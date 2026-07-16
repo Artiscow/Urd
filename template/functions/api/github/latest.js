@@ -29,7 +29,13 @@ export async function onRequestGet({ request, env }) {
     if (!base || base === head) return json({ head, changedFiles: [] });
 
     const diff = await gh(token, `/repos/${config.repo}/compare/${base}...${head}`);
-    return json({ head, changedFiles: (diff.files ?? []).map((f) => f.filename) });
+    // Rapporter stier relative til nettsiden (samme rom som editoren bruker).
+    const prefix = config.rootDir ? `${config.rootDir}/` : '';
+    const changedFiles = (diff.files ?? [])
+      .map((f) => f.filename)
+      .filter((name) => name.startsWith(prefix))
+      .map((name) => name.slice(prefix.length));
+    return json({ head, changedFiles });
   } catch (err) {
     console.error('Urd latest:', err.message);
     return json({ error: 'Kunne ikke lese repo-status fra GitHub' }, 502);

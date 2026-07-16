@@ -7,7 +7,9 @@
  * Konfigurasjon (miljøvariabler hos hosten):
  *   GITHUB_REPO ("eier/navn"), GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET,
  *   GITHUB_BRANCH (standard "main"), GITHUB_SCOPE (standard "public_repo"),
- *   ALLOWED_LOGINS (kommaseparert).
+ *   ALLOWED_LOGINS (kommaseparert),
+ *   GITHUB_ROOT_DIR (valgfri: undermappen i repoet som er nettsidens rot,
+ *   f.eks. "template" i Urd-monorepoet; utelatt når nettsiden ligger i roten).
  */
 
 /** Leser og validerer konfigurasjonen fra env. Kaster ved manglende variabler. */
@@ -15,12 +17,17 @@ export function cfg(env) {
   for (const key of ['GITHUB_REPO', 'GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET']) {
     if (!env[key]) throw new Error(`Publisering er ikke konfigurert: miljøvariabelen ${key} mangler`);
   }
+  const rootDir = (env.GITHUB_ROOT_DIR || '').replace(/^\/+|\/+$/g, '');
+  if (rootDir.split('/').includes('..')) {
+    throw new Error('GITHUB_ROOT_DIR kan ikke inneholde ..');
+  }
   return {
     repo: env.GITHUB_REPO,
     clientId: env.GITHUB_CLIENT_ID,
     clientSecret: env.GITHUB_CLIENT_SECRET,
     branch: env.GITHUB_BRANCH || 'main',
     scope: env.GITHUB_SCOPE || 'public_repo',
+    rootDir,
   };
 }
 

@@ -60,6 +60,8 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 - [ ] v0.6: oppdaterer vs. håndredigerte Urd-eide filer (sjekksum-varsel før overskriving?)
 - [ ] v0.6: GitHub Action som verifiserer at committet editor-build matcher kilden i samme commit
 - [ ] v0.6: release-Action som synker `template/` til `urd-template`-repoet
+- [ ] v0.6: avklar om urdweb skal skilles fra malen (eget repo laget FRA malen), siden publisering fra urdweb-admin skriver rett i eksempelinnholdet alle nye brukere får
+- [ ] v0.9: Generalprøven (se VEIKART) - Urd-Design-siden + oppdatering med ekte migrering
 - [ ] v1.0: minst én reell v1→v2-blokkmigrering i testsuiten (porten i VEIKART)
 - [ ] Avklar: skal `index.html` per side genereres ved publisering, eller skal hosten rewrite alle paths til `/index.html`? (henger sammen med SEO-punktet)
 - [ ] Avklar: maks bildestørrelse og varselgrenser i editoren (hosters filgrenser)

@@ -63,6 +63,12 @@ Fyll inn nøyaktig som under. Lagre, og gjenta for alle seks:
    Navn: `ALLOWED_LOGINS`
    Verdi: GitHub-brukernavnene som får publisere, adskilt med komma. F.eks. `Artiscow`
 
+7. Type: Text
+   Navn: `GITHUB_ROOT_DIR`
+   Verdi: undermappen i repoet som er nettsidens rot, altså samme verdi som
+   «Root directory» i steg 1. For Urd-monorepoet: `template`.
+   (Ligger nettsiden i repo-roten, som i et klonet mal-repo: dropp denne helt.)
+
 Til slutt må det deployes på nytt (variablene gjelder først fra neste deploy).
 Enkleste måte er en tom commit:
 
@@ -108,3 +114,4 @@ Da kjører både siden, admin og functions på `http://localhost:8788`. Full OAu
 | «Ugyldig OAuth-state» ved innlogging | Callback-URL i OAuth-appen matcher ikke domenet, eller cookies blokkeres |
 | «har ikke publiseringstilgang» (403) | Brukernavnet står ikke i `ALLOWED_LOGINS` (sjekk staving; feltet er case-ufølsomt) |
 | «Kunne ikke committe til GitHub» (502) | Tokenet mangler scope (privat repo trenger `repo`), eller grenen har flyttet seg |
+| Publisering lykkes, men siden endres ikke | `GITHUB_ROOT_DIR` mangler/feil: commiten havner utenfor nettsidens rotmappe (sjekk hvilke stier commiten endret på GitHub) |

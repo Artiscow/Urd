@@ -44,11 +44,23 @@ Ende-til-ende med minst mulig bredde: motoren rendrer `hjem.json` (én hero-seks
 - `urd-template`-repo-splitt + release-Action («Use this template»).
 - Oppdaterer v1: én-klikks Urd-oppdatering som kun overskriver manifest-stiene i `urd.json`.
 
+## v0.9 - Generalprøven
+
+Vi bruker Urd som en fremmed bruker, uten snarveier:
+
+- Lag en ekte side (arbeidsnavn: Urd-Design) via «Use this template»-knappen, i eget repo med eget Cloudflare-oppsett, satt opp KUN ved å følge OPPSETT-PUBLISERING.md. All friksjon som oppdages er funn som skal fikses.
+- Bygg siden ferdig gjennom admin alene.
+- Slipp deretter en Urd-oppdatering som inneholder en **ekte blokkendring (v1→v2 med migrering)**, og kjør oppdater-knappen på Urd-Design-siden.
+
+Frem til v0.6 er `template/` både verksted og demo (urdweb); det er greit så lenge eksempelinnholdet holdes presentabelt. Fra v0.6 er malen et eget repo, og Urd-Design blir den første siden som lever som en ekte brukers.
+
+**Port:** Urd-Design overlever oppdateringen uten tap av innhold eller manuell inngripen - løfte 2 bevist i praksis, ikke bare i testsuiten.
+
 ## v1.0 - Brukbar
 
 En forening kan klone, sette opp, bygge og vedlikeholde en side uten utvikler.
 
-**Port:** migreringskontrakten er testet med minst én reell v1→v2-blokkendring i testsuiten; en pilotforening har bygget en side.
+**Port:** migreringskontrakten er testet med minst én reell v1→v2-blokkendring i testsuiten; en pilotside (kandidat: gjenskape ApeironLF med Urd) er bygget og driftes.
 
 ---
 

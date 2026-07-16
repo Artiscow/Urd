@@ -58,8 +58,15 @@ export async function onRequestPost({ request, env }) {
     }
   }
 
+  // Stiene fra editoren er relative til NETTSIDEN. Ligger nettsiden i en
+  // undermappe av repoet (GITHUB_ROOT_DIR, f.eks. "template"), prefikses
+  // stiene her - ETTER valideringen over, som gjelder nettside-stiene.
+  const repoFiles = config.rootDir
+    ? files.map((f) => ({ ...f, path: `${config.rootDir}/${f.path}` }))
+    : files;
+
   try {
-    const { sha } = await commitFiles(token, config, { message, files });
+    const { sha } = await commitFiles(token, config, { message, files: repoFiles });
     return json({ sha });
   } catch (err) {
     console.error('Urd publish:', err.message);
