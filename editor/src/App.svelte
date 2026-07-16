@@ -67,6 +67,9 @@
       onEdit: handleEdit,
       onMove: handleMove,
       onDelete: handleDelete,
+      onAddSection: handleAddSection,
+      onMoveSection: handleMoveSection,
+      onDeleteSection: handleDeleteSection,
     });
     if (siteStore.hasDraft()) bridge.sendSite(siteStore.data);
     if (store.hasDraft()) bridge.sendPage(pageId, store.data);
@@ -93,6 +96,33 @@
     block.frames.desktop = msg.frame;
     store.save();
     updateDirty();
+  }
+
+  /** Ny seksjon fra «+ Ny seksjon» i iframen (seksjonen er allerede
+   *  bygget av presetens create() der inne). */
+  function handleAddSection(msg) {
+    store.data.sections.splice(msg.index, 0, msg.section);
+    store.save();
+    updateDirty();
+    bridge?.sendPage(pageId, store.data);
+  }
+
+  function handleMoveSection(msg) {
+    const s = store.data.sections;
+    const i = s.findIndex((x) => x.id === msg.sectionId);
+    const j = i + msg.dir;
+    if (i < 0 || j < 0 || j >= s.length) return;
+    [s[i], s[j]] = [s[j], s[i]];
+    store.save();
+    updateDirty();
+    bridge?.sendPage(pageId, store.data);
+  }
+
+  function handleDeleteSection(msg) {
+    store.data.sections = store.data.sections.filter((x) => x.id !== msg.sectionId);
+    store.save();
+    updateDirty();
+    bridge?.sendPage(pageId, store.data);
   }
 
   /** Sletting: fjern fra utkastet og rerender seksjonen i iframen. */

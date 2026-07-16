@@ -7,6 +7,9 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 
 ## [Ulansert]
 
+### Lagt til
+- Seksjons-CRUD i editoren: «+ Ny seksjon»-barer mellom seksjonene med preset-valg (tom, hero, footer), og verktøylinje per seksjon for å flytte opp/ned og slette. Presets er datafabrikker i motorregisteret (`Urd.sections.define`), samme API som plugins får.
+
 ## [0.2.0] - 2026-07-16
 
 «Tynn skive»: Urd fungerer ende-til-ende. Porten bestått: en overskrift redigert

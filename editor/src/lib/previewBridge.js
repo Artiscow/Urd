@@ -10,13 +10,16 @@
  *   side → editor: { type: 'urd-edit', sectionId, blockId, props }  (klikk-og-skriv)
  *                  { type: 'urd-move', sectionId, blockId, frame }  (dra/resize)
  *                  { type: 'urd-delete', sectionId, blockId }
+ *                  { type: 'urd-add-section', index, section }
+ *                  { type: 'urd-move-section', sectionId, dir }
+ *                  { type: 'urd-delete-section', sectionId }
  *                  { type: 'urd-preview-height', px }
  */
 
 /**
  * @param {HTMLIFrameElement} iframe Iframen som viser siden med ?preview=1
- * @param {{onEdit?: Function, onMove?: Function, onDelete?: Function}} [handlers]
- * @returns {{sendSection(pageId: string, section: object): void, sendPage(pageId: string, page: object): void, destroy(): void}}
+ * @param {{onEdit?: Function, onMove?: Function, onDelete?: Function, onAddSection?: Function, onMoveSection?: Function, onDeleteSection?: Function}} [handlers]
+ * @returns {{sendSection(pageId: string, section: object): void, sendPage(pageId: string, page: object): void, sendSite(site: object): void, destroy(): void}}
  */
 export function createPreviewBridge(iframe, handlers = {}) {
   const listener = (event) => {
@@ -25,6 +28,9 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-edit') handlers.onEdit?.(msg);
     if (msg?.type === 'urd-move') handlers.onMove?.(msg);
     if (msg?.type === 'urd-delete') handlers.onDelete?.(msg);
+    if (msg?.type === 'urd-add-section') handlers.onAddSection?.(msg);
+    if (msg?.type === 'urd-move-section') handlers.onMoveSection?.(msg);
+    if (msg?.type === 'urd-delete-section') handlers.onDeleteSection?.(msg);
   };
   window.addEventListener('message', listener);
 

@@ -49,6 +49,8 @@ export function renderPage(page, site, root, opts = {}) {
     root.appendChild(host);
     renderSection(section, site, host, opts);
   }
+  // «+ Ny seksjon»-barene mellom seksjonene (kun i preview).
+  if (opts.preview) window.UrdPreviewEdit?.enhancePage(root, page, site);
 }
 
 /**

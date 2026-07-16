@@ -21,6 +21,7 @@ import { colorLayer } from './backgrounds/color.js';
 import { gradientLayer } from './backgrounds/gradient.js';
 import { glowLayer } from './backgrounds/glow.js';
 import { grainLayer } from './backgrounds/grain.js';
+import { registerSectionPresets } from './sections/presets.js';
 
 export const Urd = {
   blocks: createRegistry('blocks'),
@@ -41,6 +42,7 @@ function registerCore() {
   Urd.backgrounds.define('gradient', gradientLayer);
   Urd.backgrounds.define('glow', glowLayer);
   Urd.backgrounds.define('grain', grainLayer);
+  registerSectionPresets(Urd);
 }
 
 /**

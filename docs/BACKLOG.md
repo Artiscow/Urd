@@ -28,13 +28,15 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 - [ ] Grid-overstyring per seksjon i UI (datamodellen støtter det allerede via section.grid)
 - [ ] Palett komplett: bilde- og logo-blokk, sirkel/rektangel-varianter, valg av målseksjon
 - [ ] z-orden (lag frem/bak)
-- [ ] Seksjons-CRUD: «+ Ny seksjon» in-place, presets (hero, bilder, footer), tom seksjon
+- [x] Seksjons-CRUD: «+ Ny seksjon» in-place med preset-valg (tom, hero, footer), flytt opp/ned og slett via seksjonsverktøylinje
+- [ ] Bilder-preset (venter på image-blokken i paletten)
 - [ ] Tekstblokker vokser ikke med innholdet (fast h klipper/overlapper ved mye tekst) - auto-høyde eller varsel
 - [ ] Angre (Ctrl+Z) for flytt/slett
 
 ## Funksjoner og forslag (udatert idébank)
 
 - [ ] Tastatursnarveier i editoren (Ctrl+Z angre, piltaster for flytting, Shift for finjustering)
+- [ ] Full tekst editor (størrelse, kursiv, uthevet, font (egen mappe for å legge til fonts?), farge, midstilt, venstrestilt, høyrestilt, osv)
 - [ ] Automatisk bildekomprimering ved opplasting (webp, størrelsestak per blokktype; mønster fra ApeironLF)
 - [ ] «Bakt HTML ved publisering» for SEO/no-JS (editoren har allerede ferdig DOM som kan snapshottes)
 - [ ] Flere kjerneblokker: video/embed, ikon, kart, skjema (skjema trolig som plugin)

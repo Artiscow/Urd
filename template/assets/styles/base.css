@@ -231,3 +231,62 @@ img, video {
 .urd-preview .urd-editable:hover .urd-edit-resize {
   display: block;
 }
+
+/* «+ Ny seksjon»-barene mellom seksjoner (kun i preview) */
+.urd-preview .urd-add-section {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 0;
+  background: repeating-linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--urd-color-accent) 25%, transparent) 0 8px,
+    transparent 8px 16px
+  ) center / 100% 1px no-repeat;
+}
+
+.urd-preview .urd-add-section button {
+  border: 1px dashed color-mix(in srgb, var(--urd-color-accent) 60%, transparent);
+  border-radius: 999px;
+  background: var(--urd-color-bg);
+  color: var(--urd-color-text);
+  font-size: 12px;
+  padding: 3px 12px;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.urd-preview .urd-add-section button:hover {
+  opacity: 1;
+  border-style: solid;
+}
+
+/* Seksjonens verktøylinje (flytt/slett) - synlig ved hover over seksjonen */
+.urd-preview .urd-section-toolbar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: none;
+  gap: 2px;
+  z-index: 1001;
+}
+
+.urd-preview .urd-section:hover > .urd-section-toolbar {
+  display: flex;
+}
+
+.urd-preview .urd-section-toolbar button {
+  border: 0;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--urd-color-surface) 85%, transparent);
+  color: var(--urd-color-text);
+  font-size: 13px;
+  line-height: 1;
+  padding: 5px 8px;
+  cursor: pointer;
+}
+
+.urd-preview .urd-section-toolbar button:hover {
+  background: var(--urd-color-accent);
+  color: #fff;
+}

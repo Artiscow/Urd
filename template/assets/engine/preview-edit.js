@@ -7,6 +7,9 @@
  * utkastet:
  *   side → editor: { type: 'urd-move',   sectionId, blockId, frame }
  *                  { type: 'urd-delete', sectionId, blockId }
+ *                  { type: 'urd-add-section', index, section }
+ *                  { type: 'urd-move-section', sectionId, dir }
+ *                  { type: 'urd-delete-section', sectionId }
  */
 import { frameToCss } from './render.js';
 
@@ -23,6 +26,79 @@ export function enhanceSection(host, section, grid) {
     const block = section.blocks.find((b) => b.id === el.dataset.blockId);
     if (block) enhanceBlock(el, block, section, grid, host);
   }
+  addSectionToolbar(host, section);
+}
+
+/**
+ * Legger «+ Ny seksjon»-barer mellom (og rundt) seksjonene. Kalles av
+ * render.js etter hver hele siderendering i preview-modus.
+ *
+ * @param {HTMLElement} root Sidens rotelement
+ * @param {object} page Sidedata (for antall seksjoner)
+ * @param {object} site site.json (ubrukt foreløpig, med for symmetri)
+ */
+export function enhancePage(root, page, site) {
+  root.querySelectorAll('.urd-add-section').forEach((el) => el.remove());
+  const hosts = [...root.querySelectorAll(':scope > .urd-section')];
+  hosts.forEach((el, i) => root.insertBefore(makeSectionAdder(i), el));
+  root.appendChild(makeSectionAdder(hosts.length));
+}
+
+/** Baren med «+ Ny seksjon»; klikk viser preset-valgene fra registeret. */
+function makeSectionAdder(index) {
+  const bar = document.createElement('div');
+  bar.className = 'urd-add-section';
+
+  const collapse = () => {
+    bar.replaceChildren(openBtn);
+  };
+
+  const openBtn = document.createElement('button');
+  openBtn.textContent = '+ Ny seksjon';
+  openBtn.addEventListener('click', () => {
+    bar.replaceChildren();
+    for (const id of window.Urd.sections.ids()) {
+      const def = window.Urd.sections.get(id);
+      const choice = document.createElement('button');
+      choice.textContent = def.label;
+      choice.addEventListener('click', () => {
+        post({ type: 'urd-add-section', index, section: def.create() });
+      });
+      bar.appendChild(choice);
+    }
+    const cancel = document.createElement('button');
+    cancel.textContent = '×';
+    cancel.title = 'Avbryt';
+    cancel.addEventListener('click', collapse);
+    bar.appendChild(cancel);
+  });
+
+  collapse();
+  return bar;
+}
+
+/** Verktøylinje øverst til høyre i seksjonen: flytt opp/ned, slett. */
+function addSectionToolbar(host, section) {
+  const bar = document.createElement('div');
+  bar.className = 'urd-section-toolbar';
+
+  const mk = (text, title, onClick) => {
+    const btn = document.createElement('button');
+    btn.textContent = text;
+    btn.title = title;
+    btn.addEventListener('click', onClick);
+    bar.appendChild(btn);
+  };
+
+  mk('↑', 'Flytt seksjonen opp', () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
+  mk('↓', 'Flytt seksjonen ned', () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
+  mk('×', 'Slett seksjonen', () => {
+    if (confirm('Slette hele seksjonen med alt innhold?')) {
+      post({ type: 'urd-delete-section', sectionId: section.id });
+    }
+  });
+
+  host.appendChild(bar);
 }
 
 function post(msg) {
