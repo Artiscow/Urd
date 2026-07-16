@@ -6,6 +6,272 @@
   },
   "sections": [
     {
+      "id": "sec-2137ee76",
+      "version": 1,
+      "preset": "tom",
+      "size": {
+        "minHeight": "400px"
+      },
+      "grid": null,
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "color",
+            "version": 1,
+            "props": {
+              "value": "bg"
+            }
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "id": "blk-0f3e689f",
+          "type": "button",
+          "version": 1,
+          "props": {
+            "label": "Ny knapp",
+            "page": null,
+            "href": "#",
+            "style": "primary"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 40,
+              "y": 140,
+              "w": 20,
+              "h": 36,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-e7b7c27c",
+          "type": "image",
+          "version": 1,
+          "props": {
+            "src": "/media/weyland-crt-1920x1200-192ecc51.webp",
+            "alt": "weyland crt 1920x1200",
+            "fit": "cover",
+            "radius": "md",
+            "href": null
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 38.92,
+              "y": 240,
+              "w": 30,
+              "h": 288,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-182881fb",
+          "type": "shape",
+          "version": 1,
+          "props": {
+            "kind": "circle",
+            "color": "accent",
+            "thickness": 2,
+            "fill": null
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 28.4,
+              "y": 80,
+              "w": 10,
+              "h": 110,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        }
+      ],
+      "responsive": {
+        "mobile": {
+          "mode": "auto",
+          "attention": null
+        }
+      }
+    },
+    {
+      "id": "sec-51eab1c9",
+      "version": 1,
+      "preset": "hero",
+      "size": {
+        "minHeight": "70vh"
+      },
+      "grid": null,
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "gradient",
+            "version": 1,
+            "props": {
+              "stops": [
+                "#0b0e14",
+                "#1a1030"
+              ],
+              "angle": 160,
+              "animate": false
+            }
+          },
+          {
+            "type": "glow",
+            "version": 1,
+            "props": {
+              "x": 0.7,
+              "y": 0.2,
+              "color": "accent",
+              "radius": 0.5,
+              "opacity": 0.35
+            }
+          },
+          {
+            "type": "grain",
+            "version": 1,
+            "props": {
+              "opacity": 0.06
+            }
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "id": "blk-1f7808ca",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<h1>Ny overskrift</h1>",
+            "align": "left"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 8.33,
+              "y": 40,
+              "w": 50,
+              "h": 32,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-956cc5f7",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<p>Skriv en kort introduksjon her.</p>",
+            "align": "left"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 8.33,
+              "y": 76,
+              "w": 41.67,
+              "h": 20,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-56753514",
+          "type": "button",
+          "version": 1,
+          "props": {
+            "label": "Les mer",
+            "page": null,
+            "href": "#",
+            "style": "primary"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 8.33,
+              "y": 104,
+              "w": 20,
+              "h": 32,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        }
+      ],
+      "responsive": {
+        "mobile": {
+          "mode": "auto",
+          "attention": null
+        }
+      }
+    },
+    {
+      "id": "sec-e1e81eb1",
+      "version": 1,
+      "preset": "footer",
+      "size": {
+        "minHeight": "20vh"
+      },
+      "grid": null,
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "color",
+            "version": 1,
+            "props": {
+              "value": "surface"
+            }
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "id": "blk-f2ba70dc",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<p>© Min forening</p>",
+            "align": "center"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 25,
+              "y": 24,
+              "w": 50,
+              "h": 20,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        }
+      ],
+      "responsive": {
+        "mobile": {
+          "mode": "auto",
+          "attention": null
+        }
+      }
+    },
+    {
       "id": "sec-om",
       "version": 1,
       "preset": null,
