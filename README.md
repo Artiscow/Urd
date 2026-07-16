@@ -37,6 +37,7 @@ Etter første oppsett er admin-siden kontrollsenteret for nettsiden din. Alt du 
 | [docs/VEIKART.md](docs/VEIKART.md) | Faser fra skjelett til v1.0 |
 | [docs/UTVIKLING.md](docs/UTVIKLING.md) | For oss som utvikler Urd: oppsett, regler, vanlige oppgaver |
 | [docs/BACKLOG.md](docs/BACKLOG.md) | Løpende oppgaveliste: gjøremål, bugs og forslag |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Slik bidrar du: fork, gren, tester, pull request |
 | [docs/adr/](docs/adr/) | Arkitekturbeslutninger med begrunnelse |
 
 ## Lisens

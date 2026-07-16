@@ -14,3 +14,14 @@ export function applyTheme(theme, root = document.documentElement) {
     }
   }
 }
+
+/**
+ * Løser en fargeverdi fra innhold til CSS. Enkle navn ('accent', 'bg')
+ * tolkes som theme-tokens og blir var(--urd-color-<navn>); alt annet
+ * ('#7c5cff', 'rgb(...)') brukes rått.
+ * @param {string} value
+ * @returns {string}
+ */
+export function resolveColor(value) {
+  return /^[a-z][a-z0-9-]*$/.test(value) ? `var(--urd-color-${value})` : value;
+}

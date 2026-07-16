@@ -1,17 +1,19 @@
 /**
- * Bakgrunnslag: ensfarget. Det enkleste laget; verdien kan være en
- * theme-token-referanse eller en rå farge.
+ * Bakgrunnslag: ensfarget. Verdien kan være en theme-token ('surface')
+ * eller en rå farge ('#151a23').
  */
+import { resolveColor } from '../theme.js';
+
 export const colorLayer = {
   version: 1,
   label: 'Farge',
-  defaults: () => ({ value: '#0b0e14' }),
+  defaults: () => ({ value: 'bg' }),
   migrations: {},
   /**
    * @param {HTMLElement} el
    * @param {{value: string}} props
    */
   render(el, props) {
-    throw new Error('TODO v0.2: color-laget er ikke implementert ennå');
+    el.style.background = resolveColor(props.value);
   },
 };

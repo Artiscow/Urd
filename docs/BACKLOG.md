@@ -4,11 +4,11 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 
 ## Neste opp (v0.2 «tynn skive»)
 
-- [ ] Motor: implementer `render.js` (renderPage, renderSection, frameToCss med grid-til-CSS-matte)
-- [ ] Motor: implementer `text`- og `button`-blokkene og `color`/`gradient`-lagene
-- [ ] Motor: rutefinning i `urd.js` (path → side fra sideregisteret) + lasting av sidefil + migrering ved lasting
-- [ ] Motor: `nav.js` (bygg nav fra site.json)
-- [ ] Motor: preview-modus (`?preview=1`): lytt på postMessage-utkast, inkrementell rerender, meld tilbake høyde
+- [x] Motor: implementer `render.js` (renderPage, renderSection, frameToCss med grid-til-CSS-matte)
+- [x] Motor: implementer `text`- og `button`-blokkene og `color`/`gradient`-lagene (også `shape`, `glow` og `grain` ble med)
+- [x] Motor: rutefinning i `urd.js` (path → side fra sideregisteret, `?page=<id>` som lokal fallback) + lasting av sidefil + migrering ved lasting
+- [x] Motor: `nav.js` (bygg nav fra site.json)
+- [x] Motor: preview-modus (`?preview=1`): lytt på postMessage-utkast, inkrementell rerender, meld tilbake høyde
 - [ ] Editor: skall med preview-iframe, klikk-og-skriv på tekstblokker
 - [ ] Editor: `draftStore.js` (localStorage-utkast + baseline-sammenligning)
 - [ ] Editor: `previewBridge.js` (postMessage-protokollen)

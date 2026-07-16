@@ -2,7 +2,7 @@
 
 Dette dokumentet er for oss som utvikler selve Urd. (Foreninger som *bruker* Urd trenger aldri noe av dette; de kloner malen og redigerer via /admin.)
 
-Den løpende oppgavelisten ligger i [BACKLOG.md](BACKLOG.md). Fasene og målene ligger i [VEIKART.md](VEIKART.md).
+Den løpende oppgavelisten ligger i [BACKLOG.md](BACKLOG.md). Fasene og målene ligger i [VEIKART.md](VEIKART.md). Skal du bidra med endringer utenfra (fork/PR-flyten), se [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Det du trenger
 
@@ -25,6 +25,7 @@ cd Urd
 # Se nettsiden lokalt (ingen Node nødvendig):
 cd template && python3 -m http.server 8000
 # åpne http://localhost:8000
+# (andre sider lokalt: http://localhost:8000/?page=om-oss)
 
 # Editor-utvikling (krever Node):
 cd editor

@@ -1,45 +1,127 @@
 /**
  * Render-løkka: side → seksjoner → bakgrunnslag + blokker.
  *
- * Flyt (implementeres i v0.2):
- *  1. For hver seksjon: opprett container med size/grid, render
- *     bakgrunnslagene i rekkefølge, deretter blokkene.
- *  2. Hver blokk løftes via migrate.lift() mot sitt register før render;
- *     plassholder-resultater rendres som nøytral boks med typenavn.
- *  3. Frames oversettes fra grid-enheter til CSS (se frameToCss).
- *  4. Inkrementelt: renderSection() kan kalles for én seksjon alene -
- *     det er dette editorens preview bruker ved utkast-endringer.
- *  5. Mobil: frames.mobile === null → auto-avledet stabling i én kolonne,
- *     sortert på desktop-y, deretter x. Tilsyn-flagget ignoreres helt her.
+ * All data løftes via migrate.lift() før rendering. Ukjente typer og
+ * render-feil gir nøytrale plassholdere (blokker) eller hoppes over
+ * (bakgrunnslag er dekorative) - siden krasjer aldri av dårlig data.
+ *
+ * v0.2 rendrer kun desktop-layouten. Mobil (auto-avledet stabling og
+ * manuelle mobil-frames) kommer i v0.4.
  */
+import { lift } from './migrate.js';
 
 /**
- * Render en hel side inn i root.
+ * Oversetter en frame i grid-enheter til CSS-posisjonering.
+ * Ren funksjon (ingen DOM), testet i tests/render.test.mjs.
+ *
+ * x/w regnes i kolonner og blir prosent (flyter med seksjonsbredden),
+ * y/h regnes i rader og blir px (rowHeight er definert i px).
+ *
+ * @param {{x: number, y: number, w: number, h: number, z?: number, rot?: number}} frame
+ * @param {{columns: number, rowHeight: number}} grid Effektivt grid (seksjonens eller nettstedets)
+ * @returns {{left: string, top: string, width: string, height: string, zIndex: string, transform: string}}
+ */
+export function frameToCss(frame, grid) {
+  const colWidth = 100 / grid.columns;
+  return {
+    left: `${frame.x * colWidth}%`,
+    top: `${frame.y * grid.rowHeight}px`,
+    width: `${frame.w * colWidth}%`,
+    height: `${frame.h * grid.rowHeight}px`,
+    zIndex: String(frame.z ?? 1),
+    transform: frame.rot ? `rotate(${frame.rot}deg)` : '',
+  };
+}
+
+/**
+ * Render en hel side inn i root. Hver seksjon får sitt eget <section>-
+ * element, slik at renderSection kan rerendre én seksjon alene senere.
+ *
  * @param {object} page Sidefil (content/pages/*.json), allerede parset
- * @param {object} site site.json (for grid-standard og tema)
+ * @param {object} site site.json
  * @param {HTMLElement} root
  * @param {{preview?: boolean}} [opts]
  */
 export function renderPage(page, site, root, opts = {}) {
-  throw new Error('TODO v0.2: renderPage er ikke implementert ennå');
+  root.replaceChildren();
+  for (const section of page.sections) {
+    const host = document.createElement('section');
+    root.appendChild(host);
+    renderSection(section, site, host, opts);
+  }
 }
 
 /**
  * Render (eller rerender) én seksjon - grunnlaget for inkrementell preview.
+ *
  * @param {object} section Seksjonsdata
  * @param {object} site site.json
- * @param {HTMLElement} host Eksisterende seksjons-element eller ny container
+ * @param {HTMLElement} host Seksjonselementet (tømmes og bygges på nytt)
+ * @param {{preview?: boolean}} [opts]
  */
-export function renderSection(section, site, host) {
-  throw new Error('TODO v0.2: renderSection er ikke implementert ennå');
+export function renderSection(section, site, host, opts = {}) {
+  const Urd = window.Urd;
+  const grid = section.grid ?? site.grid;
+  const ctx = { site, section, grid, preview: Boolean(opts.preview) };
+
+  host.className = 'urd-section';
+  host.dataset.sectionId = section.id;
+  host.replaceChildren();
+
+  for (const layer of section.background?.layers ?? []) {
+    const el = document.createElement('div');
+    el.className = 'urd-bg-layer';
+    const lifted = lift(layer, Urd.backgrounds.get(layer.type));
+    if (!lifted.ok) {
+      console.warn(`Urd: hopper over bakgrunnslag '${layer.type}' (${lifted.placeholder})`);
+      continue;
+    }
+    try {
+      Urd.backgrounds.get(layer.type).render(el, lifted.props);
+      host.appendChild(el);
+    } catch (err) {
+      console.warn(`Urd: bakgrunnslag '${layer.type}' feilet under render`, err);
+    }
+  }
+
+  let maxRow = 0;
+  for (const block of section.blocks) {
+    const el = document.createElement('div');
+    el.className = 'urd-block';
+    el.dataset.blockId = block.id;
+    const frame = block.frames.desktop;
+    Object.assign(el.style, frameToCss(frame, grid));
+    maxRow = Math.max(maxRow, frame.y + frame.h);
+
+    const lifted = lift(block, Urd.blocks.get(block.type));
+    if (lifted.ok) {
+      try {
+        Urd.blocks.get(block.type).render(el, lifted.props, ctx);
+      } catch (err) {
+        console.warn(`Urd: blokk '${block.type}' feilet under render`, err);
+        renderPlaceholder(el, block.type);
+      }
+    } else {
+      renderPlaceholder(el, block.type);
+    }
+    host.appendChild(el);
+  }
+
+  // Seksjonen må være høy nok for blokkene sine; brukerens minHeight
+  // (f.eks. '85vh') vinner når den er større.
+  const neededPx = maxRow * grid.rowHeight;
+  const wanted = section.size?.minHeight;
+  host.style.minHeight = wanted ? `max(${wanted}, ${neededPx}px)` : `${neededPx}px`;
 }
 
 /**
- * Oversetter en frame i grid-enheter til CSS-posisjonering.
- * @param {{x: number, y: number, w: number, h: number, z?: number, rot?: number}} frame
- * @param {{columns: number, rowHeight: number, gap?: number}} grid Effektivt grid (seksjonens eller nettstedets)
- * @returns {object} CSS-egenskaper (left/top i %, width i %, height i px, zIndex, transform)
+ * Nøytral plassholder for ukjente/feilende blokker. Dataene bak er
+ * urørt; dette er kun visning (se løfte 2 og ADR-0005).
+ * @param {HTMLElement} el
+ * @param {string} type
  */
-export function frameToCss(frame, grid) {
-  throw new Error('TODO v0.2: frameToCss er ikke implementert ennå');
+function renderPlaceholder(el, type) {
+  el.classList.add('urd-placeholder');
+  el.textContent = type;
+  el.title = `Blokktypen '${type}' er ikke tilgjengelig (mangler plugin eller nyere Urd?)`;
 }

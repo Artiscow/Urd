@@ -14,7 +14,10 @@
 
   <script type="module">
     import { boot } from '/assets/engine/urd.js';
-    boot({ root: document.getElementById('urd-root') });
+    boot({
+      root: document.getElementById('urd-root'),
+      nav: document.getElementById('urd-nav'),
+    });
   </script>
 </body>
 </html>
