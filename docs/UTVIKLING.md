@@ -33,9 +33,14 @@ npm install          # gjenskaper node_modules fra package.json
 npm run dev          # utviklingsserver med hot reload
 npm run build        # kompilerer til ../template/admin/assets/
 
-# Tester:
-node --test tests/
+# Tester og skjemavalidering:
+node --test tests/*.mjs
+cd editor && npm run validate
 ```
+
+CI (`.github/workflows/tests.yml`) kjører det samme på hver push og PR,
+pluss at editoren bygger. CodeQL, Dependabot og dependency review vokter
+sikkerhet og avhengigheter.
 
 Første `npm install` lager `package-lock.json`; den skal committes, slik at alle maskiner får identiske avhengighetsversjoner.
 

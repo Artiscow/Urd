@@ -1,0 +1,19 @@
+# Dependabot: automatiske PR-er for utdaterte avhengigheter.
+# npm finnes kun i editor/ (Urd-nettsider har ingen avhengigheter).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /editor
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      # Mindre oppdateringer samles i én PR for å redusere støy
+      utvikling-mindre:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday

@@ -1,0 +1,33 @@
+name: Tester
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: editor/package-lock.json
+
+      - name: Motor- og vernetester
+        run: node --test tests/*.mjs
+
+      - name: Installer editor-avhengigheter
+        working-directory: editor
+        run: npm ci
+
+      - name: Valider eksempeldata mot skjemaene
+        working-directory: editor
+        run: npm run validate
+
+      - name: Editoren bygger
+        working-directory: editor
+        run: npm run build

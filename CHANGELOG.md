@@ -13,6 +13,9 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 - «Ren visning»-knapp som skjuler alle editeringshåndtak og hele topplinjen (siden ses i full høyde); flytende Rediger-knapp tar deg tilbake.
 - Klikk-markering av blokker: varig omriss og synlige håndtak til man klikker utenfor.
 
+### Lagt til
+- Kvalitetsvern på repoet: CI-workflow (tester, skjemavalidering, editor-bygg), CodeQL, Dependabot (npm + actions) og dependency review. Skjemavalidering er nå `npm run validate` i editor/ (eget ajv-skript, ingen sårbare CLI-avhengigheter).
+
 ### Endret
 - **Sidefiler er nå schemaVersion 2: blokkplassering lagres i fysiske enheter** (x/w i prosent av seksjonsbredden, y/h i px) i stedet for grid-enheter. Gridet er dermed KUN et snappeverktøy: å endre kolonner/radhøyde flytter aldri innhold. v1-filer løftes automatisk ved lasting (`liftPageFile` i migrate.js), Urds første reelle filmigrering, testet i `tests/page-migration.test.mjs`.
 
