@@ -54,14 +54,14 @@
           "type": "text",
           "version": 1,
           "props": {
-            "html": "<h1>Velkommen til Urd sin utviklerside!</h1><div class=\"urd-edit-toolbar\"><button class=\"urd-edit-move\" title=\"Dra for å flytte (snapper til grid)\">⠿</button><button class=\"urd-edit-delete\" title=\"Slett blokken\">×</button></div><div class=\"urd-edit-resize\" title=\"Dra for å endre størrelse\"></div>",
+            "html": "<h1>Velkommen til Min forening</h1>",
             "align": "left"
           },
           "animation": null,
           "frames": {
             "desktop": {
               "x": 7,
-              "y": 7,
+              "y": 5,
               "w": 12,
               "h": 4,
               "z": 1,
@@ -81,8 +81,8 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 8,
-              "y": 13,
+              "x": 7,
+              "y": 10,
               "w": 10,
               "h": 2,
               "z": 1,
@@ -103,8 +103,8 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 9,
-              "y": 17,
+              "x": 8,
+              "y": 52,
               "w": 5,
               "h": 2,
               "z": 1,
