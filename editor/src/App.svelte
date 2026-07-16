@@ -219,6 +219,7 @@
       onSelectSection,
       onReady,
       onNavigate,
+      onAddBlock: (msg) => insertBlock(msg.sectionId, msg.block),
     });
   }
 
@@ -339,22 +340,40 @@
     'shape-triangle': { type: 'shape', props: { kind: 'triangle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
   };
 
-  function addBlock(kind, event) {
-    pushHistory('add-block');
-    const section = targetSection();
+  function buildBlock(kind) {
     const d = BLOCK_DEFAULTS[kind];
-    const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
-    section.blocks.push({
+    return {
       id: `blk-${crypto.randomUUID().slice(0, 8)}`,
       type: d.type,
       version: 1,
       props: structuredClone(d.props),
       animation: null,
-      frames: { desktop: { x: 4, y: maxBottom + 8, w: d.w, h: d.h, z: 1, rot: 0 }, mobile: null },
-    });
+      frames: { desktop: { x: 4, y: 8, w: d.w, h: d.h, z: 1, rot: 0 }, mobile: null },
+    };
+  }
+
+  /** Iframen plasserer blokken midt i synsfeltet (den vet hvor brukeren
+   *  har scrollet) og melder tilbake via urd-add-block → insertBlock. */
+  function requestPlacement(block) {
+    if (bridge) {
+      bridge.sendPlaceBlock(block);
+    } else {
+      insertBlock(targetSection()?.id, block);
+    }
+  }
+
+  function insertBlock(sectionId, block) {
+    const section = store.data.sections.find((s) => s.id === sectionId) ?? store.data.sections[0];
+    if (!section) return;
+    pushHistory('add-block');
+    section.blocks.push(block);
     store.save();
     updateDirty();
     bridge?.sendSection(pageId, section);
+  }
+
+  function addBlock(kind, event) {
+    requestPlacement(buildBlock(kind));
     event?.target.closest('details')?.removeAttribute('open');
   }
 
@@ -374,23 +393,17 @@
       return;
     }
 
-    pushHistory('add-block');
-    const section = targetSection();
-    const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
     // Startbredde 30 % av seksjonen; høyden følger bildets sideforhold
     // med en antatt seksjonsbredde (justeres uansett fritt etterpå).
     const height = Math.round((img.height / img.width) * 0.3 * (iframeEl?.clientWidth ?? 1280));
-    section.blocks.push({
+    requestPlacement({
       id: `blk-${crypto.randomUUID().slice(0, 8)}`,
       type: 'image',
       version: 1,
       props: { src: img.dataUrl, alt: slugify(file.name).replaceAll('-', ' '), fit: 'cover', radius: 'md', href: null },
       animation: null,
-      frames: { desktop: { x: 4, y: maxBottom + 8, w: 30, h: Math.max(40, height), z: 1, rot: 0 }, mobile: null },
+      frames: { desktop: { x: 4, y: 8, w: 30, h: Math.max(40, height), z: 1, rot: 0 }, mobile: null },
     });
-    store.save();
-    updateDirty();
-    bridge?.sendSection(pageId, section);
     status = img.bytes > WARN_BYTES
       ? `Bildet er stort (${Math.round(img.bytes / 1024)} kB) - vurder et mindre utsnitt.`
       : '';
@@ -470,10 +483,18 @@
     }
   }
 
+  /** Nedtrekksmenyene lukkes ved klikk utenfor dem, og når fokus går
+   *  inn i forhåndsvisningen (iframe-klikk når aldri dette dokumentet). */
+  function closeMenus(event) {
+    document.querySelectorAll('.topbar details[open]').forEach((d) => {
+      if (!event || !d.contains(event.target)) d.open = false;
+    });
+  }
+
   init();
 </script>
 
-<svelte:window onkeydown={onKeydown} />
+<svelte:window onkeydown={onKeydown} onpointerdown={closeMenus} onblur={() => closeMenus()} />
 
 <div class="editor">
   {#if !chromeVisible}
@@ -598,9 +619,9 @@
 
   .chrome-restore {
     position: fixed;
-    /* Under nettsidens egen topplinje, så den ikke dekker nav-lenkene */
-    top: 76px;
-    right: 14px;
+    /* Under nettsidens egen topplinje, klar av både nav og scrollbar */
+    top: 64px;
+    right: 28px;
     z-index: 200;
     font: inherit;
     color: #fff;

@@ -34,6 +34,36 @@ export function enhanceSection(host, section, grid) {
   if (gridOverlaysOn) showGridOverlay(host, grid).classList.add('urd-grid-persistent');
 }
 
+/**
+ * Plasserer en ny blokk fra editorens palett midt i brukerens synsfelt:
+ * i den aktive seksjonen, ellers seksjonen nærmest midten av viewporten.
+ * Iframen vet hvor brukeren har scrollet; det gjør ikke editoren.
+ */
+export function placeBlock(block, root) {
+  let host = root.querySelector('.urd-section-active');
+  if (!host) {
+    let best = null;
+    let bestDist = Infinity;
+    for (const el of root.querySelectorAll('.urd-section')) {
+      const r = el.getBoundingClientRect();
+      if (r.bottom <= 0 || r.top >= window.innerHeight) continue;
+      const dist = Math.abs(r.top + r.height / 2 - window.innerHeight / 2);
+      if (dist < bestDist) { best = el; bestDist = dist; }
+    }
+    host = best ?? root.querySelector('.urd-section');
+  }
+  if (!host) return;
+
+  const rect = host.getBoundingClientRect();
+  const visibleTop = Math.max(0, -rect.top);
+  const visibleBottom = Math.max(visibleTop, Math.min(rect.height, window.innerHeight - rect.top));
+  const frame = block.frames.desktop;
+  frame.y = Math.max(8, Math.round((visibleTop + visibleBottom) / 2 - frame.h / 2));
+  frame.x = Math.round(((100 - frame.w) / 2) * 100) / 100;
+
+  post({ type: 'urd-add-block', sectionId: host.dataset.sectionId, block });
+}
+
 /** Om vedvarende grid-visning er på (styrt av editorens grid-meny). */
 let gridOverlaysOn = false;
 
@@ -153,10 +183,8 @@ function addSectionToolbar(host, section) {
 
   mk('↑', 'Flytt seksjonen opp', () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
   mk('↓', 'Flytt seksjonen ned', () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
-  mk('×', 'Slett seksjonen', () => {
-    if (confirm('Slette hele seksjonen med alt innhold?')) {
-      post({ type: 'urd-delete-section', sectionId: section.id });
-    }
+  mk('×', 'Slett seksjonen (Ctrl+Z angrer)', () => {
+    post({ type: 'urd-delete-section', sectionId: section.id });
   });
 
   host.appendChild(bar);
@@ -298,11 +326,9 @@ function enhanceBlock(el, block, section, grid, host) {
   const deleteBtn = document.createElement('button');
   deleteBtn.className = 'urd-edit-delete';
   deleteBtn.textContent = '×';
-  deleteBtn.title = 'Slett blokken';
+  deleteBtn.title = 'Slett blokken (Ctrl+Z angrer)';
   deleteBtn.addEventListener('click', () => {
-    if (confirm('Slette blokken?')) {
-      post({ type: 'urd-delete', sectionId: section.id, blockId: block.id });
-    }
+    post({ type: 'urd-delete', sectionId: section.id, blockId: block.id });
   });
   toolbar.appendChild(deleteBtn);
   el.appendChild(toolbar);

@@ -106,6 +106,9 @@ function enablePreview(page, site, opts) {
     } else if (msg?.type === 'urd-show-grid') {
       // Grid-menyen i editoren er åpen: vis gridet i alle seksjoner.
       window.UrdPreviewEdit?.toggleGridOverlays(msg.visible, page, site);
+    } else if (msg?.type === 'urd-place-block' && msg.block) {
+      // Paletten: finn plassering midt i synsfeltet og meld tilbake.
+      window.UrdPreviewEdit?.placeBlock(msg.block, root);
     } else if (msg?.type === 'urd-site' && msg.site) {
       // Site-utkast fra editoren (grid, tema, nav): alt som avhenger av
       // site.json rendres på nytt.

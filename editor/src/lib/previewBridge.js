@@ -18,6 +18,7 @@
  *                  { type: 'urd-select-section', sectionId }  (aktiv seksjon for paletten)
  *                  { type: 'urd-ready' }                      (motoren lytter; trygt å sende utkast)
  *                  { type: 'urd-navigate', path }             (intern lenke klikket i preview)
+ *                  { type: 'urd-add-block', sectionId, block } (plassert blokk fra paletten)
  *                  { type: 'urd-preview-height', px }
  *   editor → side: { type: 'urd-chrome', visible }            (vis/skjul editeringshåndtak)
  *                  { type: 'urd-show-grid', visible }         (vis gridet i alle seksjoner)
@@ -43,6 +44,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-select-section') handlers.onSelectSection?.(msg);
     if (msg?.type === 'urd-ready') handlers.onReady?.(msg);
     if (msg?.type === 'urd-navigate') handlers.onNavigate?.(msg);
+    if (msg?.type === 'urd-add-block') handlers.onAddBlock?.(msg);
   };
   window.addEventListener('message', listener);
 
@@ -63,6 +65,9 @@ export function createPreviewBridge(iframe, handlers = {}) {
     },
     sendShowGrid(visible) {
       post({ type: 'urd-show-grid', visible });
+    },
+    sendPlaceBlock(block) {
+      post({ type: 'urd-place-block', block });
     },
     destroy() {
       window.removeEventListener('message', listener);
