@@ -60,9 +60,9 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 50.0,
-              "y": 40,
-              "w": 50.0,
+              "x": 30.51,
+              "y": 112,
+              "w": 50,
               "h": 32,
               "z": 1,
               "rot": 0
@@ -81,8 +81,8 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 37.5,
-              "y": 200,
+              "x": 19.99,
+              "y": 208,
               "w": 41.67,
               "h": 16,
               "z": 1,
@@ -103,11 +103,11 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 58.33,
-              "y": 400,
+              "x": 48.39,
+              "y": 384,
               "w": 20.83,
               "h": 16,
-              "z": 1,
+              "z": 4,
               "rot": 0
             },
             "mobile": {
@@ -118,6 +118,77 @@
               "z": 1,
               "rot": 0
             }
+          }
+        },
+        {
+          "id": "blk-c3520c92",
+          "type": "shape",
+          "version": 1,
+          "props": {
+            "kind": "rect",
+            "color": "accent",
+            "thickness": 2,
+            "fill": null
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 27.35,
+              "y": 64,
+              "w": 37.87,
+              "h": 128,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-2bd6c6b9",
+          "type": "image",
+          "version": 1,
+          "props": {
+            "src": "/media/weyland-crt-1920x1200-192ecc51.webp",
+            "alt": "weyland crt 1920x1200",
+            "fit": "cover",
+            "radius": "md",
+            "href": null
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 24.19,
+              "y": 752,
+              "w": 30,
+              "h": 288,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-0d52cefe",
+          "type": "image",
+          "version": 1,
+          "props": {
+            "src": "/media/weyland-crt-1920x1200-192ecc51.webp",
+            "alt": "weyland crt 1920x1200",
+            "fit": "cover",
+            "radius": "md",
+            "href": null
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 54.7,
+              "y": 752,
+              "w": 30,
+              "h": 288,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
           }
         }
       ],
@@ -160,9 +231,9 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 25.0,
+              "x": 25,
               "y": 16,
-              "w": 50.0,
+              "w": 50,
               "h": 16,
               "z": 1,
               "rot": 0
