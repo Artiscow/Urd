@@ -10,6 +10,7 @@
  *                  { type: 'urd-add-section', index, section }
  *                  { type: 'urd-move-section', sectionId, dir }
  *                  { type: 'urd-delete-section', sectionId }
+ *                  { type: 'urd-section-size', sectionId, minHeight }
  */
 import { frameToCss } from './render.js';
 
@@ -27,6 +28,44 @@ export function enhanceSection(host, section, grid) {
     if (block) enhanceBlock(el, block, section, grid, host);
   }
   addSectionToolbar(host, section);
+  addSectionHeightHandle(host, section, grid);
+}
+
+/**
+ * Dra-håndtak i underkant av seksjonen: justerer size.minHeight, snappet
+ * til gridets radhøyde. Lagres i px (rerender kan fortsatt vokse seksjonen
+ * hvis blokkene trenger mer, se render.js).
+ */
+function addSectionHeightHandle(host, section, grid) {
+  const handle = document.createElement('div');
+  handle.className = 'urd-section-resize';
+  handle.title = 'Dra for å endre seksjonens høyde';
+
+  handle.addEventListener('pointerdown', (event) => {
+    event.preventDefault();
+    handle.setPointerCapture(event.pointerId);
+    const startY = event.clientY;
+    const startHeight = host.getBoundingClientRect().height;
+    let px = startHeight;
+
+    const onMove = (ev) => {
+      px = Math.max(grid.rowHeight * 4, startHeight + (ev.clientY - startY));
+      px = Math.round(px / grid.rowHeight) * grid.rowHeight;
+      host.style.minHeight = `${px}px`;
+    };
+    const onUp = () => {
+      handle.removeEventListener('pointermove', onMove);
+      handle.removeEventListener('pointerup', onUp);
+      if (Math.abs(px - startHeight) < grid.rowHeight) return;
+      const minHeight = `${px}px`;
+      section.size = { ...section.size, minHeight };
+      post({ type: 'urd-section-size', sectionId: section.id, minHeight });
+    };
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp);
+  });
+
+  host.appendChild(handle);
 }
 
 /**
@@ -104,6 +143,17 @@ function addSectionToolbar(host, section) {
 function post(msg) {
   window.parent?.postMessage(msg, location.origin);
 }
+
+// Ctrl+Z / Ctrl+Shift+Z inne i iframen videresendes til editoren, som eier
+// historikken - MED MINDRE fokus står i redigerbar tekst (der skal
+// nettleserens egen tekst-angring gjelde; urd-edit holder utkastet i synk).
+window.addEventListener('keydown', (event) => {
+  if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'z') return;
+  const target = event.target;
+  if (target instanceof HTMLElement && target.isContentEditable) return;
+  event.preventDefault();
+  post({ type: 'urd-undo', redo: event.shiftKey });
+});
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);

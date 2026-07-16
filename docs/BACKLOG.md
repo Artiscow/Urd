@@ -29,9 +29,12 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 - [ ] Palett komplett: bilde- og logo-blokk, sirkel/rektangel-varianter, valg av målseksjon
 - [ ] z-orden (lag frem/bak)
 - [x] Seksjons-CRUD: «+ Ny seksjon» in-place med preset-valg (tom, hero, footer), flytt opp/ned og slett via seksjonsverktøylinje
+- [x] Seksjonshøyde: dra-håndtak i underkant av seksjonen (snapper til radhøyden, lagres i size.minHeight)
 - [ ] Bilder-preset (venter på image-blokken i paletten)
 - [ ] Tekstblokker vokser ikke med innholdet (fast h klipper/overlapper ved mye tekst) - auto-høyde eller varsel
-- [ ] Angre (Ctrl+Z) for flytt/slett
+- [x] Angre/gjenta (Ctrl+Z / Ctrl+Shift+Z) for ALT: flytt, resize, ny/slettet blokk og seksjon, seksjonshøyde, grid, forkast (tekst i skrivemodus bruker nettleserens egen angring)
+- [x] «+ Form» er en meny: strek, sirkel, rektangel
+- [x] «Ren visning»-knapp: skjuler alle editeringshåndtak så siden ses som besøkende ser den
 
 ## Funksjoner og forslag (udatert idébank)
 

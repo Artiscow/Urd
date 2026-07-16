@@ -15,6 +15,9 @@
   /** Speil av site-utkastets grid for inputfeltene */
   let grid = $state({ columns: 24, rowHeight: 8, snap: true });
 
+  /** Ren forhåndsvisning: skjuler alle editeringshåndtak i iframen */
+  let chromeVisible = $state(true);
+
   let store = null;
   let siteStore = null;
   let bridge = null;
@@ -23,6 +26,65 @@
 
   function updateDirty() {
     dirty = store?.hasDraft() || siteStore?.hasDraft() || false;
+  }
+
+  /**
+   * Angre/gjenta: snapshot-basert historikk over BÅDE side- og site-utkastet.
+   * pushHistory kalles FØR hver mutasjon; tastene brukes til å slå sammen
+   * skurer av samme handling (hvert tastetrykk i en tekstblokk skal ikke
+   * bli hvert sitt angre-steg).
+   */
+  const history = [];
+  const redoStack = [];
+  let lastHistoryKey = null;
+
+  function snapshot() {
+    return JSON.stringify({ page: store.data, site: siteStore.data });
+  }
+
+  function pushHistory(key) {
+    if (key === lastHistoryKey && (key.startsWith('edit:') || key === 'grid')) return;
+    history.push(snapshot());
+    if (history.length > 50) history.shift();
+    redoStack.length = 0;
+    lastHistoryKey = key;
+  }
+
+  function restore(snap) {
+    const { page, site: siteSnap } = JSON.parse(snap);
+    store.replace(page);
+    siteStore.replace(siteSnap);
+    store.save();
+    siteStore.save();
+    grid = { snap: true, ...siteStore.data.grid };
+    updateDirty();
+    bridge?.sendSite(siteStore.data);
+    bridge?.sendPage(pageId, store.data);
+  }
+
+  function undo() {
+    if (!history.length) return;
+    redoStack.push(snapshot());
+    restore(history.pop());
+    lastHistoryKey = null;
+    status = 'Angret';
+  }
+
+  function redo() {
+    if (!redoStack.length) return;
+    history.push(snapshot());
+    restore(redoStack.pop());
+    lastHistoryKey = null;
+    status = 'Gjentatt';
+  }
+
+  function onKeydown(e) {
+    if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'z') return;
+    const t = e.target;
+    if (t instanceof HTMLElement && (t.isContentEditable || t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) return;
+    e.preventDefault();
+    if (e.shiftKey) redo();
+    else undo();
   }
 
   async function init() {
@@ -35,6 +97,7 @@
 
   /** Grid-kontrollene: endringer lagres i site-utkastet og pushes live. */
   function setGrid(field, value) {
+    pushHistory('grid');
     grid = { ...grid, [field]: value };
     siteStore.data.grid = { ...siteStore.data.grid, [field]: value };
     siteStore.save();
@@ -56,6 +119,9 @@
     const entry = pageEntry();
     const published = await (await fetch(`/${entry.file}`)).json();
     store = createDraftStore(`urd-draft-${id}`, () => published);
+    history.length = 0;
+    redoStack.length = 0;
+    lastHistoryKey = null;
     updateDirty();
     status = '';
     // Iframen bytter src via pageId; utkastet pushes i onIframeLoad.
@@ -70,9 +136,17 @@
       onAddSection: handleAddSection,
       onMoveSection: handleMoveSection,
       onDeleteSection: handleDeleteSection,
+      onSectionSize: handleSectionSize,
+      onUndo: (msg) => (msg.redo ? redo() : undo()),
     });
     if (siteStore.hasDraft()) bridge.sendSite(siteStore.data);
     if (store.hasDraft()) bridge.sendPage(pageId, store.data);
+    if (!chromeVisible) bridge.sendChrome(false);
+  }
+
+  function toggleChrome() {
+    chromeVisible = !chromeVisible;
+    bridge?.sendChrome(chromeVisible);
   }
 
   /** Klikk-og-skriv-endring fra iframen: oppdater utkastet. Iframen viser
@@ -81,6 +155,7 @@
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     const block = section?.blocks.find((b) => b.id === msg.blockId);
     if (!block) return;
+    pushHistory(`edit:${msg.blockId}`);
     block.props = msg.props;
     store.save();
     updateDirty();
@@ -93,6 +168,7 @@
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     const block = section?.blocks.find((b) => b.id === msg.blockId);
     if (!block) return;
+    pushHistory('move-block');
     block.frames.desktop = msg.frame;
     store.save();
     updateDirty();
@@ -101,6 +177,7 @@
   /** Ny seksjon fra «+ Ny seksjon» i iframen (seksjonen er allerede
    *  bygget av presetens create() der inne). */
   function handleAddSection(msg) {
+    pushHistory('add-section');
     store.data.sections.splice(msg.index, 0, msg.section);
     store.save();
     updateDirty();
@@ -112,6 +189,7 @@
     const i = s.findIndex((x) => x.id === msg.sectionId);
     const j = i + msg.dir;
     if (i < 0 || j < 0 || j >= s.length) return;
+    pushHistory('move-section');
     [s[i], s[j]] = [s[j], s[i]];
     store.save();
     updateDirty();
@@ -119,16 +197,29 @@
   }
 
   function handleDeleteSection(msg) {
+    pushHistory('delete-section');
     store.data.sections = store.data.sections.filter((x) => x.id !== msg.sectionId);
     store.save();
     updateDirty();
     bridge?.sendPage(pageId, store.data);
   }
 
+  /** Høyde-dra i iframen: iframen viser allerede den nye høyden,
+   *  så vi bare bokfører den. */
+  function handleSectionSize(msg) {
+    const section = store.data.sections.find((x) => x.id === msg.sectionId);
+    if (!section) return;
+    pushHistory('section-size');
+    section.size = { ...section.size, minHeight: msg.minHeight };
+    store.save();
+    updateDirty();
+  }
+
   /** Sletting: fjern fra utkastet og rerender seksjonen i iframen. */
   function handleDelete(msg) {
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     if (!section) return;
+    pushHistory('delete-block');
     section.blocks = section.blocks.filter((b) => b.id !== msg.blockId);
     store.save();
     updateDirty();
@@ -138,18 +229,21 @@
   /** Blokkpaletten: ny blokk nederst i første seksjon, klar til å dras dit
    *  den skal. (Seksjonvalg og «+ Ny seksjon» kommer senere i v0.3.) */
   const BLOCK_DEFAULTS = {
-    text: { props: { html: '<p>Ny tekst</p>', align: 'left' }, w: 8, h: 3 },
-    button: { props: { label: 'Ny knapp', page: null, href: '#', style: 'primary' }, w: 5, h: 2 },
-    shape: { props: { kind: 'line', color: 'accent', thickness: 2, fill: null }, w: 6, h: 1 },
+    text: { type: 'text', props: { html: '<p>Ny tekst</p>', align: 'left' }, w: 8, h: 3 },
+    button: { type: 'button', props: { label: 'Ny knapp', page: null, href: '#', style: 'primary' }, w: 5, h: 2 },
+    'shape-line': { type: 'shape', props: { kind: 'line', color: 'accent', thickness: 2, fill: null }, w: 6, h: 1 },
+    'shape-circle': { type: 'shape', props: { kind: 'circle', color: 'accent', thickness: 2, fill: null }, w: 4, h: 4 },
+    'shape-rect': { type: 'shape', props: { kind: 'rect', color: 'accent', thickness: 2, fill: null }, w: 6, h: 3 },
   };
 
-  function addBlock(type) {
+  function addBlock(kind, event) {
+    pushHistory('add-block');
     const section = store.data.sections[0];
-    const d = BLOCK_DEFAULTS[type];
+    const d = BLOCK_DEFAULTS[kind];
     const maxRow = Math.max(0, ...section.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
     section.blocks.push({
       id: `blk-${crypto.randomUUID().slice(0, 8)}`,
-      type,
+      type: d.type,
       version: 1,
       props: structuredClone(d.props),
       animation: null,
@@ -158,9 +252,11 @@
     store.save();
     updateDirty();
     bridge?.sendSection(pageId, section);
+    event?.target.closest('details')?.removeAttribute('open');
   }
 
   function discard() {
+    pushHistory('discard');
     const freshPage = store.reset();
     const freshSite = siteStore.reset();
     grid = { snap: true, ...freshSite.grid };
@@ -213,6 +309,8 @@
   init();
 </script>
 
+<svelte:window onkeydown={onKeydown} />
+
 <div class="editor">
   <header class="topbar">
     <strong class="brand">Urd</strong>
@@ -229,7 +327,14 @@
       <span class="palette">
         <button class="ghost" onclick={() => addBlock('text')} title="Ny tekstblokk">+ Tekst</button>
         <button class="ghost" onclick={() => addBlock('button')} title="Ny knapp">+ Knapp</button>
-        <button class="ghost" onclick={() => addBlock('shape')} title="Ny strek/form">+ Form</button>
+        <details class="gridmenu">
+          <summary title="Ny form">+ Form</summary>
+          <div class="gridmenu-body formmenu">
+            <button class="ghost" onclick={(e) => addBlock('shape-line', e)}>Strek</button>
+            <button class="ghost" onclick={(e) => addBlock('shape-circle', e)}>Sirkel</button>
+            <button class="ghost" onclick={(e) => addBlock('shape-rect', e)}>Rektangel</button>
+          </div>
+        </details>
       </span>
 
       <details class="gridmenu">
@@ -264,6 +369,11 @@
     <span class="spacer"></span>
 
     {#if site}
+      <button
+        class="ghost"
+        onclick={toggleChrome}
+        title={chromeVisible ? 'Skjul editeringshåndtakene og se siden som besøkende gjør' : 'Vis editeringshåndtakene igjen'}
+      >{chromeVisible ? '👁 Ren visning' : '✏ Rediger'}</button>
       {#if auth?.loggedIn}
         <span class="who" title={auth.allowed ? 'Har publiseringstilgang' : 'Mangler publiseringstilgang (ALLOWED_LOGINS)'}>
           {auth.allowed ? '' : '⚠ '}{auth.login}
@@ -395,6 +505,15 @@
     margin: 0;
     font-size: 0.75rem;
     opacity: 0.65;
+  }
+
+  .formmenu {
+    width: auto;
+    min-width: 8rem;
+  }
+
+  .formmenu button {
+    text-align: left;
   }
 
   select,

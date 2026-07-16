@@ -290,3 +290,34 @@ img, video {
   background: var(--urd-color-accent);
   color: #fff;
 }
+
+/* Ren visning: editoren kan skjule alle editeringshåndtak, slik at siden
+   ses nøyaktig som besøkende ser den */
+.urd-preview.urd-chrome-off .urd-add-section,
+.urd-preview.urd-chrome-off .urd-edit-toolbar,
+.urd-preview.urd-chrome-off .urd-edit-resize,
+.urd-preview.urd-chrome-off .urd-section-toolbar,
+.urd-preview.urd-chrome-off .urd-section-resize,
+.urd-preview.urd-chrome-off .urd-grid-overlay {
+  display: none !important;
+}
+
+.urd-preview.urd-chrome-off .urd-editable:hover {
+  outline: none;
+}
+
+/* Høyde-håndtaket i underkant av seksjonen */
+.urd-preview .urd-section-resize {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 8px;
+  cursor: ns-resize;
+  z-index: 1001;
+}
+
+.urd-preview .urd-section-resize:hover,
+.urd-preview .urd-section-resize:active {
+  background: color-mix(in srgb, var(--urd-color-accent) 45%, transparent);
+}

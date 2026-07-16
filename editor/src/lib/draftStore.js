@@ -48,6 +48,11 @@ export function createDraftStore(key, loadPublished) {
       data = JSON.parse(baseline);
       return data;
     },
+    /** Erstatt hele utkastet (brukes av angre/gjenta). Husk save() etterpå. */
+    replace(next) {
+      data = next;
+      return data;
+    },
     hasDraft() {
       return localStorage.getItem(key) !== null;
     },

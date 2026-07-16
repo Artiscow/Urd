@@ -99,6 +99,9 @@ function enablePreview(page, site, opts) {
     } else if (msg?.type === 'urd-preview-full' && msg.page) {
       page = msg.page;
       renderPage(page, site, root, { preview: true });
+    } else if (msg?.type === 'urd-chrome') {
+      // Ren visning: skjul/vis editeringshåndtakene (kun CSS, se base.css).
+      document.body.classList.toggle('urd-chrome-off', !msg.visible);
     } else if (msg?.type === 'urd-site' && msg.site) {
       // Site-utkast fra editoren (grid, tema, nav): alt som avhenger av
       // site.json rendres på nytt.

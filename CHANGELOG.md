@@ -8,6 +8,10 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 ## [Ulansert]
 
 ### Lagt til
+- Angre/gjenta i editoren (Ctrl+Z / Ctrl+Shift+Z) for alle handlinger: flytt, resize, blokker og seksjoner inn/ut, seksjonshøyde, grid-endringer og forkast. Fungerer også når fokus står i forhåndsvisningen.
+- «+ Form»-meny med strek, sirkel og rektangel.
+- «Ren visning»-knapp som skjuler alle editeringshåndtak i forhåndsvisningen.
+- Seksjonshøyde kan dras: håndtak i underkant av hver seksjon i editoren, snappet til gridets radhøyde.
 - Seksjons-CRUD i editoren: «+ Ny seksjon»-barer mellom seksjonene med preset-valg (tom, hero, footer), og verktøylinje per seksjon for å flytte opp/ned og slette. Presets er datafabrikker i motorregisteret (`Urd.sections.define`), samme API som plugins får.
 
 ## [0.2.0] - 2026-07-16

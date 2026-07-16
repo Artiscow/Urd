@@ -13,7 +13,10 @@
  *                  { type: 'urd-add-section', index, section }
  *                  { type: 'urd-move-section', sectionId, dir }
  *                  { type: 'urd-delete-section', sectionId }
+ *                  { type: 'urd-section-size', sectionId, minHeight }
+ *                  { type: 'urd-undo', redo }                 (Ctrl+Z inne i iframen)
  *                  { type: 'urd-preview-height', px }
+ *   editor → side: { type: 'urd-chrome', visible }            (vis/skjul editeringshåndtak)
  */
 
 /**
@@ -31,6 +34,8 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-add-section') handlers.onAddSection?.(msg);
     if (msg?.type === 'urd-move-section') handlers.onMoveSection?.(msg);
     if (msg?.type === 'urd-delete-section') handlers.onDeleteSection?.(msg);
+    if (msg?.type === 'urd-section-size') handlers.onSectionSize?.(msg);
+    if (msg?.type === 'urd-undo') handlers.onUndo?.(msg);
   };
   window.addEventListener('message', listener);
 
@@ -45,6 +50,9 @@ export function createPreviewBridge(iframe, handlers = {}) {
     },
     sendSite(site) {
       post({ type: 'urd-site', site });
+    },
+    sendChrome(visible) {
+      post({ type: 'urd-chrome', visible });
     },
     destroy() {
       window.removeEventListener('message', listener);
