@@ -6,6 +6,226 @@
   },
   "sections": [
     {
+      "id": "sec-fcf158ba",
+      "version": 1,
+      "preset": "tom",
+      "size": {
+        "minHeight": "320px"
+      },
+      "grid": null,
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "color",
+            "version": 1,
+            "props": {
+              "value": "bg"
+            }
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "id": "blk-8f75be0f",
+          "type": "image",
+          "version": 1,
+          "props": {
+            "src": "/media/weyland-crt-1920x1200-192ecc51.webp",
+            "alt": "weyland crt 1920x1200",
+            "fit": "cover",
+            "radius": "md",
+            "href": null
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 35,
+              "y": 14,
+              "w": 30,
+              "h": 288,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        }
+      ],
+      "responsive": {
+        "mobile": {
+          "mode": "auto",
+          "attention": null
+        }
+      }
+    },
+    {
+      "id": "sec-f6e8ef78",
+      "version": 1,
+      "preset": "hero",
+      "size": {
+        "minHeight": "70vh"
+      },
+      "grid": null,
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "gradient",
+            "version": 1,
+            "props": {
+              "stops": [
+                "#0b0e14",
+                "#1a1030"
+              ],
+              "angle": 160,
+              "animate": false
+            }
+          },
+          {
+            "type": "glow",
+            "version": 1,
+            "props": {
+              "x": 0.7,
+              "y": 0.2,
+              "color": "accent",
+              "radius": 0.5,
+              "opacity": 0.35
+            }
+          },
+          {
+            "type": "grain",
+            "version": 1,
+            "props": {
+              "opacity": 0.06
+            }
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "id": "blk-7df5456a",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<h1>Ny overskrift</h1>",
+            "align": "left"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 33.9,
+              "y": 110,
+              "w": 50,
+              "h": 32,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-46be2356",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<p>Skriv en kort introduksjon her.</p>",
+            "align": "left"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 8.33,
+              "y": 76,
+              "w": 41.67,
+              "h": 20,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-7989d88a",
+          "type": "button",
+          "version": 1,
+          "props": {
+            "label": "Les mer",
+            "page": null,
+            "href": "#",
+            "style": "primary"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 8.33,
+              "y": 104,
+              "w": 20,
+              "h": 32,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        }
+      ],
+      "responsive": {
+        "mobile": {
+          "mode": "auto",
+          "attention": null
+        }
+      }
+    },
+    {
+      "id": "sec-3bf58225",
+      "version": 1,
+      "preset": "footer",
+      "size": {
+        "minHeight": "20vh"
+      },
+      "grid": null,
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "color",
+            "version": 1,
+            "props": {
+              "value": "surface"
+            }
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "id": "blk-e76855ab",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<p>© Min forening</p>",
+            "align": "center"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 25,
+              "y": 24,
+              "w": 50,
+              "h": 20,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        }
+      ],
+      "responsive": {
+        "mobile": {
+          "mode": "auto",
+          "attention": null
+        }
+      }
+    },
+    {
       "id": "sec-hero",
       "version": 1,
       "preset": "hero",
@@ -185,6 +405,27 @@
               "y": 752,
               "w": 30,
               "h": 288,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-49404e95",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<p>Dette er veldig kult!</p>",
+            "align": "left"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 58.91,
+              "y": 224,
+              "w": 12.62,
+              "h": 32,
               "z": 1,
               "rot": 0
             },
