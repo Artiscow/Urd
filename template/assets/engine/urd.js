@@ -120,6 +120,10 @@ function enablePreview(page, site, opts) {
     window.parent?.postMessage({ type: 'urd-preview-height', px: document.body.scrollHeight }, '*');
   };
   reportHeight();
+
+  // Meld fra til editoren at lytteren er koblet på: utkast som sendes
+  // før dette punktet ville gått tapt (iframe-load skjer før boot er ferdig).
+  window.parent?.postMessage({ type: 'urd-ready' }, location.origin);
 }
 
 /**

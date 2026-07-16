@@ -190,6 +190,23 @@ function selectBlock(el) {
   el?.classList.add('urd-selected');
 }
 
+// Intern navigasjon i preview går via editoren (som bytter side og holder
+// nedtrekket i synk); eksterne lenker åpnes i ny fane i stedet for å dra
+// iframen ut av redigeringsmodus.
+document.addEventListener('click', (event) => {
+  const a = event.target instanceof HTMLElement ? event.target.closest('a[href]') : null;
+  if (!a) return;
+  const href = a.getAttribute('href');
+  if (!href || href.startsWith('#')) return;
+  event.preventDefault();
+  const url = new URL(href, location.href);
+  if (url.origin === location.origin) {
+    post({ type: 'urd-navigate', path: url.pathname });
+  } else {
+    window.open(url, '_blank', 'noopener');
+  }
+});
+
 document.addEventListener('pointerdown', (event) => {
   const target = event.target instanceof HTMLElement ? event.target : null;
   selectBlock(target?.closest('.urd-block') ?? null);
@@ -241,11 +258,29 @@ function enhanceBlock(el, block, section, grid, host) {
   moveHandle.title = 'Dra for å flytte (snapper til grid)';
   toolbar.appendChild(moveHandle);
 
-  // z-orden: legg blokken foran/bak andre blokker i samme seksjon.
+  // z-orden: legg blokken øverst/nederst blant seksjonens blokker.
   const bumpZ = (dir) => {
-    const frame = { ...block.frames.desktop, z: Math.max(1, (block.frames.desktop.z ?? 1) + dir) };
+    const others = section.blocks.filter((b) => b.id !== block.id);
+    const zs = others.map((b) => b.frames.desktop.z ?? 1);
+    let z;
+    if (dir > 0) {
+      z = zs.length ? Math.max(...zs) + 1 : 1;
+    } else if (!zs.length || Math.min(...zs) > 1) {
+      z = 1;
+    } else {
+      // Noen ligger allerede på bunnen: skyv de andre ett hakk opp i
+      // stedet, så denne kan legges nederst (z går aldri under 1).
+      z = 1;
+      for (const other of others) {
+        const frame = { ...other.frames.desktop, z: (other.frames.desktop.z ?? 1) + 1 };
+        other.frames.desktop = frame;
+        host.querySelector(`[data-block-id="${other.id}"]`)?.style.setProperty('z-index', String(frame.z));
+        post({ type: 'urd-move', sectionId: section.id, blockId: other.id, frame, coalesce: true });
+      }
+    }
+    const frame = { ...block.frames.desktop, z };
     block.frames.desktop = frame;
-    el.style.zIndex = String(frame.z);
+    el.style.zIndex = String(z);
     post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame });
   };
   const frontBtn = document.createElement('button');

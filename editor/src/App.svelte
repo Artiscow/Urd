@@ -177,25 +177,32 @@
     }
   }
 
+  /** Løper mens en sides data lastes; urd-ready venter på denne. */
+  let pageLoading = null;
+
   async function selectPage(id) {
     pageId = id;
-    const entry = pageEntry();
-    const raw = await (await fetch(`/${entry.file}`)).json();
-    // Eldre sidefiler løftes til gjeldende format før redigering, slik at
-    // utkast og publisering alltid er på nyeste schemaVersion. Gamle
-    // utkast i localStorage løftes også.
-    const published = liftPageFile(raw, siteStore.data);
-    store = createDraftStore(`urd-draft-${id}`, () => published);
-    store.replace(liftPageFile(store.data, siteStore.data));
-    store.save();
-    history.length = 0;
-    redoStack.length = 0;
-    lastHistoryKey = null;
-    activeSectionId = null;
-    sectionGrid = null;
-    updateDirty();
-    status = '';
-    // Iframen bytter src via pageId; utkastet pushes i onIframeLoad.
+    pageLoading = (async () => {
+      const entry = pageEntry();
+      const raw = await (await fetch(`/${entry.file}`)).json();
+      // Eldre sidefiler løftes til gjeldende format før redigering, slik at
+      // utkast og publisering alltid er på nyeste schemaVersion. Gamle
+      // utkast i localStorage løftes også.
+      const published = liftPageFile(raw, siteStore.data);
+      store = createDraftStore(`urd-draft-${id}`, () => published);
+      store.replace(liftPageFile(store.data, siteStore.data));
+      store.save();
+      history.length = 0;
+      redoStack.length = 0;
+      lastHistoryKey = null;
+      activeSectionId = null;
+      sectionGrid = null;
+      updateDirty();
+      status = '';
+    })();
+    await pageLoading;
+    // Iframen bytter src via pageId; utkastet pushes når motoren melder
+    // seg klar (urd-ready), aldri på iframe-load (da lytter ingen ennå).
   }
 
   function onIframeLoad() {
@@ -210,10 +217,25 @@
       onSectionSize: handleSectionSize,
       onUndo: (msg) => (msg.redo ? redo() : undo()),
       onSelectSection,
+      onReady,
+      onNavigate,
     });
-    if (siteStore.hasDraft()) bridge.sendSite(siteStore.data);
-    if (store.hasDraft()) bridge.sendPage(pageId, store.data);
-    if (!chromeVisible) bridge.sendChrome(false);
+  }
+
+  /** Motoren i iframen lytter nå: send utkast og gjeldende editor-tilstand. */
+  async function onReady() {
+    await pageLoading;
+    if (siteStore.hasDraft()) bridge?.sendSite(siteStore.data);
+    if (store.hasDraft()) bridge?.sendPage(pageId, store.data);
+    if (!chromeVisible) bridge?.sendChrome(false);
+    if (gridMenuOpen) bridge?.sendShowGrid(true);
+  }
+
+  /** Intern lenke klikket i forhåndsvisningen: bytt side ordentlig. */
+  function onNavigate(msg) {
+    const path = msg.path.replace(/\/$/, '') || '/';
+    const entry = site.pages.find((p) => p.path === path);
+    if (entry && entry.id !== pageId) selectPage(entry.id);
   }
 
   function toggleChrome() {

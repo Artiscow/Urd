@@ -27,6 +27,9 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 - **Sidefiler er nå schemaVersion 2: blokkplassering lagres i fysiske enheter** (x/w i prosent av seksjonsbredden, y/h i px) i stedet for grid-enheter. Gridet er dermed KUN et snappeverktøy: å endre kolonner/radhøyde flytter aldri innhold. v1-filer løftes automatisk ved lasting (`liftPageFile` i migrate.js), Urds første reelle filmigrering, testet i `tests/page-migration.test.mjs`.
 
 ### Fikset
+- Blokk-håndtakene (flytt/z/slett/resize) kunne dekkes av overlappende blokker og bli uklikkbare: hovret/markert blokk løftes nå visuelt øverst under redigering. «Frem/bak» legger dessuten blokken helt øverst/nederst i seksjonen i stedet for ett hakk (som satt fast når alt lå på samme lag).
+- Utkast kunne «forsvinne» ved sidebytte i admin: editoren sendte utkastet før motoren i iframen var klar til å lytte. Motoren melder nå «klar», og editoren venter på signalet.
+- Lenker i forhåndsvisningen navigerte iframen ut av redigeringsmodus: interne lenker bytter nå side via editoren (nedtrekket følger med), eksterne åpnes i ny fane.
 - Ctrl+Z virket ikke fra tallfeltene i grid-menyen (grid-endringer er del av historikken, men tastetrykket ble slukt av feltet).
 - Gridet vises nå i alle seksjoner så lenge grid-menyen er åpen, med forklarende tekst og live rutestørrelse i menyen.
 - Grid-innstillinger så ut til å ikke virke på Om oss-siden: eksempelseksjonen hadde et eget grid-overstyr (12 kolonner) som vant over site-gridet. Overstyret er fjernet fra eksempelinnholdet; per-seksjon-grid får eget UI senere.

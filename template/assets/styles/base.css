@@ -243,6 +243,17 @@ img, video {
   outline-offset: 2px;
 }
 
+/* Under redigering løftes hovret/markert blokk visuelt øverst, slik at
+   håndtakene alltid kan nås selv om andre blokker ligger over (z-orden).
+   Ekte lagrekkefølge vises igjen når blokken avmarkeres. */
+.urd-preview .urd-editable:hover {
+  z-index: 99998 !important;
+}
+
+.urd-preview .urd-block.urd-selected {
+  z-index: 99999 !important;
+}
+
 .urd-preview .urd-block.urd-selected .urd-edit-toolbar {
   display: flex;
 }
