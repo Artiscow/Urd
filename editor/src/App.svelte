@@ -28,7 +28,9 @@
   const pageEntry = () => site.pages.find((p) => p.id === pageId);
 
   function updateDirty() {
-    dirty = store?.hasDraft() || siteStore?.hasDraft() || false;
+    // Utkast på ALLE sider teller, ikke bare den man står på.
+    const anyPageDraft = site?.pages?.some((p) => localStorage.getItem(`urd-draft-${p.id}`) !== null) ?? false;
+    dirty = anyPageDraft || store?.hasDraft() || siteStore?.hasDraft() || false;
   }
 
   /**
@@ -442,18 +444,41 @@
 
   async function publish() {
     status = 'Publiserer…';
-    const entry = pageEntry();
     const files = [];
-    if (store.hasDraft()) {
+    const publishedTitles = [];
+    const draftKeys = [];
+
+    // ALLE sider med utkast publiseres, ikke bare den man står på.
+    for (const entry of site.pages) {
+      const key = `urd-draft-${entry.id}`;
+      let page = null;
+      if (entry.id === pageId && store.hasDraft()) {
+        page = store.data;
+      } else if (entry.id !== pageId) {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          try {
+            page = liftPageFile(JSON.parse(raw), siteStore.data);
+          } catch { /* korrupt utkast hoppes over */ }
+        }
+      }
+      if (!page) continue;
       // Upubliserte bilder blir egne filer i media/ i samme commit.
-      files.push(...materializeImages(store.data));
-      store.save();
-      files.push({ path: entry.file, content: JSON.stringify(store.data, null, 2) + '\n', encoding: 'utf-8' });
+      files.push(...materializeImages(page));
+      files.push({ path: entry.file, content: JSON.stringify(page, null, 2) + '\n', encoding: 'utf-8' });
+      publishedTitles.push(entry.title);
+      draftKeys.push(key);
     }
+    if (store.hasDraft()) store.save();
+
     if (siteStore.hasDraft()) {
       files.push({ path: 'content/site.json', content: JSON.stringify(siteStore.data, null, 2) + '\n', encoding: 'utf-8' });
+      draftKeys.push('urd-draft-site');
     }
-    const body = { message: `Oppdater ${entry.title} via Urd-admin`, files };
+    const body = {
+      message: `Oppdater ${publishedTitles.join(', ') || 'innstillinger'} via Urd-admin`,
+      files,
+    };
     let res = null;
     try {
       res = await fetch('/api/github/commit', {
@@ -466,8 +491,7 @@
     if (res?.ok) {
       // Utkastene ER nå det publiserte; behold dataene i minnet (serveren
       // serverer gammel JSON til deployen er ferdig) og fjern bare merkene.
-      localStorage.removeItem(`urd-draft-${pageId}`);
-      localStorage.removeItem('urd-draft-site');
+      for (const key of draftKeys) localStorage.removeItem(key);
       status = 'Publisert! Hosten bygger siden på nytt (typisk under ett minutt).';
       dirty = false;
     } else if (res?.status === 401) {
@@ -776,6 +800,16 @@
     padding: 0.35em 0.8em;
     cursor: pointer;
     text-decoration: none;
+  }
+
+  /* Nedtrekkslisten følger mørkt tema (nettleser-standarden er hvit) */
+  select {
+    color-scheme: dark;
+  }
+
+  select option {
+    background: var(--urd-color-surface, #151a23);
+    color: var(--urd-color-text, #e8eaf0);
   }
 
   button:disabled {

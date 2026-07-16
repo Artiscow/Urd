@@ -2126,7 +2126,7 @@ function $r(e) {
 }
 //#endregion
 //#region src/App.svelte
-var ei = /* @__PURE__ */ Q("<button class=\"chrome-restore svelte-1n46o8q\" title=\"Tilbake til redigering\">✏ Rediger</button>"), ti = /* @__PURE__ */ Q("<option> </option>"), ni = /* @__PURE__ */ Q("<select class=\"svelte-1n46o8q\"></select>"), ri = /* @__PURE__ */ Q("<label class=\"svelte-1n46o8q\">Rutestørrelse <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"4\" max=\"96\" step=\"2\" class=\"svelte-1n46o8q\"/>", 1), ii = /* @__PURE__ */ Q("<hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\"/> Eget grid i valgt seksjon</label> <!>", 1), ai = /* @__PURE__ */ Q("<span class=\"palette svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\" title=\"Ny tekstblokk\">+ Tekst</button> <button class=\"ghost svelte-1n46o8q\" title=\"Ny knapp\">+ Knapp</button> <label class=\"ghost filepick svelte-1n46o8q\" title=\"Nytt bilde (komprimeres automatisk til webp)\">+ Bilde <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <details class=\"gridmenu svelte-1n46o8q\"><summary title=\"Ny form\" class=\"svelte-1n46o8q\">+ Form</summary> <div class=\"gridmenu-body formmenu svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\">─ Strek</button> <button class=\"ghost svelte-1n46o8q\">→ Pil</button> <button class=\"ghost svelte-1n46o8q\">○ Sirkel</button> <button class=\"ghost svelte-1n46o8q\">▭ Rektangel</button> <button class=\"ghost svelte-1n46o8q\">△ Trekant</button></div></details></span> <details class=\"gridmenu svelte-1n46o8q\"><summary title=\"Grid: rutene blokker snapper til når du drar\" class=\"svelte-1n46o8q\">⌗ Grid</summary> <div class=\"gridmenu-body svelte-1n46o8q\"><label class=\"svelte-1n46o8q\">Rutestørrelse <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"4\" max=\"96\" step=\"2\" class=\"svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\"/> Snap til grid</label> <!></div></details>", 1), oi = /* @__PURE__ */ Q("<span class=\"badge svelte-1n46o8q\">Upubliserte endringer</span>"), si = /* @__PURE__ */ Q("<span class=\"who svelte-1n46o8q\"> </span>"), ci = /* @__PURE__ */ Q("<a class=\"ghost svelte-1n46o8q\" href=\"/api/github/login\">Logg inn med GitHub</a>"), li = /* @__PURE__ */ Q("<button class=\"ghost svelte-1n46o8q\"> </button> <!> <a class=\"ghost svelte-1n46o8q\" target=\"_blank\" rel=\"noopener\">Se siden ↗</a> <button class=\"ghost svelte-1n46o8q\">Forkast utkast</button> <button class=\"primary svelte-1n46o8q\">Publiser</button>", 1), ui = /* @__PURE__ */ Q("<iframe title=\"Forhåndsvisning\" class=\"svelte-1n46o8q\"></iframe>"), di = /* @__PURE__ */ Q("<p class=\"loading svelte-1n46o8q\">Laster…</p>"), fi = /* @__PURE__ */ Q("<div class=\"editor svelte-1n46o8q\"><!> <header><strong class=\"brand svelte-1n46o8q\">Urd</strong> <!> <!> <!> <span class=\"status svelte-1n46o8q\"> </span> <span class=\"spacer svelte-1n46o8q\"></span> <!></header> <!></div>");
+var ei = /* @__PURE__ */ Q("<button class=\"chrome-restore svelte-1n46o8q\" title=\"Tilbake til redigering\">✏ Rediger</button>"), ti = /* @__PURE__ */ Q("<option class=\"svelte-1n46o8q\"> </option>"), ni = /* @__PURE__ */ Q("<select class=\"svelte-1n46o8q\"></select>"), ri = /* @__PURE__ */ Q("<label class=\"svelte-1n46o8q\">Rutestørrelse <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"4\" max=\"96\" step=\"2\" class=\"svelte-1n46o8q\"/>", 1), ii = /* @__PURE__ */ Q("<hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\"/> Eget grid i valgt seksjon</label> <!>", 1), ai = /* @__PURE__ */ Q("<span class=\"palette svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\" title=\"Ny tekstblokk\">+ Tekst</button> <button class=\"ghost svelte-1n46o8q\" title=\"Ny knapp\">+ Knapp</button> <label class=\"ghost filepick svelte-1n46o8q\" title=\"Nytt bilde (komprimeres automatisk til webp)\">+ Bilde <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <details class=\"gridmenu svelte-1n46o8q\"><summary title=\"Ny form\" class=\"svelte-1n46o8q\">+ Form</summary> <div class=\"gridmenu-body formmenu svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\">─ Strek</button> <button class=\"ghost svelte-1n46o8q\">→ Pil</button> <button class=\"ghost svelte-1n46o8q\">○ Sirkel</button> <button class=\"ghost svelte-1n46o8q\">▭ Rektangel</button> <button class=\"ghost svelte-1n46o8q\">△ Trekant</button></div></details></span> <details class=\"gridmenu svelte-1n46o8q\"><summary title=\"Grid: rutene blokker snapper til når du drar\" class=\"svelte-1n46o8q\">⌗ Grid</summary> <div class=\"gridmenu-body svelte-1n46o8q\"><label class=\"svelte-1n46o8q\">Rutestørrelse <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"4\" max=\"96\" step=\"2\" class=\"svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\"/> Snap til grid</label> <!></div></details>", 1), oi = /* @__PURE__ */ Q("<span class=\"badge svelte-1n46o8q\">Upubliserte endringer</span>"), si = /* @__PURE__ */ Q("<span class=\"who svelte-1n46o8q\"> </span>"), ci = /* @__PURE__ */ Q("<a class=\"ghost svelte-1n46o8q\" href=\"/api/github/login\">Logg inn med GitHub</a>"), li = /* @__PURE__ */ Q("<button class=\"ghost svelte-1n46o8q\"> </button> <!> <a class=\"ghost svelte-1n46o8q\" target=\"_blank\" rel=\"noopener\">Se siden ↗</a> <button class=\"ghost svelte-1n46o8q\">Forkast utkast</button> <button class=\"primary svelte-1n46o8q\">Publiser</button>", 1), ui = /* @__PURE__ */ Q("<iframe title=\"Forhåndsvisning\" class=\"svelte-1n46o8q\"></iframe>"), di = /* @__PURE__ */ Q("<p class=\"loading svelte-1n46o8q\">Laster…</p>"), fi = /* @__PURE__ */ Q("<div class=\"editor svelte-1n46o8q\"><!> <header><strong class=\"brand svelte-1n46o8q\">Urd</strong> <!> <!> <!> <span class=\"status svelte-1n46o8q\"> </span> <span class=\"spacer svelte-1n46o8q\"></span> <!></header> <!></div>");
 function pi(e, t) {
 	Pe(t, !0);
 	let n = /* @__PURE__ */ I(null), r = /* @__PURE__ */ I(null), i = /* @__PURE__ */ I(!1), a = /* @__PURE__ */ I(""), o = /* @__PURE__ */ I(null), s = /* @__PURE__ */ I(null), c = /* @__PURE__ */ I(Rt({
@@ -2134,7 +2134,8 @@ function pi(e, t) {
 		snap: !0
 	})), l = /* @__PURE__ */ I(!0), u = null, d = null, f = null, p = () => X(n).pages.find((e) => e.id === X(r));
 	function m() {
-		L(i, u?.hasDraft() || d?.hasDraft() || !1, !0);
+		let e = X(n)?.pages?.some((e) => localStorage.getItem(`urd-draft-${e.id}`) !== null) ?? !1;
+		L(i, e || u?.hasDraft() || d?.hasDraft() || !1, !0);
 	}
 	let h = [], g = [], _ = null;
 	function v() {
@@ -2444,28 +2445,42 @@ function pi(e, t) {
 	}
 	async function Ee() {
 		L(a, "Publiserer…");
-		let e = p(), t = [];
-		u.hasDraft() && (t.push(...O(u.data)), u.save(), t.push({
-			path: e.file,
-			content: JSON.stringify(u.data, null, 2) + "\n",
-			encoding: "utf-8"
-		})), d.hasDraft() && t.push({
+		let e = [], t = [], o = [];
+		for (let i of X(n).pages) {
+			let n = `urd-draft-${i.id}`, a = null;
+			if (i.id === X(r) && u.hasDraft()) a = u.data;
+			else if (i.id !== X(r)) {
+				let e = localStorage.getItem(n);
+				if (e) try {
+					a = qr(JSON.parse(e), d.data);
+				} catch {}
+			}
+			a && (e.push(...O(a)), e.push({
+				path: i.file,
+				content: JSON.stringify(a, null, 2) + "\n",
+				encoding: "utf-8"
+			}), t.push(i.title), o.push(n));
+		}
+		u.hasDraft() && u.save(), d.hasDraft() && (e.push({
 			path: "content/site.json",
 			content: JSON.stringify(d.data, null, 2) + "\n",
 			encoding: "utf-8"
-		});
-		let n = {
-			message: `Oppdater ${e.title} via Urd-admin`,
-			files: t
-		}, o = null;
+		}), o.push("urd-draft-site"));
+		let s = {
+			message: `Oppdater ${t.join(", ") || "innstillinger"} via Urd-admin`,
+			files: e
+		}, c = null;
 		try {
-			o = await fetch("/api/github/commit", {
+			c = await fetch("/api/github/commit", {
 				method: "POST",
 				headers: { "content-type": "application/json" },
-				body: JSON.stringify(n)
+				body: JSON.stringify(s)
 			});
 		} catch {}
-		o?.ok ? (localStorage.removeItem(`urd-draft-${X(r)}`), localStorage.removeItem("urd-draft-site"), L(a, "Publisert! Hosten bygger siden på nytt (typisk under ett minutt)."), L(i, !1)) : o?.status === 401 ? (L(a, "Du må logge inn med GitHub for å publisere."), await ce()) : o?.status === 403 ? L(a, (await o.json().catch(() => null))?.error ?? "Du har ikke publiseringstilgang.", !0) : o ? L(a, (await o.json().catch(() => null))?.error ?? "Publisering feilet (er publiseringslaget satt opp? Se docs/OPPSETT-PUBLISERING.md).", !0) : L(a, "Publisering er ikke tilgjengelig her (krever host med functions, se docs/OPPSETT-PUBLISERING.md).");
+		if (c?.ok) {
+			for (let e of o) localStorage.removeItem(e);
+			L(a, "Publisert! Hosten bygger siden på nytt (typisk under ett minutt)."), L(i, !1);
+		} else c?.status === 401 ? (L(a, "Du må logge inn med GitHub for å publisere."), await ce()) : c?.status === 403 ? L(a, (await c.json().catch(() => null))?.error ?? "Du har ikke publiseringstilgang.", !0) : c ? L(a, (await c.json().catch(() => null))?.error ?? "Publisering feilet (er publiseringslaget satt opp? Se docs/OPPSETT-PUBLISERING.md).", !0) : L(a, "Publisering er ikke tilgjengelig her (krever host med functions, se docs/OPPSETT-PUBLISERING.md).");
 	}
 	function Oe(e) {
 		document.querySelectorAll(".topbar details[open]").forEach((t) => {
