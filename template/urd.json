@@ -1,0 +1,18 @@
+{
+  "engine": "0.1.0",
+  "schemaVersion": 1,
+  "ownedPaths": [
+    "index.html",
+    "urd.json",
+    "_headers",
+    "admin/**",
+    "assets/engine/**",
+    "assets/styles/base.css",
+    "functions/**"
+  ],
+  "userPaths": [
+    "content/**",
+    "media/**",
+    "plugins/**"
+  ]
+}

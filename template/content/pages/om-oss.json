@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "meta": { "id": "om-oss", "title": "Om oss" },
+  "sections": [
+    {
+      "id": "sec-om",
+      "version": 1,
+      "preset": null,
+      "size": { "minHeight": "60vh" },
+      "grid": { "columns": 12, "rowHeight": 12, "gap": 0, "snap": true },
+      "background": {
+        "version": 1,
+        "layers": [
+          { "type": "color", "version": 1, "props": { "value": "#0b0e14" } }
+        ]
+      },
+      "blocks": [
+        {
+          "id": "blk-om-tittel",
+          "type": "text",
+          "version": 1,
+          "props": { "html": "<h1>Om oss</h1>", "align": "left" },
+          "animation": null,
+          "frames": {
+            "desktop": { "x": 1, "y": 2, "w": 6, "h": 2, "z": 1, "rot": 0 },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-om-strek",
+          "type": "shape",
+          "version": 1,
+          "props": { "kind": "line", "color": "#7c5cff", "thickness": 2 },
+          "animation": null,
+          "frames": {
+            "desktop": { "x": 1, "y": 4, "w": 4, "h": 1, "z": 1, "rot": -8 },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-om-tekst",
+          "type": "text",
+          "version": 1,
+          "props": { "html": "<p>Skriv om foreningen din her. Denne seksjonen er bygget fra tomt lerret og bruker et eget grid (12 kolonner).</p>", "align": "left" },
+          "animation": null,
+          "frames": {
+            "desktop": { "x": 1, "y": 5, "w": 7, "h": 3, "z": 1, "rot": 0 },
+            "mobile": null
+          }
+        }
+      ],
+      "responsive": {
+        "mobile": { "mode": "auto", "attention": null }
+      }
+    }
+  ]
+}

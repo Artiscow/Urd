@@ -1,0 +1,8 @@
+{
+  "id": "eksempel-kalender",
+  "name": "Kalender",
+  "version": "0.1.0",
+  "requiresEngine": ">=0.1.0 <1.0.0",
+  "entry": "index.js",
+  "provides": { "blocks": ["kalender"], "sectionPresets": [], "backgrounds": [], "animations": [], "maler": [] }
+}

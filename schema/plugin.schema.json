@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://urd.dev/schema/plugin.schema.json",
+  "title": "Urd plugin-manifest (plugins/<id>/plugin.json)",
+  "description": "Manifest for en Urd-plugin. Pluginens entry er en ES-modul som eksporterer register(Urd) og bruker samme define-APIer som kjernen - inkludert migreringskontrakten. Se docs/SKJEMA.md.",
+  "type": "object",
+  "required": ["id", "name", "version", "requiresEngine", "entry", "provides"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "name": { "type": "string", "minLength": 1 },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semver for pluginen selv"
+    },
+    "requiresEngine": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Semver-intervall for kompatibel motorversjon, f.eks. \">=0.1.0 <1.0.0\""
+    },
+    "entry": { "type": "string", "pattern": "\\.js$" },
+    "provides": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "blocks": { "$ref": "#/$defs/idList" },
+        "sectionPresets": { "$ref": "#/$defs/idList" },
+        "backgrounds": { "$ref": "#/$defs/idList" },
+        "animations": { "$ref": "#/$defs/idList" },
+        "maler": { "$ref": "#/$defs/idList" }
+      }
+    }
+  },
+  "$defs": {
+    "idList": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" }
+    }
+  }
+}

@@ -1,0 +1,71 @@
+/* Urd basestiler: reset + theme-token-variabler.
+   Variablene under er fallbacks; theme.js overskriver dem fra
+   content/site.json ved lasting. */
+
+:root {
+  --urd-color-bg: #0b0e14;
+  --urd-color-surface: #151a23;
+  --urd-color-text: #e8eaf0;
+  --urd-color-accent: #7c5cff;
+  --urd-font-heading: system-ui, sans-serif;
+  --urd-font-body: system-ui, sans-serif;
+  --urd-radius-sm: 6px;
+  --urd-radius-md: 12px;
+  --urd-space-section: clamp(3rem, 8vw, 6rem);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--urd-color-bg);
+  color: var(--urd-color-text);
+  font-family: var(--urd-font-body);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--urd-font-heading);
+  line-height: 1.15;
+}
+
+img, video {
+  max-width: 100%;
+  display: block;
+}
+
+/* Seksjonscontainer: posisjoneringskontekst for blokk-frames */
+.urd-section {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Bakgrunnslag fyller seksjonen og ligger bak blokkene */
+.urd-bg-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Blokker posisjoneres absolutt av render.js (frameToCss) */
+.urd-block {
+  position: absolute;
+}
+
+/* Plassholder for ukjente typer: nøytral, aldri ødeleggende */
+.urd-placeholder {
+  display: grid;
+  place-items: center;
+  border: 1px dashed color-mix(in srgb, var(--urd-color-text) 30%, transparent);
+  border-radius: var(--urd-radius-sm);
+  font-size: 0.85rem;
+  opacity: 0.6;
+}

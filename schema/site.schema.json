@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://urd.dev/schema/site.schema.json",
+  "title": "Urd site.json",
+  "description": "Nettstedets rot: identitet, sideregister, navigasjon, grid og tema. Kontrakten er beskrevet i docs/SKJEMA.md.",
+  "type": "object",
+  "required": ["schemaVersion", "site", "grid", "theme", "pages", "nav"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "site": {
+      "type": "object",
+      "required": ["title", "lang"],
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "lang": { "type": "string", "minLength": 2 },
+        "description": { "type": "string" }
+      }
+    },
+    "breakpoints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mobile": { "type": "integer", "minimum": 200, "description": "Maks bredde (px) som regnes som mobil" }
+      }
+    },
+    "grid": { "$ref": "#/$defs/grid" },
+    "theme": {
+      "type": "object",
+      "required": ["version", "tokens"],
+      "additionalProperties": false,
+      "properties": {
+        "version": { "type": "integer", "minimum": 1 },
+        "tokens": {
+          "type": "object",
+          "description": "Grupper av design-tokens; mappes til CSS-variabler --urd-<gruppe>-<navn>",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        }
+      }
+    },
+    "pages": {
+      "type": "array",
+      "description": "Sideregisteret - nav, ruting og adminpaneler deriveres herfra",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "path", "file"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "title": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "pattern": "^/" },
+          "file": { "type": "string", "pattern": "^content/pages/.+\\.json$" }
+        }
+      }
+    },
+    "nav": {
+      "type": "object",
+      "required": ["version", "items"],
+      "additionalProperties": false,
+      "properties": {
+        "version": { "type": "integer", "minimum": 1 },
+        "logo": {
+          "type": "object",
+          "required": ["type", "value"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "enum": ["text", "image"] },
+            "value": { "type": "string" }
+          }
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label"],
+            "additionalProperties": false,
+            "properties": {
+              "label": { "type": "string", "minLength": 1 },
+              "page": { "$ref": "#/$defs/id", "description": "Id fra sideregisteret" },
+              "href": { "type": "string", "description": "Ekstern lenke - brukes når page ikke er satt" }
+            },
+            "oneOf": [
+              { "required": ["page"] },
+              { "required": ["href"] }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "grid": {
+      "type": "object",
+      "required": ["columns", "rowHeight"],
+      "additionalProperties": false,
+      "properties": {
+        "columns": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "rowHeight": { "type": "number", "exclusiveMinimum": 0, "description": "Radhøyde i px" },
+        "gap": { "type": "number", "minimum": 0 },
+        "snap": { "type": "boolean", "default": true }
+      }
+    }
+  }
+}

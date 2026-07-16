@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://urd.dev/schema/page.schema.json",
+  "title": "Urd sidefil (content/pages/*.json)",
+  "description": "En side: metadata + vertikal rekke seksjoner. Hver seksjon er en generisk container med bakgrunnsstabel og fritt blokk-lerret. Kontrakten er beskrevet i docs/SKJEMA.md.",
+  "type": "object",
+  "required": ["schemaVersion", "meta", "sections"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "meta": {
+      "type": "object",
+      "required": ["id", "title"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "title": { "type": "string", "minLength": 1 }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/section" }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "version": { "type": "integer", "minimum": 1 },
+    "section": {
+      "type": "object",
+      "required": ["id", "version", "blocks"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "version": { "$ref": "#/$defs/version" },
+        "preset": {
+          "type": ["string", "null"],
+          "description": "Presetsen seksjonen ble laget fra - kun opphavsinfo, styrer ingenting"
+        },
+        "size": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "minHeight": { "type": "string", "description": "CSS-lengde, f.eks. '85vh'" },
+            "maxWidth": { "type": "string" }
+          }
+        },
+        "grid": {
+          "description": "null = arv nettstedets grid; objekt = overstyr per seksjon",
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "site.schema.json#/$defs/grid" }
+          ]
+        },
+        "background": {
+          "type": "object",
+          "required": ["version", "layers"],
+          "additionalProperties": false,
+          "properties": {
+            "version": { "$ref": "#/$defs/version" },
+            "layers": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/typedProps" }
+            }
+          }
+        },
+        "blocks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/block" }
+        },
+        "responsive": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mobile": {
+              "type": "object",
+              "required": ["mode"],
+              "additionalProperties": false,
+              "properties": {
+                "mode": { "enum": ["auto", "manual"] },
+                "attention": {
+                  "description": "Mobil-tilsyn-flagget - redaksjonell metadata, ignoreres av besøkende-motoren",
+                  "oneOf": [
+                    { "type": "null" },
+                    {
+                      "type": "object",
+                      "required": ["needed", "reason", "since"],
+                      "additionalProperties": false,
+                      "properties": {
+                        "needed": { "type": "boolean" },
+                        "reason": { "type": "string" },
+                        "since": { "type": "string", "format": "date-time" }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "block": {
+      "type": "object",
+      "required": ["id", "type", "version", "props", "frames"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "type": { "type": "string", "minLength": 1 },
+        "version": { "$ref": "#/$defs/version" },
+        "props": { "type": "object", "description": "Typespesifikke props - eies av blokkdefinisjonens versjon/migreringer" },
+        "animation": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/typedProps" }
+          ]
+        },
+        "frames": {
+          "type": "object",
+          "required": ["desktop"],
+          "additionalProperties": false,
+          "properties": {
+            "desktop": { "$ref": "#/$defs/frame" },
+            "mobile": {
+              "description": "null = auto-avledet (én kolonne i leserekkefølge); objekt = manuell overstyring",
+              "oneOf": [
+                { "type": "null" },
+                { "$ref": "#/$defs/frame" }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "frame": {
+      "type": "object",
+      "required": ["x", "y", "w", "h"],
+      "additionalProperties": false,
+      "properties": {
+        "x": { "type": "number", "minimum": 0, "description": "Kolonne (grid-enheter)" },
+        "y": { "type": "number", "minimum": 0, "description": "Rad (grid-enheter)" },
+        "w": { "type": "number", "exclusiveMinimum": 0, "description": "Bredde i kolonner" },
+        "h": { "type": "number", "exclusiveMinimum": 0, "description": "Høyde i rader" },
+        "z": { "type": "integer", "default": 1, "description": "Lagrekkefølge" },
+        "rot": { "type": "number", "default": 0, "description": "Rotasjon i grader" }
+      }
+    },
+    "typedProps": {
+      "type": "object",
+      "required": ["type", "version", "props"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "minLength": 1 },
+        "version": { "$ref": "#/$defs/version" },
+        "props": { "type": "object" }
+      }
+    }
+  }
+}

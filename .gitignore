@@ -1,0 +1,11 @@
+# Editor-utvikling (kun editor/-mappen bruker npm)
+editor/node_modules/
+editor/.vite/
+editor/dist/
+
+# Merk: template/admin/assets/ skal IKKE ignoreres - den ferdigbygde
+# editoren committes slik at malen kan deployes uten byggesteg.
+
+# Diverse
+.DS_Store
+*.log
