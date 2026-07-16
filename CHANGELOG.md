@@ -27,6 +27,7 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 - **Sidefiler er nå schemaVersion 2: blokkplassering lagres i fysiske enheter** (x/w i prosent av seksjonsbredden, y/h i px) i stedet for grid-enheter. Gridet er dermed KUN et snappeverktøy: å endre kolonner/radhøyde flytter aldri innhold. v1-filer løftes automatisk ved lasting (`liftPageFile` i migrate.js), Urds første reelle filmigrering, testet i `tests/page-migration.test.mjs`.
 
 ### Fikset
+- Tekstblokker: redigeringshåndtakene lå inne i det redigerbare feltet, slik at ny tekst kunne havne i verktøylinjeraden, håndtak-HTML ble lagret i innholdet (som så «forsvant»/rotet seg ved rerendering), og resize-håndtaket lurte vekstmålingen til å utvide blokken for hvert tastetrykk. Teksten har nå sitt eget indre innholdselement, og gammelt forurenset innhold renses automatisk ved rendering.
 - Publisering tar nå med utkast fra ALLE sider, ikke bare siden man står på (endringer på andre sider ble stående upublisert i stillhet). «Upubliserte endringer»-merket teller også alle sider.
 - Sidevelger-nedtrekket følger mørkt tema (nettleser-standarden ga hvit liste med uleselige valg).
 - Nye blokker plasseres nå midt i synsfeltet (i aktiv seksjon, ellers seksjonen nærmest skjermmidten) i stedet for nederst utenfor syne. Plasseringen beregnes i forhåndsvisningen, som vet hvor brukeren har scrollet.

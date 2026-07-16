@@ -14,27 +14,36 @@ export const textBlock = {
    * @param {object} ctx Render-kontekst
    */
   render(el, props, ctx) {
-    el.classList.add('urd-text');
-    el.style.textAlign = props.align;
-    el.innerHTML = props.html;
+    // Teksten lever i et eget indre element: redigeringshåndtakene som
+    // preview-edit legger på blokken skal ALDRI havne i det redigerbare
+    // innholdet (eller i lagret props.html).
+    const content = document.createElement('div');
+    content.className = 'urd-text';
+    content.style.cssText = 'width:100%;min-height:100%;';
+    content.style.textAlign = props.align;
+    content.innerHTML = props.html;
+    // Selvhelbreder: innhold lagret av eldre Urd kan inneholde
+    // håndtak-markup; fjern den ved rendering (lagres rent ved neste edit).
+    content.querySelectorAll('.urd-edit-toolbar, .urd-edit-resize').forEach((n) => n.remove());
+    el.appendChild(content);
 
     // Klikk-og-skriv: i preview-modus (inne i editorens iframe) er teksten
     // direkte redigerbar, og hver endring meldes til editoren, som eier
-    // utkastet. Blokk-id ligger på elementet (satt av render.js).
+    // utkastet. Blokk-id ligger på blokk-elementet (satt av render.js).
     if (ctx.preview) {
-      el.contentEditable = 'true';
-      el.addEventListener('input', () => {
+      content.contentEditable = 'true';
+      content.addEventListener('input', () => {
         const post = (msg) => window.parent?.postMessage(msg, location.origin);
 
         // Voks med innholdet: blir teksten høyere enn framen, utvides
         // framen (og seksjonen om nødvendig) så ingenting klippes eller
-        // overlapper. Meldes som en samlbar flytting (coalesce), slik at
-        // veksten hører til samme angre-steg som skrivingen.
-        if (el.scrollHeight > el.clientHeight) {
+        // overlapper. Måles på innholdselementet, så håndtakene aldri
+        // teller med. Veksten hører til samme angre-steg som skrivingen.
+        if (content.scrollHeight > el.clientHeight) {
           const block = ctx.section.blocks.find((b) => b.id === el.dataset.blockId);
           if (block) {
             const step = ctx.grid?.size ?? 8;
-            const newH = Math.ceil(el.scrollHeight / step) * step;
+            const newH = Math.ceil(content.scrollHeight / step) * step;
             block.frames.desktop = { ...block.frames.desktop, h: newH };
             el.style.height = `${newH}px`;
             const host = el.closest('.urd-section');
@@ -50,7 +59,7 @@ export const textBlock = {
           type: 'urd-edit',
           sectionId: ctx.section.id,
           blockId: el.dataset.blockId,
-          props: { ...props, html: el.innerHTML },
+          props: { ...props, html: content.innerHTML },
         });
       });
     }
