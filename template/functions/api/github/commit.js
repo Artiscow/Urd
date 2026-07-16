@@ -67,6 +67,18 @@ export async function onRequestPost({ request, env }) {
 
   try {
     const { sha } = await commitFiles(token, config, { message, files: repoFiles });
+
+    // Er DEPLOY_HOOK_URL satt, trigges hostens deploy eksplisitt i tillegg
+    // til git-webhooken (som kan glippe hos hosten). Feil her skal aldri
+    // velte publiseringen - commiten er allerede trygt i repoet.
+    if (env.DEPLOY_HOOK_URL) {
+      try {
+        await fetch(env.DEPLOY_HOOK_URL, { method: 'POST' });
+      } catch (err) {
+        console.warn('Urd publish: deploy-hook feilet', err.message);
+      }
+    }
+
     return json({ sha });
   } catch (err) {
     console.error('Urd publish:', err.message);

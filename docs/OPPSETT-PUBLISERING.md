@@ -69,6 +69,13 @@ Fyll inn nøyaktig som under. Lagre, og gjenta for alle seks:
    «Root directory» i steg 1. For Urd-monorepoet: `template`.
    (Ligger nettsiden i repo-roten, som i et klonet mal-repo: dropp denne helt.)
 
+8. Type: **Secret** (valgfri - trengs normalt ikke)
+   Navn: `DEPLOY_HOOK_URL`
+   Verdi: en Deploy Hook-URL (Settings → Deploy Hooks → pluss-tegnet → branch `main`).
+   Cloudflare hopper i sjeldne tilfeller over en deploy selv om commiten er riktig;
+   med denne satt trigger publiseringen deployen selv. Skru den på først hvis du
+   opplever at publiseringer uteblir.
+
 Til slutt må det deployes på nytt (variablene gjelder først fra neste deploy).
 Enkleste måte er en tom commit:
 
@@ -115,3 +122,4 @@ Da kjører både siden, admin og functions på `http://localhost:8788`. Full OAu
 | «har ikke publiseringstilgang» (403) | Brukernavnet står ikke i `ALLOWED_LOGINS` (sjekk staving; feltet er case-ufølsomt) |
 | «Kunne ikke committe til GitHub» (502) | Tokenet mangler scope (privat repo trenger `repo`), eller grenen har flyttet seg |
 | Publisering lykkes, men siden endres ikke | `GITHUB_ROOT_DIR` mangler/feil: commiten havner utenfor nettsidens rotmappe (sjekk hvilke stier commiten endret på GitHub) |
+| Commiten er riktig, men ingen deploy dukker opp | Git-webhooken glapp hos hosten (skjer av og til). Sett opp `DEPLOY_HOOK_URL` (variabel 8), så trigger publiseringen deployen selv |

@@ -8,6 +8,7 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 ## [Ulansert]
 
 ### Fikset
+- Publisering kan trigge hostens deploy direkte via valgfri `DEPLOY_HOOK_URL` (git-webhooken hos Cloudflare kan glippe; publiseringen er da ikke lenger avhengig av den).
 - Publisering skrev til feil sti når nettsiden ligger i en undermappe av repoet (som `template/` i monorepoet): ny valgfri miljøvariabel `GITHUB_ROOT_DIR` prefikser repo-stiene, mens editor og sti-vern fortsatt jobber nettside-relativt.
 - Admin krasjet ved oppstart etter grid-arbeidet (structuredClone av Svelte-proxy i utkastlageret).
 
