@@ -495,7 +495,10 @@
       status = 'Publisert! Hosten bygger siden på nytt (typisk under ett minutt).';
       dirty = false;
     } else if (res?.status === 401) {
-      status = 'Du må logge inn med GitHub for å publisere.';
+      const detail = (await res.json().catch(() => null))?.error;
+      status = detail === 'Ugyldig eller utløpt innlogging'
+        ? 'GitHub avviste innloggingen (utløpt token?) - logg inn på nytt.'
+        : `Du må logge inn med GitHub for å publisere. (${detail ?? 'ukjent årsak'})`;
       await checkAuth();
     } else if (res?.status === 403) {
       status = (await res.json().catch(() => null))?.error ?? 'Du har ikke publiseringstilgang.';
@@ -663,8 +666,9 @@
 
   .topbar {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem 0.75rem;
     padding: 0.6rem 1rem;
     background: var(--urd-color-surface, #151a23);
     border-bottom: 1px solid rgb(255 255 255 / 8%);

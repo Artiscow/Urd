@@ -2480,7 +2480,10 @@ function pi(e, t) {
 		if (c?.ok) {
 			for (let e of o) localStorage.removeItem(e);
 			L(a, "Publisert! Hosten bygger siden på nytt (typisk under ett minutt)."), L(i, !1);
-		} else c?.status === 401 ? (L(a, "Du må logge inn med GitHub for å publisere."), await ce()) : c?.status === 403 ? L(a, (await c.json().catch(() => null))?.error ?? "Du har ikke publiseringstilgang.", !0) : c ? L(a, (await c.json().catch(() => null))?.error ?? "Publisering feilet (er publiseringslaget satt opp? Se docs/OPPSETT-PUBLISERING.md).", !0) : L(a, "Publisering er ikke tilgjengelig her (krever host med functions, se docs/OPPSETT-PUBLISERING.md).");
+		} else if (c?.status === 401) {
+			let e = (await c.json().catch(() => null))?.error;
+			L(a, e === "Ugyldig eller utløpt innlogging" ? "GitHub avviste innloggingen (utløpt token?) - logg inn på nytt." : `Du må logge inn med GitHub for å publisere. (${e ?? "ukjent årsak"})`, !0), await ce();
+		} else c?.status === 403 ? L(a, (await c.json().catch(() => null))?.error ?? "Du har ikke publiseringstilgang.", !0) : c ? L(a, (await c.json().catch(() => null))?.error ?? "Publisering feilet (er publiseringslaget satt opp? Se docs/OPPSETT-PUBLISERING.md).", !0) : L(a, "Publisering er ikke tilgjengelig her (krever host med functions, se docs/OPPSETT-PUBLISERING.md).");
 	}
 	function Oe(e) {
 		document.querySelectorAll(".topbar details[open]").forEach((t) => {

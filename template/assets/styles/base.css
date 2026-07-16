@@ -48,6 +48,13 @@ img, video {
   overflow: hidden;
 }
 
+/* I redigering klippes ikke seksjonene: håndtak og verktøylinjer nær
+   kantene skal aldri gjemmes bak naboseksjoner. (Besøkende har fortsatt
+   overflow hidden - innhold utenfor seksjonen klippes i produksjon.) */
+.urd-preview .urd-section {
+  overflow: visible;
+}
+
 /* Bakgrunnslag fyller seksjonen og ligger bak blokkene */
 .urd-bg-layer {
   position: absolute;
@@ -366,16 +373,9 @@ img, video {
   z-index: 1001;
 }
 
-.urd-preview .urd-section-resize::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 2px;
-}
-
-.urd-preview .urd-section-resize:hover::after,
-.urd-preview .urd-section-resize:active::after {
-  background: var(--urd-color-accent);
+/* Hover-linjen tegnes som inset-skygge på selve seksjonen, så den alltid
+   ligger nøyaktig på den synlige bunnkanten */
+.urd-preview .urd-section:has(> .urd-section-resize:hover),
+.urd-preview .urd-section:has(> .urd-section-resize:active) {
+  box-shadow: inset 0 -2px 0 var(--urd-color-accent);
 }
