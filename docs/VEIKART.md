@@ -44,6 +44,18 @@ Ende-til-ende med minst mulig bredde: motoren rendrer `hjem.json` (én hero-seks
 - `urd-template`-repo-splitt + release-Action («Use this template»).
 - Oppdaterer v1: én-klikks Urd-oppdatering som kun overskriver manifest-stiene i `urd.json`.
 
+## v0.7 - Optimalisering
+
+Ytelses- og størrelsesgjennomgang av hele produktet. (Grunnleggende
+bildekomprimering ved opplasting - webp, maks 1600px, størrelsesvarsel -
+er levert i v0.3; dette er laget over.)
+
+- Bilder videre: responsive størrelser (`srcset`), AVIF-vurdering, lazy loading, og eventuelt rekomprimering av eksisterende media/-filer.
+- Nettsiden/malen: mål og senk vekt og lastetid for besøkende (motorstørrelse, kritisk CSS, caching-headere, Lighthouse-budsjett som CI-sjekk?).
+- Motoren: profiler rendering og rerendering ved mange seksjoner/blokker; unngå unødvendige omtegninger i preview.
+- Editoren: bundle-størrelse og oppstartstid; dra/resize skal holde 60 fps også på store sider.
+- «Bakt HTML ved publisering» (SEO/no-JS-punktet fra risikolisten) hører naturlig hjemme her om den ikke alt er tatt.
+
 ## v0.9 - Generalprøven
 
 Vi bruker Urd som en fremmed bruker, uten snarveier:

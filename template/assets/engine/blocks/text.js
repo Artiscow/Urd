@@ -48,11 +48,8 @@ export const textBlock = {
             const newH = Math.ceil(content.scrollHeight / step) * step;
             block.frames.desktop = { ...block.frames.desktop, h: newH };
             el.style.height = `${newH}px`;
-            const host = el.closest('.urd-section');
-            const needed = block.frames.desktop.y + newH;
-            if (host && needed > host.getBoundingClientRect().height) {
-              host.style.minHeight = `${needed}px`;
-            }
+            // Seksjonen røres ikke: vokser teksten forbi kanten, henger
+            // den over (seksjoner klipper aldri, og høyden er brukerens).
             post({ type: 'urd-move', sectionId: ctx.section.id, blockId: block.id, frame: block.frames.desktop, coalesce: true });
           }
         }

@@ -29,6 +29,12 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 ### Lagt til
 - Shift holdt inne under dra/resize gir midlertidig fri plassering (overstyrer snap).
 
+### Lagt til
+- «Tilpass høyden til innholdet» (⤓) på seksjonsverktøylinjen: setter seksjonshøyden til nederste blokkkant med ett klikk, lagret gjennom vanlig utkastflyt. Gir auto-vekst på forespørsel nå som seksjoner aldri vokser av seg selv.
+
+### Endret
+- **Blokker kan bevisst henge over seksjonslinjen:** seksjoner klipper aldri innhold (heller ikke for besøkende), og seksjonshøyden er nøyaktig den brukeren har satt (motoren tvangs-utvider ikke lenger). Dette fjernet også avviket mellom editor og publisert side for overhengende blokker. Sidescrolling fra roterte/overhengende blokker hindres med overflow-x: clip.
+
 ### Fikset
 - Robusthet mot GitHub-nedetid: 5xx/429 fra GitHub-API-et prøves automatisk på nytt, «GitHub er nede» skilles nå fra «ugyldig innlogging» (en GitHub-hikke så tidligere ut som at man ble logget ut av admin), og feilmeldinger kortes ned i stedet for å vise GitHubs HTML-feilsider.
 - «+ Ny seksjon»-barene tok plass i flyten og forskjøv seksjonene i editoren i forhold til hvordan besøkende ser dem; de svever nå oppå selve skillet (null høyde i layouten), så høyde-linje, bar og fargeskift ligger på samme sted.

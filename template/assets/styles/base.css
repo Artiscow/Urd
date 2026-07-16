@@ -42,17 +42,16 @@ img, video {
   display: block;
 }
 
-/* Seksjonscontainer: posisjoneringskontekst for blokk-frames */
+/* Seksjonscontainer: posisjoneringskontekst for blokk-frames.
+   Klipper ALDRI innhold: blokker kan bevisst henge over seksjonslinjen,
+   og editor og publisert side skal se identiske ut. */
 .urd-section {
   position: relative;
-  overflow: hidden;
 }
 
-/* I redigering klippes ikke seksjonene: håndtak og verktøylinjer nær
-   kantene skal aldri gjemmes bak naboseksjoner. (Besøkende har fortsatt
-   overflow hidden - innhold utenfor seksjonen klippes i produksjon.) */
-.urd-preview .urd-section {
-  overflow: visible;
+/* Roterte/overhengende blokker skal ikke gi sidescrolling */
+html {
+  overflow-x: clip;
 }
 
 /* Bakgrunnslag fyller seksjonen og ligger bak blokkene */

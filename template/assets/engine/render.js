@@ -108,11 +108,9 @@ export function renderSection(section, site, host, opts = {}) {
     host.appendChild(el);
   }
 
-  // Seksjonen må være høy nok for blokkene sine; brukerens minHeight
-  // (f.eks. '85vh') vinner når den er større.
-  const neededPx = maxBottomPx;
-  const wanted = section.size?.minHeight;
-  host.style.minHeight = wanted ? `max(${wanted}, ${neededPx}px)` : `${neededPx}px`;
+  // Seksjonshøyden er brukerens: blokker kan bevisst henge utover kanten
+  // (seksjoner klipper aldri). Uten satt høyde brukes blokkenes utstrekning.
+  host.style.minHeight = section.size?.minHeight ?? `${maxBottomPx}px`;
 
   // I preview-modus kobles editeringslaget (dra/resize/slett) på etter
   // hver rendering. Satt av urd.js; finnes aldri hos besøkende.

@@ -27,7 +27,7 @@ export function enhanceSection(host, section, grid) {
     const block = section.blocks.find((b) => b.id === el.dataset.blockId);
     if (block) enhanceBlock(el, block, section, grid, host);
   }
-  addSectionToolbar(host, section);
+  addSectionToolbar(host, section, grid);
   addSectionHeightHandle(host, section, grid);
   // Vedvarende grid-visning (grid-menyen i editoren er åpen) skal
   // overleve rerendringer av seksjonen.
@@ -169,8 +169,9 @@ function makeSectionAdder(index) {
   return bar;
 }
 
-/** Verktøylinje øverst til høyre i seksjonen: flytt opp/ned, slett. */
-function addSectionToolbar(host, section) {
+/** Verktøylinje øverst til høyre i seksjonen: flytt opp/ned, tilpass
+ *  høyde, slett. */
+function addSectionToolbar(host, section, grid) {
   const bar = document.createElement('div');
   bar.className = 'urd-section-toolbar';
 
@@ -184,6 +185,13 @@ function addSectionToolbar(host, section) {
 
   mk('↑', 'Flytt seksjonen opp', () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
   mk('↓', 'Flytt seksjonen ned', () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
+  mk('⤓', 'Tilpass høyden til innholdet', () => {
+    const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
+    const minHeight = `${Math.max(grid.size * 3, maxBottom + grid.size)}px`;
+    section.size = { ...section.size, minHeight };
+    host.style.minHeight = minHeight;
+    post({ type: 'urd-section-size', sectionId: section.id, minHeight });
+  });
   mk('×', 'Slett seksjonen (Ctrl+Z angrer)', () => {
     post({ type: 'urd-delete-section', sectionId: section.id });
   });
