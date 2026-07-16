@@ -2210,7 +2210,7 @@ function pi(e, t) {
 	async function ce() {
 		try {
 			let e = await fetch("/api/github/me");
-			L(s, e.ok ? await e.json() : null, !0);
+			e.ok ? L(s, await e.json(), !0) : e.status !== 503 && L(s, null);
 		} catch {
 			L(s, null);
 		}

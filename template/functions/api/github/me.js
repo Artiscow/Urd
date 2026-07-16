@@ -18,8 +18,10 @@ export async function onRequestGet({ request, env }) {
   try {
     const user = await currentUser(token);
     return json({ loggedIn: true, login: user.login, allowed: isAllowedLogin(user.login, env) });
-  } catch {
-    // Ugyldig/utløpt token behandles som utlogget.
-    return json({ loggedIn: false });
+  } catch (err) {
+    // KUN GitHubs 401 betyr utlogget (ugyldig/utløpt token). Alt annet er
+    // GitHub-trøbbel og skal ikke vises som utlogging i editoren.
+    if (err.status === 401) return json({ loggedIn: false });
+    return json({ error: 'GitHub er utilgjengelig akkurat nå' }, 503);
   }
 }

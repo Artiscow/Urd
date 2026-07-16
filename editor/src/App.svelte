@@ -173,7 +173,12 @@
   async function checkAuth() {
     try {
       const res = await fetch('/api/github/me');
-      auth = res.ok ? await res.json() : null;
+      if (res.ok) {
+        auth = await res.json();
+      } else if (res.status !== 503) {
+        auth = null;
+      }
+      // 503 = GitHub er nede i øyeblikket: behold innloggingsstatusen vi har.
     } catch {
       auth = null;
     }

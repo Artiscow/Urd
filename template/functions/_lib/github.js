@@ -32,10 +32,12 @@ export function cfg(env) {
 }
 
 /**
- * Autentisert kall mot api.github.com. Kaster med status og GitHub-svar
- * ved feil, slik at endepunktene kan logge presist.
+ * Autentisert kall mot api.github.com. Forbigående feil (5xx/429, som
+ * GitHubs «Unicorn»-side) prøves automatisk på nytt et par ganger.
+ * Kaster Error med .status, slik at endepunktene kan skille «GitHub er
+ * nede» fra «ugyldig token». Feiltekst kortes ned (aldri hele HTML-sider).
  */
-export async function gh(token, path, init = {}) {
+export async function gh(token, path, init = {}, attempt = 1) {
   const res = await fetch(`https://api.github.com${path}`, {
     ...init,
     headers: {
@@ -47,7 +49,15 @@ export async function gh(token, path, init = {}) {
     },
   });
   if (!res.ok) {
-    throw new Error(`GitHub ${init.method ?? 'GET'} ${path} svarte ${res.status}: ${await res.text()}`);
+    if ((res.status >= 500 || res.status === 429) && attempt < 3) {
+      await new Promise((resolve) => setTimeout(resolve, attempt * 500));
+      return gh(token, path, init, attempt + 1);
+    }
+    const isJson = res.headers.get('content-type')?.includes('json');
+    const detail = isJson ? (await res.text()).slice(0, 300) : '(HTML-feilside fra GitHub)';
+    const error = new Error(`GitHub ${init.method ?? 'GET'} ${path} svarte ${res.status}: ${detail}`);
+    error.status = res.status;
+    throw error;
   }
   return res.json();
 }

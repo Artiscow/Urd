@@ -29,8 +29,9 @@ export async function onRequestPost({ request, env }) {
   let user;
   try {
     user = await currentUser(token);
-  } catch {
-    return json({ error: 'Ugyldig eller utløpt innlogging' }, 401);
+  } catch (err) {
+    if (err.status === 401) return json({ error: 'Ugyldig eller utløpt innlogging' }, 401);
+    return json({ error: 'GitHub er utilgjengelig akkurat nå - prøv igjen om litt' }, 503);
   }
   if (!isAllowedLogin(user.login, env)) {
     return json({ error: `GitHub-brukeren '${user.login}' har ikke publiseringstilgang` }, 403);
