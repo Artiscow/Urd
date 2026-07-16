@@ -1,19 +1,51 @@
 {
   "schemaVersion": 1,
-  "meta": { "id": "hjem", "title": "Hjem" },
+  "meta": {
+    "id": "hjem",
+    "title": "Hjem"
+  },
   "sections": [
     {
       "id": "sec-hero",
       "version": 1,
       "preset": "hero",
-      "size": { "minHeight": "85vh" },
+      "size": {
+        "minHeight": "85vh"
+      },
       "grid": null,
       "background": {
         "version": 1,
         "layers": [
-          { "type": "gradient", "version": 1, "props": { "stops": ["#0b0e14", "#1a1030"], "angle": 160, "animate": false } },
-          { "type": "glow",     "version": 1, "props": { "x": 0.7, "y": 0.2, "color": "#7c5cff", "radius": 0.5, "opacity": 0.35 } },
-          { "type": "grain",    "version": 1, "props": { "opacity": 0.06 } }
+          {
+            "type": "gradient",
+            "version": 1,
+            "props": {
+              "stops": [
+                "#0b0e14",
+                "#1a1030"
+              ],
+              "angle": 160,
+              "animate": false
+            }
+          },
+          {
+            "type": "glow",
+            "version": 1,
+            "props": {
+              "x": 0.7,
+              "y": 0.2,
+              "color": "#7c5cff",
+              "radius": 0.5,
+              "opacity": 0.35
+            }
+          },
+          {
+            "type": "grain",
+            "version": 1,
+            "props": {
+              "opacity": 0.06
+            }
+          }
         ]
       },
       "blocks": [
@@ -21,10 +53,20 @@
           "id": "blk-tittel",
           "type": "text",
           "version": 1,
-          "props": { "html": "<h1>Velkommen til Min forening</h1>", "align": "left" },
+          "props": {
+            "html": "<h1>Velkommen til Min forening</h1>",
+            "align": "left"
+          },
           "animation": null,
           "frames": {
-            "desktop": { "x": 2, "y": 6, "w": 12, "h": 4, "z": 1, "rot": 0 },
+            "desktop": {
+              "x": 9,
+              "y": 14,
+              "w": 12,
+              "h": 4,
+              "z": 1,
+              "rot": 0
+            },
             "mobile": null
           }
         },
@@ -32,10 +74,20 @@
           "id": "blk-lede",
           "type": "text",
           "version": 1,
-          "props": { "html": "<p>Denne siden er bygget med Urd - rediger den på /admin.</p>", "align": "left" },
+          "props": {
+            "html": "<p>Denne siden er bygget med Urd - rediger den på /admin.</p>",
+            "align": "left"
+          },
           "animation": null,
           "frames": {
-            "desktop": { "x": 2, "y": 10, "w": 10, "h": 2, "z": 1, "rot": 0 },
+            "desktop": {
+              "x": 2,
+              "y": 30,
+              "w": 10,
+              "h": 2,
+              "z": 1,
+              "rot": 0
+            },
             "mobile": null
           }
         },
@@ -43,28 +95,57 @@
           "id": "blk-cta",
           "type": "button",
           "version": 1,
-          "props": { "label": "Les mer om oss", "page": "om-oss", "style": "primary" },
+          "props": {
+            "label": "Les mer om oss",
+            "page": "om-oss",
+            "style": "primary"
+          },
           "animation": null,
           "frames": {
-            "desktop": { "x": 2, "y": 13, "w": 5, "h": 2, "z": 1, "rot": 0 },
-            "mobile":  { "x": 1, "y": 14, "w": 10, "h": 2, "z": 1, "rot": 0 }
+            "desktop": {
+              "x": 14,
+              "y": 50,
+              "w": 5,
+              "h": 2,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": {
+              "x": 1,
+              "y": 14,
+              "w": 10,
+              "h": 2,
+              "z": 1,
+              "rot": 0
+            }
           }
         }
       ],
       "responsive": {
-        "mobile": { "mode": "manual", "attention": null }
+        "mobile": {
+          "mode": "manual",
+          "attention": null
+        }
       }
     },
     {
       "id": "sec-footer",
       "version": 1,
       "preset": "footer",
-      "size": { "minHeight": "20vh" },
+      "size": {
+        "minHeight": "20vh"
+      },
       "grid": null,
       "background": {
         "version": 1,
         "layers": [
-          { "type": "color", "version": 1, "props": { "value": "#151a23" } }
+          {
+            "type": "color",
+            "version": 1,
+            "props": {
+              "value": "#151a23"
+            }
+          }
         ]
       },
       "blocks": [
@@ -72,16 +153,29 @@
           "id": "blk-footer-tekst",
           "type": "text",
           "version": 1,
-          "props": { "html": "<p>© Min forening - bygget med Urd</p>", "align": "center" },
+          "props": {
+            "html": "<p>© Min forening - bygget med Urd</p>",
+            "align": "center"
+          },
           "animation": null,
           "frames": {
-            "desktop": { "x": 6, "y": 2, "w": 12, "h": 2, "z": 1, "rot": 0 },
+            "desktop": {
+              "x": 6,
+              "y": 2,
+              "w": 12,
+              "h": 2,
+              "z": 1,
+              "rot": 0
+            },
             "mobile": null
           }
         }
       ],
       "responsive": {
-        "mobile": { "mode": "auto", "attention": null }
+        "mobile": {
+          "mode": "auto",
+          "attention": null
+        }
       }
     }
   ]
