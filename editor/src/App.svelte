@@ -6,6 +6,7 @@
   import { createPreviewBridge } from './lib/previewBridge.js';
   // Editoren deler migreringskoden med motoren (samme fil, bundles inn).
   import { liftPageFile } from '../../template/assets/engine/migrate.js';
+  import { compressToWebp, slugify, contentHash, WARN_BYTES } from './lib/imageTools.js';
 
   let site = $state(null);
   let pageId = $state(null);
@@ -282,6 +283,64 @@
     event?.target.closest('details')?.removeAttribute('open');
   }
 
+  /** + Bilde: komprimer til webp og legg i utkastet som data-URL.
+   *  Ved publisering materialiseres den til en fil i media/. */
+  async function addImage(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    status = 'Komprimerer bildet…';
+    let img;
+    try {
+      img = await compressToWebp(file);
+    } catch {
+      status = 'Kunne ikke lese bildet (prøv jpg/png/webp).';
+      return;
+    }
+
+    pushHistory('add-block');
+    const section = store.data.sections[0];
+    const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
+    // Startbredde 30 % av seksjonen; høyden følger bildets sideforhold
+    // med en antatt seksjonsbredde (justeres uansett fritt etterpå).
+    const height = Math.round((img.height / img.width) * 0.3 * (iframeEl?.clientWidth ?? 1280));
+    section.blocks.push({
+      id: `blk-${crypto.randomUUID().slice(0, 8)}`,
+      type: 'image',
+      version: 1,
+      props: { src: img.dataUrl, alt: slugify(file.name).replaceAll('-', ' '), fit: 'cover', radius: 'md', href: null },
+      animation: null,
+      frames: { desktop: { x: 4, y: maxBottom + 8, w: 30, h: Math.max(40, height), z: 1, rot: 0 }, mobile: null },
+    });
+    store.save();
+    updateDirty();
+    bridge?.sendSection(pageId, section);
+    status = img.bytes > WARN_BYTES
+      ? `Bildet er stort (${Math.round(img.bytes / 1024)} kB) - vurder et mindre utsnitt.`
+      : '';
+  }
+
+  /**
+   * Gjør upubliserte bilder (data-URL-er i utkastet) om til filer i
+   * media/, og bytter src til stien. Returnerer fillisten for commiten.
+   * Samme bildeinnhold gir samme filnavn (deterministisk hash), så
+   * republisering aldri dupliserer filer.
+   */
+  function materializeImages(page) {
+    const files = [];
+    for (const section of page.sections) {
+      for (const block of section.blocks) {
+        if (block.type !== 'image' || !block.props.src?.startsWith('data:image/')) continue;
+        const base64 = block.props.src.split(',', 2)[1];
+        const path = `media/${slugify(block.props.alt || 'bilde')}-${contentHash(base64)}.webp`;
+        files.push({ path, content: base64, encoding: 'base64' });
+        block.props.src = `/${path}`;
+      }
+    }
+    return files;
+  }
+
   function discard() {
     pushHistory('discard');
     const freshPage = store.reset();
@@ -298,6 +357,9 @@
     const entry = pageEntry();
     const files = [];
     if (store.hasDraft()) {
+      // Upubliserte bilder blir egne filer i media/ i samme commit.
+      files.push(...materializeImages(store.data));
+      store.save();
       files.push({ path: entry.file, content: JSON.stringify(store.data, null, 2) + '\n', encoding: 'utf-8' });
     }
     if (siteStore.hasDraft()) {
@@ -358,6 +420,10 @@
       <span class="palette">
         <button class="ghost" onclick={() => addBlock('text')} title="Ny tekstblokk">+ Tekst</button>
         <button class="ghost" onclick={() => addBlock('button')} title="Ny knapp">+ Knapp</button>
+        <label class="ghost filepick" title="Nytt bilde (komprimeres automatisk til webp)">
+          + Bilde
+          <input type="file" accept="image/*" onchange={addImage} />
+        </label>
         <details class="gridmenu">
           <summary title="Ny form">+ Form</summary>
           <div class="gridmenu-body formmenu">
@@ -572,6 +638,14 @@
   .formmenu {
     width: auto;
     min-width: 8rem;
+  }
+
+  .filepick {
+    cursor: pointer;
+  }
+
+  .filepick input {
+    display: none;
   }
 
   .formmenu button {

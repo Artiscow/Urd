@@ -26,7 +26,9 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 - [x] Synlig grid-overlegg i seksjonen under dra/resize
 - [x] Grid-kontroller i editoren (⌗ Grid: kolonner, radhøyde, snap av/på) - lagres i site.json-utkast og publiseres sammen med sideendringer
 - [ ] Grid-overstyring per seksjon i UI (datamodellen støtter det allerede via section.grid)
-- [ ] Palett komplett: bilde- og logo-blokk, sirkel/rektangel-varianter, valg av målseksjon
+- [x] Bildeblokk med opplasting: + Bilde komprimerer til webp (maks 1600px, størrelsesvarsel), utkast som data-URL, materialiseres til media/-filer ved publisering (deterministisk filnavn). Valgfri href-prop dekker logo-bruk.
+- [ ] Palett: valg av målseksjon (nye blokker havner i første seksjon)
+- [ ] Bilde-props i UI: alt-tekst, fit, radius, lenke (hører til blokkeditoren i v0.5)
 - [x] z-orden: ⬆/⬇-knapper på blokkverktøylinjen (legg foran/bak)
 - [x] Seksjons-CRUD: «+ Ny seksjon» in-place med preset-valg (tom, hero, footer), flytt opp/ned og slett via seksjonsverktøylinje
 - [x] Seksjonshøyde: dra-håndtak i underkant av seksjonen (snapper til radhøyden, lagres i size.minHeight)

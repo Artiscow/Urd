@@ -14,6 +14,7 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 - Klikk-markering av blokker: varig omriss og synlige håndtak til man klikker utenfor.
 
 ### Lagt til
+- Bildeblokk med opplasting: «+ Bilde» komprimerer til webp i nettleseren (maks 1600px, med størrelsesvarsel), viser bildet umiddelbart i utkastet, og publiserer det som fil i media/ i samme commit (samme bilde gir alltid samme filnavn). Valgfri lenke gjør blokken brukbar som logo.
 - z-orden: ⬆/⬇-knapper på blokkverktøylinjen legger blokken foran/bak andre.
 - Tekstblokker vokser automatisk med innholdet under skriving; framen (og seksjonen ved behov) utvides så tekst aldri klippes eller overlapper.
 - Kvalitetsvern på repoet: CI-workflow (tester, skjemavalidering, editor-bygg), CodeQL, Dependabot (npm + actions) og dependency review. Skjemavalidering er nå `npm run validate` i editor/ (eget ajv-skript, ingen sårbare CLI-avhengigheter).

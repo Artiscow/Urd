@@ -2069,9 +2069,34 @@ function Wr(e, t) {
 	return n;
 }
 //#endregion
+//#region src/lib/imageTools.js
+var Gr = 1600, Kr = .82, qr = .6;
+async function Jr(e) {
+	let t = await createImageBitmap(e), n = Math.min(1, Gr / Math.max(t.width, t.height)), r = Math.round(t.width * n), i = Math.round(t.height * n), a = document.createElement("canvas");
+	a.width = r, a.height = i, a.getContext("2d").drawImage(t, 0, 0, r, i), t.close();
+	let o = (e) => new Promise((t) => a.toBlob(t, "image/webp", e)), s = await o(Kr);
+	return s.size > 4e5 && (s = await o(qr)), {
+		dataUrl: await new Promise((e) => {
+			let t = new FileReader();
+			t.onload = () => e(t.result), t.readAsDataURL(s);
+		}),
+		bytes: s.size,
+		width: r,
+		height: i
+	};
+}
+function Yr(e) {
+	return e.replace(/\.[^.]+$/, "").toLowerCase().replaceAll("æ", "ae").replaceAll("ø", "o").replaceAll("å", "a").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "bilde";
+}
+function Xr(e) {
+	let t = 5381;
+	for (let n = 0; n < e.length; n++) t = (t << 5) + t + e.charCodeAt(n) >>> 0;
+	return t.toString(16).padStart(8, "0");
+}
+//#endregion
 //#region src/App.svelte
-var Gr = /* @__PURE__ */ Q("<button class=\"chrome-restore svelte-1n46o8q\" title=\"Tilbake til redigering\">✏ Rediger</button>"), Kr = /* @__PURE__ */ Q("<option> </option>"), qr = /* @__PURE__ */ Q("<select class=\"svelte-1n46o8q\"></select>"), Jr = /* @__PURE__ */ Q("<span class=\"palette svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\" title=\"Ny tekstblokk\">+ Tekst</button> <button class=\"ghost svelte-1n46o8q\" title=\"Ny knapp\">+ Knapp</button> <details class=\"gridmenu svelte-1n46o8q\"><summary title=\"Ny form\" class=\"svelte-1n46o8q\">+ Form</summary> <div class=\"gridmenu-body formmenu svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\">─ Strek</button> <button class=\"ghost svelte-1n46o8q\">→ Pil</button> <button class=\"ghost svelte-1n46o8q\">○ Sirkel</button> <button class=\"ghost svelte-1n46o8q\">▭ Rektangel</button> <button class=\"ghost svelte-1n46o8q\">△ Trekant</button></div></details></span> <details class=\"gridmenu svelte-1n46o8q\"><summary title=\"Grid-innstillinger (hjelpelinjer for plassering)\" class=\"svelte-1n46o8q\">⌗ Grid</summary> <div class=\"gridmenu-body svelte-1n46o8q\"><label class=\"svelte-1n46o8q\">Kolonner (bredden) <input type=\"number\" min=\"4\" max=\"100\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\">Radhøyde i px (høyden) <input type=\"number\" min=\"2\" max=\"64\" class=\"svelte-1n46o8q\"/></label> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\"/> Snap til grid</label> <p class=\"gridmenu-hint svelte-1n46o8q\"> </p></div></details>", 1), Yr = /* @__PURE__ */ Q("<span class=\"badge svelte-1n46o8q\">Upubliserte endringer</span>"), Xr = /* @__PURE__ */ Q("<span class=\"who svelte-1n46o8q\"> </span>"), Zr = /* @__PURE__ */ Q("<a class=\"ghost svelte-1n46o8q\" href=\"/api/github/login\">Logg inn med GitHub</a>"), Qr = /* @__PURE__ */ Q("<button class=\"ghost svelte-1n46o8q\"> </button> <!> <a class=\"ghost svelte-1n46o8q\" target=\"_blank\" rel=\"noopener\">Se siden ↗</a> <button class=\"ghost svelte-1n46o8q\">Forkast utkast</button> <button class=\"primary svelte-1n46o8q\">Publiser</button>", 1), $r = /* @__PURE__ */ Q("<iframe title=\"Forhåndsvisning\" class=\"svelte-1n46o8q\"></iframe>"), ei = /* @__PURE__ */ Q("<p class=\"loading svelte-1n46o8q\">Laster…</p>"), ti = /* @__PURE__ */ Q("<div class=\"editor svelte-1n46o8q\"><!> <header><strong class=\"brand svelte-1n46o8q\">Urd</strong> <!> <!> <!> <span class=\"status svelte-1n46o8q\"> </span> <span class=\"spacer svelte-1n46o8q\"></span> <!></header> <!></div>");
-function ni(e, t) {
+var Zr = /* @__PURE__ */ Q("<button class=\"chrome-restore svelte-1n46o8q\" title=\"Tilbake til redigering\">✏ Rediger</button>"), Qr = /* @__PURE__ */ Q("<option> </option>"), $r = /* @__PURE__ */ Q("<select class=\"svelte-1n46o8q\"></select>"), ei = /* @__PURE__ */ Q("<span class=\"palette svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\" title=\"Ny tekstblokk\">+ Tekst</button> <button class=\"ghost svelte-1n46o8q\" title=\"Ny knapp\">+ Knapp</button> <label class=\"ghost filepick svelte-1n46o8q\" title=\"Nytt bilde (komprimeres automatisk til webp)\">+ Bilde <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <details class=\"gridmenu svelte-1n46o8q\"><summary title=\"Ny form\" class=\"svelte-1n46o8q\">+ Form</summary> <div class=\"gridmenu-body formmenu svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\">─ Strek</button> <button class=\"ghost svelte-1n46o8q\">→ Pil</button> <button class=\"ghost svelte-1n46o8q\">○ Sirkel</button> <button class=\"ghost svelte-1n46o8q\">▭ Rektangel</button> <button class=\"ghost svelte-1n46o8q\">△ Trekant</button></div></details></span> <details class=\"gridmenu svelte-1n46o8q\"><summary title=\"Grid-innstillinger (hjelpelinjer for plassering)\" class=\"svelte-1n46o8q\">⌗ Grid</summary> <div class=\"gridmenu-body svelte-1n46o8q\"><label class=\"svelte-1n46o8q\">Kolonner (bredden) <input type=\"number\" min=\"4\" max=\"100\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\">Radhøyde i px (høyden) <input type=\"number\" min=\"2\" max=\"64\" class=\"svelte-1n46o8q\"/></label> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\"/> Snap til grid</label> <p class=\"gridmenu-hint svelte-1n46o8q\"> </p></div></details>", 1), ti = /* @__PURE__ */ Q("<span class=\"badge svelte-1n46o8q\">Upubliserte endringer</span>"), ni = /* @__PURE__ */ Q("<span class=\"who svelte-1n46o8q\"> </span>"), ri = /* @__PURE__ */ Q("<a class=\"ghost svelte-1n46o8q\" href=\"/api/github/login\">Logg inn med GitHub</a>"), ii = /* @__PURE__ */ Q("<button class=\"ghost svelte-1n46o8q\"> </button> <!> <a class=\"ghost svelte-1n46o8q\" target=\"_blank\" rel=\"noopener\">Se siden ↗</a> <button class=\"ghost svelte-1n46o8q\">Forkast utkast</button> <button class=\"primary svelte-1n46o8q\">Publiser</button>", 1), ai = /* @__PURE__ */ Q("<iframe title=\"Forhåndsvisning\" class=\"svelte-1n46o8q\"></iframe>"), oi = /* @__PURE__ */ Q("<p class=\"loading svelte-1n46o8q\">Laster…</p>"), si = /* @__PURE__ */ Q("<div class=\"editor svelte-1n46o8q\"><!> <header><strong class=\"brand svelte-1n46o8q\">Urd</strong> <!> <!> <!> <span class=\"status svelte-1n46o8q\"> </span> <span class=\"spacer svelte-1n46o8q\"></span> <!></header> <!></div>");
+function ci(e, t) {
 	Ie(t, !0);
 	let n = /* @__PURE__ */ P(null), r = /* @__PURE__ */ P(null), i = /* @__PURE__ */ P(!1), a = /* @__PURE__ */ P(""), o = /* @__PURE__ */ P(null), s = /* @__PURE__ */ P(null), c = /* @__PURE__ */ P(Bt({
 		columns: 24,
@@ -2288,7 +2313,58 @@ function ni(e, t) {
 			}
 		}), u.save(), m(), f?.sendSection(X(r), n), t?.target.closest("details")?.removeAttribute("open");
 	}
-	function _e() {
+	async function _e(e) {
+		let t = e.target.files?.[0];
+		if (e.target.value = "", !t) return;
+		F(a, "Komprimerer bildet…");
+		let n;
+		try {
+			n = await Jr(t);
+		} catch {
+			F(a, "Kunne ikke lese bildet (prøv jpg/png/webp).");
+			return;
+		}
+		y("add-block");
+		let i = u.data.sections[0], s = Math.max(0, ...i.blocks.map((e) => e.frames.desktop.y + e.frames.desktop.h)), c = Math.round(n.height / n.width * .3 * (X(o)?.clientWidth ?? 1280));
+		i.blocks.push({
+			id: `blk-${crypto.randomUUID().slice(0, 8)}`,
+			type: "image",
+			version: 1,
+			props: {
+				src: n.dataUrl,
+				alt: Yr(t.name).replaceAll("-", " "),
+				fit: "cover",
+				radius: "md",
+				href: null
+			},
+			animation: null,
+			frames: {
+				desktop: {
+					x: 4,
+					y: s + 8,
+					w: 30,
+					h: Math.max(40, c),
+					z: 1,
+					rot: 0
+				},
+				mobile: null
+			}
+		}), u.save(), m(), f?.sendSection(X(r), i), F(a, n.bytes > 4e5 ? `Bildet er stort (${Math.round(n.bytes / 1024)} kB) - vurder et mindre utsnitt.` : "", !0);
+	}
+	function ve(e) {
+		let t = [];
+		for (let n of e.sections) for (let e of n.blocks) {
+			if (e.type !== "image" || !e.props.src?.startsWith("data:image/")) continue;
+			let n = e.props.src.split(",", 2)[1], r = `media/${Yr(e.props.alt || "bilde")}-${Xr(n)}.webp`;
+			t.push({
+				path: r,
+				content: n,
+				encoding: "base64"
+			}), e.props.src = `/${r}`;
+		}
+		return t;
+	}
+	function ye() {
 		y("discard");
 		let e = u.reset(), t = d.reset();
 		F(c, {
@@ -2296,14 +2372,14 @@ function ni(e, t) {
 			...t.grid
 		}, !0), m(), F(a, ""), f?.sendSite(t), f?.sendPage(X(r), e);
 	}
-	async function ve() {
+	async function be() {
 		F(a, "Publiserer…");
 		let e = p(), t = [];
-		u.hasDraft() && t.push({
+		u.hasDraft() && (t.push(...ve(u.data)), u.save(), t.push({
 			path: e.file,
 			content: JSON.stringify(u.data, null, 2) + "\n",
 			encoding: "utf-8"
-		}), d.hasDraft() && t.push({
+		})), d.hasDraft() && t.push({
 			path: "content/site.json",
 			content: JSON.stringify(d.data, null, 2) + "\n",
 			encoding: "utf-8"
@@ -2322,21 +2398,21 @@ function ni(e, t) {
 		o?.ok ? (localStorage.removeItem(`urd-draft-${X(r)}`), localStorage.removeItem("urd-draft-site"), F(a, "Publisert! Hosten bygger siden på nytt (typisk under ett minutt)."), F(i, !1)) : o?.status === 401 ? (F(a, "Du må logge inn med GitHub for å publisere."), await ie()) : o?.status === 403 ? F(a, (await o.json().catch(() => null))?.error ?? "Du har ikke publiseringstilgang.", !0) : o ? F(a, (await o.json().catch(() => null))?.error ?? "Publisering feilet (er publiseringslaget satt opp? Se docs/OPPSETT-PUBLISERING.md).", !0) : F(a, "Publisering er ikke tilgjengelig her (krever host med functions, se docs/OPPSETT-PUBLISERING.md).");
 	}
 	te();
-	var ye = ti();
+	var xe = si();
 	Xn("keydown", Ut, ee);
-	var be = L(ye), xe = (e) => {
-		var t = Gr();
+	var w = L(xe), Se = (e) => {
+		var t = Zr();
 		Z("click", t, se), $(e, t);
 	};
-	ur(be, (e) => {
-		X(l) || e(xe);
+	ur(w, (e) => {
+		X(l) || e(Se);
 	});
-	var w = R(be, 2);
-	let Se;
-	var Ce = R(L(w), 2), we = (e) => {
-		var t = qr();
+	var Ce = R(w, 2);
+	let we;
+	var Te = R(L(Ce), 2), Ee = (e) => {
+		var t = $r();
 		hr(t, 21, () => X(n).pages, dr, (e, t) => {
-			var n = Kr(), r = L(n, !0);
+			var n = Qr(), r = L(n, !0);
 			O(n);
 			var i = {};
 			dn(() => {
@@ -2348,48 +2424,50 @@ function ni(e, t) {
 			i !== (i = X(r)) && (t.value = (t.__value = X(r)) ?? "", wr(t, X(r)));
 		}), Z("change", t, (e) => ae(e.target.value)), $(e, t);
 	};
-	ur(Ce, (e) => {
-		X(n) && e(we);
-	});
-	var Te = R(Ce, 2), Ee = (e) => {
-		var t = Jr(), n = Xt(t), r = L(n), i = R(r, 2), a = R(i, 2), s = R(L(a), 2), l = L(s), u = R(l, 2), d = R(u, 2), f = R(d, 2), p = R(f, 2);
-		O(s), O(a), O(n);
-		var m = R(n, 2), h = R(L(m), 2), g = L(h), _ = R(L(g));
-		jr(_), O(g);
-		var v = R(g, 2), y = R(L(v));
-		jr(y), O(v);
-		var b = R(v, 2), x = L(b);
-		jr(x), ke(), O(b);
-		var S = R(b, 2), ee = L(S);
-		O(S), O(h), O(m), dn((e) => {
-			Mr(_, X(c).columns), Mr(y, X(c).rowHeight), Nr(x, X(c).snap !== !1), ir(ee, `Gridet er kun hjelpelinjer: det styrer hva blokker snapper til når du
-            drar, og å endre det flytter ALDRI noe som allerede står på siden.
-            Bredden deles i kolonner (flere = finere sideveis), høyden går i rader
-            på et fast antall piksler (lavere = finere opp/ned). Én rute er nå ca.
-            ${e ?? ""} × ${X(c).rowHeight ?? ""} px.`);
-		}, [() => Math.round((X(o)?.clientWidth ?? 1280) / X(c).columns)]), Z("click", r, () => ge("text")), Z("click", i, () => ge("button")), Z("click", l, (e) => ge("shape-line", e)), Z("click", u, (e) => ge("shape-arrow", e)), Z("click", d, (e) => ge("shape-circle", e)), Z("click", f, (e) => ge("shape-rect", e)), Z("click", p, (e) => ge("shape-triangle", e)), Xn("toggle", m, re), Z("change", _, (e) => ne("columns", Math.max(4, Math.min(100, Number(e.target.value) || 24)))), Z("change", y, (e) => ne("rowHeight", Math.max(2, Math.min(64, Number(e.target.value) || 8)))), Z("change", x, (e) => ne("snap", e.target.checked)), $(e, t);
-	};
 	ur(Te, (e) => {
 		X(n) && e(Ee);
 	});
 	var T = R(Te, 2), De = (e) => {
-		$(e, Yr());
+		var t = ei(), n = Xt(t), r = L(n), i = R(r, 2), a = R(i, 2), s = R(L(a));
+		O(a);
+		var l = R(a, 2), u = R(L(l), 2), d = L(u), f = R(d, 2), p = R(f, 2), m = R(p, 2), h = R(m, 2);
+		O(u), O(l), O(n);
+		var g = R(n, 2), _ = R(L(g), 2), v = L(_), y = R(L(v));
+		jr(y), O(v);
+		var b = R(v, 2), x = R(L(b));
+		jr(x), O(b);
+		var S = R(b, 2), ee = L(S);
+		jr(ee), ke(), O(S);
+		var te = R(S, 2), C = L(te);
+		O(te), O(_), O(g), dn((e) => {
+			Mr(y, X(c).columns), Mr(x, X(c).rowHeight), Nr(ee, X(c).snap !== !1), ir(C, `Gridet er kun hjelpelinjer: det styrer hva blokker snapper til når du
+            drar, og å endre det flytter ALDRI noe som allerede står på siden.
+            Bredden deles i kolonner (flere = finere sideveis), høyden går i rader
+            på et fast antall piksler (lavere = finere opp/ned). Én rute er nå ca.
+            ${e ?? ""} × ${X(c).rowHeight ?? ""} px.`);
+		}, [() => Math.round((X(o)?.clientWidth ?? 1280) / X(c).columns)]), Z("click", r, () => ge("text")), Z("click", i, () => ge("button")), Z("change", s, _e), Z("click", d, (e) => ge("shape-line", e)), Z("click", f, (e) => ge("shape-arrow", e)), Z("click", p, (e) => ge("shape-circle", e)), Z("click", m, (e) => ge("shape-rect", e)), Z("click", h, (e) => ge("shape-triangle", e)), Xn("toggle", g, re), Z("change", y, (e) => ne("columns", Math.max(4, Math.min(100, Number(e.target.value) || 24)))), Z("change", x, (e) => ne("rowHeight", Math.max(2, Math.min(64, Number(e.target.value) || 8)))), Z("change", ee, (e) => ne("snap", e.target.checked)), $(e, t);
 	};
 	ur(T, (e) => {
-		X(i) && e(De);
+		X(n) && e(De);
 	});
-	var E = R(T, 2), D = L(E, !0);
-	O(E);
-	var Oe = R(E, 4), Ae = (e) => {
-		var t = Qr(), n = Xt(t), r = L(n, !0);
+	var E = R(T, 2), D = (e) => {
+		$(e, ti());
+	};
+	ur(E, (e) => {
+		X(i) && e(D);
+	});
+	var Oe = R(E, 2), Ae = L(Oe, !0);
+	O(Oe);
+	var je = R(Oe, 4), Me = (e) => {
+		var t = ii(), n = Xt(t), r = L(n, !0);
 		O(n);
 		var a = R(n, 2), o = (e) => {
-			var t = Xr(), n = L(t);
+			var t = ni(), n = L(t);
 			O(t), dn(() => {
 				Pr(t, "title", X(s).allowed ? "Har publiseringstilgang" : "Mangler publiseringstilgang (ALLOWED_LOGINS)"), ir(n, `${X(s).allowed ? "" : "⚠ "}${X(s).login ?? ""}`);
 			}), $(e, t);
 		}, c = (e) => {
-			$(e, Zr());
+			$(e, ri());
 		};
 		ur(a, (e) => {
 			X(s)?.loggedIn ? e(o) : X(s) && e(c, 1);
@@ -2397,26 +2475,26 @@ function ni(e, t) {
 		var u = R(a, 2), d = R(u, 2), f = R(d, 2);
 		dn((e) => {
 			Pr(n, "title", X(l) ? "Skjul editeringshåndtakene og se siden som besøkende gjør" : "Vis editeringshåndtakene igjen"), ir(r, X(l) ? "👁 Ren visning" : "✏ Rediger"), Pr(u, "href", e), d.disabled = !X(i), f.disabled = !X(i);
-		}, [() => p().path]), Z("click", n, se), Z("click", d, _e), Z("click", f, ve), $(e, t);
-	};
-	ur(Oe, (e) => {
-		X(n) && e(Ae);
-	}), O(w);
-	var je = R(w, 2), Me = (e) => {
-		var t = $r();
-		zr(t, (e) => F(o, e), () => X(o)), dn(() => Pr(t, "src", `/?page=${X(r)}&preview=1`)), Xn("load", t, oe), Jn(t), $(e, t);
-	}, Ne = (e) => {
-		$(e, ei());
+		}, [() => p().path]), Z("click", n, se), Z("click", d, ye), Z("click", f, be), $(e, t);
 	};
 	ur(je, (e) => {
-		X(n) ? e(Me) : e(Ne, -1);
-	}), O(ye), dn(() => {
-		Se = Cr(w, 1, "topbar svelte-1n46o8q", null, Se, { hidden: !X(l) }), ir(D, X(a));
-	}), $(e, ye), Le();
+		X(n) && e(Me);
+	}), O(Ce);
+	var Ne = R(Ce, 2), Pe = (e) => {
+		var t = ai();
+		zr(t, (e) => F(o, e), () => X(o)), dn(() => Pr(t, "src", `/?page=${X(r)}&preview=1`)), Xn("load", t, oe), Jn(t), $(e, t);
+	}, k = (e) => {
+		$(e, oi());
+	};
+	ur(Ne, (e) => {
+		X(n) ? e(Pe) : e(k, -1);
+	}), O(xe), dn(() => {
+		we = Cr(Ce, 1, "topbar svelte-1n46o8q", null, we, { hidden: !X(l) }), ir(Ae, X(a));
+	}), $(e, xe), Le();
 }
 Zn(["click", "change"]);
 //#endregion
 //#region src/main.js
-var ri = ar(ni, { target: document.getElementById("urd-admin") });
+var li = ar(ci, { target: document.getElementById("urd-admin") });
 //#endregion
-export { ri as default };
+export { li as default };
