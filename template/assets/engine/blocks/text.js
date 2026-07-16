@@ -17,5 +17,20 @@ export const textBlock = {
     el.classList.add('urd-text');
     el.style.textAlign = props.align;
     el.innerHTML = props.html;
+
+    // Klikk-og-skriv: i preview-modus (inne i editorens iframe) er teksten
+    // direkte redigerbar, og hver endring meldes til editoren, som eier
+    // utkastet. Blokk-id ligger på elementet (satt av render.js).
+    if (ctx.preview) {
+      el.contentEditable = 'true';
+      el.addEventListener('input', () => {
+        window.parent?.postMessage({
+          type: 'urd-edit',
+          sectionId: ctx.section.id,
+          blockId: el.dataset.blockId,
+          props: { ...props, html: el.innerHTML },
+        }, location.origin);
+      });
+    }
   },
 };

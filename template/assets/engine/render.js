@@ -112,6 +112,10 @@ export function renderSection(section, site, host, opts = {}) {
   const neededPx = maxRow * grid.rowHeight;
   const wanted = section.size?.minHeight;
   host.style.minHeight = wanted ? `max(${wanted}, ${neededPx}px)` : `${neededPx}px`;
+
+  // I preview-modus kobles editeringslaget (dra/resize/slett) på etter
+  // hver rendering. Satt av urd.js; finnes aldri hos besøkende.
+  if (ctx.preview) window.UrdPreviewEdit?.enhanceSection(host, section, grid);
 }
 
 /**

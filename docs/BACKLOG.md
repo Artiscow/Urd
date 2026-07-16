@@ -9,15 +9,25 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 - [x] Motor: rutefinning i `urd.js` (path → side fra sideregisteret, `?page=<id>` som lokal fallback) + lasting av sidefil + migrering ved lasting
 - [x] Motor: `nav.js` (bygg nav fra site.json)
 - [x] Motor: preview-modus (`?preview=1`): lytt på postMessage-utkast, inkrementell rerender, meld tilbake høyde
-- [ ] Editor: skall med preview-iframe, klikk-og-skriv på tekstblokker
-- [ ] Editor: `draftStore.js` (localStorage-utkast + baseline-sammenligning)
-- [ ] Editor: `previewBridge.js` (postMessage-protokollen)
-- [ ] Editor: publiseringsknapp: samle endrede filer, POST til `/api/github/commit`
-- [ ] Functions: implementer `_lib/cookies.js`, `_lib/github.js` (cfg, gh, commitFiles)
-- [ ] Functions: implementer `login`, `callback`, `me`, `commit`, `latest`
-- [ ] Første `npm install`: committ `package-lock.json`
-- [ ] Oppsettguide: kort md for å sette opp OAuth-app + Cloudflare-miljøvariabler (generaliser fra ApeironLF-dokumentet)
+- [x] Editor: skall med preview-iframe, klikk-og-skriv på tekstblokker
+- [x] Editor: `draftStore.js` (localStorage-utkast + baseline-sammenligning)
+- [x] Editor: `previewBridge.js` (postMessage-protokollen, inkl. `urd-edit` fra siden)
+- [x] Editor: publiseringsknapp: samle endrede filer, POST til `/api/github/commit` (endepunktet er fortsatt stubb)
+- [x] Functions: implementer `_lib/cookies.js`, `_lib/github.js` (cfg, gh, commitFiles)
+- [x] Functions: implementer `login`, `callback`, `me`, `commit`, `latest` (sti-vernet enhetstestet i `tests/guard.test.mjs`)
+- [x] Første `npm install`: committ `package-lock.json`
+- [x] Oppsettguide: `docs/OPPSETT-PUBLISERING.md` (OAuth-app + Cloudflare-miljøvariabler + feilsøking)
 - [ ] Ende-til-ende-porten: rediger overskrift på deployet klon, publiser, se den live
+
+## Påbegynt (v0.3 «Lerretet»)
+
+- [x] Dra, resize og slett med grid-snapping i preview (håndtak på hover; `preview-edit.js` lastes kun i preview-modus)
+- [x] Blokkpalett første versjon: + Tekst / + Knapp / + Form i topplinjen (legger nederst i første seksjon)
+- [ ] Palett komplett: bilde- og logo-blokk, sirkel/rektangel-varianter, valg av målseksjon
+- [ ] z-orden (lag frem/bak)
+- [ ] Seksjons-CRUD: «+ Ny seksjon» in-place, presets (hero, bilder, footer), tom seksjon
+- [ ] Tekstblokker vokser ikke med innholdet (fast h klipper/overlapper ved mye tekst) - auto-høyde eller varsel
+- [ ] Angre (Ctrl+Z) for flytt/slett
 
 ## Funksjoner og forslag (udatert idébank)
 
@@ -25,13 +35,15 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 - [ ] Automatisk bildekomprimering ved opplasting (webp, størrelsestak per blokktype; mønster fra ApeironLF)
 - [ ] «Bakt HTML ved publisering» for SEO/no-JS (editoren har allerede ferdig DOM som kan snapshottes)
 - [ ] Flere kjerneblokker: video/embed, ikon, kart, skjema (skjema trolig som plugin)
-- [ ] Flere seksjonspresets: kalender, team/styret, FAQ, kontakt
+- [ ] Flere seksjonspresets: kalender, team/styret, FAQ, kontakt, nyheter, oppslagstavle, Hva Skjer/blokk som viser de tre neste arrangementene fra kalender moduler
 - [ ] Import fra eksisterende side (i det minste en veiviser som henter tekst/bilder)
 - [ ] Flerspråkstøtte for innhold (nb/nn/en-varianter av sider)
 - [ ] Samtidighetsvisning i admin («Kari redigerer Hjem nå»)
 - [ ] Galleri over community-maler og -plugins (urd.dev eller GitHub-topics)
 - [ ] GitLab/Gitea-adapter for publiseringslaget (etter v1, se ADR-0003)
 - [ ] Ekstern medialagring (Cloudflare R2) som plugin for bildetunge sider
+- [ ] Butikk/Merch mal med forskjellige bestillingsmåter (Kan ta inspirasjon fra ApeironLF for en måte å gjøre det på)
+- [ ] Arkiv for bestemte blokker: nyheter, oppslagstavle, styrer
 
 ## Bugs og kjente svakheter
 

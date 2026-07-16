@@ -6,6 +6,12 @@ editor/dist/
 # Merk: template/admin/assets/ skal IKKE ignoreres - den ferdigbygde
 # editoren committes slik at malen kan deployes uten byggesteg.
 
+# Lokale hemmeligheter for wrangler pages dev (aldri i git)
+template/.dev.vars
+
+# Wrangler-cache
+template/.wrangler/
+
 # Diverse
 .DS_Store
 *.log

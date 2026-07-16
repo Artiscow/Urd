@@ -6,22 +6,14 @@
   <title>Urd admin</title>
   <meta name="robots" content="noindex">
   <link rel="stylesheet" href="/assets/styles/base.css">
+  <link rel="stylesheet" href="./assets/editor.css">
 </head>
 <body>
-  <!-- Skallet for editoren. Den ferdigbygde editoren (fra editor/-kilden
-       i Urd-hovedrepoet) lastes fra ./assets/ når den finnes. -->
-  <main id="urd-admin" style="display:grid;place-items:center;min-height:100vh;text-align:center;padding:2rem">
-    <div>
-      <h1>Urd admin</h1>
-      <p>Editoren er under utvikling og kommer i v0.2 («tynn skive»).</p>
-      <p><a href="/" style="color:var(--urd-color-accent)">Tilbake til siden</a></p>
-    </div>
+  <!-- Editoren (bygget fra editor/-kilden i Urd-hovedrepoet) monteres her. -->
+  <main id="urd-admin">
+    <noscript>Urd-editoren trenger JavaScript.</noscript>
   </main>
 
-  <script type="module">
-    // Når editoren er bygget, erstattes denne blokken av
-    // <script type="module" src="./assets/editor.js"> fra byggesteget.
-    console.info('Urd admin-skall v0.1.0: editor ikke bygget ennå.');
-  </script>
+  <script type="module" src="./assets/editor.js"></script>
 </body>
 </html>

@@ -13,7 +13,13 @@
  * @returns {string} Verdi for en Set-Cookie-header
  */
 export function serializeCookie(name, value, opts = {}) {
-  throw new Error('TODO v0.2: serializeCookie er ikke implementert ennå');
+  const maxAge = opts.maxAge ?? 60 * 60 * 24 * 30;
+  return `${name}=${value}; Max-Age=${maxAge}; Path=/; HttpOnly; Secure; SameSite=Lax`;
+}
+
+/** Set-Cookie-verdi som sletter cookien. */
+export function expireCookie(name) {
+  return `${name}=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax`;
 }
 
 /**
@@ -22,5 +28,10 @@ export function serializeCookie(name, value, opts = {}) {
  * @returns {string|null}
  */
 export function readCookie(request, name) {
-  throw new Error('TODO v0.2: readCookie er ikke implementert ennå');
+  const header = request.headers.get('cookie') ?? '';
+  for (const part of header.split(/;\s*/)) {
+    const eq = part.indexOf('=');
+    if (eq > 0 && part.slice(0, eq).trim() === name) return part.slice(eq + 1);
+  }
+  return null;
 }

@@ -122,6 +122,12 @@ export async function boot(opts) {
   document.title = `${page.meta.title} - ${site.site.title}`;
 
   const preview = new URLSearchParams(location.search).get('preview') === '1';
+  if (preview) {
+    // Editeringslaget lastes dynamisk KUN i preview - besøkende henter
+    // aldri denne koden. Må være på plass før første rendering.
+    window.UrdPreviewEdit = await import('./preview-edit.js');
+    document.body.classList.add('urd-preview');
+  }
   renderPage(page, site, opts.root, { preview });
   if (preview) enablePreview(page, site, opts.root);
 }

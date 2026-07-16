@@ -1,20 +1,52 @@
 /**
  * Utkastlagring: localStorage-utkast med baseline-sammenligning.
  *
- * Mønster (validert i ApeironLF):
- *  - Utkast skrives fortløpende til localStorage under en nøkkel per panel.
- *  - En baseline (publisert tilstand) snapshottes ved lasting; blir utkastet
- *    likt baseline igjen (f.eks. etter angre), SLETTES utkastnøkkelen, slik
- *    at «upubliserte endringer»-merket alltid er ærlig.
- *  - «Har endringer» == utkastnøkkelen finnes.
- *  - Ved vellykket publisering slettes utkastnøklene og baseline oppdateres.
+ * Prinsipp (validert i ApeironLF): «har upubliserte endringer» er sant
+ * hvis og bare hvis utkastnøkkelen finnes i localStorage. save() sletter
+ * derfor nøkkelen når utkastet er identisk med publisert tilstand, slik
+ * at merket alltid er ærlig (f.eks. etter at brukeren angrer alt).
  */
 
 /**
- * @param {string} key localStorage-nøkkel, f.eks. 'urd-draft-page-hjem'
- * @param {() => object} loadPublished Leser publisert tilstand (fra content/-JSON)
- * @returns {{data: object, save(): void, reset(): void, hasDraft(): boolean}}
+ * @param {string} key localStorage-nøkkel, f.eks. 'urd-draft-hjem'
+ * @param {() => object} loadPublished Gir publisert tilstand (parset JSON)
+ * @returns {{data: object, save(): void, reset(): object, hasDraft(): boolean}}
  */
 export function createDraftStore(key, loadPublished) {
-  throw new Error('TODO v0.2: createDraftStore er ikke implementert ennå');
+  const published = loadPublished();
+  const baseline = JSON.stringify(published);
+
+  let data = structuredClone(published);
+  const raw = localStorage.getItem(key);
+  if (raw) {
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      localStorage.removeItem(key); // korrupt utkast: fall tilbake til publisert
+    }
+  }
+
+  return {
+    get data() {
+      return data;
+    },
+    /** Persister utkastet; sletter nøkkelen hvis det er likt publisert. */
+    save() {
+      const now = JSON.stringify(data);
+      if (now === baseline) {
+        localStorage.removeItem(key);
+      } else {
+        localStorage.setItem(key, now);
+      }
+    },
+    /** Forkast utkastet og gå tilbake til publisert tilstand. */
+    reset() {
+      localStorage.removeItem(key);
+      data = structuredClone(published);
+      return data;
+    },
+    hasDraft() {
+      return localStorage.getItem(key) !== null;
+    },
+  };
 }
