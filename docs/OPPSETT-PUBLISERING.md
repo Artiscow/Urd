@@ -10,7 +10,10 @@ Denne guiden setter opp «Publiser»-knappen: at admin kan committe endringer ti
 ## 1. Koble repoet til Cloudflare Pages
 
 1. Cloudflare-dashbordet → **Workers & Pages** → **Create** → **Pages** → **Connect to Git**.
-2. Velg repoet.
+2. Velg repoet, og velg **prosjektnavn med omhu**: navnet blir adressen
+   (`<navn>.pages.dev`), det deles globalt med alle Cloudflare-kunder (er navnet tatt,
+   får du et tilfeldig suffiks), og det KAN IKKE endres senere - da må prosjektet
+   slettes og opprettes på nytt. Kun små bokstaver, tall og bindestrek.
 3. Under byggeinnstillinger:
    - **Build command:** (tomt - Urd har ikke byggesteg)
    - **Build output directory:** `/`
@@ -31,18 +34,44 @@ Bruker du eget domene senere, oppdater begge URL-ene i OAuth-appen.
 
 ## 3. Sett miljøvariablene i Cloudflare
 
-Pages-prosjektet → **Settings** → **Variables and Secrets** (Production):
+Gå til prosjektet → **Settings** → **Variables and Secrets** → **Add**.
 
-| Variabel | Verdi | Type |
-|---|---|---|
-| `GITHUB_REPO` | `eier/repo`, f.eks. `minforening/nettside` | Tekst |
-| `GITHUB_CLIENT_ID` | Fra OAuth-appen | Tekst |
-| `GITHUB_CLIENT_SECRET` | Fra OAuth-appen | **Secret** |
-| `GITHUB_BRANCH` | `main` (standard hvis utelatt) | Tekst |
-| `GITHUB_SCOPE` | `public_repo` for offentlig repo, `repo` for privat | Tekst |
-| `ALLOWED_LOGINS` | Kommaseparerte GitHub-brukernavn som får publisere | Tekst |
+Skjemaet har tre felter: **Type**, **Variable name** og **Value**.
+Fyll inn nøyaktig som under. Lagre, og gjenta for alle seks:
 
-Redeploy etterpå (Deployments → siste → Retry deployment) så variablene tas i bruk.
+1. Type: Text
+   Navn: `GITHUB_REPO`
+   Verdi: repoet det skal publiseres til. For denne siden: `Artiscow/Urd`
+
+2. Type: Text
+   Navn: `GITHUB_CLIENT_ID`
+   Verdi: Client ID fra OAuth-appen (steg 2)
+
+3. Type: **Secret**
+   Navn: `GITHUB_CLIENT_SECRET`
+   Verdi: hemmeligheten fra OAuth-appen (steg 2)
+
+4. Type: Text
+   Navn: `GITHUB_BRANCH`
+   Verdi: `main`
+
+5. Type: Text
+   Navn: `GITHUB_SCOPE`
+   Verdi: `public_repo` (offentlig repo) eller `repo` (privat repo)
+
+6. Type: Text
+   Navn: `ALLOWED_LOGINS`
+   Verdi: GitHub-brukernavnene som får publisere, adskilt med komma. F.eks. `Artiscow`
+
+Til slutt må det deployes på nytt (variablene gjelder først fra neste deploy).
+Enkleste måte er en tom commit:
+
+```bash
+git commit --allow-empty -m "Redeploy for miljøvariabler"
+git push
+```
+
+(Alternativt i dashbordet: **Deployments** → ⋯-menyen på siste deploy → **Retry deployment**.)
 
 ## 4. Verifiser
 
