@@ -598,8 +598,9 @@
 
   .chrome-restore {
     position: fixed;
-    top: 10px;
-    right: 10px;
+    /* Under nettsidens egen topplinje, så den ikke dekker nav-lenkene */
+    top: 76px;
+    right: 14px;
     z-index: 200;
     font: inherit;
     color: #fff;
@@ -608,7 +609,7 @@
     border-radius: 999px;
     padding: 0.4em 1em;
     cursor: pointer;
-    opacity: 0.85;
+    opacity: 0.55;
   }
 
   .chrome-restore:hover {
