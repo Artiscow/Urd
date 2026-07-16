@@ -262,20 +262,35 @@ img, video {
   display: block;
 }
 
-/* «+ Ny seksjon»-barene mellom seksjoner (kun i preview) */
+/* «+ Ny seksjon»-barene svever OPPÅ skillet mellom seksjonene og tar
+   null plass i flyten, slik at seksjonene ligger kant i kant nøyaktig
+   som besøkende ser dem (kun i preview) */
 .urd-preview .urd-add-section {
+  position: relative;
+  height: 0;
+  overflow: visible;
   display: flex;
   justify-content: center;
   gap: 6px;
-  padding: 6px 0;
+  z-index: 1002;
+}
+
+.urd-preview .urd-add-section::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
   background: repeating-linear-gradient(
     90deg,
-    color-mix(in srgb, var(--urd-color-accent) 25%, transparent) 0 8px,
+    color-mix(in srgb, var(--urd-color-accent) 35%, transparent) 0 8px,
     transparent 8px 16px
-  ) center / 100% 1px no-repeat;
+  );
 }
 
 .urd-preview .urd-add-section button {
+  transform: translateY(-50%);
   border: 1px dashed color-mix(in srgb, var(--urd-color-accent) 60%, transparent);
   border-radius: 999px;
   background: var(--urd-color-bg);
@@ -284,6 +299,7 @@ img, video {
   padding: 3px 12px;
   cursor: pointer;
   opacity: 0.75;
+  height: fit-content;
 }
 
 .urd-preview .urd-add-section button:hover {
@@ -291,17 +307,19 @@ img, video {
   border-style: solid;
 }
 
-/* Seksjonens verktøylinje (flytt/slett) - synlig ved hover over seksjonen */
+/* Seksjonens verktøylinje (flytt opp/ned, slett) - synlig ved hover og
+   når seksjonen er valgt; ligger alltid øverst (over løftede blokker) */
 .urd-preview .urd-section-toolbar {
   position: absolute;
   top: 8px;
   right: 8px;
   display: none;
   gap: 2px;
-  z-index: 1001;
+  z-index: 100001;
 }
 
-.urd-preview .urd-section:hover > .urd-section-toolbar {
+.urd-preview .urd-section:hover > .urd-section-toolbar,
+.urd-preview .urd-section-active > .urd-section-toolbar {
   display: flex;
 }
 

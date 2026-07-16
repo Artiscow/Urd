@@ -101,8 +101,9 @@ function addSectionHeightHandle(host, section, grid) {
 
     const onMove = (ev) => {
       px = Math.max(grid.size * 3, startHeight + (ev.clientY - startY));
-      // Snapper til rutestørrelsen kun når snap er på, ellers piksel-presist.
-      px = grid.snap === false ? Math.round(px) : Math.round(px / grid.size) * grid.size;
+      // Piksel-presist når snap er av eller Shift holdes inne.
+      const free = grid.snap === false || ev.shiftKey;
+      px = free ? Math.round(px) : Math.round(px / grid.size) * grid.size;
       host.style.minHeight = `${px}px`;
     };
     const onUp = () => {
@@ -360,12 +361,15 @@ function enhanceBlock(el, block, section, grid, host) {
       const pctPerPx = 100 / host.clientWidth;
       const colStep = grid.size * pctPerPx;
       const r2 = (v) => Math.round(v * 100) / 100;
-      const snapPct = grid.snap === false ? (v) => Math.round(v * 10) / 10 : (v) => r2(Math.round(v / colStep) * colStep);
-      const snapPx = grid.snap === false ? Math.round : (v) => Math.round(v / grid.size) * grid.size;
       const overlay = showGridOverlay(host, grid);
       let current = orig;
 
       const onMove = (ev) => {
+        // Shift holdt inne = midlertidig fri plassering (0,1 % / 1 px);
+        // ellers styrer grid.snap.
+        const free = grid.snap === false || ev.shiftKey;
+        const snapPct = free ? (v) => Math.round(v * 10) / 10 : (v) => r2(Math.round(v / colStep) * colStep);
+        const snapPx = free ? Math.round : (v) => Math.round(v / grid.size) * grid.size;
         const dx = (ev.clientX - start.x) * pctPerPx;
         const dy = ev.clientY - start.y;
         current = kind === 'move'

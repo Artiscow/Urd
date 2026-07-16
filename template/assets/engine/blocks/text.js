@@ -23,8 +23,10 @@ export const textBlock = {
     content.style.textAlign = props.align;
     content.innerHTML = props.html;
     // Selvhelbreder: innhold lagret av eldre Urd kan inneholde
-    // håndtak-markup; fjern den ved rendering (lagres rent ved neste edit).
-    content.querySelectorAll('.urd-edit-toolbar, .urd-edit-resize').forEach((n) => n.remove());
+    // håndtak-markup, også foreldreløse knapper etter at nettleser-
+    // redigering splittet wrapperen. Tekstinnhold skal aldri inneholde
+    // knapper, så alle fjernes ved rendering (lagres rent ved neste edit).
+    content.querySelectorAll('.urd-edit-toolbar, .urd-edit-resize, button').forEach((n) => n.remove());
     el.appendChild(content);
 
     // Klikk-og-skriv: i preview-modus (inne i editorens iframe) er teksten

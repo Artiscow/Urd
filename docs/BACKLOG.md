@@ -43,7 +43,7 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 
 ## Funksjoner og forslag (udatert idébank)
 
-- [ ] Tastatursnarveier i editoren (Ctrl+Z angre, piltaster for flytting, Shift for finjustering)
+- [ ] Tastatursnarveier i editoren: piltaster for flytting (Ctrl+Z og Shift-for-fri-plassering er levert)
 - [ ] Full tekst editor (størrelse, kursiv, uthevet, font (egen mappe for å legge til fonts?), farge, midstilt, venstrestilt, høyrestilt, osv)
 - [ ] Automatisk bildekomprimering ved opplasting (webp, størrelsestak per blokktype; mønster fra ApeironLF)
 - [ ] «Bakt HTML ved publisering» for SEO/no-JS (editoren har allerede ferdig DOM som kan snapshottes)

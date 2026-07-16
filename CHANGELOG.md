@@ -26,7 +26,12 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 - **Gridet er nå kvadratisk med én innstilling: rutestørrelse i px** (slider i menyen; mindre = tettere). Kolonner/radhøyde og all forklaringstekst er borte. site.json er schemaVersion 2 og sidefiler schemaVersion 3 (seksjonenes grid-overstyr konverteres); eldre filer OG gamle localStorage-utkast løftes automatisk.
 - **Sidefiler er nå schemaVersion 2: blokkplassering lagres i fysiske enheter** (x/w i prosent av seksjonsbredden, y/h i px) i stedet for grid-enheter. Gridet er dermed KUN et snappeverktøy: å endre kolonner/radhøyde flytter aldri innhold. v1-filer løftes automatisk ved lasting (`liftPageFile` i migrate.js), Urds første reelle filmigrering, testet i `tests/page-migration.test.mjs`.
 
+### Lagt til
+- Shift holdt inne under dra/resize gir midlertidig fri plassering (overstyrer snap).
+
 ### Fikset
+- «+ Ny seksjon»-barene tok plass i flyten og forskjøv seksjonene i editoren i forhold til hvordan besøkende ser dem; de svever nå oppå selve skillet (null høyde i layouten), så høyde-linje, bar og fargeskift ligger på samme sted.
+- Seksjonsverktøylinjen (↑ ↓ ×, der × sletter seksjonen) vises nå også når seksjonen er valgt, ikke bare ved hover, og ligger alltid øverst.
 - Tekstblokker: redigeringshåndtakene lå inne i det redigerbare feltet, slik at ny tekst kunne havne i verktøylinjeraden, håndtak-HTML ble lagret i innholdet (som så «forsvant»/rotet seg ved rerendering), og resize-håndtaket lurte vekstmålingen til å utvide blokken for hvert tastetrykk. Teksten har nå sitt eget indre innholdselement, og gammelt forurenset innhold renses automatisk ved rendering.
 - Publisering tar nå med utkast fra ALLE sider, ikke bare siden man står på (endringer på andre sider ble stående upublisert i stillhet). «Upubliserte endringer»-merket teller også alle sider.
 - Sidevelger-nedtrekket følger mørkt tema (nettleser-standarden ga hvit liste med uleselige valg).
