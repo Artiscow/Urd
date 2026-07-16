@@ -99,7 +99,7 @@ En seksjon er alltid den samme generiske containeren - egen størrelse, egen bak
   "props": { "html": "<h1>Velkommen</h1>", "align": "left" },
   "animation": null,
   "frames": {
-    "desktop": { "x": 2, "y": 6, "w": 12, "h": 4, "z": 1, "rot": 0 },
+    "desktop": { "x": 8.33, "y": 48, "w": 50, "h": 32, "z": 1, "rot": 0 },
     "mobile": null
   }
 }
@@ -107,7 +107,7 @@ En seksjon er alltid den samme generiske containeren - egen størrelse, egen bak
 
 - **`type`** slår opp i blokkregisteret (`Urd.blocks`). Kjerneblokker: `text`, `image`, `button`, `shape` (streker - horisontale, vertikale og skrå via `rot` - sirkler, rektangler) og `logo`. Plugins kan definere flere.
 - **`props`** er typespesifikke og eies av blokkdefinisjonens versjon/migreringer.
-- **`frames`** er plassering per breakpoint, i **grid-enheter**: `x`/`w` i kolonner, `y`/`h` i rader, `z` er lagrekkefølge, `rot` er grader.
+- **`frames`** er plassering per breakpoint, i **fysiske enheter** (fra schemaVersion 2): `x`/`w` i prosent av seksjonsbredden (flyter med skjermen), `y`/`h` i px, `z` er lagrekkefølge, `rot` er grader. Gridet i site.json er KUN et snappeverktøy ved redigering; å endre det flytter aldri innhold.
 - **`frames.mobile: null`** betyr auto-avledet mobil-layout: motoren stabler blokkene i én kolonne i leserekkefølge (sortert på desktop-`y`, deretter `x`). Et objekt er en manuell overstyring.
 - **`animation`** (valgfri): `{ "type": "fade-in", "version": 1, "props": { … } }` - animasjoner er registertyper med samme migreringskontrakt (fra v0.4).
 
@@ -165,7 +165,7 @@ while (data.version < def.version) {
 - **I minnet:** lasting muterer aldri repoet. JSON på disk skrives først ved neste publisering (da i løftet form).
 - **Rene funksjoner:** migreringer får props inn og gir props ut. Ingen DOM, ingen sideeffekter - de kan enhetstestes trivielt.
 - **Manglende migrering eller ukjent type:** plassholder-rendering, original-JSON urørt. Aldri kast, aldri slett.
-- **Filnivå:** `schemaVersion` løftes med samme stegvise mønster for strukturelle endringer (f.eks. felt som flytter seg mellom objekter).
+- **Filnivå:** `schemaVersion` løftes med samme stegvise mønster for strukturelle endringer, implementert i `liftPageFile()` i migrate.js. Første reelle eksempel: **v1 → v2** (juli 2026), der frames gikk fra grid-enheter til fysiske enheter; omregningen bruker gridet innholdet ble laget mot, så ingenting flytter seg. Testet i `tests/page-migration.test.mjs`.
 
 Denne kontrakten er grunnen til at en Urd-oppdatering aldri knuser en bygget side - og fra v1.0 skal testsuiten alltid inneholde minst én reell v(n)→v(n+1)-migrering som bevis.
 

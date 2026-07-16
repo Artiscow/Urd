@@ -29,6 +29,27 @@ export function enhanceSection(host, section, grid) {
   }
   addSectionToolbar(host, section);
   addSectionHeightHandle(host, section, grid);
+  // Vedvarende grid-visning (grid-menyen i editoren er åpen) skal
+  // overleve rerendringer av seksjonen.
+  if (gridOverlaysOn) showGridOverlay(host, grid).classList.add('urd-grid-persistent');
+}
+
+/** Om vedvarende grid-visning er på (styrt av editorens grid-meny). */
+let gridOverlaysOn = false;
+
+/**
+ * Slår grid-visning i alle seksjoner av/på. Brukes mens grid-menyen i
+ * editoren er åpen, så innstillingsendringer ses umiddelbart.
+ */
+export function toggleGridOverlays(visible, page, site) {
+  gridOverlaysOn = visible;
+  document.querySelectorAll('.urd-grid-persistent').forEach((el) => el.remove());
+  if (!visible || !page || !site) return;
+  for (const host of document.querySelectorAll('.urd-section')) {
+    const section = page.sections.find((s) => s.id === host.dataset.sectionId);
+    if (!section) continue;
+    showGridOverlay(host, section.grid ?? site.grid).classList.add('urd-grid-persistent');
+  }
 }
 
 /**
@@ -243,28 +264,31 @@ function enhanceBlock(el, block, section, grid, host) {
 
       const start = { x: event.clientX, y: event.clientY };
       const orig = { ...block.frames.desktop };
-      const colWidth = host.clientWidth / grid.columns;
-      // snap av (grid.snap === false) gir fri plassering i kvarte
-      // grid-enheter, så JSON-verdiene holder seg lesbare.
-      const round = grid.snap === false ? (v) => Math.round(v * 4) / 4 : Math.round;
+      // Frames er fysiske (x/w i %, y/h i px); gridet styrer KUN hva vi
+      // snapper mot. Snap av gir fri plassering (0,1 % / 1 px-presisjon).
+      const pctPerPx = 100 / host.clientWidth;
+      const colStep = 100 / grid.columns;
+      const r2 = (v) => Math.round(v * 100) / 100;
+      const snapPct = grid.snap === false ? (v) => Math.round(v * 10) / 10 : (v) => r2(Math.round(v / colStep) * colStep);
+      const snapPx = grid.snap === false ? Math.round : (v) => Math.round(v / grid.rowHeight) * grid.rowHeight;
       const overlay = showGridOverlay(host, grid);
       let current = orig;
 
       const onMove = (ev) => {
-        const dx = (ev.clientX - start.x) / colWidth;
-        const dy = (ev.clientY - start.y) / grid.rowHeight;
+        const dx = (ev.clientX - start.x) * pctPerPx;
+        const dy = ev.clientY - start.y;
         current = kind === 'move'
           ? {
               ...orig,
-              x: clamp(round(orig.x + dx), 0, grid.columns - orig.w),
-              y: Math.max(0, round(orig.y + dy)),
+              x: clamp(snapPct(orig.x + dx), 0, r2(100 - orig.w)),
+              y: Math.max(0, snapPx(orig.y + dy)),
             }
           : {
               ...orig,
-              w: clamp(round(orig.w + dx), 1, grid.columns - orig.x),
-              h: Math.max(1, round(orig.h + dy)),
+              w: clamp(snapPct(orig.w + dx), r2(colStep), r2(100 - orig.x)),
+              h: Math.max(4, snapPx(orig.h + dy)),
             };
-        Object.assign(el.style, frameToCss(current, grid));
+        Object.assign(el.style, frameToCss(current));
       };
 
       const onUp = () => {

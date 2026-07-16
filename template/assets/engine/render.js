@@ -11,23 +11,22 @@
 import { lift } from './migrate.js';
 
 /**
- * Oversetter en frame i grid-enheter til CSS-posisjonering.
+ * Oversetter en frame til CSS-posisjonering.
  * Ren funksjon (ingen DOM), testet i tests/render.test.mjs.
  *
- * x/w regnes i kolonner og blir prosent (flyter med seksjonsbredden),
- * y/h regnes i rader og blir px (rowHeight er definert i px).
+ * Frames er i FYSISKE enheter (schemaVersion 2): x/w i prosent av
+ * seksjonsbredden (flyter med skjermen), y/h i px. Gridet er kun et
+ * snappeverktøy ved redigering og påvirker aldri plasseringen.
  *
  * @param {{x: number, y: number, w: number, h: number, z?: number, rot?: number}} frame
- * @param {{columns: number, rowHeight: number}} grid Effektivt grid (seksjonens eller nettstedets)
  * @returns {{left: string, top: string, width: string, height: string, zIndex: string, transform: string}}
  */
-export function frameToCss(frame, grid) {
-  const colWidth = 100 / grid.columns;
+export function frameToCss(frame) {
   return {
-    left: `${frame.x * colWidth}%`,
-    top: `${frame.y * grid.rowHeight}px`,
-    width: `${frame.w * colWidth}%`,
-    height: `${frame.h * grid.rowHeight}px`,
+    left: `${frame.x}%`,
+    top: `${frame.y}px`,
+    width: `${frame.w}%`,
+    height: `${frame.h}px`,
     zIndex: String(frame.z ?? 1),
     transform: frame.rot ? `rotate(${frame.rot}deg)` : '',
   };
@@ -86,14 +85,14 @@ export function renderSection(section, site, host, opts = {}) {
     }
   }
 
-  let maxRow = 0;
+  let maxBottomPx = 0;
   for (const block of section.blocks) {
     const el = document.createElement('div');
     el.className = 'urd-block';
     el.dataset.blockId = block.id;
     const frame = block.frames.desktop;
-    Object.assign(el.style, frameToCss(frame, grid));
-    maxRow = Math.max(maxRow, frame.y + frame.h);
+    Object.assign(el.style, frameToCss(frame));
+    maxBottomPx = Math.max(maxBottomPx, frame.y + frame.h);
 
     const lifted = lift(block, Urd.blocks.get(block.type));
     if (lifted.ok) {
@@ -111,7 +110,7 @@ export function renderSection(section, site, host, opts = {}) {
 
   // Seksjonen må være høy nok for blokkene sine; brukerens minHeight
   // (f.eks. '85vh') vinner når den er større.
-  const neededPx = maxRow * grid.rowHeight;
+  const neededPx = maxBottomPx;
   const wanted = section.size?.minHeight;
   host.style.minHeight = wanted ? `max(${wanted}, ${neededPx}px)` : `${neededPx}px`;
 

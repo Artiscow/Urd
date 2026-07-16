@@ -10,6 +10,7 @@
  * utkast fra editoren og rerendrer inkrementelt.
  */
 import { createRegistry } from './registry.js';
+import { liftPageFile } from './migrate.js';
 import { applyTheme } from './theme.js';
 import { renderPage, renderSection } from './render.js';
 import { renderNav } from './nav.js';
@@ -102,6 +103,9 @@ function enablePreview(page, site, opts) {
     } else if (msg?.type === 'urd-chrome') {
       // Ren visning: skjul/vis editeringshåndtakene (kun CSS, se base.css).
       document.body.classList.toggle('urd-chrome-off', !msg.visible);
+    } else if (msg?.type === 'urd-show-grid') {
+      // Grid-menyen i editoren er åpen: vis gridet i alle seksjoner.
+      window.UrdPreviewEdit?.toggleGridOverlays(msg.visible, page, site);
     } else if (msg?.type === 'urd-site' && msg.site) {
       // Site-utkast fra editoren (grid, tema, nav): alt som avhenger av
       // site.json rendres på nytt.
@@ -132,7 +136,9 @@ export async function boot(opts) {
   if (opts.nav) renderNav(site, opts.nav);
 
   const entry = resolvePage(site);
-  const page = await (await fetch(`/${entry.file}`)).json();
+  // Versjonsløfting på filnivå: eldre sidefiler løftes til gjeldende
+  // format i minnet (disk skrives først ved neste publisering).
+  const page = liftPageFile(await (await fetch(`/${entry.file}`)).json(), site);
   document.title = `${page.meta.title} - ${site.site.title}`;
 
   const preview = new URLSearchParams(location.search).get('preview') === '1';

@@ -1,17 +1,28 @@
 {
-  "schemaVersion": 1,
-  "meta": { "id": "om-oss", "title": "Om oss" },
+  "schemaVersion": 2,
+  "meta": {
+    "id": "om-oss",
+    "title": "Om oss"
+  },
   "sections": [
     {
       "id": "sec-om",
       "version": 1,
       "preset": null,
-      "size": { "minHeight": "60vh" },
+      "size": {
+        "minHeight": "60vh"
+      },
       "grid": null,
       "background": {
         "version": 1,
         "layers": [
-          { "type": "color", "version": 1, "props": { "value": "#0b0e14" } }
+          {
+            "type": "color",
+            "version": 1,
+            "props": {
+              "value": "#0b0e14"
+            }
+          }
         ]
       },
       "blocks": [
@@ -19,10 +30,20 @@
           "id": "blk-om-tittel",
           "type": "text",
           "version": 1,
-          "props": { "html": "<h1>Om oss</h1>", "align": "left" },
+          "props": {
+            "html": "<h1>Om oss</h1>",
+            "align": "left"
+          },
           "animation": null,
           "frames": {
-            "desktop": { "x": 2, "y": 4, "w": 10, "h": 4, "z": 1, "rot": 0 },
+            "desktop": {
+              "x": 8.33,
+              "y": 32,
+              "w": 41.67,
+              "h": 32,
+              "z": 1,
+              "rot": 0
+            },
             "mobile": null
           }
         },
@@ -30,10 +51,21 @@
           "id": "blk-om-strek",
           "type": "shape",
           "version": 1,
-          "props": { "kind": "line", "color": "#7c5cff", "thickness": 2 },
+          "props": {
+            "kind": "line",
+            "color": "#7c5cff",
+            "thickness": 2
+          },
           "animation": null,
           "frames": {
-            "desktop": { "x": 2, "y": 8, "w": 8, "h": 1, "z": 1, "rot": -8 },
+            "desktop": {
+              "x": 8.33,
+              "y": 64,
+              "w": 33.33,
+              "h": 8,
+              "z": 1,
+              "rot": -8
+            },
             "mobile": null
           }
         },
@@ -41,16 +73,29 @@
           "id": "blk-om-tekst",
           "type": "text",
           "version": 1,
-          "props": { "html": "<p>Skriv om foreningen din her. Denne seksjonen er bygget fra tomt lerret.</p>", "align": "left" },
+          "props": {
+            "html": "<p>Skriv om foreningen din her. Denne seksjonen er bygget fra tomt lerret.</p>",
+            "align": "left"
+          },
           "animation": null,
           "frames": {
-            "desktop": { "x": 2, "y": 10, "w": 14, "h": 4, "z": 1, "rot": 0 },
+            "desktop": {
+              "x": 8.33,
+              "y": 80,
+              "w": 58.33,
+              "h": 32,
+              "z": 1,
+              "rot": 0
+            },
             "mobile": null
           }
         }
       ],
       "responsive": {
-        "mobile": { "mode": "auto", "attention": null }
+        "mobile": {
+          "mode": "auto",
+          "attention": null
+        }
       }
     }
   ]

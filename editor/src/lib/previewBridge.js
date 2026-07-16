@@ -17,6 +17,7 @@
  *                  { type: 'urd-undo', redo }                 (Ctrl+Z inne i iframen)
  *                  { type: 'urd-preview-height', px }
  *   editor → side: { type: 'urd-chrome', visible }            (vis/skjul editeringshåndtak)
+ *                  { type: 'urd-show-grid', visible }         (vis gridet i alle seksjoner)
  */
 
 /**
@@ -53,6 +54,9 @@ export function createPreviewBridge(iframe, handlers = {}) {
     },
     sendChrome(visible) {
       post({ type: 'urd-chrome', visible });
+    },
+    sendShowGrid(visible) {
+      post({ type: 'urd-show-grid', visible });
     },
     destroy() {
       window.removeEventListener('message', listener);

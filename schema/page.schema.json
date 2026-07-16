@@ -135,11 +135,12 @@
       "type": "object",
       "required": ["x", "y", "w", "h"],
       "additionalProperties": false,
+      "description": "Fysiske enheter (fra schemaVersion 2): x/w i prosent av seksjonsbredden, y/h i px. Gridet er kun et snappeverktøy og påvirker aldri plasseringen.",
       "properties": {
-        "x": { "type": "number", "minimum": 0, "description": "Kolonne (grid-enheter)" },
-        "y": { "type": "number", "minimum": 0, "description": "Rad (grid-enheter)" },
-        "w": { "type": "number", "exclusiveMinimum": 0, "description": "Bredde i kolonner" },
-        "h": { "type": "number", "exclusiveMinimum": 0, "description": "Høyde i rader" },
+        "x": { "type": "number", "minimum": 0, "maximum": 100, "description": "Venstrekant i % av seksjonsbredden" },
+        "y": { "type": "number", "minimum": 0, "description": "Overkant i px" },
+        "w": { "type": "number", "exclusiveMinimum": 0, "maximum": 100, "description": "Bredde i % av seksjonsbredden" },
+        "h": { "type": "number", "exclusiveMinimum": 0, "description": "Høyde i px" },
         "z": { "type": "integer", "default": 1, "description": "Lagrekkefølge" },
         "rot": { "type": "number", "default": 0, "description": "Rotasjon i grader" }
       }

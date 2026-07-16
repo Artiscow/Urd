@@ -4,6 +4,8 @@
   // publiseringsknapp mot /api/github/commit.
   import { createDraftStore } from './lib/draftStore.js';
   import { createPreviewBridge } from './lib/previewBridge.js';
+  // Editoren deler migreringskoden med motoren (samme fil, bundles inn).
+  import { liftPageFile } from '../../template/assets/engine/migrate.js';
 
   let site = $state(null);
   let pageId = $state(null);
@@ -81,7 +83,12 @@
   function onKeydown(e) {
     if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'z') return;
     const t = e.target;
-    if (t instanceof HTMLElement && (t.isContentEditable || t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) return;
+    // Fritekstfelter beholder nettleserens egen angring; alt annet
+    // (inkl. tallfeltene i grid-menyen) bruker editorens historikk.
+    const nativeUndo = t instanceof HTMLElement
+      && (t.isContentEditable || t.tagName === 'TEXTAREA'
+        || (t.tagName === 'INPUT' && !['number', 'checkbox', 'range'].includes(t.type)));
+    if (nativeUndo) return;
     e.preventDefault();
     if (e.shiftKey) redo();
     else undo();
@@ -95,7 +102,11 @@
     await checkAuth();
   }
 
-  /** Grid-kontrollene: endringer lagres i site-utkastet og pushes live. */
+  /** Om grid-menyen er åpen (gridet vises da i forhåndsvisningen). */
+  let gridMenuOpen = $state(false);
+
+  /** Grid-kontrollene: endringer lagres i site-utkastet og pushes live.
+   *  Gridet er kun et snappeverktøy; å endre det flytter aldri innhold. */
   function setGrid(field, value) {
     pushHistory('grid');
     grid = { ...grid, [field]: value };
@@ -103,6 +114,14 @@
     siteStore.save();
     updateDirty();
     bridge?.sendSite(siteStore.data);
+    // sendSite rerendrer siden; slå grid-visningen på igjen etterpå
+    // (postMessage er ordnet, så dette ankommer etter rerenderingen).
+    if (gridMenuOpen) bridge?.sendShowGrid(true);
+  }
+
+  function onGridMenuToggle(event) {
+    gridMenuOpen = event.target.open;
+    bridge?.sendShowGrid(gridMenuOpen);
   }
 
   async function checkAuth() {
@@ -117,7 +136,10 @@
   async function selectPage(id) {
     pageId = id;
     const entry = pageEntry();
-    const published = await (await fetch(`/${entry.file}`)).json();
+    const raw = await (await fetch(`/${entry.file}`)).json();
+    // Eldre sidefiler løftes til gjeldende format før redigering, slik at
+    // utkast og publisering alltid er på nyeste schemaVersion.
+    const published = liftPageFile(raw, siteStore.data);
     store = createDraftStore(`urd-draft-${id}`, () => published);
     history.length = 0;
     redoStack.length = 0;
@@ -228,28 +250,29 @@
 
   /** Blokkpaletten: ny blokk nederst i første seksjon, klar til å dras dit
    *  den skal. (Seksjonvalg og «+ Ny seksjon» kommer senere i v0.3.) */
+  /** w i prosent av seksjonsbredden, h i px (fysiske enheter). */
   const BLOCK_DEFAULTS = {
-    text: { type: 'text', props: { html: '<p>Ny tekst</p>', align: 'left' }, w: 8, h: 3 },
-    button: { type: 'button', props: { label: 'Ny knapp', page: null, href: '#', style: 'primary' }, w: 5, h: 2 },
-    'shape-line': { type: 'shape', props: { kind: 'line', color: 'accent', thickness: 2, fill: null }, w: 6, h: 1 },
-    'shape-arrow': { type: 'shape', props: { kind: 'arrow', color: 'accent', thickness: 2, fill: null }, w: 6, h: 2 },
-    'shape-circle': { type: 'shape', props: { kind: 'circle', color: 'accent', thickness: 2, fill: null }, w: 4, h: 4 },
-    'shape-rect': { type: 'shape', props: { kind: 'rect', color: 'accent', thickness: 2, fill: null }, w: 6, h: 3 },
-    'shape-triangle': { type: 'shape', props: { kind: 'triangle', color: 'accent', thickness: 2, fill: null }, w: 4, h: 4 },
+    text: { type: 'text', props: { html: '<p>Ny tekst</p>', align: 'left' }, w: 33, h: 28 },
+    button: { type: 'button', props: { label: 'Ny knapp', page: null, href: '#', style: 'primary' }, w: 20, h: 36 },
+    'shape-line': { type: 'shape', props: { kind: 'line', color: 'accent', thickness: 2, fill: null }, w: 25, h: 8 },
+    'shape-arrow': { type: 'shape', props: { kind: 'arrow', color: 'accent', thickness: 2, fill: null }, w: 25, h: 16 },
+    'shape-circle': { type: 'shape', props: { kind: 'circle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
+    'shape-rect': { type: 'shape', props: { kind: 'rect', color: 'accent', thickness: 2, fill: null }, w: 20, h: 110 },
+    'shape-triangle': { type: 'shape', props: { kind: 'triangle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
   };
 
   function addBlock(kind, event) {
     pushHistory('add-block');
     const section = store.data.sections[0];
     const d = BLOCK_DEFAULTS[kind];
-    const maxRow = Math.max(0, ...section.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
+    const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
     section.blocks.push({
       id: `blk-${crypto.randomUUID().slice(0, 8)}`,
       type: d.type,
       version: 1,
       props: structuredClone(d.props),
       animation: null,
-      frames: { desktop: { x: 1, y: maxRow + 1, w: d.w, h: d.h, z: 1, rot: 0 }, mobile: null },
+      frames: { desktop: { x: 4, y: maxBottom + 8, w: d.w, h: d.h, z: 1, rot: 0 }, mobile: null },
     });
     store.save();
     updateDirty();
@@ -345,16 +368,16 @@
         </details>
       </span>
 
-      <details class="gridmenu">
-        <summary title="Grid-innstillinger (gjelder hele nettstedet, publiseres med site.json)">⌗ Grid</summary>
+      <details class="gridmenu" ontoggle={onGridMenuToggle}>
+        <summary title="Grid-innstillinger (hjelpelinjer for plassering)">⌗ Grid</summary>
         <div class="gridmenu-body">
           <label>
-            Kolonner
+            Kolonner (bredden)
             <input type="number" min="4" max="100" value={grid.columns}
               onchange={(e) => setGrid('columns', Math.max(4, Math.min(100, Number(e.target.value) || 24)))} />
           </label>
           <label>
-            Radhøyde (px)
+            Radhøyde i px (høyden)
             <input type="number" min="2" max="64" value={grid.rowHeight}
               onchange={(e) => setGrid('rowHeight', Math.max(2, Math.min(64, Number(e.target.value) || 8)))} />
           </label>
@@ -363,7 +386,13 @@
               onchange={(e) => setGrid('snap', e.target.checked)} />
             Snap til grid
           </label>
-          <p class="gridmenu-hint">Gridet vises mens du drar. Flere kolonner og lavere radhøyde gir finere plassering.</p>
+          <p class="gridmenu-hint">
+            Gridet er kun hjelpelinjer: det styrer hva blokker snapper til når du
+            drar, og å endre det flytter ALDRI noe som allerede står på siden.
+            Bredden deles i kolonner (flere = finere sideveis), høyden går i rader
+            på et fast antall piksler (lavere = finere opp/ned). Én rute er nå ca.
+            {Math.round((iframeEl?.clientWidth ?? 1280) / grid.columns)} × {grid.rowHeight} px.
+          </p>
         </div>
       </details>
     {/if}

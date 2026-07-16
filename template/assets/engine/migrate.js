@@ -43,3 +43,61 @@ export function lift(data, def) {
   }
   return { ok: true, version, props };
 }
+
+/** Gjeldende versjon av sidefil-formatet (content/pages/*.json). */
+export const PAGE_SCHEMA_VERSION = 2;
+
+const r2 = (v) => Math.round(v * 100) / 100;
+
+/**
+ * Migreringer på filnivå. Hver funksjon løfter nøyaktig én versjon og
+ * får hele sidefilen (klonet) + site.json som kontekst.
+ *
+ * v1 → v2: frames gikk fra grid-enheter (x/w i kolonner, y/h i rader) til
+ * fysiske enheter (x/w i prosent av seksjonsbredden, y/h i px). Omregningen
+ * bruker gridet innholdet ble laget mot (seksjonens eget, ellers sitets),
+ * slik at ingenting flytter seg. Etter v2 er gridet KUN et snappeverktøy.
+ */
+const pageMigrations = {
+  1: (page, site) => {
+    for (const section of page.sections ?? []) {
+      const g = section.grid ?? site?.grid ?? { columns: 24, rowHeight: 8 };
+      for (const block of section.blocks ?? []) {
+        for (const key of ['desktop', 'mobile']) {
+          const f = block.frames?.[key];
+          if (!f) continue;
+          block.frames[key] = {
+            ...f,
+            x: r2((f.x * 100) / g.columns),
+            w: r2((f.w * 100) / g.columns),
+            y: f.y * g.rowHeight,
+            h: f.h * g.rowHeight,
+          };
+        }
+      }
+    }
+    return page;
+  },
+};
+
+/**
+ * Løfter en sidefil til gjeldende schemaVersion. Stegvis og aldri
+ * destruktivt: mangler et migreringssteg (eller er filen NYERE enn
+ * motoren), returneres den urørt i stedet for å feiltolkes.
+ *
+ * @param {object} page Sidefil, allerede parset
+ * @param {object} site site.json (kontekst for omregninger)
+ * @returns {object} Løftet kopi (originalen muteres aldri)
+ */
+export function liftPageFile(page, site) {
+  let lifted = structuredClone(page);
+  let version = lifted.schemaVersion ?? 1;
+  while (version < PAGE_SCHEMA_VERSION) {
+    const step = pageMigrations[version];
+    if (typeof step !== 'function') return page;
+    lifted = step(lifted, site) ?? lifted;
+    version++;
+    lifted.schemaVersion = version;
+  }
+  return lifted;
+}
