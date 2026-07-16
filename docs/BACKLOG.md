@@ -33,8 +33,10 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 - [ ] Bilder-preset (venter på image-blokken i paletten)
 - [ ] Tekstblokker vokser ikke med innholdet (fast h klipper/overlapper ved mye tekst) - auto-høyde eller varsel
 - [x] Angre/gjenta (Ctrl+Z / Ctrl+Shift+Z) for ALT: flytt, resize, ny/slettet blokk og seksjon, seksjonshøyde, grid, forkast (tekst i skrivemodus bruker nettleserens egen angring)
-- [x] «+ Form» er en meny: strek, sirkel, rektangel
-- [x] «Ren visning»-knapp: skjuler alle editeringshåndtak så siden ses som besøkende ser den
+- [x] «+ Form» er en meny: strek, pil, sirkel, rektangel, trekant
+- [x] «Ren visning»-knapp: skjuler alle editeringshåndtak OG topplinjen (flytende Rediger-knapp), så siden ses i full høyde som besøkende ser den
+- [x] Klikk-markering: klikk på en blokk holder fokus med varig omriss og synlige håndtak; klikk utenfor avvelger
+- [ ] Fyll/farge-valg for former (fill-propen finnes i datamodellen, trenger UI - hører til blokkeditoren i v0.5)
 
 ## Funksjoner og forslag (udatert idébank)
 

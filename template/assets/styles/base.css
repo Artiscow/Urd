@@ -232,6 +232,20 @@ img, video {
   display: block;
 }
 
+/* Markert blokk: varig omriss og alltid synlige håndtak */
+.urd-preview .urd-block.urd-selected {
+  outline: 2px solid var(--urd-color-accent);
+  outline-offset: 2px;
+}
+
+.urd-preview .urd-block.urd-selected .urd-edit-toolbar {
+  display: flex;
+}
+
+.urd-preview .urd-block.urd-selected .urd-edit-resize {
+  display: block;
+}
+
 /* «+ Ny seksjon»-barene mellom seksjoner (kun i preview) */
 .urd-preview .urd-add-section {
   display: flex;
@@ -306,18 +320,28 @@ img, video {
   outline: none;
 }
 
-/* Høyde-håndtaket i underkant av seksjonen */
+/* Høyde-håndtaket i underkant av seksjonen: treffsonen er 10px, men den
+   synlige linjen ligger nøyaktig på seksjonens kant */
 .urd-preview .urd-section-resize {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 8px;
+  height: 10px;
   cursor: ns-resize;
   z-index: 1001;
 }
 
-.urd-preview .urd-section-resize:hover,
-.urd-preview .urd-section-resize:active {
-  background: color-mix(in srgb, var(--urd-color-accent) 45%, transparent);
+.urd-preview .urd-section-resize::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+}
+
+.urd-preview .urd-section-resize:hover::after,
+.urd-preview .urd-section-resize:active::after {
+  background: var(--urd-color-accent);
 }

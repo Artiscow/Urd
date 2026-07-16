@@ -232,8 +232,10 @@
     text: { type: 'text', props: { html: '<p>Ny tekst</p>', align: 'left' }, w: 8, h: 3 },
     button: { type: 'button', props: { label: 'Ny knapp', page: null, href: '#', style: 'primary' }, w: 5, h: 2 },
     'shape-line': { type: 'shape', props: { kind: 'line', color: 'accent', thickness: 2, fill: null }, w: 6, h: 1 },
+    'shape-arrow': { type: 'shape', props: { kind: 'arrow', color: 'accent', thickness: 2, fill: null }, w: 6, h: 2 },
     'shape-circle': { type: 'shape', props: { kind: 'circle', color: 'accent', thickness: 2, fill: null }, w: 4, h: 4 },
     'shape-rect': { type: 'shape', props: { kind: 'rect', color: 'accent', thickness: 2, fill: null }, w: 6, h: 3 },
+    'shape-triangle': { type: 'shape', props: { kind: 'triangle', color: 'accent', thickness: 2, fill: null }, w: 4, h: 4 },
   };
 
   function addBlock(kind, event) {
@@ -312,7 +314,11 @@
 <svelte:window onkeydown={onKeydown} />
 
 <div class="editor">
-  <header class="topbar">
+  {#if !chromeVisible}
+    <!-- Ren visning: topplinjen er skjult så siden får full høyde -->
+    <button class="chrome-restore" onclick={toggleChrome} title="Tilbake til redigering">✏ Rediger</button>
+  {/if}
+  <header class="topbar" class:hidden={!chromeVisible}>
     <strong class="brand">Urd</strong>
 
     {#if site}
@@ -330,9 +336,11 @@
         <details class="gridmenu">
           <summary title="Ny form">+ Form</summary>
           <div class="gridmenu-body formmenu">
-            <button class="ghost" onclick={(e) => addBlock('shape-line', e)}>Strek</button>
-            <button class="ghost" onclick={(e) => addBlock('shape-circle', e)}>Sirkel</button>
-            <button class="ghost" onclick={(e) => addBlock('shape-rect', e)}>Rektangel</button>
+            <button class="ghost" onclick={(e) => addBlock('shape-line', e)}>─ Strek</button>
+            <button class="ghost" onclick={(e) => addBlock('shape-arrow', e)}>→ Pil</button>
+            <button class="ghost" onclick={(e) => addBlock('shape-circle', e)}>○ Sirkel</button>
+            <button class="ghost" onclick={(e) => addBlock('shape-rect', e)}>▭ Rektangel</button>
+            <button class="ghost" onclick={(e) => addBlock('shape-triangle', e)}>△ Trekant</button>
           </div>
         </details>
       </span>
@@ -404,6 +412,29 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
+  }
+
+  .topbar.hidden {
+    display: none;
+  }
+
+  .chrome-restore {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 200;
+    font: inherit;
+    color: #fff;
+    background: var(--urd-color-accent, #7c5cff);
+    border: 0;
+    border-radius: 999px;
+    padding: 0.4em 1em;
+    cursor: pointer;
+    opacity: 0.85;
+  }
+
+  .chrome-restore:hover {
+    opacity: 1;
   }
 
   .topbar {

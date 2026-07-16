@@ -1,6 +1,7 @@
 /**
- * Kjerneblokk: form. Streker (horisontale, vertikale og skrå via framens
- * rot-felt), sirkler og rektangler. Dekorelementer for fri komposisjon.
+ * Kjerneblokk: form. Streker og piler (retning via framens rot-felt),
+ * sirkler/ellipser, rektangler og trekanter. Dekorelementer for fri
+ * komposisjon.
  */
 import { resolveColor } from '../theme.js';
 
@@ -11,18 +12,35 @@ export const shapeBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el
-   * @param {{kind: 'line'|'circle'|'rect', color: string, thickness: number, fill: string|null}} props
+   * @param {{kind: 'line'|'arrow'|'circle'|'rect'|'triangle', color: string, thickness: number, fill: string|null}} props
    * @param {object} ctx
    */
   render(el, props, ctx) {
     const color = resolveColor(props.color);
-    if (props.kind === 'line') {
+
+    if (props.kind === 'line' || props.kind === 'arrow') {
       // Horisontal strek sentrert i framen; retning styres med rot.
       const line = document.createElement('div');
-      line.style.cssText = `position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:${props.thickness}px;background:${color};`;
+      line.style.cssText = `position:absolute;left:0;right:${props.kind === 'arrow' ? '10px' : '0'};top:50%;transform:translateY(-50%);height:${props.thickness}px;background:${color};`;
       el.appendChild(line);
+      if (props.kind === 'arrow') {
+        const head = document.createElement('div');
+        const size = Math.max(6, props.thickness * 4);
+        head.style.cssText = `position:absolute;right:0;top:50%;transform:translateY(-50%);width:0;height:0;border-top:${size}px solid transparent;border-bottom:${size}px solid transparent;border-left:${size * 1.4}px solid ${color};`;
+        el.appendChild(head);
+      }
       return;
     }
+
+    if (props.kind === 'triangle') {
+      // Trekant tegnes som fylt flate (clip-path kan ikke ha kantstrek).
+      const tri = document.createElement('div');
+      tri.style.cssText = `position:absolute;inset:0;background:${resolveColor(props.fill ?? props.color)};clip-path:polygon(50% 0, 100% 100%, 0 100%);`;
+      el.appendChild(tri);
+      return;
+    }
+
+    // circle / rect: sirkel blir ellipse i ikke-kvadratiske frames.
     if (props.fill) {
       el.style.background = resolveColor(props.fill);
     } else {

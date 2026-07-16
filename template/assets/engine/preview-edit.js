@@ -50,7 +50,8 @@ function addSectionHeightHandle(host, section, grid) {
 
     const onMove = (ev) => {
       px = Math.max(grid.rowHeight * 4, startHeight + (ev.clientY - startY));
-      px = Math.round(px / grid.rowHeight) * grid.rowHeight;
+      // Snapper til radhøyden kun når snap er på, ellers piksel-presist.
+      px = grid.snap === false ? Math.round(px) : Math.round(px / grid.rowHeight) * grid.rowHeight;
       host.style.minHeight = `${px}px`;
     };
     const onUp = () => {
@@ -155,6 +156,24 @@ window.addEventListener('keydown', (event) => {
   post({ type: 'urd-undo', redo: event.shiftKey });
 });
 
+// Markering: klikk på en blokk gir den varig fokus (håndtakene holder seg
+// synlige, se base.css). Klikk utenfor alle blokker avvelger. Markeringen
+// overlever rerender via id-en.
+let selectedBlockId = null;
+
+function selectBlock(el) {
+  selectedBlockId = el?.dataset.blockId ?? null;
+  document.querySelectorAll('.urd-block.urd-selected').forEach((b) => {
+    if (b !== el) b.classList.remove('urd-selected');
+  });
+  el?.classList.add('urd-selected');
+}
+
+document.addEventListener('pointerdown', (event) => {
+  const el = event.target instanceof HTMLElement ? event.target.closest('.urd-block') : null;
+  selectBlock(el);
+});
+
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
@@ -175,6 +194,7 @@ function showGridOverlay(host, grid) {
 
 function enhanceBlock(el, block, section, grid, host) {
   el.classList.add('urd-editable');
+  if (block.id === selectedBlockId) el.classList.add('urd-selected');
 
   const toolbar = document.createElement('div');
   toolbar.className = 'urd-edit-toolbar';
