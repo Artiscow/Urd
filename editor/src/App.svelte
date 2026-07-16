@@ -529,6 +529,7 @@
     <button class="chrome-restore" onclick={toggleChrome} title="Tilbake til redigering">✏ Rediger</button>
   {/if}
   <header class="topbar" class:hidden={!chromeVisible}>
+    <span class="topbar-group">
     <strong class="brand">Urd</strong>
 
     {#if site}
@@ -599,9 +600,9 @@
     {/if}
 
     <span class="status">{status}</span>
+    </span>
 
-    <span class="spacer"></span>
-
+    <span class="topbar-group topbar-right">
     {#if site}
       <button
         class="ghost"
@@ -619,6 +620,7 @@
       <button class="ghost" onclick={discard} disabled={!dirty}>Forkast utkast</button>
       <button class="primary" onclick={publish} disabled={!dirty}>Publiser</button>
     {/if}
+    </span>
   </header>
 
   {#if site}
@@ -667,6 +669,7 @@
   .topbar {
     display: flex;
     flex-wrap: wrap;
+    justify-content: space-between;
     align-items: center;
     gap: 0.5rem 0.75rem;
     padding: 0.6rem 1rem;
@@ -679,8 +682,23 @@
     font-size: 1.05rem;
   }
 
-  .spacer {
-    flex: 1;
+  /* To grupper som bryter hver for seg: venstre (verktøy) og høyre
+     (visning/publisering). Ser ryddig ut på alle bredder. */
+  .topbar-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    min-width: 0;
+  }
+
+  .topbar-right {
+    margin-left: auto;
+    justify-content: flex-end;
+  }
+
+  .status {
+    max-width: 40ch;
   }
 
   .badge {

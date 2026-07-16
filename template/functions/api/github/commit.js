@@ -82,6 +82,8 @@ export async function onRequestPost({ request, env }) {
     return json({ sha });
   } catch (err) {
     console.error('Urd publish:', err.message);
-    return json({ error: 'Kunne ikke committe til GitHub (har HEAD flyttet seg?)' }, 502);
+    // GitHubs faktiske svar vises til den innloggede redaktøren - uten
+    // det er feilsøking umulig. Tokenet inngår aldri i meldingen.
+    return json({ error: `Kunne ikke committe til GitHub: ${err.message}` }, 502);
   }
 }

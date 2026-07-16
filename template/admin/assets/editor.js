@@ -2126,7 +2126,7 @@ function $r(e) {
 }
 //#endregion
 //#region src/App.svelte
-var ei = /* @__PURE__ */ Q("<button class=\"chrome-restore svelte-1n46o8q\" title=\"Tilbake til redigering\">✏ Rediger</button>"), ti = /* @__PURE__ */ Q("<option class=\"svelte-1n46o8q\"> </option>"), ni = /* @__PURE__ */ Q("<select class=\"svelte-1n46o8q\"></select>"), ri = /* @__PURE__ */ Q("<label class=\"svelte-1n46o8q\">Rutestørrelse <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"4\" max=\"96\" step=\"2\" class=\"svelte-1n46o8q\"/>", 1), ii = /* @__PURE__ */ Q("<hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\"/> Eget grid i valgt seksjon</label> <!>", 1), ai = /* @__PURE__ */ Q("<span class=\"palette svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\" title=\"Ny tekstblokk\">+ Tekst</button> <button class=\"ghost svelte-1n46o8q\" title=\"Ny knapp\">+ Knapp</button> <label class=\"ghost filepick svelte-1n46o8q\" title=\"Nytt bilde (komprimeres automatisk til webp)\">+ Bilde <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <details class=\"gridmenu svelte-1n46o8q\"><summary title=\"Ny form\" class=\"svelte-1n46o8q\">+ Form</summary> <div class=\"gridmenu-body formmenu svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\">─ Strek</button> <button class=\"ghost svelte-1n46o8q\">→ Pil</button> <button class=\"ghost svelte-1n46o8q\">○ Sirkel</button> <button class=\"ghost svelte-1n46o8q\">▭ Rektangel</button> <button class=\"ghost svelte-1n46o8q\">△ Trekant</button></div></details></span> <details class=\"gridmenu svelte-1n46o8q\"><summary title=\"Grid: rutene blokker snapper til når du drar\" class=\"svelte-1n46o8q\">⌗ Grid</summary> <div class=\"gridmenu-body svelte-1n46o8q\"><label class=\"svelte-1n46o8q\">Rutestørrelse <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"4\" max=\"96\" step=\"2\" class=\"svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\"/> Snap til grid</label> <!></div></details>", 1), oi = /* @__PURE__ */ Q("<span class=\"badge svelte-1n46o8q\">Upubliserte endringer</span>"), si = /* @__PURE__ */ Q("<span class=\"who svelte-1n46o8q\"> </span>"), ci = /* @__PURE__ */ Q("<a class=\"ghost svelte-1n46o8q\" href=\"/api/github/login\">Logg inn med GitHub</a>"), li = /* @__PURE__ */ Q("<button class=\"ghost svelte-1n46o8q\"> </button> <!> <a class=\"ghost svelte-1n46o8q\" target=\"_blank\" rel=\"noopener\">Se siden ↗</a> <button class=\"ghost svelte-1n46o8q\">Forkast utkast</button> <button class=\"primary svelte-1n46o8q\">Publiser</button>", 1), ui = /* @__PURE__ */ Q("<iframe title=\"Forhåndsvisning\" class=\"svelte-1n46o8q\"></iframe>"), di = /* @__PURE__ */ Q("<p class=\"loading svelte-1n46o8q\">Laster…</p>"), fi = /* @__PURE__ */ Q("<div class=\"editor svelte-1n46o8q\"><!> <header><strong class=\"brand svelte-1n46o8q\">Urd</strong> <!> <!> <!> <span class=\"status svelte-1n46o8q\"> </span> <span class=\"spacer svelte-1n46o8q\"></span> <!></header> <!></div>");
+var ei = /* @__PURE__ */ Q("<button class=\"chrome-restore svelte-1n46o8q\" title=\"Tilbake til redigering\">✏ Rediger</button>"), ti = /* @__PURE__ */ Q("<option class=\"svelte-1n46o8q\"> </option>"), ni = /* @__PURE__ */ Q("<select class=\"svelte-1n46o8q\"></select>"), ri = /* @__PURE__ */ Q("<label class=\"svelte-1n46o8q\">Rutestørrelse <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"4\" max=\"96\" step=\"2\" class=\"svelte-1n46o8q\"/>", 1), ii = /* @__PURE__ */ Q("<hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\"/> Eget grid i valgt seksjon</label> <!>", 1), ai = /* @__PURE__ */ Q("<span class=\"palette svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\" title=\"Ny tekstblokk\">+ Tekst</button> <button class=\"ghost svelte-1n46o8q\" title=\"Ny knapp\">+ Knapp</button> <label class=\"ghost filepick svelte-1n46o8q\" title=\"Nytt bilde (komprimeres automatisk til webp)\">+ Bilde <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <details class=\"gridmenu svelte-1n46o8q\"><summary title=\"Ny form\" class=\"svelte-1n46o8q\">+ Form</summary> <div class=\"gridmenu-body formmenu svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\">─ Strek</button> <button class=\"ghost svelte-1n46o8q\">→ Pil</button> <button class=\"ghost svelte-1n46o8q\">○ Sirkel</button> <button class=\"ghost svelte-1n46o8q\">▭ Rektangel</button> <button class=\"ghost svelte-1n46o8q\">△ Trekant</button></div></details></span> <details class=\"gridmenu svelte-1n46o8q\"><summary title=\"Grid: rutene blokker snapper til når du drar\" class=\"svelte-1n46o8q\">⌗ Grid</summary> <div class=\"gridmenu-body svelte-1n46o8q\"><label class=\"svelte-1n46o8q\">Rutestørrelse <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"4\" max=\"96\" step=\"2\" class=\"svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\"/> Snap til grid</label> <!></div></details>", 1), oi = /* @__PURE__ */ Q("<span class=\"badge svelte-1n46o8q\">Upubliserte endringer</span>"), si = /* @__PURE__ */ Q("<span class=\"who svelte-1n46o8q\"> </span>"), ci = /* @__PURE__ */ Q("<a class=\"ghost svelte-1n46o8q\" href=\"/api/github/login\">Logg inn med GitHub</a>"), li = /* @__PURE__ */ Q("<button class=\"ghost svelte-1n46o8q\"> </button> <!> <a class=\"ghost svelte-1n46o8q\" target=\"_blank\" rel=\"noopener\">Se siden ↗</a> <button class=\"ghost svelte-1n46o8q\">Forkast utkast</button> <button class=\"primary svelte-1n46o8q\">Publiser</button>", 1), ui = /* @__PURE__ */ Q("<iframe title=\"Forhåndsvisning\" class=\"svelte-1n46o8q\"></iframe>"), di = /* @__PURE__ */ Q("<p class=\"loading svelte-1n46o8q\">Laster…</p>"), fi = /* @__PURE__ */ Q("<div class=\"editor svelte-1n46o8q\"><!> <header><span class=\"topbar-group svelte-1n46o8q\"><strong class=\"brand svelte-1n46o8q\">Urd</strong> <!> <!> <!> <span class=\"status svelte-1n46o8q\"> </span></span> <span class=\"topbar-group topbar-right svelte-1n46o8q\"><!></span></header> <!></div>");
 function pi(e, t) {
 	Pe(t, !0);
 	let n = /* @__PURE__ */ I(null), r = /* @__PURE__ */ I(null), i = /* @__PURE__ */ I(!1), a = /* @__PURE__ */ I(""), o = /* @__PURE__ */ I(null), s = /* @__PURE__ */ I(null), c = /* @__PURE__ */ I(Rt({
@@ -2502,7 +2502,7 @@ function pi(e, t) {
 	});
 	var Me = B(Ae, 2);
 	let j;
-	var Ne = B(z(Me), 2), Ie = (e) => {
+	var Ne = z(Me), Ie = B(z(Ne), 2), Le = (e) => {
 		var t = ni();
 		hr(t, 21, () => X(n).pages, dr, (e, t) => {
 			var n = ti(), r = z(n, !0);
@@ -2517,10 +2517,10 @@ function pi(e, t) {
 			i !== (i = X(r)) && (t.value = (t.__value = X(r)) ?? "", wr(t, X(r)));
 		}), Z("change", t, (e) => ue(e.target.value)), $(e, t);
 	};
-	ur(Ne, (e) => {
-		X(n) && e(Ie);
+	ur(Ie, (e) => {
+		X(n) && e(Le);
 	});
-	var Le = B(Ne, 2), Re = (e) => {
+	var Re = B(Ie, 2), M = (e) => {
 		var t = ai(), n = Jt(t), r = z(n), i = B(r, 2), a = B(i, 2), o = B(z(a));
 		A(a);
 		var s = B(a, 2), l = B(z(s), 2), u = z(l), d = B(u, 2), f = B(d, 2), p = B(f, 2), m = B(p, 2);
@@ -2552,18 +2552,18 @@ function pi(e, t) {
 			ir(y, `${X(c).size ?? ""} px`), Mr(b, X(c).size), Nr(S, X(c).snap !== !1);
 		}), Z("click", r, () => D("text")), Z("click", i, () => D("button")), Z("change", o, Te), Z("click", u, (e) => D("shape-line", e)), Z("click", d, (e) => D("shape-arrow", e)), Z("click", f, (e) => D("shape-circle", e)), Z("click", p, (e) => D("shape-rect", e)), Z("click", m, (e) => D("shape-triangle", e)), Xn("toggle", h, se), Z("input", b, (e) => oe("size", Number(e.target.value))), Z("change", S, (e) => oe("snap", e.target.checked)), $(e, t);
 	};
-	ur(Le, (e) => {
-		X(n) && e(Re);
+	ur(Re, (e) => {
+		X(n) && e(M);
 	});
-	var M = B(Le, 2), ze = (e) => {
+	var ze = B(Re, 2), Be = (e) => {
 		$(e, oi());
 	};
-	ur(M, (e) => {
-		X(i) && e(ze);
+	ur(ze, (e) => {
+		X(i) && e(Be);
 	});
-	var Be = B(M, 2), Ve = z(Be, !0);
-	A(Be);
-	var N = B(Be, 4), He = (e) => {
+	var Ve = B(ze, 2), N = z(Ve, !0);
+	A(Ve), A(Ne);
+	var He = B(Ne, 2), Ue = z(He), We = (e) => {
 		var t = li(), n = Jt(t), r = z(n, !0);
 		A(n);
 		var a = B(n, 2), o = (e) => {
@@ -2582,19 +2582,19 @@ function pi(e, t) {
 			Pr(n, "title", X(l) ? "Skjul editeringshåndtakene og se siden som besøkende gjør" : "Vis editeringshåndtakene igjen"), ir(r, X(l) ? "👁 Ren visning" : "✏ Rediger"), Pr(u, "href", e), d.disabled = !X(i), f.disabled = !X(i);
 		}, [() => p().path]), Z("click", n, me), Z("click", d, k), Z("click", f, Ee), $(e, t);
 	};
-	ur(N, (e) => {
-		X(n) && e(He);
-	}), A(Me);
-	var Ue = B(Me, 2), We = (e) => {
+	ur(Ue, (e) => {
+		X(n) && e(We);
+	}), A(He), A(Me);
+	var Ge = B(Me, 2), Ke = (e) => {
 		var t = ui();
 		zr(t, (e) => L(o, e), () => X(o)), ln(() => Pr(t, "src", `/?page=${X(r)}&preview=1`)), Xn("load", t, de), Jn(t), $(e, t);
-	}, Ge = (e) => {
+	}, qe = (e) => {
 		$(e, di());
 	};
-	ur(Ue, (e) => {
-		X(n) ? e(We) : e(Ge, -1);
+	ur(Ge, (e) => {
+		X(n) ? e(Ke) : e(qe, -1);
 	}), A(ke), ln(() => {
-		j = Cr(Me, 1, "topbar svelte-1n46o8q", null, j, { hidden: !X(l) }), ir(Ve, X(a));
+		j = Cr(Me, 1, "topbar svelte-1n46o8q", null, j, { hidden: !X(l) }), ir(N, X(a));
 	}), $(e, ke), Fe();
 }
 Zn([
