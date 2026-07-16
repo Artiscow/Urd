@@ -158,6 +158,16 @@ img, video {
 
 /* Editeringslaget - gjelder KUN i preview-modus (body.urd-preview,
    satt av motoren inne i editorens iframe) */
+.urd-preview .urd-grid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--urd-color-accent) 30%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--urd-color-accent) 30%, transparent) 1px, transparent 1px);
+}
+
 .urd-preview .urd-editable:hover {
   outline: 1px dashed var(--urd-color-accent);
   outline-offset: 2px;
@@ -165,11 +175,23 @@ img, video {
 
 .urd-preview .urd-edit-toolbar {
   position: absolute;
-  top: -30px;
+  bottom: 100%;
   left: 0;
+  /* Usynlig bro ned til blokk-kanten, så hover ikke mistes på veien
+     opp til håndtakene */
+  padding-bottom: 5px;
   display: none;
   gap: 2px;
   z-index: 1000;
+}
+
+/* Blokker nær toppen av seksjonen: verktøylinje inni blokken i stedet,
+   så den ikke klippes av seksjonens overflow (klasse satt av preview-edit.js) */
+.urd-preview .urd-edit-toolbar-inside {
+  bottom: auto;
+  top: 4px;
+  left: 4px;
+  padding-bottom: 0;
 }
 
 .urd-preview .urd-editable:hover .urd-edit-toolbar,

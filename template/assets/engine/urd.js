@@ -84,7 +84,8 @@ function resolvePage(site) {
 }
 
 /** Kobler på postMessage-lytting og høyderapportering i preview-modus. */
-function enablePreview(page, site, root) {
+function enablePreview(page, site, opts) {
+  const root = opts.root;
   window.addEventListener('message', (event) => {
     if (event.origin !== location.origin) return; // kun editoren på samme site
     const msg = event.data;
@@ -94,7 +95,15 @@ function enablePreview(page, site, root) {
       const i = page.sections.findIndex((s) => s.id === msg.section.id);
       if (i >= 0) page.sections[i] = msg.section;
     } else if (msg?.type === 'urd-preview-full' && msg.page) {
-      renderPage(msg.page, site, root, { preview: true });
+      page = msg.page;
+      renderPage(page, site, root, { preview: true });
+    } else if (msg?.type === 'urd-site' && msg.site) {
+      // Site-utkast fra editoren (grid, tema, nav): alt som avhenger av
+      // site.json rendres på nytt.
+      site = msg.site;
+      applyTheme(site.theme);
+      if (opts.nav) renderNav(site, opts.nav);
+      renderPage(page, site, root, { preview: true });
     }
     reportHeight();
   });
@@ -129,5 +138,5 @@ export async function boot(opts) {
     document.body.classList.add('urd-preview');
   }
   renderPage(page, site, opts.root, { preview });
-  if (preview) enablePreview(page, site, opts.root);
+  if (preview) enablePreview(page, site, opts);
 }

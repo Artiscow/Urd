@@ -33,11 +33,30 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
+/**
+ * Synlig grid-overlegg i seksjonen mens man drar/resizer, så snappingen
+ * har noe å snappe synlig mot. Linjene tegnes med CSS-gradienter i
+ * nøyaktig kolonnebredde/radhøyde.
+ */
+function showGridOverlay(host, grid) {
+  const overlay = document.createElement('div');
+  overlay.className = 'urd-grid-overlay';
+  const colPx = host.clientWidth / grid.columns;
+  overlay.style.backgroundSize = `${colPx}px ${grid.rowHeight}px`;
+  host.appendChild(overlay);
+  return overlay;
+}
+
 function enhanceBlock(el, block, section, grid, host) {
   el.classList.add('urd-editable');
 
   const toolbar = document.createElement('div');
   toolbar.className = 'urd-edit-toolbar';
+  // Ligger blokken helt i toppen av seksjonen, ville verktøylinjen over
+  // blitt klippet av seksjonens overflow - legg den inni blokken i stedet.
+  if (block.frames.desktop.y * grid.rowHeight < 36) {
+    toolbar.classList.add('urd-edit-toolbar-inside');
+  }
 
   const moveHandle = document.createElement('button');
   moveHandle.className = 'urd-edit-move';
@@ -79,6 +98,10 @@ function enhanceBlock(el, block, section, grid, host) {
       const start = { x: event.clientX, y: event.clientY };
       const orig = { ...block.frames.desktop };
       const colWidth = host.clientWidth / grid.columns;
+      // snap av (grid.snap === false) gir fri plassering i kvarte
+      // grid-enheter, så JSON-verdiene holder seg lesbare.
+      const round = grid.snap === false ? (v) => Math.round(v * 4) / 4 : Math.round;
+      const overlay = showGridOverlay(host, grid);
       let current = orig;
 
       const onMove = (ev) => {
@@ -87,13 +110,13 @@ function enhanceBlock(el, block, section, grid, host) {
         current = kind === 'move'
           ? {
               ...orig,
-              x: clamp(Math.round(orig.x + dx), 0, grid.columns - orig.w),
-              y: Math.max(0, Math.round(orig.y + dy)),
+              x: clamp(round(orig.x + dx), 0, grid.columns - orig.w),
+              y: Math.max(0, round(orig.y + dy)),
             }
           : {
               ...orig,
-              w: clamp(Math.round(orig.w + dx), 1, grid.columns - orig.x),
-              h: Math.max(1, Math.round(orig.h + dy)),
+              w: clamp(round(orig.w + dx), 1, grid.columns - orig.x),
+              h: Math.max(1, round(orig.h + dy)),
             };
         Object.assign(el.style, frameToCss(current, grid));
       };
@@ -101,6 +124,7 @@ function enhanceBlock(el, block, section, grid, host) {
       const onUp = () => {
         handle.removeEventListener('pointermove', onMove);
         handle.removeEventListener('pointerup', onUp);
+        overlay.remove();
         if (current.x !== orig.x || current.y !== orig.y || current.w !== orig.w || current.h !== orig.h) {
           block.frames.desktop = current;
           post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: current });

@@ -12,16 +12,34 @@
   let iframeEl = $state(null);
   /** null = publiseringslag utilgjengelig (f.eks. enkel lokalserver uten functions) */
   let auth = $state(null);
+  /** Speil av site-utkastets grid for inputfeltene */
+  let grid = $state({ columns: 24, rowHeight: 8, snap: true });
 
   let store = null;
+  let siteStore = null;
   let bridge = null;
 
   const pageEntry = () => site.pages.find((p) => p.id === pageId);
 
+  function updateDirty() {
+    dirty = store?.hasDraft() || siteStore?.hasDraft() || false;
+  }
+
   async function init() {
     site = await (await fetch('/content/site.json')).json();
+    siteStore = createDraftStore('urd-draft-site', () => site);
+    grid = { snap: true, ...siteStore.data.grid };
     await selectPage(new URLSearchParams(location.search).get('page') ?? site.pages[0].id);
     await checkAuth();
+  }
+
+  /** Grid-kontrollene: endringer lagres i site-utkastet og pushes live. */
+  function setGrid(field, value) {
+    grid = { ...grid, [field]: value };
+    siteStore.data.grid = { ...siteStore.data.grid, [field]: value };
+    siteStore.save();
+    updateDirty();
+    bridge?.sendSite(siteStore.data);
   }
 
   async function checkAuth() {
@@ -38,7 +56,7 @@
     const entry = pageEntry();
     const published = await (await fetch(`/${entry.file}`)).json();
     store = createDraftStore(`urd-draft-${id}`, () => published);
-    dirty = store.hasDraft();
+    updateDirty();
     status = '';
     // Iframen bytter src via pageId; utkastet pushes i onIframeLoad.
   }
@@ -50,7 +68,8 @@
       onMove: handleMove,
       onDelete: handleDelete,
     });
-    if (dirty) bridge.sendPage(pageId, store.data);
+    if (siteStore.hasDraft()) bridge.sendSite(siteStore.data);
+    if (store.hasDraft()) bridge.sendPage(pageId, store.data);
   }
 
   /** Klikk-og-skriv-endring fra iframen: oppdater utkastet. Iframen viser
@@ -61,7 +80,7 @@
     if (!block) return;
     block.props = msg.props;
     store.save();
-    dirty = store.hasDraft();
+    updateDirty();
     status = '';
   }
 
@@ -73,7 +92,7 @@
     if (!block) return;
     block.frames.desktop = msg.frame;
     store.save();
-    dirty = store.hasDraft();
+    updateDirty();
   }
 
   /** Sletting: fjern fra utkastet og rerender seksjonen i iframen. */
@@ -82,7 +101,7 @@
     if (!section) return;
     section.blocks = section.blocks.filter((b) => b.id !== msg.blockId);
     store.save();
-    dirty = store.hasDraft();
+    updateDirty();
     bridge?.sendSection(pageId, section);
   }
 
@@ -107,28 +126,31 @@
       frames: { desktop: { x: 1, y: maxRow + 1, w: d.w, h: d.h, z: 1, rot: 0 }, mobile: null },
     });
     store.save();
-    dirty = store.hasDraft();
+    updateDirty();
     bridge?.sendSection(pageId, section);
   }
 
   function discard() {
-    const fresh = store.reset();
-    dirty = false;
+    const freshPage = store.reset();
+    const freshSite = siteStore.reset();
+    grid = { snap: true, ...freshSite.grid };
+    updateDirty();
     status = '';
-    bridge?.sendPage(pageId, fresh);
+    bridge?.sendSite(freshSite);
+    bridge?.sendPage(pageId, freshPage);
   }
 
   async function publish() {
     status = 'Publiserer…';
     const entry = pageEntry();
-    const body = {
-      message: `Oppdater ${entry.title}`,
-      files: [{
-        path: entry.file,
-        content: JSON.stringify(store.data, null, 2) + '\n',
-        encoding: 'utf-8',
-      }],
-    };
+    const files = [];
+    if (store.hasDraft()) {
+      files.push({ path: entry.file, content: JSON.stringify(store.data, null, 2) + '\n', encoding: 'utf-8' });
+    }
+    if (siteStore.hasDraft()) {
+      files.push({ path: 'content/site.json', content: JSON.stringify(siteStore.data, null, 2) + '\n', encoding: 'utf-8' });
+    }
+    const body = { message: `Oppdater ${entry.title} via Urd-admin`, files };
     let res = null;
     try {
       res = await fetch('/api/github/commit', {
@@ -139,7 +161,10 @@
     } catch { /* nettverksfeil håndteres under */ }
 
     if (res?.ok) {
+      // Utkastene ER nå det publiserte; behold dataene i minnet (serveren
+      // serverer gammel JSON til deployen er ferdig) og fjern bare merkene.
       localStorage.removeItem(`urd-draft-${pageId}`);
+      localStorage.removeItem('urd-draft-site');
       status = 'Publisert! Hosten bygger siden på nytt (typisk under ett minutt).';
       dirty = false;
     } else if (res?.status === 401) {
@@ -176,6 +201,28 @@
         <button class="ghost" onclick={() => addBlock('button')} title="Ny knapp">+ Knapp</button>
         <button class="ghost" onclick={() => addBlock('shape')} title="Ny strek/form">+ Form</button>
       </span>
+
+      <details class="gridmenu">
+        <summary title="Grid-innstillinger (gjelder hele nettstedet, publiseres med site.json)">⌗ Grid</summary>
+        <div class="gridmenu-body">
+          <label>
+            Kolonner
+            <input type="number" min="4" max="100" value={grid.columns}
+              onchange={(e) => setGrid('columns', Math.max(4, Math.min(100, Number(e.target.value) || 24)))} />
+          </label>
+          <label>
+            Radhøyde (px)
+            <input type="number" min="2" max="64" value={grid.rowHeight}
+              onchange={(e) => setGrid('rowHeight', Math.max(2, Math.min(64, Number(e.target.value) || 8)))} />
+          </label>
+          <label class="gridmenu-snap">
+            <input type="checkbox" checked={grid.snap !== false}
+              onchange={(e) => setGrid('snap', e.target.checked)} />
+            Snap til grid
+          </label>
+          <p class="gridmenu-hint">Gridet vises mens du drar. Flere kolonner og lavere radhøyde gir finere plassering.</p>
+        </div>
+      </details>
     {/if}
 
     {#if dirty}
@@ -258,6 +305,66 @@
   .palette {
     display: flex;
     gap: 0.35rem;
+  }
+
+  .gridmenu {
+    position: relative;
+  }
+
+  .gridmenu summary {
+    list-style: none;
+    cursor: pointer;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    padding: 0.35em 0.8em;
+    user-select: none;
+  }
+
+  .gridmenu[open] summary {
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  .gridmenu-body {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 50;
+    display: grid;
+    gap: 0.6rem;
+    width: 15rem;
+    padding: 0.8rem;
+    background: var(--urd-color-surface, #151a23);
+    border: 1px solid rgb(255 255 255 / 15%);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 40%);
+  }
+
+  .gridmenu-body label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  .gridmenu-body input[type='number'] {
+    width: 4.5rem;
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    padding: 0.25em 0.4em;
+  }
+
+  .gridmenu-snap {
+    justify-content: flex-start;
+  }
+
+  .gridmenu-hint {
+    margin: 0;
+    font-size: 0.75rem;
+    opacity: 0.65;
   }
 
   select,

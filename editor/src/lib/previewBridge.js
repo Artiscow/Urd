@@ -6,6 +6,7 @@
  * Meldingsformat:
  *   editor → side: { type: 'urd-preview', pageId, section }    (én seksjon)
  *                  { type: 'urd-preview-full', pageId, page }  (hel side)
+ *                  { type: 'urd-site', site }                  (site-utkast: grid/tema/nav)
  *   side → editor: { type: 'urd-edit', sectionId, blockId, props }  (klikk-og-skriv)
  *                  { type: 'urd-move', sectionId, blockId, frame }  (dra/resize)
  *                  { type: 'urd-delete', sectionId, blockId }
@@ -35,6 +36,9 @@ export function createPreviewBridge(iframe, handlers = {}) {
     },
     sendPage(pageId, page) {
       post({ type: 'urd-preview-full', pageId, page });
+    },
+    sendSite(site) {
+      post({ type: 'urd-site', site });
     },
     destroy() {
       window.removeEventListener('message', listener);

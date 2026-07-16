@@ -23,6 +23,9 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 
 - [x] Dra, resize og slett med grid-snapping i preview (håndtak på hover; `preview-edit.js` lastes kun i preview-modus)
 - [x] Blokkpalett første versjon: + Tekst / + Knapp / + Form i topplinjen (legger nederst i første seksjon)
+- [x] Synlig grid-overlegg i seksjonen under dra/resize
+- [x] Grid-kontroller i editoren (⌗ Grid: kolonner, radhøyde, snap av/på) - lagres i site.json-utkast og publiseres sammen med sideendringer
+- [ ] Grid-overstyring per seksjon i UI (datamodellen støtter det allerede via section.grid)
 - [ ] Palett komplett: bilde- og logo-blokk, sirkel/rektangel-varianter, valg av målseksjon
 - [ ] z-orden (lag frem/bak)
 - [ ] Seksjons-CRUD: «+ Ny seksjon» in-place, presets (hero, bilder, footer), tom seksjon
