@@ -27,11 +27,11 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 - [x] Grid-kontroller i editoren (⌗ Grid: kolonner, radhøyde, snap av/på) - lagres i site.json-utkast og publiseres sammen med sideendringer
 - [ ] Grid-overstyring per seksjon i UI (datamodellen støtter det allerede via section.grid)
 - [ ] Palett komplett: bilde- og logo-blokk, sirkel/rektangel-varianter, valg av målseksjon
-- [ ] z-orden (lag frem/bak)
+- [x] z-orden: ⬆/⬇-knapper på blokkverktøylinjen (legg foran/bak)
 - [x] Seksjons-CRUD: «+ Ny seksjon» in-place med preset-valg (tom, hero, footer), flytt opp/ned og slett via seksjonsverktøylinje
 - [x] Seksjonshøyde: dra-håndtak i underkant av seksjonen (snapper til radhøyden, lagres i size.minHeight)
 - [ ] Bilder-preset (venter på image-blokken i paletten)
-- [ ] Tekstblokker vokser ikke med innholdet (fast h klipper/overlapper ved mye tekst) - auto-høyde eller varsel
+- [x] Tekstblokker vokser med innholdet under skriving (framen og om nødvendig seksjonen utvides; veksten hører til samme angre-steg som skrivingen)
 - [x] Angre/gjenta (Ctrl+Z / Ctrl+Shift+Z) for ALT: flytt, resize, ny/slettet blokk og seksjon, seksjonshøyde, grid, forkast (tekst i skrivemodus bruker nettleserens egen angring)
 - [x] «+ Form» er en meny: strek, pil, sirkel, rektangel, trekant
 - [x] «Ren visning»-knapp: skjuler alle editeringshåndtak OG topplinjen (flytende Rediger-knapp), så siden ses i full høyde som besøkende ser den

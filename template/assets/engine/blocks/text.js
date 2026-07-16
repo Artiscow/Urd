@@ -24,12 +24,34 @@ export const textBlock = {
     if (ctx.preview) {
       el.contentEditable = 'true';
       el.addEventListener('input', () => {
-        window.parent?.postMessage({
+        const post = (msg) => window.parent?.postMessage(msg, location.origin);
+
+        // Voks med innholdet: blir teksten høyere enn framen, utvides
+        // framen (og seksjonen om nødvendig) så ingenting klippes eller
+        // overlapper. Meldes som en samlbar flytting (coalesce), slik at
+        // veksten hører til samme angre-steg som skrivingen.
+        if (el.scrollHeight > el.clientHeight) {
+          const block = ctx.section.blocks.find((b) => b.id === el.dataset.blockId);
+          if (block) {
+            const rowHeight = ctx.grid?.rowHeight ?? 8;
+            const newH = Math.ceil(el.scrollHeight / rowHeight) * rowHeight;
+            block.frames.desktop = { ...block.frames.desktop, h: newH };
+            el.style.height = `${newH}px`;
+            const host = el.closest('.urd-section');
+            const needed = block.frames.desktop.y + newH;
+            if (host && needed > host.getBoundingClientRect().height) {
+              host.style.minHeight = `${needed}px`;
+            }
+            post({ type: 'urd-move', sectionId: ctx.section.id, blockId: block.id, frame: block.frames.desktop, coalesce: true });
+          }
+        }
+
+        post({
           type: 'urd-edit',
           sectionId: ctx.section.id,
           blockId: el.dataset.blockId,
           props: { ...props, html: el.innerHTML },
-        }, location.origin);
+        });
       });
     }
   },

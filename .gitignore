@@ -9,7 +9,8 @@ editor/dist/
 # Lokale hemmeligheter for wrangler pages dev (aldri i git)
 template/.dev.vars
 
-# Wrangler-cache
+# Wrangler-cache (uansett hvor wrangler kjøres fra)
+.wrangler/
 template/.wrangler/
 
 # Diverse

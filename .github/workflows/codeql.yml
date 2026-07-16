@@ -11,6 +11,9 @@ on:
 jobs:
   analyze:
     name: Analyser (${{ matrix.language }})
+    # Dependabot-PR-er har lesetilgang-token og kan ikke laste opp
+    # CodeQL-resultater; analysen kjøres uansett på push etter merge.
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
       security-events: write

@@ -231,6 +231,25 @@ function enhanceBlock(el, block, section, grid, host) {
   moveHandle.title = 'Dra for å flytte (snapper til grid)';
   toolbar.appendChild(moveHandle);
 
+  // z-orden: legg blokken foran/bak andre blokker i samme seksjon.
+  const bumpZ = (dir) => {
+    const frame = { ...block.frames.desktop, z: Math.max(1, (block.frames.desktop.z ?? 1) + dir) };
+    block.frames.desktop = frame;
+    el.style.zIndex = String(frame.z);
+    post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame });
+  };
+  const frontBtn = document.createElement('button');
+  frontBtn.textContent = '⬆';
+  frontBtn.title = 'Legg foran (z-orden)';
+  frontBtn.addEventListener('click', () => bumpZ(1));
+  toolbar.appendChild(frontBtn);
+
+  const backBtn = document.createElement('button');
+  backBtn.textContent = '⬇';
+  backBtn.title = 'Legg bak (z-orden)';
+  backBtn.addEventListener('click', () => bumpZ(-1));
+  toolbar.appendChild(backBtn);
+
   const deleteBtn = document.createElement('button');
   deleteBtn.className = 'urd-edit-delete';
   deleteBtn.textContent = '×';

@@ -190,7 +190,9 @@
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     const block = section?.blocks.find((b) => b.id === msg.blockId);
     if (!block) return;
-    pushHistory('move-block');
+    // coalesce: automatisk vekst under skriving hører til samme
+    // angre-steg som selve skrivingen.
+    pushHistory(msg.coalesce ? `edit:${msg.blockId}` : 'move-block');
     block.frames.desktop = msg.frame;
     store.save();
     updateDirty();
