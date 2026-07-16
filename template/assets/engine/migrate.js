@@ -45,9 +45,23 @@ export function lift(data, def) {
 }
 
 /** Gjeldende versjon av sidefil-formatet (content/pages/*.json). */
-export const PAGE_SCHEMA_VERSION = 2;
+export const PAGE_SCHEMA_VERSION = 3;
+
+/** Gjeldende versjon av site.json-formatet. */
+export const SITE_SCHEMA_VERSION = 2;
 
 const r2 = (v) => Math.round(v * 100) / 100;
+
+/**
+ * Grid v2: kvadratiske ruter med én størrelse (px) + snap. Konverterer
+ * fra det gamle formatet (columns/rowHeight/gap) ved å beholde
+ * radhøyden som rutestørrelse.
+ */
+function gridToSquare(grid) {
+  if (!grid) return null;
+  if (typeof grid.size === 'number') return grid;
+  return { size: Math.max(2, grid.rowHeight ?? 16), snap: grid.snap !== false };
+}
 
 /**
  * Migreringer på filnivå. Hver funksjon løfter nøyaktig én versjon og
@@ -78,7 +92,39 @@ const pageMigrations = {
     }
     return page;
   },
+  // v2 → v3: seksjonenes grid-overstyr går til kvadratformatet.
+  2: (page) => {
+    for (const section of page.sections ?? []) {
+      if (section.grid) section.grid = gridToSquare(section.grid);
+    }
+    return page;
+  },
 };
+
+const siteMigrations = {
+  // v1 → v2: gridet går fra kolonner/radhøyde til kvadratiske ruter.
+  1: (site) => {
+    site.grid = gridToSquare(site.grid) ?? { size: 16, snap: true };
+    return site;
+  },
+};
+
+/**
+ * Løfter site.json til gjeldende schemaVersion. Samme regler som
+ * liftPageFile: stegvis, aldri destruktivt, original muteres aldri.
+ */
+export function liftSiteFile(site) {
+  let lifted = structuredClone(site);
+  let version = lifted.schemaVersion ?? 1;
+  while (version < SITE_SCHEMA_VERSION) {
+    const step = siteMigrations[version];
+    if (typeof step !== 'function') return site;
+    lifted = step(lifted) ?? lifted;
+    version++;
+    lifted.schemaVersion = version;
+  }
+  return lifted;
+}
 
 /**
  * Løfter en sidefil til gjeldende schemaVersion. Stegvis og aldri

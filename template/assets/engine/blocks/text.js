@@ -33,8 +33,8 @@ export const textBlock = {
         if (el.scrollHeight > el.clientHeight) {
           const block = ctx.section.blocks.find((b) => b.id === el.dataset.blockId);
           if (block) {
-            const rowHeight = ctx.grid?.rowHeight ?? 8;
-            const newH = Math.ceil(el.scrollHeight / rowHeight) * rowHeight;
+            const step = ctx.grid?.size ?? 8;
+            const newH = Math.ceil(el.scrollHeight / step) * step;
             block.frames.desktop = { ...block.frames.desktop, h: newH };
             el.style.height = `${newH}px`;
             const host = el.closest('.urd-section');

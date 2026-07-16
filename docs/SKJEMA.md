@@ -17,7 +17,7 @@ Nettstedets rot: identitet, sideregister, navigasjon, grid og tema.
   "schemaVersion": 1,
   "site": { "title": "Min forening", "lang": "no", "description": "" },
   "breakpoints": { "mobile": 640 },
-  "grid": { "columns": 24, "rowHeight": 8, "gap": 0, "snap": true },
+  "grid": { "size": 16, "snap": true },
   "theme": {
     "version": 1,
     "tokens": {
@@ -44,7 +44,7 @@ Nettstedets rot: identitet, sideregister, navigasjon, grid og tema.
 ```
 
 - **`pages`** er sideregisteret. Nav-elementer peker på sider via `page`-id (eller eksterne lenker via `href`). Admin lager/endrer/sletter sider her; motoren ruter fra `path`.
-- **`grid`** er standard-gridet: `columns` kolonner i bredden, rader på `rowHeight` px. Seksjoner kan overstyre det. `snap` kan slås av for helt fri plassering.
+- **`grid`** er snappeverktøyet (fra site-schemaVersion 2): kvadratiske ruter på `size` px; mindre = tettere/finere plassering. Seksjoner kan overstyre det, og `snap` kan slås av for helt fri plassering. Gridet påvirker aldri lagrede posisjoner.
 - **`theme.tokens`** mappes 1:1 til CSS-variabler: `tokens.color.bg` → `--urd-color-bg`. Motorens `theme.js` gjør mappingen; admin redigerer tokens direkte.
 
 ## `content/pages/<id>.json`

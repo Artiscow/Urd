@@ -5,7 +5,7 @@
   import { createDraftStore } from './lib/draftStore.js';
   import { createPreviewBridge } from './lib/previewBridge.js';
   // Editoren deler migreringskoden med motoren (samme fil, bundles inn).
-  import { liftPageFile } from '../../template/assets/engine/migrate.js';
+  import { liftPageFile, liftSiteFile } from '../../template/assets/engine/migrate.js';
   import { compressToWebp, slugify, contentHash, WARN_BYTES } from './lib/imageTools.js';
 
   let site = $state(null);
@@ -15,8 +15,8 @@
   let iframeEl = $state(null);
   /** null = publiseringslag utilgjengelig (f.eks. enkel lokalserver uten functions) */
   let auth = $state(null);
-  /** Speil av site-utkastets grid for inputfeltene */
-  let grid = $state({ columns: 24, rowHeight: 8, snap: true });
+  /** Speil av site-utkastets grid: kvadratiske ruter, én størrelse */
+  let grid = $state({ size: 16, snap: true });
 
   /** Ren forhåndsvisning: skjuler alle editeringshåndtak i iframen */
   let chromeVisible = $state(true);
@@ -96,8 +96,11 @@
   }
 
   async function init() {
-    site = await (await fetch('/content/site.json')).json();
+    site = liftSiteFile(await (await fetch('/content/site.json')).json());
     siteStore = createDraftStore('urd-draft-site', () => site);
+    // Utkast fra før grid-omleggingen kan ligge i localStorage: løft dem.
+    siteStore.replace(liftSiteFile(siteStore.data));
+    siteStore.save();
     grid = { snap: true, ...siteStore.data.grid };
     await selectPage(new URLSearchParams(location.search).get('page') ?? site.pages[0].id);
     await checkAuth();
@@ -179,9 +182,12 @@
     const entry = pageEntry();
     const raw = await (await fetch(`/${entry.file}`)).json();
     // Eldre sidefiler løftes til gjeldende format før redigering, slik at
-    // utkast og publisering alltid er på nyeste schemaVersion.
+    // utkast og publisering alltid er på nyeste schemaVersion. Gamle
+    // utkast i localStorage løftes også.
     const published = liftPageFile(raw, siteStore.data);
     store = createDraftStore(`urd-draft-${id}`, () => published);
+    store.replace(liftPageFile(store.data, siteStore.data));
+    store.save();
     history.length = 0;
     redoStack.length = 0;
     lastHistoryKey = null;
@@ -484,52 +490,35 @@
       </span>
 
       <details class="gridmenu" ontoggle={onGridMenuToggle}>
-        <summary title="Grid-innstillinger (hjelpelinjer for plassering)">⌗ Grid</summary>
+        <summary title="Grid: rutene blokker snapper til når du drar">⌗ Grid</summary>
         <div class="gridmenu-body">
           <label>
-            Kolonner (bredden)
-            <input type="number" min="4" max="100" value={grid.columns}
-              onchange={(e) => setGrid('columns', Math.max(4, Math.min(100, Number(e.target.value) || 24)))} />
+            Rutestørrelse
+            <span class="gridmenu-value">{grid.size} px</span>
           </label>
-          <label>
-            Radhøyde i px (høyden)
-            <input type="number" min="2" max="64" value={grid.rowHeight}
-              onchange={(e) => setGrid('rowHeight', Math.max(2, Math.min(64, Number(e.target.value) || 8)))} />
-          </label>
+          <input type="range" min="4" max="96" step="2" value={grid.size}
+            oninput={(e) => setGrid('size', Number(e.target.value))} />
           <label class="gridmenu-snap">
             <input type="checkbox" checked={grid.snap !== false}
               onchange={(e) => setGrid('snap', e.target.checked)} />
             Snap til grid
           </label>
-          <p class="gridmenu-hint">
-            Gridet er kun hjelpelinjer: det styrer hva blokker snapper til når du
-            drar, og å endre det flytter ALDRI noe som allerede står på siden.
-            Bredden deles i kolonner (flere = finere sideveis), høyden går i rader
-            på et fast antall piksler (lavere = finere opp/ned). Én rute er nå ca.
-            {Math.round((iframeEl?.clientWidth ?? 1280) / grid.columns)} × {grid.rowHeight} px.
-          </p>
 
           {#if activeSectionId}
             <hr class="gridmenu-divider" />
             <label class="gridmenu-snap">
               <input type="checkbox" checked={sectionGrid !== null}
                 onchange={(e) => toggleSectionGrid(e.target.checked)} />
-              Eget grid for valgt seksjon
+              Eget grid i valgt seksjon
             </label>
             {#if sectionGrid}
               <label>
-                Kolonner
-                <input type="number" min="4" max="100" value={sectionGrid.columns}
-                  onchange={(e) => setSectionGrid('columns', Math.max(4, Math.min(100, Number(e.target.value) || 24)))} />
+                Rutestørrelse
+                <span class="gridmenu-value">{sectionGrid.size} px</span>
               </label>
-              <label>
-                Radhøyde (px)
-                <input type="number" min="2" max="64" value={sectionGrid.rowHeight}
-                  onchange={(e) => setSectionGrid('rowHeight', Math.max(2, Math.min(64, Number(e.target.value) || 8)))} />
-              </label>
+              <input type="range" min="4" max="96" step="2" value={sectionGrid.size}
+                oninput={(e) => setSectionGrid('size', Number(e.target.value))} />
             {/if}
-          {:else}
-            <p class="gridmenu-hint">Klikk i en seksjon for å kunne gi den sitt eget grid.</p>
           {/if}
         </div>
       </details>
@@ -699,10 +688,14 @@
     justify-content: flex-start;
   }
 
-  .gridmenu-hint {
-    margin: 0;
-    font-size: 0.75rem;
-    opacity: 0.65;
+  .gridmenu-value {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.75;
+  }
+
+  .gridmenu-body input[type='range'] {
+    width: 100%;
+    accent-color: var(--urd-color-accent, #7c5cff);
   }
 
   .gridmenu-divider {

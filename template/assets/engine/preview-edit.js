@@ -70,15 +70,15 @@ function addSectionHeightHandle(host, section, grid) {
     let px = startHeight;
 
     const onMove = (ev) => {
-      px = Math.max(grid.rowHeight * 4, startHeight + (ev.clientY - startY));
-      // Snapper til radhøyden kun når snap er på, ellers piksel-presist.
-      px = grid.snap === false ? Math.round(px) : Math.round(px / grid.rowHeight) * grid.rowHeight;
+      px = Math.max(grid.size * 3, startHeight + (ev.clientY - startY));
+      // Snapper til rutestørrelsen kun når snap er på, ellers piksel-presist.
+      px = grid.snap === false ? Math.round(px) : Math.round(px / grid.size) * grid.size;
       host.style.minHeight = `${px}px`;
     };
     const onUp = () => {
       handle.removeEventListener('pointermove', onMove);
       handle.removeEventListener('pointerup', onUp);
-      if (Math.abs(px - startHeight) < grid.rowHeight) return;
+      if (Math.abs(px - startHeight) < 2) return;
       const minHeight = `${px}px`;
       section.size = { ...section.size, minHeight };
       post({ type: 'urd-section-size', sectionId: section.id, minHeight });
@@ -218,8 +218,7 @@ function clamp(value, min, max) {
 function showGridOverlay(host, grid) {
   const overlay = document.createElement('div');
   overlay.className = 'urd-grid-overlay';
-  const colPx = host.clientWidth / grid.columns;
-  overlay.style.backgroundSize = `${colPx}px ${grid.rowHeight}px`;
+  overlay.style.backgroundSize = `${grid.size}px ${grid.size}px`;
   host.appendChild(overlay);
   return overlay;
 }
@@ -295,12 +294,13 @@ function enhanceBlock(el, block, section, grid, host) {
       const start = { x: event.clientX, y: event.clientY };
       const orig = { ...block.frames.desktop };
       // Frames er fysiske (x/w i %, y/h i px); gridet styrer KUN hva vi
-      // snapper mot. Snap av gir fri plassering (0,1 % / 1 px-presisjon).
+      // snapper mot: kvadratiske ruter på grid.size px. Snap av gir fri
+      // plassering (0,1 % / 1 px-presisjon).
       const pctPerPx = 100 / host.clientWidth;
-      const colStep = 100 / grid.columns;
+      const colStep = grid.size * pctPerPx;
       const r2 = (v) => Math.round(v * 100) / 100;
       const snapPct = grid.snap === false ? (v) => Math.round(v * 10) / 10 : (v) => r2(Math.round(v / colStep) * colStep);
-      const snapPx = grid.snap === false ? Math.round : (v) => Math.round(v / grid.rowHeight) * grid.rowHeight;
+      const snapPx = grid.snap === false ? Math.round : (v) => Math.round(v / grid.size) * grid.size;
       const overlay = showGridOverlay(host, grid);
       let current = orig;
 

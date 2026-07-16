@@ -25,7 +25,8 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 - [x] Blokkpalett første versjon: + Tekst / + Knapp / + Form i topplinjen (legger nederst i første seksjon)
 - [x] Synlig grid-overlegg i seksjonen under dra/resize
 - [x] Grid-kontroller i editoren (⌗ Grid: kolonner, radhøyde, snap av/på) - lagres i site.json-utkast og publiseres sammen med sideendringer
-- [x] Grid-overstyring per seksjon i UI: «Eget grid for valgt seksjon» i ⌗ Grid-menyen
+- [x] Grid-overstyring per seksjon i UI: «Eget grid i valgt seksjon» i ⌗ Grid-menyen
+- [x] Grid forenklet etter brukertest: kvadratiske ruter, én rutestørrelse-slider (4-96 px), ingen forklaringstekst (site v2 / page v3-migrering)
 - [x] Bildeblokk med opplasting: + Bilde komprimerer til webp (maks 1600px, størrelsesvarsel), utkast som data-URL, materialiseres til media/-filer ved publisering (deterministisk filnavn). Valgfri href-prop dekker logo-bruk.
 - [x] Palett: nye blokker legges i sist klikkede seksjon (aksentlinje i venstre kant viser aktiv seksjon)
 - [ ] Bilde-props i UI: alt-tekst, fit, radius, lenke (hører til blokkeditoren i v0.5)

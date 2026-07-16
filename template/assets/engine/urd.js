@@ -10,7 +10,7 @@
  * utkast fra editoren og rerendrer inkrementelt.
  */
 import { createRegistry } from './registry.js';
-import { liftPageFile } from './migrate.js';
+import { liftPageFile, liftSiteFile } from './migrate.js';
 import { applyTheme } from './theme.js';
 import { renderPage, renderSection } from './render.js';
 import { renderNav } from './nav.js';
@@ -129,7 +129,7 @@ function enablePreview(page, site, opts) {
 export async function boot(opts) {
   registerCore();
 
-  const site = await (await fetch('/content/site.json')).json();
+  const site = liftSiteFile(await (await fetch('/content/site.json')).json());
   applyTheme(site.theme);
   await loadPlugins();
 

@@ -2040,29 +2040,54 @@ function Vr(e, t = {}) {
 		}
 	};
 }
-var Hr = (e) => Math.round(e * 100) / 100, Ur = { 1: (e, t) => {
-	for (let n of e.sections ?? []) {
-		let e = n.grid ?? t?.grid ?? {
-			columns: 24,
-			rowHeight: 8
-		};
-		for (let t of n.blocks ?? []) for (let n of ["desktop", "mobile"]) {
-			let r = t.frames?.[n];
-			r && (t.frames[n] = {
-				...r,
-				x: Hr(r.x * 100 / e.columns),
-				w: Hr(r.w * 100 / e.columns),
-				y: r.y * e.rowHeight,
-				h: r.h * e.rowHeight
-			});
+var Hr = (e) => Math.round(e * 100) / 100;
+function Ur(e) {
+	return e ? typeof e.size == "number" ? e : {
+		size: Math.max(2, e.rowHeight ?? 16),
+		snap: e.snap !== !1
+	} : null;
+}
+var Wr = {
+	1: (e, t) => {
+		for (let n of e.sections ?? []) {
+			let e = n.grid ?? t?.grid ?? {
+				columns: 24,
+				rowHeight: 8
+			};
+			for (let t of n.blocks ?? []) for (let n of ["desktop", "mobile"]) {
+				let r = t.frames?.[n];
+				r && (t.frames[n] = {
+					...r,
+					x: Hr(r.x * 100 / e.columns),
+					w: Hr(r.w * 100 / e.columns),
+					y: r.y * e.rowHeight,
+					h: r.h * e.rowHeight
+				});
+			}
 		}
+		return e;
+	},
+	2: (e) => {
+		for (let t of e.sections ?? []) t.grid &&= Ur(t.grid);
+		return e;
 	}
-	return e;
-} };
-function Wr(e, t) {
+}, Gr = { 1: (e) => (e.grid = Ur(e.grid) ?? {
+	size: 16,
+	snap: !0
+}, e) };
+function Kr(e) {
+	let t = structuredClone(e), n = t.schemaVersion ?? 1;
+	for (; n < 2;) {
+		let r = Gr[n];
+		if (typeof r != "function") return e;
+		t = r(t) ?? t, n++, t.schemaVersion = n;
+	}
+	return t;
+}
+function qr(e, t) {
 	let n = structuredClone(e), r = n.schemaVersion ?? 1;
-	for (; r < 2;) {
-		let i = Ur[r];
+	for (; r < 3;) {
+		let i = Wr[r];
 		if (typeof i != "function") return e;
 		n = i(n, t) ?? n, r++, n.schemaVersion = r;
 	}
@@ -2070,12 +2095,12 @@ function Wr(e, t) {
 }
 //#endregion
 //#region src/lib/imageTools.js
-var Gr = 1600, Kr = .82, qr = .6;
-async function Jr(e) {
-	let t = await createImageBitmap(e), n = Math.min(1, Gr / Math.max(t.width, t.height)), r = Math.round(t.width * n), i = Math.round(t.height * n), a = document.createElement("canvas");
+var Jr = 1600, Yr = .82, Xr = .6;
+async function Zr(e) {
+	let t = await createImageBitmap(e), n = Math.min(1, Jr / Math.max(t.width, t.height)), r = Math.round(t.width * n), i = Math.round(t.height * n), a = document.createElement("canvas");
 	a.width = r, a.height = i, a.getContext("2d").drawImage(t, 0, 0, r, i), t.close();
-	let o = (e) => new Promise((t) => a.toBlob(t, "image/webp", e)), s = await o(Kr);
-	return s.size > 4e5 && (s = await o(qr)), {
+	let o = (e) => new Promise((t) => a.toBlob(t, "image/webp", e)), s = await o(Yr);
+	return s.size > 4e5 && (s = await o(Xr)), {
 		dataUrl: await new Promise((e) => {
 			let t = new FileReader();
 			t.onload = () => e(t.result), t.readAsDataURL(s);
@@ -2085,22 +2110,21 @@ async function Jr(e) {
 		height: i
 	};
 }
-function Yr(e) {
+function Qr(e) {
 	return e.replace(/\.[^.]+$/, "").toLowerCase().replaceAll("æ", "ae").replaceAll("ø", "o").replaceAll("å", "a").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "bilde";
 }
-function Xr(e) {
+function $r(e) {
 	let t = 5381;
 	for (let n = 0; n < e.length; n++) t = (t << 5) + t + e.charCodeAt(n) >>> 0;
 	return t.toString(16).padStart(8, "0");
 }
 //#endregion
 //#region src/App.svelte
-var Zr = /* @__PURE__ */ Q("<button class=\"chrome-restore svelte-1n46o8q\" title=\"Tilbake til redigering\">✏ Rediger</button>"), Qr = /* @__PURE__ */ Q("<option> </option>"), $r = /* @__PURE__ */ Q("<select class=\"svelte-1n46o8q\"></select>"), ei = /* @__PURE__ */ Q("<label class=\"svelte-1n46o8q\">Kolonner <input type=\"number\" min=\"4\" max=\"100\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\">Radhøyde (px) <input type=\"number\" min=\"2\" max=\"64\" class=\"svelte-1n46o8q\"/></label>", 1), ti = /* @__PURE__ */ Q("<hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\"/> Eget grid for valgt seksjon</label> <!>", 1), ni = /* @__PURE__ */ Q("<p class=\"gridmenu-hint svelte-1n46o8q\">Klikk i en seksjon for å kunne gi den sitt eget grid.</p>"), ri = /* @__PURE__ */ Q("<span class=\"palette svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\" title=\"Ny tekstblokk\">+ Tekst</button> <button class=\"ghost svelte-1n46o8q\" title=\"Ny knapp\">+ Knapp</button> <label class=\"ghost filepick svelte-1n46o8q\" title=\"Nytt bilde (komprimeres automatisk til webp)\">+ Bilde <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <details class=\"gridmenu svelte-1n46o8q\"><summary title=\"Ny form\" class=\"svelte-1n46o8q\">+ Form</summary> <div class=\"gridmenu-body formmenu svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\">─ Strek</button> <button class=\"ghost svelte-1n46o8q\">→ Pil</button> <button class=\"ghost svelte-1n46o8q\">○ Sirkel</button> <button class=\"ghost svelte-1n46o8q\">▭ Rektangel</button> <button class=\"ghost svelte-1n46o8q\">△ Trekant</button></div></details></span> <details class=\"gridmenu svelte-1n46o8q\"><summary title=\"Grid-innstillinger (hjelpelinjer for plassering)\" class=\"svelte-1n46o8q\">⌗ Grid</summary> <div class=\"gridmenu-body svelte-1n46o8q\"><label class=\"svelte-1n46o8q\">Kolonner (bredden) <input type=\"number\" min=\"4\" max=\"100\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\">Radhøyde i px (høyden) <input type=\"number\" min=\"2\" max=\"64\" class=\"svelte-1n46o8q\"/></label> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\"/> Snap til grid</label> <p class=\"gridmenu-hint svelte-1n46o8q\"> </p> <!></div></details>", 1), ii = /* @__PURE__ */ Q("<span class=\"badge svelte-1n46o8q\">Upubliserte endringer</span>"), ai = /* @__PURE__ */ Q("<span class=\"who svelte-1n46o8q\"> </span>"), oi = /* @__PURE__ */ Q("<a class=\"ghost svelte-1n46o8q\" href=\"/api/github/login\">Logg inn med GitHub</a>"), si = /* @__PURE__ */ Q("<button class=\"ghost svelte-1n46o8q\"> </button> <!> <a class=\"ghost svelte-1n46o8q\" target=\"_blank\" rel=\"noopener\">Se siden ↗</a> <button class=\"ghost svelte-1n46o8q\">Forkast utkast</button> <button class=\"primary svelte-1n46o8q\">Publiser</button>", 1), ci = /* @__PURE__ */ Q("<iframe title=\"Forhåndsvisning\" class=\"svelte-1n46o8q\"></iframe>"), li = /* @__PURE__ */ Q("<p class=\"loading svelte-1n46o8q\">Laster…</p>"), ui = /* @__PURE__ */ Q("<div class=\"editor svelte-1n46o8q\"><!> <header><strong class=\"brand svelte-1n46o8q\">Urd</strong> <!> <!> <!> <span class=\"status svelte-1n46o8q\"> </span> <span class=\"spacer svelte-1n46o8q\"></span> <!></header> <!></div>");
-function di(e, t) {
+var ei = /* @__PURE__ */ Q("<button class=\"chrome-restore svelte-1n46o8q\" title=\"Tilbake til redigering\">✏ Rediger</button>"), ti = /* @__PURE__ */ Q("<option> </option>"), ni = /* @__PURE__ */ Q("<select class=\"svelte-1n46o8q\"></select>"), ri = /* @__PURE__ */ Q("<label class=\"svelte-1n46o8q\">Rutestørrelse <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"4\" max=\"96\" step=\"2\" class=\"svelte-1n46o8q\"/>", 1), ii = /* @__PURE__ */ Q("<hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\"/> Eget grid i valgt seksjon</label> <!>", 1), ai = /* @__PURE__ */ Q("<span class=\"palette svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\" title=\"Ny tekstblokk\">+ Tekst</button> <button class=\"ghost svelte-1n46o8q\" title=\"Ny knapp\">+ Knapp</button> <label class=\"ghost filepick svelte-1n46o8q\" title=\"Nytt bilde (komprimeres automatisk til webp)\">+ Bilde <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <details class=\"gridmenu svelte-1n46o8q\"><summary title=\"Ny form\" class=\"svelte-1n46o8q\">+ Form</summary> <div class=\"gridmenu-body formmenu svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\">─ Strek</button> <button class=\"ghost svelte-1n46o8q\">→ Pil</button> <button class=\"ghost svelte-1n46o8q\">○ Sirkel</button> <button class=\"ghost svelte-1n46o8q\">▭ Rektangel</button> <button class=\"ghost svelte-1n46o8q\">△ Trekant</button></div></details></span> <details class=\"gridmenu svelte-1n46o8q\"><summary title=\"Grid: rutene blokker snapper til når du drar\" class=\"svelte-1n46o8q\">⌗ Grid</summary> <div class=\"gridmenu-body svelte-1n46o8q\"><label class=\"svelte-1n46o8q\">Rutestørrelse <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"4\" max=\"96\" step=\"2\" class=\"svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\"/> Snap til grid</label> <!></div></details>", 1), oi = /* @__PURE__ */ Q("<span class=\"badge svelte-1n46o8q\">Upubliserte endringer</span>"), si = /* @__PURE__ */ Q("<span class=\"who svelte-1n46o8q\"> </span>"), ci = /* @__PURE__ */ Q("<a class=\"ghost svelte-1n46o8q\" href=\"/api/github/login\">Logg inn med GitHub</a>"), li = /* @__PURE__ */ Q("<button class=\"ghost svelte-1n46o8q\"> </button> <!> <a class=\"ghost svelte-1n46o8q\" target=\"_blank\" rel=\"noopener\">Se siden ↗</a> <button class=\"ghost svelte-1n46o8q\">Forkast utkast</button> <button class=\"primary svelte-1n46o8q\">Publiser</button>", 1), ui = /* @__PURE__ */ Q("<iframe title=\"Forhåndsvisning\" class=\"svelte-1n46o8q\"></iframe>"), di = /* @__PURE__ */ Q("<p class=\"loading svelte-1n46o8q\">Laster…</p>"), fi = /* @__PURE__ */ Q("<div class=\"editor svelte-1n46o8q\"><!> <header><strong class=\"brand svelte-1n46o8q\">Urd</strong> <!> <!> <!> <span class=\"status svelte-1n46o8q\"> </span> <span class=\"spacer svelte-1n46o8q\"></span> <!></header> <!></div>");
+function pi(e, t) {
 	Pe(t, !0);
 	let n = /* @__PURE__ */ I(null), r = /* @__PURE__ */ I(null), i = /* @__PURE__ */ I(!1), a = /* @__PURE__ */ I(""), o = /* @__PURE__ */ I(null), s = /* @__PURE__ */ I(null), c = /* @__PURE__ */ I(Rt({
-		columns: 24,
-		rowHeight: 8,
+		size: 16,
 		snap: !0
 	})), l = /* @__PURE__ */ I(!0), u = null, d = null, f = null, p = () => X(n).pages.find((e) => e.id === X(r));
 	function m() {
@@ -2139,7 +2163,7 @@ function di(e, t) {
 		].includes(t.type)) || (e.preventDefault(), e.shiftKey ? S() : x());
 	}
 	async function te() {
-		L(n, await (await fetch("/content/site.json")).json(), !0), d = Br("urd-draft-site", () => X(n)), L(c, {
+		L(n, Kr(await (await fetch("/content/site.json")).json()), !0), d = Br("urd-draft-site", () => X(n)), d.replace(Kr(d.data)), d.save(), L(c, {
 			snap: !0,
 			...d.data.grid
 		}, !0), await le(new URLSearchParams(location.search).get("page") ?? X(n).pages[0].id), await ce();
@@ -2186,8 +2210,8 @@ function di(e, t) {
 	}
 	async function le(e) {
 		L(r, e, !0);
-		let t = p(), n = Wr(await (await fetch(`/${t.file}`)).json(), d.data);
-		u = Br(`urd-draft-${e}`, () => n), h.length = 0, g.length = 0, _ = null, L(w, null), L(T, null), m(), L(a, "");
+		let t = p(), n = qr(await (await fetch(`/${t.file}`)).json(), d.data);
+		u = Br(`urd-draft-${e}`, () => n), u.replace(qr(u.data, d.data)), u.save(), h.length = 0, g.length = 0, _ = null, L(w, null), L(T, null), m(), L(a, "");
 	}
 	function ue() {
 		f?.destroy(), f = Vr(X(o), {
@@ -2339,7 +2363,7 @@ function di(e, t) {
 		L(a, "Komprimerer bildet…");
 		let n;
 		try {
-			n = await Jr(t);
+			n = await Zr(t);
 		} catch {
 			L(a, "Kunne ikke lese bildet (prøv jpg/png/webp).");
 			return;
@@ -2352,7 +2376,7 @@ function di(e, t) {
 			version: 1,
 			props: {
 				src: n.dataUrl,
-				alt: Yr(t.name).replaceAll("-", " "),
+				alt: Qr(t.name).replaceAll("-", " "),
 				fit: "cover",
 				radius: "md",
 				href: null
@@ -2375,7 +2399,7 @@ function di(e, t) {
 		let t = [];
 		for (let n of e.sections) for (let e of n.blocks) {
 			if (e.type !== "image" || !e.props.src?.startsWith("data:image/")) continue;
-			let n = e.props.src.split(",", 2)[1], r = `media/${Yr(e.props.alt || "bilde")}-${Xr(n)}.webp`;
+			let n = e.props.src.split(",", 2)[1], r = `media/${Qr(e.props.alt || "bilde")}-${$r(n)}.webp`;
 			t.push({
 				path: r,
 				content: n,
@@ -2418,10 +2442,10 @@ function di(e, t) {
 		o?.ok ? (localStorage.removeItem(`urd-draft-${X(r)}`), localStorage.removeItem("urd-draft-site"), L(a, "Publisert! Hosten bygger siden på nytt (typisk under ett minutt)."), L(i, !1)) : o?.status === 401 ? (L(a, "Du må logge inn med GitHub for å publisere."), await ce()) : o?.status === 403 ? L(a, (await o.json().catch(() => null))?.error ?? "Du har ikke publiseringstilgang.", !0) : o ? L(a, (await o.json().catch(() => null))?.error ?? "Publisering feilet (er publiseringslaget satt opp? Se docs/OPPSETT-PUBLISERING.md).", !0) : L(a, "Publisering er ikke tilgjengelig her (krever host med functions, se docs/OPPSETT-PUBLISERING.md).");
 	}
 	te();
-	var we = ui();
+	var we = fi();
 	Xn("keydown", Vt, ee);
 	var D = z(we), Te = (e) => {
-		var t = Zr();
+		var t = ei();
 		Z("click", t, de), $(e, t);
 	};
 	ur(D, (e) => {
@@ -2430,9 +2454,9 @@ function di(e, t) {
 	var O = B(D, 2);
 	let k;
 	var Ee = B(z(O), 2), Oe = (e) => {
-		var t = $r();
+		var t = ni();
 		hr(t, 21, () => X(n).pages, dr, (e, t) => {
-			var n = Qr(), r = z(n, !0);
+			var n = ti(), r = z(n, !0);
 			A(n);
 			var i = {};
 			ln(() => {
@@ -2448,50 +2472,42 @@ function di(e, t) {
 		X(n) && e(Oe);
 	});
 	var ke = B(Ee, 2), Ae = (e) => {
-		var t = ri(), n = Jt(t), r = z(n), i = B(r, 2), a = B(i, 2), s = B(z(a));
+		var t = ai(), n = Jt(t), r = z(n), i = B(r, 2), a = B(i, 2), o = B(z(a));
 		A(a);
-		var l = B(a, 2), u = B(z(l), 2), d = z(u), f = B(d, 2), p = B(f, 2), m = B(p, 2), h = B(m, 2);
-		A(u), A(l), A(n);
-		var g = B(n, 2), _ = B(z(g), 2), v = z(_), y = B(z(v));
-		jr(y), A(v);
-		var b = B(v, 2), x = B(z(b));
-		jr(x), A(b);
-		var S = B(b, 2), ee = z(S);
-		jr(ee), De(), A(S);
-		var te = B(S, 2), C = z(te);
-		A(te);
-		var ne = B(te, 2), re = (e) => {
-			var t = ti(), n = B(Jt(t), 2), r = z(n);
+		var s = B(a, 2), l = B(z(s), 2), u = z(l), d = B(u, 2), f = B(d, 2), p = B(f, 2), m = B(p, 2);
+		A(l), A(s), A(n);
+		var h = B(n, 2), g = B(z(h), 2), _ = z(g), v = B(z(_)), y = z(v);
+		A(v), A(_);
+		var b = B(_, 2);
+		jr(b);
+		var x = B(b, 2), S = z(x);
+		jr(S), De(), A(x);
+		var ee = B(x, 2), te = (e) => {
+			var t = ii(), n = B(Jt(t), 2), r = z(n);
 			jr(r), De(), A(n);
 			var i = B(n, 2), a = (e) => {
-				var t = ei(), n = Jt(t), r = B(z(n));
-				jr(r), A(n);
-				var i = B(n, 2), a = B(z(i));
-				jr(a), A(i), ln(() => {
-					Mr(r, X(T).columns), Mr(a, X(T).rowHeight);
-				}), Z("change", r, (e) => ae("columns", Math.max(4, Math.min(100, Number(e.target.value) || 24)))), Z("change", a, (e) => ae("rowHeight", Math.max(2, Math.min(64, Number(e.target.value) || 8)))), $(e, t);
+				var t = ri(), n = Jt(t), r = B(z(n)), i = z(r);
+				A(r), A(n);
+				var a = B(n, 2);
+				jr(a), ln(() => {
+					ir(i, `${X(T).size ?? ""} px`), Mr(a, X(T).size);
+				}), Z("input", a, (e) => ae("size", Number(e.target.value))), $(e, t);
 			};
 			ur(i, (e) => {
 				X(T) && e(a);
 			}), ln(() => Nr(r, X(T) !== null)), Z("change", r, (e) => ie(e.target.checked)), $(e, t);
-		}, ce = (e) => {
-			$(e, ni());
 		};
-		ur(ne, (e) => {
-			X(w) ? e(re) : e(ce, -1);
-		}), A(_), A(g), ln((e) => {
-			Mr(y, X(c).columns), Mr(x, X(c).rowHeight), Nr(ee, X(c).snap !== !1), ir(C, `Gridet er kun hjelpelinjer: det styrer hva blokker snapper til når du
-            drar, og å endre det flytter ALDRI noe som allerede står på siden.
-            Bredden deles i kolonner (flere = finere sideveis), høyden går i rader
-            på et fast antall piksler (lavere = finere opp/ned). Én rute er nå ca.
-            ${e ?? ""} × ${X(c).rowHeight ?? ""} px.`);
-		}, [() => Math.round((X(o)?.clientWidth ?? 1280) / X(c).columns)]), Z("click", r, () => E("text")), Z("click", i, () => E("button")), Z("change", s, be), Z("click", d, (e) => E("shape-line", e)), Z("click", f, (e) => E("shape-arrow", e)), Z("click", p, (e) => E("shape-circle", e)), Z("click", m, (e) => E("shape-rect", e)), Z("click", h, (e) => E("shape-triangle", e)), Xn("toggle", g, se), Z("change", y, (e) => oe("columns", Math.max(4, Math.min(100, Number(e.target.value) || 24)))), Z("change", x, (e) => oe("rowHeight", Math.max(2, Math.min(64, Number(e.target.value) || 8)))), Z("change", ee, (e) => oe("snap", e.target.checked)), $(e, t);
+		ur(ee, (e) => {
+			X(w) && e(te);
+		}), A(g), A(h), ln(() => {
+			ir(y, `${X(c).size ?? ""} px`), Mr(b, X(c).size), Nr(S, X(c).snap !== !1);
+		}), Z("click", r, () => E("text")), Z("click", i, () => E("button")), Z("change", o, be), Z("click", u, (e) => E("shape-line", e)), Z("click", d, (e) => E("shape-arrow", e)), Z("click", f, (e) => E("shape-circle", e)), Z("click", p, (e) => E("shape-rect", e)), Z("click", m, (e) => E("shape-triangle", e)), Xn("toggle", h, se), Z("input", b, (e) => oe("size", Number(e.target.value))), Z("change", S, (e) => oe("snap", e.target.checked)), $(e, t);
 	};
 	ur(ke, (e) => {
 		X(n) && e(Ae);
 	});
 	var je = B(ke, 2), Me = (e) => {
-		$(e, ii());
+		$(e, oi());
 	};
 	ur(je, (e) => {
 		X(i) && e(Me);
@@ -2499,15 +2515,15 @@ function di(e, t) {
 	var j = B(je, 2), Ne = z(j, !0);
 	A(j);
 	var Ie = B(j, 4), Le = (e) => {
-		var t = si(), n = Jt(t), r = z(n, !0);
+		var t = li(), n = Jt(t), r = z(n, !0);
 		A(n);
 		var a = B(n, 2), o = (e) => {
-			var t = ai(), n = z(t);
+			var t = si(), n = z(t);
 			A(t), ln(() => {
 				Pr(t, "title", X(s).allowed ? "Har publiseringstilgang" : "Mangler publiseringstilgang (ALLOWED_LOGINS)"), ir(n, `${X(s).allowed ? "" : "⚠ "}${X(s).login ?? ""}`);
 			}), $(e, t);
 		}, c = (e) => {
-			$(e, oi());
+			$(e, ci());
 		};
 		ur(a, (e) => {
 			X(s)?.loggedIn ? e(o) : X(s) && e(c, 1);
@@ -2521,10 +2537,10 @@ function di(e, t) {
 		X(n) && e(Le);
 	}), A(O);
 	var Re = B(O, 2), M = (e) => {
-		var t = ci();
+		var t = ui();
 		zr(t, (e) => L(o, e), () => X(o)), ln(() => Pr(t, "src", `/?page=${X(r)}&preview=1`)), Xn("load", t, ue), Jn(t), $(e, t);
 	}, ze = (e) => {
-		$(e, li());
+		$(e, di());
 	};
 	ur(Re, (e) => {
 		X(n) ? e(M) : e(ze, -1);
@@ -2532,9 +2548,13 @@ function di(e, t) {
 		k = Cr(O, 1, "topbar svelte-1n46o8q", null, k, { hidden: !X(l) }), ir(Ne, X(a));
 	}), $(e, we), Fe();
 }
-Zn(["click", "change"]);
+Zn([
+	"click",
+	"change",
+	"input"
+]);
 //#endregion
 //#region src/main.js
-var fi = ar(di, { target: document.getElementById("urd-admin") });
+var mi = ar(pi, { target: document.getElementById("urd-admin") });
 //#endregion
-export { fi as default };
+export { mi as default };

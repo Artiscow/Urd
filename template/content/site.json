@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "site": { "title": "Min forening", "lang": "no", "description": "En nettside bygget med Urd" },
   "breakpoints": { "mobile": 640 },
-  "grid": { "columns": 24, "rowHeight": 8, "gap": 0, "snap": true },
+  "grid": { "size": 16, "snap": true },
   "theme": {
     "version": 1,
     "tokens": {

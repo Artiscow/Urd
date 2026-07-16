@@ -6,7 +6,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { liftPageFile, PAGE_SCHEMA_VERSION } from '../template/assets/engine/migrate.js';
+import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION, SITE_SCHEMA_VERSION } from '../template/assets/engine/migrate.js';
 
 const site = { grid: { columns: 24, rowHeight: 8 } };
 
@@ -49,7 +49,7 @@ const v1Page = () => ({
   ],
 });
 
-test('v1-frames regnes om til fysiske enheter med riktig grid', () => {
+test('v1 løftes kjedet til gjeldende versjon: fysiske frames OG kvadratgrid', () => {
   const lifted = liftPageFile(v1Page(), site);
   assert.equal(lifted.schemaVersion, PAGE_SCHEMA_VERSION);
 
@@ -60,6 +60,21 @@ test('v1-frames regnes om til fysiske enheter med riktig grid', () => {
   const b = lifted.sections[1].blocks[0].frames;
   assert.deepEqual(b.desktop, { x: 25, y: 24, w: 50, h: 36, z: 1, rot: 0 });
   assert.equal(b.mobile, null);
+
+  // v2 → v3: grid-overstyret er konvertert til kvadratformatet
+  assert.deepEqual(lifted.sections[1].grid, { size: 12, snap: true });
+  assert.equal(lifted.sections[0].grid, null);
+});
+
+test('site.json v1 løftes: gridet blir kvadratisk', () => {
+  const lifted = liftSiteFile({ schemaVersion: 1, grid: { columns: 24, rowHeight: 8, gap: 0, snap: true } });
+  assert.equal(lifted.schemaVersion, SITE_SCHEMA_VERSION);
+  assert.deepEqual(lifted.grid, { size: 8, snap: true });
+});
+
+test('site.json på gjeldende versjon passerer uendret', () => {
+  const current = { schemaVersion: SITE_SCHEMA_VERSION, grid: { size: 16, snap: true } };
+  assert.deepEqual(liftSiteFile(current), current);
 });
 
 test('originalen muteres aldri', () => {
