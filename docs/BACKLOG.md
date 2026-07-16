@@ -41,6 +41,10 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 - [x] Klikk-markering: klikk på en blokk holder fokus med varig omriss og synlige håndtak; klikk utenfor avvelger
 - [ ] Fyll/farge-valg for former (fill-propen finnes i datamodellen, trenger UI - hører til blokkeditoren i v0.5)
 
+## Til v0.5 (UI-omlegging)
+
+- [ ] Topplinjen er metta: for mange knapper/meldinger på liten plass. Legges om sammen med v0.5-panelene (sider/nav/tema) - trolig sidepanel eller verktøylinje med ikoner + tooltips i stedet for tekstknapper, og statusmeldinger som toast i stedet for i linjen
+
 ## Funksjoner og forslag (udatert idébank)
 
 - [ ] Tastatursnarveier i editoren: piltaster for flytting (Ctrl+Z og Shift-for-fri-plassering er levert)
