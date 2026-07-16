@@ -14,6 +14,9 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 - Klikk-markering av blokker: varig omriss og synlige håndtak til man klikker utenfor.
 
 ### Lagt til
+- Målseksjon: paletten legger nye blokker i sist klikkede seksjon (markert med aksentlinje), ikke alltid første.
+- Grid per seksjon: «Eget grid for valgt seksjon» i grid-menyen (overstyrer nettstedets grid som snappeverktøy i den seksjonen).
+- Strammet CSP i `_headers` (script/style/connect kun 'self'); boot-skriptet flyttet til `assets/engine/boot.js`.
 - Bildeblokk med opplasting: «+ Bilde» komprimerer til webp i nettleseren (maks 1600px, med størrelsesvarsel), viser bildet umiddelbart i utkastet, og publiserer det som fil i media/ i samme commit (samme bilde gir alltid samme filnavn). Valgfri lenke gjør blokken brukbar som logo.
 - z-orden: ⬆/⬇-knapper på blokkverktøylinjen legger blokken foran/bak andre.
 - Tekstblokker vokser automatisk med innholdet under skriving; framen (og seksjonen ved behov) utvides så tekst aldri klippes eller overlapper.

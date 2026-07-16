@@ -191,8 +191,19 @@ function selectBlock(el) {
 }
 
 document.addEventListener('pointerdown', (event) => {
-  const el = event.target instanceof HTMLElement ? event.target.closest('.urd-block') : null;
-  selectBlock(el);
+  const target = event.target instanceof HTMLElement ? event.target : null;
+  selectBlock(target?.closest('.urd-block') ?? null);
+
+  // Aktiv seksjon: paletten i editoren legger nye blokker i den sist
+  // klikkede seksjonen. Markeres med en aksentlinje i venstre kant.
+  const host = target?.closest('.urd-section');
+  document.querySelectorAll('.urd-section-active').forEach((s) => {
+    if (s !== host) s.classList.remove('urd-section-active');
+  });
+  if (host) {
+    host.classList.add('urd-section-active');
+    post({ type: 'urd-select-section', sectionId: host.dataset.sectionId });
+  }
 });
 
 function clamp(value, min, max) {

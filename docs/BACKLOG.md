@@ -25,9 +25,9 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 - [x] Blokkpalett første versjon: + Tekst / + Knapp / + Form i topplinjen (legger nederst i første seksjon)
 - [x] Synlig grid-overlegg i seksjonen under dra/resize
 - [x] Grid-kontroller i editoren (⌗ Grid: kolonner, radhøyde, snap av/på) - lagres i site.json-utkast og publiseres sammen med sideendringer
-- [ ] Grid-overstyring per seksjon i UI (datamodellen støtter det allerede via section.grid)
+- [x] Grid-overstyring per seksjon i UI: «Eget grid for valgt seksjon» i ⌗ Grid-menyen
 - [x] Bildeblokk med opplasting: + Bilde komprimerer til webp (maks 1600px, størrelsesvarsel), utkast som data-URL, materialiseres til media/-filer ved publisering (deterministisk filnavn). Valgfri href-prop dekker logo-bruk.
-- [ ] Palett: valg av målseksjon (nye blokker havner i første seksjon)
+- [x] Palett: nye blokker legges i sist klikkede seksjon (aksentlinje i venstre kant viser aktiv seksjon)
 - [ ] Bilde-props i UI: alt-tekst, fit, radius, lenke (hører til blokkeditoren i v0.5)
 - [x] z-orden: ⬆/⬇-knapper på blokkverktøylinjen (legg foran/bak)
 - [x] Seksjons-CRUD: «+ Ny seksjon» in-place med preset-valg (tom, hero, footer), flytt opp/ned og slett via seksjonsverktøylinje
@@ -59,9 +59,9 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 
 ## Bugs og kjente svakheter
 
-- [ ] `template/admin/index.html` bytter ikke automatisk til å laste `./assets/editor.js` når editoren er bygget; byggesteget bør skrive inn script-taggen (eller skallet bør feature-sjekke at filen finnes)
-- [ ] `_headers` er minimal; CSP for /admin og resten må strammes til når publiseringsflyten lander (v0.2)
-- [ ] `python3 -m http.server` ruter ikke `path`-ene fra sideregisteret (kun `/` fungerer); dokumentert begrensning, men bør nevnes i UTVIKLING.md-oppskriften når ruting lander
+- [x] ~~admin/index.html laster ikke editor-build automatisk~~ (utdatert: script-taggen er fast og builden committes alltid)
+- [x] CSP i `_headers` strammet: script/style/connect kun 'self', bilder også data:/blob:, frame-ancestors 'self'. Boot-skriptet flyttet til egen fil for å unngå inline-unntak. VERIFISER i nettleser på deployet side (admin + publisering) før 0.3-slipp
+- [ ] `python3 -m http.server` ruter ikke `path`-ene fra sideregisteret (kun `/` fungerer); dokumentert begrensning (`?page=<id>` er lokal-fallback)
 
 ## Må fikses/avklares før angitt fase
 

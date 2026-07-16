@@ -12,12 +12,6 @@
     <noscript>Denne siden trenger JavaScript for å vises.</noscript>
   </main>
 
-  <script type="module">
-    import { boot } from '/assets/engine/urd.js';
-    boot({
-      root: document.getElementById('urd-root'),
-      nav: document.getElementById('urd-nav'),
-    });
-  </script>
+  <script type="module" src="/assets/engine/boot.js"></script>
 </body>
 </html>

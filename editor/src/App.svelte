@@ -106,6 +106,46 @@
   /** Om grid-menyen er åpen (gridet vises da i forhåndsvisningen). */
   let gridMenuOpen = $state(false);
 
+  /** Sist klikkede seksjon i forhåndsvisningen: paletten legger nye
+   *  blokker her, og grid-menyen kan gi den eget grid. */
+  let activeSectionId = $state(null);
+  /** Speil av den aktive seksjonens grid-overstyring (null = arver) */
+  let sectionGrid = $state(null);
+
+  function onSelectSection(msg) {
+    activeSectionId = msg.sectionId;
+    const section = store?.data.sections.find((s) => s.id === msg.sectionId);
+    sectionGrid = section?.grid ? { ...section.grid } : null;
+  }
+
+  function targetSection() {
+    return store.data.sections.find((s) => s.id === activeSectionId) ?? store.data.sections[0];
+  }
+
+  function toggleSectionGrid(on) {
+    const section = store.data.sections.find((s) => s.id === activeSectionId);
+    if (!section) return;
+    pushHistory('grid');
+    section.grid = on ? { ...siteStore.data.grid } : null;
+    sectionGrid = section.grid ? { ...section.grid } : null;
+    store.save();
+    updateDirty();
+    bridge?.sendSection(pageId, section);
+    if (gridMenuOpen) bridge?.sendShowGrid(true);
+  }
+
+  function setSectionGrid(field, value) {
+    const section = store.data.sections.find((s) => s.id === activeSectionId);
+    if (!section?.grid) return;
+    pushHistory('grid');
+    section.grid = { ...section.grid, [field]: value };
+    sectionGrid = { ...section.grid };
+    store.save();
+    updateDirty();
+    bridge?.sendSection(pageId, section);
+    if (gridMenuOpen) bridge?.sendShowGrid(true);
+  }
+
   /** Grid-kontrollene: endringer lagres i site-utkastet og pushes live.
    *  Gridet er kun et snappeverktøy; å endre det flytter aldri innhold. */
   function setGrid(field, value) {
@@ -145,6 +185,8 @@
     history.length = 0;
     redoStack.length = 0;
     lastHistoryKey = null;
+    activeSectionId = null;
+    sectionGrid = null;
     updateDirty();
     status = '';
     // Iframen bytter src via pageId; utkastet pushes i onIframeLoad.
@@ -161,6 +203,7 @@
       onDeleteSection: handleDeleteSection,
       onSectionSize: handleSectionSize,
       onUndo: (msg) => (msg.redo ? redo() : undo()),
+      onSelectSection,
     });
     if (siteStore.hasDraft()) bridge.sendSite(siteStore.data);
     if (store.hasDraft()) bridge.sendPage(pageId, store.data);
@@ -223,6 +266,10 @@
 
   function handleDeleteSection(msg) {
     pushHistory('delete-section');
+    if (msg.sectionId === activeSectionId) {
+      activeSectionId = null;
+      sectionGrid = null;
+    }
     store.data.sections = store.data.sections.filter((x) => x.id !== msg.sectionId);
     store.save();
     updateDirty();
@@ -266,7 +313,7 @@
 
   function addBlock(kind, event) {
     pushHistory('add-block');
-    const section = store.data.sections[0];
+    const section = targetSection();
     const d = BLOCK_DEFAULTS[kind];
     const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
     section.blocks.push({
@@ -300,7 +347,7 @@
     }
 
     pushHistory('add-block');
-    const section = store.data.sections[0];
+    const section = targetSection();
     const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
     // Startbredde 30 % av seksjonen; høyden følger bildets sideforhold
     // med en antatt seksjonsbredde (justeres uansett fritt etterpå).
@@ -461,6 +508,29 @@
             på et fast antall piksler (lavere = finere opp/ned). Én rute er nå ca.
             {Math.round((iframeEl?.clientWidth ?? 1280) / grid.columns)} × {grid.rowHeight} px.
           </p>
+
+          {#if activeSectionId}
+            <hr class="gridmenu-divider" />
+            <label class="gridmenu-snap">
+              <input type="checkbox" checked={sectionGrid !== null}
+                onchange={(e) => toggleSectionGrid(e.target.checked)} />
+              Eget grid for valgt seksjon
+            </label>
+            {#if sectionGrid}
+              <label>
+                Kolonner
+                <input type="number" min="4" max="100" value={sectionGrid.columns}
+                  onchange={(e) => setSectionGrid('columns', Math.max(4, Math.min(100, Number(e.target.value) || 24)))} />
+              </label>
+              <label>
+                Radhøyde (px)
+                <input type="number" min="2" max="64" value={sectionGrid.rowHeight}
+                  onchange={(e) => setSectionGrid('rowHeight', Math.max(2, Math.min(64, Number(e.target.value) || 8)))} />
+              </label>
+            {/if}
+          {:else}
+            <p class="gridmenu-hint">Klikk i en seksjon for å kunne gi den sitt eget grid.</p>
+          {/if}
         </div>
       </details>
     {/if}
@@ -633,6 +703,12 @@
     margin: 0;
     font-size: 0.75rem;
     opacity: 0.65;
+  }
+
+  .gridmenu-divider {
+    border: 0;
+    border-top: 1px solid rgb(255 255 255 / 12%);
+    margin: 0.2rem 0;
   }
 
   .formmenu {

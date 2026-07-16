@@ -232,6 +232,11 @@ img, video {
   display: block;
 }
 
+/* Aktiv seksjon (sist klikket): nye blokker fra paletten havner her */
+.urd-preview .urd-section-active {
+  box-shadow: inset 3px 0 0 var(--urd-color-accent);
+}
+
 /* Markert blokk: varig omriss og alltid synlige håndtak */
 .urd-preview .urd-block.urd-selected {
   outline: 2px solid var(--urd-color-accent);
