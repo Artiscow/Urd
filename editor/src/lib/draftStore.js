@@ -13,10 +13,13 @@
  * @returns {{data: object, save(): void, reset(): object, hasDraft(): boolean}}
  */
 export function createDraftStore(key, loadPublished) {
+  // Kloning via JSON, ikke structuredClone: innholdet er ren JSON per
+  // kontrakt, og JSON tåler Svelte 5-reaktive proxier (structuredClone
+  // kaster DataCloneError på dem).
   const published = loadPublished();
   const baseline = JSON.stringify(published);
 
-  let data = structuredClone(published);
+  let data = JSON.parse(baseline);
   const raw = localStorage.getItem(key);
   if (raw) {
     try {
@@ -42,7 +45,7 @@ export function createDraftStore(key, loadPublished) {
     /** Forkast utkastet og gå tilbake til publisert tilstand. */
     reset() {
       localStorage.removeItem(key);
-      data = structuredClone(published);
+      data = JSON.parse(baseline);
       return data;
     },
     hasDraft() {
