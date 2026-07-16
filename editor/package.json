@@ -1,7 +1,7 @@
 {
   "name": "urd-editor",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Urd-editorens kildekode. Bygges til ../template/admin/assets/ og shippes ferdigkompilert; klonede sider trenger aldri npm.",
   "type": "module",
   "scripts": {

@@ -17,7 +17,7 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 - [x] Functions: implementer `login`, `callback`, `me`, `commit`, `latest` (sti-vernet enhetstestet i `tests/guard.test.mjs`)
 - [x] Første `npm install`: committ `package-lock.json`
 - [x] Oppsettguide: `docs/OPPSETT-PUBLISERING.md` (OAuth-app + Cloudflare-miljøvariabler + feilsøking)
-- [ ] Ende-til-ende-porten: rediger overskrift på deployet klon, publiser, se den live
+- [x] Ende-til-ende-porten: rediger overskrift på deployet klon, publiser, se den live (bestått 16. juli 2026 på urdweb.pages.dev)
 
 ## Påbegynt (v0.3 «Lerretet»)
 

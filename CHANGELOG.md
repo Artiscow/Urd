@@ -7,6 +7,12 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 
 ## [Ulansert]
 
+## [0.2.0] - 2026-07-16
+
+«Tynn skive»: Urd fungerer ende-til-ende. Porten bestått: en overskrift redigert
+i nettleseren på en deployet side (urdweb.pages.dev) ble publisert med ett klikk
+og vist live, uten at en kodefil ble rørt.
+
 ### Fikset
 - Publisering kan trigge hostens deploy direkte via valgfri `DEPLOY_HOOK_URL` (git-webhooken hos Cloudflare kan glippe; publiseringen er da ikke lenger avhengig av den).
 - Publisering skrev til feil sti når nettsiden ligger i en undermappe av repoet (som `template/` i monorepoet): ny valgfri miljøvariabel `GITHUB_ROOT_DIR` prefikser repo-stiene, mens editor og sti-vern fortsatt jobber nettside-relativt.
