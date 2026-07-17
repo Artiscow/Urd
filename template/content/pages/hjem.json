@@ -47,8 +47,16 @@
               "z": 1,
               "rot": 0
             },
-            "mobile": null
-          }
+            "mobile": {
+              "x": 5,
+              "y": 24,
+              "w": 90,
+              "h": 288,
+              "z": 1,
+              "rot": 0
+            }
+          },
+          "decor": false
         },
         {
           "id": "blk-bfff1ff3",
@@ -68,14 +76,144 @@
               "z": 1,
               "rot": 0
             },
+            "mobile": {
+              "x": 5,
+              "y": 328,
+              "w": 90,
+              "h": 26,
+              "z": 1,
+              "rot": 0
+            }
+          }
+        },
+        {
+          "id": "blk-3d7c0f49",
+          "type": "shape",
+          "version": 1,
+          "decor": true,
+          "props": {
+            "kind": "line",
+            "color": "accent",
+            "thickness": 2,
+            "fill": null
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 37.5,
+              "y": 228,
+              "w": 25,
+              "h": 8,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-3e594dab",
+          "type": "shape",
+          "version": 1,
+          "decor": true,
+          "props": {
+            "kind": "line",
+            "color": "accent",
+            "thickness": 2,
+            "fill": null
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 37.5,
+              "y": 228,
+              "w": 25,
+              "h": 8,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-58cc1b8c",
+          "type": "shape",
+          "version": 1,
+          "decor": true,
+          "props": {
+            "kind": "arrow",
+            "color": "accent",
+            "thickness": 2,
+            "fill": null
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 29.45,
+              "y": 368,
+              "w": 25,
+              "h": 16,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-c1d53a96",
+          "type": "text",
+          "version": 1,
+          "decor": false,
+          "props": {
+            "html": "<h3>Overskrift</h3><p>Skriv innholdet her.</p>",
+            "align": "left",
+            "box": true
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 17.18,
+              "y": 112,
+              "w": 30,
+              "h": 150,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-6e9fd290",
+          "type": "button",
+          "version": 1,
+          "decor": false,
+          "props": {
+            "label": "Test Meg!",
+            "page": null,
+            "href": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "style": "primary"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 36.81,
+              "y": 96,
+              "w": 26,
+              "h": 36,
+              "z": 1,
+              "rot": 17
+            },
             "mobile": null
           }
         }
       ],
       "responsive": {
         "mobile": {
-          "mode": "auto",
-          "attention": null
+          "mode": "manual",
+          "attention": {
+            "needed": true,
+            "reason": "blokk-lagt-til",
+            "since": "2026-07-17T01:32:58.648Z"
+          }
         }
       }
     },
@@ -134,8 +272,8 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 8.33,
-              "y": 76,
+              "x": 7.36,
+              "y": 144,
               "w": 41.67,
               "h": 20,
               "z": 1,
@@ -145,22 +283,44 @@
           }
         },
         {
-          "id": "blk-7989d88a",
-          "type": "button",
+          "id": "blk-848d7c47",
+          "type": "text",
           "version": 1,
+          "decor": false,
           "props": {
-            "label": "Les mer",
-            "page": null,
-            "href": "#",
-            "style": "primary"
+            "html": "<p>Ny tekst</p>",
+            "align": "left"
           },
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 8.33,
-              "y": 104,
-              "w": 20,
-              "h": 32,
+              "x": 31.9,
+              "y": 176,
+              "w": 33,
+              "h": 28,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-b89fd801",
+          "type": "text",
+          "version": 1,
+          "decor": false,
+          "props": {
+            "html": "<h3>Overskrift</h3><p>Skriv innholdet her.</p>",
+            "align": "left",
+            "box": true
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 29.45,
+              "y": 160,
+              "w": 30,
+              "h": 150,
               "z": 1,
               "rot": 0
             },

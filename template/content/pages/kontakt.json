@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 3,
+  "meta": {
+    "id": "kontakt",
+    "title": "Kontakt"
+  },
+  "sections": [
+    {
+      "id": "sec-d3ef5b4a",
+      "version": 1,
+      "preset": "tom",
+      "size": {
+        "minHeight": "368px"
+      },
+      "grid": null,
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "color",
+            "version": 1,
+            "props": {
+              "value": "bg"
+            }
+          }
+        ]
+      },
+      "blocks": []
+    }
+  ]
+}

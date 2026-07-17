@@ -6,6 +6,240 @@
   },
   "sections": [
     {
+      "id": "sec-86e29932",
+      "version": 1,
+      "preset": "hero",
+      "size": {
+        "minHeight": "70vh"
+      },
+      "grid": null,
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "gradient",
+            "version": 1,
+            "props": {
+              "stops": [
+                "#0b0e14",
+                "#1a1030"
+              ],
+              "angle": 160,
+              "animate": false
+            }
+          },
+          {
+            "type": "glow",
+            "version": 1,
+            "props": {
+              "x": 0.7,
+              "y": 0.2,
+              "color": "accent",
+              "radius": 0.5,
+              "opacity": 0.35
+            }
+          },
+          {
+            "type": "grain",
+            "version": 1,
+            "props": {
+              "opacity": 0.06
+            }
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "id": "blk-c1b7e90c",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<h1>Ny overskrift</h1>",
+            "align": "left"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 8.33,
+              "y": 40,
+              "w": 50,
+              "h": 32,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-a8edd805",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<p>Skriv en kort introduksjon her.</p>",
+            "align": "left"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 8.33,
+              "y": 76,
+              "w": 41.67,
+              "h": 20,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-93886033",
+          "type": "button",
+          "version": 1,
+          "props": {
+            "label": "Les mer",
+            "page": null,
+            "href": "#",
+            "style": "primary"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 8.33,
+              "y": 104,
+              "w": 20,
+              "h": 32,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        }
+      ],
+      "responsive": {
+        "mobile": {
+          "mode": "auto",
+          "attention": null
+        }
+      }
+    },
+    {
+      "id": "sec-22242139",
+      "version": 1,
+      "preset": "hero",
+      "size": {
+        "minHeight": "70vh"
+      },
+      "grid": null,
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "gradient",
+            "version": 1,
+            "props": {
+              "stops": [
+                "#0b0e14",
+                "#1a1030"
+              ],
+              "angle": 160,
+              "animate": false
+            }
+          },
+          {
+            "type": "glow",
+            "version": 1,
+            "props": {
+              "x": 0.7,
+              "y": 0.2,
+              "color": "accent",
+              "radius": 0.5,
+              "opacity": 0.35
+            }
+          },
+          {
+            "type": "grain",
+            "version": 1,
+            "props": {
+              "opacity": 0.06
+            }
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "id": "blk-0f677294",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<h1>Ny overskrift</h1>",
+            "align": "left"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 8.33,
+              "y": 40,
+              "w": 50,
+              "h": 32,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-fe3661f7",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<p>Skriv en kort introduksjon her.</p>",
+            "align": "left"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 8.33,
+              "y": 76,
+              "w": 41.67,
+              "h": 20,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-fe7caf6b",
+          "type": "button",
+          "version": 1,
+          "props": {
+            "label": "Les mer",
+            "page": null,
+            "href": "#",
+            "style": "primary"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 8.33,
+              "y": 104,
+              "w": 20,
+              "h": 32,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        }
+      ],
+      "responsive": {
+        "mobile": {
+          "mode": "auto",
+          "attention": null
+        }
+      }
+    },
+    {
       "id": "sec-2137ee76",
       "version": 1,
       "preset": "tom",
