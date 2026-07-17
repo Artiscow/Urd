@@ -6,6 +6,56 @@
   },
   "sections": [
     {
+      "id": "sec-f460187f",
+      "version": 1,
+      "preset": "footer",
+      "size": {
+        "minHeight": "20vh"
+      },
+      "grid": null,
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "color",
+            "version": 1,
+            "props": {
+              "value": "surface"
+            }
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "id": "blk-292b56b9",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<p>© Min forening</p>",
+            "align": "center"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 25,
+              "y": 24,
+              "w": 50,
+              "h": 20,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        }
+      ],
+      "responsive": {
+        "mobile": {
+          "mode": "auto",
+          "attention": null
+        }
+      }
+    },
+    {
       "id": "sec-fcf158ba",
       "version": 1,
       "preset": "tom",
@@ -17,10 +67,12 @@
         "version": 1,
         "layers": [
           {
-            "type": "color",
+            "type": "image",
             "version": 1,
             "props": {
-              "value": "bg"
+              "src": "/media/bakgrunn-192ecc51.webp",
+              "fit": "cover",
+              "opacity": 1
             }
           }
         ]
@@ -168,7 +220,14 @@
             "align": "left",
             "box": true
           },
-          "animation": null,
+          "animation": {
+            "type": "slide-up",
+            "version": 1,
+            "props": {
+              "duration": 600,
+              "delay": 0
+            }
+          },
           "frames": {
             "desktop": {
               "x": 17.18,
@@ -214,6 +273,14 @@
             "reason": "blokk-lagt-til",
             "since": "2026-07-17T01:32:58.648Z"
           }
+        }
+      },
+      "animation": {
+        "type": "zoom-in",
+        "version": 1,
+        "props": {
+          "duration": 600,
+          "delay": 0
         }
       }
     },
