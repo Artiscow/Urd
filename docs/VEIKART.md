@@ -2,19 +2,19 @@
 
 Rekkefølgen er bevisst: **motor → publiseringsløkke → editor-dybde.** Motoren gjør skjemaet virkelig (skjemafeil er billigst å fikse før editoren avhenger av dem). Publiseringsløkka er den mest risikable *integrasjonen*, men det mest *utprøvde* mønsteret - å lande den tidlig gir et ekte deploy-mål for alt etterpå. Editor-finesse er den lange halen og bygges mot en fungerende rørledning.
 
-## v0.1 - Skjelett *(denne runden)*
+## v0.1 - Skjelett *(levert 16. juli 2026)*
 
 Dokumenter (VISJON, ARKITEKTUR, SKJEMA, VEIKART, ADR-er), JSON Schema-kontrakt i `schema/`, repo-skjelett med motor-stubber, eksempelinnhold, editor-skall og functions-stubber. `migrate.js` implementeres for ekte - invarianten først.
 
 **Port:** eksempeldataene validerer mot skjemaene; dokumentene er godkjent av eier.
 
-## v0.2 - «Tynn skive»
+## v0.2 - «Tynn skive» *(levert 16. juli 2026)*
 
 Ende-til-ende med minst mulig bredde: motoren rendrer `hjem.json` (én hero-seksjon, tekst- og knappblokk, gradientbakgrunn, kun desktop). Admin laster den ekte siden i iframe, klikk-og-skriv på tekst, utkast i localStorage, «Publiser» committer via functions, Cloudflare Pages serverer.
 
 **Port:** rediger en overskrift i nettleseren på en deployet klon og se den live etter publisering - uten å røre en kodefil.
 
-## v0.3 - Lerretet
+## v0.3 - Lerretet *(levert 17. juli 2026)*
 
 - Blokkpalett: tekst, bilde, knapp, former (streker - horisontale, vertikale, skrå via rotasjon - sirkler, rektangler), logo.
 - Dra, resize og snap på gridet (konfigurerbar grid-størrelse), z-orden.
