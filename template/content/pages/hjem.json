@@ -40,10 +40,31 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 50.49,
-              "y": 160,
+              "x": 56.8,
+              "y": 320,
               "w": 30,
               "h": 288,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-bfff1ff3",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<p>Ny tekstsssssssssssssss</p>",
+            "align": "left"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 29.45,
+              "y": 448,
+              "w": 33,
+              "h": 28,
               "z": 1,
               "rot": 0
             },
@@ -102,27 +123,6 @@
         ]
       },
       "blocks": [
-        {
-          "id": "blk-7df5456a",
-          "type": "text",
-          "version": 1,
-          "props": {
-            "html": "<h1>Ny overskrift</h1>",
-            "align": "left"
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 33.9,
-              "y": 110,
-              "w": 50,
-              "h": 32,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        },
         {
           "id": "blk-46be2356",
           "type": "text",
