@@ -177,6 +177,45 @@ html {
   }
 }
 
+/* «Til toppen»-pilen (mountToTop i urd.js) */
+.urd-totop {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 90;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--urd-color-accent) 85%, black);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.urd-totop.vis {
+  opacity: 0.85;
+  pointer-events: auto;
+}
+
+.urd-totop.vis:hover {
+  opacity: 1;
+}
+
+/* Editorens mobilvisning: skjul viewport-scrollbaren i forhåndsvisningen
+   (scrolling virker fortsatt med hjul/touch) */
+html:has(body.urd-preview.urd-mobile) {
+  scrollbar-width: none;
+}
+
+html:has(body.urd-preview.urd-mobile)::-webkit-scrollbar {
+  display: none;
+}
+
 /* Mobilvisning i editoren: strukturverktøyene (add-barer, høydehåndtak)
    skjules; mobil er layoutjustering og tilsyn */
 body.urd-mobile .urd-add-section,

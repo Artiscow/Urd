@@ -70,6 +70,25 @@ async function loadPlugins() {
 }
 
 /**
+ * «Til toppen»-pil: dukker opp nede til høyre etter et stykke scrolling.
+ */
+function mountToTop() {
+  const btn = document.createElement('button');
+  btn.className = 'urd-totop';
+  btn.textContent = '↑';
+  btn.title = 'Til toppen';
+  btn.setAttribute('aria-label', 'Til toppen av siden');
+  btn.addEventListener('click', () => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+  });
+  document.body.appendChild(btn);
+  const toggle = () => btn.classList.toggle('vis', window.scrollY > 400);
+  window.addEventListener('scroll', toggle, { passive: true });
+  toggle();
+}
+
+/**
  * Finner siden for gjeldende URL i sideregisteret.
  * ?page=<id> overstyrer (nyttig lokalt, der enkle filservere ikke
  * ruter path-ene); ellers matches location.pathname; fallback er
@@ -150,6 +169,7 @@ export async function boot(opts) {
   await loadPlugins();
 
   if (opts.nav) renderNav(site, opts.nav);
+  mountToTop();
 
   const entry = resolvePage(site);
   // Versjonsløfting på filnivå: eldre sidefiler løftes til gjeldende

@@ -13,6 +13,7 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 - Manuelle mobil-layouts: første dra i mobilvisning setter seksjonen i manuell modus og gir alle blokkene konkrete mobil-frames (lest fra flyt-posisjonene), klare til fri justering. ↺ tilbakestiller til auto.
 - Mobil-tilsyn-flagget ende-til-ende: desktop-endringer i en håndjustert seksjon markerer den gult og teller opp i topplinjen («N seksjoner trenger mobil-tilsyn», klikk hopper til mobilvisning); ✓ på seksjonen kvitterer ut. Lagres som data og publiseres (deles mellom redaktører); besøkende påvirkes aldri.
 - Dekor-flagg (✦ på blokkverktøylinjen): blokken utelates fra automatisk mobil-layout. Nye former er dekor som standard. Valgfritt additivt skjemafelt (`decor`), ingen migrering nødvendig.
+- «Til toppen»-pil på nettsiden: dukker opp nede til høyre etter scrolling (respekterer prefers-reduced-motion). Scrollbaren skjules i editorens mobil-forhåndsvisning.
 
 ## [0.3.0] - 2026-07-17
 
