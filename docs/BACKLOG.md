@@ -20,22 +20,30 @@ Fullførte punkter fra v0.2 og v0.3 er ryddet bort ved 0.3.0-slippet (17. juli 2
 - [ ] Animasjonsinnstillinger per blokk/seksjon (inn-animasjoner, hover) med version+migrate-kontrakt (flyttet fra v0.4)
 - [ ] Konfliktvarsel før publisering: bruk `latest?base=`-endepunktet (serverdelen har vært klar siden v0.2) til å varsle «noen andre har publisert siden du lastet»
 - [ ] Bilder-preset for seksjoner (image-blokken finnes; preseten trenger fornuftige plassholdere)
+- [ ] Flere seksjonspresets uten datakilder: team/styret, FAQ, kontakt (rene datafabrikker)
+- [ ] Video/embed-blokk og ikon-blokk (trenger props-UI fra blokkeditoren; embeds krever bevisst CSP-unntak for frame-src, f.eks. YouTube)
+- [ ] Tastatursnarveier: piltaster flytter markert blokk (Shift = finjustering), Delete sletter, Esc avmarkerer
 - [ ] AVKLARES FØR SIDEPANELET: nye sider trenger fungerende ruting per host. Cloudflare Pages faller tilbake til index.html (verifisert: /om-oss virker på urdweb), men GitHub Pages m.fl. gjør ikke - generere index.html per side ved publisering, eller dokumentere host-krav?
 
-## Funksjoner og forslag (udatert idébank)
+## Til v0.6 (økosystem)
 
-- [ ] Tastatursnarveier i editoren: piltaster for flytting (Ctrl+Z og Shift-for-fri-plassering er levert)
-- [ ] «Bakt HTML ved publisering» for SEO/no-JS (hører til v0.7 Optimalisering, se VEIKART)
-- [ ] Flere kjerneblokker: video/embed, ikon, kart, skjema (skjema trolig som plugin)
-- [ ] Flere seksjonspresets: kalender, team/styret, FAQ, kontakt, nyheter, oppslagstavle, Hva Skjer/blokk som viser de tre neste arrangementene fra kalender-moduler
-- [ ] Import fra eksisterende side (i det minste en veiviser som henter tekst/bilder)
-- [ ] Flerspråkstøtte for innhold (nb/nn/en-varianter av sider)
-- [ ] Samtidighetsvisning i admin («Kari redigerer Hjem nå»)
-- [ ] Galleri over community-maler og -plugins (urd.dev eller GitHub-topics)
-- [ ] GitLab/Gitea-adapter for publiseringslaget (etter v1, se ADR-0003)
+- [ ] Kart- og skjema-blokk som referanse-plugins (sammen med kalender-pluginen)
+- [ ] Kalender-avhengige presets: kalender, nyheter, oppslagstavle, «Hva skjer» (tre neste arrangementer)
+- [ ] Arkiv/datablokk-mønsteret (samlinger: nyheter, oppslag, styrer) - designes sammen med kalender-referansepluginen, det er samme mønster (blokk som rendrer en samling innslag)
+- [ ] Plugin-/mal-oppdagbarhet: etabler GitHub-topic-konvensjon (`urd-plugin`, `urd-mal`); galleri-nettstedet kommer etter v1
+
+## Etter v1.0 (horisont)
+
+- [ ] Import fra eksisterende side (veiviser som henter tekst/bilder)
+- [ ] Flerspråkstøtte for innhold (nb/nn/en-varianter; migreringskontrakten gjør at den kan komme når som helst)
+- [ ] Samtidighetsvisning i admin («Kari redigerer Hjem nå») - krever sanntidsinfra utover statisk+functions; konfliktvarselet i v0.5 dekker det viktigste
+- [ ] Galleri-nettsted over community-maler og -plugins (urd.dev; forutsetter et community)
+- [ ] GitLab/Gitea-adapter for publiseringslaget (se ADR-0003)
 - [ ] Ekstern medialagring (Cloudflare R2) som plugin for bildetunge sider
-- [ ] Butikk/Merch-mal med forskjellige bestillingsmåter (kan ta inspirasjon fra ApeironLF)
-- [ ] Arkiv for bestemte blokker: nyheter, oppslagstavle, styrer
+- [ ] Butikk/Merch-mal med bestillingsintegrasjoner (kan ta inspirasjon fra ApeironLF)
+
+## Funksjoner og Forslag
+
 
 ## Bugs og kjente svakheter
 

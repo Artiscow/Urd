@@ -42,7 +42,8 @@ redigeringsflatene bygges på den nye layouten:
 - Ny editor-layout: sidepanel/ikonverktøylinje, statusmeldinger som toast.
 - Sidepanel: opprette/omdøpe/slette sider fra sideregisteret.
 - Nav-editor og theme-token-panel (farger, fonter, radier).
-- Blokkeditor: props-UI per blokktype - bilde (alt/fit/radius/lenke), former (fyll/farge/tykkelse), knapp (mål/stil), tekst (justering, typografi).
+- Blokkeditor: props-UI per blokktype - bilde (alt/fit/radius/lenke), former (fyll/farge/tykkelse), knapp (mål/stil), tekst (justering, typografi). Nye blokktyper: video/embed og ikon.
+- Tastatursnarveier: piltaster flytter markert blokk, Delete sletter, Esc avmarkerer.
 - Seksjonseditor med **full bakgrunnseditor** (lag: farge/gradient/animert, glød, bildelag, korn) og **animasjonsinnstillinger per blokk/seksjon** (inn-animasjoner, hover; version+migrate-kontrakt) - flyttet fra v0.4.
 - Konfliktvarsel før publisering («noen andre har publisert siden du lastet», via `latest`-endepunktet som har vært klart siden v0.2).
 - Oppsettsveiviser ved første besøk (navn, farger, logo, GitHub/Cloudflare-kobling).
@@ -50,8 +51,9 @@ redigeringsflatene bygges på den nye layouten:
 
 ## v0.6 - Økosystem
 
-- Plugin-lasting for alvor: plugins leverer **egne blokker, seksjonspresets, bakgrunner, animasjoner og maler** via `register(Urd)`. Kalender-pluginen som referanseeksempel.
-- **«Lagre som mal»**: egne seksjoner/sider lagres i `content/maler/` og kan deles som plugins.
+- Plugin-lasting for alvor: plugins leverer **egne blokker, seksjonspresets, bakgrunner, animasjoner og maler** via `register(Urd)`. Kalender-pluginen som referanseeksempel; kart og skjema som ytterligere referanse-plugins.
+- **Arkiv/datablokk-mønsteret**: blokker som rendrer samlinger av innslag (nyheter, oppslag, styrer), designet sammen med kalender-pluginen. Kalender-avhengige presets: nyheter, oppslagstavle, «Hva skjer».
+- **«Lagre som mal»**: egne seksjoner/sider lagres i `content/maler/` og kan deles som plugins. GitHub-topic-konvensjon (`urd-plugin`, `urd-mal`) for oppdagbarhet.
 - `urd-template`-repo-splitt + release-Action («Use this template»).
 - Oppdaterer v1: én-klikks Urd-oppdatering som kun overskriver manifest-stiene i `urd.json`.
 
@@ -84,6 +86,13 @@ Frem til v0.6 er `template/` både verksted og demo (urdweb); det er greit så l
 En forening kan klone, sette opp, bygge og vedlikeholde en side uten utvikler.
 
 **Port:** migreringskontrakten er testet med minst én reell v1→v2-blokkendring i testsuiten; en pilotside (kandidat: gjenskape ApeironLF med Urd) er bygget og driftes.
+
+## Etter 1.0 (horisont)
+
+Uprioritert, avhenger av community og behov: import fra eksisterende sider,
+flerspråkstøtte, samtidighetsvisning i admin, galleri-nettsted for maler og
+plugins (urd.dev), GitLab/Gitea-adapter, ekstern medialagring (R2) og
+butikk/merch-mal. Detaljer i [BACKLOG.md](BACKLOG.md).
 
 ---
 
