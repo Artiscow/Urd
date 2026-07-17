@@ -35,6 +35,7 @@ Etter første oppsett er admin-siden kontrollsenteret for nettsiden din. Alt du 
 | [docs/ARKITEKTUR.md](docs/ARKITEKTUR.md) | Systemoversikt: motoren, editoren, publiseringsflyten |
 | [docs/SKJEMA.md](docs/SKJEMA.md) | Datamodellen - kontrakten alt bygger på |
 | [docs/VEIKART.md](docs/VEIKART.md) | Faser fra skjelett til v1.0 |
+| [docs/BRUKERVEILEDNING.md](docs/BRUKERVEILEDNING.md) | For sideeiere: hvordan editoren brukes, uten kode |
 | [docs/UTVIKLING.md](docs/UTVIKLING.md) | For oss som utvikler Urd: oppsett, regler, vanlige oppgaver |
 | [docs/OPPSETT-PUBLISERING.md](docs/OPPSETT-PUBLISERING.md) | Engangsoppsett av publisering: GitHub OAuth-app + Cloudflare |
 | [docs/BACKLOG.md](docs/BACKLOG.md) | Løpende oppgaveliste: gjøremål, bugs og forslag |
