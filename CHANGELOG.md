@@ -25,6 +25,7 @@ ikke slipp; alt samles i 0.5.0 ved fasegaten.
 - Radknappene i Blokker-panelet (grupper, Knapp, Bilde) deler nå samme høyde og utlegg, så listen ser jevn ut.
 - Toasten («Publisert!» m.fl.) har fått luft mot høyrekanten og ligger klar av forhåndsvisningens scrollbar.
 - Nav-panelet hadde samme overflyt ett nivå ned (radene er egne grids, og nedtrekk har egenbredde): også de klemmes nå til panelbredden.
+- Nedtrekkslistene har fått egen pil med luft mot høyrekanten, og teksten i dem linjerer nå med tekstfeltene (nettleserens innebygde pil og innrykk er skrudd av).
 
 ### 0.5.3.2 - dra over seksjonstoppen + knappe-lenke-fiks - 18. juli 2026
 - Blokker kan nå dras over toppen av sin egen seksjon (negativ y), symmetrisk med at de alltid har kunnet henge under bunnen. Før satt blokker laget i en seksjon fast ved seksjonens overkant og kunne ikke dras oppover ut av den. Skjemaets y-minimum er fjernet (ren oppmykning, knekker ingen sider).

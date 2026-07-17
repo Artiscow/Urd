@@ -1864,9 +1864,17 @@
     text-decoration: none;
   }
 
-  /* Nedtrekkslisten følger mørkt tema (nettleser-standarden er hvit) */
+  /* Nedtrekkslisten følger mørkt tema (nettleser-standarden er hvit).
+     Egen pil (appearance: none): nettleserens pil sitter klistret mot
+     høyrekanten og gir teksten en ekstra innrykk. */
   select {
     color-scheme: dark;
+    appearance: none;
+    padding-right: 2.1em;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%23e8eaf0' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.7em center;
+    background-size: 0.85em;
   }
 
   select option {
