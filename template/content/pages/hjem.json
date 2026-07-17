@@ -164,7 +164,7 @@
           "version": 1,
           "decor": false,
           "props": {
-            "html": "<h3>Overskrift</h3><p>Skriv innholdet her.</p>",
+            "html": "<h3>Jeg diger dette</h3><p><b>Jaaa jeg<i> tror</i> det</b></p>",
             "align": "left",
             "box": true
           },
