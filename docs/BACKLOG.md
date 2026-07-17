@@ -22,6 +22,7 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 - [ ] Flere seksjonspresets uten datakilder: team/styret, FAQ, kontakt (rene datafabrikker)
 - [ ] Video/embed-blokk og ikon-blokk (trenger props-UI fra blokkeditoren; embeds krever bevisst CSP-unntak for frame-src, f.eks. YouTube)
 - [ ] Tastatursnarveier: piltaster flytter markert blokk (Shift = finjustering), Delete sletter, Esc avmarkerer
+- [ ] Footer editor/mal/templates
 - [x] AVKLART (M2, 17. juli 2026): publisering genererer `<slug>/index.html` per side (kopi av rot-index.html) og sletter dem for fjernede/flyttede sider - ruting virker da på alle statiske hoster, ikke bare SPA-fallback
 
 ## Til v0.6 (økosystem)

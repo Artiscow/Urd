@@ -20,6 +20,15 @@ ikke slipp; alt samles i 0.5.0 ved fasegaten.
 - Tekstboks: tekstblokk-variant der innholdet ligger i et kort med temaets flatefarge, kantlinje og avrundede hjørner. Valgfritt additivt `box`-felt på tekstblokkens props; eldre data rendres uendret.
 - Blokker-panelet er gruppert: Tekst (Tekst, Tekstboks) og Former (Strek, Pil, Sirkel, Rektangel, Trekant) som grupper, med Knapp og Bilde imellom.
 
+### 0.5.4.2 - bakgrunnseditor-runde to - 18. juli 2026
+- Lagtypen kan byttes etter at laget er lagt til (nedtrekk i laget; innstillingene nullstilles ved bytte).
+- Styrke-glider på ALLE lagtyper: farge og gradient har fått additivt `opacity`-felt i motoren, så lag kan blandes fritt (mix and match).
+- Gradientvinkelen er glider (0-360°) i stedet for tallfelt, og «Animert» heter nå «Panorer sakte (loop)» med forklaring, så den ikke forveksles med Animasjon-valget (som gjelder innholdet).
+- Inngangsanimasjoner spilles nå én gang i forhåndsvisningen hver gang de endres fra panelet (demo-avspilling), i stedet for bare å vise slutt-tilstanden - hos besøkende spilles de fortsatt ved scrolling.
+- Bildelaget har fått full editor: fokuspunkt X/Y, uskarphet (0-20 px), gjenta som mønster, styrke.
+- Panelet kan ikke lenger få horisontal scrolling fra brede nedtrekk («Tilpasning»-boksene).
+- Egen slank, mørk scrollbar i hele admin, og nettsiden selv har fått temafarget slank scrollbar (matcher, og ser bedre ut enn nettleser-standarden på mørke sider).
+
 ### 0.5.4 - bakgrunnseditor og animasjoner (M4) - 18. juli 2026
 - Bakgrunnseditor i seksjonsegenskapene: lagliste med legg til/fjern/sorter, og per lagtype: farge (velger), gradient (fra/til-farge, vinkel, animert panorering), glød (farge, posisjon, størrelse, styrke), korn (styrke) og NYTT bildelag (opplasting med webp-komprimering, tilpasning, styrke; materialiseres som media-fil ved publisering, samme flyt som bildeblokken).
 - Animasjoner i motoren: `Urd.animations`-registeret har fått kjernetypene `fade-in`, `slide-up`, `zoom-in` (spilles ved scroll-inn hos besøkende via IntersectionObserver) og `hover-lift`. Alle følger version+migrate-kontrakten (egen testfil). `prefers-reduced-motion` respekteres; ukjent animasjonstype viser innholdet uanimert.

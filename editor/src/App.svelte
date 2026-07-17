@@ -389,6 +389,14 @@
     });
   }
 
+  /** Bytt lagtype i etterkant (laget beholder plassen, props nullstilles). */
+  function changeBgLayerType(i, type) {
+    mutateSection('bg', (s) => {
+      if (s.background.layers[i].type === type) return;
+      s.background.layers[i] = { type, version: 1, props: BG_DEFS[type].defaults() };
+    });
+  }
+
   /** Bakgrunnsbilde: samme webp-flyt som bildeblokken. */
   async function setBgImage(i, event) {
     const file = event.target.files?.[0];
@@ -418,6 +426,8 @@
     mutateBlock(`edit:anim-${selectedBlock.blockId}`, (b) => {
       b.animation = type ? animObj(type) : null;
     });
+    // Spill animasjonen én gang som demo (etter rerenderingen; postMessage er ordnet).
+    if (selectedBlock) bridge?.sendDemoAnim(selectedBlock.sectionId, selectedBlock.blockId);
   }
 
   function setBlockAnimProp(name, value) {
@@ -425,10 +435,12 @@
     mutateBlock(`edit:anim-${selectedBlock.blockId}`, (b) => {
       if (b.animation) b.animation.props[name] = value;
     });
+    if (selectedBlock) bridge?.sendDemoAnim(selectedBlock.sectionId, selectedBlock.blockId);
   }
 
   function setSectionAnimation(type) {
     mutateSection('section-anim', (s) => { s.animation = type ? animObj(type) : null; });
+    bridge?.sendDemoAnim(activeSectionId);
   }
 
   function setSectionAnimProp(name, value) {
@@ -436,6 +448,7 @@
     mutateSection('edit:section-anim', (s) => {
       if (s.animation) s.animation.props[name] = value;
     });
+    bridge?.sendDemoAnim(activeSectionId);
   }
 
   /** Høyde fra Egenskaper-panelet: px-tall eller CSS-verdi (40vh, 50%). */
@@ -1572,7 +1585,7 @@
                       <input type="number" min="0" max="4000" step="100"
                         value={selectedBlock.animation.props.delay}
                         onchange={(e) => setBlockAnimProp('delay', Number(e.target.value))} /></label>
-                    <p class="panel-hint">Spilles når besøkende scroller til innholdet. Forhåndsvisningen viser slutt-tilstanden.</p>
+                    <p class="panel-hint">Spilles hos besøkende ved scrolling. Her spilles den én gang hver gang du endrer den.</p>
                   {/if}
                 {:else if activeSectionId}
                   <p class="panel-strong">Seksjon</p>
@@ -1601,7 +1614,12 @@
                   {#each sectionBg as layer, i (i)}
                     <div class="bg-layer">
                       <span class="nav-line">
-                        <span class="bg-name">{BG_DEFS[layer.type]?.label ?? layer.type}</span>
+                        <select class="bg-type" value={layer.type} title="Bytt lagtype (innstillingene nullstilles)"
+                          onchange={(e) => changeBgLayerType(i, e.target.value)}>
+                          {#each BG_TYPES as [id, def] (id)}
+                            <option value={id}>{def.label}</option>
+                          {/each}
+                        </select>
                         <span class="row-tools">
                           <button class="ghost row-tool" onclick={() => moveBgLayer(i, -1)} disabled={i === 0}>↑</button>
                           <button class="ghost row-tool" onclick={() => moveBgLayer(i, 1)}
@@ -1613,6 +1631,10 @@
                         <label>Farge
                           <input type="color" value={hexFor(layer.props.value)}
                             oninput={(e) => setBgProp(i, 'value', e.target.value)} /></label>
+                        <label>Styrke
+                          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
+                        <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
+                          oninput={(e) => setBgProp(i, 'opacity', Number(e.target.value))} />
                       {:else if layer.type === 'gradient'}
                         <label>Fra
                           <input type="color" value={hexFor(layer.props.stops[0])}
@@ -1620,13 +1642,18 @@
                         <label>Til
                           <input type="color" value={hexFor(layer.props.stops[layer.props.stops.length - 1])}
                             oninput={(e) => setGradientStop(i, layer.props.stops.length - 1, e.target.value)} /></label>
-                        <label>Vinkel °
-                          <input type="number" step="5" value={layer.props.angle}
-                            onchange={(e) => setBgProp(i, 'angle', Number(e.target.value))} /></label>
-                        <label class="gridmenu-snap">
+                        <label>Vinkel
+                          <span class="gridmenu-value">{layer.props.angle}°</span></label>
+                        <input type="range" min="0" max="360" step="5" value={layer.props.angle}
+                          oninput={(e) => setBgProp(i, 'angle', Number(e.target.value))} />
+                        <label>Styrke
+                          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
+                        <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
+                          oninput={(e) => setBgProp(i, 'opacity', Number(e.target.value))} />
+                        <label class="gridmenu-snap" title="Bakgrunnen panorerer sakte i loop - uavhengig av Animasjon-valget under, som gjelder innholdet">
                           <input type="checkbox" checked={Boolean(layer.props.animate)}
                             onchange={(e) => setBgProp(i, 'animate', e.target.checked)} />
-                          Animert (langsom panorering)
+                          Panorer sakte (loop)
                         </label>
                       {:else if layer.type === 'glow'}
                         <label>Farge
@@ -1661,9 +1688,24 @@
                         <label>Tilpasning
                           <select value={layer.props.fit ?? 'cover'}
                             onchange={(e) => setBgProp(i, 'fit', e.target.value)}>
-                            <option value="cover">Fyll seksjonen (beskjæres)</option>
-                            <option value="contain">Vis hele bildet</option>
+                            <option value="cover">Fyll (beskjæres)</option>
+                            <option value="contain">Vis hele</option>
+                            <option value="repeat">Gjenta (mønster)</option>
                           </select></label>
+                        {#if (layer.props.fit ?? 'cover') !== 'repeat'}
+                          <label>Fokus X
+                            <span class="gridmenu-value">{Math.round((layer.props.x ?? 0.5) * 100)}%</span></label>
+                          <input type="range" min="0" max="1" step="0.05" value={layer.props.x ?? 0.5}
+                            oninput={(e) => setBgProp(i, 'x', Number(e.target.value))} />
+                          <label>Fokus Y
+                            <span class="gridmenu-value">{Math.round((layer.props.y ?? 0.5) * 100)}%</span></label>
+                          <input type="range" min="0" max="1" step="0.05" value={layer.props.y ?? 0.5}
+                            oninput={(e) => setBgProp(i, 'y', Number(e.target.value))} />
+                        {/if}
+                        <label>Uskarphet
+                          <span class="gridmenu-value">{layer.props.blur ?? 0} px</span></label>
+                        <input type="range" min="0" max="20" step="1" value={layer.props.blur ?? 0}
+                          oninput={(e) => setBgProp(i, 'blur', Number(e.target.value))} />
                         <label>Styrke
                           <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
                         <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
@@ -1695,7 +1737,7 @@
                     <label>Forsinkelse ms
                       <input type="number" min="0" max="4000" step="100" value={sectionAnim.props.delay}
                         onchange={(e) => setSectionAnimProp('delay', Number(e.target.value))} /></label>
-                    <p class="panel-hint">Spilles når besøkende scroller til seksjonen. Forhåndsvisningen viser slutt-tilstanden.</p>
+                    <p class="panel-hint">Spilles hos besøkende ved scrolling. Her spilles den én gang hver gang du endrer den.</p>
                   {/if}
                 {:else}
                   <p class="panel-hint">Klikk på en blokk eller seksjon i forhåndsvisningen.</p>
@@ -1732,6 +1774,26 @@
 </div>
 
 <style>
+  /* Egen slank, mørk scrollbar i hele admin, så den ikke stikker seg ut */
+  :global(*) {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 22%) transparent;
+  }
+
+  :global(::-webkit-scrollbar) {
+    width: 8px;
+    height: 8px;
+  }
+
+  :global(::-webkit-scrollbar-thumb) {
+    background: rgb(255 255 255 / 22%);
+    border-radius: 999px;
+  }
+
+  :global(::-webkit-scrollbar-track) {
+    background: transparent;
+  }
+
   .editor {
     display: flex;
     flex-direction: column;
@@ -2044,10 +2106,17 @@
     border-left: 2px solid rgb(255 255 255 / 12%);
   }
 
-  .bg-name {
-    flex: 1;
-    font-size: 0.85rem;
-    opacity: 0.85;
+  .bg-type {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  /* Nedtrekk og felt inni panel-etiketter skal aldri sprenge bredden */
+  .panel-body select,
+  .panel-body label > select,
+  .panel-body label > input {
+    min-width: 0;
+    max-width: 100%;
   }
 
   /* Posisjon/størrelse-feltene i Egenskaper: to kolonner med smale felt */

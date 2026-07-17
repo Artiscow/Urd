@@ -82,6 +82,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     sendAttention(sectionId, needed) {
       post({ type: 'urd-attention', sectionId, needed });
     },
+    /** Spill en inngangsanimasjon som demo (blockId null = seksjonen). */
+    sendDemoAnim(sectionId, blockId = null) {
+      post({ type: 'urd-demo-anim', sectionId, blockId });
+    },
     destroy() {
       window.removeEventListener('message', listener);
     },

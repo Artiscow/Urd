@@ -77,6 +77,22 @@ export function placeBlock(block, root) {
   post({ type: 'urd-add-block', sectionId: host.dataset.sectionId, block });
 }
 
+/**
+ * Spiller en inngangsanimasjon på nytt (demo når editoren endrer den):
+ * snapp tilbake til starttilstanden uten transition, og gli inn igjen.
+ */
+export function demoAnimation(el) {
+  if (!el) return;
+  const entrance = ['urd-anim-fade-in', 'urd-anim-slide-up', 'urd-anim-zoom-in']
+    .some((c) => el.classList.contains(c));
+  if (!entrance) return;
+  el.style.transition = 'none';
+  el.classList.remove('urd-anim-in');
+  void el.offsetWidth; // tving reflow så starttilstanden faktisk settes
+  el.style.transition = '';
+  requestAnimationFrame(() => el.classList.add('urd-anim-in'));
+}
+
 /** Om vedvarende grid-visning er på (styrt av editorens grid-meny). */
 let gridOverlaysOn = false;
 

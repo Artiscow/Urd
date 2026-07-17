@@ -61,6 +61,27 @@ html {
   pointer-events: none;
 }
 
+/* Slank scrollbar i temaets farger (matcher editorens, og ser bedre ut
+   enn nettleser-standarden på mørke sider) */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--urd-color-text) 25%, transparent) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--urd-color-text) 25%, transparent);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 /* Blokker posisjoneres absolutt av render.js (frameToCss) */
 .urd-block {
   position: absolute;

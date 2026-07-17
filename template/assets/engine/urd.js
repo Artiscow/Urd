@@ -137,6 +137,11 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-place-block' && msg.block) {
       // Paletten: finn plassering midt i synsfeltet og meld tilbake.
       window.UrdPreviewEdit?.placeBlock(msg.block, root);
+    } else if (msg?.type === 'urd-demo-anim' && msg.sectionId) {
+      // Editoren endret en animasjon: spill den én gang som demo.
+      const host = root.querySelector(`[data-section-id="${msg.sectionId}"]`);
+      const el = msg.blockId ? host?.querySelector(`[data-block-id="${msg.blockId}"]`) : host;
+      window.UrdPreviewEdit?.demoAnimation(el);
     } else if (msg?.type === 'urd-attention' && msg.sectionId) {
       // Editoren oppdaget desktop-drift i en manuell seksjon: marker live.
       root.querySelector(`[data-section-id="${msg.sectionId}"]`)
