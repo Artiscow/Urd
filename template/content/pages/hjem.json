@@ -10,7 +10,7 @@
       "version": 1,
       "preset": "tom",
       "size": {
-        "minHeight": "320px"
+        "minHeight": "464px"
       },
       "grid": null,
       "background": {
