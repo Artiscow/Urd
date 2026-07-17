@@ -1550,8 +1550,9 @@
      topplinjen og kan leses uansett hvor man jobber */
   .toast {
     position: fixed;
-    bottom: 16px;
-    right: 16px;
+    bottom: 22px;
+    /* Klar av forhåndsvisningens scrollbar og høyrekanten */
+    right: 34px;
     z-index: 300;
     display: flex;
     align-items: center;
@@ -1647,7 +1648,21 @@
 
   .panel-body {
     display: grid;
+    /* minmax(0, 1fr): kolonnen kan aldri bli bredere enn panelet, så
+       radene klemmes i stedet for å gi horisontal scrolling */
+    grid-template-columns: minmax(0, 1fr);
     gap: 0.6rem;
+  }
+
+  /* Alle «rad-knappene» i panelet (blokker, grupper, filvelger) deler
+     samme høyde og utlegg, så listen ser jevn ut */
+  .panel-body .ghost,
+  .group summary {
+    display: flex;
+    align-items: center;
+    min-height: 2.4rem;
+    padding: 0.35em 0.8em;
+    box-sizing: border-box;
   }
 
   .panel-body label {
@@ -1771,14 +1786,11 @@
      pil - åpnes til en vertikal liste av blokker under */
   .group summary {
     list-style: none;
-    display: flex;
-    align-items: center;
     justify-content: space-between;
     cursor: pointer;
     user-select: none;
     border: 1px solid rgb(255 255 255 / 20%);
     border-radius: 6px;
-    padding: 0.35em 0.8em;
   }
 
   .group summary::after {
