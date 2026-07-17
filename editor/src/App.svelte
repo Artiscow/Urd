@@ -154,8 +154,28 @@
     await checkAuth();
   }
 
-  /** Om grid-menyen er åpen (gridet vises da i forhåndsvisningen). */
-  let gridMenuOpen = $state(false);
+  /** Aktivt panel i venstre panelvelger (null = lukket) */
+  let activePanel = $state(null);
+  const PANELS = ['Sider', 'Blokker', 'Egenskaper', 'Tema', 'Nav', 'Grid', 'Historikk'];
+
+  function togglePanel(name) {
+    activePanel = activePanel === name ? null : name;
+    // Gridet vises i forhåndsvisningen så lenge Grid-panelet er åpent.
+    bridge?.sendShowGrid(activePanel === 'Grid');
+  }
+
+  /** Markert blokk i forhåndsvisningen (for Egenskaper-panelet) */
+  let selectedBlock = $state(null);
+
+  function onSelectBlock(msg) {
+    if (!msg.blockId) {
+      selectedBlock = null;
+      return;
+    }
+    const section = store?.data.sections.find((s) => s.id === msg.sectionId);
+    const block = section?.blocks.find((b) => b.id === msg.blockId);
+    selectedBlock = block ? { sectionId: msg.sectionId, blockId: msg.blockId, type: block.type } : null;
+  }
 
   /** Sist klikkede seksjon i forhåndsvisningen: paletten legger nye
    *  blokker her, og grid-menyen kan gi den eget grid. */
@@ -182,7 +202,7 @@
     store.save();
     updateDirty();
     bridge?.sendSection(pageId, section);
-    if (gridMenuOpen) bridge?.sendShowGrid(true);
+    if (activePanel === 'Grid') bridge?.sendShowGrid(true);
   }
 
   function setSectionGrid(field, value) {
@@ -194,7 +214,7 @@
     store.save();
     updateDirty();
     bridge?.sendSection(pageId, section);
-    if (gridMenuOpen) bridge?.sendShowGrid(true);
+    if (activePanel === 'Grid') bridge?.sendShowGrid(true);
   }
 
   /** Grid-kontrollene: endringer lagres i site-utkastet og pushes live.
@@ -208,12 +228,7 @@
     bridge?.sendSite(siteStore.data);
     // sendSite rerendrer siden; slå grid-visningen på igjen etterpå
     // (postMessage er ordnet, så dette ankommer etter rerenderingen).
-    if (gridMenuOpen) bridge?.sendShowGrid(true);
-  }
-
-  function onGridMenuToggle(event) {
-    gridMenuOpen = event.target.open;
-    bridge?.sendShowGrid(gridMenuOpen);
+    if (activePanel === 'Grid') bridge?.sendShowGrid(true);
   }
 
   async function checkAuth() {
@@ -271,6 +286,7 @@
       onSectionSize: handleSectionSize,
       onUndo: (msg) => (msg.redo ? redo() : undo()),
       onSelectSection,
+      onSelectBlock,
       onReady,
       onNavigate,
       onAddBlock: (msg) => insertBlock(msg.sectionId, msg.block),
@@ -287,7 +303,7 @@
     if (siteStore.hasDraft()) bridge?.sendSite(siteStore.data);
     if (store.hasDraft()) bridge?.sendPage(pageId, store.data);
     if (!chromeVisible) bridge?.sendChrome(false);
-    if (gridMenuOpen) bridge?.sendShowGrid(true);
+    if (activePanel === 'Grid') bridge?.sendShowGrid(true);
   }
 
   /** Intern lenke klikket i forhåndsvisningen: bytt side ordentlig. */
@@ -490,9 +506,8 @@
     bridge?.sendSection(pageId, section);
   }
 
-  function addBlock(kind, event) {
+  function addBlock(kind) {
     requestPlacement(buildBlock(kind));
-    event?.target.closest('details')?.removeAttribute('open');
   }
 
   /** + Bilde: komprimer til webp og legg i utkastet som data-URL.
@@ -628,113 +643,46 @@
     }
   }
 
-  /** Nedtrekksmenyene lukkes ved klikk utenfor dem, og når fokus går
-   *  inn i forhåndsvisningen (iframe-klikk når aldri dette dokumentet). */
-  function closeMenus(event) {
-    document.querySelectorAll('.topbar details[open]').forEach((d) => {
-      if (!event || !d.contains(event.target)) d.open = false;
-    });
-  }
-
   init();
 </script>
 
-<svelte:window onkeydown={onKeydown} onpointerdown={closeMenus} onblur={() => closeMenus()} />
+<svelte:window onkeydown={onKeydown} />
 
 <div class="editor">
   {#if !chromeVisible}
-    <!-- Ren visning: topplinjen er skjult så siden får full høyde -->
+    <!-- Ren visning: alt editor-UI er skjult så siden får full flate -->
     <button class="chrome-restore" onclick={toggleChrome} title="Tilbake til redigering">✏ Rediger</button>
   {/if}
+
   <header class="topbar" class:hidden={!chromeVisible}>
     <span class="topbar-group">
-    <strong class="brand">Urd</strong>
+      <strong class="brand">Urd</strong>
 
-    {#if site}
-      <select value={pageId} onchange={(e) => selectPage(e.target.value)}>
-        {#each site.pages as p}
-          <option value={p.id}>{p.title}</option>
-        {/each}
-      </select>
+      {#if site}
+        <select value={pageId} onchange={(e) => selectPage(e.target.value)}>
+          {#each site.pages as p}
+            <option value={p.id}>{p.title}</option>
+          {/each}
+        </select>
 
-      <span class="viewswitch">
-        <button class="ghost" class:active={viewMode === 'desktop'}
-          onclick={() => (viewMode = 'desktop')} title="Desktop-visning">💻</button>
-        <button class="ghost" class:active={viewMode === 'mobile'}
-          onclick={() => (viewMode = 'mobile')} title="Mobilvisning (390px)">📱</button>
-      </span>
-    {/if}
+        <span class="viewswitch">
+          <button class="ghost" class:active={viewMode === 'desktop'}
+            onclick={() => (viewMode = 'desktop')} title="Desktop-visning">💻</button>
+          <button class="ghost" class:active={viewMode === 'mobile'}
+            onclick={() => (viewMode = 'mobile')} title="Mobilvisning (390px)">📱</button>
+        </span>
+      {/if}
 
-    {#if site}
-      <span class="palette" class:locked={viewMode === 'mobile'}
-        title={viewMode === 'mobile' ? 'Bytt til desktop-visning for å legge til innhold' : undefined}>
-        <button class="ghost" onclick={() => addBlock('text')} title="Ny tekstblokk">+ Tekst</button>
-        <button class="ghost" onclick={() => addBlock('button')} title="Ny knapp">+ Knapp</button>
-        <label class="ghost filepick" title="Nytt bilde (komprimeres automatisk til webp)">
-          + Bilde
-          <input type="file" accept="image/*" onchange={addImage} />
-        </label>
-        <details class="gridmenu">
-          <summary title="Ny form">+ Form</summary>
-          <div class="gridmenu-body formmenu">
-            <button class="ghost" onclick={(e) => addBlock('shape-line', e)}>─ Strek</button>
-            <button class="ghost" onclick={(e) => addBlock('shape-arrow', e)}>→ Pil</button>
-            <button class="ghost" onclick={(e) => addBlock('shape-circle', e)}>○ Sirkel</button>
-            <button class="ghost" onclick={(e) => addBlock('shape-rect', e)}>▭ Rektangel</button>
-            <button class="ghost" onclick={(e) => addBlock('shape-triangle', e)}>△ Trekant</button>
-          </div>
-        </details>
-      </span>
+      {#if attentionCount > 0}
+        <button class="badge attention" onclick={() => (viewMode = 'mobile')}
+          title="Desktop-endringer kan ha påvirket håndjustert mobil-layout - klikk for å se over">
+          📱 {attentionCount} {attentionCount === 1 ? 'seksjon' : 'seksjoner'} trenger mobil-tilsyn
+        </button>
+      {/if}
 
-      <details class="gridmenu" ontoggle={onGridMenuToggle}>
-        <summary title="Grid: rutene blokker snapper til når du drar">⌗ Grid</summary>
-        <div class="gridmenu-body">
-          <label>
-            Rutestørrelse
-            <span class="gridmenu-value">{grid.size} px</span>
-          </label>
-          <input type="range" min="4" max="96" step="2" value={grid.size}
-            oninput={(e) => setGrid('size', Number(e.target.value))} />
-          <label class="gridmenu-snap">
-            <input type="checkbox" checked={grid.snap !== false}
-              onchange={(e) => setGrid('snap', e.target.checked)} />
-            Snap til grid
-          </label>
-
-          {#if activeSectionId}
-            <hr class="gridmenu-divider" />
-            <label class="gridmenu-snap">
-              <input type="checkbox" checked={sectionGrid !== null}
-                onchange={(e) => toggleSectionGrid(e.target.checked)} />
-              Eget grid i valgt seksjon
-            </label>
-            {#if sectionGrid}
-              <label>
-                Rutestørrelse
-                <span class="gridmenu-value">{sectionGrid.size} px</span>
-              </label>
-              <input type="range" min="4" max="96" step="2" value={sectionGrid.size}
-                oninput={(e) => setSectionGrid('size', Number(e.target.value))} />
-            {/if}
-          {/if}
-        </div>
-      </details>
-    {/if}
-
-    {#if attentionCount > 0}
-      <button class="badge attention" onclick={() => (viewMode = 'mobile')}
-        title="Desktop-endringer kan ha påvirket håndjustert mobil-layout - klikk for å se over">
-        📱 {attentionCount} {attentionCount === 1 ? 'seksjon' : 'seksjoner'} trenger mobil-tilsyn
-      </button>
-    {/if}
-
-    {#if dirty}
-      <span class="badge">Upubliserte endringer</span>
-    {/if}
-
-    {#if status}
-      <span class="status" class:ok={statusKind === 'ok'} class:error={statusKind === 'error'}>{status}</span>
-    {/if}
+      {#if dirty}
+        <span class="badge">Upubliserte endringer</span>
+      {/if}
     </span>
 
     <span class="topbar-group topbar-right">
@@ -759,16 +707,107 @@
   </header>
 
   {#if site}
-    <div class="frame-wrap" class:mobile={viewMode === 'mobile'}>
-      <iframe
-        bind:this={iframeEl}
-        title="Forhåndsvisning"
-        src={`/?page=${pageId}&preview=1`}
-        onload={onIframeLoad}
-      ></iframe>
+    <div class="workspace">
+      {#if chromeVisible}
+        <nav class="rail">
+          {#each PANELS as name}
+            <button class:active={activePanel === name} onclick={() => togglePanel(name)}>{name}</button>
+          {/each}
+        </nav>
+
+        {#if activePanel}
+          <aside class="panel">
+            <h2>{activePanel}</h2>
+
+            {#if activePanel === 'Blokker'}
+              <div class="panel-body" class:locked={viewMode === 'mobile'}
+                title={viewMode === 'mobile' ? 'Bytt til desktop-visning for å legge til innhold' : undefined}>
+                <p class="panel-hint">Nye blokker legges midt i synsfeltet, i sist klikkede seksjon.</p>
+                <button class="ghost" onclick={() => addBlock('text')}>Tekst</button>
+                <button class="ghost" onclick={() => addBlock('button')}>Knapp</button>
+                <label class="ghost filepick" title="Komprimeres automatisk til webp">
+                  Bilde
+                  <input type="file" accept="image/*" onchange={addImage} />
+                </label>
+                <button class="ghost" onclick={() => addBlock('shape-line')}>Strek</button>
+                <button class="ghost" onclick={() => addBlock('shape-arrow')}>Pil</button>
+                <button class="ghost" onclick={() => addBlock('shape-circle')}>Sirkel</button>
+                <button class="ghost" onclick={() => addBlock('shape-rect')}>Rektangel</button>
+                <button class="ghost" onclick={() => addBlock('shape-triangle')}>Trekant</button>
+              </div>
+            {:else if activePanel === 'Grid'}
+              <div class="panel-body">
+                <p class="panel-hint">Hjelpelinjene blokker snapper til. Vises så lenge panelet er åpent; å endre dem flytter aldri innhold.</p>
+                <label>
+                  Rutestørrelse
+                  <span class="gridmenu-value">{grid.size} px</span>
+                </label>
+                <input type="range" min="4" max="96" step="2" value={grid.size}
+                  oninput={(e) => setGrid('size', Number(e.target.value))} />
+                <label class="gridmenu-snap">
+                  <input type="checkbox" checked={grid.snap !== false}
+                    onchange={(e) => setGrid('snap', e.target.checked)} />
+                  Snap til grid
+                </label>
+
+                {#if activeSectionId}
+                  <hr class="gridmenu-divider" />
+                  <label class="gridmenu-snap">
+                    <input type="checkbox" checked={sectionGrid !== null}
+                      onchange={(e) => toggleSectionGrid(e.target.checked)} />
+                    Eget grid i valgt seksjon
+                  </label>
+                  {#if sectionGrid}
+                    <label>
+                      Rutestørrelse
+                      <span class="gridmenu-value">{sectionGrid.size} px</span>
+                    </label>
+                    <input type="range" min="4" max="96" step="2" value={sectionGrid.size}
+                      oninput={(e) => setSectionGrid('size', Number(e.target.value))} />
+                  {/if}
+                {:else}
+                  <p class="panel-hint">Klikk i en seksjon for å kunne gi den sitt eget grid.</p>
+                {/if}
+              </div>
+            {:else if activePanel === 'Egenskaper'}
+              <div class="panel-body">
+                {#if selectedBlock}
+                  <p>Valgt: {selectedBlock.type}-blokk</p>
+                  <p class="panel-hint">Den detaljerte blokkeditoren kommer i neste steg av v0.5.</p>
+                {:else if activeSectionId}
+                  <p>Valgt: seksjon</p>
+                  <p class="panel-hint">Seksjonseditoren (høyde, bakgrunn, animasjoner) kommer i v0.5.</p>
+                {:else}
+                  <p class="panel-hint">Klikk på en blokk eller seksjon i forhåndsvisningen.</p>
+                {/if}
+              </div>
+            {:else}
+              <div class="panel-body">
+                <p class="panel-hint">{activePanel}-panelet kommer i en senere del av v0.5.</p>
+              </div>
+            {/if}
+          </aside>
+        {/if}
+      {/if}
+
+      <div class="frame-wrap" class:mobile={viewMode === 'mobile'}>
+        <iframe
+          bind:this={iframeEl}
+          title="Forhåndsvisning"
+          src={`/?page=${pageId}&preview=1`}
+          onload={onIframeLoad}
+        ></iframe>
+      </div>
     </div>
   {:else}
     <p class="loading">Laster…</p>
+  {/if}
+
+  {#if status}
+    <div class="toast" class:ok={statusKind === 'ok'} class:error={statusKind === 'error'}>
+      <span>{status}</span>
+      <button class="toast-x" onclick={() => setStatus('')} title="Lukk">×</button>
+    </div>
   {/if}
 </div>
 
@@ -834,10 +873,6 @@
     justify-content: flex-end;
   }
 
-  .status {
-    max-width: 40ch;
-  }
-
   .badge {
     background: var(--urd-color-accent, #7c5cff);
     color: #fff;
@@ -846,22 +881,45 @@
     font-size: 0.78rem;
   }
 
-  .status {
-    opacity: 0.9;
-    font-size: 0.82rem;
-    padding: 0.25em 0.8em;
-    border-radius: 999px;
-    background: rgb(255 255 255 / 8%);
+  /* Statusmeldinger som toast nederst til høyre: forstyrrer ikke
+     topplinjen og kan leses uansett hvor man jobber */
+  .toast {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 300;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    max-width: 44ch;
+    padding: 0.6em 0.9em;
+    font-size: 0.85rem;
+    border-radius: 10px;
+    background: var(--urd-color-surface, #151a23);
+    border: 1px solid rgb(255 255 255 / 15%);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
   }
 
-  .status.ok {
-    background: rgb(46 204 113 / 18%);
+  .toast.ok {
+    border-color: rgb(46 204 113 / 45%);
     color: #7ee2a8;
   }
 
-  .status.error {
-    background: rgb(231 76 60 / 18%);
+  .toast.error {
+    border-color: rgb(231 76 60 / 45%);
     color: #f5a09a;
+  }
+
+  .toast-x {
+    border: 0;
+    padding: 0 0.2em;
+    font-size: 1rem;
+    line-height: 1;
+    opacity: 0.6;
+  }
+
+  .toast-x:hover {
+    opacity: 1;
   }
 
   .who {
@@ -869,44 +927,65 @@
     font-size: 0.82rem;
   }
 
-  .palette {
+  /* Arbeidsflaten: panelvelger-linje | panel (valgfritt) | forhåndsvisning */
+  .workspace {
+    flex: 1;
     display: flex;
-    gap: 0.35rem;
+    min-height: 0;
   }
 
-  .gridmenu {
-    position: relative;
+  .rail {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 6px;
+    background: var(--urd-color-surface, #151a23);
+    border-right: 1px solid rgb(255 255 255 / 8%);
+    overflow-y: auto;
   }
 
-  .gridmenu summary {
-    list-style: none;
-    cursor: pointer;
-    border: 1px solid rgb(255 255 255 / 20%);
-    border-radius: 6px;
-    padding: 0.35em 0.8em;
-    user-select: none;
+  .rail button {
+    border: 1px solid transparent;
+    background: transparent;
+    font-size: 0.82rem;
+    padding: 0.5em 0.7em;
+    text-align: left;
+    border-radius: 8px;
+    opacity: 0.8;
   }
 
-  .gridmenu[open] summary {
+  .rail button:hover {
+    opacity: 1;
+    background: rgb(255 255 255 / 6%);
+  }
+
+  .rail button.active {
+    opacity: 1;
+    background: rgb(124 92 255 / 15%);
     border-color: var(--urd-color-accent, #7c5cff);
   }
 
-  .gridmenu-body {
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    z-index: 50;
-    display: grid;
-    gap: 0.6rem;
-    width: 15rem;
-    padding: 0.8rem;
+  .panel {
+    width: 300px;
+    flex-shrink: 0;
+    padding: 0.9rem;
     background: var(--urd-color-surface, #151a23);
-    border: 1px solid rgb(255 255 255 / 15%);
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgb(0 0 0 / 40%);
+    border-right: 1px solid rgb(255 255 255 / 8%);
+    overflow-y: auto;
+    font-size: 0.88rem;
   }
 
-  .gridmenu-body label {
+  .panel h2 {
+    margin: 0 0 0.8rem;
+    font-size: 0.95rem;
+  }
+
+  .panel-body {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .panel-body label {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -914,14 +993,25 @@
     font-size: 0.85rem;
   }
 
-  .gridmenu-body input[type='number'] {
-    width: 4.5rem;
-    font: inherit;
-    color: inherit;
-    background: transparent;
-    border: 1px solid rgb(255 255 255 / 20%);
-    border-radius: 6px;
-    padding: 0.25em 0.4em;
+  .panel-body input[type='range'] {
+    width: 100%;
+    accent-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  .panel-body button,
+  .panel-body .filepick {
+    text-align: left;
+  }
+
+  .panel-body.locked {
+    opacity: 0.35;
+    pointer-events: none;
+  }
+
+  .panel-hint {
+    margin: 0;
+    font-size: 0.8rem;
+    opacity: 0.65;
   }
 
   .gridmenu-snap {
@@ -933,20 +1023,10 @@
     opacity: 0.75;
   }
 
-  .gridmenu-body input[type='range'] {
-    width: 100%;
-    accent-color: var(--urd-color-accent, #7c5cff);
-  }
-
   .gridmenu-divider {
     border: 0;
     border-top: 1px solid rgb(255 255 255 / 12%);
     margin: 0.2rem 0;
-  }
-
-  .formmenu {
-    width: auto;
-    min-width: 8rem;
   }
 
   .filepick {
@@ -955,10 +1035,6 @@
 
   .filepick input {
     display: none;
-  }
-
-  .formmenu button {
-    text-align: left;
   }
 
   select,
@@ -1031,11 +1107,6 @@
   .viewswitch .active {
     border-color: var(--urd-color-accent, #7c5cff);
     background: rgb(124 92 255 / 15%);
-  }
-
-  .palette.locked {
-    opacity: 0.35;
-    pointer-events: none;
   }
 
   .badge.attention {

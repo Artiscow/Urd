@@ -11,7 +11,7 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 
 ## Til v0.5 (paneler og UI-omlegging)
 
-- [ ] Ny editor-layout FØRST: sidepanel/ikonverktøylinje i stedet for metta topplinje, statusmeldinger som toast
+- [x] Ny editor-layout FØRST: panelvelger med tekstknapper + sidepanel i stedet for metta topplinje, statusmeldinger som toast (M1, 17. juli 2026)
 - [ ] Blokkeditor (per-blokk-props i UI): bilde (alt/fit/radius/lenke), former (fyll/farge/tykkelse), knapp (mål/stil), tekst (justering)
 - [ ] Full teksteditor i blokkeditoren: størrelse, fet/kursiv, farge, font (flyttet fra idébanken - det er panel-UI)
 - [ ] Seksjonseditor med full bakgrunnseditor: farge/gradient (også animert), glød, bildelag, korn (flyttet fra v0.4)

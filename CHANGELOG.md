@@ -7,6 +7,13 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 
 ## [Ulansert]
 
+### Endret
+- Ny editor-layout (v0.5 M1): smal panelvelger til venstre med tekstknapper (Sider, Blokker, Egenskaper, Tema, Nav, Grid, Historikk) som åpner et panel mellom linjen og forhåndsvisningen. Blokkpaletten bor nå i Blokker-panelet og grid-innstillingene i Grid-panelet (gridet vises så lenge panelet er åpent); Sider/Egenskaper/Tema/Nav/Historikk er skall som fylles utover v0.5. Topplinjen er slanket til sidevelger, 💻/📱, tilsyn-chip og publiseringsknappene.
+- Statusmeldinger vises som toast nederst til høyre (med lukkeknapp) i stedet for chip i topplinjen.
+
+### Lagt til
+- Forhåndsvisningen melder blokkvalg til editoren (`urd-select-block`), så Egenskaper-panelet vet hvilken blokk eller seksjon som er valgt.
+
 ## [0.4.0] - 2026-07-17
 
 «Responsivt»: sider bygget på desktop fungerer på mobil uten manuell

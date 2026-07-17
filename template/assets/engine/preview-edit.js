@@ -301,11 +301,19 @@ window.addEventListener('keydown', (event) => {
 let selectedBlockId = null;
 
 function selectBlock(el) {
+  const previous = selectedBlockId;
   selectedBlockId = el?.dataset.blockId ?? null;
   document.querySelectorAll('.urd-block.urd-selected').forEach((b) => {
     if (b !== el) b.classList.remove('urd-selected');
   });
   el?.classList.add('urd-selected');
+  if (previous !== selectedBlockId) {
+    post({
+      type: 'urd-select-block',
+      sectionId: el?.closest('.urd-section')?.dataset.sectionId ?? null,
+      blockId: selectedBlockId,
+    });
+  }
 }
 
 // Intern navigasjon i preview går via editoren (som bytter side og holder
