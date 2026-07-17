@@ -20,6 +20,12 @@ ikke slipp; alt samles i 0.5.0 ved fasegaten.
 - Tekstboks: tekstblokk-variant der innholdet ligger i et kort med temaets flatefarge, kantlinje og avrundede hjørner. Valgfritt additivt `box`-felt på tekstblokkens props; eldre data rendres uendret.
 - Blokker-panelet er gruppert: Tekst (Tekst, Tekstboks) og Former (Strek, Pil, Sirkel, Rektangel, Trekant) som grupper, med Knapp og Bilde imellom.
 
+### 0.5.4 - bakgrunnseditor og animasjoner (M4) - 18. juli 2026
+- Bakgrunnseditor i seksjonsegenskapene: lagliste med legg til/fjern/sorter, og per lagtype: farge (velger), gradient (fra/til-farge, vinkel, animert panorering), glød (farge, posisjon, størrelse, styrke), korn (styrke) og NYTT bildelag (opplasting med webp-komprimering, tilpasning, styrke; materialiseres som media-fil ved publisering, samme flyt som bildeblokken).
+- Animasjoner i motoren: `Urd.animations`-registeret har fått kjernetypene `fade-in`, `slide-up`, `zoom-in` (spilles ved scroll-inn hos besøkende via IntersectionObserver) og `hover-lift`. Alle følger version+migrate-kontrakten (egen testfil). `prefers-reduced-motion` respekteres; ukjent animasjonstype viser innholdet uanimert.
+- Animasjons-UI i Egenskaper-panelet for både blokker og seksjoner: type, varighet og forsinkelse. Editorens forhåndsvisning viser slutt-tilstanden (redigering skal ikke utløse evige avspillinger); selve avspillingen skjer hos besøkende.
+- Seksjoner har fått valgfritt `animation`-felt i skjemaet (additivt, ingen migrering nødvendig).
+
 ### 0.5.3.3 - panel-finpuss - 18. juli 2026
 - Sider-panelet (og alle andre paneler) holder seg nå innenfor panelbredden: radene klemmes i stedet for å gi horisontal scrolling.
 - Radknappene i Blokker-panelet (grupper, Knapp, Bilde) deler nå samme høyde og utlegg, så listen ser jevn ut.

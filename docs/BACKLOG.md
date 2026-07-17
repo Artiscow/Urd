@@ -12,10 +12,10 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 ## Til v0.5 (paneler og UI-omlegging)
 
 - [x] Ny editor-layout FØRST: panelvelger med tekstknapper + sidepanel i stedet for metta topplinje, statusmeldinger som toast (M1, 17. juli 2026)
-- [ ] Blokkeditor (per-blokk-props i UI): bilde (alt/fit/radius/lenke), former (fyll/farge/tykkelse), knapp (mål/stil), tekst (justering)
-- [ ] Full teksteditor i blokkeditoren: størrelse, fet/kursiv, farge, font (flyttet fra idébanken - det er panel-UI)
-- [ ] Seksjonseditor med full bakgrunnseditor: farge/gradient (også animert), glød, bildelag, korn (flyttet fra v0.4)
-- [ ] Animasjonsinnstillinger per blokk/seksjon (inn-animasjoner, hover) med version+migrate-kontrakt (flyttet fra v0.4)
+- [x] Blokkeditor (per-blokk-props i UI): bilde (alt/fit/radius/lenke), former (fyll/farge/tykkelse), knapp (mål/stil), tekst (justering) (M3, 17. juli 2026)
+- [x] Teksteditor: flytende linje over markert tekst med fet/kursiv/overskrifter/temafarger (M3, 17. juli 2026; fontvalg styres av Tema-panelet, egne skriftstørrelser utsatt)
+- [x] Seksjonseditor med full bakgrunnseditor: farge/gradient (også animert), glød, bildelag, korn (M4, 18. juli 2026)
+- [x] Animasjonsinnstillinger per blokk/seksjon (fade-in/slide-up/zoom-in/hover-lift) med version+migrate-kontrakt (M4, 18. juli 2026)
 - [ ] Konfliktvarsel før publisering: bruk `latest?base=`-endepunktet (serverdelen har vært klar siden v0.2) til å varsle «noen andre har publisert siden du lastet»
 - [ ] Bilder-preset for seksjoner (image-blokken finnes; preseten trenger fornuftige plassholdere)
 - [ ] Flere seksjonspresets uten datakilder: team/styret, FAQ, kontakt (rene datafabrikker)

@@ -77,7 +77,18 @@ valg i stedet for dra-og-slipp:
   Bilde: bytt bilde, alt-tekst, beskjæring, avrunding og lenke.
   Form: type, farge fra temaet, tykkelse og fylt/kantlinje.
 - Klikker du i en seksjon (uten blokk valgt) viser panelet seksjonens
-  minstehøyde og eget grid.
+  minstehøyde, eget grid, bakgrunn og animasjon.
+
+**Bakgrunner**: en seksjons bakgrunn er bygget av lag som kan stables:
+farge, gradient (kan animeres), glød, bilde og korn. Legg til, fjern og
+sorter lag i seksjonens Egenskaper; hvert lag har sine egne kontroller.
+
+**Animasjoner**: blokker og seksjoner kan gli eller tone inn når
+besøkende scroller til dem (og «løft ved peker» for hover-effekt).
+Velges i Egenskaper. Forhåndsvisningen i editoren viser slutt-tilstanden;
+selve animasjonen spilles på den publiserte siden. Besøkende som har
+skrudd av animasjoner i systemet sitt (redusert bevegelse) får innholdet
+uten animasjon.
 
 **Formatere tekst**: marker tekst i en tekstblokk, så dukker en liten
 verktøylinje opp over markeringen med fet, kursiv, overskriftsnivåer og

@@ -6,7 +6,25 @@
   import { createPreviewBridge } from './lib/previewBridge.js';
   // Editoren deler migreringskoden med motoren (samme fil, bundles inn).
   import { liftPageFile, liftSiteFile } from '../../template/assets/engine/migrate.js';
+  // Bakgrunns- og animasjonsdefinisjonene gjenbrukes for etiketter og
+  // standardverdier, så editor og motor aldri drifter fra hverandre.
+  import { colorLayer } from '../../template/assets/engine/backgrounds/color.js';
+  import { gradientLayer } from '../../template/assets/engine/backgrounds/gradient.js';
+  import { glowLayer } from '../../template/assets/engine/backgrounds/glow.js';
+  import { grainLayer } from '../../template/assets/engine/backgrounds/grain.js';
+  import { imageLayer } from '../../template/assets/engine/backgrounds/image.js';
+  import { coreAnimations } from '../../template/assets/engine/animations/core.js';
   import { compressToWebp, slugify, contentHash, WARN_BYTES } from './lib/imageTools.js';
+
+  /** Bakgrunnslagtypene i den rekkefølgen de tilbys i panelet. */
+  const BG_TYPES = [
+    ['color', colorLayer],
+    ['gradient', gradientLayer],
+    ['glow', glowLayer],
+    ['image', imageLayer],
+    ['grain', grainLayer],
+  ];
+  const BG_DEFS = Object.fromEntries(BG_TYPES);
 
   let site = $state(null);
   let pageId = $state(null);
@@ -232,6 +250,7 @@
       decor: Boolean(block.decor),
       props: JSON.parse(JSON.stringify(block.props)),
       frame: { ...block.frames.desktop },
+      animation: block.animation ? JSON.parse(JSON.stringify(block.animation)) : null,
     };
   }
 
@@ -305,12 +324,118 @@
   let sectionGrid = $state(null);
   /** Speil av den aktive seksjonens minstehøyde (for Egenskaper-panelet) */
   let sectionMinHeight = $state('');
+  /** Speil av den aktive seksjonens bakgrunnslag og animasjon */
+  let sectionBg = $state([]);
+  let sectionAnim = $state(null);
+
+  function syncSectionMirrors(section) {
+    sectionGrid = section?.grid ? { ...section.grid } : null;
+    sectionMinHeight = section?.size?.minHeight ?? '';
+    sectionBg = JSON.parse(JSON.stringify(section?.background?.layers ?? []));
+    sectionAnim = section?.animation ? JSON.parse(JSON.stringify(section.animation)) : null;
+  }
 
   function onSelectSection(msg) {
     activeSectionId = msg.sectionId;
-    const section = store?.data.sections.find((s) => s.id === msg.sectionId);
-    sectionGrid = section?.grid ? { ...section.grid } : null;
-    sectionMinHeight = section?.size?.minHeight ?? '';
+    syncSectionMirrors(store?.data.sections.find((s) => s.id === msg.sectionId));
+  }
+
+  /** Felles flyt for seksjons-endringer fra Egenskaper-panelet. */
+  function mutateSection(key, fn) {
+    const section = store.data.sections.find((s) => s.id === activeSectionId);
+    if (!section) return;
+    pushHistory(key);
+    fn(section);
+    store.save();
+    updateDirty();
+    bridge?.sendSection(pageId, section);
+    syncSectionMirrors(section);
+  }
+
+  /* ---------- Bakgrunnseditoren ---------- */
+
+  /** Valgt lagtype for «+ Legg til lag» */
+  let newBgType = $state('color');
+
+  function addBgLayer(type) {
+    mutateSection('bg', (s) => {
+      s.background ??= { version: 1, layers: [] };
+      s.background.layers.push({ type, version: 1, props: BG_DEFS[type].defaults() });
+    });
+  }
+
+  function removeBgLayer(i) {
+    mutateSection('bg', (s) => { s.background.layers.splice(i, 1); });
+  }
+
+  function moveBgLayer(i, dir) {
+    const j = i + dir;
+    mutateSection('bg', (s) => {
+      const layers = s.background.layers;
+      if (j < 0 || j >= layers.length) return;
+      [layers[i], layers[j]] = [layers[j], layers[i]];
+    });
+  }
+
+  function setBgProp(i, name, value) {
+    mutateSection(`edit:bg-${activeSectionId}-${i}-${name}`, (s) => {
+      s.background.layers[i].props[name] = value;
+    });
+  }
+
+  function setGradientStop(i, stopIndex, value) {
+    mutateSection(`edit:bg-${activeSectionId}-${i}-stop${stopIndex}`, (s) => {
+      s.background.layers[i].props.stops[stopIndex] = value;
+    });
+  }
+
+  /** Bakgrunnsbilde: samme webp-flyt som bildeblokken. */
+  async function setBgImage(i, event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      const img = await compressToWebp(file);
+      setBgProp(i, 'src', img.dataUrl);
+    } catch {
+      setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
+    }
+  }
+
+  /** Fargeverdi til <input type="color">: token-navn slås opp i temaet. */
+  function hexFor(value) {
+    if (typeof value !== 'string') return '#000000';
+    return value.startsWith('#') ? value : (siteDraft?.theme.tokens.color[value] ?? '#000000');
+  }
+
+  /* ---------- Animasjoner ---------- */
+
+  function animObj(type) {
+    return { type, version: coreAnimations[type].version, props: coreAnimations[type].defaults() };
+  }
+
+  function setBlockAnimation(type) {
+    mutateBlock(`edit:anim-${selectedBlock.blockId}`, (b) => {
+      b.animation = type ? animObj(type) : null;
+    });
+  }
+
+  function setBlockAnimProp(name, value) {
+    if (!Number.isFinite(value)) return;
+    mutateBlock(`edit:anim-${selectedBlock.blockId}`, (b) => {
+      if (b.animation) b.animation.props[name] = value;
+    });
+  }
+
+  function setSectionAnimation(type) {
+    mutateSection('section-anim', (s) => { s.animation = type ? animObj(type) : null; });
+  }
+
+  function setSectionAnimProp(name, value) {
+    if (!Number.isFinite(value)) return;
+    mutateSection('edit:section-anim', (s) => {
+      if (s.animation) s.animation.props[name] = value;
+    });
   }
 
   /** Høyde fra Egenskaper-panelet: px-tall eller CSS-verdi (40vh, 50%). */
@@ -920,13 +1045,20 @@
    */
   function materializeImages(page) {
     const files = [];
+    const materialize = (props, name) => {
+      if (!props.src?.startsWith('data:image/')) return;
+      const base64 = props.src.split(',', 2)[1];
+      const path = `media/${slugify(name || 'bilde')}-${contentHash(base64)}.webp`;
+      files.push({ path, content: base64, encoding: 'base64' });
+      props.src = `/${path}`;
+    };
     for (const section of page.sections) {
+      // Bakgrunnsbilder følger samme flyt som bildeblokker.
+      for (const layer of section.background?.layers ?? []) {
+        if (layer.type === 'image') materialize(layer.props, 'bakgrunn');
+      }
       for (const block of section.blocks) {
-        if (block.type !== 'image' || !block.props.src?.startsWith('data:image/')) continue;
-        const base64 = block.props.src.split(',', 2)[1];
-        const path = `media/${slugify(block.props.alt || 'bilde')}-${contentHash(base64)}.webp`;
-        files.push({ path, content: base64, encoding: 'base64' });
-        block.props.src = `/${path}`;
+        if (block.type === 'image') materialize(block.props, block.props.alt);
       }
     }
     return files;
@@ -1421,6 +1553,27 @@
                       Fylt
                     </label>
                   {/if}
+
+                  <hr class="gridmenu-divider" />
+                  <label>Animasjon
+                    <select value={selectedBlock.animation?.type ?? ''}
+                      onchange={(e) => setBlockAnimation(e.target.value || null)}>
+                      <option value="">Ingen</option>
+                      {#each Object.entries(coreAnimations) as [id, def] (id)}
+                        <option value={id}>{def.label}</option>
+                      {/each}
+                    </select></label>
+                  {#if selectedBlock.animation && coreAnimations[selectedBlock.animation.type]?.entrance}
+                    <label>Varighet ms
+                      <input type="number" min="100" max="4000" step="100"
+                        value={selectedBlock.animation.props.duration}
+                        onchange={(e) => setBlockAnimProp('duration', Number(e.target.value))} /></label>
+                    <label>Forsinkelse ms
+                      <input type="number" min="0" max="4000" step="100"
+                        value={selectedBlock.animation.props.delay}
+                        onchange={(e) => setBlockAnimProp('delay', Number(e.target.value))} /></label>
+                    <p class="panel-hint">Spilles når besøkende scroller til innholdet. Forhåndsvisningen viser slutt-tilstanden.</p>
+                  {/if}
                 {:else if activeSectionId}
                   <p class="panel-strong">Seksjon</p>
                   <label>Minstehøyde
@@ -1441,7 +1594,109 @@
                     <input type="range" min="4" max="96" step="2" value={sectionGrid.size}
                       oninput={(e) => setSectionGrid('size', Number(e.target.value))} />
                   {/if}
-                  <p class="panel-hint">Bakgrunn og animasjoner kommer i neste steg av v0.5.</p>
+
+                  <hr class="gridmenu-divider" />
+                  <p class="panel-strong">Bakgrunn</p>
+                  <p class="panel-hint">Lagene tegnes nedenfra og opp; øverste lag i listen ligger bakerst.</p>
+                  {#each sectionBg as layer, i (i)}
+                    <div class="bg-layer">
+                      <span class="nav-line">
+                        <span class="bg-name">{BG_DEFS[layer.type]?.label ?? layer.type}</span>
+                        <span class="row-tools">
+                          <button class="ghost row-tool" onclick={() => moveBgLayer(i, -1)} disabled={i === 0}>↑</button>
+                          <button class="ghost row-tool" onclick={() => moveBgLayer(i, 1)}
+                            disabled={i === sectionBg.length - 1}>↓</button>
+                          <button class="ghost row-tool" title="Fjern laget" onclick={() => removeBgLayer(i)}>×</button>
+                        </span>
+                      </span>
+                      {#if layer.type === 'color'}
+                        <label>Farge
+                          <input type="color" value={hexFor(layer.props.value)}
+                            oninput={(e) => setBgProp(i, 'value', e.target.value)} /></label>
+                      {:else if layer.type === 'gradient'}
+                        <label>Fra
+                          <input type="color" value={hexFor(layer.props.stops[0])}
+                            oninput={(e) => setGradientStop(i, 0, e.target.value)} /></label>
+                        <label>Til
+                          <input type="color" value={hexFor(layer.props.stops[layer.props.stops.length - 1])}
+                            oninput={(e) => setGradientStop(i, layer.props.stops.length - 1, e.target.value)} /></label>
+                        <label>Vinkel °
+                          <input type="number" step="5" value={layer.props.angle}
+                            onchange={(e) => setBgProp(i, 'angle', Number(e.target.value))} /></label>
+                        <label class="gridmenu-snap">
+                          <input type="checkbox" checked={Boolean(layer.props.animate)}
+                            onchange={(e) => setBgProp(i, 'animate', e.target.checked)} />
+                          Animert (langsom panorering)
+                        </label>
+                      {:else if layer.type === 'glow'}
+                        <label>Farge
+                          <input type="color" value={hexFor(layer.props.color)}
+                            oninput={(e) => setBgProp(i, 'color', e.target.value)} /></label>
+                        <label>Posisjon X
+                          <span class="gridmenu-value">{Math.round(layer.props.x * 100)}%</span></label>
+                        <input type="range" min="0" max="1" step="0.05" value={layer.props.x}
+                          oninput={(e) => setBgProp(i, 'x', Number(e.target.value))} />
+                        <label>Posisjon Y
+                          <span class="gridmenu-value">{Math.round(layer.props.y * 100)}%</span></label>
+                        <input type="range" min="0" max="1" step="0.05" value={layer.props.y}
+                          oninput={(e) => setBgProp(i, 'y', Number(e.target.value))} />
+                        <label>Størrelse
+                          <span class="gridmenu-value">{Math.round(layer.props.radius * 100)}%</span></label>
+                        <input type="range" min="0.1" max="1" step="0.05" value={layer.props.radius}
+                          oninput={(e) => setBgProp(i, 'radius', Number(e.target.value))} />
+                        <label>Styrke
+                          <span class="gridmenu-value">{Math.round(layer.props.opacity * 100)}%</span></label>
+                        <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity}
+                          oninput={(e) => setBgProp(i, 'opacity', Number(e.target.value))} />
+                      {:else if layer.type === 'grain'}
+                        <label>Styrke
+                          <span class="gridmenu-value">{Math.round(layer.props.opacity * 100)}%</span></label>
+                        <input type="range" min="0.01" max="0.3" step="0.01" value={layer.props.opacity}
+                          oninput={(e) => setBgProp(i, 'opacity', Number(e.target.value))} />
+                      {:else if layer.type === 'image'}
+                        <label class="ghost filepick" title="Komprimeres automatisk til webp">
+                          {layer.props.src ? 'Bytt bilde' : 'Velg bilde'}
+                          <input type="file" accept="image/*" onchange={(e) => setBgImage(i, e)} />
+                        </label>
+                        <label>Tilpasning
+                          <select value={layer.props.fit ?? 'cover'}
+                            onchange={(e) => setBgProp(i, 'fit', e.target.value)}>
+                            <option value="cover">Fyll seksjonen (beskjæres)</option>
+                            <option value="contain">Vis hele bildet</option>
+                          </select></label>
+                        <label>Styrke
+                          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
+                        <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
+                          oninput={(e) => setBgProp(i, 'opacity', Number(e.target.value))} />
+                      {/if}
+                    </div>
+                  {/each}
+                  <label>Nytt lag
+                    <select bind:value={newBgType}>
+                      {#each BG_TYPES as [id, def] (id)}
+                        <option value={id}>{def.label}</option>
+                      {/each}
+                    </select></label>
+                  <button class="ghost" onclick={() => addBgLayer(newBgType)}>+ Legg til lag</button>
+
+                  <hr class="gridmenu-divider" />
+                  <label>Animasjon
+                    <select value={sectionAnim?.type ?? ''}
+                      onchange={(e) => setSectionAnimation(e.target.value || null)}>
+                      <option value="">Ingen</option>
+                      {#each Object.entries(coreAnimations) as [id, def] (id)}
+                        <option value={id}>{def.label}</option>
+                      {/each}
+                    </select></label>
+                  {#if sectionAnim && coreAnimations[sectionAnim.type]?.entrance}
+                    <label>Varighet ms
+                      <input type="number" min="100" max="4000" step="100" value={sectionAnim.props.duration}
+                        onchange={(e) => setSectionAnimProp('duration', Number(e.target.value))} /></label>
+                    <label>Forsinkelse ms
+                      <input type="number" min="0" max="4000" step="100" value={sectionAnim.props.delay}
+                        onchange={(e) => setSectionAnimProp('delay', Number(e.target.value))} /></label>
+                    <p class="panel-hint">Spilles når besøkende scroller til seksjonen. Forhåndsvisningen viser slutt-tilstanden.</p>
+                  {/if}
                 {:else}
                   <p class="panel-hint">Klikk på en blokk eller seksjon i forhåndsvisningen.</p>
                 {/if}
@@ -1778,6 +2033,21 @@
   .panel-strong {
     margin: 0;
     font-weight: 600;
+  }
+
+  /* Bakgrunnslagene i seksjonsegenskapene */
+  .bg-layer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.4rem;
+    padding: 0.4rem 0 0.5rem 0.5rem;
+    border-left: 2px solid rgb(255 255 255 / 12%);
+  }
+
+  .bg-name {
+    flex: 1;
+    font-size: 0.85rem;
+    opacity: 0.85;
   }
 
   /* Posisjon/størrelse-feltene i Egenskaper: to kolonner med smale felt */

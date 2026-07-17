@@ -22,6 +22,8 @@ import { colorLayer } from './backgrounds/color.js';
 import { gradientLayer } from './backgrounds/gradient.js';
 import { glowLayer } from './backgrounds/glow.js';
 import { grainLayer } from './backgrounds/grain.js';
+import { imageLayer } from './backgrounds/image.js';
+import { coreAnimations } from './animations/core.js';
 import { registerSectionPresets } from './sections/presets.js';
 
 export const Urd = {
@@ -43,6 +45,8 @@ function registerCore() {
   Urd.backgrounds.define('gradient', gradientLayer);
   Urd.backgrounds.define('glow', glowLayer);
   Urd.backgrounds.define('grain', grainLayer);
+  Urd.backgrounds.define('image', imageLayer);
+  for (const [id, def] of Object.entries(coreAnimations)) Urd.animations.define(id, def);
   registerSectionPresets(Urd);
 }
 

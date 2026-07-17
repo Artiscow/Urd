@@ -63,6 +63,13 @@
             }
           }
         },
+        "animation": {
+          "description": "Valgfri inngangsanimasjon for hele seksjonen (additivt felt fra v0.5)",
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/typedProps" }
+          ]
+        },
         "blocks": {
           "type": "array",
           "items": { "$ref": "#/$defs/block" }

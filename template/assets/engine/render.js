@@ -15,6 +15,7 @@
  *    fra nederste mobil-frame.
  */
 import { lift } from './migrate.js';
+import { applyAnimation } from './animations/core.js';
 
 /**
  * Oversetter en frame til CSS-posisjonering.
@@ -153,6 +154,9 @@ export function renderSection(section, site, host, opts = {}) {
     }
   }
 
+  // Valgfri seksjonsanimasjon (additivt felt fra v0.5).
+  renderAnimation(Urd, host, section.animation, ctx);
+
   // Mobil-tilsyn: redaksjonell markering, kun i preview (besøkende
   // ignorerer flagget, se docs/SKJEMA.md#mobil-tilsyn).
   if (ctx.preview && section.responsive?.mobile?.attention?.needed) {
@@ -170,12 +174,29 @@ function renderBlock(Urd, el, block, ctx) {
   if (lifted.ok) {
     try {
       Urd.blocks.get(block.type).render(el, lifted.props, ctx);
+      renderAnimation(Urd, el, block.animation, ctx);
     } catch (err) {
       console.warn(`Urd: blokk '${block.type}' feilet under render`, err);
       renderPlaceholder(el, block.type);
     }
   } else {
     renderPlaceholder(el, block.type);
+  }
+}
+
+/**
+ * Valgfri animasjon på blokk/seksjon. Ukjent eller feilende animasjon
+ * viser innholdet uanimert - animasjon er dekor og velter aldri siden.
+ */
+function renderAnimation(Urd, el, animation, ctx) {
+  if (!animation?.type) return;
+  const def = Urd.animations.get(animation.type);
+  const lifted = lift(animation, def);
+  if (!lifted.ok) return;
+  try {
+    applyAnimation(el, animation.type, lifted.props, def, ctx);
+  } catch (err) {
+    console.warn(`Urd: animasjonen '${animation.type}' feilet`, err);
   }
 }
 

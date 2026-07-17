@@ -110,7 +110,7 @@ En seksjon er alltid den samme generiske containeren - egen størrelse, egen bak
 - **`frames`** er plassering per breakpoint, i **fysiske enheter** (fra schemaVersion 2): `x`/`w` i prosent av seksjonsbredden (flyter med skjermen), `y`/`h` i px (`y` kan være negativ: blokken henger da over seksjonstoppen, seksjoner klipper aldri), `z` er lagrekkefølge, `rot` er grader. Gridet i site.json er KUN et snappeverktøy ved redigering; å endre det flytter aldri innhold.
 - **`frames.mobile: null`** betyr auto-avledet mobil-layout: motoren rendrer blokkene som vanlig dokumentflyt i én kolonne i leserekkefølge (sortert på desktop-`y`, deretter `x`); tekst får naturlig høyde. Et objekt er en manuell overstyring.
 - **`decor`** (valgfri, standard false): dekor-blokker (typisk streker/sirkler) utelates fra auto-avledet mobil-layout. Nye formblokker får `decor: true` fra paletten.
-- **`animation`** (valgfri): `{ "type": "fade-in", "version": 1, "props": { … } }` - animasjoner er registertyper med samme migreringskontrakt (fra v0.5).
+- **`animation`** (valgfri): `{ "type": "fade-in", "version": 1, "props": { "duration": 600, "delay": 0 } }` - animasjoner er registertyper med samme migreringskontrakt. Kjernetyper (v0.5): `fade-in`, `slide-up`, `zoom-in` (inngang, spilles ved scroll-inn hos besøkende; editorens preview viser slutt-tilstanden) og `hover-lift`. `prefers-reduced-motion` respekteres. Seksjoner har samme valgfrie `animation`-felt (additivt fra v0.5). Ukjent animasjonstype viser innholdet uanimert - animasjon velter aldri en side.
 
 ## Mobil-tilsyn
 
