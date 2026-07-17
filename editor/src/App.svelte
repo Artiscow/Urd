@@ -205,29 +205,127 @@
     bridge?.sendShowGrid(activePanel === 'Grid');
   }
 
-  /** Markert blokk i forhåndsvisningen (for Egenskaper-panelet) */
+  /**
+   * Markert blokk i forhåndsvisningen, som reaktiv KOPI for Egenskaper-
+   * panelet (utkastdataene selv er ikke reaktive). Synkes fra utkastet
+   * ved valg, ved panel-endringer og ved endringer gjort i iframen.
+   */
   let selectedBlock = $state(null);
+
+  function readBlock(sectionId, blockId) {
+    const section = store?.data.sections.find((s) => s.id === sectionId);
+    const block = section?.blocks.find((b) => b.id === blockId);
+    return { section, block };
+  }
+
+  function syncSelectedBlock() {
+    if (!selectedBlock) return;
+    const { block } = readBlock(selectedBlock.sectionId, selectedBlock.blockId);
+    if (!block) {
+      selectedBlock = null;
+      return;
+    }
+    selectedBlock = {
+      sectionId: selectedBlock.sectionId,
+      blockId: selectedBlock.blockId,
+      type: block.type,
+      decor: Boolean(block.decor),
+      props: JSON.parse(JSON.stringify(block.props)),
+      frame: { ...block.frames.desktop },
+    };
+  }
 
   function onSelectBlock(msg) {
     if (!msg.blockId) {
       selectedBlock = null;
       return;
     }
-    const section = store?.data.sections.find((s) => s.id === msg.sectionId);
-    const block = section?.blocks.find((b) => b.id === msg.blockId);
-    selectedBlock = block ? { sectionId: msg.sectionId, blockId: msg.blockId, type: block.type } : null;
+    selectedBlock = { sectionId: msg.sectionId, blockId: msg.blockId };
+    syncSelectedBlock();
   }
+
+  /** Felles flyt for blokk-endringer fra Egenskaper-panelet. */
+  function mutateBlock(key, fn) {
+    const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
+    if (!block) return;
+    pushHistory(key);
+    fn(block, section);
+    markDesktopChange(section, 'blokk-endret');
+    store.save();
+    updateDirty();
+    bridge?.sendSection(pageId, section);
+    syncSelectedBlock();
+  }
+
+  function setBlockProp(name, value) {
+    mutateBlock(`edit:${selectedBlock.blockId}`, (b) => { b.props[name] = value; });
+  }
+
+  function setBlockFrame(field, value) {
+    if (!Number.isFinite(value)) return;
+    mutateBlock(`edit:frame-${selectedBlock.blockId}`, (b) => {
+      b.frames.desktop = { ...b.frames.desktop, [field]: value };
+    });
+  }
+
+  function setBlockDecor(on) {
+    mutateBlock('decor', (b) => { b.decor = on; });
+  }
+
+  /** Bytt bilde i en bildeblokk (samme webp-flyt som + Bilde). */
+  async function replaceImage(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      const img = await compressToWebp(file);
+      mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+        b.props.src = img.dataUrl;
+        b.props.alt = b.props.alt || slugify(file.name).replaceAll('-', ' ');
+      });
+    } catch {
+      setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
+    }
+  }
+
+  /** Navn på blokktypene i panelet. */
+  const BLOCK_LABELS = { text: 'Tekst', button: 'Knapp', image: 'Bilde', shape: 'Form' };
+  const SHAPE_KINDS = [
+    ['line', 'Strek'], ['arrow', 'Pil'], ['circle', 'Sirkel'],
+    ['rect', 'Rektangel'], ['triangle', 'Trekant'],
+  ];
+  const COLOR_TOKENS = [
+    ['accent', 'Aksent'], ['text', 'Tekst'], ['surface', 'Flate'], ['bg', 'Bakgrunn'],
+  ];
 
   /** Sist klikkede seksjon i forhåndsvisningen: paletten legger nye
    *  blokker her, og grid-menyen kan gi den eget grid. */
   let activeSectionId = $state(null);
   /** Speil av den aktive seksjonens grid-overstyring (null = arver) */
   let sectionGrid = $state(null);
+  /** Speil av den aktive seksjonens minstehøyde (for Egenskaper-panelet) */
+  let sectionMinHeight = $state('');
 
   function onSelectSection(msg) {
     activeSectionId = msg.sectionId;
     const section = store?.data.sections.find((s) => s.id === msg.sectionId);
     sectionGrid = section?.grid ? { ...section.grid } : null;
+    sectionMinHeight = section?.size?.minHeight ?? '';
+  }
+
+  /** Høyde fra Egenskaper-panelet: px-tall eller CSS-verdi (40vh, 50%). */
+  function setSectionHeight(raw) {
+    const section = store.data.sections.find((s) => s.id === activeSectionId);
+    if (!section) return;
+    const value = raw.trim();
+    if (!value) return;
+    const minHeight = /^\d+$/.test(value) ? `${value}px` : value;
+    pushHistory('section-size');
+    section.size = { ...section.size, minHeight };
+    sectionMinHeight = minHeight;
+    store.save();
+    updateDirty();
+    bridge?.sendSection(pageId, section);
   }
 
   function targetSection() {
@@ -592,6 +690,7 @@
     block.props = msg.props;
     store.save();
     updateDirty();
+    if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
     status = '';
   }
 
@@ -609,6 +708,7 @@
     if (key === 'desktop') markDesktopChange(section, 'desktop-endret-etter-mobil');
     store.save();
     updateDirty();
+    if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
   }
 
   /** Seksjon materialisert i mobilvisning: manuell modus + alle frames. */
@@ -662,6 +762,7 @@
     block.decor = msg.decor;
     store.save();
     updateDirty();
+    if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
   }
 
   /** Ny seksjon fra «+ Ny seksjon» i iframen (seksjonen er allerede
@@ -705,6 +806,7 @@
     if (!section) return;
     pushHistory('section-size');
     section.size = { ...section.size, minHeight: msg.minHeight };
+    if (msg.sectionId === activeSectionId) sectionMinHeight = msg.minHeight;
     store.save();
     updateDirty();
   }
@@ -715,6 +817,7 @@
     if (!section) return;
     pushHistory('delete-block');
     section.blocks = section.blocks.filter((b) => b.id !== msg.blockId);
+    if (selectedBlock?.blockId === msg.blockId) selectedBlock = null;
     markDesktopChange(section, 'blokk-slettet');
     store.save();
     updateDirty();
@@ -1196,12 +1299,144 @@
                   Snap til grid
                 </label>
 
-                {#if activeSectionId}
+                <p class="panel-hint">En seksjon kan få sitt eget grid: klikk i seksjonen og åpne Egenskaper.</p>
+              </div>
+            {:else if activePanel === 'Egenskaper'}
+              <div class="panel-body">
+                {#if selectedBlock}
+                  <p class="panel-strong">{BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type}-blokk</p>
+
+                  {#if viewMode === 'desktop'}
+                    <div class="frame-grid">
+                      <label>X %<input type="number" step="0.5" value={selectedBlock.frame.x}
+                        onchange={(e) => setBlockFrame('x', Number(e.target.value))} /></label>
+                      <label>Y px<input type="number" step="1" value={selectedBlock.frame.y}
+                        onchange={(e) => setBlockFrame('y', Number(e.target.value))} /></label>
+                      <label>Bredde %<input type="number" step="0.5" min="1" value={selectedBlock.frame.w}
+                        onchange={(e) => setBlockFrame('w', Number(e.target.value))} /></label>
+                      <label>Høyde px<input type="number" step="1" min="1" value={selectedBlock.frame.h}
+                        onchange={(e) => setBlockFrame('h', Number(e.target.value))} /></label>
+                      <label>Lag (z)<input type="number" step="1" value={selectedBlock.frame.z ?? 1}
+                        onchange={(e) => setBlockFrame('z', Number(e.target.value))} /></label>
+                      <label>Rotasjon °<input type="number" step="1" value={selectedBlock.frame.rot ?? 0}
+                        onchange={(e) => setBlockFrame('rot', Number(e.target.value))} /></label>
+                    </div>
+                  {/if}
+
+                  <label class="gridmenu-snap" title="Gjelder kun automatisk mobil-layout">
+                    <input type="checkbox" checked={selectedBlock.decor}
+                      onchange={(e) => setBlockDecor(e.target.checked)} />
+                    📵 Skjul i automatisk mobil-layout (pynt)
+                  </label>
+                  <hr class="gridmenu-divider" />
+
+                  {#if selectedBlock.type === 'text'}
+                    <label>Justering
+                      <select value={selectedBlock.props.align ?? 'left'}
+                        onchange={(e) => setBlockProp('align', e.target.value)}>
+                        <option value="left">Venstre</option>
+                        <option value="center">Midtstilt</option>
+                        <option value="right">Høyre</option>
+                      </select></label>
+                    <label class="gridmenu-snap">
+                      <input type="checkbox" checked={Boolean(selectedBlock.props.box)}
+                        onchange={(e) => setBlockProp('box', e.target.checked)} />
+                      Tekstboks (kort med bakgrunn)
+                    </label>
+                    <p class="panel-hint">Marker tekst i blokken for fet, kursiv, overskrifter og farge.</p>
+                  {:else if selectedBlock.type === 'button'}
+                    <label>Tekst
+                      <input value={selectedBlock.props.label}
+                        onchange={(e) => setBlockProp('label', e.target.value)} /></label>
+                    <label>Går til
+                      <select value={selectedBlock.props.page ?? '__href'}
+                        onchange={(e) => {
+                          if (e.target.value === '__href') {
+                            mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+                              b.props.page = null;
+                              b.props.href = b.props.href ?? 'https://';
+                            });
+                          } else {
+                            mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+                              b.props.page = e.target.value;
+                              b.props.href = null;
+                            });
+                          }
+                        }}>
+                        {#each siteDraft.pages as p (p.id)}
+                          <option value={p.id}>{p.title}</option>
+                        {/each}
+                        <option value="__href">Ekstern lenke</option>
+                      </select></label>
+                    {#if !selectedBlock.props.page}
+                      <input value={selectedBlock.props.href ?? ''} placeholder="https://…"
+                        onchange={(e) => setBlockProp('href', e.target.value)} />
+                    {/if}
+                    <label>Stil
+                      <select value={selectedBlock.props.style}
+                        onchange={(e) => setBlockProp('style', e.target.value)}>
+                        <option value="primary">Fylt (aksentfarge)</option>
+                        <option value="secondary">Kantlinje</option>
+                      </select></label>
+                  {:else if selectedBlock.type === 'image'}
+                    <label class="ghost filepick">
+                      Bytt bilde
+                      <input type="file" accept="image/*" onchange={replaceImage} />
+                    </label>
+                    <label>Alt-tekst
+                      <input value={selectedBlock.props.alt ?? ''} placeholder="Beskriv bildet"
+                        onchange={(e) => setBlockProp('alt', e.target.value)} /></label>
+                    <label>Tilpasning
+                      <select value={selectedBlock.props.fit ?? 'cover'}
+                        onchange={(e) => setBlockProp('fit', e.target.value)}>
+                        <option value="cover">Fyll rammen (beskjæres)</option>
+                        <option value="contain">Vis hele bildet</option>
+                      </select></label>
+                    <label>Avrunding
+                      <select value={selectedBlock.props.radius ?? ''}
+                        onchange={(e) => setBlockProp('radius', e.target.value || null)}>
+                        <option value="">Ingen</option>
+                        <option value="sm">Liten</option>
+                        <option value="md">Stor</option>
+                      </select></label>
+                    <label>Lenke
+                      <input value={selectedBlock.props.href ?? ''} placeholder="Valgfri (gjør bildet klikkbart)"
+                        onchange={(e) => setBlockProp('href', e.target.value || null)} /></label>
+                  {:else if selectedBlock.type === 'shape'}
+                    <label>Form
+                      <select value={selectedBlock.props.kind}
+                        onchange={(e) => setBlockProp('kind', e.target.value)}>
+                        {#each SHAPE_KINDS as [value, name] (value)}
+                          <option {value}>{name}</option>
+                        {/each}
+                      </select></label>
+                    <label>Farge
+                      <select value={selectedBlock.props.color}
+                        onchange={(e) => setBlockProp('color', e.target.value)}>
+                        {#each COLOR_TOKENS as [value, name] (value)}
+                          <option {value}>{name}</option>
+                        {/each}
+                      </select></label>
+                    <label>Tykkelse
+                      <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
+                        onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
+                    <label class="gridmenu-snap" title="Fylte former bruker fargen som flate i stedet for kantlinje">
+                      <input type="checkbox" checked={Boolean(selectedBlock.props.fill)}
+                        onchange={(e) => setBlockProp('fill', e.target.checked ? selectedBlock.props.color : null)} />
+                      Fylt
+                    </label>
+                  {/if}
+                {:else if activeSectionId}
+                  <p class="panel-strong">Seksjon</p>
+                  <label>Minstehøyde
+                    <input class="token-input" value={sectionMinHeight} placeholder="f.eks. 400px"
+                      onchange={(e) => setSectionHeight(e.target.value)} /></label>
+                  <p class="panel-hint">px-verdi eller CSS (40vh). Blokker kan uansett henge utover kanten.</p>
                   <hr class="gridmenu-divider" />
                   <label class="gridmenu-snap">
                     <input type="checkbox" checked={sectionGrid !== null}
                       onchange={(e) => toggleSectionGrid(e.target.checked)} />
-                    Eget grid i valgt seksjon
+                    Eget grid i seksjonen
                   </label>
                   {#if sectionGrid}
                     <label>
@@ -1211,18 +1446,7 @@
                     <input type="range" min="4" max="96" step="2" value={sectionGrid.size}
                       oninput={(e) => setSectionGrid('size', Number(e.target.value))} />
                   {/if}
-                {:else}
-                  <p class="panel-hint">Klikk i en seksjon for å kunne gi den sitt eget grid.</p>
-                {/if}
-              </div>
-            {:else if activePanel === 'Egenskaper'}
-              <div class="panel-body">
-                {#if selectedBlock}
-                  <p>Valgt: {selectedBlock.type}-blokk</p>
-                  <p class="panel-hint">Den detaljerte blokkeditoren kommer i neste steg av v0.5.</p>
-                {:else if activeSectionId}
-                  <p>Valgt: seksjon</p>
-                  <p class="panel-hint">Seksjonseditoren (høyde, bakgrunn, animasjoner) kommer i v0.5.</p>
+                  <p class="panel-hint">Bakgrunn og animasjoner kommer i neste steg av v0.5.</p>
                 {:else}
                   <p class="panel-hint">Klikk på en blokk eller seksjon i forhåndsvisningen.</p>
                 {/if}
@@ -1456,6 +1680,7 @@
 
   .panel-body input[type='text'],
   .panel-body input:not([type]),
+  .panel-body input[type='number'],
   .panel-body input[type='color'] {
     font: inherit;
     color: inherit;
@@ -1529,6 +1754,22 @@
   .token-input {
     width: 5rem;
     text-align: right;
+  }
+
+  .panel-strong {
+    margin: 0;
+    font-weight: 600;
+  }
+
+  /* Posisjon/størrelse-feltene i Egenskaper: to kolonner med smale felt */
+  .frame-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem 0.6rem;
+  }
+
+  .frame-grid input {
+    width: 4.2rem;
   }
 
   /* Grupper i panelet (Tekst, Former): ser ut som blokk-knappene, men med

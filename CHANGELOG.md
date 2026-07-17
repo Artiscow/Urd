@@ -20,6 +20,13 @@ ikke slipp; alt samles i 0.5.0 ved fasegaten.
 - Tekstboks: tekstblokk-variant der innholdet ligger i et kort med temaets flatefarge, kantlinje og avrundede hjørner. Valgfritt additivt `box`-felt på tekstblokkens props; eldre data rendres uendret.
 - Blokker-panelet er gruppert: Tekst (Tekst, Tekstboks) og Former (Strek, Pil, Sirkel, Rektangel, Trekant) som grupper, med Knapp og Bilde imellom.
 
+### 0.5.3 - Egenskaper-panelet og teksteditor (M3) - 17. juli 2026
+- Egenskaper-panelet for valgt blokk: posisjon/størrelse/lag/rotasjon som tallfelt (desktopvisning), 📵-avkrysning med forklaring, og per type: tekst (justering, tekstboks av/på), knapp (tekst, mål: side eller ekstern lenke, stil), bilde (bytt bilde, alt-tekst, tilpasning, avrunding, lenke), form (type, temafarge, tykkelse, fylt).
+- Egenskaper-panelet for valgt seksjon: minstehøyde (px eller CSS-verdi) og eget grid (flyttet hit fra Grid-panelet, som nå kun eier sidens grid).
+- Flytende formateringslinje over markert tekst i tekstblokker: fet, kursiv, H1/H2/H3/avsnitt og temafarger (tekst/aksent). Lagres gjennom den vanlige utkastflyten.
+- Blokkmarkeringen overlever nå rerendringer (endringer fra panelet fjernet tidligere det lilla omrisset).
+- Backlog: mobil-tilsyn-varselets tydelighet, 📵 i manuelle seksjoner og «mobil som egen versjon» er logget som egne avklaringer etter eiers testrunde.
+
 ### 0.5.2.3 - mobil-synlighetsikon og dra på seksjonsgrensen - 17. juli 2026
 - Dekor-knappen viser nå tilstanden med selve ikonet: 📱 = blokken vises på mobil, 📵 = skjult i automatisk mobil-layout (pynt). Erstatter ✦, som krevde at man visste hva fargene betydde (og tooltipen beskrev en grå tilstand som ikke fantes).
 - «+ Ny seksjon»-baren kan dras: den ligger på grensen mellom to seksjoner, og dra flytter grensen (høyden på seksjonen over) med samme grid-snapping og Shift-overstyring som seksjonslinjen. Klikk åpner fortsatt preset-menyen.

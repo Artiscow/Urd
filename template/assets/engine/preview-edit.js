@@ -34,6 +34,11 @@ export function enhanceSection(host, section, grid) {
     const block = section.blocks.find((b) => b.id === el.dataset.blockId);
     if (block) enhanceBlock(el, block, section, grid, host);
   }
+  // Markeringen skal overleve rerendringer (f.eks. endringer fra
+  // Egenskaper-panelet, som rerendrer hele seksjonen).
+  if (selectedBlockId) {
+    host.querySelector(`.urd-block[data-block-id="${selectedBlockId}"]`)?.classList.add('urd-selected');
+  }
   addSectionToolbar(host, section, grid);
   // Strukturendring (seksjonshøyde) hører til desktopvisningen.
   if (!isMobile()) addSectionHeightHandle(host, section, grid);
@@ -152,6 +157,7 @@ function addSectionHeightHandle(host, section, grid) {
  * @param {object} site site.json (gridet for dra på seksjonsgrensen)
  */
 export function enhancePage(root, page, site) {
+  initTextToolbar();
   root.querySelectorAll('.urd-add-section').forEach((el) => el.remove());
   // Mobilvisning er justering og tilsyn, ikke strukturbygging.
   if (isMobile()) return;
@@ -213,6 +219,66 @@ function makeSectionAdder(index, above = null) {
 
   collapse();
   return bar;
+}
+
+/**
+ * Flytende formateringslinje over markert tekst i tekstblokker: fet,
+ * kursiv, overskriftsnivå og temafarger. Kommandoene går via
+ * contenteditable (execCommand), som utløser input-hendelsen i text.js -
+ * lagringen gjenbruker altså hele den vanlige utkastflyten.
+ */
+let textToolbarReady = false;
+
+function initTextToolbar() {
+  if (textToolbarReady) return;
+  textToolbarReady = true;
+
+  const bar = document.createElement('div');
+  bar.className = 'urd-text-toolbar';
+  // Klikk i linjen skal ikke oppheve tekstmarkeringen.
+  bar.addEventListener('mousedown', (event) => event.preventDefault());
+
+  const btn = (label, title, run) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.title = title;
+    b.addEventListener('click', run);
+    bar.appendChild(b);
+    return b;
+  };
+  btn('F', 'Fet', () => document.execCommand('bold'));
+  btn('K', 'Kursiv', () => document.execCommand('italic'));
+  btn('H1', 'Stor overskrift', () => document.execCommand('formatBlock', false, 'h1'));
+  btn('H2', 'Mellomoverskrift', () => document.execCommand('formatBlock', false, 'h2'));
+  btn('H3', 'Liten overskrift', () => document.execCommand('formatBlock', false, 'h3'));
+  btn('¶', 'Vanlig avsnitt', () => document.execCommand('formatBlock', false, 'p'));
+  // Temafargene (leses ved klikk, så de følger gjeldende tema).
+  for (const token of ['text', 'accent']) {
+    const b = btn('', token === 'text' ? 'Tekstfarge' : 'Aksentfarge', () => {
+      const value = getComputedStyle(document.documentElement)
+        .getPropertyValue(`--urd-color-${token}`).trim();
+      document.execCommand('foreColor', false, value);
+    });
+    b.className = 'urd-text-swatch';
+    b.style.background = `var(--urd-color-${token})`;
+  }
+  document.body.appendChild(bar);
+
+  document.addEventListener('selectionchange', () => {
+    const sel = document.getSelection();
+    const anchor = sel?.anchorNode;
+    const inText = anchor
+      && (anchor.nodeType === 1 ? anchor : anchor.parentElement)
+        ?.closest?.('.urd-text[contenteditable="true"]');
+    if (!sel || sel.isCollapsed || !sel.rangeCount || !inText) {
+      bar.classList.remove('vis');
+      return;
+    }
+    const rect = sel.getRangeAt(0).getBoundingClientRect();
+    bar.classList.add('vis');
+    bar.style.left = `${Math.max(8, rect.left + rect.width / 2 - bar.offsetWidth / 2)}px`;
+    bar.style.top = `${Math.max(8, rect.top - bar.offsetHeight - 10)}px`;
+  });
 }
 
 /** Verktøylinje øverst til høyre i seksjonen. Desktop: flytt opp/ned,

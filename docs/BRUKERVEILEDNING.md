@@ -66,6 +66,23 @@ Klikk for å bytte. Nye former starter som 📵. (Har du håndjustert
 mobil-layouten i seksjonen, plasserer du uansett alt selv; da betyr
 flagget ingenting der.)
 
+## Egenskaper-panelet
+
+Klikk på en blokk og åpne **Egenskaper** for å finjustere den med tall og
+valg i stedet for dra-og-slipp:
+
+- Alle blokker: nøyaktig posisjon og størrelse, lag (hva som ligger
+  foran), rotasjon og mobil-synlighet (📵).
+- Tekst: justering og tekstboks av/på. Knapp: tekst, hvor den går og stil.
+  Bilde: bytt bilde, alt-tekst, beskjæring, avrunding og lenke.
+  Form: type, farge fra temaet, tykkelse og fylt/kantlinje.
+- Klikker du i en seksjon (uten blokk valgt) viser panelet seksjonens
+  minstehøyde og eget grid.
+
+**Formatere tekst**: marker tekst i en tekstblokk, så dukker en liten
+verktøylinje opp over markeringen med fet, kursiv, overskriftsnivåer og
+temafarger.
+
 ## Seksjoner
 
 Siden er bygget av seksjoner oppå hverandre. Pek på grensen mellom to
