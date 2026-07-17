@@ -12,6 +12,24 @@
   let pageId = $state(null);
   let dirty = $state(false);
   let status = $state('');
+  /** 'info' | 'ok' | 'error' - styrer fargen på status-chipen */
+  let statusKind = $state('info');
+  let statusSeq = 0;
+
+  /** Sett statusmeldingen; 'ok'-meldinger rydder seg selv etter 8 s. */
+  function setStatus(msg, kind = 'info') {
+    status = msg;
+    statusKind = kind;
+    const mine = ++statusSeq;
+    if (kind === 'ok') {
+      setTimeout(() => {
+        if (statusSeq === mine) {
+          status = '';
+          statusKind = 'info';
+        }
+      }, 8000);
+    }
+  }
   let iframeEl = $state(null);
   /** null = publiseringslag utilgjengelig (f.eks. enkel lokalserver uten functions) */
   let auth = $state(null);
@@ -72,7 +90,7 @@
     redoStack.push(snapshot());
     restore(history.pop());
     lastHistoryKey = null;
-    status = 'Angret';
+    setStatus('Angret');
   }
 
   function redo() {
@@ -80,7 +98,7 @@
     history.push(snapshot());
     restore(redoStack.pop());
     lastHistoryKey = null;
-    status = 'Gjentatt';
+    setStatus('Gjentatt');
   }
 
   function onKeydown(e) {
@@ -391,12 +409,12 @@
     event.target.value = '';
     if (!file) return;
 
-    status = 'Komprimerer bildet…';
+    setStatus('Komprimerer bildet…');
     let img;
     try {
       img = await compressToWebp(file);
     } catch {
-      status = 'Kunne ikke lese bildet (prøv jpg/png/webp).';
+      setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
       return;
     }
 
@@ -411,9 +429,11 @@
       animation: null,
       frames: { desktop: { x: 4, y: 8, w: 30, h: Math.max(40, height), z: 1, rot: 0 }, mobile: null },
     });
-    status = img.bytes > WARN_BYTES
-      ? `Bildet er stort (${Math.round(img.bytes / 1024)} kB) - vurder et mindre utsnitt.`
-      : '';
+    if (img.bytes > WARN_BYTES) {
+      setStatus(`Bildet er stort (${Math.round(img.bytes / 1024)} kB) - vurder et mindre utsnitt`, 'error');
+    } else {
+      setStatus('');
+    }
   }
 
   /**
@@ -448,7 +468,7 @@
   }
 
   async function publish() {
-    status = 'Publiserer…';
+    setStatus('Publiserer…');
     const files = [];
     const publishedTitles = [];
     const draftKeys = [];
@@ -497,21 +517,21 @@
       // Utkastene ER nå det publiserte; behold dataene i minnet (serveren
       // serverer gammel JSON til deployen er ferdig) og fjern bare merkene.
       for (const key of draftKeys) localStorage.removeItem(key);
-      status = 'Publisert! Hosten bygger siden på nytt (typisk under ett minutt).';
+      setStatus('✓ Publisert! Siden bygges på nytt (~1 min)', 'ok');
       dirty = false;
     } else if (res?.status === 401) {
       const detail = (await res.json().catch(() => null))?.error;
-      status = detail === 'Ugyldig eller utløpt innlogging'
-        ? 'GitHub avviste innloggingen (utløpt token?) - logg inn på nytt.'
-        : `Du må logge inn med GitHub for å publisere. (${detail ?? 'ukjent årsak'})`;
+      setStatus(detail === 'Ugyldig eller utløpt innlogging'
+        ? 'GitHub avviste innloggingen (utløpt token?) - logg inn på nytt'
+        : `Du må logge inn med GitHub for å publisere (${detail ?? 'ukjent årsak'})`, 'error');
       await checkAuth();
     } else if (res?.status === 403) {
-      status = (await res.json().catch(() => null))?.error ?? 'Du har ikke publiseringstilgang.';
+      setStatus((await res.json().catch(() => null))?.error ?? 'Du har ikke publiseringstilgang', 'error');
     } else if (res) {
-      status = (await res.json().catch(() => null))?.error
-        ?? 'Publisering feilet (er publiseringslaget satt opp? Se docs/OPPSETT-PUBLISERING.md).';
+      setStatus((await res.json().catch(() => null))?.error
+        ?? 'Publisering feilet (er publiseringslaget satt opp?)', 'error');
     } else {
-      status = 'Publisering er ikke tilgjengelig her (krever host med functions, se docs/OPPSETT-PUBLISERING.md).';
+      setStatus('Publisering er ikke tilgjengelig her (krever host med functions)', 'error');
     }
   }
 
@@ -604,7 +624,9 @@
       <span class="badge">Upubliserte endringer</span>
     {/if}
 
-    <span class="status">{status}</span>
+    {#if status}
+      <span class="status" class:ok={statusKind === 'ok'} class:error={statusKind === 'error'}>{status}</span>
+    {/if}
     </span>
 
     <span class="topbar-group topbar-right">
@@ -715,8 +737,21 @@
   }
 
   .status {
-    opacity: 0.8;
+    opacity: 0.9;
     font-size: 0.82rem;
+    padding: 0.25em 0.8em;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 8%);
+  }
+
+  .status.ok {
+    background: rgb(46 204 113 / 18%);
+    color: #7ee2a8;
+  }
+
+  .status.error {
+    background: rgb(231 76 60 / 18%);
+    color: #f5a09a;
   }
 
   .who {

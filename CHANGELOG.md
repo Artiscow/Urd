@@ -7,38 +7,39 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 
 ## [Ulansert]
 
+## [0.3.0] - 2026-07-17
+
+«Lerretet»: fri komposisjon på ordentlig. Alle kjerneblokkene er på plass
+(tekst, knapp, bilde med opplasting, fem formtyper), seksjoner opprettes,
+flyttes, skaleres og slettes in-place, alt kan angres, og grid-systemet er
+lagt om til rene hjelpelinjer som aldri flytter innhold. To skjemamigreringer
+(fysiske enheter og kvadratgrid) er gjennomført etter kontrakten og bevist
+med tester, og repoet fikk fullt kvalitetsvern (CI, CodeQL, Dependabot).
+
 ### Lagt til
 - Angre/gjenta i editoren (Ctrl+Z / Ctrl+Shift+Z) for alle handlinger: flytt, resize, blokker og seksjoner inn/ut, seksjonshøyde, grid-endringer og forkast. Fungerer også når fokus står i forhåndsvisningen.
-- «+ Form»-meny med strek, pil, sirkel, rektangel og trekant.
-- «Ren visning»-knapp som skjuler alle editeringshåndtak og hele topplinjen (siden ses i full høyde); flytende Rediger-knapp tar deg tilbake.
-- Klikk-markering av blokker: varig omriss og synlige håndtak til man klikker utenfor.
-
-### Lagt til
-- Målseksjon: paletten legger nye blokker i sist klikkede seksjon (markert med aksentlinje), ikke alltid første.
-- Grid per seksjon: «Eget grid for valgt seksjon» i grid-menyen (overstyrer nettstedets grid som snappeverktøy i den seksjonen).
-- Strammet CSP i `_headers` (script/style/connect kun 'self'); boot-skriptet flyttet til `assets/engine/boot.js`.
 - Bildeblokk med opplasting: «+ Bilde» komprimerer til webp i nettleseren (maks 1600px, med størrelsesvarsel), viser bildet umiddelbart i utkastet, og publiserer det som fil i media/ i samme commit (samme bilde gir alltid samme filnavn). Valgfri lenke gjør blokken brukbar som logo.
-- z-orden: ⬆/⬇-knapper på blokkverktøylinjen legger blokken foran/bak andre.
-- Tekstblokker vokser automatisk med innholdet under skriving; framen (og seksjonen ved behov) utvides så tekst aldri klippes eller overlapper.
-- Kvalitetsvern på repoet: CI-workflow (tester, skjemavalidering, editor-bygg), CodeQL, Dependabot (npm + actions) og dependency review. Skjemavalidering er nå `npm run validate` i editor/ (eget ajv-skript, ingen sårbare CLI-avhengigheter).
+- «+ Form»-meny med strek, pil, sirkel, rektangel og trekant.
+- z-orden: ⬆/⬇-knapper på blokkverktøylinjen legger blokken helt foran/bak.
+- Klikk-markering av blokker: varig omriss og synlige håndtak til man klikker utenfor.
+- Målseksjon: paletten legger nye blokker i sist klikkede seksjon (markert med aksentlinje), plassert midt i synsfeltet.
+- «Tilpass høyden til innholdet» (⤓) på seksjonsverktøylinjen: setter seksjonshøyden til nederste blokkkant med ett klikk, lagret gjennom vanlig utkastflyt.
+- Grid per seksjon («Eget grid i valgt seksjon») og Shift-for-fri-plassering under dra/resize.
+- «Ren visning»-knapp som skjuler alle editeringshåndtak og hele topplinjen; flytende Rediger-knapp tar deg tilbake.
+- Tekstblokker vokser automatisk med innholdet under skriving.
+- Statusmeldinger som fargekodet chip: grønn kvittering «✓ Publisert! Siden bygges på nytt (~1 min)» som rydder seg selv, rød for feil.
+- Strammet CSP i `_headers` (script/style/connect kun 'self'); boot-skriptet flyttet til `assets/engine/boot.js`.
+- Kvalitetsvern på repoet: CI-workflow (tester, skjemavalidering, editor-bygg), CodeQL, Dependabot (npm + actions) og dependency review. Skjemavalidering er `npm run validate` i editor/.
 
 ### Endret
-- **Gridet er nå kvadratisk med én innstilling: rutestørrelse i px** (slider i menyen; mindre = tettere). Kolonner/radhøyde og all forklaringstekst er borte. site.json er schemaVersion 2 og sidefiler schemaVersion 3 (seksjonenes grid-overstyr konverteres); eldre filer OG gamle localStorage-utkast løftes automatisk.
-- **Sidefiler er nå schemaVersion 2: blokkplassering lagres i fysiske enheter** (x/w i prosent av seksjonsbredden, y/h i px) i stedet for grid-enheter. Gridet er dermed KUN et snappeverktøy: å endre kolonner/radhøyde flytter aldri innhold. v1-filer løftes automatisk ved lasting (`liftPageFile` i migrate.js), Urds første reelle filmigrering, testet i `tests/page-migration.test.mjs`.
-
-### Lagt til
-- Shift holdt inne under dra/resize gir midlertidig fri plassering (overstyrer snap).
-
-### Lagt til
-- «Tilpass høyden til innholdet» (⤓) på seksjonsverktøylinjen: setter seksjonshøyden til nederste blokkkant med ett klikk, lagret gjennom vanlig utkastflyt. Gir auto-vekst på forespørsel nå som seksjoner aldri vokser av seg selv.
-
-### Endret
-- **Blokker kan bevisst henge over seksjonslinjen:** seksjoner klipper aldri innhold (heller ikke for besøkende), og seksjonshøyden er nøyaktig den brukeren har satt (motoren tvangs-utvider ikke lenger). Dette fjernet også avviket mellom editor og publisert side for overhengende blokker. Sidescrolling fra roterte/overhengende blokker hindres med overflow-x: clip.
+- **Blokkplassering lagres i fysiske enheter** (sidefiler schemaVersion 2: x/w i prosent av seksjonsbredden, y/h i px). Gridet er dermed KUN et snappeverktøy: å endre det flytter aldri innhold. v1-filer løftes automatisk ved lasting (`liftPageFile`), Urds første reelle filmigrering, testet i `tests/page-migration.test.mjs`.
+- **Gridet er kvadratisk med én innstilling: rutestørrelse i px** (slider; mindre = tettere). site.json er schemaVersion 2 og sidefiler schemaVersion 3; eldre filer OG gamle localStorage-utkast løftes automatisk (kjedet migrering).
+- **Blokker kan bevisst henge over seksjonslinjen:** seksjoner klipper aldri innhold, og seksjonshøyden er nøyaktig den brukeren har satt (motoren tvangs-utvider ikke lenger). Fjernet avviket mellom editor og publisert side; sidescrolling hindres med overflow-x: clip.
 
 ### Fikset
 - Robusthet mot GitHub-nedetid: 5xx/429 fra GitHub-API-et prøves automatisk på nytt, «GitHub er nede» skilles nå fra «ugyldig innlogging» (en GitHub-hikke så tidligere ut som at man ble logget ut av admin), og feilmeldinger kortes ned i stedet for å vise GitHubs HTML-feilsider.
 - «+ Ny seksjon»-barene tok plass i flyten og forskjøv seksjonene i editoren i forhold til hvordan besøkende ser dem; de svever nå oppå selve skillet (null høyde i layouten), så høyde-linje, bar og fargeskift ligger på samme sted.
-- Seksjonsverktøylinjen (↑ ↓ ×, der × sletter seksjonen) vises nå også når seksjonen er valgt, ikke bare ved hover, og ligger alltid øverst.
+- Seksjonsverktøylinjen (↑ ↓ ⤓ ×, der × sletter seksjonen) vises kun mens pekeren er i seksjonen, og ligger alltid øverst (kunne før dekkes av løftede blokker).
 - Tekstblokker: redigeringshåndtakene lå inne i det redigerbare feltet, slik at ny tekst kunne havne i verktøylinjeraden, håndtak-HTML ble lagret i innholdet (som så «forsvant»/rotet seg ved rerendering), og resize-håndtaket lurte vekstmålingen til å utvide blokken for hvert tastetrykk. Teksten har nå sitt eget indre innholdselement, og gammelt forurenset innhold renses automatisk ved rendering.
 - Publisering tar nå med utkast fra ALLE sider, ikke bare siden man står på (endringer på andre sider ble stående upublisert i stillhet). «Upubliserte endringer»-merket teller også alle sider.
 - Sidevelger-nedtrekket følger mørkt tema (nettleser-standarden ga hvit liste med uleselige valg).
