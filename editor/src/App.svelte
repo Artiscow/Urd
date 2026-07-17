@@ -1722,15 +1722,24 @@
 
   .nav-row {
     display: grid;
+    /* Samme klemme som .panel-body: aldri bredere enn panelet */
+    grid-template-columns: minmax(0, 1fr);
     gap: 0.3rem;
     padding-bottom: 0.4rem;
     border-bottom: 1px solid rgb(255 255 255 / 8%);
+  }
+
+  .nav-row select,
+  .nav-row input {
+    min-width: 0;
+    max-width: 100%;
   }
 
   .nav-line {
     display: flex;
     align-items: center;
     gap: 0.35rem;
+    min-width: 0;
   }
 
   .page-title,
