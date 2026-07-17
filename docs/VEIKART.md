@@ -21,19 +21,30 @@ Ende-til-ende med minst mulig bredde: motoren rendrer `hjem.json` (én hero-seks
 - Seksjons-CRUD med «+ Ny seksjon» in-place, seksjonspresets (hero, bilder, footer) - og **bygge egne seksjoner fra tom seksjon**.
 - Inkrementell rerender i preview.
 
-## v0.4 - Responsivt, bakgrunn + animasjoner
+## v0.4 - Responsivt
+
+Rendyrket mobilfase: nesten rent motorarbeid, uavhengig av panel-UI-et
+som kommer i v0.5. (Bakgrunnseditor og animasjoner er flyttet til v0.5:
+de ER panel-UI, og skal ikke bygges to ganger.)
 
 - Mobilvisning i editor, auto-avledet stabling, manuelle mobil-frames.
 - **Mobil-tilsyn-flagget ende-til-ende** (regler i [SKJEMA.md](SKJEMA.md#mobil-tilsyn)).
-- Full bakgrunnseditor: farge/gradient (også animert), glød, bildelag, korn.
-- **Animasjonsinnstillinger per blokk/seksjon** (inn-animasjoner, hover) - animasjoner følger samme version+migrate-kontrakt.
-- Design av «dekor»-håndtering på mobil (streker/sirkler som stabler dårlig).
+- «Dekor»-flagg på blokker (streker/sirkler som stabler dårlig i auto-avledet layout).
 
-## v0.5 - Nettstedet rundt siden
+**Port:** en side bygget på desktop ser fornuftig ut på mobil uten manuell
+inngripen, og tilsyn-flagget fanger drift når mobil-layout er håndjustert.
 
+## v0.5 - Panelene og nettstedet rundt siden
+
+Editorens UI legges om FØRST (dagens topplinje er metta), og alle
+redigeringsflatene bygges på den nye layouten:
+
+- Ny editor-layout: sidepanel/ikonverktøylinje, statusmeldinger som toast.
 - Sidepanel: opprette/omdøpe/slette sider fra sideregisteret.
 - Nav-editor og theme-token-panel (farger, fonter, radier).
-- Detaljert per-blokk/seksjon-editor (farger, typografi, avstander).
+- Blokkeditor: props-UI per blokktype - bilde (alt/fit/radius/lenke), former (fyll/farge/tykkelse), knapp (mål/stil), tekst (justering, typografi).
+- Seksjonseditor med **full bakgrunnseditor** (lag: farge/gradient/animert, glød, bildelag, korn) og **animasjonsinnstillinger per blokk/seksjon** (inn-animasjoner, hover; version+migrate-kontrakt) - flyttet fra v0.4.
+- Konfliktvarsel før publisering («noen andre har publisert siden du lastet», via `latest`-endepunktet som har vært klart siden v0.2).
 - Oppsettsveiviser ved første besøk (navn, farger, logo, GitHub/Cloudflare-kobling).
 - Historikk- og angre-publisering-UI (`history`/`revert`).
 
@@ -85,8 +96,8 @@ Ingenting fra den opprinnelige idemyldringen skal gå tapt:
 | WYSIWYG: klikk og skriv, hover for dra/slett, «+ Ny seksjon» in-place | v0.2 (klikk-og-skriv) + v0.3 |
 | Grid-basert fri plassering, resize, konfigurerbar grid-størrelse | v0.3 (+ `grid` i site.json/seksjon) |
 | Streker (horisontale/vertikale/skrå), sirkler, logoer | v0.3 (shape/logo-blokker, `rot` i frames) |
-| Full bakgrunnseditor: farge/gradient/animert + glød + bildelag + korn | v0.4 |
-| Animasjoner (blokk/seksjon) | v0.4 + utvidbart via plugins (v0.6) |
+| Full bakgrunnseditor: farge/gradient/animert + glød + bildelag + korn | v0.5 (motoren rendrer lagene siden v0.2) |
+| Animasjoner (blokk/seksjon) | v0.5 + utvidbart via plugins (v0.6) |
 | Panel for sidene + nav-redigering | v0.5 |
 | Detaljert editor for seksjon/blokk/tekst/bilder/farger | v0.3–v0.5 |
 | Lage egne seksjoner | v0.3 (tom seksjon + blokker) |
@@ -102,7 +113,7 @@ Ingenting fra den opprinnelige idemyldringen skal gå tapt:
 | Tema | Status |
 |---|---|
 | SEO / besøkende uten JS (klientside-rendering gir tomt skall for enkle crawlere) | Akseptert i v0; «bakt HTML ved publisering» vurderes mot v1 - editoren rendrer allerede ferdig DOM som kan snapshottes |
-| Auto-avledet mobil-layout for dekor-blokker (streker/sirkler stabler dårlig) | Designes i v0.4 - trolig et «dekor»-flagg på blokker |
+| Auto-avledet mobil-layout for dekor-blokker (streker/sirkler stabler dårlig) | Designes i v0.4 («dekor»-flagg på blokker) |
 | Bilder i git (repo-vekst, filgrenser hos hoster) | v0: størrelsesvarsler i editor; ekstern lagring (f.eks. R2) som plugin-spørsmål mot v1 |
 | Oppdaterer vs. håndredigerte Urd-eide filer | Avgjøres før v0.6 - trolig sjekksum-varsel før overskriving |
 | Ikke-GitHub-hoster (GitLab/Gitea) | `functions/_lib`-grensen holdes adapter-vennlig; utenfor scope til etter v1 |

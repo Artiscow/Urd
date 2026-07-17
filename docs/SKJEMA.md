@@ -109,7 +109,7 @@ En seksjon er alltid den samme generiske containeren - egen størrelse, egen bak
 - **`props`** er typespesifikke og eies av blokkdefinisjonens versjon/migreringer.
 - **`frames`** er plassering per breakpoint, i **fysiske enheter** (fra schemaVersion 2): `x`/`w` i prosent av seksjonsbredden (flyter med skjermen), `y`/`h` i px, `z` er lagrekkefølge, `rot` er grader. Gridet i site.json er KUN et snappeverktøy ved redigering; å endre det flytter aldri innhold.
 - **`frames.mobile: null`** betyr auto-avledet mobil-layout: motoren stabler blokkene i én kolonne i leserekkefølge (sortert på desktop-`y`, deretter `x`). Et objekt er en manuell overstyring.
-- **`animation`** (valgfri): `{ "type": "fade-in", "version": 1, "props": { … } }` - animasjoner er registertyper med samme migreringskontrakt (fra v0.4).
+- **`animation`** (valgfri): `{ "type": "fade-in", "version": 1, "props": { … } }` - animasjoner er registertyper med samme migreringskontrakt (fra v0.5).
 
 ## Mobil-tilsyn
 
