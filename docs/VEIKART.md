@@ -57,7 +57,13 @@ redigeringsflatene bygges på den nye layouten:
 - `urd-template`-repo-splitt + release-Action («Use this template»).
 - Oppdaterer v1: én-klikks Urd-oppdatering som kun overskriver manifest-stiene i `urd.json`.
 
-## v0.7 - Optimalisering
+## v0.7 - Finpuss
+- Sjekke alle funksjoner og se om noe mangler eller ikke fungerer godt.
+- Er alt intuitivt?
+- Er ting rotete?
+- Noe som ikke er lett å forstå eller lett å misforstå? 
+
+## v0.8 - Optimalisering
 
 Ytelses- og størrelsesgjennomgang av hele produktet. (Grunnleggende
 bildekomprimering ved opplasting - webp, maks 1600px, størrelsesvarsel -

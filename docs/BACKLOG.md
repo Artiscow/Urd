@@ -16,6 +16,7 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 - [x] Teksteditor: flytende linje over markert tekst med fet/kursiv/overskrifter/temafarger (M3, 17. juli 2026; fontvalg styres av Tema-panelet, egne skriftstørrelser utsatt)
 - [x] Seksjonseditor med full bakgrunnseditor: farge/gradient (også animert), glød, bildelag, korn (M4, 18. juli 2026)
 - [x] Animasjonsinnstillinger per blokk/seksjon (fade-in/slide-up/zoom-in/hover-lift) med version+migrate-kontrakt (M4, 18. juli 2026)
+- [ ] Nav editor: legge til logo/ikon i nav og mulighet til å bruke ikon/logo + custom tekst som "Hjem" knapp
 - [ ] Konfliktvarsel før publisering: bruk `latest?base=`-endepunktet (serverdelen har vært klar siden v0.2) til å varsle «noen andre har publisert siden du lastet»
 - [ ] Bilder-preset for seksjoner (image-blokken finnes; preseten trenger fornuftige plassholdere)
 - [ ] Flere seksjonspresets uten datakilder: team/styret, FAQ, kontakt (rene datafabrikker)
@@ -46,6 +47,8 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 - [ ] Mobil-tilsyn-varselet må bli tydeligere: SI hva som skal gjøres og HVOR (hvilken seksjon, hvilken visning). I dag: gul chip + gult omriss, men ingen veiviser. Kandidat: klikk på chipen hopper til seksjonen i mobilvisning og viser en kort forklaring med ✓-knappen.
 - [ ] 📵 (dekor/skjult på mobil) gjelder kun AUTOMATISK mobil-layout og oppleves som «virker ikke» i manuelle seksjoner. Avklar: skal manuelle seksjoner også kunne skjule blokker per blokk (f.eks. 📵 = ikke rendret i manuell modus også)?
 - [ ] Flere forskjellige design for former, bokser o.l
+- [ ] Miniikon for nettsiden i tabs og bokmerker.
+- [ ] Logo/ikon for nettsider
 
     
 ## Bugs og kjente svakheter
