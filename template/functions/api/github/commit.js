@@ -51,8 +51,9 @@ export async function onRequestPost({ request, env }) {
     return json({ error: 'files må være en liste med 1 til 200 filer' }, 400);
   }
   for (const file of files) {
-    if (typeof file?.path !== 'string' || typeof file?.content !== 'string') {
-      return json({ error: 'Hver fil trenger path og content' }, 400);
+    // Sletting (delete: true) trenger ikke content; vanlige filer må ha det.
+    if (typeof file?.path !== 'string' || (file.delete !== true && typeof file?.content !== 'string')) {
+      return json({ error: 'Hver fil trenger path og content (eller delete: true)' }, 400);
     }
     if (!isAllowedPath(file.path)) {
       return json({ error: `Stien '${file.path}' kan ikke publiseres herfra` }, 400);

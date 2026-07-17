@@ -70,14 +70,18 @@ export function currentUser(token) {
 /**
  * Committer flere filer som ÉN commit via Git Data API:
  *   1. Hent branch-ref og basecommit
- *   2. Opprett en blob per fil
+ *   2. Opprett en blob per fil (sletting: tre-innslag med sha: null)
  *   3. Opprett tre med base_tree = basecommitens tre
  *   4. Opprett commit med basecommit som forelder
  *   5. Oppdater ref (force: false - feiler trygt hvis HEAD har flyttet seg)
  *
+ * Filer med `delete: true` fjernes fra repoet. Stier som ikke finnes i
+ * basetreet hoppes over i stillhet (GitHub avviser hele treet ellers),
+ * så en sletting aldri kan velte publiseringen av resten.
+ *
  * @param {string} token
  * @param {{repo: string, branch: string}} config Fra cfg(env)
- * @param {{message: string, files: Array<{path: string, content: string, encoding?: 'utf-8'|'base64'}>}} payload
+ * @param {{message: string, files: Array<{path: string, content?: string, encoding?: 'utf-8'|'base64', delete?: boolean}>}} payload
  * @returns {Promise<{sha: string}>} Den nye commit-SHA-en
  */
 export async function commitFiles(token, config, { message, files }) {
@@ -87,8 +91,23 @@ export async function commitFiles(token, config, { message, files }) {
   const baseSha = ref.object.sha;
   const baseCommit = await gh(token, `/repos/${repo}/git/commits/${baseSha}`);
 
+  // Slettinger valideres mot basetreet: sha:null for en ukjent sti gir
+  // 422 fra GitHub. (recursive kan trunkeres i enorme repoer; da uteblir
+  // slettingen, som er den ufarlige retningen.)
+  let existing = null;
+  if (files.some((f) => f.delete)) {
+    const baseTree = await gh(token, `/repos/${repo}/git/trees/${baseCommit.tree.sha}?recursive=1`);
+    existing = new Set(baseTree.tree.map((t) => t.path));
+  }
+
   const tree = [];
   for (const file of files) {
+    if (file.delete) {
+      if (existing?.has(file.path)) {
+        tree.push({ path: file.path, mode: '100644', type: 'blob', sha: null });
+      }
+      continue;
+    }
     const blob = await gh(token, `/repos/${repo}/git/blobs`, {
       method: 'POST',
       body: JSON.stringify({
@@ -97,6 +116,10 @@ export async function commitFiles(token, config, { message, files }) {
       }),
     });
     tree.push({ path: file.path, mode: '100644', type: 'blob', sha: blob.sha });
+  }
+  if (tree.length === 0) {
+    // Alt som skulle skje var slettinger av stier som alt er borte.
+    return { sha: baseSha };
   }
 
   const newTree = await gh(token, `/repos/${repo}/git/trees`, {

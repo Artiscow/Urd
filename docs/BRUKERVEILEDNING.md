@@ -107,6 +107,18 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   («1 seksjon trenger mobil-tilsyn»). Det betyr bare: ta en titt i
   mobilvisningen og se at alt fortsatt ser bra ut, og kvitter med ✓.
 
+## Sider, meny og tema
+
+- **Sider**-panelet: opprett en ny side (skriv navnet og trykk Enter),
+  gi sider nytt navn eller ny adresse, eller slett dem med ×. Forsiden
+  kan ikke slettes eller flyttes. Nye sider legges automatisk i menyen
+  og blir synlige for besøkende først når du publiserer.
+- **Nav**-panelet: menyen øverst på siden. Endre tekst, velg hvilken side
+  (eller ekstern adresse) hvert punkt går til, flytt med ↑/↓, fjern med ×.
+  Logoen kan være tekst eller et bilde.
+- **Tema**-panelet: fargene og fontene hele siden bygger på. Endrer du
+  aksentfargen, følger knapper, lenker og markeringer med overalt.
+
 ## Utkast og publisering
 
 - Alt du gjør lagres som utkast i din nettleser, også på tvers av sider.

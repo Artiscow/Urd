@@ -70,12 +70,36 @@
   let siteStore = null;
   let bridge = null;
 
-  const pageEntry = () => site.pages.find((p) => p.id === pageId);
+  /**
+   * Reaktivt speil av site-UTKASTET (sider, nav, tema): panelene leser og
+   * muterer dette. `site` er den PUBLISERTE tilstanden og brukes kun som
+   * diff-grunnlag ved publisering (slettede/flyttede sider).
+   */
+  let siteDraft = $state(null);
+
+  /** Kobler siteDraft og siteStore til samme objekt (via Svelte-proxyen). */
+  function linkSiteDraft() {
+    siteDraft = siteStore.data;
+    siteStore.replace(siteDraft);
+  }
+
+  /**
+   * Nypubliserte sider som ennå ikke finnes på serveren: utkastet beholdes
+   * som kilde til deployen er ferdig, men skal ikke telle som «upublisert».
+   * Ryddes automatisk når siden lastes fra serveren første gang.
+   */
+  const pendingPublished = new Set();
+
+  const pageEntry = () => siteDraft.pages.find((p) => p.id === pageId);
 
   function updateDirty() {
-    // Utkast på ALLE sider teller, ikke bare den man står på.
-    const anyPageDraft = site?.pages?.some((p) => localStorage.getItem(`urd-draft-${p.id}`) !== null) ?? false;
-    dirty = anyPageDraft || store?.hasDraft() || siteStore?.hasDraft() || false;
+    // Utkast på ALLE sider teller, ikke bare den man står på - men ikke
+    // nypubliserte som bare venter på deploy.
+    const anyPageDraft = siteDraft?.pages?.some((p) =>
+      !pendingPublished.has(p.id) && localStorage.getItem(`urd-draft-${p.id}`) !== null) ?? false;
+    dirty = anyPageDraft
+      || (store?.hasDraft() && !pendingPublished.has(pageId))
+      || siteStore?.hasDraft() || false;
   }
 
   /**
@@ -104,13 +128,20 @@
     const { page, site: siteSnap } = JSON.parse(snap);
     store.replace(page);
     siteStore.replace(siteSnap);
+    linkSiteDraft();
     store.save();
     siteStore.save();
-    grid = { snap: true, ...siteStore.data.grid };
+    grid = { snap: true, ...siteDraft.grid };
     updateDirty();
     updateAttention();
-    bridge?.sendSite(siteStore.data);
-    bridge?.sendPage(pageId, store.data);
+    bridge?.sendSite(siteDraft);
+    // Angring kan fjerne siden man står på (angret sideopprettelse):
+    // da byttes det til forsiden i stedet for å bli stående i løse luften.
+    if (!siteDraft.pages.some((p) => p.id === pageId)) {
+      selectPage(siteDraft.pages[0].id);
+    } else {
+      bridge?.sendPage(pageId, store.data);
+    }
   }
 
   function undo() {
@@ -149,8 +180,9 @@
     // Utkast fra før grid-omleggingen kan ligge i localStorage: løft dem.
     siteStore.replace(liftSiteFile(siteStore.data));
     siteStore.save();
-    grid = { snap: true, ...siteStore.data.grid };
-    await selectPage(new URLSearchParams(location.search).get('page') ?? site.pages[0].id);
+    linkSiteDraft();
+    grid = { snap: true, ...siteDraft.grid };
+    await selectPage(new URLSearchParams(location.search).get('page') ?? siteDraft.pages[0].id);
     await checkAuth();
   }
 
@@ -248,15 +280,45 @@
   /** Løper mens en sides data lastes; urd-ready venter på denne. */
   let pageLoading = null;
 
+  /** Tom side for nyopprettede sider (må validere mot page-skjemaet). */
+  function blankPage(entry) {
+    return {
+      schemaVersion: 3,
+      meta: { id: entry.id, title: entry.title },
+      sections: [{
+        id: `sec-${crypto.randomUUID().slice(0, 8)}`,
+        version: 1,
+        preset: 'tom',
+        size: { minHeight: '40vh' },
+        grid: null,
+        background: { version: 1, layers: [{ type: 'color', version: 1, props: { value: 'bg' } }] },
+        blocks: [],
+      }],
+    };
+  }
+
   async function selectPage(id) {
     pageId = id;
     pageLoading = (async () => {
       const entry = pageEntry();
-      const raw = await (await fetch(`/${entry.file}`)).json();
-      // Eldre sidefiler løftes til gjeldende format før redigering, slik at
-      // utkast og publisering alltid er på nyeste schemaVersion. Gamle
-      // utkast i localStorage løftes også.
-      const published = liftPageFile(raw, siteStore.data);
+      // Nye sider finnes ikke på serveren ennå: 404, eller SPA-fallback
+      // som svarer 200 med HTML (json() kaster). Da er en blank side
+      // grunnlaget, og et eventuelt utkast i localStorage vinner uansett.
+      let published = null;
+      try {
+        const res = await fetch(`/${entry.file}`);
+        // Eldre sidefiler løftes til gjeldende format før redigering, slik at
+        // utkast og publisering alltid er på nyeste schemaVersion. Gamle
+        // utkast i localStorage løftes også.
+        if (res.ok) published = liftPageFile(await res.json(), siteStore.data);
+      } catch { /* ny, upublisert side */ }
+      if (published) {
+        // Siden er ute på serveren: en eventuell vente-på-deploy-markering
+        // er ferdig (store.save() under rydder utkastet om det er likt).
+        pendingPublished.delete(id);
+      } else {
+        published = blankPage(entry);
+      }
       store = createDraftStore(`urd-draft-${id}`, () => published);
       store.replace(liftPageFile(store.data, siteStore.data));
       store.save();
@@ -309,8 +371,198 @@
   /** Intern lenke klikket i forhåndsvisningen: bytt side ordentlig. */
   function onNavigate(msg) {
     const path = msg.path.replace(/\/$/, '') || '/';
-    const entry = site.pages.find((p) => p.path === path);
+    const entry = siteDraft.pages.find((p) => p.path === path);
     if (entry && entry.id !== pageId) selectPage(entry.id);
+  }
+
+  /**
+   * Felles flyt for alle site-endringer fra panelene (sider, nav, tema):
+   * historikk FØR mutasjonen, så lagre, merk og push live til preview.
+   * Nøkler med edit:-prefiks slås sammen i angre-historikken (skurer av
+   * tastetrykk/fargedrag blir ett angre-steg).
+   */
+  function siteMutate(key, fn) {
+    pushHistory(key);
+    fn();
+    siteStore.save();
+    updateDirty();
+    bridge?.sendSite(siteDraft);
+  }
+
+  /* ---------- Sider-panelet ---------- */
+
+  let newPageTitle = $state('');
+
+  /** Speiler guard.js: mapper som aldri kan bli sider. */
+  const RESERVED_SLUGS = ['admin', 'api', 'assets', 'content', 'media', 'plugins', 'functions'];
+
+  function pageSlugError(slug, ignoreId = null) {
+    if (!slug) return 'Siden trenger et navn';
+    if (RESERVED_SLUGS.includes(slug)) return `«${slug}» er et reservert navn`;
+    if (siteDraft.pages.some((p) => p.id !== ignoreId && (p.path === `/${slug}` || p.id === slug))) {
+      return 'Det finnes allerede en side med dette navnet';
+    }
+    return null;
+  }
+
+  function addPage() {
+    const title = newPageTitle.trim();
+    const slug = slugify(title);
+    const err = pageSlugError(slug);
+    if (err) {
+      setStatus(err, 'error');
+      return;
+    }
+    siteMutate('pages', () => {
+      siteDraft.pages.push({ id: slug, title, path: `/${slug}`, file: `content/pages/${slug}.json` });
+      // Nye sider legges rett i menyen; Nav-panelet kan fjerne dem.
+      siteDraft.nav.items.push({ label: title, page: slug });
+    });
+    // Sidens eget utkast: en blank side, klar til publisering.
+    localStorage.setItem(`urd-draft-${slug}`, JSON.stringify(blankPage({ id: slug, title })));
+    updateDirty();
+    newPageTitle = '';
+    selectPage(slug);
+  }
+
+  function renamePage(entry, rawTitle) {
+    const title = rawTitle.trim();
+    if (!title || title === entry.title) return;
+    const old = entry.title;
+    siteMutate('pages', () => {
+      entry.title = title;
+      // Menypunkter som fortsatt het det gamle følger med.
+      for (const item of siteDraft.nav.items) {
+        if (item.page === entry.id && item.label === old) item.label = title;
+      }
+    });
+    // Sidefilens meta.title holdes i takt (den styrer fanetittelen).
+    if (entry.id === pageId) {
+      store.data.meta.title = title;
+      store.save();
+      updateDirty();
+    } else {
+      patchPageDraft(entry, (p) => { p.meta.title = title; });
+    }
+  }
+
+  /** Endrer en annen sides utkast (lager utkast fra publisert ved behov). */
+  async function patchPageDraft(entry, fn) {
+    const key = `urd-draft-${entry.id}`;
+    let page = null;
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      try { page = JSON.parse(raw); } catch { /* korrupt: hentes på nytt */ }
+    }
+    if (!page) {
+      try {
+        const res = await fetch(`/${entry.file}`);
+        if (res.ok) page = liftPageFile(await res.json(), siteStore.data);
+      } catch { /* upublisert side uten utkast */ }
+    }
+    if (!page) page = blankPage(entry);
+    fn(page);
+    localStorage.setItem(key, JSON.stringify(page));
+    updateDirty();
+  }
+
+  function setPageSlug(entry, rawSlug) {
+    const slug = slugify(rawSlug);
+    if (entry.path === '/' || `/${slug}` === entry.path) return;
+    const err = pageSlugError(slug, entry.id);
+    if (err) {
+      setStatus(err, 'error');
+      return;
+    }
+    // Kun adressen endres; id (og dermed utkastnøkkel og filnavn) består,
+    // så interne referanser (nav) aldri ryker. Publisering rydder den
+    // gamle adressens index.html via diffen mot publisert site.json.
+    siteMutate('pages', () => {
+      entry.path = `/${slug}`;
+    });
+  }
+
+  function deletePage(entry) {
+    if (entry.path === '/') return; // forsiden kan aldri slettes
+    siteMutate('pages', () => {
+      siteDraft.pages = siteDraft.pages.filter((p) => p.id !== entry.id);
+      siteDraft.nav.items = siteDraft.nav.items.filter((i) => i.page !== entry.id);
+    });
+    // Sidens eget utkast beholdes: Ctrl+Z gjenoppretter alt.
+    if (entry.id === pageId) selectPage(siteDraft.pages[0].id);
+    setStatus('Siden fjernes ved neste publisering (Ctrl+Z angrer)');
+  }
+
+  /* ---------- Nav-panelet ---------- */
+
+  function setLogo(patch) {
+    siteMutate('edit:nav-logo', () => {
+      siteDraft.nav.logo = { type: 'text', value: '', ...siteDraft.nav.logo, ...patch };
+    });
+  }
+
+  function setNavLabel(i, value) {
+    siteMutate(`edit:nav-label-${i}`, () => { siteDraft.nav.items[i].label = value; });
+  }
+
+  /** Mål: en side fra registeret, eller '__href' = ekstern lenke.
+   *  Skjemaet tillater kun ett av feltene page/href, så det andre fjernes. */
+  function setNavTarget(i, value) {
+    siteMutate('nav', () => {
+      const item = siteDraft.nav.items[i];
+      if (value === '__href') {
+        delete item.page;
+        item.href = item.href ?? 'https://';
+      } else {
+        item.page = value;
+        delete item.href;
+      }
+    });
+  }
+
+  function setNavHref(i, value) {
+    siteMutate(`edit:nav-href-${i}`, () => { siteDraft.nav.items[i].href = value; });
+  }
+
+  function moveNavItem(i, dir) {
+    const j = i + dir;
+    const items = siteDraft.nav.items;
+    if (j < 0 || j >= items.length) return;
+    siteMutate('nav', () => { [items[i], items[j]] = [items[j], items[i]]; });
+  }
+
+  function removeNavItem(i) {
+    siteMutate('nav', () => { siteDraft.nav.items.splice(i, 1); });
+  }
+
+  function addNavItem() {
+    siteMutate('nav', () => {
+      siteDraft.nav.items.push({ label: 'Lenke', page: siteDraft.pages[0].id });
+    });
+  }
+
+  /* ---------- Tema-panelet ---------- */
+
+  const FONT_STACKS = [
+    ['System', 'system-ui, sans-serif'],
+    ['Arial', 'Arial, Helvetica, sans-serif'],
+    ['Verdana', 'Verdana, Geneva, sans-serif'],
+    ['Trebuchet', "'Trebuchet MS', sans-serif"],
+    ['Georgia (serif)', "Georgia, 'Times New Roman', serif"],
+    ['Palatino (serif)', "'Palatino Linotype', Palatino, serif"],
+    ['Courier (skrivemaskin)', "'Courier New', monospace"],
+  ];
+
+  function setColorToken(name, value) {
+    siteMutate(`edit:theme-color-${name}`, () => { siteDraft.theme.tokens.color[name] = value; });
+  }
+
+  function setFontToken(name, value) {
+    siteMutate('theme', () => { siteDraft.theme.tokens.font[name] = value; });
+  }
+
+  function setRadiusToken(name, value) {
+    siteMutate('theme', () => { siteDraft.theme.tokens.radius[name] = value; });
   }
 
   function toggleChrome() {
@@ -568,12 +820,18 @@
   function discard() {
     pushHistory('discard');
     const freshPage = store.reset();
-    const freshSite = siteStore.reset();
-    grid = { snap: true, ...freshSite.grid };
+    siteStore.reset();
+    linkSiteDraft();
+    grid = { snap: true, ...siteDraft.grid };
     updateDirty();
     status = '';
-    bridge?.sendSite(freshSite);
-    bridge?.sendPage(pageId, freshPage);
+    bridge?.sendSite(siteDraft);
+    // Forkasting kan fjerne siden man står på (upublisert ny side).
+    if (!siteDraft.pages.some((p) => p.id === pageId)) {
+      selectPage(siteDraft.pages[0].id);
+    } else {
+      bridge?.sendPage(pageId, freshPage);
+    }
   }
 
   async function publish() {
@@ -581,9 +839,10 @@
     const files = [];
     const publishedTitles = [];
     const draftKeys = [];
+    const newPageIds = [];
 
     // ALLE sider med utkast publiseres, ikke bare den man står på.
-    for (const entry of site.pages) {
+    for (const entry of siteDraft.pages) {
       const key = `urd-draft-${entry.id}`;
       let page = null;
       if (entry.id === pageId && store.hasDraft()) {
@@ -601,14 +860,44 @@
       files.push(...materializeImages(page));
       files.push({ path: entry.file, content: JSON.stringify(page, null, 2) + '\n', encoding: 'utf-8' });
       publishedTitles.push(entry.title);
-      draftKeys.push(key);
+      // Nye sider finnes ikke på serveren før deployen er ferdig: utkastet
+      // beholdes som kilde til da, og ryddes automatisk ved neste besøk.
+      const isNew = pendingPublished.has(entry.id) || !site.pages.some((p) => p.id === entry.id);
+      if (isNew) newPageIds.push(entry.id);
+      else draftKeys.push(key);
     }
     if (store.hasDraft()) store.save();
 
     if (siteStore.hasDraft()) {
-      files.push({ path: 'content/site.json', content: JSON.stringify(siteStore.data, null, 2) + '\n', encoding: 'utf-8' });
+      files.push({ path: 'content/site.json', content: JSON.stringify(siteDraft, null, 2) + '\n', encoding: 'utf-8' });
       draftKeys.push('urd-draft-site');
     }
+
+    // Sideruting på alle statiske hoster: hver side utenom forsiden får
+    // sin egen <sti>/index.html (kopi av rot-index.html; motoren ruter på
+    // pathname). Genereres ved hver publisering - uendrede kopier gir
+    // identiske blobber og dermed ingen diff i commiten.
+    try {
+      const html = await (await fetch('/index.html')).text();
+      for (const p of siteDraft.pages) {
+        if (p.path !== '/') {
+          files.push({ path: `${p.path.slice(1)}/index.html`, content: html, encoding: 'utf-8' });
+        }
+      }
+    } catch { /* uten index-kopiene virker siden fortsatt på SPA-hoster */ }
+
+    // Slettede og flyttede sider: diff mot publisert site.json. Serveren
+    // hopper stille over stier som alt er borte fra repoet.
+    for (const p of site.pages) {
+      const still = siteDraft.pages.find((q) => q.id === p.id);
+      if (!still) {
+        files.push({ path: p.file, delete: true });
+        if (p.path !== '/') files.push({ path: `${p.path.slice(1)}/index.html`, delete: true });
+      } else if (still.path !== p.path && p.path !== '/') {
+        files.push({ path: `${p.path.slice(1)}/index.html`, delete: true });
+      }
+    }
+
     const body = {
       message: `Oppdater ${publishedTitles.join(', ') || 'innstillinger'} via Urd-admin`,
       files,
@@ -626,8 +915,21 @@
       // Utkastene ER nå det publiserte; behold dataene i minnet (serveren
       // serverer gammel JSON til deployen er ferdig) og fjern bare merkene.
       for (const key of draftKeys) localStorage.removeItem(key);
+      for (const id of newPageIds) pendingPublished.add(id);
+      // Publisert grunnlag = utkastet: bygg store-baselines på nytt, så
+      // «Forkast utkast» aldri ruller tilbake forbi denne publiseringen.
+      site = JSON.parse(JSON.stringify(siteDraft));
+      siteStore = createDraftStore('urd-draft-site', () => site);
+      linkSiteDraft();
+      grid = { snap: true, ...siteDraft.grid };
+      const pageSnap = JSON.parse(JSON.stringify(store.data));
+      store = createDraftStore(`urd-draft-${pageId}`, () => pageSnap);
+      if (pendingPublished.has(pageId)) {
+        // Ny side: utkastet er kilden til deployen er ferdig - behold det.
+        localStorage.setItem(`urd-draft-${pageId}`, JSON.stringify(pageSnap));
+      }
+      updateDirty();
       setStatus('✓ Publisert! Siden bygges på nytt (~1 min)', 'ok');
-      dirty = false;
     } else if (res?.status === 401) {
       const detail = (await res.json().catch(() => null))?.error;
       setStatus(detail === 'Ugyldig eller utløpt innlogging'
@@ -661,7 +963,7 @@
 
       {#if site}
         <select value={pageId} onchange={(e) => selectPage(e.target.value)}>
-          {#each site.pages as p}
+          {#each siteDraft.pages as p (p.id)}
             <option value={p.id}>{p.title}</option>
           {/each}
         </select>
@@ -720,7 +1022,117 @@
           <aside class="panel">
             <h2>{activePanel}</h2>
 
-            {#if activePanel === 'Blokker'}
+            {#if activePanel === 'Sider'}
+              <div class="panel-body">
+                <p class="panel-hint">Endringer her er utkast til du publiserer. Ctrl+Z angrer.</p>
+                {#each siteDraft.pages as p (p.id)}
+                  <div class="page-row" class:current={p.id === pageId}>
+                    <input class="page-title" value={p.title} title="Sidens navn"
+                      onchange={(e) => renamePage(p, e.target.value)} />
+                    {#if p.path === '/'}
+                      <span class="page-path" title="Forsiden kan ikke flyttes eller slettes">/</span>
+                    {:else}
+                      <input class="page-slug" value={p.path.slice(1)} title="Adressen (dinside.no/…)"
+                        onchange={(e) => setPageSlug(p, e.target.value)} />
+                      <button class="ghost row-tool" title="Slett siden (Ctrl+Z angrer)"
+                        onclick={() => deletePage(p)}>×</button>
+                    {/if}
+                    <button class="ghost row-tool" title="Åpne siden i editoren"
+                      disabled={p.id === pageId} onclick={() => selectPage(p.id)}>→</button>
+                  </div>
+                {/each}
+                <hr class="gridmenu-divider" />
+                <input placeholder="Navn på ny side" bind:value={newPageTitle}
+                  onkeydown={(e) => e.key === 'Enter' && addPage()} />
+                <button class="ghost" onclick={addPage} disabled={!newPageTitle.trim()}>+ Opprett side</button>
+                <p class="panel-hint">Nye sider legges automatisk i menyen og starter tomme.</p>
+              </div>
+            {:else if activePanel === 'Nav'}
+              <div class="panel-body">
+                <p class="panel-hint">Menyen øverst på siden. Endringer vises live i forhåndsvisningen.</p>
+                <label>
+                  Logo
+                  <select value={siteDraft.nav.logo?.type ?? 'text'}
+                    onchange={(e) => setLogo({ type: e.target.value })}>
+                    <option value="text">Tekst</option>
+                    <option value="image">Bilde (URL)</option>
+                  </select>
+                </label>
+                <input value={siteDraft.nav.logo?.value ?? ''}
+                  placeholder={siteDraft.nav.logo?.type === 'image' ? '/media/logo.webp' : 'Navnet i menyen'}
+                  oninput={(e) => setLogo({ value: e.target.value })} />
+                <hr class="gridmenu-divider" />
+                {#each siteDraft.nav.items as item, i}
+                  <div class="nav-row">
+                    <input value={item.label} title="Teksten i menyen"
+                      oninput={(e) => setNavLabel(i, e.target.value)} />
+                    <select value={item.page ?? '__href'} title="Hvor lenken går"
+                      onchange={(e) => setNavTarget(i, e.target.value)}>
+                      {#each siteDraft.pages as p (p.id)}
+                        <option value={p.id}>{p.title}</option>
+                      {/each}
+                      <option value="__href">Ekstern lenke</option>
+                    </select>
+                    {#if !item.page}
+                      <input value={item.href ?? ''} placeholder="https://…"
+                        onchange={(e) => setNavHref(i, e.target.value)} />
+                    {/if}
+                    <span class="row-tools">
+                      <button class="ghost row-tool" onclick={() => moveNavItem(i, -1)} disabled={i === 0}>↑</button>
+                      <button class="ghost row-tool" onclick={() => moveNavItem(i, 1)}
+                        disabled={i === siteDraft.nav.items.length - 1}>↓</button>
+                      <button class="ghost row-tool" title="Fjern fra menyen (siden består)"
+                        onclick={() => removeNavItem(i)}>×</button>
+                    </span>
+                  </div>
+                {/each}
+                <button class="ghost" onclick={addNavItem}>+ Nytt menypunkt</button>
+              </div>
+            {:else if activePanel === 'Tema'}
+              <div class="panel-body">
+                <p class="panel-hint">Fargene og fontene hele siden bygger på. Endringer vises live.</p>
+                <label>Bakgrunn
+                  <input type="color" value={siteDraft.theme.tokens.color.bg}
+                    oninput={(e) => setColorToken('bg', e.target.value)} /></label>
+                <label>Flater
+                  <input type="color" value={siteDraft.theme.tokens.color.surface}
+                    oninput={(e) => setColorToken('surface', e.target.value)} /></label>
+                <label>Tekst
+                  <input type="color" value={siteDraft.theme.tokens.color.text}
+                    oninput={(e) => setColorToken('text', e.target.value)} /></label>
+                <label>Aksent
+                  <input type="color" value={siteDraft.theme.tokens.color.accent}
+                    oninput={(e) => setColorToken('accent', e.target.value)} /></label>
+                <hr class="gridmenu-divider" />
+                <label>Overskrifter
+                  <select value={siteDraft.theme.tokens.font.heading}
+                    onchange={(e) => setFontToken('heading', e.target.value)}>
+                    {#if !FONT_STACKS.some(([, v]) => v === siteDraft.theme.tokens.font.heading)}
+                      <option value={siteDraft.theme.tokens.font.heading}>Egendefinert</option>
+                    {/if}
+                    {#each FONT_STACKS as [name, value] (value)}
+                      <option {value}>{name}</option>
+                    {/each}
+                  </select></label>
+                <label>Brødtekst
+                  <select value={siteDraft.theme.tokens.font.body}
+                    onchange={(e) => setFontToken('body', e.target.value)}>
+                    {#if !FONT_STACKS.some(([, v]) => v === siteDraft.theme.tokens.font.body)}
+                      <option value={siteDraft.theme.tokens.font.body}>Egendefinert</option>
+                    {/if}
+                    {#each FONT_STACKS as [name, value] (value)}
+                      <option {value}>{name}</option>
+                    {/each}
+                  </select></label>
+                <hr class="gridmenu-divider" />
+                <label>Avrunding, liten
+                  <input class="token-input" value={siteDraft.theme.tokens.radius.sm}
+                    onchange={(e) => setRadiusToken('sm', e.target.value)} /></label>
+                <label>Avrunding, stor
+                  <input class="token-input" value={siteDraft.theme.tokens.radius.md}
+                    onchange={(e) => setRadiusToken('md', e.target.value)} /></label>
+              </div>
+            {:else if activePanel === 'Blokker'}
               <div class="panel-body" class:locked={viewMode === 'mobile'}
                 title={viewMode === 'mobile' ? 'Bytt til desktop-visning for å legge til innhold' : undefined}>
                 <p class="panel-hint">Nye blokker legges midt i synsfeltet, i sist klikkede seksjon.</p>
@@ -1019,6 +1431,69 @@
   .panel-body.locked {
     opacity: 0.35;
     pointer-events: none;
+  }
+
+  .panel-body input[type='text'],
+  .panel-body input:not([type]),
+  .panel-body input[type='color'] {
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    padding: 0.3em 0.5em;
+    min-width: 0;
+  }
+
+  .panel-body input[type='color'] {
+    padding: 2px;
+    width: 3rem;
+    height: 1.8rem;
+    cursor: pointer;
+  }
+
+  /* Sider- og nav-radene: tittel/etikett tar plassen, verktøyene er smale */
+  .page-row,
+  .nav-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .page-row.current {
+    border-left: 2px solid var(--urd-color-accent, #7c5cff);
+    padding-left: 0.4rem;
+  }
+
+  .page-title,
+  .nav-row input {
+    flex: 1 1 7rem;
+  }
+
+  .page-slug {
+    flex: 0 1 6rem;
+    opacity: 0.8;
+  }
+
+  .page-path {
+    opacity: 0.6;
+    padding: 0 0.4rem;
+  }
+
+  .row-tools {
+    display: flex;
+    gap: 0.2rem;
+  }
+
+  .row-tool {
+    padding: 0.2em 0.5em;
+    font-size: 0.8rem;
+  }
+
+  .token-input {
+    width: 5rem;
+    text-align: right;
   }
 
   /* Grupper i panelet (Tekst, Former): ser ut som blokk-knappene, men med

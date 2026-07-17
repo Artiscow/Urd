@@ -432,12 +432,19 @@ function enhanceBlock(el, block, section, grid, host) {
     const decorBtn = document.createElement('button');
     decorBtn.className = 'urd-edit-decor';
     decorBtn.textContent = '✦';
-    decorBtn.title = 'Dekor: utelates fra automatisk mobil-layout';
+    // Tooltipen forklarer fargene og følger tilstanden.
+    const syncDecorTitle = () => {
+      decorBtn.title = block.decor
+        ? 'Dekor PÅ (gul): pynt, skjules i automatisk mobil-layout. Klikk for å vise blokken på mobil.'
+        : 'Dekor AV (grå): innhold, vises på mobil. Klikk for å gjøre blokken til pynt som skjules der.';
+    };
+    syncDecorTitle();
     decorBtn.classList.toggle('on', Boolean(block.decor));
     decorBtn.addEventListener('click', () => {
       block.decor = !block.decor;
       decorBtn.classList.toggle('on', block.decor);
       el.classList.toggle('urd-decor', block.decor);
+      syncDecorTitle();
       post({ type: 'urd-block-flag', sectionId: section.id, blockId: block.id, decor: block.decor });
     });
     toolbar.appendChild(decorBtn);

@@ -38,6 +38,27 @@ test('kode- og konfigstier er forbudt', () => {
   }
 });
 
+test('side-index er tillatt, men aldri rot eller reserverte mapper', () => {
+  for (const path of ['om-oss/index.html', 'kontakt/index.html', 'side-2/index.html']) {
+    assert.equal(isAllowedPath(path), true, path);
+  }
+  for (const path of [
+    'index.html',
+    'admin/index.html',
+    'api/index.html',
+    'assets/index.html',
+    'functions/index.html',
+    'plugins/index.html',
+    'om-oss/undermappe/index.html',
+    'Om-Oss/index.html',
+    '-slug/index.html',
+    'om-oss/evil.html',
+  ]) {
+    assert.equal(isAllowedPath(path), false, path);
+  }
+  // content/ og media/ dekkes av allow-prefiksene og er greie også for index.html
+});
+
 test('stitriks avvises', () => {
   for (const path of [
     'content/../functions/evil.js',

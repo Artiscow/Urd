@@ -15,6 +15,14 @@ const ALLOW_PREFIXES = ['content/', 'media/'];
 const ALLOW_EXACT = ['plugins/plugins.json'];
 
 /**
+ * Sideruting: publisering får skrive `<slug>/index.html` (kopi av
+ * rot-index.html per side, så ruting virker på alle statiske hoster) -
+ * men ALDRI rot-index.html, og aldri under reserverte mapper.
+ */
+const PAGE_INDEX_RE = /^[a-z0-9][a-z0-9-]*\/index\.html$/;
+const RESERVED_SLUGS = ['admin', 'api', 'assets', 'content', 'media', 'plugins', 'functions'];
+
+/**
  * @param {string} path Repo-relativ filsti fra en commit-forespørsel
  * @returns {boolean} true hvis stien er trygg å skrive via publisering
  */
@@ -25,6 +33,7 @@ export function isAllowedPath(path) {
   if (DENY_EXACT.includes(normalized)) return false;
   if (DENY_PREFIXES.some((p) => normalized.startsWith(p))) return false;
   if (ALLOW_EXACT.includes(normalized)) return true;
+  if (PAGE_INDEX_RE.test(normalized) && !RESERVED_SLUGS.includes(normalized.split('/')[0])) return true;
   return ALLOW_PREFIXES.some((p) => normalized.startsWith(p));
 }
 

@@ -20,6 +20,14 @@ ikke slipp; alt samles i 0.5.0 ved fasegaten.
 - Tekstboks: tekstblokk-variant der innholdet ligger i et kort med temaets flatefarge, kantlinje og avrundede hjørner. Valgfritt additivt `box`-felt på tekstblokkens props; eldre data rendres uendret.
 - Blokker-panelet er gruppert: Tekst (Tekst, Tekstboks) og Former (Strek, Pil, Sirkel, Rektangel, Trekant) som grupper, med Knapp og Bilde imellom.
 
+### 0.5.2 - sider, nav og tema (M2) - 17. juli 2026
+- Sider-panelet: opprett nye sider (starter tomme, legges automatisk i menyen), gi sider nytt navn og ny adresse, og slett sider (forsiden er fredet; Ctrl+Z angrer alt frem til publisering).
+- Nav-panelet: rediger menyen (tekst, mål: side eller ekstern lenke, rekkefølge, fjern) og logoen (tekst eller bilde-URL). Alt vises live i forhåndsvisningen.
+- Tema-panelet: fargevelgere for bakgrunn/flater/tekst/aksent, fontvalg for overskrifter og brødtekst, og avrundingsverdier. Alt vises live.
+- Ruting på alle statiske hoster: publisering genererer `<adresse>/index.html` for hver side utenom forsiden (kopi av rot-index.html; motoren ruter på adressen). Slettede og flyttede sider rydder sine filer i samme commit.
+- Publiseringslaget kan nå slette filer (tre-innslag med `sha: null`; stier som alt er borte hoppes trygt over), og sti-vernet tillater `<slug>/index.html` for ikke-reserverte slugs (aldri rot-index.html). Nye vern-tester.
+- Dekor-knappen (✦) forklarer nå fargene i tooltipen (gul = pynt som skjules i automatisk mobil-layout, grå = innhold som vises), og teksten følger tilstanden.
+
 ### 0.5.1.4 - brukerveiledning - 17. juli 2026
 - Ny [docs/BRUKERVEILEDNING.md](docs/BRUKERVEILEDNING.md): veiledning for sideeiere (editoren, blokker, dekor-flagget, seksjoner, grid, mobil, publisering). Utvides løpende; full opprydding er planlagt mot v0.9.
 
