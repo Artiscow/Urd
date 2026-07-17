@@ -81,6 +81,16 @@ html {
   position: static;
 }
 
+/* Tekstboks: tekstblokk med innholdet i et kort (props.box på tekstblokken).
+   Følger temaets flatefarge og radius. */
+.urd-text-box {
+  box-sizing: border-box;
+  background: var(--urd-color-surface);
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 12%, transparent);
+  border-radius: var(--urd-radius-md);
+  padding: 1rem 1.25rem;
+}
+
 /* Plassholder for ukjente typer: nøytral, aldri ødeleggende */
 .urd-placeholder {
   display: grid;

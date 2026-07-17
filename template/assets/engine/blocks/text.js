@@ -6,11 +6,11 @@
 export const textBlock = {
   version: 1,
   label: 'Tekst',
-  defaults: () => ({ html: '<p>Ny tekst</p>', align: 'left' }),
+  defaults: () => ({ html: '<p>Ny tekst</p>', align: 'left', box: false }),
   migrations: {},
   /**
    * @param {HTMLElement} el Blokk-elementet (posisjonert av render.js)
-   * @param {{html: string, align: string}} props
+   * @param {{html: string, align: string, box?: boolean}} props
    * @param {object} ctx Render-kontekst
    */
   render(el, props, ctx) {
@@ -18,7 +18,10 @@ export const textBlock = {
     // preview-edit legger på blokken skal ALDRI havne i det redigerbare
     // innholdet (eller i lagret props.html).
     const content = document.createElement('div');
-    content.className = 'urd-text';
+    // Tekstboks-varianten: samme blokk, men innholdet ligger i et kort
+    // (temaets flatefarge, kantlinje, radius). Valgfritt felt; eldre
+    // data mangler det og rendres som før.
+    content.className = props.box ? 'urd-text urd-text-box' : 'urd-text';
     content.style.cssText = 'width:100%;min-height:100%;';
     content.style.textAlign = props.align;
     content.innerHTML = props.html;

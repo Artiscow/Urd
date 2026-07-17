@@ -12,6 +12,8 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 - Statusmeldinger vises som toast nederst til høyre (med lukkeknapp) i stedet for chip i topplinjen.
 
 ### Lagt til
+- Tekstboks: tekstblokk-variant der innholdet ligger i et kort med temaets flatefarge, kantlinje og avrundede hjørner. Valgfritt additivt `box`-felt på tekstblokkens props; eldre data rendres uendret.
+- Blokker-panelet er gruppert: Tekst (Tekst, Tekstboks) og Former (Strek, Pil, Sirkel, Rektangel, Trekant) som sammenleggbare grupper, med Knapp og Bilde imellom.
 - Forhåndsvisningen melder blokkvalg til editoren (`urd-select-block`), så Egenskaper-panelet vet hvilken blokk eller seksjon som er valgt.
 
 ## [0.4.0] - 2026-07-17
