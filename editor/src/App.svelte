@@ -830,7 +830,7 @@
   const BLOCK_DEFAULTS = {
     text: { type: 'text', props: { html: '<p>Ny tekst</p>', align: 'left' }, w: 33, h: 28 },
     'text-box': { type: 'text', props: { html: '<h3>Overskrift</h3><p>Skriv innholdet her.</p>', align: 'left', box: true }, w: 30, h: 150 },
-    button: { type: 'button', props: { label: 'Ny knapp', page: null, href: '#', style: 'primary' }, w: 20, h: 36 },
+    button: { type: 'button', props: { label: 'Ny knapp', page: null, href: null, style: 'primary' }, w: 20, h: 36 },
     'shape-line': { type: 'shape', decor: true, props: { kind: 'line', color: 'accent', thickness: 2, fill: null }, w: 25, h: 8 },
     'shape-arrow': { type: 'shape', decor: true, props: { kind: 'arrow', color: 'accent', thickness: 2, fill: null }, w: 25, h: 16 },
     'shape-circle': { type: 'shape', decor: true, props: { kind: 'circle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
@@ -1351,17 +1351,11 @@
                     <label>Går til
                       <select value={selectedBlock.props.page ?? '__href'}
                         onchange={(e) => {
-                          if (e.target.value === '__href') {
-                            mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-                              b.props.page = null;
-                              b.props.href = b.props.href ?? 'https://';
-                            });
-                          } else {
-                            mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-                              b.props.page = e.target.value;
-                              b.props.href = null;
-                            });
-                          }
+                          const page = e.target.value === '__href' ? null : e.target.value;
+                          mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+                            b.props.page = page;
+                            if (page) b.props.href = null;
+                          });
                         }}>
                         {#each siteDraft.pages as p (p.id)}
                           <option value={p.id}>{p.title}</option>
@@ -1369,8 +1363,9 @@
                         <option value="__href">Ekstern lenke</option>
                       </select></label>
                     {#if !selectedBlock.props.page}
-                      <input value={selectedBlock.props.href ?? ''} placeholder="https://…"
-                        onchange={(e) => setBlockProp('href', e.target.value)} />
+                      <input placeholder="https://…"
+                        value={selectedBlock.props.href === '#' ? '' : selectedBlock.props.href ?? ''}
+                        onchange={(e) => setBlockProp('href', e.target.value || null)} />
                     {/if}
                     <label>Stil
                       <select value={selectedBlock.props.style}

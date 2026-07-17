@@ -20,6 +20,10 @@ ikke slipp; alt samles i 0.5.0 ved fasegaten.
 - Tekstboks: tekstblokk-variant der innholdet ligger i et kort med temaets flatefarge, kantlinje og avrundede hjørner. Valgfritt additivt `box`-felt på tekstblokkens props; eldre data rendres uendret.
 - Blokker-panelet er gruppert: Tekst (Tekst, Tekstboks) og Former (Strek, Pil, Sirkel, Rektangel, Trekant) som grupper, med Knapp og Bilde imellom.
 
+### 0.5.3.2 - dra over seksjonstoppen + knappe-lenke-fiks - 18. juli 2026
+- Blokker kan nå dras over toppen av sin egen seksjon (negativ y), symmetrisk med at de alltid har kunnet henge under bunnen. Før satt blokker laget i en seksjon fast ved seksjonens overkant og kunne ikke dras oppover ut av den. Skjemaets y-minimum er fjernet (ren oppmykning, knekker ingen sider).
+- Knapp-egenskapene: ekstern lenke starter nå som tomt felt med plassholder i stedet for «#», og bytte side ↔ ekstern lenke mister ikke lenken man hadde skrevet.
+
 ### 0.5.3 - Egenskaper-panelet og teksteditor (M3) - 17. juli 2026
 - Egenskaper-panelet for valgt blokk: posisjon/størrelse/lag/rotasjon som tallfelt (desktopvisning), 📵-avkrysning med forklaring, og per type: tekst (justering, tekstboks av/på), knapp (tekst, mål: side eller ekstern lenke, stil), bilde (bytt bilde, alt-tekst, tilpasning, avrunding, lenke), form (type, temafarge, tykkelse, fylt).
 - Egenskaper-panelet for valgt seksjon: minstehøyde (px eller CSS-verdi) og eget grid (flyttet hit fra Grid-panelet, som nå kun eier sidens grid).

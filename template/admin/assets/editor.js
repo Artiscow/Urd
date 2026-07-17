@@ -2763,7 +2763,7 @@ function Xi(e, t) {
 			props: {
 				label: "Ny knapp",
 				page: null,
-				href: "#",
+				href: null,
 				style: "primary"
 			},
 			w: 20,
@@ -3278,7 +3278,7 @@ function Xi(e, t) {
 							Ir(a), N(i);
 							var l = B(i, 2), u = (e) => {
 								var t = Ei();
-								Q(t), V(() => $(t, K(O).props.href ?? "")), q("change", t, (e) => k("href", e.target.value)), Y(e, t);
+								Q(t), V(() => $(t, K(O).props.href === "#" ? "" : K(O).props.href ?? "")), q("change", t, (e) => k("href", e.target.value || null)), Y(e, t);
 							};
 							Z(l, (e) => {
 								K(O).props.page || e(u);
@@ -3291,10 +3291,9 @@ function Xi(e, t) {
 							Ir(f), N(d), V(() => {
 								$(r, K(O).props.label), c !== (c = K(O).props.page ?? "__href") && (a.value = (a.__value = K(O).props.page ?? "__href") ?? "", Fr(a, K(O).props.page ?? "__href")), h !== (h = K(O).props.style) && (f.value = (f.__value = K(O).props.style) ?? "", Fr(f, K(O).props.style));
 							}), q("change", r, (e) => k("label", e.target.value)), q("change", a, (e) => {
-								e.target.value === "__href" ? he(`edit:${K(O).blockId}`, (e) => {
-									e.props.page = null, e.props.href = e.props.href ?? "https://";
-								}) : he(`edit:${K(O).blockId}`, (t) => {
-									t.props.page = e.target.value, t.props.href = null;
+								let t = e.target.value === "__href" ? null : e.target.value;
+								he(`edit:${K(O).blockId}`, (e) => {
+									e.props.page = t, t && (e.props.href = null);
 								});
 							}), q("change", f, (e) => k("style", e.target.value)), Y(e, t);
 						}, d = (e) => {

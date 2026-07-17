@@ -612,7 +612,9 @@ function enhanceBlock(el, block, section, grid, host) {
           ? {
               ...orig,
               x: clamp(snapPct(orig.x + dx), 0, r2(100 - orig.w)),
-              y: Math.max(0, snapPx(orig.y + dy)),
+              // y er ubegrenset i begge retninger: blokker kan bevisst
+              // henge over seksjonstoppen, akkurat som under bunnen.
+              y: snapPx(orig.y + dy),
             }
           : {
               ...orig,
