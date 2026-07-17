@@ -174,7 +174,15 @@ export async function boot(opts) {
   const entry = resolvePage(site);
   // Versjonsløfting på filnivå: eldre sidefiler løftes til gjeldende
   // format i minnet (disk skrives først ved neste publisering).
-  const page = liftPageFile(await (await fetch(`/${entry.file}`)).json(), site);
+  // Mangler sidefilen (halvferdig deploy, håndredigert register), vises
+  // en tom side i stedet for krasj - siden dør aldri av dårlig data.
+  let page;
+  try {
+    page = liftPageFile(await (await fetch(`/${entry.file}`)).json(), site);
+  } catch {
+    console.warn(`Urd: fant ikke sidefilen '${entry.file}' - viser tom side`);
+    page = { schemaVersion: 3, meta: { id: entry.id, title: entry.title }, sections: [] };
+  }
   document.title = `${page.meta.title} - ${site.site.title}`;
 
   const preview = new URLSearchParams(location.search).get('preview') === '1';

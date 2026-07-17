@@ -20,6 +20,13 @@ ikke slipp; alt samles i 0.5.0 ved fasegaten.
 - Tekstboks: tekstblokk-variant der innholdet ligger i et kort med temaets flatefarge, kantlinje og avrundede hjørner. Valgfritt additivt `box`-felt på tekstblokkens props; eldre data rendres uendret.
 - Blokker-panelet er gruppert: Tekst (Tekst, Tekstboks) og Former (Strek, Pil, Sirkel, Rektangel, Trekant) som grupper, med Knapp og Bilde imellom.
 
+### 0.5.2.2 - feilretting av ny side-flyten - 17. juli 2026
+- KRITISK: site-utkastet nådde aldri forhåndsvisningen etter panelomleggingen (postMessage tåler ikke Svelte-reaktive objekter og kastet DataCloneError). Dette knakk hele ny side-flyten: siden ble registrert, men utkastet ble aldri opprettet, forhåndsvisningen ble stående på forsiden, og nav/tema-endringer vistes ikke live. Alt går nå gjennom et rent snapshot.
+- Forhåndsvisningen får alltid sidedata fra editoren for upubliserte sider (serveren kjenner dem ikke og falt tilbake til forsiden).
+- Publisering skriver alltid sidefilen for nye sider, også uten utkast - en registrert side uten fil ville gitt besøkende en død adresse.
+- Motoren viser en tom side (med varsel i konsollen) i stedet for å krasje om en sidefil mangler.
+- Sider- og Nav-panelradene holder seg på én linje (verktøyknappene brøt om).
+
 ### 0.5.2 - sider, nav og tema (M2) - 17. juli 2026
 - Sider-panelet: opprett nye sider (starter tomme, legges automatisk i menyen), gi sider nytt navn og ny adresse, og slett sider (forsiden er fredet; Ctrl+Z angrer alt frem til publisering).
 - Nav-panelet: rediger menyen (tekst, mål: side eller ekstern lenke, rekkefølge, fjern) og logoen (tekst eller bilde-URL). Alt vises live i forhåndsvisningen.

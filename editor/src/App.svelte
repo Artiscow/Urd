@@ -84,6 +84,15 @@
   }
 
   /**
+   * Site-utkastet til forhåndsvisningen. ALLTID via denne: siteDraft er
+   * en Svelte-proxy, og postMessage (structured clone) kaster
+   * DataCloneError på proxier - $state.snapshot gir et rent objekt.
+   */
+  function pushSiteToPreview() {
+    bridge?.sendSite($state.snapshot(siteDraft));
+  }
+
+  /**
    * Nypubliserte sider som ennå ikke finnes på serveren: utkastet beholdes
    * som kilde til deployen er ferdig, men skal ikke telle som «upublisert».
    * Ryddes automatisk når siden lastes fra serveren første gang.
@@ -134,7 +143,7 @@
     grid = { snap: true, ...siteDraft.grid };
     updateDirty();
     updateAttention();
-    bridge?.sendSite(siteDraft);
+    pushSiteToPreview();
     // Angring kan fjerne siden man står på (angret sideopprettelse):
     // da byttes det til forsiden i stedet for å bli stående i løse luften.
     if (!siteDraft.pages.some((p) => p.id === pageId)) {
@@ -257,7 +266,7 @@
     siteStore.data.grid = { ...siteStore.data.grid, [field]: value };
     siteStore.save();
     updateDirty();
-    bridge?.sendSite(siteStore.data);
+    pushSiteToPreview();
     // sendSite rerendrer siden; slå grid-visningen på igjen etterpå
     // (postMessage er ordnet, så dette ankommer etter rerenderingen).
     if (activePanel === 'Grid') bridge?.sendShowGrid(true);
@@ -362,8 +371,11 @@
   /** Motoren i iframen lytter nå: send utkast og gjeldende editor-tilstand. */
   async function onReady() {
     await pageLoading;
-    if (siteStore.hasDraft()) bridge?.sendSite(siteStore.data);
-    if (store.hasDraft()) bridge?.sendPage(pageId, store.data);
+    if (siteStore.hasDraft()) pushSiteToPreview();
+    // Upubliserte sider finnes ikke på serveren (iframen faller tilbake
+    // til forsiden): editorens data er kilden og må alltid sendes.
+    const unpublished = !site.pages.some((p) => p.id === pageId);
+    if (store.hasDraft() || unpublished) bridge?.sendPage(pageId, store.data);
     if (!chromeVisible) bridge?.sendChrome(false);
     if (activePanel === 'Grid') bridge?.sendShowGrid(true);
   }
@@ -386,7 +398,7 @@
     fn();
     siteStore.save();
     updateDirty();
-    bridge?.sendSite(siteDraft);
+    pushSiteToPreview();
   }
 
   /* ---------- Sider-panelet ---------- */
@@ -825,7 +837,7 @@
     grid = { snap: true, ...siteDraft.grid };
     updateDirty();
     status = '';
-    bridge?.sendSite(siteDraft);
+    pushSiteToPreview();
     // Forkasting kan fjerne siden man står på (upublisert ny side).
     if (!siteDraft.pages.some((p) => p.id === pageId)) {
       selectPage(siteDraft.pages[0].id);
@@ -844,8 +856,9 @@
     // ALLE sider med utkast publiseres, ikke bare den man står på.
     for (const entry of siteDraft.pages) {
       const key = `urd-draft-${entry.id}`;
+      const isNew = pendingPublished.has(entry.id) || !site.pages.some((p) => p.id === entry.id);
       let page = null;
-      if (entry.id === pageId && store.hasDraft()) {
+      if (entry.id === pageId && (store.hasDraft() || isNew)) {
         page = store.data;
       } else if (entry.id !== pageId) {
         const raw = localStorage.getItem(key);
@@ -855,6 +868,9 @@
           } catch { /* korrupt utkast hoppes over */ }
         }
       }
+      // En ny side skal ALDRI publiseres uten sidefil (besøkende ville
+      // fått en død adresse): mangler utkastet, publiseres en blank side.
+      if (!page && isNew) page = blankPage(entry);
       if (!page) continue;
       // Upubliserte bilder blir egne filer i media/ i samme commit.
       files.push(...materializeImages(page));
@@ -862,7 +878,6 @@
       publishedTitles.push(entry.title);
       // Nye sider finnes ikke på serveren før deployen er ferdig: utkastet
       // beholdes som kilde til da, og ryddes automatisk ved neste besøk.
-      const isNew = pendingPublished.has(entry.id) || !site.pages.some((p) => p.id === entry.id);
       if (isNew) newPageIds.push(entry.id);
       else draftKeys.push(key);
     }
@@ -1034,11 +1049,15 @@
                     {:else}
                       <input class="page-slug" value={p.path.slice(1)} title="Adressen (dinside.no/…)"
                         onchange={(e) => setPageSlug(p, e.target.value)} />
-                      <button class="ghost row-tool" title="Slett siden (Ctrl+Z angrer)"
-                        onclick={() => deletePage(p)}>×</button>
                     {/if}
-                    <button class="ghost row-tool" title="Åpne siden i editoren"
-                      disabled={p.id === pageId} onclick={() => selectPage(p.id)}>→</button>
+                    <span class="row-tools">
+                      <button class="ghost row-tool" title="Åpne siden i editoren"
+                        disabled={p.id === pageId} onclick={() => selectPage(p.id)}>→</button>
+                      {#if p.path !== '/'}
+                        <button class="ghost row-tool" title="Slett siden (Ctrl+Z angrer)"
+                          onclick={() => deletePage(p)}>×</button>
+                      {/if}
+                    </span>
                   </div>
                 {/each}
                 <hr class="gridmenu-divider" />
@@ -1064,8 +1083,17 @@
                 <hr class="gridmenu-divider" />
                 {#each siteDraft.nav.items as item, i}
                   <div class="nav-row">
-                    <input value={item.label} title="Teksten i menyen"
-                      oninput={(e) => setNavLabel(i, e.target.value)} />
+                    <span class="nav-line">
+                      <input value={item.label} title="Teksten i menyen"
+                        oninput={(e) => setNavLabel(i, e.target.value)} />
+                      <span class="row-tools">
+                        <button class="ghost row-tool" onclick={() => moveNavItem(i, -1)} disabled={i === 0}>↑</button>
+                        <button class="ghost row-tool" onclick={() => moveNavItem(i, 1)}
+                          disabled={i === siteDraft.nav.items.length - 1}>↓</button>
+                        <button class="ghost row-tool" title="Fjern fra menyen (siden består)"
+                          onclick={() => removeNavItem(i)}>×</button>
+                      </span>
+                    </span>
                     <select value={item.page ?? '__href'} title="Hvor lenken går"
                       onchange={(e) => setNavTarget(i, e.target.value)}>
                       {#each siteDraft.pages as p (p.id)}
@@ -1077,13 +1105,6 @@
                       <input value={item.href ?? ''} placeholder="https://…"
                         onchange={(e) => setNavHref(i, e.target.value)} />
                     {/if}
-                    <span class="row-tools">
-                      <button class="ghost row-tool" onclick={() => moveNavItem(i, -1)} disabled={i === 0}>↑</button>
-                      <button class="ghost row-tool" onclick={() => moveNavItem(i, 1)}
-                        disabled={i === siteDraft.nav.items.length - 1}>↓</button>
-                      <button class="ghost row-tool" title="Fjern fra menyen (siden består)"
-                        onclick={() => removeNavItem(i)}>×</button>
-                    </span>
                   </div>
                 {/each}
                 <button class="ghost" onclick={addNavItem}>+ Nytt menypunkt</button>
@@ -1453,10 +1474,8 @@
   }
 
   /* Sider- og nav-radene: tittel/etikett tar plassen, verktøyene er smale */
-  .page-row,
-  .nav-row {
+  .page-row {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     gap: 0.35rem;
   }
@@ -1466,13 +1485,28 @@
     padding-left: 0.4rem;
   }
 
+  .nav-row {
+    display: grid;
+    gap: 0.3rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
+  }
+
+  .nav-line {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
   .page-title,
-  .nav-row input {
-    flex: 1 1 7rem;
+  .nav-line input {
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .page-slug {
-    flex: 0 1 6rem;
+    flex: 0 0 5.5rem;
+    min-width: 0;
     opacity: 0.8;
   }
 
@@ -1484,6 +1518,7 @@
   .row-tools {
     display: flex;
     gap: 0.2rem;
+    flex-shrink: 0;
   }
 
   .row-tool {
