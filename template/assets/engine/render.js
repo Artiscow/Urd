@@ -5,8 +5,14 @@
  * render-feil gir nøytrale plassholdere (blokker) eller hoppes over
  * (bakgrunnslag er dekorative) - siden krasjer aldri av dårlig data.
  *
- * v0.2 rendrer kun desktop-layouten. Mobil (auto-avledet stabling og
- * manuelle mobil-frames) kommer i v0.4.
+ * To viewporter (opts.viewport):
+ *  - 'desktop': absolutt posisjonering fra frames.desktop.
+ *  - 'mobile' med responsive.mobile.mode 'auto': blokkene rendres som
+ *    vanlig dokumentflyt i én kolonne, sortert i leserekkefølge
+ *    (stackOrder); dekor-blokker utelates. Tekst får naturlig høyde.
+ *  - 'mobile' med mode 'manual': absolutt fra frames.mobile (en null
+ *    der faller tilbake til desktop-framen), og seksjonshøyden beregnes
+ *    fra nederste mobil-frame.
  */
 import { lift } from './migrate.js';
 
@@ -33,13 +39,28 @@ export function frameToCss(frame) {
 }
 
 /**
+ * Leserekkefølgen for auto-avledet mobil-stabling: sortert på desktop-y,
+ * deretter x; dekor-blokker utelates. Ren funksjon, testet.
+ *
+ * @param {Array<object>} blocks Seksjonens blokker
+ * @returns {Array<object>} Blokkene som skal stables, i rekkefølge
+ */
+export function stackOrder(blocks) {
+  return blocks
+    .filter((block) => !block.decor)
+    .slice()
+    .sort((a, b) =>
+      (a.frames.desktop.y - b.frames.desktop.y) || (a.frames.desktop.x - b.frames.desktop.x));
+}
+
+/**
  * Render en hel side inn i root. Hver seksjon får sitt eget <section>-
  * element, slik at renderSection kan rerendre én seksjon alene senere.
  *
  * @param {object} page Sidefil (content/pages/*.json), allerede parset
  * @param {object} site site.json
  * @param {HTMLElement} root
- * @param {{preview?: boolean}} [opts]
+ * @param {{preview?: boolean, viewport?: 'desktop'|'mobile'}} [opts]
  */
 export function renderPage(page, site, root, opts = {}) {
   root.replaceChildren();
@@ -58,12 +79,13 @@ export function renderPage(page, site, root, opts = {}) {
  * @param {object} section Seksjonsdata
  * @param {object} site site.json
  * @param {HTMLElement} host Seksjonselementet (tømmes og bygges på nytt)
- * @param {{preview?: boolean}} [opts]
+ * @param {{preview?: boolean, viewport?: 'desktop'|'mobile'}} [opts]
  */
 export function renderSection(section, site, host, opts = {}) {
   const Urd = window.Urd;
   const grid = section.grid ?? site.grid;
-  const ctx = { site, section, grid, preview: Boolean(opts.preview) };
+  const viewport = opts.viewport ?? 'desktop';
+  const ctx = { site, section, grid, viewport, preview: Boolean(opts.preview) };
 
   host.className = 'urd-section';
   host.dataset.sectionId = section.id;
@@ -85,36 +107,76 @@ export function renderSection(section, site, host, opts = {}) {
     }
   }
 
-  let maxBottomPx = 0;
-  for (const block of section.blocks) {
-    const el = document.createElement('div');
-    el.className = 'urd-block';
-    el.dataset.blockId = block.id;
-    const frame = block.frames.desktop;
-    Object.assign(el.style, frameToCss(frame));
-    maxBottomPx = Math.max(maxBottomPx, frame.y + frame.h);
+  const mode = section.responsive?.mobile?.mode ?? 'auto';
 
-    const lifted = lift(block, Urd.blocks.get(block.type));
-    if (lifted.ok) {
-      try {
-        Urd.blocks.get(block.type).render(el, lifted.props, ctx);
-      } catch (err) {
-        console.warn(`Urd: blokk '${block.type}' feilet under render`, err);
-        renderPlaceholder(el, block.type);
-      }
-    } else {
-      renderPlaceholder(el, block.type);
+  if (viewport === 'mobile' && mode !== 'manual') {
+    // Auto-avledet: vanlig flyt i én kolonne, tekst får naturlig høyde.
+    const flow = document.createElement('div');
+    flow.className = 'urd-flow';
+    for (const block of stackOrder(section.blocks)) {
+      const el = document.createElement('div');
+      el.className = 'urd-block urd-block-flow';
+      el.dataset.blockId = block.id;
+      if (block.type !== 'text') el.style.height = `${block.frames.desktop.h}px`;
+      if (block.frames.desktop.rot) el.style.transform = `rotate(${block.frames.desktop.rot}deg)`;
+      renderBlock(Urd, el, block, ctx);
+      flow.appendChild(el);
     }
-    host.appendChild(el);
+    host.appendChild(flow);
+    host.style.minHeight = 'auto';
+  } else {
+    // Absolutt posisjonering: desktop-frames, eller mobil-frames i
+    // manuell modus (null faller tilbake til desktop-framen).
+    let maxBottomPx = 0;
+    for (const block of section.blocks) {
+      const el = document.createElement('div');
+      el.className = 'urd-block';
+      el.dataset.blockId = block.id;
+      const frame = viewport === 'mobile'
+        ? (block.frames.mobile ?? block.frames.desktop)
+        : block.frames.desktop;
+      Object.assign(el.style, frameToCss(frame));
+      maxBottomPx = Math.max(maxBottomPx, frame.y + frame.h);
+      renderBlock(Urd, el, block, ctx);
+      host.appendChild(el);
+    }
+
+    if (viewport === 'mobile') {
+      // Mobil manuell: høyden følger nederste mobil-frame (ren funksjon
+      // av lagrede data - identisk i editor og produksjon).
+      host.style.minHeight = `${maxBottomPx}px`;
+    } else {
+      // Seksjonshøyden er brukerens: blokker kan bevisst henge utover
+      // kanten (seksjoner klipper aldri). Uten satt høyde brukes
+      // blokkenes utstrekning.
+      host.style.minHeight = section.size?.minHeight ?? `${maxBottomPx}px`;
+    }
   }
 
-  // Seksjonshøyden er brukerens: blokker kan bevisst henge utover kanten
-  // (seksjoner klipper aldri). Uten satt høyde brukes blokkenes utstrekning.
-  host.style.minHeight = section.size?.minHeight ?? `${maxBottomPx}px`;
+  // Mobil-tilsyn: redaksjonell markering, kun i preview (besøkende
+  // ignorerer flagget, se docs/SKJEMA.md#mobil-tilsyn).
+  if (ctx.preview && section.responsive?.mobile?.attention?.needed) {
+    host.classList.add('urd-attention');
+  }
 
   // I preview-modus kobles editeringslaget (dra/resize/slett) på etter
   // hver rendering. Satt av urd.js; finnes aldri hos besøkende.
   if (ctx.preview) window.UrdPreviewEdit?.enhanceSection(host, section, grid);
+}
+
+/** Felles blokk-rendering med migrering og plassholder-fallback. */
+function renderBlock(Urd, el, block, ctx) {
+  const lifted = lift(block, Urd.blocks.get(block.type));
+  if (lifted.ok) {
+    try {
+      Urd.blocks.get(block.type).render(el, lifted.props, ctx);
+    } catch (err) {
+      console.warn(`Urd: blokk '${block.type}' feilet under render`, err);
+      renderPlaceholder(el, block.type);
+    }
+  } else {
+    renderPlaceholder(el, block.type);
+  }
 }
 
 /**

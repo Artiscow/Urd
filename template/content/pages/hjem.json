@@ -330,14 +330,7 @@
               "z": 4,
               "rot": 0
             },
-            "mobile": {
-              "x": 4.17,
-              "y": 112,
-              "w": 41.67,
-              "h": 16,
-              "z": 1,
-              "rot": 0
-            }
+            "mobile": null
           }
         },
         {
@@ -435,7 +428,7 @@
       ],
       "responsive": {
         "mobile": {
-          "mode": "manual",
+          "mode": "auto",
           "attention": null
         }
       }

@@ -6,10 +6,11 @@ Fullførte punkter fra v0.2 og v0.3 er ryddet bort ved 0.3.0-slippet (17. juli 2
 
 ## Neste opp (v0.4 «Responsivt»)
 
-- [ ] Mobilvisning i editoren (breakpoint-bytte)
-- [ ] Auto-avledet mobil-stabling (én kolonne i leserekkefølge)
-- [ ] Manuelle mobil-frames + mobil-tilsyn-flagget ende-til-ende (regler i SKJEMA.md)
-- [ ] «Dekor»-flagg på blokker (streker/sirkler som stabler dårlig i auto-avledet mobil-layout)
+- [x] Mobilvisning i editoren (💻/📱-toggle; iframen smales til 390px, motorens matchMedia bytter modus selv)
+- [x] Auto-avledet mobil-stabling (ekte flyt i én kolonne i leserekkefølge, tekst får naturlig høyde; besøkende får det automatisk via matchMedia)
+- [x] Manuelle mobil-frames (første mobil-dra materialiserer hele seksjonen) + mobil-tilsyn-flagget ende-til-ende (gul markering, teller-chip, ✓ gjennomgått, ↺ tilbake til auto)
+- [x] «Dekor»-flagg på blokker (✦-toggle; former er dekor som standard og utelates fra auto-stabling)
+- [ ] Testrunde på urdweb (porten: desktop-side ser fornuftig ut på mobil uten inngripen; tilsyn-flagget fanger drift) før 0.4.0-bump
 
 ## Til v0.5 (paneler og UI-omlegging)
 
@@ -44,7 +45,7 @@ Fullførte punkter fra v0.2 og v0.3 er ryddet bort ved 0.3.0-slippet (17. juli 2
 
 ## Funksjoner og Forslag
 
-
+    
 ## Bugs og kjente svakheter
 
 - [ ] `python3 -m http.server` ruter ikke `path`-ene fra sideregisteret (kun `/` fungerer); dokumentert begrensning (`?page=<id>` er lokal-fallback)

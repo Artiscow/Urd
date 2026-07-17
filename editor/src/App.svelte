@@ -39,6 +39,33 @@
   /** Ren forhåndsvisning: skjuler alle editeringshåndtak i iframen */
   let chromeVisible = $state(true);
 
+  /** Editorens visning: 'desktop' eller 'mobile' (iframe smales til
+   *  mobilbredde; motorens matchMedia bytter modus selv). */
+  let viewMode = $state('desktop');
+  /** Antall seksjoner på siden som trenger mobil-tilsyn */
+  let attentionCount = $state(0);
+
+  function updateAttention() {
+    attentionCount = store?.data.sections
+      .filter((s) => s.responsive?.mobile?.attention?.needed).length ?? 0;
+  }
+
+  /**
+   * Desktop-strukturendring i en manuelt mobil-tilpasset seksjon:
+   * flagg seksjonen for mobil-tilsyn (regler i docs/SKJEMA.md#mobil-tilsyn).
+   */
+  function markDesktopChange(section, reason) {
+    if (!section || section.responsive?.mobile?.mode !== 'manual') return;
+    if (section.responsive.mobile.attention?.needed) return;
+    section.responsive.mobile.attention = {
+      needed: true,
+      reason,
+      since: new Date().toISOString(),
+    };
+    updateAttention();
+    bridge?.sendAttention(section.id, true);
+  }
+
   let store = null;
   let siteStore = null;
   let bridge = null;
@@ -81,6 +108,7 @@
     siteStore.save();
     grid = { snap: true, ...siteStore.data.grid };
     updateDirty();
+    updateAttention();
     bridge?.sendSite(siteStore.data);
     bridge?.sendPage(pageId, store.data);
   }
@@ -223,6 +251,7 @@
       activeSectionId = null;
       sectionGrid = null;
       updateDirty();
+      updateAttention();
       status = '';
     })();
     await pageLoading;
@@ -245,6 +274,10 @@
       onReady,
       onNavigate,
       onAddBlock: (msg) => insertBlock(msg.sectionId, msg.block),
+      onMobileManual: handleMobileManual,
+      onMobileAuto: handleMobileAuto,
+      onReviewDone: handleReviewDone,
+      onBlockFlag: handleBlockFlag,
     });
   }
 
@@ -291,7 +324,62 @@
     // coalesce: automatisk vekst under skriving hører til samme
     // angre-steg som selve skrivingen.
     pushHistory(msg.coalesce ? `edit:${msg.blockId}` : 'move-block');
-    block.frames.desktop = msg.frame;
+    const key = msg.frameKey === 'mobile' ? 'mobile' : 'desktop';
+    block.frames[key] = msg.frame;
+    if (key === 'desktop') markDesktopChange(section, 'desktop-endret-etter-mobil');
+    store.save();
+    updateDirty();
+  }
+
+  /** Seksjon materialisert i mobilvisning: manuell modus + alle frames. */
+  function handleMobileManual(msg) {
+    const section = store.data.sections.find((s) => s.id === msg.sectionId);
+    if (!section) return;
+    pushHistory('mobile-manual');
+    for (const { blockId, frame } of msg.frames) {
+      const block = section.blocks.find((b) => b.id === blockId);
+      if (block) block.frames.mobile = frame;
+    }
+    section.responsive = {
+      ...(section.responsive ?? {}),
+      mobile: { mode: 'manual', attention: section.responsive?.mobile?.attention ?? null },
+    };
+    store.save();
+    updateDirty();
+    // Ingen sendSection: iframen har allerede konvertert seg selv.
+  }
+
+  /** ↺ i mobilvisning: tilbake til auto-avledet layout. */
+  function handleMobileAuto(msg) {
+    const section = store.data.sections.find((s) => s.id === msg.sectionId);
+    if (!section) return;
+    pushHistory('mobile-auto');
+    for (const block of section.blocks) block.frames.mobile = null;
+    section.responsive = { ...(section.responsive ?? {}), mobile: { mode: 'auto', attention: null } };
+    store.save();
+    updateDirty();
+    updateAttention();
+    bridge?.sendSection(pageId, section);
+  }
+
+  /** ✓ i mobilvisning: mobil-layouten er gjennomgått. */
+  function handleReviewDone(msg) {
+    const section = store.data.sections.find((s) => s.id === msg.sectionId);
+    if (!section?.responsive?.mobile) return;
+    pushHistory('review-done');
+    section.responsive.mobile.attention = null;
+    store.save();
+    updateDirty();
+    updateAttention();
+  }
+
+  /** Dekor-flagget: blokken utelates fra auto-avledet mobil-layout. */
+  function handleBlockFlag(msg) {
+    const section = store.data.sections.find((s) => s.id === msg.sectionId);
+    const block = section?.blocks.find((b) => b.id === msg.blockId);
+    if (!block) return;
+    pushHistory('decor');
+    block.decor = msg.decor;
     store.save();
     updateDirty();
   }
@@ -347,6 +435,7 @@
     if (!section) return;
     pushHistory('delete-block');
     section.blocks = section.blocks.filter((b) => b.id !== msg.blockId);
+    markDesktopChange(section, 'blokk-slettet');
     store.save();
     updateDirty();
     bridge?.sendSection(pageId, section);
@@ -358,11 +447,11 @@
   const BLOCK_DEFAULTS = {
     text: { type: 'text', props: { html: '<p>Ny tekst</p>', align: 'left' }, w: 33, h: 28 },
     button: { type: 'button', props: { label: 'Ny knapp', page: null, href: '#', style: 'primary' }, w: 20, h: 36 },
-    'shape-line': { type: 'shape', props: { kind: 'line', color: 'accent', thickness: 2, fill: null }, w: 25, h: 8 },
-    'shape-arrow': { type: 'shape', props: { kind: 'arrow', color: 'accent', thickness: 2, fill: null }, w: 25, h: 16 },
-    'shape-circle': { type: 'shape', props: { kind: 'circle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
-    'shape-rect': { type: 'shape', props: { kind: 'rect', color: 'accent', thickness: 2, fill: null }, w: 20, h: 110 },
-    'shape-triangle': { type: 'shape', props: { kind: 'triangle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
+    'shape-line': { type: 'shape', decor: true, props: { kind: 'line', color: 'accent', thickness: 2, fill: null }, w: 25, h: 8 },
+    'shape-arrow': { type: 'shape', decor: true, props: { kind: 'arrow', color: 'accent', thickness: 2, fill: null }, w: 25, h: 16 },
+    'shape-circle': { type: 'shape', decor: true, props: { kind: 'circle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
+    'shape-rect': { type: 'shape', decor: true, props: { kind: 'rect', color: 'accent', thickness: 2, fill: null }, w: 20, h: 110 },
+    'shape-triangle': { type: 'shape', decor: true, props: { kind: 'triangle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
   };
 
   function buildBlock(kind) {
@@ -371,6 +460,9 @@
       id: `blk-${crypto.randomUUID().slice(0, 8)}`,
       type: d.type,
       version: 1,
+      // Former er dekor som standard: de utelates fra auto-avledet
+      // mobil-layout (kan skrus av per blokk med ✦-togglen).
+      decor: Boolean(d.decor),
       props: structuredClone(d.props),
       animation: null,
       frames: { desktop: { x: 4, y: 8, w: d.w, h: d.h, z: 1, rot: 0 }, mobile: null },
@@ -392,6 +484,7 @@
     if (!section) return;
     pushHistory('add-block');
     section.blocks.push(block);
+    markDesktopChange(section, 'blokk-lagt-til');
     store.save();
     updateDirty();
     bridge?.sendSection(pageId, section);
@@ -563,10 +656,18 @@
           <option value={p.id}>{p.title}</option>
         {/each}
       </select>
+
+      <span class="viewswitch">
+        <button class="ghost" class:active={viewMode === 'desktop'}
+          onclick={() => (viewMode = 'desktop')} title="Desktop-visning">💻</button>
+        <button class="ghost" class:active={viewMode === 'mobile'}
+          onclick={() => (viewMode = 'mobile')} title="Mobilvisning (390px)">📱</button>
+      </span>
     {/if}
 
     {#if site}
-      <span class="palette">
+      <span class="palette" class:locked={viewMode === 'mobile'}
+        title={viewMode === 'mobile' ? 'Bytt til desktop-visning for å legge til innhold' : undefined}>
         <button class="ghost" onclick={() => addBlock('text')} title="Ny tekstblokk">+ Tekst</button>
         <button class="ghost" onclick={() => addBlock('button')} title="Ny knapp">+ Knapp</button>
         <label class="ghost filepick" title="Nytt bilde (komprimeres automatisk til webp)">
@@ -620,6 +721,13 @@
       </details>
     {/if}
 
+    {#if attentionCount > 0}
+      <button class="badge attention" onclick={() => (viewMode = 'mobile')}
+        title="Desktop-endringer kan ha påvirket håndjustert mobil-layout - klikk for å se over">
+        📱 {attentionCount} {attentionCount === 1 ? 'seksjon' : 'seksjoner'} trenger mobil-tilsyn
+      </button>
+    {/if}
+
     {#if dirty}
       <span class="badge">Upubliserte endringer</span>
     {/if}
@@ -651,12 +759,14 @@
   </header>
 
   {#if site}
-    <iframe
-      bind:this={iframeEl}
-      title="Forhåndsvisning"
-      src={`/?page=${pageId}&preview=1`}
-      onload={onIframeLoad}
-    ></iframe>
+    <div class="frame-wrap" class:mobile={viewMode === 'mobile'}>
+      <iframe
+        bind:this={iframeEl}
+        title="Forhåndsvisning"
+        src={`/?page=${pageId}&preview=1`}
+        onload={onIframeLoad}
+      ></iframe>
+    </div>
   {:else}
     <p class="loading">Laster…</p>
   {/if}
@@ -885,11 +995,56 @@
     color: #fff;
   }
 
+  .frame-wrap {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+
   iframe {
     flex: 1;
     width: 100%;
+    height: 100%;
     border: 0;
     background: #fff;
+  }
+
+  /* Mobilvisning: iframen smales til mobilbredde; motorens matchMedia
+     bytter til mobil-rendering av seg selv */
+  .frame-wrap.mobile {
+    justify-content: center;
+    background: #08090d;
+    padding: 12px 0;
+  }
+
+  .frame-wrap.mobile iframe {
+    flex: 0 0 390px;
+    width: 390px;
+    border-radius: 12px;
+  }
+
+  .viewswitch {
+    display: flex;
+    gap: 2px;
+  }
+
+  .viewswitch .active {
+    border-color: var(--urd-color-accent, #7c5cff);
+    background: rgb(124 92 255 / 15%);
+  }
+
+  .palette.locked {
+    opacity: 0.35;
+    pointer-events: none;
+  }
+
+  .badge.attention {
+    background: rgb(226 184 74 / 20%);
+    color: #e2b84a;
+    border: 0;
+    font: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
   }
 
   .loading {

@@ -32,7 +32,9 @@ export const textBlock = {
     // Klikk-og-skriv: i preview-modus (inne i editorens iframe) er teksten
     // direkte redigerbar, og hver endring meldes til editoren, som eier
     // utkastet. Blokk-id ligger på blokk-elementet (satt av render.js).
-    if (ctx.preview) {
+    // Kun i desktopvisning: mobilvisningen er layoutjustering, og
+    // tekstvekst skriver desktop-framen.
+    if (ctx.preview && ctx.viewport !== 'mobile') {
       content.contentEditable = 'true';
       content.addEventListener('input', () => {
         const post = (msg) => window.parent?.postMessage(msg, location.origin);

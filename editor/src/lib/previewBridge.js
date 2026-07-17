@@ -8,7 +8,11 @@
  *                  { type: 'urd-preview-full', pageId, page }  (hel side)
  *                  { type: 'urd-site', site }                  (site-utkast: grid/tema/nav)
  *   side → editor: { type: 'urd-edit', sectionId, blockId, props }  (klikk-og-skriv)
- *                  { type: 'urd-move', sectionId, blockId, frame }  (dra/resize)
+ *                  { type: 'urd-move', sectionId, blockId, frame, frameKey }  (dra/resize)
+ *                  { type: 'urd-mobile-manual', sectionId, frames } (seksjon materialisert)
+ *                  { type: 'urd-mobile-auto', sectionId }           (tilbake til auto)
+ *                  { type: 'urd-review-done', sectionId }           (mobil gjennomgått)
+ *                  { type: 'urd-block-flag', sectionId, blockId, decor }
  *                  { type: 'urd-delete', sectionId, blockId }
  *                  { type: 'urd-add-section', index, section }
  *                  { type: 'urd-move-section', sectionId, dir }
@@ -45,6 +49,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-ready') handlers.onReady?.(msg);
     if (msg?.type === 'urd-navigate') handlers.onNavigate?.(msg);
     if (msg?.type === 'urd-add-block') handlers.onAddBlock?.(msg);
+    if (msg?.type === 'urd-mobile-manual') handlers.onMobileManual?.(msg);
+    if (msg?.type === 'urd-mobile-auto') handlers.onMobileAuto?.(msg);
+    if (msg?.type === 'urd-review-done') handlers.onReviewDone?.(msg);
+    if (msg?.type === 'urd-block-flag') handlers.onBlockFlag?.(msg);
   };
   window.addEventListener('message', listener);
 
@@ -68,6 +76,9 @@ export function createPreviewBridge(iframe, handlers = {}) {
     },
     sendPlaceBlock(block) {
       post({ type: 'urd-place-block', block });
+    },
+    sendAttention(sectionId, needed) {
+      post({ type: 'urd-attention', sectionId, needed });
     },
     destroy() {
       window.removeEventListener('message', listener);

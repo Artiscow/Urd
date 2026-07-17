@@ -5,14 +5,21 @@
  * Lastes KUN i preview-modus (dynamisk import i urd.js) - besøkende
  * laster aldri denne filen. Endringer meldes til editoren, som eier
  * utkastet:
- *   side → editor: { type: 'urd-move',   sectionId, blockId, frame }
+ *   side → editor: { type: 'urd-move',   sectionId, blockId, frame, frameKey }
  *                  { type: 'urd-delete', sectionId, blockId }
  *                  { type: 'urd-add-section', index, section }
  *                  { type: 'urd-move-section', sectionId, dir }
  *                  { type: 'urd-delete-section', sectionId }
  *                  { type: 'urd-section-size', sectionId, minHeight }
+ *                  { type: 'urd-mobile-manual', sectionId, frames }  (seksjon materialisert)
+ *                  { type: 'urd-mobile-auto', sectionId }            (tilbake til auto)
+ *                  { type: 'urd-review-done', sectionId }            (mobil gjennomgått)
+ *                  { type: 'urd-block-flag', sectionId, blockId, decor }
  */
 import { frameToCss } from './render.js';
+
+/** Mobilvisning? Motoren setter body-klassen ut fra breakpointet. */
+const isMobile = () => document.body.classList.contains('urd-mobile');
 
 /**
  * Kobler editeringshåndtak på alle blokkene i en rendret seksjon.
@@ -28,7 +35,8 @@ export function enhanceSection(host, section, grid) {
     if (block) enhanceBlock(el, block, section, grid, host);
   }
   addSectionToolbar(host, section, grid);
-  addSectionHeightHandle(host, section, grid);
+  // Strukturendring (seksjonshøyde) hører til desktopvisningen.
+  if (!isMobile()) addSectionHeightHandle(host, section, grid);
   // Vedvarende grid-visning (grid-menyen i editoren er åpen) skal
   // overleve rerendringer av seksjonen.
   if (gridOverlaysOn) showGridOverlay(host, grid).classList.add('urd-grid-persistent');
@@ -131,6 +139,8 @@ function addSectionHeightHandle(host, section, grid) {
  */
 export function enhancePage(root, page, site) {
   root.querySelectorAll('.urd-add-section').forEach((el) => el.remove());
+  // Mobilvisning er justering og tilsyn, ikke strukturbygging.
+  if (isMobile()) return;
   const hosts = [...root.querySelectorAll(':scope > .urd-section')];
   hosts.forEach((el, i) => root.insertBefore(makeSectionAdder(i), el));
   root.appendChild(makeSectionAdder(hosts.length));
@@ -169,8 +179,8 @@ function makeSectionAdder(index) {
   return bar;
 }
 
-/** Verktøylinje øverst til høyre i seksjonen: flytt opp/ned, tilpass
- *  høyde, slett. */
+/** Verktøylinje øverst til høyre i seksjonen. Desktop: flytt opp/ned,
+ *  tilpass høyde, slett. Mobil: gjennomgått (✓) og tilbake til auto (↺). */
 function addSectionToolbar(host, section, grid) {
   const bar = document.createElement('div');
   bar.className = 'urd-section-toolbar';
@@ -183,20 +193,91 @@ function addSectionToolbar(host, section, grid) {
     bar.appendChild(btn);
   };
 
-  mk('↑', 'Flytt seksjonen opp', () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
-  mk('↓', 'Flytt seksjonen ned', () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
-  mk('⤓', 'Tilpass høyden til innholdet', () => {
-    const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
-    const minHeight = `${Math.max(grid.size * 3, maxBottom + grid.size)}px`;
-    section.size = { ...section.size, minHeight };
-    host.style.minHeight = minHeight;
-    post({ type: 'urd-section-size', sectionId: section.id, minHeight });
-  });
-  mk('×', 'Slett seksjonen (Ctrl+Z angrer)', () => {
-    post({ type: 'urd-delete-section', sectionId: section.id });
-  });
+  if (isMobile()) {
+    const mobile = section.responsive?.mobile;
+    if (mobile?.attention?.needed) {
+      mk('✓', 'Sett mobil-layouten som gjennomgått', (event) => {
+        section.responsive.mobile.attention = null;
+        host.classList.remove('urd-attention');
+        event.target.remove();
+        post({ type: 'urd-review-done', sectionId: section.id });
+      });
+    }
+    if (mobile?.mode === 'manual') {
+      mk('↺', 'Tilbakestill til automatisk mobil-layout', () => {
+        post({ type: 'urd-mobile-auto', sectionId: section.id });
+      });
+    }
+  } else {
+    mk('↑', 'Flytt seksjonen opp', () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
+    mk('↓', 'Flytt seksjonen ned', () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
+    mk('⤓', 'Tilpass høyden til innholdet', () => {
+      const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
+      const minHeight = `${Math.max(grid.size * 3, maxBottom + grid.size)}px`;
+      section.size = { ...section.size, minHeight };
+      host.style.minHeight = minHeight;
+      post({ type: 'urd-section-size', sectionId: section.id, minHeight });
+    });
+    mk('×', 'Slett seksjonen (Ctrl+Z angrer)', () => {
+      post({ type: 'urd-delete-section', sectionId: section.id });
+    });
+  }
 
-  host.appendChild(bar);
+  if (bar.childElementCount) host.appendChild(bar);
+}
+
+/**
+ * Første håndjustering i mobilvisning: seksjonen går til manuell modus,
+ * og ALLE blokkene får konkrete mobil-frames lest fra flyt-posisjonene
+ * i øyeblikket (dekor-blokker, som ikke er i flyten, arver desktop-
+ * framen som utgangspunkt). DOM-en konverteres på stedet uten rerender,
+ * så et pågående dra ikke avbrytes; editoren bokfører via meldingen.
+ */
+function materializeMobile(host, section) {
+  const flow = host.querySelector(':scope > .urd-flow');
+  const hostRect = host.getBoundingClientRect();
+  const frames = [];
+  const flowEls = flow ? [...flow.querySelectorAll(':scope > .urd-block')] : [];
+
+  for (const el of flowEls) {
+    const block = section.blocks.find((b) => b.id === el.dataset.blockId);
+    if (!block) continue;
+    const r = el.getBoundingClientRect();
+    block.frames.mobile = {
+      x: Math.round(((r.left - hostRect.left) / hostRect.width) * 10000) / 100,
+      y: Math.round(r.top - hostRect.top),
+      w: Math.round((r.width / hostRect.width) * 10000) / 100,
+      h: Math.round(r.height),
+      z: block.frames.desktop.z ?? 1,
+      rot: block.frames.desktop.rot ?? 0,
+    };
+    frames.push({ blockId: block.id, frame: block.frames.mobile });
+  }
+  for (const block of section.blocks) {
+    if (!block.frames.mobile) {
+      block.frames.mobile = { ...block.frames.desktop };
+      frames.push({ blockId: block.id, frame: block.frames.mobile });
+    }
+  }
+
+  section.responsive = {
+    ...(section.responsive ?? {}),
+    mobile: { mode: 'manual', attention: section.responsive?.mobile?.attention ?? null },
+  };
+
+  // Konverter DOM-en: ut av flyten, inn i absolutt posisjonering.
+  for (const el of flowEls) {
+    const block = section.blocks.find((b) => b.id === el.dataset.blockId);
+    if (!block) continue;
+    el.classList.remove('urd-block-flow');
+    Object.assign(el.style, frameToCss(block.frames.mobile));
+    host.appendChild(el);
+  }
+  flow?.remove();
+  const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.mobile.y + b.frames.mobile.h));
+  host.style.minHeight = `${maxBottom}px`;
+
+  post({ type: 'urd-mobile-manual', sectionId: section.id, frames });
 }
 
 function post(msg) {
@@ -280,12 +361,17 @@ function showGridOverlay(host, grid) {
 function enhanceBlock(el, block, section, grid, host) {
   el.classList.add('urd-editable');
   if (block.id === selectedBlockId) el.classList.add('urd-selected');
+  if (block.decor) el.classList.add('urd-decor');
+
+  const mobile = isMobile();
+  const activeFrame = () =>
+    (mobile ? (block.frames.mobile ?? block.frames.desktop) : block.frames.desktop);
 
   const toolbar = document.createElement('div');
   toolbar.className = 'urd-edit-toolbar';
-  // Ligger blokken helt i toppen av seksjonen, ville verktøylinjen over
-  // blitt klippet av seksjonens overflow - legg den inni blokken i stedet.
-  if (block.frames.desktop.y * grid.rowHeight < 36) {
+  // Ligger blokken helt i toppen av siden, legges verktøylinjen inni
+  // blokken i stedet for over den.
+  if (activeFrame().y < 36 && !mobile) {
     toolbar.classList.add('urd-edit-toolbar-inside');
   }
 
@@ -320,26 +406,43 @@ function enhanceBlock(el, block, section, grid, host) {
     el.style.zIndex = String(z);
     post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame });
   };
-  const frontBtn = document.createElement('button');
-  frontBtn.textContent = '⬆';
-  frontBtn.title = 'Legg foran (z-orden)';
-  frontBtn.addEventListener('click', () => bumpZ(1));
-  toolbar.appendChild(frontBtn);
+  // Struktur (z-orden, dekor, sletting) redigeres i desktopvisning;
+  // mobilvisningen er ren layoutjustering.
+  if (!mobile) {
+    const frontBtn = document.createElement('button');
+    frontBtn.textContent = '⬆';
+    frontBtn.title = 'Legg foran (z-orden)';
+    frontBtn.addEventListener('click', () => bumpZ(1));
+    toolbar.appendChild(frontBtn);
 
-  const backBtn = document.createElement('button');
-  backBtn.textContent = '⬇';
-  backBtn.title = 'Legg bak (z-orden)';
-  backBtn.addEventListener('click', () => bumpZ(-1));
-  toolbar.appendChild(backBtn);
+    const backBtn = document.createElement('button');
+    backBtn.textContent = '⬇';
+    backBtn.title = 'Legg bak (z-orden)';
+    backBtn.addEventListener('click', () => bumpZ(-1));
+    toolbar.appendChild(backBtn);
 
-  const deleteBtn = document.createElement('button');
-  deleteBtn.className = 'urd-edit-delete';
-  deleteBtn.textContent = '×';
-  deleteBtn.title = 'Slett blokken (Ctrl+Z angrer)';
-  deleteBtn.addEventListener('click', () => {
-    post({ type: 'urd-delete', sectionId: section.id, blockId: block.id });
-  });
-  toolbar.appendChild(deleteBtn);
+    const decorBtn = document.createElement('button');
+    decorBtn.className = 'urd-edit-decor';
+    decorBtn.textContent = '✦';
+    decorBtn.title = 'Dekor: utelates fra automatisk mobil-layout';
+    decorBtn.classList.toggle('on', Boolean(block.decor));
+    decorBtn.addEventListener('click', () => {
+      block.decor = !block.decor;
+      decorBtn.classList.toggle('on', block.decor);
+      el.classList.toggle('urd-decor', block.decor);
+      post({ type: 'urd-block-flag', sectionId: section.id, blockId: block.id, decor: block.decor });
+    });
+    toolbar.appendChild(decorBtn);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'urd-edit-delete';
+    deleteBtn.textContent = '×';
+    deleteBtn.title = 'Slett blokken (Ctrl+Z angrer)';
+    deleteBtn.addEventListener('click', () => {
+      post({ type: 'urd-delete', sectionId: section.id, blockId: block.id });
+    });
+    toolbar.appendChild(deleteBtn);
+  }
   el.appendChild(toolbar);
 
   const resizeHandle = document.createElement('div');
@@ -361,8 +464,15 @@ function enhanceBlock(el, block, section, grid, host) {
       event.stopPropagation();
       handle.setPointerCapture(event.pointerId);
 
+      // Første håndjustering i mobilvisning: seksjonen materialiseres
+      // (auto → manuell) før draet fortsetter på samme element.
+      if (mobile && (section.responsive?.mobile?.mode ?? 'auto') !== 'manual') {
+        materializeMobile(host, section);
+      }
+      const frameKey = mobile ? 'mobile' : 'desktop';
+
       const start = { x: event.clientX, y: event.clientY };
-      const orig = { ...block.frames.desktop };
+      const orig = { ...(block.frames[frameKey] ?? block.frames.desktop) };
       // Frames er fysiske (x/w i %, y/h i px); gridet styrer KUN hva vi
       // snapper mot: kvadratiske ruter på grid.size px. Snap av gir fri
       // plassering (0,1 % / 1 px-presisjon).
@@ -399,8 +509,8 @@ function enhanceBlock(el, block, section, grid, host) {
         handle.removeEventListener('pointerup', onUp);
         overlay.remove();
         if (current.x !== orig.x || current.y !== orig.y || current.w !== orig.w || current.h !== orig.h) {
-          block.frames.desktop = current;
-          post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: current });
+          block.frames[frameKey] = current;
+          post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: current, frameKey });
         }
       };
 

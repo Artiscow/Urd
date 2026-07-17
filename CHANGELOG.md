@@ -7,6 +7,13 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 
 ## [Ulansert]
 
+### Lagt til
+- **Responsivt (v0.4-arbeidet):** besøkende på mobil (skjerm smalere enn breakpointet, standard 640px) får automatisk én-kolonne-layout: blokkene stables i leserekkefølge som ekte flyt, tekst får naturlig høyde, og dekor-blokker utelates. Motoren bytter modus live ved vindusendring.
+- Mobilvisning i editoren: 💻/📱-toggle smaler forhåndsvisningen til 390px. Mobilvisningen er layoutjustering og tilsyn (palett, strukturverktøy og tekstredigering er reservert desktopvisningen).
+- Manuelle mobil-layouts: første dra i mobilvisning setter seksjonen i manuell modus og gir alle blokkene konkrete mobil-frames (lest fra flyt-posisjonene), klare til fri justering. ↺ tilbakestiller til auto.
+- Mobil-tilsyn-flagget ende-til-ende: desktop-endringer i en håndjustert seksjon markerer den gult og teller opp i topplinjen («N seksjoner trenger mobil-tilsyn», klikk hopper til mobilvisning); ✓ på seksjonen kvitterer ut. Lagres som data og publiseres (deles mellom redaktører); besøkende påvirkes aldri.
+- Dekor-flagg (✦ på blokkverktøylinjen): blokken utelates fra automatisk mobil-layout. Nye former er dekor som standard. Valgfritt additivt skjemafelt (`decor`), ingen migrering nødvendig.
+
 ## [0.3.0] - 2026-07-17
 
 «Lerretet»: fri komposisjon på ordentlig. Alle kjerneblokkene er på plass

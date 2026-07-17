@@ -66,6 +66,21 @@ html {
   position: absolute;
 }
 
+/* Auto-avledet mobil-layout: vanlig flyt i én kolonne (render.js) */
+.urd-flow {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 90%;
+  margin: 0 auto;
+  padding: 24px 0;
+}
+
+.urd-block-flow {
+  position: static;
+}
+
 /* Plassholder for ukjente typer: nøytral, aldri ødeleggende */
 .urd-placeholder {
   display: grid;
@@ -160,6 +175,26 @@ html {
   .urd-bg-animate {
     animation: none;
   }
+}
+
+/* Mobilvisning i editoren: strukturverktøyene (add-barer, høydehåndtak)
+   skjules; mobil er layoutjustering og tilsyn */
+body.urd-mobile .urd-add-section,
+body.urd-mobile .urd-section-resize {
+  display: none !important;
+}
+
+/* Mobil-tilsyn: seksjonen trenger en gjennomgang av mobil-layouten
+   (redaksjonelt flagg, kun i preview) */
+.urd-preview .urd-attention {
+  outline: 2px solid #e2b84a;
+  outline-offset: -2px;
+}
+
+/* Dekor-toggle på blokkverktøylinjen */
+.urd-preview .urd-edit-toolbar .urd-edit-decor.on {
+  background: #e2b84a;
+  color: #1a1508;
 }
 
 /* Editeringslaget - gjelder KUN i preview-modus (body.urd-preview,

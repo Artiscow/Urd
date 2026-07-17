@@ -108,7 +108,8 @@ En seksjon er alltid den samme generiske containeren - egen størrelse, egen bak
 - **`type`** slår opp i blokkregisteret (`Urd.blocks`). Kjerneblokker: `text`, `image`, `button`, `shape` (streker - horisontale, vertikale og skrå via `rot` - sirkler, rektangler) og `logo`. Plugins kan definere flere.
 - **`props`** er typespesifikke og eies av blokkdefinisjonens versjon/migreringer.
 - **`frames`** er plassering per breakpoint, i **fysiske enheter** (fra schemaVersion 2): `x`/`w` i prosent av seksjonsbredden (flyter med skjermen), `y`/`h` i px, `z` er lagrekkefølge, `rot` er grader. Gridet i site.json er KUN et snappeverktøy ved redigering; å endre det flytter aldri innhold.
-- **`frames.mobile: null`** betyr auto-avledet mobil-layout: motoren stabler blokkene i én kolonne i leserekkefølge (sortert på desktop-`y`, deretter `x`). Et objekt er en manuell overstyring.
+- **`frames.mobile: null`** betyr auto-avledet mobil-layout: motoren rendrer blokkene som vanlig dokumentflyt i én kolonne i leserekkefølge (sortert på desktop-`y`, deretter `x`); tekst får naturlig høyde. Et objekt er en manuell overstyring.
+- **`decor`** (valgfri, standard false): dekor-blokker (typisk streker/sirkler) utelates fra auto-avledet mobil-layout. Nye formblokker får `decor: true` fra paletten.
 - **`animation`** (valgfri): `{ "type": "fade-in", "version": 1, "props": { … } }` - animasjoner er registertyper med samme migreringskontrakt (fra v0.5).
 
 ## Mobil-tilsyn
@@ -126,8 +127,8 @@ Den frie plasseringen gjør at desktop- og mobil-layout kan drifte fra hverandre
 
 Regler:
 
-1. `mode: "auto"` - hele mobil-layouten avledes automatisk. `attention` er alltid `null`; ingenting kan drifte.
-2. `mode: "manual"` - settes idet brukeren håndjusterer minst én mobil-frame i seksjonen.
+1. `mode: "auto"` - hele mobil-layouten avledes automatisk (flyt-stabling, se over). `attention` er alltid `null`; ingenting kan drifte.
+2. `mode: "manual"` - settes idet brukeren håndjusterer minst én mobil-frame i seksjonen. Da **materialiseres** ALLE blokkene i seksjonen med konkrete `frames.mobile` (lest fra flyt-posisjonene i øyeblikket), så manuelle seksjoner aldri har null-blanding (motoren tåler det likevel: null faller tilbake til desktop-framen). Seksjonshøyden på mobil beregnes fra nederste mobil-frame.
 3. I en `manual`-seksjon setter **enhver** desktop-endring (frame-endring, blokk lagt til/slettet, omorganisering) `attention.needed: true` med en maskinlesbar `reason`.
 4. Flagget nullstilles kun ved at brukeren åpner mobilvisningen for seksjonen og bekrefter «Sett som gjennomgått», eller setter seksjonen tilbake til `auto`.
 5. Flagget er **data** - det overlever økter, deles mellom redaktører og settes riktig selv om noen håndredigerer JSON.

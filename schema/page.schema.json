@@ -107,6 +107,7 @@
         "id": { "$ref": "#/$defs/id" },
         "type": { "type": "string", "minLength": 1 },
         "version": { "$ref": "#/$defs/version" },
+        "decor": { "type": "boolean", "default": false, "description": "Dekor-blokk: utelates fra auto-avledet mobil-layout" },
         "props": { "type": "object", "description": "Typespesifikke props - eies av blokkdefinisjonens versjon/migreringer" },
         "animation": {
           "oneOf": [
