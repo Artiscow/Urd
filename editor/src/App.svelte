@@ -724,24 +724,28 @@
               <div class="panel-body" class:locked={viewMode === 'mobile'}
                 title={viewMode === 'mobile' ? 'Bytt til desktop-visning for å legge til innhold' : undefined}>
                 <p class="panel-hint">Nye blokker legges midt i synsfeltet, i sist klikkede seksjon.</p>
-                <details class="group" open>
+                <details class="group">
                   <summary>Tekst</summary>
-                  <button class="ghost" onclick={() => addBlock('text')}>Tekst</button>
-                  <button class="ghost" onclick={() => addBlock('text-box')}
-                    title="Tekst i et kort med bakgrunn og avrundede hjørner">Tekstboks</button>
+                  <div class="group-items">
+                    <button class="ghost" onclick={() => addBlock('text')}>Tekst</button>
+                    <button class="ghost" onclick={() => addBlock('text-box')}
+                      title="Tekst i et kort med bakgrunn og avrundede hjørner">Tekstboks</button>
+                  </div>
                 </details>
                 <button class="ghost" onclick={() => addBlock('button')}>Knapp</button>
                 <label class="ghost filepick" title="Komprimeres automatisk til webp">
                   Bilde
                   <input type="file" accept="image/*" onchange={addImage} />
                 </label>
-                <details class="group" open>
+                <details class="group">
                   <summary>Former</summary>
-                  <button class="ghost" onclick={() => addBlock('shape-line')}>Strek</button>
-                  <button class="ghost" onclick={() => addBlock('shape-arrow')}>Pil</button>
-                  <button class="ghost" onclick={() => addBlock('shape-circle')}>Sirkel</button>
-                  <button class="ghost" onclick={() => addBlock('shape-rect')}>Rektangel</button>
-                  <button class="ghost" onclick={() => addBlock('shape-triangle')}>Trekant</button>
+                  <div class="group-items">
+                    <button class="ghost" onclick={() => addBlock('shape-line')}>Strek</button>
+                    <button class="ghost" onclick={() => addBlock('shape-arrow')}>Pil</button>
+                    <button class="ghost" onclick={() => addBlock('shape-circle')}>Sirkel</button>
+                    <button class="ghost" onclick={() => addBlock('shape-rect')}>Rektangel</button>
+                    <button class="ghost" onclick={() => addBlock('shape-triangle')}>Trekant</button>
+                  </div>
                 </details>
               </div>
             {:else if activePanel === 'Grid'}
@@ -1017,35 +1021,38 @@
     pointer-events: none;
   }
 
-  /* Grupper i panelet (Tekst, Former): sammenleggbare undermenyer */
-  .group {
-    display: grid;
-    gap: 0.4rem;
-  }
-
+  /* Grupper i panelet (Tekst, Former): ser ut som blokk-knappene, men med
+     pil - åpnes til en vertikal liste av blokker under */
   .group summary {
     list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     cursor: pointer;
     user-select: none;
-    font-size: 0.82rem;
-    opacity: 0.7;
-    padding: 0.2em 0;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    padding: 0.35em 0.8em;
   }
 
-  .group summary::before {
-    content: '▸ ';
+  .group summary::after {
+    content: '▸';
+    opacity: 0.6;
   }
 
-  .group[open] summary::before {
-    content: '▾ ';
+  .group[open] summary::after {
+    content: '▾';
   }
 
-  .group summary:hover {
-    opacity: 1;
+  .group[open] summary {
+    border-color: var(--urd-color-accent, #7c5cff);
   }
 
-  .group button {
-    margin-left: 0.9rem;
+  .group-items {
+    display: grid;
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+    padding-left: 0.8rem;
   }
 
   .panel-hint {
