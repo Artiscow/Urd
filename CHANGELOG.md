@@ -20,6 +20,10 @@ ikke slipp; alt samles i 0.5.0 ved fasegaten.
 - Tekstboks: tekstblokk-variant der innholdet ligger i et kort med temaets flatefarge, kantlinje og avrundede hjørner. Valgfritt additivt `box`-felt på tekstblokkens props; eldre data rendres uendret.
 - Blokker-panelet er gruppert: Tekst (Tekst, Tekstboks) og Former (Strek, Pil, Sirkel, Rektangel, Trekant) som grupper, med Knapp og Bilde imellom.
 
+### 0.5.2.3 - mobil-synlighetsikon og dra på seksjonsgrensen - 17. juli 2026
+- Dekor-knappen viser nå tilstanden med selve ikonet: 📱 = blokken vises på mobil, 📵 = skjult i automatisk mobil-layout (pynt). Erstatter ✦, som krevde at man visste hva fargene betydde (og tooltipen beskrev en grå tilstand som ikke fantes).
+- «+ Ny seksjon»-baren kan dras: den ligger på grensen mellom to seksjoner, og dra flytter grensen (høyden på seksjonen over) med samme grid-snapping og Shift-overstyring som seksjonslinjen. Klikk åpner fortsatt preset-menyen.
+
 ### 0.5.2.2 - feilretting av ny side-flyten - 17. juli 2026
 - KRITISK: site-utkastet nådde aldri forhåndsvisningen etter panelomleggingen (postMessage tåler ikke Svelte-reaktive objekter og kastet DataCloneError). Dette knakk hele ny side-flyten: siden ble registrert, men utkastet ble aldri opprettet, forhåndsvisningen ble stående på forsiden, og nav/tema-endringer vistes ikke live. Alt går nå gjennom et rent snapshot.
 - Forhåndsvisningen får alltid sidedata fra editoren for upubliserte sider (serveren kjenner dem ikke og falt tilbake til forsiden).

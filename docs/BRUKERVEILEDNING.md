@@ -36,7 +36,7 @@ helt uten editor-rammer. Klikk «✏ Rediger» for å komme tilbake.
 - **Verktøylinjen over valgt blokk**:
   - ⠿ flytt (dra)
   - ⬆ / ⬇ legg blokken helt foran eller bakerst (når blokker overlapper)
-  - ✦ dekor, se under
+  - 📱/📵 mobil-synlighet (dekor), se under
   - × slett blokken
 - **Angre**: Ctrl+Z (og Ctrl+Shift+Z for å gjenta) virker på alt: flytting,
   størrelse, tekst, sletting, seksjoner og grid.
@@ -53,19 +53,18 @@ synsfeltet, i seksjonen du sist klikket i. Typene:
 - **Bilde**: last opp fra maskinen. Bildet komprimeres automatisk.
 - **Former**: strek, pil, sirkel, rektangel og trekant til dekorasjon.
 
-### Hva er ✦ (dekor)?
+### Hva betyr 📱/📵 (dekor)?
 
-✦ på blokkverktøylinjen betyr «denne blokken er pynt». På mobil stables
-innholdet automatisk i én kolonne, og der hoppes pynt over: en skrå strek
-eller pil som ligger fint bak teksten på desktop blir bare rot midt i en
-mobilkolonne.
+Knappen viser om blokken blir med til mobil. På mobil stables innholdet
+automatisk i én kolonne, og der hoppes pynt over: en skrå strek eller pil
+som ligger fint bak teksten på desktop blir bare rot midt i en mobilkolonne.
 
-- Gul stjerne = dekor PÅ = vises ikke i automatisk mobil-layout.
-- Grå stjerne = dekor AV = blokken er innhold og vises på mobil.
+- 📱 = blokken er innhold og vises på mobil.
+- 📵 = blokken er pynt (dekor) og skjules i automatisk mobil-layout.
 
-Nye former starter med dekor på. Vil du at en form skal vises på mobil,
-klikk stjernen av. (Har du håndjustert mobil-layouten i seksjonen, plasserer
-du uansett alt selv; da betyr flagget ingenting der.)
+Klikk for å bytte. Nye former starter som 📵. (Har du håndjustert
+mobil-layouten i seksjonen, plasserer du uansett alt selv; da betyr
+flagget ingenting der.)
 
 ## Seksjoner
 
@@ -77,8 +76,10 @@ seksjon (vises når du peker på den):
 - ⤓ tilpass høyden til innholdet
 - × slett seksjonen
 
-Du kan også dra i seksjonens nederkant for å justere høyden fritt. Blokker
-kan bevisst henge utover seksjonskanten; ingenting klippes.
+Du kan også dra i seksjonens nederkant for å justere høyden fritt, eller
+dra rett i «+ Ny seksjon»-knappen på grensen mellom to seksjoner (klikk
+åpner fortsatt menyen; dra flytter grensen). Blokker kan bevisst henge
+utover seksjonskanten; ingenting klippes.
 
 ## Grid (hjelpelinjer)
 

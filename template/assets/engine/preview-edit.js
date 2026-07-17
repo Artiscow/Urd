@@ -91,23 +91,28 @@ export function toggleGridOverlays(visible, page, site) {
 }
 
 /**
- * Dra-håndtak i underkant av seksjonen: justerer size.minHeight, snappet
- * til gridets radhøyde. Lagres i px (rerender kan fortsatt vokse seksjonen
- * hvis blokkene trenger mer, se render.js).
+ * Felles høyde-dra: flytter seksjonens underkant (size.minHeight), snappet
+ * til gridet. Brukes av håndtaket i seksjonens underkant OG av «+ Ny
+ * seksjon»-baren (som ligger på samme grense). Lagres i px (rerender kan
+ * fortsatt vokse seksjonen hvis blokkene trenger mer, se render.js).
+ *
+ * Draget starter først etter en liten terskel, slik at target også kan
+ * være en klikkbar knapp; opts.onDragged kalles da (før knappens click),
+ * så klikket kan undertrykkes.
  */
-function addSectionHeightHandle(host, section, grid) {
-  const handle = document.createElement('div');
-  handle.className = 'urd-section-resize';
-  handle.title = 'Dra for å endre seksjonens høyde';
-
-  handle.addEventListener('pointerdown', (event) => {
+function wireHeightDrag(target, host, section, grid, opts = {}) {
+  target.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0) return;
     event.preventDefault();
-    handle.setPointerCapture(event.pointerId);
+    target.setPointerCapture(event.pointerId);
     const startY = event.clientY;
     const startHeight = host.getBoundingClientRect().height;
     let px = startHeight;
+    let moved = false;
 
     const onMove = (ev) => {
+      if (!moved && Math.abs(ev.clientY - startY) < 4) return;
+      moved = true;
       px = Math.max(grid.size * 3, startHeight + (ev.clientY - startY));
       // Piksel-presist når snap er av eller Shift holdes inne.
       const free = grid.snap === false || ev.shiftKey;
@@ -115,17 +120,26 @@ function addSectionHeightHandle(host, section, grid) {
       host.style.minHeight = `${px}px`;
     };
     const onUp = () => {
-      handle.removeEventListener('pointermove', onMove);
-      handle.removeEventListener('pointerup', onUp);
+      target.removeEventListener('pointermove', onMove);
+      target.removeEventListener('pointerup', onUp);
+      if (!moved) return;
+      opts.onDragged?.();
       if (Math.abs(px - startHeight) < 2) return;
       const minHeight = `${px}px`;
       section.size = { ...section.size, minHeight };
       post({ type: 'urd-section-size', sectionId: section.id, minHeight });
     };
-    handle.addEventListener('pointermove', onMove);
-    handle.addEventListener('pointerup', onUp);
+    target.addEventListener('pointermove', onMove);
+    target.addEventListener('pointerup', onUp);
   });
+}
 
+/** Dra-håndtak i underkant av seksjonen: justerer size.minHeight. */
+function addSectionHeightHandle(host, section, grid) {
+  const handle = document.createElement('div');
+  handle.className = 'urd-section-resize';
+  handle.title = 'Dra for å endre seksjonens høyde';
+  wireHeightDrag(handle, host, section, grid);
   host.appendChild(handle);
 }
 
@@ -135,19 +149,27 @@ function addSectionHeightHandle(host, section, grid) {
  *
  * @param {HTMLElement} root Sidens rotelement
  * @param {object} page Sidedata (for antall seksjoner)
- * @param {object} site site.json (ubrukt foreløpig, med for symmetri)
+ * @param {object} site site.json (gridet for dra på seksjonsgrensen)
  */
 export function enhancePage(root, page, site) {
   root.querySelectorAll('.urd-add-section').forEach((el) => el.remove());
   // Mobilvisning er justering og tilsyn, ikke strukturbygging.
   if (isMobile()) return;
   const hosts = [...root.querySelectorAll(':scope > .urd-section')];
-  hosts.forEach((el, i) => root.insertBefore(makeSectionAdder(i), el));
-  root.appendChild(makeSectionAdder(hosts.length));
+  // Baren ligger på grensen mellom to seksjoner: dra i den flytter
+  // grensen (= høyden på seksjonen OVER), akkurat som seksjonslinjen.
+  const above = (i) => (i > 0 ? {
+    host: hosts[i - 1],
+    section: page.sections[i - 1],
+    grid: page.sections[i - 1]?.grid ?? site.grid,
+  } : null);
+  hosts.forEach((el, i) => root.insertBefore(makeSectionAdder(i, above(i)), el));
+  root.appendChild(makeSectionAdder(hosts.length, above(hosts.length)));
 }
 
-/** Baren med «+ Ny seksjon»; klikk viser preset-valgene fra registeret. */
-function makeSectionAdder(index) {
+/** Baren med «+ Ny seksjon»; klikk viser preset-valgene fra registeret,
+ *  dra flytter seksjonsgrensen (når det finnes en seksjon over). */
+function makeSectionAdder(index, above = null) {
   const bar = document.createElement('div');
   bar.className = 'urd-add-section';
 
@@ -157,6 +179,20 @@ function makeSectionAdder(index) {
 
   const openBtn = document.createElement('button');
   openBtn.textContent = '+ Ny seksjon';
+  if (above) {
+    openBtn.title = 'Klikk: ny seksjon her. Dra: flytt seksjonsgrensen (Shift = fri høyde)';
+    let dragged = false;
+    wireHeightDrag(openBtn, above.host, above.section, above.grid, {
+      onDragged: () => { dragged = true; },
+    });
+    // Et fullført dra skal ikke også åpne preset-menyen.
+    openBtn.addEventListener('click', (e) => {
+      if (dragged) {
+        dragged = false;
+        e.stopImmediatePropagation();
+      }
+    }, { capture: true });
+  }
   openBtn.addEventListener('click', () => {
     bar.replaceChildren();
     for (const id of window.Urd.sections.ids()) {
@@ -429,22 +465,23 @@ function enhanceBlock(el, block, section, grid, host) {
     backBtn.addEventListener('click', () => bumpZ(-1));
     toolbar.appendChild(backBtn);
 
+    // Dekor-flagget vises som mobil-synlighet - det er det flagget GJØR:
+    // 📱 = blokken vises i automatisk mobil-layout, 📵 = den skjules
+    // (pynt/dekor). Ikonet ER tilstanden; tooltipen forklarer klikket.
     const decorBtn = document.createElement('button');
     decorBtn.className = 'urd-edit-decor';
-    decorBtn.textContent = '✦';
-    // Tooltipen forklarer fargene og følger tilstanden.
-    const syncDecorTitle = () => {
+    const syncDecor = () => {
+      decorBtn.textContent = block.decor ? '📵' : '📱';
       decorBtn.title = block.decor
-        ? 'Dekor PÅ (gul): pynt, skjules i automatisk mobil-layout. Klikk for å vise blokken på mobil.'
-        : 'Dekor AV (grå): innhold, vises på mobil. Klikk for å gjøre blokken til pynt som skjules der.';
+        ? 'Skjult på mobil (pynt/dekor). Klikk for å vise blokken i automatisk mobil-layout.'
+        : 'Vises på mobil. Klikk for å skjule blokken i automatisk mobil-layout (pynt/dekor).';
+      decorBtn.classList.toggle('on', Boolean(block.decor));
     };
-    syncDecorTitle();
-    decorBtn.classList.toggle('on', Boolean(block.decor));
+    syncDecor();
     decorBtn.addEventListener('click', () => {
       block.decor = !block.decor;
-      decorBtn.classList.toggle('on', block.decor);
       el.classList.toggle('urd-decor', block.decor);
-      syncDecorTitle();
+      syncDecor();
       post({ type: 'urd-block-flag', sectionId: section.id, blockId: block.id, decor: block.decor });
     });
     toolbar.appendChild(decorBtn);
