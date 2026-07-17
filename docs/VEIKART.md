@@ -21,7 +21,7 @@ Ende-til-ende med minst mulig bredde: motoren rendrer `hjem.json` (én hero-seks
 - Seksjons-CRUD med «+ Ny seksjon» in-place, seksjonspresets (hero, bilder, footer) - og **bygge egne seksjoner fra tom seksjon**.
 - Inkrementell rerender i preview.
 
-## v0.4 - Responsivt
+## v0.4 - Responsivt *(levert 17. juli 2026)*
 
 Rendyrket mobilfase: nesten rent motorarbeid, uavhengig av panel-UI-et
 som kommer i v0.5. (Bakgrunnseditor og animasjoner er flyttet til v0.5:

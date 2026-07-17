@@ -4,13 +4,10 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 
 Fullførte punkter fra v0.2 og v0.3 er ryddet bort ved 0.3.0-slippet (17. juli 2026); se [CHANGELOG.md](../CHANGELOG.md) for hva som ble levert.
 
-## Neste opp (v0.4 «Responsivt»)
+## Neste opp (v0.5 «Panelene og nettstedet rundt siden»)
 
-- [x] Mobilvisning i editoren (💻/📱-toggle; iframen smales til 390px, motorens matchMedia bytter modus selv)
-- [x] Auto-avledet mobil-stabling (ekte flyt i én kolonne i leserekkefølge, tekst får naturlig høyde; besøkende får det automatisk via matchMedia)
-- [x] Manuelle mobil-frames (første mobil-dra materialiserer hele seksjonen) + mobil-tilsyn-flagget ende-til-ende (gul markering, teller-chip, ✓ gjennomgått, ↺ tilbake til auto)
-- [x] «Dekor»-flagg på blokker (✦-toggle; former er dekor som standard og utelates fra auto-stabling)
-- [ ] Testrunde på urdweb (porten: desktop-side ser fornuftig ut på mobil uten inngripen; tilsyn-flagget fanger drift) før 0.4.0-bump
+Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
+(v0.4 «Responsivt» levert 17. juli 2026; se CHANGELOG.)
 
 ## Til v0.5 (paneler og UI-omlegging)
 
