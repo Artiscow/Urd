@@ -4,6 +4,8 @@
  * slår opp path i sideregisteret; elementer med `href` er eksterne lenker.
  */
 
+import { resolveColor } from './theme.js';
+
 /**
  * @param {object} site site.json, allerede parset
  * @param {HTMLElement} host Element navigasjonen bygges inn i
@@ -18,6 +20,17 @@ export function renderNav(site, host) {
   // ikke på nav-en - et sticky-element kan aldri forlate forelderen sin,
   // og forelderen her er nøyaktig like høy som nav-en.
   host.classList.toggle('urd-nav-sticky', site.nav.sticky !== false);
+
+  // Utseende (nav.style, additivt fra v0.5): bakgrunnsfarge med dekkevne,
+  // uskarphet bak, og egen tekstfarge. Uten style gjelder CSS-standarden.
+  const style = site.nav.style ?? {};
+  if (style.bg || style.bgOpacity != null) {
+    const color = resolveColor(style.bg ?? 'surface');
+    const pct = Math.round((style.bgOpacity ?? 0.85) * 100);
+    nav.style.background = `color-mix(in srgb, ${color} ${pct}%, transparent)`;
+  }
+  if (style.blur === false) nav.style.backdropFilter = 'none';
+  if (style.textColor) nav.style.color = resolveColor(style.textColor);
 
   const logoDef = site.nav.logo ?? { type: 'text', value: site.site.title };
   const logo = document.createElement('a');

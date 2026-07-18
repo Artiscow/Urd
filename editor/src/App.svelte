@@ -956,6 +956,13 @@
     siteMutate('nav', () => { siteDraft.nav.layout = value; });
   }
 
+  function setNavStyle(name, value) {
+    siteMutate(`edit:nav-style-${name}`, () => {
+      siteDraft.nav.style ??= {};
+      siteDraft.nav.style[name] = value;
+    });
+  }
+
   /* ---------- Footer-panelet ---------- */
 
   function footerMutate(key, fn) {
@@ -1650,19 +1657,43 @@
                     <p class="panel-hint">Logoen er også «Hjem»-knappen (klikk går til forsiden).</p>
                   </div>
                 </details>
-                <label>Menyplassering
-                  <select value={siteDraft.nav.layout ?? 'right'}
-                    onchange={(e) => setNavLayout(e.target.value)}>
-                    <option value="right">Høyre</option>
-                    <option value="center">Midtstilt</option>
-                    <option value="left">Venstre (etter logoen)</option>
-                  </select></label>
-                <label class="gridmenu-snap" title="Av: menyen ligger kun øverst og forsvinner når man blar nedover">
-                  <input type="checkbox" checked={siteDraft.nav.sticky !== false}
-                    onchange={(e) => siteMutate('nav', () => { siteDraft.nav.sticky = e.target.checked; })} />
-                  Klistrete meny (følger med når man blar)
-                </label>
-                <hr class="gridmenu-divider" />
+                <details class="group">
+                  <summary>Utseende</summary>
+                  <div class="group-items">
+                    <label>Bakgrunn
+                      <input type="color" value={hexFor(siteDraft.nav.style?.bg ?? 'surface')}
+                        oninput={(e) => setNavStyle('bg', e.target.value)} /></label>
+                    <label>Dekkevne
+                      <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.bgOpacity ?? 0.85) * 100)}%</span></label>
+                    <input type="range" min="0" max="1" step="0.05"
+                      value={siteDraft.nav.style?.bgOpacity ?? 0.85}
+                      oninput={(e) => setNavStyle('bgOpacity', Number(e.target.value))} />
+                    <label class="gridmenu-snap" title="Innholdet bak menyen sløres (synlig når dekkevnen er lav)">
+                      <input type="checkbox" checked={siteDraft.nav.style?.blur !== false}
+                        onchange={(e) => setNavStyle('blur', e.target.checked)} />
+                      Uskarphet bak menyen
+                    </label>
+                    <label>Tekstfarge
+                      <input type="color" value={hexFor(siteDraft.nav.style?.textColor ?? 'text')}
+                        oninput={(e) => setNavStyle('textColor', e.target.value)} /></label>
+                    <label>Menyplassering
+                      <select value={siteDraft.nav.layout ?? 'right'}
+                        onchange={(e) => setNavLayout(e.target.value)}>
+                        <option value="right">Høyre</option>
+                        <option value="center">Midtstilt</option>
+                        <option value="left">Venstre (etter logoen)</option>
+                      </select></label>
+                    <label class="gridmenu-snap" title="Av: menyen ligger kun øverst og forsvinner når man blar nedover">
+                      <input type="checkbox" checked={siteDraft.nav.sticky !== false}
+                        onchange={(e) => siteMutate('nav', () => { siteDraft.nav.sticky = e.target.checked; })} />
+                      Klistrete meny (følger med når man blar)
+                    </label>
+                    <p class="panel-hint">Bakgrunnsbilde i menyen og menypunkt-design kommer i en senere runde.</p>
+                  </div>
+                </details>
+                <details class="group" open>
+                  <summary>Menypunkter</summary>
+                  <div class="group-items">
                 {#each siteDraft.nav.items as item, i}
                   <div class="nav-row">
                     <input value={item.label} title="Teksten i menyen"
@@ -1687,7 +1718,9 @@
                     {/if}
                   </div>
                 {/each}
-                <button class="ghost" onclick={addNavItem}>+ Nytt menypunkt</button>
+                    <button class="ghost" onclick={addNavItem}>+ Nytt menypunkt</button>
+                  </div>
+                </details>
               </div>
             {:else if activePanel === 'Tema'}
               <div class="panel-body">

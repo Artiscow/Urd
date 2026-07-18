@@ -34,6 +34,7 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 - [ ] For å legge til blokk, hover over en seksjon, i seksjonen dukker opp en "+ Legg til blokk" og der dukker alt opp i en meny under.
 - [x] Når man legger til en ny seksjon åpnes Egenskaper automatisk (M7, 18. juli 2026)
 - [x] Full teksteditor per tekstfelt: egen font og grunnstørrelse per tekstblokk i Egenskaper (tomt = arv fra tema), pluss flytende linje for markert tekst (0.5.7.3, 18. juli 2026)
+- [ ] Nav-design videre: bakgrunnsbilde i menyen, design/hover-stiler for menypunkter, flere menystiler (f.eks. ekte «flytende» variant med luft rundt)
 - [ ] SISTE STEG FØR 0.5.0 (sammen med preset-utviklingen over): se på UI og funksjoner til nettsider som https://nobaraproject.org/ https://linuxmint.com/ https://garudalinux.org/ https://www.forbrukerradet.no/forside https://online.ntnu.no/ https://online.ntnu.no/offline https://abakus.no/ https://www.broderskabet.no/ https://www.vg.no/ https://www.nrk.no/
 - [x] AVKLART (M2, 17. juli 2026): publisering genererer `<slug>/index.html` per side (kopi av rot-index.html) og sletter dem for fjernede/flyttede sider - ruting virker da på alle statiske hoster, ikke bare SPA-fallback
 
@@ -64,7 +65,8 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 - [ ] Miniikon for nettsiden i tabs og bokmerker.
 - [ ] Logo/ikon for nettsider
 - [ ] Søk i "+ Legg til blokk"
-- [ ] Legge til stil til avhukingsbokser i admin (muligens moderne knapp som er animert venstre/høyre istedenfor sjekk av/på)
+- [x] Legge til stil til avhukingsbokser i admin (muligens moderne knapp som er animert venstre/høyre istedenfor sjekk av/på)
+- [ ] Mulighet til å legge til påkse egg (hemmeligheter) på nettsidene
 
     
 ## Bugs og kjente svakheter

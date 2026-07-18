@@ -372,13 +372,15 @@ body.urd-chrome-off .urd-text-toolbar {
 
 /* Navigasjon */
 .urd-nav {
+  --urd-nav-pad: 0.9rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.9rem clamp(1rem, 4vw, 2.5rem);
+  padding: var(--urd-nav-pad) clamp(1rem, 4vw, 2.5rem);
   background: color-mix(in srgb, var(--urd-color-surface) 85%, transparent);
   backdrop-filter: blur(8px);
+  color: var(--urd-color-text);
 }
 
 /* Klistret meny: sticky ligger på verten (header-elementet), som kan
@@ -386,7 +388,9 @@ body.urd-chrome-off .urd-text-toolbar {
 .urd-nav-sticky {
   position: sticky;
   top: 0;
-  z-index: 100;
+  /* Over innhold OG editorens «+ Ny seksjon»-barer (1002) - innholdet
+     skal gli under menyen, ikke gjennom den */
+  z-index: 5000;
 }
 
 .urd-nav-logo {
@@ -395,13 +399,16 @@ body.urd-chrome-off .urd-text-toolbar {
   gap: 0.6rem;
   font-family: var(--urd-font-heading);
   font-weight: 700;
-  color: var(--urd-color-text);
+  color: inherit;
   text-decoration: none;
 }
 
 .urd-nav-logo img {
   height: 2rem;
   display: block;
+  /* Store logoer vokser UT av linjen (inn i padding/innholdet under),
+     ikke linjen selv - menyhøyden styres ikke av bildet */
+  margin-block: calc(-1 * var(--urd-nav-pad) + 2px);
 }
 
 .urd-nav-list {
@@ -427,7 +434,7 @@ body.urd-chrome-off .urd-text-toolbar {
 
 
 .urd-nav-list a {
-  color: var(--urd-color-text);
+  color: inherit;
   text-decoration: none;
   opacity: 0.85;
 }

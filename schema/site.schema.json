@@ -73,6 +73,17 @@
           "default": true,
           "description": "Menyen følger med når man blar nedover (false = ligger kun øverst). Additivt felt fra v0.5."
         },
+        "style": {
+          "type": "object",
+          "description": "Menyens utseende (additivt fra v0.5). Utelatte felt = standard.",
+          "additionalProperties": false,
+          "properties": {
+            "bg": { "type": "string", "description": "Bakgrunnsfarge: theme-token eller rå farge" },
+            "bgOpacity": { "type": "number", "minimum": 0, "maximum": 1, "description": "Bakgrunnens dekkevne (0 = gjennomsiktig)" },
+            "blur": { "type": "boolean", "default": true, "description": "Uskarphet bak menyen" },
+            "textColor": { "type": "string", "description": "Tekstfarge i menyen (tom = temaets tekstfarge)" }
+          }
+        },
         "logo": {
           "type": "object",
           "required": ["type", "value"],

@@ -11,6 +11,12 @@ Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter,
 ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.7.7 - meny-lag, logo-vekst og nav-utseende - 18. juli 2026
+- «+ Ny seksjon»-barene glir nå UNDER den klistrede menyen i stedet for å synes gjennom den (menyens lag ligger over editorbarene).
+- Store logobilder vokser ikke lenger hele menylinjen: bildet vokser ut av linjen (inn i luften rundt) mens menyhøyden står fast.
+- Nytt «Utseende» i Nav-panelet: bakgrunnsfarge, dekkevne (gjennomsiktighet), uskarphet bak menyen og tekstfarge - pluss menyplassering og klistret-bryteren samlet samme sted. Alt additivt (`nav.style`); Nav-panelet er omorganisert i tre grupper (Logo, Utseende, Menypunkter).
+- Bakgrunnsbilde i menyen og menypunkt-design står som egen backlogpost.
+
 ### 0.5.7.6 - klistret meny virket aldri + flate-dra på tekstblokker - 18. juli 2026
 - GAMMEL FEIL avslørt av den nye toggelen: klistret meny har aldri virket, sticky-CSS-en lå på det indre nav-elementet, som er innesperret i et header-element med nøyaktig samme høyde (et sticky-element kan aldri forlate forelderen sin). Sticky ligger nå på verten, og menyen følger faktisk med når man blar.
 - Toggelen heter «Klistrete meny» (flytende meny reserveres som mulig egen stil senere).
