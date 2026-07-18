@@ -10,6 +10,9 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter, ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.8.9 - skarpere radglyfer - 18. juli 2026
+- Pilene og kryssene i radknappene er økt fra 11 til 12px: geometrien var alt perfekt sentrert (målt i nettleseren), men på skjermer med 125 % skalering landet strekene på brøkdels-piksler og så skjeve ut av antialiasing. 12px treffer hele fysiske piksler (12 x 1,25 = 15) og fyller knappen bedre.
+
 ### 0.5.8.8 - presise publiseringsmeldinger - 18. juli 2026
 - Publiseringer av nettstedsoppsettet sier nå HVA som endret seg i historikken («Oppdater tema via Urd-admin», «Oppdater menyen, nettstedsikonet …») i stedet for det generiske «innstillinger» - endringene diffes mot publisert site.json (tema, menyen, footeren, sideregisteret, gridet, nettstedsikonet, nettstedsinfo).
 
