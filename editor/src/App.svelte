@@ -1766,7 +1766,8 @@
                         onchange={(e) => setBlockFrame('w', Number(e.target.value))} /></label>
                       <label>Høyde px<input type="number" step="1" min="1" value={selectedBlock.frame.h}
                         onchange={(e) => setBlockFrame('h', Number(e.target.value))} /></label>
-                      <label>Lag (z)<input type="number" step="1" value={selectedBlock.frame.z ?? 1}
+                      <label title="Høyere tall ligger foran. Mens du redigerer vises pekt/markert blokk alltid øverst - se ekte rekkefølge i Ren visning">
+                        Lag (z)<input type="number" step="1" value={selectedBlock.frame.z ?? 1}
                         onchange={(e) => setBlockFrame('z', Number(e.target.value))} /></label>
                       <label>Rotasjon °<input type="number" step="1" value={selectedBlock.frame.rot ?? 0}
                         onchange={(e) => setBlockFrame('rot', Number(e.target.value))} /></label>

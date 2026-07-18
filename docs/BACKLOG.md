@@ -31,6 +31,7 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 - [x] M7: Delt footer (site.footer, additivt): redigeres ett sted, vises på alle sider (18. juli 2026); design-maler bygges videre i v0.6
 - [ ] M7/M8: Ordentlig og fullstendig utvikling av seksjonspresetene (Bilder, Team/styret, FAQ, Kontakt er barebones); eier finner inspirasjonssider (à la ApeironLF) + flere utseende-alternativer per preset
 - [x] Når man legger til en ny seksjon åpnes Egenskaper automatisk (M7, 18. juli 2026)
+- [ ] Full tekst editor for alle tekst og hvert individuelle tekstfelt.
 - [ ] SISTE STEG FØR 0.5.0 (sammen med preset-utviklingen over): se på UI og funksjoner til nettsider som https://nobaraproject.org/ https://linuxmint.com/ https://garudalinux.org/ https://www.forbrukerradet.no/forside https://online.ntnu.no/ https://online.ntnu.no/offline https://abakus.no/ https://www.broderskabet.no/ https://www.vg.no/ https://www.nrk.no/
 - [x] AVKLART (M2, 17. juli 2026): publisering genererer `<slug>/index.html` per side (kopi av rot-index.html) og sletter dem for fjernede/flyttede sider - ruting virker da på alle statiske hoster, ikke bare SPA-fallback
 

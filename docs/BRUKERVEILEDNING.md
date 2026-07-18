@@ -35,7 +35,10 @@ helt uten editor-rammer. Klikk «✏ Rediger» for å komme tilbake.
 - **Endre størrelse**: dra i håndtaket i blokkens hjørne.
 - **Verktøylinjen over valgt blokk**:
   - ⠿ flytt (dra)
-  - ⬆ / ⬇ legg blokken helt foran eller bakerst (når blokker overlapper)
+  - ⬆ / ⬇ legg blokken helt foran eller bakerst (når blokker overlapper).
+    NB: mens du redigerer vises blokken du peker på eller har markert
+    alltid øverst, så håndtakene kan nås - den EKTE rekkefølgen ser du
+    i Ren visning og på den publiserte siden
   - 📱/📵 mobil-synlighet (dekor), se under
   - × slett blokken
 - **Rotere**: dra i den lille ⟳-sirkelen i blokkens øvre høyre hjørne

@@ -586,13 +586,13 @@ function enhanceBlock(el, block, section, grid, host) {
   if (!mobile) {
     const frontBtn = document.createElement('button');
     frontBtn.textContent = '⬆';
-    frontBtn.title = 'Legg foran (z-orden)';
+    frontBtn.title = 'Legg foran (z-orden). NB: mens du redigerer vises pekt/markert blokk alltid øverst - se ekte rekkefølge i Ren visning';
     frontBtn.addEventListener('click', () => bumpZ(1));
     toolbar.appendChild(frontBtn);
 
     const backBtn = document.createElement('button');
     backBtn.textContent = '⬇';
-    backBtn.title = 'Legg bak (z-orden)';
+    backBtn.title = 'Legg bak (z-orden). NB: mens du redigerer vises pekt/markert blokk alltid øverst - se ekte rekkefølge i Ren visning';
     backBtn.addEventListener('click', () => bumpZ(-1));
     toolbar.appendChild(backBtn);
 
