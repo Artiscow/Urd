@@ -1,0 +1,344 @@
+<script>
+  /**
+   * Moderne fargevelger: flate for metning/lysstyrke, kulør-glider,
+   * hex-felt, nylige farger og temafargene som hurtigvalg.
+   *
+   * Verdien er ENTEN #rrggbb ELLER et temafarge-NAVN (f.eks. 'accent'):
+   * å velge en temaprikk lagrer navnet, så innholdet omfarges når
+   * temaet endres (motorens resolveColor forstår begge). Flate/hex gir
+   * en frikoblet hex-verdi.
+   *
+   * Popoveren er position: fixed (panelene klipper absolute innhold),
+   * og lukkes ved klikk utenfor eller Escape.
+   */
+  let { value = '#000000', tokens = [], label = 'Velg farge', onchange } = $props();
+
+  const RECENT_KEY = 'urd-recent-colors';
+
+  /** Visningsfargen: token-navn slås opp i temaprikkene. */
+  const displayHex = () => {
+    const token = tokens.find(([name]) => name === value);
+    return token ? token[1] : value;
+  };
+  const linkedToken = () => tokens.find(([name]) => name === value)?.[0] ?? null;
+
+  let recent = $state([]);
+  let openedWith = '';
+  let lastPickedHex = '';
+
+  let rootEl = $state(null);
+  let open = $state(false);
+  let pos = $state({ top: 0, left: 0 });
+
+  // HSV-tilstand mens velgeren er åpen
+  let h = $state(0);
+  let s = $state(0);
+  let v = $state(1);
+  let hexText = $state('#000000');
+
+  function hexToRgb(hex) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(String(hex).trim());
+    if (!m) return null;
+    const n = parseInt(m[1], 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+
+  const rgbToHex = (r, g, b) =>
+    '#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('');
+
+  function rgbToHsv(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const d = max - min;
+    let hue = 0;
+    if (d) {
+      if (max === r) hue = ((g - b) / d) % 6;
+      else if (max === g) hue = (b - r) / d + 2;
+      else hue = (r - g) / d + 4;
+      hue *= 60;
+      if (hue < 0) hue += 360;
+    }
+    return [hue, max ? d / max : 0, max];
+  }
+
+  function hsvToRgb(hue, sat, val) {
+    const c = val * sat;
+    const x = c * (1 - Math.abs(((hue / 60) % 2) - 1));
+    const m = val - c;
+    const [r, g, b] = hue < 60 ? [c, x, 0] : hue < 120 ? [x, c, 0]
+      : hue < 180 ? [0, c, x] : hue < 240 ? [0, x, c]
+      : hue < 300 ? [x, 0, c] : [c, 0, x];
+    return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
+  }
+
+  function currentHex() {
+    return rgbToHex(...hsvToRgb(h, s, v));
+  }
+
+  function commit() {
+    hexText = currentHex();
+    lastPickedHex = hexText;
+    onchange?.(hexText);
+  }
+
+  function setFromHex(hex) {
+    const rgb = hexToRgb(hex);
+    if (!rgb) return false;
+    [h, s, v] = rgbToHsv(...rgb);
+    hexText = rgbToHex(...rgb);
+    return true;
+  }
+
+  function openPicker() {
+    setFromHex(displayHex()) || setFromHex('#000000');
+    openedWith = value;
+    lastPickedHex = '';
+    try {
+      recent = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]');
+    } catch {
+      recent = [];
+    }
+    const r = rootEl.getBoundingClientRect();
+    const W = 236;
+    const H = 300;
+    const left = Math.max(8, Math.min(r.right - W, window.innerWidth - W - 8));
+    const top = r.bottom + H + 8 > window.innerHeight ? Math.max(8, r.top - H - 8) : r.bottom + 6;
+    pos = { top, left };
+    open = true;
+  }
+
+  function close() {
+    open = false;
+    // Husk fargen som nylig brukt (kun frikoblede hex-valg).
+    if (lastPickedHex && lastPickedHex !== openedWith) {
+      const next = [lastPickedHex, ...recent.filter((c) => c !== lastPickedHex)].slice(0, 8);
+      localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+    }
+  }
+
+  /** Temaprikk: lagre NAVNET, så elementet følger temaet. */
+  function pickToken(name, hex) {
+    setFromHex(hex);
+    hexText = hex;
+    onchange?.(name);
+  }
+
+  function svDown(e) {
+    const area = e.currentTarget;
+    area.setPointerCapture(e.pointerId);
+    const apply = (ev) => {
+      const r = area.getBoundingClientRect();
+      s = Math.min(1, Math.max(0, (ev.clientX - r.left) / r.width));
+      v = 1 - Math.min(1, Math.max(0, (ev.clientY - r.top) / r.height));
+      commit();
+    };
+    apply(e);
+    const move = (ev) => apply(ev);
+    const up = () => {
+      area.removeEventListener('pointermove', move);
+      area.removeEventListener('pointerup', up);
+    };
+    area.addEventListener('pointermove', move);
+    area.addEventListener('pointerup', up);
+  }
+
+  function onHexInput(e) {
+    if (setFromHex(e.target.value)) commit();
+    else hexText = currentHex();
+  }
+
+  function pick(hex) {
+    if (setFromHex(hex)) commit();
+  }
+
+  // Lukk ved klikk utenfor eller Escape (kun mens åpen)
+  $effect(() => {
+    if (!open) return;
+    const onDown = (e) => {
+      if (rootEl && !rootEl.contains(e.target)) close();
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') close();
+    };
+    document.addEventListener('pointerdown', onDown, true);
+    document.addEventListener('keydown', onKey, true);
+    return () => {
+      document.removeEventListener('pointerdown', onDown, true);
+      document.removeEventListener('keydown', onKey, true);
+    };
+  });
+</script>
+
+<span class="cp" bind:this={rootEl}>
+  <button type="button" class="cp-swatch" class:linked={linkedToken()}
+    style="background: {displayHex()}" title={linkedToken() ? `${label} (koblet til temafargen «${linkedToken()}»)` : label}
+    aria-label={label} onclick={() => (open ? close() : openPicker())}></button>
+  {#if open}
+    <div class="cp-pop" style="top: {pos.top}px; left: {pos.left}px">
+      <div class="cp-sv"
+        style="background-image: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent); background-color: hsl({h}, 100%, 50%)"
+        onpointerdown={svDown}>
+        <span class="cp-cursor" style="left: {s * 100}%; top: {(1 - v) * 100}%"></span>
+      </div>
+      <input class="cp-hue" type="range" min="0" max="360" step="1" value={h}
+        oninput={(e) => { h = Number(e.target.value); commit(); }} />
+      <span class="cp-row">
+        <span class="cp-preview" style="background: {hexText}"></span>
+        <input class="cp-hex" value={hexText} spellcheck="false" onchange={onHexInput} />
+      </span>
+      {#if tokens.length}
+        <span class="cp-label">Temafarger{#if linkedToken()} - koblet til «{linkedToken()}»{/if}</span>
+        <span class="cp-tokens">
+          {#each tokens as [name, hex] (name)}
+            <button type="button" class="cp-token" class:active={value === name}
+              style="background: {hex}" title="Temafarge: {name} (følger temaet)"
+              onclick={() => pickToken(name, hex)}></button>
+          {/each}
+        </span>
+      {/if}
+      {#if recent.length}
+        <span class="cp-label">Nylige</span>
+        <span class="cp-tokens">
+          {#each recent as hex (hex)}
+            <button type="button" class="cp-token" style="background: {hex}"
+              title={hex} onclick={() => pick(hex)}></button>
+          {/each}
+        </span>
+      {/if}
+    </div>
+  {/if}
+</span>
+
+<style>
+  .cp {
+    display: inline-flex;
+  }
+
+  .cp-swatch {
+    width: 3rem;
+    height: 2.2rem;
+    padding: 0;
+    border: 1px solid rgb(255 255 255 / 25%);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .cp-pop {
+    position: fixed;
+    z-index: 500;
+    width: 236px;
+    display: grid;
+    gap: 8px;
+    padding: 10px;
+    background: var(--urd-color-surface, #151a23);
+    border: 1px solid rgb(255 255 255 / 18%);
+    border-radius: 10px;
+    box-shadow: 0 12px 36px rgb(0 0 0 / 55%);
+  }
+
+  .cp-sv {
+    position: relative;
+    height: 130px;
+    border-radius: 8px;
+    cursor: crosshair;
+    touch-action: none;
+  }
+
+  .cp-cursor {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    transform: translate(-50%, -50%);
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 60%);
+    pointer-events: none;
+  }
+
+  .cp-hue {
+    appearance: none;
+    width: 100%;
+    height: 12px;
+    border-radius: 999px;
+    background: linear-gradient(to right,
+      #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+    cursor: pointer;
+  }
+
+  .cp-hue::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid rgb(0 0 0 / 40%);
+  }
+
+  .cp-hue::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid rgb(0 0 0 / 40%);
+  }
+
+  .cp-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cp-preview {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid rgb(255 255 255 / 25%);
+    flex-shrink: 0;
+  }
+
+  .cp-hex {
+    flex: 1;
+    min-width: 0;
+    font: 500 13px/1.2 ui-monospace, monospace;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    padding: 6px 8px;
+    text-transform: lowercase;
+  }
+
+  .cp-tokens {
+    display: flex;
+    gap: 6px;
+  }
+
+  .cp-token {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid rgb(255 255 255 / 30%);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .cp-token:hover {
+    border-color: #fff;
+  }
+
+  .cp-token.active {
+    outline: 2px solid #fff;
+    outline-offset: 1px;
+  }
+
+  .cp-swatch.linked {
+    outline: 2px solid rgb(255 255 255 / 45%);
+    outline-offset: -3px;
+  }
+
+  .cp-label {
+    font-size: 11px;
+    opacity: 0.6;
+  }
+</style>

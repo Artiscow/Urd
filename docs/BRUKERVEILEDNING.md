@@ -45,7 +45,10 @@ helt uten editor-rammer. Klikk «Rediger»-knappen for å komme tilbake.
   (snapper til 15°-steg; hold Shift for fri vinkel). Nøyaktig gradtall
   kan også settes i Egenskaper.
 - **Tastatur på markert blokk**: piltastene flytter ett grid-steg
-  (Shift = 1 px), Delete sletter, Esc avmarkerer.
+  (Shift = 1 px), Delete sletter, Esc avmarkerer, Ctrl+D dupliserer.
+- **Snappelinjer**: når du drar en blokk nær kanten eller midten av en
+  annen blokk, vises en linje og blokken snapper på plass (hold Shift
+  for helt fri plassering).
 - **Angre**: Ctrl+Z (og Ctrl+Shift+Z for å gjenta) virker på alt: flytting,
   størrelse, tekst, sletting, seksjoner og grid.
 
@@ -94,6 +97,16 @@ valg i stedet for dra-og-slipp:
   Form: type, farge fra temaet, tykkelse og fylt/kantlinje.
 - Klikker du i en seksjon (uten blokk valgt) viser panelet seksjonens
   minstehøyde, eget grid, bakgrunn og animasjon.
+
+**Farger**: fargevelgerne viser temafargene dine som prikker - velger du
+en av dem, KOBLES feltet til temaet og følger med når du endrer paletten
+i Tema-panelet (koblede felt vises med ring). Velger du fritt i flaten
+eller skriver en hex-kode, er fargen frikoblet. De siste frie fargene
+dine ligger under «Nylige».
+
+**Bilder**: i Egenskaper kan du sette fokuspunkt (hvilken del av bildet
+som beholdes når det beskjæres) og justere lysstyrke, kontrast og
+metning - uten at selve bildefilen endres.
 
 **Bakgrunner**: en seksjons bakgrunn er bygget av lag som kan stables:
 farge, gradient (kan animeres), glød, bilde og korn. Legg til, fjern og

@@ -6,7 +6,12 @@
 export const imageBlock = {
   version: 1,
   label: 'Bilde',
-  defaults: () => ({ src: '', alt: '', fit: 'cover', radius: 'md', href: null }),
+  defaults: () => ({
+    src: '', alt: '', fit: 'cover', radius: 'md', href: null,
+    // Additive felt fra v0.5: fokuspunkt (0..1) og ikke-destruktive
+    // CSS-justeringer (1 = nøytral).
+    x: 0.5, y: 0.5, brightness: 1, contrast: 1, saturate: 1,
+  }),
   migrations: {},
   /**
    * @param {HTMLElement} el
@@ -38,6 +43,14 @@ export const imageBlock = {
       img.addEventListener('error', () => { img.style.visibility = ''; }, { once: true });
     }
     img.style.objectFit = props.fit ?? 'cover';
+    // Fokuspunkt: hvilken del av bildet som beholdes ved beskjæring.
+    img.style.objectPosition = `${(props.x ?? 0.5) * 100}% ${(props.y ?? 0.5) * 100}%`;
+    // Ikke-destruktive justeringer (CSS-filter; 1 = nøytral).
+    const filters = [];
+    if (props.brightness != null && props.brightness !== 1) filters.push(`brightness(${props.brightness})`);
+    if (props.contrast != null && props.contrast !== 1) filters.push(`contrast(${props.contrast})`);
+    if (props.saturate != null && props.saturate !== 1) filters.push(`saturate(${props.saturate})`);
+    if (filters.length) img.style.filter = filters.join(' ');
     if (props.radius) img.style.borderRadius = `var(--urd-radius-${props.radius})`;
 
     if (props.href && !ctx.preview) {

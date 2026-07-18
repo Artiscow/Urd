@@ -8,8 +8,19 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 ## [Ulansert]
 
 Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
-testrundene kan vise til en konkret push. Numrene er arbeidspunkter,
-ikke slipp; alt samles i 0.5.0 ved fasegaten.
+testrundene kan vise til en konkret push. Numrene er arbeidspunkter, ikke slipp; alt samles i 0.5.0 ved fasegaten.
+
+### 0.5.8 - editor-løft etter research (M8 del 1) - 18. juli 2026
+Basert på nettresearch av Squarespace, Wix og Gutenberg (funn og kilder i samtalen/planen):
+- Fargevelgeren kobler til temaet: å velge en temaprikk lagrer FARGENAVNET (ikke hex), så innholdet omfarges når temaet endres - mønsteret alle de tre store bruker. Koblede felt vises med ring og «koblet til tema»-tekst; flate/hex gir frikoblet farge som før. Pluss «Nylige»-rad (siste 8 frie farger).
+- Tekststørrelse som presets: A (arv) / S / M / L / XL-knapper pluss fritt px-felt (Gutenberg-mønsteret). Utheving (markeringstusj) i formateringslinjen: aksentfargen med ett klikk eller egen farge.
+- Smart guides (à la Wix): under dra vises snappelinjer når blokkens kant/senter er innen 5 px av naboblokkers kanter/senter eller seksjonens midtlinje, med snapping (Shift = fritt). Dupliser-knapp på blokkverktøylinjen + Ctrl+D (kopi med liten forskyvning).
+- Bildeblokker fikk fokuspunkt (X/Y styrer utsnittet ved beskjæring, som bakgrunnslaget) og ikke-destruktive justeringer: lysstyrke, kontrast og metning som glidere (CSS-filter) med nullstill-knapp. Alt additivt.
+- FIKS (eiers funn): «+ Legg til blokk»-pillen lå nederst i seksjonen og havnet under folden i høye seksjoner - den er nå klebrig i synsfeltet (nær toppen i små seksjoner, følger med i høye).
+
+### 0.5.7.13 - moderne fargevelger + angre-fikser - 18. juli 2026
+- Ny fargevelger i alle paneler (egen komponent, erstatter nettleserens innebygde): flate for metning/lysstyrke, kulør-glider, hex-felt, forhåndsvisning og temafargene som hurtigvalg-prikker. Brukes i Tema, Nav-utseende, bakgrunnslag (farge/gradient/glød) og oppsettsveiviseren; alle endringer går gjennom vanlig utkast- og angreflyt.
+- Ctrl+Z virket ikke etter fargevalg (fokus ble stående i fargefeltet, som slukte snarveien), og panelene viste gamle verdier etter angring (speilene ble ikke resynket) - begge fikset. Ctrl+Y er nå også gjenta, i tillegg til Ctrl+Shift+Z, både i editoren og inne i forhåndsvisningen.
 
 ### 0.5.7.12 - bildelasting uten striper, nav-panel-overflyt, øverste seksjon-bar - 18. juli 2026
 - «Inntoningen» ved innlasting var IKKE animasjonssystemet, men selve bildelastingen: store bilder dekodes stripevis ovenfra mens de laster, og et halvlastet bilde som henger inn i neste seksjon så «avkuttet» ut. Både bildeblokker og bakgrunnsbildelag holdes nå usynlige til bildet er FERDIG lastet, og vises komplett med en gang (cachede bilder berøres ikke). Ordentlig bildeoptimalisering (responsive størrelser, lazy loading) står fortsatt i v0.7.

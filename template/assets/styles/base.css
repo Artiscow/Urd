@@ -275,6 +275,15 @@ html {
   font-size: 8px;
 }
 
+/* Uthevingsknappen: A på aksentfarget «tusj»-bakgrunn */
+.urd-text-toolbar .urd-tt-hl {
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--urd-color-accent);
+  color: #fff;
+}
+
 body.urd-chrome-off .urd-text-toolbar {
   display: none !important;
 }
@@ -373,12 +382,14 @@ body.urd-chrome-off .urd-text-toolbar {
   border-radius: var(--urd-radius-md);
 }
 
-/* «+ Legg til blokk» nederst i seksjonen (hover-vist, kun preview) */
+/* «+ Legg til blokk» (hover-vist, kun preview). Sticky i synsfeltet:
+   i små seksjoner står den nær toppen, i høye følger den med mens man
+   scroller - den lå tidligere nederst og havnet under folden. */
 .urd-preview .urd-add-block {
-  position: absolute;
-  left: 50%;
-  bottom: 10px;
-  transform: translateX(-50%);
+  position: sticky;
+  top: 40vh;
+  width: fit-content;
+  margin: 48px auto 0;
   z-index: 1002;
   display: grid;
   justify-items: center;
@@ -521,6 +532,26 @@ body.urd-chrome-off .urd-text-toolbar {
 .urd-nav-list a:hover {
   opacity: 1;
   color: var(--urd-color-accent);
+}
+
+/* Smart guides: snappelinjer mot naboblokker under dra (kun preview) */
+.urd-preview .urd-smart-guide {
+  position: absolute;
+  z-index: 1001;
+  background: var(--urd-color-accent);
+  pointer-events: none;
+}
+
+.urd-preview .urd-smart-guide-v {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.urd-preview .urd-smart-guide-h {
+  left: 0;
+  right: 0;
+  height: 1px;
 }
 
 /* Delt footer (site.footer): vises på alle sider når show er på */

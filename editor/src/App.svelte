@@ -3,6 +3,7 @@
   // siden, klikk-og-skriv på tekstblokker, utkast i localStorage og
   // publiseringsknapp mot /api/github/commit.
   import { createDraftStore } from './lib/draftStore.js';
+  import ColorPicker from './lib/ColorPicker.svelte';
   import { createPreviewBridge } from './lib/previewBridge.js';
   // Editoren deler migreringskoden med motoren (samme fil, bundles inn).
   import { liftPageFile, liftSiteFile } from '../../template/assets/engine/migrate.js';
@@ -170,6 +171,10 @@
     grid = { snap: true, ...siteDraft.grid };
     updateDirty();
     updateAttention();
+    // Panel-speilene må følge de gjenopprettede dataene, ellers viser
+    // Egenskaper/seksjonspanelet gamle verdier og angringen ser død ut.
+    syncSelectedBlock();
+    syncSectionMirrors(store.data.sections.find((s) => s.id === activeSectionId));
     pushSiteToPreview();
     // Angring kan fjerne siden man står på (angret sideopprettelse):
     // da byttes det til forsiden i stedet for å bli stående i løse luften.
@@ -197,16 +202,19 @@
   }
 
   function onKeydown(e) {
-    if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'z') return;
+    if (!(e.ctrlKey || e.metaKey)) return;
+    const key = e.key.toLowerCase();
+    if (key !== 'z' && key !== 'y') return;
     const t = e.target;
     // Fritekstfelter beholder nettleserens egen angring; alt annet
-    // (inkl. tallfeltene i grid-menyen) bruker editorens historikk.
+    // (tall, brytere, glidere, FARGEVELGERE - fokus blir stående i dem
+    // etter valg) bruker editorens historikk.
     const nativeUndo = t instanceof HTMLElement
       && (t.isContentEditable || t.tagName === 'TEXTAREA'
-        || (t.tagName === 'INPUT' && !['number', 'checkbox', 'range'].includes(t.type)));
+        || (t.tagName === 'INPUT' && !['number', 'checkbox', 'range', 'color'].includes(t.type)));
     if (nativeUndo) return;
     e.preventDefault();
-    if (e.shiftKey) redo();
+    if (key === 'y' || e.shiftKey) redo();
     else undo();
   }
 
@@ -353,6 +361,9 @@
     }
   }
 
+  /** Størrelses-presets for tekstfelt (Gutenberg-mønsteret: S/M/L/XL). */
+  const TEXT_SIZES = [['S', 14], ['M', 18], ['L', 24], ['XL', 36]];
+
   /** Navn på blokktypene i panelet. */
   const BLOCK_LABELS = { text: 'Tekst', button: 'Knapp', image: 'Bilde', shape: 'Form', video: 'Video', icon: 'Ikon' };
   const SHAPE_KINDS = [
@@ -456,7 +467,10 @@
     }
   }
 
-  /** Fargeverdi til <input type="color">: token-navn slås opp i temaet. */
+  /** Temafargene som hurtigvalg i fargevelgeren. */
+  const themeSwatches = () => Object.entries(siteDraft?.theme.tokens.color ?? {}).map(([n, hex]) => [n, hex]);
+
+  /** Fargeverdi til velgeren: token-navn slås opp i temaet. */
   function hexFor(value) {
     if (typeof value !== 'string') return '#000000';
     return value.startsWith('#') ? value : (siteDraft?.theme.tokens.color[value] ?? '#000000');
@@ -1710,8 +1724,8 @@
                   <summary>Utseende</summary>
                   <div class="group-items">
                     <label>Bakgrunn
-                      <input type="color" value={hexFor(siteDraft.nav.style?.bg ?? 'surface')}
-                        oninput={(e) => setNavStyle('bg', e.target.value)} /></label>
+                      <ColorPicker value={siteDraft.nav.style?.bg ?? 'surface'} tokens={themeSwatches()}
+                        label="Menyens bakgrunnsfarge" onchange={(hex) => setNavStyle('bg', hex)} /></label>
                     <label>Dekkevne
                       <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.bgOpacity ?? 0.85) * 100)}%</span></label>
                     <input type="range" min="0" max="1" step="0.05"
@@ -1723,8 +1737,8 @@
                       Uskarphet bak menyen
                     </label>
                     <label>Tekstfarge
-                      <input type="color" value={hexFor(siteDraft.nav.style?.textColor ?? 'text')}
-                        oninput={(e) => setNavStyle('textColor', e.target.value)} /></label>
+                      <ColorPicker value={siteDraft.nav.style?.textColor ?? 'text'} tokens={themeSwatches()}
+                        label="Menyens tekstfarge" onchange={(hex) => setNavStyle('textColor', hex)} /></label>
                     <label>Menyplassering
                       <select value={siteDraft.nav.layout ?? 'right'}
                         onchange={(e) => setNavLayout(e.target.value)}>
@@ -1775,17 +1789,17 @@
               <div class="panel-body">
                 <p class="panel-hint">Fargene og fontene hele siden bygger på. Endringer vises live.</p>
                 <label>Bakgrunn
-                  <input type="color" value={siteDraft.theme.tokens.color.bg}
-                    oninput={(e) => setColorToken('bg', e.target.value)} /></label>
+                  <ColorPicker value={siteDraft.theme.tokens.color.bg}
+                    label="Bakgrunnsfarge" onchange={(hex) => setColorToken('bg', hex)} /></label>
                 <label>Flater
-                  <input type="color" value={siteDraft.theme.tokens.color.surface}
-                    oninput={(e) => setColorToken('surface', e.target.value)} /></label>
+                  <ColorPicker value={siteDraft.theme.tokens.color.surface}
+                    label="Flatefarge" onchange={(hex) => setColorToken('surface', hex)} /></label>
                 <label>Tekst
-                  <input type="color" value={siteDraft.theme.tokens.color.text}
-                    oninput={(e) => setColorToken('text', e.target.value)} /></label>
+                  <ColorPicker value={siteDraft.theme.tokens.color.text}
+                    label="Tekstfarge" onchange={(hex) => setColorToken('text', hex)} /></label>
                 <label>Aksent
-                  <input type="color" value={siteDraft.theme.tokens.color.accent}
-                    oninput={(e) => setColorToken('accent', e.target.value)} /></label>
+                  <ColorPicker value={siteDraft.theme.tokens.color.accent}
+                    label="Aksentfarge" onchange={(hex) => setColorToken('accent', hex)} /></label>
                 <hr class="gridmenu-divider" />
                 <label>Overskrifter
                   <select value={siteDraft.theme.tokens.font.heading}
@@ -1915,10 +1929,19 @@
                           <option {value}>{name}</option>
                         {/each}
                       </select></label>
-                    <label>Størrelse px
-                      <input type="number" class="token-input" min="8" max="120" placeholder="arv"
+                    <label>Størrelse</label>
+                    <span class="toolbar-row">
+                      <button class="tbtn" title="Arv fra tema" class:active={!selectedBlock.props.size}
+                        onclick={() => setBlockProp('size', null)}>A</button>
+                      {#each TEXT_SIZES as [name, px] (name)}
+                        <button class="tbtn" title="{px} px" class:active={selectedBlock.props.size === px}
+                          onclick={() => setBlockProp('size', px)}>{name}</button>
+                      {/each}
+                      <input type="number" class="tb-num" min="8" max="120" placeholder="px"
+                        title="Egen størrelse i px"
                         value={selectedBlock.props.size ?? ''}
-                        onchange={(e) => setBlockProp('size', e.target.value ? Number(e.target.value) : null)} /></label>
+                        onchange={(e) => setBlockProp('size', e.target.value ? Number(e.target.value) : null)} />
+                    </span>
                     <p class="panel-hint">Font og størrelse gjelder hele feltet. Marker tekst i blokken for fet, kursiv, overskrifter og farge.</p>
                   {:else if selectedBlock.type === 'button'}
                     <label>Tekst
@@ -1973,6 +1996,30 @@
                     <label>Lenke
                       <input value={selectedBlock.props.href ?? ''} placeholder="Valgfri (gjør bildet klikkbart)"
                         onchange={(e) => setBlockProp('href', e.target.value || null)} /></label>
+                    <label>Fokus X
+                      <span class="gridmenu-value">{Math.round((selectedBlock.props.x ?? 0.5) * 100)}%</span></label>
+                    <input type="range" min="0" max="1" step="0.05" value={selectedBlock.props.x ?? 0.5}
+                      oninput={(e) => setBlockProp('x', Number(e.target.value))} />
+                    <label>Fokus Y
+                      <span class="gridmenu-value">{Math.round((selectedBlock.props.y ?? 0.5) * 100)}%</span></label>
+                    <input type="range" min="0" max="1" step="0.05" value={selectedBlock.props.y ?? 0.5}
+                      oninput={(e) => setBlockProp('y', Number(e.target.value))} />
+                    <label>Lysstyrke
+                      <span class="gridmenu-value">{Math.round((selectedBlock.props.brightness ?? 1) * 100)}%</span></label>
+                    <input type="range" min="0.2" max="2" step="0.05" value={selectedBlock.props.brightness ?? 1}
+                      oninput={(e) => setBlockProp('brightness', Number(e.target.value))} />
+                    <label>Kontrast
+                      <span class="gridmenu-value">{Math.round((selectedBlock.props.contrast ?? 1) * 100)}%</span></label>
+                    <input type="range" min="0.2" max="2" step="0.05" value={selectedBlock.props.contrast ?? 1}
+                      oninput={(e) => setBlockProp('contrast', Number(e.target.value))} />
+                    <label>Metning
+                      <span class="gridmenu-value">{Math.round((selectedBlock.props.saturate ?? 1) * 100)}%</span></label>
+                    <input type="range" min="0" max="2" step="0.05" value={selectedBlock.props.saturate ?? 1}
+                      oninput={(e) => setBlockProp('saturate', Number(e.target.value))} />
+                    <button class="ghost" title="Sett lysstyrke, kontrast og metning tilbake til nøytralt"
+                      onclick={() => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+                        b.props.brightness = 1; b.props.contrast = 1; b.props.saturate = 1;
+                      })}>Nullstill justeringer</button>
                   {:else if selectedBlock.type === 'video'}
                     <label>Videolenke</label>
                     <input value={selectedBlock.props.url ?? ''} placeholder="https://youtube.com/watch?v=… eller vimeo.com/…"
@@ -2083,19 +2130,19 @@
                       </span>
                       {#if layer.type === 'color'}
                         <label>Farge
-                          <input type="color" value={hexFor(layer.props.value)}
-                            oninput={(e) => setBgProp(i, 'value', e.target.value)} /></label>
+                          <ColorPicker value={layer.props.value} tokens={themeSwatches()}
+                            label="Lagets farge" onchange={(hex) => setBgProp(i, 'value', hex)} /></label>
                         <label>Styrke
                           <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
                         <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
                           oninput={(e) => setBgProp(i, 'opacity', Number(e.target.value))} />
                       {:else if layer.type === 'gradient'}
                         <label>Fra
-                          <input type="color" value={hexFor(layer.props.stops[0])}
-                            oninput={(e) => setGradientStop(i, 0, e.target.value)} /></label>
+                          <ColorPicker value={layer.props.stops[0]} tokens={themeSwatches()}
+                            label="Gradient fra" onchange={(hex) => setGradientStop(i, 0, hex)} /></label>
                         <label>Til
-                          <input type="color" value={hexFor(layer.props.stops[layer.props.stops.length - 1])}
-                            oninput={(e) => setGradientStop(i, layer.props.stops.length - 1, e.target.value)} /></label>
+                          <ColorPicker value={layer.props.stops[layer.props.stops.length - 1]} tokens={themeSwatches()}
+                            label="Gradient til" onchange={(hex) => setGradientStop(i, layer.props.stops.length - 1, hex)} /></label>
                         <label>Vinkel
                           <span class="gridmenu-value">{layer.props.angle}°</span></label>
                         <input type="range" min="0" max="360" step="5" value={layer.props.angle}
@@ -2111,8 +2158,8 @@
                         </label>
                       {:else if layer.type === 'glow'}
                         <label>Farge
-                          <input type="color" value={hexFor(layer.props.color)}
-                            oninput={(e) => setBgProp(i, 'color', e.target.value)} /></label>
+                          <ColorPicker value={layer.props.color} tokens={themeSwatches()}
+                            label="Glødens farge" onchange={(hex) => setBgProp(i, 'color', hex)} /></label>
                         <label>Posisjon X
                           <span class="gridmenu-value">{Math.round(layer.props.x * 100)}%</span></label>
                         <input type="range" min="0" max="1" step="0.05" value={layer.props.x}
@@ -2276,9 +2323,9 @@
           <input bind:value={setupName} placeholder="F.eks. foreningens navn"
             onkeydown={(e) => e.key === 'Enter' && applySetup()} /></label>
         <label>Aksentfarge (knapper og lenker)
-          <input type="color" bind:value={setupAccent} /></label>
+          <ColorPicker value={setupAccent} label="Aksentfarge" onchange={(hex) => (setupAccent = hex)} /></label>
         <label>Bakgrunnsfarge
-          <input type="color" bind:value={setupBg} /></label>
+          <ColorPicker value={setupBg} label="Bakgrunnsfarge" onchange={(hex) => (setupBg = hex)} /></label>
         <p class="panel-hint">
           Navnet brukes også som logo i menyen. Husk å trykke Publiser
           etterpå, så endringene blir synlige for besøkende.

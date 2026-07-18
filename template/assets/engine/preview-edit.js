@@ -347,6 +347,20 @@ function initTextToolbar() {
   custom.title = 'Egen farge';
   custom.addEventListener('input', () => exec('foreColor', custom.value));
   bar.appendChild(custom);
+
+  // Utheving (markeringstusj): aksentfarget bakgrunn på markert tekst.
+  const hl = btn('<span class="urd-tt-hl">A</span>', 'Uthev med aksentfargen (klikk igjen på uthevet tekst fjerner via Fjern formatering)', () => {
+    const accent = getComputedStyle(document.documentElement)
+      .getPropertyValue('--urd-color-accent').trim();
+    exec('hiliteColor', accent);
+  });
+  hl.classList.add('urd-tt-hl-btn');
+  const hlCustom = document.createElement('input');
+  hlCustom.type = 'color';
+  hlCustom.className = 'urd-tt-color';
+  hlCustom.title = 'Uthev med egen farge';
+  hlCustom.addEventListener('input', () => exec('hiliteColor', hlCustom.value));
+  bar.appendChild(hlCustom);
   sep();
 
   const alignIcon = (kind) =>
@@ -535,11 +549,13 @@ function post(msg) {
 // historikken - MED MINDRE fokus står i redigerbar tekst (der skal
 // nettleserens egen tekst-angring gjelde; urd-edit holder utkastet i synk).
 window.addEventListener('keydown', (event) => {
-  if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'z') return;
+  if (!(event.ctrlKey || event.metaKey)) return;
+  const key = event.key.toLowerCase();
+  if (key !== 'z' && key !== 'y') return;
   const target = event.target;
   if (target instanceof HTMLElement && target.isContentEditable) return;
   event.preventDefault();
-  post({ type: 'urd-undo', redo: event.shiftKey });
+  post({ type: 'urd-undo', redo: key === 'y' || event.shiftKey });
 });
 
 // Markering: klikk på en blokk gir den varig fokus (håndtakene holder seg
@@ -604,6 +620,13 @@ window.addEventListener('keydown', (event) => {
   const ctx = el?._urdCtx;
   if (!ctx) return;
 
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'd') {
+    if (isMobile()) return;
+    event.preventDefault();
+    duplicateBlock(ctx.section, ctx.block);
+    return;
+  }
+
   if (event.key === 'Delete' || event.key === 'Backspace') {
     event.preventDefault();
     post({ type: 'urd-delete', sectionId: ctx.section.id, blockId: selectedBlockId });
@@ -645,6 +668,19 @@ document.addEventListener('pointerdown', (event) => {
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+/** Dupliser en blokk: kopi med ny id, litt forskjøvet, i samme seksjon. */
+function duplicateBlock(section, block) {
+  const copy = JSON.parse(JSON.stringify(block));
+  copy.id = `blk-${crypto.randomUUID().slice(0, 8)}`;
+  const f = copy.frames.desktop;
+  copy.frames.desktop = {
+    ...f,
+    x: clamp(Math.round((f.x + 2) * 100) / 100, 0, Math.max(0, Math.round((100 - f.w) * 100) / 100)),
+    y: f.y + 16,
+  };
+  post({ type: 'urd-add-block', sectionId: section.id, block: copy });
 }
 
 /**
@@ -750,6 +786,13 @@ function enhanceBlock(el, block, section, grid, host) {
       post({ type: 'urd-block-flag', sectionId: section.id, blockId: block.id, decor: block.decor });
     });
     toolbar.appendChild(decorBtn);
+
+    const DUP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>';
+    const dupBtn = document.createElement('button');
+    dupBtn.innerHTML = DUP_SVG;
+    dupBtn.title = 'Dupliser blokken (Ctrl+D)';
+    dupBtn.addEventListener('click', () => duplicateBlock(section, block));
+    toolbar.appendChild(dupBtn);
 
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'urd-edit-delete';
@@ -863,6 +906,62 @@ function enhanceBlock(el, block, section, grid, host) {
       const overlay = showGridOverlay(host, grid);
       let current = orig;
 
+      // Smart guides (à la Wix): naboblokkers kanter/senter + seksjonens
+      // midtlinje som snappelinjer. Målene samles ved dra-start.
+      const GUIDE_TOL = 5;
+      const xTargets = [host.clientWidth / 2];
+      const yTargets = [];
+      for (const other of host.querySelectorAll(':scope > .urd-block')) {
+        if (other === el) continue;
+        const left = other.offsetLeft;
+        const top = other.offsetTop;
+        xTargets.push(left, left + other.offsetWidth / 2, left + other.offsetWidth);
+        yTargets.push(top, top + other.offsetHeight / 2, top + other.offsetHeight);
+      }
+      const guideEls = [];
+      const clearGuides = () => {
+        for (const g of guideEls) g.remove();
+        guideEls.length = 0;
+      };
+      const drawGuide = (axis, px) => {
+        const g = document.createElement('div');
+        g.className = `urd-smart-guide urd-smart-guide-${axis}`;
+        if (axis === 'v') g.style.left = `${px}px`;
+        else g.style.top = `${px}px`;
+        host.appendChild(g);
+        guideEls.push(g);
+      };
+      /** Justerer current mot nærmeste snappelinje og tegner den. */
+      const applyGuides = () => {
+        clearGuides();
+        if (kind !== 'move') return;
+        const wPx = (current.w / 100) * host.clientWidth;
+        let leftPx = (current.x / 100) * host.clientWidth;
+        let best = null;
+        for (const t of xTargets) {
+          for (const edge of [0, wPx / 2, wPx]) {
+            const d = t - (leftPx + edge);
+            if (Math.abs(d) <= GUIDE_TOL && (!best || Math.abs(d) < Math.abs(best.d))) best = { d, line: t };
+          }
+        }
+        if (best) {
+          leftPx += best.d;
+          current = { ...current, x: clamp(r2((leftPx * 100) / host.clientWidth), 0, r2(100 - current.w)) };
+          drawGuide('v', best.line);
+        }
+        best = null;
+        for (const t of yTargets) {
+          for (const edge of [0, current.h / 2, current.h]) {
+            const d = t - (current.y + edge);
+            if (Math.abs(d) <= GUIDE_TOL && (!best || Math.abs(d) < Math.abs(best.d))) best = { d, line: t };
+          }
+        }
+        if (best) {
+          current = { ...current, y: current.y + best.d };
+          drawGuide('h', best.line);
+        }
+      };
+
       const onMove = (ev) => {
         if (!started) {
           if (Math.abs(ev.clientX - start.x) + Math.abs(ev.clientY - start.y) < threshold) return;
@@ -888,6 +987,9 @@ function enhanceBlock(el, block, section, grid, host) {
               w: clamp(snapPct(orig.w + dx), r2(colStep), r2(100 - orig.x)),
               h: Math.max(4, snapPx(orig.h + dy)),
             };
+        // Shift = helt fritt: da hopper vi også over smart guides.
+        if (!free) applyGuides();
+        else clearGuides();
         Object.assign(el.style, frameToCss(current));
       };
 
@@ -895,6 +997,7 @@ function enhanceBlock(el, block, section, grid, host) {
         handle.removeEventListener('pointermove', onMove);
         handle.removeEventListener('pointerup', onUp);
         overlay.remove();
+        clearGuides();
         if (!started) return;
 
         // Slippes blokkens SENTRUM over en annen seksjon (desktop),
