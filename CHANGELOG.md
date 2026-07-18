@@ -7,11 +7,15 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 
 ## [Ulansert]
 
-(ingenting ennå etter 0.5.10)
-
 Arbeidet mot v0.6 pushes nummerert (0.6.1, 0.6.2, …), og fase-slippet
 døpes til det siste push-nummeret ved gaten, slik v0.5-fasen endte i
-0.5.10. Da stiger numrene alltid.
+0.5.10. Da stiger numrene alltid. Etterslepp-fikser på v0.5 nummereres
+0.5.11 og videre.
+
+### 0.5.11 - tegnvelger med eget ikon, favicon-fikser + CodeQL - 18. juli 2026
+- Ikon-blokken har fått en tegnvelger i Egenskaper: kategorisert meny med rundt 300 tegn og emojier (Symboler, Piler, Smilefjes, Gester og folk, Natur, Mat og drikke, Aktivitet, Objekter, Hjerter) med «Nylige»-rad, ved siden av fritekstfeltet. Nederst i menyen kan et EGET IKON lastes opp (webp, maks 256px): det vises i tegnstørrelsen i stedet for tegnet, kan fjernes i Egenskaper, og publiseres som media-fil (additivt `image`-felt, ingen migrering).
+- Admin-fanen blinket med Urd-merket ved hver innlasting før editoren hadde lest site.json: en liten `admin/favicon-boot.js` bytter nå til nettstedsikonet straks HTML-en parses, lenge før editor-bunten er lastet.
+- CodeQL-varslene #1-3 (XSS/redirect-flyt i favicon-settingen) er lukket ved at kun kjente ikonformer slippes gjennom (`data:image/…` eller site-relativ sti, aldri `//`) i alle tre favicon-flytene: editorens effekt, favicon-boot.js og motorens applyFavicon.
 
 ## [0.5.10] - 2026-07-18
 

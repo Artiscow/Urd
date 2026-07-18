@@ -103,6 +103,9 @@ function mountToTop() {
  */
 function applyFavicon(href) {
   if (!href) return;
+  // Kun kjente ikonformer (data:image eller site-relativ sti); samme vokter som admin, jf. CodeQL-funnene på favicon-flyten.
+  if (typeof href !== 'string') return;
+  if (!href.startsWith('data:image/') && !(href.startsWith('/') && !href.startsWith('//'))) return;
   let link = document.querySelector('link[rel="icon"]');
   if (!link) {
     link = document.createElement('link');

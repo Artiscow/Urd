@@ -12,9 +12,19 @@ export const iconBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el
-   * @param {{glyph: string, color: string, size: number}} props
+   * @param {{glyph: string, color: string, size: number, image?: string|null}} props
    */
   render(el, props) {
+    // Eget opplastet ikon (additivt felt): bildet vises i tegnstørrelsen og vinner over glyfen til det fjernes.
+    if (props.image) {
+      const img = document.createElement('img');
+      img.src = props.image;
+      img.alt = '';
+      img.draggable = false;
+      img.style.cssText = `height:${props.size || 48}px;width:auto;display:block;`;
+      el.appendChild(img);
+      return;
+    }
     const span = document.createElement('span');
     span.className = 'urd-icon';
     span.textContent = props.glyph || '★';

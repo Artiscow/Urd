@@ -4,6 +4,7 @@
   // publiseringsknapp mot /api/github/commit.
   import { createDraftStore } from './lib/draftStore.js';
   import ColorPicker from './lib/ColorPicker.svelte';
+  import GlyphPicker from './lib/GlyphPicker.svelte';
   import { createPreviewBridge } from './lib/previewBridge.js';
   // Editoren deler migreringskoden med motoren (samme fil, bundles inn).
   import { liftPageFile, liftSiteFile } from '../../template/assets/engine/migrate.js';
@@ -1021,11 +1022,12 @@
     siteMutate('edit:site-icon', () => { delete siteDraft.site.icon; });
   }
 
-  // Admin-fanen viser nettstedsikonet når det finnes (ellers Urd-merket
-  // fra admin/index.html).
+  // Admin-fanen viser nettstedsikonet når det finnes (ellers Urd-merket fra admin/index.html).
+  // Kun kjente ikonformer slippes gjennom (data:image eller site-relativ sti), så utkastdata aldri kan bli en aktiv URL (CodeQL-funn #1-3).
   $effect(() => {
     const href = siteDraft?.site?.icon;
-    if (!href) return;
+    if (typeof href !== 'string') return;
+    if (!href.startsWith('data:image/') && !(href.startsWith('/') && !href.startsWith('//'))) return;
     const link = document.querySelector('link[rel="icon"]');
     if (link) link.href = href;
   });
@@ -1440,6 +1442,8 @@
       }
       for (const block of section.blocks) {
         if (block.type === 'image') materializeField(block.props, 'src', block.props.alt, files);
+        // Ikon-blokkens eget opplastede ikon publiseres som media-fil på samme måte.
+        if (block.type === 'icon') materializeField(block.props, 'image', 'ikon', files);
       }
     }
     return files;
@@ -2177,8 +2181,21 @@
                     <p class="panel-hint">YouTube og Vimeo støttes, med personvernvennlig innbygging. Videoen spilles på den publiserte siden (og i Ren visning).</p>
                   {:else if selectedBlock.type === 'icon'}
                     <label>Tegn/emoji
-                      <input class="token-input" value={selectedBlock.props.glyph ?? ''} maxlength="4"
-                        onchange={(e) => setBlockProp('glyph', e.target.value || '★')} /></label>
+                      <span class="toolbar-row">
+                        <GlyphPicker value={selectedBlock.props.glyph ?? '★'}
+                          onpick={(glyph) => setBlockProp('glyph', glyph)}
+                          onimage={(dataUrl) => setBlockProp('image', dataUrl)} />
+                        <input class="token-input" value={selectedBlock.props.glyph ?? ''} maxlength="4"
+                          title="Eller skriv/lim inn et tegn selv"
+                          onchange={(e) => setBlockProp('glyph', e.target.value || '★')} />
+                      </span></label>
+                    {#if selectedBlock.props.image}
+                      <span class="toolbar-row">
+                        <img class="site-icon-preview" src={selectedBlock.props.image} alt="Eget ikon" />
+                        <button class="ghost" onclick={() => setBlockProp('image', null)}>Fjern eget ikon</button>
+                      </span>
+                      <p class="panel-hint">Blokken viser det opplastede ikonet; tegnet brukes igjen når du fjerner det.</p>
+                    {/if}
                     <label>Størrelse px
                       <input type="number" min="8" max="400" value={selectedBlock.props.size ?? 48}
                         onchange={(e) => setBlockProp('size', Number(e.target.value))} /></label>

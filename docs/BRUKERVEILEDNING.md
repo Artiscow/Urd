@@ -69,6 +69,9 @@ synsfeltet, i seksjonen du sist klikket i. Typene:
   Innbyggingen er personvennlig, og videoen spilles på den publiserte
   siden (i editoren markerer klikk bare blokken).
 - **Ikon**: et tegn eller en emoji i valgfri størrelse og temafarge.
+  I Egenskaper åpner tegnknappen en meny med hundrevis av tegn og
+  emojier (med de nylig brukte øverst), og nederst i menyen kan du
+  laste opp et eget ikon-bilde som vises i stedet for tegnet.
 - **Former**: strek, pil, sirkel, rektangel og trekant til dekorasjon.
 
 I editoren utløses aldri lenker og knapper når du klikker på dem -
