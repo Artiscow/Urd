@@ -1505,6 +1505,17 @@
       files.push(...materializeSiteImages(siteOut));
       files.push({ path: 'content/site.json', content: JSON.stringify(siteOut, null, 2) + '\n', encoding: 'utf-8' });
       draftKeys.push('urd-draft-site');
+      // Navngi HVA i nettstedsoppsettet som endret seg (til historikken).
+      const eq = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+      if (!eq(site.theme, siteDraft.theme)) publishedTitles.push('tema');
+      if (!eq(site.nav, siteDraft.nav)) publishedTitles.push('menyen');
+      if (!eq(site.footer, siteDraft.footer)) publishedTitles.push('footeren');
+      if (!eq(site.pages, siteDraft.pages)) publishedTitles.push('sideregisteret');
+      if (!eq(site.grid, siteDraft.grid)) publishedTitles.push('gridet');
+      if ((site.site.icon ?? null) !== (siteDraft.site.icon ?? null)) publishedTitles.push('nettstedsikonet');
+      const { icon: a, ...restA } = site.site;
+      const { icon: b, ...restB } = siteDraft.site;
+      if (!eq(restA, restB)) publishedTitles.push('nettstedsinfo');
     }
 
     // Sideruting på alle statiske hoster: hver side utenom forsiden får
@@ -1541,7 +1552,7 @@
     }
 
     const body = {
-      message: `Oppdater ${publishedTitles.join(', ') || 'innstillinger'} via Urd-admin`,
+      message: `Oppdater ${publishedTitles.join(', ') || 'nettstedet'} via Urd-admin`,
       files,
       // HEAD-en konfliktsjekken så: serveren avviser med 409 om noen
       // rekker å publisere i selve commit-vinduet.

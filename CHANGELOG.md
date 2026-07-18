@@ -10,6 +10,9 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter, ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.8.8 - presise publiseringsmeldinger - 18. juli 2026
+- Publiseringer av nettstedsoppsettet sier nå HVA som endret seg i historikken («Oppdater tema via Urd-admin», «Oppdater menyen, nettstedsikonet …») i stedet for det generiske «innstillinger» - endringene diffes mot publisert site.json (tema, menyen, footeren, sideregisteret, gridet, nettstedsikonet, nettstedsinfo).
+
 ### 0.5.8.7 - nettstedsikon (favicon) + grå som standardtema - 18. juli 2026
 - Nettstedsikon: last opp i Tema-panelet (skaleres til 128px webp, materialiseres som media-fil ved publisering, additivt `site.icon`-felt). Vises i nettleserfaner og bokmerker for besøkende, og admin-fanen følger nettstedsikonet når det finnes. Uten eget ikon brukes et nytt Urd-merke (innebygd SVG) i både malen og admin - før var fanene ikonløse (globus).
 - «Nøytral grå» er nå standardtema for admin (tidligere Lilla dybde); valget kan fortsatt endres i velgeren og huskes per nettleser.

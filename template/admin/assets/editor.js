@@ -3793,12 +3793,16 @@ function oo(e, t) {
 			}), t.push(i.title), o ? r.push(i.id) : n.push(a);
 		}
 		if (w.hasDraft()) {
-			let t = JSON.parse(JSON.stringify(K(E)));
-			e.push(...Sn(t)), e.push({
+			let r = JSON.parse(JSON.stringify(K(E)));
+			e.push(...Sn(r)), e.push({
 				path: "content/site.json",
-				content: JSON.stringify(t, null, 2) + "\n",
+				content: JSON.stringify(r, null, 2) + "\n",
 				encoding: "utf-8"
 			}), n.push("urd-draft-site");
+			let i = (e, t) => JSON.stringify(e ?? null) === JSON.stringify(t ?? null);
+			i(K(s).theme, K(E).theme) || t.push("tema"), i(K(s).nav, K(E).nav) || t.push("menyen"), i(K(s).footer, K(E).footer) || t.push("footeren"), i(K(s).pages, K(E).pages) || t.push("sideregisteret"), i(K(s).grid, K(E).grid) || t.push("gridet"), (K(s).site.icon ?? null) !== (K(E).site.icon ?? null) && t.push("nettstedsikonet");
+			let { icon: a, ...o } = K(s).site, { icon: c, ...l } = K(E).site;
+			i(o, l) || t.push("nettstedsinfo");
 		}
 		try {
 			let t = await (await fetch("/index.html")).text();
@@ -3827,7 +3831,7 @@ function oo(e, t) {
 			return;
 		}
 		let a = {
-			message: `Oppdater ${t.join(", ") || "innstillinger"} via Urd-admin`,
+			message: `Oppdater ${t.join(", ") || "nettstedet"} via Urd-admin`,
 			files: e,
 			...i.head ? { expect: i.head } : {}
 		}, o = null;
