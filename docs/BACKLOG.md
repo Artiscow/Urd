@@ -16,7 +16,7 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 - [x] Teksteditor: flytende linje over markert tekst med fet/kursiv/overskrifter/temafarger (M3, 17. juli 2026; fontvalg styres av Tema-panelet, egne skriftstørrelser utsatt)
 - [x] Seksjonseditor med full bakgrunnseditor: farge/gradient (også animert), glød, bildelag, korn (M4, 18. juli 2026)
 - [x] Animasjonsinnstillinger per blokk/seksjon (fade-in/slide-up/zoom-in/hover-lift) med version+migrate-kontrakt (M4, 18. juli 2026)
-- [ ] Nav editor: legge til logo/ikon i nav og mulighet til å bruke ikon/logo + custom tekst som "Hjem" knapp
+- [x] Nav editor: logo/ikon i nav, og ikon/logo + egen tekst som «Hjem»-knapp (M7, 18. juli 2026; logo-typen «bilde + tekst»)
 - [x] Konfliktvarsel før publisering via `latest?base=` + Historikk-panel med angre-publisering (`history`/`revert`) + oppsettsveiviser (M5, 18. juli 2026)
 - [x] Bilder-preset for seksjoner (M6, 18. juli 2026; tomme bilderammer som byttes i Egenskaper - bevisst ingen eksterne plassholder-URL-er pga. CSP)
 - [x] Flere seksjonspresets uten datakilder: team/styret, FAQ, kontakt (M6, 18. juli 2026)
@@ -26,12 +26,12 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 - [x] Rotering på lerretet: ⟳-håndtak med 15°-snapping (Shift = fritt); størrelse har eget hjørnehåndtak fra før (M6, 18. juli 2026)
 - [x] Knapper/lenker i editoren utløses ikke ved klikk - klikket markerer blokken (M6, 18. juli 2026)
 - [x] Innlastning: synlige elementer dukker opp med en gang; inngangsanimasjoner spilles kun ved scroll-inn senere (M6, 18. juli 2026; egne innlastningsanimasjoner kan komme som funksjon senere)
-- [ ] Footer editor/mal/templates
-- [ ] M7: Utvikle nav-editor: justering av menypunktene (venstre/midt/høyre), logo med tre valg: tekst, bilde, bilde+tekst (med størrelse og rekkefølge på bilde/tekst), logo som «Hjem»-knapp
-- [ ] M7: Delt footer (site.footer, additivt): redigeres ett sted, vises på alle sider; design-maler bygges videre i v0.6
+- [x] Footer-editor: delt footer i eget panel (M7, 18. juli 2026); design-maler bygges videre i v0.6
+- [x] M7: Utvikle nav-editor: justering av menypunktene (venstre/midt/høyre), logo med tre valg: tekst, bilde, bilde+tekst (med størrelse og rekkefølge), logo som «Hjem»-knapp (18. juli 2026)
+- [x] M7: Delt footer (site.footer, additivt): redigeres ett sted, vises på alle sider (18. juli 2026); design-maler bygges videre i v0.6
 - [ ] M7/M8: Ordentlig og fullstendig utvikling av seksjonspresetene (Bilder, Team/styret, FAQ, Kontakt er barebones); eier finner inspirasjonssider (à la ApeironLF) + flere utseende-alternativer per preset
-- [ ] Når man legger til en ny seksjon åpnes Egenskaper automatisk (samme oppførsel som ved blokkvalg)
-- [ ] Se på UI og fuksjoner til nettsider som https://nobaraproject.org/ https://linuxmint.com/ https://garudalinux.org/ https://www.forbrukerradet.no/forside https://online.ntnu.no/ https://online.ntnu.no/offline https://abakus.no/ https://www.broderskabet.no/ https://www.vg.no/ https://www.nrk.no/
+- [x] Når man legger til en ny seksjon åpnes Egenskaper automatisk (M7, 18. juli 2026)
+- [ ] SISTE STEG FØR 0.5.0 (sammen med preset-utviklingen over): se på UI og funksjoner til nettsider som https://nobaraproject.org/ https://linuxmint.com/ https://garudalinux.org/ https://www.forbrukerradet.no/forside https://online.ntnu.no/ https://online.ntnu.no/offline https://abakus.no/ https://www.broderskabet.no/ https://www.vg.no/ https://www.nrk.no/
 - [x] AVKLART (M2, 17. juli 2026): publisering genererer `<slug>/index.html` per side (kopi av rot-index.html) og sletter dem for fjernede/flyttede sider - ruting virker da på alle statiske hoster, ikke bare SPA-fallback
 
 ## Til v0.6 (økosystem)
