@@ -121,8 +121,8 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 29.45,
-              "y": 448,
+              "x": 12.85,
+              "y": 432,
               "w": 33,
               "h": 28,
               "z": 1,
@@ -254,11 +254,11 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 36.81,
-              "y": 96,
+              "x": 41.39,
+              "y": 112,
               "w": 26,
               "h": 36,
-              "z": 1,
+              "z": 2,
               "rot": 17
             },
             "mobile": null
@@ -281,6 +281,124 @@
         "props": {
           "duration": 600,
           "delay": 0
+        }
+      }
+    },
+    {
+      "id": "sec-8a2314a8",
+      "version": 1,
+      "preset": "hero",
+      "size": {
+        "minHeight": "70vh"
+      },
+      "grid": null,
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "gradient",
+            "version": 1,
+            "props": {
+              "stops": [
+                "#0b0e14",
+                "#1a1030"
+              ],
+              "angle": 160,
+              "animate": false
+            }
+          },
+          {
+            "type": "glow",
+            "version": 1,
+            "props": {
+              "x": 0.7,
+              "y": 0.2,
+              "color": "accent",
+              "radius": 0.5,
+              "opacity": 0.35
+            }
+          },
+          {
+            "type": "grain",
+            "version": 1,
+            "props": {
+              "opacity": 0.06
+            }
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "id": "blk-c68a9001",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<h1>Ny overskrift</h1>",
+            "align": "left"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 24.26,
+              "y": 240,
+              "w": 50,
+              "h": 32,
+              "z": 2,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-d2482e64",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<p>Skriv en kort introduksjon her.</p>",
+            "align": "left"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 24.26,
+              "y": 272,
+              "w": 41.39,
+              "h": 32,
+              "z": 2,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-aecce4aa",
+          "type": "shape",
+          "version": 1,
+          "decor": true,
+          "props": {
+            "kind": "rect",
+            "color": "accent",
+            "thickness": 2,
+            "fill": null
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 22.84,
+              "y": 224,
+              "w": 25.69,
+              "h": 96,
+              "z": 3,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        }
+      ],
+      "responsive": {
+        "mobile": {
+          "mode": "auto",
+          "attention": null
         }
       }
     },
@@ -438,214 +556,6 @@
               "y": 24,
               "w": 50,
               "h": 20,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        }
-      ],
-      "responsive": {
-        "mobile": {
-          "mode": "auto",
-          "attention": null
-        }
-      }
-    },
-    {
-      "id": "sec-hero",
-      "version": 1,
-      "preset": "hero",
-      "size": {
-        "minHeight": "85vh"
-      },
-      "grid": null,
-      "background": {
-        "version": 1,
-        "layers": [
-          {
-            "type": "gradient",
-            "version": 1,
-            "props": {
-              "stops": [
-                "#0b0e14",
-                "#1a1030"
-              ],
-              "angle": 160,
-              "animate": false
-            }
-          },
-          {
-            "type": "glow",
-            "version": 1,
-            "props": {
-              "x": 0.7,
-              "y": 0.2,
-              "color": "#7c5cff",
-              "radius": 0.5,
-              "opacity": 0.35
-            }
-          },
-          {
-            "type": "grain",
-            "version": 1,
-            "props": {
-              "opacity": 0.06
-            }
-          }
-        ]
-      },
-      "blocks": [
-        {
-          "id": "blk-tittel",
-          "type": "text",
-          "version": 1,
-          "props": {
-            "html": "<h1>Velkommen til Min forening</h1>",
-            "align": "left"
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 30.51,
-              "y": 112,
-              "w": 50,
-              "h": 32,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        },
-        {
-          "id": "blk-lede",
-          "type": "text",
-          "version": 1,
-          "props": {
-            "html": "<p>Denne siden er bygget med Urd - rediger den på /admin.</p>",
-            "align": "left"
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 19.99,
-              "y": 208,
-              "w": 41.67,
-              "h": 16,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        },
-        {
-          "id": "blk-cta",
-          "type": "button",
-          "version": 1,
-          "props": {
-            "label": "Les mer om oss",
-            "page": "om-oss",
-            "style": "primary"
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 48.39,
-              "y": 384,
-              "w": 20.83,
-              "h": 16,
-              "z": 4,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        },
-        {
-          "id": "blk-c3520c92",
-          "type": "shape",
-          "version": 1,
-          "props": {
-            "kind": "rect",
-            "color": "accent",
-            "thickness": 2,
-            "fill": null
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 27.35,
-              "y": 64,
-              "w": 37.87,
-              "h": 128,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        },
-        {
-          "id": "blk-2bd6c6b9",
-          "type": "image",
-          "version": 1,
-          "props": {
-            "src": "/media/weyland-crt-1920x1200-192ecc51.webp",
-            "alt": "weyland crt 1920x1200",
-            "fit": "cover",
-            "radius": "md",
-            "href": null
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 24.19,
-              "y": 752,
-              "w": 30,
-              "h": 288,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        },
-        {
-          "id": "blk-0d52cefe",
-          "type": "image",
-          "version": 1,
-          "props": {
-            "src": "/media/weyland-crt-1920x1200-192ecc51.webp",
-            "alt": "weyland crt 1920x1200",
-            "fit": "cover",
-            "radius": "md",
-            "href": null
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 54.7,
-              "y": 752,
-              "w": 30,
-              "h": 288,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        },
-        {
-          "id": "blk-49404e95",
-          "type": "text",
-          "version": 1,
-          "props": {
-            "html": "<p>Dette er veldig kult!</p>",
-            "align": "left"
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 58.91,
-              "y": 224,
-              "w": 12.62,
-              "h": 32,
               "z": 1,
               "rot": 0
             },
