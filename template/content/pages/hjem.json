@@ -200,7 +200,7 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 29.45,
+              "x": 21.41,
               "y": 368,
               "w": 25,
               "h": 16,
@@ -216,7 +216,7 @@
           "version": 1,
           "decor": false,
           "props": {
-            "html": "<h3>Jeg diger dette</h3><p><b>Jaaa jeg<i> tror</i> det</b></p>",
+            "html": "<h3>Jeg diger dette</h3><p><b>Det er bra at vi tester ting!</b></p>",
             "align": "left",
             "box": true
           },
@@ -339,7 +339,7 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 7.36,
+              "x": 7.14,
               "y": 144,
               "w": 41.67,
               "h": 20,
@@ -384,8 +384,8 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 29.45,
-              "y": 160,
+              "x": 31.4,
+              "y": 208,
               "w": 30,
               "h": 150,
               "z": 1,
