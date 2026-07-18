@@ -520,6 +520,15 @@ function addSectionToolbar(host, section, grid) {
       });
     }
   } else {
+    // Utvidbare presets: «+ kort/rad/person»-knapp som legger til NESTE element i seksjonen.
+    // Fabrikken (def.item) bor i preset-definisjonen; seksjonen forblir en generisk container.
+    const def = section.preset ? window.Urd.sections.get(section.preset) : null;
+    if (def?.item) {
+      mk(`+ ${def.itemLabel ?? 'element'}`, `Legg til: ${def.itemLabel ?? 'element'} (Ctrl+Z angrer)`, () => {
+        const next = def.item(section);
+        post({ type: 'urd-add-blocks', sectionId: section.id, blocks: next.blocks, minBottom: next.bottom });
+      });
+    }
     mk('↑', 'Flytt seksjonen opp', () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
     mk('↓', 'Flytt seksjonen ned', () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
     mk('⤓', 'Tilpass høyden til innholdet', () => {

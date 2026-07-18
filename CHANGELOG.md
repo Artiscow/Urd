@@ -10,6 +10,10 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter, ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.9.2 - utvidbare seksjoner («+ kort/rad/person») - 18. juli 2026
+- Seksjoner laget fra maler med gjentakende elementer har fått en pluss-knapp i seksjonsverktøylinjen som legger til NESTE element (kort, sak, rad, person, spørsmål, steg, produkt, tall, logo, bilde) ferdig plassert i neste ledige rute. Elementet legges som én gruppe blokker i ett angre-steg, og seksjonen vokser automatisk når det trengs.
+- Teknisk: preset-definisjoner kan nå ha valgfrie `item`/`itemLabel`-fabrikker (samme mønster som `create`); seksjonene forblir generiske containere, og antall leses robust fra blokkene så knappen virker også etter redigering.
+
 ### 0.5.9 - seksjonsbiblioteket + kartleggingen «Siste steg før 0.5.0» - 18. juli 2026
 - Kartlegging fullført av eiers ni inspirasjonssider + full funksjonsinventering av ApeironLF (kildekoden) + nettbutikk-research (Squarespace/Wix Commerce, Snipcart, Stripe, Vipps). Funnene er sortert inn i BACKLOG (v0.5/v0.6/v0.7/horisont) og VEIKART: kalender-pluginen (v0.6) blir feed-basert (Google Calendar/iCal) med designkrav fra ApeironLF, og butikk uten betalingsgateway (produktkort med varianter, klient-side handlekurv, bestillingsskjema, Vipps-instruks) er lagt som kjernefunksjon i v0.7.
 - Seksjonsbiblioteket utvidet fra 7 til 18 presets, bygget av eksisterende blokktyper med temafarge-tokens: hero sentrert (to knapper), funksjonskort (ikon + kort + hover-løft), nyheter, arrangementer (dato-badge + påmeldingsknapp), steg for steg, hovedoppslag (én stor + to små), produkter/merch (kjøp = ekstern lenke, f.eks. Vipps), CTA-banner, sitat, statistikk, sponsorrad (gråtone) og medlemskap (prisnivåer + Vipps-linje). Team fikk e-postlinje og FAQ fikk «flere spørsmål?»-lenke.

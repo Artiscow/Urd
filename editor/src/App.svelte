@@ -804,6 +804,7 @@
       onReady,
       onNavigate,
       onAddBlock: (msg) => insertBlock(msg.sectionId, msg.block),
+      onAddBlocks: (msg) => insertBlocks(msg.sectionId, msg.blocks, msg.minBottom),
       onRequestBlock: handleRequestBlock,
       onMoveBlockSection: handleMoveBlockSection,
       onMobileManual: handleMobileManual,
@@ -1341,6 +1342,23 @@
     if (!section) return;
     pushHistory('add-block');
     section.blocks.push(block);
+    markDesktopChange(section, 'blokk-lagt-til');
+    store.save();
+    updateDirty();
+    bridge?.sendSection(pageId, section);
+  }
+
+  /** «+ kort/rad»-knappen på en seksjon: preset-elementet kommer som en gruppe blokker i ETT angre-steg.
+   *  Seksjonen vokser til minBottom når minstehøyden er i px (item-presetene bruker alltid px). */
+  function insertBlocks(sectionId, blocks, minBottom) {
+    const section = store.data.sections.find((s) => s.id === sectionId);
+    if (!section || !blocks?.length) return;
+    pushHistory('add-blocks');
+    section.blocks.push(...blocks);
+    const current = String(section.size?.minHeight ?? '');
+    if (minBottom && current.endsWith('px') && Number.parseFloat(current) < minBottom) {
+      section.size = { ...section.size, minHeight: `${minBottom}px` };
+    }
     markDesktopChange(section, 'blokk-lagt-til');
     store.save();
     updateDirty();

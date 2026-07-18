@@ -7,6 +7,7 @@
  * Biblioteket er bygget mot mønstrene fra sidekartleggingen 18. juli 2026 (inspirasjonssidene + ApeironLF, se docs/BACKLOG.md).
  * Alt er komposisjoner av eksisterende blokktyper med temafarge-tokens, så presetene følger brukerens palett.
  * `group` og `hint` er valgfrie felter som «+ Ny seksjon»-menyen bruker til gruppering og beskrivelse.
+ * `item`/`itemLabel` er valgfrie fabrikker for gjentakende elementer: seksjonsverktøylinjen viser da en «+ kort/rad»-knapp.
  */
 
 /** Kort, kollisjonstrygg nok id for seksjoner/blokker laget i editoren. */
@@ -65,6 +66,14 @@ const colorLayer = (value) => ({ type: 'color', version: 1, props: { value } });
 const glowLayer = (x, y, opacity, radius = 0.5) => ({
   type: 'glow', version: 1, props: { x, y, color: 'accent', radius, opacity },
 });
+
+/* Utvidbare presets: item(section) lager NESTE element (kort/rad/logo) ferdig plassert etter dem som finnes.
+   Antall leses fra seksjonens blokker med en robust markør per preset (bilder, bokser, knapper), så knappen virker også etter redigering.
+   Plasseringen antar preset-utlegget; har eieren bygget om seksjonen, er det nye elementet fortsatt vanlige blokker som kan dras på plass. */
+const countType = (sec, type) => sec.blocks.filter((b) => b.type === type).length;
+const countBoxes = (sec) => sec.blocks.filter((b) => b.type === 'text' && b.props?.box).length;
+const maxBottom = (sec) => Math.max(0, ...sec.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
+const gridSlot = (n, per, x0, dx, y0, dy) => ({ x: x0 + (n % per) * dx, y: y0 + Math.floor(n / per) * dy });
 
 const section = (preset, minHeight, background, blocks, grid = null) => ({
   id: makeId('sec'),
@@ -127,6 +136,11 @@ export function registerSectionPresets(Urd) {
       image(frame(36, 72, 28, 220)),
       image(frame(68, 72, 28, 220)),
     ]),
+    itemLabel: 'bilde',
+    item: (sec) => {
+      const { x, y } = gridSlot(countType(sec, 'image'), 3, 4, 32, 72, 244);
+      return { blocks: [image(frame(x, y, 28, 220))], bottom: y + 244 };
+    },
   });
 
   Urd.sections.define('kontakt', {
@@ -172,6 +186,15 @@ export function registerSectionPresets(Urd) {
         ...card(72, '✓', 'Medlemsfordeler'),
       ]);
     },
+    itemLabel: 'kort',
+    item: (sec) => {
+      const { x, y } = gridSlot(countBoxes(sec), 3, 6, 33, 152, 296);
+      const box = text(frame(x, y, 25, 200),
+        '<h3>Ny tittel</h3><p>Kort beskrivelse av hva dere tilbyr.</p>',
+        { align: 'center', box: true });
+      box.animation = hoverLift();
+      return { blocks: [icon(frame(x + 10.5, y - 64, 4, 52), '✦'), box], bottom: y + 228 };
+    },
   });
 
   Urd.sections.define('nyheter', {
@@ -189,6 +212,18 @@ export function registerSectionPresets(Urd) {
         button(frame(78, 30, 16, 36), 'Se alle', { style: 'secondary' }),
         ...card(6), ...card(39), ...card(72),
       ]);
+    },
+    itemLabel: 'sak',
+    item: (sec) => {
+      const { x, y } = gridSlot(countType(sec, 'image'), 3, 6, 33, 88, 344);
+      return {
+        blocks: [
+          image(frame(x, y, 25, 160)),
+          text(frame(x, y + 168, 25, 160),
+            '<p><b>Kategori</b> · 1. januar</p><h3>Nyhetstittel</h3><p>Kort ingress som lokker til å lese mer.</p>'),
+        ],
+        bottom: y + 352,
+      };
     },
   });
 
@@ -209,6 +244,18 @@ export function registerSectionPresets(Urd) {
         ...row(304, '8', 'sep', 'Enda et arrangement'),
       ]);
     },
+    itemLabel: 'rad',
+    item: (sec) => {
+      const y = maxBottom(sec) + 16;
+      return {
+        blocks: [
+          text(frame(6, y, 8, 88), '<h3>1</h3><p>jan</p>', { align: 'center', box: true }),
+          text(frame(16, y, 58, 88), '<h3>Nytt arrangement</h3><p>Torsdag kl. 19:00 · Sted</p>'),
+          button(frame(78, y + 24, 16, 40), 'Meld deg på', { style: 'secondary' }),
+        ],
+        bottom: y + 116,
+      };
+    },
   });
 
   Urd.sections.define('team', {
@@ -226,6 +273,19 @@ export function registerSectionPresets(Urd) {
         text(frame(6, 24, 50, 32), '<h2>Styret</h2>'),
         ...member(6, 'Leder'), ...member(39, 'Nestleder'), ...member(72, 'Kasserer'),
       ]);
+    },
+    itemLabel: 'person',
+    item: (sec) => {
+      const { x, y } = gridSlot(countType(sec, 'image'), 3, 6, 33, 80, 288);
+      return {
+        blocks: [
+          image(frame(x, y, 22, 180), { alt: 'Portrett' }),
+          text(frame(x, y + 188, 22, 84),
+            '<h3>Navn Navnesen</h3><p>Verv</p><p>navn@dinforening.no</p>',
+            { align: 'center' }),
+        ],
+        bottom: y + 296,
+      };
     },
   });
 
@@ -246,6 +306,14 @@ export function registerSectionPresets(Urd) {
           { align: 'center' }),
       ]);
     },
+    itemLabel: 'spørsmål',
+    item: (sec) => {
+      const y = maxBottom(sec) + 16;
+      return {
+        blocks: [text(frame(20, y, 60, 96), '<h3>Nytt spørsmål?</h3><p>Skriv svaret her.</p>', { box: true })],
+        bottom: y + 124,
+      };
+    },
   });
 
   Urd.sections.define('steg', {
@@ -265,6 +333,20 @@ export function registerSectionPresets(Urd) {
         ...step(39, '2', 'Betal kontingent'),
         ...step(72, '3', 'Bli med på det neste'),
       ]);
+    },
+    itemLabel: 'steg',
+    item: (sec) => {
+      const n = countBoxes(sec);
+      const { x, y } = gridSlot(n, 3, 6, 33, 88, 272);
+      return {
+        blocks: [
+          text(frame(x, y, 25, 72), `<h3>${n + 1}</h3>`, { align: 'center', size: 44 }),
+          text(frame(x, y + 80, 25, 160),
+            '<h3>Nytt steg</h3><p>Forklar dette steget kort.</p>',
+            { align: 'center', box: true }),
+        ],
+        bottom: y + 268,
+      };
     },
   });
 
@@ -299,6 +381,18 @@ export function registerSectionPresets(Urd) {
         ...product(39, 'Produktnavn', '249 kr'),
         ...product(72, 'Produktnavn', '99 kr'),
       ]);
+    },
+    itemLabel: 'produkt',
+    item: (sec) => {
+      const { x, y } = gridSlot(countType(sec, 'image'), 3, 6, 33, 88, 348);
+      return {
+        blocks: [
+          image(frame(x, y, 25, 200)),
+          text(frame(x, y + 208, 25, 76), '<h3>Produktnavn</h3><p><b>199 kr</b></p>', { align: 'center' }),
+          button(frame(x + 5, y + 292, 15, 40), 'Kjøp'),
+        ],
+        bottom: y + 356,
+      };
     },
   });
 
@@ -340,6 +434,17 @@ export function registerSectionPresets(Urd) {
         ...stat(72, '1981', 'Grunnlagt'),
       ]);
     },
+    itemLabel: 'tall',
+    item: (sec) => {
+      const { x, y } = gridSlot(Math.floor(countType(sec, 'text') / 2), 3, 6, 33, 72, 136);
+      return {
+        blocks: [
+          text(frame(x, y, 25, 76), '<h2>42</h2>', { align: 'center', size: 44 }),
+          text(frame(x, y + 84, 25, 36), '<p>Etikett</p>', { align: 'center' }),
+        ],
+        bottom: y + 144,
+      };
+    },
   });
 
   Urd.sections.define('sponsorer', {
@@ -355,6 +460,15 @@ export function registerSectionPresets(Urd) {
         text(frame(6, 28, 60, 36), '<h2>Våre støttespillere</h2>'),
         logo(6), logo(29.5), logo(53), logo(76.5),
       ]);
+    },
+    itemLabel: 'logo',
+    item: (sec) => {
+      const { x, y } = gridSlot(countType(sec, 'image'), 4, 6, 23.5, 108, 124);
+      return {
+        blocks: [image(frame(x, y, 18, 100),
+          { alt: 'Sponsorlogo', fit: 'contain', radius: null, saturate: 0 })],
+        bottom: y + 124,
+      };
     },
   });
 

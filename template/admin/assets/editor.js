@@ -2497,7 +2497,7 @@ function Oi(e, t = {}) {
 	let n = (e) => {
 		if (e.origin !== location.origin) return;
 		let n = e.data;
-		n?.type === "urd-edit" && t.onEdit?.(n), n?.type === "urd-move" && t.onMove?.(n), n?.type === "urd-delete" && t.onDelete?.(n), n?.type === "urd-add-section" && t.onAddSection?.(n), n?.type === "urd-move-section" && t.onMoveSection?.(n), n?.type === "urd-delete-section" && t.onDeleteSection?.(n), n?.type === "urd-section-size" && t.onSectionSize?.(n), n?.type === "urd-undo" && t.onUndo?.(n), n?.type === "urd-select-section" && t.onSelectSection?.(n), n?.type === "urd-select-block" && t.onSelectBlock?.(n), n?.type === "urd-ready" && t.onReady?.(n), n?.type === "urd-navigate" && t.onNavigate?.(n), n?.type === "urd-add-block" && t.onAddBlock?.(n), n?.type === "urd-request-block" && t.onRequestBlock?.(n), n?.type === "urd-move-block-section" && t.onMoveBlockSection?.(n), n?.type === "urd-mobile-manual" && t.onMobileManual?.(n), n?.type === "urd-mobile-auto" && t.onMobileAuto?.(n), n?.type === "urd-review-done" && t.onReviewDone?.(n), n?.type === "urd-block-flag" && t.onBlockFlag?.(n);
+		n?.type === "urd-edit" && t.onEdit?.(n), n?.type === "urd-move" && t.onMove?.(n), n?.type === "urd-delete" && t.onDelete?.(n), n?.type === "urd-add-section" && t.onAddSection?.(n), n?.type === "urd-move-section" && t.onMoveSection?.(n), n?.type === "urd-delete-section" && t.onDeleteSection?.(n), n?.type === "urd-section-size" && t.onSectionSize?.(n), n?.type === "urd-undo" && t.onUndo?.(n), n?.type === "urd-select-section" && t.onSelectSection?.(n), n?.type === "urd-select-block" && t.onSelectBlock?.(n), n?.type === "urd-ready" && t.onReady?.(n), n?.type === "urd-navigate" && t.onNavigate?.(n), n?.type === "urd-add-block" && t.onAddBlock?.(n), n?.type === "urd-add-blocks" && t.onAddBlocks?.(n), n?.type === "urd-request-block" && t.onRequestBlock?.(n), n?.type === "urd-move-block-section" && t.onMoveBlockSection?.(n), n?.type === "urd-mobile-manual" && t.onMobileManual?.(n), n?.type === "urd-mobile-auto" && t.onMobileAuto?.(n), n?.type === "urd-review-done" && t.onReviewDone?.(n), n?.type === "urd-block-flag" && t.onBlockFlag?.(n);
 	};
 	window.addEventListener("message", n);
 	let r = (t) => e.contentWindow?.postMessage(t, location.origin);
@@ -3235,7 +3235,8 @@ function oo(e, t) {
 			onReady: Ct,
 			onNavigate: wt,
 			onAddBlock: (e) => hn(e.sectionId, e.block),
-			onRequestBlock: _n,
+			onAddBlocks: (e) => gn(e.sectionId, e.blocks, e.minBottom),
+			onRequestBlock: vn,
 			onMoveBlockSection: un,
 			onMobileManual: $t,
 			onMobileAuto: tn,
@@ -3694,14 +3695,24 @@ function oo(e, t) {
 		let n = C.data.sections.find((t) => t.id === e) ?? C.data.sections[0];
 		n && (O("add-block"), n.blocks.push(t), S(n, "blokk-lagt-til"), C.save(), D(), T?.sendSection(K(c), n));
 	}
-	function gn(e) {
-		mn(pn(e));
+	function gn(e, t, n) {
+		let r = C.data.sections.find((t) => t.id === e);
+		if (!r || !t?.length) return;
+		O("add-blocks"), r.blocks.push(...t);
+		let i = String(r.size?.minHeight ?? "");
+		n && i.endsWith("px") && Number.parseFloat(i) < n && (r.size = {
+			...r.size,
+			minHeight: `${n}px`
+		}), S(r, "blokk-lagt-til"), C.save(), D(), T?.sendSection(K(c), r);
 	}
 	function _n(e) {
+		mn(pn(e));
+	}
+	function vn(e) {
 		let t = pn(e.kind);
 		t && (t.frames.desktop.x = Math.round((100 - t.frames.desktop.w) / 2 * 100) / 100, t.frames.desktop.y = 40, hn(e.sectionId, t), e.kind === "image" && p("Bildeblokk lagt til - velg bildet i Egenskaper"));
 	}
-	async function vn(e) {
+	async function yn(e) {
 		let t = e.target.files?.[0];
 		if (e.target.value = "", !t) return;
 		p("Komprimerer bildet…");
@@ -3738,7 +3749,7 @@ function oo(e, t) {
 			}
 		}), n.bytes > 4e5 ? p(`Bildet er stort (${Math.round(n.bytes / 1024)} kB) - vurder et mindre utsnitt`, "error") : p("");
 	}
-	function yn(e, t, n, r) {
+	function bn(e, t, n, r) {
 		let i = e?.[t];
 		if (!i?.startsWith("data:image/")) return;
 		let a = i.split(",", 2)[1], o = `media/${Ji(n || "bilde")}-${Yi(a)}.webp`;
@@ -3748,38 +3759,38 @@ function oo(e, t) {
 			encoding: "base64"
 		}), e[t] = `/${o}`;
 	}
-	function bn(e) {
+	function Sn(e) {
 		let t = [];
 		for (let n of e.sections) {
-			for (let e of n.background?.layers ?? []) e.type === "image" && yn(e.props, "src", "bakgrunn", t);
-			for (let e of n.blocks) e.type === "image" && yn(e.props, "src", e.props.alt, t);
+			for (let e of n.background?.layers ?? []) e.type === "image" && bn(e.props, "src", "bakgrunn", t);
+			for (let e of n.blocks) e.type === "image" && bn(e.props, "src", e.props.alt, t);
 		}
 		return t;
 	}
-	function Sn(e) {
+	function Cn(e) {
 		let t = [], n = e.nav?.logo;
-		return n?.type === "image" && yn(n, "value", "logo", t), n?.type === "both" && yn(n, "image", "logo", t), yn(e.site, "icon", "ikon", t), t;
+		return n?.type === "image" && bn(n, "value", "logo", t), n?.type === "both" && bn(n, "image", "logo", t), bn(e.site, "icon", "ikon", t), t;
 	}
-	let Cn = /* @__PURE__ */ R(!1);
-	function wn() {
-		if (!K(Cn)) {
-			z(Cn, !0);
+	let wn = /* @__PURE__ */ R(!1);
+	function Tn() {
+		if (!K(wn)) {
+			z(wn, !0);
 			return;
 		}
-		z(Cn, !1), Tn();
+		z(wn, !1), En();
 	}
 	xn(() => {
-		if (!K(Cn)) return;
+		if (!K(wn)) return;
 		let e = (e) => {
-			e.target?.closest?.(".discard-btn") || z(Cn, !1);
+			e.target?.closest?.(".discard-btn") || z(wn, !1);
 		}, t = (e) => {
-			e.key === "Escape" && z(Cn, !1);
-		}, n = () => z(Cn, !1);
+			e.key === "Escape" && z(wn, !1);
+		}, n = () => z(wn, !1);
 		return window.addEventListener("pointerdown", e, !0), window.addEventListener("keydown", t, !0), window.addEventListener("blur", n), () => {
 			window.removeEventListener("pointerdown", e, !0), window.removeEventListener("keydown", t, !0), window.removeEventListener("blur", n);
 		};
 	});
-	function Tn() {
+	function En() {
 		O("discard");
 		let e = C.reset();
 		w.reset(), ee(), z(_, {
@@ -3787,7 +3798,7 @@ function oo(e, t) {
 			...K(E).grid
 		}, !0), D(), z(u, ""), te(), K(E).pages.some((e) => e.id === K(c)) ? T?.sendPage(K(c), e) : xt(K(E).pages[0].id);
 	}
-	async function En() {
+	async function Dn() {
 		if (_t) {
 			p("Du har angret en publisering: last admin på nytt før du publiserer igjen (editoren viser fortsatt den gamle versjonen)", "error");
 			return;
@@ -3805,7 +3816,7 @@ function oo(e, t) {
 			}
 			if (!l && o && (l = bt(i)), !l) continue;
 			let u = JSON.parse(JSON.stringify(l));
-			e.push(...bn(u)), e.push({
+			e.push(...Sn(u)), e.push({
 				path: i.file,
 				content: JSON.stringify(u, null, 2) + "\n",
 				encoding: "utf-8"
@@ -3813,7 +3824,7 @@ function oo(e, t) {
 		}
 		if (w.hasDraft()) {
 			let r = JSON.parse(JSON.stringify(K(E)));
-			e.push(...Sn(r)), e.push({
+			e.push(...Cn(r)), e.push({
 				path: "content/site.json",
 				content: JSON.stringify(r, null, 2) + "\n",
 				encoding: "utf-8"
@@ -3863,7 +3874,7 @@ function oo(e, t) {
 		} catch {}
 		if (o?.ok) {
 			let { sha: e } = await o.json().catch(() => ({}));
-			e ? lt = e : ut(), bn(C.data), Sn(K(E));
+			e ? lt = e : ut(), Sn(C.data), Cn(K(E));
 			for (let e of n) localStorage.removeItem(e);
 			for (let e of r) ne.add(e);
 			z(s, JSON.parse(JSON.stringify(K(E))), !0), w = bi("urd-draft-site", () => K(s)), ee(), z(_, {
@@ -3878,19 +3889,19 @@ function oo(e, t) {
 		} else o?.status === 403 ? p((await o.json().catch(() => null))?.error ?? "Du har ikke publiseringstilgang", "error") : o?.status === 409 ? p("Noen publiserte akkurat nå - prøv å publisere på nytt", "error") : p(o ? (await o.json().catch(() => null))?.error ?? "Publisering feilet (er publiseringslaget satt opp?)" : "Publisering er ikke tilgjengelig her (krever host med functions)", "error");
 	}
 	fe();
-	var Dn = ao();
+	var On = ao();
 	xr("keydown", rn, de);
-	var On = B(Dn), kn = (e) => {
+	var kn = B(On), An = (e) => {
 		var t = Xi();
 		Kr(B(t), () => i.pencil), P(), N(t), q("click", t, Xt), Y(e, t);
 	};
-	Z(On, (e) => {
-		K(v) || e(kn);
+	Z(kn, (e) => {
+		K(v) || e(An);
 	});
-	var An = H(On, 2);
-	let jn;
-	var Mn = B(An), Nn = H(B(Mn), 2);
-	Br(Nn, 21, () => a, ([e, t]) => e, (e, t) => {
+	var jn = H(kn, 2);
+	let Mn;
+	var Nn = B(jn), Pn = H(B(Nn), 2);
+	Br(Pn, 21, () => a, ([e, t]) => e, (e, t) => {
 		var n = /* @__PURE__ */ F(() => m(K(t), 2));
 		let r = () => K(n)[0], i = () => K(n)[1];
 		var a = Zi(), o = B(a, !0);
@@ -3899,10 +3910,10 @@ function oo(e, t) {
 		U(() => {
 			X(o, i()), s !== (s = r()) && (a.value = (a.__value = r()) ?? "");
 		}), Y(e, a);
-	}), N(Nn);
-	var Pn;
-	ni(Nn);
-	var Fn = H(Nn, 2), In = (e) => {
+	}), N(Pn);
+	var Fn;
+	ni(Pn);
+	var In = H(Pn, 2), Ln = (e) => {
 		var t = Qi(), n = V(t), r = B(n, !0);
 		N(n);
 		var a = H(n, 2), o = B(a);
@@ -3914,25 +3925,25 @@ function oo(e, t) {
 			X(r, e), s = Qr(o, 1, "ghost svelte-1n46o8q", null, s, { active: K(y) === "desktop" }), l = Qr(c, 1, "ghost svelte-1n46o8q", null, l, { active: K(y) === "mobile" });
 		}, [() => re()?.title ?? ""]), q("click", n, () => xe("Sider")), q("click", o, () => z(y, "desktop")), q("click", c, () => z(y, "mobile")), Y(e, t);
 	};
-	Z(Fn, (e) => {
-		K(s) && e(In);
+	Z(In, (e) => {
+		K(s) && e(Ln);
 	});
-	var Ln = H(Fn, 2), Rn = (e) => {
+	var Rn = H(In, 2), zn = (e) => {
 		var t = $i(), n = B(t);
 		Kr(n, () => i.phone);
 		var r = H(n);
 		N(t), U(() => X(r, ` ${K(b) ?? ""} ${K(b) === 1 ? "seksjon" : "seksjoner"} trenger mobil-tilsyn`)), q("click", t, () => z(y, "mobile")), Y(e, t);
 	};
-	Z(Ln, (e) => {
-		K(b) > 0 && e(Rn);
+	Z(Rn, (e) => {
+		K(b) > 0 && e(zn);
 	});
-	var zn = H(Ln, 2), Bn = (e) => {
+	var Bn = H(Rn, 2), Vn = (e) => {
 		Y(e, ea());
 	};
-	Z(zn, (e) => {
-		K(l) && e(Bn);
-	}), N(Mn);
-	var Vn = H(Mn, 2), Hn = B(Vn), Un = (e) => {
+	Z(Bn, (e) => {
+		K(l) && e(Vn);
+	}), N(Nn);
+	var Hn = H(Nn, 2), Un = B(Hn), W = (e) => {
 		var t = aa(), n = V(t), r = B(n), a = (e) => {
 			var t = ta();
 			Kr(V(t), () => i.eye), P(), Y(e, t);
@@ -3967,13 +3978,13 @@ function oo(e, t) {
 		N(f);
 		var h = H(f, 2);
 		U((e) => {
-			ui(n, "title", K(v) ? "Skjul editeringshåndtakene og se siden som besøkende gjør" : "Vis editeringshåndtakene igjen"), ui(d, "href", e), p = Qr(f, 1, "ghost discard-btn svelte-1n46o8q", null, p, { armed: K(Cn) }), f.disabled = !K(l), ui(f, "title", K(Cn) ? "Klikk igjen for å slette alle utkastene" : "Slett utkastene og gå tilbake til publisert versjon"), X(m, K(Cn) ? "Sikker?" : "Forkast utkast"), h.disabled = !K(l);
-		}, [() => re().path]), q("click", n, Xt), q("click", f, wn), q("click", h, En), Y(e, t);
+			ui(n, "title", K(v) ? "Skjul editeringshåndtakene og se siden som besøkende gjør" : "Vis editeringshåndtakene igjen"), ui(d, "href", e), p = Qr(f, 1, "ghost discard-btn svelte-1n46o8q", null, p, { armed: K(wn) }), f.disabled = !K(l), ui(f, "title", K(wn) ? "Klikk igjen for å slette alle utkastene" : "Slett utkastene og gå tilbake til publisert versjon"), X(m, K(wn) ? "Sikker?" : "Forkast utkast"), h.disabled = !K(l);
+		}, [() => re().path]), q("click", n, Xt), q("click", f, Tn), q("click", h, Dn), Y(e, t);
 	};
-	Z(Hn, (e) => {
-		K(s) && e(Un);
-	}), N(Vn), N(An);
-	var W = H(An, 2), Wn = (e) => {
+	Z(Un, (e) => {
+		K(s) && e(W);
+	}), N(Hn), N(jn);
+	var Wn = H(jn, 2), Gn = (e) => {
 		var t = to(), r = B(t), a = (e) => {
 			var t = eo(), r = V(t);
 			Br(r, 21, () => be, Ir, (e, t, n) => {
@@ -4280,7 +4291,7 @@ function oo(e, t) {
 					var u = H(c, 2), d = H(u, 2), f = H(d, 2), p = H(B(f), 2), m = B(p), h = H(m, 2), g = H(h, 2), _ = H(g, 2), v = H(_, 2);
 					N(p), N(f), N(t), U(() => {
 						n = Qr(t, 1, "panel-body svelte-1n46o8q", null, n, { locked: K(y) === "mobile" }), ui(t, "title", K(y) === "mobile" ? "Bytt til desktop-visning for å legge til innhold" : void 0);
-					}), q("click", a, () => gn("text")), q("click", o, () => gn("text-box")), q("click", s, () => gn("button")), q("change", l, vn), q("click", u, () => gn("video")), q("click", d, () => gn("icon")), q("click", m, () => gn("shape-line")), q("click", h, () => gn("shape-arrow")), q("click", g, () => gn("shape-circle")), q("click", _, () => gn("shape-rect")), q("click", v, () => gn("shape-triangle")), Y(e, t);
+					}), q("click", a, () => _n("text")), q("click", o, () => _n("text-box")), q("click", s, () => _n("button")), q("change", l, yn), q("click", u, () => _n("video")), q("click", d, () => _n("icon")), q("click", m, () => _n("shape-line")), q("click", h, () => _n("shape-arrow")), q("click", g, () => _n("shape-circle")), q("click", _, () => _n("shape-rect")), q("click", v, () => _n("shape-triangle")), Y(e, t);
 				}, f = (e) => {
 					var t = Ta(), n = H(B(t), 2), r = H(B(n)), i = B(r);
 					N(r), N(n);
@@ -4841,13 +4852,13 @@ function oo(e, t) {
 		vi(l, (e) => z(h, e), () => K(h)), N(o), N(t), U(() => {
 			s = Qr(o, 1, "frame-wrap svelte-1n46o8q", null, s, { mobile: K(y) === "mobile" }), ui(l, "src", `/?page=${K(c)}&preview=1`);
 		}), xr("load", l, St), yr(l), Y(e, t);
-	}, Gn = (e) => {
+	}, G = (e) => {
 		Y(e, no());
 	};
-	Z(W, (e) => {
-		K(s) ? e(Wn) : e(Gn, -1);
+	Z(Wn, (e) => {
+		K(s) ? e(Gn) : e(G, -1);
 	});
-	var G = H(W, 2), Kn = (e) => {
+	var Kn = H(Wn, 2), qn = (e) => {
 		var t = ro(), n = B(t), r = H(B(n), 4), i = H(B(r));
 		Q(i), N(r);
 		var a = H(r, 2);
@@ -4869,10 +4880,10 @@ function oo(e, t) {
 		var s = H(o, 4), c = B(s), l = H(c, 2);
 		N(s), N(n), N(t), U((e) => l.disabled = e, [() => !K(me).trim()]), q("keydown", i, (e) => e.key === "Enter" && ve()), mi(i, () => K(me), (e) => z(me, e)), q("click", c, _e), q("click", l, ve), Y(e, t);
 	};
-	Z(G, (e) => {
-		K(pe) && e(Kn);
+	Z(Kn, (e) => {
+		K(pe) && e(qn);
 	});
-	var qn = H(G, 2), Jn = (e) => {
+	var Jn = H(Kn, 2), Yn = (e) => {
 		var t = io();
 		let n;
 		var r = B(t), i = B(r, !0);
@@ -4885,11 +4896,11 @@ function oo(e, t) {
 			}), X(i, K(u));
 		}), q("click", a, () => p("")), Y(e, t);
 	};
-	Z(qn, (e) => {
-		K(u) && e(Jn);
-	}), N(Dn), U(() => {
-		jn = Qr(An, 1, "topbar svelte-1n46o8q", null, jn, { hidden: !K(v) }), Pn !== (Pn = K(o)) && (Nn.value = (Nn.__value = K(o)) ?? "", ti(Nn, K(o)));
-	}), q("change", Nn, (e) => z(o, e.target.value, !0)), Y(e, Dn), Ue();
+	Z(Jn, (e) => {
+		K(u) && e(Yn);
+	}), N(On), U(() => {
+		Mn = Qr(jn, 1, "topbar svelte-1n46o8q", null, Mn, { hidden: !K(v) }), Fn !== (Fn = K(o)) && (Pn.value = (Pn.__value = K(o)) ?? "", ti(Pn, K(o)));
+	}), q("change", Pn, (e) => z(o, e.target.value, !0)), Y(e, On), Ue();
 }
 Sr([
 	"click",

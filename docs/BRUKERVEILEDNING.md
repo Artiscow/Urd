@@ -146,6 +146,12 @@ og fargene følger temaet ditt.
 
 Verktøylinjen oppe til høyre i en seksjon (vises når du peker på den):
 
+- **+ kort / + rad / + person …**: seksjoner laget fra maler med
+  gjentakende elementer (funksjonskort, nyheter, arrangementer, team,
+  FAQ, steg, produkter, statistikk, sponsorer, bilder) har en egen
+  pluss-knapp som legger til ett element til, ferdig plassert i neste
+  ledige rute. Seksjonen vokser ved behov, og Ctrl+Z angrer hele
+  elementet under ett.
 - ↑ / ↓ flytt seksjonen opp eller ned på siden
 - ⤓ tilpass høyden til innholdet
 - × slett seksjonen
