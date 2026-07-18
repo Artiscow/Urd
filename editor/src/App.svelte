@@ -2320,11 +2320,21 @@
     display: flex;
     gap: 0.2rem;
     flex-shrink: 0;
+    /* Strekk til radens høyde, så knappene blir like høye som feltet */
+    align-self: stretch;
   }
 
   .row-tool {
     padding: 0.2em 0.5em;
     font-size: 0.8rem;
+  }
+
+  /* Overstyrer panelets 2.4rem-minhøyde for radknapper: de skal følge
+     feltet ved siden av, ikke blokk-knappene */
+  .panel-body .row-tool {
+    min-height: 0;
+    height: 100%;
+    padding: 0 0.55em;
   }
 
   .token-input {
