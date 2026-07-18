@@ -15,9 +15,9 @@ export const WARN_BYTES = 400_000;
  * @param {File} file
  * @returns {Promise<{dataUrl: string, bytes: number, width: number, height: number}>}
  */
-export async function compressToWebp(file) {
+export async function compressToWebp(file, maxDim = MAX_DIMENSION) {
   const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
+  const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
   const width = Math.round(bitmap.width * scale);
   const height = Math.round(bitmap.height * scale);
 

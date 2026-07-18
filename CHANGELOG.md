@@ -10,6 +10,10 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter, ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.8.7 - nettstedsikon (favicon) + grå som standardtema - 18. juli 2026
+- Nettstedsikon: last opp i Tema-panelet (skaleres til 128px webp, materialiseres som media-fil ved publisering, additivt `site.icon`-felt). Vises i nettleserfaner og bokmerker for besøkende, og admin-fanen følger nettstedsikonet når det finnes. Uten eget ikon brukes et nytt Urd-merke (innebygd SVG) i både malen og admin - før var fanene ikonløse (globus).
+- «Nøytral grå» er nå standardtema for admin (tidligere Lilla dybde); valget kan fortsatt endres i velgeren og huskes per nettleser.
+
 ### 0.5.8.6 - tre nye admin-temaer + SVG-radglyfer - 18. juli 2026
 - Tre nye admin-temaer basert på anerkjente fargepaletter (aksentene mørknet der det trengtes for lesbar hvit knappetekst): Nordlys (Nord: arktisk, lav metning), Skumring (Tokyo Night: neon-natt, blå) og Glo (Gruvbox: varm, glødende oransje). Totalt sju temaer i velgeren.
 - Pilene og kryssene i radknappene (Sider, Nav, bakgrunnslag) er nå tegnede SVG-er i stedet for tekstglyfer: tekstglyfer sitter aldri optisk midt i knappen (fontmetrikk), SVG sentrerer piksel-perfekt og matcher resten av ikonene.

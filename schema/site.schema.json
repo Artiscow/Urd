@@ -15,7 +15,8 @@
       "properties": {
         "title": { "type": "string", "minLength": 1 },
         "lang": { "type": "string", "minLength": 2 },
-        "description": { "type": "string" }
+        "description": { "type": "string" },
+        "icon": { "type": "string", "description": "Nettstedsikon (favicon): sti i media/ (data-URL i utkast). Additivt felt fra v0.5." }
       }
     },
     "breakpoints": {

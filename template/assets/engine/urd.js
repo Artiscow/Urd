@@ -98,6 +98,21 @@ function mountToTop() {
 }
 
 /**
+ * Nettstedsikonet (favicon) fra site.json: overstyrer standard-ikonet i
+ * index.html. Additivt felt; uten ikon beholdes Urd-merket.
+ */
+function applyFavicon(href) {
+  if (!href) return;
+  let link = document.querySelector('link[rel="icon"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'icon';
+    document.head.appendChild(link);
+  }
+  link.href = href;
+}
+
+/**
  * Finner siden for gjeldende URL i sideregisteret.
  * ?page=<id> overstyrer (nyttig lokalt, der enkle filservere ikke
  * ruter path-ene); ellers matches location.pathname; fallback er
@@ -156,6 +171,7 @@ function enablePreview(state, opts) {
       // site.json rendres på nytt.
       state.site = msg.site;
       applyTheme(state.site.theme);
+      applyFavicon(state.site.site?.icon);
       if (opts.nav) renderNav(state.site, opts.nav);
       if (opts.footer) renderFooter(state.site, opts.footer);
       renderPage(state.page, state.site, root, vp());
@@ -181,6 +197,7 @@ export async function boot(opts) {
 
   const site = liftSiteFile(await (await fetch('/content/site.json')).json());
   applyTheme(site.theme);
+  applyFavicon(site.site.icon);
   await loadPlugins();
 
   if (opts.nav) renderNav(site, opts.nav);

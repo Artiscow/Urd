@@ -24,7 +24,7 @@ Skjermen har tre deler:
   (nettstedet), og Historikk. Klikk for å åpne et panel; klikk igjen
   for å lukke.
 - **Admin-tema**: nedtrekket ved siden av Urd-logoen bytter editorens
-  eget fargetema (fire varianter). Det påvirker aldri nettsiden din.
+  eget fargetema (sju varianter). Det påvirker aldri nettsiden din.
 - **Forhåndsvisningen**: den ekte siden din. Det du ser er det besøkende får.
 
 **Ren visning** (oppe til høyre) skjuler alle verktøyene så du ser siden
@@ -180,6 +180,8 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   Logoen kan være tekst, et opplastet bilde eller begge deler (med
   størrelse og rekkefølge), og fungerer alltid som «Hjem»-knapp.
   Menypunktene kan stå til høyre, midtstilt eller til venstre.
+- **Nettstedsikon**: nederst i Tema-panelet laster du opp ikonet som
+  vises i nettleserfanen og bokmerker (firkantet bilde anbefales).
 - **Footer**-panelet: bunnteksten som vises nederst på alle sider.
   Skru den på, skriv linjene (én per linje) og velg justering - den
   redigeres ett sted og gjelder hele nettstedet.

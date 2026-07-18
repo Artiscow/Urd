@@ -54,7 +54,7 @@
     ['skumring', 'Skumring'],
     ['glo', 'Glo'],
   ];
-  let adminTheme = $state(localStorage.getItem('urd-admin-theme') ?? 'lilla');
+  let adminTheme = $state(localStorage.getItem('urd-admin-theme') ?? 'graa');
 
   $effect(() => {
     document.documentElement.dataset.adminTheme = adminTheme;
@@ -1003,6 +1003,32 @@
     }
   }
 
+  /** Nettstedsikon (favicon): lite webp, materialiseres ved publisering. */
+  async function uploadSiteIcon(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      const img = await compressToWebp(file, 128);
+      siteMutate('edit:site-icon', () => { siteDraft.site.icon = img.dataUrl; });
+    } catch {
+      setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
+    }
+  }
+
+  function removeSiteIcon() {
+    siteMutate('edit:site-icon', () => { delete siteDraft.site.icon; });
+  }
+
+  // Admin-fanen viser nettstedsikonet når det finnes (ellers Urd-merket
+  // fra admin/index.html).
+  $effect(() => {
+    const href = siteDraft?.site?.icon;
+    if (!href) return;
+    const link = document.querySelector('link[rel="icon"]');
+    if (link) link.href = href;
+  });
+
   function setNavLayout(value) {
     siteMutate('nav', () => { siteDraft.nav.layout = value; });
   }
@@ -1407,6 +1433,7 @@
     const logo = site.nav?.logo;
     if (logo?.type === 'image') materializeField(logo, 'value', 'logo', files);
     if (logo?.type === 'both') materializeField(logo, 'image', 'logo', files);
+    materializeField(site.site, 'icon', 'ikon', files);
     return files;
   }
 
@@ -1865,6 +1892,23 @@
                 <label>Avrunding, stor
                   <input class="token-input" value={siteDraft.theme.tokens.radius.md}
                     onchange={(e) => setRadiusToken('md', e.target.value)} /></label>
+                <hr class="gridmenu-divider" />
+                <label>Nettstedsikon
+                  {#if siteDraft.site.icon}
+                    <img class="site-icon-preview" src={siteDraft.site.icon} alt="Nettstedsikon" />
+                  {/if}
+                </label>
+                <span class="toolbar-row">
+                  <label class="ghost filepick tb-grow" title="Vises i nettleserfanen og bokmerker; skaleres til 128px">
+                    {siteDraft.site.icon ? 'Bytt ikon' : 'Velg ikon'}
+                    <input type="file" accept="image/*" onchange={uploadSiteIcon} />
+                  </label>
+                  {#if siteDraft.site.icon}
+                    <button class="ghost row-tool" title="Fjern ikonet (Urd-merket brukes)"
+                      onclick={removeSiteIcon}>{@html ICONS.cross}</button>
+                  {/if}
+                </span>
+                <p class="panel-hint">Vises i nettleserfanen og bokmerker. Firkantet bilde anbefales.</p>
               </div>
             {:else if activePanel === 'Blokker'}
               <div class="panel-body" class:locked={viewMode === 'mobile'}
@@ -2841,6 +2885,13 @@
   .panel-strong {
     margin: 0;
     font-weight: 600;
+  }
+
+  .site-icon-preview {
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 4px;
+    object-fit: cover;
   }
 
   /* Bakgrunnslagene i seksjonsegenskapene */

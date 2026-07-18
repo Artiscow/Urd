@@ -45,6 +45,7 @@ Nettstedets rot: identitet, sideregister, navigasjon, grid og tema.
 }
 ```
 
+- **`site.icon`** (valgfri, additiv fra v0.5): nettstedsikon (favicon) som sti i `media/`; vises i nettleserfaner og bokmerker. Uten ikon brukes Urd-merket fra index.html.
 - **`pages`** er sideregisteret. Nav-elementer peker på sider via `page`-id (eller eksterne lenker via `href`). Admin lager/endrer/sletter sider her; motoren ruter fra `path`.
 - **`nav.layout`** (valgfri, additiv fra v0.5): menypunktenes plassering (`left`/`center`/`right`, standard right). Logoen står alltid først og er «Hjem»-knappen. **`nav.logo`** har tre typer: `text` (value = tekst), `image` (value = bilde-URL) og `both` (value = tekst, `image` = bilde-URL), pluss valgfri `size` (bildehøyde px) og `order` (`image-first`/`text-first`).
 - **`footer`** (valgfri, additiv fra v0.5): delt footer nederst på ALLE sider - `show`, `text` (linjer skilt med linjeskift) og `align`. Utelatt eller skjult = ingen footer; footer-preseten (per-side seksjon) finnes uavhengig av denne.
