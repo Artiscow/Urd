@@ -130,8 +130,21 @@ grunnstørrelse for hele feltet settes i Egenskaper.
 ## Seksjoner
 
 Siden er bygget av seksjoner oppå hverandre. Pek på grensen mellom to
-seksjoner for å få **+ Ny seksjon**. Verktøylinjen oppe til høyre i en
-seksjon (vises når du peker på den):
+seksjoner for å få **+ Ny seksjon**: den åpner et galleri av ferdige
+seksjonsmaler, gruppert med en kort beskrivelse per mal. Alle malene er
+startpunkter: etter innsetting redigerer du blokkene fritt som ellers,
+og fargene følger temaet ditt.
+
+- **Grunnleggende**: tom seksjon, hero (venstrestilt eller sentrert med
+  to knapper), bilder, kontakt og enkel footer-seksjon.
+- **Kort og lister**: funksjonskort med ikoner, nyhetskort, arrangementer
+  med datobrikker og påmeldingsknapp, team/styret, FAQ, steg-for-steg,
+  hovedoppslag (én stor sak + to små) og produkter/merch (pek
+  «Kjøp»-knappen på en betalingslenke, for eksempel Vipps, i Egenskaper).
+- **Fremheving**: CTA-banner («Bli medlem»), sitat, statistikk-tall,
+  sponsorrad i gråtone og medlemskap med prisnivåer.
+
+Verktøylinjen oppe til høyre i en seksjon (vises når du peker på den):
 
 - ↑ / ↓ flytt seksjonen opp eller ned på siden
 - ⤓ tilpass høyden til innholdet

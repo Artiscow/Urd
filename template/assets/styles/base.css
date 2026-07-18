@@ -885,8 +885,92 @@ body.urd-mobile .urd-section-resize {
 /* Den øverste baren ligger rett under den klistrede menyen: pillen
    legges UNDER grenselinjen i stedet for oppå den, så den ikke
    forsvinner bak menyen */
-#urd-root > .urd-add-section:first-child button {
+#urd-root > .urd-add-section:first-child > button {
   transform: translateY(4px);
+}
+
+/* Preset-galleriet (åpen «+ Ny seksjon»): gruppert panel med rulling.
+   Holdes synlig uavhengig av hover-reglene over via .open-klassen. */
+.urd-preview .urd-add-section.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.urd-preview .urd-preset-menu {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 340px;
+  max-height: 360px;
+  overflow-y: auto;
+  background: var(--urd-color-bg);
+  border: 1px solid color-mix(in srgb, var(--urd-color-accent) 45%, transparent);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
+  padding: 6px;
+  text-align: left;
+  z-index: 1003;
+}
+
+.urd-preview .urd-preset-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--urd-color-text);
+}
+
+.urd-preview .urd-preset-menu .urd-preset-close {
+  transform: none;
+  border: 0;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 7px;
+}
+
+.urd-preview .urd-preset-group {
+  padding: 8px 8px 3px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--urd-color-text) 55%, transparent);
+}
+
+.urd-preview .urd-preset-menu .urd-preset-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  width: 100%;
+  transform: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  padding: 6px 8px;
+  text-align: left;
+  opacity: 1;
+}
+
+.urd-preview .urd-preset-menu .urd-preset-choice:hover {
+  background: color-mix(in srgb, var(--urd-color-accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--urd-color-accent) 45%, transparent);
+  border-style: solid;
+}
+
+.urd-preview .urd-preset-label {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.urd-preview .urd-preset-hint {
+  font-size: 11px;
+  color: color-mix(in srgb, var(--urd-color-text) 60%, transparent);
 }
 
 /* Seksjonens verktøylinje (flytt opp/ned, tilpass høyde, slett) - synlig

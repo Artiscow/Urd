@@ -237,6 +237,7 @@ function makeSectionAdder(index, above = null) {
   bar.className = 'urd-add-section';
 
   const collapse = () => {
+    bar.classList.remove('open');
     bar.replaceChildren(openBtn);
   };
 
@@ -257,21 +258,70 @@ function makeSectionAdder(index, above = null) {
     }, { capture: true });
   }
   openBtn.addEventListener('click', () => {
+    bar.classList.add('open');
     bar.replaceChildren();
-    for (const id of window.Urd.sections.ids()) {
-      const def = window.Urd.sections.get(id);
-      const choice = document.createElement('button');
-      choice.textContent = def.label;
-      choice.addEventListener('click', () => {
-        post({ type: 'urd-add-section', index, section: def.create() });
-      });
-      bar.appendChild(choice);
-    }
+
+    // Preset-galleriet: gruppert etter def.group med def.hint som beskrivelse.
+    // Feltene er valgfrie; presets uten group havner under «Annet».
+    // Gruppene beholder registerets rekkefølge.
+    const menu = document.createElement('div');
+    menu.className = 'urd-preset-menu';
+
+    const head = document.createElement('div');
+    head.className = 'urd-preset-head';
+    const title = document.createElement('span');
+    title.textContent = 'Ny seksjon';
     const cancel = document.createElement('button');
+    cancel.className = 'urd-preset-close';
     cancel.textContent = '×';
     cancel.title = 'Avbryt';
     cancel.addEventListener('click', collapse);
-    bar.appendChild(cancel);
+    head.append(title, cancel);
+    menu.appendChild(head);
+
+    const groups = new Map();
+    for (const id of window.Urd.sections.ids()) {
+      const def = window.Urd.sections.get(id);
+      const group = def.group ?? 'Annet';
+      if (!groups.has(group)) groups.set(group, []);
+      groups.get(group).push(def);
+    }
+    for (const [name, defs] of groups) {
+      const heading = document.createElement('div');
+      heading.className = 'urd-preset-group';
+      heading.textContent = name;
+      menu.appendChild(heading);
+      for (const def of defs) {
+        const choice = document.createElement('button');
+        choice.type = 'button';
+        choice.className = 'urd-preset-choice';
+        const label = document.createElement('span');
+        label.className = 'urd-preset-label';
+        label.textContent = def.label;
+        choice.appendChild(label);
+        if (def.hint) {
+          const hint = document.createElement('span');
+          hint.className = 'urd-preset-hint';
+          hint.textContent = def.hint;
+          choice.appendChild(hint);
+        }
+        choice.addEventListener('click', () => {
+          post({ type: 'urd-add-section', index, section: def.create() });
+        });
+        menu.appendChild(choice);
+      }
+    }
+    bar.appendChild(menu);
+
+    // Klikk utenfor menyen lukker den, samme forventning som ellers i editoren.
+    // Listeneren ryddes ved lukking.
+    const outside = (event) => {
+      if (!menu.contains(event.target)) {
+        document.removeEventListener('pointerdown', outside, true);
+        collapse();
+      }
+    };
+    setTimeout(() => document.addEventListener('pointerdown', outside, true), 0);
   });
 
   collapse();

@@ -57,7 +57,8 @@ redigeringsflatene bygges på den nye layouten:
 - `urd-template`-repo-splitt + release-Action («Use this template»).
 - Oppdaterer v1: én-klikks Urd-oppdatering som kun overskriver manifest-stiene i `urd.json`.
 
-## v0.7 - Finpuss
+## v0.7 - Finpuss + butikk
+- **Butikk uten betalingsgateway som kjernefunksjon** (ApeironLF-modellen, valgt 18. juli 2026): produktkort-blokk med varianter, handlekurv (localStorage + skuff), bestillingsskjema til e-post/valgfritt endepunkt, betaling via Vipps-nummer-instruks. Avhengighetsfri, git-eid katalog; bygges på v0.6-datablokk-mønsteret. Detaljer i [BACKLOG.md](BACKLOG.md).
 - Sjekke alle funksjoner og se om noe mangler eller ikke fungerer godt.
 - Er alt intuitivt?
 - Er ting rotete?
@@ -91,7 +92,7 @@ Frem til v0.6 er `template/` både verksted og demo (urdweb); det er greit så l
 
 En forening kan klone, sette opp, bygge og vedlikeholde en side uten utvikler.
 
-**Port:** migreringskontrakten er testet med minst én reell v1→v2-blokkendring i testsuiten; en pilotside (kandidat: gjenskape ApeironLF med Urd) er bygget og driftes.
+**Port:** migreringskontrakten er testet med minst én reell v1→v2-blokkendring i testsuiten; en pilotside (kandidat: gjenskape ApeironLF med Urd) er bygget og driftes. Piloten forutsetter v0.7-butikken (ApeironLF har merch med handlekurv) og v0.6-kalenderpluginen (arrangementer fra Google Calendar/iCal-feed).
 
 ## Etter 1.0 (horisont)
 

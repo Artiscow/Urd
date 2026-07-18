@@ -30,25 +30,33 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 - [x] M7: Utvikle nav-editor: justering av menypunktene (venstre/midt/høyre), logo med tre valg: tekst, bilde, bilde+tekst (med størrelse og rekkefølge), logo som «Hjem»-knapp (18. juli 2026)
 - [x] M7: Delt footer (site.footer, additivt): redigeres ett sted, vises på alle sider (18. juli 2026); design-maler bygges videre i v0.6
 - [x] Nav admin panel: logo-delen er sammenleggbar gruppe; full tekststil for logotekst (font/størrelse/fet/kursiv) og bildeeditor for bildelogo (høyde + avrunding) (0.5.7.3, 18. juli 2026)
-- [ ] M7/M8: Ordentlig og fullstendig utvikling av seksjonspresetene (Bilder, Team/styret, FAQ, Kontakt er barebones); eier finner inspirasjonssider (à la ApeironLF) + flere utseende-alternativer per preset
+- [ ] M7/M8: Ordentlig og fullstendig utvikling av seksjonspresetene, konkretisert av kartleggingen 18. juli 2026 (se «Siste steg»-punktet under). Nye presets: hero sentrert (to knapper), funksjonskort, nyheter, arrangementer (dato-badge), CTA-banner («Bli medlem»), sitat, sponsorband (gråtonet), statistikk, steg, hovedoppslag, produkter/merch (kjøp = ekstern lenke, Vipps Go/betalingslenke), medlemskap (prisnivåer + Vipps-nummer). Eksisterende løftes: team (+e-post), faq (+«flere spørsmål»-lenke), kontakt/bilder finjusteres. Preset-menyen grupperes med kort beskrivelse per preset og rulling.
 - [x] For å legge til blokk: hover over en seksjon viser «+ Legg til blokk» med meny under; valget legges i den seksjonen (0.5.7.9, 18. juli 2026)
 - [x] Når man legger til en ny seksjon åpnes Egenskaper automatisk (M7, 18. juli 2026)
 - [x] Full teksteditor per tekstfelt: egen font og grunnstørrelse per tekstblokk i Egenskaper (tomt = arv fra tema), pluss flytende linje for markert tekst (0.5.7.3, 18. juli 2026)
-- [ ] SISTE STEG FØR 0.5.0 (sammen med preset-utviklingen over): se på UI og funksjoner til nettsider som https://nobaraproject.org/ https://linuxmint.com/ https://garudalinux.org/ https://www.forbrukerradet.no/forside https://online.ntnu.no/ https://online.ntnu.no/offline https://abakus.no/ https://www.broderskabet.no/ https://www.vg.no/ https://www.nrk.no/ i  tillegg til Wix, Squarepace og Gutenberg+Wordpress sine redigeringsvertkøy
+- [x] SISTE STEG FØR 0.5.0: kartlegging av inspirasjonssidene (nobaraproject, linuxmint, garudalinux, forbrukerradet, online.ntnu +/offline, abakus, broderskabet, vg, nrk) + full funksjonsinventering av ApeironLF (github.com/Apeiron-Linjeforening/ApeironLF) + nettbutikk-research (Squarespace/Wix Commerce, Snipcart, Stripe Payment Links, Vipps Go/Checkout). Gjort 18. juli 2026; funnene er sortert inn i v0.5-preset-punktet over, v0.6/v0.7-punktene under og horisonten. Wix/Squarespace/Gutenberg-editorene ble kartlagt i egen runde 18. juli 2026 (M8a).
 - [x] AVKLART (M2, 17. juli 2026): publisering genererer `<slug>/index.html` per side (kopi av rot-index.html) og sletter dem for fjernede/flyttede sider - ruting virker da på alle statiske hoster, ikke bare SPA-fallback
 
 ## Til v0.6 (økosystem)
 
 - [ ] Funksjon for flere språk for både Urd github, admin panel og på nettsidene: Norsk (Bokmål), Norsk (Nynorsk), Samisk, Svensk, Dansk, Finsk, Engelsk (Britisk), Gaelic, Spansk, Tysk, Tradisjonel Kinesisk (Taiwan), Simplifisert Kinesisk, Portogisisk, Fransk, Kanadisk (Engelsk men med "please" og overlig tekst)
 - [ ] Kart- og skjema-blokk som referanse-plugins (sammen med kalender-pluginen)
+- [ ] Kalender-pluginens designkrav (fra ApeironLF-kartleggingen 18. juli 2026): datakilden er en ABONNERBAR FEED (offentlig Google-kalender via API-nøkkel eller iCal/ICS-URL), ikke manuell inntasting; gjentakende arrangementer ekspanderes (singleEvents/RRULE); tre visninger (liste med dato-badge, kort-rutenett, månedskalender); kategori-chips via tittelkonvensjonen «Kategori: Tittel»; auto-uttrekk av påmeldingslenke (skjema-URL i beskrivelsen); «Abonner»-knapp (webcal + Google-cid); flere kalenderkilder + «neste arrangement»-panel; robuste tomtilstander og tydelig merkede plassholdere før feed er koblet
 - [ ] Kalender-avhengige presets: kalender, nyheter, oppslagstavle, «Hva skjer» (tre neste arrangementer)
+- [ ] CSP-opt-in-mekanisme for plugins: kontrollerte, synlige unntak per tjeneste (trengs for kalender-pluginens googleapis.com, og senere betalings-plugins)
 - [ ] Arkiv/datablokk-mønsteret (samlinger: nyheter, oppslag, styrer) - designes sammen med kalender-referansepluginen, det er samme mønster (blokk som rendrer en samling innslag)
 - [ ] Dropdown-menyer i nav med flere design (krever omlagt nav-rendering for besøkende: hover/klikk, tastatur, mobilmeny) - flyttet fra v0.5
 - [ ] Nav-design videre: bakgrunnsbilde i menyen, design/hover-stiler for menypunkter, flere menystiler (f.eks. ekte «flytende» variant med luft rundt) - flyttet fra v0.5, hører sammen med dropdown-omleggingen
 - [ ] Flere design for former, bokser o.l. (design-galleri; plugins skal kunne levere egne - flyttet fra idébanken)
 - [ ] Søk i blokkvelgeren (gir mening når plugin-blokker gjør listen lang - flyttet fra idébanken)
 - [ ] Fra editor-researchen (Squarespace/Wix/Gutenberg, 18. juli 2026): gradient-editor med frie stopp + radial, multimarkering med align/distribute, lagpanel/list view, palett-fra-bilde + genererte palettforslag, seksjonstemaer (ferdige rollesett per seksjon), lightbox («forstørr ved klikk»), duotone-aktig filter
+- [ ] Fra sidekartleggingen (18. juli 2026): delt footer med kolonner (lenkelister, kontakt/adresse/org.nr, sosiale lenker) - additivt på site.footer; FAQ-akkordeon (utvid/lukk hos besøkende); ikonbibliotek med tegnede SVG-er i ikon-blokken (sosiale medier m.m.); boks-/kortstiler (skygge, kantlinje, glassmorfisme/backdrop-blur - Garuda-uttrykket); visuelle miniatyrer i preset-velgeren; publikasjonsarkiv-preset (utgaver gruppert per år, PDF-lenker - hører til arkiv/datablokk-mønsteret); hero-galleri (bildekarusell som bakgrunnslag); tabs/filter over kortliste (vurderes mot plugin-API-et)
 - [ ] Plugin-/mal-oppdagbarhet: etabler GitHub-topic-konvensjon (`urd-plugin`, `urd-mal`); galleri-nettstedet kommer etter v1
+
+## Til v0.7 (finpuss + butikk)
+
+- [ ] Butikk uten betalingsgateway som KJERNEFUNKSJON (eiers valg 18. juli 2026, ApeironLF-modellen): produktkort-blokk med varianter (størrelse/farge, pris + evt. medlemspris, badge, bildegalleri der fargevalg bytter bilde), handlekurv-blokk (localStorage + skuff med antall-badge), kasse = bestillingsskjema (navn/e-post/telefon/kommentar + honeypot) som går til e-post (mailto, null oppsett) eller valgfritt endepunkt (Apps Script/Pages Function), betaling via Vipps-nummer-instruks. Helt avhengighetsfri, katalogen git-eid. Bygges PÅ v0.6-datablokk-mønsteret (produktkatalog = samling). Må lande før v1: v1.0-porten (gjenskape ApeironLF) forutsetter den.
+- [ ] Produktkort-preset fra v0.5 («kjøp = ekstern lenke») oppgraderes til å kunne peke på ekte produktblokker
 
 ## Etter v1.0 (horisont)
 
@@ -58,7 +66,8 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 - [ ] Galleri-nettsted over community-maler og -plugins (urd.dev; forutsetter et community)
 - [ ] GitLab/Gitea-adapter for publiseringslaget (se ADR-0003)
 - [ ] Ekstern medialagring (Cloudflare R2) som plugin for bildetunge sider
-- [ ] Butikk/Merch-mal med bestillingsintegrasjoner (kan ta inspirasjon fra ApeironLF)
+- [ ] Ekte betalings-kasse for butikken (Snipcart-modellen med git-eid katalog + CSP-opt-in, eller Vipps Checkout via Pages Function) - kun ved reell etterspørsel; selve butikken (uten gateway) kommer i v0.7
+- [ ] Utenfor scope for kjernen (fra kartleggingen 18. juli 2026): innlogging/medlemsområde, P2P-bruktmarked (ApeironLFs «Kjøp & bytte»), fulltekstsøk på siden (krever avhengighet à la minisearch - evt. community-plugin), sanntidsfeeds/personalisering. Krever server/CMS eller avhengigheter; Urd er statisk og avhengighetsfri
 
 ## Funksjoner og Forslag
 
