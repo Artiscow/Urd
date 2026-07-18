@@ -6,56 +6,6 @@
   },
   "sections": [
     {
-      "id": "sec-f460187f",
-      "version": 1,
-      "preset": "footer",
-      "size": {
-        "minHeight": "20vh"
-      },
-      "grid": null,
-      "background": {
-        "version": 1,
-        "layers": [
-          {
-            "type": "color",
-            "version": 1,
-            "props": {
-              "value": "surface"
-            }
-          }
-        ]
-      },
-      "blocks": [
-        {
-          "id": "blk-292b56b9",
-          "type": "text",
-          "version": 1,
-          "props": {
-            "html": "<p>© Min forening</p>",
-            "align": "center"
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 25,
-              "y": 24,
-              "w": 50,
-              "h": 20,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        }
-      ],
-      "responsive": {
-        "mobile": {
-          "mode": "auto",
-          "attention": null
-        }
-      }
-    },
-    {
       "id": "sec-fcf158ba",
       "version": 1,
       "preset": "tom",
@@ -254,12 +204,12 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 41.39,
-              "y": 112,
+              "x": 37.16,
+              "y": 48,
               "w": 26,
               "h": 36,
               "z": 2,
-              "rot": 17
+              "rot": 0
             },
             "mobile": null
           }
