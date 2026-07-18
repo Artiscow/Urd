@@ -17,6 +17,7 @@ ikke slipp; alt samles i 0.5.0 ved fasegaten.
 - `history.js` og `revert.js` er implementert server-side. Angring er en FORWARD-revert (ADR-0003): en ny commit med HEAD som forelder - historikk slettes aldri, angringen kan selv angres, og `expect`-vernet gir 409 hvis noen publiserte i mellomtiden.
 - Oppsettsveiviser: første besøk på en fersk klon (malens standardnavn står fortsatt) åpner en velkomstmodal med sidenavn, aksent- og bakgrunnsfarge. Skrives som vanlig site-utkast og peker mot Publiser; «Hopp over» huskes.
 - Nav-panelet: mål- og lenkefeltene ligger nå i samme kolonne som navnefeltet (slutter på samme høyrekant, i stedet for å strekke seg ut under ↑/↓/×).
+- Jevn vertikal sentrering i hele admin: alle kontroller i panelene (felt, nedtrekk, knapper, grupper, veiviser) deler nå én høyde (2.2rem) og én skriftstørrelse, radknappene følger feltene, og kontrollene arver ikke lenger sidens luftige linjehøyde. Før spriket tre høydemekanismer og to arvede skriftstørrelser om hverandre.
 - Fra bug-gjennomgangen før push (åtte granskningsvinkler):
   - KRITISK: historikk og angring gjelder nå NETTSIDEN, ikke repoet. Historikken viser kun commits som rører `content/` under `GITHUB_ROOT_DIR`, og angring bytter bare nettsidens undertre - i Urds monorepo ville den gamle varianten listet utviklingscommits og revertert editor-kildekode.
   - Publisering materialiserer bilder i KLONER: en konflikt-avbrytelse (eller 409) etterlater ikke lenger utkast som peker på media-filer som aldri ble committet. Minnet speiles først når commiten er trygt inne.

@@ -2211,7 +2211,7 @@
   .group summary {
     display: flex;
     align-items: center;
-    min-height: 2.4rem;
+    min-height: 2.2rem;
     padding: 0.35em 0.8em;
     box-sizing: border-box;
   }
@@ -2239,23 +2239,26 @@
     pointer-events: none;
   }
 
+  /* Felles kontrollhøyde (2.2rem) og -størrelse i panelene: felt,
+     nedtrekk og knapper skal flukte uansett hvor de står */
   .panel-body input[type='text'],
   .panel-body input:not([type]),
   .panel-body input[type='number'],
   .panel-body input[type='color'] {
     font: inherit;
+    font-size: 0.85rem;
     color: inherit;
     background: transparent;
     border: 1px solid rgb(255 255 255 / 20%);
     border-radius: 6px;
-    padding: 0.3em 0.5em;
+    height: 2.2rem;
+    padding: 0 0.5em;
     min-width: 0;
   }
 
   .panel-body input[type='color'] {
     padding: 2px;
     width: 3rem;
-    height: 1.8rem;
     cursor: pointer;
   }
 
@@ -2427,7 +2430,18 @@
     background: transparent;
     border: 1px solid rgb(255 255 255 / 20%);
     border-radius: 6px;
-    padding: 0.35em 0.6em;
+    height: 2.2rem;
+    padding: 0 0.6em;
+  }
+
+  .setup-card input[type='color'] {
+    height: 2.2rem;
+    width: 3rem;
+    padding: 2px;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    cursor: pointer;
   }
 
   .setup-actions {
@@ -2444,10 +2458,12 @@
     max-width: 100%;
   }
 
-  /* Samme innvendige marg som tekstfeltene, så teksten linjerer
-     (pilen trenger fortsatt plass til høyre) */
+  /* Samme innvendige marg og høyde som tekstfeltene, så teksten
+     linjerer (pilen trenger fortsatt plass til høyre) */
   .panel-body select {
-    padding: 0.3em 2.1em 0.3em 0.5em;
+    font-size: 0.85rem;
+    height: 2.2rem;
+    padding: 0 2.1em 0 0.5em;
   }
 
   /* Posisjon/størrelse-feltene i Egenskaper: to kolonner med smale felt */
@@ -2532,6 +2548,15 @@
     padding: 0.35em 0.8em;
     cursor: pointer;
     text-decoration: none;
+  }
+
+  /* Kontroller skal ikke arve sidens luftige line-height (1.6 fra
+     base.css via font: inherit): stram linjeboks gir jevn sentrering */
+  select,
+  button,
+  .ghost,
+  input {
+    line-height: 1.3;
   }
 
   /* Nedtrekkslisten følger mørkt tema (nettleser-standarden er hvit).
