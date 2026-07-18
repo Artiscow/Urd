@@ -720,6 +720,18 @@ body.urd-mobile .urd-section-resize {
   justify-content: center;
   gap: 6px;
   z-index: 1002;
+  /* Skjult til musen er over en tilstøtende seksjon (eller baren selv):
+     mindre støy, og den øverste baren kolliderer ikke med menyen */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.urd-preview .urd-add-section:hover,
+.urd-preview .urd-section:hover + .urd-add-section,
+.urd-preview .urd-add-section:has(+ .urd-section:hover) {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .urd-preview .urd-add-section::before {

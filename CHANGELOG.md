@@ -11,6 +11,9 @@ Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter,
 ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.7.8 - «+ Ny seksjon» vises ved hover - 18. juli 2026
+- «+ Ny seksjon»-barene er skjult til musepekeren er over en seksjon: da vises baren både over og under den (og holder seg synlig mens du beveger deg over på selve baren). Mindre visuell støy, og den øverste baren krangler ikke lenger med menyen.
+
 ### 0.5.7.7 - meny-lag, logo-vekst og nav-utseende - 18. juli 2026
 - «+ Ny seksjon»-barene glir nå UNDER den klistrede menyen i stedet for å synes gjennom den (menyens lag ligger over editorbarene).
 - Store logobilder vokser ikke lenger hele menylinjen: bildet vokser ut av linjen (inn i luften rundt) mens menyhøyden står fast.
