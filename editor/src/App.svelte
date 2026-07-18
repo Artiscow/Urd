@@ -296,11 +296,8 @@
     }
     selectedBlock = { sectionId: msg.sectionId, blockId: msg.blockId };
     syncSelectedBlock();
-    // Klikk på et objekt åpner Egenskaper automatisk (eiers ønske).
-    if (selectedBlock && activePanel !== 'Egenskaper') {
-      activePanel = 'Egenskaper';
-      bridge?.sendShowGrid(false);
-    }
+    // (Auto-åpning av Egenskaper ved blokk-klikk ble prøvd og reversert
+    // etter eiers test; kun NY SEKSJON åpner panelet automatisk.)
   }
 
   /** Felles flyt for blokk-endringer fra Egenskaper-panelet. */
@@ -1660,6 +1657,11 @@
                     <option value="center">Midtstilt</option>
                     <option value="left">Venstre (etter logoen)</option>
                   </select></label>
+                <label class="gridmenu-snap" title="Av: menyen ligger kun øverst og forsvinner når man blar nedover">
+                  <input type="checkbox" checked={siteDraft.nav.sticky !== false}
+                    onchange={(e) => siteMutate('nav', () => { siteDraft.nav.sticky = e.target.checked; })} />
+                  Flytende meny (følger med når man blar)
+                </label>
                 <hr class="gridmenu-divider" />
                 {#each siteDraft.nav.items as item, i}
                   <div class="nav-row">

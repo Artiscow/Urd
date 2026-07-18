@@ -315,8 +315,10 @@ function initTextToolbar() {
   btn(alignIcon('right'), 'Høyrejuster', () => exec('justifyRight'));
   sep();
 
-  btn('•', 'Punktliste', () => exec('insertUnorderedList'));
-  btn('1.', 'Nummerert liste', () => exec('insertOrderedList'));
+  btn('<span class="urd-licon"><i></i><i></i><i></i></span>', 'Punktliste',
+    () => exec('insertUnorderedList'));
+  btn('<span class="urd-licon urd-licon-ol"><i>1</i><i>2</i><i>3</i></span>', 'Nummerert liste',
+    () => exec('insertOrderedList'));
   btn('❝', 'Sitat', () => exec('formatBlock', 'blockquote'));
   sep();
 
@@ -326,7 +328,7 @@ function initTextToolbar() {
     if (url.trim()) exec('createLink', url.trim());
     else exec('unlink');
   });
-  btn('T̷', 'Fjern formatering', () => {
+  btn('T<sub>×</sub>', 'Fjern formatering', () => {
     exec('removeFormat');
     exec('unlink');
     exec('formatBlock', 'p');
@@ -344,9 +346,15 @@ function initTextToolbar() {
     }
     const block = activeText.closest('.urd-block') ?? activeText;
     const rect = block.getBoundingClientRect();
+    // Blokkverktøylinjen (⠿⬆⬇…) ligger over blokken: legg tekstlinjen
+    // over DEN, så de aldri overlapper.
+    const blockToolbar = block.querySelector(':scope > .urd-edit-toolbar');
+    const anchorTop = blockToolbar
+      ? Math.min(rect.top, blockToolbar.getBoundingClientRect().top)
+      : rect.top;
     bar.classList.add('vis');
     bar.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - bar.offsetWidth - 8))}px`;
-    bar.style.top = `${Math.max(8, rect.top - bar.offsetHeight - 10)}px`;
+    bar.style.top = `${Math.max(8, anchorTop - bar.offsetHeight - 8)}px`;
     // Nivåvelgeren speiler markørens plassering.
     try {
       const value = (document.queryCommandValue('formatBlock') || 'p').toLowerCase();
@@ -714,6 +722,11 @@ function enhanceBlock(el, block, section, grid, host) {
 
   wireDrag(moveHandle, 'move');
   wireDrag(resizeHandle, 'resize');
+  // Hele blokkflaten kan også dras direkte (⠿ består). Terskel gjør at
+  // klikk forblir klikk; redigerbar tekst og håndtak er unntatt.
+  wireDrag(el, 'move', { surface: true });
+  // Lenker/bilder skal aldri starte nettleserens egen dra-oppførsel.
+  el.addEventListener('dragstart', (event) => event.preventDefault());
 
   // Rotasjonshåndtak (kun desktop: rot bor i desktop-framen). Dras rundt
   // blokkens sentrum; snapper til 15°-steg, Shift gir fri vinkel.
@@ -761,10 +774,21 @@ function enhanceBlock(el, block, section, grid, host) {
    * grid-enheter og rundes fortløpende, så blokken snapper synlig
    * mens man drar. Ved slipp meldes den nye framen til editoren.
    */
-  function wireDrag(handle, kind) {
+  function wireDrag(handle, kind, opts = {}) {
     handle.addEventListener('pointerdown', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
+      if (opts.surface) {
+        const target = event.target instanceof HTMLElement ? event.target : null;
+        // Aldri flate-dra fra redigerbar tekst (markering/skriving),
+        // håndtak eller skjemaelementer.
+        if (target?.closest('.urd-text[contenteditable="true"], .urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button, input, select, textarea')) return;
+        // Auto-mobil: første materialisering skal være et bevisst valg
+        // (dra i ⠿), ikke et klikk på blokken.
+        if (mobile && (section.responsive?.mobile?.mode ?? 'auto') !== 'manual') return;
+        event.preventDefault();
+      } else {
+        event.preventDefault();
+        event.stopPropagation();
+      }
       handle.setPointerCapture(event.pointerId);
 
       // Første håndjustering i mobilvisning: seksjonen materialiseres
@@ -773,6 +797,11 @@ function enhanceBlock(el, block, section, grid, host) {
         materializeMobile(host, section);
       }
       const frameKey = mobile ? 'mobile' : 'desktop';
+
+      // Flate-dra starter først etter en liten terskel, så klikk
+      // (markering, caret) forblir klikk.
+      const threshold = opts.surface ? 4 : 0;
+      let started = threshold === 0;
 
       const start = { x: event.clientX, y: event.clientY };
       const orig = { ...(block.frames[frameKey] ?? block.frames.desktop) };
@@ -786,6 +815,10 @@ function enhanceBlock(el, block, section, grid, host) {
       let current = orig;
 
       const onMove = (ev) => {
+        if (!started) {
+          if (Math.abs(ev.clientX - start.x) + Math.abs(ev.clientY - start.y) < threshold) return;
+          started = true;
+        }
         // Shift holdt inne = midlertidig fri plassering (0,1 % / 1 px);
         // ellers styrer grid.snap.
         const free = grid.snap === false || ev.shiftKey;
@@ -813,6 +846,7 @@ function enhanceBlock(el, block, section, grid, host) {
         handle.removeEventListener('pointermove', onMove);
         handle.removeEventListener('pointerup', onUp);
         overlay.remove();
+        if (!started) return;
         if (current.x !== orig.x || current.y !== orig.y || current.w !== orig.w || current.h !== orig.h) {
           block.frames[frameKey] = current;
           post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: current, frameKey });

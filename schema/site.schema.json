@@ -68,6 +68,11 @@
           "default": "right",
           "description": "Menypunktenes plassering (logoen står alltid først). Additivt felt fra v0.5."
         },
+        "sticky": {
+          "type": "boolean",
+          "default": true,
+          "description": "Menyen følger med når man blar nedover (false = ligger kun øverst). Additivt felt fra v0.5."
+        },
         "logo": {
           "type": "object",
           "required": ["type", "value"],

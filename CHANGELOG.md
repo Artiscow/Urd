@@ -11,6 +11,12 @@ Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter,
 ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.7.5 - dra fra flaten, tekstlinje-finpuss, meny-sticky - 18. juli 2026
+- Blokker kan dras direkte fra flaten (uten ⠿, som består): liten terskel gjør at klikk forblir klikk, redigerbar tekst er unntatt (tekstmarkering virker som før), og i auto-mobil kreves fortsatt et bevisst ⠿-dra for materialisering. Pekeren viser flyttekors over blokker.
+- Formateringslinjen legger seg nå over blokkVERKTØYLINJEN i stedet for oppå den (overlappen fra eiers skjermbilde), og liste-/fjern formatering-knappene har fått ordentlige ikoner (tegnet punkt-/nummerliste, T×).
+- REVERSERT etter eiers test: Egenskaper åpnes ikke lenger automatisk ved klikk på blokk (kun ved ny seksjon).
+- Nav: av/på for flytende meny (`nav.sticky`, additivt) - av betyr at menyen kun ligger øverst og ikke følger scrollingen.
+
 ### 0.5.7.4 - Squarespace-aktig tekstlinje og kompakt logo-editor - 18. juli 2026
 - Formateringslinjen for tekst er bygget om: den vises nå over blokken SÅ LENGE feltet redigeres (ikke bare ved markering), med tekstnivå-nedtrekk (Avsnitt/H1/H2/H3 som speiler markøren), fet/kursiv/understrek, temafarger + fri fargevelger, lenke (legg til/fjern), venstre/midt/høyre-justering, punkt- og nummerert liste, sitat og fjern formatering. Lister, sitater og lenker har fått innholds-CSS så de ser riktige ut også hos besøkende.
 - Logo-editoren i Nav-panelet er komprimert til tekstbehandler-aktige verktøyrader: font + px + F/K-knapper på én linje, og bildevelger + høyde + avrunding på én linje.

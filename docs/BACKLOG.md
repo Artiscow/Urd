@@ -22,7 +22,7 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 - [x] Flere seksjonspresets uten datakilder: team/styret, FAQ, kontakt (M6, 18. juli 2026)
 - [x] Video/embed-blokk (YouTube/Vimeo, personvennlig, CSP-unntak for frame-src) og ikon-blokk (M6, 18. juli 2026)
 - [x] Tastatursnarveier: piltaster flytter markert blokk (Shift = 1 px), Delete sletter, Esc avmarkerer (M6, 18. juli 2026)
-- [x] Når man trykker på et objekt på siden åpnes «Egenskaper» seg automatisk (M6, 18. juli 2026)
+- [x] Når man trykker på et objekt på siden åpnes «Egenskaper» seg automatisk (M6) - REVERSERT 18. juli 2026 etter eiers test; gjelder nå kun ny seksjon
 - [x] Rotering på lerretet: ⟳-håndtak med 15°-snapping (Shift = fritt); størrelse har eget hjørnehåndtak fra før (M6, 18. juli 2026)
 - [x] Knapper/lenker i editoren utløses ikke ved klikk - klikket markerer blokken (M6, 18. juli 2026)
 - [x] Innlastning: synlige elementer dukker opp med en gang; inngangsanimasjoner spilles kun ved scroll-inn senere (M6, 18. juli 2026; egne innlastningsanimasjoner kan komme som funksjon senere)
@@ -64,6 +64,7 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 - [ ] Miniikon for nettsiden i tabs og bokmerker.
 - [ ] Logo/ikon for nettsider
 - [ ] Søk i "+ Legg til blokk"
+- [ ] Legge til stil til avhukingsbokser i admin (muligens moderne knapp som er animert venstre/høyre istedenfor sjekk av/på)
 
     
 ## Bugs og kjente svakheter

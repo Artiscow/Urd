@@ -14,6 +14,8 @@ export function renderNav(site, host) {
   // layout (additivt fra v0.5): hvor menypunktene står; logoen er alltid
   // først og fungerer som «Hjem»-knapp.
   nav.className = `urd-nav urd-nav-${site.nav.layout ?? 'right'}`;
+  // sticky (standard): menyen følger med ved scrolling; false = statisk.
+  if (site.nav.sticky === false) nav.classList.add('urd-nav-static');
 
   const logoDef = site.nav.logo ?? { type: 'text', value: site.site.title };
   const logo = document.createElement('a');

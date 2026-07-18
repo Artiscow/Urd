@@ -234,6 +234,47 @@ html {
   justify-self: center;
 }
 
+/* Listeikoner: punkt/nummer + strek per rad */
+.urd-licon {
+  display: grid;
+  gap: 3px;
+  width: 16px;
+}
+
+.urd-licon i {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-style: normal;
+  font-size: 6px;
+  line-height: 1;
+}
+
+.urd-licon i::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.urd-licon-ol i::before {
+  content: none;
+}
+
+.urd-licon i::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.urd-text-toolbar sub {
+  font-size: 8px;
+}
+
 body.urd-chrome-off .urd-text-toolbar {
   display: none !important;
 }
@@ -377,6 +418,11 @@ body.urd-chrome-off .urd-text-toolbar {
 
 .urd-nav-left {
   gap: 2rem;
+}
+
+/* nav.sticky = false: menyen ligger kun øverst, følger ikke scrollingen */
+.urd-nav-static {
+  position: static;
 }
 
 .urd-nav-list a {
@@ -620,6 +666,15 @@ body.urd-mobile .urd-section-resize {
 .urd-preview .urd-block.urd-selected {
   outline: 2px solid var(--urd-color-accent);
   outline-offset: 2px;
+}
+
+/* Hele blokkflaten kan dras direkte; redigerbar tekst beholder tekstmarkør */
+.urd-preview .urd-editable {
+  cursor: move;
+}
+
+.urd-preview .urd-editable .urd-text[contenteditable='true'] {
+  cursor: text;
 }
 
 /* Under redigering løftes hovret/markert blokk visuelt øverst, slik at
