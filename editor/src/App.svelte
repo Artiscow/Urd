@@ -34,6 +34,10 @@
     pencil: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"/></svg>',
     eye: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/></svg>',
     warn: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L2 20h20L12 3z"/><path d="M12 10v4"/><path d="M12 17.2h.01"/></svg>',
+    up: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V4"/><path d="M5 11l7-7 7 7"/></svg>',
+    down: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M5 13l7 7 7-7"/></svg>',
+    right: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M13 5l7 7-7 7"/></svg>',
+    cross: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14"/><path d="M19 5L5 19"/></svg>',
   };
 
   /**
@@ -46,6 +50,9 @@
     ['bronn', 'Nordisk brønn'],
     ['gull', 'Norrønt gull'],
     ['graa', 'Nøytral grå'],
+    ['nordlys', 'Nordlys'],
+    ['skumring', 'Skumring'],
+    ['glo', 'Glo'],
   ];
   let adminTheme = $state(localStorage.getItem('urd-admin-theme') ?? 'lilla');
 
@@ -1672,10 +1679,10 @@
                     {/if}
                     <span class="row-tools">
                       <button class="ghost row-tool" title="Åpne siden i editoren"
-                        disabled={p.id === pageId} onclick={() => selectPage(p.id)}>→</button>
+                        disabled={p.id === pageId} onclick={() => selectPage(p.id)}>{@html ICONS.right}</button>
                       {#if p.path !== '/'}
                         <button class="ghost row-tool" title="Slett siden (Ctrl+Z angrer)"
-                          onclick={() => deletePage(p)}>×</button>
+                          onclick={() => deletePage(p)}>{@html ICONS.cross}</button>
                       {/if}
                     </span>
                   </div>
@@ -1792,11 +1799,11 @@
                     <input value={item.label} title="Teksten i menyen"
                       oninput={(e) => setNavLabel(i, e.target.value)} />
                     <span class="row-tools">
-                      <button class="ghost row-tool" onclick={() => moveNavItem(i, -1)} disabled={i === 0}>↑</button>
+                      <button class="ghost row-tool" onclick={() => moveNavItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
                       <button class="ghost row-tool" onclick={() => moveNavItem(i, 1)}
-                        disabled={i === siteDraft.nav.items.length - 1}>↓</button>
+                        disabled={i === siteDraft.nav.items.length - 1}>{@html ICONS.down}</button>
                       <button class="ghost row-tool" title="Fjern fra menyen (siden består)"
-                        onclick={() => removeNavItem(i)}>×</button>
+                        onclick={() => removeNavItem(i)}>{@html ICONS.cross}</button>
                     </span>
                     <select class="nav-target" value={item.page ?? '__href'} title="Hvor lenken går"
                       onchange={(e) => setNavTarget(i, e.target.value)}>
@@ -2152,10 +2159,10 @@
                           {/each}
                         </select>
                         <span class="row-tools">
-                          <button class="ghost row-tool" onclick={() => moveBgLayer(i, -1)} disabled={i === 0}>↑</button>
+                          <button class="ghost row-tool" onclick={() => moveBgLayer(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
                           <button class="ghost row-tool" onclick={() => moveBgLayer(i, 1)}
-                            disabled={i === sectionBg.length - 1}>↓</button>
-                          <button class="ghost row-tool" title="Fjern laget" onclick={() => removeBgLayer(i)}>×</button>
+                            disabled={i === sectionBg.length - 1}>{@html ICONS.down}</button>
+                          <button class="ghost row-tool" title="Fjern laget" onclick={() => removeBgLayer(i)}>{@html ICONS.cross}</button>
                         </span>
                       </span>
                       {#if layer.type === 'color'}
@@ -2406,6 +2413,30 @@
     --urd-color-surface: #191b1e;
     --urd-color-accent: #5f6a75;
     --urd-color-text: #e6e8ea;
+  }
+
+  /* Nordlys: Nord-paletten (arktisk, lav metning) */
+  :global(:root[data-admin-theme='nordlys']) {
+    --urd-color-bg: #232831;
+    --urd-color-surface: #2e3440;
+    --urd-color-accent: #5e81ac;
+    --urd-color-text: #eceff4;
+  }
+
+  /* Skumring: Tokyo Night (neon-natt, blå) */
+  :global(:root[data-admin-theme='skumring']) {
+    --urd-color-bg: #16161e;
+    --urd-color-surface: #1a1b26;
+    --urd-color-accent: #3d59a1;
+    --urd-color-text: #c0caf5;
+  }
+
+  /* Glo: Gruvbox (varm, glødende oransje) */
+  :global(:root[data-admin-theme='glo']) {
+    --urd-color-bg: #1d2021;
+    --urd-color-surface: #282828;
+    --urd-color-accent: #d65d0e;
+    --urd-color-text: #ebdbb2;
   }
 
   /* Egen slank, mørk scrollbar i hele admin, så den ikke stikker seg ut */
