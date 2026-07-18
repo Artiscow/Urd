@@ -22,8 +22,8 @@
         "accent": "#7c5cff"
       },
       "font": {
-        "heading": "system-ui, sans-serif",
-        "body": "system-ui, sans-serif"
+        "heading": "'Courier New', monospace",
+        "body": "Georgia, 'Times New Roman', serif"
       },
       "radius": {
         "sm": "6px",
@@ -52,31 +52,41 @@
       "title": "Kontakt",
       "path": "/kontakt",
       "file": "content/pages/kontakt.json"
+    },
+    {
+      "id": "kaker",
+      "title": "Kaker",
+      "path": "/kaker",
+      "file": "content/pages/kaker.json"
     }
   ],
   "nav": {
     "version": 1,
     "logo": {
-      "type": "text",
-      "value": "Urd v0.5.5"
+      "type": "both",
+      "value": "Urd v0.5",
+      "size": 32,
+      "image": "/media/logo-192ecc51.webp",
+      "order": "image-first"
     },
     "items": [
       {
         "label": "Hjem",
-        "page": "kontakt"
+        "page": "hjem"
       },
       {
         "label": "Om oss",
         "page": "om-oss"
       },
       {
-        "label": "Kaker",
-        "page": "hjem"
-      },
-      {
         "label": "Kontakt",
         "page": "kontakt"
+      },
+      {
+        "label": "Kaker",
+        "page": "kaker"
       }
-    ]
+    ],
+    "layout": "left"
   }
 }
