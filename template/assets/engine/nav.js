@@ -11,18 +11,36 @@
 export function renderNav(site, host) {
   host.replaceChildren();
   const nav = document.createElement('nav');
-  nav.className = 'urd-nav';
+  // layout (additivt fra v0.5): hvor menypunktene står; logoen er alltid
+  // først og fungerer som «Hjem»-knapp.
+  nav.className = `urd-nav urd-nav-${site.nav.layout ?? 'right'}`;
 
+  const logoDef = site.nav.logo ?? { type: 'text', value: site.site.title };
   const logo = document.createElement('a');
   logo.className = 'urd-nav-logo';
   logo.href = '/';
-  if (site.nav.logo?.type === 'image') {
+  logo.title = 'Til forsiden';
+
+  const logoImg = (src) => {
     const img = document.createElement('img');
-    img.src = site.nav.logo.value;
+    img.src = src;
     img.alt = site.site.title;
-    logo.appendChild(img);
+    img.style.height = `${logoDef.size ?? 32}px`;
+    return img;
+  };
+  const logoText = () => document.createTextNode(logoDef.value || site.site.title);
+
+  if (logoDef.type === 'image') {
+    logo.appendChild(logoImg(logoDef.value));
+  } else if (logoDef.type === 'both' && logoDef.image) {
+    // Bilde + tekst, i valgt rekkefølge.
+    if ((logoDef.order ?? 'image-first') === 'image-first') {
+      logo.append(logoImg(logoDef.image), logoText());
+    } else {
+      logo.append(logoText(), logoImg(logoDef.image));
+    }
   } else {
-    logo.textContent = site.nav.logo?.value ?? site.site.title;
+    logo.appendChild(logoText());
   }
   nav.appendChild(logo);
 

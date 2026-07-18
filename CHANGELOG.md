@@ -11,6 +11,13 @@ Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter,
 ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.7 - full nav-editor og delt footer (M7) - 18. juli 2026
+- Logoen har nå tre varianter: tekst, bilde eller bilde + tekst, med bildeopplasting (webp-flyt, materialiseres som media-fil ved publisering), bildehøyde og rekkefølge (bilde/tekst først). Logoen er «Hjem»-knappen. Additive skjemafelt; eldre sider rendres uendret.
+- Menyplassering: menypunktene kan stå til høyre (som før), midtstilt eller til venstre etter logoen (`nav.layout`, additivt).
+- Delt footer: nytt Footer-panel redigerer `site.footer` (vis/skjul, tekstlinjer, justering) ETT sted, og motoren viser den nederst på alle sider. Additivt felt: eldre sider uten footer er uendret; footer-PRESETEN (per-side seksjon) finnes fortsatt. Design-maler kommer i v0.6.
+- Ny seksjon markeres nå automatisk og åpner Egenskaper, klar til justering (samme oppførsel som blokkvalg).
+- Dropdown-menyer med flere design er flyttet til v0.6 (krever omlagt nav-rendering for besøkende); full videreutvikling av seksjonspresetene ligger i v0.5-listen og venter på eiers inspirasjonsmateriale.
+
 ### 0.5.6 - innholdsbredde og finpuss (M6) - 18. juli 2026
 - Video-blokk: lim inn en YouTube- eller Vimeo-lenke, så rendres personvennlig innbygging (youtube-nocookie / dnt=1). CSP-en har fått et bevisst frame-src-unntak for akkurat de to vertene. I editoren markerer klikk blokken i stedet for å starte spilleren; ugyldig/tom lenke gir rolig plassholder.
 - Ikon-blokk: glyf/emoji med valgfri størrelse og temafarge (starter som dekor, lik formene).

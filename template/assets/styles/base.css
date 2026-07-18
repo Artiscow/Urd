@@ -262,6 +262,9 @@ body.urd-chrome-off .urd-text-toolbar {
 }
 
 .urd-nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   font-family: var(--urd-font-heading);
   font-weight: 700;
   color: var(--urd-color-text);
@@ -270,12 +273,28 @@ body.urd-chrome-off .urd-text-toolbar {
 
 .urd-nav-logo img {
   height: 2rem;
+  display: block;
 }
 
 .urd-nav-list {
   display: flex;
   gap: 1.25rem;
   list-style: none;
+}
+
+/* Menypunktenes plassering (nav.layout): logoen står alltid først.
+   right er standard (dagens utseende via space-between). */
+.urd-nav-center .urd-nav-list {
+  margin: 0 auto;
+}
+
+.urd-nav-center,
+.urd-nav-left {
+  justify-content: flex-start;
+}
+
+.urd-nav-left {
+  gap: 2rem;
 }
 
 .urd-nav-list a {
@@ -287,6 +306,24 @@ body.urd-chrome-off .urd-text-toolbar {
 .urd-nav-list a:hover {
   opacity: 1;
   color: var(--urd-color-accent);
+}
+
+/* Delt footer (site.footer): vises på alle sider når show er på */
+#urd-footer .urd-footer {
+  padding: 2rem clamp(1rem, 4vw, 2.5rem);
+  background: var(--urd-color-surface);
+  color: color-mix(in srgb, var(--urd-color-text) 75%, transparent);
+  font-size: 0.9rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.urd-footer-center {
+  text-align: center;
+}
+
+.urd-footer-right {
+  text-align: right;
 }
 
 /* Knapper */

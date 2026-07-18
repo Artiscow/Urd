@@ -27,6 +27,11 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 - [x] Knapper/lenker i editoren utløses ikke ved klikk - klikket markerer blokken (M6, 18. juli 2026)
 - [x] Innlastning: synlige elementer dukker opp med en gang; inngangsanimasjoner spilles kun ved scroll-inn senere (M6, 18. juli 2026; egne innlastningsanimasjoner kan komme som funksjon senere)
 - [ ] Footer editor/mal/templates
+- [ ] M7: Utvikle nav-editor: justering av menypunktene (venstre/midt/høyre), logo med tre valg: tekst, bilde, bilde+tekst (med størrelse og rekkefølge på bilde/tekst), logo som «Hjem»-knapp
+- [ ] M7: Delt footer (site.footer, additivt): redigeres ett sted, vises på alle sider; design-maler bygges videre i v0.6
+- [ ] M7/M8: Ordentlig og fullstendig utvikling av seksjonspresetene (Bilder, Team/styret, FAQ, Kontakt er barebones); eier finner inspirasjonssider (à la ApeironLF) + flere utseende-alternativer per preset
+- [ ] Når man legger til en ny seksjon åpnes Egenskaper automatisk (samme oppførsel som ved blokkvalg)
+- [ ] Se på UI og fuksjoner til nettsider som https://nobaraproject.org/ https://linuxmint.com/ https://garudalinux.org/ https://www.forbrukerradet.no/forside https://online.ntnu.no/ https://online.ntnu.no/offline https://abakus.no/ https://www.broderskabet.no/ https://www.vg.no/ https://www.nrk.no/
 - [x] AVKLART (M2, 17. juli 2026): publisering genererer `<slug>/index.html` per side (kopi av rot-index.html) og sletter dem for fjernede/flyttede sider - ruting virker da på alle statiske hoster, ikke bare SPA-fallback
 
 ## Til v0.6 (økosystem)
@@ -34,6 +39,7 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 - [ ] Kart- og skjema-blokk som referanse-plugins (sammen med kalender-pluginen)
 - [ ] Kalender-avhengige presets: kalender, nyheter, oppslagstavle, «Hva skjer» (tre neste arrangementer)
 - [ ] Arkiv/datablokk-mønsteret (samlinger: nyheter, oppslag, styrer) - designes sammen med kalender-referansepluginen, det er samme mønster (blokk som rendrer en samling innslag)
+- [ ] Dropdown-menyer i nav med flere design (krever omlagt nav-rendering for besøkende: hover/klikk, tastatur, mobilmeny) - flyttet fra v0.5
 - [ ] Plugin-/mal-oppdagbarhet: etabler GitHub-topic-konvensjon (`urd-plugin`, `urd-mal`); galleri-nettstedet kommer etter v1
 
 ## Etter v1.0 (horisont)

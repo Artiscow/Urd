@@ -14,6 +14,7 @@ import { liftPageFile, liftSiteFile } from './migrate.js';
 import { applyTheme } from './theme.js';
 import { renderPage, renderSection } from './render.js';
 import { renderNav } from './nav.js';
+import { renderFooter } from './footer.js';
 import { textBlock } from './blocks/text.js';
 import { imageBlock } from './blocks/image.js';
 import { buttonBlock } from './blocks/button.js';
@@ -156,6 +157,7 @@ function enablePreview(state, opts) {
       state.site = msg.site;
       applyTheme(state.site.theme);
       if (opts.nav) renderNav(state.site, opts.nav);
+      if (opts.footer) renderFooter(state.site, opts.footer);
       renderPage(state.page, state.site, root, vp());
     }
     reportHeight();
@@ -182,6 +184,12 @@ export async function boot(opts) {
   await loadPlugins();
 
   if (opts.nav) renderNav(site, opts.nav);
+  // Delt footer: eget element rett etter hovedinnholdet (index.html er
+  // Urd-eid og kan ikke endres av publisering, så elementet lages her).
+  opts.footer = document.createElement('footer');
+  opts.footer.id = 'urd-footer';
+  opts.root.insertAdjacentElement('afterend', opts.footer);
+  renderFooter(site, opts.footer);
   mountToTop();
 
   const entry = resolvePage(site);

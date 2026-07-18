@@ -156,7 +156,12 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   og blir synlige for besøkende først når du publiserer.
 - **Nav**-panelet: menyen øverst på siden. Endre tekst, velg hvilken side
   (eller ekstern adresse) hvert punkt går til, flytt med ↑/↓, fjern med ×.
-  Logoen kan være tekst eller et bilde.
+  Logoen kan være tekst, et opplastet bilde eller begge deler (med
+  størrelse og rekkefølge), og fungerer alltid som «Hjem»-knapp.
+  Menypunktene kan stå til høyre, midtstilt eller til venstre.
+- **Footer**-panelet: bunnteksten som vises nederst på alle sider.
+  Skru den på, skriv linjene (én per linje) og velg justering - den
+  redigeres ett sted og gjelder hele nettstedet.
 - **Tema**-panelet: fargene og fontene hele siden bygger på. Endrer du
   aksentfargen, følger knapper, lenker og markeringer med overalt.
 

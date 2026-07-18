@@ -249,7 +249,7 @@
 
   /** Aktivt panel i venstre panelvelger (null = lukket) */
   let activePanel = $state(null);
-  const PANELS = ['Sider', 'Blokker', 'Egenskaper', 'Tema', 'Nav', 'Grid', 'Historikk'];
+  const PANELS = ['Sider', 'Blokker', 'Egenskaper', 'Tema', 'Nav', 'Footer', 'Grid', 'Historikk'];
 
   function togglePanel(name) {
     activePanel = activePanel === name ? null : name;
@@ -910,6 +910,64 @@
     });
   }
 
+  /**
+   * Logotype-bytte. value betyr tekst (text/both) eller bilde-URL (image),
+   * så feltene flyttes med når betydningen skifter.
+   */
+  function setLogoType(type) {
+    siteMutate('nav', () => {
+      siteDraft.nav.logo ??= { type: 'text', value: siteDraft.site.title };
+      const logo = siteDraft.nav.logo;
+      const imageInValue = logo.type === 'image';
+      if (type === 'both') {
+        if (imageInValue) {
+          logo.image = logo.value;
+          logo.value = siteDraft.site.title;
+        }
+        logo.image ??= '';
+        logo.size ??= 32;
+      } else if (type === 'image') {
+        if (!imageInValue) logo.value = logo.image ?? '';
+        delete logo.image;
+        logo.size ??= 32;
+      } else {
+        if (imageInValue) logo.value = siteDraft.site.title;
+        delete logo.image;
+      }
+      logo.type = type;
+    });
+  }
+
+  /** Logobilde: samme webp-flyt som bildeblokken (materialiseres ved publisering). */
+  async function uploadLogoImage(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      const img = await compressToWebp(file);
+      siteMutate('nav', () => {
+        const logo = siteDraft.nav.logo;
+        if (logo.type === 'both') logo.image = img.dataUrl;
+        else logo.value = img.dataUrl;
+      });
+    } catch {
+      setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
+    }
+  }
+
+  function setNavLayout(value) {
+    siteMutate('nav', () => { siteDraft.nav.layout = value; });
+  }
+
+  /* ---------- Footer-panelet ---------- */
+
+  function footerMutate(key, fn) {
+    siteMutate(key, () => {
+      siteDraft.footer ??= { version: 1, show: false, text: '', align: 'center' };
+      fn(siteDraft.footer);
+    });
+  }
+
   function setNavLabel(i, value) {
     siteMutate(`edit:nav-label-${i}`, () => { siteDraft.nav.items[i].label = value; });
   }
@@ -1072,6 +1130,13 @@
     store.save();
     updateDirty();
     bridge?.sendPage(pageId, store.data);
+    // Ny seksjon markeres og Egenskaper åpnes, klar til justering.
+    activeSectionId = msg.section.id;
+    syncSectionMirrors(msg.section);
+    if (activePanel !== 'Egenskaper') {
+      activePanel = 'Egenskaper';
+      bridge?.sendShowGrid(false);
+    }
   }
 
   function handleMoveSection(msg) {
@@ -1219,24 +1284,36 @@
    * Samme bildeinnhold gir samme filnavn (deterministisk hash), så
    * republisering aldri dupliserer filer.
    */
+  /** Gjør en data-URL i obj[field] om til media-fil; muterer obj. */
+  function materializeField(obj, field, name, files) {
+    const src = obj?.[field];
+    if (!src?.startsWith('data:image/')) return;
+    const base64 = src.split(',', 2)[1];
+    const path = `media/${slugify(name || 'bilde')}-${contentHash(base64)}.webp`;
+    files.push({ path, content: base64, encoding: 'base64' });
+    obj[field] = `/${path}`;
+  }
+
   function materializeImages(page) {
     const files = [];
-    const materialize = (props, name) => {
-      if (!props.src?.startsWith('data:image/')) return;
-      const base64 = props.src.split(',', 2)[1];
-      const path = `media/${slugify(name || 'bilde')}-${contentHash(base64)}.webp`;
-      files.push({ path, content: base64, encoding: 'base64' });
-      props.src = `/${path}`;
-    };
     for (const section of page.sections) {
       // Bakgrunnsbilder følger samme flyt som bildeblokker.
       for (const layer of section.background?.layers ?? []) {
-        if (layer.type === 'image') materialize(layer.props, 'bakgrunn');
+        if (layer.type === 'image') materializeField(layer.props, 'src', 'bakgrunn', files);
       }
       for (const block of section.blocks) {
-        if (block.type === 'image') materialize(block.props, block.props.alt);
+        if (block.type === 'image') materializeField(block.props, 'src', block.props.alt, files);
       }
     }
+    return files;
+  }
+
+  /** Logo-opplastinger i site-utkastet (nav.logo) materialiseres likt. */
+  function materializeSiteImages(site) {
+    const files = [];
+    const logo = site.nav?.logo;
+    if (logo?.type === 'image') materializeField(logo, 'value', 'logo', files);
+    if (logo?.type === 'both') materializeField(logo, 'image', 'logo', files);
     return files;
   }
 
@@ -1302,7 +1379,11 @@
     }
 
     if (siteStore.hasDraft()) {
-      files.push({ path: 'content/site.json', content: JSON.stringify(siteDraft, null, 2) + '\n', encoding: 'utf-8' });
+      // Klon også her: logo-opplastinger materialiseres uten å røre
+      // utkastet i minnet før commiten er trygt inne.
+      const siteOut = JSON.parse(JSON.stringify(siteDraft));
+      files.push(...materializeSiteImages(siteOut));
+      files.push({ path: 'content/site.json', content: JSON.stringify(siteOut, null, 2) + '\n', encoding: 'utf-8' });
       draftKeys.push('urd-draft-site');
     }
 
@@ -1363,6 +1444,7 @@
       // Speil materialiseringen inn i minnet nå som commiten er trygt
       // inne (samme deterministiske stier som klonene fikk).
       materializeImages(store.data);
+      materializeSiteImages(siteDraft);
       // Utkastene ER nå det publiserte; behold dataene i minnet (serveren
       // serverer gammel JSON til deployen er ferdig) og fjern bare merkene.
       for (const key of draftKeys) localStorage.removeItem(key);
@@ -1513,14 +1595,42 @@
                 <label>
                   Logo
                   <select value={siteDraft.nav.logo?.type ?? 'text'}
-                    onchange={(e) => setLogo({ type: e.target.value })}>
+                    onchange={(e) => setLogoType(e.target.value)}>
                     <option value="text">Tekst</option>
-                    <option value="image">Bilde (URL)</option>
+                    <option value="image">Bilde</option>
+                    <option value="both">Bilde + tekst</option>
                   </select>
                 </label>
-                <input value={siteDraft.nav.logo?.value ?? ''}
-                  placeholder={siteDraft.nav.logo?.type === 'image' ? '/media/logo.webp' : 'Navnet i menyen'}
-                  oninput={(e) => setLogo({ value: e.target.value })} />
+                {#if (siteDraft.nav.logo?.type ?? 'text') !== 'image'}
+                  <input value={siteDraft.nav.logo?.value ?? ''} placeholder="Navnet i menyen"
+                    oninput={(e) => setLogo({ value: e.target.value })} />
+                {/if}
+                {#if (siteDraft.nav.logo?.type ?? 'text') !== 'text'}
+                  <label class="ghost filepick" title="Komprimeres automatisk til webp">
+                    {(siteDraft.nav.logo?.type === 'image' ? siteDraft.nav.logo?.value : siteDraft.nav.logo?.image)
+                      ? 'Bytt logobilde' : 'Velg logobilde'}
+                    <input type="file" accept="image/*" onchange={uploadLogoImage} />
+                  </label>
+                  <label>Bildehøyde px
+                    <input type="number" min="12" max="128" value={siteDraft.nav.logo?.size ?? 32}
+                      onchange={(e) => setLogo({ size: Number(e.target.value) })} /></label>
+                {/if}
+                {#if siteDraft.nav.logo?.type === 'both'}
+                  <label>Rekkefølge
+                    <select value={siteDraft.nav.logo?.order ?? 'image-first'}
+                      onchange={(e) => setLogo({ order: e.target.value })}>
+                      <option value="image-first">Bilde først</option>
+                      <option value="text-first">Tekst først</option>
+                    </select></label>
+                {/if}
+                <p class="panel-hint">Logoen er også «Hjem»-knappen (klikk går til forsiden).</p>
+                <label>Menyplassering
+                  <select value={siteDraft.nav.layout ?? 'right'}
+                    onchange={(e) => setNavLayout(e.target.value)}>
+                    <option value="right">Høyre</option>
+                    <option value="center">Midtstilt</option>
+                    <option value="left">Venstre (etter logoen)</option>
+                  </select></label>
                 <hr class="gridmenu-divider" />
                 {#each siteDraft.nav.items as item, i}
                   <div class="nav-row">
@@ -1960,6 +2070,28 @@
                 {:else}
                   <p class="panel-hint">Klikk på en blokk eller seksjon i forhåndsvisningen.</p>
                 {/if}
+              </div>
+            {:else if activePanel === 'Footer'}
+              <div class="panel-body">
+                <p class="panel-hint">Footeren redigeres ett sted og vises nederst på alle sider.</p>
+                <label class="gridmenu-snap">
+                  <input type="checkbox" checked={Boolean(siteDraft.footer?.show)}
+                    onchange={(e) => footerMutate('footer', (f) => { f.show = e.target.checked; })} />
+                  Vis footer på siden
+                </label>
+                <label>Innhold</label>
+                <textarea rows="4" placeholder={'© Min forening\nGateadresse 1, 0000 Sted'}
+                  value={siteDraft.footer?.text ?? ''}
+                  oninput={(e) => footerMutate('edit:footer-text', (f) => { f.text = e.target.value; })}></textarea>
+                <p class="panel-hint">Hver linje blir sin egen tekstlinje.</p>
+                <label>Justering
+                  <select value={siteDraft.footer?.align ?? 'center'}
+                    onchange={(e) => footerMutate('footer', (f) => { f.align = e.target.value; })}>
+                    <option value="left">Venstre</option>
+                    <option value="center">Midtstilt</option>
+                    <option value="right">Høyre</option>
+                  </select></label>
+                <p class="panel-hint">Design-maler for footer kommer i v0.6.</p>
               </div>
             {:else if activePanel === 'Historikk'}
               <div class="panel-body">
@@ -2490,6 +2622,19 @@
   .panel-body label > input {
     min-width: 0;
     max-width: 100%;
+  }
+
+  .panel-body textarea {
+    font: inherit;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    padding: 0.4em 0.5em;
+    min-width: 0;
+    resize: vertical;
   }
 
   /* Samme innvendige marg og høyde som tekstfeltene, så teksten
