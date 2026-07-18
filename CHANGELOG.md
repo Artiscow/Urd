@@ -7,8 +7,31 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 
 ## [Ulansert]
 
-Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
-testrundene kan vise til en konkret push. Numrene er arbeidspunkter, ikke slipp; alt samles i 0.5.0 ved fasegaten.
+(ingenting ennå etter 0.5.10)
+
+Arbeidet mot v0.6 pushes nummerert (0.6.1, 0.6.2, …), og fase-slippet
+døpes til det siste push-nummeret ved gaten, slik v0.5-fasen endte i
+0.5.10. Da stiger numrene alltid.
+
+## [0.5.10] - 2026-07-18
+
+«Panelene og nettstedet rundt siden»: hele editor-UI-et er lagt om til
+panelvelger + sidepanel, og alt rundt selve lerretet er på plass. Levert
+og testet fortløpende på urdweb.pages.dev.
+
+Hovedtrekk:
+- **Panelene**: Sider, Blokker, Egenskaper, Grid, Tema, Nav, Footer og Historikk i gruppert panelvelger; statusmeldinger som toast; admin med sju valgbare fargetemaer (Nøytral grå som standard), knapper som ser ut som knapper, og tegnede SVG-ikoner overalt (ingen emojier).
+- **Redigeringsdybde**: props-editor per blokktype, flytende teksteditor (nivåer, S/M/L/XL, farger koblet til temaet, utheving, lenker), full bakgrunnseditor med lag (farge/gradient/glød/bilde/korn), animasjoner per blokk/seksjon, rotasjon, smarte hjelpelinjer, dupliser, tastatursnarveier, fokuspunkt og bildejusteringer.
+- **Nettstedet rundt siden**: nav-editor (logo tekst/bilde/begge, plassering, klistret meny med stilvalg), delt footer, nettstedsikon (favicon), nye blokktyper video og ikon.
+- **Seksjonsbiblioteket**: 19 presets i gruppert galleri med beskrivelser, utvidbare seksjoner («+ kort/rad/person»), alle bygget av temafarge-tokens og voktet av kontraktstest + skjemavalidering i CI.
+- **Publiseringsløkka**: konfliktvarsel (`latest?base=`), Historikk-panel med angre-publisering, oppsettsveiviser, presise commit-meldinger, per-side `<slug>/index.html`-generering, tosteg-bekreftelse på «Forkast utkast».
+- **Kartleggingen «Siste steg»**: ni inspirasjonssider + ApeironLF + nettbutikk-research sortert inn i backlog og veikart (feed-basert kalender-plugin i v0.6, butikk uten betalingsgateway i v0.7).
+
+Arbeidet ble pushet nummerert (0.5.1-0.5.10); push-loggen under er
+hele historikken, nyeste først.
+
+### 0.5.10 - testrunde-fikser: symmetriske kortmarger - 18. juli 2026
+- Kortpresetene lå med mer luft til venstre enn til høyre (eiers funn: kolonner på 6/39/72 ga 6 % venstremarg og 3 % høyremarg). Alle grid-presetene er rettet til symmetriske marger (tre kolonner 6/37,5/69, team 7,5/39/70,5, sponsorrad 5,5/29/52,5/76 med bredde 18,5), i både seksjonsmalene og «+ element»-fabrikkene.
 
 ### 0.5.9.3 - feilsjekk-runde av seksjonsbiblioteket - 18. juli 2026
 - Ny kontraktstest (tests/presets.test.mjs): alle presets gir velformede seksjoner med ferske objekter, og hver «+ element»-fabrikk plasserer to runder nye elementer uten overlapp. `npm run validate` validerer nå også alle 19 presets (med item-runder) mot page-skjemaet.

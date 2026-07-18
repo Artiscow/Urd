@@ -182,13 +182,13 @@ export function registerSectionPresets(Urd) {
       return section('funksjonskort', '420px', bg(colorLayer('bg')), [
         text(frame(6, 28, 60, 38), '<h2>Hva vi gjør</h2>'),
         ...card(6, '✦', 'Fellesskap'),
-        ...card(39, '★', 'Arrangementer'),
-        ...card(72, '✓', 'Medlemsfordeler'),
+        ...card(37.5, '★', 'Arrangementer'),
+        ...card(69, '✓', 'Medlemsfordeler'),
       ]);
     },
     itemLabel: 'kort',
     item: (sec) => {
-      const { x, y } = gridSlot(countBoxes(sec), 3, 6, 33, 152, 296);
+      const { x, y } = gridSlot(countBoxes(sec), 3, 6, 31.5, 152, 296);
       const box = text(frame(x, y, 25, 200),
         '<h3>Ny tittel</h3><p>Kort beskrivelse av hva dere tilbyr.</p>',
         { align: 'center', box: true });
@@ -210,12 +210,12 @@ export function registerSectionPresets(Urd) {
       return section('nyheter', '460px', bg(colorLayer('bg')), [
         text(frame(6, 28, 50, 38), '<h2>Siste nytt</h2>'),
         button(frame(78, 30, 16, 36), 'Se alle', { style: 'secondary' }),
-        ...card(6), ...card(39), ...card(72),
+        ...card(6), ...card(37.5), ...card(69),
       ]);
     },
     itemLabel: 'sak',
     item: (sec) => {
-      const { x, y } = gridSlot(countType(sec, 'image'), 3, 6, 33, 88, 344);
+      const { x, y } = gridSlot(countType(sec, 'image'), 3, 6, 31.5, 88, 344);
       return {
         blocks: [
           image(frame(x, y, 25, 160)),
@@ -271,12 +271,12 @@ export function registerSectionPresets(Urd) {
       ];
       return section('team', '420px', bg(colorLayer('surface')), [
         text(frame(6, 24, 50, 32), '<h2>Styret</h2>'),
-        ...member(6, 'Leder'), ...member(39, 'Nestleder'), ...member(72, 'Kasserer'),
+        ...member(7.5, 'Leder'), ...member(39, 'Nestleder'), ...member(70.5, 'Kasserer'),
       ]);
     },
     itemLabel: 'person',
     item: (sec) => {
-      const { x, y } = gridSlot(countType(sec, 'image'), 3, 6, 33, 80, 288);
+      const { x, y } = gridSlot(countType(sec, 'image'), 3, 7.5, 31.5, 80, 288);
       return {
         blocks: [
           image(frame(x, y, 22, 180), { alt: 'Portrett' }),
@@ -330,14 +330,14 @@ export function registerSectionPresets(Urd) {
       return section('steg', '400px', bg(colorLayer('bg')), [
         text(frame(6, 28, 60, 38), '<h2>Slik blir du med</h2>'),
         ...step(6, '1', 'Meld deg inn'),
-        ...step(39, '2', 'Betal kontingent'),
-        ...step(72, '3', 'Bli med på det neste'),
+        ...step(37.5, '2', 'Betal kontingent'),
+        ...step(69, '3', 'Bli med på det neste'),
       ]);
     },
     itemLabel: 'steg',
     item: (sec) => {
       const n = countBoxes(sec);
-      const { x, y } = gridSlot(n, 3, 6, 33, 88, 272);
+      const { x, y } = gridSlot(n, 3, 6, 31.5, 88, 272);
       return {
         blocks: [
           text(frame(x, y, 25, 72), `<h3>${n + 1}</h3>`, { align: 'center', size: 44 }),
@@ -378,13 +378,13 @@ export function registerSectionPresets(Urd) {
       return section('produkter', '470px', bg(colorLayer('bg')), [
         text(frame(6, 28, 50, 38), '<h2>Merch</h2>'),
         ...product(6, 'Produktnavn', '199 kr'),
-        ...product(39, 'Produktnavn', '249 kr'),
-        ...product(72, 'Produktnavn', '99 kr'),
+        ...product(37.5, 'Produktnavn', '249 kr'),
+        ...product(69, 'Produktnavn', '99 kr'),
       ]);
     },
     itemLabel: 'produkt',
     item: (sec) => {
-      const { x, y } = gridSlot(countType(sec, 'image'), 3, 6, 33, 88, 348);
+      const { x, y } = gridSlot(countType(sec, 'image'), 3, 6, 31.5, 88, 348);
       return {
         blocks: [
           image(frame(x, y, 25, 200)),
@@ -430,13 +430,13 @@ export function registerSectionPresets(Urd) {
       ];
       return section('statistikk', '260px', bg(colorLayer('surface')), [
         ...stat(6, '120+', 'Medlemmer'),
-        ...stat(39, '25', 'Arrangementer i året'),
-        ...stat(72, '1981', 'Grunnlagt'),
+        ...stat(37.5, '25', 'Arrangementer i året'),
+        ...stat(69, '1981', 'Grunnlagt'),
       ]);
     },
     itemLabel: 'tall',
     item: (sec) => {
-      const { x, y } = gridSlot(Math.floor(countType(sec, 'text') / 2), 3, 6, 33, 72, 136);
+      const { x, y } = gridSlot(Math.floor(countType(sec, 'text') / 2), 3, 6, 31.5, 72, 136);
       return {
         blocks: [
           text(frame(x, y, 25, 76), '<h2>42</h2>', { align: 'center', size: 44 }),
@@ -454,18 +454,18 @@ export function registerSectionPresets(Urd) {
     create: () => {
       // saturate 0 gir gråtonede logoer (klassisk sponsorband).
       // Logoen vises hel (contain) uten avrunding.
-      const logo = (x) => image(frame(x, 108, 18, 100),
+      const logo = (x) => image(frame(x, 108, 18.5, 100),
         { alt: 'Sponsorlogo', fit: 'contain', radius: null, saturate: 0 });
       return section('sponsorer', '280px', bg(colorLayer('bg')), [
         text(frame(6, 28, 60, 36), '<h2>Våre støttespillere</h2>'),
-        logo(6), logo(29.5), logo(53), logo(76.5),
+        logo(5.5), logo(29), logo(52.5), logo(76),
       ]);
     },
     itemLabel: 'logo',
     item: (sec) => {
-      const { x, y } = gridSlot(countType(sec, 'image'), 4, 6, 23.5, 108, 124);
+      const { x, y } = gridSlot(countType(sec, 'image'), 4, 5.5, 23.5, 108, 124);
       return {
-        blocks: [image(frame(x, y, 18, 100),
+        blocks: [image(frame(x, y, 18.5, 100),
           { alt: 'Sponsorlogo', fit: 'contain', radius: null, saturate: 0 })],
         bottom: y + 124,
       };

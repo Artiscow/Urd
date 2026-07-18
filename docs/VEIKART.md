@@ -34,7 +34,7 @@ de ER panel-UI, og skal ikke bygges to ganger.)
 **Port:** en side bygget på desktop ser fornuftig ut på mobil uten manuell
 inngripen, og tilsyn-flagget fanger drift når mobil-layout er håndjustert.
 
-## v0.5 - Panelene og nettstedet rundt siden
+## v0.5 - Panelene og nettstedet rundt siden *(levert 18. juli 2026)*
 
 Editorens UI legges om FØRST (dagens topplinje er metta), og alle
 redigeringsflatene bygges på den nye layouten:
