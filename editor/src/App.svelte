@@ -2434,6 +2434,12 @@
     max-width: 100%;
   }
 
+  /* Samme innvendige marg som tekstfeltene, så teksten linjerer
+     (pilen trenger fortsatt plass til høyre) */
+  .panel-body select {
+    padding: 0.3em 2.1em 0.3em 0.5em;
+  }
+
   /* Posisjon/størrelse-feltene i Egenskaper: to kolonner med smale felt */
   .frame-grid {
     display: grid;
