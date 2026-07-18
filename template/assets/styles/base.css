@@ -102,6 +102,23 @@ html {
   position: static;
 }
 
+/* Innhold i tekstblokker: lister, sitater og lenker fra
+   formateringslinjen (global reset nuller ellers listeinnrykk) */
+.urd-text ul,
+.urd-text ol {
+  padding-left: 1.3em;
+}
+
+.urd-text blockquote {
+  border-left: 3px solid var(--urd-color-accent);
+  padding-left: 0.8em;
+  opacity: 0.9;
+}
+
+.urd-text a {
+  color: var(--urd-color-accent);
+}
+
 /* Tekstboks: tekstblokk med innholdet i et kort (props.box på tekstblokken).
    Følger temaets flatefarge og radius. */
 .urd-text-box {
@@ -112,13 +129,16 @@ html {
   padding: 1rem 1.25rem;
 }
 
-/* Flytende formateringslinje over markert tekst (kun preview-modus) */
+/* Formateringslinjen for tekstfelt (kun preview-modus): vises over
+   blokken så lenge feltet redigeres */
 .urd-text-toolbar {
   position: fixed;
   z-index: 100002;
   display: none;
   align-items: center;
+  flex-wrap: wrap;
   gap: 2px;
+  max-width: min(560px, calc(100vw - 16px));
   padding: 4px;
   background: #151a23;
   border: 1px solid rgb(255 255 255 / 18%);
@@ -131,12 +151,17 @@ html {
 }
 
 .urd-text-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
   font: 600 12px/1 system-ui, sans-serif;
   color: #e8eaf0;
   background: transparent;
   border: 0;
   border-radius: 5px;
-  padding: 5px 7px;
+  padding: 0 5px;
   cursor: pointer;
 }
 
@@ -144,12 +169,69 @@ html {
   background: rgb(255 255 255 / 12%);
 }
 
+.urd-tt-sep {
+  width: 1px;
+  height: 18px;
+  margin: 0 3px;
+  background: rgb(255 255 255 / 18%);
+}
+
+.urd-tt-level {
+  font: 12px/1.2 system-ui, sans-serif;
+  color: #e8eaf0;
+  background: transparent;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 5px;
+  padding: 4px 6px;
+  color-scheme: dark;
+}
+
+.urd-tt-color {
+  width: 22px;
+  height: 22px;
+  padding: 1px;
+  background: transparent;
+  border: 1px solid rgb(255 255 255 / 30%);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
 .urd-text-toolbar .urd-text-swatch {
   width: 18px;
   height: 18px;
+  min-width: 18px;
   padding: 0;
   border-radius: 50%;
   border: 1px solid rgb(255 255 255 / 30%);
+}
+
+/* Justeringsikoner: tre streker med ulik linjering */
+.urd-ticon {
+  display: grid;
+  gap: 3px;
+  width: 14px;
+}
+
+.urd-ticon i {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background: currentColor;
+  border-radius: 1px;
+}
+
+.urd-ticon-left i:nth-child(2),
+.urd-ticon-right i:nth-child(2) {
+  width: 60%;
+}
+
+.urd-ticon-right i:nth-child(2) {
+  justify-self: end;
+}
+
+.urd-ticon-center i:nth-child(2) {
+  width: 60%;
+  justify-self: center;
 }
 
 body.urd-chrome-off .urd-text-toolbar {

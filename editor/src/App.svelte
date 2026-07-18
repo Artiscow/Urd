@@ -1606,41 +1606,41 @@
                     {#if (siteDraft.nav.logo?.type ?? 'text') !== 'image'}
                       <input value={siteDraft.nav.logo?.value ?? ''} placeholder="Navnet i menyen"
                         oninput={(e) => setLogo({ value: e.target.value })} />
-                      <label>Font
-                        <select value={siteDraft.nav.logo?.font ?? ''}
+                      <!-- Stilrad à la tekstbehandler: font | px | F K -->
+                      <span class="toolbar-row">
+                        <select title="Font (Arv = temaets overskriftsfont)"
+                          value={siteDraft.nav.logo?.font ?? ''}
                           onchange={(e) => setLogo({ font: e.target.value || undefined })}>
-                          <option value="">Arv (overskriftsfont)</option>
+                          <option value="">Arv</option>
                           {#each FONT_STACKS as [name, value] (value)}
                             <option {value}>{name}</option>
                           {/each}
-                        </select></label>
-                      <label>Tekststørrelse px
-                        <input type="number" class="token-input" min="8" max="96" placeholder="arv"
+                        </select>
+                        <input type="number" class="tb-num" min="8" max="96" placeholder="px"
+                          title="Tekststørrelse i px (tom = arv)"
                           value={siteDraft.nav.logo?.textSize ?? ''}
-                          onchange={(e) => setLogo({ textSize: e.target.value ? Number(e.target.value) : undefined })} /></label>
-                      <label class="gridmenu-snap">
-                        <input type="checkbox" checked={siteDraft.nav.logo?.bold !== false}
-                          onchange={(e) => setLogo({ bold: e.target.checked })} />
-                        Fet
-                      </label>
-                      <label class="gridmenu-snap">
-                        <input type="checkbox" checked={Boolean(siteDraft.nav.logo?.italic)}
-                          onchange={(e) => setLogo({ italic: e.target.checked })} />
-                        Kursiv
-                      </label>
+                          onchange={(e) => setLogo({ textSize: e.target.value ? Number(e.target.value) : undefined })} />
+                        <button class="tbtn" title="Fet" class:active={siteDraft.nav.logo?.bold !== false}
+                          onclick={() => setLogo({ bold: siteDraft.nav.logo?.bold === false })}><b>F</b></button>
+                        <button class="tbtn" title="Kursiv" class:active={Boolean(siteDraft.nav.logo?.italic)}
+                          onclick={() => setLogo({ italic: !siteDraft.nav.logo?.italic })}><i>K</i></button>
+                      </span>
                     {/if}
                     {#if (siteDraft.nav.logo?.type ?? 'text') !== 'text'}
-                      <label class="ghost filepick" title="Komprimeres automatisk til webp">
-                        {(siteDraft.nav.logo?.type === 'image' ? siteDraft.nav.logo?.value : siteDraft.nav.logo?.image)
-                          ? 'Bytt logobilde' : 'Velg logobilde'}
-                        <input type="file" accept="image/*" onchange={uploadLogoImage} />
-                      </label>
-                      <label>Bildehøyde px
-                        <input type="number" min="12" max="128" value={siteDraft.nav.logo?.size ?? 32}
-                          onchange={(e) => setLogo({ size: Number(e.target.value) })} /></label>
-                      <label>Avrunding px
-                        <input type="number" min="0" max="64" value={siteDraft.nav.logo?.radius ?? 0}
-                          onchange={(e) => setLogo({ radius: Number(e.target.value) })} /></label>
+                      <span class="toolbar-row">
+                        <label class="ghost filepick tb-grow" title="Komprimeres automatisk til webp">
+                          {(siteDraft.nav.logo?.type === 'image' ? siteDraft.nav.logo?.value : siteDraft.nav.logo?.image)
+                            ? 'Bytt bilde' : 'Velg bilde'}
+                          <input type="file" accept="image/*" onchange={uploadLogoImage} />
+                        </label>
+                        <input type="number" class="tb-num" min="12" max="128" title="Bildehøyde i px"
+                          value={siteDraft.nav.logo?.size ?? 32}
+                          onchange={(e) => setLogo({ size: Number(e.target.value) })} />
+                        <input type="number" class="tb-num" min="0" max="64" title="Avrunding i px"
+                          value={siteDraft.nav.logo?.radius ?? 0}
+                          onchange={(e) => setLogo({ radius: Number(e.target.value) })} />
+                      </span>
+                      <p class="panel-hint">Tallfeltene: bildehøyde og avrunding (px).</p>
                     {/if}
                     {#if siteDraft.nav.logo?.type === 'both'}
                       <label>Rekkefølge
@@ -2568,6 +2568,47 @@
   }
 
   .bg-type {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  /* Kompakte verktøyrader (à la tekstbehandler) i panelene */
+  .toolbar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  .toolbar-row > select {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .panel-body .toolbar-row .tb-num {
+    width: 3.4rem;
+    flex: 0 0 auto;
+    padding: 0 0.3em;
+    text-align: center;
+  }
+
+  .panel-body .toolbar-row .tbtn {
+    flex: 0 0 auto;
+    width: 2.2rem;
+    min-height: 0;
+    height: 2.2rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .toolbar-row .tbtn.active {
+    border-color: var(--urd-color-accent, #7c5cff);
+    background: rgb(124 92 255 / 18%);
+  }
+
+  .panel-body .toolbar-row .tb-grow {
     flex: 1 1 0;
     min-width: 0;
   }

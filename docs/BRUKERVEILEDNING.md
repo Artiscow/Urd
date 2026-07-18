@@ -105,9 +105,10 @@ selve animasjonen spilles på den publiserte siden. Besøkende som har
 skrudd av animasjoner i systemet sitt (redusert bevegelse) får innholdet
 uten animasjon.
 
-**Formatere tekst**: marker tekst i en tekstblokk, så dukker en liten
-verktøylinje opp over markeringen med fet, kursiv, overskriftsnivåer og
-temafarger.
+**Formatere tekst**: klikk i en tekstblokk, så dukker verktøylinjen opp
+over den: tekstnivå (avsnitt/overskrifter), fet, kursiv, understrek,
+farger, lenke, justering, lister, sitat og fjern formatering. Font og
+grunnstørrelse for hele feltet settes i Egenskaper.
 
 ## Seksjoner
 

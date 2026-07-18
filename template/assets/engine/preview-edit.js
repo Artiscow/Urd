@@ -238,10 +238,12 @@ function makeSectionAdder(index, above = null) {
 }
 
 /**
- * Flytende formateringslinje over markert tekst i tekstblokker: fet,
- * kursiv, overskriftsnivå og temafarger. Kommandoene går via
- * contenteditable (execCommand), som utløser input-hendelsen i text.js -
- * lagringen gjenbruker altså hele den vanlige utkastflyten.
+ * Formateringslinjen for tekstfelt (à la Squarespace): vises over BLOKKEN
+ * så lenge et tekstfelt redigeres, med overskriftsnivå, fet/kursiv/
+ * understrek, farger, lenke, justering, lister, sitat og fjern-formatering.
+ * Kommandoene går via contenteditable (execCommand), som utløser
+ * input-hendelsen i text.js - lagringen gjenbruker hele utkastflyten.
+ * (Font og grunnstørrelse per felt bor i Egenskaper-panelet.)
  */
 let textToolbarReady = false;
 
@@ -251,50 +253,127 @@ function initTextToolbar() {
 
   const bar = document.createElement('div');
   bar.className = 'urd-text-toolbar';
-  // Klikk i linjen skal ikke oppheve tekstmarkeringen.
+  // Klikk i linjen skal ikke flytte fokus ut av tekstfeltet.
   bar.addEventListener('mousedown', (event) => event.preventDefault());
 
-  const btn = (label, title, run) => {
+  const exec = (name, value = null) => document.execCommand(name, false, value);
+  const btn = (html, title, run) => {
     const b = document.createElement('button');
-    b.textContent = label;
+    b.innerHTML = html;
     b.title = title;
-    b.addEventListener('click', run);
+    b.addEventListener('click', () => { run(); reposition(); });
     bar.appendChild(b);
     return b;
   };
-  btn('F', 'Fet', () => document.execCommand('bold'));
-  btn('K', 'Kursiv', () => document.execCommand('italic'));
-  btn('H1', 'Stor overskrift', () => document.execCommand('formatBlock', false, 'h1'));
-  btn('H2', 'Mellomoverskrift', () => document.execCommand('formatBlock', false, 'h2'));
-  btn('H3', 'Liten overskrift', () => document.execCommand('formatBlock', false, 'h3'));
-  btn('¶', 'Vanlig avsnitt', () => document.execCommand('formatBlock', false, 'p'));
-  // Temafargene (leses ved klikk, så de følger gjeldende tema).
+  const sep = () => {
+    const s = document.createElement('span');
+    s.className = 'urd-tt-sep';
+    bar.appendChild(s);
+  };
+
+  // Overskriftsnivå
+  const level = document.createElement('select');
+  level.className = 'urd-tt-level';
+  level.title = 'Tekstnivå';
+  for (const [value, name] of [['p', 'Avsnitt'], ['h1', 'Overskrift 1'], ['h2', 'Overskrift 2'], ['h3', 'Overskrift 3']]) {
+    const o = document.createElement('option');
+    o.value = value;
+    o.textContent = name;
+    level.appendChild(o);
+  }
+  level.addEventListener('change', () => exec('formatBlock', level.value));
+  bar.appendChild(level);
+  sep();
+
+  btn('<b>F</b>', 'Fet', () => exec('bold'));
+  btn('<i>K</i>', 'Kursiv', () => exec('italic'));
+  btn('<u>U</u>', 'Understrek', () => exec('underline'));
+  sep();
+
+  // Temafargene (leses ved klikk, så de følger gjeldende tema) + fri farge.
   for (const token of ['text', 'accent']) {
     const b = btn('', token === 'text' ? 'Tekstfarge' : 'Aksentfarge', () => {
       const value = getComputedStyle(document.documentElement)
         .getPropertyValue(`--urd-color-${token}`).trim();
-      document.execCommand('foreColor', false, value);
+      exec('foreColor', value);
     });
     b.className = 'urd-text-swatch';
     b.style.background = `var(--urd-color-${token})`;
   }
+  const custom = document.createElement('input');
+  custom.type = 'color';
+  custom.className = 'urd-tt-color';
+  custom.title = 'Egen farge';
+  custom.addEventListener('input', () => exec('foreColor', custom.value));
+  bar.appendChild(custom);
+  sep();
+
+  const alignIcon = (kind) =>
+    `<span class="urd-ticon urd-ticon-${kind}"><i></i><i></i><i></i></span>`;
+  btn(alignIcon('left'), 'Venstrejuster', () => exec('justifyLeft'));
+  btn(alignIcon('center'), 'Midtstill', () => exec('justifyCenter'));
+  btn(alignIcon('right'), 'Høyrejuster', () => exec('justifyRight'));
+  sep();
+
+  btn('•', 'Punktliste', () => exec('insertUnorderedList'));
+  btn('1.', 'Nummerert liste', () => exec('insertOrderedList'));
+  btn('❝', 'Sitat', () => exec('formatBlock', 'blockquote'));
+  sep();
+
+  btn('🔗', 'Lenke (tomt felt fjerner lenken)', () => {
+    const url = prompt('Lenkeadresse:', 'https://');
+    if (url === null) return;
+    if (url.trim()) exec('createLink', url.trim());
+    else exec('unlink');
+  });
+  btn('T̷', 'Fjern formatering', () => {
+    exec('removeFormat');
+    exec('unlink');
+    exec('formatBlock', 'p');
+  });
   document.body.appendChild(bar);
 
-  document.addEventListener('selectionchange', () => {
-    const sel = document.getSelection();
-    const anchor = sel?.anchorNode;
-    const inText = anchor
-      && (anchor.nodeType === 1 ? anchor : anchor.parentElement)
-        ?.closest?.('.urd-text[contenteditable="true"]');
-    if (!sel || sel.isCollapsed || !sel.rangeCount || !inText) {
+  // Linjen vises så lenge et tekstfelt har fokus, forankret over blokken
+  // (mousedown på linjen preventDefaults, så fokus består ved klikk der).
+  let activeText = null;
+
+  const reposition = () => {
+    if (!activeText || !activeText.isConnected) {
       bar.classList.remove('vis');
       return;
     }
-    const rect = sel.getRangeAt(0).getBoundingClientRect();
+    const block = activeText.closest('.urd-block') ?? activeText;
+    const rect = block.getBoundingClientRect();
     bar.classList.add('vis');
-    bar.style.left = `${Math.max(8, rect.left + rect.width / 2 - bar.offsetWidth / 2)}px`;
+    bar.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - bar.offsetWidth - 8))}px`;
     bar.style.top = `${Math.max(8, rect.top - bar.offsetHeight - 10)}px`;
+    // Nivåvelgeren speiler markørens plassering.
+    try {
+      const value = (document.queryCommandValue('formatBlock') || 'p').toLowerCase();
+      level.value = ['h1', 'h2', 'h3'].includes(value) ? value : 'p';
+    } catch { /* enkelte nettlesere nekter før første kommando */ }
+  };
+
+  document.addEventListener('focusin', (event) => {
+    const target = event.target instanceof HTMLElement
+      ? event.target.closest('.urd-text[contenteditable="true"]')
+      : null;
+    if (target) activeText = target;
+    reposition();
   });
+  document.addEventListener('focusout', () => {
+    // Vent et blunk: fokus kan være på vei til selve linjen.
+    requestAnimationFrame(() => {
+      const el = document.activeElement;
+      if (!(el instanceof HTMLElement) || !el.closest('.urd-text[contenteditable="true"]')) {
+        activeText = null;
+        reposition();
+      }
+    });
+  });
+  document.addEventListener('selectionchange', reposition);
+  window.addEventListener('scroll', reposition, { passive: true, capture: true });
+  window.addEventListener('resize', reposition);
 }
 
 /** Verktøylinje øverst til høyre i seksjonen. Desktop: flytt opp/ned,
