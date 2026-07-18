@@ -913,6 +913,11 @@ body.urd-mobile .urd-section-resize {
   z-index: 1003;
 }
 
+.urd-preview .urd-preset-menu.urd-preset-up {
+  top: auto;
+  bottom: 8px;
+}
+
 .urd-preview .urd-preset-head {
   display: flex;
   align-items: center;

@@ -266,6 +266,9 @@ function makeSectionAdder(index, above = null) {
     // Gruppene beholder registerets rekkefølge.
     const menu = document.createElement('div');
     menu.className = 'urd-preset-menu';
+    // Den nederste grensen ligger ved sidens slutt, der iframen ikke har plass under: åpne galleriet oppover i stedet.
+    // På en tom side (kun én grense) finnes ingenting over, da åpnes det fortsatt nedover.
+    if (!bar.nextElementSibling && bar.previousElementSibling) menu.classList.add('urd-preset-up');
 
     const head = document.createElement('div');
     head.className = 'urd-preset-head';
@@ -524,7 +527,9 @@ function addSectionToolbar(host, section, grid) {
     // Fabrikken (def.item) bor i preset-definisjonen; seksjonen forblir en generisk container.
     const def = section.preset ? window.Urd.sections.get(section.preset) : null;
     if (def?.item) {
-      mk(`+ ${def.itemLabel ?? 'element'}`, `Legg til: ${def.itemLabel ?? 'element'} (Ctrl+Z angrer)`, () => {
+      mk(`+ ${def.itemLabel ?? 'element'}`, `Legg til: ${def.itemLabel ?? 'element'} (Ctrl+Z angrer)`, (event) => {
+        // Deaktiver til seksjonen rerendres: et dobbeltklikk før rundturen ville lagt to element i samme rute.
+        event.target.disabled = true;
         const next = def.item(section);
         post({ type: 'urd-add-blocks', sectionId: section.id, blocks: next.blocks, minBottom: next.bottom });
       });

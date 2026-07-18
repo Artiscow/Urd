@@ -10,6 +10,10 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter, ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.9.3 - feilsjekk-runde av seksjonsbiblioteket - 18. juli 2026
+- Ny kontraktstest (tests/presets.test.mjs): alle presets gir velformede seksjoner med ferske objekter, og hver «+ element»-fabrikk plasserer to runder nye elementer uten overlapp. `npm run validate` validerer nå også alle 19 presets (med item-runder) mot page-skjemaet.
+- Tre funn fikset: pluss-knappen deaktiveres til seksjonen er rerendret (dobbeltklikk kunne lagt to element i samme rute), preset-galleriet på nederste seksjonsgrense åpner oppover (ble klippet av iframe-høyden ved sidens slutt), og på en helt tom side åpner det fortsatt nedover.
+
 ### 0.5.9.2 - utvidbare seksjoner («+ kort/rad/person») - 18. juli 2026
 - Seksjoner laget fra maler med gjentakende elementer har fått en pluss-knapp i seksjonsverktøylinjen som legger til NESTE element (kort, sak, rad, person, spørsmål, steg, produkt, tall, logo, bilde) ferdig plassert i neste ledige rute. Elementet legges som én gruppe blokker i ett angre-steg, og seksjonen vokser automatisk når det trengs.
 - Teknisk: preset-definisjoner kan nå ha valgfrie `item`/`itemLabel`-fabrikker (samme mønster som `create`); seksjonene forblir generiske containere, og antall leses robust fra blokkene så knappen virker også etter redigering.
