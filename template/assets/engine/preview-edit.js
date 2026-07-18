@@ -896,6 +896,29 @@ function enhanceBlock(el, block, section, grid, host) {
         handle.removeEventListener('pointerup', onUp);
         overlay.remove();
         if (!started) return;
+
+        // Slippes blokkens SENTRUM over en annen seksjon (desktop),
+        // flytter blokken dit - grid og tilhørighet skal følge seksjonen
+        // den faktisk ligger i, ikke den den kom fra.
+        if (kind === 'move' && !mobile) {
+          const rect = el.getBoundingClientRect();
+          const target = document
+            .elementsFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)
+            .find((n) => n instanceof HTMLElement && n.classList.contains('urd-section'));
+          if (target && target.dataset.sectionId !== section.id) {
+            const tRect = target.getBoundingClientRect();
+            const frame = { ...current, y: Math.round(rect.top - tRect.top) };
+            post({
+              type: 'urd-move-block-section',
+              fromSectionId: section.id,
+              toSectionId: target.dataset.sectionId,
+              blockId: block.id,
+              frame,
+            });
+            return;
+          }
+        }
+
         if (current.x !== orig.x || current.y !== orig.y || current.w !== orig.w || current.h !== orig.h) {
           block.frames[frameKey] = current;
           post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: current, frameKey });

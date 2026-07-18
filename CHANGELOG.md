@@ -11,6 +11,10 @@ Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter,
 ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.7.11 - blokker bytter seksjon ved dra + innlastningsanimasjon tettet - 18. juli 2026
+- Slippes en blokk med senteret over en ANNEN seksjon, flyttes den dit i dataene: grid, tilhørighet og mobil-stabling følger seksjonen den faktisk ligger i, ikke den den kom fra (før forble blokken koblet til gamleseksjonen og hang bare visuelt over den nye). Mobil-framen nullstilles ved flytting (avledes på nytt), og Ctrl+Z angrer hele flyttingen.
+- Innlastningsanimasjonen tettet for godt: FØR brukerens første scroll snappes alle inngangsanimasjoner uansett (tidsvinduet alene kunne overskrides på trege innlastinger, som gjorde at Hjem fortsatt animerte ved lasting). Animasjonene spilles kun ved scroll-inn senere. NB: urdweb viser gammel motor til dette er pushet og deployen er ferdig.
+
 ### 0.5.7.10 - tegnede SVG-ikoner i stedet for ALL emoji - 18. juli 2026
 - Hele editoren er emojifri: desktop/mobil-togglene, tilsyn-chipen, Rediger (blyant), Ren visning (øye), dekor-knappen (telefon/overstrøket telefon), lag-knappene (pil mot strek opp/ned), lenke-ikonet og bildeplassholderen er alle tegnede SVG-ikoner i samme strek-stil (currentColor).
 - Alle ikonknapper er loddrett sentrert: blokkverktøylinjens knapper har fått fast høyde med flex-sentrering, og topplinjens ikonknapper linjerer ikon + tekst på midten.

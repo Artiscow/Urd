@@ -765,6 +765,7 @@
       onNavigate,
       onAddBlock: (msg) => insertBlock(msg.sectionId, msg.block),
       onRequestBlock: handleRequestBlock,
+      onMoveBlockSection: handleMoveBlockSection,
       onMobileManual: handleMobileManual,
       onMobileAuto: handleMobileAuto,
       onReviewDone: handleReviewDone,
@@ -1187,6 +1188,30 @@
     if (msg.sectionId === activeSectionId) sectionMinHeight = msg.minHeight;
     store.save();
     updateDirty();
+  }
+
+  /** Blokk sluppet i en annen seksjon: flytt den dit i utkastet. */
+  function handleMoveBlockSection(msg) {
+    const from = store.data.sections.find((s) => s.id === msg.fromSectionId);
+    const to = store.data.sections.find((s) => s.id === msg.toSectionId);
+    const block = from?.blocks.find((b) => b.id === msg.blockId);
+    if (!from || !to || !block) return;
+    pushHistory('move-block');
+    from.blocks = from.blocks.filter((b) => b.id !== msg.blockId);
+    block.frames.desktop = msg.frame;
+    // Mobil-layouten avledes på nytt i den nye seksjonen.
+    block.frames.mobile = null;
+    to.blocks.push(block);
+    markDesktopChange(from, 'blokk-flyttet');
+    markDesktopChange(to, 'blokk-flyttet');
+    store.save();
+    updateDirty();
+    updateAttention();
+    bridge?.sendPage(pageId, store.data);
+    if (selectedBlock?.blockId === msg.blockId) {
+      selectedBlock = { ...selectedBlock, sectionId: msg.toSectionId };
+      syncSelectedBlock();
+    }
   }
 
   /** Sletting: fjern fra utkastet og rerender seksjonen i iframen. */

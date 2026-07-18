@@ -24,16 +24,27 @@ export const coreAnimations = {
 /** Delt observer: legger på .urd-anim-in første gang elementet er synlig. */
 let observer = null;
 
+/**
+ * Ingenting skal spilles ved sideINNLASTING - kun ved scrolling senere.
+ * Tidsvinduet alene var ikke nok (trege innlastinger kunne overskride
+ * det), så før første scroll snappes alt, uansett.
+ */
+let hasScrolled = false;
+if (typeof window !== 'undefined') {
+  window.addEventListener('scroll', () => { hasScrolled = true; }, { once: true, passive: true });
+}
+
 function entranceObserver() {
   observer ??= new IntersectionObserver((entries) => {
     for (const entry of entries) {
       if (!entry.isIntersecting) continue;
       const el = entry.target;
       observer.unobserve(el);
-      // Var elementet synlig allerede idet det ble observert (side-
-      // innlasting eller rerender), skal det bare DUKKE OPP - inngangs-
-      // animasjonen er for innhold man scroller til senere.
-      if (performance.now() - (el._urdObservedAt ?? 0) < 250) {
+      // Synlig ved innlasting/rerender (ferskt observert, eller før
+      // brukeren har scrollet): bare DUKK OPP. Animasjonen er for
+      // innhold man scroller til senere.
+      const fresh = performance.now() - (el._urdObservedAt ?? 0) < 250;
+      if (!hasScrolled || fresh) {
         el.style.transition = 'none';
         el.classList.add('urd-anim-in');
         requestAnimationFrame(() => { el.style.transition = ''; });
