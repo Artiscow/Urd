@@ -195,7 +195,8 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
 - **Publiser** legger alle utkastene ut på siden. Det tar omtrent ett
   minutt før endringene er synlige for besøkende.
 - **Forkast utkast** sletter utkastene og tar deg tilbake til slik siden
-  er publisert.
+  er publisert. Knappen spør «Sikker?» (rød) før den gjør det; klikk en
+  gang til for å forkaste, eller hvor som helst ellers for å avbryte.
 - **Se siden ↗** åpner den publiserte siden i ny fane.
 
 Publisering krever at GitHub-brukeren din har fått tilgang av

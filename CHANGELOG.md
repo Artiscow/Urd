@@ -10,6 +10,9 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter, ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.8.10 - bekreftelse på «Forkast utkast» - 18. juli 2026
+- «Forkast utkast» krever nå to klikk: første klikk gjør knappen rød med teksten «Sikker?», andre klikk forkaster. Klikk hvor som helst ellers, Escape eller klikk i forhåndsvisningen tar knappen tilbake til vanlig - før slettet ett feilklikk alle utkastene uten spørsmål.
+
 ### 0.5.8.9 - skarpere radglyfer - 18. juli 2026
 - Pilene og kryssene i radknappene er økt fra 11 til 12px: geometrien var alt perfekt sentrert (målt i nettleseren), men på skjermer med 125 % skalering landet strekene på brøkdels-piksler og så skjeve ut av antialiasing. 12px treffer hele fysiske piksler (12 x 1,25 = 15) og fyller knappen bedre.
 

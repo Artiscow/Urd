@@ -1437,6 +1437,41 @@
     return files;
   }
 
+  // «Forkast utkast» krever to klikk: første klikk væpner knappen (rød,
+  // «Sikker?»), andre klikk forkaster. Klikk hvor som helst ellers,
+  // Escape eller fokus inn i forhåndsvisningen avvæpner.
+  let discardArmed = $state(false);
+
+  function requestDiscard() {
+    if (!discardArmed) {
+      discardArmed = true;
+      return;
+    }
+    discardArmed = false;
+    discard();
+  }
+
+  $effect(() => {
+    if (!discardArmed) return;
+    const disarm = (e) => {
+      if (!e.target?.closest?.('.discard-btn')) discardArmed = false;
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') discardArmed = false;
+    };
+    // Klikk i forhåndsvisningen (iframen) når aldri dette dokumentet,
+    // men flytter fokus ut av vinduet - window-blur dekker det.
+    const onBlur = () => (discardArmed = false);
+    window.addEventListener('pointerdown', disarm, true);
+    window.addEventListener('keydown', onKey, true);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      window.removeEventListener('pointerdown', disarm, true);
+      window.removeEventListener('keydown', onKey, true);
+      window.removeEventListener('blur', onBlur);
+    };
+  });
+
   function discard() {
     pushHistory('discard');
     const freshPage = store.reset();
@@ -1678,7 +1713,9 @@
         <a class="ghost" href="/api/github/login">Logg inn med GitHub</a>
       {/if}
       <a class="ghost" href={pageEntry().path} target="_blank" rel="noopener">Se siden ↗</a>
-      <button class="ghost" onclick={discard} disabled={!dirty}>Forkast utkast</button>
+      <button class="ghost discard-btn" class:armed={discardArmed} onclick={requestDiscard} disabled={!dirty}
+        title={discardArmed ? 'Klikk igjen for å slette alle utkastene' : 'Slett utkastene og gå tilbake til publisert versjon'}
+      >{discardArmed ? 'Sikker?' : 'Forkast utkast'}</button>
       <button class="primary" onclick={publish} disabled={!dirty}>Publiser</button>
     {/if}
     </span>
@@ -3228,6 +3265,23 @@
     background: var(--urd-color-accent, #7c5cff);
     border-color: transparent;
     color: #fff;
+  }
+
+  /* Væpnet «Forkast utkast»: rød og «Sikker?» til man klikker et annet
+     sted. Fast bredde så topplinjen ikke hopper når teksten byttes. */
+  .discard-btn {
+    min-width: 9.5em;
+  }
+
+  .discard-btn.armed {
+    background: #c22f2f;
+    border-color: #e05252;
+    color: #fff;
+  }
+
+  .discard-btn.armed:hover:not(:disabled) {
+    background: #d63a3a;
+    border-color: #e05252;
   }
 
   .frame-wrap {
