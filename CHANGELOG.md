@@ -10,6 +10,9 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter, ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.8.3 - tomrom øverst i seksjonene + «+ Ny blokk» øverst til høyre - 18. juli 2026
+- Alle seksjoner fikk et bakgrunnsløst bånd øverst: «+ Legg til blokk»-pillen lå i flyten med toppmarg, og siden seksjoner ikke har toppkant kollapset margen UT av seksjonen og skjøv den ned. Pillen er nå absolutt posisjonert (deltar aldri i flyten), døpt om til «+ Ny blokk», og flyttet øverst til høyre under seksjonsverktøylinjen; menyen åpner høyrejustert under den.
+
 ### 0.5.8.2 - bugsjekk av editor-løftet - 18. juli 2026
 - Gjennomgang av 0.5.8: token-fargene er verifisert hele veien (alle motor-konsumenter går via resolveColor, også gradient-stopp og color-mix i menyen), guide-matematikken bruker samme koordinatrom som blokkene, og duplisering bevarer manuell-mobil-invarianten. To småfeil fikset: død hexFor-funksjon fjernet (velgeren løser opp tokens selv), og «Nylige farger» tåler nå korrupt localStorage-innhold.
 - To kjente svakheter bokført i backloggen: utheving lagrer fargen som fast verdi (følger ikke senere temabytte), og Ctrl+D krever fokus i forhåndsvisningen.

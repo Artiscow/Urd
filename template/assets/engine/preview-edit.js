@@ -176,7 +176,7 @@ function addBlockAdder(host, section) {
 
   const openBtn = document.createElement('button');
   openBtn.className = 'urd-add-block-open';
-  openBtn.textContent = '+ Legg til blokk';
+  openBtn.textContent = '+ Ny blokk';
 
   const menu = document.createElement('div');
   menu.className = 'urd-add-block-menu';

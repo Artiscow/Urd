@@ -382,17 +382,17 @@ body.urd-chrome-off .urd-text-toolbar {
   border-radius: var(--urd-radius-md);
 }
 
-/* «+ Legg til blokk» (hover-vist, kun preview). Sticky i synsfeltet:
-   i små seksjoner står den nær toppen, i høye følger den med mens man
-   scroller - den lå tidligere nederst og havnet under folden. */
+/* «+ Ny blokk» (hover-vist, kun preview): øverst til høyre i seksjonen,
+   under seksjonsverktøylinjen. Absolutt posisjon: pillen skal aldri
+   delta i flyten (en flyt-marg kollapset tidligere ut av seksjonen og
+   ga et bakgrunnsløst bånd øverst i alle seksjoner). */
 .urd-preview .urd-add-block {
-  position: sticky;
-  top: 40vh;
-  width: fit-content;
-  margin: 48px auto 0;
+  position: absolute;
+  top: 46px;
+  right: 10px;
   z-index: 1002;
   display: grid;
-  justify-items: center;
+  justify-items: end;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.12s ease;
@@ -420,6 +420,7 @@ body.urd-chrome-off .urd-text-toolbar {
 .urd-preview .urd-add-block-menu {
   display: none;
   position: absolute;
+  right: 0;
   top: calc(100% + 6px);
   grid-template-columns: repeat(2, minmax(6.5rem, 1fr));
   gap: 4px;
