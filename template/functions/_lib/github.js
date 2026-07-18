@@ -68,6 +68,20 @@ export function currentUser(token) {
 }
 
 /**
+ * Valgfri eksplisitt deploy-trigger (DEPLOY_HOOK_URL) i tillegg til
+ * git-webhooken, som kan glippe hos hosten. Feil her velter aldri
+ * kallet - commiten ligger allerede trygt i repoet.
+ */
+export async function triggerDeploy(env) {
+  if (!env.DEPLOY_HOOK_URL) return;
+  try {
+    await fetch(env.DEPLOY_HOOK_URL, { method: 'POST' });
+  } catch (err) {
+    console.warn('Urd: deploy-hook feilet', err.message);
+  }
+}
+
+/**
  * Committer flere filer som ÉN commit via Git Data API:
  *   1. Hent branch-ref og basecommit
  *   2. Opprett en blob per fil (sletting: tre-innslag med sha: null)
@@ -79,16 +93,24 @@ export function currentUser(token) {
  * basetreet hoppes over i stillhet (GitHub avviser hele treet ellers),
  * så en sletting aldri kan velte publiseringen av resten.
  *
+ * Med `expect` satt kreves det at HEAD står nøyaktig der (Error med
+ * status 409 ellers): editorens konfliktsjekk-til-commit-vindu lukkes.
+ *
  * @param {string} token
  * @param {{repo: string, branch: string}} config Fra cfg(env)
- * @param {{message: string, files: Array<{path: string, content?: string, encoding?: 'utf-8'|'base64', delete?: boolean}>}} payload
+ * @param {{message: string, files: Array<{path: string, content?: string, encoding?: 'utf-8'|'base64', delete?: boolean}>, expect?: string}} payload
  * @returns {Promise<{sha: string}>} Den nye commit-SHA-en
  */
-export async function commitFiles(token, config, { message, files }) {
+export async function commitFiles(token, config, { message, files, expect }) {
   const { repo, branch } = config;
 
   const ref = await gh(token, `/repos/${repo}/git/ref/heads/${branch}`);
   const baseSha = ref.object.sha;
+  if (expect && expect !== baseSha) {
+    const error = new Error('HEAD har flyttet seg siden konfliktsjekken');
+    error.status = 409;
+    throw error;
+  }
   const baseCommit = await gh(token, `/repos/${repo}/git/commits/${baseSha}`);
 
   // Slettinger valideres mot basetreet: sha:null for en ukjent sti gir

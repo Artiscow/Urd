@@ -31,11 +31,14 @@ export async function onRequestGet({ request, env }) {
     const diff = await gh(token, `/repos/${config.repo}/compare/${base}...${head}`);
     // Rapporter stier relative til nettsiden (samme rom som editoren bruker).
     const prefix = config.rootDir ? `${config.rootDir}/` : '';
-    const changedFiles = (diff.files ?? [])
+    const allFiles = diff.files ?? [];
+    const changedFiles = allFiles
       .map((f) => f.filename)
       .filter((name) => name.startsWith(prefix))
       .map((name) => name.slice(prefix.length));
-    return json({ head, changedFiles });
+    // GitHub avkorter fillisten ved 300: da er listen ufullstendig, og
+    // konfliktsjekken må behandle diffen som «kan overlappe».
+    return json({ head, changedFiles, truncated: allFiles.length >= 300 });
   } catch (err) {
     console.error('Urd latest:', err.message);
     return json({ error: 'Kunne ikke lese repo-status fra GitHub' }, 502);

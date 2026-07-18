@@ -80,7 +80,7 @@ Sikkerhetslag (forsvar i dybden):
 
 1. **Ingen admin-passord** - å *redigere* lokalt er ufarlig; porten er at bare GitHub-innloggede brukere i `ALLOWED_LOGINS` kan *committe*.
 2. **Sti-allowlist i `commit.js`:** publisering kan bare skrive `content/**`, `media/**` og `plugins/plugins.json` - aldri `functions/**`, `.github/**`, `admin/**`, `assets/engine/**`, `urd.json` eller `_headers`. En kapret redaktørsesjon kan altså ikke plante kode.
-3. **Konfliktvern:** commit sjekkes mot baseline-SHA; har noen andre publisert de samme filene, får redaktøren velge før noe overskrives.
+3. **Konfliktvern i to lag:** editoren sammenligner mot baseline-SHA (`latest?base=`) og varsler ved overlappende filer; commit-endepunktet avviser i tillegg med 409 hvis HEAD flyttet seg etter sjekken (valgfri `expect` i forespørselen). Uten `expect` (eldre klienter, direkte API-bruk) finnes ikke serververnet.
 
 Konfigurasjon er seks miljøvariabler hos hosten: `GITHUB_REPO`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_BRANCH`, `GITHUB_SCOPE`, `ALLOWED_LOGINS`.
 

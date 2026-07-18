@@ -160,3 +160,25 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
 
 Publisering krever at GitHub-brukeren din har fått tilgang av
 sideeieren (se [OPPSETT-PUBLISERING.md](OPPSETT-PUBLISERING.md)).
+
+Er dere flere som redigerer, sier editoren ifra hvis noen andre har
+publisert endringer i de samme delene siden du lastet siden, og lar deg
+velge om du vil publisere likevel eller se på endringene først.
+
+## Historikk og angring av publisering
+
+**Historikk**-panelet viser de siste publiseringene: hva som ble endret,
+av hvem og når. «↩ Angre siste publisering» ruller siden tilbake til slik
+den var før forrige publisering. Angringen er selv en publisering, så
+ingenting slettes fra historikken, og du kan angre angringen. Etter en
+angring laster du admin på nytt (etter ~1 minutt) før du redigerer
+videre, editoren sier ifra.
+
+(Ctrl+Z angrer utkast i nettleseren FØR du publiserer; Historikk-panelet
+angrer det som allerede er publisert.)
+
+## Første gang
+
+Åpner du admin på en helt fersk side, får du en kort veiviser: sidens
+navn og to farger. Alt den setter kan endres senere i Tema- og
+Nav-panelene.

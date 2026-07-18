@@ -11,14 +11,17 @@ Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter,
 ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
-### 0.5.1 - ny editor-layout (M1) - 17. juli 2026
-- Smal panelvelger til venstre med tekstknapper (Sider, Blokker, Egenskaper, Tema, Nav, Grid, Historikk) som åpner et panel mellom linjen og forhåndsvisningen. Blokkpaletten bor nå i Blokker-panelet og grid-innstillingene i Grid-panelet (gridet vises så lenge panelet er åpent); Sider/Egenskaper/Tema/Nav/Historikk er skall som fylles utover v0.5. Topplinjen er slanket til sidevelger, 💻/📱, tilsyn-chip og publiseringsknappene.
-- Statusmeldinger vises som toast nederst til høyre (med lukkeknapp) i stedet for chip i topplinjen.
-- Forhåndsvisningen melder blokkvalg til editoren (`urd-select-block`), så Egenskaper-panelet vet hvilken blokk eller seksjon som er valgt.
-
-### 0.5.1.2 - blokkgrupper og tekstboks - 17. juli 2026
-- Tekstboks: tekstblokk-variant der innholdet ligger i et kort med temaets flatefarge, kantlinje og avrundede hjørner. Valgfritt additivt `box`-felt på tekstblokkens props; eldre data rendres uendret.
-- Blokker-panelet er gruppert: Tekst (Tekst, Tekstboks) og Former (Strek, Pil, Sirkel, Rektangel, Trekant) som grupper, med Knapp og Bilde imellom.
+### 0.5.5 - publiserings-modenhet (M5) - 18. juli 2026
+- Konfliktvarsel: editoren husker HEAD fra innlasting, og publisering sjekker `latest?base=`. Har noen andre publisert endringer i de samme filene, må redaktøren aktivt velge «publiser likevel» (eller avbryte og laste på nytt). Endringer i ANDRE filer enn dine stopper ingenting - da flettes de naturlig i git.
+- Historikk-panelet: siste 15 publiseringer (melding, hvem, når; øverste rad er dagens tilstand) og «↩ Angre siste publisering».
+- `history.js` og `revert.js` er implementert server-side. Angring er en FORWARD-revert (ADR-0003): en ny commit med HEAD som forelder - historikk slettes aldri, angringen kan selv angres, og `expect`-vernet gir 409 hvis noen publiserte i mellomtiden.
+- Oppsettsveiviser: første besøk på en fersk klon (malens standardnavn står fortsatt) åpner en velkomstmodal med sidenavn, aksent- og bakgrunnsfarge. Skrives som vanlig site-utkast og peker mot Publiser; «Hopp over» huskes.
+- Fra bug-gjennomgangen før push (åtte granskningsvinkler):
+  - KRITISK: historikk og angring gjelder nå NETTSIDEN, ikke repoet. Historikken viser kun commits som rører `content/` under `GITHUB_ROOT_DIR`, og angring bytter bare nettsidens undertre - i Urds monorepo ville den gamle varianten listet utviklingscommits og revertert editor-kildekode.
+  - Publisering materialiserer bilder i KLONER: en konflikt-avbrytelse (eller 409) etterlater ikke lenger utkast som peker på media-filer som aldri ble committet. Minnet speiles først når commiten er trygt inne.
+  - Konfliktvinduet er tettet server-side: editoren sender `expect` (HEAD-en sjekken så) til commit-endepunktet, som avviser med 409 om noen rakk å publisere i mellomtiden; det samme gjelder non-fast-forward i selve ref-oppdateringen (før: rå 502). Avkortede GitHub-differ (300+ filer) behandles som mulig overlapp i stedet for å slippe gjennom.
+  - Etter angring sperres publisering til admin er lastet på nytt: editoren viser fortsatt innholdet fra før angringen, og en publisering derfra ville stille gjeninnført det angrede.
+  - Tomt repo gir tom historikk i stedet for feilmelding; robust JSON-lesing i alle nye svarstier; delt `triggerDeploy`-hjelper for commit og revert; manglende konfliktgrunnlag prøves på nytt ved neste publisering.
 
 ### 0.5.4.2 - bakgrunnseditor-runde to - 18. juli 2026
 - Lagtypen kan byttes etter at laget er lagt til (nedtrekk i laget; innstillingene nullstilles ved bytte).
@@ -77,6 +80,15 @@ ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
 ### 0.5.1.3 - gruppene som menyknapper - 17. juli 2026
 - Gruppene i Blokker-panelet ser ut som blokk-knappene (full bredde, samme ramme) med ▸/▾-pil til høyre; åpnet gruppe viser blokkene som vertikal liste under, lett innrykket.
+
+### 0.5.1.2 - blokkgrupper og tekstboks - 17. juli 2026
+- Tekstboks: tekstblokk-variant der innholdet ligger i et kort med temaets flatefarge, kantlinje og avrundede hjørner. Valgfritt additivt `box`-felt på tekstblokkens props; eldre data rendres uendret.
+- Blokker-panelet er gruppert: Tekst (Tekst, Tekstboks) og Former (Strek, Pil, Sirkel, Rektangel, Trekant) som grupper, med Knapp og Bilde imellom.
+
+### 0.5.1 - ny editor-layout (M1) - 17. juli 2026
+- Smal panelvelger til venstre med tekstknapper (Sider, Blokker, Egenskaper, Tema, Nav, Grid, Historikk) som åpner et panel mellom linjen og forhåndsvisningen. Blokkpaletten bor nå i Blokker-panelet og grid-innstillingene i Grid-panelet (gridet vises så lenge panelet er åpent); Sider/Egenskaper/Tema/Nav/Historikk er skall som fylles utover v0.5. Topplinjen er slanket til sidevelger, 💻/📱, tilsyn-chip og publiseringsknappene.
+- Statusmeldinger vises som toast nederst til høyre (med lukkeknapp) i stedet for chip i topplinjen.
+- Forhåndsvisningen melder blokkvalg til editoren (`urd-select-block`), så Egenskaper-panelet vet hvilken blokk eller seksjon som er valgt.
 
 ## [0.4.0] - 2026-07-17
 

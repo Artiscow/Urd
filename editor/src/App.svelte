@@ -211,6 +211,40 @@
     grid = { snap: true, ...siteDraft.grid };
     await selectPage(new URLSearchParams(location.search).get('page') ?? siteDraft.pages[0].id);
     await checkAuth();
+    refreshBaseSha();
+    // Oppsettsveiviseren: første besøk på en fersk klon (malens standard-
+    // navn står fortsatt) og ikke avvist tidligere.
+    if (siteDraft.site.title === 'Min forening' && !localStorage.getItem('urd-setup-done')) {
+      setupName = siteDraft.site.title;
+      setupAccent = siteDraft.theme.tokens.color.accent;
+      setupBg = siteDraft.theme.tokens.color.bg;
+      showSetup = true;
+    }
+  }
+
+  /* ---------- Oppsettsveiviseren ---------- */
+
+  let showSetup = $state(false);
+  let setupName = $state('');
+  let setupAccent = $state('#7c5cff');
+  let setupBg = $state('#0b0e14');
+
+  function closeSetup() {
+    localStorage.setItem('urd-setup-done', '1');
+    showSetup = false;
+  }
+
+  function applySetup() {
+    const name = setupName.trim();
+    if (!name) return;
+    siteMutate('setup', () => {
+      siteDraft.site.title = name;
+      siteDraft.nav.logo = { type: 'text', value: name };
+      siteDraft.theme.tokens.color.accent = setupAccent;
+      siteDraft.theme.tokens.color.bg = setupBg;
+    });
+    closeSetup();
+    setStatus('Sjekk hvordan siden ser ut, og trykk Publiser når du er klar', 'ok');
   }
 
   /** Aktivt panel i venstre panelvelger (null = lukket) */
@@ -221,6 +255,7 @@
     activePanel = activePanel === name ? null : name;
     // Gridet vises i forhåndsvisningen så lenge Grid-panelet er åpent.
     bridge?.sendShowGrid(activePanel === 'Grid');
+    if (activePanel === 'Historikk') loadHistory();
   }
 
   /**
@@ -520,6 +555,127 @@
     } catch {
       auth = null;
     }
+  }
+
+  /**
+   * HEAD-commiten da editoren lastet (eller sist publiserte): grunnlaget
+   * for konfliktvarselet. null = ukjent (ikke innlogget / lokal server),
+   * da hoppes sjekken stille over.
+   */
+  let baseSha = null;
+
+  async function refreshBaseSha() {
+    try {
+      const res = await fetch('/api/github/latest');
+      if (res.ok) baseSha = (await res.json()).head ?? null;
+    } catch { /* publiseringslag utilgjengelig */ }
+  }
+
+  /**
+   * Konfliktsjekk før publisering: har noen andre publisert siden vi
+   * lastet, og rører vi de samme filene? Returnerer {ok, head}: ok=false
+   * betyr at redaktøren avbrøt; head er HEAD-en vi observerte og sendes
+   * som expect til commit-endepunktet (tetter vinduet mellom sjekk og
+   * commit server-side).
+   */
+  async function confirmNoConflict(files) {
+    if (!baseSha) {
+      // Grunnlaget kan ha glippet ved innlasting (GitHub nede): nytt
+      // forsøk nå, så NESTE publisering har sjekken på plass.
+      refreshBaseSha();
+      return { ok: true, head: null };
+    }
+    let data = null;
+    try {
+      const res = await fetch(`/api/github/latest?base=${baseSha}`);
+      if (res.ok) data = await res.json().catch(() => null);
+    } catch { /* utilgjengelig: vi stopper ikke publiseringen på det */ }
+    if (!data?.head) return { ok: true, head: null };
+
+    const head = data.head;
+    if (head === baseSha) return { ok: true, head };
+
+    const mine = new Set(files.map((f) => f.path));
+    // Avkortet diff (svært store endringer): vi VET ikke om det er
+    // overlapp, så redaktøren må ta valget.
+    const overlap = data.truncated
+      ? ['(endringslisten fra GitHub er ufullstendig - stor diff)']
+      : (data.changedFiles ?? []).filter((p) => mine.has(p));
+    if (overlap.length === 0) return { ok: true, head };
+
+    const ok = confirm(
+      `Noen andre har publisert siden du lastet siden, og endret filer du nå skriver over:\n\n`
+      + overlap.map((p) => `  • ${p}`).join('\n')
+      + `\n\nOK = publiser likevel (dine versjoner vinner for disse filene).`
+      + `\nAvbryt = ikke publiser (last siden på nytt for å se de nye endringene først).`,
+    );
+    return { ok, head };
+  }
+
+  /* ---------- Historikk-panelet ---------- */
+
+  /** null = ikke lastet ennå; [] = lastet og tomt */
+  let historyList = $state(null);
+  let historyError = $state('');
+  let historyBusy = $state(false);
+
+  async function loadHistory() {
+    historyError = '';
+    try {
+      const res = await fetch('/api/github/history');
+      if (res.ok) {
+        historyList = (await res.json()).commits;
+      } else if (res.status === 401) {
+        historyList = [];
+        historyError = 'Logg inn med GitHub for å se historikken.';
+      } else {
+        historyList = [];
+        historyError = (await res.json().catch(() => null))?.error ?? 'Kunne ikke hente historikken.';
+      }
+    } catch {
+      historyList = [];
+      historyError = 'Historikk er ikke tilgjengelig her (krever host med functions).';
+    }
+  }
+
+  const historyDate = new Intl.DateTimeFormat('nb-NO', { dateStyle: 'short', timeStyle: 'short' });
+
+  /**
+   * Etter en angring viser editoren fortsatt innholdet fra FØR angringen
+   * (den gjenopprettede versjonen finnes først på serveren etter deploy).
+   * Å publisere fra den tilstanden ville stille gjeninnført det som ble
+   * angret - derfor sperres publisering til admin er lastet på nytt.
+   */
+  let revertedSinceLoad = false;
+
+  async function revertLast() {
+    const last = historyList?.[0];
+    if (!last || historyBusy) return;
+    if (!confirm(`Angre siste publisering («${last.message}»)?\n\nEn ny commit gjenoppretter innholdet slik det var før den - ingenting slettes fra historikken.`)) return;
+    historyBusy = true;
+    setStatus('Angrer siste publisering…');
+    try {
+      const res = await fetch('/api/github/revert', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ expect: last.sha }),
+      });
+      if (res.ok) {
+        const { sha } = await res.json().catch(() => ({}));
+        if (sha) baseSha = sha;
+        else refreshBaseSha();
+        revertedSinceLoad = true;
+        setStatus('✓ Angret! Last admin på nytt om ~1 min for å redigere videre på den gjenopprettede versjonen', 'ok');
+      } else if (res.status === 409) {
+        setStatus('Noen har publisert i mellomtiden - historikken er lastet på nytt', 'error');
+      } else {
+        setStatus((await res.json().catch(() => null))?.error ?? 'Kunne ikke angre', 'error');
+      }
+    } catch {
+      setStatus('Kunne ikke nå publiseringslaget', 'error');
+    }
+    historyBusy = false;
+    loadHistory();
   }
 
   /** Løper mens en sides data lastes; urd-ready venter på denne. */
@@ -1095,6 +1251,10 @@
   }
 
   async function publish() {
+    if (revertedSinceLoad) {
+      setStatus('Du har angret en publisering: last admin på nytt før du publiserer igjen (editoren viser fortsatt den gamle versjonen)', 'error');
+      return;
+    }
     setStatus('Publiserer…');
     const files = [];
     const publishedTitles = [];
@@ -1120,16 +1280,19 @@
       // fått en død adresse): mangler utkastet, publiseres en blank side.
       if (!page && isNew) page = blankPage(entry);
       if (!page) continue;
+      // Klon før materialisering: utkastene i minnet røres ikke før
+      // commiten faktisk lykkes (en avbrutt publisering skal aldri
+      // etterlate bildereferanser til filer som ikke finnes).
+      const out = JSON.parse(JSON.stringify(page));
       // Upubliserte bilder blir egne filer i media/ i samme commit.
-      files.push(...materializeImages(page));
-      files.push({ path: entry.file, content: JSON.stringify(page, null, 2) + '\n', encoding: 'utf-8' });
+      files.push(...materializeImages(out));
+      files.push({ path: entry.file, content: JSON.stringify(out, null, 2) + '\n', encoding: 'utf-8' });
       publishedTitles.push(entry.title);
       // Nye sider finnes ikke på serveren før deployen er ferdig: utkastet
       // beholdes som kilde til da, og ryddes automatisk ved neste besøk.
       if (isNew) newPageIds.push(entry.id);
       else draftKeys.push(key);
     }
-    if (store.hasDraft()) store.save();
 
     if (siteStore.hasDraft()) {
       files.push({ path: 'content/site.json', content: JSON.stringify(siteDraft, null, 2) + '\n', encoding: 'utf-8' });
@@ -1161,9 +1324,20 @@
       }
     }
 
+    // Konfliktvarsel: har noen andre publisert siden vi lastet, og rører
+    // de samme filene, må redaktøren aktivt velge å publisere likevel.
+    const conflict = await confirmNoConflict(files);
+    if (!conflict.ok) {
+      setStatus('Publisering avbrutt. Last siden på nytt for å se de andre endringene først.', 'error');
+      return;
+    }
+
     const body = {
       message: `Oppdater ${publishedTitles.join(', ') || 'innstillinger'} via Urd-admin`,
       files,
+      // HEAD-en konfliktsjekken så: serveren avviser med 409 om noen
+      // rekker å publisere i selve commit-vinduet.
+      ...(conflict.head ? { expect: conflict.head } : {}),
     };
     let res = null;
     try {
@@ -1175,6 +1349,13 @@
     } catch { /* nettverksfeil håndteres under */ }
 
     if (res?.ok) {
+      // Ny HEAD = vår commit: konfliktgrunnlaget flyttes frem.
+      const { sha } = await res.json().catch(() => ({}));
+      if (sha) baseSha = sha;
+      else refreshBaseSha();
+      // Speil materialiseringen inn i minnet nå som commiten er trygt
+      // inne (samme deterministiske stier som klonene fikk).
+      materializeImages(store.data);
       // Utkastene ER nå det publiserte; behold dataene i minnet (serveren
       // serverer gammel JSON til deployen er ferdig) og fjern bare merkene.
       for (const key of draftKeys) localStorage.removeItem(key);
@@ -1201,6 +1382,11 @@
       await checkAuth();
     } else if (res?.status === 403) {
       setStatus((await res.json().catch(() => null))?.error ?? 'Du har ikke publiseringstilgang', 'error');
+    } else if (res?.status === 409) {
+      // Noen rakk å publisere i selve commit-vinduet: utkastene er urørt,
+      // og baseSha står stille, så et nytt forsøk kjører konfliktsjekken
+      // på nytt og fanger opp de ferske endringene.
+      setStatus('Noen publiserte akkurat nå - prøv å publisere på nytt', 'error');
     } else if (res) {
       setStatus((await res.json().catch(() => null))?.error
         ?? 'Publisering feilet (er publiseringslaget satt opp?)', 'error');
@@ -1743,9 +1929,31 @@
                   <p class="panel-hint">Klikk på en blokk eller seksjon i forhåndsvisningen.</p>
                 {/if}
               </div>
-            {:else}
+            {:else if activePanel === 'Historikk'}
               <div class="panel-body">
-                <p class="panel-hint">{activePanel}-panelet kommer i en senere del av v0.5.</p>
+                <p class="panel-hint">Siste publiseringer. Angring lager en ny commit som gjenoppretter forrige tilstand - ingenting slettes.</p>
+                {#if historyList === null}
+                  <p class="panel-hint">Henter historikken…</p>
+                {:else}
+                  {#if historyError}
+                    <p class="panel-hint">{historyError}</p>
+                  {/if}
+                  {#if historyList.length > 0}
+                    <button class="ghost" onclick={revertLast}
+                      disabled={historyBusy || !auth?.allowed}
+                      title={auth?.allowed ? 'Gjenopprett tilstanden før siste publisering' : 'Krever publiseringstilgang'}>
+                      ↩ Angre siste publisering
+                    </button>
+                    {#each historyList as c, i (c.sha)}
+                      <div class="history-row" class:head={i === 0}>
+                        <span class="history-msg" title={c.sha}>{c.message}</span>
+                        <span class="history-meta">
+                          {c.author}{c.date ? ` · ${historyDate.format(new Date(c.date))}` : ''}
+                        </span>
+                      </div>
+                    {/each}
+                  {/if}
+                {/if}
               </div>
             {/if}
           </aside>
@@ -1763,6 +1971,34 @@
     </div>
   {:else}
     <p class="loading">Laster…</p>
+  {/if}
+
+  {#if showSetup}
+    <!-- Oppsettsveiviser: første besøk på en fersk klon -->
+    <div class="setup-overlay">
+      <div class="setup-card">
+        <h2>Velkommen til Urd!</h2>
+        <p class="panel-hint">
+          Dette ser ut som en fersk side. Gi den navn og farger her, så er
+          grunnlaget på plass - alt kan endres senere i panelene.
+        </p>
+        <label>Sidens navn
+          <input bind:value={setupName} placeholder="F.eks. foreningens navn"
+            onkeydown={(e) => e.key === 'Enter' && applySetup()} /></label>
+        <label>Aksentfarge (knapper og lenker)
+          <input type="color" bind:value={setupAccent} /></label>
+        <label>Bakgrunnsfarge
+          <input type="color" bind:value={setupBg} /></label>
+        <p class="panel-hint">
+          Navnet brukes også som logo i menyen. Husk å trykke Publiser
+          etterpå, så endringene blir synlige for besøkende.
+        </p>
+        <span class="setup-actions">
+          <button class="ghost" onclick={closeSetup}>Hopp over</button>
+          <button class="primary" onclick={applySetup} disabled={!setupName.trim()}>Sett i gang</button>
+        </span>
+      </div>
+    </div>
   {/if}
 
   {#if status}
@@ -2109,6 +2345,81 @@
   .bg-type {
     flex: 1 1 0;
     min-width: 0;
+  }
+
+  /* Historikk-panelet */
+  .history-row {
+    display: grid;
+    gap: 0.15rem;
+    padding: 0.35rem 0 0.4rem 0.5rem;
+    border-left: 2px solid rgb(255 255 255 / 12%);
+    font-size: 0.83rem;
+  }
+
+  .history-row.head {
+    border-left-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  .history-msg {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .history-meta {
+    opacity: 0.55;
+    font-size: 0.76rem;
+  }
+
+  /* Oppsettsveiviseren */
+  .setup-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    display: grid;
+    place-items: center;
+    background: rgb(0 0 0 / 55%);
+  }
+
+  .setup-card {
+    display: grid;
+    gap: 0.8rem;
+    width: min(26rem, calc(100vw - 2rem));
+    padding: 1.4rem;
+    background: var(--urd-color-surface, #151a23);
+    border: 1px solid rgb(255 255 255 / 15%);
+    border-radius: 12px;
+    box-shadow: 0 16px 48px rgb(0 0 0 / 55%);
+  }
+
+  .setup-card h2 {
+    margin: 0;
+    font-size: 1.15rem;
+  }
+
+  .setup-card label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    font-size: 0.88rem;
+  }
+
+  .setup-card input:not([type='color']) {
+    flex: 1 1 55%;
+    min-width: 0;
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    padding: 0.35em 0.6em;
+  }
+
+  .setup-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
   }
 
   /* Nedtrekk og felt inni panel-etiketter skal aldri sprenge bredden */

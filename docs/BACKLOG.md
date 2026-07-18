@@ -17,7 +17,7 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 - [x] Seksjonseditor med full bakgrunnseditor: farge/gradient (også animert), glød, bildelag, korn (M4, 18. juli 2026)
 - [x] Animasjonsinnstillinger per blokk/seksjon (fade-in/slide-up/zoom-in/hover-lift) med version+migrate-kontrakt (M4, 18. juli 2026)
 - [ ] Nav editor: legge til logo/ikon i nav og mulighet til å bruke ikon/logo + custom tekst som "Hjem" knapp
-- [ ] Konfliktvarsel før publisering: bruk `latest?base=`-endepunktet (serverdelen har vært klar siden v0.2) til å varsle «noen andre har publisert siden du lastet»
+- [x] Konfliktvarsel før publisering via `latest?base=` + Historikk-panel med angre-publisering (`history`/`revert`) + oppsettsveiviser (M5, 18. juli 2026)
 - [ ] Bilder-preset for seksjoner (image-blokken finnes; preseten trenger fornuftige plassholdere)
 - [ ] Flere seksjonspresets uten datakilder: team/styret, FAQ, kontakt (rene datafabrikker)
 - [ ] Video/embed-blokk og ikon-blokk (trenger props-UI fra blokkeditoren; embeds krever bevisst CSP-unntak for frame-src, f.eks. YouTube)
@@ -55,6 +55,15 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 ## Bugs og kjente svakheter
 
 - [ ] `python3 -m http.server` ruter ikke `path`-ene fra sideregisteret (kun `/` fungerer); dokumentert begrensning (`?page=<id>` er lokal-fallback)
+- [ ] Angring av en merge-commit gjenoppretter første forelders innholdstilstand (dokumentert i revert.js); sjelden via admin-flyten, men mulig når noen også jobber via git
+- [ ] Etter angre-publisering kreves omlasting av admin før ny publisering (bevisst sperre; en bedre flyt er å laste inn den gjenopprettede tilstanden automatisk etter deploy)
+- [ ] Historikk-panelet på Urds eget monorepo viser også utviklingscommits som rører template/content (eksempelinnholdet); løses naturlig av urd-template-splitten i v0.6
+- [ ] Oppsettsveiviserens utløser er streng-matching på malens standardnavn («Min forening») i både site.json og App.svelte; bør bli et eksplisitt signal i site.json ved v0.6-splitten
+
+## Teknisk opprydding (kandidater til v0.6)
+
+- [ ] Delt auth-prolog for muterende functions-endepunkter (cfg/cookie/currentUser/isAllowedLogin er duplisert i commit.js og revert.js; en requirePublisher-hjelper i _lib)
+- [ ] Konflikt- og angre-dialogene bruker nettleserens confirm(); bør over på editorens eget modalsystem (setup-kortet viser mønsteret)
 
 ## Må fikses/avklares før angitt fase
 
