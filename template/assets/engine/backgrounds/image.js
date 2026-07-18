@@ -18,6 +18,16 @@ export const imageLayer = {
    */
   render(el, props) {
     if (!props.src) return;
+    // Samme lastevern som bildeblokken: laget holdes usynlig til bildet
+    // er ferdig lastet, så det aldri dukker opp stripevis.
+    const probe = new Image();
+    probe.src = props.src;
+    if (!probe.complete) {
+      el.style.visibility = 'hidden';
+      const show = () => { el.style.visibility = ''; };
+      probe.addEventListener('load', show, { once: true });
+      probe.addEventListener('error', show, { once: true });
+    }
     el.style.backgroundImage = `url("${props.src}")`;
     if (props.fit === 'repeat') {
       el.style.backgroundSize = 'auto';

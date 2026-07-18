@@ -2894,8 +2894,15 @@
     border-color: var(--urd-color-accent, #7c5cff);
   }
 
+  /* Grupper er grid-elementer: uten min-width 0 nekter de å krympe til
+     panelbredden, og innholdet (fargevelgere, brytere) kuttes i kanten */
+  .group {
+    min-width: 0;
+  }
+
   .group-items {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 0.4rem;
     margin-top: 0.4rem;
     padding-left: 0.8rem;
@@ -2907,8 +2914,12 @@
     opacity: 0.65;
   }
 
+  /* Bryterrader som moderne innstillinger: tekst til venstre, bryter
+     ytterst til høyre (markupen har input først; row-reverse snur) */
   .gridmenu-snap {
-    justify-content: flex-start;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    text-align: left;
   }
 
   .gridmenu-value {

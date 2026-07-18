@@ -850,6 +850,13 @@ body.urd-mobile .urd-section-resize {
   border-style: solid;
 }
 
+/* Den øverste baren ligger rett under den klistrede menyen: pillen
+   legges UNDER grenselinjen i stedet for oppå den, så den ikke
+   forsvinner bak menyen */
+#urd-root > .urd-add-section:first-child button {
+  transform: translateY(4px);
+}
+
 /* Seksjonens verktøylinje (flytt opp/ned, tilpass høyde, slett) - synlig
    kun mens pekeren er i seksjonen; ligger alltid øverst (over løftede
    blokker) */

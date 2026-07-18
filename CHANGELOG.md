@@ -11,6 +11,12 @@ Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter,
 ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.7.12 - bildelasting uten striper, nav-panel-overflyt, øverste seksjon-bar - 18. juli 2026
+- «Inntoningen» ved innlasting var IKKE animasjonssystemet, men selve bildelastingen: store bilder dekodes stripevis ovenfra mens de laster, og et halvlastet bilde som henger inn i neste seksjon så «avkuttet» ut. Både bildeblokker og bakgrunnsbildelag holdes nå usynlige til bildet er FERDIG lastet, og vises komplett med en gang (cachede bilder berøres ikke). Ordentlig bildeoptimalisering (responsive størrelser, lazy loading) står fortsatt i v0.7.
+- Nav-panelet: gruppene (Utseende m.fl.) nektet å krympe til panelbredden, så fargevelgere og brytere ble kuttet i kanten - gruppene har nå samme bredde-klemme som resten av panelet.
+- Den øverste «+ Ny seksjon»-pillen legges under grenselinjen i stedet for oppå, så den ikke gjemmer seg bak den klistrede menyen.
+- Alle bryterrader i panelene er lagt om til innstillings-stil: tekst til venstre, bryter ytterst til høyre - konsekvent med resten av radene (etikett venstre, kontroll høyre).
+
 ### 0.5.7.11 - blokker bytter seksjon ved dra + innlastningsanimasjon tettet - 18. juli 2026
 - Slippes en blokk med senteret over en ANNEN seksjon, flyttes den dit i dataene: grid, tilhørighet og mobil-stabling følger seksjonen den faktisk ligger i, ikke den den kom fra (før forble blokken koblet til gamleseksjonen og hang bare visuelt over den nye). Mobil-framen nullstilles ved flytting (avledes på nytt), og Ctrl+Z angrer hele flyttingen.
 - Innlastningsanimasjonen tettet for godt: FØR brukerens første scroll snappes alle inngangsanimasjoner uansett (tidsvinduet alene kunne overskrides på trege innlastinger, som gjorde at Hjem fortsatt animerte ved lasting). Animasjonene spilles kun ved scroll-inn senere. NB: urdweb viser gammel motor til dette er pushet og deployen er ferdig.

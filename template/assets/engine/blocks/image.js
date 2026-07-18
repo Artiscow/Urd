@@ -29,6 +29,14 @@ export const imageBlock = {
     img.alt = props.alt ?? '';
     img.draggable = false;
     img.style.cssText = 'width:100%;height:100%;display:block;';
+    // Store bilder dekodes stripevis mens de laster (ser ut som en
+    // gradvis «inntoning» ovenfra): hold bildet usynlig til det er
+    // FERDIG, og vis det komplett med en gang. Cachede bilder berøres ikke.
+    if (!img.complete) {
+      img.style.visibility = 'hidden';
+      img.addEventListener('load', () => { img.style.visibility = ''; }, { once: true });
+      img.addEventListener('error', () => { img.style.visibility = ''; }, { once: true });
+    }
     img.style.objectFit = props.fit ?? 'cover';
     if (props.radius) img.style.borderRadius = `var(--urd-radius-${props.radius})`;
 
