@@ -1660,7 +1660,7 @@
                 <label class="gridmenu-snap" title="Av: menyen ligger kun øverst og forsvinner når man blar nedover">
                   <input type="checkbox" checked={siteDraft.nav.sticky !== false}
                     onchange={(e) => siteMutate('nav', () => { siteDraft.nav.sticky = e.target.checked; })} />
-                  Flytende meny (følger med når man blar)
+                  Klistrete meny (følger med når man blar)
                 </label>
                 <hr class="gridmenu-divider" />
                 {#each siteDraft.nav.items as item, i}
@@ -2413,6 +2413,41 @@
        radene klemmes i stedet for å gi horisontal scrolling */
     grid-template-columns: minmax(0, 1fr);
     gap: 0.6rem;
+  }
+
+  /* Avhukingsbokser som moderne brytere: pille med knott som glir */
+  input[type='checkbox'] {
+    appearance: none;
+    width: 2.1rem;
+    height: 1.2rem;
+    flex-shrink: 0;
+    position: relative;
+    border: 1px solid rgb(255 255 255 / 25%);
+    border-radius: 999px;
+    background: rgb(255 255 255 / 10%);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  input[type='checkbox']::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: calc(1.2rem - 6px);
+    height: calc(1.2rem - 6px);
+    border-radius: 50%;
+    background: #e8eaf0;
+    transition: transform 0.15s ease;
+  }
+
+  input[type='checkbox']:checked {
+    background: var(--urd-color-accent, #7c5cff);
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  input[type='checkbox']:checked::after {
+    transform: translateX(0.9rem);
   }
 
   /* Alle «rad-knappene» i panelet (blokker, grupper, filvelger) deler

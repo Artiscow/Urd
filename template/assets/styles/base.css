@@ -379,6 +379,11 @@ body.urd-chrome-off .urd-text-toolbar {
   padding: 0.9rem clamp(1rem, 4vw, 2.5rem);
   background: color-mix(in srgb, var(--urd-color-surface) 85%, transparent);
   backdrop-filter: blur(8px);
+}
+
+/* Klistret meny: sticky ligger på verten (header-elementet), som kan
+   forlate sin plass i flyten - nav-en selv kan ikke (se nav.js) */
+.urd-nav-sticky {
   position: sticky;
   top: 0;
   z-index: 100;
@@ -420,10 +425,6 @@ body.urd-chrome-off .urd-text-toolbar {
   gap: 2rem;
 }
 
-/* nav.sticky = false: menyen ligger kun øverst, følger ikke scrollingen */
-.urd-nav-static {
-  position: static;
-}
 
 .urd-nav-list a {
   color: var(--urd-color-text);

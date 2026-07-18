@@ -778,9 +778,11 @@ function enhanceBlock(el, block, section, grid, host) {
     handle.addEventListener('pointerdown', (event) => {
       if (opts.surface) {
         const target = event.target instanceof HTMLElement ? event.target : null;
-        // Aldri flate-dra fra redigerbar tekst (markering/skriving),
-        // håndtak eller skjemaelementer.
-        if (target?.closest('.urd-text[contenteditable="true"], .urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button, input, select, textarea')) return;
+        // Redigerbar tekst er kun unntatt når blokken ALT er valgt (da
+        // redigerer man teksten). En uvalgt blokk dras fritt også fra
+        // teksten - klikk uten dra velger den, klikk igjen redigerer.
+        if (target?.closest('.urd-text[contenteditable="true"]') && selectedBlockId === block.id) return;
+        if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button, input, select, textarea')) return;
         // Auto-mobil: første materialisering skal være et bevisst valg
         // (dra i ⠿), ikke et klikk på blokken.
         if (mobile && (section.responsive?.mobile?.mode ?? 'auto') !== 'manual') return;

@@ -11,6 +11,12 @@ Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter,
 ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.7.6 - klistret meny virket aldri + flate-dra på tekstblokker - 18. juli 2026
+- GAMMEL FEIL avslørt av den nye toggelen: klistret meny har aldri virket, sticky-CSS-en lå på det indre nav-elementet, som er innesperret i et header-element med nøyaktig samme høyde (et sticky-element kan aldri forlate forelderen sin). Sticky ligger nå på verten, og menyen følger faktisk med når man blar.
+- Toggelen heter «Klistrete meny» (flytende meny reserveres som mulig egen stil senere).
+- Flate-draget virket ikke på tekstblokker (tekst fyller hele flaten, og all tekst var unntatt): nå er tekst kun unntatt når blokken ALT er valgt. Uvalgt blokk dras fritt også fra teksten; klikk uten dra velger den, klikk igjen redigerer (à la Squarespace).
+- Alle avhukingsbokser i admin er nå moderne brytere (pille med knott som glir til høyre, aksentfarget når på).
+
 ### 0.5.7.5 - dra fra flaten, tekstlinje-finpuss, meny-sticky - 18. juli 2026
 - Blokker kan dras direkte fra flaten (uten ⠿, som består): liten terskel gjør at klikk forblir klikk, redigerbar tekst er unntatt (tekstmarkering virker som før), og i auto-mobil kreves fortsatt et bevisst ⠿-dra for materialisering. Pekeren viser flyttekors over blokker.
 - Formateringslinjen legger seg nå over blokkVERKTØYLINJEN i stedet for oppå den (overlappen fra eiers skjermbilde), og liste-/fjern formatering-knappene har fått ordentlige ikoner (tegnet punkt-/nummerliste, T×).
