@@ -24,6 +24,9 @@ export const textBlock = {
     content.className = props.box ? 'urd-text urd-text-box' : 'urd-text';
     content.style.cssText = 'width:100%;min-height:100%;';
     content.style.textAlign = props.align;
+    // Valgfri font/størrelse per tekstblokk (additivt; tomt = arv fra tema).
+    if (props.font) content.style.fontFamily = props.font;
+    if (props.size) content.style.fontSize = `${props.size}px`;
     content.innerHTML = props.html;
     // Selvhelbreder: innhold lagret av eldre Urd kan inneholde
     // håndtak-markup, også foreldreløse knapper etter at nettleser-

@@ -29,9 +29,10 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 - [x] Footer-editor: delt footer i eget panel (M7, 18. juli 2026); design-maler bygges videre i v0.6
 - [x] M7: Utvikle nav-editor: justering av menypunktene (venstre/midt/høyre), logo med tre valg: tekst, bilde, bilde+tekst (med størrelse og rekkefølge), logo som «Hjem»-knapp (18. juli 2026)
 - [x] M7: Delt footer (site.footer, additivt): redigeres ett sted, vises på alle sider (18. juli 2026); design-maler bygges videre i v0.6
+- [x] Nav admin panel: logo-delen er sammenleggbar gruppe; full tekststil for logotekst (font/størrelse/fet/kursiv) og bildeeditor for bildelogo (høyde + avrunding) (0.5.7.3, 18. juli 2026)
 - [ ] M7/M8: Ordentlig og fullstendig utvikling av seksjonspresetene (Bilder, Team/styret, FAQ, Kontakt er barebones); eier finner inspirasjonssider (à la ApeironLF) + flere utseende-alternativer per preset
 - [x] Når man legger til en ny seksjon åpnes Egenskaper automatisk (M7, 18. juli 2026)
-- [ ] Full tekst editor for alle tekst og hvert individuelle tekstfelt.
+- [x] Full teksteditor per tekstfelt: egen font og grunnstørrelse per tekstblokk i Egenskaper (tomt = arv fra tema), pluss flytende linje for markert tekst (0.5.7.3, 18. juli 2026)
 - [ ] SISTE STEG FØR 0.5.0 (sammen med preset-utviklingen over): se på UI og funksjoner til nettsider som https://nobaraproject.org/ https://linuxmint.com/ https://garudalinux.org/ https://www.forbrukerradet.no/forside https://online.ntnu.no/ https://online.ntnu.no/offline https://abakus.no/ https://www.broderskabet.no/ https://www.vg.no/ https://www.nrk.no/
 - [x] AVKLART (M2, 17. juli 2026): publisering genererer `<slug>/index.html` per side (kopi av rot-index.html) og sletter dem for fjernede/flyttede sider - ruting virker da på alle statiske hoster, ikke bare SPA-fallback
 

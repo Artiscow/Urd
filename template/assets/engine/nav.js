@@ -26,9 +26,20 @@ export function renderNav(site, host) {
     img.src = src;
     img.alt = site.site.title;
     img.style.height = `${logoDef.size ?? 32}px`;
+    if (logoDef.radius) img.style.borderRadius = `${logoDef.radius}px`;
     return img;
   };
-  const logoText = () => document.createTextNode(logoDef.value || site.site.title);
+  // Logoteksten kan stiles uavhengig av temaet (additive felt fra v0.5);
+  // standard er temaets overskriftsfont i fet.
+  const logoText = () => {
+    const span = document.createElement('span');
+    span.textContent = logoDef.value || site.site.title;
+    if (logoDef.font) span.style.fontFamily = logoDef.font;
+    if (logoDef.textSize) span.style.fontSize = `${logoDef.textSize}px`;
+    if (logoDef.bold === false) span.style.fontWeight = '400';
+    if (logoDef.italic) span.style.fontStyle = 'italic';
+    return span;
+  };
 
   if (logoDef.type === 'image') {
     logo.appendChild(logoImg(logoDef.value));

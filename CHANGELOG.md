@@ -11,6 +11,10 @@ Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter,
 ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.7.3 - logostil og tekst per felt - 18. juli 2026
+- Logo-delen i Nav-panelet er en sammenleggbar gruppe, og logoteksten har fått full stil: font (velger), tekststørrelse, fet og kursiv. Bildelogoen har fått avrunding i tillegg til høyde. Alt additivt i skjemaet.
+- Tekstblokker kan nå ha egen font og grunnstørrelse per felt (Egenskaper; tomt = arv fra tema), i tillegg til den flytende formateringslinjen for markert tekst.
+
 ### 0.5.7.2 - z-orden var maskert i editoren - 18. juli 2026
 - z-orden VIRKET hele tiden (i dataene og på publisert side), men editoren skjulte den: blokken man peker på eller har markert løftes visuelt øverst for at håndtakene alltid skal kunne nås, og siden blokken man nettopp z-justerte alltid er markert, så det ut som «noe alltid ligger øverst». Løftet gjaldt feilaktig også i Ren visning - nå viser Ren visning nøyaktig den ekte lagrekkefølgen (og markeringsomrisset skjules der).
 - ⬆/⬇-knappene og Lag (z)-feltet forklarer nå oppførselen i tooltip.

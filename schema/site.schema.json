@@ -77,7 +77,12 @@
             "value": { "type": "string", "description": "Tekst (type text/both) eller bilde-URL (type image)" },
             "image": { "type": "string", "description": "Bilde-URL når type er both" },
             "size": { "type": "number", "minimum": 12, "maximum": 128, "description": "Bildehøyde i px (standard 32)" },
-            "order": { "enum": ["image-first", "text-first"], "default": "image-first", "description": "Rekkefølge når type er both" }
+            "order": { "enum": ["image-first", "text-first"], "default": "image-first", "description": "Rekkefølge når type er both" },
+            "font": { "type": "string", "description": "Fontstabel for logoteksten (tom = temaets overskriftsfont)" },
+            "textSize": { "type": "number", "minimum": 8, "maximum": 96, "description": "Tekststørrelse i px (tom = arv)" },
+            "bold": { "type": "boolean", "default": true },
+            "italic": { "type": "boolean", "default": false },
+            "radius": { "type": "number", "minimum": 0, "maximum": 64, "description": "Bildets avrunding i px" }
           }
         },
         "items": {

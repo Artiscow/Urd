@@ -1592,38 +1592,67 @@
             {:else if activePanel === 'Nav'}
               <div class="panel-body">
                 <p class="panel-hint">Menyen øverst på siden. Endringer vises live i forhåndsvisningen.</p>
-                <label>
-                  Logo
-                  <select value={siteDraft.nav.logo?.type ?? 'text'}
-                    onchange={(e) => setLogoType(e.target.value)}>
-                    <option value="text">Tekst</option>
-                    <option value="image">Bilde</option>
-                    <option value="both">Bilde + tekst</option>
-                  </select>
-                </label>
-                {#if (siteDraft.nav.logo?.type ?? 'text') !== 'image'}
-                  <input value={siteDraft.nav.logo?.value ?? ''} placeholder="Navnet i menyen"
-                    oninput={(e) => setLogo({ value: e.target.value })} />
-                {/if}
-                {#if (siteDraft.nav.logo?.type ?? 'text') !== 'text'}
-                  <label class="ghost filepick" title="Komprimeres automatisk til webp">
-                    {(siteDraft.nav.logo?.type === 'image' ? siteDraft.nav.logo?.value : siteDraft.nav.logo?.image)
-                      ? 'Bytt logobilde' : 'Velg logobilde'}
-                    <input type="file" accept="image/*" onchange={uploadLogoImage} />
-                  </label>
-                  <label>Bildehøyde px
-                    <input type="number" min="12" max="128" value={siteDraft.nav.logo?.size ?? 32}
-                      onchange={(e) => setLogo({ size: Number(e.target.value) })} /></label>
-                {/if}
-                {#if siteDraft.nav.logo?.type === 'both'}
-                  <label>Rekkefølge
-                    <select value={siteDraft.nav.logo?.order ?? 'image-first'}
-                      onchange={(e) => setLogo({ order: e.target.value })}>
-                      <option value="image-first">Bilde først</option>
-                      <option value="text-first">Tekst først</option>
-                    </select></label>
-                {/if}
-                <p class="panel-hint">Logoen er også «Hjem»-knappen (klikk går til forsiden).</p>
+                <details class="group">
+                  <summary>Logo</summary>
+                  <div class="group-items">
+                    <label>Type
+                      <select value={siteDraft.nav.logo?.type ?? 'text'}
+                        onchange={(e) => setLogoType(e.target.value)}>
+                        <option value="text">Tekst</option>
+                        <option value="image">Bilde</option>
+                        <option value="both">Bilde + tekst</option>
+                      </select>
+                    </label>
+                    {#if (siteDraft.nav.logo?.type ?? 'text') !== 'image'}
+                      <input value={siteDraft.nav.logo?.value ?? ''} placeholder="Navnet i menyen"
+                        oninput={(e) => setLogo({ value: e.target.value })} />
+                      <label>Font
+                        <select value={siteDraft.nav.logo?.font ?? ''}
+                          onchange={(e) => setLogo({ font: e.target.value || undefined })}>
+                          <option value="">Arv (overskriftsfont)</option>
+                          {#each FONT_STACKS as [name, value] (value)}
+                            <option {value}>{name}</option>
+                          {/each}
+                        </select></label>
+                      <label>Tekststørrelse px
+                        <input type="number" class="token-input" min="8" max="96" placeholder="arv"
+                          value={siteDraft.nav.logo?.textSize ?? ''}
+                          onchange={(e) => setLogo({ textSize: e.target.value ? Number(e.target.value) : undefined })} /></label>
+                      <label class="gridmenu-snap">
+                        <input type="checkbox" checked={siteDraft.nav.logo?.bold !== false}
+                          onchange={(e) => setLogo({ bold: e.target.checked })} />
+                        Fet
+                      </label>
+                      <label class="gridmenu-snap">
+                        <input type="checkbox" checked={Boolean(siteDraft.nav.logo?.italic)}
+                          onchange={(e) => setLogo({ italic: e.target.checked })} />
+                        Kursiv
+                      </label>
+                    {/if}
+                    {#if (siteDraft.nav.logo?.type ?? 'text') !== 'text'}
+                      <label class="ghost filepick" title="Komprimeres automatisk til webp">
+                        {(siteDraft.nav.logo?.type === 'image' ? siteDraft.nav.logo?.value : siteDraft.nav.logo?.image)
+                          ? 'Bytt logobilde' : 'Velg logobilde'}
+                        <input type="file" accept="image/*" onchange={uploadLogoImage} />
+                      </label>
+                      <label>Bildehøyde px
+                        <input type="number" min="12" max="128" value={siteDraft.nav.logo?.size ?? 32}
+                          onchange={(e) => setLogo({ size: Number(e.target.value) })} /></label>
+                      <label>Avrunding px
+                        <input type="number" min="0" max="64" value={siteDraft.nav.logo?.radius ?? 0}
+                          onchange={(e) => setLogo({ radius: Number(e.target.value) })} /></label>
+                    {/if}
+                    {#if siteDraft.nav.logo?.type === 'both'}
+                      <label>Rekkefølge
+                        <select value={siteDraft.nav.logo?.order ?? 'image-first'}
+                          onchange={(e) => setLogo({ order: e.target.value })}>
+                          <option value="image-first">Bilde først</option>
+                          <option value="text-first">Tekst først</option>
+                        </select></label>
+                    {/if}
+                    <p class="panel-hint">Logoen er også «Hjem»-knappen (klikk går til forsiden).</p>
+                  </div>
+                </details>
                 <label>Menyplassering
                   <select value={siteDraft.nav.layout ?? 'right'}
                     onchange={(e) => setNavLayout(e.target.value)}>
@@ -1794,7 +1823,19 @@
                         onchange={(e) => setBlockProp('box', e.target.checked)} />
                       Tekstboks (kort med bakgrunn)
                     </label>
-                    <p class="panel-hint">Marker tekst i blokken for fet, kursiv, overskrifter og farge.</p>
+                    <label>Font
+                      <select value={selectedBlock.props.font ?? ''}
+                        onchange={(e) => setBlockProp('font', e.target.value || null)}>
+                        <option value="">Arv fra tema</option>
+                        {#each FONT_STACKS as [name, value] (value)}
+                          <option {value}>{name}</option>
+                        {/each}
+                      </select></label>
+                    <label>Størrelse px
+                      <input type="number" class="token-input" min="8" max="120" placeholder="arv"
+                        value={selectedBlock.props.size ?? ''}
+                        onchange={(e) => setBlockProp('size', e.target.value ? Number(e.target.value) : null)} /></label>
+                    <p class="panel-hint">Font og størrelse gjelder hele feltet. Marker tekst i blokken for fet, kursiv, overskrifter og farge.</p>
                   {:else if selectedBlock.type === 'button'}
                     <label>Tekst
                       <input value={selectedBlock.props.label}
