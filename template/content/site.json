@@ -65,9 +65,13 @@
     "logo": {
       "type": "both",
       "value": "Urd v0.5",
-      "size": 32,
+      "size": 35,
       "image": "/media/logo-192ecc51.webp",
-      "order": "image-first"
+      "order": "image-first",
+      "bold": false,
+      "italic": false,
+      "font": "'Trebuchet MS', sans-serif",
+      "radius": 20
     },
     "items": [
       {
@@ -87,6 +91,7 @@
         "page": "kaker"
       }
     ],
-    "layout": "left"
+    "layout": "left",
+    "sticky": true
   }
 }
