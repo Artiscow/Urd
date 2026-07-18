@@ -296,6 +296,11 @@
     }
     selectedBlock = { sectionId: msg.sectionId, blockId: msg.blockId };
     syncSelectedBlock();
+    // Klikk på et objekt åpner Egenskaper automatisk (eiers ønske).
+    if (selectedBlock && activePanel !== 'Egenskaper') {
+      activePanel = 'Egenskaper';
+      bridge?.sendShowGrid(false);
+    }
   }
 
   /** Felles flyt for blokk-endringer fra Egenskaper-panelet. */
@@ -343,7 +348,7 @@
   }
 
   /** Navn på blokktypene i panelet. */
-  const BLOCK_LABELS = { text: 'Tekst', button: 'Knapp', image: 'Bilde', shape: 'Form' };
+  const BLOCK_LABELS = { text: 'Tekst', button: 'Knapp', image: 'Bilde', shape: 'Form', video: 'Video', icon: 'Ikon' };
   const SHAPE_KINDS = [
     ['line', 'Strek'], ['arrow', 'Pil'], ['circle', 'Sirkel'],
     ['rect', 'Rektangel'], ['triangle', 'Trekant'],
@@ -1130,6 +1135,8 @@
     'shape-circle': { type: 'shape', decor: true, props: { kind: 'circle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
     'shape-rect': { type: 'shape', decor: true, props: { kind: 'rect', color: 'accent', thickness: 2, fill: null }, w: 20, h: 110 },
     'shape-triangle': { type: 'shape', decor: true, props: { kind: 'triangle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
+    video: { type: 'video', props: { url: '', title: 'Video' }, w: 45, h: 300 },
+    icon: { type: 'icon', decor: true, props: { glyph: '★', color: 'accent', size: 48 }, w: 8, h: 64 },
   };
 
   function buildBlock(kind) {
@@ -1602,6 +1609,10 @@
                   Bilde
                   <input type="file" accept="image/*" onchange={addImage} />
                 </label>
+                <button class="ghost" title="YouTube eller Vimeo (lenken limes inn i Egenskaper)"
+                  onclick={() => addBlock('video')}>Video</button>
+                <button class="ghost" title="Glyf/emoji i valgfri størrelse og farge"
+                  onclick={() => addBlock('icon')}>Ikon</button>
                 <details class="group">
                   <summary>Former</summary>
                   <div class="group-items">
@@ -1726,6 +1737,29 @@
                     <label>Lenke
                       <input value={selectedBlock.props.href ?? ''} placeholder="Valgfri (gjør bildet klikkbart)"
                         onchange={(e) => setBlockProp('href', e.target.value || null)} /></label>
+                  {:else if selectedBlock.type === 'video'}
+                    <label>Videolenke</label>
+                    <input value={selectedBlock.props.url ?? ''} placeholder="https://youtube.com/watch?v=… eller vimeo.com/…"
+                      onchange={(e) => setBlockProp('url', e.target.value)} />
+                    <label>Tittel (for skjermlesere)
+                      <input value={selectedBlock.props.title ?? ''}
+                        onchange={(e) => setBlockProp('title', e.target.value)} /></label>
+                    <p class="panel-hint">YouTube og Vimeo støttes, med personvernvennlig innbygging. Videoen spilles på den publiserte siden (og i Ren visning).</p>
+                  {:else if selectedBlock.type === 'icon'}
+                    <label>Tegn/emoji
+                      <input class="token-input" value={selectedBlock.props.glyph ?? ''} maxlength="4"
+                        onchange={(e) => setBlockProp('glyph', e.target.value || '★')} /></label>
+                    <label>Størrelse px
+                      <input type="number" min="8" max="400" value={selectedBlock.props.size ?? 48}
+                        onchange={(e) => setBlockProp('size', Number(e.target.value))} /></label>
+                    <label>Farge
+                      <select value={selectedBlock.props.color}
+                        onchange={(e) => setBlockProp('color', e.target.value)}>
+                        {#each COLOR_TOKENS as [value, name] (value)}
+                          <option {value}>{name}</option>
+                        {/each}
+                      </select></label>
+                    <p class="panel-hint">Fargen gjelder tekst-glyfer (★ ✓ →); emoji har sine egne farger.</p>
                   {:else if selectedBlock.type === 'shape'}
                     <label>Form
                       <select value={selectedBlock.props.kind}

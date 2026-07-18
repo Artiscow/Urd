@@ -207,6 +207,36 @@ body.urd-chrome-off .urd-text-toolbar {
   }
 }
 
+/* Video-blokken: plassholder uten URL, og klikkskjold i redigering
+   (klikk skal markere blokken, ikke starte spilleren) */
+.urd-video-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+  opacity: 0.65;
+  border: 1px dashed color-mix(in srgb, var(--urd-color-text) 30%, transparent);
+  border-radius: var(--urd-radius-md);
+}
+
+.urd-video-shield {
+  position: absolute;
+  inset: 0;
+}
+
+/* Ikon-blokken: glyfen sentreres i rammen */
+.urd-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  line-height: 1;
+  user-select: none;
+}
+
 /* Plassholder for ukjente typer: nøytral, aldri ødeleggende */
 .urd-placeholder {
   display: grid;
@@ -438,6 +468,30 @@ body.urd-mobile .urd-section-resize {
   display: block;
 }
 
+/* Rotasjonshåndtak: liten sirkel i blokkens høyre overkant */
+.urd-preview .urd-edit-rotate {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 16px;
+  height: 16px;
+  display: none;
+  place-items: center;
+  font-size: 11px;
+  line-height: 1;
+  color: #fff;
+  border-radius: 50%;
+  background: var(--urd-color-accent);
+  cursor: grab;
+  user-select: none;
+  z-index: 1000;
+}
+
+.urd-preview .urd-editable:hover .urd-edit-rotate,
+.urd-preview .urd-block.urd-selected .urd-edit-rotate {
+  display: grid;
+}
+
 /* Aktiv seksjon (sist klikket): nye blokker fra paletten havner her */
 .urd-preview .urd-section-active {
   box-shadow: inset 3px 0 0 var(--urd-color-accent);
@@ -550,6 +604,8 @@ body.urd-mobile .urd-section-resize {
 .urd-preview.urd-chrome-off .urd-add-section,
 .urd-preview.urd-chrome-off .urd-edit-toolbar,
 .urd-preview.urd-chrome-off .urd-edit-resize,
+.urd-preview.urd-chrome-off .urd-edit-rotate,
+.urd-preview.urd-chrome-off .urd-video-shield,
 .urd-preview.urd-chrome-off .urd-section-toolbar,
 .urd-preview.urd-chrome-off .urd-section-resize,
 .urd-preview.urd-chrome-off .urd-grid-overlay {

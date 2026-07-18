@@ -38,6 +38,11 @@ helt uten editor-rammer. Klikk «✏ Rediger» for å komme tilbake.
   - ⬆ / ⬇ legg blokken helt foran eller bakerst (når blokker overlapper)
   - 📱/📵 mobil-synlighet (dekor), se under
   - × slett blokken
+- **Rotere**: dra i den lille ⟳-sirkelen i blokkens øvre høyre hjørne
+  (snapper til 15°-steg; hold Shift for fri vinkel). Nøyaktig gradtall
+  kan også settes i Egenskaper.
+- **Tastatur på markert blokk**: piltastene flytter ett grid-steg
+  (Shift = 1 px), Delete sletter, Esc avmarkerer.
 - **Angre**: Ctrl+Z (og Ctrl+Shift+Z for å gjenta) virker på alt: flytting,
   størrelse, tekst, sletting, seksjoner og grid.
 
@@ -51,7 +56,14 @@ synsfeltet, i seksjonen du sist klikket i. Typene:
   fint til hjelpetekster og informasjonsbokser.
 - **Knapp**: lenke til en annen side eller ekstern adresse.
 - **Bilde**: last opp fra maskinen. Bildet komprimeres automatisk.
+- **Video**: lim inn en YouTube- eller Vimeo-lenke i Egenskaper.
+  Innbyggingen er personvennlig, og videoen spilles på den publiserte
+  siden (i editoren markerer klikk bare blokken).
+- **Ikon**: et tegn eller en emoji i valgfri størrelse og temafarge.
 - **Former**: strek, pil, sirkel, rektangel og trekant til dekorasjon.
+
+I editoren utløses aldri lenker og knapper når du klikker på dem -
+klikket markerer blokken. Test lenkene via «Se siden ↗».
 
 ### Hva betyr 📱/📵 (dekor)?
 

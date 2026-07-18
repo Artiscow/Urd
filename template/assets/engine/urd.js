@@ -18,6 +18,8 @@ import { textBlock } from './blocks/text.js';
 import { imageBlock } from './blocks/image.js';
 import { buttonBlock } from './blocks/button.js';
 import { shapeBlock } from './blocks/shape.js';
+import { videoBlock } from './blocks/video.js';
+import { iconBlock } from './blocks/icon.js';
 import { colorLayer } from './backgrounds/color.js';
 import { gradientLayer } from './backgrounds/gradient.js';
 import { glowLayer } from './backgrounds/glow.js';
@@ -41,6 +43,8 @@ function registerCore() {
   Urd.blocks.define('image', imageBlock);
   Urd.blocks.define('button', buttonBlock);
   Urd.blocks.define('shape', shapeBlock);
+  Urd.blocks.define('video', videoBlock);
+  Urd.blocks.define('icon', iconBlock);
   Urd.backgrounds.define('color', colorLayer);
   Urd.backgrounds.define('gradient', gradientLayer);
   Urd.backgrounds.define('glow', glowLayer);

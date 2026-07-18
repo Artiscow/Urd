@@ -27,9 +27,18 @@ let observer = null;
 function entranceObserver() {
   observer ??= new IntersectionObserver((entries) => {
     for (const entry of entries) {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('urd-anim-in');
-        observer.unobserve(entry.target);
+      if (!entry.isIntersecting) continue;
+      const el = entry.target;
+      observer.unobserve(el);
+      // Var elementet synlig allerede idet det ble observert (side-
+      // innlasting eller rerender), skal det bare DUKKE OPP - inngangs-
+      // animasjonen er for innhold man scroller til senere.
+      if (performance.now() - (el._urdObservedAt ?? 0) < 250) {
+        el.style.transition = 'none';
+        el.classList.add('urd-anim-in');
+        requestAnimationFrame(() => { el.style.transition = ''; });
+      } else {
+        el.classList.add('urd-anim-in');
       }
     }
   }, { threshold: 0.15 });
@@ -58,5 +67,6 @@ export function applyAnimation(el, type, props, def, ctx = {}) {
     el.classList.add('urd-anim-in');
     return;
   }
+  el._urdObservedAt = performance.now();
   entranceObserver().observe(el);
 }

@@ -18,10 +18,14 @@ Se «Til v0.5»-seksjonen under; fasen starter med den nye editor-layouten.
 - [x] Animasjonsinnstillinger per blokk/seksjon (fade-in/slide-up/zoom-in/hover-lift) med version+migrate-kontrakt (M4, 18. juli 2026)
 - [ ] Nav editor: legge til logo/ikon i nav og mulighet til å bruke ikon/logo + custom tekst som "Hjem" knapp
 - [x] Konfliktvarsel før publisering via `latest?base=` + Historikk-panel med angre-publisering (`history`/`revert`) + oppsettsveiviser (M5, 18. juli 2026)
-- [ ] Bilder-preset for seksjoner (image-blokken finnes; preseten trenger fornuftige plassholdere)
-- [ ] Flere seksjonspresets uten datakilder: team/styret, FAQ, kontakt (rene datafabrikker)
-- [ ] Video/embed-blokk og ikon-blokk (trenger props-UI fra blokkeditoren; embeds krever bevisst CSP-unntak for frame-src, f.eks. YouTube)
-- [ ] Tastatursnarveier: piltaster flytter markert blokk (Shift = finjustering), Delete sletter, Esc avmarkerer
+- [x] Bilder-preset for seksjoner (M6, 18. juli 2026; tomme bilderammer som byttes i Egenskaper - bevisst ingen eksterne plassholder-URL-er pga. CSP)
+- [x] Flere seksjonspresets uten datakilder: team/styret, FAQ, kontakt (M6, 18. juli 2026)
+- [x] Video/embed-blokk (YouTube/Vimeo, personvennlig, CSP-unntak for frame-src) og ikon-blokk (M6, 18. juli 2026)
+- [x] Tastatursnarveier: piltaster flytter markert blokk (Shift = 1 px), Delete sletter, Esc avmarkerer (M6, 18. juli 2026)
+- [x] Når man trykker på et objekt på siden åpnes «Egenskaper» seg automatisk (M6, 18. juli 2026)
+- [x] Rotering på lerretet: ⟳-håndtak med 15°-snapping (Shift = fritt); størrelse har eget hjørnehåndtak fra før (M6, 18. juli 2026)
+- [x] Knapper/lenker i editoren utløses ikke ved klikk - klikket markerer blokken (M6, 18. juli 2026)
+- [x] Innlastning: synlige elementer dukker opp med en gang; inngangsanimasjoner spilles kun ved scroll-inn senere (M6, 18. juli 2026; egne innlastningsanimasjoner kan komme som funksjon senere)
 - [ ] Footer editor/mal/templates
 - [x] AVKLART (M2, 17. juli 2026): publisering genererer `<slug>/index.html` per side (kopi av rot-index.html) og sletter dem for fjernede/flyttede sider - ruting virker da på alle statiske hoster, ikke bare SPA-fallback
 

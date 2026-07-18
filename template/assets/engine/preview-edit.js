@@ -436,10 +436,16 @@ function selectBlock(el) {
 
 // Intern navigasjon i preview går via editoren (som bytter side og holder
 // nedtrekket i synk); eksterne lenker åpnes i ny fane i stedet for å dra
-// iframen ut av redigeringsmodus.
+// iframen ut av redigeringsmodus. Lenker INNE i blokker (knapper, bilder,
+// tekstlenker) utløses aldri i redigering: klikket markerer blokken, og
+// lenken testes via «Se siden».
 document.addEventListener('click', (event) => {
   const a = event.target instanceof HTMLElement ? event.target.closest('a[href]') : null;
   if (!a) return;
+  if (a.closest('.urd-block')) {
+    event.preventDefault();
+    return;
+  }
   const href = a.getAttribute('href');
   if (!href || href.startsWith('#')) return;
   event.preventDefault();
@@ -449,6 +455,47 @@ document.addEventListener('click', (event) => {
   } else {
     window.open(url, '_blank', 'noopener');
   }
+});
+
+// Tastatur på markert blokk: piltaster flytter (grid-steg; Shift = 1 px),
+// Delete sletter, Esc avmarkerer. Aldri når fokus står i tekst/felt, og
+// flytting gjelder desktopvisningen (mobil justeres med dra).
+window.addEventListener('keydown', (event) => {
+  if (!selectedBlockId) return;
+  const target = event.target;
+  if (target instanceof HTMLElement
+    && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
+
+  if (event.key === 'Escape') {
+    selectBlock(null);
+    return;
+  }
+
+  const el = document.querySelector(`.urd-block[data-block-id="${selectedBlockId}"]`);
+  const ctx = el?._urdCtx;
+  if (!ctx) return;
+
+  if (event.key === 'Delete' || event.key === 'Backspace') {
+    event.preventDefault();
+    post({ type: 'urd-delete', sectionId: ctx.section.id, blockId: selectedBlockId });
+    return;
+  }
+
+  const dirs = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+  const dir = dirs[event.key];
+  if (!dir || isMobile()) return;
+  event.preventDefault();
+
+  const stepPx = event.shiftKey ? 1 : ctx.grid.size;
+  const pctPerPx = 100 / ctx.host.clientWidth;
+  const r1 = (v) => Math.round(v * 10) / 10;
+  const frame = { ...ctx.block.frames.desktop };
+  frame.x = clamp(r1(frame.x + dir[0] * stepPx * pctPerPx), 0, r1(100 - frame.w));
+  frame.y = frame.y + dir[1] * stepPx;
+  ctx.block.frames.desktop = frame;
+  Object.assign(el.style, frameToCss(frame));
+  // coalesce: en skur av piltastetrykk blir ett angre-steg.
+  post({ type: 'urd-move', sectionId: ctx.section.id, blockId: selectedBlockId, frame, frameKey: 'desktop', coalesce: true });
 });
 
 document.addEventListener('pointerdown', (event) => {
@@ -488,6 +535,8 @@ function enhanceBlock(el, block, section, grid, host) {
   el.classList.add('urd-editable');
   if (block.id === selectedBlockId) el.classList.add('urd-selected');
   if (block.decor) el.classList.add('urd-decor');
+  // Tastaturhåndtereren (piltaster/Delete) trenger blokkens kontekst.
+  el._urdCtx = { block, section, grid, host };
 
   const mobile = isMobile();
   const activeFrame = () =>
@@ -586,6 +635,47 @@ function enhanceBlock(el, block, section, grid, host) {
 
   wireDrag(moveHandle, 'move');
   wireDrag(resizeHandle, 'resize');
+
+  // Rotasjonshåndtak (kun desktop: rot bor i desktop-framen). Dras rundt
+  // blokkens sentrum; snapper til 15°-steg, Shift gir fri vinkel.
+  if (!mobile) {
+    const rotHandle = document.createElement('div');
+    rotHandle.className = 'urd-edit-rotate';
+    rotHandle.textContent = '⟳';
+    rotHandle.title = 'Dra for å rotere (15°-steg; Shift = fritt)';
+    el.appendChild(rotHandle);
+
+    rotHandle.addEventListener('pointerdown', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      rotHandle.setPointerCapture(event.pointerId);
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const angleAt = (ev) => (Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180) / Math.PI;
+      const startAngle = angleAt(event);
+      const orig = block.frames.desktop.rot ?? 0;
+      let rot = orig;
+
+      const onMove = (ev) => {
+        rot = orig + (angleAt(ev) - startAngle);
+        rot = ev.shiftKey ? Math.round(rot) : Math.round(rot / 15) * 15;
+        if (rot > 180) rot -= 360;
+        if (rot < -180) rot += 360;
+        el.style.transform = rot ? `rotate(${rot}deg)` : '';
+      };
+      const onUp = () => {
+        rotHandle.removeEventListener('pointermove', onMove);
+        rotHandle.removeEventListener('pointerup', onUp);
+        if (rot === orig) return;
+        const frame = { ...block.frames.desktop, rot };
+        block.frames.desktop = frame;
+        post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame, frameKey: 'desktop' });
+      };
+      rotHandle.addEventListener('pointermove', onMove);
+      rotHandle.addEventListener('pointerup', onUp);
+    });
+  }
 
   /**
    * Felles dra-logikk for flytting og resize. Piksler oversettes til

@@ -11,6 +11,16 @@ Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter,
 ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.6 - innholdsbredde og finpuss (M6) - 18. juli 2026
+- Video-blokk: lim inn en YouTube- eller Vimeo-lenke, så rendres personvennlig innbygging (youtube-nocookie / dnt=1). CSP-en har fått et bevisst frame-src-unntak for akkurat de to vertene. I editoren markerer klikk blokken i stedet for å starte spilleren; ugyldig/tom lenke gir rolig plassholder.
+- Ikon-blokk: glyf/emoji med valgfri størrelse og temafarge (starter som dekor, lik formene).
+- Fire nye seksjonspresets: Bilder (tre bilderammer), Team/styret (tre medlemmer med portrett), FAQ (spørsmål i tekstbokser) og Kontakt (kontaktkort med e-postknapp). Rene datafabrikker; plassholderbilder byttes i Egenskaper.
+- Tastatur på markert blokk i forhåndsvisningen: piltaster flytter ett grid-steg (Shift = 1 px), Delete/Backspace sletter, Esc avmarkerer. En skur av piltastetrykk blir ett angre-steg.
+- Rotasjonshåndtak (⟳) på blokker: dra rundt blokkens sentrum, snapper til 15°-steg (Shift = fri vinkel).
+- Klikk på knapper og lenker i editoren utløser aldri lenken lenger - klikket markerer blokken (lenker testes via «Se siden»). Eksterne knappelenker åpnet tidligere ny fane midt i redigeringen.
+- Innlastning: elementer med inngangsanimasjon som er synlige idet siden lastes (eller ved vindusendring) dukker nå bare opp, uten avspilling - animasjonen spilles kun når innholdet scrolles inn senere. (Eiers observasjon: «alt dukket opp som om det kom til syne» ved lasting.)
+- Klikk på et objekt åpner Egenskaper-panelet automatisk.
+
 ### 0.5.5 - publiserings-modenhet (M5) - 18. juli 2026
 - Konfliktvarsel: editoren husker HEAD fra innlasting, og publisering sjekker `latest?base=`. Har noen andre publisert endringer i de samme filene, må redaktøren aktivt velge «publiser likevel» (eller avbryte og laste på nytt). Endringer i ANDRE filer enn dine stopper ingenting - da flettes de naturlig i git.
 - Historikk-panelet: siste 15 publiseringer (melding, hvem, når; øverste rad er dagens tilstand) og «↩ Angre siste publisering».

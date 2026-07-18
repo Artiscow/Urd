@@ -29,7 +29,7 @@ export const textBlock = {
     // håndtak-markup, også foreldreløse knapper etter at nettleser-
     // redigering splittet wrapperen. Tekstinnhold skal aldri inneholde
     // knapper, så alle fjernes ved rendering (lagres rent ved neste edit).
-    content.querySelectorAll('.urd-edit-toolbar, .urd-edit-resize, button').forEach((n) => n.remove());
+    content.querySelectorAll('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button').forEach((n) => n.remove());
     el.appendChild(content);
 
     // Klikk-og-skriv: i preview-modus (inne i editorens iframe) er teksten

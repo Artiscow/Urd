@@ -2,12 +2,15 @@
 # CSP-en er stram: kun egne skript og stiler; bilder også som data:/blob:
 # (upubliserte opplastinger og genererte teksturer). frame-ancestors 'self'
 # lar admin-editoren vise siden i iframe, men blokkerer fremmede sider.
+# frame-src har et BEVISST unntak for video-blokkens to personvernvennlige
+# verter (youtube-nocookie og Vimeo med dnt=1) - andre embeds krever
+# plugin og eierens eget CSP-valg.
 
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'
 
 /admin/*
   X-Robots-Tag: noindex
