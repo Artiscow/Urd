@@ -360,6 +360,85 @@ body.urd-chrome-off .urd-text-toolbar {
   user-select: none;
 }
 
+/* Tom bildeblokk: plassholder kun i editoren */
+.urd-image-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 0.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+  opacity: 0.6;
+  border: 1px dashed color-mix(in srgb, var(--urd-color-text) 30%, transparent);
+  border-radius: var(--urd-radius-md);
+}
+
+/* «+ Legg til blokk» nederst i seksjonen (hover-vist, kun preview) */
+.urd-preview .urd-add-block {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  z-index: 1002;
+  display: grid;
+  justify-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.urd-preview .urd-section:hover .urd-add-block {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.urd-preview .urd-add-block-open {
+  font: 500 12px/1 system-ui, sans-serif;
+  color: var(--urd-color-text);
+  background: color-mix(in srgb, var(--urd-color-surface) 85%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--urd-color-text) 35%, transparent);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+.urd-preview .urd-add-block-open:hover {
+  border-color: var(--urd-color-accent);
+}
+
+.urd-preview .urd-add-block-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  grid-template-columns: repeat(2, minmax(6.5rem, 1fr));
+  gap: 4px;
+  padding: 6px;
+  background: var(--urd-color-surface);
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 15%, transparent);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 45%);
+}
+
+.urd-preview .urd-add-block-menu.open {
+  display: grid;
+}
+
+.urd-preview .urd-add-block-menu button {
+  font: 12px/1.2 system-ui, sans-serif;
+  color: var(--urd-color-text);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 18%, transparent);
+  border-radius: 6px;
+  padding: 6px 8px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.urd-preview .urd-add-block-menu button:hover {
+  border-color: var(--urd-color-accent);
+  background: color-mix(in srgb, var(--urd-color-accent) 12%, transparent);
+}
+
 /* Plassholder for ukjente typer: nøytral, aldri ødeleggende */
 .urd-placeholder {
   display: grid;
@@ -609,13 +688,18 @@ body.urd-mobile .urd-section-resize {
 }
 
 .urd-preview .urd-edit-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 24px;
   border: 0;
   border-radius: 4px;
   background: var(--urd-color-accent);
   color: #fff;
   font-size: 14px;
   line-height: 1;
-  padding: 5px 7px;
+  padding: 0 6px;
   cursor: grab;
 }
 
@@ -800,6 +884,7 @@ body.urd-mobile .urd-section-resize {
 
 /* Ren visning: editoren kan skjule alle editeringshåndtak, slik at siden
    ses nøyaktig som besøkende ser den */
+.urd-preview.urd-chrome-off .urd-add-block,
 .urd-preview.urd-chrome-off .urd-add-section,
 .urd-preview.urd-chrome-off .urd-edit-toolbar,
 .urd-preview.urd-chrome-off .urd-edit-resize,

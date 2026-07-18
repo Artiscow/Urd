@@ -24,6 +24,7 @@
  *                  { type: 'urd-ready' }                      (motoren lytter; trygt å sende utkast)
  *                  { type: 'urd-navigate', path }             (intern lenke klikket i preview)
  *                  { type: 'urd-add-block', sectionId, block } (plassert blokk fra paletten)
+ *                  { type: 'urd-request-block', sectionId, kind } («+ Legg til blokk» i seksjonen)
  *                  { type: 'urd-preview-height', px }
  *   editor → side: { type: 'urd-chrome', visible }            (vis/skjul editeringshåndtak)
  *                  { type: 'urd-show-grid', visible }         (vis gridet i alle seksjoner)
@@ -51,6 +52,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-ready') handlers.onReady?.(msg);
     if (msg?.type === 'urd-navigate') handlers.onNavigate?.(msg);
     if (msg?.type === 'urd-add-block') handlers.onAddBlock?.(msg);
+    if (msg?.type === 'urd-request-block') handlers.onRequestBlock?.(msg);
     if (msg?.type === 'urd-mobile-manual') handlers.onMobileManual?.(msg);
     if (msg?.type === 'urd-mobile-auto') handlers.onMobileAuto?.(msg);
     if (msg?.type === 'urd-review-done') handlers.onReviewDone?.(msg);

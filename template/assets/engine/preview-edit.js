@@ -41,7 +41,10 @@ export function enhanceSection(host, section, grid) {
   }
   addSectionToolbar(host, section, grid);
   // Strukturendring (seksjonshøyde) hører til desktopvisningen.
-  if (!isMobile()) addSectionHeightHandle(host, section, grid);
+  if (!isMobile()) {
+    addSectionHeightHandle(host, section, grid);
+    addBlockAdder(host, section);
+  }
   // Vedvarende grid-visning (grid-menyen i editoren er åpen) skal
   // overleve rerendringer av seksjonen.
   if (gridOverlaysOn) showGridOverlay(host, grid).classList.add('urd-grid-persistent');
@@ -153,6 +156,44 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
     target.addEventListener('pointermove', onMove);
     target.addEventListener('pointerup', onUp);
   });
+}
+
+/**
+ * «+ Legg til blokk» nederst i seksjonen (vises ved hover): klikk åpner
+ * en meny med alle blokktypene, og valget meldes til editoren, som
+ * bygger blokken og legger den i akkurat denne seksjonen.
+ */
+const BLOCK_KINDS = [
+  ['text', 'Tekst'], ['text-box', 'Tekstboks'], ['button', 'Knapp'],
+  ['image', 'Bilde'], ['video', 'Video'], ['icon', 'Ikon'],
+  ['shape-line', 'Strek'], ['shape-arrow', 'Pil'], ['shape-circle', 'Sirkel'],
+  ['shape-rect', 'Rektangel'], ['shape-triangle', 'Trekant'],
+];
+
+function addBlockAdder(host, section) {
+  const wrap = document.createElement('div');
+  wrap.className = 'urd-add-block';
+
+  const openBtn = document.createElement('button');
+  openBtn.className = 'urd-add-block-open';
+  openBtn.textContent = '+ Legg til blokk';
+
+  const menu = document.createElement('div');
+  menu.className = 'urd-add-block-menu';
+  for (const [kind, label] of BLOCK_KINDS) {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.addEventListener('click', () => {
+      menu.classList.remove('open');
+      post({ type: 'urd-request-block', sectionId: section.id, kind });
+    });
+    menu.appendChild(b);
+  }
+  openBtn.addEventListener('click', () => menu.classList.toggle('open'));
+  host.addEventListener('mouseleave', () => menu.classList.remove('open'));
+
+  wrap.append(openBtn, menu);
+  host.appendChild(wrap);
 }
 
 /** Dra-håndtak i underkant av seksjonen: justerer size.minHeight. */
@@ -322,7 +363,8 @@ function initTextToolbar() {
   btn('❝', 'Sitat', () => exec('formatBlock', 'blockquote'));
   sep();
 
-  btn('🔗', 'Lenke (tomt felt fjerner lenken)', () => {
+  const LINK_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg>';
+  btn(LINK_SVG, 'Lenke (tomt felt fjerner lenken)', () => {
     const url = prompt('Lenkeadresse:', 'https://');
     if (url === null) return;
     if (url.trim()) exec('createLink', url.trim());
@@ -346,7 +388,7 @@ function initTextToolbar() {
     }
     const block = activeText.closest('.urd-block') ?? activeText;
     const rect = block.getBoundingClientRect();
-    // Blokkverktøylinjen (⠿⬆⬇…) ligger over blokken: legg tekstlinjen
+    // Blokkverktøylinjen (⠿, lag, dekor, ×) ligger over blokken: legg tekstlinjen
     // over DEN, så de aldri overlapper.
     const blockToolbar = block.querySelector(':scope > .urd-edit-toolbar');
     const anchorTop = blockToolbar
@@ -671,25 +713,30 @@ function enhanceBlock(el, block, section, grid, host) {
   // Struktur (z-orden, dekor, sletting) redigeres i desktopvisning;
   // mobilvisningen er ren layoutjustering.
   if (!mobile) {
+    const Z_FRONT_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14"/><path d="M12 20V9"/><path d="M7 13l5-5 5 5"/></svg>';
+    const Z_BACK_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20h14"/><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/></svg>';
     const frontBtn = document.createElement('button');
-    frontBtn.textContent = '⬆';
+    frontBtn.innerHTML = Z_FRONT_SVG;
     frontBtn.title = 'Legg foran (z-orden). NB: mens du redigerer vises pekt/markert blokk alltid øverst - se ekte rekkefølge i Ren visning';
     frontBtn.addEventListener('click', () => bumpZ(1));
     toolbar.appendChild(frontBtn);
 
     const backBtn = document.createElement('button');
-    backBtn.textContent = '⬇';
+    backBtn.innerHTML = Z_BACK_SVG;
     backBtn.title = 'Legg bak (z-orden). NB: mens du redigerer vises pekt/markert blokk alltid øverst - se ekte rekkefølge i Ren visning';
     backBtn.addEventListener('click', () => bumpZ(-1));
     toolbar.appendChild(backBtn);
 
     // Dekor-flagget vises som mobil-synlighet - det er det flagget GJØR:
-    // 📱 = blokken vises i automatisk mobil-layout, 📵 = den skjules
-    // (pynt/dekor). Ikonet ER tilstanden; tooltipen forklarer klikket.
+    // telefon = blokken vises i automatisk mobil-layout, overstrøket
+    // telefon = den skjules (pynt/dekor). Ikonet ER tilstanden (tegnet
+    // SVG, ikke emoji); tooltipen forklarer klikket.
+    const PHONE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.2h3"/></svg>';
+    const PHONE_OFF_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.2h3"/><path d="M3.5 3.5l17 17"/></svg>';
     const decorBtn = document.createElement('button');
     decorBtn.className = 'urd-edit-decor';
     const syncDecor = () => {
-      decorBtn.textContent = block.decor ? '📵' : '📱';
+      decorBtn.innerHTML = block.decor ? PHONE_OFF_SVG : PHONE_SVG;
       decorBtn.title = block.decor
         ? 'Skjult på mobil (pynt/dekor). Klikk for å vise blokken i automatisk mobil-layout.'
         : 'Vises på mobil. Klikk for å skjule blokken i automatisk mobil-layout (pynt/dekor).';

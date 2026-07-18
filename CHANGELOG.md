@@ -11,6 +11,15 @@ Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter,
 ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.7.10 - tegnede SVG-ikoner i stedet for ALL emoji - 18. juli 2026
+- Hele editoren er emojifri: desktop/mobil-togglene, tilsyn-chipen, Rediger (blyant), Ren visning (øye), dekor-knappen (telefon/overstrøket telefon), lag-knappene (pil mot strek opp/ned), lenke-ikonet og bildeplassholderen er alle tegnede SVG-ikoner i samme strek-stil (currentColor).
+- Alle ikonknapper er loddrett sentrert: blokkverktøylinjens knapper har fått fast høyde med flex-sentrering, og topplinjens ikonknapper linjerer ikon + tekst på midten.
+- Brukerveiledningen beskriver ikonene i ord i stedet for emoji.
+
+### 0.5.7.9 - «+ Legg til blokk» i seksjonen - 18. juli 2026
+- Hover over en seksjon viser «+ Legg til blokk» nederst i den; klikk åpner en meny med alle blokktypene, og valget legges vannrett sentrert i akkurat den seksjonen. Blokker-panelet består som alternativ.
+- Bilde via menyen starter tomt (fildialog kan ikke åpnes derfra) med tydelig plassholder («Velg bilde i Egenskaper») - plassholderen vises nå også for tomme bilderammer fra Bilder-/Team-presetene (før var de usynlige). Besøkende ser aldri plassholderen.
+
 ### 0.5.7.8 - «+ Ny seksjon» vises ved hover - 18. juli 2026
 - «+ Ny seksjon»-barene er skjult til musepekeren er over en seksjon: da vises baren både over og under den (og holder seg synlig mens du beveger deg over på selve baren). Mindre visuell støy, og den øverste baren krangler ikke lenger med menyen.
 

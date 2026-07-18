@@ -221,7 +221,7 @@ export function registerSectionPresets(Urd) {
           type: 'text',
           version: 1,
           props: {
-            html: '<p>✉ post@dinforening.no</p><p>📞 12 34 56 78</p><p>📍 Gateadresse 1, 0000 Sted</p>',
+            html: '<p><b>E-post:</b> post@dinforening.no</p><p><b>Telefon:</b> 12 34 56 78</p><p><b>Adresse:</b> Gateadresse 1, 0000 Sted</p>',
             align: 'left',
             box: true,
           },

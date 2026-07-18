@@ -26,6 +26,15 @@
   ];
   const BG_DEFS = Object.fromEntries(BG_TYPES);
 
+  /** Tegnede SVG-ikoner (strek-stil, currentColor) - aldri emoji. */
+  const ICONS = {
+    desktop: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></svg>',
+    phone: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="8" y="3" width="8" height="18" rx="2"/><path d="M11 17.5h2"/></svg>',
+    pencil: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"/></svg>',
+    eye: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/></svg>',
+    warn: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L2 20h20L12 3z"/><path d="M12 10v4"/><path d="M12 17.2h.01"/></svg>',
+  };
+
   let site = $state(null);
   let pageId = $state(null);
   let dirty = $state(false);
@@ -755,6 +764,7 @@
       onReady,
       onNavigate,
       onAddBlock: (msg) => insertBlock(msg.sectionId, msg.block),
+      onRequestBlock: handleRequestBlock,
       onMobileManual: handleMobileManual,
       onMobileAuto: handleMobileAuto,
       onReviewDone: handleReviewDone,
@@ -1204,18 +1214,20 @@
     'shape-circle': { type: 'shape', decor: true, props: { kind: 'circle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
     'shape-rect': { type: 'shape', decor: true, props: { kind: 'rect', color: 'accent', thickness: 2, fill: null }, w: 20, h: 110 },
     'shape-triangle': { type: 'shape', decor: true, props: { kind: 'triangle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
+    image: { type: 'image', props: { src: '', alt: '', fit: 'cover', radius: 'md', href: null }, w: 30, h: 220 },
     video: { type: 'video', props: { url: '', title: 'Video' }, w: 45, h: 300 },
     icon: { type: 'icon', decor: true, props: { glyph: '★', color: 'accent', size: 48 }, w: 8, h: 64 },
   };
 
   function buildBlock(kind) {
     const d = BLOCK_DEFAULTS[kind];
+    if (!d) return null;
     return {
       id: `blk-${crypto.randomUUID().slice(0, 8)}`,
       type: d.type,
       version: 1,
       // Former er dekor som standard: de utelates fra auto-avledet
-      // mobil-layout (kan skrus av per blokk med ✦-togglen).
+      // mobil-layout (kan skrus av per blokk med telefon-togglen).
       decor: Boolean(d.decor),
       props: structuredClone(d.props),
       animation: null,
@@ -1246,6 +1258,18 @@
 
   function addBlock(kind) {
     requestPlacement(buildBlock(kind));
+  }
+
+  /** «+ Legg til blokk» i en seksjon: bygg blokken og legg den DER,
+   *  vannrett sentrert. Bilde starter tomt (velges i Egenskaper -
+   *  fildialog kan ikke åpnes fra en postMessage). */
+  function handleRequestBlock(msg) {
+    const block = buildBlock(msg.kind);
+    if (!block) return;
+    block.frames.desktop.x = Math.round(((100 - block.frames.desktop.w) / 2) * 100) / 100;
+    block.frames.desktop.y = 40;
+    insertBlock(msg.sectionId, block);
+    if (msg.kind === 'image') setStatus('Bildeblokk lagt til - velg bildet i Egenskaper');
   }
 
   /** + Bilde: komprimer til webp og legg i utkastet som data-URL.
@@ -1496,7 +1520,7 @@
 <div class="editor">
   {#if !chromeVisible}
     <!-- Ren visning: alt editor-UI er skjult så siden får full flate -->
-    <button class="chrome-restore" onclick={toggleChrome} title="Tilbake til redigering">✏ Rediger</button>
+    <button class="chrome-restore" onclick={toggleChrome} title="Tilbake til redigering">{@html ICONS.pencil} Rediger</button>
   {/if}
 
   <header class="topbar" class:hidden={!chromeVisible}>
@@ -1512,16 +1536,16 @@
 
         <span class="viewswitch">
           <button class="ghost" class:active={viewMode === 'desktop'}
-            onclick={() => (viewMode = 'desktop')} title="Desktop-visning">💻</button>
+            onclick={() => (viewMode = 'desktop')} title="Desktop-visning">{@html ICONS.desktop}</button>
           <button class="ghost" class:active={viewMode === 'mobile'}
-            onclick={() => (viewMode = 'mobile')} title="Mobilvisning (390px)">📱</button>
+            onclick={() => (viewMode = 'mobile')} title="Mobilvisning (390px)">{@html ICONS.phone}</button>
         </span>
       {/if}
 
       {#if attentionCount > 0}
         <button class="badge attention" onclick={() => (viewMode = 'mobile')}
           title="Desktop-endringer kan ha påvirket håndjustert mobil-layout - klikk for å se over">
-          📱 {attentionCount} {attentionCount === 1 ? 'seksjon' : 'seksjoner'} trenger mobil-tilsyn
+          {@html ICONS.phone} {attentionCount} {attentionCount === 1 ? 'seksjon' : 'seksjoner'} trenger mobil-tilsyn
         </button>
       {/if}
 
@@ -1536,10 +1560,10 @@
         class="ghost"
         onclick={toggleChrome}
         title={chromeVisible ? 'Skjul editeringshåndtakene og se siden som besøkende gjør' : 'Vis editeringshåndtakene igjen'}
-      >{chromeVisible ? '👁 Ren visning' : '✏ Rediger'}</button>
+      >{#if chromeVisible}{@html ICONS.eye} Ren visning{:else}{@html ICONS.pencil} Rediger{/if}</button>
       {#if auth?.loggedIn}
         <span class="who" title={auth.allowed ? 'Har publiseringstilgang' : 'Mangler publiseringstilgang (ALLOWED_LOGINS)'}>
-          {auth.allowed ? '' : '⚠ '}{auth.login}
+          {#if !auth.allowed}{@html ICONS.warn}{/if}{auth.login}
         </span>
       {:else if auth}
         <a class="ghost" href="/api/github/login">Logg inn med GitHub</a>
@@ -1841,7 +1865,7 @@
                   <label class="gridmenu-snap" title="Gjelder kun automatisk mobil-layout">
                     <input type="checkbox" checked={selectedBlock.decor}
                       onchange={(e) => setBlockDecor(e.target.checked)} />
-                    📵 Skjul i automatisk mobil-layout (pynt)
+                    Skjul i automatisk mobil-layout (pynt)
                   </label>
                   <hr class="gridmenu-divider" />
 
@@ -2332,6 +2356,15 @@
     justify-content: flex-end;
   }
 
+  /* Knapper med SVG-ikon: ikon og tekst på linje, loddrett sentrert */
+  .topbar .ghost,
+  .chrome-restore,
+  .badge.attention {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+
   .badge {
     background: var(--urd-color-accent, #7c5cff);
     color: #fff;
@@ -2383,6 +2416,9 @@
   }
 
   .who {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
     opacity: 0.7;
     font-size: 0.82rem;
   }

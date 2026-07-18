@@ -14,6 +14,16 @@ export const imageBlock = {
    * @param {object} ctx
    */
   render(el, props, ctx) {
+    // Uten bilde: rolig plassholder i editoren; besøkende ser ingenting.
+    if (!props.src) {
+      if (ctx.preview) {
+        const empty = document.createElement('div');
+        empty.className = 'urd-image-empty';
+        empty.textContent = 'Velg bilde i Egenskaper';
+        el.appendChild(empty);
+      }
+      return;
+    }
     const img = document.createElement('img');
     img.src = props.src;
     img.alt = props.alt ?? '';

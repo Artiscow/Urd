@@ -18,14 +18,14 @@ git-kunnskap nødvendig: alt skjer i nettleseren på din egen side.
 
 Skjermen har tre deler:
 
-- **Topplinjen**: velg side, bytt mellom 💻 desktop og 📱 mobil, og publiser.
+- **Topplinjen**: velg side, bytt mellom desktop- og mobilvisning (skjerm- og telefonikonene), og publiser.
 - **Panelvelgeren til venstre**: Sider, Blokker, Egenskaper, Tema, Nav, Grid
   og Historikk. Klikk for å åpne et panel; klikk igjen for å lukke.
   (Noen paneler er fortsatt under bygging.)
 - **Forhåndsvisningen**: den ekte siden din. Det du ser er det besøkende får.
 
 **Ren visning** (oppe til høyre) skjuler alle verktøyene så du ser siden
-helt uten editor-rammer. Klikk «✏ Rediger» for å komme tilbake.
+helt uten editor-rammer. Klikk «Rediger»-knappen for å komme tilbake.
 
 ## Redigere innhold
 
@@ -35,11 +35,11 @@ helt uten editor-rammer. Klikk «✏ Rediger» for å komme tilbake.
 - **Endre størrelse**: dra i håndtaket i blokkens hjørne.
 - **Verktøylinjen over valgt blokk**:
   - ⠿ flytt (dra)
-  - ⬆ / ⬇ legg blokken helt foran eller bakerst (når blokker overlapper).
+  - lag-pilene (pil mot strek, opp/ned) legger blokken helt foran eller bakerst (når blokker overlapper).
     NB: mens du redigerer vises blokken du peker på eller har markert
     alltid øverst, så håndtakene kan nås - den EKTE rekkefølgen ser du
     i Ren visning og på den publiserte siden
-  - 📱/📵 mobil-synlighet (dekor), se under
+  - telefonikonet: mobil-synlighet (dekor), se under
   - × slett blokken
 - **Rotere**: dra i den lille ⟳-sirkelen i blokkens øvre høyre hjørne
   (snapper til 15°-steg; hold Shift for fri vinkel). Nøyaktig gradtall
@@ -68,16 +68,17 @@ synsfeltet, i seksjonen du sist klikket i. Typene:
 I editoren utløses aldri lenker og knapper når du klikker på dem -
 klikket markerer blokken. Test lenkene via «Se siden ↗».
 
-### Hva betyr 📱/📵 (dekor)?
+### Hva betyr telefonikonet (dekor)?
 
 Knappen viser om blokken blir med til mobil. På mobil stables innholdet
 automatisk i én kolonne, og der hoppes pynt over: en skrå strek eller pil
 som ligger fint bak teksten på desktop blir bare rot midt i en mobilkolonne.
 
-- 📱 = blokken er innhold og vises på mobil.
-- 📵 = blokken er pynt (dekor) og skjules i automatisk mobil-layout.
+- Telefon = blokken er innhold og vises på mobil.
+- Overstrøket telefon (gul knapp) = blokken er pynt (dekor) og skjules i
+  automatisk mobil-layout.
 
-Klikk for å bytte. Nye former starter som 📵. (Har du håndjustert
+Klikk for å bytte. Nye former starter som pynt. (Har du håndjustert
 mobil-layouten i seksjonen, plasserer du uansett alt selv; da betyr
 flagget ingenting der.)
 
@@ -87,7 +88,7 @@ Klikk på en blokk og åpne **Egenskaper** for å finjustere den med tall og
 valg i stedet for dra-og-slipp:
 
 - Alle blokker: nøyaktig posisjon og størrelse, lag (hva som ligger
-  foran), rotasjon og mobil-synlighet (📵).
+  foran), rotasjon og mobil-synlighet (pynt).
 - Tekst: justering og tekstboks av/på. Knapp: tekst, hvor den går og stil.
   Bilde: bytt bilde, alt-tekst, beskjæring, avrunding og lenke.
   Form: type, farge fra temaet, tykkelse og fylt/kantlinje.
@@ -143,7 +144,7 @@ noe innhold, og besøkende ser det aldri.
 Besøkende på mobil får automatisk innholdet i én kolonne, i naturlig
 leserekkefølge. Du trenger vanligvis ikke gjøre noe.
 
-- **📱 i topplinjen** viser siden slik den blir på mobil.
+- **Telefonikonet i topplinjen** viser siden slik den blir på mobil.
 - Vil du finjustere, dra i blokkene i mobilvisningen: seksjonen går da over
   til **manuell mobil-layout**, der du plasserer alt selv. ↺ på seksjonen
   tar den tilbake til automatikken.
