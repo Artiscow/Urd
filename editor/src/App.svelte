@@ -36,6 +36,24 @@
     warn: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L2 20h20L12 3z"/><path d="M12 10v4"/><path d="M12 17.2h.01"/></svg>',
   };
 
+  /**
+   * Adminens eget fargetema (KUN editoren - nettsidens tema styres av
+   * brukeren i Tema-panelet). Velges i topplinjen, lagres per nettleser.
+   * Palettene er definert som CSS-variabler i stilblokken under.
+   */
+  const ADMIN_THEMES = [
+    ['lilla', 'Lilla dybde'],
+    ['bronn', 'Nordisk brønn'],
+    ['gull', 'Norrønt gull'],
+    ['graa', 'Nøytral grå'],
+  ];
+  let adminTheme = $state(localStorage.getItem('urd-admin-theme') ?? 'lilla');
+
+  $effect(() => {
+    document.documentElement.dataset.adminTheme = adminTheme;
+    localStorage.setItem('urd-admin-theme', adminTheme);
+  });
+
   let site = $state(null);
   let pageId = $state(null);
   let dirty = $state(false);
@@ -266,7 +284,13 @@
 
   /** Aktivt panel i venstre panelvelger (null = lukket) */
   let activePanel = $state(null);
-  const PANELS = ['Sider', 'Blokker', 'Egenskaper', 'Tema', 'Nav', 'Footer', 'Grid', 'Historikk'];
+  /** Panelene gruppert etter arbeidsflyt: bygge siden, style nettstedet,
+   *  verktøy. Vises med skillelinjer i panelvelgeren. */
+  const PANEL_GROUPS = [
+    ['Sider', 'Blokker', 'Egenskaper', 'Grid'],
+    ['Tema', 'Nav', 'Footer'],
+    ['Historikk'],
+  ];
 
   function togglePanel(name) {
     activePanel = activePanel === name ? null : name;
@@ -1561,6 +1585,13 @@
     <span class="topbar-group">
       <strong class="brand">Urd</strong>
 
+      <select class="admin-theme" value={adminTheme} title="Adminens fargetema (kun editoren, ikke nettsiden din)"
+        onchange={(e) => (adminTheme = e.target.value)}>
+        {#each ADMIN_THEMES as [id, name] (id)}
+          <option value={id}>{name}</option>
+        {/each}
+      </select>
+
       {#if site}
         <select value={pageId} onchange={(e) => selectPage(e.target.value)}>
           {#each siteDraft.pages as p (p.id)}
@@ -1613,8 +1644,13 @@
     <div class="workspace">
       {#if chromeVisible}
         <nav class="rail">
-          {#each PANELS as name}
-            <button class:active={activePanel === name} onclick={() => togglePanel(name)}>{name}</button>
+          {#each PANEL_GROUPS as group, gi (gi)}
+            {#if gi > 0}
+              <hr class="rail-sep" />
+            {/if}
+            {#each group as name (name)}
+              <button class:active={activePanel === name} onclick={() => togglePanel(name)}>{name}</button>
+            {/each}
           {/each}
         </nav>
 
@@ -2342,6 +2378,37 @@
 </div>
 
 <style>
+  /* Adminens fargetemaer: overstyrer motorens standardvariabler KUN i
+     admin-dokumentet (forhåndsvisningens iframe har sitt eget dokument
+     og følger brukerens tema). Velges i topplinjen. */
+  :global(:root[data-admin-theme='lilla']) {
+    --urd-color-bg: #0b0e17;
+    --urd-color-surface: #151a2b;
+    --urd-color-accent: #7c5cff;
+    --urd-color-text: #e8eaf0;
+  }
+
+  :global(:root[data-admin-theme='bronn']) {
+    --urd-color-bg: #0b1418;
+    --urd-color-surface: #13232a;
+    --urd-color-accent: #2ec8b5;
+    --urd-color-text: #e4eef0;
+  }
+
+  :global(:root[data-admin-theme='gull']) {
+    --urd-color-bg: #100e0a;
+    --urd-color-surface: #1c1812;
+    --urd-color-accent: #d9a441;
+    --urd-color-text: #ede8dc;
+  }
+
+  :global(:root[data-admin-theme='graa']) {
+    --urd-color-bg: #0e0f11;
+    --urd-color-surface: #191b1e;
+    --urd-color-accent: #5f6a75;
+    --urd-color-text: #e6e8ea;
+  }
+
   /* Egen slank, mørk scrollbar i hele admin, så den ikke stikker seg ut */
   :global(*) {
     scrollbar-width: thin;
@@ -2524,8 +2591,14 @@
 
   .rail button.active {
     opacity: 1;
-    background: rgb(124 92 255 / 15%);
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 16%, transparent);
     border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  .rail-sep {
+    border: 0;
+    border-top: 1px solid rgb(255 255 255 / 10%);
+    margin: 0.3rem 0.4rem;
   }
 
   .panel {
@@ -2595,6 +2668,12 @@
     min-height: 2.2rem;
     padding: 0.35em 0.8em;
     box-sizing: border-box;
+  }
+
+  /* Listeknapper i panelene er venstrestilte (radene skal kunne leses
+     som en liste), selv om knapper ellers sentrerer innholdet */
+  .panel-body .ghost {
+    justify-content: flex-start;
   }
 
   .panel-body label {
@@ -2778,7 +2857,7 @@
 
   .toolbar-row .tbtn.active {
     border-color: var(--urd-color-accent, #7c5cff);
-    background: rgb(124 92 255 / 18%);
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 18%, transparent);
   }
 
   .panel-body .toolbar-row .tb-grow {
@@ -2996,6 +3075,28 @@
     text-decoration: none;
   }
 
+  /* Knapper skal SE UT som knapper: fylt flate, tydelig hover og et
+     lite trykk ved klikk. Felt (input/select) forblir flate. */
+  button,
+  .ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    background: rgb(255 255 255 / 7%);
+    transition: background 0.12s ease, border-color 0.12s ease, transform 0.05s ease;
+  }
+
+  button:hover:not(:disabled),
+  .ghost:hover {
+    background: rgb(255 255 255 / 13%);
+    border-color: rgb(255 255 255 / 38%);
+  }
+
+  button:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
   /* Kontroller skal ikke arve sidens luftige line-height (1.6 fra
      base.css via font: inherit): stram linjeboks gir jevn sentrering */
   select,
@@ -3069,7 +3170,7 @@
 
   .viewswitch .active {
     border-color: var(--urd-color-accent, #7c5cff);
-    background: rgb(124 92 255 / 15%);
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 15%, transparent);
   }
 
   .badge.attention {

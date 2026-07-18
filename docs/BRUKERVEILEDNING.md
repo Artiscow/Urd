@@ -19,9 +19,12 @@ git-kunnskap nødvendig: alt skjer i nettleseren på din egen side.
 Skjermen har tre deler:
 
 - **Topplinjen**: velg side, bytt mellom desktop- og mobilvisning (skjerm- og telefonikonene), og publiser.
-- **Panelvelgeren til venstre**: Sider, Blokker, Egenskaper, Tema, Nav, Grid
-  og Historikk. Klikk for å åpne et panel; klikk igjen for å lukke.
-  (Noen paneler er fortsatt under bygging.)
+- **Panelvelgeren til venstre**, gruppert etter arbeidsflyt: Sider,
+  Blokker, Egenskaper og Grid (bygge siden), Tema, Nav og Footer
+  (nettstedet), og Historikk. Klikk for å åpne et panel; klikk igjen
+  for å lukke.
+- **Admin-tema**: nedtrekket ved siden av Urd-logoen bytter editorens
+  eget fargetema (fire varianter). Det påvirker aldri nettsiden din.
 - **Forhåndsvisningen**: den ekte siden din. Det du ser er det besøkende får.
 
 **Ren visning** (oppe til høyre) skjuler alle verktøyene så du ser siden

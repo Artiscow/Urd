@@ -10,6 +10,12 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter, ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.8.4 - designrunde for admin - 18. juli 2026
+- Temavelger i topplinjen (ved siden av Urd-logoen): fire admin-temaer - Lilla dybde (standard), Nordisk brønn (teal), Norrønt gull (rav) og Nøytral grå. Gjelder KUN editoren (forhåndsvisningen følger brukerens eget tema) og lagres per nettleser.
+- Knapper ser nå ut som knapper: fylt flate, tydelig hover og et lite trykk ved klikk - mens felt (input/nedtrekk) forblir flate, så skillet er synlig. Alt knappinnhold er sentrert (listeknapper i panelene er fortsatt venstrestilte).
+- Panelvelgeren er sortert etter arbeidsflyt med skillelinjer: Sider/Blokker/Egenskaper/Grid (bygge siden), Tema/Nav/Footer (nettstedet), Historikk (verktøy).
+- Gjenværende hardkodede lilla-toner byttet til aksentvariabelen, så alle temaene farger hele admin konsekvent.
+
 ### 0.5.8.3 - tomrom øverst i seksjonene + «+ Ny blokk» øverst til høyre - 18. juli 2026
 - Alle seksjoner fikk et bakgrunnsløst bånd øverst: «+ Legg til blokk»-pillen lå i flyten med toppmarg, og siden seksjoner ikke har toppkant kollapset margen UT av seksjonen og skjøv den ned. Pillen er nå absolutt posisjonert (deltar aldri i flyten), døpt om til «+ Ny blokk», og flyttet øverst til høyre under seksjonsverktøylinjen; menyen åpner høyrejustert under den.
 
