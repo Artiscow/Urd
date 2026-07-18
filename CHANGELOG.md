@@ -10,6 +10,10 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter, ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.8.5 - sidevelgeren erstattet + jevne radknapper - 18. juli 2026
+- Sidevelger-nedtrekket i topplinjen er fjernet (overflødig etter Sider-panelet): i stedet viser en knapp gjeldende sidenavn, og klikk åpner Sider-panelet der bytte, omdøping og oppretting bor.
+- Radknappene (piler/kryss i Sider, Nav og bakgrunnslagene) har nå fast kvadratisk bredde og sentrert glyf - de arvet ved en feil panellistens venstrestilling, og bredden fulgte tegnet.
+
 ### 0.5.8.4 - designrunde for admin - 18. juli 2026
 - Temavelger i topplinjen (ved siden av Urd-logoen): fire admin-temaer - Lilla dybde (standard), Nordisk brønn (teal), Norrønt gull (rav) og Nøytral grå. Gjelder KUN editoren (forhåndsvisningen følger brukerens eget tema) og lagres per nettleser.
 - Knapper ser nå ut som knapper: fylt flate, tydelig hover og et lite trykk ved klikk - mens felt (input/nedtrekk) forblir flate, så skillet er synlig. Alt knappinnhold er sentrert (listeknapper i panelene er fortsatt venstrestilte).

@@ -1593,11 +1593,10 @@
       </select>
 
       {#if site}
-        <select value={pageId} onchange={(e) => selectPage(e.target.value)}>
-          {#each siteDraft.pages as p (p.id)}
-            <option value={p.id}>{p.title}</option>
-          {/each}
-        </select>
+        <!-- Gjeldende side: klikk åpner Sider-panelet (nedtrekket ble
+             overflødig da panelet kom, men siden man står på må synes) -->
+        <button class="ghost" title="Bytt side (åpner Sider-panelet)"
+          onclick={() => togglePanel('Sider')}>{pageEntry()?.title ?? ''}</button>
 
         <span class="viewswitch">
           <button class="ghost" class:active={viewMode === 'desktop'}
@@ -2792,12 +2791,15 @@
     font-size: 0.8rem;
   }
 
-  /* Overstyrer panelets 2.4rem-minhøyde for radknapper: de skal følge
-     feltet ved siden av, ikke blokk-knappene */
+  /* Radknapper (piler/kryss): fast kvadratisk bredde og sentrert glyf,
+     følger feltets høyde - ikke blokk-knappenes minhøyde eller
+     panellistens venstrestilling */
   .panel-body .row-tool {
     min-height: 0;
     height: 100%;
-    padding: 0 0.55em;
+    width: 2.1rem;
+    padding: 0;
+    justify-content: center;
   }
 
   .token-input {
