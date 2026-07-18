@@ -10,6 +10,10 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 Arbeidet mot 0.5.0 pushes nummerert (0.5.1, 0.5.1.2, 0.5.1.3, …) så
 testrundene kan vise til en konkret push. Numrene er arbeidspunkter, ikke slipp; alt samles i 0.5.0 ved fasegaten.
 
+### 0.5.8.2 - bugsjekk av editor-løftet - 18. juli 2026
+- Gjennomgang av 0.5.8: token-fargene er verifisert hele veien (alle motor-konsumenter går via resolveColor, også gradient-stopp og color-mix i menyen), guide-matematikken bruker samme koordinatrom som blokkene, og duplisering bevarer manuell-mobil-invarianten. To småfeil fikset: død hexFor-funksjon fjernet (velgeren løser opp tokens selv), og «Nylige farger» tåler nå korrupt localStorage-innhold.
+- To kjente svakheter bokført i backloggen: utheving lagrer fargen som fast verdi (følger ikke senere temabytte), og Ctrl+D krever fokus i forhåndsvisningen.
+
 ### 0.5.8 - editor-løft etter research (M8 del 1) - 18. juli 2026
 Basert på nettresearch av Squarespace, Wix og Gutenberg (funn og kilder i samtalen/planen):
 - Fargevelgeren kobler til temaet: å velge en temaprikk lagrer FARGENAVNET (ikke hex), så innholdet omfarges når temaet endres - mønsteret alle de tre store bruker. Koblede felt vises med ring og «koblet til tema»-tekst; flate/hex gir frikoblet farge som før. Pluss «Nylige»-rad (siste 8 frie farger).

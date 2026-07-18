@@ -2377,7 +2377,8 @@ function Di(e, t) {
 	function te() {
 		ee(o()) || ee("#000000"), l = n(), u = "";
 		try {
-			R(c, JSON.parse(localStorage.getItem(a) ?? "[]"), !0);
+			let e = JSON.parse(localStorage.getItem(a) ?? "[]");
+			R(c, Array.isArray(e) ? e : [], !0);
 		} catch {
 			R(c, [], !0);
 		}

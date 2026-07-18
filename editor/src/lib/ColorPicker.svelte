@@ -95,7 +95,8 @@
     openedWith = value;
     lastPickedHex = '';
     try {
-      recent = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]');
+      const parsed = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]');
+      recent = Array.isArray(parsed) ? parsed : [];
     } catch {
       recent = [];
     }

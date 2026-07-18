@@ -467,14 +467,9 @@
     }
   }
 
-  /** Temafargene som hurtigvalg i fargevelgeren. */
+  /** Temafargene som hurtigvalg i fargevelgeren (velgeren løser opp
+   *  token-navn selv, så ingen hexFor-omregning trengs lenger). */
   const themeSwatches = () => Object.entries(siteDraft?.theme.tokens.color ?? {}).map(([n, hex]) => [n, hex]);
-
-  /** Fargeverdi til velgeren: token-navn slås opp i temaet. */
-  function hexFor(value) {
-    if (typeof value !== 'string') return '#000000';
-    return value.startsWith('#') ? value : (siteDraft?.theme.tokens.color[value] ?? '#000000');
-  }
 
   /* ---------- Animasjoner ---------- */
 
