@@ -1517,18 +1517,16 @@
                 <hr class="gridmenu-divider" />
                 {#each siteDraft.nav.items as item, i}
                   <div class="nav-row">
-                    <span class="nav-line">
-                      <input value={item.label} title="Teksten i menyen"
-                        oninput={(e) => setNavLabel(i, e.target.value)} />
-                      <span class="row-tools">
-                        <button class="ghost row-tool" onclick={() => moveNavItem(i, -1)} disabled={i === 0}>↑</button>
-                        <button class="ghost row-tool" onclick={() => moveNavItem(i, 1)}
-                          disabled={i === siteDraft.nav.items.length - 1}>↓</button>
-                        <button class="ghost row-tool" title="Fjern fra menyen (siden består)"
-                          onclick={() => removeNavItem(i)}>×</button>
-                      </span>
+                    <input value={item.label} title="Teksten i menyen"
+                      oninput={(e) => setNavLabel(i, e.target.value)} />
+                    <span class="row-tools">
+                      <button class="ghost row-tool" onclick={() => moveNavItem(i, -1)} disabled={i === 0}>↑</button>
+                      <button class="ghost row-tool" onclick={() => moveNavItem(i, 1)}
+                        disabled={i === siteDraft.nav.items.length - 1}>↓</button>
+                      <button class="ghost row-tool" title="Fjern fra menyen (siden består)"
+                        onclick={() => removeNavItem(i)}>×</button>
                     </span>
-                    <select value={item.page ?? '__href'} title="Hvor lenken går"
+                    <select class="nav-target" value={item.page ?? '__href'} title="Hvor lenken går"
                       onchange={(e) => setNavTarget(i, e.target.value)}>
                       {#each siteDraft.pages as p (p.id)}
                         <option value={p.id}>{p.title}</option>
@@ -1536,7 +1534,7 @@
                       <option value="__href">Ekstern lenke</option>
                     </select>
                     {#if !item.page}
-                      <input value={item.href ?? ''} placeholder="https://…"
+                      <input class="nav-target" value={item.href ?? ''} placeholder="https://…"
                         onchange={(e) => setNavHref(i, e.target.value)} />
                     {/if}
                   </div>
@@ -2273,11 +2271,13 @@
     padding-left: 0.4rem;
   }
 
+  /* To kolonner: felt | verktøy. Mål- og lenkefeltene ligger i samme
+     kolonne som navnefeltet, så alle slutter på samme høyrekant. */
   .nav-row {
     display: grid;
-    /* Samme klemme som .panel-body: aldri bredere enn panelet */
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.3rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.3rem 0.35rem;
     padding-bottom: 0.4rem;
     border-bottom: 1px solid rgb(255 255 255 / 8%);
   }
@@ -2286,6 +2286,10 @@
   .nav-row input {
     min-width: 0;
     max-width: 100%;
+  }
+
+  .nav-row .nav-target {
+    grid-column: 1;
   }
 
   .nav-line {
