@@ -6,11 +6,94 @@
   },
   "sections": [
     {
-      "id": "sec-fcf158ba",
+      "id": "sec-26c07a04",
+      "version": 1,
+      "preset": "kontakt",
+      "size": {
+        "minHeight": "320px"
+      },
+      "grid": null,
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "color",
+            "version": 1,
+            "props": {
+              "value": "surface"
+            }
+          },
+          {
+            "type": "glow",
+            "version": 1,
+            "props": {
+              "x": 0.2,
+              "y": 0.8,
+              "color": "accent",
+              "radius": 0.5,
+              "opacity": 0.2
+            }
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "id": "blk-8ad3f379",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<h2>Kontakt oss</h2>",
+            "align": "left"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 10,
+              "y": 32,
+              "w": 40,
+              "h": 36,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-1a005a2f",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<p><b>E-post:</b> post@dinforening.no</p><p><b>Telefon:</b> 12 34 56 78</p><p><b>Adresse:</b> Gateadresse 1, 0000 Sted</p>",
+            "align": "left",
+            "box": true
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 10,
+              "y": 84,
+              "w": 36,
+              "h": 130,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        }
+      ],
+      "responsive": {
+        "mobile": {
+          "mode": "auto",
+          "attention": null
+        }
+      }
+    },
+    {
+      "id": "sec-684f5ebf",
       "version": 1,
       "preset": "tom",
       "size": {
-        "minHeight": "464px"
+        "minHeight": "40vh"
       },
       "grid": null,
       "background": {
@@ -22,16 +105,20 @@
             "props": {
               "src": "/media/bakgrunn-192ecc51.webp",
               "fit": "cover",
-              "opacity": 1
+              "x": 0.5,
+              "y": 0.5,
+              "opacity": 1,
+              "blur": 0
             }
           }
         ]
       },
       "blocks": [
         {
-          "id": "blk-8f75be0f",
+          "id": "blk-ee8843c3",
           "type": "image",
           "version": 1,
+          "decor": false,
           "props": {
             "src": "/media/weyland-crt-1920x1200-192ecc51.webp",
             "alt": "weyland crt 1920x1200",
@@ -42,173 +129,11 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 56.8,
-              "y": 320,
+              "x": 8.56,
+              "y": -96,
               "w": 30,
-              "h": 288,
+              "h": 220,
               "z": 1,
-              "rot": 0
-            },
-            "mobile": {
-              "x": 5,
-              "y": 24,
-              "w": 90,
-              "h": 288,
-              "z": 1,
-              "rot": 0
-            }
-          },
-          "decor": false
-        },
-        {
-          "id": "blk-bfff1ff3",
-          "type": "text",
-          "version": 1,
-          "props": {
-            "html": "<p>Ny tekstsssssssssssssss</p>",
-            "align": "left"
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 12.85,
-              "y": 432,
-              "w": 33,
-              "h": 28,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": {
-              "x": 5,
-              "y": 328,
-              "w": 90,
-              "h": 26,
-              "z": 1,
-              "rot": 0
-            }
-          }
-        },
-        {
-          "id": "blk-3d7c0f49",
-          "type": "shape",
-          "version": 1,
-          "decor": true,
-          "props": {
-            "kind": "line",
-            "color": "accent",
-            "thickness": 2,
-            "fill": null
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 37.5,
-              "y": 228,
-              "w": 25,
-              "h": 8,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        },
-        {
-          "id": "blk-3e594dab",
-          "type": "shape",
-          "version": 1,
-          "decor": true,
-          "props": {
-            "kind": "line",
-            "color": "accent",
-            "thickness": 2,
-            "fill": null
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 37.5,
-              "y": 228,
-              "w": 25,
-              "h": 8,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        },
-        {
-          "id": "blk-58cc1b8c",
-          "type": "shape",
-          "version": 1,
-          "decor": true,
-          "props": {
-            "kind": "arrow",
-            "color": "accent",
-            "thickness": 2,
-            "fill": null
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 21.41,
-              "y": 368,
-              "w": 25,
-              "h": 16,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        },
-        {
-          "id": "blk-c1d53a96",
-          "type": "text",
-          "version": 1,
-          "decor": false,
-          "props": {
-            "html": "<h3>Jeg diger dette</h3><p><b>Det er bra at vi tester ting!</b></p>",
-            "align": "left",
-            "box": true
-          },
-          "animation": {
-            "type": "slide-up",
-            "version": 1,
-            "props": {
-              "duration": 600,
-              "delay": 0
-            }
-          },
-          "frames": {
-            "desktop": {
-              "x": 17.18,
-              "y": 112,
-              "w": 30,
-              "h": 150,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        },
-        {
-          "id": "blk-6e9fd290",
-          "type": "button",
-          "version": 1,
-          "decor": false,
-          "props": {
-            "label": "Test Meg!",
-            "page": null,
-            "href": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-            "style": "primary"
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 37.16,
-              "y": 48,
-              "w": 26,
-              "h": 36,
-              "z": 2,
               "rot": 0
             },
             "mobile": null
@@ -217,20 +142,8 @@
       ],
       "responsive": {
         "mobile": {
-          "mode": "manual",
-          "attention": {
-            "needed": true,
-            "reason": "blokk-lagt-til",
-            "since": "2026-07-17T01:32:58.648Z"
-          }
-        }
-      },
-      "animation": {
-        "type": "zoom-in",
-        "version": 1,
-        "props": {
-          "duration": 600,
-          "delay": 0
+          "mode": "auto",
+          "attention": null
         }
       }
     },
