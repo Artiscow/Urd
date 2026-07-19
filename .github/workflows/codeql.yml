@@ -28,6 +28,12 @@ jobs:
       - uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
+          # Den committede editor-bundelen er GENERERT kode (bygget fra editor/src,
+          # som skannes): å analysere bundelen gir varsler på uleselige bundle-linjer,
+          # og hvert bygg flytter linjenumrene så varslene gjenoppstår med nye numre.
+          config: |
+            paths-ignore:
+              - template/admin/assets
       - uses: github/codeql-action/analyze@v4
         with:
           category: '/language:${{ matrix.language }}'

@@ -31,3 +31,9 @@ jobs:
       - name: Editoren bygger
         working-directory: editor
         run: npm run build
+
+      - name: Committet editor-bygg matcher kilden
+        # Bundelen i template/admin/assets er bygget artefakt som committes:
+        # avviker den fra det kilden faktisk produserer, er den enten glemt
+        # gjenbygget eller manipulert - begge skal stoppe CI.
+        run: git diff --exit-code -- template/admin/assets

@@ -85,7 +85,7 @@ Fra den store feilsveipen 19. juli 2026 (bevisst ikke fikset nå; de bekreftede 
 ## Må fikses/avklares før angitt fase
 
 - [ ] v0.6: oppdaterer vs. håndredigerte Urd-eide filer (sjekksum-varsel før overskriving?)
-- [ ] v0.6: GitHub Action som verifiserer at committet editor-build matcher kilden i samme commit
+- [x] v0.6: GitHub Action som verifiserer at committet editor-build matcher kilden i samme commit (levert tidlig, 19. juli 2026: bygg-samsvar-steg i tests.yml)
 - [ ] v0.6: release-Action som synker `template/` til `urd-template`-repoet
 - [ ] v0.6: avklar om urdweb skal skilles fra malen (eget repo laget FRA malen), siden publisering fra urdweb-admin skriver rett i eksempelinnholdet alle nye brukere får
 - [ ] v0.9: Generalprøven (se VEIKART) - Urd-Design-siden + oppdatering med ekte migrering

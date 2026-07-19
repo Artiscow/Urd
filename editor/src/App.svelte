@@ -1041,6 +1041,8 @@
   // Admin-fanen viser nettstedsikonet når det finnes, ellers Urd-merket (samme SVG som i admin/index.html; kan ikke leses fra link-elementet, for favicon-boot.js kan alt ha byttet det).
   // Kun kjente ikonformer slippes gjennom (data:image eller site-relativ sti), så utkastdata aldri kan bli en aktiv URL (CodeQL-funn #1-3).
   const URD_MARK_ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0e14'/%3E%3Cpath d='M19 14v22a13 13 0 0 0 26 0V14' fill='none' stroke='%237c5cff' stroke-width='9' stroke-linecap='round'/%3E%3C/svg%3E";
+  // Anket regex i stedet for startsWith: CodeQL gjenkjenner RegExp.test som barriere, så varslene på denne flyten lukkes.
+  const SAFE_ICON_RE = /^(?:data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+|\/(?!\/)[\w%./-]*)$/;
   $effect(() => {
     // Før utkastet er lastet styrer favicon-boot.js fanen; å røre den her ville gjeninnført ikonblinket.
     if (!siteDraft?.site) return;
@@ -1051,7 +1053,7 @@
       link.href = URD_MARK_ICON;
       return;
     }
-    if (!href.startsWith('data:image/') && !(href.startsWith('/') && !href.startsWith('//'))) return;
+    if (!SAFE_ICON_RE.test(href)) return;
     link.href = href;
   });
 

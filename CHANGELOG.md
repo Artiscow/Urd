@@ -12,6 +12,11 @@ døpes til det siste push-nummeret ved gaten, slik v0.5-fasen endte i
 0.5.10. Da stiger numrene alltid. Etterslepp-fikser på v0.5 nummereres
 0.5.11 og videre.
 
+### 0.5.13 - CodeQL-opprydding + CI-herding - 19. juli 2026
+- Favicon-vokterne (editor-effekten, favicon-boot.js, motorens applyFavicon) er skrevet om fra startsWith-sjekker til én ankret regex (kun `data:image/<type>;base64,…` eller site-relativ enkelt-skråstrek-sti): innholdsmessig samme vern, men CodeQL gjenkjenner RegExp.test som barriere, så varslene #7-9 lukkes i stedet for å gjenoppstå ved hvert bygg.
+- CodeQL-workflowen ekskluderer nå den genererte editor-bundelen (template/admin/assets): kilden i editor/src og hele motoren skannes fortsatt, og funn peker på lesbare kildelinjer i stedet for flyktige bundle-linjer.
+- Nytt CI-steg: committet editor-bygg må matche det kilden faktisk produserer (`git diff --exit-code` etter bygg) - fanger både glemt gjenbygging og manipulerte bundler. Var planlagt til v0.6, levert tidlig.
+
 ### 0.5.12 - stor feilsveip: 8 gjennomgangsdimensjoner, ~25 fikser - 19. juli 2026
 - KRITISK migreringsfiks: v1-sidefiler fikk NaN-posisjoner (innholdet forsvant) fordi grid-konteksten allerede var løftet til kvadratformat; motoren sender nå rå site.json som kontekst, migreringen tåler begge formene, og en regresjonstest låser det. Render-løkka tåler dessuten blokker uten frames og amputert site.json (tom side, aldri krasj).
 - Angre-historikken bærer nå pageId og følger over sidebytter: sletting/oppretting av sider og navigering i preview er angrbare (før tømte hvert sidebytte historikken, og «Ctrl+Z angrer» ved sidesletting var falskt). Angre-nøklene er per egenskap, og «legg bakerst» er ett steg.

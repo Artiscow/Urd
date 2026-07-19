@@ -7,9 +7,9 @@ fetch('/content/site.json')
   .then((response) => response.json())
   .then((site) => {
     const icon = site?.site?.icon;
-    // Samme vokter som i editoren: kun data:image eller site-relativ sti (jf. CodeQL-funnene på favicon-flyten).
+    // Samme vokter som i editoren: kun data:image (base64) eller site-relativ sti, som anket regex (CodeQL gjenkjenner RegExp.test som barriere).
     if (typeof icon !== 'string') return;
-    if (!icon.startsWith('data:image/') && !(icon.startsWith('/') && !icon.startsWith('//'))) return;
+    if (!/^(?:data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+|\/(?!\/)[\w%./-]*)$/.test(icon)) return;
     document.querySelector('link[rel="icon"]').href = icon;
   })
   .catch(() => {});
