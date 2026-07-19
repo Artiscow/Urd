@@ -65,7 +65,7 @@
     "version": 1,
     "logo": {
       "type": "both",
-      "value": "Urd v0.5",
+      "value": "Urd v0.6",
       "size": 35,
       "image": "/media/logo-192ecc51.webp",
       "order": "image-first",
