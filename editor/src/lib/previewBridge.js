@@ -7,6 +7,8 @@
  *   editor → side: { type: 'urd-preview', pageId, section }    (én seksjon)
  *                  { type: 'urd-preview-full', pageId, page }  (hel side)
  *                  { type: 'urd-site', site }                  (site-utkast: grid/tema/nav)
+ *                  { type: 'urd-plugins', enabled }            (plugin-utkastets aktive liste; lastes live i preview)
+ *                  { type: 'urd-viewport', mode }              (editorens visningsvalg: desktop/mobile)
  *   side → editor: { type: 'urd-edit', sectionId, blockId, props }  (klikk-og-skriv)
  *                  { type: 'urd-move', sectionId, blockId, frame, frameKey }  (dra/resize)
  *                  { type: 'urd-mobile-manual', sectionId, frames } (seksjon materialisert)
@@ -77,6 +79,16 @@ export function createPreviewBridge(iframe, handlers = {}) {
     },
     sendChrome(visible) {
       post({ type: 'urd-chrome', visible });
+    },
+    sendPlugins(enabled) {
+      post({ type: 'urd-plugins', enabled });
+    },
+    sendViewport(mode) {
+      post({ type: 'urd-viewport', mode });
+    },
+    /** Klikk i admin-panelene skal lukke åpne menyer i forhåndsvisningen. */
+    sendCloseMenus() {
+      post({ type: 'urd-close-menus' });
     },
     sendShowGrid(visible) {
       post({ type: 'urd-show-grid', visible });

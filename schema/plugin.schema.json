@@ -20,6 +20,15 @@
       "description": "Semver-intervall for kompatibel motorversjon, f.eks. \">=0.1.0 <1.0.0\""
     },
     "entry": { "type": "string", "pattern": "\\.js$" },
+    "csp": {
+      "type": "object",
+      "description": "Valgfritt (additivt fra v0.6): eksterne opprinnelser pluginen trenger CSP-unntak for. _headers endres aldri automatisk; admin viser behovet til eieren (se ADR-0006).",
+      "additionalProperties": false,
+      "properties": {
+        "connectSrc": { "$ref": "#/$defs/originList" },
+        "frameSrc": { "$ref": "#/$defs/originList" }
+      }
+    },
     "provides": {
       "type": "object",
       "additionalProperties": false,
@@ -33,6 +42,10 @@
     }
   },
   "$defs": {
+    "originList": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^https://[a-z0-9.-]+$" }
+    },
     "idList": {
       "type": "array",
       "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" }

@@ -17,9 +17,18 @@
  *                  { type: 'urd-block-flag', sectionId, blockId, decor }
  */
 import { frameToCss } from './render.js';
+import { makeId } from './sections/presets.js';
 
 /** Mobilvisning? Motoren setter body-klassen ut fra breakpointet. */
 const isMobile = () => document.body.classList.contains('urd-mobile');
+
+/** Lukker åpne menyer (preset-galleri, blokkmeny). Kalles også via urd-close-menus når eieren klikker i admin-panelene, som iframens egne klikk-lyttere aldri ser. */
+let collapseOpenPresetMenu = null;
+export function closeMenus() {
+  collapseOpenPresetMenu?.();
+  collapseOpenPresetMenu = null;
+  document.querySelectorAll('.urd-add-block-menu.open').forEach((m) => m.classList.remove('open'));
+}
 
 /**
  * Kobler editeringshåndtak på alle blokkene i en rendret seksjon.
@@ -170,6 +179,9 @@ const BLOCK_KINDS = [
   ['shape-rect', 'Rektangel'], ['shape-triangle', 'Trekant'],
 ];
 
+/** Kjerneblokk-typene (paletten i editoren eier byggingen av disse). */
+const CORE_BLOCK_TYPES = new Set(['text', 'image', 'button', 'shape', 'video', 'icon']);
+
 function addBlockAdder(host, section) {
   const wrap = document.createElement('div');
   wrap.className = 'urd-add-block';
@@ -186,6 +198,30 @@ function addBlockAdder(host, section) {
     b.addEventListener('click', () => {
       menu.classList.remove('open');
       post({ type: 'urd-request-block', sectionId: section.id, kind });
+    });
+    menu.appendChild(b);
+  }
+  // Plugin-blokker: previewen har registrene (og dermed defaults), så blokken bygges her og sendes ferdig til editoren.
+  for (const type of window.Urd.blocks.ids()) {
+    if (CORE_BLOCK_TYPES.has(type)) continue;
+    const def = window.Urd.blocks.get(type);
+    const b = document.createElement('button');
+    b.textContent = def.label ?? type;
+    b.title = 'Fra plugin';
+    b.addEventListener('click', () => {
+      menu.classList.remove('open');
+      post({
+        type: 'urd-add-block',
+        sectionId: section.id,
+        block: {
+          id: makeId('blk'),
+          type,
+          version: def.version ?? 1,
+          props: def.defaults ? def.defaults() : {},
+          animation: null,
+          frames: { desktop: { x: 25, y: 40, w: 50, h: 260, z: 1, rot: 0 }, mobile: null },
+        },
+      });
     });
     menu.appendChild(b);
   }
@@ -336,6 +372,10 @@ function makeSectionAdder(index, above = null) {
       document.removeEventListener('pointerdown', outside, true);
     }
     setTimeout(() => document.addEventListener('pointerdown', outside, true), 0);
+    collapseOpenPresetMenu = () => {
+      cleanupOutside();
+      collapse();
+    };
   });
 
   collapse();
@@ -549,6 +589,15 @@ function addSectionToolbar(host, section, grid) {
         event.target.disabled = true;
         const next = def.item(section);
         post({ type: 'urd-add-blocks', sectionId: section.id, blocks: next.blocks, minBottom: next.bottom, moves: next.moves ?? [] });
+        // Marker og rull til det nye elementet etter rerenderingen: en ny TOM ramme er identisk
+        // med naboene sine, så uten dette ser klikket dødt ut (reelt eier-funn i testrundene).
+        setTimeout(() => {
+          const el = document.querySelector(`.urd-block[data-block-id="${next.blocks[0].id}"]`);
+          if (!el) return;
+          selectBlock(el);
+          // 'nearest' i stedet for 'center': minimal flytting, så pluss-knappen forblir i synsfeltet ved gjentatte tillegg.
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 150);
       });
     }
     mk('↑', 'Flytt seksjonen opp', () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
@@ -757,7 +806,7 @@ function clamp(value, min, max) {
 /** Dupliser en blokk: kopi med ny id, litt forskjøvet, i samme seksjon. */
 function duplicateBlock(section, block) {
   const copy = JSON.parse(JSON.stringify(block));
-  copy.id = `blk-${crypto.randomUUID().slice(0, 8)}`;
+  copy.id = makeId('blk');
   const f = copy.frames.desktop;
   copy.frames.desktop = {
     ...f,

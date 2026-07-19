@@ -8,6 +8,8 @@
   import { createPreviewBridge } from './lib/previewBridge.js';
   // Editoren deler migreringskoden med motoren (samme fil, bundles inn).
   import { liftPageFile, liftSiteFile } from '../../template/assets/engine/migrate.js';
+  import { validateManifest, satisfiesEngine } from '../../template/assets/engine/plugins.js';
+  import { makeId } from '../../template/assets/engine/sections/presets.js';
   // Bakgrunns- og animasjonsdefinisjonene gjenbrukes for etiketter og
   // standardverdier, så editor og motor aldri drifter fra hverandre.
   import { colorLayer } from '../../template/assets/engine/backgrounds/color.js';
@@ -96,6 +98,21 @@
   /** Editorens visning: 'desktop' eller 'mobile' (iframe smales til
    *  mobilbredde; motorens matchMedia bytter modus selv). */
   let viewMode = $state('desktop');
+
+  // Klikk hvor som helst i admin (paneler, topplinje) lukker åpne menyer i forhåndsvisningen;
+  // iframens egne utenfor-klikk-lyttere ser aldri disse klikkene.
+  $effect(() => {
+    const closeMenus = () => bridge?.sendCloseMenus();
+    document.addEventListener('pointerdown', closeMenus, true);
+    return () => document.removeEventListener('pointerdown', closeMenus, true);
+  });
+
+  // Forhåndsvisningens viewport følger visningsvalget, ikke iframe-bredden:
+  // et smalt admin-vindu skal aldri vippe previewen til mobil og gjemme strukturverktøyene.
+  $effect(() => {
+    const mode = viewMode;
+    bridge?.sendViewport(mode);
+  });
   /** Antall seksjoner på siden som trenger mobil-tilsyn */
   let attentionCount = $state(0);
 
@@ -162,7 +179,7 @@
       !pendingPublished.has(p.id) && localStorage.getItem(`urd-draft-${p.id}`) !== null) ?? false;
     dirty = anyPageDraft
       || (store?.hasDraft() && !pendingPublished.has(pageId))
-      || siteStore?.hasDraft() || false;
+      || siteStore?.hasDraft() || pluginsStore?.hasDraft() || false;
   }
 
   /**
@@ -263,16 +280,35 @@
     linkSiteDraft();
     grid = { snap: true, ...siteDraft.grid };
     await selectPage(new URLSearchParams(location.search).get('page') ?? siteDraft.pages[0].id);
+    await initPlugins();
     await checkAuth();
     refreshBaseSha();
     // Oppsettsveiviseren: første besøk på en fersk klon (malens standard-
     // navn står fortsatt) og ikke avvist tidligere.
-    if (siteDraft.site.title === 'Min forening' && !localStorage.getItem('urd-setup-done')) {
+    // Eksplisitt signal (site.setup fra malen) med den gamle navnematchingen som fallback for eldre kloner.
+    if ((siteDraft.site.setup === true || siteDraft.site.title === 'Min forening') && !localStorage.getItem('urd-setup-done')) {
       setupName = siteDraft.site.title;
       setupAccent = siteDraft.theme.tokens.color.accent;
       setupBg = siteDraft.theme.tokens.color.bg;
       showSetup = true;
     }
+  }
+
+  /* ---------- Bekreftelsesdialogen ---------- */
+
+  // Editorens egen erstatning for confirm(): promise-basert modal i samme stil som oppsettsveiviseren.
+  // Kun én om gangen (publisering og angring er sekvensielle flyter).
+  let confirmBox = $state(null);
+
+  function askConfirm({ title, lines = [], okLabel = 'OK', cancelLabel = 'Avbryt' }) {
+    return new Promise((resolve) => {
+      confirmBox = { title, lines, okLabel, cancelLabel, resolve };
+    });
+  }
+
+  function answerConfirm(ok) {
+    confirmBox?.resolve(ok);
+    confirmBox = null;
   }
 
   /* ---------- Oppsettsveiviseren ---------- */
@@ -295,6 +331,8 @@
       siteDraft.nav.logo = { type: 'text', value: name };
       siteDraft.theme.tokens.color.accent = setupAccent;
       siteDraft.theme.tokens.color.bg = setupBg;
+      // Signalet er brukt: neste publisering fjerner det fra site.json, så veiviseren aldri går igjen for andre redaktører.
+      delete siteDraft.site.setup;
     });
     closeSetup();
     setStatus('Sjekk hvordan siden ser ut, og trykk Publiser når du er klar', 'ok');
@@ -306,7 +344,7 @@
    *  verktøy. Vises med skillelinjer i panelvelgeren. */
   const PANEL_GROUPS = [
     ['Sider', 'Blokker', 'Egenskaper', 'Grid'],
-    ['Tema', 'Nav', 'Footer'],
+    ['Tema', 'Nav', 'Footer', 'Plugins'],
     ['Historikk'],
   ];
 
@@ -646,10 +684,15 @@
       // Grunnlaget glapp ved innlasting (GitHub nede): hent HEAD nå, så expect i det minste tetter commit-vinduet.
       // Uten opprinnelig grunnlag kan vi ikke diffe, så redaktøren må ta valget eksplisitt i stedet for at vernet hoppes stille over.
       await refreshBaseSha();
-      const ok = confirm(
-        'Urd fikk ikke lastet publiseringsgrunnlaget da siden ble åpnet, og kan derfor ikke sjekke om noen andre har publisert i mellomtiden.\n\n'
-        + 'OK = publiser likevel (dine filer vinner).\nAvbryt = ikke publiser (last siden på nytt først).',
-      );
+      const ok = await askConfirm({
+        title: 'Kan ikke sjekke andres endringer',
+        lines: [
+          'Urd fikk ikke lastet publiseringsgrunnlaget da siden ble åpnet, og kan derfor ikke sjekke om noen andre har publisert i mellomtiden.',
+          'Publiserer du likevel, vinner dine filer.',
+        ],
+        okLabel: 'Publiser likevel',
+        cancelLabel: 'Avbryt',
+      });
       return { ok, head: baseSha };
     }
     let data = null;
@@ -670,12 +713,16 @@
       : (data.changedFiles ?? []).filter((p) => mine.has(p));
     if (overlap.length === 0) return { ok: true, head };
 
-    const ok = confirm(
-      `Noen andre har publisert siden du lastet siden, og endret filer du nå skriver over:\n\n`
-      + overlap.map((p) => `  • ${p}`).join('\n')
-      + `\n\nOK = publiser likevel (dine versjoner vinner for disse filene).`
-      + `\nAvbryt = ikke publiser (last siden på nytt for å se de nye endringene først).`,
-    );
+    const ok = await askConfirm({
+      title: 'Noen andre har publisert',
+      lines: [
+        'Siden du lastet siden har noen andre publisert endringer i filer du nå skriver over:',
+        ...overlap.map((p) => `• ${p}`),
+        'Publiserer du likevel, vinner dine versjoner for disse filene. Avbryt for å laste siden på nytt og se de nye endringene først.',
+      ],
+      okLabel: 'Publiser likevel',
+      cancelLabel: 'Avbryt',
+    });
     return { ok, head };
   }
 
@@ -718,7 +765,16 @@
   async function revertLast() {
     const last = historyList?.[0];
     if (!last || historyBusy) return;
-    if (!confirm(`Angre siste publisering («${last.message}»)?\n\nEn ny commit gjenoppretter innholdet slik det var før den - ingenting slettes fra historikken.`)) return;
+    const ok = await askConfirm({
+      title: 'Angre siste publisering?',
+      lines: [
+        `«${last.message}»`,
+        'En ny commit gjenoppretter innholdet slik det var før den. Ingenting slettes fra historikken, og angringen kan selv angres.',
+      ],
+      okLabel: 'Angre publiseringen',
+      cancelLabel: 'Avbryt',
+    });
+    if (!ok) return;
     historyBusy = true;
     setStatus('Angrer siste publisering…');
     try {
@@ -754,7 +810,7 @@
       schemaVersion: 3,
       meta: { id: entry.id, title: entry.title },
       sections: [{
-        id: `sec-${crypto.randomUUID().slice(0, 8)}`,
+        id: makeId('sec'),
         version: 1,
         preset: 'tom',
         size: { minHeight: '40vh' },
@@ -833,6 +889,11 @@
   /** Motoren i iframen lytter nå: send utkast og gjeldende editor-tilstand. */
   async function onReady() {
     await pageLoading;
+    await pluginsReady;
+    // Plugin-utkastets aktive liste og visningsvalget: previewen laster plugins fra UTKASTET,
+    // og viewporten følger editorens valg (ikke iframe-bredden).
+    bridge?.sendPlugins($state.snapshot(pluginsView)?.enabled ?? []);
+    bridge?.sendViewport(viewMode);
     if (siteStore.hasDraft()) pushSiteToPreview();
     // Upubliserte sider finnes ikke på serveren (iframen faller tilbake
     // til forsiden): editorens data er kilden og må alltid sendes.
@@ -1066,6 +1127,149 @@
       siteDraft.nav.style ??= {};
       siteDraft.nav.style[name] = value;
     });
+  }
+
+  /* ---------- Plugins-panelet ---------- */
+
+  // plugins.json gjennom samme utkastflyt som resten: endringer er utkast til de publiseres.
+  // Merk: forhåndsvisningen laster plugins fra SERVEREN ved boot, så aktivering vises først etter publisering og deploy.
+  let pluginsStore = null;
+  /** Eksplisitt løfte som finnes fra første øyeblikk: onReady venter ALLTID på det, så en rask iframe aldri kan få tom plugin-liste (kappløpet var tydeligst på lokal server). */
+  let resolvePluginsReady;
+  const pluginsReady = new Promise((resolve) => { resolvePluginsReady = resolve; });
+  let pluginsView = $state(null);
+  let pluginInfo = $state({});
+  let pluginEngine = $state('0.0.0');
+  let newPluginId = $state('');
+  let pluginError = $state('');
+  /** Plugin-mapper funnet i repoet (via publiseringslaget) som ikke står i plugins.json ennå. */
+  let pluginsFound = $state([]);
+  /** 'pending' | 'ok' | 'unavailable': skriv-inn-navn-feltet er kun reserveløsning når oppdagelsen ikke virker. */
+  let pluginDiscovery = $state('pending');
+
+  /** Alle plugin-idene panelet kjenner: aktive + deaktiverte (mappene består i repoet). */
+  const knownPlugins = () => [...new Set([...(pluginsView?.enabled ?? []), ...(pluginsView?.disabled ?? [])])];
+
+  function syncPluginsView() {
+    pluginsView = JSON.parse(JSON.stringify(pluginsStore.data));
+  }
+
+  async function initPlugins() {
+    let published = { version: 1, enabled: [] };
+    try {
+      published = await (await fetch('/plugins/plugins.json')).json();
+    } catch { /* ingen plugin-indeks er helt greit */ }
+    pluginsStore = createDraftStore('urd-draft-plugins', () => published);
+    syncPluginsView();
+    try {
+      pluginEngine = (await (await fetch('/urd.json')).json()).engine ?? '0.0.0';
+    } catch { /* uten manifest vises versjonskrav uten vurdering */ }
+    for (const id of knownPlugins()) loadPluginInfo(id);
+    discoverPlugins();
+    resolvePluginsReady();
+    // Belte og bukseseler mot klar-kappløpet: har iframen alt meldt seg, dyttes listen nå.
+    bridge?.sendPlugins($state.snapshot(pluginsView)?.enabled ?? []);
+  }
+
+  /** Spør publiseringslaget om plugin-mappene i repoet (statisk hosting kan ikke liste mapper).
+   *  Utilgjengelig endepunkt (lokal server, ikke innlogget) er helt greit: da gjelder skriv-inn-navn-flyten. */
+  async function discoverPlugins() {
+    try {
+      const res = await fetch('/api/github/plugins');
+      if (!res.ok) {
+        useCachedDiscovery();
+        return;
+      }
+      const { plugins } = await res.json();
+      localStorage.setItem('urd-plugins-found', JSON.stringify(plugins ?? []));
+      pluginsFound = (plugins ?? []).filter((id) => !knownPlugins().includes(id));
+      for (const id of pluginsFound) loadPluginInfo(id);
+      pluginDiscovery = 'ok';
+    } catch {
+      useCachedDiscovery();
+    }
+  }
+
+  /** Ratebegrenset/utilgjengelig endepunkt: vis sist kjente funnliste fra lokal buffer i stedet for ingenting. */
+  function useCachedDiscovery() {
+    try {
+      const cached = JSON.parse(localStorage.getItem('urd-plugins-found') ?? '[]');
+      if (Array.isArray(cached) && cached.length) {
+        pluginsFound = cached.filter((id) => !knownPlugins().includes(id));
+        for (const id of pluginsFound) loadPluginInfo(id);
+        pluginDiscovery = 'ok';
+        return;
+      }
+    } catch { /* korrupt buffer ignoreres */ }
+    pluginDiscovery = 'unavailable';
+  }
+
+  /** Henter og vurderer manifestet til én plugin (navn, versjon, krav, provides, csp). */
+  async function loadPluginInfo(id) {
+    try {
+      const manifest = await (await fetch(`/plugins/${id}/plugin.json`)).json();
+      const errors = validateManifest(manifest);
+      pluginInfo[id] = {
+        ...manifest,
+        errors,
+        satisfied: errors.length === 0 && satisfiesEngine(pluginEngine, manifest.requiresEngine),
+      };
+    } catch {
+      pluginInfo[id] = { name: id, errors: ['fant ikke plugins/' + id + '/plugin.json i repoet'], satisfied: false };
+    }
+  }
+
+  function setPluginEnabled(id, on) {
+    const d = pluginsStore.data;
+    d.enabled = (d.enabled ?? []).filter((x) => x !== id);
+    d.disabled = (d.disabled ?? []).filter((x) => x !== id);
+    if (on) d.enabled.push(id);
+    else d.disabled.push(id);
+    pluginsStore.save();
+    updateDirty();
+    syncPluginsView();
+    reloadPreview();
+  }
+
+  /** Plugin-endringer krever fersk boot i previewen (import kan ikke angres); onReady sender ny liste. */
+  function reloadPreview() {
+    if (iframeEl) iframeEl.src = iframeEl.src;
+  }
+
+  /** Fjerner pluginen fra begge listene; selve mappen i plugins/ består i repoet. */
+  function removePlugin(id) {
+    const d = pluginsStore.data;
+    d.enabled = (d.enabled ?? []).filter((x) => x !== id);
+    d.disabled = (d.disabled ?? []).filter((x) => x !== id);
+    pluginsStore.save();
+    updateDirty();
+    syncPluginsView();
+    reloadPreview();
+  }
+
+  async function addPlugin() {
+    pluginError = '';
+    const id = newPluginId.trim().toLowerCase();
+    if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) {
+      pluginError = 'Ugyldig id: bruk små bokstaver, tall og bindestrek (mappenavnet i plugins/)';
+      return;
+    }
+    if (knownPlugins().includes(id)) {
+      pluginError = 'Pluginen står allerede i listen';
+      return;
+    }
+    await loadPluginInfo(id);
+    if (pluginInfo[id].errors.length) {
+      pluginError = `Fant ingen gyldig plugin: ${pluginInfo[id].errors.join('; ')}`;
+      return;
+    }
+    setPluginEnabled(id, true);
+    newPluginId = '';
+  }
+
+  function addFoundPlugin(id) {
+    pluginsFound = pluginsFound.filter((x) => x !== id);
+    setPluginEnabled(id, true);
   }
 
   /* ---------- Footer-panelet ---------- */
@@ -1344,7 +1548,7 @@
     const d = BLOCK_DEFAULTS[kind];
     if (!d) return null;
     return {
-      id: `blk-${crypto.randomUUID().slice(0, 8)}`,
+      id: makeId('blk'),
       type: d.type,
       version: 1,
       // Former er dekor som standard: de utelates fra auto-avledet
@@ -1437,7 +1641,7 @@
     // med en antatt seksjonsbredde (justeres uansett fritt etterpå).
     const height = Math.round((img.height / img.width) * 0.3 * (iframeEl?.clientWidth ?? 1280));
     requestPlacement({
-      id: `blk-${crypto.randomUUID().slice(0, 8)}`,
+      id: makeId('blk'),
       type: 'image',
       version: 1,
       props: { src: img.dataUrl, alt: slugify(file.name).replaceAll('-', ' '), fit: 'cover', radius: 'md', href: null },
@@ -1535,6 +1739,10 @@
     }
     const freshPage = store.reset();
     siteStore.reset();
+    if (pluginsStore) {
+      pluginsStore.reset();
+      syncPluginsView();
+    }
     linkSiteDraft();
     grid = { snap: true, ...siteDraft.grid };
     updateDirty();
@@ -1612,6 +1820,13 @@
       if (!eq(restA, restB)) publishedTitles.push('nettstedsinfo');
     }
 
+    // Plugin-endringer (aktivert/deaktivert/lagt til) publiseres som plugins.json.
+    if (pluginsStore?.hasDraft()) {
+      files.push({ path: 'plugins/plugins.json', content: JSON.stringify(pluginsStore.data, null, 2) + '\n', encoding: 'utf-8' });
+      draftKeys.push('urd-draft-plugins');
+      publishedTitles.push('plugins');
+    }
+
     // Sideruting på alle statiske hoster: hver side utenom forsiden får
     // sin egen <sti>/index.html (kopi av rot-index.html; motoren ruter på
     // pathname). Genereres ved hver publisering - uendrede kopier gir
@@ -1682,6 +1897,11 @@
       site = JSON.parse(JSON.stringify(siteDraft));
       siteStore = createDraftStore('urd-draft-site', () => site);
       linkSiteDraft();
+      if (pluginsStore) {
+        const publishedPlugins = JSON.parse(JSON.stringify(pluginsStore.data));
+        pluginsStore = createDraftStore('urd-draft-plugins', () => publishedPlugins);
+        syncPluginsView();
+      }
       grid = { snap: true, ...siteDraft.grid };
       const pageSnap = JSON.parse(JSON.stringify(store.data));
       store = createDraftStore(`urd-draft-${pageId}`, () => pageSnap);
@@ -1774,7 +1994,7 @@
       {:else if auth}
         <a class="ghost" href="/api/github/login">Logg inn med GitHub</a>
       {/if}
-      <a class="ghost" href={pageEntry().path} target="_blank" rel="noopener">Se siden ↗</a>
+      <a class="ghost" href={pageEntry()?.path ?? '/'} target="_blank" rel="noopener">Se siden ↗</a>
       <button class="ghost discard-btn" class:armed={discardArmed} onclick={requestDiscard} disabled={!dirty}
         title={discardArmed ? 'Klikk igjen for å slette alle utkastene' : 'Slett utkastene og gå tilbake til publisert versjon'}
       >{discardArmed ? 'Sikker?' : 'Forkast utkast'}</button>
@@ -2470,6 +2690,71 @@
                   </select></label>
                 <p class="panel-hint">Design-maler for footer kommer i v0.6.</p>
               </div>
+            {:else if activePanel === 'Plugins'}
+              <div class="panel-body">
+                <p class="panel-hint">Plugins utvider Urd med nye blokker, seksjonsmaler, bakgrunner og animasjoner.
+                  En plugin er en mappe i plugins/ i repoet ditt; her styrer du hvilke som er aktive.
+                  Endringer gjelder fra neste publisering.</p>
+                {#if !knownPlugins().length}
+                  <p class="panel-hint">Ingen plugins i listen ennå. Legg en plugin-mappe i plugins/ i repoet og skriv mappenavnet under.</p>
+                {/if}
+                {#each knownPlugins() as id (id)}
+                  {@const info = pluginInfo[id]}
+                  {@const enabled = (pluginsView?.enabled ?? []).includes(id)}
+                  <div class="plugin-row" class:plugin-broken={info?.errors?.length}>
+                    <span class="plugin-head">
+                      <span class="plugin-name">{info?.name ?? id}</span>
+                      {#if info?.version}<span class="plugin-meta">v{info.version}</span>{/if}
+                      <span class="row-tools">
+                        <label class="gridmenu-snap plugin-toggle" title={enabled ? 'Aktiv: lastes på siden' : 'Av: lastes ikke'}>
+                          <input type="checkbox" checked={enabled} disabled={Boolean(info?.errors?.length)}
+                            onchange={(e) => setPluginEnabled(id, e.target.checked)} />
+                          {enabled ? 'På' : 'Av'}
+                        </label>
+                        <button class="ghost row-tool" title="Fjern fra listen (mappen i plugins/ består)"
+                          onclick={() => removePlugin(id)}>{@html ICONS.cross}</button>
+                      </span>
+                    </span>
+                    {#if info?.errors?.length}
+                      <p class="panel-hint plugin-warn">{info.errors.join('; ')}</p>
+                    {:else if info && !info.satisfied}
+                      <p class="panel-hint plugin-warn">Krever motorversjon {info.requiresEngine} (denne siden kjører {pluginEngine}); pluginen hoppes over ved lasting.</p>
+                    {:else if info?.csp}
+                      <p class="panel-hint plugin-warn">Trenger CSP-unntak i _headers: {[...(info.csp.connectSrc ?? []).map((d) => `connect-src ${d}`), ...(info.csp.frameSrc ?? []).map((d) => `frame-src ${d}`)].join(', ')}</p>
+                    {/if}
+                  </div>
+                {/each}
+                {#if pluginsFound.length}
+                  <hr class="gridmenu-divider" />
+                  <p class="panel-hint">Funnet i repoets plugins/-mappe:</p>
+                  {#each pluginsFound as id (id)}
+                    <div class="plugin-row">
+                      <span class="plugin-head">
+                        <span class="plugin-name">{pluginInfo[id]?.name ?? id}</span>
+                        {#if pluginInfo[id]?.version}<span class="plugin-meta">v{pluginInfo[id].version}</span>{/if}
+                        <span class="row-tools">
+                          <button class="ghost row-tool" title="Legg til og aktiver"
+                            onclick={() => addFoundPlugin(id)}>{@html ICONS.right}</button>
+                        </span>
+                      </span>
+                    </div>
+                  {/each}
+                {/if}
+                {#if pluginDiscovery === 'ok'}
+                  {#if !pluginsFound.length}
+                    <p class="panel-hint">Nye plugins dukker opp her automatisk når mappen deres er lagt i plugins/ i repoet.</p>
+                  {/if}
+                {:else}
+                  <!-- Reserveløsning når repo-oppdagelsen er utilgjengelig (lokal server / ikke innlogget) -->
+                  <hr class="gridmenu-divider" />
+                  <input placeholder="Mappenavn i plugins/ (f.eks. eksempel-kalender)" bind:value={newPluginId}
+                    onkeydown={(e) => e.key === 'Enter' && addPlugin()} />
+                  <button class="ghost action" onclick={addPlugin} disabled={!newPluginId.trim()}>+ Legg til plugin</button>
+                  {#if pluginError}
+                    <p class="panel-hint plugin-warn">{pluginError}</p>
+                  {/if}
+                {/if}
+              </div>
             {:else if activePanel === 'Historikk'}
               <div class="panel-body">
                 <p class="panel-hint">Siste publiseringer. Angring lager en ny commit som gjenoppretter forrige tilstand - ingenting slettes.</p>
@@ -2512,6 +2797,21 @@
     </div>
   {:else}
     <p class="loading">Laster…</p>
+  {/if}
+
+  {#if confirmBox}
+    <div class="setup-overlay">
+      <div class="setup-card">
+        <h2>{confirmBox.title}</h2>
+        {#each confirmBox.lines as line (line)}
+          <p class="panel-hint confirm-line">{line}</p>
+        {/each}
+        <span class="setup-actions">
+          <button class="ghost" onclick={() => answerConfirm(false)}>{confirmBox.cancelLabel}</button>
+          <button class="primary" onclick={() => answerConfirm(true)}>{confirmBox.okLabel}</button>
+        </span>
+      </div>
+    </div>
   {/if}
 
   {#if showSetup}
@@ -2933,6 +3233,51 @@
     gap: 0.35rem;
   }
 
+  .plugin-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.2rem;
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: 8px;
+    padding: 0.5rem 0.6rem;
+  }
+
+  .plugin-row.plugin-broken {
+    border-color: color-mix(in srgb, #e05252 55%, transparent);
+  }
+
+  .plugin-head {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+
+  .plugin-name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .plugin-meta {
+    font-size: 0.75rem;
+    opacity: 0.6;
+  }
+
+  .plugin-head .row-tools {
+    margin-left: auto;
+    align-items: center;
+  }
+
+  .plugin-toggle {
+    font-size: 0.8rem;
+  }
+
+  .plugin-warn {
+    color: #e2b84a;
+  }
+
   .page-row.current {
     border-left: 2px solid var(--urd-color-accent, #7c5cff);
     padding-left: 0.4rem;
@@ -3104,6 +3449,11 @@
   }
 
   /* Oppsettsveiviseren */
+  .confirm-line {
+    opacity: 0.9;
+    margin: 0;
+  }
+
   .setup-overlay {
     position: fixed;
     inset: 0;

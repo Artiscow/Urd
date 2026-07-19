@@ -982,11 +982,16 @@ body.urd-mobile .urd-section-resize {
    kun mens pekeren er i seksjonen; ligger alltid øverst (over løftede
    blokker) */
 .urd-preview .urd-section-toolbar {
-  position: absolute;
-  top: 8px;
-  right: 8px;
+  /* Klistret i seksjonen (ikke absolute): i seksjoner høyere enn viewporten følger
+     verktøylinjen med, så «+ kort»-knappen alltid kan nås ved gjentatte tillegg.
+     Verktøylinjen er seksjonens eneste flyt-element, så den starter alltid øverst. */
+  position: sticky;
+  top: 56px;
   display: none;
   gap: 2px;
+  width: fit-content;
+  margin-left: auto;
+  padding: 8px 8px 0 0;
   z-index: 100001;
 }
 

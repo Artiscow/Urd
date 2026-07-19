@@ -16,9 +16,8 @@
  * Kjent begrensning: er publiseringen en merge-commit, gjenopprettes
  * første forelders innholdstilstand.
  */
-import { cfg, currentUser, gh, triggerDeploy } from '../../_lib/github.js';
-import { readCookie } from '../../_lib/cookies.js';
-import { isAllowedLogin } from '../../_lib/guard.js';
+import { gh, triggerDeploy } from '../../_lib/github.js';
+import { requirePublisher } from '../../_lib/auth.js';
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
@@ -36,22 +35,9 @@ async function subtreeSha(token, repo, treeSha, pathSegments) {
 }
 
 export async function onRequestPost({ request, env }) {
-  let config;
-  try {
-    config = cfg(env);
-  } catch (err) {
-    return json({ error: err.message }, 503);
-  }
-
-  // Forsvar i dybden mot CSRF (i tillegg til SameSite=Lax på cookien):
-  // muterende kall skal komme fra vår egen side, aldri fra et fremmed nettsted.
-  const origin = request.headers.get('origin');
-  if (origin && origin !== new URL(request.url).origin) {
-    return json({ error: 'Forespørselen kommer fra feil nettsted' }, 403);
-  }
-
-  const token = readCookie(request, 'urd_gh');
-  if (!token) return json({ error: 'Ikke innlogget' }, 401);
+  const auth = await requirePublisher(request, env);
+  if (auth.response) return auth.response;
+  const { config, token } = auth;
 
   let body;
   try {
@@ -61,17 +47,6 @@ export async function onRequestPost({ request, env }) {
   }
   if (typeof body?.expect !== 'string' || !/^[0-9a-f]{7,64}$/i.test(body.expect)) {
     return json({ error: 'expect (publiseringen som skal angres) mangler eller er ugyldig' }, 400);
-  }
-
-  let user;
-  try {
-    user = await currentUser(token);
-  } catch (err) {
-    if (err.status === 401) return json({ error: 'Ugyldig eller utløpt innlogging' }, 401);
-    return json({ error: 'GitHub er utilgjengelig akkurat nå - prøv igjen om litt' }, 503);
-  }
-  if (!isAllowedLogin(user.login, env)) {
-    return json({ error: `GitHub-brukeren '${user.login}' har ikke publiseringstilgang` }, 403);
   }
 
   try {

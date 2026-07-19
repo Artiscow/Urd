@@ -10,9 +10,14 @@
  * `item`/`itemLabel` er valgfrie fabrikker for gjentakende elementer: seksjonsverktøylinjen viser da en «+ kort/rad»-knapp.
  */
 
-/** Kort, kollisjonstrygg nok id for seksjoner/blokker laget i editoren. */
+/** Kort, kollisjonstrygg nok id for seksjoner/blokker laget i editoren.
+ *  crypto.randomUUID finnes kun i sikre kontekster (https/localhost); på f.eks. http://0.0.0.0
+ *  (lokal testserver) brukes en tilfeldig fallback, ellers ville alt som lager nye id-er dødd stille. */
 export function makeId(prefix) {
-  return `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
+  const uuid = typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  return `${prefix}-${uuid.slice(0, 8)}`;
 }
 
 const autoMobile = () => ({ mobile: { mode: 'auto', attention: null } });
@@ -217,6 +222,38 @@ export function registerSectionPresets(Urd) {
       ic.mobileOrder = cardOrder(88, n, 0);
       box.mobileOrder = cardOrder(88, n, 1);
       return { blocks: [ic, box], bottom: y + 228 };
+    },
+  });
+
+  Urd.sections.define('funksjonskort-enkel', {
+    label: 'Funksjonskort uten ikoner',
+    group: 'Kort og lister',
+    hint: 'Tre kort med tittel og tekst (uten ikonene over)',
+    create: () => {
+      const card = (x, col, title) => {
+        const box = text(frame(x, 88, 25, 200),
+          `<h3>${title}</h3><p>Kort beskrivelse av hva dere tilbyr.</p>`,
+          { align: 'center', box: true });
+        box.animation = hoverLift();
+        box.mobileOrder = cardOrder(88, col, 0);
+        return box;
+      };
+      return section('funksjonskort-enkel', '360px', bg(colorLayer('bg')), [
+        text(frame(6, 28, 60, 38), '<h2>Hva vi gjør</h2>'),
+        card(6, 0, 'Fellesskap'),
+        card(37.5, 1, 'Arrangementer'),
+        card(69, 2, 'Medlemsfordeler'),
+      ]);
+    },
+    itemLabel: 'kort',
+    item: (sec) => {
+      const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 88, 232, 25, 200);
+      const box = text(frame(x, y, 25, 200),
+        '<h3>Ny tittel</h3><p>Kort beskrivelse av hva dere tilbyr.</p>',
+        { align: 'center', box: true });
+      box.animation = hoverLift();
+      box.mobileOrder = cardOrder(88, n, 0);
+      return { blocks: [box], bottom: y + 228 };
     },
   });
 

@@ -208,6 +208,11 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   (om menyen følger med når besøkende blar nedover).
 - **Nettstedsikon**: nederst i Tema-panelet laster du opp ikonet som
   vises i nettleserfanen og bokmerker (firkantet bilde anbefales).
+- **Plugins**-panelet: utvidelser som gir Urd nye blokker og seksjonsmaler.
+  Panelet viser pluginene i repoets plugins/-mappe; skru av og på med
+  bryteren, og publiser som vanlig. Aktive plugins virker umiddelbart i
+  forhåndsvisningen (besøkende får dem etter publisering), og pluginens
+  blokker dukker opp i «+ Ny blokk»-menyen i seksjonene.
 - **Footer**-panelet: bunnteksten som vises nederst på alle sider.
   Skru den på, skriv linjene (én per linje) og velg justering - den
   redigeres ett sted og gjelder hele nettstedet.

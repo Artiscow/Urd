@@ -12,6 +12,25 @@ døpes til det siste push-nummeret ved gaten, slik v0.5-fasen endte i
 0.5.10. Da stiger numrene alltid. Etterslepp-fikser på v0.5 nummereres
 0.5.11 og videre.
 
+### 0.6.3 - M1-testrunde: live plugins i preview, lokal utvikling, fikser - 19. juli 2026
+- Plugins virker nå i forhåndsvisningen FØR publisering: editoren sender utkastets aktive liste (`urd-plugins`), previewen laster pluginene derfra (filene ligger alt i repoet), og av/på gir fersk innlasting. Dette er også arbeidsflyten for LOKAL plugin-utvikling (dokumentert i plugins/README): mappe inn, aktiver i panelet, se blokkene live.
+- Plugin-blokker dukker automatisk opp i «+ Ny blokk»-menyen (previewen leser registrene og bygger blokken med pluginens defaults), og eksempel-kalenderen rendrer nå synlige eksempelhendelser med datobrikker i stedet for et tomt skall.
+- Plugin-oppdagelsen krever ikke lenger innlogging: offentlige repo leses anonymt, sist kjente funnliste bufres lokalt, og skriv-inn-navn-feltet vises kun når oppdagelsen er helt utilgjengelig.
+- KRITISK lokalserver-fiks: `crypto.randomUUID` finnes ikke på usikre opprinnelser (f.eks. http://0.0.0.0), så ALT som lagde nye id-er (seksjoner, blokker, dupliser) døde stille der; samlet i én makeId med fallback. I tillegg fikset DataCloneError i plugin-meldingen ($state-proxy sendt rått) og to kappløp som kunne gi tom plugin-liste ved rask iframe-oppstart.
+- Editor-UX fra testrunden: forhåndsvisningens viewport følger nå visningsvalget i topplinjen (et smalt admin-vindu vipper aldri previewen til mobil og gjemmer strukturverktøyene); klikk i admin-panelene lukker menyene i previewen; seksjonsverktøylinjen er klistret i lange seksjoner og nye elementer ruller minimalt, så pluss-knappen alltid er tilgjengelig; nye elementer markeres.
+- Ny seksjonsmal: «Funksjonskort uten ikoner» (eiers ønske), med egen pluss-knapp og testdekning.
+
+### 0.6.2 - M1: CSP-behovsmodell + teknisk opprydding - 19. juli 2026
+- ADR-0006: plugins deklarerer CSP-behov i manifestet (`csp.connectSrc`/`frameSrc`, additivt skjemafelt); `_headers` forblir Urd-eid og uskrivbar, og Plugins-panelet viser eieren nøyaktig hvilke unntak en plugin trenger.
+- requirePublisher-hjelper i functions/_lib: auth-prologen (konfig, CSRF-origin, cookie, brukeroppslag, ALLOWED_LOGINS) er ett sted i stedet for duplisert i commit.js og revert.js.
+- Konflikt- og angre-dialogene bruker editorens eget modalsystem i stedet for nettleserens confirm().
+- Oppsettsveiviseren utløses av et eksplisitt `site.setup`-felt (settes i malens standardinnhold ved M9-splitten; navnematch som fallback), og fullført veiviser fjerner feltet ved neste publisering.
+
+### 0.6.1 - M1: plugin-lasting for alvor + Plugins-panel - 19. juli 2026
+- Ny motor-modul plugins.js: manifest-validering, `requiresEngine` sjekket mot motorversjonen (avhengighetsfri semver-intervallsjekk: >=, <, ^, ~, eksakt), staging/rollback rundt register() (en plugin som feiler halvveis etterlater ingenting, og id-kollisjoner kan aldri overskrive kjernen), og provides-kontroll med logg ved kontraktsbrudd. TODO-en fra v0.1 om requiresEngine er løst.
+- Nytt Plugins-panel i admin: viser pluginene med navn/versjon/status og av/på-bryter; endringer går gjennom vanlig utkast- og publiseringsflyt (plugins.json committes, historikken sier «plugins»), og panelet advarer om ugyldige manifester og motorversjonskrav.
+- 7 nye kontraktstester (semver-sjekken, manifestvalidering, staging/rollback, provides).
+
 ### 0.5.13 - CodeQL-opprydding + CI-herding - 19. juli 2026
 - Favicon-vokterne (editor-effekten, favicon-boot.js, motorens applyFavicon) er skrevet om fra startsWith-sjekker til én ankret regex (kun `data:image/<type>;base64,…` eller site-relativ enkelt-skråstrek-sti): innholdsmessig samme vern, men CodeQL gjenkjenner RegExp.test som barriere, så varslene #7-9 lukkes i stedet for å gjenoppstå ved hvert bygg.
 - CodeQL-workflowen ekskluderer nå den genererte editor-bundelen (template/admin/assets): kilden i editor/src og hele motoren skannes fortsatt, og funn peker på lesbare kildelinjer i stedet for flyktige bundle-linjer.

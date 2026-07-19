@@ -42,7 +42,8 @@ export async function gh(token, path, init = {}, attempt = 1) {
     ...init,
     headers: {
       accept: 'application/vnd.github+json',
-      authorization: `Bearer ${token}`,
+      // token null = anonym lesing (offentlige repo, lavere rategrense); brukes kun av lesende endepunkter.
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
       'user-agent': 'urd-publisher',
       ...(init.body ? { 'content-type': 'application/json' } : {}),
       ...init.headers,

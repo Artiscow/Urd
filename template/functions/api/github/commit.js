@@ -8,41 +8,17 @@
  *  - hver filsti valideres mot sti-allowlisten (kun innhold, aldri kode)
  *  - maks 200 filer per commit
  */
-import { cfg, currentUser, commitFiles, triggerDeploy } from '../../_lib/github.js';
-import { readCookie } from '../../_lib/cookies.js';
-import { isAllowedLogin, isAllowedPath } from '../../_lib/guard.js';
+import { commitFiles, triggerDeploy } from '../../_lib/github.js';
+import { requirePublisher } from '../../_lib/auth.js';
+import { isAllowedPath } from '../../_lib/guard.js';
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 
 export async function onRequestPost({ request, env }) {
-  let config;
-  try {
-    config = cfg(env);
-  } catch (err) {
-    return json({ error: err.message }, 503);
-  }
-
-  // Forsvar i dybden mot CSRF (i tillegg til SameSite=Lax på cookien):
-  // muterende kall skal komme fra vår egen side, aldri fra et fremmed nettsted.
-  const origin = request.headers.get('origin');
-  if (origin && origin !== new URL(request.url).origin) {
-    return json({ error: 'Forespørselen kommer fra feil nettsted' }, 403);
-  }
-
-  const token = readCookie(request, 'urd_gh');
-  if (!token) return json({ error: 'Ikke innlogget' }, 401);
-
-  let user;
-  try {
-    user = await currentUser(token);
-  } catch (err) {
-    if (err.status === 401) return json({ error: 'Ugyldig eller utløpt innlogging' }, 401);
-    return json({ error: 'GitHub er utilgjengelig akkurat nå - prøv igjen om litt' }, 503);
-  }
-  if (!isAllowedLogin(user.login, env)) {
-    return json({ error: `GitHub-brukeren '${user.login}' har ikke publiseringstilgang` }, 403);
-  }
+  const auth = await requirePublisher(request, env);
+  if (auth.response) return auth.response;
+  const { config, token } = auth;
 
   let body;
   try {

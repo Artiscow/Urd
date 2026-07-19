@@ -28,6 +28,7 @@ import { grainLayer } from './backgrounds/grain.js';
 import { imageLayer } from './backgrounds/image.js';
 import { coreAnimations } from './animations/core.js';
 import { registerSectionPresets } from './sections/presets.js';
+import { loadPlugins, loadPluginList } from './plugins.js';
 
 export const Urd = {
   blocks: createRegistry('blocks'),
@@ -56,25 +57,14 @@ function registerCore() {
 }
 
 /**
- * Laster aktive plugins fra plugins/plugins.json. En plugin som feiler
- * stopper aldri siden; dens blokker rendres som plassholdere.
+ * Motorversjonen fra urd.json: grunnlaget for pluginenes requiresEngine-sjekk.
+ * Utilgjengelig manifest gir '0.0.0', som avviser versjonskravene i stedet for å laste i blinde.
  */
-async function loadPlugins() {
-  let index;
+async function engineVersion() {
   try {
-    index = await (await fetch('/plugins/plugins.json')).json();
+    return (await (await fetch('/urd.json')).json()).engine ?? '0.0.0';
   } catch {
-    return; // ingen plugin-indeks er helt greit
-  }
-  for (const id of index.enabled ?? []) {
-    try {
-      const manifest = await (await fetch(`/plugins/${id}/plugin.json`)).json();
-      // TODO v0.6: valider manifest.requiresEngine mot motorversjonen.
-      const mod = await import(`/plugins/${id}/${manifest.entry}`);
-      mod.register(Urd);
-    } catch (err) {
-      console.warn(`Urd: plugin '${id}' kunne ikke lastes`, err);
-    }
+    return '0.0.0';
   }
 }
 
@@ -169,6 +159,21 @@ function enablePreview(state, opts) {
       // Editoren oppdaget desktop-drift i en manuell seksjon: marker live.
       root.querySelector(`[data-section-id="${msg.sectionId}"]`)
         ?.classList.toggle('urd-attention', msg.needed !== false);
+    } else if (msg?.type === 'urd-close-menus') {
+      // Eieren klikket i admin-panelene: lukk åpne menyer (preset-galleri, blokkmeny).
+      window.UrdPreviewEdit?.closeMenus();
+    } else if (msg?.type === 'urd-plugins') {
+      // Editorens plugin-utkast: last de aktiverte pluginene (filene ligger alt i repoet)
+      // og rerendr, så plugins virker i forhåndsvisningen FØR publisering.
+      loadPluginList(Urd, state.engine, msg.enabled).then(() => {
+        renderPage(state.page, state.site, root, vp());
+      });
+    } else if (msg?.type === 'urd-viewport' && (msg.mode === 'desktop' || msg.mode === 'mobile')) {
+      // Forhåndsvisningen følger editorens visningsvalg, aldri iframe-bredden:
+      // et smalt admin-vindu skal ikke vippe previewen til mobil og gjemme strukturverktøyene.
+      state.viewport = msg.mode;
+      document.body.classList.toggle('urd-mobile', state.viewport === 'mobile');
+      renderPage(state.page, state.site, root, vp());
     } else if (msg?.type === 'urd-site' && msg.site) {
       // Site-utkast fra editoren (grid, tema, nav): alt som avhenger av
       // site.json rendres på nytt.
@@ -199,6 +204,7 @@ export async function boot(opts) {
   // OPPRINNELIGE gridet (columns/rowHeight), som det løftede sitet har mistet.
   const rawSite = await (await fetch('/content/site.json')).json();
   const site = liftSiteFile(rawSite);
+  const preview = new URLSearchParams(location.search).get('preview') === '1';
   // Motoren tåler amputert site.json: manglende deler får tomme standarder i stedet for krasj (siden dør aldri av dårlig data).
   site.site ??= { title: '', lang: 'no' };
   site.pages ??= [];
@@ -206,7 +212,10 @@ export async function boot(opts) {
   site.nav ??= { version: 1, items: [] };
   applyTheme(site.theme);
   applyFavicon(site.site.icon);
-  await loadPlugins();
+  const engine = await engineVersion();
+  // I preview eier EDITOREN plugin-listen (utkastet i plugins.json): boot laster ingenting,
+  // og urd-plugins-meldingen laster utkastets aktive plugins så de virker før publisering.
+  if (!preview) await loadPlugins(Urd, engine);
 
   if (opts.nav) renderNav(site, opts.nav);
   // Delt footer: eget element rett etter hovedinnholdet (index.html er
@@ -232,7 +241,6 @@ export async function boot(opts) {
   }
   document.title = `${page.meta?.title ?? entry.title ?? ''} - ${site.site.title}`;
 
-  const preview = new URLSearchParams(location.search).get('preview') === '1';
   if (preview) {
     // Editeringslaget lastes dynamisk KUN i preview - besøkende henter
     // aldri denne koden. Må være på plass før første rendering.
@@ -244,16 +252,19 @@ export async function boot(opts) {
   // preview, der iframen smales til mobilbredde). Ved kryssing av
   // breakpointet rendres siden på nytt i riktig modus.
   const mq = window.matchMedia(`(max-width: ${site.breakpoints?.mobile ?? 640}px)`);
-  const state = { page, site, viewport: mq.matches ? 'mobile' : 'desktop' };
+  // I preview eier editoren viewporten (urd-viewport-meldingen); hos besøkende følger den skjermbredden.
+  const state = { page, site, engine, viewport: preview ? 'desktop' : (mq.matches ? 'mobile' : 'desktop') };
   document.body.classList.toggle('urd-mobile', state.viewport === 'mobile');
 
   renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport });
 
-  mq.addEventListener('change', (event) => {
-    state.viewport = event.matches ? 'mobile' : 'desktop';
-    document.body.classList.toggle('urd-mobile', state.viewport === 'mobile');
-    renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport });
-  });
+  if (!preview) {
+    mq.addEventListener('change', (event) => {
+      state.viewport = event.matches ? 'mobile' : 'desktop';
+      document.body.classList.toggle('urd-mobile', state.viewport === 'mobile');
+      renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport });
+    });
+  }
 
   if (preview) enablePreview(state, opts);
 }

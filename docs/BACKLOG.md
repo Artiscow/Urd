@@ -11,7 +11,7 @@ nummereres 0.6.1 og oppover. (v0.5 levert 18. juli 2026; se CHANGELOG.)
 
 ## Til v0.6 (økosystem, etter milepæl)
 
-- [ ] **M1 Grunnmur**: plugin-lasting for alvor (requiresEngine-validering mot motorversjonen, provides-kontroll, feilkapsling med staging/rollback per plugin), Plugins-panel i admin (aktiver/deaktiver via plugins.json gjennom utkast-/publiseringsflyten), CSP-behovsmodell (ADR: manifestets `csp`-felt + eksakt _headers-instruks i admin; _headers forblir Urd-eid), requirePublisher-hjelper i _lib, konflikt-/angre-dialoger over på editorens modalsystem, eksplisitt oppsettsveiviser-signal i site.json
+- [x] **M1 Grunnmur** (0.6.1-0.6.3, 19. juli 2026; eiers testrunde bestått): plugin-lasting for alvor (requiresEngine-validering mot motorversjonen, provides-kontroll, feilkapsling med staging/rollback per plugin), Plugins-panel i admin (aktiver/deaktiver via plugins.json gjennom utkast-/publiseringsflyten), CSP-behovsmodell (ADR: manifestets `csp`-felt + eksakt _headers-instruks i admin; _headers forblir Urd-eid), requirePublisher-hjelper i _lib, konflikt-/angre-dialoger over på editorens modalsystem, eksplisitt oppsettsveiviser-signal i site.json
 - [ ] **M2 Datablokk/arkiv-mønsteret**: ADR + samlinger i content/ (innslag + blokk som rendrer samling med visningsmal); nyheter, oppslagstavle og publikasjonsarkiv-preset bygges på mønsteret; produktkatalogen i v0.7 gjenbruker det
 - [ ] **M3 Kalender-referanseplugin** (ApeironLF-designkravene): abonnerbar feed (avhengighetsfri ICS-parser + Google Calendar API-kilde), gjentakende arrangementer ekspanderes, tre visninger (liste med dato-badge, kort-rutenett, månedskalender), kategori-chips via «Kategori: Tittel», auto-uttrekk av påmeldingslenke, «Abonner»-knapp (webcal + Google-cid), flere kilder + «neste arrangement»-panel, robuste tomtilstander; «Hva skjer»-preset
 - [ ] **M4 Skjema- og kart-referanseplugins**: skjema etter ApeironLF-modellen (mailto/valgfritt endepunkt + honeypot), kart som personvennlig OSM-innbygging med CSP-opt-in-flyten
@@ -47,6 +47,8 @@ nummereres 0.6.1 og oppover. (v0.5 levert 18. juli 2026; se CHANGELOG.)
 - [ ] Sticky Blokker (lage ny blokk og velge "Klistre" eller "Fest" for at den står på siden der man setter den) + funksjon til å si hvor den skal stoppe og/eller starte å være sticky
 - [ ] Klikk på en seksjon får opp "+ ny blokk" der du klikker
 - [ ] Emoji/tegn meny i tekst editor
+- [ ] hjelpelinjer for bredde, senter, horisontalt/vertkalt for hele siden som alltid er synlig (med på av knapp)
+- [ ] Bevege/endre størrelse på seksjon både nedenfra og ovenfra - man kan krympe toppen på en seksjon. Må ha en løsning slik at man kan kun expand en seksjon uten at en annen minskes, og minske en seksjon uten at en annen økes/gjøres større
 
     
 ## Bugs og kjente svakheter
