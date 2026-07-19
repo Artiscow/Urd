@@ -139,6 +139,11 @@ over), lenke (eget felt i linjen), justering, lister, sitat og fjern
 formatering. Font og grunnstørrelse for hele feltet settes i Egenskaper.
 Linjen lukkes ved klikk hvor som helst utenfor feltet.
 
+**Hjelpechipen «?»**: blokker med spesialfunksjoner (som Samling og
+Kalender) viser en «?» øverst i venstre hjørne når du peker på dem.
+Klikk den for et hjelpekort som forklarer alle funksjonene; kortet blir
+stående til du klikker et annet sted.
+
 **Redigere bilder**: dobbeltklikk et bilde i en bildeblokk (eller klikk
 et samlingsbilde) for bildeeditoren: bytt/fjern bilde, dra fokuspunktet
 for å styre utsnittet, zoom inn mot fokuspunktet for å beskjære,
@@ -239,6 +244,14 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   bryteren, og publiser som vanlig. Aktive plugins virker umiddelbart i
   forhåndsvisningen (besøkende får dem etter publisering), og pluginens
   blokker dukker opp i «+ Ny blokk»-menyen i seksjonene.
+
+  Kalender-pluginen følger med: legg inn en Kalender-blokk (eller
+  seksjonsmalen «Hva skjer»), klikk «⚙ Kilder» på blokken og lim inn
+  kalenderens iCal-adresse eller Google-kalender-id. Velg visning (liste,
+  kort, månedskalender eller «neste arrangement») og antall. Titler på
+  formen «Kategori: Tittel» gir filtrerbare kategori-chips, en
+  påmeldingslenke i beskrivelsen blir en «Meld deg på»-knapp, og
+  «Abonner»-knappen lar besøkende følge kalenderen i sin egen app.
 - **Footer**-panelet: bunnteksten som vises nederst på alle sider.
   Skru den på, skriv linjene (én per linje) og velg justering - den
   redigeres ett sted og gjelder hele nettstedet.

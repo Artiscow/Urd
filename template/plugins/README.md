@@ -27,5 +27,48 @@ urd.json), `provides` (hva pluginen definerer), og valgfritt `csp`
 (eksterne opprinnelser pluginen trenger; se ADR-0006 - `_headers` endres
 aldri automatisk, admin viser eieren hva som må legges inn).
 
-Se [`eksempel-kalender/`](eksempel-kalender/) for formen, og
-[docs/SKJEMA.md](../../docs/SKJEMA.md#plugins) for kontrakten.
+**Hjelpechip-regelen (ADR-0008)**: har blokken din spesialfunksjoner
+(egne paneler, konvensjoner i innholdet, automatikk), SKAL den ha en
+«?»-chip som forklarer dem. Bruk den felles hjelperen, kun i preview:
+
+```js
+if (ctx.preview) {
+  import('/assets/engine/hint.js').then(({ attachHint }) => {
+    attachHint(host, { title: 'Blokken min', lines: ['Funksjon 1 …', 'Funksjon 2 …'] });
+  });
+}
+```
+
+Plugin-blokker og -seksjonsmaler vises automatisk i egne «Plugins»-
+seksjoner i «+ Ny blokk», «+ Ny seksjon» og Blokker-panelet. En blokk-def
+kan i tillegg ha `variants: [{ label, props }, …]`: da blir den en
+foldemeny i blokkmenyene (kalenderen bruker det til visningene sine).
+
+**Temastyrt UI-regelen (ADR-0009)**: aldri native `<select>` i
+redigerings-UI - popupen følger OS-temaet og blir uleselig. Bruk
+`createDropdown` fra `/assets/engine/dropdown.js`, eller segmentknapper
+for små valgsett.
+
+Se [`kalender/`](kalender/) for referansen: den viser hele formen (manifest
+med provides, blokk med versjon og migrering, seksjonspreset, egen CSS via én
+style-tag, redigering i preview via urd-edit, og ren logikk i egen modul med
+kontraktstester i tests/kalender.test.mjs). Kontrakten er beskrevet i
+[docs/SKJEMA.md](../../docs/SKJEMA.md#plugins).
+
+## Kalender-pluginen (referansen)
+
+Kalenderblokken henter arrangementer fra abonnerbare iCal-feeder (Google
+Calendar, Nextcloud, Outlook m.fl.) med fire visninger: liste, kort,
+månedskalender og «neste arrangement». Kilder settes i forhåndsvisningen
+(«⚙ Kilder» på blokken): lim inn en iCal-URL, webcal://-adresse eller en
+Google-kalender-id (f.eks. `foreningen@gmail.com`).
+
+Konvensjoner: titler på formen «Kategori: Tittel» gir kategori-chips med
+filter, og en påmeldingslenke i beskrivelsen (en linje med «Påmelding:»)
+blir en «Meld deg på»-knapp. «Abonner»-knappen gir webcal-lenke, og for
+Google-kilder også «Legg til i Google».
+
+Henting går via sidens egen feed-proxy (`/api/ics`), så pluginen trenger
+ingen CSP-unntak. Proxyen godtar `calendar.google.com` og verter eieren
+lister i miljøvariabelen `ICS_HOSTS` (kommaseparert) i hostingoppsettet.
+Lokalt uten functions vises eksempeldata i forhåndsvisningen.

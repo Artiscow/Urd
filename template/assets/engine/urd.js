@@ -177,6 +177,24 @@ function enablePreview(state, opts) {
       // og rerendr, så plugins virker i forhåndsvisningen FØR publisering.
       loadPluginList(Urd, state.engine, msg.enabled).then(() => {
         renderPage(state.page, state.site, root, vp());
+        // Meld plugin-blokkene tilbake (type, label, defaults), så Blokker-
+        // panelet i admin kan vise dem i sin egen «Fra plugins»-seksjon.
+        const blocks = [];
+        for (const type of Urd.blocks.ids()) {
+          const def = Urd.blocks.get(type);
+          if (!def?.fromPlugin) continue;
+          blocks.push({
+            type,
+            label: def.label ?? type,
+            version: def.version ?? 1,
+            plugin: def.fromPlugin,
+            defaults: def.defaults ? def.defaults() : {},
+            variants: Array.isArray(def.variants)
+              ? def.variants.map((v) => ({ label: v.label, props: v.props ?? {} }))
+              : [],
+          });
+        }
+        window.parent?.postMessage({ type: 'urd-plugin-blocks', blocks }, location.origin);
       });
     } else if (msg?.type === 'urd-viewport' && (msg.mode === 'desktop' || msg.mode === 'mobile')) {
       // Forhåndsvisningen følger editorens visningsvalg, aldri iframe-bredden:

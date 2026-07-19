@@ -20,6 +20,7 @@ import { frameToCss } from './render.js';
 import { makeId } from './sections/presets.js';
 import { openImageEditor, closeImageEditor } from './image-editor.js';
 import { openColorPicker, closeColorPicker } from './color-picker.js';
+import { createDropdown, closeDropdowns } from './dropdown.js';
 
 /** Mobilvisning? Motoren setter body-klassen ut fra breakpointet. */
 const isMobile = () => document.body.classList.contains('urd-mobile');
@@ -31,6 +32,7 @@ export function closeMenus() {
   collapseOpenPresetMenu = null;
   closeImageEditor();
   closeColorPicker();
+  closeDropdowns();
   document.querySelectorAll('.urd-add-block-menu.open').forEach((m) => m.classList.remove('open'));
 }
 
@@ -179,8 +181,13 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
 const BLOCK_KINDS = [
   ['text', 'Tekst'], ['text-box', 'Tekstboks'], ['button', 'Knapp'],
   ['image', 'Bilde'], ['video', 'Video'], ['icon', 'Ikon'],
+  ['samling', 'Samling'],
+];
+
+/** Formene bor i sin egen utfoldbare undermeny («Former») i + Ny blokk. */
+const SHAPE_KINDS = [
   ['shape-line', 'Strek'], ['shape-arrow', 'Pil'], ['shape-circle', 'Sirkel'],
-  ['shape-rect', 'Rektangel'], ['shape-triangle', 'Trekant'], ['samling', 'Samling'],
+  ['shape-rect', 'Rektangel'], ['shape-triangle', 'Trekant'],
 ];
 
 /** Kjerneblokk-typene (paletten i editoren eier byggingen av disse). */
@@ -196,23 +203,42 @@ function addBlockAdder(host, section) {
 
   const menu = document.createElement('div');
   menu.className = 'urd-add-block-menu';
-  for (const [kind, label] of BLOCK_KINDS) {
+  const kindButton = (parent, kind, label) => {
     const b = document.createElement('button');
     b.textContent = label;
     b.addEventListener('click', () => {
       menu.classList.remove('open');
       post({ type: 'urd-request-block', sectionId: section.id, kind });
     });
-    menu.appendChild(b);
+    parent.appendChild(b);
+  };
+  for (const [kind, label] of BLOCK_KINDS) kindButton(menu, kind, label);
+
+  // Formene i egen utfoldbar undermeny, så hovedmenyen holder seg kort.
+  const shapesToggle = document.createElement('button');
+  shapesToggle.className = 'urd-add-block-shapes-toggle';
+  shapesToggle.textContent = 'Former ▾';
+  const shapes = document.createElement('div');
+  shapes.className = 'urd-add-block-shapes';
+  for (const [kind, label] of SHAPE_KINDS) kindButton(shapes, kind, label);
+  shapesToggle.addEventListener('click', () => {
+    const open = shapes.classList.toggle('open');
+    shapesToggle.textContent = open ? 'Former ▴' : 'Former ▾';
+  });
+  menu.append(shapesToggle, shapes);
+  // Plugin-blokker: egen seksjon under det innebygde. Previewen har
+  // registrene (og dermed defaults), så blokken bygges her og sendes ferdig.
+  const pluginTypes = window.Urd.blocks.ids().filter((type) => !CORE_BLOCK_TYPES.has(type));
+  if (pluginTypes.length) {
+    const divider = document.createElement('div');
+    divider.className = 'urd-add-block-plugins';
+    divider.textContent = 'Plugins';
+    menu.appendChild(divider);
   }
-  // Plugin-blokker: previewen har registrene (og dermed defaults), så blokken bygges her og sendes ferdig til editoren.
-  for (const type of window.Urd.blocks.ids()) {
-    if (CORE_BLOCK_TYPES.has(type)) continue;
+  for (const type of pluginTypes) {
     const def = window.Urd.blocks.get(type);
-    const b = document.createElement('button');
-    b.textContent = def.label ?? type;
-    b.title = 'Fra plugin';
-    b.addEventListener('click', () => {
+    const title = typeof def.fromPlugin === 'string' ? `Fra pluginen ${def.fromPlugin}` : 'Fra plugin';
+    const buildAndPost = (extraProps = {}) => {
       menu.classList.remove('open');
       post({
         type: 'urd-add-block',
@@ -221,12 +247,37 @@ function addBlockAdder(host, section) {
           id: makeId('blk'),
           type,
           version: def.version ?? 1,
-          props: def.defaults ? def.defaults() : {},
+          props: { ...(def.defaults ? def.defaults() : {}), ...extraProps },
           animation: null,
           frames: { desktop: { x: 25, y: 40, w: 50, h: 260, z: 1, rot: 0 }, mobile: null },
         },
       });
-    });
+    };
+    // Blokker med variants (f.eks. kalenderens visninger) får en foldemeny som Former.
+    if (Array.isArray(def.variants) && def.variants.length) {
+      const toggle = document.createElement('button');
+      toggle.className = 'urd-add-block-shapes-toggle';
+      toggle.textContent = `${def.label ?? type} ▾`;
+      toggle.title = title;
+      const sub = document.createElement('div');
+      sub.className = 'urd-add-block-shapes';
+      for (const variant of def.variants) {
+        const b = document.createElement('button');
+        b.textContent = variant.label;
+        b.addEventListener('click', () => buildAndPost(variant.props ?? {}));
+        sub.appendChild(b);
+      }
+      toggle.addEventListener('click', () => {
+        const open = sub.classList.toggle('open');
+        toggle.textContent = `${def.label ?? type} ${open ? '▴' : '▾'}`;
+      });
+      menu.append(toggle, sub);
+      continue;
+    }
+    const b = document.createElement('button');
+    b.textContent = def.label ?? type;
+    b.title = title;
+    b.addEventListener('click', () => buildAndPost());
     menu.appendChild(b);
   }
   openBtn.addEventListener('click', () => menu.classList.toggle('open'));
@@ -328,13 +379,21 @@ function makeSectionAdder(index, above = null) {
     head.append(title, cancel);
     menu.appendChild(head);
 
+    // Kjernens maler grupperes som før; plugin-maler samles i en egen
+    // «Plugins»-seksjon under alt det innebygde.
     const groups = new Map();
+    const pluginDefs = [];
     for (const id of window.Urd.sections.ids()) {
       const def = window.Urd.sections.get(id);
+      if (def.fromPlugin) {
+        pluginDefs.push(def);
+        continue;
+      }
       const group = def.group ?? 'Annet';
       if (!groups.has(group)) groups.set(group, []);
       groups.get(group).push(def);
     }
+    if (pluginDefs.length) groups.set('Plugins', pluginDefs);
     for (const [name, defs] of groups) {
       const heading = document.createElement('div');
       heading.className = 'urd-preset-group';
@@ -441,26 +500,16 @@ function initTextToolbar() {
     return b;
   };
 
-  // Overskriftsnivå
+  // Overskriftsnivå: temastyrt nedtrekk (ADR-0009: aldri native select i
+  // redigerings-UI). Nedtrekket stjeler ikke fokus, så markeringen står.
   startGroup();
-  const level = document.createElement('select');
-  level.className = 'urd-tt-level';
-  level.title = 'Tekstnivå';
-  for (const [value, name] of [['p', 'Avsnitt'], ['h1', 'Overskrift 1'], ['h2', 'Overskrift 2'], ['h3', 'Overskrift 3']]) {
-    const o = document.createElement('option');
-    o.value = value;
-    o.textContent = name;
-    level.appendChild(o);
-  }
-  // Velgeren tar fokus fra tekstfeltet mens den er åpen: markeringen lagres
-  // ved åpning og gjenopprettes før kommandoen, så nivået treffer riktig tekst.
-  level.addEventListener('mousedown', saveSelection);
-  level.addEventListener('change', () => {
-    activeText?.focus();
-    restoreSelection();
-    exec('formatBlock', level.value);
+  const level = createDropdown({
+    value: 'p',
+    title: 'Tekstnivå',
+    options: [['p', 'Avsnitt'], ['h1', 'Overskrift 1'], ['h2', 'Overskrift 2'], ['h3', 'Overskrift 3']],
+    onchange: (value) => exec('formatBlock', value),
   });
-  group.appendChild(level);
+  group.appendChild(level.el);
 
   startGroup();
   btn('<b>F</b>', 'Fet (Ctrl+B)', () => exec('bold'));
@@ -683,7 +732,7 @@ function initTextToolbar() {
     // Nivåvelgeren speiler markørens plassering.
     try {
       const value = (document.queryCommandValue('formatBlock') || 'p').toLowerCase();
-      level.value = ['h1', 'h2', 'h3'].includes(value) ? value : 'p';
+      level.set(['h1', 'h2', 'h3'].includes(value) ? value : 'p');
     } catch { /* enkelte nettlesere nekter før første kommando */ }
   };
 
@@ -716,7 +765,7 @@ function initTextToolbar() {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
     if (bar.contains(target) || activeText.contains(target)) return;
-    if (target.closest('.urd-text[contenteditable="true"], .urd-cp, .urd-imged')) return;
+    if (target.closest('.urd-text[contenteditable="true"], .urd-cp, .urd-imged, .urd-dd-menu')) return;
     activeText.blur();
     activeText = null;
     reposition();
@@ -1036,11 +1085,6 @@ function enhanceBlock(el, block, section, grid, host) {
 
   const toolbar = document.createElement('div');
   toolbar.className = 'urd-edit-toolbar';
-  // Ligger blokken helt i toppen av siden, legges verktøylinjen inni
-  // blokken i stedet for over den.
-  if (activeFrame().y < 36 && !mobile) {
-    toolbar.classList.add('urd-edit-toolbar-inside');
-  }
 
   // Den felles bildeeditoren for bildeblokker: alle feltene, med live DOM-oppdatering
   // (kun bildebytte trenger rerender, og da lukkes panelet).
@@ -1246,7 +1290,7 @@ function enhanceBlock(el, block, section, grid, host) {
         // redigerer man teksten). En uvalgt blokk dras fritt også fra
         // teksten - klikk uten dra velger den, klikk igjen redigerer.
         if (target?.closest('.urd-text[contenteditable="true"]') && selectedBlockId === block.id) return;
-        if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button, input, select, textarea, .urd-samling-editable, .urd-samling-image-edit')) return;
+        if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button, input, select, textarea, .urd-samling-editable, .urd-samling-image-edit, .urd-kal-config')) return;
         // Auto-mobil: første materialisering skal være et bevisst valg
         // (dra i ⠿), ikke et klikk på blokken.
         if (mobile && (section.responsive?.mobile?.mode ?? 'auto') !== 'manual') return;

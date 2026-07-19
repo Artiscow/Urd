@@ -216,27 +216,28 @@ Statiske hoster kan ikke liste mapper, så en indeksfil peker ut aktive plugins:
 
 ```json
 // plugins/plugins.json
-{ "version": 1, "enabled": ["eksempel-kalender"] }
+{ "version": 1, "enabled": ["kalender"] }
 ```
 
-Hver plugin er en mappe med manifest + ES-modul:
+Hver plugin er en mappe med manifest + ES-modul (kalender-referansepluginen viser hele formen):
 
 ```json
-// plugins/eksempel-kalender/plugin.json
+// plugins/kalender/plugin.json
 {
-  "id": "eksempel-kalender",
+  "id": "kalender",
   "name": "Kalender",
   "version": "1.0.0",
-  "requiresEngine": ">=0.1.0 <1.0.0",
+  "requiresEngine": ">=0.5.0 <1.0.0",
   "entry": "index.js",
-  "provides": { "blocks": ["kalender"], "sectionPresets": [], "backgrounds": [], "animations": [], "maler": [] }
+  "provides": { "blocks": ["kalender"], "sectionPresets": ["hva-skjer"], "backgrounds": [], "animations": [], "maler": [] }
 }
 ```
 
 ```js
-// plugins/eksempel-kalender/index.js
+// plugins/kalender/index.js
 export function register(Urd) {
-  Urd.blocks.define('kalender', { version: 1, /* … */ });
+  Urd.blocks.define('kalender', { version: 2, /* … */ });
+  Urd.sections.define('hva-skjer', { label: 'Hva skjer', /* … */ });
 }
 ```
 

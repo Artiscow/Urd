@@ -1,0 +1,14 @@
+{
+  "id": "kalender",
+  "name": "Kalender",
+  "version": "1.0.0",
+  "requiresEngine": ">=0.5.0 <1.0.0",
+  "entry": "index.js",
+  "provides": {
+    "blocks": ["kalender"],
+    "sectionPresets": ["hva-skjer"],
+    "backgrounds": [],
+    "animations": [],
+    "maler": []
+  }
+}

@@ -267,6 +267,22 @@ export const samlingBlock = {
       view(host, entries);
       editCtx = null;
 
+      // Hjelpechipen (ADR-0008): blokken har spesialfunksjoner og forklarer seg selv.
+      if (ctx.preview && ctx.viewport !== 'mobile') {
+        import('../hint.js').then(({ attachHint }) => {
+          if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
+          attachHint(el, {
+            title: 'Samling-blokken',
+            lines: [
+              'Innslagene bor i Samlinger-panelet; blokken viser dem som kort, liste eller arkiv per år',
+              'Klikk rett i tittel eller tekst for å skrive; klikk et bilde for bildeeditoren',
+              'Velg samling, visning, antall og sortering i Egenskaper',
+              'Blokken vokser automatisk med innholdet',
+            ],
+          });
+        });
+      }
+
       // Autovekst: samlingsinnhold er dynamisk, så rammen følger innholdet i stedet for at
       // malene gjetter en stor fast høyde. Seksjonen løftes ved behov (kun visuelt hos
       // besøkende; i editoren bokføres høyden i utkastet, som tekstblokkene gjør).

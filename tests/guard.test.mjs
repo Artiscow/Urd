@@ -32,7 +32,7 @@ test('kode- og konfigstier er forbudt', () => {
     '_redirects',
     '.gitignore',
     'wrangler.toml',
-    'plugins/eksempel-kalender/index.js',
+    'plugins/kalender/index.js',
   ]) {
     assert.equal(isAllowedPath(path), false, path);
   }

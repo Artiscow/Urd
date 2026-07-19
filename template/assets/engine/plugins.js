@@ -73,16 +73,18 @@ const KINDS = [
 /**
  * Staging-lag rundt Urd-registrene: register(Urd) definerer mot dette,
  * og commit() tar definisjonene i bruk først når hele register() har fullført.
+ * pluginName merker definisjonene (def.fromPlugin), så menyene kan vise
+ * plugin-innhold i egne «Fra plugins»-seksjoner.
  * @returns {{staged: object, commit: () => string[], defined: () => Record<string, string[]>}}
  */
-export function createStagedUrd(Urd) {
+export function createStagedUrd(Urd, pluginName = null) {
   const captured = new Map(KINDS.map(([kind]) => [kind, []]));
   const staged = {};
   for (const [kind] of KINDS) {
     staged[kind] = {
       define(id, def) {
         if (!ID_RE.test(id ?? '')) throw new Error(`Urd.${kind}: ugyldig id '${id}'`);
-        captured.get(kind).push([id, def]);
+        captured.get(kind).push([id, pluginName ? { ...def, fromPlugin: pluginName } : def]);
       },
       get: (id) => Urd[kind].get(id),
       ids: () => Urd[kind].ids(),
@@ -160,7 +162,7 @@ export async function loadPluginById(Urd, engineVersion, id) {
       console.warn(`Urd: plugin '${id}' mangler register()-eksport`);
       return;
     }
-    const staging = createStagedUrd(Urd);
+    const staging = createStagedUrd(Urd, manifest.name ?? id);
     mod.register(staging.staged);
     for (const warning of staging.commit()) {
       console.warn(`Urd: plugin '${id}': ${warning}`);

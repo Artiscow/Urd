@@ -6,6 +6,7 @@
   import ColorPicker from './lib/ColorPicker.svelte';
   import GlyphPicker from './lib/GlyphPicker.svelte';
   import { createPreviewBridge } from './lib/previewBridge.js';
+  import Dropdown from './lib/Dropdown.svelte';
   // Editoren deler migreringskoden med motoren (samme fil, bundles inn).
   import { liftPageFile, liftSiteFile } from '../../template/assets/engine/migrate.js';
   import { validateManifest, satisfiesEngine } from '../../template/assets/engine/plugins.js';
@@ -936,6 +937,7 @@
       onReviewDone: handleReviewDone,
       onBlockFlag: handleBlockFlag,
       onCollectionEdit: handleCollectionEdit,
+      onPluginBlocks: (msg) => { pluginBlocks = msg.blocks ?? []; },
     });
   }
 
@@ -1823,6 +1825,22 @@
     requestPlacement(buildBlock(kind));
   }
 
+  /** Plugin-blokkene i Blokker-panelet: previewen meldte type/label/defaults
+   *  ved plugin-lasting (urd-plugin-blocks), så blokken kan bygges her. */
+  let pluginBlocks = $state([]);
+
+  function addPluginBlock(entry, extraProps = {}) {
+    requestPlacement({
+      id: makeId('blk'),
+      type: entry.type,
+      version: entry.version ?? 1,
+      decor: false,
+      props: { ...structuredClone(entry.defaults ?? {}), ...structuredClone(extraProps) },
+      animation: null,
+      frames: { desktop: { x: 25, y: 40, w: 50, h: 260, z: 1, rot: 0 }, mobile: null },
+    });
+  }
+
   /** «+ Legg til blokk» i en seksjon: bygg blokken og legg den DER,
    *  vannrett sentrert. Bilde starter tomt (velges i Egenskaper -
    *  fildialog kan ikke åpnes fra en postMessage). */
@@ -2210,12 +2228,8 @@
     <span class="topbar-group">
       <strong class="brand">Urd</strong>
 
-      <select class="admin-theme" value={adminTheme} title="Adminens fargetema (kun editoren, ikke nettsiden din)"
-        onchange={(e) => (adminTheme = e.target.value)}>
-        {#each ADMIN_THEMES as [id, name] (id)}
-          <option value={id}>{name}</option>
-        {/each}
-      </select>
+      <Dropdown value={adminTheme} title="Adminens fargetema (kun editoren, ikke nettsiden din)"
+        options={ADMIN_THEMES} onchange={(v) => (adminTheme = v)} />
 
       {#if site}
         <!-- Gjeldende side: klikk åpner Sider-panelet (nedtrekket ble
@@ -2320,26 +2334,19 @@
                   <summary>Logo</summary>
                   <div class="group-items">
                     <label>Type
-                      <select value={siteDraft.nav.logo?.type ?? 'text'}
-                        onchange={(e) => setLogoType(e.target.value)}>
-                        <option value="text">Tekst</option>
-                        <option value="image">Bilde</option>
-                        <option value="both">Bilde + tekst</option>
-                      </select>
+                      <Dropdown value={siteDraft.nav.logo?.type ?? 'text'}
+                        options={[['text', 'Tekst'], ['image', 'Bilde'], ['both', 'Bilde + tekst']]}
+                        onchange={(v) => setLogoType(v)} />
                     </label>
                     {#if (siteDraft.nav.logo?.type ?? 'text') !== 'image'}
                       <input value={siteDraft.nav.logo?.value ?? ''} placeholder="Navnet i menyen"
                         oninput={(e) => setLogo({ value: e.target.value })} />
                       <!-- Stilrad à la tekstbehandler: font | px | F K -->
                       <span class="toolbar-row">
-                        <select title="Font (Arv = temaets overskriftsfont)"
+                        <Dropdown title="Font (Arv = temaets overskriftsfont)"
                           value={siteDraft.nav.logo?.font ?? ''}
-                          onchange={(e) => setLogo({ font: e.target.value || undefined })}>
-                          <option value="">Arv</option>
-                          {#each FONT_STACKS as [name, value] (value)}
-                            <option {value}>{name}</option>
-                          {/each}
-                        </select>
+                          options={[['', 'Arv'], ...FONT_STACKS.map(([name, value]) => [value, name])]}
+                          onchange={(v) => setLogo({ font: v || undefined })} />
                         <input type="number" class="tb-num" min="8" max="96" placeholder="px"
                           title="Tekststørrelse i px (tom = arv)"
                           value={siteDraft.nav.logo?.textSize ?? ''}
@@ -2368,11 +2375,9 @@
                     {/if}
                     {#if siteDraft.nav.logo?.type === 'both'}
                       <label>Rekkefølge
-                        <select value={siteDraft.nav.logo?.order ?? 'image-first'}
-                          onchange={(e) => setLogo({ order: e.target.value })}>
-                          <option value="image-first">Bilde først</option>
-                          <option value="text-first">Tekst først</option>
-                        </select></label>
+                        <Dropdown value={siteDraft.nav.logo?.order ?? 'image-first'}
+                          options={[['image-first', 'Bilde først'], ['text-first', 'Tekst først']]}
+                          onchange={(v) => setLogo({ order: v })} /></label>
                     {/if}
                     <p class="panel-hint">Logoen er også «Hjem»-knappen (klikk går til forsiden).</p>
                   </div>
@@ -2397,12 +2402,9 @@
                       <ColorPicker value={siteDraft.nav.style?.textColor ?? 'text'} tokens={themeSwatches()}
                         label="Menyens tekstfarge" onchange={(hex) => setNavStyle('textColor', hex)} /></label>
                     <label>Menyplassering
-                      <select value={siteDraft.nav.layout ?? 'right'}
-                        onchange={(e) => setNavLayout(e.target.value)}>
-                        <option value="right">Høyre</option>
-                        <option value="center">Midtstilt</option>
-                        <option value="left">Venstre (etter logoen)</option>
-                      </select></label>
+                      <Dropdown value={siteDraft.nav.layout ?? 'right'}
+                        options={[['right', 'Høyre'], ['center', 'Midtstilt'], ['left', 'Venstre (etter logoen)']]}
+                        onchange={(v) => setNavLayout(v)} /></label>
                     <label class="gridmenu-snap" title="Av: menyen ligger kun øverst og forsvinner når man blar nedover">
                       <input type="checkbox" checked={siteDraft.nav.sticky !== false}
                         onchange={(e) => siteMutate('nav', () => { siteDraft.nav.sticky = e.target.checked; })} />
@@ -2425,13 +2427,12 @@
                       <button class="ghost row-tool" title="Fjern fra menyen (siden består)"
                         onclick={() => removeNavItem(i)}>{@html ICONS.cross}</button>
                     </span>
-                    <select class="nav-target" value={item.page ?? '__href'} title="Hvor lenken går"
-                      onchange={(e) => setNavTarget(i, e.target.value)}>
-                      {#each siteDraft.pages as p (p.id)}
-                        <option value={p.id}>{p.title}</option>
-                      {/each}
-                      <option value="__href">Ekstern lenke</option>
-                    </select>
+                    <!-- Wrapper-span beholder grid-plasseringen (.nav-row .nav-target) -->
+                    <span class="nav-target">
+                      <Dropdown value={item.page ?? '__href'} title="Hvor lenken går"
+                        options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Ekstern lenke']]}
+                        onchange={(v) => setNavTarget(i, v)} />
+                    </span>
                     {#if !item.page}
                       <input class="nav-target" value={item.href ?? ''} placeholder="https://…"
                         onchange={(e) => setNavHref(i, e.target.value)} />
@@ -2459,25 +2460,21 @@
                     label="Aksentfarge" onchange={(hex) => setColorToken('accent', hex)} /></label>
                 <hr class="gridmenu-divider" />
                 <label>Overskrifter
-                  <select value={siteDraft.theme.tokens.font.heading}
-                    onchange={(e) => setFontToken('heading', e.target.value)}>
-                    {#if !FONT_STACKS.some(([, v]) => v === siteDraft.theme.tokens.font.heading)}
-                      <option value={siteDraft.theme.tokens.font.heading}>Egendefinert</option>
-                    {/if}
-                    {#each FONT_STACKS as [name, value] (value)}
-                      <option {value}>{name}</option>
-                    {/each}
-                  </select></label>
+                  <Dropdown value={siteDraft.theme.tokens.font.heading}
+                    options={[
+                      ...(FONT_STACKS.some(([, v]) => v === siteDraft.theme.tokens.font.heading)
+                        ? [] : [[siteDraft.theme.tokens.font.heading, 'Egendefinert']]),
+                      ...FONT_STACKS.map(([name, value]) => [value, name]),
+                    ]}
+                    onchange={(v) => setFontToken('heading', v)} /></label>
                 <label>Brødtekst
-                  <select value={siteDraft.theme.tokens.font.body}
-                    onchange={(e) => setFontToken('body', e.target.value)}>
-                    {#if !FONT_STACKS.some(([, v]) => v === siteDraft.theme.tokens.font.body)}
-                      <option value={siteDraft.theme.tokens.font.body}>Egendefinert</option>
-                    {/if}
-                    {#each FONT_STACKS as [name, value] (value)}
-                      <option {value}>{name}</option>
-                    {/each}
-                  </select></label>
+                  <Dropdown value={siteDraft.theme.tokens.font.body}
+                    options={[
+                      ...(FONT_STACKS.some(([, v]) => v === siteDraft.theme.tokens.font.body)
+                        ? [] : [[siteDraft.theme.tokens.font.body, 'Egendefinert']]),
+                      ...FONT_STACKS.map(([name, value]) => [value, name]),
+                    ]}
+                    onchange={(v) => setFontToken('body', v)} /></label>
                 <hr class="gridmenu-divider" />
                 <label>Avrunding, liten
                   <input class="token-input" value={siteDraft.theme.tokens.radius.sm}
@@ -2536,6 +2533,29 @@
                     <button class="ghost" onclick={() => addBlock('shape-triangle')}>Trekant</button>
                   </div>
                 </details>
+                {#if pluginBlocks.length}
+                  <details class="group">
+                    <summary>Plugins</summary>
+                    <div class="group-items">
+                      {#each pluginBlocks as entry (entry.type)}
+                        {#if entry.variants?.length}
+                          <details class="group">
+                            <summary>{entry.label}</summary>
+                            <div class="group-items">
+                              {#each entry.variants as variant (variant.label)}
+                                <button class="ghost" title="Fra pluginen {entry.plugin}"
+                                  onclick={() => addPluginBlock(entry, variant.props)}>{variant.label}</button>
+                              {/each}
+                            </div>
+                          </details>
+                        {:else}
+                          <button class="ghost" title="Fra pluginen {entry.plugin}"
+                            onclick={() => addPluginBlock(entry)}>{entry.label}</button>
+                        {/if}
+                      {/each}
+                    </div>
+                  </details>
+                {/if}
               </div>
             {:else if activePanel === 'Grid'}
               <div class="panel-body">
@@ -2586,25 +2606,18 @@
 
                   {#if selectedBlock.type === 'text'}
                     <label>Justering
-                      <select value={selectedBlock.props.align ?? 'left'}
-                        onchange={(e) => setBlockProp('align', e.target.value)}>
-                        <option value="left">Venstre</option>
-                        <option value="center">Midtstilt</option>
-                        <option value="right">Høyre</option>
-                      </select></label>
+                      <Dropdown value={selectedBlock.props.align ?? 'left'}
+                        options={[['left', 'Venstre'], ['center', 'Midtstilt'], ['right', 'Høyre']]}
+                        onchange={(v) => setBlockProp('align', v)} /></label>
                     <label class="gridmenu-snap">
                       <input type="checkbox" checked={Boolean(selectedBlock.props.box)}
                         onchange={(e) => setBlockProp('box', e.target.checked)} />
                       Tekstboks (kort med bakgrunn)
                     </label>
                     <label>Font
-                      <select value={selectedBlock.props.font ?? ''}
-                        onchange={(e) => setBlockProp('font', e.target.value || null)}>
-                        <option value="">Arv fra tema</option>
-                        {#each FONT_STACKS as [name, value] (value)}
-                          <option {value}>{name}</option>
-                        {/each}
-                      </select></label>
+                      <Dropdown value={selectedBlock.props.font ?? ''}
+                        options={[['', 'Arv fra tema'], ...FONT_STACKS.map(([name, value]) => [value, name])]}
+                        onchange={(v) => setBlockProp('font', v || null)} /></label>
                     <label>Størrelse</label>
                     <span class="toolbar-row">
                       <button class="tbtn" title="Arv fra tema" class:active={!selectedBlock.props.size}
@@ -2624,30 +2637,24 @@
                       <input value={selectedBlock.props.label}
                         onchange={(e) => setBlockProp('label', e.target.value)} /></label>
                     <label>Går til
-                      <select value={selectedBlock.props.page ?? '__href'}
-                        onchange={(e) => {
-                          const page = e.target.value === '__href' ? null : e.target.value;
+                      <Dropdown value={selectedBlock.props.page ?? '__href'}
+                        options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Ekstern lenke']]}
+                        onchange={(v) => {
+                          const page = v === '__href' ? null : v;
                           mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
                             b.props.page = page;
                             if (page) b.props.href = null;
                           });
-                        }}>
-                        {#each siteDraft.pages as p (p.id)}
-                          <option value={p.id}>{p.title}</option>
-                        {/each}
-                        <option value="__href">Ekstern lenke</option>
-                      </select></label>
+                        }} /></label>
                     {#if !selectedBlock.props.page}
                       <input placeholder="https://…"
                         value={selectedBlock.props.href === '#' ? '' : selectedBlock.props.href ?? ''}
                         onchange={(e) => setBlockProp('href', e.target.value || null)} />
                     {/if}
                     <label>Stil
-                      <select value={selectedBlock.props.style}
-                        onchange={(e) => setBlockProp('style', e.target.value)}>
-                        <option value="primary">Fylt (aksentfarge)</option>
-                        <option value="secondary">Kantlinje</option>
-                      </select></label>
+                      <Dropdown value={selectedBlock.props.style}
+                        options={[['primary', 'Fylt (aksentfarge)'], ['secondary', 'Kantlinje']]}
+                        onchange={(v) => setBlockProp('style', v)} /></label>
                   {:else if selectedBlock.type === 'image'}
                     <label class="ghost filepick">
                       Bytt bilde
@@ -2657,18 +2664,13 @@
                       <input value={selectedBlock.props.alt ?? ''} placeholder="For skjermlesere, og når bildet ikke kan vises"
                         onchange={(e) => setBlockProp('alt', e.target.value)} /></label>
                     <label>Tilpasning
-                      <select value={selectedBlock.props.fit ?? 'cover'}
-                        onchange={(e) => setBlockProp('fit', e.target.value)}>
-                        <option value="cover">Fyll rammen (beskjæres)</option>
-                        <option value="contain">Vis hele bildet</option>
-                      </select></label>
+                      <Dropdown value={selectedBlock.props.fit ?? 'cover'}
+                        options={[['cover', 'Fyll rammen (beskjæres)'], ['contain', 'Vis hele bildet']]}
+                        onchange={(v) => setBlockProp('fit', v)} /></label>
                     <label>Avrunding
-                      <select value={selectedBlock.props.radius ?? ''}
-                        onchange={(e) => setBlockProp('radius', e.target.value || null)}>
-                        <option value="">Ingen</option>
-                        <option value="sm">Liten</option>
-                        <option value="md">Stor</option>
-                      </select></label>
+                      <Dropdown value={selectedBlock.props.radius ?? ''}
+                        options={[['', 'Ingen'], ['sm', 'Liten'], ['md', 'Stor']]}
+                        onchange={(v) => setBlockProp('radius', v || null)} /></label>
                     <label>Lenke
                       <input value={selectedBlock.props.href ?? ''} placeholder="Valgfri (gjør bildet klikkbart)"
                         onchange={(e) => setBlockProp('href', e.target.value || null)} /></label>
@@ -2725,29 +2727,19 @@
                       <input type="number" min="8" max="400" value={selectedBlock.props.size ?? 48}
                         onchange={(e) => setBlockProp('size', Number(e.target.value))} /></label>
                     <label>Farge
-                      <select value={selectedBlock.props.color}
-                        onchange={(e) => setBlockProp('color', e.target.value)}>
-                        {#each COLOR_TOKENS as [value, name] (value)}
-                          <option {value}>{name}</option>
-                        {/each}
-                      </select></label>
+                      <Dropdown value={selectedBlock.props.color}
+                        options={COLOR_TOKENS}
+                        onchange={(v) => setBlockProp('color', v)} /></label>
                     <p class="panel-hint">Fargen gjelder tekst-glyfer (★ ✓ →); emoji har sine egne farger.</p>
                   {:else if selectedBlock.type === 'samling'}
                     <label>Samling
-                      <select value={selectedBlock.props.collection ?? ''}
-                        onchange={(e) => setBlockProp('collection', e.target.value || null)}>
-                        <option value="">Velg …</option>
-                        {#each samlingerIds as id (id)}
-                          <option value={id}>{samlingerView[id]?.name ?? id}</option>
-                        {/each}
-                      </select></label>
+                      <Dropdown value={selectedBlock.props.collection ?? ''}
+                        options={[['', 'Velg …'], ...samlingerIds.map((id) => [id, samlingerView[id]?.name ?? id])]}
+                        onchange={(v) => setBlockProp('collection', v || null)} /></label>
                     <label>Visning
-                      <select value={selectedBlock.props.view ?? 'cards'}
-                        onchange={(e) => setBlockProp('view', e.target.value)}>
-                        <option value="cards">Kort</option>
-                        <option value="list">Liste</option>
-                        <option value="archive">Arkiv (per år)</option>
-                      </select></label>
+                      <Dropdown value={selectedBlock.props.view ?? 'cards'}
+                        options={[['cards', 'Kort'], ['list', 'Liste'], ['archive', 'Arkiv (per år)']]}
+                        onchange={(v) => setBlockProp('view', v)} /></label>
                     <label>Maks antall
                       <input type="number" min="0" max="100" value={selectedBlock.props.limit ?? 6}
                         onchange={(e) => setBlockProp('limit', Number(e.target.value))} /></label>
@@ -2759,19 +2751,13 @@
                     <p class="panel-hint">Innslagene redigeres i Samlinger-panelet; 0 i maks antall viser alle.</p>
                   {:else if selectedBlock.type === 'shape'}
                     <label>Form
-                      <select value={selectedBlock.props.kind}
-                        onchange={(e) => setBlockProp('kind', e.target.value)}>
-                        {#each SHAPE_KINDS as [value, name] (value)}
-                          <option {value}>{name}</option>
-                        {/each}
-                      </select></label>
+                      <Dropdown value={selectedBlock.props.kind}
+                        options={SHAPE_KINDS}
+                        onchange={(v) => setBlockProp('kind', v)} /></label>
                     <label>Farge
-                      <select value={selectedBlock.props.color}
-                        onchange={(e) => setBlockProp('color', e.target.value)}>
-                        {#each COLOR_TOKENS as [value, name] (value)}
-                          <option {value}>{name}</option>
-                        {/each}
-                      </select></label>
+                      <Dropdown value={selectedBlock.props.color}
+                        options={COLOR_TOKENS}
+                        onchange={(v) => setBlockProp('color', v)} /></label>
                     <label>Tykkelse
                       <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
                         onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
@@ -2784,13 +2770,9 @@
 
                   <hr class="gridmenu-divider" />
                   <label>Animasjon
-                    <select value={selectedBlock.animation?.type ?? ''}
-                      onchange={(e) => setBlockAnimation(e.target.value || null)}>
-                      <option value="">Ingen</option>
-                      {#each Object.entries(coreAnimations) as [id, def] (id)}
-                        <option value={id}>{def.label}</option>
-                      {/each}
-                    </select></label>
+                    <Dropdown value={selectedBlock.animation?.type ?? ''}
+                      options={[['', 'Ingen'], ...Object.entries(coreAnimations).map(([id, def]) => [id, def.label])]}
+                      onchange={(v) => setBlockAnimation(v || null)} /></label>
                   {#if selectedBlock.animation && coreAnimations[selectedBlock.animation.type]?.entrance}
                     <label>Varighet ms
                       <input type="number" min="100" max="4000" step="100"
@@ -2829,12 +2811,9 @@
                   {#each sectionBg as layer, i (i)}
                     <div class="bg-layer">
                       <span class="nav-line">
-                        <select class="bg-type" value={layer.type} title="Bytt lagtype (innstillingene nullstilles)"
-                          onchange={(e) => changeBgLayerType(i, e.target.value)}>
-                          {#each BG_TYPES as [id, def] (id)}
-                            <option value={id}>{def.label}</option>
-                          {/each}
-                        </select>
+                        <Dropdown value={layer.type} title="Bytt lagtype (innstillingene nullstilles)"
+                          options={BG_TYPES.map(([id, def]) => [id, def.label])}
+                          onchange={(v) => changeBgLayerType(i, v)} />
                         <span class="row-tools">
                           <button class="ghost row-tool" onclick={() => moveBgLayer(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
                           <button class="ghost row-tool" onclick={() => moveBgLayer(i, 1)}
@@ -2901,12 +2880,9 @@
                           <input type="file" accept="image/*" onchange={(e) => setBgImage(i, e)} />
                         </label>
                         <label>Tilpasning
-                          <select value={layer.props.fit ?? 'cover'}
-                            onchange={(e) => setBgProp(i, 'fit', e.target.value)}>
-                            <option value="cover">Fyll (beskjæres)</option>
-                            <option value="contain">Vis hele</option>
-                            <option value="repeat">Gjenta (mønster)</option>
-                          </select></label>
+                          <Dropdown value={layer.props.fit ?? 'cover'}
+                            options={[['cover', 'Fyll (beskjæres)'], ['contain', 'Vis hele'], ['repeat', 'Gjenta (mønster)']]}
+                            onchange={(v) => setBgProp(i, 'fit', v)} /></label>
                         {#if (layer.props.fit ?? 'cover') !== 'repeat'}
                           <label>Fokus X
                             <span class="gridmenu-value">{Math.round((layer.props.x ?? 0.5) * 100)}%</span></label>
@@ -2929,22 +2905,16 @@
                     </div>
                   {/each}
                   <label>Nytt lag
-                    <select bind:value={newBgType}>
-                      {#each BG_TYPES as [id, def] (id)}
-                        <option value={id}>{def.label}</option>
-                      {/each}
-                    </select></label>
+                    <Dropdown value={newBgType}
+                      options={BG_TYPES.map(([id, def]) => [id, def.label])}
+                      onchange={(v) => (newBgType = v)} /></label>
                   <button class="ghost action" onclick={() => addBgLayer(newBgType)}>+ Legg til lag</button>
 
                   <hr class="gridmenu-divider" />
                   <label>Animasjon
-                    <select value={sectionAnim?.type ?? ''}
-                      onchange={(e) => setSectionAnimation(e.target.value || null)}>
-                      <option value="">Ingen</option>
-                      {#each Object.entries(coreAnimations) as [id, def] (id)}
-                        <option value={id}>{def.label}</option>
-                      {/each}
-                    </select></label>
+                    <Dropdown value={sectionAnim?.type ?? ''}
+                      options={[['', 'Ingen'], ...Object.entries(coreAnimations).map(([id, def]) => [id, def.label])]}
+                      onchange={(v) => setSectionAnimation(v || null)} /></label>
                   {#if sectionAnim && coreAnimations[sectionAnim.type]?.entrance}
                     <label>Varighet ms
                       <input type="number" min="100" max="4000" step="100" value={sectionAnim.props.duration}
@@ -2972,12 +2942,9 @@
                   oninput={(e) => footerMutate('edit:footer-text', (f) => { f.text = e.target.value; })}></textarea>
                 <p class="panel-hint">Hver linje blir sin egen tekstlinje.</p>
                 <label>Justering
-                  <select value={siteDraft.footer?.align ?? 'center'}
-                    onchange={(e) => footerMutate('footer', (f) => { f.align = e.target.value; })}>
-                    <option value="left">Venstre</option>
-                    <option value="center">Midtstilt</option>
-                    <option value="right">Høyre</option>
-                  </select></label>
+                  <Dropdown value={siteDraft.footer?.align ?? 'center'}
+                    options={[['left', 'Venstre'], ['center', 'Midtstilt'], ['right', 'Høyre']]}
+                    onchange={(v) => footerMutate('footer', (f) => { f.align = v; })} /></label>
                 <p class="panel-hint">Design-maler for footer kommer i v0.6.</p>
               </div>
             {:else if activePanel === 'Samlinger'}
@@ -2986,12 +2953,9 @@
                   vises av Samling-blokker. Endringer her er utkast til du publiserer (utenfor Ctrl+Z).</p>
                 {#if samlingerIds.length}
                   <label>Samling
-                    <select value={activeSamling ?? ''} onchange={(e) => (activeSamling = e.target.value || null)}>
-                      <option value="">Velg …</option>
-                      {#each samlingerIds as id (id)}
-                        <option value={id}>{samlingerView[id]?.name ?? id}</option>
-                      {/each}
-                    </select></label>
+                    <Dropdown value={activeSamling ?? ''}
+                      options={[['', 'Velg …'], ...samlingerIds.map((id) => [id, samlingerView[id]?.name ?? id])]}
+                      onchange={(v) => (activeSamling = v || null)} /></label>
                 {/if}
                 {#if activeSamling && samlingerView[activeSamling]}
                   {@const samling = samlingerView[activeSamling]}
@@ -3048,11 +3012,9 @@
                   <input bind:value={newSamlingName} placeholder="F.eks. Nyheter"
                     onkeydown={(e) => e.key === 'Enter' && addSamling()} /></label>
                 <label>Type
-                  <select bind:value={newSamlingKind}>
-                    {#each SAMLING_KINDS as [value, name] (value)}
-                      <option {value}>{name}</option>
-                    {/each}
-                  </select></label>
+                  <Dropdown value={newSamlingKind}
+                    options={SAMLING_KINDS}
+                    onchange={(v) => (newSamlingKind = v)} /></label>
                 <button class="ghost action" onclick={addSamling} disabled={!newSamlingName.trim()}>+ Opprett samling</button>
               </div>
             {:else if activePanel === 'Plugins'}
@@ -3112,7 +3074,7 @@
                 {:else}
                   <!-- Reserveløsning når repo-oppdagelsen er utilgjengelig (lokal server / ikke innlogget) -->
                   <hr class="gridmenu-divider" />
-                  <input placeholder="Mappenavn i plugins/ (f.eks. eksempel-kalender)" bind:value={newPluginId}
+                  <input placeholder="Mappenavn i plugins/ (f.eks. kalender)" bind:value={newPluginId}
                     onkeydown={(e) => e.key === 'Enter' && addPlugin()} />
                   <button class="ghost action" onclick={addPlugin} disabled={!newPluginId.trim()}>+ Legg til plugin</button>
                   {#if pluginError}

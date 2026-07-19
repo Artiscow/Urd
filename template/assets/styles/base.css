@@ -600,6 +600,9 @@ body.urd-chrome-off .urd-cp {
   display: none !important;
 }
 
+/* Hjelpechipen (ADR-0008) styles seg selv: engine/hint.js injiserer sin egen
+   style-tag, så chipen aldri kan stå ustylet med en utdatert base.css. */
+
 /* Den felles bildeeditoren (image-editor.js): flytende panel i preview-modus */
 .urd-imged {
   position: fixed;
@@ -1130,6 +1133,38 @@ a.urd-samling-title:hover {
   box-shadow: 0 10px 30px rgb(0 0 0 / 45%);
 }
 
+/* Formene: utfoldbar undermeny som spenner begge kolonnene */
+.urd-preview .urd-add-block-shapes-toggle {
+  grid-column: 1 / -1;
+}
+
+/* Plugin-blokkene: egen merket seksjon under det innebygde */
+.urd-preview .urd-add-block-plugins {
+  grid-column: 1 / -1;
+  margin-top: 2px;
+  padding-top: 6px;
+  border-top: 1px solid color-mix(in srgb, var(--urd-color-text) 15%, transparent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.urd-preview .urd-add-block-shapes {
+  display: none;
+  grid-column: 1 / -1;
+  /* minmax(0, 1fr): innrykket skal aldri presse høyrekolonnen ut av menyen */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px 0 4px 8px;
+  border-left: 2px solid color-mix(in srgb, var(--urd-color-accent) 45%, transparent);
+}
+
+.urd-preview .urd-add-block-shapes.open {
+  display: grid;
+}
+
 .urd-preview .urd-add-block-menu.open {
   display: grid;
 }
@@ -1409,14 +1444,8 @@ body.urd-mobile .urd-section-resize {
   z-index: 1000;
 }
 
-/* Blokker nær toppen av seksjonen: verktøylinje inni blokken i stedet,
-   så den ikke klippes av seksjonens overflow (klasse satt av preview-edit.js) */
-.urd-preview .urd-edit-toolbar-inside {
-  bottom: auto;
-  top: 4px;
-  left: 4px;
-  padding-bottom: 0;
-}
+/* Verktøylinjen står ALLTID over blokken, også nær seksjonstoppen:
+   seksjoner klipper aldri, så det er ingenting å vike for (eiers valg). */
 
 .urd-preview .urd-editable:hover .urd-edit-toolbar,
 .urd-preview .urd-edit-toolbar:hover {
@@ -1539,8 +1568,10 @@ body.urd-mobile .urd-section-resize {
   display: flex;
   justify-content: center;
   gap: 6px;
-  /* Over blokk-løftet (99999), under den klistrede menyen (preview-løft 100001) */
-  z-index: 100000;
+  /* Over vanlige blokker, men UNDER blokk-løftet ved hover/markering (99998/99999):
+     en blokk man jobber med (med ?-chip og verktøy) vinner over baren. Selve
+     seksjonslinje-grepet (.urd-section-resize, 100000) er alltid øverst. */
+  z-index: 99997;
   /* Skjult til musen er over en tilstøtende seksjon (eller baren selv):
      mindre støy, og den øverste baren kolliderer ikke med menyen */
   opacity: 0;
