@@ -38,6 +38,10 @@ function entranceObserver() {
   observer ??= new IntersectionObserver((entries) => {
     for (const entry of entries) {
       if (!entry.isIntersecting) continue;
+      // Elementer som er mye høyere enn viewporten (høye seksjoner) når aldri 15 % synlig andel.
+      // Da utløses i stedet på at synlig del dekker over halve viewporten, så innholdet ikke blir stående på opacity 0 for alltid.
+      const tall = entry.rootBounds && entry.intersectionRect.height >= entry.rootBounds.height * 0.5;
+      if (entry.intersectionRatio < 0.15 && !tall) continue;
       const el = entry.target;
       observer.unobserve(el);
       // Synlig ved innlasting/rerender (ferskt observert, eller før
@@ -52,7 +56,7 @@ function entranceObserver() {
         el.classList.add('urd-anim-in');
       }
     }
-  }, { threshold: 0.15 });
+  }, { threshold: [0.05, 0.1, 0.15] });
   return observer;
 }
 

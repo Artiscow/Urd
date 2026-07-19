@@ -47,11 +47,13 @@ export function frameToCss(frame) {
  * @returns {Array<object>} Blokkene som skal stables, i rekkefølge
  */
 export function stackOrder(blocks) {
+  // mobileOrder (additivt felt) overstyrer sorteringsnøkkelen og tolkes på samme skala som desktop-y.
+  // Presetene bruker det til å holde kort samlet (ikon + boks) i stedet for at y-sorteringen splitter kortene i bånd; blokker uten feltet sorterer som før.
+  const key = (block) => block.mobileOrder ?? block.frames.desktop.y;
   return blocks
-    .filter((block) => !block.decor)
+    .filter((block) => !block.decor && block.frames?.desktop)
     .slice()
-    .sort((a, b) =>
-      (a.frames.desktop.y - b.frames.desktop.y) || (a.frames.desktop.x - b.frames.desktop.x));
+    .sort((a, b) => (key(a) - key(b)) || (a.frames.desktop.x - b.frames.desktop.x));
 }
 
 /**
@@ -130,6 +132,11 @@ export function renderSection(section, site, host, opts = {}) {
     // manuell modus (null faller tilbake til desktop-framen).
     let maxBottomPx = 0;
     for (const block of section.blocks) {
+      // En blokk uten desktop-frame (håndredigert/ødelagt data) hoppes over i stedet for å velte hele seksjonen.
+      if (!block.frames?.desktop) {
+        console.warn(`Urd: blokk '${block.id ?? block.type}' mangler frames.desktop - hoppes over`);
+        continue;
+      }
       const el = document.createElement('div');
       el.className = 'urd-block';
       el.dataset.blockId = block.id;

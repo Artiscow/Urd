@@ -79,3 +79,24 @@ test('ALLOWED_LOGINS: kommaseparert, case-ufølsom, tom liste nekter alle', () =
   assert.equal(isAllowedLogin('kari', {}), false);
   assert.equal(isAllowedLogin('kari', { ALLOWED_LOGINS: '' }), false);
 });
+
+test('urd.json ownedPaths avvises av publiseringsvokteren (kontraktene i synk)', async () => {
+  // guard.js er HÅNDHEVEREN; urd.json er den deklarative kontrakten oppdaterings-
+  // mekanismen skal bruke (v0.6). Denne testen fanger drift mellom de to.
+  const { readFile } = await import('node:fs/promises');
+  const manifest = JSON.parse(await readFile(new URL('../template/urd.json', import.meta.url), 'utf8'));
+  for (const pattern of manifest.ownedPaths) {
+    const sample = pattern.endsWith('/**') ? `${pattern.slice(0, -3)}/x.js` : pattern;
+    assert.equal(isAllowedPath(sample), false, `ownedPath '${pattern}' (prøvd som '${sample}') slapp gjennom vokteren`);
+  }
+});
+
+test('per-side index.html-kopier tillates, reserverte slugs avvises', () => {
+  assert.equal(isAllowedPath('kaker/index.html'), true);
+  assert.equal(isAllowedPath('om-oss/index.html'), true);
+  // Kun kode-/system-slugs skal avvises; media/ og content/ er bruker-stier der
+  // alt innhold er skrivbart uansett (en index.html der er harmløs brukerdata).
+  for (const path of ['admin/index.html', 'api/index.html', 'assets/index.html', 'functions/index.html', 'plugins/index.html']) {
+    assert.equal(isAllowedPath(path), false, path);
+  }
+});

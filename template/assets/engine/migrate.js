@@ -75,7 +75,12 @@ function gridToSquare(grid) {
 const pageMigrations = {
   1: (page, site) => {
     for (const section of page.sections ?? []) {
-      const g = section.grid ?? site?.grid ?? { columns: 24, rowHeight: 8 };
+      // Site-konteksten kan allerede være løftet til kvadratgrid ({size, snap}), siden site løftes før sidene.
+      // Da er columns borte og omregningen ville gitt NaN: fall tilbake til v1-standarden 24 kolonner, og bruk size som radhøyde (gridToSquare beholdt nettopp radhøyden som size).
+      const raw = section.grid ?? site?.grid;
+      const g = typeof raw?.columns === 'number'
+        ? raw
+        : { columns: 24, rowHeight: raw?.size ?? raw?.rowHeight ?? 8 };
       for (const block of section.blocks ?? []) {
         for (const key of ['desktop', 'mobile']) {
           const f = block.frames?.[key];

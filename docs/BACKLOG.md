@@ -48,6 +48,9 @@ levert 18. juli 2026; se CHANGELOG for hele leveransen.)
 - [ ] 📵 (dekor/skjult på mobil) gjelder kun AUTOMATISK mobil-layout og oppleves som «virker ikke» i manuelle seksjoner. Avklar: skal manuelle seksjoner også kunne skjule blokker per blokk (f.eks. 📵 = ikke rendret i manuell modus også)? TAS SAMMEN MED v0.7-mobilrevurderingen over.
 - [ ] Logo/ikon for nettsider
 - [ ] Mulighet til å legge til påkse egg (hemmeligheter) på nettsidene
+- [ ] Sticky Blokker (lage ny blokk og velge "Klistre" eller "Fest" for at den står på siden der man setter den) + funksjon til å si hvor den skal stoppe og/eller starte å være sticky
+- [ ] Klikk på en seksjon får opp "+ ny blokk" der du klikker
+- [ ] Emoji/tegn meny i tekst editor
 
     
 ## Bugs og kjente svakheter
@@ -60,6 +63,19 @@ levert 18. juli 2026; se CHANGELOG for hele leveransen.)
 
 - [ ] Utheving (markeringstusj) lagrer fargen som fast verdi i teksten - den følger IKKE med hvis temaets aksentfarge endres etterpå (iboende i contenteditable-tilnærmingen; en var()-basert span kan vurderes i v0.6)
 - [ ] Ctrl+D (dupliser) virker når fokus står i forhåndsvisningen og en blokk er markert; med fokus i admin-panelene går snarveien til nettleseren (bokmerke)
+
+Fra den store feilsveipen 19. juli 2026 (bevisst ikke fikset nå; de bekreftede feilene ER fikset, se CHANGELOG):
+
+- [ ] Etter publisering speiles kun gjeldende side i minnet: navigerer man til en ANNEN nettopp publisert side før deployen er ferdig (~1 min), vises serverens gamle innhold til deployen er ute. Ikke datatap (repoet er riktig), kun villedende visning i vinduet
+- [ ] Mobil-stablingen kan fortsatt splitte HÅNDBYGDE kort (flere blokker per kort i kolonner); seksjonsmalene er løst med det additive mobileOrder-feltet, men editoren har ingen UI for å sette det på egne blokker. TAS MED v0.7-mobilrevurderingen
+- [ ] Preview-verktøylinjene (blokk/seksjon) bruker hvit tekst på aksentfargen: med en lys aksent i brukerens sidetema blir kontrasten lav. Hører til kontrast-/temaarbeidet (seksjonstemaer) i v0.6
+- [ ] Tekst-selvhelbrederen fjerner alle knapper i rik tekst ved rendering, også en bevisst innlimt HTML-knapp (vernet mot foreldreløse håndtak-knapper veier tyngre); innlimte event-attributter og script strippes nå alltid hos besøkende
+- [ ] Tekstblokkens autovekst er kun monoton (rammen krymper aldri når tekst slettes), og et ekko-rerender midt i rask skriving kan i teorien miste caret-posisjonen
+- [ ] contentHash for media-filnavn er 32-bit: to ulike bilder med samme navn og hash-kollisjon (~1/4 mrd) ville stille delt fil. Vurder lengre hash ved v0.8-bildearbeidet
+- [ ] history/latest-endepunktene krever kun innlogging, ikke ALLOWED_LOGINS (lesende; på offentlige repo er dataene uansett åpne). Dokumentert asymmetri
+- [ ] revert bytter hele nettside-undertreet, men «siste publisering» finnes via content/-filteret: en commit som KUN rører media/ eller rutingskopier (mulig via git, ikke via editoren) er usynlig for angringen
+- [ ] truncated-flagget i konfliktsjekken teller hele repo-diffen (GitHub avkorter ved 300 filer): på monorepoet kan stor utviklingsaktivitet gi «kan overlappe»-varsel uten reell konflikt; løses naturlig av urd-template-splitten i v0.6
+- [ ] Verifiser i produksjon at /admin/* faktisk arver CSP-en fra /*-regelen i _headers (Cloudflare Pages slår sammen regler; andre hoster gjør det ikke nødvendigvis)
 
 ## Teknisk opprydding (kandidater til v0.6)
 

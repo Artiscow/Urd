@@ -43,6 +43,13 @@ export async function onRequestPost({ request, env }) {
     return json({ error: err.message }, 503);
   }
 
+  // Forsvar i dybden mot CSRF (i tillegg til SameSite=Lax på cookien):
+  // muterende kall skal komme fra vår egen side, aldri fra et fremmed nettsted.
+  const origin = request.headers.get('origin');
+  if (origin && origin !== new URL(request.url).origin) {
+    return json({ error: 'Forespørselen kommer fra feil nettsted' }, 403);
+  }
+
   const token = readCookie(request, 'urd_gh');
   if (!token) return json({ error: 'Ikke innlogget' }, 401);
 
@@ -52,8 +59,8 @@ export async function onRequestPost({ request, env }) {
   } catch {
     return json({ error: 'Ugyldig JSON i forespørselen' }, 400);
   }
-  if (typeof body?.expect !== 'string' || !body.expect) {
-    return json({ error: 'expect (publiseringen som skal angres) mangler' }, 400);
+  if (typeof body?.expect !== 'string' || !/^[0-9a-f]{7,64}$/i.test(body.expect)) {
+    return json({ error: 'expect (publiseringen som skal angres) mangler eller er ugyldig' }, 400);
   }
 
   let user;

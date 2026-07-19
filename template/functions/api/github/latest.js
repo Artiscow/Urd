@@ -27,6 +27,8 @@ export async function onRequestGet({ request, env }) {
 
     const base = new URL(request.url).searchParams.get('base');
     if (!base || base === head) return json({ head, changedFiles: [] });
+    // base går inn i GitHub-API-stien og må være en ekte commit-sha, ikke vilkårlig tekst.
+    if (!/^[0-9a-f]{7,64}$/i.test(base)) return json({ error: 'Ugyldig base' }, 400);
 
     const diff = await gh(token, `/repos/${config.repo}/compare/${base}...${head}`);
     // Rapporter stier relative til nettsiden (samme rom som editoren bruker).
@@ -36,8 +38,10 @@ export async function onRequestGet({ request, env }) {
       .map((f) => f.filename)
       .filter((name) => name.startsWith(prefix))
       .map((name) => name.slice(prefix.length));
-    // GitHub avkorter fillisten ved 300: da er listen ufullstendig, og
-    // konfliktsjekken må behandle diffen som «kan overlappe».
+    // GitHub avkorter fillisten ved 300: da KAN nettside-filer mangle, og
+    // konfliktsjekken må behandle diffen som «kan overlappe». Flagget
+    // settes på hele diffens lengde (avkortingen skjer før vårt filter),
+    // men først når grensen faktisk er nådd.
     return json({ head, changedFiles, truncated: allFiles.length >= 300 });
   } catch (err) {
     console.error('Urd latest:', err.message);

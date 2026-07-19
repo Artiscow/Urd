@@ -69,11 +69,16 @@
     const onKey = (e) => {
       if (e.key === 'Escape') open = false;
     };
+    const onScroll = (e) => {
+      if (rootEl && e.target instanceof Node && !rootEl.contains(e.target)) open = false;
+    };
     document.addEventListener('pointerdown', onDown, true);
     document.addEventListener('keydown', onKey, true);
+    document.addEventListener('scroll', onScroll, true);
     return () => {
       document.removeEventListener('pointerdown', onDown, true);
       document.removeEventListener('keydown', onKey, true);
+      document.removeEventListener('scroll', onScroll, true);
     };
   });
 </script>
@@ -132,7 +137,7 @@
 
   .gp-pop {
     position: fixed;
-    z-index: 10000;
+    z-index: 500;
     width: 292px;
     max-height: 380px;
     overflow-y: auto;

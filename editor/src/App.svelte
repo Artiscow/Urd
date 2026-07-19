@@ -176,11 +176,12 @@
   let lastHistoryKey = null;
 
   function snapshot() {
-    return JSON.stringify({ page: store.data, site: siteStore.data });
+    // pageId følger med: angring på tvers av sidebytter må legge sideinnholdet tilbake på SIDEN det kom fra, ikke i gjeldende sides utkast.
+    return JSON.stringify({ pageId, page: store.data, site: siteStore.data });
   }
 
   function pushHistory(key) {
-    if (key === lastHistoryKey && (key.startsWith('edit:') || key === 'grid')) return;
+    if (key === lastHistoryKey && (key.startsWith('edit:') || key.startsWith('grid:'))) return;
     history.push(snapshot());
     if (history.length > 50) history.shift();
     redoStack.length = 0;
@@ -188,24 +189,33 @@
   }
 
   function restore(snap) {
-    const { page, site: siteSnap } = JSON.parse(snap);
-    store.replace(page);
+    const { pageId: snapPageId, page, site: siteSnap } = JSON.parse(snap);
     siteStore.replace(siteSnap);
     linkSiteDraft();
-    store.save();
     siteStore.save();
     grid = { snap: true, ...siteDraft.grid };
+    pushSiteToPreview();
+
+    // Snapshotet hører til en annen side (angring over et sidebytte): legg sideinnholdet tilbake som utkast DER, og bytt dit.
+    if (snapPageId && snapPageId !== pageId && siteDraft.pages.some((p) => p.id === snapPageId)) {
+      localStorage.setItem(`urd-draft-${snapPageId}`, JSON.stringify(page));
+      selectPage(snapPageId, { keepHistory: true });
+      updateDirty();
+      return;
+    }
+
+    store.replace(page);
+    store.save();
     updateDirty();
     updateAttention();
     // Panel-speilene må følge de gjenopprettede dataene, ellers viser
     // Egenskaper/seksjonspanelet gamle verdier og angringen ser død ut.
     syncSelectedBlock();
     syncSectionMirrors(store.data.sections.find((s) => s.id === activeSectionId));
-    pushSiteToPreview();
     // Angring kan fjerne siden man står på (angret sideopprettelse):
     // da byttes det til forsiden i stedet for å bli stående i løse luften.
     if (!siteDraft.pages.some((p) => p.id === pageId)) {
-      selectPage(siteDraft.pages[0].id);
+      selectPage(siteDraft.pages[0].id, { keepHistory: true });
     } else {
       bridge?.sendPage(pageId, store.data);
     }
@@ -363,12 +373,13 @@
   }
 
   function setBlockProp(name, value) {
-    mutateBlock(`edit:${selectedBlock.blockId}`, (b) => { b.props[name] = value; });
+    // Nøkkelen inkluderer egenskapsnavnet: endring av etikett og deretter stil skal være TO angre-steg, mens en skur i samme felt koalesceres.
+    mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b) => { b.props[name] = value; });
   }
 
   function setBlockFrame(field, value) {
     if (!Number.isFinite(value)) return;
-    mutateBlock(`edit:frame-${selectedBlock.blockId}`, (b) => {
+    mutateBlock(`edit:frame-${selectedBlock.blockId}:${field}`, (b) => {
       b.frames.desktop = { ...b.frames.desktop, [field]: value };
     });
   }
@@ -519,7 +530,7 @@
 
   function setBlockAnimProp(name, value) {
     if (!Number.isFinite(value)) return;
-    mutateBlock(`edit:anim-${selectedBlock.blockId}`, (b) => {
+    mutateBlock(`edit:anim-${selectedBlock.blockId}:${name}`, (b) => {
       if (b.animation) b.animation.props[name] = value;
     });
     if (selectedBlock) bridge?.sendDemoAnim(selectedBlock.sectionId, selectedBlock.blockId);
@@ -560,7 +571,7 @@
   function toggleSectionGrid(on) {
     const section = store.data.sections.find((s) => s.id === activeSectionId);
     if (!section) return;
-    pushHistory('grid');
+    pushHistory('grid:section');
     section.grid = on ? { ...siteStore.data.grid } : null;
     sectionGrid = section.grid ? { ...section.grid } : null;
     store.save();
@@ -572,7 +583,7 @@
   function setSectionGrid(field, value) {
     const section = store.data.sections.find((s) => s.id === activeSectionId);
     if (!section?.grid) return;
-    pushHistory('grid');
+    pushHistory('grid:section');
     section.grid = { ...section.grid, [field]: value };
     sectionGrid = { ...section.grid };
     store.save();
@@ -584,7 +595,7 @@
   /** Grid-kontrollene: endringer lagres i site-utkastet og pushes live.
    *  Gridet er kun et snappeverktøy; å endre det flytter aldri innhold. */
   function setGrid(field, value) {
-    pushHistory('grid');
+    pushHistory('grid:site');
     grid = { ...grid, [field]: value };
     siteStore.data.grid = { ...siteStore.data.grid, [field]: value };
     siteStore.save();
@@ -632,10 +643,14 @@
    */
   async function confirmNoConflict(files) {
     if (!baseSha) {
-      // Grunnlaget kan ha glippet ved innlasting (GitHub nede): nytt
-      // forsøk nå, så NESTE publisering har sjekken på plass.
-      refreshBaseSha();
-      return { ok: true, head: null };
+      // Grunnlaget glapp ved innlasting (GitHub nede): hent HEAD nå, så expect i det minste tetter commit-vinduet.
+      // Uten opprinnelig grunnlag kan vi ikke diffe, så redaktøren må ta valget eksplisitt i stedet for at vernet hoppes stille over.
+      await refreshBaseSha();
+      const ok = confirm(
+        'Urd fikk ikke lastet publiseringsgrunnlaget da siden ble åpnet, og kan derfor ikke sjekke om noen andre har publisert i mellomtiden.\n\n'
+        + 'OK = publiser likevel (dine filer vinner).\nAvbryt = ikke publiser (last siden på nytt først).',
+      );
+      return { ok, head: baseSha };
     }
     let data = null;
     try {
@@ -750,7 +765,7 @@
     };
   }
 
-  async function selectPage(id) {
+  async function selectPage(id, { keepHistory = false } = {}) {
     pageId = id;
     pageLoading = (async () => {
       const entry = pageEntry();
@@ -775,9 +790,9 @@
       store = createDraftStore(`urd-draft-${id}`, () => published);
       store.replace(liftPageFile(store.data, siteStore.data));
       store.save();
-      history.length = 0;
-      redoStack.length = 0;
-      lastHistoryKey = null;
+      // Angre-historikken overlever sidebytter: snapshots bærer pageId, og restore bytter tilbake til riktig side.
+      // Uten keepHistory nulles bare koalesce-nøkkelen, så neste endring alltid får eget steg.
+      if (!keepHistory) lastHistoryKey = null;
       activeSectionId = null;
       sectionGrid = null;
       updateDirty();
@@ -805,7 +820,7 @@
       onReady,
       onNavigate,
       onAddBlock: (msg) => insertBlock(msg.sectionId, msg.block),
-      onAddBlocks: (msg) => insertBlocks(msg.sectionId, msg.blocks, msg.minBottom),
+      onAddBlocks: (msg) => insertBlocks(msg.sectionId, msg.blocks, msg.minBottom, msg.moves),
       onRequestBlock: handleRequestBlock,
       onMoveBlockSection: handleMoveBlockSection,
       onMobileManual: handleMobileManual,
@@ -900,6 +915,7 @@
       store.data.meta.title = title;
       store.save();
       updateDirty();
+      bridge?.sendPage(pageId, store.data);
     } else {
       patchPageDraft(entry, (p) => { p.meta.title = title; });
     }
@@ -1022,14 +1038,21 @@
     siteMutate('edit:site-icon', () => { delete siteDraft.site.icon; });
   }
 
-  // Admin-fanen viser nettstedsikonet når det finnes (ellers Urd-merket fra admin/index.html).
+  // Admin-fanen viser nettstedsikonet når det finnes, ellers Urd-merket (samme SVG som i admin/index.html; kan ikke leses fra link-elementet, for favicon-boot.js kan alt ha byttet det).
   // Kun kjente ikonformer slippes gjennom (data:image eller site-relativ sti), så utkastdata aldri kan bli en aktiv URL (CodeQL-funn #1-3).
+  const URD_MARK_ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0e14'/%3E%3Cpath d='M19 14v22a13 13 0 0 0 26 0V14' fill='none' stroke='%237c5cff' stroke-width='9' stroke-linecap='round'/%3E%3C/svg%3E";
   $effect(() => {
-    const href = siteDraft?.site?.icon;
-    if (typeof href !== 'string') return;
-    if (!href.startsWith('data:image/') && !(href.startsWith('/') && !href.startsWith('//'))) return;
+    // Før utkastet er lastet styrer favicon-boot.js fanen; å røre den her ville gjeninnført ikonblinket.
+    if (!siteDraft?.site) return;
+    const href = siteDraft.site.icon;
     const link = document.querySelector('link[rel="icon"]');
-    if (link) link.href = href;
+    if (!link) return;
+    if (typeof href !== 'string' || !href) {
+      link.href = URD_MARK_ICON;
+      return;
+    }
+    if (!href.startsWith('data:image/') && !(href.startsWith('/') && !href.startsWith('//'))) return;
+    link.href = href;
   });
 
   function setNavLayout(value) {
@@ -1141,9 +1164,9 @@
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     const block = section?.blocks.find((b) => b.id === msg.blockId);
     if (!block) return;
-    // coalesce: automatisk vekst under skriving hører til samme
-    // angre-steg som selve skrivingen.
-    pushHistory(msg.coalesce ? `edit:${msg.blockId}` : 'move-block');
+    // coalesce: automatisk vekst under skriving hører til samme angre-steg som selve skrivingen.
+    // groupKey (fra z-omordningen) samler flytting av FLERE blokker i ett steg.
+    pushHistory(msg.coalesce ? `edit:${msg.groupKey ?? msg.blockId}` : 'move-block');
     const key = msg.frameKey === 'mobile' ? 'mobile' : 'desktop';
     block.frames[key] = msg.frame;
     if (key === 'desktop') markDesktopChange(section, 'desktop-endret-etter-mobil');
@@ -1241,6 +1264,8 @@
       activeSectionId = null;
       sectionGrid = null;
     }
+    // En markert blokk i den slettede seksjonen skal ikke bli stående i Egenskaper-panelet.
+    if (selectedBlock?.sectionId === msg.sectionId) selectedBlock = null;
     store.data.sections = store.data.sections.filter((x) => x.id !== msg.sectionId);
     store.save();
     updateDirty();
@@ -1351,11 +1376,18 @@
   }
 
   /** «+ kort/rad»-knappen på en seksjon: preset-elementet kommer som en gruppe blokker i ETT angre-steg.
+   *  moves flytter eksisterende blokker samtidig (FAQ skyver avslutningslinjen ned), i samme steg.
    *  Seksjonen vokser til minBottom når minstehøyden er i px (item-presetene bruker alltid px). */
-  function insertBlocks(sectionId, blocks, minBottom) {
+  function insertBlocks(sectionId, blocks, minBottom, moves) {
     const section = store.data.sections.find((s) => s.id === sectionId);
     if (!section || !blocks?.length) return;
     pushHistory('add-blocks');
+    for (const move of moves ?? []) {
+      const block = section.blocks.find((b) => b.id === move.blockId);
+      if (block && typeof move.dy === 'number') {
+        block.frames.desktop = { ...block.frames.desktop, y: block.frames.desktop.y + move.dy };
+      }
+    }
     section.blocks.push(...blocks);
     const current = String(section.size?.minHeight ?? '');
     if (minBottom && current.endsWith('px') && Number.parseFloat(current) < minBottom) {
@@ -1496,6 +1528,9 @@
 
   function discard() {
     pushHistory('discard');
+    for (const p of siteDraft.pages) {
+      if (p.id !== pageId && !pendingPublished.has(p.id)) localStorage.removeItem(`urd-draft-${p.id}`);
+    }
     const freshPage = store.reset();
     siteStore.reset();
     linkSiteDraft();
@@ -1590,13 +1625,16 @@
 
     // Slettede og flyttede sider: diff mot publisert site.json. Serveren
     // hopper stille over stier som alt er borte fra repoet.
+    // En sti som OGSÅ opprettes i samme commit (to sider som bytter adresse) må ikke slettes: siste innslag med samme sti vinner i Git-treet, så en slik sletting ville fjernet den nye kopien.
+    const created = new Set(files.map((f) => f.path));
+    const del = (path) => { if (!created.has(path)) files.push({ path, delete: true }); };
     for (const p of site.pages) {
       const still = siteDraft.pages.find((q) => q.id === p.id);
       if (!still) {
-        files.push({ path: p.file, delete: true });
-        if (p.path !== '/') files.push({ path: `${p.path.slice(1)}/index.html`, delete: true });
+        del(p.file);
+        if (p.path !== '/') del(`${p.path.slice(1)}/index.html`);
       } else if (still.path !== p.path && p.path !== '/') {
-        files.push({ path: `${p.path.slice(1)}/index.html`, delete: true });
+        del(`${p.path.slice(1)}/index.html`);
       }
     }
 
@@ -1787,7 +1825,7 @@
                 <hr class="gridmenu-divider" />
                 <input placeholder="Navn på ny side" bind:value={newPageTitle}
                   onkeydown={(e) => e.key === 'Enter' && addPage()} />
-                <button class="ghost" onclick={addPage} disabled={!newPageTitle.trim()}>+ Opprett side</button>
+                <button class="ghost action" onclick={addPage} disabled={!newPageTitle.trim()}>+ Opprett side</button>
                 <p class="panel-hint">Nye sider legges automatisk i menyen og starter tomme.</p>
               </div>
             {:else if activePanel === 'Nav'}
@@ -1915,7 +1953,7 @@
                     {/if}
                   </div>
                 {/each}
-                    <button class="ghost" onclick={addNavItem}>+ Nytt menypunkt</button>
+                    <button class="ghost action" onclick={addNavItem}>+ Nytt menypunkt</button>
                   </div>
                 </details>
               </div>
@@ -2167,7 +2205,7 @@
                       <span class="gridmenu-value">{Math.round((selectedBlock.props.saturate ?? 1) * 100)}%</span></label>
                     <input type="range" min="0" max="2" step="0.05" value={selectedBlock.props.saturate ?? 1}
                       oninput={(e) => setBlockProp('saturate', Number(e.target.value))} />
-                    <button class="ghost" title="Sett lysstyrke, kontrast og metning tilbake til nøytralt"
+                    <button class="ghost action" title="Sett lysstyrke, kontrast og metning tilbake til nøytralt"
                       onclick={() => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
                         b.props.brightness = 1; b.props.contrast = 1; b.props.saturate = 1;
                       })}>Nullstill justeringer</button>
@@ -2384,7 +2422,7 @@
                         <option value={id}>{def.label}</option>
                       {/each}
                     </select></label>
-                  <button class="ghost" onclick={() => addBgLayer(newBgType)}>+ Legg til lag</button>
+                  <button class="ghost action" onclick={() => addBgLayer(newBgType)}>+ Legg til lag</button>
 
                   <hr class="gridmenu-divider" />
                   <label>Animasjon
@@ -2748,7 +2786,8 @@
 
   .rail button.active {
     opacity: 1;
-    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 16%, transparent);
+    font-weight: 600;
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 22%, transparent);
     border-color: var(--urd-color-accent, #7c5cff);
   }
 
@@ -2828,9 +2867,15 @@
   }
 
   /* Listeknapper i panelene er venstrestilte (radene skal kunne leses
-     som en liste), selv om knapper ellers sentrerer innholdet */
+     som en liste), selv om knapper ellers sentrerer innholdet.
+     Handlingsknapper (.action: «+ Opprett side», «+ Legg til lag» osv.) sentreres som vanlige knapper. */
   .panel-body .ghost {
     justify-content: flex-start;
+  }
+
+  .panel-body .ghost.action {
+    justify-content: center;
+    text-align: center;
   }
 
   .panel-body label {
@@ -3150,7 +3195,7 @@
   /* Posisjon/størrelse-feltene i Egenskaper: to kolonner med smale felt */
   .frame-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 0.4rem 0.6rem;
   }
 

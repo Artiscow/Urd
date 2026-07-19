@@ -102,7 +102,7 @@
     }
     const r = rootEl.getBoundingClientRect();
     const W = 236;
-    const H = 300;
+    const H = 320;
     const left = Math.max(8, Math.min(r.right - W, window.innerWidth - W - 8));
     const top = r.bottom + H + 8 > window.innerHeight ? Math.max(8, r.top - H - 8) : r.bottom + 6;
     pos = { top, left };
@@ -162,11 +162,16 @@
     const onKey = (e) => {
       if (e.key === 'Escape') close();
     };
+    const onScroll = (e) => {
+      if (rootEl && e.target instanceof Node && !rootEl.contains(e.target)) close();
+    };
     document.addEventListener('pointerdown', onDown, true);
     document.addEventListener('keydown', onKey, true);
+    document.addEventListener('scroll', onScroll, true);
     return () => {
       document.removeEventListener('pointerdown', onDown, true);
       document.removeEventListener('keydown', onKey, true);
+      document.removeEventListener('scroll', onScroll, true);
     };
   });
 </script>
@@ -229,6 +234,8 @@
     position: fixed;
     z-index: 500;
     width: 236px;
+    max-height: calc(100vh - 16px);
+    overflow-y: auto;
     display: grid;
     gap: 8px;
     padding: 10px;

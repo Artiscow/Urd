@@ -87,7 +87,8 @@ som ligger fint bak teksten på desktop blir bare rot midt i en mobilkolonne.
 - Overstrøket telefon (gul knapp) = blokken er pynt (dekor) og skjules i
   automatisk mobil-layout.
 
-Klikk for å bytte. Nye former starter som pynt. (Har du håndjustert
+Klikk for å bytte. Nye former og ikoner fra Blokker-panelet starter
+som pynt (ikoner fra seksjonsmalene er innhold og vises på mobil). (Har du håndjustert
 mobil-layouten i seksjonen, plasserer du uansett alt selv; da betyr
 flagget ingenting der.)
 
@@ -202,6 +203,9 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   Logoen kan være tekst, et opplastet bilde eller begge deler (med
   størrelse og rekkefølge), og fungerer alltid som «Hjem»-knapp.
   Menypunktene kan stå til høyre, midtstilt eller til venstre.
+  Under Utseende styrer du menyens bakgrunnsfarge og dekkevne (0 =
+  gjennomsiktig meny over hero-en), tekstfarge og «Klistret meny»
+  (om menyen følger med når besøkende blar nedover).
 - **Nettstedsikon**: nederst i Tema-panelet laster du opp ikonet som
   vises i nettleserfanen og bokmerker (firkantet bilde anbefales).
 - **Footer**-panelet: bunnteksten som vises nederst på alle sider.

@@ -17,6 +17,7 @@ export const grainLayer = {
   render(el, props) {
     el.style.backgroundImage = NOISE_URI;
     el.style.backgroundRepeat = 'repeat';
-    el.style.opacity = String(props.opacity);
+    // Uten fallback ville et gammelt lag uten opacity-felt gitt full styrke (kraftig støyflate).
+    el.style.opacity = String(props.opacity ?? 0.06);
   },
 };

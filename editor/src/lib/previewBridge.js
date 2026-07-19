@@ -24,10 +24,9 @@
  *                  { type: 'urd-ready' }                      (motoren lytter; trygt å sende utkast)
  *                  { type: 'urd-navigate', path }             (intern lenke klikket i preview)
  *                  { type: 'urd-add-block', sectionId, block } (plassert blokk fra paletten)
- *                  { type: 'urd-add-blocks', sectionId, blocks, minBottom } (preset-element fra «+ kort/rad»-knappen)
+ *                  { type: 'urd-add-blocks', sectionId, blocks, minBottom, moves } (preset-element fra «+ kort/rad»-knappen; moves flytter eksisterende blokker i samme angre-steg)
  *                  { type: 'urd-request-block', sectionId, kind } («+ Legg til blokk» i seksjonen)
  *                  { type: 'urd-move-block-section', fromSectionId, toSectionId, blockId, frame } (blokk sluppet i annen seksjon)
- *                  { type: 'urd-preview-height', px }
  *   editor → side: { type: 'urd-chrome', visible }            (vis/skjul editeringshåndtak)
  *                  { type: 'urd-show-grid', visible }         (vis gridet i alle seksjoner)
  */

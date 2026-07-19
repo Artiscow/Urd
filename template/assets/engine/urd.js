@@ -179,15 +179,12 @@ function enablePreview(state, opts) {
       if (opts.footer) renderFooter(state.site, opts.footer);
       renderPage(state.page, state.site, root, vp());
     }
-    reportHeight();
   });
-  const reportHeight = () => {
-    window.parent?.postMessage({ type: 'urd-preview-height', px: document.body.scrollHeight }, '*');
-  };
-  reportHeight();
 
   // Meld fra til editoren at lytteren er koblet på: utkast som sendes
   // før dette punktet ville gått tapt (iframe-load skjer før boot er ferdig).
+  // (Den gamle urd-preview-height-kanalen er fjernet: ingen lyttet på den,
+  // og iframen er CSS-dimensjonert i editoren.)
   window.parent?.postMessage({ type: 'urd-ready' }, location.origin);
 }
 
@@ -198,7 +195,15 @@ function enablePreview(state, opts) {
 export async function boot(opts) {
   registerCore();
 
-  const site = liftSiteFile(await (await fetch('/content/site.json')).json());
+  // Råfilen beholdes som migreringskontekst: v1-sideløftet trenger det
+  // OPPRINNELIGE gridet (columns/rowHeight), som det løftede sitet har mistet.
+  const rawSite = await (await fetch('/content/site.json')).json();
+  const site = liftSiteFile(rawSite);
+  // Motoren tåler amputert site.json: manglende deler får tomme standarder i stedet for krasj (siden dør aldri av dårlig data).
+  site.site ??= { title: '', lang: 'no' };
+  site.pages ??= [];
+  site.theme ??= { version: 1, tokens: {} };
+  site.nav ??= { version: 1, items: [] };
   applyTheme(site.theme);
   applyFavicon(site.site.icon);
   await loadPlugins();
@@ -212,19 +217,20 @@ export async function boot(opts) {
   renderFooter(site, opts.footer);
   mountToTop();
 
-  const entry = resolvePage(site);
+  // Tomt sideregister (håndredigert site.json) gir en tom side, ikke krasj.
+  const entry = resolvePage(site) ?? { id: 'tom', title: '', file: 'content/pages/finnes-ikke.json' };
   // Versjonsløfting på filnivå: eldre sidefiler løftes til gjeldende
   // format i minnet (disk skrives først ved neste publisering).
   // Mangler sidefilen (halvferdig deploy, håndredigert register), vises
   // en tom side i stedet for krasj - siden dør aldri av dårlig data.
   let page;
   try {
-    page = liftPageFile(await (await fetch(`/${entry.file}`)).json(), site);
+    page = liftPageFile(await (await fetch(`/${entry.file}`)).json(), rawSite);
   } catch {
     console.warn(`Urd: fant ikke sidefilen '${entry.file}' - viser tom side`);
     page = { schemaVersion: 3, meta: { id: entry.id, title: entry.title }, sections: [] };
   }
-  document.title = `${page.meta.title} - ${site.site.title}`;
+  document.title = `${page.meta?.title ?? entry.title ?? ''} - ${site.site.title}`;
 
   const preview = new URLSearchParams(location.search).get('preview') === '1';
   if (preview) {

@@ -93,3 +93,19 @@ test('nyere filer enn motoren returneres urørt (trygg nedgradering)', () => {
   const future = { schemaVersion: PAGE_SCHEMA_VERSION + 5, meta: {}, sections: [] };
   assert.deepEqual(liftPageFile(future, site), future);
 });
+
+test('v1-side løftes riktig også med ALLEREDE LØFTET site som kontekst (kvadratgrid)', () => {
+  // Sveip-funn 19. juli 2026: boot løfter site.json FØR sidene, og det løftede gridet ({size, snap})
+  // mangler columns/rowHeight. Uten fallback ble alle frames NaN og innholdet forsvant.
+  const liftedSite = liftSiteFile({ schemaVersion: 1, grid: { columns: 24, rowHeight: 8 } });
+  assert.deepEqual(liftedSite.grid, { size: 8, snap: true });
+  const lifted = liftPageFile(v1Page(), liftedSite);
+  const frame = lifted.sections[0].blocks[0].frames.desktop;
+  for (const key of ['x', 'y', 'w', 'h']) {
+    assert.ok(Number.isFinite(frame[key]), `frames.${key} er ikke et tall (${frame[key]})`);
+  }
+  // Radhøyden overlever som size (gridToSquare beholder den), og kolonnetallet faller tilbake til v1-standarden 24: samme y/h som med rå kontekst.
+  assert.equal(frame.y, 6 * 8);
+  assert.equal(frame.h, 4 * 8);
+  assert.equal(frame.x, 8.33);
+});

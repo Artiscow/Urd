@@ -16,6 +16,7 @@ export const glowLayer = {
   render(el, props) {
     const color = resolveColor(props.color);
     el.style.background = `radial-gradient(circle at ${props.x * 100}% ${props.y * 100}%, ${color} 0%, transparent ${props.radius * 100}%)`;
-    el.style.opacity = String(props.opacity);
+    // Gamle lag kan mangle feltet (lift fyller ikke inn defaults): fall tilbake til standardverdien i stedet for "undefined" (som CSS ignorerer, altså full styrke).
+    el.style.opacity = String(props.opacity ?? 0.35);
   },
 };

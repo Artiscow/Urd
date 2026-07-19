@@ -15,24 +15,35 @@ export function embedUrl(raw) {
   }
   const host = url.hostname.replace(/^www\./, '');
 
+  // YouTube-id-er er alfanumeriske med bindestrek/understrek; alt annet (deriblant ekstra sti-segmenter) avvises.
+  const ytId = (id) => (/^[\w-]{5,}$/.test(id ?? '') ? id : null);
+
   if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtube-nocookie.com') {
-    const id = url.pathname.startsWith('/embed/')
+    const id = ytId(url.pathname.startsWith('/embed/')
       ? url.pathname.slice('/embed/'.length)
       : url.pathname.startsWith('/shorts/')
         ? url.pathname.slice('/shorts/'.length)
-        : url.searchParams.get('v');
+        : url.searchParams.get('v'));
     return id ? `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}` : null;
   }
   if (host === 'youtu.be') {
-    const id = url.pathname.slice(1);
+    const id = ytId(url.pathname.slice(1));
     return id ? `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}` : null;
   }
   if (host === 'vimeo.com') {
-    const id = url.pathname.split('/').filter(Boolean)[0];
-    return /^\d+$/.test(id ?? '') ? `https://player.vimeo.com/video/${id}?dnt=1` : null;
+    // Privatlenker har formen vimeo.com/<id>/<hash>; hashen må med som ?h= for at spilleren skal godta videoen.
+    const [id, hash] = url.pathname.split('/').filter(Boolean);
+    if (!/^\d+$/.test(id ?? '')) return null;
+    const h = /^[a-f0-9]+$/i.test(hash ?? '') ? `h=${hash}&` : '';
+    return `https://player.vimeo.com/video/${id}?${h}dnt=1`;
   }
   if (host === 'player.vimeo.com') {
-    return `${url.origin}${url.pathname}?dnt=1`;
+    // Kun ekte spiller-stier (/video/<id>) godtas, og en eventuell privathash (?h=) beholdes.
+    const m = /^\/video\/(\d+)\/?$/.exec(url.pathname);
+    if (!m) return null;
+    const hash = url.searchParams.get('h');
+    const h = /^[a-f0-9]+$/i.test(hash ?? '') ? `h=${hash}&` : '';
+    return `https://player.vimeo.com/video/${m[1]}?${h}dnt=1`;
   }
   return null;
 }

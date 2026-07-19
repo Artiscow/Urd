@@ -52,6 +52,29 @@ test('presets: create() gir ferske objekter hver gang', () => {
   }
 });
 
+/** Speiler editorens insertBlocks: moves flyttes først, så legges blokkene til. */
+const applyItem = (section, next) => {
+  for (const move of next.moves ?? []) {
+    const block = section.blocks.find((b) => b.id === move.blockId);
+    if (block) block.frames.desktop = { ...block.frames.desktop, y: block.frames.desktop.y + move.dy };
+  }
+  section.blocks.push(...next.blocks);
+};
+
+const assertNoOverlap = (section, next, id, hint) => {
+  const moved = new Set((next.moves ?? []).map((m) => m.blockId));
+  for (const block of next.blocks) {
+    assertBlock(block, id);
+    for (const existing of section.blocks) {
+      if (moved.has(existing.id) || next.blocks.includes(existing)) continue;
+      assert.ok(!overlaps(block.frames.desktop, existing.frames.desktop),
+        `${id}${hint}: nytt element (${block.type} @ ${block.frames.desktop.x},${block.frames.desktop.y}) overlapper ${existing.type} @ ${existing.frames.desktop.x},${existing.frames.desktop.y}`);
+    }
+    assert.ok(next.bottom >= block.frames.desktop.y + block.frames.desktop.h,
+      `${id}${hint}: bottom (${next.bottom}) dekker ikke det nye elementet`);
+  }
+};
+
 test('presets: item() plasserer nye elementer uten overlapp, to runder', () => {
   for (const [id, def] of defs) {
     if (!def.item) continue;
@@ -61,16 +84,29 @@ test('presets: item() plasserer nye elementer uten overlapp, to runder', () => {
       const next = def.item(section);
       assert.ok(Number.isFinite(next.bottom), `${id}: item() mangler bottom`);
       assert.ok(next.blocks.length, `${id}: item() ga ingen blokker`);
-      for (const block of next.blocks) {
-        assertBlock(block, id);
-        for (const existing of section.blocks) {
-          assert.ok(!overlaps(block.frames.desktop, existing.frames.desktop),
-            `${id}: nytt element (${block.type} @ ${block.frames.desktop.x},${block.frames.desktop.y}) overlapper ${existing.type} @ ${existing.frames.desktop.x},${existing.frames.desktop.y}`);
+      assertNoOverlap(section, next, id, '');
+      applyItem(section, next);
+      // Etter påføring skal ingenting i seksjonen overlappe (fanger moves som flytter for lite).
+      for (let i = 0; i < section.blocks.length; i++) {
+        for (let j = i + 1; j < section.blocks.length; j++) {
+          assert.ok(!overlaps(section.blocks[i].frames.desktop, section.blocks[j].frames.desktop),
+            `${id}: overlapp etter item-påføring (${section.blocks[i].type} og ${section.blocks[j].type})`);
         }
-        assert.ok(next.bottom >= block.frames.desktop.y + block.frames.desktop.h,
-          `${id}: bottom (${next.bottom}) dekker ikke det nye elementet`);
       }
-      section.blocks.push(...next.blocks);
     }
+  }
+});
+
+test('presets: item() fyller igjen hullet når et element i midten er slettet', () => {
+  for (const [id, def] of defs) {
+    if (!def.item) continue;
+    const section = def.create();
+    const first = def.item(section);
+    applyItem(section, first);
+    // Slett det FØRSTE tillagte elementet (midt i utlegget for rutenett-presetene) og be om et nytt.
+    const removed = new Set(first.blocks.map((b) => b.id));
+    section.blocks = section.blocks.filter((b) => !removed.has(b.id));
+    const second = def.item(section);
+    assertNoOverlap(section, second, id, ' (etter sletting)');
   }
 });

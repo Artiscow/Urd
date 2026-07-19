@@ -67,13 +67,30 @@ const glowLayer = (x, y, opacity, radius = 0.5) => ({
   type: 'glow', version: 1, props: { x, y, color: 'accent', radius, opacity },
 });
 
-/* Utvidbare presets: item(section) lager NESTE element (kort/rad/logo) ferdig plassert etter dem som finnes.
-   Antall leses fra seksjonens blokker med en robust markør per preset (bilder, bokser, knapper), så knappen virker også etter redigering.
-   Plasseringen antar preset-utlegget; har eieren bygget om seksjonen, er det nye elementet fortsatt vanlige blokker som kan dras på plass. */
-const countType = (sec, type) => sec.blocks.filter((b) => b.type === type).length;
-const countBoxes = (sec) => sec.blocks.filter((b) => b.type === 'text' && b.props?.box).length;
+/* Utvidbare presets: item(section) lager NESTE element (kort/rad/logo) ferdig plassert i første LEDIGE rute (freeSlot under), så knappen virker også etter at eieren har slettet eller flyttet elementer.
+   item kan i tillegg returnere moves ([{blockId, dy}]) som flytter eksisterende blokker, f.eks. FAQ som skyver avslutningslinjen ned.
+   Plasseringen antar preset-utlegget; har eieren bygget om seksjonen helt, er det nye elementet fortsatt vanlige blokker som kan dras på plass. */
 const maxBottom = (sec) => Math.max(0, ...sec.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
 const gridSlot = (n, per, x0, dx, y0, dy) => ({ x: x0 + (n % per) * dx, y: y0 + Math.floor(n / per) * dy });
+
+/* Ledig-rute-sok: PROVER rutene i rekkefolge i stedet for aa telle elementer.
+   Da fylles hullet igjen naar eieren har slettet et element i midten, i stedet for at telleren synker og neste element legges oppaa et eksisterende.
+   yOff/h beskriver hele kortets fotavtrykk rundt ruten (f.eks. ikonet som ligger over boksen). */
+const freeSlot = (sec, per, x0, dx, y0, dy, w, h, yOff = 0) => {
+  const hits = (r) => sec.blocks.some((b) => {
+    const d = b.frames.desktop;
+    return d.x < r.x + r.w - 0.01 && r.x < d.x + d.w - 0.01 && d.y < r.y + r.h - 0.01 && r.y < d.y + d.h - 0.01;
+  });
+  for (let i = 0; i < 60; i++) {
+    const slot = gridSlot(i, per, x0, dx, y0, dy);
+    if (!hits({ x: slot.x, y: slot.y + yOff, w, h })) return { ...slot, n: i };
+  }
+  return { x: x0, y: maxBottom(sec) + 16, n: 0 };
+};
+
+/* Mobil-stablingsnokkel: holder et korts blokker samlet i auto-stablingen (se stackOrder i render.js).
+   Nokkelen tolkes paa samme skala som desktop-y: kolonne 0 sorterer forst, og elementene i kortet holder innbyrdes rekkefolge. */
+const cardOrder = (baseY, col, idx) => baseY + col * 0.1 + idx * 0.01;
 
 const section = (preset, minHeight, background, blocks, grid = null) => ({
   id: makeId('sec'),
@@ -108,9 +125,9 @@ export function registerSectionPresets(Urd) {
         { type: 'grain', version: 1, props: { opacity: 0.06 } },
       ],
     }, [
-      text(frame(8.33, 40, 50, 32), '<h1>Ny overskrift</h1>'),
-      text(frame(8.33, 76, 41.67, 20), '<p>Skriv en kort introduksjon her.</p>'),
-      button(frame(8.33, 104, 20, 32), 'Les mer'),
+      text(frame(8.33, 40, 50, 38), '<h1>Ny overskrift</h1>'),
+      text(frame(8.33, 84, 41.67, 26), '<p>Skriv en kort introduksjon her.</p>'),
+      button(frame(8.33, 118, 20, 32), 'Les mer'),
     ]),
   });
 
@@ -138,7 +155,7 @@ export function registerSectionPresets(Urd) {
     ]),
     itemLabel: 'bilde',
     item: (sec) => {
-      const { x, y } = gridSlot(countType(sec, 'image'), 3, 4, 32, 72, 244);
+      const { x, y } = freeSlot(sec, 3, 4, 32, 72, 244, 28, 220);
       return { blocks: [image(frame(x, y, 28, 220))], bottom: y + 244 };
     },
   });
@@ -172,28 +189,34 @@ export function registerSectionPresets(Urd) {
     group: 'Kort og lister',
     hint: 'Tre kort med ikon, tittel og tekst',
     create: () => {
-      const card = (x, glyph, title) => {
+      const card = (x, col, glyph, title) => {
+        const ic = icon(frame(x + 10.5, 88, 4, 52), glyph);
         const box = text(frame(x, 152, 25, 200),
           `<h3>${title}</h3><p>Kort beskrivelse av hva dere tilbyr.</p>`,
           { align: 'center', box: true });
         box.animation = hoverLift();
-        return [icon(frame(x + 10.5, 88, 4, 52), glyph), box];
+        ic.mobileOrder = cardOrder(88, col, 0);
+        box.mobileOrder = cardOrder(88, col, 1);
+        return [ic, box];
       };
       return section('funksjonskort', '420px', bg(colorLayer('bg')), [
         text(frame(6, 28, 60, 38), '<h2>Hva vi gjør</h2>'),
-        ...card(6, '✦', 'Fellesskap'),
-        ...card(37.5, '★', 'Arrangementer'),
-        ...card(69, '✓', 'Medlemsfordeler'),
+        ...card(6, 0, '✦', 'Fellesskap'),
+        ...card(37.5, 1, '★', 'Arrangementer'),
+        ...card(69, 2, '✓', 'Medlemsfordeler'),
       ]);
     },
     itemLabel: 'kort',
     item: (sec) => {
-      const { x, y } = gridSlot(countBoxes(sec), 3, 6, 31.5, 152, 296);
+      const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 152, 296, 25, 264, -64);
+      const ic = icon(frame(x + 10.5, y - 64, 4, 52), '✦');
       const box = text(frame(x, y, 25, 200),
         '<h3>Ny tittel</h3><p>Kort beskrivelse av hva dere tilbyr.</p>',
         { align: 'center', box: true });
       box.animation = hoverLift();
-      return { blocks: [icon(frame(x + 10.5, y - 64, 4, 52), '✦'), box], bottom: y + 228 };
+      ic.mobileOrder = cardOrder(88, n, 0);
+      box.mobileOrder = cardOrder(88, n, 1);
+      return { blocks: [ic, box], bottom: y + 228 };
     },
   });
 
@@ -202,28 +225,29 @@ export function registerSectionPresets(Urd) {
     group: 'Kort og lister',
     hint: 'Tre nyhetskort med bilde, tag og dato',
     create: () => {
-      const card = (x) => [
-        image(frame(x, 88, 25, 160)),
-        text(frame(x, 256, 25, 160),
-          '<p><b>Kategori</b> · 1. januar</p><h3>Nyhetstittel</h3><p>Kort ingress som lokker til å lese mer.</p>'),
-      ];
+      const card = (x, col) => {
+        const img = image(frame(x, 88, 25, 160));
+        const txt = text(frame(x, 256, 25, 160),
+          '<p><b>Kategori</b> · 1. januar</p><h3>Nyhetstittel</h3><p>Kort ingress som lokker til å lese mer.</p>');
+        img.mobileOrder = cardOrder(88, col, 0);
+        txt.mobileOrder = cardOrder(88, col, 1);
+        return [img, txt];
+      };
       return section('nyheter', '460px', bg(colorLayer('bg')), [
         text(frame(6, 28, 50, 38), '<h2>Siste nytt</h2>'),
         button(frame(78, 30, 16, 36), 'Se alle', { style: 'secondary' }),
-        ...card(6), ...card(37.5), ...card(69),
+        ...card(6, 0), ...card(37.5, 1), ...card(69, 2),
       ]);
     },
     itemLabel: 'sak',
     item: (sec) => {
-      const { x, y } = gridSlot(countType(sec, 'image'), 3, 6, 31.5, 88, 344);
-      return {
-        blocks: [
-          image(frame(x, y, 25, 160)),
-          text(frame(x, y + 168, 25, 160),
-            '<p><b>Kategori</b> · 1. januar</p><h3>Nyhetstittel</h3><p>Kort ingress som lokker til å lese mer.</p>'),
-        ],
-        bottom: y + 352,
-      };
+      const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 88, 344, 25, 328);
+      const img = image(frame(x, y, 25, 160));
+      const txt = text(frame(x, y + 168, 25, 160),
+        '<p><b>Kategori</b> · 1. januar</p><h3>Nyhetstittel</h3><p>Kort ingress som lokker til å lese mer.</p>');
+      img.mobileOrder = cardOrder(88, n, 0);
+      txt.mobileOrder = cardOrder(88, n, 1);
+      return { blocks: [img, txt], bottom: y + 352 };
     },
   });
 
@@ -263,29 +287,30 @@ export function registerSectionPresets(Urd) {
     group: 'Kort og lister',
     hint: 'Portretter med navn, verv og e-post',
     create: () => {
-      const member = (x, role) => [
-        image(frame(x, 80, 22, 180), { alt: 'Portrett' }),
-        text(frame(x, 268, 22, 84),
+      const member = (x, col, role) => {
+        const img = image(frame(x, 80, 22, 180), { alt: 'Portrett' });
+        const txt = text(frame(x, 268, 22, 84),
           `<h3>Navn Navnesen</h3><p>${role}</p><p>navn@dinforening.no</p>`,
-          { align: 'center' }),
-      ];
+          { align: 'center' });
+        img.mobileOrder = cardOrder(80, col, 0);
+        txt.mobileOrder = cardOrder(80, col, 1);
+        return [img, txt];
+      };
       return section('team', '420px', bg(colorLayer('surface')), [
         text(frame(6, 24, 50, 32), '<h2>Styret</h2>'),
-        ...member(7.5, 'Leder'), ...member(39, 'Nestleder'), ...member(70.5, 'Kasserer'),
+        ...member(7.5, 0, 'Leder'), ...member(39, 1, 'Nestleder'), ...member(70.5, 2, 'Kasserer'),
       ]);
     },
     itemLabel: 'person',
     item: (sec) => {
-      const { x, y } = gridSlot(countType(sec, 'image'), 3, 7.5, 31.5, 80, 288);
-      return {
-        blocks: [
-          image(frame(x, y, 22, 180), { alt: 'Portrett' }),
-          text(frame(x, y + 188, 22, 84),
-            '<h3>Navn Navnesen</h3><p>Verv</p><p>navn@dinforening.no</p>',
-            { align: 'center' }),
-        ],
-        bottom: y + 296,
-      };
+      const { x, y, n } = freeSlot(sec, 3, 7.5, 31.5, 80, 288, 22, 272);
+      const img = image(frame(x, y, 22, 180), { alt: 'Portrett' });
+      const txt = text(frame(x, y + 188, 22, 84),
+        '<h3>Navn Navnesen</h3><p>Verv</p><p>navn@dinforening.no</p>',
+        { align: 'center' });
+      img.mobileOrder = cardOrder(80, n, 0);
+      txt.mobileOrder = cardOrder(80, n, 1);
+      return { blocks: [img, txt], bottom: y + 296 };
     },
   });
 
@@ -308,10 +333,19 @@ export function registerSectionPresets(Urd) {
     },
     itemLabel: 'spørsmål',
     item: (sec) => {
-      const y = maxBottom(sec) + 16;
+      // Nye spørsmål skal inn FØR «flere spørsmål?»-linjen: plasser etter nederste spørsmålsboks, og skyv alt under (avslutningslinjen) ned ett radhopp via moves.
+      const boxes = sec.blocks.filter((b) => b.type === 'text' && b.props?.box);
+      const y = boxes.length
+        ? Math.max(...boxes.map((b) => b.frames.desktop.y + b.frames.desktop.h)) + 16
+        : maxBottom(sec) + 16;
+      const dy = 112;
+      const moves = sec.blocks
+        .filter((b) => b.frames.desktop.y >= y - 4)
+        .map((b) => ({ blockId: b.id, dy }));
       return {
         blocks: [text(frame(20, y, 60, 96), '<h3>Nytt spørsmål?</h3><p>Skriv svaret her.</p>', { box: true })],
-        bottom: y + 124,
+        bottom: maxBottom(sec) + dy + 28,
+        moves,
       };
     },
   });
@@ -321,32 +355,32 @@ export function registerSectionPresets(Urd) {
     group: 'Kort og lister',
     hint: 'Tre nummererte kort',
     create: () => {
-      const step = (x, n, title) => [
-        text(frame(x, 88, 25, 72), `<h3>${n}</h3>`, { align: 'center', size: 44 }),
-        text(frame(x, 168, 25, 160),
+      const step = (x, col, title) => {
+        const num = text(frame(x, 88, 25, 72), `<h3>${col + 1}</h3>`, { align: 'center', size: 44 });
+        const box = text(frame(x, 168, 25, 160),
           `<h3>${title}</h3><p>Forklar dette steget kort.</p>`,
-          { align: 'center', box: true }),
-      ];
+          { align: 'center', box: true });
+        num.mobileOrder = cardOrder(88, col, 0);
+        box.mobileOrder = cardOrder(88, col, 1);
+        return [num, box];
+      };
       return section('steg', '400px', bg(colorLayer('bg')), [
         text(frame(6, 28, 60, 38), '<h2>Slik blir du med</h2>'),
-        ...step(6, '1', 'Meld deg inn'),
-        ...step(37.5, '2', 'Betal kontingent'),
-        ...step(69, '3', 'Bli med på det neste'),
+        ...step(6, 0, 'Meld deg inn'),
+        ...step(37.5, 1, 'Betal kontingent'),
+        ...step(69, 2, 'Bli med på det neste'),
       ]);
     },
     itemLabel: 'steg',
     item: (sec) => {
-      const n = countBoxes(sec);
-      const { x, y } = gridSlot(n, 3, 6, 31.5, 88, 272);
-      return {
-        blocks: [
-          text(frame(x, y, 25, 72), `<h3>${n + 1}</h3>`, { align: 'center', size: 44 }),
-          text(frame(x, y + 80, 25, 160),
-            '<h3>Nytt steg</h3><p>Forklar dette steget kort.</p>',
-            { align: 'center', box: true }),
-        ],
-        bottom: y + 268,
-      };
+      const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 88, 272, 25, 240);
+      const num = text(frame(x, y, 25, 72), `<h3>${n + 1}</h3>`, { align: 'center', size: 44 });
+      const box = text(frame(x, y + 80, 25, 160),
+        '<h3>Nytt steg</h3><p>Forklar dette steget kort.</p>',
+        { align: 'center', box: true });
+      num.mobileOrder = cardOrder(88, n, 0);
+      box.mobileOrder = cardOrder(88, n, 1);
+      return { blocks: [num, box], bottom: y + 268 };
     },
   });
 
@@ -354,15 +388,20 @@ export function registerSectionPresets(Urd) {
     label: 'Hovedoppslag',
     group: 'Kort og lister',
     hint: 'Én stor sak og to små ved siden',
-    create: () => section('hovedoppslag', '540px', bg(colorLayer('bg')), [
-      image(frame(6, 40, 55, 300)),
-      text(frame(6, 348, 55, 108), '<h2>Hovedsaken</h2><p>Ingress som forteller hvorfor dette er viktigst akkurat nå.</p>'),
-      button(frame(6, 464, 14, 38), 'Les mer', { style: 'secondary' }),
-      image(frame(66, 40, 28, 120)),
-      text(frame(66, 164, 28, 60), '<h3>Liten sak</h3>'),
-      image(frame(66, 244, 28, 120)),
-      text(frame(66, 368, 28, 60), '<h3>Enda en sak</h3>'),
-    ]),
+    create: () => {
+      // mobileOrder holder hovedsaken samlet (bilde, ingress, knapp) foran småsakene i mobil-stablingen.
+      const blocks = [
+        image(frame(6, 40, 55, 300)),
+        text(frame(6, 348, 55, 108), '<h2>Hovedsaken</h2><p>Ingress som forteller hvorfor dette er viktigst akkurat nå.</p>'),
+        button(frame(6, 464, 14, 38), 'Les mer', { style: 'secondary' }),
+        image(frame(66, 40, 28, 120)),
+        text(frame(66, 164, 28, 60), '<h3>Liten sak</h3>'),
+        image(frame(66, 244, 28, 120)),
+        text(frame(66, 368, 28, 60), '<h3>Enda en sak</h3>'),
+      ];
+      blocks.forEach((block, i) => { block.mobileOrder = cardOrder(40, i < 3 ? 0 : 1, i); });
+      return section('hovedoppslag', '540px', bg(colorLayer('bg')), blocks);
+    },
   });
 
   Urd.sections.define('produkter', {
@@ -370,29 +409,32 @@ export function registerSectionPresets(Urd) {
     group: 'Kort og lister',
     hint: 'Tre produktkort; pek Kjøp-knappen på en betalingslenke (f.eks. Vipps)',
     create: () => {
-      const product = (x, name, price) => [
-        image(frame(x, 88, 25, 200)),
-        text(frame(x, 296, 25, 76), `<h3>${name}</h3><p><b>${price}</b></p>`, { align: 'center' }),
-        button(frame(x + 5, 380, 15, 40), 'Kjøp'),
-      ];
+      const product = (x, col, name, price) => {
+        const blocks = [
+          image(frame(x, 88, 25, 200)),
+          text(frame(x, 296, 25, 76), `<h3>${name}</h3><p><b>${price}</b></p>`, { align: 'center' }),
+          button(frame(x + 5, 380, 15, 40), 'Kjøp'),
+        ];
+        blocks.forEach((block, i) => { block.mobileOrder = cardOrder(88, col, i); });
+        return blocks;
+      };
       return section('produkter', '470px', bg(colorLayer('bg')), [
         text(frame(6, 28, 50, 38), '<h2>Merch</h2>'),
-        ...product(6, 'Produktnavn', '199 kr'),
-        ...product(37.5, 'Produktnavn', '249 kr'),
-        ...product(69, 'Produktnavn', '99 kr'),
+        ...product(6, 0, 'Produktnavn', '199 kr'),
+        ...product(37.5, 1, 'Produktnavn', '249 kr'),
+        ...product(69, 2, 'Produktnavn', '99 kr'),
       ]);
     },
     itemLabel: 'produkt',
     item: (sec) => {
-      const { x, y } = gridSlot(countType(sec, 'image'), 3, 6, 31.5, 88, 348);
-      return {
-        blocks: [
-          image(frame(x, y, 25, 200)),
-          text(frame(x, y + 208, 25, 76), '<h3>Produktnavn</h3><p><b>199 kr</b></p>', { align: 'center' }),
-          button(frame(x + 5, y + 292, 15, 40), 'Kjøp'),
-        ],
-        bottom: y + 356,
-      };
+      const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 88, 348, 25, 332);
+      const blocks = [
+        image(frame(x, y, 25, 200)),
+        text(frame(x, y + 208, 25, 76), '<h3>Produktnavn</h3><p><b>199 kr</b></p>', { align: 'center' }),
+        button(frame(x + 5, y + 292, 15, 40), 'Kjøp'),
+      ];
+      blocks.forEach((block, i) => { block.mobileOrder = cardOrder(88, n, i); });
+      return { blocks, bottom: y + 356 };
     },
   });
 
@@ -424,26 +466,28 @@ export function registerSectionPresets(Urd) {
     group: 'Fremheving',
     hint: 'Tre store tall med etikett',
     create: () => {
-      const stat = (x, value, label) => [
-        text(frame(x, 72, 25, 76), `<h2>${value}</h2>`, { align: 'center', size: 44 }),
-        text(frame(x, 156, 25, 36), `<p>${label}</p>`, { align: 'center' }),
-      ];
+      const stat = (x, col, value, label) => {
+        // Tallrammen har litt slark over fontens linjeboks (h2 med size 44 blir ~76px hoy).
+        const num = text(frame(x, 72, 25, 84), `<h2>${value}</h2>`, { align: 'center', size: 44 });
+        const lbl = text(frame(x, 160, 25, 36), `<p>${label}</p>`, { align: 'center' });
+        num.mobileOrder = cardOrder(72, col, 0);
+        lbl.mobileOrder = cardOrder(72, col, 1);
+        return [num, lbl];
+      };
       return section('statistikk', '260px', bg(colorLayer('surface')), [
-        ...stat(6, '120+', 'Medlemmer'),
-        ...stat(37.5, '25', 'Arrangementer i året'),
-        ...stat(69, '1981', 'Grunnlagt'),
+        ...stat(6, 0, '120+', 'Medlemmer'),
+        ...stat(37.5, 1, '25', 'Arrangementer i året'),
+        ...stat(69, 2, '1981', 'Grunnlagt'),
       ]);
     },
     itemLabel: 'tall',
     item: (sec) => {
-      const { x, y } = gridSlot(Math.floor(countType(sec, 'text') / 2), 3, 6, 31.5, 72, 136);
-      return {
-        blocks: [
-          text(frame(x, y, 25, 76), '<h2>42</h2>', { align: 'center', size: 44 }),
-          text(frame(x, y + 84, 25, 36), '<p>Etikett</p>', { align: 'center' }),
-        ],
-        bottom: y + 144,
-      };
+      const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 72, 140, 25, 124);
+      const num = text(frame(x, y, 25, 84), '<h2>42</h2>', { align: 'center', size: 44 });
+      const lbl = text(frame(x, y + 88, 25, 36), '<p>Etikett</p>', { align: 'center' });
+      num.mobileOrder = cardOrder(72, n, 0);
+      lbl.mobileOrder = cardOrder(72, n, 1);
+      return { blocks: [num, lbl], bottom: y + 152 };
     },
   });
 
@@ -463,7 +507,7 @@ export function registerSectionPresets(Urd) {
     },
     itemLabel: 'logo',
     item: (sec) => {
-      const { x, y } = gridSlot(countType(sec, 'image'), 4, 5.5, 23.5, 108, 124);
+      const { x, y } = freeSlot(sec, 4, 5.5, 23.5, 108, 124, 18.5, 100);
       return {
         blocks: [image(frame(x, y, 18.5, 100),
           { alt: 'Sponsorlogo', fit: 'contain', radius: null, saturate: 0 })],

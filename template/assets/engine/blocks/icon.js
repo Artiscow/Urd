@@ -16,12 +16,22 @@ export const iconBlock = {
    */
   render(el, props) {
     // Eget opplastet ikon (additivt felt): bildet vises i tegnstørrelsen og vinner over glyfen til det fjernes.
-    if (props.image) {
+    if (typeof props.image === 'string' && props.image) {
       const img = document.createElement('img');
       img.src = props.image;
       img.alt = '';
       img.draggable = false;
       img.style.cssText = `height:${props.size || 48}px;width:auto;display:block;`;
+      // Samme lastevern som bildeblokken (ingen stripevis inntoning), og glyfen tar over om bildet feiler.
+      if (!img.complete) {
+        img.style.visibility = 'hidden';
+        img.addEventListener('load', () => { img.style.visibility = ''; }, { once: true });
+      }
+      img.addEventListener('error', () => {
+        img.remove();
+        el.replaceChildren();
+        iconBlock.render(el, { ...props, image: null });
+      }, { once: true });
       el.appendChild(img);
       return;
     }

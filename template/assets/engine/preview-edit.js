@@ -190,7 +190,13 @@ function addBlockAdder(host, section) {
     menu.appendChild(b);
   }
   openBtn.addEventListener('click', () => menu.classList.toggle('open'));
-  host.addEventListener('mouseleave', () => menu.classList.remove('open'));
+  // enhanceSection kjører etter HVER rerender på samme host-element: lytteren legges kun én gang og slår opp gjeldende meny ved hendelsen, ellers hoper det seg opp én lytter per rerender.
+  if (!host._urdAdderLeaveWired) {
+    host._urdAdderLeaveWired = true;
+    host.addEventListener('mouseleave', () => {
+      host.querySelector('.urd-add-block-menu')?.classList.remove('open');
+    });
+  }
 
   wrap.append(openBtn, menu);
   host.appendChild(wrap);
@@ -310,6 +316,8 @@ function makeSectionAdder(index, above = null) {
         }
         choice.addEventListener('click', () => {
           post({ type: 'urd-add-section', index, section: def.create() });
+          // Rerenderingen fjerner menyen fra DOM: rydd document-lytteren nå i stedet for ved neste tilfeldige klikk.
+          cleanupOutside();
         });
         menu.appendChild(choice);
       }
@@ -317,13 +325,16 @@ function makeSectionAdder(index, above = null) {
     bar.appendChild(menu);
 
     // Klikk utenfor menyen lukker den, samme forventning som ellers i editoren.
-    // Listeneren ryddes ved lukking.
+    // Listeneren ryddes ved lukking og ved preset-valg.
     const outside = (event) => {
       if (!menu.contains(event.target)) {
-        document.removeEventListener('pointerdown', outside, true);
+        cleanupOutside();
         collapse();
       }
     };
+    function cleanupOutside() {
+      document.removeEventListener('pointerdown', outside, true);
+    }
     setTimeout(() => document.addEventListener('pointerdown', outside, true), 0);
   });
 
@@ -434,7 +445,13 @@ function initTextToolbar() {
   btn(LINK_SVG, 'Lenke (tomt felt fjerner lenken)', () => {
     const url = prompt('Lenkeadresse:', 'https://');
     if (url === null) return;
-    if (url.trim()) exec('createLink', url.trim());
+    const trimmed = url.trim();
+    // Kun vanlige lenkeformer: javascript:-URL-er (og andre aktive skjemaer) skal aldri bli klikkbare hos besøkende.
+    if (/^(javascript|data|vbscript):/i.test(trimmed)) {
+      alert('Lenkeadressen må være en vanlig nettadresse (https://…), e-post (mailto:) eller intern sti.');
+      return;
+    }
+    if (trimmed) exec('createLink', trimmed);
     else exec('unlink');
   });
   btn('T<sub>×</sub>', 'Fjern formatering', () => {
@@ -531,7 +548,7 @@ function addSectionToolbar(host, section, grid) {
         // Deaktiver til seksjonen rerendres: et dobbeltklikk før rundturen ville lagt to element i samme rute.
         event.target.disabled = true;
         const next = def.item(section);
-        post({ type: 'urd-add-blocks', sectionId: section.id, blocks: next.blocks, minBottom: next.bottom });
+        post({ type: 'urd-add-blocks', sectionId: section.id, blocks: next.blocks, minBottom: next.bottom, moves: next.moves ?? [] });
       });
     }
     mk('↑', 'Flytt seksjonen opp', () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
@@ -694,6 +711,7 @@ window.addEventListener('keydown', (event) => {
   if (event.key === 'Delete' || event.key === 'Backspace') {
     event.preventDefault();
     post({ type: 'urd-delete', sectionId: ctx.section.id, blockId: selectedBlockId });
+    selectBlock(null);
     return;
   }
 
@@ -714,13 +732,9 @@ window.addEventListener('keydown', (event) => {
   post({ type: 'urd-move', sectionId: ctx.section.id, blockId: selectedBlockId, frame, frameKey: 'desktop', coalesce: true });
 });
 
-document.addEventListener('pointerdown', (event) => {
-  const target = event.target instanceof HTMLElement ? event.target : null;
-  selectBlock(target?.closest('.urd-block') ?? null);
-
-  // Aktiv seksjon: paletten i editoren legger nye blokker i den sist
-  // klikkede seksjonen. Markeres med en aksentlinje i venstre kant.
-  const host = target?.closest('.urd-section');
+// Aktiv seksjon: paletten i editoren legger nye blokker i den sist klikkede seksjonen.
+// Markeres med en aksentlinje i venstre kant. Kalles også fra håndtak som stopper propageringen (⠿/resize/rotasjon), så grep i et håndtak teller som klikk i seksjonen.
+function markActive(host) {
   document.querySelectorAll('.urd-section-active').forEach((s) => {
     if (s !== host) s.classList.remove('urd-section-active');
   });
@@ -728,6 +742,12 @@ document.addEventListener('pointerdown', (event) => {
     host.classList.add('urd-section-active');
     post({ type: 'urd-select-section', sectionId: host.dataset.sectionId });
   }
+}
+
+document.addEventListener('pointerdown', (event) => {
+  const target = event.target instanceof HTMLElement ? event.target : null;
+  selectBlock(target?.closest('.urd-block') ?? null);
+  markActive(target?.closest('.urd-section'));
 });
 
 function clamp(value, min, max) {
@@ -802,13 +822,14 @@ function enhanceBlock(el, block, section, grid, host) {
         const frame = { ...other.frames.desktop, z: (other.frames.desktop.z ?? 1) + 1 };
         other.frames.desktop = frame;
         host.querySelector(`[data-block-id="${other.id}"]`)?.style.setProperty('z-index', String(frame.z));
-        post({ type: 'urd-move', sectionId: section.id, blockId: other.id, frame, coalesce: true });
+        // groupKey samler hele z-omordningen (alle blokkene) i ETT angre-steg hos editoren.
+        post({ type: 'urd-move', sectionId: section.id, blockId: other.id, frame, coalesce: true, groupKey: `z-${block.id}` });
       }
     }
     const frame = { ...block.frames.desktop, z };
     block.frames.desktop = frame;
     el.style.zIndex = String(z);
-    post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame });
+    post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame, coalesce: true, groupKey: `z-${block.id}` });
   };
   // Struktur (z-orden, dekor, sletting) redigeres i desktopvisning;
   // mobilvisningen er ren layoutjustering.
@@ -864,6 +885,8 @@ function enhanceBlock(el, block, section, grid, host) {
     deleteBtn.title = 'Slett blokken (Ctrl+Z angrer)';
     deleteBtn.addEventListener('click', () => {
       post({ type: 'urd-delete', sectionId: section.id, blockId: block.id });
+      // Uten avvalg ville en fantom-markering av den slettede blokken overleve i modultilstanden.
+      selectBlock(null);
     });
     toolbar.appendChild(deleteBtn);
   }
@@ -894,6 +917,8 @@ function enhanceBlock(el, block, section, grid, host) {
     rotHandle.addEventListener('pointerdown', (event) => {
       event.preventDefault();
       event.stopPropagation();
+      markActive(host);
+      selectBlock(el);
       rotHandle.setPointerCapture(event.pointerId);
       const rect = el.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
@@ -944,6 +969,8 @@ function enhanceBlock(el, block, section, grid, host) {
       } else {
         event.preventDefault();
         event.stopPropagation();
+        markActive(host);
+        selectBlock(el);
       }
       handle.setPointerCapture(event.pointerId);
 

@@ -1020,11 +1020,23 @@ body.urd-mobile .urd-section-resize {
 .urd-preview.urd-chrome-off .urd-video-shield,
 .urd-preview.urd-chrome-off .urd-section-toolbar,
 .urd-preview.urd-chrome-off .urd-section-resize,
+.urd-preview.urd-chrome-off .urd-smart-guide,
 .urd-preview.urd-chrome-off .urd-grid-overlay {
   display: none !important;
 }
 
 .urd-preview.urd-chrome-off .urd-editable:hover {
+  outline: none;
+}
+
+/* Redaksjonelle markeringer sitter som klasser på selve seksjonen og kan
+   ikke display:none-es: effektene nulles i stedet, så Ren visning er
+   identisk med publisert side. */
+.urd-preview.urd-chrome-off .urd-section-active {
+  box-shadow: none;
+}
+
+.urd-preview.urd-chrome-off .urd-attention {
   outline: none;
 }
 

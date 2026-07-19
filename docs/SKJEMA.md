@@ -14,7 +14,7 @@ Nettstedets rot: identitet, sideregister, navigasjon, grid og tema.
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "site": { "title": "Min forening", "lang": "no", "description": "" },
   "breakpoints": { "mobile": 640 },
   "grid": { "size": 16, "snap": true },
@@ -47,7 +47,8 @@ Nettstedets rot: identitet, sideregister, navigasjon, grid og tema.
 
 - **`site.icon`** (valgfri, additiv fra v0.5): nettstedsikon (favicon) som sti i `media/`; vises i nettleserfaner og bokmerker. Uten ikon brukes Urd-merket fra index.html.
 - **`pages`** er sideregisteret. Nav-elementer peker på sider via `page`-id (eller eksterne lenker via `href`). Admin lager/endrer/sletter sider her; motoren ruter fra `path`.
-- **`nav.layout`** (valgfri, additiv fra v0.5): menypunktenes plassering (`left`/`center`/`right`, standard right). Logoen står alltid først og er «Hjem»-knappen. **`nav.logo`** har tre typer: `text` (value = tekst), `image` (value = bilde-URL) og `both` (value = tekst, `image` = bilde-URL), pluss valgfri `size` (bildehøyde px) og `order` (`image-first`/`text-first`).
+- **`nav.layout`** (valgfri, additiv fra v0.5): menypunktenes plassering (`left`/`center`/`right`, standard right). Logoen står alltid først og er «Hjem»-knappen. **`nav.logo`** har tre typer: `text` (value = tekst), `image` (value = bilde-URL) og `both` (value = tekst, `image` = bilde-URL), pluss valgfrie `size` (bildehøyde px), `order` (`image-first`/`text-first`), `font`, `textSize`, `bold`, `italic` og `radius` for logotekst/-bilde.
+- **`nav.sticky`** (valgfri, additiv fra v0.5, standard true): menyen følger med ved scrolling. **`nav.style`** (valgfri, additiv fra v0.5): menyens utseende med `bg` (theme-token eller rå farge), `bgOpacity` (0..1), `blur` og `textColor`; utelatte felt gir standardutseendet.
 - **`footer`** (valgfri, additiv fra v0.5): delt footer nederst på ALLE sider - `show`, `text` (linjer skilt med linjeskift) og `align`. Utelatt eller skjult = ingen footer; footer-preseten (per-side seksjon) finnes uavhengig av denne.
 - **`grid`** er snappeverktøyet (fra site-schemaVersion 2): kvadratiske ruter på `size` px; mindre = tettere/finere plassering. Seksjoner kan overstyre det, og `snap` kan slås av for helt fri plassering. Gridet påvirker aldri lagrede posisjoner.
 - **`theme.tokens`** mappes 1:1 til CSS-variabler: `tokens.color.bg` → `--urd-color-bg`. Motorens `theme.js` gjør mappingen; admin redigerer tokens direkte.
@@ -58,7 +59,7 @@ En side er en vertikal rekke seksjoner.
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "meta": { "id": "hjem", "title": "Hjem" },
   "sections": [ { …seksjon… }, { …seksjon… } ]
 }
@@ -111,7 +112,8 @@ En seksjon er alltid den samme generiske containeren - egen størrelse, egen bak
 ```
 
 - **`type`** slår opp i blokkregisteret (`Urd.blocks`). Kjerneblokker: `text`, `image`, `button`, `shape` (streker - horisontale, vertikale og skrå via `rot` - sirkler, rektangler), `video` (YouTube/Vimeo med personvennlig innbygging; CSP-en har et bevisst frame-src-unntak for de to vertene) og `icon` (glyf/emoji med størrelse og temafarge). Plugins kan definere flere.
-- **`props`** er typespesifikke og eies av blokkdefinisjonens versjon/migreringer. Tekstblokken har et valgfritt `box`-felt (standard false): tekstboks-varianten rendrer innholdet i et kort med temaets flatefarge, kantlinje og radius. Additivt felt; eldre data mangler det og rendres uendret.
+- **`props`** er typespesifikke og eies av blokkdefinisjonens versjon/migreringer. Additive felt i bruk (eldre data mangler dem og rendres uendret): tekst har `box` (tekstboks-kort), `font` og `size` (egen font/grunnstørrelse per felt); bildeblokken har fokuspunkt `x`/`y` (0..1) og de ikke-destruktive justeringene `brightness`/`contrast`/`saturate` (1 = nøytral; 0 i saturate gir gråtone); ikon-blokken har `image` (eget opplastet ikon som vises i tegnstørrelsen i stedet for glyfen).
+- **`mobileOrder`** (valgfri, additiv fra v0.5): overstyrer blokkens sorteringsnøkkel i auto-avledet mobil-stabling, tolket på samme skala som desktop-y. Seksjonsmalene bruker den til å holde kort samlet (ikon + boks) i stedet for at y-sorteringen splitter kortene i bånd.
 - **`frames`** er plassering per breakpoint, i **fysiske enheter** (fra schemaVersion 2): `x`/`w` i prosent av seksjonsbredden (flyter med skjermen), `y`/`h` i px (`y` kan være negativ: blokken henger da over seksjonstoppen, seksjoner klipper aldri), `z` er lagrekkefølge, `rot` er grader. Gridet i site.json er KUN et snappeverktøy ved redigering; å endre det flytter aldri innhold.
 - **`frames.mobile: null`** betyr auto-avledet mobil-layout: motoren rendrer blokkene som vanlig dokumentflyt i én kolonne i leserekkefølge (sortert på desktop-`y`, deretter `x`); tekst får naturlig høyde. Et objekt er en manuell overstyring.
 - **`decor`** (valgfri, standard false): dekor-blokker (typisk streker/sirkler) utelates fra auto-avledet mobil-layout. Nye formblokker får `decor: true` fra paletten.
@@ -171,7 +173,7 @@ while (data.version < def.version) {
 - **I minnet:** lasting muterer aldri repoet. JSON på disk skrives først ved neste publisering (da i løftet form).
 - **Rene funksjoner:** migreringer får props inn og gir props ut. Ingen DOM, ingen sideeffekter - de kan enhetstestes trivielt.
 - **Manglende migrering eller ukjent type:** plassholder-rendering, original-JSON urørt. Aldri kast, aldri slett.
-- **Filnivå:** `schemaVersion` løftes med samme stegvise mønster for strukturelle endringer, implementert i `liftPageFile()` i migrate.js. Første reelle eksempel: **v1 → v2** (juli 2026), der frames gikk fra grid-enheter til fysiske enheter; omregningen bruker gridet innholdet ble laget mot, så ingenting flytter seg. Testet i `tests/page-migration.test.mjs`.
+- **Filnivå:** `schemaVersion` løftes med samme stegvise mønster for strukturelle endringer, implementert i `liftPageFile()`/`liftSiteFile()` i migrate.js. Gjennomførte løft (testet i `tests/page-migration.test.mjs`): sidefiler **v1 → v2** (juli 2026, frames fra grid-enheter til fysiske enheter; omregningen bruker gridet innholdet ble laget mot, så ingenting flytter seg) og **v2 → v3** (seksjonenes grid-overstyringer til kvadratformatet), site.json **v1 → v2** (gridet fra kolonner/radhøyde til kvadratiske ruter). Merk: siden site løftes FØR sidene, tåler v1→v2-sideløftet at kontekst-gridet allerede er på kvadratformat.
 
 Denne kontrakten er grunnen til at en Urd-oppdatering aldri knuser en bygget side - og fra v1.0 skal testsuiten alltid inneholde minst én reell v(n)→v(n+1)-migrering som bevis.
 
