@@ -10,14 +10,17 @@
  * `item`/`itemLabel` er valgfrie fabrikker for gjentakende elementer: seksjonsverktøylinjen viser da en «+ kort/rad»-knapp.
  */
 
-/** Kort, kollisjonstrygg nok id for seksjoner/blokker laget i editoren.
+/** Kort, kollisjonstrygg id for seksjoner/blokker laget i editoren.
  *  crypto.randomUUID finnes kun i sikre kontekster (https/localhost); på f.eks. http://0.0.0.0
- *  (lokal testserver) brukes en tilfeldig fallback, ellers ville alt som lager nye id-er dødd stille. */
+ *  (lokal testserver) brukes crypto.getRandomValues (som virker overalt), ellers ville alt
+ *  som lager nye id-er dødd stille der. */
 export function makeId(prefix) {
-  const uuid = typeof crypto !== 'undefined' && crypto.randomUUID
-    ? crypto.randomUUID()
-    : Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-  return `${prefix}-${uuid.slice(0, 8)}`;
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
+  }
+  const bytes = crypto.getRandomValues(new Uint8Array(4));
+  const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+  return `${prefix}-${hex}`;
 }
 
 const autoMobile = () => ({ mobile: { mode: 'auto', attention: null } });
