@@ -4,26 +4,22 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 
 Fullførte punkter fra v0.2-v0.5 er ryddet bort ved versjonsslippene (0.3.0 17. juli 2026, 0.5.10 18. juli 2026); se [CHANGELOG.md](../CHANGELOG.md) for hva som ble levert.
 
-## Neste opp (v0.6 «Økosystem»)
+## Neste opp (v0.6 «Økosystem», startet 19. juli 2026)
 
-Se «Til v0.6»-seksjonen under. (v0.5 «Panelene og nettstedet rundt siden»
-levert 18. juli 2026; se CHANGELOG for hele leveransen.)
+Fasen kjøres i milepæler M1-M9 (rekkefølgen er avhengighetsstyrt); pushes
+nummereres 0.6.1 og oppover. (v0.5 levert 18. juli 2026; se CHANGELOG.)
 
-## Til v0.6 (økosystem)
+## Til v0.6 (økosystem, etter milepæl)
 
-- [ ] Funksjon for flere språk for både Urd github, admin panel og på nettsidene: Norsk (Bokmål), Norsk (Nynorsk), Samisk, Svensk, Dansk, Finsk, Engelsk (Britisk), Gaelic, Spansk, Tysk, Tradisjonel Kinesisk (Taiwan), Simplifisert Kinesisk, Portogisisk, Fransk, Kanadisk (Engelsk men med "please" og overlig tekst)
-- [ ] Kart- og skjema-blokk som referanse-plugins (sammen med kalender-pluginen)
-- [ ] Kalender-pluginens designkrav (fra ApeironLF-kartleggingen 18. juli 2026): datakilden er en ABONNERBAR FEED (offentlig Google-kalender via API-nøkkel eller iCal/ICS-URL), ikke manuell inntasting; gjentakende arrangementer ekspanderes (singleEvents/RRULE); tre visninger (liste med dato-badge, kort-rutenett, månedskalender); kategori-chips via tittelkonvensjonen «Kategori: Tittel»; auto-uttrekk av påmeldingslenke (skjema-URL i beskrivelsen); «Abonner»-knapp (webcal + Google-cid); flere kalenderkilder + «neste arrangement»-panel; robuste tomtilstander og tydelig merkede plassholdere før feed er koblet
-- [ ] Kalender-avhengige presets: kalender, nyheter, oppslagstavle, «Hva skjer» (tre neste arrangementer)
-- [ ] CSP-opt-in-mekanisme for plugins: kontrollerte, synlige unntak per tjeneste (trengs for kalender-pluginens googleapis.com, og senere betalings-plugins)
-- [ ] Arkiv/datablokk-mønsteret (samlinger: nyheter, oppslag, styrer) - designes sammen med kalender-referansepluginen, det er samme mønster (blokk som rendrer en samling innslag)
-- [ ] Dropdown-menyer i nav med flere design (krever omlagt nav-rendering for besøkende: hover/klikk, tastatur, mobilmeny) - flyttet fra v0.5
-- [ ] Nav-design videre: bakgrunnsbilde i menyen, design/hover-stiler for menypunkter, flere menystiler (f.eks. ekte «flytende» variant med luft rundt) - flyttet fra v0.5, hører sammen med dropdown-omleggingen
-- [ ] Flere design for former, bokser o.l. (design-galleri; plugins skal kunne levere egne - flyttet fra idébanken)
-- [ ] Søk i blokkvelgeren (gir mening når plugin-blokker gjør listen lang - flyttet fra idébanken)
-- [ ] Fra editor-researchen (Squarespace/Wix/Gutenberg, 18. juli 2026): gradient-editor med frie stopp + radial, multimarkering med align/distribute, lagpanel/list view, palett-fra-bilde + genererte palettforslag, seksjonstemaer (ferdige rollesett per seksjon), lightbox («forstørr ved klikk»), duotone-aktig filter
-- [ ] Fra sidekartleggingen (18. juli 2026): delt footer med kolonner (lenkelister, kontakt/adresse/org.nr, sosiale lenker) - additivt på site.footer; FAQ-akkordeon (utvid/lukk hos besøkende); ikonbibliotek videre i ikon-blokken (tegn/emoji-meny og eget opplastet ikon LEVERT 0.5.11; gjenstår: tegnede SVG-er for bl.a. sosiale medier); boks-/kortstiler (skygge, kantlinje, glassmorfisme/backdrop-blur - Garuda-uttrykket); visuelle miniatyrer i preset-velgeren; publikasjonsarkiv-preset (utgaver gruppert per år, PDF-lenker - hører til arkiv/datablokk-mønsteret); hero-galleri (bildekarusell som bakgrunnslag); tabs/filter over kortliste (vurderes mot plugin-API-et)
-- [ ] Plugin-/mal-oppdagbarhet: etabler GitHub-topic-konvensjon (`urd-plugin`, `urd-mal`); galleri-nettstedet kommer etter v1
+- [ ] **M1 Grunnmur**: plugin-lasting for alvor (requiresEngine-validering mot motorversjonen, provides-kontroll, feilkapsling med staging/rollback per plugin), Plugins-panel i admin (aktiver/deaktiver via plugins.json gjennom utkast-/publiseringsflyten), CSP-behovsmodell (ADR: manifestets `csp`-felt + eksakt _headers-instruks i admin; _headers forblir Urd-eid), requirePublisher-hjelper i _lib, konflikt-/angre-dialoger over på editorens modalsystem, eksplisitt oppsettsveiviser-signal i site.json
+- [ ] **M2 Datablokk/arkiv-mønsteret**: ADR + samlinger i content/ (innslag + blokk som rendrer samling med visningsmal); nyheter, oppslagstavle og publikasjonsarkiv-preset bygges på mønsteret; produktkatalogen i v0.7 gjenbruker det
+- [ ] **M3 Kalender-referanseplugin** (ApeironLF-designkravene): abonnerbar feed (avhengighetsfri ICS-parser + Google Calendar API-kilde), gjentakende arrangementer ekspanderes, tre visninger (liste med dato-badge, kort-rutenett, månedskalender), kategori-chips via «Kategori: Tittel», auto-uttrekk av påmeldingslenke, «Abonner»-knapp (webcal + Google-cid), flere kilder + «neste arrangement»-panel, robuste tomtilstander; «Hva skjer»-preset
+- [ ] **M4 Skjema- og kart-referanseplugins**: skjema etter ApeironLF-modellen (mailto/valgfritt endepunkt + honeypot), kart som personvennlig OSM-innbygging med CSP-opt-in-flyten
+- [ ] **M5 Nav-omlegging**: dropdown-menyer (klikk/hover, tastatur/aria, mobilmeny) + nav-design videre (bakgrunnsbilde i menyen, hover-stiler, ekte «flytende» variant)
+- [ ] **M6 Editor- og designløft**: ikonbibliotek med tegnede SVG-er (sosiale medier m.m.), tegn/emoji-menyen inn i teksteditoren, sticky blokker (fest på skjermen med start/stopp), «+ ny blokk» der man klikker i seksjonen, footer med kolonner og sosiale lenker (additivt på site.footer), FAQ-akkordeon, boks-/kortstiler (skygge/kantlinje/glassmorfisme), gradient-editor med frie stopp + radial, seksjonstemaer (ferdige rollesett), hero-galleri som bakgrunnslag, preset-miniatyrer i velgeren, lightbox. STREKK (kuttes hvis fasen vokser): duotone, palett-fra-bilde, multimarkering med align/distribute, lagpanel, flere design for former/bokser (design-galleri)
+- [ ] **M7 Flerspråk-rammeverk** (eiers valg 19. juli 2026: rammeverk + bokmål/engelsk nå, resten påfyllbart): i18n-infrastruktur for admin (strings-moduler, språkvelger, localStorage) og motorens besøkende-tekster; nb + en komplette med paritetstest i CI; øvrige språk fra eiers liste (nynorsk, samisk, svensk, dansk, finsk, britisk engelsk, gaelic, spansk, tysk, trad./forenklet kinesisk, portugisisk, fransk, kanadisk engelsk) som påfyllbare oversettelsesfiler med bidrags-dokumentasjon
+- [ ] **M8 Maler og oppdagbarhet**: «Lagre som mal» (content/maler/), maler delt som plugins, GitHub-topic-konvensjonen (`urd-plugin`, `urd-mal`; galleri-nettstedet kommer etter v1), søk i blokkvelgeren
+- [ ] **M9 Splitt og oppdaterer (fasegaten)**: urd-template-repo med «Use this template», release-Action som synker template/, urdweb-avklaringen (eget repo laget FRA malen), oppdaterer v1 (én-klikks oppdatering av ownedPaths med sjekksum-varsel for håndredigerte filer). Port: klon malen, bygg side i admin, installer kalender-pluginen, kjør oppdateringsknappen; alt overlever
 
 ## Til v0.7 (finpuss + butikk)
 
