@@ -259,6 +259,16 @@
   function onKeydown(e) {
     if (!(e.ctrlKey || e.metaKey)) return;
     const key = e.key.toLowerCase();
+    // Ctrl+D med fokus i admin-panelene: dupliser markert blokk i previewen
+    // (ellers går snarveien til nettleserens bokmerke-dialog). Ikke i tekstfelt.
+    if (key === 'd') {
+      const inField = e.target instanceof HTMLElement
+        && (e.target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName));
+      if (inField || !selectedBlock || viewMode === 'mobile') return;
+      e.preventDefault();
+      bridge?.sendDuplicate();
+      return;
+    }
     if (key !== 'z' && key !== 'y') return;
     const t = e.target;
     // Fritekstfelter beholder nettleserens egen angring; alt annet
@@ -791,7 +801,8 @@
         if (sha) baseSha = sha;
         else refreshBaseSha();
         revertedSinceLoad = true;
-        setStatus('✓ Angret! Last admin på nytt om ~1 min for å redigere videre på den gjenopprettede versjonen', 'ok');
+        setStatus('✓ Angret! Venter på utrullingen (~1 min), så lastes den gjenopprettede versjonen automatisk …', 'ok');
+        awaitRevertDeploy();
       } else if (res.status === 409) {
         setStatus('Noen har publisert i mellomtiden - historikken er lastet på nytt', 'error');
       } else {
@@ -802,6 +813,44 @@
     }
     historyBusy = false;
     loadHistory();
+  }
+
+  /**
+   * Etter angring: poll de serverte innholdsfilene til deployen faktisk er
+   * ute, forkast utkastene (serveren er nå fasiten) og last admin på nytt
+   * automatisk - i stedet for å be eieren laste på nytt selv. Endrer ingen
+   * av filene seg innen fristen (treg utrulling, eller en publisering som
+   * bare rørte filer vi ikke poller), beholdes dagens sperre og melding.
+   */
+  async function awaitRevertDeploy() {
+    const paths = ['/content/site.json', ...siteDraft.pages.map((p) => `/${p.file}`)];
+    const snap = async () => {
+      const out = {};
+      for (const path of paths) {
+        try {
+          out[path] = await (await fetch(path, { cache: 'no-store' })).text();
+        } catch {
+          out[path] = null;
+        }
+      }
+      return out;
+    };
+    const before = await snap();
+    for (let attempt = 0; attempt < 18; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 10_000));
+      const now = await snap();
+      if (paths.some((path) => now[path] !== null && before[path] !== null && now[path] !== before[path])) {
+        setStatus('✓ Gjenopprettet versjon er ute - laster admin på nytt …', 'ok');
+        // Utkastene beskriver tilstanden fra FØR angringen; serveren er fasiten nå.
+        for (const key of Object.keys(localStorage).filter((k) => k.startsWith('urd-draft-'))) {
+          localStorage.removeItem(key);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        location.reload();
+        return;
+      }
+    }
+    setStatus('Angringen er lagret, men utrullingen lot vente på seg - last admin på nytt manuelt for å redigere videre', 'error');
   }
 
   /** Løper mens en sides data lastes; urd-ready venter på denne. */
@@ -1735,6 +1784,10 @@
     const section = store.data.sections.find((s) => s.id === sectionId) ?? store.data.sections[0];
     if (!section) return;
     pushHistory('add-block');
+    // Nye og dupliserte blokker legges ØVERST i lagrekkefølgen, så de aldri
+    // gjemmer seg bak det som alt står i seksjonen (eiers ønske 19. juli 2026).
+    const topZ = Math.max(0, ...section.blocks.map((b) => b.frames?.desktop?.z ?? 1)) + 1;
+    if (block.frames?.desktop) block.frames.desktop = { ...block.frames.desktop, z: topZ };
     section.blocks.push(block);
     markDesktopChange(section, 'blokk-lagt-til');
     store.save();
@@ -3398,10 +3451,11 @@
     background: rgb(255 255 255 / 6%);
   }
 
+  /* Aktiv markeres av bakgrunn + kant alene: font-vekt endres IKKE, ellers
+     flytter teksten seg bittelitt ved hvert valg (eiers observasjon). */
   .rail button.active {
     opacity: 1;
-    font-weight: 600;
-    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 22%, transparent);
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 28%, transparent);
     border-color: var(--urd-color-accent, #7c5cff);
   }
 

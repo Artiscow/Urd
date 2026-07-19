@@ -10,6 +10,7 @@
  *                  { type: 'urd-plugins', enabled }            (plugin-utkastets aktive liste; lastes live i preview)
  *                  { type: 'urd-collections', collections }    (samlingsutkastene: id → data; previewen bruker dem i stedet for serverfilene)
  *                  { type: 'urd-viewport', mode }              (editorens visningsvalg: desktop/mobile)
+ *                  { type: 'urd-duplicate' }                   (Ctrl+D i admin: dupliser markert blokk)
  *   side → editor: { type: 'urd-edit', sectionId, blockId, props, rerender? }  (klikk-og-skriv/bildeeditor)
  *                  { type: 'urd-move', sectionId, blockId, frame, frameKey }  (dra/resize)
  *                  { type: 'urd-mobile-manual', sectionId, frames } (seksjon materialisert)
@@ -95,6 +96,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     /** Klikk i admin-panelene skal lukke åpne menyer i forhåndsvisningen. */
     sendCloseMenus() {
       post({ type: 'urd-close-menus' });
+    },
+    /** Ctrl+D med fokus i admin-panelene: dupliser markert blokk i previewen. */
+    sendDuplicate() {
+      post({ type: 'urd-duplicate' });
     },
     sendShowGrid(visible) {
       post({ type: 'urd-show-grid', visible });

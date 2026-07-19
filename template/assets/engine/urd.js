@@ -169,6 +169,9 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-close-menus') {
       // Eieren klikket i admin-panelene: lukk åpne menyer (preset-galleri, blokkmeny).
       window.UrdPreviewEdit?.closeMenus();
+    } else if (msg?.type === 'urd-duplicate') {
+      // Ctrl+D med fokus i admin-panelene: dupliser markert blokk i previewen.
+      window.UrdPreviewEdit?.duplicateSelected();
     } else if (msg?.type === 'urd-plugins') {
       // Editorens plugin-utkast: last de aktiverte pluginene (filene ligger alt i repoet)
       // og rerendr, så plugins virker i forhåndsvisningen FØR publisering.

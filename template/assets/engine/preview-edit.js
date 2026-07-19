@@ -547,6 +547,39 @@ function initTextToolbar() {
     linkInput.focus();
   }
 
+  // Temafarge-kommandoene: execCommand kan bare skrive en FAST farge; etterpå
+  // byttes den til var(--urd-color-<token>) i feltet, så innholdet følger
+  // temabytter. execCommand normaliserer farger ulikt (hex/rgb), så matchingen
+  // skjer på rgb-form. Egne farger forblir frikoblet hex, med vilje.
+  const normColor = (value) => {
+    if (!value) return '';
+    const v = String(value).trim().toLowerCase();
+    const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/.exec(v);
+    if (!hex) return v.replace(/\s+/g, ' ');
+    let h = hex[1];
+    if (h.length === 3) h = [...h].map((c) => c + c).join('');
+    const n = parseInt(h, 16);
+    return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`;
+  };
+  const themeify = (token, styleProp) => {
+    if (!activeText) return;
+    const target = normColor(getComputedStyle(document.documentElement)
+      .getPropertyValue(`--urd-color-${token}`));
+    if (!target) return;
+    for (const el of activeText.querySelectorAll('[style], font[color]')) {
+      if (styleProp === 'color' && el.tagName === 'FONT' && normColor(el.getAttribute('color')) === target) {
+        el.removeAttribute('color');
+        el.style.color = `var(--urd-color-${token})`;
+        continue;
+      }
+      if (normColor(el.style[styleProp]) === target) {
+        el.style[styleProp] = `var(--urd-color-${token})`;
+      }
+    }
+    // Byttet skjer utenfor execCommand: meld input selv, så utkastet lagres.
+    activeText.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
   // Fargeraden (nedtrekket bak palettikonet): temafarger og egen tekstfarge,
   // så utheving med aksent/egen farge og fjern utheving.
   const colorRow = document.createElement('div');
@@ -565,6 +598,7 @@ function initTextToolbar() {
       const value = getComputedStyle(document.documentElement)
         .getPropertyValue(`--urd-color-${token}`).trim();
       exec('foreColor', value);
+      themeify(token, 'color');
       colorRow.classList.remove('vis');
     });
     b.className = 'urd-text-swatch';
@@ -588,6 +622,7 @@ function initTextToolbar() {
     const accent = getComputedStyle(document.documentElement)
       .getPropertyValue('--urd-color-accent').trim();
     exec('hiliteColor', accent);
+    themeify('accent', 'backgroundColor');
     colorRow.classList.remove('vis');
   });
   colorBtn('<span class="urd-tt-hl urd-tt-hl-free">A</span>', 'Uthev med egen farge', () => {
@@ -949,6 +984,13 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
+/** Dupliser markert blokk (broen: Ctrl+D med fokus i admin-panelene). */
+export function duplicateSelected() {
+  if (isMobile() || !selectedBlockId) return;
+  const ctx = document.querySelector(`.urd-block[data-block-id="${selectedBlockId}"]`)?._urdCtx;
+  if (ctx) duplicateBlock(ctx.section, ctx.block);
+}
+
 /** Dupliser en blokk: kopi med ny id, litt forskjøvet, i samme seksjon. */
 function duplicateBlock(section, block) {
   const copy = JSON.parse(JSON.stringify(block));
@@ -960,6 +1002,12 @@ function duplicateBlock(section, block) {
     y: f.y + 16,
   };
   post({ type: 'urd-add-block', sectionId: section.id, block: copy });
+  // Duplikatet blir den markerte blokken: rerendringen etter urd-add-block
+  // markerer den (enhanceSection leser selectedBlockId), og editoren følger
+  // etter via urd-select-block så Egenskaper-panelet viser kopien.
+  document.querySelectorAll('.urd-block.urd-selected').forEach((b) => b.classList.remove('urd-selected'));
+  selectedBlockId = copy.id;
+  post({ type: 'urd-select-block', sectionId: section.id, blockId: copy.id });
 }
 
 /**

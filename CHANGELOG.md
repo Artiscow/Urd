@@ -12,6 +12,14 @@ døpes til det siste push-nummeret ved gaten, slik v0.5-fasen endte i
 0.5.10. Da stiger numrene alltid. Etterslepp-fikser på v0.5 nummereres
 0.5.11 og videre.
 
+### 0.6.8 - backlog-sveip: fire livskvalitetsfikser + blokk-flyt - 19. juli 2026
+- Temafølgende utheving og tekstfarge: fargen TEMA-knappene i tekstlinjen skriver byttes nå til var(--urd-color-<token>) i feltet, så uthevinger og temafarget tekst skifter live når temaet endres (før frøs aksentfargen som hex i teksten). Egne farger forblir frikoblet hex, med vilje.
+- Ctrl+D (dupliser) virker nå også med fokus i admin-panelene (ny urd-duplicate-melding over broen; i tekstfelt beholder nettleseren snarveien). Duplikatet blir dessuten den MARKERTE blokken, klar for piltaster eller ny Ctrl+D.
+- Nye blokker legges alltid ØVERST i lagrekkefølgen: insertBlock (fellestrakten for palett, «+ Ny blokk»-menyen og dupliser) setter z til seksjonens høyeste pluss én, så en ny blokk aldri gjemmer seg bak eksisterende. «+ kort/rad»-elementene fra malene beholder sin bevisste interne lagdeling.
+- Etter angre-publisering lastes den gjenopprettede versjonen automatisk: admin poller de serverte innholdsfilene til deployen er ute (opptil 3 min), forkaster utkastene (serveren er fasiten) og laster seg selv på nytt; ved tidsavbrudd består den gamle sperren og omlast-meldingen.
+- Admin-venstremenyens aktiv-markering endrer ikke lenger font-vekten (teksten flyttet seg bittelitt); aktiv markeres av bakgrunn + kant, som er stabile.
+- Backlog-gjennomgang med kodeverifisering: fem punkter viste seg alt levert (requirePublisher og modalene fra 0.6.2, oppsettsveiviserens site.setup-signal, logo/ikon fra v0.5, og CSP-arven på /admin/* verifisert i produksjon). BACKLOG.md er omstrukturert: forslag og funn sorteres nå rett inn i milepælen/fasen der de tas (M6 fikk hjelpelinjer, seksjonshøyde ovenfra og multimarkering med kopier/lim inn; v0.7 fikk mobil-klyngen samlet som ett arbeid), dokumenterte begrensninger står i egen seksjon, og alt levert i v0.6-syklusen er samlet for opprydding ved fase-slippet.
+
 ### 0.6.7 - CodeQL #10: kryptografisk makeId-fallback - 19. juli 2026
 - CodeQL #10 (Insecure randomness) lukket: makeId-fallbacken for usikre opprinnelser bruker crypto.getRandomValues (som virker overalt, også http://0.0.0.0) i stedet for Math.random. Begge id-veiene er nå kryptografisk tilfeldige.
 
