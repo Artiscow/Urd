@@ -119,6 +119,29 @@ En seksjon er alltid den samme generiske containeren - egen størrelse, egen bak
 - **`decor`** (valgfri, standard false): dekor-blokker (typisk streker/sirkler) utelates fra auto-avledet mobil-layout. Nye formblokker får `decor: true` fra paletten.
 - **`animation`** (valgfri): `{ "type": "fade-in", "version": 1, "props": { "duration": 600, "delay": 0 } }` - animasjoner er registertyper med samme migreringskontrakt. Kjernetyper (v0.5): `fade-in`, `slide-up`, `zoom-in` (inngang, spilles ved scroll-inn hos besøkende; editorens preview viser slutt-tilstanden) og `hover-lift`. `prefers-reduced-motion` respekteres. Seksjoner har samme valgfrie `animation`-felt (additivt fra v0.5). Ukjent animasjonstype viser innholdet uanimert - animasjon velter aldri en side.
 
+## `content/samlinger/<id>.json` (samlinger)
+
+Datablokk-mønsteret (ADR-0007): likeartede innslag som DATA, rendret av
+samling-blokken med valgbar visning (`cards`/`list`/`archive`). Kontrakten
+bor i `schema/collection.schema.json`.
+
+```json
+{
+  "schemaVersion": 1,
+  "id": "nyheter",
+  "name": "Nyheter",
+  "kind": "news",
+  "entries": [
+    { "id": "velkommen", "title": "Velkommen", "date": "2026-07-19", "text": "…", "image": "/media/…", "href": "/om-oss" }
+  ]
+}
+```
+
+- **`kind`** (`news`/`notices`/`publications`/`custom`) styrer hvilke felter editoren fremhever; visningene leser de felles feltnavnene.
+- Innslagenes `text` er rik tekst med samme besøkende-vern som tekstblokkene (kjørbar kode strippes alltid ved rendering); `title` er alltid ren tekst.
+- `content/samlinger.json` er indeksfilen (`{ "version": 1, "samlinger": ["nyheter"] }`): statiske hoster kan ikke liste mapper, samme presedens som plugins.json.
+- Samling-blokkens props: `{ collection, view, limit, newestFirst }` (additive). Manglende/tom samling gir rolig tomtilstand i editoren og ingenting hos besøkende.
+
 ## Mobil-tilsyn
 
 Den frie plasseringen gjør at desktop- og mobil-layout kan drifte fra hverandre. Urd gjør dette til et eksplisitt, sporbart tilstandsflagg i stedet for en stille feil:

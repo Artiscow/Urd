@@ -18,6 +18,8 @@
  */
 import { frameToCss } from './render.js';
 import { makeId } from './sections/presets.js';
+import { openImageEditor, closeImageEditor } from './image-editor.js';
+import { openColorPicker, closeColorPicker } from './color-picker.js';
 
 /** Mobilvisning? Motoren setter body-klassen ut fra breakpointet. */
 const isMobile = () => document.body.classList.contains('urd-mobile');
@@ -27,6 +29,8 @@ let collapseOpenPresetMenu = null;
 export function closeMenus() {
   collapseOpenPresetMenu?.();
   collapseOpenPresetMenu = null;
+  closeImageEditor();
+  closeColorPicker();
   document.querySelectorAll('.urd-add-block-menu.open').forEach((m) => m.classList.remove('open'));
 }
 
@@ -176,11 +180,11 @@ const BLOCK_KINDS = [
   ['text', 'Tekst'], ['text-box', 'Tekstboks'], ['button', 'Knapp'],
   ['image', 'Bilde'], ['video', 'Video'], ['icon', 'Ikon'],
   ['shape-line', 'Strek'], ['shape-arrow', 'Pil'], ['shape-circle', 'Sirkel'],
-  ['shape-rect', 'Rektangel'], ['shape-triangle', 'Trekant'],
+  ['shape-rect', 'Rektangel'], ['shape-triangle', 'Trekant'], ['samling', 'Samling'],
 ];
 
 /** Kjerneblokk-typene (paletten i editoren eier byggingen av disse). */
-const CORE_BLOCK_TYPES = new Set(['text', 'image', 'button', 'shape', 'video', 'icon']);
+const CORE_BLOCK_TYPES = new Set(['text', 'image', 'button', 'shape', 'video', 'icon', 'samling']);
 
 function addBlockAdder(host, section) {
   const wrap = document.createElement('div');
@@ -398,25 +402,47 @@ function initTextToolbar() {
 
   const bar = document.createElement('div');
   bar.className = 'urd-text-toolbar';
-  // Klikk i linjen skal ikke flytte fokus ut av tekstfeltet.
-  bar.addEventListener('mousedown', (event) => event.preventDefault());
+  // Klikk i linjen skal ikke flytte fokus ut av tekstfeltet. Unntak: select
+  // og input MÅ få mousedown, ellers åpner ikke nivåvelgeren seg og
+  // lenkefeltet kan ikke klikkes i; fokusvekslingen deres håndteres eksplisitt.
+  bar.addEventListener('mousedown', (event) => {
+    if (event.target instanceof Element && event.target.closest('select, input')) return;
+    event.preventDefault();
+  });
 
   const exec = (name, value = null) => document.execCommand(name, false, value);
+
+  // Fargevelger og lenkefelt flytter fokus/markering: markeringen lagres før og gjenopprettes ved bruk.
+  let savedRange = null;
+  const saveSelection = () => {
+    const sel = document.getSelection();
+    savedRange = sel && sel.rangeCount ? sel.getRangeAt(0).cloneRange() : null;
+  };
+  const restoreSelection = () => {
+    if (!savedRange) return;
+    const sel = document.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+  };
+
+  /** Grupper som radbrytes SAMLET, så ingen enslig knapp havner på egen linje. */
+  let group = null;
+  const startGroup = () => {
+    group = document.createElement('span');
+    group.className = 'urd-tt-group';
+    bar.appendChild(group);
+  };
   const btn = (html, title, run) => {
     const b = document.createElement('button');
     b.innerHTML = html;
     b.title = title;
     b.addEventListener('click', () => { run(); reposition(); });
-    bar.appendChild(b);
+    group.appendChild(b);
     return b;
-  };
-  const sep = () => {
-    const s = document.createElement('span');
-    s.className = 'urd-tt-sep';
-    bar.appendChild(s);
   };
 
   // Overskriftsnivå
+  startGroup();
   const level = document.createElement('select');
   level.className = 'urd-tt-level';
   level.title = 'Tekstnivå';
@@ -426,101 +452,199 @@ function initTextToolbar() {
     o.textContent = name;
     level.appendChild(o);
   }
-  level.addEventListener('change', () => exec('formatBlock', level.value));
-  bar.appendChild(level);
-  sep();
-
-  btn('<b>F</b>', 'Fet', () => exec('bold'));
-  btn('<i>K</i>', 'Kursiv', () => exec('italic'));
-  btn('<u>U</u>', 'Understrek', () => exec('underline'));
-  sep();
-
-  // Temafargene (leses ved klikk, så de følger gjeldende tema) + fri farge.
-  for (const token of ['text', 'accent']) {
-    const b = btn('', token === 'text' ? 'Tekstfarge' : 'Aksentfarge', () => {
-      const value = getComputedStyle(document.documentElement)
-        .getPropertyValue(`--urd-color-${token}`).trim();
-      exec('foreColor', value);
-    });
-    b.className = 'urd-text-swatch';
-    b.style.background = `var(--urd-color-${token})`;
-  }
-  const custom = document.createElement('input');
-  custom.type = 'color';
-  custom.className = 'urd-tt-color';
-  custom.title = 'Egen farge';
-  custom.addEventListener('input', () => exec('foreColor', custom.value));
-  bar.appendChild(custom);
-
-  // Utheving (markeringstusj): aksentfarget bakgrunn på markert tekst.
-  const hl = btn('<span class="urd-tt-hl">A</span>', 'Uthev med aksentfargen (klikk igjen på uthevet tekst fjerner via Fjern formatering)', () => {
-    const accent = getComputedStyle(document.documentElement)
-      .getPropertyValue('--urd-color-accent').trim();
-    exec('hiliteColor', accent);
+  // Velgeren tar fokus fra tekstfeltet mens den er åpen: markeringen lagres
+  // ved åpning og gjenopprettes før kommandoen, så nivået treffer riktig tekst.
+  level.addEventListener('mousedown', saveSelection);
+  level.addEventListener('change', () => {
+    activeText?.focus();
+    restoreSelection();
+    exec('formatBlock', level.value);
   });
-  hl.classList.add('urd-tt-hl-btn');
-  const hlCustom = document.createElement('input');
-  hlCustom.type = 'color';
-  hlCustom.className = 'urd-tt-color';
-  hlCustom.title = 'Uthev med egen farge';
-  hlCustom.addEventListener('input', () => exec('hiliteColor', hlCustom.value));
-  bar.appendChild(hlCustom);
-  sep();
+  group.appendChild(level);
+
+  startGroup();
+  btn('<b>F</b>', 'Fet (Ctrl+B)', () => exec('bold'));
+  btn('<i>K</i>', 'Kursiv (Ctrl+I)', () => exec('italic'));
+  btn('<u>U</u>', 'Understrek (Ctrl+U)', () => exec('underline'));
+  btn('<s>S</s>', 'Gjennomstreking', () => exec('strikeThrough'));
+
+  // Farger: samlet i en nedtrekksrad (palettikonet er nedtrekksknappen),
+  // så hovedlinjen holder seg smal. Selve raden bygges lenger ned (colorRow).
+  startGroup();
+  const PALETTE_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="9" r="1" fill="currentColor"/><circle cx="15.5" cy="9" r="1" fill="currentColor"/><circle cx="8.5" cy="15" r="1" fill="currentColor"/><path d="M21 12a9 9 0 0 1-9 9c2.5-2 1-4.5 3-5.5s6 .5 6-3.5z"/></svg>';
+  btn(PALETTE_SVG, 'Farger og utheving', () => toggleColorRow());
 
   const alignIcon = (kind) =>
     `<span class="urd-ticon urd-ticon-${kind}"><i></i><i></i><i></i></span>`;
+  startGroup();
   btn(alignIcon('left'), 'Venstrejuster', () => exec('justifyLeft'));
   btn(alignIcon('center'), 'Midtstill', () => exec('justifyCenter'));
   btn(alignIcon('right'), 'Høyrejuster', () => exec('justifyRight'));
-  sep();
 
+  startGroup();
   btn('<span class="urd-licon"><i></i><i></i><i></i></span>', 'Punktliste',
     () => exec('insertUnorderedList'));
   btn('<span class="urd-licon urd-licon-ol"><i>1</i><i>2</i><i>3</i></span>', 'Nummerert liste',
     () => exec('insertOrderedList'));
-  btn('❝', 'Sitat', () => exec('formatBlock', 'blockquote'));
-  sep();
+  const QUOTE_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5C3.8 5 2 6.8 2 9s1.8 4 4 4c.3 0 .5 0 .8-.1C6.2 14.8 5 16.4 3.4 17.4l1.2 1.8C8 17 10 13.7 10 10.2 10 7.2 8.3 5 6 5z"/><path d="M17 5c-2.2 0-4 1.8-4 4s1.8 4 4 4c.3 0 .5 0 .8-.1-.6 1.9-1.8 3.5-3.4 4.5l1.2 1.8C19 17 21 13.7 21 10.2 21 7.2 19.3 5 17 5z"/></svg>';
+  btn(QUOTE_SVG, 'Sitat', () => exec('formatBlock', 'blockquote'));
 
+  startGroup();
   const LINK_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg>';
-  btn(LINK_SVG, 'Lenke (tomt felt fjerner lenken)', () => {
-    const url = prompt('Lenkeadresse:', 'https://');
-    if (url === null) return;
-    const trimmed = url.trim();
-    // Kun vanlige lenkeformer: javascript:-URL-er (og andre aktive skjemaer) skal aldri bli klikkbare hos besøkende.
-    if (/^(javascript|data|vbscript):/i.test(trimmed)) {
-      alert('Lenkeadressen må være en vanlig nettadresse (https://…), e-post (mailto:) eller intern sti.');
-      return;
-    }
-    if (trimmed) exec('createLink', trimmed);
-    else exec('unlink');
-  });
-  btn('T<sub>×</sub>', 'Fjern formatering', () => {
+  const CLEAR_SVG = '<svg width="16" height="14" viewBox="0 0 26 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5h12"/><path d="M11 5L8 19"/><path d="M18 15l6 6"/><path d="M24 15l-6 6"/></svg>';
+  btn(LINK_SVG, 'Lenke', () => toggleLinkRow());
+  btn(CLEAR_SVG, 'Fjern formatering', () => {
     exec('removeFormat');
     exec('unlink');
     exec('formatBlock', 'p');
   });
+
+  // Inline lenkefelt (moderne flyt, ingen prompt): åpnes av lenkeknappen på egen rad i linjen.
+  const linkRow = document.createElement('div');
+  linkRow.className = 'urd-tt-linkrow';
+  const linkInput = document.createElement('input');
+  linkInput.placeholder = 'https://… , /om-oss eller mailto:…';
+  linkInput.spellcheck = false;
+  const linkApply = document.createElement('button');
+  linkApply.textContent = 'Bruk';
+  const linkRemove = document.createElement('button');
+  linkRemove.textContent = 'Fjern lenke';
+  linkRow.append(linkInput, linkApply, linkRemove);
+  bar.appendChild(linkRow);
+
+  const applyLink = () => {
+    const trimmed = linkInput.value.trim();
+    // Kun vanlige lenkeformer: aktive URL-skjemaer skal aldri bli klikkbare hos besøkende.
+    if (/^(javascript|data|vbscript):/i.test(trimmed)) return;
+    restoreSelection();
+    if (trimmed) exec('createLink', trimmed);
+    else exec('unlink');
+    linkRow.classList.remove('vis');
+  };
+  linkApply.addEventListener('click', applyLink);
+  linkInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') applyLink();
+    if (event.key === 'Escape') linkRow.classList.remove('vis');
+  });
+  linkRemove.addEventListener('click', () => {
+    restoreSelection();
+    exec('unlink');
+    linkRow.classList.remove('vis');
+  });
+
+  function toggleLinkRow() {
+    if (linkRow.classList.contains('vis')) {
+      linkRow.classList.remove('vis');
+      return;
+    }
+    colorRow.classList.remove('vis');
+    saveSelection();
+    // Forhåndsutfyll med eksisterende lenke når markøren står i en.
+    const sel = document.getSelection();
+    const anchorEl = sel?.anchorNode instanceof HTMLElement ? sel.anchorNode : sel?.anchorNode?.parentElement;
+    linkInput.value = anchorEl?.closest('a')?.getAttribute('href') ?? '';
+    linkRow.classList.add('vis');
+    linkInput.focus();
+  }
+
+  // Fargeraden (nedtrekket bak palettikonet): temafarger og egen tekstfarge,
+  // så utheving med aksent/egen farge og fjern utheving.
+  const colorRow = document.createElement('div');
+  colorRow.className = 'urd-tt-colorrow';
+  bar.insertBefore(colorRow, linkRow);
+  const colorBtn = (html, title, run) => {
+    const b = document.createElement('button');
+    b.innerHTML = html;
+    b.title = title;
+    b.addEventListener('click', () => { run(); reposition(); });
+    colorRow.appendChild(b);
+    return b;
+  };
+  for (const token of ['text', 'accent']) {
+    const b = colorBtn('', token === 'text' ? 'Tekstfarge (tema)' : 'Aksentfarge (tema)', () => {
+      const value = getComputedStyle(document.documentElement)
+        .getPropertyValue(`--urd-color-${token}`).trim();
+      exec('foreColor', value);
+      colorRow.classList.remove('vis');
+    });
+    b.className = 'urd-text-swatch';
+    b.style.background = `var(--urd-color-${token})`;
+  }
+  colorBtn('<span class="urd-tt-acolor">A</span>', 'Egen tekstfarge', () => {
+    colorRow.classList.remove('vis');
+    saveSelection();
+    openColorPicker(bar, {
+      value: '#ffffff',
+      onpick: (hex) => {
+        restoreSelection();
+        exec('foreColor', hex);
+      },
+    });
+  });
+  const colorSep = document.createElement('span');
+  colorSep.className = 'urd-tt-sep';
+  colorRow.appendChild(colorSep);
+  colorBtn('<span class="urd-tt-hl">A</span>', 'Uthev med aksentfargen', () => {
+    const accent = getComputedStyle(document.documentElement)
+      .getPropertyValue('--urd-color-accent').trim();
+    exec('hiliteColor', accent);
+    colorRow.classList.remove('vis');
+  });
+  colorBtn('<span class="urd-tt-hl urd-tt-hl-free">A</span>', 'Uthev med egen farge', () => {
+    colorRow.classList.remove('vis');
+    saveSelection();
+    openColorPicker(bar, {
+      onpick: (hex) => {
+        restoreSelection();
+        exec('hiliteColor', hex);
+      },
+    });
+  });
+  colorBtn('<span class="urd-tt-hl urd-tt-hl-none">A</span>', 'Fjern utheving', () => {
+    exec('hiliteColor', 'transparent');
+    colorRow.classList.remove('vis');
+  });
+
+  function toggleColorRow() {
+    linkRow.classList.remove('vis');
+    colorRow.classList.toggle('vis');
+  }
+
   document.body.appendChild(bar);
 
-  // Linjen vises så lenge et tekstfelt har fokus, forankret over blokken
-  // (mousedown på linjen preventDefaults, så fokus består ved klikk der).
+  // Linjen vises så lenge et tekstfelt har fokus, forankret ved MARKERINGEN
+  // (blokk-rekten som fallback), klemt under sidens klistrede meny.
   let activeText = null;
 
   const reposition = () => {
     if (!activeText || !activeText.isConnected) {
       bar.classList.remove('vis');
+      linkRow.classList.remove('vis');
+      colorRow.classList.remove('vis');
       return;
     }
-    const block = activeText.closest('.urd-block') ?? activeText;
-    const rect = block.getBoundingClientRect();
-    // Blokkverktøylinjen (⠿, lag, dekor, ×) ligger over blokken: legg tekstlinjen
-    // over DEN, så de aldri overlapper.
-    const blockToolbar = block.querySelector(':scope > .urd-edit-toolbar');
-    const anchorTop = blockToolbar
-      ? Math.min(rect.top, blockToolbar.getBoundingClientRect().top)
-      : rect.top;
+    // Markeringens rekt er ankeret; en tom/ugyldig rekt (kollapset markør på
+    // tom linje, fokus på vei et annet sted) skal ALDRI flytte linjen.
+    let anchor = null;
+    const sel = document.getSelection();
+    if (sel && sel.rangeCount && activeText.contains(sel.anchorNode)) {
+      const r = sel.getRangeAt(0).getBoundingClientRect();
+      if (r && (r.width || r.height)) anchor = r;
+    }
+    if (!anchor) {
+      const block = activeText.closest('.urd-block') ?? activeText;
+      const r = block.getBoundingClientRect();
+      if (!r || (!r.width && !r.height)) return;
+      anchor = r;
+    }
     bar.classList.add('vis');
-    bar.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - bar.offsetWidth - 8))}px`;
-    bar.style.top = `${Math.max(8, anchorTop - bar.offsetHeight - 8)}px`;
+    const navHeight = document.getElementById('urd-nav')?.offsetHeight ?? 0;
+    const left = Math.max(8, Math.min(anchor.left, window.innerWidth - bar.offsetWidth - 8));
+    let top = anchor.top - bar.offsetHeight - 10;
+    // Under den klistrede menyen, ellers under markeringen i stedet for over.
+    if (top < navHeight + 8) top = Math.min(anchor.bottom + 10, window.innerHeight - bar.offsetHeight - 8);
+    bar.style.left = `${left}px`;
+    bar.style.top = `${top}px`;
     // Nivåvelgeren speiler markørens plassering.
     try {
       const value = (document.queryCommandValue('formatBlock') || 'p').toLowerCase();
@@ -532,22 +656,44 @@ function initTextToolbar() {
     const target = event.target instanceof HTMLElement
       ? event.target.closest('.urd-text[contenteditable="true"]')
       : null;
-    if (target) activeText = target;
-    reposition();
+    if (target && target !== activeText) {
+      activeText = target;
+      linkRow.classList.remove('vis');
+      colorRow.classList.remove('vis');
+    }
+    if (target) reposition();
   });
   document.addEventListener('focusout', () => {
-    // Vent et blunk: fokus kan være på vei til selve linjen.
+    // Vent et blunk: fokus kan være på vei til selve linjen (eller lenkefeltet).
     requestAnimationFrame(() => {
       const el = document.activeElement;
-      if (!(el instanceof HTMLElement) || !el.closest('.urd-text[contenteditable="true"]')) {
-        activeText = null;
-        reposition();
-      }
+      if (el instanceof HTMLElement && (bar.contains(el) || el.closest('.urd-text[contenteditable="true"]'))) return;
+      activeText = null;
+      reposition();
     });
   });
-  document.addEventListener('selectionchange', reposition);
-  window.addEventListener('scroll', reposition, { passive: true, capture: true });
-  window.addEventListener('resize', reposition);
+  // Klikk hvor som helst utenfor feltet lukker linjen. Flate-draget i preview
+  // sluker mousedown (preventDefault), så tekstfeltet mister aldri fokus av seg
+  // selv; derfor lukkes det eksplisitt her. Klikk i linjen, fargevelgeren,
+  // bildeeditoren eller et annet tekstfelt skal IKKE lukke (de håndterer selv).
+  document.addEventListener('pointerdown', (event) => {
+    if (!activeText) return;
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+    if (bar.contains(target) || activeText.contains(target)) return;
+    if (target.closest('.urd-text[contenteditable="true"], .urd-cp, .urd-imged')) return;
+    activeText.blur();
+    activeText = null;
+    reposition();
+  }, true);
+  document.addEventListener('selectionchange', () => {
+    // Kun når markeringen faktisk står i det aktive feltet; ellers ville
+    // klikk andre steder pånytt-posisjonert linjen ut av kontekst.
+    const sel = document.getSelection();
+    if (activeText && sel?.anchorNode && activeText.contains(sel.anchorNode)) reposition();
+  });
+  window.addEventListener('scroll', () => { if (activeText) reposition(); }, { passive: true, capture: true });
+  window.addEventListener('resize', () => { if (activeText) reposition(); });
 }
 
 /** Verktøylinje øverst til høyre i seksjonen. Desktop: flytt opp/ned,
@@ -848,6 +994,40 @@ function enhanceBlock(el, block, section, grid, host) {
     toolbar.classList.add('urd-edit-toolbar-inside');
   }
 
+  // Den felles bildeeditoren for bildeblokker: alle feltene, med live DOM-oppdatering
+  // (kun bildebytte trenger rerender, og da lukkes panelet).
+  const openBlockImageEditor = () => {
+    const img = () => el.querySelector('img');
+    openImageEditor(img() ?? el, {
+      fields: ['image', 'alt', 'fit', 'radius', 'href', 'focus', 'filters'],
+      get: (field) => (field === 'image' ? block.props.src || null : block.props[field]),
+      set: (field, value) => {
+        const key = field === 'image' ? 'src' : field;
+        block.props = { ...block.props, [key]: value };
+        const node = img();
+        if (node) {
+          const p = block.props;
+          node.style.objectFit = p.fit ?? 'cover';
+          node.style.objectPosition = `${(p.x ?? 0.5) * 100}% ${(p.y ?? 0.5) * 100}%`;
+          node.style.borderRadius = p.radius ? `var(--urd-radius-${p.radius})` : '';
+          const filters = [];
+          if (p.brightness != null && p.brightness !== 1) filters.push(`brightness(${p.brightness})`);
+          if (p.contrast != null && p.contrast !== 1) filters.push(`contrast(${p.contrast})`);
+          if (p.saturate != null && p.saturate !== 1) filters.push(`saturate(${p.saturate})`);
+          node.style.filter = filters.join(' ');
+          node.alt = p.alt ?? '';
+        }
+        post({ type: 'urd-edit', sectionId: section.id, blockId: block.id, props: block.props, rerender: field === 'image' });
+      },
+    });
+  };
+  if (block.type === 'image' && !mobile) {
+    el.addEventListener('dblclick', (event) => {
+      event.preventDefault();
+      openBlockImageEditor();
+    });
+  }
+
   const moveHandle = document.createElement('button');
   moveHandle.className = 'urd-edit-move';
   moveHandle.textContent = '⠿';
@@ -922,6 +1102,14 @@ function enhanceBlock(el, block, section, grid, host) {
     toolbar.appendChild(decorBtn);
 
     const DUP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>';
+    if (block.type === 'image') {
+      const imgBtn = document.createElement('button');
+      imgBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"/></svg>';
+      imgBtn.title = 'Rediger bildet (eller dobbeltklikk på det)';
+      imgBtn.addEventListener('click', () => openBlockImageEditor());
+      toolbar.appendChild(imgBtn);
+    }
+
     const dupBtn = document.createElement('button');
     dupBtn.innerHTML = DUP_SVG;
     dupBtn.title = 'Dupliser blokken (Ctrl+D)';
@@ -1010,7 +1198,7 @@ function enhanceBlock(el, block, section, grid, host) {
         // redigerer man teksten). En uvalgt blokk dras fritt også fra
         // teksten - klikk uten dra velger den, klikk igjen redigerer.
         if (target?.closest('.urd-text[contenteditable="true"]') && selectedBlockId === block.id) return;
-        if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button, input, select, textarea')) return;
+        if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button, input, select, textarea, .urd-samling-editable, .urd-samling-image-edit')) return;
         // Auto-mobil: første materialisering skal være et bevisst valg
         // (dra i ⠿), ikke et klikk på blokken.
         if (mobile && (section.responsive?.mobile?.mode ?? 'auto') !== 'manual') return;

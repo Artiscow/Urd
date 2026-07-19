@@ -3,6 +3,8 @@
  * med justering. Innholdet er eierens eget og regnes som betrodd; det er
  * samme tillitsmodell som at eieren kan redigere filene i repoet direkte.
  */
+import { stripActiveContent } from '../sanitize.js';
+
 export const textBlock = {
   version: 1,
   label: 'Tekst',
@@ -33,15 +35,8 @@ export const textBlock = {
     // redigering splittet wrapperen. Tekstinnhold skal aldri inneholde
     // knapper, så alle fjernes ved rendering (lagres rent ved neste edit).
     content.querySelectorAll('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button').forEach((n) => n.remove());
-    // Besøkende-vern: rik tekst limt inn fra tredjepart kan bære event-attributter (onerror osv.) eller javascript:-lenker.
-    // Eieren er betrodd for MARKUP, men innlimt kode skal aldri kjøre hos besøkende; legitim tekst trenger aldri disse.
-    for (const el2 of content.querySelectorAll('*')) {
-      for (const attr of [...el2.attributes]) {
-        if (attr.name.toLowerCase().startsWith('on')) el2.removeAttribute(attr.name);
-      }
-      if (/^\s*javascript:/i.test(el2.getAttribute?.('href') ?? '')) el2.removeAttribute('href');
-    }
-    content.querySelectorAll('script, iframe, object, embed').forEach((n) => n.remove());
+    // Besøkende-vern (delt med samlingsinnslag): kjørbar kode strippes alltid ved rendering.
+    stripActiveContent(content);
     el.appendChild(content);
 
     // Klikk-og-skriv: i preview-modus (inne i editorens iframe) er teksten

@@ -68,6 +68,8 @@ synsfeltet, i seksjonen du sist klikket i. Typene:
 - **Video**: lim inn en YouTube- eller Vimeo-lenke i Egenskaper.
   Innbyggingen er personvennlig, og videoen spilles på den publiserte
   siden (i editoren markerer klikk bare blokken).
+- **Samling**: viser innslagene fra en samling (se Samlinger-panelet)
+  som kort, liste eller år-gruppert arkiv.
 - **Ikon**: et tegn eller en emoji i valgfri størrelse og temafarge.
   I Egenskaper åpner tegnknappen en meny med hundrevis av tegn og
   emojier (med de nylig brukte øverst), og nederst i menyen kan du
@@ -100,7 +102,7 @@ valg i stedet for dra-og-slipp:
 - Alle blokker: nøyaktig posisjon og størrelse, lag (hva som ligger
   foran), rotasjon og mobil-synlighet (pynt).
 - Tekst: justering og tekstboks av/på. Knapp: tekst, hvor den går og stil.
-  Bilde: bytt bilde, alt-tekst, beskjæring, avrunding og lenke.
+  Bilde: bytt bilde, beskrivelse, beskjæring, avrunding og lenke.
   Form: type, farge fra temaet, tykkelse og fylt/kantlinje.
 - Klikker du i en seksjon (uten blokk valgt) viser panelet seksjonens
   minstehøyde, eget grid, bakgrunn og animasjon.
@@ -108,8 +110,10 @@ valg i stedet for dra-og-slipp:
 **Farger**: fargevelgerne viser temafargene dine som prikker - velger du
 en av dem, KOBLES feltet til temaet og følger med når du endrer paletten
 i Tema-panelet (koblede felt vises med ring). Velger du fritt i flaten
-eller skriver en hex-kode, er fargen frikoblet. De siste frie fargene
-dine ligger under «Nylige».
+eller skriver en hex- eller RGB-verdi, er fargen frikoblet, og du kan
+gjøre den gjennomsiktig med glideren under kulørene. De siste frie
+fargene dine ligger under «Nylige», og med plussknappen ved «Lagrede»
+bygger du din egen faste palett (opptil 12; × på en prikk fjerner den).
 
 **Bilder**: i Egenskaper kan du sette fokuspunkt (hvilken del av bildet
 som beholdes når det beskjæres) og justere lysstyrke, kontrast og
@@ -126,10 +130,25 @@ selve animasjonen spilles på den publiserte siden. Besøkende som har
 skrudd av animasjoner i systemet sitt (redusert bevegelse) får innholdet
 uten animasjon.
 
-**Formatere tekst**: klikk i en tekstblokk, så dukker verktøylinjen opp
-over den: tekstnivå (avsnitt/overskrifter), fet, kursiv, understrek,
-farger, lenke, justering, lister, sitat og fjern formatering. Font og
-grunnstørrelse for hele feltet settes i Egenskaper.
+**Formatere tekst**: klikk i en tekstblokk (eller i tittel/tekst i et
+samlingsinnslag), så dukker verktøylinjen opp ved markeringen: tekstnivå,
+fet, kursiv, understrek, gjennomstreking, farger og utheving samlet bak
+palettikonet (temafarger, egen farge med full fargevelger og pipette,
+uthev med aksent eller egen farge, og fjern utheving: A-en med rød strek
+over), lenke (eget felt i linjen), justering, lister, sitat og fjern
+formatering. Font og grunnstørrelse for hele feltet settes i Egenskaper.
+Linjen lukkes ved klikk hvor som helst utenfor feltet.
+
+**Redigere bilder**: dobbeltklikk et bilde i en bildeblokk (eller klikk
+et samlingsbilde) for bildeeditoren: bytt/fjern bilde, dra fokuspunktet
+for å styre utsnittet, zoom inn mot fokuspunktet for å beskjære,
+velg form på rammen (bred, kvadrat, portrett eller rund), juster
+lysstyrke/kontrast/metning (med gråtone-hurtigvalg og nullstilling),
+tilpasning, avrunding, beskrivelse (leses av skjermlesere og vises når
+bildet ikke kan lastes) og lenke. Mens editoren er åpen ligger et svakt
+tredelingsgitter over bildet (som i kameraer), så du ser midten og
+tredjedelene mens du komponerer. Alt er ikke-destruktivt:
+originalbildet røres aldri.
 
 ## Seksjoner
 
@@ -208,6 +227,13 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   (om menyen følger med når besøkende blar nedover).
 - **Nettstedsikon**: nederst i Tema-panelet laster du opp ikonet som
   vises i nettleserfanen og bokmerker (firkantet bilde anbefales).
+- **Samlinger**-panelet: lister av innslag (nyheter, oppslag, publikasjoner)
+  som bor som data og vises av Samling-blokker. Opprett en samling, skriv
+  innslag (tittel, dato, tekst, bilde, lenke), og legg en Samling-blokk på
+  siden (eller bruk seksjonsmalene «Nyheter (samling)», «Oppslagstavle» og
+  «Publikasjonsarkiv»). Å legge til en nyhet er da å SKRIVE et innslag -
+  alle visningene følger med automatisk. Blokkens Egenskaper velger
+  samling, visning (kort/liste/arkiv per år), antall og sortering.
 - **Plugins**-panelet: utvidelser som gir Urd nye blokker og seksjonsmaler.
   Panelet viser pluginene i repoets plugins/-mappe; skru av og på med
   bryteren, og publiser som vanlig. Aktive plugins virker umiddelbart i

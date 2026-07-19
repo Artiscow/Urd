@@ -21,6 +21,7 @@ import { buttonBlock } from './blocks/button.js';
 import { shapeBlock } from './blocks/shape.js';
 import { videoBlock } from './blocks/video.js';
 import { iconBlock } from './blocks/icon.js';
+import { samlingBlock } from './blocks/samling.js';
 import { colorLayer } from './backgrounds/color.js';
 import { gradientLayer } from './backgrounds/gradient.js';
 import { glowLayer } from './backgrounds/glow.js';
@@ -29,6 +30,7 @@ import { imageLayer } from './backgrounds/image.js';
 import { coreAnimations } from './animations/core.js';
 import { registerSectionPresets } from './sections/presets.js';
 import { loadPlugins, loadPluginList } from './plugins.js';
+import { setCollectionsDraft } from './samlinger.js';
 
 export const Urd = {
   blocks: createRegistry('blocks'),
@@ -47,6 +49,7 @@ function registerCore() {
   Urd.blocks.define('shape', shapeBlock);
   Urd.blocks.define('video', videoBlock);
   Urd.blocks.define('icon', iconBlock);
+  Urd.blocks.define('samling', samlingBlock);
   Urd.backgrounds.define('color', colorLayer);
   Urd.backgrounds.define('gradient', gradientLayer);
   Urd.backgrounds.define('glow', glowLayer);
@@ -159,6 +162,10 @@ function enablePreview(state, opts) {
       // Editoren oppdaget desktop-drift i en manuell seksjon: marker live.
       root.querySelector(`[data-section-id="${msg.sectionId}"]`)
         ?.classList.toggle('urd-attention', msg.needed !== false);
+    } else if (msg?.type === 'urd-collections' && msg.collections) {
+      // Samlingsutkast fra editoren: brukes i stedet for serverfilene, og alt som viser samlinger rendres på nytt.
+      setCollectionsDraft(msg.collections);
+      renderPage(state.page, state.site, root, vp());
     } else if (msg?.type === 'urd-close-menus') {
       // Eieren klikket i admin-panelene: lukk åpne menyer (preset-galleri, blokkmeny).
       window.UrdPreviewEdit?.closeMenus();

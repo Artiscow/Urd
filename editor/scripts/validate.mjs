@@ -17,6 +17,7 @@ addFormats(ajv);
 const siteSchema = load('schema/site.schema.json');
 const pageSchema = load('schema/page.schema.json');
 const pluginSchema = load('schema/plugin.schema.json');
+const collectionSchema = load('schema/collection.schema.json');
 ajv.addSchema(siteSchema); // page.schema.json refererer site.schema.json ($id)
 
 const cases = [
@@ -25,6 +26,11 @@ const cases = [
   ['template/content/pages/om-oss.json', pageSchema],
   ['template/plugins/eksempel-kalender/plugin.json', pluginSchema],
 ];
+
+// Alle samlinger fra indeksfilen valideres mot collection-skjemaet (ADR-0007).
+for (const id of load('template/content/samlinger.json').samlinger ?? []) {
+  cases.push([`template/content/samlinger/${id}.json`, collectionSchema]);
+}
 
 let failed = false;
 for (const [path, schema] of cases) {

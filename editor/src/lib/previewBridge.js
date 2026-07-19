@@ -8,8 +8,9 @@
  *                  { type: 'urd-preview-full', pageId, page }  (hel side)
  *                  { type: 'urd-site', site }                  (site-utkast: grid/tema/nav)
  *                  { type: 'urd-plugins', enabled }            (plugin-utkastets aktive liste; lastes live i preview)
+ *                  { type: 'urd-collections', collections }    (samlingsutkastene: id → data; previewen bruker dem i stedet for serverfilene)
  *                  { type: 'urd-viewport', mode }              (editorens visningsvalg: desktop/mobile)
- *   side → editor: { type: 'urd-edit', sectionId, blockId, props }  (klikk-og-skriv)
+ *   side → editor: { type: 'urd-edit', sectionId, blockId, props, rerender? }  (klikk-og-skriv/bildeeditor)
  *                  { type: 'urd-move', sectionId, blockId, frame, frameKey }  (dra/resize)
  *                  { type: 'urd-mobile-manual', sectionId, frames } (seksjon materialisert)
  *                  { type: 'urd-mobile-auto', sectionId }           (tilbake til auto)
@@ -29,6 +30,7 @@
  *                  { type: 'urd-add-blocks', sectionId, blocks, minBottom, moves } (preset-element fra «+ kort/rad»-knappen; moves flytter eksisterende blokker i samme angre-steg)
  *                  { type: 'urd-request-block', sectionId, kind } («+ Legg til blokk» i seksjonen)
  *                  { type: 'urd-move-block-section', fromSectionId, toSectionId, blockId, frame } (blokk sluppet i annen seksjon)
+ *                  { type: 'urd-collection-edit', collection, entryId, field, value } (klikk-og-skriv/bildebytte i samling-blokken)
  *   editor → side: { type: 'urd-chrome', visible }            (vis/skjul editeringshåndtak)
  *                  { type: 'urd-show-grid', visible }         (vis gridet i alle seksjoner)
  */
@@ -62,6 +64,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-mobile-auto') handlers.onMobileAuto?.(msg);
     if (msg?.type === 'urd-review-done') handlers.onReviewDone?.(msg);
     if (msg?.type === 'urd-block-flag') handlers.onBlockFlag?.(msg);
+    if (msg?.type === 'urd-collection-edit') handlers.onCollectionEdit?.(msg);
   };
   window.addEventListener('message', listener);
 
@@ -82,6 +85,9 @@ export function createPreviewBridge(iframe, handlers = {}) {
     },
     sendPlugins(enabled) {
       post({ type: 'urd-plugins', enabled });
+    },
+    sendCollections(collections) {
+      post({ type: 'urd-collections', collections });
     },
     sendViewport(mode) {
       post({ type: 'urd-viewport', mode });

@@ -66,6 +66,16 @@ const icon = (fr, glyph, size = 40) => ({
 
 const hoverLift = () => ({ type: 'hover-lift', version: 1, props: {} });
 
+/* Samling-blokk (ADR-0007): collection settes av eieren i Egenskaper; null gir veiledende tomtilstand. */
+const samling = (fr, view, props = {}) => ({
+  id: makeId('blk'),
+  type: 'samling',
+  version: 1,
+  props: { collection: null, view, limit: 6, newestFirst: true, ...props },
+  animation: null,
+  frames: fr,
+});
+
 const bg = (...layers) => ({ version: 1, layers });
 const colorLayer = (value) => ({ type: 'color', version: 1, props: { value } });
 const glowLayer = (x, y, opacity, radius = 0.5) => ({
@@ -286,6 +296,36 @@ export function registerSectionPresets(Urd) {
       txt.mobileOrder = cardOrder(88, n, 1);
       return { blocks: [img, txt], bottom: y + 352 };
     },
+  });
+
+  Urd.sections.define('nyheter-samling', {
+    label: 'Nyheter (samling)',
+    group: 'Kort og lister',
+    hint: 'Nyhetskort fra en samling: skriv innslag, kortene følger med',
+    create: () => section('nyheter-samling', '300px', bg(colorLayer('bg')), [
+      text(frame(6, 28, 50, 38), '<h2>Siste nytt</h2>'),
+      samling(frame(6, 88, 88, 180), 'cards'),
+    ]),
+  });
+
+  Urd.sections.define('oppslagstavle', {
+    label: 'Oppslagstavle',
+    group: 'Kort og lister',
+    hint: 'Datert liste fra en samling (oppslag/kunngjøringer)',
+    create: () => section('oppslagstavle', '300px', bg(colorLayer('surface')), [
+      text(frame(6, 28, 50, 38), '<h2>Oppslagstavle</h2>'),
+      samling(frame(6, 88, 88, 180), 'list', { limit: 8 }),
+    ]),
+  });
+
+  Urd.sections.define('publikasjonsarkiv', {
+    label: 'Publikasjonsarkiv',
+    group: 'Kort og lister',
+    hint: 'År-gruppert arkiv fra en samling (utgaver, referater, rapporter)',
+    create: () => section('publikasjonsarkiv', '300px', bg(colorLayer('bg')), [
+      text(frame(6, 28, 60, 38), '<h2>Arkiv</h2>'),
+      samling(frame(6, 88, 88, 180), 'archive', { limit: 0 }),
+    ]),
   });
 
   Urd.sections.define('arrangementer', {

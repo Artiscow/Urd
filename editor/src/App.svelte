@@ -18,7 +18,7 @@
   import { grainLayer } from '../../template/assets/engine/backgrounds/grain.js';
   import { imageLayer } from '../../template/assets/engine/backgrounds/image.js';
   import { coreAnimations } from '../../template/assets/engine/animations/core.js';
-  import { compressToWebp, slugify, contentHash, WARN_BYTES } from './lib/imageTools.js';
+  import { compressToWebp, slugify, contentHash, WARN_BYTES } from '../../template/assets/engine/imageTools.js';
 
   /** Bakgrunnslagtypene i den rekkefølgen de tilbys i panelet. */
   const BG_TYPES = [
@@ -177,9 +177,11 @@
     // nypubliserte som bare venter på deploy.
     const anyPageDraft = siteDraft?.pages?.some((p) =>
       !pendingPublished.has(p.id) && localStorage.getItem(`urd-draft-${p.id}`) !== null) ?? false;
+    const anySamlingDraft = samlingerIndexStore?.hasDraft()
+      || Object.values(samlingStores).some((st) => st.hasDraft());
     dirty = anyPageDraft
       || (store?.hasDraft() && !pendingPublished.has(pageId))
-      || siteStore?.hasDraft() || pluginsStore?.hasDraft() || false;
+      || siteStore?.hasDraft() || pluginsStore?.hasDraft() || anySamlingDraft || false;
   }
 
   /**
@@ -281,6 +283,7 @@
     grid = { snap: true, ...siteDraft.grid };
     await selectPage(new URLSearchParams(location.search).get('page') ?? siteDraft.pages[0].id);
     await initPlugins();
+    await initSamlinger();
     await checkAuth();
     refreshBaseSha();
     // Oppsettsveiviseren: første besøk på en fersk klon (malens standard-
@@ -344,7 +347,7 @@
    *  verktøy. Vises med skillelinjer i panelvelgeren. */
   const PANEL_GROUPS = [
     ['Sider', 'Blokker', 'Egenskaper', 'Grid'],
-    ['Tema', 'Nav', 'Footer', 'Plugins'],
+    ['Tema', 'Nav', 'Footer', 'Samlinger', 'Plugins'],
     ['Historikk'],
   ];
 
@@ -883,6 +886,7 @@
       onMobileAuto: handleMobileAuto,
       onReviewDone: handleReviewDone,
       onBlockFlag: handleBlockFlag,
+      onCollectionEdit: handleCollectionEdit,
     });
   }
 
@@ -894,6 +898,7 @@
     // og viewporten følger editorens valg (ikke iframe-bredden).
     bridge?.sendPlugins($state.snapshot(pluginsView)?.enabled ?? []);
     bridge?.sendViewport(viewMode);
+    pushCollectionsToPreview();
     if (siteStore.hasDraft()) pushSiteToPreview();
     // Upubliserte sider finnes ikke på serveren (iframen faller tilbake
     // til forsiden): editorens data er kilden og må alltid sendes.
@@ -1129,6 +1134,158 @@
     });
   }
 
+  /* ---------- Samlinger-panelet (ADR-0007) ---------- */
+
+  // Samlinger er delt nettstedsdata (som nav/footer): indeksfil + én fil per samling,
+  // hver med egen draftStore. Redigering er utenfor Ctrl+Z-historikken (som plugins).
+  let samlingerIndexStore = null;
+  let samlingStores = {};
+  let samlingerIds = $state([]);
+  let samlingerView = $state({});
+  let activeSamling = $state(null);
+  let newSamlingName = $state('');
+  let newSamlingKind = $state('news');
+
+  const SAMLING_KINDS = [
+    ['news', 'Nyheter'],
+    ['notices', 'Oppslag'],
+    ['publications', 'Publikasjoner'],
+    ['custom', 'Egendefinert'],
+  ];
+
+  async function initSamlinger() {
+    let index = { version: 1, samlinger: [] };
+    try {
+      index = await (await fetch('/content/samlinger.json')).json();
+    } catch { /* ingen indeks er helt greit */ }
+    samlingerIndexStore = createDraftStore('urd-draft-samlinger', () => index);
+    samlingerIds = [...(samlingerIndexStore.data.samlinger ?? [])];
+    for (const id of samlingerIds) {
+      let published = null;
+      try {
+        published = await (await fetch(`/content/samlinger/${id}.json`)).json();
+      } catch { /* ny, upublisert samling */ }
+      published ??= { schemaVersion: 1, id, name: id, kind: 'custom', entries: [] };
+      samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => published);
+    }
+    syncSamlingerView();
+  }
+
+  function syncSamlingerView(pushPreview = true) {
+    const view = {};
+    for (const id of samlingerIds) {
+      if (samlingStores[id]) view[id] = JSON.parse(JSON.stringify(samlingStores[id].data));
+    }
+    samlingerView = view;
+    // Ved klikk-og-skriv i selve blokken hoppes preview-dyttet over: iframen viser alt teksten, og et rerender midt i skrivingen ville mistet skrivemarkøren.
+    if (pushPreview) pushCollectionsToPreview();
+  }
+
+  /** Send samlingsutkastene til previewen (rene kopier; $state-proxier kan aldri postMessages). */
+  function pushCollectionsToPreview() {
+    bridge?.sendCollections($state.snapshot(samlingerView) ?? {});
+  }
+
+  /** Felles flyt for samlingsendringer: muter, lagre, oppdater speil og preview. */
+  function mutateSamling(id, fn, pushPreview = true) {
+    const store = samlingStores[id];
+    if (!store) return;
+    fn(store.data);
+    store.save();
+    updateDirty();
+    syncSamlingerView(pushPreview);
+  }
+
+  /** Klikk-og-skriv/bildebytte i samling-blokken (urd-collection-edit fra iframen). */
+  function handleCollectionEdit(msg) {
+    const { collection, entryId, field, value } = msg;
+    if (!['title', 'text', 'image', 'imageAlt', 'imageStyle'].includes(field)) return;
+    // Tom tittel beholdes ikke (skjemaet krever tittel); gammel tittel består til noe skrives.
+    // Tittelen er rik tekst, så tomhet vurderes uten markup.
+    if (field === 'title' && !String(value ?? '').replace(/<[^>]*>/g, '').trim()) return;
+    mutateSamling(collection, (data) => {
+      const entry = data.entries.find((e) => e.id === entryId);
+      if (!entry) return;
+      if (value === '' && field !== 'title') delete entry[field];
+      else entry[field] = value;
+    }, field === 'image');
+  }
+
+  function addSamling() {
+    const name = newSamlingName.trim();
+    if (!name) return;
+    const id = slugify(name);
+    if (!id || samlingerIds.includes(id)) {
+      setStatus(id ? 'Det finnes alt en samling med den adressen' : 'Ugyldig navn', 'error');
+      return;
+    }
+    const fresh = { schemaVersion: 1, id, name, kind: newSamlingKind, entries: [] };
+    samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => ({ ...fresh, entries: [] }));
+    samlingStores[id].replace(fresh);
+    samlingStores[id].save();
+    samlingerIndexStore.data.samlinger = [...samlingerIds, id];
+    samlingerIndexStore.save();
+    samlingerIds = [...samlingerIds, id];
+    activeSamling = id;
+    newSamlingName = '';
+    updateDirty();
+    syncSamlingerView();
+  }
+
+  function removeSamling(id) {
+    localStorage.removeItem(`urd-draft-samling-${id}`);
+    delete samlingStores[id];
+    samlingerIndexStore.data.samlinger = samlingerIds.filter((x) => x !== id);
+    samlingerIndexStore.save();
+    samlingerIds = samlingerIds.filter((x) => x !== id);
+    if (activeSamling === id) activeSamling = null;
+    updateDirty();
+    syncSamlingerView();
+  }
+
+  function addSamlingEntry(id) {
+    mutateSamling(id, (data) => {
+      data.entries.unshift({
+        id: makeId('innslag'),
+        title: 'Nytt innslag',
+        date: new Date().toISOString().slice(0, 10),
+        text: '',
+      });
+    });
+  }
+
+  function setEntryField(id, entryId, field, value) {
+    mutateSamling(id, (data) => {
+      const entry = data.entries.find((e) => e.id === entryId);
+      if (!entry) return;
+      if (value === '' && field !== 'title') delete entry[field];
+      else entry[field] = value;
+    });
+  }
+
+  function moveEntry(id, index, dir) {
+    mutateSamling(id, (data) => {
+      const j = index + dir;
+      if (j < 0 || j >= data.entries.length) return;
+      [data.entries[index], data.entries[j]] = [data.entries[j], data.entries[index]];
+    });
+  }
+
+  function removeEntry(id, entryId) {
+    mutateSamling(id, (data) => {
+      data.entries = data.entries.filter((e) => e.id !== entryId);
+    });
+  }
+
+  /** Innslagsbilde: samme webp-flyt som blokkbilder; materialiseres ved publisering. */
+  async function setEntryImage(id, entryId, event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    const img = await compressToWebp(file);
+    setEntryField(id, entryId, 'image', img.dataUrl);
+  }
+
   /* ---------- Plugins-panelet ---------- */
 
   // plugins.json gjennom samme utkastflyt som resten: endringer er utkast til de publiseres.
@@ -1361,6 +1518,9 @@
     store.save();
     updateDirty();
     if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
+    // Bildeeditoren ber om rerender ved bildebytte (tomme blokker har ingen img å oppdatere live);
+    // tekst-redigering gjør det aldri (ekko midt i skrivingen ville mistet skrivemarkøren).
+    if (msg.rerender) bridge?.sendSection(pageId, section);
     status = '';
   }
 
@@ -1542,6 +1702,7 @@
     image: { type: 'image', props: { src: '', alt: '', fit: 'cover', radius: 'md', href: null }, w: 30, h: 220 },
     video: { type: 'video', props: { url: '', title: 'Video' }, w: 45, h: 300 },
     icon: { type: 'icon', decor: true, props: { glyph: '★', color: 'accent', size: 48 }, w: 8, h: 64 },
+    samling: { type: 'samling', props: { collection: null, view: 'cards', limit: 6, newestFirst: true }, w: 90, h: 200 },
   };
 
   function buildBlock(kind) {
@@ -1743,6 +1904,15 @@
       pluginsStore.reset();
       syncPluginsView();
     }
+    if (samlingerIndexStore) {
+      samlingerIndexStore.reset();
+      samlingerIds = [...(samlingerIndexStore.data.samlinger ?? [])];
+      for (const id of Object.keys(samlingStores)) {
+        if (samlingerIds.includes(id)) samlingStores[id].reset();
+        else delete samlingStores[id];
+      }
+      syncSamlingerView();
+    }
     linkSiteDraft();
     grid = { snap: true, ...siteDraft.grid };
     updateDirty();
@@ -1818,6 +1988,32 @@
       const { icon: a, ...restA } = site.site;
       const { icon: b, ...restB } = siteDraft.site;
       if (!eq(restA, restB)) publishedTitles.push('nettstedsinfo');
+    }
+
+    // Samlinger: endrede filer, indeksfilen og slettinger (diff mot publisert indeks).
+    const changedSamlinger = Object.entries(samlingStores).filter(([, st]) => st.hasDraft());
+    if (changedSamlinger.length || samlingerIndexStore?.hasDraft()) {
+      for (const [id, st] of changedSamlinger) {
+        const out = JSON.parse(JSON.stringify(st.data));
+        for (const entry of out.entries) materializeField(entry, 'image', entry.title, files);
+        files.push({ path: `content/samlinger/${id}.json`, content: JSON.stringify(out, null, 2) + '\n', encoding: 'utf-8' });
+        draftKeys.push(`urd-draft-samling-${id}`);
+      }
+      if (samlingerIndexStore?.hasDraft()) {
+        files.push({ path: 'content/samlinger.json', content: JSON.stringify(samlingerIndexStore.data, null, 2) + '\n', encoding: 'utf-8' });
+        draftKeys.push('urd-draft-samlinger');
+        // Samlinger fjernet fra indeksen slettes fra repoet (opprettes de også i samme publisering, vinner create-listen over).
+        let publishedIndex = { samlinger: [] };
+        try {
+          publishedIndex = await (await fetch('/content/samlinger.json')).json();
+        } catch { /* ingen publisert indeks ennå */ }
+        const created = new Set(files.map((f) => f.path));
+        for (const id of publishedIndex.samlinger ?? []) {
+          const path = `content/samlinger/${id}.json`;
+          if (!samlingerIds.includes(id) && !created.has(path)) files.push({ path, delete: true });
+        }
+      }
+      publishedTitles.push('samlinger');
     }
 
     // Plugin-endringer (aktivert/deaktivert/lagt til) publiseres som plugins.json.
@@ -1901,6 +2097,20 @@
         const publishedPlugins = JSON.parse(JSON.stringify(pluginsStore.data));
         pluginsStore = createDraftStore('urd-draft-plugins', () => publishedPlugins);
         syncPluginsView();
+      }
+      if (samlingerIndexStore) {
+        // Speil materialiseringen inn i minnet (samme deterministiske stier som klonene fikk).
+        for (const st of Object.values(samlingStores)) {
+          for (const entry of st.data.entries) materializeField(entry, 'image', entry.title, []);
+        }
+        const publishedIndex = JSON.parse(JSON.stringify(samlingerIndexStore.data));
+        samlingerIndexStore = createDraftStore('urd-draft-samlinger', () => publishedIndex);
+        for (const id of samlingerIds) {
+          if (!samlingStores[id]) continue;
+          const publishedSamling = JSON.parse(JSON.stringify(samlingStores[id].data));
+          samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => publishedSamling);
+        }
+        syncSamlingerView();
       }
       grid = { snap: true, ...siteDraft.grid };
       const pageSnap = JSON.parse(JSON.stringify(store.data));
@@ -2261,6 +2471,8 @@
                   onclick={() => addBlock('video')}>Video</button>
                 <button class="ghost" title="Glyf/emoji i valgfri størrelse og farge"
                   onclick={() => addBlock('icon')}>Ikon</button>
+                <button class="ghost" title="Nyheter/oppslag/arkiv fra en samling (Samlinger-panelet)"
+                  onclick={() => addBlock('samling')}>Samling</button>
                 <details class="group">
                   <summary>Former</summary>
                   <div class="group-items">
@@ -2388,8 +2600,8 @@
                       Bytt bilde
                       <input type="file" accept="image/*" onchange={replaceImage} />
                     </label>
-                    <label>Alt-tekst
-                      <input value={selectedBlock.props.alt ?? ''} placeholder="Beskriv bildet"
+                    <label>Beskrivelse
+                      <input value={selectedBlock.props.alt ?? ''} placeholder="For skjermlesere, og når bildet ikke kan vises"
                         onchange={(e) => setBlockProp('alt', e.target.value)} /></label>
                     <label>Tilpasning
                       <select value={selectedBlock.props.fit ?? 'cover'}
@@ -2467,6 +2679,31 @@
                         {/each}
                       </select></label>
                     <p class="panel-hint">Fargen gjelder tekst-glyfer (★ ✓ →); emoji har sine egne farger.</p>
+                  {:else if selectedBlock.type === 'samling'}
+                    <label>Samling
+                      <select value={selectedBlock.props.collection ?? ''}
+                        onchange={(e) => setBlockProp('collection', e.target.value || null)}>
+                        <option value="">Velg …</option>
+                        {#each samlingerIds as id (id)}
+                          <option value={id}>{samlingerView[id]?.name ?? id}</option>
+                        {/each}
+                      </select></label>
+                    <label>Visning
+                      <select value={selectedBlock.props.view ?? 'cards'}
+                        onchange={(e) => setBlockProp('view', e.target.value)}>
+                        <option value="cards">Kort</option>
+                        <option value="list">Liste</option>
+                        <option value="archive">Arkiv (per år)</option>
+                      </select></label>
+                    <label>Maks antall
+                      <input type="number" min="0" max="100" value={selectedBlock.props.limit ?? 6}
+                        onchange={(e) => setBlockProp('limit', Number(e.target.value))} /></label>
+                    <label class="gridmenu-snap">
+                      <input type="checkbox" checked={selectedBlock.props.newestFirst !== false}
+                        onchange={(e) => setBlockProp('newestFirst', e.target.checked)} />
+                      Nyeste først
+                    </label>
+                    <p class="panel-hint">Innslagene redigeres i Samlinger-panelet; 0 i maks antall viser alle.</p>
                   {:else if selectedBlock.type === 'shape'}
                     <label>Form
                       <select value={selectedBlock.props.kind}
@@ -2689,6 +2926,81 @@
                     <option value="right">Høyre</option>
                   </select></label>
                 <p class="panel-hint">Design-maler for footer kommer i v0.6.</p>
+              </div>
+            {:else if activePanel === 'Samlinger'}
+              <div class="panel-body">
+                <p class="panel-hint">Samlinger er lister av innslag (nyheter, oppslag, publikasjoner) som
+                  vises av Samling-blokker. Endringer her er utkast til du publiserer (utenfor Ctrl+Z).</p>
+                {#if samlingerIds.length}
+                  <label>Samling
+                    <select value={activeSamling ?? ''} onchange={(e) => (activeSamling = e.target.value || null)}>
+                      <option value="">Velg …</option>
+                      {#each samlingerIds as id (id)}
+                        <option value={id}>{samlingerView[id]?.name ?? id}</option>
+                      {/each}
+                    </select></label>
+                {/if}
+                {#if activeSamling && samlingerView[activeSamling]}
+                  {@const samling = samlingerView[activeSamling]}
+                  <span class="toolbar-row">
+                    <button class="ghost action" onclick={() => addSamlingEntry(activeSamling)}>+ Nytt innslag</button>
+                    <button class="ghost row-tool" title="Slett hele samlingen (filen fjernes ved neste publisering)"
+                      onclick={() => removeSamling(activeSamling)}>{@html ICONS.cross}</button>
+                  </span>
+                  {#each samling.entries as entry, i (entry.id)}
+                    <!-- Sammenleggbart innslag: tittel + dato i summary, feltene inni (plassbruk i panelet) -->
+                    <details class="group samling-entry">
+                      <summary>{entry.title.replace(/<[^>]*>/g, '')}{entry.date ? ` · ${entry.date}` : ''}</summary>
+                      <div class="group-items">
+                        <span class="toolbar-row">
+                          <input value={entry.title} title="Tittel"
+                            onchange={(e) => setEntryField(activeSamling, entry.id, 'title', e.target.value || 'Uten tittel')} />
+                          <span class="row-tools">
+                            <button class="ghost row-tool" onclick={() => moveEntry(activeSamling, i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+                            <button class="ghost row-tool" onclick={() => moveEntry(activeSamling, i, 1)}
+                              disabled={i === samling.entries.length - 1}>{@html ICONS.down}</button>
+                            <button class="ghost row-tool" title="Slett innslaget"
+                              onclick={() => removeEntry(activeSamling, entry.id)}>{@html ICONS.cross}</button>
+                          </span>
+                        </span>
+                        <label>Dato
+                          <input type="date" value={entry.date ?? ''}
+                            onchange={(e) => setEntryField(activeSamling, entry.id, 'date', e.target.value)} /></label>
+                        <textarea rows="3" placeholder="Tekst/ingress (formater med teksteditoren i blokken på siden)"
+                          value={entry.text ?? ''}
+                          onchange={(e) => setEntryField(activeSamling, entry.id, 'text', e.target.value)}></textarea>
+                        <label>Lenke
+                          <input value={entry.href ?? ''} placeholder="Valgfri (gjør tittelen klikkbar)"
+                            onchange={(e) => setEntryField(activeSamling, entry.id, 'href', e.target.value)} /></label>
+                        <span class="toolbar-row">
+                          <label class="ghost filepick">
+                            {entry.image ? 'Bytt bilde' : 'Legg til bilde'}
+                            <input type="file" accept="image/*" onchange={(e) => setEntryImage(activeSamling, entry.id, e)} />
+                          </label>
+                          {#if entry.image}
+                            <img class="site-icon-preview" src={entry.image} alt="" />
+                            <button class="ghost row-tool" title="Fjern bildet"
+                              onclick={() => setEntryField(activeSamling, entry.id, 'image', '')}>{@html ICONS.cross}</button>
+                          {/if}
+                        </span>
+                      </div>
+                    </details>
+                  {/each}
+                  {#if !samling.entries.length}
+                    <p class="panel-hint">Ingen innslag ennå.</p>
+                  {/if}
+                  <hr class="gridmenu-divider" />
+                {/if}
+                <label>Navn på ny samling
+                  <input bind:value={newSamlingName} placeholder="F.eks. Nyheter"
+                    onkeydown={(e) => e.key === 'Enter' && addSamling()} /></label>
+                <label>Type
+                  <select bind:value={newSamlingKind}>
+                    {#each SAMLING_KINDS as [value, name] (value)}
+                      <option {value}>{name}</option>
+                    {/each}
+                  </select></label>
+                <button class="ghost action" onclick={addSamling} disabled={!newSamlingName.trim()}>+ Opprett samling</button>
               </div>
             {:else if activePanel === 'Plugins'}
               <div class="panel-body">
@@ -3231,6 +3543,15 @@
     display: flex;
     align-items: center;
     gap: 0.35rem;
+  }
+
+  .samling-entry {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.35rem;
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: 8px;
+    padding: 0.5rem 0.6rem;
   }
 
   .plugin-row {

@@ -4,7 +4,7 @@
    * Kan i tillegg ta imot et eget opplastet ikon-bilde (webp-komprimert) når onimage er satt.
    * Popoveren er position: fixed (panelene klipper absolute innhold) og lukkes ved klikk utenfor eller Escape, samme mønster som ColorPicker.
    */
-  import { compressToWebp } from './imageTools.js';
+  import { compressToWebp } from '../../../template/assets/engine/imageTools.js';
 
   let { value = '★', label = 'Velg tegn', onpick, onimage } = $props();
 
