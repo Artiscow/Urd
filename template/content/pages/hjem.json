@@ -17,23 +17,11 @@
         "version": 1,
         "layers": [
           {
-            "type": "gradient",
-            "version": 1,
-            "props": {
-              "stops": [
-                "#0b0e14",
-                "#1a1030"
-              ],
-              "angle": 160,
-              "animate": false
-            }
-          },
-          {
             "type": "glow",
             "version": 1,
             "props": {
-              "x": 0.7,
-              "y": 0.2,
+              "x": 0.85,
+              "y": 0.3,
               "color": "accent",
               "radius": 0.5,
               "opacity": 0.35

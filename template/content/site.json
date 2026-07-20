@@ -3,8 +3,7 @@
   "site": {
     "title": "Urd v0.5",
     "lang": "no",
-    "description": "En nettside bygget med Urd",
-    "icon": "/media/ikon-0581cfac.webp"
+    "description": "En nettside bygget med Urd"
   },
   "breakpoints": {
     "mobile": 640
@@ -17,10 +16,10 @@
     "version": 1,
     "tokens": {
       "color": {
-        "bg": "#0b0e14",
-        "surface": "#151a23",
+        "bg": "#000000",
+        "surface": "#000000",
         "text": "#e8eaf0",
-        "accent": "#7c5cff"
+        "accent": "#ff9a5c"
       },
       "font": {
         "heading": "'Courier New', monospace",
