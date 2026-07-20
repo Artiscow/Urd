@@ -72,3 +72,25 @@ Henting går via sidens egen feed-proxy (`/api/ics`), så pluginen trenger
 ingen CSP-unntak. Proxyen godtar `calendar.google.com` og verter eieren
 lister i miljøvariabelen `ICS_HOSTS` (kommaseparert) i hostingoppsettet.
 Lokalt uten functions vises eksempeldata i forhåndsvisningen.
+
+## Skjema-pluginen (referanse: e-post og CSP-degradering)
+
+Skjemablokken er et kontaktskjema. Standard sendemåte er `mailto`: ved
+innsending åpnes besøkendes e-postklient med en ferdig e-post (ingen
+oppsett, ingen CSP). Valgfritt kan skjemaet sende til et eksternt
+endepunkt (eierens Apps Script eller Pages Function) via `fetch` med
+JSON, som krever at eieren åpner `connect-src` for endepunktets vert i
+`_headers`. Feltene er redigerbare (navn, type, påkrevd), e-postfelt
+valideres, og et skjult honeypot-felt stopper bots. Kontaktskjema-preset
+følger med. Viser mønsteret: ekte skjemarendering, besøkende-input som
+aldri blir HTML, og rolig degradering når endepunktet er blokkert.
+
+## Kart-pluginen (referanse: CSP-opt-in for embed)
+
+Kartblokken bygger inn OpenStreetMaps egen iframe (personvennlig: ingen
+sporing, ingen tredjeparts-tiles). Eieren limer inn koordinater eller en
+OSM-lenke. Fordi en iframe mot `openstreetmap.org` krever et
+`frame-src`-unntak, DEKLARERER manifestet behovet i `csp`-feltet
+(ADR-0006): Plugins-panelet viser eieren den nøyaktige `_headers`-linjen,
+og blir kartet blokkert forklarer blokken selv hvilken linje som mangler.
+Finn oss-preset følger med.

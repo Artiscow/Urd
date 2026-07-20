@@ -22,6 +22,10 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* Lerretsbakgrunnen (bak body): på skjermer med brøkskalering runder 100vh
+     av og etterlater en sub-piksel stripe nederst der dette laget vises. Med
+     surface matcher stripen footeren/panelene, så det ikke blir en mørk linje. */
+  background: var(--urd-color-surface);
 }
 
 body {

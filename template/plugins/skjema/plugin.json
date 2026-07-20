@@ -1,0 +1,14 @@
+{
+  "id": "skjema",
+  "name": "Skjema",
+  "version": "1.0.0",
+  "requiresEngine": ">=0.5.0 <1.0.0",
+  "entry": "index.js",
+  "provides": {
+    "blocks": ["skjema"],
+    "sectionPresets": ["kontaktskjema"],
+    "backgrounds": [],
+    "animations": [],
+    "maler": []
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "kart",
+  "name": "Kart",
+  "version": "1.0.0",
+  "requiresEngine": ">=0.5.0 <1.0.0",
+  "entry": "index.js",
+  "provides": {
+    "blocks": ["kart"],
+    "sectionPresets": ["finn-oss"],
+    "backgrounds": [],
+    "animations": [],
+    "maler": []
+  },
+  "csp": {
+    "frameSrc": ["https://www.openstreetmap.org"]
+  }
+}

@@ -1290,7 +1290,7 @@ function enhanceBlock(el, block, section, grid, host) {
         // redigerer man teksten). En uvalgt blokk dras fritt også fra
         // teksten - klikk uten dra velger den, klikk igjen redigerer.
         if (target?.closest('.urd-text[contenteditable="true"]') && selectedBlockId === block.id) return;
-        if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button, input, select, textarea, .urd-samling-editable, .urd-samling-image-edit, .urd-kal-config')) return;
+        if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button, input, select, textarea, .urd-samling-editable, .urd-samling-image-edit, .urd-kal-config, .urd-skjema-config, .urd-kart-config')) return;
         // Auto-mobil: første materialisering skal være et bevisst valg
         // (dra i ⠿), ikke et klikk på blokken.
         if (mobile && (section.responsive?.mobile?.mode ?? 'auto') !== 'manual') return;

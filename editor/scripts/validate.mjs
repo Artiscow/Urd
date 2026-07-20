@@ -25,6 +25,8 @@ const cases = [
   ['template/content/pages/hjem.json', pageSchema],
   ['template/content/pages/om-oss.json', pageSchema],
   ['template/plugins/kalender/plugin.json', pluginSchema],
+  ['template/plugins/skjema/plugin.json', pluginSchema],
+  ['template/plugins/kart/plugin.json', pluginSchema],
 ];
 
 // Alle samlinger fra indeksfilen valideres mot collection-skjemaet (ADR-0007).

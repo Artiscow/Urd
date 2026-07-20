@@ -252,6 +252,21 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   formen «Kategori: Tittel» gir filtrerbare kategori-chips, en
   påmeldingslenke i beskrivelsen blir en «Meld deg på»-knapp, og
   «Abonner»-knappen lar besøkende følge kalenderen i sin egen app.
+
+  Skjema-pluginen gir en Skjema-blokk (og «Kontaktskjema»-mal): klikk
+  «⚙ Skjema» for å stille inn mottaker, felt og sendemåte. Standard er at
+  skjemaet åpner besøkendes e-postklient med en ferdig e-post (ingen
+  oppsett). Vil du heller sende til et eget endepunkt (Apps Script eller
+  en egen funksjon), velg «Eksternt endepunkt» og lim inn adressen; da må
+  du åpne connect-src for den verten i _headers (blokken forklarer
+  linjen). Feltene kan legges til, endres og fjernes.
+
+  Kart-pluginen gir en Kart-blokk (og «Finn oss»-mal): klikk «⚙ Sted» og
+  lim inn koordinater (som «59.913, 10.739») eller en OpenStreetMap-lenke,
+  og still zoom og høyde. Kartet er OpenStreetMaps egen innbygging uten
+  sporing. Fordi det er en ekstern innbygging, må nettstedet tillate den:
+  legg «frame-src https://www.openstreetmap.org» inn i _headers (Plugins-
+  panelet og blokken viser den samme linjen). Dette er en engangsjobb.
 - **Footer**-panelet: bunnteksten som vises nederst på alle sider.
   Skru den på, skriv linjene (én per linje) og velg justering - den
   redigeres ett sted og gjelder hele nettstedet.
