@@ -63,10 +63,9 @@
   "nav": {
     "version": 1,
     "logo": {
-      "type": "both",
+      "type": "text",
       "value": "Urd v0.6",
       "size": 35,
-      "image": "/media/logo-192ecc51.webp",
       "order": "image-first",
       "bold": false,
       "italic": false,

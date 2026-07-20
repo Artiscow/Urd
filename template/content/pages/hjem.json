@@ -103,6 +103,32 @@
             },
             "mobile": null
           }
+        },
+        {
+          "id": "blk-8b78867b",
+          "type": "image",
+          "version": 1,
+          "decor": false,
+          "props": {
+            "src": "/media/bilde-ff8fdd0e.webp",
+            "alt": "",
+            "fit": "contain",
+            "radius": "md",
+            "href": null,
+            "saturate": 1
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 64.23,
+              "y": 64,
+              "w": 28.55,
+              "h": 320,
+              "z": 2,
+              "rot": 0
+            },
+            "mobile": null
+          }
         }
       ],
       "responsive": {
