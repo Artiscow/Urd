@@ -139,6 +139,178 @@
       }
     },
     {
+      "version": 1,
+      "preset": "hva-skjer",
+      "size": {
+        "minHeight": "520px"
+      },
+      "grid": null,
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "color",
+            "version": 1,
+            "props": {
+              "color": "bg",
+              "opacity": 1
+            }
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "id": "blk-0ee7dc8a",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<h2>Hva skjer</h2>",
+            "align": "left",
+            "box": false
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 6,
+              "y": 40,
+              "w": 60,
+              "h": 70,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-ef036d5f",
+          "type": "kalender",
+          "version": 3,
+          "props": {
+            "sources": [],
+            "view": "list",
+            "limit": 5,
+            "showCategories": true,
+            "showSubscribe": false
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 6,
+              "y": 130,
+              "w": 28.55,
+              "h": 272,
+              "z": 2,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-7081e0e1",
+          "type": "kart",
+          "version": 1,
+          "props": {
+            "location": "",
+            "zoom": 15,
+            "height": 320
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 25,
+              "y": 40,
+              "w": 50,
+              "h": 260,
+              "z": 3,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        }
+      ],
+      "responsive": {
+        "mobile": {
+          "mode": "auto",
+          "attention": null
+        }
+      }
+    },
+    {
+      "id": "sec-d33b8339",
+      "version": 1,
+      "preset": "tom",
+      "size": {
+        "minHeight": "432px"
+      },
+      "grid": null,
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "color",
+            "version": 1,
+            "props": {
+              "value": "#9e7b65",
+              "opacity": 1
+            }
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "id": "blk-e2346553",
+          "type": "skjema",
+          "version": 1,
+          "props": {
+            "recipient": "",
+            "subject": "",
+            "mode": "mailto",
+            "endpoint": "",
+            "submitLabel": "Send",
+            "successText": "Takk! Meldingen er sendt.",
+            "fields": [
+              {
+                "id": "navn",
+                "label": "Navn",
+                "type": "text",
+                "required": true
+              },
+              {
+                "id": "epost",
+                "label": "E-post",
+                "type": "email",
+                "required": true
+              },
+              {
+                "id": "melding",
+                "label": "Melding",
+                "type": "textarea",
+                "required": true
+              }
+            ]
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 25,
+              "y": 40,
+              "w": 50,
+              "h": 260,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        }
+      ],
+      "responsive": {
+        "mobile": {
+          "mode": "auto",
+          "attention": null
+        }
+      }
+    },
+    {
       "id": "sec-1c90d7bd",
       "version": 1,
       "preset": "footer",
