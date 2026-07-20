@@ -2398,11 +2398,9 @@ function Ti(e, t) {
 			W(p) && !W(p).contains(e.target) && D();
 		}, t = (e) => {
 			e.key === "Escape" && D();
-		}, n = (e) => {
-			W(p) && e.target instanceof Node && !W(p).contains(e.target) && D();
 		};
-		return document.addEventListener("pointerdown", e, !0), document.addEventListener("keydown", t, !0), document.addEventListener("scroll", n, !0), () => {
-			document.removeEventListener("pointerdown", e, !0), document.removeEventListener("keydown", t, !0), document.removeEventListener("scroll", n, !0);
+		return document.addEventListener("pointerdown", e, !0), document.addEventListener("keydown", t, !0), () => {
+			document.removeEventListener("pointerdown", e, !0), document.removeEventListener("keydown", t, !0);
 		};
 	});
 	var me = wi(), he = R(me);

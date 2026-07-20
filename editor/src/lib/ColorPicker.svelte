@@ -205,7 +205,10 @@
     localStorage.setItem(SAVED_KEY, JSON.stringify($state.snapshot(saved)));
   }
 
-  // Lukk ved klikk utenfor eller Escape (kun mens åpen)
+  // Lukk KUN ved klikk utenfor eller Escape (som de fleste menyer). Ikke ved
+  // rulling: å klikke et felt/knapp inne i den flytende popoveren gir fokus,
+  // og nettleseren ruller da panelet litt for å vise elementet - det rullet
+  // skal ikke lukke velgeren (den lukkes ellers ved hvert innvendig klikk).
   $effect(() => {
     if (!open) return;
     const onDown = (e) => {
@@ -214,16 +217,11 @@
     const onKey = (e) => {
       if (e.key === 'Escape') close();
     };
-    const onScroll = (e) => {
-      if (rootEl && e.target instanceof Node && !rootEl.contains(e.target)) close();
-    };
     document.addEventListener('pointerdown', onDown, true);
     document.addEventListener('keydown', onKey, true);
-    document.addEventListener('scroll', onScroll, true);
     return () => {
       document.removeEventListener('pointerdown', onDown, true);
       document.removeEventListener('keydown', onKey, true);
-      document.removeEventListener('scroll', onScroll, true);
     };
   });
 </script>
