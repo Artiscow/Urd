@@ -105,8 +105,14 @@ function emptyState(host, ctx) {
  */
 function watchCspBlock(host, frame, ctx) {
   if (!ctx.preview) return;
+  // Sammenlign den blokkerte verten EKSAKT (parset URL), aldri en delstreng:
+  // en delstreng-sjekk ville også slått til på f.eks. openstreetmap.org.example.com.
+  let blockedHost = null;
+  try { blockedHost = new URL(OSM_HOST).hostname; } catch { /* OSM_HOST er en konstant, dette skjer ikke */ }
   const onViolation = (event) => {
-    if (event.violatedDirective?.startsWith('frame-src') && String(event.blockedURI).includes('openstreetmap.org')) {
+    let host = null;
+    try { host = new URL(event.blockedURI).hostname; } catch { /* blockedURI kan være «inline»/«eval» m.m. */ }
+    if (event.violatedDirective?.startsWith('frame-src') && host && host === blockedHost) {
       document.removeEventListener('securitypolicyviolation', onViolation);
       frame.remove();
       const note = el2('div', 'urd-kart-empty');

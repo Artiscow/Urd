@@ -12,6 +12,9 @@ døpes til det siste push-nummeret ved gaten, slik v0.5-fasen endte i
 0.5.10. Da stiger numrene alltid. Etterslepp-fikser på v0.5 nummereres
 0.5.11 og videre.
 
+### 0.6.12 - CodeQL #11: eksakt vert-sjekk i kartets CSP-vokter - 20. juli 2026
+- CodeQL #11 (Incomplete URL substring sanitization) lukket: kart-pluginens CSP-brudd-vokter sammenlignet den blokkerte URL-en med en delstreng («openstreetmap.org»), som også ville slått til på f.eks. openstreetmap.org.example.com. Den parser nå URL-en og sammenligner verten eksakt.
+
 ### 0.6.11 - editor-UI-sveip: bildeeditor, ikon-editor, Egenskaper-rydding, dra-teleport-fiks - 20. juli 2026
 - Dra-teleport-fiks (KRITISK): å dra en datablokk (Kalender/Kart/Skjema/Samling) teleporterte den tilbake til opprettelsesposisjonen. Autoveksten sendte hele framen fra et ctx.section-SNAPSHOT (med gammel x/y) som urd-move, og handleMove erstatter hele framen. Ny høyde-kun-melding (urd-grow) oppdaterer bare h, aldri x/y. Dette var etter alt å dømme også publiserings-shiften (blokkene falt tilbake til opprettelses-x=6/25, altså «inn mot midten/vekk fra kanten» ved re-render etter publisering).
 - Bildeblokk: full moderne editor og avrundings-fiks. Bildet ligger nå i en ramme som KLIPPER, så avrunding vises alltid (også med «Vis hele bildet»; før lå den på img-boksen, som med contain er større enn det synlige bildet). Dobbeltklikk/blyant åpner hele den delte editoren: fokuspunkt med tredelingsgitter, ZOOM (beskjærer inn mot fokuspunktet), filtre med gråtone/nullstill, tilpasning og avrunding. Render, editor og Egenskaper deler nå én applyImageStyle, så de aldri drifter (kilden til «redigeringer går ikke til nettsiden»). Zoom lagt til i Egenskaper.
