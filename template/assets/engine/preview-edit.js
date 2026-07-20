@@ -19,6 +19,7 @@
 import { frameToCss } from './render.js';
 import { makeId } from './sections/presets.js';
 import { openImageEditor, closeImageEditor } from './image-editor.js';
+import { applyImageStyle } from './blocks/image.js';
 import { openColorPicker, closeColorPicker } from './color-picker.js';
 import { createDropdown, closeDropdowns } from './dropdown.js';
 
@@ -1089,26 +1090,19 @@ function enhanceBlock(el, block, section, grid, host) {
   // Den felles bildeeditoren for bildeblokker: alle feltene, med live DOM-oppdatering
   // (kun bildebytte trenger rerender, og da lukkes panelet).
   const openBlockImageEditor = () => {
-    const img = () => el.querySelector('img');
-    openImageEditor(img() ?? el, {
-      fields: ['image', 'alt', 'fit', 'radius', 'href', 'focus', 'filters'],
+    const frame = () => el.querySelector('.urd-image-frame');
+    // Full editor: bytt/fjern, alt, tilpasning, zoom, avrunding, lenke,
+    // fokuspunkt (med tredelingsgitter) og filtre (gråtone/nullstill).
+    openImageEditor(frame() ?? el.querySelector('img') ?? el, {
+      fields: ['image', 'remove', 'alt', 'fit', 'zoom', 'radius', 'href', 'focus', 'filters'],
       get: (field) => (field === 'image' ? block.props.src || null : block.props[field]),
       set: (field, value) => {
         const key = field === 'image' ? 'src' : field;
         block.props = { ...block.props, [key]: value };
-        const node = img();
-        if (node) {
-          const p = block.props;
-          node.style.objectFit = p.fit ?? 'cover';
-          node.style.objectPosition = `${(p.x ?? 0.5) * 100}% ${(p.y ?? 0.5) * 100}%`;
-          node.style.borderRadius = p.radius ? `var(--urd-radius-${p.radius})` : '';
-          const filters = [];
-          if (p.brightness != null && p.brightness !== 1) filters.push(`brightness(${p.brightness})`);
-          if (p.contrast != null && p.contrast !== 1) filters.push(`contrast(${p.contrast})`);
-          if (p.saturate != null && p.saturate !== 1) filters.push(`saturate(${p.saturate})`);
-          node.style.filter = filters.join(' ');
-          node.alt = p.alt ?? '';
-        }
+        // Bytte/fjerne bilde krever ny render (rammen bygges på nytt); andre
+        // felt oppdateres live via den delte applyImageStyle.
+        const node = frame();
+        if (node && field !== 'image') applyImageStyle(node, block.props);
         post({ type: 'urd-edit', sectionId: section.id, blockId: block.id, props: block.props, rerender: field === 'image' });
       },
     });

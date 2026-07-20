@@ -13,6 +13,7 @@
  *                  { type: 'urd-duplicate' }                   (Ctrl+D i admin: dupliser markert blokk)
  *   side → editor: { type: 'urd-edit', sectionId, blockId, props, rerender? }  (klikk-og-skriv/bildeeditor)
  *                  { type: 'urd-move', sectionId, blockId, frame, frameKey }  (dra/resize)
+ *                  { type: 'urd-grow', sectionId, blockId, h }  (auto-høyde for datablokker: KUN h, aldri x/y)
  *                  { type: 'urd-mobile-manual', sectionId, frames } (seksjon materialisert)
  *                  { type: 'urd-mobile-auto', sectionId }           (tilbake til auto)
  *                  { type: 'urd-review-done', sectionId }           (mobil gjennomgått)
@@ -48,6 +49,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     const msg = event.data;
     if (msg?.type === 'urd-edit') handlers.onEdit?.(msg);
     if (msg?.type === 'urd-move') handlers.onMove?.(msg);
+    if (msg?.type === 'urd-grow') handlers.onGrow?.(msg);
     if (msg?.type === 'urd-delete') handlers.onDelete?.(msg);
     if (msg?.type === 'urd-add-section') handlers.onAddSection?.(msg);
     if (msg?.type === 'urd-move-section') handlers.onMoveSection?.(msg);

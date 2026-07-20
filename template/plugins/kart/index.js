@@ -134,8 +134,12 @@ const KART_CSS = `
   border-radius: var(--urd-radius-md); opacity: 0.85; display: grid; gap: 8px; justify-items: center; }
 .urd-kart-code { font: 12px/1.4 ui-monospace, monospace; padding: 4px 8px; border-radius: 5px;
   background: color-mix(in srgb, var(--urd-color-text) 10%, transparent); }
-.urd-kart-gear { position: absolute; top: -32px; right: -6px; z-index: 5;
-  font: 600 11px/1 system-ui, sans-serif; padding: 5px 9px; border-radius: 999px; cursor: pointer;
+.urd-kart-tools { position: absolute; top: -32px; right: -6px; z-index: 5;
+  display: flex; gap: 4px; align-items: center;
+  /* Usynlig bro ned til blokk-kanten, så hover overlever veien opp */
+  padding-bottom: 8px; }
+.urd-kart-tools .urd-hint-chip { position: static; }
+.urd-kart-gear { font: 600 11px/1 system-ui, sans-serif; padding: 5px 9px; border-radius: 999px; cursor: pointer;
   color: #fff; background: var(--urd-color-accent); border: 0;
   opacity: 0; pointer-events: none; transition: opacity 0.15s; }
 .urd-block:hover .urd-kart-gear, .urd-kart-gear:focus-visible,
@@ -178,7 +182,9 @@ function autoGrow(el, host, ctx) {
       const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
       if (block && block.frames.desktop.h !== needed) {
         block.frames.desktop = { ...block.frames.desktop, h: needed };
-        post({ type: 'urd-move', sectionId: ctx.section.id, blockId: el.dataset.blockId, frame: block.frames.desktop, frameKey: 'desktop', coalesce: true });
+        // KUN høyden meldes (urd-grow), aldri hele framen: ellers ville en
+        // dratt blokk teleporteres tilbake til snapshotets gamle x/y.
+        post({ type: 'urd-grow', sectionId: ctx.section.id, blockId: el.dataset.blockId, h: needed });
       }
     }
   }
@@ -216,10 +222,13 @@ function renderKart(el, props, ctx) {
 
   if (ctx.preview && ctx.viewport !== 'mobile') {
     const [gear, panel] = configPanel(el, props, ctx);
-    host.append(gear, panel);
+    // «?» og «⚙ Sted» i samme rad øverst til høyre, med hover-bro (klar av rotasjonshåndtaket).
+    const tools = el2('div', 'urd-kart-tools');
+    tools.appendChild(gear);
+    host.append(tools, panel);
     import('/assets/engine/hint.js').then(({ attachHint }) => {
       if (!host.isConnected || host.querySelector('.urd-hint-chip')) return;
-      attachHint(host, {
+      const chip = attachHint(tools, {
         title: 'Kartblokken',
         lines: [
           'Pek på blokken og klikk «⚙ Sted» for å legge inn koordinater («59.913, 10.739») eller en OSM-lenke',
@@ -229,6 +238,7 @@ function renderKart(el, props, ctx) {
           `Nettstedet må tillate kartet: legg «frame-src ${OSM_HOST}» inn i _headers (Plugins-panelet viser det samme)`,
         ],
       });
+      tools.insertBefore(chip, tools.firstChild);
     });
   }
 

@@ -119,6 +119,12 @@ bygger du din egen faste palett (opptil 12; × på en prikk fjerner den).
 som beholdes når det beskjæres) og justere lysstyrke, kontrast og
 metning - uten at selve bildefilen endres.
 
+**Nettstedsikon**: i Tema-panelet laster du opp et bilde og redigerer det
+i ikon-editoren: dra bildet for å velge utsnitt, zoom, juster
+lysstyrke/kontrast/metning eller gråtone, og «Bruk» lager et kvadratisk
+128px-ikon som vises i nettleserfanen. Blyantknappen åpner editoren på
+nytt; kryssknappen fjerner ikonet (da brukes Urd-merket).
+
 **Bakgrunner**: en seksjons bakgrunn er bygget av lag som kan stables:
 farge, gradient (kan animeres), glød, bilde og korn. Legg til, fjern og
 sorter lag i seksjonens Egenskaper; hvert lag har sine egne kontroller.

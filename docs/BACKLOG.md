@@ -8,12 +8,22 @@ Fullførte punkter fra v0.2-v0.5 er ryddet bort ved versjonsslippene (0.3.0 17. 
 
 Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren stryker herfra** når noe er testet; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her.
 
-- [ ] Mørk-linje-fiksen (0.6.10): den tynne mørke stripen nederst er borte på både admin og siden (hard oppdatering; gjelder særlig skjermer med brøkskalering)
+- [x] Mørk-linje-fiksen (0.6.10): den tynne mørke stripen nederst er borte på både admin og siden (hard oppdatering; gjelder særlig skjermer med brøkskalering)
 - [ ] Fargevelger-fiksen (0.6.10): klikk inne i fargevelgeren (fargeruten, feltene, prikkene) lukker den IKKE lenger; den lukkes kun ved klikk utenfor, Escape eller ved å klikke fargeruten igjen. Gjelder Tema, Nav, bakgrunnslag og oppsett
 - [ ] M4 Skjema: «Kontaktskjema»-mal, sett mottaker i «⚙ Skjema», test mailto-innsending på den PUBLISERTE siden (preview validerer bare); test feltredigering (legg til/fjern/type/påkrevd), e-postvalidering og honeypot; test eksternt endepunkt om du har et
 - [ ] M4 Kart: «Finn oss»-mal, lim inn koordinater i «⚙ Sted»; bekreft CSP-blokkert-melding FØR du legger `frame-src https://www.openstreetmap.org` i `template/_headers`, og at kartet vises ETTER at linjen er lagt inn og publisert
 - [ ] M3 Kalender: feed-henting i produksjon med en ekte Google-kalender-id (fungerte i preview med eksempeldata; produksjon krever functions, og andre verter enn Google krever ICS_HOSTS)
 - [ ] Plugin-menyene: «Plugins»-seksjonene i «+ Ny blokk», «+ Ny seksjon» og Blokker-panelet viser skjema/kart/kalender; «Kalender ▾»-foldemenyen gir de fire visningene
+
+### Testrunde-batch (0.6.11): editor-UI-sveip
+
+- [ ] Egenskaper-omorganisering: X/Y/Bredde/Høyde/Lag/Rotasjon + «Skjul i mobil» ligger nå i en sammenleggbar «Plassering, lag og rotasjon» nederst i panelet, for ALLE blokktyper. Bekreft at de fortsatt virker og at panelet er ryddigere
+- [ ] Kart/skjema verktøy: «⚙» og «?» ligger side om side (ikke oppå hverandre), og begge kan nås med musen (hover-bro). Gjelder både Kart og Skjema
+- [ ] «+ Ny blokk»-menyen: «Månedskalender» heter nå «Måned», og lange etiketter flyter ikke ut av knappene
+- [ ] Bildeblokk full editor (0.6.11): dobbeltklikk/blyant åpner den fulle bildeeditoren med fokuspunkt + tredelingsgitter, zoom, filtre (gråtone/nullstill), tilpasning og avrunding; avrunding vises nå ALLTID (også med «Vis hele bildet»), både i preview og på den publiserte siden
+- [ ] Tema-ikon full editor (0.6.11): last opp et nettstedsikon, så åpnes ikon-editoren (beskjær ved å dra, zoom, lysstyrke/kontrast/metning, gråtone, nullstill); «Bruk» baker et 128px favicon. «Rediger»-knappen (blyant) åpner editoren på et eksisterende ikon. Bekreft at ikonet vises i fanen etter publisering
+- [ ] Dra-teleport-fiks (0.6.11): å dra en datablokk (Kalender/Kart/Skjema/Samling) teleporterer den IKKE lenger tilbake til opprettelsesposisjonen. Autovekst melder nå kun høyde (urd-grow), aldri hele framen
+- [ ] PUBLISERINGS-SHIFT: sannsynligvis SAMME årsak som dra-teleporten (autovekstens gamle x/y klobret posisjonen ved re-render etter publisering) - sjekk om blokker fortsatt flyttes ved publisering nå. Hvis ja: noter X %-verdien FØR og ETTER (i «Plassering, lag og rotasjon») så det kan spores videre
 
 ## Til v0.6 «Økosystem» (startet 19. juli 2026; milepæler M1-M9, avhengighetsstyrt rekkefølge; pushes nummereres 0.6.1 og oppover)
 

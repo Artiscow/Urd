@@ -1087,6 +1087,21 @@ a.urd-samling-title:hover {
   border-radius: var(--urd-radius-md);
 }
 
+/* Bilderammen: klipper bildet, så avrunding vises uansett tilpasning og
+   zoom beskjæres rent inn mot fokuspunktet. */
+.urd-image-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.urd-image-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 /* «+ Ny blokk» (hover-vist, kun preview): øverst til høyre i seksjonen,
    under seksjonsverktøylinjen. Absolutt posisjon: pillen skal aldri
    delta i flyten (en flyt-marg kollapset tidligere ut av seksjonen og
@@ -1182,6 +1197,10 @@ a.urd-samling-title:hover {
   padding: 6px 8px;
   text-align: left;
   cursor: pointer;
+  /* Lange etiketter uten mellomrom (f.eks. plugin-visninger) skal aldri
+     sprenge cellen: bryt ordet i stedet for å flyte utenfor menyen. */
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .urd-preview .urd-add-block-menu button:hover {

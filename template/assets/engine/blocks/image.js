@@ -2,15 +2,43 @@
  * Kjerneblokk: bilde. Viser en fil fra media/ (eller en data-URL for
  * upubliserte opplastinger i utkast). Med href blir bildet en lenke,
  * som også dekker logo-bruk.
+ *
+ * Bildet ligger i en ramme (.urd-image-frame) som klipper: da vises
+ * avrunding ALLTID (også med «Vis hele bildet»/contain), og zoom beskjærer
+ * inn mot fokuspunktet. Én felles applyImageStyle brukes av render OG den
+ * flytende bildeeditoren, så de aldri kan drifte fra hverandre.
  */
+
+/** Anvender den ikke-destruktive bildestilen på rammen + bildet.
+ *  @param {HTMLElement} frame Rammeelementet (.urd-image-frame) med <img> inni */
+export function applyImageStyle(frame, props) {
+  const img = frame.querySelector('img');
+  if (!img) return;
+  const focus = `${(props.x ?? 0.5) * 100}% ${(props.y ?? 0.5) * 100}%`;
+  img.alt = props.alt ?? '';
+  img.style.objectFit = props.fit ?? 'cover';
+  img.style.objectPosition = focus;
+  // Zoom beskjærer inn mot fokuspunktet; rammen klipper resten.
+  const zoom = Number(props.zoom) || 1;
+  img.style.transform = zoom !== 1 ? `scale(${zoom})` : '';
+  img.style.transformOrigin = focus;
+  const filters = [];
+  if (props.brightness != null && props.brightness !== 1) filters.push(`brightness(${props.brightness})`);
+  if (props.contrast != null && props.contrast !== 1) filters.push(`contrast(${props.contrast})`);
+  if (props.saturate != null && props.saturate !== 1) filters.push(`saturate(${props.saturate})`);
+  img.style.filter = filters.join(' ');
+  // Avrunding på RAMMEN (som klipper), så den vises uansett tilpasning.
+  frame.style.borderRadius = props.radius ? `var(--urd-radius-${props.radius})` : '';
+}
+
 export const imageBlock = {
   version: 1,
   label: 'Bilde',
   defaults: () => ({
     src: '', alt: '', fit: 'cover', radius: 'md', href: null,
-    // Additive felt fra v0.5: fokuspunkt (0..1) og ikke-destruktive
+    // Additive felt: fokuspunkt (0..1), zoom (1 = ingen) og ikke-destruktive
     // CSS-justeringer (1 = nøytral).
-    x: 0.5, y: 0.5, brightness: 1, contrast: 1, saturate: 1,
+    x: 0.5, y: 0.5, zoom: 1, brightness: 1, contrast: 1, saturate: 1,
   }),
   migrations: {},
   /**
@@ -29,11 +57,11 @@ export const imageBlock = {
       }
       return;
     }
+    const frame = document.createElement('span');
+    frame.className = 'urd-image-frame';
     const img = document.createElement('img');
     img.src = props.src;
-    img.alt = props.alt ?? '';
     img.draggable = false;
-    img.style.cssText = 'width:100%;height:100%;display:block;';
     // Store bilder dekodes stripevis mens de laster (ser ut som en
     // gradvis «inntoning» ovenfra): hold bildet usynlig til det er
     // FERDIG, og vis det komplett med en gang. Cachede bilder berøres ikke.
@@ -42,24 +70,16 @@ export const imageBlock = {
       img.addEventListener('load', () => { img.style.visibility = ''; }, { once: true });
       img.addEventListener('error', () => { img.style.visibility = ''; }, { once: true });
     }
-    img.style.objectFit = props.fit ?? 'cover';
-    // Fokuspunkt: hvilken del av bildet som beholdes ved beskjæring.
-    img.style.objectPosition = `${(props.x ?? 0.5) * 100}% ${(props.y ?? 0.5) * 100}%`;
-    // Ikke-destruktive justeringer (CSS-filter; 1 = nøytral).
-    const filters = [];
-    if (props.brightness != null && props.brightness !== 1) filters.push(`brightness(${props.brightness})`);
-    if (props.contrast != null && props.contrast !== 1) filters.push(`contrast(${props.contrast})`);
-    if (props.saturate != null && props.saturate !== 1) filters.push(`saturate(${props.saturate})`);
-    if (filters.length) img.style.filter = filters.join(' ');
-    if (props.radius) img.style.borderRadius = `var(--urd-radius-${props.radius})`;
+    frame.appendChild(img);
+    applyImageStyle(frame, props);
 
     if (props.href && !ctx.preview) {
       const a = document.createElement('a');
       a.href = props.href;
-      a.appendChild(img);
+      a.appendChild(frame);
       el.appendChild(a);
     } else {
-      el.appendChild(img);
+      el.appendChild(frame);
     }
   },
 };

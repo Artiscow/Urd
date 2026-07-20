@@ -7,6 +7,7 @@
   import GlyphPicker from './lib/GlyphPicker.svelte';
   import { createPreviewBridge } from './lib/previewBridge.js';
   import Dropdown from './lib/Dropdown.svelte';
+  import IconEditor from './lib/IconEditor.svelte';
   // Editoren deler migreringskoden med motoren (samme fil, bundles inn).
   import { liftPageFile, liftSiteFile } from '../../template/assets/engine/migrate.js';
   import { validateManifest, satisfiesEngine } from '../../template/assets/engine/plugins.js';
@@ -918,6 +919,7 @@
     bridge = createPreviewBridge(iframeEl, {
       onEdit: handleEdit,
       onMove: handleMove,
+      onGrow: handleGrow,
       onDelete: handleDelete,
       onAddSection: handleAddSection,
       onMoveSection: handleMoveSection,
@@ -1139,16 +1141,23 @@
   }
 
   /** Nettstedsikon (favicon): lite webp, materialiseres ved publisering. */
-  async function uploadSiteIcon(event) {
+  // Ikon-editoren (IconEditor): kilden som redigeres. null = lukket.
+  let iconEditorImage = $state(null);
+
+  function uploadSiteIcon(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    try {
-      const img = await compressToWebp(file, 128);
-      siteMutate('edit:site-icon', () => { siteDraft.site.icon = img.dataUrl; });
-    } catch {
-      setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
-    }
+    // Les rå fil i full oppløsning, så editoren har noe å beskjære og zoome i.
+    const reader = new FileReader();
+    reader.onload = () => { iconEditorImage = String(reader.result); };
+    reader.onerror = () => setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
+    reader.readAsDataURL(file);
+  }
+
+  function applyIcon(dataUrl) {
+    siteMutate('edit:site-icon', () => { siteDraft.site.icon = dataUrl; });
+    iconEditorImage = null;
   }
 
   function removeSiteIcon() {
@@ -1587,6 +1596,20 @@
     const key = msg.frameKey === 'mobile' ? 'mobile' : 'desktop';
     block.frames[key] = msg.frame;
     if (key === 'desktop') markDesktopChange(section, 'desktop-endret-etter-mobil');
+    store.save();
+    updateDirty();
+    if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
+  }
+
+  /** Automatisk høydevekst for datablokker (samling/kalender/skjema/kart):
+   *  KUN h endres, aldri x/y, så en dratt blokk aldri teleporteres tilbake.
+   *  Coalesces med blokkens redigering (samme angre-steg). */
+  function handleGrow(msg) {
+    const section = store.data.sections.find((s) => s.id === msg.sectionId);
+    const block = section?.blocks.find((b) => b.id === msg.blockId);
+    if (!block?.frames?.desktop || block.frames.desktop.h === msg.h) return;
+    pushHistory(`edit:${msg.blockId}`);
+    block.frames.desktop.h = msg.h;
     store.save();
     updateDirty();
     if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
@@ -2489,16 +2512,18 @@
                   {/if}
                 </label>
                 <span class="toolbar-row">
-                  <label class="ghost filepick tb-grow" title="Vises i nettleserfanen og bokmerker; skaleres til 128px">
+                  <label class="ghost filepick tb-grow" title="Vises i nettleserfanen og bokmerker; redigeres til 128px">
                     {siteDraft.site.icon ? 'Bytt ikon' : 'Velg ikon'}
                     <input type="file" accept="image/*" onchange={uploadSiteIcon} />
                   </label>
                   {#if siteDraft.site.icon}
+                    <button class="ghost row-tool" title="Rediger ikonet (beskjær, zoom, filtre)"
+                      onclick={() => (iconEditorImage = siteDraft.site.icon)}>{@html ICONS.pencil ?? '✎'}</button>
                     <button class="ghost row-tool" title="Fjern ikonet (Urd-merket brukes)"
                       onclick={removeSiteIcon}>{@html ICONS.cross}</button>
                   {/if}
                 </span>
-                <p class="panel-hint">Vises i nettleserfanen og bokmerker. Firkantet bilde anbefales.</p>
+                <p class="panel-hint">Vises i nettleserfanen og bokmerker. Last opp et bilde, så beskjærer du det til et kvadratisk ikon i editoren.</p>
               </div>
             {:else if activePanel === 'Blokker'}
               <div class="panel-body" class:locked={viewMode === 'mobile'}
@@ -2579,31 +2604,6 @@
                 {#if selectedBlock}
                   <p class="panel-strong">{BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type}-blokk</p>
 
-                  {#if viewMode === 'desktop'}
-                    <div class="frame-grid">
-                      <label>X %<input type="number" step="0.5" value={selectedBlock.frame.x}
-                        onchange={(e) => setBlockFrame('x', Number(e.target.value))} /></label>
-                      <label>Y px<input type="number" step="1" value={selectedBlock.frame.y}
-                        onchange={(e) => setBlockFrame('y', Number(e.target.value))} /></label>
-                      <label>Bredde %<input type="number" step="0.5" min="1" value={selectedBlock.frame.w}
-                        onchange={(e) => setBlockFrame('w', Number(e.target.value))} /></label>
-                      <label>Høyde px<input type="number" step="1" min="1" value={selectedBlock.frame.h}
-                        onchange={(e) => setBlockFrame('h', Number(e.target.value))} /></label>
-                      <label title="Høyere tall ligger foran. Mens du redigerer vises pekt/markert blokk alltid øverst - se ekte rekkefølge i Ren visning">
-                        Lag (z)<input type="number" step="1" value={selectedBlock.frame.z ?? 1}
-                        onchange={(e) => setBlockFrame('z', Number(e.target.value))} /></label>
-                      <label>Rotasjon °<input type="number" step="1" value={selectedBlock.frame.rot ?? 0}
-                        onchange={(e) => setBlockFrame('rot', Number(e.target.value))} /></label>
-                    </div>
-                  {/if}
-
-                  <label class="gridmenu-snap" title="Gjelder kun automatisk mobil-layout">
-                    <input type="checkbox" checked={selectedBlock.decor}
-                      onchange={(e) => setBlockDecor(e.target.checked)} />
-                    Skjul i automatisk mobil-layout (pynt)
-                  </label>
-                  <hr class="gridmenu-divider" />
-
                   {#if selectedBlock.type === 'text'}
                     <label>Justering
                       <Dropdown value={selectedBlock.props.align ?? 'left'}
@@ -2682,6 +2682,10 @@
                       <span class="gridmenu-value">{Math.round((selectedBlock.props.y ?? 0.5) * 100)}%</span></label>
                     <input type="range" min="0" max="1" step="0.05" value={selectedBlock.props.y ?? 0.5}
                       oninput={(e) => setBlockProp('y', Number(e.target.value))} />
+                    <label title="Beskjærer inn mot fokuspunktet">Zoom
+                      <span class="gridmenu-value">{(selectedBlock.props.zoom ?? 1).toFixed(2)}x</span></label>
+                    <input type="range" min="1" max="3" step="0.05" value={selectedBlock.props.zoom ?? 1}
+                      oninput={(e) => setBlockProp('zoom', Number(e.target.value))} />
                     <label>Lysstyrke
                       <span class="gridmenu-value">{Math.round((selectedBlock.props.brightness ?? 1) * 100)}%</span></label>
                     <input type="range" min="0.2" max="2" step="0.05" value={selectedBlock.props.brightness ?? 1}
@@ -2784,6 +2788,36 @@
                         onchange={(e) => setBlockAnimProp('delay', Number(e.target.value))} /></label>
                     <p class="panel-hint">Spilles hos besøkende ved scrolling. Her spilles den én gang hver gang du endrer den.</p>
                   {/if}
+
+                  <hr class="gridmenu-divider" />
+                  <details class="group frame-group">
+                    <summary>Plassering, lag og rotasjon</summary>
+                    <div class="group-items">
+                      <p class="panel-hint">Kan også endres direkte på blokken: dra for å flytte, håndtakene for størrelse og rotasjon.</p>
+                      {#if viewMode === 'desktop'}
+                        <div class="frame-grid">
+                          <label>X %<input type="number" step="0.5" value={selectedBlock.frame.x}
+                            onchange={(e) => setBlockFrame('x', Number(e.target.value))} /></label>
+                          <label>Y px<input type="number" step="1" value={selectedBlock.frame.y}
+                            onchange={(e) => setBlockFrame('y', Number(e.target.value))} /></label>
+                          <label>Bredde %<input type="number" step="0.5" min="1" value={selectedBlock.frame.w}
+                            onchange={(e) => setBlockFrame('w', Number(e.target.value))} /></label>
+                          <label>Høyde px<input type="number" step="1" min="1" value={selectedBlock.frame.h}
+                            onchange={(e) => setBlockFrame('h', Number(e.target.value))} /></label>
+                          <label title="Høyere tall ligger foran. Mens du redigerer vises pekt/markert blokk alltid øverst - se ekte rekkefølge i Ren visning">
+                            Lag (z)<input type="number" step="1" value={selectedBlock.frame.z ?? 1}
+                            onchange={(e) => setBlockFrame('z', Number(e.target.value))} /></label>
+                          <label>Rotasjon °<input type="number" step="1" value={selectedBlock.frame.rot ?? 0}
+                            onchange={(e) => setBlockFrame('rot', Number(e.target.value))} /></label>
+                        </div>
+                      {/if}
+                      <label class="gridmenu-snap" title="Gjelder kun automatisk mobil-layout">
+                        <input type="checkbox" checked={selectedBlock.decor}
+                          onchange={(e) => setBlockDecor(e.target.checked)} />
+                        Skjul i automatisk mobil-layout (pynt)
+                      </label>
+                    </div>
+                  </details>
                 {:else if activeSectionId}
                   <p class="panel-strong">Seksjon</p>
                   <label>Minstehøyde
@@ -3124,6 +3158,10 @@
     </div>
   {:else}
     <p class="loading">Laster…</p>
+  {/if}
+
+  {#if iconEditorImage}
+    <IconEditor image={iconEditorImage} onapply={applyIcon} oncancel={() => (iconEditorImage = null)} />
   {/if}
 
   {#if confirmBox}

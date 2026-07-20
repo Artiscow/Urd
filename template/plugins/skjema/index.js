@@ -293,7 +293,9 @@ function autoGrow(el, host, ctx) {
       const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
       if (block && block.frames.desktop.h !== needed) {
         block.frames.desktop = { ...block.frames.desktop, h: needed };
-        post({ type: 'urd-move', sectionId: ctx.section.id, blockId: el.dataset.blockId, frame: block.frames.desktop, frameKey: 'desktop', coalesce: true });
+        // KUN høyden meldes (urd-grow), aldri hele framen: ellers ville en
+        // dratt blokk teleporteres tilbake til snapshotets gamle x/y.
+        post({ type: 'urd-grow', sectionId: ctx.section.id, blockId: el.dataset.blockId, h: needed });
       }
     }
   }
@@ -321,8 +323,12 @@ textarea.urd-skjema-input { resize: vertical; min-height: 90px; }
 .urd-skjema-status { font-size: 0.9em; margin: 0; }
 .urd-skjema-status.ok { color: color-mix(in srgb, #4ac26b 85%, var(--urd-color-text)); }
 .urd-skjema-status.feil { color: #e05252; }
-.urd-skjema-gear { position: absolute; top: -32px; right: -6px; z-index: 5;
-  font: 600 11px/1 system-ui, sans-serif; padding: 5px 9px; border-radius: 999px; cursor: pointer;
+.urd-skjema-tools { position: absolute; top: -32px; right: -6px; z-index: 5;
+  display: flex; gap: 4px; align-items: center;
+  /* Usynlig bro ned til blokk-kanten, så hover overlever veien opp */
+  padding-bottom: 8px; }
+.urd-skjema-tools .urd-hint-chip { position: static; }
+.urd-skjema-gear { font: 600 11px/1 system-ui, sans-serif; padding: 5px 9px; border-radius: 999px; cursor: pointer;
   color: #fff; background: var(--urd-color-accent); border: 0;
   opacity: 0; pointer-events: none; transition: opacity 0.15s; }
 .urd-block:hover .urd-skjema-gear, .urd-skjema-gear:focus-visible,
@@ -366,10 +372,13 @@ function renderSkjema(el, props, ctx) {
 
   if (ctx.preview && ctx.viewport !== 'mobile') {
     const [gear, panel] = configPanel(el, props, ctx);
-    host.append(gear, panel);
+    // «?» og «⚙ Skjema» i samme rad øverst til høyre, med hover-bro (klar av rotasjonshåndtaket).
+    const tools = el2('div', 'urd-skjema-tools');
+    tools.appendChild(gear);
+    host.append(tools, panel);
     import('/assets/engine/hint.js').then(({ attachHint }) => {
       if (!host.isConnected || host.querySelector('.urd-hint-chip')) return;
-      attachHint(gear.parentElement, {
+      const chip = attachHint(tools, {
         title: 'Skjemablokken',
         lines: [
           'Pek på blokken og klikk «⚙ Skjema» for å stille inn mottaker, felt og sendemåte',
@@ -379,6 +388,7 @@ function renderSkjema(el, props, ctx) {
           'Innsending virker på den publiserte siden; i forhåndsvisningen valideres skjemaet uten å sende',
         ],
       });
+      tools.insertBefore(chip, tools.firstChild);
     });
   }
 

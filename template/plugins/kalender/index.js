@@ -280,7 +280,7 @@ function post(msg) {
   window.parent?.postMessage(msg, location.origin);
 }
 
-const VIEW_NAMES = [['list', 'Liste'], ['cards', 'Kort'], ['month', 'Månedskalender'], ['next', 'Neste arrangement']];
+const VIEW_NAMES = [['list', 'Liste'], ['cards', 'Kort'], ['month', 'Måned'], ['next', 'Neste']];
 
 function configPanel(el, props, ctx) {
   const gear = el2('button', 'urd-kal-gear', '⚙ Kilder');
@@ -396,7 +396,9 @@ function autoGrow(el, host, ctx) {
       const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
       if (block && block.frames.desktop.h !== needed) {
         block.frames.desktop = { ...block.frames.desktop, h: needed };
-        post({ type: 'urd-move', sectionId: ctx.section.id, blockId: el.dataset.blockId, frame: block.frames.desktop, frameKey: 'desktop', coalesce: true });
+        // KUN høyden meldes (urd-grow), aldri hele framen: ellers ville en
+        // dratt blokk teleporteres tilbake til snapshotets gamle x/y.
+        post({ type: 'urd-grow', sectionId: ctx.section.id, blockId: el.dataset.blockId, h: needed });
       }
     }
   }

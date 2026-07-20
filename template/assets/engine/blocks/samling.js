@@ -299,7 +299,9 @@ export const samlingBlock = {
           const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
           if (block && block.frames.desktop.h !== needed) {
             block.frames.desktop = { ...block.frames.desktop, h: needed };
-            post({ type: 'urd-move', sectionId: ctx.section.id, blockId: el.dataset.blockId, frame: block.frames.desktop, frameKey: 'desktop', coalesce: true });
+            // KUN høyden meldes (urd-grow), aldri hele framen: ellers ville en
+            // dratt blokk teleporteres tilbake til snapshotets gamle x/y.
+            post({ type: 'urd-grow', sectionId: ctx.section.id, blockId: el.dataset.blockId, h: needed });
           }
         }
       }
