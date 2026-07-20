@@ -1673,6 +1673,10 @@
    *  bygget av presetens create() der inne). */
   function handleAddSection(msg) {
     pushHistory('add-section');
+    // Vern: en seksjon MÅ ha id (skjemaet krever det). Kjernepresetene setter
+    // den selv, men en plugin-preset kan glemme den, og en id-løs seksjon ville
+    // gjort sidefilen ugyldig ved publisering. Tildel en her om den mangler.
+    if (!msg.section.id) msg.section.id = makeId('sec');
     store.data.sections.splice(msg.index, 0, msg.section);
     store.save();
     updateDirty();

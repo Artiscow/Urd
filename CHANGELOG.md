@@ -12,6 +12,9 @@ døpes til det siste push-nummeret ved gaten, slik v0.5-fasen endte i
 0.5.10. Da stiger numrene alltid. Etterslepp-fikser på v0.5 nummereres
 0.5.11 og videre.
 
+### 0.6.13 - CI-fiks: plugin-seksjonspresets manglet id - 20. juli 2026
+- KRITISK CI-/datafiks: plugin-seksjonspresetene (Hva skjer / Kontaktskjema / Finn oss) returnerte seksjonen UTEN id (kjernepresetene setter den i section()-factoryen, plugin-presetene glemte den). En publisert «Hva skjer»-seksjon havnet dermed uten id i hjem.json, som er ugyldig mot page-skjemaet og felte CI-valideringen. Fikset i tre lag: de tre plugin-presetene setter nå id selv; handleAddSection tildeler defensivt en id om en seksjon mangler den (verner ALLE plugins, også fremtidige); og den allerede publiserte id-løse seksjonen i hjem.json fikk en id.
+
 ### 0.6.12 - CodeQL #11: eksakt vert-sjekk i kartets CSP-vokter - 20. juli 2026
 - CodeQL #11 (Incomplete URL substring sanitization) lukket: kart-pluginens CSP-brudd-vokter sammenlignet den blokkerte URL-en med en delstreng («openstreetmap.org»), som også ville slått til på f.eks. openstreetmap.org.example.com. Den parser nå URL-en og sammenligner verten eksakt.
 

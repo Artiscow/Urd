@@ -260,6 +260,7 @@ const blockId = () => {
 
 function finnOssSection() {
   return {
+    id: 'sec-' + blockId().slice(4),
     version: 1,
     preset: 'finn-oss',
     size: { minHeight: '480px' },

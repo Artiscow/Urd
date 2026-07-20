@@ -410,6 +410,7 @@ const defaultFields = () => [
 
 function kontaktSection() {
   return {
+    id: 'sec-' + blockId().slice(4),
     version: 1,
     preset: 'kontaktskjema',
     size: { minHeight: '520px' },

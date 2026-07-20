@@ -4117,7 +4117,7 @@ function Wo(e, t) {
 		t && (O("decor"), t.decor = e.decor, C.save(), D(), G(A)?.blockId === e.blockId && Te());
 	}
 	function tr(e) {
-		O("add-section"), C.data.sections.splice(e.index, 0, e.section), C.save(), D(), T?.sendPage(G(c), C.data), R(Pe, e.section.id, !0), Be(e.section), G(k) !== "Egenskaper" && (R(k, "Egenskaper"), T?.sendShowGrid(!1));
+		O("add-section"), e.section.id || (e.section.id = ra("sec")), C.data.sections.splice(e.index, 0, e.section), C.save(), D(), T?.sendPage(G(c), C.data), R(Pe, e.section.id, !0), Be(e.section), G(k) !== "Egenskaper" && (R(k, "Egenskaper"), T?.sendShowGrid(!1));
 	}
 	function nr(e) {
 		let t = C.data.sections, n = t.findIndex((t) => t.id === e.sectionId), r = n + e.dir;

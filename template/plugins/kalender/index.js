@@ -585,6 +585,7 @@ const presetId = () => {
 
 function hvaSkjerSection() {
   return {
+    id: 'sec-' + presetId().slice(4),
     version: 1,
     preset: 'hva-skjer',
     size: { minHeight: '520px' },
