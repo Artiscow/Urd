@@ -20,7 +20,7 @@ Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren
 - [x] Egenskaper-omorganisering: X/Y/Bredde/Høyde/Lag/Rotasjon + «Skjul i mobil» ligger nå i en sammenleggbar «Plassering, lag og rotasjon» nederst i panelet, for ALLE blokktyper. Bekreft at de fortsatt virker og at panelet er ryddigere
 - [x] Kart/skjema verktøy: «⚙» og «?» ligger side om side (ikke oppå hverandre), og begge kan nås med musen (hover-bro). Gjelder både Kart og Skjema
 - [x] «+ Ny blokk»-menyen: «Månedskalender» heter nå «Måned», og lange etiketter flyter ikke ut av knappene
-- [ ] Bildeblokk full editor (0.6.11): dobbeltklikk/blyant åpner den fulle bildeeditoren med fokuspunkt + tredelingsgitter, zoom, filtre (gråtone/nullstill), tilpasning og avrunding; avrunding vises nå ALLTID (også med «Vis hele bildet»), både i preview og på den publiserte siden
+- [ ] Bildeblokk full editor (0.6.11): editoren viser ikke hele bildet i sin preview.
 - [x] Tema-ikon full editor (0.6.11): last opp et nettstedsikon, så åpnes ikon-editoren (beskjær ved å dra, zoom, lysstyrke/kontrast/metning, gråtone, nullstill); «Bruk» baker et 128px favicon. «Rediger»-knappen (blyant) åpner editoren på et eksisterende ikon. Bekreft at ikonet vises i fanen etter publisering
 - [x] Dra-teleport-fiks (0.6.11): å dra en datablokk (Kalender/Kart/Skjema/Samling) teleporterer den IKKE lenger tilbake til opprettelsesposisjonen. Autovekst melder nå kun høyde (urd-grow), aldri hele framen
 - [x] PUBLISERINGS-SHIFT: sannsynligvis SAMME årsak som dra-teleporten (autovekstens gamle x/y klobret posisjonen ved re-render etter publisering) - sjekk om blokker fortsatt flyttes ved publisering nå. Hvis ja: noter X %-verdien FØR og ETTER (i «Plassering, lag og rotasjon») så det kan spores videre
