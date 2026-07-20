@@ -12,6 +12,12 @@ døpes til det siste push-nummeret ved gaten, slik v0.5-fasen endte i
 0.5.10. Da stiger numrene alltid. Etterslepp-fikser på v0.5 nummereres
 0.5.11 og videre.
 
+### 0.6.14 - kart: adressesøk + virker ut av boksen; Egenskaper-foldemeny ryddet - 20. juli 2026
+- Kart adressesøk: «⚙ Sted» godtar nå en vanlig adresse («Storgata 1, Oslo»), koordinater ELLER en OSM-lenke. En adresse slås opp via ny samme-origin-proxy (functions/api/geocode → OpenStreetMaps Nominatim, med identifiserende User-Agent og cache); koordinatene lagres i blokken, så besøkende laster kartet direkte uten oppslag.
+- Kartet virker ut av boksen: det brukne bildet var CSP som blokkerte OSM-iframen. https://www.openstreetmap.org er lagt i Urds standard _headers frame-src (personvennlig, shippet reference-plugin), så kartet vises etter publisering uten manuell CSP-jobb. Manifestets csp-erklæring og degraderingen består for andre hoster.
+- Kart-degradering + bugfiks: hvis kartet likevel blokkeres får besøkende en «Åpne kartet på OpenStreetMap»-lenke i stedet for et brukket bilde (editoren får instruksen). Rettet samtidig en variabel-skygging innført i 0.6.12 (det indre `host` overskrev DOM-elementet, så CSP-vokteren ville kastet feil ved et brudd).
+- Egenskaper: «Plassering, lag og rotasjon»-foldemenyen er nå en enkel seksjonsoverskrift i stedet for en chip/pille (eiers ønske).
+
 ### 0.6.13 - CI-fiks: plugin-seksjonspresets manglet id - 20. juli 2026
 - KRITISK CI-/datafiks: plugin-seksjonspresetene (Hva skjer / Kontaktskjema / Finn oss) returnerte seksjonen UTEN id (kjernepresetene setter den i section()-factoryen, plugin-presetene glemte den). En publisert «Hva skjer»-seksjon havnet dermed uten id i hjem.json, som er ugyldig mot page-skjemaet og felte CI-valideringen. Fikset i tre lag: de tre plugin-presetene setter nå id selv; handleAddSection tildeler defensivt en id om en seksjon mangler den (verner ALLE plugins, også fremtidige); og den allerede publiserte id-løse seksjonen i hjem.json fikk en id.
 

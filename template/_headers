@@ -2,15 +2,17 @@
 # CSP-en er stram: kun egne skript og stiler; bilder også som data:/blob:
 # (upubliserte opplastinger og genererte teksturer). frame-ancestors 'self'
 # lar admin-editoren vise siden i iframe, men blokkerer fremmede sider.
-# frame-src har et BEVISST unntak for video-blokkens to personvernvennlige
-# verter (youtube-nocookie og Vimeo med dnt=1) - andre embeds krever
-# plugin og eierens eget CSP-valg.
+# frame-src har BEVISSTE unntak for personvernvennlige innbygginger som
+# følger med Urd: video-blokkens to verter (youtube-nocookie og Vimeo med
+# dnt=1) og kart-pluginens OpenStreetMap. Andre embeds krever at eieren
+# legger verten til her (jf. ADR-0006; plugin-manifestet deklarerer behovet
+# og admin viser den eksakte linjen).
 
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://www.openstreetmap.org; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'
 
 /admin/*
   X-Robots-Tag: noindex

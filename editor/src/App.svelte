@@ -3958,6 +3958,20 @@
     border-color: var(--urd-color-accent, #7c5cff);
   }
 
+  /* «Plassering, lag og rotasjon» er en SEKSJONS-foldemeny, ikke en chip:
+     dropp pille-rammen, la den lese som en enkel overskriftsrad. */
+  .frame-group summary {
+    border: 0;
+    border-radius: 0;
+    padding-left: 0.1em;
+    font-weight: 600;
+    opacity: 0.9;
+  }
+
+  .frame-group[open] summary {
+    border-color: transparent;
+  }
+
   /* Grupper er grid-elementer: uten min-width 0 nekter de å krympe til
      panelbredden, og innholdet (fargevelgere, brytere) kuttes i kanten */
   .group {

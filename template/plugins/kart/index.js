@@ -31,7 +31,7 @@ function configPanel(el, props, ctx) {
   const label = (text) => el2('div', 'urd-kart-config-label', text);
   const location = el2('input', 'urd-kart-config-input');
   location.value = props.location ?? '';
-  location.placeholder = '59.913, 10.739 eller en OSM-lenke';
+  location.placeholder = 'Adresse, koordinater eller OSM-lenke';
 
   const zoom = el2('input', 'urd-kart-config-input');
   zoom.type = 'number';
@@ -45,26 +45,64 @@ function configPanel(el, props, ctx) {
   height.max = '900';
   height.value = String(props.height ?? 320);
 
+  const status = el2('p', 'urd-kart-config-note urd-kart-status');
+
   const apply = el2('button', 'urd-kart-apply', 'Bruk');
   apply.type = 'button';
-  apply.addEventListener('click', () => {
+  apply.addEventListener('click', async () => {
+    const raw = location.value.trim();
+    const z = Math.max(1, Math.min(19, Number(zoom.value) || 15));
+    const h = Math.max(120, Math.min(900, Number(height.value) || 320));
+    status.textContent = '';
+    status.classList.remove('feil');
+
+    // Koordinater/OSM-lenke tolkes lokalt; en vanlig adresse geokodes.
+    const parsed = parseLocation(raw);
+    let lat = null;
+    let lon = null;
+    let resolvedZoom = z;
+    if (parsed) {
+      lat = parsed.lat;
+      lon = parsed.lon;
+      if (parsed.zoom) resolvedZoom = parsed.zoom;
+    } else if (raw) {
+      apply.disabled = true;
+      status.textContent = 'Søker etter adressen …';
+      try {
+        const res = await fetch(`/api/geocode?q=${encodeURIComponent(raw)}`);
+        const data = await res.json().catch(() => null);
+        if (res.ok && Number.isFinite(data?.lat)) {
+          lat = data.lat;
+          lon = data.lon;
+        } else {
+          status.textContent = data?.error ?? 'Fant ikke stedet.';
+          status.classList.add('feil');
+          apply.disabled = false;
+          return;
+        }
+      } catch {
+        status.textContent = 'Kunne ikke søke akkurat nå (adressesøk krever den publiserte siden).';
+        status.classList.add('feil');
+        apply.disabled = false;
+        return;
+      }
+      apply.disabled = false;
+    }
+
     post({
       type: 'urd-edit',
       sectionId: ctx.section.id,
       blockId: el.dataset.blockId,
-      props: {
-        location: location.value.trim(),
-        zoom: Math.max(1, Math.min(19, Number(zoom.value) || 15)),
-        height: Math.max(120, Math.min(900, Number(height.value) || 320)),
-      },
+      props: { location: raw, lat, lon, zoom: resolvedZoom, height: h },
       rerender: true,
     });
     close();
   });
 
   panel.append(
-    label('Sted (koordinater eller OSM-lenke)'), location,
-    el2('p', 'urd-kart-config-note', 'Finn punktet på openstreetmap.org, høyreklikk «Vis adresse» eller kopier lenken fra Del.'),
+    label('Sted'), location,
+    el2('p', 'urd-kart-config-note', 'Skriv en adresse (f.eks. «Storgata 1, Oslo»), koordinater («59.913, 10.739») eller lim inn en lenke fra openstreetmap.org.'),
+    status,
     label('Zoom (1 til 19)'), zoom,
     label('Høyde (piksler)'), height,
     apply,
@@ -95,34 +133,42 @@ function configPanel(el, props, ctx) {
 function emptyState(host, ctx) {
   if (!ctx.preview) return;
   host.appendChild(el2('div', 'urd-kart-empty',
-    'Pek på blokken og klikk «⚙ Sted» for å legge inn koordinater eller en OSM-lenke.'));
+    'Pek på blokken og klikk «⚙ Sted» for å legge inn en adresse, koordinater eller en OSM-lenke.'));
 }
 
 /**
- * Er innbyggingen tillatt av CSP? En blokkert iframe laster aldri; vi kan ikke
- * lese på tvers av opprinnelse, men CSP-brudd sender en securitypolicyviolation.
- * Vi lytter på den én gang og bytter til en forklarende tomtilstand.
+ * Fanger et CSP-brudd på iframe-en (hvis en host IKKE har OpenStreetMap i
+ * frame-src) og bytter den brukne iframen med noe rolig: en forklaring i
+ * editoren, en «åpne kartet»-lenke hos besøkende. Urds standard _headers har
+ * OSM alt godkjent, så dette slår normalt aldri til.
  */
-function watchCspBlock(host, frame, ctx) {
-  if (!ctx.preview) return;
+function watchCspBlock(host, frame, ctx, largerUrl) {
   // Sammenlign den blokkerte verten EKSAKT (parset URL), aldri en delstreng:
   // en delstreng-sjekk ville også slått til på f.eks. openstreetmap.org.example.com.
   let blockedHost = null;
   try { blockedHost = new URL(OSM_HOST).hostname; } catch { /* OSM_HOST er en konstant, dette skjer ikke */ }
   const onViolation = (event) => {
-    let host = null;
-    try { host = new URL(event.blockedURI).hostname; } catch { /* blockedURI kan være «inline»/«eval» m.m. */ }
-    if (event.violatedDirective?.startsWith('frame-src') && host && host === blockedHost) {
-      document.removeEventListener('securitypolicyviolation', onViolation);
-      frame.remove();
-      const note = el2('div', 'urd-kart-empty');
+    let violatedHost = null;
+    try { violatedHost = new URL(event.blockedURI).hostname; } catch { /* blockedURI kan være «inline»/«eval» m.m. */ }
+    if (!(event.violatedDirective?.startsWith('frame-src') && violatedHost && violatedHost === blockedHost)) return;
+    document.removeEventListener('securitypolicyviolation', onViolation);
+    frame.remove();
+    const note = el2('div', 'urd-kart-empty');
+    if (ctx.preview) {
       note.append(
         el2('strong', null, 'Kartet er blokkert av nettstedets CSP.'),
-        el2('p', 'urd-kart-config-note', `Legg til denne verten i frame-src i _headers, så vises kartet:`),
+        el2('p', 'urd-kart-config-note', 'Legg denne verten i frame-src i _headers, så vises kartet:'),
         el2('code', 'urd-kart-code', `frame-src ${OSM_HOST}`),
       );
-      host.appendChild(note);
+    } else {
+      // Besøkende får en rolig lenke i stedet for en brukket iframe.
+      const a = el2('a', 'urd-kart-fallback', 'Åpne kartet på OpenStreetMap');
+      a.href = largerUrl;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      note.append(a);
     }
+    host.appendChild(note);
   };
   document.addEventListener('securitypolicyviolation', onViolation);
   setTimeout(() => document.removeEventListener('securitypolicyviolation', onViolation), 4000);
@@ -140,6 +186,9 @@ const KART_CSS = `
   border-radius: var(--urd-radius-md); opacity: 0.85; display: grid; gap: 8px; justify-items: center; }
 .urd-kart-code { font: 12px/1.4 ui-monospace, monospace; padding: 4px 8px; border-radius: 5px;
   background: color-mix(in srgb, var(--urd-color-text) 10%, transparent); }
+.urd-kart-fallback { color: var(--urd-color-accent); font-weight: 600; }
+.urd-kart-status:empty { display: none; }
+.urd-kart-status.feil { color: #e05252; opacity: 1; }
 .urd-kart-tools { position: absolute; top: -32px; right: -6px; z-index: 5;
   display: flex; gap: 4px; align-items: center;
   /* Usynlig bro ned til blokk-kanten, så hover overlever veien opp */
@@ -203,9 +252,14 @@ function renderKart(el, props, ctx) {
   const host = el2('div', 'urd-kart');
   el.appendChild(host);
 
-  const loc = parseLocation(props.location);
+  // Lagrede koordinater (fra adressesøk eller forrige tolking) foretrekkes;
+  // ellers tolkes location-strengen (koordinater/OSM-lenke) direkte.
+  const loc = (Number.isFinite(props.lat) && Number.isFinite(props.lon))
+    ? { lat: props.lat, lon: props.lon, zoom: props.zoom }
+    : parseLocation(props.location);
   if (loc) {
     const zoom = props.zoom ?? loc.zoom ?? 15;
+    const largerUrl = buildLargerMapUrl({ lat: loc.lat, lon: loc.lon, zoom });
     const frame = el2('iframe', 'urd-kart-frame');
     frame.src = buildEmbedUrl({ lat: loc.lat, lon: loc.lon, zoom });
     frame.style.height = `${props.height ?? 320}px`;
@@ -213,11 +267,11 @@ function renderKart(el, props, ctx) {
     frame.title = 'Kart';
     frame.setAttribute('referrerpolicy', 'no-referrer');
     host.appendChild(frame);
-    watchCspBlock(host, frame, ctx);
+    watchCspBlock(host, frame, ctx, largerUrl);
 
     const link = el2('div', 'urd-kart-link');
     const a = el2('a', null, 'Vis større kart');
-    a.href = buildLargerMapUrl({ lat: loc.lat, lon: loc.lon, zoom });
+    a.href = largerUrl;
     a.target = '_blank';
     a.rel = 'noopener';
     link.appendChild(a);
@@ -237,11 +291,11 @@ function renderKart(el, props, ctx) {
       const chip = attachHint(tools, {
         title: 'Kartblokken',
         lines: [
-          'Pek på blokken og klikk «⚙ Sted» for å legge inn koordinater («59.913, 10.739») eller en OSM-lenke',
-          'Finn stedet på openstreetmap.org: høyreklikk kartet og velg «Vis adresse», eller kopier fra Del-knappen',
+          'Pek på blokken og klikk «⚙ Sted» og skriv en adresse (f.eks. «Storgata 1, Oslo»), koordinater («59.913, 10.739») eller lim inn en OSM-lenke',
+          'Adressesøket slår opp stedet via OpenStreetMap når du klikker «Bruk» (virker på den publiserte siden; koordinater og lenker virker også lokalt)',
           'Still zoom (1 er verden, 19 er gatenivå) og høyden på kartet',
           'Kartet er OpenStreetMaps egen innbygging: ingen sporing, ingen informasjonskapsler',
-          `Nettstedet må tillate kartet: legg «frame-src ${OSM_HOST}» inn i _headers (Plugins-panelet viser det samme)`,
+          'Urds standard _headers tillater kartet. På andre hoster må «frame-src https://www.openstreetmap.org» ligge i _headers (blokken sier fra om det er blokkert)',
         ],
       });
       tools.insertBefore(chip, tools.firstChild);

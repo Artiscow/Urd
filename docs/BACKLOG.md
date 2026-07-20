@@ -17,13 +17,19 @@ Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren
 
 ### Testrunde-batch (0.6.11): editor-UI-sveip
 
-- [ ] Egenskaper-omorganisering: X/Y/Bredde/Høyde/Lag/Rotasjon + «Skjul i mobil» ligger nå i en sammenleggbar «Plassering, lag og rotasjon» nederst i panelet, for ALLE blokktyper. Bekreft at de fortsatt virker og at panelet er ryddigere
-- [ ] Kart/skjema verktøy: «⚙» og «?» ligger side om side (ikke oppå hverandre), og begge kan nås med musen (hover-bro). Gjelder både Kart og Skjema
-- [ ] «+ Ny blokk»-menyen: «Månedskalender» heter nå «Måned», og lange etiketter flyter ikke ut av knappene
+- [x] Egenskaper-omorganisering: X/Y/Bredde/Høyde/Lag/Rotasjon + «Skjul i mobil» ligger nå i en sammenleggbar «Plassering, lag og rotasjon» nederst i panelet, for ALLE blokktyper. Bekreft at de fortsatt virker og at panelet er ryddigere
+- [x] Kart/skjema verktøy: «⚙» og «?» ligger side om side (ikke oppå hverandre), og begge kan nås med musen (hover-bro). Gjelder både Kart og Skjema
+- [x] «+ Ny blokk»-menyen: «Månedskalender» heter nå «Måned», og lange etiketter flyter ikke ut av knappene
 - [ ] Bildeblokk full editor (0.6.11): dobbeltklikk/blyant åpner den fulle bildeeditoren med fokuspunkt + tredelingsgitter, zoom, filtre (gråtone/nullstill), tilpasning og avrunding; avrunding vises nå ALLTID (også med «Vis hele bildet»), både i preview og på den publiserte siden
-- [ ] Tema-ikon full editor (0.6.11): last opp et nettstedsikon, så åpnes ikon-editoren (beskjær ved å dra, zoom, lysstyrke/kontrast/metning, gråtone, nullstill); «Bruk» baker et 128px favicon. «Rediger»-knappen (blyant) åpner editoren på et eksisterende ikon. Bekreft at ikonet vises i fanen etter publisering
-- [ ] Dra-teleport-fiks (0.6.11): å dra en datablokk (Kalender/Kart/Skjema/Samling) teleporterer den IKKE lenger tilbake til opprettelsesposisjonen. Autovekst melder nå kun høyde (urd-grow), aldri hele framen
-- [ ] PUBLISERINGS-SHIFT: sannsynligvis SAMME årsak som dra-teleporten (autovekstens gamle x/y klobret posisjonen ved re-render etter publisering) - sjekk om blokker fortsatt flyttes ved publisering nå. Hvis ja: noter X %-verdien FØR og ETTER (i «Plassering, lag og rotasjon») så det kan spores videre
+- [x] Tema-ikon full editor (0.6.11): last opp et nettstedsikon, så åpnes ikon-editoren (beskjær ved å dra, zoom, lysstyrke/kontrast/metning, gråtone, nullstill); «Bruk» baker et 128px favicon. «Rediger»-knappen (blyant) åpner editoren på et eksisterende ikon. Bekreft at ikonet vises i fanen etter publisering
+- [x] Dra-teleport-fiks (0.6.11): å dra en datablokk (Kalender/Kart/Skjema/Samling) teleporterer den IKKE lenger tilbake til opprettelsesposisjonen. Autovekst melder nå kun høyde (urd-grow), aldri hele framen
+- [x] PUBLISERINGS-SHIFT: sannsynligvis SAMME årsak som dra-teleporten (autovekstens gamle x/y klobret posisjonen ved re-render etter publisering) - sjekk om blokker fortsatt flyttes ved publisering nå. Hvis ja: noter X %-verdien FØR og ETTER (i «Plassering, lag og rotasjon») så det kan spores videre
+
+### Testrunde-batch (0.6.14): kart-forbedringer
+
+- [ ] Kart adressesøk: skriv en vanlig adresse (f.eks. «Storgata 1, Oslo») i «⚙ Sted» og klikk «Bruk» - stedet slås opp og vises (krever den PUBLISERTE siden; koordinater og OSM-lenker virker også lokalt)
+- [ ] Kartet vises nå ut av boksen på den publiserte siden (OSM er lagt i Urds _headers frame-src); ingen manuell CSP-jobb lenger. Bekreft at kartet faktisk viser etter publisering + deploy
+- [ ] CSP-vokter-fiks: hvis kartet likevel blokkeres (annen host) får besøkende en «Åpne kartet på OpenStreetMap»-lenke i stedet for et brukket bilde; editoren får instruksen. (Rettet også en variabel-skygging fra 0.6.12 som ville kastet feil her)
 
 ## Til v0.6 «Økosystem» (startet 19. juli 2026; milepæler M1-M9, avhengighetsstyrt rekkefølge; pushes nummereres 0.6.1 og oppover)
 

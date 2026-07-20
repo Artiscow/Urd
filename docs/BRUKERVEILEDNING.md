@@ -268,11 +268,13 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   linjen). Feltene kan legges til, endres og fjernes.
 
   Kart-pluginen gir en Kart-blokk (og «Finn oss»-mal): klikk «⚙ Sted» og
-  lim inn koordinater (som «59.913, 10.739») eller en OpenStreetMap-lenke,
-  og still zoom og høyde. Kartet er OpenStreetMaps egen innbygging uten
-  sporing. Fordi det er en ekstern innbygging, må nettstedet tillate den:
-  legg «frame-src https://www.openstreetmap.org» inn i _headers (Plugins-
-  panelet og blokken viser den samme linjen). Dette er en engangsjobb.
+  skriv en adresse (f.eks. «Storgata 1, Oslo»), koordinater (som
+  «59.913, 10.739») eller lim inn en OpenStreetMap-lenke, og still zoom og
+  høyde. Adressesøket slår opp stedet via OpenStreetMap når du klikker
+  «Bruk». Kartet er OpenStreetMaps egen innbygging uten sporing, og Urds
+  standard _headers tillater det, så det virker ut av boksen. (På en annen
+  host må «frame-src https://www.openstreetmap.org» ligge i _headers;
+  blokken sier fra hvis kartet er blokkert.)
 - **Footer**-panelet: bunnteksten som vises nederst på alle sider.
   Skru den på, skriv linjene (én per linje) og velg justering - den
   redigeres ett sted og gjelder hele nettstedet.
