@@ -142,7 +142,7 @@
       "version": 1,
       "preset": "hva-skjer",
       "size": {
-        "minHeight": "520px"
+        "minHeight": "624px"
       },
       "grid": null,
       "background": {
@@ -212,7 +212,7 @@
           "type": "kart",
           "version": 1,
           "props": {
-            "location": "",
+            "location": "https://www.openstreetmap.org/#map=18/63.426891/10.396446",
             "zoom": 15,
             "height": 320
           },
