@@ -173,8 +173,8 @@
             "desktop": {
               "x": 6,
               "y": 40,
-              "w": 60,
-              "h": 70,
+              "w": 24.77,
+              "h": 48,
               "z": 1,
               "rot": 0
             },
@@ -186,9 +186,11 @@
           "type": "kalender",
           "version": 3,
           "props": {
-            "sources": [],
+            "sources": [
+              "https://calendar.google.com/calendar/ical/74a6de6d28a7a0ec383148bb2f67025d09712386e8b6add3d425fc0d9b5320f7%40group.calendar.google.com/public/basic.ics"
+            ],
             "view": "list",
-            "limit": 5,
+            "limit": 6,
             "showCategories": true,
             "showSubscribe": false
           },
@@ -197,8 +199,8 @@
             "desktop": {
               "x": 6,
               "y": 130,
-              "w": 28.55,
-              "h": 272,
+              "w": 34.9,
+              "h": 445,
               "z": 2,
               "rot": 0
             },
@@ -219,8 +221,8 @@
             "desktop": {
               "x": 25,
               "y": 40,
-              "w": 50,
-              "h": 260,
+              "w": 35.68,
+              "h": 288,
               "z": 3,
               "rot": 0
             },
