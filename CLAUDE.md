@@ -6,7 +6,9 @@ Denne filen lastes automatisk i hver økt. Den fester de varige reglene og peker
 
 Urd er en avhengighetsfri, statisk nettsidebygger der det klonede repoet ER nettsiden, og `/admin` er WYSIWYG-editoren. Motoren er ren, lesbar vanilla-JS (serveres rått, ingen bygging). Editoren er Svelte 5 (runes) og bygges til `template/admin/assets/`. Publisering skjer via GitHub OAuth + Cloudflare Pages Functions.
 
-Full orientering: [docs/VEIKART.md](docs/VEIKART.md) (faser og mål), [docs/ARKITEKTUR.md](docs/ARKITEKTUR.md), [docs/UTVIKLING.md](docs/UTVIKLING.md) (tekniske regler), [CONTRIBUTING.md](CONTRIBUTING.md), og ADR-ene i [docs/adr/](docs/adr/).
+**Totrinns-modellen (ADR-0001):** editoren viser den EKTE siden i en iframe (`?preview=1`) og styrer den via postMessage. Forhåndsvisningen ER produksjon: samme motor, samme render. Editoren eier utkastet; motoren rendrer det. Meldingene (`urd-edit`, `urd-move`, `urd-grow`, `urd-add-block`, ...) er kontrakten mellom dem.
+
+**Når du tar opp arbeid:** les [CHANGELOG.md](CHANGELOG.md) for siste tilstand og [docs/BACKLOG.md](docs/BACKLOG.md) for Testrunder-sjekklisten og hva som er neste. Full orientering: [docs/VEIKART.md](docs/VEIKART.md) (faser og mål), [docs/ARKITEKTUR.md](docs/ARKITEKTUR.md), [docs/UTVIKLING.md](docs/UTVIKLING.md) (tekniske regler), [CONTRIBUTING.md](CONTRIBUTING.md), og ADR-ene i [docs/adr/](docs/adr/).
 
 ## Repo-struktur
 
@@ -23,6 +25,8 @@ Kjør alle tre, og rapporter resultatet ærlig:
 3. Skjemavalidering: `cd editor && npm run validate`
 
 Endrer du `editor/src/`, må du bygge på nytt og committe bundelen (ellers feiler CI-ens bygg-samsvar-sjekk). Rene motorfiler (`template/assets/engine/`) trenger ingen bygging.
+
+CI (GitHub Actions) kjører de samme tre pluss bygg-samsvar-sjekken, og CodeQL skanner ved push. To gjentatte CodeQL-fallgruver: (1) sjekk aldri en URL med en delstreng (`.includes('vert.no')`), parse URL-en og sammenlign verten eksakt; (2) bruk ankrede regex på URL-/data-validering, som CodeQL gjenkjenner som barrierer.
 
 ## Ufravikelige regler
 
