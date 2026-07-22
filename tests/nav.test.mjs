@@ -92,6 +92,19 @@ test('navClasses: standardene bar og standard gir ingen ekstra klasser', () => {
   assert.equal(navClasses({ nav: { variant: 'bar', style: { hover: 'standard' } } }), 'urd-nav urd-nav-right');
 });
 
+test('navClasses: glød kun som tilvalg på flytende pille', () => {
+  assert.equal(
+    navClasses({ nav: { variant: 'floating', style: { glow: true } } }),
+    'urd-nav urd-nav-right urd-nav-var-floating urd-nav-glow',
+  );
+  // Uten glow-flagget: ingen glød; glow uten floating: ingen effekt
+  assert.equal(
+    navClasses({ nav: { variant: 'floating' } }),
+    'urd-nav urd-nav-right urd-nav-var-floating',
+  );
+  assert.equal(navClasses({ nav: { style: { glow: true } } }), 'urd-nav urd-nav-right');
+});
+
 test('navSurface: uten style gjelder CSS-standardene', () => {
   assert.deepEqual(navSurface(), {});
   assert.deepEqual(navSurface({}), {});

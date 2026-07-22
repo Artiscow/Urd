@@ -8,7 +8,7 @@ Urd er en avhengighetsfri, statisk nettsidebygger der det klonede repoet ER nett
 
 **Totrinns-modellen (ADR-0001):** editoren viser den EKTE siden i en iframe (`?preview=1`) og styrer den via postMessage. Forhåndsvisningen ER produksjon: samme motor, samme render. Editoren eier utkastet; motoren rendrer det. Meldingene (`urd-edit`, `urd-move`, `urd-grow`, `urd-add-block`, ...) er kontrakten mellom dem.
 
-**Når du tar opp arbeid:** les [docs/CHANGELOG.md](docs/CHANGELOG.md) for siste tilstand og [docs/BACKLOG.md](docs/BACKLOG.md) for Testrunder-sjekklisten og hva som er neste. Full orientering: [docs/VEIKART.md](docs/VEIKART.md) (faser og mål), [docs/ARKITEKTUR.md](docs/ARKITEKTUR.md), [docs/UTVIKLING.md](docs/UTVIKLING.md) (tekniske regler), [CONTRIBUTING.md](CONTRIBUTING.md), og ADR-ene i [docs/adr/](docs/adr/).
+**Når du tar opp arbeid:** les [docs/CHANGELOG.md](docs/CHANGELOG.md) for siste tilstand, [docs/BACKLOG.md](docs/BACKLOG.md) for hva som er neste, og [docs/TESTRUNDER.md](docs/TESTRUNDER.md) for eiers testrunde-sjekkliste. Full orientering: [docs/VEIKART.md](docs/VEIKART.md) (faser og mål), [docs/ARKITEKTUR.md](docs/ARKITEKTUR.md), [docs/UTVIKLING.md](docs/UTVIKLING.md) (tekniske regler), [CONTRIBUTING.md](CONTRIBUTING.md), og ADR-ene i [docs/adr/](docs/adr/).
 
 ## Repo-struktur
 
@@ -25,6 +25,8 @@ Kjør alle tre, og rapporter resultatet ærlig:
 3. Skjemavalidering: `cd editor && npm run validate`
 
 Endrer du `editor/src/`, må du bygge på nytt og committe bundelen (ellers feiler CI-ens bygg-samsvar-sjekk). Rene motorfiler (`template/assets/engine/`) trenger ingen bygging.
+
+Feiler bygg-samsvar-sjekken i CI med en diff inne i rammeverkskode (Svelte-runtime, ikke app-kode), er det avhengighets-drift: sjekk at `node_modules/svelte/package.json` matcher versjonen i `editor/package-lock.json`, og kjør `rm -rf node_modules && npm ci` + nytt bygg om ikke (sett 22. juli 2026: npm ga 5.56.5 der låsefilen pinnet 5.56.7). Bundle-fiksen må pushes sammen med kilden den er bygget fra.
 
 CI (GitHub Actions) kjører de samme tre pluss bygg-samsvar-sjekken, og CodeQL skanner ved push. To gjentatte CodeQL-fallgruver: (1) sjekk aldri en URL med en delstreng (`.includes('vert.no')`), parse URL-en og sammenlign verten eksakt; (2) bruk ankrede regex på URL-/data-validering, som CodeQL gjenkjenner som barrierer.
 
@@ -68,9 +70,9 @@ Referanse-pluginene i `template/plugins/` (kalender, skjema, kart) viser mønste
 
 Les og følg dem; skriv en ny ADR når du tar en beslutning med varige konsekvenser. Gjeldende: 0001 hybrid editormodell, 0002 Svelte for editor / lesbar JS for motor, 0003 publisering via GitHub OAuth + Pages Functions, 0004 monorepo med template-mappe, 0005 versjonering og migrering, 0006 plugin-CSP-behovsmodell, 0007 samlinger (datablokk-mønsteret), 0008 hjelpechip-regelen, 0009 temastyrt UI-regelen, 0010 disclosure-navigasjon i nav (aldri role="menu").
 
-## Testrunder-seksjonen i backloggen
+## Testrundene (docs/TESTRUNDER.md)
 
-`docs/BACKLOG.md` har en «Testrunder»-seksjon: eierens sjekkliste over levert arbeid som venter på testing. **Legg til nye punkter når du leverer noe, men fjern aldri noe der; kun eieren stryker.**
+`docs/TESTRUNDER.md` er eierens sjekkliste over levert arbeid som venter på testing (flyttet ut av backloggen 22. juli 2026). Ved levering: legg en ny «Testrunde-batch (0.6.x)»-seksjon øverst der. **Legg til nye punkter når du leverer noe, men fjern aldri noe der; kun eieren stryker.**
 
 ## Kjøre verktøy
 

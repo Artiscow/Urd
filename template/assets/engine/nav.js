@@ -12,6 +12,7 @@
  */
 
 import { navItems, navClasses, navSurface } from './nav-model.js';
+import { themeMode, toggleThemeMode } from './theme.js';
 
 /** Hvor lenge undermenyen står åpen etter at pekeren forlater punktet. */
 const HOVER_CLOSE_DELAY = 250;
@@ -25,6 +26,8 @@ const svg = (path) =>
   `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
 const CHEVRON = svg('<path d="M6 9l6 6 6-6"/>');
 const BURGER = svg('<path d="M4 6h16M4 12h16M4 18h16"/>');
+const SUN = svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>');
+const MOON = svg('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>');
 
 /**
  * @param {object} site site.json, allerede parset
@@ -44,6 +47,9 @@ export function renderNav(site, host) {
   // ikke på nav-en - et sticky-element kan aldri forlate forelderen sin,
   // og forelderen her er nøyaktig like høy som nav-en.
   host.classList.toggle('urd-nav-sticky', site.nav.sticky !== false);
+  // Flytende pille svever OVER innholdet: verten tas ut av flyten (fixed
+  // ved sticky, absolute ellers), så hero-en starter øverst bak pillen.
+  host.classList.toggle('urd-nav-float', site.nav.variant === 'floating');
 
   // Utseende (nav.style, additivt fra v0.5): bakgrunnsfarge med dekkevne,
   // uskarphet bak, og egen tekstfarge. Bakgrunnen settes som CSS-var så
@@ -96,6 +102,29 @@ export function renderNav(site, host) {
   }
   nav.appendChild(logo);
 
+  // Verktøy-klyngen ytterst til høyre: lys/mørk-bryteren (når temaet har
+  // et alt-motstykke) og burgeren. Tom klynge skjules i CSS (:empty).
+  const tools = document.createElement('span');
+  tools.className = 'urd-nav-tools';
+
+  if (site.theme?.alt?.tokens) {
+    const themeBtn = document.createElement('button');
+    themeBtn.className = 'urd-nav-theme';
+    themeBtn.type = 'button';
+    const paintToggle = () => {
+      const dark = themeMode() === 'dark';
+      // Ikonet viser modusen du BYTTER TIL (konvensjonen folk kjenner).
+      themeBtn.innerHTML = dark ? SUN : MOON;
+      themeBtn.setAttribute('aria-label', dark ? 'Bytt til lyst tema' : 'Bytt til mørkt tema');
+    };
+    paintToggle();
+    themeBtn.addEventListener('click', () => {
+      toggleThemeMode(site.theme);
+      paintToggle();
+    }, { signal });
+    tools.appendChild(themeBtn);
+  }
+
   // Burgeren (kun synlig i mobilvisning via CSS): ikke-modal disclosure av
   // menylisten - ingen fokusfelle eller scroll-lås, panelet scroller selv.
   const burger = document.createElement('button');
@@ -105,7 +134,7 @@ export function renderNav(site, host) {
   burger.setAttribute('aria-controls', 'urd-nav-menu');
   burger.setAttribute('aria-label', 'Meny');
   burger.innerHTML = BURGER;
-  nav.appendChild(burger);
+  tools.appendChild(burger);
 
   const setMobileOpen = (open) => {
     nav.classList.toggle('urd-nav-open', open);
@@ -227,6 +256,7 @@ export function renderNav(site, host) {
   });
 
   nav.appendChild(list);
+  nav.appendChild(tools);
   host.appendChild(nav);
 
   // Escape lukker nærmeste åpne lag og gir fokuset tilbake til knappen som

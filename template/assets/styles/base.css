@@ -1317,6 +1317,48 @@ a.urd-samling-title:hover {
   border-radius: var(--urd-radius-sm);
 }
 
+/* Verktøy-klyngen ytterst til høyre: lys/mørk-bryter og burger.
+   Tom klynge (intet alt-tema, desktop) skjules helt, så menylisten
+   fortsatt ender helt ute på kanten. */
+.urd-nav-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.urd-nav-tools:empty {
+  display: none;
+}
+
+/* Med verktøy-klyngen etter listen må plasseringen styres av auto-marger,
+   ikke space-between (tre barn ville blitt spredt jevnt utover) */
+.urd-nav-right .urd-nav-list {
+  margin-left: auto;
+}
+
+.urd-nav-left .urd-nav-tools {
+  margin-left: auto;
+}
+
+/* Lys/mørk-bryteren (vises kun når temaet har et alt-motstykke) */
+.urd-nav-theme {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.35rem;
+  opacity: 0.85;
+}
+
+.urd-nav-theme:hover,
+.urd-nav-theme:focus-visible {
+  opacity: 1;
+  color: var(--urd-color-accent);
+}
+
 /* Burgeren (mobilmenyens åpner): skjult på desktop, vises via body.urd-mobile */
 .urd-nav-burger {
   display: none;
@@ -1461,6 +1503,31 @@ body.urd-mobile .urd-nav-sub {
 /* Flytende variant (nav.variant, additivt fra v0.6): løsrevet pille med
    luft mot kantene. Verten (header) er fortsatt sticky i full bredde;
    pillen sentreres inni den og fester dermed med toppluft. */
+/* Verten tas ut av flyten når pillen flyter: innholdet starter øverst og
+   pillen svever over hero-en. Sticky gir fixed (følger med ved scrolling),
+   ellers absolute (blir igjen øverst). pointer-events slippes gjennom
+   stripene ved siden av pillen, så innholdet bak kan klikkes. */
+.urd-nav-float {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5000;
+  pointer-events: none;
+}
+
+.urd-preview .urd-nav-float {
+  z-index: 100001;
+}
+
+.urd-nav-float.urd-nav-sticky {
+  position: fixed;
+}
+
+.urd-nav-float .urd-nav {
+  pointer-events: auto;
+}
+
 .urd-nav-var-floating {
   /* Padding via varen, ikke padding-block: logobildets negative
      margin-triks er kalibrert mot --urd-nav-pad og må følge med */
@@ -1468,7 +1535,11 @@ body.urd-mobile .urd-nav-sub {
   margin: 0.75rem auto 0;
   width: min(1100px, calc(100% - 2rem));
   border-radius: 999px;
-  box-shadow: 0 8px 30px color-mix(in srgb, var(--urd-color-text) 18%, transparent);
+}
+
+/* Glød rundt pillen: tilvalg (av som standard) */
+.urd-nav-glow {
+  box-shadow: 0 8px 30px color-mix(in srgb, var(--urd-color-accent) 35%, transparent);
 }
 
 /* Mobilpanelet skal ikke arve pillens fasong: eget lag med luft under */

@@ -41,6 +41,27 @@
             "type": "object",
             "additionalProperties": { "type": "string" }
           }
+        },
+        "scheme": {
+          "enum": ["light", "dark"],
+          "default": "light",
+          "description": "Hovedtemaets lyshet (additivt fra v0.6): hva lys/mørk-bryteren og prefers-color-scheme regner hovedtokens som."
+        },
+        "alt": {
+          "type": "object",
+          "description": "Alternativt tema for lys/mørk-bryteren (additivt fra v0.6): token-grupper som overstyrer hovedtokens i motsatt modus av scheme. Finnes feltet, viser nav-en bryteren.",
+          "required": ["tokens"],
+          "additionalProperties": false,
+          "properties": {
+            "tokens": {
+              "type": "object",
+              "description": "Samme form som theme.tokens; utelatte verdier arver hovedtemaet",
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": { "type": "string" }
+              }
+            }
+          }
         }
       }
     },
@@ -93,6 +114,11 @@
               "enum": ["standard", "underline", "pill", "lift"],
               "default": "standard",
               "description": "Hover-stil for menylenkene (additivt fra v0.6): standard = aksentfarge, underline = glidende understrek, pill = avrundet bakgrunn, lift = løft med glød."
+            },
+            "glow": {
+              "type": "boolean",
+              "default": false,
+              "description": "Glød rundt den flytende pillen (additivt fra v0.6; gjelder kun variant floating)."
             },
             "image": { "type": "string", "description": "Bakgrunnsbilde i menyen (additivt fra v0.6): sti i media/ (data-URL i utkast). bg/bgOpacity legger seg som slør over bildet." }
           }

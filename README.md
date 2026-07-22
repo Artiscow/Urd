@@ -20,6 +20,8 @@ Ingen server. Ingen database. Ingen abonnement. Ingen byggeprosess. Bare et git-
 
 Etter første oppsett er admin-siden kontrollsenteret for nettsiden din. Alt du ser på siden kan redigeres derfra.
 
+Urd kan utvides med **plugins** som bor i repoet ditt og skrus på i admin. Tre følger med som referanse: kalender (abonnerbar feed med fire visninger), kontaktskjema (mailto eller eget endepunkt) og kart (personvennlig OpenStreetMap). Se [template/plugins/README.md](template/plugins/README.md) for å lage egne.
+
 ## De fire løftene
 
 1. **Du eier alt.** Siden din er et git-repo med lesbare filer. Ingen innlåsing.
@@ -39,6 +41,8 @@ Etter første oppsett er admin-siden kontrollsenteret for nettsiden din. Alt du 
 | [docs/UTVIKLING.md](docs/UTVIKLING.md) | For oss som utvikler Urd: oppsett, regler, vanlige oppgaver |
 | [docs/OPPSETT-PUBLISERING.md](docs/OPPSETT-PUBLISERING.md) | Engangsoppsett av publisering: GitHub OAuth-app + Cloudflare |
 | [docs/BACKLOG.md](docs/BACKLOG.md) | Løpende oppgaveliste: gjøremål, bugs og forslag |
+| [docs/TESTRUNDER.md](docs/TESTRUNDER.md) | Eiers sjekkliste: levert arbeid som venter på testing |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | Endringslogg per push |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Slik bidrar du: fork, gren, tester, pull request |
 | [docs/adr/](docs/adr/) | Arkitekturbeslutninger med begrunnelse |
 

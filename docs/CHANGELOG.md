@@ -12,6 +12,15 @@ døpes til det siste push-nummeret ved gaten, slik v0.5-fasen endte i
 0.5.10. Da stiger numrene alltid. Etterslepp-fikser på v0.5 nummereres
 0.5.11 og videre.
 
+### 0.6.17 - lys/mørk-bryter, flytende over hero, testrunder til egen fil - 22. juli 2026
+- LYS/MØRK-BRYTER (eiers ønske fra testrunden): siden kan nå ha to paletter. Tema-panelet fikk en «Lys/mørk-bryter»-seksjon: «+ Lag alternativt tema» oppretter motstykket ferdig utfylt med inverterte utgaver av dagens farger (lyshet snus, fargetone består), som eieren justerer med de vanlige fargevelgerne; «Foreslå på nytt (inverter)» regenererer, og «Hovedtemaet er: Lyst/Mørkt» settes med theme.scheme. Finnes alt-temaet, viser menyen en sol/måne-knapp: første besøk følger prefers-color-scheme, aktivt valg huskes i localStorage. Additive felt theme.scheme + theme.alt.tokens (utelatte verdier arver hovedtemaet gruppevis); ren modus-/fletlogikk i theme.js med 7 nye kontraktstester.
+- Flytende meny svever nå OVER innholdet (eiers testfunn: pillen reserverte en stripe i full bredde med tomrom rundt): verten tas ut av flyten, hero-en starter øverst bak pillen (fixed ved sticky, absolute ellers), og stripene ved siden av pillen slipper klikk gjennom til innholdet bak.
+- Gløden rundt pillen er fjernet som standard (eiers testfunn: den gamle skyggen ble en hvitaktig glød på mørkt tema) og erstattet av tilvalget «Glød rundt pillen» i Nav → Utseende (nav.style.glow, aksentfarget).
+- Nav-en fikk en verktøy-klynge ytterst (bryter + burger) med auto-marg-basert plassering, så menylisten står riktig i alle tre oppsettene med og uten bryter.
+- Testrundene bor nå i egen fil: docs/TESTRUNDER.md (eiers ønske) - batchene flyttet ut av BACKLOG.md med pekere oppdatert i CLAUDE.md; README-en fikk de nye dokumentene i tabellen og et avsnitt om plugin-økosystemet.
+- CI-byggfiks: bygg-samsvar-sjekken feilet fordi den committede bundelen var bygget med svelte 5.56.5 mens låsefilen pinner 5.56.7 (avhengighets-drift i lokal npm-cache). node_modules reinstallert med npm ci og bundelen rebygd; lærdommen er festet i CLAUDE.md (diff i rammeverkskode = sjekk svelte-versjonen mot låsefilen).
+- 102 kontraktstester totalt.
+
 ### 0.6.16 - M5 fullført: flytende pille, hover-stiler og bakgrunnsbilde i menyen - 22. juli 2026
 - FLYTENDE meny (nav.variant): ny «Flytende (pille)»-variant i Nav → Utseende - menyen blir en løsrevet, avrundet pille med luft mot kantene, skygge og maks-bredde. Klistret-innstillingen virker som før (pillen fester med toppluft); mobilpanelet legger seg som eget lag under pillen i stedet for å arve fasongen.
 - HOVER-STILER for menylenkene (nav.style.hover): «Understrek» (glidende strek under lenken), «Pille» (avrundet aksentbakgrunn) og «Løft med glød» (svakt løft med glød i aksentfargen), i tillegg til standarden. Alle gjelder også tastaturfokus (:focus-visible) og respekterer prefers-reduced-motion.

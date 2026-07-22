@@ -62,7 +62,11 @@ export function navItems(site) {
  */
 export function navClasses(site) {
   let classes = `urd-nav urd-nav-${site.nav.layout ?? 'right'}`;
-  if (site.nav.variant === 'floating') classes += ' urd-nav-var-floating';
+  if (site.nav.variant === 'floating') {
+    classes += ' urd-nav-var-floating';
+    // Glød er et tilvalg for pillen (av som standard, eiers valg 22. juli 2026).
+    if (site.nav.style?.glow) classes += ' urd-nav-glow';
+  }
   const hover = site.nav.style?.hover;
   if (hover && hover !== 'standard') classes += ` urd-nav-hover-${hover}`;
   return classes;

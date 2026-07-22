@@ -1214,6 +1214,15 @@
     });
   }
 
+  /** Glød rundt den flytende pillen: av er standard og lagres ikke i fila. */
+  function setNavGlow(on) {
+    siteMutate('nav', () => {
+      siteDraft.nav.style ??= {};
+      if (on) siteDraft.nav.style.glow = true;
+      else delete siteDraft.nav.style.glow;
+    });
+  }
+
   /** Hover-stil (additivt fra v0.6): standarden lagres ikke i fila. */
   function setNavHover(value) {
     siteMutate('nav', () => {
@@ -1667,6 +1676,69 @@
 
   function setRadiusToken(name, value) {
     siteMutate('theme', () => { siteDraft.theme.tokens.radius[name] = value; });
+  }
+
+  /* ---------- Lys/mørk-bryteren (alternativt tema) ---------- */
+
+  /** Inverterer lysheten til en #rrggbb-farge (HSL: L -> 1-L); annet passerer urørt.
+   *  Brukes som FORSLAG til alt-temaet - eieren justerer selv etterpå. */
+  function invertLightness(hex) {
+    const m = /^#([0-9a-f]{6})$/i.exec(hex ?? '');
+    if (!m) return hex;
+    const [r, g, b] = [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16) / 255);
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0;
+    const l = (max + min) / 2;
+    const d = max - min;
+    const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+    if (d !== 0) {
+      if (max === r) h = ((g - b) / d) % 6;
+      else if (max === g) h = (b - r) / d + 2;
+      else h = (r - g) / d + 4;
+      h = (h * 60 + 360) % 360;
+    }
+    const li = 1 - l;
+    const c = (1 - Math.abs(2 * li - 1)) * s;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const mm = li - c / 2;
+    const [rr, gg, bb] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x]
+      : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+    const toHex = (v) => Math.round((v + mm) * 255).toString(16).padStart(2, '0');
+    return `#${toHex(rr)}${toHex(gg)}${toHex(bb)}`;
+  }
+
+  function suggestAltColors() {
+    return Object.fromEntries(
+      Object.entries(siteDraft.theme.tokens.color).map(([name, value]) => [name, invertLightness(value)]),
+    );
+  }
+
+  function createAltTheme() {
+    siteMutate('theme', () => {
+      siteDraft.theme.alt = { tokens: { color: suggestAltColors() } };
+    });
+  }
+
+  function reSuggestAltTheme() {
+    siteMutate('theme', () => {
+      siteDraft.theme.alt.tokens.color = suggestAltColors();
+    });
+  }
+
+  function removeAltTheme() {
+    siteMutate('theme', () => { delete siteDraft.theme.alt; });
+  }
+
+  function setAltColorToken(name, value) {
+    siteMutate(`edit:theme-alt-${name}`, () => { siteDraft.theme.alt.tokens.color[name] = value; });
+  }
+
+  function setThemeScheme(value) {
+    siteMutate('theme', () => {
+      if (value === 'light') delete siteDraft.theme.scheme;
+      else siteDraft.theme.scheme = value;
+    });
   }
 
   function toggleChrome() {
@@ -2549,6 +2621,13 @@
                       <Dropdown value={siteDraft.nav.variant ?? 'bar'}
                         options={[['bar', 'Stripe (standard)'], ['floating', 'Flytende (pille)']]}
                         onchange={(v) => setNavVariant(v)} /></label>
+                    {#if siteDraft.nav.variant === 'floating'}
+                      <label class="gridmenu-snap" title="Myk glød i aksentfargen rundt pillen">
+                        <input type="checkbox" checked={siteDraft.nav.style?.glow === true}
+                          onchange={(e) => setNavGlow(e.target.checked)} />
+                        Glød rundt pillen
+                      </label>
+                    {/if}
                     <label>Lenke-hover
                       <Dropdown value={siteDraft.nav.style?.hover ?? 'standard'}
                         options={[['standard', 'Standard (aksentfarge)'], ['underline', 'Understrek'], ['pill', 'Pille'], ['lift', 'Løft med glød']]}
@@ -2639,6 +2718,32 @@
                 <label>Aksent
                   <ColorPicker value={siteDraft.theme.tokens.color.accent}
                     label="Aksentfarge" onchange={(hex) => setColorToken('accent', hex)} /></label>
+                <details class="group">
+                  <summary>Lys/mørk-bryter</summary>
+                  <div class="group-items">
+                    {#if siteDraft.theme.alt}
+                      <label>Hovedtemaet er
+                        <Dropdown value={siteDraft.theme.scheme ?? 'light'}
+                          options={[['light', 'Lyst'], ['dark', 'Mørkt']]}
+                          onchange={(v) => setThemeScheme(v)} /></label>
+                      <p class="panel-hint">Fargene under gjelder motsatt modus. Første besøk følger besøkendes OS-innstilling; bryteren i menyen husker valget.</p>
+                      {#each Object.entries(siteDraft.theme.alt.tokens.color) as [name]}
+                        <label>{({ bg: 'Bakgrunn', surface: 'Flater', text: 'Tekst', accent: 'Aksent' })[name] ?? name}
+                          <ColorPicker value={siteDraft.theme.alt.tokens.color[name]}
+                            label={`Alternativ ${name}`} onchange={(hex) => setAltColorToken(name, hex)} /></label>
+                      {/each}
+                      <span class="toolbar-row">
+                        <button class="ghost action tb-grow" title="Erstatter fargene over med inverterte utgaver av hovedtemaet"
+                          onclick={reSuggestAltTheme}>Foreslå på nytt (inverter)</button>
+                        <button class="ghost row-tool" title="Fjern det alternative temaet (bryteren i menyen forsvinner)"
+                          onclick={removeAltTheme}>{@html ICONS.cross}</button>
+                      </span>
+                    {:else}
+                      <button class="ghost action" onclick={createAltTheme}>+ Lag alternativt tema</button>
+                      <p class="panel-hint">Gir siden en lys/mørk-bryter i menyen. Starter med inverterte utgaver av dagens farger, som du justerer selv.</p>
+                    {/if}
+                  </div>
+                </details>
                 <hr class="gridmenu-divider" />
                 <label>Overskrifter
                   <Dropdown value={siteDraft.theme.tokens.font.heading}

@@ -4,39 +4,7 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 
 Fullførte punkter fra v0.2-v0.5 er ryddet bort ved versjonsslippene (0.3.0 17. juli 2026, 0.5.10 18. juli 2026); se [CHANGELOG.md](CHANGELOG.md) for hva som ble levert. Innkomne forslag og funn sorteres rett inn i milepælen eller fasen der de best tas; dokumenterte begrensninger uten plan står i egen seksjon nederst.
 
-## Testrunder (eiers sjekkliste)
-
-Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren stryker herfra** når noe er testet; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her.
-
-- [ ] Fargevelger-fiksen (0.6.10): klikk inne i fargevelgeren (fargeruten, feltene, prikkene) lukker den IKKE lenger; den lukkes kun ved klikk utenfor, Escape eller ved å klikke fargeruten igjen. Gjelder Tema, Nav, bakgrunnslag og oppsett
-- [ ] M4 Skjema: «Kontaktskjema»-mal, sett mottaker i «⚙ Skjema», test mailto-innsending på den PUBLISERTE siden (preview validerer bare); test feltredigering (legg til/fjern/type/påkrevd), e-postvalidering og honeypot; test eksternt endepunkt om du har et
-- [ ] M4 Kart: «Finn oss»-mal, lim inn koordinater i «⚙ Sted»; bekreft CSP-blokkert-melding FØR du legger `frame-src https://www.openstreetmap.org` i `template/_headers`, og at kartet vises ETTER at linjen er lagt inn og publisert
-- [ ] M3 Kalender: feed-henting i produksjon med en ekte Google-kalender-id (fungerte i preview med eksempeldata; produksjon krever functions, og andre verter enn Google krever ICS_HOSTS)
-- [ ] Plugin-menyene: «Plugins»-seksjonene i «+ Ny blokk», «+ Ny seksjon» og Blokker-panelet viser skjema/kart/kalender; «Kalender ▾»-foldemenyen gir de fire visningene
-
-### Testrunde-batch (0.6.11): editor-UI-sveip
-
-- [x] Egenskaper-omorganisering: X/Y/Bredde/Høyde/Lag/Rotasjon + «Skjul i mobil» ligger nå i en sammenleggbar «Plassering, lag og rotasjon» nederst i panelet, for ALLE blokktyper. Bekreft at de fortsatt virker og at panelet er ryddigere
-- [ ] Bildeblokk full editor (0.6.11): editoren viser ikke hele bildet i sin preview.
-
-### Testrunde-batch (0.6.16): flytende pille, hover-stiler, bakgrunnsbilde
-
-- [ ] Flytende meny: velg «Flytende (pille)» i Nav → Utseende → Variant; bekreft pillen med luft rundt, at den fester med toppluft ved scrolling (sticky), og at mobilmenyens panel legger seg pent under pillen
-- [ ] Hover-stiler: test «Understrek», «Pille» og «Løft med glød» i Nav → Utseende → Lenke-hover, på både lyst og mørkt tema; Tab-fokus skal gi samme effekt som hover
-- [ ] Bakgrunnsbilde i menyen: last opp i Nav → Utseende; juster farge/dekkevne (sløret over bildet); publiser og bekreft at bildet ble en /media/meny-….webp-fil og vises hos besøkende
-
-### Testrunde-batch (0.6.15): dropdown-menyer og mobilmeny
-
-- [ ] Undermeny i nav: legg til undermenypunkter med «+»-knappen i Menypunkter (Nav-panelet); punkt MED egen side får lenke + pilknapp, punkt med målet «Ingen lenke» blir ren åpner. Test hover (åpner/lukker med forsinkelse), klikk på pilen, at kun én er åpen, Escape (lukker + fokus tilbake) og Tab gjennom menyen
-- [ ] Mobilmeny: bytt preview til mobil (og test på den publiserte siden i smalt vindu/telefon) - burger vises, panelet åpner under menyen, undermenyer er trekkspill, Escape/klikk utenfor lukker
-- [ ] Nav-farger i undermenyene: sett bakgrunnsfarge/dekkevne i Nav → Utseende og bekreft at undermenyer og mobilpanelet følger samme flate
-- [ ] Slett en side som ligger i en undermeny og bekreft at undermenypunktet forsvinner (en åpner som mister alle barna fjernes helt)
-
-### Testrunde-batch (0.6.14): kart-forbedringer
-
-- [ ] Kart adressesøk: skriv en vanlig adresse (f.eks. «Storgata 1, Oslo») i «⚙ Sted» og klikk «Bruk» - stedet slås opp og vises (krever den PUBLISERTE siden; koordinater og OSM-lenker virker også lokalt)
-- [ ] Kartet vises nå ut av boksen på den publiserte siden (OSM er lagt i Urds _headers frame-src); ingen manuell CSP-jobb lenger. Bekreft at kartet faktisk viser etter publisering + deploy
-- [ ] CSP-vokter-fiks: hvis kartet likevel blokkeres (annen host) får besøkende en «Åpne kartet på OpenStreetMap»-lenke i stedet for et brukket bilde; editoren får instruksen. (Rettet også en variabel-skygging fra 0.6.12 som ville kastet feil her)
+**Testrundene (eiers sjekkliste over levert arbeid som venter på testing) bor i [TESTRUNDER.md](TESTRUNDER.md)** - flyttet dit 22. juli 2026; nye leveranser får batchene sine der.
 
 ## Til v0.6 «Økosystem» (startet 19. juli 2026; milepæler M1-M9, avhengighetsstyrt rekkefølge; pushes nummereres 0.6.1 og oppover)
 
