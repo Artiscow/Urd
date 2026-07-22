@@ -134,6 +134,19 @@ test('navSurface: bakgrunnsbilde får standardsløret over seg', () => {
   );
 });
 
+test('navSurface: ugyldig bilde ignoreres (vern mot url()-brudd og eksterne verter)', () => {
+  // Ukodet SVG-data-URL med tegn som ville knekt url("…")
+  const svg = 'data:image/svg+xml,<svg xmlns="http://x"></svg>';
+  assert.equal(navSurface({ image: svg }).bg, undefined);
+  // Ekstern URL slippes ikke inn i CSS-en
+  assert.equal(navSurface({ image: 'https://evil.example/x.png' }).bg, undefined);
+  // Sløret består selv om bildet forkastes
+  assert.equal(
+    navSurface({ image: svg, bg: 'accent', bgOpacity: 0.4 }).bg,
+    'color-mix(in srgb, var(--urd-color-accent) 40%, transparent)',
+  );
+});
+
 test('navSurface: bilde med egen farge og dekkevne i sløret', () => {
   assert.equal(
     navSurface({ image: 'data:image/webp;base64,AA==', bg: 'accent', bgOpacity: 0.3 }).bg,

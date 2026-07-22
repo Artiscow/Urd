@@ -1226,13 +1226,20 @@ a.urd-samling-title:hover {
   justify-content: space-between;
   gap: 1rem;
   padding: var(--urd-nav-pad) clamp(1rem, 4vw, 2.5rem);
-  /* Bakgrunnen bor i en var (settes av nav.js fra nav.style): undermenyer
-     og mobilpanelet gjenbruker samme flate som selve menyen */
+  /* Bakgrunn og blur bor i varer (settes av nav.js fra nav.style):
+     undermenyer og mobilpanelet gjenbruker samme flate som selve menyen.
+     Blur må gå via custom property fordi backdrop-filter ikke arver. */
   background: var(--urd-nav-bg, color-mix(in srgb, var(--urd-color-surface) 85%, transparent));
-  backdrop-filter: blur(8px);
+  backdrop-filter: var(--urd-nav-blur, blur(8px));
   color: var(--urd-color-text);
-  /* Ankerpunkt for mobilpanelet (absolutt under menyen) */
+  /* Ankerpunkt for mobilpanelet, og egen stacking context så nedtrekk og
+     panel ligger over etterfølgende innhold også når menyen ikke er sticky */
   position: relative;
+  z-index: 5000;
+}
+
+.urd-preview .urd-nav {
+  z-index: 100001;
 }
 
 /* Klistret meny: sticky ligger på verten (header-elementet), som kan
@@ -1374,8 +1381,8 @@ a.urd-samling-title:hover {
   padding: 0.5rem;
   list-style: none;
   background: var(--urd-nav-bg, color-mix(in srgb, var(--urd-color-surface) 85%, transparent));
-  /* inherit følger nav-ens blur, også når nav.style skrur den av */
-  backdrop-filter: inherit;
+  /* Varen arver fra nav-en, også når nav.style skrur bluren av */
+  backdrop-filter: var(--urd-nav-blur, blur(8px));
   border-radius: var(--urd-radius-sm);
   box-shadow: 0 8px 24px color-mix(in srgb, var(--urd-color-text) 15%, transparent);
 }
@@ -1420,7 +1427,7 @@ body.urd-mobile .urd-nav.urd-nav-open .urd-nav-list {
   margin: 0;
   padding: 0.75rem clamp(1rem, 4vw, 2.5rem) 1rem;
   background: var(--urd-nav-bg, color-mix(in srgb, var(--urd-color-surface) 85%, transparent));
-  backdrop-filter: inherit;
+  backdrop-filter: var(--urd-nav-blur, blur(8px));
   box-shadow: 0 12px 24px color-mix(in srgb, var(--urd-color-text) 15%, transparent);
   max-height: calc(100vh - 4rem);
   overflow-y: auto;
@@ -1429,6 +1436,8 @@ body.urd-mobile .urd-nav.urd-nav-open .urd-nav-list {
 body.urd-mobile .urd-nav-list a {
   display: block;
   padding: 0.5rem 0;
+  /* Hover-pillens 999px-radius skal ikke ligge på fullbredde mobilrader */
+  border-radius: var(--urd-radius-sm);
 }
 
 body.urd-mobile .urd-nav-has-sub {
@@ -1453,11 +1462,13 @@ body.urd-mobile .urd-nav-sub {
    luft mot kantene. Verten (header) er fortsatt sticky i full bredde;
    pillen sentreres inni den og fester dermed med toppluft. */
 .urd-nav-var-floating {
+  /* Padding via varen, ikke padding-block: logobildets negative
+     margin-triks er kalibrert mot --urd-nav-pad og må følge med */
+  --urd-nav-pad: 0.6rem;
   margin: 0.75rem auto 0;
   width: min(1100px, calc(100% - 2rem));
   border-radius: 999px;
   box-shadow: 0 8px 30px color-mix(in srgb, var(--urd-color-text) 18%, transparent);
-  padding-block: 0.6rem;
 }
 
 /* Mobilpanelet skal ikke arve pillens fasong: eget lag med luft under */

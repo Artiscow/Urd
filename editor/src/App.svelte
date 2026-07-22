@@ -1081,10 +1081,13 @@
     if (entry.path === '/') return; // forsiden kan aldri slettes
     siteMutate('pages', () => {
       siteDraft.pages = siteDraft.pages.filter((p) => p.id !== entry.id);
-      siteDraft.nav.items = siteDraft.nav.items.filter((i) => i.page !== entry.id);
-      // Undermenypunkter som pekte på siden ryddes også; en åpner som
-      // mister alle barna sine (og ikke har eget mål) fjernes helt.
+      // Punkter med undermeny overlever at egen side slettes: målet fjernes
+      // og punktet blir en ren åpner, så barna (som kan peke på levende
+      // sider) ikke forsvinner stille. Undermenypunkter som pekte på siden
+      // ryddes; punkter uten både mål og barn til slutt fjernes helt.
+      siteDraft.nav.items = siteDraft.nav.items.filter((i) => i.page !== entry.id || i.children);
       for (const item of siteDraft.nav.items) {
+        if (item.page === entry.id) delete item.page;
         if (!item.children) continue;
         item.children = item.children.filter((c) => c.page !== entry.id);
         if (item.children.length === 0) delete item.children;

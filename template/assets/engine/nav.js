@@ -51,7 +51,9 @@ export function renderNav(site, host) {
   // CSS-standarden.
   const surface = navSurface(site.nav.style);
   if (surface.bg) nav.style.setProperty('--urd-nav-bg', surface.bg);
-  if (surface.blur === false) nav.style.backdropFilter = 'none';
+  // Blur styres via custom property (arver til undermenyer og mobilpanel;
+  // backdrop-filter selv arver ikke, så inherit i CSS-en ville stoppet på li-en).
+  if (surface.blur === false) nav.style.setProperty('--urd-nav-blur', 'none');
   if (surface.color) nav.style.color = surface.color;
 
   const logoDef = site.nav.logo ?? { type: 'text', value: site.site.title };

@@ -6,6 +6,12 @@
 
 import { resolveColor } from './theme.js';
 
+// Samme vern som favicon-flyten i urd.js (SAFE_ICON_RE): kun kjente
+// bildeformer (base64-data-URL eller site-relativ sti) slippes inn i
+// CSS-url(); alt annet (eksterne verter, tegn som knekker url("…"))
+// ignoreres. Ankret regex med vilje - CodeQL gjenkjenner det som barriere.
+const SAFE_IMAGE_RE = /^(?:data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+|\/(?!\/)[\w%./-]*)$/;
+
 /**
  * Løser et menypunkt mot sideregisteret: `page` slås opp til path,
  * `href` er ekstern lenke. Ukjent side gir '#' med missing-flagg
@@ -75,7 +81,7 @@ export function navClasses(site) {
 export function navSurface(style = {}) {
   const out = {};
   const hasVeil = style.bg || style.bgOpacity != null;
-  if (style.image) {
+  if (style.image && SAFE_IMAGE_RE.test(style.image)) {
     // Sløret gjentas som gradient-lag over bildet; uten egne valg brukes
     // standardflaten (surface 85 %), så teksten alltid har bakgrunn å stå på.
     const color = resolveColor(style.bg ?? 'surface');

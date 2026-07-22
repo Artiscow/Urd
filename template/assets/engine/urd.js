@@ -204,8 +204,13 @@ function enablePreview(state, opts) {
       renderPage(state.page, state.site, root, vp());
     } else if (msg?.type === 'urd-site' && msg.site) {
       // Site-utkast fra editoren (grid, tema, nav): alt som avhenger av
-      // site.json rendres på nytt.
+      // site.json rendres på nytt. Samme amputert-vern som i boot(): et
+      // utkast uten disse delene skal aldri kaste og fryse previewen.
       state.site = msg.site;
+      state.site.site ??= { title: '', lang: 'no' };
+      state.site.pages ??= [];
+      state.site.theme ??= { version: 1, tokens: {} };
+      state.site.nav ??= { version: 1, items: [] };
       applyTheme(state.site.theme);
       applyFavicon(state.site.site?.icon);
       if (opts.nav) renderNav(state.site, opts.nav);
