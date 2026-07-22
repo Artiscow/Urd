@@ -59,7 +59,8 @@ redigeringsflatene bygges på den nye layouten:
 
 ## v0.7 - Finpuss + butikk
 - **Butikk uten betalingsgateway som kjernefunksjon** (ApeironLF-modellen, valgt 18. juli 2026): produktkort-blokk med varianter, handlekurv (localStorage + skuff), bestillingsskjema til e-post/valgfritt endepunkt, betaling via Vipps-nummer-instruks. Avhengighetsfri, git-eid katalog; bygges på v0.6-datablokk-mønsteret. Detaljer i [BACKLOG.md](BACKLOG.md).
-- Sjekke alle funksjoner og se om noe mangler eller ikke fungerer godt.
+- **SEO-grunnpakke** (fra funksjonskartet 23. juli 2026, se [FUNKSJONSKART.md](FUNKSJONSKART.md)): per-side meta/og-felter, sitemap, robots, 404, canonical. Pluss RSS for samlinger, flere skjema-felttyper, video-bakgrunnslag og CSV/tabell; detaljer i backloggen.
+- Sjekke alle funksjoner og se om noe mangler eller ikke fungerer godt. (Funksjonssammenligningen mot andre byggere er gjort 23. juli 2026 - FUNKSJONSKART.md; gjenstår: egen gjennomgang av intuitivitet og rot.)
 - Er alt intuitivt?
 - Er ting rotete?
 - Noe som ikke er lett å forstå eller lett å misforstå? 
@@ -75,6 +76,7 @@ er levert i v0.3; dette er laget over.)
 - Motoren: profiler rendering og rerendering ved mange seksjoner/blokker; unngå unødvendige omtegninger i preview.
 - Editoren: bundle-størrelse og oppstartstid; dra/resize skal holde 60 fps også på store sider.
 - «Bakt HTML ved publisering» (SEO/no-JS-punktet fra risikolisten) hører naturlig hjemme her om den ikke alt er tatt.
+- Fra funksjonskartet (23. juli 2026): innslagssider (permalenke per samlingsinnslag, generert ved publisering - hører sammen med bakingen) og mediebibliotek-panel.
 
 ## v0.9 - Generalprøven
 
