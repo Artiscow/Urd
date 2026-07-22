@@ -94,6 +94,6 @@ Sannhetskilden er `engine`-feltet i `template/urd.json`. Git-taggen (`v0.2.0`) o
 
 1. Alle tester grønne, eksempeldata validerer mot skjemaene.
 2. `npm run build` i `editor/`, committ output.
-3. Bump motorversjon i `template/urd.json` og oppdater `CHANGELOG.md`.
+3. Bump motorversjon i `template/urd.json` og oppdater `docs/CHANGELOG.md`.
 4. Tagg utgivelsen (`v0.x.y`).
 5. Fra v0.6: release-Action synker `template/` til `urd-template`-repoet.

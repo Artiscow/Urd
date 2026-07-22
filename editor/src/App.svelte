@@ -43,6 +43,7 @@
     down: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M5 13l7 7 7-7"/></svg>',
     right: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M13 5l7 7-7 7"/></svg>',
     cross: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14"/><path d="M19 5L5 19"/></svg>',
+    plus: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
   };
 
   /**
@@ -1081,6 +1082,14 @@
     siteMutate('pages', () => {
       siteDraft.pages = siteDraft.pages.filter((p) => p.id !== entry.id);
       siteDraft.nav.items = siteDraft.nav.items.filter((i) => i.page !== entry.id);
+      // Undermenypunkter som pekte på siden ryddes også; en åpner som
+      // mister alle barna sine (og ikke har eget mål) fjernes helt.
+      for (const item of siteDraft.nav.items) {
+        if (!item.children) continue;
+        item.children = item.children.filter((c) => c.page !== entry.id);
+        if (item.children.length === 0) delete item.children;
+      }
+      siteDraft.nav.items = siteDraft.nav.items.filter((i) => i.page || i.href || i.children);
     });
     // Sidens eget utkast beholdes: Ctrl+Z gjenoppretter alt.
     if (entry.id === pageId) selectPage(siteDraft.pages[0].id);
@@ -1191,6 +1200,45 @@
     siteMutate(`edit:nav-style-${name}`, () => {
       siteDraft.nav.style ??= {};
       siteDraft.nav.style[name] = value;
+    });
+  }
+
+  /** Variant (additivt fra v0.6): standarden (bar) lagres ikke i fila. */
+  function setNavVariant(value) {
+    siteMutate('nav', () => {
+      if (value === 'bar') delete siteDraft.nav.variant;
+      else siteDraft.nav.variant = value;
+    });
+  }
+
+  /** Hover-stil (additivt fra v0.6): standarden lagres ikke i fila. */
+  function setNavHover(value) {
+    siteMutate('nav', () => {
+      siteDraft.nav.style ??= {};
+      if (value === 'standard') delete siteDraft.nav.style.hover;
+      else siteDraft.nav.style.hover = value;
+    });
+  }
+
+  /** Bakgrunnsbilde i menyen: samme webp-flyt som logoen (materialiseres ved publisering). */
+  async function uploadNavImage(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      const img = await compressToWebp(file);
+      siteMutate('nav', () => {
+        siteDraft.nav.style ??= {};
+        siteDraft.nav.style.image = img.dataUrl;
+      });
+    } catch {
+      setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
+    }
+  }
+
+  function removeNavImage() {
+    siteMutate('nav', () => {
+      if (siteDraft.nav.style) delete siteDraft.nav.style.image;
     });
   }
 
@@ -1502,14 +1550,18 @@
     siteMutate(`edit:nav-label-${i}`, () => { siteDraft.nav.items[i].label = value; });
   }
 
-  /** Mål: en side fra registeret, eller '__href' = ekstern lenke.
-   *  Skjemaet tillater kun ett av feltene page/href, så det andre fjernes. */
+  /** Mål: en side fra registeret, '__href' = ekstern lenke, eller '__none' =
+   *  ren åpner for undermenyen (tilbys kun for punkter med undermeny).
+   *  Skjemaet tillater kun ett av feltene page/href, så resten fjernes. */
   function setNavTarget(i, value) {
     siteMutate('nav', () => {
       const item = siteDraft.nav.items[i];
       if (value === '__href') {
         delete item.page;
         item.href = item.href ?? 'https://';
+      } else if (value === '__none') {
+        delete item.page;
+        delete item.href;
       } else {
         item.page = value;
         delete item.href;
@@ -1535,6 +1587,58 @@
   function addNavItem() {
     siteMutate('nav', () => {
       siteDraft.nav.items.push({ label: 'Lenke', page: siteDraft.pages[0].id });
+    });
+  }
+
+  /* Undermeny (ett nivå, additivt fra v0.6): barna har alltid eget mål;
+   * forelderen kan i tillegg være ren åpner ('__none' i setNavTarget). */
+
+  function addNavChild(i) {
+    siteMutate('nav', () => {
+      const item = siteDraft.nav.items[i];
+      item.children ??= [];
+      item.children.push({ label: 'Lenke', page: siteDraft.pages[0].id });
+    });
+  }
+
+  function setNavChildLabel(i, j, value) {
+    siteMutate(`edit:nav-child-label-${i}-${j}`, () => { siteDraft.nav.items[i].children[j].label = value; });
+  }
+
+  function setNavChildTarget(i, j, value) {
+    siteMutate('nav', () => {
+      const child = siteDraft.nav.items[i].children[j];
+      if (value === '__href') {
+        delete child.page;
+        child.href = child.href ?? 'https://';
+      } else {
+        child.page = value;
+        delete child.href;
+      }
+    });
+  }
+
+  function setNavChildHref(i, j, value) {
+    siteMutate(`edit:nav-child-href-${i}-${j}`, () => { siteDraft.nav.items[i].children[j].href = value; });
+  }
+
+  function moveNavChild(i, j, dir) {
+    const k = j + dir;
+    const children = siteDraft.nav.items[i].children;
+    if (k < 0 || k >= children.length) return;
+    siteMutate('nav', () => { [children[j], children[k]] = [children[k], children[j]]; });
+  }
+
+  function removeNavChild(i, j) {
+    siteMutate('nav', () => {
+      const item = siteDraft.nav.items[i];
+      item.children.splice(j, 1);
+      if (item.children.length === 0) {
+        // Tom undermeny fjernes fra fila; en ren åpner uten barn har ikke
+        // lenger noe mål og får forsiden, så punktet forblir gyldig.
+        delete item.children;
+        if (!item.page && !item.href) item.page = siteDraft.pages[0].id;
+      }
     });
   }
 
@@ -1952,6 +2056,7 @@
     const logo = site.nav?.logo;
     if (logo?.type === 'image') materializeField(logo, 'value', 'logo', files);
     if (logo?.type === 'both') materializeField(logo, 'image', 'logo', files);
+    if (site.nav?.style) materializeField(site.nav.style, 'image', 'meny', files);
     materializeField(site.site, 'icon', 'ikon', files);
     return files;
   }
@@ -2437,7 +2542,27 @@
                         onchange={(e) => siteMutate('nav', () => { siteDraft.nav.sticky = e.target.checked; })} />
                       Klistrete meny (følger med når man blar)
                     </label>
-                    <p class="panel-hint">Bakgrunnsbilde i menyen og menypunkt-design kommer i en senere runde.</p>
+                    <label>Variant
+                      <Dropdown value={siteDraft.nav.variant ?? 'bar'}
+                        options={[['bar', 'Stripe (standard)'], ['floating', 'Flytende (pille)']]}
+                        onchange={(v) => setNavVariant(v)} /></label>
+                    <label>Lenke-hover
+                      <Dropdown value={siteDraft.nav.style?.hover ?? 'standard'}
+                        options={[['standard', 'Standard (aksentfarge)'], ['underline', 'Understrek'], ['pill', 'Pille'], ['lift', 'Løft med glød']]}
+                        onchange={(v) => setNavHover(v)} /></label>
+                    <span class="toolbar-row">
+                      <label class="ghost filepick tb-grow" title="Komprimeres automatisk til webp">
+                        {siteDraft.nav.style?.image ? 'Bytt bakgrunnsbilde' : 'Bakgrunnsbilde i menyen'}
+                        <input type="file" accept="image/*" onchange={uploadNavImage} />
+                      </label>
+                      {#if siteDraft.nav.style?.image}
+                        <button class="ghost row-tool" title="Fjern bakgrunnsbildet"
+                          onclick={removeNavImage}>{@html ICONS.cross}</button>
+                      {/if}
+                    </span>
+                    {#if siteDraft.nav.style?.image}
+                      <p class="panel-hint">Bakgrunnsfargen og dekkevnen over legger seg som et slør over bildet.</p>
+                    {/if}
                   </div>
                 </details>
                 <details class="group" open>
@@ -2448,6 +2573,8 @@
                     <input value={item.label} title="Teksten i menyen"
                       oninput={(e) => setNavLabel(i, e.target.value)} />
                     <span class="row-tools">
+                      <button class="ghost row-tool" title="Legg til undermenypunkt"
+                        onclick={() => addNavChild(i)}>{@html ICONS.plus}</button>
                       <button class="ghost row-tool" onclick={() => moveNavItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
                       <button class="ghost row-tool" onclick={() => moveNavItem(i, 1)}
                         disabled={i === siteDraft.nav.items.length - 1}>{@html ICONS.down}</button>
@@ -2456,17 +2583,41 @@
                     </span>
                     <!-- Wrapper-span beholder grid-plasseringen (.nav-row .nav-target) -->
                     <span class="nav-target">
-                      <Dropdown value={item.page ?? '__href'} title="Hvor lenken går"
-                        options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Ekstern lenke']]}
+                      <Dropdown value={item.page ?? (item.href != null ? '__href' : '__none')} title="Hvor lenken går"
+                        options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Ekstern lenke'],
+                          ...(item.children ? [['__none', 'Ingen lenke (kun åpner undermenyen)']] : [])]}
                         onchange={(v) => setNavTarget(i, v)} />
                     </span>
-                    {#if !item.page}
-                      <input class="nav-target" value={item.href ?? ''} placeholder="https://…"
+                    {#if !item.page && item.href != null}
+                      <input class="nav-target" value={item.href} placeholder="https://…"
                         onchange={(e) => setNavHref(i, e.target.value)} />
                     {/if}
                   </div>
+                  {#each item.children ?? [] as child, j}
+                    <div class="nav-row nav-sub-row">
+                      <input value={child.label} title="Teksten i undermenyen"
+                        oninput={(e) => setNavChildLabel(i, j, e.target.value)} />
+                      <span class="row-tools">
+                        <button class="ghost row-tool" onclick={() => moveNavChild(i, j, -1)} disabled={j === 0}>{@html ICONS.up}</button>
+                        <button class="ghost row-tool" onclick={() => moveNavChild(i, j, 1)}
+                          disabled={j === item.children.length - 1}>{@html ICONS.down}</button>
+                        <button class="ghost row-tool" title="Fjern fra undermenyen (siden består)"
+                          onclick={() => removeNavChild(i, j)}>{@html ICONS.cross}</button>
+                      </span>
+                      <span class="nav-target">
+                        <Dropdown value={child.page ?? '__href'} title="Hvor lenken går"
+                          options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Ekstern lenke']]}
+                          onchange={(v) => setNavChildTarget(i, j, v)} />
+                      </span>
+                      {#if !child.page}
+                        <input class="nav-target" value={child.href ?? ''} placeholder="https://…"
+                          onchange={(e) => setNavChildHref(i, j, e.target.value)} />
+                      {/if}
+                    </div>
+                  {/each}
                 {/each}
                     <button class="ghost action" onclick={addNavItem}>+ Nytt menypunkt</button>
+                    <p class="panel-hint">Punkt med undermeny får en pilknapp i menyen; uten egen lenke blir hele punktet åpneren.</p>
                   </div>
                 </details>
               </div>
@@ -3681,6 +3832,13 @@
 
   .nav-row .nav-target {
     grid-column: 1;
+  }
+
+  /* Undermenyrader: innrykket under forelderpunktet, med markert kant */
+  .nav-sub-row {
+    margin-left: 0.8rem;
+    padding-left: 0.5rem;
+    border-left: 2px solid rgb(255 255 255 / 12%);
   }
 
   .nav-line {

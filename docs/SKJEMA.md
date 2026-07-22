@@ -37,8 +37,8 @@ Nettstedets rot: identitet, sideregister, navigasjon, grid og tema.
     "logo": { "type": "text", "value": "Min forening" },
     "items": [
       { "label": "Hjem", "page": "hjem" },
-      { "label": "Om oss", "page": "om-oss" },
-      { "label": "Facebook", "href": "https://facebook.com/minforening" }
+      { "label": "Om oss", "page": "om-oss",
+        "children": [{ "label": "Facebook", "href": "https://facebook.com/minforening" }] }
     ]
   },
   "footer": { "version": 1, "show": true, "text": "© Min forening", "align": "center" }
@@ -49,6 +49,8 @@ Nettstedets rot: identitet, sideregister, navigasjon, grid og tema.
 - **`pages`** er sideregisteret. Nav-elementer peker på sider via `page`-id (eller eksterne lenker via `href`). Admin lager/endrer/sletter sider her; motoren ruter fra `path`.
 - **`nav.layout`** (valgfri, additiv fra v0.5): menypunktenes plassering (`left`/`center`/`right`, standard right). Logoen står alltid først og er «Hjem»-knappen. **`nav.logo`** har tre typer: `text` (value = tekst), `image` (value = bilde-URL) og `both` (value = tekst, `image` = bilde-URL), pluss valgfrie `size` (bildehøyde px), `order` (`image-first`/`text-first`), `font`, `textSize`, `bold`, `italic` og `radius` for logotekst/-bilde.
 - **`nav.sticky`** (valgfri, additiv fra v0.5, standard true): menyen følger med ved scrolling. **`nav.style`** (valgfri, additiv fra v0.5): menyens utseende med `bg` (theme-token eller rå farge), `bgOpacity` (0..1), `blur` og `textColor`; utelatte felt gir standardutseendet.
+- **`nav.items[].children`** (valgfri, additiv fra v0.6): undermeny, ETT nivå - hvert barn er `{label, page|href}` og må ha eget mål. Forelderen kan i tillegg til `children` ha eget mål (`page`/`href`): da rendres den som lenke + egen pilknapp (siden er alltid nåbar). Uten eget mål er punktet en ren åpner - hele punktet åpner undermenyen. Undermenyene følger WAI-ARIA-mønsteret «disclosure navigation» (aria-expanded/aria-controls på ekte knapper, aldri role="menu"), og i mobilmenyen (burgeren, styrt av `breakpoints.mobile`) blir de trekkspill.
+- **`nav.variant`** (valgfri, additiv fra v0.6, standard `bar`): `floating` gir menyen som løsrevet pille med luft mot kantene. **`nav.style.hover`** (valgfri, additiv fra v0.6, standard `standard`): hover-stil for menylenkene (`underline`/`pill`/`lift`). **`nav.style.image`** (valgfri, additiv fra v0.6): bakgrunnsbilde i menyen som sti i `media/` (data-URL i utkast); `bg`/`bgOpacity` legger seg som slør over bildet.
 - **`footer`** (valgfri, additiv fra v0.5): delt footer nederst på ALLE sider - `show`, `text` (linjer skilt med linjeskift) og `align`. Utelatt eller skjult = ingen footer; footer-preseten (per-side seksjon) finnes uavhengig av denne.
 - **`grid`** er snappeverktøyet (fra site-schemaVersion 2): kvadratiske ruter på `size` px; mindre = tettere/finere plassering. Seksjoner kan overstyre det, og `snap` kan slås av for helt fri plassering. Gridet påvirker aldri lagrede posisjoner.
 - **`theme.tokens`** mappes 1:1 til CSS-variabler: `tokens.color.bg` → `--urd-color-bg`. Motorens `theme.js` gjør mappingen; admin redigerer tokens direkte.

@@ -75,6 +75,11 @@
           "default": true,
           "description": "Menyen følger med når man blar nedover (false = ligger kun øverst). Additivt felt fra v0.5."
         },
+        "variant": {
+          "enum": ["bar", "floating"],
+          "default": "bar",
+          "description": "Menyens form (additivt fra v0.6): bar = stripe i full bredde, floating = løsrevet pille med luft mot kantene."
+        },
         "style": {
           "type": "object",
           "description": "Menyens utseende (additivt fra v0.5). Utelatte felt = standard.",
@@ -83,7 +88,13 @@
             "bg": { "type": "string", "description": "Bakgrunnsfarge: theme-token eller rå farge" },
             "bgOpacity": { "type": "number", "minimum": 0, "maximum": 1, "description": "Bakgrunnens dekkevne (0 = gjennomsiktig)" },
             "blur": { "type": "boolean", "default": true, "description": "Uskarphet bak menyen" },
-            "textColor": { "type": "string", "description": "Tekstfarge i menyen (tom = temaets tekstfarge)" }
+            "textColor": { "type": "string", "description": "Tekstfarge i menyen (tom = temaets tekstfarge)" },
+            "hover": {
+              "enum": ["standard", "underline", "pill", "lift"],
+              "default": "standard",
+              "description": "Hover-stil for menylenkene (additivt fra v0.6): standard = aksentfarge, underline = glidende understrek, pill = avrundet bakgrunn, lift = løft med glød."
+            },
+            "image": { "type": "string", "description": "Bakgrunnsbilde i menyen (additivt fra v0.6): sti i media/ (data-URL i utkast). bg/bgOpacity legger seg som slør over bildet." }
           }
         },
         "logo": {
@@ -112,12 +123,32 @@
             "properties": {
               "label": { "type": "string", "minLength": 1 },
               "page": { "$ref": "#/$defs/id", "description": "Id fra sideregisteret" },
-              "href": { "type": "string", "description": "Ekstern lenke - brukes når page ikke er satt" }
+              "href": { "type": "string", "description": "Ekstern lenke - brukes når page ikke er satt" },
+              "children": {
+                "type": "array",
+                "description": "Undermeny, ett nivå (additivt fra v0.6). Et punkt med children men uten page/href er en ren åpner (hele punktet åpner undermenyen); med eget mål vises lenken pluss en pilknapp.",
+                "items": {
+                  "type": "object",
+                  "required": ["label"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "label": { "type": "string", "minLength": 1 },
+                    "page": { "$ref": "#/$defs/id", "description": "Id fra sideregisteret" },
+                    "href": { "type": "string", "description": "Ekstern lenke - brukes når page ikke er satt" }
+                  },
+                  "oneOf": [
+                    { "required": ["page"] },
+                    { "required": ["href"] }
+                  ]
+                }
+              }
             },
-            "oneOf": [
+            "anyOf": [
               { "required": ["page"] },
-              { "required": ["href"] }
-            ]
+              { "required": ["href"] },
+              { "required": ["children"] }
+            ],
+            "not": { "required": ["page", "href"] }
           }
         }
       }

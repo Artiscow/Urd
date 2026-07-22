@@ -8,7 +8,7 @@ Urd er en avhengighetsfri, statisk nettsidebygger der det klonede repoet ER nett
 
 **Totrinns-modellen (ADR-0001):** editoren viser den EKTE siden i en iframe (`?preview=1`) og styrer den via postMessage. Forhåndsvisningen ER produksjon: samme motor, samme render. Editoren eier utkastet; motoren rendrer det. Meldingene (`urd-edit`, `urd-move`, `urd-grow`, `urd-add-block`, ...) er kontrakten mellom dem.
 
-**Når du tar opp arbeid:** les [CHANGELOG.md](CHANGELOG.md) for siste tilstand og [docs/BACKLOG.md](docs/BACKLOG.md) for Testrunder-sjekklisten og hva som er neste. Full orientering: [docs/VEIKART.md](docs/VEIKART.md) (faser og mål), [docs/ARKITEKTUR.md](docs/ARKITEKTUR.md), [docs/UTVIKLING.md](docs/UTVIKLING.md) (tekniske regler), [CONTRIBUTING.md](CONTRIBUTING.md), og ADR-ene i [docs/adr/](docs/adr/).
+**Når du tar opp arbeid:** les [docs/CHANGELOG.md](docs/CHANGELOG.md) for siste tilstand og [docs/BACKLOG.md](docs/BACKLOG.md) for Testrunder-sjekklisten og hva som er neste. Full orientering: [docs/VEIKART.md](docs/VEIKART.md) (faser og mål), [docs/ARKITEKTUR.md](docs/ARKITEKTUR.md), [docs/UTVIKLING.md](docs/UTVIKLING.md) (tekniske regler), [CONTRIBUTING.md](CONTRIBUTING.md), og ADR-ene i [docs/adr/](docs/adr/).
 
 ## Repo-struktur
 
@@ -37,13 +37,13 @@ CI (GitHub Actions) kjører de samme tre pluss bygg-samsvar-sjekken, og CodeQL s
 
 ## Arbeidsflyt
 
-- **Vent med CHANGELOG, backlog og commit-forslag til eieren sier «push».** Eieren pusher selv. Når de sier push: oppdater CHANGELOG og backlog, gjenbygg editoren, kjør verifiseringen, og foreslå en nummerert commit-melding. Ikke commit eller push selv.
+- **Vent med CHANGELOG, backlog og commit-forslag til eieren sier «push».** Eieren pusher selv. Når de sier push: oppdater CHANGELOG og backlog, gjenbygg editoren, kjør verifiseringen, og foreslå en nummerert commit-melding (kun meldingsteksten, ingen git-kommandoer). Ikke commit eller push selv.
 - **Versjonering:** pushes nummereres 0.x.y stigende. Fase-slippet døpes til siste push-nummer (v0.5 endte i 0.5.10). Hvert push-nummer er et eget CHANGELOG-innslag.
 - **Svar på spørsmål i tekst FØR du åpner en valgdialog.** Forklaringer skal ikke gjemmes bak dialoger.
 
 ## Skrivestil
 
-- **Aldri tankestrek (em dash) noe sted** i prosjekttekst, kode, kommentarer eller commit-meldinger. Bruk vanlig bindestrek eller omformuler.
+- **Aldri tankestrek (em dash) noe sted**: ikke i prosjekttekst, kode, kommentarer, commit-meldinger eller chat-svar til eieren. Bruk vanlig bindestrek eller omformuler.
 - **Norsk (bokmål) i docs og bruker-UI; engelske identifikatorer i kode OG i datakontrakter** (feltnavn i JSON, meldingstyper).
 - **Ingen emoji/tegn i editor-UI: kun tegnede SVG-ikoner.** (Tegn/emoji er innhold brukeren kan sette, ikke chrome.)
 - **Kode-kommentarer brytes ved setningsgrense, aldri midt i en setning.** Match omkringliggende kode i kommentar-tetthet, navngiving og idiom.
@@ -57,6 +57,8 @@ CI (GitHub Actions) kjører de samme tre pluss bygg-samsvar-sjekken, og CodeQL s
 - **Datablokkers autovekst melder KUN høyde** (`urd-grow`), aldri hele framen, ellers teleporteres en dratt blokk tilbake.
 - **Seksjoner MÅ ha `id`.** `handleAddSection` tildeler defensivt en om en preset glemmer den.
 - **Lokal utvikling må virke** (`python3 -m http.server` fra `template/`): plugin-utviklere jobber lokalt. Ting som bare virker på den deployede siden (functions) skal degradere pent lokalt.
+- **Hover-UI må vaktes mot hybride enheter:** `pointerenter` fyrer også ved trykk på laptop med touchskjerm, så uten `event.pointerType === 'mouse'`-vakt åpner og lukker et hover-element i samme trykk. Se hover-håndteringen i `engine/nav.js`.
+- **Motorkomponenter som re-rendres per utkast-melding og setter lyttere på document, må koble fra forrige sett** (ellers stables lytterne for hver editor-endring). Mønsteret: modulnivå-AbortController som abortes øverst i render-funksjonen, og `{ signal }` på alle addEventListener. Se `renderNav` i `engine/nav.js`.
 
 ## Plugins
 
@@ -64,7 +66,7 @@ Referanse-pluginene i `template/plugins/` (kalender, skjema, kart) viser mønste
 
 ## ADR-er
 
-Les og følg dem; skriv en ny ADR når du tar en beslutning med varige konsekvenser. Gjeldende: 0001 hybrid editormodell, 0002 Svelte for editor / lesbar JS for motor, 0003 publisering via GitHub OAuth + Pages Functions, 0004 monorepo med template-mappe, 0005 versjonering og migrering, 0006 plugin-CSP-behovsmodell, 0007 samlinger (datablokk-mønsteret), 0008 hjelpechip-regelen, 0009 temastyrt UI-regelen.
+Les og følg dem; skriv en ny ADR når du tar en beslutning med varige konsekvenser. Gjeldende: 0001 hybrid editormodell, 0002 Svelte for editor / lesbar JS for motor, 0003 publisering via GitHub OAuth + Pages Functions, 0004 monorepo med template-mappe, 0005 versjonering og migrering, 0006 plugin-CSP-behovsmodell, 0007 samlinger (datablokk-mønsteret), 0008 hjelpechip-regelen, 0009 temastyrt UI-regelen, 0010 disclosure-navigasjon i nav (aldri role="menu").
 
 ## Testrunder-seksjonen i backloggen
 
