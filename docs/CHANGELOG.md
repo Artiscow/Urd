@@ -12,6 +12,13 @@ døpes til det siste push-nummeret ved gaten, slik v0.5-fasen endte i
 0.5.10. Da stiger numrene alltid. Etterslepp-fikser på v0.5 nummereres
 0.5.11 og videre.
 
+### 0.6.18 - sidestilt meny, bildekontroller i nav, pille-luft og «Tekst på aksent» - 22. juli 2026
+- SIDESTILT MENY (eiers ønske): to nye varianter i Nav → Utseende - «Sidestilt venstre» og «Sidestilt høyre». Fast kolonne (250px) langs kanten med logo øverst, menypunktene som kolonne, undermenyer som trekkspill og lys/mørk-bryteren nederst; innholdet flyttes med body-padding på samme side. På mobil faller sidestilt tilbake til topplinje med burger. Variantbytte rydder alltid vert- og body-klassene (ny ren hostClasses() i nav-model.js).
+- Bildekontroller for nav-bakgrunnsbildet (eiers ønske om enkel bildeeditor): «Bildestyrke» (toner bildet mot bakgrunnsfargen med eget lag under fargesløret) og «Bildeutsnitt (høyde)» (hvilken del av bildet stripen viser, 0 = toppen, 100 = bunnen). Additive felt nav.style.imageOpacity/imageY; ren strengmatte i navSurface med tester.
+- «Luft over pillen»: ny bryter for den flytende varianten (på som standard); av legger pillen helt i toppen (nav.style.topGap: false).
+- Ny temafarge «Tekst på aksent» (accent-text, eiers valg etter fargegjennomgang): styrer teksten oppå aksentflater (primærknapper, uthevings-chipen). Uten tokenet brukes bakgrunnsfargen som før, så eksisterende paletter rendres uendret; auto-inverteren i alt-temaet tar den med. Dempet tekst og kantlinjer avledes fortsatt automatisk (opacity/color-mix) - settet holdes bevisst lite.
+- 106 kontraktstester totalt.
+
 ### 0.6.17 - lys/mørk-bryter, flytende over hero, testrunder til egen fil - 22. juli 2026
 - LYS/MØRK-BRYTER (eiers ønske fra testrunden): siden kan nå ha to paletter. Tema-panelet fikk en «Lys/mørk-bryter»-seksjon: «+ Lag alternativt tema» oppretter motstykket ferdig utfylt med inverterte utgaver av dagens farger (lyshet snus, fargetone består), som eieren justerer med de vanlige fargevelgerne; «Foreslå på nytt (inverter)» regenererer, og «Hovedtemaet er: Lyst/Mørkt» settes med theme.scheme. Finnes alt-temaet, viser menyen en sol/måne-knapp: første besøk følger prefers-color-scheme, aktivt valg huskes i localStorage. Additive felt theme.scheme + theme.alt.tokens (utelatte verdier arver hovedtemaet gruppevis); ren modus-/fletlogikk i theme.js med 7 nye kontraktstester.
 - Flytende meny svever nå OVER innholdet (eiers testfunn: pillen reserverte en stripe i full bredde med tomrom rundt): verten tas ut av flyten, hero-en starter øverst bak pillen (fixed ved sticky, absolute ellers), og stripene ved siden av pillen slipper klikk gjennom til innholdet bak.

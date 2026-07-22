@@ -19,7 +19,8 @@
         "bg": "#000000",
         "surface": "#000000",
         "text": "#e8eaf0",
-        "accent": "#ff9a5c"
+        "accent": "#ff9a5c",
+        "accent-text": "#000000"
       },
       "font": {
         "heading": "'Courier New', monospace",

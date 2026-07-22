@@ -1223,6 +1223,15 @@
     });
   }
 
+  /** Luft over pillen: på er standard og lagres ikke i fila. */
+  function setNavTopGap(on) {
+    siteMutate('nav', () => {
+      siteDraft.nav.style ??= {};
+      if (on) delete siteDraft.nav.style.topGap;
+      else siteDraft.nav.style.topGap = false;
+    });
+  }
+
   /** Hover-stil (additivt fra v0.6): standarden lagres ikke i fila. */
   function setNavHover(value) {
     siteMutate('nav', () => {
@@ -2619,7 +2628,8 @@
                     </label>
                     <label>Variant
                       <Dropdown value={siteDraft.nav.variant ?? 'bar'}
-                        options={[['bar', 'Stripe (standard)'], ['floating', 'Flytende (pille)']]}
+                        options={[['bar', 'Stripe (standard)'], ['floating', 'Flytende (pille)'],
+                          ['side-left', 'Sidestilt venstre'], ['side-right', 'Sidestilt høyre']]}
                         onchange={(v) => setNavVariant(v)} /></label>
                     {#if siteDraft.nav.variant === 'floating'}
                       <label class="gridmenu-snap" title="Myk glød i aksentfargen rundt pillen">
@@ -2627,6 +2637,14 @@
                           onchange={(e) => setNavGlow(e.target.checked)} />
                         Glød rundt pillen
                       </label>
+                      <label class="gridmenu-snap" title="Av: pillen ligger helt i toppen av siden">
+                        <input type="checkbox" checked={siteDraft.nav.style?.topGap !== false}
+                          onchange={(e) => setNavTopGap(e.target.checked)} />
+                        Luft over pillen
+                      </label>
+                    {/if}
+                    {#if siteDraft.nav.variant === 'side-left' || siteDraft.nav.variant === 'side-right'}
+                      <p class="panel-hint">Sidestilt meny er en fast kolonne; på mobil vises den som topplinje med burger.</p>
                     {/if}
                     <label>Lenke-hover
                       <Dropdown value={siteDraft.nav.style?.hover ?? 'standard'}
@@ -2643,6 +2661,17 @@
                       {/if}
                     </span>
                     {#if siteDraft.nav.style?.image}
+                      <label>Bildestyrke
+                        <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.imageOpacity ?? 1) * 100)}%</span></label>
+                      <input type="range" min="0.1" max="1" step="0.05"
+                        value={siteDraft.nav.style?.imageOpacity ?? 1}
+                        oninput={(e) => setNavStyle('imageOpacity', Number(e.target.value))} />
+                      <label>Bildeutsnitt (høyde)
+                        <span class="gridmenu-value">{Math.round(siteDraft.nav.style?.imageY ?? 50)}%</span></label>
+                      <input type="range" min="0" max="100" step="1"
+                        title="Hvilken del av bildet som vises i stripen: 0 = toppen, 100 = bunnen"
+                        value={siteDraft.nav.style?.imageY ?? 50}
+                        oninput={(e) => setNavStyle('imageY', Number(e.target.value))} />
                       <p class="panel-hint">Bakgrunnsfargen og dekkevnen over legger seg som et slør over bildet.</p>
                     {/if}
                   </div>
@@ -2718,6 +2747,9 @@
                 <label>Aksent
                   <ColorPicker value={siteDraft.theme.tokens.color.accent}
                     label="Aksentfarge" onchange={(hex) => setColorToken('accent', hex)} /></label>
+                <label title="Tekstfargen oppå aksentflater (primærknapper m.m.)">Tekst på aksent
+                  <ColorPicker value={siteDraft.theme.tokens.color['accent-text'] ?? siteDraft.theme.tokens.color.bg}
+                    label="Tekst på aksentflater" onchange={(hex) => setColorToken('accent-text', hex)} /></label>
                 <details class="group">
                   <summary>Lys/mørk-bryter</summary>
                   <div class="group-items">
@@ -2728,7 +2760,7 @@
                           onchange={(v) => setThemeScheme(v)} /></label>
                       <p class="panel-hint">Fargene under gjelder motsatt modus. Første besøk følger besøkendes OS-innstilling; bryteren i menyen husker valget.</p>
                       {#each Object.entries(siteDraft.theme.alt.tokens.color) as [name]}
-                        <label>{({ bg: 'Bakgrunn', surface: 'Flater', text: 'Tekst', accent: 'Aksent' })[name] ?? name}
+                        <label>{({ bg: 'Bakgrunn', surface: 'Flater', text: 'Tekst', accent: 'Aksent', 'accent-text': 'Tekst på aksent' })[name] ?? name}
                           <ColorPicker value={siteDraft.theme.alt.tokens.color[name]}
                             label={`Alternativ ${name}`} onchange={(hex) => setAltColorToken(name, hex)} /></label>
                       {/each}

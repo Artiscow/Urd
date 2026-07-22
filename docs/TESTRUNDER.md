@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren stryker herfra** når noe er testet; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert.
 
+### Testrunde-batch (0.6.18): bildekontroller, pille-luft, sidestilt meny
+
+- [ ] Bakgrunnsbilde-kontroller i Nav → Utseende (vises når bilde er valgt): «Bildestyrke» toner bildet mot bakgrunnsfargen, «Bildeutsnitt (høyde)» velger hvilken del av bildet stripen viser (0 = toppen, 100 = bunnen)
+- [ ] Pille-luft: «Luft over pillen» (på som standard, vises ved Flytende); skru av og bekreft at pillen ligger helt i toppen
+- [ ] Sidestilt meny: velg «Sidestilt venstre» og «Sidestilt høyre» i Variant; fast kolonne langs kanten, innholdet flytter seg tilsvarende, undermenyer er trekkspill, bryteren ligger nederst i kolonnen; bytt til mobilvisning og bekreft topplinje med burger
+- [ ] Variantbytte frem og tilbake (stripe ↔ flytende ↔ sidestilt) etterlater ingen rester (body-padding, klasser)
+- [ ] Ny temafarge «Tekst på aksent» i Tema-panelet (og i alt-temaet): styrer teksten på primærknapper; sett en lys aksent + lys bakgrunn og bekreft at knappteksten nå kan gjøres lesbar
+
 ### Testrunde-batch (0.6.17): flytende over hero, glød-tilvalg, lys/mørk-bryter
 
 - [ ] Flytende svever nå OVER innholdet: hero-en starter øverst bak pillen, ingen stripe/tomrom rundt pillen lenger. Test med sticky på (pillen følger med) og av (pillen blir igjen øverst); klikk på innholdet i stripene ved siden av pillen skal gå gjennom

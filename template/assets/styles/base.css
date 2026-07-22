@@ -357,7 +357,7 @@ html {
   padding: 1px 4px;
   border-radius: 3px;
   background: var(--urd-color-accent);
-  color: #fff;
+  color: var(--urd-color-accent-text, #fff);
 }
 
 .urd-text-toolbar .urd-tt-hl-free {
@@ -1542,6 +1542,127 @@ body.urd-mobile .urd-nav-sub {
   box-shadow: 0 8px 30px color-mix(in srgb, var(--urd-color-accent) 35%, transparent);
 }
 
+/* Uten luft over: pillen ligger helt i toppen (nav.style.topGap: false) */
+.urd-nav-var-floating.urd-nav-flush {
+  margin-top: 0;
+}
+
+/* Sidestilt meny (nav.variant side-left/side-right): fast kolonne langs
+   kanten; body får innholds-padding på samme side (urd-side-*). Sticky
+   er irrelevant her - kolonnen står alltid fast. */
+.urd-nav-side-host {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 250px;
+  z-index: 5000;
+}
+
+.urd-nav-side-host-right {
+  left: auto;
+  right: 0;
+}
+
+.urd-preview .urd-nav-side-host {
+  z-index: 100001;
+}
+
+body.urd-side-left {
+  padding-left: 250px;
+}
+
+body.urd-side-right {
+  padding-right: 250px;
+}
+
+.urd-nav-side-host .urd-nav {
+  flex-direction: column;
+  align-items: stretch;
+  height: 100%;
+  padding: 1.2rem 1rem;
+  overflow-y: auto;
+}
+
+.urd-nav-side-host .urd-nav-logo {
+  justify-content: center;
+}
+
+/* Kolonneretning: auto-margene fra topplinje-oppsettet nullstilles */
+.urd-nav-side-host .urd-nav-list {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  margin: 1.5rem 0 0;
+}
+
+/* Ekstra spesifisitet med vilje: kolonneraden skal vinne over
+   hover-stilenes display/padding (de står senere i fila) */
+.urd-nav-side-host .urd-nav .urd-nav-list a {
+  display: block;
+  padding: 0.45rem 0.6rem;
+  border-radius: var(--urd-radius-sm);
+}
+
+/* Verktøy-klyngen (bryter) nederst i kolonnen */
+.urd-nav-side-host .urd-nav-tools {
+  margin: auto 0 0;
+  justify-content: center;
+}
+
+/* Undermenyer blir trekkspill i kolonnen (som i mobilpanelet) */
+.urd-nav-side-host .urd-nav-has-sub {
+  flex-wrap: wrap;
+}
+
+.urd-nav-side-host .urd-nav-has-sub > a {
+  flex: 1;
+}
+
+.urd-nav-side-host .urd-nav-sub {
+  position: static;
+  width: 100%;
+  min-width: 0;
+  padding: 0 0 0.25rem 1rem;
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+/* Logobildets negative margin-triks gjelder topplinjen, ikke kolonnen */
+.urd-nav-side-host .urd-nav-logo img {
+  margin-block: 0;
+}
+
+/* På mobil faller sidestilt tilbake til topplinjen med burger: kolonnen
+   blir vanlig sticky topplinje og body-paddingen fjernes */
+body.urd-mobile .urd-nav-side-host {
+  position: sticky;
+  bottom: auto;
+  width: auto;
+  right: 0;
+}
+
+body.urd-mobile .urd-nav-side-host .urd-nav {
+  flex-direction: row;
+  align-items: center;
+  height: auto;
+  overflow: visible;
+  padding: var(--urd-nav-pad) clamp(1rem, 4vw, 2.5rem);
+}
+
+body.urd-mobile .urd-nav-side-host .urd-nav-tools {
+  margin: 0;
+}
+
+body.urd-mobile.urd-side-left {
+  padding-left: 0;
+}
+
+body.urd-mobile.urd-side-right {
+  padding-right: 0;
+}
+
 /* Mobilpanelet skal ikke arve pillens fasong: eget lag med luft under */
 body.urd-mobile .urd-nav-var-floating.urd-nav-open .urd-nav-list {
   top: calc(100% + 0.5rem);
@@ -1665,7 +1786,9 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open .urd-nav-list {
 
 .urd-button-primary {
   background: var(--urd-color-accent);
-  color: var(--urd-color-bg);
+  /* Tekst på aksent (additivt token fra v0.6): uten token brukes bakgrunns-
+     fargen som før, så eksisterende paletter rendres uendret */
+  color: var(--urd-color-accent-text, var(--urd-color-bg));
 }
 
 .urd-button-primary:hover {

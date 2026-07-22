@@ -5,7 +5,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveItem, navItems, navClasses, navSurface } from '../template/assets/engine/nav-model.js';
+import { resolveItem, navItems, navClasses, navSurface, hostClasses } from '../template/assets/engine/nav-model.js';
 
 const PAGES = [
   { id: 'hjem', title: 'Hjem', path: '/' },
@@ -143,8 +143,23 @@ test('navSurface: bakgrunnsbilde får standardsløret over seg', () => {
     navSurface({ image: '/media/meny-abc.webp' }).bg,
     'linear-gradient(color-mix(in srgb, var(--urd-color-surface) 85%, transparent), '
       + 'color-mix(in srgb, var(--urd-color-surface) 85%, transparent)), '
-      + 'url("/media/meny-abc.webp") center / cover',
+      + 'url("/media/meny-abc.webp") 50% 50% / cover',
   );
+});
+
+test('navSurface: bildestyrke under 1 gir eget tonelag under sløret', () => {
+  const bg = navSurface({ image: '/media/meny-abc.webp', imageOpacity: 0.4 }).bg;
+  // Tonelaget bruker bakgrunnsfargen med 60 % (1 - 0.4) dekkevne
+  assert.ok(bg.includes('color-mix(in srgb, var(--urd-color-surface) 60%, transparent)'));
+  // Full styrke gir INTET ekstra lag (to gradienter ville doblet sløret)
+  const full = navSurface({ image: '/media/meny-abc.webp', imageOpacity: 1 }).bg;
+  assert.equal(full.split('linear-gradient').length - 1, 1);
+});
+
+test('navSurface: bildeutsnitt i høyden klemmes til 0-100', () => {
+  assert.ok(navSurface({ image: '/media/m.webp', imageY: 20 }).bg.endsWith('url("/media/m.webp") 50% 20% / cover'));
+  assert.ok(navSurface({ image: '/media/m.webp', imageY: 150 }).bg.endsWith('50% 100% / cover'));
+  assert.ok(navSurface({ image: '/media/m.webp', imageY: -5 }).bg.endsWith('50% 0% / cover'));
 });
 
 test('navSurface: ugyldig bilde ignoreres (vern mot url()-brudd og eksterne verter)', () => {
@@ -165,6 +180,24 @@ test('navSurface: bilde med egen farge og dekkevne i sløret', () => {
     navSurface({ image: 'data:image/webp;base64,AA==', bg: 'accent', bgOpacity: 0.3 }).bg,
     'linear-gradient(color-mix(in srgb, var(--urd-color-accent) 30%, transparent), '
       + 'color-mix(in srgb, var(--urd-color-accent) 30%, transparent)), '
-      + 'url("data:image/webp;base64,AA==") center / cover',
+      + 'url("data:image/webp;base64,AA==") 50% 50% / cover',
   );
+});
+
+test('navClasses: pille uten luft over får flush-klassen', () => {
+  assert.equal(
+    navClasses({ nav: { variant: 'floating', style: { topGap: false } } }),
+    'urd-nav urd-nav-right urd-nav-var-floating urd-nav-flush',
+  );
+  // topGap utenfor floating har ingen effekt
+  assert.equal(navClasses({ nav: { style: { topGap: false } } }), 'urd-nav urd-nav-right');
+});
+
+test('hostClasses: variantene styrer vert- og body-klassene', () => {
+  assert.deepEqual(hostClasses({ nav: {} }), { host: [], body: [] });
+  assert.deepEqual(hostClasses({ nav: { variant: 'floating' } }), { host: ['urd-nav-float'], body: [] });
+  assert.deepEqual(hostClasses({ nav: { variant: 'side-left' } }),
+    { host: ['urd-nav-side-host', 'urd-nav-side-host-left'], body: ['urd-side-left'] });
+  assert.deepEqual(hostClasses({ nav: { variant: 'side-right' } }),
+    { host: ['urd-nav-side-host', 'urd-nav-side-host-right'], body: ['urd-side-right'] });
 });

@@ -62,14 +62,32 @@ export function navItems(site) {
  */
 export function navClasses(site) {
   let classes = `urd-nav urd-nav-${site.nav.layout ?? 'right'}`;
-  if (site.nav.variant === 'floating') {
+  const variant = site.nav.variant;
+  if (variant === 'floating') {
     classes += ' urd-nav-var-floating';
     // Glød er et tilvalg for pillen (av som standard, eiers valg 22. juli 2026).
     if (site.nav.style?.glow) classes += ' urd-nav-glow';
+    // Luft over pillen er standard; topGap: false legger den helt i toppen.
+    if (site.nav.style?.topGap === false) classes += ' urd-nav-flush';
   }
   const hover = site.nav.style?.hover;
   if (hover && hover !== 'standard') classes += ` urd-nav-hover-${hover}`;
   return classes;
+}
+
+/**
+ * Klasser for VERTEN (header-elementet) og body, avledet av varianten:
+ * flytende tar verten ut av flyten; sidestilt gjør den til fast kolonne
+ * og gir body innholds-padding på samme side.
+ * @param {{nav: {variant?: string}}} site
+ * @returns {{host: string[], body: string[]}}
+ */
+export function hostClasses(site) {
+  const v = site.nav.variant;
+  if (v === 'floating') return { host: ['urd-nav-float'], body: [] };
+  if (v === 'side-left') return { host: ['urd-nav-side-host', 'urd-nav-side-host-left'], body: ['urd-side-left'] };
+  if (v === 'side-right') return { host: ['urd-nav-side-host', 'urd-nav-side-host-right'], body: ['urd-side-right'] };
+  return { host: [], body: [] };
 }
 
 /**
@@ -91,7 +109,20 @@ export function navSurface(style = {}) {
     const color = resolveColor(style.bg ?? 'surface');
     const pct = Math.round((style.bgOpacity ?? 0.85) * 100);
     const veil = `color-mix(in srgb, ${color} ${pct}%, transparent)`;
-    out.bg = `linear-gradient(${veil}, ${veil}), url("${style.image}") center / cover`;
+    const layers = [`linear-gradient(${veil}, ${veil})`];
+    // Bildestyrke (0..1, standard 1): svakere bilde tones mot bakgrunns-
+    // fargen med et eget lag under sløret - CSS kan ikke sette opacity på
+    // ett enkelt bakgrunnslag.
+    const strength = style.imageOpacity ?? 1;
+    if (strength < 1) {
+      const fade = `color-mix(in srgb, ${color} ${Math.round((1 - strength) * 100)}%, transparent)`;
+      layers.push(`linear-gradient(${fade}, ${fade})`);
+    }
+    // Posisjon i høyden (0..100, standard 50): hvilken del av bildet som
+    // vises i den smale menystripen.
+    const y = Math.min(100, Math.max(0, style.imageY ?? 50));
+    layers.push(`url("${style.image}") 50% ${y}% / cover`);
+    out.bg = layers.join(', ');
   } else if (hasVeil) {
     const color = resolveColor(style.bg ?? 'surface');
     const pct = Math.round((style.bgOpacity ?? 0.85) * 100);

@@ -97,9 +97,9 @@
           "description": "Menyen følger med når man blar nedover (false = ligger kun øverst). Additivt felt fra v0.5."
         },
         "variant": {
-          "enum": ["bar", "floating"],
+          "enum": ["bar", "floating", "side-left", "side-right"],
           "default": "bar",
-          "description": "Menyens form (additivt fra v0.6): bar = stripe i full bredde, floating = løsrevet pille med luft mot kantene."
+          "description": "Menyens form (additivt fra v0.6): bar = stripe i full bredde, floating = pille som svever over innholdet, side-left/side-right = fast kolonne langs kanten (mobil faller tilbake til topplinje med burger)."
         },
         "style": {
           "type": "object",
@@ -120,7 +120,26 @@
               "default": false,
               "description": "Glød rundt den flytende pillen (additivt fra v0.6; gjelder kun variant floating)."
             },
-            "image": { "type": "string", "description": "Bakgrunnsbilde i menyen (additivt fra v0.6): sti i media/ (data-URL i utkast). bg/bgOpacity legger seg som slør over bildet." }
+            "topGap": {
+              "type": "boolean",
+              "default": true,
+              "description": "Luft over den flytende pillen (additivt fra v0.6; false = pillen ligger helt i toppen)."
+            },
+            "image": { "type": "string", "description": "Bakgrunnsbilde i menyen (additivt fra v0.6): sti i media/ (data-URL i utkast). bg/bgOpacity legger seg som slør over bildet." },
+            "imageOpacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 1,
+              "description": "Bildestyrke (additivt fra v0.6): under 1 tones bildet mot bakgrunnsfargen."
+            },
+            "imageY": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "default": 50,
+              "description": "Bildeutsnitt i høyden (additivt fra v0.6): 0 = toppen av bildet, 100 = bunnen."
+            }
           }
         },
         "logo": {

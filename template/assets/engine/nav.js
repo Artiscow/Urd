@@ -11,7 +11,7 @@
  * styles av body.urd-mobile (breakpointet settes i urd.js fra site.json).
  */
 
-import { navItems, navClasses, navSurface } from './nav-model.js';
+import { navItems, navClasses, navSurface, hostClasses } from './nav-model.js';
 import { themeMode, toggleThemeMode } from './theme.js';
 
 /** Hvor lenge undermenyen står åpen etter at pekeren forlater punktet. */
@@ -47,9 +47,17 @@ export function renderNav(site, host) {
   // ikke på nav-en - et sticky-element kan aldri forlate forelderen sin,
   // og forelderen her er nøyaktig like høy som nav-en.
   host.classList.toggle('urd-nav-sticky', site.nav.sticky !== false);
-  // Flytende pille svever OVER innholdet: verten tas ut av flyten (fixed
-  // ved sticky, absolute ellers), så hero-en starter øverst bak pillen.
-  host.classList.toggle('urd-nav-float', site.nav.variant === 'floating');
+  // Varianten styrer verten og body: flytende tar verten ut av flyten
+  // (hero-en starter bak pillen), sidestilt gjør verten til fast kolonne
+  // og gir body innholds-padding. Alle klasser toggles hver rendering,
+  // så variantbytte i editoren aldri etterlater rester.
+  const hc = hostClasses(site);
+  for (const cls of ['urd-nav-float', 'urd-nav-side-host', 'urd-nav-side-host-left', 'urd-nav-side-host-right']) {
+    host.classList.toggle(cls, hc.host.includes(cls));
+  }
+  for (const cls of ['urd-side-left', 'urd-side-right']) {
+    document.body.classList.toggle(cls, hc.body.includes(cls));
+  }
 
   // Utseende (nav.style, additivt fra v0.5): bakgrunnsfarge med dekkevne,
   // uskarphet bak, og egen tekstfarge. Bakgrunnen settes som CSS-var så
