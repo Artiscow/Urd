@@ -16,6 +16,7 @@
  */
 import { lift } from './migrate.js';
 import { applyAnimation } from './animations/core.js';
+import { refreshSticky } from './sticky.js';
 
 /**
  * Oversetter en frame til CSS-posisjonering.
@@ -74,6 +75,8 @@ export function renderPage(page, site, root, opts = {}) {
   }
   // «+ Ny seksjon»-barene mellom seksjonene (kun i preview).
   if (opts.preview) window.UrdPreviewEdit?.enhancePage(root, page, site);
+  // Sticky blokker måles på nytt (re-render kan ha endret høyder/felt).
+  refreshSticky();
 }
 
 /**
@@ -144,6 +147,14 @@ export function renderSection(section, site, host, opts = {}) {
         ? (block.frames.mobile ?? block.frames.desktop)
         : block.frames.desktop;
       Object.assign(el.style, frameToCss(frame));
+      // Sticky («fest ved scrolling», additivt felt): kun merking her;
+      // selve festingen gjør sticky.js ved scroll. Kun desktop - mobil-
+      // visningen er dokumentflyt og ignorerer feltet.
+      if (viewport !== 'mobile' && block.sticky && typeof block.sticky.offset === 'number') {
+        el.classList.add('urd-sticky-able');
+        el.dataset.stickyOffset = String(block.sticky.offset);
+        el.dataset.stickyUntil = block.sticky.until ?? '';
+      }
       maxBottomPx = Math.max(maxBottomPx, frame.y + frame.h);
       renderBlock(Urd, el, block, ctx);
       host.appendChild(el);
@@ -173,6 +184,8 @@ export function renderSection(section, site, host, opts = {}) {
   // I preview-modus kobles editeringslaget (dra/resize/slett) på etter
   // hver rendering. Satt av urd.js; finnes aldri hos besøkende.
   if (ctx.preview) window.UrdPreviewEdit?.enhanceSection(host, section, grid);
+  // Sticky blokker måles på nytt (inkrementell rerender av én seksjon).
+  refreshSticky();
 }
 
 /** Felles blokk-rendering med migrering og plassholder-fallback. */

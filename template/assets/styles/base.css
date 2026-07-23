@@ -2347,6 +2347,38 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open .urd-nav-list,
   height: 1px;
 }
 
+/* Hjelpelinjer for hele siden (av/på-knappen ved visningsvalgene):
+   stiplet aksent, i motsetning til de heltrukne smarte dra-linjene.
+   Under smart-guidene i z, aldri klikkbare, aldri hos besøkende. */
+.urd-preview .urd-page-guide {
+  position: absolute;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.urd-preview .urd-page-guide-v {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--urd-color-accent) 0 6px,
+    transparent 6px 12px
+  );
+}
+
+.urd-preview .urd-page-guide-h {
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: repeating-linear-gradient(
+    to right,
+    var(--urd-color-accent) 0 6px,
+    transparent 6px 12px
+  );
+}
+
 /* Delt footer (site.footer): vises på alle sider når show er på */
 #urd-footer .urd-footer {
   padding: 2rem clamp(1rem, 4vw, 2.5rem);
@@ -2453,7 +2485,8 @@ html:has(body.urd-preview.urd-mobile)::-webkit-scrollbar {
 /* Mobilvisning i editoren: strukturverktøyene (add-barer, høydehåndtak)
    skjules; mobil er layoutjustering og tilsyn */
 body.urd-mobile .urd-add-section,
-body.urd-mobile .urd-section-resize {
+body.urd-mobile .urd-section-resize,
+body.urd-mobile .urd-section-resize-top {
   display: none !important;
 }
 
@@ -2838,7 +2871,9 @@ body.urd-mobile .urd-section-resize {
 .urd-preview.urd-chrome-off .urd-video-shield,
 .urd-preview.urd-chrome-off .urd-section-toolbar,
 .urd-preview.urd-chrome-off .urd-section-resize,
+.urd-preview.urd-chrome-off .urd-section-resize-top,
 .urd-preview.urd-chrome-off .urd-smart-guide,
+.urd-preview.urd-chrome-off .urd-page-guide,
 .urd-preview.urd-chrome-off .urd-samling-image-adder,
 .urd-preview.urd-chrome-off .urd-samling-placeholder,
 .urd-preview.urd-chrome-off .urd-grid-overlay {
@@ -2884,4 +2919,21 @@ body.urd-mobile .urd-section-resize {
 .urd-preview .urd-section:has(> .urd-section-resize:hover),
 .urd-preview .urd-section:has(> .urd-section-resize:active) {
   box-shadow: inset 0 -2px 0 var(--urd-color-accent);
+}
+
+/* Toppkant-håndtaket: speiler bunnhåndtaket, men gir/fjerner luft ØVERST
+   i seksjonen (blokkene følger med, innholdet står stille) */
+.urd-preview .urd-section-resize-top {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 10px;
+  cursor: ns-resize;
+  z-index: 100000;
+}
+
+.urd-preview .urd-section:has(> .urd-section-resize-top:hover),
+.urd-preview .urd-section:has(> .urd-section-resize-top:active) {
+  box-shadow: inset 0 2px 0 var(--urd-color-accent);
 }

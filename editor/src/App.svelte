@@ -23,6 +23,7 @@
   import { coreAnimations } from '../../template/assets/engine/animations/core.js';
   import { compressToWebp, slugify, contentHash, WARN_BYTES } from '../../template/assets/engine/imageTools.js';
   import { FONT_STACKS, TEXT_SIZES } from '../../template/assets/engine/fonts.js';
+  import { frameAtPoint } from '../../template/assets/engine/place.js';
 
   /** Bakgrunnslagtypene i den rekkefølgen de tilbys i panelet. */
   const BG_TYPES = [
@@ -47,6 +48,7 @@
     right: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M13 5l7 7-7 7"/></svg>',
     cross: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14"/><path d="M19 5L5 19"/></svg>',
     plus: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
+    guides: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="3.2" stroke-dasharray="2.5 2.5"/></svg>',
   };
 
   /**
@@ -410,6 +412,7 @@
       props: JSON.parse(JSON.stringify(block.props)),
       frame: { ...block.frames.desktop },
       animation: block.animation ? JSON.parse(JSON.stringify(block.animation)) : null,
+      sticky: block.sticky ? JSON.parse(JSON.stringify(block.sticky)) : null,
     };
   }
 
@@ -429,6 +432,18 @@
    *  editor-koordinater, null = lukket. Innholdet er samme snippet som
    *  Egenskaper-panelet. */
   let blockMenu = $state(null);
+
+  /** «Slipp taket»-valgene for sticky: kun seksjonene ETTER blokkens
+   *  egen (festing bakover gir ikke mening; innstillinger vises kun
+   *  når de er relevante). */
+  function stickyUntilOptions() {
+    const sections = store?.data.sections ?? [];
+    const idx = sections.findIndex((s) => s.id === selectedBlock?.sectionId);
+    return [
+      ['', 'Når egen seksjon er forbi'],
+      ...sections.slice(idx + 1).map((s, i) => [s.id, `Ved seksjon ${idx + 2 + i}`]),
+    ];
+  }
 
   function onBlockMenu(msg) {
     onSelectBlock(msg);
@@ -1040,6 +1055,17 @@
     if (store.hasDraft() || unpublished) bridge?.sendPage(pageId, store.data);
     if (!chromeVisible) bridge?.sendChrome(false);
     if (activePanel === 'Grid') bridge?.sendShowGrid(true);
+    if (guidesOn) bridge?.sendShowGuides(true);
+  }
+
+  /** Hjelpelinjer på/av: personlig arbeidsflate-preferanse, huskes i
+   *  localStorage (ikke sidedata) og gjenetableres i onReady. */
+  let guidesOn = $state(localStorage.getItem('urd-guides') === '1');
+
+  function toggleGuides() {
+    guidesOn = !guidesOn;
+    localStorage.setItem('urd-guides', guidesOn ? '1' : '0');
+    bridge?.sendShowGuides(guidesOn);
   }
 
   /** Intern lenke klikket i forhåndsvisningen: bytt side ordentlig. */
@@ -1996,6 +2022,18 @@
     if (!section) return;
     pushHistory('section-size');
     section.size = { ...section.size, minHeight: msg.minHeight };
+    // Toppkant-håndtaket: seksjonen vokste/krympet i toppen, og alle
+    // blokkene forskyves i SAMME angre-steg (innholdet sto visuelt
+    // stille i previewen; her bokføres de nye y-ene).
+    for (const move of msg.moves ?? []) {
+      const block = section.blocks.find((b) => b.id === move.blockId);
+      if (!block) continue;
+      block.frames.desktop = { ...block.frames.desktop, y: block.frames.desktop.y + move.dy };
+    }
+    if (msg.moves?.length) {
+      markDesktopChange(section, 'seksjonshøyde');
+      if (selectedBlock?.sectionId === msg.sectionId) syncSelectedBlock();
+    }
     if (msg.sectionId === activeSectionId) sectionMinHeight = msg.minHeight;
     store.save();
     updateDirty();
@@ -2142,15 +2180,35 @@
     });
   }
 
-  /** «+ Legg til blokk» i en seksjon: bygg blokken og legg den DER,
-   *  vannrett sentrert. Bilde starter tomt (velges i Egenskaper -
-   *  fildialog kan ikke åpnes fra en postMessage). */
+  /** «+ Legg til blokk» i en seksjon: bygg blokken og legg den der.
+   *  Med klikkpunkt (msg.at, fra dobbeltklikk på seksjonsflaten) lander
+   *  blokken sentrert på punktet, klemt og snappet (frameAtPoint);
+   *  uten sentreres den vannrett som før. Bilde starter tomt (velges i
+   *  Egenskaper - fildialog kan ikke åpnes fra en postMessage). */
   function handleRequestBlock(msg) {
     const block = buildBlock(msg.kind);
     if (!block) return;
-    block.frames.desktop.x = Math.round(((100 - block.frames.desktop.w) / 2) * 100) / 100;
-    block.frames.desktop.y = 40;
+    if (msg.at && typeof msg.at.x === 'number' && typeof msg.at.y === 'number') {
+      const section = store.data.sections.find((s) => s.id === msg.sectionId);
+      const grid = section?.grid ?? siteDraft.grid;
+      const pos = frameAtPoint({
+        x: msg.at.x,
+        y: msg.at.y,
+        w: block.frames.desktop.w,
+        h: block.frames.desktop.h,
+        grid,
+      });
+      block.frames.desktop.x = pos.x;
+      block.frames.desktop.y = pos.y;
+    } else {
+      block.frames.desktop.x = Math.round(((100 - block.frames.desktop.w) / 2) * 100) / 100;
+      block.frames.desktop.y = 40;
+    }
     insertBlock(msg.sectionId, block);
+    // Den nye blokken markeres (previewen kjenner ikke id-en før
+    // rerendringen; selectById svarer med urd-select-block, så
+    // Egenskaper-panelet følger etter). Samme UX som paletten.
+    bridge?.sendSelect(block.id);
     if (msg.kind === 'image') setStatus('Bildeblokk lagt til - velg bildet i Egenskaper');
     if (msg.kind === 'galleri') setStatus('Galleri lagt til - legg til bilder i Egenskaper');
   }
@@ -2620,6 +2678,8 @@
           <button class="ghost" class:active={viewMode === 'mobile'}
             onclick={() => (viewMode = 'mobile')} title="Mobilvisning (390px)">{@html ICONS.phone}</button>
         </span>
+        <button class="ghost" class:active={guidesOn} onclick={toggleGuides}
+          title="Hjelpelinjer: senter og innholdsbredde i alle seksjoner">{@html ICONS.guides}</button>
       {/if}
 
       {#if attentionCount > 0}
@@ -3852,6 +3912,30 @@
         value={selectedBlock.animation.props.delay}
         onchange={(e) => setBlockAnimProp('delay', Number(e.target.value))} /></label>
     <p class="panel-hint">Spilles hos besøkende ved scrolling. Her spilles den én gang hver gang du endrer den.</p>
+  {/if}
+
+  {#if viewMode === 'desktop'}
+    <hr class="gridmenu-divider" />
+    <label class="gridmenu-snap" title="Blokken blir stående ved vindustoppen mens besøkende scroller. Prøv i Ren visning; gjelder ikke mobil.">
+      <input type="checkbox" checked={Boolean(selectedBlock.sticky)}
+        onchange={(e) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+          b.sticky = e.target.checked ? { offset: 16, until: null } : null;
+        })} />
+      Fest ved scrolling
+    </label>
+    {#if selectedBlock.sticky}
+      <label title="Avstanden fra vinduets topp mens blokken er festet; en klistret meny kan kreve større avstand">Avstand fra toppen
+        <input type="number" min="0" max="400" value={selectedBlock.sticky.offset ?? 16}
+          onchange={(e) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+            b.sticky = { ...b.sticky, offset: Math.max(0, Number(e.target.value) || 0) };
+          })} /></label>
+      <label title="Hvor festingen slutter: ved egen seksjon, eller først når en senere seksjon er passert">Slipp taket
+        <Dropdown value={selectedBlock.sticky.until ?? ''}
+          options={stickyUntilOptions()}
+          onchange={(v) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+            b.sticky = { ...b.sticky, until: v || null };
+          })} /></label>
+    {/if}
   {/if}
 
   <hr class="gridmenu-divider" />

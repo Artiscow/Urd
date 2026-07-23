@@ -33,6 +33,7 @@ import { coreAnimations } from './animations/core.js';
 import { registerSectionPresets } from './sections/presets.js';
 import { loadPlugins, loadPluginList } from './plugins.js';
 import { setCollectionsDraft } from './samlinger.js';
+import { initSticky, refreshSticky } from './sticky.js';
 
 export const Urd = {
   blocks: createRegistry('blocks'),
@@ -151,9 +152,15 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-chrome') {
       // Ren visning: skjul/vis editeringshåndtakene (kun CSS, se base.css).
       document.body.classList.toggle('urd-chrome-off', !msg.visible);
+      // Sticky blokker er kun aktive i Ren visning i editoren: fest/slipp
+      // umiddelbart ved bytte, ikke først ved neste scroll.
+      refreshSticky();
     } else if (msg?.type === 'urd-show-grid') {
       // Grid-menyen i editoren er åpen: vis gridet i alle seksjoner.
       window.UrdPreviewEdit?.toggleGridOverlays(msg.visible, state.page, state.site);
+    } else if (msg?.type === 'urd-show-guides') {
+      // Hjelpelinje-knappen i editoren: senter- og breddelinjer på/av.
+      window.UrdPreviewEdit?.toggleGuideOverlays(msg.visible);
     } else if (msg?.type === 'urd-place-block' && msg.block) {
       // Paletten: finn plassering midt i synsfeltet og meld tilbake.
       window.UrdPreviewEdit?.placeBlock(msg.block, root);
@@ -176,6 +183,9 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-duplicate') {
       // Ctrl+D med fokus i admin-panelene: dupliser markert blokk i previewen.
       window.UrdPreviewEdit?.duplicateSelected();
+    } else if (msg?.type === 'urd-select' && msg.blockId) {
+      // Editoren bygde en blokk selv (+ Ny blokk-menyen): marker den.
+      window.UrdPreviewEdit?.selectById(msg.blockId);
     } else if (msg?.type === 'urd-plugins') {
       // Editorens plugin-utkast: last de aktiverte pluginene (filene ligger alt i repoet)
       // og rerendr, så plugins virker i forhåndsvisningen FØR publisering.
@@ -294,6 +304,8 @@ export async function boot(opts) {
   document.body.classList.toggle('urd-mobile', state.viewport === 'mobile');
 
   renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport });
+  // Sticky blokker («fest ved scrolling»): én scroll-lytter for hele siden.
+  initSticky();
 
   if (!preview) {
     mq.addEventListener('change', (event) => {

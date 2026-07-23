@@ -10,7 +10,7 @@
  *                  { type: 'urd-add-section', index, section }
  *                  { type: 'urd-move-section', sectionId, dir }
  *                  { type: 'urd-delete-section', sectionId }
- *                  { type: 'urd-section-size', sectionId, minHeight }
+ *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: toppkant-håndtaket flytter alle blokkene i samme angre-steg)
  *                  { type: 'urd-mobile-manual', sectionId, frames }  (seksjon materialisert)
  *                  { type: 'urd-mobile-auto', sectionId }            (tilbake til auto)
  *                  { type: 'urd-review-done', sectionId }            (mobil gjennomgått)
@@ -26,6 +26,8 @@ import { openColorPicker, closeColorPicker } from './color-picker.js';
 import { createDropdown, closeDropdowns } from './dropdown.js';
 import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from './glyphs.js';
 import { FONT_STACKS, TEXT_SIZES } from './fonts.js';
+import { frameAtPoint } from './place.js';
+import { topDrag } from './section-size.js';
 
 /** Mobilvisning? Motoren setter body-klassen ut fra breakpointet. */
 const isMobile = () => document.body.classList.contains('urd-mobile');
@@ -63,11 +65,14 @@ export function enhanceSection(host, section, grid) {
   // Strukturendring (seksjonshøyde) hører til desktopvisningen.
   if (!isMobile()) {
     addSectionHeightHandle(host, section, grid);
-    addBlockAdder(host, section);
+    addSectionTopHandle(host, section, grid);
+    addBlockAdder(host, section, grid);
   }
   // Vedvarende grid-visning (grid-menyen i editoren er åpen) skal
   // overleve rerendringer av seksjonen.
   if (gridOverlaysOn) showGridOverlay(host, grid).classList.add('urd-grid-persistent');
+  // Hjelpelinjene likeså (re-render fjerner overlegg-elementene).
+  if (guideOverlaysOn) addGuideOverlays(host);
 }
 
 /**
@@ -141,6 +146,36 @@ export function toggleGridOverlays(visible, page, site) {
   }
 }
 
+/** Om hjelpelinjene er på (styrt av editorens topplinje-knapp). */
+let guideOverlaysOn = false;
+
+/**
+ * Alltid synlige hjelpelinjer for hele siden: sidens vertikale senter,
+ * hver seksjons horisontale senter, og innholdsbredde-linjene på
+ * 4 %/96 % (palettens og presetenes standardmarg). Stiplet, i motsetning
+ * til de heltrukne smarte linjene som kun vises under dra. Kun editor-
+ * chrome: skjules i Ren visning og finnes aldri hos besøkende.
+ */
+export function toggleGuideOverlays(visible) {
+  guideOverlaysOn = visible;
+  document.querySelectorAll('.urd-page-guide').forEach((el) => el.remove());
+  if (!visible) return;
+  document.querySelectorAll('.urd-section').forEach((host) => addGuideOverlays(host));
+}
+
+function addGuideOverlays(host) {
+  const line = (cls, style) => {
+    const el = document.createElement('div');
+    el.className = `urd-page-guide ${cls}`;
+    el.style.cssText = style;
+    host.appendChild(el);
+  };
+  line('urd-page-guide-v', 'left:50%;');
+  line('urd-page-guide-v', 'left:4%;');
+  line('urd-page-guide-v', 'left:96%;');
+  line('urd-page-guide-h', 'top:50%;');
+}
+
 /**
  * Felles høyde-dra: flytter seksjonens underkant (size.minHeight), snappet
  * til gridet. Brukes av håndtaket i seksjonens underkant OG av «+ Ny
@@ -205,7 +240,7 @@ const SHAPE_KINDS = [
 /** Kjerneblokk-typene (paletten i editoren eier byggingen av disse). */
 const CORE_BLOCK_TYPES = new Set(['text', 'image', 'button', 'shape', 'video', 'icon', 'samling', 'galleri']);
 
-function addBlockAdder(host, section) {
+function addBlockAdder(host, section, grid) {
   const wrap = document.createElement('div');
   wrap.className = 'urd-add-block';
 
@@ -215,12 +250,16 @@ function addBlockAdder(host, section) {
 
   const menu = document.createElement('div');
   menu.className = 'urd-add-block-menu';
+  // Klikkpunktet (seksjonsrelativt: x i %, y i px) settes når menyen
+  // åpnes med DOBBELTKLIKK på seksjonsflaten; da lander blokken der.
+  // Åpnet fra knappen er punktet null, og editoren sentrerer som før.
+  menu._urdAt = null;
   const kindButton = (parent, kind, label) => {
     const b = document.createElement('button');
     b.textContent = label;
     b.addEventListener('click', () => {
       menu.classList.remove('open');
-      post({ type: 'urd-request-block', sectionId: section.id, kind });
+      post({ type: 'urd-request-block', sectionId: section.id, kind, at: menu._urdAt ?? undefined });
     });
     parent.appendChild(b);
   };
@@ -252,6 +291,13 @@ function addBlockAdder(host, section) {
     const title = typeof def.fromPlugin === 'string' ? `Fra pluginen ${def.fromPlugin}` : 'Fra plugin';
     const buildAndPost = (extraProps = {}) => {
       menu.classList.remove('open');
+      // Åpnet med dobbeltklikk: plugin-blokken lander på klikkpunktet
+      // (samme rene plassering som editoren bruker for kjerneblokkene).
+      const w = 50;
+      const h = 260;
+      const pos = menu._urdAt
+        ? frameAtPoint({ x: menu._urdAt.x, y: menu._urdAt.y, w, h, grid })
+        : { x: 25, y: 40 };
       post({
         type: 'urd-add-block',
         sectionId: section.id,
@@ -261,7 +307,7 @@ function addBlockAdder(host, section) {
           version: def.version ?? 1,
           props: { ...(def.defaults ? def.defaults() : {}), ...extraProps },
           animation: null,
-          frames: { desktop: { x: 25, y: 40, w: 50, h: 260, z: 1, rot: 0 }, mobile: null },
+          frames: { desktop: { x: pos.x, y: pos.y, w, h, z: 1, rot: 0 }, mobile: null },
         },
       });
     };
@@ -292,12 +338,48 @@ function addBlockAdder(host, section) {
     b.addEventListener('click', () => buildAndPost());
     menu.appendChild(b);
   }
-  openBtn.addEventListener('click', () => menu.classList.toggle('open'));
-  // enhanceSection kjører etter HVER rerender på samme host-element: lytteren legges kun én gang og slår opp gjeldende meny ved hendelsen, ellers hoper det seg opp én lytter per rerender.
+  openBtn.addEventListener('click', () => {
+    // Fra knappen: nullstill ev. dobbeltklikk-plassering av menyen.
+    menu._urdAt = null;
+    wrap.style.left = '';
+    wrap.style.top = '';
+    wrap.style.right = '';
+    menu.classList.toggle('open');
+  });
+  // enhanceSection kjører etter HVER rerender på samme host-element: lytterne legges kun én gang og slår opp gjeldende meny ved hendelsen, ellers hoper det seg opp én lytter per rerender.
   if (!host._urdAdderLeaveWired) {
     host._urdAdderLeaveWired = true;
     host.addEventListener('mouseleave', () => {
       host.querySelector('.urd-add-block-menu')?.classList.remove('open');
+      // Etter dobbeltklikk-åpning: legg «+ Ny blokk» tilbake i hjørnet.
+      const w = host.querySelector('.urd-add-block');
+      if (w) {
+        w.style.left = '';
+        w.style.top = '';
+        w.style.right = '';
+      }
+    });
+    // Dobbeltklikk på tom seksjonsflate åpner menyen VED PEKEREN, og
+    // blokken lander på klikkpunktet (eiers ønske: «+ ny blokk der man
+    // klikker»). Aldri i blokker (dobbeltklikk er ordmarkering/bilde-
+    // editor der) eller på editeringshåndtak.
+    host.addEventListener('dblclick', (event) => {
+      if (isMobile()) return;
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target) return;
+      if (target.closest('.urd-block, .urd-add-block, .urd-add-section, .urd-section-toolbar, .urd-section-resize, .urd-section-resize-top, .urd-hint-chip, .urd-hint-card')) return;
+      const curWrap = host.querySelector('.urd-add-block');
+      const curMenu = curWrap?.querySelector('.urd-add-block-menu');
+      if (!curWrap || !curMenu) return;
+      const rect = host.getBoundingClientRect();
+      curMenu._urdAt = {
+        x: Math.round(((event.clientX - rect.left) / rect.width) * 10000) / 100,
+        y: Math.round(event.clientY - rect.top),
+      };
+      curWrap.style.left = `${Math.round(event.clientX - rect.left)}px`;
+      curWrap.style.top = `${Math.round(event.clientY - rect.top)}px`;
+      curWrap.style.right = 'auto';
+      curMenu.classList.add('open');
     });
   }
 
@@ -311,6 +393,75 @@ function addSectionHeightHandle(host, section, grid) {
   handle.className = 'urd-section-resize';
   handle.title = 'Dra for å endre seksjonens høyde';
   wireHeightDrag(handle, host, section, grid);
+  host.appendChild(handle);
+}
+
+/**
+ * Dra-håndtak i TOPPKANTEN av seksjonen: gir/fjerner luft øverst.
+ * Seksjonen vokser/krymper i toppen og alle blokkene forskyves
+ * tilsvarende (topDrag i section-size.js), så innholdet står visuelt
+ * stille - scrollposisjonen kompenseres med veksten. Naboseksjonene
+ * røres aldri, og hele draget meldes som ETT urd-section-size med
+ * moves (ett angre-steg i editoren). Bunnkant-håndtaket består.
+ */
+function addSectionTopHandle(host, section, grid) {
+  const handle = document.createElement('div');
+  handle.className = 'urd-section-resize-top';
+  handle.title = 'Dra for å gi eller fjerne luft øverst i seksjonen (innholdet står stille)';
+  handle.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    handle.setPointerCapture(event.pointerId);
+    const startY = event.clientY;
+    const startHeight = host.getBoundingClientRect().height;
+    const startScrollY = window.scrollY;
+    // Blokk-elementene og utgangs-y samles ÉN gang: ingen rerender skjer
+    // under draget (elementbytte ville sluppet pekerfangsten).
+    const parts = [...host.querySelectorAll(':scope > .urd-block')].map((el) => {
+      const block = section.blocks.find((b) => b.id === el.dataset.blockId);
+      return block ? { el, block, y: block.frames.desktop.y } : null;
+    }).filter(Boolean);
+    let result = null;
+    let moved = false;
+
+    const onMove = (ev) => {
+      if (!moved && Math.abs(ev.clientY - startY) < 4) return;
+      moved = true;
+      result = topDrag({
+        dyPointer: ev.clientY - startY,
+        minHeightPx: startHeight,
+        blockYs: parts.map((p) => p.y),
+        grid,
+        free: ev.shiftKey,
+      });
+      host.style.minHeight = `${result.minHeightPx}px`;
+      for (const p of parts) p.el.style.top = `${p.y + result.dy}px`;
+      // Innholdet skal stå visuelt stille: dokumentet under seksjons-
+      // toppen flytter seg result.dy, scrollen følger. Absolutt mot
+      // startverdien (aldri akkumulert scrollBy: det driver). Nær
+      // dokumenttoppen finnes ikke nok scroll å kompensere med, og
+      // innholdet glir synlig - akseptert kanttilfelle.
+      window.scrollTo(0, Math.max(0, startScrollY + result.dy));
+    };
+    const onUp = () => {
+      handle.removeEventListener('pointermove', onMove);
+      handle.removeEventListener('pointerup', onUp);
+      if (!moved || !result || result.dy === 0) return;
+      section.size = { ...section.size, minHeight: `${result.minHeightPx}px` };
+      for (const p of parts) {
+        p.block.frames.desktop = { ...p.block.frames.desktop, y: p.y + result.dy };
+      }
+      post({
+        type: 'urd-section-size',
+        sectionId: section.id,
+        minHeight: `${result.minHeightPx}px`,
+        moves: parts.map((p) => ({ blockId: p.block.id, dy: result.dy })),
+      });
+    };
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp);
+  });
   host.appendChild(handle);
 }
 
@@ -1276,6 +1427,16 @@ document.addEventListener('pointerdown', (event) => {
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+/**
+ * Marker en blokk via id (broen: editoren bygde nettopp blokken selv,
+ * f.eks. fra «+ Ny blokk»-menyen, og previewen kjenner ikke id-en før
+ * seksjonen er rerendret). Kalles ETTER rerendringen.
+ */
+export function selectById(blockId) {
+  const el = document.querySelector(`.urd-block[data-block-id="${CSS.escape(blockId)}"]`);
+  if (el) selectBlock(el);
 }
 
 /** Dupliser markert blokk (broen: Ctrl+D med fokus i admin-panelene). */

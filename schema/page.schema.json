@@ -116,6 +116,26 @@
         "version": { "$ref": "#/$defs/version" },
         "decor": { "type": "boolean", "default": false, "description": "Dekor-blokk: utelates fra auto-avledet mobil-layout" },
         "mobileOrder": { "type": "number", "description": "Overstyrer sorteringsnøkkelen i auto-avledet mobil-stabling (tolkes på samme skala som desktop-y). Additivt felt fra v0.5: seksjonsmalene bruker det til å holde kort samlet." },
+        "sticky": {
+          "description": "Fest ved scrolling (additivt felt fra v0.6, kun desktop): blokken festes ved vindustoppen og slipper når egen seksjon (until: null) eller en senere seksjon (until: seksjons-id) er passert",
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["offset"],
+              "additionalProperties": false,
+              "properties": {
+                "offset": { "type": "number", "minimum": 0, "description": "Avstand fra vinduets topp i px mens blokken er festet" },
+                "until": {
+                  "oneOf": [
+                    { "type": "null" },
+                    { "$ref": "#/$defs/id" }
+                  ]
+                }
+              }
+            }
+          ]
+        },
         "props": { "type": "object", "description": "Typespesifikke props - eies av blokkdefinisjonens versjon/migreringer" },
         "animation": {
           "oneOf": [

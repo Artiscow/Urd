@@ -112,6 +112,10 @@
               "rot": 0
             },
             "mobile": null
+          },
+          "sticky": {
+            "offset": 16,
+            "until": null
           }
         }
       ],

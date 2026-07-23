@@ -22,7 +22,7 @@
  *                  { type: 'urd-add-section', index, section }
  *                  { type: 'urd-move-section', sectionId, dir }
  *                  { type: 'urd-delete-section', sectionId }
- *                  { type: 'urd-section-size', sectionId, minHeight }
+ *                  { type: 'urd-section-size', sectionId, minHeight, moves? } (moves fra toppkant-håndtaket: [{blockId, dy}] i samme angre-steg)
  *                  { type: 'urd-undo', redo }                 (Ctrl+Z inne i iframen)
  *                  { type: 'urd-select-section', sectionId }  (aktiv seksjon for paletten)
  *                  { type: 'urd-select-block', sectionId, blockId } (markert blokk, null = avvalgt)
@@ -32,12 +32,14 @@
  *                  { type: 'urd-navigate', path }             (intern lenke klikket i preview)
  *                  { type: 'urd-add-block', sectionId, block } (plassert blokk fra paletten)
  *                  { type: 'urd-add-blocks', sectionId, blocks, minBottom, moves } (preset-element fra «+ kort/rad»-knappen; moves flytter eksisterende blokker i samme angre-steg)
- *                  { type: 'urd-request-block', sectionId, kind } («+ Legg til blokk» i seksjonen)
+ *                  { type: 'urd-request-block', sectionId, kind, at? } («+ Legg til blokk»; at = klikkpunkt {x i %, y i px}, uten = sentrert)
  *                  { type: 'urd-move-block-section', fromSectionId, toSectionId, blockId, frame } (blokk sluppet i annen seksjon)
  *                  { type: 'urd-collection-edit', collection, entryId, field, value } (klikk-og-skriv/bildebytte i samling-blokken)
  *                  { type: 'urd-nav-width', width }           (sidestilt kolonnebredde dratt i preview)
  *   editor → side: { type: 'urd-chrome', visible }            (vis/skjul editeringshåndtak)
  *                  { type: 'urd-show-grid', visible }         (vis gridet i alle seksjoner)
+ *                  { type: 'urd-show-guides', visible }       (hjelpelinjer: senter/innholdsbredde i alle seksjoner)
+ *                  { type: 'urd-select', blockId }            (marker blokk editoren nettopp bygde, f.eks. + Ny blokk)
  */
 
 /**
@@ -111,6 +113,12 @@ export function createPreviewBridge(iframe, handlers = {}) {
     },
     sendShowGrid(visible) {
       post({ type: 'urd-show-grid', visible });
+    },
+    sendShowGuides(visible) {
+      post({ type: 'urd-show-guides', visible });
+    },
+    sendSelect(blockId) {
+      post({ type: 'urd-select', blockId });
     },
     sendPlaceBlock(block) {
       post({ type: 'urd-place-block', block });
