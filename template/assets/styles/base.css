@@ -1715,7 +1715,10 @@ a.urd-galleri-tile {
   /* Varen arver fra nav-en, også når nav.style skrur bluren av */
   backdrop-filter: var(--urd-nav-blur, blur(8px));
   border-radius: var(--urd-radius-sm);
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--urd-color-text) 15%, transparent);
+  /* Skyggen skal kun falle nedover: kortet ligger kant i kant med barens
+     bunn, og blur uten negativ spredning ville blødd oppover og lagt et
+     mørkt bånd på baren (samme fargebug som utfall-varianten hadde) */
+  box-shadow: 0 14px 28px -8px color-mix(in srgb, var(--urd-color-text) 18%, transparent);
   grid-template-columns: repeat(var(--urd-nav-sub-cols, 1), 1fr);
 }
 
@@ -1753,11 +1756,13 @@ a.urd-galleri-tile {
 }
 
 .urd-nav-sub-pills .urd-nav-sub a {
-  background: var(--urd-nav-sub-bg, color-mix(in srgb, var(--urd-color-surface) 92%, transparent));
+  /* Egen pillefarge (nav.style.subPillColor) med undermeny-flaten som
+     standard; skyggen kun nedover (se kortet over) */
+  background: var(--urd-nav-sub-pill, var(--urd-nav-sub-bg, color-mix(in srgb, var(--urd-color-surface) 92%, transparent)));
   backdrop-filter: var(--urd-nav-blur, blur(8px));
   border-radius: 999px;
   padding: 0.45rem 1.1rem;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--urd-color-text) 12%, transparent);
+  box-shadow: 0 6px 14px -4px color-mix(in srgb, var(--urd-color-text) 15%, transparent);
 }
 
 .urd-nav-sub-lines .urd-nav-sub {
@@ -1796,16 +1801,23 @@ a.urd-galleri-tile {
    under menyen med egen flate (--urd-nav-sub-bg, uten bakgrunnsbildet),
    og undermenyene blir statiske trekkspill i stedet for svevende bokser.
    (Sidestilt på trange vinduer trenger ingen egne regler: nav.js rendrer
-   den som vanlig topplinje - effektiv variant bar - under 900px.) */
-body.urd-mobile .urd-nav-list {
+   den som vanlig topplinje - effektiv variant bar - under 900px.)
+   Tvilling-selektorene .urd-nav-mobile (klasse på nav-en, satt av nav.js
+   fra FAKTISK bredde) gir burgeren også i previewens desktop-modus, der
+   body.urd-mobile eies av editorens viewport-valg - hold dem alltid
+   samlet i samme regelblokk. */
+body.urd-mobile .urd-nav-list,
+.urd-nav-mobile .urd-nav-list {
   display: none;
 }
 
-body.urd-mobile .urd-nav-burger {
+body.urd-mobile .urd-nav-burger,
+.urd-nav-mobile .urd-nav-burger {
   display: inline-flex;
 }
 
-body.urd-mobile .urd-nav.urd-nav-open .urd-nav-list {
+body.urd-mobile .urd-nav.urd-nav-open .urd-nav-list,
+.urd-nav-mobile.urd-nav-open .urd-nav-list {
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -1823,22 +1835,26 @@ body.urd-mobile .urd-nav.urd-nav-open .urd-nav-list {
   overflow-y: auto;
 }
 
-body.urd-mobile .urd-nav-list a {
+body.urd-mobile .urd-nav-list a,
+.urd-nav-mobile .urd-nav-list a {
   display: block;
   padding: 0.5rem 0;
   /* Hover-pillens 999px-radius skal ikke ligge på fullbredde mobilrader */
   border-radius: var(--urd-radius-sm);
 }
 
-body.urd-mobile .urd-nav-has-sub {
+body.urd-mobile .urd-nav-has-sub,
+.urd-nav-mobile .urd-nav-has-sub {
   flex-wrap: wrap;
 }
 
-body.urd-mobile .urd-nav-has-sub > a {
+body.urd-mobile .urd-nav-has-sub > a,
+.urd-nav-mobile .urd-nav-has-sub > a {
   flex: 1;
 }
 
-body.urd-mobile .urd-nav-sub {
+body.urd-mobile .urd-nav-sub,
+.urd-nav-mobile .urd-nav-sub {
   position: static;
   width: 100%;
   min-width: 0;
@@ -2008,20 +2024,33 @@ body.urd-side-right {
   margin-block: 0;
 }
 
-/* Menyplassering i kolonnen (nav.layout): right (standard) = øverst,
-   center = vertikalt midt på, left = nederst. Auto-margene fordeler
-   restplassen; verktøy-klyngen slipper sin auto-marg så listen styrer. */
-.urd-nav-side-host .urd-nav-center .urd-nav-list {
+/* Vertikal plassering i kolonnen (nav.style.sidePlacement): standard er
+   øverst, uavhengig av nav.layout (topplinjens begrep). Auto-margene
+   fordeler restplassen; verktøy-klyngen slipper sin auto-marg så listen
+   styrer. */
+.urd-nav-side-host .urd-nav-splace-middle .urd-nav-list {
   margin: auto 0;
 }
 
-.urd-nav-side-host .urd-nav-left .urd-nav-list {
+.urd-nav-side-host .urd-nav-splace-bottom .urd-nav-list {
   margin: auto 0 0;
 }
 
-.urd-nav-side-host .urd-nav-center .urd-nav-tools,
-.urd-nav-side-host .urd-nav-left .urd-nav-tools {
+.urd-nav-side-host .urd-nav-splace-middle .urd-nav-tools,
+.urd-nav-side-host .urd-nav-splace-bottom .urd-nav-tools {
   margin-top: 1rem;
+}
+
+/* Pille-punkter og understrek-liste gjelder også trekkspillet i kolonnen;
+   kolonneradens radius/padding (den ekstra spesifikke regelen over) må
+   overstyres her, senere i fila med samme spesifisitet */
+.urd-nav-side-host .urd-nav-sub-pills .urd-nav-sub a {
+  border-radius: 999px;
+  padding: 0.45rem 1.1rem;
+}
+
+.urd-nav-side-host .urd-nav-sub-lines .urd-nav-sub a {
+  border-radius: 0;
 }
 
 /* Tekstjustering av punktene i kolonnen (nav.style.sideAlign) */
@@ -2121,7 +2150,8 @@ body.urd-chrome-off .urd-nav-side-resize {
 }
 
 /* Mobilpanelet skal ikke arve pillens fasong: eget lag med luft under */
-body.urd-mobile .urd-nav-var-floating.urd-nav-open .urd-nav-list {
+body.urd-mobile .urd-nav-var-floating.urd-nav-open .urd-nav-list,
+.urd-nav-mobile.urd-nav-var-floating.urd-nav-open .urd-nav-list {
   top: calc(100% + 0.5rem);
   border-radius: var(--urd-radius-md);
 }

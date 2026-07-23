@@ -120,10 +120,12 @@
     const r = rootEl.getBoundingClientRect();
     const W = 236;
     const H = 380;
-    // Popoveren holder seg innenfor PANELET den åpnes fra (ikke bare
-    // viewporten), så den aldri henger ut over forhåndsvisningen.
+    // Popoveren holder seg innenfor panelets HØYREKANT, så den aldri
+    // henger ut over forhåndsvisningen. Panelet er smalere enn popoveren,
+    // så overskytende bredde går mot venstre (over verktøysrailen), som
+    // fortsatt er editorens egen flate.
     const panel = rootEl.closest('.panel-body')?.getBoundingClientRect();
-    const rightEdge = panel && panel.width >= W + 16 ? panel.right : window.innerWidth;
+    const rightEdge = panel ? panel.right : window.innerWidth;
     const left = Math.max(8, Math.min(r.right - W, rightEdge - W - 8));
     const top = r.bottom + H + 8 > window.innerHeight ? Math.max(8, r.top - H - 8) : r.bottom + 6;
     pos = { top, left };
@@ -333,6 +335,11 @@
     box-sizing: border-box;
     width: 236px;
     display: grid;
+    /* minmax(0, 1fr): en implisitt grid-kolonne er max-content-dimensjonert,
+       og den bredeste raden (hex-feltets naturlige bredde) ville gjort
+       kolonnen bredere enn boksen - innholdet fløt da ut av den (målt til
+       59px overflyt). Kolonnen skal aldri kunne overstige boksbredden. */
+    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
     padding: 10px;
     background: var(--urd-color-surface, #151a23);

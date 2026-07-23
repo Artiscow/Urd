@@ -70,6 +70,8 @@ Fullførte punkter fra v0.2-v0.5 er ryddet bort ved versjonsslippene (0.3.0 17. 
 - revert bytter hele nettside-undertreet, men «siste publisering» finnes via content/-filteret: en commit som KUN rører media/ eller rutingskopier (mulig via git, ikke via editoren) er usynlig for angringen
 - En forbigående GitHub-feil under publisering (5xx, f.eks. 503 ved ref-oppdateringen under en GitHub-driftsforstyrrelse) vises som en rå feilmelding, og eieren må trykke Publiser på nytt selv; utkastet består og repoet er urørt (ufarlig). Automatisk gjenforsøk/«Prøv igjen»-knapp er ønsket og loggført under v0.7 editor-finpuss
 
+## Bugs
+
 ## Forslag og Ideer
 
 - [ ] Småblokker fra funksjonskartet (C9+C10, 23. juli 2026): delingsknapper (statiske lenker, ingen sporing), nedteller (arrangementer) og audio-blokk (HTML5, git-eid fil) - billige og statisk-vennlige; tas når de passer inn

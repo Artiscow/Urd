@@ -230,6 +230,16 @@ test('navClasses: tekstjustering og undermeny-design gir hvitelistede klasser', 
   assert.equal(navClasses({ nav: { style: { subStyle: 'x"y' } } }), 'urd-nav urd-nav-right');
 });
 
+test('navClasses: kolonneplassering er eget felt med øverst som standard', () => {
+  assert.equal(navClasses({ nav: { style: { sidePlacement: 'middle' } } }), 'urd-nav urd-nav-right urd-nav-splace-middle');
+  assert.equal(navClasses({ nav: { style: { sidePlacement: 'bottom' } } }), 'urd-nav urd-nav-right urd-nav-splace-bottom');
+  assert.equal(navClasses({ nav: { style: { sidePlacement: 'top' } } }), 'urd-nav urd-nav-right');
+  // layout skal ikke lenger påvirke kolonnens vertikale plassering; eldre
+  // sider med layout: left får dermed øverst som standard, ikke nederst
+  assert.equal(navClasses({ nav: { layout: 'left', style: {} } }), 'urd-nav urd-nav-left');
+  assert.equal(navClasses({ nav: { style: { sidePlacement: 'evil injection' } } }), 'urd-nav urd-nav-right');
+});
+
 test('navSurface: bildeutsnitt i bredden klemmes til 0-100', () => {
   assert.ok(navSurface({ image: '/media/m.webp', imageX: 20 }).bg.endsWith('url("/media/m.webp") 20% 50% / cover'));
   assert.ok(navSurface({ image: '/media/m.webp', imageX: 150 }).bg.endsWith('100% 50% / cover'));

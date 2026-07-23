@@ -65,6 +65,15 @@ export function renderNav(site, host) {
   // layout (additivt fra v0.5): hvor menypunktene står; logoen er alltid
   // først og fungerer som «Hjem»-knapp.
   nav.className = navClasses(effSite);
+  // Burgeren følger den FAKTISKE bredden via egen klasse på nav-en: i
+  // preview eier editorens viewport-valg body.urd-mobile (og dermed
+  // strukturverktøyene), men menyen alene skal likevel bli mobil når
+  // vinduet er smalere enn mobil-breakpointet (eiers funn 23. juli 2026).
+  // Hos besøkende settes body.urd-mobile ved samme terskel; dobbelt
+  // dekning i CSS-en er harmløs.
+  const mobileMq = window.matchMedia(`(max-width: ${site.breakpoints?.mobile ?? 640}px)`);
+  mobileMq.addEventListener('change', () => renderNav(lastRender.site, lastRender.host), { signal });
+  if (mobileMq.matches) nav.classList.add('urd-nav-mobile');
   // Klistret meny (standard): sticky må ligge på VERTEN (header-elementet),
   // ikke på nav-en - et sticky-element kan aldri forlate forelderen sin,
   // og forelderen her er nøyaktig like høy som nav-en.
@@ -116,6 +125,11 @@ export function renderNav(site, host) {
   const glowStrength = Number(site.nav.style?.hoverGlow);
   if (Number.isFinite(glowStrength)) {
     nav.style.setProperty('--urd-nav-hover-glow', `${Math.round(Math.min(1, Math.max(0, glowStrength)) * 100)}%`);
+  }
+  // Pille-punktenes egen farge (subStyle pills); uten valg brukes
+  // undermeny-flaten som før.
+  if (site.nav.style?.subPillColor) {
+    nav.style.setProperty('--urd-nav-sub-pill', resolveColor(site.nav.style.subPillColor));
   }
   // Undermeny-kolonner (n x n): punktene legges i grid med valgt kolonnetall.
   const subCols = Math.round(Number(site.nav.style?.subColumns));
@@ -222,11 +236,12 @@ export function renderNav(site, host) {
 
   // Hover åpner kun på enheter med ekte peker - touch skal aldri få
   // hover-tilstander som krever et ekstra trykk for å bli kvitt.
-  // I den sidestilte kolonnen er undermenyene trekkspill i flyten: hover-
-  // lukking ville kortet ned hele kolonnen under pekeren og gitt feilklikk
-  // (eiers testfunn 23. juli 2026). Der styres de kun av klikk.
+  // I den sidestilte kolonnen er undermenyene trekkspill i flyten: der
+  // åpner hover, men lukker aldri per punkt - lukking ville kortet ned
+  // kolonnen under pekeren og gitt feilklikk. Trekkspillene lukkes først
+  // når pekeren forlater hele menyen (eiers presisering 23. juli 2026).
   const isColumn = hc.host.includes('urd-nav-side-host');
-  const hoverable = !isColumn && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const mouseHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
   const items = navItems(site);
   items.forEach((item, index) => {
@@ -294,7 +309,7 @@ export function renderNav(site, host) {
       setOpen(entry, open);
     }, { signal });
 
-    if (hoverable) {
+    if (mouseHover) {
       // Kun ekte mus: på hybride enheter (laptop med touchskjerm) fyrer et
       // trykk både pointerenter og click, og uten vakten ville undermenyen
       // åpnet på enter og lukket igjen på click.
@@ -302,14 +317,18 @@ export function renderNav(site, host) {
       li.addEventListener('pointerenter', (event) => {
         if (event.pointerType !== 'mouse') return;
         clearTimeout(closeTimer);
-        closeAll(entry);
+        // I kolonnen holdes andre trekkspill åpne: lukking flytter punktene
+        // under pekeren. Lukkingen skjer samlet når menyen forlates.
+        if (!isColumn) closeAll(entry);
         setOpen(entry, true);
       }, { signal });
-      li.addEventListener('pointerleave', (event) => {
-        if (event.pointerType !== 'mouse') return;
-        clearTimeout(closeTimer);
-        closeTimer = setTimeout(() => setOpen(entry, false), HOVER_CLOSE_DELAY);
-      }, { signal });
+      if (!isColumn) {
+        li.addEventListener('pointerleave', (event) => {
+          if (event.pointerType !== 'mouse') return;
+          clearTimeout(closeTimer);
+          closeTimer = setTimeout(() => setOpen(entry, false), HOVER_CLOSE_DELAY);
+        }, { signal });
+      }
     }
 
     // Tab ut av punktet lukker undermenyen - fokus skal aldri «etterlate»
@@ -324,6 +343,21 @@ export function renderNav(site, host) {
   nav.appendChild(list);
   nav.appendChild(tools);
   host.appendChild(nav);
+
+  // Kolonnens hover-lukking: alle trekkspill lukkes samlet når pekeren
+  // forlater hele menyen; ny inntreden innen fristen avbryter lukkingen.
+  if (isColumn && mouseHover) {
+    let columnTimer = null;
+    nav.addEventListener('pointerenter', (event) => {
+      if (event.pointerType !== 'mouse') return;
+      clearTimeout(columnTimer);
+    }, { signal });
+    nav.addEventListener('pointerleave', (event) => {
+      if (event.pointerType !== 'mouse') return;
+      clearTimeout(columnTimer);
+      columnTimer = setTimeout(() => closeAll(), HOVER_CLOSE_DELAY);
+    }, { signal });
+  }
 
   // Sidekolonnens bredde justeres ved å dra i innerkanten (kun i preview,
   // som seksjonshøydene). Live-oppdatering via CSS-varen; ved slipp meldes

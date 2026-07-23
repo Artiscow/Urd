@@ -49,6 +49,7 @@ CI (GitHub Actions) kjører de samme tre pluss bygg-samsvar-sjekken, og CodeQL s
 - **Norsk (bokmål) i docs og bruker-UI; engelske identifikatorer i kode OG i datakontrakter** (feltnavn i JSON, meldingstyper).
 - **Ingen emoji/tegn i editor-UI: kun tegnede SVG-ikoner.** (Tegn/emoji er innhold brukeren kan sette, ikke chrome.)
 - **Ingen forklarende prosa i admin-panelene** (eiers regel 23. juli 2026): innstillinger forklares i «?»-tooltips (title-attributtet) eller hjelpechipen, aldri som tekstavsnitt (panel-hint o.l.) i panelet. Innstillinger som kun gjelder en variant/et valg skal stå RETT UNDER valget de hører til.
+- **Innstillinger vises KUN når de er relevante** (eiers regel 23. juli 2026): et valg som ikke har effekt med gjeldende variant/stil skal skjules, ikke stå inert (f.eks. effektfargen kun for hover-stiler med effekt, kolonne-valg kun for sidestilt). Etiketten skal si hva innstillingen faktisk styrer i det valget («Glødfarge» for løft med glød, ikke generisk «Hover-farge»), og valglister filtreres til de variantene som gir mening.
 - **Kode-kommentarer brytes ved setningsgrense, aldri midt i en setning.** Match omkringliggende kode i kommentar-tetthet, navngiving og idiom.
 
 ## Motor-lekser (gjentatte fallgruver)

@@ -2,27 +2,42 @@
 
 Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren stryker herfra** når noe er testet; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert.
 
+### Testrunde-batch (0.6.22): sidestilt-oppfølging
+
+- [x] Sidestilt meny: velg sidestilt på en side som aldri har rørt Menyplassering; menypunktene skal stå ØVERST i kolonnen (rett under logoen), uansett hva Menyplassering sto på i topplinjen (plasseringen i kolonnen er nå et eget valg med Øverst som standard)
+- [ ] Menyplassering i sidestilt (Øverst/Midt på/Nederst) virker og påvirker IKKE topplinje-plasseringen (bytt tilbake til stripe og sjekk at punktene står der de sto)
+- [x] Undermeny i sidestilt kolonne: hover ÅPNER trekkspillet, men lukker det ALDRI mens pekeren er blant menypunktene (flere kan stå åpne samtidig); alt lukkes samlet når pekeren forlater kolonnen; klikk på pilen virker som før
+- [x] Panelet: Menyplassering og Lenke-hover (med Glødstyrke og hover-fargene) står rett under Størrelse i alle varianter; Bakgrunnsfarge/Gjennomsiktighet/Uskarphet/Tekstfarge kommer etter
+- [x] Undermeny → Design viser kun Standard/Pille-punkter/Understrek-liste når sidestilt er valgt (Ren flate og Utfall er meningsløse i kolonnen); alle fem vises for stripe/flytende
+- [x] Pille-punkter og Understrek-liste i sidestilt kolonne: trekkspillpunktene får henholdsvis pilleform og skillelinjer
+- [ ] Undermeny-design Kort: ingen mørkere skygge-bånd oppå baren lenger (kortets skygge faller kun nedover, som utfall); sjekk særlig flytende pille/firkant med farget bakgrunn
+- [ ] Pille-punkter: nytt «Punktfarge»-valg i Undermeny-gruppen (vises kun når Design = Pille-punkter); uten valg brukes undermeny-flaten som før
+- [ ] Fargevelger-popoveren: innholdet (sliderne, hex-feltet, fargeprikkene) holder seg INNE i boksen, og boksen inne i panelet (målt rotårsak: grid-kolonnen ble max-content-bred og innholdet fløt 59px ut av boksen; verifisert med headless-nettleser etter fiks)
+- [ ] Effektfargen ved hover heter nå Strekfarge/Pillefarge/Glødfarge etter valgt Lenke-hover, og vises IKKE for Standard og Løft (uten glød); «Tekstfarge ved hover» vises alltid
+- [ ] Smalt vindu i editorens desktop-preview: menyen (også sidestilt) blir burger under mobil-breakpointet selv om resten av previewen fortsatt er desktop (strukturverktøyene beholdes); hos besøkende som før
+- [ ] Panelet: «Variant» heter nå «Navigasjonsmeny»; Gjennomsiktighet og Uskarphet står rett under den (etter variantvalgene Glød/Luft/Tekstjustering); Tekstfarge står sammen med fargevalgene, rett etter Bakgrunnsfarge
+
 ### Testrunde-batch (0.6.21): nav-testrundens fikser og nav-utseende
 
 - [ ] Fargevelgeren i Nav → Utseende (Bakgrunnsfarge/Tekstfarge/hover-fargene): klikk på fargeflaten, sliderne og feltene INNE i velgeren skal IKKE lukke den; kun klikk utenfor, klikk i forhåndsvisningen eller Escape (rotårsaker: label-videresending + iframe-klikk når aldri editorens document)
 - [ ] Fargevelger-popoveren holder seg innenfor panelet (henger ikke ut over forhåndsvisningen) og boksen omslutter alt innholdet (border-box-fiks)
 - [ ] Logo-bilde: sett bildehøyde 94px (og prøv enda større) i alle varianter og størrelser; nav-baren skal ALDRI vokse, bildet vokser ut av linjen
 - [ ] Undermenyen lander NØYAKTIG på barens bunn (aldri oppå baren, heller ikke de få pikslene som synes som mørkere bånd på gjennomsiktige flater), også med stor logo, lys/mørk-bryter i verktøyklyngen og i flytende variant; utfall (full bredde) flukter med barens bunn uten skygge-bånd oppover
-- [ ] Undermenyen og mobilpanelet får kun bakgrunnsfargen som standard når nav har bakgrunnsbilde; «Bakgrunnsbilde også i undermenyen» (i den nye Undermeny-gruppen) skrur bildet på
+- [x] Undermenyen og mobilpanelet får kun bakgrunnsfargen som standard når nav har bakgrunnsbilde; «Bakgrunnsbilde også i undermenyen» (i den nye Undermeny-gruppen) skrur bildet på
 - [ ] Sidestilt meny på smale vinduer: smaln nettleservinduet under ca. 900px, kolonnen skal bli en VANLIG topplinje med horisontale menypunkter (som stripe-varianten; virker også i editorens preview); burgeren kommer først under mobil-breakpointet; over 900px kommer kolonnen tilbake
 - [ ] Undermeny i sidestilt kolonne: åpnes og lukkes KUN med klikk (hover lukker ikke lenger kolonnen under pekeren, så man ikke feilklikker på punktet under)
 - [ ] Sidebredde: dra i kolonnekanten i previewen (180-400px); innholdet flytter seg med, og bredden overlever publisering
 - [ ] Bildeutsnitt (bredde) på nav-bakgrunnsbildet: virker i sidestilt kolonne (der høyde-slideren naturlig ikke monner); begge sliderne vises for alle varianter
-- [ ] Menyplassering i sidestilt = vertikal plassering (Øverst/Midt på/Nederst); Tekstjustering (venstre/midt/høyre) justerer punktene i kolonnen
-- [ ] Undermeny-pilen i kolonnen: høyrestilt tekst gir pil på VENSTRE side; midtstilt tekst står i ro (pilen skyver ikke); venstrestilt har pilen til høyre
-- [ ] Klistrete meny-valget er skjult for sidestilt (irrelevant der); vises for stripe/flytende
-- [ ] Fire størrelser (Liten/Standard/Stor/Ekstra stor) i alle varianter; Standard = nøyaktig utseendet fra før
-- [ ] Hover-farge + Tekstfarge ved hover i alle hover-stilene (Understrek: strek = hover-farge, tekst = tekstfarge ved hover)
-- [ ] Ny hover-stil «Løft» (kun løft, ingen glød); «Løft med glød» har fått «Glødstyrke»-slider, og gløden ligger BAK teksten
-- [ ] Ny variant «Flytende (firkant)»: som pillen uten avrunding, med glød- og luft-valgene
-- [ ] «Luft over menyen» av (flytende): menyen skal ligge HELT inntil toppen, ingen rest-luft
-- [ ] Undermeny-design i den nye Undermeny-gruppen: Kort, Ren flate, Pille-punkter, Understrek-liste, Utfall (full bredde) + Kolonner (2 gir 2x2-rutenett osv.); utfall bør sjekkes ekstra i flytende variant
-- [ ] Panelet: Variant og Størrelse står øverst i Utseende med variantvalgene (Glød/Luft/Tekstjustering) rett under Variant; «Bakgrunnsfarge» (før «Bakgrunn») og «Gjennomsiktighet» (0 % = tett, før «Dekkevne»); undermeny-innstillingene i egen Undermeny-gruppe; forklaringene bor i tooltips, ikke tekstavsnitt
+- [x] Menyplassering i sidestilt = vertikal plassering (Øverst/Midt på/Nederst); Tekstjustering (venstre/midt/høyre) justerer punktene i kolonnen
+- [x] Undermeny-pilen i kolonnen: høyrestilt tekst gir pil på VENSTRE side; midtstilt tekst står i ro (pilen skyver ikke); venstrestilt har pilen til høyre
+- [x] Klistrete meny-valget er skjult for sidestilt (irrelevant der); vises for stripe/flytende
+- [x] Fire størrelser (Liten/Standard/Stor/Ekstra stor) i alle varianter; Standard = nøyaktig utseendet fra før
+- [x] Hover-farge + Tekstfarge ved hover i alle hover-stilene (Understrek: strek = hover-farge, tekst = tekstfarge ved hover)
+- [x] Ny hover-stil «Løft» (kun løft, ingen glød); «Løft med glød» har fått «Glødstyrke»-slider, og gløden ligger BAK teksten
+- [x] Ny variant «Flytende (firkant)»: som pillen uten avrunding, med glød- og luft-valgene
+- [x] «Luft over menyen» av (flytende): menyen skal ligge HELT inntil toppen, ingen rest-luft
+- [x] Undermeny-design i den nye Undermeny-gruppen: Kort, Ren flate, Pille-punkter, Understrek-liste, Utfall (full bredde) + Kolonner (2 gir 2x2-rutenett osv.); utfall bør sjekkes ekstra i flytende variant
+- [x] Panelet: Variant og Størrelse står øverst i Utseende med variantvalgene (Glød/Luft/Tekstjustering) rett under Variant; «Bakgrunnsfarge» (før «Bakgrunn») og «Gjennomsiktighet» (0 % = tett, før «Dekkevne»); undermeny-innstillingene i egen Undermeny-gruppe; forklaringene bor i tooltips, ikke tekstavsnitt
 
 ### Testrunde-batch (0.6.20): galleri-blokk, lightbox, hero-galleri, preset-miniatyrer
 

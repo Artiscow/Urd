@@ -81,6 +81,11 @@ export function navClasses(site) {
   // Tekstjustering av punktene i den sidestilte kolonnen (standard venstre).
   const salign = site.nav.style?.sideAlign;
   if (['center', 'right'].includes(salign)) classes += ` urd-nav-salign-${salign}`;
+  // Vertikal plassering av menylisten i kolonnen (standard øverst). Eget
+  // felt, ikke nav.layout: layout er topplinjens begrep, og gjenbruk ga
+  // nederst som utilsiktet standard (eiers testfunn 23. juli 2026).
+  const splace = site.nav.style?.sidePlacement;
+  if (['middle', 'bottom'].includes(splace)) classes += ` urd-nav-splace-${splace}`;
   // Undermeny-design (standard card = dagens kort).
   const sub = site.nav.style?.subStyle;
   if (['flat', 'pills', 'lines', 'flyout'].includes(sub)) classes += ` urd-nav-sub-${sub}`;

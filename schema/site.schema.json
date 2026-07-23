@@ -164,6 +164,10 @@
               "default": "card",
               "description": "Undermenyens design (additivt fra v0.6): card = kort med skygge, flat = ren flate, pills = pille-punkter, lines = liste med skillelinjer, flyout = utfall i full menybredde."
             },
+            "subPillColor": {
+              "type": "string",
+              "description": "Pille-punktenes farge når subStyle er pills: theme-token eller rå farge (additivt fra v0.6; standard er undermenyens flate)."
+            },
             "subColumns": {
               "type": "number",
               "minimum": 1,
@@ -175,6 +179,11 @@
               "enum": ["left", "center", "right"],
               "default": "left",
               "description": "Tekstjustering av punktene i den sidestilte kolonnen (additivt fra v0.6)."
+            },
+            "sidePlacement": {
+              "enum": ["top", "middle", "bottom"],
+              "default": "top",
+              "description": "Vertikal plassering av menylisten i den sidestilte kolonnen (additivt fra v0.6). Eget felt: layout gjelder kun topplinjen."
             },
             "width": {
               "type": "number",

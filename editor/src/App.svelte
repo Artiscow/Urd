@@ -1258,6 +1258,15 @@
   const sideVariant = $derived(siteDraft?.nav?.variant === 'side-left' || siteDraft?.nav?.variant === 'side-right');
   const floatingVariant = $derived(siteDraft?.nav?.variant === 'floating' || siteDraft?.nav?.variant === 'floating-square');
 
+  /** Effektfargen ved hover: kun der stilen har en effekt, med etikett som
+      sier hva fargen faktisk styrer i den valgte stilen. */
+  const HOVER_COLOR_LABELS = {
+    underline: ['Strekfarge', 'Fargen på streken under lenken'],
+    pill: ['Pillefarge', 'Fargen på pille-flaten bak lenken'],
+    lift: ['Glødfarge', 'Fargen på gløden bak teksten'],
+  };
+  const hoverColorLabel = $derived(HOVER_COLOR_LABELS[siteDraft?.nav?.style?.hover] ?? null);
+
   /** Variant (additivt fra v0.6): standarden (bar) lagres ikke i fila. */
   function setNavVariant(value) {
     siteMutate('nav', () => {
@@ -2729,7 +2738,7 @@
                 <details class="group">
                   <summary>Utseende</summary>
                   <div class="group-items">
-                    <label title="Sidestilt meny: dra i kolonnekanten i forhåndsvisningen for å endre bredden; på mobil og trange vinduer vises den som topplinje">Variant
+                    <label title="Sidestilt meny: dra i kolonnekanten i forhåndsvisningen for å endre bredden; på mobil og trange vinduer vises den som topplinje">Navigasjonsmeny
                       <Dropdown value={siteDraft.nav.variant ?? 'bar'}
                         options={[['bar', 'Stripe (standard)'], ['floating', 'Flytende (pille)'], ['floating-square', 'Flytende (firkant)'],
                           ['side-left', 'Sidestilt venstre'], ['side-right', 'Sidestilt høyre']]}
@@ -2752,13 +2761,6 @@
                           options={[['left', 'Venstre'], ['center', 'Midtstilt'], ['right', 'Høyre']]}
                           onchange={(v) => setNavStyle('sideAlign', v === 'left' ? undefined : v)} /></label>
                     {/if}
-                    <label>Størrelse
-                      <Dropdown value={siteDraft.nav.style?.size ?? 'md'}
-                        options={[['sm', 'Liten'], ['md', 'Standard'], ['lg', 'Stor'], ['xl', 'Ekstra stor']]}
-                        onchange={(v) => setNavStyle('size', v === 'md' ? undefined : v)} /></label>
-                    <label>Bakgrunnsfarge
-                      <ColorPicker value={siteDraft.nav.style?.bg ?? 'surface'} tokens={themeSwatches()}
-                        label="Menyens bakgrunnsfarge" onchange={(hex) => setNavStyle('bg', hex)} /></label>
                     <label title="0 % = helt tett flate, 100 % = helt gjennomsiktig meny">Gjennomsiktighet
                       <span class="gridmenu-value">{Math.round((1 - (siteDraft.nav.style?.bgOpacity ?? 0.85)) * 100)}%</span></label>
                     <input type="range" min="0" max="1" step="0.05"
@@ -2769,15 +2771,20 @@
                         onchange={(e) => setNavStyle('blur', e.target.checked)} />
                       Uskarphet bak menyen
                     </label>
-                    <label>Tekstfarge
-                      <ColorPicker value={siteDraft.nav.style?.textColor ?? 'text'} tokens={themeSwatches()}
-                        label="Menyens tekstfarge" onchange={(hex) => setNavStyle('textColor', hex)} /></label>
+                    <label>Størrelse
+                      <Dropdown value={siteDraft.nav.style?.size ?? 'md'}
+                        options={[['sm', 'Liten'], ['md', 'Standard'], ['lg', 'Stor'], ['xl', 'Ekstra stor']]}
+                        onchange={(v) => setNavStyle('size', v === 'md' ? undefined : v)} /></label>
                     <label>Menyplassering
-                      <Dropdown value={siteDraft.nav.layout ?? 'right'}
-                        options={sideVariant
-                          ? [['right', 'Øverst (standard)'], ['center', 'Midt på'], ['left', 'Nederst']]
-                          : [['right', 'Høyre'], ['center', 'Midtstilt'], ['left', 'Venstre (etter logoen)']]}
-                        onchange={(v) => setNavLayout(v)} /></label>
+                      {#if sideVariant}
+                        <Dropdown value={siteDraft.nav.style?.sidePlacement ?? 'top'}
+                          options={[['top', 'Øverst (standard)'], ['middle', 'Midt på'], ['bottom', 'Nederst']]}
+                          onchange={(v) => setNavStyle('sidePlacement', v === 'top' ? undefined : v)} />
+                      {:else}
+                        <Dropdown value={siteDraft.nav.layout ?? 'right'}
+                          options={[['right', 'Høyre'], ['center', 'Midtstilt'], ['left', 'Venstre (etter logoen)']]}
+                          onchange={(v) => setNavLayout(v)} />
+                      {/if}</label>
                     {#if !sideVariant}
                       <label class="gridmenu-snap" title="Av: menyen ligger kun øverst og forsvinner når man blar nedover">
                         <input type="checkbox" checked={siteDraft.nav.sticky !== false}
@@ -2796,12 +2803,20 @@
                         value={siteDraft.nav.style?.hoverGlow ?? 0.6}
                         oninput={(e) => setNavStyle('hoverGlow', Number(e.target.value))} />
                     {/if}
-                    <label title="Fargen på hover-effekten: streken, pille-flaten eller gløden">Hover-farge
-                      <ColorPicker value={siteDraft.nav.style?.hoverColor ?? 'accent'} tokens={themeSwatches()}
-                        label="Hover-effektens farge" onchange={(hex) => setNavStyle('hoverColor', hex)} /></label>
+                    {#if hoverColorLabel}
+                      <label title={hoverColorLabel[1]}>{hoverColorLabel[0]}
+                        <ColorPicker value={siteDraft.nav.style?.hoverColor ?? 'accent'} tokens={themeSwatches()}
+                          label={hoverColorLabel[1]} onchange={(hex) => setNavStyle('hoverColor', hex)} /></label>
+                    {/if}
                     <label title="Tekstfargen når pekeren er over et menypunkt">Tekstfarge ved hover
                       <ColorPicker value={siteDraft.nav.style?.hoverTextColor ?? 'accent'} tokens={themeSwatches()}
                         label="Tekstfargen ved hover" onchange={(hex) => setNavStyle('hoverTextColor', hex)} /></label>
+                    <label>Bakgrunnsfarge
+                      <ColorPicker value={siteDraft.nav.style?.bg ?? 'surface'} tokens={themeSwatches()}
+                        label="Menyens bakgrunnsfarge" onchange={(hex) => setNavStyle('bg', hex)} /></label>
+                    <label>Tekstfarge
+                      <ColorPicker value={siteDraft.nav.style?.textColor ?? 'text'} tokens={themeSwatches()}
+                        label="Menyens tekstfarge" onchange={(hex) => setNavStyle('textColor', hex)} /></label>
                     <span class="toolbar-row">
                       <label class="ghost filepick tb-grow" title="Bakgrunnsfargen med gjennomsiktigheten legger seg som et slør over bildet; komprimeres automatisk til webp">
                         {siteDraft.nav.style?.image ? 'Bytt bakgrunnsbilde' : 'Bakgrunnsbilde i menyen'}
@@ -2836,10 +2851,19 @@
                 <details class="group">
                   <summary>Undermeny</summary>
                   <div class="group-items">
+                    <!-- Sidestilt: undermenyene er trekkspill i kolonnen, så
+                         kort-rammen, ren flate og utfall gir ingen mening der -->
                     <label>Design
                       <Dropdown value={siteDraft.nav.style?.subStyle ?? 'card'}
-                        options={[['card', 'Kort (standard)'], ['flat', 'Ren flate'], ['pills', 'Pille-punkter'], ['lines', 'Understrek-liste'], ['flyout', 'Utfall (full bredde)']]}
+                        options={sideVariant
+                          ? [['card', 'Standard'], ['pills', 'Pille-punkter'], ['lines', 'Understrek-liste']]
+                          : [['card', 'Kort (standard)'], ['flat', 'Ren flate'], ['pills', 'Pille-punkter'], ['lines', 'Understrek-liste'], ['flyout', 'Utfall (full bredde)']]}
                         onchange={(v) => setNavStyle('subStyle', v === 'card' ? undefined : v)} /></label>
+                    {#if siteDraft.nav.style?.subStyle === 'pills'}
+                      <label title="Fargen på pille-punktene (standard er undermenyens flate)">Punktfarge
+                        <ColorPicker value={siteDraft.nav.style?.subPillColor ?? 'surface'} tokens={themeSwatches()}
+                          label="Pille-punktenes farge" onchange={(hex) => setNavStyle('subPillColor', hex)} /></label>
+                    {/if}
                     <label title="Punktene i undermenyen legges i rutenett: 2 kolonner gir 2x2, 2x3 osv.">Kolonner
                       <input type="number" min="1" max="4" value={siteDraft.nav.style?.subColumns ?? 1}
                         onchange={(e) => setNavStyle('subColumns', Number(e.target.value) > 1 ? Number(e.target.value) : undefined)} /></label>
