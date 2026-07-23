@@ -2,6 +2,17 @@
 
 Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren stryker herfra** når noe er testet; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert.
 
+### Testrunde-batch (0.6.24): ikonbibliotek, tegnmeny i teksteditoren, linje- og bokstavavstand (M6 batch B)
+
+- [ ] Ikon-blokk: velgeren (som før viste tegn/emoji) har nå tegnede SVG-ikoner øverst i fem kategorier (Sosiale medier, Kommunikasjon, Sted og tid, Symboler, Piler); velg f.eks. Instagram og sjekk at ikonet vises i blokken, følger Farge-valget og skalerer skarpt med Størrelse
+- [ ] Ikon-blokk: med et tegnet ikon valgt viser panelet «Fjern tegnet ikon» i stedet for fritekstfeltet; fjerning gir tegnet/emojien tilbake; å velge et tegn i menyen bytter også bort fra SVG-ikonet; eget opplastet bilde vinner fortsatt over alt
+- [ ] Ikon-blokk: en side med SVG-ikon åpnet i en eldre Urd-motor (eller med en ukjent ikon-id) skal falle stille tilbake til glyfen, aldri knekke
+- [ ] Teksteditor-linjen: ny smilefjes-knapp («Sett inn tegn») åpner en rullbar tegnrad i selve linjen med Nylige øverst og samme kategorier som ikon-blokkens velger; klikk setter tegnet inn ved markøren (også midt i et ord) og lagres i utkastet
+- [ ] Tegnraden og admin-velgeren deler Nylige-listen: et tegn satt inn i teksteditoren dukker opp under Nylige i ikon-blokkens velger og omvendt
+- [ ] Tekstblokk: Linjeavstand-slider (1-2,5; A = arv) i Egenskaper gjelder hele feltet og overlever publisering; blir teksten høyere enn rammen, vokser rammen ved neste skriving i feltet (samme adferd som font-størrelse i dag)
+- [ ] Tekstblokk: Bokstavavstand-slider (-1 til 8 px; A/0 = arv) gjelder hele feltet; negativ verdi gir tettere tekst
+- [ ] Eldre tekstblokker uten de nye feltene rendres uendret (arv fra tema)
+
 ### Testrunde-batch (0.6.22): sidestilt-oppfølging
 
 - [x] Sidestilt meny: velg sidestilt på en side som aldri har rørt Menyplassering; menypunktene skal stå ØVERST i kolonnen (rett under logoen), uansett hva Menyplassering sto på i topplinjen (plasseringen i kolonnen er nå et eget valg med Øverst som standard)
@@ -10,12 +21,12 @@ Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren
 - [x] Panelet: Menyplassering og Lenke-hover (med Glødstyrke og hover-fargene) står rett under Størrelse i alle varianter; Bakgrunnsfarge/Gjennomsiktighet/Uskarphet/Tekstfarge kommer etter
 - [x] Undermeny → Design viser kun Standard/Pille-punkter/Understrek-liste når sidestilt er valgt (Ren flate og Utfall er meningsløse i kolonnen); alle fem vises for stripe/flytende
 - [x] Pille-punkter og Understrek-liste i sidestilt kolonne: trekkspillpunktene får henholdsvis pilleform og skillelinjer
-- [ ] Undermeny-design Kort: ingen mørkere skygge-bånd oppå baren lenger (kortets skygge faller kun nedover, som utfall); sjekk særlig flytende pille/firkant med farget bakgrunn
-- [ ] Pille-punkter: nytt «Punktfarge»-valg i Undermeny-gruppen (vises kun når Design = Pille-punkter); uten valg brukes undermeny-flaten som før
+- [x] Undermeny-design Kort: ingen mørkere skygge-bånd oppå baren lenger (kortets skygge faller kun nedover, som utfall); sjekk særlig flytende pille/firkant med farget bakgrunn
+- [x] Pille-punkter: nytt «Punktfarge»-valg i Undermeny-gruppen (vises kun når Design = Pille-punkter); uten valg brukes undermeny-flaten som før
 - [ ] Fargevelger-popoveren: innholdet (sliderne, hex-feltet, fargeprikkene) holder seg INNE i boksen, og boksen inne i panelet (målt rotårsak: grid-kolonnen ble max-content-bred og innholdet fløt 59px ut av boksen; verifisert med headless-nettleser etter fiks)
 - [ ] Effektfargen ved hover heter nå Strekfarge/Pillefarge/Glødfarge etter valgt Lenke-hover, og vises IKKE for Standard og Løft (uten glød); «Tekstfarge ved hover» vises alltid
 - [ ] Smalt vindu i editorens desktop-preview: menyen (også sidestilt) blir burger under mobil-breakpointet selv om resten av previewen fortsatt er desktop (strukturverktøyene beholdes); hos besøkende som før
-- [ ] Panelet: «Variant» heter nå «Navigasjonsmeny»; Gjennomsiktighet og Uskarphet står rett under den (etter variantvalgene Glød/Luft/Tekstjustering); Tekstfarge står sammen med fargevalgene, rett etter Bakgrunnsfarge
+- [x] Panelet: «Variant» heter nå «Navigasjonsmeny»; Gjennomsiktighet og Uskarphet står rett under den (etter variantvalgene Glød/Luft/Tekstjustering); Tekstfarge står sammen med fargevalgene, rett etter Bakgrunnsfarge
 
 ### Testrunde-batch (0.6.21): nav-testrundens fikser og nav-utseende
 

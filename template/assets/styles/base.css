@@ -193,6 +193,41 @@ html {
   display: flex;
 }
 
+/* Tegnraden (nedtrekket bak smilefjes-knappen): rullbart rutenett med
+   tegn og emoji, samme utvalg som ikon-blokkens tegnvelger */
+.urd-tt-glyphrow {
+  display: none;
+  flex-basis: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-top: 4px;
+  margin-top: 2px;
+  border-top: 1px solid rgb(255 255 255 / 14%);
+}
+
+.urd-tt-glyphrow.vis {
+  display: block;
+}
+
+.urd-tt-glyphhead {
+  font: 600 10px/1.2 system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(232 234 240 / 60%);
+  padding: 6px 2px 3px;
+}
+
+.urd-tt-glyphgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
+  gap: 2px;
+}
+
+.urd-text-toolbar .urd-tt-glyphgrid button {
+  font-size: 15px;
+  font-weight: 400;
+}
+
 /* «Egen tekstfarge»: A med regnbueunderstrek */
 .urd-text-toolbar .urd-tt-acolor {
   display: inline-block;

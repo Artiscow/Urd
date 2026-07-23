@@ -4,6 +4,7 @@
  * farger; temafargen gjelder tekst-glyfer (★ ✓ → osv.).
  */
 import { resolveColor } from '../theme.js';
+import { iconSvg } from '../icons.js';
 
 export const iconBlock = {
   version: 1,
@@ -12,7 +13,7 @@ export const iconBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el
-   * @param {{glyph: string, color: string, size: number, image?: string|null}} props
+   * @param {{glyph: string, color: string, size: number, image?: string|null, icon?: string|null}} props
    */
   render(el, props) {
     // Eget opplastet ikon (additivt felt): bildet vises i tegnstørrelsen og vinner over glyfen til det fjernes.
@@ -34,6 +35,21 @@ export const iconBlock = {
       }, { once: true });
       el.appendChild(img);
       return;
+    }
+    // Tegnet SVG-ikon fra biblioteket (additivt felt): skarpt i alle
+    // størrelser og følger temafargen. Ukjent id (data fra nyere Urd)
+    // faller stille tilbake til glyfen.
+    if (typeof props.icon === 'string' && props.icon) {
+      const svg = iconSvg(props.icon);
+      if (svg) {
+        const span = document.createElement('span');
+        span.className = 'urd-icon urd-icon-svg';
+        span.innerHTML = svg;
+        const size = props.size || 48;
+        span.style.cssText = `display:block;width:${size}px;height:${size}px;color:${resolveColor(props.color)};`;
+        el.appendChild(span);
+        return;
+      }
     }
     const span = document.createElement('span');
     span.className = 'urd-icon';

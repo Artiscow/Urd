@@ -3137,7 +3137,24 @@
                         value={selectedBlock.props.size ?? ''}
                         onchange={(e) => setBlockProp('size', e.target.value ? Number(e.target.value) : null)} />
                     </span>
-                    <p class="panel-hint">Font og størrelse gjelder hele feltet. Marker tekst i blokken for fet, kursiv, overskrifter og farge.</p>
+                    <label title="Avstanden mellom tekstlinjene, i forhold til skriftstørrelsen">Linjeavstand
+                      <span class="gridmenu-value">{selectedBlock.props.lineHeight ? `${selectedBlock.props.lineHeight}` : 'Arv'}</span></label>
+                    <span class="toolbar-row">
+                      <button class="tbtn" title="Arv fra tema" class:active={!selectedBlock.props.lineHeight}
+                        onclick={() => setBlockProp('lineHeight', null)}>A</button>
+                      <input type="range" class="tb-grow" min="1" max="2.5" step="0.05" value={selectedBlock.props.lineHeight ?? 1.6}
+                        oninput={(e) => setBlockProp('lineHeight', Number(e.target.value))} />
+                    </span>
+                    <label title="Avstanden mellom bokstavene; negativ er tettere enn normalt">Bokstavavstand
+                      <span class="gridmenu-value">{typeof selectedBlock.props.letterSpacing === 'number' && selectedBlock.props.letterSpacing !== 0 ? `${selectedBlock.props.letterSpacing} px` : 'Arv'}</span></label>
+                    <span class="toolbar-row">
+                      <button class="tbtn" title="Arv fra tema"
+                        class:active={!selectedBlock.props.letterSpacing}
+                        onclick={() => setBlockProp('letterSpacing', null)}>A</button>
+                      <input type="range" class="tb-grow" min="-1" max="8" step="0.1" value={selectedBlock.props.letterSpacing ?? 0}
+                        oninput={(e) => setBlockProp('letterSpacing', Number(e.target.value) || null)} />
+                    </span>
+                    <p class="panel-hint">Font, størrelse og avstandene gjelder hele feltet. Marker tekst i blokken for fet, kursiv, overskrifter og farge.</p>
                   {:else if selectedBlock.type === 'button'}
                     <label>Tekst
                       <input value={selectedBlock.props.label}
@@ -3224,14 +3241,24 @@
                         onchange={(e) => setBlockProp('title', e.target.value)} /></label>
                     <p class="panel-hint">YouTube og Vimeo støttes, med personvernvennlig innbygging. Videoen spilles på den publiserte siden (og i Ren visning).</p>
                   {:else if selectedBlock.type === 'icon'}
-                    <label>Tegn/emoji
+                    <label>Ikon
                       <span class="toolbar-row">
                         <GlyphPicker value={selectedBlock.props.glyph ?? '★'}
-                          onpick={(glyph) => setBlockProp('glyph', glyph)}
+                          icon={selectedBlock.props.icon ?? null}
+                          onpick={(glyph) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+                            b.props.glyph = glyph;
+                            b.props.icon = null;
+                          })}
+                          onicon={(id) => setBlockProp('icon', id)}
                           onimage={(dataUrl) => setBlockProp('image', dataUrl)} />
-                        <input class="token-input" value={selectedBlock.props.glyph ?? ''} maxlength="4"
-                          title="Eller skriv/lim inn et tegn selv"
-                          onchange={(e) => setBlockProp('glyph', e.target.value || '★')} />
+                        {#if !selectedBlock.props.icon}
+                          <input class="token-input" value={selectedBlock.props.glyph ?? ''} maxlength="4"
+                            title="Eller skriv/lim inn et tegn selv"
+                            onchange={(e) => setBlockProp('glyph', e.target.value || '★')} />
+                        {:else}
+                          <button class="ghost" title="Tilbake til tegnet/emojien"
+                            onclick={() => setBlockProp('icon', null)}>Fjern tegnet ikon</button>
+                        {/if}
                       </span></label>
                     {#if selectedBlock.props.image}
                       <span class="toolbar-row">
@@ -3247,7 +3274,7 @@
                       <Dropdown value={selectedBlock.props.color}
                         options={COLOR_TOKENS}
                         onchange={(v) => setBlockProp('color', v)} /></label>
-                    <p class="panel-hint">Fargen gjelder tekst-glyfer (★ ✓ →); emoji har sine egne farger.</p>
+                    <p class="panel-hint">Fargen gjelder tegnede ikoner og tekst-glyfer (★ ✓ →); emoji har sine egne farger.</p>
                   {:else if selectedBlock.type === 'samling'}
                     <label>Samling
                       <Dropdown value={selectedBlock.props.collection ?? ''}

@@ -1,26 +1,15 @@
 <script>
   /**
    * Tegn-/emojivelger: knapp som viser gjeldende tegn og åpner en omfattende, kategorisert meny med nylige tegn øverst.
-   * Kan i tillegg ta imot et eget opplastet ikon-bilde (webp-komprimert) når onimage er satt.
+   * Tegnsettet og nylig-logikken bor i motorens glyphs.js (delt med teksteditor-linjens tegnmeny, samme localStorage-nøkkel).
+   * Med onicon satt vises også motorens ikonbibliotek (tegnede SVG-er) øverst; med onimage satt kan et eget ikon-bilde lastes opp (webp-komprimert).
    * Popoveren er position: fixed (panelene klipper absolute innhold) og lukkes ved klikk utenfor eller Escape, samme mønster som ColorPicker.
    */
   import { compressToWebp } from '../../../template/assets/engine/imageTools.js';
+  import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from '../../../template/assets/engine/glyphs.js';
+  import { ICON_CATEGORIES, ICON_LIBRARY, iconSvg } from '../../../template/assets/engine/icons.js';
 
-  let { value = '★', label = 'Velg tegn', onpick, onimage } = $props();
-
-  const RECENT_KEY = 'urd-recent-glyphs';
-
-  const CATEGORIES = [
-    ['Symboler', '★ ☆ ✦ ✧ ✩ ✪ ✫ ✭ ✮ ✯ ✵ ✳ ✴ ❖ ❋ ✿ ❀ ❁ ✾ ❃ ☘ ◆ ◇ ● ○ ◎ ■ □ ▣ ▲ △ ▼ ▽ ⬡ ⬢ ♦ ♠ ♣ ♥ ♡ ✓ ✔ ✕ ✖ ✗ ✘ ✚ ✜ ☀ ☾ ♪ ♫ ♬ ☮ ☯ ⚜ ⚓ ⚡ ☂ ✂ ✏ ✒ ✉ ☎ ⌛ ⏳ ♻ ⚠ ☑ ⚙ § © ® ™ ° ± × ÷ ∞ ≈ ≠ ≤ ≥ € £ ¥ • ‣ ⁂'],
-    ['Piler', '→ ← ↑ ↓ ↔ ↕ ↗ ↘ ↙ ↖ ⇒ ⇐ ⇑ ⇓ ⇔ ➜ ➤ ➔ ↩ ↪ ⤴ ⤵ ↺ ↻ ⟲ ⟳ « » ‹ ›'],
-    ['Smilefjes', '😀 😃 😄 😁 😆 😅 😂 🙂 😉 😊 😇 🥰 😍 🤩 😘 😋 😜 🤪 😎 🥳 😏 😌 😴 🤔 🤗 🤭 🙃 😢 😭 😤 😡 🤯 😱 🥺 😬 🤓 🫠 🫡 🫶'],
-    ['Gester og folk', '👍 👎 👏 🙌 🤝 👋 ✌ 🤘 🤞 💪 🙏 👀 🧠 👶 🧒 🧑 🧓 👥 👤 🗣 🏃 🚶 🧍 💃 🕺 🧑‍🤝‍🧑'],
-    ['Natur', '🌞 🌝 🌙 ⭐ 🌟 ✨ ☁ 🌈 🔥 💧 🌊 ❄ ⛄ 🌸 🌼 🌻 🌹 🌷 🌱 🌲 🌳 🍀 🍁 🍂 🐝 🦋 🐶 🐱 🐦 🦉 🐟 🐢 🌍 🏔 🏕'],
-    ['Mat og drikke', '☕ 🍵 🥤 🍺 🍷 🥂 🍰 🎂 🧁 🍪 🍩 🍕 🌮 🍔 🍟 🥗 🍎 🍊 🍋 🍇 🍓 🫐 🥕 🌽 🍞 🥐 🧀 🍿 🍦 🍫'],
-    ['Aktivitet', '⚽ 🏀 🏐 🎾 🏓 🏸 ⛷ 🏂 🚴 🏊 🎮 🎲 ♟ 🎯 🎳 🎣 🥾 ⛺ 🎪 🎭 🎨 🎬 🎤 🎧 🎸 🎹 🥁 🎻 📚 ✈ 🚗 🚲 ⛵ 🚀 🏋 🧘'],
-    ['Objekter', '💡 🔔 📣 📢 📌 📍 📅 ⏰ 🔑 🔒 🔓 🛠 🔧 🔨 🧰 📦 📫 📧 📱 💻 🖥 🖨 📷 📸 🎥 📺 🔍 🔎 📎 📏 📐 📝 📄 📋 📁 💾 🧾 💰 💳 🪙 🎁 🎈 🎉 🎊 🏆 🥇 🥈 🥉 🏅 🚩 🏁 🔗 🧭 🗺 🧲 🧪 🔬 🔭 💊 🩺 🛡 🕯 🪧 🖼'],
-    ['Hjerter', '❤ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💗 💓 💕 💖 💘 💝 💞 💟'],
-  ];
+  let { value = '★', icon = null, label = 'Velg tegn', onpick, onicon, onimage } = $props();
 
   let recent = $state([]);
   let rootEl = $state(null);
@@ -29,12 +18,7 @@
   let pos = $state({ top: 0, left: 0 });
 
   function openPicker() {
-    try {
-      const parsed = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]');
-      recent = Array.isArray(parsed) ? parsed : [];
-    } catch {
-      recent = [];
-    }
+    recent = readRecentGlyphs();
     const r = rootEl.getBoundingClientRect();
     const W = 292;
     const H = 380;
@@ -45,9 +29,13 @@
   }
 
   function pick(glyph) {
-    const next = [glyph, ...recent.filter((g) => g !== glyph)].slice(0, 16);
-    localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+    saveRecentGlyph(glyph);
     onpick?.(glyph);
+    open = false;
+  }
+
+  function pickIcon(id) {
+    onicon?.(id);
     open = false;
   }
 
@@ -85,9 +73,24 @@
 
 <span class="gp" bind:this={rootEl}>
   <button type="button" class="gp-swatch" title={label} aria-label={label}
-    onclick={() => (open ? (open = false) : openPicker())}>{value || '★'}</button>
+    onclick={() => (open ? (open = false) : openPicker())}>
+    {#if icon && ICON_LIBRARY[icon]}<span class="gp-svg">{@html iconSvg(icon)}</span>{:else}{value || '★'}{/if}
+  </button>
   {#if open}
     <div class="gp-pop" style="top: {pos.top}px; left: {pos.left}px">
+      {#if onicon}
+        {#each ICON_CATEGORIES as [name, ids] (name)}
+          <div class="gp-group">{name}</div>
+          <div class="gp-grid">
+            {#each ids as id (id)}
+              <button type="button" class="gp-cell gp-cell-icon" title={ICON_LIBRARY[id].label}
+                class:active={id === icon}
+                onclick={() => pickIcon(id)}><span class="gp-svg">{@html iconSvg(id)}</span></button>
+            {/each}
+          </div>
+        {/each}
+        <div class="gp-group">Tegn og emoji</div>
+      {/if}
       {#if recent.length}
         <div class="gp-group">Nylige</div>
         <div class="gp-grid">
@@ -96,7 +99,7 @@
           {/each}
         </div>
       {/if}
-      {#each CATEGORIES as [name, glyphs] (name)}
+      {#each GLYPH_CATEGORIES as [name, glyphs] (name)}
         <div class="gp-group">{name}</div>
         <div class="gp-grid">
           {#each glyphs.split(' ') as glyph (glyph)}
@@ -181,6 +184,20 @@
   .gp-cell.active {
     border-color: var(--urd-color-accent, #7c5cff);
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 16%, transparent);
+  }
+
+  /* Tegnede SVG-ikoner fra motorens bibliotek: fast rutestørrelse, farges av teksten */
+  .gp-cell-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 0;
+  }
+
+  .gp-svg {
+    display: inline-flex;
+    width: 17px;
+    height: 17px;
   }
 
   .gp-upload {

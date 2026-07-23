@@ -12,7 +12,7 @@ export const textBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el Blokk-elementet (posisjonert av render.js)
-   * @param {{html: string, align: string, box?: boolean}} props
+   * @param {{html: string, align: string, box?: boolean, font?: string, size?: number, lineHeight?: number, letterSpacing?: number}} props
    * @param {object} ctx Render-kontekst
    */
   render(el, props, ctx) {
@@ -29,6 +29,13 @@ export const textBlock = {
     // Valgfri font/størrelse per tekstblokk (additivt; tomt = arv fra tema).
     if (props.font) content.style.fontFamily = props.font;
     if (props.size) content.style.fontSize = `${props.size}px`;
+    // Valgfri linje- og bokstavavstand per felt (additivt; tomt = arv).
+    // Linjeavstanden er enhetsløs (skalerer med skriftstørrelsen);
+    // bokstavavstanden er px og kan være negativ (tettere enn normalt).
+    if (props.lineHeight) content.style.lineHeight = String(props.lineHeight);
+    if (typeof props.letterSpacing === 'number' && props.letterSpacing !== 0) {
+      content.style.letterSpacing = `${props.letterSpacing}px`;
+    }
     content.innerHTML = props.html;
     // Selvhelbreder: innhold lagret av eldre Urd kan inneholde
     // håndtak-markup, også foreldreløse knapper etter at nettleser-

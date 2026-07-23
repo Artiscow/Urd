@@ -23,6 +23,7 @@ import { openImageEditor, closeImageEditor } from './image-editor.js';
 import { applyImageStyle } from './blocks/image.js';
 import { openColorPicker, closeColorPicker } from './color-picker.js';
 import { createDropdown, closeDropdowns } from './dropdown.js';
+import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from './glyphs.js';
 
 /** Mobilvisning? Motoren setter body-klassen ut fra breakpointet. */
 const isMobile = () => document.body.classList.contains('urd-mobile');
@@ -551,6 +552,11 @@ function initTextToolbar() {
     () => exec('insertOrderedList'));
   const QUOTE_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5C3.8 5 2 6.8 2 9s1.8 4 4 4c.3 0 .5 0 .8-.1C6.2 14.8 5 16.4 3.4 17.4l1.2 1.8C8 17 10 13.7 10 10.2 10 7.2 8.3 5 6 5z"/><path d="M17 5c-2.2 0-4 1.8-4 4s1.8 4 4 4c.3 0 .5 0 .8-.1-.6 1.9-1.8 3.5-3.4 4.5l1.2 1.8C19 17 21 13.7 21 10.2 21 7.2 19.3 5 17 5z"/></svg>';
   btn(QUOTE_SVG, 'Sitat', () => exec('formatBlock', 'blockquote'));
+  // Tegnmenyen: samme utvalg som ikon-blokkens tegnvelger (delt modul i
+  // glyphs.js), satt inn ved markøren. Knappen er et tegnet smilefjes
+  // (aldri emoji i editor-chrome); selve tegnene er innhold.
+  const GLYPH_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9.5" x2="9" y2="9.5"/><line x1="15" y1="9.5" x2="15" y2="9.5"/><path d="M8.5 14.5c.8 1.2 2 2 3.5 2s2.7-.8 3.5-2"/></svg>';
+  btn(GLYPH_SVG, 'Sett inn tegn', () => toggleGlyphRow());
 
   startGroup();
   const LINK_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg>';
@@ -601,6 +607,7 @@ function initTextToolbar() {
       return;
     }
     colorRow.classList.remove('vis');
+    glyphRow.classList.remove('vis');
     saveSelection();
     // Forhåndsutfyll med eksisterende lenke når markøren står i en.
     const sel = document.getSelection();
@@ -705,7 +712,76 @@ function initTextToolbar() {
 
   function toggleColorRow() {
     linkRow.classList.remove('vis');
+    glyphRow.classList.remove('vis');
     colorRow.classList.toggle('vis');
+  }
+
+  // Tegnraden (bak smilefjes-knappen): «Nylige» + kategoriene fra den
+  // delte tegnmodulen, i et rullbart rutenett. Tegnet settes inn ved
+  // markøren via insertText, som utløser input-hendelsen i text.js -
+  // lagringen gjenbruker utkastflyten. Raden bygges først når den åpnes
+  // (flere hundre knapper); nylig-listen deles med admin-velgeren via
+  // samme localStorage-nøkkel.
+  const glyphRow = document.createElement('div');
+  glyphRow.className = 'urd-tt-glyphrow';
+  bar.insertBefore(glyphRow, linkRow);
+  let glyphRowBuilt = false;
+
+  const glyphHeading = (name) => {
+    const h = document.createElement('div');
+    h.className = 'urd-tt-glyphhead';
+    h.textContent = name;
+    return h;
+  };
+  const glyphGrid = () => {
+    const g = document.createElement('div');
+    g.className = 'urd-tt-glyphgrid';
+    return g;
+  };
+  const glyphCell = (host, glyph) => {
+    const b = document.createElement('button');
+    b.textContent = glyph;
+    b.title = 'Sett inn';
+    b.addEventListener('click', () => {
+      exec('insertText', glyph);
+      saveRecentGlyph(glyph);
+      renderRecentGlyphs();
+      reposition();
+    });
+    host.appendChild(b);
+  };
+
+  const recentGlyphs = document.createElement('div');
+  const renderRecentGlyphs = () => {
+    recentGlyphs.replaceChildren();
+    const recent = readRecentGlyphs();
+    if (!recent.length) return;
+    recentGlyphs.appendChild(glyphHeading('Nylige'));
+    const grid = glyphGrid();
+    recent.forEach((glyph) => glyphCell(grid, glyph));
+    recentGlyphs.appendChild(grid);
+  };
+
+  function toggleGlyphRow() {
+    linkRow.classList.remove('vis');
+    colorRow.classList.remove('vis');
+    if (glyphRow.classList.contains('vis')) {
+      glyphRow.classList.remove('vis');
+      return;
+    }
+    if (!glyphRowBuilt) {
+      glyphRowBuilt = true;
+      glyphRow.appendChild(recentGlyphs);
+      for (const [name, glyphs] of GLYPH_CATEGORIES) {
+        glyphRow.appendChild(glyphHeading(name));
+        const grid = glyphGrid();
+        glyphs.split(' ').forEach((glyph) => glyphCell(grid, glyph));
+        glyphRow.appendChild(grid);
+      }
+    }
+    renderRecentGlyphs();
+    glyphRow.classList.add('vis');
+    reposition();
   }
 
   document.body.appendChild(bar);
@@ -719,6 +795,7 @@ function initTextToolbar() {
       bar.classList.remove('vis');
       linkRow.classList.remove('vis');
       colorRow.classList.remove('vis');
+      glyphRow.classList.remove('vis');
       return;
     }
     // Markeringens rekt er ankeret; en tom/ugyldig rekt (kollapset markør på
@@ -758,6 +835,7 @@ function initTextToolbar() {
       activeText = target;
       linkRow.classList.remove('vis');
       colorRow.classList.remove('vis');
+      glyphRow.classList.remove('vis');
     }
     if (target) reposition();
   });
