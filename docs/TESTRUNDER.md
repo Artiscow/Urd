@@ -7,7 +7,7 @@ Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren
 - [ ] Fargevelgeren i Nav → Utseende (Bakgrunnsfarge/Tekstfarge/hover-fargene): klikk på fargeflaten, sliderne og feltene INNE i velgeren skal IKKE lukke den; kun klikk utenfor, klikk i forhåndsvisningen eller Escape (rotårsaker: label-videresending + iframe-klikk når aldri editorens document)
 - [ ] Fargevelger-popoveren holder seg innenfor panelet (henger ikke ut over forhåndsvisningen) og boksen omslutter alt innholdet (border-box-fiks)
 - [ ] Logo-bilde: sett bildehøyde 94px (og prøv enda større) i alle varianter og størrelser; nav-baren skal ALDRI vokse, bildet vokser ut av linjen
-- [ ] Undermenyen lander under baren (ikke over nav-teksten), også med stor logo og i flytende variant
+- [ ] Undermenyen lander NØYAKTIG på barens bunn (aldri oppå baren, heller ikke de få pikslene som synes som mørkere bånd på gjennomsiktige flater), også med stor logo, lys/mørk-bryter i verktøyklyngen og i flytende variant; utfall (full bredde) flukter med barens bunn uten skygge-bånd oppover
 - [ ] Undermenyen og mobilpanelet får kun bakgrunnsfargen som standard når nav har bakgrunnsbilde; «Bakgrunnsbilde også i undermenyen» (i den nye Undermeny-gruppen) skrur bildet på
 - [ ] Sidestilt meny på smale vinduer: smaln nettleservinduet under ca. 900px, kolonnen skal bli en VANLIG topplinje med horisontale menypunkter (som stripe-varianten; virker også i editorens preview); burgeren kommer først under mobil-breakpointet; over 900px kommer kolonnen tilbake
 - [ ] Undermeny i sidestilt kolonne: åpnes og lukkes KUN med klikk (hover lukker ikke lenger kolonnen under pekeren, så man ikke feilklikker på punktet under)

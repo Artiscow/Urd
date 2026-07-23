@@ -1551,6 +1551,12 @@ a.urd-galleri-tile {
 
 .urd-nav-list {
   display: flex;
+  /* Listen spenner barens innerhøyde og sentrerer punktene selv: da kan
+     punkter med undermeny strekkes til full høyde, så undermenyens
+     top: 100 % lander NØYAKTIG på barens bunn (aldri oppå baren, selv når
+     verktøyklyngen er høyere enn tekstpunktene) */
+  align-self: stretch;
+  align-items: center;
   gap: 1.25rem;
   list-style: none;
 }
@@ -1652,6 +1658,9 @@ a.urd-galleri-tile {
 .urd-nav-has-sub {
   position: relative;
   display: flex;
+  /* Full barhøyde (se .urd-nav-list): undermenyens anker er punktets
+     underkant, og den skal være barens bunn */
+  align-self: stretch;
   align-items: center;
   gap: 0.15rem;
 }
@@ -1778,6 +1787,9 @@ a.urd-galleri-tile {
   right: 0;
   top: 100%;
   border-radius: 0 0 var(--urd-radius-md) var(--urd-radius-md);
+  /* Skyggen skal kun falle nedover: negativ spredning hindrer at blur-en
+     blør oppover og legger et mørkt bånd på selve baren */
+  box-shadow: 0 16px 24px -8px color-mix(in srgb, var(--urd-color-text) 15%, transparent);
 }
 
 /* Mobilmeny: burgeren erstatter listen; åpen liste blir et kolonnepanel
