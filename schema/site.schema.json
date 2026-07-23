@@ -97,9 +97,9 @@
           "description": "Menyen følger med når man blar nedover (false = ligger kun øverst). Additivt felt fra v0.5."
         },
         "variant": {
-          "enum": ["bar", "floating", "side-left", "side-right"],
+          "enum": ["bar", "floating", "floating-square", "side-left", "side-right"],
           "default": "bar",
-          "description": "Menyens form (additivt fra v0.6): bar = stripe i full bredde, floating = pille som svever over innholdet, side-left/side-right = fast kolonne langs kanten (mobil faller tilbake til topplinje med burger)."
+          "description": "Menyens form (additivt fra v0.6): bar = stripe i full bredde, floating = pille som svever over innholdet, floating-square = det samme uten avrundede kanter, side-left/side-right = fast kolonne langs kanten (mobil og trange vinduer faller tilbake til topplinje med burger)."
         },
         "style": {
           "type": "object",
@@ -111,9 +111,16 @@
             "blur": { "type": "boolean", "default": true, "description": "Uskarphet bak menyen" },
             "textColor": { "type": "string", "description": "Tekstfarge i menyen (tom = temaets tekstfarge)" },
             "hover": {
-              "enum": ["standard", "underline", "pill", "lift"],
+              "enum": ["standard", "underline", "pill", "lift-plain", "lift"],
               "default": "standard",
-              "description": "Hover-stil for menylenkene (additivt fra v0.6): standard = aksentfarge, underline = glidende understrek, pill = avrundet bakgrunn, lift = løft med glød."
+              "description": "Hover-stil for menylenkene (additivt fra v0.6): standard = aksentfarge, underline = glidende understrek, pill = avrundet bakgrunn, lift-plain = løft uten glød, lift = løft med glød."
+            },
+            "hoverGlow": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.6,
+              "description": "Glødstyrken for hover-stilen lift (additivt fra v0.6); gløden ligger bak teksten."
             },
             "glow": {
               "type": "boolean",
@@ -139,6 +146,55 @@
               "maximum": 100,
               "default": 50,
               "description": "Bildeutsnitt i høyden (additivt fra v0.6): 0 = toppen av bildet, 100 = bunnen."
+            },
+            "imageX": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "default": 50,
+              "description": "Bildeutsnitt i bredden (additivt fra v0.6): 0 = venstre kant, 100 = høyre. Monner mest i sidestilt kolonne."
+            },
+            "subImage": {
+              "type": "boolean",
+              "default": false,
+              "description": "Bakgrunnsbildet vises også i undermenyen og mobilpanelet (additivt fra v0.6; standard er kun fargesløret)."
+            },
+            "subStyle": {
+              "enum": ["card", "flat", "pills", "lines", "flyout"],
+              "default": "card",
+              "description": "Undermenyens design (additivt fra v0.6): card = kort med skygge, flat = ren flate, pills = pille-punkter, lines = liste med skillelinjer, flyout = utfall i full menybredde."
+            },
+            "subColumns": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 4,
+              "default": 1,
+              "description": "Kolonner i undermenyen (additivt fra v0.6): punktene legges i rutenett (2 gir 2x2, 2x3 osv.)."
+            },
+            "sideAlign": {
+              "enum": ["left", "center", "right"],
+              "default": "left",
+              "description": "Tekstjustering av punktene i den sidestilte kolonnen (additivt fra v0.6)."
+            },
+            "width": {
+              "type": "number",
+              "minimum": 180,
+              "maximum": 400,
+              "default": 250,
+              "description": "Den sidestilte kolonnens bredde i px (additivt fra v0.6); justeres ved å dra i kolonnekanten i editoren."
+            },
+            "hoverColor": {
+              "type": "string",
+              "description": "Hover-effektens farge (strek/pille-flate/glød): theme-token eller rå farge (additivt fra v0.6; standard aksent)."
+            },
+            "hoverTextColor": {
+              "type": "string",
+              "description": "Tekstfargen ved hover: theme-token eller rå farge (additivt fra v0.6; standard aksent)."
+            },
+            "size": {
+              "enum": ["sm", "md", "lg", "xl"],
+              "default": "md",
+              "description": "Menyens størrelse (additivt fra v0.6): padding og skrift i fire trinn; md = dagens utseende."
             }
           }
         },

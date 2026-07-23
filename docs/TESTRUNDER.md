@@ -2,6 +2,28 @@
 
 Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren stryker herfra** når noe er testet; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert.
 
+### Testrunde-batch (0.6.21): nav-testrundens fikser og nav-utseende
+
+- [ ] Fargevelgeren i Nav → Utseende (Bakgrunnsfarge/Tekstfarge/hover-fargene): klikk på fargeflaten, sliderne og feltene INNE i velgeren skal IKKE lukke den; kun klikk utenfor, klikk i forhåndsvisningen eller Escape (rotårsaker: label-videresending + iframe-klikk når aldri editorens document)
+- [ ] Fargevelger-popoveren holder seg innenfor panelet (henger ikke ut over forhåndsvisningen) og boksen omslutter alt innholdet (border-box-fiks)
+- [ ] Logo-bilde: sett bildehøyde 94px (og prøv enda større) i alle varianter og størrelser; nav-baren skal ALDRI vokse, bildet vokser ut av linjen
+- [ ] Undermenyen lander under baren (ikke over nav-teksten), også med stor logo og i flytende variant
+- [ ] Undermenyen og mobilpanelet får kun bakgrunnsfargen som standard når nav har bakgrunnsbilde; «Bakgrunnsbilde også i undermenyen» (i den nye Undermeny-gruppen) skrur bildet på
+- [ ] Sidestilt meny på smale vinduer: smaln nettleservinduet under ca. 900px, kolonnen skal bli en VANLIG topplinje med horisontale menypunkter (som stripe-varianten; virker også i editorens preview); burgeren kommer først under mobil-breakpointet; over 900px kommer kolonnen tilbake
+- [ ] Undermeny i sidestilt kolonne: åpnes og lukkes KUN med klikk (hover lukker ikke lenger kolonnen under pekeren, så man ikke feilklikker på punktet under)
+- [ ] Sidebredde: dra i kolonnekanten i previewen (180-400px); innholdet flytter seg med, og bredden overlever publisering
+- [ ] Bildeutsnitt (bredde) på nav-bakgrunnsbildet: virker i sidestilt kolonne (der høyde-slideren naturlig ikke monner); begge sliderne vises for alle varianter
+- [ ] Menyplassering i sidestilt = vertikal plassering (Øverst/Midt på/Nederst); Tekstjustering (venstre/midt/høyre) justerer punktene i kolonnen
+- [ ] Undermeny-pilen i kolonnen: høyrestilt tekst gir pil på VENSTRE side; midtstilt tekst står i ro (pilen skyver ikke); venstrestilt har pilen til høyre
+- [ ] Klistrete meny-valget er skjult for sidestilt (irrelevant der); vises for stripe/flytende
+- [ ] Fire størrelser (Liten/Standard/Stor/Ekstra stor) i alle varianter; Standard = nøyaktig utseendet fra før
+- [ ] Hover-farge + Tekstfarge ved hover i alle hover-stilene (Understrek: strek = hover-farge, tekst = tekstfarge ved hover)
+- [ ] Ny hover-stil «Løft» (kun løft, ingen glød); «Løft med glød» har fått «Glødstyrke»-slider, og gløden ligger BAK teksten
+- [ ] Ny variant «Flytende (firkant)»: som pillen uten avrunding, med glød- og luft-valgene
+- [ ] «Luft over menyen» av (flytende): menyen skal ligge HELT inntil toppen, ingen rest-luft
+- [ ] Undermeny-design i den nye Undermeny-gruppen: Kort, Ren flate, Pille-punkter, Understrek-liste, Utfall (full bredde) + Kolonner (2 gir 2x2-rutenett osv.); utfall bør sjekkes ekstra i flytende variant
+- [ ] Panelet: Variant og Størrelse står øverst i Utseende med variantvalgene (Glød/Luft/Tekstjustering) rett under Variant; «Bakgrunnsfarge» (før «Bakgrunn») og «Gjennomsiktighet» (0 % = tett, før «Dekkevne»); undermeny-innstillingene i egen Undermeny-gruppe; forklaringene bor i tooltips, ikke tekstavsnitt
+
 ### Testrunde-batch (0.6.20): galleri-blokk, lightbox, hero-galleri, preset-miniatyrer
 
 - [ ] Galleri-blokk: legg til via Blokker → Galleri («Tomt galleri» og «Galleri med bilder» med flere filer valgt samtidig) og via «+ Ny blokk» i en seksjon; tomt galleri viser «Legg til bilder i Egenskaper»
@@ -19,17 +41,17 @@ Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren
 
 ### Testrunde-batch (0.6.18): bildekontroller, pille-luft, sidestilt meny
 
-- [ ] Bakgrunnsbilde-kontroller i Nav → Utseende (vises når bilde er valgt): «Bildestyrke» toner bildet mot bakgrunnsfargen, «Bildeutsnitt (høyde)» velger hvilken del av bildet stripen viser (0 = toppen, 100 = bunnen)
-- [ ] Pille-luft: «Luft over pillen» (på som standard, vises ved Flytende); skru av og bekreft at pillen ligger helt i toppen
-- [ ] Sidestilt meny: velg «Sidestilt venstre» og «Sidestilt høyre» i Variant; fast kolonne langs kanten, innholdet flytter seg tilsvarende, undermenyer er trekkspill, bryteren ligger nederst i kolonnen; bytt til mobilvisning og bekreft topplinje med burger
-- [ ] Variantbytte frem og tilbake (stripe ↔ flytende ↔ sidestilt) etterlater ingen rester (body-padding, klasser)
-- [ ] Ny temafarge «Tekst på aksent» i Tema-panelet (og i alt-temaet): styrer teksten på primærknapper; sett en lys aksent + lys bakgrunn og bekreft at knappteksten nå kan gjøres lesbar
+- [x]Bakgrunnsbilde-kontroller i Nav → Utseende (vises når bilde er valgt): «Bildestyrke» toner bildet mot bakgrunnsfargen, «Bildeutsnitt (høyde)» velger hvilken del av bildet stripen viser (0 = toppen, 100 = bunnen)
+- [x] Pille-luft: «Luft over pillen» (på som standard, vises ved Flytende); skru av og bekreft at pillen ligger helt i toppen
+- [x] Sidestilt meny: velg «Sidestilt venstre» og «Sidestilt høyre» i Variant; fast kolonne langs kanten, innholdet flytter seg tilsvarende, undermenyer er trekkspill, bryteren ligger nederst i kolonnen; bytt til mobilvisning og bekreft topplinje med burger
+- [x] Variantbytte frem og tilbake (stripe ↔ flytende ↔ sidestilt) etterlater ingen rester (body-padding, klasser)
+- [x] Ny temafarge «Tekst på aksent» i Tema-panelet (og i alt-temaet): styrer teksten på primærknapper; sett en lys aksent + lys bakgrunn og bekreft at knappteksten nå kan gjøres lesbar
 
 ### Testrunde-batch (0.6.17): flytende over hero, glød-tilvalg, lys/mørk-bryter
 
-- [ ] Flytende svever nå OVER innholdet: hero-en starter øverst bak pillen, ingen stripe/tomrom rundt pillen lenger. Test med sticky på (pillen følger med) og av (pillen blir igjen øverst); klikk på innholdet i stripene ved siden av pillen skal gå gjennom
-- [ ] Glød: pillen er nå uten glød som standard; skru på «Glød rundt pillen» i Nav → Utseende (vises kun ved Flytende) og bekreft aksentglød
-- [ ] Lys/mørk-bryter: i Tema → «Lys/mørk-bryter», klikk «+ Lag alternativt tema» (starter med inverterte farger), sett «Hovedtemaet er» riktig (Mørkt for dagens side), juster fargene; sol/måne-knappen dukker opp i menyen. Test at bryteren bytter tema, at valget huskes ved omlast (localStorage), at første besøk i privat vindu følger OS-preferansen, og «Foreslå på nytt (inverter)» + fjern-knappen
+- [x] Flytende svever nå OVER innholdet: hero-en starter øverst bak pillen, ingen stripe/tomrom rundt pillen lenger. Test med sticky på (pillen følger med) og av (pillen blir igjen øverst); klikk på innholdet i stripene ved siden av pillen skal gå gjennom
+- [x] Glød: pillen er nå uten glød som standard; skru på «Glød rundt pillen» i Nav → Utseende (vises kun ved Flytende) og bekreft aksentglød
+- [x] Lys/mørk-bryter: i Tema → «Lys/mørk-bryter», klikk «+ Lag alternativt tema» (starter med inverterte farger), sett «Hovedtemaet er» riktig (Mørkt for dagens side), juster fargene; sol/måne-knappen dukker opp i menyen. Test at bryteren bytter tema, at valget huskes ved omlast (localStorage), at første besøk i privat vindu følger OS-preferansen, og «Foreslå på nytt (inverter)» + fjern-knappen
 - [ ] Bryteren på mobil: vises ved siden av burgeren; menylisten står fortsatt riktig plassert på desktop (høyre/midtstilt/venstre) med og uten bryter
 
 ### Testrunde-batch (0.6.16): flytende pille, hover-stiler, bakgrunnsbilde
@@ -40,9 +62,9 @@ Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren
 
 ### Testrunde-batch (0.6.15): dropdown-menyer og mobilmeny
 
-- [ ] Undermeny i nav: legg til undermenypunkter med «+»-knappen i Menypunkter (Nav-panelet); punkt MED egen side får lenke + pilknapp, punkt med målet «Ingen lenke» blir ren åpner. Test hover (åpner/lukker med forsinkelse), klikk på pilen, at kun én er åpen, Escape (lukker + fokus tilbake) og Tab gjennom menyen
+- [x] Undermeny i nav: legg til undermenypunkter med «+»-knappen i Menypunkter (Nav-panelet); punkt MED egen side får lenke + pilknapp, punkt med målet «Ingen lenke» blir ren åpner. Test hover (åpner/lukker med forsinkelse), klikk på pilen, at kun én er åpen, Escape (lukker + fokus tilbake) og Tab gjennom menyen
 - [ ] Mobilmeny: bytt preview til mobil (og test på den publiserte siden i smalt vindu/telefon) - burger vises, panelet åpner under menyen, undermenyer er trekkspill, Escape/klikk utenfor lukker
-- [ ] Nav-farger i undermenyene: sett bakgrunnsfarge/dekkevne i Nav → Utseende og bekreft at undermenyer og mobilpanelet følger samme flate
+- [x] Nav-farger i undermenyene: sett bakgrunnsfarge/dekkevne i Nav → Utseende og bekreft at undermenyer og mobilpanelet følger samme flate
 - [ ] Slett en side som ligger i en undermeny og bekreft at undermenypunktet forsvinner (en åpner som mister alle barna fjernes helt). Slett en side som et punkt MED undermeny peker på: punktet består som ren åpner og barna beholdes (buggjakt-fiks 22. juli 2026)
 
 ### Testrunde-batch (0.6.14): kart-forbedringer
@@ -62,4 +84,4 @@ Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren
 - [ ] M4 Skjema: «Kontaktskjema»-mal, sett mottaker i «⚙ Skjema», test mailto-innsending på den PUBLISERTE siden (preview validerer bare); test feltredigering (legg til/fjern/type/påkrevd), e-postvalidering og honeypot; test eksternt endepunkt om du har et
 - [ ] M4 Kart: «Finn oss»-mal, lim inn koordinater i «⚙ Sted»; bekreft CSP-blokkert-melding FØR du legger `frame-src https://www.openstreetmap.org` i `template/_headers`, og at kartet vises ETTER at linjen er lagt inn og publisert
 - [ ] M3 Kalender: feed-henting i produksjon med en ekte Google-kalender-id (fungerte i preview med eksempeldata; produksjon krever functions, og andre verter enn Google krever ICS_HOSTS)
-- [ ] Plugin-menyene: «Plugins»-seksjonene i «+ Ny blokk», «+ Ny seksjon» og Blokker-panelet viser skjema/kart/kalender; «Kalender ▾»-foldemenyen gir de fire visningene
+- [x] Plugin-menyene: «Plugins»-seksjonene i «+ Ny blokk», «+ Ny seksjon» og Blokker-panelet viser skjema/kart/kalender; «Kalender ▾»-foldemenyen gir de fire visningene

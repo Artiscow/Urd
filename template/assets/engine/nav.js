@@ -11,8 +11,8 @@
  * styles av body.urd-mobile (breakpointet settes i urd.js fra site.json).
  */
 
-import { navItems, navClasses, navSurface, hostClasses } from './nav-model.js';
-import { themeMode, toggleThemeMode } from './theme.js';
+import { navItems, navClasses, navSurface, navSubSurface, hostClasses, clampSideWidth } from './nav-model.js';
+import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 
 /** Hvor lenge undermenyen står åpen etter at pekeren forlater punktet. */
 const HOVER_CLOSE_DELAY = 250;
@@ -21,6 +21,20 @@ const HOVER_CLOSE_DELAY = 250;
 // kobler fra forrige renderings lyttere (også de på document) så det aldri
 // finnes mer enn ett aktivt sett.
 let navController = null;
+
+// Sidestilt kolonne på trange vinduer: under 900px rendres menyen som en
+// VANLIG topplinje (effektiv variant bar) med horisontale punkter; burgeren
+// kommer først ved mobil-breakpointet, som for stripe-varianten (eiers valg
+// 23. juli 2026). Egen brytekant uavhengig av mobil-breakpointet OG av
+// editorens viewport-valg, så det virker også i previewens desktop-modus.
+const narrowMq = window.matchMedia('(max-width: 900px)');
+let lastRender = null;
+narrowMq.addEventListener('change', () => {
+  const variant = lastRender?.site.nav.variant;
+  if (variant === 'side-left' || variant === 'side-right') {
+    renderNav(lastRender.site, lastRender.host);
+  }
+});
 
 const svg = (path) =>
   `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
@@ -37,26 +51,42 @@ export function renderNav(site, host) {
   navController?.abort();
   navController = new AbortController();
   const signal = navController.signal;
+  lastRender = { site, host };
+
+  // Trange vinduer: sidestilt rendres som vanlig topplinje (effektiv
+  // variant bar); breakpoint-lytteren over rendrer på nytt ved kryssing.
+  const wantsSide = site.nav.variant === 'side-left' || site.nav.variant === 'side-right';
+  const effSite = wantsSide && narrowMq.matches
+    ? { ...site, nav: { ...site.nav, variant: 'bar' } }
+    : site;
 
   host.replaceChildren();
   const nav = document.createElement('nav');
   // layout (additivt fra v0.5): hvor menypunktene står; logoen er alltid
   // først og fungerer som «Hjem»-knapp.
-  nav.className = navClasses(site);
+  nav.className = navClasses(effSite);
   // Klistret meny (standard): sticky må ligge på VERTEN (header-elementet),
   // ikke på nav-en - et sticky-element kan aldri forlate forelderen sin,
   // og forelderen her er nøyaktig like høy som nav-en.
-  host.classList.toggle('urd-nav-sticky', site.nav.sticky !== false);
+  host.classList.toggle('urd-nav-sticky', effSite.nav.sticky !== false);
   // Varianten styrer verten og body: flytende tar verten ut av flyten
   // (hero-en starter bak pillen), sidestilt gjør verten til fast kolonne
   // og gir body innholds-padding. Alle klasser toggles hver rendering,
   // så variantbytte i editoren aldri etterlater rester.
-  const hc = hostClasses(site);
+  const hc = hostClasses(effSite);
   for (const cls of ['urd-nav-float', 'urd-nav-side-host', 'urd-nav-side-host-left', 'urd-nav-side-host-right']) {
     host.classList.toggle(cls, hc.host.includes(cls));
   }
   for (const cls of ['urd-side-left', 'urd-side-right']) {
     document.body.classList.toggle(cls, hc.body.includes(cls));
+  }
+  // Sidekolonnens bredde: settes på body så både kolonnen og innholds-
+  // paddingen leser samme verdi.
+  const isSide = hc.body.length > 0;
+  if (isSide) {
+    document.body.style.setProperty('--urd-nav-side-width', `${clampSideWidth(site.nav.style?.width)}px`);
+  } else {
+    document.body.style.removeProperty('--urd-nav-side-width');
   }
 
   // Utseende (nav.style, additivt fra v0.5): bakgrunnsfarge med dekkevne,
@@ -69,6 +99,27 @@ export function renderNav(site, host) {
   // backdrop-filter selv arver ikke, så inherit i CSS-en ville stoppet på li-en).
   if (surface.blur === false) nav.style.setProperty('--urd-nav-blur', 'none');
   if (surface.color) nav.style.color = surface.color;
+  // Undermenyen og mobilpanelet får sin egen flate: som standard kun
+  // fargesløret, aldri bakgrunnsbildet (subImage skrur bildet på).
+  const subBg = navSubSurface(site.nav.style);
+  if (subBg) nav.style.setProperty('--urd-nav-sub-bg', subBg);
+  // Hover-farger (additive fra v0.6): effektfargen (strek/pille-flate/glød)
+  // og tekstfargen ved hover; uten valg gjelder aksentfargen som før.
+  if (site.nav.style?.hoverColor) {
+    nav.style.setProperty('--urd-nav-hover', resolveColor(site.nav.style.hoverColor));
+  }
+  if (site.nav.style?.hoverTextColor) {
+    nav.style.setProperty('--urd-nav-hover-text', resolveColor(site.nav.style.hoverTextColor));
+  }
+  // Glødstyrke for «Løft med glød» (0..1, standard 0.6): settes som ferdig
+  // prosent, så CSS-ens color-mix kan bruke verdien rett.
+  const glowStrength = Number(site.nav.style?.hoverGlow);
+  if (Number.isFinite(glowStrength)) {
+    nav.style.setProperty('--urd-nav-hover-glow', `${Math.round(Math.min(1, Math.max(0, glowStrength)) * 100)}%`);
+  }
+  // Undermeny-kolonner (n x n): punktene legges i grid med valgt kolonnetall.
+  const subCols = Math.round(Number(site.nav.style?.subColumns));
+  if (subCols >= 2) nav.style.setProperty('--urd-nav-sub-cols', String(Math.min(4, subCols)));
 
   const logoDef = site.nav.logo ?? { type: 'text', value: site.site.title };
   const logo = document.createElement('a');
@@ -80,7 +131,10 @@ export function renderNav(site, host) {
     const img = document.createElement('img');
     img.src = src;
     img.alt = site.site.title;
-    img.style.height = `${logoDef.size ?? 32}px`;
+    // Høyden settes via variabel, ikke inline height: CSS-kalibreringen
+    // (negativ blokkmarg som skalerer med størrelsen) holder barens høyde
+    // konstant uansett bildehøyde - bildet fyller ut, baren vokser aldri.
+    img.style.setProperty('--urd-logo-size', `${logoDef.size ?? 32}px`);
     if (logoDef.radius) img.style.borderRadius = `${logoDef.radius}px`;
     return img;
   };
@@ -168,7 +222,11 @@ export function renderNav(site, host) {
 
   // Hover åpner kun på enheter med ekte peker - touch skal aldri få
   // hover-tilstander som krever et ekstra trykk for å bli kvitt.
-  const hoverable = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  // I den sidestilte kolonnen er undermenyene trekkspill i flyten: hover-
+  // lukking ville kortet ned hele kolonnen under pekeren og gitt feilklikk
+  // (eiers testfunn 23. juli 2026). Der styres de kun av klikk.
+  const isColumn = hc.host.includes('urd-nav-side-host');
+  const hoverable = !isColumn && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
   const items = navItems(site);
   items.forEach((item, index) => {
@@ -266,6 +324,36 @@ export function renderNav(site, host) {
   nav.appendChild(list);
   nav.appendChild(tools);
   host.appendChild(nav);
+
+  // Sidekolonnens bredde justeres ved å dra i innerkanten (kun i preview,
+  // som seksjonshøydene). Live-oppdatering via CSS-varen; ved slipp meldes
+  // bredden til editoren, som eier utkastet (urd-nav-width).
+  if (isSide && document.body.classList.contains('urd-preview')) {
+    const grip = document.createElement('div');
+    grip.className = 'urd-nav-side-resize';
+    grip.title = 'Dra for å endre kolonnebredden';
+    const rightSide = hc.host.includes('urd-nav-side-host-right');
+    grip.addEventListener('pointerdown', (event) => {
+      event.preventDefault();
+      grip.setPointerCapture(event.pointerId);
+      const startX = event.clientX;
+      const startW = clampSideWidth(site.nav.style?.width);
+      let width = startW;
+      const onMove = (ev) => {
+        const delta = rightSide ? startX - ev.clientX : ev.clientX - startX;
+        width = clampSideWidth(startW + delta);
+        document.body.style.setProperty('--urd-nav-side-width', `${width}px`);
+      };
+      const onUp = () => {
+        grip.removeEventListener('pointermove', onMove);
+        grip.removeEventListener('pointerup', onUp);
+        if (width !== startW) window.parent?.postMessage({ type: 'urd-nav-width', width }, location.origin);
+      };
+      grip.addEventListener('pointermove', onMove);
+      grip.addEventListener('pointerup', onUp);
+    }, { signal });
+    host.appendChild(grip);
+  }
 
   // Escape lukker nærmeste åpne lag og gir fokuset tilbake til knappen som
   // åpnet det, så tastaturbrukere lander der de var.

@@ -981,6 +981,12 @@
       onBlockFlag: handleBlockFlag,
       onCollectionEdit: handleCollectionEdit,
       onPluginBlocks: (msg) => { pluginBlocks = msg.blocks ?? []; },
+      // Sidestilt kolonnebredde dratt i preview: skurer i samme dra
+      // koalesceres til ETT angre-steg (edit:-prefikset).
+      onNavWidth: (msg) => siteMutate('edit:nav-width', () => {
+        siteDraft.nav.style ??= {};
+        siteDraft.nav.style.width = msg.width;
+      }),
     });
   }
 
@@ -1242,9 +1248,15 @@
   function setNavStyle(name, value) {
     siteMutate(`edit:nav-style-${name}`, () => {
       siteDraft.nav.style ??= {};
-      siteDraft.nav.style[name] = value;
+      // Standardverdier lagres ikke i fila (kall med undefined fjerner feltet).
+      if (value === undefined) delete siteDraft.nav.style[name];
+      else siteDraft.nav.style[name] = value;
     });
   }
+
+  /** Variant-avledninger for panelet: sidestilt og flytende viser egne valg. */
+  const sideVariant = $derived(siteDraft?.nav?.variant === 'side-left' || siteDraft?.nav?.variant === 'side-right');
+  const floatingVariant = $derived(siteDraft?.nav?.variant === 'floating' || siteDraft?.nav?.variant === 'floating-square');
 
   /** Variant (additivt fra v0.6): standarden (bar) lagres ikke i fila. */
   function setNavVariant(value) {
@@ -2717,15 +2729,42 @@
                 <details class="group">
                   <summary>Utseende</summary>
                   <div class="group-items">
-                    <label>Bakgrunn
+                    <label title="Sidestilt meny: dra i kolonnekanten i forhåndsvisningen for å endre bredden; på mobil og trange vinduer vises den som topplinje">Variant
+                      <Dropdown value={siteDraft.nav.variant ?? 'bar'}
+                        options={[['bar', 'Stripe (standard)'], ['floating', 'Flytende (pille)'], ['floating-square', 'Flytende (firkant)'],
+                          ['side-left', 'Sidestilt venstre'], ['side-right', 'Sidestilt høyre']]}
+                        onchange={(v) => setNavVariant(v)} /></label>
+                    {#if floatingVariant}
+                      <label class="gridmenu-snap" title="Myk glød i aksentfargen rundt den flytende menyen">
+                        <input type="checkbox" checked={siteDraft.nav.style?.glow === true}
+                          onchange={(e) => setNavGlow(e.target.checked)} />
+                        Glød rundt menyen
+                      </label>
+                      <label class="gridmenu-snap" title="Av: menyen ligger helt i toppen av siden">
+                        <input type="checkbox" checked={siteDraft.nav.style?.topGap !== false}
+                          onchange={(e) => setNavTopGap(e.target.checked)} />
+                        Luft over menyen
+                      </label>
+                    {/if}
+                    {#if sideVariant}
+                      <label title="Justeringen av menypunktene inne i kolonnen">Tekstjustering
+                        <Dropdown value={siteDraft.nav.style?.sideAlign ?? 'left'}
+                          options={[['left', 'Venstre'], ['center', 'Midtstilt'], ['right', 'Høyre']]}
+                          onchange={(v) => setNavStyle('sideAlign', v === 'left' ? undefined : v)} /></label>
+                    {/if}
+                    <label>Størrelse
+                      <Dropdown value={siteDraft.nav.style?.size ?? 'md'}
+                        options={[['sm', 'Liten'], ['md', 'Standard'], ['lg', 'Stor'], ['xl', 'Ekstra stor']]}
+                        onchange={(v) => setNavStyle('size', v === 'md' ? undefined : v)} /></label>
+                    <label>Bakgrunnsfarge
                       <ColorPicker value={siteDraft.nav.style?.bg ?? 'surface'} tokens={themeSwatches()}
                         label="Menyens bakgrunnsfarge" onchange={(hex) => setNavStyle('bg', hex)} /></label>
-                    <label>Dekkevne
-                      <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.bgOpacity ?? 0.85) * 100)}%</span></label>
+                    <label title="0 % = helt tett flate, 100 % = helt gjennomsiktig meny">Gjennomsiktighet
+                      <span class="gridmenu-value">{Math.round((1 - (siteDraft.nav.style?.bgOpacity ?? 0.85)) * 100)}%</span></label>
                     <input type="range" min="0" max="1" step="0.05"
-                      value={siteDraft.nav.style?.bgOpacity ?? 0.85}
-                      oninput={(e) => setNavStyle('bgOpacity', Number(e.target.value))} />
-                    <label class="gridmenu-snap" title="Innholdet bak menyen sløres (synlig når dekkevnen er lav)">
+                      value={1 - (siteDraft.nav.style?.bgOpacity ?? 0.85)}
+                      oninput={(e) => setNavStyle('bgOpacity', Math.round((1 - Number(e.target.value)) * 100) / 100)} />
+                    <label class="gridmenu-snap" title="Innholdet bak menyen sløres (synlig når gjennomsiktigheten er høy)">
                       <input type="checkbox" checked={siteDraft.nav.style?.blur !== false}
                         onchange={(e) => setNavStyle('blur', e.target.checked)} />
                       Uskarphet bak menyen
@@ -2735,39 +2774,36 @@
                         label="Menyens tekstfarge" onchange={(hex) => setNavStyle('textColor', hex)} /></label>
                     <label>Menyplassering
                       <Dropdown value={siteDraft.nav.layout ?? 'right'}
-                        options={[['right', 'Høyre'], ['center', 'Midtstilt'], ['left', 'Venstre (etter logoen)']]}
+                        options={sideVariant
+                          ? [['right', 'Øverst (standard)'], ['center', 'Midt på'], ['left', 'Nederst']]
+                          : [['right', 'Høyre'], ['center', 'Midtstilt'], ['left', 'Venstre (etter logoen)']]}
                         onchange={(v) => setNavLayout(v)} /></label>
-                    <label class="gridmenu-snap" title="Av: menyen ligger kun øverst og forsvinner når man blar nedover">
-                      <input type="checkbox" checked={siteDraft.nav.sticky !== false}
-                        onchange={(e) => siteMutate('nav', () => { siteDraft.nav.sticky = e.target.checked; })} />
-                      Klistrete meny (følger med når man blar)
-                    </label>
-                    <label>Variant
-                      <Dropdown value={siteDraft.nav.variant ?? 'bar'}
-                        options={[['bar', 'Stripe (standard)'], ['floating', 'Flytende (pille)'],
-                          ['side-left', 'Sidestilt venstre'], ['side-right', 'Sidestilt høyre']]}
-                        onchange={(v) => setNavVariant(v)} /></label>
-                    {#if siteDraft.nav.variant === 'floating'}
-                      <label class="gridmenu-snap" title="Myk glød i aksentfargen rundt pillen">
-                        <input type="checkbox" checked={siteDraft.nav.style?.glow === true}
-                          onchange={(e) => setNavGlow(e.target.checked)} />
-                        Glød rundt pillen
+                    {#if !sideVariant}
+                      <label class="gridmenu-snap" title="Av: menyen ligger kun øverst og forsvinner når man blar nedover">
+                        <input type="checkbox" checked={siteDraft.nav.sticky !== false}
+                          onchange={(e) => siteMutate('nav', () => { siteDraft.nav.sticky = e.target.checked; })} />
+                        Klistrete meny (følger med når man blar)
                       </label>
-                      <label class="gridmenu-snap" title="Av: pillen ligger helt i toppen av siden">
-                        <input type="checkbox" checked={siteDraft.nav.style?.topGap !== false}
-                          onchange={(e) => setNavTopGap(e.target.checked)} />
-                        Luft over pillen
-                      </label>
-                    {/if}
-                    {#if siteDraft.nav.variant === 'side-left' || siteDraft.nav.variant === 'side-right'}
-                      <p class="panel-hint">Sidestilt meny er en fast kolonne; på mobil vises den som topplinje med burger.</p>
                     {/if}
                     <label>Lenke-hover
                       <Dropdown value={siteDraft.nav.style?.hover ?? 'standard'}
-                        options={[['standard', 'Standard (aksentfarge)'], ['underline', 'Understrek'], ['pill', 'Pille'], ['lift', 'Løft med glød']]}
+                        options={[['standard', 'Standard (aksentfarge)'], ['underline', 'Understrek'], ['pill', 'Pille'], ['lift-plain', 'Løft'], ['lift', 'Løft med glød']]}
                         onchange={(v) => setNavHover(v)} /></label>
+                    {#if siteDraft.nav.style?.hover === 'lift'}
+                      <label title="Hvor sterk gløden bak teksten er">Glødstyrke
+                        <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.hoverGlow ?? 0.6) * 100)}%</span></label>
+                      <input type="range" min="0.1" max="1" step="0.05"
+                        value={siteDraft.nav.style?.hoverGlow ?? 0.6}
+                        oninput={(e) => setNavStyle('hoverGlow', Number(e.target.value))} />
+                    {/if}
+                    <label title="Fargen på hover-effekten: streken, pille-flaten eller gløden">Hover-farge
+                      <ColorPicker value={siteDraft.nav.style?.hoverColor ?? 'accent'} tokens={themeSwatches()}
+                        label="Hover-effektens farge" onchange={(hex) => setNavStyle('hoverColor', hex)} /></label>
+                    <label title="Tekstfargen når pekeren er over et menypunkt">Tekstfarge ved hover
+                      <ColorPicker value={siteDraft.nav.style?.hoverTextColor ?? 'accent'} tokens={themeSwatches()}
+                        label="Tekstfargen ved hover" onchange={(hex) => setNavStyle('hoverTextColor', hex)} /></label>
                     <span class="toolbar-row">
-                      <label class="ghost filepick tb-grow" title="Komprimeres automatisk til webp">
+                      <label class="ghost filepick tb-grow" title="Bakgrunnsfargen med gjennomsiktigheten legger seg som et slør over bildet; komprimeres automatisk til webp">
                         {siteDraft.nav.style?.image ? 'Bytt bakgrunnsbilde' : 'Bakgrunnsbilde i menyen'}
                         <input type="file" accept="image/*" onchange={uploadNavImage} />
                       </label>
@@ -2785,10 +2821,34 @@
                       <label>Bildeutsnitt (høyde)
                         <span class="gridmenu-value">{Math.round(siteDraft.nav.style?.imageY ?? 50)}%</span></label>
                       <input type="range" min="0" max="100" step="1"
-                        title="Hvilken del av bildet som vises i stripen: 0 = toppen, 100 = bunnen"
+                        title="Hvilken del av bildet som vises i høyden: 0 = toppen, 100 = bunnen. Monner mest i topplinjen"
                         value={siteDraft.nav.style?.imageY ?? 50}
                         oninput={(e) => setNavStyle('imageY', Number(e.target.value))} />
-                      <p class="panel-hint">Bakgrunnsfargen og dekkevnen over legger seg som et slør over bildet.</p>
+                      <label>Bildeutsnitt (bredde)
+                        <span class="gridmenu-value">{Math.round(siteDraft.nav.style?.imageX ?? 50)}%</span></label>
+                      <input type="range" min="0" max="100" step="1"
+                        title="Hvilken del av bildet som vises i bredden: 0 = venstre, 100 = høyre. Monner mest i sidestilt kolonne"
+                        value={siteDraft.nav.style?.imageX ?? 50}
+                        oninput={(e) => setNavStyle('imageX', Number(e.target.value))} />
+                    {/if}
+                  </div>
+                </details>
+                <details class="group">
+                  <summary>Undermeny</summary>
+                  <div class="group-items">
+                    <label>Design
+                      <Dropdown value={siteDraft.nav.style?.subStyle ?? 'card'}
+                        options={[['card', 'Kort (standard)'], ['flat', 'Ren flate'], ['pills', 'Pille-punkter'], ['lines', 'Understrek-liste'], ['flyout', 'Utfall (full bredde)']]}
+                        onchange={(v) => setNavStyle('subStyle', v === 'card' ? undefined : v)} /></label>
+                    <label title="Punktene i undermenyen legges i rutenett: 2 kolonner gir 2x2, 2x3 osv.">Kolonner
+                      <input type="number" min="1" max="4" value={siteDraft.nav.style?.subColumns ?? 1}
+                        onchange={(e) => setNavStyle('subColumns', Number(e.target.value) > 1 ? Number(e.target.value) : undefined)} /></label>
+                    {#if siteDraft.nav.style?.image}
+                      <label class="gridmenu-snap" title="Av: undermenyen og mobilpanelet får kun bakgrunnsfargen, ikke bildet">
+                        <input type="checkbox" checked={siteDraft.nav.style?.subImage === true}
+                          onchange={(e) => setNavStyle('subImage', e.target.checked ? true : undefined)} />
+                        Bakgrunnsbilde også i undermenyen
+                      </label>
                     {/if}
                   </div>
                 </details>

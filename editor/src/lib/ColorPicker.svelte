@@ -120,7 +120,11 @@
     const r = rootEl.getBoundingClientRect();
     const W = 236;
     const H = 380;
-    const left = Math.max(8, Math.min(r.right - W, window.innerWidth - W - 8));
+    // Popoveren holder seg innenfor PANELET den åpnes fra (ikke bare
+    // viewporten), så den aldri henger ut over forhåndsvisningen.
+    const panel = rootEl.closest('.panel-body')?.getBoundingClientRect();
+    const rightEdge = panel && panel.width >= W + 16 ? panel.right : window.innerWidth;
+    const left = Math.max(8, Math.min(r.right - W, rightEdge - W - 8));
     const top = r.bottom + H + 8 > window.innerHeight ? Math.max(8, r.top - H - 8) : r.bottom + 6;
     pos = { top, left };
     open = true;
@@ -209,6 +213,8 @@
   // rulling: å klikke et felt/knapp inne i den flytende popoveren gir fokus,
   // og nettleseren ruller da panelet litt for å vise elementet - det rullet
   // skal ikke lukke velgeren (den lukkes ellers ved hvert innvendig klikk).
+  // Klikk i forhåndsvisnings-iframen når aldri documentets pointerdown;
+  // fokusflyttet dit gir window-blur, som også skal lukke.
   $effect(() => {
     if (!open) return;
     const onDown = (e) => {
@@ -217,11 +223,14 @@
     const onKey = (e) => {
       if (e.key === 'Escape') close();
     };
+    const onBlur = () => close();
     document.addEventListener('pointerdown', onDown, true);
     document.addEventListener('keydown', onKey, true);
+    window.addEventListener('blur', onBlur);
     return () => {
       document.removeEventListener('pointerdown', onDown, true);
       document.removeEventListener('keydown', onKey, true);
+      window.removeEventListener('blur', onBlur);
     };
   });
 </script>
@@ -231,7 +240,12 @@
     style="background: {displayHex()}" title={linkedToken() ? `${label} (koblet til temafargen «${linkedToken()}»)` : label}
     aria-label={label} onclick={() => (open ? close() : openPicker())}></button>
   {#if open}
-    <div class="cp-pop" style="top: {pos.top}px; left: {pos.left}px">
+    <!-- Velgeren ligger ofte inne i en <label>: uten preventDefault videresender
+         nettleseren klikk på ikke-interaktive flater (fargeflaten, tomrom) som et
+         klikk til label-ens knapp = fargeruten, som ville togglet velgeren lukket. -->
+    <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+    <div class="cp-pop" style="top: {pos.top}px; left: {pos.left}px"
+      onclick={(e) => e.preventDefault()}>
       <div class="cp-sv"
         style="background-image: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent); background-color: hsl({h}, 100%, 50%)"
         onpointerdown={svDown}>
@@ -313,6 +327,10 @@
   .cp-pop {
     position: fixed;
     z-index: 500;
+    /* border-box: bredden her ER den synlige bredden, samme tall som
+       plasseringsutregningen i openPicker bruker (ellers henger boksen
+       20px lenger ut enn matematikken tror) */
+    box-sizing: border-box;
     width: 236px;
     display: grid;
     gap: 8px;

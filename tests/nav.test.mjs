@@ -5,7 +5,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveItem, navItems, navClasses, navSurface, hostClasses } from '../template/assets/engine/nav-model.js';
+import { resolveItem, navItems, navClasses, navSurface, navSubSurface, hostClasses, clampSideWidth } from '../template/assets/engine/nav-model.js';
 
 const PAGES = [
   { id: 'hjem', title: 'Hjem', path: '/' },
@@ -90,6 +90,10 @@ test('navClasses: flytende variant og hover-stil gir egne klasser', () => {
 
 test('navClasses: standardene bar og standard gir ingen ekstra klasser', () => {
   assert.equal(navClasses({ nav: { variant: 'bar', style: { hover: 'standard' } } }), 'urd-nav urd-nav-right');
+});
+
+test('navClasses: løft uten glød er egen hover-stil', () => {
+  assert.equal(navClasses({ nav: { style: { hover: 'lift-plain' } } }), 'urd-nav urd-nav-right urd-nav-hover-lift-plain');
 });
 
 test('navClasses: glød kun som tilvalg på flytende pille', () => {
@@ -200,4 +204,59 @@ test('hostClasses: variantene styrer vert- og body-klassene', () => {
     { host: ['urd-nav-side-host', 'urd-nav-side-host-left'], body: ['urd-side-left'] });
   assert.deepEqual(hostClasses({ nav: { variant: 'side-right' } }),
     { host: ['urd-nav-side-host', 'urd-nav-side-host-right'], body: ['urd-side-right'] });
+});
+
+test('navClasses/hostClasses: firkant-varianten er flytende uten avrunding', () => {
+  assert.equal(
+    navClasses({ nav: { variant: 'floating-square', style: { glow: true } } }),
+    'urd-nav urd-nav-right urd-nav-var-floating urd-nav-square urd-nav-glow',
+  );
+  assert.deepEqual(hostClasses({ nav: { variant: 'floating-square' } }), { host: ['urd-nav-float'], body: [] });
+});
+
+test('navClasses: størrelse gir klasse kun utenfor standarden (md)', () => {
+  assert.equal(navClasses({ nav: { style: { size: 'sm' } } }), 'urd-nav urd-nav-right urd-nav-size-sm');
+  assert.equal(navClasses({ nav: { style: { size: 'xl' } } }), 'urd-nav urd-nav-right urd-nav-size-xl');
+  assert.equal(navClasses({ nav: { style: { size: 'md' } } }), 'urd-nav urd-nav-right');
+  // Frie strenger hvitelistes bort - klassenavn bygges aldri av rå data
+  assert.equal(navClasses({ nav: { style: { size: 'evil injection' } } }), 'urd-nav urd-nav-right');
+});
+
+test('navClasses: tekstjustering og undermeny-design gir hvitelistede klasser', () => {
+  assert.equal(navClasses({ nav: { style: { sideAlign: 'center' } } }), 'urd-nav urd-nav-right urd-nav-salign-center');
+  assert.equal(navClasses({ nav: { style: { sideAlign: 'left' } } }), 'urd-nav urd-nav-right');
+  assert.equal(navClasses({ nav: { style: { subStyle: 'flyout' } } }), 'urd-nav urd-nav-right urd-nav-sub-flyout');
+  assert.equal(navClasses({ nav: { style: { subStyle: 'card' } } }), 'urd-nav urd-nav-right');
+  assert.equal(navClasses({ nav: { style: { subStyle: 'x"y' } } }), 'urd-nav urd-nav-right');
+});
+
+test('navSurface: bildeutsnitt i bredden klemmes til 0-100', () => {
+  assert.ok(navSurface({ image: '/media/m.webp', imageX: 20 }).bg.endsWith('url("/media/m.webp") 20% 50% / cover'));
+  assert.ok(navSurface({ image: '/media/m.webp', imageX: 150 }).bg.endsWith('100% 50% / cover'));
+  assert.ok(navSurface({ image: '/media/m.webp', imageX: -5, imageY: 80 }).bg.endsWith('0% 80% / cover'));
+});
+
+test('navSubSurface: undermenyen får kun sløret, aldri bildet, som standard', () => {
+  // Uten style: CSS-standarden gjelder (undefined)
+  assert.equal(navSubSurface(), undefined);
+  assert.equal(navSubSurface({ image: '/media/m.webp' }), undefined);
+  // Med egne farger: sløret alene
+  assert.equal(
+    navSubSurface({ image: '/media/m.webp', bg: 'accent', bgOpacity: 0.4 }),
+    'color-mix(in srgb, var(--urd-color-accent) 40%, transparent)',
+  );
+  // subImage: true gir hele bakgrunnen med bildelagene
+  const withImage = navSubSurface({ image: '/media/m.webp', subImage: true });
+  assert.ok(withImage.includes('url("/media/m.webp")'));
+  // Ugyldig bilde slipper ikke gjennom selv med subImage
+  assert.equal(navSubSurface({ image: 'https://evil.example/x.png', subImage: true }), undefined);
+});
+
+test('clampSideWidth: klemmes til 180-400, søppel gir standarden 250', () => {
+  assert.equal(clampSideWidth(300), 300);
+  assert.equal(clampSideWidth(100), 180);
+  assert.equal(clampSideWidth(900), 400);
+  assert.equal(clampSideWidth(249.6), 250);
+  assert.equal(clampSideWidth(undefined), 250);
+  assert.equal(clampSideWidth('tull'), 250);
 });

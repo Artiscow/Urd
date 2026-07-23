@@ -48,6 +48,7 @@ CI (GitHub Actions) kjører de samme tre pluss bygg-samsvar-sjekken, og CodeQL s
 - **Aldri tankestrek (em dash) noe sted**: ikke i prosjekttekst, kode, kommentarer, commit-meldinger eller chat-svar til eieren. Bruk vanlig bindestrek eller omformuler.
 - **Norsk (bokmål) i docs og bruker-UI; engelske identifikatorer i kode OG i datakontrakter** (feltnavn i JSON, meldingstyper).
 - **Ingen emoji/tegn i editor-UI: kun tegnede SVG-ikoner.** (Tegn/emoji er innhold brukeren kan sette, ikke chrome.)
+- **Ingen forklarende prosa i admin-panelene** (eiers regel 23. juli 2026): innstillinger forklares i «?»-tooltips (title-attributtet) eller hjelpechipen, aldri som tekstavsnitt (panel-hint o.l.) i panelet. Innstillinger som kun gjelder en variant/et valg skal stå RETT UNDER valget de hører til.
 - **Kode-kommentarer brytes ved setningsgrense, aldri midt i en setning.** Match omkringliggende kode i kommentar-tetthet, navngiving og idiom.
 
 ## Motor-lekser (gjentatte fallgruver)

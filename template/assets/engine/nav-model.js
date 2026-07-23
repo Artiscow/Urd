@@ -63,8 +63,10 @@ export function navItems(site) {
 export function navClasses(site) {
   let classes = `urd-nav urd-nav-${site.nav.layout ?? 'right'}`;
   const variant = site.nav.variant;
-  if (variant === 'floating') {
+  if (variant === 'floating' || variant === 'floating-square') {
     classes += ' urd-nav-var-floating';
+    // Firkant-varianten er pillen uten avrundede kanter (eiers ønske 23. juli 2026).
+    if (variant === 'floating-square') classes += ' urd-nav-square';
     // Glød er et tilvalg for pillen (av som standard, eiers valg 22. juli 2026).
     if (site.nav.style?.glow) classes += ' urd-nav-glow';
     // Luft over pillen er standard; topGap: false legger den helt i toppen.
@@ -72,6 +74,16 @@ export function navClasses(site) {
   }
   const hover = site.nav.style?.hover;
   if (hover && hover !== 'standard') classes += ` urd-nav-hover-${hover}`;
+  // Størrelse (additivt fra v0.6): md er standard og gir ingen klasse.
+  // Verdiene hvitelistes - klassenavn skal aldri bygges av frie strenger.
+  const size = site.nav.style?.size;
+  if (['sm', 'lg', 'xl'].includes(size)) classes += ` urd-nav-size-${size}`;
+  // Tekstjustering av punktene i den sidestilte kolonnen (standard venstre).
+  const salign = site.nav.style?.sideAlign;
+  if (['center', 'right'].includes(salign)) classes += ` urd-nav-salign-${salign}`;
+  // Undermeny-design (standard card = dagens kort).
+  const sub = site.nav.style?.subStyle;
+  if (['flat', 'pills', 'lines', 'flyout'].includes(sub)) classes += ` urd-nav-sub-${sub}`;
   return classes;
 }
 
@@ -84,7 +96,7 @@ export function navClasses(site) {
  */
 export function hostClasses(site) {
   const v = site.nav.variant;
-  if (v === 'floating') return { host: ['urd-nav-float'], body: [] };
+  if (v === 'floating' || v === 'floating-square') return { host: ['urd-nav-float'], body: [] };
   if (v === 'side-left') return { host: ['urd-nav-side-host', 'urd-nav-side-host-left'], body: ['urd-side-left'] };
   if (v === 'side-right') return { host: ['urd-nav-side-host', 'urd-nav-side-host-right'], body: ['urd-side-right'] };
   return { host: [], body: [] };
@@ -107,9 +119,8 @@ export function navSurface(style = {}) {
     // Sløret gjentas som gradient-lag over bildet; uten egne valg brukes
     // standardflaten (surface 85 %), så teksten alltid har bakgrunn å stå på.
     const color = resolveColor(style.bg ?? 'surface');
-    const pct = Math.round((style.bgOpacity ?? 0.85) * 100);
-    const veil = `color-mix(in srgb, ${color} ${pct}%, transparent)`;
-    const layers = [`linear-gradient(${veil}, ${veil})`];
+    const cover = veil(style);
+    const layers = [`linear-gradient(${cover}, ${cover})`];
     // Bildestyrke (0..1, standard 1): svakere bilde tones mot bakgrunns-
     // fargen med et eget lag under sløret - CSS kan ikke sette opacity på
     // ett enkelt bakgrunnslag.
@@ -118,17 +129,51 @@ export function navSurface(style = {}) {
       const fade = `color-mix(in srgb, ${color} ${Math.round((1 - strength) * 100)}%, transparent)`;
       layers.push(`linear-gradient(${fade}, ${fade})`);
     }
-    // Posisjon i høyden (0..100, standard 50): hvilken del av bildet som
-    // vises i den smale menystripen.
+    // Utsnitt (0..100, standard 50 midt på): høyden er det som monner i den
+    // lave brede stripen, bredden i den høye smale sidekolonnen - begge
+    // eksponeres, så valget virker i alle varianter.
+    const x = Math.min(100, Math.max(0, style.imageX ?? 50));
     const y = Math.min(100, Math.max(0, style.imageY ?? 50));
-    layers.push(`url("${style.image}") 50% ${y}% / cover`);
+    layers.push(`url("${style.image}") ${x}% ${y}% / cover`);
     out.bg = layers.join(', ');
   } else if (hasVeil) {
-    const color = resolveColor(style.bg ?? 'surface');
-    const pct = Math.round((style.bgOpacity ?? 0.85) * 100);
-    out.bg = `color-mix(in srgb, ${color} ${pct}%, transparent)`;
+    out.bg = veil(style);
   }
   if (style.blur === false) out.blur = false;
   if (style.textColor) out.color = resolveColor(style.textColor);
   return out;
+}
+
+/** Sløret alene (fargen med dekkevne), uten bildelagene. */
+function veil(style) {
+  const color = resolveColor(style.bg ?? 'surface');
+  const pct = Math.round((style.bgOpacity ?? 0.85) * 100);
+  return `color-mix(in srgb, ${color} ${pct}%, transparent)`;
+}
+
+/**
+ * Bakgrunnen for undermenyen og mobilpanelet (--urd-nav-sub-bg): som
+ * standard KUN sløret, aldri bakgrunnsbildet - bildet blir med bare når
+ * eieren skrur på nav.style.subImage. Undefined = CSS-standarden gjelder.
+ * @param {{bg?: string, bgOpacity?: number, image?: string, subImage?: boolean}} [style]
+ * @returns {string|undefined}
+ */
+export function navSubSurface(style = {}) {
+  if (style.image && SAFE_IMAGE_RE.test(style.image) && style.subImage === true) {
+    return navSurface(style).bg;
+  }
+  if (style.bg || style.bgOpacity != null) return veil(style);
+  return undefined;
+}
+
+/**
+ * Den sidestilte kolonnens bredde i px (nav.style.width), klemt til
+ * fornuftige grenser; alt ugyldig gir standardbredden 250.
+ * @param {number|string|undefined} width
+ * @returns {number}
+ */
+export function clampSideWidth(width) {
+  const n = Number(width);
+  if (!Number.isFinite(n)) return 250;
+  return Math.min(400, Math.max(180, Math.round(n)));
 }

@@ -1490,7 +1490,9 @@ a.urd-galleri-tile {
 
 /* Navigasjon */
 .urd-nav {
-  --urd-nav-pad: 0.9rem;
+  /* Basispaddingen settes av størrelsesklassene (urd-nav-size-*); pillen
+     skalerer den ned med calc, så størrelse og variant komponerer. */
+  --urd-nav-pad: var(--urd-nav-base-pad, 0.9rem);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1538,11 +1540,13 @@ a.urd-galleri-tile {
 }
 
 .urd-nav-logo img {
-  height: 2rem;
+  height: var(--urd-logo-size, 2rem);
   display: block;
   /* Store logoer vokser UT av linjen (inn i padding/innholdet under),
-     ikke linjen selv - menyhøyden styres ikke av bildet */
-  margin-block: calc(-1 * var(--urd-nav-pad) + 2px);
+     ikke linjen selv - menyhøyden styres ikke av bildet. Margen skalerer
+     med bildehøyden, så bidraget til barhøyden er konstant uansett
+     størrelse (fast del kalibrert mot 2rem-logoen). */
+  margin-block: calc(-1 * var(--urd-nav-pad) + 2px - (var(--urd-logo-size, 2rem) - 2rem) / 2);
 }
 
 .urd-nav-list {
@@ -1573,10 +1577,12 @@ a.urd-galleri-tile {
   opacity: 0.85;
 }
 
+/* Hover-tekstfargen kan overstyres (nav.style.hoverTextColor); standard
+   er aksentfargen som før */
 .urd-nav-list a:hover,
 .urd-nav-list a:focus-visible {
   opacity: 1;
-  color: var(--urd-color-accent);
+  color: var(--urd-nav-hover-text, var(--urd-color-accent));
 }
 
 /* Synlig tastaturfokus på alt interaktivt i menyen */
@@ -1669,7 +1675,7 @@ a.urd-galleri-tile {
 .urd-nav-caret:focus-visible,
 .urd-nav-toggle:focus-visible {
   opacity: 1;
-  color: var(--urd-color-accent);
+  color: var(--urd-nav-hover-text, var(--urd-color-accent));
 }
 
 .urd-nav-caret svg,
@@ -1685,18 +1691,23 @@ a.urd-galleri-tile {
 .urd-nav-sub {
   display: none;
   position: absolute;
-  top: 100%;
+  /* Ankres UNDER baren, ikke rett under menypunktet: punktet er midtstilt
+     i baren, så top: 100% alene ville landet inni den (over nav-teksten) */
+  top: calc(100% + var(--urd-nav-pad, 0.9rem));
   left: 0;
   z-index: 1;
   min-width: 12rem;
   margin: 0;
   padding: 0.5rem;
   list-style: none;
-  background: var(--urd-nav-bg, color-mix(in srgb, var(--urd-color-surface) 85%, transparent));
+  /* Egen flate-var: som standard kun fargesløret, aldri bakgrunnsbildet
+     (nav.style.subImage skrur bildet på; nav.js setter varen) */
+  background: var(--urd-nav-sub-bg, color-mix(in srgb, var(--urd-color-surface) 85%, transparent));
   /* Varen arver fra nav-en, også når nav.style skrur bluren av */
   backdrop-filter: var(--urd-nav-blur, blur(8px));
   border-radius: var(--urd-radius-sm);
   box-shadow: 0 8px 24px color-mix(in srgb, var(--urd-color-text) 15%, transparent);
+  grid-template-columns: repeat(var(--urd-nav-sub-cols, 1), 1fr);
 }
 
 /* Med menypunktene til høyre må undermenyen holde seg innenfor kanten */
@@ -1716,9 +1727,64 @@ a.urd-galleri-tile {
   white-space: nowrap;
 }
 
+/* Undermeny-design (nav.style.subStyle, additivt fra v0.6): standarden er
+   kortet over (card); variantklassen står på nav-elementet. Kolonnetallet
+   (--urd-nav-sub-cols) settes av nav.js og virker i alle variantene. */
+.urd-nav-sub-flat .urd-nav-sub {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.urd-nav-sub-pills .urd-nav-sub {
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  padding: 0.4rem 0;
+  gap: 0.35rem;
+}
+
+.urd-nav-sub-pills .urd-nav-sub a {
+  background: var(--urd-nav-sub-bg, color-mix(in srgb, var(--urd-color-surface) 92%, transparent));
+  backdrop-filter: var(--urd-nav-blur, blur(8px));
+  border-radius: 999px;
+  padding: 0.45rem 1.1rem;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--urd-color-text) 12%, transparent);
+}
+
+.urd-nav-sub-lines .urd-nav-sub {
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0.25rem 0;
+}
+
+.urd-nav-sub-lines .urd-nav-sub a {
+  border-radius: 0;
+  padding: 0.55rem 1rem;
+}
+
+.urd-nav-sub-lines .urd-nav-sub li + li {
+  border-top: 1px solid color-mix(in srgb, var(--urd-color-text) 15%, transparent);
+}
+
+/* Utfall: undermenyen spenner hele menybredden. Punktet slipper å være
+   ankeret (position: static), så nav-en selv (position: relative) blir
+   beholderen, og top: 100% lander rett under baren. */
+.urd-nav-sub-flyout .urd-nav-has-sub {
+  position: static;
+}
+
+.urd-nav-sub-flyout .urd-nav-sub {
+  left: 0;
+  right: 0;
+  top: 100%;
+  border-radius: 0 0 var(--urd-radius-md) var(--urd-radius-md);
+}
+
 /* Mobilmeny: burgeren erstatter listen; åpen liste blir et kolonnepanel
-   under menyen med samme flate (--urd-nav-bg), og undermenyene blir
-   statiske trekkspill i stedet for svevende bokser */
+   under menyen med egen flate (--urd-nav-sub-bg, uten bakgrunnsbildet),
+   og undermenyene blir statiske trekkspill i stedet for svevende bokser.
+   (Sidestilt på trange vinduer trenger ingen egne regler: nav.js rendrer
+   den som vanlig topplinje - effektiv variant bar - under 900px.) */
 body.urd-mobile .urd-nav-list {
   display: none;
 }
@@ -1738,7 +1804,7 @@ body.urd-mobile .urd-nav.urd-nav-open .urd-nav-list {
   right: 0;
   margin: 0;
   padding: 0.75rem clamp(1rem, 4vw, 2.5rem) 1rem;
-  background: var(--urd-nav-bg, color-mix(in srgb, var(--urd-color-surface) 85%, transparent));
+  background: var(--urd-nav-sub-bg, color-mix(in srgb, var(--urd-color-surface) 85%, transparent));
   backdrop-filter: var(--urd-nav-blur, blur(8px));
   box-shadow: 0 12px 24px color-mix(in srgb, var(--urd-color-text) 15%, transparent);
   max-height: calc(100vh - 4rem);
@@ -1800,11 +1866,17 @@ body.urd-mobile .urd-nav-sub {
 
 .urd-nav-var-floating {
   /* Padding via varen, ikke padding-block: logobildets negative
-     margin-triks er kalibrert mot --urd-nav-pad og må følge med */
-  --urd-nav-pad: 0.6rem;
+     margin-triks er kalibrert mot --urd-nav-pad og må følge med.
+     Pillen skalerer basispaddingen ned, så størrelsesvalget komponerer. */
+  --urd-nav-pad: calc(var(--urd-nav-base-pad, 0.9rem) * 0.67);
   margin: 0.75rem auto 0;
   width: min(1100px, calc(100% - 2rem));
   border-radius: 999px;
+}
+
+/* Firkant-varianten (nav.variant floating-square): pillen uten avrunding */
+.urd-nav-var-floating.urd-nav-square {
+  border-radius: 0;
 }
 
 /* Glød rundt pillen: tilvalg (av som standard) */
@@ -1817,6 +1889,24 @@ body.urd-mobile .urd-nav-sub {
   margin-top: 0;
 }
 
+/* Fire størrelser (nav.style.size, additivt fra v0.6): md er standard og
+   trenger ingen klasse. Basispaddingen driver også logokalibreringen og
+   undermeny-ankeret, så alt følger med størrelsen. */
+.urd-nav-size-sm {
+  --urd-nav-base-pad: 0.55rem;
+  font-size: 0.85rem;
+}
+
+.urd-nav-size-lg {
+  --urd-nav-base-pad: 1.25rem;
+  font-size: 1.05rem;
+}
+
+.urd-nav-size-xl {
+  --urd-nav-base-pad: 1.7rem;
+  font-size: 1.15rem;
+}
+
 /* Sidestilt meny (nav.variant side-left/side-right): fast kolonne langs
    kanten; body får innholds-padding på samme side (urd-side-*). Sticky
    er irrelevant her - kolonnen står alltid fast. */
@@ -1825,7 +1915,9 @@ body.urd-mobile .urd-nav-sub {
   top: 0;
   bottom: 0;
   left: 0;
-  width: 250px;
+  /* Bredden styres av nav.style.width via variabelen (settes av nav.js på
+     body, så innholds-paddingen under leser samme verdi) */
+  width: var(--urd-nav-side-width, 250px);
   z-index: 5000;
 }
 
@@ -1839,11 +1931,11 @@ body.urd-mobile .urd-nav-sub {
 }
 
 body.urd-side-left {
-  padding-left: 250px;
+  padding-left: var(--urd-nav-side-width, 250px);
 }
 
 body.urd-side-right {
-  padding-right: 250px;
+  padding-right: var(--urd-nav-side-width, 250px);
 }
 
 .urd-nav-side-host .urd-nav {
@@ -1904,8 +1996,84 @@ body.urd-side-right {
   margin-block: 0;
 }
 
+/* Menyplassering i kolonnen (nav.layout): right (standard) = øverst,
+   center = vertikalt midt på, left = nederst. Auto-margene fordeler
+   restplassen; verktøy-klyngen slipper sin auto-marg så listen styrer. */
+.urd-nav-side-host .urd-nav-center .urd-nav-list {
+  margin: auto 0;
+}
+
+.urd-nav-side-host .urd-nav-left .urd-nav-list {
+  margin: auto 0 0;
+}
+
+.urd-nav-side-host .urd-nav-center .urd-nav-tools,
+.urd-nav-side-host .urd-nav-left .urd-nav-tools {
+  margin-top: 1rem;
+}
+
+/* Tekstjustering av punktene i kolonnen (nav.style.sideAlign) */
+.urd-nav-side-host .urd-nav-salign-center .urd-nav-list a,
+.urd-nav-side-host .urd-nav-salign-center .urd-nav-toggle {
+  text-align: center;
+  justify-content: center;
+}
+
+.urd-nav-side-host .urd-nav-salign-right .urd-nav-list a,
+.urd-nav-side-host .urd-nav-salign-right .urd-nav-toggle {
+  text-align: right;
+  justify-content: flex-end;
+}
+
+/* Undermeny-pilen følger tekstjusteringen i kolonnen (eiers regel 23. juli
+   2026): høyrestilt tekst får pilen på VENSTRE side; midtstilt tekst
+   sentreres uten at pilen skyver på den (pilen står absolutt i kanten). */
+.urd-nav-side-host .urd-nav-salign-right .urd-nav-has-sub > .urd-nav-caret {
+  order: -1;
+}
+
+.urd-nav-side-host .urd-nav-salign-right .urd-nav-toggle svg {
+  order: -1;
+}
+
+.urd-nav-side-host .urd-nav-salign-center .urd-nav-has-sub {
+  position: relative;
+  justify-content: center;
+}
+
+.urd-nav-side-host .urd-nav-salign-center .urd-nav-has-sub > a {
+  flex: 0 0 auto;
+}
+
+.urd-nav-side-host .urd-nav-salign-center .urd-nav-has-sub > .urd-nav-caret {
+  position: absolute;
+  right: 0;
+  top: 0.1rem;
+}
+
+/* Dra-håndtak for kolonnebredden (kun preview; nav.js legger det på) */
+.urd-nav-side-resize {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -3px;
+  width: 8px;
+  cursor: ew-resize;
+  z-index: 2;
+}
+
+.urd-nav-side-host-right .urd-nav-side-resize {
+  right: auto;
+  left: -3px;
+}
+
+.urd-nav-side-resize:hover {
+  background: color-mix(in srgb, var(--urd-color-accent) 45%, transparent);
+}
+
 /* På mobil faller sidestilt tilbake til topplinjen med burger: kolonnen
-   blir vanlig sticky topplinje og body-paddingen fjernes */
+   blir vanlig sticky topplinje og body-paddingen fjernes. (Trange vinduer
+   under 900px håndteres i nav.js: effektiv variant bar, ingen egne regler.) */
 body.urd-mobile .urd-nav-side-host {
   position: sticky;
   bottom: auto;
@@ -1933,6 +2101,13 @@ body.urd-mobile.urd-side-right {
   padding-right: 0;
 }
 
+/* Dra-håndtaket for kolonnebredden (kun preview) skjules når kolonnen er
+   falt til topplinje, og i Ren visning */
+body.urd-mobile .urd-nav-side-resize,
+body.urd-chrome-off .urd-nav-side-resize {
+  display: none;
+}
+
 /* Mobilpanelet skal ikke arve pillens fasong: eget lag med luft under */
 body.urd-mobile .urd-nav-var-floating.urd-nav-open .urd-nav-list {
   top: calc(100% + 0.5rem);
@@ -1954,7 +2129,7 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open .urd-nav-list {
   bottom: -0.2rem;
   height: 2px;
   border-radius: 1px;
-  background: var(--urd-color-accent);
+  background: var(--urd-nav-hover, var(--urd-color-accent));
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.2s ease;
@@ -1973,18 +2148,27 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open .urd-nav-list {
 
 .urd-nav-hover-pill .urd-nav-list a:hover,
 .urd-nav-hover-pill .urd-nav-list a:focus-visible {
-  background: color-mix(in srgb, var(--urd-color-accent) 15%, transparent);
+  background: color-mix(in srgb, var(--urd-nav-hover, var(--urd-color-accent)) 15%, transparent);
 }
 
-.urd-nav-hover-lift .urd-nav-list a {
+.urd-nav-hover-lift .urd-nav-list a,
+.urd-nav-hover-lift-plain .urd-nav-list a {
   display: inline-block;
   transition: transform 0.15s ease, text-shadow 0.15s ease;
 }
 
+/* Gløden ligger som text-shadow BAK tegnene; styrken styres av
+   nav.style.hoverGlow (nav.js setter varen som ferdig prosent) */
 .urd-nav-hover-lift .urd-nav-list a:hover,
 .urd-nav-hover-lift .urd-nav-list a:focus-visible {
   transform: translateY(-2px);
-  text-shadow: 0 4px 14px color-mix(in srgb, var(--urd-color-accent) 60%, transparent);
+  text-shadow: 0 4px 14px color-mix(in srgb, var(--urd-nav-hover, var(--urd-color-accent)) var(--urd-nav-hover-glow, 60%), transparent);
+}
+
+/* «Løft»: kun løftet, ingen glød */
+.urd-nav-hover-lift-plain .urd-nav-list a:hover,
+.urd-nav-hover-lift-plain .urd-nav-list a:focus-visible {
+  transform: translateY(-2px);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1992,12 +2176,15 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open .urd-nav-list {
   .urd-nav-toggle svg,
   .urd-nav-hover-underline .urd-nav-list a::after,
   .urd-nav-hover-pill .urd-nav-list a,
-  .urd-nav-hover-lift .urd-nav-list a {
+  .urd-nav-hover-lift .urd-nav-list a,
+  .urd-nav-hover-lift-plain .urd-nav-list a {
     transition: none;
   }
 
   .urd-nav-hover-lift .urd-nav-list a:hover,
-  .urd-nav-hover-lift .urd-nav-list a:focus-visible {
+  .urd-nav-hover-lift .urd-nav-list a:focus-visible,
+  .urd-nav-hover-lift-plain .urd-nav-list a:hover,
+  .urd-nav-hover-lift-plain .urd-nav-list a:focus-visible {
     transform: none;
   }
 }
