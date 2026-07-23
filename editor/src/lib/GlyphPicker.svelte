@@ -9,7 +9,7 @@
   import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from '../../../template/assets/engine/glyphs.js';
   import { ICON_CATEGORIES, ICON_LIBRARY, iconSvg } from '../../../template/assets/engine/icons.js';
 
-  let { value = '★', icon = null, label = 'Velg tegn', onpick, onicon, onimage } = $props();
+  let { value = '★', icon = null, image = null, label = 'Velg tegn', onpick, onicon, onimage } = $props();
 
   let recent = $state([]);
   let rootEl = $state(null);
@@ -74,10 +74,20 @@
 <span class="gp" bind:this={rootEl}>
   <button type="button" class="gp-swatch" title={label} aria-label={label}
     onclick={() => (open ? (open = false) : openPicker())}>
-    {#if icon && ICON_LIBRARY[icon]}<span class="gp-svg">{@html iconSvg(icon)}</span>{:else}{value || '★'}{/if}
+    {#if image}<img class="gp-own" src={image} alt="Eget ikon" />
+    {:else if icon && ICON_LIBRARY[icon]}<span class="gp-svg">{@html iconSvg(icon)}</span>
+    {:else}{value || '★'}{/if}
   </button>
   {#if open}
     <div class="gp-pop" style="top: {pos.top}px; left: {pos.left}px">
+      {#if recent.length}
+        <div class="gp-group">Nylige</div>
+        <div class="gp-grid">
+          {#each recent as glyph (glyph)}
+            <button type="button" class="gp-cell" onclick={() => pick(glyph)}>{glyph}</button>
+          {/each}
+        </div>
+      {/if}
       {#if onicon}
         {#each ICON_CATEGORIES as [name, ids] (name)}
           <div class="gp-group">{name}</div>
@@ -89,15 +99,6 @@
             {/each}
           </div>
         {/each}
-        <div class="gp-group">Tegn og emoji</div>
-      {/if}
-      {#if recent.length}
-        <div class="gp-group">Nylige</div>
-        <div class="gp-grid">
-          {#each recent as glyph (glyph)}
-            <button type="button" class="gp-cell" onclick={() => pick(glyph)}>{glyph}</button>
-          {/each}
-        </div>
       {/if}
       {#each GLYPH_CATEGORIES as [name, glyphs] (name)}
         <div class="gp-group">{name}</div>
@@ -132,6 +133,7 @@
     align-items: center;
     justify-content: center;
     font-size: 1.1rem;
+    color: #e8eaf0;
     border: 1px solid rgb(255 255 255 / 25%);
     border-radius: 6px;
     background: rgb(255 255 255 / 7%);
@@ -175,6 +177,9 @@
     padding: 5px 0;
     cursor: pointer;
     text-align: center;
+    /* Knapper arver ikke tekstfarge: uten denne blir tegn og SVG-ikoner
+       svarte i den mørke menyen */
+    color: #e8eaf0;
   }
 
   .gp-cell:hover {
@@ -198,6 +203,13 @@
     display: inline-flex;
     width: 17px;
     height: 17px;
+  }
+
+  .gp-own {
+    width: 1.5rem;
+    height: 1.5rem;
+    object-fit: contain;
+    border-radius: 4px;
   }
 
   .gp-upload {

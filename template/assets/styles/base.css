@@ -193,6 +193,67 @@ html {
   display: flex;
 }
 
+/* Typografiraden (bak Aa-knappen): font, størrelse og avstand for hele feltet */
+.urd-tt-typorow {
+  display: none;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+  padding-top: 4px;
+  margin-top: 2px;
+  border-top: 1px solid rgb(255 255 255 / 14%);
+}
+
+.urd-tt-typorow.vis {
+  display: flex;
+}
+
+.urd-tt-typolabel {
+  font: 600 10px/1.2 system-ui, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgb(232 234 240 / 60%);
+}
+
+.urd-tt-sizegroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.urd-text-toolbar .urd-tt-sizegroup button.on {
+  background: rgb(255 255 255 / 16%);
+  outline: 1px solid rgb(255 255 255 / 35%);
+}
+
+.urd-tt-sizegroup input {
+  width: 3.2em;
+  font: 12px/1.3 system-ui, sans-serif;
+  color: #e8eaf0;
+  background: rgb(255 255 255 / 6%);
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 5px;
+  padding: 3px 4px;
+}
+
+.urd-tt-sliderwrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.urd-tt-sliderwrap input[type='range'] {
+  width: 90px;
+  accent-color: #e8eaf0;
+}
+
+.urd-tt-sliderval {
+  font: 11px/1.2 system-ui, sans-serif;
+  color: rgb(232 234 240 / 75%);
+  min-width: 3.2em;
+}
+
 /* Tegnraden (nedtrekket bak smilefjes-knappen): rullbart rutenett med
    tegn og emoji, samme utvalg som ikon-blokkens tegnvelger */
 .urd-tt-glyphrow {

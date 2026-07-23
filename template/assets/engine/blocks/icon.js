@@ -38,15 +38,19 @@ export const iconBlock = {
     }
     // Tegnet SVG-ikon fra biblioteket (additivt felt): skarpt i alle
     // størrelser og følger temafargen. Ukjent id (data fra nyere Urd)
-    // faller stille tilbake til glyfen.
+    // faller stille tilbake til glyfen. Ytterelementet beholder
+    // .urd-icon-sentreringen i rammen; det indre elementet bærer størrelsen.
     if (typeof props.icon === 'string' && props.icon) {
       const svg = iconSvg(props.icon);
       if (svg) {
         const span = document.createElement('span');
-        span.className = 'urd-icon urd-icon-svg';
-        span.innerHTML = svg;
+        span.className = 'urd-icon';
+        span.style.color = resolveColor(props.color);
+        const inner = document.createElement('span');
+        inner.innerHTML = svg;
         const size = props.size || 48;
-        span.style.cssText = `display:block;width:${size}px;height:${size}px;color:${resolveColor(props.color)};`;
+        inner.style.cssText = `display:block;width:${size}px;height:${size}px;`;
+        span.appendChild(inner);
         el.appendChild(span);
         return;
       }

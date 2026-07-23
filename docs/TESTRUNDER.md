@@ -2,16 +2,24 @@
 
 Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren stryker herfra** når noe er testet; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert.
 
+### Testrunde-batch (0.6.25): blokkmeny, testrunde-fikser på batch B
+
+- [ ] BLOKKMENY (nytt): tannhjul-knapp på hver blokks verktøylinje åpner en flytende meny ved blokken med ALLE blokk-innstillingene (samme innhold som Egenskaper-panelet, de kan aldri divergere); lukkes med X, Esc eller ved avmarkering; havner til venstre for blokken når det er trangt til høyre
+- [ ] Ctrl+D: en blokk lagt til via paletten er nå markert med en gang (både i preview og admin), så Ctrl+D virker uten et ekstra klikk først; Ctrl+D virker også når fokus står i tallfelt, slidere og brytere i panelene (kun skrivefelt beholder nettleserens snarvei)
+- [ ] Ikon-blokk: tegnede ikoner er SENTRERT i rammen (målt: lik luft på alle sider), i alle størrelser
+- [ ] Ikon-blokk: Farge er nå en full fargevelger (temafarger + egen farge), ikke bare de fire tokenene
+- [ ] Tegn-/ikonvelgeren: ikonene og tegnene er lyse (var svarte på mørk meny), Nylige står øverst, og swatch-knappen viser det som faktisk er valgt - også eget opplastet bilde; å velge tegn/ikon i menyen bytter bort fra det opplastede bildet
+- [ ] Teksteditor-linjen: ny Aa-knapp åpner typografiraden med Font, Størrelse (A/S/M/L/XL/px), Linjeavstand og Bokstavavstand for hele feltet - alt uten å gå til Egenskaper; endringene vises umiddelbart og linjen består (gjenoppkobles etter re-render)
+- [ ] «Valgområdet vokser» fra forrige runde: IKKE reprodusert i målingene (ikon/tekst/galleri/kalender målt over gjentatte prop-endringer i headless-nettleser, alle stabile); si fra med en konkret oppskrift (blokktype + handling) om det skjer igjen
+
 ### Testrunde-batch (0.6.24): ikonbibliotek, tegnmeny i teksteditoren, linje- og bokstavavstand (M6 batch B)
 
 - [ ] Ikon-blokk: velgeren (som før viste tegn/emoji) har nå tegnede SVG-ikoner øverst i fem kategorier (Sosiale medier, Kommunikasjon, Sted og tid, Symboler, Piler); velg f.eks. Instagram og sjekk at ikonet vises i blokken, følger Farge-valget og skalerer skarpt med Størrelse
-- [ ] Ikon-blokk: med et tegnet ikon valgt viser panelet «Fjern tegnet ikon» i stedet for fritekstfeltet; fjerning gir tegnet/emojien tilbake; å velge et tegn i menyen bytter også bort fra SVG-ikonet; eget opplastet bilde vinner fortsatt over alt
-- [ ] Ikon-blokk: en side med SVG-ikon åpnet i en eldre Urd-motor (eller med en ukjent ikon-id) skal falle stille tilbake til glyfen, aldri knekke
-- [ ] Teksteditor-linjen: ny smilefjes-knapp («Sett inn tegn») åpner en rullbar tegnrad i selve linjen med Nylige øverst og samme kategorier som ikon-blokkens velger; klikk setter tegnet inn ved markøren (også midt i et ord) og lagres i utkastet
-- [ ] Tegnraden og admin-velgeren deler Nylige-listen: et tegn satt inn i teksteditoren dukker opp under Nylige i ikon-blokkens velger og omvendt
+- [x] Ikon-blokk: med et tegnet ikon valgt viser panelet «Fjern tegnet ikon» i stedet for fritekstfeltet; fjerning gir tegnet/emojien tilbake; å velge et tegn i menyen bytter også bort fra SVG-ikonet; eget opplastet bilde vinner fortsatt over alt
+- [x] Teksteditor-linjen: ny smilefjes-knapp («Sett inn tegn») åpner en rullbar tegnrad i selve linjen med Nylige øverst og samme kategorier som ikon-blokkens velger; klikk setter tegnet inn ved markøren (også midt i et ord) og lagres i utkastet
+- [x] Tegnraden og admin-velgeren deler Nylige-listen: et tegn satt inn i teksteditoren dukker opp under Nylige i ikon-blokkens velger og omvendt
 - [ ] Tekstblokk: Linjeavstand-slider (1-2,5; A = arv) i Egenskaper gjelder hele feltet og overlever publisering; blir teksten høyere enn rammen, vokser rammen ved neste skriving i feltet (samme adferd som font-størrelse i dag)
 - [ ] Tekstblokk: Bokstavavstand-slider (-1 til 8 px; A/0 = arv) gjelder hele feltet; negativ verdi gir tettere tekst
-- [ ] Eldre tekstblokker uten de nye feltene rendres uendret (arv fra tema)
 
 ### Testrunde-batch (0.6.22): sidestilt-oppfølging
 

@@ -26,6 +26,7 @@
  *                  { type: 'urd-undo', redo }                 (Ctrl+Z inne i iframen)
  *                  { type: 'urd-select-section', sectionId }  (aktiv seksjon for paletten)
  *                  { type: 'urd-select-block', sectionId, blockId } (markert blokk, null = avvalgt)
+ *                  { type: 'urd-block-menu', sectionId, blockId, rect } (åpne blokkmenyen ved blokken)
  *                  { type: 'urd-ready' }                      (motoren lytter; trygt å sende utkast)
  *                  { type: 'urd-plugin-blocks', blocks }      (plugin-blokkene: type/label/defaults til Blokker-panelet)
  *                  { type: 'urd-navigate', path }             (intern lenke klikket i preview)
@@ -59,6 +60,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-undo') handlers.onUndo?.(msg);
     if (msg?.type === 'urd-select-section') handlers.onSelectSection?.(msg);
     if (msg?.type === 'urd-select-block') handlers.onSelectBlock?.(msg);
+    if (msg?.type === 'urd-block-menu') handlers.onBlockMenu?.(msg);
     if (msg?.type === 'urd-plugin-blocks') handlers.onPluginBlocks?.(msg);
     if (msg?.type === 'urd-ready') handlers.onReady?.(msg);
     if (msg?.type === 'urd-navigate') handlers.onNavigate?.(msg);

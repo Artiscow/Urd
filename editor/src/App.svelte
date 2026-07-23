@@ -22,6 +22,7 @@
   import { bildegalleriLayer } from '../../template/assets/engine/backgrounds/bildegalleri.js';
   import { coreAnimations } from '../../template/assets/engine/animations/core.js';
   import { compressToWebp, slugify, contentHash, WARN_BYTES } from '../../template/assets/engine/imageTools.js';
+  import { FONT_STACKS, TEXT_SIZES } from '../../template/assets/engine/fonts.js';
 
   /** Bakgrunnslagtypene i den rekkefølgen de tilbys i panelet. */
   const BG_TYPES = [
@@ -262,14 +263,22 @@
   }
 
   function onKeydown(e) {
+    if (e.key === 'Escape' && blockMenu) {
+      blockMenu = null;
+      return;
+    }
     if (!(e.ctrlKey || e.metaKey)) return;
     const key = e.key.toLowerCase();
     // Ctrl+D med fokus i admin-panelene: dupliser markert blokk i previewen
-    // (ellers går snarveien til nettleserens bokmerke-dialog). Ikke i tekstfelt.
+    // (ellers går snarveien til nettleserens bokmerke-dialog). Kun ekte
+    // SKRIVEFELT beholder nettleserens snarvei; tall, brytere og slidere
+    // (der fokus blir stående etter et panelvalg) skal ikke sluke Ctrl+D.
     if (key === 'd') {
-      const inField = e.target instanceof HTMLElement
-        && (e.target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName));
-      if (inField || !selectedBlock || viewMode === 'mobile') return;
+      const t = e.target;
+      const inTextField = t instanceof HTMLElement
+        && (t.isContentEditable || t.tagName === 'TEXTAREA'
+          || (t.tagName === 'INPUT' && !['number', 'checkbox', 'range', 'color'].includes(t.type)));
+      if (inTextField || !selectedBlock || viewMode === 'mobile') return;
       e.preventDefault();
       bridge?.sendDuplicate();
       return;
@@ -407,12 +416,35 @@
   function onSelectBlock(msg) {
     if (!msg.blockId) {
       selectedBlock = null;
+      blockMenu = null;
       return;
     }
     selectedBlock = { sectionId: msg.sectionId, blockId: msg.blockId };
     syncSelectedBlock();
     // (Auto-åpning av Egenskaper ved blokk-klikk ble prøvd og reversert
     // etter eiers test; kun NY SEKSJON åpner panelet automatisk.)
+  }
+
+  /** Blokkmenyen (tannhjulet på blokkens verktøylinje): posisjon i
+   *  editor-koordinater, null = lukket. Innholdet er samme snippet som
+   *  Egenskaper-panelet. */
+  let blockMenu = $state(null);
+
+  function onBlockMenu(msg) {
+    onSelectBlock(msg);
+    if (!selectedBlock) return;
+    const MENU_W = 300;
+    const ir = iframeEl?.getBoundingClientRect();
+    if (!ir) return;
+    // Ved siden av blokken: til høyre om det er plass, ellers til venstre,
+    // klemt innenfor vinduet (menyen selv scroller ved lite høyde).
+    let left = ir.left + msg.rect.right + 12;
+    if (left + MENU_W > window.innerWidth - 8) {
+      left = Math.max(8, ir.left + msg.rect.left - MENU_W - 12);
+    }
+    const maxTop = window.innerHeight - Math.min(window.innerHeight * 0.7, 560) - 8;
+    const top = Math.min(Math.max(8, ir.top + msg.rect.top), Math.max(8, maxTop));
+    blockMenu = { left, top };
   }
 
   /** Felles flyt for blokk-endringer fra Egenskaper-panelet. */
@@ -461,7 +493,8 @@
   }
 
   /** Størrelses-presets for tekstfelt (Gutenberg-mønsteret: S/M/L/XL). */
-  const TEXT_SIZES = [['S', 14], ['M', 18], ['L', 24], ['XL', 36]];
+  // TEXT_SIZES og FONT_STACKS bor i motorens fonts.js (deles med
+  // teksteditor-linjens typografirad).
 
   /** Navn på blokktypene i panelet. */
   const BLOCK_LABELS = { text: 'Tekst', button: 'Knapp', image: 'Bilde', shape: 'Form', video: 'Video', icon: 'Ikon', galleri: 'Galleri' };
@@ -969,6 +1002,7 @@
       onUndo: (msg) => (msg.redo ? redo() : undo()),
       onSelectSection,
       onSelectBlock,
+      onBlockMenu,
       onReady,
       onNavigate,
       onAddBlock: (msg) => insertBlock(msg.sectionId, msg.block),
@@ -1725,16 +1759,6 @@
   }
 
   /* ---------- Tema-panelet ---------- */
-
-  const FONT_STACKS = [
-    ['System', 'system-ui, sans-serif'],
-    ['Arial', 'Arial, Helvetica, sans-serif'],
-    ['Verdana', 'Verdana, Geneva, sans-serif'],
-    ['Trebuchet', "'Trebuchet MS', sans-serif"],
-    ['Georgia (serif)', "Georgia, 'Times New Roman', serif"],
-    ['Palatino (serif)', "'Palatino Linotype', Palatino, serif"],
-    ['Courier (skrivemaskin)', "'Courier New', monospace"],
-  ];
 
   function setColorToken(name, value) {
     siteMutate(`edit:theme-color-${name}`, () => { siteDraft.theme.tokens.color[name] = value; });
@@ -3109,308 +3133,7 @@
               <div class="panel-body">
                 {#if selectedBlock}
                   <p class="panel-strong">{BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type}-blokk</p>
-
-                  {#if selectedBlock.type === 'text'}
-                    <label>Justering
-                      <Dropdown value={selectedBlock.props.align ?? 'left'}
-                        options={[['left', 'Venstre'], ['center', 'Midtstilt'], ['right', 'Høyre']]}
-                        onchange={(v) => setBlockProp('align', v)} /></label>
-                    <label class="gridmenu-snap">
-                      <input type="checkbox" checked={Boolean(selectedBlock.props.box)}
-                        onchange={(e) => setBlockProp('box', e.target.checked)} />
-                      Tekstboks (kort med bakgrunn)
-                    </label>
-                    <label>Font
-                      <Dropdown value={selectedBlock.props.font ?? ''}
-                        options={[['', 'Arv fra tema'], ...FONT_STACKS.map(([name, value]) => [value, name])]}
-                        onchange={(v) => setBlockProp('font', v || null)} /></label>
-                    <label>Størrelse</label>
-                    <span class="toolbar-row">
-                      <button class="tbtn" title="Arv fra tema" class:active={!selectedBlock.props.size}
-                        onclick={() => setBlockProp('size', null)}>A</button>
-                      {#each TEXT_SIZES as [name, px] (name)}
-                        <button class="tbtn" title="{px} px" class:active={selectedBlock.props.size === px}
-                          onclick={() => setBlockProp('size', px)}>{name}</button>
-                      {/each}
-                      <input type="number" class="tb-num" min="8" max="120" placeholder="px"
-                        title="Egen størrelse i px"
-                        value={selectedBlock.props.size ?? ''}
-                        onchange={(e) => setBlockProp('size', e.target.value ? Number(e.target.value) : null)} />
-                    </span>
-                    <label title="Avstanden mellom tekstlinjene, i forhold til skriftstørrelsen">Linjeavstand
-                      <span class="gridmenu-value">{selectedBlock.props.lineHeight ? `${selectedBlock.props.lineHeight}` : 'Arv'}</span></label>
-                    <span class="toolbar-row">
-                      <button class="tbtn" title="Arv fra tema" class:active={!selectedBlock.props.lineHeight}
-                        onclick={() => setBlockProp('lineHeight', null)}>A</button>
-                      <input type="range" class="tb-grow" min="1" max="2.5" step="0.05" value={selectedBlock.props.lineHeight ?? 1.6}
-                        oninput={(e) => setBlockProp('lineHeight', Number(e.target.value))} />
-                    </span>
-                    <label title="Avstanden mellom bokstavene; negativ er tettere enn normalt">Bokstavavstand
-                      <span class="gridmenu-value">{typeof selectedBlock.props.letterSpacing === 'number' && selectedBlock.props.letterSpacing !== 0 ? `${selectedBlock.props.letterSpacing} px` : 'Arv'}</span></label>
-                    <span class="toolbar-row">
-                      <button class="tbtn" title="Arv fra tema"
-                        class:active={!selectedBlock.props.letterSpacing}
-                        onclick={() => setBlockProp('letterSpacing', null)}>A</button>
-                      <input type="range" class="tb-grow" min="-1" max="8" step="0.1" value={selectedBlock.props.letterSpacing ?? 0}
-                        oninput={(e) => setBlockProp('letterSpacing', Number(e.target.value) || null)} />
-                    </span>
-                    <p class="panel-hint">Font, størrelse og avstandene gjelder hele feltet. Marker tekst i blokken for fet, kursiv, overskrifter og farge.</p>
-                  {:else if selectedBlock.type === 'button'}
-                    <label>Tekst
-                      <input value={selectedBlock.props.label}
-                        onchange={(e) => setBlockProp('label', e.target.value)} /></label>
-                    <label>Går til
-                      <Dropdown value={selectedBlock.props.page ?? '__href'}
-                        options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Ekstern lenke']]}
-                        onchange={(v) => {
-                          const page = v === '__href' ? null : v;
-                          mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-                            b.props.page = page;
-                            if (page) b.props.href = null;
-                          });
-                        }} /></label>
-                    {#if !selectedBlock.props.page}
-                      <input placeholder="https://…"
-                        value={selectedBlock.props.href === '#' ? '' : selectedBlock.props.href ?? ''}
-                        onchange={(e) => setBlockProp('href', e.target.value || null)} />
-                    {/if}
-                    <label>Stil
-                      <Dropdown value={selectedBlock.props.style}
-                        options={[['primary', 'Fylt (aksentfarge)'], ['secondary', 'Kantlinje']]}
-                        onchange={(v) => setBlockProp('style', v)} /></label>
-                  {:else if selectedBlock.type === 'image'}
-                    <label class="ghost filepick">
-                      Bytt bilde
-                      <input type="file" accept="image/*" onchange={replaceImage} />
-                    </label>
-                    <label>Beskrivelse
-                      <input value={selectedBlock.props.alt ?? ''} placeholder="For skjermlesere, og når bildet ikke kan vises"
-                        onchange={(e) => setBlockProp('alt', e.target.value)} /></label>
-                    <label>Tilpasning
-                      <Dropdown value={selectedBlock.props.fit ?? 'cover'}
-                        options={[['cover', 'Fyll rammen (beskjæres)'], ['contain', 'Vis hele bildet']]}
-                        onchange={(v) => setBlockProp('fit', v)} /></label>
-                    <label>Avrunding
-                      <Dropdown value={selectedBlock.props.radius ?? ''}
-                        options={[['', 'Ingen'], ['sm', 'Liten'], ['md', 'Stor']]}
-                        onchange={(v) => setBlockProp('radius', v || null)} /></label>
-                    <label>Lenke
-                      <input value={selectedBlock.props.href ?? ''} placeholder="Valgfri (gjør bildet klikkbart)"
-                        onchange={(e) => setBlockProp('href', e.target.value || null)} /></label>
-                    {#if !selectedBlock.props.href}
-                      <label class="gridmenu-snap" title="Gjelder hos besøkende (prøv i Ren visning); her åpner klikk bildeeditoren">
-                        <input type="checkbox" checked={Boolean(selectedBlock.props.lightbox)}
-                          onchange={(e) => setBlockProp('lightbox', e.target.checked)} />
-                        Fullskjerm ved klikk (lightbox)
-                      </label>
-                    {/if}
-                    <label>Fokus X
-                      <span class="gridmenu-value">{Math.round((selectedBlock.props.x ?? 0.5) * 100)}%</span></label>
-                    <input type="range" min="0" max="1" step="0.05" value={selectedBlock.props.x ?? 0.5}
-                      oninput={(e) => setBlockProp('x', Number(e.target.value))} />
-                    <label>Fokus Y
-                      <span class="gridmenu-value">{Math.round((selectedBlock.props.y ?? 0.5) * 100)}%</span></label>
-                    <input type="range" min="0" max="1" step="0.05" value={selectedBlock.props.y ?? 0.5}
-                      oninput={(e) => setBlockProp('y', Number(e.target.value))} />
-                    <label title="Beskjærer inn mot fokuspunktet">Zoom
-                      <span class="gridmenu-value">{(selectedBlock.props.zoom ?? 1).toFixed(2)}x</span></label>
-                    <input type="range" min="1" max="3" step="0.05" value={selectedBlock.props.zoom ?? 1}
-                      oninput={(e) => setBlockProp('zoom', Number(e.target.value))} />
-                    <label>Lysstyrke
-                      <span class="gridmenu-value">{Math.round((selectedBlock.props.brightness ?? 1) * 100)}%</span></label>
-                    <input type="range" min="0.2" max="2" step="0.05" value={selectedBlock.props.brightness ?? 1}
-                      oninput={(e) => setBlockProp('brightness', Number(e.target.value))} />
-                    <label>Kontrast
-                      <span class="gridmenu-value">{Math.round((selectedBlock.props.contrast ?? 1) * 100)}%</span></label>
-                    <input type="range" min="0.2" max="2" step="0.05" value={selectedBlock.props.contrast ?? 1}
-                      oninput={(e) => setBlockProp('contrast', Number(e.target.value))} />
-                    <label>Metning
-                      <span class="gridmenu-value">{Math.round((selectedBlock.props.saturate ?? 1) * 100)}%</span></label>
-                    <input type="range" min="0" max="2" step="0.05" value={selectedBlock.props.saturate ?? 1}
-                      oninput={(e) => setBlockProp('saturate', Number(e.target.value))} />
-                    <button class="ghost action" title="Sett lysstyrke, kontrast og metning tilbake til nøytralt"
-                      onclick={() => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-                        b.props.brightness = 1; b.props.contrast = 1; b.props.saturate = 1;
-                      })}>Nullstill justeringer</button>
-                  {:else if selectedBlock.type === 'video'}
-                    <label>Videolenke</label>
-                    <input value={selectedBlock.props.url ?? ''} placeholder="https://youtube.com/watch?v=… eller vimeo.com/…"
-                      onchange={(e) => setBlockProp('url', e.target.value)} />
-                    <label>Tittel (for skjermlesere)
-                      <input value={selectedBlock.props.title ?? ''}
-                        onchange={(e) => setBlockProp('title', e.target.value)} /></label>
-                    <p class="panel-hint">YouTube og Vimeo støttes, med personvernvennlig innbygging. Videoen spilles på den publiserte siden (og i Ren visning).</p>
-                  {:else if selectedBlock.type === 'icon'}
-                    <label>Ikon
-                      <span class="toolbar-row">
-                        <GlyphPicker value={selectedBlock.props.glyph ?? '★'}
-                          icon={selectedBlock.props.icon ?? null}
-                          onpick={(glyph) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-                            b.props.glyph = glyph;
-                            b.props.icon = null;
-                          })}
-                          onicon={(id) => setBlockProp('icon', id)}
-                          onimage={(dataUrl) => setBlockProp('image', dataUrl)} />
-                        {#if !selectedBlock.props.icon}
-                          <input class="token-input" value={selectedBlock.props.glyph ?? ''} maxlength="4"
-                            title="Eller skriv/lim inn et tegn selv"
-                            onchange={(e) => setBlockProp('glyph', e.target.value || '★')} />
-                        {:else}
-                          <button class="ghost" title="Tilbake til tegnet/emojien"
-                            onclick={() => setBlockProp('icon', null)}>Fjern tegnet ikon</button>
-                        {/if}
-                      </span></label>
-                    {#if selectedBlock.props.image}
-                      <span class="toolbar-row">
-                        <img class="site-icon-preview" src={selectedBlock.props.image} alt="Eget ikon" />
-                        <button class="ghost" onclick={() => setBlockProp('image', null)}>Fjern eget ikon</button>
-                      </span>
-                      <p class="panel-hint">Blokken viser det opplastede ikonet; tegnet brukes igjen når du fjerner det.</p>
-                    {/if}
-                    <label>Størrelse px
-                      <input type="number" min="8" max="400" value={selectedBlock.props.size ?? 48}
-                        onchange={(e) => setBlockProp('size', Number(e.target.value))} /></label>
-                    <label>Farge
-                      <Dropdown value={selectedBlock.props.color}
-                        options={COLOR_TOKENS}
-                        onchange={(v) => setBlockProp('color', v)} /></label>
-                    <p class="panel-hint">Fargen gjelder tegnede ikoner og tekst-glyfer (★ ✓ →); emoji har sine egne farger.</p>
-                  {:else if selectedBlock.type === 'samling'}
-                    <label>Samling
-                      <Dropdown value={selectedBlock.props.collection ?? ''}
-                        options={[['', 'Velg …'], ...samlingerIds.map((id) => [id, samlingerView[id]?.name ?? id])]}
-                        onchange={(v) => setBlockProp('collection', v || null)} /></label>
-                    <label>Visning
-                      <Dropdown value={selectedBlock.props.view ?? 'cards'}
-                        options={[['cards', 'Kort'], ['list', 'Liste'], ['archive', 'Arkiv (per år)']]}
-                        onchange={(v) => setBlockProp('view', v)} /></label>
-                    <label>Maks antall
-                      <input type="number" min="0" max="100" value={selectedBlock.props.limit ?? 6}
-                        onchange={(e) => setBlockProp('limit', Number(e.target.value))} /></label>
-                    <label class="gridmenu-snap">
-                      <input type="checkbox" checked={selectedBlock.props.newestFirst !== false}
-                        onchange={(e) => setBlockProp('newestFirst', e.target.checked)} />
-                      Nyeste først
-                    </label>
-                    <p class="panel-hint">Innslagene redigeres i Samlinger-panelet; 0 i maks antall viser alle.</p>
-                  {:else if selectedBlock.type === 'galleri'}
-                    <label>Visning
-                      <Dropdown value={selectedBlock.props.view ?? 'grid'}
-                        options={[['grid', 'Rutenett'], ['carousel', 'Karusell'], ['slides', 'Lysbilde (bytter automatisk)']]}
-                        onchange={(v) => setBlockProp('view', v)} /></label>
-                    {#if (selectedBlock.props.view ?? 'grid') === 'grid'}
-                      <label>Kolonner
-                        <input type="number" min="1" max="6" value={selectedBlock.props.columns ?? 3}
-                          onchange={(e) => setBlockProp('columns', Number(e.target.value))} /></label>
-                      <label>Luft mellom bildene
-                        <span class="gridmenu-value">{selectedBlock.props.gap ?? 12} px</span></label>
-                      <input type="range" min="0" max="32" step="2" value={selectedBlock.props.gap ?? 12}
-                        oninput={(e) => setBlockProp('gap', Number(e.target.value))} />
-                    {/if}
-                    {#if selectedBlock.props.view === 'slides'}
-                      <label>Sekunder per bilde
-                        <input type="number" min="2" max="60" value={selectedBlock.props.interval ?? 5}
-                          onchange={(e) => setBlockProp('interval', Number(e.target.value))} /></label>
-                    {/if}
-                    <label>Avrunding
-                      <Dropdown value={selectedBlock.props.radius ?? ''}
-                        options={[['', 'Ingen'], ['sm', 'Liten'], ['md', 'Stor']]}
-                        onchange={(v) => setBlockProp('radius', v || null)} /></label>
-                    <label class="gridmenu-snap" title="Gjelder hos besøkende (prøv i Ren visning); her åpner klikk bildeeditoren">
-                      <input type="checkbox" checked={selectedBlock.props.lightbox !== false}
-                        onchange={(e) => setBlockProp('lightbox', e.target.checked)} />
-                      Fullskjerm ved klikk (lightbox)
-                    </label>
-                    <hr class="gridmenu-divider" />
-                    <label class="ghost filepick" title="Velg gjerne flere bilder samtidig">
-                      + Legg til bilder
-                      <input type="file" accept="image/*" multiple onchange={addGalleryImages} />
-                    </label>
-                    {#each selectedBlock.props.images ?? [] as img, i (i)}
-                      <div class="bg-layer">
-                        <span class="toolbar-row">
-                          <img class="site-icon-preview" src={img.src} alt="" />
-                          <span class="row-tools">
-                            <button class="ghost row-tool" onclick={() => moveGalleryImage(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-                            <button class="ghost row-tool" onclick={() => moveGalleryImage(i, 1)}
-                              disabled={i === selectedBlock.props.images.length - 1}>{@html ICONS.down}</button>
-                            <button class="ghost row-tool" title="Fjern bildet" onclick={() => removeGalleryImage(i)}>{@html ICONS.cross}</button>
-                          </span>
-                        </span>
-                        <label>Beskrivelse
-                          <input value={img.alt ?? ''} placeholder="For skjermlesere"
-                            onchange={(e) => setGalleryImageField(i, 'alt', e.target.value)} /></label>
-                        <label>Lenke
-                          <input value={img.href ?? ''} placeholder="Valgfri - vinner over fullskjerm"
-                            onchange={(e) => setGalleryImageField(i, 'href', e.target.value || null)} /></label>
-                      </div>
-                    {/each}
-                    <p class="panel-hint">Klikk et bilde i forhåndsvisningen for utsnitt, zoom og filtre (bildeeditoren).</p>
-                  {:else if selectedBlock.type === 'shape'}
-                    <label>Form
-                      <Dropdown value={selectedBlock.props.kind}
-                        options={SHAPE_KINDS}
-                        onchange={(v) => setBlockProp('kind', v)} /></label>
-                    <label>Farge
-                      <Dropdown value={selectedBlock.props.color}
-                        options={COLOR_TOKENS}
-                        onchange={(v) => setBlockProp('color', v)} /></label>
-                    <label>Tykkelse
-                      <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
-                        onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
-                    <label class="gridmenu-snap" title="Fylte former bruker fargen som flate i stedet for kantlinje">
-                      <input type="checkbox" checked={Boolean(selectedBlock.props.fill)}
-                        onchange={(e) => setBlockProp('fill', e.target.checked ? selectedBlock.props.color : null)} />
-                      Fylt
-                    </label>
-                  {/if}
-
-                  <hr class="gridmenu-divider" />
-                  <label>Animasjon
-                    <Dropdown value={selectedBlock.animation?.type ?? ''}
-                      options={[['', 'Ingen'], ...Object.entries(coreAnimations).map(([id, def]) => [id, def.label])]}
-                      onchange={(v) => setBlockAnimation(v || null)} /></label>
-                  {#if selectedBlock.animation && coreAnimations[selectedBlock.animation.type]?.entrance}
-                    <label>Varighet ms
-                      <input type="number" min="100" max="4000" step="100"
-                        value={selectedBlock.animation.props.duration}
-                        onchange={(e) => setBlockAnimProp('duration', Number(e.target.value))} /></label>
-                    <label>Forsinkelse ms
-                      <input type="number" min="0" max="4000" step="100"
-                        value={selectedBlock.animation.props.delay}
-                        onchange={(e) => setBlockAnimProp('delay', Number(e.target.value))} /></label>
-                    <p class="panel-hint">Spilles hos besøkende ved scrolling. Her spilles den én gang hver gang du endrer den.</p>
-                  {/if}
-
-                  <hr class="gridmenu-divider" />
-                  <details class="group frame-group">
-                    <summary>Plassering, lag og rotasjon</summary>
-                    <div class="group-items">
-                      <p class="panel-hint">Kan også endres direkte på blokken: dra for å flytte, håndtakene for størrelse og rotasjon.</p>
-                      {#if viewMode === 'desktop'}
-                        <div class="frame-grid">
-                          <label>X %<input type="number" step="0.5" value={selectedBlock.frame.x}
-                            onchange={(e) => setBlockFrame('x', Number(e.target.value))} /></label>
-                          <label>Y px<input type="number" step="1" value={selectedBlock.frame.y}
-                            onchange={(e) => setBlockFrame('y', Number(e.target.value))} /></label>
-                          <label>Bredde %<input type="number" step="0.5" min="1" value={selectedBlock.frame.w}
-                            onchange={(e) => setBlockFrame('w', Number(e.target.value))} /></label>
-                          <label>Høyde px<input type="number" step="1" min="1" value={selectedBlock.frame.h}
-                            onchange={(e) => setBlockFrame('h', Number(e.target.value))} /></label>
-                          <label title="Høyere tall ligger foran. Mens du redigerer vises pekt/markert blokk alltid øverst - se ekte rekkefølge i Ren visning">
-                            Lag (z)<input type="number" step="1" value={selectedBlock.frame.z ?? 1}
-                            onchange={(e) => setBlockFrame('z', Number(e.target.value))} /></label>
-                          <label>Rotasjon °<input type="number" step="1" value={selectedBlock.frame.rot ?? 0}
-                            onchange={(e) => setBlockFrame('rot', Number(e.target.value))} /></label>
-                        </div>
-                      {/if}
-                      <label class="gridmenu-snap" title="Gjelder kun automatisk mobil-layout">
-                        <input type="checkbox" checked={selectedBlock.decor}
-                          onchange={(e) => setBlockDecor(e.target.checked)} />
-                        Skjul i automatisk mobil-layout (pynt)
-                      </label>
-                    </div>
-                  </details>
+                  {@render blockPropsUI()}
                 {:else if activeSectionId}
                   <p class="panel-strong">Seksjon</p>
                   <label>Minstehøyde
@@ -3853,6 +3576,330 @@
   {/if}
 </div>
 
+{#snippet blockPropsUI()}
+
+  {#if selectedBlock.type === 'text'}
+    <label>Justering
+      <Dropdown value={selectedBlock.props.align ?? 'left'}
+        options={[['left', 'Venstre'], ['center', 'Midtstilt'], ['right', 'Høyre']]}
+        onchange={(v) => setBlockProp('align', v)} /></label>
+    <label class="gridmenu-snap">
+      <input type="checkbox" checked={Boolean(selectedBlock.props.box)}
+        onchange={(e) => setBlockProp('box', e.target.checked)} />
+      Tekstboks (kort med bakgrunn)
+    </label>
+    <label>Font
+      <Dropdown value={selectedBlock.props.font ?? ''}
+        options={[['', 'Arv fra tema'], ...FONT_STACKS.map(([name, value]) => [value, name])]}
+        onchange={(v) => setBlockProp('font', v || null)} /></label>
+    <label>Størrelse</label>
+    <span class="toolbar-row">
+      <button class="tbtn" title="Arv fra tema" class:active={!selectedBlock.props.size}
+        onclick={() => setBlockProp('size', null)}>A</button>
+      {#each TEXT_SIZES as [name, px] (name)}
+        <button class="tbtn" title="{px} px" class:active={selectedBlock.props.size === px}
+          onclick={() => setBlockProp('size', px)}>{name}</button>
+      {/each}
+      <input type="number" class="tb-num" min="8" max="120" placeholder="px"
+        title="Egen størrelse i px"
+        value={selectedBlock.props.size ?? ''}
+        onchange={(e) => setBlockProp('size', e.target.value ? Number(e.target.value) : null)} />
+    </span>
+    <label title="Avstanden mellom tekstlinjene, i forhold til skriftstørrelsen">Linjeavstand
+      <span class="gridmenu-value">{selectedBlock.props.lineHeight ? `${selectedBlock.props.lineHeight}` : 'Arv'}</span></label>
+    <span class="toolbar-row">
+      <button class="tbtn" title="Arv fra tema" class:active={!selectedBlock.props.lineHeight}
+        onclick={() => setBlockProp('lineHeight', null)}>A</button>
+      <input type="range" class="tb-grow" min="1" max="2.5" step="0.05" value={selectedBlock.props.lineHeight ?? 1.6}
+        oninput={(e) => setBlockProp('lineHeight', Number(e.target.value))} />
+    </span>
+    <label title="Avstanden mellom bokstavene; negativ er tettere enn normalt">Bokstavavstand
+      <span class="gridmenu-value">{typeof selectedBlock.props.letterSpacing === 'number' && selectedBlock.props.letterSpacing !== 0 ? `${selectedBlock.props.letterSpacing} px` : 'Arv'}</span></label>
+    <span class="toolbar-row">
+      <button class="tbtn" title="Arv fra tema"
+        class:active={!selectedBlock.props.letterSpacing}
+        onclick={() => setBlockProp('letterSpacing', null)}>A</button>
+      <input type="range" class="tb-grow" min="-1" max="8" step="0.1" value={selectedBlock.props.letterSpacing ?? 0}
+        oninput={(e) => setBlockProp('letterSpacing', Number(e.target.value) || null)} />
+    </span>
+    <p class="panel-hint">Font, størrelse og avstandene gjelder hele feltet. Marker tekst i blokken for fet, kursiv, overskrifter og farge.</p>
+  {:else if selectedBlock.type === 'button'}
+    <label>Tekst
+      <input value={selectedBlock.props.label}
+        onchange={(e) => setBlockProp('label', e.target.value)} /></label>
+    <label>Går til
+      <Dropdown value={selectedBlock.props.page ?? '__href'}
+        options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Ekstern lenke']]}
+        onchange={(v) => {
+          const page = v === '__href' ? null : v;
+          mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+            b.props.page = page;
+            if (page) b.props.href = null;
+          });
+        }} /></label>
+    {#if !selectedBlock.props.page}
+      <input placeholder="https://…"
+        value={selectedBlock.props.href === '#' ? '' : selectedBlock.props.href ?? ''}
+        onchange={(e) => setBlockProp('href', e.target.value || null)} />
+    {/if}
+    <label>Stil
+      <Dropdown value={selectedBlock.props.style}
+        options={[['primary', 'Fylt (aksentfarge)'], ['secondary', 'Kantlinje']]}
+        onchange={(v) => setBlockProp('style', v)} /></label>
+  {:else if selectedBlock.type === 'image'}
+    <label class="ghost filepick">
+      Bytt bilde
+      <input type="file" accept="image/*" onchange={replaceImage} />
+    </label>
+    <label>Beskrivelse
+      <input value={selectedBlock.props.alt ?? ''} placeholder="For skjermlesere, og når bildet ikke kan vises"
+        onchange={(e) => setBlockProp('alt', e.target.value)} /></label>
+    <label>Tilpasning
+      <Dropdown value={selectedBlock.props.fit ?? 'cover'}
+        options={[['cover', 'Fyll rammen (beskjæres)'], ['contain', 'Vis hele bildet']]}
+        onchange={(v) => setBlockProp('fit', v)} /></label>
+    <label>Avrunding
+      <Dropdown value={selectedBlock.props.radius ?? ''}
+        options={[['', 'Ingen'], ['sm', 'Liten'], ['md', 'Stor']]}
+        onchange={(v) => setBlockProp('radius', v || null)} /></label>
+    <label>Lenke
+      <input value={selectedBlock.props.href ?? ''} placeholder="Valgfri (gjør bildet klikkbart)"
+        onchange={(e) => setBlockProp('href', e.target.value || null)} /></label>
+    {#if !selectedBlock.props.href}
+      <label class="gridmenu-snap" title="Gjelder hos besøkende (prøv i Ren visning); her åpner klikk bildeeditoren">
+        <input type="checkbox" checked={Boolean(selectedBlock.props.lightbox)}
+          onchange={(e) => setBlockProp('lightbox', e.target.checked)} />
+        Fullskjerm ved klikk (lightbox)
+      </label>
+    {/if}
+    <label>Fokus X
+      <span class="gridmenu-value">{Math.round((selectedBlock.props.x ?? 0.5) * 100)}%</span></label>
+    <input type="range" min="0" max="1" step="0.05" value={selectedBlock.props.x ?? 0.5}
+      oninput={(e) => setBlockProp('x', Number(e.target.value))} />
+    <label>Fokus Y
+      <span class="gridmenu-value">{Math.round((selectedBlock.props.y ?? 0.5) * 100)}%</span></label>
+    <input type="range" min="0" max="1" step="0.05" value={selectedBlock.props.y ?? 0.5}
+      oninput={(e) => setBlockProp('y', Number(e.target.value))} />
+    <label title="Beskjærer inn mot fokuspunktet">Zoom
+      <span class="gridmenu-value">{(selectedBlock.props.zoom ?? 1).toFixed(2)}x</span></label>
+    <input type="range" min="1" max="3" step="0.05" value={selectedBlock.props.zoom ?? 1}
+      oninput={(e) => setBlockProp('zoom', Number(e.target.value))} />
+    <label>Lysstyrke
+      <span class="gridmenu-value">{Math.round((selectedBlock.props.brightness ?? 1) * 100)}%</span></label>
+    <input type="range" min="0.2" max="2" step="0.05" value={selectedBlock.props.brightness ?? 1}
+      oninput={(e) => setBlockProp('brightness', Number(e.target.value))} />
+    <label>Kontrast
+      <span class="gridmenu-value">{Math.round((selectedBlock.props.contrast ?? 1) * 100)}%</span></label>
+    <input type="range" min="0.2" max="2" step="0.05" value={selectedBlock.props.contrast ?? 1}
+      oninput={(e) => setBlockProp('contrast', Number(e.target.value))} />
+    <label>Metning
+      <span class="gridmenu-value">{Math.round((selectedBlock.props.saturate ?? 1) * 100)}%</span></label>
+    <input type="range" min="0" max="2" step="0.05" value={selectedBlock.props.saturate ?? 1}
+      oninput={(e) => setBlockProp('saturate', Number(e.target.value))} />
+    <button class="ghost action" title="Sett lysstyrke, kontrast og metning tilbake til nøytralt"
+      onclick={() => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+        b.props.brightness = 1; b.props.contrast = 1; b.props.saturate = 1;
+      })}>Nullstill justeringer</button>
+  {:else if selectedBlock.type === 'video'}
+    <label>Videolenke</label>
+    <input value={selectedBlock.props.url ?? ''} placeholder="https://youtube.com/watch?v=… eller vimeo.com/…"
+      onchange={(e) => setBlockProp('url', e.target.value)} />
+    <label>Tittel (for skjermlesere)
+      <input value={selectedBlock.props.title ?? ''}
+        onchange={(e) => setBlockProp('title', e.target.value)} /></label>
+    <p class="panel-hint">YouTube og Vimeo støttes, med personvernvennlig innbygging. Videoen spilles på den publiserte siden (og i Ren visning).</p>
+  {:else if selectedBlock.type === 'icon'}
+    <label>Ikon
+      <span class="toolbar-row">
+        <GlyphPicker value={selectedBlock.props.glyph ?? '★'}
+          icon={selectedBlock.props.icon ?? null}
+          image={selectedBlock.props.image ?? null}
+          onpick={(glyph) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+            b.props.glyph = glyph;
+            b.props.icon = null;
+            b.props.image = null;
+          })}
+          onicon={(id) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+            b.props.icon = id;
+            b.props.image = null;
+          })}
+          onimage={(dataUrl) => setBlockProp('image', dataUrl)} />
+        {#if !selectedBlock.props.icon}
+          <input class="token-input" value={selectedBlock.props.glyph ?? ''} maxlength="4"
+            title="Eller skriv/lim inn et tegn selv"
+            onchange={(e) => setBlockProp('glyph', e.target.value || '★')} />
+        {:else}
+          <button class="ghost" title="Tilbake til tegnet/emojien"
+            onclick={() => setBlockProp('icon', null)}>Fjern tegnet ikon</button>
+        {/if}
+      </span></label>
+    {#if selectedBlock.props.image}
+      <span class="toolbar-row">
+        <img class="site-icon-preview" src={selectedBlock.props.image} alt="Eget ikon" />
+        <button class="ghost" onclick={() => setBlockProp('image', null)}>Fjern eget ikon</button>
+      </span>
+      <p class="panel-hint">Blokken viser det opplastede ikonet; tegnet brukes igjen når du fjerner det.</p>
+    {/if}
+    <label>Størrelse px
+      <input type="number" min="8" max="400" value={selectedBlock.props.size ?? 48}
+        onchange={(e) => setBlockProp('size', Number(e.target.value))} /></label>
+    <label>Farge
+      <ColorPicker value={selectedBlock.props.color ?? 'accent'} tokens={themeSwatches()}
+        onchange={(v) => setBlockProp('color', v)} /></label>
+    <p class="panel-hint">Temafarge eller egen farge. Gjelder tegnede ikoner og tekst-glyfer (★ ✓ →); emoji har sine egne farger.</p>
+  {:else if selectedBlock.type === 'samling'}
+    <label>Samling
+      <Dropdown value={selectedBlock.props.collection ?? ''}
+        options={[['', 'Velg …'], ...samlingerIds.map((id) => [id, samlingerView[id]?.name ?? id])]}
+        onchange={(v) => setBlockProp('collection', v || null)} /></label>
+    <label>Visning
+      <Dropdown value={selectedBlock.props.view ?? 'cards'}
+        options={[['cards', 'Kort'], ['list', 'Liste'], ['archive', 'Arkiv (per år)']]}
+        onchange={(v) => setBlockProp('view', v)} /></label>
+    <label>Maks antall
+      <input type="number" min="0" max="100" value={selectedBlock.props.limit ?? 6}
+        onchange={(e) => setBlockProp('limit', Number(e.target.value))} /></label>
+    <label class="gridmenu-snap">
+      <input type="checkbox" checked={selectedBlock.props.newestFirst !== false}
+        onchange={(e) => setBlockProp('newestFirst', e.target.checked)} />
+      Nyeste først
+    </label>
+    <p class="panel-hint">Innslagene redigeres i Samlinger-panelet; 0 i maks antall viser alle.</p>
+  {:else if selectedBlock.type === 'galleri'}
+    <label>Visning
+      <Dropdown value={selectedBlock.props.view ?? 'grid'}
+        options={[['grid', 'Rutenett'], ['carousel', 'Karusell'], ['slides', 'Lysbilde (bytter automatisk)']]}
+        onchange={(v) => setBlockProp('view', v)} /></label>
+    {#if (selectedBlock.props.view ?? 'grid') === 'grid'}
+      <label>Kolonner
+        <input type="number" min="1" max="6" value={selectedBlock.props.columns ?? 3}
+          onchange={(e) => setBlockProp('columns', Number(e.target.value))} /></label>
+      <label>Luft mellom bildene
+        <span class="gridmenu-value">{selectedBlock.props.gap ?? 12} px</span></label>
+      <input type="range" min="0" max="32" step="2" value={selectedBlock.props.gap ?? 12}
+        oninput={(e) => setBlockProp('gap', Number(e.target.value))} />
+    {/if}
+    {#if selectedBlock.props.view === 'slides'}
+      <label>Sekunder per bilde
+        <input type="number" min="2" max="60" value={selectedBlock.props.interval ?? 5}
+          onchange={(e) => setBlockProp('interval', Number(e.target.value))} /></label>
+    {/if}
+    <label>Avrunding
+      <Dropdown value={selectedBlock.props.radius ?? ''}
+        options={[['', 'Ingen'], ['sm', 'Liten'], ['md', 'Stor']]}
+        onchange={(v) => setBlockProp('radius', v || null)} /></label>
+    <label class="gridmenu-snap" title="Gjelder hos besøkende (prøv i Ren visning); her åpner klikk bildeeditoren">
+      <input type="checkbox" checked={selectedBlock.props.lightbox !== false}
+        onchange={(e) => setBlockProp('lightbox', e.target.checked)} />
+      Fullskjerm ved klikk (lightbox)
+    </label>
+    <hr class="gridmenu-divider" />
+    <label class="ghost filepick" title="Velg gjerne flere bilder samtidig">
+      + Legg til bilder
+      <input type="file" accept="image/*" multiple onchange={addGalleryImages} />
+    </label>
+    {#each selectedBlock.props.images ?? [] as img, i (i)}
+      <div class="bg-layer">
+        <span class="toolbar-row">
+          <img class="site-icon-preview" src={img.src} alt="" />
+          <span class="row-tools">
+            <button class="ghost row-tool" onclick={() => moveGalleryImage(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+            <button class="ghost row-tool" onclick={() => moveGalleryImage(i, 1)}
+              disabled={i === selectedBlock.props.images.length - 1}>{@html ICONS.down}</button>
+            <button class="ghost row-tool" title="Fjern bildet" onclick={() => removeGalleryImage(i)}>{@html ICONS.cross}</button>
+          </span>
+        </span>
+        <label>Beskrivelse
+          <input value={img.alt ?? ''} placeholder="For skjermlesere"
+            onchange={(e) => setGalleryImageField(i, 'alt', e.target.value)} /></label>
+        <label>Lenke
+          <input value={img.href ?? ''} placeholder="Valgfri - vinner over fullskjerm"
+            onchange={(e) => setGalleryImageField(i, 'href', e.target.value || null)} /></label>
+      </div>
+    {/each}
+    <p class="panel-hint">Klikk et bilde i forhåndsvisningen for utsnitt, zoom og filtre (bildeeditoren).</p>
+  {:else if selectedBlock.type === 'shape'}
+    <label>Form
+      <Dropdown value={selectedBlock.props.kind}
+        options={SHAPE_KINDS}
+        onchange={(v) => setBlockProp('kind', v)} /></label>
+    <label>Farge
+      <Dropdown value={selectedBlock.props.color}
+        options={COLOR_TOKENS}
+        onchange={(v) => setBlockProp('color', v)} /></label>
+    <label>Tykkelse
+      <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
+        onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
+    <label class="gridmenu-snap" title="Fylte former bruker fargen som flate i stedet for kantlinje">
+      <input type="checkbox" checked={Boolean(selectedBlock.props.fill)}
+        onchange={(e) => setBlockProp('fill', e.target.checked ? selectedBlock.props.color : null)} />
+      Fylt
+    </label>
+  {/if}
+
+  <hr class="gridmenu-divider" />
+  <label>Animasjon
+    <Dropdown value={selectedBlock.animation?.type ?? ''}
+      options={[['', 'Ingen'], ...Object.entries(coreAnimations).map(([id, def]) => [id, def.label])]}
+      onchange={(v) => setBlockAnimation(v || null)} /></label>
+  {#if selectedBlock.animation && coreAnimations[selectedBlock.animation.type]?.entrance}
+    <label>Varighet ms
+      <input type="number" min="100" max="4000" step="100"
+        value={selectedBlock.animation.props.duration}
+        onchange={(e) => setBlockAnimProp('duration', Number(e.target.value))} /></label>
+    <label>Forsinkelse ms
+      <input type="number" min="0" max="4000" step="100"
+        value={selectedBlock.animation.props.delay}
+        onchange={(e) => setBlockAnimProp('delay', Number(e.target.value))} /></label>
+    <p class="panel-hint">Spilles hos besøkende ved scrolling. Her spilles den én gang hver gang du endrer den.</p>
+  {/if}
+
+  <hr class="gridmenu-divider" />
+  <details class="group frame-group">
+    <summary>Plassering, lag og rotasjon</summary>
+    <div class="group-items">
+      <p class="panel-hint">Kan også endres direkte på blokken: dra for å flytte, håndtakene for størrelse og rotasjon.</p>
+      {#if viewMode === 'desktop'}
+        <div class="frame-grid">
+          <label>X %<input type="number" step="0.5" value={selectedBlock.frame.x}
+            onchange={(e) => setBlockFrame('x', Number(e.target.value))} /></label>
+          <label>Y px<input type="number" step="1" value={selectedBlock.frame.y}
+            onchange={(e) => setBlockFrame('y', Number(e.target.value))} /></label>
+          <label>Bredde %<input type="number" step="0.5" min="1" value={selectedBlock.frame.w}
+            onchange={(e) => setBlockFrame('w', Number(e.target.value))} /></label>
+          <label>Høyde px<input type="number" step="1" min="1" value={selectedBlock.frame.h}
+            onchange={(e) => setBlockFrame('h', Number(e.target.value))} /></label>
+          <label title="Høyere tall ligger foran. Mens du redigerer vises pekt/markert blokk alltid øverst - se ekte rekkefølge i Ren visning">
+            Lag (z)<input type="number" step="1" value={selectedBlock.frame.z ?? 1}
+            onchange={(e) => setBlockFrame('z', Number(e.target.value))} /></label>
+          <label>Rotasjon °<input type="number" step="1" value={selectedBlock.frame.rot ?? 0}
+            onchange={(e) => setBlockFrame('rot', Number(e.target.value))} /></label>
+        </div>
+      {/if}
+      <label class="gridmenu-snap" title="Gjelder kun automatisk mobil-layout">
+        <input type="checkbox" checked={selectedBlock.decor}
+          onchange={(e) => setBlockDecor(e.target.checked)} />
+        Skjul i automatisk mobil-layout (pynt)
+      </label>
+    </div>
+  </details>
+{/snippet}
+
+<!-- Blokkmenyen: alle blokk-innstillingene i en flytende meny ved blokken
+     (kalender-mønsteret; åpnes fra tannhjulet på blokkens verktøylinje).
+     Samme snippet som Egenskaper-panelet, så de to aldri divergerer. -->
+{#if blockMenu && selectedBlock}
+  <div class="block-menu" style="left: {blockMenu.left}px; top: {blockMenu.top}px">
+    <header class="block-menu-head">
+      <span>{BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type}-blokk</span>
+      <button class="ghost row-tool" title="Lukk (Esc)" onclick={() => (blockMenu = null)}>{@html ICONS.cross}</button>
+    </header>
+    <div class="panel-body block-menu-body">
+      {@render blockPropsUI()}
+    </div>
+  </div>
+{/if}
+
 <style>
   /* Adminens fargetemaer: overstyrer motorens standardvariabler KUN i
      admin-dokumentet (forhåndsvisningens iframe har sitt eget dokument
@@ -4124,6 +4171,37 @@
        radene klemmes i stedet for å gi horisontal scrolling */
     grid-template-columns: minmax(0, 1fr);
     gap: 0.6rem;
+  }
+
+  /* Blokkmenyen: flytende utgave av Egenskaper-innholdet ved blokken */
+  .block-menu {
+    position: fixed;
+    z-index: 320;
+    width: 300px;
+    max-height: min(70vh, 560px);
+    display: flex;
+    flex-direction: column;
+    background: var(--urd-color-surface, #151a23);
+    border: 1px solid rgb(255 255 255 / 15%);
+    border-radius: 10px;
+    box-shadow: 0 12px 32px rgb(0 0 0 / 50%);
+  }
+
+  .block-menu-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.55rem 0.8rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border-bottom: 1px solid rgb(255 255 255 / 12%);
+  }
+
+  .block-menu-body {
+    padding: 0.7rem 0.8rem 0.9rem;
+    overflow-y: auto;
+    min-height: 0;
   }
 
   /* Avhukingsbokser som moderne brytere: pille med knott som glir */

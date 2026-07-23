@@ -15,6 +15,7 @@
  *                  { type: 'urd-mobile-auto', sectionId }            (tilbake til auto)
  *                  { type: 'urd-review-done', sectionId }            (mobil gjennomgått)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor }
+ *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (åpne blokkmenyen i editoren)
  */
 import { frameToCss } from './render.js';
 import { makeId } from './sections/presets.js';
@@ -24,6 +25,7 @@ import { applyImageStyle } from './blocks/image.js';
 import { openColorPicker, closeColorPicker } from './color-picker.js';
 import { createDropdown, closeDropdowns } from './dropdown.js';
 import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from './glyphs.js';
+import { FONT_STACKS, TEXT_SIZES } from './fonts.js';
 
 /** Mobilvisning? Motoren setter body-klassen ut fra breakpointet. */
 const isMobile = () => document.body.classList.contains('urd-mobile');
@@ -96,6 +98,13 @@ export function placeBlock(block, root) {
   frame.x = Math.round(((100 - frame.w) / 2) * 100) / 100;
 
   post({ type: 'urd-add-block', sectionId: host.dataset.sectionId, block });
+  // Den nye blokken markeres med en gang (samme mønster som dupliser):
+  // rerendringen etter urd-add-block leser selectedBlockId, editoren
+  // følger etter via urd-select-block, og Ctrl+D/piltaster virker
+  // uten et ekstra klikk først (eiers testfunn 23. juli 2026).
+  document.querySelectorAll('.urd-block.urd-selected').forEach((b) => b.classList.remove('urd-selected'));
+  selectedBlockId = block.id;
+  post({ type: 'urd-select-block', sectionId: host.dataset.sectionId, blockId: block.id });
 }
 
 /**
@@ -525,6 +534,9 @@ function initTextToolbar() {
     onchange: (value) => exec('formatBlock', value),
   });
   group.appendChild(level.el);
+  // Typografi for HELE feltet (blokk-props, ikke markering): egen rad bak
+  // Aa-knappen, se buildTypoRow lenger ned.
+  btn('<span class="urd-tt-aa">Aa</span>', 'Font, størrelse og avstand for hele feltet', () => toggleTypoRow());
 
   startGroup();
   btn('<b>F</b>', 'Fet (Ctrl+B)', () => exec('bold'));
@@ -608,6 +620,7 @@ function initTextToolbar() {
     }
     colorRow.classList.remove('vis');
     glyphRow.classList.remove('vis');
+    typoRow.classList.remove('vis');
     saveSelection();
     // Forhåndsutfyll med eksisterende lenke når markøren står i en.
     const sel = document.getSelection();
@@ -713,6 +726,7 @@ function initTextToolbar() {
   function toggleColorRow() {
     linkRow.classList.remove('vis');
     glyphRow.classList.remove('vis');
+    typoRow.classList.remove('vis');
     colorRow.classList.toggle('vis');
   }
 
@@ -765,6 +779,7 @@ function initTextToolbar() {
   function toggleGlyphRow() {
     linkRow.classList.remove('vis');
     colorRow.classList.remove('vis');
+    typoRow.classList.remove('vis');
     if (glyphRow.classList.contains('vis')) {
       glyphRow.classList.remove('vis');
       return;
@@ -784,18 +799,145 @@ function initTextToolbar() {
     reposition();
   }
 
+  // Typografiraden (bak Aa-knappen): font, grunnstørrelse, linje- og
+  // bokstavavstand for HELE feltet. Dette er blokk-props, ikke markering:
+  // verdiene leses fra blokkens ctx og meldes som urd-edit, så raden og
+  // Egenskaper-panelet alltid er i synk. Raden bygges på nytt ved åpning
+  // med gjeldende verdier.
+  const typoRow = document.createElement('div');
+  typoRow.className = 'urd-tt-typorow';
+  bar.insertBefore(typoRow, linkRow);
+
+  const activeCtx = () => activeText?.closest('.urd-block')?._urdCtx ?? null;
+  const postProps = (patch) => {
+    const ctx = activeCtx();
+    if (!ctx) return;
+    const props = { ...ctx.block.props, ...patch };
+    ctx.block.props = props;
+    // rerender: true - typografi skal synes umiddelbart. Skrivemarkøren
+    // står i selve raden (ikke i teksten), så ekkoet mister ingen caret.
+    post({ type: 'urd-edit', sectionId: ctx.section.id, blockId: ctx.block.id, props, rerender: true });
+    // Re-renderingen bytter ut tekstfeltet: reposisjoner etterpå, så
+    // linjen følger det nye elementet (reposition gjenoppkobler via id).
+    setTimeout(reposition, 150);
+  };
+
+  function buildTypoRow() {
+    typoRow.replaceChildren();
+    const props = activeCtx()?.block.props ?? {};
+    const typoLabel = (text) => {
+      const s = document.createElement('span');
+      s.className = 'urd-tt-typolabel';
+      s.textContent = text;
+      return s;
+    };
+
+    const font = createDropdown({
+      value: props.font ?? '',
+      title: 'Font for hele feltet',
+      options: [['', 'Arv fra tema'], ...FONT_STACKS.map(([name, value]) => [value, name])],
+      onchange: (v) => postProps({ font: v || null }),
+    });
+    typoRow.appendChild(font.el);
+
+    // Størrelse: arv + forvalg + fritt px-tall (samme skala som panelet).
+    const sizeGroup = document.createElement('span');
+    sizeGroup.className = 'urd-tt-sizegroup';
+    const sizeBtn = (label, title, value) => {
+      const b = document.createElement('button');
+      b.textContent = label;
+      b.title = title;
+      if ((props.size ?? null) === value) b.classList.add('on');
+      b.addEventListener('click', () => { postProps({ size: value }); buildTypoRow(); });
+      sizeGroup.appendChild(b);
+    };
+    sizeBtn('A', 'Arv fra tema', null);
+    for (const [name, px] of TEXT_SIZES) sizeBtn(name, `${px} px`, px);
+    const sizeInput = document.createElement('input');
+    sizeInput.type = 'number';
+    sizeInput.min = '8';
+    sizeInput.max = '120';
+    sizeInput.placeholder = 'px';
+    sizeInput.title = 'Egen størrelse i px';
+    sizeInput.value = props.size ?? '';
+    sizeInput.addEventListener('change', () => {
+      postProps({ size: sizeInput.value ? Number(sizeInput.value) : null });
+      buildTypoRow();
+    });
+    sizeGroup.appendChild(sizeInput);
+    typoRow.append(typoLabel('Størrelse'), sizeGroup);
+
+    // Linje- og bokstavavstand: slidere med live verdivisning.
+    const slider = (labelText, title, { min, max, step, value, format, onset }) => {
+      const wrap = document.createElement('span');
+      wrap.className = 'urd-tt-sliderwrap';
+      const input = document.createElement('input');
+      input.type = 'range';
+      input.min = String(min);
+      input.max = String(max);
+      input.step = String(step);
+      input.value = String(value);
+      input.title = title;
+      const val = document.createElement('span');
+      val.className = 'urd-tt-sliderval';
+      val.textContent = format(value);
+      input.addEventListener('input', () => {
+        const v = Number(input.value);
+        val.textContent = format(v);
+        onset(v);
+      });
+      wrap.append(input, val);
+      typoRow.append(typoLabel(labelText), wrap);
+      return { input, val };
+    };
+    slider('Linjeavstand', 'Avstanden mellom tekstlinjene (A i Egenskaper = arv)', {
+      min: 1, max: 2.5, step: 0.05,
+      value: props.lineHeight ?? 1.6,
+      format: (v) => String(v),
+      onset: (v) => postProps({ lineHeight: v }),
+    });
+    slider('Bokstavavstand', 'Avstanden mellom bokstavene; 0 = arv', {
+      min: -1, max: 8, step: 0.1,
+      value: props.letterSpacing ?? 0,
+      format: (v) => `${v} px`,
+      onset: (v) => postProps({ letterSpacing: v || null }),
+    });
+  }
+
+  function toggleTypoRow() {
+    linkRow.classList.remove('vis');
+    colorRow.classList.remove('vis');
+    glyphRow.classList.remove('vis');
+    if (typoRow.classList.contains('vis')) {
+      typoRow.classList.remove('vis');
+      return;
+    }
+    buildTypoRow();
+    typoRow.classList.add('vis');
+    reposition();
+  }
+
   document.body.appendChild(bar);
 
   // Linjen vises så lenge et tekstfelt har fokus, forankret ved MARKERINGEN
   // (blokk-rekten som fallback), klemt under sidens klistrede meny.
   let activeText = null;
+  // Blokk-id-en til det aktive feltet: prop-endringer (typografiraden,
+  // Egenskaper-panelet) re-rendrer seksjonen og bytter ut elementet, så
+  // linjen finner det igjen via id-en. Nulles ved bevisst lukking, ellers
+  // ville linjen aldri slippe taket.
+  let activeBlockId = null;
 
   const reposition = () => {
+    if (activeBlockId && (!activeText || !activeText.isConnected)) {
+      activeText = document.querySelector(`.urd-block[data-block-id="${activeBlockId}"] .urd-text[contenteditable="true"]`);
+    }
     if (!activeText || !activeText.isConnected) {
       bar.classList.remove('vis');
       linkRow.classList.remove('vis');
       colorRow.classList.remove('vis');
       glyphRow.classList.remove('vis');
+      typoRow.classList.remove('vis');
       return;
     }
     // Markeringens rekt er ankeret; en tom/ugyldig rekt (kollapset markør på
@@ -833,9 +975,11 @@ function initTextToolbar() {
       : null;
     if (target && target !== activeText) {
       activeText = target;
+      activeBlockId = target.closest('.urd-block')?.dataset.blockId ?? null;
       linkRow.classList.remove('vis');
       colorRow.classList.remove('vis');
       glyphRow.classList.remove('vis');
+      typoRow.classList.remove('vis');
     }
     if (target) reposition();
   });
@@ -844,7 +988,15 @@ function initTextToolbar() {
     requestAnimationFrame(() => {
       const el = document.activeElement;
       if (el instanceof HTMLElement && (bar.contains(el) || el.closest('.urd-text[contenteditable="true"]'))) return;
+      // Ble feltet BYTTET UT av en re-render (typografi-/panelendring),
+      // ikke forlatt av brukeren? Da gjenoppkobler reposition via
+      // blokk-id-en i stedet for å lukke linjen.
+      if (activeText && !activeText.isConnected && activeBlockId) {
+        reposition();
+        return;
+      }
       activeText = null;
+      activeBlockId = null;
       reposition();
     });
   });
@@ -860,6 +1012,7 @@ function initTextToolbar() {
     if (target.closest('.urd-text[contenteditable="true"], .urd-cp, .urd-imged, .urd-dd-menu')) return;
     activeText.blur();
     activeText = null;
+    activeBlockId = null;
     reposition();
   }, true);
   document.addEventListener('selectionchange', () => {
@@ -1292,6 +1445,29 @@ function enhanceBlock(el, block, section, grid, host) {
     dupBtn.title = 'Dupliser blokken (Ctrl+D)';
     dupBtn.addEventListener('click', () => duplicateBlock(section, block));
     toolbar.appendChild(dupBtn);
+
+    // Blokkmeny: alle blokk-innstillingene i en flytende meny ved blokken
+    // (kalender-mønsteret, eiers ønske 23. juli 2026). Selve menyen bor i
+    // editoren (samme kontroller som Egenskaper); her meldes kun hvor.
+    const GEAR_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.06-.4.1-.8.1-1.2z"/></svg>';
+    const menuBtn = document.createElement('button');
+    menuBtn.innerHTML = GEAR_SVG;
+    menuBtn.title = 'Blokkmeny (alle innstillinger)';
+    // Uten stopp ville pointerdown boble til dokumentets markeringslytter,
+    // som kan utløse en re-render (seksjonsaktivering) FØR click fyrer -
+    // og da byttes knappen ut midt i klikket (samme vern som håndtakene).
+    menuBtn.addEventListener('pointerdown', (event) => event.stopPropagation());
+    menuBtn.addEventListener('click', () => {
+      selectBlock(el);
+      const r = el.getBoundingClientRect();
+      post({
+        type: 'urd-block-menu',
+        sectionId: section.id,
+        blockId: block.id,
+        rect: { left: r.left, top: r.top, right: r.right, bottom: r.bottom },
+      });
+    });
+    toolbar.appendChild(menuBtn);
 
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'urd-edit-delete';
