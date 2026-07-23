@@ -37,8 +37,10 @@ export const imageBlock = {
   defaults: () => ({
     src: '', alt: '', fit: 'cover', radius: 'md', href: null,
     // Additive felt: fokuspunkt (0..1), zoom (1 = ingen) og ikke-destruktive
-    // CSS-justeringer (1 = nøytral).
+    // CSS-justeringer (1 = nøytral). lightbox åpner bildet i fullskjerm ved
+    // klikk hos besøkende (fravær = false, så gamle data trenger ingen migrering).
     x: 0.5, y: 0.5, zoom: 1, brightness: 1, contrast: 1, saturate: 1,
+    lightbox: false,
   }),
   migrations: {},
   /**
@@ -80,6 +82,17 @@ export const imageBlock = {
       el.appendChild(a);
     } else {
       el.appendChild(frame);
+    }
+
+    // Fullskjerm ved klikk: hos besøkende alltid når feltet er på; i preview
+    // kun i Ren visning (ellers eier redigeringen klikket). Lenke vinner.
+    if (props.lightbox && !props.href) {
+      frame.classList.add('urd-lightbox-able');
+      frame.addEventListener('click', async () => {
+        if (ctx.preview && !document.body.classList.contains('urd-chrome-off')) return;
+        const { openLightbox } = await import('../lightbox.js');
+        openLightbox([{ src: props.src, alt: props.alt, style: props }], 0);
+      });
     }
   },
 };

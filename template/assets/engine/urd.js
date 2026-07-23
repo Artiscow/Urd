@@ -22,11 +22,13 @@ import { shapeBlock } from './blocks/shape.js';
 import { videoBlock } from './blocks/video.js';
 import { iconBlock } from './blocks/icon.js';
 import { samlingBlock } from './blocks/samling.js';
+import { galleriBlock } from './blocks/galleri.js';
 import { colorLayer } from './backgrounds/color.js';
 import { gradientLayer } from './backgrounds/gradient.js';
 import { glowLayer } from './backgrounds/glow.js';
 import { grainLayer } from './backgrounds/grain.js';
 import { imageLayer } from './backgrounds/image.js';
+import { bildegalleriLayer } from './backgrounds/bildegalleri.js';
 import { coreAnimations } from './animations/core.js';
 import { registerSectionPresets } from './sections/presets.js';
 import { loadPlugins, loadPluginList } from './plugins.js';
@@ -50,11 +52,13 @@ function registerCore() {
   Urd.blocks.define('video', videoBlock);
   Urd.blocks.define('icon', iconBlock);
   Urd.blocks.define('samling', samlingBlock);
+  Urd.blocks.define('galleri', galleriBlock);
   Urd.backgrounds.define('color', colorLayer);
   Urd.backgrounds.define('gradient', gradientLayer);
   Urd.backgrounds.define('glow', glowLayer);
   Urd.backgrounds.define('grain', grainLayer);
   Urd.backgrounds.define('image', imageLayer);
+  Urd.backgrounds.define('bildegalleri', bildegalleriLayer);
   for (const [id, def] of Object.entries(coreAnimations)) Urd.animations.define(id, def);
   registerSectionPresets(Urd);
 }

@@ -79,6 +79,16 @@ const samling = (fr, view, props = {}) => ({
   frames: fr,
 });
 
+/* Galleri-blokk: bildene legges til av eieren i Egenskaper (flervalg). */
+const galleri = (fr, props = {}) => ({
+  id: makeId('blk'),
+  type: 'galleri',
+  version: 1,
+  props: { images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5, ...props },
+  animation: null,
+  frames: fr,
+});
+
 const bg = (...layers) => ({ version: 1, layers });
 const colorLayer = (value) => ({ type: 'color', version: 1, props: { value } });
 const glowLayer = (x, y, opacity, radius = 0.5) => ({
@@ -176,6 +186,16 @@ export function registerSectionPresets(Urd) {
       const { x, y } = freeSlot(sec, 3, 4, 32, 72, 244, 28, 220);
       return { blocks: [image(frame(x, y, 28, 220))], bottom: y + 244 };
     },
+  });
+
+  Urd.sections.define('galleri', {
+    label: 'Galleri',
+    group: 'Grunnleggende',
+    hint: 'Bildegalleri i rutenett med fullskjermvisning (lightbox)',
+    create: () => section('galleri', '440px', bg(colorLayer('bg')), [
+      text(frame(4, 24, 50, 32), '<h2>Galleri</h2>'),
+      galleri(frame(4, 72, 92, 320)),
+    ]),
   });
 
   Urd.sections.define('kontakt', {

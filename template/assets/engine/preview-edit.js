@@ -18,6 +18,7 @@
  */
 import { frameToCss } from './render.js';
 import { makeId } from './sections/presets.js';
+import { presetThumb } from './preset-thumb.js';
 import { openImageEditor, closeImageEditor } from './image-editor.js';
 import { applyImageStyle } from './blocks/image.js';
 import { openColorPicker, closeColorPicker } from './color-picker.js';
@@ -182,7 +183,7 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
 const BLOCK_KINDS = [
   ['text', 'Tekst'], ['text-box', 'Tekstboks'], ['button', 'Knapp'],
   ['image', 'Bilde'], ['video', 'Video'], ['icon', 'Ikon'],
-  ['samling', 'Samling'],
+  ['samling', 'Samling'], ['galleri', 'Galleri'],
 ];
 
 /** Formene bor i sin egen utfoldbare undermeny («Former») i + Ny blokk. */
@@ -192,7 +193,7 @@ const SHAPE_KINDS = [
 ];
 
 /** Kjerneblokk-typene (paletten i editoren eier byggingen av disse). */
-const CORE_BLOCK_TYPES = new Set(['text', 'image', 'button', 'shape', 'video', 'icon', 'samling']);
+const CORE_BLOCK_TYPES = new Set(['text', 'image', 'button', 'shape', 'video', 'icon', 'samling', 'galleri']);
 
 function addBlockAdder(host, section) {
   const wrap = document.createElement('div');
@@ -404,15 +405,27 @@ function makeSectionAdder(index, above = null) {
         const choice = document.createElement('button');
         choice.type = 'button';
         choice.className = 'urd-preset-choice';
+        // Auto-generert miniatyr fra presetens faktiske data (dataene
+        // forkastes). En kastende plugin-preset skal aldri velte menyen:
+        // da vises valget uten skisse, som før.
+        try {
+          const thumb = document.createElement('span');
+          thumb.className = 'urd-preset-thumb';
+          thumb.insertAdjacentHTML('afterbegin', presetThumb(def.create()));
+          choice.appendChild(thumb);
+        } catch { /* tekstvalg uten miniatyr */ }
+        const body = document.createElement('span');
+        body.className = 'urd-preset-body';
+        choice.appendChild(body);
         const label = document.createElement('span');
         label.className = 'urd-preset-label';
         label.textContent = def.label;
-        choice.appendChild(label);
+        body.appendChild(label);
         if (def.hint) {
           const hint = document.createElement('span');
           hint.className = 'urd-preset-hint';
           hint.textContent = def.hint;
-          choice.appendChild(hint);
+          body.appendChild(hint);
         }
         choice.addEventListener('click', () => {
           post({ type: 'urd-add-section', index, section: def.create() });

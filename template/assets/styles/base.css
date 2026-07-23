@@ -868,6 +868,14 @@ body.urd-chrome-off .urd-imged {
     transform: none;
     transition: none;
   }
+
+  /* Galleri- og bakgrunnstoningene: JS-en nekter alt å spille automatisk
+     ved redusert bevegelse; dette fjerner også selve toningen ved manuell
+     blaing i lysbildevisningen. */
+  .urd-galleri-slide,
+  .urd-bg-slide {
+    transition: none;
+  }
 }
 
 /* Samling-blokken (ADR-0007): tre visninger over strukturerte innslag.
@@ -1100,6 +1108,268 @@ a.urd-samling-title:hover {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+/* Bildeblokk med lightbox: zoom-peker hos besøkende og i Ren visning;
+   med chrome på eier redigeringen klikket, så pekeren er nøytral der. */
+.urd-lightbox-able {
+  cursor: zoom-in;
+}
+
+.urd-preview:not(.urd-chrome-off) .urd-lightbox-able {
+  cursor: inherit;
+}
+
+/* Galleri-blokken: tre visninger (rutenett/karusell/lysbilde) over samme
+   bildeliste. Flisene er rammer som klipper (som .urd-image-frame);
+   klikkbare fliser er button/a uten egen knappestil. */
+.urd-galleri {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.urd-galleri-tile {
+  display: block;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: default;
+}
+
+button.urd-galleri-tile,
+a.urd-galleri-tile {
+  cursor: zoom-in;
+}
+
+.urd-preview:not(.urd-chrome-off) .urd-galleri-edit {
+  cursor: pointer;
+}
+
+.urd-galleri-tile img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.urd-galleri-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--urd-galleri-cols, 3), 1fr);
+  gap: var(--urd-galleri-gap, 12px);
+  height: auto;
+}
+
+.urd-galleri-grid .urd-galleri-tile {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+/* Karusell: sidescroll med snap; pilene ruller et skjermbreddehopp. */
+.urd-galleri-track {
+  display: flex;
+  gap: var(--urd-galleri-gap, 12px);
+  height: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+
+.urd-galleri-track .urd-galleri-tile {
+  flex: 0 0 auto;
+  height: 100%;
+  aspect-ratio: 4 / 3;
+  scroll-snap-align: start;
+}
+
+/* Lysbilde: stablede slides, kun .on er synlig (og klikkbar). */
+.urd-galleri-slides {
+  height: 100%;
+  overflow: hidden;
+}
+
+.urd-galleri-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+
+.urd-galleri-slide.on {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.urd-galleri-slide .urd-galleri-tile {
+  width: 100%;
+  height: 100%;
+}
+
+.urd-galleri-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--urd-color-bg) 65%, transparent);
+  color: var(--urd-color-text);
+  cursor: pointer;
+}
+
+.urd-galleri-nav:hover {
+  background: color-mix(in srgb, var(--urd-color-accent) 35%, var(--urd-color-bg));
+}
+
+.urd-galleri-nav:focus-visible {
+  outline: 2px solid var(--urd-color-accent);
+  outline-offset: 2px;
+}
+
+.urd-galleri-prev {
+  left: 10px;
+}
+
+.urd-galleri-next {
+  right: 10px;
+}
+
+.urd-galleri-dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  gap: 7px;
+}
+
+.urd-galleri-dot {
+  top: auto;
+  transform: none;
+  position: static;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--urd-color-text) 45%, transparent);
+}
+
+.urd-galleri-dot.on {
+  background: var(--urd-color-accent);
+}
+
+/* Tom-tilstand: kun i editorens preview, samme mønster som bildeblokken */
+.urd-galleri-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 0.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+  opacity: 0.6;
+  border: 1px dashed color-mix(in srgb, var(--urd-color-text) 30%, transparent);
+  border-radius: var(--urd-radius-md);
+}
+
+/* Lightbox (engine/lightbox.js): fullskjermvisning hos besøkende og i Ren
+   visning. Over nav (5000), under editor-chromen (99999+). Mørk uansett
+   tema: den er et fotovisningsrom, ikke en temaflate. */
+.urd-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 88%);
+}
+
+.urd-lightbox-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  max-width: 92vw;
+  max-height: 88vh;
+}
+
+.urd-lightbox-img {
+  max-width: 92vw;
+  max-height: 82vh;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.urd-lightbox-caption {
+  color: #e8eaf0;
+  font-size: 0.85rem;
+  opacity: 0.85;
+  text-align: center;
+}
+
+.urd-lightbox button {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 10%);
+  color: #fff;
+  cursor: pointer;
+}
+
+.urd-lightbox button:hover {
+  background: rgb(255 255 255 / 24%);
+}
+
+.urd-lightbox button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.urd-lightbox-close {
+  top: 16px;
+  right: 16px;
+}
+
+.urd-lightbox-prev {
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.urd-lightbox-next {
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Bildegalleri-bakgrunnslaget: to stablede bilder som krysstoner. */
+.urd-bg-galleri {
+  overflow: hidden;
+}
+
+.urd-bg-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity var(--urd-bgg-fade, 1.5s) ease;
+}
+
+.urd-bg-slide.on {
+  opacity: 1;
 }
 
 /* «+ Ny blokk» (hover-vist, kun preview): øverst til høyre i seksjonen,
@@ -2145,9 +2415,8 @@ body.urd-mobile .urd-section-resize {
 
 .urd-preview .urd-preset-menu .urd-preset-choice {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1px;
+  align-items: center;
+  gap: 10px;
   width: 100%;
   transform: none;
   border: 1px solid transparent;
@@ -2156,6 +2425,29 @@ body.urd-mobile .urd-section-resize {
   padding: 6px 8px;
   text-align: left;
   opacity: 1;
+}
+
+/* Auto-generert miniatyr (preset-thumb.js): skjematisk skisse av seksjonen */
+.urd-preview .urd-preset-thumb {
+  flex: 0 0 auto;
+  width: 84px;
+  height: 48px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 20%, transparent);
+  border-radius: 5px;
+}
+
+.urd-preview .urd-preset-thumb svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.urd-preview .urd-preset-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
 }
 
 .urd-preview .urd-preset-menu .urd-preset-choice:hover {

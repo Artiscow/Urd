@@ -239,6 +239,102 @@
       }
     },
     {
+      "id": "sec-galleri1",
+      "version": 1,
+      "preset": "galleri",
+      "size": {
+        "minHeight": "440px"
+      },
+      "grid": null,
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "color",
+            "version": 1,
+            "props": {
+              "value": "bg"
+            }
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "id": "blk-galtit1",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<h2>Galleri</h2>",
+            "align": "left",
+            "box": false
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 4,
+              "y": 24,
+              "w": 50,
+              "h": 32,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-galleri1",
+          "type": "galleri",
+          "version": 1,
+          "props": {
+            "images": [
+              {
+                "src": "/media/bilde-ff8fdd0e.webp",
+                "alt": "Fra demosiden",
+                "href": null,
+                "style": {}
+              },
+              {
+                "src": "/media/bakgrunn-192ecc51.webp",
+                "alt": "Bakgrunnsmotiv",
+                "href": null,
+                "style": {}
+              },
+              {
+                "src": "/media/weyland-crt-1920x1200-192ecc51.webp",
+                "alt": "Skjermmotiv",
+                "href": null,
+                "style": {}
+              }
+            ],
+            "view": "grid",
+            "columns": 3,
+            "gap": 12,
+            "radius": "md",
+            "lightbox": true,
+            "interval": 5
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 4,
+              "y": 72,
+              "w": 92,
+              "h": 320,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        }
+      ],
+      "responsive": {
+        "mobile": {
+          "mode": "auto",
+          "attention": null
+        }
+      }
+    },
+    {
       "id": "sec-d33b8339",
       "version": 1,
       "preset": "tom",

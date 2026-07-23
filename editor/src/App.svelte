@@ -19,6 +19,7 @@
   import { glowLayer } from '../../template/assets/engine/backgrounds/glow.js';
   import { grainLayer } from '../../template/assets/engine/backgrounds/grain.js';
   import { imageLayer } from '../../template/assets/engine/backgrounds/image.js';
+  import { bildegalleriLayer } from '../../template/assets/engine/backgrounds/bildegalleri.js';
   import { coreAnimations } from '../../template/assets/engine/animations/core.js';
   import { compressToWebp, slugify, contentHash, WARN_BYTES } from '../../template/assets/engine/imageTools.js';
 
@@ -28,6 +29,7 @@
     ['gradient', gradientLayer],
     ['glow', glowLayer],
     ['image', imageLayer],
+    ['bildegalleri', bildegalleriLayer],
     ['grain', grainLayer],
   ];
   const BG_DEFS = Object.fromEntries(BG_TYPES);
@@ -462,7 +464,7 @@
   const TEXT_SIZES = [['S', 14], ['M', 18], ['L', 24], ['XL', 36]];
 
   /** Navn på blokktypene i panelet. */
-  const BLOCK_LABELS = { text: 'Tekst', button: 'Knapp', image: 'Bilde', shape: 'Form', video: 'Video', icon: 'Ikon' };
+  const BLOCK_LABELS = { text: 'Tekst', button: 'Knapp', image: 'Bilde', shape: 'Form', video: 'Video', icon: 'Ikon', galleri: 'Galleri' };
   const SHAPE_KINDS = [
     ['line', 'Strek'], ['arrow', 'Pil'], ['circle', 'Sirkel'],
     ['rect', 'Rektangel'], ['triangle', 'Trekant'],
@@ -562,6 +564,44 @@
     } catch {
       setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
     }
+  }
+
+  /* Bildegalleri-laget: bildelisten redigeres som bakgrunnslagene ellers,
+     men med flervalgs-opplasting (hele bunken i ETT angre-steg). */
+
+  async function addBgGalleryImages(i, event) {
+    const files = [...(event.target.files ?? [])];
+    event.target.value = '';
+    if (!files.length) return;
+    setStatus('Komprimerer bildene…');
+    const { images, failed, big } = await compressMany(files);
+    if (images.length) {
+      mutateSection('bg', (s) => {
+        const props = s.background.layers[i].props;
+        props.images ??= [];
+        props.images.push(...images.map(({ src }) => ({ src, x: 0.5, y: 0.5 })));
+      });
+    }
+    reportUpload(images.length, failed, big);
+  }
+
+  function moveBgGalleryImage(i, j, dir) {
+    mutateSection('bg', (s) => {
+      const arr = s.background.layers[i].props.images;
+      const k = j + dir;
+      if (k < 0 || k >= arr.length) return;
+      [arr[j], arr[k]] = [arr[k], arr[j]];
+    });
+  }
+
+  function removeBgGalleryImage(i, j) {
+    mutateSection('bg', (s) => { s.background.layers[i].props.images.splice(j, 1); });
+  }
+
+  function setBgGalleryImageProp(i, j, name, value) {
+    mutateSection(`edit:bgg-${activeSectionId}-${i}-${j}-${name}`, (s) => {
+      s.background.layers[i].props.images[j][name] = value;
+    });
   }
 
   /** Temafargene som hurtigvalg i fargevelgeren (velgeren løser opp
@@ -1969,6 +2009,7 @@
     video: { type: 'video', props: { url: '', title: 'Video' }, w: 45, h: 300 },
     icon: { type: 'icon', decor: true, props: { glyph: '★', color: 'accent', size: 48 }, w: 8, h: 64 },
     samling: { type: 'samling', props: { collection: null, view: 'cards', limit: 6, newestFirst: true }, w: 90, h: 200 },
+    galleri: { type: 'galleri', props: { images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5 }, w: 90, h: 320 },
   };
 
   function buildBlock(kind) {
@@ -2066,6 +2107,7 @@
     block.frames.desktop.y = 40;
     insertBlock(msg.sectionId, block);
     if (msg.kind === 'image') setStatus('Bildeblokk lagt til - velg bildet i Egenskaper');
+    if (msg.kind === 'galleri') setStatus('Galleri lagt til - legg til bilder i Egenskaper');
   }
 
   /** + Bilde: komprimer til webp og legg i utkastet som data-URL.
@@ -2102,6 +2144,74 @@
     }
   }
 
+  /** Flere bilder i én opplasting (galleriene): komprimer alle;
+   *  ett uleselig bilde stopper ikke resten av bunken. */
+  async function compressMany(fileList) {
+    const images = [];
+    let failed = 0;
+    let big = 0;
+    for (const file of fileList) {
+      try {
+        const img = await compressToWebp(file);
+        if (img.bytes > WARN_BYTES) big += 1;
+        images.push({ src: img.dataUrl, alt: slugify(file.name).replaceAll('-', ' '), href: null, style: {} });
+      } catch {
+        failed += 1;
+      }
+    }
+    return { images, failed, big };
+  }
+
+  function reportUpload(ok, failed, big) {
+    if (failed) setStatus(`${failed} av bildene kunne ikke leses (prøv jpg/png/webp)`, 'error');
+    else if (big) setStatus(`${big} av bildene er store - vurder mindre utsnitt`, 'error');
+    else setStatus(ok ? '' : 'Ingen bilder lagt til');
+  }
+
+  /** + Legg til bilder i en markert galleri-blokk: hele bunken i ETT angre-steg. */
+  async function addGalleryImages(event) {
+    const files = [...(event.target.files ?? [])];
+    event.target.value = '';
+    if (!files.length) return;
+    setStatus('Komprimerer bildene…');
+    const { images, failed, big } = await compressMany(files);
+    if (images.length) mutateBlock('galleri-add', (b) => { b.props.images.push(...images); });
+    reportUpload(images.length, failed, big);
+  }
+
+  /** «Galleri med bilder» i paletten: bygg blokken ferdig fylt. */
+  async function addGalleryBlock(event) {
+    const files = [...(event.target.files ?? [])];
+    event.target.value = '';
+    if (!files.length) return;
+    setStatus('Komprimerer bildene…');
+    const { images, failed, big } = await compressMany(files);
+    if (!images.length) {
+      reportUpload(0, failed, big);
+      return;
+    }
+    const block = buildBlock('galleri');
+    block.props.images = images;
+    requestPlacement(block);
+    reportUpload(images.length, failed, big);
+  }
+
+  function moveGalleryImage(i, dir) {
+    mutateBlock('galleri-move', (b) => {
+      const j = i + dir;
+      if (j < 0 || j >= b.props.images.length) return;
+      [b.props.images[i], b.props.images[j]] = [b.props.images[j], b.props.images[i]];
+    });
+  }
+
+  function removeGalleryImage(i) {
+    mutateBlock('galleri-remove', (b) => { b.props.images.splice(i, 1); });
+  }
+
+  function setGalleryImageField(i, field, value) {
+    mutateBlock(`edit:${selectedBlock.blockId}:img${i}-${field}`, (b) => { b.props.images[i][field] = value; });
+  }
+
   /**
    * Gjør upubliserte bilder (data-URL-er i utkastet) om til filer i
    * media/, og bytter src til stien. Returnerer fillisten for commiten.
@@ -2124,11 +2234,17 @@
       // Bakgrunnsbilder følger samme flyt som bildeblokker.
       for (const layer of section.background?.layers ?? []) {
         if (layer.type === 'image') materializeField(layer.props, 'src', 'bakgrunn', files);
+        if (layer.type === 'bildegalleri') {
+          for (const img of layer.props.images ?? []) materializeField(img, 'src', 'bakgrunn', files);
+        }
       }
       for (const block of section.blocks) {
         if (block.type === 'image') materializeField(block.props, 'src', block.props.alt, files);
         // Ikon-blokkens eget opplastede ikon publiseres som media-fil på samme måte.
         if (block.type === 'icon') materializeField(block.props, 'image', 'ikon', files);
+        if (block.type === 'galleri') {
+          for (const img of block.props.images ?? []) materializeField(img, 'src', img.alt || 'galleri', files);
+        }
       }
     }
     return files;
@@ -2844,6 +2960,17 @@
                 <button class="ghost" title="Nyheter/oppslag/arkiv fra en samling (Samlinger-panelet)"
                   onclick={() => addBlock('samling')}>Samling</button>
                 <details class="group">
+                  <summary>Galleri</summary>
+                  <div class="group-items">
+                    <button class="ghost" title="Bildegalleri med rutenett-, karusell- eller lysbildevisning"
+                      onclick={() => addBlock('galleri')}>Tomt galleri</button>
+                    <label class="ghost filepick" title="Velg flere bilder samtidig og få dem rett inn i et galleri">
+                      Galleri med bilder
+                      <input type="file" accept="image/*" multiple onchange={addGalleryBlock} />
+                    </label>
+                  </div>
+                </details>
+                <details class="group">
                   <summary>Former</summary>
                   <div class="group-items">
                     <button class="ghost" onclick={() => addBlock('shape-line')}>Strek</button>
@@ -2969,6 +3096,13 @@
                     <label>Lenke
                       <input value={selectedBlock.props.href ?? ''} placeholder="Valgfri (gjør bildet klikkbart)"
                         onchange={(e) => setBlockProp('href', e.target.value || null)} /></label>
+                    {#if !selectedBlock.props.href}
+                      <label class="gridmenu-snap" title="Gjelder hos besøkende (prøv i Ren visning); her åpner klikk bildeeditoren">
+                        <input type="checkbox" checked={Boolean(selectedBlock.props.lightbox)}
+                          onchange={(e) => setBlockProp('lightbox', e.target.checked)} />
+                        Fullskjerm ved klikk (lightbox)
+                      </label>
+                    {/if}
                     <label>Fokus X
                       <span class="gridmenu-value">{Math.round((selectedBlock.props.x ?? 0.5) * 100)}%</span></label>
                     <input type="range" min="0" max="1" step="0.05" value={selectedBlock.props.x ?? 0.5}
@@ -3048,6 +3182,59 @@
                       Nyeste først
                     </label>
                     <p class="panel-hint">Innslagene redigeres i Samlinger-panelet; 0 i maks antall viser alle.</p>
+                  {:else if selectedBlock.type === 'galleri'}
+                    <label>Visning
+                      <Dropdown value={selectedBlock.props.view ?? 'grid'}
+                        options={[['grid', 'Rutenett'], ['carousel', 'Karusell'], ['slides', 'Lysbilde (bytter automatisk)']]}
+                        onchange={(v) => setBlockProp('view', v)} /></label>
+                    {#if (selectedBlock.props.view ?? 'grid') === 'grid'}
+                      <label>Kolonner
+                        <input type="number" min="1" max="6" value={selectedBlock.props.columns ?? 3}
+                          onchange={(e) => setBlockProp('columns', Number(e.target.value))} /></label>
+                      <label>Luft mellom bildene
+                        <span class="gridmenu-value">{selectedBlock.props.gap ?? 12} px</span></label>
+                      <input type="range" min="0" max="32" step="2" value={selectedBlock.props.gap ?? 12}
+                        oninput={(e) => setBlockProp('gap', Number(e.target.value))} />
+                    {/if}
+                    {#if selectedBlock.props.view === 'slides'}
+                      <label>Sekunder per bilde
+                        <input type="number" min="2" max="60" value={selectedBlock.props.interval ?? 5}
+                          onchange={(e) => setBlockProp('interval', Number(e.target.value))} /></label>
+                    {/if}
+                    <label>Avrunding
+                      <Dropdown value={selectedBlock.props.radius ?? ''}
+                        options={[['', 'Ingen'], ['sm', 'Liten'], ['md', 'Stor']]}
+                        onchange={(v) => setBlockProp('radius', v || null)} /></label>
+                    <label class="gridmenu-snap" title="Gjelder hos besøkende (prøv i Ren visning); her åpner klikk bildeeditoren">
+                      <input type="checkbox" checked={selectedBlock.props.lightbox !== false}
+                        onchange={(e) => setBlockProp('lightbox', e.target.checked)} />
+                      Fullskjerm ved klikk (lightbox)
+                    </label>
+                    <hr class="gridmenu-divider" />
+                    <label class="ghost filepick" title="Velg gjerne flere bilder samtidig">
+                      + Legg til bilder
+                      <input type="file" accept="image/*" multiple onchange={addGalleryImages} />
+                    </label>
+                    {#each selectedBlock.props.images ?? [] as img, i (i)}
+                      <div class="bg-layer">
+                        <span class="toolbar-row">
+                          <img class="site-icon-preview" src={img.src} alt="" />
+                          <span class="row-tools">
+                            <button class="ghost row-tool" onclick={() => moveGalleryImage(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+                            <button class="ghost row-tool" onclick={() => moveGalleryImage(i, 1)}
+                              disabled={i === selectedBlock.props.images.length - 1}>{@html ICONS.down}</button>
+                            <button class="ghost row-tool" title="Fjern bildet" onclick={() => removeGalleryImage(i)}>{@html ICONS.cross}</button>
+                          </span>
+                        </span>
+                        <label>Beskrivelse
+                          <input value={img.alt ?? ''} placeholder="For skjermlesere"
+                            onchange={(e) => setGalleryImageField(i, 'alt', e.target.value)} /></label>
+                        <label>Lenke
+                          <input value={img.href ?? ''} placeholder="Valgfri - vinner over fullskjerm"
+                            onchange={(e) => setGalleryImageField(i, 'href', e.target.value || null)} /></label>
+                      </div>
+                    {/each}
+                    <p class="panel-hint">Klikk et bilde i forhåndsvisningen for utsnitt, zoom og filtre (bildeeditoren).</p>
                   {:else if selectedBlock.type === 'shape'}
                     <label>Form
                       <Dropdown value={selectedBlock.props.kind}
@@ -3230,6 +3417,51 @@
                           <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
                         <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
                           oninput={(e) => setBgProp(i, 'opacity', Number(e.target.value))} />
+                      {:else if layer.type === 'bildegalleri'}
+                        <label class="ghost filepick" title="Velg gjerne flere bilder samtidig; komprimeres til webp">
+                          + Legg til bilder
+                          <input type="file" accept="image/*" multiple onchange={(e) => addBgGalleryImages(i, e)} />
+                        </label>
+                        {#each layer.props.images ?? [] as img, j (j)}
+                          <span class="toolbar-row">
+                            <img class="site-icon-preview" src={img.src} alt="" />
+                            <span class="row-tools">
+                              <button class="ghost row-tool" onclick={() => moveBgGalleryImage(i, j, -1)} disabled={j === 0}>{@html ICONS.up}</button>
+                              <button class="ghost row-tool" onclick={() => moveBgGalleryImage(i, j, 1)}
+                                disabled={j === layer.props.images.length - 1}>{@html ICONS.down}</button>
+                              <button class="ghost row-tool" title="Fjern bildet"
+                                onclick={() => removeBgGalleryImage(i, j)}>{@html ICONS.cross}</button>
+                            </span>
+                          </span>
+                          <label>Fokus X
+                            <span class="gridmenu-value">{Math.round((img.x ?? 0.5) * 100)}%</span></label>
+                          <input type="range" min="0" max="1" step="0.05" value={img.x ?? 0.5}
+                            oninput={(e) => setBgGalleryImageProp(i, j, 'x', Number(e.target.value))} />
+                          <label>Fokus Y
+                            <span class="gridmenu-value">{Math.round((img.y ?? 0.5) * 100)}%</span></label>
+                          <input type="range" min="0" max="1" step="0.05" value={img.y ?? 0.5}
+                            oninput={(e) => setBgGalleryImageProp(i, j, 'y', Number(e.target.value))} />
+                        {/each}
+                        <label>Tilpasning
+                          <Dropdown value={layer.props.fit ?? 'cover'}
+                            options={[['cover', 'Fyll (beskjæres)'], ['contain', 'Vis hele']]}
+                            onchange={(v) => setBgProp(i, 'fit', v)} /></label>
+                        <label>Sekunder per bilde
+                          <input type="number" min="2" max="120" value={layer.props.interval ?? 6}
+                            onchange={(e) => setBgProp(i, 'interval', Number(e.target.value))} /></label>
+                        <label>Overgang
+                          <span class="gridmenu-value">{(layer.props.fade ?? 1.5).toFixed(1)} s</span></label>
+                        <input type="range" min="0" max="5" step="0.1" value={layer.props.fade ?? 1.5}
+                          oninput={(e) => setBgProp(i, 'fade', Number(e.target.value))} />
+                        <label>Uskarphet
+                          <span class="gridmenu-value">{layer.props.blur ?? 0} px</span></label>
+                        <input type="range" min="0" max="20" step="1" value={layer.props.blur ?? 0}
+                          oninput={(e) => setBgProp(i, 'blur', Number(e.target.value))} />
+                        <label>Styrke
+                          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
+                        <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
+                          oninput={(e) => setBgProp(i, 'opacity', Number(e.target.value))} />
+                        <p class="panel-hint">Bakgrunnen blar gjennom bildene med myk overgang. Med ett bilde, eller redusert bevegelse hos den besøkende, vises kun det første.</p>
                       {/if}
                     </div>
                   {/each}
