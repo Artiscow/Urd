@@ -5270,7 +5270,9 @@ function Fs(e, t) {
 	}
 	function Vr(e) {
 		let t = C.data.sections.find((t) => t.id === e.sectionId);
-		t && (le("delete-block"), t.blocks = t.blocks.filter((t) => t.id !== e.blockId), G(k)?.blockId === e.blockId && R(k, null), ee(t, "blokk-slettet"), C.save(), D(), T?.sendSection(G(l), t));
+		if (!t) return;
+		let n = e.blockIds ?? [e.blockId];
+		le("delete-block"), t.blocks = t.blocks.filter((e) => !n.includes(e.id)), n.includes(G(k)?.blockId) && R(k, null), ee(t, "blokk-slettet"), C.save(), D(), T?.sendSection(G(l), t);
 	}
 	let Hr = {
 		text: {

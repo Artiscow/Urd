@@ -18,7 +18,7 @@
  *                  { type: 'urd-mobile-auto', sectionId }           (tilbake til auto)
  *                  { type: 'urd-review-done', sectionId }           (mobil gjennomgått)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor }
- *                  { type: 'urd-delete', sectionId, blockId }
+ *                  { type: 'urd-delete', sectionId, blockId | blockIds } (blockIds fra multimarkering: hele utvalget i ett angre-steg)
  *                  { type: 'urd-add-section', index, section }
  *                  { type: 'urd-move-section', sectionId, dir }
  *                  { type: 'urd-delete-section', sectionId }
@@ -31,7 +31,7 @@
  *                  { type: 'urd-plugin-blocks', blocks }      (plugin-blokkene: type/label/defaults til Blokker-panelet)
  *                  { type: 'urd-navigate', path }             (intern lenke klikket i preview)
  *                  { type: 'urd-add-block', sectionId, block } (plassert blokk fra paletten)
- *                  { type: 'urd-add-blocks', sectionId, blocks, minBottom, moves } (preset-element fra «+ kort/rad»-knappen; moves flytter eksisterende blokker i samme angre-steg)
+ *                  { type: 'urd-add-blocks', sectionId, blocks, minBottom, moves } (preset-element fra «+ kort/rad»-knappen ELLER innliming/duplisering av et multiutvalg; moves flytter eksisterende blokker i samme angre-steg)
  *                  { type: 'urd-request-block', sectionId, kind, at? } («+ Legg til blokk»; at = klikkpunkt {x i %, y i px}, uten = sentrert)
  *                  { type: 'urd-move-block-section', fromSectionId, toSectionId, blockId, frame } (blokk sluppet i annen seksjon)
  *                  { type: 'urd-collection-edit', collection, entryId, field, value } (klikk-og-skriv/bildebytte i samling-blokken)

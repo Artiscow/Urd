@@ -2067,9 +2067,11 @@
   function handleDelete(msg) {
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     if (!section) return;
+    // blockIds (multimarkering): hele utvalget slettes som ETT angre-steg.
+    const ids = msg.blockIds ?? [msg.blockId];
     pushHistory('delete-block');
-    section.blocks = section.blocks.filter((b) => b.id !== msg.blockId);
-    if (selectedBlock?.blockId === msg.blockId) selectedBlock = null;
+    section.blocks = section.blocks.filter((b) => !ids.includes(b.id));
+    if (ids.includes(selectedBlock?.blockId)) selectedBlock = null;
     markDesktopChange(section, 'blokk-slettet');
     store.save();
     updateDirty();

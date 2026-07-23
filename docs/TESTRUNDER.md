@@ -2,6 +2,17 @@
 
 Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren stryker herfra** når noe er testet; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert.
 
+### Testrunde-batch (0.6.27): multimarkering (M6 batch C del 2)
+
+- [ ] Marquee: dra en ramme på tom seksjonsflate; alle blokker rammen berører (delvis holder) blir utvalget, med stiplet markering per blokk og en flytende verktøylinje («N valgt») over utvalget; klikk uten dra virker som før
+- [ ] Shift-klikk: bygg utvalget blokk for blokk (legg til/fjern); utvalget er avgrenset til ÉN seksjon (shift-klikk i en annen seksjon starter nytt utvalg)
+- [ ] Gruppe-dra: dra i et hvilket som helst medlem, hele utvalget følger med (samme forskyvning, klemt mot seksjonskantene i bredden); ETT Ctrl+Z ruller hele draget; klikk på et medlem kollapser IKKE utvalget (klikk på tom flate eller Esc gjør det)
+- [ ] Piltaster flytter hele utvalget i grid-steg (Shift = 1 px); Delete/Backspace sletter hele utvalget som ETT angre-steg
+- [ ] Ctrl+C/V: kopier utvalget (eller én markert blokk) og lim inn; det innlimte får bevart innbyrdes oppsett, litt forskjøvet, blir det nye utvalget, og hele innlimingen er ETT angre-steg; nytt Ctrl+V fortsetter fra det innlimte; innliming går til den AKTIVE seksjonen (sist klikkede); utklippstavlen nullstilles ved sidebytte (kjent avgrensning)
+- [ ] Ctrl+D med utvalg dupliserer hele utvalget
+- [ ] Verktøylinjen: venstre/midt/høyre + topp/midte/bunn justerer innenfor utvalgets egen boks; «Fordel jevnt» (vises kun ved 3+) gjør luften mellom blokkene lik; hver knapp er ett angre-steg
+- [ ] Ren visning og mobilvisning: ingen marquee, ingen verktøylinje, ingen utvalgsrammer
+
 ### Testrunde-batch (0.6.26): sticky blokker, klikkplassering, hjelpelinjer, toppkant-høyde (M6 batch C del 1)
 
 - [ ] Sticky: «Fest ved scrolling» på en blokk (Egenskaper/blokkmenyen, kun desktop-visning); i Ren visning fester blokken seg ved vindustoppen med valgt avstand og slipper når egen seksjon er forbi; publiser og sjekk samme adferd som besøkende (demoen: «Møt gjengen»-knappen på Om oss-siden har festing på)

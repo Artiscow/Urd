@@ -6,7 +6,7 @@
  * laster aldri denne filen. Endringer meldes til editoren, som eier
  * utkastet:
  *   side → editor: { type: 'urd-move',   sectionId, blockId, frame, frameKey }
- *                  { type: 'urd-delete', sectionId, blockId }
+ *                  { type: 'urd-delete', sectionId, blockId | blockIds }  (blockIds: multiutvalg i ett angre-steg)
  *                  { type: 'urd-add-section', index, section }
  *                  { type: 'urd-move-section', sectionId, dir }
  *                  { type: 'urd-delete-section', sectionId }
@@ -28,6 +28,7 @@ import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from './glyphs.js
 import { FONT_STACKS, TEXT_SIZES } from './fonts.js';
 import { frameAtPoint } from './place.js';
 import { topDrag } from './section-size.js';
+import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
 
 /** Mobilvisning? Motoren setter body-klassen ut fra breakpointet. */
 const isMobile = () => document.body.classList.contains('urd-mobile');
@@ -60,6 +61,14 @@ export function enhanceSection(host, section, grid) {
   // Egenskaper-panelet, som rerendrer hele seksjonen).
   if (selectedBlockId) {
     host.querySelector(`.urd-block[data-block-id="${selectedBlockId}"]`)?.classList.add('urd-selected');
+  }
+  // Multimarkeringen likeså (inkl. et nettopp innlimt utvalg, der
+  // id-ene ble satt FØR rerendringen fant elementene).
+  if (multiIds.size && host.dataset.sectionId === multiSectionId) {
+    for (const id of multiIds) {
+      host.querySelector(`.urd-block[data-block-id="${CSS.escape(id)}"]`)?.classList.add('urd-multi-selected');
+    }
+    updateMultiToolbar();
   }
   addSectionToolbar(host, section, grid);
   // Strukturendring (seksjonshøyde) hører til desktopvisningen.
@@ -1319,7 +1328,67 @@ window.addEventListener('keydown', (event) => {
 // overlever rerender via id-en.
 let selectedBlockId = null;
 
-function selectBlock(el) {
+/**
+ * Multimarkering: et utvalg av blokker i ÉN seksjon (id-er + seksjonen
+ * de bor i). selectedBlockId er alltid primærblokken i utvalget.
+ * Utvalget bygges med shift-klikk eller marquee (dra på tom flate),
+ * og behandles som én enhet ved dra, piltaster, sletting og Ctrl+C/D/V.
+ */
+let multiIds = new Set();
+let multiSectionId = null;
+
+/** Utklippstavlen for Ctrl+C/V: blokk-JSON + kildeseksjonen. Lever i
+ *  previewens modultilstand, så den nullstilles ved sidebytte. */
+let clipboard = null;
+
+function selectedEls() {
+  if (!multiIds.size) return [];
+  return [...multiIds]
+    .map((id) => document.querySelector(`.urd-block[data-block-id="${CSS.escape(id)}"]`))
+    .filter(Boolean);
+}
+
+function applyMultiClasses() {
+  document.querySelectorAll('.urd-block.urd-multi-selected').forEach((el) => {
+    if (!multiIds.has(el.dataset.blockId)) el.classList.remove('urd-multi-selected');
+  });
+  for (const el of selectedEls()) el.classList.add('urd-multi-selected');
+  updateMultiToolbar();
+}
+
+function clearMulti() {
+  if (!multiIds.size) return;
+  multiIds = new Set();
+  multiSectionId = null;
+  applyMultiClasses();
+}
+
+/** Shift-klikk: legg til/fjern blokken i utvalget (innenfor én seksjon). */
+function toggleMulti(el) {
+  const id = el.dataset.blockId;
+  const sec = el.closest('.urd-section')?.dataset.sectionId ?? null;
+  if (multiSectionId && multiSectionId !== sec) clearMulti();
+  multiSectionId = sec;
+  // Utgangspunktet er den allerede markerte blokken (samme seksjon).
+  if (!multiIds.size && selectedBlockId && selectedBlockId !== id) {
+    const cur = document.querySelector(`.urd-block[data-block-id="${CSS.escape(selectedBlockId)}"]`);
+    if (cur?.closest('.urd-section')?.dataset.sectionId === sec) multiIds.add(selectedBlockId);
+  }
+  if (multiIds.has(id)) {
+    multiIds.delete(id);
+    // Primærblokken forblir en som fortsatt er med i utvalget.
+    const rest = selectedEls();
+    selectBlock(rest[0] ?? null, { keepMulti: true });
+  } else {
+    multiIds.add(id);
+    selectBlock(el, { keepMulti: true });
+  }
+  if (multiIds.size < 2) clearMulti();
+  applyMultiClasses();
+}
+
+function selectBlock(el, opts = {}) {
+  if (!opts.keepMulti) clearMulti();
   const previous = selectedBlockId;
   selectedBlockId = el?.dataset.blockId ?? null;
   document.querySelectorAll('.urd-block.urd-selected').forEach((b) => {
@@ -1358,14 +1427,25 @@ document.addEventListener('click', (event) => {
   }
 });
 
-// Tastatur på markert blokk: piltaster flytter (grid-steg; Shift = 1 px),
-// Delete sletter, Esc avmarkerer. Aldri når fokus står i tekst/felt, og
-// flytting gjelder desktopvisningen (mobil justeres med dra).
+// Tastatur på markert blokk/utvalg: piltaster flytter (grid-steg;
+// Shift = 1 px), Delete sletter, Esc avmarkerer, Ctrl+C/V kopierer og
+// limer inn med bevart oppsett, Ctrl+D dupliserer. Aldri når fokus står
+// i tekst/felt, og flytting gjelder desktopvisningen.
 window.addEventListener('keydown', (event) => {
-  if (!selectedBlockId) return;
   const target = event.target;
   if (target instanceof HTMLElement
     && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
+  const ctrl = event.ctrlKey || event.metaKey;
+
+  // Ctrl+V trenger ingen markering: lim inn der den aktive seksjonen er.
+  if (ctrl && event.key.toLowerCase() === 'v') {
+    if (isMobile() || !clipboard) return;
+    event.preventDefault();
+    pasteClipboard();
+    return;
+  }
+
+  if (!selectedBlockId) return;
 
   if (event.key === 'Escape') {
     selectBlock(null);
@@ -1376,16 +1456,29 @@ window.addEventListener('keydown', (event) => {
   const ctx = el?._urdCtx;
   if (!ctx) return;
 
-  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'd') {
+  if (ctrl && event.key.toLowerCase() === 'c') {
     if (isMobile()) return;
     event.preventDefault();
-    duplicateBlock(ctx.section, ctx.block);
+    copySelection(ctx);
+    return;
+  }
+
+  if (ctrl && event.key.toLowerCase() === 'd') {
+    if (isMobile()) return;
+    event.preventDefault();
+    if (multiIds.size > 1) duplicateSelection(ctx);
+    else duplicateBlock(ctx.section, ctx.block);
     return;
   }
 
   if (event.key === 'Delete' || event.key === 'Backspace') {
     event.preventDefault();
-    post({ type: 'urd-delete', sectionId: ctx.section.id, blockId: selectedBlockId });
+    if (multiIds.size > 1) {
+      // Hele utvalget slettes som ETT angre-steg (blockIds-listen).
+      post({ type: 'urd-delete', sectionId: ctx.section.id, blockIds: [...multiIds] });
+    } else {
+      post({ type: 'urd-delete', sectionId: ctx.section.id, blockId: selectedBlockId });
+    }
     selectBlock(null);
     return;
   }
@@ -1398,6 +1491,24 @@ window.addEventListener('keydown', (event) => {
   const stepPx = event.shiftKey ? 1 : ctx.grid.size;
   const pctPerPx = 100 / ctx.host.clientWidth;
   const r1 = (v) => Math.round(v * 10) / 10;
+
+  if (multiIds.size > 1) {
+    // Hele utvalget flyttes med samme delta, klemt så gruppen holder
+    // seg innenfor bredden; en skur av trykk blir ett angre-steg.
+    const parts = selectedEls().map((e) => ({ el: e, ctx: e._urdCtx })).filter((p) => p.ctx);
+    const d = groupDelta(parts.map((p) => p.ctx.block.frames.desktop), r1(dir[0] * stepPx * pctPerPx), 0);
+    for (const p of parts) {
+      const frame = { ...p.ctx.block.frames.desktop };
+      frame.x = r1(frame.x + d.dx);
+      frame.y = frame.y + dir[1] * stepPx;
+      p.ctx.block.frames.desktop = frame;
+      Object.assign(p.el.style, frameToCss(frame));
+      post({ type: 'urd-move', sectionId: p.ctx.section.id, blockId: p.ctx.block.id, frame, frameKey: 'desktop', coalesce: true, groupKey: 'multi-arrow' });
+    }
+    updateMultiToolbar();
+    return;
+  }
+
   const frame = { ...ctx.block.frames.desktop };
   frame.x = clamp(r1(frame.x + dir[0] * stepPx * pctPerPx), 0, r1(100 - frame.w));
   frame.y = frame.y + dir[1] * stepPx;
@@ -1421,12 +1532,244 @@ function markActive(host) {
 
 document.addEventListener('pointerdown', (event) => {
   const target = event.target instanceof HTMLElement ? event.target : null;
-  selectBlock(target?.closest('.urd-block') ?? null);
+  // Klikk i multi-verktøylinjen skal aldri endre utvalget den virker på.
+  if (target?.closest('.urd-multi-toolbar')) return;
+  const blockEl = target?.closest('.urd-block') ?? null;
+  if (blockEl && event.shiftKey && !isMobile()) {
+    toggleMulti(blockEl);
+  } else if (blockEl && multiIds.size > 1 && multiIds.has(blockEl.dataset.blockId)) {
+    // Klikk på et medlem beholder utvalget (gruppe-dra), men gjør
+    // blokken til primær.
+    selectBlock(blockEl, { keepMulti: true });
+  } else {
+    selectBlock(blockEl);
+  }
   markActive(target?.closest('.urd-section'));
+});
+
+// Marquee: dra på tom seksjonsflate tegner en markeringsramme, og alle
+// blokker den overlapper blir utvalget (klikk uten dra forblir klikk;
+// utvalget avgrenses til seksjonen draget startet i).
+document.addEventListener('pointerdown', (event) => {
+  if (event.button !== 0 || event.shiftKey || isMobile()) return;
+  if (document.body.classList.contains('urd-chrome-off')) return;
+  const target = event.target instanceof HTMLElement ? event.target : null;
+  const host = target?.closest('.urd-section');
+  if (!host) return;
+  if (target.closest('.urd-block, .urd-add-block, .urd-add-section, .urd-section-toolbar, .urd-section-resize, .urd-section-resize-top, .urd-hint-chip, .urd-hint-card, .urd-multi-toolbar, .urd-text-toolbar')) return;
+
+  const startRect = host.getBoundingClientRect();
+  const start = { x: event.clientX - startRect.left, y: event.clientY - startRect.top };
+  let rectEl = null;
+
+  const onMove = (ev) => {
+    const hostRect = host.getBoundingClientRect();
+    const cur = { x: ev.clientX - hostRect.left, y: ev.clientY - hostRect.top };
+    if (!rectEl) {
+      if (Math.abs(cur.x - start.x) + Math.abs(cur.y - start.y) < 6) return;
+      rectEl = document.createElement('div');
+      rectEl.className = 'urd-marquee';
+      host.appendChild(rectEl);
+      document.body.classList.add('urd-marqueeing');
+      document.getSelection()?.removeAllRanges();
+    }
+    const rect = {
+      left: Math.min(start.x, cur.x),
+      top: Math.min(start.y, cur.y),
+      right: Math.max(start.x, cur.x),
+      bottom: Math.max(start.y, cur.y),
+    };
+    rectEl.style.left = `${rect.left}px`;
+    rectEl.style.top = `${rect.top}px`;
+    rectEl.style.width = `${rect.right - rect.left}px`;
+    rectEl.style.height = `${rect.bottom - rect.top}px`;
+    const blocks = [...host.querySelectorAll(':scope > .urd-block')].map((el) => ({
+      id: el.dataset.blockId,
+      left: el.offsetLeft,
+      top: el.offsetTop,
+      right: el.offsetLeft + el.offsetWidth,
+      bottom: el.offsetTop + el.offsetHeight,
+    }));
+    multiSectionId = host.dataset.sectionId;
+    multiIds = new Set(blocksInRect(rect, blocks));
+    applyMultiClasses();
+  };
+  const onUp = () => {
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.body.classList.remove('urd-marqueeing');
+    if (!rectEl) return;
+    rectEl.remove();
+    if (multiIds.size < 2) {
+      const single = selectedEls()[0] ?? null;
+      clearMulti();
+      selectBlock(single);
+      return;
+    }
+    selectBlock(selectedEls()[0], { keepMulti: true });
+    updateMultiToolbar();
+  };
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', onUp);
 });
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+/* ---------- Multimarkering: verktøylinje, kopier/lim inn ---------- */
+
+/** Flytende verktøylinje over utvalget: juster/fordel + antall. */
+let multiBar = null;
+
+function buildMultiBar() {
+  multiBar = document.createElement('div');
+  multiBar.className = 'urd-multi-toolbar';
+  // Klikk i linjen skal ikke boble til dokumentets markeringslytter.
+  multiBar.addEventListener('pointerdown', (event) => event.stopPropagation());
+
+  const count = document.createElement('span');
+  count.className = 'urd-multi-count';
+  multiBar.appendChild(count);
+  multiBar._urdCount = count;
+
+  const svg = (body) => `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${body}</svg>`;
+  const btn = (html, title, run) => {
+    const b = document.createElement('button');
+    b.innerHTML = html;
+    b.title = title;
+    b.addEventListener('click', run);
+    multiBar.appendChild(b);
+    return b;
+  };
+  btn(svg('<path d="M4 3v18"/><rect x="7" y="6" width="10" height="4"/><rect x="7" y="14" width="14" height="4"/>'), 'Still venstrekantene på linje', () => applyAlign('left'));
+  btn(svg('<path d="M12 3v18"/><rect x="7" y="6" width="10" height="4"/><rect x="4" y="14" width="16" height="4"/>'), 'Midtstill vannrett', () => applyAlign('center'));
+  btn(svg('<path d="M20 3v18"/><rect x="7" y="6" width="10" height="4"/><rect x="3" y="14" width="14" height="4"/>'), 'Still høyrekantene på linje', () => applyAlign('right'));
+  btn(svg('<path d="M3 4h18"/><rect x="6" y="7" width="4" height="10"/><rect x="14" y="7" width="4" height="14"/>'), 'Still overkantene på linje', () => applyAlign('top'));
+  btn(svg('<path d="M3 12h18"/><rect x="6" y="7" width="4" height="10"/><rect x="14" y="4" width="4" height="16"/>'), 'Midtstill loddrett', () => applyAlign('middle'));
+  btn(svg('<path d="M3 20h18"/><rect x="6" y="7" width="4" height="10"/><rect x="14" y="3" width="4" height="14"/>'), 'Still underkantene på linje', () => applyAlign('bottom'));
+  const distH = btn(svg('<path d="M3 3v18M21 3v18"/><rect x="7" y="9" width="3" height="6"/><rect x="14" y="9" width="3" height="6"/>'), 'Fordel jevnt vannrett', () => applyDistribute('x'));
+  const distV = btn(svg('<path d="M3 3h18M3 21h18"/><rect x="9" y="7" width="6" height="3"/><rect x="9" y="14" width="6" height="3"/>'), 'Fordel jevnt loddrett', () => applyDistribute('y'));
+  multiBar._urdDist = [distH, distV];
+  document.body.appendChild(multiBar);
+}
+
+function updateMultiToolbar() {
+  const active = multiIds.size >= 2 && !isMobile() && !document.body.classList.contains('urd-chrome-off');
+  if (!active) {
+    multiBar?.classList.remove('vis');
+    return;
+  }
+  if (!multiBar) buildMultiBar();
+  const els = selectedEls();
+  if (els.length < 2) {
+    multiBar.classList.remove('vis');
+    return;
+  }
+  multiBar._urdCount.textContent = `${els.length} valgt`;
+  // Fordel-knappene krever minst tre blokker (innstillinger kun når relevante).
+  for (const b of multiBar._urdDist) b.style.display = els.length >= 3 ? '' : 'none';
+  multiBar.classList.add('vis');
+  const rects = els.map((el) => el.getBoundingClientRect());
+  const left = Math.min(...rects.map((r) => r.left));
+  const right = Math.max(...rects.map((r) => r.right));
+  const top = Math.min(...rects.map((r) => r.top));
+  const x = clamp((left + right) / 2 - multiBar.offsetWidth / 2, 8, window.innerWidth - multiBar.offsetWidth - 8);
+  const y = Math.max(8, top - multiBar.offsetHeight - 10);
+  multiBar.style.left = `${x}px`;
+  multiBar.style.top = `${y}px`;
+}
+
+// Linjen følger utvalget ved scrolling/resize (fixed posisjonering).
+window.addEventListener('scroll', () => { if (multiIds.size > 1) updateMultiToolbar(); }, { passive: true, capture: true });
+window.addEventListener('resize', () => { if (multiIds.size > 1) updateMultiToolbar(); });
+
+/** Utvalgets frames som rene items for align/distribute. */
+function selectionItems() {
+  return selectedEls()
+    .map((el) => {
+      const block = el._urdCtx?.block;
+      return block ? { id: block.id, ...block.frames.desktop } : null;
+    })
+    .filter(Boolean);
+}
+
+/** Bokfør en liste flyttinger som ETT angre-steg (delt groupKey). */
+function applySelectionMoves(moves) {
+  if (!moves.length) return;
+  const key = makeId('malign');
+  for (const move of moves) {
+    const el = document.querySelector(`.urd-block[data-block-id="${CSS.escape(move.id)}"]`);
+    const ctx = el?._urdCtx;
+    if (!ctx) continue;
+    const frame = { ...ctx.block.frames.desktop };
+    if (typeof move.x === 'number') frame.x = move.x;
+    if (typeof move.y === 'number') frame.y = move.y;
+    ctx.block.frames.desktop = frame;
+    Object.assign(el.style, frameToCss(frame));
+    post({ type: 'urd-move', sectionId: ctx.section.id, blockId: move.id, frame, frameKey: 'desktop', coalesce: true, groupKey: key });
+  }
+  updateMultiToolbar();
+}
+
+function applyAlign(mode) {
+  applySelectionMoves(alignMoves(selectionItems(), mode));
+}
+
+function applyDistribute(axis) {
+  applySelectionMoves(distributeMoves(selectionItems(), axis));
+}
+
+/** Ctrl+C: utvalget (eller den ene markerte blokken) til utklippstavlen. */
+function copySelection(ctx) {
+  const ids = multiIds.size > 1 ? multiIds : new Set([selectedBlockId]);
+  const blocks = ctx.section.blocks.filter((b) => ids.has(b.id));
+  if (!blocks.length) return;
+  clipboard = { sectionId: ctx.section.id, blocks: JSON.parse(JSON.stringify(blocks)) };
+}
+
+/**
+ * Ctrl+V: lim inn utklippstavlen med bevart innbyrdes oppsett - alle
+ * blokkene får SAMME forskyvning (litt ned/høyre, klemt av groupDelta
+ * så hele gruppen holder seg innenfor seksjonen). Målet er den aktive
+ * seksjonen, ellers kildeseksjonen, ellers den første. Sendes samlet
+ * som urd-add-blocks = ETT angre-steg, og det nye utvalget markeres.
+ */
+function pasteClipboard(source = clipboard) {
+  if (!source?.blocks?.length) return;
+  const host = document.querySelector('.urd-section-active')
+    ?? document.querySelector(`.urd-section[data-section-id="${CSS.escape(source.sectionId)}"]`)
+    ?? document.querySelector('.urd-section');
+  if (!host) return;
+  const sectionId = host.dataset.sectionId;
+  const r2 = (v) => Math.round(v * 100) / 100;
+  const frames = source.blocks.map((b) => b.frames.desktop);
+  const { dx, dy } = groupDelta(frames, 2, 16);
+  const blocks = source.blocks.map((b) => {
+    const copy = JSON.parse(JSON.stringify(b));
+    copy.id = makeId('blk');
+    copy.frames.desktop = { ...copy.frames.desktop, x: r2(copy.frames.desktop.x + dx), y: copy.frames.desktop.y + dy };
+    return copy;
+  });
+  const minBottom = Math.max(...blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
+  post({ type: 'urd-add-blocks', sectionId, blocks, minBottom, moves: [] });
+  // Nytt lim inn fortsetter fra det innlimte (stables ikke oppå hverandre).
+  if (source === clipboard) clipboard = { sectionId, blocks: JSON.parse(JSON.stringify(blocks)) };
+  // Det innlimte blir det nye utvalget: rerendringen etter urd-add-blocks
+  // leser multiIds/selectedBlockId (enhanceSection), editoren følger etter.
+  document.querySelectorAll('.urd-block.urd-selected, .urd-block.urd-multi-selected')
+    .forEach((b) => b.classList.remove('urd-selected', 'urd-multi-selected'));
+  multiSectionId = sectionId;
+  multiIds = blocks.length > 1 ? new Set(blocks.map((b) => b.id)) : new Set();
+  selectedBlockId = blocks[0].id;
+  post({ type: 'urd-select-block', sectionId, blockId: selectedBlockId });
+}
+
+/** Ctrl+D med flerutvalg: dupliser utvalget (via lim inn-flyten). */
+function duplicateSelection(ctx) {
+  const ids = [...multiIds];
+  const blocks = ctx.section.blocks.filter((b) => ids.includes(b.id));
+  pasteClipboard({ sectionId: ctx.section.id, blocks: JSON.parse(JSON.stringify(blocks)) });
 }
 
 /**
@@ -1669,7 +2012,7 @@ function enhanceBlock(el, block, section, grid, host) {
       event.preventDefault();
       event.stopPropagation();
       markActive(host);
-      selectBlock(el);
+      selectBlock(el, { keepMulti: multiIds.has(block.id) });
       rotHandle.setPointerCapture(event.pointerId);
       const rect = el.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
@@ -1711,7 +2054,7 @@ function enhanceBlock(el, block, section, grid, host) {
         // Redigerbar tekst er kun unntatt når blokken ALT er valgt (da
         // redigerer man teksten). En uvalgt blokk dras fritt også fra
         // teksten - klikk uten dra velger den, klikk igjen redigerer.
-        if (target?.closest('.urd-text[contenteditable="true"]') && selectedBlockId === block.id) return;
+        if (target?.closest('.urd-text[contenteditable="true"]') && selectedBlockId === block.id && multiIds.size <= 1) return;
         if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button, input, select, textarea, .urd-samling-editable, .urd-samling-image-edit, .urd-kal-config, .urd-skjema-config, .urd-kart-config')) return;
         // Auto-mobil: første materialisering skal være et bevisst valg
         // (dra i ⠿), ikke et klikk på blokken.
@@ -1721,7 +2064,8 @@ function enhanceBlock(el, block, section, grid, host) {
         event.preventDefault();
         event.stopPropagation();
         markActive(host);
-        selectBlock(el);
+        // Grep i ⠿/resize på et utvalgs-medlem skal ikke kollapse utvalget.
+        selectBlock(el, { keepMulti: multiIds.has(block.id) });
       }
       handle.setPointerCapture(event.pointerId);
 
@@ -1739,6 +2083,18 @@ function enhanceBlock(el, block, section, grid, host) {
 
       const start = { x: event.clientX, y: event.clientY };
       const orig = { ...(block.frames[frameKey] ?? block.frames.desktop) };
+      // Gruppe-dra: er blokken del av et flerutvalg, følger resten med
+      // (samme delta, klemt så hele gruppen holder seg innenfor bredden).
+      const groupParts = (!mobile && kind === 'move' && multiIds.size > 1 && multiIds.has(block.id))
+        ? [...host.querySelectorAll(':scope > .urd-block')]
+            .filter((o) => o !== el && multiIds.has(o.dataset.blockId))
+            .map((o) => {
+              const b = section.blocks.find((x) => x.id === o.dataset.blockId);
+              return b ? { el: o, block: b, orig: { ...b.frames.desktop } } : null;
+            })
+            .filter(Boolean)
+        : [];
+      const groupKey = groupParts.length ? makeId('mdrag') : null;
       // Frames er fysiske (x/w i %, y/h i px); gridet styrer KUN hva vi
       // snapper mot: kvadratiske ruter på grid.size px. Snap av gir fri
       // plassering (0,1 % / 1 px-presisjon).
@@ -1832,6 +2188,17 @@ function enhanceBlock(el, block, section, grid, host) {
         // Shift = helt fritt: da hopper vi også over smart guides.
         if (!free) applyGuides();
         else clearGuides();
+        if (groupParts.length) {
+          // Deltaet klemmes mot gruppens samlede bredde-grenser; y er
+          // ubegrenset som ved enkelt-dra (blokker kan henge utenfor).
+          const d = groupDelta([orig, ...groupParts.map((g) => g.orig)], current.x - orig.x, 0);
+          const dyPx = current.y - orig.y;
+          current = { ...current, x: r2(orig.x + d.dx) };
+          for (const g of groupParts) {
+            Object.assign(g.el.style, frameToCss({ ...g.orig, x: r2(g.orig.x + d.dx), y: g.orig.y + dyPx }));
+          }
+          updateMultiToolbar();
+        }
         Object.assign(el.style, frameToCss(current));
       };
 
@@ -1841,6 +2208,22 @@ function enhanceBlock(el, block, section, grid, host) {
         overlay.remove();
         clearGuides();
         if (!started) return;
+
+        // Gruppe-dra: bokfør hele utvalget som ETT angre-steg (delt
+        // groupKey) og hopp over seksjonsbytte (utvalget bor i én seksjon).
+        if (groupParts.length) {
+          if (current.x === orig.x && current.y === orig.y) return;
+          const dx = r2(current.x - orig.x);
+          const dyPx = current.y - orig.y;
+          block.frames.desktop = current;
+          post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: current, frameKey: 'desktop', coalesce: true, groupKey });
+          for (const g of groupParts) {
+            const frame = { ...g.orig, x: r2(g.orig.x + dx), y: g.orig.y + dyPx };
+            g.block.frames.desktop = frame;
+            post({ type: 'urd-move', sectionId: section.id, blockId: g.block.id, frame, frameKey: 'desktop', coalesce: true, groupKey });
+          }
+          return;
+        }
 
         // Slippes blokkens SENTRUM over en annen seksjon (desktop),
         // flytter blokken dit - grid og tilhørighet skal følge seksjonen
