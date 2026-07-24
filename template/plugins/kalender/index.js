@@ -283,7 +283,7 @@ function post(msg) {
 const VIEW_NAMES = [['list', 'Liste'], ['cards', 'Kort'], ['month', 'Måned'], ['next', 'Neste']];
 
 function configPanel(el, props, ctx) {
-  const gear = el2('button', 'urd-kal-gear', '⚙ Kilder');
+  const gear = el2('button', 'urd-kal-gear urd-cfg-toggle', '⚙ Kilder');
   gear.type = 'button';
   gear.title = 'Kalenderkilder og visning';
   const panel = el2('div', 'urd-kal-config');
@@ -459,10 +459,9 @@ const KAL_CSS = `
   /* Usynlig bro ned til blokk-kanten, så hover overlever veien opp */
   padding-bottom: 8px; }
 .urd-kal-tools .urd-hint-chip { position: static; }
-.urd-kal-gear { font: 600 11px/1 system-ui, sans-serif;
-  padding: 5px 9px; border-radius: 999px; cursor: pointer; color: #fff;
-  background: var(--urd-color-accent); border: 0;
-  opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+/* Config-bryteren er skjult: innstillingene åpnes fra blokkens Egenskaper
+   (urd-cfg-toggle klikkes via urd-open-block-config). */
+.urd-kal-gear { display: none; }
 .urd-block:hover .urd-kal-gear, .urd-kal-gear:focus-visible,
 .urd-kal:has(.urd-kal-config.vis) .urd-kal-gear { opacity: 0.92; pointer-events: auto; }
 .urd-kal-config { position: absolute; top: 24px; right: 0; z-index: 6; width: min(340px, 90%);
@@ -520,7 +519,7 @@ function renderCalendar(el, props, ctx) {
           title: 'Kalenderblokken',
           lines: [
             'Blokken viser arrangementene fra en kalender dere allerede har (f.eks. Google Kalender): legg inn og endre arrangementer der, så oppdaterer siden seg selv',
-            'Kilder: pek på blokken, klikk «⚙ Kilder» og lim inn kalenderens iCal-adresse eller Google-kalender-id; der velger du også visning og antall',
+            'Kilder: velg blokken og åpne «Innstillinger …» i Egenskaper, og lim inn kalenderens iCal-adresse eller Google-kalender-id; der velger du også visning og antall',
             'Visninger: liste, kort, månedskalender eller «neste arrangement»-panel',
             'Kategorier: titler som «Møte: Årsmøte» i kalenderen gir knapper besøkende kan filtrere med (kan skrus av i Kilder)',
             'Påmelding: legg en lenke i arrangementets beskrivelse (en linje med «Påmelding: …»), så får arrangementet en «Meld deg på»-knapp som åpner den siden',
@@ -559,7 +558,7 @@ function renderCalendar(el, props, ctx) {
 
   if (!sources.length) {
     if (ctx.preview) {
-      draw(demoOccurrences(), 'Eksempeldata: åpne «⚙ Kilder» og lim inn kalenderens iCal-adresse eller Google-kalender-id.');
+      draw(demoOccurrences(), 'Eksempeldata: åpne «Innstillinger …» i blokkens Egenskaper og lim inn kalenderens iCal-adresse eller Google-kalender-id.');
     }
     return;
   }

@@ -181,6 +181,10 @@ function enablePreview(state, opts) {
       const host = root.querySelector(`[data-section-id="${msg.sectionId}"]`);
       const el = msg.blockId ? host?.querySelector(`[data-block-id="${msg.blockId}"]`) : host;
       window.UrdPreviewEdit?.demoAnimation(el);
+    } else if (msg?.type === 'urd-open-block-config' && msg.blockId) {
+      // Plugin-blokkens innstillinger åpnes fra Egenskaper: klikk den skjulte
+      // config-bryteren i blokken (samme toggle som den gamle gear-pillen).
+      root.querySelector(`[data-block-id="${msg.blockId}"] .urd-cfg-toggle`)?.click();
     } else if (msg?.type === 'urd-attention' && msg.sectionId) {
       // Editoren oppdaget desktop-drift i en manuell seksjon: marker live.
       root.querySelector(`[data-section-id="${msg.sectionId}"]`)

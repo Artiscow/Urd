@@ -25,15 +25,14 @@ export const coreAnimations = {
 let observer = null;
 
 /**
- * Ingenting skal spilles ved sideINNLASTING - kun ved scrolling senere.
- * Tidsvinduet alene var ikke nok (trege innlastinger kunne overskride
- * det), så før første scroll snappes alt, uansett.
+ * Inngangsanimasjonen spilles når elementet blir synlig - også hvis det er
+ * synlig alt ved innlasting (da tones/glir det inn like etter at siden vises,
+ * som «Ton inn» skal). IntersectionObserver-callbacken kjører først etter at
+ * starttilstanden (opacity 0 fra CSS) er malt, så overgangen spiller rent.
+ * Elementer man scroller til senere spiller når de kommer inn i viewporten.
+ * (I editorens preview vises SLUTT-tilstanden umiddelbart - se applyAnimation
+ * - så observeren er kun aktiv hos besøkende og på publisert side.)
  */
-let hasScrolled = false;
-if (typeof window !== 'undefined') {
-  window.addEventListener('scroll', () => { hasScrolled = true; }, { once: true, passive: true });
-}
-
 function entranceObserver() {
   observer ??= new IntersectionObserver((entries) => {
     for (const entry of entries) {
@@ -44,17 +43,7 @@ function entranceObserver() {
       if (entry.intersectionRatio < 0.15 && !tall) continue;
       const el = entry.target;
       observer.unobserve(el);
-      // Synlig ved innlasting/rerender (ferskt observert, eller før
-      // brukeren har scrollet): bare DUKK OPP. Animasjonen er for
-      // innhold man scroller til senere.
-      const fresh = performance.now() - (el._urdObservedAt ?? 0) < 250;
-      if (!hasScrolled || fresh) {
-        el.style.transition = 'none';
-        el.classList.add('urd-anim-in');
-        requestAnimationFrame(() => { el.style.transition = ''; });
-      } else {
-        el.classList.add('urd-anim-in');
-      }
+      el.classList.add('urd-anim-in');
     }
   }, { threshold: [0.05, 0.1, 0.15] });
   return observer;
@@ -82,6 +71,5 @@ export function applyAnimation(el, type, props, def, ctx = {}) {
     el.classList.add('urd-anim-in');
     return;
   }
-  el._urdObservedAt = performance.now();
   entranceObserver().observe(el);
 }

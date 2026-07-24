@@ -11,7 +11,7 @@
    * Popoveren er position: fixed (panelene klipper absolute innhold),
    * og lukkes ved klikk utenfor eller Escape.
    */
-  let { value = '#000000', tokens = [], label = 'Velg farge', onchange } = $props();
+  let { value = '#000000', tokens = [], label = 'Velg farge', onchange, allowClear = false } = $props();
 
   const RECENT_KEY = 'urd-recent-colors';
   const SAVED_KEY = 'urd-saved-colors';
@@ -238,9 +238,13 @@
 </script>
 
 <span class="cp" bind:this={rootEl}>
-  <button type="button" class="cp-swatch" class:linked={linkedToken()}
-    style="background: {displayHex()}" title={linkedToken() ? `${label} (koblet til temafargen «${linkedToken()}»)` : label}
+  <button type="button" class="cp-swatch" class:linked={linkedToken()} class:cp-empty={allowClear && !value}
+    style="background: {value ? displayHex() : 'transparent'}" title={linkedToken() ? `${label} (koblet til temafargen «${linkedToken()}»)` : label}
     aria-label={label} onclick={() => (open ? close() : openPicker())}></button>
+  {#if allowClear && value}
+    <button type="button" class="cp-clear" title="Fjern fargen (bruk temaets standard)"
+      aria-label="Fjern fargen" onclick={() => onchange?.('')}>×</button>
+  {/if}
   {#if open}
     <!-- Velgeren ligger ofte inne i en <label>: uten preventDefault videresender
          nettleseren klikk på ikke-interaktive flater (fargeflaten, tomrom) som et
@@ -315,6 +319,8 @@
 <style>
   .cp {
     display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
 
   .cp-swatch {
@@ -324,6 +330,33 @@
     border: 1px solid rgb(255 255 255 / 25%);
     border-radius: 6px;
     cursor: pointer;
+  }
+
+  /* Tom (ingen farge valgt): sjakkbrett + skråstrek, som «ingen». */
+  .cp-swatch.cp-empty {
+    background:
+      linear-gradient(to top right, transparent 46%, rgb(255 255 255 / 45%) 46% 54%, transparent 54%),
+      repeating-conic-gradient(rgb(255 255 255 / 12%) 0 25%, transparent 0 50%) 0 0 / 12px 12px !important;
+  }
+
+  .cp-clear {
+    width: 1.4rem;
+    height: 1.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 15px;
+    line-height: 1;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .cp-clear:hover {
+    background: rgb(255 255 255 / 12%);
   }
 
   .cp-pop {

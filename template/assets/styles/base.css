@@ -128,7 +128,9 @@ html {
 .urd-text-box {
   box-sizing: border-box;
   background: var(--urd-color-surface);
-  border: 1px solid color-mix(in srgb, var(--urd-color-text) 12%, transparent);
+  /* Temaets tynne kantlinje: synlig nok til å lese som en kant (var 12 %,
+     nesten usynlig). «Egen farge» i kortstilen overstyrer den. */
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 22%, transparent);
   border-radius: var(--urd-radius-md);
   padding: 1rem 1.25rem;
 }
@@ -206,20 +208,35 @@ html {
 }
 
 /* Formateringslinjen for tekstfelt (kun preview-modus): vises over
-   blokken så lenge feltet redigeres */
+   blokken så lenge feltet redigeres. To faste rader (Office-stil) stables
+   i en kolonne; de utvidbare underradene legger seg under. */
 .urd-text-toolbar {
   position: fixed;
   z-index: 100002;
   display: none;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
-  max-width: min(640px, calc(100vw - 16px));
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  max-width: min(760px, calc(100vw - 16px));
   padding: 4px 6px;
   background: #151a23;
   border: 1px solid rgb(255 255 255 / 18%);
   border-radius: 8px;
   box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+}
+
+/* Hver faste rad: knappegrupper som radbryter ved trang plass. */
+.urd-tt-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.urd-tt-row + .urd-tt-row {
+  border-top: 1px solid rgb(255 255 255 / 10%);
+  padding-top: 4px;
+  margin-top: 4px;
 }
 
 /* Grupper radbrytes SAMLET (ingen enslige knapper på egen linje), med skillelinje mellom */
@@ -235,10 +252,53 @@ html {
   margin-left: 2px;
 }
 
-/* Inline lenkefelt (egen rad i linjen når lenkeknappen er aktiv) */
+/* Størrelsesfeltet: smalt, sentrert tall mellom minus/pluss. De innebygde
+   opp/ned-pilene skjules (− / + gjør jobben); feltet kan fremdeles skrives i. */
+.urd-tt-size {
+  width: 3.2em;
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.urd-tt-size::-webkit-outer-spin-button,
+.urd-tt-size::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Hevet/senket-knappene: A med liten 2-er. */
+.urd-tt-supsub {
+  font: 600 12px/1 system-ui, sans-serif;
+}
+
+.urd-text-toolbar sup {
+  font-size: 8px;
+}
+
+/* Aktiv formatknapp: markøren står i formatet (fet, justering, lister ...).
+   Nøytral markering (uavhengig av sidens tema), tydelig mot den mørke linjen. */
+.urd-text-toolbar button.active {
+  background: rgb(120 160 255 / 34%);
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgb(120 160 255 / 55%);
+}
+
+.urd-text-toolbar button.active:hover {
+  background: rgb(120 160 255 / 44%);
+}
+
+/* Linjeavstand-knappene i avstandsraden. */
+.urd-text-toolbar .urd-tt-lh {
+  min-width: 0;
+  padding: 0 6px;
+  font: 12px/1 system-ui, sans-serif;
+}
+
+
+/* Inline lenkefelt (egen underrad i linjen når lenkeknappen er aktiv) */
 .urd-tt-linkrow {
   display: none;
-  flex-basis: 100%;
   gap: 4px;
   align-items: center;
   padding-top: 4px;
@@ -250,10 +310,9 @@ html {
   display: flex;
 }
 
-/* Fargeraden (nedtrekket bak palettikonet): egen rad i linjen, som lenkefeltet */
+/* Fargeraden (nedtrekket bak palettikonet): egen underrad, som lenkefeltet */
 .urd-tt-colorrow {
   display: none;
-  flex-basis: 100%;
   gap: 2px;
   align-items: center;
   padding-top: 4px;
@@ -265,10 +324,9 @@ html {
   display: flex;
 }
 
-/* Typografiraden (bak Aa-knappen): font, størrelse og avstand for hele feltet */
-.urd-tt-typorow {
+/* Avstandsraden (bak avstandsknappen): linjeavstand-preset + bokstavavstand */
+.urd-tt-spacerow {
   display: none;
-  flex-basis: 100%;
   flex-wrap: wrap;
   gap: 4px 8px;
   align-items: center;
@@ -277,7 +335,7 @@ html {
   border-top: 1px solid rgb(255 255 255 / 14%);
 }
 
-.urd-tt-typorow.vis {
+.urd-tt-spacerow.vis {
   display: flex;
 }
 
@@ -288,7 +346,7 @@ html {
   color: rgb(232 234 240 / 60%);
 }
 
-/* Tallfeltene i typografiraden (tomt felt = arv fra tema) */
+/* Tallfeltene (størrelse, bokstavavstand); tomt felt = arv fra tema */
 .urd-tt-num {
   width: 4em;
   font: 12px/1.3 system-ui, sans-serif;
@@ -524,6 +582,9 @@ body.urd-chrome-off .urd-text-toolbar {
   z-index: 100003;
   width: 236px;
   display: grid;
+  /* Bind kolonnen til boksbredden: uten dette blir den implisitte grid-
+     kolonnen max-content-bred (RGB-feltene) og innholdet flyter ut av boksen. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   padding: 10px;
   background: #151a23;
@@ -989,6 +1050,27 @@ body.urd-chrome-off .urd-imged {
 
 .urd-anim-hover-lift {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Kombinasjon: en blokk med BÅDE inngangsanimasjon OG «Løft ved peker».
+   Uten dette overstyrer hover-lift-regelen (senere i CSS-en) inngangens
+   transition, så opasiteten/formen hopper i stedet for å tone/gli inn.
+   Her dekker transitionen både inngangen (varighet/forsinkelse) og hover
+   (box-shadow). Fade-in bruker ikke transform til inngangen, så der er
+   hover-løftet snappy (0.2s); slide/zoom deler inngangens varighet. */
+.urd-anim-fade-in.urd-anim-hover-lift {
+  transition:
+    opacity var(--urd-anim-duration, 600ms) ease var(--urd-anim-delay, 0ms),
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.urd-anim-slide-up.urd-anim-hover-lift,
+.urd-anim-zoom-in.urd-anim-hover-lift {
+  transition:
+    opacity var(--urd-anim-duration, 600ms) ease var(--urd-anim-delay, 0ms),
+    transform var(--urd-anim-duration, 600ms) ease var(--urd-anim-delay, 0ms),
+    box-shadow 0.2s ease;
 }
 
 .urd-anim-hover-lift:hover {
@@ -1549,10 +1631,13 @@ a.urd-galleri-tile {
 }
 
 /* Åpnet med dobbeltklikk: menyen står alene ved pekeren, chip-knappen
-   skjules, og menyen holdes synlig uavhengig av hover-reglene */
+   skjules, og menyen holdes synlig uavhengig av hover-reglene. Hevet OVER
+   seksjons-chromet (+ Ny seksjon 100001, seksjonslinjene 100000), så det
+   ligger UNDER menyen i stedet for å stikke gjennom den. */
 .urd-preview .urd-add-block.urd-at-pointer {
   opacity: 1;
   pointer-events: auto;
+  z-index: 100002;
 }
 
 .urd-preview .urd-add-block.urd-at-pointer .urd-add-block-open {
@@ -2400,7 +2485,7 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open .urd-nav-list,
 .urd-preview .urd-smart-guide {
   position: absolute;
   z-index: 1001;
-  background: var(--urd-color-accent);
+  background: var(--urd-admin-accent, #5f6a75);
   pointer-events: none;
 }
 
@@ -2421,8 +2506,8 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open .urd-nav-list,
 .urd-preview .urd-marquee {
   position: absolute;
   z-index: 1002;
-  border: 1px dashed var(--urd-color-accent);
-  background: color-mix(in srgb, var(--urd-color-accent) 12%, transparent);
+  border: 1px dashed var(--urd-admin-accent, #5f6a75);
+  background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 12%, transparent);
   pointer-events: none;
 }
 
@@ -2431,7 +2516,7 @@ body.urd-marqueeing {
 }
 
 .urd-preview .urd-block.urd-multi-selected {
-  outline: 2px dashed var(--urd-color-accent);
+  outline: 2px dashed var(--urd-admin-accent, #5f6a75);
   outline-offset: 2px;
 }
 
@@ -2493,7 +2578,7 @@ body.urd-marqueeing {
   width: 1px;
   background: repeating-linear-gradient(
     to bottom,
-    var(--urd-color-accent) 0 6px,
+    var(--urd-admin-accent, #5f6a75) 0 6px,
     transparent 6px 12px
   );
 }
@@ -2504,7 +2589,7 @@ body.urd-marqueeing {
   height: 1px;
   background: repeating-linear-gradient(
     to right,
-    var(--urd-color-accent) 0 6px,
+    var(--urd-admin-accent, #5f6a75) 0 6px,
     transparent 6px 12px
   );
 }
@@ -2699,12 +2784,12 @@ body.urd-mobile .urd-section-resize-top {
   pointer-events: none;
   z-index: 0;
   background-image:
-    linear-gradient(to right, color-mix(in srgb, var(--urd-color-accent) 30%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, var(--urd-color-accent) 30%, transparent) 1px, transparent 1px);
+    linear-gradient(to right, color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 30%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 30%, transparent) 1px, transparent 1px);
 }
 
 .urd-preview .urd-editable:hover {
-  outline: 1px dashed var(--urd-color-accent);
+  outline: 1px dashed var(--urd-admin-accent, #5f6a75);
   outline-offset: 2px;
 }
 
@@ -2736,7 +2821,7 @@ body.urd-mobile .urd-section-resize-top {
   height: 24px;
   border: 0;
   border-radius: 4px;
-  background: var(--urd-color-accent);
+  background: var(--urd-admin-accent, #5f6a75);
   color: #fff;
   font-size: 14px;
   line-height: 1;
@@ -2756,7 +2841,7 @@ body.urd-mobile .urd-section-resize-top {
   width: 12px;
   height: 12px;
   border-radius: 3px;
-  background: var(--urd-color-accent);
+  background: var(--urd-admin-accent, #5f6a75);
   cursor: nwse-resize;
   display: none;
   z-index: 1000;
@@ -2779,7 +2864,7 @@ body.urd-mobile .urd-section-resize-top {
   line-height: 1;
   color: #fff;
   border-radius: 50%;
-  background: var(--urd-color-accent);
+  background: var(--urd-admin-accent, #5f6a75);
   cursor: grab;
   user-select: none;
   z-index: 1000;
@@ -2792,12 +2877,12 @@ body.urd-mobile .urd-section-resize-top {
 
 /* Aktiv seksjon (sist klikket): nye blokker fra paletten havner her */
 .urd-preview .urd-section-active {
-  box-shadow: inset 3px 0 0 var(--urd-color-accent);
+  box-shadow: inset 3px 0 0 var(--urd-admin-accent, #5f6a75);
 }
 
 /* Markert blokk: varig omriss og alltid synlige håndtak */
 .urd-preview .urd-block.urd-selected {
-  outline: 2px solid var(--urd-color-accent);
+  outline: 2px solid var(--urd-admin-accent, #5f6a75);
   outline-offset: 2px;
 }
 
@@ -2873,14 +2958,14 @@ body.urd-mobile .urd-section-resize-top {
   height: 1px;
   background: repeating-linear-gradient(
     90deg,
-    color-mix(in srgb, var(--urd-color-accent) 35%, transparent) 0 8px,
+    color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 35%, transparent) 0 8px,
     transparent 8px 16px
   );
 }
 
 .urd-preview .urd-add-section button {
   transform: translateY(-50%);
-  border: 1px dashed color-mix(in srgb, var(--urd-color-accent) 60%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 60%, transparent);
   border-radius: 999px;
   background: var(--urd-color-bg);
   color: var(--urd-color-text);
@@ -2919,7 +3004,7 @@ body.urd-mobile .urd-section-resize-top {
   max-height: 360px;
   overflow-y: auto;
   background: var(--urd-color-bg);
-  border: 1px solid color-mix(in srgb, var(--urd-color-accent) 45%, transparent);
+  border: 1px solid color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 45%, transparent);
   border-radius: 10px;
   box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
   padding: 6px;
@@ -2999,8 +3084,8 @@ body.urd-mobile .urd-section-resize-top {
 }
 
 .urd-preview .urd-preset-menu .urd-preset-choice:hover {
-  background: color-mix(in srgb, var(--urd-color-accent) 14%, transparent);
-  border-color: color-mix(in srgb, var(--urd-color-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 14%, transparent);
+  border-color: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 45%, transparent);
   border-style: solid;
 }
 
@@ -3047,7 +3132,7 @@ body.urd-mobile .urd-section-resize-top {
 }
 
 .urd-preview .urd-section-toolbar button:hover {
-  background: var(--urd-color-accent);
+  background: var(--urd-admin-accent, #5f6a75);
   color: #fff;
 }
 
@@ -3114,7 +3199,7 @@ body.urd-mobile .urd-section-resize-top {
    ligger nøyaktig på den synlige bunnkanten */
 .urd-preview .urd-section:has(> .urd-section-resize:hover),
 .urd-preview .urd-section:has(> .urd-section-resize:active) {
-  box-shadow: inset 0 -2px 0 var(--urd-color-accent);
+  box-shadow: inset 0 -2px 0 var(--urd-admin-accent, #5f6a75);
 }
 
 /* Toppkant-håndtaket: speiler bunnhåndtaket, men gir/fjerner luft ØVERST
@@ -3131,7 +3216,7 @@ body.urd-mobile .urd-section-resize-top {
 
 .urd-preview .urd-section:has(> .urd-section-resize-top:hover),
 .urd-preview .urd-section:has(> .urd-section-resize-top:active) {
-  box-shadow: inset 0 2px 0 var(--urd-color-accent);
+  box-shadow: inset 0 2px 0 var(--urd-admin-accent, #5f6a75);
 }
 
 /* Retningsvisende peker mens en seksjonsgrense dras (preview-edit setter

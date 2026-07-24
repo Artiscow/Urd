@@ -149,7 +149,7 @@ function renderForm(host, props, ctx) {
 /* ---------- Konfigpanel (i forhåndsvisningen) ---------- */
 
 function configPanel(el, props, ctx) {
-  const gear = el2('button', 'urd-skjema-gear', '⚙ Skjema');
+  const gear = el2('button', 'urd-skjema-gear urd-cfg-toggle', '⚙ Skjema');
   gear.type = 'button';
   gear.title = 'Skjemainnstillinger';
   const panel = el2('div', 'urd-skjema-config');
@@ -328,9 +328,8 @@ textarea.urd-skjema-input { resize: vertical; min-height: 90px; }
   /* Usynlig bro ned til blokk-kanten, så hover overlever veien opp */
   padding-bottom: 8px; }
 .urd-skjema-tools .urd-hint-chip { position: static; }
-.urd-skjema-gear { font: 600 11px/1 system-ui, sans-serif; padding: 5px 9px; border-radius: 999px; cursor: pointer;
-  color: #fff; background: var(--urd-color-accent); border: 0;
-  opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+/* Config-bryteren er skjult: innstillingene åpnes fra blokkens Egenskaper. */
+.urd-skjema-gear { display: none; }
 .urd-block:hover .urd-skjema-gear, .urd-skjema-gear:focus-visible,
 .urd-skjema:has(.urd-skjema-config.vis) .urd-skjema-gear { opacity: 0.92; pointer-events: auto; }
 .urd-skjema-config { position: absolute; top: -6px; right: 0; z-index: 6; width: min(360px, 92vw);
@@ -381,7 +380,7 @@ function renderSkjema(el, props, ctx) {
       const chip = attachHint(tools, {
         title: 'Skjemablokken',
         lines: [
-          'Pek på blokken og klikk «⚙ Skjema» for å stille inn mottaker, felt og sendemåte',
+          'Velg blokken og åpne «Innstillinger …» i Egenskaper for å stille inn mottaker, felt og sendemåte',
           'Standard: skjemaet åpner besøkendes e-postklient med en ferdig e-post (mailto, ingen oppsett)',
           'Valgfritt: send til et eksternt endepunkt (Apps Script/Pages Function); da må du åpne connect-src for endepunktets vert i _headers',
           'Feltene kan legges til, endres og fjernes; e-postfelt valideres, og et skjult honeypot-felt stopper bots',

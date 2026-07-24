@@ -25,7 +25,7 @@ const HINT_CSS = `
   padding: 0; border-radius: 50%;
   /* Gjennomsiktig kant = usynlig bro ned til blokk-kanten, så hover overlever veien opp */
   border: 6px solid transparent;
-  background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 80%, black);
+  background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 80%, black);
   background-clip: padding-box;
   color: #fff; font: 700 12px/1 system-ui, sans-serif; cursor: pointer;
   opacity: 0; pointer-events: none; transition: opacity 0.15s;

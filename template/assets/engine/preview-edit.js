@@ -26,6 +26,7 @@ import { openColorPicker, closeColorPicker } from './color-picker.js';
 import { createDropdown, closeDropdowns } from './dropdown.js';
 import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from './glyphs.js';
 import { FONT_STACKS } from './fonts.js';
+import { SIZE_MIN, SIZE_MAX, clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from './text-typo.js';
 import { frameAtPoint } from './place.js';
 import { topDrag } from './section-size.js';
 import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
@@ -421,12 +422,9 @@ function addBlockAdder(host, section, grid) {
   // enhanceSection kjører etter HVER rerender på samme host-element: lytterne legges kun én gang og slår opp gjeldende meny ved hendelsen, ellers hoper det seg opp én lytter per rerender.
   if (!host._urdAdderLeaveWired) {
     host._urdAdderLeaveWired = true;
-    host.addEventListener('mouseleave', () => {
-      // Menyen lukkes også når pekeren forlater seksjonen, og etter
-      // dobbeltklikk-åpning legges «+ Ny blokk» tilbake i hjørnet.
-      const w = host.querySelector('.urd-add-block');
-      if (w) resetBlockAdder(w);
-    });
+    // Menyen lukkes IKKE når pekeren forlater seksjonen: den står til man
+    // klikker utenfor (outside-pointerdown) eller velger en blokk. Ingen
+    // mouseleave-lukking.
     // Dobbeltklikk på tom seksjonsflate åpner menyen VED PEKEREN, og
     // blokken lander på klikkpunktet (eiers ønske: «+ ny blokk der man
     // klikker»). Aldri i blokker (dobbeltklikk er ordmarkering/bilde-
@@ -744,23 +742,212 @@ function initTextToolbar() {
 
   /** Grupper som radbrytes SAMLET, så ingen enslig knapp havner på egen linje. */
   let group = null;
-  const startGroup = () => {
+  const startGroup = (host) => {
     group = document.createElement('span');
     group.className = 'urd-tt-group';
-    bar.appendChild(group);
+    host.appendChild(group);
   };
-  const btn = (html, title, run) => {
+  // Knapper med en execCommand-tilstand (fet, justering, lister ...) merkes
+  // aktive når markøren står i formatet. cmd = queryCommandState-navnet.
+  const stateButtons = [];
+  const btn = (html, title, run, cmd) => {
     const b = document.createElement('button');
     b.innerHTML = html;
     b.title = title;
     b.addEventListener('click', () => { run(); reposition(); });
     group.appendChild(b);
+    if (cmd) stateButtons.push([b, cmd]);
     return b;
   };
 
+  // To FASTE rader (Office/Word-stil): rad 1 = struktur + størrelse, rad 2 =
+  // tegnformatering + avsnitt. De utvidbare underradene (farger, avstand,
+  // tegn, lenke) legges under begge.
+  const row1 = document.createElement('div');
+  row1.className = 'urd-tt-row';
+  const row2 = document.createElement('div');
+  row2.className = 'urd-tt-row';
+  bar.append(row1, row2);
+
+  // --- Sentinel-normalisering: én teknikk for alle inline-stiler på
+  // MARKERINGEN (størrelse, font, bokstavavstand). execCommand('fontName')
+  // gjør range-kirurgien (splitter delvis markerte tekstnoder, går over
+  // flere avsnitt); etterpå byttes markørene ut med rene span-er. styleWithCSS
+  // røres aldri, så themeify (font[color]) består. ---
+  const SENTINEL = 'urd-marker';
+
+  const unwrap = (el) => {
+    const parent = el.parentNode;
+    if (!parent) return;
+    while (el.firstChild) parent.insertBefore(el.firstChild, el);
+    parent.removeChild(el);
+  };
+  // Markørene: font[face] (standard uten styleWithCSS) ELLER en span med
+  // font-family satt til sentinelen (enkelte nettlesere, f.eks. Firefox).
+  const collectMarkers = () => {
+    const out = [...activeText.querySelectorAll(`font[face="${SENTINEL}"]`)];
+    for (const el of activeText.querySelectorAll('span[style]')) {
+      if (el.style.fontFamily.replace(/["']/g, '') === SENTINEL) out.push(el);
+    }
+    return out;
+  };
+  // Fjern samme prop fra etterkommere (så den ytterste span-en vinner), og
+  // rydd tomme span-er.
+  const stripDescendantProp = (root, prop) => {
+    for (const el of [...root.querySelectorAll('[style]')]) {
+      if (!el.style[prop]) continue;
+      el.style[prop] = '';
+      if (el.getAttribute('style') === '') el.removeAttribute('style');
+      if (el.tagName === 'SPAN' && !el.attributes.length) unwrap(el);
+    }
+  };
+  const reselect = (nodes) => {
+    const valid = nodes.filter((n) => n && n.isConnected);
+    if (!valid.length) return;
+    const range = document.createRange();
+    range.setStartBefore(valid[0]);
+    range.setEndAfter(valid[valid.length - 1]);
+    const sel = document.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  };
+  // Kollapset markør: utvid til ordet skrivemarkøren står i (som Word), aldri
+  // med et usynlig tegn i lagret HTML.
+  const expandToWord = () => {
+    const sel = document.getSelection();
+    if (!sel || !sel.rangeCount || !sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    const node = range.startContainer;
+    if (node.nodeType !== 3) return;
+    const text = node.textContent;
+    let start = range.startOffset;
+    let end = range.startOffset;
+    while (start > 0 && /\S/.test(text[start - 1])) start--;
+    while (end < text.length && /\S/.test(text[end])) end++;
+    if (start === end) return;
+    const r = document.createRange();
+    r.setStart(node, start);
+    r.setEnd(node, end);
+    sel.removeAllRanges();
+    sel.addRange(r);
+  };
+  // Sett en fast inline-verdi (value null/'' = fjern stilen, «Arv») på markeringen.
+  const applyInlineStyle = (prop, value) => {
+    if (!activeText) return;
+    expandToWord();
+    exec('fontName', SENTINEL);
+    const markers = collectMarkers();
+    if (!markers.length) return;
+    const made = [];
+    for (const marker of markers) {
+      const span = document.createElement('span');
+      if (value != null && value !== '') span.style[prop] = value;
+      while (marker.firstChild) span.appendChild(marker.firstChild);
+      stripDescendantProp(span, prop);
+      if (span.getAttribute('style')) {
+        marker.replaceWith(span);
+        made.push(span);
+      } else {
+        const kids = [...span.childNodes];
+        marker.replaceWith(...kids);
+        made.push(...kids);
+      }
+    }
+    reselect(made);
+    activeText.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  // Størrelse per run (A-opp/A-ned og ±1px): hver tekst-run steppes ut fra
+  // SIN egen beregnede størrelse, så blandede markeringer beholdes. Går rett
+  // på tekstnodene (ikke via fontName-markør, som slår naborun-er sammen).
+  const applySizeStep = (read) => {
+    if (!activeText) return;
+    expandToWord();
+    const sel = document.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    if (range.collapsed) return;
+    // Del tekstnodene ved markeringsgrensene, så runene aligner på noder.
+    if (range.startContainer.nodeType === 3 && range.startOffset > 0) {
+      const after = range.startContainer.splitText(range.startOffset);
+      range.setStart(after, 0);
+    }
+    if (range.endContainer.nodeType === 3 && range.endOffset < range.endContainer.length) {
+      range.endContainer.splitText(range.endOffset);
+    }
+    sel.removeAllRanges();
+    sel.addRange(range);
+    const runs = [];
+    const walker = document.createTreeWalker(activeText, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      if (node.textContent && sel.containsNode(node, false)) runs.push(node);
+    }
+    if (!runs.length) return;
+    const made = [];
+    for (const tn of runs) {
+      const parent = tn.parentElement;
+      const next = read(parseFloat(getComputedStyle(parent).fontSize));
+      // Er runen HELE innholdet i en størrelse-span? Oppdater den på stedet,
+      // så gjentatt stepping ikke stabler nye span-er.
+      if (parent.tagName === 'SPAN' && parent.childNodes.length === 1 && parent.style.fontSize) {
+        parent.style.fontSize = `${next}px`;
+        made.push(parent);
+      } else {
+        const span = document.createElement('span');
+        span.style.fontSize = `${next}px`;
+        parent.insertBefore(span, tn);
+        span.appendChild(tn);
+        made.push(span);
+      }
+    }
+    reselect(made);
+    activeText.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
+  // Blokk-nivå-operasjoner (linjeavstand, innrykk): påvirker avsnittene i
+  // markeringen, ikke enkeltord.
+  const BLOCK_SEL = 'p,h1,h2,h3,h4,h5,h6,li,blockquote,div';
+  const blocksInRange = () => {
+    const sel = document.getSelection();
+    if (!sel || !sel.rangeCount || !activeText) return [];
+    const range = sel.getRangeAt(0);
+    const leaf = (list) => list.filter((el) => !list.some((o) => o !== el && el.contains(o)));
+    let hits = leaf([...activeText.querySelectorAll(BLOCK_SEL)].filter((el) => range.intersectsNode(el)));
+    if (!hits.length) {
+      // Bare tekstnoder rett i feltet: normaliser til ett avsnitt først.
+      exec('formatBlock', 'p');
+      hits = leaf([...activeText.querySelectorAll(BLOCK_SEL)].filter((el) => range.intersectsNode(el)));
+    }
+    return hits;
+  };
+  const setLineHeight = (value) => {
+    if (!activeText) return;
+    for (const el of blocksInRange()) {
+      el.style.lineHeight = value;
+      if (el.getAttribute('style') === '') el.removeAttribute('style');
+    }
+    activeText.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  const applyIndent = (dir) => {
+    if (!activeText) return;
+    const hits = blocksInRange();
+    // Rene lister: la nettleseren lage/rive nivåer (riktig ul-nesting).
+    if (hits.length && hits.every((el) => el.tagName === 'LI')) {
+      exec(dir > 0 ? 'indent' : 'outdent');
+      return;
+    }
+    for (const el of hits) {
+      if (el.tagName === 'LI') continue;
+      el.style.marginLeft = stepIndent(el.style.marginLeft, dir);
+      if (el.getAttribute('style') === '') el.removeAttribute('style');
+    }
+    activeText.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
+  // ---------------- RAD 1: struktur og størrelse ----------------
   // Overskriftsnivå: temastyrt nedtrekk (ADR-0009: aldri native select i
   // redigerings-UI). Nedtrekket stjeler ikke fokus, så markeringen står.
-  startGroup();
+  startGroup(row1);
   const level = createDropdown({
     value: 'p',
     title: 'Tekstnivå',
@@ -768,45 +955,101 @@ function initTextToolbar() {
     onchange: (value) => exec('formatBlock', value),
   });
   group.appendChild(level.el);
-  // Typografi for HELE feltet (blokk-props, ikke markering): egen rad bak
-  // Aa-knappen, se buildTypoRow lenger ned. Radens props hører til
-  // TEKSTBLOKKEN, så knappen skjules i andre blokkers rike felt
-  // (FAQ-svar); der ville den skrevet inerte props og re-rendret unødig.
-  const typoBtn = btn('<span class="urd-tt-aa">Aa</span>', 'Font, størrelse og avstand for hele feltet', () => toggleTypoRow());
 
-  startGroup();
-  btn('<b>F</b>', 'Fet (Ctrl+B)', () => exec('bold'));
-  btn('<i>K</i>', 'Kursiv (Ctrl+I)', () => exec('italic'));
-  btn('<u>U</u>', 'Understrek (Ctrl+U)', () => exec('underline'));
-  btn('<s>S</s>', 'Gjennomstreking', () => exec('strikeThrough'));
+  // Font for MARKERINGEN (ikke hele feltet; feltets font bor i Egenskaper).
+  // «Arv fra tema» fjerner font-family fra markeringen.
+  const fontDd = createDropdown({
+    value: '',
+    title: 'Skrifttype for markert tekst',
+    options: [['', 'Arv fra tema'], ...FONT_STACKS.map(([name, value]) => [value, name])],
+    onchange: (v) => { applyInlineStyle('fontFamily', v || null); reposition(); },
+  });
+  group.appendChild(fontDd.el);
+
+  // Størrelse for MARKERINGEN: tallfelt med minus/pluss (±1px). Feltet stjeler
+  // fokus, så markeringen lagres/gjenopprettes (linkRow-mønsteret).
+  const MINUS_SVG = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 6h7"/></svg>';
+  const PLUS_SVG = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 2.5v7M2.5 6h7"/></svg>';
+
+  startGroup(row1);
+  btn(MINUS_SVG, 'Mindre (ett px)', () => applySizeStep((cur) => stepSize(cur, -1)));
+  const sizeInput = document.createElement('input');
+  sizeInput.type = 'number';
+  sizeInput.className = 'urd-tt-num urd-tt-size';
+  sizeInput.min = String(SIZE_MIN);
+  sizeInput.max = String(SIZE_MAX);
+  sizeInput.step = '1';
+  sizeInput.title = 'Skriftstørrelse for markert tekst (px)';
+  const applySizeFromField = () => {
+    restoreSelection();
+    const raw = sizeInput.value.trim();
+    if (raw === '') { applyInlineStyle('fontSize', null); return; }
+    const px = clampSize(Number(raw));
+    if (px == null) return;
+    sizeInput.value = String(px);
+    applyInlineStyle('fontSize', `${px}px`);
+  };
+  // Lagre markeringen FØR fokus flyttes til feltet (på pointerdown står den
+  // ennå i teksten; ved focus kan den være borte).
+  sizeInput.addEventListener('pointerdown', saveSelection);
+  sizeInput.addEventListener('change', () => { applySizeFromField(); reposition(); });
+  sizeInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') { event.preventDefault(); applySizeFromField(); activeText?.focus(); reposition(); }
+  });
+  group.appendChild(sizeInput);
+  btn(PLUS_SVG, 'Større (ett px)', () => applySizeStep((cur) => stepSize(cur, 1)));
+
+  // ---------------- RAD 2: tegnformatering og avsnitt ----------------
+  startGroup(row2);
+  btn('<b>F</b>', 'Fet (Ctrl+B)', () => exec('bold'), 'bold');
+  btn('<i>K</i>', 'Kursiv (Ctrl+I)', () => exec('italic'), 'italic');
+  btn('<u>U</u>', 'Understrek (Ctrl+U)', () => exec('underline'), 'underline');
+  btn('<s>S</s>', 'Gjennomstreking', () => exec('strikeThrough'), 'strikeThrough');
+  btn('<span class="urd-tt-supsub">A<sup>2</sup></span>', 'Hevet skrift', () => exec('superscript'), 'superscript');
+  btn('<span class="urd-tt-supsub">A<sub>2</sub></span>', 'Senket skrift', () => exec('subscript'), 'subscript');
 
   // Farger: samlet i en nedtrekksrad (palettikonet er nedtrekksknappen),
   // så hovedlinjen holder seg smal. Selve raden bygges lenger ned (colorRow).
-  startGroup();
+  startGroup(row2);
   const PALETTE_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="9" r="1" fill="currentColor"/><circle cx="15.5" cy="9" r="1" fill="currentColor"/><circle cx="8.5" cy="15" r="1" fill="currentColor"/><path d="M21 12a9 9 0 0 1-9 9c2.5-2 1-4.5 3-5.5s6 .5 6-3.5z"/></svg>';
   btn(PALETTE_SVG, 'Farger og utheving', () => toggleColorRow());
 
   const alignIcon = (kind) =>
     `<span class="urd-ticon urd-ticon-${kind}"><i></i><i></i><i></i></span>`;
-  startGroup();
-  btn(alignIcon('left'), 'Venstrejuster', () => exec('justifyLeft'));
-  btn(alignIcon('center'), 'Midtstill', () => exec('justifyCenter'));
-  btn(alignIcon('right'), 'Høyrejuster', () => exec('justifyRight'));
+  startGroup(row2);
+  btn(alignIcon('left'), 'Venstrejuster', () => exec('justifyLeft'), 'justifyLeft');
+  btn(alignIcon('center'), 'Midtstill', () => exec('justifyCenter'), 'justifyCenter');
+  btn(alignIcon('right'), 'Høyrejuster', () => exec('justifyRight'), 'justifyRight');
+  btn(alignIcon('justify'), 'Blokkjuster', () => exec('justifyFull'), 'justifyFull');
+  // Linje- og bokstavavstand: egen nedtrekksrad bak avstandsknappen.
+  const SPACING_SVG = '<svg width="16" height="14" viewBox="0 0 16 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2.5v9M1.2 4.2 3 2.4l1.8 1.8M1.2 9.8 3 11.6l1.8-1.8M7.5 3.5h7.5M7.5 7h7.5M7.5 10.5h7.5"/></svg>';
+  btn(SPACING_SVG, 'Linje- og bokstavavstand', () => toggleSpacingRow());
 
-  startGroup();
+  startGroup(row2);
   btn('<span class="urd-licon"><i></i><i></i><i></i></span>', 'Punktliste',
-    () => exec('insertUnorderedList'));
+    () => exec('insertUnorderedList'), 'insertUnorderedList');
   btn('<span class="urd-licon urd-licon-ol"><i>1</i><i>2</i><i>3</i></span>', 'Nummerert liste',
-    () => exec('insertOrderedList'));
+    () => exec('insertOrderedList'), 'insertOrderedList');
+  const OUTDENT_SVG = '<svg width="15" height="13" viewBox="0 0 15 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 2h12M6.5 6.5h7M1.5 11h12M4.3 4.5 2 6.5l2.3 2"/></svg>';
+  const INDENT_SVG = '<svg width="15" height="13" viewBox="0 0 15 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 2h12M6.5 6.5h7M1.5 11h12M2 4.5l2.3 2L2 8.5"/></svg>';
+  btn(OUTDENT_SVG, 'Mindre innrykk', () => applyIndent(-1));
+  btn(INDENT_SVG, 'Større innrykk', () => applyIndent(1));
+
+  startGroup(row2);
   const QUOTE_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5C3.8 5 2 6.8 2 9s1.8 4 4 4c.3 0 .5 0 .8-.1C6.2 14.8 5 16.4 3.4 17.4l1.2 1.8C8 17 10 13.7 10 10.2 10 7.2 8.3 5 6 5z"/><path d="M17 5c-2.2 0-4 1.8-4 4s1.8 4 4 4c.3 0 .5 0 .8-.1-.6 1.9-1.8 3.5-3.4 4.5l1.2 1.8C19 17 21 13.7 21 10.2 21 7.2 19.3 5 17 5z"/></svg>';
-  btn(QUOTE_SVG, 'Sitat', () => exec('formatBlock', 'blockquote'));
+  // Sitat er en av/på-bryter: står markøren i et sitat, gjøres det til avsnitt igjen.
+  const quoteBtn = btn(QUOTE_SVG, 'Sitat', () => {
+    let inQuote = false;
+    try { inQuote = (document.queryCommandValue('formatBlock') || '').toLowerCase() === 'blockquote'; } catch { /* noop */ }
+    exec('formatBlock', inQuote ? 'p' : 'blockquote');
+  });
   // Tegnmenyen: samme utvalg som ikon-blokkens tegnvelger (delt modul i
   // glyphs.js), satt inn ved markøren. Knappen er et tegnet smilefjes
   // (aldri emoji i editor-chrome); selve tegnene er innhold.
   const GLYPH_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9.5" x2="9" y2="9.5"/><line x1="15" y1="9.5" x2="15" y2="9.5"/><path d="M8.5 14.5c.8 1.2 2 2 3.5 2s2.7-.8 3.5-2"/></svg>';
   btn(GLYPH_SVG, 'Sett inn tegn', () => toggleGlyphRow());
 
-  startGroup();
+  startGroup(row2);
   const LINK_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg>';
   const CLEAR_SVG = '<svg width="16" height="14" viewBox="0 0 26 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5h12"/><path d="M11 5L8 19"/><path d="M18 15l6 6"/><path d="M24 15l-6 6"/></svg>';
   btn(LINK_SVG, 'Lenke', () => toggleLinkRow());
@@ -814,6 +1057,12 @@ function initTextToolbar() {
     exec('removeFormat');
     exec('unlink');
     exec('formatBlock', 'p');
+    // removeFormat rører ikke blokk-nivå-stil: nullstill også avsnittene.
+    for (const el of blocksInRange()) {
+      el.style.lineHeight = '';
+      el.style.marginLeft = '';
+      if (el.getAttribute('style') === '') el.removeAttribute('style');
+    }
   });
 
   // Inline lenkefelt (moderne flyt, ingen prompt): åpnes av lenkeknappen på egen rad i linjen.
@@ -856,7 +1105,7 @@ function initTextToolbar() {
     }
     colorRow.classList.remove('vis');
     glyphRow.classList.remove('vis');
-    typoRow.classList.remove('vis');
+    spacingRow.classList.remove('vis');
     saveSelection();
     // Forhåndsutfyll med eksisterende lenke når markøren står i en.
     const sel = document.getSelection();
@@ -912,26 +1161,34 @@ function initTextToolbar() {
     colorRow.appendChild(b);
     return b;
   };
+  // Fargemenyen lukkes IKKE ved valg (så man kan prøve flere farger); den
+  // lukkes bare når hele linjen forsvinner, en annen underrad åpnes, eller
+  // palettikonet trykkes igjen (toggleColorRow).
+  //
+  // Den delte fargevelgeren melder onpick LIVE ved hvert valg. Etter hvert
+  // execCommand endres DOM-en, så en fast lagret Range blir ugjyldig. Derfor
+  // fornyes markeringen etter HVER påføring (saveSelection), slik at neste
+  // live-kall treffer samme tekst - den universelle koblings-fiksen.
+  const pickInto = (apply) => (hex) => {
+    restoreSelection();
+    apply(hex);
+    saveSelection();
+  };
   for (const token of ['text', 'accent']) {
     const b = colorBtn('', token === 'text' ? 'Tekstfarge (tema)' : 'Aksentfarge (tema)', () => {
       const value = getComputedStyle(document.documentElement)
         .getPropertyValue(`--urd-color-${token}`).trim();
       exec('foreColor', value);
       themeify(token, 'color');
-      colorRow.classList.remove('vis');
     });
     b.className = 'urd-text-swatch';
     b.style.background = `var(--urd-color-${token})`;
   }
   colorBtn('<span class="urd-tt-acolor">A</span>', 'Egen tekstfarge', () => {
-    colorRow.classList.remove('vis');
     saveSelection();
     openColorPicker(bar, {
       value: '#ffffff',
-      onpick: (hex) => {
-        restoreSelection();
-        exec('foreColor', hex);
-      },
+      onpick: pickInto((hex) => exec('foreColor', hex)),
     });
   });
   const colorSep = document.createElement('span');
@@ -942,27 +1199,21 @@ function initTextToolbar() {
       .getPropertyValue('--urd-color-accent').trim();
     exec('hiliteColor', accent);
     themeify('accent', 'backgroundColor');
-    colorRow.classList.remove('vis');
   });
   colorBtn('<span class="urd-tt-hl urd-tt-hl-free">A</span>', 'Uthev med egen farge', () => {
-    colorRow.classList.remove('vis');
     saveSelection();
     openColorPicker(bar, {
-      onpick: (hex) => {
-        restoreSelection();
-        exec('hiliteColor', hex);
-      },
+      onpick: pickInto((hex) => exec('hiliteColor', hex)),
     });
   });
   colorBtn('<span class="urd-tt-hl urd-tt-hl-none">A</span>', 'Fjern utheving', () => {
     exec('hiliteColor', 'transparent');
-    colorRow.classList.remove('vis');
   });
 
   function toggleColorRow() {
     linkRow.classList.remove('vis');
     glyphRow.classList.remove('vis');
-    typoRow.classList.remove('vis');
+    spacingRow.classList.remove('vis');
     colorRow.classList.toggle('vis');
   }
 
@@ -1015,7 +1266,7 @@ function initTextToolbar() {
   function toggleGlyphRow() {
     linkRow.classList.remove('vis');
     colorRow.classList.remove('vis');
-    typoRow.classList.remove('vis');
+    spacingRow.classList.remove('vis');
     if (glyphRow.classList.contains('vis')) {
       glyphRow.classList.remove('vis');
       return;
@@ -1035,92 +1286,58 @@ function initTextToolbar() {
     reposition();
   }
 
-  // Typografiraden (bak Aa-knappen): font, grunnstørrelse, linje- og
-  // bokstavavstand for HELE feltet. Dette er blokk-props, ikke markering:
-  // verdiene leses fra blokkens ctx og meldes som urd-edit, så raden og
-  // Egenskaper-panelet alltid er i synk. Raden bygges på nytt ved åpning
-  // med gjeldende verdier.
-  const typoRow = document.createElement('div');
-  typoRow.className = 'urd-tt-typorow';
-  bar.insertBefore(typoRow, linkRow);
+  // Avstandsraden (bak avstandsknappen): linjeavstand-presetene og
+  // bokstavavstand for MARKERINGEN. Linjeavstand gjelder avsnittene i
+  // markeringen, bokstavavstand gjelder tegnene. Alt er additivt inline;
+  // «Arv» fjerner overstyringen.
+  const spacingRow = document.createElement('div');
+  spacingRow.className = 'urd-tt-spacerow';
+  bar.insertBefore(spacingRow, linkRow);
 
-  const activeCtx = () => activeText?.closest('.urd-block')?._urdCtx ?? null;
-  const postProps = (patch) => {
-    const ctx = activeCtx();
-    if (!ctx) return;
-    const props = { ...ctx.block.props, ...patch };
-    ctx.block.props = props;
-    // rerender: true - typografi skal synes umiddelbart. Skrivemarkøren
-    // står i selve raden (ikke i teksten), så ekkoet mister ingen caret.
-    post({ type: 'urd-edit', sectionId: ctx.section.id, blockId: ctx.block.id, props, rerender: true });
-    // Re-renderingen bytter ut tekstfeltet: reposisjoner etterpå, så
-    // linjen følger det nye elementet (reposition gjenoppkobler via id).
-    setTimeout(reposition, 150);
+  const spacingLabel = (text) => {
+    const s = document.createElement('span');
+    s.className = 'urd-tt-typolabel';
+    s.textContent = text;
+    return s;
   };
-
-  function buildTypoRow() {
-    typoRow.replaceChildren();
-    const props = activeCtx()?.block.props ?? {};
-    const typoLabel = (text) => {
-      const s = document.createElement('span');
-      s.className = 'urd-tt-typolabel';
-      s.textContent = text;
-      return s;
-    };
-
-    const font = createDropdown({
-      value: props.font ?? '',
-      title: 'Font for hele feltet',
-      options: [['', 'Arv fra tema'], ...FONT_STACKS.map(([name, value]) => [value, name])],
-      onchange: (v) => postProps({ font: v || null }),
-    });
-    typoRow.appendChild(font.el);
-
-    // Størrelse og avstander som tallfelt, slik alle teksteditorer gjør
-    // det: skriv et tall eller stepp med pilene. Tomt felt = arv fra tema.
-    const numField = (labelText, title, { min, max, step, value, onset }) => {
-      const input = document.createElement('input');
-      input.type = 'number';
-      input.className = 'urd-tt-num';
-      input.min = String(min);
-      input.max = String(max);
-      input.step = String(step);
-      input.placeholder = 'Arv';
-      input.title = title;
-      input.value = value ?? '';
-      input.addEventListener('change', () => {
-        onset(input.value === '' ? null : Number(input.value));
-      });
-      typoRow.append(typoLabel(labelText), input);
-    };
-    numField('Størrelse', 'Skriftstørrelse i px for hele feltet; tomt = arv fra tema', {
-      min: 8, max: 120, step: 1,
-      value: props.size,
-      onset: (v) => postProps({ size: v }),
-    });
-    numField('Linjeavstand', 'Avstanden mellom tekstlinjene, i forhold til skriftstørrelsen; tomt = arv', {
-      min: 0.8, max: 3, step: 0.1,
-      value: props.lineHeight,
-      onset: (v) => postProps({ lineHeight: v }),
-    });
-    numField('Bokstavavstand', 'Avstanden mellom bokstavene i px, negativ er tettere; tomt = arv', {
-      min: -2, max: 10, step: 0.1,
-      value: props.letterSpacing,
-      onset: (v) => postProps({ letterSpacing: v || null }),
-    });
+  spacingRow.appendChild(spacingLabel('Linjeavstand'));
+  for (const [value, label] of LINE_HEIGHTS) {
+    const b = document.createElement('button');
+    b.className = 'urd-tt-lh';
+    b.textContent = label;
+    b.title = value ? `Linjeavstand ${label}` : 'Arv fra tema (fjern overstyring)';
+    b.addEventListener('click', () => { setLineHeight(value); reposition(); });
+    spacingRow.appendChild(b);
   }
+  const spacingSep = document.createElement('span');
+  spacingSep.className = 'urd-tt-sep';
+  spacingRow.appendChild(spacingSep);
+  spacingRow.appendChild(spacingLabel('Bokstavavstand'));
+  const lsInput = document.createElement('input');
+  lsInput.type = 'number';
+  lsInput.className = 'urd-tt-num';
+  lsInput.min = '-2';
+  lsInput.max = '10';
+  lsInput.step = '0.1';
+  lsInput.placeholder = 'Arv';
+  lsInput.title = 'Avstand mellom bokstavene i px, negativ er tettere; tomt = arv';
+  const applyLetterSpacing = () => {
+    restoreSelection();
+    const raw = lsInput.value.trim();
+    applyInlineStyle('letterSpacing', raw === '' ? null : `${Number(raw)}px`);
+  };
+  lsInput.addEventListener('pointerdown', saveSelection);
+  lsInput.addEventListener('change', () => { applyLetterSpacing(); reposition(); });
+  lsInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') { event.preventDefault(); applyLetterSpacing(); activeText?.focus(); reposition(); }
+  });
+  spacingRow.appendChild(lsInput);
 
-  function toggleTypoRow() {
+  function toggleSpacingRow() {
     linkRow.classList.remove('vis');
     colorRow.classList.remove('vis');
     glyphRow.classList.remove('vis');
-    if (typoRow.classList.contains('vis')) {
-      typoRow.classList.remove('vis');
-      return;
-    }
-    buildTypoRow();
-    typoRow.classList.add('vis');
-    reposition();
+    spacingRow.classList.toggle('vis');
   }
 
   document.body.appendChild(bar);
@@ -1143,36 +1360,87 @@ function initTextToolbar() {
       linkRow.classList.remove('vis');
       colorRow.classList.remove('vis');
       glyphRow.classList.remove('vis');
-      typoRow.classList.remove('vis');
+      spacingRow.classList.remove('vis');
       return;
     }
-    // Markeringens rekt er ankeret; en tom/ugyldig rekt (kollapset markør på
-    // tom linje, fokus på vei et annet sted) skal ALDRI flytte linjen.
-    let anchor = null;
-    const sel = document.getSelection();
-    if (sel && sel.rangeCount && activeText.contains(sel.anchorNode)) {
-      const r = sel.getRangeAt(0).getBoundingClientRect();
-      if (r && (r.width || r.height)) anchor = r;
-    }
-    if (!anchor) {
-      const block = activeText.closest('.urd-block') ?? activeText;
-      const r = block.getBoundingClientRect();
-      if (!r || (!r.width && !r.height)) return;
-      anchor = r;
-    }
+    // Linjen forankres alltid ved TOPPEN av tekstfeltet (blokken), ikke ved
+    // markøren, så den står i ro mens man skriver. En ugyldig rekt (blokken
+    // ikke lagt ut ennå) skal ikke flytte linjen.
+    const block = activeText.closest('.urd-block') ?? activeText;
+    const anchor = block.getBoundingClientRect();
+    if (!anchor || (!anchor.width && !anchor.height)) return;
     bar.classList.add('vis');
     const navHeight = document.getElementById('urd-nav')?.offsetHeight ?? 0;
     const left = Math.max(8, Math.min(anchor.left, window.innerWidth - bar.offsetWidth - 8));
     let top = anchor.top - bar.offsetHeight - 10;
-    // Under den klistrede menyen, ellers under markeringen i stedet for over.
-    if (top < navHeight + 8) top = Math.min(anchor.bottom + 10, window.innerHeight - bar.offsetHeight - 8);
+    // Over blokken; men aldri under den klistrede menyen (da klemmes den rett
+    // under menyen, fortsatt nær toppen av feltet).
+    if (top < navHeight + 8) top = navHeight + 8;
     bar.style.left = `${left}px`;
     bar.style.top = `${top}px`;
-    // Nivåvelgeren speiler markørens plassering.
+    // Nivåvelgeren og sitatknappen speiler markørens plassering.
     try {
       const value = (document.queryCommandValue('formatBlock') || 'p').toLowerCase();
       level.set(['h1', 'h2', 'h3'].includes(value) ? value : 'p');
+      quoteBtn.classList.toggle('active', value === 'blockquote');
     } catch { /* enkelte nettlesere nekter før første kommando */ }
+    // Formatknappene (fet, kursiv, justering, lister, hevet/senket) merkes
+    // aktive når markøren står i formatet.
+    for (const [b, cmd] of stateButtons) {
+      let on = false;
+      try { on = document.queryCommandState(cmd); } catch { /* noop */ }
+      b.classList.toggle('active', on);
+    }
+    syncTypoControls();
+  };
+
+  // Størrelsesfeltet og font-nedtrekket speiler markeringen. Kjøres fra
+  // reposition (selectionchange), aldri mens brukeren skriver i selve feltet.
+  let lastFontSet = '';
+  const styledAncestor = (node) => {
+    let el = node?.nodeType === 3 ? node.parentElement : node;
+    return el instanceof HTMLElement && activeText.contains(el) ? el : null;
+  };
+  const selectionSize = () => {
+    const sel = document.getSelection();
+    if (!sel || !sel.rangeCount) return null;
+    const range = sel.getRangeAt(0);
+    // Kollapset markør: størrelsen der markøren står.
+    if (range.collapsed) {
+      const el = styledAncestor(range.startContainer);
+      return el ? Math.round(parseFloat(getComputedStyle(el).fontSize)) : null;
+    }
+    // Ellers: mål faktisk størrelse på hver MARKERT tekst-run. Vi går på
+    // tekstnodene, ikke selection-endepunktene, fordi de kan peke på en
+    // container (etter reselect med setStartBefore) og gi feltets basestørrelse.
+    const sizes = new Set();
+    const walker = document.createTreeWalker(activeText, NodeFilter.SHOW_TEXT);
+    let n;
+    while ((n = walker.nextNode())) {
+      if (n.textContent && n.parentElement && sel.containsNode(n, true)) {
+        sizes.add(Math.round(parseFloat(getComputedStyle(n.parentElement).fontSize)));
+      }
+    }
+    if (sizes.size === 0) return null;
+    return sizes.size === 1 ? [...sizes][0] : null; // blandet -> tomt
+  };
+  const selectionFamily = () => {
+    let el = styledAncestor(document.getSelection()?.anchorNode);
+    while (el && el !== activeText) {
+      if (el.style?.fontFamily) return el.style.fontFamily;
+      if (el.tagName === 'FONT' && el.getAttribute('face')) return el.getAttribute('face');
+      el = el.parentElement;
+    }
+    return '';
+  };
+  const syncTypoControls = () => {
+    if (document.activeElement !== sizeInput) {
+      const px = selectionSize();
+      const shown = px == null ? '' : String(px);
+      if (sizeInput.value !== shown) sizeInput.value = shown;
+    }
+    const wantFont = matchFontStack(selectionFamily()) || '';
+    if (wantFont !== lastFontSet) { fontDd.set(wantFont); lastFontSet = wantFont; }
   };
 
   document.addEventListener('focusin', (event) => {
@@ -1182,11 +1450,10 @@ function initTextToolbar() {
     if (target && target !== activeText) {
       activeText = target;
       activeBlockId = target.closest('.urd-block')?.dataset.blockId ?? null;
-      typoBtn.style.display = target.closest('.urd-block')?._urdCtx?.block?.type === 'text' ? '' : 'none';
       linkRow.classList.remove('vis');
       colorRow.classList.remove('vis');
       glyphRow.classList.remove('vis');
-      typoRow.classList.remove('vis');
+      spacingRow.classList.remove('vis');
     }
     if (target) reposition();
   });
@@ -1567,16 +1834,24 @@ window.addEventListener('keydown', (event) => {
   post({ type: 'urd-move', sectionId: ctx.section.id, blockId: selectedBlockId, frame, frameKey: 'desktop', coalesce: true });
 });
 
-// Aktiv seksjon: paletten i editoren legger nye blokker i den sist klikkede seksjonen.
-// Markeres med en aksentlinje i venstre kant. Kalles også fra håndtak som stopper propageringen (⠿/resize/rotasjon), så grep i et håndtak teller som klikk i seksjonen.
-function markActive(host) {
+// Aktiv seksjon: paletten i editoren legger nye blokker i den sist klikkede
+// seksjonen, markert med en aksentlinje i venstre kant.
+//
+// markActiveVisual setter KUN klassen (palett-hintet). markActive poster i
+// tillegg urd-select-section, som får editoren til å vise SEKSJONENS
+// egenskaper - det skal kun skje når man klikker den bare seksjonsflaten,
+// aldri når man rører en blokk eller et blokk-håndtak (da bærer blokkens
+// eget urd-select-block seksjonskonteksten, og Egenskaper skal bli på
+// blokken).
+function markActiveVisual(host) {
   document.querySelectorAll('.urd-section-active').forEach((s) => {
     if (s !== host) s.classList.remove('urd-section-active');
   });
-  if (host) {
-    host.classList.add('urd-section-active');
-    post({ type: 'urd-select-section', sectionId: host.dataset.sectionId });
-  }
+  if (host) host.classList.add('urd-section-active');
+}
+function markActive(host) {
+  markActiveVisual(host);
+  if (host) post({ type: 'urd-select-section', sectionId: host.dataset.sectionId });
 }
 
 document.addEventListener('pointerdown', (event) => {
@@ -1593,7 +1868,11 @@ document.addEventListener('pointerdown', (event) => {
   } else {
     selectBlock(blockEl);
   }
-  markActive(target?.closest('.urd-section'));
+  // Klikk på en blokk skal ikke poste seksjonsvalg (Egenskaper blir på
+  // blokken); kun den bare seksjonsflaten bytter til seksjonens egenskaper.
+  const host = target?.closest('.urd-section');
+  if (blockEl) markActiveVisual(host);
+  else markActive(host);
 });
 
 // Marquee: dra på tom seksjonsflate tegner en markeringsramme, og alle
@@ -2060,7 +2339,7 @@ function enhanceBlock(el, block, section, grid, host) {
     rotHandle.addEventListener('pointerdown', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      markActive(host);
+      markActiveVisual(host);
       selectBlock(el, { keepMulti: multiIds.has(block.id) });
       rotHandle.setPointerCapture(event.pointerId);
       const rect = el.getBoundingClientRect();
@@ -2112,7 +2391,7 @@ function enhanceBlock(el, block, section, grid, host) {
       } else {
         event.preventDefault();
         event.stopPropagation();
-        markActive(host);
+        markActiveVisual(host);
         // Grep i ⠿/resize på et utvalgs-medlem skal ikke kollapse utvalget.
         selectBlock(el, { keepMulti: multiIds.has(block.id) });
       }

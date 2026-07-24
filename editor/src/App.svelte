@@ -278,6 +278,14 @@
     setStatus('Gjentatt');
   }
 
+  // Klikk hvor som helst i admin utenfor blokkmenyen lukker den (klikk i
+  // previewen håndteres via onSelectBlock; iframe-klikk når ikke hit).
+  function onPointerdownWindow(e) {
+    if (!blockMenu) return;
+    if (e.target instanceof Element && e.target.closest('.block-menu')) return;
+    blockMenu = null;
+  }
+
   function onKeydown(e) {
     if (e.key === 'Escape' && blockMenu) {
       blockMenu = null;
@@ -435,12 +443,17 @@
   }
 
   function onSelectBlock(msg) {
+    // Klikk i previewen (blokk eller lerret) lukker blokkmenyen. onBlockMenu
+    // kaller denne FØR den åpner menyen, så gjenåpning virker.
+    blockMenu = null;
     if (!msg.blockId) {
       selectedBlock = null;
-      blockMenu = null;
       return;
     }
     selectedBlock = { sectionId: msg.sectionId, blockId: msg.blockId };
+    // Blokkens seksjon blir palett-målet (blokk-gester poster ikke lenger
+    // urd-select-section, så Egenskaper ikke rives fra blokken til seksjonen).
+    if (msg.sectionId) activeSectionId = msg.sectionId;
     syncSelectedBlock();
     // (Auto-åpning av Egenskaper ved blokk-klikk ble prøvd og reversert
     // etter eiers test; kun NY SEKSJON åpner panelet automatisk.)
@@ -1213,6 +1226,12 @@
 
   function onIframeLoad() {
     bridge?.destroy();
+    // Klikk i previewen (blokk, tekstfelt, lerret) lukker blokkmenyen. Iframen
+    // er samme opprinnelse, så vi lytter direkte; tannhjul-klikket lukker først
+    // og gjenåpner via urd-block-menu-meldingen etterpå (den kommer senere).
+    iframeEl?.contentDocument?.addEventListener('pointerdown', () => {
+      if (blockMenu) blockMenu = null;
+    }, true);
     bridge = createPreviewBridge(iframeEl, {
       onEdit: handleEdit,
       onMove: handleMove,
@@ -2887,7 +2906,7 @@
   init();
 </script>
 
-<svelte:window onkeydown={onKeydown} />
+<svelte:window onkeydown={onKeydown} onpointerdown={onPointerdownWindow} />
 
 <div class="editor">
   {#if !chromeVisible}
@@ -3912,22 +3931,40 @@
 
 {#snippet kortstilUI()}
   {@const bs = selectedBlock.props.boxStyle ?? {}}
+  <label>Blokkfarge
+    <ColorPicker value={bs.bg ?? ''} tokens={themeSwatches()} allowClear
+      label="Bakgrunnsfarge for boksen (tom = temaets flate)"
+      onchange={(hex) => setBoxStyle({ bg: hex || null })} /></label>
   <label>Skygge
     <Dropdown value={bs.shadow ?? ''}
       options={[['', 'Ingen'], ['soft', 'Myk'], ['strong', 'Tydelig']]}
       onchange={(v) => setBoxStyle({ shadow: v || null })} /></label>
+  {#if bs.shadow}
+    <label>Skyggefarge
+      <ColorPicker value={bs.shadowColor ?? ''} tokens={themeSwatches()} allowClear
+        label="Skyggens farge (tom = svart)"
+        onchange={(hex) => setBoxStyle({ shadowColor: hex || null })} /></label>
+  {/if}
   <label>Kantlinje
     <Dropdown value={bs.border === 'none' ? 'none' : bs.border ? 'custom' : ''}
       options={[['', 'Temaets (tynn)'], ['none', 'Ingen'], ['custom', 'Egen farge']]}
       onchange={(v) => setBoxStyle({ border: v === 'custom' ? { color: 'accent', width: 1 } : v || null })} /></label>
-  {#if bs.border && bs.border !== 'none'}
+  {#if bs.border !== 'none'}
+    <!-- Kantfarge/Tykkelse vises OGSÅ for «Temaets (tynn)»: å velge en farge
+         gjør den til en egen (fargbar) kantlinje. -->
+    {@const bd = typeof bs.border === 'object' ? bs.border : { color: 'text', width: 1 }}
     <label>Kantfarge
-      <ColorPicker value={bs.border.color ?? 'accent'} tokens={themeSwatches()}
-        label="Kantlinjens farge" onchange={(hex) => setBoxStyle({ border: { ...bs.border, color: hex } })} /></label>
-    <label>Tykkelse
-      <span class="gridmenu-value">{bs.border.width ?? 1} px</span></label>
-    <input type="range" min="1" max="4" step="1" value={bs.border.width ?? 1}
-      oninput={(e) => setBoxStyle({ border: { ...bs.border, width: Number(e.target.value) } })} />
+      <ColorPicker value={bd.color} tokens={themeSwatches()}
+        label="Kantlinjens farge" onchange={(hex) => setBoxStyle({ border: { ...bd, color: hex } })} /></label>
+    <label>Tykkelse (px)
+      <span class="num-stepper">
+        <button type="button" title="Tynnere" aria-label="Tynnere"
+          onclick={() => setBoxStyle({ border: { ...bd, width: Math.max(1, bd.width - 1) } })}>−</button>
+        <input type="number" min="1" max="12" step="1" value={bd.width}
+          onchange={(e) => setBoxStyle({ border: { ...bd, width: Math.min(12, Math.max(1, Number(e.target.value) || 1)) } })} />
+        <button type="button" title="Tykkere" aria-label="Tykkere"
+          onclick={() => setBoxStyle({ border: { ...bd, width: Math.min(12, bd.width + 1) } })}>+</button>
+      </span></label>
   {/if}
   <label class="gridmenu-snap" title="Frostet glass: gjennomskinnelig kort med uskarp bakgrunn - best over bilder og gradienter">
     <input type="checkbox" checked={Boolean(bs.glass)}
@@ -3951,22 +3988,8 @@
     {#if selectedBlock.props.box}
       {@render kortstilUI()}
     {/if}
-    <label>Font
-      <Dropdown value={selectedBlock.props.font ?? ''}
-        options={[['', 'Arv fra tema'], ...FONT_STACKS.map(([name, value]) => [value, name])]}
-        onchange={(v) => setBlockProp('font', v || null)} /></label>
-    <label title="Skriftstørrelse i px for hele feltet; tomt = arv fra tema">Størrelse (px)
-      <input type="number" min="8" max="120" step="1" placeholder="Arv"
-        value={selectedBlock.props.size ?? ''}
-        onchange={(e) => setBlockProp('size', e.target.value === '' ? null : Number(e.target.value))} /></label>
-    <label title="Avstanden mellom tekstlinjene, i forhold til skriftstørrelsen; tomt = arv">Linjeavstand
-      <input type="number" min="0.8" max="3" step="0.1" placeholder="Arv"
-        value={selectedBlock.props.lineHeight ?? ''}
-        onchange={(e) => setBlockProp('lineHeight', e.target.value === '' ? null : Number(e.target.value))} /></label>
-    <label title="Avstanden mellom bokstavene i px, negativ er tettere; tomt = arv">Bokstavavstand (px)
-      <input type="number" min="-2" max="10" step="0.1" placeholder="Arv"
-        value={selectedBlock.props.letterSpacing ?? ''}
-        onchange={(e) => setBlockProp('letterSpacing', e.target.value === '' ? null : Number(e.target.value) || null)} /></label>
+    <!-- Font, størrelse, linje- og bokstavavstand settes i tekst-editorens
+         verktøylinje (gjelder markert tekst), ikke her. -->
   {:else if selectedBlock.type === 'faq'}
     <label class="gridmenu-snap" title="Ellers lukkes forrige svar når et nytt åpnes">
       <input type="checkbox" checked={Boolean(selectedBlock.props.multi)}
@@ -4201,6 +4224,12 @@
         onchange={(e) => setBlockProp('fill', e.target.checked ? selectedBlock.props.color : null)} />
       Fylt
     </label>
+  {:else}
+    <!-- Plugin-blokker (kalender/kart/skjema): innstillingene bor i pluginens
+         eget config-panel i forhåndsvisningen. Knappen åpner det; den gamle
+         flytende «Kilder»/«Sted»-pillen er fjernet. -->
+    <button class="ghost" onclick={() => bridge?.sendOpenConfig(selectedBlock.blockId)}>Innstillinger …</button>
+    <p class="panel-hint">Åpner blokkens innstillinger i forhåndsvisningen.</p>
   {/if}
 
   <hr class="gridmenu-divider" />
@@ -4699,6 +4728,44 @@
     padding: 2px;
     width: 3rem;
     cursor: pointer;
+  }
+
+  /* Tall-stepper (−/[tall]/+), som størrelsesfeltet i teksteditoren. */
+  .num-stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .num-stepper input[type='number'] {
+    width: 3.4rem;
+    text-align: center;
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+
+  .num-stepper input[type='number']::-webkit-outer-spin-button,
+  .num-stepper input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .num-stepper button {
+    width: 2.2rem;
+    height: 2.2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .num-stepper button:hover {
+    background: rgb(255 255 255 / 10%);
   }
 
   /* Sider- og nav-radene: tittel/etikett tar plassen, verktøyene er smale */

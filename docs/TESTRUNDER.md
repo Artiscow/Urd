@@ -2,47 +2,30 @@
 
 Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren stryker herfra** når noe er testet; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert.
 
-### Testrunde-batch (0.6.30): bugfikser fra eiers runde 24. juli (blokkmeny, seksjon-chip, dra-cursor, typografifelt, animasjon/peker-splitt)
+### Testrunde-batch (0.6.31): teksteditoren «Office-linjen» (to faste rader, størrelse på markering)
 
-- [ ] Blokkmenyen ved dobbeltklikk: «+ Ny blokk»-chippen vises IKKE lenger over menyen (menyen står alene ved pekeren); klikk hvor som helst utenfor lukker menyen (også i en annen seksjon); pekeren ut av seksjonen lukker fortsatt som før
-- [ ] Dobbeltklikk nær venstre kant: menyen åpnes mot HØYRE for pekeren og går aldri ut av skjermen
-- [ ] Blokkmenyen og seksjonsgalleriet («+ Ny seksjon») følger nå Urd-adminens fargetema (velg et annet admin-tema i topplinjen og se menyene bytte), ikke siden som redigeres; åpnes previewen utenfor admin brukes grå-temaet
-- [ ] «+ Ny seksjon»-chippen: kan alltid klikkes - dra-flaten for seksjonsgrensen fanger ikke lenger klikket der chippen står (å DRA i selve chippen flytter fortsatt grensen, klikk uten dra åpner galleriet)
-- [ ] Dra en seksjonsgrense (bunn- eller toppkant): pekeren blir pil ned når du drar nedover og pil opp når du drar oppover, og normal igjen ved slipp
-- [ ] Typografi i Egenskaper/blokkmenyen for tekstblokk: Størrelse, Linjeavstand og Bokstavavstand er nå vanlige tallfelt (skriv tall eller stepp med pilene, som i Office/LibreOffice); tomt felt = arv fra tema; S/M/L/XL-knappene, A-knappene, sliderne og forklaringsteksten er fjernet
-- [ ] Samme i teksteditor-popupens Aa-rad: tre tallfelt i stedet for knapperad + slidere
-- [ ] «Animasjon inn» og «Ved peker» er nå to uavhengige valg på blokker OG seksjoner: «Løft ved peker» kan kombineres med f.eks. «Zoom inn» (demoen: «Les mer»-knappen på Om oss har begge); eldre sider med pekereffekt lagret i det gamle fellesfeltet virker uendret og flyttes over ved neste animasjonsendring
-- [ ] Rotårsaken til «Løft ved peker funker ikke» (eiers runde 24. juli, målt i headless): et nedtrekk nederst i panelet utløste en fokus-scroll i samme klikk, og popupen lukket seg før man fikk valgt. Alle nedtrekk FØLGER nå ankeret ved rulling i stedet for å lukke seg; klikk utenfor og Escape lukker som før - prøv «Ved peker» nederst i seksjons-Egenskaper og rull i panelet mens listen er åpen
-- [ ] Ny lokal testserver uten caching: `python3 dev-server.py 8000` fra repo-roten (i stedet for `cd template && python3 -m http.server 8000`). Hver respons sendes med «aldri cache», så vanlig reload alltid viser siste motorversjon - ingen mer F12-tømming etter motorendringer. Sjekk at siden, admin og ?page=om-oss virker som før via den
+Bugfikser i teksteditoren (del 2, 24. juli):
+- [ ] Egendefinert fargevelger: markeringen bevares nå gjennom hele fargevalget (dra i fargeflaten og se fargen endres live uten at markeringen mistes eller fargen legger seg feil); rotårsaken var at den lagrede markeringen ikke ble fornyet mellom live-kallene
+
+Bugfikser (del 3, 24. juli):
+- [ ] Blokk-styling (Tekstboks / FAQ-kort, i kortstilen under Tekstboks-valget): NY «Blokkfarge» (egen bakgrunnsfarge, tom = temaets flate, med fjern-knapp), NY «Skyggefarge» (vises når Skygge er valgt), og temaets tynne kantlinje er nå synlig nok til å leses som en kant (var nesten usynlig); «Egen farge» på Kantlinje gir full fargevalg som før. Eldre bokser ser like ut
+
+Bugfikser (del 5, 24. juli):
+- [ ] «Temaets (tynn)» kantlinje kan nå farges: Kantfarge-velgeren vises også for den (før kun for «Egen farge»); velger du en farge blir den en egen fargbar kantlinje
+- [ ] Dobbeltklikk-menyen («+ Ny blokk» ved pekeren) ligger nå OVER seksjonslinjene og «+ Ny seksjon»-stripen (de vises ikke lenger gjennom menyen)
+
+Bugfikser (del 4, 24. juli - fler edit-chrome-elementer til Urd-tema + kortstil-finpuss):
+- [ ] ALT redigerings-chrome følger nå Urd-adminens tema, ikke sidens: blokk-omrisset (også hover-omrisset), grid-overlegget, hjelpe-/side-linjene (guides), marquee-rammen, «+ Ny seksjon»-stripen, seksjons-dragelinjene (topp/bunn), «?»-hjelpechippen, preset-menyen og kalenderens «⚙ Kilder»-knapp. Sidens EGNE knapper («Les mer» osv.) beholder sidetemaet
 
 ### Testrunde-batch (0.6.29): gradient-editor, kortstiler, FAQ-akkordeon (M6 batch D del 1)
 
-- [ ] Gradient-editoren (Egenskaper på en seksjon, gradient-lag): «Form» velger Lineær eller Radiell; lineær har Vinkel, radiell har Sentrum X/Y (kun de relevante innstillingene vises); demoen: øverste hero på Om oss er nå radiell
-- [ ] Farger med plass (eiers modell 24. juli 2026): fargene er en liste i rekkefølge langs gradienten; slideren per farge er hvor MYE PLASS fargen tar (verdien viser normalisert andel); rekkefølgen styres KUN ved å dra i håndtaket (pekerdra med dempet rad og innsettingsstrek, virker også ett hakk opp/ned; pilknappene er fjernet etter eiers testrunde), og hvert dra er ett angre-steg; fargeknappene er kompakte (samme høyde som radknappene); «+ Legg til farge» legger en ny nederst; fjern-knappen vises kun ved 3+ farger; plass 0 gir en hard fargekant mot nabofargen; Styrke står rett under Vinkel/Sentrum, Bevegelse nederst
-- [ ] «Bevegelse» per gradient (erstatter panorerings-bryteren): Lineær har Panorer frem og tilbake, Panorer én vei (sirkulær «regnbue»-loop etter eiers modell 24. juli 2026: fargene passerer 1 2 3 4 1 2 3 4, siste farge glir tilbake til første, ingen farge synes to ganger samtidig, og loopen FØLGER vinkelen du setter - implementert som en gjentakende gradient i px på en løper som forskyves én periode langs aksen) og Roter sakte; Radiell har Pulser og Sving sakte i bane; valgene byttes når formen byttes, og redusert bevegelse hos den besøkende slår alle av. Fikser underveis etter eiers skjermbilder: background-shorthanden nullstilte flisstørrelsen (loopen «pustet»), speil-flisen viste fargene dobbelt (skjøt-rutenettet), dobbel syklus viste første farge to ganger, et midlertidig Retning-valg er fjernet igjen til fordel for Vinkel, og perioden tilpasses fargene: linjen pluss akkurat plassen til den STØRSTE fargen (7 like farger = kun 1/6 lengre, fargene beholder omtrent statisk størrelse), så ingen farge kan splittes over kantene eller stå to ganger - en ren dobling ble prøvd og forkastet fordi den gjorde fargene dobbelt så store
-- [ ] Dra-omsorteringen viser nå en spøkelsesrad: hele fargeraden (med fargeknappen) følger pekeren mens du drar, i tillegg til innsettingsstreken
-- [ ] Eldre gradienter (fra før denne runden, også de du lagde i går/i dag med posisjons-modellen) ser like ut, og løftes til det nye formatet først når du endrer noe i dem; angre virker som ellers
 - [ ] Kortstiler på Tekstboks (innstillingene står rett under Tekstboks-valget): Skygge (Ingen/Myk/Tydelig), Kantlinje (Temaets/Ingen/Egen farge med tykkelse), Glass-effekt (frostet, best over bilder/gradienter); uten valg ser boksen ut som før
 - [ ] FAQ-blokk (Blokker-panelet): spørsmålskort der svaret foldes ut ved klikk; hos besøkende åpner hele raden, i editoren er det pilknappen (tekstene er direkte redigerbare der); «Flere svar åpne samtidig» i Egenskaper; demoen: FAQ-seksjon på Om oss med glass + myk skygge
 - [ ] FAQ-redigering: klikk rett i spørsmål/svar og skriv (svar har hele formateringslinjen, men uten Aa-raden - typografi der er tekstblokkens); nye spørsmål, rekkefølge og sletting i Egenskaper eller blokkmenyen; blokken lagrer sammenfoldet høyde og utfolding vokser kun visuelt (gir aldri «Upubliserte endringer» av seg selv)
 - [ ] Kortstil på FAQ: samme Skygge/Kantlinje/Glass-valg gjelder alle kortene i blokken
 
-### Testrunde-batch (0.6.28): utkast-fiksene («Upubliserte endringer» av seg selv / etter angring)
-
-- [x] Åpne admin på en nettopp publisert side UTEN å røre noe: ingen «Upubliserte endringer», ingen Forkast-knapp, ingen urd-draft-nøkler i localStorage (målt rotårsak: datablokkenes autovekst skrev målt høyde inn i utkastet ved første rendering; målinger bokføres nå i både utkast og sammenligningsgrunnlag og utgjør aldri alene en endring)
-- [x] Gjør en ekte endring: merket og Forkast-knappen kommer; Forkast utkast (to klikk) fjerner BEGGE varig - de kommer ikke tilbake ved scrolling, sidebytte eller ny lasting
-- [x] ANGRE alt du gjorde (Ctrl+Z): merket og Forkast-knappen forsvinner når tilstanden faktisk er lik publisert; det samme gjelder MANUELL tilbakestilling (flytt en blokk ned og så opp igjen - piltaster rører ikke lenger aksen som ikke flyttes, som før etterlot en usynlig avrunding av x)
-- [x] Forkast-knappen vises nå kun når det finnes utkast, og står til HØYRE for «Upubliserte endringer»-merket (flyttet fra høyresiden ved Publiser); Publiser står som før men er deaktivert uten utkast
-
 ### Testrunde-batch (0.6.27): multimarkering (M6 batch C del 2)
 
-- [ ] Marquee: dra en ramme på tom seksjonsflate; alle blokker rammen berører (delvis holder) blir utvalget, med stiplet markering per blokk og en flytende verktøylinje («N valgt») over utvalget; klikk uten dra virker som før
-- [ ] Shift-klikk: bygg utvalget blokk for blokk (legg til/fjern); utvalget er avgrenset til ÉN seksjon (shift-klikk i en annen seksjon starter nytt utvalg)
-- [ ] Gruppe-dra: dra i et hvilket som helst medlem, hele utvalget følger med (samme forskyvning, klemt mot seksjonskantene i bredden); ETT Ctrl+Z ruller hele draget; klikk på et medlem kollapser IKKE utvalget (klikk på tom flate eller Esc gjør det)
-- [ ] Piltaster flytter hele utvalget i grid-steg (Shift = 1 px); Delete/Backspace sletter hele utvalget som ETT angre-steg
-- [ ] Ctrl+C/V: kopier utvalget (eller én markert blokk) og lim inn; det innlimte får bevart innbyrdes oppsett, litt forskjøvet, blir det nye utvalget, og hele innlimingen er ETT angre-steg; nytt Ctrl+V fortsetter fra det innlimte; innliming går til den AKTIVE seksjonen (sist klikkede); utklippstavlen nullstilles ved sidebytte (kjent avgrensning)
-- [ ] Ctrl+D med utvalg dupliserer hele utvalget
-- [ ] Verktøylinjen: venstre/midt/høyre + topp/midte/bunn justerer innenfor utvalgets egen boks; «Fordel jevnt» (vises kun ved 3+) gjør luften mellom blokkene lik; hver knapp er ett angre-steg
 - [ ] Ren visning og mobilvisning: ingen marquee, ingen verktøylinje, ingen utvalgsrammer
 
 ### Testrunde-batch (0.6.26): sticky blokker, klikkplassering, hjelpelinjer, toppkant-høyde (M6 batch C del 1)
@@ -50,30 +33,15 @@ Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren
 - [ ] Sticky: «Fest ved scrolling» på en blokk (Egenskaper/blokkmenyen, kun desktop-visning); i Ren visning fester blokken seg ved vindustoppen med valgt avstand og slipper når egen seksjon er forbi; publiser og sjekk samme adferd som besøkende (demoen: «Møt gjengen»-knappen på Om oss-siden har festing på)
 - [ ] Sticky med «Slipp taket» satt til en senere seksjon: blokken følger med forbi egen seksjon og slipper først der; nedtrekket viser kun seksjoner LENGER NED enn blokkens egen
 - [ ] Sticky i vanlig redigering (chrome på): blokken står helt stille og kan dras/redigeres som før; mobilvisningen og auto-mobil hos besøkende påvirkes aldri
-- [ ] + Ny blokk der man klikker: DOBBELTKLIKK på tom seksjonsflate åpner blokkmenyen ved pekeren, og blokken lander sentrert på klikkpunktet (klemt innenfor seksjonen, snappet til grid); den nye blokken er markert med en gang (også fra hjørneknappen, som fortsatt sentrerer som før)
-- [ ] Hjelpelinjer: ny knapp ved visningsvalgene i topplinjen viser stiplete linjer i alle seksjoner (sidens senter, seksjonens midte, innholdsbredde på 4 %/96 % - si fra om margen bør være en annen); overlever redigering, skjules i Ren visning, huskes til neste økt
-- [ ] Toppkant-håndtak: dra i seksjonens ØVERSTE kant for å gi/fjerne luft øverst; innholdet står visuelt bom stille (også scrollposisjonen), naboseksjonene røres aldri, ingen blokk havner over toppen (blokker som allerede henger over stopper krymping), og ETT Ctrl+Z angrer hele justeringen; bunnkant-håndtaket virker som før
 
 ### Testrunde-batch (0.6.25): blokkmeny, testrunde-fikser på batch B
 
-- [ ] BLOKKMENY (nytt): tannhjul-knapp på hver blokks verktøylinje åpner en flytende meny ved blokken med ALLE blokk-innstillingene (samme innhold som Egenskaper-panelet, de kan aldri divergere); lukkes med X, Esc eller ved avmarkering; havner til venstre for blokken når det er trangt til høyre
-- [ ] Ctrl+D: en blokk lagt til via paletten er nå markert med en gang (både i preview og admin), så Ctrl+D virker uten et ekstra klikk først; Ctrl+D virker også når fokus står i tallfelt, slidere og brytere i panelene (kun skrivefelt beholder nettleserens snarvei)
-- [ ] Ikon-blokk: tegnede ikoner er SENTRERT i rammen (målt: lik luft på alle sider), i alle størrelser
 - [ ] Ikon-blokk: Farge er nå en full fargevelger (temafarger + egen farge), ikke bare de fire tokenene
-- [ ] Tegn-/ikonvelgeren: ikonene og tegnene er lyse (var svarte på mørk meny), Nylige står øverst, og swatch-knappen viser det som faktisk er valgt - også eget opplastet bilde; å velge tegn/ikon i menyen bytter bort fra det opplastede bildet
-- [ ] Teksteditor-linjen: ny Aa-knapp åpner typografiraden med Font, Størrelse (A/S/M/L/XL/px), Linjeavstand og Bokstavavstand for hele feltet - alt uten å gå til Egenskaper; endringene vises umiddelbart og linjen består (gjenoppkobles etter re-render)
 - [ ] «Valgområdet vokser» fra forrige runde: IKKE reprodusert i målingene (ikon/tekst/galleri/kalender målt over gjentatte prop-endringer i headless-nettleser, alle stabile); si fra med en konkret oppskrift (blokktype + handling) om det skjer igjen
-
-### Testrunde-batch (0.6.24): ikonbibliotek, tegnmeny i teksteditoren, linje- og bokstavavstand (M6 batch B)
-
-- [ ] Ikon-blokk: velgeren (som før viste tegn/emoji) har nå tegnede SVG-ikoner øverst i fem kategorier (Sosiale medier, Kommunikasjon, Sted og tid, Symboler, Piler); velg f.eks. Instagram og sjekk at ikonet vises i blokken, følger Farge-valget og skalerer skarpt med Størrelse
-- [ ] Tekstblokk: Linjeavstand-slider (1-2,5; A = arv) i Egenskaper gjelder hele feltet og overlever publisering; blir teksten høyere enn rammen, vokser rammen ved neste skriving i feltet (samme adferd som font-størrelse i dag)
-- [ ] Tekstblokk: Bokstavavstand-slider (-1 til 8 px; A/0 = arv) gjelder hele feltet; negativ verdi gir tettere tekst
 
 ### Testrunde-batch (0.6.22): sidestilt-oppfølging
 
 - [-] Menyplassering i sidestilt (Øverst/Midt på/Nederst) virker og påvirker IKKE topplinje-plasseringen (bytt tilbake til stripe og sjekk at punktene står der de sto)
-- [ ] Fargevelger-popoveren: innholdet (sliderne, hex-feltet, fargeprikkene) holder seg INNE i boksen, og boksen inne i panelet (målt rotårsak: grid-kolonnen ble max-content-bred og innholdet fløt 59px ut av boksen; verifisert med headless-nettleser etter fiks)
 - [ ] Effektfargen ved hover heter nå Strekfarge/Pillefarge/Glødfarge etter valgt Lenke-hover, og vises IKKE for Standard og Løft (uten glød); «Tekstfarge ved hover» vises alltid
 - [ ] Smalt vindu i editorens desktop-preview: menyen (også sidestilt) blir burger under mobil-breakpointet selv om resten av previewen fortsatt er desktop (strukturverktøyene beholdes); hos besøkende som før
 
@@ -82,10 +50,6 @@ Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren
 - [ ] Fargevelgeren i Nav → Utseende (Bakgrunnsfarge/Tekstfarge/hover-fargene): klikk på fargeflaten, sliderne og feltene INNE i velgeren skal IKKE lukke den; kun klikk utenfor, klikk i forhåndsvisningen eller Escape (rotårsaker: label-videresending + iframe-klikk når aldri editorens document)
 - [ ] Fargevelger-popoveren holder seg innenfor panelet (henger ikke ut over forhåndsvisningen) og boksen omslutter alt innholdet (border-box-fiks)
 - [ ] Logo-bilde: sett bildehøyde 94px (og prøv enda større) i alle varianter og størrelser; nav-baren skal ALDRI vokse, bildet vokser ut av linjen
-- [ ] Undermenyen lander NØYAKTIG på barens bunn (aldri oppå baren, heller ikke de få pikslene som synes som mørkere bånd på gjennomsiktige flater), også med stor logo, lys/mørk-bryter i verktøyklyngen og i flytende variant; utfall (full bredde) flukter med barens bunn uten skygge-bånd oppover
-- [ ] Sidestilt meny på smale vinduer: smaln nettleservinduet under ca. 900px, kolonnen skal bli en VANLIG topplinje med horisontale menypunkter (som stripe-varianten; virker også i editorens preview); burgeren kommer først under mobil-breakpointet; over 900px kommer kolonnen tilbake
-- [ ] Undermeny i sidestilt kolonne: åpnes og lukkes KUN med klikk (hover lukker ikke lenger kolonnen under pekeren, så man ikke feilklikker på punktet under)
-- [ ] Sidebredde: dra i kolonnekanten i previewen (180-400px); innholdet flytter seg med, og bredden overlever publisering
 - [ ] Bildeutsnitt (bredde) på nav-bakgrunnsbildet: virker i sidestilt kolonne (der høyde-slideren naturlig ikke monner); begge sliderne vises for alle varianter
 
 ### Testrunde-batch (0.6.20): galleri-blokk, lightbox, hero-galleri, preset-miniatyrer

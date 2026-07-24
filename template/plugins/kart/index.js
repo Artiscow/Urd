@@ -23,7 +23,7 @@ const post = (msg) => window.parent?.postMessage(msg, location.origin);
 /* ---------- Konfigpanel ---------- */
 
 function configPanel(el, props, ctx) {
-  const gear = el2('button', 'urd-kart-gear', '⚙ Sted');
+  const gear = el2('button', 'urd-kart-gear urd-cfg-toggle', '⚙ Sted');
   gear.type = 'button';
   gear.title = 'Kartsted og zoom';
   const panel = el2('div', 'urd-kart-config');
@@ -133,7 +133,7 @@ function configPanel(el, props, ctx) {
 function emptyState(host, ctx) {
   if (!ctx.preview) return;
   host.appendChild(el2('div', 'urd-kart-empty',
-    'Pek på blokken og klikk «⚙ Sted» for å legge inn en adresse, koordinater eller en OSM-lenke.'));
+    'Velg blokken og åpne «Innstillinger …» i Egenskaper for å legge inn en adresse, koordinater eller en OSM-lenke.'));
 }
 
 /**
@@ -194,9 +194,8 @@ const KART_CSS = `
   /* Usynlig bro ned til blokk-kanten, så hover overlever veien opp */
   padding-bottom: 8px; }
 .urd-kart-tools .urd-hint-chip { position: static; }
-.urd-kart-gear { font: 600 11px/1 system-ui, sans-serif; padding: 5px 9px; border-radius: 999px; cursor: pointer;
-  color: #fff; background: var(--urd-color-accent); border: 0;
-  opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+/* Config-bryteren er skjult: innstillingene åpnes fra blokkens Egenskaper. */
+.urd-kart-gear { display: none; }
 .urd-block:hover .urd-kart-gear, .urd-kart-gear:focus-visible,
 .urd-kart:has(.urd-kart-config.vis) .urd-kart-gear { opacity: 0.92; pointer-events: auto; }
 .urd-kart-config { position: absolute; top: -6px; right: 0; z-index: 6; width: min(340px, 92vw);
@@ -291,7 +290,7 @@ function renderKart(el, props, ctx) {
       const chip = attachHint(tools, {
         title: 'Kartblokken',
         lines: [
-          'Pek på blokken og klikk «⚙ Sted» og skriv en adresse (f.eks. «Storgata 1, Oslo»), koordinater («59.913, 10.739») eller lim inn en OSM-lenke',
+          'Velg blokken og åpne «Innstillinger …» i Egenskaper, og skriv en adresse (f.eks. «Storgata 1, Oslo»), koordinater («59.913, 10.739») eller lim inn en OSM-lenke',
           'Adressesøket slår opp stedet via OpenStreetMap når du klikker «Bruk» (virker på den publiserte siden; koordinater og lenker virker også lokalt)',
           'Still zoom (1 er verden, 19 er gatenivå) og høyden på kartet',
           'Kartet er OpenStreetMaps egen innbygging: ingen sporing, ingen informasjonskapsler',

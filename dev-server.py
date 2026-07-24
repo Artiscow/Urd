@@ -27,8 +27,27 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
     # modul-lastestorm (en tilkobling per fil ellers).
     protocol_version = 'HTTP/1.1'
 
+    # Betingede forespørsler strippes FØR send_head: ellers svarer
+    # SimpleHTTPRequestHandler «304 Not Modified» på If-Modified-Since, og da
+    # bruker nettleseren sin gamle kopi (motorfiler ble hengende igjen selv
+    # med no-store). Uten disse headerne sendes alltid en fersk 200.
+    def _strip_conditional(self):
+        for header in ('If-Modified-Since', 'If-None-Match', 'If-Range'):
+            while header in self.headers:
+                del self.headers[header]
+
+    def do_GET(self):
+        self._strip_conditional()
+        super().do_GET()
+
+    def do_HEAD(self):
+        self._strip_conditional()
+        super().do_HEAD()
+
     def end_headers(self):
-        self.send_header('Cache-Control', 'no-store')
+        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
         super().end_headers()
 
 

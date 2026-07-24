@@ -135,6 +135,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     sendDemoAnim(sectionId, blockId = null) {
       post({ type: 'urd-demo-anim', sectionId, blockId });
     },
+    /** Åpne en plugin-blokks innstillinger (config-panelet) i forhåndsvisningen. */
+    sendOpenConfig(blockId) {
+      post({ type: 'urd-open-block-config', blockId });
+    },
     destroy() {
       window.removeEventListener('message', listener);
     },

@@ -78,8 +78,8 @@ Fullførte punkter fra v0.2-v0.5 er ryddet bort ved versjonsslippene (0.3.0 17. 
 
 ## Bugs og (dårlige) funksjoner
 - Blokker - Plugins tillater ikke å legge til blokkene/elementene - å trykke på noen av kalendrene, skejma eller kart fungerer ikke. 
-- dobbelklikk meny forsvinner om man drar musen over en seksjon. Menyen skal stå helt til man klikker på noe annet eller velger en blokk i menyen.
-- Dra seksjon er litt buggy - La oss gjøre en fullstendig sjekk av den. Det må også legges til en tydelig måte å vise de forskjellige dra funksjonene på.
+- Nav sitter over Hero i sin egen seksjon, så gjennomsiktighet fungerer ikke når man er helt på toppen av siden. Nav burde være akkurat over toppen av Hero.
+- Kart-plugin har nå instillinger inne i egenskaper- må bygges om til at alle 'instillingene' er i egenskaper, ikke inne i "Instillinger" i egenskaper.
 
 ## Forslag og Ideer
 
@@ -87,6 +87,7 @@ Fullførte punkter fra v0.2-v0.5 er ryddet bort ved versjonsslippene (0.3.0 17. 
 
 ## Levert underveis i v0.6 (ryddes bort ved fase-slippet)
 
+- [x] Teksteditor «Office-linjen» + en stor bugfiks-runde (levert 0.6.31): to faste rader der størrelse/font/avstand gjelder MARKERT tekst (ren text-typo.js + tester, felt-typografi ut av Egenskaper, linjen forankret ved feltets topp, A-opp/A-ned og spinner-piler fjernet); fargevelgeren bevarer markeringen gjennom live-valg og «lekker» ikke ut av boksen (grid-kolonne-fiks); blokk-styling (Blokkfarge, Skyggefarge, fargbar «Temaets tynn»-kant, tykkelse-stepper, glass tones med blokkfargen); ALT redigerings-chrome følger admin-temaet; blokk-kontroller river ikke Egenskaper til seksjonen; dobbeltklikk-menyen står til klikk utenfor og ligger over seksjons-chromet; inngangsanimasjoner spiller når synlig og «Ton inn» toner selv med «Løft ved peker» (transition-konflikt fikset); plugin-innstillinger (Kilder/Sted/Skjema) flyttet fra flytende piller inn i Egenskaper («Innstillinger …» åpner config-panelet); blokkmenyen lukkes ved klikk utenfor; dev-server.py svarer aldri 304 lenger
 - [x] Bugfiks-runden fra eiers testing 24. juli (levert 0.6.30): dobbeltklikk-blokkmenyen (chip skjult, klikk-utenfor lukker, holder seg innenfor skjermen), editor-menyene følger admin-temaet (ny urd-admin-theme), «+ Ny seksjon»-chippen over dra-flatene, retningsvisende dra-cursor, typografi som tallfelt (S/M/L/XL og slidere fjernet), «Animasjon inn»/«Ved peker» skilt og kombinerbare (additivt hover-felt), nedtrekk følger ankeret ved rulling (rotårsaken til at «Løft ved peker» ikke lot seg velge), og cache-fri lokal testserver (dev-server.py)
 
 - [x] Logo/ikon for nettsider (levert i v0.5: nettstedsikon/favicon via site.icon i Tema-panelet, nav-logo via site.nav.logo med tekst/bilde/begge i Nav-panelet)
