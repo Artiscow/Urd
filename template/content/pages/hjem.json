@@ -105,26 +105,56 @@
           }
         },
         {
-          "id": "blk-8b78867b",
-          "type": "image",
-          "version": 1,
-          "decor": false,
+          "id": "blk-ef036d5f",
+          "type": "kalender",
+          "version": 3,
           "props": {
-            "src": "/media/bilde-ff8fdd0e.webp",
-            "alt": "",
-            "fit": "contain",
-            "radius": "md",
-            "href": null,
-            "saturate": 1
+            "sources": [
+              "https://calendar.google.com/calendar/ical/74a6de6d28a7a0ec383148bb2f67025d09712386e8b6add3d425fc0d9b5320f7%40group.calendar.google.com/public/basic.ics"
+            ],
+            "view": "list",
+            "limit": 4,
+            "showCategories": true,
+            "showSubscribe": false
           },
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 64.23,
-              "y": 64,
-              "w": 28.55,
-              "h": 320,
+              "x": 60.41,
+              "y": 96,
+              "w": 25.33,
+              "h": 299,
               "z": 2,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-00298c94",
+          "type": "text",
+          "version": 1,
+          "decor": false,
+          "props": {
+            "html": "<h3><br></h3>",
+            "align": "left",
+            "box": true,
+            "boxStyle": {
+              "glass": true,
+              "border": {
+                "color": "accent",
+                "width": 1
+              }
+            }
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 58.47,
+              "y": 64,
+              "w": 28.26,
+              "h": 368,
+              "z": 1,
               "rot": 0
             },
             "mobile": null
@@ -143,7 +173,131 @@
       "version": 1,
       "preset": "hva-skjer",
       "size": {
-        "minHeight": "544px"
+        "minHeight": "512px"
+      },
+      "grid": null,
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "gradient",
+            "version": 3,
+            "props": {
+              "kind": "linear",
+              "stops": [
+                {
+                  "color": "#980101",
+                  "share": 50
+                },
+                {
+                  "color": "#a54500",
+                  "share": 50
+                },
+                {
+                  "color": "#8f7500",
+                  "share": 50
+                },
+                {
+                  "color": "#3e8e00",
+                  "share": 50
+                },
+                {
+                  "color": "#00a19b",
+                  "share": 50
+                },
+                {
+                  "color": "#0028a1",
+                  "share": 50
+                },
+                {
+                  "color": "#6900a1",
+                  "share": 50
+                },
+                {
+                  "color": "#a1006e",
+                  "share": 50
+                }
+              ],
+              "angle": 305,
+              "x": 0.5,
+              "y": 0.5,
+              "animation": "pan-loop",
+              "opacity": 1
+            }
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "id": "blk-6f6ffd6e",
+          "type": "text",
+          "version": 1,
+          "decor": false,
+          "props": {
+            "html": "<h3>Overskrift</h3><p>Skriv <b><span style=\"font-size: 20px;\">innholdet</span></b> her.</p>",
+            "align": "left",
+            "box": true,
+            "boxStyle": {
+              "glass": true
+            }
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 9.74,
+              "y": 112,
+              "w": 28.26,
+              "h": 272,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-b971705e",
+          "type": "text",
+          "version": 1,
+          "decor": false,
+          "props": {
+            "html": "<h3><br></h3><p><br></p>",
+            "align": "left",
+            "box": true,
+            "boxStyle": {
+              "glass": true,
+              "border": {
+                "color": "#ffffff",
+                "width": 2
+              }
+            }
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 43.85,
+              "y": 80,
+              "w": 18.51,
+              "h": 352,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        }
+      ],
+      "responsive": {
+        "mobile": {
+          "mode": "auto",
+          "attention": null
+        }
+      }
+    },
+    {
+      "id": "sec-2111b8a4",
+      "version": 1,
+      "preset": "tom",
+      "size": {
+        "minHeight": "40vh"
       },
       "grid": null,
       "background": {
@@ -153,61 +307,12 @@
             "type": "color",
             "version": 1,
             "props": {
-              "color": "bg",
-              "opacity": 1
+              "value": "bg"
             }
           }
         ]
       },
       "blocks": [
-        {
-          "id": "blk-0ee7dc8a",
-          "type": "text",
-          "version": 1,
-          "props": {
-            "html": "<h2>Hva skjer</h2>",
-            "align": "left",
-            "box": false
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 6,
-              "y": 40,
-              "w": 24.77,
-              "h": 48,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        },
-        {
-          "id": "blk-ef036d5f",
-          "type": "kalender",
-          "version": 3,
-          "props": {
-            "sources": [
-              "https://calendar.google.com/calendar/ical/74a6de6d28a7a0ec383148bb2f67025d09712386e8b6add3d425fc0d9b5320f7%40group.calendar.google.com/public/basic.ics"
-            ],
-            "view": "list",
-            "limit": 4,
-            "showCategories": true,
-            "showSubscribe": false
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 6,
-              "y": 130,
-              "w": 34.9,
-              "h": 299,
-              "z": 2,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        },
         {
           "id": "blk-2d9ebc4e",
           "type": "kart",
@@ -220,8 +325,8 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 51.79,
-              "y": 95.5,
+              "x": 53.59,
+              "y": 43,
               "w": 39.41,
               "h": 368,
               "z": 3,
@@ -243,17 +348,32 @@
       "version": 1,
       "preset": "galleri",
       "size": {
-        "minHeight": "440px"
+        "minHeight": "704px"
       },
       "grid": null,
       "background": {
         "version": 1,
         "layers": [
           {
-            "type": "color",
-            "version": 1,
+            "type": "gradient",
+            "version": 3,
             "props": {
-              "value": "bg"
+              "kind": "radial",
+              "stops": [
+                {
+                  "color": "accent",
+                  "share": 0
+                },
+                {
+                  "color": "#000000",
+                  "share": 50
+                }
+              ],
+              "angle": 235,
+              "x": 0,
+              "y": 0.5,
+              "animation": "pulse",
+              "opacity": 1
             }
           }
         ]
@@ -319,7 +439,7 @@
               "x": 4,
               "y": 72,
               "w": 92,
-              "h": 320,
+              "h": 588,
               "z": 1,
               "rot": 0
             },
