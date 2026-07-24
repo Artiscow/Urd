@@ -695,8 +695,10 @@ function initTextToolbar() {
   });
   group.appendChild(level.el);
   // Typografi for HELE feltet (blokk-props, ikke markering): egen rad bak
-  // Aa-knappen, se buildTypoRow lenger ned.
-  btn('<span class="urd-tt-aa">Aa</span>', 'Font, størrelse og avstand for hele feltet', () => toggleTypoRow());
+  // Aa-knappen, se buildTypoRow lenger ned. Radens props hører til
+  // TEKSTBLOKKEN, så knappen skjules i andre blokkers rike felt
+  // (FAQ-svar); der ville den skrevet inerte props og re-rendret unødig.
+  const typoBtn = btn('<span class="urd-tt-aa">Aa</span>', 'Font, størrelse og avstand for hele feltet', () => toggleTypoRow());
 
   startGroup();
   btn('<b>F</b>', 'Fet (Ctrl+B)', () => exec('bold'));
@@ -1136,6 +1138,7 @@ function initTextToolbar() {
     if (target && target !== activeText) {
       activeText = target;
       activeBlockId = target.closest('.urd-block')?.dataset.blockId ?? null;
+      typoBtn.style.display = target.closest('.urd-block')?._urdCtx?.block?.type === 'text' ? '' : 'none';
       linkRow.classList.remove('vis');
       colorRow.classList.remove('vis');
       glyphRow.classList.remove('vis');
@@ -2057,7 +2060,7 @@ function enhanceBlock(el, block, section, grid, host) {
         // redigerer man teksten). En uvalgt blokk dras fritt også fra
         // teksten - klikk uten dra velger den, klikk igjen redigerer.
         if (target?.closest('.urd-text[contenteditable="true"]') && selectedBlockId === block.id && multiIds.size <= 1) return;
-        if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button, input, select, textarea, .urd-samling-editable, .urd-samling-image-edit, .urd-kal-config, .urd-skjema-config, .urd-kart-config')) return;
+        if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button, input, select, textarea, .urd-samling-editable, .urd-samling-image-edit, .urd-faq-q, .urd-kal-config, .urd-skjema-config, .urd-kart-config')) return;
         // Auto-mobil: første materialisering skal være et bevisst valg
         // (dra i ⠿), ikke et klikk på blokken.
         if (mobile && (section.responsive?.mobile?.mode ?? 'auto') !== 'manual') return;

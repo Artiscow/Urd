@@ -9,7 +9,7 @@
   import Dropdown from './lib/Dropdown.svelte';
   import IconEditor from './lib/IconEditor.svelte';
   // Editoren deler migreringskoden med motoren (samme fil, bundles inn).
-  import { liftPageFile, liftSiteFile } from '../../template/assets/engine/migrate.js';
+  import { lift, liftPageFile, liftSiteFile } from '../../template/assets/engine/migrate.js';
   import { validateManifest, satisfiesEngine } from '../../template/assets/engine/plugins.js';
   import { makeId } from '../../template/assets/engine/sections/presets.js';
   // Bakgrunns- og animasjonsdefinisjonene gjenbrukes for etiketter og
@@ -311,7 +311,10 @@
     await initPlugins();
     await initSamlinger();
     await checkAuth();
-    refreshBaseSha();
+    // Publiseringsgrunnlaget krever innlogging: uinnlogget ville kallet
+    // bare gitt 401-støy i konsollen. Etter innlogging (OAuth-redirect)
+    // lastes siden på nytt, så grunnlaget hentes da her.
+    if (auth) refreshBaseSha();
     // Oppsettsveiviseren: første besøk på en fersk klon (malens standard-
     // navn står fortsatt) og ikke avvist tidligere.
     // Eksplisitt signal (site.setup fra malen) med den gamle navnematchingen som fallback for eldre kloner.
@@ -487,6 +490,45 @@
     });
   }
 
+  /** Kortstilen (boxStyle, additiv): null-verdier i patchen fjerner feltet,
+   *  og et tomt objekt fjernes helt (= basisstilen). */
+  function setBoxStyle(patch) {
+    mutateBlock(`edit:${selectedBlock.blockId}:boxStyle`, (b) => {
+      const next = { ...(b.props.boxStyle ?? {}), ...patch };
+      for (const k of Object.keys(next)) {
+        if (next[k] == null) delete next[k];
+      }
+      if (Object.keys(next).length) b.props.boxStyle = next;
+      else delete b.props.boxStyle;
+    });
+  }
+
+  /* FAQ-blokken: spørsmålslisten redigeres her; tekstene også rett i preview. */
+
+  function setFaqItem(i, patch) {
+    mutateBlock(`edit:${selectedBlock.blockId}:faq${i}`, (b) => {
+      b.props.items[i] = { ...b.props.items[i], ...patch };
+    });
+  }
+
+  function addFaqItem() {
+    mutateBlock('faq-item', (b) => {
+      (b.props.items ??= []).push({ q: 'Nytt spørsmål?', a: '<p>Skriv svaret her.</p>' });
+    });
+  }
+
+  function removeFaqItem(i) {
+    mutateBlock('faq-item', (b) => { b.props.items.splice(i, 1); });
+  }
+
+  function moveFaqItem(i, dir) {
+    const j = i + dir;
+    mutateBlock('faq-item', (b) => {
+      if (j < 0 || j >= b.props.items.length) return;
+      [b.props.items[i], b.props.items[j]] = [b.props.items[j], b.props.items[i]];
+    });
+  }
+
   function setBlockDecor(on) {
     mutateBlock('decor', (b) => { b.decor = on; });
   }
@@ -512,7 +554,7 @@
   // teksteditor-linjens typografirad).
 
   /** Navn på blokktypene i panelet. */
-  const BLOCK_LABELS = { text: 'Tekst', button: 'Knapp', image: 'Bilde', shape: 'Form', video: 'Video', icon: 'Ikon', galleri: 'Galleri' };
+  const BLOCK_LABELS = { text: 'Tekst', button: 'Knapp', image: 'Bilde', shape: 'Form', video: 'Video', icon: 'Ikon', galleri: 'Galleri', faq: 'FAQ' };
   const SHAPE_KINDS = [
     ['line', 'Strek'], ['arrow', 'Pil'], ['circle', 'Sirkel'],
     ['rect', 'Rektangel'], ['triangle', 'Trekant'],
@@ -564,7 +606,7 @@
   function addBgLayer(type) {
     mutateSection('bg', (s) => {
       s.background ??= { version: 1, layers: [] };
-      s.background.layers.push({ type, version: 1, props: BG_DEFS[type].defaults() });
+      s.background.layers.push({ type, version: BG_DEFS[type].version ?? 1, props: BG_DEFS[type].defaults() });
     });
   }
 
@@ -587,17 +629,133 @@
     });
   }
 
-  function setGradientStop(i, stopIndex, value) {
-    mutateSection(`edit:bg-${activeSectionId}-${i}-stop${stopIndex}`, (s) => {
-      s.background.layers[i].props.stops[stopIndex] = value;
+  /* Gradient-editoren (lag-versjon 2: frie stopp + lineær/radiell).
+     Eldre lag (v1, rene fargestrenger) løftes for visning uten å røre
+     utkastet, og løftes I utkastet ved første gradient-endring. */
+
+  function gradientProps(layer) {
+    if ((layer.version ?? 1) >= gradientLayer.version) return layer.props;
+    // Snapshot før lift: migreringssteget structuredCloner props, som
+    // kaster på en $state-proxy (samme felle som postMessage).
+    const raw = $state.snapshot(layer);
+    return lift({ type: 'gradient', version: raw.version ?? 1, props: raw.props }, gradientLayer).props;
+  }
+
+  function mutateGradient(i, key, fn) {
+    mutateSection(key, (s) => {
+      const layer = s.background.layers[i];
+      if ((layer.version ?? 1) < gradientLayer.version) {
+        const res = lift({ type: 'gradient', version: layer.version ?? 1, props: $state.snapshot(layer.props) }, gradientLayer);
+        if (!res.ok) return;
+        layer.props = res.props;
+        layer.version = res.version;
+      }
+      fn(layer.props);
     });
+  }
+
+  function setGradProp(i, name, value) {
+    mutateGradient(i, `edit:bg-${activeSectionId}-${i}-${name}`, (p) => { p[name] = value; });
+  }
+
+  /** Formbytte nullstiller animasjonen om den ikke finnes for den nye formen. */
+  const GRAD_ANIMATIONS = {
+    linear: [['none', 'Ingen'], ['pan', 'Panorer frem og tilbake'], ['pan-loop', 'Panorer én vei (loop)'], ['rotate', 'Roter sakte']],
+    radial: [['none', 'Ingen'], ['pulse', 'Pulser'], ['orbit', 'Sving sakte i bane']],
+  };
+
+  function setGradKind(i, kind) {
+    mutateGradient(i, 'bg', (p) => {
+      p.kind = kind;
+      if (!GRAD_ANIMATIONS[kind].some(([id]) => id === (p.animation ?? 'none'))) p.animation = 'none';
+    });
+  }
+
+  function setGradStop(i, si, patch) {
+    mutateGradient(i, `edit:bg-${activeSectionId}-${i}-stop${si}`, (p) => {
+      p.stops[si] = { ...p.stops[si], ...patch };
+    });
+  }
+
+  /** Ny farge nederst i listen, med plass som en gjennomsnittsfarge. */
+  function addGradStop(i) {
+    mutateGradient(i, 'bg', (p) => {
+      const avg = Math.round(p.stops.reduce((a, s) => a + (Number(s.share) || 0), 0) / p.stops.length) || 50;
+      p.stops.push({ color: p.stops[p.stops.length - 1]?.color ?? '#ffffff', share: avg });
+    });
+  }
+
+  function removeGradStop(i, si) {
+    mutateGradient(i, 'bg', (p) => {
+      if (p.stops.length > 2) p.stops.splice(si, 1);
+    });
+  }
+
+  function reorderGradStop(i, from, to) {
+    mutateGradient(i, 'bg', (p) => {
+      const [moved] = p.stops.splice(from, 1);
+      p.stops.splice(to, 0, moved);
+    });
+  }
+
+  /** Pågående dra-omsortering av gradientfarger: {layer, from, insert}
+   *  eller null. insert er innsettingsplassen (0..antall), tegnet som en
+   *  strek over raden (eller under den siste). */
+  let stopDrag = $state(null);
+
+  /** Pekerbasert dra (ikke HTML5-dnd: den ga verken visuell indikator
+   *  eller pålitelig slipp på naboraden). Raden man drar dempes, og
+   *  innsettingsstreken følger pekeren; slipp utfører ETT angre-steg. */
+  function startStopDrag(event, layerI, si) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    const container = event.currentTarget.closest('.bg-layer');
+    const row = event.currentTarget.closest('.grad-stop');
+    stopDrag = { layer: layerI, from: si, insert: si };
+
+    // Spøkelsesrad: en kopi av hele raden (med fargen) følger pekeren,
+    // så man ser HVA man drar, ikke bare hvor det lander. Inline-stil,
+    // siden kopien bor på document.body utenfor komponent-treet.
+    const rect = row.getBoundingClientRect();
+    const grabY = event.clientY - rect.top;
+    const ghost = row.cloneNode(true);
+    ghost.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;`
+      + `width:${rect.width}px;display:flex;align-items:center;gap:0.4rem;`
+      + 'pointer-events:none;z-index:1000;opacity:0.92;padding:2px 4px;'
+      + 'background:var(--urd-color-surface);border:1px solid var(--urd-color-accent);border-radius:6px;';
+    document.body.appendChild(ghost);
+
+    const move = (ev) => {
+      ghost.style.top = `${ev.clientY - grabY}px`;
+      const rects = [...container.querySelectorAll('.grad-stop')].map((r) => r.getBoundingClientRect());
+      let insert = rects.length;
+      for (let k = 0; k < rects.length; k++) {
+        if (ev.clientY < rects[k].top + rects[k].height / 2) {
+          insert = k;
+          break;
+        }
+      }
+      stopDrag = { ...stopDrag, insert };
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      ghost.remove();
+      const drag = stopDrag;
+      stopDrag = null;
+      if (!drag) return;
+      const to = drag.insert > drag.from ? drag.insert - 1 : drag.insert;
+      if (to !== drag.from) reorderGradStop(drag.layer, drag.from, to);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
   }
 
   /** Bytt lagtype i etterkant (laget beholder plassen, props nullstilles). */
   function changeBgLayerType(i, type) {
     mutateSection('bg', (s) => {
       if (s.background.layers[i].type === type) return;
-      s.background.layers[i] = { type, version: 1, props: BG_DEFS[type].defaults() };
+      s.background.layers[i] = { type, version: BG_DEFS[type].version ?? 1, props: BG_DEFS[type].defaults() };
     });
   }
 
@@ -2108,6 +2266,18 @@
     icon: { type: 'icon', decor: true, props: { glyph: '★', color: 'accent', size: 48 }, w: 8, h: 64 },
     samling: { type: 'samling', props: { collection: null, view: 'cards', limit: 6, newestFirst: true }, w: 90, h: 200 },
     galleri: { type: 'galleri', props: { images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5 }, w: 90, h: 320 },
+    faq: {
+      type: 'faq',
+      props: {
+        items: [
+          { q: 'Hvordan blir jeg medlem?', a: '<p>Skriv svaret her.</p>' },
+          { q: 'Når er dere åpne?', a: '<p>Skriv svaret her.</p>' },
+          { q: 'Hvordan kontakter jeg dere?', a: '<p>Skriv svaret her.</p>' },
+        ],
+        multi: false,
+      },
+      w: 50, h: 220,
+    },
   };
 
   function buildBlock(kind) {
@@ -3142,6 +3312,8 @@
                   onclick={() => addBlock('icon')}>Ikon</button>
                 <button class="ghost" title="Nyheter/oppslag/arkiv fra en samling (Samlinger-panelet)"
                   onclick={() => addBlock('samling')}>Samling</button>
+                <button class="ghost" title="Spørsmål og svar der svaret foldes ut ved klikk"
+                  onclick={() => addBlock('faq')}>FAQ</button>
                 <details class="group">
                   <summary>Galleri</summary>
                   <div class="group-items">
@@ -3255,25 +3427,58 @@
                         <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
                           oninput={(e) => setBgProp(i, 'opacity', Number(e.target.value))} />
                       {:else if layer.type === 'gradient'}
-                        <label>Fra
-                          <ColorPicker value={layer.props.stops[0]} tokens={themeSwatches()}
-                            label="Gradient fra" onchange={(hex) => setGradientStop(i, 0, hex)} /></label>
-                        <label>Til
-                          <ColorPicker value={layer.props.stops[layer.props.stops.length - 1]} tokens={themeSwatches()}
-                            label="Gradient til" onchange={(hex) => setGradientStop(i, layer.props.stops.length - 1, hex)} /></label>
-                        <label>Vinkel
-                          <span class="gridmenu-value">{layer.props.angle}°</span></label>
-                        <input type="range" min="0" max="360" step="5" value={layer.props.angle}
-                          oninput={(e) => setBgProp(i, 'angle', Number(e.target.value))} />
+                        {@const g = gradientProps(layer)}
+                        {@const shareSum = g.stops.reduce((a, s) => a + Math.max(0, Number(s.share) || 0), 0)}
+                        <label>Form
+                          <Dropdown value={g.kind ?? 'linear'}
+                            options={[['linear', 'Lineær'], ['radial', 'Radiell (fra et punkt)']]}
+                            onchange={(v) => setGradKind(i, v)} /></label>
+                        {#each g.stops as stop, si (si)}
+                          <span class="nav-line grad-stop"
+                            class:dragging={stopDrag?.layer === i && stopDrag.from === si}
+                            class:drop-above={stopDrag?.layer === i && stopDrag.insert === si}
+                            class:drop-below={stopDrag?.layer === i && stopDrag.insert === g.stops.length && si === g.stops.length - 1}>
+                            <span class="grad-grip" title="Dra for å endre fargenes rekkefølge"
+                              onpointerdown={(e) => startStopDrag(e, i, si)}>
+                              <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.4"/><circle cx="11" cy="3" r="1.4"/><circle cx="5" cy="8" r="1.4"/><circle cx="11" cy="8" r="1.4"/><circle cx="5" cy="13" r="1.4"/><circle cx="11" cy="13" r="1.4"/></svg>
+                            </span>
+                            <ColorPicker value={stop.color} tokens={themeSwatches()}
+                              label="Fargen" onchange={(hex) => setGradStop(i, si, { color: hex })} />
+                            <input type="range" class="tb-grow" min="0" max="100" step="1" value={stop.share ?? 50}
+                              title="Hvor mye plass fargen tar; 0 gir en hard kant mot nabofargen"
+                              oninput={(e) => setGradStop(i, si, { share: Number(e.target.value) })} />
+                            <span class="gridmenu-value">{shareSum > 0 ? Math.round((Math.max(0, Number(stop.share) || 0) / shareSum) * 100) : Math.round(100 / g.stops.length)}%</span>
+                            {#if g.stops.length > 2}
+                              <button class="ghost row-tool" title="Fjern fargen"
+                                onclick={() => removeGradStop(i, si)}>{@html ICONS.cross}</button>
+                            {/if}
+                          </span>
+                        {/each}
+                        <button class="ghost action" title="Ny farge nederst i listen; dra i håndtaket for rekkefølgen"
+                          onclick={() => addGradStop(i)}>+ Legg til farge</button>
+                        {#if (g.kind ?? 'linear') === 'radial'}
+                          <label>Sentrum X
+                            <span class="gridmenu-value">{Math.round((g.x ?? 0.5) * 100)}%</span></label>
+                          <input type="range" min="0" max="1" step="0.05" value={g.x ?? 0.5}
+                            oninput={(e) => setGradProp(i, 'x', Number(e.target.value))} />
+                          <label>Sentrum Y
+                            <span class="gridmenu-value">{Math.round((g.y ?? 0.5) * 100)}%</span></label>
+                          <input type="range" min="0" max="1" step="0.05" value={g.y ?? 0.5}
+                            oninput={(e) => setGradProp(i, 'y', Number(e.target.value))} />
+                        {:else}
+                          <label>Vinkel
+                            <span class="gridmenu-value">{g.angle}°</span></label>
+                          <input type="range" min="0" max="360" step="5" value={g.angle}
+                            oninput={(e) => setGradProp(i, 'angle', Number(e.target.value))} />
+                        {/if}
                         <label>Styrke
-                          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
-                        <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
-                          oninput={(e) => setBgProp(i, 'opacity', Number(e.target.value))} />
-                        <label class="gridmenu-snap" title="Bakgrunnen panorerer sakte i loop - uavhengig av Animasjon-valget under, som gjelder innholdet">
-                          <input type="checkbox" checked={Boolean(layer.props.animate)}
-                            onchange={(e) => setBgProp(i, 'animate', e.target.checked)} />
-                          Panorer sakte (loop)
-                        </label>
+                          <span class="gridmenu-value">{Math.round((g.opacity ?? 1) * 100)}%</span></label>
+                        <input type="range" min="0.05" max="1" step="0.05" value={g.opacity ?? 1}
+                          oninput={(e) => setGradProp(i, 'opacity', Number(e.target.value))} />
+                        <label title="Gjelder selve gradienten - uavhengig av Animasjon-valget nederst, som gjelder innholdet">Bevegelse
+                          <Dropdown value={g.animation ?? 'none'}
+                            options={GRAD_ANIMATIONS[(g.kind ?? 'linear') === 'radial' ? 'radial' : 'linear']}
+                            onchange={(v) => setGradProp(i, 'animation', v)} /></label>
                       {:else if layer.type === 'glow'}
                         <label>Farge
                           <ColorPicker value={layer.props.color} tokens={themeSwatches()}
@@ -3651,6 +3856,32 @@
   {/if}
 </div>
 
+{#snippet kortstilUI()}
+  {@const bs = selectedBlock.props.boxStyle ?? {}}
+  <label>Skygge
+    <Dropdown value={bs.shadow ?? ''}
+      options={[['', 'Ingen'], ['soft', 'Myk'], ['strong', 'Tydelig']]}
+      onchange={(v) => setBoxStyle({ shadow: v || null })} /></label>
+  <label>Kantlinje
+    <Dropdown value={bs.border === 'none' ? 'none' : bs.border ? 'custom' : ''}
+      options={[['', 'Temaets (tynn)'], ['none', 'Ingen'], ['custom', 'Egen farge']]}
+      onchange={(v) => setBoxStyle({ border: v === 'custom' ? { color: 'accent', width: 1 } : v || null })} /></label>
+  {#if bs.border && bs.border !== 'none'}
+    <label>Kantfarge
+      <ColorPicker value={bs.border.color ?? 'accent'} tokens={themeSwatches()}
+        label="Kantlinjens farge" onchange={(hex) => setBoxStyle({ border: { ...bs.border, color: hex } })} /></label>
+    <label>Tykkelse
+      <span class="gridmenu-value">{bs.border.width ?? 1} px</span></label>
+    <input type="range" min="1" max="4" step="1" value={bs.border.width ?? 1}
+      oninput={(e) => setBoxStyle({ border: { ...bs.border, width: Number(e.target.value) } })} />
+  {/if}
+  <label class="gridmenu-snap" title="Frostet glass: gjennomskinnelig kort med uskarp bakgrunn - best over bilder og gradienter">
+    <input type="checkbox" checked={Boolean(bs.glass)}
+      onchange={(e) => setBoxStyle({ glass: e.target.checked || null })} />
+    Glass-effekt (frostet)
+  </label>
+{/snippet}
+
 {#snippet blockPropsUI()}
 
   {#if selectedBlock.type === 'text'}
@@ -3663,6 +3894,9 @@
         onchange={(e) => setBlockProp('box', e.target.checked)} />
       Tekstboks (kort med bakgrunn)
     </label>
+    {#if selectedBlock.props.box}
+      {@render kortstilUI()}
+    {/if}
     <label>Font
       <Dropdown value={selectedBlock.props.font ?? ''}
         options={[['', 'Arv fra tema'], ...FONT_STACKS.map(([name, value]) => [value, name])]}
@@ -3698,6 +3932,28 @@
         oninput={(e) => setBlockProp('letterSpacing', Number(e.target.value) || null)} />
     </span>
     <p class="panel-hint">Font, størrelse og avstandene gjelder hele feltet. Marker tekst i blokken for fet, kursiv, overskrifter og farge.</p>
+  {:else if selectedBlock.type === 'faq'}
+    <label class="gridmenu-snap" title="Ellers lukkes forrige svar når et nytt åpnes">
+      <input type="checkbox" checked={Boolean(selectedBlock.props.multi)}
+        onchange={(e) => setBlockProp('multi', e.target.checked)} />
+      Flere svar åpne samtidig
+    </label>
+    <p class="panel-strong">Spørsmål</p>
+    {#each selectedBlock.props.items ?? [] as item, i (i)}
+      <span class="nav-line">
+        <input value={item.q} title="Spørsmålsteksten (svaret skrives rett i blokken)"
+          onchange={(e) => setFaqItem(i, { q: e.target.value })} />
+        <span class="row-tools">
+          <button class="ghost row-tool" onclick={() => moveFaqItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+          <button class="ghost row-tool" onclick={() => moveFaqItem(i, 1)}
+            disabled={i === (selectedBlock.props.items?.length ?? 0) - 1}>{@html ICONS.down}</button>
+          <button class="ghost row-tool" title="Fjern spørsmålet" onclick={() => removeFaqItem(i)}>{@html ICONS.cross}</button>
+        </span>
+      </span>
+    {/each}
+    <button class="ghost action" onclick={addFaqItem}>+ Nytt spørsmål</button>
+    <p class="panel-strong">Kortstil</p>
+    {@render kortstilUI()}
   {:else if selectedBlock.type === 'button'}
     <label>Tekst
       <input value={selectedBlock.props.label}
@@ -4531,6 +4787,44 @@
     flex-shrink: 0;
     /* Strekk til radens høyde, så knappene blir like høye som feltet */
     align-self: stretch;
+  }
+
+  /* Gradientfargenes dra-håndtak: rekkefølgen dras med pekeren
+     (startStopDrag); raden dempes og innsettingsstreken følger med */
+  .grad-grip {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    cursor: grab;
+    opacity: 0.55;
+    touch-action: none;
+  }
+
+  .grad-grip:hover {
+    opacity: 1;
+  }
+
+  .grad-stop {
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .grad-stop.dragging {
+    opacity: 0.45;
+  }
+
+  .grad-stop.drop-above {
+    box-shadow: 0 -2px 0 0 var(--urd-color-accent);
+  }
+
+  .grad-stop.drop-below {
+    box-shadow: 0 2px 0 0 var(--urd-color-accent);
+  }
+
+  /* Kompakte fargeknapper i gradientradene (samme høyde som radknappene) */
+  .grad-stop :global(.cp-swatch) {
+    width: 1.7rem;
+    height: 1.7rem;
   }
 
   .row-tool {

@@ -18,14 +18,28 @@
         "layers": [
           {
             "type": "gradient",
-            "version": 1,
+            "version": 3,
             "props": {
+              "kind": "radial",
               "stops": [
-                "#0b0e14",
-                "#1a1030"
+                {
+                  "color": "#1a1030",
+                  "share": 27.5
+                },
+                {
+                  "color": "#0b0e14",
+                  "share": 50
+                },
+                {
+                  "color": "#05060a",
+                  "share": 22.5
+                }
               ],
               "angle": 160,
-              "animate": false
+              "x": 0.3,
+              "y": 0.2,
+              "animation": "none",
+              "opacity": 1
             }
           },
           {
@@ -458,6 +472,106 @@
           "attention": null
         }
       }
+    },
+    {
+      "id": "sec-faq-demo",
+      "version": 1,
+      "preset": null,
+      "size": {
+        "minHeight": "480px"
+      },
+      "grid": null,
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "gradient",
+            "version": 3,
+            "props": {
+              "kind": "linear",
+              "stops": [
+                {
+                  "color": "#131022",
+                  "share": 50
+                },
+                {
+                  "color": "#0b0e14",
+                  "share": 50
+                }
+              ],
+              "angle": 180,
+              "x": 0.5,
+              "y": 0.5,
+              "animation": "none",
+              "opacity": 1
+            }
+          }
+        ]
+      },
+      "animation": null,
+      "blocks": [
+        {
+          "id": "blk-faq-heading",
+          "type": "text",
+          "version": 1,
+          "decor": false,
+          "props": {
+            "html": "<h2>Ofte stilte spørsmål</h2>",
+            "align": "center"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 25,
+              "y": 32,
+              "w": 50,
+              "h": 48,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-faq-demo",
+          "type": "faq",
+          "version": 1,
+          "decor": false,
+          "props": {
+            "items": [
+              {
+                "q": "Hva er Urd?",
+                "a": "<p>En nettsidebygger der repoet ditt er nettsiden. Ingen server, ingen avhengigheter.</p>"
+              },
+              {
+                "q": "Koster det noe?",
+                "a": "<p>Nei. Alt er åpen kildekode, og siden kan hostes gratis.</p>"
+              },
+              {
+                "q": "Hvordan kommer jeg i gang?",
+                "a": "<p>Klon malen, åpne <strong>/admin</strong>, og bygg siden i nettleseren.</p>"
+              }
+            ],
+            "multi": false,
+            "boxStyle": {
+              "shadow": "soft",
+              "glass": true
+            }
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 25,
+              "y": 104,
+              "w": 50,
+              "h": 220,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        }
+      ]
     },
     {
       "id": "sec-e1e81eb1",

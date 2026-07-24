@@ -4,6 +4,7 @@
  * samme tillitsmodell som at eieren kan redigere filene i repoet direkte.
  */
 import { stripActiveContent } from '../sanitize.js';
+import { boxStyleCss } from '../box-style.js';
 
 export const textBlock = {
   version: 1,
@@ -12,7 +13,7 @@ export const textBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el Blokk-elementet (posisjonert av render.js)
-   * @param {{html: string, align: string, box?: boolean, font?: string, size?: number, lineHeight?: number, letterSpacing?: number}} props
+   * @param {{html: string, align: string, box?: boolean, boxStyle?: object, font?: string, size?: number, lineHeight?: number, letterSpacing?: number}} props
    * @param {object} ctx Render-kontekst
    */
   render(el, props, ctx) {
@@ -25,6 +26,8 @@ export const textBlock = {
     // data mangler det og rendres som før.
     content.className = props.box ? 'urd-text urd-text-box' : 'urd-text';
     content.style.cssText = 'width:100%;min-height:100%;';
+    // Valgfri kortstil (additivt; tomt = basisstilen i .urd-text-box).
+    if (props.box) Object.assign(content.style, boxStyleCss(props.boxStyle));
     content.style.textAlign = props.align;
     // Valgfri font/størrelse per tekstblokk (additivt; tomt = arv fra tema).
     if (props.font) content.style.fontFamily = props.font;

@@ -23,6 +23,7 @@ import { videoBlock } from './blocks/video.js';
 import { iconBlock } from './blocks/icon.js';
 import { samlingBlock } from './blocks/samling.js';
 import { galleriBlock } from './blocks/galleri.js';
+import { faqBlock } from './blocks/faq.js';
 import { colorLayer } from './backgrounds/color.js';
 import { gradientLayer } from './backgrounds/gradient.js';
 import { glowLayer } from './backgrounds/glow.js';
@@ -54,6 +55,7 @@ function registerCore() {
   Urd.blocks.define('icon', iconBlock);
   Urd.blocks.define('samling', samlingBlock);
   Urd.blocks.define('galleri', galleriBlock);
+  Urd.blocks.define('faq', faqBlock);
   Urd.backgrounds.define('color', colorLayer);
   Urd.backgrounds.define('gradient', gradientLayer);
   Urd.backgrounds.define('glow', glowLayer);

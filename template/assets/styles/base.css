@@ -133,6 +133,78 @@ html {
   padding: 1rem 1.25rem;
 }
 
+/* FAQ-akkordeonen: spørsmålskort (deler .urd-text-box-basisstilen) der
+   svaret foldes ut med grid-rows-overgangen (0fr -> 1fr). */
+.urd-faq {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.urd-faq-item {
+  padding: 0.75rem 1.25rem;
+}
+
+.urd-faq-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.urd-faq-q {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.urd-faq-toggle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--urd-color-text);
+  cursor: pointer;
+}
+
+.urd-faq-toggle svg {
+  transition: transform 0.25s ease;
+}
+
+.urd-faq-item.open .urd-faq-toggle svg {
+  transform: rotate(180deg);
+}
+
+.urd-faq-a {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
+}
+
+.urd-faq-item.open .urd-faq-a {
+  grid-template-rows: 1fr;
+}
+
+.urd-faq-a > .urd-text {
+  overflow: hidden;
+}
+
+.urd-faq-item.open .urd-faq-a > .urd-text {
+  padding-top: 0.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .urd-faq-a,
+  .urd-faq-toggle svg {
+    transition: none;
+  }
+}
+
 /* Formateringslinjen for tekstfelt (kun preview-modus): vises over
    blokken så lenge feltet redigeres */
 .urd-text-toolbar {
@@ -2498,8 +2570,66 @@ body.urd-marqueeing {
   to { background-position: 100% 100%; }
 }
 
+/* Én-veis panorering: sirkulær gjentakende gradient (siste farge glir
+   tilbake til første) på en oversized løper som forskyves nøyaktig én
+   periode langs gradientaksen per runde (px-mål fra loopGeometry i
+   gradient.js) - sømløst for enhver vinkel eieren setter. Verten
+   klipper, så løperen aldri stikker ut av seksjonen. */
+.urd-bg-loop-host {
+  overflow: hidden;
+}
+
+.urd-bg-loop-runner {
+  position: absolute;
+  inset: 0;
+  animation: urd-bg-loop 30s linear infinite;
+}
+
+@keyframes urd-bg-loop {
+  to { transform: translate(var(--urd-loop-dx, 0px), var(--urd-loop-dy, 0px)); }
+}
+
+/* Rotasjon: vinkelen spinner via den registrerte --urd-grad-spin
+   (CSS.registerProperty i gradient.js); uten støtte står den stille */
+.urd-bg-rotate {
+  animation: urd-bg-rotate 40s linear infinite;
+}
+
+@keyframes urd-bg-rotate {
+  to { --urd-grad-spin: 360deg; }
+}
+
+/* Pulsering (radiell): styrken puster rundt lagets egen opacity;
+   0/100 %-rammene arver inline-verdien, så pusten alltid starter der */
+.urd-bg-pulse {
+  animation: urd-bg-pulse 7s ease-in-out infinite;
+}
+
+@keyframes urd-bg-pulse {
+  50% { opacity: calc(var(--urd-bg-op, 1) * 0.45); }
+}
+
+/* Bane (radiell): 200 %-lerret der basisposisjonen holder sentrum på
+   plass (satt av gradientRender), og banen svinger rundt den */
+.urd-bg-orbit {
+  background-size: 200% 200%;
+  background-repeat: no-repeat;
+  animation: urd-bg-orbit 26s ease-in-out infinite;
+}
+
+@keyframes urd-bg-orbit {
+  0%, 100% { background-position: calc(var(--urd-bg-px, 50%) + 4%) var(--urd-bg-py, 50%); }
+  25% { background-position: var(--urd-bg-px, 50%) calc(var(--urd-bg-py, 50%) + 4%); }
+  50% { background-position: calc(var(--urd-bg-px, 50%) - 4%) var(--urd-bg-py, 50%); }
+  75% { background-position: var(--urd-bg-px, 50%) calc(var(--urd-bg-py, 50%) - 4%); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .urd-bg-animate {
+  .urd-bg-animate,
+  .urd-bg-loop-runner,
+  .urd-bg-rotate,
+  .urd-bg-pulse,
+  .urd-bg-orbit {
     animation: none;
   }
 }
