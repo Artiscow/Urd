@@ -2,6 +2,13 @@
 
 Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren stryker herfra** når noe er testet; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert.
 
+### Testrunde-batch (0.6.28): utkast-fiksene («Upubliserte endringer» av seg selv / etter angring)
+
+- [ ] Åpne admin på en nettopp publisert side UTEN å røre noe: ingen «Upubliserte endringer», ingen Forkast-knapp, ingen urd-draft-nøkler i localStorage (målt rotårsak: datablokkenes autovekst skrev målt høyde inn i utkastet ved første rendering; målinger bokføres nå i både utkast og sammenligningsgrunnlag og utgjør aldri alene en endring)
+- [ ] Gjør en ekte endring: merket og Forkast-knappen kommer; Forkast utkast (to klikk) fjerner BEGGE varig - de kommer ikke tilbake ved scrolling, sidebytte eller ny lasting
+- [ ] ANGRE alt du gjorde (Ctrl+Z): merket og Forkast-knappen forsvinner når tilstanden faktisk er lik publisert; det samme gjelder MANUELL tilbakestilling (flytt en blokk ned og så opp igjen - piltaster rører ikke lenger aksen som ikke flyttes, som før etterlot en usynlig avrunding av x)
+- [ ] Forkast-knappen vises nå kun når det finnes utkast, og står til HØYRE for «Upubliserte endringer»-merket (flyttet fra høyresiden ved Publiser); Publiser står som før men er deaktivert uten utkast
+
 ### Testrunde-batch (0.6.27): multimarkering (M6 batch C del 2)
 
 - [ ] Marquee: dra en ramme på tom seksjonsflate; alle blokker rammen berører (delvis holder) blir utvalget, med stiplet markering per blokk og en flytende verktøylinje («N valgt») over utvalget; klikk uten dra virker som før

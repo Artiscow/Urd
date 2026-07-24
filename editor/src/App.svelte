@@ -1907,8 +1907,21 @@
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     const block = section?.blocks.find((b) => b.id === msg.blockId);
     if (!block?.frames?.desktop || block.frames.desktop.h === msg.h) return;
-    pushHistory(`edit:${msg.blockId}`);
+    // Autovekst er en MÅLING, ikke en redigering: datablokker melder
+    // høyden sin ved HVER rendering, og målingen varierer med innhold,
+    // feed-svar og vindu. Målingen bokføres derfor i BÅDE utkastet og
+    // sammenligningsgrunnlaget, så den aldri alene utgjør «upubliserte
+    // endringer» (eiers testfunn 23. juli 2026: merket dukket opp av seg
+    // selv ved lasting, kom tilbake etter Forkast utkast, og ble stående
+    // etter at alt var angret - målte høyder skilte utkast fra publisert).
+    store.amendBaseline((base) => {
+      const s = base.sections.find((x) => x.id === msg.sectionId);
+      const b = s?.blocks.find((x) => x.id === msg.blockId);
+      if (b?.frames?.desktop) b.frames.desktop.h = msg.h;
+    });
+    if (store.hasDraft()) pushHistory(`edit:${msg.blockId}`);
     block.frames.desktop.h = msg.h;
+    // save() rydder utkastnøkkelen når målingen var eneste forskjell.
     store.save();
     updateDirty();
     if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
@@ -2693,6 +2706,9 @@
 
       {#if dirty}
         <span class="badge">Upubliserte endringer</span>
+        <button class="ghost discard-btn" class:armed={discardArmed} onclick={requestDiscard}
+          title={discardArmed ? 'Klikk igjen for å slette alle utkastene' : 'Slett utkastene og gå tilbake til publisert versjon'}
+        >{discardArmed ? 'Sikker?' : 'Forkast utkast'}</button>
       {/if}
     </span>
 
@@ -2711,9 +2727,6 @@
         <a class="ghost" href="/api/github/login">Logg inn med GitHub</a>
       {/if}
       <a class="ghost" href={pageEntry()?.path ?? '/'} target="_blank" rel="noopener">Se siden ↗</a>
-      <button class="ghost discard-btn" class:armed={discardArmed} onclick={requestDiscard} disabled={!dirty}
-        title={discardArmed ? 'Klikk igjen for å slette alle utkastene' : 'Slett utkastene og gå tilbake til publisert versjon'}
-      >{discardArmed ? 'Sikker?' : 'Forkast utkast'}</button>
       <button class="primary" onclick={publish} disabled={!dirty}>Publiser</button>
     {/if}
     </span>

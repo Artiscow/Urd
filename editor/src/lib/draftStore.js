@@ -17,7 +17,7 @@ export function createDraftStore(key, loadPublished) {
   // kontrakt, og JSON tåler Svelte 5-reaktive proxier (structuredClone
   // kaster DataCloneError på dem).
   const published = loadPublished();
-  const baseline = JSON.stringify(published);
+  let baseline = JSON.stringify(published);
 
   let data = JSON.parse(baseline);
   const raw = localStorage.getItem(key);
@@ -52,6 +52,17 @@ export function createDraftStore(key, loadPublished) {
     replace(next) {
       data = next;
       return data;
+    },
+    /**
+     * Juster sammenligningsgrunnlaget: for MÅLINGER (datablokkenes
+     * autovekst) som skal speiles i både utkast og baseline, slik at de
+     * aldri alene utgjør «upubliserte endringer». Mutatoren får en kopi
+     * av baseline-objektet; endringen skrives tilbake.
+     */
+    amendBaseline(fn) {
+      const base = JSON.parse(baseline);
+      fn(base);
+      baseline = JSON.stringify(base);
     },
     hasDraft() {
       return localStorage.getItem(key) !== null;

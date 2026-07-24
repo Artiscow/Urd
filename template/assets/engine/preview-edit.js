@@ -1495,12 +1495,14 @@ window.addEventListener('keydown', (event) => {
   if (multiIds.size > 1) {
     // Hele utvalget flyttes med samme delta, klemt så gruppen holder
     // seg innenfor bredden; en skur av trykk blir ett angre-steg.
+    // Aksen som IKKE flyttes røres aldri (avrunding av en urørt x/y
+    // ville etterlatt en usynlig endring som holdt utkastet skittent).
     const parts = selectedEls().map((e) => ({ el: e, ctx: e._urdCtx })).filter((p) => p.ctx);
-    const d = groupDelta(parts.map((p) => p.ctx.block.frames.desktop), r1(dir[0] * stepPx * pctPerPx), 0);
+    const d = dir[0] ? groupDelta(parts.map((p) => p.ctx.block.frames.desktop), r1(dir[0] * stepPx * pctPerPx), 0) : { dx: 0 };
     for (const p of parts) {
       const frame = { ...p.ctx.block.frames.desktop };
-      frame.x = r1(frame.x + d.dx);
-      frame.y = frame.y + dir[1] * stepPx;
+      if (dir[0]) frame.x = r1(frame.x + d.dx);
+      if (dir[1]) frame.y = frame.y + dir[1] * stepPx;
       p.ctx.block.frames.desktop = frame;
       Object.assign(p.el.style, frameToCss(frame));
       post({ type: 'urd-move', sectionId: p.ctx.section.id, blockId: p.ctx.block.id, frame, frameKey: 'desktop', coalesce: true, groupKey: 'multi-arrow' });
@@ -1510,8 +1512,8 @@ window.addEventListener('keydown', (event) => {
   }
 
   const frame = { ...ctx.block.frames.desktop };
-  frame.x = clamp(r1(frame.x + dir[0] * stepPx * pctPerPx), 0, r1(100 - frame.w));
-  frame.y = frame.y + dir[1] * stepPx;
+  if (dir[0]) frame.x = clamp(r1(frame.x + dir[0] * stepPx * pctPerPx), 0, r1(100 - frame.w));
+  if (dir[1]) frame.y = frame.y + dir[1] * stepPx;
   ctx.block.frames.desktop = frame;
   Object.assign(el.style, frameToCss(frame));
   // coalesce: en skur av piltastetrykk blir ett angre-steg.
