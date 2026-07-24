@@ -23,9 +23,9 @@ git clone https://github.com/<eier>/Urd.git
 cd Urd
 
 # Se nettsiden lokalt (ingen Node nødvendig):
-cd template && python3 -m http.server 8000
-# åpne http://localhost:8000
-# (andre sider lokalt: http://localhost:8000/?page=om-oss)
+python3 dev-server.py 8000
+# åpne http://localhost:8000/admin
+# dev-server.py serverer template/ med caching AV: uten den gjetter nettleseren fil-ferskhet og forhåndsvisningens motorfiler blir hengende igjen selv ved hard reload. `cd template && python3 -m http.server` virker fortsatt, men krever manuell cache-tømming etter motorendringer.
 
 # Editor-utvikling (krever Node):
 cd editor
@@ -47,8 +47,7 @@ Første `npm install` lager `package-lock.json`; den skal committes, slik at all
 ## Repo-kart
 
 ```
-docs/       Dokumentasjon. VISJON (hvorfor), ARKITEKTUR (hvordan),
-            SKJEMA (datakontrakten), VEIKART (faser), BACKLOG (oppgaver),
+docs/       Dokumentasjon. VISJON (hvorfor), ARKITEKTUR (hvordan), SKJEMA (datakontrakten), VEIKART (faser), BACKLOG (oppgaver),
             adr/ (beslutninger med begrunnelse)
 schema/     JSON Schema: maskinlesbar utgave av SKJEMA.md
 editor/     Svelte-kildekoden til editoren. Eneste sted med npm.

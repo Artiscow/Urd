@@ -127,6 +127,7 @@ En seksjon er alltid den samme generiske containeren - egen størrelse, egen bak
 - **`frames.mobile: null`** betyr auto-avledet mobil-layout: motoren rendrer blokkene som vanlig dokumentflyt i én kolonne i leserekkefølge (sortert på desktop-`y`, deretter `x`); tekst får naturlig høyde. Et objekt er en manuell overstyring.
 - **`decor`** (valgfri, standard false): dekor-blokker (typisk streker/sirkler) utelates fra auto-avledet mobil-layout. Nye formblokker får `decor: true` fra paletten.
 - **`animation`** (valgfri): `{ "type": "fade-in", "version": 1, "props": { "duration": 600, "delay": 0 } }` - animasjoner er registertyper med samme migreringskontrakt. Kjernetyper (v0.5): `fade-in`, `slide-up`, `zoom-in` (inngang, spilles ved scroll-inn hos besøkende; editorens preview viser slutt-tilstanden) og `hover-lift`. `prefers-reduced-motion` respekteres. Seksjoner har samme valgfrie `animation`-felt (additivt fra v0.5). Ukjent animasjonstype viser innholdet uanimert - animasjon velter aldri en side.
+- **`hover`** (valgfri, additiv fra v0.6): pekereffekt i samme form som `animation` (f.eks. `{ "type": "hover-lift", "version": 1, "props": {} }`), på både blokker og seksjoner. Inn-animasjonen og pekereffekten er UAVHENGIGE felt og kan kombineres (`zoom-in` inn + `hover-lift` ved peker). Eldre sider kan ha en pekereffekt lagret i `animation` (feltene var ett til 0.6.30): motoren rendrer begge felt likt, så slike data virker uendret; editoren flytter verdien til `hover` ved neste animasjonsendring.
 
 ## `content/samlinger/<id>.json` (samlinger)
 

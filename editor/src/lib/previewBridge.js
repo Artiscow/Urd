@@ -40,6 +40,7 @@
  *                  { type: 'urd-show-grid', visible }         (vis gridet i alle seksjoner)
  *                  { type: 'urd-show-guides', visible }       (hjelpelinjer: senter/innholdsbredde i alle seksjoner)
  *                  { type: 'urd-select', blockId }            (marker blokk editoren nettopp bygde, f.eks. + Ny blokk)
+ *                  { type: 'urd-admin-theme', colors }        (adminens fargetema {bg, surface, accent, text}: editor-menyene i previewen følger admin, ikke siden)
  */
 
 /**
@@ -116,6 +117,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     },
     sendShowGuides(visible) {
       post({ type: 'urd-show-guides', visible });
+    },
+    /** Adminens fargetema: editor-menyene i previewen følger admin, ikke siden. */
+    sendAdminTheme(colors) {
+      post({ type: 'urd-admin-theme', colors });
     },
     sendSelect(blockId) {
       post({ type: 'urd-select', blockId });

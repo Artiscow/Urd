@@ -2,6 +2,19 @@
 
 Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren stryker herfra** når noe er testet; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert.
 
+### Testrunde-batch (0.6.30): bugfikser fra eiers runde 24. juli (blokkmeny, seksjon-chip, dra-cursor, typografifelt, animasjon/peker-splitt)
+
+- [ ] Blokkmenyen ved dobbeltklikk: «+ Ny blokk»-chippen vises IKKE lenger over menyen (menyen står alene ved pekeren); klikk hvor som helst utenfor lukker menyen (også i en annen seksjon); pekeren ut av seksjonen lukker fortsatt som før
+- [ ] Dobbeltklikk nær venstre kant: menyen åpnes mot HØYRE for pekeren og går aldri ut av skjermen
+- [ ] Blokkmenyen og seksjonsgalleriet («+ Ny seksjon») følger nå Urd-adminens fargetema (velg et annet admin-tema i topplinjen og se menyene bytte), ikke siden som redigeres; åpnes previewen utenfor admin brukes grå-temaet
+- [ ] «+ Ny seksjon»-chippen: kan alltid klikkes - dra-flaten for seksjonsgrensen fanger ikke lenger klikket der chippen står (å DRA i selve chippen flytter fortsatt grensen, klikk uten dra åpner galleriet)
+- [ ] Dra en seksjonsgrense (bunn- eller toppkant): pekeren blir pil ned når du drar nedover og pil opp når du drar oppover, og normal igjen ved slipp
+- [ ] Typografi i Egenskaper/blokkmenyen for tekstblokk: Størrelse, Linjeavstand og Bokstavavstand er nå vanlige tallfelt (skriv tall eller stepp med pilene, som i Office/LibreOffice); tomt felt = arv fra tema; S/M/L/XL-knappene, A-knappene, sliderne og forklaringsteksten er fjernet
+- [ ] Samme i teksteditor-popupens Aa-rad: tre tallfelt i stedet for knapperad + slidere
+- [ ] «Animasjon inn» og «Ved peker» er nå to uavhengige valg på blokker OG seksjoner: «Løft ved peker» kan kombineres med f.eks. «Zoom inn» (demoen: «Les mer»-knappen på Om oss har begge); eldre sider med pekereffekt lagret i det gamle fellesfeltet virker uendret og flyttes over ved neste animasjonsendring
+- [ ] Rotårsaken til «Løft ved peker funker ikke» (eiers runde 24. juli, målt i headless): et nedtrekk nederst i panelet utløste en fokus-scroll i samme klikk, og popupen lukket seg før man fikk valgt. Alle nedtrekk FØLGER nå ankeret ved rulling i stedet for å lukke seg; klikk utenfor og Escape lukker som før - prøv «Ved peker» nederst i seksjons-Egenskaper og rull i panelet mens listen er åpen
+- [ ] Ny lokal testserver uten caching: `python3 dev-server.py 8000` fra repo-roten (i stedet for `cd template && python3 -m http.server 8000`). Hver respons sendes med «aldri cache», så vanlig reload alltid viser siste motorversjon - ingen mer F12-tømming etter motorendringer. Sjekk at siden, admin og ?page=om-oss virker som før via den
+
 ### Testrunde-batch (0.6.29): gradient-editor, kortstiler, FAQ-akkordeon (M6 batch D del 1)
 
 - [ ] Gradient-editoren (Egenskaper på en seksjon, gradient-lag): «Form» velger Lineær eller Radiell; lineær har Vinkel, radiell har Sentrum X/Y (kun de relevante innstillingene vises); demoen: øverste hero på Om oss er nå radiell

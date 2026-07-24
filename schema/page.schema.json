@@ -70,6 +70,13 @@
             { "$ref": "#/$defs/typedProps" }
           ]
         },
+        "hover": {
+          "description": "Valgfri pekereffekt for hele seksjonen (additivt felt fra v0.6) - uavhengig av animation, de kan kombineres",
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/typedProps" }
+          ]
+        },
         "blocks": {
           "type": "array",
           "items": { "$ref": "#/$defs/block" }
@@ -138,6 +145,13 @@
         },
         "props": { "type": "object", "description": "Typespesifikke props - eies av blokkdefinisjonens versjon/migreringer" },
         "animation": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/typedProps" }
+          ]
+        },
+        "hover": {
+          "description": "Valgfri pekereffekt (additivt felt fra v0.6) - uavhengig av animation, de kan kombineres",
           "oneOf": [
             { "type": "null" },
             { "$ref": "#/$defs/typedProps" }

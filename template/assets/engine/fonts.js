@@ -1,7 +1,7 @@
 /**
- * Delte typografi-konstanter: fontvalgene og størrelsesforvalgene som
- * både admin-panelene og teksteditor-linjens typografirad viser. Kun
- * systemtrygge stacker (Urd laster aldri eksterne fonter, se _headers/CSP).
+ * Delte typografi-konstanter: fontvalgene som både admin-panelene og
+ * teksteditor-linjens typografirad viser. Kun systemtrygge stacker
+ * (Urd laster aldri eksterne fonter, se _headers/CSP).
  */
 
 /** @type {Array<[string, string]>} Visningsnavn + CSS-fontstack. */
@@ -14,6 +14,3 @@ export const FONT_STACKS = [
   ['Palatino (serif)', "'Palatino Linotype', Palatino, serif"],
   ['Courier (skrivemaskin)', "'Courier New', monospace"],
 ];
-
-/** @type {Array<[string, number]>} Størrelsesforvalg for tekstfelt (px). */
-export const TEXT_SIZES = [['S', 14], ['M', 18], ['L', 24], ['XL', 36]];

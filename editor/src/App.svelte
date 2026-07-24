@@ -22,7 +22,7 @@
   import { bildegalleriLayer } from '../../template/assets/engine/backgrounds/bildegalleri.js';
   import { coreAnimations } from '../../template/assets/engine/animations/core.js';
   import { compressToWebp, slugify, contentHash, WARN_BYTES } from '../../template/assets/engine/imageTools.js';
-  import { FONT_STACKS, TEXT_SIZES } from '../../template/assets/engine/fonts.js';
+  import { FONT_STACKS } from '../../template/assets/engine/fonts.js';
   import { frameAtPoint } from '../../template/assets/engine/place.js';
 
   /** Bakgrunnslagtypene i den rekkefølgen de tilbys i panelet. */
@@ -70,7 +70,21 @@
   $effect(() => {
     document.documentElement.dataset.adminTheme = adminTheme;
     localStorage.setItem('urd-admin-theme', adminTheme);
+    sendAdminTheme();
   });
+
+  /** Melder adminens temafarger til previewen: editor-menyene der inne
+   *  (blokkmenyen, seksjonsgalleriet) følger admin, ikke siden. Leses
+   *  fra dokumentets faktiske variabler, så palettene bor ett sted. */
+  function sendAdminTheme() {
+    const style = getComputedStyle(document.documentElement);
+    bridge?.sendAdminTheme({
+      bg: style.getPropertyValue('--urd-color-bg').trim(),
+      surface: style.getPropertyValue('--urd-color-surface').trim(),
+      accent: style.getPropertyValue('--urd-color-accent').trim(),
+      text: style.getPropertyValue('--urd-color-text').trim(),
+    });
+  }
 
   let site = $state(null);
   let pageId = $state(null);
@@ -415,6 +429,7 @@
       props: JSON.parse(JSON.stringify(block.props)),
       frame: { ...block.frames.desktop },
       animation: block.animation ? JSON.parse(JSON.stringify(block.animation)) : null,
+      hover: block.hover ? JSON.parse(JSON.stringify(block.hover)) : null,
       sticky: block.sticky ? JSON.parse(JSON.stringify(block.sticky)) : null,
     };
   }
@@ -549,9 +564,8 @@
     }
   }
 
-  /** Størrelses-presets for tekstfelt (Gutenberg-mønsteret: S/M/L/XL). */
-  // TEXT_SIZES og FONT_STACKS bor i motorens fonts.js (deles med
-  // teksteditor-linjens typografirad).
+  // FONT_STACKS bor i motorens fonts.js (deles med teksteditor-linjens
+  // typografirad).
 
   /** Navn på blokktypene i panelet. */
   const BLOCK_LABELS = { text: 'Tekst', button: 'Knapp', image: 'Bilde', shape: 'Form', video: 'Video', icon: 'Ikon', galleri: 'Galleri', faq: 'FAQ' };
@@ -573,12 +587,14 @@
   /** Speil av den aktive seksjonens bakgrunnslag og animasjon */
   let sectionBg = $state([]);
   let sectionAnim = $state(null);
+  let sectionHover = $state(null);
 
   function syncSectionMirrors(section) {
     sectionGrid = section?.grid ? { ...section.grid } : null;
     sectionMinHeight = section?.size?.minHeight ?? '';
     sectionBg = JSON.parse(JSON.stringify(section?.background?.layers ?? []));
     sectionAnim = section?.animation ? JSON.parse(JSON.stringify(section.animation)) : null;
+    sectionHover = section?.hover ? JSON.parse(JSON.stringify(section.hover)) : null;
   }
 
   function onSelectSection(msg) {
@@ -820,12 +836,36 @@
     return { type, version: coreAnimations[type].version, props: coreAnimations[type].defaults() };
   }
 
+  /** Inn-animasjon og pekereffekt er uavhengige felt (animation/hover) og
+   *  kan kombineres. Eldre sider kan ha en pekereffekt lagret i animation
+   *  (feltene var ett til 0.6.30): normaliseres til hover ved neste edit. */
+  const isEntrance = (anim) => Boolean(anim && coreAnimations[anim.type]?.entrance);
+  const ENTRANCE_OPTIONS = [['', 'Ingen'],
+    ...Object.entries(coreAnimations).filter(([, def]) => def.entrance).map(([id, def]) => [id, def.label])];
+  const HOVER_OPTIONS = [['', 'Ingen'],
+    ...Object.entries(coreAnimations).filter(([, def]) => !def.entrance).map(([id, def]) => [id, def.label])];
+
+  function normalizeAnim(target) {
+    if (target.animation && !isEntrance(target.animation)) {
+      target.hover ??= target.animation;
+      target.animation = null;
+    }
+  }
+
   function setBlockAnimation(type) {
     mutateBlock(`edit:anim-${selectedBlock.blockId}`, (b) => {
+      normalizeAnim(b);
       b.animation = type ? animObj(type) : null;
     });
     // Spill animasjonen én gang som demo (etter rerenderingen; postMessage er ordnet).
     if (selectedBlock) bridge?.sendDemoAnim(selectedBlock.sectionId, selectedBlock.blockId);
+  }
+
+  function setBlockHover(type) {
+    mutateBlock(`edit:hover-${selectedBlock.blockId}`, (b) => {
+      normalizeAnim(b);
+      b.hover = type ? animObj(type) : null;
+    });
   }
 
   function setBlockAnimProp(name, value) {
@@ -837,8 +877,18 @@
   }
 
   function setSectionAnimation(type) {
-    mutateSection('section-anim', (s) => { s.animation = type ? animObj(type) : null; });
+    mutateSection('section-anim', (s) => {
+      normalizeAnim(s);
+      s.animation = type ? animObj(type) : null;
+    });
     bridge?.sendDemoAnim(activeSectionId);
+  }
+
+  function setSectionHover(type) {
+    mutateSection('section-hover', (s) => {
+      normalizeAnim(s);
+      s.hover = type ? animObj(type) : null;
+    });
   }
 
   function setSectionAnimProp(name, value) {
@@ -1214,6 +1264,7 @@
     if (!chromeVisible) bridge?.sendChrome(false);
     if (activePanel === 'Grid') bridge?.sendShowGrid(true);
     if (guidesOn) bridge?.sendShowGuides(true);
+    sendAdminTheme();
   }
 
   /** Hjelpelinjer på/av: personlig arbeidsflate-preferanse, huskes i
@@ -3586,19 +3637,22 @@
                   <button class="ghost action" onclick={() => addBgLayer(newBgType)}>+ Legg til lag</button>
 
                   <hr class="gridmenu-divider" />
-                  <label>Animasjon
-                    <Dropdown value={sectionAnim?.type ?? ''}
-                      options={[['', 'Ingen'], ...Object.entries(coreAnimations).map(([id, def]) => [id, def.label])]}
+                  <label title="Spilles når seksjonen scrolles inn hos besøkende; her spilles den én gang hver gang du endrer den">Animasjon inn
+                    <Dropdown value={isEntrance(sectionAnim) ? sectionAnim.type : ''}
+                      options={ENTRANCE_OPTIONS}
                       onchange={(v) => setSectionAnimation(v || null)} /></label>
-                  {#if sectionAnim && coreAnimations[sectionAnim.type]?.entrance}
+                  {#if isEntrance(sectionAnim)}
                     <label>Varighet ms
                       <input type="number" min="100" max="4000" step="100" value={sectionAnim.props.duration}
                         onchange={(e) => setSectionAnimProp('duration', Number(e.target.value))} /></label>
                     <label>Forsinkelse ms
                       <input type="number" min="0" max="4000" step="100" value={sectionAnim.props.delay}
                         onchange={(e) => setSectionAnimProp('delay', Number(e.target.value))} /></label>
-                    <p class="panel-hint">Spilles hos besøkende ved scrolling. Her spilles den én gang hver gang du endrer den.</p>
                   {/if}
+                  <label title="Effekt mens pekeren er over seksjonen; kan kombineres med animasjonen inn">Ved peker
+                    <Dropdown value={sectionHover?.type ?? (sectionAnim && !isEntrance(sectionAnim) ? sectionAnim.type : '')}
+                      options={HOVER_OPTIONS}
+                      onchange={(v) => setSectionHover(v || null)} /></label>
                 {:else}
                   <p class="panel-hint">Klikk på en blokk eller seksjon i forhåndsvisningen.</p>
                 {/if}
@@ -3901,37 +3955,18 @@
       <Dropdown value={selectedBlock.props.font ?? ''}
         options={[['', 'Arv fra tema'], ...FONT_STACKS.map(([name, value]) => [value, name])]}
         onchange={(v) => setBlockProp('font', v || null)} /></label>
-    <label>Størrelse</label>
-    <span class="toolbar-row">
-      <button class="tbtn" title="Arv fra tema" class:active={!selectedBlock.props.size}
-        onclick={() => setBlockProp('size', null)}>A</button>
-      {#each TEXT_SIZES as [name, px] (name)}
-        <button class="tbtn" title="{px} px" class:active={selectedBlock.props.size === px}
-          onclick={() => setBlockProp('size', px)}>{name}</button>
-      {/each}
-      <input type="number" class="tb-num" min="8" max="120" placeholder="px"
-        title="Egen størrelse i px"
+    <label title="Skriftstørrelse i px for hele feltet; tomt = arv fra tema">Størrelse (px)
+      <input type="number" min="8" max="120" step="1" placeholder="Arv"
         value={selectedBlock.props.size ?? ''}
-        onchange={(e) => setBlockProp('size', e.target.value ? Number(e.target.value) : null)} />
-    </span>
-    <label title="Avstanden mellom tekstlinjene, i forhold til skriftstørrelsen">Linjeavstand
-      <span class="gridmenu-value">{selectedBlock.props.lineHeight ? `${selectedBlock.props.lineHeight}` : 'Arv'}</span></label>
-    <span class="toolbar-row">
-      <button class="tbtn" title="Arv fra tema" class:active={!selectedBlock.props.lineHeight}
-        onclick={() => setBlockProp('lineHeight', null)}>A</button>
-      <input type="range" class="tb-grow" min="1" max="2.5" step="0.05" value={selectedBlock.props.lineHeight ?? 1.6}
-        oninput={(e) => setBlockProp('lineHeight', Number(e.target.value))} />
-    </span>
-    <label title="Avstanden mellom bokstavene; negativ er tettere enn normalt">Bokstavavstand
-      <span class="gridmenu-value">{typeof selectedBlock.props.letterSpacing === 'number' && selectedBlock.props.letterSpacing !== 0 ? `${selectedBlock.props.letterSpacing} px` : 'Arv'}</span></label>
-    <span class="toolbar-row">
-      <button class="tbtn" title="Arv fra tema"
-        class:active={!selectedBlock.props.letterSpacing}
-        onclick={() => setBlockProp('letterSpacing', null)}>A</button>
-      <input type="range" class="tb-grow" min="-1" max="8" step="0.1" value={selectedBlock.props.letterSpacing ?? 0}
-        oninput={(e) => setBlockProp('letterSpacing', Number(e.target.value) || null)} />
-    </span>
-    <p class="panel-hint">Font, størrelse og avstandene gjelder hele feltet. Marker tekst i blokken for fet, kursiv, overskrifter og farge.</p>
+        onchange={(e) => setBlockProp('size', e.target.value === '' ? null : Number(e.target.value))} /></label>
+    <label title="Avstanden mellom tekstlinjene, i forhold til skriftstørrelsen; tomt = arv">Linjeavstand
+      <input type="number" min="0.8" max="3" step="0.1" placeholder="Arv"
+        value={selectedBlock.props.lineHeight ?? ''}
+        onchange={(e) => setBlockProp('lineHeight', e.target.value === '' ? null : Number(e.target.value))} /></label>
+    <label title="Avstanden mellom bokstavene i px, negativ er tettere; tomt = arv">Bokstavavstand (px)
+      <input type="number" min="-2" max="10" step="0.1" placeholder="Arv"
+        value={selectedBlock.props.letterSpacing ?? ''}
+        onchange={(e) => setBlockProp('letterSpacing', e.target.value === '' ? null : Number(e.target.value) || null)} /></label>
   {:else if selectedBlock.type === 'faq'}
     <label class="gridmenu-snap" title="Ellers lukkes forrige svar når et nytt åpnes">
       <input type="checkbox" checked={Boolean(selectedBlock.props.multi)}
@@ -4169,11 +4204,11 @@
   {/if}
 
   <hr class="gridmenu-divider" />
-  <label>Animasjon
-    <Dropdown value={selectedBlock.animation?.type ?? ''}
-      options={[['', 'Ingen'], ...Object.entries(coreAnimations).map(([id, def]) => [id, def.label])]}
+  <label title="Spilles når blokken scrolles inn hos besøkende; her spilles den én gang hver gang du endrer den">Animasjon inn
+    <Dropdown value={isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : ''}
+      options={ENTRANCE_OPTIONS}
       onchange={(v) => setBlockAnimation(v || null)} /></label>
-  {#if selectedBlock.animation && coreAnimations[selectedBlock.animation.type]?.entrance}
+  {#if isEntrance(selectedBlock.animation)}
     <label>Varighet ms
       <input type="number" min="100" max="4000" step="100"
         value={selectedBlock.animation.props.duration}
@@ -4182,8 +4217,11 @@
       <input type="number" min="0" max="4000" step="100"
         value={selectedBlock.animation.props.delay}
         onchange={(e) => setBlockAnimProp('delay', Number(e.target.value))} /></label>
-    <p class="panel-hint">Spilles hos besøkende ved scrolling. Her spilles den én gang hver gang du endrer den.</p>
   {/if}
+  <label title="Effekt mens pekeren er over blokken; kan kombineres med animasjonen inn">Ved peker
+    <Dropdown value={selectedBlock.hover?.type ?? (selectedBlock.animation && !isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : '')}
+      options={HOVER_OPTIONS}
+      onchange={(v) => setBlockHover(v || null)} /></label>
 
   {#if viewMode === 'desktop'}
     <hr class="gridmenu-divider" />

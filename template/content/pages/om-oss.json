@@ -115,7 +115,8 @@
             "href": "#",
             "style": "primary"
           },
-          "animation": null,
+          "animation": { "type": "zoom-in", "version": 1, "props": { "duration": 600, "delay": 0 } },
+          "hover": { "type": "hover-lift", "version": 1, "props": {} },
           "frames": {
             "desktop": {
               "x": 8.33,

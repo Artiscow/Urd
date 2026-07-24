@@ -288,42 +288,15 @@ html {
   color: rgb(232 234 240 / 60%);
 }
 
-.urd-tt-sizegroup {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.urd-text-toolbar .urd-tt-sizegroup button.on {
-  background: rgb(255 255 255 / 16%);
-  outline: 1px solid rgb(255 255 255 / 35%);
-}
-
-.urd-tt-sizegroup input {
-  width: 3.2em;
+/* Tallfeltene i typografiraden (tomt felt = arv fra tema) */
+.urd-tt-num {
+  width: 4em;
   font: 12px/1.3 system-ui, sans-serif;
   color: #e8eaf0;
   background: rgb(255 255 255 / 6%);
   border: 1px solid rgb(255 255 255 / 20%);
   border-radius: 5px;
   padding: 3px 4px;
-}
-
-.urd-tt-sliderwrap {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.urd-tt-sliderwrap input[type='range'] {
-  width: 90px;
-  accent-color: #e8eaf0;
-}
-
-.urd-tt-sliderval {
-  font: 11px/1.2 system-ui, sans-serif;
-  color: rgb(232 234 240 / 75%);
-  min-width: 3.2em;
 }
 
 /* Tegnraden (nedtrekket bak smilefjes-knappen): rullbart rutenett med
@@ -1557,9 +1530,33 @@ a.urd-galleri-tile {
   transition: opacity 0.12s ease;
 }
 
+/* Editor-menyene (blokkmenyen og seksjonsgalleriet) følger Urd-adminens
+   fargetema, ikke siden som redigeres: editoren melder temaet inn som
+   --urd-admin-*-variabler (urd-admin-theme), og her overstyres sidens
+   variabler lokalt. Fallbackene er adminens standardtema («grå»), så
+   menyene er lesbare også når previewen åpnes utenfor admin. */
+.urd-preview .urd-add-block,
+.urd-preview .urd-add-section {
+  --urd-color-bg: var(--urd-admin-bg, #0e0f11);
+  --urd-color-surface: var(--urd-admin-surface, #191b1e);
+  --urd-color-accent: var(--urd-admin-accent, #5f6a75);
+  --urd-color-text: var(--urd-admin-text, #e6e8ea);
+}
+
 .urd-preview .urd-section:hover .urd-add-block {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* Åpnet med dobbeltklikk: menyen står alene ved pekeren, chip-knappen
+   skjules, og menyen holdes synlig uavhengig av hover-reglene */
+.urd-preview .urd-add-block.urd-at-pointer {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.urd-preview .urd-add-block.urd-at-pointer .urd-add-block-open {
+  display: none;
 }
 
 .urd-preview .urd-add-block-open {
@@ -2847,10 +2844,12 @@ body.urd-mobile .urd-section-resize-top {
   display: flex;
   justify-content: center;
   gap: 6px;
-  /* Over vanlige blokker, men UNDER blokk-løftet ved hover/markering (99998/99999):
-     en blokk man jobber med (med ?-chip og verktøy) vinner over baren. Selve
-     seksjonslinje-grepet (.urd-section-resize, 100000) er alltid øverst. */
-  z-index: 99997;
+  /* Over seksjonslinje-grepene (.urd-section-resize/-top, 100000): der
+     chippen står skal den kunne KLIKKES, ikke fanges av dra-flaten
+     (chippen drar uansett selv samme grense via wireHeightDrag). Baren
+     selv er 0 px høy og pointer-events: none, så det er kun chip-pillen
+     og galleriet som ligger over noe. */
+  z-index: 100001;
   /* Skjult til musen er over en tilstøtende seksjon (eller baren selv):
      mindre støy, og den øverste baren kolliderer ikke med menyen */
   opacity: 0;
@@ -3133,4 +3132,17 @@ body.urd-mobile .urd-section-resize-top {
 .urd-preview .urd-section:has(> .urd-section-resize-top:hover),
 .urd-preview .urd-section:has(> .urd-section-resize-top:active) {
   box-shadow: inset 0 2px 0 var(--urd-color-accent);
+}
+
+/* Retningsvisende peker mens en seksjonsgrense dras (preview-edit setter
+   klassen på rotelementet): pil ned når man drar ned, pil opp når man
+   drar opp. !important fordi pekeren ellers følger elementet under. */
+html.urd-drag-down,
+html.urd-drag-down * {
+  cursor: s-resize !important;
+}
+
+html.urd-drag-up,
+html.urd-drag-up * {
+  cursor: n-resize !important;
 }

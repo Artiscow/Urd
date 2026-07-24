@@ -172,8 +172,11 @@ export function renderSection(section, site, host, opts = {}) {
     }
   }
 
-  // Valgfri seksjonsanimasjon (additivt felt fra v0.5).
+  // Valgfri seksjonsanimasjon (additivt felt fra v0.5). Inn-animasjonen
+  // (animation) og pekereffekten (hover, additivt felt fra v0.6) er
+  // uavhengige og kan kombineres.
   renderAnimation(Urd, host, section.animation, ctx);
+  renderAnimation(Urd, host, section.hover, ctx);
 
   // Mobil-tilsyn: redaksjonell markering, kun i preview (besøkende
   // ignorerer flagget, se docs/SKJEMA.md#mobil-tilsyn).
@@ -194,7 +197,9 @@ function renderBlock(Urd, el, block, ctx) {
   if (lifted.ok) {
     try {
       Urd.blocks.get(block.type).render(el, lifted.props, ctx);
+      // Inn-animasjon og pekereffekt er uavhengige felt og kan kombineres.
       renderAnimation(Urd, el, block.animation, ctx);
+      renderAnimation(Urd, el, block.hover, ctx);
     } catch (err) {
       console.warn(`Urd: blokk '${block.type}' feilet under render`, err);
       renderPlaceholder(el, block.type);

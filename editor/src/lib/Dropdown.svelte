@@ -6,7 +6,10 @@
    * sammenlignes som strenger, så '' og null kan brukes som «ingen».
    *
    * Popoveren er position: fixed (panelene klipper absolute innhold),
-   * og lukkes ved klikk utenfor, Escape eller rulling utenfor.
+   * og lukkes ved klikk utenfor eller Escape. Ved rulling utenfor
+   * FØLGER den ankeret i stedet for å lukke: et klikk på en knapp
+   * nederst i panelet utløser en fokus-scroll i samme øyeblikk, og en
+   * lukk-ved-scroll-regel smalt da popupen igjen før man fikk valgt.
    */
   let { value = null, options = [], onchange, title = null, disabled = false } = $props();
 
@@ -17,12 +20,7 @@
   const currentLabel = () =>
     options.find(([v]) => `${v ?? ''}` === `${value ?? ''}`)?.[1] ?? '';
 
-  function toggle() {
-    if (disabled) return;
-    if (open) {
-      open = false;
-      return;
-    }
+  function place() {
     const r = rootEl.getBoundingClientRect();
     const height = Math.min(320, options.length * 32 + 12);
     const width = Math.max(r.width, 160);
@@ -32,6 +30,15 @@
       left: Math.max(8, Math.min(r.left, window.innerWidth - width - 8)),
       width,
     };
+  }
+
+  function toggle() {
+    if (disabled) return;
+    if (open) {
+      open = false;
+      return;
+    }
+    place();
     open = true;
   }
 
@@ -49,7 +56,7 @@
       if (e.key === 'Escape') open = false;
     };
     const onScroll = (e) => {
-      if (rootEl && e.target instanceof Node && !rootEl.contains(e.target)) open = false;
+      if (rootEl && e.target instanceof Node && !rootEl.contains(e.target)) place();
     };
     document.addEventListener('pointerdown', onDown, true);
     document.addEventListener('keydown', onKey, true);

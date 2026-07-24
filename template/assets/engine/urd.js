@@ -160,6 +160,16 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-show-grid') {
       // Grid-menyen i editoren er åpen: vis gridet i alle seksjoner.
       window.UrdPreviewEdit?.toggleGridOverlays(msg.visible, state.page, state.site);
+    } else if (msg?.type === 'urd-admin-theme' && msg.colors) {
+      // Adminens fargetema: editor-menyene i previewen (blokkmenyen,
+      // seksjonsgalleriet) skal følge admin, ikke siden som redigeres.
+      // Verdiene legges som egne variabler; base.css bruker dem KUN på
+      // editor-chromen, aldri på sidens eget innhold.
+      for (const key of ['bg', 'surface', 'accent', 'text']) {
+        if (typeof msg.colors[key] === 'string') {
+          document.documentElement.style.setProperty(`--urd-admin-${key}`, msg.colors[key]);
+        }
+      }
     } else if (msg?.type === 'urd-show-guides') {
       // Hjelpelinje-knappen i editoren: senter- og breddelinjer på/av.
       window.UrdPreviewEdit?.toggleGuideOverlays(msg.visible);

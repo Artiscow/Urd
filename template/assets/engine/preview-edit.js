@@ -25,7 +25,7 @@ import { applyImageStyle } from './blocks/image.js';
 import { openColorPicker, closeColorPicker } from './color-picker.js';
 import { createDropdown, closeDropdowns } from './dropdown.js';
 import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from './glyphs.js';
-import { FONT_STACKS, TEXT_SIZES } from './fonts.js';
+import { FONT_STACKS } from './fonts.js';
 import { frameAtPoint } from './place.js';
 import { topDrag } from './section-size.js';
 import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
@@ -41,7 +41,10 @@ export function closeMenus() {
   closeImageEditor();
   closeColorPicker();
   closeDropdowns();
-  document.querySelectorAll('.urd-add-block-menu.open').forEach((m) => m.classList.remove('open'));
+  document.querySelectorAll('.urd-add-block-menu.open').forEach((m) => {
+    const wrap = m.closest('.urd-add-block');
+    if (wrap) resetBlockAdder(wrap);
+  });
 }
 
 /**
@@ -195,6 +198,32 @@ function addGuideOverlays(host) {
  * være en klikkbar knapp; opts.onDragged kalles da (før knappens click),
  * så klikket kan undertrykkes.
  */
+/**
+ * Retningsvisende peker under seksjonshøyde-drag: pil ned når man drar
+ * ned, pil opp når man drar opp (CSS-klassene i base.css overstyrer alt
+ * med !important, siden pekeren ellers følger elementet under den).
+ * Liten terskel mot dirring; retningen beholdes til den faktisk snur.
+ */
+function dragCursor() {
+  let lastY = null;
+  return {
+    move(clientY) {
+      if (lastY === null) {
+        lastY = clientY;
+        return;
+      }
+      if (Math.abs(clientY - lastY) < 2) return;
+      const down = clientY > lastY;
+      lastY = clientY;
+      document.documentElement.classList.toggle('urd-drag-down', down);
+      document.documentElement.classList.toggle('urd-drag-up', !down);
+    },
+    clear() {
+      document.documentElement.classList.remove('urd-drag-down', 'urd-drag-up');
+    },
+  };
+}
+
 function wireHeightDrag(target, host, section, grid, opts = {}) {
   target.addEventListener('pointerdown', (event) => {
     if (event.button !== 0) return;
@@ -202,12 +231,14 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
     target.setPointerCapture(event.pointerId);
     const startY = event.clientY;
     const startHeight = host.getBoundingClientRect().height;
+    const cursor = dragCursor();
     let px = startHeight;
     let moved = false;
 
     const onMove = (ev) => {
       if (!moved && Math.abs(ev.clientY - startY) < 4) return;
       moved = true;
+      cursor.move(ev.clientY);
       px = Math.max(grid.size * 3, startHeight + (ev.clientY - startY));
       // Piksel-presist når snap er av eller Shift holdes inne.
       const free = grid.snap === false || ev.shiftKey;
@@ -217,6 +248,7 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
     const onUp = () => {
       target.removeEventListener('pointermove', onMove);
       target.removeEventListener('pointerup', onUp);
+      cursor.clear();
       if (!moved) return;
       opts.onDragged?.();
       if (Math.abs(px - startHeight) < 2) return;
@@ -249,7 +281,39 @@ const SHAPE_KINDS = [
 /** Kjerneblokk-typene (paletten i editoren eier byggingen av disse). */
 const CORE_BLOCK_TYPES = new Set(['text', 'image', 'button', 'shape', 'video', 'icon', 'samling', 'galleri']);
 
+/**
+ * Lukker en «+ Ny blokk»-meny og nullstiller dobbeltklikk-tilstanden:
+ * chip-knappen tilbake i hjørnet, sideklemmingen av menyen fjernet.
+ */
+function resetBlockAdder(wrap) {
+  wrap.classList.remove('urd-at-pointer');
+  wrap.style.left = '';
+  wrap.style.top = '';
+  wrap.style.right = '';
+  const menu = wrap.querySelector('.urd-add-block-menu');
+  if (menu) {
+    menu.classList.remove('open');
+    menu.style.left = '';
+    menu.style.right = '';
+  }
+}
+
+/** Klikk hvor som helst utenfor en åpen blokkmeny lukker den. Én
+ *  document-lytter for hele siden, koblet første gang en meny bygges. */
+let blockMenuOutsideWired = false;
+function wireBlockMenuOutsideClose() {
+  if (blockMenuOutsideWired) return;
+  blockMenuOutsideWired = true;
+  document.addEventListener('pointerdown', (event) => {
+    for (const menu of document.querySelectorAll('.urd-add-block-menu.open')) {
+      const wrap = menu.closest('.urd-add-block');
+      if (wrap && event.target instanceof Node && !wrap.contains(event.target)) resetBlockAdder(wrap);
+    }
+  }, true);
+}
+
 function addBlockAdder(host, section, grid) {
+  wireBlockMenuOutsideClose();
   const wrap = document.createElement('div');
   wrap.className = 'urd-add-block';
 
@@ -267,8 +331,8 @@ function addBlockAdder(host, section, grid) {
     const b = document.createElement('button');
     b.textContent = label;
     b.addEventListener('click', () => {
-      menu.classList.remove('open');
       post({ type: 'urd-request-block', sectionId: section.id, kind, at: menu._urdAt ?? undefined });
+      resetBlockAdder(wrap);
     });
     parent.appendChild(b);
   };
@@ -299,7 +363,6 @@ function addBlockAdder(host, section, grid) {
     const def = window.Urd.blocks.get(type);
     const title = typeof def.fromPlugin === 'string' ? `Fra pluginen ${def.fromPlugin}` : 'Fra plugin';
     const buildAndPost = (extraProps = {}) => {
-      menu.classList.remove('open');
       // Åpnet med dobbeltklikk: plugin-blokken lander på klikkpunktet
       // (samme rene plassering som editoren bruker for kjerneblokkene).
       const w = 50;
@@ -319,6 +382,7 @@ function addBlockAdder(host, section, grid) {
           frames: { desktop: { x: pos.x, y: pos.y, w, h, z: 1, rot: 0 }, mobile: null },
         },
       });
+      resetBlockAdder(wrap);
     };
     // Blokker med variants (f.eks. kalenderens visninger) får en foldemeny som Former.
     if (Array.isArray(def.variants) && def.variants.length) {
@@ -349,24 +413,19 @@ function addBlockAdder(host, section, grid) {
   }
   openBtn.addEventListener('click', () => {
     // Fra knappen: nullstill ev. dobbeltklikk-plassering av menyen.
+    const wasOpen = menu.classList.contains('open');
     menu._urdAt = null;
-    wrap.style.left = '';
-    wrap.style.top = '';
-    wrap.style.right = '';
-    menu.classList.toggle('open');
+    resetBlockAdder(wrap);
+    if (!wasOpen) menu.classList.add('open');
   });
   // enhanceSection kjører etter HVER rerender på samme host-element: lytterne legges kun én gang og slår opp gjeldende meny ved hendelsen, ellers hoper det seg opp én lytter per rerender.
   if (!host._urdAdderLeaveWired) {
     host._urdAdderLeaveWired = true;
     host.addEventListener('mouseleave', () => {
-      host.querySelector('.urd-add-block-menu')?.classList.remove('open');
-      // Etter dobbeltklikk-åpning: legg «+ Ny blokk» tilbake i hjørnet.
+      // Menyen lukkes også når pekeren forlater seksjonen, og etter
+      // dobbeltklikk-åpning legges «+ Ny blokk» tilbake i hjørnet.
       const w = host.querySelector('.urd-add-block');
-      if (w) {
-        w.style.left = '';
-        w.style.top = '';
-        w.style.right = '';
-      }
+      if (w) resetBlockAdder(w);
     });
     // Dobbeltklikk på tom seksjonsflate åpner menyen VED PEKEREN, og
     // blokken lander på klikkpunktet (eiers ønske: «+ ny blokk der man
@@ -388,7 +447,20 @@ function addBlockAdder(host, section, grid) {
       curWrap.style.left = `${Math.round(event.clientX - rect.left)}px`;
       curWrap.style.top = `${Math.round(event.clientY - rect.top)}px`;
       curWrap.style.right = 'auto';
+      // Ved pekeren vises menyen alene: chip-knappen skjules (CSS-en på
+      // .urd-at-pointer), så det ikke står en «+ Ny blokk» over menyen.
+      curWrap.classList.add('urd-at-pointer');
       curMenu.classList.add('open');
+      // Menyen henger normalt mot venstre fra pekeren (right: 0). Nær
+      // venstre kant ville den gått ut av skjermen: da åpnes den mot
+      // høyre for pekeren i stedet.
+      curMenu.style.left = '';
+      curMenu.style.right = '';
+      const menuWidth = curMenu.getBoundingClientRect().width;
+      if (event.clientX - menuWidth < 8) {
+        curMenu.style.left = '0';
+        curMenu.style.right = 'auto';
+      }
     });
   }
 
@@ -431,12 +503,14 @@ function addSectionTopHandle(host, section, grid) {
       const block = section.blocks.find((b) => b.id === el.dataset.blockId);
       return block ? { el, block, y: block.frames.desktop.y } : null;
     }).filter(Boolean);
+    const cursor = dragCursor();
     let result = null;
     let moved = false;
 
     const onMove = (ev) => {
       if (!moved && Math.abs(ev.clientY - startY) < 4) return;
       moved = true;
+      cursor.move(ev.clientY);
       result = topDrag({
         dyPointer: ev.clientY - startY,
         minHeightPx: startHeight,
@@ -1002,66 +1076,36 @@ function initTextToolbar() {
     });
     typoRow.appendChild(font.el);
 
-    // Størrelse: arv + forvalg + fritt px-tall (samme skala som panelet).
-    const sizeGroup = document.createElement('span');
-    sizeGroup.className = 'urd-tt-sizegroup';
-    const sizeBtn = (label, title, value) => {
-      const b = document.createElement('button');
-      b.textContent = label;
-      b.title = title;
-      if ((props.size ?? null) === value) b.classList.add('on');
-      b.addEventListener('click', () => { postProps({ size: value }); buildTypoRow(); });
-      sizeGroup.appendChild(b);
-    };
-    sizeBtn('A', 'Arv fra tema', null);
-    for (const [name, px] of TEXT_SIZES) sizeBtn(name, `${px} px`, px);
-    const sizeInput = document.createElement('input');
-    sizeInput.type = 'number';
-    sizeInput.min = '8';
-    sizeInput.max = '120';
-    sizeInput.placeholder = 'px';
-    sizeInput.title = 'Egen størrelse i px';
-    sizeInput.value = props.size ?? '';
-    sizeInput.addEventListener('change', () => {
-      postProps({ size: sizeInput.value ? Number(sizeInput.value) : null });
-      buildTypoRow();
-    });
-    sizeGroup.appendChild(sizeInput);
-    typoRow.append(typoLabel('Størrelse'), sizeGroup);
-
-    // Linje- og bokstavavstand: slidere med live verdivisning.
-    const slider = (labelText, title, { min, max, step, value, format, onset }) => {
-      const wrap = document.createElement('span');
-      wrap.className = 'urd-tt-sliderwrap';
+    // Størrelse og avstander som tallfelt, slik alle teksteditorer gjør
+    // det: skriv et tall eller stepp med pilene. Tomt felt = arv fra tema.
+    const numField = (labelText, title, { min, max, step, value, onset }) => {
       const input = document.createElement('input');
-      input.type = 'range';
+      input.type = 'number';
+      input.className = 'urd-tt-num';
       input.min = String(min);
       input.max = String(max);
       input.step = String(step);
-      input.value = String(value);
+      input.placeholder = 'Arv';
       input.title = title;
-      const val = document.createElement('span');
-      val.className = 'urd-tt-sliderval';
-      val.textContent = format(value);
-      input.addEventListener('input', () => {
-        const v = Number(input.value);
-        val.textContent = format(v);
-        onset(v);
+      input.value = value ?? '';
+      input.addEventListener('change', () => {
+        onset(input.value === '' ? null : Number(input.value));
       });
-      wrap.append(input, val);
-      typoRow.append(typoLabel(labelText), wrap);
-      return { input, val };
+      typoRow.append(typoLabel(labelText), input);
     };
-    slider('Linjeavstand', 'Avstanden mellom tekstlinjene (A i Egenskaper = arv)', {
-      min: 1, max: 2.5, step: 0.05,
-      value: props.lineHeight ?? 1.6,
-      format: (v) => String(v),
+    numField('Størrelse', 'Skriftstørrelse i px for hele feltet; tomt = arv fra tema', {
+      min: 8, max: 120, step: 1,
+      value: props.size,
+      onset: (v) => postProps({ size: v }),
+    });
+    numField('Linjeavstand', 'Avstanden mellom tekstlinjene, i forhold til skriftstørrelsen; tomt = arv', {
+      min: 0.8, max: 3, step: 0.1,
+      value: props.lineHeight,
       onset: (v) => postProps({ lineHeight: v }),
     });
-    slider('Bokstavavstand', 'Avstanden mellom bokstavene; 0 = arv', {
-      min: -1, max: 8, step: 0.1,
-      value: props.letterSpacing ?? 0,
-      format: (v) => `${v} px`,
+    numField('Bokstavavstand', 'Avstanden mellom bokstavene i px, negativ er tettere; tomt = arv', {
+      min: -2, max: 10, step: 0.1,
+      value: props.letterSpacing,
       onset: (v) => postProps({ letterSpacing: v || null }),
     });
   }

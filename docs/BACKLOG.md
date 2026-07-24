@@ -46,6 +46,8 @@ Fullførte punkter fra v0.2-v0.5 er ryddet bort ved versjonsslippene (0.3.0 17. 
 
 ## Må avklares før M9-gaten
 
+- [ ] Ved fase-slippet: bak inn pre-v1-migreringene (eiers presisering 24. juli 2026: migrerings-overlevelse er uviktig før v1, ingenting eksternt er bygget): dagens formater blir versjon 1 igjen (gradient v1→v2→v3 kollapses til ny v1), demoinnholdet skrives om, og pre-v1-migreringsstegene + testene deres slettes. Maskineriet (version/lift/liftPageFile) består som grunnlag for M9-oppdatereren; underveis i utviklingen trenger upushede formatendringer ingen migrering (regelen står i CLAUDE.md)
+
 - [ ] Oppdaterer vs. håndredigerte Urd-eide filer (sjekksum-varsel før overskriving?)
 - [ ] Release-Action som synker `template/` til `urd-template`-repoet
 - [ ] Avklar om urdweb skal skilles fra malen (eget repo laget FRA malen), siden publisering fra urdweb-admin skriver rett i eksempelinnholdet alle nye brukere får
@@ -75,18 +77,17 @@ Fullførte punkter fra v0.2-v0.5 er ryddet bort ved versjonsslippene (0.3.0 17. 
 - En forbigående GitHub-feil under publisering (5xx, f.eks. 503 ved ref-oppdateringen under en GitHub-driftsforstyrrelse) vises som en rå feilmelding, og eieren må trykke Publiser på nytt selv; utkastet består og repoet er urørt (ufarlig). Automatisk gjenforsøk/«Prøv igjen»-knapp er ønsket og loggført under v0.7 editor-finpuss
 
 ## Bugs og (dårlige) funksjoner
-- Ny Blokk Meny: Å dobbelttrykke på et åpent felt åpner hele +ny blokk menyen og å trykke på "+ ny blokk" lukker hele menyen. Når man trykker vekk forsvinner ikke menyen. Menyen forsvinner kun om man flytter pekeren over til en ny seksjon. Om man dobbeltklikker venstre side av siden, så åpnes menyen utenfor skjermen- menyen burde da åpnes på høyre side av pekeren istedenfor å gå ut av siden. Om man klikker et annet sted skal menyen forsvinne/lukkes. "+ ny blokk" skal ikke vises i dobbelt klikk menyen. Ny blokk menyen skal følge Urd sitt tema, ikke siden man redigerer.
-- Ny Seksjon: Klikk og dra for å endre størrelse på seksjoner går over "+ Ny esksjon" og gjør det vanskelig å klikke den. Der hvor "ny seksjon" chippen er, burde det ikke være mulig å klikke og dra for å endre seksjonsstørrelse aka chippen ligger over den. Ny seksjon menyen skal følge Urd sitt tema, ikke nettsiden man redigerer.
-- Dra seksjon: Når man drar ned skal musepekeren tydelig vise det ved å bli til kun en pil ned (om mulig), likedan ved dra opp.
-- Teksteditor: Retarded "Størrelse", Linjeavstand og bokstavavstand. Det skal være standard linjeavstand aka en boks hvor man velger lijeavstand og bokstavavstand akkurat som i moderne teksteditorer. Samme med størrelse - INGEN A S M L XL. Dette betyr at størrelse, avstander skal være et felt hvor man øker tekst, akkurat som Office, libreoffice og absolutt alle teksteditorer som finnes. Fjern retarded forklarende tekst "Font, størrelse og avstandene gjelder hele feltet. Marker tekst i blokken for fet, kursiv, overskrifter og farge."
-- Tekstblokk teksteditor: Se "Teksteditor" i ## Bugs og (dårlige) funksjoner. 
-- Animasjoner/bevegelser for nå en blokk lastes inn vs når man peker på den må skilles. Eksempel: "Løft ved peker" burde kunne brukes sammen med "Zoom inn"
+- Blokker - Plugins tillater ikke å legge til blokkene/elementene - å trykke på noen av kalendrene, skejma eller kart fungerer ikke. 
+- dobbelklikk meny forsvinner om man drar musen over en seksjon. Menyen skal stå helt til man klikker på noe annet eller velger en blokk i menyen.
+- Dra seksjon er litt buggy - La oss gjøre en fullstendig sjekk av den. Det må også legges til en tydelig måte å vise de forskjellige dra funksjonene på.
 
 ## Forslag og Ideer
 
 - [ ] Småblokker fra funksjonskartet (C9+C10, 23. juli 2026): delingsknapper (statiske lenker, ingen sporing), nedteller (arrangementer) og audio-blokk (HTML5, git-eid fil) - billige og statisk-vennlige; tas når de passer inn
 
 ## Levert underveis i v0.6 (ryddes bort ved fase-slippet)
+
+- [x] Bugfiks-runden fra eiers testing 24. juli (levert 0.6.30): dobbeltklikk-blokkmenyen (chip skjult, klikk-utenfor lukker, holder seg innenfor skjermen), editor-menyene følger admin-temaet (ny urd-admin-theme), «+ Ny seksjon»-chippen over dra-flatene, retningsvisende dra-cursor, typografi som tallfelt (S/M/L/XL og slidere fjernet), «Animasjon inn»/«Ved peker» skilt og kombinerbare (additivt hover-felt), nedtrekk følger ankeret ved rulling (rotårsaken til at «Løft ved peker» ikke lot seg velge), og cache-fri lokal testserver (dev-server.py)
 
 - [x] Logo/ikon for nettsider (levert i v0.5: nettstedsikon/favicon via site.icon i Tema-panelet, nav-logo via site.nav.logo med tekst/bilde/begge i Nav-panelet)
 - [x] Teknisk opprydding-punktene (levert 0.6.2): requirePublisher-hjelperen i functions/_lib/auth.js (brukes av commit.js og revert.js), og konflikt-/angre-dialogene over på editorens modalsystem (askConfirm, ingen window.confirm igjen)
