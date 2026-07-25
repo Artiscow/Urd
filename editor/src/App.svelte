@@ -24,6 +24,7 @@
   import { compressToWebp, slugify, contentHash, WARN_BYTES } from '../../template/assets/engine/imageTools.js';
   import { FONT_STACKS } from '../../template/assets/engine/fonts.js';
   import { frameAtPoint } from '../../template/assets/engine/place.js';
+  import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '../../template/assets/engine/icons.js';
 
   /** Bakgrunnslagtypene i den rekkefølgen de tilbys i panelet. */
   const BG_TYPES = [
@@ -1916,6 +1917,115 @@
     });
   }
 
+  /* Rik footer (additiv fra v0.6): merkevare, kolonner, sosiale lenker,
+   * bunnlinje og bakgrunn. Speiler nav-handlerne, men gjennom footerMutate. */
+
+  function setFooterBrand(field, value) {
+    footerMutate(`edit:footer-brand-${field}`, (f) => {
+      f.brand ??= {};
+      if (value.trim()) f.brand[field] = value; else delete f.brand[field];
+      if (!f.brand.title && !f.brand.tagline) delete f.brand;
+    });
+  }
+
+  function setFooterCopyright(value) {
+    footerMutate('edit:footer-copyright', (f) => {
+      if (value.trim()) f.copyright = value; else delete f.copyright;
+    });
+  }
+
+  function setFooterBg(hex) {
+    footerMutate('footer', (f) => { if (hex && hex !== 'surface') f.bg = hex; else delete f.bg; });
+  }
+
+  function addFooterColumn() {
+    footerMutate('footer', (f) => {
+      f.columns ??= [];
+      f.columns.push({ title: 'Kolonne', links: [{ label: 'Lenke', page: siteDraft.pages[0].id }] });
+    });
+  }
+
+  function removeFooterColumn(ci) {
+    footerMutate('footer', (f) => { f.columns.splice(ci, 1); if (!f.columns.length) delete f.columns; });
+  }
+
+  function moveFooterColumn(ci, dir) {
+    footerMutate('footer', (f) => {
+      const j = ci + dir;
+      if (j < 0 || j >= f.columns.length) return;
+      [f.columns[ci], f.columns[j]] = [f.columns[j], f.columns[ci]];
+    });
+  }
+
+  function setFooterColumnTitle(ci, value) {
+    footerMutate(`edit:footer-col-title-${ci}`, (f) => { f.columns[ci].title = value; });
+  }
+
+  function addFooterLink(ci) {
+    footerMutate('footer', (f) => {
+      f.columns[ci].links ??= [];
+      f.columns[ci].links.push({ label: 'Lenke', page: siteDraft.pages[0].id });
+    });
+  }
+
+  function removeFooterLink(ci, li) {
+    footerMutate('footer', (f) => { f.columns[ci].links.splice(li, 1); });
+  }
+
+  function moveFooterLink(ci, li, dir) {
+    footerMutate('footer', (f) => {
+      const links = f.columns[ci].links;
+      const j = li + dir;
+      if (j < 0 || j >= links.length) return;
+      [links[li], links[j]] = [links[j], links[li]];
+    });
+  }
+
+  function setFooterLinkLabel(ci, li, value) {
+    footerMutate(`edit:footer-link-label-${ci}-${li}`, (f) => { f.columns[ci].links[li].label = value; });
+  }
+
+  function setFooterLinkTarget(ci, li, value) {
+    footerMutate('footer', (f) => {
+      const link = f.columns[ci].links[li];
+      if (value === '__href') { delete link.page; link.href = link.href ?? 'https://'; }
+      else { link.page = value; delete link.href; }
+    });
+  }
+
+  function setFooterLinkHref(ci, li, value) {
+    footerMutate(`edit:footer-link-href-${ci}-${li}`, (f) => { f.columns[ci].links[li].href = value; });
+  }
+
+  function addFooterSocial() {
+    footerMutate('footer', (f) => { f.social ??= []; f.social.push({ icon: 'facebook', url: 'https://' }); });
+  }
+
+  function removeFooterSocial(si) {
+    footerMutate('footer', (f) => { f.social.splice(si, 1); if (!f.social.length) delete f.social; });
+  }
+
+  function moveFooterSocial(si, dir) {
+    footerMutate('footer', (f) => {
+      const j = si + dir;
+      if (j < 0 || j >= f.social.length) return;
+      [f.social[si], f.social[j]] = [f.social[j], f.social[si]];
+    });
+  }
+
+  function setFooterSocialIcon(si, id) {
+    footerMutate('footer', (f) => { f.social[si].icon = id; });
+  }
+
+  function setFooterSocialUrl(si, value) {
+    footerMutate(`edit:footer-social-url-${si}`, (f) => { f.social[si].url = value; });
+  }
+
+  // Sosial-ikonene i nedtrekket: de sosiale og kommunikasjonskategoriene fra ikonbiblioteket.
+  const SOCIAL_ICON_OPTIONS = ICON_CATEGORIES
+    .filter(([cat]) => cat === 'Sosiale medier' || cat === 'Kommunikasjon')
+    .flatMap(([, ids]) => ids.map((id) => [id, ICON_LIBRARY[id].label]));
+
   function setNavLabel(i, value) {
     siteMutate(`edit:nav-label-${i}`, () => { siteDraft.nav.items[i].label = value; });
   }
@@ -3678,22 +3788,118 @@
               </div>
             {:else if activePanel === 'Footer'}
               <div class="panel-body">
-                <p class="panel-hint">Footeren redigeres ett sted og vises nederst på alle sider.</p>
-                <label class="gridmenu-snap">
+                <label class="gridmenu-snap" title="Footeren redigeres ett sted og vises nederst på alle sider">
                   <input type="checkbox" checked={Boolean(siteDraft.footer?.show)}
                     onchange={(e) => footerMutate('footer', (f) => { f.show = e.target.checked; })} />
                   Vis footer på siden
                 </label>
-                <label>Innhold</label>
-                <textarea rows="4" placeholder={'© Min forening\nGateadresse 1, 0000 Sted'}
-                  value={siteDraft.footer?.text ?? ''}
-                  oninput={(e) => footerMutate('edit:footer-text', (f) => { f.text = e.target.value; })}></textarea>
-                <p class="panel-hint">Hver linje blir sin egen tekstlinje.</p>
-                <label>Justering
-                  <Dropdown value={siteDraft.footer?.align ?? 'center'}
-                    options={[['left', 'Venstre'], ['center', 'Midtstilt'], ['right', 'Høyre']]}
-                    onchange={(v) => footerMutate('footer', (f) => { f.align = v; })} /></label>
-                <p class="panel-hint">Design-maler for footer kommer i v0.6.</p>
+
+                <details class="group" open>
+                  <summary>Merkevare</summary>
+                  <div class="group-items">
+                    <label title="Navnet øverst i footeren. Tomt = sidetittelen">Tittel
+                      <input value={siteDraft.footer?.brand?.title ?? ''} placeholder="Urd"
+                        oninput={(e) => setFooterBrand('title', e.target.value)} /></label>
+                    <label title="Kort undertekst under navnet">Tagline
+                      <input value={siteDraft.footer?.brand?.tagline ?? ''}
+                        oninput={(e) => setFooterBrand('tagline', e.target.value)} /></label>
+                  </div>
+                </details>
+
+                <details class="group">
+                  <summary>Kolonner</summary>
+                  <div class="group-items">
+                    {#each siteDraft.footer?.columns ?? [] as col, ci}
+                      <div class="nav-row">
+                        <input value={col.title} title="Kolonnens overskrift"
+                          oninput={(e) => setFooterColumnTitle(ci, e.target.value)} />
+                        <span class="row-tools">
+                          <button class="ghost row-tool" title="Legg til lenke i kolonnen"
+                            onclick={() => addFooterLink(ci)}>{@html ICONS.plus}</button>
+                          <button class="ghost row-tool" onclick={() => moveFooterColumn(ci, -1)} disabled={ci === 0}>{@html ICONS.up}</button>
+                          <button class="ghost row-tool" onclick={() => moveFooterColumn(ci, 1)}
+                            disabled={ci === siteDraft.footer.columns.length - 1}>{@html ICONS.down}</button>
+                          <button class="ghost row-tool" title="Fjern kolonnen"
+                            onclick={() => removeFooterColumn(ci)}>{@html ICONS.cross}</button>
+                        </span>
+                      </div>
+                      {#each col.links ?? [] as link, li}
+                        <div class="nav-row nav-sub-row">
+                          <input value={link.label} title="Lenketeksten"
+                            oninput={(e) => setFooterLinkLabel(ci, li, e.target.value)} />
+                          <span class="row-tools">
+                            <button class="ghost row-tool" onclick={() => moveFooterLink(ci, li, -1)} disabled={li === 0}>{@html ICONS.up}</button>
+                            <button class="ghost row-tool" onclick={() => moveFooterLink(ci, li, 1)}
+                              disabled={li === col.links.length - 1}>{@html ICONS.down}</button>
+                            <button class="ghost row-tool" title="Fjern lenken"
+                              onclick={() => removeFooterLink(ci, li)}>{@html ICONS.cross}</button>
+                          </span>
+                          <span class="nav-target">
+                            <Dropdown value={link.page ?? '__href'} title="Hvor lenken går"
+                              options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Ekstern lenke']]}
+                              onchange={(v) => setFooterLinkTarget(ci, li, v)} />
+                          </span>
+                          {#if !link.page}
+                            <input class="nav-target" value={link.href ?? ''} placeholder="https://…"
+                              onchange={(e) => setFooterLinkHref(ci, li, e.target.value)} />
+                          {/if}
+                        </div>
+                      {/each}
+                    {/each}
+                    <button class="ghost action" onclick={addFooterColumn}>+ Ny kolonne</button>
+                  </div>
+                </details>
+
+                <details class="group">
+                  <summary>Sosiale lenker</summary>
+                  <div class="group-items">
+                    {#each siteDraft.footer?.social ?? [] as soc, si}
+                      <div class="nav-row">
+                        <span class="nav-line">
+                          <span class="footer-soc-preview" aria-hidden="true">{@html iconSvg(soc.icon) || ''}</span>
+                          <Dropdown value={soc.icon} title="Ikon" options={SOCIAL_ICON_OPTIONS}
+                            onchange={(v) => setFooterSocialIcon(si, v)} />
+                        </span>
+                        <span class="row-tools">
+                          <button class="ghost row-tool" onclick={() => moveFooterSocial(si, -1)} disabled={si === 0}>{@html ICONS.up}</button>
+                          <button class="ghost row-tool" onclick={() => moveFooterSocial(si, 1)}
+                            disabled={si === siteDraft.footer.social.length - 1}>{@html ICONS.down}</button>
+                          <button class="ghost row-tool" title="Fjern lenken"
+                            onclick={() => removeFooterSocial(si)}>{@html ICONS.cross}</button>
+                        </span>
+                        <input class="nav-target" value={soc.url} placeholder="https://… / mailto:…"
+                          onchange={(e) => setFooterSocialUrl(si, e.target.value)} />
+                      </div>
+                    {/each}
+                    <button class="ghost action" onclick={addFooterSocial}>+ Ny sosial lenke</button>
+                  </div>
+                </details>
+
+                <details class="group">
+                  <summary>Utseende</summary>
+                  <div class="group-items">
+                    <label>Bakgrunnsfarge
+                      <ColorPicker value={siteDraft.footer?.bg ?? 'surface'} tokens={themeSwatches()}
+                        label="Footerens bakgrunnsfarge" onchange={(hex) => setFooterBg(hex)} /></label>
+                    <label title="Justering av innholdet (mest merkbart uten kolonner)">Justering
+                      <Dropdown value={siteDraft.footer?.align ?? 'left'}
+                        options={[['left', 'Venstre'], ['center', 'Midtstilt'], ['right', 'Høyre']]}
+                        onchange={(v) => footerMutate('footer', (f) => { f.align = v; })} /></label>
+                  </div>
+                </details>
+
+                <details class="group">
+                  <summary>Bunnlinje og enkel tekst</summary>
+                  <div class="group-items">
+                    <label title="Copyright-linja nederst. Tom = bruker «Enkel tekst» under">Bunnlinje
+                      <input value={siteDraft.footer?.copyright ?? ''} placeholder="© 2026 Min forening"
+                        oninput={(e) => setFooterCopyright(e.target.value)} /></label>
+                    <label title="Footer uten kolonner: hver linje blir et avsnitt. Vises når bunnlinja er tom">Enkel tekst
+                      <textarea rows="3" placeholder={'© Min forening\nGateadresse 1, 0000 Sted'}
+                        value={siteDraft.footer?.text ?? ''}
+                        oninput={(e) => footerMutate('edit:footer-text', (f) => { f.text = e.target.value; })}></textarea></label>
+                  </div>
+                </details>
               </div>
             {:else if activePanel === 'Samlinger'}
               <div class="panel-body">
@@ -4853,6 +5059,20 @@
 
   .nav-row .nav-target {
     grid-column: 1;
+  }
+
+  /* Sosial-ikonets forhåndsvisning i Footer-panelet */
+  .footer-soc-preview {
+    flex: 0 0 1.15rem;
+    width: 1.15rem;
+    height: 1.15rem;
+    color: inherit;
+    opacity: 0.85;
+  }
+  .footer-soc-preview :global(svg) {
+    width: 100%;
+    height: 100%;
+    display: block;
   }
 
   /* Undermenyrader: innrykket under forelderpunktet, med markert kant */

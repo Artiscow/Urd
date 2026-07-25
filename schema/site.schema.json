@@ -271,8 +271,57 @@
       "properties": {
         "version": { "type": "integer", "minimum": 1 },
         "show": { "type": "boolean", "default": false },
-        "text": { "type": "string", "description": "Linjer skilt med linjeskift; hver linje blir et avsnitt" },
-        "align": { "enum": ["left", "center", "right"], "default": "center" }
+        "text": { "type": "string", "description": "Linjer skilt med linjeskift; hver linje blir et avsnitt. Bakoverkompatibel enkel form" },
+        "align": { "enum": ["left", "center", "right"], "default": "center" },
+        "brand": {
+          "type": "object",
+          "description": "Merkevare-kolonnen (additivt fra v0.6). Tittel faller tilbake til sidetittelen.",
+          "additionalProperties": false,
+          "properties": {
+            "title": { "type": "string" },
+            "tagline": { "type": "string" }
+          }
+        },
+        "columns": {
+          "type": "array",
+          "description": "Lenkekolonner (additivt fra v0.6). En kolonne uten gyldige lenker rendres ikke.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "title": { "type": "string" },
+              "links": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["label"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "label": { "type": "string" },
+                    "page": { "$ref": "#/$defs/id", "description": "Id fra sideregisteret" },
+                    "href": { "type": "string", "description": "Ekstern lenke - brukes når page ikke er satt" }
+                  },
+                  "not": { "required": ["page", "href"] }
+                }
+              }
+            }
+          }
+        },
+        "social": {
+          "type": "array",
+          "description": "Sosiale lenker (additivt fra v0.6): ikon-id fra ikonbiblioteket + URL (http/https/mailto/tel).",
+          "items": {
+            "type": "object",
+            "required": ["icon", "url"],
+            "additionalProperties": false,
+            "properties": {
+              "icon": { "type": "string", "description": "Id fra ikonbiblioteket (icons.js)" },
+              "url": { "type": "string" }
+            }
+          }
+        },
+        "copyright": { "type": "string", "description": "Bunnlinje (additivt fra v0.6); faller tilbake til text når fraværende" },
+        "bg": { "type": "string", "description": "Bakgrunnsfarge: temafarge-token eller egen verdi (additivt fra v0.6). Default = temaets surface" }
       }
     }
   },

@@ -3,6 +3,16 @@
 Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren stryker herfra** når noe er testet; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.33): footer med kolonner og sosiale lenker
+
+Footer (25. juli). Bygg footeren i admin (Footer-panelet) og sjekk på siden:
+- [ ] Footer-panelet: skru på «Vis footer», legg til Merkevare (tittel + tagline), Kolonner (tittel + lenker til sider eller eksterne URL-er, med legg til / flytt / fjern), Sosiale lenker (velg ikon i nedtrekket med live forhåndsvisning + URL), Utseende (bakgrunnsfarge + justering) og Bunnlinje (copyright)
+- [ ] Forhåndsvisningen oppdateres live mens du redigerer
+- [ ] På siden: kolonnene står side ved side på bred skjerm og stabler pent på smal/mobil; interne lenker går til riktig side, eksterne åpner riktig; sosiale ikoner tegnes og peker på URL-ene
+- [ ] Tema: footeren er lesbar i både lys og mørk modus
+- [ ] Tittel-feltets plassholder er «Urd» (ikke et versjonsnummer)
+- [ ] En eventuell gammel enkel footer (kun tekstlinjer) ser uendret ut
+
 ### Testrunde-batch (0.6.31): teksteditoren «Office-linjen» (to faste rader, størrelse på markering)
 
 Bugfikser i teksteditoren (del 2, 24. juli):
