@@ -48,16 +48,26 @@ export function renderFooter(site, host) {
     return;
   }
 
+  const rich = hasRichFooter(site);
+  const baseline = footerBaseline(site);
+
+  // Påskrudd, men uten innhold: en synlig, men HELT tom footer. Ingen tekst,
+  // ingen plassholder, ingen sidetittel - den fylles først når noe legges inn i
+  // Footer-panelet. (show av gir ingen footer i det hele tatt, over.)
+  if (!rich && !baseline.length) {
+    host.style.display = '';
+    const inner = document.createElement('div');
+    inner.className = 'urd-footer urd-footer-empty';
+    host.appendChild(inner);
+    return;
+  }
+
   // Gammel form: kun text-linjer. Byte-likt som før, uten kolonner/social.
-  if (!hasRichFooter(site)) {
-    if (!footer.text?.trim()) {
-      host.style.display = 'none';
-      return;
-    }
+  if (!rich) {
     host.style.display = '';
     const inner = document.createElement('div');
     inner.className = `urd-footer urd-footer-${footer.align ?? 'center'}`;
-    for (const line of footer.text.split('\n')) {
+    for (const line of (footer.text ?? '').split('\n')) {
       if (!line.trim()) continue;
       const p = document.createElement('p');
       p.textContent = line;
@@ -71,11 +81,6 @@ export function renderFooter(site, host) {
   const brand = footerBrand(site);
   const columns = footerColumns(site);
   const social = footerSocial(site);
-  const baseline = footerBaseline(site);
-  if (!brand && !columns.length && !social.length && !baseline.length) {
-    host.style.display = 'none';
-    return;
-  }
   host.style.display = '';
 
   const inner = document.createElement('div');

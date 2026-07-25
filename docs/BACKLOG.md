@@ -4,7 +4,7 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 
 Fullførte punkter fra v0.2-v0.5 er ryddet bort ved versjonsslippene (0.3.0 17. juli 2026, 0.5.10 18. juli 2026); se [CHANGELOG.md](CHANGELOG.md) for hva som ble levert. Innkomne forslag og funn sorteres rett inn i milepælen eller fasen der de best tas; dokumenterte begrensninger uten plan står i egen seksjon nederst.
 
-Et innslag arver nummeret til backlog-punktet arbeidet hører under, pluss ett siffer (0.6.6 → 0.6.6.6 som neste ledige). 
+Et innslag arver nummeret til backlog-punktet arbeidet hører under, pluss ett siffer for rekkefølge (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …).
 
 **Testrundene (sjekkliste over levert arbeid som venter på testing) bor i [TESTRUNDER.md](TESTRUNDER.md)**
 
@@ -95,7 +95,6 @@ Et innslag arver nummeret til backlog-punktet arbeidet hører under, pluss ett s
 - []Blokker - Plugins tillater ikke å legge til blokkene/elementene - å trykke på noen av kalendrene, skejma eller kart fungerer ikke. 
 - []Nav sitter over Hero i sin egen seksjon, så gjennomsiktighet fungerer ikke når man er helt på toppen av siden. Nav burde være akkurat over toppen av Hero.
 - []Kart-plugin har nå instillinger inne i egenskaper- må bygges om til at alle 'instillingene' er i egenskaper, ikke inne i "Instillinger" i egenskaper.
-- []dobbelklikk meny tema følger ikke Urd tema.
 - []Om man fjerner alle seksjoner på en side forsvinner + ny seksjon og det er ikke mulig å legge til en ny seksjon.
 
 ## Forslag og Ideer

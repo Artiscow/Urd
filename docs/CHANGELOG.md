@@ -7,14 +7,13 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 
 ## [Ulansert]
 
-Arbeidet mot v0.6 pushes nummerert (0.6.1, 0.6.2, …), og fase-slippet
-døpes til det siste push-nummeret ved gaten, slik v0.5-fasen endte i
-0.5.10. Da stiger numrene alltid. Etterslepp-fikser på v0.5 nummereres
-0.5.11 og videre.
+Hvert innslag arver nummeret til backlog-punktet arbeidet hører under, pluss
+ett siffer for rekkefølge (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). Fase-slippet
+døpes til det siste nummeret ved gaten.
 
-### 0.6.34 - footerfiks: tom footer forblir tom (ingen «Urd v0.5»-default) (0.6.6.5) - 25. juli 2026
+### 0.6.6.5.1 - footerfiks: tom footer forblir tom (ingen «Urd v0.5»-default) - 25. juli 2026
 - BUGFIKS: en footer som nettopp ble skrudd på viste sidetittelen (f.eks. «Urd v0.5») som merkevare, fordi `footerBrand` falt tilbake til `site.site.title` når `brand` var tom. Fallbacken er fjernet: en tom merkevare gir null, og en footer uten egne felt rendres byte-likt som den gamle tekst-footeren (tom når det ikke er skrevet noe). Tittel-feltets plassholder-hjelp endret fra «Tomt = sidetittelen» til «Tomt = ingen merkevare».
-- NUMMERERING (docs): backlog-notatet presisert - et CHANGELOG-innslag arver nummeret til backlog-punktet arbeidet hører under, pluss ett siffer for rekkefølge (0.6.6 → 0.6.6.6). Rydder opp i tidligere misforståelse om at backlog-numrene var noe annet enn CHANGELOG-numrene.
+- NUMMERERING (docs): backlog-notatet og CHANGELOG-ingressen presisert - hvert innslag arver nummeret til backlog-punktet arbeidet hører under, pluss ett siffer for rekkefølge (0.6.6.5 → 0.6.6.5.1). Rydder opp i tidligere misforståelse om at backlog-numrene var noe annet enn CHANGELOG-numrene; denne footerfiksen er selv det første eksemplet.
 - Verifisert: 211 kontraktstester (footerBrand- og hasRichFooter-testene oppdatert til ingen-fallback), skjemavalidering og editor-bygg grønne.
 
 ### 0.6.33 - footer med kolonner, sosiale lenker og merkevare (batch E / 0.6.6.5) - 25. juli 2026

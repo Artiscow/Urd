@@ -2604,6 +2604,12 @@ body.urd-marqueeing {
   gap: 0.3rem;
 }
 
+/* Påskrudd, men tom footer: en synlig, men helt tom flate (surface-bakgrunn),
+   ingen tekst. Fylles så snart noe legges inn i Footer-panelet. */
+#urd-footer .urd-footer-empty {
+  min-height: 4rem;
+}
+
 .urd-footer-center {
   text-align: center;
 }
