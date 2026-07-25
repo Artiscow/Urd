@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren stryker herfra** når noe er testet; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert.
 
+### Testrunde-batch (0.6.32): ytelse - raskere sidelasting
+
+Ytelse (25. juli). Mest merkbart på den deployede siden; noen ting kan kun bekreftes i produksjon:
+- [ ] Nye sider laster merkbart raskere enn før (både admin og besøkersiden), uten at noe ser annerledes ut - ingen visuell regresjon på Hjem, Om oss, Kaker, Kontakt
+- [ ] Interne lenker føles nær-umiddelbare ved klikk i Chromium/Chrome (Speculation Rules prerendrer dem); i andre nettlesere er det uendret, bare ikke fullt så raskt
+- [ ] Bilder i bildeblokker lenger nede på siden laster først når du scroller ned til dem (lazy), ikke alle med én gang
+- [ ] KUN på ekte deploy (ikke lokalt): et gjenbesøk henter ikke media-bildene på nytt (immutable-cache); sjekk evt. i DevTools at `media/`-svar har `Cache-Control: ...immutable`
+- [ ] Ingenting i editoren er endret: redigering, publisering og forhåndsvisning virker som før (motoren er den samme, kun raskere lastet)
+
 ### Testrunde-batch (0.6.31): teksteditoren «Office-linjen» (to faste rader, størrelse på markering)
 
 Bugfikser i teksteditoren (del 2, 24. juli):

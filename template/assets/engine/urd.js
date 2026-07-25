@@ -263,6 +263,11 @@ function enablePreview(state, opts) {
 export async function boot(opts) {
   registerCore();
 
+  // Start motorversjon-hentingen (urd.json) samtidig med site.json: de gjelder
+  // ikke hverandre, så de skal ikke ligge i seriell kø. Bare site.json blokkerer
+  // sideoppslaget; motorversjonen ventes på først rett før plugin-lastingen.
+  const enginePromise = engineVersion();
+
   // Råfilen beholdes som migreringskontekst: v1-sideløftet trenger det
   // OPPRINNELIGE gridet (columns/rowHeight), som det løftede sitet har mistet.
   const rawSite = await (await fetch('/content/site.json')).json();
@@ -275,7 +280,7 @@ export async function boot(opts) {
   site.nav ??= { version: 1, items: [] };
   applyTheme(site.theme);
   applyFavicon(site.site.icon);
-  const engine = await engineVersion();
+  const engine = await enginePromise;
   // I preview eier EDITOREN plugin-listen (utkastet i plugins.json): boot laster ingenting,
   // og urd-plugins-meldingen laster utkastets aktive plugins så de virker før publisering.
   if (!preview) await loadPlugins(Urd, engine);

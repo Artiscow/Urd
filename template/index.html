@@ -7,6 +7,48 @@
   <!-- Standard Urd-ikon; nettstedsikonet fra site.json overstyrer ved lasting -->
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0e14'/%3E%3Cpath d='M19 14v22a13 13 0 0 0 26 0V14' fill='none' stroke='%237c5cff' stroke-width='9' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/assets/styles/base.css">
+  <!--
+    Motoren serveres som rå ES-moduler. Uten forhåndslasting oppdager
+    nettleseren importene lag for lag (serielt fossefall). Disse
+    modulepreload-lenkene er den fulle STATISKE import-lukningen av boot.js,
+    så hele grafen hentes i én parallell bølge. Editor-laget (preview-edit.js
+    m.fl.) lastes dynamisk og skal IKKE stå her. Lista holdes i synk med
+    kilden av tests/modulepreload.test.mjs (feiler bygget ved drift).
+  -->
+  <link rel="modulepreload" href="/assets/engine/boot.js">
+  <link rel="modulepreload" href="/assets/engine/urd.js">
+  <link rel="modulepreload" href="/assets/engine/registry.js">
+  <link rel="modulepreload" href="/assets/engine/migrate.js">
+  <link rel="modulepreload" href="/assets/engine/theme.js">
+  <link rel="modulepreload" href="/assets/engine/render.js">
+  <link rel="modulepreload" href="/assets/engine/nav.js">
+  <link rel="modulepreload" href="/assets/engine/nav-model.js">
+  <link rel="modulepreload" href="/assets/engine/footer.js">
+  <link rel="modulepreload" href="/assets/engine/sanitize.js">
+  <link rel="modulepreload" href="/assets/engine/box-style.js">
+  <link rel="modulepreload" href="/assets/engine/icons.js">
+  <link rel="modulepreload" href="/assets/engine/samlinger.js">
+  <link rel="modulepreload" href="/assets/engine/galleri-model.js">
+  <link rel="modulepreload" href="/assets/engine/sticky.js">
+  <link rel="modulepreload" href="/assets/engine/sticky-model.js">
+  <link rel="modulepreload" href="/assets/engine/plugins.js">
+  <link rel="modulepreload" href="/assets/engine/blocks/text.js">
+  <link rel="modulepreload" href="/assets/engine/blocks/image.js">
+  <link rel="modulepreload" href="/assets/engine/blocks/button.js">
+  <link rel="modulepreload" href="/assets/engine/blocks/shape.js">
+  <link rel="modulepreload" href="/assets/engine/blocks/video.js">
+  <link rel="modulepreload" href="/assets/engine/blocks/icon.js">
+  <link rel="modulepreload" href="/assets/engine/blocks/samling.js">
+  <link rel="modulepreload" href="/assets/engine/blocks/galleri.js">
+  <link rel="modulepreload" href="/assets/engine/blocks/faq.js">
+  <link rel="modulepreload" href="/assets/engine/backgrounds/color.js">
+  <link rel="modulepreload" href="/assets/engine/backgrounds/gradient.js">
+  <link rel="modulepreload" href="/assets/engine/backgrounds/glow.js">
+  <link rel="modulepreload" href="/assets/engine/backgrounds/grain.js">
+  <link rel="modulepreload" href="/assets/engine/backgrounds/image.js">
+  <link rel="modulepreload" href="/assets/engine/backgrounds/bildegalleri.js">
+  <link rel="modulepreload" href="/assets/engine/animations/core.js">
+  <link rel="modulepreload" href="/assets/engine/sections/presets.js">
 </head>
 <body>
   <header id="urd-nav"></header>

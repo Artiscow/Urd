@@ -62,6 +62,11 @@ export const imageBlock = {
     const frame = document.createElement('span');
     frame.className = 'urd-image-frame';
     const img = document.createElement('img');
+    // Innholdsbilder hentes først når de nærmer seg viewporten: sparer bilder
+    // under folden på tunge sider. loading/decoding settes FØR src, ellers kan
+    // nettleseren ha startet hentingen allerede. (Samling/galleri/video gjør likt.)
+    img.loading = 'lazy';
+    img.decoding = 'async';
     img.src = props.src;
     img.draggable = false;
     // Store bilder dekodes stripevis mens de laster (ser ut som en
