@@ -20,6 +20,7 @@
   import { grainLayer } from '../../template/assets/engine/backgrounds/grain.js';
   import { imageLayer } from '../../template/assets/engine/backgrounds/image.js';
   import { bildegalleriLayer } from '../../template/assets/engine/backgrounds/bildegalleri.js';
+  import { footerThumb } from '../../template/assets/engine/footer-thumb.js';
   import { coreAnimations } from '../../template/assets/engine/animations/core.js';
   import { compressToWebp, slugify, contentHash, WARN_BYTES } from '../../template/assets/engine/imageTools.js';
   import { FONT_STACKS } from '../../template/assets/engine/fonts.js';
@@ -633,29 +634,40 @@
   /** Valgt lagtype for «+ Legg til lag» */
   let newBgType = $state('color');
 
-  function addBgLayer(type) {
-    mutateSection('bg', (s) => {
-      s.background ??= { version: 1, layers: [] };
-      s.background.layers.push({ type, version: BG_DEFS[type].version ?? 1, props: BG_DEFS[type].defaults() });
+  /* Bakgrunnseditoren er delt mellom seksjon, nav og footer via en snippet
+     (backgroundLayers) som deler denne komponentens scoped stiler. Hver
+     handler tar en `bg`-kontekst {mutate, keyPrefix, keyId}: `mutate(key, fn)`
+     der fn(target) muterer target.background (seksjon / nav.style / footer),
+     keyPrefix/keyId gir stabile history-koalescerings-nøkler per mål. */
+
+  function addBgLayer(bg, type) {
+    bg.mutate(bg.keyPrefix, (t) => {
+      t.background ??= { version: 1, layers: [] };
+      t.background.layers.push({ type, version: BG_DEFS[type].version ?? 1, props: BG_DEFS[type].defaults() });
     });
   }
 
-  function removeBgLayer(i) {
-    mutateSection('bg', (s) => { s.background.layers.splice(i, 1); });
+  function removeBgLayer(bg, i) {
+    bg.mutate(bg.keyPrefix, (t) => {
+      t.background.layers.splice(i, 1);
+      // Tom lagliste rydder background helt, så mål uten bakgrunn ikke bærer
+      // et tomt {version,layers}-objekt (og nav/footer faller tilbake til flat).
+      if (!t.background.layers.length) delete t.background;
+    });
   }
 
-  function moveBgLayer(i, dir) {
+  function moveBgLayer(bg, i, dir) {
     const j = i + dir;
-    mutateSection('bg', (s) => {
-      const layers = s.background.layers;
+    bg.mutate(bg.keyPrefix, (t) => {
+      const layers = t.background.layers;
       if (j < 0 || j >= layers.length) return;
       [layers[i], layers[j]] = [layers[j], layers[i]];
     });
   }
 
-  function setBgProp(i, name, value) {
-    mutateSection(`edit:bg-${activeSectionId}-${i}-${name}`, (s) => {
-      s.background.layers[i].props[name] = value;
+  function setBgProp(bg, i, name, value) {
+    bg.mutate(`edit:${bg.keyPrefix}-${bg.keyId}-${i}-${name}`, (t) => {
+      t.background.layers[i].props[name] = value;
     });
   }
 
@@ -671,9 +683,9 @@
     return lift({ type: 'gradient', version: raw.version ?? 1, props: raw.props }, gradientLayer).props;
   }
 
-  function mutateGradient(i, key, fn) {
-    mutateSection(key, (s) => {
-      const layer = s.background.layers[i];
+  function mutateGradient(bg, i, key, fn) {
+    bg.mutate(key, (t) => {
+      const layer = t.background.layers[i];
       if ((layer.version ?? 1) < gradientLayer.version) {
         const res = lift({ type: 'gradient', version: layer.version ?? 1, props: $state.snapshot(layer.props) }, gradientLayer);
         if (!res.ok) return;
@@ -684,8 +696,8 @@
     });
   }
 
-  function setGradProp(i, name, value) {
-    mutateGradient(i, `edit:bg-${activeSectionId}-${i}-${name}`, (p) => { p[name] = value; });
+  function setGradProp(bg, i, name, value) {
+    mutateGradient(bg, i, `edit:${bg.keyPrefix}-${bg.keyId}-${i}-${name}`, (p) => { p[name] = value; });
   }
 
   /** Formbytte nullstiller animasjonen om den ikke finnes for den nye formen. */
@@ -694,35 +706,35 @@
     radial: [['none', 'Ingen'], ['pulse', 'Pulser'], ['orbit', 'Sving sakte i bane']],
   };
 
-  function setGradKind(i, kind) {
-    mutateGradient(i, 'bg', (p) => {
+  function setGradKind(bg, i, kind) {
+    mutateGradient(bg, i, bg.keyPrefix, (p) => {
       p.kind = kind;
       if (!GRAD_ANIMATIONS[kind].some(([id]) => id === (p.animation ?? 'none'))) p.animation = 'none';
     });
   }
 
-  function setGradStop(i, si, patch) {
-    mutateGradient(i, `edit:bg-${activeSectionId}-${i}-stop${si}`, (p) => {
+  function setGradStop(bg, i, si, patch) {
+    mutateGradient(bg, i, `edit:${bg.keyPrefix}-${bg.keyId}-${i}-stop${si}`, (p) => {
       p.stops[si] = { ...p.stops[si], ...patch };
     });
   }
 
   /** Ny farge nederst i listen, med plass som en gjennomsnittsfarge. */
-  function addGradStop(i) {
-    mutateGradient(i, 'bg', (p) => {
+  function addGradStop(bg, i) {
+    mutateGradient(bg, i, bg.keyPrefix, (p) => {
       const avg = Math.round(p.stops.reduce((a, s) => a + (Number(s.share) || 0), 0) / p.stops.length) || 50;
       p.stops.push({ color: p.stops[p.stops.length - 1]?.color ?? '#ffffff', share: avg });
     });
   }
 
-  function removeGradStop(i, si) {
-    mutateGradient(i, 'bg', (p) => {
+  function removeGradStop(bg, i, si) {
+    mutateGradient(bg, i, bg.keyPrefix, (p) => {
       if (p.stops.length > 2) p.stops.splice(si, 1);
     });
   }
 
-  function reorderGradStop(i, from, to) {
-    mutateGradient(i, 'bg', (p) => {
+  function reorderGradStop(bg, i, from, to) {
+    mutateGradient(bg, i, bg.keyPrefix, (p) => {
       const [moved] = p.stops.splice(from, 1);
       p.stops.splice(to, 0, moved);
     });
@@ -736,7 +748,7 @@
   /** Pekerbasert dra (ikke HTML5-dnd: den ga verken visuell indikator
    *  eller pålitelig slipp på naboraden). Raden man drar dempes, og
    *  innsettingsstreken følger pekeren; slipp utfører ETT angre-steg. */
-  function startStopDrag(event, layerI, si) {
+  function startStopDrag(bg, event, layerI, si) {
     if (event.button !== 0) return;
     event.preventDefault();
     const container = event.currentTarget.closest('.bg-layer');
@@ -775,28 +787,28 @@
       stopDrag = null;
       if (!drag) return;
       const to = drag.insert > drag.from ? drag.insert - 1 : drag.insert;
-      if (to !== drag.from) reorderGradStop(drag.layer, drag.from, to);
+      if (to !== drag.from) reorderGradStop(bg, drag.layer, drag.from, to);
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
   }
 
   /** Bytt lagtype i etterkant (laget beholder plassen, props nullstilles). */
-  function changeBgLayerType(i, type) {
-    mutateSection('bg', (s) => {
-      if (s.background.layers[i].type === type) return;
-      s.background.layers[i] = { type, version: BG_DEFS[type].version ?? 1, props: BG_DEFS[type].defaults() };
+  function changeBgLayerType(bg, i, type) {
+    bg.mutate(bg.keyPrefix, (t) => {
+      if (t.background.layers[i].type === type) return;
+      t.background.layers[i] = { type, version: BG_DEFS[type].version ?? 1, props: BG_DEFS[type].defaults() };
     });
   }
 
   /** Bakgrunnsbilde: samme webp-flyt som bildeblokken. */
-  async function setBgImage(i, event) {
+  async function setBgImage(bg, i, event) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
     try {
       const img = await compressToWebp(file);
-      setBgProp(i, 'src', img.dataUrl);
+      setBgProp(bg, i, 'src', img.dataUrl);
     } catch {
       setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
     }
@@ -805,15 +817,15 @@
   /* Bildegalleri-laget: bildelisten redigeres som bakgrunnslagene ellers,
      men med flervalgs-opplasting (hele bunken i ETT angre-steg). */
 
-  async function addBgGalleryImages(i, event) {
+  async function addBgGalleryImages(bg, i, event) {
     const files = [...(event.target.files ?? [])];
     event.target.value = '';
     if (!files.length) return;
     setStatus('Komprimerer bildene…');
     const { images, failed, big } = await compressMany(files);
     if (images.length) {
-      mutateSection('bg', (s) => {
-        const props = s.background.layers[i].props;
+      bg.mutate(bg.keyPrefix, (t) => {
+        const props = t.background.layers[i].props;
         props.images ??= [];
         props.images.push(...images.map(({ src }) => ({ src, x: 0.5, y: 0.5 })));
       });
@@ -821,24 +833,33 @@
     reportUpload(images.length, failed, big);
   }
 
-  function moveBgGalleryImage(i, j, dir) {
-    mutateSection('bg', (s) => {
-      const arr = s.background.layers[i].props.images;
+  function moveBgGalleryImage(bg, i, j, dir) {
+    bg.mutate(bg.keyPrefix, (t) => {
+      const arr = t.background.layers[i].props.images;
       const k = j + dir;
       if (k < 0 || k >= arr.length) return;
       [arr[j], arr[k]] = [arr[k], arr[j]];
     });
   }
 
-  function removeBgGalleryImage(i, j) {
-    mutateSection('bg', (s) => { s.background.layers[i].props.images.splice(j, 1); });
+  function removeBgGalleryImage(bg, i, j) {
+    bg.mutate(bg.keyPrefix, (t) => { t.background.layers[i].props.images.splice(j, 1); });
   }
 
-  function setBgGalleryImageProp(i, j, name, value) {
-    mutateSection(`edit:bgg-${activeSectionId}-${i}-${j}-${name}`, (s) => {
-      s.background.layers[i].props.images[j][name] = value;
+  function setBgGalleryImageProp(bg, i, j, name, value) {
+    bg.mutate(`edit:${bg.keyPrefix}g-${bg.keyId}-${i}-${j}-${name}`, (t) => {
+      t.background.layers[i].props.images[j][name] = value;
     });
   }
+
+  /** bg-kontekstene for de tre målene (seksjon/nav/footer). Seksjonen bruker
+   *  mirror-speilet sectionBg; nav/footer leser reaktivt fra siteDraft. */
+  function navBgMutate(key, fn) {
+    siteMutate(key, () => { siteDraft.nav.style ??= {}; fn(siteDraft.nav.style); });
+  }
+  const sectionBgCtx = $derived({ mutate: mutateSection, keyPrefix: 'bg', keyId: activeSectionId });
+  const navBgCtx = { mutate: navBgMutate, keyPrefix: 'navbg', keyId: 'nav' };
+  const footerBgCtx = { mutate: footerMutate, keyPrefix: 'footerbg', keyId: 'footer' };
 
   /** Temafargene som hurtigvalg i fargevelgeren (velgeren løser opp
    *  token-navn selv, så ingen hexFor-omregning trengs lenger). */
@@ -1513,7 +1534,7 @@
 
   // Admin-fanen viser nettstedsikonet når det finnes, ellers Urd-merket (samme SVG som i admin/index.html; kan ikke leses fra link-elementet, for favicon-boot.js kan alt ha byttet det).
   // Kun kjente ikonformer slippes gjennom (data:image eller site-relativ sti), så utkastdata aldri kan bli en aktiv URL (CodeQL-funn #1-3).
-  const URD_MARK_ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0e14'/%3E%3Cpath d='M19 14v22a13 13 0 0 0 26 0V14' fill='none' stroke='%237c5cff' stroke-width='9' stroke-linecap='round'/%3E%3C/svg%3E";
+  const URD_MARK_ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0e14'/%3E%3Cpath d='M19.2 51.2V16l25.6 10.4V51.2' fill='none' stroke='%2315b39a' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E";
   // Anket regex i stedet for startsWith: CodeQL gjenkjenner RegExp.test som barriere, så varslene på denne flyten lukkes.
   const SAFE_ICON_RE = /^(?:data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+|\/(?!\/)[\w%./-]*)$/;
   $effect(() => {
@@ -1588,28 +1609,6 @@
       siteDraft.nav.style ??= {};
       if (value === 'standard') delete siteDraft.nav.style.hover;
       else siteDraft.nav.style.hover = value;
-    });
-  }
-
-  /** Bakgrunnsbilde i menyen: samme webp-flyt som logoen (materialiseres ved publisering). */
-  async function uploadNavImage(event) {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-    try {
-      const img = await compressToWebp(file);
-      siteMutate('nav', () => {
-        siteDraft.nav.style ??= {};
-        siteDraft.nav.style.image = img.dataUrl;
-      });
-    } catch {
-      setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
-    }
-  }
-
-  function removeNavImage() {
-    siteMutate('nav', () => {
-      if (siteDraft.nav.style) delete siteDraft.nav.style.image;
     });
   }
 
@@ -1924,7 +1923,41 @@
     footerMutate(`edit:footer-brand-${field}`, (f) => {
       f.brand ??= {};
       if (value.trim()) f.brand[field] = value; else delete f.brand[field];
+      if (!f.brand.title && !f.brand.tagline && !f.brand.logo) delete f.brand;
+    });
+  }
+
+  /* Footer-logo (tekst/logo/begge, speiler nav-logoen): opplasting til webp,
+     materialiseres til media/ ved publisering. */
+  function setFooterBrandMode(value) {
+    footerMutate('footer', (f) => {
+      f.brand ??= {};
+      if (value === 'image' || value === 'both') f.brand.mode = value; else delete f.brand.mode;
+    });
+  }
+  async function uploadFooterLogo(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      const img = await compressToWebp(file);
+      footerMutate('footer', (f) => { f.brand ??= {}; f.brand.logo = img.dataUrl; if (!f.brand.mode) f.brand.mode = 'both'; });
+    } catch {
+      setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
+    }
+  }
+  function removeFooterLogo() {
+    footerMutate('footer', (f) => {
+      if (!f.brand) return;
+      delete f.brand.logo; delete f.brand.mode; delete f.brand.logoHeight;
       if (!f.brand.title && !f.brand.tagline) delete f.brand;
+    });
+  }
+  function setFooterLogoHeight(value) {
+    footerMutate('edit:footer-logo-height', (f) => {
+      f.brand ??= {};
+      const n = Number(value);
+      if (Number.isFinite(n)) f.brand.logoHeight = Math.min(160, Math.max(16, Math.round(n)));
     });
   }
 
@@ -1934,9 +1967,174 @@
     });
   }
 
-  function setFooterBg(hex) {
-    footerMutate('footer', (f) => { if (hex && hex !== 'surface') f.bg = hex; else delete f.bg; });
+  /* Footer-maler: åtte research-baserte startoppsett, bygget fra sidens egne
+     sider og tittel. Fyller footeren; alt redigeres videre. Hver har en liten
+     thumb-beskrivelse til den visuelle mal-velgeren (footerThumb). */
+  const FOOTER_TEMPLATES = [
+    { id: 'minimal', label: 'Minimal', thumb: { center: true, social: 2, baselineLinks: 1 } },
+    { id: 'sentrert', label: 'Sentrert', thumb: { center: true, row: true, social: 3 } },
+    { id: 'kolonner', label: 'Kolonner', thumb: { tag: true, cols: 3, social: 3, baselineLinks: 2 } },
+    { id: 'sitemap', label: 'Sitemap', thumb: { tag: true, fat: true, cols: 4, social: 4, baselineLinks: 3 } },
+    { id: 'nyhetsbrev', label: 'Nyhetsbrev', thumb: { tag: true, cta: true, cols: 2, social: 2, baselineLinks: 1 } },
+    { id: 'storcta', label: 'Stor CTA', thumb: { center: true, bigcta: true, baselineLinks: 2 } },
+    { id: 'kontakt', label: 'Kontakt', thumb: { tag: true, cols: 3, social: 2, baselineLinks: 1 } },
+    { id: 'mega', label: 'Mega', thumb: { tag: true, mega: true, cols: 2, social: 4, baselineLinks: 2 } },
+  ];
+
+  function footerTemplateConfig(name) {
+    // ALLTID nøytral plassholder, ALDRI sidetittelen: sidetittelen kan inneholde
+    // hva som helst (f.eks. et versjonsnummer på en testside), og eksempeltekst
+    // skal aldri ha versjonsnummer. Eieren skriver inn sitt eget navn.
+    const title = 'Min forening';
+    const pages = siteDraft.pages ?? [];
+    const pageLinks = (n) => pages.slice(0, n).map((p) => ({ label: p.title || p.id, page: p.id }));
+    const soc = (ids) => ids.map((icon) => ({ icon, url: `https://${icon}.com` }));
+    const ext = (label, href) => ({ label, href });
+    const copyright = `© ${title}`;
+    if (name === 'minimal') {
+      return { align: 'center', brand: { title }, social: soc(['facebook', 'instagram']),
+        copyright, baseline: [ext('Personvern', '#')] };
+    }
+    if (name === 'sentrert') {
+      return { align: 'center', brand: { title }, linkRow: pageLinks(5),
+        social: soc(['facebook', 'instagram', 'x']), copyright: `${copyright} · Laget med Urd` };
+    }
+    if (name === 'kolonner') {
+      return { align: 'left', brand: { title, tagline: 'Et lite fellesskap for store spørsmål. Møtes annenhver torsdag.' },
+        columns: [
+          { title: 'Sider', links: pageLinks(4) },
+          { title: 'Selskap', links: [ext('Om oss', '#'), ext('Bli medlem', '#'), ext('Presse', '#')] },
+          { title: 'Ressurser', links: [ext('Vedtekter', '#'), ext('Personvern', '#'), ext('Kontakt', '#')] },
+        ],
+        social: soc(['facebook', 'instagram', 'linkedin']), copyright,
+        baseline: [ext('Personvern', '#'), ext('Vilkår', '#')] };
+    }
+    if (name === 'sitemap') {
+      return { align: 'left', brand: { title, tagline: 'Alt på ett sted.' },
+        columns: [
+          { title: 'Utforsk', links: [ext('Hjem', '#'), ext('Arrangementer', '#'), ext('Galleri', '#'), ext('Blogg', '#')] },
+          { title: 'Selskap', links: [ext('Om oss', '#'), ext('Historie', '#'), ext('Presse', '#'), ext('Kontakt', '#')] },
+          { title: 'Støtte', links: [ext('Bli medlem', '#'), ext('FAQ', '#'), ext('Hjelp', '#')] },
+          { title: 'Juridisk', links: [ext('Personvern', '#'), ext('Vilkår', '#'), ext('Vedtekter', '#')] },
+        ],
+        social: soc(['facebook', 'instagram', 'linkedin', 'youtube']), copyright,
+        baseline: [ext('Personvern', '#'), ext('Vilkår', '#'), ext('Cookies', '#')] };
+    }
+    if (name === 'nyhetsbrev') {
+      return { align: 'left', brand: { title, tagline: 'Få siste nytt om arrangementer og medlemsfordeler.' },
+        cta: { kind: 'newsletter', heading: 'Meld deg på nyhetsbrevet', label: 'Meld på', recipient: 'post@dinforening.no', success: 'Takk, du er påmeldt!' },
+        columns: [
+          { title: 'Sider', links: pageLinks(4) },
+          { title: 'Mer', links: [ext('Om oss', '#'), ext('Kontakt', '#'), ext('Personvern', '#')] },
+        ],
+        social: soc(['facebook', 'instagram']), copyright, baseline: [ext('Personvern', '#')] };
+    }
+    if (name === 'storcta') {
+      return { align: 'center',
+        cta: { kind: 'button', big: true, heading: 'Klar til å bli med i fellesskapet?', sub: 'Vi tar imot nye medlemmer hele året - kom innom en torsdag.', label: 'Bli medlem', href: '#' },
+        linkRow: pageLinks(4), social: soc(['facebook', 'instagram', 'x']), copyright,
+        baseline: [ext('Personvern', '#'), ext('Vilkår', '#')] };
+    }
+    if (name === 'kontakt') {
+      return { align: 'left', brand: { title, tagline: 'Kom innom eller ta kontakt - vi svarer gjerne.' },
+        columns: [
+          { title: 'Besøk oss', links: [ext('Storgata 1, 0155 Oslo', '#'), ext('post@dinforening.no', 'mailto:post@dinforening.no'), ext('+47 22 00 00 00', 'tel:+4722000000')] },
+          { title: 'Åpningstider', links: [ext('Man-fre 09-16', '#'), ext('Lør 10-14', '#')] },
+          { title: 'Sider', links: pageLinks(4) },
+        ],
+        social: soc(['facebook', 'instagram']), copyright, baseline: [ext('Personvern', '#')] };
+    }
+    // mega: kolonner + bakgrunnslag (glød + korn).
+    return { align: 'left', brand: { title, tagline: 'Bli med i samtalen. Vi tar imot nye medlemmer hele året.' },
+      columns: [
+        { title: 'Utforsk', links: pageLinks(4) },
+        { title: 'Følg oss', links: [ext('Nyhetsbrev', '#'), ext('post@dinforening.no', 'mailto:post@dinforening.no')] },
+      ],
+      social: soc(['facebook', 'instagram', 'linkedin', 'youtube']), copyright,
+      baseline: [ext('Personvern', '#'), ext('Laget med Urd', '#')],
+      background: { version: 1, layers: [
+        { type: 'glow', version: glowLayer.version ?? 1, props: { ...glowLayer.defaults(), color: 'accent', x: 0.12, y: 0, radius: 0.6, opacity: 0.45 } },
+        { type: 'grain', version: grainLayer.version ?? 1, props: { ...grainLayer.defaults(), opacity: 0.08 } },
+      ] } };
   }
+
+  /** Bruk et footer-oppsett: erstatter innholds-feltene og skrur footeren på. */
+  function applyFooterTemplate(name) {
+    footerMutate('footer-template', (f) => {
+      const t = footerTemplateConfig(name);
+      f.show = true;
+      delete f.text; // «Enkel tekst» er den gamle formen; malene bruker rik footer.
+      for (const k of ['align', 'brand', 'columns', 'social', 'copyright', 'baseline', 'linkRow', 'cta', 'columnsAlign', 'background']) {
+        if (t[k] !== undefined) f[k] = t[k]; else delete f[k];
+      }
+    });
+  }
+
+  /* Generiske lenkeliste-handlere for bunnlinje-lenker (baseline) og doormat-
+     raden (linkRow) - samme form som kolonne-lenkene, men på en flat liste. */
+  function addFooterListLink(field) {
+    footerMutate('footer', (f) => {
+      f[field] ??= [];
+      f[field].push(siteDraft.pages[0] ? { label: 'Lenke', page: siteDraft.pages[0].id } : { label: 'Lenke', href: 'https://' });
+    });
+  }
+  function removeFooterListLink(field, i) {
+    footerMutate('footer', (f) => { f[field].splice(i, 1); if (!f[field].length) delete f[field]; });
+  }
+  function moveFooterListLink(field, i, dir) {
+    footerMutate('footer', (f) => {
+      const a = f[field]; const j = i + dir;
+      if (j < 0 || j >= a.length) return;
+      [a[i], a[j]] = [a[j], a[i]];
+    });
+  }
+  function setFooterListLinkLabel(field, i, value) {
+    footerMutate(`edit:footer-${field}-label-${i}`, (f) => { f[field][i].label = value; });
+  }
+  function setFooterListLinkTarget(field, i, value) {
+    footerMutate('footer', (f) => {
+      const link = f[field][i];
+      if (value === '__href') { delete link.page; link.href = link.href ?? 'https://'; }
+      else { link.page = value; delete link.href; }
+    });
+  }
+  function setFooterListLinkHref(field, i, value) {
+    footerMutate(`edit:footer-${field}-href-${i}`, (f) => { f[field][i].href = value; });
+  }
+
+  /** Kolonne-justering: overskriften til en bred (todelt) kolonne. */
+  function setFooterColumnsAlign(value) {
+    footerMutate('footer', (f) => { if (value === 'center') f.columnsAlign = 'center'; else delete f.columnsAlign; });
+  }
+
+  /* Handlingsoppfordring (CTA): knapp (lenke) eller nyhetsbrev (e-postfelt). */
+  function enableFooterCta(on) {
+    footerMutate('footer', (f) => { if (on) f.cta ??= { kind: 'button', label: 'Bli medlem' }; else delete f.cta; });
+  }
+  function setFooterCtaField(field, value) {
+    footerMutate(`edit:footer-cta-${field}`, (f) => {
+      f.cta ??= {};
+      if (value === '' || value == null || value === false) delete f.cta[field];
+      else f.cta[field] = value;
+    });
+  }
+  function setFooterCtaTarget(value) {
+    footerMutate('footer', (f) => {
+      f.cta ??= {};
+      if (value === '__href') { delete f.cta.page; f.cta.href = f.cta.href ?? 'https://'; }
+      else { f.cta.page = value; delete f.cta.href; }
+    });
+  }
+
+  /** Per-side synlighet: footeren vises på alle sider unntatt de i hideOn. */
+  function toggleFooterOnPage(pageId, show) {
+    footerMutate('footer', (f) => {
+      const hide = new Set(f.hideOn ?? []);
+      if (show) hide.delete(pageId); else hide.add(pageId);
+      if (hide.size) f.hideOn = [...hide]; else delete f.hideOn;
+    });
+  }
+
 
   function addFooterColumn() {
     footerMutate('footer', (f) => {
@@ -2696,16 +2894,21 @@
     obj[field] = `/${path}`;
   }
 
+  /** Bakgrunnslagenes bilder (image + bildegalleri) - delt av seksjon, nav og footer. */
+  function materializeBackground(background, files) {
+    for (const layer of background?.layers ?? []) {
+      if (layer.type === 'image') materializeField(layer.props, 'src', 'bakgrunn', files);
+      if (layer.type === 'bildegalleri') {
+        for (const img of layer.props.images ?? []) materializeField(img, 'src', 'bakgrunn', files);
+      }
+    }
+  }
+
   function materializeImages(page) {
     const files = [];
     for (const section of page.sections) {
       // Bakgrunnsbilder følger samme flyt som bildeblokker.
-      for (const layer of section.background?.layers ?? []) {
-        if (layer.type === 'image') materializeField(layer.props, 'src', 'bakgrunn', files);
-        if (layer.type === 'bildegalleri') {
-          for (const img of layer.props.images ?? []) materializeField(img, 'src', 'bakgrunn', files);
-        }
-      }
+      materializeBackground(section.background, files);
       for (const block of section.blocks) {
         if (block.type === 'image') materializeField(block.props, 'src', block.props.alt, files);
         // Ikon-blokkens eget opplastede ikon publiseres som media-fil på samme måte.
@@ -2724,7 +2927,12 @@
     const logo = site.nav?.logo;
     if (logo?.type === 'image') materializeField(logo, 'value', 'logo', files);
     if (logo?.type === 'both') materializeField(logo, 'image', 'logo', files);
+    // Gammelt enkelt nav-bakgrunnsbilde (bakoverkompat) + de nye lag-bakgrunnene
+    // på nav og footer.
     if (site.nav?.style) materializeField(site.nav.style, 'image', 'meny', files);
+    materializeBackground(site.nav?.style?.background, files);
+    materializeBackground(site.footer?.background, files);
+    if (site.footer?.brand) materializeField(site.footer.brand, 'logo', 'footer-logo', files);
     materializeField(site.site, 'icon', 'ikon', files);
     return files;
   }
@@ -3026,7 +3234,10 @@
 
   <header class="topbar" class:hidden={!chromeVisible}>
     <span class="topbar-group">
-      <strong class="brand">Urd</strong>
+      <span class="brand" title="Urd">
+        <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M12 32V10l16 6.5V32" fill="none" stroke="var(--urd-brand)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        <span class="brand-word">Urd</span>
+      </span>
 
       <Dropdown value={adminTheme} title="Adminens fargetema (kun editoren, ikke nettsiden din)"
         options={ADMIN_THEMES} onchange={(v) => (adminTheme = v)} />
@@ -3210,12 +3421,7 @@
                           options={[['left', 'Venstre'], ['center', 'Midtstilt'], ['right', 'Høyre']]}
                           onchange={(v) => setNavStyle('sideAlign', v === 'left' ? undefined : v)} /></label>
                     {/if}
-                    <label title="0 % = helt tett flate, 100 % = helt gjennomsiktig meny">Gjennomsiktighet
-                      <span class="gridmenu-value">{Math.round((1 - (siteDraft.nav.style?.bgOpacity ?? 0.85)) * 100)}%</span></label>
-                    <input type="range" min="0" max="1" step="0.05"
-                      value={1 - (siteDraft.nav.style?.bgOpacity ?? 0.85)}
-                      oninput={(e) => setNavStyle('bgOpacity', Math.round((1 - Number(e.target.value)) * 100) / 100)} />
-                    <label class="gridmenu-snap" title="Innholdet bak menyen sløres (synlig når gjennomsiktigheten er høy)">
+                    <label class="gridmenu-snap" title="Innholdet bak menyen sløres (synlig når bakgrunnen er gjennomsiktig)">
                       <input type="checkbox" checked={siteDraft.nav.style?.blur !== false}
                         onchange={(e) => setNavStyle('blur', e.target.checked)} />
                       Uskarphet bak menyen
@@ -3260,41 +3466,12 @@
                     <label title="Tekstfargen når pekeren er over et menypunkt">Tekstfarge ved hover
                       <ColorPicker value={siteDraft.nav.style?.hoverTextColor ?? 'accent'} tokens={themeSwatches()}
                         label="Tekstfargen ved hover" onchange={(hex) => setNavStyle('hoverTextColor', hex)} /></label>
-                    <label>Bakgrunnsfarge
-                      <ColorPicker value={siteDraft.nav.style?.bg ?? 'surface'} tokens={themeSwatches()}
-                        label="Menyens bakgrunnsfarge" onchange={(hex) => setNavStyle('bg', hex)} /></label>
                     <label>Tekstfarge
                       <ColorPicker value={siteDraft.nav.style?.textColor ?? 'text'} tokens={themeSwatches()}
                         label="Menyens tekstfarge" onchange={(hex) => setNavStyle('textColor', hex)} /></label>
-                    <span class="toolbar-row">
-                      <label class="ghost filepick tb-grow" title="Bakgrunnsfargen med gjennomsiktigheten legger seg som et slør over bildet; komprimeres automatisk til webp">
-                        {siteDraft.nav.style?.image ? 'Bytt bakgrunnsbilde' : 'Bakgrunnsbilde i menyen'}
-                        <input type="file" accept="image/*" onchange={uploadNavImage} />
-                      </label>
-                      {#if siteDraft.nav.style?.image}
-                        <button class="ghost row-tool" title="Fjern bakgrunnsbildet"
-                          onclick={removeNavImage}>{@html ICONS.cross}</button>
-                      {/if}
-                    </span>
-                    {#if siteDraft.nav.style?.image}
-                      <label>Bildestyrke
-                        <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.imageOpacity ?? 1) * 100)}%</span></label>
-                      <input type="range" min="0.1" max="1" step="0.05"
-                        value={siteDraft.nav.style?.imageOpacity ?? 1}
-                        oninput={(e) => setNavStyle('imageOpacity', Number(e.target.value))} />
-                      <label>Bildeutsnitt (høyde)
-                        <span class="gridmenu-value">{Math.round(siteDraft.nav.style?.imageY ?? 50)}%</span></label>
-                      <input type="range" min="0" max="100" step="1"
-                        title="Hvilken del av bildet som vises i høyden: 0 = toppen, 100 = bunnen. Monner mest i topplinjen"
-                        value={siteDraft.nav.style?.imageY ?? 50}
-                        oninput={(e) => setNavStyle('imageY', Number(e.target.value))} />
-                      <label>Bildeutsnitt (bredde)
-                        <span class="gridmenu-value">{Math.round(siteDraft.nav.style?.imageX ?? 50)}%</span></label>
-                      <input type="range" min="0" max="100" step="1"
-                        title="Hvilken del av bildet som vises i bredden: 0 = venstre, 100 = høyre. Monner mest i sidestilt kolonne"
-                        value={siteDraft.nav.style?.imageX ?? 50}
-                        oninput={(e) => setNavStyle('imageX', Number(e.target.value))} />
-                    {/if}
+                    <hr class="gridmenu-divider" />
+                    <p class="panel-strong">Bakgrunn</p>
+                    {@render backgroundLayers(navBgCtx, siteDraft.nav?.style?.background?.layers ?? [])}
                   </div>
                 </details>
                 <details class="group">
@@ -3316,13 +3493,6 @@
                     <label title="Punktene i undermenyen legges i rutenett: 2 kolonner gir 2x2, 2x3 osv.">Kolonner
                       <input type="number" min="1" max="4" value={siteDraft.nav.style?.subColumns ?? 1}
                         onchange={(e) => setNavStyle('subColumns', Number(e.target.value) > 1 ? Number(e.target.value) : undefined)} /></label>
-                    {#if siteDraft.nav.style?.image}
-                      <label class="gridmenu-snap" title="Av: undermenyen og mobilpanelet får kun bakgrunnsfargen, ikke bildet">
-                        <input type="checkbox" checked={siteDraft.nav.style?.subImage === true}
-                          onchange={(e) => setNavStyle('subImage', e.target.checked ? true : undefined)} />
-                        Bakgrunnsbilde også i undermenyen
-                      </label>
-                    {/if}
                   </div>
                 </details>
                 <details class="group" open>
@@ -3584,186 +3754,7 @@
 
                   <hr class="gridmenu-divider" />
                   <p class="panel-strong">Bakgrunn</p>
-                  <p class="panel-hint">Lagene tegnes nedenfra og opp; øverste lag i listen ligger bakerst.</p>
-                  {#each sectionBg as layer, i (i)}
-                    <div class="bg-layer">
-                      <span class="nav-line">
-                        <Dropdown value={layer.type} title="Bytt lagtype (innstillingene nullstilles)"
-                          options={BG_TYPES.map(([id, def]) => [id, def.label])}
-                          onchange={(v) => changeBgLayerType(i, v)} />
-                        <span class="row-tools">
-                          <button class="ghost row-tool" onclick={() => moveBgLayer(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-                          <button class="ghost row-tool" onclick={() => moveBgLayer(i, 1)}
-                            disabled={i === sectionBg.length - 1}>{@html ICONS.down}</button>
-                          <button class="ghost row-tool" title="Fjern laget" onclick={() => removeBgLayer(i)}>{@html ICONS.cross}</button>
-                        </span>
-                      </span>
-                      {#if layer.type === 'color'}
-                        <label>Farge
-                          <ColorPicker value={layer.props.value} tokens={themeSwatches()}
-                            label="Lagets farge" onchange={(hex) => setBgProp(i, 'value', hex)} /></label>
-                        <label>Styrke
-                          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
-                        <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
-                          oninput={(e) => setBgProp(i, 'opacity', Number(e.target.value))} />
-                      {:else if layer.type === 'gradient'}
-                        {@const g = gradientProps(layer)}
-                        {@const shareSum = g.stops.reduce((a, s) => a + Math.max(0, Number(s.share) || 0), 0)}
-                        <label>Form
-                          <Dropdown value={g.kind ?? 'linear'}
-                            options={[['linear', 'Lineær'], ['radial', 'Radiell (fra et punkt)']]}
-                            onchange={(v) => setGradKind(i, v)} /></label>
-                        {#each g.stops as stop, si (si)}
-                          <span class="nav-line grad-stop"
-                            class:dragging={stopDrag?.layer === i && stopDrag.from === si}
-                            class:drop-above={stopDrag?.layer === i && stopDrag.insert === si}
-                            class:drop-below={stopDrag?.layer === i && stopDrag.insert === g.stops.length && si === g.stops.length - 1}>
-                            <span class="grad-grip" title="Dra for å endre fargenes rekkefølge"
-                              onpointerdown={(e) => startStopDrag(e, i, si)}>
-                              <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.4"/><circle cx="11" cy="3" r="1.4"/><circle cx="5" cy="8" r="1.4"/><circle cx="11" cy="8" r="1.4"/><circle cx="5" cy="13" r="1.4"/><circle cx="11" cy="13" r="1.4"/></svg>
-                            </span>
-                            <ColorPicker value={stop.color} tokens={themeSwatches()}
-                              label="Fargen" onchange={(hex) => setGradStop(i, si, { color: hex })} />
-                            <input type="range" class="tb-grow" min="0" max="100" step="1" value={stop.share ?? 50}
-                              title="Hvor mye plass fargen tar; 0 gir en hard kant mot nabofargen"
-                              oninput={(e) => setGradStop(i, si, { share: Number(e.target.value) })} />
-                            <span class="gridmenu-value">{shareSum > 0 ? Math.round((Math.max(0, Number(stop.share) || 0) / shareSum) * 100) : Math.round(100 / g.stops.length)}%</span>
-                            {#if g.stops.length > 2}
-                              <button class="ghost row-tool" title="Fjern fargen"
-                                onclick={() => removeGradStop(i, si)}>{@html ICONS.cross}</button>
-                            {/if}
-                          </span>
-                        {/each}
-                        <button class="ghost action" title="Ny farge nederst i listen; dra i håndtaket for rekkefølgen"
-                          onclick={() => addGradStop(i)}>+ Legg til farge</button>
-                        {#if (g.kind ?? 'linear') === 'radial'}
-                          <label>Sentrum X
-                            <span class="gridmenu-value">{Math.round((g.x ?? 0.5) * 100)}%</span></label>
-                          <input type="range" min="0" max="1" step="0.05" value={g.x ?? 0.5}
-                            oninput={(e) => setGradProp(i, 'x', Number(e.target.value))} />
-                          <label>Sentrum Y
-                            <span class="gridmenu-value">{Math.round((g.y ?? 0.5) * 100)}%</span></label>
-                          <input type="range" min="0" max="1" step="0.05" value={g.y ?? 0.5}
-                            oninput={(e) => setGradProp(i, 'y', Number(e.target.value))} />
-                        {:else}
-                          <label>Vinkel
-                            <span class="gridmenu-value">{g.angle}°</span></label>
-                          <input type="range" min="0" max="360" step="5" value={g.angle}
-                            oninput={(e) => setGradProp(i, 'angle', Number(e.target.value))} />
-                        {/if}
-                        <label>Styrke
-                          <span class="gridmenu-value">{Math.round((g.opacity ?? 1) * 100)}%</span></label>
-                        <input type="range" min="0.05" max="1" step="0.05" value={g.opacity ?? 1}
-                          oninput={(e) => setGradProp(i, 'opacity', Number(e.target.value))} />
-                        <label title="Gjelder selve gradienten - uavhengig av Animasjon-valget nederst, som gjelder innholdet">Bevegelse
-                          <Dropdown value={g.animation ?? 'none'}
-                            options={GRAD_ANIMATIONS[(g.kind ?? 'linear') === 'radial' ? 'radial' : 'linear']}
-                            onchange={(v) => setGradProp(i, 'animation', v)} /></label>
-                      {:else if layer.type === 'glow'}
-                        <label>Farge
-                          <ColorPicker value={layer.props.color} tokens={themeSwatches()}
-                            label="Glødens farge" onchange={(hex) => setBgProp(i, 'color', hex)} /></label>
-                        <label>Posisjon X
-                          <span class="gridmenu-value">{Math.round(layer.props.x * 100)}%</span></label>
-                        <input type="range" min="0" max="1" step="0.05" value={layer.props.x}
-                          oninput={(e) => setBgProp(i, 'x', Number(e.target.value))} />
-                        <label>Posisjon Y
-                          <span class="gridmenu-value">{Math.round(layer.props.y * 100)}%</span></label>
-                        <input type="range" min="0" max="1" step="0.05" value={layer.props.y}
-                          oninput={(e) => setBgProp(i, 'y', Number(e.target.value))} />
-                        <label>Størrelse
-                          <span class="gridmenu-value">{Math.round(layer.props.radius * 100)}%</span></label>
-                        <input type="range" min="0.1" max="1" step="0.05" value={layer.props.radius}
-                          oninput={(e) => setBgProp(i, 'radius', Number(e.target.value))} />
-                        <label>Styrke
-                          <span class="gridmenu-value">{Math.round(layer.props.opacity * 100)}%</span></label>
-                        <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity}
-                          oninput={(e) => setBgProp(i, 'opacity', Number(e.target.value))} />
-                      {:else if layer.type === 'grain'}
-                        <label>Styrke
-                          <span class="gridmenu-value">{Math.round(layer.props.opacity * 100)}%</span></label>
-                        <input type="range" min="0.01" max="0.3" step="0.01" value={layer.props.opacity}
-                          oninput={(e) => setBgProp(i, 'opacity', Number(e.target.value))} />
-                      {:else if layer.type === 'image'}
-                        <label class="ghost filepick" title="Komprimeres automatisk til webp">
-                          {layer.props.src ? 'Bytt bilde' : 'Velg bilde'}
-                          <input type="file" accept="image/*" onchange={(e) => setBgImage(i, e)} />
-                        </label>
-                        <label>Tilpasning
-                          <Dropdown value={layer.props.fit ?? 'cover'}
-                            options={[['cover', 'Fyll (beskjæres)'], ['contain', 'Vis hele'], ['repeat', 'Gjenta (mønster)']]}
-                            onchange={(v) => setBgProp(i, 'fit', v)} /></label>
-                        {#if (layer.props.fit ?? 'cover') !== 'repeat'}
-                          <label>Fokus X
-                            <span class="gridmenu-value">{Math.round((layer.props.x ?? 0.5) * 100)}%</span></label>
-                          <input type="range" min="0" max="1" step="0.05" value={layer.props.x ?? 0.5}
-                            oninput={(e) => setBgProp(i, 'x', Number(e.target.value))} />
-                          <label>Fokus Y
-                            <span class="gridmenu-value">{Math.round((layer.props.y ?? 0.5) * 100)}%</span></label>
-                          <input type="range" min="0" max="1" step="0.05" value={layer.props.y ?? 0.5}
-                            oninput={(e) => setBgProp(i, 'y', Number(e.target.value))} />
-                        {/if}
-                        <label>Uskarphet
-                          <span class="gridmenu-value">{layer.props.blur ?? 0} px</span></label>
-                        <input type="range" min="0" max="20" step="1" value={layer.props.blur ?? 0}
-                          oninput={(e) => setBgProp(i, 'blur', Number(e.target.value))} />
-                        <label>Styrke
-                          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
-                        <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
-                          oninput={(e) => setBgProp(i, 'opacity', Number(e.target.value))} />
-                      {:else if layer.type === 'bildegalleri'}
-                        <label class="ghost filepick" title="Velg gjerne flere bilder samtidig; komprimeres til webp">
-                          + Legg til bilder
-                          <input type="file" accept="image/*" multiple onchange={(e) => addBgGalleryImages(i, e)} />
-                        </label>
-                        {#each layer.props.images ?? [] as img, j (j)}
-                          <span class="toolbar-row">
-                            <img class="site-icon-preview" src={img.src} alt="" />
-                            <span class="row-tools">
-                              <button class="ghost row-tool" onclick={() => moveBgGalleryImage(i, j, -1)} disabled={j === 0}>{@html ICONS.up}</button>
-                              <button class="ghost row-tool" onclick={() => moveBgGalleryImage(i, j, 1)}
-                                disabled={j === layer.props.images.length - 1}>{@html ICONS.down}</button>
-                              <button class="ghost row-tool" title="Fjern bildet"
-                                onclick={() => removeBgGalleryImage(i, j)}>{@html ICONS.cross}</button>
-                            </span>
-                          </span>
-                          <label>Fokus X
-                            <span class="gridmenu-value">{Math.round((img.x ?? 0.5) * 100)}%</span></label>
-                          <input type="range" min="0" max="1" step="0.05" value={img.x ?? 0.5}
-                            oninput={(e) => setBgGalleryImageProp(i, j, 'x', Number(e.target.value))} />
-                          <label>Fokus Y
-                            <span class="gridmenu-value">{Math.round((img.y ?? 0.5) * 100)}%</span></label>
-                          <input type="range" min="0" max="1" step="0.05" value={img.y ?? 0.5}
-                            oninput={(e) => setBgGalleryImageProp(i, j, 'y', Number(e.target.value))} />
-                        {/each}
-                        <label>Tilpasning
-                          <Dropdown value={layer.props.fit ?? 'cover'}
-                            options={[['cover', 'Fyll (beskjæres)'], ['contain', 'Vis hele']]}
-                            onchange={(v) => setBgProp(i, 'fit', v)} /></label>
-                        <label>Sekunder per bilde
-                          <input type="number" min="2" max="120" value={layer.props.interval ?? 6}
-                            onchange={(e) => setBgProp(i, 'interval', Number(e.target.value))} /></label>
-                        <label>Overgang
-                          <span class="gridmenu-value">{(layer.props.fade ?? 1.5).toFixed(1)} s</span></label>
-                        <input type="range" min="0" max="5" step="0.1" value={layer.props.fade ?? 1.5}
-                          oninput={(e) => setBgProp(i, 'fade', Number(e.target.value))} />
-                        <label>Uskarphet
-                          <span class="gridmenu-value">{layer.props.blur ?? 0} px</span></label>
-                        <input type="range" min="0" max="20" step="1" value={layer.props.blur ?? 0}
-                          oninput={(e) => setBgProp(i, 'blur', Number(e.target.value))} />
-                        <label>Styrke
-                          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
-                        <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
-                          oninput={(e) => setBgProp(i, 'opacity', Number(e.target.value))} />
-                        <p class="panel-hint">Bakgrunnen blar gjennom bildene med myk overgang. Med ett bilde, eller redusert bevegelse hos den besøkende, vises kun det første.</p>
-                      {/if}
-                    </div>
-                  {/each}
-                  <label>Nytt lag
-                    <Dropdown value={newBgType}
-                      options={BG_TYPES.map(([id, def]) => [id, def.label])}
-                      onchange={(v) => (newBgType = v)} /></label>
-                  <button class="ghost action" onclick={() => addBgLayer(newBgType)}>+ Legg til lag</button>
+                  {@render backgroundLayers(sectionBgCtx, sectionBg)}
 
                   <hr class="gridmenu-divider" />
                   <label title="Spilles når seksjonen scrolles inn hos besøkende; her spilles den én gang hver gang du endrer den">Animasjon inn
@@ -3788,21 +3779,74 @@
               </div>
             {:else if activePanel === 'Footer'}
               <div class="panel-body">
-                <label class="gridmenu-snap" title="Footeren redigeres ett sted og vises nederst på alle sider">
+                <label class="gridmenu-snap" title="Footeren redigeres ett sted og vises nederst på alle sider (unntatt sider du skrur av under «Vis på sider»)">
                   <input type="checkbox" checked={Boolean(siteDraft.footer?.show)}
                     onchange={(e) => footerMutate('footer', (f) => { f.show = e.target.checked; })} />
-                  Vis footer på siden
+                  Vis footer
                 </label>
+
+                {#if siteDraft.footer?.show}
+                  <details class="group">
+                    <summary>Vis på sider</summary>
+                    <div class="group-items">
+                      {#each siteDraft.pages ?? [] as pg (pg.id)}
+                        <label class="gridmenu-snap" title="Fjern haken for å skjule footeren på denne siden">
+                          <input type="checkbox"
+                            checked={!(siteDraft.footer?.hideOn ?? []).includes(pg.id)}
+                            onchange={(e) => toggleFooterOnPage(pg.id, e.target.checked)} />
+                          {pg.title || pg.id}
+                        </label>
+                      {/each}
+                    </div>
+                  </details>
+                {/if}
+
+                <details class="group">
+                  <summary>Startpunkt</summary>
+                  <div class="group-items">
+                    <div class="footer-tpick">
+                      {#each FOOTER_TEMPLATES as t (t.id)}
+                        <button class="footer-tp" title="Fyller footeren med {t.label}-oppsettet - rediger fritt videre"
+                          onclick={() => applyFooterTemplate(t.id)}>
+                          <span class="footer-tp-thumb">{@html footerThumb(t.thumb)}</span>
+                          <span class="footer-tp-name">{t.label}</span>
+                        </button>
+                      {/each}
+                    </div>
+                  </div>
+                </details>
 
                 <details class="group" open>
                   <summary>Merkevare</summary>
                   <div class="group-items">
                     <label title="Navnet øverst i footeren. Tomt = ingen merkevare">Tittel
-                      <input value={siteDraft.footer?.brand?.title ?? ''} placeholder="Urd"
+                      <input value={siteDraft.footer?.brand?.title ?? ''} placeholder="Min forening"
                         oninput={(e) => setFooterBrand('title', e.target.value)} /></label>
                     <label title="Kort undertekst under navnet">Tagline
                       <input value={siteDraft.footer?.brand?.tagline ?? ''}
                         oninput={(e) => setFooterBrand('tagline', e.target.value)} /></label>
+                    <label title="Vis merket som tekst, opplastet logo (bilde) eller begge">Vis merke som
+                      <Dropdown value={siteDraft.footer?.brand?.mode ?? 'text'}
+                        options={[['text', 'Tekst'], ['image', 'Logo (bilde)'], ['both', 'Begge']]}
+                        onchange={(v) => setFooterBrandMode(v)} /></label>
+                    {#if (siteDraft.footer?.brand?.mode ?? 'text') !== 'text'}
+                      <span class="toolbar-row">
+                        <label class="ghost filepick tb-grow" title="Komprimeres automatisk til webp; materialiseres til media/ ved publisering">
+                          {siteDraft.footer?.brand?.logo ? 'Bytt logo' : 'Last opp logo'}
+                          <input type="file" accept="image/*" onchange={uploadFooterLogo} />
+                        </label>
+                        {#if siteDraft.footer?.brand?.logo}
+                          <button class="ghost row-tool" title="Fjern logoen"
+                            onclick={removeFooterLogo}>{@html ICONS.cross}</button>
+                        {/if}
+                      </span>
+                      {#if siteDraft.footer?.brand?.logo}
+                        <label>Logohøyde
+                          <span class="gridmenu-value">{siteDraft.footer?.brand?.logoHeight ?? 40} px</span></label>
+                        <input type="range" min="16" max="160" step="2" value={siteDraft.footer?.brand?.logoHeight ?? 40}
+                          oninput={(e) => setFooterLogoHeight(e.target.value)} />
+                      {/if}
+                    {/if}
                   </div>
                 </details>
 
@@ -3847,6 +3891,10 @@
                       {/each}
                     {/each}
                     <button class="ghost action" onclick={addFooterColumn}>+ Ny kolonne</button>
+                    <label title="Når en kolonne har mange lenker deles den i to underkolonner - her velger du om overskriften står til venstre eller midtstilt over paret">Justering av delt kolonne
+                      <Dropdown value={siteDraft.footer?.columnsAlign ?? 'left'}
+                        options={[['left', 'Venstre'], ['center', 'Midtstilt']]}
+                        onchange={(v) => setFooterColumnsAlign(v)} /></label>
                   </div>
                 </details>
 
@@ -3876,28 +3924,87 @@
                 </details>
 
                 <details class="group">
-                  <summary>Utseende</summary>
+                  <summary>Handlingsoppfordring</summary>
                   <div class="group-items">
-                    <label>Bakgrunnsfarge
-                      <ColorPicker value={siteDraft.footer?.bg ?? 'surface'} tokens={themeSwatches()}
-                        label="Footerens bakgrunnsfarge" onchange={(hex) => setFooterBg(hex)} /></label>
-                    <label title="Justering av innholdet (mest merkbart uten kolonner)">Justering
-                      <Dropdown value={siteDraft.footer?.align ?? 'left'}
-                        options={[['left', 'Venstre'], ['center', 'Midtstilt'], ['right', 'Høyre']]}
-                        onchange={(v) => footerMutate('footer', (f) => { f.align = v; })} /></label>
+                    <label class="gridmenu-snap" title="En knapp eller nyhetsbrev-påmelding i footeren">
+                      <input type="checkbox" checked={Boolean(siteDraft.footer?.cta)}
+                        onchange={(e) => enableFooterCta(e.target.checked)} />
+                      Vis handlingsoppfordring
+                    </label>
+                    {#if siteDraft.footer?.cta}
+                      {@const cta = siteDraft.footer.cta}
+                      <label title="Knapp går til en side/lenke; nyhetsbrev tar imot e-post">Type
+                        <Dropdown value={cta.kind ?? 'button'}
+                          options={[['button', 'Knapp (lenke)'], ['newsletter', 'Nyhetsbrev (e-post)']]}
+                          onchange={(v) => setFooterCtaField('kind', v)} /></label>
+                      <label class="gridmenu-snap" title="Stor, sentrert variant (Stor CTA-stilen)">
+                        <input type="checkbox" checked={cta.big === true}
+                          onchange={(e) => setFooterCtaField('big', e.target.checked)} />
+                        Stor sentrert
+                      </label>
+                      <label title="Overskrift over knappen/feltet">Overskrift
+                        <input value={cta.heading ?? ''} placeholder="Klar til å bli med?"
+                          oninput={(e) => setFooterCtaField('heading', e.target.value)} /></label>
+                      <label title="Kort undertekst">Undertekst
+                        <input value={cta.sub ?? ''}
+                          oninput={(e) => setFooterCtaField('sub', e.target.value)} /></label>
+                      <label title="Teksten på knappen">Knappetekst
+                        <input value={cta.label ?? ''} placeholder="Bli medlem"
+                          oninput={(e) => setFooterCtaField('label', e.target.value)} /></label>
+                      {#if (cta.kind ?? 'button') === 'button'}
+                        <label title="Hvor knappen går">Knappen går til
+                          <Dropdown value={cta.page ?? '__href'}
+                            options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Ekstern lenke / mailto']]}
+                            onchange={(v) => setFooterCtaTarget(v)} /></label>
+                        {#if !cta.page}
+                          <input value={cta.href ?? ''} placeholder="https://… / mailto:…"
+                            onchange={(e) => setFooterCtaField('href', e.target.value)} />
+                        {/if}
+                      {:else}
+                        <label title="Skjema-adresse fra en tjeneste (Formspree/Mailchimp/Buttondown) eller egen Cloudflare-function; sendes med fetch. Ekstern vert krever at du legger connect-src for verten i _headers.">Nyhetsbrev-endepunkt
+                          <input value={cta.endpoint ?? ''} placeholder="https://formspree.io/f/…"
+                            onchange={(e) => setFooterCtaField('endpoint', e.target.value)} /></label>
+                        <label title="Fallback når endepunkt mangler: åpner e-post til denne adressen">Mottaker (fallback)
+                          <input value={cta.recipient ?? ''} placeholder="post@dinforening.no"
+                            onchange={(e) => setFooterCtaField('recipient', e.target.value)} /></label>
+                        <label title="Bekreftelsen som vises etter påmelding">Bekreftelse
+                          <input value={cta.success ?? ''} placeholder="Takk, du er påmeldt!"
+                            oninput={(e) => setFooterCtaField('success', e.target.value)} /></label>
+                      {/if}
+                    {/if}
                   </div>
                 </details>
 
                 <details class="group">
-                  <summary>Bunnlinje og enkel tekst</summary>
+                  <summary>Lenkerad (sentrert)</summary>
                   <div class="group-items">
-                    <label title="Copyright-linja nederst. Tom = bruker «Enkel tekst» under">Bunnlinje
+                    {@render footerLinkList('linkRow', siteDraft.footer?.linkRow ?? [])}
+                    <button class="ghost action" onclick={() => addFooterListLink('linkRow')}>+ Ny lenke i raden</button>
+                  </div>
+                </details>
+
+                <details class="group">
+                  <summary>Utseende</summary>
+                  <div class="group-items">
+                    <label title="Justering av innholdet (mest merkbart uten kolonner)">Justering
+                      <Dropdown value={siteDraft.footer?.align ?? 'left'}
+                        options={[['left', 'Venstre'], ['center', 'Midtstilt'], ['right', 'Høyre']]}
+                        onchange={(v) => footerMutate('footer', (f) => { f.align = v; })} /></label>
+                    <hr class="gridmenu-divider" />
+                    <p class="panel-strong">Bakgrunn</p>
+                    {@render backgroundLayers(footerBgCtx, siteDraft.footer?.background?.layers ?? [])}
+                  </div>
+                </details>
+
+                <details class="group">
+                  <summary>Bunnlinje</summary>
+                  <div class="group-items">
+                    <label title="Copyright/tekst til venstre i bunnlinja">Copyright
                       <input value={siteDraft.footer?.copyright ?? ''} placeholder="© 2026 Min forening"
                         oninput={(e) => setFooterCopyright(e.target.value)} /></label>
-                    <label title="Footer uten kolonner: hver linje blir et avsnitt. Vises når bunnlinja er tom">Enkel tekst
-                      <textarea rows="3" placeholder={'© Min forening\nGateadresse 1, 0000 Sted'}
-                        value={siteDraft.footer?.text ?? ''}
-                        oninput={(e) => footerMutate('edit:footer-text', (f) => { f.text = e.target.value; })}></textarea></label>
+                    <p class="panel-strong">Lenker til høyre</p>
+                    {@render footerLinkList('baseline', siteDraft.footer?.baseline ?? [])}
+                    <button class="ghost action" onclick={() => addFooterListLink('baseline')}>+ Ny bunnlinje-lenke</button>
                   </div>
                 </details>
               </div>
@@ -4134,6 +4241,214 @@
     </div>
   {/if}
 </div>
+
+{#snippet backgroundLayers(bg, layers)}
+  <p class="panel-hint">Lagene tegnes nedenfra og opp; øverste lag i listen ligger bakerst.</p>
+  {#each layers as layer, i (i)}
+    <div class="bg-layer">
+      <span class="nav-line">
+        <Dropdown value={layer.type} title="Bytt lagtype (innstillingene nullstilles)"
+          options={BG_TYPES.map(([id, def]) => [id, def.label])}
+          onchange={(v) => changeBgLayerType(bg, i, v)} />
+        <span class="row-tools">
+          <button class="ghost row-tool" onclick={() => moveBgLayer(bg, i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+          <button class="ghost row-tool" onclick={() => moveBgLayer(bg, i, 1)}
+            disabled={i === layers.length - 1}>{@html ICONS.down}</button>
+          <button class="ghost row-tool" title="Fjern laget" onclick={() => removeBgLayer(bg, i)}>{@html ICONS.cross}</button>
+        </span>
+      </span>
+      {#if layer.type === 'color'}
+        <label>Farge
+          <ColorPicker value={layer.props.value} tokens={themeSwatches()}
+            label="Lagets farge" onchange={(hex) => setBgProp(bg, i, 'value', hex)} /></label>
+        <label>Styrke
+          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
+        <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
+          oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
+      {:else if layer.type === 'gradient'}
+        {@const g = gradientProps(layer)}
+        {@const shareSum = g.stops.reduce((a, s) => a + Math.max(0, Number(s.share) || 0), 0)}
+        <label>Form
+          <Dropdown value={g.kind ?? 'linear'}
+            options={[['linear', 'Lineær'], ['radial', 'Radiell (fra et punkt)']]}
+            onchange={(v) => setGradKind(bg, i, v)} /></label>
+        {#each g.stops as stop, si (si)}
+          <span class="nav-line grad-stop"
+            class:dragging={stopDrag?.layer === i && stopDrag.from === si}
+            class:drop-above={stopDrag?.layer === i && stopDrag.insert === si}
+            class:drop-below={stopDrag?.layer === i && stopDrag.insert === g.stops.length && si === g.stops.length - 1}>
+            <span class="grad-grip" title="Dra for å endre fargenes rekkefølge"
+              onpointerdown={(e) => startStopDrag(bg, e, i, si)}>
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.4"/><circle cx="11" cy="3" r="1.4"/><circle cx="5" cy="8" r="1.4"/><circle cx="11" cy="8" r="1.4"/><circle cx="5" cy="13" r="1.4"/><circle cx="11" cy="13" r="1.4"/></svg>
+            </span>
+            <ColorPicker value={stop.color} tokens={themeSwatches()}
+              label="Fargen" onchange={(hex) => setGradStop(bg, i, si, { color: hex })} />
+            <input type="range" class="tb-grow" min="0" max="100" step="1" value={stop.share ?? 50}
+              title="Hvor mye plass fargen tar; 0 gir en hard kant mot nabofargen"
+              oninput={(e) => setGradStop(bg, i, si, { share: Number(e.target.value) })} />
+            <span class="gridmenu-value">{shareSum > 0 ? Math.round((Math.max(0, Number(stop.share) || 0) / shareSum) * 100) : Math.round(100 / g.stops.length)}%</span>
+            {#if g.stops.length > 2}
+              <button class="ghost row-tool" title="Fjern fargen"
+                onclick={() => removeGradStop(bg, i, si)}>{@html ICONS.cross}</button>
+            {/if}
+          </span>
+        {/each}
+        <button class="ghost action" title="Ny farge nederst i listen; dra i håndtaket for rekkefølgen"
+          onclick={() => addGradStop(bg, i)}>+ Legg til farge</button>
+        {#if (g.kind ?? 'linear') === 'radial'}
+          <label>Sentrum X
+            <span class="gridmenu-value">{Math.round((g.x ?? 0.5) * 100)}%</span></label>
+          <input type="range" min="0" max="1" step="0.05" value={g.x ?? 0.5}
+            oninput={(e) => setGradProp(bg, i, 'x', Number(e.target.value))} />
+          <label>Sentrum Y
+            <span class="gridmenu-value">{Math.round((g.y ?? 0.5) * 100)}%</span></label>
+          <input type="range" min="0" max="1" step="0.05" value={g.y ?? 0.5}
+            oninput={(e) => setGradProp(bg, i, 'y', Number(e.target.value))} />
+        {:else}
+          <label>Vinkel
+            <span class="gridmenu-value">{g.angle}°</span></label>
+          <input type="range" min="0" max="360" step="5" value={g.angle}
+            oninput={(e) => setGradProp(bg, i, 'angle', Number(e.target.value))} />
+        {/if}
+        <label>Styrke
+          <span class="gridmenu-value">{Math.round((g.opacity ?? 1) * 100)}%</span></label>
+        <input type="range" min="0.05" max="1" step="0.05" value={g.opacity ?? 1}
+          oninput={(e) => setGradProp(bg, i, 'opacity', Number(e.target.value))} />
+        <label title="Gjelder selve gradienten - uavhengig av Animasjon-valget nederst, som gjelder innholdet">Bevegelse
+          <Dropdown value={g.animation ?? 'none'}
+            options={GRAD_ANIMATIONS[(g.kind ?? 'linear') === 'radial' ? 'radial' : 'linear']}
+            onchange={(v) => setGradProp(bg, i, 'animation', v)} /></label>
+      {:else if layer.type === 'glow'}
+        <label>Farge
+          <ColorPicker value={layer.props.color} tokens={themeSwatches()}
+            label="Glødens farge" onchange={(hex) => setBgProp(bg, i, 'color', hex)} /></label>
+        <label>Posisjon X
+          <span class="gridmenu-value">{Math.round(layer.props.x * 100)}%</span></label>
+        <input type="range" min="0" max="1" step="0.05" value={layer.props.x}
+          oninput={(e) => setBgProp(bg, i, 'x', Number(e.target.value))} />
+        <label>Posisjon Y
+          <span class="gridmenu-value">{Math.round(layer.props.y * 100)}%</span></label>
+        <input type="range" min="0" max="1" step="0.05" value={layer.props.y}
+          oninput={(e) => setBgProp(bg, i, 'y', Number(e.target.value))} />
+        <label>Størrelse
+          <span class="gridmenu-value">{Math.round(layer.props.radius * 100)}%</span></label>
+        <input type="range" min="0.1" max="1" step="0.05" value={layer.props.radius}
+          oninput={(e) => setBgProp(bg, i, 'radius', Number(e.target.value))} />
+        <label>Styrke
+          <span class="gridmenu-value">{Math.round(layer.props.opacity * 100)}%</span></label>
+        <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity}
+          oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
+      {:else if layer.type === 'grain'}
+        <label>Styrke
+          <span class="gridmenu-value">{Math.round(layer.props.opacity * 100)}%</span></label>
+        <input type="range" min="0.01" max="0.3" step="0.01" value={layer.props.opacity}
+          oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
+      {:else if layer.type === 'image'}
+        <label class="ghost filepick" title="Komprimeres automatisk til webp">
+          {layer.props.src ? 'Bytt bilde' : 'Velg bilde'}
+          <input type="file" accept="image/*" onchange={(e) => setBgImage(bg, i, e)} />
+        </label>
+        <label>Tilpasning
+          <Dropdown value={layer.props.fit ?? 'cover'}
+            options={[['cover', 'Fyll (beskjæres)'], ['contain', 'Vis hele'], ['repeat', 'Gjenta (mønster)']]}
+            onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
+        {#if (layer.props.fit ?? 'cover') !== 'repeat'}
+          <label>Fokus X
+            <span class="gridmenu-value">{Math.round((layer.props.x ?? 0.5) * 100)}%</span></label>
+          <input type="range" min="0" max="1" step="0.05" value={layer.props.x ?? 0.5}
+            oninput={(e) => setBgProp(bg, i, 'x', Number(e.target.value))} />
+          <label>Fokus Y
+            <span class="gridmenu-value">{Math.round((layer.props.y ?? 0.5) * 100)}%</span></label>
+          <input type="range" min="0" max="1" step="0.05" value={layer.props.y ?? 0.5}
+            oninput={(e) => setBgProp(bg, i, 'y', Number(e.target.value))} />
+        {/if}
+        <label>Uskarphet
+          <span class="gridmenu-value">{layer.props.blur ?? 0} px</span></label>
+        <input type="range" min="0" max="20" step="1" value={layer.props.blur ?? 0}
+          oninput={(e) => setBgProp(bg, i, 'blur', Number(e.target.value))} />
+        <label>Styrke
+          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
+        <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
+          oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
+      {:else if layer.type === 'bildegalleri'}
+        <label class="ghost filepick" title="Velg gjerne flere bilder samtidig; komprimeres til webp">
+          + Legg til bilder
+          <input type="file" accept="image/*" multiple onchange={(e) => addBgGalleryImages(bg, i, e)} />
+        </label>
+        {#each layer.props.images ?? [] as img, j (j)}
+          <span class="toolbar-row">
+            <img class="site-icon-preview" src={img.src} alt="" />
+            <span class="row-tools">
+              <button class="ghost row-tool" onclick={() => moveBgGalleryImage(bg, i, j, -1)} disabled={j === 0}>{@html ICONS.up}</button>
+              <button class="ghost row-tool" onclick={() => moveBgGalleryImage(bg, i, j, 1)}
+                disabled={j === layer.props.images.length - 1}>{@html ICONS.down}</button>
+              <button class="ghost row-tool" title="Fjern bildet"
+                onclick={() => removeBgGalleryImage(bg, i, j)}>{@html ICONS.cross}</button>
+            </span>
+          </span>
+          <label>Fokus X
+            <span class="gridmenu-value">{Math.round((img.x ?? 0.5) * 100)}%</span></label>
+          <input type="range" min="0" max="1" step="0.05" value={img.x ?? 0.5}
+            oninput={(e) => setBgGalleryImageProp(bg, i, j, 'x', Number(e.target.value))} />
+          <label>Fokus Y
+            <span class="gridmenu-value">{Math.round((img.y ?? 0.5) * 100)}%</span></label>
+          <input type="range" min="0" max="1" step="0.05" value={img.y ?? 0.5}
+            oninput={(e) => setBgGalleryImageProp(bg, i, j, 'y', Number(e.target.value))} />
+        {/each}
+        <label>Tilpasning
+          <Dropdown value={layer.props.fit ?? 'cover'}
+            options={[['cover', 'Fyll (beskjæres)'], ['contain', 'Vis hele']]}
+            onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
+        <label>Sekunder per bilde
+          <input type="number" min="2" max="120" value={layer.props.interval ?? 6}
+            onchange={(e) => setBgProp(bg, i, 'interval', Number(e.target.value))} /></label>
+        <label>Overgang
+          <span class="gridmenu-value">{(layer.props.fade ?? 1.5).toFixed(1)} s</span></label>
+        <input type="range" min="0" max="5" step="0.1" value={layer.props.fade ?? 1.5}
+          oninput={(e) => setBgProp(bg, i, 'fade', Number(e.target.value))} />
+        <label>Uskarphet
+          <span class="gridmenu-value">{layer.props.blur ?? 0} px</span></label>
+        <input type="range" min="0" max="20" step="1" value={layer.props.blur ?? 0}
+          oninput={(e) => setBgProp(bg, i, 'blur', Number(e.target.value))} />
+        <label>Styrke
+          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
+        <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
+          oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
+        <p class="panel-hint">Bakgrunnen blar gjennom bildene med myk overgang. Med ett bilde, eller redusert bevegelse hos den besøkende, vises kun det første.</p>
+      {/if}
+    </div>
+  {/each}
+  <label>Nytt lag
+    <Dropdown value={newBgType}
+      options={BG_TYPES.map(([id, def]) => [id, def.label])}
+      onchange={(v) => (newBgType = v)} /></label>
+  <button class="ghost action" onclick={() => addBgLayer(bg, newBgType)}>+ Legg til lag</button>
+{/snippet}
+
+{#snippet footerLinkList(field, links)}
+  {#each links as link, li}
+    <div class="nav-row nav-sub-row">
+      <input value={link.label} title="Lenketeksten"
+        oninput={(e) => setFooterListLinkLabel(field, li, e.target.value)} />
+      <span class="row-tools">
+        <button class="ghost row-tool" onclick={() => moveFooterListLink(field, li, -1)} disabled={li === 0}>{@html ICONS.up}</button>
+        <button class="ghost row-tool" onclick={() => moveFooterListLink(field, li, 1)}
+          disabled={li === links.length - 1}>{@html ICONS.down}</button>
+        <button class="ghost row-tool" title="Fjern lenken"
+          onclick={() => removeFooterListLink(field, li)}>{@html ICONS.cross}</button>
+      </span>
+      <span class="nav-target">
+        <Dropdown value={link.page ?? '__href'} title="Hvor lenken går"
+          options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Ekstern lenke']]}
+          onchange={(v) => setFooterListLinkTarget(field, li, v)} />
+      </span>
+      {#if !link.page}
+        <input class="nav-target" value={link.href ?? ''} placeholder="https://…"
+          onchange={(e) => setFooterListLinkHref(field, li, e.target.value)} />
+      {/if}
+    </div>
+  {/each}
+{/snippet}
 
 {#snippet kortstilUI()}
   {@const bs = selectedBlock.props.boxStyle ?? {}}
@@ -4532,6 +4847,15 @@
   /* Adminens fargetemaer: overstyrer motorens standardvariabler KUN i
      admin-dokumentet (forhåndsvisningens iframe har sitt eget dokument
      og følger brukerens tema). Velges i topplinjen. */
+  /* Urd-merkevarepalett (logo/merke): brønn-turkis primær, med alle
+     fargevariantene bevart. Fast merkevarefarge, uavhengig av admin-temaet. */
+  :global(:root) {
+    --urd-brand: #15b39a;         /* brønn-turkis (primær, Urds brønn + Yggdrasil) */
+    --urd-brand-bronze: #c9a227;  /* runestein-bronse */
+    --urd-brand-indigo: #7c5cff;  /* skjebne-indigo */
+    --urd-brand-mono: #eaf1ed;    /* monokrom (off-white) */
+  }
+
   :global(:root[data-admin-theme='lilla']) {
     --urd-color-bg: #0b0e17;
     --urd-color-surface: #151a2b;
@@ -4647,7 +4971,19 @@
   }
 
   .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
     font-size: 1.05rem;
+    font-weight: 700;
+  }
+  .brand-mark {
+    width: 1.4rem;
+    height: 1.4rem;
+    flex: none;
+  }
+  .brand-word {
+    letter-spacing: 0.01em;
   }
 
   /* To grupper som bryter hver for seg: venstre (verktøy) og høyre
@@ -5073,6 +5409,44 @@
     width: 100%;
     height: 100%;
     display: block;
+  }
+
+  /* Visuell footer-mal-velger: miniatyr-rutenett (footerThumb-SVG). */
+  .footer-tpick {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
+  }
+  .footer-tp {
+    display: grid;
+    gap: 0.3rem;
+    padding: 0.35rem;
+    border: 1.5px solid rgb(255 255 255 / 12%);
+    border-radius: 0.5rem;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  .footer-tp:hover {
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+  .footer-tp-thumb {
+    display: block;
+    border-radius: 0.35rem;
+    overflow: hidden;
+    border: 1px solid rgb(255 255 255 / 10%);
+    aspect-ratio: 16 / 8;
+  }
+  .footer-tp-thumb :global(svg) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .footer-tp-name {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-align: center;
   }
 
   /* Undermenyrader: innrykket under forelderpunktet, med markert kant */

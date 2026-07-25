@@ -106,7 +106,8 @@
           "description": "Menyens utseende (additivt fra v0.5). Utelatte felt = standard.",
           "additionalProperties": false,
           "properties": {
-            "bg": { "type": "string", "description": "Bakgrunnsfarge: theme-token eller rå farge" },
+            "background": { "$ref": "#/$defs/background", "description": "Lagbasert bakgrunn (additivt fra v0.6): overtar flaten når den finnes; de gamle bg/image-feltene gjelder kun uten lag (bakoverkompat)." },
+            "bg": { "type": "string", "description": "Bakgrunnsfarge: theme-token eller rå farge (gammel enkel form; erstattet av background-lag i editoren)" },
             "bgOpacity": { "type": "number", "minimum": 0, "maximum": 1, "description": "Bakgrunnens dekkevne (0 = gjennomsiktig)" },
             "blur": { "type": "boolean", "default": true, "description": "Uskarphet bak menyen" },
             "textColor": { "type": "string", "description": "Tekstfarge i menyen (tom = temaets tekstfarge)" },
@@ -271,15 +272,19 @@
       "properties": {
         "version": { "type": "integer", "minimum": 1 },
         "show": { "type": "boolean", "default": false },
+        "hideOn": { "type": "array", "items": { "type": "string" }, "description": "Side-id-er der footeren skjules (per-side-unntak, additivt fra v0.6); standard (fraværende) er synlig på alle sider når show er på." },
         "text": { "type": "string", "description": "Linjer skilt med linjeskift; hver linje blir et avsnitt. Bakoverkompatibel enkel form" },
         "align": { "enum": ["left", "center", "right"], "default": "center" },
         "brand": {
           "type": "object",
-          "description": "Merkevare-kolonnen (additivt fra v0.6). Tittel faller tilbake til sidetittelen.",
+          "description": "Merkevare-kolonnen (additivt fra v0.6): tittel, tagline og valgfri opplastet logo.",
           "additionalProperties": false,
           "properties": {
             "title": { "type": "string" },
-            "tagline": { "type": "string" }
+            "tagline": { "type": "string" },
+            "mode": { "enum": ["text", "image", "both"], "default": "text", "description": "Merket vises som tekst, opplastet logo (bilde), eller begge (logo + tekst). Speiler nav-logoen. Additivt fra v0.6." },
+            "logo": { "type": "string", "description": "Opplastet logo: sti i media/ (data-URL i utkast). Vises når mode er image/both." },
+            "logoHeight": { "type": "number", "minimum": 16, "maximum": 160, "default": 40, "description": "Logohøyde i px." }
           }
         },
         "columns": {
@@ -290,6 +295,7 @@
             "additionalProperties": false,
             "properties": {
               "title": { "type": "string" },
+              "wide": { "type": "boolean", "default": false, "description": "Tving kolonnen bred (todelt); ellers auto ved > 6 lenker (additivt fra v0.6)." },
               "links": {
                 "type": "array",
                 "items": {
@@ -321,12 +327,44 @@
           }
         },
         "copyright": { "type": "string", "description": "Bunnlinje (additivt fra v0.6); faller tilbake til text når fraværende" },
-        "bg": { "type": "string", "description": "Bakgrunnsfarge: temafarge-token eller egen verdi (additivt fra v0.6). Default = temaets surface" }
+        "bg": { "type": "string", "description": "Bakgrunnsfarge: temafarge-token eller egen verdi (gammel enkel form; erstattet av background-lag i editoren). Default = temaets surface" },
+        "background": { "$ref": "#/$defs/background", "description": "Lagbasert bakgrunn (additivt fra v0.6): overtar flaten når den finnes; det gamle bg-feltet gjelder kun uten lag (bakoverkompat)." },
+        "baseline": { "type": "array", "description": "Bunnlinjas valgfrie høyre-lenker (additivt fra v0.6): personvern/vilkår/«Laget med Urd».", "items": { "$ref": "#/$defs/footerLink" } },
+        "linkRow": { "type": "array", "description": "Doormat-lenkerad: én sentrert rad med lenker (additivt fra v0.6; Sentrert- og Stor CTA-malen).", "items": { "$ref": "#/$defs/footerLink" } },
+        "columnsAlign": { "enum": ["left", "center"], "default": "left", "description": "Justering av en bred (todelt) kolonnes overskrift (additivt fra v0.6)." },
+        "cta": {
+          "type": "object",
+          "description": "Handlingsoppfordring (additivt fra v0.6): knapp (lenke) eller nyhetsbrev (e-postfelt + moderne endepunkt-innsending).",
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "enum": ["button", "newsletter"], "default": "button" },
+            "big": { "type": "boolean", "default": false, "description": "Stor sentrert variant (Stor CTA)." },
+            "heading": { "type": "string" },
+            "sub": { "type": "string", "description": "Undertekst" },
+            "label": { "type": "string", "description": "Knappetekst" },
+            "page": { "$ref": "#/$defs/id", "description": "Knapp-mål: id fra sideregisteret" },
+            "href": { "type": "string", "description": "Knapp-mål: ekstern lenke/mailto (brukes når page ikke er satt)" },
+            "endpoint": { "type": "string", "description": "Nyhetsbrev-endepunkt (Formspree/Mailchimp/Buttondown/egen Cloudflare-function); sendes med fetch (POST JSON). Ekstern vert krever connect-src i _headers (ADR-0006)." },
+            "recipient": { "type": "string", "description": "Mailto-fallback når endpoint mangler" },
+            "success": { "type": "string", "description": "Inline bekreftelse etter påmelding" }
+          }
+        }
       }
     }
   },
   "$defs": {
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "footerLink": {
+      "type": "object",
+      "required": ["label"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string" },
+        "page": { "$ref": "#/$defs/id", "description": "Id fra sideregisteret" },
+        "href": { "type": "string", "description": "Ekstern lenke - brukes når page ikke er satt" }
+      },
+      "not": { "required": ["page", "href"] }
+    },
     "grid": {
       "type": "object",
       "required": ["size"],
@@ -335,6 +373,26 @@
       "properties": {
         "size": { "type": "number", "minimum": 2, "maximum": 256, "description": "Rutestørrelse i px (mindre = tettere)" },
         "snap": { "type": "boolean", "default": true }
+      }
+    },
+    "typedProps": {
+      "type": "object",
+      "required": ["type", "version", "props"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "minLength": 1 },
+        "version": { "type": "integer", "minimum": 1 },
+        "props": { "type": "object" }
+      }
+    },
+    "background": {
+      "type": "object",
+      "description": "Lagbasert bakgrunn (color/gradient/glow/grain/image/bildegalleri) - samme modell som seksjonsbakgrunnen. Additivt fra v0.6; delt av nav og footer.",
+      "required": ["version", "layers"],
+      "additionalProperties": false,
+      "properties": {
+        "version": { "type": "integer", "minimum": 1 },
+        "layers": { "type": "array", "items": { "$ref": "#/$defs/typedProps" } }
       }
     }
   }

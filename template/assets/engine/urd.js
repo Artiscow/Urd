@@ -151,6 +151,8 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-preview-full' && msg.page) {
       state.page = msg.page;
       renderPage(state.page, state.site, root, vp());
+      // Sidebytte i editoren: footeren kan ha per-side-synlighet (hideOn).
+      if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);
     } else if (msg?.type === 'urd-chrome') {
       // Ren visning: skjul/vis editeringshåndtakene (kun CSS, se base.css).
       document.body.classList.toggle('urd-chrome-off', !msg.visible);
@@ -244,7 +246,7 @@ function enablePreview(state, opts) {
       applyTheme(state.site.theme);
       applyFavicon(state.site.site?.icon);
       if (opts.nav) renderNav(state.site, opts.nav);
-      if (opts.footer) renderFooter(state.site, opts.footer);
+      if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);
       renderPage(state.page, state.site, root, vp());
     }
   });
@@ -291,7 +293,6 @@ export async function boot(opts) {
   opts.footer = document.createElement('footer');
   opts.footer.id = 'urd-footer';
   opts.root.insertAdjacentElement('afterend', opts.footer);
-  renderFooter(site, opts.footer);
   mountToTop();
 
   // Tomt sideregister (håndredigert site.json) gir en tom side, ikke krasj.
@@ -308,6 +309,8 @@ export async function boot(opts) {
     page = { schemaVersion: 3, meta: { id: entry.id, title: entry.title }, sections: [] };
   }
   document.title = `${page.meta?.title ?? entry.title ?? ''} - ${site.site.title}`;
+  // Footeren rendres nå som side-id-en er kjent (per-side hideOn-synlighet).
+  renderFooter(site, opts.footer, page.meta?.id ?? entry.id);
 
   if (preview) {
     // Editeringslaget lastes dynamisk KUN i preview - besøkende henter

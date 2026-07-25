@@ -211,14 +211,8 @@ export function registerSectionPresets(Urd) {
     ]),
   });
 
-  Urd.sections.define('footer', {
-    label: 'Footer',
-    group: 'Grunnleggende',
-    hint: 'Enkel bunnseksjon (den delte footeren bor i Footer-panelet)',
-    create: () => section('footer', '20vh', bg(colorLayer('surface')), [
-      text(frame(25, 24, 50, 20), '<p>© Min forening</p>', { align: 'center' }),
-    ]),
-  });
+  /* Ingen «Footer»-seksjonspreset: den delte footeren bor i Footer-panelet
+     (site.footer), ikke som en seksjon per side. */
 
   /* ---------- Kort og lister ---------- */
 

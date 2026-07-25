@@ -65,6 +65,20 @@ html {
   pointer-events: none;
 }
 
+/* Lagbasert bakgrunn for nav og footer (delt med seksjoner): en backdrop-
+   container bak innholdet. z-index -1 legger lagene bak nav/footer-innholdet,
+   men foran elementets egen flate; overflow klipper bildelag til (avrundede)
+   kanter. Verten (.urd-nav / .urd-footer) er en stacking context. */
+.urd-nav-bg,
+.urd-footer-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
 /* Slank scrollbar i temaets farger (matcher editorens, og ser bedre ut
    enn nettleser-standarden på mørke sider) */
 html {
@@ -2602,6 +2616,10 @@ body.urd-marqueeing {
   font-size: 0.9rem;
   display: grid;
   gap: 0.3rem;
+  /* Egen stacking context så en lagbasert bakgrunn (.urd-footer-bg, z-index -1)
+     ligger bak innholdet men foran footerens egen flate. */
+  position: relative;
+  isolation: isolate;
 }
 
 /* Påskrudd, men tom footer: en synlig, men helt tom flate (surface-bakgrunn),
@@ -2631,26 +2649,86 @@ body.urd-marqueeing {
   margin: 0 auto;
   padding: 2.6rem clamp(1rem, 4vw, 2.5rem) 1.4rem;
 }
-/* Flexbox (ikke grid): et vekslende antall kolonner (merkevare + 0..N
-   lenkekolonner) flyter og brytes robust. En ledende fr-track kombinert med
-   repeat(auto-fit) kollapser til én kolonne, så det unngås med vilje. */
+/* Merke + lenkekolonner i ETT rutenett: like brede kolonner (1fr), lik gap,
+   alltid på én rad. --n = antall spor (en bred kolonne teller to). Kollapser
+   responsivt til 2 og 1 kolonne. Sentrert/doormat/Stor CTA bruker flex-kolonne. */
 .urd-footer-top {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1.7fr repeat(var(--n, 3), minmax(0, 1fr));
   gap: 1.7rem 2.5rem;
-  align-items: flex-start;
+  align-items: start;
 }
 .urd-footer-brand {
-  flex: 1.6 1 240px;
   min-width: 0;
 }
 .urd-footer-col {
-  flex: 1 1 140px;
   min-width: 0;
 }
-.urd-footer-rich.urd-footer-center .urd-footer-top {
-  justify-content: center;
+/* Lang kolonne: spenner over to spor, lenkene deles i to underkolonner. */
+.urd-footer-col-wide {
+  grid-column: span 2;
+}
+.urd-footer-col-wide ul {
+  display: block;
+  columns: 2;
+  column-gap: 2.2rem;
+}
+.urd-footer-col-wide ul li {
+  break-inside: avoid;
+  margin-bottom: 0.55rem;
+}
+/* «Sentrert» kolonne-justering: den brede kolonnens overskrift midtstilles. */
+.urd-footer-cols-center .urd-footer-col-wide h4 {
   text-align: center;
+}
+.urd-footer-rich.urd-footer-center .urd-footer-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.urd-footer-rich.urd-footer-center .urd-footer-brand {
+  max-width: 34rem;
+}
+@media (max-width: 780px) {
+  .urd-footer-top {
+    grid-template-columns: 1fr 1fr;
+  }
+  .urd-footer-top > .urd-footer-brand {
+    grid-column: 1 / -1;
+  }
+  .urd-footer-col-wide {
+    grid-column: auto;
+  }
+  .urd-footer-col-wide ul {
+    columns: 1;
+  }
+}
+@media (max-width: 480px) {
+  .urd-footer-top {
+    grid-template-columns: 1fr;
+  }
+}
+/* Merket: tekst, logo (bilde) eller begge (logo + tekst side ved side). */
+.urd-footer-brand-id {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.urd-footer-rich.urd-footer-center .urd-footer-brand-id {
+  justify-content: center;
+}
+.urd-footer-logo {
+  height: var(--urd-footer-logo-h, 40px);
+  width: auto;
+  max-width: 100%;
+  display: block;
+}
+.urd-footer-brand-top {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.4rem;
 }
 .urd-footer-brand-title {
   font-weight: 700;
@@ -2732,6 +2810,126 @@ body.urd-marqueeing {
     justify-content: center;
     text-align: center;
   }
+}
+
+/* Bunnlinja: tekst til venstre, valgfrie lenker til høyre. */
+.urd-footer-baseline-text {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1rem;
+}
+.urd-footer-baseline-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+}
+
+/* Doormat-lenkeraden (Sentrert / Stor CTA): én sentrert rad med lenker. */
+.urd-footer-linkrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.6rem;
+  justify-content: center;
+  margin-top: 1.4rem;
+}
+.urd-footer-social-center {
+  justify-content: center;
+}
+
+/* Handlingsoppfordring (CTA): overskrift + undertekst + knapp/nyhetsbrev. */
+.urd-footer-cta {
+  margin-top: 1.1rem;
+  max-width: 22rem;
+}
+.urd-footer-rich.urd-footer-center .urd-footer-cta {
+  margin-inline: auto;
+}
+.urd-footer-cta-h {
+  font-weight: 650;
+  color: var(--urd-color-text);
+  margin-bottom: 0.5rem;
+}
+.urd-footer-cta-sub {
+  margin: 0.3rem 0 0;
+  line-height: 1.5;
+}
+.urd-footer-cta-btn {
+  display: inline-block;
+  background: var(--urd-color-accent);
+  color: var(--urd-color-accent-text, #fff);
+  font: inherit;
+  font-weight: 600;
+  padding: 0.55rem 1.1rem;
+  border: none;
+  border-radius: 0.55rem;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.urd-footer-cta-btn:hover {
+  text-decoration: none;
+  filter: brightness(1.06);
+}
+/* Stor sentrert CTA (Stor CTA-malen). */
+.urd-footer-bigcta {
+  max-width: 40rem;
+  margin: 0 auto;
+  text-align: center;
+}
+.urd-footer-bigcta .urd-footer-cta-h {
+  font-size: clamp(1.4rem, 3.5vw, 2rem);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+.urd-footer-bigcta .urd-footer-cta-sub {
+  font-size: 1rem;
+  margin-top: 0.7rem;
+}
+.urd-footer-bigcta .urd-footer-cta-btn {
+  margin-top: 1.1rem;
+  padding: 0.7rem 1.4rem;
+}
+/* Nyhetsbrev-skjema. */
+.urd-footer-nl {
+  margin-top: 0.7rem;
+}
+.urd-footer-nl-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.urd-footer-rich.urd-footer-center .urd-footer-nl-row {
+  justify-content: center;
+}
+.urd-footer-nl-email {
+  flex: 1 1 12rem;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 22%, transparent);
+  border-radius: 0.55rem;
+  padding: 0.55rem 0.8rem;
+  background: color-mix(in srgb, var(--urd-color-text) 4%, transparent);
+  color: var(--urd-color-text);
+  font: inherit;
+}
+.urd-footer-nl-status {
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+  min-height: 1.1em;
+}
+.urd-footer-nl-status.ok {
+  color: var(--urd-color-accent);
+}
+.urd-footer-nl-status.feil {
+  color: #e5484d;
+}
+/* Honeypot: helt skjult for mennesker, synlig for bots. */
+.urd-footer-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
 }
 
 /* Knapper */

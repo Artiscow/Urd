@@ -11,6 +11,9 @@ import {
   footerColumns,
   footerSocial,
   footerBaseline,
+  footerBaselineLinks,
+  footerLinkRow,
+  footerCta,
   hasRichFooter,
 } from '../template/assets/engine/footer-model.js';
 
@@ -29,14 +32,17 @@ test('isSafeUrl godtar http(s)/mailto/tel og avviser resten', () => {
 });
 
 test('footerBrand: tittel, tagline, ingen sidetittel-fallback, null når tomt', () => {
-  assert.deepEqual(
-    footerBrand({ footer: { brand: { title: 'Urd', tagline: 'Hei' } } }),
-    { title: 'Urd', tagline: 'Hei' },
-  );
+  const b = footerBrand({ footer: { brand: { title: 'Urd', tagline: 'Hei' } } });
+  assert.equal(b.title, 'Urd');
+  assert.equal(b.tagline, 'Hei');
+  assert.equal(b.mode, 'text');
   // Ingen fallback til sidetittelen: en tom merkevare skal forbli tom.
   assert.equal(footerBrand({ site: { title: 'Min side' }, footer: { brand: {} } }), null);
   assert.equal(footerBrand({ footer: {} }), null);
   assert.equal(footerBrand({}), null);
+  // Logo alene (image/both-modus) gjør merket ikke-tomt; tekst-modus uten tittel er tomt.
+  assert.ok(footerBrand({ footer: { brand: { mode: 'image', logo: '/media/x.webp' } } }));
+  assert.equal(footerBrand({ footer: { brand: { mode: 'text', logo: '/media/x.webp' } } }), null);
 });
 
 test('footerColumns: resolverer lenker, hopper over tomme', () => {
@@ -93,4 +99,41 @@ test('hasRichFooter: sant ved nye felt, usant for kun text (bakoverkompat)', () 
   assert.equal(hasRichFooter({ footer: { brand: { title: 'Urd' } } }), true);
   // Kun sidetittel, ingen egne footer-felt: ikke rik (footeren forblir tom).
   assert.equal(hasRichFooter({ site: { title: 'S' }, footer: { show: true } }), false);
+  // Nye felt (v0.6.6.5.2) gjør footeren rik.
+  assert.equal(hasRichFooter({ pages: PAGES, footer: { baseline: [{ label: 'Personvern', page: 'hjem' }] } }), true);
+  assert.equal(hasRichFooter({ pages: PAGES, footer: { linkRow: [{ label: 'Hjem', page: 'hjem' }] } }), true);
+  assert.equal(hasRichFooter({ footer: { cta: { kind: 'button', label: 'Bli medlem', href: 'https://x.no' } } }), true);
+});
+
+test('footerColumns: wide når mange lenker (> 6) eller col.wide', () => {
+  const many = footerColumns({ footer: { columns: [{ title: 'Sider', links: Array.from({ length: 8 }, (_, i) => ({ label: `L${i}`, href: 'https://x.no' })) }] } });
+  assert.equal(many[0].wide, true);
+  const few = footerColumns({ footer: { columns: [{ title: 'Sider', links: [{ label: 'A', href: 'https://x.no' }] }] } });
+  assert.equal(few[0].wide, false);
+  const forced = footerColumns({ footer: { columns: [{ title: 'X', wide: true, links: [{ label: 'A', href: 'https://x.no' }] }] } });
+  assert.equal(forced[0].wide, true);
+});
+
+test('footerBaselineLinks + footerLinkRow: resolverer som kolonner, hopper over tomme', () => {
+  const bl = footerBaselineLinks({ pages: PAGES, footer: { baseline: [{ label: 'Personvern', page: 'om' }, { label: '' }, { label: 'Ekstern', href: 'https://x.no' }] } });
+  assert.equal(bl.length, 2);
+  assert.deepEqual(bl[0], { label: 'Personvern', href: '/om-oss', external: false, missing: false });
+  assert.equal(bl[1].external, true);
+  const row = footerLinkRow({ pages: PAGES, footer: { linkRow: [{ label: 'Hjem', page: 'hjem' }] } });
+  assert.equal(row[0].href, '/');
+  assert.deepEqual(footerBaselineLinks({ footer: {} }), []);
+});
+
+test('footerCta: knapp krever label, nyhetsbrev krever overskrift, defaults settes', () => {
+  assert.equal(footerCta({ footer: {} }), null);
+  assert.equal(footerCta({ footer: { cta: { kind: 'button' } } }), null); // knapp uten label
+  const btn = footerCta({ pages: PAGES, footer: { cta: { kind: 'button', label: 'Bli medlem', page: 'om' } } });
+  assert.equal(btn.kind, 'button');
+  assert.equal(btn.target.href, '/om-oss');
+  const nl = footerCta({ footer: { cta: { kind: 'newsletter', heading: 'Meld på', endpoint: 'https://formspree.io/f/x' } } });
+  assert.equal(nl.kind, 'newsletter');
+  assert.equal(nl.label, 'Meld på'); // default knappetekst
+  assert.equal(nl.success, 'Takk, du er påmeldt!'); // default bekreftelse
+  assert.equal(nl.target, null);
+  assert.equal(footerCta({ footer: { cta: { kind: 'newsletter' } } }), null); // uten overskrift/label
 });

@@ -19,6 +19,34 @@ import { applyAnimation } from './animations/core.js';
 import { refreshSticky } from './sticky.js';
 
 /**
+ * Tegner bakgrunnslagene (color/gradient/glow/grain/image/bildegalleri) inn i
+ * host som `div.urd-bg-layer`-elementer, nedenfra og opp. Delt av seksjoner
+ * (render.js), nav (nav.js) og footer (footer.js) - samme lagmodell overalt.
+ * Hvert lag løftes via lift() før render; ukjente typer og render-feil hoppes
+ * over med en advarsel (bakgrunner er dekorative, de velter aldri siden).
+ * @param {HTMLElement} host Elementet lagene bygges inn i
+ * @param {{layers?: Array<{type: string, version?: number, props?: object}>}} [background]
+ */
+export function renderBackgroundLayers(host, background) {
+  const Urd = window.Urd;
+  for (const layer of background?.layers ?? []) {
+    const el = document.createElement('div');
+    el.className = 'urd-bg-layer';
+    const lifted = lift(layer, Urd.backgrounds.get(layer.type));
+    if (!lifted.ok) {
+      console.warn(`Urd: hopper over bakgrunnslag '${layer.type}' (${lifted.placeholder})`);
+      continue;
+    }
+    try {
+      Urd.backgrounds.get(layer.type).render(el, lifted.props);
+      host.appendChild(el);
+    } catch (err) {
+      console.warn(`Urd: bakgrunnslag '${layer.type}' feilet under render`, err);
+    }
+  }
+}
+
+/**
  * Oversetter en frame til CSS-posisjonering.
  * Ren funksjon (ingen DOM), testet i tests/render.test.mjs.
  *
@@ -97,21 +125,7 @@ export function renderSection(section, site, host, opts = {}) {
   host.dataset.sectionId = section.id;
   host.replaceChildren();
 
-  for (const layer of section.background?.layers ?? []) {
-    const el = document.createElement('div');
-    el.className = 'urd-bg-layer';
-    const lifted = lift(layer, Urd.backgrounds.get(layer.type));
-    if (!lifted.ok) {
-      console.warn(`Urd: hopper over bakgrunnslag '${layer.type}' (${lifted.placeholder})`);
-      continue;
-    }
-    try {
-      Urd.backgrounds.get(layer.type).render(el, lifted.props);
-      host.appendChild(el);
-    } catch (err) {
-      console.warn(`Urd: bakgrunnslag '${layer.type}' feilet under render`, err);
-    }
-  }
+  renderBackgroundLayers(host, section.background);
 
   const mode = section.responsive?.mobile?.mode ?? 'auto';
 

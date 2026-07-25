@@ -13,6 +13,7 @@
 
 import { navItems, navClasses, navSurface, navSubSurface, hostClasses, clampSideWidth } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
+import { renderBackgroundLayers } from './render.js';
 
 /** Hvor lenge undermenyen står åpen etter at pekeren forlater punktet. */
 const HOVER_CLOSE_DELAY = 250;
@@ -103,15 +104,32 @@ export function renderNav(site, host) {
   // undermenyer og mobilpanelet arver samme flate; uten style gjelder
   // CSS-standarden.
   const surface = navSurface(site.nav.style);
-  if (surface.bg) nav.style.setProperty('--urd-nav-bg', surface.bg);
+  // Full lagbasert bakgrunn (additivt fra v0.6, delt med seksjoner og footer):
+  // en backdrop bak nav-innholdet med samme lagstakk som seksjonene. Når den
+  // finnes overtar den flaten, og den gamle veil/bilde-stien hoppes over.
+  const navBg = site.nav.style?.background;
+  const hasNavBgLayers = Array.isArray(navBg?.layers) && navBg.layers.length > 0;
+  if (hasNavBgLayers) {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'urd-nav-bg';
+    renderBackgroundLayers(backdrop, navBg);
+    nav.appendChild(backdrop);
+    // Lagene definerer flaten: nav-elementets egen bakgrunn gjøres gjennomsiktig
+    // (blur/frosted-glass virker fortsatt gjennom den).
+    nav.style.setProperty('--urd-nav-bg', 'transparent');
+  } else if (surface.bg) {
+    nav.style.setProperty('--urd-nav-bg', surface.bg);
+  }
   // Blur styres via custom property (arver til undermenyer og mobilpanel;
   // backdrop-filter selv arver ikke, så inherit i CSS-en ville stoppet på li-en).
   if (surface.blur === false) nav.style.setProperty('--urd-nav-blur', 'none');
   if (surface.color) nav.style.color = surface.color;
   // Undermenyen og mobilpanelet får sin egen flate: som standard kun
-  // fargesløret, aldri bakgrunnsbildet (subImage skrur bildet på).
+  // fargesløret, aldri bakgrunnsbildet (subImage skrur bildet på). Med den nye
+  // lag-bakgrunnen beholder submeny/mobil veil-standarden (lagstakken gjelder
+  // hovedlinjen).
   const subBg = navSubSurface(site.nav.style);
-  if (subBg) nav.style.setProperty('--urd-nav-sub-bg', subBg);
+  if (subBg && !hasNavBgLayers) nav.style.setProperty('--urd-nav-sub-bg', subBg);
   // Hover-farger (additive fra v0.6): effektfargen (strek/pille-flate/glød)
   // og tekstfargen ved hover; uten valg gjelder aksentfargen som før.
   if (site.nav.style?.hoverColor) {

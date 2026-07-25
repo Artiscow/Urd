@@ -27,8 +27,13 @@ export function footerBrand(site) {
   const brand = site.footer?.brand ?? {};
   const title = (brand.title ?? '').trim();
   const tagline = (brand.tagline ?? '').trim();
-  if (!title && !tagline) return null;
-  return { title, tagline };
+  // Merket kan være tekst, opplastet logo (bilde) eller begge (additivt fra
+  // v0.6, speiler nav-logoen). mode styrer hva som vises.
+  const logo = (brand.logo ?? '').trim();
+  const mode = brand.mode === 'image' || brand.mode === 'both' ? brand.mode : 'text';
+  const hasLogo = logo && mode !== 'text';
+  if (!title && !tagline && !hasLogo) return null;
+  return { title, tagline, logo, mode, logoHeight: brand.logoHeight };
 }
 
 /**
@@ -42,13 +47,73 @@ export function footerColumns(site) {
   const pages = site.pages ?? [];
   const columns = Array.isArray(site.footer?.columns) ? site.footer.columns : [];
   return columns
-    .map((col) => ({
-      title: (col.title ?? '').trim(),
-      links: (Array.isArray(col.links) ? col.links : [])
+    .map((col) => {
+      const links = (Array.isArray(col.links) ? col.links : [])
         .filter((l) => (l.label ?? '').trim())
-        .map((l) => resolveItem(l, pages)),
-    }))
+        .map((l) => resolveItem(l, pages));
+      return {
+        title: (col.title ?? '').trim(),
+        links,
+        // Lang kolonne (mange lenker, eller eksplisitt col.wide): rendres over
+        // to spor og deles i to underkolonner, så footeren holder seg symmetrisk.
+        wide: col.wide === true || links.length > 6,
+      };
+    })
     .filter((col) => col.links.length);
+}
+
+/**
+ * Bunnlinjas valgfrie høyre-lenker (personvern/vilkår/«Laget med Urd»),
+ * resolvert som kolonne-lenkene. Additivt fra v0.6.
+ * @param {object} site
+ * @returns {Array<{label: string, href: string, external: boolean, missing: boolean}>}
+ */
+export function footerBaselineLinks(site) {
+  const pages = site.pages ?? [];
+  const links = Array.isArray(site.footer?.baseline) ? site.footer.baseline : [];
+  return links.filter((l) => (l.label ?? '').trim()).map((l) => resolveItem(l, pages));
+}
+
+/**
+ * Doormat-lenkeraden: én sentrert rad med lenker (Sentrert- og Stor CTA-malen).
+ * Additivt fra v0.6.
+ * @param {object} site
+ * @returns {Array<{label: string, href: string, external: boolean, missing: boolean}>}
+ */
+export function footerLinkRow(site) {
+  const pages = site.pages ?? [];
+  const row = Array.isArray(site.footer?.linkRow) ? site.footer.linkRow : [];
+  return row.filter((l) => (l.label ?? '').trim()).map((l) => resolveItem(l, pages));
+}
+
+/**
+ * Handlingsoppfordringen (CTA, additivt fra v0.6): normalisert eller null.
+ * `kind` er 'button' (knapp som lenke) eller 'newsletter' (e-postfelt). `big`
+ * gir den store sentrerte varianten. Knapp-CTA krever knappetekst; nyhetsbrev
+ * krever minst en overskrift - ellers er CTA-en tom (null).
+ * @param {object} site
+ * @returns {{kind: string, heading: string, sub: string, label: string, big: boolean, target: object|null, endpoint: string, recipient: string, success: string}|null}
+ */
+export function footerCta(site) {
+  const cta = site.footer?.cta;
+  if (!cta || typeof cta !== 'object') return null;
+  const heading = (cta.heading ?? '').trim();
+  const rawLabel = (cta.label ?? '').trim();
+  const kind = cta.kind === 'newsletter' ? 'newsletter' : 'button';
+  if (kind === 'button' && !rawLabel) return null;
+  if (kind === 'newsletter' && !heading && !rawLabel) return null;
+  const pages = site.pages ?? [];
+  return {
+    kind,
+    heading,
+    sub: (cta.sub ?? '').trim(),
+    label: rawLabel || (kind === 'newsletter' ? 'Meld på' : 'Les mer'),
+    big: cta.big === true,
+    target: kind === 'button' ? resolveItem({ label: rawLabel, page: cta.page, href: cta.href }, pages) : null,
+    endpoint: (cta.endpoint ?? '').trim(),
+    recipient: (cta.recipient ?? '').trim(),
+    success: (cta.success ?? '').trim() || 'Takk, du er påmeldt!',
+  };
 }
 
 /**
@@ -88,6 +153,9 @@ export function hasRichFooter(site) {
     footerBrand(site) ||
     footerColumns(site).length ||
     footerSocial(site).length ||
+    footerBaselineLinks(site).length ||
+    footerLinkRow(site).length ||
+    footerCta(site) ||
     (site.footer?.copyright ?? '').trim()
   );
 }
