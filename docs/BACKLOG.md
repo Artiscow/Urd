@@ -4,11 +4,11 @@ Løpende oppgaveliste for Urd-utviklingen: konkrete gjøremål, feilrettinger og
 
 Fullførte punkter fra v0.2-v0.5 er ryddet bort ved versjonsslippene (0.3.0 17. juli 2026, 0.5.10 18. juli 2026); se [CHANGELOG.md](CHANGELOG.md) for hva som ble levert. Innkomne forslag og funn sorteres rett inn i milepælen eller fasen der de best tas; dokumenterte begrensninger uten plan står i egen seksjon nederst.
 
-**Testrundene (eiers sjekkliste over levert arbeid som venter på testing) bor i [TESTRUNDER.md](TESTRUNDER.md)** - flyttet dit 22. juli 2026; nye leveranser får batchene sine der.
+Et innslag arver nummeret til backlog-punktet arbeidet hører under, pluss ett siffer (0.6.6 → 0.6.6.6 som neste ledige). 
+
+**Testrundene (sjekkliste over levert arbeid som venter på testing) bor i [TESTRUNDER.md](TESTRUNDER.md)**
 
 ## Til v0.6 «Økosystem» (startet 19. juli 2026; milepæler 0.6.1-0.6.9 i avhengighetsstyrt rekkefølge)
-
-MERK: milepæl-nummeret (0.6.6 osv.) er en FUNKSJONSGRUPPE, ikke det samme som CHANGELOG-ens fortløpende push-numre (0.6.1, 0.6.2 … 0.6.32). Hver milepæl leveres over flere pushes; «pushene X-Y» viser hvilke. Batcher innen en milepæl får undernummer: 0.6.6.1 = M6 batch A, 0.6.6.5 = batch E, osv.
 
 - [x] **0.6.1 Grunnmur** (pushene 0.6.1-0.6.3, 19. juli 2026; testrunde bestått): plugin-lasting for alvor (requiresEngine-validering mot motorversjonen, provides-kontroll, feilkapsling med staging/rollback per plugin), Plugins-panel i admin (aktiver/deaktiver via plugins.json gjennom utkast-/publiseringsflyten), CSP-behovsmodell (ADR: manifestets `csp`-felt + eksakt _headers-instruks i admin; _headers forblir Urd-eid), requirePublisher-hjelper i _lib, konflikt-/angre-dialoger over på editorens modalsystem, eksplisitt oppsettsveiviser-signal i site.json
 - [x] **0.6.2 Datablokk/arkiv-mønsteret** (pushene 0.6.4-0.6.6, 19. juli 2026; testrunder underveis): ADR-0007 + samlinger i content/ (innslag + samling-blokk med kort/liste/arkiv-visning); nyheter, oppslagstavle og publikasjonsarkiv-preset bygget på mønsteret; produktkatalogen i v0.7 gjenbruker det. Testrundene løftet i tillegg editorene til topp-nivå (M2.5/M2.6): felles teksteditor på alle rike flater (også titler), felles bildeeditor med fokuspunkt/zoom/form/tredelingsgitter, felles fargevelger med gjennomsiktighet og delt Lagrede/Nylige-palett i admin og lerret

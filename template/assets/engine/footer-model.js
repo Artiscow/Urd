@@ -17,14 +17,15 @@ export function isSafeUrl(url) {
 }
 
 /**
- * Merkevare-kolonnen: tittel (fallback til sidetittelen) + valgfri tagline.
- * Null når det ikke finnes noe å vise.
+ * Merkevare-kolonnen: eksplisitt tittel + valgfri tagline. Ingen fallback til
+ * sidetittelen - en footer som nettopp er skrudd på skal være tom, ikke fylles
+ * med sidenavnet. Null når det ikke finnes noe å vise.
  * @param {object} site
  * @returns {{title: string, tagline: string}|null}
  */
 export function footerBrand(site) {
   const brand = site.footer?.brand ?? {};
-  const title = (brand.title ?? '').trim() || (site.site?.title ?? '').trim();
+  const title = (brand.title ?? '').trim();
   const tagline = (brand.tagline ?? '').trim();
   if (!title && !tagline) return null;
   return { title, tagline };

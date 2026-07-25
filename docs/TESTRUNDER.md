@@ -12,6 +12,7 @@ Footer (25. juli). Bygg footeren i admin (Footer-panelet) og sjekk på siden:
 - [ ] Tema: footeren er lesbar i både lys og mørk modus
 - [ ] Tittel-feltets plassholder er «Urd» (ikke et versjonsnummer)
 - [ ] En eventuell gammel enkel footer (kun tekstlinjer) ser uendret ut
+- [ ] (0.6.34) Skru på «Vis footer» uten å skrive noe: footeren forblir TOM (ingen «Urd v0.5» eller annet sidenavn dukker opp av seg selv)
 
 ### Testrunde-batch (0.6.31): teksteditoren «Office-linjen» (to faste rader, størrelse på markering)
 

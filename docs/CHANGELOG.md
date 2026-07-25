@@ -12,6 +12,11 @@ døpes til det siste push-nummeret ved gaten, slik v0.5-fasen endte i
 0.5.10. Da stiger numrene alltid. Etterslepp-fikser på v0.5 nummereres
 0.5.11 og videre.
 
+### 0.6.34 - footerfiks: tom footer forblir tom (ingen «Urd v0.5»-default) (0.6.6.5) - 25. juli 2026
+- BUGFIKS: en footer som nettopp ble skrudd på viste sidetittelen (f.eks. «Urd v0.5») som merkevare, fordi `footerBrand` falt tilbake til `site.site.title` når `brand` var tom. Fallbacken er fjernet: en tom merkevare gir null, og en footer uten egne felt rendres byte-likt som den gamle tekst-footeren (tom når det ikke er skrevet noe). Tittel-feltets plassholder-hjelp endret fra «Tomt = sidetittelen» til «Tomt = ingen merkevare».
+- NUMMERERING (docs): backlog-notatet presisert - et CHANGELOG-innslag arver nummeret til backlog-punktet arbeidet hører under, pluss ett siffer for rekkefølge (0.6.6 → 0.6.6.6). Rydder opp i tidligere misforståelse om at backlog-numrene var noe annet enn CHANGELOG-numrene.
+- Verifisert: 211 kontraktstester (footerBrand- og hasRichFooter-testene oppdatert til ingen-fallback), skjemavalidering og editor-bygg grønne.
+
 ### 0.6.33 - footer med kolonner, sosiale lenker og merkevare (batch E / 0.6.6.5) - 25. juli 2026
 - FOOTER-LØFT: den delte footeren (`site.footer`) går fra én sentrert tekst til en fleksibel modell med merkevare (tittel + tagline), lenkekolonner, sosiale ikoner og en copyright-bunnlinje. Alt additivt: gamle footere (kun `text`/`align`) rendres byte-likt som før, ingen migrering (fravær defaultes ved lesing).
 - KOLONNER: valgfrie lenkekolonner (`columns`), hver med tittel og lenker som peker på sider (via sideregisteret) eller eksterne URL-er (får `rel="noopener noreferrer"`). En kolonne uten gyldige lenker rendres ikke.

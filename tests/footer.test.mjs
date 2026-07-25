@@ -28,15 +28,13 @@ test('isSafeUrl godtar http(s)/mailto/tel og avviser resten', () => {
   }
 });
 
-test('footerBrand: tittel, fallback til sidetittel, tagline, null når tomt', () => {
+test('footerBrand: tittel, tagline, ingen sidetittel-fallback, null når tomt', () => {
   assert.deepEqual(
     footerBrand({ footer: { brand: { title: 'Urd', tagline: 'Hei' } } }),
     { title: 'Urd', tagline: 'Hei' },
   );
-  assert.deepEqual(
-    footerBrand({ site: { title: 'Min side' }, footer: { brand: {} } }),
-    { title: 'Min side', tagline: '' },
-  );
+  // Ingen fallback til sidetittelen: en tom merkevare skal forbli tom.
+  assert.equal(footerBrand({ site: { title: 'Min side' }, footer: { brand: {} } }), null);
   assert.equal(footerBrand({ footer: {} }), null);
   assert.equal(footerBrand({}), null);
 });
@@ -92,5 +90,7 @@ test('hasRichFooter: sant ved nye felt, usant for kun text (bakoverkompat)', () 
   assert.equal(hasRichFooter({ footer: { show: true, text: 'Bare tekst', align: 'center' } }), false);
   assert.equal(hasRichFooter({ footer: { columns: [{ title: 'A', links: [{ label: 'B', href: 'https://x.no' }] }] } }), true);
   assert.equal(hasRichFooter({ footer: { copyright: '© Urd' } }), true);
-  assert.equal(hasRichFooter({ site: { title: 'S' }, footer: { brand: {} } }), true);
+  assert.equal(hasRichFooter({ footer: { brand: { title: 'Urd' } } }), true);
+  // Kun sidetittel, ingen egne footer-felt: ikke rik (footeren forblir tom).
+  assert.equal(hasRichFooter({ site: { title: 'S' }, footer: { show: true } }), false);
 });

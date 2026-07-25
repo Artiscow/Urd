@@ -3797,7 +3797,7 @@
                 <details class="group" open>
                   <summary>Merkevare</summary>
                   <div class="group-items">
-                    <label title="Navnet øverst i footeren. Tomt = sidetittelen">Tittel
+                    <label title="Navnet øverst i footeren. Tomt = ingen merkevare">Tittel
                       <input value={siteDraft.footer?.brand?.title ?? ''} placeholder="Urd"
                         oninput={(e) => setFooterBrand('title', e.target.value)} /></label>
                     <label title="Kort undertekst under navnet">Tagline
