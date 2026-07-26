@@ -22,6 +22,7 @@
   import { bildegalleriLayer } from '../../template/assets/engine/backgrounds/bildegalleri.js';
   import { footerThumb } from '../../template/assets/engine/footer-thumb.js';
   import { coreAnimations } from '../../template/assets/engine/animations/core.js';
+  import { SECTION_THEME_LABELS, contrastRatio, relativeLuminance } from '../../template/assets/engine/theme.js';
   import { compressToWebp, slugify, contentHash, mediaExtension, WARN_BYTES } from '../../template/assets/engine/imageTools.js';
   import { FONT_STACKS } from '../../template/assets/engine/fonts.js';
   import { frameAtPoint } from '../../template/assets/engine/place.js';
@@ -80,12 +81,24 @@
    *  fra dokumentets faktiske variabler, så palettene bor ett sted. */
   function sendAdminTheme() {
     const style = getComputedStyle(document.documentElement);
+    const accent = style.getPropertyValue('--urd-color-accent').trim();
     bridge?.sendAdminTheme({
       bg: style.getPropertyValue('--urd-color-bg').trim(),
       surface: style.getPropertyValue('--urd-color-surface').trim(),
-      accent: style.getPropertyValue('--urd-color-accent').trim(),
+      accent,
       text: style.getPropertyValue('--urd-color-text').trim(),
+      // Lesbar tekst PÅ admin-aksenten: chromen brukte hardkodet hvit, som ga
+      // lav kontrast på lyse admin-aksenter (Gull/Glo). Velg svart/hvit etter
+      // aksentens luminans, så «hvit på lys» aldri oppstår.
+      'accent-text': readableOn(accent),
     });
+  }
+
+  /** Svart eller hvit tekst - det som har best WCAG-kontrast mot bakgrunnen. */
+  function readableOn(bg) {
+    const l = relativeLuminance(bg);
+    if (l == null) return '#ffffff';
+    return (contrastRatio(bg, '#ffffff') ?? 0) >= (contrastRatio(bg, '#0b0e14') ?? 0) ? '#ffffff' : '#0b0e14';
   }
 
   let site = $state(null);
@@ -603,6 +616,8 @@
   let sectionBg = $state([]);
   let sectionAnim = $state(null);
   let sectionHover = $state(null);
+  /** Speil av den aktive seksjonens rollesett (seksjonstema), '' = Standard */
+  let sectionTheme = $state('');
 
   function syncSectionMirrors(section) {
     sectionGrid = section?.grid ? { ...section.grid } : null;
@@ -610,6 +625,14 @@
     sectionBg = JSON.parse(JSON.stringify(section?.background?.layers ?? []));
     sectionAnim = section?.animation ? JSON.parse(JSON.stringify(section.animation)) : null;
     sectionHover = section?.hover ? JSON.parse(JSON.stringify(section.hover)) : null;
+    sectionTheme = section?.theme ?? '';
+  }
+
+  /** Ferdig seksjonstema (rollesett): presentasjon, ingen mobil-invalidering. */
+  function setSectionTheme(role) {
+    mutateSection('section-theme', (s) => {
+      if (role) s.theme = role; else delete s.theme;
+    });
   }
 
   function onSelectSection(msg) {
@@ -865,6 +888,14 @@
    *  token-navn selv, så ingen hexFor-omregning trengs lenger). */
   const themeSwatches = () => Object.entries(siteDraft?.theme.tokens.color ?? {}).map(([n, hex]) => [n, hex]);
 
+  /** Tema-panelets avledede tilstand (Farger-området). */
+  const PALETTE_KEYS = [['bg', 'Bakgrunn', 'bg'], ['surface', 'Flater', 'flate'], ['text', 'Tekst', 'tekst'], ['accent', 'Aksent', 'aksent'], ['accent-text', 'Tekst på aksent', 'på aksent']];
+  const dualMode = $derived(!!siteDraft?.theme.alt);
+  const altAuto = $derived(siteDraft?.theme.alt?.auto === true);
+  const stdMode = $derived(siteDraft?.theme.scheme === 'dark' ? 'dark' : 'light');
+  const lightPal = $derived(siteDraft?.theme.tokens.color ?? {});
+  const darkPal = $derived({ ...(siteDraft?.theme.tokens.color ?? {}), ...(siteDraft?.theme.alt?.tokens?.color ?? {}) });
+
   /* ---------- Animasjoner ---------- */
 
   function animObj(type) {
@@ -930,6 +961,14 @@
     if (!Number.isFinite(value)) return;
     mutateSection('edit:section-anim', (s) => {
       if (s.animation) s.animation.props[name] = value;
+    });
+    bridge?.sendDemoAnim(activeSectionId);
+  }
+
+  /** Streng-prop på seksjonsanimasjonen (stagger-mønster). */
+  function setSectionAnimPattern(pattern) {
+    mutateSection('edit:section-anim', (s) => {
+      if (s.animation) s.animation.props.pattern = pattern;
     });
     bridge?.sendDemoAnim(activeSectionId);
   }
@@ -2323,7 +2362,11 @@
   /* ---------- Tema-panelet ---------- */
 
   function setColorToken(name, value) {
-    siteMutate(`edit:theme-color-${name}`, () => { siteDraft.theme.tokens.color[name] = value; });
+    siteMutate(`edit:theme-color-${name}`, () => {
+      siteDraft.theme.tokens.color[name] = value;
+      // Auto-avledet mørkt tema følger de lyse fargene automatisk.
+      if (siteDraft.theme.alt?.auto) siteDraft.theme.alt.tokens.color = suggestAltColors();
+    });
   }
 
   function setFontToken(name, value) {
@@ -2387,7 +2430,11 @@
   }
 
   function setAltColorToken(name, value) {
-    siteMutate(`edit:theme-alt-${name}`, () => { siteDraft.theme.alt.tokens.color[name] = value; });
+    siteMutate(`edit:theme-alt-${name}`, () => {
+      siteDraft.theme.alt.tokens.color[name] = value;
+      // Å styre en mørk farge selv slår av auto-avledningen.
+      siteDraft.theme.alt.auto = false;
+    });
   }
 
   function setThemeScheme(value) {
@@ -2396,6 +2443,89 @@
       else siteDraft.theme.scheme = value;
     });
   }
+
+  /** Lys og mørk modus av/på: oppretter (auto-avledet) eller fjerner alt-temaet. */
+  function setDualMode(on) {
+    siteMutate('theme', () => {
+      if (on) siteDraft.theme.alt = { auto: true, tokens: { color: suggestAltColors() } };
+      else delete siteDraft.theme.alt;
+    });
+  }
+
+  /** Mørke farger: Auto (avledet fra de lyse) eller Egne (styres selv). */
+  function setAltAuto(auto) {
+    siteMutate('theme', () => {
+      siteDraft.theme.alt ??= { tokens: { color: suggestAltColors() } };
+      siteDraft.theme.alt.auto = auto;
+      if (auto) siteDraft.theme.alt.tokens.color = suggestAltColors();
+    });
+  }
+
+  /** Font-nedtrekkets valg: kjente stabler + evt. gjeldende egendefinerte. */
+  function fontOptions(which) {
+    const cur = siteDraft.theme.tokens.font[which];
+    return [
+      ...(FONT_STACKS.some(([, v]) => v === cur) ? [] : [[cur, 'Egendefinert']]),
+      ...FONT_STACKS.map(([name, value]) => [value, name]),
+    ];
+  }
+
+  /** Hjørne-radius fra glidebryter (px). */
+  const radiusNum = (v) => parseInt(v, 10) || 0;
+  function setRadiusPx(name, n) { setRadiusToken(name, `${n}px`); }
+
+  /** Løser en token-verdi til hex for forhåndsvisning (token-navn slås opp i paletten). */
+  const themeHex = (v, pal) => (v && pal && pal[v]) ? pal[v] : v;
+
+  /* Ferdige tema-forslag: fyller alle fargetokens + lys/mørk i ett klikk, så
+     finjusterer eieren fritt (startpunkt, som seksjonstemaene). Fonter/avrunding
+     røres ikke. Natt er mørk-først (scheme dark); resten lyse med mørkt alt. */
+  const THEME_PRESET_KEYS = ['bg', 'surface', 'text', 'accent', 'accent-text'];
+  const THEME_PRESETS = [
+    { id: 'bronn', name: 'Brønn', note: 'turkis (Urd)',
+      light: { bg: '#f6faf8', surface: '#ffffff', text: '#16211d', accent: '#15b39a', 'accent-text': '#04241d' },
+      dark: { bg: '#0e1512', surface: '#17211d', text: '#eaf1ed', accent: '#22c3a8', 'accent-text': '#04241d' } },
+    { id: 'stein', name: 'Stein', note: 'varm nøytral',
+      light: { bg: '#f4f2ed', surface: '#ffffff', text: '#262019', accent: '#8a5a41', 'accent-text': '#ffffff' },
+      dark: { bg: '#17130e', surface: '#221c15', text: '#efe8dd', accent: '#c0906f', 'accent-text': '#1a1109' } },
+    { id: 'plomme', name: 'Plomme', note: 'vibrant violett',
+      light: { bg: '#faf5ff', surface: '#ffffff', text: '#2a1546', accent: '#7c3aed', 'accent-text': '#ffffff' },
+      dark: { bg: '#140f20', surface: '#1f1733', text: '#ece5f8', accent: '#a97cf6', 'accent-text': '#170a2c' } },
+    { id: 'rose', name: 'Rose', note: 'dus rosa',
+      light: { bg: '#faf5f6', surface: '#ffffff', text: '#241a1d', accent: '#b04a63', 'accent-text': '#ffffff' },
+      dark: { bg: '#171015', surface: '#22181c', text: '#f1e6ea', accent: '#d98098', 'accent-text': '#2a0f18' } },
+    { id: 'hav', name: 'Hav', note: 'blå',
+      light: { bg: '#f1f6fb', surface: '#ffffff', text: '#13202b', accent: '#1a6fa8', 'accent-text': '#ffffff' },
+      dark: { bg: '#0a1420', surface: '#12202f', text: '#e2edf5', accent: '#47a6df', 'accent-text': '#06131f' } },
+    { id: 'natt', name: 'Natt', note: 'mørk-først, indigo', scheme: 'dark',
+      light: { bg: '#f5f6fb', surface: '#ffffff', text: '#171a2b', accent: '#4f5ed6', 'accent-text': '#ffffff' },
+      dark: { bg: '#0d0f1a', surface: '#171b2e', text: '#e7e9f5', accent: '#8091ff', 'accent-text': '#0a0c18' } },
+  ];
+
+  /** Anvend et tema-forslag: hovedmodus + alt-modus fylles fra paletten. */
+  function applyThemePreset(pr) {
+    siteMutate('theme', () => {
+      const dark = pr.scheme === 'dark';
+      const main = dark ? pr.dark : pr.light;
+      const other = dark ? pr.light : pr.dark;
+      for (const k of THEME_PRESET_KEYS) siteDraft.theme.tokens.color[k] = main[k];
+      if (dark) siteDraft.theme.scheme = 'dark'; else delete siteDraft.theme.scheme;
+      siteDraft.theme.alt = { tokens: { color: { ...other } } };
+    });
+  }
+
+  /** Hvilket forslag som matcher gjeldende palett (for markering); null når eieren har finjustert. */
+  const activeThemePreset = $derived.by(() => {
+    if (!siteDraft) return null;
+    const cur = siteDraft.theme.tokens.color;
+    const alt = siteDraft.theme.alt?.tokens?.color ?? {};
+    const dark = siteDraft.theme.scheme === 'dark';
+    return THEME_PRESETS.find((pr) => {
+      const main = dark ? pr.dark : pr.light;
+      const other = dark ? pr.light : pr.dark;
+      return THEME_PRESET_KEYS.every((k) => cur[k] === main[k] && alt[k] === other[k]);
+    })?.id ?? null;
+  });
 
   function toggleChrome() {
     chromeVisible = !chromeVisible;
@@ -3560,72 +3690,117 @@
               </div>
             {:else if activePanel === 'Tema'}
               <div class="panel-body">
-                <p class="panel-hint">Fargene og fontene hele siden bygger på. Endringer vises live.</p>
-                <label>Bakgrunn
-                  <ColorPicker value={siteDraft.theme.tokens.color.bg}
-                    label="Bakgrunnsfarge" onchange={(hex) => setColorToken('bg', hex)} /></label>
-                <label>Flater
-                  <ColorPicker value={siteDraft.theme.tokens.color.surface}
-                    label="Flatefarge" onchange={(hex) => setColorToken('surface', hex)} /></label>
-                <label>Tekst
-                  <ColorPicker value={siteDraft.theme.tokens.color.text}
-                    label="Tekstfarge" onchange={(hex) => setColorToken('text', hex)} /></label>
-                <label>Aksent
-                  <ColorPicker value={siteDraft.theme.tokens.color.accent}
-                    label="Aksentfarge" onchange={(hex) => setColorToken('accent', hex)} /></label>
-                <label title="Tekstfargen oppå aksentflater (primærknapper m.m.)">Tekst på aksent
-                  <ColorPicker value={siteDraft.theme.tokens.color['accent-text'] ?? siteDraft.theme.tokens.color.bg}
-                    label="Tekst på aksentflater" onchange={(hex) => setColorToken('accent-text', hex)} /></label>
-                <details class="group">
-                  <summary>Lys/mørk-bryter</summary>
-                  <div class="group-items">
-                    {#if siteDraft.theme.alt}
-                      <label>Hovedtemaet er
-                        <Dropdown value={siteDraft.theme.scheme ?? 'light'}
-                          options={[['light', 'Lyst'], ['dark', 'Mørkt']]}
-                          onchange={(v) => setThemeScheme(v)} /></label>
-                      <p class="panel-hint">Fargene under gjelder motsatt modus. Første besøk følger besøkendes OS-innstilling; bryteren i menyen husker valget.</p>
-                      {#each Object.entries(siteDraft.theme.alt.tokens.color) as [name]}
-                        <label>{({ bg: 'Bakgrunn', surface: 'Flater', text: 'Tekst', accent: 'Aksent', 'accent-text': 'Tekst på aksent' })[name] ?? name}
-                          <ColorPicker value={siteDraft.theme.alt.tokens.color[name]}
-                            label={`Alternativ ${name}`} onchange={(hex) => setAltColorToken(name, hex)} /></label>
-                      {/each}
-                      <span class="toolbar-row">
-                        <button class="ghost action tb-grow" title="Erstatter fargene over med inverterte utgaver av hovedtemaet"
-                          onclick={reSuggestAltTheme}>Foreslå på nytt (inverter)</button>
-                        <button class="ghost row-tool" title="Fjern det alternative temaet (bryteren i menyen forsvinner)"
-                          onclick={removeAltTheme}>{@html ICONS.cross}</button>
+                {#snippet themePreview(pal, cap)}
+                  <div class="theme-pvw">
+                    {#if cap}<div class="tpv-cap">{cap}</div>{/if}
+                    <div class="tpv-demo" style="--tv-bg:{themeHex(pal.bg, pal)};--tv-surface:{themeHex(pal.surface, pal)};--tv-text:{themeHex(pal.text, pal)};--tv-accent:{themeHex(pal.accent, pal)};--tv-accent-ink:{themeHex(pal['accent-text'] ?? pal.bg, pal)}">
+                      <div class="tpv-h">Overskrift</div>
+                      <div class="tpv-card">Litt brødtekst på et kort.</div>
+                      <div class="tpv-row"><span class="tpv-btn">Knapp</span><span class="tpv-lnk">Lenke</span></div>
+                    </div>
+                  </div>
+                {/snippet}
+                <p class="panel-strong">Tema-forslag</p>
+                <div class="theme-presets">
+                  {#each THEME_PRESETS as pr (pr.id)}
+                    <button type="button" class="theme-preset" class:sel={activeThemePreset === pr.id}
+                      title={`${pr.name} - ${pr.note}`} onclick={() => applyThemePreset(pr)}>
+                      <span class="tp-band">
+                        <i style="background:{pr.light.bg}"></i><i style="background:{pr.light.surface}"></i><i style="background:{pr.light.accent}"></i><i style="background:{pr.light.text}"></i>
                       </span>
-                    {:else}
-                      <button class="ghost action" onclick={createAltTheme}>+ Lag alternativt tema</button>
-                      <p class="panel-hint">Gir siden en lys/mørk-bryter i menyen. Starter med inverterte utgaver av dagens farger, som du justerer selv.</p>
-                    {/if}
+                      <small>{pr.name}</small>
+                    </button>
+                  {/each}
+                </div>
+                <p class="panel-strong">Farger</p>
+                <label class="gridmenu-snap" title="Gir siden en sol/måne-bryter i menyen">
+                  <input type="checkbox" checked={dualMode}
+                    onchange={(e) => setDualMode(e.target.checked)} />
+                  Lys og mørk modus
+                </label>
+                {#if dualMode}
+                  <div class="autorow">
+                    <span class="autolbl">Mørke farger</span>
+                    <span class="seg">
+                      <button type="button" class:on={altAuto} onclick={() => setAltAuto(true)}>Auto</button>
+                      <button type="button" class:on={!altAuto} onclick={() => setAltAuto(false)}>Egne</button>
+                    </span>
+                  </div>
+                {/if}
+
+                <div class="palhead">
+                  {#if dualMode}<span class="palname">Lys</span>{/if}
+                  <button type="button" class="stdtag" class:ghost={stdMode !== 'light'}
+                    title="Modusen nye besøkende ser først" onclick={() => setThemeScheme('light')}>Standard</button>
+                </div>
+                <div class="palcells">
+                  {#each PALETTE_KEYS as [key, full, short] (key)}
+                    <div class="palcol">
+                      <ColorPicker value={siteDraft.theme.tokens.color[key] ?? siteDraft.theme.tokens.color.bg}
+                        tokens={themeSwatches()} label={full} onchange={(hex) => setColorToken(key, hex)} />
+                      <span class="palcap">{short}</span>
+                      <b class="palhex">{themeHex(siteDraft.theme.tokens.color[key] ?? siteDraft.theme.tokens.color.bg, lightPal)}</b>
+                    </div>
+                  {/each}
+                </div>
+
+                {#if dualMode}
+                  <div class="palhead">
+                    <span class="palname">Mørk</span>
+                    <button type="button" class="stdtag" class:ghost={stdMode !== 'dark'}
+                      title="Sett mørk som standard" onclick={() => setThemeScheme('dark')}>Standard</button>
+                  </div>
+                  <div class="palcells" class:autopal={altAuto}>
+                    {#each PALETTE_KEYS as [key, full, short] (key)}
+                      <div class="palcol">
+                        <ColorPicker value={siteDraft.theme.alt.tokens.color[key] ?? darkPal[key] ?? siteDraft.theme.tokens.color.bg}
+                          tokens={themeSwatches()} label={`Mørk ${full}`} onchange={(hex) => setAltColorToken(key, hex)} />
+                        <span class="palcap">{short}</span>
+                        <b class="palhex">{themeHex(siteDraft.theme.alt.tokens.color[key] ?? darkPal[key], darkPal)}</b>
+                      </div>
+                    {/each}
+                  </div>
+                  {#if altAuto}
+                    <p class="panel-hint">Avledet fra de lyse fargene - klikk en rute for å styre dem selv.</p>
+                  {/if}
+                {/if}
+
+                <div class="theme-previews">
+                  {@render themePreview(lightPal, dualMode ? 'Lys' : '')}
+                  {#if dualMode}{@render themePreview(darkPal, 'Mørk')}{/if}
+                </div>
+
+                <details class="group">
+                  <summary>Typografi</summary>
+                  <div class="group-items">
+                    <label>Overskrifter
+                      <Dropdown value={siteDraft.theme.tokens.font.heading} options={fontOptions('heading')}
+                        onchange={(v) => setFontToken('heading', v)} /></label>
+                    <label>Brødtekst
+                      <Dropdown value={siteDraft.theme.tokens.font.body} options={fontOptions('body')}
+                        onchange={(v) => setFontToken('body', v)} /></label>
+                    <div class="typo-sample">
+                      <div class="ts-h" style="font-family:{siteDraft.theme.tokens.font.heading}">Overskrift</div>
+                      <div class="ts-b" style="font-family:{siteDraft.theme.tokens.font.body}">Litt brødtekst i valgt skrift - slik leser folk innholdet ditt.</div>
+                    </div>
                   </div>
                 </details>
-                <hr class="gridmenu-divider" />
-                <label>Overskrifter
-                  <Dropdown value={siteDraft.theme.tokens.font.heading}
-                    options={[
-                      ...(FONT_STACKS.some(([, v]) => v === siteDraft.theme.tokens.font.heading)
-                        ? [] : [[siteDraft.theme.tokens.font.heading, 'Egendefinert']]),
-                      ...FONT_STACKS.map(([name, value]) => [value, name]),
-                    ]}
-                    onchange={(v) => setFontToken('heading', v)} /></label>
-                <label>Brødtekst
-                  <Dropdown value={siteDraft.theme.tokens.font.body}
-                    options={[
-                      ...(FONT_STACKS.some(([, v]) => v === siteDraft.theme.tokens.font.body)
-                        ? [] : [[siteDraft.theme.tokens.font.body, 'Egendefinert']]),
-                      ...FONT_STACKS.map(([name, value]) => [value, name]),
-                    ]}
-                    onchange={(v) => setFontToken('body', v)} /></label>
-                <hr class="gridmenu-divider" />
-                <label>Avrunding, liten
-                  <input class="token-input" value={siteDraft.theme.tokens.radius.sm}
-                    onchange={(e) => setRadiusToken('sm', e.target.value)} /></label>
-                <label>Avrunding, stor
-                  <input class="token-input" value={siteDraft.theme.tokens.radius.md}
-                    onchange={(e) => setRadiusToken('md', e.target.value)} /></label>
+
+                <details class="group">
+                  <summary>Form (hjørner)</summary>
+                  <div class="group-items">
+                    <div class="form-prev" style="--r-sm:{siteDraft.theme.tokens.radius.sm};--r-md:{siteDraft.theme.tokens.radius.md}">
+                      <span class="fp-btn">Knapp</span>
+                      <span class="fp-card">Kort</span>
+                    </div>
+                    <label class="rng-lab">Små hjørner<span class="gridmenu-value">{siteDraft.theme.tokens.radius.sm}</span></label>
+                    <input type="range" min="0" max="24" step="1" value={radiusNum(siteDraft.theme.tokens.radius.sm)}
+                      oninput={(e) => setRadiusPx('sm', Number(e.target.value))} />
+                    <label class="rng-lab">Store hjørner<span class="gridmenu-value">{siteDraft.theme.tokens.radius.md}</span></label>
+                    <input type="range" min="0" max="40" step="1" value={radiusNum(siteDraft.theme.tokens.radius.md)}
+                      oninput={(e) => setRadiusPx('md', Number(e.target.value))} /></div>
+                </details>
+
                 <hr class="gridmenu-divider" />
                 <label>Nettstedsikon
                   {#if siteDraft.site.icon}
@@ -3760,6 +3935,12 @@
                   {/if}
 
                   <hr class="gridmenu-divider" />
+                  <label title="Ferdig fargerolle for seksjonen: overstyrer temaets farger på denne seksjonen (Aksent-flate, mørkt kontrastbånd o.l.). Følger lys/mørk automatisk.">Seksjonstema
+                    <Dropdown value={sectionTheme}
+                      options={[['', 'Standard'], ...Object.entries(SECTION_THEME_LABELS)]}
+                      onchange={(v) => setSectionTheme(v)} /></label>
+
+                  <hr class="gridmenu-divider" />
                   <p class="panel-strong">Bakgrunn</p>
                   {@render backgroundLayers(sectionBgCtx, sectionBg)}
 
@@ -3772,9 +3953,19 @@
                     <label>Varighet ms
                       <input type="number" min="100" max="4000" step="100" value={sectionAnim.props.duration}
                         onchange={(e) => setSectionAnimProp('duration', Number(e.target.value))} /></label>
-                    <label>Forsinkelse ms
-                      <input type="number" min="0" max="4000" step="100" value={sectionAnim.props.delay}
-                        onchange={(e) => setSectionAnimProp('delay', Number(e.target.value))} /></label>
+                    {#if sectionAnim.type === 'stagger'}
+                      <label title="Tid mellom hvert kort (En etter en) eller hver kolonne (Kolonnevis)">Trinn ms
+                        <input type="number" min="0" max="1000" step="10" value={sectionAnim.props.step ?? 90}
+                          onchange={(e) => setSectionAnimProp('step', Number(e.target.value))} /></label>
+                      <label title="En etter en: hvert kort ett trinn etter forrige. Kolonnevis: kort i samme kolonne kommer samtidig, bølgen skyves bortover.">Mønster
+                        <Dropdown value={sectionAnim.props.pattern ?? 'sequence'}
+                          options={[['sequence', 'En etter en'], ['columns', 'Kolonnevis']]}
+                          onchange={(v) => setSectionAnimPattern(v)} /></label>
+                    {:else}
+                      <label>Forsinkelse ms
+                        <input type="number" min="0" max="4000" step="100" value={sectionAnim.props.delay}
+                          onchange={(e) => setSectionAnimProp('delay', Number(e.target.value))} /></label>
+                    {/if}
                   {/if}
                   <label title="Effekt mens pekeren er over seksjonen; kan kombineres med animasjonen inn">Ved peker
                     <Dropdown value={sectionHover?.type ?? (sectionAnim && !isEntrance(sectionAnim) ? sectionAnim.type : '')}
@@ -4379,6 +4570,17 @@
           <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
         <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
+        <label class="gridmenu-snap" title="Bildet henger etter når man ruller. Av på mobil og ved redusert bevegelse.">
+          <input type="checkbox" checked={(layer.props.parallax ?? 0) > 0}
+            onchange={(e) => setBgProp(bg, i, 'parallax', e.target.checked ? 0.5 : 0)} />
+          Parallakse
+        </label>
+        {#if (layer.props.parallax ?? 0) > 0}
+          <label>Parallaksestyrke
+            <span class="gridmenu-value">{Math.round((layer.props.parallax ?? 0) * 100)}%</span></label>
+          <input type="range" min="0.1" max="1" step="0.05" value={layer.props.parallax ?? 0.5}
+            oninput={(e) => setBgProp(bg, i, 'parallax', Number(e.target.value))} />
+        {/if}
       {:else if layer.type === 'bildegalleri'}
         <label class="ghost filepick" title="Velg gjerne flere bilder samtidig; komprimeres til webp">
           + Legg til bilder
@@ -5811,6 +6013,72 @@
     font-size: 0.8rem;
     opacity: 0.65;
   }
+
+  /* Kontrast-varsel: lav aksent/tekst-kontrast. Tydeligere enn en vanlig hint. */
+  .contrast-warn {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    opacity: 1;
+    color: #d98324;
+  }
+  .contrast-warn :global(svg) { flex: none; margin-top: 2px; }
+
+  /* Tema-forslag: rad med palett-miniatyrer (alle på én rad) */
+  .theme-presets { display: flex; gap: 6px; margin: 6px 0 12px; }
+  .theme-preset {
+    flex: 1; min-width: 0; padding: 0; cursor: pointer; color: inherit; background: transparent;
+    border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 9px; overflow: hidden;
+  }
+  .theme-preset:hover { border-color: var(--urd-color-accent); }
+  .theme-preset.sel { outline: 2px solid var(--urd-color-accent); outline-offset: 1px; }
+  .theme-preset .tp-band { display: flex; height: 22px; }
+  .theme-preset .tp-band i { flex: 1; }
+  .theme-preset small { display: block; text-align: center; font-size: 9px; padding: 2px 0 3px; opacity: 0.8; }
+
+  /* Palett-forhåndsvisning av gjeldende tema */
+  .theme-palette { display: flex; gap: 8px; margin: 0 0 14px; }
+  .theme-palette .tp-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+  .theme-palette .tp-col i { display: block; height: 38px; border-radius: 8px; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); }
+  .theme-palette .tp-col span { text-align: center; font-size: 10px; opacity: 0.7; }
+
+  /* Farger: Auto/Egne, palett-rader (Lys+Mørk), Standard-tag */
+  .autorow { display: flex; align-items: center; justify-content: space-between; margin: 8px 0 2px; }
+  .autorow .autolbl { font-size: 0.85rem; opacity: 0.75; }
+  .seg { display: inline-flex; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 999px; overflow: hidden; }
+  .seg button { border: 0; background: transparent; color: inherit; font: 600 11px system-ui, sans-serif; padding: 3px 11px; cursor: pointer; }
+  .seg button.on { background: var(--urd-color-accent); color: var(--urd-color-bg); }
+  .palhead { display: flex; align-items: center; justify-content: space-between; margin: 13px 0 6px; }
+  .palname { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
+  .stdtag { border: 1px solid var(--urd-color-accent); background: color-mix(in srgb, var(--urd-color-accent) 20%, transparent); color: inherit; font: 600 9.5px system-ui, sans-serif; padding: 2px 9px; border-radius: 999px; cursor: pointer; }
+  .stdtag.ghost { border-color: color-mix(in srgb, currentColor 18%, transparent); background: transparent; opacity: 0.6; }
+  .palcells { display: flex; gap: 6px; }
+  .palcells .palcol { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
+  .palcells :global(.cp) { display: block; width: 100%; }
+  .palcells :global(.cp-swatch) { width: 100%; height: 32px; }
+  .palcells .palcap { text-align: center; font-size: 9px; opacity: 0.6; }
+  .palcells .palhex { text-align: center; font: 400 9px ui-monospace, monospace; opacity: 0.7; letter-spacing: -0.02em; }
+  .palcells.autopal .palcol { opacity: 0.7; }
+
+  /* Forhåndsvisning: hvordan hver farge påvirker siden (lys + mørk ved dual) */
+  .theme-previews { display: flex; gap: 10px; margin-top: 13px; }
+  .theme-pvw { flex: 1; min-width: 0; }
+  .tpv-cap { font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.5; margin-bottom: 5px; }
+  .tpv-demo { border-radius: 9px; border: 1px solid color-mix(in srgb, currentColor 12%, transparent); background: var(--tv-bg); color: var(--tv-text); padding: 9px 10px 10px; }
+  .tpv-h { font-weight: 700; font-size: 12px; margin-bottom: 5px; }
+  .tpv-card { background: var(--tv-surface); border: 1px solid color-mix(in srgb, var(--tv-text) 12%, transparent); border-radius: 7px; padding: 6px 8px; font-size: 10px; color: color-mix(in srgb, var(--tv-text) 62%, transparent); margin-bottom: 8px; }
+  .tpv-row { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+  .tpv-btn { background: var(--tv-accent); color: var(--tv-accent-ink); font: 600 10.5px system-ui, sans-serif; padding: 5px 11px; border-radius: 999px; }
+  .tpv-lnk { color: var(--tv-accent); font: 600 10.5px system-ui, sans-serif; border-bottom: 1.5px solid currentColor; }
+
+  /* Typografi-prøve + Form-hjørneprøve */
+  .typo-sample { margin-top: 10px; padding: 11px 12px; background: color-mix(in srgb, currentColor 5%, transparent); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); border-radius: 9px; }
+  .typo-sample .ts-h { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .typo-sample .ts-b { font-size: 12.5px; opacity: 0.7; line-height: 1.5; }
+  .form-prev { display: flex; align-items: center; gap: 12px; padding: 12px; background: color-mix(in srgb, currentColor 5%, transparent); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); border-radius: 9px; margin-bottom: 10px; }
+  .form-prev .fp-btn { background: var(--urd-color-accent); color: var(--urd-color-bg); font: 600 12px system-ui, sans-serif; padding: 8px 15px; border-radius: var(--r-sm); }
+  .form-prev .fp-card { flex: 1; height: 42px; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); border-radius: var(--r-md); display: grid; place-items: center; font-size: 11px; opacity: 0.7; }
+  .rng-lab { display: flex; align-items: center; justify-content: space-between; }
 
   /* Bryterrader som moderne innstillinger: tekst til venstre, bryter
      ytterst til høyre (markupen har input først; row-reverse snur) */

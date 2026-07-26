@@ -36,6 +36,10 @@
           "type": ["string", "null"],
           "description": "Presetsen seksjonen ble laget fra - kun opphavsinfo, styrer ingenting"
         },
+        "theme": {
+          "type": "string",
+          "description": "Ferdig seksjonstema (rollesett, additivt fra v0.6): 'flate'/'aksent'/'invers' overstyrer temaets fargetokens på seksjonen; fravær = Standard (ingen overstyring). Ukjent rolle ignoreres."
+        },
         "size": {
           "type": "object",
           "additionalProperties": false,

@@ -3161,7 +3161,7 @@ body.urd-mobile .urd-section-resize-top {
   border: 0;
   border-radius: 4px;
   background: var(--urd-admin-accent, #5f6a75);
-  color: #fff;
+  color: var(--urd-admin-accent-text, #fff);
   font-size: 14px;
   line-height: 1;
   padding: 0 6px;
@@ -3201,7 +3201,7 @@ body.urd-mobile .urd-section-resize-top {
   place-items: center;
   font-size: 11px;
   line-height: 1;
-  color: #fff;
+  color: var(--urd-admin-accent-text, #fff);
   border-radius: 50%;
   background: var(--urd-admin-accent, #5f6a75);
   cursor: grab;
@@ -3485,7 +3485,7 @@ body.urd-mobile .urd-section-resize-top {
 
 .urd-preview .urd-section-toolbar button:hover {
   background: var(--urd-admin-accent, #5f6a75);
-  color: #fff;
+  color: var(--urd-admin-accent-text, #fff);
 }
 
 /* Ren visning: editoren kan skjule alle editeringshåndtak, slik at siden

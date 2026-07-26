@@ -16,6 +16,7 @@
  */
 import { lift } from './migrate.js';
 import { applyAnimation } from './animations/core.js';
+import { applySectionTheme } from './theme.js';
 import { refreshSticky } from './sticky.js';
 
 /**
@@ -123,6 +124,9 @@ export function renderSection(section, site, host, opts = {}) {
 
   host.className = 'urd-section';
   host.dataset.sectionId = section.id;
+  // Ferdig seksjonstema (rollesett, additivt fra v0.6): overstyrer seksjonens
+  // fargetokens på host, blokkene arver dem. Nullstiller ved Standard/fravær.
+  applySectionTheme(host, section.theme);
   host.replaceChildren();
 
   renderBackgroundLayers(host, section.background);

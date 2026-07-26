@@ -53,6 +53,10 @@
           "required": ["tokens"],
           "additionalProperties": false,
           "properties": {
+            "auto": {
+              "type": "boolean",
+              "description": "Additivt fra v0.6: er true auto-avledes alt-fargene fra hovedtemaet (invertert lyshet) og re-avledes når en hovedfarge endres; false/utelatt = eieren styrer alt-fargene selv."
+            },
             "tokens": {
               "type": "object",
               "description": "Samme form som theme.tokens; utelatte verdier arver hovedtemaet",

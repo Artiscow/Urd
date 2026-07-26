@@ -167,7 +167,7 @@ function enablePreview(state, opts) {
       // seksjonsgalleriet) skal følge admin, ikke siden som redigeres.
       // Verdiene legges som egne variabler; base.css bruker dem KUN på
       // editor-chromen, aldri på sidens eget innhold.
-      for (const key of ['bg', 'surface', 'accent', 'text']) {
+      for (const key of ['bg', 'surface', 'accent', 'text', 'accent-text']) {
         if (typeof msg.colors[key] === 'string') {
           document.documentElement.style.setProperty(`--urd-admin-${key}`, msg.colors[key]);
         }

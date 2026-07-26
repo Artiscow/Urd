@@ -5,7 +5,10 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveThemeMode, activeTokens } from '../template/assets/engine/theme.js';
+import {
+  resolveThemeMode, activeTokens,
+  sectionThemeVars, SECTION_THEMES, relativeLuminance, contrastRatio,
+} from '../template/assets/engine/theme.js';
 
 test('resolveThemeMode: lagret valg vinner over OS-preferansen', () => {
   assert.equal(resolveThemeMode('light', 'dark', false), 'dark');
@@ -58,4 +61,36 @@ test('activeTokens: uten alt-tema returneres hovedtokens uansett modus', () => {
   const theme = { tokens: { color: { bg: '#123456' } } };
   assert.deepEqual(activeTokens(theme, 'dark'), theme.tokens);
   assert.deepEqual(activeTokens(theme, 'light'), theme.tokens);
+});
+
+test('sectionThemeVars: kjente roller gir overstyringer, Standard/ukjent gir {}', () => {
+  assert.deepEqual(sectionThemeVars('standard'), {});
+  assert.deepEqual(sectionThemeVars(undefined), {});
+  assert.deepEqual(sectionThemeVars('finnes-ikke'), {});
+  assert.deepEqual(sectionThemeVars('flate'), SECTION_THEMES.flate);
+  assert.equal(sectionThemeVars('aksent')['--urd-color-bg'], 'var(--urd-base-accent)');
+  // Invers bytter bg<->text via BASIS-kopier (ikke levende tokens = ingen sykel).
+  assert.equal(sectionThemeVars('invers')['--urd-color-bg'], 'var(--urd-base-text)');
+  assert.equal(sectionThemeVars('invers')['--urd-color-text'], 'var(--urd-base-bg)');
+  for (const vars of Object.values(SECTION_THEMES)) {
+    for (const v of Object.values(vars)) {
+      assert.ok(!/var\(--urd-color-/.test(v), `rolle skal ikke referere levende --urd-color-* (${v})`);
+    }
+  }
+});
+
+test('relativeLuminance: hvit=1, svart=0, ugyldig=null', () => {
+  assert.equal(Math.round(relativeLuminance('#ffffff')), 1);
+  assert.equal(relativeLuminance('#000000'), 0);
+  assert.equal(relativeLuminance('#fff'), relativeLuminance('#ffffff')); // kortform
+  assert.equal(relativeLuminance('accent'), null); // token-navn kan ikke måles
+  assert.equal(relativeLuminance('color-mix(in srgb, red, blue)'), null);
+});
+
+test('contrastRatio: svart/hvit=21, likt=1, umålbart=null', () => {
+  assert.ok(Math.abs(contrastRatio('#000000', '#ffffff') - 21) < 0.01);
+  assert.equal(contrastRatio('#123456', '#123456'), 1);
+  assert.equal(contrastRatio('#ffffff', 'accent'), null);
+  // Hvit tekst på brønn-turkis er under WCAG 4,5 (kontrast-varselets poeng).
+  assert.ok(contrastRatio('#15b39a', '#ffffff') < 4.5);
 });

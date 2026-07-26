@@ -19,10 +19,35 @@ export const coreAnimations = {
   'slide-up': { version: 1, label: 'Gli opp', entrance: true, defaults: entranceDefaults, migrations: {} },
   'zoom-in': { version: 1, label: 'Zoom inn', entrance: true, defaults: entranceDefaults, migrations: {} },
   'hover-lift': { version: 1, label: 'Løft ved peker', entrance: false, defaults: () => ({}), migrations: {} },
+  // Stagger er en GRUPPE-inngangsanimasjon (kun seksjonsnivå): den animerer
+  // ikke seksjonen selv, men slipper seksjonens kort-blokker inn forskjøvet fra
+  // ÉN felles trigger. pattern: 'sequence' (ett trinn per kort) eller 'columns'
+  // (kort i samme kolonne kommer samtidig, bølgen skyves bortover kolonnene).
+  stagger: {
+    version: 1, label: 'Stagger (kortgruppe)', entrance: true, group: true,
+    defaults: () => ({ duration: 600, step: 90, effect: 'slide-up', pattern: 'sequence' }),
+    migrations: {},
+  },
 };
+
+const STAGGER_EFFECTS = ['fade-in', 'slide-up', 'zoom-in'];
+
+/**
+ * Forsinkelser (ms) for kolonnevis stagger: kort med samme x-posisjon deler
+ * trinn, og bølgen skyves bortover stigende x. Ren funksjon (node-testet).
+ * @param {number[]} positions x-posisjon per kort (samme rekkefølge som kortene)
+ * @param {number} step Trinn-tid i ms
+ * @returns {number[]}
+ */
+export function staggerColumnDelays(positions, step) {
+  const cols = [...new Set(positions)].sort((a, b) => a - b);
+  return positions.map((p) => cols.indexOf(p) * step);
+}
 
 /** Delt observer: legger på .urd-anim-in første gang elementet er synlig. */
 let observer = null;
+// Seksjoner med stagger: verten observeres, men det er BARNA som slippes.
+const staggerGroups = new WeakMap();
 
 /**
  * Inngangsanimasjonen spilles når elementet blir synlig - også hvis det er
@@ -43,10 +68,43 @@ function entranceObserver() {
       if (entry.intersectionRatio < 0.15 && !tall) continue;
       const el = entry.target;
       observer.unobserve(el);
-      el.classList.add('urd-anim-in');
+      // Stagger-vert: slipp BARNA (hvert med sin forskjøvne delay), ikke verten.
+      const group = staggerGroups.get(el);
+      if (group) group.forEach((child) => child.classList.add('urd-anim-in'));
+      else el.classList.add('urd-anim-in');
     }
   }, { threshold: [0.05, 0.1, 0.15] });
   return observer;
+}
+
+/**
+ * Stagger (gruppe): finn seksjonens kort-blokker (uten egen animasjon), gi dem
+ * inngangseffekt + forskjøvet delay etter mønster, og slipp dem samlet fra
+ * seksjonens synlighet. I preview/reduced-motion vises slutt-tilstanden straks.
+ */
+function applyStagger(host, props, ctx) {
+  const effect = STAGGER_EFFECTS.includes(props.effect) ? props.effect : 'slide-up';
+  const step = Number.isFinite(props.step) ? Math.max(0, props.step) : 90;
+  host.classList.add('urd-anim-stagger');
+  // Kort-blokkene: alle .urd-block i seksjonen som ikke alt har egen animasjon.
+  const targets = [...host.querySelectorAll('.urd-block')].filter((el) => !/\burd-anim-/.test(el.className));
+  if (!targets.length) return;
+  const delays = props.pattern === 'columns'
+    ? staggerColumnDelays(targets.map((el) => Math.round(el.offsetLeft / 8)), step)
+    : targets.map((_, i) => i * step);
+  targets.forEach((el, i) => {
+    el.classList.add(`urd-anim-${effect}`);
+    if (props.duration != null) el.style.setProperty('--urd-anim-duration', `${props.duration}ms`);
+    el.style.setProperty('--urd-anim-delay', `${delays[i]}ms`);
+  });
+
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (ctx.preview || reduced) {
+    targets.forEach((el) => el.classList.add('urd-anim-in'));
+    return;
+  }
+  staggerGroups.set(host, targets);
+  entranceObserver().observe(host);
 }
 
 /**
@@ -61,6 +119,11 @@ function entranceObserver() {
  * @param {{preview?: boolean}} [ctx] Render-kontekst
  */
 export function applyAnimation(el, type, props, def, ctx = {}) {
+  // Gruppe-animasjon (stagger): animerer barna, ikke elementet selv.
+  if (def.group) {
+    applyStagger(el, props, ctx);
+    return;
+  }
   el.classList.add(`urd-anim-${type}`);
   if (props.duration != null) el.style.setProperty('--urd-anim-duration', `${props.duration}ms`);
   if (props.delay != null) el.style.setProperty('--urd-anim-delay', `${props.delay}ms`);
