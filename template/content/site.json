@@ -120,7 +120,8 @@
         ]
       },
       "topGap": false,
-      "textColor": "#ffffff"
+      "textColor": "#ffffff",
+      "hoverTextColor": "#00fff5"
     },
     "overlay": true,
     "variant": "floating-square"

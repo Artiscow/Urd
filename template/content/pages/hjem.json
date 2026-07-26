@@ -10,7 +10,7 @@
       "version": 1,
       "preset": "hero",
       "size": {
-        "minHeight": "672px"
+        "minHeight": "608px"
       },
       "grid": null,
       "background": {
@@ -173,7 +173,7 @@
       "version": 1,
       "preset": "hva-skjer",
       "size": {
-        "minHeight": "560px"
+        "minHeight": "464px"
       },
       "grid": null,
       "background": {
@@ -186,39 +186,39 @@
               "kind": "linear",
               "stops": [
                 {
-                  "color": "#980101",
+                  "color": "#00fff5",
                   "share": 50
                 },
                 {
-                  "color": "#a54500",
+                  "color": "#db4949",
                   "share": 50
                 },
                 {
-                  "color": "#8f7500",
+                  "color": "#00fff5",
                   "share": 50
                 },
                 {
-                  "color": "#3e8e00",
+                  "color": "#c0ff93",
                   "share": 50
                 },
                 {
-                  "color": "#00a19b",
+                  "color": "#00fff5",
                   "share": 50
                 },
                 {
-                  "color": "#0028a1",
+                  "color": "#a593ff",
                   "share": 50
                 },
                 {
-                  "color": "#6900a1",
+                  "color": "#00fff5",
                   "share": 50
                 },
                 {
-                  "color": "#a1006e",
+                  "color": "#ff93fb",
                   "share": 50
                 }
               ],
-              "angle": 305,
+              "angle": 325,
               "x": 0.5,
               "y": 0.5,
               "animation": "pan-loop",
@@ -245,7 +245,7 @@
           "frames": {
             "desktop": {
               "x": 9.74,
-              "y": 112,
+              "y": 64,
               "w": 28.26,
               "h": 272,
               "z": 1,
@@ -267,7 +267,7 @@
           "frames": {
             "desktop": {
               "x": 54.49,
-              "y": 112,
+              "y": 64,
               "w": 39.41,
               "h": 368,
               "z": 3,
