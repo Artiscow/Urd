@@ -6,11 +6,130 @@
   },
   "sections": [
     {
-      "id": "sec-d3ef5b4a",
+      "id": "sec-1bb9cc55",
       "version": 1,
-      "preset": "tom",
+      "preset": "hero",
       "size": {
-        "minHeight": "368px"
+        "minHeight": "608px"
+      },
+      "grid": null,
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "gradient",
+            "version": 1,
+            "props": {
+              "stops": [
+                "#0b0e14",
+                "#1a1030"
+              ],
+              "angle": 160,
+              "animate": false
+            }
+          },
+          {
+            "type": "glow",
+            "version": 1,
+            "props": {
+              "x": 0.7,
+              "y": 0.2,
+              "color": "accent",
+              "radius": 0.5,
+              "opacity": 0.35
+            }
+          },
+          {
+            "type": "grain",
+            "version": 1,
+            "props": {
+              "opacity": 0.06
+            }
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "id": "blk-f5aca818",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<h1>Ny overskrift</h1>",
+            "align": "left",
+            "box": false
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 8.33,
+              "y": 40,
+              "w": 50,
+              "h": 38,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-9960b2d3",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<p>Skriv en kort introduksjon her.</p>",
+            "align": "left",
+            "box": false
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 8.33,
+              "y": 84,
+              "w": 41.67,
+              "h": 26,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-ce742ee5",
+          "type": "button",
+          "version": 1,
+          "props": {
+            "label": "Les mer",
+            "page": null,
+            "href": "#",
+            "style": "primary"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 8.33,
+              "y": 118,
+              "w": 20,
+              "h": 32,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        }
+      ],
+      "responsive": {
+        "mobile": {
+          "mode": "auto",
+          "attention": null
+        }
+      }
+    },
+    {
+      "id": "sec-c1e0870f",
+      "version": 1,
+      "preset": "kontakt",
+      "size": {
+        "minHeight": "720px"
       },
       "grid": null,
       "background": {
@@ -20,12 +139,97 @@
             "type": "color",
             "version": 1,
             "props": {
-              "value": "bg"
+              "value": "surface"
+            }
+          },
+          {
+            "type": "glow",
+            "version": 1,
+            "props": {
+              "x": 0.2,
+              "y": 0.8,
+              "color": "accent",
+              "radius": 0.5,
+              "opacity": 0.2
             }
           }
         ]
       },
-      "blocks": []
+      "blocks": [
+        {
+          "id": "blk-c740523c",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<h2>Kontakt oss</h2>",
+            "align": "left",
+            "box": false
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 10,
+              "y": 32,
+              "w": 40,
+              "h": 36,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-1a698de7",
+          "type": "text",
+          "version": 1,
+          "props": {
+            "html": "<p><b>E-post:</b> post@dinforening.no</p><p><b>Telefon:</b> 12 34 56 78</p><p><b>Adresse:</b> Gateadresse 1, 0000 Sted</p>",
+            "align": "left",
+            "box": true
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 10,
+              "y": 84,
+              "w": 36,
+              "h": 130,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-bf54c41b",
+          "type": "button",
+          "version": 1,
+          "props": {
+            "label": "Send e-post",
+            "page": null,
+            "href": "mailto:post@dinforening.no",
+            "style": "primary"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 60,
+              "y": 100,
+              "w": 22,
+              "h": 40,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        }
+      ],
+      "responsive": {
+        "mobile": {
+          "mode": "auto",
+          "attention": null
+        }
+      }
     }
   ]
 }
