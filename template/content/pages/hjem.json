@@ -10,7 +10,7 @@
       "version": 1,
       "preset": "hero",
       "size": {
-        "minHeight": "576px"
+        "minHeight": "672px"
       },
       "grid": null,
       "background": {
@@ -49,8 +49,8 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 9.15,
-              "y": 112,
+              "x": 9.17,
+              "y": 176,
               "w": 50,
               "h": 38,
               "z": 1,
@@ -71,8 +71,8 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 9.15,
-              "y": 176,
+              "x": 9.17,
+              "y": 240,
               "w": 41.67,
               "h": 64,
               "z": 1,
@@ -94,8 +94,8 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 9.13,
-              "y": 256,
+              "x": 9.15,
+              "y": 320,
               "w": 20,
               "h": 32,
               "z": 1,
@@ -120,8 +120,8 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 60.41,
-              "y": 96,
+              "x": 60.43,
+              "y": 160,
               "w": 25.33,
               "h": 299,
               "z": 2,
@@ -150,8 +150,8 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 58.47,
-              "y": 64,
+              "x": 58.49,
+              "y": 128,
               "w": 29.34,
               "h": 368,
               "z": 1,

@@ -33,6 +33,17 @@
       "space": {
         "section": "clamp(3rem, 8vw, 6rem)"
       }
+    },
+    "alt": {
+      "tokens": {
+        "color": {
+          "bg": "#b2cfc8",
+          "surface": "#ffffff",
+          "text": "#0f1117",
+          "accent": "#00a19b",
+          "accent-text": "#ffffff"
+        }
+      }
     }
   },
   "pages": [
@@ -64,14 +75,14 @@
   "nav": {
     "version": 1,
     "logo": {
-      "type": "text",
-      "value": "Urd v0.6",
-      "size": 35,
+      "type": "image",
+      "value": "/media/logo-0e227b01.svg",
+      "size": 40,
       "order": "image-first",
       "bold": false,
       "italic": false,
       "font": "'Trebuchet MS', sans-serif",
-      "radius": 20
+      "radius": 0
     },
     "items": [
       {
@@ -92,7 +103,24 @@
       }
     ],
     "layout": "left",
-    "sticky": true
+    "sticky": true,
+    "style": {
+      "background": {
+        "version": 1,
+        "layers": [
+          {
+            "type": "color",
+            "version": 1,
+            "props": {
+              "value": "#0e1a27",
+              "opacity": 0.45
+            }
+          }
+        ]
+      },
+      "topGap": false
+    },
+    "overlay": true
   },
   "footer": {
     "version": 1,
