@@ -123,7 +123,7 @@
               "x": 60.43,
               "y": 160,
               "w": 25.33,
-              "h": 299,
+              "h": 347,
               "z": 2,
               "rot": 0
             },
@@ -152,8 +152,8 @@
             "desktop": {
               "x": 58.49,
               "y": 128,
-              "w": 29.34,
-              "h": 368,
+              "w": 29.63,
+              "h": 400,
               "z": 1,
               "rot": 0
             },
@@ -173,7 +173,7 @@
       "version": 1,
       "preset": "hva-skjer",
       "size": {
-        "minHeight": "912px"
+        "minHeight": "560px"
       },
       "grid": null,
       "background": {
@@ -248,36 +248,6 @@
               "y": 112,
               "w": 28.26,
               "h": 272,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        },
-        {
-          "id": "blk-b971705e",
-          "type": "text",
-          "version": 1,
-          "decor": false,
-          "props": {
-            "html": "<h3><br></h3><p><br></p>",
-            "align": "left",
-            "box": true,
-            "boxStyle": {
-              "glass": true,
-              "border": {
-                "color": "#ffffff",
-                "width": 2
-              }
-            }
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 10.48,
-              "y": 432,
-              "w": 18.51,
-              "h": 352,
               "z": 1,
               "rot": 0
             },
