@@ -259,7 +259,7 @@ export function renderFooter(site, host, pageId) {
     host.style.display = '';
     const inner = document.createElement('div');
     inner.className = `urd-footer urd-footer-${footer.align ?? 'center'}`;
-    for (const line of (footer.text ?? '').split('\n')) {
+    for (const line of String(footer.text ?? '').split('\n')) {
       if (!line.trim()) continue;
       const p = document.createElement('p');
       p.textContent = line;

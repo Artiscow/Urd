@@ -1,4 +1,6 @@
-# Urd
+<p align="center">
+  <img src="docs/brand/urd-logo-turkis.svg" alt="Urd" width="200">
+</p>
 
 > Urd er trolig den eldste av de tre nornene i norrøn mytologi som sitter ved foten av Yggdrasil og bestemmer æsenes skjebner. Sammen sitter nornene og spinner skjebnetråder eller risser skjebnen inn i trestykker.
 > Urd er verktøyet for å spinne og risse inn din egen nettside ut fra treets rot.
@@ -50,18 +52,3 @@ Urd kan utvides med **plugins** som bor i repoet ditt og skrus på i admin. Tre 
 ## Lisens
 
 [MIT](LICENSE)
-
----
-
-                                  |
-                                 |||
-                                |||||
-                  |    |    |   |||||||
-                 )_)  )_)  )_)   ~|~
-                )___))___))___)\  |
-               )____)____)_____)\\|
-             _____|____|____|_____\\\__
-             \                       /
-       ~^~^~~^~^~~^~^~~^~^~~^~^~~^~^~~^~^~
-               ~^~  all aboard!  ~^~
-       ~^~^~~^~^~~^~^~~^~^~~^~^~~^~^~~^~^~

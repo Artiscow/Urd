@@ -2156,6 +2156,25 @@ body.urd-mobile .urd-nav-sub,
   pointer-events: auto;
 }
 
+/* Overlay (nav.overlay, kun variant bar): fullbredde-linjen tas ut av flyten
+   og legges oppå toppseksjonen, så toppseksjonens bakgrunn fyller helt opp og
+   en gjennomsiktig meny avslører hero bak seg. Sticky blir fixed, som float. */
+.urd-nav-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5000;
+}
+
+.urd-nav-overlay.urd-nav-sticky {
+  position: fixed;
+}
+
+.urd-preview .urd-nav-overlay {
+  z-index: 100001;
+}
+
 .urd-nav-var-floating {
   /* Padding via varen, ikke padding-block: logobildets negative
      margin-triks er kalibrert mot --urd-nav-pad og må følge med.
@@ -3267,6 +3286,19 @@ body.urd-mobile .urd-section-resize-top {
 .urd-preview .urd-add-section:has(+ .urd-section:hover) {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* Tom side: den eneste baren har ingen naboseksjon å bli avslørt av, så
+   hover-reglene over kan aldri vise den. Da står den alltid framme og fyller
+   flaten som en tom-tilstand, ellers blir siden umulig å bygge videre på. */
+.urd-preview #urd-root > .urd-add-section:only-child {
+  opacity: 1;
+  pointer-events: auto;
+  height: min(55vh, 380px);
+  align-items: center;
+}
+.urd-preview #urd-root > .urd-add-section:only-child > button {
+  transform: none;
 }
 
 .urd-preview .urd-add-section::before {

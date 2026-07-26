@@ -84,7 +84,7 @@ export function renderNav(site, host) {
   // og gir body innholds-padding. Alle klasser toggles hver rendering,
   // så variantbytte i editoren aldri etterlater rester.
   const hc = hostClasses(effSite);
-  for (const cls of ['urd-nav-float', 'urd-nav-side-host', 'urd-nav-side-host-left', 'urd-nav-side-host-right']) {
+  for (const cls of ['urd-nav-float', 'urd-nav-overlay', 'urd-nav-side-host', 'urd-nav-side-host-left', 'urd-nav-side-host-right']) {
     host.classList.toggle(cls, hc.host.includes(cls));
   }
   for (const cls of ['urd-side-left', 'urd-side-right']) {
@@ -401,8 +401,8 @@ export function renderNav(site, host) {
         grip.removeEventListener('pointerup', onUp);
         if (width !== startW) window.parent?.postMessage({ type: 'urd-nav-width', width }, location.origin);
       };
-      grip.addEventListener('pointermove', onMove);
-      grip.addEventListener('pointerup', onUp);
+      grip.addEventListener('pointermove', onMove, { signal });
+      grip.addEventListener('pointerup', onUp, { signal });
     }, { signal });
     host.appendChild(grip);
   }

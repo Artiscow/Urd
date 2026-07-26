@@ -3,17 +3,26 @@
 Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren stryker herfra** når noe er testet; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.6.5.3): SVG-logoer, nav oppå hero, tom-side-fiks, bugsjekkrunde
+
+- [ ] SVG-logo: last opp en `.svg` som footer-merke og som nav-logo; den skal bli skarp (ikke rasterisert/webp) og vises rett i preview og på publisert side
+- [ ] Nav oppå hero (overlay): på variant «Stripe» skru på «Legg menyen oppå toppseksjonen»; en (halv)gjennomsiktig meny skal avsløre hero bak seg helt på toppen. Av = menyen ligger i eget bånd som før. Valget skal kun vises for Stripe (ikke floating/sidestilt), og toppseksjonen bør ha nok klaring øverst
+- [ ] Tom side: fjern alle seksjonene på en side; «+ Ny seksjon» skal fortsatt vises (som en tom-tilstand) så siden kan bygges videre
+- [ ] Justering ved Stor CTA: med Stor CTA aktiv i footeren skal «Justering»-valget være borte (det hadde ingen effekt); uten Stor CTA er det tilbake
+- [ ] Utrygge lenker: en lenke med et rart skjema (f.eks. `javascript:`) i en footer-kolonne/bunnlinje skal ikke bli en aktiv lenke (peker til `#`). NB: rene anker-lenker (`#seksjon`) støttes ikke ennå og blir også `#`
+- [ ] README: prosjektets forside viser Urd-logoen øverst
+
 ### Testrunde-batch (0.6.6.5.2): footer-overhaling, delt bakgrunnslag for nav, Urd-logo
 
 Footer-overhalingen (26. juli). Bygg footeren i admin (Footer-panelet) og sjekk på siden:
 - [ ] Startpunkt: den visuelle mal-velgeren viser åtte miniatyrer (Minimal, Sentrert, Kolonner, Sitemap, Nyhetsbrev, Stor CTA, Kontakt, Mega); velg en og footeren fylles - alt kan så redigeres fritt
-- [ ] Rik bunnlinje: copyright/tekst til venstre + baseline-lenker (Personvern o.l.) til høyre; ingen «Enkel tekst»-felt i den rike admin-en; ingenting fylles inn av seg selv (aldri versjonsnummer eller sidetittel)
-- [ ] Kolonner: like brede kolonner med lik avstand, symmetrisk; en lang kolonne (mange lenker) deler seg i to spor; venstre/sentrert-justering for den delte overskriften virker; kollapser pent til 2/1 på smal skjerm
+- [x] Rik bunnlinje: copyright/tekst til venstre + baseline-lenker (Personvern o.l.) til høyre; ingen «Enkel tekst»-felt i den rike admin-en; ingenting fylles inn av seg selv (aldri versjonsnummer eller sidetittel)
+- [x] Kolonner: like brede kolonner med lik avstand, symmetrisk; en lang kolonne (mange lenker) deler seg i to spor; venstre/sentrert-justering for den delte overskriften virker; kollapser pent til 2/1 på smal skjerm
 - [ ] Handlingsoppfordring (CTA): knapp-varianten lenker til side/URL/mailto og virker uten server; nyhetsbrev-varianten validerer e-post og viser inline bekreftelse (mot et ekte endepunkt) eller åpner mailto som fallback uten endepunkt; en stor sentrert CTA-variant finnes. NB: nyhetsbrev mot ekstern vert krever `connect-src` i `_headers`
 - [ ] Merkevare-logo: modus Tekst / Logo / Begge; last opp en logo (blir webp ved publisering) med høydevalg; «Logo» uten opplastet bilde faller pent tilbake til tittel
 - [ ] Per-side-synlighet: «Vis på sider» kan skru footeren av på enkeltsider; av som standard betyr synlig på alle
 - [ ] Nav- og footer-bakgrunn: den delte lag-bakgrunnen (farge/gradient/glød/bilde/korn) kan settes på både nav og footer; uten lag ser de uendret ut
-- [ ] Urd-logo: admin-headeren viser runen + «Urd» i turkis; nettleserfanen (favicon) viser runen på både den offentlige siden og i admin. Logo-filer ligger i docs/brand/ om du vil bruke dem andre steder
+- [x] Urd-logo: admin-headeren viser runen + «Urd» i turkis; nettleserfanen (favicon) viser runen på både den offentlige siden og i admin. Logo-filer ligger i docs/brand/ om du vil bruke dem andre steder
 - [ ] Tema: footeren (og CTA-en) er lesbar i både lys og mørk modus
 
 ### Testrunde-batch (0.6.33): footer med kolonner og sosiale lenker

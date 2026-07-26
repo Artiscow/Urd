@@ -45,6 +45,18 @@ test('footerBrand: tittel, tagline, ingen sidetittel-fallback, null når tomt', 
   assert.equal(footerBrand({ footer: { brand: { mode: 'text', logo: '/media/x.webp' } } }), null);
 });
 
+test('footer-model: ikke-streng-felt (håndredigert data) velter aldri renderen', () => {
+  // Tall/bool/objekt der modellen venter tekst skal gi tom streng, ikke TypeError.
+  assert.doesNotThrow(() => footerBrand({ footer: { brand: { title: 2026, tagline: true, logo: 5 } } }));
+  assert.equal(footerBrand({ footer: { brand: { title: 2026 } } }), null);
+  assert.doesNotThrow(() => footerBaseline({ footer: { text: 42, copyright: {} } }));
+  assert.deepEqual(footerBaseline({ footer: { text: 42 } }), []);
+  assert.doesNotThrow(() => footerCta({ footer: { cta: { kind: 'button', label: 99 } } }));
+  assert.equal(footerCta({ footer: { cta: { kind: 'button', label: 99 } } }), null);
+  assert.doesNotThrow(() => hasRichFooter({ footer: { copyright: 5 } }));
+  assert.doesNotThrow(() => footerColumns({ footer: { columns: [{ title: 7, links: [{ label: 3 }] }] } }));
+});
+
 test('footerColumns: resolverer lenker, hopper over tomme', () => {
   const cols = footerColumns({
     pages: PAGES,

@@ -26,7 +26,8 @@ Et innslag arver nummeret til backlog-punktet arbeidet hører under, pluss ett s
     - [x] Footer med kolonner og sosiale lenker (levert 0.6.33, venter på testrunde): additivt på site.footer (brand med tittel/tagline, columns med lenker, social med ikon-id + URL, copyright, bakgrunnsFARGE), ren footer-model.js + tester, admin Footer-panel som speiler nav-panelet, gjenbruker ikonbiblioteket (12 sosiale ikoner) og resolveItem
     - [x] Footer-overhaling (levert 0.6.6.5.2, venter på testrunde): åtte research-baserte maler i en visuell miniatyr-velger («Startpunkt»), rik bunnlinje (copyright + baseline-lenker, «Enkel tekst» ute av rik admin), symmetrisk kolonne-rutenett med bred-kolonne-deling + venstre/sentrert-justering, CTA (knapp / nyhetsbrev med fetch + inline bekreftelse + mailto-fallback, ren footer-cta.js), merkevare-logo (Tekst/Logo/Begge med opplasting + materialisering), per-side-synlighet (hideOn). Pluss Urd-logo i admin-header (uruz-rune + palett) + docs/brand/-filer + favicon byttet til runen
     - [x] Footer-/nav-bakgrunnslag (levert 0.6.6.5.2): den delte lagbaserte «side-chrome-bakgrunnen» (`renderBackgroundLayers` faktorert ut til render.js, delt av seksjoner/nav/footer), med full lag-editor for nav og footer. Dekker footer-utvidelse (a) og nav-bakgrunn-punktet under
-    - [ ] Footer-rest (utsatt): (c) kolonne-lenker til seksjon/anker (ikke bare hele sider eller eksterne URL-er)
+    - [x] SVG-logoer + nav-overlay + tom-side-fiks + bugsjekkrunde (levert 0.6.6.5.3, venter på testrunde): logo-opplasting beholder SVG-vektoren (sanitert, `.svg` ved publisering); opt-in `nav.overlay` legger fullbredde-linjen oppå toppseksjonen så gjennomsiktig meny avslører hero; «+ Ny seksjon» vises på en tom side; og fire trygge fikser (delt trygg-URL-vokter på alle nav-/footer-lenker, herding mot ikke-streng-felt, skjult inert justeringsvalg ved Stor CTA, render-signal på resize-grepet)
+    - [ ] Footer-rest (utsatt): (c) kolonne-lenker til seksjon/anker (ikke bare hele sider eller eksterne URL-er). NB: trygg-URL-vokteren slipper nå kun http(s)/mailto/tel - når anker/seksjon-lenker lages må `resolveItem` utvides til å tillate `#`/site-interne stier
     - [ ] Nav scroll-adferd (krymp/skjul ved scroll ned, vis ved opp)
   - STREKK (kuttes hvis fasen vokser): duotone, palett-fra-bilde, lagpanel, flere design for former/bokser (design-galleri), flere design for samlingsvisningene og flere samlingsbaserte seksjonsmaler
 - [ ] **0.6.7 Flerspråk-rammeverk** (eiers valg 19. juli 2026: rammeverk + bokmål/engelsk nå, resten påfyllbart): i18n-infrastruktur for admin (strings-moduler, språkvelger, localStorage) og motorens besøkende-tekster; nb + en komplette med paritetstest i CI; øvrige språk fra eiers liste (nynorsk, samisk, svensk, dansk, finsk, britisk engelsk, gaelic, spansk, tysk, trad./forenklet kinesisk, portugisisk, fransk, kanadisk engelsk) som påfyllbare oversettelsesfiler med bidrags-dokumentasjon
@@ -100,7 +101,8 @@ Et innslag arver nummeret til backlog-punktet arbeidet hører under, pluss ett s
 
 ## Forslag og Ideer
 
-- [ ] Småblokker fra funksjonskartet (C9+C10, 23. juli 2026): delingsknapper (statiske lenker, ingen sporing), nedteller (arrangementer) og audio-blokk (HTML5, git-eid fil) - billige og statisk-vennlige; tas når de passer inn
+- [ ] Småblokker fra funksjonskartet (C9+C10, 23. juli 2026): delingsknapper (statiske lenker, ingen sporing), nedteller (arrangementer) og audio-blokk (HTML5, git-eid fil) - billige og statisk-vennlige; tas når de passer inn.
+- [ ] Måte å ha en bakgrunn over en annen  / faste sidebarer
 
 ## Levert underveis i v0.6 (ryddes bort ved fase-slippet)
 

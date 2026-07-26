@@ -22,7 +22,7 @@
   import { bildegalleriLayer } from '../../template/assets/engine/backgrounds/bildegalleri.js';
   import { footerThumb } from '../../template/assets/engine/footer-thumb.js';
   import { coreAnimations } from '../../template/assets/engine/animations/core.js';
-  import { compressToWebp, slugify, contentHash, WARN_BYTES } from '../../template/assets/engine/imageTools.js';
+  import { compressToWebp, slugify, contentHash, mediaExtension, WARN_BYTES } from '../../template/assets/engine/imageTools.js';
   import { FONT_STACKS } from '../../template/assets/engine/fonts.js';
   import { frameAtPoint } from '../../template/assets/engine/place.js';
   import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '../../template/assets/engine/icons.js';
@@ -1504,7 +1504,7 @@
         else logo.value = img.dataUrl;
       });
     } catch {
-      setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
+      setStatus('Kunne ikke lese bildet (prøv jpg/png/webp/svg)', 'error');
     }
   }
 
@@ -1943,7 +1943,7 @@
       const img = await compressToWebp(file);
       footerMutate('footer', (f) => { f.brand ??= {}; f.brand.logo = img.dataUrl; if (!f.brand.mode) f.brand.mode = 'both'; });
     } catch {
-      setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
+      setStatus('Kunne ikke lese bildet (prøv jpg/png/webp/svg)', 'error');
     }
   }
   function removeFooterLogo() {
@@ -2889,7 +2889,7 @@
     const src = obj?.[field];
     if (!src?.startsWith('data:image/')) return;
     const base64 = src.split(',', 2)[1];
-    const path = `media/${slugify(name || 'bilde')}-${contentHash(base64)}.webp`;
+    const path = `media/${slugify(name || 'bilde')}-${contentHash(base64)}.${mediaExtension(src)}`;
     files.push({ path, content: base64, encoding: 'base64' });
     obj[field] = `/${path}`;
   }
@@ -3413,6 +3413,13 @@
                         <input type="checkbox" checked={siteDraft.nav.style?.topGap !== false}
                           onchange={(e) => setNavTopGap(e.target.checked)} />
                         Luft over menyen
+                      </label>
+                    {/if}
+                    {#if !floatingVariant && !sideVariant}
+                      <label class="gridmenu-snap" title="Menyen legges oppå toppseksjonen i stedet for i eget bånd over den, så en gjennomsiktig meny viser hero bak seg. Toppseksjonen bør ha nok klaring øverst.">
+                        <input type="checkbox" checked={siteDraft.nav.overlay === true}
+                          onchange={(e) => siteMutate('nav', () => { if (e.target.checked) siteDraft.nav.overlay = true; else delete siteDraft.nav.overlay; })} />
+                        Legg menyen oppå toppseksjonen
                       </label>
                     {/if}
                     {#if sideVariant}
@@ -3986,11 +3993,13 @@
                 <details class="group">
                   <summary>Utseende</summary>
                   <div class="group-items">
-                    <label title="Justering av innholdet (mest merkbart uten kolonner)">Justering
-                      <Dropdown value={siteDraft.footer?.align ?? 'left'}
-                        options={[['left', 'Venstre'], ['center', 'Midtstilt'], ['right', 'Høyre']]}
-                        onchange={(v) => footerMutate('footer', (f) => { f.align = v; })} /></label>
-                    <hr class="gridmenu-divider" />
+                    {#if siteDraft.footer?.cta?.big !== true}
+                      <label title="Justering av innholdet (mest merkbart uten kolonner)">Justering
+                        <Dropdown value={siteDraft.footer?.align ?? 'left'}
+                          options={[['left', 'Venstre'], ['center', 'Midtstilt'], ['right', 'Høyre']]}
+                          onchange={(v) => footerMutate('footer', (f) => { f.align = v; })} /></label>
+                      <hr class="gridmenu-divider" />
+                    {/if}
                     <p class="panel-strong">Bakgrunn</p>
                     {@render backgroundLayers(footerBgCtx, siteDraft.footer?.background?.layers ?? [])}
                   </div>

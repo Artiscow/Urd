@@ -29,6 +29,17 @@ test('resolveItem: href er ekstern lenke', () => {
   assert.deepEqual(resolveItem({ label: 'Ut', href: 'https://eksempel.no' }, PAGES), {
     label: 'Ut', href: 'https://eksempel.no', external: true, missing: false,
   });
+  // mailto/tel er også trygge skjemaer.
+  assert.equal(resolveItem({ label: 'Send', href: 'mailto:a@b.no' }, PAGES).external, true);
+});
+
+test('resolveItem: utrygg href avvises til # med missing', () => {
+  for (const bad of ['javascript:alert(1)', 'data:text/html,x', 'example.no', '  ', '']) {
+    const item = resolveItem({ label: 'Farlig', href: bad }, PAGES);
+    assert.equal(item.href, '#', bad);
+    assert.equal(item.external, false, bad);
+    assert.equal(item.missing, true, bad);
+  }
 });
 
 test('navItems: punkter uten undermeny er kind link', () => {
@@ -204,6 +215,17 @@ test('hostClasses: variantene styrer vert- og body-klassene', () => {
     { host: ['urd-nav-side-host', 'urd-nav-side-host-left'], body: ['urd-side-left'] });
   assert.deepEqual(hostClasses({ nav: { variant: 'side-right' } }),
     { host: ['urd-nav-side-host', 'urd-nav-side-host-right'], body: ['urd-side-right'] });
+});
+
+test('hostClasses: overlay gjelder kun bar, ikke floating/sidestilt', () => {
+  // Bar (standard) med overlay: verten tas ut av flyten.
+  assert.deepEqual(hostClasses({ nav: { overlay: true } }), { host: ['urd-nav-overlay'], body: [] });
+  // Floating og sidestilt ligger allerede utenfor flyten: overlay-flagget gir ingen ekstra klasse.
+  assert.deepEqual(hostClasses({ nav: { variant: 'floating', overlay: true } }), { host: ['urd-nav-float'], body: [] });
+  assert.deepEqual(hostClasses({ nav: { variant: 'side-left', overlay: true } }),
+    { host: ['urd-nav-side-host', 'urd-nav-side-host-left'], body: ['urd-side-left'] });
+  // Uten flagget: ingen overlay.
+  assert.deepEqual(hostClasses({ nav: { overlay: false } }), { host: [], body: [] });
 });
 
 test('navClasses/hostClasses: firkant-varianten er flytende uten avrunding', () => {

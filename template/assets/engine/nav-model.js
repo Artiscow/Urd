@@ -12,10 +12,22 @@ import { resolveColor } from './theme.js';
 // ignoreres. Ankret regex med vilje - CodeQL gjenkjenner det som barriere.
 const SAFE_IMAGE_RE = /^(?:data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+|\/(?!\/)[\w%./-]*)$/;
 
+// Trygg lenke-URL for nav-/footer-lenker (item.href): kun http(s), mailto og
+// tel, som footer-sosiallenkene. javascript:/data: og alt annet avvises, så en
+// urørt href aldri kan bli en aktiv URL. Ankret regex med vilje - CodeQL
+// gjenkjenner det som en barriere. Interne sider lenkes via `page`, ikke href.
+const SAFE_URL_RE = /^(?:https?:\/\/|mailto:|tel:)[^\s]+$/i;
+
+/** @param {unknown} url @returns {boolean} */
+export function isSafeUrl(url) {
+  return typeof url === 'string' && SAFE_URL_RE.test(url.trim());
+}
+
 /**
  * Løser et menypunkt mot sideregisteret: `page` slås opp til path,
- * `href` er ekstern lenke. Ukjent side gir '#' med missing-flagg
- * (nav.js logger advarselen - denne modulen har ingen sideeffekter).
+ * `href` er ekstern lenke (kun trygge skjemaer slippes gjennom). Ukjent side
+ * eller utrygg href gir '#' med missing-flagg (nav.js logger advarselen -
+ * denne modulen har ingen sideeffekter).
  * @param {{label: string, page?: string, href?: string}} item
  * @param {Array<{id: string, path: string}>} pages Sideregisteret (site.pages)
  * @returns {{label: string, href: string, external: boolean, missing: boolean}}
@@ -25,7 +37,9 @@ export function resolveItem(item, pages) {
     const target = pages.find((p) => p.id === item.page);
     return { label: item.label, href: target ? target.path : '#', external: false, missing: !target };
   }
-  return { label: item.label, href: item.href ?? '#', external: !!item.href, missing: !item.href };
+  const href = (item.href ?? '').trim();
+  const safe = isSafeUrl(href);
+  return { label: item.label, href: safe ? href : '#', external: safe, missing: !safe };
 }
 
 /**
@@ -104,6 +118,9 @@ export function hostClasses(site) {
   if (v === 'floating' || v === 'floating-square') return { host: ['urd-nav-float'], body: [] };
   if (v === 'side-left') return { host: ['urd-nav-side-host', 'urd-nav-side-host-left'], body: ['urd-side-left'] };
   if (v === 'side-right') return { host: ['urd-nav-side-host', 'urd-nav-side-host-right'], body: ['urd-side-right'] };
+  // Overlay gjelder kun fullbredde-linjen (bar): verten tas ut av flyten så
+  // toppseksjonen glir opp under menyen. Floating/sidestilt ligger allerede utenfor.
+  if (site.nav.overlay) return { host: ['urd-nav-overlay'], body: [] };
   return { host: [], body: [] };
 }
 

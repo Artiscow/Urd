@@ -101,6 +101,11 @@
           "default": "bar",
           "description": "Menyens form (additivt fra v0.6): bar = stripe i full bredde, floating = pille som svever over innholdet, floating-square = det samme uten avrundede kanter, side-left/side-right = fast kolonne langs kanten (mobil og trange vinduer faller tilbake til topplinje med burger)."
         },
+        "overlay": {
+          "type": "boolean",
+          "default": false,
+          "description": "Legg fullbredde-linjen oppå toppseksjonen i stedet for i eget bånd over den, så en gjennomsiktig meny avslører hero bak seg (additivt fra v0.6). Gjelder kun variant bar; toppseksjonen bør ha nok klaring øverst. Floating/sidestilt ligger allerede utenfor flyten."
+        },
         "style": {
           "type": "object",
           "description": "Menyens utseende (additivt fra v0.5). Utelatte felt = standard.",

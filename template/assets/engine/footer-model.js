@@ -4,17 +4,16 @@
  * og dekkes av tests/footer.test.mjs; DOM-byggingen bor i footer.js.
  */
 
-import { resolveItem } from './nav-model.js';
+import { resolveItem, isSafeUrl } from './nav-model.js';
 
-// Ankret trygg-URL-vokter for sosiale lenker: kun http(s), mailto og tel.
-// javascript:/data: og alt annet avvises. Ankret regex med vilje - CodeQL
-// gjenkjenner det som en barriere.
-const SAFE_URL_RE = /^(?:https?:\/\/|mailto:|tel:)[^\s]+$/i;
+// Trygg-URL-vokteren bor i nav-model (delt med resolveItem); re-eksporteres her
+// for footer.js og testene som importerer den herfra.
+export { isSafeUrl };
 
-/** @param {unknown} url @returns {boolean} */
-export function isSafeUrl(url) {
-  return typeof url === 'string' && SAFE_URL_RE.test(url.trim());
-}
+// Trygt til streng: håndredigert site.json kan ha tall/bool der modellen venter
+// tekst. Da gir vi tom streng i stedet for å la .trim()/.split() kaste og velte
+// hele footer-renderen (siden dør aldri av dårlig data).
+const str = (v) => (typeof v === 'string' ? v : '');
 
 /**
  * Merkevare-kolonnen: eksplisitt tittel + valgfri tagline. Ingen fallback til
@@ -25,11 +24,11 @@ export function isSafeUrl(url) {
  */
 export function footerBrand(site) {
   const brand = site.footer?.brand ?? {};
-  const title = (brand.title ?? '').trim();
-  const tagline = (brand.tagline ?? '').trim();
+  const title = str(brand.title).trim();
+  const tagline = str(brand.tagline).trim();
   // Merket kan være tekst, opplastet logo (bilde) eller begge (additivt fra
   // v0.6, speiler nav-logoen). mode styrer hva som vises.
-  const logo = (brand.logo ?? '').trim();
+  const logo = str(brand.logo).trim();
   const mode = brand.mode === 'image' || brand.mode === 'both' ? brand.mode : 'text';
   const hasLogo = logo && mode !== 'text';
   if (!title && !tagline && !hasLogo) return null;
@@ -49,10 +48,10 @@ export function footerColumns(site) {
   return columns
     .map((col) => {
       const links = (Array.isArray(col.links) ? col.links : [])
-        .filter((l) => (l.label ?? '').trim())
+        .filter((l) => str(l.label).trim())
         .map((l) => resolveItem(l, pages));
       return {
-        title: (col.title ?? '').trim(),
+        title: str(col.title).trim(),
         links,
         // Lang kolonne (mange lenker, eller eksplisitt col.wide): rendres over
         // to spor og deles i to underkolonner, så footeren holder seg symmetrisk.
@@ -71,7 +70,7 @@ export function footerColumns(site) {
 export function footerBaselineLinks(site) {
   const pages = site.pages ?? [];
   const links = Array.isArray(site.footer?.baseline) ? site.footer.baseline : [];
-  return links.filter((l) => (l.label ?? '').trim()).map((l) => resolveItem(l, pages));
+  return links.filter((l) => str(l.label).trim()).map((l) => resolveItem(l, pages));
 }
 
 /**
@@ -83,7 +82,7 @@ export function footerBaselineLinks(site) {
 export function footerLinkRow(site) {
   const pages = site.pages ?? [];
   const row = Array.isArray(site.footer?.linkRow) ? site.footer.linkRow : [];
-  return row.filter((l) => (l.label ?? '').trim()).map((l) => resolveItem(l, pages));
+  return row.filter((l) => str(l.label).trim()).map((l) => resolveItem(l, pages));
 }
 
 /**
@@ -97,8 +96,8 @@ export function footerLinkRow(site) {
 export function footerCta(site) {
   const cta = site.footer?.cta;
   if (!cta || typeof cta !== 'object') return null;
-  const heading = (cta.heading ?? '').trim();
-  const rawLabel = (cta.label ?? '').trim();
+  const heading = str(cta.heading).trim();
+  const rawLabel = str(cta.label).trim();
   const kind = cta.kind === 'newsletter' ? 'newsletter' : 'button';
   if (kind === 'button' && !rawLabel) return null;
   if (kind === 'newsletter' && !heading && !rawLabel) return null;
@@ -106,13 +105,13 @@ export function footerCta(site) {
   return {
     kind,
     heading,
-    sub: (cta.sub ?? '').trim(),
+    sub: str(cta.sub).trim(),
     label: rawLabel || (kind === 'newsletter' ? 'Meld på' : 'Les mer'),
     big: cta.big === true,
     target: kind === 'button' ? resolveItem({ label: rawLabel, page: cta.page, href: cta.href }, pages) : null,
-    endpoint: (cta.endpoint ?? '').trim(),
-    recipient: (cta.recipient ?? '').trim(),
-    success: (cta.success ?? '').trim() || 'Takk, du er påmeldt!',
+    endpoint: str(cta.endpoint).trim(),
+    recipient: str(cta.recipient).trim(),
+    success: str(cta.success).trim() || 'Takk, du er påmeldt!',
   };
 }
 
@@ -137,9 +136,9 @@ export function footerSocial(site) {
  */
 export function footerBaseline(site) {
   const footer = site.footer ?? {};
-  const copyright = (footer.copyright ?? '').trim();
+  const copyright = str(footer.copyright).trim();
   if (copyright) return [copyright];
-  return (footer.text ?? '').split('\n').map((l) => l.trim()).filter(Boolean);
+  return str(footer.text).split('\n').map((l) => l.trim()).filter(Boolean);
 }
 
 /**
@@ -156,6 +155,6 @@ export function hasRichFooter(site) {
     footerBaselineLinks(site).length ||
     footerLinkRow(site).length ||
     footerCta(site) ||
-    (site.footer?.copyright ?? '').trim()
+    str(site.footer?.copyright).trim()
   );
 }
