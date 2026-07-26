@@ -22,7 +22,7 @@
             "props": {
               "x": 0.85,
               "y": 0.3,
-              "color": "accent",
+              "color": "#00a19b",
               "radius": 0.5,
               "opacity": 0.35
             }
@@ -152,7 +152,7 @@
             "desktop": {
               "x": 58.47,
               "y": 64,
-              "w": 28.26,
+              "w": 29.34,
               "h": 368,
               "z": 1,
               "rot": 0
@@ -173,7 +173,7 @@
       "version": 1,
       "preset": "hva-skjer",
       "size": {
-        "minHeight": "512px"
+        "minHeight": "912px"
       },
       "grid": null,
       "background": {
@@ -274,8 +274,8 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 43.85,
-              "y": 80,
+              "x": 10.48,
+              "y": 432,
               "w": 18.51,
               "h": 352,
               "z": 1,
@@ -283,36 +283,7 @@
             },
             "mobile": null
           }
-        }
-      ],
-      "responsive": {
-        "mobile": {
-          "mode": "auto",
-          "attention": null
-        }
-      }
-    },
-    {
-      "id": "sec-2111b8a4",
-      "version": 1,
-      "preset": "tom",
-      "size": {
-        "minHeight": "40vh"
-      },
-      "grid": null,
-      "background": {
-        "version": 1,
-        "layers": [
-          {
-            "type": "color",
-            "version": 1,
-            "props": {
-              "value": "bg"
-            }
-          }
-        ]
-      },
-      "blocks": [
+        },
         {
           "id": "blk-2d9ebc4e",
           "type": "kart",
@@ -325,248 +296,11 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 53.59,
-              "y": 43,
+              "x": 54.49,
+              "y": 112,
               "w": 39.41,
               "h": 368,
               "z": 3,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        }
-      ],
-      "responsive": {
-        "mobile": {
-          "mode": "auto",
-          "attention": null
-        }
-      }
-    },
-    {
-      "id": "sec-galleri1",
-      "version": 1,
-      "preset": "galleri",
-      "size": {
-        "minHeight": "704px"
-      },
-      "grid": null,
-      "background": {
-        "version": 1,
-        "layers": [
-          {
-            "type": "gradient",
-            "version": 3,
-            "props": {
-              "kind": "radial",
-              "stops": [
-                {
-                  "color": "accent",
-                  "share": 0
-                },
-                {
-                  "color": "#000000",
-                  "share": 50
-                }
-              ],
-              "angle": 235,
-              "x": 0,
-              "y": 0.5,
-              "animation": "pulse",
-              "opacity": 1
-            }
-          }
-        ]
-      },
-      "blocks": [
-        {
-          "id": "blk-galtit1",
-          "type": "text",
-          "version": 1,
-          "props": {
-            "html": "<h2>Galleri</h2>",
-            "align": "left",
-            "box": false
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 4,
-              "y": 24,
-              "w": 50,
-              "h": 32,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        },
-        {
-          "id": "blk-galleri1",
-          "type": "galleri",
-          "version": 1,
-          "props": {
-            "images": [
-              {
-                "src": "/media/bilde-ff8fdd0e.webp",
-                "alt": "Fra demosiden",
-                "href": null,
-                "style": {}
-              },
-              {
-                "src": "/media/bakgrunn-192ecc51.webp",
-                "alt": "Bakgrunnsmotiv",
-                "href": null,
-                "style": {}
-              },
-              {
-                "src": "/media/weyland-crt-1920x1200-192ecc51.webp",
-                "alt": "Skjermmotiv",
-                "href": null,
-                "style": {}
-              }
-            ],
-            "view": "grid",
-            "columns": 3,
-            "gap": 12,
-            "radius": "md",
-            "lightbox": true,
-            "interval": 5
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 4,
-              "y": 72,
-              "w": 92,
-              "h": 588,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        }
-      ],
-      "responsive": {
-        "mobile": {
-          "mode": "auto",
-          "attention": null
-        }
-      }
-    },
-    {
-      "id": "sec-d33b8339",
-      "version": 1,
-      "preset": "tom",
-      "size": {
-        "minHeight": "432px"
-      },
-      "grid": null,
-      "background": {
-        "version": 1,
-        "layers": [
-          {
-            "type": "color",
-            "version": 1,
-            "props": {
-              "value": "#9e7b65",
-              "opacity": 1
-            }
-          }
-        ]
-      },
-      "blocks": [
-        {
-          "id": "blk-e2346553",
-          "type": "skjema",
-          "version": 1,
-          "props": {
-            "recipient": "",
-            "subject": "",
-            "mode": "mailto",
-            "endpoint": "",
-            "submitLabel": "Send",
-            "successText": "Takk! Meldingen er sendt.",
-            "fields": [
-              {
-                "id": "navn",
-                "label": "Navn",
-                "type": "text",
-                "required": true
-              },
-              {
-                "id": "epost",
-                "label": "E-post",
-                "type": "email",
-                "required": true
-              },
-              {
-                "id": "melding",
-                "label": "Melding",
-                "type": "textarea",
-                "required": true
-              }
-            ]
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 5.71,
-              "y": 48,
-              "w": 50,
-              "h": 260,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        }
-      ],
-      "responsive": {
-        "mobile": {
-          "mode": "auto",
-          "attention": null
-        }
-      }
-    },
-    {
-      "id": "sec-1c90d7bd",
-      "version": 1,
-      "preset": "footer",
-      "size": {
-        "minHeight": "160px"
-      },
-      "grid": null,
-      "background": {
-        "version": 1,
-        "layers": [
-          {
-            "type": "color",
-            "version": 1,
-            "props": {
-              "value": "surface"
-            }
-          }
-        ]
-      },
-      "blocks": [
-        {
-          "id": "blk-de2814fc",
-          "type": "text",
-          "version": 1,
-          "props": {
-            "html": "<p>© Urd Nettsidebygger</p>",
-            "align": "center",
-            "box": false
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 25,
-              "y": 24,
-              "w": 50,
-              "h": 32,
-              "z": 1,
               "rot": 0
             },
             "mobile": null

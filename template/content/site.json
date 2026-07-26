@@ -19,7 +19,7 @@
         "bg": "#000000",
         "surface": "#000000",
         "text": "#e8eaf0",
-        "accent": "#ff9a5c",
+        "accent": "#00fff5",
         "accent-text": "#000000"
       },
       "font": {
@@ -93,5 +93,98 @@
     ],
     "layout": "left",
     "sticky": true
+  },
+  "footer": {
+    "version": 1,
+    "show": true,
+    "align": "left",
+    "brand": {
+      "title": "Urd",
+      "tagline": "Bygg din egen nettside for din lille forening helt gratis!"
+    },
+    "columns": [
+      {
+        "title": "Utforsk",
+        "links": [
+          {
+            "label": "Hjem",
+            "page": "hjem"
+          },
+          {
+            "label": "Om oss",
+            "page": "om-oss"
+          },
+          {
+            "label": "Kontakt",
+            "page": "kontakt"
+          },
+          {
+            "label": "Kaker",
+            "page": "kaker"
+          }
+        ]
+      },
+      {
+        "title": "Følg oss",
+        "links": [
+          {
+            "label": "Vi har ingen steder du kan følge oss",
+            "href": "#"
+          }
+        ]
+      }
+    ],
+    "social": [
+      {
+        "icon": "facebook",
+        "url": "https://facebook.com"
+      },
+      {
+        "icon": "instagram",
+        "url": "https://instagram.com"
+      },
+      {
+        "icon": "linkedin",
+        "url": "https://linkedin.com"
+      },
+      {
+        "icon": "youtube",
+        "url": "https://youtube.com"
+      }
+    ],
+    "background": {
+      "version": 1,
+      "layers": [
+        {
+          "type": "glow",
+          "version": 1,
+          "props": {
+            "x": 0.12,
+            "y": 0,
+            "color": "#00a19b",
+            "radius": 0.6,
+            "opacity": 0.45
+          }
+        },
+        {
+          "type": "grain",
+          "version": 1,
+          "props": {
+            "opacity": 0.08
+          }
+        }
+      ]
+    },
+    "baseline": [
+      {
+        "label": "Personvern",
+        "href": "#"
+      },
+      {
+        "label": "Laget med Urd",
+        "href": "#"
+      }
+    ],
+    "copyright": "© Min forening"
   }
 }
