@@ -128,7 +128,10 @@
     "align": "left",
     "brand": {
       "title": "Urd",
-      "tagline": "Bygg din egen nettside for din lille forening helt gratis!"
+      "tagline": "Bygg din egen nettside for din lille forening helt gratis!",
+      "mode": "both",
+      "logo": "/media/footer-logo-b18c5fc9.svg",
+      "logoHeight": 40
     },
     "columns": [
       {
