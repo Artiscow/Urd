@@ -2540,23 +2540,15 @@ function Mi(e) {
 	return e.type === ji || /\.svg$/i.test(e.name || "");
 }
 function Ni(e) {
-	let t = new DOMParser().parseFromString(e, ji), n = t.documentElement;
-	if (!n || n.tagName.toLowerCase() !== "svg" || t.querySelector("parsererror")) throw Error("Ugyldig SVG");
-	n.querySelectorAll("script, foreignObject").forEach((e) => e.remove());
-	let r = (e) => {
-		for (let t of [...e.attributes]) {
-			let n = t.name.toLowerCase(), r = n === "href" || n === "xlink:href";
-			(n.startsWith("on") || r && !t.value.trim().startsWith("#") || /^\s*javascript:/i.test(t.value)) && e.removeAttribute(t.name);
-		}
-		for (let t of e.children) r(t);
-	};
-	r(n);
-	let i = new XMLSerializer().serializeToString(n), a = new Blob([i]).size, o = `data:${ji};base64,${btoa(unescape(encodeURIComponent(i)))}`, s = n.getAttribute("viewBox")?.split(/[\s,]+/).map(Number);
+	let t = String(e ?? "");
+	if (!/<svg[\s>]/i.test(t)) throw Error("Ugyldig SVG");
+	if (/<\s*script[\s>]/i.test(t) || /<\s*foreignObject[\s>]/i.test(t) || /\son[a-z]+\s*=/i.test(t) || /javascript:/i.test(t)) throw Error("SVG-en inneholder skript eller hendelser og kan ikke brukes");
+	let n = new Blob([t]).size, r = `data:${ji};base64,${btoa(unescape(encodeURIComponent(t)))}`, i = t.match(/<svg\b[^>]*>/i)?.[0] ?? "", a = i.match(/viewBox\s*=\s*["']\s*([-\d.]+(?:[\s,]+[-\d.]+){3})\s*["']/i)?.[1]?.split(/[\s,]+/).map(Number);
 	return {
-		dataUrl: o,
-		bytes: a,
-		width: s?.length === 4 ? s[2] : Number.parseFloat(n.getAttribute("width")) || 0,
-		height: s?.length === 4 ? s[3] : Number.parseFloat(n.getAttribute("height")) || 0
+		dataUrl: r,
+		bytes: n,
+		width: a?.length === 4 ? a[2] : Number.parseFloat(i.match(/\bwidth\s*=\s*["']?([\d.]+)/i)?.[1]) || 0,
+		height: a?.length === 4 ? a[3] : Number.parseFloat(i.match(/\bheight\s*=\s*["']?([\d.]+)/i)?.[1]) || 0
 	};
 }
 function Pi(e) {

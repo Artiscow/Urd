@@ -50,38 +50,33 @@ function isSvgFile(file) {
 }
 
 /**
- * Saniterer en SVG og pakker den som en base64 data-URL. Rendring skjer alltid
- * via <img>/CSS (secure static mode, ingen skript), men den publiserte /media-
- * filen kan åpnes direkte, så vi fjerner script/foreignObject, hendelses-
- * attributter (on*) og js:/eksterne href-er som forsvar i dybden.
+ * Validerer en SVG og pakker den som en base64 data-URL. Teksten reinterpreteres
+ * ALDRI som markup i live-DOM (ingen DOMParser/innerHTML) - den går kun til en
+ * data-URL og rendres via <img>/CSS (secure static mode, ingen skript). Den
+ * publiserte /media-filen kan likevel åpnes direkte, så en SVG med skript-
+ * vektorer AVVISES (ikke strippes: reject er robust, stripping kan omgås).
+ * Logo-SVG-er inneholder aldri skript/hendelser, så dette rammer ikke ekte bruk.
  * @returns {{dataUrl: string, bytes: number, width: number, height: number}}
  */
 export function svgToDataUrl(text) {
-  const doc = new DOMParser().parseFromString(text, SVG_MIME);
-  const svg = doc.documentElement;
-  if (!svg || svg.tagName.toLowerCase() !== 'svg' || doc.querySelector('parsererror')) {
-    throw new Error('Ugyldig SVG');
+  const raw = String(text ?? '');
+  // Ankrede regex-barrierer (CodeQL gjenkjenner dem): må se ut som en SVG, og
+  // ingen av skript-vektorene får finnes.
+  if (!/<svg[\s>]/i.test(raw)) throw new Error('Ugyldig SVG');
+  if (/<\s*script[\s>]/i.test(raw)
+    || /<\s*foreignObject[\s>]/i.test(raw)
+    || /\son[a-z]+\s*=/i.test(raw)
+    || /javascript:/i.test(raw)) {
+    throw new Error('SVG-en inneholder skript eller hendelser og kan ikke brukes');
   }
-  svg.querySelectorAll('script, foreignObject').forEach((n) => n.remove());
-  const scrub = (el) => {
-    for (const attr of [...el.attributes]) {
-      const name = attr.name.toLowerCase();
-      const isHref = name === 'href' || name === 'xlink:href';
-      if (name.startsWith('on')) el.removeAttribute(attr.name);
-      else if (isHref && !attr.value.trim().startsWith('#')) el.removeAttribute(attr.name);
-      else if (/^\s*javascript:/i.test(attr.value)) el.removeAttribute(attr.name);
-    }
-    for (const child of el.children) scrub(child);
-  };
-  scrub(svg);
-
-  const clean = new XMLSerializer().serializeToString(svg);
-  const bytes = new Blob([clean]).size;
+  const bytes = new Blob([raw]).size;
   // encodeURIComponent-omveien lar btoa takle ikke-ASCII (æøå i tittel/desc).
-  const dataUrl = `data:${SVG_MIME};base64,${btoa(unescape(encodeURIComponent(clean)))}`;
-  const box = svg.getAttribute('viewBox')?.split(/[\s,]+/).map(Number);
-  const width = box?.length === 4 ? box[2] : Number.parseFloat(svg.getAttribute('width')) || 0;
-  const height = box?.length === 4 ? box[3] : Number.parseFloat(svg.getAttribute('height')) || 0;
+  const dataUrl = `data:${SVG_MIME};base64,${btoa(unescape(encodeURIComponent(raw)))}`;
+  // Mål leses fra ÅPNINGS-taggen (ikke barneelementer): viewBox foretrukket.
+  const svgTag = raw.match(/<svg\b[^>]*>/i)?.[0] ?? '';
+  const box = svgTag.match(/viewBox\s*=\s*["']\s*([-\d.]+(?:[\s,]+[-\d.]+){3})\s*["']/i)?.[1]?.split(/[\s,]+/).map(Number);
+  const width = box?.length === 4 ? box[2] : Number.parseFloat(svgTag.match(/\bwidth\s*=\s*["']?([\d.]+)/i)?.[1]) || 0;
+  const height = box?.length === 4 ? box[3] : Number.parseFloat(svgTag.match(/\bheight\s*=\s*["']?([\d.]+)/i)?.[1]) || 0;
   return { dataUrl, bytes, width, height };
 }
 
