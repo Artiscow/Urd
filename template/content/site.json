@@ -119,7 +119,8 @@
           }
         ]
       },
-      "topGap": false
+      "topGap": false,
+      "textColor": "#ffffff"
     },
     "overlay": true,
     "variant": "floating-square"
