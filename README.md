@@ -44,7 +44,9 @@ Urd kan utvides med **plugins** som bor i repoet ditt og skrus på i admin. Tre 
 | [docs/OPPSETT-PUBLISERING.md](docs/OPPSETT-PUBLISERING.md) | Engangsoppsett av publisering: GitHub OAuth-app + Cloudflare |
 | [docs/BACKLOG.md](docs/BACKLOG.md) | Løpende oppgaveliste: gjøremål, bugs og forslag |
 | [docs/TESTRUNDER.md](docs/TESTRUNDER.md) | Eiers sjekkliste: levert arbeid som venter på testing |
-| [docs/FUNKSJONSKART.md](docs/FUNKSJONSKART.md) | Funksjonssammenligning mot andre nettsidebyggere med gap-analyse |
+| [docs/sammenligning/FUNKSJONSKART.md](docs/sammenligning/FUNKSJONSKART.md) | Funksjonssammenligning mot andre nettsidebyggere med gap-analyse |
+| [docs/sammenligning/LAERDOMMER.md](docs/sammenligning/LAERDOMMER.md) | Hvordan andre nettsidebyggere bygger, og hva vi kan hente (arkitektur og mønstre) |
+| [docs/sammenligning/ELEMENTKART.md](docs/sammenligning/ELEMENTKART.md) | Elementer og funksjoner: hvordan de tilbys brukeren og hvordan de bygges |
 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | Endringslogg per push |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Slik bidrar du: fork, gren, tester, pull request |
 | [docs/adr/](docs/adr/) | Arkitekturbeslutninger med begrunnelse |

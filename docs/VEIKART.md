@@ -59,7 +59,7 @@ redigeringsflatene bygges på den nye layouten:
 
 ## v0.7 - Finpuss + butikk
 - **Butikk uten betalingsgateway som kjernefunksjon** (ApeironLF-modellen, valgt 18. juli 2026): produktkort-blokk med varianter, handlekurv (localStorage + skuff), bestillingsskjema til e-post/valgfritt endepunkt, betaling via Vipps-nummer-instruks. Avhengighetsfri, git-eid katalog; bygges på v0.6-datablokk-mønsteret. Detaljer i [BACKLOG.md](BACKLOG.md).
-- **SEO-grunnpakke** (fra funksjonskartet 23. juli 2026, se [FUNKSJONSKART.md](FUNKSJONSKART.md)): per-side meta/og-felter, sitemap, robots, 404, canonical. Pluss RSS for samlinger, flere skjema-felttyper, video-bakgrunnslag og CSV/tabell; detaljer i backloggen.
+- **SEO-grunnpakke** (fra funksjonskartet 23. juli 2026, se [FUNKSJONSKART.md](sammenligning/FUNKSJONSKART.md)): per-side meta/og-felter, sitemap, robots, 404, canonical. Pluss RSS for samlinger, flere skjema-felttyper, video-bakgrunnslag og CSV/tabell; detaljer i backloggen.
 - Sjekke alle funksjoner og se om noe mangler eller ikke fungerer godt. (Funksjonssammenligningen mot andre byggere er gjort 23. juli 2026 - FUNKSJONSKART.md; gjenstår: egen gjennomgang av intuitivitet og rot.)
 - Er alt intuitivt?
 - Er ting rotete?
@@ -77,6 +77,7 @@ er levert i v0.3; dette er laget over.)
 - Editoren: bundle-størrelse og oppstartstid; dra/resize skal holde 60 fps også på store sider.
 - «Bakt HTML ved publisering» (SEO/no-JS-punktet fra risikolisten) hører naturlig hjemme her om den ikke alt er tatt.
 - Fra funksjonskartet (23. juli 2026): innslagssider (permalenke per samlingsinnslag, generert ved publisering - hører sammen med bakingen) og mediebibliotek-panel.
+- Moderniser til native/CSS (fra [ELEMENTKART.md](sammenligning/ELEMENTKART.md) 27. juli 2026): `<dialog>`/Popover top-layer, `<details name>`, scroll-drevne animasjoner, `light-dark()` uten FOUC og finere patch-protokoll. Native/CSS erstatter skjør egen-JS og senker vekt/jank; egen backlog-seksjon med detaljer og doc-henvisninger.
 
 ## v0.9 - Generalprøven
 
@@ -100,7 +101,8 @@ En forening kan klone, sette opp, bygge og vedlikeholde en side uten utvikler.
 
 Uprioritert, avhenger av community og behov: import fra eksisterende sider,
 flerspråkstøtte, samtidighetsvisning i admin, galleri-nettsted for maler og
-plugins (urd.dev), GitLab/Gitea-adapter, ekstern medialagring (R2) og
+plugins (urd.dev), GitLab/Gitea-adapter, ekstern medialagring (R2),
+PR-per-utkast-/deploy-preview-arbeidsflyt (fra [LAERDOMMER.md](sammenligning/LAERDOMMER.md)) og
 butikk/merch-mal. Detaljer i [BACKLOG.md](BACKLOG.md).
 
 ---
