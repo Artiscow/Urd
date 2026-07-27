@@ -157,14 +157,23 @@ html {
   gap: 12px;
 }
 
+/* Hvert spørsmål er et native <details>. */
 .urd-faq-item {
   padding: 0.75rem 1.25rem;
 }
 
+/* <summary>: skjul standard-trekanten (flex fjerner den i Chromium; list-style
+   og webkit-markøren dekker resten). */
 .urd-faq-head {
   display: flex;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.urd-faq-head::-webkit-details-marker {
+  display: none;
 }
 
 .urd-faq-q {
@@ -180,44 +189,52 @@ html {
   justify-content: center;
   width: 28px;
   height: 28px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: none;
   color: var(--urd-color-text);
-  cursor: pointer;
 }
 
 .urd-faq-toggle svg {
   transition: transform 0.25s ease;
 }
 
-.urd-faq-item.open .urd-faq-toggle svg {
+.urd-faq-item[open] .urd-faq-toggle svg {
   transform: rotate(180deg);
 }
 
-.urd-faq-a {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.25s ease;
-}
-
-.urd-faq-item.open .urd-faq-a {
-  grid-template-rows: 1fr;
-}
-
 .urd-faq-a > .urd-text {
-  overflow: hidden;
-}
-
-.urd-faq-item.open .urd-faq-a > .urd-text {
   padding-top: 0.5rem;
 }
 
+/* Myk utfolding der nettleseren støtter ::details-content + interpolate-size
+   (Chromium tidlig 2026): svaret glir ut/inn i høyde. Uten støtte folder native
+   <details> svaret ut momentant. content-visibility-overgangen (allow-discrete)
+   holder innholdet synlig gjennom sammenleggingen. */
+@supports (interpolate-size: allow-keywords) {
+  .urd-faq {
+    interpolate-size: allow-keywords;
+  }
+
+  .urd-faq-item::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition: block-size 0.25s ease, content-visibility 0.25s allow-discrete;
+  }
+
+  .urd-faq-item[open]::details-content {
+    block-size: auto;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .urd-faq-a,
   .urd-faq-toggle svg {
     transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @supports (interpolate-size: allow-keywords) {
+    .urd-faq-item::details-content {
+      transition: none;
+    }
   }
 }
 
@@ -1518,13 +1535,29 @@ a.urd-galleri-tile {
 /* Lightbox (engine/lightbox.js): fullskjermvisning hos besøkende og i Ren
    visning. Over nav (5000), under editor-chromen (99999+). Mørk uansett
    tema: den er et fotovisningsrom, ikke en temaflate. */
+/* Native <dialog> (showModal): top-layer, så ingen z-index trengs. UA-stilene
+   for margin/border/padding/maks nullstilles; den mørke bakgrunnen er ::backdrop.
+   display gates på [open] så den aldri vises mellom appendChild og showModal. */
 .urd-lightbox {
   position: fixed;
   inset: 0;
-  z-index: 9000;
-  display: flex;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
   align-items: center;
   justify-content: center;
+}
+
+.urd-lightbox[open] {
+  display: flex;
+}
+
+.urd-lightbox::backdrop {
   background: rgb(0 0 0 / 88%);
 }
 
@@ -3052,6 +3085,37 @@ body.urd-marqueeing {
   .urd-bg-pulse,
   .urd-bg-orbit {
     animation: none;
+  }
+}
+
+/* Parallaks for bilde-bakgrunnslaget: scroll-drevet CSS på kompositor-tråden,
+   erstatter rAF/scroll-lytteren i backgrounds/image.js. Reiseveien settes som
+   --urd-px-shift (px) av mountParallaxCss (ved oppsett og resize, ikke scroll);
+   view()-tidslinjen scrubber translateY fra -shift (laget kommer inn nedenfra)
+   til +shift (laget forlater toppen), null i senter. Gates med @supports; uten
+   støtte kobler JS den rAF-drevne varianten i stedet. Stille (sluttilstand) på
+   mobil og ved redusert bevegelse. */
+@supports (animation-timeline: view()) {
+  .urd-bg-image.urd-parallax-css {
+    animation: urd-parallax-y linear both;
+    animation-timeline: view();
+  }
+
+  @keyframes urd-parallax-y {
+    from { transform: translateY(calc(-1 * var(--urd-px-shift, 0px))); }
+    to { transform: translateY(var(--urd-px-shift, 0px)); }
+  }
+
+  body.urd-mobile .urd-bg-image.urd-parallax-css {
+    animation: none;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .urd-bg-image.urd-parallax-css {
+    animation: none;
+    transform: none;
   }
 }
 

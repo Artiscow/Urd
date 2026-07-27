@@ -3,21 +3,30 @@
  * visning). Lastes kun via dynamic import ved første klikk, så besøkende
  * som aldri klikker et bilde laster den aldri.
  *
- * Ett overlegg på document.body: mørk bakgrunn, sentrert bilde, forrige/
- * neste (skjult ved ett bilde), lukkeknapp og alt-teksten som bildetekst.
- * Esc lukker, piltastene stepper, bakgrunnsklikk lukker. Body-scroll låses
- * mens den er åpen, og fokus går tilbake dit det kom fra ved lukking.
+ * Bygget på det native <dialog>-elementet (showModal): top-layer fjerner
+ * z-index-krig, ::backdrop gir den mørke bakgrunnen, og fokusfelle, fokus-retur
+ * og inert bakgrunn følger gratis. Esc lukker (native), piltastene stepper,
+ * bakgrunnsklikk lukker. Body-scroll låses mens den er åpen.
  */
 import { stepIndex } from './galleri-model.js';
 
 let overlay = null;
-let teardown = null;
+let prevOverflow = '';
+
+/** Synkron opprydning av gjeldende overlegg (brukes ved re-open, så et
+ *  etterslepende close-event ikke river et nyåpnet overlegg). */
+function hardTeardown() {
+  if (!overlay) return;
+  const d = overlay;
+  overlay = null;
+  document.body.style.overflow = prevOverflow;
+  if (d.open) d.close();
+  d.remove();
+}
 
 export function closeLightbox() {
-  teardown?.();
-  overlay?.remove();
-  overlay = null;
-  teardown = null;
+  if (overlay?.open) overlay.close(); // -> 'close'-hendelsen rydder opp (native fokus-retur)
+  else hardTeardown();
 }
 
 const el2 = (tag, className, textContent) => {
@@ -44,18 +53,18 @@ function filterCss(style) {
 export function openLightbox(images, startIndex = 0) {
   const list = (images ?? []).filter((img) => img?.src);
   if (!list.length) return;
-  closeLightbox();
+  hardTeardown();
 
-  const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   let index = Math.min(Math.max(startIndex, 0), list.length - 1);
 
-  overlay = el2('div', 'urd-lightbox');
+  const dialog = el2('dialog', 'urd-lightbox');
+  overlay = dialog;
   const figure = el2('figure', 'urd-lightbox-figure');
   const image = document.createElement('img');
   image.className = 'urd-lightbox-img';
   const caption = el2('figcaption', 'urd-lightbox-caption');
   figure.append(image, caption);
-  overlay.appendChild(figure);
+  dialog.appendChild(figure);
 
   const show = (i) => {
     index = i;
@@ -88,7 +97,7 @@ export function openLightbox(images, startIndex = 0) {
     return btn;
   };
   if (list.length > 1) {
-    overlay.append(navButton('prev', 'Forrige bilde', -1), navButton('next', 'Neste bilde', 1));
+    dialog.append(navButton('prev', 'Forrige bilde', -1), navButton('next', 'Neste bilde', 1));
   }
 
   const close = el2('button', 'urd-lightbox-close');
@@ -96,35 +105,33 @@ export function openLightbox(images, startIndex = 0) {
   close.setAttribute('aria-label', 'Lukk');
   close.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5l14 14"/><path d="M19 5L5 19"/></svg>';
   close.addEventListener('click', closeLightbox);
-  overlay.appendChild(close);
+  dialog.appendChild(close);
 
-  // Bakgrunnsklikk lukker; klikk på bildet og knappene gjør det ikke.
-  overlay.addEventListener('click', (event) => {
-    if (event.target === overlay || event.target === figure) closeLightbox();
+  // Rydding når dialogen lukkes (også ved native Esc): instans-vaktet så et
+  // etterslepende close fra et tidligere overlegg ikke nuller det nye.
+  dialog.addEventListener('close', () => {
+    if (overlay === dialog) {
+      overlay = null;
+      document.body.style.overflow = prevOverflow;
+    }
+    dialog.remove();
   });
 
-  const onKey = (event) => {
-    if (event.key === 'Escape') {
-      event.stopPropagation();
-      closeLightbox();
-    } else if (event.key === 'ArrowRight') {
-      step(1);
-    } else if (event.key === 'ArrowLeft') {
-      step(-1);
-    }
-  };
-  document.addEventListener('keydown', onKey, true);
+  // Bakgrunnsklikk lukker; klikk på bildet og knappene gjør det ikke.
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog || event.target === figure) closeLightbox();
+  });
 
-  const prevOverflow = document.body.style.overflow;
+  // Piltastene stepper; Esc lukker native via dialogens cancel-handling.
+  dialog.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowRight') step(1);
+    else if (event.key === 'ArrowLeft') step(-1);
+  });
+
+  prevOverflow = document.body.style.overflow;
   document.body.style.overflow = 'hidden';
 
-  teardown = () => {
-    document.removeEventListener('keydown', onKey, true);
-    document.body.style.overflow = prevOverflow;
-    opener?.focus?.();
-  };
-
   show(index);
-  document.body.appendChild(overlay);
-  close.focus();
+  document.body.appendChild(dialog);
+  dialog.showModal();
 }

@@ -1,29 +1,29 @@
 /**
- * Kontraktstester for FAQ-akkordeonens rene åpen/lukk-logikk (nextOpen).
+ * Kontraktstester for FAQ-akkordeonen: gruppenavnet (native eksklusiv utfolding
+ * via <details name>) og blokkens standardform. Selve utfoldingen, redigeringen
+ * og autoveksten er DOM-atferd og dekkes av headless-sjekkene.
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { nextOpen } from '../template/assets/engine/blocks/faq.js';
+import { faqBlock, groupName } from '../template/assets/engine/blocks/faq.js';
 
-test('klikk åpner et lukket svar', () => {
-  assert.deepEqual(nextOpen([], 1, false), [1]);
+test('groupName: uten multi deler spørsmålene ett navn (eksklusiv utfolding)', () => {
+  assert.equal(groupName('abc', false), 'urd-faq-abc');
 });
 
-test('klikk lukker et åpent svar', () => {
-  assert.deepEqual(nextOpen([1], 1, false), []);
-  assert.deepEqual(nextOpen([0, 2], 2, true), [0]);
+test('groupName: med multi er navnet tomt (flere kan stå åpne)', () => {
+  assert.equal(groupName('abc', true), '');
 });
 
-test('uten multi lukkes forrige når et nytt åpnes', () => {
-  assert.deepEqual(nextOpen([0], 2, false), [2]);
+test('groupName: manglende blokk-id gir et stabilt reservenavn', () => {
+  assert.equal(groupName('', false), 'urd-faq-x');
+  assert.equal(groupName(undefined, false), 'urd-faq-x');
 });
 
-test('med multi kan flere stå åpne, sortert stigende', () => {
-  assert.deepEqual(nextOpen([2], 0, true), [0, 2]);
-});
-
-test('inndata-listen muteres ikke', () => {
-  const open = [0];
-  nextOpen(open, 1, false);
-  assert.deepEqual(open, [0]);
+test('faqBlock: standardform er tre spørsmål, ikke multi', () => {
+  const d = faqBlock.defaults();
+  assert.equal(faqBlock.version, 1);
+  assert.equal(d.items.length, 3);
+  assert.equal(d.multi, false);
+  assert.ok(d.items.every((i) => typeof i.q === 'string' && typeof i.a === 'string'));
 });

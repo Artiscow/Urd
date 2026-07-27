@@ -63,6 +63,7 @@ CI (GitHub Actions) kjører de samme tre pluss bygg-samsvar-sjekken, og CodeQL s
 - **Lokal utvikling må virke** (`python3 -m http.server` fra `template/`): plugin-utviklere jobber lokalt. Ting som bare virker på den deployede siden (functions) skal degradere pent lokalt.
 - **Hover-UI må vaktes mot hybride enheter:** `pointerenter` fyrer også ved trykk på laptop med touchskjerm, så uten `event.pointerType === 'mouse'`-vakt åpner og lukker et hover-element i samme trykk. Se hover-håndteringen i `engine/nav.js`.
 - **Motorkomponenter som re-rendres per utkast-melding og setter lyttere på document, må koble fra forrige sett** (ellers stables lytterne for hver editor-endring). Mønsteret: modulnivå-AbortController som abortes øverst i render-funksjonen, og `{ signal }` på alle addEventListener. Se `renderNav` i `engine/nav.js`.
+- **Bygg komponenter native/CSS-først (ADR-0011):** bruk nettleser-primitiver framfor egen JS - `<dialog>`/`showModal()` for modal/lightbox, `<details name>` for accordion, `animation-timeline: view()` for scroll-koblede effekter (parallaks), Popover API for menyer der forankring finnes. Gate alt som ikke er baseline med `@supports`/funksjonssjekk; fallback = enten en JS-vei eller elementet i SLUTTILSTAND (aldri skjult). `IntersectionObserver`/`ResizeObserver` er fortsatt riktig for LOGIKK (engangs-avdekking, resize), ikke for scroll-animasjon - engangs-entré blir derfor værende på IntersectionObserver.
 
 ## Plugins
 
@@ -70,7 +71,7 @@ Referanse-pluginene i `template/plugins/` (kalender, skjema, kart) viser mønste
 
 ## ADR-er
 
-Les og følg dem; skriv en ny ADR når du tar en beslutning med varige konsekvenser. Gjeldende: 0001 hybrid editormodell, 0002 Svelte for editor / lesbar JS for motor, 0003 publisering via GitHub OAuth + Pages Functions, 0004 monorepo med template-mappe, 0005 versjonering og migrering, 0006 plugin-CSP-behovsmodell, 0007 samlinger (datablokk-mønsteret), 0008 hjelpechip-regelen, 0009 temastyrt UI-regelen, 0010 disclosure-navigasjon i nav (aldri role="menu").
+Les og følg dem; skriv en ny ADR når du tar en beslutning med varige konsekvenser. Gjeldende: 0001 hybrid editormodell, 0002 Svelte for editor / lesbar JS for motor, 0003 publisering via GitHub OAuth + Pages Functions, 0004 monorepo med template-mappe, 0005 versjonering og migrering, 0006 plugin-CSP-behovsmodell, 0007 samlinger (datablokk-mønsteret), 0008 hjelpechip-regelen, 0009 temastyrt UI-regelen, 0010 disclosure-navigasjon i nav (aldri role="menu"), 0011 native/CSS-først for komponenter.
 
 ## Testrundene (docs/TESTRUNDER.md)
 

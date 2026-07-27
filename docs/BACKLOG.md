@@ -82,10 +82,10 @@ Et innslag arver nummeret til backlog-punktet arbeidet hører under, pluss ett s
 
 Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og forebygger bug-klassene i ELEMENTKART del 6. Alt gates med `@supports` (se støtte-tier i ELEMENTKART del 2).
 
-- [ ] Retningslinje ved push: skriv en ADR + motor-lekser «bygg komponenter native/CSS-først» (ELEMENTKART del 2, 5b og 6-tabellen), så bug-forebyggingen festes der arbeidet skjer. ADR/CLAUDE.md-endringen venter til push; ombyggingsoppgavene under kan tas før
-- [ ] faq/accordion -> native `<details name>` (ELEMENTKART 5b.2): eksklusiv single-open, finn-på-siden og null JS; erstatter dagens disclosure-JS
-- [ ] lightbox/modal/menyer -> `<dialog>`/`showModal()` + Popover API (ELEMENTKART 5b.1): top-layer fjerner z-index-krig, fokusfeller og outside-click-lyttere
-- [ ] entré/parallaks -> scroll-drevne CSS-animasjoner bak `@supports` (ELEMENTKART 5b.4), fallback = sluttilstand; erstatter dagens rAF/scroll-listener
+- [x] Retningslinje ved push: skriv en ADR + motor-lekser «bygg komponenter native/CSS-først» (levert 0.6.6.5.7: ADR-0011 + motor-lekse i CLAUDE.md)
+- [x] faq/accordion -> native `<details name>` (levert 0.6.6.5.7, venter på testrunde): eksklusiv single-open via `name`, finn-på-siden og null toggle-JS; `::details-content`+`interpolate-size` for myk utfolding bak `@supports`; ren `groupName` node-testet
+- [~] lightbox/modal/menyer -> `<dialog>`/`showModal()` + Popover API (ELEMENTKART 5b.1): lightbox/modal LEVERT (0.6.6.5.7, venter på testrunde) - top-layer, `::backdrop`, native fokusfelle/-retur, Esc. MENYER UTSATT: nav er disclosure (ADR-0010) og Popover/top-layer krever CSS Anchor Positioning (~82 %, ikke baseline) for å posisjonere undermenyen; egen runde når forankring er baseline
+- [~] entré/parallaks -> scroll-drevne CSS-animasjoner bak `@supports` (ELEMENTKART 5b.4): PARALLAKS levert (0.6.6.5.7, venter på testrunde) via `animation-timeline: view()`, rAF-fallback beholdt. ENTRÉ/STAGGER beholdes bevisst på IntersectionObserver (ADR-0011): view() ville reversere ved scroll opp, og engangs-avdekking er riktig bruk av Observer; en scroll-scrubbet variant kan komme som eget, tydelig merket valg senere
 - [ ] tema uten FOUC -> `light-dark()` + `color-scheme` (ELEMENTKART 5b.5), med inline `<head>`-skript kun for manuell overstyring
 - [ ] Flere byggemåte-grep (lavere prioritet, full kontekst i ELEMENTKART 5b + del 6): container queries/subgrid/`:has()` (5b.9), cross-document View Transitions (5b.8), minimal-wrapper + per-side betinget asset-lasting (5b.7), animer kun `transform`/`opacity`. (aspect-ratio/srcset/AVIF 5b.6 dekkes av v0.8-bildearbeidet; scroll-snap-karusell 5b.3 brukes alt)
 

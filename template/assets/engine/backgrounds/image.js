@@ -165,6 +165,80 @@ function mountParallax(img, speed, blurMargin, fit) {
   }
 }
 
+/**
+ * Støtter nettleseren scroll-drevne animasjoner? Da driver kompositoren
+ * parallaksen via `animation-timeline: view()` (CSS), og vi slipper både
+ * scroll-lytteren og rAF-pumpen (mountParallaxCss). Ellers faller vi tilbake
+ * til den rAF-drevne mountParallax. Gates også i CSS med `@supports`.
+ */
+function supportsScrollTimeline() {
+  return typeof CSS !== 'undefined' && typeof CSS.supports === 'function'
+    && CSS.supports('animation-timeline', 'view()');
+}
+
+// CSS-parallax: reiseveien (--urd-px-shift) og overskannet (top/bottom) settes
+// én gang og ved RESIZE, aldri ved scroll. Selve forskyvningen scrubbes av
+// view()-tidslinjen i base.css på kompositor-tråden. Delt resize-lytter med
+// samme opprydning som rAF-fallbacken: frakoblede lag lukes ut når måle-
+// funksjonen returnerer false.
+const parallaxMeasurers = new Set();
+let measureBound = false;
+let measureRaf = 0;
+function pumpMeasure() {
+  measureRaf = 0;
+  for (const fn of [...parallaxMeasurers]) if (!fn()) parallaxMeasurers.delete(fn);
+}
+function scheduleMeasure() {
+  if (!measureRaf && typeof requestAnimationFrame === 'function') measureRaf = requestAnimationFrame(pumpMeasure);
+}
+function registerMeasure(measure) {
+  parallaxMeasurers.add(measure);
+  measure();
+  if (measureBound || typeof window === 'undefined') return;
+  measureBound = true;
+  window.addEventListener('resize', scheduleMeasure, { passive: true });
+}
+
+/**
+ * Fester CSS-parallax på bilde-elementet: reiseveien og overskannet regnes ut
+ * fra seksjonshøyden og vindushøyden (samme parallaxPad-formel som mountParallax),
+ * men forskyvningen scrubbes av `animation-timeline: view()` i CSS - ingen scroll-
+ * lytter, ingen rAF pr. bilde. Stille på mobil / ved redusert bevegelse (CSS
+ * setter da animation:none; her holdes overskannet til uskarphetens rand så laget
+ * står rent i sluttilstand).
+ * @param {HTMLElement} img Bilde-elementet
+ * @param {number} speed Styrke 0..1
+ * @param {number} blurMargin Uskarphetens rand i px (0 uten blur)
+ * @param {'vanlig'|'flislegg'|'cover'|'egen'|'contain'|'repeat'} fit
+ */
+function mountParallaxCss(img, speed, blurMargin, fit) {
+  const fills = fit === 'cover' || fit === 'flislegg' || fit === 'repeat';
+  const section = img.closest('.urd-section') ?? img.parentElement?.closest('.urd-section') ?? img.parentElement;
+  img.style.willChange = 'transform';
+  img.classList.add('urd-parallax-css');
+  const measure = () => {
+    if (!img.isConnected) return false;
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const still = reduce || document.body.classList.contains('urd-mobile');
+    const rect = (section ?? img).getBoundingClientRect();
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    // Reisevei = parallaxPad (fyll: stramt tak; fri: stort tak). Overskann kun i
+    // fyllmodus når laget faktisk beveger seg; ellers holder uskarphetens rand.
+    const shift = parallaxPad(rect.height, vh, speed, fills ? 0.18 : 0.6);
+    const inset = (fills && !still) ? Math.max(blurMargin, shift) : blurMargin;
+    img.style.setProperty('--urd-px-shift', `${shift}px`);
+    img.style.top = `-${inset}px`;
+    img.style.bottom = `-${inset}px`;
+    return true;
+  };
+  registerMeasure(measure);
+  // Samme grunn som mountParallax: laget legges i DOM etter render(), så første
+  // måling må skje når seksjonen faktisk er målbar.
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => requestAnimationFrame(measure));
+  }
+}
+
 export const imageLayer = {
   version: 2,
   label: 'Bilde',
@@ -227,7 +301,13 @@ export const imageLayer = {
     }
 
     el.appendChild(img);
-    // Parallax (additivt fra v0.6): laget henger etter ved scroll.
-    if (props.parallax > 0) mountParallax(img, props.parallax, blurMargin, props.fit ?? 'cover');
+    // Parallax (additivt fra v0.6): laget henger etter ved scroll. Moderne
+    // nettlesere driver det med scroll-drevet CSS (kompositor-tråd, ingen scroll-
+    // lytter); eldre faller tilbake til den rAF-drevne varianten.
+    if (props.parallax > 0) {
+      const fit = props.fit ?? 'cover';
+      if (supportsScrollTimeline()) mountParallaxCss(img, props.parallax, blurMargin, fit);
+      else mountParallax(img, props.parallax, blurMargin, fit);
+    }
   },
 };
