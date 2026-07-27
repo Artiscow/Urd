@@ -3,13 +3,25 @@
 Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren stryker herfra** når noe er testet; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.6.5.5): bakgrunnsbilde omdesignet - fri plassering, kraftig parallaks, Flislegg, SVG auto-trim, bleed
+
+Legg et Bilde-bakgrunnslag på en seksjon (Egenskaper → Bakgrunn → Nytt lag = Bilde), og last opp en logo/et bilde:
+
+- [ ] Størrelse: stepperen (10-400 %) og +/- krymper/forstørrer bildet. «Dekk» fyller seksjonen (beskjærer), «Vis hele» viser hele bildet - begge regner seg fram fra bilde- og seksjonsmål
+- [ ] Posisjon: 2D-punktet og Vannrett/Loddrett-sliderne flytter bildet fritt i BEGGE akser (ingen skjult). Slidere kan gå under 0 % / over 100 % så motivet legges delvis eller helt utenfor kanten
+- [ ] Dra-slipp: hold på 2D-punktet og dra musa ut over forhåndsvisningen, slipp - draget skal STOPPE (ikke henge igjen)
+- [ ] Flislegg: Tilpasning = «Flislegg» gjentar bildet som et mønster; Størrelse endrer flis-størrelsen
+- [ ] Parallaks: skru på «Parallakse». På publisert/ren visning skal bildet henge KRAFTIG etter ved scroll, UTEN å endre størrelse (ingen zoom). Størrelsen skal være lik på load og ved scroll. Av på mobil / redusert bevegelse
+- [ ] Flyt inn i nabo: med parallaks på, sett «Ned» eller «Begge» - bildet skal flyte forbi seksjonskanten inn i seksjonen UNDER (over dens bakgrunn) når du ruller. «Opp» flyter inn i seksjonen over
+- [ ] SVG auto-trim: last opp en logo-SVG med mye død plass / som ikke er sentrert - «bildeboksen» skal følge selve logoen (Dekk/skala/posisjon oppfører seg rundt motivet, ikke den døde plassen)
+
 ### Testrunde-batch (0.6.6.5.4): seksjonstemaer, parallax, stagger, admin-kontrast, ferdige temaer + oppusset Tema-panel
 
-- [ ] Seksjonstema: velg en seksjon (Egenskaper) → «Seksjonstema» = Flate / Aksent / Invers. Fargene på seksjonen (og blokkene i den) skifter; det holder i både lys og mørk modus. Invers-kortene skal være tydelige, ikke grumsete
+- [x] Seksjonstema: velg en seksjon (Egenskaper) → «Seksjonstema» = Flate / Aksent / Invers. Fargene på seksjonen (og blokkene i den) skifter; det holder i både lys og mørk modus. Invers-kortene skal være tydelige, ikke grumsete
 - [ ] Admin-kontrast: bytt admin-tema til et lyst (Norrønt gull / Glo). Editorens verktøy-chrome (dra-verktøylinjen på en blokk, roter-håndtaket, seksjonslinjen) skal ha lesbar tekst - ikke hvit på lys aksent
 - [ ] Parallax: legg et Bilde-bakgrunnslag på en seksjon og skru på «Parallakse». På publisert/ren visning skal bildet henge etter når du ruller; på mobil og ved redusert bevegelse står det stille
 - [ ] Stagger: sett «Animasjon inn» = Stagger på en seksjon med flere kort; kortene skal slippes inn forskjøvet fra én trigger. Prøv begge mønstre («En etter en» og «Kolonnevis») og trinn-tiden
-- [ ] Ferdige temaer: Tema-panelet har seks forslag (Brønn/Stein/Plomme/Rose/Hav/Natt); klikk ett og hele temaet + lys/mørk fylles, så kan du finjustere fritt
+- [-] Ferdige temaer: Tema-panelet har seks forslag (Brønn/Stein/Plomme/Rose/Hav/Natt); klikk ett og hele temaet + lys/mørk fylles, så kan du finjustere fritt
 - [ ] Tema-panel (oppuss): palett-rutene åpner fargevelgeren; «Lys og mørk modus» av viser én palett, på viser Lys + Mørk samtidig med «Auto/Egne» (Auto avleder de mørke fra de lyse; Egne når du endrer en mørk selv); «Standard»-taggen velger default-modus; forhåndsvisningen (lys+mørk) viser fargene i bruk; Typografi har en tekstprøve i valgt skrift; Form har en hjørne-prøve styrt av glidebryterne
 - [ ] Tema: publiser med et ferdig tema (f.eks. mørk-først Natt) og sjekk at siden og lys/mørk-bryteren i menyen ser riktig ut hos besøkende
 

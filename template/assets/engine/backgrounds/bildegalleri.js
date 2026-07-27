@@ -9,6 +9,7 @@
  * laget forsvinner fra DOM (re-render-churn i preview).
  */
 import { canAutoplay, normalizeInterval, stepIndex } from '../galleri-model.js';
+import { bgSize, bgPosition } from './image.js';
 
 export const bildegalleriLayer = {
   version: 1,
@@ -37,9 +38,9 @@ export const bildegalleriLayer = {
 
     const paint = (slide, img) => {
       slide.style.backgroundImage = `url("${img.src}")`;
-      slide.style.backgroundSize = props.fit === 'contain' ? 'contain' : 'cover';
+      slide.style.backgroundSize = bgSize(props.fit);
       slide.style.backgroundRepeat = 'no-repeat';
-      slide.style.backgroundPosition = `${(img.x ?? 0.5) * 100}% ${(img.y ?? 0.5) * 100}%`;
+      slide.style.backgroundPosition = bgPosition(img.x, img.y);
     };
 
     // Samme lastevern som bildelaget: hold laget usynlig til første bilde

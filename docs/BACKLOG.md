@@ -22,7 +22,8 @@ Et innslag arver nummeret til backlog-punktet arbeidet hører under, pluss ett s
   - [x] **0.6.6.4 (D) Design/tema** - del 1 (push 0.6.29) + del 2 (0.6.6.5.4) levert, venter på testrunde:
     - [x] Del 1: gradient-editor (plass-modell med farge-andeler, dra-omsortering, lineær/radiell, gradient-lag v3 + migreringskjede, fem bevegelser inkl. vinkel-følgende loop), kortstiler (skygge/kantlinje/glass, additivt boxStyle på tekstboks + FAQ-kort, ren box-style.js), FAQ-akkordeon som kjerneblokk (disclosure, redigering i blokken, sammenfoldet autovekst)
     - [x] Del 2 (levert 0.6.6.5.4): seksjonstemaer (ferdige rollesett Flate/Aksent/Invers via `--urd-base-*`, med Invers-kontrastfiks), admin-kontrastfiks (`--urd-admin-accent-text`) for preview-chromen (kontrast-varselet i Tema-panelet ble bygget men fjernet - forhåndsvisningen dekker lesbarheten), parallax på bilde-bakgrunnslaget, stagger-animasjon (en-etter-en/kolonnevis) for kortgrupper. PLUSS: seks ferdige tema-forslag + oppusset Tema-panel (palett-redigering via ColorPicker, lys/mørk + auto/egne, levende forhåndsvisning, Typografi/Form) som PILOT for et delt panel-språk
-    - [ ] Rest fra del 2-planen (utsatt): seksjonstemaer som ferdige ROLLESETT-varianter utover Flate/Aksent/Invers (design-galleri), og parallax/stagger-finpuss
+    - [x] Bilde-bakgrunn omdesignet (levert 0.6.6.5.5, venter på testrunde): fri plassering (skala + posisjon, også utenfor kant), Dekk/Vis hele-hurtigknapper, kraftig zoom-fri parallaks, Flislegg, SVG auto-trim, og bleed-fiks (z-index for ned/begge). Erstattet den for smale cover-modellen (research mot Figma/Webflow/Framer)
+    - [ ] Rest fra del 2-planen (utsatt): seksjonstemaer som ferdige ROLLESETT-varianter utover Flate/Aksent/Invers (design-galleri), og stagger-finpuss
   - [ ] **0.6.6.5 (E) Struktur/nav** - footer levert, resten gjenstår:
     - [x] Footer med kolonner og sosiale lenker (levert 0.6.33, venter på testrunde): additivt på site.footer (brand med tittel/tagline, columns med lenker, social med ikon-id + URL, copyright, bakgrunnsFARGE), ren footer-model.js + tester, admin Footer-panel som speiler nav-panelet, gjenbruker ikonbiblioteket (12 sosiale ikoner) og resolveItem
     - [x] Footer-overhaling (levert 0.6.6.5.2, venter på testrunde): åtte research-baserte maler i en visuell miniatyr-velger («Startpunkt»), rik bunnlinje (copyright + baseline-lenker, «Enkel tekst» ute av rik admin), symmetrisk kolonne-rutenett med bred-kolonne-deling + venstre/sentrert-justering, CTA (knapp / nyhetsbrev med fetch + inline bekreftelse + mailto-fallback, ren footer-cta.js), merkevare-logo (Tekst/Logo/Begge med opplasting + materialisering), per-side-synlighet (hideOn). Pluss Urd-logo i admin-header (uruz-rune + palett) + docs/brand/-filer + favicon byttet til runen
@@ -106,6 +107,9 @@ Et innslag arver nummeret til backlog-punktet arbeidet hører under, pluss ett s
 
 - [ ] Småblokker fra funksjonskartet (C9+C10, 23. juli 2026): delingsknapper (statiske lenker, ingen sporing), nedteller (arrangementer) og audio-blokk (HTML5, git-eid fil) - billige og statisk-vennlige; tas når de passer inn.
 - [ ] Måte å ha en bakgrunn over en annen  / faste sidebarer
+- [ ] Endre størrelse på blokker/elementer ved å dra i kantene av highlight (nå kan man kun gjøre det ved å dra i nedre høyre hjørne)
+- [ ] Navigasjonsmeny variant - Flytende firkantet med kun de to nedre hjørnene avrundet.
+- [ ] Lagre eget tema
 
 ## Levert underveis i v0.6 (ryddes bort ved fase-slippet)
 

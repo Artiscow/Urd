@@ -80,6 +80,47 @@ export function svgToDataUrl(text) {
   return { dataUrl, bytes, width, height };
 }
 
+/**
+ * Strammer en SVGs `viewBox` (og width/height) til motivets faktiske omfang, så
+ * død plass rundt en logo fjernes og «bildeboksen» følger innholdet. Bounding-
+ * boksen (i SVG-ens brukerkoordinater) måles utenfor denne funksjonen (canvas-
+ * piksler i editoren); her gjøres kun den rene tekst-omskrivingen. En liten
+ * luft-andel legges til. Ugyldig/tom boks -> teksten returneres uendret.
+ * Ren funksjon (node-testet).
+ * @param {string} svgText
+ * @param {{x: number, y: number, width: number, height: number}} bbox
+ * @param {number} [padFrac] Luft som andel av største side (standard 0.04)
+ * @returns {string}
+ */
+export function tightSvgViewBox(svgText, bbox, padFrac = 0.04) {
+  const raw = String(svgText ?? '');
+  if (!bbox || !(bbox.width > 0) || !(bbox.height > 0)) return raw;
+  const tag = raw.match(/<svg\b[^>]*>/i)?.[0];
+  if (!tag) return raw;
+  const r = (n) => Math.round(n * 1000) / 1000;
+  const pad = Math.max(bbox.width, bbox.height) * Math.max(0, padFrac);
+  const x = r(bbox.x - pad);
+  const y = r(bbox.y - pad);
+  const w = r(bbox.width + 2 * pad);
+  const h = r(bbox.height + 2 * pad);
+  const cleaned = tag
+    .replace(/\sviewBox\s*=\s*["'][^"']*["']/i, '')
+    .replace(/\swidth\s*=\s*["'][^"']*["']/i, '')
+    .replace(/\sheight\s*=\s*["'][^"']*["']/i, '');
+  const newTag = cleaned.replace(/<svg\b/i, `<svg viewBox="${x} ${y} ${w} ${h}" width="${w}" height="${h}"`);
+  return raw.replace(tag, newTag);
+}
+
+/** viewBox-tallene [minX, minY, w, h] fra en SVG-tekst, ellers null. */
+export function svgViewBox(svgText) {
+  const tag = String(svgText ?? '').match(/<svg\b[^>]*>/i)?.[0] ?? '';
+  const vb = tag.match(/viewBox\s*=\s*["']\s*([-\d.]+(?:[\s,]+[-\d.]+){3})\s*["']/i)?.[1]?.split(/[\s,]+/).map(Number);
+  if (vb?.length === 4 && vb.every(Number.isFinite)) return vb;
+  const w = Number.parseFloat(tag.match(/\bwidth\s*=\s*["']?([\d.]+)/i)?.[1]);
+  const h = Number.parseFloat(tag.match(/\bheight\s*=\s*["']?([\d.]+)/i)?.[1]);
+  return w > 0 && h > 0 ? [0, 0, w, h] : null;
+}
+
 /** Media-filendelse fra en data-URL: SVG beholder vektoren, resten er webp. */
 export function mediaExtension(dataUrl) {
   return /^data:image\/svg\+xml[;,]/.test(dataUrl || '') ? 'svg' : 'webp';

@@ -23,7 +23,7 @@
   import { footerThumb } from '../../template/assets/engine/footer-thumb.js';
   import { coreAnimations } from '../../template/assets/engine/animations/core.js';
   import { SECTION_THEME_LABELS, contrastRatio, relativeLuminance } from '../../template/assets/engine/theme.js';
-  import { compressToWebp, slugify, contentHash, mediaExtension, WARN_BYTES } from '../../template/assets/engine/imageTools.js';
+  import { compressToWebp, svgToDataUrl, tightSvgViewBox, svgViewBox, slugify, contentHash, mediaExtension, WARN_BYTES } from '../../template/assets/engine/imageTools.js';
   import { FONT_STACKS } from '../../template/assets/engine/fonts.js';
   import { frameAtPoint } from '../../template/assets/engine/place.js';
   import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '../../template/assets/engine/icons.js';
@@ -628,6 +628,46 @@
     sectionTheme = section?.theme ?? '';
   }
 
+  /* Mål for «Dekk»/«Vis hele»-knappene på bilde-bakgrunnslag: seksjonsboksen (målt
+     i preview-iframen, samme-origin) og bildets naturlige mål lar oss regne ut
+     skalaen som akkurat fyller/viser hele bildet. */
+  let secBox = $state(null);            // { w, h } for den valgte seksjonen
+  const imgNat = $state({});            // src -> { w, h } (naturlige bildemål)
+
+  function measureSecBox() {
+    try {
+      const doc = iframeEl?.contentDocument;
+      const el = doc?.querySelector(`.urd-section[data-section-id="${activeSectionId}"]`);
+      const r = el?.getBoundingClientRect();
+      secBox = r && r.width ? { w: r.width, h: r.height } : null;
+    } catch { secBox = null; }
+  }
+
+  // Mål på nytt når valgt seksjon endres (etter at preview har rendret) og når
+  // preview-iframen endrer størrelse.
+  $effect(() => {
+    activeSectionId; sectionBg;
+    requestAnimationFrame(() => requestAnimationFrame(measureSecBox));
+  });
+  $effect(() => {
+    const el = iframeEl;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => measureSecBox());
+    ro.observe(el);
+    return () => ro.disconnect();
+  });
+  // Last bildenes naturlige mål (for rom-utregningen).
+  $effect(() => {
+    for (const l of sectionBg) {
+      const src = l?.props?.src;
+      if (l?.type === 'image' && src && !imgNat[src]) {
+        const im = new Image();
+        im.onload = () => { imgNat[src] = { w: im.naturalWidth, h: im.naturalHeight }; };
+        im.src = src;
+      }
+    }
+  });
+
   /** Ferdig seksjonstema (rollesett): presentasjon, ingen mobil-invalidering. */
   function setSectionTheme(role) {
     mutateSection('section-theme', (s) => {
@@ -692,6 +732,59 @@
     bg.mutate(`edit:${bg.keyPrefix}-${bg.keyId}-${i}-${name}`, (t) => {
       t.background.layers[i].props[name] = value;
     });
+  }
+
+  /* Fokuspunkt-dra på bilde-bakgrunnslaget: en liten forhåndsvisningsboks der man
+     drar et punkt for å sette x/y (0..1) samtidig. Samme fokus-idé som bildeeditoren. */
+  function startFocalDrag(event, bg, i, axes = 'xy') {
+    event.preventDefault();
+    const pad = event.currentTarget;
+    // Pekerfangst på pad-elementet: da får det ALLE pekerhendelser til knappen
+    // slippes, også når musen drar over preview-iframen (som ellers spiser dem,
+    // så draget «henger igjen» etter at man slipper utenfor).
+    pad.setPointerCapture?.(event.pointerId);
+    const move = (e) => {
+      const r = pad.getBoundingClientRect();
+      if (axes.includes('x')) {
+        const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+        setBgProp(bg, i, 'x', Math.round(x * 100) / 100);
+      }
+      if (axes.includes('y')) {
+        const y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+        setBgProp(bg, i, 'y', Math.round(y * 100) / 100);
+      }
+    };
+    move(event);
+    const up = () => {
+      pad.removeEventListener('pointermove', move);
+      pad.removeEventListener('pointerup', up);
+      pad.removeEventListener('pointercancel', up);
+    };
+    pad.addEventListener('pointermove', move);
+    pad.addEventListener('pointerup', up);
+    pad.addEventListener('pointercancel', up);
+  }
+
+  /* Størrelse (Egen størrelse-modus): stepper/tallfelt skriver `size` som brøk,
+     klemt til 10-400 %. */
+  const clampBgSize = (v) => Math.min(4, Math.max(0.1, v));
+  function stepBgSize(bg, i, cur, delta) {
+    setBgProp(bg, i, 'size', clampBgSize(Math.round((cur + delta) * 100) / 100));
+  }
+  function setBgSizePct(bg, i, pct) {
+    const n = Number(pct);
+    if (Number.isFinite(n)) setBgProp(bg, i, 'size', clampBgSize(n / 100));
+  }
+  /* «Dekk»/«Vis hele»: regn ut skalaen fra bilde- og seksjonsmål og sett den, så
+     Fyll/Vis-hele blir forhåndsvalg man kan finjustere videre (ikke egne moduser).
+     r = høyde/bredde-forholdet mellom seksjon og bilde ved 100 % bredde. */
+  function setBgFillSize(bg, i, layer, mode) {
+    const nat = imgNat[layer.props.src];
+    if (!nat?.w || !nat?.h || !secBox?.w || !secBox?.h) return;
+    const r = (secBox.h * nat.w) / (secBox.w * nat.h);
+    const size = mode === 'cover' ? Math.max(1, r) : Math.min(1, r);
+    if (layer.props.fit === 'flislegg' || layer.props.fit === 'repeat') setBgProp(bg, i, 'fit', 'vanlig');
+    setBgProp(bg, i, 'size', clampBgSize(Math.round(size * 100) / 100));
   }
 
   /* Gradient-editoren (lag-versjon 2: frie stopp + lineær/radiell).
@@ -825,12 +918,57 @@
   }
 
   /** Bakgrunnsbilde: samme webp-flyt som bildeblokken. */
+  /* Måler motivets omfang i en SVG via canvas-piksler (SVG rendret som BILDE,
+     ikke live-DOM - trygt: ingen skript-kjøring, og svgToDataUrl har alt avvist
+     skript-SVG-er). Returnerer bounding-boksen i SVG-ens brukerkoordinater. */
+  async function svgContentBBox(dataUrl, vb) {
+    try {
+      const img = new Image();
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = dataUrl; });
+      const W = 320;
+      const H = Math.max(1, Math.round((W * vb[3]) / vb[2]));
+      const canvas = document.createElement('canvas');
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, W, H);
+      const data = ctx.getImageData(0, 0, W, H).data;
+      let minx = W, miny = H, maxx = -1, maxy = -1;
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          if (data[(y * W + x) * 4 + 3] > 8) {
+            if (x < minx) minx = x; if (x > maxx) maxx = x;
+            if (y < miny) miny = y; if (y > maxy) maxy = y;
+          }
+        }
+      }
+      if (maxx < minx) return null;
+      const sx = vb[2] / W, sy = vb[3] / H;
+      return { x: vb[0] + minx * sx, y: vb[1] + miny * sy, width: (maxx - minx + 1) * sx, height: (maxy - miny + 1) * sy };
+    } catch { return null; }
+  }
+
+  /* Opplastet SVG: valider + auto-trim (stram viewBox til motivet, fjern død plass)
+     så Dekk/skala/posisjon oppfører seg rundt selve logoen. Faller pent tilbake til
+     den utrimmede SVG-en hvis noe ikke lar seg måle. */
+  async function svgAutoTrim(file) {
+    const text = await file.text();
+    const first = svgToDataUrl(text); // validerer (kaster på skript-SVG) + encoder
+    const vb = svgViewBox(text);
+    if (!vb) return first;
+    const bbox = await svgContentBBox(first.dataUrl, vb);
+    if (!bbox) return first;
+    const trimmed = tightSvgViewBox(text, bbox);
+    if (trimmed === text) return first;
+    try { return svgToDataUrl(trimmed); } catch { return first; }
+  }
+
   async function setBgImage(bg, i, event) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
     try {
-      const img = await compressToWebp(file);
+      const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name || '');
+      const img = isSvg ? await svgAutoTrim(file) : await compressToWebp(file);
       setBgProp(bg, i, 'src', img.dataUrl);
     } catch {
       setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
@@ -3591,7 +3729,7 @@
                     {#if siteDraft.nav.style?.hover === 'lift'}
                       <label title="Hvor sterk gløden bak teksten er">Glødstyrke
                         <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.hoverGlow ?? 0.6) * 100)}%</span></label>
-                      <input type="range" min="0.1" max="1" step="0.05"
+                      <input type="range" min="0.1" max="1" step="0.01"
                         value={siteDraft.nav.style?.hoverGlow ?? 0.6}
                         oninput={(e) => setNavStyle('hoverGlow', Number(e.target.value))} />
                     {/if}
@@ -4463,7 +4601,7 @@
             label="Lagets farge" onchange={(hex) => setBgProp(bg, i, 'value', hex)} /></label>
         <label>Styrke
           <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
-        <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
+        <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity ?? 1}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
       {:else if layer.type === 'gradient'}
         {@const g = gradientProps(layer)}
@@ -4498,11 +4636,11 @@
         {#if (g.kind ?? 'linear') === 'radial'}
           <label>Sentrum X
             <span class="gridmenu-value">{Math.round((g.x ?? 0.5) * 100)}%</span></label>
-          <input type="range" min="0" max="1" step="0.05" value={g.x ?? 0.5}
+          <input type="range" min="0" max="1" step="0.01" value={g.x ?? 0.5}
             oninput={(e) => setGradProp(bg, i, 'x', Number(e.target.value))} />
           <label>Sentrum Y
             <span class="gridmenu-value">{Math.round((g.y ?? 0.5) * 100)}%</span></label>
-          <input type="range" min="0" max="1" step="0.05" value={g.y ?? 0.5}
+          <input type="range" min="0" max="1" step="0.01" value={g.y ?? 0.5}
             oninput={(e) => setGradProp(bg, i, 'y', Number(e.target.value))} />
         {:else}
           <label>Vinkel
@@ -4512,7 +4650,7 @@
         {/if}
         <label>Styrke
           <span class="gridmenu-value">{Math.round((g.opacity ?? 1) * 100)}%</span></label>
-        <input type="range" min="0.05" max="1" step="0.05" value={g.opacity ?? 1}
+        <input type="range" min="0.05" max="1" step="0.01" value={g.opacity ?? 1}
           oninput={(e) => setGradProp(bg, i, 'opacity', Number(e.target.value))} />
         <label title="Gjelder selve gradienten - uavhengig av Animasjon-valget nederst, som gjelder innholdet">Bevegelse
           <Dropdown value={g.animation ?? 'none'}
@@ -4524,19 +4662,19 @@
             label="Glødens farge" onchange={(hex) => setBgProp(bg, i, 'color', hex)} /></label>
         <label>Posisjon X
           <span class="gridmenu-value">{Math.round(layer.props.x * 100)}%</span></label>
-        <input type="range" min="0" max="1" step="0.05" value={layer.props.x}
+        <input type="range" min="0" max="1" step="0.01" value={layer.props.x}
           oninput={(e) => setBgProp(bg, i, 'x', Number(e.target.value))} />
         <label>Posisjon Y
           <span class="gridmenu-value">{Math.round(layer.props.y * 100)}%</span></label>
-        <input type="range" min="0" max="1" step="0.05" value={layer.props.y}
+        <input type="range" min="0" max="1" step="0.01" value={layer.props.y}
           oninput={(e) => setBgProp(bg, i, 'y', Number(e.target.value))} />
         <label>Størrelse
           <span class="gridmenu-value">{Math.round(layer.props.radius * 100)}%</span></label>
-        <input type="range" min="0.1" max="1" step="0.05" value={layer.props.radius}
+        <input type="range" min="0.1" max="1" step="0.01" value={layer.props.radius}
           oninput={(e) => setBgProp(bg, i, 'radius', Number(e.target.value))} />
         <label>Styrke
           <span class="gridmenu-value">{Math.round(layer.props.opacity * 100)}%</span></label>
-        <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity}
+        <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
       {:else if layer.type === 'grain'}
         <label>Styrke
@@ -4548,18 +4686,36 @@
           {layer.props.src ? 'Bytt bilde' : 'Velg bilde'}
           <input type="file" accept="image/*" onchange={(e) => setBgImage(bg, i, e)} />
         </label>
-        <label>Tilpasning
-          <Dropdown value={layer.props.fit ?? 'cover'}
-            options={[['cover', 'Fyll (beskjæres)'], ['contain', 'Vis hele'], ['repeat', 'Gjenta (mønster)']]}
+        {@const isTile = layer.props.fit === 'flislegg' || layer.props.fit === 'repeat'}
+        <label title="Vanlig plasserer bildet fritt med valgt størrelse og posisjon. Flislegg gjentar bildet som et mønster.">Tilpasning
+          <Dropdown value={isTile ? 'flislegg' : 'vanlig'}
+            options={[['vanlig', 'Vanlig'], ['flislegg', 'Flislegg']]}
             onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
-        {#if (layer.props.fit ?? 'cover') !== 'repeat'}
-          <label>Fokus X
+        <label title="Skala relativt til seksjonsbredden: 100 % = like bred som seksjonen. Dekk fyller seksjonen (beskjærer); Vis hele viser hele bildet.">Størrelse</label>
+        <div class="sizestep">
+          <button type="button" title="Mindre" onclick={() => stepBgSize(bg, i, layer.props.size ?? 1, -0.05)}>−</button>
+          <input type="number" min="10" max="400" value={Math.round((layer.props.size ?? 1) * 100)}
+            onchange={(e) => setBgSizePct(bg, i, e.target.value)} />
+          <span class="sizeunit">%</span>
+          <button type="button" title="Større" onclick={() => stepBgSize(bg, i, layer.props.size ?? 1, 0.05)}>+</button>
+        </div>
+        {#if !isTile}
+          <div class="sizefill">
+            <button type="button" class="ghost" title="Fyll seksjonen (beskjærer)" onclick={() => setBgFillSize(bg, i, layer, 'cover')}>Dekk</button>
+            <button type="button" class="ghost" title="Vis hele bildet" onclick={() => setBgFillSize(bg, i, layer, 'contain')}>Vis hele</button>
+          </div>
+          <label title="Dra punktet eller bruk sliderne. 50 % = sentrert. Gå under 0 % / over 100 % for å legge motivet delvis eller helt utenfor kanten.">Posisjon</label>
+          <div class="focalpad" onpointerdown={(e) => startFocalDrag(e, bg, i, 'xy')}
+            style="--fx:{Math.max(0, Math.min(1, layer.props.x ?? 0.5)) * 100}%; --fy:{Math.max(0, Math.min(1, layer.props.y ?? 0.5)) * 100}%">
+            <span class="focaldot"></span>
+          </div>
+          <label class="sub">Vannrett
             <span class="gridmenu-value">{Math.round((layer.props.x ?? 0.5) * 100)}%</span></label>
-          <input type="range" min="0" max="1" step="0.05" value={layer.props.x ?? 0.5}
+          <input type="range" min="-0.5" max="1.5" step="0.01" value={layer.props.x ?? 0.5}
             oninput={(e) => setBgProp(bg, i, 'x', Number(e.target.value))} />
-          <label>Fokus Y
+          <label class="sub">Loddrett
             <span class="gridmenu-value">{Math.round((layer.props.y ?? 0.5) * 100)}%</span></label>
-          <input type="range" min="0" max="1" step="0.05" value={layer.props.y ?? 0.5}
+          <input type="range" min="-0.5" max="1.5" step="0.01" value={layer.props.y ?? 0.5}
             oninput={(e) => setBgProp(bg, i, 'y', Number(e.target.value))} />
         {/if}
         <label>Uskarphet
@@ -4568,18 +4724,22 @@
           oninput={(e) => setBgProp(bg, i, 'blur', Number(e.target.value))} />
         <label>Styrke
           <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
-        <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
+        <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity ?? 1}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
         <label class="gridmenu-snap" title="Bildet henger etter når man ruller. Av på mobil og ved redusert bevegelse.">
           <input type="checkbox" checked={(layer.props.parallax ?? 0) > 0}
-            onchange={(e) => setBgProp(bg, i, 'parallax', e.target.checked ? 0.5 : 0)} />
+            onchange={(e) => setBgProp(bg, i, 'parallax', e.target.checked ? 0.3 : 0)} />
           Parallakse
         </label>
         {#if (layer.props.parallax ?? 0) > 0}
           <label>Parallaksestyrke
             <span class="gridmenu-value">{Math.round((layer.props.parallax ?? 0) * 100)}%</span></label>
-          <input type="range" min="0.1" max="1" step="0.05" value={layer.props.parallax ?? 0.5}
+          <input type="range" min="0.1" max="1" step="0.01" value={layer.props.parallax ?? 0.3}
             oninput={(e) => setBgProp(bg, i, 'parallax', Number(e.target.value))} />
+          <label title="Lar parallaksen flyte forbi seksjonskanten inn i naboseksjonen. Vises der naboen er gjennomsiktig.">Flyt inn i nabo
+            <Dropdown value={layer.props.bleed ?? 'none'}
+              options={[['none', 'Ingen'], ['up', 'Opp'], ['down', 'Ned'], ['both', 'Begge']]}
+              onchange={(v) => setBgProp(bg, i, 'bleed', v)} /></label>
         {/if}
       {:else if layer.type === 'bildegalleri'}
         <label class="ghost filepick" title="Velg gjerne flere bilder samtidig; komprimeres til webp">
@@ -4599,11 +4759,11 @@
           </span>
           <label>Fokus X
             <span class="gridmenu-value">{Math.round((img.x ?? 0.5) * 100)}%</span></label>
-          <input type="range" min="0" max="1" step="0.05" value={img.x ?? 0.5}
+          <input type="range" min="0" max="1" step="0.01" value={img.x ?? 0.5}
             oninput={(e) => setBgGalleryImageProp(bg, i, j, 'x', Number(e.target.value))} />
           <label>Fokus Y
             <span class="gridmenu-value">{Math.round((img.y ?? 0.5) * 100)}%</span></label>
-          <input type="range" min="0" max="1" step="0.05" value={img.y ?? 0.5}
+          <input type="range" min="0" max="1" step="0.01" value={img.y ?? 0.5}
             oninput={(e) => setBgGalleryImageProp(bg, i, j, 'y', Number(e.target.value))} />
         {/each}
         <label>Tilpasning
@@ -4623,7 +4783,7 @@
           oninput={(e) => setBgProp(bg, i, 'blur', Number(e.target.value))} />
         <label>Styrke
           <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
-        <input type="range" min="0.05" max="1" step="0.05" value={layer.props.opacity ?? 1}
+        <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity ?? 1}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
         <p class="panel-hint">Bakgrunnen blar gjennom bildene med myk overgang. Med ett bilde, eller redusert bevegelse hos den besøkende, vises kun det første.</p>
       {/if}
@@ -4795,27 +4955,27 @@
     {/if}
     <label>Fokus X
       <span class="gridmenu-value">{Math.round((selectedBlock.props.x ?? 0.5) * 100)}%</span></label>
-    <input type="range" min="0" max="1" step="0.05" value={selectedBlock.props.x ?? 0.5}
+    <input type="range" min="0" max="1" step="0.01" value={selectedBlock.props.x ?? 0.5}
       oninput={(e) => setBlockProp('x', Number(e.target.value))} />
     <label>Fokus Y
       <span class="gridmenu-value">{Math.round((selectedBlock.props.y ?? 0.5) * 100)}%</span></label>
-    <input type="range" min="0" max="1" step="0.05" value={selectedBlock.props.y ?? 0.5}
+    <input type="range" min="0" max="1" step="0.01" value={selectedBlock.props.y ?? 0.5}
       oninput={(e) => setBlockProp('y', Number(e.target.value))} />
     <label title="Beskjærer inn mot fokuspunktet">Zoom
       <span class="gridmenu-value">{(selectedBlock.props.zoom ?? 1).toFixed(2)}x</span></label>
-    <input type="range" min="1" max="3" step="0.05" value={selectedBlock.props.zoom ?? 1}
+    <input type="range" min="1" max="3" step="0.01" value={selectedBlock.props.zoom ?? 1}
       oninput={(e) => setBlockProp('zoom', Number(e.target.value))} />
     <label>Lysstyrke
       <span class="gridmenu-value">{Math.round((selectedBlock.props.brightness ?? 1) * 100)}%</span></label>
-    <input type="range" min="0.2" max="2" step="0.05" value={selectedBlock.props.brightness ?? 1}
+    <input type="range" min="0.2" max="2" step="0.01" value={selectedBlock.props.brightness ?? 1}
       oninput={(e) => setBlockProp('brightness', Number(e.target.value))} />
     <label>Kontrast
       <span class="gridmenu-value">{Math.round((selectedBlock.props.contrast ?? 1) * 100)}%</span></label>
-    <input type="range" min="0.2" max="2" step="0.05" value={selectedBlock.props.contrast ?? 1}
+    <input type="range" min="0.2" max="2" step="0.01" value={selectedBlock.props.contrast ?? 1}
       oninput={(e) => setBlockProp('contrast', Number(e.target.value))} />
     <label>Metning
       <span class="gridmenu-value">{Math.round((selectedBlock.props.saturate ?? 1) * 100)}%</span></label>
-    <input type="range" min="0" max="2" step="0.05" value={selectedBlock.props.saturate ?? 1}
+    <input type="range" min="0" max="2" step="0.01" value={selectedBlock.props.saturate ?? 1}
       oninput={(e) => setBlockProp('saturate', Number(e.target.value))} />
     <button class="ghost action" title="Sett lysstyrke, kontrast og metning tilbake til nøytralt"
       onclick={() => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
@@ -6028,6 +6188,7 @@
   .theme-presets { display: flex; gap: 6px; margin: 6px 0 12px; }
   .theme-preset {
     flex: 1; min-width: 0; padding: 0; cursor: pointer; color: inherit; background: transparent;
+    display: flex; flex-direction: column; align-items: stretch;
     border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 9px; overflow: hidden;
   }
   .theme-preset:hover { border-color: var(--urd-color-accent); }
@@ -6092,6 +6253,78 @@
     font-variant-numeric: tabular-nums;
     opacity: 0.75;
   }
+
+  /* Bilde-bakgrunnslag: fokuspunkt-pad (dra), under-sliders og størrelse-stepper */
+  .focalpad {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    margin: 4px 0 6px;
+    border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+    border-radius: 8px;
+    background: color-mix(in srgb, currentColor 7%, transparent);
+    cursor: crosshair;
+    touch-action: none;
+  }
+  .focaldot {
+    position: absolute;
+    left: var(--fx, 50%);
+    top: var(--fy, 50%);
+    width: 14px;
+    height: 14px;
+    transform: translate(-50%, -50%);
+    border: 2px solid var(--urd-color-accent, #15b39a);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--urd-color-accent, #15b39a) 30%, transparent);
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 45%);
+    pointer-events: none;
+  }
+  label.sub {
+    font-size: 0.85em;
+    opacity: 0.8;
+  }
+  .sizestep {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 2px 0 6px;
+  }
+  .sizestep button {
+    width: 28px;
+    height: 28px;
+    border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+    border-radius: 7px;
+    background: transparent;
+    color: inherit;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .sizestep button:hover { border-color: var(--urd-color-accent); }
+  .sizestep input {
+    width: 60px;
+    text-align: center;
+    padding: 5px 4px;
+    border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+    border-radius: 7px;
+    background: transparent;
+    color: inherit;
+    font-variant-numeric: tabular-nums;
+  }
+  .sizeunit { opacity: 0.6; }
+  /* «Dekk» / «Vis hele»-hurtigknapper for Størrelse */
+  .sizefill { display: flex; gap: 6px; margin: 0 0 8px; }
+  .sizefill button {
+    flex: 1;
+    padding: 5px 8px;
+    border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+    border-radius: 7px;
+    background: transparent;
+    color: inherit;
+    font-size: 0.85em;
+    cursor: pointer;
+  }
+  .sizefill button:hover { border-color: var(--urd-color-accent); }
 
   .gridmenu-divider {
     border: 0;
