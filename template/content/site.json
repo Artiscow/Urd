@@ -17,11 +17,11 @@
     "version": 1,
     "tokens": {
       "color": {
-        "bg": "#000000",
-        "surface": "#000000",
-        "text": "#e8eaf0",
-        "accent": "#00fff5",
-        "accent-text": "#000000"
+        "bg": "#f6faf8",
+        "surface": "#ffffff",
+        "text": "#000000",
+        "accent": "#15b39a",
+        "accent-text": "#04241d"
       },
       "font": {
         "heading": "'Courier New', monospace",
@@ -38,13 +38,14 @@
     "alt": {
       "tokens": {
         "color": {
-          "bg": "#b2cfc8",
-          "surface": "#ffffff",
-          "text": "#0f1117",
-          "accent": "#00a19b",
-          "accent-text": "#ffffff"
+          "bg": "#000000",
+          "surface": "#000000",
+          "text": "#eaf1ed",
+          "accent": "#22c3a8",
+          "accent-text": "#04241d"
         }
-      }
+      },
+      "auto": false
     }
   },
   "pages": [

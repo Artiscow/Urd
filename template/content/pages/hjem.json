@@ -10,7 +10,7 @@
       "version": 1,
       "preset": "hero",
       "size": {
-        "minHeight": "608px"
+        "minHeight": "1280px"
       },
       "grid": null,
       "background": {
@@ -33,6 +33,21 @@
             "props": {
               "opacity": 0.06
             }
+          },
+          {
+            "type": "image",
+            "version": 2,
+            "props": {
+              "src": "/media/bakgrunn-a1730034.svg",
+              "fit": "vanlig",
+              "x": 0.5,
+              "y": 0.5,
+              "size": 1,
+              "opacity": 0.18,
+              "blur": 6,
+              "parallax": 1,
+              "bleed": "none"
+            }
           }
         ]
       },
@@ -49,10 +64,10 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 9.17,
-              "y": 176,
-              "w": 50,
-              "h": 38,
+              "x": 19.4,
+              "y": 256,
+              "w": 16.42,
+              "h": 32,
               "z": 1,
               "rot": 0
             },
@@ -71,9 +86,9 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 9.17,
-              "y": 240,
-              "w": 41.67,
+              "x": 19.4,
+              "y": 320,
+              "w": 19.4,
               "h": 64,
               "z": 1,
               "rot": 0
@@ -94,8 +109,8 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 9.15,
-              "y": 320,
+              "x": 19.38,
+              "y": 400,
               "w": 20,
               "h": 32,
               "z": 1,
@@ -120,10 +135,10 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 60.43,
-              "y": 160,
+              "x": 59.54,
+              "y": 240,
               "w": 25.33,
-              "h": 347,
+              "h": 289,
               "z": 2,
               "rot": 0
             },
@@ -150,8 +165,8 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 58.49,
-              "y": 128,
+              "x": 58.3,
+              "y": 208,
               "w": 29.63,
               "h": 400,
               "z": 1,
@@ -173,7 +188,7 @@
       "version": 1,
       "preset": "hva-skjer",
       "size": {
-        "minHeight": "464px"
+        "minHeight": "1280px"
       },
       "grid": null,
       "background": {
@@ -234,7 +249,7 @@
           "version": 1,
           "decor": false,
           "props": {
-            "html": "<h3>Overskrift</h3><p>Skriv <b><span style=\"font-size: 20px;\">innholdet</span></b> her.</p>",
+            "html": "<h3>Wow! Jeg ser farger!</h3><h3><span style=\"font-family: Georgia, &quot;Times New Roman&quot;, serif;\"><br></span></h3><h3><font face=\"Georgia, Times New Roman, serif\" style=\"font-weight: normal;\">Fint du er positiv</font></h3>",
             "align": "left",
             "box": true,
             "boxStyle": {
@@ -244,8 +259,8 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 9.74,
-              "y": 64,
+              "x": 10.45,
+              "y": 288,
               "w": 28.26,
               "h": 272,
               "z": 1,
@@ -260,16 +275,18 @@
           "version": 1,
           "props": {
             "location": "https://www.openstreetmap.org/#map=18/63.426891/10.396446",
-            "zoom": 15,
-            "height": 320
+            "lat": 63.426891,
+            "lon": 10.396446,
+            "zoom": 18,
+            "height": 600
           },
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 54.49,
-              "y": 64,
-              "w": 39.41,
-              "h": 368,
+              "x": 61.19,
+              "y": 176,
+              "w": 36.57,
+              "h": 608,
               "z": 3,
               "rot": 0
             },
