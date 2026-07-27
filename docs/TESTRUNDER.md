@@ -3,6 +3,13 @@
 Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren stryker herfra** når noe er testet; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.6.5.8): Nettsted-panel - navngi siden, beskrivelse, favicon
+
+- [ ] Åpne det nye «Nettsted»-panelet i admin. Navn-feltet skal vise nettstedets navn (det som står etter sidenavnet i nettleserfanen). Endre det, publiser, og sjekk at fanetittelen på den ekte siden blir `<sidenavn> - <ditt nye navn>`
+- [ ] Beskrivelse: skriv en kort beskrivelse; den skal overleve publisering (brukes av søkemotorer/deling)
+- [ ] Nettstedsikon (favicon): ligger nå i Nettsted-panelet (ikke lenger i Tema). Last opp / bytt / rediger / fjern skal virke som før, og ikonet vises i fanen
+- [ ] Angre: etter å ha endret navn/beskrivelse skal Ctrl+Z reversere endringen
+
 ### Testrunde-batch (0.6.6.5.7): moderniser til native/CSS - parallaks scroll-drevet, faq som `<details>`, lightbox som `<dialog>`
 
 Bygg om på en ekte side og sjekk hos besøkende/publisert der det står:

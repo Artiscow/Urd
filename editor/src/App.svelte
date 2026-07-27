@@ -413,7 +413,7 @@
    *  verktøy. Vises med skillelinjer i panelvelgeren. */
   const PANEL_GROUPS = [
     ['Sider', 'Blokker', 'Egenskaper', 'Grid'],
-    ['Tema', 'Nav', 'Footer', 'Samlinger', 'Plugins'],
+    ['Nettsted', 'Tema', 'Nav', 'Footer', 'Samlinger', 'Plugins'],
     ['Historikk'],
   ];
 
@@ -1707,6 +1707,17 @@
 
   function removeSiteIcon() {
     siteMutate('edit:site-icon', () => { delete siteDraft.site.icon; });
+  }
+
+  /** Nettstedsnavnet (site.title): halve fanetittelen (`<side> - <navn>`) og
+   *  standardteksten i menylogoen. edit:-nøkkel så en skriveøkt blir ett angre-steg. */
+  function setSiteName(value) {
+    siteMutate('edit:site-title', () => { siteDraft.site.title = value; });
+  }
+
+  /** Nettstedsbeskrivelsen (site.description): brukt av søkemotorer og ved deling. */
+  function setSiteDescription(value) {
+    siteMutate('edit:site-desc', () => { siteDraft.site.description = value; });
   }
 
   // Admin-fanen viser nettstedsikonet når det finnes, ellers Urd-merket (samme SVG som i admin/index.html; kan ikke leses fra link-elementet, for favicon-boot.js kan alt ha byttet det).
@@ -3826,6 +3837,35 @@
                   </div>
                 </details>
               </div>
+            {:else if activePanel === 'Nettsted'}
+              <div class="panel-body">
+                <label title="Vises i nettleserfanen etter sidenavnet, og som standardtekst i menylogoen">Navn
+                  <input value={siteDraft.site.title ?? ''} placeholder="Navn på nettstedet"
+                    oninput={(e) => setSiteName(e.target.value)} />
+                </label>
+                <label title="Kort beskrivelse av nettstedet - brukt av søkemotorer og ved deling">Beskrivelse
+                  <input value={siteDraft.site.description ?? ''} placeholder="Kort om nettstedet"
+                    oninput={(e) => setSiteDescription(e.target.value)} />
+                </label>
+                <hr class="gridmenu-divider" />
+                <label>Nettstedsikon
+                  {#if siteDraft.site.icon}
+                    <img class="site-icon-preview" src={siteDraft.site.icon} alt="Nettstedsikon" />
+                  {/if}
+                </label>
+                <span class="toolbar-row">
+                  <label class="ghost filepick tb-grow" title="Vises i nettleserfanen og bokmerker; redigeres til 128px">
+                    {siteDraft.site.icon ? 'Bytt ikon' : 'Velg ikon'}
+                    <input type="file" accept="image/*" onchange={uploadSiteIcon} />
+                  </label>
+                  {#if siteDraft.site.icon}
+                    <button class="ghost row-tool" title="Rediger ikonet (beskjær, zoom, filtre)"
+                      onclick={() => (iconEditorImage = siteDraft.site.icon)}>{@html ICONS.pencil ?? '✎'}</button>
+                    <button class="ghost row-tool" title="Fjern ikonet (Urd-merket brukes)"
+                      onclick={removeSiteIcon}>{@html ICONS.cross}</button>
+                  {/if}
+                </span>
+              </div>
             {:else if activePanel === 'Tema'}
               <div class="panel-body">
                 {#snippet themePreview(pal, cap)}
@@ -3938,26 +3978,6 @@
                     <input type="range" min="0" max="40" step="1" value={radiusNum(siteDraft.theme.tokens.radius.md)}
                       oninput={(e) => setRadiusPx('md', Number(e.target.value))} /></div>
                 </details>
-
-                <hr class="gridmenu-divider" />
-                <label>Nettstedsikon
-                  {#if siteDraft.site.icon}
-                    <img class="site-icon-preview" src={siteDraft.site.icon} alt="Nettstedsikon" />
-                  {/if}
-                </label>
-                <span class="toolbar-row">
-                  <label class="ghost filepick tb-grow" title="Vises i nettleserfanen og bokmerker; redigeres til 128px">
-                    {siteDraft.site.icon ? 'Bytt ikon' : 'Velg ikon'}
-                    <input type="file" accept="image/*" onchange={uploadSiteIcon} />
-                  </label>
-                  {#if siteDraft.site.icon}
-                    <button class="ghost row-tool" title="Rediger ikonet (beskjær, zoom, filtre)"
-                      onclick={() => (iconEditorImage = siteDraft.site.icon)}>{@html ICONS.pencil ?? '✎'}</button>
-                    <button class="ghost row-tool" title="Fjern ikonet (Urd-merket brukes)"
-                      onclick={removeSiteIcon}>{@html ICONS.cross}</button>
-                  {/if}
-                </span>
-                <p class="panel-hint">Vises i nettleserfanen og bokmerker. Last opp et bilde, så beskjærer du det til et kvadratisk ikon i editoren.</p>
               </div>
             {:else if activePanel === 'Blokker'}
               <div class="panel-body" class:locked={viewMode === 'mobile'}
