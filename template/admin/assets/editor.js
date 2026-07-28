@@ -343,8 +343,8 @@ var ft = class {
 				if (e.data.startsWith("[?")) {
 					let t = JSON.parse(e.data.slice(2));
 					this.#_(t);
-				} else t ? this.#v() : this.#g();
-			} else this.#y();
+				} else t ? this.#y() : this.#g();
+			} else this.#b();
 		}, ut), A && (this.#e = Ae);
 	}
 	#g() {
@@ -355,21 +355,45 @@ var ft = class {
 		}
 	}
 	#_(e) {
-		let t = this.#n.failed;
-		t && (this.#s = Dn(() => {
-			t(this.#e, () => e, () => () => {});
+		let t = this.#n.failed, { reset: n, invoke_onerror: r } = this.#v(e);
+		qe(r), t && (this.#s = Dn(() => {
+			t(this.#e, () => e, () => n);
 		}));
 	}
-	#v() {
+	#v(e) {
+		var t = !1, n = !1;
+		let r = () => {
+			if (t) {
+				Oe();
+				return;
+			}
+			t = !0, n && be(), this.#s !== null && Pn(this.#s, () => {
+				this.#s = null;
+			}), this.#S(() => {
+				this.#b();
+			});
+		};
+		return {
+			reset: r,
+			invoke_onerror: () => {
+				try {
+					n = !0, this.#n.onerror?.(e, r), n = !1;
+				} catch (e) {
+					Xe(e, this.#i && this.#i.parent);
+				}
+			}
+		};
+	}
+	#y() {
 		let e = this.#n.pending;
 		e && (this.is_pending = !0, this.#o = Dn(() => e(this.#e)), qe(() => {
 			var e = this.#c = document.createDocumentFragment(), t = cn();
-			e.append(t), this.#a = this.#x(() => Dn(() => this.#r(t))), this.#u === 0 && (this.#e.before(e), this.#c = null, Pn(this.#o, () => {
+			e.append(t), this.#a = this.#S(() => Dn(() => this.#r(t))), this.#u === 0 && (this.#e.before(e), this.#c = null, Pn(this.#o, () => {
 				this.#o = null;
-			}), this.#b(F));
+			}), this.#x(F));
 		}));
 	}
-	#y() {
+	#b() {
 		try {
 			if (this.is_pending = this.has_pending_snippet(), this.#u = 0, this.#l = 0, this.#a = Dn(() => {
 				this.#r(this.#e);
@@ -378,12 +402,12 @@ var ft = class {
 				Rn(this.#a, e);
 				let t = this.#n.pending;
 				this.#o = Dn(() => t(this.#e));
-			} else this.#b(F);
+			} else this.#x(F);
 		} catch (e) {
 			this.error(e);
 		}
 	}
-	#b(e) {
+	#x(e) {
 		this.is_pending = !1, e.transfer_effects(this.#f, this.#p);
 	}
 	defer_effect(e) {
@@ -395,7 +419,7 @@ var ft = class {
 	has_pending_snippet() {
 		return !!this.#n.pending;
 	}
-	#x(e) {
+	#S(e) {
 		var t = H, n = Un, r = Ve;
 		Kn(this.#i), Gn(this.#i), N(this.#i.ctx);
 		try {
@@ -406,17 +430,17 @@ var ft = class {
 			Kn(t), Gn(n), N(r);
 		}
 	}
-	#S(e, t) {
+	#C(e, t) {
 		if (!this.has_pending_snippet()) {
-			this.parent && this.parent.#S(e, t);
+			this.parent && this.parent.#C(e, t);
 			return;
 		}
-		this.#u += e, this.#u === 0 && (this.#b(t), this.#o && Pn(this.#o, () => {
+		this.#u += e, this.#u === 0 && (this.#x(t), this.#o && Pn(this.#o, () => {
 			this.#o = null;
 		}), this.#c &&= (this.#e.before(this.#c), null));
 	}
 	update_pending_count(e, t) {
-		this.#S(e, t), this.#l += e, !(!this.#m || this.#d) && (this.#d = !0, qe(() => {
+		this.#C(e, t), this.#l += e, !(!this.#m || this.#d) && (this.#d = !0, qe(() => {
 			this.#d = !1, this.#m && Zt(this.#m, this.#l);
 		}));
 	}
@@ -426,35 +450,18 @@ var ft = class {
 	error(e) {
 		if (!this.#n.onerror && !this.#n.failed) throw e;
 		F?.is_fork ? (this.#a && F.skip_effect(this.#a), this.#o && F.skip_effect(this.#o), this.#s && F.skip_effect(this.#s), F.oncommit(() => {
-			this.#C(e);
-		})) : this.#C(e);
+			this.#w(e);
+		})) : this.#w(e);
 	}
-	#C(e) {
+	#w(e) {
 		this.#a &&= (jn(this.#a), null), this.#o &&= (jn(this.#o), null), this.#s &&= (jn(this.#s), null), A && (je(this.#t), M(), je(Ne()));
-		var t = this.#n.onerror;
-		let n = this.#n.failed;
-		var r = !1, i = !1;
-		let a = () => {
-			if (r) {
-				Oe();
-				return;
-			}
-			r = !0, i && be(), this.#s !== null && Pn(this.#s, () => {
-				this.#s = null;
-			}), this.#x(() => {
-				this.#y();
-			});
-		}, o = (e) => {
-			try {
-				i = !0, t?.(e, a), i = !1;
-			} catch (e) {
-				Xe(e, this.#i && this.#i.parent);
-			}
-			n && (this.#s = this.#x(() => {
+		let t = this.#n.failed, n = (e) => {
+			let { reset: n, invoke_onerror: r } = this.#v(e);
+			r(), t && (this.#s = this.#S(() => {
 				try {
 					return Dn(() => {
-						var t = H;
-						t.b = this, t.f |= 128, n(this.#e, () => e, () => a);
+						var r = H;
+						r.b = this, r.f |= 128, t(this.#e, () => e, () => n);
 					});
 				} catch (e) {
 					return Xe(e, this.#i.parent), null;
@@ -469,7 +476,7 @@ var ft = class {
 				Xe(e, this.#i && this.#i.parent);
 				return;
 			}
-			typeof t == "object" && t && typeof t.then == "function" ? t.then(o, (e) => Xe(e, this.#i && this.#i.parent)) : o(t);
+			typeof t == "object" && t && typeof t.then == "function" ? t.then(n, (e) => Xe(e, this.#i && this.#i.parent)) : n(t);
 		});
 	}
 };
