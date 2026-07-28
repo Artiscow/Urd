@@ -10,7 +10,7 @@
       "version": 1,
       "preset": "steg",
       "size": {
-        "minHeight": "976px"
+        "minHeight": "1280px"
       },
       "grid": null,
       "background": {
@@ -24,7 +24,7 @@
               "fit": "vanlig",
               "x": 0.5,
               "y": 0.5,
-              "size": 1,
+              "size": 1.5,
               "opacity": 1,
               "blur": 5,
               "parallax": 0,
@@ -533,7 +533,7 @@
       "version": 1,
       "preset": "tom",
       "size": {
-        "minHeight": "672px"
+        "minHeight": "640px"
       },
       "grid": null,
       "background": {
@@ -562,7 +562,7 @@
           "frames": {
             "desktop": {
               "x": 25.2,
-              "y": 64,
+              "y": 32,
               "w": 49.66,
               "h": 544,
               "z": 2,
