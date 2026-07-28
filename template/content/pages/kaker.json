@@ -10,7 +10,7 @@
       "version": 1,
       "preset": "steg",
       "size": {
-        "minHeight": "1280px"
+        "minHeight": "1344px"
       },
       "grid": null,
       "background": {
