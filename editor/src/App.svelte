@@ -6,6 +6,7 @@
   import ColorPicker from './lib/ColorPicker.svelte';
   import GlyphPicker from './lib/GlyphPicker.svelte';
   import { createPreviewBridge } from './lib/previewBridge.js';
+  import { previewScale } from './lib/preview-scale.js';
   import Dropdown from './lib/Dropdown.svelte';
   import IconEditor from './lib/IconEditor.svelte';
   // Editoren deler migreringskoden med motoren (samme fil, bundles inn).
@@ -52,6 +53,7 @@
     cross: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14"/><path d="M19 5L5 19"/></svg>',
     plus: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
     guides: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="3.2" stroke-dasharray="2.5 2.5"/></svg>',
+    fit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/></svg>',
   };
 
   /**
@@ -136,6 +138,27 @@
    *  mobilbredde; motorens matchMedia bytter modus selv). */
   let viewMode = $state('desktop');
 
+  // Skalert lerret: iframen rendrer siden i full vindus-viewport (samme som en
+  // besøkende med fullt vindu) og skaleres ned for å passe .frame-wrap, i stedet
+  // for å reflowe inn i restplassen etter chromen. Da er render-en identisk med
+  // publisert; kun visningsstørrelsen (zoom) endres. Se lib/preview-scale.js.
+  const MOBILE_W = 390;
+  let frameWrapEl = $state(null);
+  let frameW = $state(0);            // .frame-wrap sin målte innerflate (px)
+  let frameH = $state(0);
+  let winW = $state(typeof window !== 'undefined' ? window.innerWidth : 1280);
+  /** Zoom for redigerings-lerretet: 'fit' tilpasser vinduet, 'full' = ekte 1:1. */
+  let zoomMode = $state('fit');
+  let targetW = $derived(viewMode === 'mobile' ? MOBILE_W : winW);
+  // Skalaen er BREDDE-drevet: siden rendrer i full målbredde og skaleres til
+  // rammebredden. Iframen gjøres tilsvarende høyere (frameH/scale), så den
+  // SKALERTE høyden fyller .frame-wrap - ingen topp/bunn-barer; siden scroller
+  // inni iframen som en ekte side.
+  let scale = $derived(previewScale(frameW, targetW, zoomMode));
+  let iframeH = $derived(scale > 0 ? frameH / scale : frameH);
+  let stageW = $derived(targetW * scale);
+  let stageH = $derived(frameH);
+
   // Klikk hvor som helst i admin (paneler, topplinje) lukker åpne menyer i forhåndsvisningen;
   // iframens egne utenfor-klikk-lyttere ser aldri disse klikkene.
   $effect(() => {
@@ -149,6 +172,28 @@
   $effect(() => {
     const mode = viewMode;
     bridge?.sendViewport(mode);
+  });
+
+  // Målviewporten følger det levende vinduets indre mål.
+  $effect(() => {
+    const onResize = () => { winW = window.innerWidth; };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  });
+
+  // .frame-wrap endrer størrelse ved panel/skinne åpne-lukke OG vindus-resize;
+  // mål den så skalaen alltid passer den faktiske lerretsflaten.
+  $effect(() => {
+    const el = frameWrapEl;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      frameW = r.width; frameH = r.height;
+    };
+    measure(); // umiddelbart, så første ramme ikke blinker på scale 1
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
   });
   /** Antall seksjoner på siden som trenger mobil-tilsyn */
   let attentionCount = $state(0);
@@ -499,12 +544,15 @@
     if (!ir) return;
     // Ved siden av blokken: til høyre om det er plass, ellers til venstre,
     // klemt innenfor vinduet (menyen selv scroller ved lite høyde).
-    let left = ir.left + msg.rect.right + 12;
+    // ir er den SKALERTE iframe-rekta; msg.rect er blokka i iframens EGNE
+    // (uskalerte) koordinater, så indre punkt må ganges med scale før de legges
+    // til iframens vindusposisjon (visuelt = ir + scale * indre).
+    let left = ir.left + scale * msg.rect.right + 12;
     if (left + MENU_W > window.innerWidth - 8) {
-      left = Math.max(8, ir.left + msg.rect.left - MENU_W - 12);
+      left = Math.max(8, ir.left + scale * msg.rect.left - MENU_W - 12);
     }
     const maxTop = window.innerHeight - Math.min(window.innerHeight * 0.7, 560) - 8;
-    const top = Math.min(Math.max(8, ir.top + msg.rect.top), Math.max(8, maxTop));
+    const top = Math.min(Math.max(8, ir.top + scale * msg.rect.top), Math.max(8, maxTop));
     blockMenu = { left, top };
   }
 
@@ -3533,6 +3581,13 @@
           <button class="ghost" class:active={viewMode === 'mobile'}
             onclick={() => (viewMode = 'mobile')} title="Mobilvisning (390px)">{@html ICONS.phone}</button>
         </span>
+        <span class="zoomswitch">
+          <button class="ghost" class:active={zoomMode === 'fit'}
+            onclick={() => (zoomMode = 'fit')} title="Tilpass lerretet til vinduet">{@html ICONS.fit}</button>
+          <button class="ghost" class:active={zoomMode === 'full'}
+            onclick={() => (zoomMode = 'full')} title="Faktisk størrelse (100%)">100%</button>
+          <span class="zoom-readout" title="Gjeldende zoom">{Math.round(scale * 100)}%</span>
+        </span>
         <button class="ghost" class:active={guidesOn} onclick={toggleGuides}
           title="Hjelpelinjer: senter og innholdsbredde i alle seksjoner">{@html ICONS.guides}</button>
       {/if}
@@ -4532,13 +4587,18 @@
         {/if}
       {/if}
 
-      <div class="frame-wrap" class:mobile={viewMode === 'mobile'}>
-        <iframe
-          bind:this={iframeEl}
-          title="Forhåndsvisning"
-          src={`/?page=${pageId}&preview=1`}
-          onload={onIframeLoad}
-        ></iframe>
+      <div class="frame-wrap" class:mobile={viewMode === 'mobile'} bind:this={frameWrapEl}>
+        <!-- .stage har den SKALERTE størrelsen, så scroll/sentrering får en ekte
+             boks (en transformert iframe alene utvider ikke forelderens scroll). -->
+        <div class="stage" style="width:{stageW}px; height:{stageH}px">
+          <iframe
+            bind:this={iframeEl}
+            title="Forhåndsvisning"
+            src={`/?page=${pageId}&preview=1`}
+            onload={onIframeLoad}
+            style="width:{targetW}px; height:{iframeH}px; transform:scale({scale}); transform-origin:top left"
+          ></iframe>
+        </div>
       </div>
     </div>
   {:else}
@@ -6452,40 +6512,60 @@
 
   .frame-wrap {
     flex: 1;
-    display: flex;
     min-height: 0;
+    overflow: auto;
+    display: flex;
+    /* 'safe' hindrer at topp/venstre klippes bort når lerretet er større enn
+       flaten (100%-modus): da forankres det i stedet for å sentreres vekk. */
+    justify-content: safe center;
+    align-items: safe center;
+    background: #08090d;            /* letterbox-flate rundt lerretet */
+  }
+
+  /* Lerretsboksen har den SKALERTE størrelsen; iframen inni står i full
+     målviewport og skaleres med transform (se markup), så render-en er
+     identisk med publisert - kun visningsstørrelsen endres. */
+  .stage {
+    flex: 0 0 auto;
+    position: relative;
   }
 
   iframe {
-    flex: 1;
-    width: 100%;
-    height: 100%;
     border: 0;
     background: #fff;
+    display: block;
   }
 
-  /* Mobilvisning: iframen smales til mobilbredde; motorens matchMedia
-     bytter til mobil-rendering av seg selv */
+  /* Mobilvisning: iframen står i 390px (motorens matchMedia styres av
+     urd-viewport, ikke bredden) og skaleres for å passe; mørk backdrop. */
   .frame-wrap.mobile {
-    justify-content: center;
     background: #08090d;
-    padding: 12px 0;
   }
 
-  .frame-wrap.mobile iframe {
-    flex: 0 0 390px;
-    width: 390px;
+  .frame-wrap.mobile .stage {
     border-radius: 12px;
+    overflow: hidden;
   }
 
-  .viewswitch {
+  .viewswitch,
+  .zoomswitch {
     display: flex;
     gap: 2px;
+    align-items: center;
   }
 
-  .viewswitch .active {
+  .viewswitch .active,
+  .zoomswitch .active {
     border-color: var(--urd-color-accent, #7c5cff);
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 15%, transparent);
+  }
+
+  .zoom-readout {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    padding: 0 0.3em;
+    min-width: 3.2em;
+    text-align: right;
   }
 
   .badge.attention {
