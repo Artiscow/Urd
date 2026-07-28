@@ -74,13 +74,20 @@ export function navItems(site) {
  * @param {{nav: {layout?: string, variant?: string, style?: {hover?: string}}}} site
  * @returns {string}
  */
+/** De flytende variantene (pille, firkant, tab) deler grunnklassen urd-nav-var-floating. */
+function isFloating(variant) {
+  return variant === 'floating' || variant === 'floating-square' || variant === 'floating-tab';
+}
+
 export function navClasses(site) {
   let classes = `urd-nav urd-nav-${site.nav.layout ?? 'right'}`;
   const variant = site.nav.variant;
-  if (variant === 'floating' || variant === 'floating-square') {
+  if (isFloating(variant)) {
     classes += ' urd-nav-var-floating';
     // Firkant-varianten er pillen uten avrundede kanter (eiers ønske 23. juli 2026).
     if (variant === 'floating-square') classes += ' urd-nav-square';
+    // Tab-varianten henger ned: firkant topp, kun de nedre hjørnene avrundet.
+    if (variant === 'floating-tab') classes += ' urd-nav-tab';
     // Glød er et tilvalg for pillen (av som standard, eiers valg 22. juli 2026).
     if (site.nav.style?.glow) classes += ' urd-nav-glow';
     // Luft over pillen er standard; topGap: false legger den helt i toppen.
@@ -115,7 +122,7 @@ export function navClasses(site) {
  */
 export function hostClasses(site) {
   const v = site.nav.variant;
-  if (v === 'floating' || v === 'floating-square') return { host: ['urd-nav-float'], body: [] };
+  if (isFloating(v)) return { host: ['urd-nav-float'], body: [] };
   if (v === 'side-left') return { host: ['urd-nav-side-host', 'urd-nav-side-host-left'], body: ['urd-side-left'] };
   if (v === 'side-right') return { host: ['urd-nav-side-host', 'urd-nav-side-host-right'], body: ['urd-side-right'] };
   // Overlay gjelder kun fullbredde-linjen (bar): verten tas ut av flyten så

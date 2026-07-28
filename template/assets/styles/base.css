@@ -1,17 +1,33 @@
 /* Urd basestiler: reset + theme-token-variabler.
-   Variablene under er fallbacks; theme.js overskriver dem fra
-   content/site.json ved lasting. */
+   :root under er Urds STANDARDtema som trygg fallback (enkeltverdier). Sidens
+   EGNE farger kommer fra content/theme.css (materialisert ved publisering, lastet
+   rett etter denne fila) og theme.js sin injiserte <style>; begge vinner. */
 
 :root {
-  --urd-color-bg: #0b0e14;
-  --urd-color-surface: #151a23;
-  --urd-color-text: #e8eaf0;
+  --urd-color-bg: #f7f8fb;
+  --urd-color-surface: #ffffff;
+  --urd-color-text: #14161c;
   --urd-color-accent: #7c5cff;
   --urd-font-heading: system-ui, sans-serif;
   --urd-font-body: system-ui, sans-serif;
   --urd-radius-sm: 6px;
   --urd-radius-md: 12px;
   --urd-space-section: clamp(3rem, 8vw, 6rem);
+}
+
+/* Standardtemaet følger OS-lyshet der light-dark() støttes (Baseline 2024): fjerner
+   FOUC-en de gamle mørke default-tokenene ga (malt før JS/innhold lastet). color-scheme
+   får nettleser-chrome (scrollbar/formfelt) til å matche; et manuelt valg overstyrer
+   via data-urd-theme (satt av theme-init.js før paint). Sidens egen theme.css vinner. */
+@supports (color: light-dark(#000, #fff)) {
+  :root {
+    color-scheme: light dark;
+    --urd-color-bg: light-dark(#f7f8fb, #0b0e14);
+    --urd-color-surface: light-dark(#ffffff, #151a23);
+    --urd-color-text: light-dark(#14161c, #e8eaf0);
+  }
+  :root[data-urd-theme="light"] { color-scheme: light; }
+  :root[data-urd-theme="dark"] { color-scheme: dark; }
 }
 
 *, *::before, *::after {
@@ -2221,6 +2237,13 @@ body.urd-mobile .urd-nav-sub,
 /* Firkant-varianten (nav.variant floating-square): pillen uten avrunding */
 .urd-nav-var-floating.urd-nav-square {
   border-radius: 0;
+}
+
+/* Tab-varianten (nav.variant floating-tab): firkant topp, kun de to nedre
+   hjørnene avrundet - henger ned fra toppen. Arver luft over + sidemarg fra
+   basen; med topGap: false (urd-nav-flush) blir det en nedhengende header. */
+.urd-nav-var-floating.urd-nav-tab {
+  border-radius: 0 0 var(--urd-radius-md) var(--urd-radius-md);
 }
 
 /* Glød rundt pillen: tilvalg (av som standard) */

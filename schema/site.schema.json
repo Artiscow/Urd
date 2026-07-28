@@ -101,9 +101,9 @@
           "description": "Menyen følger med når man blar nedover (false = ligger kun øverst). Additivt felt fra v0.5."
         },
         "variant": {
-          "enum": ["bar", "floating", "floating-square", "side-left", "side-right"],
+          "enum": ["bar", "floating", "floating-square", "floating-tab", "side-left", "side-right"],
           "default": "bar",
-          "description": "Menyens form (additivt fra v0.6): bar = stripe i full bredde, floating = pille som svever over innholdet, floating-square = det samme uten avrundede kanter, side-left/side-right = fast kolonne langs kanten (mobil og trange vinduer faller tilbake til topplinje med burger)."
+          "description": "Menyens form (additivt fra v0.6): bar = stripe i full bredde, floating = pille som svever over innholdet, floating-square = det samme uten avrundede kanter, floating-tab = flytende med firkant topp og kun de to nedre hjørnene avrundet (henger ned fra toppen), side-left/side-right = fast kolonne langs kanten (mobil og trange vinduer faller tilbake til topplinje med burger)."
         },
         "overlay": {
           "type": "boolean",

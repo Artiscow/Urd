@@ -23,7 +23,7 @@
   import { bildegalleriLayer } from '../../template/assets/engine/backgrounds/bildegalleri.js';
   import { footerThumb } from '../../template/assets/engine/footer-thumb.js';
   import { coreAnimations } from '../../template/assets/engine/animations/core.js';
-  import { SECTION_THEME_LABELS, contrastRatio, relativeLuminance } from '../../template/assets/engine/theme.js';
+  import { SECTION_THEME_LABELS, contrastRatio, relativeLuminance, buildThemeCss } from '../../template/assets/engine/theme.js';
   import { compressToWebp, svgToDataUrl, tightSvgViewBox, svgViewBox, slugify, contentHash, mediaExtension, WARN_BYTES } from '../../template/assets/engine/imageTools.js';
   import { FONT_STACKS } from '../../template/assets/engine/fonts.js';
   import { frameAtPoint } from '../../template/assets/engine/place.js';
@@ -630,7 +630,7 @@
     event.target.value = '';
     if (!file) return;
     try {
-      const img = await compressToWebp(file);
+      const img = await compressOrTrim(file);
       mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
         b.props.src = img.dataUrl;
         b.props.alt = b.props.alt || slugify(file.name).replaceAll('-', ' ');
@@ -1010,13 +1010,19 @@
     try { return svgToDataUrl(trimmed); } catch { return first; }
   }
 
+  /* SVG-er auto-trimmes (stram viewBox til motivet); raster komprimeres til webp.
+     Felles inngang for alle bilde-opplastinger, så en SVG-logo/-ikon fyller plassen. */
+  async function compressOrTrim(file) {
+    const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name || '');
+    return isSvg ? svgAutoTrim(file) : compressToWebp(file);
+  }
+
   async function setBgImage(bg, i, event) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
     try {
-      const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name || '');
-      const img = isSvg ? await svgAutoTrim(file) : await compressToWebp(file);
+      const img = await compressOrTrim(file);
       setBgProp(bg, i, 'src', img.dataUrl);
     } catch {
       setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
@@ -1722,7 +1728,7 @@
     event.target.value = '';
     if (!file) return;
     try {
-      const img = await compressToWebp(file);
+      const img = await compressOrTrim(file);
       siteMutate('nav', () => {
         const logo = siteDraft.nav.logo;
         if (logo.type === 'both') logo.image = img.dataUrl;
@@ -1737,10 +1743,23 @@
   // Ikon-editoren (IconEditor): kilden som redigeres. null = lukket.
   let iconEditorImage = $state(null);
 
-  function uploadSiteIcon(event) {
+  async function uploadSiteIcon(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
+    const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name || '');
+    if (isSvg) {
+      // SVG auto-trimmes (stram viewBox til motivet) FØR ikon-editoren, så det
+      // rasteriserte faviconet fylles tett av merket. Faviconet forblir raster:
+      // universell støtte (Safari bruker ikke SVG-favicon).
+      try {
+        const img = await svgAutoTrim(file);
+        iconEditorImage = img.dataUrl;
+      } catch {
+        setStatus('Kunne ikke lese bildet (prøv jpg/png/webp/svg)', 'error');
+      }
+      return;
+    }
     // Les rå fil i full oppløsning, så editoren har noe å beskjære og zoome i.
     const reader = new FileReader();
     reader.onload = () => { iconEditorImage = String(reader.result); };
@@ -1802,7 +1821,7 @@
 
   /** Variant-avledninger for panelet: sidestilt og flytende viser egne valg. */
   const sideVariant = $derived(siteDraft?.nav?.variant === 'side-left' || siteDraft?.nav?.variant === 'side-right');
-  const floatingVariant = $derived(siteDraft?.nav?.variant === 'floating' || siteDraft?.nav?.variant === 'floating-square');
+  const floatingVariant = $derived(['floating', 'floating-square', 'floating-tab'].includes(siteDraft?.nav?.variant));
 
   /** Effektfargen ved hover: kun der stilen har en effekt, med etikett som
       sier hva fargen faktisk styrer i den valgte stilen. */
@@ -1996,7 +2015,7 @@
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    const img = await compressToWebp(file);
+    const img = await compressOrTrim(file);
     setEntryField(id, entryId, 'image', img.dataUrl);
   }
 
@@ -2176,7 +2195,7 @@
     event.target.value = '';
     if (!file) return;
     try {
-      const img = await compressToWebp(file);
+      const img = await compressOrTrim(file);
       footerMutate('footer', (f) => { f.brand ??= {}; f.brand.logo = img.dataUrl; if (!f.brand.mode) f.brand.mode = 'both'; });
     } catch {
       setStatus('Kunne ikke lese bildet (prøv jpg/png/webp/svg)', 'error');
@@ -3113,7 +3132,7 @@
     setStatus('Komprimerer bildet…');
     let img;
     try {
-      img = await compressToWebp(file);
+      img = await compressOrTrim(file);
     } catch {
       setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
       return;
@@ -3145,7 +3164,7 @@
     let big = 0;
     for (const file of fileList) {
       try {
-        const img = await compressToWebp(file);
+        const img = await compressOrTrim(file);
         if (img.bytes > WARN_BYTES) big += 1;
         images.push({ src: img.dataUrl, alt: slugify(file.name).replaceAll('-', ' '), href: null, style: {} });
       } catch {
@@ -3382,6 +3401,9 @@
       const siteOut = JSON.parse(JSON.stringify(siteDraft));
       files.push(...materializeSiteImages(siteOut));
       files.push({ path: 'content/site.json', content: JSON.stringify(siteOut, null, 2) + '\n', encoding: 'utf-8' });
+      // Materialiser temaet som render-blokkerende light-dark()-CSS (FOUC-fri
+      // første paint). Én fil dekker alle sider; index.html-kopiene lenker til den.
+      files.push({ path: 'content/theme.css', content: buildThemeCss(siteOut.theme), encoding: 'utf-8' });
       draftKeys.push('urd-draft-site');
       // Navngi HVA i nettstedsoppsettet som endret seg (til historikken).
       const eq = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
@@ -3735,7 +3757,7 @@
                     <label title="Sidestilt meny: dra i kolonnekanten i forhåndsvisningen for å endre bredden; på mobil og trange vinduer vises den som topplinje">Navigasjonsmeny
                       <Dropdown value={siteDraft.nav.variant ?? 'bar'}
                         options={[['bar', 'Stripe (standard)'], ['floating', 'Flytende (pille)'], ['floating-square', 'Flytende (firkant)'],
-                          ['side-left', 'Sidestilt venstre'], ['side-right', 'Sidestilt høyre']]}
+                          ['floating-tab', 'Flytende (tab)'], ['side-left', 'Sidestilt venstre'], ['side-right', 'Sidestilt høyre']]}
                         onchange={(v) => setNavVariant(v)} /></label>
                     {#if floatingVariant}
                       <label class="gridmenu-snap" title="Myk glød i aksentfargen rundt den flytende menyen">

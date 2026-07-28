@@ -236,6 +236,19 @@ test('navClasses/hostClasses: firkant-varianten er flytende uten avrunding', () 
   assert.deepEqual(hostClasses({ nav: { variant: 'floating-square' } }), { host: ['urd-nav-float'], body: [] });
 });
 
+test('navClasses/hostClasses: tab-varianten er flytende med kun de nedre hjørnene avrundet', () => {
+  assert.equal(
+    navClasses({ nav: { variant: 'floating-tab' } }),
+    'urd-nav urd-nav-right urd-nav-var-floating urd-nav-tab',
+  );
+  // Glød/luft arves fra flytende-basen, som for pille og firkant.
+  assert.equal(
+    navClasses({ nav: { variant: 'floating-tab', style: { glow: true, topGap: false } } }),
+    'urd-nav urd-nav-right urd-nav-var-floating urd-nav-tab urd-nav-glow urd-nav-flush',
+  );
+  assert.deepEqual(hostClasses({ nav: { variant: 'floating-tab' } }), { host: ['urd-nav-float'], body: [] });
+});
+
 test('navClasses: størrelse gir klasse kun utenfor standarden (md)', () => {
   assert.equal(navClasses({ nav: { style: { size: 'sm' } } }), 'urd-nav urd-nav-right urd-nav-size-sm');
   assert.equal(navClasses({ nav: { style: { size: 'xl' } } }), 'urd-nav urd-nav-right urd-nav-size-xl');

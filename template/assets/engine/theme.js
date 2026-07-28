@@ -64,17 +64,126 @@ function applyTokens(tokens, root) {
   }
 }
 
+/* Ankret allowlist for en CSS-tokenverdi (CodeQL-vennlig barriere): kun tegn som
+   forekommer i farger/lengder/fontstacker. Char-klassen utelukker ; { } < > : @,
+   og vi avviser eksplisitt url()/kommentar/expression. Ugyldige tokens droppes, så
+   en innlogget publiser ikke kan injisere vilkårlig CSS gjennom temaet (buildThemeCss
+   skriver rå tekst, ikke via style.setProperty som stille avviser). */
+const SAFE_CSS_VALUE = /^[a-zA-Z0-9#%.,()'"\s+\-*/]+$/;
+export function safeCssValue(value) {
+  return typeof value === 'string'
+    && SAFE_CSS_VALUE.test(value)
+    && !/url\(|\/\*|\*\/|expression/i.test(value);
+}
+
+/**
+ * Bygger en statisk CSS-streng som setter temaets fargetokens som
+ * light-dark(lys, mørk) bak @supports, med enkeltverdi-fallback (hovedtemaet) for
+ * eldre nettlesere. Materialiseres til content/theme.css ved publisering og lastes
+ * render-blokkerende, så første paint har sidens faktiske farger uten FOUC.
+ * color-scheme følger OS; et manuelt valg overstyrer via [data-urd-theme] (light-dark()
+ * velger side etter beregnet color-scheme). Ren funksjon, gjenbruker activeTokens.
+ * @param {{tokens: object, scheme?: string, alt?: {tokens: object}}} theme
+ * @returns {string}
+ */
+export function buildThemeCss(theme) {
+  const main = theme.tokens || {};
+  const light = activeTokens(theme, 'light');
+  const dark = activeTokens(theme, 'dark');
+  const mainScheme = theme.scheme === 'dark' ? 'dark' : 'light';
+
+  const fallback = [];     // hovedtemaet som enkeltverdier (alle tokens)
+  const dualColor = [];    // farger ulike lys/mørk -> light-dark()
+  const altNonColor = [];  // ikke-farge ulik per modus (sjelden)
+
+  const groups = new Set([...Object.keys(main), ...Object.keys(light), ...Object.keys(dark)]);
+  for (const group of groups) {
+    const isColor = group === 'color';
+    const names = new Set([
+      ...Object.keys(main[group] || {}),
+      ...Object.keys(light[group] || {}),
+      ...Object.keys(dark[group] || {}),
+    ]);
+    for (const name of names) {
+      const mv = main[group]?.[name];
+      const lv = light[group]?.[name];
+      const dv = dark[group]?.[name];
+      if (safeCssValue(mv)) {
+        fallback.push(`  --urd-${group}-${name}: ${mv};`);
+        if (isColor) fallback.push(`  --urd-base-${name}: ${mv};`);
+      }
+      if (lv === dv) continue; // like i begge moduser: enkeltverdien holder
+      if (isColor && safeCssValue(lv) && safeCssValue(dv)) {
+        dualColor.push({ name, lv, dv });
+      } else if (!isColor && safeCssValue(lv) && safeCssValue(dv)) {
+        altNonColor.push({ group, name, lv, dv });
+      }
+    }
+  }
+
+  // Uten en mørk variant (alt) er siden ett tema: lås color-scheme til det, ingen
+  // light-dark() og ingen bryter. Med variant følger color-scheme OS og light-dark()
+  // bærer begge sett; et manuelt valg overstyrer via [data-urd-theme].
+  const hasDual = dualColor.length > 0 || altNonColor.length > 0;
+  let css = `:root {\n  color-scheme: ${hasDual ? 'light dark' : mainScheme};\n${fallback.join('\n')}\n}\n`;
+  if (!hasDual) return css;
+
+  const ld = [];
+  for (const c of dualColor) {
+    const v = `light-dark(${c.lv}, ${c.dv})`;
+    ld.push(`    --urd-color-${c.name}: ${v};`);
+    ld.push(`    --urd-base-${c.name}: ${v};`);
+  }
+  css += '@supports (color: light-dark(#000, #fff)) {\n';
+  if (ld.length) css += `  :root {\n${ld.join('\n')}\n  }\n`;
+  // Manuelt valg: color-scheme bestemmer hvilken side light-dark() velger.
+  css += '  :root[data-urd-theme="light"] { color-scheme: light; }\n';
+  css += '  :root[data-urd-theme="dark"] { color-scheme: dark; }\n';
+  if (altNonColor.length) {
+    // Ikke-farge kan ikke bruke light-dark(): styr per modus via media + attributt.
+    const rows = (pick) => altNonColor.map((t) => `    --urd-${t.group}-${t.name}: ${pick(t)};`).join('\n');
+    css += `  @media (prefers-color-scheme: dark) {\n    :root {\n${altNonColor.map((t) => `      --urd-${t.group}-${t.name}: ${t.dv};`).join('\n')}\n    }\n  }\n`;
+    css += `  :root[data-urd-theme="light"] {\n${rows((t) => t.lv)}\n  }\n`;
+    css += `  :root[data-urd-theme="dark"] {\n${rows((t) => t.dv)}\n  }\n`;
+  }
+  css += '}\n';
+  return css;
+}
+
+/** Støtter nettleseren native light-dark()? (Baseline 2024; ellers JS-fallback.) */
+function supportsLightDark() {
+  return typeof window !== 'undefined' && !!window.CSS?.supports?.('color', 'light-dark(#000, #fff)');
+}
+
 /**
  * @param {{tokens: Record<string, Record<string, string>>}} theme `theme`-objektet fra site.json
  * @param {HTMLElement} [root] Element variablene settes på (standard: document.documentElement)
  */
 export function applyTheme(theme, root = document.documentElement) {
+  const stored = readStoredMode();
   activeMode = resolveThemeMode(
     theme.scheme,
-    readStoredMode(),
+    stored,
     window.matchMedia('(prefers-color-scheme: dark)').matches,
   );
-  applyTokens(activeTokens(theme, activeMode), root);
+  if (supportsLightDark()) {
+    // Moderne: CSS-en bærer light-dark(). Injiser utkastets/sidens tokens som en
+    // <style> (så preview og live-endring virker), og la et lagret valg overstyre
+    // OS via data-urd-theme. Ingen inline --urd-color-* (ville klobbet light-dark()).
+    const doc = root.ownerDocument || document;
+    let style = doc.getElementById('urd-theme');
+    if (!style) {
+      style = doc.createElement('style');
+      style.id = 'urd-theme';
+      doc.head.appendChild(style);
+    }
+    style.textContent = buildThemeCss(theme);
+    if (stored === 'light' || stored === 'dark') root.setAttribute('data-urd-theme', stored);
+    else root.removeAttribute('data-urd-theme');
+  } else {
+    // Fallback (ingen light-dark()): JS setter tokenene inline for løst modus.
+    applyTokens(activeTokens(theme, activeMode), root);
+  }
 }
 
 /** Gjeldende modus ('light'/'dark'); satt av applyTheme ved boot. */
@@ -90,7 +199,13 @@ export function themeMode() {
 export function toggleThemeMode(theme) {
   activeMode = themeMode() === 'dark' ? 'light' : 'dark';
   try { localStorage.setItem(MODE_KEY, activeMode); } catch { /* privat modus */ }
-  applyTokens(activeTokens(theme, activeMode), document.documentElement);
+  const root = document.documentElement;
+  if (supportsLightDark()) {
+    // color-scheme (via data-urd-theme) bestemmer hvilken side light-dark() velger.
+    root.setAttribute('data-urd-theme', activeMode);
+  } else {
+    applyTokens(activeTokens(theme, activeMode), root);
+  }
   return activeMode;
 }
 

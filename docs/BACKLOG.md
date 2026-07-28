@@ -87,7 +87,7 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 - [x] faq/accordion -> native `<details name>` (levert 0.6.6.5.7, venter på testrunde): eksklusiv single-open via `name`, finn-på-siden og null toggle-JS; `::details-content`+`interpolate-size` for myk utfolding bak `@supports`; ren `groupName` node-testet
 - [~] lightbox/modal/menyer -> `<dialog>`/`showModal()` + Popover API (ELEMENTKART 5b.1): lightbox/modal LEVERT (0.6.6.5.7, venter på testrunde) - top-layer, `::backdrop`, native fokusfelle/-retur, Esc. MENYER UTSATT: nav er disclosure (ADR-0010) og Popover/top-layer krever CSS Anchor Positioning (~82 %, ikke baseline) for å posisjonere undermenyen; egen runde når forankring er baseline
 - [~] entré/parallaks -> scroll-drevne CSS-animasjoner bak `@supports` (ELEMENTKART 5b.4): PARALLAKS levert (0.6.6.5.7, venter på testrunde) via `animation-timeline: view()`, rAF-fallback beholdt. ENTRÉ/STAGGER beholdes bevisst på IntersectionObserver (ADR-0011): view() ville reversere ved scroll opp, og engangs-avdekking er riktig bruk av Observer; en scroll-scrubbet variant kan komme som eget, tydelig merket valg senere
-- [ ] tema uten FOUC -> `light-dark()` + `color-scheme` (ELEMENTKART 5b.5), med inline `<head>`-skript kun for manuell overstyring
+- [x] tema uten FOUC -> `light-dark()` + `color-scheme` (ELEMENTKART 5b.5) (levert 0.6.6.5.11, venter på testrunde): materialisert render-blokkerende `content/theme.css` med `light-dark()` bak `@supports`; `color-scheme` følger OS, manuelt valg overstyrer. KORRIGERT: punktets «inline head-skript» er umulig - `_headers` har `script-src 'self'` uten `'unsafe-inline'`, så manuell-valg-skriptet er EKSTERNT (`theme-init.js`)
 - [ ] Flere byggemåte-grep (lavere prioritet, full kontekst i ELEMENTKART 5b + del 6): container queries/subgrid/`:has()` (5b.9), cross-document View Transitions (5b.8), minimal-wrapper + per-side betinget asset-lasting (5b.7), animer kun `transform`/`opacity`. (aspect-ratio/srcset/AVIF 5b.6 dekkes av v0.8-bildearbeidet; scroll-snap-karusell 5b.3 brukes alt)
 
 ## Kodegjennomgang 27. juli 2026 (fiks/endre-kandidater)
@@ -146,9 +146,9 @@ Funn fra en gjennomgang av motor, editor og functions/plugins, gruppert etter al
 - [ ] Flere leverings-grep fra sammenligningen (kuratert, full kontekst i ELEMENTKART 5a + LAERDOMMER 5): command palette Cmd+K (5a.8), tydeligere to-farge drop-target (5a.6), rikere tomtilstander med preset-forslag (5a.9), kuraterte font-pakker som ett valg (5a.7), «hvilket layout-verktøy»-hjelpechip (5a.10 / LAERDOMMER 5.10), ryddig theme.json-token-modell + duotone (LAERDOMMER 5.3), deklarativ per-brekkpunkt-variant (LAERDOMMER 5.11, ses med mobil-revurderingen)
 - [ ] Måte å ha en bakgrunn over en annen  / faste sidebarer
 - [ ] Endre størrelse på blokker/elementer ved å dra i kantene av highlight (nå kan man kun gjøre det ved å dra i nedre høyre hjørne)
-- [ ] Navigasjonsmeny variant - Flytende firkantet med kun de to nedre hjørnene avrundet.
+- [x] Navigasjonsmeny variant - Flytende firkantet med kun de to nedre hjørnene avrundet. (levert 0.6.6.5.11 som «Flytende (tab)»: firkant topp, avrundet bunn, henger ned fra toppen)
 - [ ] Lagre eget tema.
-- [ ] SVG auto-trim for favicon, navicon/nav logo / bilde blokk
+- [x] SVG auto-trim for favicon, navicon/nav logo / bilde blokk (levert 0.6.6.5.11: `compressOrTrim` på alle bilde-flater; favicon auto-trimmes før ikon-rasteriseringen så det forblir universelt raster)
 
 ## Levert underveis i v0.6 (ryddes bort ved fase-slippet)
 
