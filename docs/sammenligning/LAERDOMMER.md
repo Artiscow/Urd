@@ -41,7 +41,7 @@ Webflows tese er at hver handling mapper 1:1 til en ekte CSS-egenskap: flytt en 
 ### Komponent = ekte DOM-node + StyleManager som kun viser relevante kontroller (GrapesJS)
 GrapesJS (motoren bak Silex) modellerer hvert element som en **ekte DOM-node med en typet modell**, ikke et proprietært objekt, og StyleManager eksponerer CSS som et kuratert sett visuelle kontroller per elementtype.
 
-**For Urd:** komponent-som-DOM-node er allerede Urds render-modell. «Vis kun relevante kontroller» er allerede en regel (se CLAUDE.md); GrapesJS bekrefter mønsteret.
+**For Urd:** komponent-som-DOM-node er allerede Urds render-modell. «Vis kun relevante kontroller» er allerede en regel (se AGENTS.md); GrapesJS bekrefter mønsteret.
 
 ### Admin injisert i selve siden, ikke en egen app (Keystatic)
 Keystatic installeres som en pakke og injiserer admin-ruter i ditt eget nettsted, med samme skjema i to kjøremiljøer: lokal modus skriver til disk, GitHub-modus committer via en GitHub App.
@@ -144,7 +144,7 @@ Rangert etter (passform x verdi / innsats). Dette er byggemåte- og design-møns
 1. **Fluid-Engine-guardrails i grid og canvas.** `minmax(row-height, auto)`-rader så rader vokser med innhold uten JS ved kjøring; kan ikke krympe en blokk under innholdet; drag mot et uniformt rutenett (fjern rad-strekk ved drag-start); egen mobil-layout som holder seg synket. «G»-overlegget finnes allerede. Kilde: Squarespace. Passform: svært høy (rett i ADR-0001 + mobil-tilsyn). Innsats: middels. Styrker kjerne-canvasen og gjør fri plassering tryggere.
 2. **Finere patch-protokoll i preview.** Send målrettede patcher (én blokk/attributt) i stedet for seksjons-rerender ved hver endring. Kilde: Builder.io. Passform: høy (allerede Urds modell). Innsats: middels. Merkes mest på store sider.
 3. **Ryddig `theme.json`-token-modell.** Formaliser og dokumenter designtokens som én kontrakt; åpner for duotone-presets (allerede en strekk-idé i backloggen). Kilde: Gutenberg. Passform: høy. Innsats: lav-middels.
-4. **Gjenbruk som arkitektur: patterns, symbols og template parts.** Innsettbare ferdig-komponerte blokkgrupper (patterns), en gjenbrukbar gruppe som oppdateres overalt (symbols), og delte header/footer-fragmenter (template parts). Kilde: Gutenberg/Webflow. Bygger på den planlagte «Lagre som mal» (M8) og samling-blokken. Passform: høy. Innsats: middels-høy. Utdyper notatet under C12 i funksjonskartet.
+4. **Gjenbruk som arkitektur: patterns, symbols og template parts.** Innsettbare ferdig-komponerte blokkgrupper (patterns), en gjenbrukbar gruppe som oppdateres overalt (symbols), og delte header/footer-fragmenter (template parts). Kilde: Gutenberg/Webflow. Bygger på den planlagte «Lagre som mal» (0.6.7) og samling-blokken. Passform: høy. Innsats: middels-høy. Utdyper notatet under C12 i funksjonskartet.
 5. **PR-per-utkast + deploy-preview + open authoring.** Utkast som branch, publiser som merge; preview-URL per utkast via Cloudflare Pages + commit-status; bidrag via fork + PR. Kilde: Decap. Passform: høy med GitHub-OAuth + Pages. Innsats: middels-høy. Støtter v1.0-målet og flere bidragsytere.
 6. **Gjør motorens letthet synlig og målbar.** Et DOM-node-tall / payload-mål i editoren eller ved «Se siden». Kilde: Bricks-leksa. Passform: høy. Innsats: lav. Bygger tillit og omdømme rundt et fortrinn som i dag er usynlig.
 7. **Slash-kommando + snippets i tekst-editoren.** Rask innsetting av blokker og gjenbruk midt i prosaen. Kilde: Ghost. Passform: høy med «Office-linjen». Innsats: middels.

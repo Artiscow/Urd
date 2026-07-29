@@ -37,7 +37,7 @@ theme.json + Global Styles (WP), Site Settings + ett-klikks Kits (Elementor), Gl
 ### 1.5 Gjenbruk med synk
 Synced vs un-synced patterns (WP), components/symbols med varianter (Framer/Bricks/Silex), Ghost snippets (lagre utvalg, dukker opp i samme innsettingspalett), Carrd Element Styles. Snippets-modellen er den letteste veien: lagre et utvalg, og det dukker opp i akkurat den samme innsettingsmenyen.
 
-**Urd i dag:** seksjonspresets; «Lagre som mal» er planlagt (M8).
+**Urd i dag:** seksjonspresets; «Lagre som mal» er planlagt (0.6.7).
 
 ### 1.6 Tilstander og interaksjoner
 To filosofier: CSS-pseudo-tilstander (Webflow: selector -> states, med arv) mot Framers variants (navngitte visuelle tilstander som dekker hover, scroll og responsiv med automatisk tweening). Framers variant-modell er den mest visuelle og enhetlige.
@@ -226,18 +226,18 @@ Per kategori, med (a) hvordan det tilbys og (b) slik bygges det moderne. For par
 
 **Leveranse-siden.** Urd treffer allerede flere leveringsmønstre: inline klikk-og-skriv + Office-linjen (1.2), preset-miniatyrer (1.8), token-swatches i Tema-panelet (1.4), tomtilstand + hjelpechip (1.10), temastyrt Dropdown (aldri native select). Tynt i dag: ingen slash/søk-innsetting eller command palette (1.1), ingen Innhold/Stil-splitt (1.2), ingen struktur/lag-tre (1.3), ingen gjenbrukbare grupper (1.5).
 
-**Bygge-siden.** Urd koder allerede flere av de moderne invariantene fra del 2 og 7: `crypto.getRandomValues` (ikke `randomUUID`), AbortController-skopede lyttere som kobles fra ved rerender, autovekst som melder KUN høyde (ingen teleport), ingen native select i temastyrt UI, hover vaktet med `pointerType === 'mouse'`, snapshot før `postMessage`, `IntersectionObserver` for entré, faq som disclosure, og målt runner for sømløs pan-loop-gradient. Mulige flytt til native/CSS: faq -> `<details name>`; egen lightbox -> `<dialog>`; egne menyer -> Popover API; rAF-parallaks -> scroll-drevet CSS bak `@supports`; sticky-JS der `position: sticky` holder.
+**Bygge-siden.** Urd koder allerede flere av de moderne invariantene fra del 2 og 7: `crypto.getRandomValues` (ikke `randomUUID`), AbortController-skopede lyttere som kobles fra ved rerender, autovekst som melder KUN høyde (ingen teleport), ingen native select i temastyrt UI, hover vaktet med `pointerType === 'mouse'`, snapshot før `postMessage`, `IntersectionObserver` for entré, faq som disclosure, og målt runner for sømløs pan-loop-gradient. Mulige flytt til native/CSS (status 29. juli 2026: faq, lightbox/modal og parallaks er flyttet, levert 0.6.6.5.7; tema uten FOUC levert 0.6.6.5.11; menyer bevisst utsatt til anchor positioning er baseline): faq -> `<details name>`; egen lightbox -> `<dialog>`; egne menyer -> Popover API; rAF-parallaks -> scroll-drevet CSS bak `@supports`; sticky-JS der `position: sticky` holder.
 
 ---
 
 ## 5. Hva vi kan hente (prioritert)
 
-Rangert etter (passform x verdi / innsats). Rene funksjonshull (SEO, galleri, RSS osv.) er prioritert i [FUNKSJONSKART.md](FUNKSJONSKART.md#anbefalingene-c-funnene-prioritert); dette er leverings- og byggemåte-grep.
+Rangert etter (passform x verdi / innsats). Rene funksjonshull (SEO, galleri, RSS osv.) er prioritert i [FUNKSJONSKART.md](FUNKSJONSKART.md#anbefalingene-c-funnene-prioritert); dette er leverings- og byggemåte-grep. Løpende status for 5b-grepene bor i backloggens «Moderniser til native/CSS»-seksjon.
 
 ### 5a. Leverings-grep (grensesnitt/UX)
-1. **Innhold/Stil-splitt + panelspråk-utrulling** (backlog-punkt F/M6). Svært høy passform. Middels innsats.
+1. **Innhold/Stil-splitt + panelspråk-utrulling** (backlog-punkt 0.6.6.6 F). Svært høy passform. Middels innsats.
 2. **Slash-kommando + søkbar innsettingspalett.** Høy passform med Office-linjen. Middels.
-3. **Gjenbrukbare grupper (snippets-modellen).** Høy. Middels. Bygger på M8 «Lagre som mal».
+3. **Gjenbrukbare grupper (snippets-modellen).** Høy. Middels. Bygger på 0.6.7 «Lagre som mal».
 4. **Seksjons-galleri med «bytt oppsett».** Høy. Middels.
 5. **Struktur/lag-tre.** Høy. Middels.
 6. **Tydeligere drop-target (to-farge-indikator).** Middels-høy. Lav-middels.
@@ -277,7 +277,7 @@ Rangert etter (passform x verdi / innsats). Rene funksjonshull (SEO, galleri, RS
 | animere `top/left/width/background-position` | repaint-jank | animer kun `transform`/`opacity` | kode |
 | rå contenteditable som sannhet | inkonsistent DOM, seleksjon, paste, undo | dokumentmodell som sannhet, DOM avledet | kode (framtidig rik-tekst) |
 
-Flere av disse er allerede Urds motor-lekser (se CLAUDE.md). De som er markert «kode» er kandidater til å kodes inn som invarianter eller ADR senere.
+Flere av disse er allerede Urds motor-lekser (se AGENTS.md). De som er markert «kode» er kandidater til å kodes inn som invarianter eller ADR senere.
 
 ---
 

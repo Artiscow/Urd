@@ -57,13 +57,20 @@ redigeringsflatene bygges på den nye layouten:
 - `urd-template`-repo-splitt + release-Action («Use this template»).
 - Oppdaterer v1: én-klikks Urd-oppdatering som kun overskriver manifest-stiene i `urd.json`.
 
+Fasen styres som milepælene 0.6.1-0.6.9 i [BACKLOG.md](BACKLOG.md), og vokste underveis med et editor- og designløft (0.6.6), maler og gjenbruk (0.6.7) og flerspråk-rammeverket (0.6.8).
+
+**Port:** klon malen via «Use this template», bygg en side i admin, installer kalender-pluginen, og kjør oppdateringsknappen: alt overlever.
+
 ## v0.7 - Finpuss + butikk
 - **Butikk uten betalingsgateway som kjernefunksjon** (ApeironLF-modellen, valgt 18. juli 2026): produktkort-blokk med varianter, handlekurv (localStorage + skuff), bestillingsskjema til e-post/valgfritt endepunkt, betaling via Vipps-nummer-instruks. Avhengighetsfri, git-eid katalog; bygges på v0.6-datablokk-mønsteret. Detaljer i [BACKLOG.md](BACKLOG.md).
 - **SEO-grunnpakke** (fra funksjonskartet 23. juli 2026, se [FUNKSJONSKART.md](sammenligning/FUNKSJONSKART.md)): per-side meta/og-felter, sitemap, robots, 404, canonical. Pluss RSS for samlinger, flere skjema-felttyper, video-bakgrunnslag og CSV/tabell; detaljer i backloggen.
+- **Arkitektur-arbeid lagt til fasen underveis** (detaljer i [BACKLOG.md](BACKLOG.md)): mobil-revurderingen (egen mobilmodell?), fast innholdsbredde (egen ADR: gjør layouten breddeinvariant, fikser fold-avviket i admin og flow-out-bugene) og klientside-navigasjon.
 - Sjekke alle funksjoner og se om noe mangler eller ikke fungerer godt. (Funksjonssammenligningen mot andre byggere er gjort 23. juli 2026 - FUNKSJONSKART.md; gjenstår: egen gjennomgang av intuitivitet og rot.)
 - Er alt intuitivt?
 - Er ting rotete?
-- Noe som ikke er lett å forstå eller lett å misforstå? 
+- Noe som ikke er lett å forstå eller lett å misforstå?
+
+**Port:** en testbestilling går gjennom handlekurv, bestillingsskjema og e-post på en deployet side; publisert side har meta/og-felter, sitemap, robots og 404; intuitivitets-gjennomgangen er gjennomført og funnene sortert inn i backloggen; arkitektur-avklaringene (mobil, innholdsbredde, klientside-navigasjon) er landet med ADR eller eksplisitt flyttet.
 
 ## v0.8 - Optimalisering
 
@@ -78,6 +85,8 @@ er levert i v0.3; dette er laget over.)
 - «Bakt HTML ved publisering» (SEO/no-JS-punktet fra risikolisten) hører naturlig hjemme her om den ikke alt er tatt.
 - Fra funksjonskartet (23. juli 2026): innslagssider (permalenke per samlingsinnslag, generert ved publisering - hører sammen med bakingen) og mediebibliotek-panel.
 - Moderniser til native/CSS (fra [ELEMENTKART.md](sammenligning/ELEMENTKART.md) 27. juli 2026): `<dialog>`/Popover top-layer, `<details name>`, scroll-drevne animasjoner, `light-dark()` uten FOUC og finere patch-protokoll. Native/CSS erstatter skjør egen-JS og senker vekt/jank; egen backlog-seksjon med detaljer og doc-henvisninger.
+
+**Port:** ytelsesbudsjettet (Lighthouse-terskler og vektmål, festes når fasen startes) er målt og holdt på publisert eksempelside, og dra/resize holder 60 fps på en stor side.
 
 ## v0.9 - Generalprøven
 
@@ -132,9 +141,9 @@ Ingenting fra den opprinnelige idemyldringen skal gå tapt:
 
 | Tema | Status |
 |---|---|
-| SEO / besøkende uten JS (klientside-rendering gir tomt skall for enkle crawlere) | Akseptert i v0; «bakt HTML ved publisering» vurderes mot v1 - editoren rendrer allerede ferdig DOM som kan snapshottes |
-| Auto-avledet mobil-layout for dekor-blokker (streker/sirkler stabler dårlig) | Designes i v0.4 («dekor»-flagg på blokker) |
+| SEO / besøkende uten JS (klientside-rendering gir tomt skall for enkle crawlere) | Akseptert i v0; SEO-grunnpakken er planlagt i v0.7 og «bakt HTML ved publisering» i v0.8 - editoren rendrer allerede ferdig DOM som kan snapshottes |
+| Auto-avledet mobil-layout for dekor-blokker (streker/sirkler stabler dårlig) | Levert i v0.4 («dekor»-flagg); mobilmodellen som helhet revurderes i v0.7 (backloggens mobil-revurdering) |
 | Bilder i git (repo-vekst, filgrenser hos hoster) | v0: størrelsesvarsler i editor; ekstern lagring (f.eks. R2) som plugin-spørsmål mot v1 |
-| Oppdaterer vs. håndredigerte Urd-eide filer | Avgjøres før v0.6 - trolig sjekksum-varsel før overskriving |
+| Oppdaterer vs. håndredigerte Urd-eide filer | Avgjøres ved 0.6.9-gaten - trolig sjekksum-varsel før overskriving |
 | Ikke-GitHub-hoster (GitLab/Gitea) | `functions/_lib`-grensen holdes adapter-vennlig; utenfor scope til etter v1 |
 | Antall breakpoints | To (desktop + mobil) i v1; nettbrett vurderes senere |

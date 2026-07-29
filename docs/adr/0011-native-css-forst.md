@@ -22,9 +22,9 @@ Urds motor er avhengighetsfri vanilla-JS som serveres rått. Flere komponenter b
 
 - Ombygging sletter skjør JS og gir bedre tilgjengelighet «gratis» (f.eks. fikk lightboxen en fokusfelle den manglet).
 - Invarianten består: props-formen endres ikke av en ren render-omlegging, så ingen migrering trengs; endrer en ombygging props, gjelder [ADR-0005] som vanlig.
-- Nye motor-lekser er festet i [CLAUDE.md]. Regelen om `@supports`-gating og «fallback = sluttilstand» er et fast sjekkpunkt i testrundene.
+- Nye motor-lekser er festet i [AGENTS.md]. Regelen om `@supports`-gating og «fallback = sluttilstand» er et fast sjekkpunkt i testrundene.
 - Der en primitiv ikke er moden nok (native masonry, anchor positioning som kjerne), venter vi bevisst; se ELEMENTKART del 8.
 
 [ADR-0010]: 0010-disclosure-navigasjon.md
 [ADR-0005]: 0005-versjonering-og-migrering.md
-[CLAUDE.md]: ../../CLAUDE.md
+[AGENTS.md]: ../../AGENTS.md

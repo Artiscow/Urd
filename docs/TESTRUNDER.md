@@ -3,6 +3,11 @@
 Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren stryker herfra** når noe er testet; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.34): AGENTS.md-flytting og docs-opprydding
+
+- [ ] AGENTS.md-importen: start en ny Claude Code-økt i repoet - hele regelverket skal lastes som prosjektinstruksjoner (ikke bare linjen `@AGENTS.md`), og assistenten skal kjenne reglene (f.eks. verifiserings-ritualet) uten å bli minnet på dem
+- [ ] GitHub-rendering: åpne docs/BACKLOG.md på GitHub - punktene under «Bugs og (dårlige) funksjoner» vises nå som sjekkbokser med boks, ikke som rå `[]`-tekst
+
 ### Testrunde-batch (0.6.6.5.11): tema uten FOUC (light-dark()), SVG auto-trim, nav-variant «Flytende (tab)»
 
 Bygg om på en ekte side og sjekk hos besøkende/publisert der det står:
