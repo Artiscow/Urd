@@ -23,13 +23,24 @@ export const SUPPORTED_LANGS = ['nb', 'nn', 'en-GB', 'se', 'tr'];
  * @returns {string}
  */
 export function normalizeLang(raw) {
+  return matchLang(raw) ?? 'nb';
+}
+
+/**
+ * Streng variant for auto-deteksjon (admin): matcher en språktag mot de
+ * støttede språkene, eller null når ingenting passer - deteksjonen skal
+ * da prøve NESTE tag i navigator.languages, ikke lande på bokmål.
+ * @param {unknown} raw
+ * @returns {string|null}
+ */
+export function matchLang(raw) {
   const v = String(raw ?? '').trim().toLowerCase();
-  if (!v || v === 'no' || v.startsWith('nb') || v.startsWith('no-')) return 'nb';
+  if (v === 'no' || v.startsWith('nb') || v.startsWith('no-')) return 'nb';
   if (v.startsWith('nn')) return 'nn';
   if (v.startsWith('se') || v.startsWith('smj') || v.startsWith('sma')) return 'se';
   if (v.startsWith('tr')) return 'tr';
   if (v.startsWith('en')) return 'en-GB';
-  return 'nb';
+  return null;
 }
 
 const site = { lang: 'nb', dict: { ...nb.strings }, dates: null };

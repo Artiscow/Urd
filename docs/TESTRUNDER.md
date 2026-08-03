@@ -3,6 +3,15 @@
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.8.2-3): panel-refaktoren og språkvelgerne
+
+- [ ] Panelene virker som før: klikk gjennom alle 11 (Sider, Blokker, Egenskaper, Grid, Nettsted, Tema, Nav, Footer, Samlinger, Plugins, Historikk) - åpne/lukke, Grid-overlegg følger Grid-panelet, Historikk laster, blokk-klikk åpner Egenskaper
+- [ ] Auto-språk: uten lagret valg skal admin følge nettleser-/OS-språket (norsk maskin = bokmål; sett nettleseren til et ustøttet språk, f.eks. tysk = engelsk)
+- [ ] Språkvelgeren i topbaren: velg hvert av de fem språkene - admin laster på nytt og panelnavnene skifter språk (resten av UI-et er fortsatt norsk til batchene 4-6); «Automatisk» går tilbake til enhetsspråket; valget overlever ny fane/omstart i samme nettleser
+- [ ] Nettsted > Språk på nettsiden: bytt til f.eks. English (UK) - previewen bytter besøkende-chrome UMIDDELBART (footer-knapper, til-toppen) uten omlasting; «Upubliserte endringer» vises; publiser og sjekk at den publiserte siden følger valget
+- [ ] Håndredigert lang-verdi utenfor lista (f.eks. «de» i site.json): panelet viser den som eget alternativ øverst og ødelegger ingenting
+- [ ] Historikk-datoene formateres etter admin-språket
+
 ### Testrunde-batch (0.6.8.1): flerspråk-kjernen og besøkende-tekstene
 
 - [ ] Standard uendret: en side med `"lang": "no"` (demoen) skal se HELT ut som før på bokmål - nav-tooltips, til-toppen, footer, galleri, datobadger

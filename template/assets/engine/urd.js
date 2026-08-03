@@ -35,7 +35,7 @@ import { registerSectionPresets } from './sections/presets.js';
 import { loadPlugins, loadPluginList } from './plugins.js';
 import { setCollectionsDraft } from './samlinger.js';
 import { initSticky, refreshSticky } from './sticky.js';
-import { t, initSiteLocale } from './i18n.js';
+import { t, initSiteLocale, normalizeLang, siteLang } from './i18n.js';
 
 export const Urd = {
   blocks: createRegistry('blocks'),
@@ -244,11 +244,24 @@ function enablePreview(state, opts) {
       state.site.pages ??= [];
       state.site.theme ??= { version: 1, tokens: {} };
       state.site.nav ??= { version: 1, items: [] };
-      applyTheme(state.site.theme);
-      applyFavicon(state.site.site?.icon);
-      if (opts.nav) renderNav(state.site, opts.nav);
-      if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);
-      renderPage(state.page, state.site, root, vp());
+      const rerender = () => {
+        applyTheme(state.site.theme);
+        applyFavicon(state.site.site?.icon);
+        if (opts.nav) renderNav(state.site, opts.nav);
+        if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);
+        renderPage(state.page, state.site, root, vp());
+      };
+      // Endret site.lang i utkastet: last besøkende-localen på nytt FØR
+      // re-render, så previewen er WYSIWYG også for språket (booten leste
+      // den publiserte site.json og kan ha et annet språk).
+      if (normalizeLang(state.site.site.lang) !== siteLang()) {
+        initSiteLocale(state.site.site.lang).then((lang) => {
+          document.documentElement.lang = lang;
+          rerender();
+        });
+      } else {
+        rerender();
+      }
     }
   });
 

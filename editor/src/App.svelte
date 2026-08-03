@@ -11,6 +11,7 @@
   import IconEditor from './lib/IconEditor.svelte';
   // Editoren deler migreringskoden med motoren (samme fil, bundles inn).
   import { lift, liftPageFile, liftSiteFile } from '../../template/assets/engine/migrate.js';
+  import { ta, adminLang as currentAdminLang } from '../../template/assets/engine/i18n.js';
   import { validateManifest, satisfiesEngine } from '../../template/assets/engine/plugins.js';
   import { makeId } from '../../template/assets/engine/sections/presets.js';
   // Bakgrunns- og animasjonsdefinisjonene gjenbrukes for etiketter og
@@ -526,18 +527,41 @@
   /** Aktivt panel i venstre panelvelger (null = lukket) */
   let activePanel = $state(null);
   /** Panelene gruppert etter arbeidsflyt: bygge siden, style nettstedet,
-   *  verktøy. Vises med skillelinjer i panelvelgeren. */
+   *  verktøy. Vises med skillelinjer i panelvelgeren. Id-ene er stabile
+   *  engelske identifikatorer (aldri visningstekst, 0.6.8.2);
+   *  PANEL_LABELS eier det brukeren ser. */
   const PANEL_GROUPS = [
-    ['Sider', 'Blokker', 'Egenskaper', 'Grid'],
-    ['Nettsted', 'Tema', 'Nav', 'Footer', 'Samlinger', 'Plugins'],
-    ['Historikk'],
+    ['pages', 'blocks', 'properties', 'grid'],
+    ['site', 'theme', 'nav', 'footer', 'collections', 'plugins'],
+    ['history'],
   ];
+  const PANEL_LABELS = Object.fromEntries(PANEL_GROUPS.flat().map((id) => [id, ta(`panel.${id}`)]));
+
+  /** Admin-språkvelgeren: språkene med sine EGNE navn (endonymer, aldri
+   *  oversatt, aldri flagg); «Automatisk» følger enhetsspråket og er
+   *  standarden - et valg huskes per nettleser (urd-admin-lang). */
+  const LANG_OPTIONS = [
+    ['nb', 'Norsk bokmål'],
+    ['nn', 'Norsk nynorsk'],
+    ['en-GB', 'English (UK)'],
+    ['se', 'Davvisámegiella'],
+    ['tr', 'Türkçe'],
+  ];
+  const adminLangChoice = localStorage.getItem('urd-admin-lang') ?? 'auto';
+  function setAdminLang(v) {
+    if (v === adminLangChoice) return;
+    if (v === 'auto') localStorage.removeItem('urd-admin-lang');
+    else localStorage.setItem('urd-admin-lang', v);
+    // Språkbytte er en omlasting (Publii-modellen): ordbøkene leses ved
+    // oppstart, og iframen følger med.
+    location.reload();
+  }
 
   function togglePanel(name) {
     activePanel = activePanel === name ? null : name;
     // Gridet vises i forhåndsvisningen så lenge Grid-panelet er åpent.
-    bridge?.sendShowGrid(activePanel === 'Grid');
-    if (activePanel === 'Historikk') loadHistory();
+    bridge?.sendShowGrid(activePanel === 'grid');
+    if (activePanel === 'history') loadHistory();
   }
 
   /**
@@ -1264,7 +1288,7 @@
     store.save();
     updateDirty();
     bridge?.sendSection(pageId, section);
-    if (activePanel === 'Grid') bridge?.sendShowGrid(true);
+    if (activePanel === 'grid') bridge?.sendShowGrid(true);
   }
 
   function setSectionGrid(field, value) {
@@ -1276,7 +1300,7 @@
     store.save();
     updateDirty();
     bridge?.sendSection(pageId, section);
-    if (activePanel === 'Grid') bridge?.sendShowGrid(true);
+    if (activePanel === 'grid') bridge?.sendShowGrid(true);
   }
 
   /** Grid-kontrollene: endringer lagres i site-utkastet og pushes live.
@@ -1290,7 +1314,7 @@
     pushSiteToPreview();
     // sendSite rerendrer siden; slå grid-visningen på igjen etterpå
     // (postMessage er ordnet, så dette ankommer etter rerenderingen).
-    if (activePanel === 'Grid') bridge?.sendShowGrid(true);
+    if (activePanel === 'grid') bridge?.sendShowGrid(true);
   }
 
   async function checkAuth() {
@@ -1401,7 +1425,8 @@
     }
   }
 
-  const historyDate = new Intl.DateTimeFormat('nb-NO', { dateStyle: 'short', timeStyle: 'short' });
+  // Historikk-datoene følger admin-språket (Intl har alle de støttede).
+  const historyDate = new Intl.DateTimeFormat(currentAdminLang(), { dateStyle: 'short', timeStyle: 'short' });
 
   /**
    * Etter en angring viser editoren fortsatt innholdet fra FØR angringen
@@ -1605,7 +1630,7 @@
     const unpublished = !site.pages.some((p) => p.id === pageId);
     if (store.hasDraft() || unpublished) bridge?.sendPage(pageId, store.data);
     if (!chromeVisible) bridge?.sendChrome(false);
-    if (activePanel === 'Grid') bridge?.sendShowGrid(true);
+    if (activePanel === 'grid') bridge?.sendShowGrid(true);
     if (guidesOn) bridge?.sendShowGuides(true);
     sendAdminTheme();
   }
@@ -1856,6 +1881,22 @@
   /** Nettstedsbeskrivelsen (site.description): brukt av søkemotorer og ved deling. */
   function setSiteDescription(value) {
     siteMutate('edit:site-desc', () => { siteDraft.site.description = value; });
+  }
+
+  /** Besøkende-språket (site.lang, ADR-0012): den historiske verdien 'no'
+   *  vises som bokmål; en håndredigert verdi utenfor lista bevares som
+   *  eget alternativ øverst så ingenting ødelegges av å åpne panelet. */
+  function siteLangValue() {
+    const cur = siteDraft.site.lang ?? 'no';
+    return cur === 'no' ? 'nb' : cur;
+  }
+  function siteLangOptions() {
+    const cur = siteLangValue();
+    const known = LANG_OPTIONS.some(([code]) => code === cur);
+    return [...(known ? [] : [[cur, cur]]), ...LANG_OPTIONS];
+  }
+  function setSiteLang(v) {
+    siteMutate('site', () => { siteDraft.site.lang = v; });
   }
 
   // Admin-fanen viser nettstedsikonet når det finnes, ellers Urd-merket (samme SVG som i admin/index.html; kan ikke leses fra link-elementet, for favicon-boot.js kan alt ha byttet det).
@@ -2962,8 +3003,8 @@
     // Ny seksjon markeres og Egenskaper åpnes, klar til justering.
     activeSectionId = msg.section.id;
     syncSectionMirrors(msg.section);
-    if (activePanel !== 'Egenskaper') {
-      activePanel = 'Egenskaper';
+    if (activePanel !== 'properties') {
+      activePanel = 'properties';
       bridge?.sendShowGrid(false);
     }
   }
@@ -3674,14 +3715,17 @@
         <span class="brand-word">Urd</span>
       </span>
 
-      <Dropdown value={adminTheme} title="Adminens fargetema (kun editoren, ikke nettsiden din)"
+      <Dropdown value={adminTheme} title={ta('topbar.adminTheme.title')}
         options={ADMIN_THEMES} onchange={(v) => (adminTheme = v)} />
+
+      <Dropdown value={adminLangChoice} title={ta('topbar.language.title')}
+        options={[['auto', ta('lang.auto')], ...LANG_OPTIONS]} onchange={setAdminLang} />
 
       {#if site}
         <!-- Gjeldende side: klikk åpner Sider-panelet (nedtrekket ble
              overflødig da panelet kom, men siden man står på må synes) -->
         <button class="ghost" title="Bytt side (åpner Sider-panelet)"
-          onclick={() => togglePanel('Sider')}>{pageEntry()?.title ?? ''}</button>
+          onclick={() => togglePanel('pages')}>{pageEntry()?.title ?? ''}</button>
 
         <span class="viewswitch">
           <button class="ghost" class:active={viewMode === 'desktop'}
@@ -3744,16 +3788,16 @@
               <hr class="rail-sep" />
             {/if}
             {#each group as name (name)}
-              <button class:active={activePanel === name} onclick={() => togglePanel(name)}>{name}</button>
+              <button class:active={activePanel === name} onclick={() => togglePanel(name)}>{PANEL_LABELS[name]}</button>
             {/each}
           {/each}
         </nav>
 
         {#if activePanel}
           <aside class="panel">
-            <h2>{activePanel}</h2>
+            <h2>{PANEL_LABELS[activePanel]}</h2>
 
-            {#if activePanel === 'Sider'}
+            {#if activePanel === 'pages'}
               <div class="panel-body">
                 <p class="panel-hint">Endringer her er utkast til du publiserer. Ctrl+Z angrer.</p>
                 {#each siteDraft.pages as p (p.id)}
@@ -3782,7 +3826,7 @@
                 <button class="ghost action" onclick={addPage} disabled={!newPageTitle.trim()}>+ Opprett side</button>
                 <p class="panel-hint">Nye sider legges automatisk i menyen og starter tomme.</p>
               </div>
-            {:else if activePanel === 'Nav'}
+            {:else if activePanel === 'nav'}
               <div class="panel-body">
                 <p class="panel-hint">Menyen øverst på siden. Endringer vises live i forhåndsvisningen.</p>
                 <details class="group">
@@ -4010,7 +4054,7 @@
                   </div>
                 </details>
               </div>
-            {:else if activePanel === 'Nettsted'}
+            {:else if activePanel === 'site'}
               <div class="panel-body">
                 <label title="Vises i nettleserfanen etter sidenavnet, og som standardtekst i menylogoen">Navn
                   <input value={siteDraft.site.title ?? ''} placeholder="Navn på nettstedet"
@@ -4020,6 +4064,9 @@
                   <input value={siteDraft.site.description ?? ''} placeholder="Kort om nettstedet"
                     oninput={(e) => setSiteDescription(e.target.value)} />
                 </label>
+                <label title={ta('site.langTitle')}>{ta('site.langLabel')}
+                  <Dropdown value={siteLangValue()} options={siteLangOptions()}
+                    onchange={(v) => setSiteLang(v)} /></label>
                 <hr class="gridmenu-divider" />
                 <label>Nettstedsikon
                   {#if siteDraft.site.icon}
@@ -4039,7 +4086,7 @@
                   {/if}
                 </span>
               </div>
-            {:else if activePanel === 'Tema'}
+            {:else if activePanel === 'theme'}
               <div class="panel-body">
                 {#snippet themePreview(pal, cap)}
                   <div class="theme-pvw">
@@ -4152,7 +4199,7 @@
                       oninput={(e) => setRadiusPx('md', Number(e.target.value))} /></div>
                 </details>
               </div>
-            {:else if activePanel === 'Blokker'}
+            {:else if activePanel === 'blocks'}
               <div class="panel-body" class:locked={viewMode === 'mobile'}
                 title={viewMode === 'mobile' ? 'Bytt til desktop-visning for å legge til innhold' : undefined}>
                 <p class="panel-hint">Nye blokker legges midt i synsfeltet, i sist klikkede seksjon.</p>
@@ -4222,7 +4269,7 @@
                   </details>
                 {/if}
               </div>
-            {:else if activePanel === 'Grid'}
+            {:else if activePanel === 'grid'}
               <div class="panel-body">
                 <p class="panel-hint">Hjelpelinjene blokker snapper til. Vises så lenge panelet er åpent; å endre dem flytter aldri innhold.</p>
                 <label>
@@ -4239,7 +4286,7 @@
 
                 <p class="panel-hint">En seksjon kan få sitt eget grid: klikk i seksjonen og åpne Egenskaper.</p>
               </div>
-            {:else if activePanel === 'Egenskaper'}
+            {:else if activePanel === 'properties'}
               <div class="panel-body">
                 {#if selectedBlock}
                   <p class="panel-strong">{BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type}-blokk</p>
@@ -4312,7 +4359,7 @@
                   <p class="panel-hint">Klikk på en blokk eller seksjon i forhåndsvisningen.</p>
                 {/if}
               </div>
-            {:else if activePanel === 'Footer'}
+            {:else if activePanel === 'footer'}
               <div class="panel-body">
                 <label class="gridmenu-snap" title="Footeren redigeres ett sted og vises nederst på alle sider (unntatt sider du skrur av under «Vis på sider»)">
                   <input type="checkbox" checked={Boolean(siteDraft.footer?.show)}
@@ -4547,7 +4594,7 @@
                   </div>
                 </details>
               </div>
-            {:else if activePanel === 'Samlinger'}
+            {:else if activePanel === 'collections'}
               <div class="panel-body">
                 <p class="panel-hint">Samlinger er lister av innslag (nyheter, oppslag, publikasjoner) som
                   vises av Samling-blokker. Endringer her er utkast til du publiserer (utenfor Ctrl+Z).</p>
@@ -4617,7 +4664,7 @@
                     onchange={(v) => (newSamlingKind = v)} /></label>
                 <button class="ghost action" onclick={addSamling} disabled={!newSamlingName.trim()}>+ Opprett samling</button>
               </div>
-            {:else if activePanel === 'Plugins'}
+            {:else if activePanel === 'plugins'}
               <div class="panel-body">
                 <p class="panel-hint">Plugins utvider Urd med nye blokker, seksjonsmaler, bakgrunner og animasjoner.
                   En plugin er en mappe i plugins/ i repoet ditt; her styrer du hvilke som er aktive.
@@ -4682,7 +4729,7 @@
                   {/if}
                 {/if}
               </div>
-            {:else if activePanel === 'Historikk'}
+            {:else if activePanel === 'history'}
               <div class="panel-body">
                 <p class="panel-hint">Siste publiseringer. Angring lager en ny commit som gjenoppretter forrige tilstand - ingenting slettes.</p>
                 {#if historyList === null}
