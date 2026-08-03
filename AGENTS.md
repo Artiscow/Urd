@@ -28,6 +28,12 @@ Endrer du `editor/src/`, må du bygge på nytt og committe bundelen (ellers feil
 
 Feiler bygg-samsvar-sjekken i CI med en diff inne i rammeverkskode (Svelte-runtime, ikke app-kode), er det avhengighets-drift: sjekk at `node_modules/svelte/package.json` matcher versjonen i `editor/package-lock.json`, og kjør `rm -rf node_modules && npm ci` + nytt bygg om ikke (sett 22. juli 2026: npm ga 5.56.5 der låsefilen pinnet 5.56.7). Bundle-fiksen må pushes sammen med kilden den er bygget fra.
 
+**Verifiseringens omfang følger diffen** (regel fastsatt 3. august 2026):
+
+- **Mellomcommits underveis** trenger ingen full runde: kjør kun testene som dekker det du rører (f.eks. `node --test tests/guard.test.mjs`), eller ingen. Hele ritualet hører til push-klargjøringen, ikke til hver commit. Hver commit nummereres fortsatt (se Versjonering under Arbeidsflyt).
+- **Push med kun docs-endringer (.md):** editor-gjenbygg er unødvendig (markdown kan ikke påvirke bundelen), og det uavhengige review-steget kan erstattes av mekaniske sjekker: tankestrek, sjekkboks-syntaks, lenkemål, versjonsnummer-konsistens, og at ingenting er fjernet fra TESTRUNDER (presedens: 0.6.34). Full testsuite koster sekunder og kan gjerne kjøres, men CI kjører uansett de samme sjekkene etter push.
+- **Push med kode-, skjema- eller innholdsendringer:** full runde som beskrevet over: bygg + alle tester + skjemavalidering + uavhengig review.
+
 CI (GitHub Actions) kjører de samme tre pluss bygg-samsvar-sjekken, og CodeQL skanner ved push. To gjentatte CodeQL-fallgruver: (1) sjekk aldri en URL med en delstreng (`.includes('vert.no')`), parse URL-en og sammenlign verten eksakt; (2) bruk ankrede regex på URL-/data-validering, som CodeQL gjenkjenner som barrierer.
 
 ## Ufravikelige regler
@@ -41,7 +47,7 @@ CI (GitHub Actions) kjører de samme tre pluss bygg-samsvar-sjekken, og CodeQL s
 
 - **Vent med CHANGELOG, backlog og commit-forslag til beskjeden «push» kommer.** Pushing skjer manuelt (GitHub Desktop), aldri fra agenten; ikke commit eller push selv. Ved push-klargjøring: oppdater CHANGELOG og backlog, gjenbygg editoren, og kjør verifiseringen.
 - **Uavhengig gjennomgang før commit-forslaget:** la en frisk agent uten øktens kontekst gjennomgå hele diffen mot reglene i denne filen og ADR-ene, og rett reelle funn. Økta som skrev endringene skal aldri være den eneste som vurderte dem. Deretter foreslås en nummerert commit-melding (kun meldingsteksten, ingen git-kommandoer).
-- **Versjonering:** pushes nummereres 0.x.y stigende. Fase-slippet døpes til siste push-nummer (v0.5 endte i 0.5.10). Hvert push-nummer er et eget CHANGELOG-innslag.
+- **Versjonering:** pushes nummereres 0.x.y stigende. Fase-slippet døpes til siste push-nummer (v0.5 endte i 0.5.10). Hvert push-nummer er et eget CHANGELOG-innslag. Underveis kan det gjøres flere små commits uten full seremoni, men en commit tilsier fremdeles nummerering: hver commit får sitt eget stigende nummer i commit-meldingen, og verifiseringens omfang følger diffen (se Verifisering).
 - **Ferdig-kriterier:** nye backlog-milepæler får en «Ferdig når:»-linje med observerbare betingelser, og veikart-faser har en tilsvarende «Port:»-linje. «Fungerer» er ikke et kriterium; skriv hva som kan observeres.
 - **Et svar på et spørsmål avslutter turen.** Åpne aldri en valgdialog i samme tur som en forklaring (dialogen gjemmer teksten); still heller oppfølgingsspørsmålet i ren tekst.
 
