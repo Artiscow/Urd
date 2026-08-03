@@ -2,6 +2,8 @@
  * Kjerneblokk: knapp. Lenker til en side i sideregisteret (page) eller
  * ekstern URL (href). page slås opp i ctx.site.pages ved render.
  */
+import { isSafeHref } from '../nav-model.js';
+
 export const buttonBlock = {
   version: 1,
   label: 'Knapp',
@@ -21,7 +23,9 @@ export const buttonBlock = {
       a.href = target ? target.path : '#';
       if (!target) console.warn(`Urd: knappen peker på ukjent side '${props.page}'`);
     } else {
-      a.href = props.href ?? '#';
+      // Delt vokter (nav/footer + interne stier/anker): en utrygg href (javascript:/data:) skal aldri bli en levende lenke hos besøkende.
+      a.href = isSafeHref(props.href) ? props.href : '#';
+      if (props.href && !isSafeHref(props.href)) console.warn(`Urd: knappen har utrygg lenke '${props.href}'`);
     }
     el.appendChild(a);
   },

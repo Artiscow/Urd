@@ -3,15 +3,24 @@
  *
  * Sti-allowlisten er implementert for ekte allerede i skjelettet: den er
  * liten, testbar og sikkerhetskritisk. En kapret redaktørsesjon skal aldri
- * kunne skrive kode eller konfigurasjon, kun innhold.
+ * kunne skrive kode eller konfigurasjon, kun innhold. Invarianten gjelder
+ * også filtype: under innholdsprefiksene tillates kun data- og bildeendelser,
+ * aldri noe som kan kjøre under `script-src 'self'` (js/html o.l.).
  */
 
 /** Stier publisering ALDRI får skrive (prefiks- eller eksaktmatch). */
 const DENY_PREFIXES = ['functions/', '.github/', 'admin/', 'assets/engine/'];
 const DENY_EXACT = ['_headers', '_redirects', 'urd.json', 'index.html', '.gitignore', 'wrangler.toml'];
 
-/** Stier publisering FÅR skrive. */
-const ALLOW_PREFIXES = ['content/', 'media/'];
+/**
+ * Stier publisering FÅR skrive, med endelse-allowlist per prefiks.
+ * Editoren skriver i praksis kun .json/.css (content/) og .webp/.svg (media/);
+ * vanlige rasterformater tas med som romslighet for manuelt git-lagt media.
+ */
+const ALLOW_PREFIX_EXTENSIONS = {
+  'content/': ['json', 'css'],
+  'media/': ['webp', 'svg', 'png', 'jpg', 'jpeg', 'gif', 'avif', 'ico'],
+};
 const ALLOW_EXACT = ['plugins/plugins.json'];
 
 /**
@@ -34,7 +43,13 @@ export function isAllowedPath(path) {
   if (DENY_PREFIXES.some((p) => normalized.startsWith(p))) return false;
   if (ALLOW_EXACT.includes(normalized)) return true;
   if (PAGE_INDEX_RE.test(normalized) && !RESERVED_SLUGS.includes(normalized.split('/')[0])) return true;
-  return ALLOW_PREFIXES.some((p) => normalized.startsWith(p));
+  const filename = normalized.split('/').pop();
+  const dot = filename.lastIndexOf('.');
+  if (dot <= 0) return false; // fil uten endelse (eller ren dotfil) avvises
+  const extension = filename.slice(dot + 1).toLowerCase();
+  return Object.entries(ALLOW_PREFIX_EXTENSIONS).some(
+    ([prefix, extensions]) => normalized.startsWith(prefix) && extensions.includes(extension)
+  );
 }
 
 /**

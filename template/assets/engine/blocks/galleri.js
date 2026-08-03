@@ -17,6 +17,7 @@
  */
 import { applyImageStyle } from './image.js';
 import { stepIndex, canAutoplay, normalizeInterval, gridColumns } from '../galleri-model.js';
+import { isSafeHref } from '../nav-model.js';
 
 const post = (msg) => window.parent?.postMessage(msg, location.origin);
 
@@ -68,7 +69,8 @@ async function openTileEditor(tile, props, index, ctx, blockEl) {
  *  velges etter hva klikket skal gjøre: lenke (a), klikkbar (button) eller ren pynt (span). */
 function makeTile(props, index, ctx, blockEl) {
   const img = props.images[index];
-  const asLink = Boolean(img.href) && !ctx.preview;
+  // Delt vokter (nav/footer + interne stier/anker): utrygg href gir flis uten lenke (lightbox tar over).
+  const asLink = Boolean(img.href) && isSafeHref(img.href) && !ctx.preview;
   const clickable = ctx.preview || props.lightbox;
   const tile = el2(asLink ? 'a' : clickable ? 'button' : 'span', 'urd-galleri-tile');
   if (asLink) tile.href = img.href;

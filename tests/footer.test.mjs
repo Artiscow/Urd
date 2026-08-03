@@ -26,7 +26,18 @@ test('isSafeUrl godtar http(s)/mailto/tel og avviser resten', () => {
   for (const ok of ['https://x.no', 'http://x.no/a', 'mailto:a@b.no', 'tel:+4712345678']) {
     assert.equal(isSafeUrl(ok), true, ok);
   }
-  for (const bad of ['javascript:alert(1)', 'data:text/html,x', 'ftp://x', '', '  ', null, 42]) {
+  for (const bad of [
+    'javascript:alert(1)',
+    'JavaScript:alert(1)',
+    ' javascript:x',
+    'vbscript:x',
+    'data:text/html,x',
+    'ftp://x',
+    '',
+    '  ',
+    null,
+    42,
+  ]) {
     assert.equal(isSafeUrl(bad), false, String(bad));
   }
 });

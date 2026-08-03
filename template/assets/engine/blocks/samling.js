@@ -9,6 +9,7 @@
  */
 import { getCollection, sortEntries, groupByYear, dateBadge } from '../samlinger.js';
 import { stripActiveContent } from '../sanitize.js';
+import { isSafeHref } from '../nav-model.js';
 
 /** Redigeringskontekst mens en samling rendres i preview: {collection} eller null (besøkende). */
 let editCtx = null;
@@ -105,7 +106,8 @@ const el2 = (tag, className, textContent) => {
 /** Tittel: rik tekst (sikker HTML-delmengde) med full teksteditor i preview (klassen urd-text
  *  gir den flytende linjen). Med lenke rendres den som anker hos besøkende; i editoren redigeres teksten. */
 function titleNode(entry) {
-  const tag = entry.href && !editCtx ? 'a' : 'strong';
+  // Delt vokter (nav/footer + interne stier/anker): utrygg href gir tittel uten lenke.
+  const tag = entry.href && isSafeHref(entry.href) && !editCtx ? 'a' : 'strong';
   const node = el2(tag, 'urd-samling-title');
   node.innerHTML = entry.title;
   stripActiveContent(node);

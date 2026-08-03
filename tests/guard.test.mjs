@@ -12,10 +12,34 @@ test('innholdsstier er tillatt', () => {
     'content/site.json',
     'content/pages/hjem.json',
     'content/maler/var-hero.json',
+    'content/theme.css',
     'media/styret/leder.webp',
+    'media/logo.svg',
+    'media/foto.PNG',
+    'media/undermappe/bilde.jpg',
     'plugins/plugins.json',
   ]) {
     assert.equal(isAllowedPath(path), true, path);
+  }
+});
+
+test('kjørbare endelser under innholdsprefiksene er forbudt', () => {
+  // Invarianten «aldri kode» gjelder også filtype: media/x.js ville
+  // ellers kjørt under script-src 'self' fra en kapret publisher-økt.
+  for (const path of [
+    'media/x.js',
+    'media/X.JS',
+    'media/x.mjs',
+    'media/x.html',
+    'media/x.htm',
+    'media/x.svg.js',
+    'media/x.webmanifest',
+    'media/uten-endelse',
+    'media/.dotfil',
+    'content/evil.js',
+    'content/x.html',
+  ]) {
+    assert.equal(isAllowedPath(path), false, path);
   }
 });
 
@@ -56,7 +80,10 @@ test('side-index er tillatt, men aldri rot eller reserverte mapper', () => {
   ]) {
     assert.equal(isAllowedPath(path), false, path);
   }
-  // content/ og media/ dekkes av allow-prefiksene og er greie også for index.html
+  // html er ikke en tillatt endelse under innholdsprefiksene, så en
+  // index.html der avvises også (kun <slug>/index.html-kopier er lov).
+  assert.equal(isAllowedPath('content/index.html'), false);
+  assert.equal(isAllowedPath('media/index.html'), false);
 });
 
 test('stitriks avvises', () => {
@@ -94,8 +121,6 @@ test('urd.json ownedPaths avvises av publiseringsvokteren (kontraktene i synk)',
 test('per-side index.html-kopier tillates, reserverte slugs avvises', () => {
   assert.equal(isAllowedPath('kaker/index.html'), true);
   assert.equal(isAllowedPath('om-oss/index.html'), true);
-  // Kun kode-/system-slugs skal avvises; media/ og content/ er bruker-stier der
-  // alt innhold er skrivbart uansett (en index.html der er harmløs brukerdata).
   for (const path of ['admin/index.html', 'api/index.html', 'assets/index.html', 'functions/index.html', 'plugins/index.html']) {
     assert.equal(isAllowedPath(path), false, path);
   }

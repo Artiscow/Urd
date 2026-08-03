@@ -125,6 +125,20 @@
       }, 8000);
     }
   }
+  /** Felles feilmelding når et utkast ikke får plass i localStorage (delt av alle draftStores). */
+  function draftSaveError() {
+    setStatus('Nettleserens lagringsplass er full: siste endring ble ikke lagret som utkast. Publiser, eller fjern store bilder, for å frigjøre plass.', 'error');
+  }
+
+  /** Direkte utkast-skriving (utenom draftStore) med samme kvotevern. */
+  function writeDraftKey(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      draftSaveError();
+    }
+  }
+
   let iframeEl = $state(null);
   /** null = publiseringslag utilgjengelig (f.eks. enkel lokalserver uten functions) */
   let auth = $state(null);
@@ -267,10 +281,10 @@
   }
 
   /**
-   * Angre/gjenta: snapshot-basert historikk over BÅDE side- og site-utkastet.
-   * pushHistory kalles FØR hver mutasjon; tastene brukes til å slå sammen
-   * skurer av samme handling (hvert tastetrykk i en tekstblokk skal ikke
-   * bli hvert sitt angre-steg).
+   * Angre/gjenta: snapshot-basert historikk over side-, site-, samling- og
+   * plugin-utkastene. pushHistory kalles FØR hver mutasjon; tastene brukes
+   * til å slå sammen skurer av samme handling (hvert tastetrykk i en
+   * tekstblokk skal ikke bli hvert sitt angre-steg).
    */
   const history = [];
   const redoStack = [];
@@ -278,7 +292,17 @@
 
   function snapshot() {
     // pageId følger med: angring på tvers av sidebytter må legge sideinnholdet tilbake på SIDEN det kom fra, ikke i gjeldende sides utkast.
-    return JSON.stringify({ pageId, page: store.data, site: siteStore.data });
+    // Samlinger/plugins er null til init-flyten deres er FERDIG (samlingerReady-flagget, ikke bare at indeks-storen finnes: stores fylles asynkront etterpå, og et snapshot fra det vinduet ville manglet samlinger som en angring så ville slettet); restore hopper over null-delene.
+    return JSON.stringify({
+      pageId,
+      page: store.data,
+      site: siteStore.data,
+      samlingerIndex: samlingerReady ? samlingerIndexStore.data : null,
+      samlinger: samlingerReady
+        ? Object.fromEntries(Object.entries(samlingStores).map(([id, st]) => [id, st.data]))
+        : {},
+      plugins: pluginsStore?.data ?? null,
+    });
   }
 
   function pushHistory(key) {
@@ -290,16 +314,19 @@
   }
 
   function restore(snap) {
-    const { pageId: snapPageId, page, site: siteSnap } = JSON.parse(snap);
+    const { pageId: snapPageId, page, site: siteSnap, samlingerIndex, samlinger, plugins } = JSON.parse(snap);
     siteStore.replace(siteSnap);
     linkSiteDraft();
     siteStore.save();
     grid = { snap: true, ...siteDraft.grid };
     pushSiteToPreview();
+    // Samlinger/plugins gjenopprettes FØR sidebytte-grenen under, ellers ville kryss-side-angring miste de delene av snapshotet.
+    restoreSamlinger(samlingerIndex, samlinger ?? {});
+    restorePlugins(plugins);
 
     // Snapshotet hører til en annen side (angring over et sidebytte): legg sideinnholdet tilbake som utkast DER, og bytt dit.
     if (snapPageId && snapPageId !== pageId && siteDraft.pages.some((p) => p.id === snapPageId)) {
-      localStorage.setItem(`urd-draft-${snapPageId}`, JSON.stringify(page));
+      writeDraftKey(`urd-draft-${snapPageId}`, JSON.stringify(page));
       selectPage(snapPageId, { keepHistory: true });
       updateDirty();
       return;
@@ -320,6 +347,49 @@
     } else {
       bridge?.sendPage(pageId, store.data);
     }
+  }
+
+  /** Gjenopprett samlingsutkastene fra et snapshot (null = tatt før init, hopp over).
+   *  Stores som mangler gjenskapes mot publisert baseline; stores utenfor snapshotet fjernes. */
+  function restoreSamlinger(indexSnap, samlingerSnap) {
+    if (!samlingerIndexStore || !indexSnap) return;
+    const current = JSON.stringify({
+      index: samlingerIndexStore.data,
+      samlinger: Object.fromEntries(Object.entries(samlingStores).map(([id, st]) => [id, st.data])),
+    });
+    if (current === JSON.stringify({ index: indexSnap, samlinger: samlingerSnap })) return;
+    samlingerIndexStore.replace(indexSnap);
+    samlingerIndexStore.save();
+    for (const id of Object.keys(samlingStores)) {
+      if (!(id in samlingerSnap)) {
+        localStorage.removeItem(`urd-draft-samling-${id}`);
+        delete samlingStores[id];
+      }
+    }
+    for (const [id, data] of Object.entries(samlingerSnap)) {
+      if (!samlingStores[id]) {
+        // Angret sletting: baseline er publisert tilstand, eller fresh-tom for en samling som aldri rakk å publiseres (speiler addSamling).
+        const baseline = publishedSamlinger[id]
+          ?? { schemaVersion: 1, id, name: data.name ?? id, kind: data.kind ?? 'custom', entries: [] };
+        samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => baseline, draftSaveError);
+      }
+      samlingStores[id].replace(data);
+      samlingStores[id].save();
+    }
+    samlingerIds = [...(indexSnap.samlinger ?? [])];
+    if (activeSamling && !samlingerIds.includes(activeSamling)) activeSamling = null;
+    syncSamlingerView();
+  }
+
+  /** Gjenopprett plugin-utkastet fra et snapshot (null = tatt før init, hopp over).
+   *  Diff-vaktet: kun en reell plugin-endring skal koste en preview-reboot. */
+  function restorePlugins(pluginsSnap) {
+    if (!pluginsStore || !pluginsSnap) return;
+    if (JSON.stringify(pluginsStore.data) === JSON.stringify(pluginsSnap)) return;
+    pluginsStore.replace(pluginsSnap);
+    pluginsStore.save();
+    syncPluginsView();
+    reloadPreview();
   }
 
   function undo() {
@@ -383,7 +453,7 @@
 
   async function init() {
     site = liftSiteFile(await (await fetch('/content/site.json')).json());
-    siteStore = createDraftStore('urd-draft-site', () => site);
+    siteStore = createDraftStore('urd-draft-site', () => site, draftSaveError);
     // Utkast fra før grid-omleggingen kan ligge i localStorage: løft dem.
     siteStore.replace(liftSiteFile(siteStore.data));
     siteStore.save();
@@ -1460,7 +1530,7 @@
       } else {
         published = blankPage(entry);
       }
-      store = createDraftStore(`urd-draft-${id}`, () => published);
+      store = createDraftStore(`urd-draft-${id}`, () => published, draftSaveError);
       store.replace(liftPageFile(store.data, siteStore.data));
       store.save();
       // Angre-historikken overlever sidebytter: snapshots bærer pageId, og restore bytter tilbake til riktig side.
@@ -1600,7 +1670,7 @@
       siteDraft.nav.items.push({ label: title, page: slug });
     });
     // Sidens eget utkast: en blank side, klar til publisering.
-    localStorage.setItem(`urd-draft-${slug}`, JSON.stringify(blankPage({ id: slug, title })));
+    writeDraftKey(`urd-draft-${slug}`, JSON.stringify(blankPage({ id: slug, title })));
     updateDirty();
     newPageTitle = '';
     selectPage(slug);
@@ -1644,7 +1714,7 @@
     }
     if (!page) page = blankPage(entry);
     fn(page);
-    localStorage.setItem(key, JSON.stringify(page));
+    writeDraftKey(key, JSON.stringify(page));
     updateDirty();
   }
 
@@ -1870,9 +1940,13 @@
   /* ---------- Samlinger-panelet (ADR-0007) ---------- */
 
   // Samlinger er delt nettstedsdata (som nav/footer): indeksfil + én fil per samling,
-  // hver med egen draftStore. Redigering er utenfor Ctrl+Z-historikken (som plugins).
+  // hver med egen draftStore. Redigering går gjennom Ctrl+Z-historikken (som sider/site).
   let samlingerIndexStore = null;
   let samlingStores = {};
+  /** Publisert baseline per samling-id: brukes når angring gjenskaper en slettet samlings store. */
+  let publishedSamlinger = {};
+  /** Sant først når initSamlinger har fylt ALLE stores; snapshot() tar med samlinger først da. */
+  let samlingerReady = false;
   let samlingerIds = $state([]);
   let samlingerView = $state({});
   let activeSamling = $state(null);
@@ -1891,7 +1965,7 @@
     try {
       index = await (await fetch('/content/samlinger.json')).json();
     } catch { /* ingen indeks er helt greit */ }
-    samlingerIndexStore = createDraftStore('urd-draft-samlinger', () => index);
+    samlingerIndexStore = createDraftStore('urd-draft-samlinger', () => index, draftSaveError);
     samlingerIds = [...(samlingerIndexStore.data.samlinger ?? [])];
     for (const id of samlingerIds) {
       let published = null;
@@ -1899,8 +1973,10 @@
         published = await (await fetch(`/content/samlinger/${id}.json`)).json();
       } catch { /* ny, upublisert samling */ }
       published ??= { schemaVersion: 1, id, name: id, kind: 'custom', entries: [] };
-      samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => published);
+      publishedSamlinger[id] = published;
+      samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => published, draftSaveError);
     }
+    samlingerReady = true;
     syncSamlingerView();
   }
 
@@ -1919,10 +1995,12 @@
     bridge?.sendCollections($state.snapshot(samlingerView) ?? {});
   }
 
-  /** Felles flyt for samlingsendringer: muter, lagre, oppdater speil og preview. */
-  function mutateSamling(id, fn, pushPreview = true) {
+  /** Felles flyt for samlingsendringer: historikk, muter, lagre, oppdater speil og preview.
+   *  key er angre-nøkkelen (edit:-prefiks koalescerer skurer av samme handling). */
+  function mutateSamling(id, key, fn, pushPreview = true) {
     const store = samlingStores[id];
     if (!store) return;
+    pushHistory(key);
     fn(store.data);
     store.save();
     updateDirty();
@@ -1936,7 +2014,7 @@
     // Tom tittel beholdes ikke (skjemaet krever tittel); gammel tittel består til noe skrives.
     // Tittelen er rik tekst, så tomhet vurderes uten markup.
     if (field === 'title' && !String(value ?? '').replace(/<[^>]*>/g, '').trim()) return;
-    mutateSamling(collection, (data) => {
+    mutateSamling(collection, `edit:samling:${collection}:${entryId}:${field}`, (data) => {
       const entry = data.entries.find((e) => e.id === entryId);
       if (!entry) return;
       if (value === '' && field !== 'title') delete entry[field];
@@ -1952,8 +2030,10 @@
       setStatus(id ? 'Det finnes alt en samling med den adressen' : 'Ugyldig navn', 'error');
       return;
     }
+    pushHistory('samlinger');
     const fresh = { schemaVersion: 1, id, name, kind: newSamlingKind, entries: [] };
-    samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => ({ ...fresh, entries: [] }));
+    publishedSamlinger[id] = { ...fresh, entries: [] };
+    samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => ({ ...fresh, entries: [] }), draftSaveError);
     samlingStores[id].replace(fresh);
     samlingStores[id].save();
     samlingerIndexStore.data.samlinger = [...samlingerIds, id];
@@ -1966,6 +2046,7 @@
   }
 
   function removeSamling(id) {
+    pushHistory('samlinger');
     localStorage.removeItem(`urd-draft-samling-${id}`);
     delete samlingStores[id];
     samlingerIndexStore.data.samlinger = samlingerIds.filter((x) => x !== id);
@@ -1977,7 +2058,7 @@
   }
 
   function addSamlingEntry(id) {
-    mutateSamling(id, (data) => {
+    mutateSamling(id, `samling:${id}:add-entry`, (data) => {
       data.entries.unshift({
         id: makeId('innslag'),
         title: 'Nytt innslag',
@@ -1988,7 +2069,7 @@
   }
 
   function setEntryField(id, entryId, field, value) {
-    mutateSamling(id, (data) => {
+    mutateSamling(id, `edit:samling:${id}:${entryId}:${field}`, (data) => {
       const entry = data.entries.find((e) => e.id === entryId);
       if (!entry) return;
       if (value === '' && field !== 'title') delete entry[field];
@@ -1997,7 +2078,7 @@
   }
 
   function moveEntry(id, index, dir) {
-    mutateSamling(id, (data) => {
+    mutateSamling(id, `samling:${id}:move-entry`, (data) => {
       const j = index + dir;
       if (j < 0 || j >= data.entries.length) return;
       [data.entries[index], data.entries[j]] = [data.entries[j], data.entries[index]];
@@ -2005,7 +2086,7 @@
   }
 
   function removeEntry(id, entryId) {
-    mutateSamling(id, (data) => {
+    mutateSamling(id, `samling:${id}:remove-entry`, (data) => {
       data.entries = data.entries.filter((e) => e.id !== entryId);
     });
   }
@@ -2049,7 +2130,7 @@
     try {
       published = await (await fetch('/plugins/plugins.json')).json();
     } catch { /* ingen plugin-indeks er helt greit */ }
-    pluginsStore = createDraftStore('urd-draft-plugins', () => published);
+    pluginsStore = createDraftStore('urd-draft-plugins', () => published, draftSaveError);
     syncPluginsView();
     try {
       pluginEngine = (await (await fetch('/urd.json')).json()).engine ?? '0.0.0';
@@ -2110,6 +2191,7 @@
   }
 
   function setPluginEnabled(id, on) {
+    pushHistory('plugins');
     const d = pluginsStore.data;
     d.enabled = (d.enabled ?? []).filter((x) => x !== id);
     d.disabled = (d.disabled ?? []).filter((x) => x !== id);
@@ -2128,6 +2210,7 @@
 
   /** Fjerner pluginen fra begge listene; selve mappen i plugins/ består i repoet. */
   function removePlugin(id) {
+    pushHistory('plugins');
     const d = pluginsStore.data;
     d.enabled = (d.enabled ?? []).filter((x) => x !== id);
     d.disabled = (d.disabled ?? []).filter((x) => x !== id);
@@ -3519,11 +3602,11 @@
       // Publisert grunnlag = utkastet: bygg store-baselines på nytt, så
       // «Forkast utkast» aldri ruller tilbake forbi denne publiseringen.
       site = JSON.parse(JSON.stringify(siteDraft));
-      siteStore = createDraftStore('urd-draft-site', () => site);
+      siteStore = createDraftStore('urd-draft-site', () => site, draftSaveError);
       linkSiteDraft();
       if (pluginsStore) {
         const publishedPlugins = JSON.parse(JSON.stringify(pluginsStore.data));
-        pluginsStore = createDraftStore('urd-draft-plugins', () => publishedPlugins);
+        pluginsStore = createDraftStore('urd-draft-plugins', () => publishedPlugins, draftSaveError);
         syncPluginsView();
       }
       if (samlingerIndexStore) {
@@ -3532,20 +3615,22 @@
           for (const entry of st.data.entries) materializeField(entry, 'image', entry.title, []);
         }
         const publishedIndex = JSON.parse(JSON.stringify(samlingerIndexStore.data));
-        samlingerIndexStore = createDraftStore('urd-draft-samlinger', () => publishedIndex);
+        samlingerIndexStore = createDraftStore('urd-draft-samlinger', () => publishedIndex, draftSaveError);
+        publishedSamlinger = {};
         for (const id of samlingerIds) {
           if (!samlingStores[id]) continue;
           const publishedSamling = JSON.parse(JSON.stringify(samlingStores[id].data));
-          samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => publishedSamling);
+          publishedSamlinger[id] = publishedSamling;
+          samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => publishedSamling, draftSaveError);
         }
         syncSamlingerView();
       }
       grid = { snap: true, ...siteDraft.grid };
       const pageSnap = JSON.parse(JSON.stringify(store.data));
-      store = createDraftStore(`urd-draft-${pageId}`, () => pageSnap);
+      store = createDraftStore(`urd-draft-${pageId}`, () => pageSnap, draftSaveError);
       if (pendingPublished.has(pageId)) {
         // Ny side: utkastet er kilden til deployen er ferdig - behold det.
-        localStorage.setItem(`urd-draft-${pageId}`, JSON.stringify(pageSnap));
+        writeDraftKey(`urd-draft-${pageId}`, JSON.stringify(pageSnap));
       }
       updateDirty();
       setStatus('✓ Publisert! Siden bygges på nytt (~1 min)', 'ok');

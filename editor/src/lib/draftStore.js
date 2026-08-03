@@ -10,9 +10,10 @@
 /**
  * @param {string} key localStorage-nøkkel, f.eks. 'urd-draft-hjem'
  * @param {() => object} loadPublished Gir publisert tilstand (parset JSON)
- * @returns {{data: object, save(): void, reset(): object, hasDraft(): boolean}}
+ * @param {(err: Error) => void} [onSaveError] Kalles når persistering feiler (typisk full kvote)
+ * @returns {{data: object, save(): boolean, reset(): object, hasDraft(): boolean}}
  */
-export function createDraftStore(key, loadPublished) {
+export function createDraftStore(key, loadPublished, onSaveError) {
   // Kloning via JSON, ikke structuredClone: innholdet er ren JSON per
   // kontrakt, og JSON tåler Svelte 5-reaktive proxier (structuredClone
   // kaster DataCloneError på dem).
@@ -33,13 +34,22 @@ export function createDraftStore(key, loadPublished) {
     get data() {
       return data;
     },
-    /** Persister utkastet; sletter nøkkelen hvis det er likt publisert. */
+    /** Persister utkastet; sletter nøkkelen hvis det er likt publisert.
+     *  Full kvote (base64-bilder i utkastet) skal aldri passere stille:
+     *  ethvert kast fra setItem melder onSaveError og gir false, og dataene
+     *  i minnet står urørt. Returnerer true når utkastet er persistert. */
     save() {
       const now = JSON.stringify(data);
       if (now === baseline) {
         localStorage.removeItem(key);
-      } else {
+        return true;
+      }
+      try {
         localStorage.setItem(key, now);
+        return true;
+      } catch (err) {
+        onSaveError?.(err);
+        return false;
       }
     },
     /** Forkast utkastet og gå tilbake til publisert tilstand. */

@@ -23,6 +23,19 @@ export function isSafeUrl(url) {
   return typeof url === 'string' && SAFE_URL_RE.test(url.trim());
 }
 
+// Trygg blokk-href (knapp/bilde/samling/galleri): i tillegg til de eksterne
+// skjemaene over godtas site-interne stier ('/...', aldri protokoll-relative
+// '//...') og ankere ('#...'), som samlings-skjemaet dokumenterer for entry.href.
+// Backslash avvises i sti-grenen: nettlesere normaliserer '\' til '/' i
+// http(s)-URL-er, så '/\evil.no' ville ellers blitt protokoll-relativ likevel.
+// Ankret regex med vilje - CodeQL gjenkjenner det som en barriere.
+const SAFE_INTERNAL_RE = /^(?:\/(?![/\\])[^\s\\]*|#[^\s]*)$/;
+
+/** @param {unknown} url @returns {boolean} */
+export function isSafeHref(url) {
+  return isSafeUrl(url) || (typeof url === 'string' && SAFE_INTERNAL_RE.test(url.trim()));
+}
+
 /**
  * Løser et menypunkt mot sideregisteret: `page` slås opp til path,
  * `href` er ekstern lenke (kun trygge skjemaer slippes gjennom). Ukjent side

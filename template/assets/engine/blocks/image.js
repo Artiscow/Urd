@@ -9,6 +9,8 @@
  * flytende bildeeditoren, så de aldri kan drifte fra hverandre.
  */
 
+import { isSafeHref } from '../nav-model.js';
+
 /** Anvender den ikke-destruktive bildestilen på rammen + bildet.
  *  @param {HTMLElement} frame Rammeelementet (.urd-image-frame) med <img> inni */
 export function applyImageStyle(frame, props) {
@@ -80,9 +82,11 @@ export const imageBlock = {
     frame.appendChild(img);
     applyImageStyle(frame, props);
 
-    if (props.href && !ctx.preview) {
+    // Delt vokter (nav/footer + interne stier/anker): en utrygg href behandles som om lenken ikke fantes.
+    const safeHref = props.href && isSafeHref(props.href) ? props.href : null;
+    if (safeHref && !ctx.preview) {
       const a = document.createElement('a');
-      a.href = props.href;
+      a.href = safeHref;
       a.appendChild(frame);
       el.appendChild(a);
     } else {
@@ -91,7 +95,7 @@ export const imageBlock = {
 
     // Fullskjerm ved klikk: hos besøkende alltid når feltet er på; i preview
     // kun i Ren visning (ellers eier redigeringen klikket). Lenke vinner.
-    if (props.lightbox && !props.href) {
+    if (props.lightbox && !safeHref) {
       frame.classList.add('urd-lightbox-able');
       frame.addEventListener('click', async () => {
         if (ctx.preview && !document.body.classList.contains('urd-chrome-off')) return;
