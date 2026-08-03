@@ -8,8 +8,9 @@
   import { compressToWebp } from '../../../template/assets/engine/imageTools.js';
   import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from '../../../template/assets/engine/glyphs.js';
   import { ICON_CATEGORIES, ICON_LIBRARY, iconSvg } from '../../../template/assets/engine/icons.js';
+  import { ta } from '../../../template/assets/engine/i18n.js';
 
-  let { value = '★', icon = null, image = null, label = 'Velg tegn', onpick, onicon, onimage } = $props();
+  let { value = '★', icon = null, image = null, label = ta('gp.pickGlyph'), onpick, onicon, onimage } = $props();
 
   let recent = $state([]);
   let rootEl = $state(null);
@@ -74,14 +75,14 @@
 <span class="gp" bind:this={rootEl}>
   <button type="button" class="gp-swatch" title={label} aria-label={label}
     onclick={() => (open ? (open = false) : openPicker())}>
-    {#if image}<img class="gp-own" src={image} alt="Eget ikon" />
+    {#if image}<img class="gp-own" src={image} alt={ta('gp.ownIcon')} />
     {:else if icon && ICON_LIBRARY[icon]}<span class="gp-svg">{@html iconSvg(icon)}</span>
     {:else}{value || '★'}{/if}
   </button>
   {#if open}
     <div class="gp-pop" style="top: {pos.top}px; left: {pos.left}px">
       {#if recent.length}
-        <div class="gp-group">Nylige</div>
+        <div class="gp-group">{ta('common.recent')}</div>
         <div class="gp-grid">
           {#each recent as glyph (glyph)}
             <button type="button" class="gp-cell" onclick={() => pick(glyph)}>{glyph}</button>
@@ -110,10 +111,10 @@
         </div>
       {/each}
       {#if onimage}
-        <div class="gp-group">Eget ikon</div>
-        <button type="button" class="ghost gp-upload" onclick={() => fileEl.click()}>Last opp bilde …</button>
+        <div class="gp-group">{ta('gp.ownIcon')}</div>
+        <button type="button" class="ghost gp-upload" onclick={() => fileEl.click()}>{ta('gp.upload')}</button>
         <input type="file" accept="image/*" hidden bind:this={fileEl} onchange={uploadOwn} />
-        <p class="gp-hint">Bildet skalerer til blokkens størrelse og erstatter tegnet til du fjerner det.</p>
+        <p class="gp-hint">{ta('gp.uploadHint')}</p>
       {/if}
     </div>
   {/if}

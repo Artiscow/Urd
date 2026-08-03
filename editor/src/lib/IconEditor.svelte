@@ -8,6 +8,8 @@
    * ikke ligge som CSS slik bildeblokken gjør; de tegnes inn i selve ikonet.
    * ÉN coverDraw bruker samme matematikk til både forhåndsvisning og eksport.
    */
+  import { ta } from '../../../template/assets/engine/i18n.js';
+
   let { image = '', onapply, oncancel } = $props();
 
   const PREVIEW = 220;
@@ -92,31 +94,31 @@
 
 <div class="ie-overlay" role="dialog" aria-modal="true">
   <div class="ie-card">
-    <h2>Rediger nettstedsikon</h2>
+    <h2>{ta('ie.title')}</h2>
     <div class="ie-stage">
       <canvas bind:this={canvasEl} width={PREVIEW} height={PREVIEW}
-        class="ie-canvas" onpointerdown={startPan} title="Dra for å flytte utsnittet"></canvas>
-      <p class="ie-hint">Dra bildet for å velge utsnitt. Ikonet blir kvadratisk (128px).</p>
+        class="ie-canvas" onpointerdown={startPan} title={ta('ie.dragTip')}></canvas>
+      <p class="ie-hint">{ta('ie.hint')}</p>
     </div>
 
-    <label class="ie-row">Zoom <span class="ie-val">{zoom.toFixed(2)}x</span></label>
+    <label class="ie-row">{ta('lbl.zoom')} <span class="ie-val">{zoom.toFixed(2)}x</span></label>
     <input type="range" min="1" max="3" step="0.02" bind:value={zoom} />
 
-    <label class="ie-row">Lysstyrke <span class="ie-val">{Math.round(brightness * 100)}%</span></label>
+    <label class="ie-row">{ta('lbl.brightness')} <span class="ie-val">{Math.round(brightness * 100)}%</span></label>
     <input type="range" min="0.3" max="2" step="0.02" bind:value={brightness} />
-    <label class="ie-row">Kontrast <span class="ie-val">{Math.round(contrast * 100)}%</span></label>
+    <label class="ie-row">{ta('lbl.contrast')} <span class="ie-val">{Math.round(contrast * 100)}%</span></label>
     <input type="range" min="0.3" max="2" step="0.02" bind:value={contrast} />
-    <label class="ie-row">Metning <span class="ie-val">{Math.round(saturate * 100)}%</span></label>
+    <label class="ie-row">{ta('lbl.saturate')} <span class="ie-val">{Math.round(saturate * 100)}%</span></label>
     <input type="range" min="0" max="2" step="0.02" bind:value={saturate} />
 
     <span class="ie-tools">
-      <button type="button" class="ghost" onclick={() => (saturate = 0)}>Gråtone</button>
-      <button type="button" class="ghost" onclick={reset}>Nullstill</button>
+      <button type="button" class="ghost" onclick={() => (saturate = 0)}>{ta('ie.grayscale')}</button>
+      <button type="button" class="ghost" onclick={reset}>{ta('common.reset')}</button>
     </span>
 
     <span class="ie-actions">
-      <button type="button" class="ghost" onclick={() => oncancel?.()}>Avbryt</button>
-      <button type="button" class="primary" onclick={apply}>Bruk</button>
+      <button type="button" class="ghost" onclick={() => oncancel?.()}>{ta('confirm.cancel')}</button>
+      <button type="button" class="primary" onclick={apply}>{ta('common.apply')}</button>
     </span>
   </div>
 </div>

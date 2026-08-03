@@ -626,8 +626,8 @@
     const sections = store?.data.sections ?? [];
     const idx = sections.findIndex((s) => s.id === selectedBlock?.sectionId);
     return [
-      ['', 'Når egen seksjon er forbi'],
-      ...sections.slice(idx + 1).map((s, i) => [s.id, `Ved seksjon ${idx + 2 + i}`]),
+      ['', ta('opt.sticky.ownSection')],
+      ...sections.slice(idx + 1).map((s, i) => [s.id, ta('opt.sticky.atSection', { n: idx + 2 + i })]),
     ];
   }
 
@@ -1414,7 +1414,7 @@
         historyList = (await res.json()).commits;
       } else if (res.status === 401) {
         historyList = [];
-        historyError = 'Logg inn med GitHub for å se historikken.';
+        historyError = ta('status.historyLoginRequired');
       } else {
         historyList = [];
         historyError = (await res.json().catch(() => null))?.error ?? ta('status.historyFetchFailed');
@@ -2228,7 +2228,7 @@
         satisfied: errors.length === 0 && satisfiesEngine(pluginEngine, manifest.requiresEngine),
       };
     } catch {
-      pluginInfo[id] = { name: id, errors: ['fant ikke plugins/' + id + '/plugin.json i repoet'], satisfied: false };
+      pluginInfo[id] = { name: id, errors: [ta('plugin.manifestNotFound', { id })], satisfied: false };
     }
   }
 
@@ -2266,16 +2266,16 @@
     pluginError = '';
     const id = newPluginId.trim().toLowerCase();
     if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) {
-      pluginError = 'Ugyldig id: bruk små bokstaver, tall og bindestrek (mappenavnet i plugins/)';
+      pluginError = ta('plugin.invalidId');
       return;
     }
     if (knownPlugins().includes(id)) {
-      pluginError = 'Pluginen står allerede i listen';
+      pluginError = ta('plugin.alreadyListed');
       return;
     }
     await loadPluginInfo(id);
     if (pluginInfo[id].errors.length) {
-      pluginError = `Fant ingen gyldig plugin: ${pluginInfo[id].errors.join('; ')}`;
+      pluginError = ta('plugin.invalidManifest', { errors: pluginInfo[id].errors.join('; ') });
       return;
     }
     setPluginEnabled(id, true);
@@ -2806,7 +2806,7 @@
   function fontOptions(which) {
     const cur = siteDraft.theme.tokens.font[which];
     return [
-      ...(FONT_STACKS.some(([, v]) => v === cur) ? [] : [[cur, 'Egendefinert']]),
+      ...(FONT_STACKS.some(([, v]) => v === cur) ? [] : [[cur, ta('opt.customFont')]]),
       ...FONT_STACKS.map(([name, value]) => [value, name]),
     ];
   }
@@ -3705,7 +3705,7 @@
 <div class="editor">
   {#if !chromeVisible}
     <!-- Ren visning: alt editor-UI er skjult så siden får full flate -->
-    <button class="chrome-restore" onclick={toggleChrome} title="Tilbake til redigering">{@html ICONS.pencil} Rediger</button>
+    <button class="chrome-restore" onclick={toggleChrome} title={ta('tip.backToEdit')}>{@html ICONS.pencil} {ta('ui.edit')}</button>
   {/if}
 
   <header class="topbar" class:hidden={!chromeVisible}>
@@ -3724,38 +3724,38 @@
       {#if site}
         <!-- Gjeldende side: klikk åpner Sider-panelet (nedtrekket ble
              overflødig da panelet kom, men siden man står på må synes) -->
-        <button class="ghost" title="Bytt side (åpner Sider-panelet)"
+        <button class="ghost" title={ta('tip.switchPage')}
           onclick={() => togglePanel('pages')}>{pageEntry()?.title ?? ''}</button>
 
         <span class="viewswitch">
           <button class="ghost" class:active={viewMode === 'desktop'}
-            onclick={() => (viewMode = 'desktop')} title="Desktop-visning">{@html ICONS.desktop}</button>
+            onclick={() => (viewMode = 'desktop')} title={ta('tip.desktopView')}>{@html ICONS.desktop}</button>
           <button class="ghost" class:active={viewMode === 'mobile'}
-            onclick={() => (viewMode = 'mobile')} title="Mobilvisning (390px)">{@html ICONS.phone}</button>
+            onclick={() => (viewMode = 'mobile')} title={ta('tip.mobileView')}>{@html ICONS.phone}</button>
         </span>
         <span class="zoomswitch">
           <button class="ghost" class:active={zoomMode === 'fit'}
-            onclick={() => (zoomMode = 'fit')} title="Tilpass lerretet til vinduet">{@html ICONS.fit}</button>
+            onclick={() => (zoomMode = 'fit')} title={ta('tip.zoomFit')}>{@html ICONS.fit}</button>
           <button class="ghost" class:active={zoomMode === 'full'}
-            onclick={() => (zoomMode = 'full')} title="Faktisk størrelse (100%)">100%</button>
-          <span class="zoom-readout" title="Gjeldende zoom">{Math.round(scale * 100)}%</span>
+            onclick={() => (zoomMode = 'full')} title={ta('tip.zoomFull')}>100%</button>
+          <span class="zoom-readout" title={ta('tip.zoomCurrent')}>{Math.round(scale * 100)}%</span>
         </span>
         <button class="ghost" class:active={guidesOn} onclick={toggleGuides}
-          title="Hjelpelinjer: senter og innholdsbredde i alle seksjoner">{@html ICONS.guides}</button>
+          title={ta('tip.guides')}>{@html ICONS.guides}</button>
       {/if}
 
       {#if attentionCount > 0}
         <button class="badge attention" onclick={() => (viewMode = 'mobile')}
-          title="Desktop-endringer kan ha påvirket håndjustert mobil-layout - klikk for å se over">
-          {@html ICONS.phone} {attentionCount} {attentionCount === 1 ? 'seksjon' : 'seksjoner'} trenger mobil-tilsyn
+          title={ta('tip.attention')}>
+          {@html ICONS.phone} {ta(attentionCount === 1 ? 'ui.attentionOne' : 'ui.attentionMany', { n: attentionCount })}
         </button>
       {/if}
 
       {#if dirty}
-        <span class="badge">Upubliserte endringer</span>
+        <span class="badge">{ta('ui.unpublished')}</span>
         <button class="ghost discard-btn" class:armed={discardArmed} onclick={requestDiscard}
-          title={discardArmed ? 'Klikk igjen for å slette alle utkastene' : 'Slett utkastene og gå tilbake til publisert versjon'}
-        >{discardArmed ? 'Sikker?' : 'Forkast utkast'}</button>
+          title={discardArmed ? ta('tip.discardArmed') : ta('tip.discard')}
+        >{discardArmed ? ta('ui.discardConfirm') : ta('ui.discard')}</button>
       {/if}
     </span>
 
@@ -3764,17 +3764,17 @@
       <button
         class="ghost"
         onclick={toggleChrome}
-        title={chromeVisible ? 'Skjul editeringshåndtakene og se siden som besøkende gjør' : 'Vis editeringshåndtakene igjen'}
-      >{#if chromeVisible}{@html ICONS.eye} Ren visning{:else}{@html ICONS.pencil} Rediger{/if}</button>
+        title={chromeVisible ? ta('tip.chromeHide') : ta('tip.chromeShow')}
+      >{#if chromeVisible}{@html ICONS.eye} {ta('ui.cleanView')}{:else}{@html ICONS.pencil} {ta('ui.edit')}{/if}</button>
       {#if auth?.loggedIn}
-        <span class="who" title={auth.allowed ? 'Har publiseringstilgang' : 'Mangler publiseringstilgang (ALLOWED_LOGINS)'}>
+        <span class="who" title={auth.allowed ? ta('tip.hasPublishAccess') : ta('tip.noPublishAccess')}>
           {#if !auth.allowed}{@html ICONS.warn}{/if}{auth.login}
         </span>
       {:else if auth}
-        <a class="ghost" href="/api/github/login">Logg inn med GitHub</a>
+        <a class="ghost" href="/api/github/login">{ta('ui.loginGitHub')}</a>
       {/if}
-      <a class="ghost" href={pageEntry()?.path ?? '/'} target="_blank" rel="noopener">Se siden ↗</a>
-      <button class="primary" onclick={publish} disabled={!dirty}>Publiser</button>
+      <a class="ghost" href={pageEntry()?.path ?? '/'} target="_blank" rel="noopener">{ta('ui.viewSite')}</a>
+      <button class="primary" onclick={publish} disabled={!dirty}>{ta('ui.publish')}</button>
     {/if}
     </span>
   </header>
@@ -3799,131 +3799,131 @@
 
             {#if activePanel === 'pages'}
               <div class="panel-body">
-                <p class="panel-hint">Endringer her er utkast til du publiserer. Ctrl+Z angrer.</p>
+                <p class="panel-hint">{ta('hint.pages.drafts')}</p>
                 {#each siteDraft.pages as p (p.id)}
                   <div class="page-row" class:current={p.id === pageId}>
-                    <input class="page-title" value={p.title} title="Sidens navn"
+                    <input class="page-title" value={p.title} title={ta('tip.pages.title')}
                       onchange={(e) => renamePage(p, e.target.value)} />
                     {#if p.path === '/'}
-                      <span class="page-path" title="Forsiden kan ikke flyttes eller slettes">/</span>
+                      <span class="page-path" title={ta('tip.pages.homeLocked')}>/</span>
                     {:else}
-                      <input class="page-slug" value={p.path.slice(1)} title="Adressen (dinside.no/…)"
+                      <input class="page-slug" value={p.path.slice(1)} title={ta('tip.pages.slug')}
                         onchange={(e) => setPageSlug(p, e.target.value)} />
                     {/if}
                     <span class="row-tools">
-                      <button class="ghost row-tool" title="Åpne siden i editoren"
+                      <button class="ghost row-tool" title={ta('tip.pages.open')}
                         disabled={p.id === pageId} onclick={() => selectPage(p.id)}>{@html ICONS.right}</button>
                       {#if p.path !== '/'}
-                        <button class="ghost row-tool" title="Slett siden (Ctrl+Z angrer)"
+                        <button class="ghost row-tool" title={ta('tip.pages.delete')}
                           onclick={() => deletePage(p)}>{@html ICONS.cross}</button>
                       {/if}
                     </span>
                   </div>
                 {/each}
                 <hr class="gridmenu-divider" />
-                <input placeholder="Navn på ny side" bind:value={newPageTitle}
+                <input placeholder={ta('ph.newPageName')} bind:value={newPageTitle}
                   onkeydown={(e) => e.key === 'Enter' && addPage()} />
-                <button class="ghost action" onclick={addPage} disabled={!newPageTitle.trim()}>+ Opprett side</button>
-                <p class="panel-hint">Nye sider legges automatisk i menyen og starter tomme.</p>
+                <button class="ghost action" onclick={addPage} disabled={!newPageTitle.trim()}>{ta('ui.createPage')}</button>
+                <p class="panel-hint">{ta('hint.pages.autoMenu')}</p>
               </div>
             {:else if activePanel === 'nav'}
               <div class="panel-body">
-                <p class="panel-hint">Menyen øverst på siden. Endringer vises live i forhåndsvisningen.</p>
+                <p class="panel-hint">{ta('hint.nav.intro')}</p>
                 <details class="group">
-                  <summary>Logo</summary>
+                  <summary>{ta('group.logo')}</summary>
                   <div class="group-items">
-                    <label>Type
+                    <label>{ta('common.type')}
                       <Dropdown value={siteDraft.nav.logo?.type ?? 'text'}
                         options={[['text', ta('blocks.text')], ['image', ta('blocks.image')], ['both', ta('opt.logo.both')]]}
                         onchange={(v) => setLogoType(v)} />
                     </label>
                     {#if (siteDraft.nav.logo?.type ?? 'text') !== 'image'}
-                      <input value={siteDraft.nav.logo?.value ?? ''} placeholder="Navnet i menyen"
+                      <input value={siteDraft.nav.logo?.value ?? ''} placeholder={ta('ph.nav.logoName')}
                         oninput={(e) => setLogo({ value: e.target.value })} />
                       <!-- Stilrad à la tekstbehandler: font | px | F K -->
                       <span class="toolbar-row">
-                        <Dropdown title="Font (Arv = temaets overskriftsfont)"
+                        <Dropdown title={ta('tip.nav.logoFont')}
                           value={siteDraft.nav.logo?.font ?? ''}
                           options={[['', ta('common.inherit')], ...FONT_STACKS.map(([name, value]) => [value, name])]}
                           onchange={(v) => setLogo({ font: v || undefined })} />
                         <input type="number" class="tb-num" min="8" max="96" placeholder="px"
-                          title="Tekststørrelse i px (tom = arv)"
+                          title={ta('tip.nav.textSize')}
                           value={siteDraft.nav.logo?.textSize ?? ''}
                           onchange={(e) => setLogo({ textSize: e.target.value ? Number(e.target.value) : undefined })} />
-                        <button class="tbtn" title="Fet" class:active={siteDraft.nav.logo?.bold !== false}
-                          onclick={() => setLogo({ bold: siteDraft.nav.logo?.bold === false })}><b>F</b></button>
-                        <button class="tbtn" title="Kursiv" class:active={Boolean(siteDraft.nav.logo?.italic)}
-                          onclick={() => setLogo({ italic: !siteDraft.nav.logo?.italic })}><i>K</i></button>
+                        <button class="tbtn" title={ta('format.bold')} class:active={siteDraft.nav.logo?.bold !== false}
+                          onclick={() => setLogo({ bold: siteDraft.nav.logo?.bold === false })}><b>{ta('format.boldLetter')}</b></button>
+                        <button class="tbtn" title={ta('format.italic')} class:active={Boolean(siteDraft.nav.logo?.italic)}
+                          onclick={() => setLogo({ italic: !siteDraft.nav.logo?.italic })}><i>{ta('format.italicLetter')}</i></button>
                       </span>
                     {/if}
                     {#if (siteDraft.nav.logo?.type ?? 'text') !== 'text'}
                       <span class="toolbar-row">
-                        <label class="ghost filepick tb-grow" title="Komprimeres automatisk til webp">
+                        <label class="ghost filepick tb-grow" title={ta('tip.webpAuto')}>
                           {(siteDraft.nav.logo?.type === 'image' ? siteDraft.nav.logo?.value : siteDraft.nav.logo?.image)
-                            ? 'Bytt bilde' : 'Velg bilde'}
+                            ? ta('ui.changeImage') : ta('ui.chooseImage')}
                           <input type="file" accept="image/*" onchange={uploadLogoImage} />
                         </label>
-                        <input type="number" class="tb-num" min="12" max="128" title="Bildehøyde i px"
+                        <input type="number" class="tb-num" min="12" max="128" title={ta('tip.nav.logoHeight')}
                           value={siteDraft.nav.logo?.size ?? 32}
                           onchange={(e) => setLogo({ size: Number(e.target.value) })} />
-                        <input type="number" class="tb-num" min="0" max="64" title="Avrunding i px"
+                        <input type="number" class="tb-num" min="0" max="64" title={ta('tip.nav.logoRadius')}
                           value={siteDraft.nav.logo?.radius ?? 0}
                           onchange={(e) => setLogo({ radius: Number(e.target.value) })} />
                       </span>
-                      <p class="panel-hint">Tallfeltene: bildehøyde og avrunding (px).</p>
+                      <p class="panel-hint">{ta('hint.nav.logoFields')}</p>
                     {/if}
                     {#if siteDraft.nav.logo?.type === 'both'}
-                      <label>Rekkefølge
+                      <label>{ta('lbl.order')}
                         <Dropdown value={siteDraft.nav.logo?.order ?? 'image-first'}
                           options={[['image-first', ta('opt.logo.imageFirst')], ['text-first', ta('opt.logo.textFirst')]]}
                           onchange={(v) => setLogo({ order: v })} /></label>
                     {/if}
-                    <p class="panel-hint">Logoen er også «Hjem»-knappen (klikk går til forsiden).</p>
+                    <p class="panel-hint">{ta('hint.nav.logoHome')}</p>
                   </div>
                 </details>
                 <details class="group">
-                  <summary>Utseende</summary>
+                  <summary>{ta('group.appearance')}</summary>
                   <div class="group-items">
-                    <label title="Sidestilt meny: dra i kolonnekanten i forhåndsvisningen for å endre bredden; på mobil og trange vinduer vises den som topplinje">Navigasjonsmeny
+                    <label title={ta('tip.nav.variant')}>{ta('lbl.navVariant')}
                       <Dropdown value={siteDraft.nav.variant ?? 'bar'}
                         options={[['bar', ta('opt.navVariant.bar')], ['floating', ta('opt.navVariant.floating')], ['floating-square', ta('opt.navVariant.floatingSquare')],
                           ['floating-tab', ta('opt.navVariant.floatingTab')], ['side-left', ta('opt.navVariant.sideLeft')], ['side-right', ta('opt.navVariant.sideRight')]]}
                         onchange={(v) => setNavVariant(v)} /></label>
                     {#if floatingVariant}
-                      <label class="gridmenu-snap" title="Myk glød i aksentfargen rundt den flytende menyen">
+                      <label class="gridmenu-snap" title={ta('tip.nav.glow')}>
                         <input type="checkbox" checked={siteDraft.nav.style?.glow === true}
                           onchange={(e) => setNavGlow(e.target.checked)} />
-                        Glød rundt menyen
+                        {ta('lbl.navGlow')}
                       </label>
-                      <label class="gridmenu-snap" title="Av: menyen ligger helt i toppen av siden">
+                      <label class="gridmenu-snap" title={ta('tip.nav.topGap')}>
                         <input type="checkbox" checked={siteDraft.nav.style?.topGap !== false}
                           onchange={(e) => setNavTopGap(e.target.checked)} />
-                        Luft over menyen
+                        {ta('lbl.navTopGap')}
                       </label>
                     {/if}
                     {#if !floatingVariant && !sideVariant}
-                      <label class="gridmenu-snap" title="Menyen legges oppå toppseksjonen i stedet for i eget bånd over den, så en gjennomsiktig meny viser hero bak seg. Toppseksjonen bør ha nok klaring øverst.">
+                      <label class="gridmenu-snap" title={ta('tip.nav.overlay')}>
                         <input type="checkbox" checked={siteDraft.nav.overlay === true}
                           onchange={(e) => siteMutate('nav', () => { if (e.target.checked) siteDraft.nav.overlay = true; else delete siteDraft.nav.overlay; })} />
-                        Legg menyen oppå toppseksjonen
+                        {ta('lbl.navOverlay')}
                       </label>
                     {/if}
                     {#if sideVariant}
-                      <label title="Justeringen av menypunktene inne i kolonnen">Tekstjustering
+                      <label title={ta('tip.nav.sideAlign')}>{ta('lbl.textAlign')}
                         <Dropdown value={siteDraft.nav.style?.sideAlign ?? 'left'}
                           options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
                           onchange={(v) => setNavStyle('sideAlign', v === 'left' ? undefined : v)} /></label>
                     {/if}
-                    <label class="gridmenu-snap" title="Innholdet bak menyen sløres (synlig når bakgrunnen er gjennomsiktig)">
+                    <label class="gridmenu-snap" title={ta('tip.nav.blur')}>
                       <input type="checkbox" checked={siteDraft.nav.style?.blur !== false}
                         onchange={(e) => setNavStyle('blur', e.target.checked)} />
-                      Uskarphet bak menyen
+                      {ta('lbl.navBlur')}
                     </label>
-                    <label>Størrelse
+                    <label>{ta('lbl.size')}
                       <Dropdown value={siteDraft.nav.style?.size ?? 'md'}
                         options={[['sm', ta('opt.size.sm')], ['md', ta('opt.size.md')], ['lg', ta('opt.size.lg')], ['xl', ta('opt.size.xl')]]}
                         onchange={(v) => setNavStyle('size', v === 'md' ? undefined : v)} /></label>
-                    <label>Menyplassering
+                    <label>{ta('lbl.navPlacement')}
                       {#if sideVariant}
                         <Dropdown value={siteDraft.nav.style?.sidePlacement ?? 'top'}
                           options={[['top', ta('opt.place.top')], ['middle', ta('opt.place.middle')], ['bottom', ta('opt.place.bottom')]]}
@@ -3934,13 +3934,13 @@
                           onchange={(v) => setNavLayout(v)} />
                       {/if}</label>
                     {#if !sideVariant}
-                      <label class="gridmenu-snap" title="Av: menyen ligger kun øverst og forsvinner når man blar nedover">
+                      <label class="gridmenu-snap" title={ta('tip.nav.sticky')}>
                         <input type="checkbox" checked={siteDraft.nav.sticky !== false}
                           onchange={(e) => siteMutate('nav', () => { siteDraft.nav.sticky = e.target.checked; })} />
-                        Klistrete meny (følger med når man blar)
+                        {ta('lbl.navSticky')}
                       </label>
                       {#if siteDraft.nav.sticky !== false}
-                        <label title="Krymp: menyen blir kompakt etter et stykke scrolling. Skjul: menyen glir ut ved scrolling nedover og kommer tilbake ved scrolling oppover. Øverst på siden er den alltid normal. Prøves i Ren visning.">Ved scrolling
+                        <label title={ta('tip.nav.scroll')}>{ta('lbl.navScroll')}
                           <Dropdown value={siteDraft.nav.scroll ?? 'none'}
                             options={[['none', ta('opt.scroll.none')], ['shrink', ta('opt.scroll.shrink')], ['hide', ta('opt.scroll.hide')]]}
                             onchange={(v) => siteMutate('nav', () => {
@@ -3948,12 +3948,12 @@
                             })} /></label>
                       {/if}
                     {/if}
-                    <label>Lenke-hover
+                    <label>{ta('lbl.navHover')}
                       <Dropdown value={siteDraft.nav.style?.hover ?? 'standard'}
                         options={[['standard', ta('opt.hover.standard')], ['underline', ta('opt.hover.underline')], ['pill', ta('opt.hover.pill')], ['lift-plain', ta('opt.hover.liftPlain')], ['lift', ta('opt.hover.lift')]]}
                         onchange={(v) => setNavHover(v)} /></label>
                     {#if siteDraft.nav.style?.hover === 'lift'}
-                      <label title="Hvor sterk gløden bak teksten er">Glødstyrke
+                      <label title={ta('tip.nav.hoverGlow')}>{ta('lbl.glowStrength')}
                         <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.hoverGlow ?? 0.6) * 100)}%</span></label>
                       <input type="range" min="0.1" max="1" step="0.01"
                         value={siteDraft.nav.style?.hoverGlow ?? 0.6}
@@ -3964,124 +3964,124 @@
                         <ColorPicker value={siteDraft.nav.style?.hoverColor ?? 'accent'} tokens={themeSwatches()}
                           label={hoverColorLabel[1]} onchange={(hex) => setNavStyle('hoverColor', hex)} /></label>
                     {/if}
-                    <label title="Tekstfargen når pekeren er over et menypunkt">Tekstfarge ved hover
+                    <label title={ta('tip.nav.hoverTextColor')}>{ta('lbl.hoverTextColor')}
                       <ColorPicker value={siteDraft.nav.style?.hoverTextColor ?? 'accent'} tokens={themeSwatches()}
-                        label="Tekstfargen ved hover" onchange={(hex) => setNavStyle('hoverTextColor', hex)} /></label>
-                    <label>Tekstfarge
+                        label={ta('tip.nav.hoverTextColorPick')} onchange={(hex) => setNavStyle('hoverTextColor', hex)} /></label>
+                    <label>{ta('lbl.textColor')}
                       <ColorPicker value={siteDraft.nav.style?.textColor ?? 'text'} tokens={themeSwatches()}
-                        label="Menyens tekstfarge" onchange={(hex) => setNavStyle('textColor', hex)} /></label>
+                        label={ta('tip.nav.textColorPick')} onchange={(hex) => setNavStyle('textColor', hex)} /></label>
                     <hr class="gridmenu-divider" />
-                    <p class="panel-strong">Bakgrunn</p>
+                    <p class="panel-strong">{ta('lbl.background')}</p>
                     {@render backgroundLayers(navBgCtx, siteDraft.nav?.style?.background?.layers ?? [])}
                   </div>
                 </details>
                 <details class="group">
-                  <summary>Undermeny</summary>
+                  <summary>{ta('group.submenu')}</summary>
                   <div class="group-items">
                     <!-- Sidestilt: undermenyene er trekkspill i kolonnen, så
                          kort-rammen, ren flate og utfall gir ingen mening der -->
-                    <label>Design
+                    <label>{ta('lbl.design')}
                       <Dropdown value={siteDraft.nav.style?.subStyle ?? 'card'}
                         options={sideVariant
                           ? [['card', ta('common.standard')], ['pills', ta('opt.sub.pills')], ['lines', ta('opt.sub.lines')]]
                           : [['card', ta('opt.sub.card')], ['flat', ta('opt.sub.flat')], ['pills', ta('opt.sub.pills')], ['lines', ta('opt.sub.lines')], ['flyout', ta('opt.sub.flyout')]]}
                         onchange={(v) => setNavStyle('subStyle', v === 'card' ? undefined : v)} /></label>
                     {#if siteDraft.nav.style?.subStyle === 'pills'}
-                      <label title="Fargen på pille-punktene (standard er undermenyens flate)">Punktfarge
+                      <label title={ta('tip.nav.subPillColor')}>{ta('lbl.subPillColor')}
                         <ColorPicker value={siteDraft.nav.style?.subPillColor ?? 'surface'} tokens={themeSwatches()}
-                          label="Pille-punktenes farge" onchange={(hex) => setNavStyle('subPillColor', hex)} /></label>
+                          label={ta('tip.nav.subPillColorPick')} onchange={(hex) => setNavStyle('subPillColor', hex)} /></label>
                     {/if}
-                    <label title="Punktene i undermenyen legges i rutenett: 2 kolonner gir 2x2, 2x3 osv.">Kolonner
+                    <label title={ta('tip.nav.subColumns')}>{ta('lbl.columns')}
                       <input type="number" min="1" max="4" value={siteDraft.nav.style?.subColumns ?? 1}
                         onchange={(e) => setNavStyle('subColumns', Number(e.target.value) > 1 ? Number(e.target.value) : undefined)} /></label>
                   </div>
                 </details>
                 <details class="group" open>
-                  <summary>Menypunkter</summary>
+                  <summary>{ta('group.menuItems')}</summary>
                   <div class="group-items">
                 {#each siteDraft.nav.items as item, i}
                   <div class="nav-row">
-                    <input value={item.label} title="Teksten i menyen"
+                    <input value={item.label} title={ta('tip.nav.itemLabel')}
                       oninput={(e) => setNavLabel(i, e.target.value)} />
                     <span class="row-tools">
-                      <button class="ghost row-tool" title="Legg til undermenypunkt"
+                      <button class="ghost row-tool" title={ta('tip.nav.addChild')}
                         onclick={() => addNavChild(i)}>{@html ICONS.plus}</button>
                       <button class="ghost row-tool" onclick={() => moveNavItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
                       <button class="ghost row-tool" onclick={() => moveNavItem(i, 1)}
                         disabled={i === siteDraft.nav.items.length - 1}>{@html ICONS.down}</button>
-                      <button class="ghost row-tool" title="Fjern fra menyen (siden består)"
+                      <button class="ghost row-tool" title={ta('tip.nav.removeItem')}
                         onclick={() => removeNavItem(i)}>{@html ICONS.cross}</button>
                     </span>
                     <!-- Wrapper-span beholder grid-plasseringen (.nav-row .nav-target) -->
                     <span class="nav-target">
-                      <Dropdown value={item.page ?? (item.href != null ? '__href' : '__none')} title="Hvor lenken går"
+                      <Dropdown value={item.page ?? (item.href != null ? '__href' : '__none')} title={ta('tip.linkTarget')}
                         options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')],
-                          ...(item.children ? [['__none', 'Ingen lenke (kun åpner undermenyen)']] : [])]}
+                          ...(item.children ? [['__none', ta('opt.noLink')]] : [])]}
                         onchange={(v) => setNavTarget(i, v)} />
                     </span>
                     {#if !item.page && item.href != null}
-                      <input class="nav-target" value={item.href} placeholder="https://… eller #anker"
-                        title="Ekstern lenke (https://…, mailto:, tel:) eller anker til en seksjon: #ankeret på samme side, /siden#ankeret fra en annen side. Ankeret kopieres fra seksjonens Egenskaper."
+                      <input class="nav-target" value={item.href} placeholder={ta('ph.hrefAnchor')}
+                        title={ta('tip.hrefAnchor')}
                         onchange={(e) => setNavHref(i, e.target.value)} />
                     {/if}
                   </div>
                   {#each item.children ?? [] as child, j}
                     <div class="nav-row nav-sub-row">
-                      <input value={child.label} title="Teksten i undermenyen"
+                      <input value={child.label} title={ta('tip.nav.childLabel')}
                         oninput={(e) => setNavChildLabel(i, j, e.target.value)} />
                       <span class="row-tools">
                         <button class="ghost row-tool" onclick={() => moveNavChild(i, j, -1)} disabled={j === 0}>{@html ICONS.up}</button>
                         <button class="ghost row-tool" onclick={() => moveNavChild(i, j, 1)}
                           disabled={j === item.children.length - 1}>{@html ICONS.down}</button>
-                        <button class="ghost row-tool" title="Fjern fra undermenyen (siden består)"
+                        <button class="ghost row-tool" title={ta('tip.nav.removeChild')}
                           onclick={() => removeNavChild(i, j)}>{@html ICONS.cross}</button>
                       </span>
                       <span class="nav-target">
-                        <Dropdown value={child.page ?? '__href'} title="Hvor lenken går"
+                        <Dropdown value={child.page ?? '__href'} title={ta('tip.linkTarget')}
                           options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')]]}
                           onchange={(v) => setNavChildTarget(i, j, v)} />
                       </span>
                       {#if !child.page}
-                        <input class="nav-target" value={child.href ?? ''} placeholder="https://… eller #anker"
-                          title="Ekstern lenke (https://…, mailto:, tel:) eller anker til en seksjon: #ankeret på samme side, /siden#ankeret fra en annen side. Ankeret kopieres fra seksjonens Egenskaper."
+                        <input class="nav-target" value={child.href ?? ''} placeholder={ta('ph.hrefAnchor')}
+                          title={ta('tip.hrefAnchor')}
                           onchange={(e) => setNavChildHref(i, j, e.target.value)} />
                       {/if}
                     </div>
                   {/each}
                 {/each}
-                    <button class="ghost action" onclick={addNavItem}>+ Nytt menypunkt</button>
-                    <p class="panel-hint">Punkt med undermeny får en pilknapp i menyen; uten egen lenke blir hele punktet åpneren.</p>
+                    <button class="ghost action" onclick={addNavItem}>{ta('ui.addMenuItem')}</button>
+                    <p class="panel-hint">{ta('hint.nav.submenu')}</p>
                   </div>
                 </details>
               </div>
             {:else if activePanel === 'site'}
               <div class="panel-body">
-                <label title="Vises i nettleserfanen etter sidenavnet, og som standardtekst i menylogoen">Navn
-                  <input value={siteDraft.site.title ?? ''} placeholder="Navn på nettstedet"
+                <label title={ta('tip.site.name')}>{ta('lbl.name')}
+                  <input value={siteDraft.site.title ?? ''} placeholder={ta('ph.site.name')}
                     oninput={(e) => setSiteName(e.target.value)} />
                 </label>
-                <label title="Kort beskrivelse av nettstedet - brukt av søkemotorer og ved deling">Beskrivelse
-                  <input value={siteDraft.site.description ?? ''} placeholder="Kort om nettstedet"
+                <label title={ta('tip.site.description')}>{ta('lbl.description')}
+                  <input value={siteDraft.site.description ?? ''} placeholder={ta('ph.site.description')}
                     oninput={(e) => setSiteDescription(e.target.value)} />
                 </label>
                 <label title={ta('site.langTitle')}>{ta('site.langLabel')}
                   <Dropdown value={siteLangValue()} options={siteLangOptions()}
                     onchange={(v) => setSiteLang(v)} /></label>
                 <hr class="gridmenu-divider" />
-                <label>Nettstedsikon
+                <label>{ta('lbl.siteIcon')}
                   {#if siteDraft.site.icon}
-                    <img class="site-icon-preview" src={siteDraft.site.icon} alt="Nettstedsikon" />
+                    <img class="site-icon-preview" src={siteDraft.site.icon} alt={ta('lbl.siteIcon')} />
                   {/if}
                 </label>
                 <span class="toolbar-row">
-                  <label class="ghost filepick tb-grow" title="Vises i nettleserfanen og bokmerker; redigeres til 128px">
-                    {siteDraft.site.icon ? 'Bytt ikon' : 'Velg ikon'}
+                  <label class="ghost filepick tb-grow" title={ta('tip.site.icon')}>
+                    {siteDraft.site.icon ? ta('ui.changeIcon') : ta('ui.chooseIcon')}
                     <input type="file" accept="image/*" onchange={uploadSiteIcon} />
                   </label>
                   {#if siteDraft.site.icon}
-                    <button class="ghost row-tool" title="Rediger ikonet (beskjær, zoom, filtre)"
+                    <button class="ghost row-tool" title={ta('tip.site.editIcon')}
                       onclick={() => (iconEditorImage = siteDraft.site.icon)}>{@html ICONS.pencil ?? '✎'}</button>
-                    <button class="ghost row-tool" title="Fjern ikonet (Urd-merket brukes)"
+                    <button class="ghost row-tool" title={ta('tip.site.removeIcon')}
                       onclick={removeSiteIcon}>{@html ICONS.cross}</button>
                   {/if}
                 </span>
@@ -4092,13 +4092,13 @@
                   <div class="theme-pvw">
                     {#if cap}<div class="tpv-cap">{cap}</div>{/if}
                     <div class="tpv-demo" style="--tv-bg:{themeHex(pal.bg, pal)};--tv-surface:{themeHex(pal.surface, pal)};--tv-text:{themeHex(pal.text, pal)};--tv-accent:{themeHex(pal.accent, pal)};--tv-accent-ink:{themeHex(pal['accent-text'] ?? pal.bg, pal)}">
-                      <div class="tpv-h">Overskrift</div>
-                      <div class="tpv-card">Litt brødtekst på et kort.</div>
-                      <div class="tpv-row"><span class="tpv-btn">Knapp</span><span class="tpv-lnk">Lenke</span></div>
+                      <div class="tpv-h">{ta('preview.heading')}</div>
+                      <div class="tpv-card">{ta('preview.cardBody')}</div>
+                      <div class="tpv-row"><span class="tpv-btn">{ta('preview.button')}</span><span class="tpv-lnk">{ta('preview.link')}</span></div>
                     </div>
                   </div>
                 {/snippet}
-                <p class="panel-strong">Tema-forslag</p>
+                <p class="panel-strong">{ta('lbl.themePresets')}</p>
                 <div class="theme-presets">
                   {#each THEME_PRESETS as pr (pr.id)}
                     <button type="button" class="theme-preset" class:sel={activeThemePreset === pr.id}
@@ -4110,26 +4110,26 @@
                     </button>
                   {/each}
                 </div>
-                <p class="panel-strong">Farger</p>
-                <label class="gridmenu-snap" title="Gir siden en sol/måne-bryter i menyen">
+                <p class="panel-strong">{ta('lbl.colors')}</p>
+                <label class="gridmenu-snap" title={ta('tip.theme.dualMode')}>
                   <input type="checkbox" checked={dualMode}
                     onchange={(e) => setDualMode(e.target.checked)} />
-                  Lys og mørk modus
+                  {ta('lbl.dualMode')}
                 </label>
                 {#if dualMode}
                   <div class="autorow">
-                    <span class="autolbl">Mørke farger</span>
+                    <span class="autolbl">{ta('lbl.darkColors')}</span>
                     <span class="seg">
-                      <button type="button" class:on={altAuto} onclick={() => setAltAuto(true)}>Auto</button>
-                      <button type="button" class:on={!altAuto} onclick={() => setAltAuto(false)}>Egne</button>
+                      <button type="button" class:on={altAuto} onclick={() => setAltAuto(true)}>{ta('opt.auto')}</button>
+                      <button type="button" class:on={!altAuto} onclick={() => setAltAuto(false)}>{ta('opt.custom')}</button>
                     </span>
                   </div>
                 {/if}
 
                 <div class="palhead">
-                  {#if dualMode}<span class="palname">Lys</span>{/if}
+                  {#if dualMode}<span class="palname">{ta('lbl.light')}</span>{/if}
                   <button type="button" class="stdtag" class:ghost={stdMode !== 'light'}
-                    title="Modusen nye besøkende ser først" onclick={() => setThemeScheme('light')}>Standard</button>
+                    title={ta('tip.theme.defaultScheme')} onclick={() => setThemeScheme('light')}>{ta('common.standard')}</button>
                 </div>
                 <div class="palcells">
                   {#each PALETTE_KEYS as [key, full, short] (key)}
@@ -4144,110 +4144,110 @@
 
                 {#if dualMode}
                   <div class="palhead">
-                    <span class="palname">Mørk</span>
+                    <span class="palname">{ta('lbl.dark')}</span>
                     <button type="button" class="stdtag" class:ghost={stdMode !== 'dark'}
-                      title="Sett mørk som standard" onclick={() => setThemeScheme('dark')}>Standard</button>
+                      title={ta('tip.theme.darkDefault')} onclick={() => setThemeScheme('dark')}>{ta('common.standard')}</button>
                   </div>
                   <div class="palcells" class:autopal={altAuto}>
                     {#each PALETTE_KEYS as [key, full, short] (key)}
                       <div class="palcol">
                         <ColorPicker value={siteDraft.theme.alt.tokens.color[key] ?? darkPal[key] ?? siteDraft.theme.tokens.color.bg}
-                          tokens={themeSwatches()} label={`Mørk ${full}`} onchange={(hex) => setAltColorToken(key, hex)} />
+                          tokens={themeSwatches()} label={ta('theme.darkColorLabel', { name: full })} onchange={(hex) => setAltColorToken(key, hex)} />
                         <span class="palcap">{short}</span>
                         <b class="palhex">{themeHex(siteDraft.theme.alt.tokens.color[key] ?? darkPal[key], darkPal)}</b>
                       </div>
                     {/each}
                   </div>
                   {#if altAuto}
-                    <p class="panel-hint">Avledet fra de lyse fargene - klikk en rute for å styre dem selv.</p>
+                    <p class="panel-hint">{ta('hint.theme.autoDark')}</p>
                   {/if}
                 {/if}
 
                 <div class="theme-previews">
-                  {@render themePreview(lightPal, dualMode ? 'Lys' : '')}
-                  {#if dualMode}{@render themePreview(darkPal, 'Mørk')}{/if}
+                  {@render themePreview(lightPal, dualMode ? ta('lbl.light') : '')}
+                  {#if dualMode}{@render themePreview(darkPal, ta('lbl.dark'))}{/if}
                 </div>
 
                 <details class="group">
-                  <summary>Typografi</summary>
+                  <summary>{ta('group.typography')}</summary>
                   <div class="group-items">
-                    <label>Overskrifter
+                    <label>{ta('lbl.headings')}
                       <Dropdown value={siteDraft.theme.tokens.font.heading} options={fontOptions('heading')}
                         onchange={(v) => setFontToken('heading', v)} /></label>
-                    <label>Brødtekst
+                    <label>{ta('lbl.bodyText')}
                       <Dropdown value={siteDraft.theme.tokens.font.body} options={fontOptions('body')}
                         onchange={(v) => setFontToken('body', v)} /></label>
                     <div class="typo-sample">
-                      <div class="ts-h" style="font-family:{siteDraft.theme.tokens.font.heading}">Overskrift</div>
-                      <div class="ts-b" style="font-family:{siteDraft.theme.tokens.font.body}">Litt brødtekst i valgt skrift - slik leser folk innholdet ditt.</div>
+                      <div class="ts-h" style="font-family:{siteDraft.theme.tokens.font.heading}">{ta('preview.heading')}</div>
+                      <div class="ts-b" style="font-family:{siteDraft.theme.tokens.font.body}">{ta('preview.bodySample')}</div>
                     </div>
                   </div>
                 </details>
 
                 <details class="group">
-                  <summary>Form (hjørner)</summary>
+                  <summary>{ta('group.shape')}</summary>
                   <div class="group-items">
                     <div class="form-prev" style="--r-sm:{siteDraft.theme.tokens.radius.sm};--r-md:{siteDraft.theme.tokens.radius.md}">
-                      <span class="fp-btn">Knapp</span>
-                      <span class="fp-card">Kort</span>
+                      <span class="fp-btn">{ta('preview.button')}</span>
+                      <span class="fp-card">{ta('preview.card')}</span>
                     </div>
-                    <label class="rng-lab">Små hjørner<span class="gridmenu-value">{siteDraft.theme.tokens.radius.sm}</span></label>
+                    <label class="rng-lab">{ta('lbl.smallCorners')}<span class="gridmenu-value">{siteDraft.theme.tokens.radius.sm}</span></label>
                     <input type="range" min="0" max="24" step="1" value={radiusNum(siteDraft.theme.tokens.radius.sm)}
                       oninput={(e) => setRadiusPx('sm', Number(e.target.value))} />
-                    <label class="rng-lab">Store hjørner<span class="gridmenu-value">{siteDraft.theme.tokens.radius.md}</span></label>
+                    <label class="rng-lab">{ta('lbl.largeCorners')}<span class="gridmenu-value">{siteDraft.theme.tokens.radius.md}</span></label>
                     <input type="range" min="0" max="40" step="1" value={radiusNum(siteDraft.theme.tokens.radius.md)}
                       oninput={(e) => setRadiusPx('md', Number(e.target.value))} /></div>
                 </details>
               </div>
             {:else if activePanel === 'blocks'}
               <div class="panel-body" class:locked={viewMode === 'mobile'}
-                title={viewMode === 'mobile' ? 'Bytt til desktop-visning for å legge til innhold' : undefined}>
-                <p class="panel-hint">Nye blokker legges midt i synsfeltet, i sist klikkede seksjon.</p>
+                title={viewMode === 'mobile' ? ta('tip.blocks.mobileLocked') : undefined}>
+                <p class="panel-hint">{ta('hint.blocks.intro')}</p>
                 <details class="group">
-                  <summary>Tekst</summary>
+                  <summary>{ta('blocks.text')}</summary>
                   <div class="group-items">
-                    <button class="ghost" onclick={() => addBlock('text')}>Tekst</button>
+                    <button class="ghost" onclick={() => addBlock('text')}>{ta('blocks.text')}</button>
                     <button class="ghost" onclick={() => addBlock('text-box')}
-                      title="Tekst i et kort med bakgrunn og avrundede hjørner">Tekstboks</button>
+                      title={ta('tip.blocks.textBox')}>{ta('ui.textBox')}</button>
                   </div>
                 </details>
-                <button class="ghost" onclick={() => addBlock('button')}>Knapp</button>
-                <label class="ghost filepick" title="Komprimeres automatisk til webp">
-                  Bilde
+                <button class="ghost" onclick={() => addBlock('button')}>{ta('blocks.button')}</button>
+                <label class="ghost filepick" title={ta('tip.webpAuto')}>
+                  {ta('blocks.image')}
                   <input type="file" accept="image/*" onchange={addImage} />
                 </label>
-                <button class="ghost" title="YouTube eller Vimeo (lenken limes inn i Egenskaper)"
-                  onclick={() => addBlock('video')}>Video</button>
-                <button class="ghost" title="Glyf/emoji i valgfri størrelse og farge"
-                  onclick={() => addBlock('icon')}>Ikon</button>
-                <button class="ghost" title="Nyheter/oppslag/arkiv fra en samling (Samlinger-panelet)"
-                  onclick={() => addBlock('samling')}>Samling</button>
-                <button class="ghost" title="Spørsmål og svar der svaret foldes ut ved klikk"
-                  onclick={() => addBlock('faq')}>FAQ</button>
+                <button class="ghost" title={ta('tip.blocks.video')}
+                  onclick={() => addBlock('video')}>{ta('blocks.video')}</button>
+                <button class="ghost" title={ta('tip.blocks.icon')}
+                  onclick={() => addBlock('icon')}>{ta('blocks.icon')}</button>
+                <button class="ghost" title={ta('tip.blocks.samling')}
+                  onclick={() => addBlock('samling')}>{ta('blocks.samling')}</button>
+                <button class="ghost" title={ta('tip.blocks.faq')}
+                  onclick={() => addBlock('faq')}>{ta('blocks.faq')}</button>
                 <details class="group">
-                  <summary>Galleri</summary>
+                  <summary>{ta('blocks.galleri')}</summary>
                   <div class="group-items">
-                    <button class="ghost" title="Bildegalleri med rutenett-, karusell- eller lysbildevisning"
-                      onclick={() => addBlock('galleri')}>Tomt galleri</button>
-                    <label class="ghost filepick" title="Velg flere bilder samtidig og få dem rett inn i et galleri">
-                      Galleri med bilder
+                    <button class="ghost" title={ta('tip.blocks.gallery')}
+                      onclick={() => addBlock('galleri')}>{ta('ui.emptyGallery')}</button>
+                    <label class="ghost filepick" title={ta('tip.blocks.galleryImages')}>
+                      {ta('ui.galleryWithImages')}
                       <input type="file" accept="image/*" multiple onchange={addGalleryBlock} />
                     </label>
                   </div>
                 </details>
                 <details class="group">
-                  <summary>Former</summary>
+                  <summary>{ta('group.shapes')}</summary>
                   <div class="group-items">
-                    <button class="ghost" onclick={() => addBlock('shape-line')}>Strek</button>
-                    <button class="ghost" onclick={() => addBlock('shape-arrow')}>Pil</button>
-                    <button class="ghost" onclick={() => addBlock('shape-circle')}>Sirkel</button>
-                    <button class="ghost" onclick={() => addBlock('shape-rect')}>Rektangel</button>
-                    <button class="ghost" onclick={() => addBlock('shape-triangle')}>Trekant</button>
+                    <button class="ghost" onclick={() => addBlock('shape-line')}>{ta('shape.line')}</button>
+                    <button class="ghost" onclick={() => addBlock('shape-arrow')}>{ta('shape.arrow')}</button>
+                    <button class="ghost" onclick={() => addBlock('shape-circle')}>{ta('shape.circle')}</button>
+                    <button class="ghost" onclick={() => addBlock('shape-rect')}>{ta('shape.rect')}</button>
+                    <button class="ghost" onclick={() => addBlock('shape-triangle')}>{ta('shape.triangle')}</button>
                   </div>
                 </details>
                 {#if pluginBlocks.length}
                   <details class="group">
-                    <summary>Plugins</summary>
+                    <summary>{ta('panel.plugins')}</summary>
                     <div class="group-items">
                       {#each pluginBlocks as entry (entry.type)}
                         {#if entry.variants?.length}
@@ -4255,13 +4255,13 @@
                             <summary>{entry.label}</summary>
                             <div class="group-items">
                               {#each entry.variants as variant (variant.label)}
-                                <button class="ghost" title="Fra pluginen {entry.plugin}"
+                                <button class="ghost" title={ta('tip.blocks.fromPlugin', { plugin: entry.plugin })}
                                   onclick={() => addPluginBlock(entry, variant.props)}>{variant.label}</button>
                               {/each}
                             </div>
                           </details>
                         {:else}
-                          <button class="ghost" title="Fra pluginen {entry.plugin}"
+                          <button class="ghost" title={ta('tip.blocks.fromPlugin', { plugin: entry.plugin })}
                             onclick={() => addPluginBlock(entry)}>{entry.label}</button>
                         {/if}
                       {/each}
@@ -4271,9 +4271,9 @@
               </div>
             {:else if activePanel === 'grid'}
               <div class="panel-body">
-                <p class="panel-hint">Hjelpelinjene blokker snapper til. Vises så lenge panelet er åpent; å endre dem flytter aldri innhold.</p>
+                <p class="panel-hint">{ta('hint.grid.intro')}</p>
                 <label>
-                  Rutestørrelse
+                  {ta('lbl.gridSize')}
                   <span class="gridmenu-value">{grid.size} px</span>
                 </label>
                 <input type="range" min="4" max="96" step="2" value={grid.size}
@@ -4281,10 +4281,10 @@
                 <label class="gridmenu-snap">
                   <input type="checkbox" checked={grid.snap !== false}
                     onchange={(e) => setGrid('snap', e.target.checked)} />
-                  Snap til grid
+                  {ta('lbl.gridSnap')}
                 </label>
 
-                <p class="panel-hint">En seksjon kan få sitt eget grid: klikk i seksjonen og åpne Egenskaper.</p>
+                <p class="panel-hint">{ta('hint.grid.section')}</p>
               </div>
             {:else if activePanel === 'properties'}
               <div class="panel-body">
@@ -4292,20 +4292,20 @@
                   <p class="panel-strong">{ta('blocks.suffix', { label: BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type })}</p>
                   {@render blockPropsUI()}
                 {:else if activeSectionId}
-                  <p class="panel-strong">Seksjon</p>
-                  <label>Minstehøyde
-                    <input class="token-input" value={sectionMinHeight} placeholder="f.eks. 400px"
+                  <p class="panel-strong">{ta('lbl.section')}</p>
+                  <label>{ta('lbl.minHeight')}
+                    <input class="token-input" value={sectionMinHeight} placeholder={ta('ph.minHeight')}
                       onchange={(e) => setSectionHeight(e.target.value)} /></label>
-                  <p class="panel-hint">px-verdi eller CSS (40vh). Blokker kan uansett henge utover kanten.</p>
+                  <p class="panel-hint">{ta('hint.props.minHeight')}</p>
                   <hr class="gridmenu-divider" />
                   <label class="gridmenu-snap">
                     <input type="checkbox" checked={sectionGrid !== null}
                       onchange={(e) => toggleSectionGrid(e.target.checked)} />
-                    Eget grid i seksjonen
+                    {ta('lbl.sectionGrid')}
                   </label>
                   {#if sectionGrid}
                     <label>
-                      Rutestørrelse
+                      {ta('lbl.gridSize')}
                       <span class="gridmenu-value">{sectionGrid.size} px</span>
                     </label>
                     <input type="range" min="4" max="96" step="2" value={sectionGrid.size}
@@ -4313,66 +4313,66 @@
                   {/if}
 
                   <hr class="gridmenu-divider" />
-                  <label title="Ferdig fargerolle for seksjonen: overstyrer temaets farger på denne seksjonen (Aksent-flate, mørkt kontrastbånd o.l.). Følger lys/mørk automatisk.">Seksjonstema
+                  <label title={ta('tip.props.sectionTheme')}>{ta('lbl.sectionTheme')}
                     <Dropdown value={sectionTheme}
                       options={[['', ta('common.standard')], ...Object.entries(SECTION_THEME_LABELS)]}
                       onchange={(v) => setSectionTheme(v)} /></label>
-                  <label title="Seksjonens ankermål for lenker: lim inn i lenkefeltet på footer-kolonner, menypunkter eller knapper. Samme side: #ankeret - fra en annen side: /siden#ankeret.">Anker
+                  <label title={ta('tip.props.anchor')}>{ta('lbl.anchor')}
                     <span class="row-tools">
                       <span class="gridmenu-value">#{activeSectionId}</span>
-                      <button class="ghost row-tool" title="Kopier ankeret"
+                      <button class="ghost row-tool" title={ta('tip.props.copyAnchor')}
                         onclick={() => navigator.clipboard?.writeText(`#${activeSectionId}`)}>{@html ICONS.copy}</button>
                     </span></label>
 
                   <hr class="gridmenu-divider" />
-                  <p class="panel-strong">Bakgrunn</p>
+                  <p class="panel-strong">{ta('lbl.background')}</p>
                   {@render backgroundLayers(sectionBgCtx, sectionBg)}
 
                   <hr class="gridmenu-divider" />
-                  <label title="Spilles når seksjonen scrolles inn hos besøkende; her spilles den én gang hver gang du endrer den">Animasjon inn
+                  <label title={ta('tip.props.sectionAnim')}>{ta('lbl.animIn')}
                     <Dropdown value={isEntrance(sectionAnim) ? sectionAnim.type : ''}
                       options={ENTRANCE_OPTIONS}
                       onchange={(v) => setSectionAnimation(v || null)} /></label>
                   {#if isEntrance(sectionAnim)}
-                    <label>Varighet ms
+                    <label>{ta('lbl.durationMs')}
                       <input type="number" min="100" max="4000" step="100" value={sectionAnim.props.duration}
                         onchange={(e) => setSectionAnimProp('duration', Number(e.target.value))} /></label>
                     {#if sectionAnim.type === 'stagger'}
-                      <label title="Tid mellom hvert kort (En etter en) eller hver kolonne (Kolonnevis)">Trinn ms
+                      <label title={ta('tip.props.staggerStep')}>{ta('lbl.stepMs')}
                         <input type="number" min="0" max="1000" step="10" value={sectionAnim.props.step ?? 90}
                           onchange={(e) => setSectionAnimProp('step', Number(e.target.value))} /></label>
-                      <label title="En etter en: hvert kort ett trinn etter forrige. Kolonnevis: kort i samme kolonne kommer samtidig, bølgen skyves bortover.">Mønster
+                      <label title={ta('tip.props.staggerPattern')}>{ta('lbl.pattern')}
                         <Dropdown value={sectionAnim.props.pattern ?? 'sequence'}
                           options={[['sequence', ta('opt.stagger.sequence')], ['columns', ta('opt.stagger.columns')]]}
                           onchange={(v) => setSectionAnimPattern(v)} /></label>
                     {:else}
-                      <label>Forsinkelse ms
+                      <label>{ta('lbl.delayMs')}
                         <input type="number" min="0" max="4000" step="100" value={sectionAnim.props.delay}
                           onchange={(e) => setSectionAnimProp('delay', Number(e.target.value))} /></label>
                     {/if}
                   {/if}
-                  <label title="Effekt mens pekeren er over seksjonen; kan kombineres med animasjonen inn">Ved peker
+                  <label title={ta('tip.props.sectionHover')}>{ta('lbl.onHover')}
                     <Dropdown value={sectionHover?.type ?? (sectionAnim && !isEntrance(sectionAnim) ? sectionAnim.type : '')}
                       options={HOVER_OPTIONS}
                       onchange={(v) => setSectionHover(v || null)} /></label>
                 {:else}
-                  <p class="panel-hint">Klikk på en blokk eller seksjon i forhåndsvisningen.</p>
+                  <p class="panel-hint">{ta('hint.props.empty')}</p>
                 {/if}
               </div>
             {:else if activePanel === 'footer'}
               <div class="panel-body">
-                <label class="gridmenu-snap" title="Footeren redigeres ett sted og vises nederst på alle sider (unntatt sider du skrur av under «Vis på sider»)">
+                <label class="gridmenu-snap" title={ta('tip.footer.show')}>
                   <input type="checkbox" checked={Boolean(siteDraft.footer?.show)}
                     onchange={(e) => footerMutate('footer', (f) => { f.show = e.target.checked; })} />
-                  Vis footer
+                  {ta('lbl.showFooter')}
                 </label>
 
                 {#if siteDraft.footer?.show}
                   <details class="group">
-                    <summary>Vis på sider</summary>
+                    <summary>{ta('group.showOnPages')}</summary>
                     <div class="group-items">
                       {#each siteDraft.pages ?? [] as pg (pg.id)}
-                        <label class="gridmenu-snap" title="Fjern haken for å skjule footeren på denne siden">
+                        <label class="gridmenu-snap" title={ta('tip.footer.hideOnPage')}>
                           <input type="checkbox"
                             checked={!(siteDraft.footer?.hideOn ?? []).includes(pg.id)}
                             onchange={(e) => toggleFooterOnPage(pg.id, e.target.checked)} />
@@ -4384,11 +4384,11 @@
                 {/if}
 
                 <details class="group">
-                  <summary>Startpunkt</summary>
+                  <summary>{ta('group.startpoint')}</summary>
                   <div class="group-items">
                     <div class="footer-tpick">
                       {#each FOOTER_TEMPLATES as t (t.id)}
-                        <button class="footer-tp" title="Fyller footeren med {t.label}-oppsettet - rediger fritt videre"
+                        <button class="footer-tp" title={ta('tip.footer.template', { label: t.label })}
                           onclick={() => applyFooterTemplate(t.id)}>
                           <span class="footer-tp-thumb">{@html footerThumb(t.thumb)}</span>
                           <span class="footer-tp-name">{t.label}</span>
@@ -4399,31 +4399,31 @@
                 </details>
 
                 <details class="group" open>
-                  <summary>Merkevare</summary>
+                  <summary>{ta('group.brand')}</summary>
                   <div class="group-items">
-                    <label title="Navnet øverst i footeren. Tomt = ingen merkevare">Tittel
-                      <input value={siteDraft.footer?.brand?.title ?? ''} placeholder="Min forening"
+                    <label title={ta('tip.footer.brandTitle')}>{ta('lbl.title')}
+                      <input value={siteDraft.footer?.brand?.title ?? ''} placeholder={ta('ph.footer.brandTitle')}
                         oninput={(e) => setFooterBrand('title', e.target.value)} /></label>
-                    <label title="Kort undertekst under navnet">Tagline
+                    <label title={ta('tip.footer.tagline')}>{ta('lbl.tagline')}
                       <input value={siteDraft.footer?.brand?.tagline ?? ''}
                         oninput={(e) => setFooterBrand('tagline', e.target.value)} /></label>
-                    <label title="Vis merket som tekst, opplastet logo (bilde) eller begge">Vis merke som
+                    <label title={ta('tip.footer.brandMode')}>{ta('lbl.brandMode')}
                       <Dropdown value={siteDraft.footer?.brand?.mode ?? 'text'}
                         options={[['text', ta('blocks.text')], ['image', ta('opt.brand.image')], ['both', ta('opt.brand.both')]]}
                         onchange={(v) => setFooterBrandMode(v)} /></label>
                     {#if (siteDraft.footer?.brand?.mode ?? 'text') !== 'text'}
                       <span class="toolbar-row">
-                        <label class="ghost filepick tb-grow" title="Komprimeres automatisk til webp; materialiseres til media/ ved publisering">
-                          {siteDraft.footer?.brand?.logo ? 'Bytt logo' : 'Last opp logo'}
+                        <label class="ghost filepick tb-grow" title={ta('tip.webpAutoPublish')}>
+                          {siteDraft.footer?.brand?.logo ? ta('ui.changeLogo') : ta('ui.uploadLogo')}
                           <input type="file" accept="image/*" onchange={uploadFooterLogo} />
                         </label>
                         {#if siteDraft.footer?.brand?.logo}
-                          <button class="ghost row-tool" title="Fjern logoen"
+                          <button class="ghost row-tool" title={ta('tip.footer.removeLogo')}
                             onclick={removeFooterLogo}>{@html ICONS.cross}</button>
                         {/if}
                       </span>
                       {#if siteDraft.footer?.brand?.logo}
-                        <label>Logohøyde
+                        <label>{ta('lbl.logoHeight')}
                           <span class="gridmenu-value">{siteDraft.footer?.brand?.logoHeight ?? 40} px</span></label>
                         <input type="range" min="16" max="160" step="2" value={siteDraft.footer?.brand?.logoHeight ?? 40}
                           oninput={(e) => setFooterLogoHeight(e.target.value)} />
@@ -4433,48 +4433,48 @@
                 </details>
 
                 <details class="group">
-                  <summary>Kolonner</summary>
+                  <summary>{ta('group.columns')}</summary>
                   <div class="group-items">
                     {#each siteDraft.footer?.columns ?? [] as col, ci}
                       <div class="nav-row">
-                        <input value={col.title} title="Kolonnens overskrift"
+                        <input value={col.title} title={ta('tip.footer.columnTitle')}
                           oninput={(e) => setFooterColumnTitle(ci, e.target.value)} />
                         <span class="row-tools">
-                          <button class="ghost row-tool" title="Legg til lenke i kolonnen"
+                          <button class="ghost row-tool" title={ta('tip.footer.addLink')}
                             onclick={() => addFooterLink(ci)}>{@html ICONS.plus}</button>
                           <button class="ghost row-tool" onclick={() => moveFooterColumn(ci, -1)} disabled={ci === 0}>{@html ICONS.up}</button>
                           <button class="ghost row-tool" onclick={() => moveFooterColumn(ci, 1)}
                             disabled={ci === siteDraft.footer.columns.length - 1}>{@html ICONS.down}</button>
-                          <button class="ghost row-tool" title="Fjern kolonnen"
+                          <button class="ghost row-tool" title={ta('tip.footer.removeColumn')}
                             onclick={() => removeFooterColumn(ci)}>{@html ICONS.cross}</button>
                         </span>
                       </div>
                       {#each col.links ?? [] as link, li}
                         <div class="nav-row nav-sub-row">
-                          <input value={link.label} title="Lenketeksten"
+                          <input value={link.label} title={ta('tip.linkLabel')}
                             oninput={(e) => setFooterLinkLabel(ci, li, e.target.value)} />
                           <span class="row-tools">
                             <button class="ghost row-tool" onclick={() => moveFooterLink(ci, li, -1)} disabled={li === 0}>{@html ICONS.up}</button>
                             <button class="ghost row-tool" onclick={() => moveFooterLink(ci, li, 1)}
                               disabled={li === col.links.length - 1}>{@html ICONS.down}</button>
-                            <button class="ghost row-tool" title="Fjern lenken"
+                            <button class="ghost row-tool" title={ta('tip.removeLink')}
                               onclick={() => removeFooterLink(ci, li)}>{@html ICONS.cross}</button>
                           </span>
                           <span class="nav-target">
-                            <Dropdown value={link.page ?? '__href'} title="Hvor lenken går"
+                            <Dropdown value={link.page ?? '__href'} title={ta('tip.linkTarget')}
                               options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')]]}
                               onchange={(v) => setFooterLinkTarget(ci, li, v)} />
                           </span>
                           {#if !link.page}
-                            <input class="nav-target" value={link.href ?? ''} placeholder="https://… eller #anker"
-                              title="Ekstern lenke (https://…, mailto:, tel:) eller anker til en seksjon: #ankeret på samme side, /siden#ankeret fra en annen side. Ankeret kopieres fra seksjonens Egenskaper."
+                            <input class="nav-target" value={link.href ?? ''} placeholder={ta('ph.hrefAnchor')}
+                              title={ta('tip.hrefAnchor')}
                               onchange={(e) => setFooterLinkHref(ci, li, e.target.value)} />
                           {/if}
                         </div>
                       {/each}
                     {/each}
-                    <button class="ghost action" onclick={addFooterColumn}>+ Ny kolonne</button>
-                    <label title="Når en kolonne har mange lenker deles den i to underkolonner - her velger du om overskriften står til venstre eller midtstilt over paret">Justering av delt kolonne
+                    <button class="ghost action" onclick={addFooterColumn}>{ta('ui.addColumn')}</button>
+                    <label title={ta('tip.footer.columnsAlign')}>{ta('lbl.splitColumnAlign')}
                       <Dropdown value={siteDraft.footer?.columnsAlign ?? 'left'}
                         options={[['left', ta('common.left')], ['center', ta('common.center')]]}
                         onchange={(v) => setFooterColumnsAlign(v)} /></label>
@@ -4482,77 +4482,77 @@
                 </details>
 
                 <details class="group">
-                  <summary>Sosiale lenker</summary>
+                  <summary>{ta('group.social')}</summary>
                   <div class="group-items">
                     {#each siteDraft.footer?.social ?? [] as soc, si}
                       <div class="nav-row">
                         <span class="nav-line">
                           <span class="footer-soc-preview" aria-hidden="true">{@html iconSvg(soc.icon) || ''}</span>
-                          <Dropdown value={soc.icon} title="Ikon" options={SOCIAL_ICON_OPTIONS}
+                          <Dropdown value={soc.icon} title={ta('blocks.icon')} options={SOCIAL_ICON_OPTIONS}
                             onchange={(v) => setFooterSocialIcon(si, v)} />
                         </span>
                         <span class="row-tools">
                           <button class="ghost row-tool" onclick={() => moveFooterSocial(si, -1)} disabled={si === 0}>{@html ICONS.up}</button>
                           <button class="ghost row-tool" onclick={() => moveFooterSocial(si, 1)}
                             disabled={si === siteDraft.footer.social.length - 1}>{@html ICONS.down}</button>
-                          <button class="ghost row-tool" title="Fjern lenken"
+                          <button class="ghost row-tool" title={ta('tip.removeLink')}
                             onclick={() => removeFooterSocial(si)}>{@html ICONS.cross}</button>
                         </span>
-                        <input class="nav-target" value={soc.url} placeholder="https://… / mailto:…"
+                        <input class="nav-target" value={soc.url} placeholder={ta('ph.hrefMailto')}
                           onchange={(e) => setFooterSocialUrl(si, e.target.value)} />
                       </div>
                     {/each}
-                    <button class="ghost action" onclick={addFooterSocial}>+ Ny sosial lenke</button>
+                    <button class="ghost action" onclick={addFooterSocial}>{ta('ui.addSocial')}</button>
                   </div>
                 </details>
 
                 <details class="group">
-                  <summary>Handlingsoppfordring</summary>
+                  <summary>{ta('group.cta')}</summary>
                   <div class="group-items">
-                    <label class="gridmenu-snap" title="En knapp eller nyhetsbrev-påmelding i footeren">
+                    <label class="gridmenu-snap" title={ta('tip.footer.cta')}>
                       <input type="checkbox" checked={Boolean(siteDraft.footer?.cta)}
                         onchange={(e) => enableFooterCta(e.target.checked)} />
-                      Vis handlingsoppfordring
+                      {ta('lbl.showCta')}
                     </label>
                     {#if siteDraft.footer?.cta}
                       {@const cta = siteDraft.footer.cta}
-                      <label title="Knapp går til en side/lenke; nyhetsbrev tar imot e-post">Type
+                      <label title={ta('tip.footer.ctaKind')}>{ta('common.type')}
                         <Dropdown value={cta.kind ?? 'button'}
                           options={[['button', ta('opt.cta.button')], ['newsletter', ta('opt.cta.newsletter')]]}
                           onchange={(v) => setFooterCtaField('kind', v)} /></label>
-                      <label class="gridmenu-snap" title="Stor, sentrert variant (Stor CTA-stilen)">
+                      <label class="gridmenu-snap" title={ta('tip.footer.ctaBig')}>
                         <input type="checkbox" checked={cta.big === true}
                           onchange={(e) => setFooterCtaField('big', e.target.checked)} />
-                        Stor sentrert
+                        {ta('lbl.bigCentered')}
                       </label>
-                      <label title="Overskrift over knappen/feltet">Overskrift
-                        <input value={cta.heading ?? ''} placeholder="Klar til å bli med?"
+                      <label title={ta('tip.footer.ctaHeading')}>{ta('lbl.heading')}
+                        <input value={cta.heading ?? ''} placeholder={ta('ph.footer.ctaHeading')}
                           oninput={(e) => setFooterCtaField('heading', e.target.value)} /></label>
-                      <label title="Kort undertekst">Undertekst
+                      <label title={ta('tip.footer.ctaSub')}>{ta('lbl.subText')}
                         <input value={cta.sub ?? ''}
                           oninput={(e) => setFooterCtaField('sub', e.target.value)} /></label>
-                      <label title="Teksten på knappen">Knappetekst
-                        <input value={cta.label ?? ''} placeholder="Bli medlem"
+                      <label title={ta('tip.footer.ctaLabel')}>{ta('lbl.buttonText')}
+                        <input value={cta.label ?? ''} placeholder={ta('ph.footer.ctaLabel')}
                           oninput={(e) => setFooterCtaField('label', e.target.value)} /></label>
                       {#if (cta.kind ?? 'button') === 'button'}
-                        <label title="Hvor knappen går">Knappen går til
+                        <label title={ta('tip.footer.ctaTarget')}>{ta('lbl.buttonTarget')}
                           <Dropdown value={cta.page ?? '__href'}
                             options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHrefMailto')]]}
                             onchange={(v) => setFooterCtaTarget(v)} /></label>
                         {#if !cta.page}
-                          <input value={cta.href ?? ''} placeholder="https://… / mailto:… / #anker"
-                            title="Ekstern lenke (https://…, mailto:, tel:) eller anker til en seksjon: #ankeret på samme side, /siden#ankeret fra en annen side. Ankeret kopieres fra seksjonens Egenskaper."
+                          <input value={cta.href ?? ''} placeholder={ta('ph.hrefMailtoAnchor')}
+                            title={ta('tip.hrefAnchor')}
                             onchange={(e) => setFooterCtaField('href', e.target.value)} />
                         {/if}
                       {:else}
-                        <label title="Skjema-adresse fra en tjeneste (Formspree/Mailchimp/Buttondown) eller egen Cloudflare-function; sendes med fetch. Ekstern vert krever at du legger connect-src for verten i _headers.">Nyhetsbrev-endepunkt
-                          <input value={cta.endpoint ?? ''} placeholder="https://formspree.io/f/…"
+                        <label title={ta('tip.footer.ctaEndpoint')}>{ta('lbl.newsletterEndpoint')}
+                          <input value={cta.endpoint ?? ''} placeholder={ta('ph.endpoint')}
                             onchange={(e) => setFooterCtaField('endpoint', e.target.value)} /></label>
-                        <label title="Fallback når endepunkt mangler: åpner e-post til denne adressen">Mottaker (fallback)
-                          <input value={cta.recipient ?? ''} placeholder="post@dinforening.no"
+                        <label title={ta('tip.footer.ctaRecipient')}>{ta('lbl.recipientFallback')}
+                          <input value={cta.recipient ?? ''} placeholder={ta('ph.email')}
                             onchange={(e) => setFooterCtaField('recipient', e.target.value)} /></label>
-                        <label title="Bekreftelsen som vises etter påmelding">Bekreftelse
-                          <input value={cta.success ?? ''} placeholder="Takk, du er påmeldt!"
+                        <label title={ta('tip.footer.ctaSuccess')}>{ta('lbl.confirmation')}
+                          <input value={cta.success ?? ''} placeholder={ta('ph.footer.ctaSuccess')}
                             oninput={(e) => setFooterCtaField('success', e.target.value)} /></label>
                       {/if}
                     {/if}
@@ -4560,46 +4560,45 @@
                 </details>
 
                 <details class="group">
-                  <summary>Lenkerad (sentrert)</summary>
+                  <summary>{ta('group.linkRow')}</summary>
                   <div class="group-items">
                     {@render footerLinkList('linkRow', siteDraft.footer?.linkRow ?? [])}
-                    <button class="ghost action" onclick={() => addFooterListLink('linkRow')}>+ Ny lenke i raden</button>
+                    <button class="ghost action" onclick={() => addFooterListLink('linkRow')}>{ta('ui.addRowLink')}</button>
                   </div>
                 </details>
 
                 <details class="group">
-                  <summary>Utseende</summary>
+                  <summary>{ta('group.appearance')}</summary>
                   <div class="group-items">
                     {#if siteDraft.footer?.cta?.big !== true}
-                      <label title="Justering av innholdet (mest merkbart uten kolonner)">Justering
+                      <label title={ta('tip.footer.align')}>{ta('lbl.align')}
                         <Dropdown value={siteDraft.footer?.align ?? 'left'}
                           options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
                           onchange={(v) => footerMutate('footer', (f) => { f.align = v; })} /></label>
                       <hr class="gridmenu-divider" />
                     {/if}
-                    <p class="panel-strong">Bakgrunn</p>
+                    <p class="panel-strong">{ta('lbl.background')}</p>
                     {@render backgroundLayers(footerBgCtx, siteDraft.footer?.background?.layers ?? [])}
                   </div>
                 </details>
 
                 <details class="group">
-                  <summary>Bunnlinje</summary>
+                  <summary>{ta('group.baseline')}</summary>
                   <div class="group-items">
-                    <label title="Copyright/tekst til venstre i bunnlinja">Copyright
-                      <input value={siteDraft.footer?.copyright ?? ''} placeholder="© 2026 Min forening"
+                    <label title={ta('tip.footer.copyright')}>{ta('lbl.copyright')}
+                      <input value={siteDraft.footer?.copyright ?? ''} placeholder={ta('ph.footer.copyright')}
                         oninput={(e) => setFooterCopyright(e.target.value)} /></label>
-                    <p class="panel-strong">Lenker til høyre</p>
+                    <p class="panel-strong">{ta('lbl.baselineLinks')}</p>
                     {@render footerLinkList('baseline', siteDraft.footer?.baseline ?? [])}
-                    <button class="ghost action" onclick={() => addFooterListLink('baseline')}>+ Ny bunnlinje-lenke</button>
+                    <button class="ghost action" onclick={() => addFooterListLink('baseline')}>{ta('ui.addBaselineLink')}</button>
                   </div>
                 </details>
               </div>
             {:else if activePanel === 'collections'}
               <div class="panel-body">
-                <p class="panel-hint">Samlinger er lister av innslag (nyheter, oppslag, publikasjoner) som
-                  vises av Samling-blokker. Endringer her er utkast til du publiserer (utenfor Ctrl+Z).</p>
+                <p class="panel-hint">{ta('hint.collections.intro')}</p>
                 {#if samlingerIds.length}
-                  <label>Samling
+                  <label>{ta('blocks.samling')}
                     <Dropdown value={activeSamling ?? ''}
                       options={[['', ta('common.choose')], ...samlingerIds.map((id) => [id, samlingerView[id]?.name ?? id])]}
                       onchange={(v) => (activeSamling = v || null)} /></label>
@@ -4607,8 +4606,8 @@
                 {#if activeSamling && samlingerView[activeSamling]}
                   {@const samling = samlingerView[activeSamling]}
                   <span class="toolbar-row">
-                    <button class="ghost action" onclick={() => addSamlingEntry(activeSamling)}>+ Nytt innslag</button>
-                    <button class="ghost row-tool" title="Slett hele samlingen (filen fjernes ved neste publisering)"
+                    <button class="ghost action" onclick={() => addSamlingEntry(activeSamling)}>{ta('ui.addEntry')}</button>
+                    <button class="ghost row-tool" title={ta('tip.collections.deleteCollection')}
                       onclick={() => removeSamling(activeSamling)}>{@html ICONS.cross}</button>
                   </span>
                   {#each samling.entries as entry, i (entry.id)}
@@ -4617,33 +4616,33 @@
                       <summary>{entry.title.replace(/<[^>]*>/g, '')}{entry.date ? ` · ${entry.date}` : ''}</summary>
                       <div class="group-items">
                         <span class="toolbar-row">
-                          <input value={entry.title} title="Tittel"
+                          <input value={entry.title} title={ta('lbl.title')}
                             onchange={(e) => setEntryField(activeSamling, entry.id, 'title', e.target.value || 'Uten tittel')} />
                           <span class="row-tools">
                             <button class="ghost row-tool" onclick={() => moveEntry(activeSamling, i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
                             <button class="ghost row-tool" onclick={() => moveEntry(activeSamling, i, 1)}
                               disabled={i === samling.entries.length - 1}>{@html ICONS.down}</button>
-                            <button class="ghost row-tool" title="Slett innslaget"
+                            <button class="ghost row-tool" title={ta('tip.collections.deleteEntry')}
                               onclick={() => removeEntry(activeSamling, entry.id)}>{@html ICONS.cross}</button>
                           </span>
                         </span>
-                        <label>Dato
+                        <label>{ta('lbl.date')}
                           <input type="date" value={entry.date ?? ''}
                             onchange={(e) => setEntryField(activeSamling, entry.id, 'date', e.target.value)} /></label>
-                        <textarea rows="3" placeholder="Tekst/ingress (formater med teksteditoren i blokken på siden)"
+                        <textarea rows="3" placeholder={ta('ph.collections.text')}
                           value={entry.text ?? ''}
                           onchange={(e) => setEntryField(activeSamling, entry.id, 'text', e.target.value)}></textarea>
-                        <label>Lenke
-                          <input value={entry.href ?? ''} placeholder="Valgfri (gjør tittelen klikkbar)"
+                        <label>{ta('lbl.link')}
+                          <input value={entry.href ?? ''} placeholder={ta('ph.collections.href')}
                             onchange={(e) => setEntryField(activeSamling, entry.id, 'href', e.target.value)} /></label>
                         <span class="toolbar-row">
                           <label class="ghost filepick">
-                            {entry.image ? 'Bytt bilde' : 'Legg til bilde'}
+                            {entry.image ? ta('ui.changeImage') : ta('ui.addImage')}
                             <input type="file" accept="image/*" onchange={(e) => setEntryImage(activeSamling, entry.id, e)} />
                           </label>
                           {#if entry.image}
                             <img class="site-icon-preview" src={entry.image} alt="" />
-                            <button class="ghost row-tool" title="Fjern bildet"
+                            <button class="ghost row-tool" title={ta('tip.removeImage')}
                               onclick={() => setEntryField(activeSamling, entry.id, 'image', '')}>{@html ICONS.cross}</button>
                           {/if}
                         </span>
@@ -4651,26 +4650,24 @@
                     </details>
                   {/each}
                   {#if !samling.entries.length}
-                    <p class="panel-hint">Ingen innslag ennå.</p>
+                    <p class="panel-hint">{ta('hint.collections.empty')}</p>
                   {/if}
                   <hr class="gridmenu-divider" />
                 {/if}
-                <label>Navn på ny samling
-                  <input bind:value={newSamlingName} placeholder="F.eks. Nyheter"
+                <label>{ta('lbl.newCollectionName')}
+                  <input bind:value={newSamlingName} placeholder={ta('ph.collections.name')}
                     onkeydown={(e) => e.key === 'Enter' && addSamling()} /></label>
-                <label>Type
+                <label>{ta('common.type')}
                   <Dropdown value={newSamlingKind}
                     options={SAMLING_KINDS}
                     onchange={(v) => (newSamlingKind = v)} /></label>
-                <button class="ghost action" onclick={addSamling} disabled={!newSamlingName.trim()}>+ Opprett samling</button>
+                <button class="ghost action" onclick={addSamling} disabled={!newSamlingName.trim()}>{ta('ui.createCollection')}</button>
               </div>
             {:else if activePanel === 'plugins'}
               <div class="panel-body">
-                <p class="panel-hint">Plugins utvider Urd med nye blokker, seksjonsmaler, bakgrunner og animasjoner.
-                  En plugin er en mappe i plugins/ i repoet ditt; her styrer du hvilke som er aktive.
-                  Endringer gjelder fra neste publisering.</p>
+                <p class="panel-hint">{ta('hint.plugins.intro')}</p>
                 {#if !knownPlugins().length}
-                  <p class="panel-hint">Ingen plugins i listen ennå. Legg en plugin-mappe i plugins/ i repoet og skriv mappenavnet under.</p>
+                  <p class="panel-hint">{ta('hint.plugins.empty')}</p>
                 {/if}
                 {#each knownPlugins() as id (id)}
                   {@const info = pluginInfo[id]}
@@ -4680,34 +4677,34 @@
                       <span class="plugin-name">{info?.name ?? id}</span>
                       {#if info?.version}<span class="plugin-meta">v{info.version}</span>{/if}
                       <span class="row-tools">
-                        <label class="gridmenu-snap plugin-toggle" title={enabled ? 'Aktiv: lastes på siden' : 'Av: lastes ikke'}>
+                        <label class="gridmenu-snap plugin-toggle" title={enabled ? ta('tip.plugins.on') : ta('tip.plugins.off')}>
                           <input type="checkbox" checked={enabled} disabled={Boolean(info?.errors?.length)}
                             onchange={(e) => setPluginEnabled(id, e.target.checked)} />
-                          {enabled ? 'På' : 'Av'}
+                          {enabled ? ta('ui.on') : ta('ui.off')}
                         </label>
-                        <button class="ghost row-tool" title="Fjern fra listen (mappen i plugins/ består)"
+                        <button class="ghost row-tool" title={ta('tip.plugins.remove')}
                           onclick={() => removePlugin(id)}>{@html ICONS.cross}</button>
                       </span>
                     </span>
                     {#if info?.errors?.length}
                       <p class="panel-hint plugin-warn">{info.errors.join('; ')}</p>
                     {:else if info && !info.satisfied}
-                      <p class="panel-hint plugin-warn">Krever motorversjon {info.requiresEngine} (denne siden kjører {pluginEngine}); pluginen hoppes over ved lasting.</p>
+                      <p class="panel-hint plugin-warn">{ta('plugin.engineMismatch', { required: info.requiresEngine, current: pluginEngine })}</p>
                     {:else if info?.csp}
-                      <p class="panel-hint plugin-warn">Trenger CSP-unntak i _headers: {[...(info.csp.connectSrc ?? []).map((d) => `connect-src ${d}`), ...(info.csp.frameSrc ?? []).map((d) => `frame-src ${d}`)].join(', ')}</p>
+                      <p class="panel-hint plugin-warn">{ta('plugin.cspNeeded', { list: [...(info.csp.connectSrc ?? []).map((d) => `connect-src ${d}`), ...(info.csp.frameSrc ?? []).map((d) => `frame-src ${d}`)].join(', ') })}</p>
                     {/if}
                   </div>
                 {/each}
                 {#if pluginsFound.length}
                   <hr class="gridmenu-divider" />
-                  <p class="panel-hint">Funnet i repoets plugins/-mappe:</p>
+                  <p class="panel-hint">{ta('hint.plugins.found')}</p>
                   {#each pluginsFound as id (id)}
                     <div class="plugin-row">
                       <span class="plugin-head">
                         <span class="plugin-name">{pluginInfo[id]?.name ?? id}</span>
                         {#if pluginInfo[id]?.version}<span class="plugin-meta">v{pluginInfo[id].version}</span>{/if}
                         <span class="row-tools">
-                          <button class="ghost row-tool" title="Legg til og aktiver"
+                          <button class="ghost row-tool" title={ta('tip.plugins.addFound')}
                             onclick={() => addFoundPlugin(id)}>{@html ICONS.right}</button>
                         </span>
                       </span>
@@ -4716,14 +4713,14 @@
                 {/if}
                 {#if pluginDiscovery === 'ok'}
                   {#if !pluginsFound.length}
-                    <p class="panel-hint">Nye plugins dukker opp her automatisk når mappen deres er lagt i plugins/ i repoet.</p>
+                    <p class="panel-hint">{ta('hint.plugins.autoDiscover')}</p>
                   {/if}
                 {:else}
                   <!-- Reserveløsning når repo-oppdagelsen er utilgjengelig (lokal server / ikke innlogget) -->
                   <hr class="gridmenu-divider" />
-                  <input placeholder="Mappenavn i plugins/ (f.eks. kalender)" bind:value={newPluginId}
+                  <input placeholder={ta('ph.plugins.folder')} bind:value={newPluginId}
                     onkeydown={(e) => e.key === 'Enter' && addPlugin()} />
-                  <button class="ghost action" onclick={addPlugin} disabled={!newPluginId.trim()}>+ Legg til plugin</button>
+                  <button class="ghost action" onclick={addPlugin} disabled={!newPluginId.trim()}>{ta('ui.addPlugin')}</button>
                   {#if pluginError}
                     <p class="panel-hint plugin-warn">{pluginError}</p>
                   {/if}
@@ -4731,9 +4728,9 @@
               </div>
             {:else if activePanel === 'history'}
               <div class="panel-body">
-                <p class="panel-hint">Siste publiseringer. Angring lager en ny commit som gjenoppretter forrige tilstand - ingenting slettes.</p>
+                <p class="panel-hint">{ta('hint.history.intro')}</p>
                 {#if historyList === null}
-                  <p class="panel-hint">Henter historikken…</p>
+                  <p class="panel-hint">{ta('hint.history.loading')}</p>
                 {:else}
                   {#if historyError}
                     <p class="panel-hint">{historyError}</p>
@@ -4741,8 +4738,8 @@
                   {#if historyList.length > 0}
                     <button class="ghost" onclick={revertLast}
                       disabled={historyBusy || !auth?.allowed}
-                      title={auth?.allowed ? 'Gjenopprett tilstanden før siste publisering' : 'Krever publiseringstilgang'}>
-                      ↩ Angre siste publisering
+                      title={auth?.allowed ? ta('tip.history.revert') : ta('tip.history.needsAccess')}>
+                      {ta('ui.revertLast')}
                     </button>
                     {#each historyList as c, i (c.sha)}
                       <div class="history-row" class:head={i === 0}>
@@ -4766,7 +4763,7 @@
         <div class="stage" style="width:{stageW}px; height:{stageH}px">
           <iframe
             bind:this={iframeEl}
-            title="Forhåndsvisning"
+            title={ta('ui.previewTitle')}
             src={`/?page=${pageId}&preview=1`}
             onload={onIframeLoad}
             style="width:{targetW}px; height:{iframeH}px; transform:scale({scale}); transform-origin:top left"
@@ -4775,7 +4772,7 @@
       </div>
     </div>
   {:else}
-    <p class="loading">Laster…</p>
+    <p class="loading">{ta('ui.loading')}</p>
   {/if}
 
   {#if iconEditorImage}
@@ -4801,25 +4798,19 @@
     <!-- Oppsettsveiviser: første besøk på en fersk klon -->
     <div class="setup-overlay">
       <div class="setup-card">
-        <h2>Velkommen til Urd!</h2>
-        <p class="panel-hint">
-          Dette ser ut som en fersk side. Gi den navn og farger her, så er
-          grunnlaget på plass - alt kan endres senere i panelene.
-        </p>
-        <label>Sidens navn
-          <input bind:value={setupName} placeholder="F.eks. foreningens navn"
+        <h2>{ta('setup.title')}</h2>
+        <p class="panel-hint">{ta('setup.intro')}</p>
+        <label>{ta('setup.nameLabel')}
+          <input bind:value={setupName} placeholder={ta('ph.setup.name')}
             onkeydown={(e) => e.key === 'Enter' && applySetup()} /></label>
-        <label>Aksentfarge (knapper og lenker)
-          <ColorPicker value={setupAccent} label="Aksentfarge" onchange={(hex) => (setupAccent = hex)} /></label>
-        <label>Bakgrunnsfarge
-          <ColorPicker value={setupBg} label="Bakgrunnsfarge" onchange={(hex) => (setupBg = hex)} /></label>
-        <p class="panel-hint">
-          Navnet brukes også som logo i menyen. Husk å trykke Publiser
-          etterpå, så endringene blir synlige for besøkende.
-        </p>
+        <label>{ta('setup.accentLabel')}
+          <ColorPicker value={setupAccent} label={ta('setup.accentPick')} onchange={(hex) => (setupAccent = hex)} /></label>
+        <label>{ta('setup.bgLabel')}
+          <ColorPicker value={setupBg} label={ta('setup.bgLabel')} onchange={(hex) => (setupBg = hex)} /></label>
+        <p class="panel-hint">{ta('setup.outro')}</p>
         <span class="setup-actions">
-          <button class="ghost" onclick={closeSetup}>Hopp over</button>
-          <button class="primary" onclick={applySetup} disabled={!setupName.trim()}>Sett i gang</button>
+          <button class="ghost" onclick={closeSetup}>{ta('setup.skip')}</button>
+          <button class="primary" onclick={applySetup} disabled={!setupName.trim()}>{ta('setup.start')}</button>
         </span>
       </div>
     </div>
@@ -4828,38 +4819,38 @@
   {#if status}
     <div class="toast" class:ok={statusKind === 'ok'} class:error={statusKind === 'error'}>
       <span>{status}</span>
-      <button class="toast-x" onclick={() => setStatus('')} title="Lukk">×</button>
+      <button class="toast-x" onclick={() => setStatus('')} title={ta('ui.close')}>×</button>
     </div>
   {/if}
 </div>
 
 {#snippet backgroundLayers(bg, layers)}
-  <p class="panel-hint">Lagene tegnes nedenfra og opp; øverste lag i listen ligger bakerst.</p>
+  <p class="panel-hint">{ta('hint.bg.order')}</p>
   {#each layers as layer, i (i)}
     <div class="bg-layer">
       <span class="nav-line">
-        <Dropdown value={layer.type} title="Bytt lagtype (innstillingene nullstilles)"
+        <Dropdown value={layer.type} title={ta('tip.bg.changeType')}
           options={BG_TYPES.map(([id, def]) => [id, def.label])}
           onchange={(v) => changeBgLayerType(bg, i, v)} />
         <span class="row-tools">
           <button class="ghost row-tool" onclick={() => moveBgLayer(bg, i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
           <button class="ghost row-tool" onclick={() => moveBgLayer(bg, i, 1)}
             disabled={i === layers.length - 1}>{@html ICONS.down}</button>
-          <button class="ghost row-tool" title="Fjern laget" onclick={() => removeBgLayer(bg, i)}>{@html ICONS.cross}</button>
+          <button class="ghost row-tool" title={ta('tip.bg.removeLayer')} onclick={() => removeBgLayer(bg, i)}>{@html ICONS.cross}</button>
         </span>
       </span>
       {#if layer.type === 'color'}
-        <label>Farge
+        <label>{ta('lbl.color')}
           <ColorPicker value={layer.props.value} tokens={themeSwatches()}
-            label="Lagets farge" onchange={(hex) => setBgProp(bg, i, 'value', hex)} /></label>
-        <label>Styrke
+            label={ta('tip.bg.layerColor')} onchange={(hex) => setBgProp(bg, i, 'value', hex)} /></label>
+        <label>{ta('lbl.strength')}
           <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
         <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity ?? 1}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
       {:else if layer.type === 'gradient'}
         {@const g = gradientProps(layer)}
         {@const shareSum = g.stops.reduce((a, s) => a + Math.max(0, Number(s.share) || 0), 0)}
-        <label>Form
+        <label>{ta('blocks.shape')}
           <Dropdown value={g.kind ?? 'linear'}
             options={[['linear', ta('opt.grad.linear')], ['radial', ta('opt.grad.radial')]]}
             onchange={(v) => setGradKind(bg, i, v)} /></label>
@@ -4868,135 +4859,135 @@
             class:dragging={stopDrag?.layer === i && stopDrag.from === si}
             class:drop-above={stopDrag?.layer === i && stopDrag.insert === si}
             class:drop-below={stopDrag?.layer === i && stopDrag.insert === g.stops.length && si === g.stops.length - 1}>
-            <span class="grad-grip" title="Dra for å endre fargenes rekkefølge"
+            <span class="grad-grip" title={ta('tip.bg.dragStop')}
               onpointerdown={(e) => startStopDrag(bg, e, i, si)}>
               <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.4"/><circle cx="11" cy="3" r="1.4"/><circle cx="5" cy="8" r="1.4"/><circle cx="11" cy="8" r="1.4"/><circle cx="5" cy="13" r="1.4"/><circle cx="11" cy="13" r="1.4"/></svg>
             </span>
             <ColorPicker value={stop.color} tokens={themeSwatches()}
-              label="Fargen" onchange={(hex) => setGradStop(bg, i, si, { color: hex })} />
+              label={ta('tip.bg.stopColor')} onchange={(hex) => setGradStop(bg, i, si, { color: hex })} />
             <input type="range" class="tb-grow" min="0" max="100" step="1" value={stop.share ?? 50}
-              title="Hvor mye plass fargen tar; 0 gir en hard kant mot nabofargen"
+              title={ta('tip.bg.stopShare')}
               oninput={(e) => setGradStop(bg, i, si, { share: Number(e.target.value) })} />
             <span class="gridmenu-value">{shareSum > 0 ? Math.round((Math.max(0, Number(stop.share) || 0) / shareSum) * 100) : Math.round(100 / g.stops.length)}%</span>
             {#if g.stops.length > 2}
-              <button class="ghost row-tool" title="Fjern fargen"
+              <button class="ghost row-tool" title={ta('tip.bg.removeStop')}
                 onclick={() => removeGradStop(bg, i, si)}>{@html ICONS.cross}</button>
             {/if}
           </span>
         {/each}
-        <button class="ghost action" title="Ny farge nederst i listen; dra i håndtaket for rekkefølgen"
-          onclick={() => addGradStop(bg, i)}>+ Legg til farge</button>
+        <button class="ghost action" title={ta('tip.bg.addStop')}
+          onclick={() => addGradStop(bg, i)}>{ta('ui.addStop')}</button>
         {#if (g.kind ?? 'linear') === 'radial'}
-          <label>Sentrum X
+          <label>{ta('lbl.centerX')}
             <span class="gridmenu-value">{Math.round((g.x ?? 0.5) * 100)}%</span></label>
           <input type="range" min="0" max="1" step="0.01" value={g.x ?? 0.5}
             oninput={(e) => setGradProp(bg, i, 'x', Number(e.target.value))} />
-          <label>Sentrum Y
+          <label>{ta('lbl.centerY')}
             <span class="gridmenu-value">{Math.round((g.y ?? 0.5) * 100)}%</span></label>
           <input type="range" min="0" max="1" step="0.01" value={g.y ?? 0.5}
             oninput={(e) => setGradProp(bg, i, 'y', Number(e.target.value))} />
         {:else}
-          <label>Vinkel
+          <label>{ta('lbl.angle')}
             <span class="gridmenu-value">{g.angle}°</span></label>
           <input type="range" min="0" max="360" step="5" value={g.angle}
             oninput={(e) => setGradProp(bg, i, 'angle', Number(e.target.value))} />
         {/if}
-        <label>Styrke
+        <label>{ta('lbl.strength')}
           <span class="gridmenu-value">{Math.round((g.opacity ?? 1) * 100)}%</span></label>
         <input type="range" min="0.05" max="1" step="0.01" value={g.opacity ?? 1}
           oninput={(e) => setGradProp(bg, i, 'opacity', Number(e.target.value))} />
-        <label title="Gjelder selve gradienten - uavhengig av Animasjon-valget nederst, som gjelder innholdet">Bevegelse
+        <label title={ta('tip.bg.motion')}>{ta('lbl.motion')}
           <Dropdown value={g.animation ?? 'none'}
             options={GRAD_ANIMATIONS[(g.kind ?? 'linear') === 'radial' ? 'radial' : 'linear']}
             onchange={(v) => setGradProp(bg, i, 'animation', v)} /></label>
       {:else if layer.type === 'glow'}
-        <label>Farge
+        <label>{ta('lbl.color')}
           <ColorPicker value={layer.props.color} tokens={themeSwatches()}
-            label="Glødens farge" onchange={(hex) => setBgProp(bg, i, 'color', hex)} /></label>
-        <label>Posisjon X
+            label={ta('tip.bg.glowColor')} onchange={(hex) => setBgProp(bg, i, 'color', hex)} /></label>
+        <label>{ta('lbl.posX')}
           <span class="gridmenu-value">{Math.round(layer.props.x * 100)}%</span></label>
         <input type="range" min="0" max="1" step="0.01" value={layer.props.x}
           oninput={(e) => setBgProp(bg, i, 'x', Number(e.target.value))} />
-        <label>Posisjon Y
+        <label>{ta('lbl.posY')}
           <span class="gridmenu-value">{Math.round(layer.props.y * 100)}%</span></label>
         <input type="range" min="0" max="1" step="0.01" value={layer.props.y}
           oninput={(e) => setBgProp(bg, i, 'y', Number(e.target.value))} />
-        <label>Størrelse
+        <label>{ta('lbl.size')}
           <span class="gridmenu-value">{Math.round(layer.props.radius * 100)}%</span></label>
         <input type="range" min="0.1" max="1" step="0.01" value={layer.props.radius}
           oninput={(e) => setBgProp(bg, i, 'radius', Number(e.target.value))} />
-        <label>Styrke
+        <label>{ta('lbl.strength')}
           <span class="gridmenu-value">{Math.round(layer.props.opacity * 100)}%</span></label>
         <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
       {:else if layer.type === 'grain'}
-        <label>Styrke
+        <label>{ta('lbl.strength')}
           <span class="gridmenu-value">{Math.round(layer.props.opacity * 100)}%</span></label>
         <input type="range" min="0.01" max="0.3" step="0.01" value={layer.props.opacity}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
       {:else if layer.type === 'image'}
-        <label class="ghost filepick" title="Komprimeres automatisk til webp">
-          {layer.props.src ? 'Bytt bilde' : 'Velg bilde'}
+        <label class="ghost filepick" title={ta('tip.webpAuto')}>
+          {layer.props.src ? ta('ui.changeImage') : ta('ui.chooseImage')}
           <input type="file" accept="image/*" onchange={(e) => setBgImage(bg, i, e)} />
         </label>
         {@const isTile = layer.props.fit === 'flislegg' || layer.props.fit === 'repeat'}
-        <label title="Vanlig plasserer bildet fritt med valgt størrelse og posisjon. Flislegg gjentar bildet som et mønster.">Tilpasning
+        <label title={ta('tip.bg.fit')}>{ta('lbl.fit')}
           <Dropdown value={isTile ? 'flislegg' : 'vanlig'}
             options={[['vanlig', ta('opt.img.plain')], ['flislegg', ta('opt.img.tile')]]}
             onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
-        <label title="Skala relativt til seksjonsbredden: 100 % = like bred som seksjonen. Dekk fyller seksjonen (beskjærer); Vis hele viser hele bildet.">Størrelse</label>
+        <label title={ta('tip.bg.size')}>{ta('lbl.size')}</label>
         <div class="sizestep">
-          <button type="button" title="Mindre" onclick={() => stepBgSize(bg, i, layer.props.size ?? 1, -0.05)}>−</button>
+          <button type="button" title={ta('tip.smaller')} onclick={() => stepBgSize(bg, i, layer.props.size ?? 1, -0.05)}>−</button>
           <input type="number" min="10" max="400" value={Math.round((layer.props.size ?? 1) * 100)}
             onchange={(e) => setBgSizePct(bg, i, e.target.value)} />
           <span class="sizeunit">%</span>
-          <button type="button" title="Større" onclick={() => stepBgSize(bg, i, layer.props.size ?? 1, 0.05)}>+</button>
+          <button type="button" title={ta('tip.larger')} onclick={() => stepBgSize(bg, i, layer.props.size ?? 1, 0.05)}>+</button>
         </div>
         {#if !isTile}
           <div class="sizefill">
-            <button type="button" class="ghost" title="Fyll seksjonen (beskjærer)" onclick={() => setBgFillSize(bg, i, layer, 'cover')}>Dekk</button>
-            <button type="button" class="ghost" title="Vis hele bildet" onclick={() => setBgFillSize(bg, i, layer, 'contain')}>Vis hele</button>
+            <button type="button" class="ghost" title={ta('tip.bg.cover')} onclick={() => setBgFillSize(bg, i, layer, 'cover')}>{ta('ui.cover')}</button>
+            <button type="button" class="ghost" title={ta('opt.fitFrame.contain')} onclick={() => setBgFillSize(bg, i, layer, 'contain')}>{ta('opt.fit.contain')}</button>
           </div>
-          <label title="Dra punktet eller bruk sliderne. 50 % = sentrert. Gå under 0 % / over 100 % for å legge motivet delvis eller helt utenfor kanten.">Posisjon</label>
+          <label title={ta('tip.bg.position')}>{ta('lbl.position')}</label>
           <div class="focalpad" onpointerdown={(e) => startFocalDrag(e, bg, i, 'xy')}
             style="--fx:{Math.max(0, Math.min(1, layer.props.x ?? 0.5)) * 100}%; --fy:{Math.max(0, Math.min(1, layer.props.y ?? 0.5)) * 100}%">
             <span class="focaldot"></span>
           </div>
-          <label class="sub">Vannrett
+          <label class="sub">{ta('lbl.horizontal')}
             <span class="gridmenu-value">{Math.round((layer.props.x ?? 0.5) * 100)}%</span></label>
           <input type="range" min="-0.5" max="1.5" step="0.01" value={layer.props.x ?? 0.5}
             oninput={(e) => setBgProp(bg, i, 'x', Number(e.target.value))} />
-          <label class="sub">Loddrett
+          <label class="sub">{ta('lbl.vertical')}
             <span class="gridmenu-value">{Math.round((layer.props.y ?? 0.5) * 100)}%</span></label>
           <input type="range" min="-0.5" max="1.5" step="0.01" value={layer.props.y ?? 0.5}
             oninput={(e) => setBgProp(bg, i, 'y', Number(e.target.value))} />
         {/if}
-        <label>Uskarphet
+        <label>{ta('lbl.blur')}
           <span class="gridmenu-value">{layer.props.blur ?? 0} px</span></label>
         <input type="range" min="0" max="20" step="1" value={layer.props.blur ?? 0}
           oninput={(e) => setBgProp(bg, i, 'blur', Number(e.target.value))} />
-        <label>Styrke
+        <label>{ta('lbl.strength')}
           <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
         <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity ?? 1}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
-        <label class="gridmenu-snap" title="Bildet henger etter når man ruller. Av på mobil og ved redusert bevegelse.">
+        <label class="gridmenu-snap" title={ta('tip.bg.parallax')}>
           <input type="checkbox" checked={(layer.props.parallax ?? 0) > 0}
             onchange={(e) => setBgProp(bg, i, 'parallax', e.target.checked ? 0.3 : 0)} />
-          Parallakse
+          {ta('lbl.parallax')}
         </label>
         {#if (layer.props.parallax ?? 0) > 0}
-          <label>Parallaksestyrke
+          <label>{ta('lbl.parallaxStrength')}
             <span class="gridmenu-value">{Math.round((layer.props.parallax ?? 0) * 100)}%</span></label>
           <input type="range" min="0.1" max="1" step="0.01" value={layer.props.parallax ?? 0.3}
             oninput={(e) => setBgProp(bg, i, 'parallax', Number(e.target.value))} />
-          <label title="Lar parallaksen flyte forbi seksjonskanten inn i naboseksjonen. Vises der naboen er gjennomsiktig.">Flyt inn i nabo
+          <label title={ta('tip.bg.bleed')}>{ta('lbl.bleed')}
             <Dropdown value={layer.props.bleed ?? 'none'}
               options={[['none', ta('common.none')], ['up', ta('opt.bleed.up')], ['down', ta('opt.bleed.down')], ['both', ta('opt.brand.both')]]}
               onchange={(v) => setBgProp(bg, i, 'bleed', v)} /></label>
         {/if}
       {:else if layer.type === 'bildegalleri'}
-        <label class="ghost filepick" title="Velg gjerne flere bilder samtidig; komprimeres til webp">
-          + Legg til bilder
+        <label class="ghost filepick" title={ta('tip.bg.addImages')}>
+          {ta('ui.addImages')}
           <input type="file" accept="image/*" multiple onchange={(e) => addBgGalleryImages(bg, i, e)} />
         </label>
         {#each layer.props.images ?? [] as img, j (j)}
@@ -5006,69 +4997,69 @@
               <button class="ghost row-tool" onclick={() => moveBgGalleryImage(bg, i, j, -1)} disabled={j === 0}>{@html ICONS.up}</button>
               <button class="ghost row-tool" onclick={() => moveBgGalleryImage(bg, i, j, 1)}
                 disabled={j === layer.props.images.length - 1}>{@html ICONS.down}</button>
-              <button class="ghost row-tool" title="Fjern bildet"
+              <button class="ghost row-tool" title={ta('tip.removeImage')}
                 onclick={() => removeBgGalleryImage(bg, i, j)}>{@html ICONS.cross}</button>
             </span>
           </span>
-          <label>Fokus X
+          <label>{ta('lbl.focusX')}
             <span class="gridmenu-value">{Math.round((img.x ?? 0.5) * 100)}%</span></label>
           <input type="range" min="0" max="1" step="0.01" value={img.x ?? 0.5}
             oninput={(e) => setBgGalleryImageProp(bg, i, j, 'x', Number(e.target.value))} />
-          <label>Fokus Y
+          <label>{ta('lbl.focusY')}
             <span class="gridmenu-value">{Math.round((img.y ?? 0.5) * 100)}%</span></label>
           <input type="range" min="0" max="1" step="0.01" value={img.y ?? 0.5}
             oninput={(e) => setBgGalleryImageProp(bg, i, j, 'y', Number(e.target.value))} />
         {/each}
-        <label>Tilpasning
+        <label>{ta('lbl.fit')}
           <Dropdown value={layer.props.fit ?? 'cover'}
             options={[['cover', ta('opt.fit.cover')], ['contain', ta('opt.fit.contain')]]}
             onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
-        <label>Sekunder per bilde
+        <label>{ta('lbl.secondsPerImage')}
           <input type="number" min="2" max="120" value={layer.props.interval ?? 6}
             onchange={(e) => setBgProp(bg, i, 'interval', Number(e.target.value))} /></label>
-        <label>Overgang
+        <label>{ta('lbl.transition')}
           <span class="gridmenu-value">{(layer.props.fade ?? 1.5).toFixed(1)} s</span></label>
         <input type="range" min="0" max="5" step="0.1" value={layer.props.fade ?? 1.5}
           oninput={(e) => setBgProp(bg, i, 'fade', Number(e.target.value))} />
-        <label>Uskarphet
+        <label>{ta('lbl.blur')}
           <span class="gridmenu-value">{layer.props.blur ?? 0} px</span></label>
         <input type="range" min="0" max="20" step="1" value={layer.props.blur ?? 0}
           oninput={(e) => setBgProp(bg, i, 'blur', Number(e.target.value))} />
-        <label>Styrke
+        <label>{ta('lbl.strength')}
           <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
         <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity ?? 1}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
-        <p class="panel-hint">Bakgrunnen blar gjennom bildene med myk overgang. Med ett bilde, eller redusert bevegelse hos den besøkende, vises kun det første.</p>
+        <p class="panel-hint">{ta('hint.bg.gallery')}</p>
       {/if}
     </div>
   {/each}
-  <label>Nytt lag
+  <label>{ta('lbl.newLayer')}
     <Dropdown value={newBgType}
       options={BG_TYPES.map(([id, def]) => [id, def.label])}
       onchange={(v) => (newBgType = v)} /></label>
-  <button class="ghost action" onclick={() => addBgLayer(bg, newBgType)}>+ Legg til lag</button>
+  <button class="ghost action" onclick={() => addBgLayer(bg, newBgType)}>{ta('ui.addLayer')}</button>
 {/snippet}
 
 {#snippet footerLinkList(field, links)}
   {#each links as link, li}
     <div class="nav-row nav-sub-row">
-      <input value={link.label} title="Lenketeksten"
+      <input value={link.label} title={ta('tip.linkLabel')}
         oninput={(e) => setFooterListLinkLabel(field, li, e.target.value)} />
       <span class="row-tools">
         <button class="ghost row-tool" onclick={() => moveFooterListLink(field, li, -1)} disabled={li === 0}>{@html ICONS.up}</button>
         <button class="ghost row-tool" onclick={() => moveFooterListLink(field, li, 1)}
           disabled={li === links.length - 1}>{@html ICONS.down}</button>
-        <button class="ghost row-tool" title="Fjern lenken"
+        <button class="ghost row-tool" title={ta('tip.removeLink')}
           onclick={() => removeFooterListLink(field, li)}>{@html ICONS.cross}</button>
       </span>
       <span class="nav-target">
-        <Dropdown value={link.page ?? '__href'} title="Hvor lenken går"
+        <Dropdown value={link.page ?? '__href'} title={ta('tip.linkTarget')}
           options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')]]}
           onchange={(v) => setFooterListLinkTarget(field, li, v)} />
       </span>
       {#if !link.page}
-        <input class="nav-target" value={link.href ?? ''} placeholder="https://… eller #anker"
-          title="Ekstern lenke (https://…, mailto:, tel:) eller anker til en seksjon: #ankeret på samme side, /siden#ankeret fra en annen side. Ankeret kopieres fra seksjonens Egenskaper."
+        <input class="nav-target" value={link.href ?? ''} placeholder={ta('ph.hrefAnchor')}
+          title={ta('tip.hrefAnchor')}
           onchange={(e) => setFooterListLinkHref(field, li, e.target.value)} />
       {/if}
     </div>
@@ -5077,21 +5068,21 @@
 
 {#snippet kortstilUI()}
   {@const bs = selectedBlock.props.boxStyle ?? {}}
-  <label>Blokkfarge
+  <label>{ta('lbl.blockColor')}
     <ColorPicker value={bs.bg ?? ''} tokens={themeSwatches()} allowClear
-      label="Bakgrunnsfarge for boksen (tom = temaets flate)"
+      label={ta('tip.box.bg')}
       onchange={(hex) => setBoxStyle({ bg: hex || null })} /></label>
-  <label>Skygge
+  <label>{ta('lbl.shadow')}
     <Dropdown value={bs.shadow ?? ''}
       options={[['', ta('common.none')], ['soft', ta('opt.shadow.soft')], ['strong', ta('opt.shadow.strong')]]}
       onchange={(v) => setBoxStyle({ shadow: v || null })} /></label>
   {#if bs.shadow}
-    <label>Skyggefarge
+    <label>{ta('lbl.shadowColor')}
       <ColorPicker value={bs.shadowColor ?? ''} tokens={themeSwatches()} allowClear
-        label="Skyggens farge (tom = svart)"
+        label={ta('tip.box.shadowColor')}
         onchange={(hex) => setBoxStyle({ shadowColor: hex || null })} /></label>
   {/if}
-  <label>Kantlinje
+  <label>{ta('lbl.border')}
     <Dropdown value={bs.border === 'none' ? 'none' : bs.border ? 'custom' : ''}
       options={[['', ta('opt.border.theme')], ['none', ta('common.none')], ['custom', ta('opt.border.custom')]]}
       onchange={(v) => setBoxStyle({ border: v === 'custom' ? { color: 'accent', width: 1 } : v || null })} /></label>
@@ -5099,37 +5090,37 @@
     <!-- Kantfarge/Tykkelse vises OGSÅ for «Temaets (tynn)»: å velge en farge
          gjør den til en egen (fargbar) kantlinje. -->
     {@const bd = typeof bs.border === 'object' ? bs.border : { color: 'text', width: 1 }}
-    <label>Kantfarge
+    <label>{ta('lbl.borderColor')}
       <ColorPicker value={bd.color} tokens={themeSwatches()}
-        label="Kantlinjens farge" onchange={(hex) => setBoxStyle({ border: { ...bd, color: hex } })} /></label>
-    <label>Tykkelse (px)
+        label={ta('tip.box.borderColor')} onchange={(hex) => setBoxStyle({ border: { ...bd, color: hex } })} /></label>
+    <label>{ta('lbl.thicknessPx')}
       <span class="num-stepper">
-        <button type="button" title="Tynnere" aria-label="Tynnere"
+        <button type="button" title={ta('tip.thinner')} aria-label={ta('tip.thinner')}
           onclick={() => setBoxStyle({ border: { ...bd, width: Math.max(1, bd.width - 1) } })}>−</button>
         <input type="number" min="1" max="12" step="1" value={bd.width}
           onchange={(e) => setBoxStyle({ border: { ...bd, width: Math.min(12, Math.max(1, Number(e.target.value) || 1)) } })} />
-        <button type="button" title="Tykkere" aria-label="Tykkere"
+        <button type="button" title={ta('tip.thicker')} aria-label={ta('tip.thicker')}
           onclick={() => setBoxStyle({ border: { ...bd, width: Math.min(12, bd.width + 1) } })}>+</button>
       </span></label>
   {/if}
-  <label class="gridmenu-snap" title="Frostet glass: gjennomskinnelig kort med uskarp bakgrunn - best over bilder og gradienter">
+  <label class="gridmenu-snap" title={ta('tip.box.glass')}>
     <input type="checkbox" checked={Boolean(bs.glass)}
       onchange={(e) => setBoxStyle({ glass: e.target.checked || null })} />
-    Glass-effekt (frostet)
+    {ta('lbl.glass')}
   </label>
 {/snippet}
 
 {#snippet blockPropsUI()}
 
   {#if selectedBlock.type === 'text'}
-    <label>Justering
+    <label>{ta('lbl.align')}
       <Dropdown value={selectedBlock.props.align ?? 'left'}
         options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
         onchange={(v) => setBlockProp('align', v)} /></label>
     <label class="gridmenu-snap">
       <input type="checkbox" checked={Boolean(selectedBlock.props.box)}
         onchange={(e) => setBlockProp('box', e.target.checked)} />
-      Tekstboks (kort med bakgrunn)
+      {ta('lbl.textBoxToggle')}
     </label>
     {#if selectedBlock.props.box}
       {@render kortstilUI()}
@@ -5137,32 +5128,32 @@
     <!-- Font, størrelse, linje- og bokstavavstand settes i tekst-editorens
          verktøylinje (gjelder markert tekst), ikke her. -->
   {:else if selectedBlock.type === 'faq'}
-    <label class="gridmenu-snap" title="Ellers lukkes forrige svar når et nytt åpnes">
+    <label class="gridmenu-snap" title={ta('tip.faq.multi')}>
       <input type="checkbox" checked={Boolean(selectedBlock.props.multi)}
         onchange={(e) => setBlockProp('multi', e.target.checked)} />
-      Flere svar åpne samtidig
+      {ta('lbl.faqMulti')}
     </label>
-    <p class="panel-strong">Spørsmål</p>
+    <p class="panel-strong">{ta('lbl.questions')}</p>
     {#each selectedBlock.props.items ?? [] as item, i (i)}
       <span class="nav-line">
-        <input value={item.q} title="Spørsmålsteksten (svaret skrives rett i blokken)"
+        <input value={item.q} title={ta('tip.faq.question')}
           onchange={(e) => setFaqItem(i, { q: e.target.value })} />
         <span class="row-tools">
           <button class="ghost row-tool" onclick={() => moveFaqItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
           <button class="ghost row-tool" onclick={() => moveFaqItem(i, 1)}
             disabled={i === (selectedBlock.props.items?.length ?? 0) - 1}>{@html ICONS.down}</button>
-          <button class="ghost row-tool" title="Fjern spørsmålet" onclick={() => removeFaqItem(i)}>{@html ICONS.cross}</button>
+          <button class="ghost row-tool" title={ta('tip.faq.remove')} onclick={() => removeFaqItem(i)}>{@html ICONS.cross}</button>
         </span>
       </span>
     {/each}
-    <button class="ghost action" onclick={addFaqItem}>+ Nytt spørsmål</button>
-    <p class="panel-strong">Kortstil</p>
+    <button class="ghost action" onclick={addFaqItem}>{ta('ui.addQuestion')}</button>
+    <p class="panel-strong">{ta('lbl.cardStyle')}</p>
     {@render kortstilUI()}
   {:else if selectedBlock.type === 'button'}
-    <label>Tekst
+    <label>{ta('blocks.text')}
       <input value={selectedBlock.props.label}
         onchange={(e) => setBlockProp('label', e.target.value)} /></label>
-    <label>Går til
+    <label>{ta('lbl.goesTo')}
       <Dropdown value={selectedBlock.props.page ?? '__href'}
         options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.externalLink')]]}
         onchange={(v) => {
@@ -5173,78 +5164,78 @@
           });
         }} /></label>
     {#if !selectedBlock.props.page}
-      <input placeholder="https://…"
+      <input placeholder={ta('ph.url')}
         value={selectedBlock.props.href === '#' ? '' : selectedBlock.props.href ?? ''}
         onchange={(e) => setBlockProp('href', e.target.value || null)} />
     {/if}
-    <label>Stil
+    <label>{ta('lbl.style')}
       <Dropdown value={selectedBlock.props.style}
         options={[['primary', ta('opt.btn.primary')], ['secondary', ta('opt.btn.secondary')]]}
         onchange={(v) => setBlockProp('style', v)} /></label>
   {:else if selectedBlock.type === 'image'}
     <label class="ghost filepick">
-      Bytt bilde
+      {ta('ui.changeImage')}
       <input type="file" accept="image/*" onchange={replaceImage} />
     </label>
-    <label>Beskrivelse
-      <input value={selectedBlock.props.alt ?? ''} placeholder="For skjermlesere, og når bildet ikke kan vises"
+    <label>{ta('lbl.description')}
+      <input value={selectedBlock.props.alt ?? ''} placeholder={ta('ph.altText')}
         onchange={(e) => setBlockProp('alt', e.target.value)} /></label>
-    <label>Tilpasning
+    <label>{ta('lbl.fit')}
       <Dropdown value={selectedBlock.props.fit ?? 'cover'}
         options={[['cover', ta('opt.fitFrame.cover')], ['contain', ta('opt.fitFrame.contain')]]}
         onchange={(v) => setBlockProp('fit', v)} /></label>
-    <label>Avrunding
+    <label>{ta('lbl.radius')}
       <Dropdown value={selectedBlock.props.radius ?? ''}
         options={[['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]]}
         onchange={(v) => setBlockProp('radius', v || null)} /></label>
-    <label>Lenke
-      <input value={selectedBlock.props.href ?? ''} placeholder="Valgfri (gjør bildet klikkbart)"
+    <label>{ta('lbl.link')}
+      <input value={selectedBlock.props.href ?? ''} placeholder={ta('ph.optionalImageLink')}
         onchange={(e) => setBlockProp('href', e.target.value || null)} /></label>
     {#if !selectedBlock.props.href}
-      <label class="gridmenu-snap" title="Gjelder hos besøkende (prøv i Ren visning); her åpner klikk bildeeditoren">
+      <label class="gridmenu-snap" title={ta('tip.lightbox')}>
         <input type="checkbox" checked={Boolean(selectedBlock.props.lightbox)}
           onchange={(e) => setBlockProp('lightbox', e.target.checked)} />
-        Fullskjerm ved klikk (lightbox)
+        {ta('lbl.lightbox')}
       </label>
     {/if}
-    <label>Fokus X
+    <label>{ta('lbl.focusX')}
       <span class="gridmenu-value">{Math.round((selectedBlock.props.x ?? 0.5) * 100)}%</span></label>
     <input type="range" min="0" max="1" step="0.01" value={selectedBlock.props.x ?? 0.5}
       oninput={(e) => setBlockProp('x', Number(e.target.value))} />
-    <label>Fokus Y
+    <label>{ta('lbl.focusY')}
       <span class="gridmenu-value">{Math.round((selectedBlock.props.y ?? 0.5) * 100)}%</span></label>
     <input type="range" min="0" max="1" step="0.01" value={selectedBlock.props.y ?? 0.5}
       oninput={(e) => setBlockProp('y', Number(e.target.value))} />
-    <label title="Beskjærer inn mot fokuspunktet">Zoom
+    <label title={ta('tip.zoomCrop')}>{ta('lbl.zoom')}
       <span class="gridmenu-value">{(selectedBlock.props.zoom ?? 1).toFixed(2)}x</span></label>
     <input type="range" min="1" max="3" step="0.01" value={selectedBlock.props.zoom ?? 1}
       oninput={(e) => setBlockProp('zoom', Number(e.target.value))} />
-    <label>Lysstyrke
+    <label>{ta('lbl.brightness')}
       <span class="gridmenu-value">{Math.round((selectedBlock.props.brightness ?? 1) * 100)}%</span></label>
     <input type="range" min="0.2" max="2" step="0.01" value={selectedBlock.props.brightness ?? 1}
       oninput={(e) => setBlockProp('brightness', Number(e.target.value))} />
-    <label>Kontrast
+    <label>{ta('lbl.contrast')}
       <span class="gridmenu-value">{Math.round((selectedBlock.props.contrast ?? 1) * 100)}%</span></label>
     <input type="range" min="0.2" max="2" step="0.01" value={selectedBlock.props.contrast ?? 1}
       oninput={(e) => setBlockProp('contrast', Number(e.target.value))} />
-    <label>Metning
+    <label>{ta('lbl.saturate')}
       <span class="gridmenu-value">{Math.round((selectedBlock.props.saturate ?? 1) * 100)}%</span></label>
     <input type="range" min="0" max="2" step="0.01" value={selectedBlock.props.saturate ?? 1}
       oninput={(e) => setBlockProp('saturate', Number(e.target.value))} />
-    <button class="ghost action" title="Sett lysstyrke, kontrast og metning tilbake til nøytralt"
+    <button class="ghost action" title={ta('tip.resetAdjust')}
       onclick={() => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
         b.props.brightness = 1; b.props.contrast = 1; b.props.saturate = 1;
-      })}>Nullstill justeringer</button>
+      })}>{ta('ui.resetAdjust')}</button>
   {:else if selectedBlock.type === 'video'}
-    <label>Videolenke</label>
-    <input value={selectedBlock.props.url ?? ''} placeholder="https://youtube.com/watch?v=… eller vimeo.com/…"
+    <label>{ta('lbl.videoUrl')}</label>
+    <input value={selectedBlock.props.url ?? ''} placeholder={ta('ph.videoUrl')}
       onchange={(e) => setBlockProp('url', e.target.value)} />
-    <label>Tittel (for skjermlesere)
+    <label>{ta('lbl.videoTitle')}
       <input value={selectedBlock.props.title ?? ''}
         onchange={(e) => setBlockProp('title', e.target.value)} /></label>
-    <p class="panel-hint">YouTube og Vimeo støttes, med personvernvennlig innbygging. Videoen spilles på den publiserte siden (og i Ren visning).</p>
+    <p class="panel-hint">{ta('hint.video')}</p>
   {:else if selectedBlock.type === 'icon'}
-    <label>Ikon
+    <label>{ta('blocks.icon')}
       <span class="toolbar-row">
         <GlyphPicker value={selectedBlock.props.glyph ?? '★'}
           icon={selectedBlock.props.icon ?? null}
@@ -5261,76 +5252,76 @@
           onimage={(dataUrl) => setBlockProp('image', dataUrl)} />
         {#if !selectedBlock.props.icon}
           <input class="token-input" value={selectedBlock.props.glyph ?? ''} maxlength="4"
-            title="Eller skriv/lim inn et tegn selv"
+            title={ta('tip.icon.typeGlyph')}
             onchange={(e) => setBlockProp('glyph', e.target.value || '★')} />
         {:else}
-          <button class="ghost" title="Tilbake til tegnet/emojien"
-            onclick={() => setBlockProp('icon', null)}>Fjern tegnet ikon</button>
+          <button class="ghost" title={ta('tip.icon.backToGlyph')}
+            onclick={() => setBlockProp('icon', null)}>{ta('ui.removeDrawnIcon')}</button>
         {/if}
       </span></label>
     {#if selectedBlock.props.image}
       <span class="toolbar-row">
-        <img class="site-icon-preview" src={selectedBlock.props.image} alt="Eget ikon" />
-        <button class="ghost" onclick={() => setBlockProp('image', null)}>Fjern eget ikon</button>
+        <img class="site-icon-preview" src={selectedBlock.props.image} alt={ta('gp.ownIcon')} />
+        <button class="ghost" onclick={() => setBlockProp('image', null)}>{ta('ui.removeOwnIcon')}</button>
       </span>
-      <p class="panel-hint">Blokken viser det opplastede ikonet; tegnet brukes igjen når du fjerner det.</p>
+      <p class="panel-hint">{ta('hint.icon.ownImage')}</p>
     {/if}
-    <label>Størrelse px
+    <label>{ta('lbl.sizePx')}
       <input type="number" min="8" max="400" value={selectedBlock.props.size ?? 48}
         onchange={(e) => setBlockProp('size', Number(e.target.value))} /></label>
-    <label>Farge
+    <label>{ta('lbl.color')}
       <ColorPicker value={selectedBlock.props.color ?? 'accent'} tokens={themeSwatches()}
         onchange={(v) => setBlockProp('color', v)} /></label>
-    <p class="panel-hint">Temafarge eller egen farge. Gjelder tegnede ikoner og tekst-glyfer (★ ✓ →); emoji har sine egne farger.</p>
+    <p class="panel-hint">{ta('hint.icon.color')}</p>
   {:else if selectedBlock.type === 'samling'}
-    <label>Samling
+    <label>{ta('blocks.samling')}
       <Dropdown value={selectedBlock.props.collection ?? ''}
         options={[['', ta('common.choose')], ...samlingerIds.map((id) => [id, samlingerView[id]?.name ?? id])]}
         onchange={(v) => setBlockProp('collection', v || null)} /></label>
-    <label>Visning
+    <label>{ta('lbl.view')}
       <Dropdown value={selectedBlock.props.view ?? 'cards'}
         options={[['cards', ta('opt.collectionView.cards')], ['list', ta('opt.collectionView.list')], ['archive', ta('opt.collectionView.archive')]]}
         onchange={(v) => setBlockProp('view', v)} /></label>
-    <label>Maks antall
+    <label>{ta('lbl.maxCount')}
       <input type="number" min="0" max="100" value={selectedBlock.props.limit ?? 6}
         onchange={(e) => setBlockProp('limit', Number(e.target.value))} /></label>
     <label class="gridmenu-snap">
       <input type="checkbox" checked={selectedBlock.props.newestFirst !== false}
         onchange={(e) => setBlockProp('newestFirst', e.target.checked)} />
-      Nyeste først
+      {ta('lbl.newestFirst')}
     </label>
-    <p class="panel-hint">Innslagene redigeres i Samlinger-panelet; 0 i maks antall viser alle.</p>
+    <p class="panel-hint">{ta('hint.samling')}</p>
   {:else if selectedBlock.type === 'galleri'}
-    <label>Visning
+    <label>{ta('lbl.view')}
       <Dropdown value={selectedBlock.props.view ?? 'grid'}
         options={[['grid', ta('opt.galleryView.grid')], ['carousel', ta('opt.galleryView.carousel')], ['slides', ta('opt.galleryView.slides')]]}
         onchange={(v) => setBlockProp('view', v)} /></label>
     {#if (selectedBlock.props.view ?? 'grid') === 'grid'}
-      <label>Kolonner
+      <label>{ta('lbl.columns')}
         <input type="number" min="1" max="6" value={selectedBlock.props.columns ?? 3}
           onchange={(e) => setBlockProp('columns', Number(e.target.value))} /></label>
-      <label>Luft mellom bildene
+      <label>{ta('lbl.imageGap')}
         <span class="gridmenu-value">{selectedBlock.props.gap ?? 12} px</span></label>
       <input type="range" min="0" max="32" step="2" value={selectedBlock.props.gap ?? 12}
         oninput={(e) => setBlockProp('gap', Number(e.target.value))} />
     {/if}
     {#if selectedBlock.props.view === 'slides'}
-      <label>Sekunder per bilde
+      <label>{ta('lbl.secondsPerImage')}
         <input type="number" min="2" max="60" value={selectedBlock.props.interval ?? 5}
           onchange={(e) => setBlockProp('interval', Number(e.target.value))} /></label>
     {/if}
-    <label>Avrunding
+    <label>{ta('lbl.radius')}
       <Dropdown value={selectedBlock.props.radius ?? ''}
         options={[['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]]}
         onchange={(v) => setBlockProp('radius', v || null)} /></label>
-    <label class="gridmenu-snap" title="Gjelder hos besøkende (prøv i Ren visning); her åpner klikk bildeeditoren">
+    <label class="gridmenu-snap" title={ta('tip.lightbox')}>
       <input type="checkbox" checked={selectedBlock.props.lightbox !== false}
         onchange={(e) => setBlockProp('lightbox', e.target.checked)} />
-      Fullskjerm ved klikk (lightbox)
+      {ta('lbl.lightbox')}
     </label>
     <hr class="gridmenu-divider" />
-    <label class="ghost filepick" title="Velg gjerne flere bilder samtidig">
-      + Legg til bilder
+    <label class="ghost filepick" title={ta('tip.gallery.addImages')}>
+      {ta('ui.addImages')}
       <input type="file" accept="image/*" multiple onchange={addGalleryImages} />
     </label>
     {#each selectedBlock.props.images ?? [] as img, i (i)}
@@ -5341,79 +5332,79 @@
             <button class="ghost row-tool" onclick={() => moveGalleryImage(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
             <button class="ghost row-tool" onclick={() => moveGalleryImage(i, 1)}
               disabled={i === selectedBlock.props.images.length - 1}>{@html ICONS.down}</button>
-            <button class="ghost row-tool" title="Fjern bildet" onclick={() => removeGalleryImage(i)}>{@html ICONS.cross}</button>
+            <button class="ghost row-tool" title={ta('tip.removeImage')} onclick={() => removeGalleryImage(i)}>{@html ICONS.cross}</button>
           </span>
         </span>
-        <label>Beskrivelse
-          <input value={img.alt ?? ''} placeholder="For skjermlesere"
+        <label>{ta('lbl.description')}
+          <input value={img.alt ?? ''} placeholder={ta('ph.altShort')}
             onchange={(e) => setGalleryImageField(i, 'alt', e.target.value)} /></label>
-        <label>Lenke
-          <input value={img.href ?? ''} placeholder="Valgfri - vinner over fullskjerm"
+        <label>{ta('lbl.link')}
+          <input value={img.href ?? ''} placeholder={ta('ph.galleryHref')}
             onchange={(e) => setGalleryImageField(i, 'href', e.target.value || null)} /></label>
       </div>
     {/each}
-    <p class="panel-hint">Klikk et bilde i forhåndsvisningen for utsnitt, zoom og filtre (bildeeditoren).</p>
+    <p class="panel-hint">{ta('hint.gallery')}</p>
   {:else if selectedBlock.type === 'shape'}
-    <label>Form
+    <label>{ta('blocks.shape')}
       <Dropdown value={selectedBlock.props.kind}
         options={SHAPE_KINDS}
         onchange={(v) => setBlockProp('kind', v)} /></label>
-    <label>Farge
+    <label>{ta('lbl.color')}
       <Dropdown value={selectedBlock.props.color}
         options={COLOR_TOKENS}
         onchange={(v) => setBlockProp('color', v)} /></label>
-    <label>Tykkelse
+    <label>{ta('lbl.thickness')}
       <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
         onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
-    <label class="gridmenu-snap" title="Fylte former bruker fargen som flate i stedet for kantlinje">
+    <label class="gridmenu-snap" title={ta('tip.shape.fill')}>
       <input type="checkbox" checked={Boolean(selectedBlock.props.fill)}
         onchange={(e) => setBlockProp('fill', e.target.checked ? selectedBlock.props.color : null)} />
-      Fylt
+      {ta('lbl.filled')}
     </label>
   {:else}
     <!-- Plugin-blokker (kalender/kart/skjema): innstillingene bor i pluginens
          eget config-panel i forhåndsvisningen. Knappen åpner det; den gamle
          flytende «Kilder»/«Sted»-pillen er fjernet. -->
-    <button class="ghost" onclick={() => bridge?.sendOpenConfig(selectedBlock.blockId)}>Innstillinger …</button>
-    <p class="panel-hint">Åpner blokkens innstillinger i forhåndsvisningen.</p>
+    <button class="ghost" onclick={() => bridge?.sendOpenConfig(selectedBlock.blockId)}>{ta('ui.settings')}</button>
+    <p class="panel-hint">{ta('hint.pluginBlock')}</p>
   {/if}
 
   <hr class="gridmenu-divider" />
-  <label title="Spilles når blokken scrolles inn hos besøkende; her spilles den én gang hver gang du endrer den">Animasjon inn
+  <label title={ta('tip.props.blockAnim')}>{ta('lbl.animIn')}
     <Dropdown value={isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : ''}
       options={ENTRANCE_OPTIONS}
       onchange={(v) => setBlockAnimation(v || null)} /></label>
   {#if isEntrance(selectedBlock.animation)}
-    <label>Varighet ms
+    <label>{ta('lbl.durationMs')}
       <input type="number" min="100" max="4000" step="100"
         value={selectedBlock.animation.props.duration}
         onchange={(e) => setBlockAnimProp('duration', Number(e.target.value))} /></label>
-    <label>Forsinkelse ms
+    <label>{ta('lbl.delayMs')}
       <input type="number" min="0" max="4000" step="100"
         value={selectedBlock.animation.props.delay}
         onchange={(e) => setBlockAnimProp('delay', Number(e.target.value))} /></label>
   {/if}
-  <label title="Effekt mens pekeren er over blokken; kan kombineres med animasjonen inn">Ved peker
+  <label title={ta('tip.props.blockHover')}>{ta('lbl.onHover')}
     <Dropdown value={selectedBlock.hover?.type ?? (selectedBlock.animation && !isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : '')}
       options={HOVER_OPTIONS}
       onchange={(v) => setBlockHover(v || null)} /></label>
 
   {#if viewMode === 'desktop'}
     <hr class="gridmenu-divider" />
-    <label class="gridmenu-snap" title="Blokken blir stående ved vindustoppen mens besøkende scroller. Prøv i Ren visning; gjelder ikke mobil.">
+    <label class="gridmenu-snap" title={ta('tip.sticky')}>
       <input type="checkbox" checked={Boolean(selectedBlock.sticky)}
         onchange={(e) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
           b.sticky = e.target.checked ? { offset: 16, until: null } : null;
         })} />
-      Fest ved scrolling
+      {ta('lbl.sticky')}
     </label>
     {#if selectedBlock.sticky}
-      <label title="Avstanden fra vinduets topp mens blokken er festet; en klistret meny kan kreve større avstand">Avstand fra toppen
+      <label title={ta('tip.stickyOffset')}>{ta('lbl.stickyOffset')}
         <input type="number" min="0" max="400" value={selectedBlock.sticky.offset ?? 16}
           onchange={(e) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
             b.sticky = { ...b.sticky, offset: Math.max(0, Number(e.target.value) || 0) };
           })} /></label>
-      <label title="Hvor festingen slutter: ved egen seksjon, eller først når en senere seksjon er passert">Slipp taket
+      <label title={ta('tip.stickyUntil')}>{ta('lbl.stickyUntil')}
         <Dropdown value={selectedBlock.sticky.until ?? ''}
           options={stickyUntilOptions()}
           onchange={(v) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
@@ -5424,30 +5415,30 @@
 
   <hr class="gridmenu-divider" />
   <details class="group frame-group">
-    <summary>Plassering, lag og rotasjon</summary>
+    <summary>{ta('group.placement')}</summary>
     <div class="group-items">
-      <p class="panel-hint">Kan også endres direkte på blokken: dra for å flytte, håndtakene for størrelse og rotasjon.</p>
+      <p class="panel-hint">{ta('hint.placement')}</p>
       {#if viewMode === 'desktop'}
         <div class="frame-grid">
-          <label>X %<input type="number" step="0.5" value={selectedBlock.frame.x}
+          <label>{ta('frame.x')}<input type="number" step="0.5" value={selectedBlock.frame.x}
             onchange={(e) => setBlockFrame('x', Number(e.target.value))} /></label>
-          <label>Y px<input type="number" step="1" value={selectedBlock.frame.y}
+          <label>{ta('frame.y')}<input type="number" step="1" value={selectedBlock.frame.y}
             onchange={(e) => setBlockFrame('y', Number(e.target.value))} /></label>
-          <label>Bredde %<input type="number" step="0.5" min="1" value={selectedBlock.frame.w}
+          <label>{ta('frame.w')}<input type="number" step="0.5" min="1" value={selectedBlock.frame.w}
             onchange={(e) => setBlockFrame('w', Number(e.target.value))} /></label>
-          <label>Høyde px<input type="number" step="1" min="1" value={selectedBlock.frame.h}
+          <label>{ta('frame.h')}<input type="number" step="1" min="1" value={selectedBlock.frame.h}
             onchange={(e) => setBlockFrame('h', Number(e.target.value))} /></label>
-          <label title="Høyere tall ligger foran. Mens du redigerer vises pekt/markert blokk alltid øverst - se ekte rekkefølge i Ren visning">
-            Lag (z)<input type="number" step="1" value={selectedBlock.frame.z ?? 1}
+          <label title={ta('tip.frameZ')}>
+            {ta('frame.z')}<input type="number" step="1" value={selectedBlock.frame.z ?? 1}
             onchange={(e) => setBlockFrame('z', Number(e.target.value))} /></label>
-          <label>Rotasjon °<input type="number" step="1" value={selectedBlock.frame.rot ?? 0}
+          <label>{ta('frame.rot')}<input type="number" step="1" value={selectedBlock.frame.rot ?? 0}
             onchange={(e) => setBlockFrame('rot', Number(e.target.value))} /></label>
         </div>
       {/if}
-      <label class="gridmenu-snap" title="Gjelder kun automatisk mobil-layout">
+      <label class="gridmenu-snap" title={ta('tip.decor')}>
         <input type="checkbox" checked={selectedBlock.decor}
           onchange={(e) => setBlockDecor(e.target.checked)} />
-        Skjul i automatisk mobil-layout (pynt)
+        {ta('lbl.decor')}
       </label>
     </div>
   </details>
@@ -5460,7 +5451,7 @@
   <div class="block-menu" style="left: {blockMenu.left}px; top: {blockMenu.top}px">
     <header class="block-menu-head">
       <span>{ta('blocks.suffix', { label: BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type })}</span>
-      <button class="ghost row-tool" title="Lukk (Esc)" onclick={() => (blockMenu = null)}>{@html ICONS.cross}</button>
+      <button class="ghost row-tool" title={ta('tip.closeEsc')} onclick={() => (blockMenu = null)}>{@html ICONS.cross}</button>
     </header>
     <div class="panel-body block-menu-body">
       {@render blockPropsUI()}

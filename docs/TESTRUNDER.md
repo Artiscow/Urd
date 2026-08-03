@@ -3,6 +3,15 @@
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.8.5): admin-strenger B (tooltips, placeholders, panel-tekster)
+
+- [ ] Full engelsk-runde: bytt admin-språk til English (UK) og gå gjennom ALLE paneler - gruppetitler, knapper, hint-avsnitt, placeholders og tooltips (hold pekeren over «?»-felter og knapper) skal være engelske; norsk skal ikke skinne gjennom noe sted i chromen
+- [ ] Norsk uendret: med bokmål skal hele admin se ordrett ut som før
+- [ ] Fargevelgeren: «koblet til temafargen»-tittelen (pek på en swatch koblet til token) interpolerer riktig på valgt språk; Fjern fargen-knappen likeså
+- [ ] Bildeeditoren og tegnvelgeren: etiketter (Zoom/Lysstyrke/Kontrast/Metning, Nullstill/Bruk) følger språket
+- [ ] Fet/kursiv-knappene i logo-innstillingene viser B/I på engelsk, K/I på tyrkisk, F/K på norsk
+- [ ] Innhold forblir innhold: nye blokker settes fortsatt inn med norsk seed-tekst uansett admin-språk (oversettes først i 0.6.8.7), og publiserings-commitmeldingen i historikken er norsk (bevisst: delt git-historikk)
+
 ### Testrunde-batch (0.6.8.4): admin-strenger A (meldinger, dialoger, nedtrekk)
 
 - [ ] Bytt admin-språk til English (UK): statuslinja (Angret/Undone, Publiserer…/Publishing…), publiseringsdialogene (konflikt/angre), alle nedtrekksvalg (nav-varianter, hover-stiler, galleri-visninger, footer-maler, temaforslag) og Egenskapers «Text block»-overskrift følger språket

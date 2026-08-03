@@ -11,7 +11,9 @@
    * Popoveren er position: fixed (panelene klipper absolute innhold),
    * og lukkes ved klikk utenfor eller Escape.
    */
-  let { value = '#000000', tokens = [], label = 'Velg farge', onchange, allowClear = false } = $props();
+  import { ta } from '../../../template/assets/engine/i18n.js';
+
+  let { value = '#000000', tokens = [], label = ta('cp.pickColor'), onchange, allowClear = false } = $props();
 
   const RECENT_KEY = 'urd-recent-colors';
   const SAVED_KEY = 'urd-saved-colors';
@@ -239,11 +241,11 @@
 
 <span class="cp" bind:this={rootEl}>
   <button type="button" class="cp-swatch" class:linked={linkedToken()} class:cp-empty={allowClear && !value}
-    style="background: {value ? displayHex() : 'transparent'}" title={linkedToken() ? `${label} (koblet til temafargen «${linkedToken()}»)` : label}
+    style="background: {value ? displayHex() : 'transparent'}" title={linkedToken() ? ta('cp.linkedTitle', { label, token: linkedToken() }) : label}
     aria-label={label} onclick={() => (open ? close() : openPicker())}></button>
   {#if allowClear && value}
-    <button type="button" class="cp-clear" title="Fjern fargen (bruk temaets standard)"
-      aria-label="Fjern fargen" onclick={() => onchange?.('')}>×</button>
+    <button type="button" class="cp-clear" title={ta('cp.clearTitle')}
+      aria-label={ta('cp.clear')} onclick={() => onchange?.('')}>×</button>
   {/if}
   {#if open}
     <!-- Velgeren ligger ofte inne i en <label>: uten preventDefault videresender
@@ -260,14 +262,14 @@
       <input class="cp-hue" type="range" min="0" max="360" step="1" value={h}
         oninput={(e) => { h = Number(e.target.value); commit(); }} />
       <input class="cp-alpha" type="range" min="0" max="100" step="1" value={Math.round(a * 100)}
-        title="Gjennomsiktighet"
+        title={ta('cp.alpha')}
         style="background: linear-gradient(to right, transparent, {currentHex()}), repeating-conic-gradient(rgb(255 255 255 / 35%) 0 25%, rgb(0 0 0 / 35%) 0 50%) 0 0 / 10px 10px"
         oninput={(e) => { a = Number(e.target.value) / 100; commit(); }} />
       <span class="cp-row">
         <span class="cp-preview" style="background: {hexText}"></span>
         <input class="cp-hex" value={hexText} spellcheck="false" onchange={onHexInput} />
         {#if hasEyeDropper}
-          <button type="button" class="cp-eye" title="Pipette: plukk farge fra skjermen" onclick={pickFromScreen}>
+          <button type="button" class="cp-eye" title={ta('cp.eyedropper')} onclick={pickFromScreen}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2l4 4-3 3-4-4 3-3z"/><path d="M15 5L4 16l-1 5 5-1L19 9"/></svg>
           </button>
         {/if}
@@ -279,17 +281,17 @@
         {/each}
       </span>
       {#if tokens.length}
-        <span class="cp-label">Temafarger{#if linkedToken()} - koblet til «{linkedToken()}»{/if}</span>
+        <span class="cp-label">{ta('cp.themeColors')}{#if linkedToken()} {ta('cp.linkedSuffix', { token: linkedToken() })}{/if}</span>
         <span class="cp-tokens">
           {#each tokens as [name, hex] (name)}
             <button type="button" class="cp-token" class:active={value === name}
-              style="background: {hex}" title="Temafarge: {name} (følger temaet)"
+              style="background: {hex}" title={ta('cp.tokenTitle', { name })}
               onclick={() => pickToken(name, hex)}></button>
           {/each}
         </span>
       {/if}
-      <span class="cp-label cp-label-row">Lagrede
-        <button type="button" class="cp-add" title="Lagre gjeldende farge" onclick={addSaved}>+</button>
+      <span class="cp-label cp-label-row">{ta('cp.saved')}
+        <button type="button" class="cp-add" title={ta('cp.saveTitle')} onclick={addSaved}>+</button>
       </span>
       {#if saved.length}
         <span class="cp-tokens">
@@ -297,14 +299,14 @@
             <span class="cp-saved">
               <button type="button" class="cp-token" style="background: {hex}"
                 title={hex} onclick={() => pick(hex)}></button>
-              <button type="button" class="cp-del" title="Fjern lagret farge"
+              <button type="button" class="cp-del" title={ta('cp.removeSaved')}
                 onclick={() => removeSaved(hex)}>×</button>
             </span>
           {/each}
         </span>
       {/if}
       {#if recent.length}
-        <span class="cp-label">Nylige</span>
+        <span class="cp-label">{ta('common.recent')}</span>
         <span class="cp-tokens">
           {#each recent as hex (hex)}
             <button type="button" class="cp-token" style="background: {hex}"
