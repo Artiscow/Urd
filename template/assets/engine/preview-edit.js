@@ -522,8 +522,9 @@ function addSectionTopHandle(host, section, grid) {
       // toppen flytter seg result.dy, scrollen følger. Absolutt mot
       // startverdien (aldri akkumulert scrollBy: det driver). Nær
       // dokumenttoppen finnes ikke nok scroll å kompensere med, og
-      // innholdet glir synlig - akseptert kanttilfelle.
-      window.scrollTo(0, Math.max(0, startScrollY + result.dy));
+      // innholdet glir synlig - akseptert kanttilfelle. Eksplisitt
+      // instant: kompensasjonen må aldri arve scroll-behavior: smooth.
+      window.scrollTo({ top: Math.max(0, startScrollY + result.dy), behavior: 'instant' });
     };
     const onUp = () => {
       handle.removeEventListener('pointermove', onMove);

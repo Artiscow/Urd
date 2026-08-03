@@ -6,12 +6,12 @@
  * Bygget på det native <dialog>-elementet (showModal): top-layer fjerner
  * z-index-krig, ::backdrop gir den mørke bakgrunnen, og fokusfelle, fokus-retur
  * og inert bakgrunn følger gratis. Esc lukker (native), piltastene stepper,
- * bakgrunnsklikk lukker. Body-scroll låses mens den er åpen.
+ * bakgrunnsklikk lukker. Body-scroll låses av body:has(dialog:modal) i
+ * base.css, ingen JS-bokføring.
  */
 import { stepIndex } from './galleri-model.js';
 
 let overlay = null;
-let prevOverflow = '';
 
 /** Synkron opprydning av gjeldende overlegg (brukes ved re-open, så et
  *  etterslepende close-event ikke river et nyåpnet overlegg). */
@@ -19,7 +19,6 @@ function hardTeardown() {
   if (!overlay) return;
   const d = overlay;
   overlay = null;
-  document.body.style.overflow = prevOverflow;
   if (d.open) d.close();
   d.remove();
 }
@@ -110,10 +109,7 @@ export function openLightbox(images, startIndex = 0) {
   // Rydding når dialogen lukkes (også ved native Esc): instans-vaktet så et
   // etterslepende close fra et tidligere overlegg ikke nuller det nye.
   dialog.addEventListener('close', () => {
-    if (overlay === dialog) {
-      overlay = null;
-      document.body.style.overflow = prevOverflow;
-    }
+    if (overlay === dialog) overlay = null;
     dialog.remove();
   });
 
@@ -127,9 +123,6 @@ export function openLightbox(images, startIndex = 0) {
     if (event.key === 'ArrowRight') step(1);
     else if (event.key === 'ArrowLeft') step(-1);
   });
-
-  prevOverflow = document.body.style.overflow;
-  document.body.style.overflow = 'hidden';
 
   show(index);
   document.body.appendChild(dialog);

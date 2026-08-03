@@ -1548,6 +1548,14 @@ a.urd-galleri-tile {
   border-radius: var(--urd-radius-md);
 }
 
+/* Scrollås mens en modal dialog er åpen (lysboksen i dag, enhver framtidig
+   showModal-flate automatisk): native :has()/:modal i stedet for JS-bokføring
+   av body.style.overflow. Uten :has-støtte (utenfor baseline-halen) mangler
+   kun låsen; dialogen selv virker som før. */
+body:has(dialog:modal) {
+  overflow: hidden;
+}
+
 /* Lightbox (engine/lightbox.js): fullskjermvisning hos besøkende og i Ren
    visning. Over nav (5000), under editor-chromen (99999+). Mørk uansett
    tema: den er et fotovisningsrom, ikke en temaflate. */
@@ -3139,6 +3147,45 @@ body.urd-marqueeing {
   .urd-bg-image.urd-parallax-css {
     animation: none;
     transform: none;
+  }
+}
+
+/* Side-overganger (ADR-0011): cross-document View Transitions gir myk
+   krysstoning mellom sidene på det publiserte nettstedet, ren CSS uten JS.
+   Gaten er at-regelen selv: motorer uten støtte ignorerer den og navigerer
+   som før (sluttilstand). Editor-preview berøres aldri - der skjer
+   sidebytter via postMessage, ikke navigasjon. Nav og footer får egne
+   view-transition-name så side-chromen står i ro mens innholdet toner;
+   navnene er inerte utenom en aktiv overgang. */
+@view-transition {
+  navigation: auto;
+}
+
+#urd-nav {
+  view-transition-name: urd-nav;
+}
+
+#urd-footer {
+  view-transition-name: urd-footer;
+}
+
+/* Redusert bevegelse: overgangen beholdes (navigasjonen er like rask),
+   men all animasjon i den slås av, så byttet er et rent klipp. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none;
+  }
+}
+
+/* Myk ankerscroll (blokk-lenker til #anker og «Til toppen»-pilen): native
+   scroll-behavior i stedet for JS-animasjon. Programmatiske scroll som skal
+   være umiddelbare (dra-kompensasjonen i preview-edit.js) sier behavior:
+   'instant' eksplisitt og berøres ikke. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
   }
 }
 
