@@ -10,6 +10,7 @@
  * base.css, ingen JS-bokføring.
  */
 import { stepIndex } from './galleri-model.js';
+import { t } from './i18n.js';
 
 let overlay = null;
 
@@ -96,12 +97,12 @@ export function openLightbox(images, startIndex = 0) {
     return btn;
   };
   if (list.length > 1) {
-    dialog.append(navButton('prev', 'Forrige bilde', -1), navButton('next', 'Neste bilde', 1));
+    dialog.append(navButton('prev', t('lightbox.prev'), -1), navButton('next', t('lightbox.next'), 1));
   }
 
   const close = el2('button', 'urd-lightbox-close');
   close.type = 'button';
-  close.setAttribute('aria-label', 'Lukk');
+  close.setAttribute('aria-label', t('lightbox.close'));
   close.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5l14 14"/><path d="M19 5L5 19"/></svg>';
   close.addEventListener('click', closeLightbox);
   dialog.appendChild(close);

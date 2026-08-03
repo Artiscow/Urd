@@ -14,6 +14,7 @@
 import { navItems, navClasses, navSurface, navSubSurface, hostClasses, clampSideWidth, navScrollState } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
+import { t } from './i18n.js';
 
 /** Hvor lenge undermenyen står åpen etter at pekeren forlater punktet. */
 const HOVER_CLOSE_DELAY = 250;
@@ -199,7 +200,7 @@ export function renderNav(site, host) {
   const logo = document.createElement('a');
   logo.className = 'urd-nav-logo';
   logo.href = '/';
-  logo.title = 'Til forsiden';
+  logo.title = t('nav.toFront');
 
   const logoImg = (src) => {
     const img = document.createElement('img');
@@ -251,7 +252,7 @@ export function renderNav(site, host) {
       const dark = themeMode() === 'dark';
       // Ikonet viser modusen du BYTTER TIL (konvensjonen folk kjenner).
       themeBtn.innerHTML = dark ? SUN : MOON;
-      themeBtn.setAttribute('aria-label', dark ? 'Bytt til lyst tema' : 'Bytt til mørkt tema');
+      themeBtn.setAttribute('aria-label', dark ? t('nav.toLightTheme') : t('nav.toDarkTheme'));
     };
     paintToggle();
     themeBtn.addEventListener('click', () => {
@@ -268,7 +269,7 @@ export function renderNav(site, host) {
   burger.type = 'button';
   burger.setAttribute('aria-expanded', 'false');
   burger.setAttribute('aria-controls', 'urd-nav-menu');
-  burger.setAttribute('aria-label', 'Meny');
+  burger.setAttribute('aria-label', t('nav.menu'));
   burger.innerHTML = BURGER;
   tools.appendChild(burger);
 
@@ -336,7 +337,7 @@ export function renderNav(site, host) {
     if (item.kind === 'split') {
       li.appendChild(makeLink(item));
       button.className = 'urd-nav-caret';
-      button.setAttribute('aria-label', `Undermeny for ${item.label}`);
+      button.setAttribute('aria-label', t('nav.submenuFor', { label: item.label }));
       button.innerHTML = CHEVRON;
     } else {
       button.className = 'urd-nav-toggle';

@@ -4,6 +4,7 @@
  * CSP-en i _headers har et bevisst frame-src-unntak for akkurat disse
  * to vertene - andre embeds krever plugin og eget CSP-valg hos eieren.
  */
+import { t } from '../i18n.js';
 
 /** Finner innbyggings-URL for en kjent videotjeneste, ellers null. */
 export function embedUrl(raw) {
@@ -64,9 +65,7 @@ export const videoBlock = {
       // Uten (gyldig) URL: rolig plassholder, aldri krasj.
       const hint = document.createElement('div');
       hint.className = 'urd-video-empty';
-      hint.textContent = props.url
-        ? 'Ukjent videolenke (YouTube og Vimeo støttes)'
-        : 'Lim inn en YouTube- eller Vimeo-lenke i Egenskaper';
+      hint.textContent = props.url ? t('video.unknownUrl') : t('video.emptyHint');
       el.appendChild(hint);
       return;
     }

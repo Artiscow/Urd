@@ -3,6 +3,17 @@
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.8.1): flerspråk-kjernen og besøkende-tekstene
+
+- [ ] Standard uendret: en side med `"lang": "no"` (demoen) skal se HELT ut som før på bokmål - nav-tooltips, til-toppen, footer, galleri, datobadger
+- [ ] Språkbytte: sett `site.lang` til `nn`, `en-GB`, `se` og `tr` (håndredigert site.json, publiser eller lokal server) - motor-chromen bytter språk (temabryterens skjermleser-tekst, burger, til-toppen, lysboksens knapper, galleri-pilene, video-tomtilstander), og `<html lang>` følger med (sjekk i devtools)
+- [ ] Datoer: samlings-datobadgen viser månedsnavn på sidens språk (f.eks. «njukčamánnu» for mars på nordsamisk, «Mar» på tyrkisk)
+- [ ] Nyhetsbrev-CTA: med TOM knappetekst vises språkets standard («Meld på»/«Sign up»/…); egen tekst overstyrer som før; valideringsmelding og bekreftelse følger språket; mailto-fallbackens emne/kropp likeså
+- [ ] Skjermleser/a11y: footer-sosiallenkene annonserer «Facebook»/«Instagram» (ikke rå id), galleri-prikkene «Bilde 1/2/3» på sidens språk
+- [ ] Lokal utvikling: `python3 dev-server.py` + site.lang satt til `en-GB` - språkfilen dynamisk-lastes uten feil i konsollen
+- [ ] Ukjent språk: `"lang": "de"` gir bokmål (fallback), ingen feil
+- [ ] Samisk innhold: be gjerne en med nordsamisk som morsmål se over `locales/site/se.js` (flagget i filen)
+
 ### Testrunde-batch (0.6.6.5.12): lenker til seksjon/anker og nav scroll-adferd
 
 - [ ] Anker på tvers av sider: demo-footerens «Kakevideoen» (Utforsk-kolonnen) skal fra en annen side gå til Kaker og rulle mykt ned til videoseksjonen

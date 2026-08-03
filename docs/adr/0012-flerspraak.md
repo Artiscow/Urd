@@ -1,0 +1,26 @@
+# ADR-0012: Flerspråk via rene ES-modul-locales, to registre og native Intl
+
+Dato: 3. august 2026. Status: vedtatt (v0.6, milepæl 0.6.8).
+
+## Kontekst
+
+Motoren er avhengighetsfri vanilla-JS som serveres rått; editoren er Svelte med bygg, og bundelen committes. All brukersynlig tekst var hardkodet norsk på bruksstedet (~1000+ distinkte strenger). Målspråkene er bokmål (nb), nynorsk (nn), britisk engelsk (en-GB), nordsamisk (se) og tyrkisk (tr), med flere som community-påfyll senere. Research på Shopify (storefront-/schema-localefiler), Squarespace (ett site-språk for innebygd chrome), Publii (app-locales + language file checker), Ghost ({{t}} + locales-JSON) og WordPress (gettext) informerte valgene.
+
+## Beslutning
+
+1. **Rene ES-modul-locales, ingen bibliotek, ingen bygging.** Språkfilene er håndskrevne ES-moduler under `template/assets/engine/locales/` (`site/` for besøkende-tekster, `admin/` for admin-chromen) og `template/plugins/<id>/locales/` for plugins. De kan importeres direkte av motor, editor og node-tester. Kompilator-baserte løsninger (Paraglide) og runtime-bibliotek (i18next, gettext/ICU) er forkastet: motoren kan ikke ha avhengigheter eller bygg, og en oversettelses-PR skal være en ren filendring uten gjenbygg.
+2. **Nøkler er engelske identifikatorer** med punktum-navnerom (`nav.toTop`, `footer.newsletter.invalidEmail`) - localefilenes form er en datakontrakt (AGENTS.md). Kildestreng-som-nøkkel (Ghost/WordPress-modellen) er forkastet av samme grunn.
+3. **To registre i `engine/i18n.js`:** `t()` for besøkende-tekster følger `site.lang` (normalisert via `normalizeLang`; 'no' og alle nb-varianter er bokmål, sør-/lulesamisk faller til nordsamisk, ukjent til nb). `ta()` for admin-chromen følger admin-språket (localStorage `urd-admin-lang`; auto fra `navigator.languages` når nøkkelen mangler, eksplisitt valg vinner - samme rekkefølge som i18next-browser-languagedetector). Besøkende-chromen auto-detekterer ALDRI: den skal være konsistent med innholdet, som har ett språk (Squarespace-modellen).
+4. **nb er alltid statisk base.** `i18n.js` importerer `locales/site/nb.js` statisk (forhåndslastet); andre språk dynamisk-importeres i `boot()` etter at site.json er lest, oppå en FERSK kopi av basen. Manglende nøkkel gir bokmålsteksten; helt ukjent nøkkel gir nøkkelen selv (synlig, aldri krasj). Dynamisk import er bevisst usynlig for modulepreload-kontrakten. `boot()` setter også `document.documentElement.lang` (skallene hardkoder "no" kun som pre-JS-standard).
+5. **Admin-localene bundles aldri:** editorens main.js kjøretids-importerer `/assets/engine/locales/admin/<lang>.js` før mount, og preview-iframens canvas-chrome gjør samme oppslag selv (delt localStorage, samme opprinnelse). Språkbytte er en omlasting (Publii-modellen), ikke live-reaktivitet (~900 kallsteder).
+6. **Datonavn, flertall og relativ tid via native Intl (ADR-0011).** Månedsnavn/ukedager fra `Intl.DateTimeFormat`, relativ dagtelling fra `Intl.RelativeTimeFormat`, flertall fra `Intl.PluralRules` med nøkkel-suffikser (`.one`/`.two`/`.other` - nordsamisk har totallsform, så håndskrevne en/mange-par ville vært feil). ICU har full CLDR-data for alle fem språkene; bokmålstabellene i nb-basen er fallback der ICU mangler språket. Kalenderens interne tidssone-Intl (ics.js) er ikke visning og røres ikke.
+7. **Seed-regelen:** tekst som SKRIVES INN i brukerdata (preset-innhold, blokk-defaults som 'Les mer', faq-seeds) oversettes én gang ved innsetting med admin-språket; besøkende-rendring oversetter aldri brukerdata. Render-fallbacks for tomme felt (footer-CTA-ens knappetekst/bekreftelse) er derimot besøkende-tekster: modellagene er språkfrie, og `t()`-oppslaget skjer i render.
+8. **Plugins** får additive manifest-felt (`locales: true`, `names` per språk) og legger ordbøkene sine inn via `addSiteDict`/`addAdminDict`, med nøkler prefikset med plugin-id.
+9. **Paritetstesten (`tests/i18n.test.mjs`) er kontrakten:** alle språkfiler i alle locale-sett må ha identisk nøkkelsett med nb-basen, ingen tomme verdier, ingen tankestrek, og samme `{var}`-tokens per nøkkel. Den finner locale-mappene automatisk og er samtidig «language file checker»-verktøyet for bidragsytere (Publii-mønsteret).
+
+## Konsekvenser
+
+- Oversettelses-PR-er er rene filendringer; CI-paritetstesten fanger drift, og ingen bygging kreves (admin-localene ligger utenfor bundelen).
+- Et nytt språk = en fil per locale-sett + normalizeLang-oppføring; alt annet følger.
+- Ikke-norske sider betaler ett ekstra serielt hent (site-localen) før første render; norske sider betaler ingenting.
+- Den nordsamiske oversettelsen er maskinskrevet førsteutkast og skal gjennomgås av morsmålsbruker (flagget i filene og CONTRIBUTING.md); paritetstesten sikrer form, ikke innhold.

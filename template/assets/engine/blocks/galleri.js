@@ -18,6 +18,7 @@
 import { applyImageStyle } from './image.js';
 import { stepIndex, canAutoplay, normalizeInterval, gridColumns } from '../galleri-model.js';
 import { isSafeHref } from '../nav-model.js';
+import { t } from '../i18n.js';
 
 const post = (msg) => window.parent?.postMessage(msg, location.origin);
 
@@ -138,8 +139,8 @@ function renderCarousel(host, props, ctx, blockEl) {
   host.appendChild(track);
   if (props.images.length > 1) {
     const behavior = reducedMotion() ? 'auto' : 'smooth';
-    host.appendChild(navButton('prev', 'Forrige bilder', () => track.scrollBy({ left: -track.clientWidth * 0.8, behavior })));
-    host.appendChild(navButton('next', 'Neste bilder', () => track.scrollBy({ left: track.clientWidth * 0.8, behavior })));
+    host.appendChild(navButton('prev', t('gallery.prevImages'), () => track.scrollBy({ left: -track.clientWidth * 0.8, behavior })));
+    host.appendChild(navButton('next', t('gallery.nextImages'), () => track.scrollBy({ left: track.clientWidth * 0.8, behavior })));
   }
 }
 
@@ -185,13 +186,13 @@ function renderSlides(host, props, ctx, blockEl) {
   };
 
   if (count > 1) {
-    host.appendChild(navButton('prev', 'Forrige bilde', () => manual(-1)));
-    host.appendChild(navButton('next', 'Neste bilde', () => manual(1)));
+    host.appendChild(navButton('prev', t('gallery.prevImage'), () => manual(-1)));
+    host.appendChild(navButton('next', t('gallery.nextImage'), () => manual(1)));
     const dotRow = el2('div', 'urd-galleri-dots');
     props.images.forEach((_, i) => {
       const dot = el2('button', 'urd-galleri-dot urd-galleri-nav');
       dot.type = 'button';
-      dot.setAttribute('aria-label', `Bilde ${i + 1}`);
+      dot.setAttribute('aria-label', t('gallery.imageN', { n: i + 1 }));
       dot.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();

@@ -147,7 +147,7 @@ test('footerBaselineLinks + footerLinkRow: resolverer som kolonner, hopper over 
   assert.deepEqual(footerBaselineLinks({ footer: {} }), []);
 });
 
-test('footerCta: knapp krever label, nyhetsbrev krever overskrift, defaults settes', () => {
+test('footerCta: knapp krever label, nyhetsbrev krever overskrift, modellen er språkfri', () => {
   assert.equal(footerCta({ footer: {} }), null);
   assert.equal(footerCta({ footer: { cta: { kind: 'button' } } }), null); // knapp uten label
   const btn = footerCta({ pages: PAGES, footer: { cta: { kind: 'button', label: 'Bli medlem', page: 'om' } } });
@@ -155,8 +155,10 @@ test('footerCta: knapp krever label, nyhetsbrev krever overskrift, defaults sett
   assert.equal(btn.target.href, '/om-oss');
   const nl = footerCta({ footer: { cta: { kind: 'newsletter', heading: 'Meld på', endpoint: 'https://formspree.io/f/x' } } });
   assert.equal(nl.kind, 'newsletter');
-  assert.equal(nl.label, 'Meld på'); // default knappetekst
-  assert.equal(nl.success, 'Takk, du er påmeldt!'); // default bekreftelse
+  // Tom label/success fylles av render-laget på besøkende-språket (ADR-0012);
+  // modellen bærer aldri norske standardtekster.
+  assert.equal(nl.label, '');
+  assert.equal(nl.success, '');
   assert.equal(nl.target, null);
   assert.equal(footerCta({ footer: { cta: { kind: 'newsletter' } } }), null); // uten overskrift/label
 });

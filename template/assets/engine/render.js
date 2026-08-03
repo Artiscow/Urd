@@ -18,6 +18,7 @@ import { lift } from './migrate.js';
 import { applyAnimation } from './animations/core.js';
 import { applySectionTheme } from './theme.js';
 import { refreshSticky } from './sticky.js';
+import { t } from './i18n.js';
 
 /**
  * Tegner bakgrunnslagene (color/gradient/glow/grain/image/bildegalleri) inn i
@@ -255,5 +256,5 @@ function renderAnimation(Urd, el, animation, ctx) {
 function renderPlaceholder(el, type) {
   el.classList.add('urd-placeholder');
   el.textContent = type;
-  el.title = `Blokktypen '${type}' er ikke tilgjengelig (mangler plugin eller nyere Urd?)`;
+  el.title = t('render.missingPlugin', { type });
 }

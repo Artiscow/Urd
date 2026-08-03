@@ -2,6 +2,7 @@
  * Samlinger (datablokk-mønsteret, ADR-0007): datahenting og rene hjelpere.
  * Hjelperne er uten DOM og testes i tests/samlinger.test.mjs; samling-blokken (blocks/samling.js) bruker dem.
  */
+import { dates } from './i18n.js';
 
 /** Gjeldende versjon av samlingsfil-formatet (content/samlinger/<id>.json). */
 export const COLLECTION_SCHEMA_VERSION = 1;
@@ -33,10 +34,9 @@ export function groupByYear(entries) {
   return [...groups.entries()].map(([year, list]) => ({ year, entries: list }));
 }
 
-const MONTHS = ['jan', 'feb', 'mar', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'des'];
-
 /**
  * Dato-badge-deler fra en ISO-dato: {day: '19', month: 'jul', year: '2026'}.
+ * Månedsnavnet følger besøkende-språket (Intl via i18n.js, nb uten init).
  * Ugyldig/manglende dato gir null (visningen dropper badgen).
  */
 export function dateBadge(date) {
@@ -44,7 +44,7 @@ export function dateBadge(date) {
   if (!m) return null;
   const monthIndex = Number(m[2]) - 1;
   if (monthIndex < 0 || monthIndex > 11) return null;
-  return { day: String(Number(m[3])), month: MONTHS[monthIndex], year: m[1] };
+  return { day: String(Number(m[3])), month: dates().monthsShort[monthIndex], year: m[1] };
 }
 
 /** Utkast-overstyring fra editoren (urd-collections-meldingen): id → samlingsdata. */

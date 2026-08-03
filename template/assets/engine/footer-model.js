@@ -106,12 +106,14 @@ export function footerCta(site) {
     kind,
     heading,
     sub: str(cta.sub).trim(),
-    label: rawLabel || (kind === 'newsletter' ? 'Meld på' : 'Les mer'),
+    // Tom label/success fylles av render-laget med besøkende-språkets
+    // standardtekst (footer.js + t()); modellen er språkfri (ADR-0012).
+    label: rawLabel,
     big: cta.big === true,
     target: kind === 'button' ? resolveItem({ label: rawLabel, page: cta.page, href: cta.href }, pages) : null,
     endpoint: str(cta.endpoint).trim(),
     recipient: str(cta.recipient).trim(),
-    success: str(cta.success).trim() || 'Takk, du er påmeldt!',
+    success: str(cta.success).trim(),
   };
 }
 

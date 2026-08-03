@@ -5,6 +5,7 @@
  * plugin, så disse hjelperne speiler - men importerer IKKE - skjema-pluginens
  * form.js. Dekket av tests/footer-cta.test.mjs.
  */
+import { t } from './i18n.js';
 
 // Enkel e-postform (ikke RFC-komplett, samme som skjema-pluginen): noe før @,
 // noe etter, og et punktum i domenet.
@@ -43,8 +44,8 @@ export function buildNewsletterMailto(recipient, email) {
   const to = (recipient ?? '').trim();
   if (!to) return null;
   const params = new URLSearchParams({
-    subject: 'Nyhetsbrev-påmelding',
-    body: `Meld på nyhetsbrevet: ${(email ?? '').trim()}`,
+    subject: t('footer.newsletter.mailtoSubject'),
+    body: t('footer.newsletter.mailtoBody', { email: (email ?? '').trim() }),
   });
   return `mailto:${to}?${params.toString().replace(/\+/g, '%20')}`;
 }

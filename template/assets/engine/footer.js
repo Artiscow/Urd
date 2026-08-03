@@ -7,7 +7,8 @@
  */
 
 import { resolveColor } from './theme.js';
-import { iconSvg } from './icons.js';
+import { iconSvg, ICON_LIBRARY } from './icons.js';
+import { t } from './i18n.js';
 import { renderBackgroundLayers } from './render.js';
 import {
   footerBrand,
@@ -53,7 +54,9 @@ function buildSocial(social) {
     a.className = 'urd-footer-soc';
     a.href = s.url;
     a.rel = 'noopener noreferrer';
-    a.setAttribute('aria-label', s.icon);
+    // Ikonets visningsnavn (merkenavn, språknøytralt) som tilgjengelig navn,
+    // aldri den rå ikon-id-en.
+    a.setAttribute('aria-label', ICON_LIBRARY[s.icon]?.label ?? s.icon);
     // iconSvg er motorens egen, selvforfattede SVG (samme mønster som
     // blocks/icon.js) - ikke brukerinnhold, trygt å sette som innerHTML.
     a.innerHTML = svg;
@@ -100,14 +103,14 @@ function buildNewsletterForm(cta) {
   const email = document.createElement('input');
   email.type = 'email';
   email.required = true;
-  email.placeholder = 'din@epost.no';
+  email.placeholder = t('footer.newsletter.emailPlaceholder');
   email.className = 'urd-footer-nl-email';
-  email.setAttribute('aria-label', 'E-postadresse');
+  email.setAttribute('aria-label', t('footer.newsletter.emailLabel'));
 
   const submit = document.createElement('button');
   submit.type = 'submit';
   submit.className = 'urd-footer-cta-btn';
-  submit.textContent = cta.label;
+  submit.textContent = cta.label || t('footer.newsletter.subscribe');
 
   const status = document.createElement('p');
   status.className = 'urd-footer-nl-status';
@@ -120,7 +123,7 @@ function buildNewsletterForm(cta) {
 
   const done = () => {
     status.className = 'urd-footer-nl-status ok';
-    status.textContent = cta.success;
+    status.textContent = cta.success || t('footer.newsletter.success');
     form.reset();
   };
   const fail = (msg) => {
@@ -135,7 +138,7 @@ function buildNewsletterForm(cta) {
     // Honeypot utfylt: lat som det gikk bra, send ingenting (ikke tips boten).
     if (isSpam(honeypot.value)) { done(); return; }
     const value = email.value.trim();
-    if (!isEmail(value)) { fail('Skriv inn en gyldig e-postadresse.'); return; }
+    if (!isEmail(value)) { fail(t('footer.newsletter.invalidEmail')); return; }
     // I editorens preview sendes aldri noe på ekte - vis bekreftelsen.
     if (document.body.classList.contains('urd-preview')) { done(); return; }
 
@@ -150,13 +153,13 @@ function buildNewsletterForm(cta) {
         if (!res.ok) throw new Error(String(res.status));
         done();
       } catch {
-        fail('Kunne ikke sende akkurat nå. Prøv igjen senere.');
+        fail(t('footer.newsletter.sendFailed'));
       } finally {
         submit.disabled = false;
       }
     } else {
       const url = buildNewsletterMailto(cta.recipient, value);
-      if (!url) { fail('Nyhetsbrevet mangler mottaker eller endepunkt.'); return; }
+      if (!url) { fail(t('footer.newsletter.missingTarget')); return; }
       window.location.href = url;
       done();
     }
@@ -187,7 +190,7 @@ function buildCta(cta) {
     const a = document.createElement('a');
     a.className = 'urd-footer-cta-btn';
     a.href = cta.target?.href ?? '#';
-    a.textContent = cta.label;
+    a.textContent = cta.label || t('footer.readMore');
     if (cta.target?.external) a.rel = 'noopener noreferrer';
     block.appendChild(a);
   }

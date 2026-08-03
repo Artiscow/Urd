@@ -35,6 +35,7 @@ import { registerSectionPresets } from './sections/presets.js';
 import { loadPlugins, loadPluginList } from './plugins.js';
 import { setCollectionsDraft } from './samlinger.js';
 import { initSticky, refreshSticky } from './sticky.js';
+import { t, initSiteLocale } from './i18n.js';
 
 export const Urd = {
   blocks: createRegistry('blocks'),
@@ -85,8 +86,8 @@ function mountToTop() {
   const btn = document.createElement('button');
   btn.className = 'urd-totop';
   btn.textContent = '↑';
-  btn.title = 'Til toppen';
-  btn.setAttribute('aria-label', 'Til toppen av siden');
+  btn.title = t('nav.toTop');
+  btn.setAttribute('aria-label', t('nav.toTopFull'));
   btn.addEventListener('click', () => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
@@ -280,6 +281,10 @@ export async function boot(opts) {
   site.pages ??= [];
   site.theme ??= { version: 1, tokens: {} };
   site.nav ??= { version: 1, items: [] };
+  // Besøkende-språket (ADR-0012): site.lang styrer motorens egne tekster
+  // og datonavn. Må være lastet FØR første render; dokumentets lang-attributt
+  // settes fra samme kilde (skallene hardkoder "no" som pre-JS-standard).
+  document.documentElement.lang = await initSiteLocale(site.site.lang);
   applyTheme(site.theme);
   applyFavicon(site.site.icon);
   const engine = await enginePromise;
