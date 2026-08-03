@@ -101,7 +101,7 @@ test('loopGeometry: perioden er linjen pluss plass til største farge', () => {
   // den skjulte delen stor nok til at halvparten aldri splittes.
   assert.deepEqual(loopGeometry(1000, 500, 90, 0.5), { period: 2000, dx: 2000, dy: 0 });
   // 7 like farger: bare 1/6 lengre enn linjen (fargene beholder omtrent
-  // statisk størrelse, eiers krav 24. juli 2026).
+  // statisk størrelse, krav fastsatt 24. juli 2026).
   const g7 = loopGeometry(1200, 0, 90, 1 / 7);
   assert.ok(Math.abs(g7.period - 1400) < 0.05, `period ${g7.period}`);
   // 0 grader (oppover): gradientlinjen er høyden, forskyvningen oppover.
@@ -134,13 +134,27 @@ test('rotate bruker den registrerte vinkel-variabelen', () => {
   assert.equal(r.className, 'urd-bg-rotate');
 });
 
-test('orbit setter posisjons-vars som holder sentrum på plass', () => {
+test('pan gir en 200 %-løper med gradienten (transform, ikke background-position)', () => {
+  const r = gradientRender({ kind: 'linear', angle: 90, animation: 'pan', stops: [{ color: '#000000', share: 50 }, { color: '#ffffff', share: 50 }] });
+  assert.equal(r.background, null);
+  assert.equal(r.className, null);
+  assert.equal(r.runner.className, 'urd-bg-pan-runner');
+  assert.equal(r.runner.background, 'linear-gradient(90deg, #000000 25%, #ffffff 75%)');
+  // Pan har ingen forankring: løperen står i vertens topp-venstre.
+  assert.equal(r.runner.left, undefined);
+  assert.equal(r.runner.top, undefined);
+});
+
+test('orbit gir en 200 %-løper forankret så sentrum står på plass', () => {
   const r = gradientRender({ kind: 'radial', x: 0.7, y: 0.2, animation: 'orbit', stops: [{ color: '#000000', share: 50 }, { color: '#ffffff', share: 50 }] });
-  assert.equal(r.className, 'urd-bg-orbit');
-  assert.equal(r.styles['--urd-bg-px'], '70%');
-  assert.equal(r.styles['--urd-bg-py'], '20%');
-  assert.equal(r.styles['background-size'], '200% 200%');
-  assert.equal(r.styles['background-repeat'], 'no-repeat');
+  assert.equal(r.background, null);
+  assert.equal(r.className, null);
+  assert.equal(r.runner.className, 'urd-bg-orbit-runner');
+  assert.equal(r.runner.background, 'radial-gradient(circle at 70% 20%, #000000 25%, #ffffff 75%)');
+  // Forankringen -x/-y (av flaten) setter løperens punkt (x, y) på
+  // flatens punkt (x, y): sentrum står der det står uanimert.
+  assert.equal(r.runner.left, '-70%');
+  assert.equal(r.runner.top, '-20%');
 });
 
 test('pulse sender lagets styrke til pust-animasjonen', () => {

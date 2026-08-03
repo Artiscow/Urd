@@ -1,7 +1,15 @@
-# Testrunder (eiers sjekkliste)
+# Testrunder (sjekkliste for manuell testing)
 
-Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren stryker herfra** når noe er testet; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
+Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+
+### Testrunde-batch (0.6.0.6): gradient pan/orbit på kompositoren (transform-løpere)
+
+- [ ] Pan (lineær gradient, «Panorer»): sett animasjonen på et gradientlag - glidningen skal se identisk ut som før (diagonal drift frem og tilbake over 18 s), uten hakking, og gradienten skal fylle seksjonen uten synlige kanter eller hvite striper i noen vindusstørrelse
+- [ ] Orbit (radiell gradient, «Bane»): sentrum skal stå der det er satt (Sentrum X/Y) og banen svinge rundt det som før (26 s); prøv også et sentrum utenfor midten (f.eks. X 70 %, Y 20 %)
+- [ ] Redusert bevegelse: pan viser stille utsnitt som før; orbit skal nå vise det KORREKTE forankrede sentrumet (før viste den feil hjørne av lerretet)
+- [ ] Pulse/Rotate/Panorer én vei: uendret adferd (kun pan/orbit er bygget om)
+- [ ] I editor-preview: gradientlag med pan/orbit redigeres og forhåndsvises som før (bytt animasjon frem og tilbake, ingen etterlatte løpere eller doble lag)
 
 ### Testrunde-batch (0.6.0.5): View Transitions mellom sider, native scrollås og myk ankerscroll
 
@@ -19,10 +27,6 @@ Nytt som er levert og venter på eiers testing i produksjon/lokalt. **Kun eieren
 - [ ] Angre plugins: skru en plugin av/på og Ctrl+Z - previewen laster på nytt med forrige liste; vanlig angring av sideinnhold skal ALDRI utløse preview-reload
 - [ ] Kvotevarsel: fyll utkastet med store bilder til localStorage sprenges (eller senk kvoten midlertidig i devtools) - rød feilmelding i statuslinja i stedet for stille tap; publisering frigjør plassen
 - [ ] Publisering etter vokter-tilstrammingen: vanlig publisering (sider, samlinger, plugins, bilder/SVG-logo, sletting av side/samling) går gjennom uten avvisning
-
-### Testrunde-batch (0.6.34): AGENTS.md-flytting og docs-opprydding
-
-- [ ] AGENTS.md-importen: start en ny Claude Code-økt i repoet - hele regelverket skal lastes som prosjektinstruksjoner (ikke bare linjen `@AGENTS.md`), og assistenten skal kjenne reglene (f.eks. verifiserings-ritualet) uten å bli minnet på dem
 
 ### Testrunde-batch (0.6.6.5.11): tema uten FOUC (light-dark()), SVG auto-trim, nav-variant «Flytende (tab)»
 

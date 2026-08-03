@@ -242,7 +242,7 @@ export const SECTION_THEMES = {
   invers: {
     '--urd-color-bg': 'var(--urd-base-text)',
     // 78/22 (ikke 88/12): kortene (surface) må ha nok separasjon fra den
-    // inverterte bakgrunnen, ellers blir de grumsete (eiers testfunn).
+    // inverterte bakgrunnen, ellers blir de grumsete (testfunn).
     '--urd-color-surface': 'color-mix(in srgb, var(--urd-base-text) 78%, var(--urd-base-bg))',
     '--urd-color-text': 'var(--urd-base-bg)',
   },

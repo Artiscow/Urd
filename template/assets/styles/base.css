@@ -3045,14 +3045,27 @@ body.urd-marqueeing {
   color: var(--urd-color-accent);
 }
 
-/* Animert gradientbakgrunn (gradient-laget setter background-size 200%) */
-.urd-bg-animate {
+/* Animert gradientbakgrunn (pan/orbit): gradienten males på en 200 %-løper
+   (gradient.js) som forskyves med transform på kompositor-tråden, aldri
+   background-position (repaint av laget per frame). Verten klipper
+   (urd-bg-loop-host). translate-% er av løperen selv, så -50 % = en hel
+   flatebredde/-høyde: samme reisevei som den gamle position-utgaven. */
+.urd-bg-pan-runner,
+.urd-bg-orbit-runner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+}
+
+.urd-bg-pan-runner {
   animation: urd-bg-pan 18s ease-in-out infinite alternate;
 }
 
 @keyframes urd-bg-pan {
-  from { background-position: 0% 0%; }
-  to { background-position: 100% 100%; }
+  from { transform: translate(0, 0); }
+  to { transform: translate(-50%, -50%); }
 }
 
 /* Én-veis panorering: sirkulær gjentakende gradient (siste farge glir
@@ -3094,27 +3107,26 @@ body.urd-marqueeing {
   50% { opacity: calc(var(--urd-bg-op, 1) * 0.45); }
 }
 
-/* Bane (radiell): 200 %-lerret der basisposisjonen holder sentrum på
-   plass (satt av gradientRender), og banen svinger rundt den */
-.urd-bg-orbit {
-  background-size: 200% 200%;
-  background-repeat: no-repeat;
+/* Bane (radiell): løperen er forankret (inline left/top fra gradient.js)
+   så gradientens sentrum står på plass, og banen svinger den ±2 % av
+   egen størrelse (= 4 % av flaten, samme utslag som før) */
+.urd-bg-orbit-runner {
   animation: urd-bg-orbit 26s ease-in-out infinite;
 }
 
 @keyframes urd-bg-orbit {
-  0%, 100% { background-position: calc(var(--urd-bg-px, 50%) + 4%) var(--urd-bg-py, 50%); }
-  25% { background-position: var(--urd-bg-px, 50%) calc(var(--urd-bg-py, 50%) + 4%); }
-  50% { background-position: calc(var(--urd-bg-px, 50%) - 4%) var(--urd-bg-py, 50%); }
-  75% { background-position: var(--urd-bg-px, 50%) calc(var(--urd-bg-py, 50%) - 4%); }
+  0%, 100% { transform: translate(-2%, 0); }
+  25% { transform: translate(0, -2%); }
+  50% { transform: translate(2%, 0); }
+  75% { transform: translate(0, 2%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .urd-bg-animate,
+  .urd-bg-pan-runner,
+  .urd-bg-orbit-runner,
   .urd-bg-loop-runner,
   .urd-bg-rotate,
-  .urd-bg-pulse,
-  .urd-bg-orbit {
+  .urd-bg-pulse {
     animation: none;
   }
 }

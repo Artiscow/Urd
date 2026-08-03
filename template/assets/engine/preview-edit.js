@@ -119,7 +119,7 @@ export function placeBlock(block, root) {
   // Den nye blokken markeres med en gang (samme mønster som dupliser):
   // rerendringen etter urd-add-block leser selectedBlockId, editoren
   // følger etter via urd-select-block, og Ctrl+D/piltaster virker
-  // uten et ekstra klikk først (eiers testfunn 23. juli 2026).
+  // uten et ekstra klikk først (testfunn 23. juli 2026).
   document.querySelectorAll('.urd-block.urd-selected').forEach((b) => b.classList.remove('urd-selected'));
   selectedBlockId = block.id;
   post({ type: 'urd-select-block', sectionId: host.dataset.sectionId, blockId: block.id });
@@ -426,7 +426,7 @@ function addBlockAdder(host, section, grid) {
     // klikker utenfor (outside-pointerdown) eller velger en blokk. Ingen
     // mouseleave-lukking.
     // Dobbeltklikk på tom seksjonsflate åpner menyen VED PEKEREN, og
-    // blokken lander på klikkpunktet (eiers ønske: «+ ny blokk der man
+    // blokken lander på klikkpunktet (valgt adferd: «+ ny blokk der man
     // klikker»). Aldri i blokker (dobbeltklikk er ordmarkering/bilde-
     // editor der) eller på editeringshåndtak.
     host.addEventListener('dblclick', (event) => {
@@ -1540,7 +1540,7 @@ function addSectionToolbar(host, section, grid) {
         const next = def.item(section);
         post({ type: 'urd-add-blocks', sectionId: section.id, blocks: next.blocks, minBottom: next.bottom, moves: next.moves ?? [] });
         // Marker og rull til det nye elementet etter rerenderingen: en ny TOM ramme er identisk
-        // med naboene sine, så uten dette ser klikket dødt ut (reelt eier-funn i testrundene).
+        // med naboene sine, så uten dette ser klikket dødt ut (reelt funn i testrundene).
         setTimeout(() => {
           const el = document.querySelector(`.urd-block[data-block-id="${next.blocks[0].id}"]`);
           if (!el) return;
@@ -2280,7 +2280,7 @@ function enhanceBlock(el, block, section, grid, host) {
     toolbar.appendChild(dupBtn);
 
     // Blokkmeny: alle blokk-innstillingene i en flytende meny ved blokken
-    // (kalender-mønsteret, eiers ønske 23. juli 2026). Selve menyen bor i
+    // (kalender-mønsteret, valgt 23. juli 2026). Selve menyen bor i
     // editoren (samme kontroller som Egenskaper); her meldes kun hvor.
     const GEAR_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.06-.4.1-.8.1-1.2z"/></svg>';
     const menuBtn = document.createElement('button');

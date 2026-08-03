@@ -1,6 +1,6 @@
 # ADR-0009: Temastyrt UI-regelen (aldri native select i redigerings-UI)
 
-Dato: 19. juli 2026. Status: vedtatt (v0.6 M3, eiers regel).
+Dato: 19. juli 2026. Status: vedtatt (v0.6 M3).
 
 ## Kontekst
 

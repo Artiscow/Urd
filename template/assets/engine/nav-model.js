@@ -97,11 +97,11 @@ export function navClasses(site) {
   const variant = site.nav.variant;
   if (isFloating(variant)) {
     classes += ' urd-nav-var-floating';
-    // Firkant-varianten er pillen uten avrundede kanter (eiers ønske 23. juli 2026).
+    // Firkant-varianten er pillen uten avrundede kanter (valgt 23. juli 2026).
     if (variant === 'floating-square') classes += ' urd-nav-square';
     // Tab-varianten henger ned: firkant topp, kun de nedre hjørnene avrundet.
     if (variant === 'floating-tab') classes += ' urd-nav-tab';
-    // Glød er et tilvalg for pillen (av som standard, eiers valg 22. juli 2026).
+    // Glød er et tilvalg for pillen (av som standard, valgt 22. juli 2026).
     if (site.nav.style?.glow) classes += ' urd-nav-glow';
     // Luft over pillen er standard; topGap: false legger den helt i toppen.
     if (site.nav.style?.topGap === false) classes += ' urd-nav-flush';
@@ -117,7 +117,7 @@ export function navClasses(site) {
   if (['center', 'right'].includes(salign)) classes += ` urd-nav-salign-${salign}`;
   // Vertikal plassering av menylisten i kolonnen (standard øverst). Eget
   // felt, ikke nav.layout: layout er topplinjens begrep, og gjenbruk ga
-  // nederst som utilsiktet standard (eiers testfunn 23. juli 2026).
+  // nederst som utilsiktet standard (testfunn 23. juli 2026).
   const splace = site.nav.style?.sidePlacement;
   if (['middle', 'bottom'].includes(splace)) classes += ` urd-nav-splace-${splace}`;
   // Undermeny-design (standard card = dagens kort).

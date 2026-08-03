@@ -3569,7 +3569,18 @@ function Ha(e) {
 	let t = e.kind === "radial" ? "radial" : "linear", n = (La[t] ?? []).includes(e.animation) ? e.animation : null, r = Ra(e.stops), i = r.map((e) => `${ja(e.color)} ${e.at}%`).join(", "), a = {}, o;
 	if (t === "radial") {
 		let t = Math.round((e.x ?? .5) * 100), r = Math.round((e.y ?? .5) * 100);
-		o = `radial-gradient(circle at ${t}% ${r}%, ${i})`, n === "orbit" && (a["background-size"] = "200% 200%", a["background-repeat"] = "no-repeat", a["--urd-bg-px"] = `${t}%`, a["--urd-bg-py"] = `${r}%`), n === "pulse" && (a["--urd-bg-op"] = String(e.opacity ?? 1));
+		if (o = `radial-gradient(circle at ${t}% ${r}%, ${i})`, n === "orbit") return {
+			background: null,
+			className: null,
+			styles: a,
+			runner: {
+				className: "urd-bg-orbit-runner",
+				background: o,
+				left: `${-t}%`,
+				top: `${-r}%`
+			}
+		};
+		n === "pulse" && (a["--urd-bg-op"] = String(e.opacity ?? 1));
 	} else {
 		let t = e.angle ?? 160;
 		if (n === "pan-loop") {
@@ -3585,16 +3596,22 @@ function Ha(e) {
 				}
 			};
 		}
-		o = n === "rotate" ? `linear-gradient(calc(var(--urd-grad-spin, 0deg) + ${t}deg), ${i})` : `linear-gradient(${t}deg, ${i})`, n === "pan" && (a["background-size"] = "200% 200%");
+		if (o = n === "rotate" ? `linear-gradient(calc(var(--urd-grad-spin, 0deg) + ${t}deg), ${i})` : `linear-gradient(${t}deg, ${i})`, n === "pan") return {
+			background: null,
+			className: null,
+			styles: a,
+			runner: {
+				className: "urd-bg-pan-runner",
+				background: o
+			}
+		};
 	}
 	return {
 		background: o,
 		className: n ? {
-			pan: "urd-bg-animate",
 			rotate: "urd-bg-rotate",
-			pulse: "urd-bg-pulse",
-			orbit: "urd-bg-orbit"
-		}[n] : null,
+			pulse: "urd-bg-pulse"
+		}[n] ?? null : null,
 		styles: a
 	};
 }
@@ -3693,6 +3710,12 @@ var Xa = {
 				return !0;
 			};
 			requestAnimationFrame(r), qa(r);
+			return;
+		}
+		if (n.runner) {
+			e.classList.add("urd-bg-loop-host");
+			let t = document.createElement("div");
+			t.className = n.runner.className, t.style.background = n.runner.background, n.runner.left != null && (t.style.left = n.runner.left), n.runner.top != null && (t.style.top = n.runner.top), e.appendChild(t);
 			return;
 		}
 		e.style.background = n.background, n.className && (e.classList.add(n.className), n.className === "urd-bg-rotate" && Ya());

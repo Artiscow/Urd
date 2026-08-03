@@ -25,7 +25,7 @@ let navController = null;
 
 // Sidestilt kolonne på trange vinduer: under 900px rendres menyen som en
 // VANLIG topplinje (effektiv variant bar) med horisontale punkter; burgeren
-// kommer først ved mobil-breakpointet, som for stripe-varianten (eiers valg
+// kommer først ved mobil-breakpointet, som for stripe-varianten (valgt
 // 23. juli 2026). Egen brytekant uavhengig av mobil-breakpointet OG av
 // editorens viewport-valg, så det virker også i previewens desktop-modus.
 const narrowMq = window.matchMedia('(max-width: 900px)');
@@ -69,7 +69,7 @@ export function renderNav(site, host) {
   // Burgeren følger den FAKTISKE bredden via egen klasse på nav-en: i
   // preview eier editorens viewport-valg body.urd-mobile (og dermed
   // strukturverktøyene), men menyen alene skal likevel bli mobil når
-  // vinduet er smalere enn mobil-breakpointet (eiers funn 23. juli 2026).
+  // vinduet er smalere enn mobil-breakpointet (testfunn 23. juli 2026).
   // Hos besøkende settes body.urd-mobile ved samme terskel; dobbelt
   // dekning i CSS-en er harmløs.
   const mobileMq = window.matchMedia(`(max-width: ${site.breakpoints?.mobile ?? 640}px)`);
@@ -257,7 +257,7 @@ export function renderNav(site, host) {
   // I den sidestilte kolonnen er undermenyene trekkspill i flyten: der
   // åpner hover, men lukker aldri per punkt - lukking ville kortet ned
   // kolonnen under pekeren og gitt feilklikk. Trekkspillene lukkes først
-  // når pekeren forlater hele menyen (eiers presisering 23. juli 2026).
+  // når pekeren forlater hele menyen (presisert 23. juli 2026).
   const isColumn = hc.host.includes('urd-nav-side-host');
   const mouseHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 

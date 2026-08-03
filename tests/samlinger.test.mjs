@@ -1,6 +1,6 @@
 /**
  * Test av samlingsmønsterets rene hjelpere (ADR-0007): sortering, år-gruppering
- * og dato-badge. Selve samling-blokken er DOM-kode og dekkes av eiers testrunde;
+ * og dato-badge. Selve samling-blokken er DOM-kode og dekkes av testrundene;
  * skjemavalideringen av samlingsfiler kjøres i editor/scripts/validate.mjs.
  */
 import { test } from 'node:test';

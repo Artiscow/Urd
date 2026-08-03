@@ -586,7 +586,7 @@
     if (msg.sectionId) activeSectionId = msg.sectionId;
     syncSelectedBlock();
     // (Auto-åpning av Egenskaper ved blokk-klikk ble prøvd og reversert
-    // etter eiers test; kun NY SEKSJON åpner panelet automatisk.)
+    // etter testrunde; kun NY SEKSJON åpner panelet automatisk.)
   }
 
   /** Blokkmenyen (tannhjulet på blokkens verktøylinje): posisjon i
@@ -2876,7 +2876,7 @@
     // høyden sin ved HVER rendering, og målingen varierer med innhold,
     // feed-svar og vindu. Målingen bokføres derfor i BÅDE utkastet og
     // sammenligningsgrunnlaget, så den aldri alene utgjør «upubliserte
-    // endringer» (eiers testfunn 23. juli 2026: merket dukket opp av seg
+    // endringer» (testfunn 23. juli 2026: merket dukket opp av seg
     // selv ved lasting, kom tilbake etter Forkast utkast, og ble stående
     // etter at alt var angret - målte høyder skilte utkast fra publisert).
     store.amendBaseline((base) => {
@@ -3118,7 +3118,7 @@
     if (!section) return;
     pushHistory('add-block');
     // Nye og dupliserte blokker legges ØVERST i lagrekkefølgen, så de aldri
-    // gjemmer seg bak det som alt står i seksjonen (eiers ønske 19. juli 2026).
+    // gjemmer seg bak det som alt står i seksjonen (valgt 19. juli 2026).
     const topZ = Math.max(0, ...section.blocks.map((b) => b.frames?.desktop?.z ?? 1)) + 1;
     if (block.frames?.desktop) block.frames.desktop = { ...block.frames.desktop, z: topZ };
     section.blocks.push(block);
@@ -5659,7 +5659,7 @@
   }
 
   /* Aktiv markeres av bakgrunn + kant alene: font-vekt endres IKKE, ellers
-     flytter teksten seg bittelitt ved hvert valg (eiers observasjon). */
+     flytter teksten seg bittelitt ved hvert valg (observasjon fra testrundene). */
   .rail button.active {
     opacity: 1;
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 28%, transparent);

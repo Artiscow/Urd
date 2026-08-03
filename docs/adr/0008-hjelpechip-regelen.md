@@ -1,10 +1,10 @@
 # ADR-0008: Hjelpechip-regelen («?» på alt med spesialfunksjoner)
 
-Dato: 19. juli 2026. Status: vedtatt (v0.6 M3, eiers regel).
+Dato: 19. juli 2026. Status: vedtatt (v0.6 M3).
 
 ## Kontekst
 
-Blokker og seksjoner får stadig flere funksjoner som ikke synes på overflaten: samling-blokken har klikk-og-skriv og autovekst, kalenderblokken har kildepanel, kategori-konvensjon og påmeldings-uttrekk. Testrundene viste mønsteret: eieren oppdager ikke funksjonene, eller oppfatter dem som feil («bildeeditoren er ingen bildeeditor», «⚙ Kilder - hva er dette?»). Tooltips forsvinner før de er lest, og dokumentasjon utenfor editoren blir ikke funnet i arbeidsøyeblikket.
+Blokker og seksjoner får stadig flere funksjoner som ikke synes på overflaten: samling-blokken har klikk-og-skriv og autovekst, kalenderblokken har kildepanel, kategori-konvensjon og påmeldings-uttrekk. Testrundene viste mønsteret: funksjonene blir ikke oppdaget, eller oppfattes som feil («bildeeditoren er ingen bildeeditor», «⚙ Kilder - hva er dette?»). Tooltips forsvinner før de er lest, og dokumentasjon utenfor editoren blir ikke funnet i arbeidsøyeblikket.
 
 ## Beslutning
 
