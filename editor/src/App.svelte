@@ -64,13 +64,13 @@
    * Palettene er definert som CSS-variabler i stilblokken under.
    */
   const ADMIN_THEMES = [
-    ['lilla', 'Lilla dybde'],
-    ['bronn', 'Nordisk brønn'],
-    ['gull', 'Norrønt gull'],
-    ['graa', 'Nøytral grå'],
-    ['nordlys', 'Nordlys'],
-    ['skumring', 'Skumring'],
-    ['glo', 'Glo'],
+    ['lilla', ta('adminTheme.lilla')],
+    ['bronn', ta('adminTheme.bronn')],
+    ['gull', ta('adminTheme.gull')],
+    ['graa', ta('adminTheme.graa')],
+    ['nordlys', ta('adminTheme.nordlys')],
+    ['skumring', ta('adminTheme.skumring')],
+    ['glo', ta('adminTheme.glo')],
   ];
   let adminTheme = $state(localStorage.getItem('urd-admin-theme') ?? 'graa');
 
@@ -129,7 +129,7 @@
   }
   /** Felles feilmelding når et utkast ikke får plass i localStorage (delt av alle draftStores). */
   function draftSaveError() {
-    setStatus('Nettleserens lagringsplass er full: siste endring ble ikke lagret som utkast. Publiser, eller fjern store bilder, for å frigjøre plass.', 'error');
+    setStatus(ta('status.storageFull'), 'error');
   }
 
   /** Direkte utkast-skriving (utenom draftStore) med samme kvotevern. */
@@ -399,7 +399,7 @@
     redoStack.push(snapshot());
     restore(history.pop());
     lastHistoryKey = null;
-    setStatus('Angret');
+    setStatus(ta('status.undone'));
   }
 
   function redo() {
@@ -407,7 +407,7 @@
     history.push(snapshot());
     restore(redoStack.pop());
     lastHistoryKey = null;
-    setStatus('Gjentatt');
+    setStatus(ta('status.redone'));
   }
 
   // Klikk hvor som helst i admin utenfor blokkmenyen lukker den (klikk i
@@ -486,7 +486,7 @@
   // Kun én om gangen (publisering og angring er sekvensielle flyter).
   let confirmBox = $state(null);
 
-  function askConfirm({ title, lines = [], okLabel = 'OK', cancelLabel = 'Avbryt' }) {
+  function askConfirm({ title, lines = [], okLabel = ta('confirm.ok'), cancelLabel = ta('confirm.cancel') }) {
     return new Promise((resolve) => {
       confirmBox = { title, lines, okLabel, cancelLabel, resolve };
     });
@@ -521,7 +521,7 @@
       delete siteDraft.site.setup;
     });
     closeSetup();
-    setStatus('Sjekk hvordan siden ser ut, og trykk Publiser når du er klar', 'ok');
+    setStatus(ta('status.setupDone'), 'ok');
   }
 
   /** Aktivt panel i venstre panelvelger (null = lukket) */
@@ -731,7 +731,7 @@
         b.props.alt = b.props.alt || slugify(file.name).replaceAll('-', ' ');
       });
     } catch {
-      setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
+      setStatus(ta('status.imageReadError'), 'error');
     }
   }
 
@@ -739,13 +739,13 @@
   // typografirad).
 
   /** Navn på blokktypene i panelet. */
-  const BLOCK_LABELS = { text: 'Tekst', button: 'Knapp', image: 'Bilde', shape: 'Form', video: 'Video', icon: 'Ikon', galleri: 'Galleri', faq: 'FAQ' };
+  const BLOCK_LABELS = { text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), galleri: ta('blocks.galleri'), faq: ta('blocks.faq') };
   const SHAPE_KINDS = [
-    ['line', 'Strek'], ['arrow', 'Pil'], ['circle', 'Sirkel'],
-    ['rect', 'Rektangel'], ['triangle', 'Trekant'],
+    ['line', ta('shape.line')], ['arrow', ta('shape.arrow')], ['circle', ta('shape.circle')],
+    ['rect', ta('shape.rect')], ['triangle', ta('shape.triangle')],
   ];
   const COLOR_TOKENS = [
-    ['accent', 'Aksent'], ['text', 'Tekst'], ['surface', 'Flate'], ['bg', 'Bakgrunn'],
+    ['accent', ta('color.accent')], ['text', ta('color.text')], ['surface', ta('color.surface')], ['bg', ta('color.bg')],
   ];
 
   /** Sist klikkede seksjon i forhåndsvisningen: paletten legger nye
@@ -961,8 +961,8 @@
 
   /** Formbytte nullstiller animasjonen om den ikke finnes for den nye formen. */
   const GRAD_ANIMATIONS = {
-    linear: [['none', 'Ingen'], ['pan', 'Panorer frem og tilbake'], ['pan-loop', 'Panorer én vei (loop)'], ['rotate', 'Roter sakte']],
-    radial: [['none', 'Ingen'], ['pulse', 'Pulser'], ['orbit', 'Sving sakte i bane']],
+    linear: [['none', ta('common.none')], ['pan', ta('opt.gradAnim.pan')], ['pan-loop', ta('opt.gradAnim.panLoop')], ['rotate', ta('opt.gradAnim.rotate')]],
+    radial: [['none', ta('common.none')], ['pulse', ta('opt.gradAnim.pulse')], ['orbit', ta('opt.gradAnim.orbit')]],
   };
 
   function setGradKind(bg, i, kind) {
@@ -1120,7 +1120,7 @@
       const img = await compressOrTrim(file);
       setBgProp(bg, i, 'src', img.dataUrl);
     } catch {
-      setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
+      setStatus(ta('status.imageReadError'), 'error');
     }
   }
 
@@ -1131,7 +1131,7 @@
     const files = [...(event.target.files ?? [])];
     event.target.value = '';
     if (!files.length) return;
-    setStatus('Komprimerer bildene…');
+    setStatus(ta('status.compressingImages'));
     const { images, failed, big } = await compressMany(files);
     if (images.length) {
       bg.mutate(bg.keyPrefix, (t) => {
@@ -1176,7 +1176,7 @@
   const themeSwatches = () => Object.entries(siteDraft?.theme.tokens.color ?? {}).map(([n, hex]) => [n, hex]);
 
   /** Tema-panelets avledede tilstand (Farger-området). */
-  const PALETTE_KEYS = [['bg', 'Bakgrunn', 'bg'], ['surface', 'Flater', 'flate'], ['text', 'Tekst', 'tekst'], ['accent', 'Aksent', 'aksent'], ['accent-text', 'Tekst på aksent', 'på aksent']];
+  const PALETTE_KEYS = [['bg', ta('palette.bg'), ta('palette.bgShort')], ['surface', ta('palette.surface'), ta('palette.surfaceShort')], ['text', ta('palette.text'), ta('palette.textShort')], ['accent', ta('palette.accent'), ta('palette.accentShort')], ['accent-text', ta('palette.accentText'), ta('palette.accentTextShort')]];
   const dualMode = $derived(!!siteDraft?.theme.alt);
   const altAuto = $derived(siteDraft?.theme.alt?.auto === true);
   const stdMode = $derived(siteDraft?.theme.scheme === 'dark' ? 'dark' : 'light');
@@ -1193,9 +1193,9 @@
    *  kan kombineres. Eldre sider kan ha en pekereffekt lagret i animation
    *  (feltene var ett til 0.6.30): normaliseres til hover ved neste edit. */
   const isEntrance = (anim) => Boolean(anim && coreAnimations[anim.type]?.entrance);
-  const ENTRANCE_OPTIONS = [['', 'Ingen'],
+  const ENTRANCE_OPTIONS = [['', ta('common.none')],
     ...Object.entries(coreAnimations).filter(([, def]) => def.entrance).map(([id, def]) => [id, def.label])];
-  const HOVER_OPTIONS = [['', 'Ingen'],
+  const HOVER_OPTIONS = [['', ta('common.none')],
     ...Object.entries(coreAnimations).filter(([, def]) => !def.entrance).map(([id, def]) => [id, def.label])];
 
   function normalizeAnim(target) {
@@ -1358,13 +1358,13 @@
       // Uten opprinnelig grunnlag kan vi ikke diffe, så redaktøren må ta valget eksplisitt i stedet for at vernet hoppes stille over.
       await refreshBaseSha();
       const ok = await askConfirm({
-        title: 'Kan ikke sjekke andres endringer',
+        title: ta('confirm.conflictUnknown.title'),
         lines: [
-          'Urd fikk ikke lastet publiseringsgrunnlaget da siden ble åpnet, og kan derfor ikke sjekke om noen andre har publisert i mellomtiden.',
-          'Publiserer du likevel, vinner dine filer.',
+          ta('confirm.conflictUnknown.body'),
+          ta('confirm.conflictUnknown.warning'),
         ],
-        okLabel: 'Publiser likevel',
-        cancelLabel: 'Avbryt',
+        okLabel: ta('confirm.publishAnyway'),
+        cancelLabel: ta('confirm.cancel'),
       });
       return { ok, head: baseSha };
     }
@@ -1382,19 +1382,19 @@
     // Avkortet diff (svært store endringer): vi VET ikke om det er
     // overlapp, så redaktøren må ta valget.
     const overlap = data.truncated
-      ? ['(endringslisten fra GitHub er ufullstendig - stor diff)']
+      ? [ta('confirm.conflict.truncated')]
       : (data.changedFiles ?? []).filter((p) => mine.has(p));
     if (overlap.length === 0) return { ok: true, head };
 
     const ok = await askConfirm({
-      title: 'Noen andre har publisert',
+      title: ta('confirm.conflict.title'),
       lines: [
-        'Siden du lastet siden har noen andre publisert endringer i filer du nå skriver over:',
+        ta('confirm.conflict.intro'),
         ...overlap.map((p) => `• ${p}`),
-        'Publiserer du likevel, vinner dine versjoner for disse filene. Avbryt for å laste siden på nytt og se de nye endringene først.',
+        ta('confirm.conflict.warning'),
       ],
-      okLabel: 'Publiser likevel',
-      cancelLabel: 'Avbryt',
+      okLabel: ta('confirm.publishAnyway'),
+      cancelLabel: ta('confirm.cancel'),
     });
     return { ok, head };
   }
@@ -1417,11 +1417,11 @@
         historyError = 'Logg inn med GitHub for å se historikken.';
       } else {
         historyList = [];
-        historyError = (await res.json().catch(() => null))?.error ?? 'Kunne ikke hente historikken.';
+        historyError = (await res.json().catch(() => null))?.error ?? ta('status.historyFetchFailed');
       }
     } catch {
       historyList = [];
-      historyError = 'Historikk er ikke tilgjengelig her (krever host med functions).';
+      historyError = ta('status.historyUnavailable');
     }
   }
 
@@ -1440,17 +1440,17 @@
     const last = historyList?.[0];
     if (!last || historyBusy) return;
     const ok = await askConfirm({
-      title: 'Angre siste publisering?',
+      title: ta('confirm.revert.title'),
       lines: [
         `«${last.message}»`,
-        'En ny commit gjenoppretter innholdet slik det var før den. Ingenting slettes fra historikken, og angringen kan selv angres.',
+        ta('confirm.revert.body'),
       ],
-      okLabel: 'Angre publiseringen',
-      cancelLabel: 'Avbryt',
+      okLabel: ta('confirm.revert.ok'),
+      cancelLabel: ta('confirm.cancel'),
     });
     if (!ok) return;
     historyBusy = true;
-    setStatus('Angrer siste publisering…');
+    setStatus(ta('status.reverting'));
     try {
       const res = await fetch('/api/github/revert', {
         method: 'POST',
@@ -1462,15 +1462,15 @@
         if (sha) baseSha = sha;
         else refreshBaseSha();
         revertedSinceLoad = true;
-        setStatus('✓ Angret! Venter på utrullingen (~1 min), så lastes den gjenopprettede versjonen automatisk …', 'ok');
+        setStatus(ta('status.revertDone'), 'ok');
         awaitRevertDeploy();
       } else if (res.status === 409) {
-        setStatus('Noen har publisert i mellomtiden - historikken er lastet på nytt', 'error');
+        setStatus(ta('status.revertConflict'), 'error');
       } else {
-        setStatus((await res.json().catch(() => null))?.error ?? 'Kunne ikke angre', 'error');
+        setStatus((await res.json().catch(() => null))?.error ?? ta('status.revertFailed'), 'error');
       }
     } catch {
-      setStatus('Kunne ikke nå publiseringslaget', 'error');
+      setStatus(ta('status.publishLayerUnreachable'), 'error');
     }
     historyBusy = false;
     loadHistory();
@@ -1501,7 +1501,7 @@
       await new Promise((resolve) => setTimeout(resolve, 10_000));
       const now = await snap();
       if (paths.some((path) => now[path] !== null && before[path] !== null && now[path] !== before[path])) {
-        setStatus('✓ Gjenopprettet versjon er ute - laster admin på nytt …', 'ok');
+        setStatus(ta('status.revertDeployed'), 'ok');
         // Utkastene beskriver tilstanden fra FØR angringen; serveren er fasiten nå.
         for (const key of Object.keys(localStorage).filter((k) => k.startsWith('urd-draft-'))) {
           localStorage.removeItem(key);
@@ -1511,7 +1511,7 @@
         return;
       }
     }
-    setStatus('Angringen er lagret, men utrullingen lot vente på seg - last admin på nytt manuelt for å redigere videre', 'error');
+    setStatus(ta('status.revertDeployTimeout'), 'error');
   }
 
   /** Løper mens en sides data lastes; urd-ready venter på denne. */
@@ -1674,10 +1674,10 @@
   const RESERVED_SLUGS = ['admin', 'api', 'assets', 'content', 'media', 'plugins', 'functions'];
 
   function pageSlugError(slug, ignoreId = null) {
-    if (!slug) return 'Siden trenger et navn';
-    if (RESERVED_SLUGS.includes(slug)) return `«${slug}» er et reservert navn`;
+    if (!slug) return ta('error.pageNeedsName');
+    if (RESERVED_SLUGS.includes(slug)) return ta('error.reservedName', { slug });
     if (siteDraft.pages.some((p) => p.id !== ignoreId && (p.path === `/${slug}` || p.id === slug))) {
-      return 'Det finnes allerede en side med dette navnet';
+      return ta('error.pageExists');
     }
     return null;
   }
@@ -1779,7 +1779,7 @@
     });
     // Sidens eget utkast beholdes: Ctrl+Z gjenoppretter alt.
     if (entry.id === pageId) selectPage(siteDraft.pages[0].id);
-    setStatus('Siden fjernes ved neste publisering (Ctrl+Z angrer)');
+    setStatus(ta('status.pageRemoved'));
   }
 
   /* ---------- Nav-panelet ---------- */
@@ -1831,7 +1831,7 @@
         else logo.value = img.dataUrl;
       });
     } catch {
-      setStatus('Kunne ikke lese bildet (prøv jpg/png/webp/svg)', 'error');
+      setStatus(ta('status.imageReadErrorSvg'), 'error');
     }
   }
 
@@ -1852,14 +1852,14 @@
         const img = await svgAutoTrim(file);
         iconEditorImage = img.dataUrl;
       } catch {
-        setStatus('Kunne ikke lese bildet (prøv jpg/png/webp/svg)', 'error');
+        setStatus(ta('status.imageReadErrorSvg'), 'error');
       }
       return;
     }
     // Les rå fil i full oppløsning, så editoren har noe å beskjære og zoome i.
     const reader = new FileReader();
     reader.onload = () => { iconEditorImage = String(reader.result); };
-    reader.onerror = () => setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
+    reader.onerror = () => setStatus(ta('status.imageReadError'), 'error');
     reader.readAsDataURL(file);
   }
 
@@ -1938,9 +1938,9 @@
   /** Effektfargen ved hover: kun der stilen har en effekt, med etikett som
       sier hva fargen faktisk styrer i den valgte stilen. */
   const HOVER_COLOR_LABELS = {
-    underline: ['Strekfarge', 'Fargen på streken under lenken'],
-    pill: ['Pillefarge', 'Fargen på pille-flaten bak lenken'],
-    lift: ['Glødfarge', 'Fargen på gløden bak teksten'],
+    underline: [ta('hoverColor.underline.label'), ta('hoverColor.underline.title')],
+    pill: [ta('hoverColor.pill.label'), ta('hoverColor.pill.title')],
+    lift: [ta('hoverColor.lift.label'), ta('hoverColor.lift.title')],
   };
   const hoverColorLabel = $derived(HOVER_COLOR_LABELS[siteDraft?.nav?.style?.hover] ?? null);
 
@@ -1996,10 +1996,10 @@
   let newSamlingKind = $state('news');
 
   const SAMLING_KINDS = [
-    ['news', 'Nyheter'],
-    ['notices', 'Oppslag'],
-    ['publications', 'Publikasjoner'],
-    ['custom', 'Egendefinert'],
+    ['news', ta('collectionKind.news')],
+    ['notices', ta('collectionKind.notices')],
+    ['publications', ta('collectionKind.publications')],
+    ['custom', ta('collectionKind.custom')],
   ];
 
   async function initSamlinger() {
@@ -2069,7 +2069,7 @@
     if (!name) return;
     const id = slugify(name);
     if (!id || samlingerIds.includes(id)) {
-      setStatus(id ? 'Det finnes alt en samling med den adressen' : 'Ugyldig navn', 'error');
+      setStatus(id ? ta('status.collectionExists') : ta('status.invalidName'), 'error');
       return;
     }
     pushHistory('samlinger');
@@ -2323,7 +2323,7 @@
       const img = await compressOrTrim(file);
       footerMutate('footer', (f) => { f.brand ??= {}; f.brand.logo = img.dataUrl; if (!f.brand.mode) f.brand.mode = 'both'; });
     } catch {
-      setStatus('Kunne ikke lese bildet (prøv jpg/png/webp/svg)', 'error');
+      setStatus(ta('status.imageReadErrorSvg'), 'error');
     }
   }
   function removeFooterLogo() {
@@ -2351,14 +2351,14 @@
      sider og tittel. Fyller footeren; alt redigeres videre. Hver har en liten
      thumb-beskrivelse til den visuelle mal-velgeren (footerThumb). */
   const FOOTER_TEMPLATES = [
-    { id: 'minimal', label: 'Minimal', thumb: { center: true, social: 2, baselineLinks: 1 } },
-    { id: 'sentrert', label: 'Sentrert', thumb: { center: true, row: true, social: 3 } },
-    { id: 'kolonner', label: 'Kolonner', thumb: { tag: true, cols: 3, social: 3, baselineLinks: 2 } },
-    { id: 'sitemap', label: 'Sitemap', thumb: { tag: true, fat: true, cols: 4, social: 4, baselineLinks: 3 } },
-    { id: 'nyhetsbrev', label: 'Nyhetsbrev', thumb: { tag: true, cta: true, cols: 2, social: 2, baselineLinks: 1 } },
-    { id: 'storcta', label: 'Stor CTA', thumb: { center: true, bigcta: true, baselineLinks: 2 } },
-    { id: 'kontakt', label: 'Kontakt', thumb: { tag: true, cols: 3, social: 2, baselineLinks: 1 } },
-    { id: 'mega', label: 'Mega', thumb: { tag: true, mega: true, cols: 2, social: 4, baselineLinks: 2 } },
+    { id: 'minimal', label: ta('footerTemplate.minimal'), thumb: { center: true, social: 2, baselineLinks: 1 } },
+    { id: 'sentrert', label: ta('footerTemplate.sentrert'), thumb: { center: true, row: true, social: 3 } },
+    { id: 'kolonner', label: ta('footerTemplate.kolonner'), thumb: { tag: true, cols: 3, social: 3, baselineLinks: 2 } },
+    { id: 'sitemap', label: ta('footerTemplate.sitemap'), thumb: { tag: true, fat: true, cols: 4, social: 4, baselineLinks: 3 } },
+    { id: 'nyhetsbrev', label: ta('footerTemplate.nyhetsbrev'), thumb: { tag: true, cta: true, cols: 2, social: 2, baselineLinks: 1 } },
+    { id: 'storcta', label: ta('footerTemplate.storcta'), thumb: { center: true, bigcta: true, baselineLinks: 2 } },
+    { id: 'kontakt', label: ta('footerTemplate.kontakt'), thumb: { tag: true, cols: 3, social: 2, baselineLinks: 1 } },
+    { id: 'mega', label: ta('footerTemplate.mega'), thumb: { tag: true, mega: true, cols: 2, social: 4, baselineLinks: 2 } },
   ];
 
   function footerTemplateConfig(name) {
@@ -2823,22 +2823,22 @@
      røres ikke. Natt er mørk-først (scheme dark); resten lyse med mørkt alt. */
   const THEME_PRESET_KEYS = ['bg', 'surface', 'text', 'accent', 'accent-text'];
   const THEME_PRESETS = [
-    { id: 'bronn', name: 'Brønn', note: 'turkis (Urd)',
+    { id: 'bronn', name: ta('themePreset.bronn.name'), note: ta('themePreset.bronn.note'),
       light: { bg: '#f6faf8', surface: '#ffffff', text: '#16211d', accent: '#15b39a', 'accent-text': '#04241d' },
       dark: { bg: '#0e1512', surface: '#17211d', text: '#eaf1ed', accent: '#22c3a8', 'accent-text': '#04241d' } },
-    { id: 'stein', name: 'Stein', note: 'varm nøytral',
+    { id: 'stein', name: ta('themePreset.stein.name'), note: ta('themePreset.stein.note'),
       light: { bg: '#f4f2ed', surface: '#ffffff', text: '#262019', accent: '#8a5a41', 'accent-text': '#ffffff' },
       dark: { bg: '#17130e', surface: '#221c15', text: '#efe8dd', accent: '#c0906f', 'accent-text': '#1a1109' } },
-    { id: 'plomme', name: 'Plomme', note: 'vibrant violett',
+    { id: 'plomme', name: ta('themePreset.plomme.name'), note: ta('themePreset.plomme.note'),
       light: { bg: '#faf5ff', surface: '#ffffff', text: '#2a1546', accent: '#7c3aed', 'accent-text': '#ffffff' },
       dark: { bg: '#140f20', surface: '#1f1733', text: '#ece5f8', accent: '#a97cf6', 'accent-text': '#170a2c' } },
-    { id: 'rose', name: 'Rose', note: 'dus rosa',
+    { id: 'rose', name: ta('themePreset.rose.name'), note: ta('themePreset.rose.note'),
       light: { bg: '#faf5f6', surface: '#ffffff', text: '#241a1d', accent: '#b04a63', 'accent-text': '#ffffff' },
       dark: { bg: '#171015', surface: '#22181c', text: '#f1e6ea', accent: '#d98098', 'accent-text': '#2a0f18' } },
-    { id: 'hav', name: 'Hav', note: 'blå',
+    { id: 'hav', name: ta('themePreset.hav.name'), note: ta('themePreset.hav.note'),
       light: { bg: '#f1f6fb', surface: '#ffffff', text: '#13202b', accent: '#1a6fa8', 'accent-text': '#ffffff' },
       dark: { bg: '#0a1420', surface: '#12202f', text: '#e2edf5', accent: '#47a6df', 'accent-text': '#06131f' } },
-    { id: 'natt', name: 'Natt', note: 'mørk-først, indigo', scheme: 'dark',
+    { id: 'natt', name: ta('themePreset.natt.name'), note: ta('themePreset.natt.note'), scheme: 'dark',
       light: { bg: '#f5f6fb', surface: '#ffffff', text: '#171a2b', accent: '#4f5ed6', 'accent-text': '#ffffff' },
       dark: { bg: '#0d0f1a', surface: '#171b2e', text: '#e7e9f5', accent: '#8091ff', 'accent-text': '#0a0c18' } },
   ];
@@ -3243,8 +3243,8 @@
     // rerendringen; selectById svarer med urd-select-block, så
     // Egenskaper-panelet følger etter). Samme UX som paletten.
     bridge?.sendSelect(block.id);
-    if (msg.kind === 'image') setStatus('Bildeblokk lagt til - velg bildet i Egenskaper');
-    if (msg.kind === 'galleri') setStatus('Galleri lagt til - legg til bilder i Egenskaper');
+    if (msg.kind === 'image') setStatus(ta('status.imageBlockAdded'));
+    if (msg.kind === 'galleri') setStatus(ta('status.galleryBlockAdded'));
   }
 
   /** + Bilde: komprimer til webp og legg i utkastet som data-URL.
@@ -3254,12 +3254,12 @@
     event.target.value = '';
     if (!file) return;
 
-    setStatus('Komprimerer bildet…');
+    setStatus(ta('status.compressingImage'));
     let img;
     try {
       img = await compressOrTrim(file);
     } catch {
-      setStatus('Kunne ikke lese bildet (prøv jpg/png/webp)', 'error');
+      setStatus(ta('status.imageReadError'), 'error');
       return;
     }
 
@@ -3275,7 +3275,7 @@
       frames: { desktop: { x: 4, y: 8, w: 30, h: Math.max(40, height), z: 1, rot: 0 }, mobile: null },
     });
     if (img.bytes > WARN_BYTES) {
-      setStatus(`Bildet er stort (${Math.round(img.bytes / 1024)} kB) - vurder et mindre utsnitt`, 'error');
+      setStatus(ta('status.imageLarge', { kb: Math.round(img.bytes / 1024) }), 'error');
     } else {
       setStatus('');
     }
@@ -3300,9 +3300,9 @@
   }
 
   function reportUpload(ok, failed, big) {
-    if (failed) setStatus(`${failed} av bildene kunne ikke leses (prøv jpg/png/webp)`, 'error');
-    else if (big) setStatus(`${big} av bildene er store - vurder mindre utsnitt`, 'error');
-    else setStatus(ok ? '' : 'Ingen bilder lagt til');
+    if (failed) setStatus(ta('status.imagesReadFailed', { n: failed }), 'error');
+    else if (big) setStatus(ta('status.imagesLarge', { n: big }), 'error');
+    else setStatus(ok ? '' : ta('status.noImagesAdded'));
   }
 
   /** + Legg til bilder i en markert galleri-blokk: hele bunken i ETT angre-steg. */
@@ -3310,7 +3310,7 @@
     const files = [...(event.target.files ?? [])];
     event.target.value = '';
     if (!files.length) return;
-    setStatus('Komprimerer bildene…');
+    setStatus(ta('status.compressingImages'));
     const { images, failed, big } = await compressMany(files);
     if (images.length) mutateBlock('galleri-add', (b) => { b.props.images.push(...images); });
     reportUpload(images.length, failed, big);
@@ -3321,7 +3321,7 @@
     const files = [...(event.target.files ?? [])];
     event.target.value = '';
     if (!files.length) return;
-    setStatus('Komprimerer bildene…');
+    setStatus(ta('status.compressingImages'));
     const { images, failed, big } = await compressMany(files);
     if (!images.length) {
       reportUpload(0, failed, big);
@@ -3478,10 +3478,10 @@
 
   async function publish() {
     if (revertedSinceLoad) {
-      setStatus('Du har angret en publisering: last admin på nytt før du publiserer igjen (editoren viser fortsatt den gamle versjonen)', 'error');
+      setStatus(ta('status.revertReloadBeforePublish'), 'error');
       return;
     }
-    setStatus('Publiserer…');
+    setStatus(ta('status.publishing'));
     const files = [];
     const publishedTitles = [];
     const draftKeys = [];
@@ -3608,7 +3608,7 @@
     // de samme filene, må redaktøren aktivt velge å publisere likevel.
     const conflict = await confirmNoConflict(files);
     if (!conflict.ok) {
-      setStatus('Publisering avbrutt. Last siden på nytt for å se de andre endringene først.', 'error');
+      setStatus(ta('status.publishAborted'), 'error');
       return;
     }
 
@@ -3675,25 +3675,25 @@
         writeDraftKey(`urd-draft-${pageId}`, JSON.stringify(pageSnap));
       }
       updateDirty();
-      setStatus('✓ Publisert! Siden bygges på nytt (~1 min)', 'ok');
+      setStatus(ta('status.published'), 'ok');
     } else if (res?.status === 401) {
       const detail = (await res.json().catch(() => null))?.error;
       setStatus(detail === 'Ugyldig eller utløpt innlogging'
-        ? 'GitHub avviste innloggingen (utløpt token?) - logg inn på nytt'
-        : `Du må logge inn med GitHub for å publisere (${detail ?? 'ukjent årsak'})`, 'error');
+        ? ta('status.loginExpired')
+        : ta('status.loginRequired', { reason: detail ?? ta('status.unknownReason') }), 'error');
       await checkAuth();
     } else if (res?.status === 403) {
-      setStatus((await res.json().catch(() => null))?.error ?? 'Du har ikke publiseringstilgang', 'error');
+      setStatus((await res.json().catch(() => null))?.error ?? ta('status.noPublishAccess'), 'error');
     } else if (res?.status === 409) {
       // Noen rakk å publisere i selve commit-vinduet: utkastene er urørt,
       // og baseSha står stille, så et nytt forsøk kjører konfliktsjekken
       // på nytt og fanger opp de ferske endringene.
-      setStatus('Noen publiserte akkurat nå - prøv å publisere på nytt', 'error');
+      setStatus(ta('status.publishRace'), 'error');
     } else if (res) {
       setStatus((await res.json().catch(() => null))?.error
-        ?? 'Publisering feilet (er publiseringslaget satt opp?)', 'error');
+        ?? ta('status.publishFailed'), 'error');
     } else {
-      setStatus('Publisering er ikke tilgjengelig her (krever host med functions)', 'error');
+      setStatus(ta('status.publishUnavailable'), 'error');
     }
   }
 
@@ -3834,7 +3834,7 @@
                   <div class="group-items">
                     <label>Type
                       <Dropdown value={siteDraft.nav.logo?.type ?? 'text'}
-                        options={[['text', 'Tekst'], ['image', 'Bilde'], ['both', 'Bilde + tekst']]}
+                        options={[['text', ta('blocks.text')], ['image', ta('blocks.image')], ['both', ta('opt.logo.both')]]}
                         onchange={(v) => setLogoType(v)} />
                     </label>
                     {#if (siteDraft.nav.logo?.type ?? 'text') !== 'image'}
@@ -3844,7 +3844,7 @@
                       <span class="toolbar-row">
                         <Dropdown title="Font (Arv = temaets overskriftsfont)"
                           value={siteDraft.nav.logo?.font ?? ''}
-                          options={[['', 'Arv'], ...FONT_STACKS.map(([name, value]) => [value, name])]}
+                          options={[['', ta('common.inherit')], ...FONT_STACKS.map(([name, value]) => [value, name])]}
                           onchange={(v) => setLogo({ font: v || undefined })} />
                         <input type="number" class="tb-num" min="8" max="96" placeholder="px"
                           title="Tekststørrelse i px (tom = arv)"
@@ -3875,7 +3875,7 @@
                     {#if siteDraft.nav.logo?.type === 'both'}
                       <label>Rekkefølge
                         <Dropdown value={siteDraft.nav.logo?.order ?? 'image-first'}
-                          options={[['image-first', 'Bilde først'], ['text-first', 'Tekst først']]}
+                          options={[['image-first', ta('opt.logo.imageFirst')], ['text-first', ta('opt.logo.textFirst')]]}
                           onchange={(v) => setLogo({ order: v })} /></label>
                     {/if}
                     <p class="panel-hint">Logoen er også «Hjem»-knappen (klikk går til forsiden).</p>
@@ -3886,8 +3886,8 @@
                   <div class="group-items">
                     <label title="Sidestilt meny: dra i kolonnekanten i forhåndsvisningen for å endre bredden; på mobil og trange vinduer vises den som topplinje">Navigasjonsmeny
                       <Dropdown value={siteDraft.nav.variant ?? 'bar'}
-                        options={[['bar', 'Stripe (standard)'], ['floating', 'Flytende (pille)'], ['floating-square', 'Flytende (firkant)'],
-                          ['floating-tab', 'Flytende (tab)'], ['side-left', 'Sidestilt venstre'], ['side-right', 'Sidestilt høyre']]}
+                        options={[['bar', ta('opt.navVariant.bar')], ['floating', ta('opt.navVariant.floating')], ['floating-square', ta('opt.navVariant.floatingSquare')],
+                          ['floating-tab', ta('opt.navVariant.floatingTab')], ['side-left', ta('opt.navVariant.sideLeft')], ['side-right', ta('opt.navVariant.sideRight')]]}
                         onchange={(v) => setNavVariant(v)} /></label>
                     {#if floatingVariant}
                       <label class="gridmenu-snap" title="Myk glød i aksentfargen rundt den flytende menyen">
@@ -3911,7 +3911,7 @@
                     {#if sideVariant}
                       <label title="Justeringen av menypunktene inne i kolonnen">Tekstjustering
                         <Dropdown value={siteDraft.nav.style?.sideAlign ?? 'left'}
-                          options={[['left', 'Venstre'], ['center', 'Midtstilt'], ['right', 'Høyre']]}
+                          options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
                           onchange={(v) => setNavStyle('sideAlign', v === 'left' ? undefined : v)} /></label>
                     {/if}
                     <label class="gridmenu-snap" title="Innholdet bak menyen sløres (synlig når bakgrunnen er gjennomsiktig)">
@@ -3921,16 +3921,16 @@
                     </label>
                     <label>Størrelse
                       <Dropdown value={siteDraft.nav.style?.size ?? 'md'}
-                        options={[['sm', 'Liten'], ['md', 'Standard'], ['lg', 'Stor'], ['xl', 'Ekstra stor']]}
+                        options={[['sm', ta('opt.size.sm')], ['md', ta('opt.size.md')], ['lg', ta('opt.size.lg')], ['xl', ta('opt.size.xl')]]}
                         onchange={(v) => setNavStyle('size', v === 'md' ? undefined : v)} /></label>
                     <label>Menyplassering
                       {#if sideVariant}
                         <Dropdown value={siteDraft.nav.style?.sidePlacement ?? 'top'}
-                          options={[['top', 'Øverst (standard)'], ['middle', 'Midt på'], ['bottom', 'Nederst']]}
+                          options={[['top', ta('opt.place.top')], ['middle', ta('opt.place.middle')], ['bottom', ta('opt.place.bottom')]]}
                           onchange={(v) => setNavStyle('sidePlacement', v === 'top' ? undefined : v)} />
                       {:else}
                         <Dropdown value={siteDraft.nav.layout ?? 'right'}
-                          options={[['right', 'Høyre'], ['center', 'Midtstilt'], ['left', 'Venstre (etter logoen)']]}
+                          options={[['right', ta('common.right')], ['center', ta('common.center')], ['left', ta('opt.layout.leftAfterLogo')]]}
                           onchange={(v) => setNavLayout(v)} />
                       {/if}</label>
                     {#if !sideVariant}
@@ -3942,7 +3942,7 @@
                       {#if siteDraft.nav.sticky !== false}
                         <label title="Krymp: menyen blir kompakt etter et stykke scrolling. Skjul: menyen glir ut ved scrolling nedover og kommer tilbake ved scrolling oppover. Øverst på siden er den alltid normal. Prøves i Ren visning.">Ved scrolling
                           <Dropdown value={siteDraft.nav.scroll ?? 'none'}
-                            options={[['none', 'Som vanlig'], ['shrink', 'Krymp menyen'], ['hide', 'Skjul, vis ved scroll opp']]}
+                            options={[['none', ta('opt.scroll.none')], ['shrink', ta('opt.scroll.shrink')], ['hide', ta('opt.scroll.hide')]]}
                             onchange={(v) => siteMutate('nav', () => {
                               if (v === 'none') delete siteDraft.nav.scroll; else siteDraft.nav.scroll = v;
                             })} /></label>
@@ -3950,7 +3950,7 @@
                     {/if}
                     <label>Lenke-hover
                       <Dropdown value={siteDraft.nav.style?.hover ?? 'standard'}
-                        options={[['standard', 'Standard (aksentfarge)'], ['underline', 'Understrek'], ['pill', 'Pille'], ['lift-plain', 'Løft'], ['lift', 'Løft med glød']]}
+                        options={[['standard', ta('opt.hover.standard')], ['underline', ta('opt.hover.underline')], ['pill', ta('opt.hover.pill')], ['lift-plain', ta('opt.hover.liftPlain')], ['lift', ta('opt.hover.lift')]]}
                         onchange={(v) => setNavHover(v)} /></label>
                     {#if siteDraft.nav.style?.hover === 'lift'}
                       <label title="Hvor sterk gløden bak teksten er">Glødstyrke
@@ -3983,8 +3983,8 @@
                     <label>Design
                       <Dropdown value={siteDraft.nav.style?.subStyle ?? 'card'}
                         options={sideVariant
-                          ? [['card', 'Standard'], ['pills', 'Pille-punkter'], ['lines', 'Understrek-liste']]
-                          : [['card', 'Kort (standard)'], ['flat', 'Ren flate'], ['pills', 'Pille-punkter'], ['lines', 'Understrek-liste'], ['flyout', 'Utfall (full bredde)']]}
+                          ? [['card', ta('common.standard')], ['pills', ta('opt.sub.pills')], ['lines', ta('opt.sub.lines')]]
+                          : [['card', ta('opt.sub.card')], ['flat', ta('opt.sub.flat')], ['pills', ta('opt.sub.pills')], ['lines', ta('opt.sub.lines')], ['flyout', ta('opt.sub.flyout')]]}
                         onchange={(v) => setNavStyle('subStyle', v === 'card' ? undefined : v)} /></label>
                     {#if siteDraft.nav.style?.subStyle === 'pills'}
                       <label title="Fargen på pille-punktene (standard er undermenyens flate)">Punktfarge
@@ -4015,7 +4015,7 @@
                     <!-- Wrapper-span beholder grid-plasseringen (.nav-row .nav-target) -->
                     <span class="nav-target">
                       <Dropdown value={item.page ?? (item.href != null ? '__href' : '__none')} title="Hvor lenken går"
-                        options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Lenke (URL/anker)'],
+                        options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')],
                           ...(item.children ? [['__none', 'Ingen lenke (kun åpner undermenyen)']] : [])]}
                         onchange={(v) => setNavTarget(i, v)} />
                     </span>
@@ -4038,7 +4038,7 @@
                       </span>
                       <span class="nav-target">
                         <Dropdown value={child.page ?? '__href'} title="Hvor lenken går"
-                          options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Lenke (URL/anker)']]}
+                          options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')]]}
                           onchange={(v) => setNavChildTarget(i, j, v)} />
                       </span>
                       {#if !child.page}
@@ -4289,7 +4289,7 @@
             {:else if activePanel === 'properties'}
               <div class="panel-body">
                 {#if selectedBlock}
-                  <p class="panel-strong">{BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type}-blokk</p>
+                  <p class="panel-strong">{ta('blocks.suffix', { label: BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type })}</p>
                   {@render blockPropsUI()}
                 {:else if activeSectionId}
                   <p class="panel-strong">Seksjon</p>
@@ -4315,7 +4315,7 @@
                   <hr class="gridmenu-divider" />
                   <label title="Ferdig fargerolle for seksjonen: overstyrer temaets farger på denne seksjonen (Aksent-flate, mørkt kontrastbånd o.l.). Følger lys/mørk automatisk.">Seksjonstema
                     <Dropdown value={sectionTheme}
-                      options={[['', 'Standard'], ...Object.entries(SECTION_THEME_LABELS)]}
+                      options={[['', ta('common.standard')], ...Object.entries(SECTION_THEME_LABELS)]}
                       onchange={(v) => setSectionTheme(v)} /></label>
                   <label title="Seksjonens ankermål for lenker: lim inn i lenkefeltet på footer-kolonner, menypunkter eller knapper. Samme side: #ankeret - fra en annen side: /siden#ankeret.">Anker
                     <span class="row-tools">
@@ -4343,7 +4343,7 @@
                           onchange={(e) => setSectionAnimProp('step', Number(e.target.value))} /></label>
                       <label title="En etter en: hvert kort ett trinn etter forrige. Kolonnevis: kort i samme kolonne kommer samtidig, bølgen skyves bortover.">Mønster
                         <Dropdown value={sectionAnim.props.pattern ?? 'sequence'}
-                          options={[['sequence', 'En etter en'], ['columns', 'Kolonnevis']]}
+                          options={[['sequence', ta('opt.stagger.sequence')], ['columns', ta('opt.stagger.columns')]]}
                           onchange={(v) => setSectionAnimPattern(v)} /></label>
                     {:else}
                       <label>Forsinkelse ms
@@ -4409,7 +4409,7 @@
                         oninput={(e) => setFooterBrand('tagline', e.target.value)} /></label>
                     <label title="Vis merket som tekst, opplastet logo (bilde) eller begge">Vis merke som
                       <Dropdown value={siteDraft.footer?.brand?.mode ?? 'text'}
-                        options={[['text', 'Tekst'], ['image', 'Logo (bilde)'], ['both', 'Begge']]}
+                        options={[['text', ta('blocks.text')], ['image', ta('opt.brand.image')], ['both', ta('opt.brand.both')]]}
                         onchange={(v) => setFooterBrandMode(v)} /></label>
                     {#if (siteDraft.footer?.brand?.mode ?? 'text') !== 'text'}
                       <span class="toolbar-row">
@@ -4462,7 +4462,7 @@
                           </span>
                           <span class="nav-target">
                             <Dropdown value={link.page ?? '__href'} title="Hvor lenken går"
-                              options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Lenke (URL/anker)']]}
+                              options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')]]}
                               onchange={(v) => setFooterLinkTarget(ci, li, v)} />
                           </span>
                           {#if !link.page}
@@ -4476,7 +4476,7 @@
                     <button class="ghost action" onclick={addFooterColumn}>+ Ny kolonne</button>
                     <label title="Når en kolonne har mange lenker deles den i to underkolonner - her velger du om overskriften står til venstre eller midtstilt over paret">Justering av delt kolonne
                       <Dropdown value={siteDraft.footer?.columnsAlign ?? 'left'}
-                        options={[['left', 'Venstre'], ['center', 'Midtstilt']]}
+                        options={[['left', ta('common.left')], ['center', ta('common.center')]]}
                         onchange={(v) => setFooterColumnsAlign(v)} /></label>
                   </div>
                 </details>
@@ -4518,7 +4518,7 @@
                       {@const cta = siteDraft.footer.cta}
                       <label title="Knapp går til en side/lenke; nyhetsbrev tar imot e-post">Type
                         <Dropdown value={cta.kind ?? 'button'}
-                          options={[['button', 'Knapp (lenke)'], ['newsletter', 'Nyhetsbrev (e-post)']]}
+                          options={[['button', ta('opt.cta.button')], ['newsletter', ta('opt.cta.newsletter')]]}
                           onchange={(v) => setFooterCtaField('kind', v)} /></label>
                       <label class="gridmenu-snap" title="Stor, sentrert variant (Stor CTA-stilen)">
                         <input type="checkbox" checked={cta.big === true}
@@ -4537,7 +4537,7 @@
                       {#if (cta.kind ?? 'button') === 'button'}
                         <label title="Hvor knappen går">Knappen går til
                           <Dropdown value={cta.page ?? '__href'}
-                            options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Lenke (URL/anker/mailto)']]}
+                            options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHrefMailto')]]}
                             onchange={(v) => setFooterCtaTarget(v)} /></label>
                         {#if !cta.page}
                           <input value={cta.href ?? ''} placeholder="https://… / mailto:… / #anker"
@@ -4573,7 +4573,7 @@
                     {#if siteDraft.footer?.cta?.big !== true}
                       <label title="Justering av innholdet (mest merkbart uten kolonner)">Justering
                         <Dropdown value={siteDraft.footer?.align ?? 'left'}
-                          options={[['left', 'Venstre'], ['center', 'Midtstilt'], ['right', 'Høyre']]}
+                          options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
                           onchange={(v) => footerMutate('footer', (f) => { f.align = v; })} /></label>
                       <hr class="gridmenu-divider" />
                     {/if}
@@ -4601,7 +4601,7 @@
                 {#if samlingerIds.length}
                   <label>Samling
                     <Dropdown value={activeSamling ?? ''}
-                      options={[['', 'Velg …'], ...samlingerIds.map((id) => [id, samlingerView[id]?.name ?? id])]}
+                      options={[['', ta('common.choose')], ...samlingerIds.map((id) => [id, samlingerView[id]?.name ?? id])]}
                       onchange={(v) => (activeSamling = v || null)} /></label>
                 {/if}
                 {#if activeSamling && samlingerView[activeSamling]}
@@ -4861,7 +4861,7 @@
         {@const shareSum = g.stops.reduce((a, s) => a + Math.max(0, Number(s.share) || 0), 0)}
         <label>Form
           <Dropdown value={g.kind ?? 'linear'}
-            options={[['linear', 'Lineær'], ['radial', 'Radiell (fra et punkt)']]}
+            options={[['linear', ta('opt.grad.linear')], ['radial', ta('opt.grad.radial')]]}
             onchange={(v) => setGradKind(bg, i, v)} /></label>
         {#each g.stops as stop, si (si)}
           <span class="nav-line grad-stop"
@@ -4942,7 +4942,7 @@
         {@const isTile = layer.props.fit === 'flislegg' || layer.props.fit === 'repeat'}
         <label title="Vanlig plasserer bildet fritt med valgt størrelse og posisjon. Flislegg gjentar bildet som et mønster.">Tilpasning
           <Dropdown value={isTile ? 'flislegg' : 'vanlig'}
-            options={[['vanlig', 'Vanlig'], ['flislegg', 'Flislegg']]}
+            options={[['vanlig', ta('opt.img.plain')], ['flislegg', ta('opt.img.tile')]]}
             onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
         <label title="Skala relativt til seksjonsbredden: 100 % = like bred som seksjonen. Dekk fyller seksjonen (beskjærer); Vis hele viser hele bildet.">Størrelse</label>
         <div class="sizestep">
@@ -4991,7 +4991,7 @@
             oninput={(e) => setBgProp(bg, i, 'parallax', Number(e.target.value))} />
           <label title="Lar parallaksen flyte forbi seksjonskanten inn i naboseksjonen. Vises der naboen er gjennomsiktig.">Flyt inn i nabo
             <Dropdown value={layer.props.bleed ?? 'none'}
-              options={[['none', 'Ingen'], ['up', 'Opp'], ['down', 'Ned'], ['both', 'Begge']]}
+              options={[['none', ta('common.none')], ['up', ta('opt.bleed.up')], ['down', ta('opt.bleed.down')], ['both', ta('opt.brand.both')]]}
               onchange={(v) => setBgProp(bg, i, 'bleed', v)} /></label>
         {/if}
       {:else if layer.type === 'bildegalleri'}
@@ -5021,7 +5021,7 @@
         {/each}
         <label>Tilpasning
           <Dropdown value={layer.props.fit ?? 'cover'}
-            options={[['cover', 'Fyll (beskjæres)'], ['contain', 'Vis hele']]}
+            options={[['cover', ta('opt.fit.cover')], ['contain', ta('opt.fit.contain')]]}
             onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
         <label>Sekunder per bilde
           <input type="number" min="2" max="120" value={layer.props.interval ?? 6}
@@ -5063,7 +5063,7 @@
       </span>
       <span class="nav-target">
         <Dropdown value={link.page ?? '__href'} title="Hvor lenken går"
-          options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Lenke (URL/anker)']]}
+          options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')]]}
           onchange={(v) => setFooterListLinkTarget(field, li, v)} />
       </span>
       {#if !link.page}
@@ -5083,7 +5083,7 @@
       onchange={(hex) => setBoxStyle({ bg: hex || null })} /></label>
   <label>Skygge
     <Dropdown value={bs.shadow ?? ''}
-      options={[['', 'Ingen'], ['soft', 'Myk'], ['strong', 'Tydelig']]}
+      options={[['', ta('common.none')], ['soft', ta('opt.shadow.soft')], ['strong', ta('opt.shadow.strong')]]}
       onchange={(v) => setBoxStyle({ shadow: v || null })} /></label>
   {#if bs.shadow}
     <label>Skyggefarge
@@ -5093,7 +5093,7 @@
   {/if}
   <label>Kantlinje
     <Dropdown value={bs.border === 'none' ? 'none' : bs.border ? 'custom' : ''}
-      options={[['', 'Temaets (tynn)'], ['none', 'Ingen'], ['custom', 'Egen farge']]}
+      options={[['', ta('opt.border.theme')], ['none', ta('common.none')], ['custom', ta('opt.border.custom')]]}
       onchange={(v) => setBoxStyle({ border: v === 'custom' ? { color: 'accent', width: 1 } : v || null })} /></label>
   {#if bs.border !== 'none'}
     <!-- Kantfarge/Tykkelse vises OGSÅ for «Temaets (tynn)»: å velge en farge
@@ -5124,7 +5124,7 @@
   {#if selectedBlock.type === 'text'}
     <label>Justering
       <Dropdown value={selectedBlock.props.align ?? 'left'}
-        options={[['left', 'Venstre'], ['center', 'Midtstilt'], ['right', 'Høyre']]}
+        options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
         onchange={(v) => setBlockProp('align', v)} /></label>
     <label class="gridmenu-snap">
       <input type="checkbox" checked={Boolean(selectedBlock.props.box)}
@@ -5164,7 +5164,7 @@
         onchange={(e) => setBlockProp('label', e.target.value)} /></label>
     <label>Går til
       <Dropdown value={selectedBlock.props.page ?? '__href'}
-        options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Ekstern lenke']]}
+        options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.externalLink')]]}
         onchange={(v) => {
           const page = v === '__href' ? null : v;
           mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
@@ -5179,7 +5179,7 @@
     {/if}
     <label>Stil
       <Dropdown value={selectedBlock.props.style}
-        options={[['primary', 'Fylt (aksentfarge)'], ['secondary', 'Kantlinje']]}
+        options={[['primary', ta('opt.btn.primary')], ['secondary', ta('opt.btn.secondary')]]}
         onchange={(v) => setBlockProp('style', v)} /></label>
   {:else if selectedBlock.type === 'image'}
     <label class="ghost filepick">
@@ -5191,11 +5191,11 @@
         onchange={(e) => setBlockProp('alt', e.target.value)} /></label>
     <label>Tilpasning
       <Dropdown value={selectedBlock.props.fit ?? 'cover'}
-        options={[['cover', 'Fyll rammen (beskjæres)'], ['contain', 'Vis hele bildet']]}
+        options={[['cover', ta('opt.fitFrame.cover')], ['contain', ta('opt.fitFrame.contain')]]}
         onchange={(v) => setBlockProp('fit', v)} /></label>
     <label>Avrunding
       <Dropdown value={selectedBlock.props.radius ?? ''}
-        options={[['', 'Ingen'], ['sm', 'Liten'], ['md', 'Stor']]}
+        options={[['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]]}
         onchange={(v) => setBlockProp('radius', v || null)} /></label>
     <label>Lenke
       <input value={selectedBlock.props.href ?? ''} placeholder="Valgfri (gjør bildet klikkbart)"
@@ -5285,11 +5285,11 @@
   {:else if selectedBlock.type === 'samling'}
     <label>Samling
       <Dropdown value={selectedBlock.props.collection ?? ''}
-        options={[['', 'Velg …'], ...samlingerIds.map((id) => [id, samlingerView[id]?.name ?? id])]}
+        options={[['', ta('common.choose')], ...samlingerIds.map((id) => [id, samlingerView[id]?.name ?? id])]}
         onchange={(v) => setBlockProp('collection', v || null)} /></label>
     <label>Visning
       <Dropdown value={selectedBlock.props.view ?? 'cards'}
-        options={[['cards', 'Kort'], ['list', 'Liste'], ['archive', 'Arkiv (per år)']]}
+        options={[['cards', ta('opt.collectionView.cards')], ['list', ta('opt.collectionView.list')], ['archive', ta('opt.collectionView.archive')]]}
         onchange={(v) => setBlockProp('view', v)} /></label>
     <label>Maks antall
       <input type="number" min="0" max="100" value={selectedBlock.props.limit ?? 6}
@@ -5303,7 +5303,7 @@
   {:else if selectedBlock.type === 'galleri'}
     <label>Visning
       <Dropdown value={selectedBlock.props.view ?? 'grid'}
-        options={[['grid', 'Rutenett'], ['carousel', 'Karusell'], ['slides', 'Lysbilde (bytter automatisk)']]}
+        options={[['grid', ta('opt.galleryView.grid')], ['carousel', ta('opt.galleryView.carousel')], ['slides', ta('opt.galleryView.slides')]]}
         onchange={(v) => setBlockProp('view', v)} /></label>
     {#if (selectedBlock.props.view ?? 'grid') === 'grid'}
       <label>Kolonner
@@ -5321,7 +5321,7 @@
     {/if}
     <label>Avrunding
       <Dropdown value={selectedBlock.props.radius ?? ''}
-        options={[['', 'Ingen'], ['sm', 'Liten'], ['md', 'Stor']]}
+        options={[['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]]}
         onchange={(v) => setBlockProp('radius', v || null)} /></label>
     <label class="gridmenu-snap" title="Gjelder hos besøkende (prøv i Ren visning); her åpner klikk bildeeditoren">
       <input type="checkbox" checked={selectedBlock.props.lightbox !== false}
@@ -5459,7 +5459,7 @@
 {#if blockMenu && selectedBlock}
   <div class="block-menu" style="left: {blockMenu.left}px; top: {blockMenu.top}px">
     <header class="block-menu-head">
-      <span>{BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type}-blokk</span>
+      <span>{ta('blocks.suffix', { label: BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type })}</span>
       <button class="ghost row-tool" title="Lukk (Esc)" onclick={() => (blockMenu = null)}>{@html ICONS.cross}</button>
     </header>
     <div class="panel-body block-menu-body">
