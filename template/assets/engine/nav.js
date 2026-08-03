@@ -11,7 +11,7 @@
  * styles av body.urd-mobile (breakpointet settes i urd.js fra site.json).
  */
 
-import { navItems, navClasses, navSurface, navSubSurface, hostClasses, clampSideWidth } from './nav-model.js';
+import { navItems, navClasses, navSurface, navSubSurface, hostClasses, clampSideWidth, navScrollState } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
 
@@ -97,6 +97,48 @@ export function renderNav(site, host) {
     document.body.style.setProperty('--urd-nav-side-width', `${clampSideWidth(site.nav.style?.width)}px`);
   } else {
     document.body.style.removeProperty('--urd-nav-side-width');
+  }
+
+  // Scroll-adferd (nav.scroll, additivt fra v0.6): 'shrink' krymper menyen
+  // etter et stykke scrolling, 'hide' skjuler den ved scroll ned og viser
+  // ved scroll opp. Tilstanden regnes av ren navScrollState; kun meningsfull
+  // for klistret topplinje (ikke sidestilt, ikke sticky av). Som sticky
+  // blokker er adferden inaktiv under redigering (preview med chrome på) -
+  // en meny som stikker av under dra/scroll ville sloss med redigeringen -
+  // og alltid av mens mobilpanelet er åpent. Lytteren er rAF-throttlet,
+  // passiv og abortes med resten av renderingens lyttere.
+  const scrollMode = effSite.nav.scroll;
+  const wantsScroll = (scrollMode === 'shrink' || scrollMode === 'hide')
+    && !isSide && effSite.nav.sticky !== false;
+  host.classList.toggle('urd-nav-scroll', wantsScroll);
+  if (!wantsScroll) {
+    host.classList.remove('urd-nav-compact', 'urd-nav-hidden');
+  } else {
+    let prevY = window.scrollY;
+    let hidden = false;
+    let ticking = false;
+    const applyScroll = () => {
+      const body = document.body;
+      const editing = body.classList.contains('urd-preview') && !body.classList.contains('urd-chrome-off');
+      const menuOpen = nav.classList.contains('urd-nav-open');
+      const y = window.scrollY;
+      const state = editing || menuOpen
+        ? { compact: false, hidden: false }
+        : navScrollState(scrollMode, prevY, y, hidden);
+      prevY = y;
+      hidden = state.hidden;
+      host.classList.toggle('urd-nav-compact', state.compact);
+      host.classList.toggle('urd-nav-hidden', state.hidden);
+    };
+    window.addEventListener('scroll', () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        applyScroll();
+      });
+    }, { passive: true, signal });
+    applyScroll();
   }
 
   // Utseende (nav.style, additivt fra v0.5): bakgrunnsfarge med dekkevne,

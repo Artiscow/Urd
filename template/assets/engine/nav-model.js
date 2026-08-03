@@ -38,9 +38,11 @@ export function isSafeHref(url) {
 
 /**
  * Løser et menypunkt mot sideregisteret: `page` slås opp til path,
- * `href` er ekstern lenke (kun trygge skjemaer slippes gjennom). Ukjent side
- * eller utrygg href gir '#' med missing-flagg (nav.js logger advarselen -
- * denne modulen har ingen sideeffekter).
+ * `href` er ekstern lenke ELLER site-intern sti/anker (additivt fra v0.6:
+ * `#seksjons-id` og `/sti#seksjons-id` via isSafeHref, så footer-kolonner
+ * og menypunkter kan peke på seksjoner - seksjonene rendres med DOM-id).
+ * Ukjent side eller utrygg href gir '#' med missing-flagg (nav.js logger
+ * advarselen - denne modulen har ingen sideeffekter).
  * @param {{label: string, page?: string, href?: string}} item
  * @param {Array<{id: string, path: string}>} pages Sideregisteret (site.pages)
  * @returns {{label: string, href: string, external: boolean, missing: boolean}}
@@ -51,8 +53,10 @@ export function resolveItem(item, pages) {
     return { label: item.label, href: target ? target.path : '#', external: false, missing: !target };
   }
   const href = (item.href ?? '').trim();
-  const safe = isSafeUrl(href);
-  return { label: item.label, href: safe ? href : '#', external: safe, missing: !safe };
+  if (isSafeUrl(href)) return { label: item.label, href, external: true, missing: false };
+  // Interne mål åpnes aldri i ny fane og får ingen rel - de er ikke eksterne.
+  if (isSafeHref(href)) return { label: item.label, href, external: false, missing: false };
+  return { label: item.label, href: '#', external: false, missing: true };
 }
 
 /**
@@ -78,6 +82,29 @@ export function navItems(site) {
       : resolveItem(item, pages);
     return { ...own, kind, children };
   });
+}
+
+/**
+ * Scroll-adferd for menyen (nav.scroll, additivt fra v0.6): ren
+ * tilstandsregning, DOM-delen bor i nav.js. 'shrink' = kompakt etter et
+ * stykke scrolling; 'hide' = skjules ved scroll ned, vises ved scroll opp.
+ * Nær toppen (under TOP_ZONE) er menyen alltid normal og synlig. Små
+ * bevegelser under JITTER flipper aldri skjul-tilstanden (dirr-vern mot
+ * f.eks. scroll-avrunding ved momentum-stopp).
+ * @param {string|undefined} mode nav.scroll ('shrink' | 'hide' | undefined)
+ * @param {number} prevY Forrige scrollY
+ * @param {number} y Gjeldende scrollY
+ * @param {boolean} prevHidden Om menyen var skjult
+ * @returns {{compact: boolean, hidden: boolean}}
+ */
+export function navScrollState(mode, prevY, y, prevHidden) {
+  const TOP_ZONE = 80;
+  const JITTER = 4;
+  if (mode === 'shrink') return { compact: y > TOP_ZONE, hidden: false };
+  if (mode !== 'hide') return { compact: false, hidden: false };
+  if (y <= TOP_ZONE) return { compact: false, hidden: false };
+  if (Math.abs(y - prevY) < JITTER) return { compact: false, hidden: prevHidden };
+  return { compact: false, hidden: y > prevY };
 }
 
 /**

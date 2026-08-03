@@ -1812,8 +1812,10 @@ body:has(dialog:modal) {
 /* Navigasjon */
 .urd-nav {
   /* Basispaddingen settes av størrelsesklassene (urd-nav-size-*); pillen
-     skalerer den ned med calc, så størrelse og variant komponerer. */
-  --urd-nav-pad: var(--urd-nav-base-pad, 0.9rem);
+     skalerer den ned med calc, så størrelse og variant komponerer.
+     --urd-nav-shrink er scroll-krympen (urd-nav-compact på verten):
+     faktor 1 uten krymp, så alle varianter komponerer med den. */
+  --urd-nav-pad: calc(var(--urd-nav-base-pad, 0.9rem) * var(--urd-nav-shrink, 1));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1848,6 +1850,36 @@ body:has(dialog:modal) {
    fortsatt glir under den; editorpanelene (100001+) ligger over alt */
 .urd-preview .urd-nav-sticky {
   z-index: 100001;
+}
+
+/* Scroll-adferd (nav.scroll, tilstandsklassene settes av nav.js fra ren
+   navScrollState): 'hide' glir verten ut over toppen med translate
+   (kompositor, aldri top/margin), 'shrink' krymper paddingen via
+   --urd-nav-shrink-faktoren (engangs-overgang, ikke scroll-drevet).
+   Overgangene ligger på modusklassen, så menyer uten scroll-adferd
+   aldri får transition. */
+.urd-nav-scroll {
+  transition: translate 0.28s ease;
+}
+
+.urd-nav-scroll .urd-nav {
+  transition: padding 0.22s ease;
+}
+
+.urd-nav-hidden {
+  /* Ekstra klaring så skygge/glød følger med ut av synsfeltet */
+  translate: 0 calc(-100% - 24px);
+}
+
+.urd-nav-compact {
+  --urd-nav-shrink: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .urd-nav-scroll,
+  .urd-nav-scroll .urd-nav {
+    transition: none;
+  }
 }
 
 .urd-nav-logo {
@@ -2236,7 +2268,7 @@ body.urd-mobile .urd-nav-sub,
   /* Padding via varen, ikke padding-block: logobildets negative
      margin-triks er kalibrert mot --urd-nav-pad og må følge med.
      Pillen skalerer basispaddingen ned, så størrelsesvalget komponerer. */
-  --urd-nav-pad: calc(var(--urd-nav-base-pad, 0.9rem) * 0.67);
+  --urd-nav-pad: calc(var(--urd-nav-base-pad, 0.9rem) * 0.67 * var(--urd-nav-shrink, 1));
   margin: 0.75rem auto 0;
   width: min(1100px, calc(100% - 2rem));
   border-radius: 999px;

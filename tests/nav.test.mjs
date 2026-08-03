@@ -5,7 +5,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveItem, navItems, navClasses, navSurface, navSubSurface, hostClasses, clampSideWidth } from '../template/assets/engine/nav-model.js';
+import { resolveItem, navItems, navClasses, navSurface, navSubSurface, hostClasses, clampSideWidth, navScrollState } from '../template/assets/engine/nav-model.js';
 
 const PAGES = [
   { id: 'hjem', title: 'Hjem', path: '/' },
@@ -34,11 +34,20 @@ test('resolveItem: href er ekstern lenke', () => {
 });
 
 test('resolveItem: utrygg href avvises til # med missing', () => {
-  for (const bad of ['javascript:alert(1)', 'data:text/html,x', 'example.no', '  ', '']) {
+  for (const bad of ['javascript:alert(1)', 'data:text/html,x', 'example.no', '  ', '', '//ond.no/x', '/\\ond.no']) {
     const item = resolveItem({ label: 'Farlig', href: bad }, PAGES);
     assert.equal(item.href, '#', bad);
     assert.equal(item.external, false, bad);
     assert.equal(item.missing, true, bad);
+  }
+});
+
+test('resolveItem: site-interne stier og ankere er gyldige mål uten external', () => {
+  for (const ok of ['#kontakt', '#s-abc123', '/om-oss#kontakt', '/om-oss']) {
+    const item = resolveItem({ label: 'Til seksjon', href: ok }, PAGES);
+    assert.equal(item.href, ok, ok);
+    assert.equal(item.external, false, ok);
+    assert.equal(item.missing, false, ok);
   }
 });
 
@@ -304,4 +313,31 @@ test('clampSideWidth: klemmes til 180-400, søppel gir standarden 250', () => {
   assert.equal(clampSideWidth(249.6), 250);
   assert.equal(clampSideWidth(undefined), 250);
   assert.equal(clampSideWidth('tull'), 250);
+});
+
+test('navScrollState: uten modus er menyen alltid normal og synlig', () => {
+  assert.deepEqual(navScrollState(undefined, 0, 500, true), { compact: false, hidden: false });
+  assert.deepEqual(navScrollState('tull', 0, 500, true), { compact: false, hidden: false });
+});
+
+test('navScrollState: shrink er kompakt først etter toppsonen', () => {
+  assert.deepEqual(navScrollState('shrink', 0, 40, false), { compact: false, hidden: false });
+  assert.deepEqual(navScrollState('shrink', 40, 200, false), { compact: true, hidden: false });
+  // Shrink skjuler aldri, uansett retning.
+  assert.equal(navScrollState('shrink', 500, 300, false).hidden, false);
+});
+
+test('navScrollState: hide skjuler ved scroll ned og viser ved scroll opp', () => {
+  assert.deepEqual(navScrollState('hide', 100, 200, false), { compact: false, hidden: true });
+  assert.deepEqual(navScrollState('hide', 200, 100, true), { compact: false, hidden: false });
+});
+
+test('navScrollState: hide er alltid synlig i toppsonen', () => {
+  assert.deepEqual(navScrollState('hide', 200, 50, true), { compact: false, hidden: false });
+  assert.deepEqual(navScrollState('hide', 0, 0, true), { compact: false, hidden: false });
+});
+
+test('navScrollState: småbevegelser under dirr-vernet beholder tilstanden', () => {
+  assert.equal(navScrollState('hide', 200, 202, true).hidden, true);
+  assert.equal(navScrollState('hide', 200, 198, false).hidden, false);
 });

@@ -43,6 +43,7 @@
   /** Tegnede SVG-ikoner (strek-stil, currentColor) - aldri emoji. */
   const ICONS = {
     desktop: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></svg>',
+    copy: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
     phone: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="8" y="3" width="8" height="18" rx="2"/><path d="M11 17.5h2"/></svg>',
     pencil: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"/></svg>',
     eye: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/></svg>',
@@ -3894,6 +3895,14 @@
                           onchange={(e) => siteMutate('nav', () => { siteDraft.nav.sticky = e.target.checked; })} />
                         Klistrete meny (følger med når man blar)
                       </label>
+                      {#if siteDraft.nav.sticky !== false}
+                        <label title="Krymp: menyen blir kompakt etter et stykke scrolling. Skjul: menyen glir ut ved scrolling nedover og kommer tilbake ved scrolling oppover. Øverst på siden er den alltid normal. Prøves i Ren visning.">Ved scrolling
+                          <Dropdown value={siteDraft.nav.scroll ?? 'none'}
+                            options={[['none', 'Som vanlig'], ['shrink', 'Krymp menyen'], ['hide', 'Skjul, vis ved scroll opp']]}
+                            onchange={(v) => siteMutate('nav', () => {
+                              if (v === 'none') delete siteDraft.nav.scroll; else siteDraft.nav.scroll = v;
+                            })} /></label>
+                      {/if}
                     {/if}
                     <label>Lenke-hover
                       <Dropdown value={siteDraft.nav.style?.hover ?? 'standard'}
@@ -3962,12 +3971,13 @@
                     <!-- Wrapper-span beholder grid-plasseringen (.nav-row .nav-target) -->
                     <span class="nav-target">
                       <Dropdown value={item.page ?? (item.href != null ? '__href' : '__none')} title="Hvor lenken går"
-                        options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Ekstern lenke'],
+                        options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Lenke (URL/anker)'],
                           ...(item.children ? [['__none', 'Ingen lenke (kun åpner undermenyen)']] : [])]}
                         onchange={(v) => setNavTarget(i, v)} />
                     </span>
                     {#if !item.page && item.href != null}
-                      <input class="nav-target" value={item.href} placeholder="https://…"
+                      <input class="nav-target" value={item.href} placeholder="https://… eller #anker"
+                        title="Ekstern lenke (https://…, mailto:, tel:) eller anker til en seksjon: #ankeret på samme side, /siden#ankeret fra en annen side. Ankeret kopieres fra seksjonens Egenskaper."
                         onchange={(e) => setNavHref(i, e.target.value)} />
                     {/if}
                   </div>
@@ -3984,11 +3994,12 @@
                       </span>
                       <span class="nav-target">
                         <Dropdown value={child.page ?? '__href'} title="Hvor lenken går"
-                          options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Ekstern lenke']]}
+                          options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Lenke (URL/anker)']]}
                           onchange={(v) => setNavChildTarget(i, j, v)} />
                       </span>
                       {#if !child.page}
-                        <input class="nav-target" value={child.href ?? ''} placeholder="https://…"
+                        <input class="nav-target" value={child.href ?? ''} placeholder="https://… eller #anker"
+                          title="Ekstern lenke (https://…, mailto:, tel:) eller anker til en seksjon: #ankeret på samme side, /siden#ankeret fra en annen side. Ankeret kopieres fra seksjonens Egenskaper."
                           onchange={(e) => setNavChildHref(i, j, e.target.value)} />
                       {/if}
                     </div>
@@ -4259,6 +4270,12 @@
                     <Dropdown value={sectionTheme}
                       options={[['', 'Standard'], ...Object.entries(SECTION_THEME_LABELS)]}
                       onchange={(v) => setSectionTheme(v)} /></label>
+                  <label title="Seksjonens ankermål for lenker: lim inn i lenkefeltet på footer-kolonner, menypunkter eller knapper. Samme side: #ankeret - fra en annen side: /siden#ankeret.">Anker
+                    <span class="row-tools">
+                      <span class="gridmenu-value">#{activeSectionId}</span>
+                      <button class="ghost row-tool" title="Kopier ankeret"
+                        onclick={() => navigator.clipboard?.writeText(`#${activeSectionId}`)}>{@html ICONS.copy}</button>
+                    </span></label>
 
                   <hr class="gridmenu-divider" />
                   <p class="panel-strong">Bakgrunn</p>
@@ -4398,11 +4415,12 @@
                           </span>
                           <span class="nav-target">
                             <Dropdown value={link.page ?? '__href'} title="Hvor lenken går"
-                              options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Ekstern lenke']]}
+                              options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Lenke (URL/anker)']]}
                               onchange={(v) => setFooterLinkTarget(ci, li, v)} />
                           </span>
                           {#if !link.page}
-                            <input class="nav-target" value={link.href ?? ''} placeholder="https://…"
+                            <input class="nav-target" value={link.href ?? ''} placeholder="https://… eller #anker"
+                              title="Ekstern lenke (https://…, mailto:, tel:) eller anker til en seksjon: #ankeret på samme side, /siden#ankeret fra en annen side. Ankeret kopieres fra seksjonens Egenskaper."
                               onchange={(e) => setFooterLinkHref(ci, li, e.target.value)} />
                           {/if}
                         </div>
@@ -4472,10 +4490,11 @@
                       {#if (cta.kind ?? 'button') === 'button'}
                         <label title="Hvor knappen går">Knappen går til
                           <Dropdown value={cta.page ?? '__href'}
-                            options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Ekstern lenke / mailto']]}
+                            options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Lenke (URL/anker/mailto)']]}
                             onchange={(v) => setFooterCtaTarget(v)} /></label>
                         {#if !cta.page}
-                          <input value={cta.href ?? ''} placeholder="https://… / mailto:…"
+                          <input value={cta.href ?? ''} placeholder="https://… / mailto:… / #anker"
+                            title="Ekstern lenke (https://…, mailto:, tel:) eller anker til en seksjon: #ankeret på samme side, /siden#ankeret fra en annen side. Ankeret kopieres fra seksjonens Egenskaper."
                             onchange={(e) => setFooterCtaField('href', e.target.value)} />
                         {/if}
                       {:else}
@@ -4997,11 +5016,12 @@
       </span>
       <span class="nav-target">
         <Dropdown value={link.page ?? '__href'} title="Hvor lenken går"
-          options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Ekstern lenke']]}
+          options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', 'Lenke (URL/anker)']]}
           onchange={(v) => setFooterListLinkTarget(field, li, v)} />
       </span>
       {#if !link.page}
-        <input class="nav-target" value={link.href ?? ''} placeholder="https://…"
+        <input class="nav-target" value={link.href ?? ''} placeholder="https://… eller #anker"
+          title="Ekstern lenke (https://…, mailto:, tel:) eller anker til en seksjon: #ankeret på samme side, /siden#ankeret fra en annen side. Ankeret kopieres fra seksjonens Egenskaper."
           onchange={(e) => setFooterListLinkHref(field, li, e.target.value)} />
       {/if}
     </div>

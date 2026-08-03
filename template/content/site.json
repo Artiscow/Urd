@@ -76,6 +76,7 @@
   ],
   "nav": {
     "version": 1,
+    "scroll": "shrink",
     "logo": {
       "type": "image",
       "value": "/media/logo-0e227b01.svg",
@@ -157,6 +158,10 @@
           {
             "label": "Kaker",
             "page": "kaker"
+          },
+          {
+            "label": "Kakevideoen",
+            "href": "/kaker#sec-4c908354"
           }
         ]
       },

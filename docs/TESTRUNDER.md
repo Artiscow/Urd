@@ -3,6 +3,18 @@
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.6.5.12): lenker til seksjon/anker og nav scroll-adferd
+
+- [ ] Anker på tvers av sider: demo-footerens «Kakevideoen» (Utforsk-kolonnen) skal fra en annen side gå til Kaker og rulle mykt ned til videoseksjonen
+- [ ] Anker på samme side: lag en knapp/footer-lenke med `#seksjons-id` fra samme side - siden ruller mykt dit uten omlasting; med redusert bevegelse hopper den direkte
+- [ ] Kopier-knappen: seksjonens Egenskaper viser «Anker #id» - kopier, lim inn i et lenkefelt, og lenken virker
+- [ ] Vokteren står: `javascript:alert(1)` og `//ond.no` i lenkefeltet gir fortsatt død lenke (`#`); eksterne https-lenker åpner som før med noopener
+- [ ] Nav krymp: sett Meny > «Ved scrolling» til Krymp - i Ren visning og publisert blir menyen kompakt etter et stykke scrolling og normal igjen øverst; prøv også med flytende pille og størrelse Stor (skaleringene skal komponere)
+- [ ] Nav skjul: «Skjul, vis ved scroll opp» - menyen glir ut ved scrolling ned, inn igjen ved scrolling opp, alltid synlig øverst; småbevegelser får den ikke til å flimre
+- [ ] Mobil: med mobilmenyen åpen skal menyen aldri forsvinne; lukket oppfører den seg som på desktop
+- [ ] Gating: valget «Ved scrolling» vises ikke for sidestilt variant eller når «Klistrete meny» er av; i redigeringsmodus (chrome på) står menyen alltid i ro
+- [ ] Redusert bevegelse: krymp/skjul skjer som klipp uten overgang
+
 ### Testrunde-batch (0.6.0.6): gradient pan/orbit på kompositoren (transform-løpere)
 
 - [ ] Pan (lineær gradient, «Panorer»): sett animasjonen på et gradientlag - glidningen skal se identisk ut som før (diagonal drift frem og tilbake over 18 s), uten hakking, og gradienten skal fylle seksjonen uten synlige kanter eller hvite striper i noen vindusstørrelse

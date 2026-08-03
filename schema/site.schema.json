@@ -100,6 +100,10 @@
           "default": true,
           "description": "Menyen følger med når man blar nedover (false = ligger kun øverst). Additivt felt fra v0.5."
         },
+        "scroll": {
+          "enum": ["shrink", "hide"],
+          "description": "Scroll-adferd for klistret topplinje (additivt fra v0.6): shrink = menyen krymper etter et stykke scrolling, hide = skjules ved scrolling nedover og vises igjen ved scrolling oppover (alltid synlig øverst). Utelatt = vanlig. Ignoreres for sidestilt variant og når sticky er false."
+        },
         "variant": {
           "enum": ["bar", "floating", "floating-square", "floating-tab", "side-left", "side-right"],
           "default": "bar",
@@ -243,7 +247,7 @@
             "properties": {
               "label": { "type": "string", "minLength": 1 },
               "page": { "$ref": "#/$defs/id", "description": "Id fra sideregisteret" },
-              "href": { "type": "string", "description": "Ekstern lenke - brukes når page ikke er satt" },
+              "href": { "type": "string", "description": "Lenkemål når page ikke er satt: ekstern lenke (https/mailto/tel) eller site-intern sti/anker til en seksjon (#seksjons-id, /sti#seksjons-id; additivt fra v0.6)" },
               "children": {
                 "type": "array",
                 "description": "Undermeny, ett nivå (additivt fra v0.6). Et punkt med children men uten page/href er en ren åpner (hele punktet åpner undermenyen); med eget mål vises lenken pluss en pilknapp.",
@@ -254,7 +258,7 @@
                   "properties": {
                     "label": { "type": "string", "minLength": 1 },
                     "page": { "$ref": "#/$defs/id", "description": "Id fra sideregisteret" },
-                    "href": { "type": "string", "description": "Ekstern lenke - brukes når page ikke er satt" }
+                    "href": { "type": "string", "description": "Lenkemål når page ikke er satt: ekstern lenke (https/mailto/tel) eller site-intern sti/anker til en seksjon (#seksjons-id, /sti#seksjons-id; additivt fra v0.6)" }
                   },
                   "oneOf": [
                     { "required": ["page"] },
@@ -314,7 +318,7 @@
                   "properties": {
                     "label": { "type": "string" },
                     "page": { "$ref": "#/$defs/id", "description": "Id fra sideregisteret" },
-                    "href": { "type": "string", "description": "Ekstern lenke - brukes når page ikke er satt" }
+                    "href": { "type": "string", "description": "Lenkemål når page ikke er satt: ekstern lenke (https/mailto/tel) eller site-intern sti/anker til en seksjon (#seksjons-id, /sti#seksjons-id; additivt fra v0.6)" }
                   },
                   "not": { "required": ["page", "href"] }
                 }
@@ -352,7 +356,7 @@
             "sub": { "type": "string", "description": "Undertekst" },
             "label": { "type": "string", "description": "Knappetekst" },
             "page": { "$ref": "#/$defs/id", "description": "Knapp-mål: id fra sideregisteret" },
-            "href": { "type": "string", "description": "Knapp-mål: ekstern lenke/mailto (brukes når page ikke er satt)" },
+            "href": { "type": "string", "description": "Knapp-mål når page ikke er satt: ekstern lenke/mailto eller site-intern sti/anker til en seksjon (#seksjons-id; additivt fra v0.6)" },
             "endpoint": { "type": "string", "description": "Nyhetsbrev-endepunkt (Formspree/Mailchimp/Buttondown/egen Cloudflare-function); sendes med fetch (POST JSON). Ekstern vert krever connect-src i _headers (ADR-0006)." },
             "recipient": { "type": "string", "description": "Mailto-fallback når endpoint mangler" },
             "success": { "type": "string", "description": "Inline bekreftelse etter påmelding" }
@@ -370,7 +374,7 @@
       "properties": {
         "label": { "type": "string" },
         "page": { "$ref": "#/$defs/id", "description": "Id fra sideregisteret" },
-        "href": { "type": "string", "description": "Ekstern lenke - brukes når page ikke er satt" }
+        "href": { "type": "string", "description": "Lenkemål når page ikke er satt: ekstern lenke (https/mailto/tel) eller site-intern sti/anker til en seksjon (#seksjons-id, /sti#seksjons-id; additivt fra v0.6)" }
       },
       "not": { "required": ["page", "href"] }
     },

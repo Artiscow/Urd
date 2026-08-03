@@ -124,6 +124,9 @@ export function renderSection(section, site, host, opts = {}) {
 
   host.className = 'urd-section';
   host.dataset.sectionId = section.id;
+  // DOM-id gjør seksjonen til ankermål (#<seksjons-id> fra footer-kolonner,
+  // menypunkter og blokk-lenker); myk ankerscroll kommer fra base.css.
+  if (typeof section.id === 'string' && section.id) host.id = section.id;
   // Ferdig seksjonstema (rollesett, additivt fra v0.6): overstyrer seksjonens
   // fargetokens på host, blokkene arver dem. Nullstiller ved Standard/fravær.
   applySectionTheme(host, section.theme);
