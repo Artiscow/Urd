@@ -9,13 +9,16 @@
  * onpick(color) kalles live ved hvert valg; color er #rrggbb, eller #rrggbbaa
  * når gjennomsiktighet er valgt.
  */
+// Lastes kun via preview-laget (statisk fra preview-edit.js), alltid etter
+// at admin-ordboka er lastet: ta() er trygg også på modulnivå her.
+import { ta } from './i18n.js';
 
 let panel = null;
 let teardown = null;
 
 const RECENT_KEY = 'urd-recent-colors';
 const SAVED_KEY = 'urd-saved-colors';
-const THEME_TOKENS = [['text', 'Tekstfarge'], ['accent', 'Aksentfarge'], ['bg', 'Bakgrunn'], ['surface', 'Flate']];
+const THEME_TOKENS = [['text', ta('lbl.textColor')], ['accent', ta('setup.accentPick')], ['bg', ta('lbl.background')], ['surface', ta('color.surface')]];
 
 export function closeColorPicker() {
   teardown?.();
@@ -87,10 +90,10 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
   panel = el2('div', 'urd-cp');
 
   const head = el2('div', 'urd-cp-head');
-  head.appendChild(el2('strong', null, 'Farge'));
+  head.appendChild(el2('strong', null, ta('lbl.color')));
   const close = el2('button', 'urd-cp-close', '×');
   close.type = 'button';
-  close.title = 'Lukk';
+  close.title = ta('ui.close');
   head.appendChild(close);
   panel.appendChild(head);
 
@@ -111,7 +114,7 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
   alpha.max = '100';
   alpha.step = '1';
   alpha.className = 'urd-cp-alpha';
-  alpha.title = 'Gjennomsiktighet';
+  alpha.title = ta('cp.alpha');
 
   const fields = el2('div', 'urd-cp-fields');
   const hexInput = document.createElement('input');
@@ -197,7 +200,7 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
   if (window.EyeDropper) {
     const eye = el2('button', 'urd-cp-eye');
     eye.type = 'button';
-    eye.title = 'Pipette: plukk farge fra skjermen';
+    eye.title = ta('cp.eyedropper');
     eye.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2l4 4-3 3-4-4 3-3z"/><path d="M15 5L4 16l-1 5 5-1L19 9"/></svg>';
     eye.addEventListener('click', async () => {
       try {
@@ -229,11 +232,11 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
     const hex = rootStyle.getPropertyValue(`--urd-color-${token}`).trim();
     if (!hex) continue;
     const dot = swatch(hex);
-    dot.title = `Temafarge: ${name}`;
+    dot.title = ta('cp.tokenTitleShort', { name });
     tokens.appendChild(dot);
   }
   if (tokens.children.length) {
-    panel.appendChild(el2('div', 'urd-cp-label', 'Temafarger'));
+    panel.appendChild(el2('div', 'urd-cp-label', ta('cp.themeColors')));
     panel.appendChild(tokens);
   }
 
@@ -241,10 +244,10 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
   // Pluss-knappen lagrer gjeldende farge; × på prikken fjerner den.
   let saved = readStore(SAVED_KEY);
   const savedLabel = el2('div', 'urd-cp-label urd-cp-label-row');
-  savedLabel.appendChild(el2('span', null, 'Lagrede'));
+  savedLabel.appendChild(el2('span', null, ta('cp.saved')));
   const addSaved = el2('button', 'urd-cp-add', '+');
   addSaved.type = 'button';
-  addSaved.title = 'Lagre gjeldende farge';
+  addSaved.title = ta('cp.saveTitle');
   savedLabel.appendChild(addSaved);
   const savedRow = el2('div', 'urd-cp-tokens');
   const renderSaved = () => {
@@ -254,7 +257,7 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
       wrap.appendChild(swatch(hex));
       const del = el2('button', 'urd-cp-del', '×');
       del.type = 'button';
-      del.title = 'Fjern lagret farge';
+      del.title = ta('cp.removeSaved');
       del.addEventListener('click', () => {
         saved = saved.filter((c) => c !== hex);
         localStorage.setItem(SAVED_KEY, JSON.stringify(saved));
@@ -277,7 +280,7 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
   // Nylige: delt lager med admin-fargevelgeren.
   const recent = readStore(RECENT_KEY);
   if (recent.length) {
-    panel.appendChild(el2('div', 'urd-cp-label', 'Nylige'));
+    panel.appendChild(el2('div', 'urd-cp-label', ta('common.recent')));
     const row = el2('div', 'urd-cp-tokens');
     for (const hex of recent.slice(0, 8)) row.appendChild(swatch(hex));
     panel.appendChild(row);

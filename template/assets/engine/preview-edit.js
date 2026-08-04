@@ -30,6 +30,9 @@ import { SIZE_MIN, SIZE_MAX, clampSize, stepSize, LINE_HEIGHTS, stepIndent, matc
 import { frameAtPoint } from './place.js';
 import { topDrag } from './section-size.js';
 import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
+// Modulen lastes dynamisk av urd.js ETTER at admin-ordboka er lastet
+// (initAdminLocale), så ta() er trygg også på modulnivå her.
+import { ta } from './i18n.js';
 
 /** Mobilvisning? Motoren setter body-klassen ut fra breakpointet. */
 const isMobile = () => document.body.classList.contains('urd-mobile');
@@ -268,15 +271,15 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
  * bygger blokken og legger den i akkurat denne seksjonen.
  */
 const BLOCK_KINDS = [
-  ['text', 'Tekst'], ['text-box', 'Tekstboks'], ['button', 'Knapp'],
-  ['image', 'Bilde'], ['video', 'Video'], ['icon', 'Ikon'],
-  ['samling', 'Samling'], ['galleri', 'Galleri'],
+  ['text', ta('blocks.text')], ['text-box', ta('ui.textBox')], ['button', ta('blocks.button')],
+  ['image', ta('blocks.image')], ['video', ta('blocks.video')], ['icon', ta('blocks.icon')],
+  ['samling', ta('blocks.samling')], ['galleri', ta('blocks.galleri')],
 ];
 
 /** Formene bor i sin egen utfoldbare undermeny («Former») i + Ny blokk. */
 const SHAPE_KINDS = [
-  ['shape-line', 'Strek'], ['shape-arrow', 'Pil'], ['shape-circle', 'Sirkel'],
-  ['shape-rect', 'Rektangel'], ['shape-triangle', 'Trekant'],
+  ['shape-line', ta('shape.line')], ['shape-arrow', ta('shape.arrow')], ['shape-circle', ta('shape.circle')],
+  ['shape-rect', ta('shape.rect')], ['shape-triangle', ta('shape.triangle')],
 ];
 
 /** Kjerneblokk-typene (paletten i editoren eier byggingen av disse). */
@@ -320,7 +323,7 @@ function addBlockAdder(host, section, grid) {
 
   const openBtn = document.createElement('button');
   openBtn.className = 'urd-add-block-open';
-  openBtn.textContent = '+ Ny blokk';
+  openBtn.textContent = ta('canvas.newBlock');
 
   const menu = document.createElement('div');
   menu.className = 'urd-add-block-menu';
@@ -342,13 +345,13 @@ function addBlockAdder(host, section, grid) {
   // Formene i egen utfoldbar undermeny, så hovedmenyen holder seg kort.
   const shapesToggle = document.createElement('button');
   shapesToggle.className = 'urd-add-block-shapes-toggle';
-  shapesToggle.textContent = 'Former ▾';
+  shapesToggle.textContent = `${ta('group.shapes')} ▾`;
   const shapes = document.createElement('div');
   shapes.className = 'urd-add-block-shapes';
   for (const [kind, label] of SHAPE_KINDS) kindButton(shapes, kind, label);
   shapesToggle.addEventListener('click', () => {
     const open = shapes.classList.toggle('open');
-    shapesToggle.textContent = open ? 'Former ▴' : 'Former ▾';
+    shapesToggle.textContent = `${ta('group.shapes')} ${open ? '▴' : '▾'}`;
   });
   menu.append(shapesToggle, shapes);
   // Plugin-blokker: egen seksjon under det innebygde. Previewen har
@@ -357,12 +360,12 @@ function addBlockAdder(host, section, grid) {
   if (pluginTypes.length) {
     const divider = document.createElement('div');
     divider.className = 'urd-add-block-plugins';
-    divider.textContent = 'Plugins';
+    divider.textContent = ta('panel.plugins');
     menu.appendChild(divider);
   }
   for (const type of pluginTypes) {
     const def = window.Urd.blocks.get(type);
-    const title = typeof def.fromPlugin === 'string' ? `Fra pluginen ${def.fromPlugin}` : 'Fra plugin';
+    const title = typeof def.fromPlugin === 'string' ? ta('tip.blocks.fromPlugin', { plugin: def.fromPlugin }) : ta('tip.blocks.fromPluginGeneric');
     const buildAndPost = (extraProps = {}) => {
       // Åpnet med dobbeltklikk: plugin-blokken lander på klikkpunktet
       // (samme rene plassering som editoren bruker for kjerneblokkene).
@@ -389,7 +392,7 @@ function addBlockAdder(host, section, grid) {
     if (Array.isArray(def.variants) && def.variants.length) {
       const toggle = document.createElement('button');
       toggle.className = 'urd-add-block-shapes-toggle';
-      toggle.textContent = `${def.label ?? type} ▾`;
+      toggle.textContent = `${def.labelKey ? ta(def.labelKey) : (def.label ?? type)} ▾`;
       toggle.title = title;
       const sub = document.createElement('div');
       sub.className = 'urd-add-block-shapes';
@@ -401,13 +404,13 @@ function addBlockAdder(host, section, grid) {
       }
       toggle.addEventListener('click', () => {
         const open = sub.classList.toggle('open');
-        toggle.textContent = `${def.label ?? type} ${open ? '▴' : '▾'}`;
+        toggle.textContent = `${def.labelKey ? ta(def.labelKey) : (def.label ?? type)} ${open ? '▴' : '▾'}`;
       });
       menu.append(toggle, sub);
       continue;
     }
     const b = document.createElement('button');
-    b.textContent = def.label ?? type;
+    b.textContent = def.labelKey ? ta(def.labelKey) : (def.label ?? type);
     b.title = title;
     b.addEventListener('click', () => buildAndPost());
     menu.appendChild(b);
@@ -470,7 +473,7 @@ function addBlockAdder(host, section, grid) {
 function addSectionHeightHandle(host, section, grid) {
   const handle = document.createElement('div');
   handle.className = 'urd-section-resize';
-  handle.title = 'Dra for å endre seksjonens høyde';
+  handle.title = ta('canvas.sectionHeightDrag');
   wireHeightDrag(handle, host, section, grid);
   host.appendChild(handle);
 }
@@ -486,7 +489,7 @@ function addSectionHeightHandle(host, section, grid) {
 function addSectionTopHandle(host, section, grid) {
   const handle = document.createElement('div');
   handle.className = 'urd-section-resize-top';
-  handle.title = 'Dra for å gi eller fjerne luft øverst i seksjonen (innholdet står stille)';
+  handle.title = ta('canvas.sectionTopDrag');
   handle.addEventListener('pointerdown', (event) => {
     if (event.button !== 0) return;
     event.preventDefault();
@@ -584,9 +587,9 @@ function makeSectionAdder(index, above = null) {
   };
 
   const openBtn = document.createElement('button');
-  openBtn.textContent = '+ Ny seksjon';
+  openBtn.textContent = ta('canvas.newSection');
   if (above) {
-    openBtn.title = 'Klikk: ny seksjon her. Dra: flytt seksjonsgrensen (Shift = fri høyde)';
+    openBtn.title = ta('canvas.newSectionDrag');
     let dragged = false;
     wireHeightDrag(openBtn, above.host, above.section, above.grid, {
       onDragged: () => { dragged = true; },
@@ -615,11 +618,11 @@ function makeSectionAdder(index, above = null) {
     const head = document.createElement('div');
     head.className = 'urd-preset-head';
     const title = document.createElement('span');
-    title.textContent = 'Ny seksjon';
+    title.textContent = ta('canvas.newSectionTitle');
     const cancel = document.createElement('button');
     cancel.className = 'urd-preset-close';
     cancel.textContent = '×';
-    cancel.title = 'Avbryt';
+    cancel.title = ta('confirm.cancel');
     cancel.addEventListener('click', collapse);
     head.append(title, cancel);
     menu.appendChild(head);
@@ -634,11 +637,11 @@ function makeSectionAdder(index, above = null) {
         pluginDefs.push(def);
         continue;
       }
-      const group = def.group ?? 'Annet';
+      const group = def.group ?? ta('canvas.groupOther');
       if (!groups.has(group)) groups.set(group, []);
       groups.get(group).push(def);
     }
-    if (pluginDefs.length) groups.set('Plugins', pluginDefs);
+    if (pluginDefs.length) groups.set(ta('panel.plugins'), pluginDefs);
     for (const [name, defs] of groups) {
       const heading = document.createElement('div');
       heading.className = 'urd-preset-group';
@@ -951,8 +954,8 @@ function initTextToolbar() {
   startGroup(row1);
   const level = createDropdown({
     value: 'p',
-    title: 'Tekstnivå',
-    options: [['p', 'Avsnitt'], ['h1', 'Overskrift 1'], ['h2', 'Overskrift 2'], ['h3', 'Overskrift 3']],
+    title: ta('tt.level'),
+    options: [['p', ta('tt.paragraph')], ['h1', ta('tt.headingN', { n: 1 })], ['h2', ta('tt.headingN', { n: 2 })], ['h3', ta('tt.headingN', { n: 3 })]],
     onchange: (value) => exec('formatBlock', value),
   });
   group.appendChild(level.el);
@@ -961,8 +964,8 @@ function initTextToolbar() {
   // «Arv fra tema» fjerner font-family fra markeringen.
   const fontDd = createDropdown({
     value: '',
-    title: 'Skrifttype for markert tekst',
-    options: [['', 'Arv fra tema'], ...FONT_STACKS.map(([name, value]) => [value, name])],
+    title: ta('tt.fontTitle'),
+    options: [['', ta('tt.inheritFont')], ...FONT_STACKS.map(([name, value]) => [value, ta(name)])],
     onchange: (v) => { applyInlineStyle('fontFamily', v || null); reposition(); },
   });
   group.appendChild(fontDd.el);
@@ -973,14 +976,14 @@ function initTextToolbar() {
   const PLUS_SVG = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 2.5v7M2.5 6h7"/></svg>';
 
   startGroup(row1);
-  btn(MINUS_SVG, 'Mindre (ett px)', () => applySizeStep((cur) => stepSize(cur, -1)));
+  btn(MINUS_SVG, ta('tt.sizeMinus'), () => applySizeStep((cur) => stepSize(cur, -1)));
   const sizeInput = document.createElement('input');
   sizeInput.type = 'number';
   sizeInput.className = 'urd-tt-num urd-tt-size';
   sizeInput.min = String(SIZE_MIN);
   sizeInput.max = String(SIZE_MAX);
   sizeInput.step = '1';
-  sizeInput.title = 'Skriftstørrelse for markert tekst (px)';
+  sizeInput.title = ta('tt.sizeTitle');
   const applySizeFromField = () => {
     restoreSelection();
     const raw = sizeInput.value.trim();
@@ -998,48 +1001,48 @@ function initTextToolbar() {
     if (event.key === 'Enter') { event.preventDefault(); applySizeFromField(); activeText?.focus(); reposition(); }
   });
   group.appendChild(sizeInput);
-  btn(PLUS_SVG, 'Større (ett px)', () => applySizeStep((cur) => stepSize(cur, 1)));
+  btn(PLUS_SVG, ta('tt.sizePlus'), () => applySizeStep((cur) => stepSize(cur, 1)));
 
   // ---------------- RAD 2: tegnformatering og avsnitt ----------------
   startGroup(row2);
-  btn('<b>F</b>', 'Fet (Ctrl+B)', () => exec('bold'), 'bold');
-  btn('<i>K</i>', 'Kursiv (Ctrl+I)', () => exec('italic'), 'italic');
-  btn('<u>U</u>', 'Understrek (Ctrl+U)', () => exec('underline'), 'underline');
-  btn('<s>S</s>', 'Gjennomstreking', () => exec('strikeThrough'), 'strikeThrough');
-  btn('<span class="urd-tt-supsub">A<sup>2</sup></span>', 'Hevet skrift', () => exec('superscript'), 'superscript');
-  btn('<span class="urd-tt-supsub">A<sub>2</sub></span>', 'Senket skrift', () => exec('subscript'), 'subscript');
+  btn(`<b>${ta('format.boldLetter')}</b>`, ta('tt.bold'), () => exec('bold'), 'bold');
+  btn(`<i>${ta('format.italicLetter')}</i>`, ta('tt.italic'), () => exec('italic'), 'italic');
+  btn(`<u>${ta('format.underlineLetter')}</u>`, ta('tt.underline'), () => exec('underline'), 'underline');
+  btn(`<s>${ta('format.strikeLetter')}</s>`, ta('tt.strike'), () => exec('strikeThrough'), 'strikeThrough');
+  btn('<span class="urd-tt-supsub">A<sup>2</sup></span>', ta('tt.superscript'), () => exec('superscript'), 'superscript');
+  btn('<span class="urd-tt-supsub">A<sub>2</sub></span>', ta('tt.subscript'), () => exec('subscript'), 'subscript');
 
   // Farger: samlet i en nedtrekksrad (palettikonet er nedtrekksknappen),
   // så hovedlinjen holder seg smal. Selve raden bygges lenger ned (colorRow).
   startGroup(row2);
   const PALETTE_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="9" r="1" fill="currentColor"/><circle cx="15.5" cy="9" r="1" fill="currentColor"/><circle cx="8.5" cy="15" r="1" fill="currentColor"/><path d="M21 12a9 9 0 0 1-9 9c2.5-2 1-4.5 3-5.5s6 .5 6-3.5z"/></svg>';
-  btn(PALETTE_SVG, 'Farger og utheving', () => toggleColorRow());
+  btn(PALETTE_SVG, ta('tt.colors'), () => toggleColorRow());
 
   const alignIcon = (kind) =>
     `<span class="urd-ticon urd-ticon-${kind}"><i></i><i></i><i></i></span>`;
   startGroup(row2);
-  btn(alignIcon('left'), 'Venstrejuster', () => exec('justifyLeft'), 'justifyLeft');
-  btn(alignIcon('center'), 'Midtstill', () => exec('justifyCenter'), 'justifyCenter');
-  btn(alignIcon('right'), 'Høyrejuster', () => exec('justifyRight'), 'justifyRight');
-  btn(alignIcon('justify'), 'Blokkjuster', () => exec('justifyFull'), 'justifyFull');
+  btn(alignIcon('left'), ta('tt.alignLeft'), () => exec('justifyLeft'), 'justifyLeft');
+  btn(alignIcon('center'), ta('tt.alignCenter'), () => exec('justifyCenter'), 'justifyCenter');
+  btn(alignIcon('right'), ta('tt.alignRight'), () => exec('justifyRight'), 'justifyRight');
+  btn(alignIcon('justify'), ta('tt.alignJustify'), () => exec('justifyFull'), 'justifyFull');
   // Linje- og bokstavavstand: egen nedtrekksrad bak avstandsknappen.
   const SPACING_SVG = '<svg width="16" height="14" viewBox="0 0 16 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2.5v9M1.2 4.2 3 2.4l1.8 1.8M1.2 9.8 3 11.6l1.8-1.8M7.5 3.5h7.5M7.5 7h7.5M7.5 10.5h7.5"/></svg>';
-  btn(SPACING_SVG, 'Linje- og bokstavavstand', () => toggleSpacingRow());
+  btn(SPACING_SVG, ta('tt.spacing'), () => toggleSpacingRow());
 
   startGroup(row2);
-  btn('<span class="urd-licon"><i></i><i></i><i></i></span>', 'Punktliste',
+  btn('<span class="urd-licon"><i></i><i></i><i></i></span>', ta('tt.ul'),
     () => exec('insertUnorderedList'), 'insertUnorderedList');
-  btn('<span class="urd-licon urd-licon-ol"><i>1</i><i>2</i><i>3</i></span>', 'Nummerert liste',
+  btn('<span class="urd-licon urd-licon-ol"><i>1</i><i>2</i><i>3</i></span>', ta('tt.ol'),
     () => exec('insertOrderedList'), 'insertOrderedList');
   const OUTDENT_SVG = '<svg width="15" height="13" viewBox="0 0 15 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 2h12M6.5 6.5h7M1.5 11h12M4.3 4.5 2 6.5l2.3 2"/></svg>';
   const INDENT_SVG = '<svg width="15" height="13" viewBox="0 0 15 13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 2h12M6.5 6.5h7M1.5 11h12M2 4.5l2.3 2L2 8.5"/></svg>';
-  btn(OUTDENT_SVG, 'Mindre innrykk', () => applyIndent(-1));
-  btn(INDENT_SVG, 'Større innrykk', () => applyIndent(1));
+  btn(OUTDENT_SVG, ta('tt.outdent'), () => applyIndent(-1));
+  btn(INDENT_SVG, ta('tt.indent'), () => applyIndent(1));
 
   startGroup(row2);
   const QUOTE_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5C3.8 5 2 6.8 2 9s1.8 4 4 4c.3 0 .5 0 .8-.1C6.2 14.8 5 16.4 3.4 17.4l1.2 1.8C8 17 10 13.7 10 10.2 10 7.2 8.3 5 6 5z"/><path d="M17 5c-2.2 0-4 1.8-4 4s1.8 4 4 4c.3 0 .5 0 .8-.1-.6 1.9-1.8 3.5-3.4 4.5l1.2 1.8C19 17 21 13.7 21 10.2 21 7.2 19.3 5 17 5z"/></svg>';
   // Sitat er en av/på-bryter: står markøren i et sitat, gjøres det til avsnitt igjen.
-  const quoteBtn = btn(QUOTE_SVG, 'Sitat', () => {
+  const quoteBtn = btn(QUOTE_SVG, ta('tt.quote'), () => {
     let inQuote = false;
     try { inQuote = (document.queryCommandValue('formatBlock') || '').toLowerCase() === 'blockquote'; } catch { /* noop */ }
     exec('formatBlock', inQuote ? 'p' : 'blockquote');
@@ -1048,13 +1051,13 @@ function initTextToolbar() {
   // glyphs.js), satt inn ved markøren. Knappen er et tegnet smilefjes
   // (aldri emoji i editor-chrome); selve tegnene er innhold.
   const GLYPH_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9.5" x2="9" y2="9.5"/><line x1="15" y1="9.5" x2="15" y2="9.5"/><path d="M8.5 14.5c.8 1.2 2 2 3.5 2s2.7-.8 3.5-2"/></svg>';
-  btn(GLYPH_SVG, 'Sett inn tegn', () => toggleGlyphRow());
+  btn(GLYPH_SVG, ta('tt.glyphs'), () => toggleGlyphRow());
 
   startGroup(row2);
   const LINK_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg>';
   const CLEAR_SVG = '<svg width="16" height="14" viewBox="0 0 26 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5h12"/><path d="M11 5L8 19"/><path d="M18 15l6 6"/><path d="M24 15l-6 6"/></svg>';
-  btn(LINK_SVG, 'Lenke', () => toggleLinkRow());
-  btn(CLEAR_SVG, 'Fjern formatering', () => {
+  btn(LINK_SVG, ta('lbl.link'), () => toggleLinkRow());
+  btn(CLEAR_SVG, ta('tt.clearFormat'), () => {
     exec('removeFormat');
     exec('unlink');
     exec('formatBlock', 'p');
@@ -1070,12 +1073,12 @@ function initTextToolbar() {
   const linkRow = document.createElement('div');
   linkRow.className = 'urd-tt-linkrow';
   const linkInput = document.createElement('input');
-  linkInput.placeholder = 'https://… , /om-oss eller mailto:…';
+  linkInput.placeholder = ta('tt.linkPh');
   linkInput.spellcheck = false;
   const linkApply = document.createElement('button');
-  linkApply.textContent = 'Bruk';
+  linkApply.textContent = ta('common.apply');
   const linkRemove = document.createElement('button');
-  linkRemove.textContent = 'Fjern lenke';
+  linkRemove.textContent = ta('tt.removeLink');
   linkRow.append(linkInput, linkApply, linkRemove);
   bar.appendChild(linkRow);
 
@@ -1176,7 +1179,7 @@ function initTextToolbar() {
     saveSelection();
   };
   for (const token of ['text', 'accent']) {
-    const b = colorBtn('', token === 'text' ? 'Tekstfarge (tema)' : 'Aksentfarge (tema)', () => {
+    const b = colorBtn('', token === 'text' ? ta('tt.textColorTheme') : ta('tt.accentColorTheme'), () => {
       const value = getComputedStyle(document.documentElement)
         .getPropertyValue(`--urd-color-${token}`).trim();
       exec('foreColor', value);
@@ -1185,7 +1188,7 @@ function initTextToolbar() {
     b.className = 'urd-text-swatch';
     b.style.background = `var(--urd-color-${token})`;
   }
-  colorBtn('<span class="urd-tt-acolor">A</span>', 'Egen tekstfarge', () => {
+  colorBtn('<span class="urd-tt-acolor">A</span>', ta('tt.customTextColor'), () => {
     saveSelection();
     openColorPicker(bar, {
       value: '#ffffff',
@@ -1195,19 +1198,19 @@ function initTextToolbar() {
   const colorSep = document.createElement('span');
   colorSep.className = 'urd-tt-sep';
   colorRow.appendChild(colorSep);
-  colorBtn('<span class="urd-tt-hl">A</span>', 'Uthev med aksentfargen', () => {
+  colorBtn('<span class="urd-tt-hl">A</span>', ta('tt.hlAccent'), () => {
     const accent = getComputedStyle(document.documentElement)
       .getPropertyValue('--urd-color-accent').trim();
     exec('hiliteColor', accent);
     themeify('accent', 'backgroundColor');
   });
-  colorBtn('<span class="urd-tt-hl urd-tt-hl-free">A</span>', 'Uthev med egen farge', () => {
+  colorBtn('<span class="urd-tt-hl urd-tt-hl-free">A</span>', ta('tt.hlCustom'), () => {
     saveSelection();
     openColorPicker(bar, {
       onpick: pickInto((hex) => exec('hiliteColor', hex)),
     });
   });
-  colorBtn('<span class="urd-tt-hl urd-tt-hl-none">A</span>', 'Fjern utheving', () => {
+  colorBtn('<span class="urd-tt-hl urd-tt-hl-none">A</span>', ta('tt.hlNone'), () => {
     exec('hiliteColor', 'transparent');
   });
 
@@ -1243,7 +1246,7 @@ function initTextToolbar() {
   const glyphCell = (host, glyph) => {
     const b = document.createElement('button');
     b.textContent = glyph;
-    b.title = 'Sett inn';
+    b.title = ta('tt.insert');
     b.addEventListener('click', () => {
       exec('insertText', glyph);
       saveRecentGlyph(glyph);
@@ -1258,7 +1261,7 @@ function initTextToolbar() {
     recentGlyphs.replaceChildren();
     const recent = readRecentGlyphs();
     if (!recent.length) return;
-    recentGlyphs.appendChild(glyphHeading('Nylige'));
+    recentGlyphs.appendChild(glyphHeading(ta('common.recent')));
     const grid = glyphGrid();
     recent.forEach((glyph) => glyphCell(grid, glyph));
     recentGlyphs.appendChild(grid);
@@ -1276,7 +1279,7 @@ function initTextToolbar() {
       glyphRowBuilt = true;
       glyphRow.appendChild(recentGlyphs);
       for (const [name, glyphs] of GLYPH_CATEGORIES) {
-        glyphRow.appendChild(glyphHeading(name));
+        glyphRow.appendChild(glyphHeading(ta(name)));
         const grid = glyphGrid();
         glyphs.split(' ').forEach((glyph) => glyphCell(grid, glyph));
         glyphRow.appendChild(grid);
@@ -1301,27 +1304,27 @@ function initTextToolbar() {
     s.textContent = text;
     return s;
   };
-  spacingRow.appendChild(spacingLabel('Linjeavstand'));
+  spacingRow.appendChild(spacingLabel(ta('tt.lineHeight')));
   for (const [value, label] of LINE_HEIGHTS) {
     const b = document.createElement('button');
     b.className = 'urd-tt-lh';
-    b.textContent = label;
-    b.title = value ? `Linjeavstand ${label}` : 'Arv fra tema (fjern overstyring)';
+    b.textContent = value ? label : ta('common.inherit');
+    b.title = value ? ta('tt.lineHeightN', { label }) : ta('tt.inheritLh');
     b.addEventListener('click', () => { setLineHeight(value); reposition(); });
     spacingRow.appendChild(b);
   }
   const spacingSep = document.createElement('span');
   spacingSep.className = 'urd-tt-sep';
   spacingRow.appendChild(spacingSep);
-  spacingRow.appendChild(spacingLabel('Bokstavavstand'));
+  spacingRow.appendChild(spacingLabel(ta('tt.letterSpacing')));
   const lsInput = document.createElement('input');
   lsInput.type = 'number';
   lsInput.className = 'urd-tt-num';
   lsInput.min = '-2';
   lsInput.max = '10';
   lsInput.step = '0.1';
-  lsInput.placeholder = 'Arv';
-  lsInput.title = 'Avstand mellom bokstavene i px, negativ er tettere; tomt = arv';
+  lsInput.placeholder = ta('common.inherit');
+  lsInput.title = ta('tt.letterSpacingTitle');
   const applyLetterSpacing = () => {
     restoreSelection();
     const raw = lsInput.value.trim();
@@ -1517,7 +1520,7 @@ function addSectionToolbar(host, section, grid) {
   if (isMobile()) {
     const mobile = section.responsive?.mobile;
     if (mobile?.attention?.needed) {
-      mk('✓', 'Sett mobil-layouten som gjennomgått', (event) => {
+      mk('✓', ta('canvas.mobileReviewed'), (event) => {
         section.responsive.mobile.attention = null;
         host.classList.remove('urd-attention');
         event.target.remove();
@@ -1525,7 +1528,7 @@ function addSectionToolbar(host, section, grid) {
       });
     }
     if (mobile?.mode === 'manual') {
-      mk('↺', 'Tilbakestill til automatisk mobil-layout', () => {
+      mk('↺', ta('canvas.mobileAuto'), () => {
         post({ type: 'urd-mobile-auto', sectionId: section.id });
       });
     }
@@ -1534,7 +1537,7 @@ function addSectionToolbar(host, section, grid) {
     // Fabrikken (def.item) bor i preset-definisjonen; seksjonen forblir en generisk container.
     const def = section.preset ? window.Urd.sections.get(section.preset) : null;
     if (def?.item) {
-      mk(`+ ${def.itemLabel ?? 'element'}`, `Legg til: ${def.itemLabel ?? 'element'} (Ctrl+Z angrer)`, (event) => {
+      mk(`+ ${def.itemLabel ?? ta('canvas.itemFallback')}`, ta('canvas.addItemTitle', { label: def.itemLabel ?? ta('canvas.itemFallback') }), (event) => {
         // Deaktiver til seksjonen rerendres: et dobbeltklikk før rundturen ville lagt to element i samme rute.
         event.target.disabled = true;
         const next = def.item(section);
@@ -1550,16 +1553,16 @@ function addSectionToolbar(host, section, grid) {
         }, 150);
       });
     }
-    mk('↑', 'Flytt seksjonen opp', () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
-    mk('↓', 'Flytt seksjonen ned', () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
-    mk('⤓', 'Tilpass høyden til innholdet', () => {
+    mk('↑', ta('canvas.sectionUp'), () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
+    mk('↓', ta('canvas.sectionDown'), () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
+    mk('⤓', ta('canvas.fitHeight'), () => {
       const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
       const minHeight = `${Math.max(grid.size * 3, maxBottom + grid.size)}px`;
       section.size = { ...section.size, minHeight };
       host.style.minHeight = minHeight;
       post({ type: 'urd-section-size', sectionId: section.id, minHeight });
     });
-    mk('×', 'Slett seksjonen (Ctrl+Z angrer)', () => {
+    mk('×', ta('canvas.deleteSection'), () => {
       post({ type: 'urd-delete-section', sectionId: section.id });
     });
   }
@@ -1971,14 +1974,14 @@ function buildMultiBar() {
     multiBar.appendChild(b);
     return b;
   };
-  btn(svg('<path d="M4 3v18"/><rect x="7" y="6" width="10" height="4"/><rect x="7" y="14" width="14" height="4"/>'), 'Still venstrekantene på linje', () => applyAlign('left'));
-  btn(svg('<path d="M12 3v18"/><rect x="7" y="6" width="10" height="4"/><rect x="4" y="14" width="16" height="4"/>'), 'Midtstill vannrett', () => applyAlign('center'));
-  btn(svg('<path d="M20 3v18"/><rect x="7" y="6" width="10" height="4"/><rect x="3" y="14" width="14" height="4"/>'), 'Still høyrekantene på linje', () => applyAlign('right'));
-  btn(svg('<path d="M3 4h18"/><rect x="6" y="7" width="4" height="10"/><rect x="14" y="7" width="4" height="14"/>'), 'Still overkantene på linje', () => applyAlign('top'));
-  btn(svg('<path d="M3 12h18"/><rect x="6" y="7" width="4" height="10"/><rect x="14" y="4" width="4" height="16"/>'), 'Midtstill loddrett', () => applyAlign('middle'));
-  btn(svg('<path d="M3 20h18"/><rect x="6" y="7" width="4" height="10"/><rect x="14" y="3" width="4" height="14"/>'), 'Still underkantene på linje', () => applyAlign('bottom'));
-  const distH = btn(svg('<path d="M3 3v18M21 3v18"/><rect x="7" y="9" width="3" height="6"/><rect x="14" y="9" width="3" height="6"/>'), 'Fordel jevnt vannrett', () => applyDistribute('x'));
-  const distV = btn(svg('<path d="M3 3h18M3 21h18"/><rect x="9" y="7" width="6" height="3"/><rect x="9" y="14" width="6" height="3"/>'), 'Fordel jevnt loddrett', () => applyDistribute('y'));
+  btn(svg('<path d="M4 3v18"/><rect x="7" y="6" width="10" height="4"/><rect x="7" y="14" width="14" height="4"/>'), ta('canvas.alignLeft'), () => applyAlign('left'));
+  btn(svg('<path d="M12 3v18"/><rect x="7" y="6" width="10" height="4"/><rect x="4" y="14" width="16" height="4"/>'), ta('canvas.alignCenterH'), () => applyAlign('center'));
+  btn(svg('<path d="M20 3v18"/><rect x="7" y="6" width="10" height="4"/><rect x="3" y="14" width="14" height="4"/>'), ta('canvas.alignRight'), () => applyAlign('right'));
+  btn(svg('<path d="M3 4h18"/><rect x="6" y="7" width="4" height="10"/><rect x="14" y="7" width="4" height="14"/>'), ta('canvas.alignTop'), () => applyAlign('top'));
+  btn(svg('<path d="M3 12h18"/><rect x="6" y="7" width="4" height="10"/><rect x="14" y="4" width="4" height="16"/>'), ta('canvas.alignMiddleV'), () => applyAlign('middle'));
+  btn(svg('<path d="M3 20h18"/><rect x="6" y="7" width="4" height="10"/><rect x="14" y="3" width="4" height="14"/>'), ta('canvas.alignBottom'), () => applyAlign('bottom'));
+  const distH = btn(svg('<path d="M3 3v18M21 3v18"/><rect x="7" y="9" width="3" height="6"/><rect x="14" y="9" width="3" height="6"/>'), ta('canvas.distributeH'), () => applyDistribute('x'));
+  const distV = btn(svg('<path d="M3 3h18M3 21h18"/><rect x="9" y="7" width="6" height="3"/><rect x="9" y="14" width="6" height="3"/>'), ta('canvas.distributeV'), () => applyDistribute('y'));
   multiBar._urdDist = [distH, distV];
   document.body.appendChild(multiBar);
 }
@@ -1995,7 +1998,7 @@ function updateMultiToolbar() {
     multiBar.classList.remove('vis');
     return;
   }
-  multiBar._urdCount.textContent = `${els.length} valgt`;
+  multiBar._urdCount.textContent = ta('canvas.selectedCount', { n: els.length });
   // Fordel-knappene krever minst tre blokker (innstillinger kun når relevante).
   for (const b of multiBar._urdDist) b.style.display = els.length >= 3 ? '' : 'none';
   multiBar.classList.add('vis');
@@ -2194,7 +2197,7 @@ function enhanceBlock(el, block, section, grid, host) {
   const moveHandle = document.createElement('button');
   moveHandle.className = 'urd-edit-move';
   moveHandle.textContent = '⠿';
-  moveHandle.title = 'Dra for å flytte (snapper til grid)';
+  moveHandle.title = ta('canvas.dragMove');
   toolbar.appendChild(moveHandle);
 
   // z-orden: legg blokken øverst/nederst blant seksjonens blokker.
@@ -2230,13 +2233,13 @@ function enhanceBlock(el, block, section, grid, host) {
     const Z_BACK_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20h14"/><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/></svg>';
     const frontBtn = document.createElement('button');
     frontBtn.innerHTML = Z_FRONT_SVG;
-    frontBtn.title = 'Legg foran (z-orden). NB: mens du redigerer vises pekt/markert blokk alltid øverst - se ekte rekkefølge i Ren visning';
+    frontBtn.title = ta('canvas.zFront');
     frontBtn.addEventListener('click', () => bumpZ(1));
     toolbar.appendChild(frontBtn);
 
     const backBtn = document.createElement('button');
     backBtn.innerHTML = Z_BACK_SVG;
-    backBtn.title = 'Legg bak (z-orden). NB: mens du redigerer vises pekt/markert blokk alltid øverst - se ekte rekkefølge i Ren visning';
+    backBtn.title = ta('canvas.zBack');
     backBtn.addEventListener('click', () => bumpZ(-1));
     toolbar.appendChild(backBtn);
 
@@ -2251,8 +2254,8 @@ function enhanceBlock(el, block, section, grid, host) {
     const syncDecor = () => {
       decorBtn.innerHTML = block.decor ? PHONE_OFF_SVG : PHONE_SVG;
       decorBtn.title = block.decor
-        ? 'Skjult på mobil (pynt/dekor). Klikk for å vise blokken i automatisk mobil-layout.'
-        : 'Vises på mobil. Klikk for å skjule blokken i automatisk mobil-layout (pynt/dekor).';
+        ? ta('canvas.decorHidden')
+        : ta('canvas.decorShown');
       decorBtn.classList.toggle('on', Boolean(block.decor));
     };
     syncDecor();
@@ -2268,14 +2271,14 @@ function enhanceBlock(el, block, section, grid, host) {
     if (block.type === 'image') {
       const imgBtn = document.createElement('button');
       imgBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"/></svg>';
-      imgBtn.title = 'Rediger bildet (eller dobbeltklikk på det)';
+      imgBtn.title = ta('canvas.editImage');
       imgBtn.addEventListener('click', () => openBlockImageEditor());
       toolbar.appendChild(imgBtn);
     }
 
     const dupBtn = document.createElement('button');
     dupBtn.innerHTML = DUP_SVG;
-    dupBtn.title = 'Dupliser blokken (Ctrl+D)';
+    dupBtn.title = ta('canvas.duplicate');
     dupBtn.addEventListener('click', () => duplicateBlock(section, block));
     toolbar.appendChild(dupBtn);
 
@@ -2285,7 +2288,7 @@ function enhanceBlock(el, block, section, grid, host) {
     const GEAR_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.06-.4.1-.8.1-1.2z"/></svg>';
     const menuBtn = document.createElement('button');
     menuBtn.innerHTML = GEAR_SVG;
-    menuBtn.title = 'Blokkmeny (alle innstillinger)';
+    menuBtn.title = ta('canvas.blockMenu');
     // Uten stopp ville pointerdown boble til dokumentets markeringslytter,
     // som kan utløse en re-render (seksjonsaktivering) FØR click fyrer -
     // og da byttes knappen ut midt i klikket (samme vern som håndtakene).
@@ -2305,7 +2308,7 @@ function enhanceBlock(el, block, section, grid, host) {
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'urd-edit-delete';
     deleteBtn.textContent = '×';
-    deleteBtn.title = 'Slett blokken (Ctrl+Z angrer)';
+    deleteBtn.title = ta('canvas.deleteBlock');
     deleteBtn.addEventListener('click', () => {
       post({ type: 'urd-delete', sectionId: section.id, blockId: block.id });
       // Uten avvalg ville en fantom-markering av den slettede blokken overleve i modultilstanden.
@@ -2317,7 +2320,7 @@ function enhanceBlock(el, block, section, grid, host) {
 
   const resizeHandle = document.createElement('div');
   resizeHandle.className = 'urd-edit-resize';
-  resizeHandle.title = 'Dra for å endre størrelse';
+  resizeHandle.title = ta('canvas.dragResize');
   el.appendChild(resizeHandle);
 
   wireDrag(moveHandle, 'move');
@@ -2334,7 +2337,7 @@ function enhanceBlock(el, block, section, grid, host) {
     const rotHandle = document.createElement('div');
     rotHandle.className = 'urd-edit-rotate';
     rotHandle.textContent = '⟳';
-    rotHandle.title = 'Dra for å rotere (15°-steg; Shift = fritt)';
+    rotHandle.title = ta('canvas.dragRotate');
     el.appendChild(rotHandle);
 
     rotHandle.addEventListener('pointerdown', (event) => {

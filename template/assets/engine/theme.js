@@ -249,7 +249,9 @@ export const SECTION_THEMES = {
 };
 
 /** Etiketter til seksjonstema-nedtrekket (Standard er «ingen rolle»). */
-export const SECTION_THEME_LABELS = { flate: 'Flate', aksent: 'Aksent', invers: 'Invers' };
+/** Visningsnavn-NØKLER (ta-oppslag hos konsumenten; modulen ligger i
+ *  besøkende-lukningen og kan aldri kalle ta() på modulnivå). */
+export const SECTION_THEME_LABELS = { flate: 'sectionTheme.flate', aksent: 'sectionTheme.aksent', invers: 'sectionTheme.invers' };
 
 /** Alle token-nøkler noen rolle kan sette - brukes til å nullstille før ny rolle. */
 const SECTION_THEME_KEYS = [...new Set(Object.values(SECTION_THEMES).flatMap(Object.keys))];

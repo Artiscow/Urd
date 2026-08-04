@@ -4,13 +4,16 @@
  * (Urd laster aldri eksterne fonter, se _headers/CSP).
  */
 
-/** @type {Array<[string, string]>} Visningsnavn + CSS-fontstack. */
+/** @type {Array<[string, string]>} Visningsnavn-NØKKEL (ta-oppslag hos
+ *  konsumenten; modulen ligger i besøkende-lukningen og kan aldri kalle
+ *  ta() på modulnivå) + CSS-fontstack. Sammenligning og lagring bruker
+ *  alltid stacken (element 1), aldri nøkkelen. */
 export const FONT_STACKS = [
-  ['System', 'system-ui, sans-serif'],
-  ['Arial', 'Arial, Helvetica, sans-serif'],
-  ['Verdana', 'Verdana, Geneva, sans-serif'],
-  ['Trebuchet', "'Trebuchet MS', sans-serif"],
-  ['Georgia (serif)', "Georgia, 'Times New Roman', serif"],
-  ['Palatino (serif)', "'Palatino Linotype', Palatino, serif"],
-  ['Courier (skrivemaskin)', "'Courier New', monospace"],
+  ['font.system', 'system-ui, sans-serif'],
+  ['font.arial', 'Arial, Helvetica, sans-serif'],
+  ['font.verdana', 'Verdana, Geneva, sans-serif'],
+  ['font.trebuchet', "'Trebuchet MS', sans-serif"],
+  ['font.georgia', "Georgia, 'Times New Roman', serif"],
+  ['font.palatino', "'Palatino Linotype', Palatino, serif"],
+  ['font.courier', "'Courier New', monospace"],
 ];

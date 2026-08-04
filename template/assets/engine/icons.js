@@ -78,12 +78,15 @@ export const ICON_LIBRARY = {
 };
 
 /** @type {Array<[string, string[]]>} Kategorinavn + ikon-ider, i visningsrekkefølge. */
+/* Kategorinavnene er NØKLER (ta-oppslag hos konsumenten; modulen ligger i
+   besøkende-lukningen og kan aldri kalle ta() på modulnivå). ICON_LIBRARY-
+   labelene under er merkenavn brukt i besøkende-aria-labels og oversettes aldri. */
 export const ICON_CATEGORIES = [
-  ['Sosiale medier', ['facebook', 'instagram', 'x', 'linkedin', 'youtube', 'tiktok', 'whatsapp', 'snapchat', 'pinterest', 'spotify', 'discord', 'github']],
-  ['Kommunikasjon', ['mail', 'phone', 'smartphone', 'chat', 'send', 'globe', 'rss']],
-  ['Sted og tid', ['map-pin', 'map', 'home', 'clock', 'calendar']],
-  ['Symboler', ['heart', 'star', 'check', 'cross', 'plus', 'info', 'question', 'warning', 'zap', 'sun', 'moon', 'leaf', 'music', 'camera', 'image', 'document', 'shopping-bag', 'gift', 'wrench', 'lock', 'search', 'user', 'users', 'thumbs-up']],
-  ['Piler', ['arrow-right', 'arrow-left', 'arrow-up', 'arrow-down', 'external-link', 'download', 'share']],
+  ['iconCat.social', ['facebook', 'instagram', 'x', 'linkedin', 'youtube', 'tiktok', 'whatsapp', 'snapchat', 'pinterest', 'spotify', 'discord', 'github']],
+  ['iconCat.communication', ['mail', 'phone', 'smartphone', 'chat', 'send', 'globe', 'rss']],
+  ['iconCat.placeTime', ['map-pin', 'map', 'home', 'clock', 'calendar']],
+  ['iconCat.symbols', ['heart', 'star', 'check', 'cross', 'plus', 'info', 'question', 'warning', 'zap', 'sun', 'moon', 'leaf', 'music', 'camera', 'image', 'document', 'shopping-bag', 'gift', 'wrench', 'lock', 'search', 'user', 'users', 'thumbs-up']],
+  ['iconCat.arrows', ['arrow-right', 'arrow-left', 'arrow-up', 'arrow-down', 'external-link', 'download', 'share']],
 ];
 
 /**

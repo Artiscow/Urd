@@ -52,6 +52,7 @@ export function embedUrl(raw) {
 export const videoBlock = {
   version: 1,
   label: 'Video',
+  labelKey: 'blocks.video',
   defaults: () => ({ url: '', title: 'Video' }),
   migrations: {},
   /**

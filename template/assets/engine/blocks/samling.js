@@ -10,6 +10,8 @@
 import { getCollection, sortEntries, groupByYear, dateBadge } from '../samlinger.js';
 import { stripActiveContent } from '../sanitize.js';
 import { isSafeHref } from '../nav-model.js';
+// Kun kallt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
+import { ta, adminLocaleReady } from '../i18n.js';
 
 /** Redigeringskontekst mens en samling rendres i preview: {collection} eller null (besøkende). */
 let editCtx = null;
@@ -235,6 +237,7 @@ function emptyState(el, ctx, message) {
 export const samlingBlock = {
   version: 1,
   label: 'Samling',
+  labelKey: 'blocks.samling',
   defaults: () => ({ collection: null, view: 'cards', limit: 6, newestFirst: true }),
   migrations: {},
   /**
@@ -271,15 +274,16 @@ export const samlingBlock = {
 
       // Hjelpechipen (ADR-0008): blokken har spesialfunksjoner og forklarer seg selv.
       if (ctx.preview && ctx.viewport !== 'mobile') {
-        import('../hint.js').then(({ attachHint }) => {
+        // adminLocaleReady: første render kan skje før ordboka er lastet i boot.
+        Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
           if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
           attachHint(el, {
-            title: 'Samling-blokken',
+            title: ta('hintSamling.title'),
             lines: [
-              'Innslagene bor i Samlinger-panelet; blokken viser dem som kort, liste eller arkiv per år',
-              'Klikk rett i tittel eller tekst for å skrive; klikk et bilde for bildeeditoren',
-              'Velg samling, visning, antall og sortering i Egenskaper',
-              'Blokken vokser automatisk med innholdet',
+              ta('hintSamling.l1'),
+              ta('hintSamling.l2'),
+              ta('hintSamling.l3'),
+              ta('hintSamling.l4'),
             ],
           });
         });

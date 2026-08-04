@@ -35,7 +35,7 @@ import { registerSectionPresets } from './sections/presets.js';
 import { loadPlugins, loadPluginList } from './plugins.js';
 import { setCollectionsDraft } from './samlinger.js';
 import { initSticky, refreshSticky } from './sticky.js';
-import { t, initSiteLocale, normalizeLang, siteLang } from './i18n.js';
+import { t, initSiteLocale, initAdminLocale, normalizeLang, siteLang } from './i18n.js';
 
 export const Urd = {
   blocks: createRegistry('blocks'),
@@ -331,6 +331,10 @@ export async function boot(opts) {
   renderFooter(site, opts.footer, page.meta?.id ?? entry.id);
 
   if (preview) {
+    // Canvas-chromen følger ADMIN-språket (to registre, ADR-0012):
+    // ordboka lastes FØR editeringslaget, med samme deteksjon som
+    // editorens main.js (delt localStorage, samme opprinnelse).
+    await initAdminLocale();
     // Editeringslaget lastes dynamisk KUN i preview - besøkende henter
     // aldri denne koden. Må være på plass før første rendering.
     window.UrdPreviewEdit = await import('./preview-edit.js');

@@ -14,6 +14,7 @@ import { bgSize, bgPosition } from './image.js';
 export const bildegalleriLayer = {
   version: 1,
   label: 'Bildegalleri',
+  labelKey: 'bgLayer.bildegalleri',
   defaults: () => ({ images: [], fit: 'cover', interval: 6, fade: 1.5, opacity: 1, blur: 0 }),
   migrations: {},
   /**

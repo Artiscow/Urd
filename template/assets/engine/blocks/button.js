@@ -7,6 +7,7 @@ import { isSafeHref } from '../nav-model.js';
 export const buttonBlock = {
   version: 1,
   label: 'Knapp',
+  labelKey: 'blocks.button',
   defaults: () => ({ label: 'Les mer', page: null, href: null, style: 'primary' }),
   migrations: {},
   /**

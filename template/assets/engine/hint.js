@@ -12,6 +12,10 @@
  * skjules i Ren visning (chrome-off) og hos besøkende finnes de aldri.
  */
 
+// Modulen lastes kun dynamisk i preview, etter at admin-ordboka er lastet
+// (kallstedene venter på adminLocaleReady), så ta() er trygg her.
+import { ta } from './i18n.js';
+
 let openCard = null;
 let teardown = null;
 
@@ -73,7 +77,7 @@ export function attachHint(host, { title, lines = [] }) {
   chip.type = 'button';
   chip.className = 'urd-hint-chip';
   chip.textContent = '?';
-  chip.title = `Slik virker ${title}`;
+  chip.title = ta('hint.how', { title });
 
   chip.addEventListener('click', (event) => {
     event.stopPropagation();

@@ -15,16 +15,16 @@
 const entranceDefaults = () => ({ duration: 600, delay: 0 });
 
 export const coreAnimations = {
-  'fade-in': { version: 1, label: 'Ton inn', entrance: true, defaults: entranceDefaults, migrations: {} },
-  'slide-up': { version: 1, label: 'Gli opp', entrance: true, defaults: entranceDefaults, migrations: {} },
-  'zoom-in': { version: 1, label: 'Zoom inn', entrance: true, defaults: entranceDefaults, migrations: {} },
-  'hover-lift': { version: 1, label: 'Løft ved peker', entrance: false, defaults: () => ({}), migrations: {} },
+  'fade-in': { version: 1, label: 'Ton inn', labelKey: 'anim.fadeIn', entrance: true, defaults: entranceDefaults, migrations: {} },
+  'slide-up': { version: 1, label: 'Gli opp', labelKey: 'anim.slideUp', entrance: true, defaults: entranceDefaults, migrations: {} },
+  'zoom-in': { version: 1, label: 'Zoom inn', labelKey: 'anim.zoomIn', entrance: true, defaults: entranceDefaults, migrations: {} },
+  'hover-lift': { version: 1, label: 'Løft ved peker', labelKey: 'anim.hoverLift', entrance: false, defaults: () => ({}), migrations: {} },
   // Stagger er en GRUPPE-inngangsanimasjon (kun seksjonsnivå): den animerer
   // ikke seksjonen selv, men slipper seksjonens kort-blokker inn forskjøvet fra
   // ÉN felles trigger. pattern: 'sequence' (ett trinn per kort) eller 'columns'
   // (kort i samme kolonne kommer samtidig, bølgen skyves bortover kolonnene).
   stagger: {
-    version: 1, label: 'Stagger (kortgruppe)', entrance: true, group: true,
+    version: 1, label: 'Stagger (kortgruppe)', labelKey: 'anim.stagger', entrance: true, group: true,
     defaults: () => ({ duration: 600, step: 90, effect: 'slide-up', pattern: 'sequence' }),
     migrations: {},
   },

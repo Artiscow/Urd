@@ -7,6 +7,7 @@ import { resolveColor } from '../theme.js';
 export const glowLayer = {
   version: 1,
   label: 'Glød',
+  labelKey: 'bgLayer.glow',
   defaults: () => ({ x: 0.5, y: 0.3, color: 'accent', radius: 0.5, opacity: 0.35 }),
   migrations: {},
   /**

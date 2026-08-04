@@ -16,6 +16,8 @@
  */
 import { stripActiveContent } from '../sanitize.js';
 import { boxStyleCss } from '../box-style.js';
+// Kun kallt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
+import { ta, adminLocaleReady } from '../i18n.js';
 
 /**
  * Gruppenavnet for FAQ-elementene (ren, node-testbar). Uten `multi` deler alle
@@ -36,6 +38,7 @@ const CHEVRON = '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" str
 export const faqBlock = {
   version: 1,
   label: 'FAQ',
+  labelKey: 'blocks.faq',
   defaults: () => ({
     items: [
       { q: 'Hvordan blir jeg medlem?', a: '<p>Skriv svaret her.</p>' },
@@ -156,15 +159,16 @@ export const faqBlock = {
 
     if (editable) {
       // Hjelpechipen (ADR-0008): blokken har spesialfunksjoner og forklarer seg selv.
-      import('../hint.js').then(({ attachHint }) => {
+      // adminLocaleReady: første render kan skje før ordboka er lastet i boot.
+      Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {
-          title: 'FAQ-blokken',
+          title: ta('hintFaq.title'),
           lines: [
-            'Klikk rett i et spørsmål eller svar for å skrive',
-            'Pil-ikonet folder svaret ut og inn; besøkende kan klikke hele raden',
-            'Nye spørsmål, rekkefølge, flere åpne samtidig og kortstil i Egenskaper',
-            'Blokken lagrer sammenfoldet høyde og vokser kun visuelt ved åpning',
+            ta('hintFaq.l1'),
+            ta('hintFaq.l2'),
+            ta('hintFaq.l3'),
+            ta('hintFaq.l4'),
           ],
         });
       });

@@ -214,6 +214,7 @@ function registerSpin() {
 export const gradientLayer = {
   version: 3,
   label: 'Gradient',
+  labelKey: 'bgLayer.gradient',
   defaults: () => ({
     kind: 'linear',
     stops: [{ color: '#0b0e14', share: 50 }, { color: '#1a1030', share: 50 }],

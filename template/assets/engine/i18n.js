@@ -107,12 +107,47 @@ export async function initSiteLocale(rawLang) {
 }
 
 /**
- * Setter admin-språket og fyller admin-registret (kalles av editorens
- * main.js og av preview-edit.js med ferdig importerte ordbøker).
+ * Admin-språkdeteksjonen (delt av editorens main.js og preview-chromen):
+ * eksplisitt valg i localStorage 'urd-admin-lang' vinner; ellers matches
+ * enhetens språk strengt mot de støttede (neste tag prøves ved ikke-treff);
+ * ingen treff gir engelsk.
  */
-export function initAdminDict(lang, strings) {
+export function detectAdminLang() {
+  let stored = null;
+  try { stored = localStorage.getItem('urd-admin-lang'); } catch { /* privat modus */ }
+  if (stored) return normalizeLang(stored);
+  for (const cand of navigator.languages ?? [navigator.language]) {
+    const hit = matchLang(cand);
+    if (hit) return hit;
+  }
+  return 'en-GB';
+}
+
+/**
+ * Løses når admin-ordboka er lastet. Preview-chrome som kan rendres FØR
+ * initAdminLocale er ferdig (hjelpechipene i kjerneblokkene: første
+ * side-render skjer før preview-grenen i boot) venter på denne før ta()
+ * kalles, så nøkkelnavn aldri fryses inn i chrome fra første render.
+ * Besøkende-løypa løser den aldri - chipene finnes kun i preview.
+ */
+let adminLocaleReadyResolve;
+export const adminLocaleReady = new Promise((resolve) => { adminLocaleReadyResolve = resolve; });
+
+/**
+ * Laster admin-ordboka: nb-basen i bunn, valgt språk oppå. Kjøretids-import
+ * fra absolutt sti, så samme kode virker i admin-bundelen OG i preview-
+ * iframen, og ordbøkene bundles aldri. Feiler lastingen helt (vite dev uten
+ * template-serveren) vises nøklene i stedet for krasj.
+ */
+export async function initAdminLocale(lang = detectAdminLang()) {
+  const load = async (code) => (await import(/* @vite-ignore */ `/assets/engine/locales/admin/${code}.js`)).default.strings;
   admin.lang = normalizeLang(lang);
-  Object.assign(admin.dict, strings ?? {});
+  try {
+    Object.assign(admin.dict, await load('nb'));
+    if (admin.lang !== 'nb') Object.assign(admin.dict, await load(admin.lang));
+  } catch { /* uten ordbok vises nøklene; appen skal aldri dø av dette */ }
+  adminLocaleReadyResolve(admin.lang);
+  return admin.lang;
 }
 
 /* Datonavn: bygges fra Intl for gjeldende site-språk og caches per språk.

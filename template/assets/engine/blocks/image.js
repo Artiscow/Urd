@@ -36,6 +36,7 @@ export function applyImageStyle(frame, props) {
 export const imageBlock = {
   version: 1,
   label: 'Bilde',
+  labelKey: 'blocks.image',
   defaults: () => ({
     src: '', alt: '', fit: 'cover', radius: 'md', href: null,
     // Additive felt: fokuspunkt (0..1), zoom (1 = ingen) og ikke-destruktive

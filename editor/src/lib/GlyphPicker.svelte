@@ -91,7 +91,7 @@
       {/if}
       {#if onicon}
         {#each ICON_CATEGORIES as [name, ids] (name)}
-          <div class="gp-group">{name}</div>
+          <div class="gp-group">{ta(name)}</div>
           <div class="gp-grid">
             {#each ids as id (id)}
               <button type="button" class="gp-cell gp-cell-icon" title={ICON_LIBRARY[id].label}
@@ -102,7 +102,7 @@
         {/each}
       {/if}
       {#each GLYPH_CATEGORIES as [name, glyphs] (name)}
-        <div class="gp-group">{name}</div>
+        <div class="gp-group">{ta(name)}</div>
         <div class="gp-grid">
           {#each glyphs.split(' ') as glyph (glyph)}
             <button type="button" class="gp-cell" class:active={glyph === value}

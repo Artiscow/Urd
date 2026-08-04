@@ -9,6 +9,7 @@ import { boxStyleCss } from '../box-style.js';
 export const textBlock = {
   version: 1,
   label: 'Tekst',
+  labelKey: 'blocks.text',
   defaults: () => ({ html: '<p>Ny tekst</p>', align: 'left', box: false }),
   migrations: {},
   /**

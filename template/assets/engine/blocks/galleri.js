@@ -18,7 +18,8 @@
 import { applyImageStyle } from './image.js';
 import { stepIndex, canAutoplay, normalizeInterval, gridColumns } from '../galleri-model.js';
 import { isSafeHref } from '../nav-model.js';
-import { t } from '../i18n.js';
+// ta/adminLocaleReady: kun kallt i preview (etter at admin-ordboka er lastet), aldri på modulnivå.
+import { t, ta, adminLocaleReady } from '../i18n.js';
 
 const post = (msg) => window.parent?.postMessage(msg, location.origin);
 
@@ -213,6 +214,7 @@ const VIEWS = { grid: renderGrid, carousel: renderCarousel, slides: renderSlides
 export const galleriBlock = {
   version: 1,
   label: 'Galleri',
+  labelKey: 'blocks.galleri',
   defaults: () => ({
     images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5,
   }),
@@ -235,15 +237,16 @@ export const galleriBlock = {
 
     // Hjelpechipen (ADR-0008): blokken har spesialfunksjoner og forklarer seg selv.
     if (ctx.preview && ctx.viewport !== 'mobile') {
-      import('../hint.js').then(({ attachHint }) => {
+      // adminLocaleReady: første render kan skje før ordboka er lastet i boot.
+      Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {
-          title: 'Galleri-blokken',
+          title: ta('hintGallery.title'),
           lines: [
-            'Legg til flere bilder samtidig i Egenskaper; klikk et bilde for bildeeditoren',
-            'Tre visninger i Egenskaper: rutenett, karusell og lysbilde (bytter automatisk)',
-            'Hos besøkende åpner klikk bildet i fullskjerm (lightbox) - prøv i Ren visning; kan skrus av',
-            'En lenke på et bilde vinner over fullskjermvisningen',
+            ta('hintGallery.l1'),
+            ta('hintGallery.l2'),
+            ta('hintGallery.l3'),
+            ta('hintGallery.l4'),
           ],
         });
       });

@@ -9,6 +9,9 @@
  * set() skal både oppdatere DOM-en live og melde endringen til editoren (som eier utkastet).
  */
 import { compressToWebp } from './imageTools.js';
+// Lastes kun via preview-laget (statisk fra preview-edit.js, dynamisk fra
+// blokkene ved klikk), alltid etter at admin-ordboka er lastet: ta() er trygg.
+import { ta } from './i18n.js';
 
 let panel = null;
 let teardown = null;
@@ -78,10 +81,10 @@ export function openImageEditor(anchor, adapter) {
   panel = el2('div', 'urd-imged');
 
   const head = el2('div', 'urd-imged-head');
-  head.appendChild(el2('strong', null, 'Bilde'));
+  head.appendChild(el2('strong', null, ta('blocks.image')));
   const close = el2('button', 'urd-imged-close', '×');
   close.type = 'button';
-  close.title = 'Lukk';
+  close.title = ta('ui.close');
   close.addEventListener('click', closeImageEditor);
   head.appendChild(close);
   panel.appendChild(head);
@@ -98,7 +101,7 @@ export function openImageEditor(anchor, adapter) {
     dot.style.left = `${(adapter.get('x') ?? 0.5) * 100}%`;
     dot.style.top = `${(adapter.get('y') ?? 0.5) * 100}%`;
     thumb.appendChild(dot);
-    thumb.title = 'Dra punktet: hvilken del av bildet som beholdes ved beskjæring';
+    thumb.title = ta('imged.focusTip');
     thumb.addEventListener('pointerdown', (event) => {
       event.preventDefault();
       thumb.setPointerCapture(event.pointerId);
@@ -122,17 +125,17 @@ export function openImageEditor(anchor, adapter) {
     });
     panel.appendChild(thumb);
     panel.appendChild(el2('div', 'urd-imged-hint',
-      'Sirkelen er fokuspunktet: dra den til det viktigste i bildet, så beholdes den delen når bildet beskjæres.'));
+      ta('imged.focusHint')));
   }
 
   // Zoom: beskjærer inn mot fokuspunktet (rammen klipper resten).
   if (has('zoom')) {
-    panel.appendChild(row('Zoom', slider(adapter.get('zoom'), (v) => adapter.set('zoom', v), { min: '1', max: '3' })));
+    panel.appendChild(row(ta('lbl.zoom'), slider(adapter.get('zoom'), (v) => adapter.set('zoom', v), { min: '1', max: '3' })));
   }
 
   // Bytt/fjern
   const actions = el2('div', 'urd-imged-actions');
-  const pick = el2('button', 'urd-imged-btn', adapter.get('image') ? 'Bytt bilde' : 'Velg bilde');
+  const pick = el2('button', 'urd-imged-btn', adapter.get('image') ? ta('ui.changeImage') : ta('ui.chooseImage'));
   pick.type = 'button';
   pick.addEventListener('click', () => {
     const input = document.createElement('input');
@@ -150,7 +153,7 @@ export function openImageEditor(anchor, adapter) {
   });
   actions.appendChild(pick);
   if (has('remove') && adapter.get('image')) {
-    const remove = el2('button', 'urd-imged-btn urd-imged-danger', 'Fjern');
+    const remove = el2('button', 'urd-imged-btn urd-imged-danger', ta('ui.remove'));
     remove.type = 'button';
     remove.addEventListener('click', () => {
       adapter.set('image', '');
@@ -178,21 +181,21 @@ export function openImageEditor(anchor, adapter) {
       adapter.set(field, value);
       thumbFilter();
     };
-    panel.appendChild(row('Lysstyrke', sliders.brightness));
-    panel.appendChild(row('Kontrast', sliders.contrast));
-    panel.appendChild(row('Metning', sliders.saturate));
+    panel.appendChild(row(ta('lbl.brightness'), sliders.brightness));
+    panel.appendChild(row(ta('lbl.contrast'), sliders.contrast));
+    panel.appendChild(row(ta('lbl.saturate'), sliders.saturate));
     thumbFilter();
 
     const filterActions = el2('div', 'urd-imged-actions');
-    const gray = el2('button', 'urd-imged-btn', 'Gråtone');
+    const gray = el2('button', 'urd-imged-btn', ta('ie.grayscale'));
     gray.type = 'button';
-    gray.title = 'Metning 0 (klassisk sponsorlogo-stil)';
+    gray.title = ta('imged.grayTitle');
     gray.addEventListener('click', () => {
       sliders.saturate.range.value = '0';
       sliders.saturate.readout.textContent = '0.00';
       applyFilter('saturate', 0);
     });
-    const reset = el2('button', 'urd-imged-btn', 'Nullstill justeringer');
+    const reset = el2('button', 'urd-imged-btn', ta('ui.resetAdjust'));
     reset.type = 'button';
     reset.addEventListener('click', () => {
       for (const [field, s] of Object.entries(sliders)) {
@@ -207,24 +210,24 @@ export function openImageEditor(anchor, adapter) {
   }
 
   if (has('fit')) {
-    panel.appendChild(row('Tilpasning', segmented(
-      [['cover', 'Fyll rammen'], ['contain', 'Hele bildet']],
+    panel.appendChild(row(ta('lbl.fit'), segmented(
+      [['cover', ta('imged.fitCover')], ['contain', ta('imged.fitContain')]],
       adapter.get('fit') ?? 'cover',
       (value) => adapter.set('fit', value),
     )));
   }
 
   if (has('shape')) {
-    panel.appendChild(row('Form', segmented(
-      [['', 'Auto'], ['wide', 'Bred'], ['square', '1:1'], ['portrait', 'Høy'], ['circle', 'Rund']],
+    panel.appendChild(row(ta('blocks.shape'), segmented(
+      [['', ta('opt.auto')], ['wide', ta('imged.wide')], ['square', '1:1'], ['portrait', ta('imged.tall')], ['circle', ta('imged.round')]],
       adapter.get('shape') ?? '',
       (value) => adapter.set('shape', value || null),
     )));
   }
 
   if (has('radius')) {
-    panel.appendChild(row('Avrunding', segmented(
-      [['', 'Ingen'], ['sm', 'Liten'], ['md', 'Stor']],
+    panel.appendChild(row(ta('lbl.radius'), segmented(
+      [['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]],
       adapter.get('radius') ?? '',
       (value) => adapter.set('radius', value || null),
     )));
@@ -233,17 +236,17 @@ export function openImageEditor(anchor, adapter) {
   if (has('alt')) {
     const input = document.createElement('input');
     input.value = adapter.get('alt') ?? '';
-    input.placeholder = 'For skjermlesere, og når bildet ikke kan vises';
+    input.placeholder = ta('ph.altText');
     input.addEventListener('change', () => adapter.set('alt', input.value));
-    panel.appendChild(row('Beskrivelse', input));
+    panel.appendChild(row(ta('lbl.description'), input));
   }
 
   if (has('href')) {
     const input = document.createElement('input');
     input.value = adapter.get('href') ?? '';
-    input.placeholder = 'Valgfri (gjør bildet klikkbart)';
+    input.placeholder = ta('ph.optionalImageLink');
     input.addEventListener('change', () => adapter.set('href', input.value || null));
-    panel.appendChild(row('Lenke', input));
+    panel.appendChild(row(ta('lbl.link'), input));
   }
 
   // Tredelingsgitter over selve bildet mens editoren er åpen (som i kameraer):

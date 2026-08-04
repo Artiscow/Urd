@@ -1194,9 +1194,9 @@
    *  (feltene var ett til 0.6.30): normaliseres til hover ved neste edit. */
   const isEntrance = (anim) => Boolean(anim && coreAnimations[anim.type]?.entrance);
   const ENTRANCE_OPTIONS = [['', ta('common.none')],
-    ...Object.entries(coreAnimations).filter(([, def]) => def.entrance).map(([id, def]) => [id, def.label])];
+    ...Object.entries(coreAnimations).filter(([, def]) => def.entrance).map(([id, def]) => [id, def.labelKey ? ta(def.labelKey) : def.label])];
   const HOVER_OPTIONS = [['', ta('common.none')],
-    ...Object.entries(coreAnimations).filter(([, def]) => !def.entrance).map(([id, def]) => [id, def.label])];
+    ...Object.entries(coreAnimations).filter(([, def]) => !def.entrance).map(([id, def]) => [id, def.labelKey ? ta(def.labelKey) : def.label])];
 
   function normalizeAnim(target) {
     if (target.animation && !isEntrance(target.animation)) {
@@ -2601,7 +2601,7 @@
 
   // Sosial-ikonene i nedtrekket: de sosiale og kommunikasjonskategoriene fra ikonbiblioteket.
   const SOCIAL_ICON_OPTIONS = ICON_CATEGORIES
-    .filter(([cat]) => cat === 'Sosiale medier' || cat === 'Kommunikasjon')
+    .filter(([cat]) => cat === 'iconCat.social' || cat === 'iconCat.communication')
     .flatMap(([, ids]) => ids.map((id) => [id, ICON_LIBRARY[id].label]));
 
   function setNavLabel(i, value) {
@@ -2807,7 +2807,7 @@
     const cur = siteDraft.theme.tokens.font[which];
     return [
       ...(FONT_STACKS.some(([, v]) => v === cur) ? [] : [[cur, ta('opt.customFont')]]),
-      ...FONT_STACKS.map(([name, value]) => [value, name]),
+      ...FONT_STACKS.map(([name, value]) => [value, ta(name)]),
     ];
   }
 
@@ -3844,7 +3844,7 @@
                       <span class="toolbar-row">
                         <Dropdown title={ta('tip.nav.logoFont')}
                           value={siteDraft.nav.logo?.font ?? ''}
-                          options={[['', ta('common.inherit')], ...FONT_STACKS.map(([name, value]) => [value, name])]}
+                          options={[['', ta('common.inherit')], ...FONT_STACKS.map(([name, value]) => [value, ta(name)])]}
                           onchange={(v) => setLogo({ font: v || undefined })} />
                         <input type="number" class="tb-num" min="8" max="96" placeholder="px"
                           title={ta('tip.nav.textSize')}
@@ -4315,7 +4315,7 @@
                   <hr class="gridmenu-divider" />
                   <label title={ta('tip.props.sectionTheme')}>{ta('lbl.sectionTheme')}
                     <Dropdown value={sectionTheme}
-                      options={[['', ta('common.standard')], ...Object.entries(SECTION_THEME_LABELS)]}
+                      options={[['', ta('common.standard')], ...Object.entries(SECTION_THEME_LABELS).map(([id, key]) => [id, ta(key)])]}
                       onchange={(v) => setSectionTheme(v)} /></label>
                   <label title={ta('tip.props.anchor')}>{ta('lbl.anchor')}
                     <span class="row-tools">
@@ -4830,7 +4830,7 @@
     <div class="bg-layer">
       <span class="nav-line">
         <Dropdown value={layer.type} title={ta('tip.bg.changeType')}
-          options={BG_TYPES.map(([id, def]) => [id, def.label])}
+          options={BG_TYPES.map(([id, def]) => [id, def.labelKey ? ta(def.labelKey) : def.label])}
           onchange={(v) => changeBgLayerType(bg, i, v)} />
         <span class="row-tools">
           <button class="ghost row-tool" onclick={() => moveBgLayer(bg, i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
@@ -5035,7 +5035,7 @@
   {/each}
   <label>{ta('lbl.newLayer')}
     <Dropdown value={newBgType}
-      options={BG_TYPES.map(([id, def]) => [id, def.label])}
+      options={BG_TYPES.map(([id, def]) => [id, def.labelKey ? ta(def.labelKey) : def.label])}
       onchange={(v) => (newBgType = v)} /></label>
   <button class="ghost action" onclick={() => addBgLayer(bg, newBgType)}>{ta('ui.addLayer')}</button>
 {/snippet}
