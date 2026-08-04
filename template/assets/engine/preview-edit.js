@@ -398,7 +398,7 @@ function addBlockAdder(host, section, grid) {
       sub.className = 'urd-add-block-shapes';
       for (const variant of def.variants) {
         const b = document.createElement('button');
-        b.textContent = variant.label;
+        b.textContent = variant.labelKey ? ta(variant.labelKey) : variant.label;
         b.addEventListener('click', () => buildAndPost(variant.props ?? {}));
         sub.appendChild(b);
       }

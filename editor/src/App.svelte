@@ -4712,7 +4712,7 @@
                   {@const enabled = (pluginsView?.enabled ?? []).includes(id)}
                   <div class="plugin-row" class:plugin-broken={info?.errors?.length}>
                     <span class="plugin-head">
-                      <span class="plugin-name">{info?.name ?? id}</span>
+                      <span class="plugin-name">{info?.names?.[currentAdminLang()] ?? info?.name ?? id}</span>
                       {#if info?.version}<span class="plugin-meta">v{info.version}</span>{/if}
                       <span class="row-tools">
                         <label class="gridmenu-snap plugin-toggle" title={enabled ? ta('tip.plugins.on') : ta('tip.plugins.off')}>
@@ -4739,7 +4739,7 @@
                   {#each pluginsFound as id (id)}
                     <div class="plugin-row">
                       <span class="plugin-head">
-                        <span class="plugin-name">{pluginInfo[id]?.name ?? id}</span>
+                        <span class="plugin-name">{pluginInfo[id]?.names?.[currentAdminLang()] ?? pluginInfo[id]?.name ?? id}</span>
                         {#if pluginInfo[id]?.version}<span class="plugin-meta">v{pluginInfo[id].version}</span>{/if}
                         <span class="row-tools">
                           <button class="ghost row-tool" title={ta('tip.plugins.addFound')}

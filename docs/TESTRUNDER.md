@@ -3,14 +3,16 @@
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
-### Testrunde-batch (0.6.0.7): innstillings-popover, zoom-steppere, hjelpelinje-knapp
+### Testrunde-batch (0.6.8.8): plugin-locales (kalender, skjema, kart)
 
-- [ ] Tannhjulet nederst til venstre åpner Urd-innstillingene (Fargetema + Språk); begge valgene virker som før (temabytte umiddelbart, språkbytte laster på nytt)
-- [ ] Popoveren lukkes ved klikk hvor som helst UTENFOR - også ved klikk på selve nettsiden i previewen - og med Escape; tannhjulet viser på-tilstand mens den er åpen
-- [ ] Zoom: minus/pluss stepper i 10 %-trinn (nedre/øvre grense 10/400 %), avlesningen følger med, og Tilpass-knappen går tilbake til automatisk skalering; redigering (klikk/dra/skriv) treffer riktig også i manuell zoom
-- [ ] Hjelpelinje-knappen har rutenett-ikon og viser TYDELIG når hjelpelinjene er på; av/på virker som før
-- [ ] Språklistene (innstillingene + Nettsted > Språk på nettsiden) står alfabetisk etter språkets eget navn, med Automatisk øverst i admin-velgeren
-- [ ] Topbaren: tema-/språkvelgerne er borte fra toppen og ingenting annet har flyttet seg
+- [ ] Besøkende-språket: sett site.lang til en-GB og se på en side med kalender/skjema/kart - «Next event»-panelet, nedtellingen (Today!/Tomorrow/In {n} days), Abonner-knappene, skjemaets valideringsmeldinger og «Send», kartets «View larger map» følger språket; månedsnavn/ukedager i kalenderen likeså
+- [ ] Nedtelling på samisk/tyrkisk: stikkprøv at «I dag/I morgen/Om N dager»-tekstene er ekte språk (egne nøkler, ikke rå tall); samisk er maskinutkast (funn meldes)
+- [ ] Config-panelene i preview (Kilder/Skjema/Sted) og hjelpechipene følger ADMIN-språket, uavhengig av site-språket
+- [ ] Plugin-navnene: Blokker-panelets «Fra plugins»-seksjon og Plugins-panelet viser names på admin-språket (Calendar/Takvim …); blokk- og variant-etiketter likeså
+- [ ] Språkbytte i preview: bytt Nettsted > Språk - plugin-tekstene hos besøkende i previewen bytter MED (applyPluginSiteLocales), ingen norske rester
+- [ ] Skjema-seed: sett inn Kontaktskjema-preset med admin på engelsk - feltene heter Name/Email/Message (seed); publisert skjema validerer og sender som før
+- [ ] A11y: kalenderens ‹/›-månedsknapper annonserer Forrige/Neste måned på sidens språk
+- [ ] Gamle manifester: en plugin UTEN locales/names-feltene lastes som før (bakoverkompatibelt)
 
 ### Testrunde-batch (0.6.8.7): seed-innhold på admin-språket
 

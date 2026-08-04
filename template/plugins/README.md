@@ -27,6 +27,37 @@ urd.json), `provides` (hva pluginen definerer), og valgfritt `csp`
 (eksterne opprinnelser pluginen trenger; se ADR-0006 - `_headers` endres
 aldri automatisk, admin viser eieren hva som må legges inn).
 
+## Flerspråk (ADR-0012)
+
+Sett `"locales": true` i manifestet og legg `locales/{nb,nn,en-GB,se,tr}.js`
+i pluginmappen, samme form som motorens locale-filer:
+
+```js
+// plugins/<id>/locales/nb.js
+export default { lang: 'nb', strings: { '<id>.nokkel': 'Tekst', '<id>.edit.nokkel': 'Panel-tekst' } };
+```
+
+- **Nøklene prefikses med plugin-id-en** (`kalender.*`); editor-/config-
+  panel-nøkler ligger under `<id>.edit.*`. Én strings-flate per fil.
+- **nb er basen**: lasteren legger nb i bunn og valgt språk oppå, så en
+  manglende nøkkel faller til bokmål. Paritetstesten (`node --test
+  tests/i18n.test.mjs`) finner `locales/`-mappen automatisk og krever
+  identiske nøkkelsett, ingen tomme verdier, ingen tankestrek og samme
+  `{var}`-tokens i alle fem filene.
+- **Oppslag**: `import { t, ta } from '/assets/engine/i18n.js'` - `t()` for
+  besøkende-tekster (site-språket), `ta()` for editor-chromen (admin-
+  språket). Kall dem KUN i render-/fabrikkfunksjoner, aldri på modulnivå
+  (modulen kan evalueres før ordboka er lastet); tabeller på modulnivå
+  holder nøkkelNAVN, og blokk-/preset-defs bruker de additive feltene
+  `labelKey`/`hintKey` (behold `label`/`hint` som fallback).
+- **Seed-regelen**: tekst som SKRIVES INN i brukerdata (felt-defaults,
+  preset-innhold) oversettes ÉN gang ved innsetting med admin-språket -
+  `ta()` inne i `defaults()`/`create()`-kroppen, aldri ved rendering av
+  eksisterende data.
+- `"names": {"nb": "Kalender", "en-GB": "Calendar", …}` i manifestet gir
+  Plugins-panelet og «Fra pluginen …»-tekstene et visningsnavn per
+  admin-språk (`name` er fallback).
+
 **Hjelpechip-regelen (ADR-0008)**: har blokken din spesialfunksjoner
 (egne paneler, konvensjoner i innholdet, automatikk), SKAL den ha en
 «?»-chip som forklarer dem. Bruk den felles hjelperen, kun i preview:

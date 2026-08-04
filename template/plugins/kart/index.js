@@ -10,6 +10,10 @@
  * kartet blokkert av CSP viser blokken den nøyaktige _headers-linjen.
  */
 import { parseLocation, buildEmbedUrl, buildLargerMapUrl, OSM_HOST } from './osm.js';
+// Flerspråk (ADR-0012): t() for besøkende-tekster (site-språket), ta() for
+// editor-chromen og seed (admin-språket). Ordboka (locales/) lastes av
+// plugin-lasteren FØR register() - t/ta kalles aldri på modulnivå.
+import { t, ta } from '/assets/engine/i18n.js';
 
 const el2 = (tag, className, textContent) => {
   const node = document.createElement(tag);
@@ -23,15 +27,15 @@ const post = (msg) => window.parent?.postMessage(msg, location.origin);
 /* ---------- Konfigpanel ---------- */
 
 function configPanel(el, props, ctx) {
-  const gear = el2('button', 'urd-kart-gear urd-cfg-toggle', '⚙ Sted');
+  const gear = el2('button', 'urd-kart-gear urd-cfg-toggle', `⚙ ${ta('kart.edit.location')}`);
   gear.type = 'button';
-  gear.title = 'Kartsted og zoom';
+  gear.title = ta('kart.edit.gearTitle');
   const panel = el2('div', 'urd-kart-config');
 
   const label = (text) => el2('div', 'urd-kart-config-label', text);
   const location = el2('input', 'urd-kart-config-input');
   location.value = props.location ?? '';
-  location.placeholder = 'Adresse, koordinater eller OSM-lenke';
+  location.placeholder = ta('kart.edit.locationPh');
 
   const zoom = el2('input', 'urd-kart-config-input');
   zoom.type = 'number';
@@ -47,7 +51,7 @@ function configPanel(el, props, ctx) {
 
   const status = el2('p', 'urd-kart-config-note urd-kart-status');
 
-  const apply = el2('button', 'urd-kart-apply', 'Bruk');
+  const apply = el2('button', 'urd-kart-apply', ta('common.apply'));
   apply.type = 'button';
   apply.addEventListener('click', async () => {
     const raw = location.value.trim();
@@ -67,7 +71,7 @@ function configPanel(el, props, ctx) {
       if (parsed.zoom) resolvedZoom = parsed.zoom;
     } else if (raw) {
       apply.disabled = true;
-      status.textContent = 'Søker etter adressen …';
+      status.textContent = ta('kart.edit.searching');
       try {
         const res = await fetch(`/api/geocode?q=${encodeURIComponent(raw)}`);
         const data = await res.json().catch(() => null);
@@ -75,13 +79,13 @@ function configPanel(el, props, ctx) {
           lat = data.lat;
           lon = data.lon;
         } else {
-          status.textContent = data?.error ?? 'Fant ikke stedet.';
+          status.textContent = data?.error ?? ta('kart.edit.notFound');
           status.classList.add('feil');
           apply.disabled = false;
           return;
         }
       } catch {
-        status.textContent = 'Kunne ikke søke akkurat nå (adressesøk krever den publiserte siden).';
+        status.textContent = ta('kart.edit.searchFailed');
         status.classList.add('feil');
         apply.disabled = false;
         return;
@@ -100,11 +104,11 @@ function configPanel(el, props, ctx) {
   });
 
   panel.append(
-    label('Sted'), location,
-    el2('p', 'urd-kart-config-note', 'Skriv en adresse (f.eks. «Storgata 1, Oslo»), koordinater («59.913, 10.739») eller lim inn en lenke fra openstreetmap.org.'),
+    label(ta('kart.edit.location')), location,
+    el2('p', 'urd-kart-config-note', ta('kart.edit.locationNote')),
     status,
-    label('Zoom (1 til 19)'), zoom,
-    label('Høyde (piksler)'), height,
+    label(ta('kart.edit.zoom')), zoom,
+    label(ta('kart.edit.height')), height,
     apply,
   );
 
@@ -132,8 +136,7 @@ function configPanel(el, props, ctx) {
 
 function emptyState(host, ctx) {
   if (!ctx.preview) return;
-  host.appendChild(el2('div', 'urd-kart-empty',
-    'Velg blokken og åpne «Innstillinger …» i Egenskaper for å legge inn en adresse, koordinater eller en OSM-lenke.'));
+  host.appendChild(el2('div', 'urd-kart-empty', ta('kart.edit.empty')));
 }
 
 /**
@@ -156,13 +159,13 @@ function watchCspBlock(host, frame, ctx, largerUrl) {
     const note = el2('div', 'urd-kart-empty');
     if (ctx.preview) {
       note.append(
-        el2('strong', null, 'Kartet er blokkert av nettstedets CSP.'),
-        el2('p', 'urd-kart-config-note', 'Legg denne verten i frame-src i _headers, så vises kartet:'),
+        el2('strong', null, ta('kart.edit.cspBlocked')),
+        el2('p', 'urd-kart-config-note', ta('kart.edit.cspFix')),
         el2('code', 'urd-kart-code', `frame-src ${OSM_HOST}`),
       );
     } else {
       // Besøkende får en rolig lenke i stedet for en brukket iframe.
-      const a = el2('a', 'urd-kart-fallback', 'Åpne kartet på OpenStreetMap');
+      const a = el2('a', 'urd-kart-fallback', t('kart.openOsm'));
       a.href = largerUrl;
       a.target = '_blank';
       a.rel = 'noopener';
@@ -263,13 +266,13 @@ function renderKart(el, props, ctx) {
     frame.src = buildEmbedUrl({ lat: loc.lat, lon: loc.lon, zoom });
     frame.style.height = `${props.height ?? 320}px`;
     frame.loading = 'lazy';
-    frame.title = 'Kart';
+    frame.title = t('kart.mapTitle');
     frame.setAttribute('referrerpolicy', 'no-referrer');
     host.appendChild(frame);
     watchCspBlock(host, frame, ctx, largerUrl);
 
     const link = el2('div', 'urd-kart-link');
-    const a = el2('a', null, 'Vis større kart');
+    const a = el2('a', null, t('kart.larger'));
     a.href = largerUrl;
     a.target = '_blank';
     a.rel = 'noopener';
@@ -288,13 +291,13 @@ function renderKart(el, props, ctx) {
     import('/assets/engine/hint.js').then(({ attachHint }) => {
       if (!host.isConnected || host.querySelector('.urd-hint-chip')) return;
       const chip = attachHint(tools, {
-        title: 'Kartblokken',
+        title: ta('kart.edit.hintTitle'),
         lines: [
-          'Velg blokken og åpne «Innstillinger …» i Egenskaper, og skriv en adresse (f.eks. «Storgata 1, Oslo»), koordinater («59.913, 10.739») eller lim inn en OSM-lenke',
-          'Adressesøket slår opp stedet via OpenStreetMap når du klikker «Bruk» (virker på den publiserte siden; koordinater og lenker virker også lokalt)',
-          'Still zoom (1 er verden, 19 er gatenivå) og høyden på kartet',
-          'Kartet er OpenStreetMaps egen innbygging: ingen sporing, ingen informasjonskapsler',
-          'Urds standard _headers tillater kartet. På andre hoster må «frame-src https://www.openstreetmap.org» ligge i _headers (blokken sier fra om det er blokkert)',
+          ta('kart.edit.hint1'),
+          ta('kart.edit.hint2'),
+          ta('kart.edit.hint3'),
+          ta('kart.edit.hint4'),
+          ta('kart.edit.hint5'),
         ],
       });
       tools.insertBefore(chip, tools.firstChild);
@@ -324,7 +327,7 @@ function finnOssSection() {
         id: blockId(),
         type: 'text',
         version: 1,
-        props: { html: '<h2>Finn oss</h2>', align: 'left', box: false },
+        props: { html: ta('kart.edit.seedTitle'), align: 'left', box: false },
         animation: null,
         frames: { desktop: { x: 6, y: 40, w: 60, h: 70, z: 1, rot: 0 }, mobile: null },
       },
@@ -348,6 +351,7 @@ export function register(Urd) {
   Urd.blocks.define('kart', {
     version: 1,
     label: 'Kart',
+    labelKey: 'kart.edit.blockLabel',
     defaults: () => ({ location: '', zoom: 15, height: 320 }),
     migrations: {},
     render: renderKart,
@@ -355,8 +359,10 @@ export function register(Urd) {
 
   Urd.sections.define('finn-oss', {
     label: 'Finn oss',
+    labelKey: 'kart.edit.presetLabel',
     group: 'Kort og lister',
     hint: 'Kart med adressen deres (personvennlig OpenStreetMap)',
+    hintKey: 'kart.edit.presetHint',
     create: finnOssSection,
   });
 }

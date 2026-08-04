@@ -32,10 +32,10 @@ import { imageLayer } from './backgrounds/image.js';
 import { bildegalleriLayer } from './backgrounds/bildegalleri.js';
 import { coreAnimations } from './animations/core.js';
 import { registerSectionPresets } from './sections/presets.js';
-import { loadPlugins, loadPluginList } from './plugins.js';
+import { loadPlugins, loadPluginList, applyPluginSiteLocales } from './plugins.js';
 import { setCollectionsDraft } from './samlinger.js';
 import { initSticky, refreshSticky } from './sticky.js';
-import { t, initSiteLocale, initAdminLocale, normalizeLang, siteLang } from './i18n.js';
+import { t, ta, initSiteLocale, initAdminLocale, normalizeLang, siteLang } from './i18n.js';
 
 export const Urd = {
   blocks: createRegistry('blocks'),
@@ -216,14 +216,17 @@ function enablePreview(state, opts) {
         for (const type of Urd.blocks.ids()) {
           const def = Urd.blocks.get(type);
           if (!def?.fromPlugin) continue;
+          // Admin-VINDUETS ordbok har aldri plugin-nøkler: etikettene løses
+          // HER (iframe-siden, der plugin-ordboka bor) og sendes som ferdige
+          // strenger. fromPlugin bærer alt visningsnavnet (manifest.names).
           blocks.push({
             type,
-            label: def.label ?? type,
+            label: def.labelKey ? ta(def.labelKey) : (def.label ?? type),
             version: def.version ?? 1,
             plugin: def.fromPlugin,
             defaults: def.defaults ? def.defaults() : {},
             variants: Array.isArray(def.variants)
-              ? def.variants.map((v) => ({ label: v.label, props: v.props ?? {} }))
+              ? def.variants.map((v) => ({ label: v.labelKey ? ta(v.labelKey) : v.label, props: v.props ?? {} }))
               : [],
           });
         }
@@ -255,8 +258,11 @@ function enablePreview(state, opts) {
       // re-render, så previewen er WYSIWYG også for språket (booten leste
       // den publiserte site.json og kan ha et annet språk).
       if (normalizeLang(state.site.site.lang) !== siteLang()) {
-        initSiteLocale(state.site.site.lang).then((lang) => {
+        // Plugin-tekstene legges oppå igjen: initSiteLocale bygger ordboka
+        // fra motorens nb-base, uten plugin-nøklene.
+        initSiteLocale(state.site.site.lang).then(async (lang) => {
           document.documentElement.lang = lang;
+          await applyPluginSiteLocales();
           rerender();
         });
       } else {

@@ -7,6 +7,8 @@
  * så en plugin som kaster halvveis etterlater aldri halvferdige registreringer.
  */
 
+import { siteLang, adminLang, addSiteDict, addAdminDict } from './i18n.js';
+
 /** Tolker «x.y.z» til [x, y, z], eller null når strengen ikke er semver. */
 export function parseSemver(text) {
   const m = /^(\d+)\.(\d+)\.(\d+)$/.exec(String(text).trim());
@@ -59,6 +61,11 @@ export function validateManifest(manifest) {
   if (typeof manifest.requiresEngine !== 'string' || !manifest.requiresEngine) errors.push('requiresEngine mangler');
   if (typeof manifest.entry !== 'string' || !manifest.entry.endsWith('.js')) errors.push('entry mangler eller er ikke en .js-fil');
   if (!manifest.provides || typeof manifest.provides !== 'object') errors.push('provides mangler');
+  // Valgfrie flerspråk-felt (additive fra 0.6.8): locales lover locales/<lang>.js-filer,
+  // names er visningsnavn per admin-språk.
+  if (manifest.locales !== undefined && typeof manifest.locales !== 'boolean') errors.push('locales må være boolsk');
+  if (manifest.names !== undefined && (typeof manifest.names !== 'object' || manifest.names === null || Array.isArray(manifest.names)
+    || Object.values(manifest.names).some((v) => typeof v !== 'string' || !v))) errors.push('names må være et objekt med språkkode til navn');
   return errors;
 }
 
@@ -139,6 +146,56 @@ export function checkProvides(provides, defined) {
 /** Plugins som alt er lastet i denne siden: import kan ikke angres, så hver id lastes maks én gang. */
 const loadedPlugins = new Set();
 
+/* ---------- Plugin-locales (ADR-0012) ---------- */
+
+/** Plugin-ider med locales: true som er lastet - brukes ved språkbytte i preview. */
+const localePlugins = new Set();
+
+/** Er dette editorens forhåndsvisning? Samme deteksjon som boot. */
+const isPreview = () => new URLSearchParams(location.search).get('preview') === '1';
+
+/**
+ * Laster én plugin-ordbok: nb-basen i bunn, valgt språk oppå (manglende
+ * språkfil faller stille til nb, samme modell som admin-ordboka).
+ * @returns {Promise<Record<string, string>|null>} null når selv basen mangler
+ */
+async function loadPluginLocale(id, lang) {
+  const load = async (code) => (await import(`/plugins/${id}/locales/${code}.js`)).default.strings;
+  try {
+    const base = await load('nb');
+    const extra = lang !== 'nb' ? await load(lang).catch(() => null) : null;
+    return { ...base, ...(extra ?? {}) };
+  } catch {
+    console.warn(`Urd: plugin '${id}' lover locales, men locales/nb.js kunne ikke lastes`);
+    return null;
+  }
+}
+
+/** Legger pluginens tekster i registrene: besøkende-register med SITE-språket,
+ *  og i preview I TILLEGG admin-registret med ADMIN-språket (canvas-chromen). */
+async function applyPluginLocale(id) {
+  const strings = await loadPluginLocale(id, siteLang());
+  if (!strings) return;
+  addSiteDict(strings);
+  localePlugins.add(id);
+  if (isPreview()) {
+    const adminStrings = adminLang() === siteLang() ? strings : await loadPluginLocale(id, adminLang());
+    if (adminStrings) addAdminDict(adminStrings);
+  }
+}
+
+/**
+ * Legger plugin-tekstene inn i besøkende-registret på nytt. Kalles etter
+ * initSiteLocale ved språkbytte i preview: initSiteLocale bygger ordboka
+ * fra motorens nb-base, så plugin-nøklene må legges oppå igjen.
+ */
+export async function applyPluginSiteLocales() {
+  for (const id of localePlugins) {
+    const strings = await loadPluginLocale(id, siteLang());
+    if (strings) addSiteDict(strings);
+  }
+}
+
 /**
  * Laster ÉN plugin: manifest-fetch → validering → requiresEngine-sjekk →
  * import → register(staging) → commit → provides-kontroll. Feil på ett steg
@@ -157,12 +214,20 @@ export async function loadPluginById(Urd, engineVersion, id) {
       console.warn(`Urd: plugin '${id}' krever motor '${manifest.requiresEngine}', denne er ${engineVersion} - hoppes over`);
       return;
     }
+    // Ordboka lastes FØR register()/render, så pluginens t()/ta()-oppslag
+    // treffer fra første rendering. Besøkende: loadPlugins kjører etter
+    // initSiteLocale i boot. Preview: urd-plugins-meldingen kommer etter
+    // initAdminLocale, så begge registrene er klare.
+    if (manifest.locales === true) await applyPluginLocale(id);
     const mod = await import(`/plugins/${id}/${manifest.entry}`);
     if (typeof mod.register !== 'function') {
       console.warn(`Urd: plugin '${id}' mangler register()-eksport`);
       return;
     }
-    const staging = createStagedUrd(Urd, manifest.name ?? id);
+    // fromPlugin bærer VISNINGSNAVNET (manifest.names for admin-språket når
+    // det finnes): feltet brukes kun i editor-chromen («Fra pluginen …»).
+    const displayName = manifest.names?.[adminLang()] ?? manifest.name ?? id;
+    const staging = createStagedUrd(Urd, displayName);
     mod.register(staging.staged);
     for (const warning of staging.commit()) {
       console.warn(`Urd: plugin '${id}': ${warning}`);

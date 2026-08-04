@@ -27,18 +27,23 @@ export function isSpam(honeypotValue) {
  * Validerer innsamlede verdier mot feltdefinisjonene.
  * @param {Array<{id, label, type, required}>} fields
  * @param {Record<string,string>} values
+ * @param {{required?: string, email?: string}} [messages] Meldingsmaler ({label} byttes inn)
  * @returns {{ ok: boolean, errors: Record<string,string> }}
  */
-export function validate(fields, values) {
+export function validate(fields, values, messages = {}) {
+  // Meldingsmalene kan overstyres (index.js sender besøkende-språkets
+  // tekster via t()); standardene er bokmål så node-testene er selvbærende.
+  const requiredMsg = messages.required ?? '{label} må fylles ut';
+  const emailMsg = messages.email ?? 'Skriv en gyldig e-postadresse';
   const errors = {};
   for (const field of fields) {
     const value = String(values[field.id] ?? '').trim();
     if (field.required && !value) {
-      errors[field.id] = `${field.label} må fylles ut`;
+      errors[field.id] = requiredMsg.replaceAll('{label}', field.label);
       continue;
     }
     if (value && field.type === 'email' && !isEmail(value)) {
-      errors[field.id] = 'Skriv en gyldig e-postadresse';
+      errors[field.id] = emailMsg;
     }
   }
   return { ok: Object.keys(errors).length === 0, errors };

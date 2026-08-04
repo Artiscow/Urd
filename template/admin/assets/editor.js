@@ -3592,7 +3592,7 @@ function Ma(e, t) {
 var Na = /^[a-z0-9][a-z0-9-]*$/;
 function Pa(e) {
 	let t = [];
-	return !e || typeof e != "object" ? ["manifestet er ikke et objekt"] : (Na.test(e.id ?? "") || t.push("id mangler eller er ugyldig"), (typeof e.name != "string" || !e.name) && t.push("name mangler"), Aa(e.version ?? "") || t.push("version er ikke semver"), (typeof e.requiresEngine != "string" || !e.requiresEngine) && t.push("requiresEngine mangler"), (typeof e.entry != "string" || !e.entry.endsWith(".js")) && t.push("entry mangler eller er ikke en .js-fil"), (!e.provides || typeof e.provides != "object") && t.push("provides mangler"), t);
+	return !e || typeof e != "object" ? ["manifestet er ikke et objekt"] : (Na.test(e.id ?? "") || t.push("id mangler eller er ugyldig"), (typeof e.name != "string" || !e.name) && t.push("name mangler"), Aa(e.version ?? "") || t.push("version er ikke semver"), (typeof e.requiresEngine != "string" || !e.requiresEngine) && t.push("requiresEngine mangler"), (typeof e.entry != "string" || !e.entry.endsWith(".js")) && t.push("entry mangler eller er ikke en .js-fil"), (!e.provides || typeof e.provides != "object") && t.push("provides mangler"), e.locales !== void 0 && typeof e.locales != "boolean" && t.push("locales må være boolsk"), e.names !== void 0 && (typeof e.names != "object" || e.names === null || Array.isArray(e.names) || Object.values(e.names).some((e) => typeof e != "string" || !e)) && t.push("names må være et objekt med språkkode til navn"), t);
 }
 //#endregion
 //#region ../template/assets/engine/sections/presets.js
@@ -10387,9 +10387,10 @@ function rl(e, t) {
 						};
 						q(_, (e) => {
 							H(n)?.errors?.length ? e(v) : H(n) && !H(n).satisfied ? e(y, 1) : H(n)?.csp && e(b, 2);
-						}), M(i), B((e, o, s, c) => {
-							a = Qr(i, 1, "plugin-row svelte-1n46o8q", null, a, { "plugin-broken": H(n)?.errors?.length }), K(l, H(n)?.name ?? t), Z(p, "title", e), ai(m, H(r)), m.disabled = o, K(h, ` ${s ?? ""}`), Z(g, "title", c);
+						}), M(i), B((e, t, o, s, c) => {
+							a = Qr(i, 1, "plugin-row svelte-1n46o8q", null, a, { "plugin-broken": H(n)?.errors?.length }), K(l, e), Z(p, "title", t), ai(m, H(r)), m.disabled = o, K(h, ` ${s ?? ""}`), Z(g, "title", c);
 						}, [
+							() => H(n)?.names?.[bi()] ?? H(n)?.name ?? t,
 							() => H(r) ? Q("tip.plugins.on") : Q("tip.plugins.off"),
 							() => !!H(n)?.errors?.length,
 							() => H(r) ? Q("ui.on") : Q("ui.off"),
@@ -10409,9 +10410,9 @@ function rl(e, t) {
 								Ci[t]?.version && e(s);
 							});
 							var l = z(o, 2), u = L(l);
-							J(u, () => c.right, !0), M(u), M(l), M(r), M(n), B((e) => {
-								K(a, Ci[t]?.name ?? t), Z(u, "title", e);
-							}, [() => Q("tip.plugins.addFound")]), U("click", u, () => Hi(t)), G(e, n);
+							J(u, () => c.right, !0), M(u), M(l), M(r), M(n), B((e, t) => {
+								K(a, e), Z(u, "title", t);
+							}, [() => Ci[t]?.names?.[bi()] ?? Ci[t]?.name ?? t, () => Q("tip.plugins.addFound")]), U("click", u, () => Hi(t)), G(e, n);
 						}), B((e) => K(r, e), [() => Q("hint.plugins.found")]), G(e, t);
 					};
 					q(l, (e) => {

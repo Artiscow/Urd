@@ -20,6 +20,18 @@
       "description": "Semver-intervall for kompatibel motorversjon, f.eks. \">=0.1.0 <1.0.0\""
     },
     "entry": { "type": "string", "pattern": "\\.js$" },
+    "names": {
+      "type": "object",
+      "description": "Valgfritt (additivt fra 0.6.8): visningsnavn per admin-språk (ADR-0012). Nøkkel = språkkode (nb/nn/en-GB/se/tr), verdi = navn; admin viser names[admin-språket] med name som fallback.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-zA-Z-]+$": { "type": "string", "minLength": 1 }
+      }
+    },
+    "locales": {
+      "type": "boolean",
+      "description": "Valgfritt (additivt fra 0.6.8): true lover locales/{nb,nn,en-GB,se,tr}.js med pluginens tekster (ADR-0012). Lasteren legger dem i besøkende-registret (site-språket) og i preview også i admin-registret; paritetstesten holder filene i synk."
+    },
     "csp": {
       "type": "object",
       "description": "Valgfritt (additivt fra v0.6): eksterne opprinnelser pluginen trenger CSP-unntak for. _headers endres aldri automatisk; admin viser behovet til eieren (se ADR-0006).",

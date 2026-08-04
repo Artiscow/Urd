@@ -13,8 +13,13 @@ import {
   isSpam, validate, buildMailto, buildPayload, endpointOrigin,
 } from './form.js';
 import { createDropdown } from '/assets/engine/dropdown.js';
+// Flerspråk (ADR-0012): t() for besøkende-tekster (site-språket), ta() for
+// editor-chromen og seed-defaults (admin-språket). Ordboka (locales/) lastes
+// av plugin-lasteren FØR register() - t/ta kalles aldri på modulnivå.
+import { t, ta } from '/assets/engine/i18n.js';
 
-const FIELD_TYPES = [['text', 'Tekst'], ['email', 'E-post'], ['tel', 'Telefon'], ['textarea', 'Flerlinjes']];
+/** Felttype-id + etikett-NØKKEL (ta-oppslag ved bruk; aldri på modulnivå). */
+const FIELD_TYPES = [['text', 'skjema.edit.typeText'], ['email', 'skjema.edit.typeEmail'], ['tel', 'skjema.edit.typeTel'], ['textarea', 'skjema.edit.typeTextarea']];
 
 const el2 = (tag, className, textContent) => {
   const node = document.createElement(tag);
@@ -71,7 +76,7 @@ function renderForm(host, props, ctx) {
   honeypot.setAttribute('aria-hidden', 'true');
   form.appendChild(honeypot);
 
-  const submit = el2('button', 'urd-skjema-submit', props.submitLabel || 'Send');
+  const submit = el2('button', 'urd-skjema-submit', props.submitLabel || t('skjema.send'));
   submit.type = 'submit';
   form.appendChild(submit);
 
@@ -95,23 +100,23 @@ function renderForm(host, props, ctx) {
     // Spam: lat som om det gikk bra, men send ingenting (ikke tips boten).
     if (isSpam(honeypot.value)) {
       status.classList.add('ok');
-      status.textContent = props.successText || 'Takk! Meldingen er sendt.';
+      status.textContent = props.successText || t('skjema.thanks');
       return;
     }
 
-    const result = validate(fields, values);
+    const result = validate(fields, values, { required: t('skjema.required'), email: t('skjema.invalidEmail') });
     showErrors(result.errors);
     if (!result.ok) return;
 
     if (ctx.preview) {
       status.classList.add('ok');
-      status.textContent = 'Forhåndsvisning: skjemaet er gyldig. Ekte innsending skjer på den publiserte siden.';
+      status.textContent = ta('skjema.edit.previewOk');
       return;
     }
 
     const done = () => {
       status.classList.add('ok');
-      status.textContent = props.successText || 'Takk! Meldingen er sendt.';
+      status.textContent = props.successText || t('skjema.thanks');
       form.reset();
     };
 
@@ -127,15 +132,15 @@ function renderForm(host, props, ctx) {
         done();
       } catch {
         status.classList.add('feil');
-        status.textContent = 'Kunne ikke sende akkurat nå. Prøv igjen senere.';
+        status.textContent = t('skjema.sendFailed');
       } finally {
         submit.disabled = false;
       }
     } else {
-      const url = buildMailto(props.recipient, props.subject || 'Henvendelse fra nettsiden', fields, values);
+      const url = buildMailto(props.recipient, props.subject || t('skjema.subjectDefault'), fields, values);
       if (!url) {
         status.classList.add('feil');
-        status.textContent = 'Skjemaet mangler mottakeradresse.';
+        status.textContent = t('skjema.noRecipient');
         return;
       }
       window.location.href = url;
@@ -149,9 +154,9 @@ function renderForm(host, props, ctx) {
 /* ---------- Konfigpanel (i forhåndsvisningen) ---------- */
 
 function configPanel(el, props, ctx) {
-  const gear = el2('button', 'urd-skjema-gear urd-cfg-toggle', '⚙ Skjema');
+  const gear = el2('button', 'urd-skjema-gear urd-cfg-toggle', `⚙ ${ta('skjema.edit.gear')}`);
   gear.type = 'button';
-  gear.title = 'Skjemainnstillinger';
+  gear.title = ta('skjema.edit.gearTitle');
   const panel = el2('div', 'urd-skjema-config');
 
   const label = (text) => el2('div', 'urd-skjema-config-label', text);
@@ -163,26 +168,26 @@ function configPanel(el, props, ctx) {
   };
 
   let mode = props.mode ?? 'mailto';
-  const recipient = textInput(props.recipient, 'post@forening.no');
-  const subject = textInput(props.subject, 'Emne i e-posten (valgfritt)');
-  const endpoint = textInput(props.endpoint, 'https://… (Apps Script/Pages Function)');
-  const submitLabel = textInput(props.submitLabel, 'Send');
-  const successText = textInput(props.successText, 'Takk! Meldingen er sendt.');
+  const recipient = textInput(props.recipient, ta('skjema.edit.recipientPh'));
+  const subject = textInput(props.subject, ta('skjema.edit.subjectPh'));
+  const endpoint = textInput(props.endpoint, ta('skjema.edit.endpointPh'));
+  const submitLabel = textInput(props.submitLabel, ta('skjema.edit.sendDefault'));
+  const successText = textInput(props.successText, ta('skjema.edit.thanksDefault'));
 
   const modeRow = el2('div', 'urd-skjema-config-row');
   const modeDd = createDropdown({
     value: mode,
-    title: 'Hvor skjemaet sendes',
-    options: [['mailto', 'E-postklient (mailto)'], ['endpoint', 'Eksternt endepunkt']],
+    title: ta('skjema.edit.modeTitle'),
+    options: [['mailto', ta('skjema.edit.modeMailto')], ['endpoint', ta('skjema.edit.modeEndpoint')]],
     onchange: (value) => { mode = value; syncMode(); },
   });
   modeRow.appendChild(modeDd.el);
 
   const mailtoBox = el2('div', 'urd-skjema-config-box');
-  mailtoBox.append(label('Mottaker (e-post)'), recipient, label('Emne'), subject);
+  mailtoBox.append(label(ta('skjema.edit.recipient')), recipient, label(ta('skjema.edit.subject')), subject);
   const endpointBox = el2('div', 'urd-skjema-config-box');
-  endpointBox.append(label('Endepunkt-URL'), endpoint,
-    el2('p', 'urd-skjema-config-note', 'Krever at du åpner connect-src for endepunktets vert i _headers.'));
+  endpointBox.append(label(ta('skjema.edit.endpoint')), endpoint,
+    el2('p', 'urd-skjema-config-note', ta('skjema.edit.endpointNote')));
   const syncMode = () => {
     mailtoBox.style.display = mode === 'mailto' ? '' : 'none';
     endpointBox.style.display = mode === 'endpoint' ? '' : 'none';
@@ -196,11 +201,11 @@ function configPanel(el, props, ctx) {
     fieldList.replaceChildren();
     fields.forEach((field, index) => {
       const row = el2('div', 'urd-skjema-fieldrow');
-      const name = textInput(field.label, 'Feltnavn');
+      const name = textInput(field.label, ta('skjema.edit.fieldNamePh'));
       name.addEventListener('input', () => { field.label = name.value; });
       const typeDd = createDropdown({
         value: field.type,
-        options: FIELD_TYPES,
+        options: FIELD_TYPES.map(([value, key]) => [value, ta(key)]),
         onchange: (value) => { field.type = value; },
       });
       const req = el2('label', 'urd-skjema-fieldreq');
@@ -208,28 +213,28 @@ function configPanel(el, props, ctx) {
       reqBox.type = 'checkbox';
       reqBox.checked = field.required !== false;
       reqBox.addEventListener('change', () => { field.required = reqBox.checked; });
-      req.append(reqBox, document.createTextNode(' påkrevd'));
+      req.append(reqBox, document.createTextNode(` ${ta('skjema.edit.required')}`));
       const del = el2('button', 'urd-skjema-fielddel', '✕');
       del.type = 'button';
-      del.title = 'Fjern felt';
+      del.title = ta('skjema.edit.removeField');
       del.addEventListener('click', () => { fields.splice(index, 1); renderFields(); });
       row.append(name, typeDd.el, req, del);
       fieldList.appendChild(row);
     });
   };
   renderFields();
-  const addField = el2('button', 'urd-skjema-addfield', '+ Legg til felt');
+  const addField = el2('button', 'urd-skjema-addfield', ta('skjema.edit.addField'));
   addField.type = 'button';
   addField.addEventListener('click', () => {
-    fields.push({ id: fieldId(), label: 'Nytt felt', type: 'text', required: false });
+    fields.push({ id: fieldId(), label: ta('skjema.edit.newField'), type: 'text', required: false });
     renderFields();
   });
 
-  const apply = el2('button', 'urd-skjema-apply', 'Bruk');
+  const apply = el2('button', 'urd-skjema-apply', ta('common.apply'));
   apply.type = 'button';
   apply.addEventListener('click', () => {
     const cleaned = fields
-      .map((f) => ({ id: f.id || fieldId(), label: (f.label || 'Felt').trim(), type: f.type || 'text', required: f.required !== false }))
+      .map((f) => ({ id: f.id || fieldId(), label: (f.label || ta('skjema.edit.fieldFallback')).trim(), type: f.type || 'text', required: f.required !== false }))
       .filter((f) => f.label);
     post({
       type: 'urd-edit',
@@ -240,8 +245,8 @@ function configPanel(el, props, ctx) {
         subject: subject.value.trim(),
         mode,
         endpoint: endpoint.value.trim(),
-        submitLabel: submitLabel.value.trim() || 'Send',
-        successText: successText.value.trim() || 'Takk! Meldingen er sendt.',
+        submitLabel: submitLabel.value.trim() || ta('skjema.edit.sendDefault'),
+        successText: successText.value.trim() || ta('skjema.edit.thanksDefault'),
         fields: cleaned,
       },
       rerender: true,
@@ -250,10 +255,10 @@ function configPanel(el, props, ctx) {
   });
 
   panel.append(
-    label('Sendemåte'), modeRow, mailtoBox, endpointBox,
-    label('Felt'), fieldList, addField,
-    label('Knappetekst'), submitLabel,
-    label('Kvittering'), successText,
+    label(ta('skjema.edit.mode')), modeRow, mailtoBox, endpointBox,
+    label(ta('skjema.edit.fields')), fieldList, addField,
+    label(ta('lbl.buttonText')), submitLabel,
+    label(ta('skjema.edit.receipt')), successText,
     apply,
   );
 
@@ -378,13 +383,13 @@ function renderSkjema(el, props, ctx) {
     import('/assets/engine/hint.js').then(({ attachHint }) => {
       if (!host.isConnected || host.querySelector('.urd-hint-chip')) return;
       const chip = attachHint(tools, {
-        title: 'Skjemablokken',
+        title: ta('skjema.edit.hintTitle'),
         lines: [
-          'Velg blokken og åpne «Innstillinger …» i Egenskaper for å stille inn mottaker, felt og sendemåte',
-          'Standard: skjemaet åpner besøkendes e-postklient med en ferdig e-post (mailto, ingen oppsett)',
-          'Valgfritt: send til et eksternt endepunkt (Apps Script/Pages Function); da må du åpne connect-src for endepunktets vert i _headers',
-          'Feltene kan legges til, endres og fjernes; e-postfelt valideres, og et skjult honeypot-felt stopper bots',
-          'Innsending virker på den publiserte siden; i forhåndsvisningen valideres skjemaet uten å sende',
+          ta('skjema.edit.hint1'),
+          ta('skjema.edit.hint2'),
+          ta('skjema.edit.hint3'),
+          ta('skjema.edit.hint4'),
+          ta('skjema.edit.hint5'),
         ],
       });
       tools.insertBefore(chip, tools.firstChild);
@@ -401,10 +406,12 @@ const blockId = () => {
   return 'blk-' + [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
 };
 
+// Seed-regelen (ADR-0012): feltetikettene skrives inn i props ved innsetting,
+// oversatt ÉN gang med admin-språket (ta i fabrikk-kroppen).
 const defaultFields = () => [
-  { id: 'navn', label: 'Navn', type: 'text', required: true },
-  { id: 'epost', label: 'E-post', type: 'email', required: true },
-  { id: 'melding', label: 'Melding', type: 'textarea', required: true },
+  { id: 'navn', label: ta('skjema.edit.fieldName'), type: 'text', required: true },
+  { id: 'epost', label: ta('skjema.edit.fieldEmail'), type: 'email', required: true },
+  { id: 'melding', label: ta('skjema.edit.fieldMessage'), type: 'textarea', required: true },
 ];
 
 function kontaktSection() {
@@ -420,7 +427,7 @@ function kontaktSection() {
         id: blockId(),
         type: 'text',
         version: 1,
-        props: { html: '<h2>Kontakt oss</h2><p>Send oss en melding, så svarer vi så snart vi kan.</p>', align: 'left', box: false },
+        props: { html: ta('skjema.edit.seedIntro'), align: 'left', box: false },
         animation: null,
         frames: { desktop: { x: 6, y: 40, w: 60, h: 120, z: 1, rot: 0 }, mobile: null },
       },
@@ -428,7 +435,7 @@ function kontaktSection() {
         id: blockId(),
         type: 'skjema',
         version: 1,
-        props: { recipient: '', subject: '', mode: 'mailto', endpoint: '', submitLabel: 'Send', successText: 'Takk! Meldingen er sendt.', fields: defaultFields() },
+        props: { recipient: '', subject: '', mode: 'mailto', endpoint: '', submitLabel: ta('skjema.edit.sendDefault'), successText: ta('skjema.edit.thanksDefault'), fields: defaultFields() },
         animation: null,
         frames: { desktop: { x: 6, y: 180, w: 60, h: 380, z: 2, rot: 0 }, mobile: null },
       },
@@ -444,9 +451,10 @@ export function register(Urd) {
   Urd.blocks.define('skjema', {
     version: 1,
     label: 'Skjema',
+    labelKey: 'skjema.edit.blockLabel',
     defaults: () => ({
       recipient: '', subject: '', mode: 'mailto', endpoint: '',
-      submitLabel: 'Send', successText: 'Takk! Meldingen er sendt.', fields: defaultFields(),
+      submitLabel: ta('skjema.edit.sendDefault'), successText: ta('skjema.edit.thanksDefault'), fields: defaultFields(),
     }),
     migrations: {},
     render: renderSkjema,
@@ -454,8 +462,10 @@ export function register(Urd) {
 
   Urd.sections.define('kontaktskjema', {
     label: 'Kontaktskjema',
+    labelKey: 'skjema.edit.presetLabel',
     group: 'Kort og lister',
     hint: 'Kontaktskjema som sender via e-post (eller eget endepunkt)',
+    hintKey: 'skjema.edit.presetHint',
     create: kontaktSection,
   });
 }

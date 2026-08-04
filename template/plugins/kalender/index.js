@@ -18,11 +18,11 @@ import {
   parseIcs, expandEvents, splitCategory, findSignupLink,
   normalizeSourceUrl, subscribeLinks,
 } from './ics.js';
-
-const MONTHS_NB = ['jan', 'feb', 'mar', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'des'];
-const WEEKDAYS_NB = ['man', 'tir', 'ons', 'tor', 'fre', 'lør', 'søn'];
-const MONTH_NAMES_NB = ['januar', 'februar', 'mars', 'april', 'mai', 'juni',
-  'juli', 'august', 'september', 'oktober', 'november', 'desember'];
+// Flerspråk (ADR-0012): t() for besøkende-tekster (site-språket), ta() for
+// editor-chromen (admin-språket), dates() for måneds-/ukedagsnavn og tp()
+// for flertall. Ordboka (locales/) lastes av plugin-lasteren FØR register()
+// - t/ta kalles kun i render-/fabrikk-kropper, aldri på modulnivå.
+import { t, ta, tp, dates } from '/assets/engine/i18n.js';
 
 const el2 = (tag, className, textContent) => {
   const node = document.createElement(tag);
@@ -44,7 +44,7 @@ async function fetchSource(url) {
   const res = await fetch(`/api/ics?url=${encodeURIComponent(url)}`);
   if (!res.ok) {
     const detail = (await res.json().catch(() => null))?.error;
-    throw new Error(detail ?? `Feeden svarte ${res.status}`);
+    throw new Error(detail ?? ta('kalender.edit.feedStatus', { status: res.status }));
   }
   const text = await res.text();
   try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), text })); } catch { /* fullt lager er greit */ }
@@ -57,7 +57,7 @@ async function loadOccurrences(sources, limit) {
   const events = [];
   await Promise.all(sources.map(async (source) => {
     const url = normalizeSourceUrl(source);
-    if (!url) { errors.push(`Ukjent kildeform: ${source}`); return; }
+    if (!url) { errors.push(ta('kalender.edit.unknownSource', { source })); return; }
     try {
       events.push(...parseIcs(await fetchSource(url)).events);
     } catch (error) {
@@ -78,9 +78,9 @@ function demoOccurrences() {
   const day = 24 * 3600 * 1000;
   const base = Date.now();
   return [
-    { start: base + 3 * day, end: base + 3 * day + 2 * 3600 * 1000, allDay: false, title: 'Oppstartskveld', category: 'Sosialt', location: 'Klubbhuset', signup: null, description: '' },
-    { start: base + 10 * day, end: base + 10 * day + 3600 * 1000, allDay: false, title: 'Medlemsmøte', category: 'Møte', location: 'Klubbhuset', signup: null, description: '' },
-    { start: base + 17 * day, end: base + 17 * day, allDay: true, title: 'Høsttur', category: 'Tur', location: 'Oppmøte ved parkeringen', signup: null, description: '' },
+    { start: base + 3 * day, end: base + 3 * day + 2 * 3600 * 1000, allDay: false, title: ta('kalender.edit.demoTitle1'), category: ta('kalender.edit.demoCat1'), location: ta('kalender.edit.demoLoc1'), signup: null, description: '' },
+    { start: base + 10 * day, end: base + 10 * day + 3600 * 1000, allDay: false, title: ta('kalender.edit.demoTitle2'), category: ta('kalender.edit.demoCat2'), location: ta('kalender.edit.demoLoc1'), signup: null, description: '' },
+    { start: base + 17 * day, end: base + 17 * day, allDay: true, title: ta('kalender.edit.demoTitle3'), category: ta('kalender.edit.demoCat3'), location: ta('kalender.edit.demoLoc2'), signup: null, description: '' },
   ];
 }
 
@@ -90,8 +90,13 @@ const two = (n) => String(n).padStart(2, '0');
 
 function metaLine(occ) {
   const start = new Date(occ.start);
-  const parts = [`${WEEKDAYS_NB[(start.getDay() + 6) % 7]} ${start.getDate()}. ${MONTHS_NB[start.getMonth()]}`];
-  if (!occ.allDay) parts.push(`kl. ${two(start.getHours())}:${two(start.getMinutes())}`);
+  const d = dates();
+  const parts = [t('kalender.dateLine', {
+    wd: d.weekdaysShort[(start.getDay() + 6) % 7],
+    d: start.getDate(),
+    m: d.monthsShort[start.getMonth()],
+  })];
+  if (!occ.allDay) parts.push(t('kalender.timeAt', { time: `${two(start.getHours())}:${two(start.getMinutes())}` }));
   if (occ.location) parts.push(occ.location);
   return parts.join(' · ');
 }
@@ -99,7 +104,7 @@ function metaLine(occ) {
 function badgeNode(occ) {
   const start = new Date(occ.start);
   const badge = el2('div', 'urd-samling-badge');
-  badge.append(el2('strong', null, String(start.getDate())), el2('span', null, MONTHS_NB[start.getMonth()]));
+  badge.append(el2('strong', null, String(start.getDate())), el2('span', null, dates().monthsShort[start.getMonth()]));
   return badge;
 }
 
@@ -109,11 +114,11 @@ function chipNode(category) {
 
 function signupNode(occ) {
   if (!occ.signup) return null;
-  const a = el2('a', 'urd-kal-signup', 'Meld deg på');
+  const a = el2('a', 'urd-kal-signup', t('kalender.signup'));
   a.href = occ.signup;
   a.target = '_blank';
   a.rel = 'noopener';
-  a.title = 'Åpner påmeldingssiden arrangøren har lagt i arrangementets beskrivelse';
+  a.title = t('kalender.signupTitle');
   return a;
 }
 
@@ -162,7 +167,7 @@ function renderNext(host, occs) {
   const occ = occs[0];
   if (!occ) return;
   const panel = el2('div', 'urd-kal-next');
-  panel.appendChild(el2('div', 'urd-kal-next-label', 'Neste arrangement'));
+  panel.appendChild(el2('div', 'urd-kal-next-label', t('kalender.next')));
   const row = el2('div', 'urd-kal-next-row');
   row.appendChild(badgeNode(occ));
   const body = el2('div', null);
@@ -173,7 +178,9 @@ function renderNext(host, occs) {
   body.appendChild(titleRow);
   body.appendChild(el2('div', 'urd-kal-meta', metaLine(occ)));
   const days = Math.max(0, Math.round((occ.start - Date.now()) / (24 * 3600 * 1000)));
-  body.appendChild(el2('div', 'urd-kal-next-count', days === 0 ? 'I dag!' : days === 1 ? 'I morgen' : `Om ${days} dager`));
+  // Egne nøkler i stedet for Intl.RelativeTimeFormat: «I dag!»-stilen
+  // beholdes, og nordsamisk mangler i ICU (ville falt til rått tall).
+  body.appendChild(el2('div', 'urd-kal-next-count', days === 0 ? t('kalender.today') : days === 1 ? t('kalender.tomorrow') : tp('kalender.inDays', days)));
   const signup = signupNode(occ);
   if (signup) body.appendChild(signup);
   row.appendChild(body);
@@ -189,17 +196,19 @@ function renderMonth(host, occs) {
   const head = el2('div', 'urd-kal-month-head');
   const prev = el2('button', 'urd-kal-nav', '‹');
   prev.type = 'button';
+  prev.setAttribute('aria-label', t('kalender.prevMonth'));
   const label = el2('strong', null, '');
   const next = el2('button', 'urd-kal-nav', '›');
   next.type = 'button';
+  next.setAttribute('aria-label', t('kalender.nextMonth'));
   head.append(prev, label, next);
   const grid = el2('div', 'urd-kal-grid');
   wrap.append(head, grid);
 
   const paint = () => {
-    label.textContent = `${MONTH_NAMES_NB[shown.mo]} ${shown.y}`;
+    label.textContent = `${dates().months[shown.mo]} ${shown.y}`;
     grid.replaceChildren();
-    for (const day of WEEKDAYS_NB) grid.appendChild(el2('div', 'urd-kal-dow', day));
+    for (const day of dates().weekdaysShort) grid.appendChild(el2('div', 'urd-kal-dow', day));
     const first = new Date(shown.y, shown.mo, 1);
     const lead = (first.getDay() + 6) % 7;
     const dim = new Date(shown.y, shown.mo + 1, 0).getDate();
@@ -220,7 +229,7 @@ function renderMonth(host, occs) {
         pill.title = `${occ.title}\n${metaLine(occ)}`;
         cell.appendChild(pill);
       }
-      if (todays.length > 3) cell.appendChild(el2('div', 'urd-kal-more', `+${todays.length - 3}`));
+      if (todays.length > 3) cell.appendChild(el2('div', 'urd-kal-more', t('kalender.more', { n: todays.length - 3 })));
       grid.appendChild(cell);
     }
   };
@@ -239,16 +248,16 @@ function subscribeRow(sources) {
   for (const source of sources) {
     const links = subscribeLinks(source);
     if (!links) continue;
-    const webcal = el2('a', 'urd-kal-sub-btn', sources.length > 1 ? 'Abonner (kalender)' : 'Abonner');
+    const webcal = el2('a', 'urd-kal-sub-btn', sources.length > 1 ? t('kalender.subscribeMulti') : t('kalender.subscribe'));
     webcal.href = links.webcal;
-    webcal.title = 'Åpner kalender-appen din og legger til kalenderen der, så nye og endrede arrangementer følger med automatisk';
+    webcal.title = t('kalender.subscribeTitle');
     row.appendChild(webcal);
     if (links.google) {
-      const google = el2('a', 'urd-kal-sub-btn', 'Legg til i Google');
+      const google = el2('a', 'urd-kal-sub-btn', t('kalender.addGoogle'));
       google.href = links.google;
       google.target = '_blank';
       google.rel = 'noopener';
-      google.title = 'Legger kalenderen til i din egen Google Kalender';
+      google.title = t('kalender.addGoogleTitle');
       row.appendChild(google);
     }
   }
@@ -259,7 +268,7 @@ function categoryRow(occs, active, onpick) {
   const categories = [...new Set(occs.map((occ) => occ.category).filter(Boolean))];
   if (categories.length < 2) return null;
   const row = el2('div', 'urd-kal-chips');
-  const all = el2('button', 'urd-kal-chipbtn', 'Alle');
+  const all = el2('button', 'urd-kal-chipbtn', t('kalender.all'));
   all.type = 'button';
   if (!active) all.classList.add('valgt');
   all.addEventListener('click', () => onpick(null));
@@ -280,18 +289,19 @@ function post(msg) {
   window.parent?.postMessage(msg, location.origin);
 }
 
-const VIEW_NAMES = [['list', 'Liste'], ['cards', 'Kort'], ['month', 'Måned'], ['next', 'Neste']];
+/** Visning-id + etikett-NØKKEL (ta-oppslag ved bruk; aldri på modulnivå). */
+const VIEW_NAMES = [['list', 'kalender.edit.viewList'], ['cards', 'kalender.edit.viewCards'], ['month', 'kalender.edit.viewMonth'], ['next', 'kalender.edit.viewNext']];
 
 function configPanel(el, props, ctx) {
-  const gear = el2('button', 'urd-kal-gear urd-cfg-toggle', '⚙ Kilder');
+  const gear = el2('button', 'urd-kal-gear urd-cfg-toggle', `⚙ ${ta('kalender.edit.sources')}`);
   gear.type = 'button';
-  gear.title = 'Kalenderkilder og visning';
+  gear.title = ta('kalender.edit.gearTitle');
   const panel = el2('div', 'urd-kal-config');
 
   const label = (text) => el2('label', 'urd-kal-config-label', text);
   const sources = document.createElement('textarea');
   sources.rows = 3;
-  sources.placeholder = 'Én kilde per linje: iCal-URL, webcal:// eller Google-kalender-id (…@gmail.com)';
+  sources.placeholder = ta('kalender.edit.sourcesPh');
   sources.value = (props.sources ?? []).join('\n');
 
   // Visning: temastyrte segmentknapper (native select-popuper følger OS-temaet
@@ -299,8 +309,8 @@ function configPanel(el, props, ctx) {
   let chosenView = props.view ?? 'list';
   const viewSeg = el2('div', 'urd-kal-seg');
   const viewButtons = [];
-  for (const [value, name] of VIEW_NAMES) {
-    const b = el2('button', null, name);
+  for (const [value, nameKey] of VIEW_NAMES) {
+    const b = el2('button', null, ta(nameKey));
     b.type = 'button';
     if (value === chosenView) b.classList.add('valgt');
     b.addEventListener('click', () => {
@@ -314,7 +324,7 @@ function configPanel(el, props, ctx) {
   }
 
   // Maks antall gjelder kun liste og kort; måned viser måneden og «neste» viser ett.
-  const limitLabel = label('Maks antall');
+  const limitLabel = label(ta('lbl.maxCount'));
   const limit = document.createElement('input');
   limit.type = 'number';
   limit.min = '1';
@@ -335,10 +345,10 @@ function configPanel(el, props, ctx) {
     wrap.append(input, document.createTextNode(` ${text}`));
     return [wrap, input];
   };
-  const [categoriesLabel, categories] = check('Vis kategori-filter (fra titler som «Møte: Årsmøte»)', props.showCategories !== false);
-  const [subscribeLabel, subscribe] = check('Vis abonner-knapp', props.showSubscribe !== false);
+  const [categoriesLabel, categories] = check(ta('kalender.edit.showCategories'), props.showCategories !== false);
+  const [subscribeLabel, subscribe] = check(ta('kalender.edit.showSubscribe'), props.showSubscribe !== false);
 
-  const apply = el2('button', 'urd-kal-apply', 'Bruk');
+  const apply = el2('button', 'urd-kal-apply', ta('common.apply'));
   apply.type = 'button';
   apply.addEventListener('click', () => {
     const nextProps = {
@@ -353,8 +363,8 @@ function configPanel(el, props, ctx) {
   });
 
   panel.append(
-    label('Kilder'), sources,
-    label('Visning'), viewSeg,
+    label(ta('kalender.edit.sources')), sources,
+    label(ta('lbl.view')), viewSeg,
     limitLabel, limit,
     categoriesLabel, subscribeLabel, apply,
   );
@@ -516,15 +526,15 @@ function renderCalendar(el, props, ctx) {
       import('/assets/engine/hint.js').then(({ attachHint }) => {
         if (!host.isConnected || host.querySelector('.urd-hint-chip')) return;
         const chip = attachHint(tools, {
-          title: 'Kalenderblokken',
+          title: ta('kalender.edit.hintTitle'),
           lines: [
-            'Blokken viser arrangementene fra en kalender dere allerede har (f.eks. Google Kalender): legg inn og endre arrangementer der, så oppdaterer siden seg selv',
-            'Kilder: velg blokken og åpne «Innstillinger …» i Egenskaper, og lim inn kalenderens iCal-adresse eller Google-kalender-id; der velger du også visning og antall',
-            'Visninger: liste, kort, månedskalender eller «neste arrangement»-panel',
-            'Kategorier: titler som «Møte: Årsmøte» i kalenderen gir knapper besøkende kan filtrere med (kan skrus av i Kilder)',
-            'Påmelding: legg en lenke i arrangementets beskrivelse (en linje med «Påmelding: …»), så får arrangementet en «Meld deg på»-knapp som åpner den siden',
-            'Abonner: besøkende får kalenderen inn i sin egen kalender-app og følger endringer automatisk; Google-kilder får også en «Legg til i Google»-knapp',
-            'Andre kalenderverter enn Google må godkjennes: legg vertsnavnet i ICS_HOSTS i hostingoppsettet',
+            ta('kalender.edit.hint1'),
+            ta('kalender.edit.hint2'),
+            ta('kalender.edit.hint3'),
+            ta('kalender.edit.hint4'),
+            ta('kalender.edit.hint5'),
+            ta('kalender.edit.hint6'),
+            ta('kalender.edit.hint7'),
           ],
         });
         // «?» først, så «⚙ Kilder».
@@ -544,7 +554,7 @@ function renderCalendar(el, props, ctx) {
     });
     if (chips) host.appendChild(chips);
     if (!limited.length) {
-      host.appendChild(el2('div', 'urd-kal-empty', 'Ingen kommende arrangementer'));
+      host.appendChild(el2('div', 'urd-kal-empty', t('kalender.empty')));
     } else {
       (VIEWS[props.view] ?? renderList)(host, limited);
     }
@@ -558,7 +568,7 @@ function renderCalendar(el, props, ctx) {
 
   if (!sources.length) {
     if (ctx.preview) {
-      draw(demoOccurrences(), 'Eksempeldata: åpne «Innstillinger …» i blokkens Egenskaper og lim inn kalenderens iCal-adresse eller Google-kalender-id.');
+      draw(demoOccurrences(), ta('kalender.edit.demoNote'));
     }
     return;
   }
@@ -568,10 +578,10 @@ function renderCalendar(el, props, ctx) {
     if (!host.isConnected) return;
     if (!occurrences.length && errors.length) {
       // Besøkende får rolig tomtilstand; forhåndsvisningen får feilen.
-      draw([], ctx.preview ? `Fikk ikke hentet feeden: ${errors[0]}` : null);
+      draw([], ctx.preview ? ta('kalender.edit.feedFailed', { error: errors[0] }) : null);
       return;
     }
-    draw(occurrences, ctx.preview && errors.length ? `Én av kildene feilet: ${errors[0]}` : null);
+    draw(occurrences, ctx.preview && errors.length ? ta('kalender.edit.sourceFailed', { error: errors[0] }) : null);
   });
 }
 
@@ -595,7 +605,7 @@ function hvaSkjerSection() {
         id: presetId(),
         type: 'text',
         version: 1,
-        props: { html: '<h2>Hva skjer</h2>', align: 'left', box: false },
+        props: { html: ta('kalender.edit.seedTitle'), align: 'left', box: false },
         animation: null,
         frames: { desktop: { x: 6, y: 40, w: 60, h: 70, z: 1, rot: 0 }, mobile: null },
       },
@@ -619,9 +629,11 @@ export function register(Urd) {
   Urd.blocks.define('kalender', {
     version: 3,
     label: 'Kalender',
+    labelKey: 'kalender.edit.blockLabel',
     defaults: () => ({ sources: [], view: 'list', limit: 6, showCategories: true, showSubscribe: true }),
     // Foldemenyen i blokkmenyene: én variant per visning (generisk variants-felt).
-    variants: VIEW_NAMES.map(([view, label]) => ({ label, props: { view } })),
+    // labelKey løses av konsumentene (iframe-siden har plugin-ordboka).
+    variants: VIEW_NAMES.map(([view, labelKey]) => ({ label: view, labelKey, props: { view } })),
     migrations: {
       // v1 (eksempel-kalenderen): source (én streng) → sources (liste).
       1: (props) => ({
@@ -638,8 +650,10 @@ export function register(Urd) {
 
   Urd.sections.define('hva-skjer', {
     label: 'Hva skjer',
+    labelKey: 'kalender.edit.presetLabel',
     group: 'Kort og lister',
     hint: 'Arrangementsliste fra en abonnerbar kalender (iCal/Google)',
+    hintKey: 'kalender.edit.presetHint',
     create: hvaSkjerSection,
   });
 }

@@ -249,6 +249,8 @@ Hver plugin er en mappe med manifest + ES-modul (kalender-referansepluginen vise
 {
   "id": "kalender",
   "name": "Kalender",
+  "names": { "nb": "Kalender", "nn": "Kalender", "en-GB": "Calendar", "se": "Kaleandar", "tr": "Takvim" },
+  "locales": true,
   "version": "1.0.0",
   "requiresEngine": ">=0.5.0 <1.0.0",
   "entry": "index.js",
@@ -263,5 +265,11 @@ export function register(Urd) {
   Urd.sections.define('hva-skjer', { label: 'Hva skjer', /* … */ });
 }
 ```
+
+Valgfrie manifest-felt (alle additive):
+
+- **`csp`** (additivt fra v0.6): eksterne opprinnelser pluginen trenger CSP-unntak for, som `{ "connectSrc": ["https://…"], "frameSrc": ["https://…"] }`. `_headers` endres aldri automatisk (ADR-0006): Plugins-panelet viser eieren nøyaktig hvilke linjer som må inn, og verten legges manuelt i `_headers`.
+- **`names`** (additivt fra 0.6.8, ADR-0012): visningsnavn per admin-språk (`{ "nb": "Kalender", "en-GB": "Calendar", … }`). Admin viser `names[admin-språket]` med `name` som fallback; `name` består som obligatorisk basisnavn.
+- **`locales`** (additivt fra 0.6.8, ADR-0012): `true` lover `locales/{nb,nn,en-GB,se,tr}.js` (samme form som motorens locale-filer: `export default { lang, strings }`, nøkler prefikset med plugin-id, editor-nøkler under `<id>.edit.*`). Lasteren legger tekstene i besøkende-registret med site-språket (og i preview også i admin-registret med admin-språket) FØR `register()` kjører; nb er basen, manglende språkfil faller stille til nb, og paritetstesten (`tests/i18n.test.mjs`) holder filene i synk.
 
 Plugins bruker de **samme** define-API-ene som kjernen og er underlagt samme migreringskontrakt - en plugin-oppdatering kan heller aldri knuse eksisterende innhold. Deaktiveres/mangler en plugin, rendres dens blokker som plassholdere; dataene består.
