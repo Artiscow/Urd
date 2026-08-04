@@ -35,6 +35,10 @@ Urd kan utvides med **plugins** som bor i repoet ditt og skrus på i admin. Tre 
 3. **Nettsiden trenger ingen byggeprosess.** Det som ligger i repoet er nøyaktig det nettleseren laster.
 4. **WYSIWYG uten kompromiss.** Admin viser den ekte siden - samme motor, samme filer.
 
+## Språk
+
+Editoren og motorens besøkende-tekster finnes på nordsamisk, britisk engelsk, norsk (bokmål og nynorsk) og tyrkisk. Admin-språket følger enheten din som standard og huskes per nettleser; besøkende-språket velges i Nettsted-panelet. Å legge til eller forbedre en oversettelse er en ren filendring uten byggesteg, se [CONTRIBUTING.md](../../../CONTRIBUTING.md). Et språk Urd ikke har innebygd kan legges til som en språkpakke: en plugin som kun er oversettelsesfiler, slått på i Plugins-panelet.
+
 ## Dokumentasjon
 
 | Dokument | Innhold |

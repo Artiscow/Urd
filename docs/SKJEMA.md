@@ -54,7 +54,7 @@ Nettstedets rot: identitet, sideregister, navigasjon, grid og tema.
 ```
 
 - **`site.icon`** (valgfri, additiv fra v0.5): nettstedsikon (favicon) som sti i `media/`; vises i nettleserfaner og bokmerker. Uten ikon brukes Urd-merket fra index.html.
-- **`site.lang`** (påkrevd; fra v0.6 faktisk i bruk, ADR-0012): besøkende-språket. Styrer motorens egne tekster (knapper, datoer, skjemameldinger via `t()`), Intl-datonavnene og `<html lang>` (settes av boot; skallene hardkoder "no" kun som pre-JS-standard). Anbefalte verdier er de støttede språkkodene `nb`, `nn`, `en-GB`, `se`, `tr` (velges i Nettsted-panelet); alt normaliseres via `normalizeLang` - historisk `no` og andre nb-varianter er bokmål, sør-/lulesamisk faller til nordsamisk, ukjente verdier til bokmål. Eierens eget INNHOLD oversettes aldri (chrome følger innholdsspråket, ett språk per site). Admin-språket er uavhengig (localStorage `urd-admin-lang`, auto fra enhetsspråket) og lagres aldri i site.json.
+- **`site.lang`** (påkrevd; fra v0.6 faktisk i bruk, ADR-0012): besøkende-språket. Styrer motorens egne tekster (knapper, datoer, skjemameldinger via `t()`), Intl-datonavnene og `<html lang>` (settes av boot; skallene hardkoder "no" kun som pre-JS-standard). Anbefalte verdier er de innebygde språkkodene `nb`, `nn`, `en-GB`, `se`, `tr` (velges i Nettsted-panelet), eller koden til en aktivert språkpakke (se `languages` under Plugins); verdien matches via `matchLang` - historisk `no` og andre nb-varianter er bokmål, sør-/lulesamisk faller til nordsamisk. En kode uten treff slås opp blant språkpakkene før den faller til bokmål. Eierens eget INNHOLD oversettes aldri (chrome følger innholdsspråket, ett språk per site). Admin-språket er uavhengig (localStorage `urd-admin-lang`, auto fra enhetsspråket) og lagres aldri i site.json.
 - **`pages`** er sideregisteret. Nav-elementer peker på sider via `page`-id (eller lenker via `href`). Admin lager/endrer/sletter sider her; motoren ruter fra `path`.
 - **`href` i nav-/footer-lenker** (nav.items, children, footer.columns/baseline/linkRow, footer.cta; utvidet i v0.6): ekstern lenke (`https://`, `http://`, `mailto:`, `tel:`) ELLER site-intern sti/anker via samme vokter som blokk-lenkene (`isSafeHref`): `#seksjons-id` på samme side, `/sti#seksjons-id` fra en annen side. Seksjonene rendres med DOM-id (= seksjonens `id`), så ankrene treffer nativt og ruller mykt (`scroll-behavior: smooth`); ankeret kopieres fra seksjonens Egenskaper i editoren. Interne mål får aldri `rel="noopener"`/ekstern-markering. Alt annet (javascript:, data:, protokoll-relative `//`) avvises til `#`.
 - **`nav.layout`** (valgfri, additiv fra v0.5): menypunktenes plassering (`left`/`center`/`right`, standard right). Logoen står alltid først og er «Hjem»-knappen. **`nav.logo`** har tre typer: `text` (value = tekst), `image` (value = bilde-URL) og `both` (value = tekst, `image` = bilde-URL), pluss valgfrie `size` (bildehøyde px), `order` (`image-first`/`text-first`), `font`, `textSize`, `bold`, `italic` og `radius` for logotekst/-bilde.
@@ -271,5 +271,20 @@ Valgfrie manifest-felt (alle additive):
 - **`csp`** (additivt fra v0.6): eksterne opprinnelser pluginen trenger CSP-unntak for, som `{ "connectSrc": ["https://…"], "frameSrc": ["https://…"] }`. `_headers` endres aldri automatisk (ADR-0006): Plugins-panelet viser eieren nøyaktig hvilke linjer som må inn, og verten legges manuelt i `_headers`.
 - **`names`** (additivt fra 0.6.8, ADR-0012): visningsnavn per admin-språk (`{ "nb": "Kalender", "en-GB": "Calendar", … }`). Admin viser `names[admin-språket]` med `name` som fallback; `name` består som obligatorisk basisnavn.
 - **`locales`** (additivt fra 0.6.8, ADR-0012): `true` lover `locales/{nb,nn,en-GB,se,tr}.js` (samme form som motorens locale-filer: `export default { lang, strings }`, nøkler prefikset med plugin-id, editor-nøkler under `<id>.edit.*`). Lasteren legger tekstene i besøkende-registret med site-språket (og i preview også i admin-registret med admin-språket) FØR `register()` kjører; nb er basen, manglende språkfil faller stille til nb, og paritetstesten (`tests/i18n.test.mjs`) holder filene i synk.
+- **`languages`** (additivt fra 0.6.8.10, ADR-0012): språk pluginen leverer som SPRÅKPAKKE, altså et helt nytt språk for Urd selv (ikke pluginens egne tekster, det er `locales`). Hvert innslag er `{ "code": "sv", "name": "Svenska", "site": true, "admin": false }`: `code` er en BCP 47-kode som IKKE er et av de innebygde (`nb`, `nn`, `en-GB`, `se`, `tr`), `name` er språkets eget navn slik det vises i språkvelgerne, og `site`/`admin` sier hvilke registre pakken dekker (minst ett). Innslagene lover filene `locales/site/<code>.js` og `locales/admin/<code>.js`, som har samme form og nøkler som motorens egne - bokmålsbasen ligger under, så en pakke kan dekke alt eller bare deler.
+
+```json
+// plugins/sprak-svensk/plugin.json - en REN språkpakke har ingen kode, og
+// derfor verken entry eller provides
+{
+  "id": "sprak-svensk",
+  "name": "Svensk språkpakke",
+  "version": "1.0.0",
+  "requiresEngine": ">=0.5.0 <1.0.0",
+  "languages": [{ "code": "sv", "name": "Svenska", "site": true, "admin": false }]
+}
+```
+
+`entry` og `provides` er påkrevd for alle andre plugins, men valgfrie når `languages` er oppgitt: en ren språkpakke er bare filer. Et pakkespråk blir tilgjengelig når pakken er AKTIVERT i `plugins.json`; besøkende-velgeren (`site.lang`) følger plugin-utkastet, mens admin-språkvelgeren kun tilbyr pakker som alt er publisert (det er den lista motoren leser ved oppstart).
 
 Plugins bruker de **samme** define-API-ene som kjernen og er underlagt samme migreringskontrakt - en plugin-oppdatering kan heller aldri knuse eksisterende innhold. Deaktiveres/mangler en plugin, rendres dens blokker som plassholdere; dataene består.

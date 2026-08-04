@@ -446,6 +446,7 @@ export default {
     'ph.videoUrl': 'https://youtube.com/watch?v=… or vimeo.com/…',
     'plugin.alreadyListed': 'The plugin is already in the list',
     'plugin.cspNeeded': 'Needs CSP exceptions in _headers: {list}',
+    'plugin.languages': 'Language pack: {list}',
     'plugin.engineMismatch': 'Requires engine version {required} (this site runs {current}); the plugin is skipped on load.',
     'plugin.invalidId': 'Invalid id: use lowercase letters, digits and hyphens (the folder name in plugins/)',
     'plugin.invalidManifest': 'Found no valid plugin: {errors}',

@@ -27,6 +27,7 @@ const cases = [
   ['template/plugins/kalender/plugin.json', pluginSchema],
   ['template/plugins/skjema/plugin.json', pluginSchema],
   ['template/plugins/kart/plugin.json', pluginSchema],
+  ['template/plugins/sprak-svensk/plugin.json', pluginSchema],
 ];
 
 // Alle samlinger fra indeksfilen valideres mot collection-skjemaet (ADR-0007).

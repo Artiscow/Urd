@@ -35,6 +35,10 @@ Urd kan utvidast med **plugins** som bur i repoet ditt og blir skrudde på i adm
 3. **Nettsida treng ingen byggjeprosess.** Det som ligg i repoet er nøyaktig det nettlesaren lastar.
 4. **WYSIWYG utan kompromiss.** Admin viser den ekte sida - same motor, same filer.
 
+## Språk
+
+Editoren og motoren sine tekstar for besøkjande finst på nordsamisk, britisk engelsk, norsk (bokmål og nynorsk) og tyrkisk. Admin-språket følgjer eininga di som standard og blir hugsa per nettlesar; språket for besøkjande blir valt i Nettstad-panelet. Å leggje til eller forbetre ei omsetjing er ei rein filendring utan byggjesteg, sjå [CONTRIBUTING.md](../../../CONTRIBUTING.md) (på bokmål). Eit språk Urd ikkje har innebygd kan leggjast til som ein språkpakke: ein plugin som berre er omsetjingsfiler, slått på i Plugins-panelet.
+
 ## Dokumentasjon
 
 Dokumenta er skrivne på bokmål; skildringane under er omsette.

@@ -2,32 +2,51 @@
  * Kontraktstester for flerspråk-rammeverket (ADR-0012): paritet mellom
  * språkfilene (identiske nøkkelsett mot nb-basen, ingen tomme verdier,
  * ingen tankestrek, {var}-token-paritet), og i18n-kjernens rene logikk
- * (normalizeLang, interpolasjon, fallback, datotabeller). Finner alle
+ * (matchLang, interpolasjon, fallback, datotabeller). Finner alle
  * locale-sett automatisk, så plugin- og admin-locales dekkes i det de
  * opprettes. Fungerer som Urds «language file checker» for bidragsytere:
  * node --test tests/i18n.test.mjs
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync, existsSync } from 'node:fs';
-import { t, tp, normalizeLang, initSiteLocale, dates, SUPPORTED_LANGS } from '../template/assets/engine/i18n.js';
+import { readdirSync, existsSync, readFileSync } from 'node:fs';
+import {
+  t, tp, matchLang, requestedLang, initSiteLocale, dates,
+  SUPPORTED_LANGS, validateLanguages, isBuiltinLang,
+} from '../template/assets/engine/i18n.js';
+import { registerPackLanguages, loadPackStrings, packLanguages } from '../template/assets/engine/language-packs.js';
 
 const ROOT = new URL('../template/', import.meta.url);
 const BASE = 'nb';
 
-/** Alle locale-mapper: motorens site/admin + hver plugins locales/. */
+const PLUGINS = new URL('plugins/', ROOT);
+const pluginDirs = () => readdirSync(PLUGINS, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
+
+/** Alle locale-mapper med FULL paritet: motorens site/admin + hver plugins
+ *  egne tekster. Språkpakkenes locales/site|admin/ hører ikke hit (de kan
+ *  dekke deler av settet); de testes for seg under. */
 function localeDirs() {
   const dirs = [
     new URL('assets/engine/locales/site/', ROOT),
     new URL('assets/engine/locales/admin/', ROOT),
   ];
-  const plugins = new URL('plugins/', ROOT);
-  for (const entry of readdirSync(plugins, { withFileTypes: true })) {
-    if (!entry.isDirectory()) continue;
-    const dir = new URL(`${entry.name}/locales/`, plugins);
-    if (existsSync(dir)) dirs.push(dir);
+  for (const name of pluginDirs()) {
+    const dir = new URL(`${name}/locales/`, PLUGINS);
+    if (existsSync(new URL(`${BASE}.js`, dir))) dirs.push(dir);
   }
   return dirs.filter((d) => existsSync(d));
+}
+
+/** Språkpakkene i repoet: [plugin-id, manifest] for hver med languages. */
+function languagePacks() {
+  const packs = [];
+  for (const name of pluginDirs()) {
+    const manifestFile = new URL(`${name}/plugin.json`, PLUGINS);
+    if (!existsSync(manifestFile)) continue;
+    const manifest = JSON.parse(readFileSync(manifestFile, 'utf-8'));
+    if (Array.isArray(manifest.languages) && manifest.languages.length) packs.push([name, manifest]);
+  }
+  return packs;
 }
 
 async function loadSet(dir) {
@@ -84,16 +103,17 @@ test('site-basen har fallback-datotabeller med 12/12/7/7 innslag', async () => {
   assert.equal(nb.dates.weekdaysShort.length, 7);
 });
 
-test('normalizeLang: no/nb-varianter til nb, samiske varianter til se, ukjent til nb', () => {
+test('matchLang: no/nb-varianter til nb, samiske varianter til se, ukjent gir null', () => {
   for (const [raw, want] of [
-    ['no', 'nb'], ['nb', 'nb'], ['nb-NO', 'nb'], ['NO-nb', 'nb'], ['', 'nb'], [undefined, 'nb'],
+    ['no', 'nb'], ['nb', 'nb'], ['nb-NO', 'nb'], ['NO-nb', 'nb'], ['', null], [undefined, null],
     ['nn', 'nn'], ['nn-NO', 'nn'],
     ['se', 'se'], ['se-NO', 'se'], ['smj', 'se'], ['sma', 'se'],
     ['tr', 'tr'], ['tr-TR', 'tr'],
     ['en', 'en-GB'], ['en-GB', 'en-GB'], ['en-US', 'en-GB'],
-    ['de', 'nb'], ['tull', 'nb'],
+    // Null er meningsbærende: koden kan tilhøre en språkpakke.
+    ['sv', null], ['de', null], ['tull', null],
   ]) {
-    assert.equal(normalizeLang(raw), want, String(raw));
+    assert.equal(matchLang(raw), want, String(raw));
   }
 });
 
@@ -118,6 +138,97 @@ test('initSiteLocale: bytter språk med nb-fallback for manglende nøkler, og ti
   assert.equal(dates().months[2].toLowerCase(), 'march');
   await initSiteLocale('tull-språk');
   assert.equal(t('nav.menu'), 'Meny');
+});
+
+/* ---------- Språkpakker (0.6.8.10) ---------- */
+
+for (const [id, manifest] of languagePacks()) {
+  test(`språkpakken '${id}': manifestet er gyldig, og filene finnes med nøkler fra basen`, async () => {
+    assert.deepEqual(validateLanguages(manifest.languages), [], `${id}: ugyldig languages-liste`);
+    for (const entry of manifest.languages) {
+      for (const kind of ['site', 'admin']) {
+        if (entry[kind] !== true) continue;
+        const file = new URL(`${id}/locales/${kind}/${entry.code}.js`, PLUGINS);
+        assert.ok(existsSync(file), `${id}: lover ${kind}-tekster for ${entry.code}, men filen mangler`);
+        const mod = (await import(file)).default;
+        assert.equal(mod.lang, entry.code, `${id}/${kind}/${entry.code}: lang-feltet matcher koden`);
+        // En pakke KAN dekke deler av settet (basen ligger under), men en
+        // nøkkel som ikke finnes i basen er en skrivefeil som aldri vises.
+        const base = (await import(new URL(`assets/engine/locales/${kind}/${BASE}.js`, ROOT))).default.strings;
+        for (const [key, value] of Object.entries(mod.strings)) {
+          assert.ok(base[key] !== undefined, `${id}/${kind}/${entry.code}: ukjent nøkkel '${key}'`);
+          assert.ok(String(value).trim().length, `${id}/${kind}/${entry.code}: '${key}' er tom`);
+          assert.ok(!String(value).includes('—'), `${id}/${kind}/${entry.code}: '${key}' har tankestrek`);
+          assert.equal(tokensOf(value), tokensOf(base[key]), `${id}/${kind}/${entry.code}: '${key}' har andre {var}-tokens enn basen`);
+        }
+      }
+    }
+  });
+}
+
+test('validateLanguages: krever gyldig kode, eget navn og minst ett register', () => {
+  assert.deepEqual(validateLanguages([{ code: 'sv', name: 'Svenska', site: true }]), []);
+  assert.deepEqual(validateLanguages([{ code: 'pt-BR', name: 'Português', admin: true }]), []);
+  // Innebygde språk kan ikke kapres av en plugin.
+  assert.equal(validateLanguages([{ code: 'nb', name: 'Bokmål', site: true }]).length, 1);
+  assert.equal(validateLanguages([{ code: 'Svensk!', name: 'Svenska', site: true }]).length, 1);
+  assert.equal(validateLanguages([{ code: 'sv', site: true }]).length, 1);
+  assert.equal(validateLanguages([{ code: 'sv', name: 'Svenska' }]).length, 1);
+  assert.equal(validateLanguages([{ code: 'sv', name: 'Svenska', site: 'ja' }]).length, 2);
+  assert.equal(validateLanguages('nei').length, 1);
+});
+
+test('isBuiltinLang: de fem som følger med, ingen andre', () => {
+  for (const lang of SUPPORTED_LANGS) assert.ok(isBuiltinLang(lang));
+  for (const lang of ['sv', 'de', '', undefined]) assert.ok(!isBuiltinLang(lang));
+});
+
+test('requestedLang: innebygd treff, ellers pakkekode som den er, ellers nb', () => {
+  assert.equal(requestedLang('no'), 'nb');
+  assert.equal(requestedLang('en-US'), 'en-GB');
+  assert.equal(requestedLang('sv'), 'sv');
+  assert.equal(requestedLang('pt-BR'), 'pt-BR');
+  assert.equal(requestedLang('tull språk'), 'nb');
+  assert.equal(requestedLang(''), 'nb');
+  assert.equal(requestedLang(undefined), 'nb');
+});
+
+test('packLanguages: leser manifestene til de AKTIVERTE pluginene, hopper over de deaktiverte', async () => {
+  // Oppdagelsen går over fetch (statisk hosting kan ikke liste mapper), så
+  // svarene stubbes her. Kjøres før de andre pakketestene: skanningen gjøres
+  // maks én gang per side, og resultatet caches.
+  const files = {
+    '/plugins/plugins.json': { version: 1, enabled: ['qa-pakke'], disabled: ['qa-avslatt'] },
+    '/plugins/qa-pakke/plugin.json': {
+      id: 'qa-pakke', name: 'QA', version: '1.0.0', requiresEngine: '>=0.5.0',
+      languages: [{ code: 'qa-on', name: 'QA-språk', site: true }],
+    },
+    '/plugins/qa-avslatt/plugin.json': {
+      id: 'qa-avslatt', name: 'QA av', version: '1.0.0', requiresEngine: '>=0.5.0',
+      languages: [{ code: 'qa-off', name: 'Skal ikke med', site: true }],
+    },
+  };
+  const original = globalThis.fetch;
+  globalThis.fetch = async (url) => ({ json: async () => files[url] ?? Promise.reject(new Error('404')) });
+  try {
+    const langs = await packLanguages();
+    const found = langs.find((l) => l.code === 'qa-on');
+    assert.ok(found, 'språket fra den aktiverte pakken mangler');
+    assert.equal(found.plugin, 'qa-pakke');
+    assert.equal(found.site, true);
+    assert.equal(found.admin, false);
+    assert.ok(!langs.some((l) => l.code === 'qa-off'), 'en deaktivert pakke skal ikke tilby språk');
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test('loadPackStrings: innebygde språk og ukjente koder gir null (aldri krasj uten server)', async () => {
+  assert.equal(await loadPackStrings('nb', 'site'), null);
+  assert.equal(await loadPackStrings('finnes-ikke', 'site'), null);
+  // Registrert pakke uten site-dekning: registret svarer nei uten å laste noe.
+  registerPackLanguages('test-pakke', [{ code: 'qa-test', name: 'Testspråk', admin: true }]);
+  assert.equal(await loadPackStrings('qa-test', 'site'), null);
 });
 
 test('tp: flertallskategorier via Intl.PluralRules (nb one/other)', async () => {

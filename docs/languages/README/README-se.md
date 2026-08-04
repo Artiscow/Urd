@@ -37,6 +37,10 @@ Urd sáhttá viiddiduvvot **pluginaiguin** mat orrot du repos ja mat jáddaduvvo
 3. **Neahttasiidu ii dárbbaš huksenproseassa.** Dat mii lea repos lea juste dat maid fierpmádatlohkki viežžá.
 4. **WYSIWYG almmá kompromissaid haga.** Admin čájeha duohta siiddu - seamma mohtor, seamma fiillat.
 
+## Gielat
+
+Doaimmaheaddji ja mohtora teavsttat maid guossit oidnet gávdnojit davvisámegillii, brittalaš eŋgelasgillii, dárogillii (bokmål ja nynorsk) ja durkagillii. Hálddašangiella čuovvu automáhtalaččat du reaidduid giela ja muitojuvvo juohke neahttalogan várás; guossiid giella válljejuvvo Neahttabáiki-panelas. Jorgalusa lasiheapmi dahje buorideapmi lea dušše fiilarievdadus almmá huksenlávkki haga, geahča [CONTRIBUTING.md](../../../CONTRIBUTING.md) (dárogillii). Giela mii ii leat sisahuksejuvvon Urd:i sáhttá lasihit giellapáhkkan: lassemoduvla mas leat dušše jorgalanfiillat, ja mii biddjojuvvo johtui Plugins-panelas.
+
 ## Dokumentašuvdna
 
 Dokumeanttat leat čállojuvvon dárogillii; válddahusat vuolábealde leat jorgaluvvon.

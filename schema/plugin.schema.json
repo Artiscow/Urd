@@ -4,7 +4,14 @@
   "title": "Urd plugin-manifest (plugins/<id>/plugin.json)",
   "description": "Manifest for en Urd-plugin. Pluginens entry er en ES-modul som eksporterer register(Urd) og bruker samme define-APIer som kjernen - inkludert migreringskontrakten. Se docs/SKJEMA.md.",
   "type": "object",
-  "required": ["id", "name", "version", "requiresEngine", "entry", "provides"],
+  "required": ["id", "name", "version", "requiresEngine"],
+  "allOf": [
+    {
+      "$comment": "entry og provides er påkrevd for alt annet enn en ren språkpakke, som ikke har kode å kjøre (0.6.8.10).",
+      "if": { "not": { "required": ["languages"], "properties": { "languages": { "type": "array", "minItems": 1 } } } },
+      "then": { "required": ["entry", "provides"] }
+    }
+  ],
   "additionalProperties": false,
   "properties": {
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
@@ -31,6 +38,34 @@
     "locales": {
       "type": "boolean",
       "description": "Valgfritt (additivt fra 0.6.8): true lover locales/{nb,nn,en-GB,se,tr}.js med pluginens tekster (ADR-0012). Lasteren legger dem i besøkende-registret (site-språket) og i preview også i admin-registret; paritetstesten holder filene i synk."
+    },
+    "languages": {
+      "type": "array",
+      "description": "Valgfritt (additivt fra 0.6.8.10): språk pluginen leverer som SPRÅKPAKKE (ADR-0012). Hvert innslag lover locales/site/<code>.js og/eller locales/admin/<code>.js. En pakke kan ikke overstyre Urds innebygde språk (nb, nn, en-GB, se, tr), og en ren språkpakke trenger verken entry eller provides.",
+      "items": {
+        "type": "object",
+        "required": ["code", "name"],
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$",
+            "not": { "enum": ["nb", "nn", "en-GB", "se", "tr"] },
+            "description": "Språkkoden (BCP 47), f.eks. \"sv\" eller \"pt-BR\". Urds innebygde språk kan ikke overstyres av en plugin."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Språkets EGET navn (endonym), som vises i språkvelgerne"
+          },
+          "site": { "type": "boolean", "description": "Pakken dekker besøkende-tekstene (locales/site/<code>.js)" },
+          "admin": { "type": "boolean", "description": "Pakken dekker admin-chromen (locales/admin/<code>.js)" }
+        },
+        "anyOf": [
+          { "required": ["site"], "properties": { "site": { "const": true } } },
+          { "required": ["admin"], "properties": { "admin": { "const": true } } }
+        ]
+      }
     },
     "csp": {
       "type": "object",

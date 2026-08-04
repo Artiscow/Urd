@@ -35,7 +35,7 @@ import { registerSectionPresets } from './sections/presets.js';
 import { loadPlugins, loadPluginList, applyPluginSiteLocales } from './plugins.js';
 import { setCollectionsDraft } from './samlinger.js';
 import { initSticky, refreshSticky } from './sticky.js';
-import { t, ta, initSiteLocale, initAdminLocale, normalizeLang, siteLang } from './i18n.js';
+import { t, ta, initSiteLocale, initAdminLocale, requestedLang, siteLang } from './i18n.js';
 
 export const Urd = {
   blocks: createRegistry('blocks'),
@@ -208,7 +208,13 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-plugins') {
       // Editorens plugin-utkast: last de aktiverte pluginene (filene ligger alt i repoet)
       // og rerendr, så plugins virker i forhåndsvisningen FØR publisering.
-      loadPluginList(Urd, state.engine, msg.enabled).then(() => {
+      loadPluginList(Urd, state.engine, msg.enabled).then(async () => {
+        // Lista kan ha inneholdt en SPRÅKPAKKE: var utkastets språk ukjent
+        // da site-utkastet kom (eller ved boot), lastes det nå.
+        if (requestedLang(state.site.site?.lang) !== siteLang()) {
+          document.documentElement.lang = await initSiteLocale(state.site.site.lang);
+          await applyPluginSiteLocales();
+        }
         renderPage(state.page, state.site, root, vp());
         // Meld plugin-blokkene tilbake (type, label, defaults), så Blokker-
         // panelet i admin kan vise dem i sin egen «Fra plugins»-seksjon.
@@ -257,7 +263,7 @@ function enablePreview(state, opts) {
       // Endret site.lang i utkastet: last besøkende-localen på nytt FØR
       // re-render, så previewen er WYSIWYG også for språket (booten leste
       // den publiserte site.json og kan ha et annet språk).
-      if (normalizeLang(state.site.site.lang) !== siteLang()) {
+      if (requestedLang(state.site.site.lang) !== siteLang()) {
         // Plugin-tekstene legges oppå igjen: initSiteLocale bygger ordboka
         // fra motorens nb-base, uten plugin-nøklene.
         initSiteLocale(state.site.site.lang).then(async (lang) => {

@@ -25,7 +25,8 @@ sist kjente liste), og av/på-valget publiseres som en vanlig endring.
 Manifestkrav: `requiresEngine` (semver-intervall mot motorversjonen i
 urd.json), `provides` (hva pluginen definerer), og valgfritt `csp`
 (eksterne opprinnelser pluginen trenger; se ADR-0006 - `_headers` endres
-aldri automatisk, admin viser eieren hva som må legges inn).
+aldri automatisk, admin viser eieren hva som må legges inn). `entry` og
+`provides` er valgfrie for rene språkpakker, som ikke har kode (se under).
 
 ## Flerspråk (ADR-0012)
 
@@ -57,6 +58,49 @@ export default { lang: 'nb', strings: { '<id>.nokkel': 'Tekst', '<id>.edit.nokke
 - `"names": {"nb": "Kalender", "en-GB": "Calendar", …}` i manifestet gir
   Plugins-panelet og «Fra pluginen …»-tekstene et visningsnavn per
   admin-språk (`name` er fallback).
+
+## Språkpakker: en plugin som KUN er et språk
+
+Trenger du et språk Urd ikke har innebygd, lages det som en plugin uten
+kode. `sprak-svensk` er referansen (svensk for besøkende-siden):
+
+```json
+// plugins/sprak-svensk/plugin.json - ingen entry, ingen provides
+{
+  "id": "sprak-svensk",
+  "name": "Svensk språkpakke",
+  "version": "1.0.0",
+  "requiresEngine": ">=0.5.0 <1.0.0",
+  "languages": [{ "code": "sv", "name": "Svenska", "site": true, "admin": false }]
+}
+```
+
+```
+plugins/sprak-svensk/locales/site/sv.js     besøkende-tekstene (t())
+plugins/sprak-svensk/locales/admin/sv.js    admin-chromen (ta())
+```
+
+- **Filene har samme form og nøkler som motorens egne** locale-filer:
+  kopier `assets/engine/locales/site/nb.js` (28 nøkler) eller
+  `.../admin/nb.js` (984 nøkler) og oversett verdiene. Nøklene endres
+  aldri.
+- **`site` og `admin` er uavhengige.** En pakke kan dekke besøkende-siden,
+  admin-chromen eller begge; feltene sier hva du faktisk leverer, og bare
+  det som er lovet blir etterspurt.
+- **Bokmålsbasen ligger under**, så en delvis pakke virker: nøkler du ikke
+  har oversatt vises på bokmål i stedet for å forsvinne. Paritetstesten
+  krever derfor ikke fullt sett for pakker, men slår ned på nøkler som
+  ikke finnes i basen (skrivefeil som aldri ville vist seg).
+- **Innebygde språk kan ikke overstyres** (`nb`, `nn`, `en-GB`, `se`,
+  `tr`): en plugin skal ikke kunne kapre bokmål. Vil du forbedre et av
+  dem, rediger motorens egen locale-fil (se [CONTRIBUTING.md](../../CONTRIBUTING.md)).
+- **Språket blir tilgjengelig når pakken er aktivert** i Plugins-panelet.
+  Besøkende-språket (Nettsted-panelet) følger utkastet med én gang;
+  admin-språkvelgeren tilbyr pakken etter publisering, siden admin leser
+  den publiserte plugin-lista ved oppstart.
+- **Datoer, flertall og relativ tid trenger ingen oversettelse**: de går
+  via `Intl` med språkkoden din, så lenge nettleseren har CLDR-data for
+  den.
 
 **Hjelpechip-regelen (ADR-0008)**: har blokken din spesialfunksjoner
 (egne paneler, konvensjoner i innholdet, automatikk), SKAL den ha en

@@ -3,6 +3,17 @@
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.8.10): språkpakke-plugins
+
+- [ ] Aktivering: åpne Plugins-panelet - «Svensk språkpakke» står der (deaktivert), viser «Språkpakke: Svenska» og ingen versjonsadvarsel. Slå den på og publiser
+- [ ] Besøkende-språket: Nettsted > Språk viser nå Svenska alfabetisk mellom Norsk nynorsk og Türkçe. Velg det, og se i forhåndsvisningen at meny, «Till toppen», lysboks, galleri og nyhetsbrev-skjemaet er svenske MENS admin fortsatt er på ditt eget språk
+- [ ] Publisert side: last den ekte siden med site.lang = sv - samme svenske chrome, og `<html lang="sv">` i kilden. Datobadger og kalender-månedsnavn er svenske via Intl (ikke oversatt i pakken)
+- [ ] Delvis dekning: pakken dekker KUN besøkende-siden, så admin-språkvelgeren skal IKKE tilby Svenska. Sjekk at den ikke dukker opp der
+- [ ] Deaktivering: slå pakken av igjen mens site.lang fortsatt er sv - siden faller til bokmål uten å kræsje, og velgeren beholder «sv» som eget alternativ så verdien ikke går tapt
+- [ ] Utkast vs. publisert: slå pakken på UTEN å publisere - språket skal være valgbart i Nettsted-panelet og virke i forhåndsvisningen (utkastlista), men admin-språkvelgeren venter til det er publisert
+- [ ] Lag din egen: følg «Språkpakker»-avsnittet i template/plugins/README.md og lag en pakke for et språk med admin-dekning (kopier locales/admin/nb.js, oversett noen nøkler) - de uoversatte nøklene skal vises på bokmål, ikke som nøkkelnavn
+- [ ] Ingen ekstra last for innebygde språk: med site.lang = nb/en-GB skal nettverksfanen ikke vise language-packs.js i det hele tatt
+
 ### Testrunde-batch (0.6.8.9): dokumentasjonen på fem språk
 
 - [ ] GitHub-visningen: åpne repoet på github.com - READMEen vises på engelsk med logo, språklinje og uttale-avsnittet; klikk gjennom alle fire språklenker og tilbake igjen (GitHub gjengir relative lenker riktig)

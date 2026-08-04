@@ -8,11 +8,12 @@
  * engelsk. Ordbøkene kjøretids-importeres og bundles aldri.
  */
 import { mount } from 'svelte';
-import { detectAdminLang, initAdminLocale } from '../../template/assets/engine/i18n.js';
+import { initAdminLocale } from '../../template/assets/engine/i18n.js';
 import App from './App.svelte';
 
-const lang = detectAdminLang();
-document.documentElement.lang = lang;
-await initAdminLocale(lang);
+// Dokumentets lang settes fra det som FAKTISK ble lastet: et valgt
+// språkpakke-språk som ikke lenger er installert faller til bokmål, og da
+// skal attributtet følge teksten.
+document.documentElement.lang = await initAdminLocale();
 
 export default mount(App, { target: document.getElementById('urd-admin') });

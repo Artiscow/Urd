@@ -37,6 +37,10 @@ Urd, deponda yaşayan ve adminden açılan **eklentilerle** genişletilebilir. R
 3. **Web sitesi derleme süreci gerektirmez.** Depoda ne varsa tarayıcının yüklediği tam olarak odur.
 4. **Ödünsüz WYSIWYG.** Admin gerçek sayfayı gösterir - aynı motor, aynı dosyalar.
 
+## Diller
+
+Düzenleyici ve motorun ziyaretçilere gösterdiği metinler Kuzey Sami dili, İngiliz İngilizcesi, Norveççe (bokmål ve nynorsk) ve Türkçe olarak vardır. Yönetim dili öntanımlı olarak cihazınızın dilini izler ve tarayıcı başına hatırlanır; ziyaretçilerin gördüğü dil Site panelinden seçilir. Bir çeviriyi eklemek ya da iyileştirmek, derleme adımı olmayan düz bir dosya değişikliğidir; bkz. [CONTRIBUTING.md](../../../CONTRIBUTING.md) (Norveççe). Urd'un yerleşik olarak sunmadığı bir dil, dil paketi olarak eklenebilir: yalnızca çeviri dosyalarından oluşan ve Eklentiler panelinden açılan bir eklenti.
+
 ## Belgeler
 
 Belgeler Norveççe yazılmıştır; aşağıdaki açıklamalar çevrilmiştir.

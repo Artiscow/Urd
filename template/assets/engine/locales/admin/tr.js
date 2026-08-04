@@ -446,6 +446,7 @@ export default {
     'ph.videoUrl': 'https://youtube.com/watch?v=… veya vimeo.com/…',
     'plugin.alreadyListed': 'Eklenti zaten listede',
     'plugin.cspNeeded': '_headers içinde CSP istisnaları gerekli: {list}',
+    'plugin.languages': 'Dil paketi: {list}',
     'plugin.engineMismatch': '{required} motor sürümü gerekli (bu site {current} çalıştırıyor); eklenti yüklemede atlanır.',
     'plugin.invalidId': 'Geçersiz kimlik: küçük harf, rakam ve tire kullan (plugins/ içindeki klasör adı)',
     'plugin.invalidManifest': 'Geçerli bir eklenti bulunamadı: {errors}',

@@ -62,7 +62,10 @@ Norsk bokmål (`nb.js`) er basen i alle sett: en nøkkel som mangler i et annet 
    ```bash
    node --test tests/i18n.test.mjs
    ```
-6. Nytt språk (ikke bare en oppdatering av et eksisterende)? Legg koden inn i `SUPPORTED_LANGS` og `matchLang` i `template/assets/engine/i18n.js`, og i `LANG_OPTIONS` i `editor/src/App.svelte` (med språkets EGET navn, alfabetisk sortert). Da må editoren bygges (`cd editor && npm run build`) og bundelen committes.
+**Nytt språk?** Da er det to veier, og den første krever fortsatt ingen bygging:
+
+- **Som språkpakke** (anbefalt, og den eneste veien som ikke rører Urds kode): en plugin uten kode, med `languages` i manifestet og filene i `locales/site/<kode>.js` og `locales/admin/<kode>.js`. Den kan legges i et hvilket som helst Urd-repo og slås på i Plugins-panelet, uten å vente på oss. Referansen er `template/plugins/sprak-svensk/`, og formen er beskrevet i [template/plugins/README.md](template/plugins/README.md).
+- **Innebygd i Urd** (språket følger med alle nye sider): legg koden inn i `SUPPORTED_LANGS` og `matchLang` i `template/assets/engine/i18n.js`, og i `LANG_OPTIONS` i `editor/src/App.svelte` (med språkets EGET navn, alfabetisk sortert). Da må editoren bygges (`cd editor && npm run build`) og bundelen committes. Et innebygd språk krever fullt nøkkelsett i alle tre settene.
 
 **Gjennomgang av eksisterende oversettelser er også et bidrag.** Den nordsamiske oversettelsen er et maskinskrevet førsteutkast som venter på gjennomgang av en morsmålsbruker; filene er merket med det. Retter du språkfeil der, er det like verdifullt som en ny oversettelse.
 

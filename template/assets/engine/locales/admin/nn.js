@@ -446,6 +446,7 @@ export default {
     'ph.videoUrl': 'https://youtube.com/watch?v=… eller vimeo.com/…',
     'plugin.alreadyListed': 'Pluginen står allereie i lista',
     'plugin.cspNeeded': 'Treng CSP-unntak i _headers: {list}',
+    'plugin.languages': 'Språkpakke: {list}',
     'plugin.engineMismatch': 'Krev motorversjon {required} (denne sida køyrer {current}); pluginen blir hoppa over ved lasting.',
     'plugin.invalidId': 'Ugyldig id: bruk små bokstavar, tal og bindestrek (mappenamnet i plugins/)',
     'plugin.invalidManifest': 'Fann ingen gyldig plugin: {errors}',

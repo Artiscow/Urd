@@ -557,6 +557,31 @@
     ['nn', 'Norsk nynorsk'],
     ['tr', 'Türkçe'],
   ];
+
+  /** Språk fra språkpakke-plugins (0.6.8.10): koder motoren ikke har
+   *  innebygd. Alfabetisk på språkets eget navn, som de innebygde. */
+  const sortLangs = (list) => [...list].sort((a, b) => a[1].localeCompare(b[1]));
+  function packLangOptions(ids, kind) {
+    const out = [];
+    for (const id of ids) {
+      for (const lang of pluginInfo[id]?.languages ?? []) {
+        if (lang[kind] === true && !out.some(([code]) => code === lang.code)) out.push([lang.code, lang.name]);
+      }
+    }
+    return out;
+  }
+  /** Admin-velgeren følger den PUBLISERTE plugin-lista: det er den motoren
+   *  leser ved oppstart, så et valg herfra virker med én gang. Et lagret
+   *  valg som ikke finnes lenger (pakken er fjernet) beholdes som eget
+   *  alternativ, så velgeren aldri står tom. */
+  function adminLangOptions() {
+    const options = sortLangs([...LANG_OPTIONS, ...packLangOptions(publishedPluginIds, 'admin')]);
+    const known = adminLangChoice === 'auto' || options.some(([code]) => code === adminLangChoice);
+    return known ? options : [[adminLangChoice, adminLangChoice], ...options];
+  }
+  /** Besøkende-språket følger utkastet: site.lang publiseres sammen med
+   *  plugin-utkastet, så en pakke som slås på nå gjelder samme publisering. */
+  const sitePackLangs = () => packLangOptions(pluginsView?.enabled ?? [], 'site');
   const adminLangChoice = localStorage.getItem('urd-admin-lang') ?? 'auto';
   function setAdminLang(v) {
     if (v === adminLangChoice) return;
@@ -1435,8 +1460,17 @@
     }
   }
 
-  // Historikk-datoene følger admin-språket (Intl har alle de støttede).
-  const historyDate = new Intl.DateTimeFormat(currentAdminLang(), { dateStyle: 'short', timeStyle: 'short' });
+  // Historikk-datoene følger admin-språket (Intl har alle de innebygde).
+  // Et språkpakke-språk kan være en kode Intl ikke godtar: da faller vi til
+  // nettleserens eget format i stedet for å felle hele panelet.
+  const historyDate = (() => {
+    const opts = { dateStyle: 'short', timeStyle: 'short' };
+    try {
+      return new Intl.DateTimeFormat(currentAdminLang(), opts);
+    } catch {
+      return new Intl.DateTimeFormat(undefined, opts);
+    }
+  })();
 
   /**
    * Etter en angring viser editoren fortsatt innholdet fra FØR angringen
@@ -1923,8 +1957,9 @@
   }
   function siteLangOptions() {
     const cur = siteLangValue();
-    const known = LANG_OPTIONS.some(([code]) => code === cur);
-    return [...(known ? [] : [[cur, cur]]), ...LANG_OPTIONS];
+    const options = sortLangs([...LANG_OPTIONS, ...sitePackLangs()]);
+    const known = options.some(([code]) => code === cur);
+    return [...(known ? [] : [[cur, cur]]), ...options];
   }
   function setSiteLang(v) {
     siteMutate('site', () => { siteDraft.site.lang = v; });
@@ -2188,6 +2223,9 @@
   let pluginError = $state('');
   /** Plugin-mapper funnet i repoet (via publiseringslaget) som ikke står i plugins.json ennå. */
   let pluginsFound = $state([]);
+  /** Pluginene som er aktive i den PUBLISERTE plugins.json (ikke utkastet):
+   *  admin-språkvelgeren kan kun tilby språkpakker motoren alt kan laste. */
+  let publishedPluginIds = $state([]);
   /** 'pending' | 'ok' | 'unavailable': skriv-inn-navn-feltet er kun reserveløsning når oppdagelsen ikke virker. */
   let pluginDiscovery = $state('pending');
 
@@ -2203,6 +2241,7 @@
     try {
       published = await (await fetch('/plugins/plugins.json')).json();
     } catch { /* ingen plugin-indeks er helt greit */ }
+    publishedPluginIds = published.enabled ?? [];
     pluginsStore = createDraftStore('urd-draft-plugins', () => published, draftSaveError);
     syncPluginsView();
     try {
@@ -3825,7 +3864,7 @@
                 <label title={ta('topbar.adminTheme.title')}>{ta('settings.theme')}
                   <Dropdown value={adminTheme} options={ADMIN_THEMES} onchange={(v) => (adminTheme = v)} /></label>
                 <label title={ta('topbar.language.title')}>{ta('settings.language')}
-                  <Dropdown value={adminLangChoice} options={[['auto', ta('lang.auto')], ...LANG_OPTIONS]} onchange={setAdminLang} /></label>
+                  <Dropdown value={adminLangChoice} options={[['auto', ta('lang.auto')], ...adminLangOptions()]} onchange={setAdminLang} /></label>
               </div>
             {/if}
           </span>
@@ -4730,6 +4769,9 @@
                       <p class="panel-hint plugin-warn">{ta('plugin.engineMismatch', { required: info.requiresEngine, current: pluginEngine })}</p>
                     {:else if info?.csp}
                       <p class="panel-hint plugin-warn">{ta('plugin.cspNeeded', { list: [...(info.csp.connectSrc ?? []).map((d) => `connect-src ${d}`), ...(info.csp.frameSrc ?? []).map((d) => `frame-src ${d}`)].join(', ') })}</p>
+                    {/if}
+                    {#if info?.languages?.length}
+                      <p class="panel-hint">{ta('plugin.languages', { list: info.languages.map((l) => l.name).join(', ') })}</p>
                     {/if}
                   </div>
                 {/each}

@@ -449,6 +449,7 @@ export default {
     'ph.videoUrl': 'https://youtube.com/watch?v=… dahje vimeo.com/…',
     'plugin.alreadyListed': 'Plugin lea juo listtus',
     'plugin.cspNeeded': 'Dárbbaša CSP-spiehkastagaid _headers fiillas: {list}',
+    'plugin.languages': 'Giellapáhkka: {list}',
     'plugin.engineMismatch': 'Gáibida mohtorveršuvnna {required} (dát siidu vuodjá {current}); plugin njuiketuvvo viežžamis.',
     'plugin.invalidId': 'Gustohis id: geavat unna bustávaid, loguid ja gaskastreahka (máhpa namma plugins/ máhpas)',
     'plugin.invalidManifest': 'Ii gávdnan gustojeaddji plugin: {errors}',

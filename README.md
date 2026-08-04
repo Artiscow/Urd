@@ -43,7 +43,7 @@ Urd can be extended with **plugins** that live in your repo and are switched on 
 
 ## Languages
 
-The editor and the engine texts your visitors see are available in Northern Sámi, British English, Norwegian (bokmål and nynorsk) and Turkish. The admin language follows your device by default and is remembered per browser; the site language is chosen in the Site panel. Adding or improving a translation is a plain file change with no build step - see [CONTRIBUTING.md](CONTRIBUTING.md).
+The editor and the engine texts your visitors see are available in Northern Sámi, British English, Norwegian (bokmål and nynorsk) and Turkish. The admin language follows your device by default and is remembered per browser; the site language is chosen in the Site panel. Adding or improving a translation is a plain file change with no build step - see [CONTRIBUTING.md](CONTRIBUTING.md). A language Urd does not ship with can be added as a language pack: a plugin that is only translation files, switched on in the Plugins panel.
 
 ## Documentation
 

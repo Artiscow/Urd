@@ -7,7 +7,7 @@
  * så en plugin som kaster halvveis etterlater aldri halvferdige registreringer.
  */
 
-import { siteLang, adminLang, addSiteDict, addAdminDict } from './i18n.js';
+import { siteLang, adminLang, addSiteDict, addAdminDict, validateLanguages } from './i18n.js';
 
 /** Tolker «x.y.z» til [x, y, z], eller null når strengen ikke er semver. */
 export function parseSemver(text) {
@@ -59,8 +59,16 @@ export function validateManifest(manifest) {
   if (typeof manifest.name !== 'string' || !manifest.name) errors.push('name mangler');
   if (!parseSemver(manifest.version ?? '')) errors.push('version er ikke semver');
   if (typeof manifest.requiresEngine !== 'string' || !manifest.requiresEngine) errors.push('requiresEngine mangler');
-  if (typeof manifest.entry !== 'string' || !manifest.entry.endsWith('.js')) errors.push('entry mangler eller er ikke en .js-fil');
-  if (!manifest.provides || typeof manifest.provides !== 'object') errors.push('provides mangler');
+  // En ren SPRÅKPAKKE har ingen kode: da er entry og provides valgfrie.
+  // Er de likevel oppgitt, gjelder de vanlige kravene.
+  const isLanguagePack = Array.isArray(manifest.languages) && manifest.languages.length > 0;
+  if (manifest.entry !== undefined || !isLanguagePack) {
+    if (typeof manifest.entry !== 'string' || !manifest.entry.endsWith('.js')) errors.push('entry mangler eller er ikke en .js-fil');
+  }
+  if (manifest.provides !== undefined || !isLanguagePack) {
+    if (!manifest.provides || typeof manifest.provides !== 'object') errors.push('provides mangler');
+  }
+  if (manifest.languages !== undefined) errors.push(...validateLanguages(manifest.languages));
   // Valgfrie flerspråk-felt (additive fra 0.6.8): locales lover locales/<lang>.js-filer,
   // names er visningsnavn per admin-språk.
   if (manifest.locales !== undefined && typeof manifest.locales !== 'boolean') errors.push('locales må være boolsk');
@@ -219,6 +227,18 @@ export async function loadPluginById(Urd, engineVersion, id) {
     // initSiteLocale i boot. Preview: urd-plugins-meldingen kommer etter
     // initAdminLocale, så begge registrene er klare.
     if (manifest.locales === true) await applyPluginLocale(id);
+    // Språkpakkens språk meldes inn før noe rendres, så previewen kjenner
+    // et utkast-aktivert pakkespråk uten å lese manifestene på nytt.
+    // Pakkemodulen hentes kun her, aldri for en plugin uten languages.
+    if (manifest.languages?.length) {
+      const { registerPackLanguages } = await import(/* @vite-ignore */ '/assets/engine/language-packs.js');
+      registerPackLanguages(id, manifest.languages);
+    }
+    // Ren språkpakke: ingen entry, ingenting å kjøre.
+    if (!manifest.entry) {
+      loadedPlugins.add(id);
+      return;
+    }
     const mod = await import(`/plugins/${id}/${manifest.entry}`);
     if (typeof mod.register !== 'function') {
       console.warn(`Urd: plugin '${id}' mangler register()-eksport`);
