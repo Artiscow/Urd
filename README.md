@@ -2,55 +2,72 @@
   <img src="docs/brand/urd-logo-turkis.svg" alt="Urd" width="200">
 </p>
 
-> Urd er trolig den eldste av de tre nornene i norrøn mytologi som sitter ved foten av Yggdrasil og bestemmer æsenes skjebner. Sammen sitter nornene og spinner skjebnetråder eller risser skjebnen inn i trestykker.
-> Urd er verktøyet for å spinne og risse inn din egen nettside ut fra treets rot.
+<p align="center">
+  <a href="docs/languages/README/README-se.md">Sámegiella</a> ·
+  <strong>🇬🇧 English</strong> ·
+  <a href="docs/languages/README/README-nb.md">🇳🇴 Bokmål</a> ·
+  <a href="docs/languages/README/README-nn.md">🇳🇴 Nynorsk</a> ·
+  <a href="docs/languages/README/README-tr.md">🇹🇷 Türkçe</a>
+</p>
 
-**Status: under utvikling - ikke klar til bruk ennå.** Se [veikartet](docs/VEIKART.md) for hvor langt vi er kommet.
+> Urd is probably the eldest of the three norns in Norse mythology who sit at the foot of Yggdrasil and decide the fates of the gods. Together the norns sit and spin threads of fate, or carve fate into pieces of wood.
+> Urd is the tool for spinning and carving your own website out from the root of the tree.
 
-## Hva er Urd?
+**Saying the name:** *Urd* is pronounced roughly **oord** (Norwegian [ʉːɖ]). The vowel is close to the "oo" in *food*, but with the lips more rounded and pushed forward, and the "rd" melts into a single sound made with the tip of the tongue curled back. English speakers already know a relative of the word: *weird* comes from Old English *wyrd*, fate, the same root as the Old Norse *Urðr*.
 
-Urd er en open source nettsidebygger der **repoet du kloner ER nettsiden din** - og nettsiden er sin egen bygger. Et gratis, statisk, git-eid alternativ til Squarespace, Wix og Publii.
+**Status: under development - not ready for use yet.** See [the roadmap](docs/VEIKART.md) for how far we have come.
 
-Ingen server. Ingen database. Ingen abonnement. Ingen byggeprosess. Bare et git-repo med lesbare filer som du eier selv, og som kan serveres av hvilken som helst statisk host (Cloudflare Pages, GitHub Pages, …).
+## What is Urd?
 
-## Slik fungerer det
+Urd is an open source website builder where **the repo you clone IS your website** - and the website is its own builder. A free, static, git-owned alternative to Squarespace, Wix and Publii.
 
-1. **Klon** Urd-malen til ditt eget repo og koble det til en statisk host.
-2. **Sett opp** siden din gjennom oppsettsveiviseren - navn, farger, logo.
-3. **Rediger** ved å gå til `dinside.no/admin` og logge inn med GitHub. Der er hele byggeren: klikk og skriv rett på siden, dra blokker fritt på et grid, legg til seksjoner, rediger bakgrunner, farger og navigasjon.
-4. **Publiser** - ett klikk lager én git-commit med endringene dine, og hosten serverer den nye siden på under et minutt.
+No server. No database. No subscription. No build process. Just a git repo with readable files that you own yourself, and that can be served by any static host (Cloudflare Pages, GitHub Pages, …).
 
-Etter første oppsett er admin-siden kontrollsenteret for nettsiden din. Alt du ser på siden kan redigeres derfra.
+## How it works
 
-Urd kan utvides med **plugins** som bor i repoet ditt og skrus på i admin. Tre følger med som referanse: kalender (abonnerbar feed med fire visninger), kontaktskjema (mailto eller eget endepunkt) og kart (personvennlig OpenStreetMap). Se [template/plugins/README.md](template/plugins/README.md) for å lage egne.
+1. **Clone** the Urd template into your own repo and connect it to a static host.
+2. **Set up** your site through the setup wizard - name, colours, logo.
+3. **Edit** by going to `yoursite.org/admin` and logging in with GitHub. The whole builder is there: click and type directly on the page, drag blocks freely on a grid, add sections, edit backgrounds, colours and navigation.
+4. **Publish** - one click makes one git commit with your changes, and the host serves the new page in under a minute.
 
-## De fire løftene
+After the first setup, the admin page is the control centre for your website. Everything you see on the page can be edited from there.
 
-1. **Du eier alt.** Siden din er et git-repo med lesbare filer. Ingen innlåsing.
-2. **En oppdatering knuser aldri en bygget side.** Alt innhold har `version` + migreringer som løfter gammel data trygt fremover.
-3. **Nettsiden trenger ingen byggeprosess.** Det som ligger i repoet er nøyaktig det nettleseren laster.
-4. **WYSIWYG uten kompromiss.** Admin viser den ekte siden - samme motor, samme filer.
+Urd can be extended with **plugins** that live in your repo and are switched on in admin. Three are included as references: calendar (subscribable feed with four views), contact form (mailto or your own endpoint) and map (privacy-friendly OpenStreetMap). See [template/plugins/README.md](template/plugins/README.md) to build your own.
 
-## Dokumentasjon
+## The four promises
 
-| Dokument | Innhold |
+1. **You own everything.** Your site is a git repo with readable files. No lock-in.
+2. **An update never breaks a built site.** All content has `version` + migrations that carry old data safely forward.
+3. **The website needs no build process.** What is in the repo is exactly what the browser loads.
+4. **WYSIWYG without compromise.** Admin shows the real page - same engine, same files.
+
+## Languages
+
+The editor and the engine texts your visitors see are available in Northern Sámi, British English, Norwegian (bokmål and nynorsk) and Turkish. The admin language follows your device by default and is remembered per browser; the site language is chosen in the Site panel. Adding or improving a translation is a plain file change with no build step - see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Documentation
+
+The project documents are written in Norwegian; the descriptions below are translated.
+
+| Document | Contents |
 |---|---|
-| [docs/VISJON.md](docs/VISJON.md) | Hva Urd er, hvem det er for, og løftene som styrer alle valg |
-| [docs/ARKITEKTUR.md](docs/ARKITEKTUR.md) | Systemoversikt: motoren, editoren, publiseringsflyten |
-| [docs/SKJEMA.md](docs/SKJEMA.md) | Datamodellen - kontrakten alt bygger på |
-| [docs/VEIKART.md](docs/VEIKART.md) | Faser fra skjelett til v1.0 |
-| [docs/BRUKERVEILEDNING.md](docs/BRUKERVEILEDNING.md) | For sideeiere: hvordan editoren brukes, uten kode |
-| [docs/UTVIKLING.md](docs/UTVIKLING.md) | For oss som utvikler Urd: oppsett, regler, vanlige oppgaver |
-| [docs/OPPSETT-PUBLISERING.md](docs/OPPSETT-PUBLISERING.md) | Engangsoppsett av publisering: GitHub OAuth-app + Cloudflare |
-| [docs/BACKLOG.md](docs/BACKLOG.md) | Løpende oppgaveliste: gjøremål, bugs og forslag |
-| [docs/TESTRUNDER.md](docs/TESTRUNDER.md) | Eiers sjekkliste: levert arbeid som venter på testing |
-| [docs/sammenligning/FUNKSJONSKART.md](docs/sammenligning/FUNKSJONSKART.md) | Funksjonssammenligning mot andre nettsidebyggere med gap-analyse |
-| [docs/sammenligning/LAERDOMMER.md](docs/sammenligning/LAERDOMMER.md) | Hvordan andre nettsidebyggere bygger, og hva vi kan hente (arkitektur og mønstre) |
-| [docs/sammenligning/ELEMENTKART.md](docs/sammenligning/ELEMENTKART.md) | Elementer og funksjoner: hvordan de tilbys brukeren og hvordan de bygges |
-| [docs/CHANGELOG.md](docs/CHANGELOG.md) | Endringslogg per push |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Slik bidrar du: fork, gren, tester, pull request |
-| [docs/adr/](docs/adr/) | Arkitekturbeslutninger med begrunnelse |
+| [Vision](docs/languages/VISION-en-GB.md) | What Urd is, who it is for, and the promises that govern every decision |
+| [docs/ARKITEKTUR.md](docs/ARKITEKTUR.md) | System overview: the engine, the editor, the publishing flow (in Norwegian) |
+| [docs/SKJEMA.md](docs/SKJEMA.md) | The data model - the contract everything builds on (in Norwegian) |
+| [Roadmap](docs/languages/ROADMAP-en-GB.md) | Phases from skeleton to v1.0 |
+| [User guide](docs/languages/user-guide/GUIDE-en-GB.md) | For site owners: how the editor is used, without code |
+| [Development](docs/languages/DEVELOPMENT-en-GB.md) | For those of us developing Urd: setup, rules, common tasks |
+| [Publishing setup](docs/languages/setup-publication/SETUP-en-GB.md) | One-time publishing setup: GitHub OAuth app + Cloudflare |
+| [docs/BACKLOG.md](docs/BACKLOG.md) | Running task list: to-dos, bugs and suggestions (in Norwegian) |
+| [docs/TESTRUNDER.md](docs/TESTRUNDER.md) | Checklist for manual testing: delivered work waiting to be tested (in Norwegian) |
+| [docs/languages/](docs/languages/) | All translated documents (the user guide in five languages; the rest in English) |
+| [docs/sammenligning/FUNKSJONSKART.md](docs/sammenligning/FUNKSJONSKART.md) | Feature comparison against other website builders with a gap analysis (in Norwegian) |
+| [docs/sammenligning/LAERDOMMER.md](docs/sammenligning/LAERDOMMER.md) | How other website builders are built, and what we can take from them (in Norwegian) |
+| [docs/sammenligning/ELEMENTKART.md](docs/sammenligning/ELEMENTKART.md) | Elements and features: how they are offered to the user and how they are built (in Norwegian) |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | Change log per push (in Norwegian) |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute: fork, branch, tests, pull request (in Norwegian) |
+| [docs/adr/](docs/adr/) | Architecture decisions with reasoning (in Norwegian) |
 
-## Lisens
+## Licence
 
 [MIT](LICENSE)

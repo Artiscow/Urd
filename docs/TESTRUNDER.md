@@ -3,6 +3,16 @@
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.8.9): dokumentasjonen på fem språk
+
+- [ ] GitHub-visningen: åpne repoet på github.com - READMEen vises på engelsk med logo, språklinje og uttale-avsnittet; klikk gjennom alle fire språklenker og tilbake igjen (GitHub gjengir relative lenker riktig)
+- [ ] Lenkelinjene: fra hvert dokument, klikk hvert språk - ingen 404, og gjeldende språk er uthevet uten lenke. Sjekk også de to-språks-linjene (utvikling, veikart, visjon)
+- [ ] Brukerveiledningen mot ekte admin: sett admin til English (UK) og følg den engelske veiledningen - knappe- og panelnavnene i teksten skal matche det som faktisk står på skjermen. Gjenta stikkprøve på tyrkisk
+- [ ] Oppsettsguiden: følg den engelske utgaven mot et ekte Cloudflare/GitHub-oppsett - menyvalgene står på engelsk (som i dashbordet), og feilsøkingstabellens symptomer matcher Urds faktiske meldinger
+- [ ] Uttale-avsnittet: leser det naturlig for en engelsktalende, og stemmer *weird*-etymologien? (Samme på tyrkisk)
+- [ ] Samisk gjennomgang: be gjerne en med nordsamisk som morsmål se over README-se.md, GUIDE-se.md og SETUP-se.md (alle er merket som maskinutkast)
+- [ ] CONTRIBUTING: følg «Bidra med språk»-oppskriften som om du var en ny bidragsyter - er stegene nok til å legge inn en rettelse og verifisere den med paritetstesten?
+
 ### Testrunde-batch (0.6.8.8): plugin-locales (kalender, skjema, kart)
 
 - [ ] Besøkende-språket: sett site.lang til en-GB og se på en side med kalender/skjema/kart - «Next event»-panelet, nedtellingen (Today!/Tomorrow/In {n} days), Abonner-knappene, skjemaets valideringsmeldinger og «Send», kartets «View larger map» følger språket; månedsnavn/ukedager i kalenderen likeså

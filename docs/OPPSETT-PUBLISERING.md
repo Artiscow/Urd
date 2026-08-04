@@ -1,5 +1,7 @@
 # Oppsett av publisering (GitHub + Cloudflare Pages)
 
+[Sámegiella](languages/setup-publication/SETUP-se.md) · [🇬🇧 English](languages/setup-publication/SETUP-en-GB.md) · **🇳🇴 Bokmål** · [🇳🇴 Nynorsk](languages/setup-publication/SETUP-nn.md) · [🇹🇷 Türkçe](languages/setup-publication/SETUP-tr.md)
+
 Denne guiden setter opp «Publiser»-knappen: at admin kan committe endringer til GitHub-repoet, som Cloudflare Pages så deployer. Dette er en engangsjobb per nettside og tar rundt ti minutter. (Mønsteret er validert i produksjon i ApeironLF.)
 
 ## Forutsetninger

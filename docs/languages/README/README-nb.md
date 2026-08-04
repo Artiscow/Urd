@@ -1,0 +1,61 @@
+<p align="center">
+  <img src="../../brand/urd-logo-turkis.svg" alt="Urd" width="200">
+</p>
+
+[Sámegiella](README-se.md) · [🇬🇧 English](../../../README.md) · **🇳🇴 Bokmål** · [🇳🇴 Nynorsk](README-nn.md) · [🇹🇷 Türkçe](README-tr.md)
+
+Norsk utgave av README. Hovedutgaven i repo-roten er på engelsk; norsk er prosjektets arbeidsspråk og gjelder for resten av dokumentasjonen.
+
+> Urd er trolig den eldste av de tre nornene i norrøn mytologi som sitter ved foten av Yggdrasil og bestemmer æsenes skjebner. Sammen sitter nornene og spinner skjebnetråder eller risser skjebnen inn i trestykker.
+> Urd er verktøyet for å spinne og risse inn din egen nettside ut fra treets rot.
+
+**Status: under utvikling - ikke klar til bruk ennå.** Se [veikartet](../../VEIKART.md) for hvor langt vi er kommet.
+
+## Hva er Urd?
+
+Urd er en open source nettsidebygger der **repoet du kloner ER nettsiden din** - og nettsiden er sin egen bygger. Et gratis, statisk, git-eid alternativ til Squarespace, Wix og Publii.
+
+Ingen server. Ingen database. Ingen abonnement. Ingen byggeprosess. Bare et git-repo med lesbare filer som du eier selv, og som kan serveres av hvilken som helst statisk host (Cloudflare Pages, GitHub Pages, …).
+
+## Slik fungerer det
+
+1. **Klon** Urd-malen til ditt eget repo og koble det til en statisk host.
+2. **Sett opp** siden din gjennom oppsettsveiviseren - navn, farger, logo.
+3. **Rediger** ved å gå til `dinside.no/admin` og logge inn med GitHub. Der er hele byggeren: klikk og skriv rett på siden, dra blokker fritt på et grid, legg til seksjoner, rediger bakgrunner, farger og navigasjon.
+4. **Publiser** - ett klikk lager én git-commit med endringene dine, og hosten serverer den nye siden på under et minutt.
+
+Etter første oppsett er admin-siden kontrollsenteret for nettsiden din. Alt du ser på siden kan redigeres derfra.
+
+Urd kan utvides med **plugins** som bor i repoet ditt og skrus på i admin. Tre følger med som referanse: kalender (abonnerbar feed med fire visninger), kontaktskjema (mailto eller eget endepunkt) og kart (personvennlig OpenStreetMap). Se [template/plugins/README.md](../../../template/plugins/README.md) for å lage egne.
+
+## De fire løftene
+
+1. **Du eier alt.** Siden din er et git-repo med lesbare filer. Ingen innlåsing.
+2. **En oppdatering knuser aldri en bygget side.** Alt innhold har `version` + migreringer som løfter gammel data trygt fremover.
+3. **Nettsiden trenger ingen byggeprosess.** Det som ligger i repoet er nøyaktig det nettleseren laster.
+4. **WYSIWYG uten kompromiss.** Admin viser den ekte siden - samme motor, samme filer.
+
+## Dokumentasjon
+
+| Dokument | Innhold |
+|---|---|
+| [docs/VISJON.md](../../VISJON.md) | Hva Urd er, hvem det er for, og løftene som styrer alle valg |
+| [docs/ARKITEKTUR.md](../../ARKITEKTUR.md) | Systemoversikt: motoren, editoren, publiseringsflyten |
+| [docs/SKJEMA.md](../../SKJEMA.md) | Datamodellen - kontrakten alt bygger på |
+| [docs/VEIKART.md](../../VEIKART.md) | Faser fra skjelett til v1.0 |
+| [docs/BRUKERVEILEDNING.md](../../BRUKERVEILEDNING.md) | For sideeiere: hvordan editoren brukes, uten kode |
+| [docs/UTVIKLING.md](../../UTVIKLING.md) | For oss som utvikler Urd: oppsett, regler, vanlige oppgaver |
+| [docs/OPPSETT-PUBLISERING.md](../../OPPSETT-PUBLISERING.md) | Engangsoppsett av publisering: GitHub OAuth-app + Cloudflare |
+| [docs/BACKLOG.md](../../BACKLOG.md) | Løpende oppgaveliste: gjøremål, bugs og forslag |
+| [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Sjekkliste for manuell testing: levert arbeid som venter på testing |
+| [docs/languages/](../) | Oversettelser av README og oppsettsguiden (norsk er kanonisk) |
+| [docs/sammenligning/FUNKSJONSKART.md](../../sammenligning/FUNKSJONSKART.md) | Funksjonssammenligning mot andre nettsidebyggere med gap-analyse |
+| [docs/sammenligning/LAERDOMMER.md](../../sammenligning/LAERDOMMER.md) | Hvordan andre nettsidebyggere bygger, og hva vi kan hente (arkitektur og mønstre) |
+| [docs/sammenligning/ELEMENTKART.md](../../sammenligning/ELEMENTKART.md) | Elementer og funksjoner: hvordan de tilbys brukeren og hvordan de bygges |
+| [docs/CHANGELOG.md](../../CHANGELOG.md) | Endringslogg per push |
+| [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Slik bidrar du: fork, gren, tester, pull request |
+| [docs/adr/](../../adr/) | Arkitekturbeslutninger med begrunnelse |
+
+## Lisens
+
+[MIT](../../../LICENSE)

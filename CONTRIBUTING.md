@@ -42,6 +42,32 @@ Takk for at du vil bidra! Dette dokumentet er for alle som vil sende endringer t
 - Er koden i samme stil som resten (norsk i docs og brukerflater, engelsk i kode/identifikatorer, ingen tankestreker i tekst)?
 - Store arkitekturendringer: åpne et issue og diskuter FØR du bygger, gjerne med forslag til en ny ADR i `docs/adr/`.
 
+## Bidra med språk
+
+Urd er flerspråklig (se [ADR-0012](docs/adr/0012-flerspraak.md)). Oversettelsene er rene ES-moduler, så et språkbidrag krever **ingen bygging** og ingen kunnskap om Svelte:
+
+- `template/assets/engine/locales/site/<kode>.js` er tekstene besøkende ser (knapper, datoer, skjemameldinger).
+- `template/assets/engine/locales/admin/<kode>.js` er redigeringsverktøyets tekster.
+- `template/plugins/<plugin>/locales/<kode>.js` er pluginenes tekster.
+
+Norsk bokmål (`nb.js`) er basen i alle sett: en nøkkel som mangler i et annet språk faller tilbake til bokmål, aldri til en tom side.
+
+**Slik oversetter du:**
+
+1. Kopier `nb.js` i settet du vil oversette, til filnavnet for språket ditt.
+2. Oversett VERDIENE. Nøklene (`'nav.toTop'`) er identifikatorer og skal aldri endres.
+3. Behold plassholderne i teksten: `{n}`, `{label}`, `{email}` osv. må stå igjen, ellers mangler tall og navn i den ferdige teksten. De kan flyttes dit setningen din trenger dem.
+4. Ingen tankestrek (em dash) i verdiene; bruk vanlig bindestrek.
+5. Kjør språksjekken - den er Urds «language file checker» og sier fra om nøkler mangler, er tomme eller har feil plassholdere:
+   ```bash
+   node --test tests/i18n.test.mjs
+   ```
+6. Nytt språk (ikke bare en oppdatering av et eksisterende)? Legg koden inn i `SUPPORTED_LANGS` og `matchLang` i `template/assets/engine/i18n.js`, og i `LANG_OPTIONS` i `editor/src/App.svelte` (med språkets EGET navn, alfabetisk sortert). Da må editoren bygges (`cd editor && npm run build`) og bundelen committes.
+
+**Gjennomgang av eksisterende oversettelser er også et bidrag.** Den nordsamiske oversettelsen er et maskinskrevet førsteutkast som venter på gjennomgang av en morsmålsbruker; filene er merket med det. Retter du språkfeil der, er det like verdifullt som en ny oversettelse.
+
+Dokumentoversettelser (README og oppsettsguiden) bor i [docs/languages/](docs/languages/). Norsk er kanonisk: ved avvik gjelder den norske teksten, og oversettelser oppdateres i etterkant.
+
 ## Feilrapporter og forslag
 
 Bruk GitHub Issues. For feil: beskriv hva du gjorde, hva du forventet og hva som skjedde, gjerne med nettleser/OS. For forslag: sjekk først [docs/BACKLOG.md](docs/BACKLOG.md) og [docs/VEIKART.md](docs/VEIKART.md) så vi slipper duplikater.

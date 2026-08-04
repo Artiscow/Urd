@@ -1,5 +1,7 @@
 # Brukerveiledning
 
+[Sámegiella](languages/user-guide/GUIDE-se.md) · [🇬🇧 English](languages/user-guide/GUIDE-en-GB.md) · **🇳🇴 Bokmål** · [🇳🇴 Nynorsk](languages/user-guide/GUIDE-nn.md) · [🇹🇷 Türkçe](languages/user-guide/GUIDE-tr.md)
+
 For deg som eier eller redigerer en side bygget med Urd. Ingen kode, ingen
 git-kunnskap nødvendig: alt skjer i nettleseren på din egen side.
 

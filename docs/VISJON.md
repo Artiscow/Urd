@@ -1,5 +1,7 @@
 # Visjon
 
+[🇬🇧 English](languages/VISION-en-GB.md) · **🇳🇴 Bokmål**
+
 ## Hva er Urd?
 
 Urd er en open source nettsidebygger som utfordrer Squarespace, Wix og verktøy som Publii - med én grunnleggende forskjell: **Urd er både nettsiden og byggeren.**

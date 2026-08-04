@@ -1,5 +1,7 @@
 # Utvikling av Urd
 
+[🇬🇧 English](languages/DEVELOPMENT-en-GB.md) · **🇳🇴 Bokmål**
+
 Dette dokumentet er for oss som utvikler selve Urd. (Foreninger som *bruker* Urd trenger aldri noe av dette; de kloner malen og redigerer via /admin.)
 
 Den løpende oppgavelisten ligger i [BACKLOG.md](BACKLOG.md). Fasene og målene ligger i [VEIKART.md](VEIKART.md). Skal du bidra med endringer utenfra (fork/PR-flyten), se [CONTRIBUTING.md](../CONTRIBUTING.md).
@@ -68,7 +70,7 @@ tests/      node --test-tester (foreløpig migreringskontrakten)
 4. **Skjemaendringer gjøres tre steder i samme commit:** `docs/SKJEMA.md`, `schema/*.schema.json` og eksempeldataene i `template/content/`. Eksemplene skal alltid validere.
 5. **Editor-endringer bygges før merge:** `npm run build`, og den oppdaterte `template/admin/assets/` committes sammen med kilden.
 6. **Publisering får aldri skrive kode.** Sti-allowlisten i `template/functions/_lib/guard.js` (nekt `functions/`, `admin/`, `assets/engine/`, med mer) endres kun med svært god grunn.
-7. **Norsk i dokumenter og brukerflater, engelsk i kode/identifikatorer.** Ingen tankestreker i tekst.
+7. **Norsk (bokmål) er kanonisk i dokumenter og brukerflater; engelsk i kode/identifikatorer** (også i datakontrakter: JSON-feltnavn, meldingstyper og oversettelsesnøkler). Kanonisk betyr ikke enerådende: fra 0.6.8 finnes UI-tekstene på fem språk (ADR-0012) og deler av dokumentasjonen er oversatt under [languages/](languages/), men den norske teksten gjelder ved avvik. Ingen tankestreker i tekst.
 
 ## Vanlige oppgaver
 

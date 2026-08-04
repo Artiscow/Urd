@@ -1,5 +1,7 @@
 # Veikart
 
+[🇬🇧 English](languages/ROADMAP-en-GB.md) · **🇳🇴 Bokmål**
+
 Rekkefølgen er bevisst: **motor → publiseringsløkke → editor-dybde.** Motoren gjør skjemaet virkelig (skjemafeil er billigst å fikse før editoren avhenger av dem). Publiseringsløkka er den mest risikable *integrasjonen*, men det mest *utprøvde* mønsteret - å lande den tidlig gir et ekte deploy-mål for alt etterpå. Editor-finesse er den lange halen og bygges mot en fungerende rørledning.
 
 ## v0.1 - Skjelett *(levert 16. juli 2026)*
@@ -109,7 +111,8 @@ En forening kan klone, sette opp, bygge og vedlikeholde en side uten utvikler.
 ## Etter 1.0 (horisont)
 
 Uprioritert, avhenger av community og behov: import fra eksisterende sider,
-flerspråkstøtte, samtidighetsvisning i admin, galleri-nettsted for maler og
+flerspråklig INNHOLD (nb/nn/en-varianter av sidene selv; UI-et og dokumentasjonen
+er flerspråklige fra 0.6.8), samtidighetsvisning i admin, galleri-nettsted for maler og
 plugins (urd.dev), GitLab/Gitea-adapter, ekstern medialagring (R2),
 PR-per-utkast-/deploy-preview-arbeidsflyt (fra [LAERDOMMER.md](sammenligning/LAERDOMMER.md)) og
 butikk/merch-mal. Detaljer i [BACKLOG.md](BACKLOG.md).
