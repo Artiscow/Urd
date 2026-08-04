@@ -54,7 +54,9 @@
     right: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M13 5l7 7-7 7"/></svg>',
     cross: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14"/><path d="M19 5L5 19"/></svg>',
     plus: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
-    guides: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="3.2" stroke-dasharray="2.5 2.5"/></svg>',
+    minus: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg>',
+    gear: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+    guides: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M3.5 9.2h17M3.5 14.8h17M9.2 3.5v17M14.8 3.5v17"/></svg>',
     fit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/></svg>',
   };
 
@@ -164,13 +166,21 @@
   let frameH = $state(0);
   let winW = $state(typeof window !== 'undefined' ? window.innerWidth : 1280);
   /** Zoom for redigerings-lerretet: 'fit' tilpasser vinduet, 'full' = ekte 1:1. */
-  let zoomMode = $state('fit');
+  let zoomMode = $state('fit'); // 'fit' | 'manual' (steppes med +/-)
+  let manualZoom = $state(1);
   let targetW = $derived(viewMode === 'mobile' ? MOBILE_W : winW);
   // Skalaen er BREDDE-drevet: siden rendrer i full målbredde og skaleres til
   // rammebredden. Iframen gjøres tilsvarende høyere (frameH/scale), så den
   // SKALERTE høyden fyller .frame-wrap - ingen topp/bunn-barer; siden scroller
   // inni iframen som en ekte side.
-  let scale = $derived(previewScale(frameW, targetW, zoomMode));
+  let scale = $derived(zoomMode === 'manual' ? manualZoom : previewScale(frameW, targetW, 'fit'));
+
+  /** Zoom-stepperne: 10 %-poengs trinn fra gjeldende visning, klemt 10-400 %. */
+  function stepZoom(dir) {
+    const next = Math.min(400, Math.max(10, (Math.round(Math.round(scale * 100) / 10) + dir) * 10));
+    manualZoom = next / 100;
+    zoomMode = 'manual';
+  }
   let iframeH = $derived(scale > 0 ? frameH / scale : frameH);
   let stageW = $derived(targetW * scale);
   let stageH = $derived(frameH);
@@ -541,10 +551,10 @@
    *  oversatt, aldri flagg); «Automatisk» følger enhetsspråket og er
    *  standarden - et valg huskes per nettleser (urd-admin-lang). */
   const LANG_OPTIONS = [
+    ['se', 'Davvisámegiella'],
+    ['en-GB', 'English (UK)'],
     ['nb', 'Norsk bokmål'],
     ['nn', 'Norsk nynorsk'],
-    ['en-GB', 'English (UK)'],
-    ['se', 'Davvisámegiella'],
     ['tr', 'Türkçe'],
   ];
   const adminLangChoice = localStorage.getItem('urd-admin-lang') ?? 'auto';
@@ -1638,6 +1648,27 @@
   /** Hjelpelinjer på/av: personlig arbeidsflate-preferanse, huskes i
    *  localStorage (ikke sidedata) og gjenetableres i onReady. */
   let guidesOn = $state(localStorage.getItem('urd-guides') === '1');
+
+  /* Urd-innstillingene (admin-tema + språk) bor i en popover nede i railen,
+     ikke i topbaren. Lukkes ved klikk utenfor og Escape. */
+  let settingsOpen = $state(false);
+  let settingsEl = $state(null);
+  $effect(() => {
+    if (!settingsOpen) return;
+    const onDown = (e) => { if (!settingsEl?.contains(e.target)) settingsOpen = false; };
+    const onKey = (e) => { if (e.key === 'Escape') settingsOpen = false; };
+    // Klikk i forhåndsvisnings-iframen når aldri editorens document; iframen
+    // tar fokus og admin-vinduet blurres - samme lukkemønster som ColorPicker.
+    const onBlur = () => { settingsOpen = false; };
+    document.addEventListener('pointerdown', onDown, true);
+    document.addEventListener('keydown', onKey);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      document.removeEventListener('pointerdown', onDown, true);
+      document.removeEventListener('keydown', onKey);
+      window.removeEventListener('blur', onBlur);
+    };
+  });
 
   function toggleGuides() {
     guidesOn = !guidesOn;
@@ -3715,12 +3746,6 @@
         <span class="brand-word">Urd</span>
       </span>
 
-      <Dropdown value={adminTheme} title={ta('topbar.adminTheme.title')}
-        options={ADMIN_THEMES} onchange={(v) => (adminTheme = v)} />
-
-      <Dropdown value={adminLangChoice} title={ta('topbar.language.title')}
-        options={[['auto', ta('lang.auto')], ...LANG_OPTIONS]} onchange={setAdminLang} />
-
       {#if site}
         <!-- Gjeldende side: klikk åpner Sider-panelet (nedtrekket ble
              overflødig da panelet kom, men siden man står på må synes) -->
@@ -3736,11 +3761,11 @@
         <span class="zoomswitch">
           <button class="ghost" class:active={zoomMode === 'fit'}
             onclick={() => (zoomMode = 'fit')} title={ta('tip.zoomFit')}>{@html ICONS.fit}</button>
-          <button class="ghost" class:active={zoomMode === 'full'}
-            onclick={() => (zoomMode = 'full')} title={ta('tip.zoomFull')}>100%</button>
+          <button class="ghost" onclick={() => stepZoom(-1)} title={ta('tip.zoomOut')}>{@html ICONS.minus}</button>
           <span class="zoom-readout" title={ta('tip.zoomCurrent')}>{Math.round(scale * 100)}%</span>
+          <button class="ghost" onclick={() => stepZoom(1)} title={ta('tip.zoomIn')}>{@html ICONS.plus}</button>
         </span>
-        <button class="ghost" class:active={guidesOn} onclick={toggleGuides}
+        <button class="ghost guides-btn" class:active={guidesOn} onclick={toggleGuides}
           title={ta('tip.guides')}>{@html ICONS.guides}</button>
       {/if}
 
@@ -3791,6 +3816,19 @@
               <button class:active={activePanel === name} onclick={() => togglePanel(name)}>{PANEL_LABELS[name]}</button>
             {/each}
           {/each}
+          <span class="rail-settings" bind:this={settingsEl}>
+            <button class="rail-gear" class:active={settingsOpen} title={ta('settings.title')}
+              onclick={() => (settingsOpen = !settingsOpen)}>{@html ICONS.gear}</button>
+            {#if settingsOpen}
+              <div class="settings-pop">
+                <p class="panel-strong">{ta('settings.title')}</p>
+                <label title={ta('topbar.adminTheme.title')}>{ta('settings.theme')}
+                  <Dropdown value={adminTheme} options={ADMIN_THEMES} onchange={(v) => (adminTheme = v)} /></label>
+                <label title={ta('topbar.language.title')}>{ta('settings.language')}
+                  <Dropdown value={adminLangChoice} options={[['auto', ta('lang.auto')], ...LANG_OPTIONS]} onchange={setAdminLang} /></label>
+              </div>
+            {/if}
+          </span>
         </nav>
 
         {#if activePanel}
@@ -5718,6 +5756,50 @@
 
   /* Aktiv markeres av bakgrunn + kant alene: font-vekt endres IKKE, ellers
      flytter teksten seg bittelitt ved hvert valg (observasjon fra testrundene). */
+  /* Innstillings-tannhjulet nederst i railen + popoveren over det.
+     position: fixed klippes ikke av railens overflow. */
+  .rail-settings {
+    margin-top: auto;
+    padding-top: 8px;
+    display: flex;
+  }
+
+  .rail-gear {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5em 0 !important;
+  }
+
+  .rail-gear.active {
+    border-color: var(--urd-color-accent, #7c5cff) !important;
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 18%, transparent) !important;
+  }
+
+  .settings-pop {
+    position: fixed;
+    left: 10px;
+    bottom: 52px;
+    z-index: 100002;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 178px;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgb(255 255 255 / 12%);
+    background: var(--urd-color-surface, #151a23);
+    box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+  }
+
+  .settings-pop label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.8rem;
+  }
+
   .rail button.active {
     opacity: 1;
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 28%, transparent);
@@ -6723,6 +6805,14 @@
   .zoomswitch .active {
     border-color: var(--urd-color-accent, #7c5cff);
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 15%, transparent);
+  }
+
+  /* Hjelpelinje-knappen står alene i topbaren og trenger sin egen,
+     tydelige på-tilstand (aktiv-stilene over er container-avgrenset). */
+  .guides-btn.active {
+    border-color: var(--urd-color-accent, #7c5cff);
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 22%, transparent);
+    color: var(--urd-color-accent, #7c5cff);
   }
 
   .zoom-readout {

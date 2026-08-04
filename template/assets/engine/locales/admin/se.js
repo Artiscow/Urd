@@ -618,7 +618,6 @@ export default {
     'tip.zoomCrop': 'Čuohppá fokusčuoggá guvlui',
     'tip.zoomCurrent': 'Dálá zoom',
     'tip.zoomFit': 'Heivet lerreha lássii',
-    'tip.zoomFull': 'Duohta sturrodat (100%)',
     'ui.addBaselineLink': '+ Ođđa vuolimuš linnjá liŋka',
     'ui.addColumn': '+ Ođđa ceakkoraidu',
     'ui.addEntry': '+ Ođđa oassi',
@@ -987,5 +986,10 @@ export default {
     'seed.team.title': '<h2>Stivra</h2>',
     'seed.text': '<p>Ođđa teaksta</p>',
     'seed.textBox': '<h3>Bajilčála</h3><p>Čále sisdoalu dása.</p>',
+    'settings.title': 'Urd-heivehusat',
+    'settings.theme': 'Ivdnefáddá',
+    'settings.language': 'Giella',
+    'tip.zoomOut': 'Unnit oidnosa (10 %-lávkkit)',
+    'tip.zoomIn': 'Stuorit oidnosa (10 %-lávkkit)',
   },
 };

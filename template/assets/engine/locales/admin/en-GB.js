@@ -615,7 +615,6 @@ export default {
     'tip.zoomCrop': 'Crops in towards the focus point',
     'tip.zoomCurrent': 'Current zoom',
     'tip.zoomFit': 'Fit the canvas to the window',
-    'tip.zoomFull': 'Actual size (100%)',
     'ui.addBaselineLink': '+ New baseline link',
     'ui.addColumn': '+ New column',
     'ui.addEntry': '+ New entry',
@@ -984,5 +983,10 @@ export default {
     'seed.team.title': '<h2>The board</h2>',
     'seed.text': '<p>New text</p>',
     'seed.textBox': '<h3>Heading</h3><p>Write the content here.</p>',
+    'settings.title': 'Urd settings',
+    'settings.theme': 'Colour theme',
+    'settings.language': 'Language',
+    'tip.zoomOut': 'Zoom out (10% steps)',
+    'tip.zoomIn': 'Zoom in (10% steps)',
   },
 };

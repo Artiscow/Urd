@@ -3,6 +3,15 @@
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.0.7): innstillings-popover, zoom-steppere, hjelpelinje-knapp
+
+- [ ] Tannhjulet nederst til venstre åpner Urd-innstillingene (Fargetema + Språk); begge valgene virker som før (temabytte umiddelbart, språkbytte laster på nytt)
+- [ ] Popoveren lukkes ved klikk hvor som helst UTENFOR - også ved klikk på selve nettsiden i previewen - og med Escape; tannhjulet viser på-tilstand mens den er åpen
+- [ ] Zoom: minus/pluss stepper i 10 %-trinn (nedre/øvre grense 10/400 %), avlesningen følger med, og Tilpass-knappen går tilbake til automatisk skalering; redigering (klikk/dra/skriv) treffer riktig også i manuell zoom
+- [ ] Hjelpelinje-knappen har rutenett-ikon og viser TYDELIG når hjelpelinjene er på; av/på virker som før
+- [ ] Språklistene (innstillingene + Nettsted > Språk på nettsiden) står alfabetisk etter språkets eget navn, med Automatisk øverst i admin-velgeren
+- [ ] Topbaren: tema-/språkvelgerne er borte fra toppen og ingenting annet har flyttet seg
+
 ### Testrunde-batch (0.6.8.7): seed-innhold på admin-språket
 
 - [ ] Engelsk seed: med admin på English (UK), sett inn en Hero-, kort- og team-preset pluss tekst/knapp/FAQ-blokker - alt innsatt INNHOLD (overskrifter, brødtekst, «Read more»-knappen, FAQ-spørsmålene) er engelsk, og preset-galleriets etiketter/grupper/hint følger språket
@@ -18,7 +27,7 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 - [ ] Hjelpechipene: åpne «?» på FAQ-, galleri- og samlingsblokken - kortets tittel («Slik virker …»-mønsteret) og innholdslinjene følger admin-språket; ved FØRSTE sidelast skal chipene aldri vise rå nøkler (adminLocaleReady-vinduet)
 - [ ] Bildeeditoren: alle etiketter og segmentvalg følger språket; «Bytt bilde»/«Velg bilde»-ternæren riktig
 - [ ] Delte kart: font-navnene, seksjonstema-valgene (Flate/Aksent/Invers), ikon-/tegnkategoriene i velgerne, bakgrunnslag-typene og animasjonsvalgene følger admin-språket i BÅDE panelene og canvas-menyene
-- [ ] Besøkende upåvirket: hos besøkende (og i Ren visning uten chrome) finnes ingen spor av admin-språket; footer-sosiallenkenes aria-labels er fortsatt merkenavn
+- [ ] Besøkende upåvirket: hos besøkende (og i Ren visning uten chrome) finnes ingen spor av admin-språket; footer-sosiallenkenes aria-labels er fortsatt merkenavn 
 - [ ] Norsk uendret: hele canvas-chromen ordrett som før på bokmål
 
 ### Testrunde-batch (0.6.8.5): admin-strenger B (tooltips, placeholders, panel-tekster)

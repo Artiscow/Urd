@@ -615,7 +615,6 @@ export default {
     'tip.zoomCrop': 'Odak noktasına doğru kırpar',
     'tip.zoomCurrent': 'Geçerli yakınlaştırma',
     'tip.zoomFit': 'Tuvali pencereye sığdır',
-    'tip.zoomFull': 'Gerçek boyut (100%)',
     'ui.addBaselineLink': '+ Yeni alt satır bağlantısı',
     'ui.addColumn': '+ Yeni sütun',
     'ui.addEntry': '+ Yeni kayıt',
@@ -984,5 +983,10 @@ export default {
     'seed.team.title': '<h2>Yönetim kurulu</h2>',
     'seed.text': '<p>Yeni metin</p>',
     'seed.textBox': '<h3>Başlık</h3><p>İçeriği buraya yaz.</p>',
+    'settings.title': 'Urd ayarları',
+    'settings.theme': 'Renk teması',
+    'settings.language': 'Dil',
+    'tip.zoomOut': 'Uzaklaştır (%10 adım)',
+    'tip.zoomIn': 'Yakınlaştır (%10 adım)',
   },
 };

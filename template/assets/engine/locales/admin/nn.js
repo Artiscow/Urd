@@ -615,7 +615,6 @@ export default {
     'tip.zoomCrop': 'Skjer inn mot fokuspunktet',
     'tip.zoomCurrent': 'Gjeldande zoom',
     'tip.zoomFit': 'Tilpass lerretet til vindauget',
-    'tip.zoomFull': 'Faktisk storleik (100%)',
     'ui.addBaselineLink': '+ Ny botnlinje-lenkje',
     'ui.addColumn': '+ Ny kolonne',
     'ui.addEntry': '+ Nytt innslag',
@@ -984,5 +983,10 @@ export default {
     'seed.team.title': '<h2>Styret</h2>',
     'seed.text': '<p>Ny tekst</p>',
     'seed.textBox': '<h3>Overskrift</h3><p>Skriv innhaldet her.</p>',
+    'settings.title': 'Urd-innstillingar',
+    'settings.theme': 'Fargetema',
+    'settings.language': 'Språk',
+    'tip.zoomOut': 'Zoom ut (10 %-steg)',
+    'tip.zoomIn': 'Zoom inn (10 %-steg)',
   },
 };

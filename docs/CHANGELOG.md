@@ -20,6 +20,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.6.0.7 - Topbar-opprydding: Urd-innstillinger nede i railen, zoom-steppere og tydelig hjelpelinje-knapp - 4. august 2026
+- URD-INNSTILLINGER I EGEN POPOVER: admin-fargetemaet og admin-språkvelgeren er flyttet ut av topbaren og inn i en popover som åpnes fra et tegnet tannhjul nederst i venstre-railen. Popoveren (178px, temastyrte Dropdowns med etikettene Fargetema/Språk, tooltips beholdt) lukkes ved klikk utenfor, Escape OG klikk i forhåndsvisningen - iframe-klikk når aldri editorens document, så window-blur lukker (samme mønster og av samme grunn som fargevelgeren). Første tannhjul-utkast så ut som en sol og ble byttet til et ekte tannhjul med tenner etter visuell sjekk.
+- ZOOM-STEPPERE: 100 %-knappen er fjernet; zoomen er nå [tilpass] [minus] [prosent-avlesning] [pluss], der stepperne går i 10 %-poengs trinn fra gjeldende visning (klemt 10-400 %, ny manuell modus i tillegg til tilpass). Nøklene tip.zoomOut/tip.zoomIn inn og tip.zoomFull ut i alle fem admin-localene (paritet grønn).
+- HJELPELINJE-KNAPPEN: ikonet byttet fra det pluss-lignende trådkorset til et tegnet rutenett, og på-tilstanden er nå synlig - rotårsaken var at topbarens aktiv-stiler var container-avgrenset til zoom-/visningsbryterne, så knappens class:active aldri fikk stil; den har nå egen aksentfarget aktiv-stil.
+- Språkvelgerne sorterer nå språkene alfabetisk etter eget navn (endonym); «Automatisk» står fortsatt øverst i admin-velgeren.
+- Verifisert: alle 272 tester grønne (inkl. paritet etter nøkkelendringene), editor gjenbygd med committet bundel, nøkkeldekning komplett.
+
 ### 0.6.8.7 - Seed-innholdet på fem språk: innsettings-oversettelse av presets, blokk-defaults og footer-maler - 4. august 2026
 - SEED-REGELEN FRA ADR-0012 IMPLEMENTERT FULLT UT: tekst som skrives inn i brukerdata oversettes ÉN gang i innsettingsøyeblikket med admin-språket; besøkende-rendring oversetter aldri brukerdata, og ta() kalles kun inne i fabrikk-/defaults-kropper (aldri modulnivå i besøkende-lukningen - presets.js og blocks/* bundles og lastes hos besøkende).
 - sections/presets.js (115 assert-verifiserte regler): alle 23 preset-defs fikk additive labelKey/groupKey/hintKey (+ itemLabelKey på de 10 utvidbare) med de gamle feltene som plugin-fallback; ~70 seed-kallsteder i fabrikkene går via seed.*-nøkler, med parameteriserte kortmaler ({title}/{price}/{role}/{day}/{month}). Preset-galleriet i preview-edit grupperer fortsatt på group-ID-en (uendret gruppering, verifisert) og oversetter kun visningen; plugin-gruppen samles som før.
