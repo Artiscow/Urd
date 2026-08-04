@@ -39,11 +39,12 @@ export const faqBlock = {
   version: 1,
   label: 'FAQ',
   labelKey: 'blocks.faq',
+  // Seed-regelen (ADR-0012): ta() kalles kun her ved innsetting i preview.
   defaults: () => ({
     items: [
-      { q: 'Hvordan blir jeg medlem?', a: '<p>Skriv svaret her.</p>' },
-      { q: 'Når er dere åpne?', a: '<p>Skriv svaret her.</p>' },
-      { q: 'Hvordan kontakter jeg dere?', a: '<p>Skriv svaret her.</p>' },
+      { q: ta('seed.faq.q1'), a: ta('seed.faq.answer') },
+      { q: ta('seed.faq.q2'), a: ta('seed.faq.answer') },
+      { q: ta('seed.faq.q3'), a: ta('seed.faq.answer') },
     ],
     multi: false,
   }),

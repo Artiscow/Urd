@@ -4,11 +4,14 @@
  */
 import { isSafeHref } from '../nav-model.js';
 
+// Seed-regelen (ADR-0012): ta() kalles kun i defaults() ved innsetting i preview, aldri på modulnivå.
+import { ta } from '../i18n.js';
+
 export const buttonBlock = {
   version: 1,
   label: 'Knapp',
   labelKey: 'blocks.button',
-  defaults: () => ({ label: 'Les mer', page: null, href: null, style: 'primary' }),
+  defaults: () => ({ label: ta('seed.readMore'), page: null, href: null, style: 'primary' }),
   migrations: {},
   /**
    * @param {HTMLElement} el

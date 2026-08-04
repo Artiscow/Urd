@@ -699,7 +699,7 @@
 
   function addFaqItem() {
     mutateBlock('faq-item', (b) => {
-      (b.props.items ??= []).push({ q: 'Nytt spørsmål?', a: '<p>Skriv svaret her.</p>' });
+      (b.props.items ??= []).push({ q: ta('seed.faq.newQ'), a: ta('seed.faq.answer') });
     });
   }
 
@@ -2103,7 +2103,7 @@
     mutateSamling(id, `samling:${id}:add-entry`, (data) => {
       data.entries.unshift({
         id: makeId('innslag'),
-        title: 'Nytt innslag',
+        title: ta('seed.newEntry'),
         date: new Date().toISOString().slice(0, 10),
         text: '',
       });
@@ -2365,7 +2365,7 @@
     // ALLTID nøytral plassholder, ALDRI sidetittelen: sidetittelen kan inneholde
     // hva som helst (f.eks. et versjonsnummer på en testside), og eksempeltekst
     // skal aldri ha versjonsnummer. Eieren skriver inn sitt eget navn.
-    const title = 'Min forening';
+    const title = ta('seed.orgName');
     const pages = siteDraft.pages ?? [];
     const pageLinks = (n) => pages.slice(0, n).map((p) => ({ label: p.title || p.id, page: p.id }));
     const soc = (ids) => ids.map((icon) => ({ icon, url: `https://${icon}.com` }));
@@ -2373,65 +2373,65 @@
     const copyright = `© ${title}`;
     if (name === 'minimal') {
       return { align: 'center', brand: { title }, social: soc(['facebook', 'instagram']),
-        copyright, baseline: [ext('Personvern', '#')] };
+        copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
     }
     if (name === 'sentrert') {
       return { align: 'center', brand: { title }, linkRow: pageLinks(5),
-        social: soc(['facebook', 'instagram', 'x']), copyright: `${copyright} · Laget med Urd` };
+        social: soc(['facebook', 'instagram', 'x']), copyright: `${copyright} · ${ta('seed.footer.madeWith')}` };
     }
     if (name === 'kolonner') {
-      return { align: 'left', brand: { title, tagline: 'Et lite fellesskap for store spørsmål. Møtes annenhver torsdag.' },
+      return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline1') },
         columns: [
-          { title: 'Sider', links: pageLinks(4) },
-          { title: 'Selskap', links: [ext('Om oss', '#'), ext('Bli medlem', '#'), ext('Presse', '#')] },
-          { title: 'Ressurser', links: [ext('Vedtekter', '#'), ext('Personvern', '#'), ext('Kontakt', '#')] },
+          { title: ta('seed.footer.colPages'), links: pageLinks(4) },
+          { title: ta('seed.footer.colCompany'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.join'), '#'), ext(ta('seed.footer.press'), '#')] },
+          { title: ta('seed.footer.colResources'), links: [ext(ta('seed.footer.bylaws'), '#'), ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.contact'), '#')] },
         ],
         social: soc(['facebook', 'instagram', 'linkedin']), copyright,
-        baseline: [ext('Personvern', '#'), ext('Vilkår', '#')] };
+        baseline: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.terms'), '#')] };
     }
     if (name === 'sitemap') {
-      return { align: 'left', brand: { title, tagline: 'Alt på ett sted.' },
+      return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline2') },
         columns: [
-          { title: 'Utforsk', links: [ext('Hjem', '#'), ext('Arrangementer', '#'), ext('Galleri', '#'), ext('Blogg', '#')] },
-          { title: 'Selskap', links: [ext('Om oss', '#'), ext('Historie', '#'), ext('Presse', '#'), ext('Kontakt', '#')] },
-          { title: 'Støtte', links: [ext('Bli medlem', '#'), ext('FAQ', '#'), ext('Hjelp', '#')] },
-          { title: 'Juridisk', links: [ext('Personvern', '#'), ext('Vilkår', '#'), ext('Vedtekter', '#')] },
+          { title: ta('seed.footer.colExplore'), links: [ext(ta('seed.footer.home'), '#'), ext(ta('seed.footer.events'), '#'), ext(ta('seed.footer.gallery'), '#'), ext(ta('seed.footer.blog'), '#')] },
+          { title: ta('seed.footer.colCompany'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.footer.history'), '#'), ext(ta('seed.footer.press'), '#'), ext(ta('seed.footer.contact'), '#')] },
+          { title: ta('seed.footer.colSupport'), links: [ext(ta('seed.join'), '#'), ext(ta('seed.footer.faq'), '#'), ext(ta('seed.footer.help'), '#')] },
+          { title: ta('seed.footer.colLegal'), links: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.terms'), '#'), ext(ta('seed.footer.bylaws'), '#')] },
         ],
         social: soc(['facebook', 'instagram', 'linkedin', 'youtube']), copyright,
-        baseline: [ext('Personvern', '#'), ext('Vilkår', '#'), ext('Cookies', '#')] };
+        baseline: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.terms'), '#'), ext(ta('seed.footer.cookies'), '#')] };
     }
     if (name === 'nyhetsbrev') {
-      return { align: 'left', brand: { title, tagline: 'Få siste nytt om arrangementer og medlemsfordeler.' },
-        cta: { kind: 'newsletter', heading: 'Meld deg på nyhetsbrevet', label: 'Meld på', recipient: 'post@dinforening.no', success: 'Takk, du er påmeldt!' },
+      return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline3') },
+        cta: { kind: 'newsletter', heading: ta('seed.footer.newsletterHeading'), label: ta('seed.footer.newsletterButton'), recipient: ta('seed.email'), success: ta('seed.footer.newsletterSuccess') },
         columns: [
-          { title: 'Sider', links: pageLinks(4) },
-          { title: 'Mer', links: [ext('Om oss', '#'), ext('Kontakt', '#'), ext('Personvern', '#')] },
+          { title: ta('seed.footer.colPages'), links: pageLinks(4) },
+          { title: ta('seed.footer.colMore'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.footer.contact'), '#'), ext(ta('seed.footer.privacy'), '#')] },
         ],
-        social: soc(['facebook', 'instagram']), copyright, baseline: [ext('Personvern', '#')] };
+        social: soc(['facebook', 'instagram']), copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
     }
     if (name === 'storcta') {
       return { align: 'center',
-        cta: { kind: 'button', big: true, heading: 'Klar til å bli med i fellesskapet?', sub: 'Vi tar imot nye medlemmer hele året - kom innom en torsdag.', label: 'Bli medlem', href: '#' },
+        cta: { kind: 'button', big: true, heading: ta('seed.footer.ctaHeading'), sub: ta('seed.footer.ctaSub'), label: ta('seed.join'), href: '#' },
         linkRow: pageLinks(4), social: soc(['facebook', 'instagram', 'x']), copyright,
-        baseline: [ext('Personvern', '#'), ext('Vilkår', '#')] };
+        baseline: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.terms'), '#')] };
     }
     if (name === 'kontakt') {
-      return { align: 'left', brand: { title, tagline: 'Kom innom eller ta kontakt - vi svarer gjerne.' },
+      return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline4') },
         columns: [
-          { title: 'Besøk oss', links: [ext('Storgata 1, 0155 Oslo', '#'), ext('post@dinforening.no', 'mailto:post@dinforening.no'), ext('+47 22 00 00 00', 'tel:+4722000000')] },
-          { title: 'Åpningstider', links: [ext('Man-fre 09-16', '#'), ext('Lør 10-14', '#')] },
-          { title: 'Sider', links: pageLinks(4) },
+          { title: ta('seed.footer.colVisit'), links: [ext(ta('seed.footer.address'), '#'), ext(ta('seed.email'), 'mailto:post@dinforening.no'), ext('+47 22 00 00 00', 'tel:+4722000000')] },
+          { title: ta('seed.footer.colHours'), links: [ext(ta('seed.footer.hours1'), '#'), ext(ta('seed.footer.hours2'), '#')] },
+          { title: ta('seed.footer.colPages'), links: pageLinks(4) },
         ],
-        social: soc(['facebook', 'instagram']), copyright, baseline: [ext('Personvern', '#')] };
+        social: soc(['facebook', 'instagram']), copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
     }
     // mega: kolonner + bakgrunnslag (glød + korn).
-    return { align: 'left', brand: { title, tagline: 'Bli med i samtalen. Vi tar imot nye medlemmer hele året.' },
+    return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline5') },
       columns: [
-        { title: 'Utforsk', links: pageLinks(4) },
-        { title: 'Følg oss', links: [ext('Nyhetsbrev', '#'), ext('post@dinforening.no', 'mailto:post@dinforening.no')] },
+        { title: ta('seed.footer.colExplore'), links: pageLinks(4) },
+        { title: ta('seed.footer.colFollow'), links: [ext(ta('seed.footer.newsletter'), '#'), ext(ta('seed.email'), 'mailto:post@dinforening.no')] },
       ],
       social: soc(['facebook', 'instagram', 'linkedin', 'youtube']), copyright,
-      baseline: [ext('Personvern', '#'), ext('Laget med Urd', '#')],
+      baseline: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.madeWith'), '#')],
       background: { version: 1, layers: [
         { type: 'glow', version: glowLayer.version ?? 1, props: { ...glowLayer.defaults(), color: 'accent', x: 0.12, y: 0, radius: 0.6, opacity: 0.45 } },
         { type: 'grain', version: grainLayer.version ?? 1, props: { ...grainLayer.defaults(), opacity: 0.08 } },
@@ -2455,7 +2455,7 @@
   function addFooterListLink(field) {
     footerMutate('footer', (f) => {
       f[field] ??= [];
-      f[field].push(siteDraft.pages[0] ? { label: 'Lenke', page: siteDraft.pages[0].id } : { label: 'Lenke', href: 'https://' });
+      f[field].push(siteDraft.pages[0] ? { label: ta('seed.link'), page: siteDraft.pages[0].id } : { label: ta('seed.link'), href: 'https://' });
     });
   }
   function removeFooterListLink(field, i) {
@@ -2489,7 +2489,7 @@
 
   /* Handlingsoppfordring (CTA): knapp (lenke) eller nyhetsbrev (e-postfelt). */
   function enableFooterCta(on) {
-    footerMutate('footer', (f) => { if (on) f.cta ??= { kind: 'button', label: 'Bli medlem' }; else delete f.cta; });
+    footerMutate('footer', (f) => { if (on) f.cta ??= { kind: 'button', label: ta('seed.join') }; else delete f.cta; });
   }
   function setFooterCtaField(field, value) {
     footerMutate(`edit:footer-cta-${field}`, (f) => {
@@ -2519,7 +2519,7 @@
   function addFooterColumn() {
     footerMutate('footer', (f) => {
       f.columns ??= [];
-      f.columns.push({ title: 'Kolonne', links: [{ label: 'Lenke', page: siteDraft.pages[0].id }] });
+      f.columns.push({ title: ta('seed.column'), links: [{ label: ta('seed.link'), page: siteDraft.pages[0].id }] });
     });
   }
 
@@ -2542,7 +2542,7 @@
   function addFooterLink(ci) {
     footerMutate('footer', (f) => {
       f.columns[ci].links ??= [];
-      f.columns[ci].links.push({ label: 'Lenke', page: siteDraft.pages[0].id });
+      f.columns[ci].links.push({ label: ta('seed.link'), page: siteDraft.pages[0].id });
     });
   }
 
@@ -2644,7 +2644,7 @@
 
   function addNavItem() {
     siteMutate('nav', () => {
-      siteDraft.nav.items.push({ label: 'Lenke', page: siteDraft.pages[0].id });
+      siteDraft.nav.items.push({ label: ta('seed.link'), page: siteDraft.pages[0].id });
     });
   }
 
@@ -2655,7 +2655,7 @@
     siteMutate('nav', () => {
       const item = siteDraft.nav.items[i];
       item.children ??= [];
-      item.children.push({ label: 'Lenke', page: siteDraft.pages[0].id });
+      item.children.push({ label: ta('seed.link'), page: siteDraft.pages[0].id });
     });
   }
 
@@ -3102,9 +3102,9 @@
    *  den skal. (Seksjonvalg og «+ Ny seksjon» kommer senere i v0.3.) */
   /** w i prosent av seksjonsbredden, h i px (fysiske enheter). */
   const BLOCK_DEFAULTS = {
-    text: { type: 'text', props: { html: '<p>Ny tekst</p>', align: 'left' }, w: 33, h: 28 },
-    'text-box': { type: 'text', props: { html: '<h3>Overskrift</h3><p>Skriv innholdet her.</p>', align: 'left', box: true }, w: 30, h: 150 },
-    button: { type: 'button', props: { label: 'Ny knapp', page: null, href: null, style: 'primary' }, w: 20, h: 36 },
+    text: { type: 'text', props: { html: ta('seed.text'), align: 'left' }, w: 33, h: 28 },
+    'text-box': { type: 'text', props: { html: ta('seed.textBox'), align: 'left', box: true }, w: 30, h: 150 },
+    button: { type: 'button', props: { label: ta('seed.newButton'), page: null, href: null, style: 'primary' }, w: 20, h: 36 },
     'shape-line': { type: 'shape', decor: true, props: { kind: 'line', color: 'accent', thickness: 2, fill: null }, w: 25, h: 8 },
     'shape-arrow': { type: 'shape', decor: true, props: { kind: 'arrow', color: 'accent', thickness: 2, fill: null }, w: 25, h: 16 },
     'shape-circle': { type: 'shape', decor: true, props: { kind: 'circle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
@@ -3119,9 +3119,9 @@
       type: 'faq',
       props: {
         items: [
-          { q: 'Hvordan blir jeg medlem?', a: '<p>Skriv svaret her.</p>' },
-          { q: 'Når er dere åpne?', a: '<p>Skriv svaret her.</p>' },
-          { q: 'Hvordan kontakter jeg dere?', a: '<p>Skriv svaret her.</p>' },
+          { q: ta('seed.faq.q1'), a: ta('seed.faq.answer') },
+          { q: ta('seed.faq.q2'), a: ta('seed.faq.answer') },
+          { q: ta('seed.faq.q3'), a: ta('seed.faq.answer') },
         ],
         multi: false,
       },

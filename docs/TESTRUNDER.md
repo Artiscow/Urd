@@ -3,6 +3,15 @@
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.8.7): seed-innhold på admin-språket
+
+- [ ] Engelsk seed: med admin på English (UK), sett inn en Hero-, kort- og team-preset pluss tekst/knapp/FAQ-blokker - alt innsatt INNHOLD (overskrifter, brødtekst, «Read more»-knappen, FAQ-spørsmålene) er engelsk, og preset-galleriets etiketter/grupper/hint følger språket
+- [ ] Footer-maler: velg «Newsletter»- og «Big CTA»-malen på engelsk - kolonnetitler, taglines, «Privacy», CTA-feltene og «Made with Urd» settes inn på engelsk
+- [ ] Innsatt innhold FRYSES: bytt admin-språk etter innsetting - det alt innsatte innholdet beholder språket sitt (det er brukerdata nå), kun chromen bytter
+- [ ] Norsk uendret: på bokmål settes alt inn ordrett som før
+- [ ] Publisert side: seedene vises hos besøkende nøyaktig som de ble satt inn (ingen nøkler, ingen oversettelse ved rendering)
+- [ ] Gruppering intakt: preset-galleriet har samme grupper og rekkefølge som før, plugin-presets samlet sist
+
 ### Testrunde-batch (0.6.8.6): canvas-chromen (verktøylinjer, hjelpekort, bildeeditor)
 
 - [ ] Engelsk canvas-runde: med admin på English (UK), åpne preview-chromen - blokkpaletten (+ Ny blokk), preset-galleriet (+ Ny seksjon), tekst-verktøylinjens titler (pek på knappene; B/I-bokstavene), seksjonshøyde-håndtakene, multimarkeringslinjen («2 selected»), blokk-verktøylinjen og dobbeltklikk-menyen skal være engelske

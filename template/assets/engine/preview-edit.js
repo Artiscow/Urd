@@ -637,15 +637,17 @@ function makeSectionAdder(index, above = null) {
         pluginDefs.push(def);
         continue;
       }
-      const group = def.group ?? ta('canvas.groupOther');
-      if (!groups.has(group)) groups.set(group, []);
-      groups.get(group).push(def);
+      // Grupperingen skjer på group-STRENGEN (id); kun visningen oversettes
+      // (groupKey med group som fallback - plugin-kontrakten).
+      const group = def.group ?? '';
+      if (!groups.has(group)) groups.set(group, { labelKey: def.groupKey ?? null, defs: [] });
+      groups.get(group).defs.push(def);
     }
-    if (pluginDefs.length) groups.set(ta('panel.plugins'), pluginDefs);
-    for (const [name, defs] of groups) {
+    if (pluginDefs.length) groups.set('__plugins', { labelKey: 'panel.plugins', defs: pluginDefs });
+    for (const [name, { labelKey, defs }] of groups) {
       const heading = document.createElement('div');
       heading.className = 'urd-preset-group';
-      heading.textContent = name;
+      heading.textContent = labelKey ? ta(labelKey) : (name || ta('canvas.groupOther'));
       menu.appendChild(heading);
       for (const def of defs) {
         const choice = document.createElement('button');
@@ -665,12 +667,12 @@ function makeSectionAdder(index, above = null) {
         choice.appendChild(body);
         const label = document.createElement('span');
         label.className = 'urd-preset-label';
-        label.textContent = def.label;
+        label.textContent = def.labelKey ? ta(def.labelKey) : def.label;
         body.appendChild(label);
-        if (def.hint) {
+        if (def.hintKey || def.hint) {
           const hint = document.createElement('span');
           hint.className = 'urd-preset-hint';
-          hint.textContent = def.hint;
+          hint.textContent = def.hintKey ? ta(def.hintKey) : def.hint;
           body.appendChild(hint);
         }
         choice.addEventListener('click', () => {
@@ -1537,7 +1539,8 @@ function addSectionToolbar(host, section, grid) {
     // Fabrikken (def.item) bor i preset-definisjonen; seksjonen forblir en generisk container.
     const def = section.preset ? window.Urd.sections.get(section.preset) : null;
     if (def?.item) {
-      mk(`+ ${def.itemLabel ?? ta('canvas.itemFallback')}`, ta('canvas.addItemTitle', { label: def.itemLabel ?? ta('canvas.itemFallback') }), (event) => {
+      const itemLabel = def.itemLabelKey ? ta(def.itemLabelKey) : (def.itemLabel ?? ta('canvas.itemFallback'));
+      mk(`+ ${itemLabel}`, ta('canvas.addItemTitle', { label: itemLabel }), (event) => {
         // Deaktiver til seksjonen rerendres: et dobbeltklikk før rundturen ville lagt to element i samme rute.
         event.target.disabled = true;
         const next = def.item(section);

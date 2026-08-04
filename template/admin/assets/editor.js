@@ -5862,8 +5862,8 @@ function nl(e, t) {
 	function ut() {
 		at("faq-item", (e) => {
 			(e.props.items ??= []).push({
-				q: "Nytt spørsmål?",
-				a: "<p>Skriv svaret her.</p>"
+				q: Q("seed.faq.newQ"),
+				a: Q("seed.faq.answer")
 			});
 		});
 	}
@@ -6848,7 +6848,7 @@ function nl(e, t) {
 		ni(e, `samling:${e}:add-entry`, (e) => {
 			e.entries.unshift({
 				id: Fa("innslag"),
-				title: "Nytt innslag",
+				title: Q("seed.newEntry"),
 				date: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
 				text: ""
 			});
@@ -7103,7 +7103,7 @@ function nl(e, t) {
 		}
 	];
 	function $i(e) {
-		let t = "Min forening", n = H(A).pages ?? [], r = (e) => n.slice(0, e).map((e) => ({
+		let t = Q("seed.orgName"), n = H(A).pages ?? [], r = (e) => n.slice(0, e).map((e) => ({
 			label: e.title || e.id,
 			page: e.id
 		})), i = (e) => e.map((e) => ({
@@ -7118,7 +7118,7 @@ function nl(e, t) {
 			brand: { title: t },
 			social: i(["facebook", "instagram"]),
 			copyright: o,
-			baseline: [a("Personvern", "#")]
+			baseline: [a(Q("seed.footer.privacy"), "#")]
 		} : e === "sentrert" ? {
 			align: "center",
 			brand: { title: t },
@@ -7128,32 +7128,32 @@ function nl(e, t) {
 				"instagram",
 				"x"
 			]),
-			copyright: `${o} · Laget med Urd`
+			copyright: `${o} · ${Q("seed.footer.madeWith")}`
 		} : e === "kolonner" ? {
 			align: "left",
 			brand: {
 				title: t,
-				tagline: "Et lite fellesskap for store spørsmål. Møtes annenhver torsdag."
+				tagline: Q("seed.footer.tagline1")
 			},
 			columns: [
 				{
-					title: "Sider",
+					title: Q("seed.footer.colPages"),
 					links: r(4)
 				},
 				{
-					title: "Selskap",
+					title: Q("seed.footer.colCompany"),
 					links: [
-						a("Om oss", "#"),
-						a("Bli medlem", "#"),
-						a("Presse", "#")
+						a(Q("seed.footer.about"), "#"),
+						a(Q("seed.join"), "#"),
+						a(Q("seed.footer.press"), "#")
 					]
 				},
 				{
-					title: "Ressurser",
+					title: Q("seed.footer.colResources"),
 					links: [
-						a("Vedtekter", "#"),
-						a("Personvern", "#"),
-						a("Kontakt", "#")
+						a(Q("seed.footer.bylaws"), "#"),
+						a(Q("seed.footer.privacy"), "#"),
+						a(Q("seed.footer.contact"), "#")
 					]
 				}
 			],
@@ -7163,46 +7163,46 @@ function nl(e, t) {
 				"linkedin"
 			]),
 			copyright: o,
-			baseline: [a("Personvern", "#"), a("Vilkår", "#")]
+			baseline: [a(Q("seed.footer.privacy"), "#"), a(Q("seed.footer.terms"), "#")]
 		} : e === "sitemap" ? {
 			align: "left",
 			brand: {
 				title: t,
-				tagline: "Alt på ett sted."
+				tagline: Q("seed.footer.tagline2")
 			},
 			columns: [
 				{
-					title: "Utforsk",
+					title: Q("seed.footer.colExplore"),
 					links: [
-						a("Hjem", "#"),
-						a("Arrangementer", "#"),
-						a("Galleri", "#"),
-						a("Blogg", "#")
+						a(Q("seed.footer.home"), "#"),
+						a(Q("seed.footer.events"), "#"),
+						a(Q("seed.footer.gallery"), "#"),
+						a(Q("seed.footer.blog"), "#")
 					]
 				},
 				{
-					title: "Selskap",
+					title: Q("seed.footer.colCompany"),
 					links: [
-						a("Om oss", "#"),
-						a("Historie", "#"),
-						a("Presse", "#"),
-						a("Kontakt", "#")
+						a(Q("seed.footer.about"), "#"),
+						a(Q("seed.footer.history"), "#"),
+						a(Q("seed.footer.press"), "#"),
+						a(Q("seed.footer.contact"), "#")
 					]
 				},
 				{
-					title: "Støtte",
+					title: Q("seed.footer.colSupport"),
 					links: [
-						a("Bli medlem", "#"),
-						a("FAQ", "#"),
-						a("Hjelp", "#")
+						a(Q("seed.join"), "#"),
+						a(Q("seed.footer.faq"), "#"),
+						a(Q("seed.footer.help"), "#")
 					]
 				},
 				{
-					title: "Juridisk",
+					title: Q("seed.footer.colLegal"),
 					links: [
-						a("Personvern", "#"),
-						a("Vilkår", "#"),
-						a("Vedtekter", "#")
+						a(Q("seed.footer.privacy"), "#"),
+						a(Q("seed.footer.terms"), "#"),
+						a(Q("seed.footer.bylaws"), "#")
 					]
 				}
 			],
@@ -7214,45 +7214,45 @@ function nl(e, t) {
 			]),
 			copyright: o,
 			baseline: [
-				a("Personvern", "#"),
-				a("Vilkår", "#"),
-				a("Cookies", "#")
+				a(Q("seed.footer.privacy"), "#"),
+				a(Q("seed.footer.terms"), "#"),
+				a(Q("seed.footer.cookies"), "#")
 			]
 		} : e === "nyhetsbrev" ? {
 			align: "left",
 			brand: {
 				title: t,
-				tagline: "Få siste nytt om arrangementer og medlemsfordeler."
+				tagline: Q("seed.footer.tagline3")
 			},
 			cta: {
 				kind: "newsletter",
-				heading: "Meld deg på nyhetsbrevet",
-				label: "Meld på",
-				recipient: "post@dinforening.no",
-				success: "Takk, du er påmeldt!"
+				heading: Q("seed.footer.newsletterHeading"),
+				label: Q("seed.footer.newsletterButton"),
+				recipient: Q("seed.email"),
+				success: Q("seed.footer.newsletterSuccess")
 			},
 			columns: [{
-				title: "Sider",
+				title: Q("seed.footer.colPages"),
 				links: r(4)
 			}, {
-				title: "Mer",
+				title: Q("seed.footer.colMore"),
 				links: [
-					a("Om oss", "#"),
-					a("Kontakt", "#"),
-					a("Personvern", "#")
+					a(Q("seed.footer.about"), "#"),
+					a(Q("seed.footer.contact"), "#"),
+					a(Q("seed.footer.privacy"), "#")
 				]
 			}],
 			social: i(["facebook", "instagram"]),
 			copyright: o,
-			baseline: [a("Personvern", "#")]
+			baseline: [a(Q("seed.footer.privacy"), "#")]
 		} : e === "storcta" ? {
 			align: "center",
 			cta: {
 				kind: "button",
 				big: !0,
-				heading: "Klar til å bli med i fellesskapet?",
-				sub: "Vi tar imot nye medlemmer hele året - kom innom en torsdag.",
-				label: "Bli medlem",
+				heading: Q("seed.footer.ctaHeading"),
+				sub: Q("seed.footer.ctaSub"),
+				label: Q("seed.join"),
 				href: "#"
 			},
 			linkRow: r(4),
@@ -7262,46 +7262,46 @@ function nl(e, t) {
 				"x"
 			]),
 			copyright: o,
-			baseline: [a("Personvern", "#"), a("Vilkår", "#")]
+			baseline: [a(Q("seed.footer.privacy"), "#"), a(Q("seed.footer.terms"), "#")]
 		} : e === "kontakt" ? {
 			align: "left",
 			brand: {
 				title: t,
-				tagline: "Kom innom eller ta kontakt - vi svarer gjerne."
+				tagline: Q("seed.footer.tagline4")
 			},
 			columns: [
 				{
-					title: "Besøk oss",
+					title: Q("seed.footer.colVisit"),
 					links: [
-						a("Storgata 1, 0155 Oslo", "#"),
-						a("post@dinforening.no", "mailto:post@dinforening.no"),
+						a(Q("seed.footer.address"), "#"),
+						a(Q("seed.email"), "mailto:post@dinforening.no"),
 						a("+47 22 00 00 00", "tel:+4722000000")
 					]
 				},
 				{
-					title: "Åpningstider",
-					links: [a("Man-fre 09-16", "#"), a("Lør 10-14", "#")]
+					title: Q("seed.footer.colHours"),
+					links: [a(Q("seed.footer.hours1"), "#"), a(Q("seed.footer.hours2"), "#")]
 				},
 				{
-					title: "Sider",
+					title: Q("seed.footer.colPages"),
 					links: r(4)
 				}
 			],
 			social: i(["facebook", "instagram"]),
 			copyright: o,
-			baseline: [a("Personvern", "#")]
+			baseline: [a(Q("seed.footer.privacy"), "#")]
 		} : {
 			align: "left",
 			brand: {
 				title: t,
-				tagline: "Bli med i samtalen. Vi tar imot nye medlemmer hele året."
+				tagline: Q("seed.footer.tagline5")
 			},
 			columns: [{
-				title: "Utforsk",
+				title: Q("seed.footer.colExplore"),
 				links: r(4)
 			}, {
-				title: "Følg oss",
-				links: [a("Nyhetsbrev", "#"), a("post@dinforening.no", "mailto:post@dinforening.no")]
+				title: Q("seed.footer.colFollow"),
+				links: [a(Q("seed.footer.newsletter"), "#"), a(Q("seed.email"), "mailto:post@dinforening.no")]
 			}],
 			social: i([
 				"facebook",
@@ -7310,7 +7310,7 @@ function nl(e, t) {
 				"youtube"
 			]),
 			copyright: o,
-			baseline: [a("Personvern", "#"), a("Laget med Urd", "#")],
+			baseline: [a(Q("seed.footer.privacy"), "#"), a(Q("seed.footer.madeWith"), "#")],
 			background: {
 				version: 1,
 				layers: [{
@@ -7356,10 +7356,10 @@ function nl(e, t) {
 	function ta(e) {
 		Ri("footer", (t) => {
 			t[e] ??= [], t[e].push(H(A).pages[0] ? {
-				label: "Lenke",
+				label: Q("seed.link"),
 				page: H(A).pages[0].id
 			} : {
-				label: "Lenke",
+				label: Q("seed.link"),
 				href: "https://"
 			});
 		});
@@ -7400,7 +7400,7 @@ function nl(e, t) {
 		Ri("footer", (t) => {
 			e ? t.cta ??= {
 				kind: "button",
-				label: "Bli medlem"
+				label: Q("seed.join")
 			} : delete t.cta;
 		});
 	}
@@ -7423,9 +7423,9 @@ function nl(e, t) {
 	function va() {
 		Ri("footer", (e) => {
 			e.columns ??= [], e.columns.push({
-				title: "Kolonne",
+				title: Q("seed.column"),
 				links: [{
-					label: "Lenke",
+					label: Q("seed.link"),
 					page: H(A).pages[0].id
 				}]
 			});
@@ -7450,7 +7450,7 @@ function nl(e, t) {
 	function wa(e) {
 		Ri("footer", (t) => {
 			t.columns[e].links ??= [], t.columns[e].links.push({
-				label: "Lenke",
+				label: Q("seed.link"),
 				page: H(A).pages[0].id
 			});
 		});
@@ -7542,7 +7542,7 @@ function nl(e, t) {
 	function Za() {
 		V("nav", () => {
 			H(A).nav.items.push({
-				label: "Lenke",
+				label: Q("seed.link"),
 				page: H(A).pages[0].id
 			});
 		});
@@ -7551,7 +7551,7 @@ function nl(e, t) {
 		V("nav", () => {
 			let t = H(A).nav.items[e];
 			t.children ??= [], t.children.push({
-				label: "Lenke",
+				label: Q("seed.link"),
 				page: H(A).pages[0].id
 			});
 		});
@@ -7911,7 +7911,7 @@ function nl(e, t) {
 		text: {
 			type: "text",
 			props: {
-				html: "<p>Ny tekst</p>",
+				html: Q("seed.text"),
 				align: "left"
 			},
 			w: 33,
@@ -7920,7 +7920,7 @@ function nl(e, t) {
 		"text-box": {
 			type: "text",
 			props: {
-				html: "<h3>Overskrift</h3><p>Skriv innholdet her.</p>",
+				html: Q("seed.textBox"),
 				align: "left",
 				box: !0
 			},
@@ -7930,7 +7930,7 @@ function nl(e, t) {
 		button: {
 			type: "button",
 			props: {
-				label: "Ny knapp",
+				label: Q("seed.newButton"),
 				page: null,
 				href: null,
 				style: "primary"
@@ -8060,16 +8060,16 @@ function nl(e, t) {
 			props: {
 				items: [
 					{
-						q: "Hvordan blir jeg medlem?",
-						a: "<p>Skriv svaret her.</p>"
+						q: Q("seed.faq.q1"),
+						a: Q("seed.faq.answer")
 					},
 					{
-						q: "Når er dere åpne?",
-						a: "<p>Skriv svaret her.</p>"
+						q: Q("seed.faq.q2"),
+						a: Q("seed.faq.answer")
 					},
 					{
-						q: "Hvordan kontakter jeg dere?",
-						a: "<p>Skriv svaret her.</p>"
+						q: Q("seed.faq.q3"),
+						a: Q("seed.faq.answer")
 					}
 				],
 				multi: !1

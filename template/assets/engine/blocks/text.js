@@ -6,11 +6,14 @@
 import { stripActiveContent } from '../sanitize.js';
 import { boxStyleCss } from '../box-style.js';
 
+// Seed-regelen (ADR-0012): ta() kalles kun i defaults() ved innsetting i preview, aldri på modulnivå.
+import { ta } from '../i18n.js';
+
 export const textBlock = {
   version: 1,
   label: 'Tekst',
   labelKey: 'blocks.text',
-  defaults: () => ({ html: '<p>Ny tekst</p>', align: 'left', box: false }),
+  defaults: () => ({ html: ta('seed.text'), align: 'left', box: false }),
   migrations: {},
   /**
    * @param {HTMLElement} el Blokk-elementet (posisjonert av render.js)
