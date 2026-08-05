@@ -10,10 +10,10 @@
   <a href="docs/languages/README/README-tr.md">🇹🇷 Türkçe</a>
 </p>
 
-> Urd is probably the eldest of the three norns in Norse mythology who sit at the foot of Yggdrasil and decide the fates of the gods. Together the norns sit and spin threads of fate, or carve fate into pieces of wood.
+> Urd is said to be the eldest of the three norns in Norse mythology who sit at the foot of Yggdrasil and decide the fates of the gods. Together the norns sit and spin threads of fate, or carve fate into pieces of wood.
 > Urd is the tool for spinning and carving your own website out from the root of the tree.
 
-**Saying the name:** *Urd* is pronounced roughly **oord** (Norwegian [ʉːɖ]). The vowel is close to the "oo" in *food*, but with the lips more rounded and pushed forward, and the "rd" melts into a single sound made with the tip of the tongue curled back. English speakers already know a relative of the word: *weird* comes from Old English *wyrd*, fate, the same root as the Old Norse *Urðr*.
+**Pronounciation:** *Urd* is pronounced roughly **oord** (Norwegian [ʉːɖ]). The vowel is close to the "oo" in *food*, but with the lips more rounded and pushed forward, and the "rd" melts into a single sound made with the tip of the tongue curled back. English speakers already know a relative of the word: *weird* comes from Old English *wyrd*, fate, the same root as the Old Norse *Urðr*.
 
 **Status: under development - not ready for use yet.** See [the roadmap](docs/VEIKART.md) for how far we have come.
 
@@ -25,10 +25,11 @@ No server. No database. No subscription. No build process. Just a git repo with 
 
 ## How it works
 
-1. **Clone** the Urd template into your own repo and connect it to a static host.
+1. **Create your repo** from the [urd-template](https://github.com/Artiscow/urd-template) («Use this template» on GitHub) and connect it to a static host.
 2. **Set up** your site through the setup wizard - name, colours, logo.
 3. **Edit** by going to `yoursite.org/admin` and logging in with GitHub. The whole builder is there: click and type directly on the page, drag blocks freely on a grid, add sections, edit backgrounds, colours and navigation.
 4. **Publish** - one click makes one git commit with your changes, and the host serves the new page in under a minute.
+5. **Update** - the Updates panel in admin fetches new Urd versions from the template repo as one commit, and warns about files you have hand-edited.
 
 After the first setup, the admin page is the control centre for your website. Everything you see on the page can be edited from there.
 

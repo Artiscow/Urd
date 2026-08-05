@@ -19,10 +19,11 @@ Ingen server. Ingen database. Ingen abonnement. Ingen byggjeprosess. Berre eit g
 
 ## Slik fungerer det
 
-1. **Klon** Urd-malen til ditt eige repo og kople det til ein statisk host.
+1. **Lag repoet ditt** frå [urd-template](https://github.com/Artiscow/urd-template) («Use this template» på GitHub) og kople det til ein statisk host.
 2. **Set opp** sida di gjennom oppsettsvegvisaren - namn, fargar, logo.
 3. **Rediger** ved å gå til `disida.no/admin` og logge inn med GitHub. Der er heile byggjaren: klikk og skriv rett på sida, dra blokker fritt på eit grid, legg til seksjonar, rediger bakgrunnar, fargar og navigasjon.
 4. **Publiser** - eitt klikk lagar éin git-commit med endringane dine, og hosten serverer den nye sida på under eit minutt.
+5. **Oppdater** - Oppdatering-panelet i admin hentar nye Urd-versjonar frå malrepoet som éin commit, og varslar om filer du har handredigert.
 
 Etter første oppsett er admin-sida kontrollsenteret for nettsida di. Alt du ser på sida kan redigerast derfrå.
 

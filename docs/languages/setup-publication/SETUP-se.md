@@ -8,6 +8,10 @@ docs/OPPSETT-PUBLISERING.md jorgalus. Dárogiella (bokmål) lea kanonalaš ja gu
 
 Dát rávvagat heivehit «Almmut»-boalu: ahte admin sáhttá committet rievdadusaid GitHub-repoi, maid Cloudflare Pages de deployere. Dát lea ovttageardánis bargu juohke neahttasiiddu ovddas ja ádjána sullii logi minuhta. (Minsttar lea dárkkistuvvon produkšuvnnas ApeironLF:s.)
 
+## 0. Ráhkat neahttasiiddu repo
+
+Ođđa siidu álgá málle-repos [urd-template](https://github.com/Artiscow/urd-template): coahkkal **Use this template** → **Create a new repository** GitHubas, ja atte repoi nama. Repo maid oaččut LEA neahttasiidu; buot eará dán rávvagis dahkkojuvvo dan vuostá. Maŋit Urd-veršuvnnat vižžojuvvojit **Ođasmahttin**-panelain adminis, mii dárkkista málle-repo vuostá, várre fiillain maid leat gieđain rievdadan, ja čállá ođasmahttima oktan commitin. (Urd-ovddideami várás geavahuvvo ieš Urd-monorepo; dalle neahttasiidu lea vuollemáhppa `template`.)
+
 ## Eaktun
 
 - Neahttasiiddu repo lea GitHubas (Urd-ovddideami várás: ieš Urd-repo).
@@ -75,7 +79,13 @@ Deavdde juste nugo vuolábealde. Vurke, ja gearddut buot guđa ovddas:
    «Root directory» lávkkis 1. Urd-monorepo ovddas: `template`.
    (Jus neahttasiidu lea repo-ruohttasis, nugo klonejuvvon málle-repos: guođe dán áibbas eret.)
 
-8. Type: **Secret** (eaktodáhtolaš - dábálaččat ii dárbbašuvvo)
+8. Type: Text (eaktodáhtolaš - dábálaččat ii dárbbašuvvo)
+   Namma: `URD_TEMPLATE_REPO`
+   Árvu: málle-repo mas Ođasmahttin-panela viežžá ođđa Urd-veršuvnnaid.
+   Dán haga geavahuvvo standárda `Artiscow/urd-template`; bija dan dušše jus
+   siidu galgá čuovvut málle forka.
+
+9. Type: **Secret** (eaktodáhtolaš - dábálaččat ii dárbbašuvvo)
    Namma: `DEPLOY_HOOK_URL`
    Árvu: Deploy Hook-URL (Settings → Deploy Hooks → plus-mearka → branch `main`).
    Cloudflare njuikko hárve dilálašvuođain badjel deploya vaikko commit lea riekta;
@@ -128,4 +138,4 @@ De vujolit sihke siidu, admin ja functions čujuhusas `http://localhost:8788`. O
 | «har ikke publiseringstilgang» (403) | Geavaheaddjinamma ii leat `ALLOWED_LOGINS`-listtus (dárkkis čállinvuogi; giedda ii beroš stuora/unna bustávain) |
 | «Kunne ikke committe til GitHub» (502) | Token:s váilu scope (priváhta repo dárbbaša `repo`), dahje ossodat lea sirdásan |
 | Almmuheapmi lihkostuvvá, muhto siidu ii rievdda | `GITHUB_ROOT_DIR` váilu/lea boastut: commit boahtá olggobeallái neahttasiiddu ruohttasmáhpa (dárkkis makkár bálgáid commit rievdadii GitHubas) |
-| Commit lea riekta, muhto ii boađe deploy | Git-webhook filtii hostas (dáhpáhuvvá duollet dálle). Heivet `DEPLOY_HOOK_URL` (variábel 8), de almmuheapmi ieš vuolggaha deploya |
+| Commit lea riekta, muhto ii boađe deploy | Git-webhook filtii hostas (dáhpáhuvvá duollet dálle). Heivet `DEPLOY_HOOK_URL` (variábel 9), de almmuheapmi ieš vuolggaha deploya |

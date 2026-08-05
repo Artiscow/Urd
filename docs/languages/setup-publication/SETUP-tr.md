@@ -6,6 +6,10 @@ docs/OPPSETT-PUBLISERING.md dosyasının çevirisi. Norveççe (bokmål) kanonik
 
 Bu kılavuz «Yayımla» düğmesini kurar: adminin değişiklikleri GitHub deposuna commit edebilmesini ve Cloudflare Pages'in bunu dağıtmasını sağlar. Bu, her web sitesi için tek seferlik bir iştir ve yaklaşık on dakika sürer. (Desen, ApeironLF'de üretimde doğrulanmıştır.)
 
+## 0. Web sitesinin deposunu oluştur
+
+Yeni bir site, şablon deposu [urd-template](https://github.com/Artiscow/urd-template) ile başlar: GitHub'da **Use this template** → **Create a new repository** düğmesine bas ve depoya bir ad ver. Aldığın depo web sitesinin KENDİSİDİR; bu kılavuzdaki diğer her şey ona karşı yapılır. Sonraki Urd sürümleri, yönetici panelindeki **Güncelleme** bölümüyle getirilir: şablon deposuyla karşılaştırır, elle düzenlediğin dosyalar için uyarır ve güncellemeyi tek commit olarak yazar. (Urd geliştirmesi için bunun yerine Urd monorepo'sunun kendisi kullanılır; web sitesi o zaman `template` alt klasörüdür.)
+
 ## Ön koşullar
 
 - Web sitesinin deposu GitHub'da olmalı (Urd geliştirmesi için: Urd deposunun kendisi).
@@ -73,7 +77,13 @@ Aşağıdaki gibi tam olarak doldur. Kaydet ve altısı için de tekrarla:
    «Root directory» ile aynı değer. Urd monorepo için: `template`.
    (Web sitesi depo kökündeyse, klonlanmış bir şablon deposundaki gibi: bunu tamamen atla.)
 
-8. Type: **Secret** (isteğe bağlı - normalde gerekmez)
+8. Type: Text (isteğe bağlı - normalde gerekmez)
+   Ad: `URD_TEMPLATE_REPO`
+   Değer: Güncelleme bölümünün yeni Urd sürümlerini getirdiği şablon deposu.
+   Bu olmadan varsayılan `Artiscow/urd-template` kullanılır; yalnızca site
+   şablonun bir fork'unu izleyecekse ayarla.
+
+9. Type: **Secret** (isteğe bağlı - normalde gerekmez)
    Ad: `DEPLOY_HOOK_URL`
    Değer: bir Deploy Hook URL'si (Settings → Deploy Hooks → artı işareti → branch `main`).
    Cloudflare nadir durumlarda commit doğru olsa bile bir dağıtımı atlar;
@@ -126,4 +136,4 @@ O zaman site, admin ve functions birlikte `http://localhost:8788` üzerinde çal
 | «har ikke publiseringstilgang» (403) | Kullanıcı adı `ALLOWED_LOGINS` içinde yok (yazımı denetle; alan büyük/küçük harfe duyarsızdır) |
 | «Kunne ikke committe til GitHub» (502) | Belirtecin kapsamı eksik (özel depo `repo` gerektirir) ya da dal yer değiştirmiş |
 | Yayımlama başarılı ama site değişmiyor | `GITHUB_ROOT_DIR` eksik/yanlış: commit web sitesinin kök klasörünün dışına düşüyor (GitHub'da commit'in hangi yolları değiştirdiğini denetle) |
-| Commit doğru ama hiç dağıtım görünmüyor | Git webhook'u sunucuda kaçtı (arada olur). `DEPLOY_HOOK_URL` (değişken 8) kur, yayımlama dağıtımı kendisi tetikler |
+| Commit doğru ama hiç dağıtım görünmüyor | Git webhook'u sunucuda kaçtı (arada olur). `DEPLOY_HOOK_URL` (değişken 9) kur, yayımlama dağıtımı kendisi tetikler |

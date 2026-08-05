@@ -21,10 +21,11 @@ Ii server. Ii diehtovuođđu. Ii diŋgojupmi. Ii huksenproseassa. Dušše git-re
 
 ## Ná dat doaibmá
 
-1. **Klonere** Urd-málle iežat repoi ja lakto dan stáhtalaš hostii.
+1. **Ráhkat iežat repo** [urd-template](https://github.com/Artiscow/urd-template) mális («Use this template» GitHubas) ja lakto dan stáhtalaš hostii.
 2. **Heivet** siiddu oahpisteaddji bokte - namma, ivnnit, logo.
 3. **Doaimmat** go manat čujuhussii `dusiidu.no/admin` ja loggejat sisa GitHubain. Doppe lea olles huksejeaddji: coahkkal ja čále njuolga siidui, gease blohkaid friddja gridii, lasit sekšuvnnaid, doaimmat duogážiid, ivnniid ja navigašuvnna.
 4. **Almmut** - okta coahkkaleapmi ráhkada ovtta git-commita du rievdadusaiguin, ja host bálvala ođđa siiddu vuollel minuhtas.
+5. **Ođasmahte** - Ođasmahttin-panela adminis viežžá ođđa Urd-veršuvnnaid mállerepos oktan commitin, ja várre fiillain maid leat gieđain rievdadan.
 
 Maŋŋel vuosttaš heiveheami lea admin-siidu du neahttasiiddu stivrenguovddáš. Buot maid oainnát siiddus sáhttá doaimmahuvvot doppe.
 

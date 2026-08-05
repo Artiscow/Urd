@@ -6,6 +6,10 @@ Omsetjing av docs/OPPSETT-PUBLISERING.md. Norsk (bokmål) er kanonisk og gjeld v
 
 Denne guiden set opp «Publiser»-knappen: at admin kan committe endringar til GitHub-repoet, som Cloudflare Pages så deployar. Dette er ein eingongsjobb per nettside og tek rundt ti minutt. (Mønsteret er validert i produksjon i ApeironLF.)
 
+## 0. Lag repoet til nettsida
+
+Ei ny side startar frå malrepoet [urd-template](https://github.com/Artiscow/urd-template): trykk **Use this template** → **Create a new repository** på GitHub, og gi repoet eit namn. Repoet du får ER nettsida; alt vidare i guiden gjerast mot det. Seinare Urd-versjonar hentast med **Oppdatering**-panelet i admin, som sjekkar mot malrepoet, varslar om filer du har handredigert, og skriv oppdateringa som éin commit. (For Urd-utvikling brukast sjølve Urd-monorepoet i staden; då er nettsida undermappa `template`.)
+
 ## Føresetnader
 
 - Repoet til nettsida ligg på GitHub (for Urd-utvikling: sjølve Urd-repoet).
@@ -73,7 +77,13 @@ Fyll inn nøyaktig som under. Lagre, og gjenta for alle seks:
    «Root directory» i steg 1. For Urd-monorepoet: `template`.
    (Ligg nettsida i repo-rota, som i eit klona mal-repo: drop denne heilt.)
 
-8. Type: **Secret** (valfri - trengst normalt ikkje)
+8. Type: Text (valfri - trengst normalt ikkje)
+   Namn: `URD_TEMPLATE_REPO`
+   Verdi: malrepoet Oppdatering-panelet hentar nye Urd-versjonar frå.
+   Utan denne brukast standarden `Artiscow/urd-template`; set han berre om
+   sida skal følgje ein fork av malen.
+
+9. Type: **Secret** (valfri - trengst normalt ikkje)
    Namn: `DEPLOY_HOOK_URL`
    Verdi: ein Deploy Hook-URL (Settings → Deploy Hooks → pluss-teiknet → branch `main`).
    Cloudflare hoppar i sjeldne tilfelle over ein deploy sjølv om commiten er rett;
@@ -126,4 +136,4 @@ Da køyrer både sida, admin og functions på `http://localhost:8788`. Full OAut
 | «har ikke publiseringstilgang» (403) | Brukarnamnet står ikkje i `ALLOWED_LOGINS` (sjekk stavinga; feltet er ufølsamt for store/små bokstavar) |
 | «Kunne ikke committe til GitHub» (502) | Tokenet manglar scope (privat repo treng `repo`), eller greina har flytta seg |
 | Publisering lukkast, men sida endrar seg ikkje | `GITHUB_ROOT_DIR` manglar/er feil: commiten hamnar utanfor rotmappa til nettsida (sjekk kva stiar commiten endra på GitHub) |
-| Commiten er rett, men ingen deploy dukkar opp | Git-webhooken glapp hos hosten (skjer av og til). Set opp `DEPLOY_HOOK_URL` (variabel 8), så trigger publiseringa deployen sjølv |
+| Commiten er rett, men ingen deploy dukkar opp | Git-webhooken glapp hos hosten (skjer av og til). Set opp `DEPLOY_HOOK_URL` (variabel 9), så trigger publiseringa deployen sjølv |

@@ -53,8 +53,9 @@ docs/       Dokumentasjon. VISJON (hvorfor), ARKITEKTUR (hvordan), SKJEMA (datak
             adr/ (beslutninger med begrunnelse)
 schema/     JSON Schema: maskinlesbar utgave av SKJEMA.md
 editor/     Svelte-kildekoden til editoren. Eneste sted med npm.
-template/   NETTSIDEN. Dette er det foreninger kloner:
-              assets/engine/   håndskrevet lesbar motor-JS (ALDRI kompilert)
+template/   NETTSIDEN. Synkes til urd-template-repoet ved utgivelser («Use this template»):
+              assets/engine/<versjon>/   håndskrevet lesbar motor-JS (ALDRI kompilert; versjonert mappe, ADR-0013)
+              assets/urd/      stabile plugin-API-skall (re-exports mot gjeldende motorversjon)
               admin/assets/    ferdigbygd editor (committes, fra editor/)
               content/         eksempelinnhold (brukereid ved kloning)
               functions/       publiseringslaget (Cloudflare Pages Functions)
@@ -69,7 +70,7 @@ tests/      node --test-tester (foreløpig migreringskontrakten)
 3. **Endrer du formen på props for en blokk/seksjon/bakgrunn/animasjon, SKAL du bumpe `version` og skrive en migrering** (`migrations[n]` løfter v(n) til v(n+1), ren funksjon, med test i `tests/`). Se [ADR-0005](adr/0005-versjonering-og-migrering.md).
 4. **Skjemaendringer gjøres tre steder i samme commit:** `docs/SKJEMA.md`, `schema/*.schema.json` og eksempeldataene i `template/content/`. Eksemplene skal alltid validere.
 5. **Editor-endringer bygges før merge:** `npm run build`, og den oppdaterte `template/admin/assets/` committes sammen med kilden.
-6. **Publisering får aldri skrive kode.** Sti-allowlisten i `template/functions/_lib/guard.js` (nekt `functions/`, `admin/`, `assets/engine/`, med mer) endres kun med svært god grunn.
+6. **Publisering får aldri skrive kode.** Sti-allowlisten i `template/functions/_lib/guard.js` (nekt `functions/`, `admin/`, `assets/engine/`, `assets/urd/`, med mer) endres kun med svært god grunn. Oppdatereren har det motsatte domenet (eierskapskartet, ADR-0014); kontraktstester holder guard.js og urd.json i synk.
 7. **Norsk (bokmål) er kanonisk i dokumenter og brukerflater; engelsk i kode/identifikatorer** (også i datakontrakter: JSON-feltnavn, meldingstyper og oversettelsesnøkler). Kanonisk betyr ikke enerådende: fra 0.6.8 finnes UI-tekstene på fem språk (ADR-0012) og deler av dokumentasjonen er oversatt under [languages/](languages/), men den norske teksten gjelder ved avvik. Ingen tankestreker i tekst.
 
 ## Vanlige oppgaver

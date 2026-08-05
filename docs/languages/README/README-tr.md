@@ -21,10 +21,11 @@ Sunucu yok. Veritabanı yok. Abonelik yok. Derleme süreci yok. Yalnızca kendi 
 
 ## Nasıl çalışır
 
-1. Urd şablonunu kendi depona **klonla** ve statik bir sunucuya bağla.
+1. [urd-template](https://github.com/Artiscow/urd-template) şablonundan **kendi deponu oluştur** (GitHub'da «Use this template») ve statik bir sunucuya bağla.
 2. Siteni kurulum sihirbazıyla **kur** - ad, renkler, logo.
 3. `siten.org/admin` adresine giderek ve GitHub ile giriş yaparak **düzenle**. Kurucunun tamamı orada: sayfanın üzerine tıklayıp doğrudan yaz, blokları ızgarada serbestçe sürükle, bölümler ekle, arka planları, renkleri ve gezinmeyi düzenle.
 4. **Yayımla** - tek tıklama değişikliklerinle tek bir git commit oluşturur ve sunucu yeni sayfayı bir dakikadan kısa sürede yayımlar.
+5. **Güncelle** - yönetici panelindeki Güncelleme bölümü yeni Urd sürümlerini şablon deposundan tek commit olarak getirir ve elle düzenlediğin dosyalar için uyarır.
 
 İlk kurulumdan sonra admin sayfası web sitenin kontrol merkezidir. Sayfada gördüğün her şey oradan düzenlenebilir.
 

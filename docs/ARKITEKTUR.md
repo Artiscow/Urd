@@ -94,13 +94,15 @@ Urd/
 └── template/      NETTSIDEN. Deployes som Pages-rot; dette er det foreninger kloner.
 ```
 
-I tidlig utvikling endres skjema, motor og editor i samme commit, og den bygde editoren i `template/admin/assets/` må alltid matche motoren fra samme commit - derfor ett repo nå ([ADR-0004](adr/0004-monorepo-med-template-mappe.md)). Mot v1 synker en GitHub Action `template/` til et rent `urd-template`-repo med «Use this template»-knapp.
+I tidlig utvikling endres skjema, motor og editor i samme commit, og den bygde editoren i `template/admin/assets/` må alltid matche motoren fra samme commit - derfor ett repo nå ([ADR-0004](adr/0004-monorepo-med-template-mappe.md)). Ved hver utgivelse synker release-Action-en (`.github/workflows/release.yml`) innholdet av `template/` til det rene `urd-template`-repoet («Use this template») som én squashet commit, tagget med versjonen.
 
-## Oppdateringsmekanismen
+## Motorversjonering (ADR-0013)
 
-`template/urd.json` er manifestet: motorversjon + listen over **Urd-eide stier** (`assets/engine/**`, `admin/**`, `functions/**`, `index.html`, `_headers`, `urd.json`). Den fremtidige oppdatereren (knapp i admin, planlagt v0.6) henter en Urd-utgivelse og lager én commit som overskriver *kun* manifest-stiene - aldri `content/`, `media/` eller `plugins/`. Innhold skrevet på gammelt skjema løftes av migreringskontrakten ved lasting; det er hele poenget med den.
+Motoren bor i en versjonert mappe, `template/assets/engine/<versjon>/`, der mappenavnet alltid er lik `engine`-feltet i urd.json (testhåndhevet). Det gjør hele import-grafen adresserbar per versjon (relative ES-importer arver ingen `?v=`-query), så `_headers` kan gi `/assets/engine/*` immutable-cache med en versjonsnøytral regel som aldri trenger endres. Det stabile plugin-API-et bor i `template/assets/urd/`: skallmoduler (i18n, hint, dropdown m.fl.) som re-eksporterer fra gjeldende versjon og revalideres normalt - plugins hardkoder aldri den versjonerte stien. Enhver mekanisme som bytter motorversjon (fase-slipp, oppdatereren) skriver rot-index.html og alle `<slug>/index.html`-kopier i samme commit (kopi-oppfriskningsplikten).
 
-Åpent spørsmål (avgjøres før v0.6): varsling når brukeren har håndredigert Urd-eide filer (sjekksum-sammenligning før overskriving).
+## Oppdateringsmekanismen (ADR-0014)
+
+`template/urd.json` er manifestet: motorversjon + eierskapskartet (`ownedPaths` for Urd-eide stier, `userPaths` for `content/**`, `media/**`, `plugins/**`). Oppdatering-panelet i admin sjekker mot `urd-template`-repoet via `/api/github/update`: brukerens git-tre sammenlignes med malens tre ved BASISLINJEN (taggen `v<engine>` for versjonen siden kjører) og ved målversjonen, med rene blob-SHA-sammenligninger - lik SHA er identisk innhold, så «håndredigert» avgjøres uten å laste en eneste fil. Utføringen skriver de Urd-eide filene som ÉN atomisk commit (inline-trær, expect-vern): motor-atomgruppen byttes alltid samlet, valgfrie filer (functions, løse rotfiler) kan holdes tilbake per fil, `_headers` skrives aldri (diff-instruks i stedet, jf. ADR-0006), og brukereide stier røres aldri. Innhold skrevet på gammelt skjema løftes av migreringskontrakten ved lasting; det er hele poenget med den.
 
 ## Arv fra ApeironLF - hva som er fikset by design
 

@@ -4,9 +4,13 @@
 
 Denne guiden setter opp «Publiser»-knappen: at admin kan committe endringer til GitHub-repoet, som Cloudflare Pages så deployer. Dette er en engangsjobb per nettside og tar rundt ti minutter. (Mønsteret er validert i produksjon i ApeironLF.)
 
+## 0. Lag nettsidens repo
+
+Ny side starter fra malrepoet [urd-template](https://github.com/Artiscow/urd-template): trykk **Use this template** → **Create a new repository** på GitHub, og gi repoet et navn. Repoet du får ER nettsiden; alt videre i guiden gjøres mot det. Senere Urd-versjoner hentes med **Oppdatering**-panelet i admin, som sjekker mot malrepoet, varsler om filer du har håndredigert, og skriver oppdateringen som én commit. (For Urd-utvikling brukes selve Urd-monorepoet i stedet; da er nettsiden undermappen `template`.)
+
 ## Forutsetninger
 
-- Nettsidens repo ligger på GitHub (for Urd-utvikling: selve Urd-repoet).
+- Nettsidens repo ligger på GitHub (laget fra malen i steg 0, eller for Urd-utvikling: selve Urd-repoet).
 - En Cloudflare-konto (gratisnivået holder lenge).
 
 ## 1. Koble repoet til Cloudflare Pages
@@ -71,7 +75,13 @@ Fyll inn nøyaktig som under. Lagre, og gjenta for alle seks:
    «Root directory» i steg 1. For Urd-monorepoet: `template`.
    (Ligger nettsiden i repo-roten, som i et klonet mal-repo: dropp denne helt.)
 
-8. Type: **Secret** (valgfri - trengs normalt ikke)
+8. Type: Text (valgfri - trengs normalt ikke)
+   Navn: `URD_TEMPLATE_REPO`
+   Verdi: malrepoet Oppdatering-panelet henter nye Urd-versjoner fra.
+   Uten denne brukes standarden `Artiscow/urd-template`; sett den kun hvis
+   siden skal følge en fork av malen.
+
+9. Type: **Secret** (valgfri - trengs normalt ikke)
    Navn: `DEPLOY_HOOK_URL`
    Verdi: en Deploy Hook-URL (Settings → Deploy Hooks → pluss-tegnet → branch `main`).
    Cloudflare hopper i sjeldne tilfeller over en deploy selv om commiten er riktig;
@@ -124,4 +134,4 @@ Da kjører både siden, admin og functions på `http://localhost:8788`. Full OAu
 | «har ikke publiseringstilgang» (403) | Brukernavnet står ikke i `ALLOWED_LOGINS` (sjekk staving; feltet er case-ufølsomt) |
 | «Kunne ikke committe til GitHub» (502) | Tokenet mangler scope (privat repo trenger `repo`), eller grenen har flyttet seg |
 | Publisering lykkes, men siden endres ikke | `GITHUB_ROOT_DIR` mangler/feil: commiten havner utenfor nettsidens rotmappe (sjekk hvilke stier commiten endret på GitHub) |
-| Commiten er riktig, men ingen deploy dukker opp | Git-webhooken glapp hos hosten (skjer av og til). Sett opp `DEPLOY_HOOK_URL` (variabel 8), så trigger publiseringen deployen selv |
+| Commiten er riktig, men ingen deploy dukker opp | Git-webhooken glapp hos hosten (skjer av og til). Sett opp `DEPLOY_HOOK_URL` (variabel 9), så trigger publiseringen deployen selv |

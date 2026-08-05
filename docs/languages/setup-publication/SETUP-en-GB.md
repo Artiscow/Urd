@@ -6,6 +6,10 @@ Translation of docs/OPPSETT-PUBLISERING.md. Norwegian (bokmål) is canonical and
 
 This guide sets up the «Publish» button: letting admin commit changes to the GitHub repo, which Cloudflare Pages then deploys. This is a one-time job per website and takes about ten minutes. (The pattern is validated in production in ApeironLF.)
 
+## 0. Create the website repo
+
+A new site starts from the template repository [urd-template](https://github.com/Artiscow/urd-template): press **Use this template** → **Create a new repository** on GitHub and name your repo. The repo you get IS the website; everything else in this guide is done against it. Later Urd versions are fetched with the **Updates** panel in the admin, which checks against the template repository, warns about files you have hand-edited, and writes the update as one commit. (For Urd development, the Urd monorepo itself is used instead; the website is then the `template` subfolder.)
+
 ## Prerequisites
 
 - The website repo is on GitHub (for Urd development: the Urd repo itself).
@@ -73,7 +77,13 @@ Fill them in exactly as below. Save, and repeat for all six:
    «Root directory» in step 1. For the Urd monorepo: `template`.
    (If the website is at the repo root, as in a cloned template repo: drop this entirely.)
 
-8. Type: **Secret** (optional - normally not needed)
+8. Type: Text (optional - normally not needed)
+   Name: `URD_TEMPLATE_REPO`
+   Value: the template repository the Updates panel fetches new Urd versions
+   from. Without it the default `Artiscow/urd-template` is used; set it only
+   if the site should follow a fork of the template.
+
+9. Type: **Secret** (optional - normally not needed)
    Name: `DEPLOY_HOOK_URL`
    Value: a Deploy Hook URL (Settings → Deploy Hooks → the plus sign → branch `main`).
    In rare cases Cloudflare skips a deploy even though the commit is correct;
@@ -126,4 +136,4 @@ Then the site, admin and functions all run on `http://localhost:8788`. Full OAut
 | «har ikke publiseringstilgang» (403) | The username is not in `ALLOWED_LOGINS` (check the spelling; the field is case-insensitive) |
 | «Kunne ikke committe til GitHub» (502) | The token lacks scope (a private repo needs `repo`), or the branch has moved |
 | Publishing succeeds, but the site does not change | `GITHUB_ROOT_DIR` is missing/wrong: the commit lands outside the website root folder (check which paths the commit changed on GitHub) |
-| The commit is correct, but no deploy appears | The git webhook was missed by the host (happens now and then). Set up `DEPLOY_HOOK_URL` (variable 8), and publishing triggers the deploy itself |
+| The commit is correct, but no deploy appears | The git webhook was missed by the host (happens now and then). Set up `DEPLOY_HOOK_URL` (variable 9), and publishing triggers the deploy itself |
