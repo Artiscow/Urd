@@ -31,14 +31,21 @@ const ALLOW_EXACT = ['plugins/plugins.json'];
 const PAGE_INDEX_RE = /^[a-z0-9][a-z0-9-]*\/index\.html$/;
 const RESERVED_SLUGS = ['admin', 'api', 'assets', 'content', 'media', 'plugins', 'functions'];
 
+/** Felles normalisering: skråstreker, og avvis absolutte stier og `..`. */
+function normalizePath(path) {
+  if (typeof path !== 'string' || path.length === 0) return null;
+  const normalized = path.replaceAll('\\', '/');
+  if (normalized.startsWith('/') || normalized.split('/').includes('..')) return null;
+  return normalized;
+}
+
 /**
  * @param {string} path Repo-relativ filsti fra en commit-forespørsel
  * @returns {boolean} true hvis stien er trygg å skrive via publisering
  */
 export function isAllowedPath(path) {
-  if (typeof path !== 'string' || path.length === 0) return false;
-  const normalized = path.replaceAll('\\', '/');
-  if (normalized.startsWith('/') || normalized.split('/').includes('..')) return false;
+  const normalized = normalizePath(path);
+  if (!normalized) return false;
   if (DENY_EXACT.includes(normalized)) return false;
   if (DENY_PREFIXES.some((p) => normalized.startsWith(p))) return false;
   if (ALLOW_EXACT.includes(normalized)) return true;
@@ -50,6 +57,53 @@ export function isAllowedPath(path) {
   return Object.entries(ALLOW_PREFIX_EXTENSIONS).some(
     ([prefix, extensions]) => normalized.startsWith(prefix) && extensions.includes(extension)
   );
+}
+
+/**
+ * Eierskapskartet for oppdatereren (0.6.9): speiler ownedPaths/userPaths i
+ * urd.json, fordi functions ikke kan lese repoets urd.json ved kjøring.
+ * Kontraktstesten i tests/guard.test.mjs krever at listene er identiske med
+ * urd.json, så de aldri driver. Mønsterformene er kun eksakt sti og
+ * `prefiks/**` - hold det slik.
+ */
+export const OWNED_PATTERNS = [
+  'index.html',
+  'urd.json',
+  '_headers',
+  'speculation-rules.json',
+  'admin/**',
+  'assets/engine/**',
+  'assets/urd/**',
+  'assets/styles/base.css',
+  'functions/**',
+];
+export const USER_PATTERNS = ['content/**', 'media/**', 'plugins/**'];
+
+/** @param {string} pattern Eksakt sti eller `prefiks/**` */
+export function matchesPattern(pattern, path) {
+  if (pattern.endsWith('/**')) return path.startsWith(pattern.slice(0, -2));
+  return path === pattern;
+}
+
+/** Urd-eid sti (oppdatererens domene; publisering avviser alle disse). */
+export function isOwnedPath(path) {
+  const normalized = normalizePath(path);
+  return normalized !== null && OWNED_PATTERNS.some((p) => matchesPattern(p, normalized));
+}
+
+/** Brukereid sti (innhold/media/plugins; oppdatereren rører aldri disse). */
+export function isUserPath(path) {
+  const normalized = normalizePath(path);
+  return normalized !== null && USER_PATTERNS.some((p) => matchesPattern(p, normalized));
+}
+
+/** Sideruting-kopi (`<slug>/index.html`): skrives av publisering, og friskes
+ *  opp av oppdatereren i samme commit som et motorbytte (ADR-0013). */
+export function isPageIndexCopy(path) {
+  const normalized = normalizePath(path);
+  return normalized !== null
+    && PAGE_INDEX_RE.test(normalized)
+    && !RESERVED_SLUGS.includes(normalized.split('/')[0]);
 }
 
 /**

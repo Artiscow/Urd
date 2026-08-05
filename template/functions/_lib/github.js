@@ -35,6 +35,9 @@ export function cfg(env) {
     branch: env.GITHUB_BRANCH || 'main',
     scope: env.GITHUB_SCOPE || 'public_repo',
     rootDir,
+    // Malrepoet oppdatereren henter nye Urd-versjoner fra (ADR-0014).
+    // Overstyres med URD_TEMPLATE_REPO for fork-baserte oppstrøms.
+    templateRepo: env.URD_TEMPLATE_REPO || 'Artiscow/urd-template',
   };
 }
 
@@ -73,6 +76,42 @@ export async function gh(token, path, init = {}, attempt = 1) {
 /** Innlogget GitHub-bruker for tokenet. */
 export function currentUser(token) {
   return gh(token, '/user');
+}
+
+/**
+ * GraphQL-kall mot GitHub: brukes av oppdatereren til å hente MANGE
+ * fil-innhold i ETT subrequest (Blob.text via aliaser), som REST ville
+ * trengt ett kall per fil for. Samme retry-regel som gh().
+ */
+export async function ghGraphql(token, query, attempt = 1) {
+  const res = await fetch('https://api.github.com/graphql', {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${token}`,
+      'content-type': 'application/json',
+      'user-agent': 'urd-publisher',
+    },
+    body: JSON.stringify({ query }),
+  });
+  if (!res.ok) {
+    if ((res.status >= 500 || res.status === 429) && attempt < 3) {
+      await new Promise((resolve) => setTimeout(resolve, attempt * 500));
+      return ghGraphql(token, query, attempt + 1);
+    }
+    const error = new Error(`GitHub GraphQL svarte ${res.status}`);
+    error.status = res.status;
+    throw error;
+  }
+  const payload = await res.json();
+  if (payload.errors?.length) {
+    throw new Error(`GitHub GraphQL: ${payload.errors[0].message}`.slice(0, 300));
+  }
+  return payload.data;
+}
+
+/** Base64 fra blobs-API-et (kommer med innskutte linjeskift). */
+export function cleanBase64(b64) {
+  return String(b64 ?? '').replace(/\s/g, '');
 }
 
 /**
@@ -160,6 +199,60 @@ export async function commitFiles(token, config, { message, files, expect }) {
   const commit = await gh(token, `/repos/${repo}/git/commits`, {
     method: 'POST',
     body: JSON.stringify({ message, tree: newTree.sha, parents: [baseSha] }),
+  });
+
+  await gh(token, `/repos/${repo}/git/refs/heads/${branch}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ sha: commit.sha, force: false }),
+  });
+
+  return { sha: commit.sha };
+}
+
+/**
+ * Oppdaterens commit-vei (ADR-0014): som commitFiles, men tre-innslagene
+ * bygges med INLINE `content` (eller ferdig blob-`sha`) i stedet for én
+ * blob-POST per fil - det er dét som holder en ~90-filers motoroppdatering
+ * under Cloudflares subrequest-tak. Store innslagsmengder deles i KJEDEDE
+ * trær (base_tree = forrige tre), fortsatt som ÉN commit.
+ *
+ * @param {string} token
+ * @param {{repo: string, branch: string}} config
+ * @param {{message: string, entries: Array<{path: string, content?: string, sha?: string|null}>, expect?: string}} payload
+ *   `content` for tekstfiler, `sha` for ferdiglagde blober (binær/avkortet),
+ *   `sha: null` for sletting. Slettinger må gjelde stier som finnes.
+ * @param {(entries: Array<object>) => Array<Array<object>>} chunk Ren chunking (fra update-plan.js)
+ * @returns {Promise<{sha: string}>}
+ */
+export async function commitTree(token, config, { message, entries, expect }, chunk) {
+  const { repo, branch } = config;
+
+  const ref = await gh(token, `/repos/${repo}/git/ref/heads/${branch}`);
+  const baseSha = ref.object.sha;
+  if (expect && expect !== baseSha) {
+    const error = new Error('HEAD har flyttet seg siden oppdaterings-sjekken');
+    error.status = 409;
+    throw error;
+  }
+  const baseCommit = await gh(token, `/repos/${repo}/git/commits/${baseSha}`);
+
+  let treeSha = baseCommit.tree.sha;
+  for (const group of chunk(entries.map((e) => ({
+    path: e.path,
+    mode: '100644',
+    type: 'blob',
+    ...(e.sha !== undefined ? { sha: e.sha } : { content: e.content }),
+  })))) {
+    const tree = await gh(token, `/repos/${repo}/git/trees`, {
+      method: 'POST',
+      body: JSON.stringify({ base_tree: treeSha, tree: group }),
+    });
+    treeSha = tree.sha;
+  }
+
+  const commit = await gh(token, `/repos/${repo}/git/commits`, {
+    method: 'POST',
+    body: JSON.stringify({ message, tree: treeSha, parents: [baseSha] }),
   });
 
   await gh(token, `/repos/${repo}/git/refs/heads/${branch}`, {

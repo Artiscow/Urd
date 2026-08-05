@@ -5,7 +5,11 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { isAllowedPath, isAllowedLogin } from '../template/functions/_lib/guard.js';
+import { readdirSync, readFileSync } from 'node:fs';
+import {
+  isAllowedPath, isAllowedLogin,
+  OWNED_PATTERNS, USER_PATTERNS, matchesPattern, isOwnedPath, isUserPath, isPageIndexCopy,
+} from '../template/functions/_lib/guard.js';
 
 test('innholdsstier er tillatt', () => {
   for (const path of [
@@ -124,5 +128,76 @@ test('per-side index.html-kopier tillates, reserverte slugs avvises', () => {
   assert.equal(isAllowedPath('om-oss/index.html'), true);
   for (const path of ['admin/index.html', 'api/index.html', 'assets/index.html', 'functions/index.html', 'plugins/index.html']) {
     assert.equal(isAllowedPath(path), false, path);
+  }
+});
+
+/* ---------- Eierskapskartet for oppdatereren (0.6.9, ADR-0014) ---------- */
+
+const manifest = JSON.parse(readFileSync(new URL('../template/urd.json', import.meta.url), 'utf8'));
+
+test('eierskapskartet i guard.js er identisk med urd.json', () => {
+  // guard.js speiler urd.json (functions kan ikke lese repofiler ved
+  // kjøring); denne testen er det som hindrer de to i å drive.
+  assert.deepEqual(OWNED_PATTERNS, manifest.ownedPaths);
+  assert.deepEqual(USER_PATTERNS, manifest.userPaths);
+});
+
+test('matchesPattern: eksakt sti og prefiks/**', () => {
+  assert.equal(matchesPattern('urd.json', 'urd.json'), true);
+  assert.equal(matchesPattern('urd.json', 'urd.json.bak'), false);
+  assert.equal(matchesPattern('admin/**', 'admin/index.html'), true);
+  assert.equal(matchesPattern('admin/**', 'admin/assets/editor.js'), true);
+  assert.equal(matchesPattern('admin/**', 'administrasjon/x.js'), false);
+  assert.equal(matchesPattern('admin/**', 'admin'), false);
+});
+
+test('isOwnedPath/isUserPath: eksempler og stitriks', () => {
+  for (const path of ['urd.json', '_headers', 'speculation-rules.json', 'index.html',
+    'admin/assets/editor.js', 'assets/engine/0.6.8/urd.js', 'assets/urd/i18n.js',
+    'assets/styles/base.css', 'functions/api/github/update.js']) {
+    assert.equal(isOwnedPath(path), true, path);
+    assert.equal(isUserPath(path), false, path);
+  }
+  for (const path of ['content/site.json', 'media/logo.svg', 'plugins/kalender/index.js']) {
+    assert.equal(isUserPath(path), true, path);
+    assert.equal(isOwnedPath(path), false, path);
+  }
+  for (const path of ['/urd.json', 'admin/../content/x.json', '']) {
+    assert.equal(isOwnedPath(path), false, JSON.stringify(path));
+    assert.equal(isUserPath(path), false, JSON.stringify(path));
+  }
+  assert.equal(isPageIndexCopy('kaker/index.html'), true);
+  assert.equal(isPageIndexCopy('admin/index.html'), false);
+  assert.equal(isPageIndexCopy('index.html'), false);
+});
+
+test('hver faktiske fil i template/ er eid, brukereid eller side-kopi', () => {
+  // Fullstendighets-invarianten oppdateringsplanen hviler på: en sti uten
+  // klassifisering ville falt utenfor både publisering og oppdaterer.
+  // Dukker en ny toppnivå-fil opp, MÅ den inn i urd.json (owned/user).
+  const root = new URL('../template/', import.meta.url);
+  const files = readdirSync(root, { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => `${entry.parentPath.replaceAll('\\', '/')}/${entry.name}`
+      .slice(root.pathname.length)
+      .replace(/^\/+/, ''))
+    .filter((name) => !name.includes('/.') && !name.startsWith('.'));
+  assert.ok(files.length > 80, `fant bare ${files.length} filer - listingen er trolig gal`);
+  for (const path of files) {
+    const classes = [isOwnedPath(path), isUserPath(path), isPageIndexCopy(path)].filter(Boolean);
+    assert.equal(classes.length, 1, `${path} skal ha nøyaktig én eierskapsklasse (fikk ${classes.length})`);
+  }
+});
+
+test('eid og publiserbar er disjunkte klasser', () => {
+  // Publisering og oppdaterer skal aldri kunne skrive samme sti - unntatt
+  // side-kopiene, som publisering skriver og oppdatereren frisker opp
+  // (kopi-oppfriskningsplikten i ADR-0013).
+  for (const pattern of manifest.ownedPaths) {
+    const sample = pattern.endsWith('/**') ? `${pattern.slice(0, -3)}/x.js` : pattern;
+    assert.equal(isOwnedPath(sample) && isAllowedPath(sample), false, sample);
+  }
+  for (const path of ['content/site.json', 'media/logo.webp', 'plugins/plugins.json', 'kaker/index.html']) {
+    assert.equal(isOwnedPath(path), false, path);
   }
 });

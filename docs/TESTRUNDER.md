@@ -3,6 +3,15 @@
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.9.4): oppdaterer server-side (etter rc-synken)
+
+- [ ] GET /api/github/update (innlogget) mot rc-tagget malrepo: svaret klassifiserer riktig (uendret/håndredigert/ny/slettet) mot en testklon der én functions-fil er bevisst håndredigert
+- [ ] `_headers`-avvik rapporteres med oppstrøms tekst i sjekk-svaret, og filen står ALDRI i endringslisten
+- [ ] POST med gyldig expect gjennomfører ÉN commit i testklonen: ny motormappe inn, gammel ut, slug-kopier byte-like ny rot-index.html, urd.json-engine bumpet
+- [ ] POST med skip på en atomgruppe-fil avvises med updateBadSkip; skip på en functions-fil respekteres (filen forblir urørt)
+- [ ] POST med utdatert expect (push noe annet først) gir updateRace uten at noe skrives
+- [ ] Klon uten baseline-tagg (engine-verdi som ikke finnes som tagg i malrepoet) får updateNoBaseline, oversatt på admin-språket
+
 ### Testrunde-batch (0.6.9.3): release-Action
 
 - [ ] Engangsoppsett gjort: offentlig `urd-template`-repo opprettet («Template repository» huket av, topic `urd-mal`), og secreten `URD_TEMPLATE_PAT` (fine-grained, contents read/write kun på malrepoet) lagt inn i monorepoet

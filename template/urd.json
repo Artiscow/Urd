@@ -5,6 +5,7 @@
     "index.html",
     "urd.json",
     "_headers",
+    "speculation-rules.json",
     "admin/**",
     "assets/engine/**",
     "assets/urd/**",
