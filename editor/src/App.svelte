@@ -565,7 +565,13 @@
     const out = [];
     for (const id of ids) {
       for (const lang of pluginInfo[id]?.languages ?? []) {
-        if (lang[kind] === true && !out.some(([code]) => code === lang.code)) out.push([lang.code, lang.name]);
+        // Rå manifest-data: et ødelagt innslag (uten navn/kode, eller med en
+        // innebygd kode) hoppes over i stedet for å felle panelet - motorens
+        // lasting filtrerer det samme, så velgeren skal aldri love mer.
+        if (lang?.[kind] !== true) continue;
+        if (typeof lang.code !== 'string' || typeof lang.name !== 'string' || !lang.name) continue;
+        if (LANG_OPTIONS.some(([code]) => code === lang.code)) continue;
+        if (!out.some(([code]) => code === lang.code)) out.push([lang.code, lang.name]);
       }
     }
     return out;
@@ -6542,16 +6548,6 @@
     font-size: 0.8rem;
     opacity: 0.65;
   }
-
-  /* Kontrast-varsel: lav aksent/tekst-kontrast. Tydeligere enn en vanlig hint. */
-  .contrast-warn {
-    display: flex;
-    align-items: flex-start;
-    gap: 6px;
-    opacity: 1;
-    color: #d98324;
-  }
-  .contrast-warn :global(svg) { flex: none; margin-top: 2px; }
 
   /* Tema-forslag: rad med palett-miniatyrer (alle på én rad) */
   .theme-presets { display: flex; gap: 6px; margin: 6px 0 12px; }

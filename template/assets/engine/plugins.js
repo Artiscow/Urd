@@ -168,7 +168,7 @@ const isPreview = () => new URLSearchParams(location.search).get('preview') === 
  * @returns {Promise<Record<string, string>|null>} null når selv basen mangler
  */
 async function loadPluginLocale(id, lang) {
-  const load = async (code) => (await import(`/plugins/${id}/locales/${code}.js`)).default.strings;
+  const load = async (code) => (await import(/* @vite-ignore */ `/plugins/${id}/locales/${code}.js`)).default.strings;
   try {
     const base = await load('nb');
     const extra = lang !== 'nb' ? await load(lang).catch(() => null) : null;
@@ -239,7 +239,7 @@ export async function loadPluginById(Urd, engineVersion, id) {
       loadedPlugins.add(id);
       return;
     }
-    const mod = await import(`/plugins/${id}/${manifest.entry}`);
+    const mod = await import(/* @vite-ignore */ `/plugins/${id}/${manifest.entry}`);
     if (typeof mod.register !== 'function') {
       console.warn(`Urd: plugin '${id}' mangler register()-eksport`);
       return;

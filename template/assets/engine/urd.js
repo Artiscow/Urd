@@ -141,6 +141,30 @@ function resolvePage(site) {
 function enablePreview(state, opts) {
   const root = opts.root;
   const vp = () => ({ preview: true, viewport: state.viewport });
+
+  /* Språkbytter i previewen serialiseres: initSiteLocale kan vente på nett
+     (pakkespråk), og et raskt bytte tilbake må ikke bli klobret av at den
+     GAMLE lastingen fullfører sist. Hver oppgave leser utkastets språk på
+     KJØRETIDSpunktet, så den siste i køen alltid lander på gjeldende valg;
+     langPending sier om noe er underveis, slik at hurtigveien (likt språk,
+     rendre synkront) aldri tas mens en lasting kan omgjøre den. */
+  let langQueue = Promise.resolve();
+  let langPending = 0;
+  const langOutOfSync = () => langPending > 0 || requestedLang(state.site.site?.lang) !== siteLang();
+  function syncSiteLocale() {
+    langPending++;
+    langQueue = langQueue.then(async () => {
+      try {
+        if (requestedLang(state.site.site?.lang) !== siteLang()) {
+          document.documentElement.lang = await initSiteLocale(state.site.site?.lang);
+          await applyPluginSiteLocales();
+        }
+      } finally {
+        langPending--;
+      }
+    });
+    return langQueue;
+  }
   window.addEventListener('message', (event) => {
     if (event.origin !== location.origin) return; // kun editoren på samme site
     const msg = event.data;
@@ -211,10 +235,7 @@ function enablePreview(state, opts) {
       loadPluginList(Urd, state.engine, msg.enabled).then(async () => {
         // Lista kan ha inneholdt en SPRÅKPAKKE: var utkastets språk ukjent
         // da site-utkastet kom (eller ved boot), lastes det nå.
-        if (requestedLang(state.site.site?.lang) !== siteLang()) {
-          document.documentElement.lang = await initSiteLocale(state.site.site.lang);
-          await applyPluginSiteLocales();
-        }
+        if (langOutOfSync()) await syncSiteLocale();
         renderPage(state.page, state.site, root, vp());
         // Meld plugin-blokkene tilbake (type, label, defaults), så Blokker-
         // panelet i admin kan vise dem i sin egen «Fra plugins»-seksjon.
@@ -262,15 +283,11 @@ function enablePreview(state, opts) {
       };
       // Endret site.lang i utkastet: last besøkende-localen på nytt FØR
       // re-render, så previewen er WYSIWYG også for språket (booten leste
-      // den publiserte site.json og kan ha et annet språk).
-      if (requestedLang(state.site.site.lang) !== siteLang()) {
-        // Plugin-tekstene legges oppå igjen: initSiteLocale bygger ordboka
-        // fra motorens nb-base, uten plugin-nøklene.
-        initSiteLocale(state.site.site.lang).then(async (lang) => {
-          document.documentElement.lang = lang;
-          await applyPluginSiteLocales();
-          rerender();
-        });
+      // den publiserte site.json og kan ha et annet språk). Plugin-tekstene
+      // legges oppå igjen inne i syncSiteLocale: initSiteLocale bygger
+      // ordboka fra motorens nb-base, uten plugin-nøklene.
+      if (langOutOfSync()) {
+        syncSiteLocale().then(rerender);
       } else {
         rerender();
       }

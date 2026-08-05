@@ -105,13 +105,16 @@ test('site-basen har fallback-datotabeller med 12/12/7/7 innslag', async () => {
 
 test('matchLang: no/nb-varianter til nb, samiske varianter til se, ukjent gir null', () => {
   for (const [raw, want] of [
-    ['no', 'nb'], ['nb', 'nb'], ['nb-NO', 'nb'], ['NO-nb', 'nb'], ['', null], [undefined, null],
-    ['nn', 'nn'], ['nn-NO', 'nn'],
-    ['se', 'se'], ['se-NO', 'se'], ['smj', 'se'], ['sma', 'se'],
+    ['no', 'nb'], ['nb', 'nb'], ['nb-NO', 'nb'], ['NO-nb', 'nb'], ['nob', 'nb'], ['', null], [undefined, null],
+    ['nn', 'nn'], ['nn-NO', 'nn'], ['nno', 'nn'],
+    ['se', 'se'], ['se-NO', 'se'], ['sme', 'se'], ['smj', 'se'], ['sma', 'se'],
     ['tr', 'tr'], ['tr-TR', 'tr'],
     ['en', 'en-GB'], ['en-GB', 'en-GB'], ['en-US', 'en-GB'],
     // Null er meningsbærende: koden kan tilhøre en språkpakke.
     ['sv', null], ['de', null], ['tull', null],
+    // Tagen må være HELE koden (eller koden + undertagg): en pakkekode som
+    // tilfeldigvis begynner likt skal ikke omdirigeres til et innebygd språk.
+    ['ses', null], ['trv', null], ['nnh', null], ['ena', null], ['sea', null],
   ]) {
     assert.equal(matchLang(raw), want, String(raw));
   }

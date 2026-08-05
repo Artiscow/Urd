@@ -23,23 +23,37 @@ export const SUPPORTED_LANGS = ['nb', 'nn', 'en-GB', 'se', 'tr'];
  */
 export const LANG_CODE_RE = /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/;
 
+/* Tagene som betyr hvert innebygde språk. Både to- og trebokstavskodene
+   (ISO 639-1 og -3) står her: sender et system 'nob', skal det bli bokmål,
+   og koden skal samtidig være opptatt så en språkpakke ikke kan kapre
+   bokmål gjennom den. Sør- og lulesamisk (sma/smj) er en TILNÆRMING til
+   nordsamisk, ikke identitet; de er derfor også opptatte, og et ekte
+   sørsamisk språk må inn i motoren, ikke som pakke. */
+const LANG_TAGS = {
+  nb: ['no', 'nor', 'nb', 'nob'],
+  nn: ['nn', 'nno'],
+  se: ['se', 'sme', 'smj', 'sma'],
+  tr: ['tr', 'tur'],
+  'en-GB': ['en', 'eng'],
+};
+
 /**
  * Matcher en språktag (site.lang, navigator.language) mot de INNEBYGDE
- * språkene, eller null når ingenting passer. 'no' og alle nb/no-varianter
- * er bokmål; sørsamisk og lulesamisk faller til nordsamisk (nærmeste
- * tilgjengelige). Null er meningsbærende: auto-deteksjonen skal da prøve
- * NESTE tag i navigator.languages, og en site.lang uten treff kan tilhøre
- * en språkpakke (se requestedLang).
+ * språkene, eller null når ingenting passer. Tagen må være hele koden
+ * eller koden pluss undertagger ('nb-NO' er bokmål, 'nbx' er det ikke):
+ * ellers ville en språkpakke med en kode som tilfeldigvis begynner likt
+ * ('ses', 'trv') blitt omdirigert til et innebygd språk og aldri lastet.
+ * Null er meningsbærende: auto-deteksjonen skal da prøve NESTE tag i
+ * navigator.languages, og en site.lang uten treff kan tilhøre en
+ * språkpakke (se requestedLang).
  * @param {unknown} raw
  * @returns {string|null}
  */
 export function matchLang(raw) {
   const v = String(raw ?? '').trim().toLowerCase();
-  if (v === 'no' || v.startsWith('nb') || v.startsWith('no-')) return 'nb';
-  if (v.startsWith('nn')) return 'nn';
-  if (v.startsWith('se') || v.startsWith('smj') || v.startsWith('sma')) return 'se';
-  if (v.startsWith('tr')) return 'tr';
-  if (v.startsWith('en')) return 'en-GB';
+  for (const [lang, tags] of Object.entries(LANG_TAGS)) {
+    if (tags.some((tag) => v === tag || v.startsWith(`${tag}-`))) return lang;
+  }
   return null;
 }
 
@@ -80,8 +94,7 @@ export function validateLanguages(list) {
 
 /**
  * Språket en verdi BER om: innebygd treff først, ellers en kode som kan
- * tilhøre en språkpakke (beholdes som den er), ellers bokmål. Ulikt
- * normalizeLang, som alltid lander på et innebygd språk.
+ * tilhøre en språkpakke (beholdes som den er), ellers bokmål.
  * @param {unknown} raw
  * @returns {string}
  */
@@ -161,25 +174,24 @@ export function addAdminDict(strings) { Object.assign(admin.dict, strings ?? {})
  */
 export async function initSiteLocale(rawLang) {
   const lang = requestedLang(rawLang);
-  const builtin = isBuiltinLang(lang);
-  site.lang = lang;
-  site.dates = null;
-  // Alltid fersk kopi av basen: overlayen skal aldri mutere nb-ordboka,
-  // og et språkbytte (editorens preview) skal ikke arve forrige språk.
-  site.dict = { ...nb.strings };
-  if (lang === 'nb') return lang;
-  if (builtin) {
-    try {
-      const mod = await import(/* @vite-ignore */ `./locales/site/${lang}.js`);
-      Object.assign(site.dict, mod.default.strings);
-    } catch {
-      site.lang = 'nb';
+  let strings = null;
+  if (lang !== 'nb') {
+    if (isBuiltinLang(lang)) {
+      try {
+        strings = (await import(/* @vite-ignore */ `./locales/site/${lang}.js`)).default.strings;
+      } catch { /* manglende språkfil: bokmålsbasen står igjen */ }
+    } else {
+      strings = await loadPack(lang, 'site');
     }
-    return site.lang;
   }
-  const strings = await loadPack(lang, 'site');
-  if (strings) Object.assign(site.dict, strings);
-  else site.lang = 'nb';
+  // Ordboka byttes FØRST når tekstene er i hånden, i ett jafs: en render
+  // som skjer mens lastingen pågår skal se forrige språk, aldri et halvbygd
+  // (i previewen kan et nytt utkast komme midt i et språkbytte). Alltid
+  // fersk kopi av basen, så overlayen ikke muterer nb-ordboka og et bytte
+  // ikke arver forrige språk.
+  site.lang = lang === 'nb' || strings ? lang : 'nb';
+  site.dict = { ...nb.strings, ...(strings ?? {}) };
+  site.dates = null;
   return site.lang;
 }
 

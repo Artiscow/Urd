@@ -2289,15 +2289,32 @@ var hi = {
 	"en-GB",
 	"se",
 	"tr"
-], _i = /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/;
-function vi(e) {
-	let t = String(e ?? "").trim().toLowerCase();
-	return t === "no" || t.startsWith("nb") || t.startsWith("no-") ? "nb" : t.startsWith("nn") ? "nn" : t.startsWith("se") || t.startsWith("smj") || t.startsWith("sma") ? "se" : t.startsWith("tr") ? "tr" : t.startsWith("en") ? "en-GB" : null;
-}
+], _i = /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/, vi = {
+	nb: [
+		"no",
+		"nor",
+		"nb",
+		"nob"
+	],
+	nn: ["nn", "nno"],
+	se: [
+		"se",
+		"sme",
+		"smj",
+		"sma"
+	],
+	tr: ["tr", "tur"],
+	"en-GB": ["en", "eng"]
+};
 function yi(e) {
-	return gi.includes(String(e ?? ""));
+	let t = String(e ?? "").trim().toLowerCase();
+	for (let [e, n] of Object.entries(vi)) if (n.some((e) => t === e || t.startsWith(`${e}-`))) return e;
+	return null;
 }
 function bi(e) {
+	return gi.includes(String(e ?? ""));
+}
+function xi(e) {
 	let t = [];
 	if (!Array.isArray(e)) return ["languages må være en liste"];
 	for (let n of e) {
@@ -2306,19 +2323,19 @@ function bi(e) {
 			continue;
 		}
 		let e = String(n.code ?? "");
-		_i.test(e) ? yi(e) && t.push(`languages: '${e}' er innebygd i Urd og kan ikke overstyres`) : t.push(`languages: '${e}' er ikke en gyldig språkkode`), (typeof n.name != "string" || !n.name.trim()) && t.push(`languages/${e}: name mangler (språkets eget navn)`);
+		_i.test(e) ? bi(e) && t.push(`languages: '${e}' er innebygd i Urd og kan ikke overstyres`) : t.push(`languages: '${e}' er ikke en gyldig språkkode`), (typeof n.name != "string" || !n.name.trim()) && t.push(`languages/${e}: name mangler (språkets eget navn)`);
 		for (let r of ["site", "admin"]) n[r] !== void 0 && typeof n[r] != "boolean" && t.push(`languages/${e}: ${r} må være boolsk`);
 		n.site !== !0 && n.admin !== !0 && t.push(`languages/${e}: må dekke site, admin eller begge`);
 	}
 	return t;
 }
-function xi(e) {
-	let t = vi(e);
+function Si(e) {
+	let t = yi(e);
 	if (t) return t;
 	let n = String(e ?? "").trim();
 	return _i.test(n) ? n : "nb";
 }
-async function Si(e, t) {
+async function Ci(e, t) {
 	try {
 		return await (await import(
 			/* @vite-ignore */
@@ -2329,60 +2346,60 @@ async function Si(e, t) {
 	}
 }
 ({ ...hi.strings });
-var Ci = {
+var wi = {
 	lang: "nb",
 	dict: {}
 };
-function wi(e, t) {
+function Ti(e, t) {
 	if (!t) return e;
 	let n = e;
 	for (let [e, r] of Object.entries(t)) n = n.replaceAll(`{${e}}`, String(r));
 	return n;
 }
 function Q(e, t) {
-	return wi(Ci.dict[e] ?? e, t);
-}
-function Ti() {
-	return Ci.lang;
+	return Ti(wi.dict[e] ?? e, t);
 }
 function Ei() {
+	return wi.lang;
+}
+function Di() {
 	let e = null;
 	try {
 		e = localStorage.getItem("urd-admin-lang");
 	} catch {}
-	if (e) return xi(e);
+	if (e) return Si(e);
 	for (let e of navigator.languages ?? [navigator.language]) {
-		let t = vi(e);
+		let t = yi(e);
 		if (t) return t;
 	}
 	return "en-GB";
 }
-var Di;
+var Oi;
 new Promise((e) => {
-	Di = e;
+	Oi = e;
 });
-async function Oi(e = Ei()) {
+async function ki(e = Di()) {
 	let t = async (e) => (await import(
 		/* @vite-ignore */
 		`/assets/engine/locales/admin/${e}.js`
 )).default.strings;
-	Ci.lang = xi(e);
-	let n = yi(Ci.lang);
+	wi.lang = Si(e);
+	let n = bi(wi.lang);
 	try {
-		Object.assign(Ci.dict, await t("nb")), n && Ci.lang !== "nb" && Object.assign(Ci.dict, await t(Ci.lang));
+		Object.assign(wi.dict, await t("nb")), n && wi.lang !== "nb" && Object.assign(wi.dict, await t(wi.lang));
 	} catch {}
 	if (!n) {
-		let e = await Si(Ci.lang, "admin");
-		e ? Object.assign(Ci.dict, e) : Ci.lang = "nb";
+		let e = await Ci(wi.lang, "admin");
+		e ? Object.assign(wi.dict, e) : wi.lang = "nb";
 	}
-	return Di(Ci.lang), Ci.lang;
+	return Oi(wi.lang), wi.lang;
 }
 //#endregion
 //#region node_modules/svelte/src/internal/disclose-version.js
 typeof window < "u" && ((window.__svelte ??= {}).v ??= /* @__PURE__ */ new Set()).add("5");
 //#endregion
 //#region src/lib/draftStore.js
-function ki(e, t, n) {
+function Ai(e, t, n) {
 	let r = t(), i = JSON.stringify(r), a = JSON.parse(i), o = localStorage.getItem(e);
 	if (o) try {
 		a = JSON.parse(o);
@@ -2419,8 +2436,8 @@ function ki(e, t, n) {
 }
 //#endregion
 //#region src/lib/ColorPicker.svelte
-var Ai = /* @__PURE__ */ W("<button type=\"button\" class=\"cp-clear svelte-zxiloo\">×</button>"), ji = /* @__PURE__ */ W("<button type=\"button\" class=\"cp-eye svelte-zxiloo\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 2l4 4-3 3-4-4 3-3z\"></path><path d=\"M15 5L4 16l-1 5 5-1L19 9\"></path></svg></button>"), Mi = /* @__PURE__ */ W("<input type=\"number\" min=\"0\" max=\"255\" class=\"svelte-zxiloo\"/>"), Ni = /* @__PURE__ */ W("<button type=\"button\"></button>"), Pi = /* @__PURE__ */ W("<span class=\"cp-label svelte-zxiloo\"> <!></span> <span class=\"cp-tokens svelte-zxiloo\"></span>", 1), Fi = /* @__PURE__ */ W("<span class=\"cp-saved svelte-zxiloo\"><button type=\"button\" class=\"cp-token svelte-zxiloo\"></button> <button type=\"button\" class=\"cp-del svelte-zxiloo\">×</button></span>"), Ii = /* @__PURE__ */ W("<span class=\"cp-tokens svelte-zxiloo\"></span>"), Li = /* @__PURE__ */ W("<button type=\"button\" class=\"cp-token svelte-zxiloo\"></button>"), Ri = /* @__PURE__ */ W("<span class=\"cp-label svelte-zxiloo\"> </span> <span class=\"cp-tokens svelte-zxiloo\"></span>", 1), zi = /* @__PURE__ */ W("<div class=\"cp-pop svelte-zxiloo\"><div class=\"cp-sv svelte-zxiloo\"><span class=\"cp-cursor svelte-zxiloo\"></span></div> <input class=\"cp-hue svelte-zxiloo\" type=\"range\" min=\"0\" max=\"360\" step=\"1\"/> <input class=\"cp-alpha svelte-zxiloo\" type=\"range\" min=\"0\" max=\"100\" step=\"1\"/> <span class=\"cp-row svelte-zxiloo\"><span class=\"cp-preview svelte-zxiloo\"></span> <input class=\"cp-hex svelte-zxiloo\" spellcheck=\"false\"/> <!></span> <span class=\"cp-row cp-rgb svelte-zxiloo\"></span> <!> <span class=\"cp-label cp-label-row svelte-zxiloo\"> <button type=\"button\" class=\"cp-add svelte-zxiloo\">+</button></span> <!> <!></div>"), Bi = /* @__PURE__ */ W("<span class=\"cp svelte-zxiloo\"><button type=\"button\"></button> <!> <!></span>");
-function Vi(e, t) {
+var ji = /* @__PURE__ */ W("<button type=\"button\" class=\"cp-clear svelte-zxiloo\">×</button>"), Mi = /* @__PURE__ */ W("<button type=\"button\" class=\"cp-eye svelte-zxiloo\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 2l4 4-3 3-4-4 3-3z\"></path><path d=\"M15 5L4 16l-1 5 5-1L19 9\"></path></svg></button>"), Ni = /* @__PURE__ */ W("<input type=\"number\" min=\"0\" max=\"255\" class=\"svelte-zxiloo\"/>"), Pi = /* @__PURE__ */ W("<button type=\"button\"></button>"), Fi = /* @__PURE__ */ W("<span class=\"cp-label svelte-zxiloo\"> <!></span> <span class=\"cp-tokens svelte-zxiloo\"></span>", 1), Ii = /* @__PURE__ */ W("<span class=\"cp-saved svelte-zxiloo\"><button type=\"button\" class=\"cp-token svelte-zxiloo\"></button> <button type=\"button\" class=\"cp-del svelte-zxiloo\">×</button></span>"), Li = /* @__PURE__ */ W("<span class=\"cp-tokens svelte-zxiloo\"></span>"), Ri = /* @__PURE__ */ W("<button type=\"button\" class=\"cp-token svelte-zxiloo\"></button>"), zi = /* @__PURE__ */ W("<span class=\"cp-label svelte-zxiloo\"> </span> <span class=\"cp-tokens svelte-zxiloo\"></span>", 1), Bi = /* @__PURE__ */ W("<div class=\"cp-pop svelte-zxiloo\"><div class=\"cp-sv svelte-zxiloo\"><span class=\"cp-cursor svelte-zxiloo\"></span></div> <input class=\"cp-hue svelte-zxiloo\" type=\"range\" min=\"0\" max=\"360\" step=\"1\"/> <input class=\"cp-alpha svelte-zxiloo\" type=\"range\" min=\"0\" max=\"100\" step=\"1\"/> <span class=\"cp-row svelte-zxiloo\"><span class=\"cp-preview svelte-zxiloo\"></span> <input class=\"cp-hex svelte-zxiloo\" spellcheck=\"false\"/> <!></span> <span class=\"cp-row cp-rgb svelte-zxiloo\"></span> <!> <span class=\"cp-label cp-label-row svelte-zxiloo\"> <button type=\"button\" class=\"cp-add svelte-zxiloo\">+</button></span> <!> <!></div>"), Vi = /* @__PURE__ */ W("<span class=\"cp svelte-zxiloo\"><button type=\"button\"></button> <!> <!></span>");
+function Hi(e, t) {
 	Ue(t, !0);
 	let n = mi(t, "value", 3, "#000000"), r = mi(t, "tokens", 19, () => []), i = mi(t, "label", 19, () => Q("cp.pickColor")), a = mi(t, "allowClear", 3, !1), o = "urd-recent-colors", s = "urd-saved-colors", c = () => {
 		let e = r().find(([e]) => e === n());
@@ -2593,10 +2610,10 @@ function Vi(e, t) {
 			document.removeEventListener("pointerdown", e, !0), document.removeEventListener("keydown", t, !0), window.removeEventListener("blur", n);
 		};
 	});
-	var he = Bi(), O = L(he);
+	var he = Vi(), O = L(he);
 	let ge;
 	var k = z(O, 2), A = (e) => {
-		var n = Ai();
+		var n = ji();
 		B((e, t) => {
 			Z(n, "title", e), Z(n, "aria-label", t);
 		}, [() => Q("cp.clearTitle"), () => Q("cp.clear")]), U("click", n, () => t.onchange?.("")), G(e, n);
@@ -2605,7 +2622,7 @@ function Vi(e, t) {
 		a() && n() && e(A);
 	});
 	var _e = z(k, 2), ve = (e) => {
-		var t = zi(), i = L(t), a = L(i);
+		var t = Bi(), i = L(t), a = L(i);
 		M(i);
 		var o = z(i, 2);
 		Y(o);
@@ -2614,7 +2631,7 @@ function Vi(e, t) {
 		var c = z(s, 2), f = L(c), p = z(f, 2);
 		Y(p);
 		var h = z(p, 2), g = (e) => {
-			var t = ji();
+			var t = Mi();
 			B((e) => Z(t, "title", e), [() => Q("cp.eyedropper")]), U("click", t, de), G(e, t);
 		};
 		q(h, (e) => {
@@ -2626,13 +2643,13 @@ function Vi(e, t) {
 			"G",
 			"B"
 		], (e) => e, (e, t, n) => {
-			var r = Mi();
+			var r = Ni();
 			Y(r), B((e) => {
 				Z(r, "title", t), X(r, e);
 			}, [() => ce(H(n))]), U("change", r, (e) => le(H(n), e.target.value)), G(e, r);
 		}), M(C);
 		var w = z(C, 2), T = (e) => {
-			var t = Pi(), i = R(t), a = L(i, !0), o = z(a), s = (e) => {
+			var t = Fi(), i = R(t), a = L(i, !0), o = z(a), s = (e) => {
 				var t = Ar();
 				B((e) => K(t, e), [() => Q("cp.linkedSuffix", { token: l() })]), G(e, t);
 			}, c = /* @__PURE__ */ P(() => l());
@@ -2643,7 +2660,7 @@ function Vi(e, t) {
 			Vr(u, 21, r, ([e, t]) => e, (e, t) => {
 				var r = /* @__PURE__ */ P(() => m(H(t), 2));
 				let i = () => H(r)[0], a = () => H(r)[1];
-				var o = Ni();
+				var o = Pi();
 				let s;
 				B((e) => {
 					s = Qr(o, 1, "cp-token svelte-zxiloo", null, s, { active: n() === i() }), ei(o, `background: ${a() ?? ""}`), Z(o, "title", e);
@@ -2656,9 +2673,9 @@ function Vi(e, t) {
 		var E = z(w, 2), ee = L(E), ne = z(ee);
 		M(E);
 		var re = z(E, 2), ie = (e) => {
-			var t = Ii();
+			var t = Li();
 			Vr(t, 20, () => H(d), (e) => e, (e, t) => {
-				var n = Fi(), r = L(n), i = z(r, 2);
+				var n = Ii(), r = L(n), i = z(r, 2);
 				M(n), B((e) => {
 					ei(r, `background: ${t ?? ""}`), Z(r, "title", t), Z(i, "title", e);
 				}, [() => Q("cp.removeSaved")]), U("click", r, () => fe(t)), U("click", i, () => me(t)), G(e, n);
@@ -2668,11 +2685,11 @@ function Vi(e, t) {
 			H(d).length && e(ie);
 		});
 		var he = z(re, 2), O = (e) => {
-			var t = Ri(), n = R(t), r = L(n, !0);
+			var t = zi(), n = R(t), r = L(n, !0);
 			M(n);
 			var i = z(n, 2);
 			Vr(i, 20, () => H(u), (e) => e, (e, t) => {
-				var n = Li();
+				var n = Ri();
 				B(() => {
 					ei(n, `background: ${t ?? ""}`), Z(n, "title", t);
 				}), U("click", n, () => fe(t)), G(e, n);
@@ -2718,13 +2735,13 @@ Cr([
 ]);
 //#endregion
 //#region ../template/assets/engine/imageTools.js
-var Hi = 1600, Ui = .82, Wi = .6;
-async function Gi(e, t = Hi) {
-	if (qi(e)) return Ji(await e.text());
+var Ui = 1600, Wi = .82, Gi = .6;
+async function Ki(e, t = Ui) {
+	if (Ji(e)) return Yi(await e.text());
 	let n = await createImageBitmap(e), r = Math.min(1, t / Math.max(n.width, n.height)), i = Math.round(n.width * r), a = Math.round(n.height * r), o = document.createElement("canvas");
 	o.width = i, o.height = a, o.getContext("2d").drawImage(n, 0, 0, i, a), n.close();
-	let s = (e) => new Promise((t) => o.toBlob(t, "image/webp", e)), c = await s(Ui);
-	return c.size > 4e5 && (c = await s(Wi)), {
+	let s = (e) => new Promise((t) => o.toBlob(t, "image/webp", e)), c = await s(Wi);
+	return c.size > 4e5 && (c = await s(Gi)), {
 		dataUrl: await new Promise((e) => {
 			let t = new FileReader();
 			t.onload = () => e(t.result), t.readAsDataURL(c);
@@ -2734,15 +2751,15 @@ async function Gi(e, t = Hi) {
 		height: a
 	};
 }
-var Ki = "image/svg+xml";
-function qi(e) {
-	return e.type === Ki || /\.svg$/i.test(e.name || "");
-}
+var qi = "image/svg+xml";
 function Ji(e) {
+	return e.type === qi || /\.svg$/i.test(e.name || "");
+}
+function Yi(e) {
 	let t = String(e ?? "");
 	if (!/<svg[\s>]/i.test(t)) throw Error("Ugyldig SVG");
 	if (/<\s*script[\s>]/i.test(t) || /<\s*foreignObject[\s>]/i.test(t) || /\son[a-z]+\s*=/i.test(t) || /javascript:/i.test(t)) throw Error("SVG-en inneholder skript eller hendelser og kan ikke brukes");
-	let n = new Blob([t]).size, r = `data:${Ki};base64,${btoa(unescape(encodeURIComponent(t)))}`, i = t.match(/<svg\b[^>]*>/i)?.[0] ?? "", a = i.match(/viewBox\s*=\s*["']\s*([-\d.]+(?:[\s,]+[-\d.]+){3})\s*["']/i)?.[1]?.split(/[\s,]+/).map(Number);
+	let n = new Blob([t]).size, r = `data:${qi};base64,${btoa(unescape(encodeURIComponent(t)))}`, i = t.match(/<svg\b[^>]*>/i)?.[0] ?? "", a = i.match(/viewBox\s*=\s*["']\s*([-\d.]+(?:[\s,]+[-\d.]+){3})\s*["']/i)?.[1]?.split(/[\s,]+/).map(Number);
 	return {
 		dataUrl: r,
 		bytes: n,
@@ -2750,7 +2767,7 @@ function Ji(e) {
 		height: a?.length === 4 ? a[3] : Number.parseFloat(i.match(/\bheight\s*=\s*["']?([\d.]+)/i)?.[1]) || 0
 	};
 }
-function Yi(e, t, n = .04) {
+function Xi(e, t, n = .04) {
 	let r = String(e ?? "");
 	if (!t || !(t.width > 0) || !(t.height > 0)) return r;
 	let i = r.match(/<svg\b[^>]*>/i)?.[0];
@@ -2758,7 +2775,7 @@ function Yi(e, t, n = .04) {
 	let a = (e) => Math.round(e * 1e3) / 1e3, o = Math.max(t.width, t.height) * Math.max(0, n), s = a(t.x - o), c = a(t.y - o), l = a(t.width + 2 * o), u = a(t.height + 2 * o), d = i.replace(/\sviewBox\s*=\s*["'][^"']*["']/i, "").replace(/\swidth\s*=\s*["'][^"']*["']/i, "").replace(/\sheight\s*=\s*["'][^"']*["']/i, "").replace(/<svg\b/i, `<svg viewBox="${s} ${c} ${l} ${u}" width="${l}" height="${u}"`);
 	return r.replace(i, d);
 }
-function Xi(e) {
+function Zi(e) {
 	let t = String(e ?? "").match(/<svg\b[^>]*>/i)?.[0] ?? "", n = t.match(/viewBox\s*=\s*["']\s*([-\d.]+(?:[\s,]+[-\d.]+){3})\s*["']/i)?.[1]?.split(/[\s,]+/).map(Number);
 	if (n?.length === 4 && n.every(Number.isFinite)) return n;
 	let r = Number.parseFloat(t.match(/\bwidth\s*=\s*["']?([\d.]+)/i)?.[1]), i = Number.parseFloat(t.match(/\bheight\s*=\s*["']?([\d.]+)/i)?.[1]);
@@ -2769,20 +2786,20 @@ function Xi(e) {
 		i
 	] : null;
 }
-function Zi(e) {
+function Qi(e) {
 	return /^data:image\/svg\+xml[;,]/.test(e || "") ? "svg" : "webp";
 }
-function Qi(e) {
+function $i(e) {
 	return e.replace(/\.[^.]+$/, "").toLowerCase().replaceAll("æ", "ae").replaceAll("ø", "o").replaceAll("å", "a").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "bilde";
 }
-function $i(e) {
+function ea(e) {
 	let t = 5381;
 	for (let n = 0; n < e.length; n++) t = (t << 5) + t + e.charCodeAt(n) >>> 0;
 	return t.toString(16).padStart(8, "0");
 }
 //#endregion
 //#region ../template/assets/engine/glyphs.js
-var ea = "urd-recent-glyphs", ta = [
+var ta = "urd-recent-glyphs", na = [
 	["glyphCat.symbols", "★ ☆ ✦ ✧ ✩ ✪ ✫ ✭ ✮ ✯ ✵ ✳ ✴ ❖ ❋ ✿ ❀ ❁ ✾ ❃ ☘ ◆ ◇ ● ○ ◎ ■ □ ▣ ▲ △ ▼ ▽ ⬡ ⬢ ♦ ♠ ♣ ♥ ♡ ✓ ✔ ✕ ✖ ✗ ✘ ✚ ✜ ☀ ☾ ♪ ♫ ♬ ☮ ☯ ⚜ ⚓ ⚡ ☂ ✂ ✏ ✒ ✉ ☎ ⌛ ⏳ ♻ ⚠ ☑ ⚙ § © ® ™ ° ± × ÷ ∞ ≈ ≠ ≤ ≥ € £ ¥ • ‣ ⁂"],
 	["glyphCat.arrows", "→ ← ↑ ↓ ↔ ↕ ↗ ↘ ↙ ↖ ⇒ ⇐ ⇑ ⇓ ⇔ ➜ ➤ ➔ ↩ ↪ ⤴ ⤵ ↺ ↻ ⟲ ⟳ « » ‹ ›"],
 	["glyphCat.smileys", "😀 😃 😄 😁 😆 😅 😂 🙂 😉 😊 😇 🥰 😍 🤩 😘 😋 😜 🤪 😎 🥳 😏 😌 😴 🤔 🤗 🤭 🙃 😢 😭 😤 😡 🤯 😱 🥺 😬 🤓 🫠 🫡 🫶"],
@@ -2793,10 +2810,10 @@ var ea = "urd-recent-glyphs", ta = [
 	["glyphCat.objects", "💡 🔔 📣 📢 📌 📍 📅 ⏰ 🔑 🔒 🔓 🛠 🔧 🔨 🧰 📦 📫 📧 📱 💻 🖥 🖨 📷 📸 🎥 📺 🔍 🔎 📎 📏 📐 📝 📄 📋 📁 💾 🧾 💰 💳 🪙 🎁 🎈 🎉 🎊 🏆 🥇 🥈 🥉 🏅 🚩 🏁 🔗 🧭 🗺 🧲 🧪 🔬 🔭 💊 🩺 🛡 🕯 🪧 🖼"],
 	["glyphCat.hearts", "❤ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💗 💓 💕 💖 💘 💝 💞 💟"]
 ];
-function na(e, t) {
+function ra(e, t) {
 	return [t, ...(Array.isArray(e) ? e : []).filter((e) => e !== t)].slice(0, 16);
 }
-function ra() {
+function ia() {
 	try {
 		let e = JSON.parse(localStorage.getItem("urd-recent-glyphs") ?? "[]");
 		return Array.isArray(e) ? e : [];
@@ -2804,16 +2821,16 @@ function ra() {
 		return [];
 	}
 }
-function ia(e) {
-	let t = na(ra(), e);
+function aa(e) {
+	let t = ra(ia(), e);
 	try {
-		localStorage.setItem(ea, JSON.stringify(t));
+		localStorage.setItem(ta, JSON.stringify(t));
 	} catch {}
 	return t;
 }
 //#endregion
 //#region ../template/assets/engine/icons.js
-var aa = "fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"", oa = "fill=\"currentColor\" stroke=\"none\"", sa = {
+var oa = "fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"", sa = "fill=\"currentColor\" stroke=\"none\"", ca = {
 	facebook: {
 		label: "Facebook",
 		body: "<path d=\"M15.5 4H13a3.5 3.5 0 0 0-3.5 3.5V10H7v3.2h2.5V20h3.2v-6.8h2.5l.55-3.2h-3.05V7.8c0-.5.4-.8.9-.8h1.9z\"/>"
@@ -3036,7 +3053,7 @@ var aa = "fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-line
 		label: "Deling",
 		body: "<circle cx=\"6\" cy=\"12\" r=\"2.6\"/><circle cx=\"17.5\" cy=\"5.5\" r=\"2.6\"/><circle cx=\"17.5\" cy=\"18.5\" r=\"2.6\"/><path d=\"M8.4 10.8l6.8-4M8.4 13.2l6.8 4\"/>"
 	}
-}, ca = [
+}, la = [
 	["iconCat.social", [
 		"facebook",
 		"instagram",
@@ -3103,21 +3120,21 @@ var aa = "fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-line
 		"share"
 	]]
 ];
-function la(e) {
-	let t = typeof e == "string" ? sa[e] : null;
-	return t ? `<svg viewBox="0 0 24 24" width="100%" height="100%" ${t.fill ? oa : aa} aria-hidden="true" focusable="false">${t.body}</svg>` : null;
+function ua(e) {
+	let t = typeof e == "string" ? ca[e] : null;
+	return t ? `<svg viewBox="0 0 24 24" width="100%" height="100%" ${t.fill ? sa : oa} aria-hidden="true" focusable="false">${t.body}</svg>` : null;
 }
 //#endregion
 //#region src/lib/GlyphPicker.svelte
-var ua = /* @__PURE__ */ W("<img class=\"gp-own svelte-15ln1c3\"/>"), da = /* @__PURE__ */ W("<span class=\"gp-svg svelte-15ln1c3\"></span>"), fa = /* @__PURE__ */ W("<button type=\"button\" class=\"gp-cell svelte-15ln1c3\"> </button>"), pa = /* @__PURE__ */ W("<div class=\"gp-group svelte-15ln1c3\"> </div> <div class=\"gp-grid svelte-15ln1c3\"></div>", 1), ma = /* @__PURE__ */ W("<button type=\"button\"><span class=\"gp-svg svelte-15ln1c3\"></span></button>"), ha = /* @__PURE__ */ W("<button type=\"button\"> </button>"), ga = /* @__PURE__ */ W("<div class=\"gp-group svelte-15ln1c3\"> </div> <button type=\"button\" class=\"ghost gp-upload svelte-15ln1c3\"> </button> <input type=\"file\" accept=\"image/*\" hidden=\"\"/> <p class=\"gp-hint svelte-15ln1c3\"> </p>", 1), _a = /* @__PURE__ */ W("<div class=\"gp-pop svelte-15ln1c3\"><!> <!> <!> <!></div>"), va = /* @__PURE__ */ W("<span class=\"gp svelte-15ln1c3\"><button type=\"button\" class=\"gp-swatch svelte-15ln1c3\"><!></button> <!></span>");
-function ya(e, t) {
+var da = /* @__PURE__ */ W("<img class=\"gp-own svelte-15ln1c3\"/>"), fa = /* @__PURE__ */ W("<span class=\"gp-svg svelte-15ln1c3\"></span>"), pa = /* @__PURE__ */ W("<button type=\"button\" class=\"gp-cell svelte-15ln1c3\"> </button>"), ma = /* @__PURE__ */ W("<div class=\"gp-group svelte-15ln1c3\"> </div> <div class=\"gp-grid svelte-15ln1c3\"></div>", 1), ha = /* @__PURE__ */ W("<button type=\"button\"><span class=\"gp-svg svelte-15ln1c3\"></span></button>"), ga = /* @__PURE__ */ W("<button type=\"button\"> </button>"), _a = /* @__PURE__ */ W("<div class=\"gp-group svelte-15ln1c3\"> </div> <button type=\"button\" class=\"ghost gp-upload svelte-15ln1c3\"> </button> <input type=\"file\" accept=\"image/*\" hidden=\"\"/> <p class=\"gp-hint svelte-15ln1c3\"> </p>", 1), va = /* @__PURE__ */ W("<div class=\"gp-pop svelte-15ln1c3\"><!> <!> <!> <!></div>"), ya = /* @__PURE__ */ W("<span class=\"gp svelte-15ln1c3\"><button type=\"button\" class=\"gp-swatch svelte-15ln1c3\"><!></button> <!></span>");
+function ba(e, t) {
 	Ue(t, !0);
 	let n = mi(t, "value", 3, "★"), r = mi(t, "icon", 3, null), i = mi(t, "image", 3, null), a = mi(t, "label", 19, () => Q("gp.pickGlyph")), o = /* @__PURE__ */ F(nn([])), s = /* @__PURE__ */ F(null), c = /* @__PURE__ */ F(null), l = /* @__PURE__ */ F(!1), u = /* @__PURE__ */ F(nn({
 		top: 0,
 		left: 0
 	}));
 	function d() {
-		I(o, ra(), !0);
+		I(o, ia(), !0);
 		let e = H(s).getBoundingClientRect(), t = Math.max(8, Math.min(e.right - 292, window.innerWidth - 292 - 8)), n = e.bottom + 380 + 8 > window.innerHeight ? Math.max(8, e.top - 380 - 8) : e.bottom + 6;
 		I(u, {
 			top: n,
@@ -3125,7 +3142,7 @@ function ya(e, t) {
 		}, !0), I(l, !0);
 	}
 	function f(e) {
-		ia(e), t.onpick?.(e), I(l, !1);
+		aa(e), t.onpick?.(e), I(l, !1);
 	}
 	function p(e) {
 		t.onicon?.(e), I(l, !1);
@@ -3133,7 +3150,7 @@ function ya(e, t) {
 	async function h(e) {
 		let n = e.target.files?.[0];
 		if (e.target.value = "", !n) return;
-		let r = await Gi(n, 256);
+		let r = await Ki(n, 256);
 		t.onimage?.(r.dataUrl), I(l, !1);
 	}
 	xn(() => {
@@ -3149,28 +3166,28 @@ function ya(e, t) {
 			document.removeEventListener("pointerdown", e, !0), document.removeEventListener("keydown", t, !0), document.removeEventListener("scroll", n, !0);
 		};
 	});
-	var g = va(), _ = L(g), v = L(_), y = (e) => {
-		var t = ua();
+	var g = ya(), _ = L(g), v = L(_), y = (e) => {
+		var t = da();
 		B((e) => {
 			Z(t, "src", i()), Z(t, "alt", e);
 		}, [() => Q("gp.ownIcon")]), G(e, t);
 	}, b = (e) => {
-		var t = da();
-		J(t, () => la(r()), !0), M(t), G(e, t);
+		var t = fa();
+		J(t, () => ua(r()), !0), M(t), G(e, t);
 	}, x = (e) => {
 		var t = Ar();
 		B(() => K(t, n() || "★")), G(e, t);
 	};
 	q(v, (e) => {
-		i() ? e(y) : r() && sa[r()] ? e(b, 1) : e(x, -1);
+		i() ? e(y) : r() && ca[r()] ? e(b, 1) : e(x, -1);
 	}), M(_);
 	var S = z(_, 2), C = (e) => {
-		var i = _a(), a = L(i), s = (e) => {
-			var t = pa(), n = R(t), r = L(n, !0);
+		var i = va(), a = L(i), s = (e) => {
+			var t = ma(), n = R(t), r = L(n, !0);
 			M(n);
 			var i = z(n, 2);
 			Vr(i, 20, () => H(o), (e) => e, (e, t) => {
-				var n = fa(), r = L(n, !0);
+				var n = pa(), r = L(n, !0);
 				M(n), B(() => K(r, t)), U("click", n, () => f(t)), G(e, n);
 			}), M(i), B((e) => K(r, e), [() => Q("common.recent")]), G(e, t);
 		};
@@ -3179,18 +3196,18 @@ function ya(e, t) {
 		});
 		var l = z(a, 2), d = (e) => {
 			var t = jr();
-			Vr(R(t), 17, () => ca, ([e, t]) => e, (e, t) => {
+			Vr(R(t), 17, () => la, ([e, t]) => e, (e, t) => {
 				var n = /* @__PURE__ */ P(() => m(H(t), 2));
 				let i = () => H(n)[0], a = () => H(n)[1];
-				var o = pa(), s = R(o), c = L(s, !0);
+				var o = ma(), s = R(o), c = L(s, !0);
 				M(s);
 				var l = z(s, 2);
 				Vr(l, 20, a, (e) => e, (e, t) => {
-					var n = ma();
+					var n = ha();
 					let i;
 					var a = L(n);
-					J(a, () => la(t), !0), M(a), M(n), B(() => {
-						i = Qr(n, 1, "gp-cell gp-cell-icon svelte-15ln1c3", null, i, { active: t === r() }), Z(n, "title", sa[t].label);
+					J(a, () => ua(t), !0), M(a), M(n), B(() => {
+						i = Qr(n, 1, "gp-cell gp-cell-icon svelte-15ln1c3", null, i, { active: t === r() }), Z(n, "title", ca[t].label);
 					}), U("click", n, () => p(t)), G(e, n);
 				}), M(l), B((e) => K(c, e), [() => Q(i())]), G(e, o);
 			}), G(e, t);
@@ -3199,14 +3216,14 @@ function ya(e, t) {
 			t.onicon && e(d);
 		});
 		var g = z(l, 2);
-		Vr(g, 17, () => ta, ([e, t]) => e, (e, t) => {
+		Vr(g, 17, () => na, ([e, t]) => e, (e, t) => {
 			var r = /* @__PURE__ */ P(() => m(H(t), 2));
 			let i = () => H(r)[0], a = () => H(r)[1];
-			var o = pa(), s = R(o), c = L(s, !0);
+			var o = ma(), s = R(o), c = L(s, !0);
 			M(s);
 			var l = z(s, 2);
 			Vr(l, 20, () => a().split(" "), (e) => e, (e, t) => {
-				var r = ha();
+				var r = ga();
 				let i;
 				var a = L(r, !0);
 				M(r), B(() => {
@@ -3215,7 +3232,7 @@ function ya(e, t) {
 			}), M(l), B((e) => K(c, e), [() => Q(i())]), G(e, o);
 		});
 		var _ = z(g, 2), v = (e) => {
-			var t = ga(), n = R(t), r = L(n, !0);
+			var t = _a(), n = R(t), r = L(n, !0);
 			M(n);
 			var i = z(n, 2), a = L(i, !0);
 			M(i);
@@ -3243,7 +3260,7 @@ function ya(e, t) {
 Cr(["click", "change"]);
 //#endregion
 //#region src/lib/previewBridge.js
-function ba(e, t = {}) {
+function xa(e, t = {}) {
 	let n = (e) => {
 		if (e.origin !== location.origin) return;
 		let n = e.data;
@@ -3359,16 +3376,16 @@ function ba(e, t = {}) {
 }
 //#endregion
 //#region src/lib/preview-scale.js
-function xa(e, t) {
+function Sa(e, t) {
 	return !(e > 0) || !(t > 0) ? 1 : e / t;
 }
-function Sa(e, t, n) {
-	let r = n === "full" ? 1 : Math.min(1, xa(e, t));
+function Ca(e, t, n) {
+	let r = n === "full" ? 1 : Math.min(1, Sa(e, t));
 	return Math.max(.1, r);
 }
 //#endregion
 //#region src/lib/Dropdown.svelte
-var Ca = /* @__PURE__ */ W("<button type=\"button\"> </button>"), wa = /* @__PURE__ */ W("<div class=\"dd-pop svelte-vtocc6\"></div>"), Ta = /* @__PURE__ */ W("<span class=\"dd svelte-vtocc6\"><button type=\"button\" class=\"dd-btn svelte-vtocc6\"><span class=\"dd-value svelte-vtocc6\"> </span> <span class=\"dd-caret svelte-vtocc6\"> </span></button> <!></span>");
+var wa = /* @__PURE__ */ W("<button type=\"button\"> </button>"), Ta = /* @__PURE__ */ W("<div class=\"dd-pop svelte-vtocc6\"></div>"), Ea = /* @__PURE__ */ W("<span class=\"dd svelte-vtocc6\"><button type=\"button\" class=\"dd-btn svelte-vtocc6\"><span class=\"dd-value svelte-vtocc6\"> </span> <span class=\"dd-caret svelte-vtocc6\"> </span></button> <!></span>");
 function $(e, t) {
 	Ue(t, !0);
 	let n = mi(t, "value", 3, null), r = mi(t, "options", 19, () => []), i = mi(t, "title", 3, null), a = mi(t, "disabled", 3, !1), o = /* @__PURE__ */ F(!1), s = /* @__PURE__ */ F(null), c = /* @__PURE__ */ F(nn({
@@ -3409,16 +3426,16 @@ function $(e, t) {
 			document.removeEventListener("pointerdown", e, !0), document.removeEventListener("keydown", t, !0), document.removeEventListener("scroll", n, !0);
 		};
 	});
-	var p = Ta(), h = L(p), g = L(h), _ = L(g, !0);
+	var p = Ea(), h = L(p), g = L(h), _ = L(g, !0);
 	M(g);
 	var v = z(g, 2), y = L(v, !0);
 	M(v), M(h);
 	var b = z(h, 2), x = (e) => {
-		var t = wa();
+		var t = Ta();
 		Vr(t, 21, r, ([e, t]) => `${e ?? ""}`, (e, t) => {
 			var r = /* @__PURE__ */ P(() => m(H(t), 2));
 			let i = () => H(r)[0], a = () => H(r)[1];
-			var o = Ca();
+			var o = wa();
 			let s;
 			var c = L(o, !0);
 			M(o), B(() => {
@@ -3435,8 +3452,8 @@ function $(e, t) {
 Cr(["click"]);
 //#endregion
 //#region src/lib/IconEditor.svelte
-var Ea = /* @__PURE__ */ W("<div class=\"ie-overlay svelte-e7sog7\" role=\"dialog\" aria-modal=\"true\"><div class=\"ie-card svelte-e7sog7\"><h2 class=\"svelte-e7sog7\"> </h2> <div class=\"ie-stage svelte-e7sog7\"><canvas class=\"ie-canvas svelte-e7sog7\"></canvas> <p class=\"ie-hint svelte-e7sog7\"> </p></div> <label class=\"ie-row svelte-e7sog7\"> <span class=\"ie-val svelte-e7sog7\"> </span></label> <input type=\"range\" min=\"1\" max=\"3\" step=\"0.02\" class=\"svelte-e7sog7\"/> <label class=\"ie-row svelte-e7sog7\"> <span class=\"ie-val svelte-e7sog7\"> </span></label> <input type=\"range\" min=\"0.3\" max=\"2\" step=\"0.02\" class=\"svelte-e7sog7\"/> <label class=\"ie-row svelte-e7sog7\"> <span class=\"ie-val svelte-e7sog7\"> </span></label> <input type=\"range\" min=\"0.3\" max=\"2\" step=\"0.02\" class=\"svelte-e7sog7\"/> <label class=\"ie-row svelte-e7sog7\"> <span class=\"ie-val svelte-e7sog7\"> </span></label> <input type=\"range\" min=\"0\" max=\"2\" step=\"0.02\" class=\"svelte-e7sog7\"/> <span class=\"ie-tools svelte-e7sog7\"><button type=\"button\" class=\"ghost svelte-e7sog7\"> </button> <button type=\"button\" class=\"ghost svelte-e7sog7\"> </button></span> <span class=\"ie-actions svelte-e7sog7\"><button type=\"button\" class=\"ghost svelte-e7sog7\"> </button> <button type=\"button\" class=\"primary svelte-e7sog7\"> </button></span></div></div>");
-function Da(e, t) {
+var Da = /* @__PURE__ */ W("<div class=\"ie-overlay svelte-e7sog7\" role=\"dialog\" aria-modal=\"true\"><div class=\"ie-card svelte-e7sog7\"><h2 class=\"svelte-e7sog7\"> </h2> <div class=\"ie-stage svelte-e7sog7\"><canvas class=\"ie-canvas svelte-e7sog7\"></canvas> <p class=\"ie-hint svelte-e7sog7\"> </p></div> <label class=\"ie-row svelte-e7sog7\"> <span class=\"ie-val svelte-e7sog7\"> </span></label> <input type=\"range\" min=\"1\" max=\"3\" step=\"0.02\" class=\"svelte-e7sog7\"/> <label class=\"ie-row svelte-e7sog7\"> <span class=\"ie-val svelte-e7sog7\"> </span></label> <input type=\"range\" min=\"0.3\" max=\"2\" step=\"0.02\" class=\"svelte-e7sog7\"/> <label class=\"ie-row svelte-e7sog7\"> <span class=\"ie-val svelte-e7sog7\"> </span></label> <input type=\"range\" min=\"0.3\" max=\"2\" step=\"0.02\" class=\"svelte-e7sog7\"/> <label class=\"ie-row svelte-e7sog7\"> <span class=\"ie-val svelte-e7sog7\"> </span></label> <input type=\"range\" min=\"0\" max=\"2\" step=\"0.02\" class=\"svelte-e7sog7\"/> <span class=\"ie-tools svelte-e7sog7\"><button type=\"button\" class=\"ghost svelte-e7sog7\"> </button> <button type=\"button\" class=\"ghost svelte-e7sog7\"> </button></span> <span class=\"ie-actions svelte-e7sog7\"><button type=\"button\" class=\"ghost svelte-e7sog7\"> </button> <button type=\"button\" class=\"primary svelte-e7sog7\"> </button></span></div></div>");
+function Oa(e, t) {
 	Ue(t, !0);
 	let n = mi(t, "image", 3, ""), r = /* @__PURE__ */ F(null), i = /* @__PURE__ */ F(null), a = /* @__PURE__ */ F(1), o = /* @__PURE__ */ F(.5), s = /* @__PURE__ */ F(.5), c = /* @__PURE__ */ F(1), l = /* @__PURE__ */ F(1), u = /* @__PURE__ */ F(1);
 	xn(() => {
@@ -3472,7 +3489,7 @@ function Da(e, t) {
 		let e = document.createElement("canvas");
 		e.width = 128, e.height = 128, d(e.getContext("2d"), 128), t.onapply?.(e.toDataURL("image/webp", .92));
 	}
-	var h = Ea(), g = L(h), _ = L(g), v = L(_, !0);
+	var h = Da(), g = L(h), _ = L(g), v = L(_, !0);
 	M(_);
 	var y = z(_, 2), b = L(y);
 	Z(b, "width", 220), Z(b, "height", 220), pi(b, (e) => I(r, e), () => H(r));
@@ -3524,7 +3541,7 @@ function Da(e, t) {
 Cr(["pointerdown", "click"]);
 //#endregion
 //#region ../template/assets/engine/migrate.js
-function Oa(e, t) {
+function ka(e, t) {
 	if (!t) return {
 		ok: !1,
 		version: e.version,
@@ -3554,14 +3571,14 @@ function Oa(e, t) {
 		props: r
 	};
 }
-var ka = (e) => Math.round(e * 100) / 100;
-function Aa(e) {
+var Aa = (e) => Math.round(e * 100) / 100;
+function ja(e) {
 	return e ? typeof e.size == "number" ? e : {
 		size: Math.max(2, e.rowHeight ?? 16),
 		snap: e.snap !== !1
 	} : null;
 }
-var ja = {
+var Ma = {
 	1: (e, t) => {
 		for (let n of e.sections ?? []) {
 			let e = n.grid ?? t?.grid, r = typeof e?.columns == "number" ? e : {
@@ -3572,8 +3589,8 @@ var ja = {
 				let n = e.frames?.[t];
 				n && (e.frames[t] = {
 					...n,
-					x: ka(n.x * 100 / r.columns),
-					w: ka(n.w * 100 / r.columns),
+					x: Aa(n.x * 100 / r.columns),
+					w: Aa(n.w * 100 / r.columns),
 					y: n.y * r.rowHeight,
 					h: n.h * r.rowHeight
 				});
@@ -3582,26 +3599,26 @@ var ja = {
 		return e;
 	},
 	2: (e) => {
-		for (let t of e.sections ?? []) t.grid &&= Aa(t.grid);
+		for (let t of e.sections ?? []) t.grid &&= ja(t.grid);
 		return e;
 	}
-}, Ma = { 1: (e) => (e.grid = Aa(e.grid) ?? {
+}, Na = { 1: (e) => (e.grid = ja(e.grid) ?? {
 	size: 16,
 	snap: !0
 }, e) };
-function Na(e) {
+function Pa(e) {
 	let t = structuredClone(e), n = t.schemaVersion ?? 1;
 	for (; n < 2;) {
-		let r = Ma[n];
+		let r = Na[n];
 		if (typeof r != "function") return e;
 		t = r(t) ?? t, n++, t.schemaVersion = n;
 	}
 	return t;
 }
-function Pa(e, t) {
+function Fa(e, t) {
 	let n = structuredClone(e), r = n.schemaVersion ?? 1;
 	for (; r < 3;) {
-		let i = ja[r];
+		let i = Ma[r];
 		if (typeof i != "function") return e;
 		n = i(n, t) ?? n, r++, n.schemaVersion = r;
 	}
@@ -3609,7 +3626,7 @@ function Pa(e, t) {
 }
 //#endregion
 //#region ../template/assets/engine/plugins.js
-function Fa(e) {
+function Ia(e) {
 	let t = /^(\d+)\.(\d+)\.(\d+)$/.exec(String(e).trim());
 	return t ? [
 		Number(t[1]),
@@ -3617,34 +3634,34 @@ function Fa(e) {
 		Number(t[3])
 	] : null;
 }
-var Ia = (e, t) => e[0] - t[0] || e[1] - t[1] || e[2] - t[2];
-function La(e, t) {
-	let n = Fa(e);
+var La = (e, t) => e[0] - t[0] || e[1] - t[1] || e[2] - t[2];
+function Ra(e, t) {
+	let n = Ia(e);
 	if (!n || typeof t != "string" || !t.trim()) return !1;
 	for (let e of t.trim().split(/\s+/)) {
 		let t = /^(>=|<=|>|<|=|\^|~)?(\d+\.\d+\.\d+)$/.exec(e);
 		if (!t) return !1;
-		let r = t[1] ?? "=", i = Fa(t[2]), a = Ia(n, i);
+		let r = t[1] ?? "=", i = Ia(t[2]), a = La(n, i);
 		if (!(r === ">=" ? a >= 0 : r === ">" ? a > 0 : r === "<=" ? a <= 0 : r === "<" ? a < 0 : r === "^" ? i[0] === 0 ? n[0] === 0 && n[1] === i[1] && a >= 0 : n[0] === i[0] && a >= 0 : r === "~" ? n[0] === i[0] && n[1] === i[1] && a >= 0 : a === 0)) return !1;
 	}
 	return !0;
 }
-var Ra = /^[a-z0-9][a-z0-9-]*$/;
-function za(e) {
+var za = /^[a-z0-9][a-z0-9-]*$/;
+function Ba(e) {
 	let t = [];
 	if (!e || typeof e != "object") return ["manifestet er ikke et objekt"];
-	Ra.test(e.id ?? "") || t.push("id mangler eller er ugyldig"), (typeof e.name != "string" || !e.name) && t.push("name mangler"), Fa(e.version ?? "") || t.push("version er ikke semver"), (typeof e.requiresEngine != "string" || !e.requiresEngine) && t.push("requiresEngine mangler");
+	za.test(e.id ?? "") || t.push("id mangler eller er ugyldig"), (typeof e.name != "string" || !e.name) && t.push("name mangler"), Ia(e.version ?? "") || t.push("version er ikke semver"), (typeof e.requiresEngine != "string" || !e.requiresEngine) && t.push("requiresEngine mangler");
 	let n = Array.isArray(e.languages) && e.languages.length > 0;
-	return (e.entry !== void 0 || !n) && (typeof e.entry != "string" || !e.entry.endsWith(".js")) && t.push("entry mangler eller er ikke en .js-fil"), (e.provides !== void 0 || !n) && (!e.provides || typeof e.provides != "object") && t.push("provides mangler"), e.languages !== void 0 && t.push(...bi(e.languages)), e.locales !== void 0 && typeof e.locales != "boolean" && t.push("locales må være boolsk"), e.names !== void 0 && (typeof e.names != "object" || e.names === null || Array.isArray(e.names) || Object.values(e.names).some((e) => typeof e != "string" || !e)) && t.push("names må være et objekt med språkkode til navn"), t;
+	return (e.entry !== void 0 || !n) && (typeof e.entry != "string" || !e.entry.endsWith(".js")) && t.push("entry mangler eller er ikke en .js-fil"), (e.provides !== void 0 || !n) && (!e.provides || typeof e.provides != "object") && t.push("provides mangler"), e.languages !== void 0 && t.push(...xi(e.languages)), e.locales !== void 0 && typeof e.locales != "boolean" && t.push("locales må være boolsk"), e.names !== void 0 && (typeof e.names != "object" || e.names === null || Array.isArray(e.names) || Object.values(e.names).some((e) => typeof e != "string" || !e)) && t.push("names må være et objekt med språkkode til navn"), t;
 }
 //#endregion
 //#region ../template/assets/engine/sections/presets.js
-function Ba(e) {
+function Va(e) {
 	return typeof crypto < "u" && crypto.randomUUID ? `${e}-${crypto.randomUUID().slice(0, 8)}` : `${e}-${[...crypto.getRandomValues(/* @__PURE__ */ new Uint8Array(4))].map((e) => e.toString(16).padStart(2, "0")).join("")}`;
 }
 //#endregion
 //#region ../template/assets/engine/theme.js
-function Va(e, t) {
+function Ha(e, t) {
 	let n = e.tokens || {}, r = e.scheme === "dark" ? "dark" : "light";
 	if (!e.alt?.tokens || t === r) return n;
 	let i = {};
@@ -3654,12 +3671,12 @@ function Va(e, t) {
 	};
 	return i;
 }
-var Ha = /^[a-zA-Z0-9#%.,()'"\s+\-*/]+$/;
-function Ua(e) {
-	return typeof e == "string" && Ha.test(e) && !/url\(|\/\*|\*\/|expression/i.test(e);
-}
+var Ua = /^[a-zA-Z0-9#%.,()'"\s+\-*/]+$/;
 function Wa(e) {
-	let t = e.tokens || {}, n = Va(e, "light"), r = Va(e, "dark"), i = e.scheme === "dark" ? "dark" : "light", a = [], o = [], s = [], c = /* @__PURE__ */ new Set([
+	return typeof e == "string" && Ua.test(e) && !/url\(|\/\*|\*\/|expression/i.test(e);
+}
+function Ga(e) {
+	let t = e.tokens || {}, n = Ha(e, "light"), r = Ha(e, "dark"), i = e.scheme === "dark" ? "dark" : "light", a = [], o = [], s = [], c = /* @__PURE__ */ new Set([
 		...Object.keys(t),
 		...Object.keys(n),
 		...Object.keys(r)
@@ -3672,11 +3689,11 @@ function Wa(e) {
 		]);
 		for (let l of c) {
 			let c = t[e]?.[l], u = n[e]?.[l], d = r[e]?.[l];
-			Ua(c) && (a.push(`  --urd-${e}-${l}: ${c};`), i && a.push(`  --urd-base-${l}: ${c};`)), u !== d && (i && Ua(u) && Ua(d) ? o.push({
+			Wa(c) && (a.push(`  --urd-${e}-${l}: ${c};`), i && a.push(`  --urd-base-${l}: ${c};`)), u !== d && (i && Wa(u) && Wa(d) ? o.push({
 				name: l,
 				lv: u,
 				dv: d
-			}) : !i && Ua(u) && Ua(d) && s.push({
+			}) : !i && Wa(u) && Wa(d) && s.push({
 				group: e,
 				name: l,
 				lv: u,
@@ -3697,10 +3714,10 @@ function Wa(e) {
 	}
 	return u += "}\n", u;
 }
-function Ga(e) {
+function Ka(e) {
 	return /^[a-z][a-z0-9-]*$/.test(e) ? `var(--urd-color-${e})` : e;
 }
-var Ka = {
+var qa = {
 	flate: {
 		"--urd-color-bg": "var(--urd-base-surface)",
 		"--urd-color-surface": "color-mix(in srgb, var(--urd-base-text) 7%, var(--urd-base-surface))"
@@ -3717,13 +3734,13 @@ var Ka = {
 		"--urd-color-surface": "color-mix(in srgb, var(--urd-base-text) 78%, var(--urd-base-bg))",
 		"--urd-color-text": "var(--urd-base-bg)"
 	}
-}, qa = {
+}, Ja = {
 	flate: "sectionTheme.flate",
 	aksent: "sectionTheme.aksent",
 	invers: "sectionTheme.invers"
 };
-[...new Set(Object.values(Ka).flatMap(Object.keys))];
-function Ja(e) {
+[...new Set(Object.values(qa).flatMap(Object.keys))];
+function Ya(e) {
 	let t = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(typeof e == "string" ? e.trim() : "");
 	if (!t) return null;
 	let n = t[1];
@@ -3734,13 +3751,13 @@ function Ja(e) {
 	};
 	return .2126 * r(n.slice(0, 2)) + .7152 * r(n.slice(2, 4)) + .0722 * r(n.slice(4, 6));
 }
-function Ya(e, t) {
-	let n = Ja(e), r = Ja(t);
+function Xa(e, t) {
+	let n = Ya(e), r = Ya(t);
 	return n == null || r == null ? null : (Math.max(n, r) + .05) / (Math.min(n, r) + .05);
 }
 //#endregion
 //#region ../template/assets/engine/backgrounds/color.js
-var Xa = {
+var Za = {
 	version: 1,
 	label: "Farge",
 	labelKey: "bgLayer.color",
@@ -3750,9 +3767,9 @@ var Xa = {
 	}),
 	migrations: {},
 	render(e, t) {
-		e.style.background = Ga(t.value), e.style.opacity = String(t.opacity ?? 1);
+		e.style.background = Ka(t.value), e.style.opacity = String(t.opacity ?? 1);
 	}
-}, Za = {
+}, Qa = {
 	linear: [
 		"pan",
 		"pan-loop",
@@ -3760,7 +3777,7 @@ var Xa = {
 	],
 	radial: ["pulse", "orbit"]
 };
-function Qa(e) {
+function $a(e) {
 	let t = Array.isArray(e) && e.length ? e : [{ color: "#0b0e14" }, { color: "#1a1030" }], n = t.map((e) => Math.max(0, Number(e?.share) || 0)), r = n.reduce((e, t) => e + t, 0), i = r <= 0, a = i ? t.length : r, o = 0;
 	return t.map((e, t) => {
 		let r = i ? 1 : n[t], s = (o + r / 2) / a * 100;
@@ -3770,7 +3787,7 @@ function Qa(e) {
 		};
 	});
 }
-function $a(e) {
+function eo(e) {
 	let t = (e) => Math.round(e * 100) / 100, n = e[0]?.at ?? 0;
 	return [...e.map((e) => ({
 		color: e.color,
@@ -3780,7 +3797,7 @@ function $a(e) {
 		at: 100
 	}];
 }
-function eo(e, t, n, r = .5) {
+function to(e, t, n, r = .5) {
 	let i = n % 360 * Math.PI / 180, a = (e) => Math.round(e * 100) / 100 || 0, o = (Math.abs(e * Math.sin(i)) + Math.abs(t * Math.cos(i))) / (1 - Math.min(Math.max(r, 0), .9));
 	return {
 		period: a(o),
@@ -3788,11 +3805,11 @@ function eo(e, t, n, r = .5) {
 		dy: a(-Math.cos(i) * o)
 	};
 }
-function to(e, t, n) {
-	return `repeating-linear-gradient(${t}deg, ${e.map((e) => `${Ga(e.color)} ${Math.round(e.at / 100 * n * 100) / 100}px`).join(", ")})`;
+function no(e, t, n) {
+	return `repeating-linear-gradient(${t}deg, ${e.map((e) => `${Ka(e.color)} ${Math.round(e.at / 100 * n * 100) / 100}px`).join(", ")})`;
 }
-function no(e) {
-	let t = e.kind === "radial" ? "radial" : "linear", n = (Za[t] ?? []).includes(e.animation) ? e.animation : null, r = Qa(e.stops), i = r.map((e) => `${Ga(e.color)} ${e.at}%`).join(", "), a = {}, o;
+function ro(e) {
+	let t = e.kind === "radial" ? "radial" : "linear", n = (Qa[t] ?? []).includes(e.animation) ? e.animation : null, r = $a(e.stops), i = r.map((e) => `${Ka(e.color)} ${e.at}%`).join(", "), a = {}, o;
 	if (t === "radial") {
 		let t = Math.round((e.x ?? .5) * 100), r = Math.round((e.y ?? .5) * 100);
 		if (o = `radial-gradient(circle at ${t}% ${r}%, ${i})`, n === "orbit") return {
@@ -3817,7 +3834,7 @@ function no(e) {
 				styles: a,
 				loop: {
 					angle: t,
-					stops: $a(r),
+					stops: eo(r),
 					maxShare: o
 				}
 			};
@@ -3841,7 +3858,7 @@ function no(e) {
 		styles: a
 	};
 }
-function ro(e) {
+function io(e) {
 	let t = Array.isArray(e) && e.length ? e : ["#0b0e14", "#1a1030"], n = (e) => t.length === 1 ? 0 : Math.round(e * 100 / (t.length - 1));
 	return t.map((e, t) => e && typeof e == "object" ? {
 		color: e.color ?? "#0b0e14",
@@ -3851,8 +3868,8 @@ function ro(e) {
 		at: n(t)
 	});
 }
-function io(e) {
-	let t = [...ro(e)].sort((e, t) => e.at - t.at), n = [
+function ao(e) {
+	let t = [...io(e)].sort((e, t) => e.at - t.at), n = [
 		0,
 		...t.slice(0, -1).map((e, n) => (e.at + t[n + 1].at) / 2),
 		100
@@ -3862,16 +3879,16 @@ function io(e) {
 		share: Math.round((n[t + 1] - n[t]) * 10) / 10
 	}));
 }
-var ao = /* @__PURE__ */ new Set(), oo = !1;
-function so(e) {
-	ao.add(e), !(oo || typeof window > "u") && (oo = !0, window.addEventListener("resize", () => {
-		for (let e of [...ao]) e() || ao.delete(e);
+var oo = /* @__PURE__ */ new Set(), so = !1;
+function co(e) {
+	oo.add(e), !(so || typeof window > "u") && (so = !0, window.addEventListener("resize", () => {
+		for (let e of [...oo]) e() || oo.delete(e);
 	}));
 }
-var co = !1;
-function lo() {
-	if (!co) {
-		co = !0;
+var lo = !1;
+function uo() {
+	if (!lo) {
+		lo = !0;
 		try {
 			CSS.registerProperty({
 				name: "--urd-grad-spin",
@@ -3882,7 +3899,7 @@ function lo() {
 		} catch {}
 	}
 }
-var uo = {
+var fo = {
 	version: 3,
 	label: "Gradient",
 	labelKey: "bgLayer.gradient",
@@ -3907,11 +3924,11 @@ var uo = {
 			kind: "linear",
 			x: .5,
 			y: .5,
-			stops: ro(e.stops)
+			stops: io(e.stops)
 		}),
 		2: (e) => ({
 			kind: e.kind === "radial" ? "radial" : "linear",
-			stops: io(e.stops),
+			stops: ao(e.stops),
 			angle: e.angle ?? 160,
 			x: e.x ?? .5,
 			y: e.y ?? .5,
@@ -3920,7 +3937,7 @@ var uo = {
 		})
 	},
 	render(e, t) {
-		let n = no(t);
+		let n = ro(t);
 		e.style.opacity = String(t.opacity ?? 1);
 		for (let [t, r] of Object.entries(n.styles)) e.style.setProperty(t, r);
 		if (n.loop) {
@@ -3931,12 +3948,12 @@ var uo = {
 				if (!e.isConnected) return !1;
 				let r = e.clientWidth, i = e.clientHeight;
 				if (r && i) {
-					let e = eo(r, i, n.loop.angle, n.loop.maxShare);
-					t.style.inset = `${-Math.ceil(e.period)}px`, t.style.background = to(n.loop.stops, n.loop.angle, e.period), t.style.setProperty("--urd-loop-dx", `${e.dx}px`), t.style.setProperty("--urd-loop-dy", `${e.dy}px`);
+					let e = to(r, i, n.loop.angle, n.loop.maxShare);
+					t.style.inset = `${-Math.ceil(e.period)}px`, t.style.background = no(n.loop.stops, n.loop.angle, e.period), t.style.setProperty("--urd-loop-dx", `${e.dx}px`), t.style.setProperty("--urd-loop-dy", `${e.dy}px`);
 				}
 				return !0;
 			};
-			requestAnimationFrame(r), so(r);
+			requestAnimationFrame(r), co(r);
 			return;
 		}
 		if (n.runner) {
@@ -3945,9 +3962,9 @@ var uo = {
 			t.className = n.runner.className, t.style.background = n.runner.background, n.runner.left != null && (t.style.left = n.runner.left), n.runner.top != null && (t.style.top = n.runner.top), e.appendChild(t);
 			return;
 		}
-		e.style.background = n.background, n.className && (e.classList.add(n.className), n.className === "urd-bg-rotate" && lo());
+		e.style.background = n.background, n.className && (e.classList.add(n.className), n.className === "urd-bg-rotate" && uo());
 	}
-}, fo = {
+}, po = {
 	version: 1,
 	label: "Glød",
 	labelKey: "bgLayer.glow",
@@ -3960,49 +3977,49 @@ var uo = {
 	}),
 	migrations: {},
 	render(e, t) {
-		let n = Ga(t.color);
+		let n = Ka(t.color);
 		e.style.background = `radial-gradient(circle at ${t.x * 100}% ${t.y * 100}%, ${n} 0%, transparent ${t.radius * 100}%)`, e.style.opacity = String(t.opacity ?? .35);
 	}
-}, po = "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22128%22%20height%3D%22128%22%3E%3Cfilter%20id%3D%22n%22%3E%3CfeTurbulence%20type%3D%22fractalNoise%22%20baseFrequency%3D%220.9%22%20numOctaves%3D%222%22%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%22128%22%20height%3D%22128%22%20filter%3D%22url(%23n)%22%2F%3E%3C%2Fsvg%3E\")", mo = {
+}, mo = "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22128%22%20height%3D%22128%22%3E%3Cfilter%20id%3D%22n%22%3E%3CfeTurbulence%20type%3D%22fractalNoise%22%20baseFrequency%3D%220.9%22%20numOctaves%3D%222%22%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%22128%22%20height%3D%22128%22%20filter%3D%22url(%23n)%22%2F%3E%3C%2Fsvg%3E\")", ho = {
 	version: 1,
 	label: "Korn",
 	labelKey: "bgLayer.grain",
 	defaults: () => ({ opacity: .06 }),
 	migrations: {},
 	render(e, t) {
-		e.style.backgroundImage = po, e.style.backgroundRepeat = "repeat", e.style.opacity = String(t.opacity ?? .06);
+		e.style.backgroundImage = mo, e.style.backgroundRepeat = "repeat", e.style.opacity = String(t.opacity ?? .06);
 	}
-}, ho = .4;
-function go(e, t) {
+}, go = .4;
+function _o(e, t) {
 	return `${(e ?? .5) * 100}% ${(t ?? .5) * 100}%`;
 }
-function _o(e, t) {
+function vo(e, t) {
 	return e === "contain" ? "contain" : e === "cover" ? "cover" : `${Math.max(0, t ?? 1) * 100}%`;
 }
-function vo(e) {
+function yo(e) {
 	let t = "-9999px";
 	return e === "up" ? `inset(${t} 0 0 0)` : e === "down" ? `inset(0 0 ${t} 0)` : e === "both" ? `inset(${t} 0 ${t} 0)` : "inset(0)";
 }
-function yo(e, t, n, r = .18) {
-	let i = Math.max(0, Math.min(1, n)) * ho * t;
+function bo(e, t, n, r = .18) {
+	let i = Math.max(0, Math.min(1, n)) * go * t;
 	return Math.round(Math.min(i, r * e));
 }
-function bo(e, t, n, r, i) {
-	let a = e + t / 2, o = (n / 2 - a) * Math.max(0, Math.min(1, r)) * ho, s = i ?? yo(t, n, r);
+function xo(e, t, n, r, i) {
+	let a = e + t / 2, o = (n / 2 - a) * Math.max(0, Math.min(1, r)) * go, s = i ?? bo(t, n, r);
 	return Math.max(-s, Math.min(s, o)) || 0;
 }
-var xo = /* @__PURE__ */ new Set(), So = !1, Co = 0;
-function wo() {
-	Co = 0;
-	for (let e of [...xo]) e() || xo.delete(e);
-}
+var So = /* @__PURE__ */ new Set(), Co = !1, wo = 0;
 function To() {
-	Co ||= requestAnimationFrame(wo);
+	wo = 0;
+	for (let e of [...So]) e() || So.delete(e);
 }
-function Eo(e) {
-	xo.add(e), e(), !(So || typeof window > "u") && (So = !0, window.addEventListener("scroll", To, { passive: !0 }), window.addEventListener("resize", To, { passive: !0 }));
+function Eo() {
+	wo ||= requestAnimationFrame(To);
 }
-function Do(e, t, n, r) {
+function Do(e) {
+	So.add(e), e(), !(Co || typeof window > "u") && (Co = !0, window.addEventListener("scroll", Eo, { passive: !0 }), window.addEventListener("resize", Eo, { passive: !0 }));
+}
+function Oo(e, t, n, r) {
 	let i = r === "cover" || r === "flislegg" || r === "repeat", a = e.closest(".urd-section") ?? e.parentElement?.closest(".urd-section") ?? e.parentElement, o = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 	e.style.willChange = "transform";
 	let s = (t) => {
@@ -4010,38 +4027,38 @@ function Do(e, t, n, r) {
 	}, c = () => {
 		if (!e.isConnected) return !1;
 		if (o || document.body.classList.contains("urd-mobile")) return s(n), e.style.transform = "", !0;
-		let r = (a ?? e).getBoundingClientRect(), c = window.innerHeight || document.documentElement.clientHeight, l = yo(r.height, c, t, i ? .18 : .6);
+		let r = (a ?? e).getBoundingClientRect(), c = window.innerHeight || document.documentElement.clientHeight, l = bo(r.height, c, t, i ? .18 : .6);
 		s(i ? Math.max(n, l) : n);
-		let u = bo(r.top, r.height, c, t, l);
+		let u = xo(r.top, r.height, c, t, l);
 		return e.style.transform = `translateY(${u.toFixed(1)}px)`, !0;
 	};
-	Eo(c), typeof requestAnimationFrame == "function" && requestAnimationFrame(() => requestAnimationFrame(c));
+	Do(c), typeof requestAnimationFrame == "function" && requestAnimationFrame(() => requestAnimationFrame(c));
 }
-function Oo() {
+function ko() {
 	return typeof CSS < "u" && typeof CSS.supports == "function" && CSS.supports("animation-timeline", "view()");
 }
-var ko = /* @__PURE__ */ new Set(), Ao = !1, jo = 0;
-function Mo() {
-	jo = 0;
-	for (let e of [...ko]) e() || ko.delete(e);
-}
+var Ao = /* @__PURE__ */ new Set(), jo = !1, Mo = 0;
 function No() {
-	!jo && typeof requestAnimationFrame == "function" && (jo = requestAnimationFrame(Mo));
+	Mo = 0;
+	for (let e of [...Ao]) e() || Ao.delete(e);
 }
-function Po(e) {
-	ko.add(e), e(), !(Ao || typeof window > "u") && (Ao = !0, window.addEventListener("resize", No, { passive: !0 }));
+function Po() {
+	!Mo && typeof requestAnimationFrame == "function" && (Mo = requestAnimationFrame(No));
 }
-function Fo(e, t, n, r) {
+function Fo(e) {
+	Ao.add(e), e(), !(jo || typeof window > "u") && (jo = !0, window.addEventListener("resize", Po, { passive: !0 }));
+}
+function Io(e, t, n, r) {
 	let i = r === "cover" || r === "flislegg" || r === "repeat", a = e.closest(".urd-section") ?? e.parentElement?.closest(".urd-section") ?? e.parentElement;
 	e.style.willChange = "transform", e.classList.add("urd-parallax-css");
 	let o = () => {
 		if (!e.isConnected) return !1;
-		let r = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches || document.body.classList.contains("urd-mobile"), o = (a ?? e).getBoundingClientRect(), s = window.innerHeight || document.documentElement.clientHeight, c = yo(o.height, s, t, i ? .18 : .6), l = i && !r ? Math.max(n, c) : n;
+		let r = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches || document.body.classList.contains("urd-mobile"), o = (a ?? e).getBoundingClientRect(), s = window.innerHeight || document.documentElement.clientHeight, c = bo(o.height, s, t, i ? .18 : .6), l = i && !r ? Math.max(n, c) : n;
 		return e.style.setProperty("--urd-px-shift", `${c}px`), e.style.top = `-${l}px`, e.style.bottom = `-${l}px`, !0;
 	};
-	Po(o), typeof requestAnimationFrame == "function" && requestAnimationFrame(() => requestAnimationFrame(o));
+	Fo(o), typeof requestAnimationFrame == "function" && requestAnimationFrame(() => requestAnimationFrame(o));
 }
-var Io = {
+var Lo = {
 	version: 2,
 	label: "Bilde",
 	labelKey: "bgLayer.image",
@@ -4062,11 +4079,11 @@ var Io = {
 	}) },
 	render(e, t) {
 		if (!t.src) return;
-		e.style.opacity = String(t.opacity ?? 1), e.style.clipPath = vo(t.bleed), e.style.zIndex = t.bleed === "down" || t.bleed === "both" ? "1" : "";
+		e.style.opacity = String(t.opacity ?? 1), e.style.clipPath = yo(t.bleed), e.style.zIndex = t.bleed === "down" || t.bleed === "both" ? "1" : "";
 		let n = document.createElement("div");
 		n.className = "urd-bg-image", n.style.position = "absolute", n.style.left = "0", n.style.right = "0", n.style.top = "0", n.style.bottom = "0";
 		let r = t.fit === "flislegg" || t.fit === "repeat";
-		n.style.backgroundImage = `url("${t.src}")`, n.style.backgroundSize = _o(t.fit, t.size), n.style.backgroundRepeat = r ? "repeat" : "no-repeat", n.style.backgroundPosition = go(t.x, t.y);
+		n.style.backgroundImage = `url("${t.src}")`, n.style.backgroundSize = vo(t.fit, t.size), n.style.backgroundRepeat = r ? "repeat" : "no-repeat", n.style.backgroundPosition = _o(t.x, t.y);
 		let i = 0;
 		t.blur > 0 && (n.style.filter = `blur(${t.blur}px)`, i = Math.ceil(t.blur), n.style.left = `-${i}px`, n.style.right = `-${i}px`, n.style.top = `-${i}px`, n.style.bottom = `-${i}px`);
 		let a = new Image();
@@ -4079,25 +4096,25 @@ var Io = {
 		}
 		if (e.appendChild(n), t.parallax > 0) {
 			let e = t.fit ?? "cover";
-			Oo() ? Fo(n, t.parallax, i, e) : Do(n, t.parallax, i, e);
+			ko() ? Io(n, t.parallax, i, e) : Oo(n, t.parallax, i, e);
 		}
 	}
 };
 //#endregion
 //#region ../template/assets/engine/galleri-model.js
-function Lo(e, t, n) {
+function Ro(e, t, n) {
 	return !Number.isFinite(n) || n < 1 ? 0 : (((Number.isFinite(e) ? e : 0) + t) % n + n) % n;
 }
-function Ro({ count: e = 0, reducedMotion: t = !1 } = {}) {
+function zo({ count: e = 0, reducedMotion: t = !1 } = {}) {
 	return e >= 2 && !t;
 }
-function zo(e, { min: t = 2, fallback: n = 5 } = {}) {
+function Bo(e, { min: t = 2, fallback: n = 5 } = {}) {
 	let r = Number(e);
 	return !Number.isFinite(r) || r <= 0 ? n : Math.max(t, r);
 }
 //#endregion
 //#region ../template/assets/engine/backgrounds/bildegalleri.js
-var Bo = {
+var Vo = {
 	version: 1,
 	label: "Bildegalleri",
 	labelKey: "bgLayer.bildegalleri",
@@ -4117,7 +4134,7 @@ var Bo = {
 		let r = Math.max(0, Number(t.fade) || 0);
 		e.style.setProperty("--urd-bgg-fade", `${r}s`);
 		let i = (e, n) => {
-			e.style.backgroundImage = `url("${n.src}")`, e.style.backgroundSize = _o(t.fit), e.style.backgroundRepeat = "no-repeat", e.style.backgroundPosition = go(n.x, n.y);
+			e.style.backgroundImage = `url("${n.src}")`, e.style.backgroundSize = vo(t.fit), e.style.backgroundRepeat = "no-repeat", e.style.backgroundPosition = _o(n.x, n.y);
 		}, a = new Image();
 		if (a.src = n[0].src, !a.complete) {
 			e.style.visibility = "hidden";
@@ -4129,19 +4146,19 @@ var Bo = {
 		let o = document.createElement("div");
 		o.className = "urd-bg-slide on", i(o, n[0]), e.appendChild(o);
 		let s = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-		if (!Ro({
+		if (!zo({
 			count: n.length,
 			reducedMotion: s
 		})) return;
 		let c = document.createElement("div");
 		c.className = "urd-bg-slide", e.appendChild(c);
-		let l = 0, u = o, d = Math.max(zo(t.interval, { fallback: 6 }), r + .5) * 1e3, f = setInterval(() => {
+		let l = 0, u = o, d = Math.max(Bo(t.interval, { fallback: 6 }), r + .5) * 1e3, f = setInterval(() => {
 			if (!e.isConnected) {
 				clearInterval(f);
 				return;
 			}
 			if (document.hidden) return;
-			let t = Lo(l, 1, n.length), r = new Image();
+			let t = Ro(l, 1, n.length), r = new Image();
 			r.src = n[t].src;
 			let a = () => {
 				if (!e.isConnected) return;
@@ -4156,9 +4173,9 @@ var Bo = {
 };
 //#endregion
 //#region ../template/assets/engine/footer-thumb.js
-function Vo(e = {}) {
+function Ho(e = {}) {
 	let t = "#2fd6b6", n = "#5c6b64", r = e.mega ? "#16221d" : "#0e1512", i = e.cols ?? 0, a = e.social ?? 0, o = `<svg viewBox="0 0 160 80" preserveAspectRatio="none" aria-hidden="true"><rect width="160" height="80" fill="${r}"/>`;
-	if (e.mega && (o += `<circle cx="20" cy="6" r="34" fill="${t}" opacity="0.18"/>`), e.bigcta) return o += `<rect x="45" y="18" width="70" height="8" rx="3" fill="${n}" opacity="0.85"/>`, o += `<rect x="56" y="32" width="48" height="4" rx="2" fill="${n}" opacity="0.5"/>`, o += `<rect x="62" y="43" width="36" height="10" rx="3" fill="${t}"/>`, o += Ho(n, e.baselineLinks), o + "</svg>";
+	if (e.mega && (o += `<circle cx="20" cy="6" r="34" fill="${t}" opacity="0.18"/>`), e.bigcta) return o += `<rect x="45" y="18" width="70" height="8" rx="3" fill="${n}" opacity="0.85"/>`, o += `<rect x="56" y="32" width="48" height="4" rx="2" fill="${n}" opacity="0.5"/>`, o += `<rect x="62" y="43" width="36" height="10" rx="3" fill="${t}"/>`, o += Uo(n, e.baselineLinks), o + "</svg>";
 	let s = e.center ? 80 : 16;
 	if (o += `<rect x="${s - (e.center ? 9 : 0)}" y="14" width="18" height="6" rx="2" fill="${t}"/>`, e.tag && (o += `<rect x="${e.center ? s - 22 : 16}" y="24" width="44" height="3" rx="1.5" fill="${n}" opacity="0.6"/>`), e.cta && (o += `<rect x="16" y="31" width="40" height="8" rx="2" fill="none" stroke="${n}" stroke-width="1" opacity="0.7"/>`, o += `<rect x="58" y="31" width="16" height="8" rx="2" fill="${t}"/>`), e.row) o += `<g fill="${n}" opacity="0.7">` + [
 		0,
@@ -4176,24 +4193,24 @@ function Vo(e = {}) {
 	}
 	let c = e.center ? 80 - a * 9 / 2 : 16;
 	for (let e = 0; e < a; e++) o += `<rect x="${c + e * 9}" y="52" width="6.5" height="6.5" rx="2" fill="none" stroke="${n}" stroke-width="1"/>`;
-	return o += Ho(n, e.baselineLinks), o + "</svg>";
+	return o += Uo(n, e.baselineLinks), o + "</svg>";
 }
-function Ho(e, t = 0) {
+function Uo(e, t = 0) {
 	let n = `<line x1="8" y1="66" x2="152" y2="66" stroke="${e}" stroke-width="0.6" opacity="0.5"/>`;
 	return n += `<rect x="8" y="70" width="40" height="3" rx="1.5" fill="${e}" opacity="0.6"/>`, t && (n += `<g fill="${e}" opacity="0.6">` + Array.from({ length: t }, (e, t) => `<rect x="${120 - t * 16}" y="70" width="12" height="3" rx="1.5"/>`).join("") + "</g>"), n;
 }
 //#endregion
 //#region ../template/assets/engine/animations/core.js
-var Uo = () => ({
+var Wo = () => ({
 	duration: 600,
 	delay: 0
-}), Wo = {
+}), Go = {
 	"fade-in": {
 		version: 1,
 		label: "Ton inn",
 		labelKey: "anim.fadeIn",
 		entrance: !0,
-		defaults: Uo,
+		defaults: Wo,
 		migrations: {}
 	},
 	"slide-up": {
@@ -4201,7 +4218,7 @@ var Uo = () => ({
 		label: "Gli opp",
 		labelKey: "anim.slideUp",
 		entrance: !0,
-		defaults: Uo,
+		defaults: Wo,
 		migrations: {}
 	},
 	"zoom-in": {
@@ -4209,7 +4226,7 @@ var Uo = () => ({
 		label: "Zoom inn",
 		labelKey: "anim.zoomIn",
 		entrance: !0,
-		defaults: Uo,
+		defaults: Wo,
 		migrations: {}
 	},
 	"hover-lift": {
@@ -4234,7 +4251,7 @@ var Uo = () => ({
 		}),
 		migrations: {}
 	}
-}, Go = [
+}, Ko = [
 	["font.system", "system-ui, sans-serif"],
 	["font.arial", "Arial, Helvetica, sans-serif"],
 	["font.verdana", "Verdana, Geneva, sans-serif"],
@@ -4245,7 +4262,7 @@ var Uo = () => ({
 ];
 //#endregion
 //#region ../template/assets/engine/place.js
-function Ko(e) {
+function qo(e) {
 	let t = (e) => Math.round(e * 100) / 100, n = Math.max(0, t(100 - e.w)), r = Math.min(n, Math.max(0, t(e.x - e.w / 2))), i = Math.max(0, e.y - e.h / 2), a = e.snap === !1 || e.grid?.snap === !1, o = e.grid?.size || 8;
 	return i = a ? Math.round(i) : Math.round(i / o) * o, {
 		x: r,
@@ -4254,15 +4271,15 @@ function Ko(e) {
 }
 //#endregion
 //#region src/App.svelte
-var qo = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.05\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/>", 1), Jo = /* @__PURE__ */ W("<button class=\"ghost row-tool svelte-1n46o8q\"></button>"), Yo = /* @__PURE__ */ W("<span><span class=\"grad-grip svelte-1n46o8q\"><svg viewBox=\"0 0 16 16\" width=\"14\" height=\"14\" fill=\"currentColor\" aria-hidden=\"true\"><circle cx=\"5\" cy=\"3\" r=\"1.4\"></circle><circle cx=\"11\" cy=\"3\" r=\"1.4\"></circle><circle cx=\"5\" cy=\"8\" r=\"1.4\"></circle><circle cx=\"11\" cy=\"8\" r=\"1.4\"></circle><circle cx=\"5\" cy=\"13\" r=\"1.4\"></circle><circle cx=\"11\" cy=\"13\" r=\"1.4\"></circle></svg></span> <!> <input type=\"range\" class=\"tb-grow svelte-1n46o8q\" min=\"0\" max=\"100\" step=\"1\"/> <span class=\"gridmenu-value svelte-1n46o8q\"> </span> <!></span>"), Xo = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/>", 1), Zo = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"360\" step=\"5\" class=\"svelte-1n46o8q\"/>", 1), Qo = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <!> <button class=\"ghost action svelte-1n46o8q\"> </button> <!> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.05\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <!></label>", 1), $o = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.1\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.05\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/>", 1), es = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.01\" max=\"0.3\" step=\"0.01\" class=\"svelte-1n46o8q\"/>", 1), ts = /* @__PURE__ */ W("<div class=\"sizefill svelte-1n46o8q\"><button type=\"button\" class=\"ghost svelte-1n46o8q\"> </button> <button type=\"button\" class=\"ghost svelte-1n46o8q\"> </button></div> <label class=\"svelte-1n46o8q\"> </label> <div class=\"focalpad svelte-1n46o8q\"><span class=\"focaldot svelte-1n46o8q\"></span></div> <label class=\"sub svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"-0.5\" max=\"1.5\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"sub svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"-0.5\" max=\"1.5\" step=\"0.01\" class=\"svelte-1n46o8q\"/>", 1), ns = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.1\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <!></label>", 1), rs = /* @__PURE__ */ W("<label class=\"ghost filepick svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> </label> <div class=\"sizestep svelte-1n46o8q\"><button type=\"button\" class=\"svelte-1n46o8q\">−</button> <input type=\"number\" min=\"10\" max=\"400\" class=\"svelte-1n46o8q\"/> <span class=\"sizeunit svelte-1n46o8q\">%</span> <button type=\"button\" class=\"svelte-1n46o8q\">+</button></div> <!> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"20\" step=\"1\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.05\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <!>", 1), is = /* @__PURE__ */ W("<span class=\"toolbar-row svelte-1n46o8q\"><img class=\"site-icon-preview svelte-1n46o8q\" alt=\"\"/> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span></span> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/>", 1), as = /* @__PURE__ */ W("<label class=\"ghost filepick svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" multiple=\"\" class=\"svelte-1n46o8q\"/></label> <!> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"2\" max=\"120\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"5\" step=\"0.1\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"20\" step=\"1\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.05\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <p class=\"panel-hint svelte-1n46o8q\"> </p>", 1), os = /* @__PURE__ */ W("<div class=\"bg-layer svelte-1n46o8q\"><span class=\"nav-line svelte-1n46o8q\"><!> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span></span> <!></div>"), ss = /* @__PURE__ */ W("<p class=\"panel-hint svelte-1n46o8q\"> </p> <!> <label class=\"svelte-1n46o8q\"> <!></label> <button class=\"ghost action svelte-1n46o8q\"> </button>", 1), cs = /* @__PURE__ */ W("<input class=\"nav-target svelte-1n46o8q\"/>"), ls = /* @__PURE__ */ W("<div class=\"nav-row nav-sub-row svelte-1n46o8q\"><input class=\"svelte-1n46o8q\"/> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span> <span class=\"nav-target svelte-1n46o8q\"><!></span> <!></div>"), us = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label>"), ds = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <span class=\"num-stepper svelte-1n46o8q\"><button type=\"button\" class=\"svelte-1n46o8q\">−</button> <input type=\"number\" min=\"1\" max=\"12\" step=\"1\" class=\"svelte-1n46o8q\"/> <button type=\"button\" class=\"svelte-1n46o8q\">+</button></span></label>", 1), fs = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <!></label> <!> <label class=\"svelte-1n46o8q\"> <!></label> <!> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label>", 1), ps = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <!>", 1), ms = /* @__PURE__ */ W("<span class=\"nav-line svelte-1n46o8q\"><input class=\"svelte-1n46o8q\"/> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span></span>"), hs = /* @__PURE__ */ W("<label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <p class=\"panel-strong svelte-1n46o8q\"> </p> <!> <button class=\"ghost action svelte-1n46o8q\"> </button> <p class=\"panel-strong svelte-1n46o8q\"> </p> <!>", 1), gs = /* @__PURE__ */ W("<input class=\"svelte-1n46o8q\"/>"), _s = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label> <!> <label class=\"svelte-1n46o8q\"> <!></label>", 1), vs = /* @__PURE__ */ W("<label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label>"), ys = /* @__PURE__ */ W("<label class=\"ghost filepick svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <!> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"1\" max=\"3\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.2\" max=\"2\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.2\" max=\"2\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"2\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <button class=\"ghost action svelte-1n46o8q\"> </button>", 1), bs = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> </label> <input class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <p class=\"panel-hint svelte-1n46o8q\"> </p>", 1), xs = /* @__PURE__ */ W("<input class=\"token-input svelte-1n46o8q\" maxlength=\"4\"/>"), Ss = /* @__PURE__ */ W("<button class=\"ghost svelte-1n46o8q\"> </button>"), Cs = /* @__PURE__ */ W("<span class=\"toolbar-row svelte-1n46o8q\"><img class=\"site-icon-preview svelte-1n46o8q\"/> <button class=\"ghost svelte-1n46o8q\"> </button></span> <p class=\"panel-hint svelte-1n46o8q\"> </p>", 1), ws = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <span class=\"toolbar-row svelte-1n46o8q\"><!> <!></span></label> <!> <label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"8\" max=\"400\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label> <p class=\"panel-hint svelte-1n46o8q\"> </p>", 1), Ts = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"0\" max=\"100\" class=\"svelte-1n46o8q\"/></label> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <p class=\"panel-hint svelte-1n46o8q\"> </p>", 1), Es = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"1\" max=\"6\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"32\" step=\"2\" class=\"svelte-1n46o8q\"/>", 1), Ds = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"2\" max=\"60\" class=\"svelte-1n46o8q\"/></label>"), Os = /* @__PURE__ */ W("<div class=\"bg-layer svelte-1n46o8q\"><span class=\"toolbar-row svelte-1n46o8q\"><img class=\"site-icon-preview svelte-1n46o8q\" alt=\"\"/> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span></span> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label></div>"), ks = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <!> <!> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"ghost filepick svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" multiple=\"\" class=\"svelte-1n46o8q\"/></label> <!> <p class=\"panel-hint svelte-1n46o8q\"> </p>", 1), As = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"1\" max=\"40\" class=\"svelte-1n46o8q\"/></label> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label>", 1), js = /* @__PURE__ */ W("<button class=\"ghost svelte-1n46o8q\"> </button> <p class=\"panel-hint svelte-1n46o8q\"> </p>", 1), Ms = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"100\" max=\"4000\" step=\"100\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"0\" max=\"4000\" step=\"100\" class=\"svelte-1n46o8q\"/></label>", 1), Ns = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"0\" max=\"400\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label>", 1), Ps = /* @__PURE__ */ W("<hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <!>", 1), Fs = /* @__PURE__ */ W("<div class=\"frame-grid svelte-1n46o8q\"><label class=\"svelte-1n46o8q\"> <input type=\"number\" step=\"0.5\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input type=\"number\" step=\"1\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input type=\"number\" step=\"0.5\" min=\"1\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input type=\"number\" step=\"1\" min=\"1\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input type=\"number\" step=\"1\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input type=\"number\" step=\"1\" class=\"svelte-1n46o8q\"/></label></div>"), Is = /* @__PURE__ */ W("<!> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <!></label> <!> <label class=\"svelte-1n46o8q\"> <!></label> <!> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <details class=\"group frame-group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><p class=\"panel-hint svelte-1n46o8q\"> </p> <!> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label></div></details>", 1), Ls = /* @__PURE__ */ W("<button class=\"chrome-restore svelte-1n46o8q\"><!> </button>"), Rs = /* @__PURE__ */ W("<button class=\"ghost svelte-1n46o8q\"> </button> <span class=\"viewswitch svelte-1n46o8q\"><button></button> <button></button></span> <span class=\"zoomswitch svelte-1n46o8q\"><button></button> <button class=\"ghost svelte-1n46o8q\"></button> <span class=\"zoom-readout svelte-1n46o8q\"> </span> <button class=\"ghost svelte-1n46o8q\"></button></span> <button></button>", 1), zs = /* @__PURE__ */ W("<button class=\"badge attention svelte-1n46o8q\"><!> </button>"), Bs = /* @__PURE__ */ W("<span class=\"badge svelte-1n46o8q\"> </span> <button> </button>", 1), Vs = /* @__PURE__ */ W("<!> ", 1), Hs = /* @__PURE__ */ W("<span class=\"who svelte-1n46o8q\"><!> </span>"), Us = /* @__PURE__ */ W("<a class=\"ghost svelte-1n46o8q\" href=\"/api/github/login\"> </a>"), Ws = /* @__PURE__ */ W("<button class=\"ghost svelte-1n46o8q\"><!></button> <!> <a class=\"ghost svelte-1n46o8q\" target=\"_blank\" rel=\"noopener\"> </a> <button class=\"primary svelte-1n46o8q\"> </button>", 1), Gs = /* @__PURE__ */ W("<hr class=\"rail-sep svelte-1n46o8q\"/>"), Ks = /* @__PURE__ */ W("<button> </button>"), qs = /* @__PURE__ */ W("<!> <!>", 1), Js = /* @__PURE__ */ W("<div class=\"settings-pop svelte-1n46o8q\"><p class=\"panel-strong svelte-1n46o8q\"> </p> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <!></label></div>"), Ys = /* @__PURE__ */ W("<span class=\"page-path svelte-1n46o8q\">/</span>"), Xs = /* @__PURE__ */ W("<input class=\"page-slug svelte-1n46o8q\"/>"), Zs = /* @__PURE__ */ W("<div><input class=\"page-title svelte-1n46o8q\"/> <!> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <!></span></div>"), Qs = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><p class=\"panel-hint svelte-1n46o8q\"> </p> <!> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <input class=\"svelte-1n46o8q\"/> <button class=\"ghost action svelte-1n46o8q\"> </button> <p class=\"panel-hint svelte-1n46o8q\"> </p></div>"), $s = /* @__PURE__ */ W("<input class=\"svelte-1n46o8q\"/> <span class=\"toolbar-row svelte-1n46o8q\"><!> <input type=\"number\" class=\"tb-num svelte-1n46o8q\" min=\"8\" max=\"96\" placeholder=\"px\"/> <button><b> </b></button> <button><i> </i></button></span>", 1), ec = /* @__PURE__ */ W("<span class=\"toolbar-row svelte-1n46o8q\"><label class=\"ghost filepick tb-grow svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <input type=\"number\" class=\"tb-num svelte-1n46o8q\" min=\"12\" max=\"128\"/> <input type=\"number\" class=\"tb-num svelte-1n46o8q\" min=\"0\" max=\"64\"/></span> <p class=\"panel-hint svelte-1n46o8q\"> </p>", 1), tc = /* @__PURE__ */ W("<label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label>", 1), nc = /* @__PURE__ */ W("<label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <!>", 1), rc = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.1\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/>", 1), ic = /* @__PURE__ */ W("<div class=\"nav-row svelte-1n46o8q\"><input class=\"svelte-1n46o8q\"/> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span> <span class=\"nav-target svelte-1n46o8q\"><!></span> <!></div> <!>", 1), ac = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><p class=\"panel-hint svelte-1n46o8q\"> </p> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><label class=\"svelte-1n46o8q\"> <!></label> <!> <!> <!> <p class=\"panel-hint svelte-1n46o8q\"> </p></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><label class=\"svelte-1n46o8q\"> <!></label> <!> <!> <!> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <!></label> <!> <label class=\"svelte-1n46o8q\"> <!></label> <!> <!> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <!></label> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <p class=\"panel-strong svelte-1n46o8q\"> </p> <!></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><label class=\"svelte-1n46o8q\"> <!></label> <!> <label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"1\" max=\"4\" class=\"svelte-1n46o8q\"/></label></div></details> <details class=\"group svelte-1n46o8q\" open=\"\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><!> <button class=\"ghost action svelte-1n46o8q\"> </button> <p class=\"panel-hint svelte-1n46o8q\"> </p></div></details></div>"), oc = /* @__PURE__ */ W("<img class=\"site-icon-preview svelte-1n46o8q\"/>"), sc = /* @__PURE__ */ W("<button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button>", 1), cc = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <!></label> <span class=\"toolbar-row svelte-1n46o8q\"><label class=\"ghost filepick tb-grow svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <!></span></div>"), lc = /* @__PURE__ */ W("<div class=\"tpv-cap svelte-1n46o8q\"> </div>"), uc = /* @__PURE__ */ W("<div class=\"theme-pvw svelte-1n46o8q\"><!> <div class=\"tpv-demo svelte-1n46o8q\"><div class=\"tpv-h svelte-1n46o8q\"> </div> <div class=\"tpv-card svelte-1n46o8q\"> </div> <div class=\"tpv-row svelte-1n46o8q\"><span class=\"tpv-btn svelte-1n46o8q\"> </span><span class=\"tpv-lnk svelte-1n46o8q\"> </span></div></div></div>"), dc = /* @__PURE__ */ W("<button type=\"button\"><span class=\"tp-band svelte-1n46o8q\"><i class=\"svelte-1n46o8q\"></i><i class=\"svelte-1n46o8q\"></i><i class=\"svelte-1n46o8q\"></i><i class=\"svelte-1n46o8q\"></i></span> <small class=\"svelte-1n46o8q\"> </small></button>"), fc = /* @__PURE__ */ W("<div class=\"autorow svelte-1n46o8q\"><span class=\"autolbl svelte-1n46o8q\"> </span> <span class=\"seg svelte-1n46o8q\"><button type=\"button\"> </button> <button type=\"button\"> </button></span></div>"), pc = /* @__PURE__ */ W("<span class=\"palname svelte-1n46o8q\"> </span>"), mc = /* @__PURE__ */ W("<div class=\"palcol svelte-1n46o8q\"><!> <span class=\"palcap svelte-1n46o8q\"> </span> <b class=\"palhex svelte-1n46o8q\"> </b></div>"), hc = /* @__PURE__ */ W("<p class=\"panel-hint svelte-1n46o8q\"> </p>"), gc = /* @__PURE__ */ W("<div class=\"palhead svelte-1n46o8q\"><span class=\"palname svelte-1n46o8q\"> </span> <button type=\"button\"> </button></div> <div></div> <!>", 1), _c = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><p class=\"panel-strong svelte-1n46o8q\"> </p> <div class=\"theme-presets svelte-1n46o8q\"></div> <p class=\"panel-strong svelte-1n46o8q\"> </p> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <!> <div class=\"palhead svelte-1n46o8q\"><!> <button type=\"button\"> </button></div> <div class=\"palcells svelte-1n46o8q\"></div> <!> <div class=\"theme-previews svelte-1n46o8q\"><!> <!></div> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <!></label> <div class=\"typo-sample svelte-1n46o8q\"><div class=\"ts-h svelte-1n46o8q\"> </div> <div class=\"ts-b svelte-1n46o8q\"> </div></div></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><div class=\"form-prev svelte-1n46o8q\"><span class=\"fp-btn svelte-1n46o8q\"> </span> <span class=\"fp-card svelte-1n46o8q\"> </span></div> <label class=\"rng-lab svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"24\" step=\"1\" class=\"svelte-1n46o8q\"/> <label class=\"rng-lab svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"40\" step=\"1\" class=\"svelte-1n46o8q\"/></div></details></div>"), vc = /* @__PURE__ */ W("<details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"></div></details>"), yc = /* @__PURE__ */ W("<div><p class=\"panel-hint svelte-1n46o8q\"> </p> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"ghost svelte-1n46o8q\"> </button></div></details> <button class=\"ghost svelte-1n46o8q\"> </button> <label class=\"ghost filepick svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"ghost svelte-1n46o8q\"> </button> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\"> </button> <label class=\"ghost filepick svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" multiple=\"\" class=\"svelte-1n46o8q\"/></label></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"ghost svelte-1n46o8q\"> </button></div></details> <!></div>"), bc = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><p class=\"panel-hint svelte-1n46o8q\"> </p> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"4\" max=\"96\" step=\"2\" class=\"svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <p class=\"panel-hint svelte-1n46o8q\"> </p></div>"), xc = /* @__PURE__ */ W("<p class=\"panel-strong svelte-1n46o8q\"> </p> <!>", 1), Sc = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"4\" max=\"96\" step=\"2\" class=\"svelte-1n46o8q\"/>", 1), Cc = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"0\" max=\"1000\" step=\"10\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label>", 1), wc = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"0\" max=\"4000\" step=\"100\" class=\"svelte-1n46o8q\"/></label>"), Tc = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"100\" max=\"4000\" step=\"100\" class=\"svelte-1n46o8q\"/></label> <!>", 1), Ec = /* @__PURE__ */ W("<p class=\"panel-strong svelte-1n46o8q\"> </p> <label class=\"svelte-1n46o8q\"> <input class=\"token-input svelte-1n46o8q\"/></label> <p class=\"panel-hint svelte-1n46o8q\"> </p> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <!> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <span class=\"row-tools svelte-1n46o8q\"><span class=\"gridmenu-value svelte-1n46o8q\"> </span> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span></label> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <p class=\"panel-strong svelte-1n46o8q\"> </p> <!> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <!></label> <!> <label class=\"svelte-1n46o8q\"> <!></label>", 1), Dc = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><!></div>"), Oc = /* @__PURE__ */ W("<button class=\"footer-tp svelte-1n46o8q\"><span class=\"footer-tp-thumb svelte-1n46o8q\"></span> <span class=\"footer-tp-name svelte-1n46o8q\"> </span></button>"), kc = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"16\" max=\"160\" step=\"2\" class=\"svelte-1n46o8q\"/>", 1), Ac = /* @__PURE__ */ W("<span class=\"toolbar-row svelte-1n46o8q\"><label class=\"ghost filepick tb-grow svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <!></span> <!>", 1), jc = /* @__PURE__ */ W("<div class=\"nav-row svelte-1n46o8q\"><input class=\"svelte-1n46o8q\"/> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span></div> <!>", 1), Mc = /* @__PURE__ */ W("<div class=\"nav-row svelte-1n46o8q\"><span class=\"nav-line svelte-1n46o8q\"><span class=\"footer-soc-preview svelte-1n46o8q\" aria-hidden=\"true\"></span> <!></span> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span> <input class=\"nav-target svelte-1n46o8q\"/></div>"), Nc = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <!>", 1), Pc = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label>", 1), Fc = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <!>", 1), Ic = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <hr class=\"gridmenu-divider svelte-1n46o8q\"/>", 1), Lc = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <!> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><div class=\"footer-tpick svelte-1n46o8q\"></div></div></details> <details class=\"group svelte-1n46o8q\" open=\"\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label> <!></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><!> <button class=\"ghost action svelte-1n46o8q\"> </button> <label class=\"svelte-1n46o8q\"> <!></label></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><!> <button class=\"ghost action svelte-1n46o8q\"> </button></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <!></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><!> <button class=\"ghost action svelte-1n46o8q\"> </button></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><!> <p class=\"panel-strong svelte-1n46o8q\"> </p> <!></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <p class=\"panel-strong svelte-1n46o8q\"> </p> <!> <button class=\"ghost action svelte-1n46o8q\"> </button></div></details></div>"), Rc = /* @__PURE__ */ W("<img class=\"site-icon-preview svelte-1n46o8q\" alt=\"\"/> <button class=\"ghost row-tool svelte-1n46o8q\"></button>", 1), zc = /* @__PURE__ */ W("<details class=\"group samling-entry svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><span class=\"toolbar-row svelte-1n46o8q\"><input class=\"svelte-1n46o8q\"/> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span></span> <label class=\"svelte-1n46o8q\"> <input type=\"date\" class=\"svelte-1n46o8q\"/></label> <textarea rows=\"3\" class=\"svelte-1n46o8q\"></textarea> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <span class=\"toolbar-row svelte-1n46o8q\"><label class=\"ghost filepick svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <!></span></div></details>"), Bc = /* @__PURE__ */ W("<span class=\"toolbar-row svelte-1n46o8q\"><button class=\"ghost action svelte-1n46o8q\"> </button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span> <!> <!> <hr class=\"gridmenu-divider svelte-1n46o8q\"/>", 1), Vc = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><p class=\"panel-hint svelte-1n46o8q\"> </p> <!> <!> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label> <button class=\"ghost action svelte-1n46o8q\"> </button></div>"), Hc = /* @__PURE__ */ W("<span class=\"plugin-meta svelte-1n46o8q\"> </span>"), Uc = /* @__PURE__ */ W("<p class=\"panel-hint plugin-warn svelte-1n46o8q\"> </p>"), Wc = /* @__PURE__ */ W("<div><span class=\"plugin-head svelte-1n46o8q\"><span class=\"plugin-name svelte-1n46o8q\"> </span> <!> <span class=\"row-tools svelte-1n46o8q\"><label class=\"gridmenu-snap plugin-toggle svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span></span> <!> <!></div>"), Gc = /* @__PURE__ */ W("<div class=\"plugin-row svelte-1n46o8q\"><span class=\"plugin-head svelte-1n46o8q\"><span class=\"plugin-name svelte-1n46o8q\"> </span> <!> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button></span></span></div>"), Kc = /* @__PURE__ */ W("<hr class=\"gridmenu-divider svelte-1n46o8q\"/> <p class=\"panel-hint svelte-1n46o8q\"> </p> <!>", 1), qc = /* @__PURE__ */ W("<hr class=\"gridmenu-divider svelte-1n46o8q\"/> <input class=\"svelte-1n46o8q\"/> <button class=\"ghost action svelte-1n46o8q\"> </button> <!>", 1), Jc = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><p class=\"panel-hint svelte-1n46o8q\"> </p> <!> <!> <!> <!></div>"), Yc = /* @__PURE__ */ W("<div><span class=\"history-msg svelte-1n46o8q\"> </span> <span class=\"history-meta svelte-1n46o8q\"> </span></div>"), Xc = /* @__PURE__ */ W("<button class=\"ghost svelte-1n46o8q\"> </button> <!>", 1), Zc = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><p class=\"panel-hint svelte-1n46o8q\"> </p> <!></div>"), Qc = /* @__PURE__ */ W("<aside class=\"panel svelte-1n46o8q\"><h2 class=\"svelte-1n46o8q\"> </h2> <!></aside>"), $c = /* @__PURE__ */ W("<nav class=\"rail svelte-1n46o8q\"><!> <span class=\"rail-settings svelte-1n46o8q\"><button></button> <!></span></nav> <!>", 1), el = /* @__PURE__ */ W("<div class=\"workspace svelte-1n46o8q\"><!> <div><div class=\"stage svelte-1n46o8q\"><iframe class=\"svelte-1n46o8q\"></iframe></div></div></div>"), tl = /* @__PURE__ */ W("<p class=\"loading svelte-1n46o8q\"> </p>"), nl = /* @__PURE__ */ W("<p class=\"panel-hint confirm-line svelte-1n46o8q\"> </p>"), rl = /* @__PURE__ */ W("<div class=\"setup-overlay svelte-1n46o8q\"><div class=\"setup-card svelte-1n46o8q\"><h2 class=\"svelte-1n46o8q\"> </h2> <!> <span class=\"setup-actions svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"primary svelte-1n46o8q\"> </button></span></div></div>"), il = /* @__PURE__ */ W("<div class=\"setup-overlay svelte-1n46o8q\"><div class=\"setup-card svelte-1n46o8q\"><h2 class=\"svelte-1n46o8q\"> </h2> <p class=\"panel-hint svelte-1n46o8q\"> </p> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <!></label> <p class=\"panel-hint svelte-1n46o8q\"> </p> <span class=\"setup-actions svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"primary svelte-1n46o8q\"> </button></span></div></div>"), al = /* @__PURE__ */ W("<div><span> </span> <button class=\"toast-x svelte-1n46o8q\">×</button></div>"), ol = /* @__PURE__ */ W("<div class=\"block-menu svelte-1n46o8q\"><header class=\"block-menu-head svelte-1n46o8q\"><span> </span> <button class=\"ghost row-tool svelte-1n46o8q\"></button></header> <div class=\"panel-body block-menu-body svelte-1n46o8q\"><!></div></div>"), sl = /* @__PURE__ */ W("<div class=\"editor svelte-1n46o8q\"><!> <header><span class=\"topbar-group svelte-1n46o8q\"><span class=\"brand svelte-1n46o8q\" title=\"Urd\"><svg class=\"brand-mark svelte-1n46o8q\" viewBox=\"0 0 40 40\" aria-hidden=\"true\"><path d=\"M12 32V10l16 6.5V32\" fill=\"none\" stroke=\"var(--urd-brand)\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path></svg> <span class=\"brand-word svelte-1n46o8q\">Urd</span></span> <!> <!> <!></span> <span class=\"topbar-group topbar-right svelte-1n46o8q\"><!></span></header> <!> <!> <!> <!> <!></div>   <!>", 1);
-function cl(e, t) {
+var Jo = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.05\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/>", 1), Yo = /* @__PURE__ */ W("<button class=\"ghost row-tool svelte-1n46o8q\"></button>"), Xo = /* @__PURE__ */ W("<span><span class=\"grad-grip svelte-1n46o8q\"><svg viewBox=\"0 0 16 16\" width=\"14\" height=\"14\" fill=\"currentColor\" aria-hidden=\"true\"><circle cx=\"5\" cy=\"3\" r=\"1.4\"></circle><circle cx=\"11\" cy=\"3\" r=\"1.4\"></circle><circle cx=\"5\" cy=\"8\" r=\"1.4\"></circle><circle cx=\"11\" cy=\"8\" r=\"1.4\"></circle><circle cx=\"5\" cy=\"13\" r=\"1.4\"></circle><circle cx=\"11\" cy=\"13\" r=\"1.4\"></circle></svg></span> <!> <input type=\"range\" class=\"tb-grow svelte-1n46o8q\" min=\"0\" max=\"100\" step=\"1\"/> <span class=\"gridmenu-value svelte-1n46o8q\"> </span> <!></span>"), Zo = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/>", 1), Qo = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"360\" step=\"5\" class=\"svelte-1n46o8q\"/>", 1), $o = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <!> <button class=\"ghost action svelte-1n46o8q\"> </button> <!> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.05\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <!></label>", 1), es = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.1\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.05\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/>", 1), ts = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.01\" max=\"0.3\" step=\"0.01\" class=\"svelte-1n46o8q\"/>", 1), ns = /* @__PURE__ */ W("<div class=\"sizefill svelte-1n46o8q\"><button type=\"button\" class=\"ghost svelte-1n46o8q\"> </button> <button type=\"button\" class=\"ghost svelte-1n46o8q\"> </button></div> <label class=\"svelte-1n46o8q\"> </label> <div class=\"focalpad svelte-1n46o8q\"><span class=\"focaldot svelte-1n46o8q\"></span></div> <label class=\"sub svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"-0.5\" max=\"1.5\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"sub svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"-0.5\" max=\"1.5\" step=\"0.01\" class=\"svelte-1n46o8q\"/>", 1), rs = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.1\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <!></label>", 1), is = /* @__PURE__ */ W("<label class=\"ghost filepick svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> </label> <div class=\"sizestep svelte-1n46o8q\"><button type=\"button\" class=\"svelte-1n46o8q\">−</button> <input type=\"number\" min=\"10\" max=\"400\" class=\"svelte-1n46o8q\"/> <span class=\"sizeunit svelte-1n46o8q\">%</span> <button type=\"button\" class=\"svelte-1n46o8q\">+</button></div> <!> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"20\" step=\"1\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.05\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <!>", 1), as = /* @__PURE__ */ W("<span class=\"toolbar-row svelte-1n46o8q\"><img class=\"site-icon-preview svelte-1n46o8q\" alt=\"\"/> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span></span> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/>", 1), os = /* @__PURE__ */ W("<label class=\"ghost filepick svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" multiple=\"\" class=\"svelte-1n46o8q\"/></label> <!> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"2\" max=\"120\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"5\" step=\"0.1\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"20\" step=\"1\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.05\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <p class=\"panel-hint svelte-1n46o8q\"> </p>", 1), ss = /* @__PURE__ */ W("<div class=\"bg-layer svelte-1n46o8q\"><span class=\"nav-line svelte-1n46o8q\"><!> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span></span> <!></div>"), cs = /* @__PURE__ */ W("<p class=\"panel-hint svelte-1n46o8q\"> </p> <!> <label class=\"svelte-1n46o8q\"> <!></label> <button class=\"ghost action svelte-1n46o8q\"> </button>", 1), ls = /* @__PURE__ */ W("<input class=\"nav-target svelte-1n46o8q\"/>"), us = /* @__PURE__ */ W("<div class=\"nav-row nav-sub-row svelte-1n46o8q\"><input class=\"svelte-1n46o8q\"/> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span> <span class=\"nav-target svelte-1n46o8q\"><!></span> <!></div>"), ds = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label>"), fs = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <span class=\"num-stepper svelte-1n46o8q\"><button type=\"button\" class=\"svelte-1n46o8q\">−</button> <input type=\"number\" min=\"1\" max=\"12\" step=\"1\" class=\"svelte-1n46o8q\"/> <button type=\"button\" class=\"svelte-1n46o8q\">+</button></span></label>", 1), ps = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <!></label> <!> <label class=\"svelte-1n46o8q\"> <!></label> <!> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label>", 1), ms = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <!>", 1), hs = /* @__PURE__ */ W("<span class=\"nav-line svelte-1n46o8q\"><input class=\"svelte-1n46o8q\"/> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span></span>"), gs = /* @__PURE__ */ W("<label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <p class=\"panel-strong svelte-1n46o8q\"> </p> <!> <button class=\"ghost action svelte-1n46o8q\"> </button> <p class=\"panel-strong svelte-1n46o8q\"> </p> <!>", 1), _s = /* @__PURE__ */ W("<input class=\"svelte-1n46o8q\"/>"), vs = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label> <!> <label class=\"svelte-1n46o8q\"> <!></label>", 1), ys = /* @__PURE__ */ W("<label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label>"), bs = /* @__PURE__ */ W("<label class=\"ghost filepick svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <!> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"1\" max=\"3\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.2\" max=\"2\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.2\" max=\"2\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"2\" step=\"0.01\" class=\"svelte-1n46o8q\"/> <button class=\"ghost action svelte-1n46o8q\"> </button>", 1), xs = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> </label> <input class=\"svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <p class=\"panel-hint svelte-1n46o8q\"> </p>", 1), Ss = /* @__PURE__ */ W("<input class=\"token-input svelte-1n46o8q\" maxlength=\"4\"/>"), Cs = /* @__PURE__ */ W("<button class=\"ghost svelte-1n46o8q\"> </button>"), ws = /* @__PURE__ */ W("<span class=\"toolbar-row svelte-1n46o8q\"><img class=\"site-icon-preview svelte-1n46o8q\"/> <button class=\"ghost svelte-1n46o8q\"> </button></span> <p class=\"panel-hint svelte-1n46o8q\"> </p>", 1), Ts = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <span class=\"toolbar-row svelte-1n46o8q\"><!> <!></span></label> <!> <label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"8\" max=\"400\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label> <p class=\"panel-hint svelte-1n46o8q\"> </p>", 1), Es = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"0\" max=\"100\" class=\"svelte-1n46o8q\"/></label> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <p class=\"panel-hint svelte-1n46o8q\"> </p>", 1), Ds = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"1\" max=\"6\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"32\" step=\"2\" class=\"svelte-1n46o8q\"/>", 1), Os = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"2\" max=\"60\" class=\"svelte-1n46o8q\"/></label>"), ks = /* @__PURE__ */ W("<div class=\"bg-layer svelte-1n46o8q\"><span class=\"toolbar-row svelte-1n46o8q\"><img class=\"site-icon-preview svelte-1n46o8q\" alt=\"\"/> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span></span> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label></div>"), As = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <!> <!> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"ghost filepick svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" multiple=\"\" class=\"svelte-1n46o8q\"/></label> <!> <p class=\"panel-hint svelte-1n46o8q\"> </p>", 1), js = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"1\" max=\"40\" class=\"svelte-1n46o8q\"/></label> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label>", 1), Ms = /* @__PURE__ */ W("<button class=\"ghost svelte-1n46o8q\"> </button> <p class=\"panel-hint svelte-1n46o8q\"> </p>", 1), Ns = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"100\" max=\"4000\" step=\"100\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"0\" max=\"4000\" step=\"100\" class=\"svelte-1n46o8q\"/></label>", 1), Ps = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"0\" max=\"400\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label>", 1), Fs = /* @__PURE__ */ W("<hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <!>", 1), Is = /* @__PURE__ */ W("<div class=\"frame-grid svelte-1n46o8q\"><label class=\"svelte-1n46o8q\"> <input type=\"number\" step=\"0.5\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input type=\"number\" step=\"1\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input type=\"number\" step=\"0.5\" min=\"1\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input type=\"number\" step=\"1\" min=\"1\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input type=\"number\" step=\"1\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input type=\"number\" step=\"1\" class=\"svelte-1n46o8q\"/></label></div>"), Ls = /* @__PURE__ */ W("<!> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <!></label> <!> <label class=\"svelte-1n46o8q\"> <!></label> <!> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <details class=\"group frame-group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><p class=\"panel-hint svelte-1n46o8q\"> </p> <!> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label></div></details>", 1), Rs = /* @__PURE__ */ W("<button class=\"chrome-restore svelte-1n46o8q\"><!> </button>"), zs = /* @__PURE__ */ W("<button class=\"ghost svelte-1n46o8q\"> </button> <span class=\"viewswitch svelte-1n46o8q\"><button></button> <button></button></span> <span class=\"zoomswitch svelte-1n46o8q\"><button></button> <button class=\"ghost svelte-1n46o8q\"></button> <span class=\"zoom-readout svelte-1n46o8q\"> </span> <button class=\"ghost svelte-1n46o8q\"></button></span> <button></button>", 1), Bs = /* @__PURE__ */ W("<button class=\"badge attention svelte-1n46o8q\"><!> </button>"), Vs = /* @__PURE__ */ W("<span class=\"badge svelte-1n46o8q\"> </span> <button> </button>", 1), Hs = /* @__PURE__ */ W("<!> ", 1), Us = /* @__PURE__ */ W("<span class=\"who svelte-1n46o8q\"><!> </span>"), Ws = /* @__PURE__ */ W("<a class=\"ghost svelte-1n46o8q\" href=\"/api/github/login\"> </a>"), Gs = /* @__PURE__ */ W("<button class=\"ghost svelte-1n46o8q\"><!></button> <!> <a class=\"ghost svelte-1n46o8q\" target=\"_blank\" rel=\"noopener\"> </a> <button class=\"primary svelte-1n46o8q\"> </button>", 1), Ks = /* @__PURE__ */ W("<hr class=\"rail-sep svelte-1n46o8q\"/>"), qs = /* @__PURE__ */ W("<button> </button>"), Js = /* @__PURE__ */ W("<!> <!>", 1), Ys = /* @__PURE__ */ W("<div class=\"settings-pop svelte-1n46o8q\"><p class=\"panel-strong svelte-1n46o8q\"> </p> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <!></label></div>"), Xs = /* @__PURE__ */ W("<span class=\"page-path svelte-1n46o8q\">/</span>"), Zs = /* @__PURE__ */ W("<input class=\"page-slug svelte-1n46o8q\"/>"), Qs = /* @__PURE__ */ W("<div><input class=\"page-title svelte-1n46o8q\"/> <!> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <!></span></div>"), $s = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><p class=\"panel-hint svelte-1n46o8q\"> </p> <!> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <input class=\"svelte-1n46o8q\"/> <button class=\"ghost action svelte-1n46o8q\"> </button> <p class=\"panel-hint svelte-1n46o8q\"> </p></div>"), ec = /* @__PURE__ */ W("<input class=\"svelte-1n46o8q\"/> <span class=\"toolbar-row svelte-1n46o8q\"><!> <input type=\"number\" class=\"tb-num svelte-1n46o8q\" min=\"8\" max=\"96\" placeholder=\"px\"/> <button><b> </b></button> <button><i> </i></button></span>", 1), tc = /* @__PURE__ */ W("<span class=\"toolbar-row svelte-1n46o8q\"><label class=\"ghost filepick tb-grow svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <input type=\"number\" class=\"tb-num svelte-1n46o8q\" min=\"12\" max=\"128\"/> <input type=\"number\" class=\"tb-num svelte-1n46o8q\" min=\"0\" max=\"64\"/></span> <p class=\"panel-hint svelte-1n46o8q\"> </p>", 1), nc = /* @__PURE__ */ W("<label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label>", 1), rc = /* @__PURE__ */ W("<label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <!>", 1), ic = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0.1\" max=\"1\" step=\"0.01\" class=\"svelte-1n46o8q\"/>", 1), ac = /* @__PURE__ */ W("<div class=\"nav-row svelte-1n46o8q\"><input class=\"svelte-1n46o8q\"/> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span> <span class=\"nav-target svelte-1n46o8q\"><!></span> <!></div> <!>", 1), oc = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><p class=\"panel-hint svelte-1n46o8q\"> </p> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><label class=\"svelte-1n46o8q\"> <!></label> <!> <!> <!> <p class=\"panel-hint svelte-1n46o8q\"> </p></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><label class=\"svelte-1n46o8q\"> <!></label> <!> <!> <!> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <!></label> <!> <label class=\"svelte-1n46o8q\"> <!></label> <!> <!> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <!></label> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <p class=\"panel-strong svelte-1n46o8q\"> </p> <!></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><label class=\"svelte-1n46o8q\"> <!></label> <!> <label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"1\" max=\"4\" class=\"svelte-1n46o8q\"/></label></div></details> <details class=\"group svelte-1n46o8q\" open=\"\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><!> <button class=\"ghost action svelte-1n46o8q\"> </button> <p class=\"panel-hint svelte-1n46o8q\"> </p></div></details></div>"), sc = /* @__PURE__ */ W("<img class=\"site-icon-preview svelte-1n46o8q\"/>"), cc = /* @__PURE__ */ W("<button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button>", 1), lc = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <!></label> <span class=\"toolbar-row svelte-1n46o8q\"><label class=\"ghost filepick tb-grow svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <!></span></div>"), uc = /* @__PURE__ */ W("<div class=\"tpv-cap svelte-1n46o8q\"> </div>"), dc = /* @__PURE__ */ W("<div class=\"theme-pvw svelte-1n46o8q\"><!> <div class=\"tpv-demo svelte-1n46o8q\"><div class=\"tpv-h svelte-1n46o8q\"> </div> <div class=\"tpv-card svelte-1n46o8q\"> </div> <div class=\"tpv-row svelte-1n46o8q\"><span class=\"tpv-btn svelte-1n46o8q\"> </span><span class=\"tpv-lnk svelte-1n46o8q\"> </span></div></div></div>"), fc = /* @__PURE__ */ W("<button type=\"button\"><span class=\"tp-band svelte-1n46o8q\"><i class=\"svelte-1n46o8q\"></i><i class=\"svelte-1n46o8q\"></i><i class=\"svelte-1n46o8q\"></i><i class=\"svelte-1n46o8q\"></i></span> <small class=\"svelte-1n46o8q\"> </small></button>"), pc = /* @__PURE__ */ W("<div class=\"autorow svelte-1n46o8q\"><span class=\"autolbl svelte-1n46o8q\"> </span> <span class=\"seg svelte-1n46o8q\"><button type=\"button\"> </button> <button type=\"button\"> </button></span></div>"), mc = /* @__PURE__ */ W("<span class=\"palname svelte-1n46o8q\"> </span>"), hc = /* @__PURE__ */ W("<div class=\"palcol svelte-1n46o8q\"><!> <span class=\"palcap svelte-1n46o8q\"> </span> <b class=\"palhex svelte-1n46o8q\"> </b></div>"), gc = /* @__PURE__ */ W("<p class=\"panel-hint svelte-1n46o8q\"> </p>"), _c = /* @__PURE__ */ W("<div class=\"palhead svelte-1n46o8q\"><span class=\"palname svelte-1n46o8q\"> </span> <button type=\"button\"> </button></div> <div></div> <!>", 1), vc = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><p class=\"panel-strong svelte-1n46o8q\"> </p> <div class=\"theme-presets svelte-1n46o8q\"></div> <p class=\"panel-strong svelte-1n46o8q\"> </p> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <!> <div class=\"palhead svelte-1n46o8q\"><!> <button type=\"button\"> </button></div> <div class=\"palcells svelte-1n46o8q\"></div> <!> <div class=\"theme-previews svelte-1n46o8q\"><!> <!></div> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <!></label> <div class=\"typo-sample svelte-1n46o8q\"><div class=\"ts-h svelte-1n46o8q\"> </div> <div class=\"ts-b svelte-1n46o8q\"> </div></div></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><div class=\"form-prev svelte-1n46o8q\"><span class=\"fp-btn svelte-1n46o8q\"> </span> <span class=\"fp-card svelte-1n46o8q\"> </span></div> <label class=\"rng-lab svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"24\" step=\"1\" class=\"svelte-1n46o8q\"/> <label class=\"rng-lab svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"0\" max=\"40\" step=\"1\" class=\"svelte-1n46o8q\"/></div></details></div>"), yc = /* @__PURE__ */ W("<details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"></div></details>"), bc = /* @__PURE__ */ W("<div><p class=\"panel-hint svelte-1n46o8q\"> </p> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"ghost svelte-1n46o8q\"> </button></div></details> <button class=\"ghost svelte-1n46o8q\"> </button> <label class=\"ghost filepick svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"ghost svelte-1n46o8q\"> </button> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\"> </button> <label class=\"ghost filepick svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" multiple=\"\" class=\"svelte-1n46o8q\"/></label></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"ghost svelte-1n46o8q\"> </button></div></details> <!></div>"), xc = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><p class=\"panel-hint svelte-1n46o8q\"> </p> <label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"4\" max=\"96\" step=\"2\" class=\"svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <p class=\"panel-hint svelte-1n46o8q\"> </p></div>"), Sc = /* @__PURE__ */ W("<p class=\"panel-strong svelte-1n46o8q\"> </p> <!>", 1), Cc = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"4\" max=\"96\" step=\"2\" class=\"svelte-1n46o8q\"/>", 1), wc = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"0\" max=\"1000\" step=\"10\" class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label>", 1), Tc = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"0\" max=\"4000\" step=\"100\" class=\"svelte-1n46o8q\"/></label>"), Ec = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <input type=\"number\" min=\"100\" max=\"4000\" step=\"100\" class=\"svelte-1n46o8q\"/></label> <!>", 1), Dc = /* @__PURE__ */ W("<p class=\"panel-strong svelte-1n46o8q\"> </p> <label class=\"svelte-1n46o8q\"> <input class=\"token-input svelte-1n46o8q\"/></label> <p class=\"panel-hint svelte-1n46o8q\"> </p> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <!> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <span class=\"row-tools svelte-1n46o8q\"><span class=\"gridmenu-value svelte-1n46o8q\"> </span> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span></label> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <p class=\"panel-strong svelte-1n46o8q\"> </p> <!> <hr class=\"gridmenu-divider svelte-1n46o8q\"/> <label class=\"svelte-1n46o8q\"> <!></label> <!> <label class=\"svelte-1n46o8q\"> <!></label>", 1), Oc = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><!></div>"), kc = /* @__PURE__ */ W("<button class=\"footer-tp svelte-1n46o8q\"><span class=\"footer-tp-thumb svelte-1n46o8q\"></span> <span class=\"footer-tp-name svelte-1n46o8q\"> </span></button>"), Ac = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <span class=\"gridmenu-value svelte-1n46o8q\"> </span></label> <input type=\"range\" min=\"16\" max=\"160\" step=\"2\" class=\"svelte-1n46o8q\"/>", 1), jc = /* @__PURE__ */ W("<span class=\"toolbar-row svelte-1n46o8q\"><label class=\"ghost filepick tb-grow svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <!></span> <!>", 1), Mc = /* @__PURE__ */ W("<div class=\"nav-row svelte-1n46o8q\"><input class=\"svelte-1n46o8q\"/> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span></div> <!>", 1), Nc = /* @__PURE__ */ W("<div class=\"nav-row svelte-1n46o8q\"><span class=\"nav-line svelte-1n46o8q\"><span class=\"footer-soc-preview svelte-1n46o8q\" aria-hidden=\"true\"></span> <!></span> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span> <input class=\"nav-target svelte-1n46o8q\"/></div>"), Pc = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <!>", 1), Fc = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label>", 1), Ic = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <!>", 1), Lc = /* @__PURE__ */ W("<label class=\"svelte-1n46o8q\"> <!></label> <hr class=\"gridmenu-divider svelte-1n46o8q\"/>", 1), Rc = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <!> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><div class=\"footer-tpick svelte-1n46o8q\"></div></div></details> <details class=\"group svelte-1n46o8q\" open=\"\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label> <!></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><!> <button class=\"ghost action svelte-1n46o8q\"> </button> <label class=\"svelte-1n46o8q\"> <!></label></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><!> <button class=\"ghost action svelte-1n46o8q\"> </button></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><label class=\"gridmenu-snap svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <!></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><!> <button class=\"ghost action svelte-1n46o8q\"> </button></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><!> <p class=\"panel-strong svelte-1n46o8q\"> </p> <!></div></details> <details class=\"group svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <p class=\"panel-strong svelte-1n46o8q\"> </p> <!> <button class=\"ghost action svelte-1n46o8q\"> </button></div></details></div>"), zc = /* @__PURE__ */ W("<img class=\"site-icon-preview svelte-1n46o8q\" alt=\"\"/> <button class=\"ghost row-tool svelte-1n46o8q\"></button>", 1), Bc = /* @__PURE__ */ W("<details class=\"group samling-entry svelte-1n46o8q\"><summary class=\"svelte-1n46o8q\"> </summary> <div class=\"group-items svelte-1n46o8q\"><span class=\"toolbar-row svelte-1n46o8q\"><input class=\"svelte-1n46o8q\"/> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span></span> <label class=\"svelte-1n46o8q\"> <input type=\"date\" class=\"svelte-1n46o8q\"/></label> <textarea rows=\"3\" class=\"svelte-1n46o8q\"></textarea> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <span class=\"toolbar-row svelte-1n46o8q\"><label class=\"ghost filepick svelte-1n46o8q\"> <input type=\"file\" accept=\"image/*\" class=\"svelte-1n46o8q\"/></label> <!></span></div></details>"), Vc = /* @__PURE__ */ W("<span class=\"toolbar-row svelte-1n46o8q\"><button class=\"ghost action svelte-1n46o8q\"> </button> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span> <!> <!> <hr class=\"gridmenu-divider svelte-1n46o8q\"/>", 1), Hc = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><p class=\"panel-hint svelte-1n46o8q\"> </p> <!> <!> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label> <button class=\"ghost action svelte-1n46o8q\"> </button></div>"), Uc = /* @__PURE__ */ W("<span class=\"plugin-meta svelte-1n46o8q\"> </span>"), Wc = /* @__PURE__ */ W("<p class=\"panel-hint plugin-warn svelte-1n46o8q\"> </p>"), Gc = /* @__PURE__ */ W("<div><span class=\"plugin-head svelte-1n46o8q\"><span class=\"plugin-name svelte-1n46o8q\"> </span> <!> <span class=\"row-tools svelte-1n46o8q\"><label class=\"gridmenu-snap plugin-toggle svelte-1n46o8q\"><input type=\"checkbox\" class=\"svelte-1n46o8q\"/> </label> <button class=\"ghost row-tool svelte-1n46o8q\"></button></span></span> <!> <!></div>"), Kc = /* @__PURE__ */ W("<div class=\"plugin-row svelte-1n46o8q\"><span class=\"plugin-head svelte-1n46o8q\"><span class=\"plugin-name svelte-1n46o8q\"> </span> <!> <span class=\"row-tools svelte-1n46o8q\"><button class=\"ghost row-tool svelte-1n46o8q\"></button></span></span></div>"), qc = /* @__PURE__ */ W("<hr class=\"gridmenu-divider svelte-1n46o8q\"/> <p class=\"panel-hint svelte-1n46o8q\"> </p> <!>", 1), Jc = /* @__PURE__ */ W("<hr class=\"gridmenu-divider svelte-1n46o8q\"/> <input class=\"svelte-1n46o8q\"/> <button class=\"ghost action svelte-1n46o8q\"> </button> <!>", 1), Yc = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><p class=\"panel-hint svelte-1n46o8q\"> </p> <!> <!> <!> <!></div>"), Xc = /* @__PURE__ */ W("<div><span class=\"history-msg svelte-1n46o8q\"> </span> <span class=\"history-meta svelte-1n46o8q\"> </span></div>"), Zc = /* @__PURE__ */ W("<button class=\"ghost svelte-1n46o8q\"> </button> <!>", 1), Qc = /* @__PURE__ */ W("<div class=\"panel-body svelte-1n46o8q\"><p class=\"panel-hint svelte-1n46o8q\"> </p> <!></div>"), $c = /* @__PURE__ */ W("<aside class=\"panel svelte-1n46o8q\"><h2 class=\"svelte-1n46o8q\"> </h2> <!></aside>"), el = /* @__PURE__ */ W("<nav class=\"rail svelte-1n46o8q\"><!> <span class=\"rail-settings svelte-1n46o8q\"><button></button> <!></span></nav> <!>", 1), tl = /* @__PURE__ */ W("<div class=\"workspace svelte-1n46o8q\"><!> <div><div class=\"stage svelte-1n46o8q\"><iframe class=\"svelte-1n46o8q\"></iframe></div></div></div>"), nl = /* @__PURE__ */ W("<p class=\"loading svelte-1n46o8q\"> </p>"), rl = /* @__PURE__ */ W("<p class=\"panel-hint confirm-line svelte-1n46o8q\"> </p>"), il = /* @__PURE__ */ W("<div class=\"setup-overlay svelte-1n46o8q\"><div class=\"setup-card svelte-1n46o8q\"><h2 class=\"svelte-1n46o8q\"> </h2> <!> <span class=\"setup-actions svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"primary svelte-1n46o8q\"> </button></span></div></div>"), al = /* @__PURE__ */ W("<div class=\"setup-overlay svelte-1n46o8q\"><div class=\"setup-card svelte-1n46o8q\"><h2 class=\"svelte-1n46o8q\"> </h2> <p class=\"panel-hint svelte-1n46o8q\"> </p> <label class=\"svelte-1n46o8q\"> <input class=\"svelte-1n46o8q\"/></label> <label class=\"svelte-1n46o8q\"> <!></label> <label class=\"svelte-1n46o8q\"> <!></label> <p class=\"panel-hint svelte-1n46o8q\"> </p> <span class=\"setup-actions svelte-1n46o8q\"><button class=\"ghost svelte-1n46o8q\"> </button> <button class=\"primary svelte-1n46o8q\"> </button></span></div></div>"), ol = /* @__PURE__ */ W("<div><span> </span> <button class=\"toast-x svelte-1n46o8q\">×</button></div>"), sl = /* @__PURE__ */ W("<div class=\"block-menu svelte-1n46o8q\"><header class=\"block-menu-head svelte-1n46o8q\"><span> </span> <button class=\"ghost row-tool svelte-1n46o8q\"></button></header> <div class=\"panel-body block-menu-body svelte-1n46o8q\"><!></div></div>"), cl = /* @__PURE__ */ W("<div class=\"editor svelte-1n46o8q\"><!> <header><span class=\"topbar-group svelte-1n46o8q\"><span class=\"brand svelte-1n46o8q\" title=\"Urd\"><svg class=\"brand-mark svelte-1n46o8q\" viewBox=\"0 0 40 40\" aria-hidden=\"true\"><path d=\"M12 32V10l16 6.5V32\" fill=\"none\" stroke=\"var(--urd-brand)\" stroke-width=\"3.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path></svg> <span class=\"brand-word svelte-1n46o8q\">Urd</span></span> <!> <!> <!></span> <span class=\"topbar-group topbar-right svelte-1n46o8q\"><!></span></header> <!> <!> <!> <!> <!></div>   <!>", 1);
+function ll(e, t) {
 	Ue(t, !0);
 	let n = (e, t = d, n = d) => {
-		var r = ss(), i = R(r), a = L(i, !0);
+		var r = cs(), i = R(r), a = L(i, !0);
 		M(i);
 		var s = z(i, 2);
 		Vr(s, 17, n, Lr, (e, r, i) => {
-			var a = os(), s = L(a), l = L(s);
+			var a = ss(), s = L(a), l = L(s);
 			{
 				let e = /* @__PURE__ */ P(() => Q("tip.bg.changeType")), n = /* @__PURE__ */ P(() => o.map(([e, t]) => [e, t.labelKey ? Q(t.labelKey) : t.label]));
 				$(l, {
@@ -4285,10 +4302,10 @@ function cl(e, t) {
 			var p = z(f, 2);
 			J(p, () => c.cross, !0), M(p), M(u), M(s);
 			var m = z(s, 2), h = (e) => {
-				var n = qo(), a = R(n), o = L(a), s = z(o);
+				var n = Jo(), a = R(n), o = L(a), s = z(o);
 				{
 					let e = /* @__PURE__ */ P(Sn), n = /* @__PURE__ */ P(() => Q("tip.bg.layerColor"));
-					Vi(s, {
+					Hi(s, {
 						get value() {
 							return H(r).props.value;
 						},
@@ -4314,7 +4331,7 @@ function cl(e, t) {
 				]), U("input", f, (e) => Ht(t(), i, "opacity", Number(e.target.value))), G(e, n);
 			}, g = (e) => {
 				let n = /* @__PURE__ */ P(() => Jt(H(r))), a = /* @__PURE__ */ P(() => H(n).stops.reduce((e, t) => e + Math.max(0, Number(t.share) || 0), 0));
-				var o = Qo(), s = R(o), l = L(s), u = z(l);
+				var o = $o(), s = R(o), l = L(s), u = z(l);
 				{
 					let e = /* @__PURE__ */ P(() => H(n).kind ?? "linear"), r = /* @__PURE__ */ P(() => [["linear", Q("opt.grad.linear")], ["radial", Q("opt.grad.radial")]]);
 					$(u, {
@@ -4330,12 +4347,12 @@ function cl(e, t) {
 				M(s);
 				var d = z(s, 2);
 				Vr(d, 17, () => H(n).stops, Lr, (e, r, o) => {
-					var s = Yo();
+					var s = Xo();
 					let l;
 					var u = L(s), d = z(u, 2);
 					{
 						let e = /* @__PURE__ */ P(Sn), n = /* @__PURE__ */ P(() => Q("tip.bg.stopColor"));
-						Vi(d, {
+						Hi(d, {
 							get value() {
 								return H(r).color;
 							},
@@ -4353,7 +4370,7 @@ function cl(e, t) {
 					var p = z(f, 2), m = L(p);
 					M(p);
 					var h = z(p, 2), g = (e) => {
-						var n = Jo();
+						var n = Yo();
 						J(n, () => c.cross, !0), M(n), B((e) => Z(n, "title", e), [() => Q("tip.bg.removeStop")]), U("click", n, () => tn(t(), i, o)), G(e, n);
 					};
 					q(h, (e) => {
@@ -4373,7 +4390,7 @@ function cl(e, t) {
 				var f = z(d, 2), p = L(f, !0);
 				M(f);
 				var m = z(f, 2), h = (e) => {
-					var r = Xo(), a = R(r), o = L(a), s = z(o), c = L(s);
+					var r = Zo(), a = R(r), o = L(a), s = z(o), c = L(s);
 					M(s), M(a);
 					var l = z(a, 2);
 					Y(l);
@@ -4389,7 +4406,7 @@ function cl(e, t) {
 						() => Math.round((H(n).y ?? .5) * 100)
 					]), U("input", l, (e) => Xt(t(), i, "x", Number(e.target.value))), U("input", m, (e) => Xt(t(), i, "y", Number(e.target.value))), G(e, r);
 				}, g = (e) => {
-					var r = Zo(), a = R(r), o = L(a), s = z(o), c = L(s);
+					var r = Qo(), a = R(r), o = L(a), s = z(o), c = L(s);
 					M(s), M(a);
 					var l = z(a, 2);
 					Y(l), B((e) => {
@@ -4428,10 +4445,10 @@ function cl(e, t) {
 					() => Q("lbl.motion")
 				]), U("click", f, () => en(t(), i)), U("input", x, (e) => Xt(t(), i, "opacity", Number(e.target.value))), G(e, o);
 			}, _ = (e) => {
-				var n = $o(), a = R(n), o = L(a), s = z(o);
+				var n = es(), a = R(n), o = L(a), s = z(o);
 				{
 					let e = /* @__PURE__ */ P(Sn), n = /* @__PURE__ */ P(() => Q("tip.bg.glowColor"));
-					Vi(s, {
+					Hi(s, {
 						get value() {
 							return H(r).props.color;
 						},
@@ -4474,7 +4491,7 @@ function cl(e, t) {
 					() => Math.round(H(r).props.opacity * 100)
 				]), U("input", f, (e) => Ht(t(), i, "x", Number(e.target.value))), U("input", _, (e) => Ht(t(), i, "y", Number(e.target.value))), U("input", S, (e) => Ht(t(), i, "radius", Number(e.target.value))), U("input", D, (e) => Ht(t(), i, "opacity", Number(e.target.value))), G(e, n);
 			}, v = (e) => {
-				var n = es(), a = R(n), o = L(a), s = z(o), c = L(s);
+				var n = ts(), a = R(n), o = L(a), s = z(o), c = L(s);
 				M(s), M(a);
 				var l = z(a, 2);
 				Y(l), B((e, t) => {
@@ -4482,7 +4499,7 @@ function cl(e, t) {
 				}, [() => Q("lbl.strength"), () => Math.round(H(r).props.opacity * 100)]), U("input", l, (e) => Ht(t(), i, "opacity", Number(e.target.value))), G(e, n);
 			}, y = (e) => {
 				let n = /* @__PURE__ */ P(() => H(r).props.fit === "flislegg" || H(r).props.fit === "repeat");
-				var a = rs(), o = R(a), s = L(o), c = z(s);
+				var a = is(), o = R(a), s = L(o), c = z(s);
 				M(o);
 				var l = z(o, 2), u = L(l), d = z(u);
 				{
@@ -4505,7 +4522,7 @@ function cl(e, t) {
 				var _ = z(g, 4);
 				M(m);
 				var v = z(m, 2), y = (e) => {
-					var n = ts(), a = R(n), o = L(a), s = L(o, !0);
+					var n = ns(), a = R(n), o = L(a), s = L(o, !0);
 					M(o);
 					var c = z(o, 2), l = L(c, !0);
 					M(c), M(a);
@@ -4551,7 +4568,7 @@ function cl(e, t) {
 				var ie = z(re);
 				M(ne);
 				var ae = z(ne, 2), oe = (e) => {
-					var n = ns(), a = R(n), o = L(a), s = z(o), c = L(s);
+					var n = rs(), a = R(n), o = L(a), s = z(o), c = L(s);
 					M(s), M(a);
 					var l = z(a, 2);
 					Y(l);
@@ -4603,11 +4620,11 @@ function cl(e, t) {
 					() => Q("lbl.parallax")
 				]), U("change", c, (e) => fn(t(), i, e)), U("click", h, () => Gt(t(), i, H(r).props.size ?? 1, -.05)), U("change", g, (e) => Kt(t(), i, e.target.value)), U("click", _, () => Gt(t(), i, H(r).props.size ?? 1, .05)), U("input", w, (e) => Ht(t(), i, "blur", Number(e.target.value))), U("input", te, (e) => Ht(t(), i, "opacity", Number(e.target.value))), U("change", re, (e) => Ht(t(), i, "parallax", e.target.checked ? .3 : 0)), G(e, a);
 			}, b = (e) => {
-				var n = as(), a = R(n), o = L(a), s = z(o);
+				var n = os(), a = R(n), o = L(a), s = z(o);
 				M(a);
 				var l = z(a, 2);
 				Vr(l, 17, () => H(r).props.images ?? [], Lr, (e, n, a) => {
-					var o = is(), s = R(o), l = L(s), u = z(l, 2), d = L(u);
+					var o = as(), s = R(o), l = L(s), u = z(l, 2), d = L(u);
 					d.disabled = a === 0, J(d, () => c.up, !0), M(d);
 					var f = z(d, 2);
 					J(f, () => c.down, !0), M(f);
@@ -4705,7 +4722,7 @@ function cl(e, t) {
 	}, r = (e, t = d, n = d) => {
 		var r = jr();
 		Vr(R(r), 17, n, Lr, (e, r, i) => {
-			var a = ls(), o = L(a);
+			var a = us(), o = L(a);
 			Y(o);
 			var s = z(o, 2), l = L(s);
 			l.disabled = i === 0, J(l, () => c.up, !0), M(l);
@@ -4731,7 +4748,7 @@ function cl(e, t) {
 			}
 			M(f);
 			var m = z(f, 2), h = (e) => {
-				var n = cs();
+				var n = ls();
 				Y(n), B((e, t) => {
 					X(n, H(r).href ?? ""), Z(n, "placeholder", e), Z(n, "title", t);
 				}, [() => Q("ph.hrefAnchor"), () => Q("tip.hrefAnchor")]), U("change", n, (e) => va(t(), i, e.target.value)), G(e, n);
@@ -4744,10 +4761,10 @@ function cl(e, t) {
 		}), G(e, r);
 	}, i = (e) => {
 		let t = /* @__PURE__ */ P(() => H(N).props.boxStyle ?? {});
-		var n = fs(), r = R(n), i = L(r), a = z(i);
+		var n = ps(), r = R(n), i = L(r), a = z(i);
 		{
 			let e = /* @__PURE__ */ P(() => H(t).bg ?? ""), n = /* @__PURE__ */ P(Sn), r = /* @__PURE__ */ P(() => Q("tip.box.bg"));
-			Vi(a, {
+			Hi(a, {
 				get value() {
 					return H(e);
 				},
@@ -4781,10 +4798,10 @@ function cl(e, t) {
 		}
 		M(o);
 		var l = z(o, 2), u = (e) => {
-			var n = us(), r = L(n), i = z(r);
+			var n = ds(), r = L(n), i = z(r);
 			{
 				let e = /* @__PURE__ */ P(() => H(t).shadowColor ?? ""), n = /* @__PURE__ */ P(Sn), r = /* @__PURE__ */ P(() => Q("tip.box.shadowColor"));
-				Vi(i, {
+				Hi(i, {
 					get value() {
 						return H(e);
 					},
@@ -4829,10 +4846,10 @@ function cl(e, t) {
 				color: "text",
 				width: 1
 			});
-			var r = ds(), i = R(r), a = L(i), o = z(a);
+			var r = fs(), i = R(r), a = L(i), o = z(a);
 			{
 				let e = /* @__PURE__ */ P(Sn), t = /* @__PURE__ */ P(() => Q("tip.box.borderColor"));
-				Vi(o, {
+				Hi(o, {
 					get value() {
 						return H(n).color;
 					},
@@ -4889,8 +4906,8 @@ function cl(e, t) {
 			() => Q("lbl.glass")
 		]), U("change", _, (e) => mt({ glass: e.target.checked || null })), G(e, n);
 	}, a = (e) => {
-		var t = Is(), n = R(t), r = (e) => {
-			var t = ps(), n = R(t), r = L(n), a = z(r);
+		var t = Ls(), n = R(t), r = (e) => {
+			var t = ms(), n = R(t), r = L(n), a = z(r);
 			{
 				let e = /* @__PURE__ */ P(() => H(N).props.align ?? "left"), t = /* @__PURE__ */ P(() => [
 					["left", Q("common.left")],
@@ -4925,7 +4942,7 @@ function cl(e, t) {
 				() => Q("lbl.textBoxToggle")
 			]), U("change", s, (e) => ft("box", e.target.checked)), G(e, t);
 		}, a = (e) => {
-			var t = hs(), n = R(t), r = L(n);
+			var t = gs(), n = R(t), r = L(n);
 			Y(r);
 			var a = z(r);
 			M(n);
@@ -4933,7 +4950,7 @@ function cl(e, t) {
 			M(o);
 			var l = z(o, 2);
 			Vr(l, 17, () => H(N).props.items ?? [], Lr, (e, t, n) => {
-				var r = ms(), i = L(r);
+				var r = hs(), i = L(r);
 				Y(i);
 				var a = z(i, 2), o = L(a);
 				o.disabled = n === 0, J(o, () => c.up, !0), M(o);
@@ -4960,7 +4977,7 @@ function cl(e, t) {
 				() => Q("lbl.cardStyle")
 			]), U("change", r, (e) => ft("multi", e.target.checked)), U("click", u, gt), G(e, t);
 		}, o = (e) => {
-			var t = _s(), n = R(t), r = L(n), i = z(r);
+			var t = vs(), n = R(t), r = L(n), i = z(r);
 			Y(i), M(n);
 			var a = z(n, 2), o = L(a), s = z(o);
 			{
@@ -4982,7 +4999,7 @@ function cl(e, t) {
 			}
 			M(a);
 			var c = z(a, 2), l = (e) => {
-				var t = gs();
+				var t = _s();
 				Y(t), B((e) => {
 					Z(t, "placeholder", e), X(t, H(N).props.href === "#" ? "" : H(N).props.href ?? "");
 				}, [() => Q("ph.url")]), U("change", t, (e) => ft("href", e.target.value || null)), G(e, t);
@@ -5011,7 +5028,7 @@ function cl(e, t) {
 				() => Q("lbl.style")
 			]), U("change", i, (e) => ft("label", e.target.value)), G(e, t);
 		}, s = (e) => {
-			var t = ys(), n = R(t), r = L(n), i = z(r);
+			var t = bs(), n = R(t), r = L(n), i = z(r);
 			M(n);
 			var a = z(n, 2), o = L(a), s = z(o);
 			Y(s), M(a);
@@ -5050,7 +5067,7 @@ function cl(e, t) {
 			var m = z(d, 2), h = L(m), g = z(h);
 			Y(g), M(m);
 			var _ = z(m, 2), v = (e) => {
-				var t = vs(), n = L(t);
+				var t = ys(), n = L(t);
 				Y(n);
 				var r = z(n);
 				M(t), B((e, i, a) => {
@@ -5118,7 +5135,7 @@ function cl(e, t) {
 				e.props.brightness = 1, e.props.contrast = 1, e.props.saturate = 1;
 			})), G(e, t);
 		}, l = (e) => {
-			var t = bs(), n = R(t), r = L(n, !0);
+			var t = xs(), n = R(t), r = L(n, !0);
 			M(n);
 			var i = z(n, 2);
 			Y(i);
@@ -5134,10 +5151,10 @@ function cl(e, t) {
 				() => Q("hint.video")
 			]), U("change", i, (e) => ft("url", e.target.value)), U("change", s, (e) => ft("title", e.target.value)), G(e, t);
 		}, u = (e) => {
-			var t = ws(), n = R(t), r = L(n), i = z(r), a = L(i);
+			var t = Ts(), n = R(t), r = L(n), i = z(r), a = L(i);
 			{
 				let e = /* @__PURE__ */ P(() => H(N).props.glyph ?? "★"), t = /* @__PURE__ */ P(() => H(N).props.icon ?? null), n = /* @__PURE__ */ P(() => H(N).props.image ?? null);
-				ya(a, {
+				ba(a, {
 					get value() {
 						return H(e);
 					},
@@ -5157,12 +5174,12 @@ function cl(e, t) {
 				});
 			}
 			var o = z(a, 2), s = (e) => {
-				var t = xs();
+				var t = Ss();
 				Y(t), B((e) => {
 					X(t, H(N).props.glyph ?? ""), Z(t, "title", e);
 				}, [() => Q("tip.icon.typeGlyph")]), U("change", t, (e) => ft("glyph", e.target.value || "★")), G(e, t);
 			}, c = (e) => {
-				var t = Ss(), n = L(t, !0);
+				var t = Cs(), n = L(t, !0);
 				M(t), B((e, r) => {
 					Z(t, "title", e), K(n, r);
 				}, [() => Q("tip.icon.backToGlyph"), () => Q("ui.removeDrawnIcon")]), U("click", t, () => ft("icon", null)), G(e, t);
@@ -5171,7 +5188,7 @@ function cl(e, t) {
 				H(N).props.icon ? e(c, -1) : e(s);
 			}), M(i), M(n);
 			var l = z(n, 2), u = (e) => {
-				var t = Cs(), n = R(t), r = L(n), i = z(r, 2), a = L(i, !0);
+				var t = ws(), n = R(t), r = L(n), i = z(r, 2), a = L(i, !0);
 				M(i), M(n);
 				var o = z(n, 2), s = L(o, !0);
 				M(o), B((e, t, n) => {
@@ -5190,7 +5207,7 @@ function cl(e, t) {
 			var m = z(d, 2), h = L(m), g = z(h);
 			{
 				let e = /* @__PURE__ */ P(() => H(N).props.color ?? "accent"), t = /* @__PURE__ */ P(Sn);
-				Vi(g, {
+				Hi(g, {
 					get value() {
 						return H(e);
 					},
@@ -5211,7 +5228,7 @@ function cl(e, t) {
 				() => Q("hint.icon.color")
 			]), U("change", p, (e) => ft("size", Number(e.target.value))), G(e, t);
 		}, d = (e) => {
-			var t = Ts(), n = R(t), r = L(n), i = z(r);
+			var t = Es(), n = R(t), r = L(n), i = z(r);
 			{
 				let e = /* @__PURE__ */ P(() => H(N).props.collection ?? ""), t = /* @__PURE__ */ P(() => [["", Q("common.choose")], ...H(ti).map((e) => [e, H(ni)[e]?.name ?? e])]);
 				$(i, {
@@ -5260,7 +5277,7 @@ function cl(e, t) {
 				() => Q("hint.samling")
 			]), U("change", u, (e) => ft("limit", Number(e.target.value))), U("change", f, (e) => ft("newestFirst", e.target.checked)), G(e, t);
 		}, f = (e) => {
-			var t = ks(), n = R(t), r = L(n), i = z(r);
+			var t = As(), n = R(t), r = L(n), i = z(r);
 			{
 				let e = /* @__PURE__ */ P(() => H(N).props.view ?? "grid"), t = /* @__PURE__ */ P(() => [
 					["grid", Q("opt.galleryView.grid")],
@@ -5279,7 +5296,7 @@ function cl(e, t) {
 			}
 			M(n);
 			var a = z(n, 2), o = (e) => {
-				var t = Es(), n = R(t), r = L(n), i = z(r);
+				var t = Ds(), n = R(t), r = L(n), i = z(r);
 				Y(i), M(n);
 				var a = z(n, 2), o = L(a), s = z(o), c = L(s);
 				M(s), M(a);
@@ -5292,7 +5309,7 @@ function cl(e, t) {
 				(H(N).props.view ?? "grid") === "grid" && e(o);
 			});
 			var s = z(a, 2), l = (e) => {
-				var t = Ds(), n = L(t), r = z(n);
+				var t = Os(), n = L(t), r = z(n);
 				Y(r), M(t), B((e) => {
 					K(n, `${e ?? ""} `), X(r, H(N).props.interval ?? 5);
 				}, [() => Q("lbl.secondsPerImage")]), U("change", r, (e) => ft("interval", Number(e.target.value))), G(e, t);
@@ -5326,7 +5343,7 @@ function cl(e, t) {
 			M(g);
 			var y = z(g, 2);
 			Vr(y, 17, () => H(N).props.images ?? [], Lr, (e, t, n) => {
-				var r = Os(), i = L(r), a = L(i), o = z(a, 2), s = L(o);
+				var r = ks(), i = L(r), a = L(i), o = z(a, 2), s = L(o);
 				s.disabled = n === 0, J(s, () => c.up, !0), M(s);
 				var l = z(s, 2);
 				J(l, () => c.down, !0), M(l);
@@ -5358,7 +5375,7 @@ function cl(e, t) {
 				() => Q("hint.gallery")
 			]), U("change", m, (e) => ft("lightbox", e.target.checked)), U("change", v, Dl), G(e, t);
 		}, p = (e) => {
-			var t = As(), n = R(t), r = L(n);
+			var t = js(), n = R(t), r = L(n);
 			$(z(r), {
 				get value() {
 					return H(N).props.kind;
@@ -5394,7 +5411,7 @@ function cl(e, t) {
 				() => Q("lbl.filled")
 			]), U("change", c, (e) => ft("thickness", Number(e.target.value))), U("change", u, (e) => ft("fill", e.target.checked ? H(N).props.color : null)), G(e, t);
 		}, m = (e) => {
-			var t = js(), n = R(t), r = L(n, !0);
+			var t = Ms(), n = R(t), r = L(n, !0);
 			M(n);
 			var i = z(n, 2), a = L(i, !0);
 			M(i), B((e, t) => {
@@ -5419,7 +5436,7 @@ function cl(e, t) {
 		}
 		M(h);
 		var v = z(h, 2), y = (e) => {
-			var t = Ms(), n = R(t), r = L(n), i = z(r);
+			var t = Ns(), n = R(t), r = L(n), i = z(r);
 			Y(i), M(n);
 			var a = z(n, 2), o = L(a), s = z(o);
 			Y(s), M(a), B((e, t) => {
@@ -5444,12 +5461,12 @@ function cl(e, t) {
 		}
 		M(x);
 		var w = z(x, 2), T = (e) => {
-			var t = Ps(), n = z(R(t), 2), r = L(n);
+			var t = Fs(), n = z(R(t), 2), r = L(n);
 			Y(r);
 			var i = z(r);
 			M(n);
 			var a = z(n, 2), o = (e) => {
-				var t = Ns(), n = R(t), r = L(n), i = z(r);
+				var t = Ps(), n = R(t), r = L(n), i = z(r);
 				Y(i), M(n);
 				var a = z(n, 2), o = L(a), s = z(o);
 				{
@@ -5506,7 +5523,7 @@ function cl(e, t) {
 		var ne = z(D, 2), re = L(ne), ie = L(re, !0);
 		M(re);
 		var ae = z(re, 2), oe = (e) => {
-			var t = Fs(), n = L(t), r = L(n, !0), i = z(r);
+			var t = Is(), n = L(t), r = L(n, !0), i = z(r);
 			Y(i), M(n);
 			var a = z(n, 2), o = L(a, !0), s = z(o);
 			Y(s), M(a);
@@ -5548,12 +5565,12 @@ function cl(e, t) {
 			() => Q("lbl.decor")
 		]), U("change", ce, (e) => yt(e.target.checked)), G(e, t);
 	}, o = [
-		["color", Xa],
-		["gradient", uo],
-		["glow", fo],
-		["image", Io],
-		["bildegalleri", Bo],
-		["grain", mo]
+		["color", Za],
+		["gradient", fo],
+		["glow", po],
+		["image", Lo],
+		["bildegalleri", Vo],
+		["grain", ho]
 	], s = Object.fromEntries(o), c = {
 		desktop: "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"4\" y=\"5\" width=\"16\" height=\"11\" rx=\"1.5\"/><path d=\"M2 19h20\"/></svg>",
 		copy: "<svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"9\" y=\"9\" width=\"11\" height=\"11\" rx=\"2\"/><path d=\"M5 15V5a2 2 0 0 1 2-2h10\"/></svg>",
@@ -5593,7 +5610,7 @@ function cl(e, t) {
 		});
 	}
 	function p(e) {
-		return Ja(e) == null || (Ya(e, "#ffffff") ?? 0) >= (Ya(e, "#0b0e14") ?? 0) ? "#ffffff" : "#0b0e14";
+		return Ya(e) == null || (Xa(e, "#ffffff") ?? 0) >= (Xa(e, "#0b0e14") ?? 0) ? "#ffffff" : "#0b0e14";
 	}
 	let h = /* @__PURE__ */ F(null), g = /* @__PURE__ */ F(null), _ = /* @__PURE__ */ F(!1), v = /* @__PURE__ */ F(""), y = /* @__PURE__ */ F("info"), b = 0;
 	function x(e, t = "info") {
@@ -5616,7 +5633,7 @@ function cl(e, t) {
 	let w = /* @__PURE__ */ F(null), T = /* @__PURE__ */ F(null), E = /* @__PURE__ */ F(nn({
 		size: 16,
 		snap: !0
-	})), D = /* @__PURE__ */ F(!0), ee = /* @__PURE__ */ F("desktop"), te = /* @__PURE__ */ F(null), ne = /* @__PURE__ */ F(0), re = /* @__PURE__ */ F(0), ie = /* @__PURE__ */ F(nn(typeof window < "u" ? window.innerWidth : 1280)), ae = /* @__PURE__ */ F("fit"), oe = /* @__PURE__ */ F(1), se = /* @__PURE__ */ P(() => H(ee) === "mobile" ? 390 : H(ie)), ce = /* @__PURE__ */ P(() => H(ae) === "manual" ? H(oe) : Sa(H(ne), H(se), "fit"));
+	})), D = /* @__PURE__ */ F(!0), ee = /* @__PURE__ */ F("desktop"), te = /* @__PURE__ */ F(null), ne = /* @__PURE__ */ F(0), re = /* @__PURE__ */ F(0), ie = /* @__PURE__ */ F(nn(typeof window < "u" ? window.innerWidth : 1280)), ae = /* @__PURE__ */ F("fit"), oe = /* @__PURE__ */ F(1), se = /* @__PURE__ */ P(() => H(ee) === "mobile" ? 390 : H(ie)), ce = /* @__PURE__ */ P(() => H(ae) === "manual" ? H(oe) : Ca(H(ne), H(se), "fit"));
 	function le(e) {
 		let t = Math.min(400, Math.max(10, (Math.round(Math.round(H(ce) * 100) / 10) + e) * 10));
 		I(oe, t / 100), I(ae, "manual");
@@ -5711,7 +5728,7 @@ function cl(e, t) {
 						kind: n.kind ?? "custom",
 						entries: []
 					};
-					Xr[e] = ki(`urd-draft-samling-${e}`, () => t, S);
+					Xr[e] = Ai(`urd-draft-samling-${e}`, () => t, S);
 				}
 				Xr[e].replace(n), Xr[e].save();
 			}
@@ -5758,7 +5775,7 @@ function cl(e, t) {
 		].includes(n.type)) || (e.preventDefault(), t === "y" || e.shiftKey ? Ae() : ke());
 	}
 	async function Pe() {
-		I(h, Na(await (await fetch("/content/site.json")).json()), !0), ge = ki("urd-draft-site", () => H(h), S), ge.replace(Na(ge.data)), ge.save(), _e(), I(E, {
+		I(h, Pa(await (await fetch("/content/site.json")).json()), !0), ge = Ai("urd-draft-site", () => H(h), S), ge.replace(Pa(ge.data)), ge.save(), _e(), I(E, {
 			snap: !0,
 			...H(A).grid
 		}, !0), await ar(new URLSearchParams(location.search).get("page") ?? H(A).pages[0].id), await Li(), await ci(), await Kn(), H(T) && qn(), (H(A).site.setup === !0 || H(A).site.title === "Min forening") && !localStorage.getItem("urd-setup-done") && (I(Be, H(A).site.title, !0), I(Ve, H(A).theme.tokens.color.accent, !0), I(He, H(A).theme.tokens.color.bg, !0), I(Re, !0));
@@ -5816,14 +5833,14 @@ function cl(e, t) {
 	], Ze = (e) => [...e].sort((e, t) => e[1].localeCompare(t[1]));
 	function Qe(e, t) {
 		let n = [];
-		for (let r of e) for (let e of Di[r]?.languages ?? []) e[t] === !0 && !n.some(([t]) => t === e.code) && n.push([e.code, e.name]);
+		for (let r of e) for (let e of Di[r]?.languages ?? []) e?.[t] === !0 && (typeof e.code != "string" || typeof e.name != "string" || !e.name || Xe.some(([t]) => t === e.code) || n.some(([t]) => t === e.code) || n.push([e.code, e.name]));
 		return n;
 	}
 	function $e() {
 		let e = Ze([...Xe, ...Qe(H(Ni), "admin")]);
 		return tt === "auto" || e.some(([e]) => e === tt) ? e : [[tt, tt], ...e];
 	}
-	let et = () => Qe(H(Ei)?.enabled ?? [], "site"), tt = localStorage.getItem("urd-admin-lang") ?? "auto";
+	let et = () => Qe(H(Ti)?.enabled ?? [], "site"), tt = localStorage.getItem("urd-admin-lang") ?? "auto";
 	function nt(e) {
 		e !== tt && (e === "auto" ? localStorage.removeItem("urd-admin-lang") : localStorage.setItem("urd-admin-lang", e), location.reload());
 	}
@@ -5948,7 +5965,7 @@ function cl(e, t) {
 		if (e.target.value = "", t) try {
 			let e = await dn(t);
 			dt(`edit:${H(N).blockId}`, (n) => {
-				n.props.src = e.dataUrl, n.props.alt = n.props.alt || Qi(t.name).replaceAll("-", " ");
+				n.props.src = e.dataUrl, n.props.alt = n.props.alt || $i(t.name).replaceAll("-", " ");
 			});
 		} catch {
 			x(Q("status.imageReadError"), "error");
@@ -6089,23 +6106,23 @@ function cl(e, t) {
 		(n.props.fit === "flislegg" || n.props.fit === "repeat") && Ht(e, t, "fit", "vanlig"), Ht(e, t, "size", Wt(Math.round(o * 100) / 100));
 	}
 	function Jt(e) {
-		if ((e.version ?? 1) >= uo.version) return e.props;
+		if ((e.version ?? 1) >= fo.version) return e.props;
 		let t = ze(e);
-		return Oa({
+		return ka({
 			type: "gradient",
 			version: t.version ?? 1,
 			props: t.props
-		}, uo).props;
+		}, fo).props;
 	}
 	function Yt(e, t, n, r) {
 		e.mutate(n, (e) => {
 			let n = e.background.layers[t];
-			if ((n.version ?? 1) < uo.version) {
-				let e = Oa({
+			if ((n.version ?? 1) < fo.version) {
+				let e = ka({
 					type: "gradient",
 					version: n.version ?? 1,
 					props: ze(n.props)
-				}, uo);
+				}, fo);
 				if (!e.ok) return;
 				n.props = e.props, n.version = e.version;
 			}
@@ -6229,20 +6246,20 @@ function cl(e, t) {
 		}
 	}
 	async function un(e) {
-		let t = await e.text(), n = Ji(t), r = Xi(t);
+		let t = await e.text(), n = Yi(t), r = Zi(t);
 		if (!r) return n;
 		let i = await ln(n.dataUrl, r);
 		if (!i) return n;
-		let a = Yi(t, i);
+		let a = Xi(t, i);
 		if (a === t) return n;
 		try {
-			return Ji(a);
+			return Yi(a);
 		} catch {
 			return n;
 		}
 	}
 	async function dn(e) {
-		return e.type === "image/svg+xml" || /\.svg$/i.test(e.name || "") ? un(e) : Gi(e);
+		return e.type === "image/svg+xml" || /\.svg$/i.test(e.name || "") ? un(e) : Ki(e);
 	}
 	async function fn(e, t, n) {
 		let r = n.target.files?.[0];
@@ -6296,7 +6313,7 @@ function cl(e, t) {
 		keyPrefix: "navbg",
 		keyId: "nav"
 	}, bn = {
-		mutate: ea,
+		mutate: Ji,
 		keyPrefix: "footerbg",
 		keyId: "footer"
 	}, Sn = () => Object.entries(H(A)?.theme.tokens.color ?? {}).map(([e, t]) => [e, t]), Cn = [
@@ -6332,11 +6349,11 @@ function cl(e, t) {
 	function kn(e) {
 		return {
 			type: e,
-			version: Wo[e].version,
-			props: Wo[e].defaults()
+			version: Go[e].version,
+			props: Go[e].defaults()
 		};
 	}
-	let An = (e) => !!(e && Wo[e.type]?.entrance), jn = [["", Q("common.none")], ...Object.entries(Wo).filter(([, e]) => e.entrance).map(([e, t]) => [e, t.labelKey ? Q(t.labelKey) : t.label])], Mn = [["", Q("common.none")], ...Object.entries(Wo).filter(([, e]) => !e.entrance).map(([e, t]) => [e, t.labelKey ? Q(t.labelKey) : t.label])];
+	let An = (e) => !!(e && Go[e.type]?.entrance), jn = [["", Q("common.none")], ...Object.entries(Go).filter(([, e]) => e.entrance).map(([e, t]) => [e, t.labelKey ? Q(t.labelKey) : t.label])], Mn = [["", Q("common.none")], ...Object.entries(Go).filter(([, e]) => !e.entrance).map(([e, t]) => [e, t.labelKey ? Q(t.labelKey) : t.label])];
 	function Nn(e) {
 		e.animation && !An(e.animation) && (e.hover ??= e.animation, e.animation = null);
 	}
@@ -6482,7 +6499,7 @@ function cl(e, t) {
 			timeStyle: "short"
 		};
 		try {
-			return new Intl.DateTimeFormat(Ti(), e);
+			return new Intl.DateTimeFormat(Ei(), e);
 		} catch {
 			return new Intl.DateTimeFormat(void 0, e);
 		}
@@ -6543,7 +6560,7 @@ function cl(e, t) {
 				title: e.title
 			},
 			sections: [{
-				id: Ba("sec"),
+				id: Va("sec"),
 				version: 1,
 				preset: "tom",
 				size: { minHeight: "40vh" },
@@ -6565,17 +6582,17 @@ function cl(e, t) {
 			let n = be(), r = null;
 			try {
 				let e = await fetch(`/${n.file}`);
-				e.ok && (r = Pa(await e.json(), ge.data));
+				e.ok && (r = Fa(await e.json(), ge.data));
 			} catch {}
-			r ? ye.delete(e) : r = ir(n), O = ki(`urd-draft-${e}`, () => r, S), O.replace(Pa(O.data, ge.data)), O.save(), t || (Ce = null), I(wt, null), I(Tt, null), j(), me(), I(v, "");
+			r ? ye.delete(e) : r = ir(n), O = Ai(`urd-draft-${e}`, () => r, S), O.replace(Fa(O.data, ge.data)), O.save(), t || (Ce = null), I(wt, null), I(Tt, null), j(), me(), I(v, "");
 		})(), await rr;
 	}
 	function or() {
 		k?.destroy(), H(w)?.contentDocument?.addEventListener("pointerdown", () => {
 			H(ct) && I(ct, null);
-		}, !0), k = ba(H(w), {
+		}, !0), k = xa(H(w), {
 			onEdit: Fo,
-			onMove: Lo,
+			onMove: Io,
 			onGrow: Ro,
 			onDelete: ml,
 			onAddSection: ll,
@@ -6593,9 +6610,9 @@ function cl(e, t) {
 			onRequestBlock: Cl,
 			onMoveBlockSection: pl,
 			onMobileManual: zo,
-			onMobileAuto: Ho,
+			onMobileAuto: Bo,
 			onReviewDone: Uo,
-			onBlockFlag: cl,
+			onBlockFlag: Wo,
 			onCollectionEdit: mi,
 			onPluginBlocks: (e) => {
 				I(xl, e.blocks ?? [], !0);
@@ -6606,7 +6623,7 @@ function cl(e, t) {
 		});
 	}
 	async function sr() {
-		await rr, await wi, k?.sendPlugins(ze(H(Ei))?.enabled ?? []), k?.sendViewport(H(ee)), di(), ge.hasDraft() && ve();
+		await rr, await wi, k?.sendPlugins(ze(H(Ti))?.enabled ?? []), k?.sendViewport(H(ee)), di(), ge.hasDraft() && ve();
 		let e = !H(h).pages.some((e) => e.id === H(g));
 		(O.hasDraft() || e) && k?.sendPage(H(g), O.data), H(D) || k?.sendChrome(!1), H(qe) === "grid" && k?.sendShowGrid(!0), H(cr) && k?.sendShowGuides(!0), f();
 	}
@@ -6647,7 +6664,7 @@ function cl(e, t) {
 		return e ? hr.includes(e) ? Q("error.reservedName", { slug: e }) : H(A).pages.some((n) => n.id !== t && (n.path === `/${e}` || n.id === e)) ? Q("error.pageExists") : null : Q("error.pageNeedsName");
 	}
 	function _r() {
-		let e = H(mr).trim(), t = Qi(e), n = gr(t);
+		let e = H(mr).trim(), t = $i(e), n = gr(t);
 		if (n) {
 			x(n, "error");
 			return;
@@ -6685,12 +6702,12 @@ function cl(e, t) {
 		} catch {}
 		if (!r) try {
 			let t = await fetch(`/${e.file}`);
-			t.ok && (r = Pa(await t.json(), ge.data));
+			t.ok && (r = Fa(await t.json(), ge.data));
 		} catch {}
 		r ||= ir(e), t(r), C(n, JSON.stringify(r)), j();
 	}
 	function xr(e, t) {
-		let n = Qi(t);
+		let n = $i(t);
 		if (e.path === "/" || `/${n}` === e.path) return;
 		let r = gr(n, e.id);
 		if (r) {
@@ -6856,7 +6873,7 @@ function cl(e, t) {
 		try {
 			e = await (await fetch("/content/samlinger.json")).json();
 		} catch {}
-		Yr = ki("urd-draft-samlinger", () => e, S), I(ti, [...Yr.data.samlinger ?? []], !0);
+		Yr = Ai("urd-draft-samlinger", () => e, S), I(ti, [...Yr.data.samlinger ?? []], !0);
 		for (let e of H(ti)) {
 			let t = null;
 			try {
@@ -6868,7 +6885,7 @@ function cl(e, t) {
 				name: e,
 				kind: "custom",
 				entries: []
-			}, Zr[e] = t, Xr[e] = ki(`urd-draft-samling-${e}`, () => t, S);
+			}, Zr[e] = t, Xr[e] = Ai(`urd-draft-samling-${e}`, () => t, S);
 		}
 		$r = !0, ui();
 	}
@@ -6900,7 +6917,7 @@ function cl(e, t) {
 	function hi() {
 		let e = H(ii).trim();
 		if (!e) return;
-		let t = Qi(e);
+		let t = $i(e);
 		if (!t || H(ti).includes(t)) {
 			x(Q(t ? "status.collectionExists" : "status.invalidName"), "error");
 			return;
@@ -6916,7 +6933,7 @@ function cl(e, t) {
 		Zr[t] = {
 			...n,
 			entries: []
-		}, Xr[t] = ki(`urd-draft-samling-${t}`, () => ({
+		}, Xr[t] = Ai(`urd-draft-samling-${t}`, () => ({
 			...n,
 			entries: []
 		}), S), Xr[t].replace(n), Xr[t].save(), Yr.data.samlinger = [...H(ti), t], Yr.save(), I(ti, [...H(ti), t], !0), I(ri, t, !0), I(ii, ""), j(), ui();
@@ -6927,7 +6944,7 @@ function cl(e, t) {
 	function _i(e) {
 		fi(e, `samling:${e}:add-entry`, (e) => {
 			e.entries.unshift({
-				id: Ba("innslag"),
+				id: Va("innslag"),
 				title: Q("seed.newEntry"),
 				date: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
 				text: ""
@@ -6957,9 +6974,9 @@ function cl(e, t) {
 	}
 	let Si = null, Ci, wi = new Promise((e) => {
 		Ci = e;
-	}), Ei = /* @__PURE__ */ F(null), Di = nn({}), Oi = /* @__PURE__ */ F("0.0.0"), Ai = /* @__PURE__ */ F(""), ji = /* @__PURE__ */ F(""), Mi = /* @__PURE__ */ F(nn([])), Ni = /* @__PURE__ */ F(nn([])), Pi = /* @__PURE__ */ F("pending"), Fi = () => [.../* @__PURE__ */ new Set([...H(Ei)?.enabled ?? [], ...H(Ei)?.disabled ?? []])];
+	}), Ti = /* @__PURE__ */ F(null), Di = nn({}), Oi = /* @__PURE__ */ F("0.0.0"), ki = /* @__PURE__ */ F(""), ji = /* @__PURE__ */ F(""), Mi = /* @__PURE__ */ F(nn([])), Ni = /* @__PURE__ */ F(nn([])), Pi = /* @__PURE__ */ F("pending"), Fi = () => [.../* @__PURE__ */ new Set([...H(Ti)?.enabled ?? [], ...H(Ti)?.disabled ?? []])];
 	function Ii() {
-		I(Ei, JSON.parse(JSON.stringify(Si.data)), !0);
+		I(Ti, JSON.parse(JSON.stringify(Si.data)), !0);
 	}
 	async function Li() {
 		let e = {
@@ -6969,12 +6986,12 @@ function cl(e, t) {
 		try {
 			e = await (await fetch("/plugins/plugins.json")).json();
 		} catch {}
-		I(Ni, e.enabled ?? [], !0), Si = ki("urd-draft-plugins", () => e, S), Ii();
+		I(Ni, e.enabled ?? [], !0), Si = Ai("urd-draft-plugins", () => e, S), Ii();
 		try {
 			I(Oi, (await (await fetch("/urd.json")).json()).engine ?? "0.0.0", !0);
 		} catch {}
 		for (let e of Fi()) Bi(e);
-		Ri(), Ci(), k?.sendPlugins(ze(H(Ei))?.enabled ?? []);
+		Ri(), Ci(), k?.sendPlugins(ze(H(Ti))?.enabled ?? []);
 	}
 	async function Ri() {
 		try {
@@ -7005,11 +7022,11 @@ function cl(e, t) {
 	}
 	async function Bi(e) {
 		try {
-			let t = await (await fetch(`/plugins/${e}/plugin.json`)).json(), n = za(t);
+			let t = await (await fetch(`/plugins/${e}/plugin.json`)).json(), n = Ba(t);
 			Di[e] = {
 				...t,
 				errors: n,
-				satisfied: n.length === 0 && La(H(Oi), t.requiresEngine)
+				satisfied: n.length === 0 && Ra(H(Oi), t.requiresEngine)
 			};
 		} catch {
 			Di[e] = {
@@ -7019,7 +7036,7 @@ function cl(e, t) {
 			};
 		}
 	}
-	function Hi(e, t) {
+	function Vi(e, t) {
 		Te("plugins");
 		let n = Si.data;
 		n.enabled = (n.enabled ?? []).filter((t) => t !== e), n.disabled = (n.disabled ?? []).filter((t) => t !== e), t ? n.enabled.push(e) : n.disabled.push(e), Si.save(), j(), Ii(), Ui();
@@ -7032,9 +7049,9 @@ function cl(e, t) {
 		let t = Si.data;
 		t.enabled = (t.enabled ?? []).filter((t) => t !== e), t.disabled = (t.disabled ?? []).filter((t) => t !== e), Si.save(), j(), Ii(), Ui();
 	}
-	async function Ki() {
+	async function Gi() {
 		I(ji, "");
-		let e = H(Ai).trim().toLowerCase();
+		let e = H(ki).trim().toLowerCase();
 		if (!/^[a-z0-9][a-z0-9-]*$/.test(e)) {
 			I(ji, Q("plugin.invalidId"), !0);
 			return;
@@ -7047,12 +7064,12 @@ function cl(e, t) {
 			I(ji, Q("plugin.invalidManifest", { errors: Di[e].errors.join("; ") }), !0);
 			return;
 		}
-		Hi(e, !0), I(Ai, "");
+		Vi(e, !0), I(ki, "");
 	}
 	function qi(e) {
-		I(Mi, H(Mi).filter((t) => t !== e), !0), Hi(e, !0);
+		I(Mi, H(Mi).filter((t) => t !== e), !0), Vi(e, !0);
 	}
-	function ea(e, t) {
+	function Ji(e, t) {
 		pr(e, () => {
 			H(A).footer ??= {
 				version: 1,
@@ -7063,12 +7080,12 @@ function cl(e, t) {
 		});
 	}
 	function ta(e, t) {
-		ea(`edit:footer-brand-${e}`, (n) => {
+		Ji(`edit:footer-brand-${e}`, (n) => {
 			n.brand ??= {}, t.trim() ? n.brand[e] = t : delete n.brand[e], !n.brand.title && !n.brand.tagline && !n.brand.logo && delete n.brand;
 		});
 	}
 	function na(e) {
-		ea("footer", (t) => {
+		Ji("footer", (t) => {
 			t.brand ??= {}, e === "image" || e === "both" ? t.brand.mode = e : delete t.brand.mode;
 		});
 	}
@@ -7076,7 +7093,7 @@ function cl(e, t) {
 		let t = e.target.files?.[0];
 		if (e.target.value = "", t) try {
 			let e = await dn(t);
-			ea("footer", (t) => {
+			Ji("footer", (t) => {
 				t.brand ??= {}, t.brand.logo = e.dataUrl, t.brand.mode || (t.brand.mode = "both");
 			});
 		} catch {
@@ -7084,23 +7101,23 @@ function cl(e, t) {
 		}
 	}
 	function ia() {
-		ea("footer", (e) => {
+		Ji("footer", (e) => {
 			e.brand && (delete e.brand.logo, delete e.brand.mode, delete e.brand.logoHeight, !e.brand.title && !e.brand.tagline && delete e.brand);
 		});
 	}
 	function aa(e) {
-		ea("edit:footer-logo-height", (t) => {
+		Ji("edit:footer-logo-height", (t) => {
 			t.brand ??= {};
 			let n = Number(e);
 			Number.isFinite(n) && (t.brand.logoHeight = Math.min(160, Math.max(16, Math.round(n))));
 		});
 	}
 	function oa(e) {
-		ea("edit:footer-copyright", (t) => {
+		Ji("edit:footer-copyright", (t) => {
 			e.trim() ? t.copyright = e : delete t.copyright;
 		});
 	}
-	let ua = [
+	let sa = [
 		{
 			id: "minimal",
 			label: Q("footerTemplate.minimal"),
@@ -7395,9 +7412,9 @@ function cl(e, t) {
 				version: 1,
 				layers: [{
 					type: "glow",
-					version: fo.version ?? 1,
+					version: po.version ?? 1,
 					props: {
-						...fo.defaults(),
+						...po.defaults(),
 						color: "accent",
 						x: .12,
 						y: 0,
@@ -7406,9 +7423,9 @@ function cl(e, t) {
 					}
 				}, {
 					type: "grain",
-					version: mo.version ?? 1,
+					version: ho.version ?? 1,
 					props: {
-						...mo.defaults(),
+						...ho.defaults(),
 						opacity: .08
 					}
 				}]
@@ -7416,7 +7433,7 @@ function cl(e, t) {
 		};
 	}
 	function fa(e) {
-		ea("footer-template", (t) => {
+		Ji("footer-template", (t) => {
 			let n = da(e);
 			t.show = !0, delete t.text;
 			for (let e of [
@@ -7434,7 +7451,7 @@ function cl(e, t) {
 		});
 	}
 	function pa(e) {
-		ea("footer", (t) => {
+		Ji("footer", (t) => {
 			t[e] ??= [], t[e].push(H(A).pages[0] ? {
 				label: Q("seed.link"),
 				page: H(A).pages[0].id
@@ -7445,39 +7462,39 @@ function cl(e, t) {
 		});
 	}
 	function ma(e, t) {
-		ea("footer", (n) => {
+		Ji("footer", (n) => {
 			n[e].splice(t, 1), n[e].length || delete n[e];
 		});
 	}
 	function ha(e, t, n) {
-		ea("footer", (r) => {
+		Ji("footer", (r) => {
 			let i = r[e], a = t + n;
 			a < 0 || a >= i.length || ([i[t], i[a]] = [i[a], i[t]]);
 		});
 	}
 	function ga(e, t, n) {
-		ea(`edit:footer-${e}-label-${t}`, (r) => {
+		Ji(`edit:footer-${e}-label-${t}`, (r) => {
 			r[e][t].label = n;
 		});
 	}
 	function _a(e, t, n) {
-		ea("footer", (r) => {
+		Ji("footer", (r) => {
 			let i = r[e][t];
 			n === "__href" ? (delete i.page, i.href = i.href ?? "https://") : (i.page = n, delete i.href);
 		});
 	}
 	function va(e, t, n) {
-		ea(`edit:footer-${e}-href-${t}`, (r) => {
+		Ji(`edit:footer-${e}-href-${t}`, (r) => {
 			r[e][t].href = n;
 		});
 	}
-	function xa(e) {
-		ea("footer", (t) => {
+	function ya(e) {
+		Ji("footer", (t) => {
 			e === "center" ? t.columnsAlign = "center" : delete t.columnsAlign;
 		});
 	}
-	function Ca(e) {
-		ea("footer", (t) => {
+	function Sa(e) {
+		Ji("footer", (t) => {
 			e ? t.cta ??= {
 				kind: "button",
 				label: Q("seed.join")
@@ -7485,23 +7502,23 @@ function cl(e, t) {
 		});
 	}
 	function wa(e, t) {
-		ea(`edit:footer-cta-${e}`, (n) => {
+		Ji(`edit:footer-cta-${e}`, (n) => {
 			n.cta ??= {}, t === "" || t == null || t === !1 ? delete n.cta[e] : n.cta[e] = t;
 		});
 	}
 	function Ta(e) {
-		ea("footer", (t) => {
+		Ji("footer", (t) => {
 			t.cta ??= {}, e === "__href" ? (delete t.cta.page, t.cta.href = t.cta.href ?? "https://") : (t.cta.page = e, delete t.cta.href);
 		});
 	}
 	function Ea(e, t) {
-		ea("footer", (n) => {
+		Ji("footer", (n) => {
 			let r = new Set(n.hideOn ?? []);
 			t ? r.delete(e) : r.add(e), r.size ? n.hideOn = [...r] : delete n.hideOn;
 		});
 	}
-	function ka() {
-		ea("footer", (e) => {
+	function Da() {
+		Ji("footer", (e) => {
 			e.columns ??= [], e.columns.push({
 				title: Q("seed.column"),
 				links: [{
@@ -7512,23 +7529,23 @@ function cl(e, t) {
 		});
 	}
 	function Aa(e) {
-		ea("footer", (t) => {
+		Ji("footer", (t) => {
 			t.columns.splice(e, 1), t.columns.length || delete t.columns;
 		});
 	}
 	function ja(e, t) {
-		ea("footer", (n) => {
+		Ji("footer", (n) => {
 			let r = e + t;
 			r < 0 || r >= n.columns.length || ([n.columns[e], n.columns[r]] = [n.columns[r], n.columns[e]]);
 		});
 	}
 	function Ma(e, t) {
-		ea(`edit:footer-col-title-${e}`, (n) => {
+		Ji(`edit:footer-col-title-${e}`, (n) => {
 			n.columns[e].title = t;
 		});
 	}
-	function Fa(e) {
-		ea("footer", (t) => {
+	function Na(e) {
+		Ji("footer", (t) => {
 			t.columns[e].links ??= [], t.columns[e].links.push({
 				label: Q("seed.link"),
 				page: H(A).pages[0].id
@@ -7536,34 +7553,34 @@ function cl(e, t) {
 		});
 	}
 	function Ia(e, t) {
-		ea("footer", (n) => {
+		Ji("footer", (n) => {
 			n.columns[e].links.splice(t, 1);
 		});
 	}
-	function Ra(e, t, n) {
-		ea("footer", (r) => {
+	function La(e, t, n) {
+		Ji("footer", (r) => {
 			let i = r.columns[e].links, a = t + n;
 			a < 0 || a >= i.length || ([i[t], i[a]] = [i[a], i[t]]);
 		});
 	}
-	function Va(e, t, n) {
-		ea(`edit:footer-link-label-${e}-${t}`, (r) => {
+	function za(e, t, n) {
+		Ji(`edit:footer-link-label-${e}-${t}`, (r) => {
 			r.columns[e].links[t].label = n;
 		});
 	}
 	function Ha(e, t, n) {
-		ea("footer", (r) => {
+		Ji("footer", (r) => {
 			let i = r.columns[e].links[t];
 			n === "__href" ? (delete i.page, i.href = i.href ?? "https://") : (i.page = n, delete i.href);
 		});
 	}
 	function Ua(e, t, n) {
-		ea(`edit:footer-link-href-${e}-${t}`, (r) => {
+		Ji(`edit:footer-link-href-${e}-${t}`, (r) => {
 			r.columns[e].links[t].href = n;
 		});
 	}
-	function Ga() {
-		ea("footer", (e) => {
+	function Wa() {
+		Ji("footer", (e) => {
 			e.social ??= [], e.social.push({
 				icon: "facebook",
 				url: "https://"
@@ -7571,27 +7588,27 @@ function cl(e, t) {
 		});
 	}
 	function Ka(e) {
-		ea("footer", (t) => {
+		Ji("footer", (t) => {
 			t.social.splice(e, 1), t.social.length || delete t.social;
 		});
 	}
-	function Za(e, t) {
-		ea("footer", (n) => {
+	function qa(e, t) {
+		Ji("footer", (n) => {
 			let r = e + t;
 			r < 0 || r >= n.social.length || ([n.social[e], n.social[r]] = [n.social[r], n.social[e]]);
 		});
 	}
 	function Qa(e, t) {
-		ea("footer", (n) => {
+		Ji("footer", (n) => {
 			n.social[e].icon = t;
 		});
 	}
 	function $a(e, t) {
-		ea(`edit:footer-social-url-${e}`, (n) => {
+		Ji(`edit:footer-social-url-${e}`, (n) => {
 			n.social[e].url = t;
 		});
 	}
-	let eo = ca.filter(([e]) => e === "iconCat.social" || e === "iconCat.communication").flatMap(([, e]) => e.map((e) => [e, sa[e].label]));
+	let eo = la.filter(([e]) => e === "iconCat.social" || e === "iconCat.communication").flatMap(([, e]) => e.map((e) => [e, ca[e].label]));
 	function to(e, t) {
 		pr(`edit:nav-label-${e}`, () => {
 			H(A).nav.items[e].label = t;
@@ -7647,12 +7664,12 @@ function cl(e, t) {
 			n === "__href" ? (delete r.page, r.href = r.href ?? "https://") : (r.page = n, delete r.href);
 		});
 	}
-	function po(e, t, n) {
+	function uo(e, t, n) {
 		pr(`edit:nav-child-href-${e}-${t}`, () => {
 			H(A).nav.items[e].children[t].href = n;
 		});
 	}
-	function ho(e, t, n) {
+	function mo(e, t, n) {
 		let r = t + n, i = H(A).nav.items[e].children;
 		r < 0 || r >= i.length || pr("nav", () => {
 			[i[t], i[r]] = [i[r], i[t]];
@@ -7743,7 +7760,7 @@ function cl(e, t) {
 	}
 	function Eo(e) {
 		let t = H(A).theme.tokens.font[e];
-		return [...Go.some(([, e]) => e === t) ? [] : [[t, Q("opt.customFont")]], ...Go.map(([e, t]) => [t, Q(e)])];
+		return [...Ko.some(([, e]) => e === t) ? [] : [[t, Q("opt.customFont")]], ...Ko.map(([e, t]) => [t, Q(e)])];
 	}
 	let Do = (e) => parseInt(e, 10) || 0;
 	function Oo(e, t) {
@@ -7894,7 +7911,7 @@ function cl(e, t) {
 		let t = O.data.sections.find((t) => t.id === e.sectionId), n = t?.blocks.find((t) => t.id === e.blockId);
 		n && (Te(`edit:${e.blockId}`), n.props = e.props, O.save(), j(), H(N)?.blockId === e.blockId && ot(), e.rerender && k?.sendSection(H(g), t), I(v, ""));
 	}
-	function Lo(e) {
+	function Io(e) {
 		let t = O.data.sections.find((t) => t.id === e.sectionId), n = t?.blocks.find((t) => t.id === e.blockId);
 		if (!n) return;
 		Te(e.coalesce ? `edit:${e.groupKey ?? e.blockId}` : "move-block");
@@ -7925,7 +7942,7 @@ function cl(e, t) {
 			}, O.save(), j();
 		}
 	}
-	function Ho(e) {
+	function Bo(e) {
 		let t = O.data.sections.find((t) => t.id === e.sectionId);
 		if (t) {
 			Te("mobile-auto");
@@ -7943,12 +7960,12 @@ function cl(e, t) {
 		let t = O.data.sections.find((t) => t.id === e.sectionId);
 		t?.responsive?.mobile && (Te("review-done"), t.responsive.mobile.attention = null, O.save(), j(), me());
 	}
-	function cl(e) {
+	function Wo(e) {
 		let t = O.data.sections.find((t) => t.id === e.sectionId)?.blocks.find((t) => t.id === e.blockId);
 		t && (Te("decor"), t.decor = e.decor, O.save(), j(), H(N)?.blockId === e.blockId && ot());
 	}
 	function ll(e) {
-		Te("add-section"), e.section.id || (e.section.id = Ba("sec")), O.data.sections.splice(e.index, 0, e.section), O.save(), j(), k?.sendPage(H(g), O.data), I(wt, e.section.id, !0), jt(e.section), H(qe) !== "properties" && (I(qe, "properties"), k?.sendShowGrid(!1));
+		Te("add-section"), e.section.id || (e.section.id = Va("sec")), O.data.sections.splice(e.index, 0, e.section), O.save(), j(), k?.sendPage(H(g), O.data), I(wt, e.section.id, !0), jt(e.section), H(qe) !== "properties" && (I(qe, "properties"), k?.sendShowGrid(!1));
 	}
 	function ul(e) {
 		let t = O.data.sections, n = t.findIndex((t) => t.id === e.sectionId), r = n + e.dir;
@@ -8161,7 +8178,7 @@ function cl(e, t) {
 	function gl(e) {
 		let t = hl[e];
 		return t ? {
-			id: Ba("blk"),
+			id: Va("blk"),
 			type: t.type,
 			version: 1,
 			decor: !!t.decor,
@@ -8217,7 +8234,7 @@ function cl(e, t) {
 	let xl = /* @__PURE__ */ F(nn([]));
 	function Sl(e, t = {}) {
 		_l({
-			id: Ba("blk"),
+			id: Va("blk"),
 			type: e.type,
 			version: e.version ?? 1,
 			decor: !1,
@@ -8243,7 +8260,7 @@ function cl(e, t) {
 		let t = gl(e.kind);
 		if (t) {
 			if (e.at && typeof e.at.x == "number" && typeof e.at.y == "number") {
-				let n = O.data.sections.find((t) => t.id === e.sectionId)?.grid ?? H(A).grid, r = Ko({
+				let n = O.data.sections.find((t) => t.id === e.sectionId)?.grid ?? H(A).grid, r = qo({
 					x: e.at.x,
 					y: e.at.y,
 					w: t.frames.desktop.w,
@@ -8268,12 +8285,12 @@ function cl(e, t) {
 		}
 		let r = Math.round(n.height / n.width * .3 * (H(w)?.clientWidth ?? 1280));
 		_l({
-			id: Ba("blk"),
+			id: Va("blk"),
 			type: "image",
 			version: 1,
 			props: {
 				src: n.dataUrl,
-				alt: Qi(t.name).replaceAll("-", " "),
+				alt: $i(t.name).replaceAll("-", " "),
 				fit: "cover",
 				radius: "md",
 				href: null
@@ -8298,7 +8315,7 @@ function cl(e, t) {
 			let e = await dn(i);
 			e.bytes > 4e5 && (r += 1), t.push({
 				src: e.dataUrl,
-				alt: Qi(i.name).replaceAll("-", " "),
+				alt: $i(i.name).replaceAll("-", " "),
 				href: null,
 				style: {}
 			});
@@ -8354,7 +8371,7 @@ function cl(e, t) {
 	function Ml(e, t, n, r) {
 		let i = e?.[t];
 		if (!i?.startsWith("data:image/")) return;
-		let a = i.split(",", 2)[1], o = `media/${Qi(n || "bilde")}-${$i(a)}.${Zi(i)}`;
+		let a = i.split(",", 2)[1], o = `media/${$i(n || "bilde")}-${ea(a)}.${Qi(i)}`;
 		r.push({
 			path: o,
 			content: a,
@@ -8422,7 +8439,7 @@ function cl(e, t) {
 			else if (i.id !== H(g)) {
 				let e = localStorage.getItem(a);
 				if (e) try {
-					s = Pa(JSON.parse(e), ge.data);
+					s = Fa(JSON.parse(e), ge.data);
 				} catch {}
 			}
 			if (!s && o && (s = ir(i)), !s) continue;
@@ -8441,7 +8458,7 @@ function cl(e, t) {
 				encoding: "utf-8"
 			}), e.push({
 				path: "content/theme.css",
-				content: Wa(r.theme),
+				content: Ga(r.theme),
 				encoding: "utf-8"
 			}), n.push("urd-draft-site");
 			let i = (e, t) => JSON.stringify(e ?? null) === JSON.stringify(t ?? null);
@@ -8526,18 +8543,18 @@ function cl(e, t) {
 			e ? V = e : qn(), Pl(O.data), Fl(H(A));
 			for (let e of n) localStorage.removeItem(e);
 			for (let e of r) ye.add(e);
-			if (I(h, JSON.parse(JSON.stringify(H(A))), !0), ge = ki("urd-draft-site", () => H(h), S), _e(), Si) {
+			if (I(h, JSON.parse(JSON.stringify(H(A))), !0), ge = Ai("urd-draft-site", () => H(h), S), _e(), Si) {
 				let e = JSON.parse(JSON.stringify(Si.data));
-				Si = ki("urd-draft-plugins", () => e, S), Ii();
+				Si = Ai("urd-draft-plugins", () => e, S), Ii();
 			}
 			if (Yr) {
 				for (let e of Object.values(Xr)) for (let t of e.data.entries) Ml(t, "image", t.title, []);
 				let e = JSON.parse(JSON.stringify(Yr.data));
-				Yr = ki("urd-draft-samlinger", () => e, S), Zr = {};
+				Yr = Ai("urd-draft-samlinger", () => e, S), Zr = {};
 				for (let e of H(ti)) {
 					if (!Xr[e]) continue;
 					let t = JSON.parse(JSON.stringify(Xr[e].data));
-					Zr[e] = t, Xr[e] = ki(`urd-draft-samling-${e}`, () => t, S);
+					Zr[e] = t, Xr[e] = Ai(`urd-draft-samling-${e}`, () => t, S);
 				}
 				ui();
 			}
@@ -8546,17 +8563,17 @@ function cl(e, t) {
 				...H(A).grid
 			}, !0);
 			let t = JSON.parse(JSON.stringify(O.data));
-			O = ki(`urd-draft-${H(g)}`, () => t, S), ye.has(H(g)) && C(`urd-draft-${H(g)}`, JSON.stringify(t)), j(), x(Q("status.published"), "ok");
+			O = Ai(`urd-draft-${H(g)}`, () => t, S), ye.has(H(g)) && C(`urd-draft-${H(g)}`, JSON.stringify(t)), j(), x(Q("status.published"), "ok");
 		} else if (l?.status === 401) {
 			let e = (await l.json().catch(() => null))?.error;
 			x(e === "Ugyldig eller utløpt innlogging" ? Q("status.loginExpired") : Q("status.loginRequired", { reason: e ?? Q("status.unknownReason") }), "error"), await Kn();
 		} else l?.status === 403 ? x((await l.json().catch(() => null))?.error ?? Q("status.noPublishAccess"), "error") : l?.status === 409 ? x(Q("status.publishRace"), "error") : x(l ? (await l.json().catch(() => null))?.error ?? Q("status.publishFailed") : Q("status.publishUnavailable"), "error");
 	}
 	Pe();
-	var Bl = sl();
+	var Bl = cl();
 	Sr("keydown", rn, Ne), Sr("pointerdown", rn, je);
 	var Vl = R(Bl), Hl = L(Vl), Ul = (e) => {
-		var t = Ls(), n = L(t);
+		var t = Rs(), n = L(t);
 		J(n, () => c.pencil);
 		var r = z(n);
 		M(t), B((e, n) => {
@@ -8569,7 +8586,7 @@ function cl(e, t) {
 	var Wl = z(Hl, 2);
 	let Gl;
 	var Kl = L(Wl), ql = z(L(Kl), 2), Jl = (e) => {
-		var t = Rs(), n = R(t), r = L(n, !0);
+		var t = zs(), n = R(t), r = L(n, !0);
 		M(n);
 		var i = z(n, 2), a = L(i);
 		let o;
@@ -8607,7 +8624,7 @@ function cl(e, t) {
 		H(h) && e(Jl);
 	});
 	var Yl = z(ql, 2), Xl = (e) => {
-		var t = zs(), n = L(t);
+		var t = Bs(), n = L(t);
 		J(n, () => c.phone);
 		var r = z(n);
 		M(t), B((e, n) => {
@@ -8618,7 +8635,7 @@ function cl(e, t) {
 		H(pe) > 0 && e(Xl);
 	});
 	var Zl = z(Yl, 2), Ql = (e) => {
-		var t = Bs(), n = R(t), r = L(n, !0);
+		var t = Vs(), n = R(t), r = L(n, !0);
 		M(n);
 		var i = z(n, 2);
 		let a;
@@ -8635,13 +8652,13 @@ function cl(e, t) {
 		H(_) && e(Ql);
 	}), M(Kl);
 	var $l = z(Kl, 2), eu = L($l), tu = (e) => {
-		var t = Ws(), n = R(t), r = L(n), i = (e) => {
-			var t = Vs(), n = R(t);
+		var t = Gs(), n = R(t), r = L(n), i = (e) => {
+			var t = Hs(), n = R(t);
 			J(n, () => c.eye);
 			var r = z(n);
 			B((e) => K(r, ` ${e ?? ""}`), [() => Q("ui.cleanView")]), G(e, t);
 		}, a = (e) => {
-			var t = Vs(), n = R(t);
+			var t = Hs(), n = R(t);
 			J(n, () => c.pencil);
 			var r = z(n);
 			B((e) => K(r, ` ${e ?? ""}`), [() => Q("ui.edit")]), G(e, t);
@@ -8650,7 +8667,7 @@ function cl(e, t) {
 			H(D) ? e(i) : e(a, -1);
 		}), M(n);
 		var o = z(n, 2), s = (e) => {
-			var t = Hs(), n = L(t), r = (e) => {
+			var t = Us(), n = L(t), r = (e) => {
 				var t = jr();
 				J(R(t), () => c.warn), G(e, t);
 			};
@@ -8662,7 +8679,7 @@ function cl(e, t) {
 				Z(t, "title", e), K(i, H(T).login);
 			}, [() => H(T).allowed ? Q("tip.hasPublishAccess") : Q("tip.noPublishAccess")]), G(e, t);
 		}, l = (e) => {
-			var t = Us(), n = L(t, !0);
+			var t = Ws(), n = L(t, !0);
 			M(t), B((e) => K(n, e), [() => Q("ui.loginGitHub")]), G(e, t);
 		};
 		q(o, (e) => {
@@ -8684,16 +8701,16 @@ function cl(e, t) {
 		H(h) && e(tu);
 	}), M($l), M(Wl);
 	var nu = z(Wl, 2), ru = (e) => {
-		var t = el(), i = L(t), o = (e) => {
-			var t = $c(), i = R(t), o = L(i);
+		var t = tl(), i = L(t), o = (e) => {
+			var t = el(), i = R(t), o = L(i);
 			Vr(o, 17, () => Je, Lr, (e, t, n) => {
-				var r = qs(), i = R(r), a = (e) => {
-					G(e, Gs());
+				var r = Js(), i = R(r), a = (e) => {
+					G(e, Ks());
 				};
 				q(i, (e) => {
 					n > 0 && e(a);
 				}), Vr(z(i, 2), 16, () => H(t), (e) => e, (e, t) => {
-					var n = Ks();
+					var n = qs();
 					let r;
 					var i = L(n, !0);
 					M(n), B(() => {
@@ -8705,7 +8722,7 @@ function cl(e, t) {
 			let p;
 			J(f, () => c.gear, !0), M(f);
 			var h = z(f, 2), _ = (e) => {
-				var t = Js(), n = L(t), r = L(n, !0);
+				var t = Ys(), n = L(t), r = L(n, !0);
 				M(n);
 				var i = z(n, 2), a = L(i);
 				$(z(a), {
@@ -8744,22 +8761,22 @@ function cl(e, t) {
 				H(lr) && e(_);
 			}), M(s), pi(s, (e) => I(ur, e), () => H(ur)), M(i);
 			var v = z(i, 2), y = (e) => {
-				var t = Qc(), i = L(t), o = L(i, !0);
+				var t = $c(), i = L(t), o = L(i, !0);
 				M(i);
 				var s = z(i, 2), l = (e) => {
-					var t = Qs(), n = L(t), r = L(n, !0);
+					var t = $s(), n = L(t), r = L(n, !0);
 					M(n);
 					var i = z(n, 2);
 					Vr(i, 17, () => H(A).pages, (e) => e.id, (e, t) => {
-						var n = Zs();
+						var n = Qs();
 						let r;
 						var i = L(n);
 						Y(i);
 						var a = z(i, 2), o = (e) => {
-							var t = Ys();
+							var t = Xs();
 							B((e) => Z(t, "title", e), [() => Q("tip.pages.homeLocked")]), G(e, t);
 						}, s = (e) => {
-							var n = Xs();
+							var n = Zs();
 							Y(n), B((e, t) => {
 								X(n, e), Z(n, "title", t);
 							}, [() => H(t).path.slice(1), () => Q("tip.pages.slug")]), U("change", n, (e) => xr(H(t), e.target.value)), G(e, n);
@@ -8770,7 +8787,7 @@ function cl(e, t) {
 						var l = z(a, 2), u = L(l);
 						J(u, () => c.right, !0), M(u);
 						var d = z(u, 2), f = (e) => {
-							var n = Jo();
+							var n = Yo();
 							J(n, () => c.cross, !0), M(n), B((e) => Z(n, "title", e), [() => Q("tip.pages.delete")]), U("click", n, () => Cr(H(t))), G(e, n);
 						};
 						q(d, (e) => {
@@ -8794,7 +8811,7 @@ function cl(e, t) {
 						() => Q("hint.pages.autoMenu")
 					]), U("keydown", a, (e) => e.key === "Enter" && _r()), li(a, () => H(mr), (e) => I(mr, e)), U("click", o, _r), G(e, t);
 				}, u = (e) => {
-					var t = ac(), r = L(t), i = L(r, !0);
+					var t = oc(), r = L(t), i = L(r, !0);
 					M(r);
 					var a = z(r, 2), o = L(a), s = L(o, !0);
 					M(o);
@@ -8817,11 +8834,11 @@ function cl(e, t) {
 					}
 					M(u);
 					var p = z(u, 2), m = (e) => {
-						var t = $s(), n = R(t);
+						var t = ec(), n = R(t);
 						Y(n);
 						var r = z(n, 2), i = L(r);
 						{
-							let e = /* @__PURE__ */ P(() => Q("tip.nav.logoFont")), t = /* @__PURE__ */ P(() => H(A).nav.logo?.font ?? ""), n = /* @__PURE__ */ P(() => [["", Q("common.inherit")], ...Go.map(([e, t]) => [t, Q(e)])]);
+							let e = /* @__PURE__ */ P(() => Q("tip.nav.logoFont")), t = /* @__PURE__ */ P(() => H(A).nav.logo?.font ?? ""), n = /* @__PURE__ */ P(() => [["", Q("common.inherit")], ...Ko.map(([e, t]) => [t, Q(e)])]);
 							$(i, {
 								get title() {
 									return H(e);
@@ -8860,7 +8877,7 @@ function cl(e, t) {
 						(H(A).nav.logo?.type ?? "text") !== "image" && e(m);
 					});
 					var h = z(p, 2), g = (e) => {
-						var t = ec(), n = R(t), r = L(n), i = L(r), a = z(i);
+						var t = tc(), n = R(t), r = L(n), i = L(r), a = z(i);
 						M(r);
 						var o = z(r, 2);
 						Y(o);
@@ -8881,7 +8898,7 @@ function cl(e, t) {
 						(H(A).nav.logo?.type ?? "text") !== "text" && e(g);
 					});
 					var _ = z(h, 2), v = (e) => {
-						var t = us(), n = L(t), r = z(n);
+						var t = ds(), n = L(t), r = z(n);
 						{
 							let e = /* @__PURE__ */ P(() => H(A).nav.logo?.order ?? "image-first"), t = /* @__PURE__ */ P(() => [["image-first", Q("opt.logo.imageFirst")], ["text-first", Q("opt.logo.textFirst")]]);
 							$(r, {
@@ -8925,7 +8942,7 @@ function cl(e, t) {
 					}
 					M(T);
 					var ee = z(T, 2), te = (e) => {
-						var t = tc(), n = R(t), r = L(n);
+						var t = nc(), n = R(t), r = L(n);
 						Y(r);
 						var i = z(r);
 						M(n);
@@ -8945,7 +8962,7 @@ function cl(e, t) {
 						H(Hr) && e(te);
 					});
 					var ne = z(ee, 2), re = (e) => {
-						var t = vs(), n = L(t);
+						var t = ys(), n = L(t);
 						Y(n);
 						var r = z(n);
 						M(t), B((e, i) => {
@@ -8958,7 +8975,7 @@ function cl(e, t) {
 						!H(Hr) && !H(Br) && e(re);
 					});
 					var ie = z(ne, 2), ae = (e) => {
-						var t = us(), n = L(t), r = z(n);
+						var t = ds(), n = L(t), r = z(n);
 						{
 							let e = /* @__PURE__ */ P(() => H(A).nav.style?.sideAlign ?? "left"), t = /* @__PURE__ */ P(() => [
 								["left", Q("common.left")],
@@ -9044,12 +9061,12 @@ function cl(e, t) {
 						H(Br) ? e(he) : e(O, -1);
 					}), M(fe);
 					var ge = z(fe, 2), k = (e) => {
-						var t = nc(), n = R(t), r = L(n);
+						var t = rc(), n = R(t), r = L(n);
 						Y(r);
 						var i = z(r);
 						M(n);
 						var a = z(n, 2), o = (e) => {
-							var t = us(), n = L(t), r = z(n);
+							var t = ds(), n = L(t), r = z(n);
 							{
 								let e = /* @__PURE__ */ P(() => H(A).nav.scroll ?? "none"), t = /* @__PURE__ */ P(() => [
 									["none", Q("opt.scroll.none")],
@@ -9104,7 +9121,7 @@ function cl(e, t) {
 					}
 					M(_e);
 					var be = z(_e, 2), j = (e) => {
-						var t = rc(), n = R(t), r = L(n), i = z(r), a = L(i);
+						var t = ic(), n = R(t), r = L(n), i = z(r), a = L(i);
 						M(i), M(n);
 						var o = z(n, 2);
 						Y(o), B((e, t, i) => {
@@ -9119,10 +9136,10 @@ function cl(e, t) {
 						H(A).nav.style?.hover === "lift" && e(j);
 					});
 					var xe = z(be, 2), Se = (e) => {
-						var t = us(), n = L(t), r = z(n);
+						var t = ds(), n = L(t), r = z(n);
 						{
 							let e = /* @__PURE__ */ P(() => H(A).nav.style?.hoverColor ?? "accent"), t = /* @__PURE__ */ P(Sn);
-							Vi(r, {
+							Hi(r, {
 								get value() {
 									return H(e);
 								},
@@ -9145,7 +9162,7 @@ function cl(e, t) {
 					var Ce = z(xe, 2), we = L(Ce), Te = z(we);
 					{
 						let e = /* @__PURE__ */ P(() => H(A).nav.style?.hoverTextColor ?? "accent"), t = /* @__PURE__ */ P(Sn), n = /* @__PURE__ */ P(() => Q("tip.nav.hoverTextColorPick"));
-						Vi(Te, {
+						Hi(Te, {
 							get value() {
 								return H(e);
 							},
@@ -9162,7 +9179,7 @@ function cl(e, t) {
 					var Ee = z(Ce, 2), De = L(Ee), Oe = z(De);
 					{
 						let e = /* @__PURE__ */ P(() => H(A).nav.style?.textColor ?? "text"), t = /* @__PURE__ */ P(Sn), n = /* @__PURE__ */ P(() => Q("tip.nav.textColorPick"));
-						Vi(Oe, {
+						Hi(Oe, {
 							get value() {
 								return H(e);
 							},
@@ -9207,10 +9224,10 @@ function cl(e, t) {
 					}
 					M(Ie);
 					var ze = z(Ie, 2), Be = (e) => {
-						var t = us(), n = L(t), r = z(n);
+						var t = ds(), n = L(t), r = z(n);
 						{
 							let e = /* @__PURE__ */ P(() => H(A).nav.style?.subPillColor ?? "surface"), t = /* @__PURE__ */ P(Sn), n = /* @__PURE__ */ P(() => Q("tip.nav.subPillColorPick"));
-							Vi(r, {
+							Hi(r, {
 								get value() {
 									return H(e);
 								},
@@ -9236,7 +9253,7 @@ function cl(e, t) {
 					M(Ge);
 					var qe = z(Ge, 2), Je = L(qe);
 					Vr(Je, 17, () => H(A).nav.items, Lr, (e, t, n) => {
-						var r = ic(), i = R(r), a = L(i);
+						var r = ac(), i = R(r), a = L(i);
 						Y(a);
 						var o = z(a, 2), s = L(o);
 						J(s, () => c.plus, !0), M(s);
@@ -9268,7 +9285,7 @@ function cl(e, t) {
 						}
 						M(f);
 						var m = z(f, 2), h = (e) => {
-							var r = cs();
+							var r = ls();
 							Y(r), B((e, n) => {
 								X(r, H(t).href), Z(r, "placeholder", e), Z(r, "title", n);
 							}, [() => Q("ph.hrefAnchor"), () => Q("tip.hrefAnchor")]), U("change", r, (e) => ro(n, e.target.value)), G(e, r);
@@ -9276,7 +9293,7 @@ function cl(e, t) {
 						q(m, (e) => {
 							!H(t).page && H(t).href != null && e(h);
 						}), M(i), Vr(z(i, 2), 17, () => H(t).children ?? [], Lr, (e, r, i) => {
-							var a = ls(), o = L(a);
+							var a = us(), o = L(a);
 							Y(o);
 							var s = z(o, 2), l = L(s);
 							l.disabled = i === 0, J(l, () => c.up, !0), M(l);
@@ -9302,16 +9319,16 @@ function cl(e, t) {
 							}
 							M(f);
 							var m = z(f, 2), h = (e) => {
-								var t = cs();
+								var t = ls();
 								Y(t), B((e, n) => {
 									X(t, H(r).href ?? ""), Z(t, "placeholder", e), Z(t, "title", n);
-								}, [() => Q("ph.hrefAnchor"), () => Q("tip.hrefAnchor")]), U("change", t, (e) => po(n, i, e.target.value)), G(e, t);
+								}, [() => Q("ph.hrefAnchor"), () => Q("tip.hrefAnchor")]), U("change", t, (e) => uo(n, i, e.target.value)), G(e, t);
 							};
 							q(m, (e) => {
 								H(r).page || e(h);
 							}), M(a), B((e, n) => {
 								X(o, H(r).label), Z(o, "title", e), u.disabled = i === H(t).children.length - 1, Z(d, "title", n);
-							}, [() => Q("tip.nav.childLabel"), () => Q("tip.nav.removeChild")]), U("input", o, (e) => co(n, i, e.target.value)), U("click", l, () => ho(n, i, -1)), U("click", u, () => ho(n, i, 1)), U("click", d, () => go(n, i)), G(e, a);
+							}, [() => Q("tip.nav.childLabel"), () => Q("tip.nav.removeChild")]), U("input", o, (e) => co(n, i, e.target.value)), U("click", l, () => mo(n, i, -1)), U("click", u, () => mo(n, i, 1)), U("click", d, () => go(n, i)), G(e, a);
 						}), B((e, r, i) => {
 							X(a, H(t).label), Z(a, "title", e), Z(s, "title", r), u.disabled = n === H(A).nav.items.length - 1, Z(d, "title", i);
 						}, [
@@ -9351,7 +9368,7 @@ function cl(e, t) {
 						() => Q("hint.nav.submenu")
 					]), U("change", se, (e) => zr("blur", e.target.checked)), U("change", Ue, (e) => zr("subColumns", Number(e.target.value) > 1 ? Number(e.target.value) : void 0)), U("click", Ye, oo), G(e, t);
 				}, f = (e) => {
-					var t = cc(), n = L(t), r = L(n), i = z(r);
+					var t = lc(), n = L(t), r = L(n), i = z(r);
 					Y(i), M(n);
 					var a = z(n, 2), o = L(a), s = z(o);
 					Y(s), M(a);
@@ -9370,7 +9387,7 @@ function cl(e, t) {
 					}
 					M(l);
 					var f = z(l, 4), p = L(f), m = z(p), h = (e) => {
-						var t = oc();
+						var t = sc();
 						B((e) => {
 							Z(t, "src", H(A).site.icon), Z(t, "alt", e);
 						}, [() => Q("lbl.siteIcon")]), G(e, t);
@@ -9381,7 +9398,7 @@ function cl(e, t) {
 					var g = z(f, 2), _ = L(g), v = L(_), y = z(v);
 					M(_);
 					var b = z(_, 2), x = (e) => {
-						var t = sc(), n = R(t);
+						var t = cc(), n = R(t);
 						J(n, () => c.pencil ?? "✎", !0), M(n);
 						var r = z(n, 2);
 						J(r, () => c.cross, !0), M(r), B((e, t) => {
@@ -9406,11 +9423,11 @@ function cl(e, t) {
 						() => H(A).site.icon ? Q("ui.changeIcon") : Q("ui.chooseIcon")
 					]), U("input", i, (e) => Ar(e.target.value)), U("input", s, (e) => Mr(e.target.value)), U("change", y, Or), G(e, t);
 				}, p = (e) => {
-					var t = _c();
+					var t = vc();
 					{
 						let e = (e, t = d, n = d) => {
-							var r = uc(), i = L(r), a = (e) => {
-								var t = lc(), r = L(t, !0);
+							var r = dc(), i = L(r), a = (e) => {
+								var t = uc(), r = L(t, !0);
 								M(t), B(() => K(r, n())), G(e, t);
 							};
 							q(i, (e) => {
@@ -9441,7 +9458,7 @@ function cl(e, t) {
 						M(n);
 						var i = z(n, 2);
 						Vr(i, 21, () => jo, (e) => e.id, (e, t) => {
-							var n = dc();
+							var n = fc();
 							let r;
 							var i = L(n), a = L(i), o = z(a), s = z(o), c = z(s);
 							M(i);
@@ -9457,7 +9474,7 @@ function cl(e, t) {
 						var l = z(c);
 						M(s);
 						var u = z(s, 2), f = (e) => {
-							var t = fc(), n = L(t), r = L(n, !0);
+							var t = pc(), n = L(t), r = L(n, !0);
 							M(n);
 							var i = z(n, 2), a = L(i);
 							let o;
@@ -9478,7 +9495,7 @@ function cl(e, t) {
 							H(wn) && e(f);
 						});
 						var p = z(u, 2), h = L(p), g = (e) => {
-							var t = pc(), n = L(t, !0);
+							var t = mc(), n = L(t, !0);
 							M(t), B((e) => K(n, e), [() => Q("lbl.light")]), G(e, t);
 						};
 						q(h, (e) => {
@@ -9492,10 +9509,10 @@ function cl(e, t) {
 						Vr(y, 21, () => Cn, ([e, t, n]) => e, (e, t) => {
 							var n = /* @__PURE__ */ P(() => m(H(t), 3));
 							let r = () => H(n)[0], i = () => H(n)[1], a = () => H(n)[2];
-							var o = mc(), s = L(o);
+							var o = hc(), s = L(o);
 							{
 								let e = /* @__PURE__ */ P(() => H(A).theme.tokens.color[r()] ?? H(A).theme.tokens.color.bg), t = /* @__PURE__ */ P(Sn);
-								Vi(s, {
+								Hi(s, {
 									get value() {
 										return H(e);
 									},
@@ -9516,7 +9533,7 @@ function cl(e, t) {
 							}, [() => ko(H(A).theme.tokens.color[r()] ?? H(A).theme.tokens.color.bg, H(Dn))]), G(e, o);
 						}), M(y);
 						var b = z(y, 2), x = (e) => {
-							var t = gc(), n = R(t), r = L(n), i = L(r, !0);
+							var t = _c(), n = R(t), r = L(n), i = L(r, !0);
 							M(r);
 							var a = z(r, 2);
 							let o;
@@ -9527,10 +9544,10 @@ function cl(e, t) {
 							Vr(c, 21, () => Cn, ([e, t, n]) => e, (e, t) => {
 								var n = /* @__PURE__ */ P(() => m(H(t), 3));
 								let r = () => H(n)[0], i = () => H(n)[1], a = () => H(n)[2];
-								var o = mc(), s = L(o);
+								var o = hc(), s = L(o);
 								{
 									let e = /* @__PURE__ */ P(() => H(A).theme.alt.tokens.color[r()] ?? H(On)[r()] ?? H(A).theme.tokens.color.bg), t = /* @__PURE__ */ P(Sn), n = /* @__PURE__ */ P(() => Q("theme.darkColorLabel", { name: i() }));
-									Vi(s, {
+									Hi(s, {
 										get value() {
 											return H(e);
 										},
@@ -9551,7 +9568,7 @@ function cl(e, t) {
 								}, [() => ko(H(A).theme.alt.tokens.color[r()] ?? H(On)[r()], H(On))]), G(e, o);
 							}), M(c);
 							var u = z(c, 2), d = (e) => {
-								var t = hc(), n = L(t, !0);
+								var t = gc(), n = L(t, !0);
 								M(t), B((e) => K(n, e), [() => Q("hint.theme.autoDark")]), G(e, t);
 							};
 							q(u, (e) => {
@@ -9653,7 +9670,7 @@ function cl(e, t) {
 					}
 					G(e, t);
 				}, h = (e) => {
-					var t = yc();
+					var t = bc();
 					let n;
 					var r = L(t), i = L(r, !0);
 					M(r);
@@ -9694,22 +9711,22 @@ function cl(e, t) {
 					var _e = z(k, 2), ve = L(_e, !0);
 					M(_e), M(de), M(ce);
 					var ye = z(ce, 2), be = (e) => {
-						var t = vc(), n = L(t), r = L(n, !0);
+						var t = yc(), n = L(t), r = L(n, !0);
 						M(n);
 						var i = z(n, 2);
 						Vr(i, 21, () => H(xl), (e) => e.type, (e, t) => {
 							var n = jr(), r = R(n), i = (e) => {
-								var n = vc(), r = L(n), i = L(r, !0);
+								var n = yc(), r = L(n), i = L(r, !0);
 								M(r);
 								var a = z(r, 2);
 								Vr(a, 21, () => H(t).variants, (e) => e.label, (e, n) => {
-									var r = Ss(), i = L(r, !0);
+									var r = Cs(), i = L(r, !0);
 									M(r), B((e) => {
 										Z(r, "title", e), K(i, H(n).label);
 									}, [() => Q("tip.blocks.fromPlugin", { plugin: H(t).plugin })]), U("click", r, () => Sl(H(t), H(n).props)), G(e, r);
 								}), M(a), M(n), B(() => K(i, H(t).label)), G(e, n);
 							}, a = (e) => {
-								var n = Ss(), r = L(n, !0);
+								var n = Cs(), r = L(n, !0);
 								M(n), B((e) => {
 									Z(n, "title", e), K(r, H(t).label);
 								}, [() => Q("tip.blocks.fromPlugin", { plugin: H(t).plugin })]), U("click", n, () => Sl(H(t))), G(e, n);
@@ -9754,7 +9771,7 @@ function cl(e, t) {
 						() => Q("shape.triangle")
 					]), U("click", l, () => bl("text")), U("click", d, () => bl("text-box")), U("click", p, () => bl("button")), U("change", _, wl), U("click", v, () => bl("video")), U("click", b, () => bl("icon")), U("click", S, () => bl("samling")), U("click", w, () => bl("faq")), U("click", re, () => bl("galleri")), U("change", se, Ol), U("click", fe, () => bl("shape-line")), U("click", me, () => bl("shape-arrow")), U("click", O, () => bl("shape-circle")), U("click", k, () => bl("shape-rect")), U("click", _e, () => bl("shape-triangle")), G(e, t);
 				}, _ = (e) => {
-					var t = bc(), n = L(t), r = L(n, !0);
+					var t = xc(), n = L(t), r = L(n, !0);
 					M(n);
 					var i = z(n, 2), a = L(i), o = z(a), s = L(o);
 					M(o), M(i);
@@ -9774,13 +9791,13 @@ function cl(e, t) {
 						() => Q("hint.grid.section")
 					]), U("input", c, (e) => Gn("size", Number(e.target.value))), U("change", u, (e) => Gn("snap", e.target.checked)), G(e, t);
 				}, v = (e) => {
-					var t = Dc(), r = L(t), i = (e) => {
-						var t = xc(), n = R(t), r = L(n, !0);
+					var t = Oc(), r = L(t), i = (e) => {
+						var t = Sc(), n = R(t), r = L(n, !0);
 						M(n);
 						var i = z(n, 2);
 						a(i), B((e) => K(r, e), [() => Q("blocks.suffix", { label: xt[H(N).type] ?? H(N).type })]), G(e, t);
 					}, o = (e) => {
-						var t = Ec(), r = R(t), i = L(r, !0);
+						var t = Dc(), r = R(t), i = L(r, !0);
 						M(r);
 						var a = z(r, 2), o = L(a), s = z(o);
 						Y(s), M(a);
@@ -9791,7 +9808,7 @@ function cl(e, t) {
 						var p = z(f);
 						M(d);
 						var m = z(d, 2), h = (e) => {
-							var t = Sc(), n = R(t), r = L(n), i = z(r), a = L(i);
+							var t = Cc(), n = R(t), r = L(n), i = z(r), a = L(i);
 							M(i), M(n);
 							var o = z(n, 2);
 							Y(o), B((e) => {
@@ -9803,7 +9820,7 @@ function cl(e, t) {
 						});
 						var g = z(m, 4), _ = L(g), v = z(_);
 						{
-							let e = /* @__PURE__ */ P(() => [["", Q("common.standard")], ...Object.entries(qa).map(([e, t]) => [e, Q(t)])]);
+							let e = /* @__PURE__ */ P(() => [["", Q("common.standard")], ...Object.entries(Ja).map(([e, t]) => [e, Q(t)])]);
 							$(v, {
 								get value() {
 									return H(At);
@@ -9838,10 +9855,10 @@ function cl(e, t) {
 						}
 						M(ee);
 						var re = z(ee, 2), ie = (e) => {
-							var t = Tc(), n = R(t), r = L(n), i = z(r);
+							var t = Ec(), n = R(t), r = L(n), i = z(r);
 							Y(i), M(n);
 							var a = z(n, 2), o = (e) => {
-								var t = Cc(), n = R(t), r = L(n), i = z(r);
+								var t = wc(), n = R(t), r = L(n), i = z(r);
 								Y(i), M(n);
 								var a = z(n, 2), o = L(a), s = z(o);
 								{
@@ -9865,7 +9882,7 @@ function cl(e, t) {
 									() => Q("lbl.pattern")
 								]), U("change", i, (e) => zn("step", Number(e.target.value))), G(e, t);
 							}, s = (e) => {
-								var t = wc(), n = L(t), r = z(n);
+								var t = Tc(), n = L(t), r = z(n);
 								Y(r), M(t), B((e) => {
 									K(n, `${e ?? ""} `), X(r, H(Ot).props.delay);
 								}, [() => Q("lbl.delayMs")]), U("change", r, (e) => zn("delay", Number(e.target.value))), G(e, t);
@@ -9912,23 +9929,23 @@ function cl(e, t) {
 							() => Q("lbl.onHover")
 						]), U("change", s, (e) => Vn(e.target.value)), U("change", f, (e) => Un(e.target.checked)), U("click", w, () => navigator.clipboard?.writeText(`#${H(wt)}`)), G(e, t);
 					}, s = (e) => {
-						var t = hc(), n = L(t, !0);
+						var t = gc(), n = L(t, !0);
 						M(t), B((e) => K(n, e), [() => Q("hint.props.empty")]), G(e, t);
 					};
 					q(r, (e) => {
 						H(N) ? e(i) : H(wt) ? e(o, 1) : e(s, -1);
 					}), M(t), G(e, t);
 				}, y = (e) => {
-					var t = Lc(), i = L(t), a = L(i);
+					var t = Rc(), i = L(t), a = L(i);
 					Y(a);
 					var o = z(a);
 					M(i);
 					var s = z(i, 2), l = (e) => {
-						var t = vc(), n = L(t), r = L(n, !0);
+						var t = yc(), n = L(t), r = L(n, !0);
 						M(n);
 						var i = z(n, 2);
 						Vr(i, 21, () => H(A).pages ?? [], (e) => e.id, (e, t) => {
-							var n = vs(), r = L(n);
+							var n = ys(), r = L(n);
 							Y(r);
 							var i = z(r);
 							M(n), B((e, a) => {
@@ -9942,9 +9959,9 @@ function cl(e, t) {
 					var u = z(s, 2), d = L(u), f = L(d, !0);
 					M(d);
 					var p = z(d, 2), m = L(p);
-					Vr(m, 21, () => ua, (e) => e.id, (e, t) => {
-						var n = Oc(), r = L(n);
-						J(r, () => Vo(H(t).thumb), !0), M(r);
+					Vr(m, 21, () => sa, (e) => e.id, (e, t) => {
+						var n = kc(), r = L(n);
+						J(r, () => Ho(H(t).thumb), !0), M(r);
 						var i = z(r, 2), a = L(i, !0);
 						M(i), M(n), B((e) => {
 							Z(n, "title", e), K(a, H(t).label);
@@ -9975,17 +9992,17 @@ function cl(e, t) {
 					}
 					M(T);
 					var ee = z(T, 2), te = (e) => {
-						var t = Ac(), n = R(t), r = L(n), i = L(r), a = z(i);
+						var t = jc(), n = R(t), r = L(n), i = L(r), a = z(i);
 						M(r);
 						var o = z(r, 2), s = (e) => {
-							var t = Jo();
+							var t = Yo();
 							J(t, () => c.cross, !0), M(t), B((e) => Z(t, "title", e), [() => Q("tip.footer.removeLogo")]), U("click", t, ia), G(e, t);
 						};
 						q(o, (e) => {
 							H(A).footer?.brand?.logo && e(s);
 						}), M(n);
 						var l = z(n, 2), u = (e) => {
-							var t = kc(), n = R(t), r = L(n), i = z(r), a = L(i);
+							var t = Ac(), n = R(t), r = L(n), i = z(r), a = L(i);
 							M(i), M(n);
 							var o = z(n, 2);
 							Y(o), B((e) => {
@@ -10005,7 +10022,7 @@ function cl(e, t) {
 					M(re);
 					var ae = z(re, 2), oe = L(ae);
 					Vr(oe, 17, () => H(A).footer?.columns ?? [], Lr, (e, t, n) => {
-						var r = jc(), i = R(r), a = L(i);
+						var r = Mc(), i = R(r), a = L(i);
 						Y(a);
 						var o = z(a, 2), s = L(o);
 						J(s, () => c.plus, !0), M(s);
@@ -10015,7 +10032,7 @@ function cl(e, t) {
 						J(u, () => c.down, !0), M(u);
 						var d = z(u, 2);
 						J(d, () => c.cross, !0), M(d), M(o), M(i), Vr(z(i, 2), 17, () => H(t).links ?? [], Lr, (e, r, i) => {
-							var a = ls(), o = L(a);
+							var a = us(), o = L(a);
 							Y(o);
 							var s = z(o, 2), l = L(s);
 							l.disabled = i === 0, J(l, () => c.up, !0), M(l);
@@ -10041,7 +10058,7 @@ function cl(e, t) {
 							}
 							M(f);
 							var m = z(f, 2), h = (e) => {
-								var t = cs();
+								var t = ls();
 								Y(t), B((e, n) => {
 									X(t, H(r).href ?? ""), Z(t, "placeholder", e), Z(t, "title", n);
 								}, [() => Q("ph.hrefAnchor"), () => Q("tip.hrefAnchor")]), U("change", t, (e) => Ua(n, i, e.target.value)), G(e, t);
@@ -10050,14 +10067,14 @@ function cl(e, t) {
 								H(r).page || e(h);
 							}), M(a), B((e, n) => {
 								X(o, H(r).label), Z(o, "title", e), u.disabled = i === H(t).links.length - 1, Z(d, "title", n);
-							}, [() => Q("tip.linkLabel"), () => Q("tip.removeLink")]), U("input", o, (e) => Va(n, i, e.target.value)), U("click", l, () => Ra(n, i, -1)), U("click", u, () => Ra(n, i, 1)), U("click", d, () => Ia(n, i)), G(e, a);
+							}, [() => Q("tip.linkLabel"), () => Q("tip.removeLink")]), U("input", o, (e) => za(n, i, e.target.value)), U("click", l, () => La(n, i, -1)), U("click", u, () => La(n, i, 1)), U("click", d, () => Ia(n, i)), G(e, a);
 						}), B((e, r, i) => {
 							X(a, H(t).title), Z(a, "title", e), Z(s, "title", r), u.disabled = n === H(A).footer.columns.length - 1, Z(d, "title", i);
 						}, [
 							() => Q("tip.footer.columnTitle"),
 							() => Q("tip.footer.addLink"),
 							() => Q("tip.footer.removeColumn")
-						]), U("input", a, (e) => Ma(n, e.target.value)), U("click", s, () => Fa(n)), U("click", l, () => ja(n, -1)), U("click", u, () => ja(n, 1)), U("click", d, () => Aa(n)), G(e, r);
+						]), U("input", a, (e) => Ma(n, e.target.value)), U("click", s, () => Na(n)), U("click", l, () => ja(n, -1)), U("click", u, () => ja(n, 1)), U("click", d, () => Aa(n)), G(e, r);
 					});
 					var se = z(oe, 2), ce = L(se, !0);
 					M(se);
@@ -10071,7 +10088,7 @@ function cl(e, t) {
 							get options() {
 								return H(t);
 							},
-							onchange: (e) => xa(e)
+							onchange: (e) => ya(e)
 						});
 					}
 					M(le), M(ae), M(ne);
@@ -10079,8 +10096,8 @@ function cl(e, t) {
 					M(pe);
 					var he = z(pe, 2), O = L(he);
 					Vr(O, 17, () => H(A).footer?.social ?? [], Lr, (e, t, n) => {
-						var r = Mc(), i = L(r), a = L(i);
-						J(a, () => la(H(t).icon) || "", !0), M(a);
+						var r = Nc(), i = L(r), a = L(i);
+						J(a, () => ua(H(t).icon) || "", !0), M(a);
 						var o = z(a, 2);
 						{
 							let e = /* @__PURE__ */ P(() => Q("blocks.icon"));
@@ -10107,7 +10124,7 @@ function cl(e, t) {
 						var f = z(s, 2);
 						Y(f), M(r), B((e, r) => {
 							u.disabled = n === H(A).footer.social.length - 1, Z(d, "title", e), X(f, H(t).url), Z(f, "placeholder", r);
-						}, [() => Q("tip.removeLink"), () => Q("ph.hrefMailto")]), U("click", l, () => Za(n, -1)), U("click", u, () => Za(n, 1)), U("click", d, () => Ka(n)), U("change", f, (e) => $a(n, e.target.value)), G(e, r);
+						}, [() => Q("tip.removeLink"), () => Q("ph.hrefMailto")]), U("click", l, () => qa(n, -1)), U("click", u, () => qa(n, 1)), U("click", d, () => Ka(n)), U("change", f, (e) => $a(n, e.target.value)), G(e, r);
 					});
 					var ge = z(O, 2), k = L(ge, !0);
 					M(ge), M(he), M(fe);
@@ -10119,7 +10136,7 @@ function cl(e, t) {
 					M(j);
 					var Ce = z(j, 2), we = (e) => {
 						let t = /* @__PURE__ */ P(() => H(A).footer.cta);
-						var n = Fc(), r = R(n), i = L(r), a = z(i);
+						var n = Ic(), r = R(n), i = L(r), a = z(i);
 						{
 							let e = /* @__PURE__ */ P(() => H(t).kind ?? "button"), n = /* @__PURE__ */ P(() => [["button", Q("opt.cta.button")], ["newsletter", Q("opt.cta.newsletter")]]);
 							$(a, {
@@ -10144,7 +10161,7 @@ function cl(e, t) {
 						var h = z(f, 2), g = L(h), _ = z(g);
 						Y(_), M(h);
 						var v = z(h, 2), y = (e) => {
-							var n = Nc(), r = R(n), i = L(r), a = z(i);
+							var n = Pc(), r = R(n), i = L(r), a = z(i);
 							{
 								let e = /* @__PURE__ */ P(() => H(t).page ?? "__href"), n = /* @__PURE__ */ P(() => [...H(A).pages.map((e) => [e.id, e.title]), ["__href", Q("opt.linkHrefMailto")]]);
 								$(a, {
@@ -10159,7 +10176,7 @@ function cl(e, t) {
 							}
 							M(r);
 							var o = z(r, 2), s = (e) => {
-								var n = gs();
+								var n = _s();
 								Y(n), B((e, r) => {
 									X(n, H(t).href ?? ""), Z(n, "placeholder", e), Z(n, "title", r);
 								}, [() => Q("ph.hrefMailtoAnchor"), () => Q("tip.hrefAnchor")]), U("change", n, (e) => wa("href", e.target.value)), G(e, n);
@@ -10170,7 +10187,7 @@ function cl(e, t) {
 								Z(r, "title", e), K(i, `${t ?? ""} `);
 							}, [() => Q("tip.footer.ctaTarget"), () => Q("lbl.buttonTarget")]), G(e, n);
 						}, b = (e) => {
-							var n = Pc(), r = R(n), i = L(r), a = z(i);
+							var n = Fc(), r = R(n), i = L(r), a = z(i);
 							Y(a), M(r);
 							var o = z(r, 2), s = L(o), c = z(s);
 							Y(c), M(o);
@@ -10220,7 +10237,7 @@ function cl(e, t) {
 					var Ne = z(Te, 2), Pe = L(Ne), Fe = L(Pe, !0);
 					M(Pe);
 					var Ie = z(Pe, 2), Le = L(Ie), Re = (e) => {
-						var t = Ic(), n = R(t), r = L(n), i = z(r);
+						var t = Lc(), n = R(t), r = L(n), i = z(r);
 						{
 							let e = /* @__PURE__ */ P(() => H(A).footer?.align ?? "left"), t = /* @__PURE__ */ P(() => [
 								["left", Q("common.left")],
@@ -10234,7 +10251,7 @@ function cl(e, t) {
 								get options() {
 									return H(t);
 								},
-								onchange: (e) => ea("footer", (t) => {
+								onchange: (e) => Ji("footer", (t) => {
 									t.align = e;
 								})
 							});
@@ -10294,14 +10311,14 @@ function cl(e, t) {
 						() => Q("ph.footer.copyright"),
 						() => Q("lbl.baselineLinks"),
 						() => Q("ui.addBaselineLink")
-					]), U("change", a, (e) => ea("footer", (t) => {
+					]), U("change", a, (e) => Ji("footer", (t) => {
 						t.show = e.target.checked;
-					})), U("input", x, (e) => ta("title", e.target.value)), U("input", w, (e) => ta("tagline", e.target.value)), U("click", se, ka), U("click", ge, Ga), U("change", xe, (e) => Ca(e.target.checked)), U("click", Ae, () => pa("linkRow")), U("input", Je, (e) => oa(e.target.value)), U("click", Qe, () => pa("baseline")), G(e, t);
+					})), U("input", x, (e) => ta("title", e.target.value)), U("input", w, (e) => ta("tagline", e.target.value)), U("click", se, Da), U("click", ge, Wa), U("change", xe, (e) => Sa(e.target.checked)), U("click", Ae, () => pa("linkRow")), U("input", Je, (e) => oa(e.target.value)), U("click", Qe, () => pa("baseline")), G(e, t);
 				}, b = (e) => {
-					var t = Vc(), n = L(t), r = L(n, !0);
+					var t = Hc(), n = L(t), r = L(n, !0);
 					M(n);
 					var i = z(n, 2), a = (e) => {
-						var t = us(), n = L(t), r = z(n);
+						var t = ds(), n = L(t), r = z(n);
 						{
 							let e = /* @__PURE__ */ P(() => H(ri) ?? ""), t = /* @__PURE__ */ P(() => [["", Q("common.choose")], ...H(ti).map((e) => [e, H(ni)[e]?.name ?? e])]);
 							$(r, {
@@ -10321,13 +10338,13 @@ function cl(e, t) {
 					});
 					var o = z(i, 2), s = (e) => {
 						let t = /* @__PURE__ */ P(() => H(ni)[H(ri)]);
-						var n = Bc(), r = R(n), i = L(r), a = L(i, !0);
+						var n = Vc(), r = R(n), i = L(r), a = L(i, !0);
 						M(i);
 						var o = z(i, 2);
 						J(o, () => c.cross, !0), M(o), M(r);
 						var s = z(r, 2);
 						Vr(s, 19, () => H(t).entries, (e) => e.id, (e, n, r) => {
-							var i = zc(), a = L(i), o = L(a);
+							var i = Bc(), a = L(i), o = L(a);
 							M(a);
 							var s = z(a, 2), l = L(s), u = L(l);
 							Y(u);
@@ -10346,7 +10363,7 @@ function cl(e, t) {
 							var S = z(y, 2), C = L(S), w = L(C), T = z(w);
 							M(C);
 							var E = z(C, 2), D = (e) => {
-								var t = Rc(), r = R(t), i = z(r, 2);
+								var t = zc(), r = R(t), i = z(r, 2);
 								J(i, () => c.cross, !0), M(i), B((e) => {
 									Z(r, "src", H(n).image), Z(i, "title", e);
 								}, [() => Q("tip.removeImage")]), U("click", i, () => vi(H(ri), H(n).id, "image", "")), G(e, t);
@@ -10367,7 +10384,7 @@ function cl(e, t) {
 							]), U("change", u, (e) => vi(H(ri), H(n).id, "title", e.target.value || "Uten tittel")), U("click", f, () => yi(H(ri), H(r), -1)), U("click", p, () => yi(H(ri), H(r), 1)), U("click", m, () => bi(H(ri), H(n).id)), U("change", _, (e) => vi(H(ri), H(n).id, "date", e.target.value)), U("change", v, (e) => vi(H(ri), H(n).id, "text", e.target.value)), U("change", x, (e) => vi(H(ri), H(n).id, "href", e.target.value)), U("change", T, (e) => xi(H(ri), H(n).id, e)), G(e, i);
 						});
 						var l = z(s, 2), u = (e) => {
-							var t = hc(), n = L(t, !0);
+							var t = gc(), n = L(t, !0);
 							M(t), B((e) => K(n, e), [() => Q("hint.collections.empty")]), G(e, t);
 						};
 						q(l, (e) => {
@@ -10403,10 +10420,10 @@ function cl(e, t) {
 						() => Q("ui.createCollection")
 					]), U("keydown", d, (e) => e.key === "Enter" && hi()), li(d, () => H(ii), (e) => I(ii, e)), U("click", m, hi), G(e, t);
 				}, x = (e) => {
-					var t = Jc(), n = L(t), r = L(n, !0);
+					var t = Yc(), n = L(t), r = L(n, !0);
 					M(n);
 					var i = z(n, 2), a = (e) => {
-						var t = hc(), n = L(t, !0);
+						var t = gc(), n = L(t, !0);
 						M(t), B((e) => K(n, e), [() => Q("hint.plugins.empty")]), G(e, t);
 					}, o = /* @__PURE__ */ P(() => !Fi().length);
 					q(i, (e) => {
@@ -10414,13 +10431,13 @@ function cl(e, t) {
 					});
 					var s = z(i, 2);
 					Vr(s, 16, Fi, (e) => e, (e, t) => {
-						let n = /* @__PURE__ */ P(() => Di[t]), r = /* @__PURE__ */ P(() => (H(Ei)?.enabled ?? []).includes(t));
-						var i = Wc();
+						let n = /* @__PURE__ */ P(() => Di[t]), r = /* @__PURE__ */ P(() => (H(Ti)?.enabled ?? []).includes(t));
+						var i = Gc();
 						let a;
 						var o = L(i), s = L(o), l = L(s, !0);
 						M(s);
 						var u = z(s, 2), d = (e) => {
-							var t = Hc(), r = L(t);
+							var t = Uc(), r = L(t);
 							M(t), B(() => K(r, `v${H(n).version ?? ""}`)), G(e, t);
 						};
 						q(u, (e) => {
@@ -10433,23 +10450,23 @@ function cl(e, t) {
 						var g = z(p, 2);
 						J(g, () => c.cross, !0), M(g), M(f), M(o);
 						var _ = z(o, 2), v = (e) => {
-							var t = Uc(), r = L(t, !0);
+							var t = Wc(), r = L(t, !0);
 							M(t), B((e) => K(r, e), [() => H(n).errors.join("; ")]), G(e, t);
 						}, y = (e) => {
-							var t = Uc(), r = L(t, !0);
+							var t = Wc(), r = L(t, !0);
 							M(t), B((e) => K(r, e), [() => Q("plugin.engineMismatch", {
 								required: H(n).requiresEngine,
 								current: H(Oi)
 							})]), G(e, t);
 						}, b = (e) => {
-							var t = Uc(), r = L(t, !0);
+							var t = Wc(), r = L(t, !0);
 							M(t), B((e) => K(r, e), [() => Q("plugin.cspNeeded", { list: [...(H(n).csp.connectSrc ?? []).map((e) => `connect-src ${e}`), ...(H(n).csp.frameSrc ?? []).map((e) => `frame-src ${e}`)].join(", ") })]), G(e, t);
 						};
 						q(_, (e) => {
 							H(n)?.errors?.length ? e(v) : H(n) && !H(n).satisfied ? e(y, 1) : H(n)?.csp && e(b, 2);
 						});
 						var x = z(_, 2), S = (e) => {
-							var t = hc(), r = L(t, !0);
+							var t = gc(), r = L(t, !0);
 							M(t), B((e) => K(r, e), [() => Q("plugin.languages", { list: H(n).languages.map((e) => e.name).join(", ") })]), G(e, t);
 						};
 						q(x, (e) => {
@@ -10457,20 +10474,20 @@ function cl(e, t) {
 						}), M(i), B((e, t, o, s, c) => {
 							a = Qr(i, 1, "plugin-row svelte-1n46o8q", null, a, { "plugin-broken": H(n)?.errors?.length }), K(l, e), Z(p, "title", t), ai(m, H(r)), m.disabled = o, K(h, ` ${s ?? ""}`), Z(g, "title", c);
 						}, [
-							() => H(n)?.names?.[Ti()] ?? H(n)?.name ?? t,
+							() => H(n)?.names?.[Ei()] ?? H(n)?.name ?? t,
 							() => H(r) ? Q("tip.plugins.on") : Q("tip.plugins.off"),
 							() => !!H(n)?.errors?.length,
 							() => H(r) ? Q("ui.on") : Q("ui.off"),
 							() => Q("tip.plugins.remove")
-						]), U("change", m, (e) => Hi(t, e.target.checked)), U("click", g, () => Wi(t)), G(e, i);
+						]), U("change", m, (e) => Vi(t, e.target.checked)), U("click", g, () => Wi(t)), G(e, i);
 					});
 					var l = z(s, 2), u = (e) => {
-						var t = Kc(), n = z(R(t), 2), r = L(n, !0);
+						var t = qc(), n = z(R(t), 2), r = L(n, !0);
 						M(n), Vr(z(n, 2), 16, () => H(Mi), (e) => e, (e, t) => {
-							var n = Gc(), r = L(n), i = L(r), a = L(i, !0);
+							var n = Kc(), r = L(n), i = L(r), a = L(i, !0);
 							M(i);
 							var o = z(i, 2), s = (e) => {
-								var n = Hc(), r = L(n);
+								var n = Uc(), r = L(n);
 								M(n), B(() => K(r, `v${Di[t].version ?? ""}`)), G(e, n);
 							};
 							q(o, (e) => {
@@ -10479,7 +10496,7 @@ function cl(e, t) {
 							var l = z(o, 2), u = L(l);
 							J(u, () => c.right, !0), M(u), M(l), M(r), M(n), B((e, t) => {
 								K(a, e), Z(u, "title", t);
-							}, [() => Di[t]?.names?.[Ti()] ?? Di[t]?.name ?? t, () => Q("tip.plugins.addFound")]), U("click", u, () => qi(t)), G(e, n);
+							}, [() => Di[t]?.names?.[Ei()] ?? Di[t]?.name ?? t, () => Q("tip.plugins.addFound")]), U("click", u, () => qi(t)), G(e, n);
 						}), B((e) => K(r, e), [() => Q("hint.plugins.found")]), G(e, t);
 					};
 					q(l, (e) => {
@@ -10487,19 +10504,19 @@ function cl(e, t) {
 					});
 					var d = z(l, 2), f = (e) => {
 						var t = jr(), n = R(t), r = (e) => {
-							var t = hc(), n = L(t, !0);
+							var t = gc(), n = L(t, !0);
 							M(t), B((e) => K(n, e), [() => Q("hint.plugins.autoDiscover")]), G(e, t);
 						};
 						q(n, (e) => {
 							H(Mi).length || e(r);
 						}), G(e, t);
 					}, p = (e) => {
-						var t = qc(), n = z(R(t), 2);
+						var t = Jc(), n = z(R(t), 2);
 						Y(n);
 						var r = z(n, 2), i = L(r, !0);
 						M(r);
 						var a = z(r, 2), o = (e) => {
-							var t = Uc(), n = L(t, !0);
+							var t = Wc(), n = L(t, !0);
 							M(t), B(() => K(n, H(ji))), G(e, t);
 						};
 						q(a, (e) => {
@@ -10508,31 +10525,31 @@ function cl(e, t) {
 							Z(n, "placeholder", e), r.disabled = t, K(i, a);
 						}, [
 							() => Q("ph.plugins.folder"),
-							() => !H(Ai).trim(),
+							() => !H(ki).trim(),
 							() => Q("ui.addPlugin")
-						]), U("keydown", n, (e) => e.key === "Enter" && Ki()), li(n, () => H(Ai), (e) => I(Ai, e)), U("click", r, Ki), G(e, t);
+						]), U("keydown", n, (e) => e.key === "Enter" && Gi()), li(n, () => H(ki), (e) => I(ki, e)), U("click", r, Gi), G(e, t);
 					};
 					q(d, (e) => {
 						H(Pi) === "ok" ? e(f) : e(p, -1);
 					}), M(t), B((e) => K(r, e), [() => Q("hint.plugins.intro")]), G(e, t);
 				}, S = (e) => {
-					var t = Zc(), n = L(t), r = L(n, !0);
+					var t = Qc(), n = L(t), r = L(n, !0);
 					M(n);
 					var i = z(n, 2), a = (e) => {
-						var t = hc(), n = L(t, !0);
+						var t = gc(), n = L(t, !0);
 						M(t), B((e) => K(n, e), [() => Q("hint.history.loading")]), G(e, t);
 					}, o = (e) => {
-						var t = qs(), n = R(t), r = (e) => {
-							var t = hc(), n = L(t, !0);
+						var t = Js(), n = R(t), r = (e) => {
+							var t = gc(), n = L(t, !0);
 							M(t), B(() => K(n, H(Xn))), G(e, t);
 						};
 						q(n, (e) => {
 							H(Xn) && e(r);
 						});
 						var i = z(n, 2), a = (e) => {
-							var t = Xc(), n = R(t), r = L(n, !0);
+							var t = Zc(), n = R(t), r = L(n, !0);
 							M(n), Vr(z(n, 2), 19, () => H(Yn), (e) => e.sha, (e, t, n) => {
-								var r = Yc();
+								var r = Xc();
 								let i;
 								var a = L(r), o = L(a, !0);
 								M(a);
@@ -10572,14 +10589,14 @@ function cl(e, t) {
 			f = Qr(s, 1, "frame-wrap svelte-1n46o8q", null, f, { mobile: H(ee) === "mobile" }), ei(p, `width:${H(de) ?? ""}px; height:${H(fe) ?? ""}px`), Z(h, "title", e), Z(h, "src", `/?page=${H(g)}&preview=1`), ei(h, `width:${H(se) ?? ""}px; height:${H(ue) ?? ""}px; transform:scale(${H(ce) ?? ""}); transform-origin:top left`);
 		}, [() => Q("ui.previewTitle")]), Sr("load", h, or), br(h), G(e, t);
 	}, iu = (e) => {
-		var t = tl(), n = L(t, !0);
+		var t = nl(), n = L(t, !0);
 		M(t), B((e) => K(n, e), [() => Q("ui.loading")]), G(e, t);
 	};
 	q(nu, (e) => {
 		H(h) ? e(ru) : e(iu, -1);
 	});
 	var au = z(nu, 2), ou = (e) => {
-		Da(e, {
+		Oa(e, {
 			get image() {
 				return H(Dr);
 			},
@@ -10591,11 +10608,11 @@ function cl(e, t) {
 		H(Dr) && e(ou);
 	});
 	var su = z(au, 2), cu = (e) => {
-		var t = rl(), n = L(t), r = L(n), i = L(r, !0);
+		var t = il(), n = L(t), r = L(n), i = L(r, !0);
 		M(r);
 		var a = z(r, 2);
 		Vr(a, 16, () => H(Fe).lines, (e) => e, (e, t) => {
-			var n = nl(), r = L(n, !0);
+			var n = rl(), r = L(n, !0);
 			M(n), B(() => K(r, t)), G(e, n);
 		});
 		var o = z(a, 2), s = L(o), c = L(s, !0);
@@ -10609,7 +10626,7 @@ function cl(e, t) {
 		H(Fe) && e(cu);
 	});
 	var lu = z(su, 2), uu = (e) => {
-		var t = il(), n = L(t), r = L(n), i = L(r, !0);
+		var t = al(), n = L(t), r = L(n), i = L(r, !0);
 		M(r);
 		var a = z(r, 2), o = L(a, !0);
 		M(a);
@@ -10618,7 +10635,7 @@ function cl(e, t) {
 		var u = z(s, 2), d = L(u), f = z(d);
 		{
 			let e = /* @__PURE__ */ P(() => Q("setup.accentPick"));
-			Vi(f, {
+			Hi(f, {
 				get value() {
 					return H(Ve);
 				},
@@ -10632,7 +10649,7 @@ function cl(e, t) {
 		var p = z(u, 2), m = L(p), h = z(m);
 		{
 			let e = /* @__PURE__ */ P(() => Q("setup.bgLabel"));
-			Vi(h, {
+			Hi(h, {
 				get value() {
 					return H(He);
 				},
@@ -10667,7 +10684,7 @@ function cl(e, t) {
 		H(Re) && e(uu);
 	});
 	var du = z(lu, 2), fu = (e) => {
-		var t = al();
+		var t = ol();
 		let n;
 		var r = L(t), i = L(r, !0);
 		M(r);
@@ -10683,7 +10700,7 @@ function cl(e, t) {
 		H(v) && e(fu);
 	}), M(Vl);
 	var pu = z(Vl, 2), mu = (e) => {
-		var t = ol(), n = L(t), r = L(n), i = L(r, !0);
+		var t = sl(), n = L(t), r = L(n), i = L(r, !0);
 		M(r);
 		var o = z(r, 2);
 		J(o, () => c.cross, !0), M(o), M(n);
@@ -10704,7 +10721,7 @@ Cr([
 	"pointerdown",
 	"change",
 	"keydown"
-]), document.documentElement.lang = await Oi();
-var ll = Mr(cl, { target: document.getElementById("urd-admin") });
+]), document.documentElement.lang = await ki();
+var ul = Mr(ll, { target: document.getElementById("urd-admin") });
 //#endregion
-export { ll as default };
+export { ul as default };
