@@ -19,7 +19,7 @@ Ingen server. Ingen database. Ingen abonnement. Ingen byggeprosess. Bare et git-
 
 ## Slik fungerer det
 
-1. **Lag repoet ditt** fra [urd-template](https://github.com/Artiscow/urd-template) («Use this template» på GitHub) og koble det til en statisk host.
+1. **Lag repoet ditt** fra [urd-template](https://github.com/Artiscow/urd-template) («Use this template» på GitHub) og koble det til en statisk host: [oppsettsguiden](../../OPPSETT-PUBLISERING.md) tar deg gjennom hvert steg.
 2. **Sett opp** siden din gjennom oppsettsveiviseren - navn, farger, logo.
 3. **Rediger** ved å gå til `dinside.no/admin` og logge inn med GitHub. Der er hele byggeren: klikk og skriv rett på siden, dra blokker fritt på et grid, legg til seksjoner, rediger bakgrunner, farger og navigasjon.
 4. **Publiser** - ett klikk lager én git-commit med endringene dine, og hosten serverer den nye siden på under et minutt.

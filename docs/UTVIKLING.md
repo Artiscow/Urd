@@ -101,6 +101,13 @@ Sannhetskilden er `engine`-feltet i `template/urd.json`. Git-taggen (`v0.2.0`) o
 5. Tagg utgivelsen (`v0.x.y`) og publiser en GitHub-release på taggen.
 6. Release-Action-en (`.github/workflows/release.yml`) kjører da automatisk: validerer versjonskonsistens (`scripts/check-release.mjs`: engine == tagg == CHANGELOG-overskrift == package.json), kjører testene, og synker innholdet av `template/` til `urd-template`-repoet som ÉN squashet commit («Urd v0.x.y») med samme tagg. Taggen i malrepoet er oppdaterens sjekksum-baseline og flyttes aldri.
 
-Forutsetninger (engangsoppsett): malrepoet `urd-template` finnes (offentlig, «Template repository» huket av, GitHub-topic `urd-mal`), og monorepoet har secreten `URD_TEMPLATE_PAT` (fine-grained PAT med contents read/write kun på malrepoet). Plugins deles med topicen `urd-plugin`.
+Forutsetninger (engangsoppsett, gjøres FØR første utgivelse; før dette finnes verken malrepoet eller «Use this template»-knappen, og lenkene til `urd-template` i dokumentasjonen gir 404):
+
+1. Opprett det offentlige repoet `urd-template` på GitHub (**New repository**). Huk av «Add a README file» så main-grenen finnes fra start (release-Action-en pusher til eksisterende gren; første synk erstatter uansett alt innholdet).
+2. Legg inn secreten `URD_TEMPLATE_PAT` i monorepoets Actions-secrets: en fine-grained PAT med contents read/write KUN på malrepoet.
+3. Kjør første synk (publiser en release, eller en manuell prerelease-dispatch av Release-workflowen).
+4. Merk repoet som mal: **Settings → General → huk av «Template repository»**. Først DA vises «Use this template»-knappen på repo-forsiden (knappen er en egenskap ved et repo merket som mal, aldri ved en mappe). Sett samtidig GitHub-topicen `urd-mal`.
+
+Plugins deles med topicen `urd-plugin`.
 
 **Prerelease-synk (rc):** for å ende-til-ende-teste oppdatereren før et slipp kan Action-en kjøres manuelt (`workflow_dispatch`) mot en rc-tagg med prerelease-flagget satt; da hoppes CHANGELOG-/package.json-sjekkene over. Bruk et eget treparts versjonsnummer for rc-en (semver-parseren i `satisfiesEngine` er streng treparts, så suffikser som `-rc.1` kan ikke stå i engine-feltet).

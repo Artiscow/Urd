@@ -25,7 +25,7 @@ No server. No database. No subscription. No build process. Just a git repo with 
 
 ## How it works
 
-1. **Create your repo** from the [urd-template](https://github.com/Artiscow/urd-template) («Use this template» on GitHub) and connect it to a static host.
+1. **Create your repo** from the [urd-template](https://github.com/Artiscow/urd-template) («Use this template» on GitHub) and connect it to a static host: the [publishing setup guide](docs/languages/setup-publication/SETUP-en-GB.md) walks through every step.
 2. **Set up** your site through the setup wizard - name, colours, logo.
 3. **Edit** by going to `yoursite.org/admin` and logging in with GitHub. The whole builder is there: click and type directly on the page, drag blocks freely on a grid, add sections, edit backgrounds, colours and navigation.
 4. **Publish** - one click makes one git commit with your changes, and the host serves the new page in under a minute.
