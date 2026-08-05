@@ -148,6 +148,26 @@ Funn fra en gjennomgang av motor, editor og functions/plugins, gruppert etter al
 - [ ] PR-per-utkast + deploy-preview + open authoring (LAERDOMMER 5.5, Decap-modellen): utkast som branch, publiser som merge, preview-URL per utkast via Cloudflare Pages + commit-status, bidrag via fork+PR uten skrivetilgang. Bygger på GitHub-OAuth-publiseringen (ADR-0003) og støtter v1.0-målet «forening uten utvikler» + flere bidragsytere; kan vurderes trukket tidligere ved behov
 - [ ] Utenfor scope for kjernen (fra kartleggingen 18. juli 2026): innlogging/medlemsområde, P2P-bruktmarked (ApeironLFs «Kjøp & bytte»), fulltekstsøk på siden (krever avhengighet à la minisearch - evt. community-plugin), sanntidsfeeds/personalisering. Krever server/CMS eller avhengigheter; Urd er statisk og avhengighetsfri
 
+## Bugs og (dårlige) funksjoner
+- [ ] Blokker - Plugins tillater ikke å legge til blokkene/elementene - å trykke på noen av kalendrene, skjema eller kart fungerer ikke. 
+- [ ] Nav sitter over Hero i sin egen seksjon, så gjennomsiktighet fungerer ikke når man er helt på toppen av siden. Nav burde være akkurat over toppen av Hero. (Mulig dekket av opt-in `nav.overlay` levert 0.6.6.5.3 - verifiser i testrunden)
+- [ ] Kart-plugin har nå innstillinger inne i egenskaper - må bygges om til at alle 'innstillingene' er i egenskaper, ikke inne i "Innstillinger" i egenskaper.
+- [ ] Om man fjerner alle seksjoner på en side forsvinner + ny seksjon og det er ikke mulig å legge til en ny seksjon. (Mulig dekket av tom-side-fiksen levert 0.6.6.5.3 - verifiser i testrunden)
+- [ ] Dra og marker - Slett alt som er markert både med shortcuts og knapp
+- [ ] Error meldinger må oversettes og settes til engelsk
+- [ ] Legge til en bedre forklaring på hvordan man deployer siden på nytt etter førsteoppsett i Cloudflare
+- [ ] /template/plugins trenger en engelsk readme som peker til urd/docs/plugins/plugins-[språk].md
+- [ ] Flytte /readme /setup-publication og /user-guide ut fra /languages
+- [ ] Lage en Troubleshoot fil
+
+## Forslag og Ideer
+
+- [ ] Småblokker fra funksjonskartet (C9+C10, 23. juli 2026): delingsknapper (statiske lenker, ingen sporing), nedteller (arrangementer) og audio-blokk (HTML5, git-eid fil) - billige og statisk-vennlige; tas når de passer inn.
+- [ ] Flere leverings-grep fra sammenligningen (kuratert, full kontekst i ELEMENTKART 5a + LAERDOMMER 5): command palette Cmd+K (5a.8), tydeligere to-farge drop-target (5a.6), rikere tomtilstander med preset-forslag (5a.9), kuraterte font-pakker som ett valg (5a.7), «hvilket layout-verktøy»-hjelpechip (5a.10 / LAERDOMMER 5.10), ryddig theme.json-token-modell + duotone (LAERDOMMER 5.3), deklarativ per-brekkpunkt-variant (LAERDOMMER 5.11, ses med mobil-revurderingen)
+- [ ] Måte å ha en bakgrunn over en annen / faste sidebarer
+- [ ] Endre størrelse på blokker/elementer ved å dra i kantene av highlight (nå kan man kun gjøre det ved å dra i nedre høyre hjørne)
+- [ ] Lagre eget tema.
+
 ## Kjente begrensninger (dokumentert, ingen fiks planlagt)
 
 - `python3 -m http.server` ruter ikke `path`-ene fra sideregisteret (kun `/` fungerer); dokumentert begrensning (`?page=<id>` er lokal-fallback)
@@ -160,24 +180,6 @@ Funn fra en gjennomgang av motor, editor og functions/plugins, gruppert etter al
 - Oppdatereren behandler malens EGNE eksempelside-ruter som vanlige Urd-eide filer (lav-funn i push-gjennomgangen 5. august 2026): har eieren slettet en eksempelside (f.eks. kaker), gjenoppretter neste oppdatering slug-kopien uten tilhørende sidefil (en levende URL til tom side); fjerner malen en eksempelside eieren har gjenbrukt slug-en til, slettes ruten i stillhet. Neste publisering reparerer begge (kopiene skrives fra sideregisteret); dokumentert i stedet for kodet rundt fordi kantene er selvhelbredende og sjeldne
 - Angring bytter hele nettside-undertreet, så «angre siste publisering» utført ETTER en Urd-oppdatering ruller også motoren tilbake til før oppdateringen (funnet 5. august 2026 under 0.6.9.6). Tilstanden er konsistent gammel (motor, skall og urd.json følges ad), aldri blandet, og Oppdatering-panelet kan kjøres på nytt etterpå; dokumentert i stedet for vernet fordi et vern ville krevd at angringen skilte innholds- fra motorfiler, stikk i strid med dens enkle subtre-modell
 - En forbigående GitHub-feil under publisering (5xx, f.eks. 503 ved ref-oppdateringen under en GitHub-driftsforstyrrelse) vises som en rå feilmelding, og man må trykke Publiser på nytt selv; utkastet består og repoet er urørt (ufarlig). Automatisk gjenforsøk/«Prøv igjen»-knapp er ønsket og loggført under v0.7 editor-finpuss
-
-## Bugs og (dårlige) funksjoner
-- [ ] Blokker - Plugins tillater ikke å legge til blokkene/elementene - å trykke på noen av kalendrene, skjema eller kart fungerer ikke. 
-- [ ] Nav sitter over Hero i sin egen seksjon, så gjennomsiktighet fungerer ikke når man er helt på toppen av siden. Nav burde være akkurat over toppen av Hero. (Mulig dekket av opt-in `nav.overlay` levert 0.6.6.5.3 - verifiser i testrunden)
-- [ ] Kart-plugin har nå innstillinger inne i egenskaper - må bygges om til at alle 'innstillingene' er i egenskaper, ikke inne i "Innstillinger" i egenskaper.
-- [ ] Om man fjerner alle seksjoner på en side forsvinner + ny seksjon og det er ikke mulig å legge til en ny seksjon. (Mulig dekket av tom-side-fiksen levert 0.6.6.5.3 - verifiser i testrunden)
-- [x] hva er image.png? (avklart 5. august 2026: et skjermbilde av «+ Ny blokk»-menyen i docs/, feilcommittet med 0.6.29 og referert ingen steder; slettet i push-klargjøringen av 0.6.9)
-- [ ] Dra og marker - Slett alt som er markert både med shortcuts og knapp
-
-## Forslag og Ideer
-
-- [ ] Småblokker fra funksjonskartet (C9+C10, 23. juli 2026): delingsknapper (statiske lenker, ingen sporing), nedteller (arrangementer) og audio-blokk (HTML5, git-eid fil) - billige og statisk-vennlige; tas når de passer inn.
-- [ ] Flere leverings-grep fra sammenligningen (kuratert, full kontekst i ELEMENTKART 5a + LAERDOMMER 5): command palette Cmd+K (5a.8), tydeligere to-farge drop-target (5a.6), rikere tomtilstander med preset-forslag (5a.9), kuraterte font-pakker som ett valg (5a.7), «hvilket layout-verktøy»-hjelpechip (5a.10 / LAERDOMMER 5.10), ryddig theme.json-token-modell + duotone (LAERDOMMER 5.3), deklarativ per-brekkpunkt-variant (LAERDOMMER 5.11, ses med mobil-revurderingen)
-- [ ] Måte å ha en bakgrunn over en annen / faste sidebarer
-- [ ] Endre størrelse på blokker/elementer ved å dra i kantene av highlight (nå kan man kun gjøre det ved å dra i nedre høyre hjørne)
-- [x] Navigasjonsmeny variant - Flytende firkantet med kun de to nedre hjørnene avrundet. (levert 0.6.6.5.11 som «Flytende (tab)»: firkant topp, avrundet bunn, henger ned fra toppen)
-- [ ] Lagre eget tema.
-- [x] SVG auto-trim for favicon, navicon/nav logo / bilde blokk (levert 0.6.6.5.11: `compressOrTrim` på alle bilde-flater; favicon auto-trimmes før ikon-rasteriseringen så det forblir universelt raster)
 
 ## Levert underveis i v0.6 (ryddes bort ved fase-slippet)
 

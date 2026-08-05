@@ -53,7 +53,7 @@ test('kode- og konfigstier er forbudt', () => {
     'functions/evil.js',
     '.github/workflows/pwn.yml',
     'admin/assets/editor.js',
-    'assets/engine/0.6.9/urd.js',
+    'assets/engine/0.6.10/urd.js',
     'assets/urd/i18n.js',
     'urd.json',
     'index.html',
@@ -153,7 +153,7 @@ test('matchesPattern: eksakt sti og prefiks/**', () => {
 
 test('isOwnedPath/isUserPath: eksempler og stitriks', () => {
   for (const path of ['urd.json', '_headers', 'speculation-rules.json', 'index.html',
-    'admin/assets/editor.js', 'assets/engine/0.6.9/urd.js', 'assets/urd/i18n.js',
+    'admin/assets/editor.js', 'assets/engine/0.6.10/urd.js', 'assets/urd/i18n.js',
     'assets/styles/base.css', 'functions/api/github/update.js']) {
     assert.equal(isOwnedPath(path), true, path);
     assert.equal(isUserPath(path), false, path);

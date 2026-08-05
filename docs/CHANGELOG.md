@@ -20,7 +20,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
-## [0.6.9] - 2026-08-05
+## [0.6.10] - 2026-08-06
+
+### 0.6.0.12p - Utgivelsen 0.6.10: README-designet ut i malen, og oppdaterens første ekte test - 6. august 2026
+- FØRSTE UTGIVELSE ETTER DET NYE RELEASE-RITUALET i AGENTS.md (beskjeden «release» utløser slippritualet + push-klargjøringen): engine 0.6.10, git mv av motormappa, ni skall, fire HTML-skall (base.css-stempelet uendret, filinnholdet er det samme), editor/package.json + låsefil, gjenbygd bundel, og denne utgivelsesoverskriften. check-release grønn i FULL modus før forslag om commit-melding.
+- UTGIVELSEN BÆRER innslagene 0.6.9.10p og 0.6.0.11p (engelsk mal-README med readme/-mappe, docs-normaliseringen, designrunden, AGENTS.md-revisjonen) ut til malrepoet, og er samtidig den første EKTE testen av Oppdatering-panelet: urd-web (klonet fra v0.6.9) skal tilby v0.6.10 og gjennomføre motorbyttet med README-omleggingen som valgfrie filer.
+- VERIFISERT: bygg grønt med gjenbygd bundel, 296/296 tester (mappenavn-invariantene fulgte omdøpingen automatisk), alle ni valideringene, check-release v0.6.10 grønn i full modus. Diffen er ritualet + de versjonsrefererende testfilene/testrunde-punktene; docs-only-vurdering gjelder ikke (bundel + urd.json), så full runde ble kjørt. Den uavhengige gjennomgangen fra 0.6.9.10p/0.6.0.11p dekker innholdet som skipper; selve ritualet er mekanisk og testvoktet.
 
 ### 0.6.0.11p - AGENTS.md-revidert etter 0.6.9: 35 avvik rettet, ni nye regler festet - 5. august 2026
 - FULL REVISJON AV AGENTS.MD (planlagt i planmodus med egen revisjonsagent som fant 35 avvik og 20 regelkandidater; planen VAR forhåndsvisningen av regelteksten og ble godkjent av eier): repo-strukturen beskriver nå versjonert motormappe/assets-urd-skall/urd.json-kontrakten/readme-mappen/scripts/workflows/dev-server.py, verifiseringens importliste fikk den manglende `i18n` (hyppigst endrede bundlede modul) med riktige kildestier og kjørbar grep-kommando, CI-beskrivelsen dekker alle fire workflowene, ADR-listen går til 0015 med addenda, plugin-seksjonen nevner språkpakken og manifest-feltene, og lokal server-rådet peker på dev-server.py.
@@ -38,6 +43,8 @@ entydig: alle commit-innslag over forrige p-innslag.
   - RETTET (middels-lav): to TOC-ankre i den tyrkiske guiden var døde pga. İ-sluggingen: GitHub downcaser İ (U+0130) til i + kombinerende prikk (U+0307), så «İçeriği düzenleme»/«İlk kez» får ankre med U+0307 som lenker med ren i aldri treffer. Verifisert på byte-nivå og rettet til U+0307-formen; de øvrige 53 ankrene på fem språk var riktige.
   - RETTET (lav): åtte oversettelsesnoter navnga de gamle filnavnene i prosa, badge-alt-tekstene i se/tr sto på norsk, og nb-guiden brukte filnavn som lenkeetikett; README-nb-tabellens languages-rad beskrev gammel tilstand.
 - VERIFISERT (også gjenkjørt av gjennomgåeren): 296/296 tester (kontrakt-, fullstendighets- og slug-vaktene dekker de nye mønstrene), bygg grønt med gjenbygd bundel etter slug-fiksen, alle ni valideringene, check-release grønn, lenke-/anker-skript over alle 21 rørte filer, oppdaterer-simulering mot ekte planUpdate (readme-filene er valgfrie, aldri atom; gamle README-varianter slettes rent ved neste oppdatering), ingen tankestrek.
+
+## [0.6.9] - 2026-08-05
 
 ### 0.6.9.9p - Engangsoppsettet i praksis: PAT-instruksene presisert og topic-konvensjonen ble engelsk - 5. august 2026
 - SKREVET UNDER SELVE ENGANGSOPPSETTET, der instruksene ble prøvd mot GitHubs faktiske UI: UTVIKLING-stegene for tokenet er nå den eksakte klikkstien (Fine-grained token med Only select repositories → urd-template og Contents = Read and write; GitHubs nye permissions-UI legger rettigheten til via «Add permissions»-listen FØRST og viser tilgangsnivå-menyen på den tilføyde raden), og secret-steget sier utvetydig at tokenet limes inn i MONOREPOET Urd sine Actions-secrets, ikke i malrepoet, som ikke skal ha noen secrets. Presisert etter at eieren sto i feil repo med god grunn: instruksen sa bare «monorepoets Actions-secrets». Navn-mot-verdi-skillet er også nedfelt (navnet URD_TEMPLATE_PAT står i workflow og docs; strengen skal aldri inn i noen fil).
