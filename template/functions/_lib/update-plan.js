@@ -8,7 +8,7 @@
  * har) og malrepoets tre ved MÅLVERSJONEN. Lik SHA = identisk innhold, så
  * «håndredigert» kan avgjøres uten å laste ned en eneste fil.
  */
-import { isUserPath } from './guard.js';
+import { isUserPath, isPageIndexCopy } from './guard.js';
 
 /** Høyeste treparts versjonstagg (vX.Y.Z) i en liste tagg-navn, eller null. */
 export function highestVersionTag(names) {
@@ -34,14 +34,17 @@ export function highestVersionTag(names) {
  * foreldreløses siden. HTML-skallene peker på den versjonerte motormappa,
  * admin-bundelen bunter motormoduler, skallene i assets/urd/ peker inn i
  * versjonen, base.css refereres med innholdsstempel fra skallene, og
- * urd.json.engine ER mappenavn-invarianten. Kun functions/** og løse
- * rotfiler (f.eks. speculation-rules.json) kan holdes tilbake per fil.
+ * urd.json.engine ER mappenavn-invarianten. Slug-kopiene hører også til
+ * (kopi-oppfriskningsplikten, ADR-0013): en tilbakeholdt kopi ville pekt
+ * på slettet motormappe. Kun functions/** og løse rotfiler (f.eks.
+ * speculation-rules.json) kan holdes tilbake per fil.
  */
 export function isAtomPath(path) {
   return path === 'index.html'
     || path === 'urd.json'
     || path.startsWith('admin/')
-    || path.startsWith('assets/');
+    || path.startsWith('assets/')
+    || isPageIndexCopy(path);
 }
 
 /**

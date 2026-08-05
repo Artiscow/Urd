@@ -269,6 +269,7 @@ export default {
     'update.failed': 'Oppdateringen feilet',
     'update.deployed': 'Oppdateringen er ute - laster admin på nytt',
     'update.deployTimeout': 'Oppdateringen er lagret i repoet, men utrullingen er ikke bekreftet ennå. Last siden på nytt om litt.',
+    'update.publishBlocked': 'Vent til oppdateringen er rullet ut før du publiserer',
     'confirm.update.title': 'Oppdatere Urd?',
     'confirm.update.body': '{target}: {writes} filer skrives, {deletes} slettes.',
     'confirm.update.warnEdited': 'Håndredigerte motorfiler overskrives: {paths}',

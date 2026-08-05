@@ -120,4 +120,6 @@ jobs:
           else
             git tag "$TAG"
           fi
-          git push origin HEAD "refs/tags/$TAG"
+          # --atomic: gren og tagg går sammen eller ikke i det hele tatt, så
+          # en manuell commit i malrepoet aldri kan gi tagg uten innhold.
+          git push --atomic origin HEAD "refs/tags/$TAG"

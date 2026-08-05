@@ -269,6 +269,7 @@ export default {
     'update.failed': 'Ođasmahttin filtii',
     'update.deployed': 'Ođasmahttin lea olggos - viežžá admin ođđasit',
     'update.deployTimeout': 'Ođasmahttin lea vurkejuvvon repoi, muhto almmuheapmi ii leat vel duođaštuvvon. Vieččat siiddu ođđasit fargga.',
+    'update.publishBlocked': 'Vuorddes dassážii go ođasmahttin lea almmuhuvvon ovdal go almmuhat',
     'confirm.update.title': 'Ođasmahttit Urd?',
     'confirm.update.body': '{target}: {writes} fiilla čállojuvvojit, {deletes} sihkkojuvvojit.',
     'confirm.update.warnEdited': 'Gieđain rievdaduvvon mohtorfiillat čállojuvvojit badjel: {paths}',

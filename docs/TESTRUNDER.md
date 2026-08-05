@@ -3,62 +3,24 @@
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
-### Testrunde-batch (0.6.9.7): dokumentasjonen av splitten
+### Testrunde-batch (0.6.9.x): splitt, oppdaterer og fase-slipp (samlet og slått sammen etter eierens beskjed 5. august 2026)
 
-- [ ] Følg OPPSETT-PUBLISERING fra «0. Lag nettsidens repo» til deployet side mot en ekte klon: hvert steg stemmer med det GitHub/Cloudflare faktisk viser, uten monorepo-kunnskap
-- [ ] Variabelnummereringen stemmer i alle fem språkversjonene av oppsettsguiden (URD_TEMPLATE_REPO er 8, DEPLOY_HOOK_URL er 9, også i feilsøkingstabellen)
-- [ ] README-ene (rot + fire oversettelser) viser Use this template-flyten og oppdaterings-steget konsistent
-
-### Testrunde-batch (0.6.9.6): setup-signalet og malens README
-
-- [ ] Fersk klon (eller tøm `urd-setup-done` fra localStorage mot en deploy av malen): oppsettsveiviseren vises i admin, utløst av setup-signalet alene
-- [ ] Fullfør veiviseren og publiser: `setup`-feltet er borte fra site.json i repoet, og veiviseren vises aldri igjen
-- [ ] Avvis veiviseren (lukk uten å fullføre): den holder seg borte i samme nettleser, men feltet består i repoet til noen fullfører
-- [ ] Malens README leses godt på GitHub på alle tre språk (flagg-lenkelinjen bytter mellom bokmål/engelsk/tyrkisk, og lenkene til oppsettsguide og brukerveiledning virker per språk)
-
-### Testrunde-batch (0.6.9.5): Oppdatering-panelet (etter rc-synken)
-
-- [ ] Panelet åpnes fra verktøy-gruppen og viser installert motorversjon; med malrepo utilgjengelig vises oversatt feil med fungerende «Prøv igjen»
-- [ ] Med rc-versjon tilgjengelig: endringslisten viser motorfiler og valgfrie filer riktig, håndredigerte filer har varseltrekant med forklarende tooltip
-- [ ] «Behold min» på en functions-fil holder den utenfor (verifiser i repoet etterpå); checkboxen finnes IKKE på motorfiler
-- [ ] `_headers`-avvik viser instruksen med oppstrøms tekst i markerbar blokk; filen er urørt i repoet etter oppdateringen
-- [ ] Bekreftelsesdialogen viser målversjon + antall, og lister håndredigerte motorfiler som overskrives
-- [ ] Etter Oppdater: status følger commit → utrulling, admin laster på nytt av seg selv når /urd.json melder ny versjon, og upubliserte utkast består etter omlastingen
-- [ ] Uten publiseringstilgang (bruker utenfor ALLOWED_LOGINS): Oppdater-knappen er deaktivert med forklarende tooltip
-- [ ] Lokalt (dev-server.py uten functions): panelet degraderer pent til utilgjengelig-melding
-
-### Testrunde-batch (0.6.9.4): oppdaterer server-side (etter rc-synken)
-
-- [ ] GET /api/github/update (innlogget) mot rc-tagget malrepo: svaret klassifiserer riktig (uendret/håndredigert/ny/slettet) mot en testklon der én functions-fil er bevisst håndredigert
-- [ ] `_headers`-avvik rapporteres med oppstrøms tekst i sjekk-svaret, og filen står ALDRI i endringslisten
-- [ ] POST med gyldig expect gjennomfører ÉN commit i testklonen: ny motormappe inn, gammel ut, slug-kopier byte-like ny rot-index.html, urd.json-engine bumpet
-- [ ] POST med skip på en atomgruppe-fil avvises med updateBadSkip; skip på en functions-fil respekteres (filen forblir urørt)
-- [ ] POST med utdatert expect (push noe annet først) gir updateRace uten at noe skrives
-- [ ] Klon uten baseline-tagg (engine-verdi som ikke finnes som tagg i malrepoet) får updateNoBaseline, oversatt på admin-språket
-
-### Testrunde-batch (0.6.9.3): release-Action
-
-- [ ] Engangsoppsett gjort: offentlig `urd-template`-repo opprettet («Template repository» huket av, topic `urd-mal`), og secreten `URD_TEMPLATE_PAT` (fine-grained, contents read/write kun på malrepoet) lagt inn i monorepoet
-- [ ] Rc-dispatch: tagg en commit med et treparts rc-nummer, kjør Release-workflowen manuelt med prerelease-flagget, og se at malrepoet seedes med template/-innholdet som ÉN commit «Urd v<nummer>» pluss taggen
-- [ ] Omkjøring av samme dispatch er ufarlig: workflowen melder uendret innhold/eksisterende tagg i stedet for å lage ny commit eller flytte taggen
-- [ ] check-release stopper feil: en dispatch mot en tagg som ikke matcher urd.json.engine feiler i versjonskonsistens-steget før noe pushes
-
-### Testrunde-batch (0.6.9.2): versjonert motor og immutable-cache
-
-- [ ] Siden laster normalt lokalt (dev-server.py) og i preview: alle sider, nav, footer, bakgrunner og animasjoner, uten 404 i konsollen/nettverksfanen (alle motor-moduler fra /assets/engine/0.6.8/)
-- [ ] Undersidene (kaker/om-oss/kontakt) har nå render-blokkerende tema og blinkefritt lys/mørk-valg ved direkte innlasting (theme.css + theme-init.js kom inn med kopi-rettingen)
-- [ ] Alle fire pluginene virker i preview (kalender, skjema, kart, språkpakken): importene går via /assets/urd/-skallene
-- [ ] Admin-språkbytte virker fortsatt (ordbøkene kjøretids-lastes via /assets/urd/locales/admin/)
-- [ ] Etter deploy: svar-headerne viser `immutable` på en motorfil (f.eks. /assets/engine/0.6.8/boot.js) og på /assets/styles/base.css, men IKKE på /assets/urd/i18n.js
-- [ ] Etter deploy: publisér en side og sjekk at slug-kopiene skrives med de versjonerte stiene (vis kildekode på en underside)
-
-### Testrunde-batch (0.6.9.1): pre-v1-innbakingen
-
-- [ ] Alle fire eksempelsidene rendrer identisk som før innbakingen (gradienter, bilde-bakgrunner med parallaks, kalender-blokken på Hjem): versjonstallene ble endret, aldri props-formene
-- [ ] Gradient-editoren: rediger farger/andeler/animasjon på et gradient-lag (Hjem eller Kaker) og se at endringer slår gjennom og publiserer rent (lift-løftingen i editoren er fjernet)
-- [ ] Ny side: opprett en side i admin, publiser, og sjekk i repoet at sidefilen har `"schemaVersion": 1`
-- [ ] Kalender-blokken: sett inn en ny kalender fra blokkvelgeren og se at den fungerer (version 1, ingen migrering i veien)
-- [ ] Konsollen hos besøkende: ingen plassholder-advarsler («missing-migration»/«newer-than-engine») på noen av sidene
+- [ ] Lokalt (dev-server.py): alle sider laster uten 404 i konsoll/nettverksfane (motoren fra /assets/engine/0.6.9/), alle fire pluginene virker i preview via /assets/urd/-skallene, admin-språkbytte virker (ordbøkene kjøretids-lastes via skallene), og Oppdatering-panelet degraderer pent til utilgjengelig-melding uten functions
+- [ ] Pre-v1-innbakingen: eksempelsidene rendrer identisk som før (gradienter, bilde-bakgrunner med parallaks, kalender-blokken på Hjem) uten plassholder-advarsler i konsollen, og gradient-editoren redigerer farger/andeler/animasjon og publiserer rent
+- [ ] Nytt innhold: opprett en side og sett inn en ny kalender-blokk fra velgeren; begge virker, og publisert sidefil har `"schemaVersion": 1`
+- [ ] Engangsoppsettet: offentlig `urd-template`-repo opprettet («Template repository» huket av, topic `urd-mal`) og secreten `URD_TEMPLATE_PAT` (fine-grained, contents read/write kun på malrepoet) lagt inn i monorepoet
+- [ ] Release-flyten: tagg `v0.6.9` og publiser GitHub-releasen; Action-en kjører grønt (check-release i full modus, tester, synk) og seeder urd-template med ÉN commit «Urd v0.6.9» pluss taggen. En rc-dispatch med prerelease-flagget seeder tilsvarende for oppdaterer-testing, omkjøring er ufarlig (uendret innhold/eksisterende tagg flyttes aldri), og en dispatch mot tagg som ikke matcher urd.json.engine stoppes i versjonskonsistens-steget før noe pushes
+- [ ] Deployen av 0.6.9 på urdweb: siden virker som før; undersidene har render-blokkerende tema og blinkefritt lys/mørk-valg ved direkte innlasting; svar-headerne viser `immutable` på en motorfil og på base.css, men IKKE på /assets/urd/i18n.js; en publisering skriver slug-kopier med de versjonerte stiene (vis kildekode på en underside); og Oppdatering-panelet melder «kjører nyeste» mot malrepoet
+- [ ] Klon-flyten: følg OPPSETT-PUBLISERING fra «0. Lag nettsidens repo» til deployet side mot en ekte klon, uten monorepo-kunnskap; hvert steg stemmer med det GitHub/Cloudflare faktisk viser
+- [ ] Oppsettsveiviseren på fersk klon: vises i admin utløst av setup-signalet alene; fullføring + publisering fjerner `setup`-feltet fra site.json og veiviseren vises aldri igjen; avvisning (lukk uten å fullføre) holder den borte i samme nettleser mens feltet består i repoet til noen fullfører
+- [ ] Oppdaterings-sjekken (mot rc-tagget mal): panelet viser installert og tilgjengelig versjon, endringslisten skiller motorfiler fra valgfrie, og GET /api/github/update klassifiserer riktig (uendret/håndredigert/ny/slettet) mot en testklon der én functions-fil er bevisst håndredigert
+- [ ] Håndredigerte filer: varseltrekant med forklarende tooltip i panelet, «Behold min» på en functions-fil holder den utenfor (verifiser i repoet etterpå), checkboxen finnes IKKE på motorfiler, og skip på en atomgruppe-fil avvises med updateBadSkip
+- [ ] `_headers`-avvik: instruksen med oppstrøms tekst vises i markerbar blokk (i både sjekk-svaret og panelet), filen står ALDRI i endringslisten og er urørt i repoet etter oppdateringen
+- [ ] Selve oppdateringen (rc til rc i testklonen): bekreftelsesdialogen viser målversjon, antall og overskrivings-varsel for håndredigerte motorfiler; utføringen gir ÉN commit (ny motormappe inn, gammel ut, slug-kopier byte-like ny rot-index.html, urd.json-engine bumpet); deploy-pollingen laster admin på nytt av seg selv når /urd.json melder ny versjon, upubliserte utkast består, og publisering i deploy-vinduet sperres i samme fane
+- [ ] Feilveiene: utdatert expect (push noe annet først) gir updateRace uten at noe skrives; klon uten baseline-tagg får updateNoBaseline oversatt på admin-språket; utilgjengelig malrepo gir oversatt feil med fungerende «Prøv igjen»; og uten publiseringstilgang (utenfor ALLOWED_LOGINS) er Oppdater-knappen deaktivert med forklarende tooltip
+- [ ] PORT-TESTEN (fasegaten, summen av alt over): klon malen via «Use this template», sett opp publisering, bygg en side i admin, installer kalender-pluginen, og kjør oppdateringsknappen mot en senere rc/patch-versjon; alt overlever
+- [ ] Etter urdweb-utskillelsen: historikk-panelet i testklonen/urdweb viser kun publiseringer (ingen utviklingscommits), og konfliktsjekken gir ikke truncated-varsler
+- [ ] Docs: variabelnummereringen stemmer i alle fem språkversjonene av oppsettsguiden (URD_TEMPLATE_REPO er 8, DEPLOY_HOOK_URL er 9, også i feilsøkingstabellen); README-ene (rot + fire oversettelser) viser Use this template-flyten og oppdaterings-steget konsistent; og malens README leses godt på GitHub på alle tre språk med virkende lenker per språk
 
 ### Testrunde-batch (0.6.0.10): API-feil på admin-språket, motor-stempel og CSS-rydding
 

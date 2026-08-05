@@ -266,6 +266,7 @@ export default {
     'update.failed': 'The update failed',
     'update.deployed': 'The update is live - reloading the admin',
     'update.deployTimeout': 'The update is saved in the repository, but the deployment is not confirmed yet. Reload the page in a moment.',
+    'update.publishBlocked': 'Wait until the update has been deployed before publishing',
     'confirm.update.title': 'Update Urd?',
     'confirm.update.body': '{target}: {writes} files written, {deletes} deleted.',
     'confirm.update.warnEdited': 'Hand-edited engine files will be overwritten: {paths}',

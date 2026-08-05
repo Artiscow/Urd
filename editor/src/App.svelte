@@ -10,7 +10,7 @@
   import Dropdown from './lib/Dropdown.svelte';
   import IconEditor from './lib/IconEditor.svelte';
   // Editoren deler migreringskoden med motoren (samme fil, bundles inn).
-  import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION } from '$engine/migrate.js';
+  import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION, SITE_SCHEMA_VERSION } from '$engine/migrate.js';
   import { ta, taApiError, adminLang as currentAdminLang } from '$engine/i18n.js';
   import { validateManifest, satisfiesEngine } from '$engine/plugins.js';
   import { makeId } from '$engine/sections/presets.js';
@@ -466,7 +466,13 @@
   async function init() {
     site = liftSiteFile(await (await fetch('/content/site.json')).json());
     siteStore = createDraftStore('urd-draft-site', () => site, draftSaveError);
-    // Utkast fra før grid-omleggingen kan ligge i localStorage: løft dem.
+    // Site-utkast med høyere schemaVersion enn motoren forkastes, samme
+    // vern som for sideutkastene (liftSiteFile lar dem ellers passere).
+    if ((siteStore.data.schemaVersion ?? 1) > SITE_SCHEMA_VERSION) {
+      console.warn(`Urd: site-utkastet har schemaVersion ${siteStore.data.schemaVersion} (motoren har ${SITE_SCHEMA_VERSION}) og forkastes`);
+      siteStore.replace(structuredClone(site));
+    }
+    // Utkast fra eldre format kan ligge i localStorage: løft dem.
     siteStore.replace(liftSiteFile(siteStore.data));
     siteStore.save();
     linkSiteDraft();
@@ -1623,7 +1629,9 @@
         await awaitUpdateDeploy(updateInfo.target.replace(/^v/, ''));
       } else if (res.status === 409) {
         setStatus(taApiError(data) ?? ta('update.checkFailed'), 'error');
-        loadUpdateCheck();
+        // Avventes: ellers nulles updateBusy under re-sjekken, og panelet
+        // står blankt i et vindu der en ekstra sjekk kan slippe gjennom.
+        await loadUpdateCheck();
       } else {
         setStatus(taApiError(data) ?? ta('update.failed'), 'error');
       }
@@ -1698,6 +1706,15 @@
         published = blankPage(entry);
       }
       store = createDraftStore(`urd-draft-${id}`, () => published, draftSaveError);
+      // Et utkast med HØYERE schemaVersion enn motoren (skrevet av en nyere
+      // Urd, eller liggende igjen fra før pre-v1-innbakingen) kan verken
+      // redigeres eller publiseres trygt: liftPageFile lar det passere
+      // urørt, lagene rendres som plassholdere, og en publisering ville
+      // sementert det. Forkast utkastet; serveren er fasiten.
+      if ((store.data.schemaVersion ?? 1) > PAGE_SCHEMA_VERSION) {
+        console.warn(`Urd: utkastet for '${id}' har schemaVersion ${store.data.schemaVersion} (motoren har ${PAGE_SCHEMA_VERSION}) og forkastes`);
+        store.replace(structuredClone(published));
+      }
       store.replace(liftPageFile(store.data, siteStore.data));
       store.save();
       // Angre-historikken overlever sidebytter: snapshots bærer pageId, og restore bytter tilbake til riktig side.
@@ -3646,6 +3663,13 @@
   async function publish() {
     if (revertedSinceLoad) {
       setStatus(ta('status.revertReloadBeforePublish'), 'error');
+      return;
+    }
+    if (updateBusy) {
+      // Publisering skriver slug-kopier fra SERVERT rot-index; i deploy-
+      // vinduet etter en motoroppdatering peker den fortsatt på slettet
+      // motormappe, og kopiene ville knekt alle undersidene (ADR-0013).
+      setStatus(ta('update.publishBlocked'), 'error');
       return;
     }
     setStatus(ta('status.publishing'));

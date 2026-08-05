@@ -266,6 +266,7 @@ export default {
     'update.failed': 'Güncelleme başarısız oldu',
     'update.deployed': 'Güncelleme yayında - yönetici yeniden yükleniyor',
     'update.deployTimeout': 'Güncelleme depoya kaydedildi ama dağıtım henüz doğrulanmadı. Sayfayı birazdan yeniden yükleyin.',
+    'update.publishBlocked': 'Yayımlamadan önce güncellemenin dağıtılmasını bekle',
     'confirm.update.title': 'Urd güncellensin mi?',
     'confirm.update.body': '{target}: {writes} dosya yazılacak, {deletes} silinecek.',
     'confirm.update.warnEdited': 'Elle düzenlenmiş motor dosyalarının üzerine yazılacak: {paths}',

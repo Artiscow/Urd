@@ -612,7 +612,7 @@ function hvaSkjerSection() {
       {
         id: presetId(),
         type: 'kalender',
-        version: 3,
+        version: 1,
         props: { sources: [], view: 'list', limit: 5, showCategories: true, showSubscribe: true },
         animation: null,
         frames: { desktop: { x: 6, y: 130, w: 88, h: 320, z: 2, rot: 0 }, mobile: null },

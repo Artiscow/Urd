@@ -23,7 +23,8 @@ test('highestVersionTag: høyeste treparts vinner, andre navn ignoreres', () => 
 
 test('isAtomPath: motorgruppen låses, functions og løse rotfiler er valgfrie', () => {
   for (const path of ['index.html', 'urd.json', 'admin/assets/editor.js',
-    'assets/engine/0.7.0/boot.js', 'assets/urd/i18n.js', 'assets/styles/base.css']) {
+    'assets/engine/0.7.0/boot.js', 'assets/urd/i18n.js', 'assets/styles/base.css',
+    'kaker/index.html']) {
     assert.equal(isAtomPath(path), true, path);
   }
   for (const path of ['functions/api/github/update.js', 'speculation-rules.json', '.gitignore']) {

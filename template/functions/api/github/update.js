@@ -57,6 +57,14 @@ async function loadState(token, config, toParam) {
   const ref = await gh(token, `/repos/${repo}/git/ref/heads/${branch}`);
   const head = ref.object.sha;
   const rawTree = await gh(token, `/repos/${repo}/git/trees/${head}?recursive=1`);
+  if (rawTree.truncated) {
+    // Et avkortet tre ville feilklassifisert filer utenfor utsnittet som
+    // «mangler lokalt» og skrevet dem om uten varsel: stopp heller trygt.
+    throw Object.assign(
+      new Error('Repoets git-tre er for stort til å sammenlignes trygt'),
+      { code: 'updateFailed', detail: 'git-treet er avkortet av GitHub' },
+    );
+  }
   const userTree = siteTree(rawTree.tree, rootDir);
 
   if (!userTree['urd.json']) {
@@ -91,7 +99,17 @@ async function loadState(token, config, toParam) {
       }
       throw err;
     }
-    const targetTree = await gh(token, `/repos/${templateRepo}/git/trees/${target}?recursive=1`);
+    let targetTree;
+    try {
+      targetTree = await gh(token, `/repos/${templateRepo}/git/trees/${target}?recursive=1`);
+    } catch (err) {
+      if (err.status === 404 || err.status === 422) {
+        // Formgyldig, men ikke-eksisterende måltagg skal diagnostiseres som
+        // nettopp det, ikke som «malrepoet utilgjengelig».
+        throw Object.assign(new Error(`Målversjonen ${target} finnes ikke i malrepoet`), { code: 'updateBadTarget', target });
+      }
+      throw err;
+    }
     return {
       head,
       engine,
@@ -167,7 +185,9 @@ export async function onRequestPost({ request, env }) {
     return json({ error: 'expect må være en commit-sha', code: 'badExpect' }, 400);
   }
   if (skip !== undefined && (!Array.isArray(skip) || skip.length > 500 || skip.some((p) => typeof p !== 'string'))) {
-    return json({ error: 'skip må være en liste stier', code: 'badFiles' }, 400);
+    // api.updateFailed interpolerer detail, så teksten blir riktig for
+    // DENNE brukeren av koden (api.badFiles beskriver commit-endepunktet).
+    return json({ error: 'skip må være en liste stier', code: 'updateFailed', detail: 'skip må være en liste stier (maks 500)' }, 400);
   }
 
   try {
@@ -197,9 +217,11 @@ export async function onRequestPost({ request, env }) {
     // Kopi-oppfriskningsplikten (ADR-0013): hver <slug>/index.html i
     // brukerens tre skal være byte-lik malens rot-index.html etter byttet.
     // Blob-SHA-sammenligning avgjør hvem som faktisk trenger skriving.
+    // Malens EGNE slug-kopier ligger alt i planen (de finnes i maltrærne);
+    // uten planned-filteret ville de blitt duplikate tre-innslag.
     const rootIndexSha = state.targetTree['index.html'];
     const copyPaths = Object.keys(state.userTree)
-      .filter((p) => isPageIndexCopy(p) && state.userTree[p] !== rootIndexSha);
+      .filter((p) => isPageIndexCopy(p) && state.userTree[p] !== rootIndexSha && !planned.has(p));
     const needsRootText = copyPaths.length > 0 && !writes.some((c) => c.path === 'index.html');
 
     // ETT GraphQL-kall henter alle måltekstene; binære/avkortede blober tar
