@@ -55,7 +55,7 @@ redigeringsflatene bygges på den nye layouten:
 
 - Plugin-lasting for alvor: plugins leverer **egne blokker, seksjonspresets, bakgrunner, animasjoner og maler** via `register(Urd)`. Kalender-pluginen som referanseeksempel; kart og skjema som ytterligere referanse-plugins.
 - **Arkiv/datablokk-mønsteret**: blokker som rendrer samlinger av innslag (nyheter, oppslag, styrer), designet sammen med kalender-pluginen. Kalender-avhengige presets: nyheter, oppslagstavle, «Hva skjer».
-- **«Lagre som mal»**: egne seksjoner/sider lagres i `content/maler/` og kan deles som plugins. GitHub-topic-konvensjon (`urd-plugin`, `urd-mal`) for oppdagbarhet.
+- **«Lagre som mal»**: egne seksjoner/sider lagres i `content/maler/` og kan deles som plugins. GitHub-topic-konvensjon (`urd-plugin`, `urd-template`) for oppdagbarhet.
 - `urd-template`-repo-splitt + release-Action («Use this template»).
 - Oppdaterer v1: én-klikks Urd-oppdatering som kun overskriver manifest-stiene i `urd.json`.
 

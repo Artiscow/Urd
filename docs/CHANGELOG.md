@@ -22,6 +22,11 @@ entydig: alle commit-innslag over forrige p-innslag.
 
 ## [0.6.9] - 2026-08-05
 
+### 0.6.9.9p - Engangsoppsettet i praksis: PAT-instruksene presisert og topic-konvensjonen ble engelsk - 5. august 2026
+- SKREVET UNDER SELVE ENGANGSOPPSETTET, der instruksene ble prøvd mot GitHubs faktiske UI: UTVIKLING-stegene for tokenet er nå den eksakte klikkstien (Fine-grained token med Only select repositories → urd-template og Contents = Read and write; GitHubs nye permissions-UI legger rettigheten til via «Add permissions»-listen FØRST og viser tilgangsnivå-menyen på den tilføyde raden), og secret-steget sier utvetydig at tokenet limes inn i MONOREPOET Urd sine Actions-secrets, ikke i malrepoet, som ikke skal ha noen secrets. Presisert etter at eieren sto i feil repo med god grunn: instruksen sa bare «monorepoets Actions-secrets». Navn-mot-verdi-skillet er også nedfelt (navnet URD_TEMPLATE_PAT står i workflow og docs; strengen skal aldri inn i noen fil).
+- TOPIC-KONVENSJONEN ER `urd-template` (eierbeslutning 5. august 2026: engelsk er standarden, konsistent med `urd-plugin`): byttet fra `urd-mal` i UTVIKLING, VEIKART, backloggen, testrunde-punktet, plugin-README og den engelske roadmapen. Historiske CHANGELOG-innslag som nevner det gamle navnet står urørt som historikk; ingen kode leser topicen.
+- SPENNET: eieren committet og pushet README-/oppsettsforbedringene fra samme arbeidsøkt selv underveis («Oppdatert readme»); dette innslaget dekker resten av diffen. Docs-only push: mekaniske sjekker (tankestrek, sjekkboks-syntaks, lenkemål, at ingenting er fjernet fra TESTRUNDER) i stedet for uavhengig review, per verifiseringsregelen.
+
 ### 0.6.0.9-0.6.9.8p - Push-klargjøring: fasegaten gjennomgått, to oppdaterer-funn rettet - 5. august 2026
 - SPENNET er blandet serie og skrives fullt ut: 0.6.0.9, 0.6.0.10 og hele 0.6.9-milepælen (0.6.9.1-0.6.9.8; 0.6.9.1-innholdet ligger i 0.6.9.2-committen, med egne CHANGELOG-innslag).
 - VERIFISERT (også gjenkjørt av gjennomgåeren selv): editor-bygg grønt og ferskt bygg byte-likt committet bundel, 296/296 tester, alle ni skjemavalideringene, `check-release v0.6.9` grønn i FULL modus, ingen tankestrek i diffen, lenkemål finnes.

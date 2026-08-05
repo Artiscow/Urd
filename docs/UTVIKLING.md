@@ -104,9 +104,10 @@ Sannhetskilden er `engine`-feltet i `template/urd.json`. Git-taggen (`v0.2.0`) o
 Forutsetninger (engangsoppsett, gjøres FØR første utgivelse; før dette finnes verken malrepoet eller «Use this template»-knappen, og lenkene til `urd-template` i dokumentasjonen gir 404):
 
 1. Opprett det offentlige repoet `urd-template` på GitHub (**New repository**). Huk av «Add a README file» så main-grenen finnes fra start (release-Action-en pusher til eksisterende gren; første synk erstatter uansett alt innholdet).
-2. Legg inn secreten `URD_TEMPLATE_PAT` i monorepoets Actions-secrets: en fine-grained PAT med contents read/write KUN på malrepoet.
-3. Kjør første synk (publiser en release, eller en manuell prerelease-dispatch av Release-workflowen).
-4. Merk repoet som mal: **Settings → General → huk av «Template repository»**. Først DA vises «Use this template»-knappen på repo-forsiden (knappen er en egenskap ved et repo merket som mal, aldri ved en mappe). Sett samtidig GitHub-topicen `urd-mal`.
+2. Lag tokenet: din GitHub-profil → **Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**, med Repository access = «Only select repositories» → `urd-template`, og Permissions → Contents = Read and write. Kopier token-strengen (vises kun én gang).
+3. Legg tokenet inn som secret I MONOREPOET (repoet `Urd`, der release-workflowen kjører - IKKE i malrepoet, som ikke trenger noen secrets): `Urd` → **Settings → Secrets and variables → Actions → New repository secret**, Name `URD_TEMPLATE_PAT`, Secret = token-strengen. Navnet står i workflowen og dokumentasjonen; selve strengen skal aldri inn i noen fil.
+4. Kjør første synk (publiser en release, eller en manuell prerelease-dispatch av Release-workflowen).
+5. Merk repoet som mal: **Settings → General → huk av «Template repository»**. Først DA vises «Use this template»-knappen på repo-forsiden (knappen er en egenskap ved et repo merket som mal, aldri ved en mappe). Sett samtidig GitHub-topicen `urd-template` (eierbeslutning 5. august 2026: engelsk er standarden for topics).
 
 Plugins deles med topicen `urd-plugin`.
 

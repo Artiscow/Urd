@@ -30,7 +30,7 @@ aldri automatisk, admin viser eieren hva som må legges inn). `entry` og
 
 **Dele pluginen:** legg den i et eget offentlig GitHub-repo og sett
 GitHub-topicen `urd-plugin`, så den kan finnes med topic-søk (maler delt
-som repo bruker `urd-mal`). Brukere installerer ved å kopiere mappen inn
+som repo bruker `urd-template`). Brukere installerer ved å kopiere mappen inn
 i `plugins/` og aktivere den i Plugins-panelet.
 
 ## Flerspråk (ADR-0012)
