@@ -3,6 +3,10 @@
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.0.8): vite 8.2.0 og gjenbygd bundel
+
+- [ ] Røyktest av editoren etter byggverktøy-bumpen: åpne /admin, last en side, åpne hvert panel, rediger en blokk og publiser. Bundelen er bygget av en nyere vite, og selv om streng-literalene er bit-identiske med forrige bundel, er dette den eneste testen som faktisk kjører den
+
 ### Testrunde-batch (0.6.8.10): språkpakke-plugins
 
 - [ ] Aktivering: åpne Plugins-panelet - «Svensk språkpakke» står der (deaktivert), viser «Språkpakke: Svenska» og ingen versjonsadvarsel. Slå den på og publiser
