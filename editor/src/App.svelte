@@ -479,10 +479,10 @@
     // bare gitt 401-støy i konsollen. Etter innlogging (OAuth-redirect)
     // lastes siden på nytt, så grunnlaget hentes da her.
     if (auth) refreshBaseSha();
-    // Oppsettsveiviseren: første besøk på en fersk klon (malens standard-
-    // navn står fortsatt) og ikke avvist tidligere.
-    // Eksplisitt signal (site.setup fra malen) med den gamle navnematchingen som fallback for eldre kloner.
-    if ((siteDraft.site.setup === true || siteDraft.site.title === 'Min forening') && !localStorage.getItem('urd-setup-done')) {
+    // Oppsettsveiviseren: første besøk på en fersk klon og ikke avvist
+    // tidligere. Utløses KUN av malens eksplisitte signal (site.setup);
+    // veiviseren fjerner feltet ved fullføring, så det aldri vises igjen.
+    if (siteDraft.site.setup === true && !localStorage.getItem('urd-setup-done')) {
       setupName = siteDraft.site.title;
       setupAccent = siteDraft.theme.tokens.color.accent;
       setupBg = siteDraft.theme.tokens.color.bg;

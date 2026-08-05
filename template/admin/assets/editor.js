@@ -5660,7 +5660,7 @@ function dl(e, t) {
 		I(h, Aa(await (await fetch("/content/site.json")).json()), !0), ge = ki("urd-draft-site", () => V(h), S), ge.replace(Aa(ge.data)), ge.save(), _e(), I(E, {
 			snap: !0,
 			...V(A).grid
-		}, !0), await mr(new URLSearchParams(location.search).get("page") ?? V(A).pages[0].id), await ta(), await yi(), await Kn(), V(T) && Jn(), (V(A).site.setup === !0 || V(A).site.title === "Min forening") && !localStorage.getItem("urd-setup-done") && (I(Be, V(A).site.title, !0), I(Ve, V(A).theme.tokens.color.accent, !0), I(He, V(A).theme.tokens.color.bg, !0), I(Re, !0));
+		}, !0), await mr(new URLSearchParams(location.search).get("page") ?? V(A).pages[0].id), await ta(), await yi(), await Kn(), V(T) && Jn(), V(A).site.setup === !0 && !localStorage.getItem("urd-setup-done") && (I(Be, V(A).site.title, !0), I(Ve, V(A).theme.tokens.color.accent, !0), I(He, V(A).theme.tokens.color.bg, !0), I(Re, !0));
 	}
 	let Fe = /* @__PURE__ */ F(null);
 	function Ie({ title: e, lines: t = [], okLabel: n = Q("confirm.ok"), cancelLabel: r = Q("confirm.cancel") }) {

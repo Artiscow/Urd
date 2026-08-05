@@ -4,7 +4,8 @@
     "title": "Urd",
     "lang": "no",
     "description": "Urd sin testside",
-    "icon": "/media/ikon-9740643c.webp"
+    "icon": "/media/ikon-9740643c.webp",
+    "setup": true
   },
   "breakpoints": {
     "mobile": 640
