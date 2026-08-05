@@ -543,7 +543,7 @@
   const PANEL_GROUPS = [
     ['pages', 'blocks', 'properties', 'grid'],
     ['site', 'theme', 'nav', 'footer', 'collections', 'plugins'],
-    ['history'],
+    ['history', 'update'],
   ];
   const PANEL_LABELS = Object.fromEntries(PANEL_GROUPS.flat().map((id) => [id, ta(`panel.${id}`)]));
 
@@ -603,6 +603,7 @@
     // Gridet vises i forhåndsvisningen så lenge Grid-panelet er åpent.
     bridge?.sendShowGrid(activePanel === 'grid');
     if (activePanel === 'history') loadHistory();
+    if (activePanel === 'update' && !updateBusy) loadUpdateCheck();
   }
 
   /**
@@ -1549,6 +1550,109 @@
       }
     }
     setStatus(ta('status.revertDeployTimeout'), 'error');
+  }
+
+  /* ---------- Oppdatereren (0.6.9, ADR-0014) ---------- */
+
+  /** Svaret fra GET-sjekken (null = ikke lastet ennå). */
+  let updateInfo = $state(null);
+  let updateError = $state(null);
+  let updateBusy = $state(false);
+  /** Valgfrie filer eieren vil beholde sin egen versjon av (kun utenfor
+   *  motor-atomgruppen; serveren validerer det samme). */
+  let updateSkip = $state(new Set());
+
+  async function loadUpdateCheck() {
+    updateBusy = true;
+    updateError = null;
+    updateInfo = null;
+    try {
+      const res = await fetch('/api/github/update');
+      const data = await res.json().catch(() => null);
+      if (res.ok) {
+        updateInfo = data;
+        updateSkip = new Set();
+      } else {
+        updateError = taApiError(data) ?? ta('update.checkFailed');
+      }
+    } catch {
+      updateError = ta('status.publishLayerUnreachable');
+    }
+    updateBusy = false;
+  }
+
+  function toggleUpdateSkip(path) {
+    const next = new Set(updateSkip);
+    if (next.has(path)) next.delete(path);
+    else next.add(path);
+    updateSkip = next;
+  }
+
+  async function runUpdate() {
+    if (!updateInfo || updateInfo.upToDate || updateBusy) return;
+    const skipped = [...updateSkip];
+    const applied = updateInfo.changes.filter((c) => !updateSkip.has(c.path));
+    const editedAtom = applied.filter((c) => c.atom && c.conflict);
+    const ok = await askConfirm({
+      title: ta('confirm.update.title'),
+      lines: [
+        ta('confirm.update.body', {
+          target: updateInfo.target,
+          writes: applied.filter((c) => c.action === 'write').length,
+          deletes: applied.filter((c) => c.action === 'delete').length,
+        }),
+        ...(editedAtom.length > 0
+          ? [ta('confirm.update.warnEdited', { paths: editedAtom.map((c) => c.path).join(', ') })]
+          : []),
+      ],
+      okLabel: ta('confirm.update.ok'),
+      cancelLabel: ta('confirm.cancel'),
+    });
+    if (!ok) return;
+    updateBusy = true;
+    setStatus(ta('update.running', { target: updateInfo.target }));
+    try {
+      const res = await fetch('/api/github/update', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ to: updateInfo.target, expect: updateInfo.head, skip: skipped }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok) {
+        setStatus(ta('update.committed', { target: updateInfo.target }), 'ok');
+        await awaitUpdateDeploy(updateInfo.target.replace(/^v/, ''));
+      } else if (res.status === 409) {
+        setStatus(taApiError(data) ?? ta('update.checkFailed'), 'error');
+        loadUpdateCheck();
+      } else {
+        setStatus(taApiError(data) ?? ta('update.failed'), 'error');
+      }
+    } catch {
+      setStatus(ta('status.publishLayerUnreachable'), 'error');
+    }
+    updateBusy = false;
+  }
+
+  /**
+   * Etter oppdaterings-commiten: poll /urd.json til engine-feltet melder
+   * målversjonen (deployen er ute), og last admin på nytt så den nye
+   * bundelen og motoren tas i bruk. Utkastene beholdes: oppdatereren rører
+   * aldri brukereide filer, så de er like gyldige etterpå.
+   */
+  async function awaitUpdateDeploy(version) {
+    for (let attempt = 0; attempt < 18; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 10_000));
+      try {
+        const data = await (await fetch('/urd.json', { cache: 'no-store' })).json();
+        if (data?.engine === version) {
+          setStatus(ta('update.deployed'), 'ok');
+          await new Promise((resolve) => setTimeout(resolve, 800));
+          location.reload();
+          return;
+        }
+      } catch { /* midlertidig nede under utrulling: fortsett å polle */ }
+    }
+    setStatus(ta('update.deployTimeout'), 'error');
   }
 
   /** Løper mens en sides data lastes; urd-ready venter på denne. */
@@ -4825,6 +4929,61 @@
                   {/if}
                 {/if}
               </div>
+            {:else if activePanel === 'update'}
+              <div class="panel-body">
+                {#if updateBusy && !updateInfo}
+                  <p class="panel-hint">{ta('update.checking')}</p>
+                {:else if updateError}
+                  <p class="panel-hint">{updateError}</p>
+                  <button class="ghost" onclick={loadUpdateCheck}>{ta('update.retry')}</button>
+                {:else if updateInfo}
+                  <div class="update-versions">
+                    <span>{ta('update.current', { version: updateInfo.current })}</span>
+                    {#if !updateInfo.upToDate}
+                      <span>{ta('update.available', { target: updateInfo.target })}</span>
+                    {/if}
+                  </div>
+                  {#if updateInfo.upToDate}
+                    <p class="panel-hint">{ta('update.upToDate')}</p>
+                  {:else}
+                    {#if updateInfo.headers?.upstream}
+                      <p class="panel-hint plugin-warn">{ta('update.headersManual')}</p>
+                      <pre class="update-headers">{updateInfo.headers.upstream}</pre>
+                    {/if}
+                    <p class="panel-strong">{ta('update.atomTitle')}</p>
+                    {#each updateInfo.changes.filter((c) => c.atom) as c (c.path)}
+                      <div class="update-row">
+                        <span class="update-path" title={c.path}>{c.path}</span>
+                        <span class="update-flags">
+                          {#if c.action === 'delete'}{ta('update.actionDelete')}{/if}
+                          {#if c.conflict}<span class="update-warn" title={ta(`update.conflict.${c.conflict}`)}>{@html ICONS.warn}</span>{/if}
+                        </span>
+                      </div>
+                    {/each}
+                    {#if updateInfo.changes.some((c) => !c.atom)}
+                      <p class="panel-strong">{ta('update.optionalTitle')}</p>
+                      {#each updateInfo.changes.filter((c) => !c.atom) as c (c.path)}
+                        <div class="update-row">
+                          <span class="update-path" class:skipped={updateSkip.has(c.path)} title={c.path}>{c.path}</span>
+                          <span class="update-flags">
+                            {#if c.action === 'delete'}{ta('update.actionDelete')}{/if}
+                            {#if c.conflict}<span class="update-warn" title={ta(`update.conflict.${c.conflict}`)}>{@html ICONS.warn}</span>{/if}
+                            <label class="update-keep" title={ta('update.keepMine.title')}>
+                              <input type="checkbox" checked={updateSkip.has(c.path)} onchange={() => toggleUpdateSkip(c.path)} />
+                              {ta('update.keepMine')}
+                            </label>
+                          </span>
+                        </div>
+                      {/each}
+                    {/if}
+                    <button class="primary update-run" onclick={runUpdate}
+                      disabled={updateBusy || !auth?.allowed}
+                      title={auth?.allowed ? ta('update.run.title') : ta('tip.history.needsAccess')}>
+                      {ta('update.run', { target: updateInfo.target })}
+                    </button>
+                  {/if}
+                {/if}
+              </div>
             {/if}
           </aside>
         {/if}
@@ -6350,6 +6509,72 @@
   .history-meta {
     opacity: 0.55;
     font-size: 0.76rem;
+  }
+
+  /* Oppdaterings-panelet (0.6.9): versjonslinje, filrader og _headers-instruks */
+  .update-versions {
+    display: grid;
+    gap: 0.15rem;
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .update-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.18rem 0;
+    font-size: 0.78rem;
+  }
+
+  .update-path {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    direction: rtl; /* lange stier klippes i STARTEN, filnavnet er det som teller */
+    text-align: left;
+  }
+
+  .update-path.skipped {
+    opacity: 0.45;
+    text-decoration: line-through;
+  }
+
+  .update-flags {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: none;
+    opacity: 0.85;
+  }
+
+  .update-warn {
+    color: #e0b04a;
+    display: inline-flex;
+  }
+
+  .update-keep {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.74rem;
+    cursor: pointer;
+  }
+
+  .update-headers {
+    max-height: 10rem;
+    overflow: auto;
+    font-size: 0.7rem;
+    background: rgb(0 0 0 / 25%);
+    border-radius: 6px;
+    padding: 0.5rem;
+    user-select: all;
+  }
+
+  .update-run {
+    margin-top: 0.6rem;
+    width: 100%;
   }
 
   /* Oppsettsveiviseren */

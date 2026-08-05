@@ -3,6 +3,17 @@
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.9.5): Oppdatering-panelet (etter rc-synken)
+
+- [ ] Panelet åpnes fra verktøy-gruppen og viser installert motorversjon; med malrepo utilgjengelig vises oversatt feil med fungerende «Prøv igjen»
+- [ ] Med rc-versjon tilgjengelig: endringslisten viser motorfiler og valgfrie filer riktig, håndredigerte filer har varseltrekant med forklarende tooltip
+- [ ] «Behold min» på en functions-fil holder den utenfor (verifiser i repoet etterpå); checkboxen finnes IKKE på motorfiler
+- [ ] `_headers`-avvik viser instruksen med oppstrøms tekst i markerbar blokk; filen er urørt i repoet etter oppdateringen
+- [ ] Bekreftelsesdialogen viser målversjon + antall, og lister håndredigerte motorfiler som overskrives
+- [ ] Etter Oppdater: status følger commit → utrulling, admin laster på nytt av seg selv når /urd.json melder ny versjon, og upubliserte utkast består etter omlastingen
+- [ ] Uten publiseringstilgang (bruker utenfor ALLOWED_LOGINS): Oppdater-knappen er deaktivert med forklarende tooltip
+- [ ] Lokalt (dev-server.py uten functions): panelet degraderer pent til utilgjengelig-melding
+
 ### Testrunde-batch (0.6.9.4): oppdaterer server-side (etter rc-synken)
 
 - [ ] GET /api/github/update (innlogget) mot rc-tagget malrepo: svaret klassifiserer riktig (uendret/håndredigert/ny/slettet) mot en testklon der én functions-fil er bevisst håndredigert
