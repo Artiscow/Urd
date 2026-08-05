@@ -1,0 +1,123 @@
+# Release-synk (ADR-0004): speiler innholdet av template/ til det rene
+# urd-template-repoet («Use this template») som ÉN squashet commit per
+# utgivelse, og tagger malrepoet med versjonen. Taggen der er oppdaterens
+# sjekksum-baseline (blob-SHA-er sammenlignes mot den), så synk og tagging
+# skjer i samme kjøring og kan aldri drive fra hverandre.
+#
+# Krever secreten URD_TEMPLATE_PAT: en fine-grained PAT med contents
+# read/write KUN på malrepoet (GITHUB_TOKEN når ikke på tvers av repoer).
+# Actions er SHA-pinnede med versjonskommentar; dependabot-gruppen
+# actions-alle holder pinningene ferske.
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tagg som skal synkes (vX.Y.Z, må finnes i repoet)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Prerelease-synk (rc): hopper over CHANGELOG-sjekken'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# Én synk om gangen: to samtidige kjøringer ville kappløpt om malrepoets HEAD.
+concurrency:
+  group: release-sync
+
+env:
+  TEMPLATE_REPO: Artiscow/urd-template
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Utled tagg og prerelease-flagg
+        id: meta
+        env:
+          EVENT: ${{ github.event_name }}
+          REL_TAG: ${{ github.event.release.tag_name }}
+          REL_PRE: ${{ github.event.release.prerelease }}
+          IN_TAG: ${{ inputs.tag }}
+          IN_PRE: ${{ inputs.prerelease }}
+        run: |
+          if [ "$EVENT" = "release" ]; then
+            echo "tag=$REL_TAG" >> "$GITHUB_OUTPUT"
+            echo "prerelease=$REL_PRE" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=$IN_TAG" >> "$GITHUB_OUTPUT"
+            echo "prerelease=$IN_PRE" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.meta.outputs.tag }}
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      - name: Versjonskonsistens (engine == tagg == CHANGELOG)
+        env:
+          TAG: ${{ steps.meta.outputs.tag }}
+          PRERELEASE: ${{ steps.meta.outputs.prerelease }}
+        run: |
+          if [ "$PRERELEASE" = "true" ]; then
+            node scripts/check-release.mjs "$TAG" --prerelease
+          else
+            node scripts/check-release.mjs "$TAG"
+          fi
+
+      - name: Motor- og vernetester
+        # Billig røykvern på nøyaktig innholdet som synkes; full CI (bygg,
+        # validering, bygg-samsvar) har allerede kjørt på pushen bak taggen.
+        run: node --test tests/*.mjs
+
+      - name: Sjekk ut malrepoet
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ env.TEMPLATE_REPO }}
+          token: ${{ secrets.URD_TEMPLATE_PAT }}
+          path: urd-template
+          # Full historikk: push fra grunn klon er skjørt, og malrepoets
+          # historikk er liten (én commit per utgivelse).
+          fetch-depth: 0
+
+      - name: Synk template/ som én squashet commit og tagg
+        env:
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          set -eu
+          # Tøm arbeidskopien (alt unntatt .git) og kopier malen inn, så
+          # slettede filer i template/ også forsvinner fra malrepoet.
+          find urd-template -mindepth 1 -maxdepth 1 -not -name '.git' -exec rm -rf {} +
+          cp -a template/. urd-template/
+          cd urd-template
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'Ingen innholdsendringer siden forrige synk; tagger uendret innhold.'
+          else
+            git commit -m "Urd $TAG"
+          fi
+          # Idempotens ved omkjøring: en eksisterende tagg godtas kun hvis den
+          # alt peker på dette innholdet; ellers stoppes kjøringen (baseline-
+          # tagger skal aldri flyttes i stillhet).
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            if [ "$(git rev-parse "refs/tags/$TAG^{commit}")" = "$(git rev-parse HEAD)" ]; then
+              echo "Taggen $TAG finnes allerede og peker riktig."
+            else
+              echo "FEIL: taggen $TAG finnes med annet innhold." >&2
+              exit 1
+            fi
+          else
+            git tag "$TAG"
+          fi
+          git push origin HEAD "refs/tags/$TAG"

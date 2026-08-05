@@ -3,6 +3,13 @@
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.9.3): release-Action
+
+- [ ] Engangsoppsett gjort: offentlig `urd-template`-repo opprettet («Template repository» huket av, topic `urd-mal`), og secreten `URD_TEMPLATE_PAT` (fine-grained, contents read/write kun på malrepoet) lagt inn i monorepoet
+- [ ] Rc-dispatch: tagg en commit med et treparts rc-nummer, kjør Release-workflowen manuelt med prerelease-flagget, og se at malrepoet seedes med template/-innholdet som ÉN commit «Urd v<nummer>» pluss taggen
+- [ ] Omkjøring av samme dispatch er ufarlig: workflowen melder uendret innhold/eksisterende tagg i stedet for å lage ny commit eller flytte taggen
+- [ ] check-release stopper feil: en dispatch mot en tagg som ikke matcher urd.json.engine feiler i versjonskonsistens-steget før noe pushes
+
 ### Testrunde-batch (0.6.9.2): versjonert motor og immutable-cache
 
 - [ ] Siden laster normalt lokalt (dev-server.py) og i preview: alle sider, nav, footer, bakgrunner og animasjoner, uten 404 i konsollen/nettverksfanen (alle motor-moduler fra /assets/engine/0.6.8/)

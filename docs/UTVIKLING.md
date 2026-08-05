@@ -91,10 +91,15 @@ Urd følger [semantisk versjonering](https://semver.org/lang/no/): `MAJOR.MINOR.
 
 Sannhetskilden er `engine`-feltet i `template/urd.json`. Git-taggen (`v0.2.0`) og CHANGELOG-overskriften skal alltid stemme med den. `editor/package.json` og plugin-manifester versjoneres etter samme regler (plugins deklarerer motorkompatibilitet via `requiresEngine`).
 
-## Utgivelser (form fra v0.2, automatiseres i v0.6)
+## Utgivelser (automatisert fra 0.6.9)
 
 1. Alle tester grønne, eksempeldata validerer mot skjemaene.
-2. `npm run build` i `editor/`, committ output.
-3. Bump motorversjon i `template/urd.json` og oppdater `docs/CHANGELOG.md`.
-4. Tagg utgivelsen (`v0.x.y`).
-5. Fra v0.6: release-Action synker `template/` til `urd-template`-repoet.
+2. Bump motorversjonen: sett `engine` i `template/urd.json`, `git mv` motormappa til `template/assets/engine/<ny versjon>/`, og oppdater re-export-målene i `template/assets/urd/`-skallene pluss referansene i HTML-skallene (rot + slug-kopier). Testene, editor-bygget og valideringen leser mappenavnet fra urd.json og følger automatisk (ADR-0013); modulepreload-testen feiler på alt som henger igjen.
+3. `npm run build` i `editor/`, committ output (bundelen bærer motorstien).
+4. Oppdater `docs/CHANGELOG.md` (utgivelsesoverskrift `## [x.y.z] - dato`) og `editor/package.json` til samme versjon.
+5. Tagg utgivelsen (`v0.x.y`) og publiser en GitHub-release på taggen.
+6. Release-Action-en (`.github/workflows/release.yml`) kjører da automatisk: validerer versjonskonsistens (`scripts/check-release.mjs`: engine == tagg == CHANGELOG-overskrift == package.json), kjører testene, og synker innholdet av `template/` til `urd-template`-repoet som ÉN squashet commit («Urd v0.x.y») med samme tagg. Taggen i malrepoet er oppdaterens sjekksum-baseline og flyttes aldri.
+
+Forutsetninger (engangsoppsett): malrepoet `urd-template` finnes (offentlig, «Template repository» huket av, GitHub-topic `urd-mal`), og monorepoet har secreten `URD_TEMPLATE_PAT` (fine-grained PAT med contents read/write kun på malrepoet). Plugins deles med topicen `urd-plugin`.
+
+**Prerelease-synk (rc):** for å ende-til-ende-teste oppdatereren før et slipp kan Action-en kjøres manuelt (`workflow_dispatch`) mot en rc-tagg med prerelease-flagget satt; da hoppes CHANGELOG-/package.json-sjekkene over. Bruk et eget treparts versjonsnummer for rc-en (semver-parseren i `satisfiesEngine` er streng treparts, så suffikser som `-rc.1` kan ikke stå i engine-feltet).

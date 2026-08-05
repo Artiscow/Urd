@@ -98,7 +98,7 @@ git push
 
 - OAuth-tokenet byttes server-side og lagres i en httpOnly-cookie; det når aldri nettleser-JS.
 - `ALLOWED_LOGINS` håndheves i alle muterende endepunkter, ikke bare i UI-et.
-- Publisering kan kun skrive `content/**`, `media/**` og `plugins/plugins.json`. Kode (`functions/`, `admin/`, `assets/engine/`), workflows og sikkerhetsfiler er blokkert på serversiden, så en kapret redaktørsesjon ikke kan plante noe.
+- Publisering kan kun skrive `content/**`, `media/**` og `plugins/plugins.json`. Kode (`functions/`, `admin/`, `assets/engine/`, `assets/urd/`), workflows og sikkerhetsfiler er blokkert på serversiden, så en kapret redaktørsesjon ikke kan plante noe.
 - Se [ADR-0003](adr/0003-publisering-via-github-oauth-og-pages-functions.md) for hele begrunnelsen.
 
 ## Lokal testing av publiseringslaget (Urd-utviklere)

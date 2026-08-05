@@ -28,6 +28,11 @@ urd.json), `provides` (hva pluginen definerer), og valgfritt `csp`
 aldri automatisk, admin viser eieren hva som må legges inn). `entry` og
 `provides` er valgfrie for rene språkpakker, som ikke har kode (se under).
 
+**Dele pluginen:** legg den i et eget offentlig GitHub-repo og sett
+GitHub-topicen `urd-plugin`, så den kan finnes med topic-søk (maler delt
+som repo bruker `urd-mal`). Brukere installerer ved å kopiere mappen inn
+i `plugins/` og aktivere den i Plugins-panelet.
+
 ## Flerspråk (ADR-0012)
 
 Sett `"locales": true` i manifestet og legg `locales/{nb,nn,en-GB,se,tr}.js`
