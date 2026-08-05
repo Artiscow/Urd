@@ -10,7 +10,7 @@
  * utkast fra editoren og rerendrer inkrementelt.
  */
 import { createRegistry } from './registry.js';
-import { liftPageFile, liftSiteFile } from './migrate.js';
+import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION } from './migrate.js';
 import { applyTheme } from './theme.js';
 import { renderPage, renderSection } from './render.js';
 import { renderNav } from './nav.js';
@@ -353,7 +353,7 @@ export async function boot(opts) {
     page = liftPageFile(await (await fetch(`/${entry.file}`)).json(), rawSite);
   } catch {
     console.warn(`Urd: fant ikke sidefilen '${entry.file}' - viser tom side`);
-    page = { schemaVersion: 3, meta: { id: entry.id, title: entry.title }, sections: [] };
+    page = { schemaVersion: PAGE_SCHEMA_VERSION, meta: { id: entry.id, title: entry.title }, sections: [] };
   }
   document.title = `${page.meta?.title ?? entry.title ?? ''} - ${site.site.title}`;
   // Footeren rendres nå som side-id-en er kjent (per-side hideOn-synlighet).

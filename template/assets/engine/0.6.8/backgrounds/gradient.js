@@ -159,31 +159,6 @@ export function gradientRender(props) {
   return { background, className: anim ? (classNames[anim] ?? null) : null, styles };
 }
 
-/** v1 → v2: stoppene går fra rene fargestrenger til {color, at} jevnt
- *  fordelt. Defensiv mot blandet tilstand: et stopp som ALT er på
- *  v2-formen beholdes som det er (aldri [object Object] i CSS-en). */
-function liftStops(stops) {
-  const list = Array.isArray(stops) && stops.length ? stops : ['#0b0e14', '#1a1030'];
-  const spread = (i) => (list.length === 1 ? 0 : Math.round((i * 100) / (list.length - 1)));
-  return list.map((s, i) => {
-    if (s && typeof s === 'object') {
-      return { color: s.color ?? '#0b0e14', at: typeof s.at === 'number' ? s.at : spread(i) };
-    }
-    return { color: s, at: spread(i) };
-  });
-}
-
-/** v2 → v3: posisjoner (at) blir andeler (share) via båndgrensene midt
- *  mellom nabofarger; rekkefølgen langs gradienten blir listens rekkefølge. */
-function sharesFromPositions(stops) {
-  const sorted = [...liftStops(stops)].sort((a, b) => a.at - b.at);
-  const bounds = [0, ...sorted.slice(0, -1).map((s, i) => (s.at + sorted[i + 1].at) / 2), 100];
-  return sorted.map((s, i) => ({
-    color: s.color,
-    share: Math.round((bounds[i + 1] - bounds[i]) * 10) / 10,
-  }));
-}
-
 /* Loop-løperne må måles på nytt når vinduet endrer størrelse (px-mål).
    ÉN modulnivå-lytter; frakoblede løpere (etter re-render) lukes ut ved
    at apply returnerer false. */
@@ -212,7 +187,7 @@ function registerSpin() {
 }
 
 export const gradientLayer = {
-  version: 3,
+  version: 1,
   label: 'Gradient',
   labelKey: 'bgLayer.gradient',
   defaults: () => ({
@@ -224,18 +199,7 @@ export const gradientLayer = {
     animation: 'none',
     opacity: 1,
   }),
-  migrations: {
-    1: (props) => ({ ...props, kind: 'linear', x: 0.5, y: 0.5, stops: liftStops(props.stops) }),
-    2: (props) => ({
-      kind: props.kind === 'radial' ? 'radial' : 'linear',
-      stops: sharesFromPositions(props.stops),
-      angle: props.angle ?? 160,
-      x: props.x ?? 0.5,
-      y: props.y ?? 0.5,
-      animation: props.animate ? (props.kind === 'radial' ? 'orbit' : 'pan') : 'none',
-      opacity: props.opacity ?? 1,
-    }),
-  },
+  migrations: {},
   /**
    * @param {HTMLElement} el
    * @param {{kind: string, stops: Array<{color: string, share: number}>, angle: number, x: number, y: number, animation: string, opacity?: number}} props

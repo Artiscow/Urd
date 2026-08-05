@@ -51,7 +51,9 @@ for (const [path, schema] of cases) {
 
 // Seksjonspresetene valideres også: hver create() pluss to item-runder skal gi skjemagyldige seksjoner.
 // Strukturen og plasseringsgeometrien testes i tests/presets.test.mjs; her er det skjemakontrakten som gjelder.
-const { registerSectionPresets } = await import(new URL('template/assets/engine/sections/presets.js', `file://${root}`));
+// Motorstien er versjonert (ADR-0013): mappenavnet leses fra urd.json.engine.
+const engineVersion = JSON.parse(readFileSync(`${root}template/urd.json`, 'utf-8')).engine;
+const { registerSectionPresets } = await import(new URL(`template/assets/engine/${engineVersion}/sections/presets.js`, `file://${root}`));
 const defs = new Map();
 registerSectionPresets({ sections: { define: (id, def) => defs.set(id, def) } });
 const sections = [];
@@ -62,7 +64,7 @@ for (const def of defs.values()) {
   }
   sections.push(section);
 }
-const presetPage = { schemaVersion: 3, meta: { id: 'presets', title: 'Presets' }, sections };
+const presetPage = { schemaVersion: 1, meta: { id: 'presets', title: 'Presets' }, sections };
 const validatePresets = typeof pageSchema === 'string' ? ajv.getSchema(pageSchema) : ajv.compile(pageSchema);
 if (validatePresets(presetPage)) {
   console.log(`OK    seksjonspresets (${defs.size} presets mot page-skjemaet)`);

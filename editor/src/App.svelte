@@ -10,25 +10,25 @@
   import Dropdown from './lib/Dropdown.svelte';
   import IconEditor from './lib/IconEditor.svelte';
   // Editoren deler migreringskoden med motoren (samme fil, bundles inn).
-  import { lift, liftPageFile, liftSiteFile } from '../../template/assets/engine/migrate.js';
-  import { ta, taApiError, adminLang as currentAdminLang } from '../../template/assets/engine/i18n.js';
-  import { validateManifest, satisfiesEngine } from '../../template/assets/engine/plugins.js';
-  import { makeId } from '../../template/assets/engine/sections/presets.js';
+  import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION } from '$engine/migrate.js';
+  import { ta, taApiError, adminLang as currentAdminLang } from '$engine/i18n.js';
+  import { validateManifest, satisfiesEngine } from '$engine/plugins.js';
+  import { makeId } from '$engine/sections/presets.js';
   // Bakgrunns- og animasjonsdefinisjonene gjenbrukes for etiketter og
   // standardverdier, så editor og motor aldri drifter fra hverandre.
-  import { colorLayer } from '../../template/assets/engine/backgrounds/color.js';
-  import { gradientLayer } from '../../template/assets/engine/backgrounds/gradient.js';
-  import { glowLayer } from '../../template/assets/engine/backgrounds/glow.js';
-  import { grainLayer } from '../../template/assets/engine/backgrounds/grain.js';
-  import { imageLayer } from '../../template/assets/engine/backgrounds/image.js';
-  import { bildegalleriLayer } from '../../template/assets/engine/backgrounds/bildegalleri.js';
-  import { footerThumb } from '../../template/assets/engine/footer-thumb.js';
-  import { coreAnimations } from '../../template/assets/engine/animations/core.js';
-  import { SECTION_THEME_LABELS, contrastRatio, relativeLuminance, buildThemeCss } from '../../template/assets/engine/theme.js';
-  import { compressToWebp, svgToDataUrl, tightSvgViewBox, svgViewBox, slugify, contentHash, mediaExtension, WARN_BYTES } from '../../template/assets/engine/imageTools.js';
-  import { FONT_STACKS } from '../../template/assets/engine/fonts.js';
-  import { frameAtPoint } from '../../template/assets/engine/place.js';
-  import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '../../template/assets/engine/icons.js';
+  import { colorLayer } from '$engine/backgrounds/color.js';
+  import { gradientLayer } from '$engine/backgrounds/gradient.js';
+  import { glowLayer } from '$engine/backgrounds/glow.js';
+  import { grainLayer } from '$engine/backgrounds/grain.js';
+  import { imageLayer } from '$engine/backgrounds/image.js';
+  import { bildegalleriLayer } from '$engine/backgrounds/bildegalleri.js';
+  import { footerThumb } from '$engine/footer-thumb.js';
+  import { coreAnimations } from '$engine/animations/core.js';
+  import { SECTION_THEME_LABELS, contrastRatio, relativeLuminance, buildThemeCss } from '$engine/theme.js';
+  import { compressToWebp, svgToDataUrl, tightSvgViewBox, svgViewBox, slugify, contentHash, mediaExtension, WARN_BYTES } from '$engine/imageTools.js';
+  import { FONT_STACKS } from '$engine/fonts.js';
+  import { frameAtPoint } from '$engine/place.js';
+  import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '$engine/icons.js';
 
   /** Bakgrunnslagtypene i den rekkefølgen de tilbys i panelet. */
   const BG_TYPES = [
@@ -971,28 +971,15 @@
     setBgProp(bg, i, 'size', clampBgSize(Math.round(size * 100) / 100));
   }
 
-  /* Gradient-editoren (lag-versjon 2: frie stopp + lineær/radiell).
-     Eldre lag (v1, rene fargestrenger) løftes for visning uten å røre
-     utkastet, og løftes I utkastet ved første gradient-endring. */
+  /* Gradient-editoren (frie stopp + lineær/radiell). */
 
   function gradientProps(layer) {
-    if ((layer.version ?? 1) >= gradientLayer.version) return layer.props;
-    // Snapshot før lift: migreringssteget structuredCloner props, som
-    // kaster på en $state-proxy (samme felle som postMessage).
-    const raw = $state.snapshot(layer);
-    return lift({ type: 'gradient', version: raw.version ?? 1, props: raw.props }, gradientLayer).props;
+    return layer.props;
   }
 
   function mutateGradient(bg, i, key, fn) {
     bg.mutate(key, (t) => {
-      const layer = t.background.layers[i];
-      if ((layer.version ?? 1) < gradientLayer.version) {
-        const res = lift({ type: 'gradient', version: layer.version ?? 1, props: $state.snapshot(layer.props) }, gradientLayer);
-        if (!res.ok) return;
-        layer.props = res.props;
-        layer.version = res.version;
-      }
-      fn(layer.props);
+      fn(t.background.layers[i].props);
     });
   }
 
@@ -1570,7 +1557,7 @@
   /** Tom side for nyopprettede sider (må validere mot page-skjemaet). */
   function blankPage(entry) {
     return {
-      schemaVersion: 3,
+      schemaVersion: PAGE_SCHEMA_VERSION,
       meta: { id: entry.id, title: entry.title },
       sections: [{
         id: makeId('sec'),

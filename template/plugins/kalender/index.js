@@ -22,7 +22,7 @@ import {
 // editor-chromen (admin-språket), dates() for måneds-/ukedagsnavn og tp()
 // for flertall. Ordboka (locales/) lastes av plugin-lasteren FØR register()
 // - t/ta kalles kun i render-/fabrikk-kropper, aldri på modulnivå.
-import { t, ta, tp, taApiError, dates } from '/assets/engine/i18n.js';
+import { t, ta, tp, taApiError, dates } from '/assets/urd/i18n.js';
 
 const el2 = (tag, className, textContent) => {
   const node = document.createElement(tag);
@@ -523,7 +523,7 @@ function renderCalendar(el, props, ctx) {
       tools.appendChild(gear);
       host.append(tools, panel);
       // Hjelpechipen (ADR-0008): blokker med spesialfunksjoner forklarer seg selv.
-      import('/assets/engine/hint.js').then(({ attachHint }) => {
+      import('/assets/urd/hint.js').then(({ attachHint }) => {
         if (!host.isConnected || host.querySelector('.urd-hint-chip')) return;
         const chip = attachHint(tools, {
           title: ta('kalender.edit.hintTitle'),
@@ -627,24 +627,14 @@ function hvaSkjerSection() {
 /** @param {typeof window.Urd} Urd */
 export function register(Urd) {
   Urd.blocks.define('kalender', {
-    version: 3,
+    version: 1,
     label: 'Kalender',
     labelKey: 'kalender.edit.blockLabel',
     defaults: () => ({ sources: [], view: 'list', limit: 6, showCategories: true, showSubscribe: true }),
     // Foldemenyen i blokkmenyene: én variant per visning (generisk variants-felt).
     // labelKey løses av konsumentene (iframe-siden har plugin-ordboka).
     variants: VIEW_NAMES.map(([view, labelKey]) => ({ label: view, labelKey, props: { view } })),
-    migrations: {
-      // v1 (eksempel-kalenderen): source (én streng) → sources (liste).
-      1: (props) => ({
-        sources: props.source ? [props.source] : [],
-        view: ['list', 'cards', 'month', 'next'].includes(props.view) ? props.view : 'list',
-        limit: props.limit ?? 6,
-        showSubscribe: true,
-      }),
-      // v2 → v3: kategori-filteret ble et valg (på som standard).
-      2: (props) => ({ ...props, showCategories: true }),
-    },
+    migrations: {},
     render: renderCalendar,
   });
 

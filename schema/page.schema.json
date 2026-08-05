@@ -182,7 +182,7 @@
       "type": "object",
       "required": ["x", "y", "w", "h"],
       "additionalProperties": false,
-      "description": "Fysiske enheter (fra schemaVersion 2): x/w i prosent av seksjonsbredden, y/h i px. Gridet er kun et snappeverktøy og påvirker aldri plasseringen.",
+      "description": "Fysiske enheter: x/w i prosent av seksjonsbredden, y/h i px. Gridet er kun et snappeverktøy og påvirker aldri plasseringen.",
       "properties": {
         "x": { "type": "number", "minimum": 0, "maximum": 100, "description": "Venstrekant i % av seksjonsbredden" },
         "y": { "type": "number", "description": "Overkant i px (kan være negativ: blokken henger over seksjonstoppen)" },

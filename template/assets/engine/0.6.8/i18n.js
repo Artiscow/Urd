@@ -118,7 +118,7 @@ export function requestedLang(raw) {
  */
 async function loadPack(code, kind) {
   try {
-    const mod = await import(/* @vite-ignore */ '/assets/engine/language-packs.js');
+    const mod = await import(/* @vite-ignore */ '/assets/urd/language-packs.js');
     return await mod.loadPackStrings(code, kind);
   } catch {
     return null;
@@ -246,7 +246,7 @@ export const adminLocaleReady = new Promise((resolve) => { adminLocaleReadyResol
  * lastingen helt (vite dev uten template-serveren) vises nøklene.
  */
 export async function initAdminLocale(lang = detectAdminLang()) {
-  const load = async (code) => (await import(/* @vite-ignore */ `/assets/engine/locales/admin/${code}.js`)).default.strings;
+  const load = async (code) => (await import(/* @vite-ignore */ `/assets/urd/locales/admin/${code}.js`)).default.strings;
   admin.lang = requestedLang(lang);
   const builtin = isBuiltinLang(admin.lang);
   try {

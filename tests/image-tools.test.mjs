@@ -4,7 +4,8 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { svgViewBox, tightSvgViewBox, mediaExtension, slugify } from '../template/assets/engine/imageTools.js';
+import { engineImport } from './_engine.mjs';
+const { svgViewBox, tightSvgViewBox, mediaExtension, slugify } = await engineImport('imageTools.js');
 
 test('svgViewBox: leser viewBox, faller til width/height, ellers null', () => {
   assert.deepEqual(svgViewBox('<svg viewBox="0 0 100 40"></svg>'), [0, 0, 100, 40]);

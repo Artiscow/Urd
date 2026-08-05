@@ -382,7 +382,7 @@
       "type": "object",
       "required": ["size"],
       "additionalProperties": false,
-      "description": "Snappeverktøy (fra site-schemaVersion 2): kvadratiske ruter. Påvirker aldri plassering.",
+      "description": "Snappeverktøy: kvadratiske ruter. Påvirker aldri plassering.",
       "properties": {
         "size": { "type": "number", "minimum": 2, "maximum": 256, "description": "Rutestørrelse i px (mindre = tettere)" },
         "snap": { "type": "boolean", "default": true }

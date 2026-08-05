@@ -11,7 +11,7 @@
    * Popoveren er position: fixed (panelene klipper absolute innhold),
    * og lukkes ved klikk utenfor eller Escape.
    */
-  import { ta } from '../../../template/assets/engine/i18n.js';
+  import { ta } from '$engine/i18n.js';
 
   let { value = '#000000', tokens = [], label = ta('cp.pickColor'), onchange, allowClear = false } = $props();
 

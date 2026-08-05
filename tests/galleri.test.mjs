@@ -5,11 +5,12 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { stepIndex, canAutoplay, normalizeInterval, gridColumns } from '../template/assets/engine/galleri-model.js';
-import { presetThumb, parseMinHeightPx } from '../template/assets/engine/preset-thumb.js';
-import { registerSectionPresets } from '../template/assets/engine/sections/presets.js';
-import { galleriBlock } from '../template/assets/engine/blocks/galleri.js';
-import { bildegalleriLayer } from '../template/assets/engine/backgrounds/bildegalleri.js';
+import { engineImport } from './_engine.mjs';
+const { stepIndex, canAutoplay, normalizeInterval, gridColumns } = await engineImport('galleri-model.js');
+const { presetThumb, parseMinHeightPx } = await engineImport('preset-thumb.js');
+const { registerSectionPresets } = await engineImport('sections/presets.js');
+const { galleriBlock } = await engineImport('blocks/galleri.js');
+const { bildegalleriLayer } = await engineImport('backgrounds/bildegalleri.js');
 
 test('stepIndex: rundgang begge veier', () => {
   assert.equal(stepIndex(0, 1, 3), 1);

@@ -240,14 +240,11 @@ function mountParallaxCss(img, speed, blurMargin, fit) {
 }
 
 export const imageLayer = {
-  version: 2,
+  version: 1,
   label: 'Bilde',
   labelKey: 'bgLayer.image',
   defaults: () => ({ src: '', fit: 'vanlig', x: 0.5, y: 0.5, size: 1, opacity: 1, blur: 0, parallax: 0, bleed: 'none' }),
-  migrations: {
-    // v1 -> v2: parallax lagt til (additivt, av som standard).
-    1: (props) => ({ ...props, parallax: props.parallax ?? 0 }),
-  },
+  migrations: {},
   /**
    * @param {HTMLElement} el
    * @param {{src: string, fit?: 'cover'|'egen'|'contain'|'repeat', x?: number, y?: number, size?: number, opacity?: number, blur?: number, parallax?: number, bleed?: 'none'|'up'|'down'|'both'}} props

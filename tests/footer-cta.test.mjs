@@ -5,13 +5,14 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {
+import { engineImport } from './_engine.mjs';
+const {
   isEmail,
   isSpam,
   buildNewsletterPayload,
   buildNewsletterMailto,
   endpointOrigin,
-} from '../template/assets/engine/footer-cta.js';
+} = await engineImport('footer-cta.js');
 
 test('isEmail godtar rimelige adresser og avviser resten', () => {
   for (const ok of ['a@b.no', 'ola.nordmann@urd.no', ' post@urd.no ']) {

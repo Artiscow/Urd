@@ -45,9 +45,12 @@ export default { lang: 'nb', strings: { '<id>.nokkel': 'Tekst', '<id>.edit.nokke
   tests/i18n.test.mjs`) finner `locales/`-mappen automatisk og krever
   identiske nøkkelsett, ingen tomme verdier, ingen tankestrek og samme
   `{var}`-tokens i alle fem filene.
-- **Oppslag**: `import { t, ta } from '/assets/engine/i18n.js'` - `t()` for
+- **Oppslag**: `import { t, ta } from '/assets/urd/i18n.js'` - `t()` for
   besøkende-tekster (site-språket), `ta()` for editor-chromen (admin-
-  språket). Kall dem KUN i render-/fabrikkfunksjoner, aldri på modulnivå
+  språket). `/assets/urd/` er det STABILE plugin-API-et (ADR-0013):
+  motoren selv bor i en versjonert mappe (`/assets/engine/<versjon>/`)
+  som byttes ved hver Urd-utgivelse - hardkod aldri den versjonerte
+  stien i en plugin. Kall dem KUN i render-/fabrikkfunksjoner, aldri på modulnivå
   (modulen kan evalueres før ordboka er lastet); tabeller på modulnivå
   holder nøkkelNAVN, og blokk-/preset-defs bruker de additive feltene
   `labelKey`/`hintKey` (behold `label`/`hint` som fallback).
@@ -81,7 +84,7 @@ plugins/sprak-svensk/locales/admin/sv.js    admin-chromen (ta())
 ```
 
 - **Filene har samme form og nøkler som motorens egne** locale-filer:
-  kopier `assets/engine/locales/site/nb.js` (28 nøkler) eller
+  kopier motorens `locales/site/nb.js` (28 nøkler) eller
   `.../admin/nb.js` (984 nøkler) og oversett verdiene. Nøklene endres
   aldri.
 - **`site` og `admin` er uavhengige.** En pakke kan dekke besøkende-siden,
@@ -108,7 +111,7 @@ plugins/sprak-svensk/locales/admin/sv.js    admin-chromen (ta())
 
 ```js
 if (ctx.preview) {
-  import('/assets/engine/hint.js').then(({ attachHint }) => {
+  import('/assets/urd/hint.js').then(({ attachHint }) => {
     attachHint(host, { title: 'Blokken min', lines: ['Funksjon 1 …', 'Funksjon 2 …'] });
   });
 }
@@ -121,7 +124,7 @@ foldemeny i blokkmenyene (kalenderen bruker det til visningene sine).
 
 **Temastyrt UI-regelen (ADR-0009)**: aldri native `<select>` i
 redigerings-UI - popupen følger OS-temaet og blir uleselig. Bruk
-`createDropdown` fra `/assets/engine/dropdown.js`, eller segmentknapper
+`createDropdown` fra `/assets/urd/dropdown.js`, eller segmentknapper
 for små valgsett.
 
 Se [`kalender/`](kalender/) for referansen: den viser hele formen (manifest

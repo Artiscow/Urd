@@ -4,7 +4,8 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { registerSectionPresets } from '../template/assets/engine/sections/presets.js';
+import { engineImport } from './_engine.mjs';
+const { registerSectionPresets } = await engineImport('sections/presets.js');
 
 const defs = new Map();
 registerSectionPresets({ sections: { define: (id, def) => defs.set(id, def) } });

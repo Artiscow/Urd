@@ -5,25 +5,17 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {
+import { engineImport } from './_engine.mjs';
+const {
   imageLayer, bgPosition, bgSize, bleedClip, parallaxPad, parallaxOffset,
-} from '../template/assets/engine/backgrounds/image.js';
-import { lift } from '../template/assets/engine/migrate.js';
+} = await engineImport('backgrounds/image.js');
 
-test('imageLayer: standardverdier + v1 -> v2 legger til parallax', () => {
-  assert.equal(imageLayer.version, 2);
+test('imageLayer: standardverdier', () => {
+  assert.equal(imageLayer.version, 1);
   assert.equal(imageLayer.defaults().fit, 'vanlig');
   assert.equal(imageLayer.defaults().size, 1);
   assert.equal(imageLayer.defaults().parallax, 0);
   assert.equal(imageLayer.defaults().bleed, 'none');
-  const lifted = lift({ type: 'image', version: 1, props: { src: '/media/a.webp', blur: 4 } }, imageLayer);
-  assert.equal(lifted.ok, true);
-  assert.equal(lifted.version, 2);
-  assert.equal(lifted.props.parallax, 0);
-  assert.equal(lifted.props.src, '/media/a.webp');
-  assert.equal(lifted.props.blur, 4);
-  const kept = lift({ type: 'image', version: 1, props: { src: 'x', parallax: 0.6 } }, imageLayer);
-  assert.equal(kept.props.parallax, 0.6);
 });
 
 test('bgPosition: posisjon til background-position-prosent (kan gå utenfor 0-100)', () => {

@@ -5,7 +5,8 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { sortEntries, groupByYear, dateBadge } from '../template/assets/engine/samlinger.js';
+import { engineImport } from './_engine.mjs';
+const { sortEntries, groupByYear, dateBadge } = await engineImport('samlinger.js');
 
 const entries = [
   { id: 'a', title: 'Eldst', date: '2024-03-01' },

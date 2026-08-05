@@ -8,7 +8,7 @@
    * ikke ligge som CSS slik bildeblokken gjør; de tegnes inn i selve ikonet.
    * ÉN coverDraw bruker samme matematikk til både forhåndsvisning og eksport.
    */
-  import { ta } from '../../../template/assets/engine/i18n.js';
+  import { ta } from '$engine/i18n.js';
 
   let { image = '', onapply, oncancel } = $props();
 

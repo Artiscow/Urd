@@ -6,9 +6,10 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { engineImport } from './_engine.mjs';
 
-import { ICON_LIBRARY, ICON_CATEGORIES, iconSvg } from '../template/assets/engine/icons.js';
-import { GLYPH_CATEGORIES, GLYPH_RECENT_MAX, pushRecentGlyph } from '../template/assets/engine/glyphs.js';
+const { ICON_LIBRARY, ICON_CATEGORIES, iconSvg } = await engineImport('icons.js');
+const { GLYPH_CATEGORIES, GLYPH_RECENT_MAX, pushRecentGlyph } = await engineImport('glyphs.js');
 
 test('ikonbiblioteket og kategoriene samsvarer: hver id finnes, ingen duplikater, ingen foreldreløse', () => {
   const seen = new Set();

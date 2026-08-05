@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 1,
   "meta": {
     "id": "kaker",
     "title": "Kaker"
@@ -18,7 +18,7 @@
         "layers": [
           {
             "type": "image",
-            "version": 2,
+            "version": 1,
             "props": {
               "src": "/media/bakgrunn-f5939d16.webp",
               "fit": "vanlig",
@@ -33,7 +33,7 @@
           },
           {
             "type": "gradient",
-            "version": 3,
+            "version": 1,
             "props": {
               "kind": "linear",
               "stops": [

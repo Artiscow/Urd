@@ -52,7 +52,7 @@ export function renderBackgroundLayers(host, background) {
  * Oversetter en frame til CSS-posisjonering.
  * Ren funksjon (ingen DOM), testet i tests/render.test.mjs.
  *
- * Frames er i FYSISKE enheter (schemaVersion 2): x/w i prosent av
+ * Frames er i FYSISKE enheter: x/w i prosent av
  * seksjonsbredden (flyter med skjermen), y/h i px. Gridet er kun et
  * snappeverktøy ved redigering og påvirker aldri plasseringen.
  *

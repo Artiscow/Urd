@@ -33,5 +33,18 @@
 /media/*
   Cache-Control: public, max-age=31536000, immutable
 
+# Motoren er versjonsadressert (assets/engine/<versjon>/..., ADR-0013): ny
+# motor gir ny mappe, så modulene kan caches for alltid. Regelen er BEVISST
+# versjonsnøytral (/assets/engine/* dekker enhver versjonert mappe), så denne
+# håndredigerbare fila aldri trenger endring ved motor-bump. De stabile
+# plugin-API-skallene i /assets/urd/ står UTENFOR og revalideres normalt.
+/assets/engine/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# base.css refereres alltid med innholdsstemplet ?v=<hash> fra HTML-skallene:
+# nytt innhold gir ny URL, så også den kan caches for alltid.
+/assets/styles/base.css
+  Cache-Control: public, max-age=31536000, immutable
+
 /admin/*
   X-Robots-Tag: noindex

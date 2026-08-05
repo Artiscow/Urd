@@ -4,7 +4,8 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { embedUrl } from '../template/assets/engine/blocks/video.js';
+import { engineImport } from './_engine.mjs';
+const { embedUrl } = await engineImport('blocks/video.js');
 
 test('kjente videolenker gir personvennlig embed-URL', () => {
   assert.equal(embedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ'),

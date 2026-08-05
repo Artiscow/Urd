@@ -5,7 +5,8 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { faqBlock, groupName } from '../template/assets/engine/blocks/faq.js';
+import { engineImport } from './_engine.mjs';
+const { faqBlock, groupName } = await engineImport('blocks/faq.js');
 
 test('groupName: uten multi deler spørsmålene ett navn (eksklusiv utfolding)', () => {
   assert.equal(groupName('abc', false), 'urd-faq-abc');

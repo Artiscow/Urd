@@ -5,7 +5,7 @@
  * klikker utenfor eller trykker Escape, så det kan leses i ro.
  *
  * Brukes av kjerneblokker OG plugins (samme regel for begge):
- *   import { attachHint } from '/assets/engine/hint.js';
+ *   import { attachHint } from '/assets/urd/hint.js';
  *   attachHint(vertselement, { title: 'Kalender', lines: ['…', '…'] });
  *
  * Kun i preview-laget: kall den bare når ctx.preview er sann. Chip og kort

@@ -5,8 +5,9 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { engineImport } from './_engine.mjs';
 
-import { frameAtPoint } from '../template/assets/engine/place.js';
+const { frameAtPoint } = await engineImport('place.js');
 
 const grid = { size: 8 };
 

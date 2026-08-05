@@ -5,8 +5,9 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { engineImport } from './_engine.mjs';
 
-import { stickyState } from '../template/assets/engine/sticky-model.js';
+const { stickyState } = await engineImport('sticky-model.js');
 
 // Standardoppsett: seksjon fra 1000, blokk 200 inn i seksjonen, 100 høy,
 // egen seksjons bunn på 2000, festes 16 px fra vindustoppen.

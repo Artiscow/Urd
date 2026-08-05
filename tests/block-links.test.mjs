@@ -7,8 +7,9 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buttonBlock } from '../template/assets/engine/blocks/button.js';
-import { isSafeHref } from '../template/assets/engine/nav-model.js';
+import { engineImport } from './_engine.mjs';
+const { buttonBlock } = await engineImport('blocks/button.js');
+const { isSafeHref } = await engineImport('nav-model.js');
 
 /** Minste mulige element-stub: nok til buttonBlock.render. */
 function makeElement() {

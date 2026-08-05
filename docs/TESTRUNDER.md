@@ -3,6 +3,23 @@
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.9.2): versjonert motor og immutable-cache
+
+- [ ] Siden laster normalt lokalt (dev-server.py) og i preview: alle sider, nav, footer, bakgrunner og animasjoner, uten 404 i konsollen/nettverksfanen (alle motor-moduler fra /assets/engine/0.6.8/)
+- [ ] Undersidene (kaker/om-oss/kontakt) har nå render-blokkerende tema og blinkefritt lys/mørk-valg ved direkte innlasting (theme.css + theme-init.js kom inn med kopi-rettingen)
+- [ ] Alle fire pluginene virker i preview (kalender, skjema, kart, språkpakken): importene går via /assets/urd/-skallene
+- [ ] Admin-språkbytte virker fortsatt (ordbøkene kjøretids-lastes via /assets/urd/locales/admin/)
+- [ ] Etter deploy: svar-headerne viser `immutable` på en motorfil (f.eks. /assets/engine/0.6.8/boot.js) og på /assets/styles/base.css, men IKKE på /assets/urd/i18n.js
+- [ ] Etter deploy: publisér en side og sjekk at slug-kopiene skrives med de versjonerte stiene (vis kildekode på en underside)
+
+### Testrunde-batch (0.6.9.1): pre-v1-innbakingen
+
+- [ ] Alle fire eksempelsidene rendrer identisk som før innbakingen (gradienter, bilde-bakgrunner med parallaks, kalender-blokken på Hjem): versjonstallene ble endret, aldri props-formene
+- [ ] Gradient-editoren: rediger farger/andeler/animasjon på et gradient-lag (Hjem eller Kaker) og se at endringer slår gjennom og publiserer rent (lift-løftingen i editoren er fjernet)
+- [ ] Ny side: opprett en side i admin, publiser, og sjekk i repoet at sidefilen har `"schemaVersion": 1`
+- [ ] Kalender-blokken: sett inn en ny kalender fra blokkvelgeren og se at den fungerer (version 1, ingen migrering i veien)
+- [ ] Konsollen hos besøkende: ingen plassholder-advarsler («missing-migration»/«newer-than-engine») på noen av sidene
+
 ### Testrunde-batch (0.6.0.10): API-feil på admin-språket, motor-stempel og CSS-rydding
 
 - [ ] API-feil oversettes: sett admin-språket til English (UK), logg ut i en annen fane og prøv å publisere - feilmeldingen kommer på engelsk (kode-oppslag), ikke som norsk backend-tekst

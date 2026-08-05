@@ -12,11 +12,11 @@
 import {
   isSpam, validate, buildMailto, buildPayload, endpointOrigin,
 } from './form.js';
-import { createDropdown } from '/assets/engine/dropdown.js';
+import { createDropdown } from '/assets/urd/dropdown.js';
 // Flerspråk (ADR-0012): t() for besøkende-tekster (site-språket), ta() for
 // editor-chromen og seed-defaults (admin-språket). Ordboka (locales/) lastes
 // av plugin-lasteren FØR register() - t/ta kalles aldri på modulnivå.
-import { t, ta } from '/assets/engine/i18n.js';
+import { t, ta } from '/assets/urd/i18n.js';
 
 /** Felttype-id + etikett-NØKKEL (ta-oppslag ved bruk; aldri på modulnivå). */
 const FIELD_TYPES = [['text', 'skjema.edit.typeText'], ['email', 'skjema.edit.typeEmail'], ['tel', 'skjema.edit.typeTel'], ['textarea', 'skjema.edit.typeTextarea']];
@@ -380,7 +380,7 @@ function renderSkjema(el, props, ctx) {
     const tools = el2('div', 'urd-skjema-tools');
     tools.appendChild(gear);
     host.append(tools, panel);
-    import('/assets/engine/hint.js').then(({ attachHint }) => {
+    import('/assets/urd/hint.js').then(({ attachHint }) => {
       if (!host.isConnected || host.querySelector('.urd-hint-chip')) return;
       const chip = attachHint(tools, {
         title: ta('skjema.edit.hintTitle'),

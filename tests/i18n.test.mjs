@@ -10,11 +10,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, existsSync, readFileSync } from 'node:fs';
-import {
+import { engineImport, ENGINE_DIR } from './_engine.mjs';
+const {
   t, tp, matchLang, requestedLang, initSiteLocale, dates,
   SUPPORTED_LANGS, validateLanguages, isBuiltinLang,
-} from '../template/assets/engine/i18n.js';
-import { registerPackLanguages, loadPackStrings, packLanguages } from '../template/assets/engine/language-packs.js';
+} = await engineImport('i18n.js');
+const { registerPackLanguages, loadPackStrings, packLanguages } = await engineImport('language-packs.js');
 
 const ROOT = new URL('../template/', import.meta.url);
 const BASE = 'nb';
@@ -27,8 +28,8 @@ const pluginDirs = () => readdirSync(PLUGINS, { withFileTypes: true }).filter((e
  *  dekke deler av settet); de testes for seg under. */
 function localeDirs() {
   const dirs = [
-    new URL('assets/engine/locales/site/', ROOT),
-    new URL('assets/engine/locales/admin/', ROOT),
+    new URL('locales/site/', ENGINE_DIR),
+    new URL('locales/admin/', ENGINE_DIR),
   ];
   for (const name of pluginDirs()) {
     const dir = new URL(`${name}/locales/`, PLUGINS);
@@ -96,7 +97,7 @@ for (const dir of localeDirs()) {
 }
 
 test('site-basen har fallback-datotabeller med 12/12/7/7 innslag', async () => {
-  const nb = (await import('../template/assets/engine/locales/site/nb.js')).default;
+  const nb = (await engineImport('locales/site/nb.js')).default;
   assert.equal(nb.dates.months.length, 12);
   assert.equal(nb.dates.monthsShort.length, 12);
   assert.equal(nb.dates.weekdays.length, 7);
@@ -157,7 +158,7 @@ for (const [id, manifest] of languagePacks()) {
         assert.equal(mod.lang, entry.code, `${id}/${kind}/${entry.code}: lang-feltet matcher koden`);
         // En pakke KAN dekke deler av settet (basen ligger under), men en
         // nøkkel som ikke finnes i basen er en skrivefeil som aldri vises.
-        const base = (await import(new URL(`assets/engine/locales/${kind}/${BASE}.js`, ROOT))).default.strings;
+        const base = (await engineImport(`locales/${kind}/${BASE}.js`)).default.strings;
         for (const [key, value] of Object.entries(mod.strings)) {
           assert.ok(base[key] !== undefined, `${id}/${kind}/${entry.code}: ukjent nøkkel '${key}'`);
           assert.ok(String(value).trim().length, `${id}/${kind}/${entry.code}: '${key}' er tom`);
@@ -245,7 +246,7 @@ test('tp: flertallskategorier via Intl.PluralRules (nb one/other)', async () => 
 test('api-feilkoder: hver code i functions har en api.-nøkkel i admin-basen', () => {
   // Basen leses som tekst: nøklene hentes med regex, samme mekaniske
   // form som resten av paritetstestene.
-  const nbSrc = readFileSync(new URL('assets/engine/locales/admin/nb.js', ROOT), 'utf-8');
+  const nbSrc = readFileSync(new URL('locales/admin/nb.js', ENGINE_DIR), 'utf-8');
   const adminKeys = new Set([...nbSrc.matchAll(/'(api\.[A-Za-z]+)':/g)].map((m) => m[1]));
   const fnDir = new URL('functions/', ROOT);
   const codes = new Set();
@@ -266,8 +267,8 @@ test('api-feilkoder: hver code i functions har en api.-nøkkel i admin-basen', (
 });
 
 test('taApiError: kjent kode oversettes med parametre, ukjent faller til error-teksten', async () => {
-  const { taApiError, addAdminDict } = await import('../template/assets/engine/i18n.js');
-  const nbAdmin = (await import('../template/assets/engine/locales/admin/nb.js')).default;
+  const { taApiError, addAdminDict } = await engineImport('i18n.js');
+  const nbAdmin = (await engineImport('locales/admin/nb.js')).default;
   addAdminDict(nbAdmin.strings);
   assert.equal(
     taApiError({ error: 'rå tekst', code: 'setupMissingEnv', key: 'GITHUB_REPO' }),

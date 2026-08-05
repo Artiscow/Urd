@@ -4,8 +4,9 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { engineImport } from './_engine.mjs';
 
-import { blocksInRect, alignMoves, distributeMoves, groupDelta } from '../template/assets/engine/selection.js';
+const { blocksInRect, alignMoves, distributeMoves, groupDelta } = await engineImport('selection.js');
 
 test('blocksInRect: delvis overlapp holder, naboer utenfor treffes ikke', () => {
   const blocks = [

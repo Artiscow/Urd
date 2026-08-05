@@ -8,7 +8,7 @@
  * engelsk. Ordbøkene kjøretids-importeres og bundles aldri.
  */
 import { mount } from 'svelte';
-import { initAdminLocale } from '../../template/assets/engine/i18n.js';
+import { initAdminLocale } from '$engine/i18n.js';
 import App from './App.svelte';
 
 // Dokumentets lang settes fra det som FAKTISK ble lastet: et valgt

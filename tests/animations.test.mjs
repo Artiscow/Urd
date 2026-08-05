@@ -5,8 +5,9 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { coreAnimations, staggerColumnDelays } from '../template/assets/engine/animations/core.js';
-import { lift } from '../template/assets/engine/migrate.js';
+import { engineImport } from './_engine.mjs';
+const { coreAnimations, staggerColumnDelays } = await engineImport('animations/core.js');
+const { lift } = await engineImport('migrate.js');
 
 test('kjerneanimasjonene følger version+migrate-kontrakten', () => {
   const ids = Object.keys(coreAnimations);

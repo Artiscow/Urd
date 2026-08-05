@@ -1,0 +1,22 @@
+# ADR-0013: Immutable motorversjonering og kopi-oppfriskningsplikten
+
+Dato: 5. august 2026. Status: vedtatt (v0.6, milepæl 0.6.9).
+
+## Kontekst
+
+Motoren serveres som rå ES-moduler uten cache-styring: hver besøkende revaliderte hver modul, og 0.6.32-ytelsesarbeidet utsatte immutable-caching hit. `?v=`-query-stempling (mønsteret base.css nå bruker) virker ikke for motoren, fordi relative ES-importer (`import './render.js'`) ikke arver queryen fra importøren; det eneste som gjør hele grafen adresserbar per versjon, er stien selv. Samtidig skriver publiseringen `<slug>/index.html`-rutingskopier som rå kopier av rot-index.html, så en motorflytting som sletter gammel mappe kan foreldreløse kopier som aldri republiseres. Og plugins (også tredjeparts, utenfor repoet) importerer motormoduler med absolutte stier som ikke kan bære et versjonsnummer de ikke kjenner.
+
+## Beslutning
+
+1. **Hele motoren bor i en versjonert mappe: `assets/engine/<versjon>/`, der mappenavnet ALLTID er lik `engine`-feltet i urd.json.** En egen, billigere teller er forkastet: en glemt teller-bump ville servert stale immutable-moduler i stillhet (blandet motorversjon i nettleseren, verste feilklassen), mens semver-navnet gjør invarianten trivielt testbar. Testene, editor-bygget og valideringen leser mappenavnet fra urd.json (tests/_engine.mjs, vite-aliaset `$engine`, validate.mjs), så en omdøping er ETT feltbytte pluss git mv; modulepreload-testen håndhever at mappa finnes, at det kun finnes én versjon, og at alle HTML-referanser peker på den.
+2. **`_headers` får versjonsnøytrale immutable-regler:** `/assets/engine/*` og `/assets/styles/base.css` (sistnevnte alltid referert med innholdsstempel `?v=<hash8>`, samme djb2-hash som media-navnene). Reglene skrives ÉN gang og trenger aldri endres ved motor-bump; det er avgjørende fordi `_headers` er håndredigerbar (plugin-CSP, ADR-0006) og permanent unntatt automatisk oppdatering.
+3. **Det stabile plugin-API-et bor i `assets/urd/`, UTENFOR det immutable treet:** skallmoduler (én re-export hver) for i18n.js, hint.js, dropdown.js, language-packs.js og locales/admin/<kode>.js x5. Plugins importerer KUN `/assets/urd/`-stier og hardkoder aldri den versjonerte stien. Skallene revalideres normalt (ingen immutable), bærer versjonen i re-export-målet og oppdateres i slippritualet (testhåndhevet mot urd.json.engine). Siden både motorens relative importer og skallene ender på samme versjonerte modul-URL, deles modulinstansen: i18n-registrene forblir singletons. De dynamiske importene i i18n.js/plugins.js (admin-ordbøker, språkpakker) går også via skallene, fordi de samme linjene kjører fra editor-bundelen der en relativ sti ville pekt feil. Alternativene ble forkastet: importmap krever inline script (CSP-en har bevisst ikke `unsafe-inline`), og skall på engine-roten ville krevd en VERSJONERT immutable-regel i den håndredigerbare `_headers`.
+4. **Kopi-oppfriskningsplikten:** enhver mekanisme som bytter motorversjon MÅ skrive rot-index.html og ALLE `<slug>/index.html`-kopier i samme commit som mappebyttet. Publiseringen gjør det allerede (kopiene skrives som rå kopi av servert rot ved hver publisering); 0.6.9-oppdatereren pålegges det eksplisitt. Modulepreload-testen krever at kopiene i malen er byte-like roten, etter at drift ble funnet i praksis (kopiene manglet theme.css-lenken og theme-init.js).
+5. **Ren swap uten N-1-retensjon:** gammel motormappe slettes i samme commit som ny legges inn. Vinduet der en allerede nedlastet HTML peker på slettet mappe, er sekunder (deploy-atomet hos Cloudflare Pages er hele deployen), og en reload henter nytt skall; å beholde N-1 en runde ville doblet repostørrelsen og utsatt, ikke fjernet, problemet. Avveiningen aksepteres for v1 av oppdatereren.
+
+## Konsekvenser
+
+- Motorbytte er en utgivelseshandling (fase-slipp/oppdaterer), aldri en løpende utviklingshandling; lokal utvikling og preview er upåvirket (stiene er de samme, bare versjonerte).
+- ELEMENTKART 5b.7 (betinget per-side asset-lasting) er eksplisitt utsatt: per-side-varierende skall står i direkte spenning med både den globale modulepreload-lista (anti-drift-testen) og kopi-oppfriskningsplikten (kopiene må være byte-like). Tas den opp igjen, må den løse begge.
+- Nye motormoduler som skal være plugin-API, krever et nytt skall i `assets/urd/` og en linje i plugin-README; alt annet i motoren er interna og kan flyttes fritt innenfor versjonsmappa.
+- Editor-bundelen bunter motormoduler og må gjenbygges ved motor-bump (bundlerens kildekommentarer bærer stien), som slippritualet uansett krever.

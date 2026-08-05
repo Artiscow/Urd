@@ -4,11 +4,12 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { engineImport } from './_engine.mjs';
 
-import {
+const {
   SIZE_MIN, SIZE_MAX, clampSize, stepSize, ladderStep, SIZE_LADDER,
   LINE_HEIGHTS, stepIndent, firstFamily, matchFontStack,
-} from '../template/assets/engine/text-typo.js';
+} = await engineImport('text-typo.js');
 
 test('clampSize: runder, klemmer og avviser ugyldig', () => {
   assert.equal(clampSize(16.6), 17);

@@ -5,7 +5,8 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {
+import { engineImport } from './_engine.mjs';
+const {
   isSafeUrl,
   footerBrand,
   footerColumns,
@@ -15,7 +16,7 @@ import {
   footerLinkRow,
   footerCta,
   hasRichFooter,
-} from '../template/assets/engine/footer-model.js';
+} = await engineImport('footer-model.js');
 
 const PAGES = [
   { id: 'hjem', path: '/' },

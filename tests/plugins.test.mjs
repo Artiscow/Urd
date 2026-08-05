@@ -5,8 +5,9 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseSemver, satisfiesEngine, validateManifest, createStagedUrd, checkProvides } from '../template/assets/engine/plugins.js';
-import { createRegistry } from '../template/assets/engine/registry.js';
+import { engineImport } from './_engine.mjs';
+const { parseSemver, satisfiesEngine, validateManifest, createStagedUrd, checkProvides } = await engineImport('plugins.js');
+const { createRegistry } = await engineImport('registry.js');
 
 test('parseSemver: gyldige og ugyldige former', () => {
   assert.deepEqual(parseSemver('0.6.1'), [0, 6, 1]);

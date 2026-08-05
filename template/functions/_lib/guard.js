@@ -9,7 +9,7 @@
  */
 
 /** Stier publisering ALDRI får skrive (prefiks- eller eksaktmatch). */
-const DENY_PREFIXES = ['functions/', '.github/', 'admin/', 'assets/engine/'];
+const DENY_PREFIXES = ['functions/', '.github/', 'admin/', 'assets/engine/', 'assets/urd/'];
 const DENY_EXACT = ['_headers', '_redirects', 'urd.json', 'index.html', '.gitignore', 'wrangler.toml'];
 
 /**

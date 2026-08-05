@@ -231,7 +231,7 @@ export async function loadPluginById(Urd, engineVersion, id) {
     // et utkast-aktivert pakkespråk uten å lese manifestene på nytt.
     // Pakkemodulen hentes kun her, aldri for en plugin uten languages.
     if (manifest.languages?.length) {
-      const { registerPackLanguages } = await import(/* @vite-ignore */ '/assets/engine/language-packs.js');
+      const { registerPackLanguages } = await import(/* @vite-ignore */ '/assets/urd/language-packs.js');
       registerPackLanguages(id, manifest.languages);
     }
     // Ren språkpakke: ingen entry, ingenting å kjøre.

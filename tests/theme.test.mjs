@@ -5,11 +5,12 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {
+import { engineImport } from './_engine.mjs';
+const {
   resolveThemeMode, activeTokens,
   sectionThemeVars, SECTION_THEMES, relativeLuminance, contrastRatio,
   buildThemeCss, safeCssValue,
-} from '../template/assets/engine/theme.js';
+} = await engineImport('theme.js');
 
 test('resolveThemeMode: lagret valg vinner over OS-preferansen', () => {
   assert.equal(resolveThemeMode('light', 'dark', false), 'dark');

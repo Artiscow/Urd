@@ -5,10 +5,10 @@
    * Med onicon satt vises også motorens ikonbibliotek (tegnede SVG-er) øverst; med onimage satt kan et eget ikon-bilde lastes opp (webp-komprimert).
    * Popoveren er position: fixed (panelene klipper absolute innhold) og lukkes ved klikk utenfor eller Escape, samme mønster som ColorPicker.
    */
-  import { compressToWebp } from '../../../template/assets/engine/imageTools.js';
-  import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from '../../../template/assets/engine/glyphs.js';
-  import { ICON_CATEGORIES, ICON_LIBRARY, iconSvg } from '../../../template/assets/engine/icons.js';
-  import { ta } from '../../../template/assets/engine/i18n.js';
+  import { compressToWebp } from '$engine/imageTools.js';
+  import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from '$engine/glyphs.js';
+  import { ICON_CATEGORIES, ICON_LIBRARY, iconSvg } from '$engine/icons.js';
+  import { ta } from '$engine/i18n.js';
 
   let { value = '★', icon = null, image = null, label = ta('gp.pickGlyph'), onpick, onicon, onimage } = $props();
 

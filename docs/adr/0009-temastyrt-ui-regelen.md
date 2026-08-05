@@ -11,7 +11,7 @@ Native select-popuper tegnes av nettleseren/OS-et, utenfor sidens renderingsmode
 1. **Native `<select>` er forbudt i alt redigerings-UI** (admin-panelene og preview-laget). `color-scheme: dark` er ikke en akseptert løsning; den overstyres av nettlesere.
 2. **Felleskomponentene eier formen**:
    - Admin (Svelte): [Dropdown.svelte](../../editor/src/lib/Dropdown.svelte) - `<Dropdown value={…} options={[[verdi, etikett], …]} onchange={(v) => …} />`
-   - Lerretet og plugins (vanilla): [engine/dropdown.js](../../template/assets/engine/dropdown.js) - `createDropdown({ value, options, onchange, title })`; stjeler ikke fokus, så tekstmarkeringer overlever valget
+   - Lerretet og plugins (vanilla): [dropdown.js](../../template/assets/urd/dropdown.js) (stabil plugin-API-sti, ADR-0013) - `createDropdown({ value, options, onchange, title })`; stjeler ikke fokus, så tekstmarkeringer overlever valget
    - **Segmentknapper** for små valgsett (2-5 korte etiketter): bildeeditorens mønster (.urd-imged-seg) / kalenderens .urd-kal-seg
 3. Andre native kontroller er greie: checkbox/range/number følger `accent-color`/`color-scheme` uten popup-problemet; fil- og fargevelger-DIALOGENE er OS-flater med egne temaer og er ok (men `input type=color` som VELGER er alt erstattet av fargevelgeren).
 4. Regelen gjelder kjernen OG plugins; kravet står i plugins/README.md.

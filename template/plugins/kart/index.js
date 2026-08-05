@@ -13,7 +13,7 @@ import { parseLocation, buildEmbedUrl, buildLargerMapUrl, OSM_HOST } from './osm
 // Flerspråk (ADR-0012): t() for besøkende-tekster (site-språket), ta() for
 // editor-chromen og seed (admin-språket). Ordboka (locales/) lastes av
 // plugin-lasteren FØR register() - t/ta kalles aldri på modulnivå.
-import { t, ta, taApiError } from '/assets/engine/i18n.js';
+import { t, ta, taApiError } from '/assets/urd/i18n.js';
 
 const el2 = (tag, className, textContent) => {
   const node = document.createElement(tag);
@@ -288,7 +288,7 @@ function renderKart(el, props, ctx) {
     const tools = el2('div', 'urd-kart-tools');
     tools.appendChild(gear);
     host.append(tools, panel);
-    import('/assets/engine/hint.js').then(({ attachHint }) => {
+    import('/assets/urd/hint.js').then(({ attachHint }) => {
       if (!host.isConnected || host.querySelector('.urd-hint-chip')) return;
       const chip = attachHint(tools, {
         title: ta('kart.edit.hintTitle'),

@@ -6,8 +6,9 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { engineImport } from './_engine.mjs';
 
-import { topDrag } from '../template/assets/engine/section-size.js';
+const { topDrag } = await engineImport('section-size.js');
 
 const grid = { size: 8 };
 

@@ -5,7 +5,8 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { lift } from '../template/assets/engine/migrate.js';
+import { engineImport } from './_engine.mjs';
+const { lift } = await engineImport('migrate.js');
 
 const textV3 = {
   version: 3,

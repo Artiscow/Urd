@@ -1,12 +1,11 @@
 /**
- * Kontraktstester for gradient-laget v3: gradientRender (ren
- * render-oppskrift: CSS, animasjonsklasse, style-vars) og
- * migreringskjeden v1 → v2 → v3.
+ * Kontraktstester for gradient-laget: gradientRender (ren
+ * render-oppskrift: CSS, animasjonsklasse, style-vars).
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { gradientRender, gradientLayer, loopGeometry, loopGradientCss } from '../template/assets/engine/backgrounds/gradient.js';
-import { lift } from '../template/assets/engine/migrate.js';
+import { engineImport } from './_engine.mjs';
+const { gradientRender, loopGeometry, loopGradientCss } = await engineImport('backgrounds/gradient.js');
 
 test('lineær gradient: like andeler gir båndsentre 25/75', () => {
   const r = gradientRender({
@@ -170,49 +169,3 @@ test('animasjon som ikke finnes for formen rendres uanimert', () => {
   assert.equal(r2.className, null);
 });
 
-test('migrering v1 til v3: strenger blir andeler, jevnt fordelt', () => {
-  const res = lift(
-    { type: 'gradient', version: 1, props: { stops: ['#000000', '#888888', '#ffffff'], angle: 120, animate: false } },
-    gradientLayer,
-  );
-  assert.equal(res.ok, true);
-  assert.equal(res.version, 3);
-  assert.equal(res.props.kind, 'linear');
-  assert.equal(res.props.animation, 'none');
-  // v1-posisjonene 0/50/100 gir båndgrenser 0/25/75/100 -> andeler 25/50/25.
-  assert.deepEqual(res.props.stops, [
-    { color: '#000000', share: 25 },
-    { color: '#888888', share: 50 },
-    { color: '#ffffff', share: 25 },
-  ]);
-  assert.equal(res.props.angle, 120);
-});
-
-test('migrering v2 til v3: usorterte posisjoner sorteres inn i rekkefølgen', () => {
-  const res = lift(
-    { type: 'gradient', version: 2, props: { kind: 'radial', x: 0.3, y: 0.2, stops: [{ color: '#ffffff', at: 100 }, { color: '#0000ff', at: 43 }], angle: 160, animate: false } },
-    gradientLayer,
-  );
-  assert.equal(res.version, 3);
-  assert.equal(res.props.kind, 'radial');
-  assert.equal(res.props.x, 0.3);
-  // Grensen mellom 43 og 100 er 71.5 -> andeler 71.5 og 28.5, blå først.
-  assert.deepEqual(res.props.stops, [
-    { color: '#0000ff', share: 71.5 },
-    { color: '#ffffff', share: 28.5 },
-  ]);
-});
-
-test('migrering: animate true blir pan (lineær) og orbit (radiell)', () => {
-  const lin = lift({ type: 'gradient', version: 2, props: { kind: 'linear', stops: [{ color: '#000000', at: 0 }, { color: '#ffffff', at: 100 }], angle: 0, animate: true } }, gradientLayer);
-  assert.equal(lin.props.animation, 'pan');
-  const rad = lift({ type: 'gradient', version: 2, props: { kind: 'radial', stops: [{ color: '#000000', at: 0 }, { color: '#ffffff', at: 100 }], animate: true } }, gradientLayer);
-  assert.equal(rad.props.animation, 'orbit');
-});
-
-test('migrering av tom/ugyldig stoppliste faller til standardfargene', () => {
-  const res = lift({ type: 'gradient', version: 1, props: { stops: [], angle: 160, animate: false } }, gradientLayer);
-  assert.equal(res.ok, true);
-  assert.equal(res.props.stops.length, 2);
-  assert.ok(res.props.stops.every((s) => typeof s.share === 'number'));
-});

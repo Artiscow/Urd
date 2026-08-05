@@ -7,6 +7,7 @@
     "_headers",
     "admin/**",
     "assets/engine/**",
+    "assets/urd/**",
     "assets/styles/base.css",
     "functions/**"
   ],

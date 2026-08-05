@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 1,
   "meta": {
     "id": "hjem",
     "title": "Hjem"
@@ -36,7 +36,7 @@
           },
           {
             "type": "image",
-            "version": 2,
+            "version": 1,
             "props": {
               "src": "/media/bakgrunn-a1730034.svg",
               "fit": "vanlig",
@@ -122,7 +122,7 @@
         {
           "id": "blk-ef036d5f",
           "type": "kalender",
-          "version": 3,
+          "version": 1,
           "props": {
             "sources": [
               "https://calendar.google.com/calendar/ical/74a6de6d28a7a0ec383148bb2f67025d09712386e8b6add3d425fc0d9b5320f7%40group.calendar.google.com/public/basic.ics"
@@ -196,7 +196,7 @@
         "layers": [
           {
             "type": "gradient",
-            "version": 3,
+            "version": 1,
             "props": {
               "kind": "linear",
               "stops": [

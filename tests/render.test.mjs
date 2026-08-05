@@ -1,11 +1,12 @@
 /**
  * Test av frame-til-CSS-oversettelsen i render.js (frameToCss er en ren
- * funksjon). Frames er i fysiske enheter fra schemaVersion 2: x/w i
+ * funksjon). Frames er i fysiske enheter: x/w i
  * prosent av seksjonsbredden, y/h i px.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { frameToCss, stackOrder } from '../template/assets/engine/render.js';
+import { engineImport } from './_engine.mjs';
+const { frameToCss, stackOrder } = await engineImport('render.js');
 
 test('x/w blir prosent, y/h blir px', () => {
   const css = frameToCss({ x: 8.33, y: 48, w: 50, h: 32, z: 3, rot: 0 });

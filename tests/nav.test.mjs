@@ -5,7 +5,8 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveItem, navItems, navClasses, navSurface, navSubSurface, hostClasses, clampSideWidth, navScrollState } from '../template/assets/engine/nav-model.js';
+import { engineImport } from './_engine.mjs';
+const { resolveItem, navItems, navClasses, navSurface, navSubSurface, hostClasses, clampSideWidth, navScrollState } = await engineImport('nav-model.js');
 
 const PAGES = [
   { id: 'hjem', title: 'Hjem', path: '/' },

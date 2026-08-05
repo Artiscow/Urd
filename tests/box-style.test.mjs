@@ -4,7 +4,8 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { boxStyleCss } from '../template/assets/engine/box-style.js';
+import { engineImport } from './_engine.mjs';
+const { boxStyleCss } = await engineImport('box-style.js');
 
 test('uten stil (undefined eller tomt objekt) er resultatet tomt', () => {
   assert.deepEqual(boxStyleCss(undefined), {});
