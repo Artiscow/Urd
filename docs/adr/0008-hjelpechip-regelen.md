@@ -10,7 +10,7 @@ Blokker og seksjoner får stadig flere funksjoner som ikke synes på overflaten:
 
 1. **Alle blokker, seksjoner og elementer med SPESIELLE funksjoner skal ha en hjelpechip** i forhåndsvisningen: en «?» som åpner et vedvarende hjelpekort der ALLE funksjonene er forklart, én linje per funksjon. Kortet blir stående til man klikker utenfor eller trykker Escape, så det kan leses i ro. «Spesiell» betyr: noe utover flytt/skaler/slett-standarden alle blokker har (egne redigeringsflater, konvensjoner i innholdet, paneler, automatikk).
 2. **Én felles hjelper eier formen**: `attachHint(host, { title, lines })` i [hint.js](../../template/assets/urd/hint.js) (stabil plugin-API-sti, ADR-0013), med stil i base.css (chip vises ved pek på blokken, aldri i Ren visning, aldri hos besøkende). Ingen lager egne varianter.
-3. **Regelen gjelder kjernen OG plugins likt.** Plugin-forfattere importerer samme hjelper (`import { attachHint } from '/assets/engine/hint.js'`) og kaller den kun når `ctx.preview` er sann. Kravet står i plugins/README.md.
+3. **Regelen gjelder kjernen OG plugins likt.** Plugin-forfattere importerer samme hjelper (`import { attachHint } from '/assets/urd/hint.js'`) og kaller den kun når `ctx.preview` er sann. Kravet står i plugins/README.md.
 4. Første etterlevelse: samling-blokken og kalenderblokken. Nye blokker med spesialfunksjoner skal levere chipen i samme push som funksjonen.
 
 ## Konsekvenser
