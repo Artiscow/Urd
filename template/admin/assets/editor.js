@@ -6582,7 +6582,8 @@ function dl(e, t) {
 		"content",
 		"media",
 		"plugins",
-		"functions"
+		"functions",
+		"readme"
 	];
 	function Er(e, t = null) {
 		return e ? Tr.includes(e) ? Q("error.reservedName", { slug: e }) : V(A).pages.some((n) => n.id !== t && (n.path === `/${e}` || n.id === e)) ? Q("error.pageExists") : null : Q("error.pageNeedsName");

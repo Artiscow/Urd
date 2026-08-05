@@ -10,6 +10,17 @@
   <a href="docs/languages/README/README-tr.md">🇹🇷 Türkçe</a>
 </p>
 
+<p align="center">
+  <a href="https://github.com/Artiscow/Urd/actions/workflows/tests.yml"><img src="https://github.com/Artiscow/Urd/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
+  <a href="https://github.com/Artiscow/Urd/releases"><img src="https://img.shields.io/github/v/release/Artiscow/Urd?label=release&color=15b39a" alt="Release"></a>
+</p>
+
+<p align="center">
+  <a href="docs/languages/setup-publication/SETUP-en-GB.md"><strong>Get started</strong></a> ·
+  <a href="docs/languages/user-guide/GUIDE-en-GB.md"><strong>User guide</strong></a> ·
+  <a href="docs/languages/ROADMAP-en-GB.md"><strong>Roadmap</strong></a>
+</p>
+
 > Urd is said to be the eldest of the three norns in Norse mythology who sit at the foot of Yggdrasil and decide the fates of the gods. Together the norns sit and spin threads of fate, or carve fate into pieces of wood.
 > Urd is the tool for spinning and carving your own website out from the root of the tree.
 

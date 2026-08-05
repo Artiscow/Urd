@@ -6,6 +6,17 @@
 
 Norsk utgave av README. Hovedutgaven i repo-roten er på engelsk; norsk er prosjektets arbeidsspråk og gjelder for resten av dokumentasjonen.
 
+<p align="center">
+  <a href="https://github.com/Artiscow/Urd/actions/workflows/tests.yml"><img src="https://github.com/Artiscow/Urd/actions/workflows/tests.yml/badge.svg" alt="Tester"></a>
+  <a href="https://github.com/Artiscow/Urd/releases"><img src="https://img.shields.io/github/v/release/Artiscow/Urd?label=release&color=15b39a" alt="Release"></a>
+</p>
+
+<p align="center">
+  <a href="../setup-publication/SETUP-nb.md"><strong>Kom i gang</strong></a> ·
+  <a href="../user-guide/GUIDE-nb.md"><strong>Brukerveiledning</strong></a> ·
+  <a href="../../VEIKART.md"><strong>Veikart</strong></a>
+</p>
+
 > Urd er trolig den eldste av de tre nornene i norrøn mytologi som sitter ved foten av Yggdrasil og bestemmer æsenes skjebner. Sammen sitter nornene og spinner skjebnetråder eller risser skjebnen inn i trestykker.
 > Urd er verktøyet for å spinne og risse inn din egen nettside ut fra treets rot.
 
@@ -19,7 +30,7 @@ Ingen server. Ingen database. Ingen abonnement. Ingen byggeprosess. Bare et git-
 
 ## Slik fungerer det
 
-1. **Lag repoet ditt** fra [urd-template](https://github.com/Artiscow/urd-template) («Use this template» på GitHub) og koble det til en statisk host: [oppsettsguiden](../../OPPSETT-PUBLISERING.md) tar deg gjennom hvert steg.
+1. **Lag repoet ditt** fra [urd-template](https://github.com/Artiscow/urd-template) («Use this template» på GitHub) og koble det til en statisk host: [oppsettsguiden](../setup-publication/SETUP-nb.md) tar deg gjennom hvert steg.
 2. **Sett opp** siden din gjennom oppsettsveiviseren - navn, farger, logo.
 3. **Rediger** ved å gå til `dinside.no/admin` og logge inn med GitHub. Der er hele byggeren: klikk og skriv rett på siden, dra blokker fritt på et grid, legg til seksjoner, rediger bakgrunner, farger og navigasjon.
 4. **Publiser** - ett klikk lager én git-commit med endringene dine, og hosten serverer den nye siden på under et minutt.
@@ -48,12 +59,12 @@ Editoren og motorens besøkende-tekster finnes på nordsamisk, britisk engelsk, 
 | [docs/ARKITEKTUR.md](../../ARKITEKTUR.md) | Systemoversikt: motoren, editoren, publiseringsflyten |
 | [docs/SKJEMA.md](../../SKJEMA.md) | Datamodellen - kontrakten alt bygger på |
 | [docs/VEIKART.md](../../VEIKART.md) | Faser fra skjelett til v1.0 |
-| [docs/BRUKERVEILEDNING.md](../../BRUKERVEILEDNING.md) | For sideeiere: hvordan editoren brukes, uten kode |
+| [Brukerveiledning](../user-guide/GUIDE-nb.md) | For sideeiere: hvordan editoren brukes, uten kode |
 | [docs/UTVIKLING.md](../../UTVIKLING.md) | For oss som utvikler Urd: oppsett, regler, vanlige oppgaver |
-| [docs/OPPSETT-PUBLISERING.md](../../OPPSETT-PUBLISERING.md) | Engangsoppsett av publisering: GitHub OAuth-app + Cloudflare |
+| [Oppsett av publisering](../setup-publication/SETUP-nb.md) | Engangsoppsett av publisering: GitHub OAuth-app + Cloudflare |
 | [docs/BACKLOG.md](../../BACKLOG.md) | Løpende oppgaveliste: gjøremål, bugs og forslag |
 | [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Sjekkliste for manuell testing: levert arbeid som venter på testing |
-| [docs/languages/](../) | Oversettelser av README og oppsettsguiden (norsk er kanonisk) |
+| [docs/languages/](../) | Alle oversatte dokumenter (guide og oppsett på fem språk; norsk tekst er kanonisk ved avvik) |
 | [docs/sammenligning/FUNKSJONSKART.md](../../sammenligning/FUNKSJONSKART.md) | Funksjonssammenligning mot andre nettsidebyggere med gap-analyse |
 | [docs/sammenligning/LAERDOMMER.md](../../sammenligning/LAERDOMMER.md) | Hvordan andre nettsidebyggere bygger, og hva vi kan hente (arkitektur og mønstre) |
 | [docs/sammenligning/ELEMENTKART.md](../../sammenligning/ELEMENTKART.md) | Elementer og funksjoner: hvordan de tilbys brukeren og hvordan de bygges |

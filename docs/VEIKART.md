@@ -94,7 +94,7 @@ er levert i v0.3; dette er laget over.)
 
 Vi bruker Urd som en fremmed bruker, uten snarveier:
 
-- Lag en ekte side (arbeidsnavn: Urd-Design) via «Use this template»-knappen, i eget repo med eget Cloudflare-oppsett, satt opp KUN ved å følge OPPSETT-PUBLISERING.md. All friksjon som oppdages er funn som skal fikses.
+- Lag en ekte side (arbeidsnavn: Urd-Design) via «Use this template»-knappen, i eget repo med eget Cloudflare-oppsett, satt opp KUN ved å følge [oppsettsguiden](languages/setup-publication/SETUP-nb.md). All friksjon som oppdages er funn som skal fikses.
 - Bygg siden ferdig gjennom admin alene.
 - Slipp deretter en Urd-oppdatering som inneholder en **ekte blokkendring (v1→v2 med migrering)**, og kjør oppdater-knappen på Urd-Design-siden.
 

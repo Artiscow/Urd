@@ -1,14 +1,16 @@
 # Kullanıcı kılavuzu
 
-[Sámegiella](GUIDE-se.md) · [🇬🇧 English](GUIDE-en-GB.md) · [🇳🇴 Bokmål](../../BRUKERVEILEDNING.md) · [🇳🇴 Nynorsk](GUIDE-nn.md) · **🇹🇷 Türkçe**
+[Sámegiella](GUIDE-se.md) · [🇬🇧 English](GUIDE-en-GB.md) · [🇳🇴 Bokmål](GUIDE-nb.md) · [🇳🇴 Nynorsk](GUIDE-nn.md) · **🇹🇷 Türkçe**
 
-BRUKERVEILEDNING.md dosyasının çevirisi. Norveççe (bokmål) kanoniktir ve farklılık durumunda geçerlidir. Aşağıdaki düğme ve panel adları Türkçe admin metinleridir; adminin başka bir dile ayarlıysa adlar o dili izler.
+GUIDE-nb.md dosyasının çevirisi. Norveççe (bokmål) kanoniktir ve farklılık durumunda geçerlidir. Aşağıdaki düğme ve panel adları Türkçe admin metinleridir; adminin başka bir dile ayarlıysa adlar o dili izler.
 
 Urd ile kurulmuş bir siteye sahip olan ya da onu düzenleyen senin için. Kod yok, git
 bilgisi gerekmez: her şey kendi sitende, tarayıcıda olur.
 
 > Urd geliştirme aşamasındadır. Kılavuz bugün var olanı kapsar ve
 > zamanla genişletilir; tam bir derleme toparlaması v0.9'a doğru planlanmıştır.
+
+**İçindekiler:** [Başlarken](#başlarken) · [Düzenleyici](#düzenleyici) · [İçeriği düzenleme](#i̇çeriği-düzenleme) · [Özellikler paneli](#özellikler-paneli) · [Bölümler](#bölümler) · [Izgara (kılavuz çizgileri)](#izgara-kılavuz-çizgileri) · [Mobil](#mobil) · [Sayfalar, menü ve tema](#sayfalar-menü-ve-tema) · [Taslaklar ve yayımlama](#taslaklar-ve-yayımlama) · [Geçmiş ve bir yayımlamayı geri alma](#geçmiş-ve-bir-yayımlamayı-geri-alma) · [İlk kez](#i̇lk-kez)
 
 ## Başlarken
 
@@ -296,7 +298,7 @@ sırasıyla alır. Genelde bir şey yapman gerekmez.
 - **Siteyi gör ↗** yayımlanan sayfayı yeni sekmede açar.
 
 Yayımlama, GitHub kullanıcının site sahibi tarafından yetkilendirilmiş olmasını
-gerektirir ([OPPSETT-PUBLISERING.md](../setup-publication/SETUP-tr.md) belgesine bak).
+gerektirir ([kurulum kılavuzu](../setup-publication/SETUP-tr.md) belgesine bak).
 
 Birkaç kişi düzenliyorsanız, sen sayfayı yükledikten sonra aynı bölümlerde
 başkası değişiklik yayımladıysa düzenleyici haber verir ve yine de yayımlamak mı

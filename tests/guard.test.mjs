@@ -126,7 +126,7 @@ test('urd.json ownedPaths avvises av publiseringsvokteren (kontraktene i synk)',
 test('per-side index.html-kopier tillates, reserverte slugs avvises', () => {
   assert.equal(isAllowedPath('kaker/index.html'), true);
   assert.equal(isAllowedPath('om-oss/index.html'), true);
-  for (const path of ['admin/index.html', 'api/index.html', 'assets/index.html', 'functions/index.html', 'plugins/index.html']) {
+  for (const path of ['admin/index.html', 'api/index.html', 'assets/index.html', 'functions/index.html', 'plugins/index.html', 'readme/index.html']) {
     assert.equal(isAllowedPath(path), false, path);
   }
 });
@@ -168,6 +168,7 @@ test('isOwnedPath/isUserPath: eksempler og stitriks', () => {
   }
   assert.equal(isPageIndexCopy('kaker/index.html'), true);
   assert.equal(isPageIndexCopy('admin/index.html'), false);
+  assert.equal(isPageIndexCopy('readme/index.html'), false);
   assert.equal(isPageIndexCopy('index.html'), false);
 });
 

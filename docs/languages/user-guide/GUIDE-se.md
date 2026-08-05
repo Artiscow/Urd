@@ -1,8 +1,8 @@
 # Geavaheaddjirávvagat
 
-**Sámegiella** · [🇬🇧 English](GUIDE-en-GB.md) · [🇳🇴 Bokmål](../../BRUKERVEILEDNING.md) · [🇳🇴 Nynorsk](GUIDE-nn.md) · [🇹🇷 Türkçe](GUIDE-tr.md)
+**Sámegiella** · [🇬🇧 English](GUIDE-en-GB.md) · [🇳🇴 Bokmål](GUIDE-nb.md) · [🇳🇴 Nynorsk](GUIDE-nn.md) · [🇹🇷 Türkçe](GUIDE-tr.md)
 
-BRUKERVEILEDNING.md jorgalus. Dárogiella (bokmål) lea kanonalaš ja gusto go leat erohusat. Boallu- ja panelanamat vuolábealde leat sámegiel admin-teavsttat; jus admin lea eará gielas, čuvvot namat dan giela.
+GUIDE-nb.md jorgalus. Dárogiella (bokmål) lea kanonalaš ja gusto go leat erohusat. Boallu- ja panelanamat vuolábealde leat sámegiel admin-teavsttat; jus admin lea eará gielas, čuvvot namat dan giela.
 
 > MERKE: dát lea maskiinjorgaluvvon vuosttašárvalus mii dárbbaša geahčadeami olbmos geas lea davvisámegiella eatnigiellan.
 
@@ -11,6 +11,8 @@ git-máhttu dárbbašuvvo: buot dáhpáhuvvá fierpmádatlohkkis du iežat siidd
 
 > Urd lea ovddiduvvomin. Rávvagat gokčet dan mii gávdno odne ja
 > viiddiduvvojit dađistaga; olles čorgen lea plánejuvvon v0.9 rádjai.
+
+**Sisdoallu:** [Álggat](#álggat) · [Doaimmaheaddji](#doaimmaheaddji) · [Sisdoalu doaimmaheapmi](#sisdoalu-doaimmaheapmi) · [Iešvuođat-panela](#iešvuođat-panela) · [Sekšuvnnat](#sekšuvnnat) · [Grid (veahkkelinnját)](#grid-veahkkelinnját) · [Mobiila](#mobiila) · [Siiddut, fállu ja fáddá](#siiddut-fállu-ja-fáddá) · [Evttohusat ja almmuheapmi](#evttohusat-ja-almmuheapmi) · [Historihkka ja almmuheami gáđaheapmi](#historihkka-ja-almmuheami-gáđaheapmi) · [Vuosttaš háve](#vuosttaš-háve)
 
 ## Álggat
 
@@ -299,7 +301,7 @@ lohkanortnegis. It dábálaččat dárbbaš dahkat maidege.
 - **Geahča siiddu ↗** rahpá almmuhuvvon siiddu ođđa fános.
 
 Almmuheapmi gáibida ahte du GitHub-geavaheaddji lea ožžon lobi
-siidooamasteaddjis (geahča [OPPSETT-PUBLISERING.md](../setup-publication/SETUP-se.md)).
+siidooamasteaddjis (geahča [SETUP-se.md](../setup-publication/SETUP-se.md)).
 
 Jus lehpet máŋggas geat doaimmahehpet, de muitala doaimmaheaddji jus muhtin eará lea
 almmuhan rievdadusaid seamma osiin maŋŋel go don viežžat siiddu, ja diktá du

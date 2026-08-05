@@ -1,19 +1,19 @@
 # Publishing setup (GitHub + Cloudflare Pages)
 
-[Sámegiella](SETUP-se.md) · **🇬🇧 English** · [🇳🇴 Bokmål](../../OPPSETT-PUBLISERING.md) · [🇳🇴 Nynorsk](SETUP-nn.md) · [🇹🇷 Türkçe](SETUP-tr.md)
+[Sámegiella](SETUP-se.md) · **🇬🇧 English** · [🇳🇴 Bokmål](SETUP-nb.md) · [🇳🇴 Nynorsk](SETUP-nn.md) · [🇹🇷 Türkçe](SETUP-tr.md)
 
-Translation of docs/OPPSETT-PUBLISERING.md. Norwegian (bokmål) is canonical and prevails in case of discrepancies.
+Translation of SETUP-nb.md. Norwegian (bokmål) is canonical and prevails in case of discrepancies.
 
 This guide sets up the «Publish» button: letting admin commit changes to the GitHub repo, which Cloudflare Pages then deploys. This is a one-time job per website and takes about ten minutes. (The pattern is validated in production in ApeironLF.)
-
-## 0. Create the website repo
-
-A new site starts from the template repository [urd-template](https://github.com/Artiscow/urd-template): press **Use this template** → **Create a new repository** on GitHub and name your repo. The repo you get IS the website; everything else in this guide is done against it. Later Urd versions are fetched with the **Updates** panel in the admin, which checks against the template repository, warns about files you have hand-edited, and writes the update as one commit. (For Urd development, the Urd monorepo itself is used instead; the website is then the `template` subfolder.)
 
 ## Prerequisites
 
 - The website repo is on GitHub (for Urd development: the Urd repo itself).
 - A Cloudflare account (the free tier goes a long way).
+
+## 0. Create the website repo
+
+A new site starts from the template repository [urd-template](https://github.com/Artiscow/urd-template): press **Use this template** → **Create a new repository** on GitHub and name your repo. The repo you get IS the website; everything else in this guide is done against it. Later Urd versions are fetched with the **Updates** panel in the admin, which checks against the template repository, warns about files you have hand-edited, and writes the update as one commit. (For Urd development, the Urd monorepo itself is used instead; the website is then the `template` subfolder.)
 
 ## 1. Connect the repo to Cloudflare Pages
 

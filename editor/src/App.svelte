@@ -1850,7 +1850,7 @@
   let newPageTitle = $state('');
 
   /** Speiler guard.js: mapper som aldri kan bli sider. */
-  const RESERVED_SLUGS = ['admin', 'api', 'assets', 'content', 'media', 'plugins', 'functions'];
+  const RESERVED_SLUGS = ['admin', 'api', 'assets', 'content', 'media', 'plugins', 'functions', 'readme'];
 
   function pageSlugError(slug, ignoreId = null) {
     if (!slug) return ta('error.pageNeedsName');

@@ -1,13 +1,15 @@
 # User guide
 
-[Sámegiella](GUIDE-se.md) · **🇬🇧 English** · [🇳🇴 Bokmål](../../BRUKERVEILEDNING.md) · [🇳🇴 Nynorsk](GUIDE-nn.md) · [🇹🇷 Türkçe](GUIDE-tr.md)
+[Sámegiella](GUIDE-se.md) · **🇬🇧 English** · [🇳🇴 Bokmål](GUIDE-nb.md) · [🇳🇴 Nynorsk](GUIDE-nn.md) · [🇹🇷 Türkçe](GUIDE-tr.md)
 
-Translation of BRUKERVEILEDNING.md. Norwegian (bokmål) is canonical and prevails in case of discrepancies. The button and panel names below are the English admin texts; if your admin is set to another language, the names follow that language.
+Translation of GUIDE-nb.md. Norwegian (bokmål) is canonical and prevails in case of discrepancies. The button and panel names below are the English admin texts; if your admin is set to another language, the names follow that language.
 
 For you who own or edit a site built with Urd. No code, no git knowledge needed: everything happens in the browser on your own site.
 
 > Urd is under development. The guide covers what exists today and is
 > extended along the way; a full clean-up is planned towards v0.9.
+
+**Contents:** [Getting started](#getting-started) · [The editor](#the-editor) · [Editing content](#editing-content) · [The Properties panel](#the-properties-panel) · [Sections](#sections) · [Grid (guide lines)](#grid-guide-lines) · [Mobile](#mobile) · [Pages, menu and theme](#pages-menu-and-theme) · [Drafts and publishing](#drafts-and-publishing) · [History and undoing a publish](#history-and-undoing-a-publish) · [The first time](#the-first-time)
 
 ## Getting started
 
@@ -296,7 +298,7 @@ reading order. You usually do not have to do anything.
 - **View site ↗** opens the published page in a new tab.
 
 Publishing requires that your GitHub user has been given access by
-the site owner (see [OPPSETT-PUBLISERING.md](../setup-publication/SETUP-en-GB.md)).
+the site owner (see [the setup guide](../setup-publication/SETUP-en-GB.md)).
 
 If several of you are editing, the editor says so if someone else has
 published changes in the same parts since you loaded the page, and lets you

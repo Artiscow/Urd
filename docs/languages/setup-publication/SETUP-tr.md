@@ -1,19 +1,19 @@
 # Yayımlama kurulumu (GitHub + Cloudflare Pages)
 
-[Sámegiella](SETUP-se.md) · [🇬🇧 English](SETUP-en-GB.md) · [🇳🇴 Bokmål](../../OPPSETT-PUBLISERING.md) · [🇳🇴 Nynorsk](SETUP-nn.md) · **🇹🇷 Türkçe**
+[Sámegiella](SETUP-se.md) · [🇬🇧 English](SETUP-en-GB.md) · [🇳🇴 Bokmål](SETUP-nb.md) · [🇳🇴 Nynorsk](SETUP-nn.md) · **🇹🇷 Türkçe**
 
-docs/OPPSETT-PUBLISERING.md dosyasının çevirisi. Norveççe (bokmål) kanoniktir ve farklılık durumunda geçerlidir.
+SETUP-nb.md dosyasının çevirisi. Norveççe (bokmål) kanoniktir ve farklılık durumunda geçerlidir.
 
 Bu kılavuz «Yayımla» düğmesini kurar: adminin değişiklikleri GitHub deposuna commit edebilmesini ve Cloudflare Pages'in bunu dağıtmasını sağlar. Bu, her web sitesi için tek seferlik bir iştir ve yaklaşık on dakika sürer. (Desen, ApeironLF'de üretimde doğrulanmıştır.)
-
-## 0. Web sitesinin deposunu oluştur
-
-Yeni bir site, şablon deposu [urd-template](https://github.com/Artiscow/urd-template) ile başlar: GitHub'da **Use this template** → **Create a new repository** düğmesine bas ve depoya bir ad ver. Aldığın depo web sitesinin KENDİSİDİR; bu kılavuzdaki diğer her şey ona karşı yapılır. Sonraki Urd sürümleri, yönetici panelindeki **Güncelleme** bölümüyle getirilir: şablon deposuyla karşılaştırır, elle düzenlediğin dosyalar için uyarır ve güncellemeyi tek commit olarak yazar. (Urd geliştirmesi için bunun yerine Urd monorepo'sunun kendisi kullanılır; web sitesi o zaman `template` alt klasörüdür.)
 
 ## Ön koşullar
 
 - Web sitesinin deposu GitHub'da olmalı (Urd geliştirmesi için: Urd deposunun kendisi).
 - Bir Cloudflare hesabı (ücretsiz katman uzun süre yeter).
+
+## 0. Web sitesinin deposunu oluştur
+
+Yeni bir site, şablon deposu [urd-template](https://github.com/Artiscow/urd-template) ile başlar: GitHub'da **Use this template** → **Create a new repository** düğmesine bas ve depoya bir ad ver. Aldığın depo web sitesinin KENDİSİDİR; bu kılavuzdaki diğer her şey ona karşı yapılır. Sonraki Urd sürümleri, yönetici panelindeki **Güncelleme** bölümüyle getirilir: şablon deposuyla karşılaştırır, elle düzenlediğin dosyalar için uyarır ve güncellemeyi tek commit olarak yazar. (Urd geliştirmesi için bunun yerine Urd monorepo'sunun kendisi kullanılır; web sitesi o zaman `template` alt klasörüdür.)
 
 ## 1. Depoyu Cloudflare Pages'e bağla
 

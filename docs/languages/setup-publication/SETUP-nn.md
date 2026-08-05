@@ -1,19 +1,19 @@
 # Oppsett av publisering (GitHub + Cloudflare Pages)
 
-[Sámegiella](SETUP-se.md) · [🇬🇧 English](SETUP-en-GB.md) · [🇳🇴 Bokmål](../../OPPSETT-PUBLISERING.md) · **🇳🇴 Nynorsk** · [🇹🇷 Türkçe](SETUP-tr.md)
+[Sámegiella](SETUP-se.md) · [🇬🇧 English](SETUP-en-GB.md) · [🇳🇴 Bokmål](SETUP-nb.md) · **🇳🇴 Nynorsk** · [🇹🇷 Türkçe](SETUP-tr.md)
 
-Omsetjing av docs/OPPSETT-PUBLISERING.md. Norsk (bokmål) er kanonisk og gjeld ved avvik.
+Omsetjing av SETUP-nb.md. Norsk (bokmål) er kanonisk og gjeld ved avvik.
 
 Denne guiden set opp «Publiser»-knappen: at admin kan committe endringar til GitHub-repoet, som Cloudflare Pages så deployar. Dette er ein eingongsjobb per nettside og tek rundt ti minutt. (Mønsteret er validert i produksjon i ApeironLF.)
-
-## 0. Lag repoet til nettsida
-
-Ei ny side startar frå malrepoet [urd-template](https://github.com/Artiscow/urd-template): trykk **Use this template** → **Create a new repository** på GitHub, og gi repoet eit namn. Repoet du får ER nettsida; alt vidare i guiden gjerast mot det. Seinare Urd-versjonar hentast med **Oppdatering**-panelet i admin, som sjekkar mot malrepoet, varslar om filer du har handredigert, og skriv oppdateringa som éin commit. (For Urd-utvikling brukast sjølve Urd-monorepoet i staden; då er nettsida undermappa `template`.)
 
 ## Føresetnader
 
 - Repoet til nettsida ligg på GitHub (for Urd-utvikling: sjølve Urd-repoet).
 - Ein Cloudflare-konto (gratisnivået held lenge).
+
+## 0. Lag repoet til nettsida
+
+Ei ny side startar frå malrepoet [urd-template](https://github.com/Artiscow/urd-template): trykk **Use this template** → **Create a new repository** på GitHub, og gi repoet eit namn. Repoet du får ER nettsida; alt vidare i guiden gjerast mot det. Seinare Urd-versjonar hentast med **Oppdatering**-panelet i admin, som sjekkar mot malrepoet, varslar om filer du har handredigert, og skriv oppdateringa som éin commit. (For Urd-utvikling brukast sjølve Urd-monorepoet i staden; då er nettsida undermappa `template`.)
 
 ## 1. Kople repoet til Cloudflare Pages
 

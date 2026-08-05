@@ -5,6 +5,14 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 ### Testrunde-batch (0.6.9.x): splitt, oppdaterer og fase-slipp (samlet og slått sammen etter eierens beskjed 5. august 2026)
 
+**README-ene, docs-strukturen og designrunden (0.6.9.10)**
+
+- [ ] Etter neste synk: malrepo-forsiden viser engelsk README med logo, flagg-linje og hurtiglenker; bokmål/tyrkisk i readme/-mappen leses godt med virkende lenker
+- [ ] Rot-READMEens badges er levende på GitHub (Tester grønn, release-versjonen vises) på alle fem språk
+- [ ] Guidenes innholdsfortegnelse: klikk gjennom ankrene på GitHub i alle fem språk; særlig de tyrkiske «İçeriği düzenleme» og «İlk kez» (İ-slugging med U+0307)
+- [ ] Ny side med slug «readme» avvises i editoren med reservert-navn-meldingen (ikke server-feil ved publisering)
+- [ ] Oppsettsguidene har Forutsetninger øverst i alle fem språk, og gamle stier (docs/OPPSETT-PUBLISERING.md, docs/BRUKERVEILEDNING.md) er borte uten døde lenker i repoet
+
 - [ ] Lokalt (dev-server.py): alle sider laster uten 404 i konsoll/nettverksfane (motoren fra /assets/engine/0.6.9/), alle fire pluginene virker i preview via /assets/urd/-skallene, admin-språkbytte virker (ordbøkene kjøretids-lastes via skallene), og Oppdatering-panelet degraderer pent til utilgjengelig-melding uten functions
 - [ ] Pre-v1-innbakingen: eksempelsidene rendrer identisk som før (gradienter, bilde-bakgrunner med parallaks, kalender-blokken på Hjem) uten plassholder-advarsler i konsollen, og gradient-editoren redigerer farger/andeler/animasjon og publiserer rent
 - [ ] Nytt innhold: opprett en side og sett inn en ny kalender-blokk fra velgeren; begge virker, og publisert sidefil har `"schemaVersion": 1`

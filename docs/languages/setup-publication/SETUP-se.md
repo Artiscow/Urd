@@ -1,21 +1,21 @@
 # Almmuheami heiveheapmi (GitHub + Cloudflare Pages)
 
-**Sámegiella** · [🇬🇧 English](SETUP-en-GB.md) · [🇳🇴 Bokmål](../../OPPSETT-PUBLISERING.md) · [🇳🇴 Nynorsk](SETUP-nn.md) · [🇹🇷 Türkçe](SETUP-tr.md)
+**Sámegiella** · [🇬🇧 English](SETUP-en-GB.md) · [🇳🇴 Bokmål](SETUP-nb.md) · [🇳🇴 Nynorsk](SETUP-nn.md) · [🇹🇷 Türkçe](SETUP-tr.md)
 
-docs/OPPSETT-PUBLISERING.md jorgalus. Dárogiella (bokmål) lea kanonalaš ja gusto go leat erohusat.
+SETUP-nb.md jorgalus. Dárogiella (bokmål) lea kanonalaš ja gusto go leat erohusat.
 
 > MERKE: dát lea maskiinjorgaluvvon vuosttašárvalus mii dárbbaša geahčadeami olbmos geas lea davvisámegiella eatnigiellan.
 
 Dát rávvagat heivehit «Almmut»-boalu: ahte admin sáhttá committet rievdadusaid GitHub-repoi, maid Cloudflare Pages de deployere. Dát lea ovttageardánis bargu juohke neahttasiiddu ovddas ja ádjána sullii logi minuhta. (Minsttar lea dárkkistuvvon produkšuvnnas ApeironLF:s.)
 
-## 0. Ráhkat neahttasiiddu repo
-
-Ođđa siidu álgá málle-repos [urd-template](https://github.com/Artiscow/urd-template): coahkkal **Use this template** → **Create a new repository** GitHubas, ja atte repoi nama. Repo maid oaččut LEA neahttasiidu; buot eará dán rávvagis dahkkojuvvo dan vuostá. Maŋit Urd-veršuvnnat vižžojuvvojit **Ođasmahttin**-panelain adminis, mii dárkkista málle-repo vuostá, várre fiillain maid leat gieđain rievdadan, ja čállá ođasmahttima oktan commitin. (Urd-ovddideami várás geavahuvvo ieš Urd-monorepo; dalle neahttasiidu lea vuollemáhppa `template`.)
-
 ## Eaktun
 
 - Neahttasiiddu repo lea GitHubas (Urd-ovddideami várás: ieš Urd-repo).
 - Cloudflare-konto (nuvttá dássi guhkkás birge).
+
+## 0. Ráhkat neahttasiiddu repo
+
+Ođđa siidu álgá málle-repos [urd-template](https://github.com/Artiscow/urd-template): coahkkal **Use this template** → **Create a new repository** GitHubas, ja atte repoi nama. Repo maid oaččut LEA neahttasiidu; buot eará dán rávvagis dahkkojuvvo dan vuostá. Maŋit Urd-veršuvnnat vižžojuvvojit **Ođasmahttin**-panelain adminis, mii dárkkista málle-repo vuostá, várre fiillain maid leat gieđain rievdadan, ja čállá ođasmahttima oktan commitin. (Urd-ovddideami várás geavahuvvo ieš Urd-monorepo; dalle neahttasiidu lea vuollemáhppa `template`.)
 
 ## 1. Lakto repo Cloudflare Pages:ii
 

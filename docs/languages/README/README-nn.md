@@ -6,6 +6,17 @@
 
 Omsetjing av README. Hovudutgåva i repo-rota er på engelsk.
 
+<p align="center">
+  <a href="https://github.com/Artiscow/Urd/actions/workflows/tests.yml"><img src="https://github.com/Artiscow/Urd/actions/workflows/tests.yml/badge.svg" alt="Tester"></a>
+  <a href="https://github.com/Artiscow/Urd/releases"><img src="https://img.shields.io/github/v/release/Artiscow/Urd?label=release&color=15b39a" alt="Release"></a>
+</p>
+
+<p align="center">
+  <a href="../setup-publication/SETUP-nn.md"><strong>Kom i gang</strong></a> ·
+  <a href="../user-guide/GUIDE-nn.md"><strong>Brukarrettleiing</strong></a> ·
+  <a href="../../VEIKART.md"><strong>Vegkart</strong></a>
+</p>
+
 > Urd er truleg den eldste av dei tre nornene i norrøn mytologi som sit ved foten av Yggdrasil og avgjer skjebnen til æsene. Saman sit nornene og spinn skjebnetrådar eller ristar skjebnen inn i trestykke.
 > Urd er verktøyet for å spinne og riste inn di eiga nettside ut frå rota til treet.
 
@@ -50,9 +61,9 @@ Dokumenta er skrivne på bokmål; skildringane under er omsette.
 | [docs/ARKITEKTUR.md](../../ARKITEKTUR.md) | Systemoversikt: motoren, editoren, publiseringsflyten (på bokmål) |
 | [docs/SKJEMA.md](../../SKJEMA.md) | Datamodellen - kontrakten alt byggjer på (på bokmål) |
 | [docs/VEIKART.md](../../VEIKART.md) | Fasar frå skjelett til v1.0 (på bokmål) |
-| [docs/BRUKERVEILEDNING.md](../../BRUKERVEILEDNING.md) | For sideeigarar: korleis editoren blir brukt, utan kode (på bokmål) |
+| [Brukarrettleiing](../user-guide/GUIDE-nn.md) | For sideeigarar: korleis editoren blir brukt, utan kode |
 | [docs/UTVIKLING.md](../../UTVIKLING.md) | For oss som utviklar Urd: oppsett, reglar, vanlege oppgåver (på bokmål) |
-| [docs/OPPSETT-PUBLISERING.md](../setup-publication/SETUP-nn.md) | Eingongsoppsett av publisering: GitHub OAuth-app + Cloudflare |
+| [Oppsett av publisering](../setup-publication/SETUP-nn.md) | Eingongsoppsett av publisering: GitHub OAuth-app + Cloudflare |
 | [docs/BACKLOG.md](../../BACKLOG.md) | Løpande oppgåveliste: gjeremål, buggar og forslag (på bokmål) |
 | [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Sjekklista til eigaren: levert arbeid som ventar på testing (på bokmål) |
 | [docs/sammenligning/FUNKSJONSKART.md](../../sammenligning/FUNKSJONSKART.md) | Funksjonssamanlikning mot andre nettsidebyggjarar med gap-analyse (på bokmål) |

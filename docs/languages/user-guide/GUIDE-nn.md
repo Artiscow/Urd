@@ -1,14 +1,16 @@
 # Brukarrettleiing
 
-[Sámegiella](GUIDE-se.md) · [🇬🇧 English](GUIDE-en-GB.md) · [🇳🇴 Bokmål](../../BRUKERVEILEDNING.md) · **🇳🇴 Nynorsk** · [🇹🇷 Türkçe](GUIDE-tr.md)
+[Sámegiella](GUIDE-se.md) · [🇬🇧 English](GUIDE-en-GB.md) · [🇳🇴 Bokmål](GUIDE-nb.md) · **🇳🇴 Nynorsk** · [🇹🇷 Türkçe](GUIDE-tr.md)
 
-Omsetjing av BRUKERVEILEDNING.md. Norsk (bokmål) er kanonisk og gjeld ved avvik. Knappe- og panelnamna under er dei nynorske admin-tekstane; står adminen på eit anna språk, følgjer namna det språket.
+Omsetjing av GUIDE-nb.md. Norsk (bokmål) er kanonisk og gjeld ved avvik. Knappe- og panelnamna under er dei nynorske admin-tekstane; står adminen på eit anna språk, følgjer namna det språket.
 
 For deg som eig eller redigerer ei side bygd med Urd. Ingen kode, ingen
 git-kunnskap nødvendig: alt skjer i nettlesaren på di eiga side.
 
 > Urd er under utvikling. Rettleiinga dekkjer det som finst i dag og
 > blir utvida etter kvart; ei full opprydding er planlagd mot v0.9.
+
+**Innhald:** [Kom i gang](#kom-i-gang) · [Editoren](#editoren) · [Redigere innhald](#redigere-innhald) · [Eigenskapar-panelet](#eigenskapar-panelet) · [Seksjonar](#seksjonar) · [Grid (hjelpelinjer)](#grid-hjelpelinjer) · [Mobil](#mobil) · [Sider, meny og tema](#sider-meny-og-tema) · [Utkast og publisering](#utkast-og-publisering) · [Historikk og angring av publisering](#historikk-og-angring-av-publisering) · [Første gong](#første-gong)
 
 ## Kom i gang
 
@@ -297,7 +299,7 @@ lesarrekkjefølgje. Du treng vanlegvis ikkje gjere noko.
 - **Sjå sida ↗** opnar den publiserte sida i ny fane.
 
 Publisering krev at GitHub-brukaren din har fått tilgang av
-sideeigaren (sjå [OPPSETT-PUBLISERING.md](../setup-publication/SETUP-nn.md)).
+sideeigaren (sjå [oppsettsrettleiinga](../setup-publication/SETUP-nn.md)).
 
 Er de fleire som redigerer, seier editoren ifrå dersom nokon andre har
 publisert endringar i dei same delane sidan du lasta sida, og lèt deg

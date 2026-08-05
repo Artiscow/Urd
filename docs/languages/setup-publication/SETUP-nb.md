@@ -1,17 +1,17 @@
 # Oppsett av publisering (GitHub + Cloudflare Pages)
 
-[Sámegiella](languages/setup-publication/SETUP-se.md) · [🇬🇧 English](languages/setup-publication/SETUP-en-GB.md) · **🇳🇴 Bokmål** · [🇳🇴 Nynorsk](languages/setup-publication/SETUP-nn.md) · [🇹🇷 Türkçe](languages/setup-publication/SETUP-tr.md)
+[Sámegiella](SETUP-se.md) · [🇬🇧 English](SETUP-en-GB.md) · **🇳🇴 Bokmål** · [🇳🇴 Nynorsk](SETUP-nn.md) · [🇹🇷 Türkçe](SETUP-tr.md)
 
 Denne guiden setter opp «Publiser»-knappen: at admin kan committe endringer til GitHub-repoet, som Cloudflare Pages så deployer. Dette er en engangsjobb per nettside og tar rundt ti minutter. (Mønsteret er validert i produksjon i ApeironLF.)
-
-## 0. Lag nettsidens repo
-
-Ny side starter fra malrepoet [urd-template](https://github.com/Artiscow/urd-template): trykk **Use this template** → **Create a new repository** på GitHub, og gi repoet et navn. Repoet du får ER nettsiden; alt videre i guiden gjøres mot det. Senere Urd-versjoner hentes med **Oppdatering**-panelet i admin, som sjekker mot malrepoet, varsler om filer du har håndredigert, og skriver oppdateringen som én commit. (For Urd-utvikling brukes selve Urd-monorepoet i stedet; da er nettsiden undermappen `template`.)
 
 ## Forutsetninger
 
 - Nettsidens repo ligger på GitHub (laget fra malen i steg 0, eller for Urd-utvikling: selve Urd-repoet).
 - En Cloudflare-konto (gratisnivået holder lenge).
+
+## 0. Lag nettsidens repo
+
+Ny side starter fra malrepoet [urd-template](https://github.com/Artiscow/urd-template): trykk **Use this template** → **Create a new repository** på GitHub, og gi repoet et navn. Repoet du får ER nettsiden; alt videre i guiden gjøres mot det. Senere Urd-versjoner hentes med **Oppdatering**-panelet i admin, som sjekker mot malrepoet, varsler om filer du har håndredigert, og skriver oppdateringen som én commit. (For Urd-utvikling brukes selve Urd-monorepoet i stedet; da er nettsiden undermappen `template`.)
 
 ## 1. Koble repoet til Cloudflare Pages
 
@@ -109,7 +109,7 @@ git push
 - OAuth-tokenet byttes server-side og lagres i en httpOnly-cookie; det når aldri nettleser-JS.
 - `ALLOWED_LOGINS` håndheves i alle muterende endepunkter, ikke bare i UI-et.
 - Publisering kan kun skrive `content/**`, `media/**` og `plugins/plugins.json`. Kode (`functions/`, `admin/`, `assets/engine/`, `assets/urd/`), workflows og sikkerhetsfiler er blokkert på serversiden, så en kapret redaktørsesjon ikke kan plante noe.
-- Se [ADR-0003](adr/0003-publisering-via-github-oauth-og-pages-functions.md) for hele begrunnelsen.
+- Se [ADR-0003](../../adr/0003-publisering-via-github-oauth-og-pages-functions.md) for hele begrunnelsen.
 
 ## Lokal testing av publiseringslaget (Urd-utviklere)
 

@@ -1,12 +1,14 @@
 # Brukerveiledning
 
-[Sámegiella](languages/user-guide/GUIDE-se.md) · [🇬🇧 English](languages/user-guide/GUIDE-en-GB.md) · **🇳🇴 Bokmål** · [🇳🇴 Nynorsk](languages/user-guide/GUIDE-nn.md) · [🇹🇷 Türkçe](languages/user-guide/GUIDE-tr.md)
+[Sámegiella](GUIDE-se.md) · [🇬🇧 English](GUIDE-en-GB.md) · **🇳🇴 Bokmål** · [🇳🇴 Nynorsk](GUIDE-nn.md) · [🇹🇷 Türkçe](GUIDE-tr.md)
 
 For deg som eier eller redigerer en side bygget med Urd. Ingen kode, ingen
 git-kunnskap nødvendig: alt skjer i nettleseren på din egen side.
 
 > Urd er under utvikling. Veiledningen dekker det som finnes i dag og
 > utvides etter hvert; en full opprydding er planlagt mot v0.9.
+
+**Innhold:** [Kom i gang](#kom-i-gang) · [Editoren](#editoren) · [Redigere innhold](#redigere-innhold) · [Egenskaper-panelet](#egenskaper-panelet) · [Seksjoner](#seksjoner) · [Grid (hjelpelinjer)](#grid-hjelpelinjer) · [Mobil](#mobil) · [Sider, meny og tema](#sider-meny-og-tema) · [Utkast og publisering](#utkast-og-publisering) · [Historikk og angring av publisering](#historikk-og-angring-av-publisering) · [Første gang](#første-gang)
 
 ## Kom i gang
 
@@ -295,7 +297,7 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
 - **Se siden ↗** åpner den publiserte siden i ny fane.
 
 Publisering krever at GitHub-brukeren din har fått tilgang av
-sideeieren (se [OPPSETT-PUBLISERING.md](OPPSETT-PUBLISERING.md)).
+sideeieren (se [oppsettsguiden](../setup-publication/SETUP-nb.md)).
 
 Er dere flere som redigerer, sier editoren ifra hvis noen andre har
 publisert endringer i de samme delene siden du lastet siden, og lar deg

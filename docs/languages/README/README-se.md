@@ -6,6 +6,17 @@
 
 README jorgalus. Váldoveršuvdna vuorkkáruohttasis lea eaŋgalasgillii.
 
+<p align="center">
+  <a href="https://github.com/Artiscow/Urd/actions/workflows/tests.yml"><img src="https://github.com/Artiscow/Urd/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
+  <a href="https://github.com/Artiscow/Urd/releases"><img src="https://img.shields.io/github/v/release/Artiscow/Urd?label=release&color=15b39a" alt="Release"></a>
+</p>
+
+<p align="center">
+  <a href="../setup-publication/SETUP-se.md"><strong>Álgge dás</strong></a> ·
+  <a href="../user-guide/GUIDE-se.md"><strong>Geavaheaddjirávvagat</strong></a> ·
+  <a href="../ROADMAP-en-GB.md"><strong>Luoddakárta</strong></a>
+</p>
+
 > MERKE: dát lea maskiinjorgaluvvon vuosttašárvalus mii dárbbaša geahčadeami olbmos geas lea davvisámegiella eatnigiellan.
 
 > Urd lea árvideames boarráseamos golmma nornas norrøna mytologiijas, geat čohkkájit Yggdrasila ruohttasa buohta ja mearridit áseid vuorbbi. Ovttas čohkkájit nornat ja bođđet vuorbebálgáid dahje ristet vuorbbi muorračoahkkái.
@@ -52,9 +63,9 @@ Dokumeanttat leat čállojuvvon dárogillii; válddahusat vuolábealde leat jorg
 | [docs/ARKITEKTUR.md](../../ARKITEKTUR.md) | Vuogádatgeahčastat: mohtor, doaimmaheaddji, almmuhanvuohki (dárogillii) |
 | [docs/SKJEMA.md](../../SKJEMA.md) | Dáhtamodealla - šiehtadus masa buot huksejuvvo (dárogillii) |
 | [docs/VEIKART.md](../../VEIKART.md) | Muttut skálžžus gitta v1.0 rádjai (dárogillii) |
-| [docs/BRUKERVEILEDNING.md](../../BRUKERVEILEDNING.md) | Siidooamasteddjiide: movt doaimmaheaddji geavahuvvo, almmá koda haga (dárogillii) |
+| [Geavaheaddjirávvagat](../user-guide/GUIDE-se.md) | Siidooamasteddjiide: movt doaimmaheaddji geavahuvvo, almmá koda haga |
 | [docs/UTVIKLING.md](../../UTVIKLING.md) | Midjiide geat ovddidit Urd: heiveheapmi, njuolggadusat, dábálaš barggut (dárogillii) |
-| [docs/OPPSETT-PUBLISERING.md](../setup-publication/SETUP-se.md) | Ovttageardánis almmuhanheiveheapmi: GitHub OAuth-app + Cloudflare |
+| [Almmuhanheiveheapmi](../setup-publication/SETUP-se.md) | Ovttageardánis almmuhanheiveheapmi: GitHub OAuth-app + Cloudflare |
 | [docs/BACKLOG.md](../../BACKLOG.md) | Jotkkolaš bargolistu: barggut, meattáhusat ja evttohusat (dárogillii) |
 | [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Oamasteaddji dárkkistanlistu: buktojuvvon bargu mii vuordá geahččaleami (dárogillii) |
 | [docs/sammenligning/FUNKSJONSKART.md](../../sammenligning/FUNKSJONSKART.md) | Doaibmabuohtastahttin eará neahttasiidohuksejeddjiiguin ja gapme-analysa (dárogillii) |

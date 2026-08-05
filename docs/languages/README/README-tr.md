@@ -6,6 +6,17 @@
 
 README çevirisi. Depo kökündeki ana sürüm İngilizcedir.
 
+<p align="center">
+  <a href="https://github.com/Artiscow/Urd/actions/workflows/tests.yml"><img src="https://github.com/Artiscow/Urd/actions/workflows/tests.yml/badge.svg" alt="Testler"></a>
+  <a href="https://github.com/Artiscow/Urd/releases"><img src="https://img.shields.io/github/v/release/Artiscow/Urd?label=release&color=15b39a" alt="Release"></a>
+</p>
+
+<p align="center">
+  <a href="../setup-publication/SETUP-tr.md"><strong>Başla</strong></a> ·
+  <a href="../user-guide/GUIDE-tr.md"><strong>Kullanıcı kılavuzu</strong></a> ·
+  <a href="../ROADMAP-en-GB.md"><strong>Yol haritası</strong></a>
+</p>
+
 > Urd, İskandinav mitolojisinde Yggdrasil'in dibinde oturup tanrıların kaderini belirleyen üç nornadan muhtemelen en yaşlısıdır. Nornalar birlikte oturur, kader ipliklerini eğirir ya da kaderi ağaç parçalarına kazır.
 > Urd, kendi web siteni ağacın kökünden eğirmek ve kazımak için bir araçtır.
 
@@ -52,9 +63,9 @@ Belgeler Norveççe yazılmıştır; aşağıdaki açıklamalar çevrilmiştir.
 | [docs/ARKITEKTUR.md](../../ARKITEKTUR.md) | Sistem genel bakışı: motor, düzenleyici, yayımlama akışı (Norveççe) |
 | [docs/SKJEMA.md](../../SKJEMA.md) | Veri modeli - her şeyin üzerine kurulduğu sözleşme (Norveççe) |
 | [docs/VEIKART.md](../../VEIKART.md) | İskeletten v1.0'a kadar aşamalar (Norveççe) |
-| [docs/BRUKERVEILEDNING.md](../../BRUKERVEILEDNING.md) | Site sahipleri için: düzenleyicinin kodsuz kullanımı (Norveççe) |
+| [Kullanıcı kılavuzu](../user-guide/GUIDE-tr.md) | Site sahipleri için: düzenleyicinin kodsuz kullanımı |
 | [docs/UTVIKLING.md](../../UTVIKLING.md) | Urd'u geliştiren bizler için: kurulum, kurallar, sık yapılan işler (Norveççe) |
-| [docs/OPPSETT-PUBLISERING.md](../setup-publication/SETUP-tr.md) | Tek seferlik yayımlama kurulumu: GitHub OAuth uygulaması + Cloudflare |
+| [Yayımlama kurulumu](../setup-publication/SETUP-tr.md) | Tek seferlik yayımlama kurulumu: GitHub OAuth uygulaması + Cloudflare |
 | [docs/BACKLOG.md](../../BACKLOG.md) | Güncel görev listesi: yapılacaklar, hatalar ve öneriler (Norveççe) |
 | [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Sahibin kontrol listesi: test bekleyen teslim edilmiş işler (Norveççe) |
 | [docs/sammenligning/FUNKSJONSKART.md](../../sammenligning/FUNKSJONSKART.md) | Diğer web sitesi kurucularıyla özellik karşılaştırması ve boşluk analizi (Norveççe) |

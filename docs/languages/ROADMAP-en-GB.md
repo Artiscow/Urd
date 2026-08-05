@@ -96,7 +96,7 @@ was delivered in v0.3; this is the layer above.)
 
 We use Urd as an outside user, without shortcuts:
 
-- Create a real site (working name: Urd-Design) via the «Use this template» button, in its own repo with its own Cloudflare setup, set up ONLY by following [OPPSETT-PUBLISERING.md](setup-publication/SETUP-en-GB.md). All friction that is discovered is a finding that shall be fixed.
+- Create a real site (working name: Urd-Design) via the «Use this template» button, in its own repo with its own Cloudflare setup, set up ONLY by following [the setup guide](setup-publication/SETUP-en-GB.md). All friction that is discovered is a finding that shall be fixed.
 - Build the site to completion through admin alone.
 - Then release an Urd update that contains a **real block change (v1→v2 with migration)**, and run the update button on the Urd-Design site.
 
