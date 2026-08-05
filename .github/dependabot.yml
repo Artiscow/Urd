@@ -12,8 +12,15 @@ updates:
       utvikling-mindre:
         update-types: [minor, patch]
 
+  # Workflowene SHA-pinner alle actions (forsyningskjede-vern: tags kan
+  # flyttes, commit-SHA-er ikke); Dependabot leser versjonskommentaren
+  # bak SHA-en og holder pinningene oppdatert.
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
       day: monday
+    groups:
+      # Alle actions-bumper samles i én ukentlig PR
+      actions-alle:
+        patterns: ['*']

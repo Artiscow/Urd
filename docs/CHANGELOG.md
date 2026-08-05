@@ -20,6 +20,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.6.0.9 - Actions SHA-pinnet: forsyningskjede-vern for CI-workflowene - 5. august 2026
+- BAKGRUNN: codeql-PR-en (#10) ble merget i stedet for lukket, så codeql-action sto pinnet til eksakt versjon mens de tre andre actions fløt på major-tagg. Mergen avgjorde backlog-beslutningen fra 0.6.0.8: pinning ble valgt, og da er ignore-regel-forslaget feil (det ville frosset codeql på 4.37.4 til neste major). I stedet ble backlog-alternativet gjennomført: pinne alle.
+- ALLE FIRE actions (sju uses-linjer i tre workflower) er SHA-pinnet med versjonskommentar bak (`actions/checkout@3d3c42e... # v7.0.1`): en tagg kan flyttes av en angriper som kompromitterer action-repoet, en commit-SHA kan ikke. SHA-ene er slått opp direkte mot upstream-repoene med `git ls-remote` (derefererte commit-SHA-er, ikke tag-objekter), pinnet til nyeste innenfor de majorene som alt var i bruk: checkout v7.0.1, setup-node v7.0.0, dependency-review-action v5.0.0 og codeql-action v4.37.6 (to patcher nyere enn PR-ens 4.37.4).
+- DEPENDABOT.YML har fått en gruppe som samler alle actions-bumper i én ukentlig PR, så pinningen ikke gir en PR per action-utgivelse. Dependabot leser versjonskommentaren bak SHA-en og holder pinningene ferske, som er nøyaktig auto-oppdateringen de flytende taggene ga, bare med PR-review som port.
+- VERIFISERT: alle fire YAML-filene parser rent, ingen tankestrek. Diffen rører kun .github/, så bygg, tester og bundel er upåvirket; selve pinningen kan først observeres ved at workflowene kjører grønt etter push (testrunde-punkt).
+
 ### 0.6.0.8p - Push-gjennomgang: avhengighetsrunden - 5. august 2026
 - SPENNET er én commit (0.6.0.8), så pushen arver nummeret med p-suffiks.
 - VERIFISERT: `npm ci` mot den nye låsefilen ga nøyaktig de låste versjonene (ingen avhengighets-drift, i motsetning til hendelsen 22. juli), `npm run build` grønt, `node --test tests/*.mjs` 284/284, `npm run validate` alle ni, `npm audit` null sårbarheter, og to påfølgende bygg ga bit-identisk bundel (deterministisk).
