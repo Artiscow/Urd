@@ -12,14 +12,21 @@
  *   f.eks. "template" i Urd-monorepoet; utelatt når nettsiden ligger i roten).
  */
 
-/** Leser og validerer konfigurasjonen fra env. Kaster ved manglende variabler. */
+/** Leser og validerer konfigurasjonen fra env. Kaster ved manglende variabler.
+ *  Feilene bærer en maskinlesbar `code` (og ev. parametre) som endepunktene
+ *  sender videre i feilsvaret, så admin kan oversette dem (api.*-nøklene). */
 export function cfg(env) {
   for (const key of ['GITHUB_REPO', 'GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET']) {
-    if (!env[key]) throw new Error(`Publisering er ikke konfigurert: miljøvariabelen ${key} mangler`);
+    if (!env[key]) {
+      throw Object.assign(
+        new Error(`Publisering er ikke konfigurert: miljøvariabelen ${key} mangler`),
+        { code: 'setupMissingEnv', key },
+      );
+    }
   }
   const rootDir = (env.GITHUB_ROOT_DIR || '').replace(/^\/+|\/+$/g, '');
   if (rootDir.split('/').includes('..')) {
-    throw new Error('GITHUB_ROOT_DIR kan ikke inneholde ..');
+    throw Object.assign(new Error('GITHUB_ROOT_DIR kan ikke inneholde ..'), { code: 'setupBadRootDir' });
   }
   return {
     repo: env.GITHUB_REPO,

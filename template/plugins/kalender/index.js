@@ -22,7 +22,7 @@ import {
 // editor-chromen (admin-språket), dates() for måneds-/ukedagsnavn og tp()
 // for flertall. Ordboka (locales/) lastes av plugin-lasteren FØR register()
 // - t/ta kalles kun i render-/fabrikk-kropper, aldri på modulnivå.
-import { t, ta, tp, dates } from '/assets/engine/i18n.js';
+import { t, ta, tp, taApiError, dates } from '/assets/engine/i18n.js';
 
 const el2 = (tag, className, textContent) => {
   const node = document.createElement(tag);
@@ -43,7 +43,7 @@ async function fetchSource(url) {
   } catch { /* korrupt mellomlager ignoreres */ }
   const res = await fetch(`/api/ics?url=${encodeURIComponent(url)}`);
   if (!res.ok) {
-    const detail = (await res.json().catch(() => null))?.error;
+    const detail = taApiError(await res.json().catch(() => null));
     throw new Error(detail ?? ta('kalender.edit.feedStatus', { status: res.status }));
   }
   const text = await res.text();

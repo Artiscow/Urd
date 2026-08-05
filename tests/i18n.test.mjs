@@ -241,3 +241,39 @@ test('tp: flertallskategorier via Intl.PluralRules (nb one/other)', async () => 
   assert.equal(tp('x.days', 1), 'x.days.one');
   assert.equal(tp('x.days', 3), 'x.days.other');
 });
+
+test('api-feilkoder: hver code i functions har en api.-nøkkel i admin-basen', () => {
+  // Basen leses som tekst: nøklene hentes med regex, samme mekaniske
+  // form som resten av paritetstestene.
+  const nbSrc = readFileSync(new URL('assets/engine/locales/admin/nb.js', ROOT), 'utf-8');
+  const adminKeys = new Set([...nbSrc.matchAll(/'(api\.[A-Za-z]+)':/g)].map((m) => m[1]));
+  const fnDir = new URL('functions/', ROOT);
+  const codes = new Set();
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const child = new URL(entry.name + (entry.isDirectory() ? '/' : ''), dir);
+      if (entry.isDirectory()) walk(child);
+      else if (entry.name.endsWith('.js')) {
+        for (const m of readFileSync(child, 'utf-8').matchAll(/code: '([A-Za-z]+)'/g)) codes.add(m[1]);
+      }
+    }
+  };
+  walk(fnDir);
+  assert.ok(codes.size >= 30, `fant bare ${codes.size} koder i functions (regex-drift?)`);
+  for (const code of codes) {
+    assert.ok(adminKeys.has(`api.${code}`), `functions-koden '${code}' mangler api.${code} i admin-basen`);
+  }
+});
+
+test('taApiError: kjent kode oversettes med parametre, ukjent faller til error-teksten', async () => {
+  const { taApiError, addAdminDict } = await import('../template/assets/engine/i18n.js');
+  const nbAdmin = (await import('../template/assets/engine/locales/admin/nb.js')).default;
+  addAdminDict(nbAdmin.strings);
+  assert.equal(
+    taApiError({ error: 'rå tekst', code: 'setupMissingEnv', key: 'GITHUB_REPO' }),
+    'Publisering er ikke konfigurert: miljøvariabelen GITHUB_REPO mangler',
+  );
+  assert.equal(taApiError({ error: 'rå backend-tekst', code: 'ukjentKode' }), 'rå backend-tekst');
+  assert.equal(taApiError({ error: 'kun tekst' }), 'kun tekst');
+  assert.equal(taApiError(null), null);
+});

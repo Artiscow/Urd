@@ -3,6 +3,15 @@
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.0.10): API-feil på admin-språket, motor-stempel og CSS-rydding
+
+- [ ] API-feil oversettes: sett admin-språket til English (UK), logg ut i en annen fane og prøv å publisere - feilmeldingen kommer på engelsk (kode-oppslag), ikke som norsk backend-tekst
+- [ ] Utløpt innlogging: med utløpt/ugyldig token gir publisering «sign in again»-varianten (koden `loginExpired`), ikke den generiske «must sign in»-meldingen med rå årsak
+- [ ] Kart-søket i preview: søk på tøys (under 3 tegn og et sted som ikke finnes) med admin på et annet språk - «skriv en adresse»- og «fant ikke stedet»-meldingene følger admin-språket
+- [ ] Kalender-feed-feil: pek en kalenderkilde på en ikke-godkjent vert - feilen i blokken viser vertsnavnet interpolert, på admin-språket
+- [ ] Panelene etter CSS-ryddingen: klikk gjennom alle paneler (særlig Tema, Nettsted, oppsettskortet og verktøyradene) og se at ingenting har mistet stil
+- [ ] Motor-stempelet: alle fire pluginene laster fortsatt (ingen «krever motor»-advarsler i konsollen), og plugin-panelet viser ingen versjonsadvarsel med engine 0.6.8 mot kravet >=0.6.8
+
 ### Testrunde-batch (0.6.0.9): SHA-pinnede actions
 
 - [ ] Etter push: alle tre workflowene (Tester, CodeQL, Dependency review) kjører grønt med de pinnede SHA-ene, og loggene viser at riktige versjoner ble hentet (checkout v7.0.1, setup-node v7.0.0, dependency-review v5.0.0, codeql v4.37.6)

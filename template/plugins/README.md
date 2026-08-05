@@ -70,7 +70,7 @@ kode. `sprak-svensk` er referansen (svensk for besøkende-siden):
   "id": "sprak-svensk",
   "name": "Svensk språkpakke",
   "version": "1.0.0",
-  "requiresEngine": ">=0.5.0 <1.0.0",
+  "requiresEngine": ">=0.6.8 <1.0.0",
   "languages": [{ "code": "sv", "name": "Svenska", "site": true, "admin": false }]
 }
 ```

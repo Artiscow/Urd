@@ -158,6 +158,19 @@ export function tp(baseKey, n, params) {
   return format(chosen ?? `${baseKey}.${cat}`, { ...params, n });
 }
 
+/**
+ * Feilsvar fra publiseringslaget (functions): den maskinlesbare `code`-en
+ * slås opp som api.<code> og interpoleres med svarets egne felter ({key},
+ * {login}, {host} ...). Ukjent kode faller til backend-teksten (`error`),
+ * som alltid finnes; null når svaret mangler helt, så kalleren kan `??`
+ * sin egen fallback.
+ */
+export function taApiError(data) {
+  const key = `api.${data?.code}`;
+  if (data?.code && admin.dict[key] !== undefined) return format(admin.dict[key], data);
+  return data?.error ?? null;
+}
+
 export function siteLang() { return site.lang; }
 export function adminLang() { return admin.lang; }
 

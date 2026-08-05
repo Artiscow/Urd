@@ -252,7 +252,7 @@ Hver plugin er en mappe med manifest + ES-modul (kalender-referansepluginen vise
   "names": { "nb": "Kalender", "nn": "Kalender", "en-GB": "Calendar", "se": "Kaleandar", "tr": "Takvim" },
   "locales": true,
   "version": "1.0.0",
-  "requiresEngine": ">=0.5.0 <1.0.0",
+  "requiresEngine": ">=0.6.8 <1.0.0",
   "entry": "index.js",
   "provides": { "blocks": ["kalender"], "sectionPresets": ["hva-skjer"], "backgrounds": [], "animations": [], "maler": [] }
 }
@@ -280,7 +280,7 @@ Valgfrie manifest-felt (alle additive):
   "id": "sprak-svensk",
   "name": "Svensk språkpakke",
   "version": "1.0.0",
-  "requiresEngine": ">=0.5.0 <1.0.0",
+  "requiresEngine": ">=0.6.8 <1.0.0",
   "languages": [{ "code": "sv", "name": "Svenska", "site": true, "admin": false }]
 }
 ```

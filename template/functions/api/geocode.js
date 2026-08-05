@@ -20,7 +20,7 @@ const json = (body, status = 200) =>
 
 export async function onRequestGet({ request }) {
   const q = (new URL(request.url).searchParams.get('q') ?? '').trim();
-  if (q.length < 3) return json({ error: 'Skriv en adresse eller et sted' }, 400);
+  if (q.length < 3) return json({ error: 'Skriv en adresse eller et sted', code: 'queryTooShort' }, 400);
 
   const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=0&q=${encodeURIComponent(q)}`;
   const controller = new AbortController();
@@ -37,22 +37,22 @@ export async function onRequestGet({ request }) {
     });
   } catch {
     clearTimeout(timer);
-    return json({ error: 'Fikk ikke kontakt med adressesøket' }, 502);
+    return json({ error: 'Fikk ikke kontakt med adressesøket', code: 'geocodeUnreachable' }, 502);
   }
   clearTimeout(timer);
-  if (!upstream.ok) return json({ error: `Adressesøket svarte ${upstream.status}` }, 502);
+  if (!upstream.ok) return json({ error: `Adressesøket svarte ${upstream.status}`, code: 'geocodeUpstreamStatus', status: upstream.status }, 502);
 
   let data = null;
   try {
     data = await upstream.json();
   } catch {
-    return json({ error: 'Uventet svar fra adressesøket' }, 502);
+    return json({ error: 'Uventet svar fra adressesøket', code: 'geocodeUnexpected' }, 502);
   }
   const hit = Array.isArray(data) ? data[0] : null;
   const lat = Number(hit?.lat);
   const lon = Number(hit?.lon);
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-    return json({ error: 'Fant ikke stedet. Prøv en mer nøyaktig adresse.' }, 404);
+    return json({ error: 'Fant ikke stedet. Prøv en mer nøyaktig adresse.', code: 'placeNotFound' }, 404);
   }
   return json({ lat, lon, label: hit.display_name ?? q });
 }

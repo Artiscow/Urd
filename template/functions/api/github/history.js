@@ -17,11 +17,11 @@ export async function onRequestGet({ request, env }) {
   try {
     config = cfg(env);
   } catch (err) {
-    return json({ error: err.message }, 503);
+    return json({ error: err.message, code: err.code, key: err.key }, 503);
   }
 
   const token = readCookie(request, 'urd_gh');
-  if (!token) return json({ error: 'Ikke innlogget' }, 401);
+  if (!token) return json({ error: 'Ikke innlogget', code: 'notLoggedIn' }, 401);
 
   try {
     const path = config.rootDir ? `${config.rootDir}/content` : 'content';
@@ -39,10 +39,10 @@ export async function onRequestGet({ request, env }) {
       })),
     });
   } catch (err) {
-    if (err.status === 401) return json({ error: 'Ugyldig eller utløpt innlogging' }, 401);
+    if (err.status === 401) return json({ error: 'Ugyldig eller utløpt innlogging', code: 'loginExpired' }, 401);
     // 409 = helt tomt repo: ingen historikk er en normal tilstand, ikke feil.
     if (err.status === 409) return json({ commits: [] });
     console.error('Urd history:', err.message);
-    return json({ error: 'Kunne ikke lese historikken fra GitHub' }, 502);
+    return json({ error: 'Kunne ikke lese historikken fra GitHub', code: 'historyFailed' }, 502);
   }
 }

@@ -13,7 +13,7 @@ import { parseLocation, buildEmbedUrl, buildLargerMapUrl, OSM_HOST } from './osm
 // Flerspråk (ADR-0012): t() for besøkende-tekster (site-språket), ta() for
 // editor-chromen og seed (admin-språket). Ordboka (locales/) lastes av
 // plugin-lasteren FØR register() - t/ta kalles aldri på modulnivå.
-import { t, ta } from '/assets/engine/i18n.js';
+import { t, ta, taApiError } from '/assets/engine/i18n.js';
 
 const el2 = (tag, className, textContent) => {
   const node = document.createElement(tag);
@@ -79,7 +79,7 @@ function configPanel(el, props, ctx) {
           lat = data.lat;
           lon = data.lon;
         } else {
-          status.textContent = data?.error ?? ta('kart.edit.notFound');
+          status.textContent = taApiError(data) ?? ta('kart.edit.notFound');
           status.classList.add('feil');
           apply.disabled = false;
           return;

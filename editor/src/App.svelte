@@ -11,7 +11,7 @@
   import IconEditor from './lib/IconEditor.svelte';
   // Editoren deler migreringskoden med motoren (samme fil, bundles inn).
   import { lift, liftPageFile, liftSiteFile } from '../../template/assets/engine/migrate.js';
-  import { ta, adminLang as currentAdminLang } from '../../template/assets/engine/i18n.js';
+  import { ta, taApiError, adminLang as currentAdminLang } from '../../template/assets/engine/i18n.js';
   import { validateManifest, satisfiesEngine } from '../../template/assets/engine/plugins.js';
   import { makeId } from '../../template/assets/engine/sections/presets.js';
   // Bakgrunns- og animasjonsdefinisjonene gjenbrukes for etiketter og
@@ -1458,7 +1458,7 @@
         historyError = ta('status.historyLoginRequired');
       } else {
         historyList = [];
-        historyError = (await res.json().catch(() => null))?.error ?? ta('status.historyFetchFailed');
+        historyError = taApiError(await res.json().catch(() => null)) ?? ta('status.historyFetchFailed');
       }
     } catch {
       historyList = [];
@@ -1517,7 +1517,7 @@
       } else if (res.status === 409) {
         setStatus(ta('status.revertConflict'), 'error');
       } else {
-        setStatus((await res.json().catch(() => null))?.error ?? ta('status.revertFailed'), 'error');
+        setStatus(taApiError(await res.json().catch(() => null)) ?? ta('status.revertFailed'), 'error');
       }
     } catch {
       setStatus(ta('status.publishLayerUnreachable'), 'error');
@@ -3753,20 +3753,20 @@
       updateDirty();
       setStatus(ta('status.published'), 'ok');
     } else if (res?.status === 401) {
-      const detail = (await res.json().catch(() => null))?.error;
-      setStatus(detail === 'Ugyldig eller utløpt innlogging'
+      const data = await res.json().catch(() => null);
+      setStatus(data?.code === 'loginExpired'
         ? ta('status.loginExpired')
-        : ta('status.loginRequired', { reason: detail ?? ta('status.unknownReason') }), 'error');
+        : ta('status.loginRequired', { reason: taApiError(data) ?? ta('status.unknownReason') }), 'error');
       await checkAuth();
     } else if (res?.status === 403) {
-      setStatus((await res.json().catch(() => null))?.error ?? ta('status.noPublishAccess'), 'error');
+      setStatus(taApiError(await res.json().catch(() => null)) ?? ta('status.noPublishAccess'), 'error');
     } else if (res?.status === 409) {
       // Noen rakk å publisere i selve commit-vinduet: utkastene er urørt,
       // og baseSha står stille, så et nytt forsøk kjører konfliktsjekken
       // på nytt og fanger opp de ferske endringene.
       setStatus(ta('status.publishRace'), 'error');
     } else if (res) {
-      setStatus((await res.json().catch(() => null))?.error
+      setStatus(taApiError(await res.json().catch(() => null))
         ?? ta('status.publishFailed'), 'error');
     } else {
       setStatus(ta('status.publishUnavailable'), 'error');
@@ -5995,12 +5995,10 @@
     pointer-events: none;
   }
 
-  /* Felles kontrollhøyde (2.2rem) og -størrelse i panelene: felt,
-     nedtrekk og knapper skal flukte uansett hvor de står */
-  .panel-body input[type='text'],
+  /* Felles kontrollhøyde (2.2rem) og -størrelse i panelene: felt
+     og knapper skal flukte uansett hvor de står */
   .panel-body input:not([type]),
-  .panel-body input[type='number'],
-  .panel-body input[type='color'] {
+  .panel-body input[type='number'] {
     font: inherit;
     font-size: 0.85rem;
     color: inherit;
@@ -6010,12 +6008,6 @@
     height: 2.2rem;
     padding: 0 0.5em;
     min-width: 0;
-  }
-
-  .panel-body input[type='color'] {
-    padding: 2px;
-    width: 3rem;
-    cursor: pointer;
   }
 
   /* Tall-stepper (−/[tall]/+), som størrelsesfeltet i teksteditoren. */
@@ -6133,7 +6125,6 @@
     border-bottom: 1px solid rgb(255 255 255 / 8%);
   }
 
-  .nav-row select,
   .nav-row input {
     min-width: 0;
     max-width: 100%;
@@ -6314,21 +6305,11 @@
     border-left: 2px solid rgb(255 255 255 / 12%);
   }
 
-  .bg-type {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-
   /* Kompakte verktøyrader (à la tekstbehandler) i panelene */
   .toolbar-row {
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    min-width: 0;
-  }
-
-  .toolbar-row > select {
-    flex: 1 1 0;
     min-width: 0;
   }
 
@@ -6435,25 +6416,13 @@
     padding: 0 0.6em;
   }
 
-  .setup-card input[type='color'] {
-    height: 2.2rem;
-    width: 3rem;
-    padding: 2px;
-    background: transparent;
-    border: 1px solid rgb(255 255 255 / 20%);
-    border-radius: 6px;
-    cursor: pointer;
-  }
-
   .setup-actions {
     display: flex;
     justify-content: flex-end;
     gap: 0.6rem;
   }
 
-  /* Nedtrekk og felt inni panel-etiketter skal aldri sprenge bredden */
-  .panel-body select,
-  .panel-body label > select,
+  /* Felt inni panel-etiketter skal aldri sprenge bredden */
   .panel-body label > input {
     min-width: 0;
     max-width: 100%;
@@ -6470,14 +6439,6 @@
     padding: 0.4em 0.5em;
     min-width: 0;
     resize: vertical;
-  }
-
-  /* Samme innvendige marg og høyde som tekstfeltene, så teksten
-     linjerer (pilen trenger fortsatt plass til høyre) */
-  .panel-body select {
-    font-size: 0.85rem;
-    height: 2.2rem;
-    padding: 0 2.1em 0 0.5em;
   }
 
   /* Posisjon/størrelse-feltene i Egenskaper: to kolonner med smale felt */
@@ -6561,12 +6522,6 @@
   .theme-preset .tp-band { display: flex; height: 22px; }
   .theme-preset .tp-band i { flex: 1; }
   .theme-preset small { display: block; text-align: center; font-size: 9px; padding: 2px 0 3px; opacity: 0.8; }
-
-  /* Palett-forhåndsvisning av gjeldende tema */
-  .theme-palette { display: flex; gap: 8px; margin: 0 0 14px; }
-  .theme-palette .tp-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
-  .theme-palette .tp-col i { display: block; height: 38px; border-radius: 8px; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); }
-  .theme-palette .tp-col span { text-align: center; font-size: 10px; opacity: 0.7; }
 
   /* Farger: Auto/Egne, palett-rader (Lys+Mørk), Standard-tag */
   .autorow { display: flex; align-items: center; justify-content: space-between; margin: 8px 0 2px; }
@@ -6705,7 +6660,6 @@
     display: none;
   }
 
-  select,
   button,
   .ghost {
     font: inherit;
@@ -6719,7 +6673,7 @@
   }
 
   /* Knapper skal SE UT som knapper: fylt flate, tydelig hover og et
-     lite trykk ved klikk. Felt (input/select) forblir flate. */
+     lite trykk ved klikk. Felt (input) forblir flate. */
   button,
   .ghost {
     display: inline-flex;
@@ -6742,29 +6696,10 @@
 
   /* Kontroller skal ikke arve sidens luftige line-height (1.6 fra
      base.css via font: inherit): stram linjeboks gir jevn sentrering */
-  select,
   button,
   .ghost,
   input {
     line-height: 1.3;
-  }
-
-  /* Nedtrekkslisten følger mørkt tema (nettleser-standarden er hvit).
-     Egen pil (appearance: none): nettleserens pil sitter klistret mot
-     høyrekanten og gir teksten en ekstra innrykk. */
-  select {
-    color-scheme: dark;
-    appearance: none;
-    padding-right: 2.1em;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%23e8eaf0' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.7em center;
-    background-size: 0.85em;
-  }
-
-  select option {
-    background: var(--urd-color-surface, #151a23);
-    color: var(--urd-color-text, #e8eaf0);
   }
 
   button:disabled {
