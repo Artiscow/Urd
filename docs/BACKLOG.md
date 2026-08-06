@@ -150,16 +150,10 @@ Funn fra en gjennomgang av motor, editor og functions/plugins, gruppert etter al
 - [ ] Utenfor scope for kjernen (fra kartleggingen 18. juli 2026): innlogging/medlemsområde, P2P-bruktmarked (ApeironLFs «Kjøp & bytte»), fulltekstsøk på siden (krever avhengighet à la minisearch - evt. community-plugin), sanntidsfeeds/personalisering. Krever server/CMS eller avhengigheter; Urd er statisk og avhengighetsfri
 
 ## Bugs, (dårlige) funksjoner og ting som ellers må gjøres
-- [x] Blokker - Plugins tillater ikke å legge til blokkene/elementene - å trykke på noen av kalendrene, skjema eller kart fungerer ikke. (Rettet 0.6.0.13: structuredClone på $state-proxy kastet DataCloneError stille; $state.snapshot)
-- [x] Kart-plugin har nå innstillinger inne i egenskaper - må bygges om til at alle 'innstillingene' er i egenskaper, ikke inne i "Innstillinger" i egenskaper. (Levert 0.6.0.13 som felt-kontrakten: `fields` på plugin-blokk-defs rendres rett i Egenskaper; kartet er referansen)
-- [ ] Om man fjerner alle seksjoner på en side forsvinner + ny seksjon og det er ikke mulig å legge til en ny seksjon. (Mulig dekket av tom-side-fiksen levert 0.6.6.5.3 - verifiser i testrunden)
-- [x] Dra og marker - Slett alt som er markert både med shortcuts og knapp (Levert 0.6.0.13: slett-knapp i multiverktøylinjen + Delete/Backspace, ett angre-steg)
-- [x] Error meldinger må oversettes og settes til engelsk (Levert 0.6.0.13: 65 fallback-tekster i functions oversatt; api-kodene og admin-oversettelsen urørt)
 - [ ] Legge til en bedre forklaring på hvordan man deployer siden på nytt etter førsteoppsett i Cloudflare
 - [ ] /template/plugins trenger en engelsk readme som peker til urd/docs/plugins/plugins-[språk].md
 - [ ] Flytte /readme /setup-publication og /user-guide ut fra /languages
 - [ ] Lage en Troubleshoot fil
-- [x] Kallender plugin: Needs CSP exceptions in _headers: frame-src https://www.openstreetmap.org (Rettet 0.6.0.13: Plugins-panelet sjekker den levende CSP-headeren og varsler kun om verter som faktisk mangler)
 
 ## Forslag og Ideer
 
