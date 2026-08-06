@@ -470,7 +470,8 @@
     // vern som for sideutkastene (liftSiteFile lar dem ellers passere).
     if ((siteStore.data.schemaVersion ?? 1) > SITE_SCHEMA_VERSION) {
       console.warn(`Urd: site-utkastet har schemaVersion ${siteStore.data.schemaVersion} (motoren har ${SITE_SCHEMA_VERSION}) og forkastes`);
-      siteStore.replace(structuredClone(site));
+      // site er $state: structuredClone på proxyen kaster (snapshot-leksen).
+      siteStore.replace($state.snapshot(site));
     }
     // Utkast fra eldre format kan ligge i localStorage: løft dem.
     siteStore.replace(liftSiteFile(siteStore.data));
@@ -715,6 +716,54 @@
   function setBlockProp(name, value) {
     // Nøkkelen inkluderer egenskapsnavnet: endring av etikett og deretter stil skal være TO angre-steg, mens en skur i samme felt koalesceres.
     mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b) => { b.props[name] = value; });
+  }
+
+  /** Flere props i ETT angre-steg (felt-kontraktens place-felt skriver tre). */
+  function setBlockProps(name, patch) {
+    mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b) => { Object.assign(b.props, patch); });
+  }
+
+  /* Felt-kontrakten (plugin-blokker, `fields` i urd-plugin-blocks): utkast og
+     søkestatus for place-felt, nøklet per blokk+felt så et blokkbytte viser
+     den markerte blokkens egne verdier. */
+  let placeDrafts = $state({});
+  let placeStatus = $state({});
+  let placeBusy = $state(false);
+
+  const clampField = (f, v) => {
+    if (!Number.isFinite(v)) v = f.min ?? 0;
+    if (f.min != null) v = Math.max(f.min, v);
+    if (f.max != null) v = Math.min(f.max, v);
+    return v;
+  };
+
+  /** place-feltet skriver teksten til feltets key og koordinater til lat/lon:
+   *  «lat, lon» tolkes lokalt, lenker skrives urørt (pluginen tolker dem ved
+   *  rendring), alt annet geokodes via /api/geocode. */
+  async function searchPlace(f) {
+    const k = `${selectedBlock.blockId}:${f.key}`;
+    const raw = (placeDrafts[k] ?? selectedBlock.props[f.key] ?? '').trim();
+    placeStatus[k] = null;
+    const coords = raw.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+    if (!raw || coords || /^https?:\/\//i.test(raw)) {
+      setBlockProps(f.key, { [f.key]: raw, lat: coords ? Number(coords[1]) : null, lon: coords ? Number(coords[2]) : null });
+      return;
+    }
+    placeBusy = true;
+    placeStatus[k] = { text: ta('props.place.searching'), err: false };
+    try {
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(raw)}`);
+      const data = await res.json().catch(() => null);
+      if (res.ok && Number.isFinite(data?.lat)) {
+        setBlockProps(f.key, { [f.key]: raw, lat: data.lat, lon: data.lon });
+        placeStatus[k] = null;
+      } else {
+        placeStatus[k] = { text: taApiError(data) ?? ta('props.place.notFound'), err: true };
+      }
+    } catch {
+      placeStatus[k] = { text: ta('props.place.failed'), err: true };
+    }
+    placeBusy = false;
   }
 
   function setBlockFrame(field, value) {
@@ -2350,7 +2399,41 @@
     pluginsView = JSON.parse(JSON.stringify(pluginsStore.data));
   }
 
+  /** Sidens LEVENDE CSP, lest fra svar-headerne (Cloudflare setter den fra
+   *  _headers på alle stier). null = ikke lastet; {unknown: true} = ingen
+   *  CSP-header (lokal utvikling): da blokkeres ingenting, og instruksen
+   *  ville bare vært støy. */
+  let liveCsp = $state(null);
+
+  async function loadLiveCsp() {
+    try {
+      const res = await fetch('/urd.json', { cache: 'no-store' });
+      const header = res.headers.get('content-security-policy');
+      if (!header) { liveCsp = { unknown: true }; return; }
+      const directive = (name) => new Set(
+        (header.split(';').map((s) => s.trim()).find((s) => s.startsWith(`${name} `)) ?? '')
+          .split(/\s+/).slice(1),
+      );
+      liveCsp = { frameSrc: directive('frame-src'), connectSrc: directive('connect-src') };
+    } catch {
+      liveCsp = { unknown: true };
+    }
+  }
+
+  /** Manifest-CSP-behov som IKKE alt står i den levende CSP-en: kun de
+   *  vises i instruksen (innstillinger vises kun når de er relevante). */
+  function cspMissing(csp) {
+    const need = [
+      ...(csp.connectSrc ?? []).map((host) => ['connect-src', host]),
+      ...(csp.frameSrc ?? []).map((host) => ['frame-src', host]),
+    ];
+    if (!liveCsp || liveCsp.unknown) return [];
+    const present = { 'connect-src': liveCsp.connectSrc, 'frame-src': liveCsp.frameSrc };
+    return need.filter(([dir, host]) => !present[dir]?.has(host)).map(([dir, host]) => `${dir} ${host}`);
+  }
+
   async function initPlugins() {
+    loadLiveCsp();
     let published = { version: 1, enabled: [] };
     try {
       published = await (await fetch('/plugins/plugins.json')).json();
@@ -3387,12 +3470,16 @@
   let pluginBlocks = $state([]);
 
   function addPluginBlock(entry, extraProps = {}) {
+    // pluginBlocks er $state: structuredClone på en reaktiv proxy kaster
+    // DataCloneError (samme felle som postMessage), så klikket døde stille.
+    // Snapshot gir rene objekter; virker også på ikke-reaktive verdier.
+    const raw = $state.snapshot(entry);
     requestPlacement({
       id: makeId('blk'),
-      type: entry.type,
-      version: entry.version ?? 1,
+      type: raw.type,
+      version: raw.version ?? 1,
       decor: false,
-      props: { ...structuredClone(entry.defaults ?? {}), ...structuredClone(extraProps) },
+      props: { ...(raw.defaults ?? {}), ...$state.snapshot(extraProps) },
       animation: null,
       frames: { desktop: { x: 25, y: 40, w: 50, h: 260, z: 1, rot: 0 }, mobile: null },
     });
@@ -4888,8 +4975,8 @@
                       <p class="panel-hint plugin-warn">{info.errors.join('; ')}</p>
                     {:else if info && !info.satisfied}
                       <p class="panel-hint plugin-warn">{ta('plugin.engineMismatch', { required: info.requiresEngine, current: pluginEngine })}</p>
-                    {:else if info?.csp}
-                      <p class="panel-hint plugin-warn">{ta('plugin.cspNeeded', { list: [...(info.csp.connectSrc ?? []).map((d) => `connect-src ${d}`), ...(info.csp.frameSrc ?? []).map((d) => `frame-src ${d}`)].join(', ') })}</p>
+                    {:else if info?.csp && cspMissing(info.csp).length}
+                      <p class="panel-hint plugin-warn">{ta('plugin.cspNeeded', { list: cspMissing(info.csp).join(', ') })}</p>
                     {/if}
                     {#if info?.languages?.length}
                       <p class="panel-hint">{ta('plugin.languages', { list: info.languages.map((l) => l.name).join(', ') })}</p>
@@ -4962,40 +5049,75 @@
                   <button class="ghost" onclick={loadUpdateCheck}>{ta('update.retry')}</button>
                 {:else if updateInfo}
                   <div class="update-versions">
-                    <span>{ta('update.current', { version: updateInfo.current })}</span>
+                    <span class="update-from">{ta('update.current', { version: updateInfo.current })}</span>
                     {#if !updateInfo.upToDate}
-                      <span>{ta('update.available', { target: updateInfo.target })}</span>
+                      <span class="update-arrow">{@html ICONS.right}</span>
+                      <span class="badge">{updateInfo.target}</span>
                     {/if}
                   </div>
                   {#if updateInfo.upToDate}
                     <p class="panel-hint">{ta('update.upToDate')}</p>
                   {:else}
-                    {#if updateInfo.headers?.upstream}
-                      <p class="panel-hint plugin-warn">{ta('update.headersManual')}</p>
-                      <pre class="update-headers">{updateInfo.headers.upstream}</pre>
+                    <p class="update-summary">{ta('update.summary', {
+                      writes: updateInfo.changes.filter((c) => c.action === 'write').length,
+                      deletes: updateInfo.changes.filter((c) => c.action === 'delete').length,
+                    })}</p>
+                    {#if updateInfo.notes}
+                      <details class="group">
+                        <summary>{ta('update.aboutVersion', { target: updateInfo.target })}</summary>
+                        <div class="group-items">
+                          <p class="update-notes">{updateInfo.notes}</p>
+                        </div>
+                      </details>
                     {/if}
-                    <p class="panel-strong">{ta('update.atomTitle')}</p>
-                    {#each updateInfo.changes.filter((c) => c.atom) as c (c.path)}
+                    {#if updateInfo.headers?.upstream}
+                      <details class="group">
+                        <summary title={ta('update.headersManual')}>
+                          <span class="update-warn">{@html ICONS.warn}</span> {ta('update.headersTitle')}
+                        </summary>
+                        <div class="group-items">
+                          <pre class="update-headers">{updateInfo.headers.upstream}</pre>
+                        </div>
+                      </details>
+                    {/if}
+                    <!-- Håndredigerte motorfiler skal ses uten klikk; resten av
+                         atomgruppen er én samlet swap og foldes sammen. -->
+                    {#each updateInfo.changes.filter((c) => c.atom && c.conflict) as c (c.path)}
                       <div class="update-row">
                         <span class="update-path" title={c.path}>{c.path}</span>
                         <span class="update-flags">
-                          {#if c.action === 'delete'}{ta('update.actionDelete')}{/if}
-                          {#if c.conflict}<span class="update-warn" title={ta(`update.conflict.${c.conflict}`)}>{@html ICONS.warn}</span>{/if}
+                          {#if c.action === 'delete'}<span class="update-tag">{ta('update.actionDelete')}</span>{/if}
+                          <span class="update-warn" title={ta(`update.conflict.${c.conflict}`)}>{@html ICONS.warn}</span>
                         </span>
                       </div>
                     {/each}
+                    <details class="group">
+                      <summary title={ta('update.atomGroup.title')}>
+                        {ta('update.atomTitle')} · {updateInfo.changes.filter((c) => c.atom).length}
+                      </summary>
+                      <div class="group-items">
+                        {#each updateInfo.changes.filter((c) => c.atom && !c.conflict) as c (c.path)}
+                          <div class="update-row">
+                            <span class="update-path" title={c.path}>{c.path}</span>
+                            {#if c.action === 'delete'}<span class="update-tag">{ta('update.actionDelete')}</span>{/if}
+                          </div>
+                        {/each}
+                      </div>
+                    </details>
                     {#if updateInfo.changes.some((c) => !c.atom)}
-                      <p class="panel-strong">{ta('update.optionalTitle')}</p>
+                      <div class="update-opt-head">
+                        <p class="panel-strong">{ta('update.optionalTitle')}</p>
+                        <span class="update-opt-label">{ta('update.keepMine')}</span>
+                      </div>
                       {#each updateInfo.changes.filter((c) => !c.atom) as c (c.path)}
                         <div class="update-row">
                           <span class="update-path" class:skipped={updateSkip.has(c.path)} title={c.path}>{c.path}</span>
                           <span class="update-flags">
-                            {#if c.action === 'delete'}{ta('update.actionDelete')}{/if}
+                            {#if c.action === 'delete'}<span class="update-tag">{ta('update.actionDelete')}</span>{/if}
                             {#if c.conflict}<span class="update-warn" title={ta(`update.conflict.${c.conflict}`)}>{@html ICONS.warn}</span>{/if}
-                            <label class="update-keep" title={ta('update.keepMine.title')}>
-                              <input type="checkbox" checked={updateSkip.has(c.path)} onchange={() => toggleUpdateSkip(c.path)} />
-                              {ta('update.keepMine')}
-                            </label>
+                            <input type="checkbox" checked={updateSkip.has(c.path)}
+                              onchange={() => toggleUpdateSkip(c.path)}
+                              title={ta('update.keepMine.title')} aria-label={ta('update.keepMine')} />
                           </span>
                         </div>
                       {/each}
@@ -5618,11 +5740,49 @@
       {ta('lbl.filled')}
     </label>
   {:else}
-    <!-- Plugin-blokker (kalender/kart/skjema): innstillingene bor i pluginens
-         eget config-panel i forhåndsvisningen. Knappen åpner det; den gamle
-         flytende «Kilder»/«Sted»-pillen er fjernet. -->
-    <button class="ghost" onclick={() => bridge?.sendOpenConfig(selectedBlock.blockId)}>{ta('ui.settings')}</button>
-    <p class="panel-hint">{ta('hint.pluginBlock')}</p>
+    <!-- Plugin-blokker: en def med `fields` (felt-kontrakten) får innstillingene
+         rendret her; ellers åpner knappen pluginens eget config-panel i
+         forhåndsvisningen (kalender/skjema). -->
+    {@const pluginFields = pluginBlocks.find((b) => b.type === selectedBlock.type)?.fields ?? []}
+    {#if pluginFields.length}
+      {#each pluginFields as f (f.key)}
+        {#if f.type === 'place'}
+          {@const k = `${selectedBlock.blockId}:${f.key}`}
+          <label>{f.label}
+            <input type="text" placeholder={f.placeholder}
+              value={placeDrafts[k] ?? selectedBlock.props[f.key] ?? ''}
+              oninput={(e) => { placeDrafts[k] = e.target.value; }}
+              onkeydown={(e) => { if (e.key === 'Enter') searchPlace(f); }} /></label>
+          <button class="ghost" disabled={placeBusy} onclick={() => searchPlace(f)}>{ta('props.place.search')}</button>
+          {#if placeStatus[k]}
+            <p class="panel-hint" class:felt-feil={placeStatus[k].err}>{placeStatus[k].text}</p>
+          {/if}
+        {:else if f.type === 'number'}
+          <label>{f.label}
+            <input type="number" min={f.min} max={f.max} step={f.step ?? 1}
+              value={selectedBlock.props[f.key]}
+              onchange={(e) => setBlockProp(f.key, clampField(f, Number(e.target.value)))} /></label>
+        {:else if f.type === 'toggle'}
+          <label class="gridmenu-snap">
+            <input type="checkbox" checked={Boolean(selectedBlock.props[f.key])}
+              onchange={(e) => setBlockProp(f.key, e.target.checked)} />
+            {f.label}
+          </label>
+        {:else if f.type === 'select'}
+          <label>{f.label}
+            <Dropdown value={selectedBlock.props[f.key]}
+              options={(f.options ?? []).map((o) => [o.value, o.label])}
+              onchange={(v) => setBlockProp(f.key, v)} /></label>
+        {:else}
+          <label>{f.label}
+            <input type="text" placeholder={f.placeholder} value={selectedBlock.props[f.key] ?? ''}
+              onchange={(e) => setBlockProp(f.key, e.target.value)} /></label>
+        {/if}
+      {/each}
+    {:else}
+      <button class="ghost" onclick={() => bridge?.sendOpenConfig(selectedBlock.blockId)}>{ta('ui.settings')}</button>
+      <p class="panel-hint">{ta('hint.pluginBlock')}</p>
+    {/if}
   {/if}
 
   <hr class="gridmenu-divider" />
@@ -6535,20 +6695,20 @@
     font-size: 0.76rem;
   }
 
-  /* Oppdaterings-panelet (0.6.9): versjonslinje, filrader og _headers-instruks */
-  .update-versions {
-    display: grid;
-    gap: 0.15rem;
-    font-size: 0.85rem;
-    margin-bottom: 0.4rem;
-  }
+  /* Oppdaterings-panelet (0.6.9, redesignet 0.6.10): versjonskort, foldede
+     grupper og filrader i panel-pilotens idiom. */
+  .update-versions { display: flex; align-items: center; gap: 0.45rem; font-size: 0.85rem; }
+  .update-from { opacity: 0.7; }
+  .update-arrow { display: inline-flex; opacity: 0.55; }
+  .update-summary { margin: -0.25rem 0 0; font-size: 0.78rem; opacity: 0.65; }
+  .update-notes { margin: 0; font-size: 0.78rem; white-space: pre-wrap; overflow-wrap: anywhere; }
 
   .update-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
-    padding: 0.18rem 0;
+    padding: 0.16rem 0;
     font-size: 0.78rem;
   }
 
@@ -6565,26 +6725,20 @@
     text-decoration: line-through;
   }
 
-  .update-flags {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    flex: none;
-    opacity: 0.85;
+  .update-flags { display: flex; align-items: center; gap: 0.4rem; flex: none; }
+
+  .update-tag {
+    border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+    border-radius: 999px;
+    padding: 0 0.45rem;
+    font-size: 0.68rem;
+    opacity: 0.7;
   }
 
-  .update-warn {
-    color: #e0b04a;
-    display: inline-flex;
-  }
+  .update-warn { color: #e0b04a; display: inline-flex; }
 
-  .update-keep {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.74rem;
-    cursor: pointer;
-  }
+  .update-opt-head { display: flex; align-items: baseline; justify-content: space-between; margin-top: 0.2rem; }
+  .update-opt-label { font-size: 0.68rem; letter-spacing: 0.03em; text-transform: uppercase; opacity: 0.55; }
 
   .update-headers {
     max-height: 10rem;
@@ -6594,12 +6748,10 @@
     border-radius: 6px;
     padding: 0.5rem;
     user-select: all;
+    margin: 0;
   }
 
-  .update-run {
-    margin-top: 0.6rem;
-    width: 100%;
-  }
+  .update-run { margin-top: 0.5rem; width: 100%; }
 
   /* Oppsettsveiviseren */
   .confirm-line {
@@ -6744,6 +6896,12 @@
     margin: 0;
     font-size: 0.8rem;
     opacity: 0.65;
+  }
+
+  /* Felt-kontraktens søkestatus (place-felt): feil i destruktiv-rødt. */
+  .panel-hint.felt-feil {
+    color: #e05252;
+    opacity: 1;
   }
 
   /* Tema-forslag: rad med palett-miniatyrer (alle på én rad) */

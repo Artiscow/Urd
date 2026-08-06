@@ -1,6 +1,7 @@
 /**
  * Kontraktstester for flerspråk-rammeverket (ADR-0012): paritet mellom
- * språkfilene (identiske nøkkelsett mot nb-basen, ingen tomme verdier,
+ * språkfilene (kjernespråkene nb/en-GB/tr komplette mot nb-basen, nn/se
+ * kan ha etterslep men aldri ukjente nøkler; ingen tomme verdier,
  * ingen tankestrek, {var}-token-paritet), og i18n-kjernens rene logikk
  * (matchLang, interpolasjon, fallback, datotabeller). Finner alle
  * locale-sett automatisk, så plugin- og admin-locales dekkes i det de
@@ -19,6 +20,11 @@ const { registerPackLanguages, loadPackStrings, packLanguages } = await engineIm
 
 const ROOT = new URL('../template/', import.meta.url);
 const BASE = 'nb';
+/** Kjernespråkene holdes KOMPLETTE ved hver leveranse (eierbeslutning
+ *  6. august 2026); nn/se faller tilbake til bokmål ved kjøring og fylles
+ *  i egne oversettelsesrunder. Testen godtar hull der, men aldri ukjente
+ *  nøkler (skrivefeil som ellers aldri ville vist seg). */
+const CORE_LANGS = ['nb', 'en-GB', 'tr'];
 
 const PLUGINS = new URL('plugins/', ROOT);
 const pluginDirs = () => readdirSync(PLUGINS, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
@@ -62,7 +68,7 @@ const tokensOf = (value) => [...String(value).matchAll(/\{[a-zA-Z]+\}/g)].map((m
 for (const dir of localeDirs()) {
   const name = dir.href.replace(ROOT.href, '');
 
-  test(`${name}: alle støttede språk finnes, og nøkkelsettene matcher nb-basen`, async () => {
+  test(`${name}: alle støttede språk finnes, kjernespråkene matcher nb-basen`, async () => {
     const set = await loadSet(dir);
     assert.ok(set[BASE], `${name} mangler basen ${BASE}.js`);
     for (const lang of SUPPORTED_LANGS) assert.ok(set[lang], `${name} mangler ${lang}.js`);
@@ -72,7 +78,13 @@ for (const dir of localeDirs()) {
       const keys = Object.keys(mod.strings);
       const missing = baseKeys.filter((k) => !keys.includes(k));
       const extra = keys.filter((k) => !baseKeys.includes(k));
-      assert.deepEqual(missing, [], `${name}${lang}: mangler nøkler`);
+      if (CORE_LANGS.includes(lang)) {
+        assert.deepEqual(missing, [], `${name}${lang}: mangler nøkler`);
+      } else if (missing.length) {
+        // Etterslepet er lovlig utenfor kjernespråkene, men gjøres synlig
+        // så oversettelsesrundene ser omfanget.
+        console.log(`  (${name}${lang}: ${missing.length} nøkler venter på oversettelse)`);
+      }
       assert.deepEqual(extra, [], `${name}${lang}: ukjente nøkler (ikke i nb-basen)`);
     }
   });

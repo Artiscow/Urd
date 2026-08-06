@@ -288,3 +288,10 @@ Valgfrie manifest-felt (alle additive):
 `entry` og `provides` er påkrevd for alle andre plugins, men valgfrie når `languages` er oppgitt: en ren språkpakke er bare filer. Et pakkespråk blir tilgjengelig når pakken er AKTIVERT i `plugins.json`; besøkende-velgeren (`site.lang`) følger plugin-utkastet, mens admin-språkvelgeren kun tilbyr pakker som alt er publisert (det er den lista motoren leser ved oppstart).
 
 Plugins bruker de **samme** define-API-ene som kjernen og er underlagt samme migreringskontrakt - en plugin-oppdatering kan heller aldri knuse eksisterende innhold. Deaktiveres/mangler en plugin, rendres dens blokker som plassholdere; dataene består.
+
+**Felt-kontrakten** (additiv fra 0.6.10): en plugin-blokk-def kan ha `fields`, en liste felt som admin rendrer rett i Egenskaper-panelet i stedet for at pluginen bygger et eget config-panel. Hvert felt er `{ key, type, labelKey/label, placeholderKey/placeholder?, min?, max?, step?, options? }`:
+
+- `key` er prop-navnet feltet skriver, `type` er en av `text`, `number` (med `min`/`max`/`step`, verdien klemmes), `toggle` (boolsk), `select` (`options: [{ value, labelKey/label }]`, rendres temastyrt) og `place`.
+- `place` er et stedsfelt: teksten skrives til `key`, og koordinater til props `lat`/`lon` (konvensjon). «lat, lon»-par tolkes lokalt, `https?://`-lenker skrives urørt (pluginen tolker dem selv ved rendring), alt annet geokodes via `/api/geocode` med Søk-knappen.
+- Etikettene (`labelKey`/`placeholderKey`, med `label`/`placeholder` som fallback) løses på iframe-siden der plugin-ordboka bor, og sendes ferdige i `urd-plugin-blocks`-meldingen, som `label`/`variants`.
+- Uten `fields` viser Egenskaper som før en «Innstillinger …»-knapp som åpner pluginens eget config-panel i forhåndsvisningen (`urd-open-block-config`). Kart-pluginen er referansen for felt-kontrakten; kalender og skjema for config-panel-mønsteret.

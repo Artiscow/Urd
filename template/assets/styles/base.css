@@ -2684,6 +2684,22 @@ body.urd-marqueeing {
   background: rgb(255 255 255 / 12%);
 }
 
+/* Slett-knappen i utvalgslinjen: destruktiv tone ved pek. */
+.urd-multi-toolbar .urd-multi-delete:hover {
+  background: rgb(224 82 82 / 25%);
+  color: #ffb4b4;
+}
+
+/* Dra-håndtaket i utvalgslinjen: hele utvalget dras samlet. */
+.urd-multi-toolbar .urd-multi-drag {
+  cursor: grab;
+  touch-action: none;
+}
+
+.urd-multi-toolbar .urd-multi-drag:active {
+  cursor: grabbing;
+}
+
 .urd-multi-count {
   font: 600 11px/1 system-ui, sans-serif;
   color: rgb(232 234 240 / 70%);

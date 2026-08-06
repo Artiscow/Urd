@@ -123,3 +123,17 @@ jobs:
           # --atomic: gren og tagg går sammen eller ikke i det hele tatt, så
           # en manuell commit i malrepoet aldri kan gi tagg uten innhold.
           git push --atomic origin HEAD "refs/tags/$TAG"
+
+      - name: Publiser utgivelsesnotatene til malrepoet
+        # Oppdatering-panelet viser notatene («Om vX.Y.Z»); de finnes kun i
+        # monorepo-releasen, så de kopieres hit. Hoppes over ved dispatch
+        # (ingen release-body) og tåler at releasen alt finnes.
+        if: github.event_name == 'release' && github.event.release.body != ''
+        env:
+          GH_TOKEN: ${{ secrets.URD_TEMPLATE_PAT }}
+          TAG: ${{ steps.meta.outputs.tag }}
+          BODY: ${{ github.event.release.body }}
+          REPO: ${{ env.TEMPLATE_REPO }}
+        run: |
+          gh release create "$TAG" --repo "$REPO" --title "Urd $TAG" --notes "$BODY" \
+            || gh release edit "$TAG" --repo "$REPO" --notes "$BODY"

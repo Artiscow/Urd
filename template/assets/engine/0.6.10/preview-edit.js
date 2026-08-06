@@ -1766,6 +1766,14 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
+  // Utvalgs-sletting trenger ikke enkeltblokk-anker (marquee kan stå
+  // uten et etter gruppe-operasjoner).
+  if ((event.key === 'Delete' || event.key === 'Backspace') && multiIds.size > 1) {
+    event.preventDefault();
+    deleteSelection();
+    return;
+  }
+
   if (!selectedBlockId) return;
 
   if (event.key === 'Escape') {
@@ -1794,12 +1802,7 @@ window.addEventListener('keydown', (event) => {
 
   if (event.key === 'Delete' || event.key === 'Backspace') {
     event.preventDefault();
-    if (multiIds.size > 1) {
-      // Hele utvalget slettes som ETT angre-steg (blockIds-listen).
-      post({ type: 'urd-delete', sectionId: ctx.section.id, blockIds: [...multiIds] });
-    } else {
-      post({ type: 'urd-delete', sectionId: ctx.section.id, blockId: selectedBlockId });
-    }
+    post({ type: 'urd-delete', sectionId: ctx.section.id, blockId: selectedBlockId });
     selectBlock(null);
     return;
   }
@@ -1954,6 +1957,16 @@ function clamp(value, min, max) {
 
 /* ---------- Multimarkering: verktøylinje, kopier/lim inn ---------- */
 
+/** Sletter hele utvalget som ETT angre-steg (delt av Delete-tasten og
+ *  verktøylinjens slett-knapp). */
+function deleteSelection() {
+  const ctx = selectedEls()[0]?._urdCtx;
+  const sectionId = multiSectionId ?? ctx?.section?.id;
+  if (!sectionId || multiIds.size < 2) return;
+  post({ type: 'urd-delete', sectionId, blockIds: [...multiIds] });
+  selectBlock(null);
+}
+
 /** Flytende verktøylinje over utvalget: juster/fordel + antall. */
 let multiBar = null;
 
@@ -1986,7 +1999,65 @@ function buildMultiBar() {
   const distH = btn(svg('<path d="M3 3v18M21 3v18"/><rect x="7" y="9" width="3" height="6"/><rect x="14" y="9" width="3" height="6"/>'), ta('canvas.distributeH'), () => applyDistribute('x'));
   const distV = btn(svg('<path d="M3 3h18M3 21h18"/><rect x="9" y="7" width="6" height="3"/><rect x="9" y="14" width="6" height="3"/>'), ta('canvas.distributeV'), () => applyDistribute('y'));
   multiBar._urdDist = [distH, distV];
+  // Dra-håndtaket: grip hele utvalget og dra det samlet (egen knapp ved
+  // siden av søppelikonet); bokføres som ETT angre-steg ved slipp.
+  const grip = document.createElement('button');
+  grip.className = 'urd-multi-drag';
+  grip.title = ta('canvas.dragSelected');
+  grip.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><g fill="currentColor"><circle cx="3" cy="3.5" r="1.4"/><circle cx="7" cy="3.5" r="1.4"/><circle cx="11" cy="3.5" r="1.4"/><circle cx="3" cy="10.5" r="1.4"/><circle cx="7" cy="10.5" r="1.4"/><circle cx="11" cy="10.5" r="1.4"/></g></svg>';
+  grip.addEventListener('pointerdown', startSelectionDrag);
+  multiBar.appendChild(grip);
+  const del = btn(svg('<path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/>'), ta('canvas.deleteSelected'), deleteSelection);
+  del.classList.add('urd-multi-delete');
   document.body.appendChild(multiBar);
+}
+
+/** Dra hele utvalget samlet fra håndtaket i verktøylinjen: livevisning
+ *  under draet (klemt av groupDelta så gruppen holder seg i seksjonen),
+ *  bokført som ETT angre-steg ved slipp. Avbrudd stiller alt tilbake. */
+function startSelectionDrag(event) {
+  if (event.button !== 0) return;
+  const items = selectionItems();
+  const host = selectedEls()[0]?.closest('.urd-section');
+  if (!host || items.length < 2) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const handle = event.currentTarget;
+  handle.setPointerCapture(event.pointerId);
+
+  const width = host.getBoundingClientRect().width;
+  const startX = event.clientX;
+  const startY = event.clientY;
+  const r2 = (v) => Math.round(v * 100) / 100;
+  let delta = { dx: 0, dy: 0 };
+
+  const apply = (frameFor) => {
+    for (const it of items) {
+      const el = document.querySelector(`.urd-block[data-block-id="${CSS.escape(it.id)}"]`);
+      if (el) Object.assign(el.style, frameToCss(frameFor(it)));
+    }
+    // Verktøylinjen følger utvalget, så håndtaket ligger under pekeren hele veien.
+    updateMultiToolbar();
+  };
+  const move = (e) => {
+    delta = groupDelta(items, ((e.clientX - startX) / width) * 100, e.clientY - startY);
+    apply((it) => ({ ...it, x: it.x + delta.dx, y: it.y + delta.dy }));
+  };
+  const finish = (commit) => {
+    handle.removeEventListener('pointermove', move);
+    handle.removeEventListener('pointerup', up);
+    handle.removeEventListener('pointercancel', cancel);
+    if (commit && (delta.dx || delta.dy)) {
+      applySelectionMoves(items.map((it) => ({ id: it.id, x: r2(it.x + delta.dx), y: it.y + delta.dy })));
+    } else {
+      apply((it) => it);
+    }
+  };
+  const up = () => finish(true);
+  const cancel = () => finish(false);
+  handle.addEventListener('pointermove', move);
+  handle.addEventListener('pointerup', up);
+  handle.addEventListener('pointercancel', cancel);
 }
 
 function updateMultiToolbar() {

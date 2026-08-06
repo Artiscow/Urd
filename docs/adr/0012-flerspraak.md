@@ -1,6 +1,6 @@
 # ADR-0012: Flerspråk via rene ES-modul-locales, to registre og native Intl
 
-Dato: 3. august 2026. Status: vedtatt (v0.6, milepæl 0.6.8).
+Dato: 3. august 2026. Status: vedtatt (v0.6, milepæl 0.6.8); addendum om kjernespråk (august 2026).
 
 ## Kontekst
 
@@ -25,3 +25,7 @@ Motoren er avhengighetsfri vanilla-JS som serveres rått; editoren er Svelte med
 - Et nytt språk = en fil per locale-sett + matchLang-oppføring; alt annet følger. Skal språket ikke inn i Urd selv, er språkpakke-plugin veien: samme filer, ingen kjerneendring, ingen gjenbygg.
 - Ikke-norske sider betaler ett ekstra serielt hent (site-localen) før første render; norske sider betaler ingenting.
 - Den nordsamiske oversettelsen er maskinskrevet førsteutkast og skal gjennomgås av morsmålsbruker (flagget i filene og CONTRIBUTING.md); paritetstesten sikrer form, ikke innhold.
+
+## Addendum: kjernespråk-modellen (6. august 2026)
+
+Eierbeslutning for å spare leveransetid: nye nøkler holdes komplette i KJERNESPRÅKENE nb, en-GB og tr ved hver leveranse; nn og se fylles i egne oversettelsesrunder. Kjøretiden var alt bygget for dette (manglende nøkler faller til bokmålsbasen), så endringen er kun i paritetstesten: full paritet håndheves for kjernespråkene, mens nn/se godtar etterslep (rapportert i testloggen) men aldri ukjente nøkler. Samisk var uansett merket «trenger morsmålsgjennomgang».

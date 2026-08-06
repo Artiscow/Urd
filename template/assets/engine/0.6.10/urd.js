@@ -255,6 +255,23 @@ function enablePreview(state, opts) {
             variants: Array.isArray(def.variants)
               ? def.variants.map((v) => ({ label: v.labelKey ? ta(v.labelKey) : v.label, props: v.props ?? {} }))
               : [],
+            // Felt-kontrakten (additiv): en def med `fields` får innstillingene
+            // sine rendret rett i Egenskaper-panelet i stedet for et eget
+            // config-panel. Etikettene løses her av samme grunn som over.
+            fields: Array.isArray(def.fields)
+              ? def.fields.map((f) => ({
+                  key: f.key,
+                  type: f.type,
+                  label: f.labelKey ? ta(f.labelKey) : (f.label ?? f.key),
+                  placeholder: f.placeholderKey ? ta(f.placeholderKey) : (f.placeholder ?? ''),
+                  ...(f.min !== undefined ? { min: f.min } : {}),
+                  ...(f.max !== undefined ? { max: f.max } : {}),
+                  ...(f.step !== undefined ? { step: f.step } : {}),
+                  ...(Array.isArray(f.options)
+                    ? { options: f.options.map((o) => ({ value: o.value, label: o.labelKey ? ta(o.labelKey) : (o.label ?? String(o.value)) })) }
+                    : {}),
+                }))
+              : [],
           });
         }
         window.parent?.postMessage({ type: 'urd-plugin-blocks', blocks }, location.origin);

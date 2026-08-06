@@ -3,6 +3,24 @@
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
 
+### Testrunde-batch (0.6.0.14): dra-håndtak for multiutvalget
+
+- [ ] Marker flere blokker (dra-markering eller Ctrl+klikk): utvalgslinjen viser gripe-knappen ved siden av søppelikonet, og å dra i den flytter ALLE markerte blokker samlet med livevisning; gruppen stopper mot seksjonskantene
+- [ ] Slipp bokføres som ETT angre-steg (ett Ctrl+Z stiller hele gruppen tilbake), og verktøylinjen følger utvalget under draet uten at draet dør når pekeren krysser andre seksjoner eller forlater vinduet
+- [ ] Seksjonsverktøylinjen er som før (↑ ↓ ⤓ ×, ingen gripe-knapp), og ingen flytende håndtak-pille vises topp-senter i seksjonene
+
+### Testrunde-batch (0.6.0.13): panel-design, kjernespråk og bug-runden
+
+- [ ] Oppdatering-panelets nye design (mot urd-web med ny versjon tilgjengelig): versjonskort med installert versjon, pil og mål-badge pluss oppsummeringslinjen; motorgruppen som fold med antall (og atomforklaring i tooltip); valgfrie filer med «Behold min» som kolonneoverskrift, slettes-chip og switcher; «Sikkerhetsheadere»-folden viser _headers-instruksen ved avvik
+- [ ] Utgivelsesnotatene: neste release med notater i monorepoet gir en release med samme notater på malrepoet (Action-steget), og panelet viser dem i «Om {target}»-folden; en eldre målversjon uten notater viser ingen fold
+- [ ] Plugin-blokker kan settes inn igjen: kalender (alle fire visningene via foldemenyen), skjema og kart fra «+ Ny blokk» og Blokker-panelet lander på lerretet
+- [ ] Slett utvalget: dra-marker flere blokker; slett-knappen i multiverktøylinjen og Delete/Backspace fjerner alle markerte, og ETT Ctrl+Z bringer alle tilbake
+- [ ] CSP-varselet: på deployet side vises INGEN advarsel for kart (OSM-verten står i _headers); fjernes verten fra _headers midlertidig, vises advarselen for nøyaktig den verten; lokalt (uten CSP-header) vises aldri advarsel
+- [ ] Kart-innstillingene i Egenskaper: sted, zoom og høyde rendres direkte når kartblokken er markert (ingen «Innstillinger …»-knapp, tannhjulet på blokken er borte); adressesøk med Søk-knappen virker på publisert side, koordinater («59.913, 10.739») og OSM-lenker virker også lokalt; zoom/høyde klemmes til gyldige verdier
+- [ ] Kalender og skjema beholder «Innstillinger …»-knappen i Egenskaper, og den åpner fortsatt config-panelet i forhåndsvisningen
+- [ ] Feiltekster utenfor admin er engelske (f.eks. logg ut og kall /api/github/latest direkte: «Not signed in»), mens admin fortsatt viser feil oversatt på admin-språket via api-kodene
+- [ ] Kjernespråk-modellen: bytt admin-språk til nynorsk eller nordsamisk; de nye tekstene (place-søket, slett utvalget, oppdateringspanelet) vises på bokmål uten hull eller feil
+
 ### Testrunde-batch (0.6.9.x): splitt, oppdaterer og fase-slipp (samlet og slått sammen etter eierens beskjed 5. august 2026)
 
 **README-ene, docs-strukturen og designrunden (0.6.9.10)**
@@ -21,14 +39,9 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 - [ ] Deployen av 0.6.9 på urdweb: siden virker som før; undersidene har render-blokkerende tema og blinkefritt lys/mørk-valg ved direkte innlasting; svar-headerne viser `immutable` på en motorfil og på base.css, men IKKE på /assets/urd/i18n.js; en publisering skriver slug-kopier med de versjonerte stiene (vis kildekode på en underside); og Oppdatering-panelet melder «kjører nyeste» mot malrepoet
 - [ ] Klon-flyten: følg OPPSETT-PUBLISERING fra «0. Lag nettsidens repo» til deployet side mot en ekte klon, uten monorepo-kunnskap; hvert steg stemmer med det GitHub/Cloudflare faktisk viser
 - [ ] Oppsettsveiviseren på fersk klon: vises i admin utløst av setup-signalet alene; fullføring + publisering fjerner `setup`-feltet fra site.json og veiviseren vises aldri igjen; avvisning (lukk uten å fullføre) holder den borte i samme nettleser mens feltet består i repoet til noen fullfører
-- [ ] Oppdaterings-sjekken (mot rc-tagget mal): panelet viser installert og tilgjengelig versjon, endringslisten skiller motorfiler fra valgfrie, og GET /api/github/update klassifiserer riktig (uendret/håndredigert/ny/slettet) mot en testklon der én functions-fil er bevisst håndredigert
-- [ ] Håndredigerte filer: varseltrekant med forklarende tooltip i panelet, «Behold min» på en functions-fil holder den utenfor (verifiser i repoet etterpå), checkboxen finnes IKKE på motorfiler, og skip på en atomgruppe-fil avvises med updateBadSkip
 - [ ] `_headers`-avvik: instruksen med oppstrøms tekst vises i markerbar blokk (i både sjekk-svaret og panelet), filen står ALDRI i endringslisten og er urørt i repoet etter oppdateringen
 - [ ] Selve oppdateringen (rc til rc i testklonen): bekreftelsesdialogen viser målversjon, antall og overskrivings-varsel for håndredigerte motorfiler; utføringen gir ÉN commit (ny motormappe inn, gammel ut, slug-kopier byte-like ny rot-index.html, urd.json-engine bumpet); deploy-pollingen laster admin på nytt av seg selv når /urd.json melder ny versjon, upubliserte utkast består, og publisering i deploy-vinduet sperres i samme fane
 - [ ] Feilveiene: utdatert expect (push noe annet først) gir updateRace uten at noe skrives; klon uten baseline-tagg får updateNoBaseline oversatt på admin-språket; utilgjengelig malrepo gir oversatt feil med fungerende «Prøv igjen»; og uten publiseringstilgang (utenfor ALLOWED_LOGINS) er Oppdater-knappen deaktivert med forklarende tooltip
-- [ ] PORT-TESTEN (fasegaten, summen av alt over): klon malen via «Use this template», sett opp publisering, bygg en side i admin, installer kalender-pluginen, og kjør oppdateringsknappen mot en senere rc/patch-versjon; alt overlever
-- [ ] Etter urdweb-utskillelsen: historikk-panelet i testklonen/urdweb viser kun publiseringer (ingen utviklingscommits), og konfliktsjekken gir ikke truncated-varsler
-- [ ] Docs: variabelnummereringen stemmer i alle fem språkversjonene av oppsettsguiden (URD_TEMPLATE_REPO er 8, DEPLOY_HOOK_URL er 9, også i feilsøkingstabellen); README-ene (rot + fire oversettelser) viser Use this template-flyten og oppdaterings-steget konsistent; og malens README leses godt på GitHub på alle tre språk med virkende lenker per språk
 
 ### Testrunde-batch (0.6.0.10): API-feil på admin-språket, motor-stempel og CSS-rydding
 
@@ -38,15 +51,6 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 - [ ] Kalender-feed-feil: pek en kalenderkilde på en ikke-godkjent vert - feilen i blokken viser vertsnavnet interpolert, på admin-språket
 - [ ] Panelene etter CSS-ryddingen: klikk gjennom alle paneler (særlig Tema, Nettsted, oppsettskortet og verktøyradene) og se at ingenting har mistet stil
 - [ ] Motor-stempelet: alle fire pluginene laster fortsatt (ingen «krever motor»-advarsler i konsollen), og plugin-panelet viser ingen versjonsadvarsel med engine 0.6.8 mot kravet >=0.6.8
-
-### Testrunde-batch (0.6.0.9): SHA-pinnede actions
-
-- [ ] Etter push: alle tre workflowene (Tester, CodeQL, Dependency review) kjører grønt med de pinnede SHA-ene, og loggene viser at riktige versjoner ble hentet (checkout v7.0.1, setup-node v7.0.0, dependency-review v5.0.0, codeql v4.37.6)
-- [ ] Neste Dependabot-mandag: kommer det actions-oppdateringer, skal de stå som ÉN samlet PR som bumper SHA pluss versjonskommentaren bak, ikke en PR per action
-
-### Testrunde-batch (0.6.0.8): vite 8.2.0 og gjenbygd bundel
-
-- [ ] Røyktest av editoren etter byggverktøy-bumpen: åpne /admin, last en side, åpne hvert panel, rediger en blokk og publiser. Bundelen er bygget av en nyere vite, og selv om streng-literalene er bit-identiske med forrige bundel, er dette den eneste testen som faktisk kjører den
 
 ### Testrunde-batch (0.6.8.10): språkpakke-plugins
 
