@@ -741,7 +741,8 @@
    *  «lat, lon» tolkes lokalt, lenker skrives urørt (pluginen tolker dem ved
    *  rendring), alt annet geokodes via /api/geocode. */
   async function searchPlace(f) {
-    const k = `${selectedBlock.blockId}:${f.key}`;
+    const blockId = selectedBlock.blockId;
+    const k = `${blockId}:${f.key}`;
     const raw = (placeDrafts[k] ?? selectedBlock.props[f.key] ?? '').trim();
     placeStatus[k] = null;
     const coords = raw.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
@@ -754,6 +755,9 @@
     try {
       const res = await fetch(`/api/geocode?q=${encodeURIComponent(raw)}`);
       const data = await res.json().catch(() => null);
+      // Markeringen kan ha byttet blokk mens søket var i flukt: da skal
+      // svaret forkastes, ellers skrives koordinatene i feil blokks props.
+      if (selectedBlock?.blockId !== blockId) return;
       if (res.ok && Number.isFinite(data?.lat)) {
         setBlockProps(f.key, { [f.key]: raw, lat: data.lat, lon: data.lon });
         placeStatus[k] = null;
@@ -762,8 +766,9 @@
       }
     } catch {
       placeStatus[k] = { text: ta('props.place.failed'), err: true };
+    } finally {
+      placeBusy = false;
     }
-    placeBusy = false;
   }
 
   function setBlockFrame(field, value) {
@@ -5755,7 +5760,7 @@
               onkeydown={(e) => { if (e.key === 'Enter') searchPlace(f); }} /></label>
           <button class="ghost" disabled={placeBusy} onclick={() => searchPlace(f)}>{ta('props.place.search')}</button>
           {#if placeStatus[k]}
-            <p class="panel-hint" class:felt-feil={placeStatus[k].err}>{placeStatus[k].text}</p>
+            <p class="panel-hint" class:place-error={placeStatus[k].err}>{placeStatus[k].text}</p>
           {/if}
         {:else if f.type === 'number'}
           <label>{f.label}
@@ -6899,7 +6904,7 @@
   }
 
   /* Felt-kontraktens søkestatus (place-felt): feil i destruktiv-rødt. */
-  .panel-hint.felt-feil {
+  .panel-hint.place-error {
     color: #e05252;
     opacity: 1;
   }

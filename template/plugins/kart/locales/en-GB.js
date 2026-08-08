@@ -11,7 +11,7 @@ export default {
     'kart.edit.blockLabel': 'Map',
     'kart.edit.cspBlocked': 'The map is blocked by the site CSP.',
     'kart.edit.cspFix': 'Put this host in frame-src in _headers, and the map appears:',
-    'kart.edit.empty': 'Select the block and open «Settings …» in Properties to enter an address, coordinates or an OSM link.',
+    'kart.edit.empty': 'Select the block and enter an address, coordinates or an OSM link in Properties.',
     'kart.edit.height': 'Height (pixels)',
     'kart.edit.hint1': 'Select the block and type an address (e.g. «1 High Street, Anytown»), coordinates («59.913, 10.739») or paste an OSM link in Properties',
     'kart.edit.hint2': 'The address search looks up the place via OpenStreetMap when you click «Search» (works on the published page; coordinates and links also work locally)',

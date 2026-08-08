@@ -13,7 +13,7 @@ export default {
     'kart.edit.blockLabel': 'Kart',
     'kart.edit.cspBlocked': 'Kartet er blokkert av nettstedets CSP.',
     'kart.edit.cspFix': 'Legg denne verten i frame-src i _headers, så vises kartet:',
-    'kart.edit.empty': 'Velg blokken og åpne «Innstillinger …» i Egenskaper for å legge inn en adresse, koordinater eller en OSM-lenke.',
+    'kart.edit.empty': 'Velg blokken og legg inn en adresse, koordinater eller en OSM-lenke i Egenskaper.',
     'kart.edit.height': 'Høyde (piksler)',
     'kart.edit.hint1': 'Velg blokken og skriv en adresse (f.eks. «Storgata 1, Oslo»), koordinater («59.913, 10.739») eller lim inn en OSM-lenke i Egenskaper',
     'kart.edit.hint2': 'Adressesøket slår opp stedet via OpenStreetMap når du klikker «Søk» (virker på den publiserte siden; koordinater og lenker virker også lokalt)',

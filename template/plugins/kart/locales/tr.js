@@ -11,7 +11,7 @@ export default {
     'kart.edit.blockLabel': 'Harita',
     'kart.edit.cspBlocked': 'Harita, sitenin CSP kuralı tarafından engellendi.',
     'kart.edit.cspFix': 'Bu sunucuyu _headers dosyasında frame-src içine koy, harita görünür:',
-    'kart.edit.empty': 'Bloğu seç ve adres, koordinat ya da OSM bağlantısı girmek için Özelliklerde «Ayarlar …» aç.',
+    'kart.edit.empty': 'Bloğu seç ve Özelliklerde bir adres, koordinat ya da OSM bağlantısı gir.',
     'kart.edit.height': 'Yükseklik (piksel)',
     'kart.edit.hint1': 'Bloğu seç ve Özelliklerde bir adres (örn. «Örnek Cad. 1, İstanbul»), koordinat («59.913, 10.739») yaz ya da bir OSM bağlantısı yapıştır',
     'kart.edit.hint2': 'Adres araması «Ara» tıklanınca yeri OpenStreetMap üzerinden bulur (yayımlanan sayfada çalışır; koordinatlar ve bağlantılar yerelde de çalışır)',

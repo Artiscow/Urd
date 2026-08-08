@@ -69,7 +69,7 @@ Et innslag arver nummeret til backlog-punktet arbeidet hører under, pluss ett s
 - [x] urdweb skilles fra malen (avgjort: ja, eget repo laget FRA urd-template etter fase-slippet, som dogfooding av selve splitten; da skriver demo-publisering aldri i eksempelinnholdet nye brukere får, og monorepo-støyen i historikk-panelet/truncated-varselet forsvinner av seg selv; manuelt eiersteg etter 0.6.9.8)
 - [x] Redirects-håndtering (funksjonskartet C13) (avgjort: GENERERT modell med host-nøytralt datalag, redirect-data i innholdet og publisering genererer `_redirects` i hostens format slik slug-kopiene genereres i dag, så datamodellen ikke låses til Cloudflare og ADR-0006-konflikten unngås; kun eierskaps-ADR skrives nå (0.6.9.7), selve byggingen hører til v0.7 sammen med SEO-grunnpakken C3)
 
-## Til v0.7 «Finpuss + butikk»
+## Til v0.7 «Finpuss + butikk» HUSK: Se /sammenligning før vi starter
 
 - [ ] Butikk uten betalingsgateway som KJERNEFUNKSJON (valgt 18. juli 2026, ApeironLF-modellen): produktkort-blokk med varianter (størrelse/farge, pris + evt. medlemspris, badge, bildegalleri der fargevalg bytter bilde), handlekurv-blokk (localStorage + skuff med antall-badge), kasse = bestillingsskjema (navn/e-post/telefon/kommentar + honeypot) som går til e-post (mailto, null oppsett) eller valgfritt endepunkt (Apps Script/Pages Function), betaling via Vipps-nummer-instruks. Helt avhengighetsfri, katalogen git-eid. Bygges PÅ v0.6-datablokk-mønsteret (produktkatalog = samling). Må lande før v1: v1.0-porten (gjenskape ApeironLF) forutsetter den.
 - [ ] Produktkort-preset fra v0.5 («kjøp = ekstern lenke») oppgraderes til å kunne peke på ekte produktblokker
@@ -92,7 +92,7 @@ Et innslag arver nummeret til backlog-punktet arbeidet hører under, pluss ett s
 - [ ] Påskeegg: mulighet til å legge inn hemmeligheter/easter eggs på nettsidene (moro-funksjon, formen er åpen)
 - [ ] Avklar maks bildestørrelse og varselgrenser i editoren (hosters filgrenser)
 
-## Til v0.8 og senere faser
+## Til v0.8 og senere faser HUSK: Se /sammenligning før vi starter
 
 - [ ] v0.8: contentHash for media-filnavn er 32-bit; to ulike bilder med samme navn og hash-kollisjon (~1/4 mrd) ville stille delt fil. Vurder lengre hash ved bildearbeidet
 - [ ] v0.8: **Innslagssider** (funksjonskartet C4b, valgt 23. juli 2026): permalenke-side per samlingsinnslag generert ved publisering (Webflow/Wix-modellen: én mal, én URL per innslag); hører naturlig sammen med bakt HTML-arbeidet
@@ -105,7 +105,7 @@ Et innslag arver nummeret til backlog-punktet arbeidet hører under, pluss ett s
 - [ ] v0.9: rydde opp og fullføre brukerveiledningen (docs/languages/user-guide/GUIDE-nb.md; startet i v0.5; skal dekke alt editoren kan, med skjermbilder?)
 - [ ] v1.0: en blokk-props-migrering som eget bevis (sidefil-migreringene v1→v2→v3 ligger allerede i testsuiten)
 
-## Moderniser til native/CSS (fra ELEMENTKART, 27. juli 2026)
+## Moderniser til native/CSS (fra ELEMENTKART, 27. juli 2026) HUSK: Se /sammenligning før vi starter
 
 Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og forebygger bug-klassene i ELEMENTKART del 6. Alt gates med `@supports` (se støtte-tier i ELEMENTKART del 2).
 
@@ -126,18 +126,18 @@ Funn fra en gjennomgang av motor, editor og functions/plugins, gruppert etter al
 - [x] Innholdsblokk-lenker går utenom `isSafeUrl`-vokteren (levert 0.6.35, venter på testrunde): knapp/bilde/samling/galleri ruter href gjennom ny delt `isSafeHref` i nav-model.js (eksterne skjemaer + site-interne stier/anker, per samlings-skjemaets kontrakt); footer-anker-utvidelsen (0.6.6.5 E) kan gjenbruke den
 - [x] Angre/gjenopprett dekker ikke samlinger og plugins (levert 0.6.35, venter på testrunde): full inkludering i snapshot/restore med `publishedSamlinger`-baseline-cache og diff-vaktet preview-reboot for plugins; panelsperre-alternativet forkastet (samlinger redigeres også i preview)
 
-### Middels (korrekthet, layout, robusthet)
+### Middels (korrekthet, layout, robusthet) HUSK: Se /sammenligning før vi starter
 - [ ] `addSamling` gir store-baseline identisk med fresh data (funnet under 0.6.35-planleggingen): en NY, TOM samling har `hasDraft() === false`, så den kan publiseres som indeks-innslag uten tilhørende `content/samlinger/<id>.json` (motoren tåler manglende fil, men indeks og innhold driver fra hverandre). Fiks: la baseline for en nyopprettet samling være «finnes ikke» (f.eks. tomt objekt/markør) så utkastet alltid teller som endring til første publisering
 - [ ] Mobil-auto-stabling gir autovoksende datablokker (samling/galleri/faq) fast desktop-høyde, mens autovekst er av på mobil, så høyere mobilinnhold flyter over og overlapper blokken under. Se assets/engine/render.js:144. Fiks: unnta autovoksende typer fra fast høyde (naturlig høyde, som tekst)
 - [ ] `migrate.lift` hopper over migrering ved manglende `version` (`undefined > def.version` er falsk), så gammel-formet/håndredigert data behandles som gjeldende i stedet for migrert/placeholder. Rører migreringsinvarianten. Se assets/engine/migrate.js:34. Fiks: default manglende versjon til 1 (eller behandle som ukjent -> placeholder)
 - [ ] `/api/geocode` er en uautentisert offentlig proxy til Nominatim (kun brukt fra editoren), uten innloggingssjekk eller rate-limiting; misbruk kan få deploymentets IP bannet. Se functions/api/geocode.js:21. Fiks: krev innlogging som latest.js
 - [ ] 33 `panel-hint`-prosaavsnitt bryter «ingen forklarende prosa i panelene»-regelen (skal ligge i «?»-tooltip/hjelpechip; legitime tomtilstander/feilmeldinger kan stå). Henger sammen med panelspråk-utrullingen 0.6.6.6. Se editor/src/App.svelte (bl.a. 3609, 3663, 3825)
 
-### Lav (opprydding og konsistens)
+### Lav (opprydding og konsistens) HUSK: Se /sammenligning før vi starter
 - [ ] Bilde-`src` uten `SAFE_IMAGE_RE` i nav.js:166 / footer.js:209 / blocks/icon.js:22 (favicon og nav-bg gjør det); glow gir `NaN%` uten x/y/radius-default (backgrounds/glow.js:18); `samling` `editCtx` kan lekke hvis async-render kaster (blocks/samling.js:266, try/finally); `enablePreview` mangler `sections`-vern som boot() har (urd.js:151); `callback.js` sjekker ikke `tokenRes.ok` og kan kaste på ikke-JSON (functions/api/github/callback.js:25); `ics.js` leser hele body før størrelsessjekk (functions/api/ics.js:60); CSRF-origin-sjekk hoppes over når `Origin`-headeren mangler (dempet av SameSite=Lax, functions/_lib/auth.js:31)
 - [ ] Housekeeping: CI validerer kun 2 av 4 innholdssider (editor/scripts/validate.mjs:23, bør globbe pages/*.json); SKJEMA.md mangler plugin-`csp`-feltet og viser kalender `version: 2` mens koden er `3` (tre-steder-regelen); `urd.json` motorversjon står `0.5.10` mens prosjektet er 0.6.x (bumpes ved slipp - plugin `requiresEngine` gater på den)
 
-## Etter v1.0 (horisont)
+## Etter v1.0 (horisont) HUSK: Se /sammenligning før vi starter
 
 - [ ] Import fra eksisterende side (veiviser som henter tekst/bilder)
 - [ ] Flerspråkstøtte for innhold (nb/nn/en-varianter; migreringskontrakten gjør at den kan komme når som helst)

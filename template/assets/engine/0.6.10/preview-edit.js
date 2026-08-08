@@ -2016,7 +2016,9 @@ function buildMultiBar() {
  *  under draet (klemt av groupDelta så gruppen holder seg i seksjonen),
  *  bokført som ETT angre-steg ved slipp. Avbrudd stiller alt tilbake. */
 function startSelectionDrag(event) {
-  if (event.button !== 0) return;
+  // isPrimary-vakten: en finger nummer to på håndtaket skal ikke starte
+  // et konkurrerende dra med egne lyttere som kjemper om delta.
+  if (event.button !== 0 || !event.isPrimary) return;
   const items = selectionItems();
   const host = selectedEls()[0]?.closest('.urd-section');
   if (!host || items.length < 2) return;

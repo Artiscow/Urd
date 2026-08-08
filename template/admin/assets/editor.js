@@ -5308,7 +5308,7 @@ function yl(e, t) {
 							let r;
 							var i = L(t, !0);
 							M(t), B(() => {
-								r = Xr(t, 1, "panel-hint svelte-1n46o8q", null, r, { "felt-feil": ht[V(n)].err }), K(i, ht[V(n)].text);
+								r = Xr(t, 1, "panel-hint svelte-1n46o8q", null, r, { "place-error": ht[V(n)].err }), K(i, ht[V(n)].text);
 							}), G(e, t);
 						};
 						q(l, (e) => {
@@ -5868,38 +5868,40 @@ function yl(e, t) {
 	}
 	let mt = en({}), ht = en({}), gt = /* @__PURE__ */ F(!1), _t = (e, t) => (Number.isFinite(t) || (t = e.min ?? 0), e.min != null && (t = Math.max(e.min, t)), e.max != null && (t = Math.min(e.max, t)), t);
 	async function vt(e) {
-		let t = `${V(N).blockId}:${e.key}`, n = (mt[t] ?? V(N).props[e.key] ?? "").trim();
-		ht[t] = null;
-		let r = n.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
-		if (!n || r || /^https?:\/\//i.test(n)) {
+		let t = V(N).blockId, n = `${t}:${e.key}`, r = (mt[n] ?? V(N).props[e.key] ?? "").trim();
+		ht[n] = null;
+		let i = r.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+		if (!r || i || /^https?:\/\//i.test(r)) {
 			pt(e.key, {
-				[e.key]: n,
-				lat: r ? Number(r[1]) : null,
-				lon: r ? Number(r[2]) : null
+				[e.key]: r,
+				lat: i ? Number(i[1]) : null,
+				lon: i ? Number(i[2]) : null
 			});
 			return;
 		}
-		I(gt, !0), ht[t] = {
+		I(gt, !0), ht[n] = {
 			text: Q("props.place.searching"),
 			err: !1
 		};
 		try {
-			let r = await fetch(`/api/geocode?q=${encodeURIComponent(n)}`), i = await r.json().catch(() => null);
-			r.ok && Number.isFinite(i?.lat) ? (pt(e.key, {
-				[e.key]: n,
-				lat: i.lat,
-				lon: i.lon
-			}), ht[t] = null) : ht[t] = {
-				text: wi(i) ?? Q("props.place.notFound"),
+			let i = await fetch(`/api/geocode?q=${encodeURIComponent(r)}`), a = await i.json().catch(() => null);
+			if (V(N)?.blockId !== t) return;
+			i.ok && Number.isFinite(a?.lat) ? (pt(e.key, {
+				[e.key]: r,
+				lat: a.lat,
+				lon: a.lon
+			}), ht[n] = null) : ht[n] = {
+				text: wi(a) ?? Q("props.place.notFound"),
 				err: !0
 			};
 		} catch {
-			ht[t] = {
+			ht[n] = {
 				text: Q("props.place.failed"),
 				err: !0
 			};
+		} finally {
+			I(gt, !1);
 		}
-		I(gt, !1);
 	}
 	function yt(e, t) {
 		Number.isFinite(t) && dt(`edit:frame-${V(N).blockId}:${e}`, (n) => {

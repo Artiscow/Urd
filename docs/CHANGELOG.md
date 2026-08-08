@@ -20,6 +20,15 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.6.0.13-14p - Push-klargjøring: geokode-kapplop og tre småfunn rettet - 8. august 2026
+- VERIFISERT (full runde, diffen har kode-, skjema- og innholdsendringer): editor-bygg grønt og ferskt bygg byte-likt committet bundel, 296/296 tester, alle skjemavalideringene, base.css-stempelet matcher filinnholdet i alle fem skall og slug-kopiene er byte-like roten, ingen tankestrek i diffen.
+- UAVHENGIG GJENNOMGANG (frisk agent uten øktens kontekst, hele diffen mot AGENTS.md og ADR-0006/0008/0009/0012/0013/0014, inkludert egen kjøring av testene og byte-sammenlikning av gjenbygd bundel): sikkerhetssjekken av notat-pipelinen var ren (release-body via env uten shell-interpolasjon, notes kappet og rendret som ren tekst, ankret TAG_RE, PAT kun mot malrepoet), $state.snapshot-fiksene, felt-kontraktens additivitet og CSP-sjekkens eksakte vertssammenlikning bekreftet. Fire funn, alle rettet i denne committen:
+  - RETTET (middels, kapplop): place-søket i Egenskaper leste selectedBlock PÅ NYTT etter await, så et blokkbytte mens geokodingen var i flukt ville skrevet location/lat/lon inn i den nye blokkens props, uansett blokktype. blockId fanges nå før await og svaret forkastes om markeringen har byttet; placeBusy nullstilles i finally så et forkastet svar ikke låser Søk-knappen.
+  - RETTET (lav): kartets tomtilstand (kart.edit.empty) ba brukeren åpne «Innstillinger …»-knappen som felt-kontrakten nettopp fjernet; omskrevet i kjernespråkene til å peke på feltene i Egenskaper. (Gjennomgåerens observasjon: paritetstesten fanger manglende NØKLER, aldri utdaterte VERDIER.)
+  - RETTET (lav): det norske CSS-klassenavnet felt-feil byttet til place-error (engelske identifikatorer i kode).
+  - RETTET (lav): multiutvalgets dra-håndtak fikk isPrimary-vakt, så en finger nummer to på håndtaket ikke starter et konkurrerende dra med egne lyttere.
+- TESTRUNDER-strykingene i spennet (to eldre batcher og fem 0.6.9.x-punkter) er eierens egne etter testing, i tråd med regelen om at kun testeren stryker. Committen med 0.6.0.14-tittelen bærer også 0.6.0.13-innholdet (slått sammen ved commit); begge innslagene under beskriver hver sin runde.
+
 ### 0.6.0.14 - Dra-håndtak for multiutvalget - 6. august 2026
 - UTVALGSLINJEN («N valgt») HAR FÅTT ET DRA-HÅNDTAK, egen knapp med gripe-ikon rett ved siden av søppelikonet: hele blokkutvalget dras samlet med livevisning, gruppen klemmes av groupDelta så den holder seg innenfor seksjonen, verktøylinjen følger utvalget under draet, og slipp bokføres som ETT angre-steg via samme flyt som juster/fordel-knappene (applySelectionMoves). Avbrudd (pointercancel) stiller alt tilbake. Ny nøkkel canvas.dragSelected i kjernespråkene; cursor grab/grabbing og touch-action i base.css (nytt stempel i alle fem skall).
 - VERIFISERT: editor-bygg grønt med gjenbygd bundel, 296/296 tester.
