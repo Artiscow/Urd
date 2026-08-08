@@ -2,6 +2,16 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.6.7.3): Lagre som mal og Mine maler
+
+- [ ] Bokmerke-knappen i seksjonsverktøylinjen åpner navnedialogen; Enter og OK lagrer, Avbryt lagrer ingenting; duplikatnavn og navn uten gyldige tegn gir feilmelding i statuslinjen
+- [ ] + Ny seksjon har fanene «Innebygde» og «Mine maler»; fanevalget huskes til neste åpning i samme økt
+- [ ] Mine maler viser malene i rutenett med miniatyr som ligner seksjonen; tomtilstanden vises når ingen maler finnes
+- [ ] Innsetting fra Mine maler legger seksjonen på riktig plass; samme mal to ganger gir ingen advarsler/kollisjoner, og Ctrl+Z fjerner én innsetting per trykk
+- [ ] Sletteknappen på kortet spør om bekreftelse og fjerner malen; Ctrl+Z bringer den tilbake
+- [ ] Malene overlever reload (localStorage-utkast); «Forkast utkast» fjerner aldri-publiserte maler
+- [ ] Kjernespråk: admin på engelsk/tyrkisk viser fanene og dialogen oversatt; nynorsk/nordsamisk faller til bokmål
+
 ### Testrunde-batch (0.6.7.2): Mal-formatet (datagrunn, ingen UI ennå)
 
 - [ ] `npm run validate` viser «OK syntetiske maler (2 mot mal-skjemaet)» og ingen strict-advarsler; CI grønn

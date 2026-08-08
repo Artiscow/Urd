@@ -19,6 +19,7 @@
  */
 import { frameToCss } from './render.js';
 import { makeId } from './sections/presets.js';
+import { cloneSectionForInsert } from './maler-model.js';
 import { presetThumb } from './preset-thumb.js';
 import { openImageEditor, closeImageEditor } from './image-editor.js';
 import { applyImageStyle } from './blocks/image.js';
@@ -36,6 +37,16 @@ import { ta } from './i18n.js';
 
 /** Mobilvisning? Motoren setter body-klassen ut fra breakpointet. */
 const isMobile = () => document.body.classList.contains('urd-mobile');
+
+/** Mal-utkastene fra editoren (urd-maler-meldingen): {id, name, kind, section?, blocks?}.
+ *  Editoren eier listen; her vises den i Mine maler-fanen i «+ Ny seksjon». */
+let maler = [];
+export function setMaler(list) {
+  maler = Array.isArray(list) ? list : [];
+}
+
+/** Fanevalget i preset-galleriet huskes per økt (variant C, eiervalg 8. august 2026). */
+let presetTabMaler = false;
 
 /** Lukker åpne menyer (preset-galleri, blokkmeny). Kalles også via urd-close-menus når eieren klikker i admin-panelene, som iframens egne klikk-lyttere aldri ser. */
 let collapseOpenPresetMenu = null;
@@ -627,62 +638,145 @@ function makeSectionAdder(index, above = null) {
     head.append(title, cancel);
     menu.appendChild(head);
 
-    // Kjernens maler grupperes som før; plugin-maler samles i en egen
-    // «Plugins»-seksjon under alt det innebygde.
-    const groups = new Map();
-    const pluginDefs = [];
-    for (const id of window.Urd.sections.ids()) {
-      const def = window.Urd.sections.get(id);
-      if (def.fromPlugin) {
-        pluginDefs.push(def);
-        continue;
+    // To segmentfaner (variant C, eiervalg 8. august 2026): innebygde
+    // presets og Mine maler (lagrede seksjons-maler). Fanevalget huskes
+    // per økt i presetTabMaler.
+    const tabs = document.createElement('div');
+    tabs.className = 'urd-preset-tabs';
+    const tabPresets = document.createElement('button');
+    tabPresets.type = 'button';
+    tabPresets.textContent = ta('canvas.tabPresets');
+    const tabMaler = document.createElement('button');
+    tabMaler.type = 'button';
+    tabMaler.textContent = ta('canvas.tabMyTemplates');
+    tabs.append(tabPresets, tabMaler);
+    menu.appendChild(tabs);
+    const content = document.createElement('div');
+    menu.appendChild(content);
+
+    // Innebygde-fanen: kjernens presets grupperes som før; plugin-presets
+    // samles i en egen «Plugins»-seksjon under alt det innebygde.
+    const renderPresets = () => {
+      content.replaceChildren();
+      const groups = new Map();
+      const pluginDefs = [];
+      for (const id of window.Urd.sections.ids()) {
+        const def = window.Urd.sections.get(id);
+        if (def.fromPlugin) {
+          pluginDefs.push(def);
+          continue;
+        }
+        // Grupperingen skjer på group-STRENGEN (id); kun visningen oversettes
+        // (groupKey med group som fallback - plugin-kontrakten).
+        const group = def.group ?? '';
+        if (!groups.has(group)) groups.set(group, { labelKey: def.groupKey ?? null, defs: [] });
+        groups.get(group).defs.push(def);
       }
-      // Grupperingen skjer på group-STRENGEN (id); kun visningen oversettes
-      // (groupKey med group som fallback - plugin-kontrakten).
-      const group = def.group ?? '';
-      if (!groups.has(group)) groups.set(group, { labelKey: def.groupKey ?? null, defs: [] });
-      groups.get(group).defs.push(def);
-    }
-    if (pluginDefs.length) groups.set('__plugins', { labelKey: 'panel.plugins', defs: pluginDefs });
-    for (const [name, { labelKey, defs }] of groups) {
-      const heading = document.createElement('div');
-      heading.className = 'urd-preset-group';
-      heading.textContent = labelKey ? ta(labelKey) : (name || ta('canvas.groupOther'));
-      menu.appendChild(heading);
-      for (const def of defs) {
-        const choice = document.createElement('button');
-        choice.type = 'button';
-        choice.className = 'urd-preset-choice';
-        // Auto-generert miniatyr fra presetens faktiske data (dataene
-        // forkastes). En kastende plugin-preset skal aldri velte menyen:
-        // da vises valget uten skisse, som før.
+      if (pluginDefs.length) groups.set('__plugins', { labelKey: 'panel.plugins', defs: pluginDefs });
+      for (const [name, { labelKey, defs }] of groups) {
+        const heading = document.createElement('div');
+        heading.className = 'urd-preset-group';
+        heading.textContent = labelKey ? ta(labelKey) : (name || ta('canvas.groupOther'));
+        content.appendChild(heading);
+        for (const def of defs) {
+          const choice = document.createElement('button');
+          choice.type = 'button';
+          choice.className = 'urd-preset-choice';
+          // Auto-generert miniatyr fra presetens faktiske data (dataene
+          // forkastes). En kastende plugin-preset skal aldri velte menyen:
+          // da vises valget uten skisse, som før.
+          try {
+            const thumb = document.createElement('span');
+            thumb.className = 'urd-preset-thumb';
+            thumb.insertAdjacentHTML('afterbegin', presetThumb(def.create()));
+            choice.appendChild(thumb);
+          } catch { /* tekstvalg uten miniatyr */ }
+          const body = document.createElement('span');
+          body.className = 'urd-preset-body';
+          choice.appendChild(body);
+          const label = document.createElement('span');
+          label.className = 'urd-preset-label';
+          label.textContent = def.labelKey ? ta(def.labelKey) : def.label;
+          body.appendChild(label);
+          if (def.hintKey || def.hint) {
+            const hint = document.createElement('span');
+            hint.className = 'urd-preset-hint';
+            hint.textContent = def.hintKey ? ta(def.hintKey) : def.hint;
+            body.appendChild(hint);
+          }
+          choice.addEventListener('click', () => {
+            post({ type: 'urd-add-section', index, section: def.create() });
+            // Rerenderingen fjerner menyen fra DOM: rydd document-lytteren nå i stedet for ved neste tilfeldige klikk.
+            cleanupOutside();
+          });
+          content.appendChild(choice);
+        }
+      }
+    };
+
+    // Mine maler-fanen: rutenett med stor miniatyr, navn og sletteknapp.
+    // Innsetting går via cloneSectionForInsert (re-id-regelen i SKJEMA.md):
+    // nye id-er hver gang, så samme mal kan settes inn flere ganger.
+    const renderMaler = () => {
+      content.replaceChildren();
+      const list = maler.filter((m) => m.kind === 'section' && m.section);
+      if (!list.length) {
+        const empty = document.createElement('div');
+        empty.className = 'urd-mal-empty';
+        empty.textContent = ta('canvas.templatesEmpty');
+        content.appendChild(empty);
+        return;
+      }
+      const grid = document.createElement('div');
+      grid.className = 'urd-mal-grid';
+      for (const mal of list) {
+        const card = document.createElement('div');
+        card.className = 'urd-mal-card';
+        const pick = document.createElement('button');
+        pick.type = 'button';
+        pick.className = 'urd-mal-pick';
         try {
           const thumb = document.createElement('span');
-          thumb.className = 'urd-preset-thumb';
-          thumb.insertAdjacentHTML('afterbegin', presetThumb(def.create()));
-          choice.appendChild(thumb);
+          thumb.className = 'urd-mal-thumb';
+          thumb.insertAdjacentHTML('afterbegin', presetThumb(mal.section));
+          pick.appendChild(thumb);
         } catch { /* tekstvalg uten miniatyr */ }
-        const body = document.createElement('span');
-        body.className = 'urd-preset-body';
-        choice.appendChild(body);
-        const label = document.createElement('span');
-        label.className = 'urd-preset-label';
-        label.textContent = def.labelKey ? ta(def.labelKey) : def.label;
-        body.appendChild(label);
-        if (def.hintKey || def.hint) {
-          const hint = document.createElement('span');
-          hint.className = 'urd-preset-hint';
-          hint.textContent = def.hintKey ? ta(def.hintKey) : def.hint;
-          body.appendChild(hint);
-        }
-        choice.addEventListener('click', () => {
-          post({ type: 'urd-add-section', index, section: def.create() });
-          // Rerenderingen fjerner menyen fra DOM: rydd document-lytteren nå i stedet for ved neste tilfeldige klikk.
+        const nameEl = document.createElement('span');
+        nameEl.className = 'urd-mal-name';
+        nameEl.textContent = mal.name;
+        pick.appendChild(nameEl);
+        pick.addEventListener('click', () => {
+          post({ type: 'urd-add-section', index, section: cloneSectionForInsert(mal.section, makeId) });
           cleanupOutside();
         });
-        menu.appendChild(choice);
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'urd-mal-del';
+        del.textContent = '×';
+        del.title = ta('canvas.deleteTemplate');
+        del.addEventListener('click', (event) => {
+          // Editoren eier bekreftelsen og slettingen; menyen lukkes så
+          // listen er fersk neste gang den åpnes.
+          event.stopPropagation();
+          post({ type: 'urd-delete-template', id: mal.id });
+          cleanupOutside();
+          collapse();
+        });
+        card.append(pick, del);
+        grid.appendChild(card);
       }
-    }
+      content.appendChild(grid);
+    };
+
+    const applyTab = () => {
+      tabPresets.classList.toggle('on', !presetTabMaler);
+      tabMaler.classList.toggle('on', presetTabMaler);
+      if (presetTabMaler) renderMaler();
+      else renderPresets();
+    };
+    tabPresets.addEventListener('click', () => { presetTabMaler = false; applyTab(); });
+    tabMaler.addEventListener('click', () => { presetTabMaler = true; applyTab(); });
+    applyTab();
     bar.appendChild(menu);
 
     // Klikk utenfor menyen lukker den, samme forventning som ellers i editoren.
@@ -1565,6 +1659,16 @@ function addSectionToolbar(host, section, grid) {
       host.style.minHeight = minHeight;
       post({ type: 'urd-section-size', sectionId: section.id, minHeight });
     });
+    // «Lagre som mal» (0.6.7): navnløst snapshot til editoren, som navngir
+    // og lagrer utkastet. Re-id skjer først ved innsetting, aldri her.
+    const save = document.createElement('button');
+    save.className = 'urd-save-template';
+    save.title = ta('canvas.saveTemplate');
+    save.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/></svg>';
+    save.addEventListener('click', () => {
+      post({ type: 'urd-save-template', kind: 'section', section: JSON.parse(JSON.stringify(section)) });
+    });
+    bar.appendChild(save);
     mk('×', ta('canvas.deleteSection'), () => {
       post({ type: 'urd-delete-section', sectionId: section.id });
     });

@@ -3578,6 +3578,123 @@ body.urd-mobile .urd-section-resize-top {
   padding: 2px 7px;
 }
 
+/* Fanene i preset-galleriet (Mine maler, 0.6.7, variant C): segmentkontroll
+   i full bredde rett under tittelen; fanevalget huskes per økt. */
+.urd-preview .urd-preset-tabs {
+  display: flex;
+  padding: 0 6px 6px;
+}
+
+.urd-preview .urd-preset-tabs button {
+  flex: 1;
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 18%, transparent);
+  background: transparent;
+  color: inherit;
+  font: 600 11px system-ui, sans-serif;
+  padding: 5px 0;
+  cursor: pointer;
+}
+
+.urd-preview .urd-preset-tabs button:first-child {
+  border-radius: 999px 0 0 999px;
+  border-right: 0;
+}
+
+.urd-preview .urd-preset-tabs button:last-child {
+  border-radius: 0 999px 999px 0;
+}
+
+.urd-preview .urd-preset-tabs button.on {
+  background: var(--urd-admin-accent, #5f6a75);
+  border-color: var(--urd-admin-accent, #5f6a75);
+  color: var(--urd-admin-accent-text, #fff);
+}
+
+/* Mine maler-fanen: 2-kolonners rutenett med stor miniatyr, navn og
+   sletteknapp (vises ved pek på kortet) */
+.urd-preview .urd-mal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 2px 6px 8px;
+}
+
+.urd-preview .urd-mal-card {
+  position: relative;
+}
+
+.urd-preview .urd-mal-pick {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 14%, transparent);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: center;
+}
+
+.urd-preview .urd-mal-pick:hover {
+  border-color: var(--urd-admin-accent, #5f6a75);
+  background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 12%, transparent);
+}
+
+.urd-preview .urd-mal-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 18%, transparent);
+  border-radius: 5px;
+}
+
+.urd-preview .urd-mal-thumb svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.urd-preview .urd-mal-name {
+  font-size: 11.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.urd-preview .urd-mal-del {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: none;
+  border: 0;
+  border-radius: 5px;
+  padding: 2px 6px;
+  cursor: pointer;
+  background: rgb(224 82 82 / 25%);
+  color: #ffb4b4;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.urd-preview .urd-mal-card:hover .urd-mal-del {
+  display: block;
+}
+
+.urd-preview .urd-mal-empty {
+  padding: 8px 10px 10px;
+  font-size: 11.5px;
+  color: color-mix(in srgb, var(--urd-color-text) 55%, transparent);
+}
+
+/* Lagre som mal-knappen i seksjonsverktøylinjen: SVG-ikonet sentreres */
+.urd-preview .urd-section-toolbar .urd-save-template {
+  display: inline-flex;
+  align-items: center;
+}
+
 .urd-preview .urd-preset-group {
   padding: 8px 8px 3px;
   font-size: 10px;

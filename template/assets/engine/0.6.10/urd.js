@@ -250,6 +250,9 @@ function enablePreview(state, opts) {
       // Samlingsutkast fra editoren: brukes i stedet for serverfilene, og alt som viser samlinger rendres på nytt.
       setCollectionsDraft(msg.collections);
       renderPage(state.page, state.site, root, vp());
+    } else if (msg?.type === 'urd-maler') {
+      // Mal-utkastene fra editoren: vises i Mine maler-fanen i «+ Ny seksjon».
+      window.UrdPreviewEdit?.setMaler?.(msg.maler);
     } else if (msg?.type === 'urd-close-menus') {
       // Eieren klikket i admin-panelene: lukk åpne menyer (preset-galleri, blokkmeny).
       window.UrdPreviewEdit?.closeMenus();

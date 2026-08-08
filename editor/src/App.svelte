@@ -14,6 +14,7 @@
   import { ta, taApiError, adminLang as currentAdminLang } from '$engine/i18n.js';
   import { validateManifest, satisfiesEngine } from '$engine/plugins.js';
   import { makeId } from '$engine/sections/presets.js';
+  import { malId, MAL_SCHEMA_VERSION } from '$engine/maler-model.js';
   // Bakgrunns- og animasjonsdefinisjonene gjenbrukes for etiketter og
   // standardverdier, så editor og motor aldri drifter fra hverandre.
   import { colorLayer } from '$engine/backgrounds/color.js';
@@ -313,6 +314,10 @@
       samlinger: samlingerReady
         ? Object.fromEntries(Object.entries(samlingStores).map(([id, st]) => [id, st.data]))
         : {},
+      malerIndex: malerReady ? malerIndexStore.data : null,
+      maler: malerReady
+        ? Object.fromEntries(Object.entries(malStores).map(([id, st]) => [id, st.data]))
+        : {},
       plugins: pluginsStore?.data ?? null,
     });
   }
@@ -326,14 +331,15 @@
   }
 
   function restore(snap) {
-    const { pageId: snapPageId, page, site: siteSnap, samlingerIndex, samlinger, plugins } = JSON.parse(snap);
+    const { pageId: snapPageId, page, site: siteSnap, samlingerIndex, samlinger, malerIndex, maler, plugins } = JSON.parse(snap);
     siteStore.replace(siteSnap);
     linkSiteDraft();
     siteStore.save();
     grid = { snap: true, ...siteDraft.grid };
     pushSiteToPreview();
-    // Samlinger/plugins gjenopprettes FØR sidebytte-grenen under, ellers ville kryss-side-angring miste de delene av snapshotet.
+    // Samlinger/maler/plugins gjenopprettes FØR sidebytte-grenen under, ellers ville kryss-side-angring miste de delene av snapshotet.
     restoreSamlinger(samlingerIndex, samlinger ?? {});
+    restoreMaler(malerIndex, maler ?? {});
     restorePlugins(plugins);
 
     // Snapshotet hører til en annen side (angring over et sidebytte): legg sideinnholdet tilbake som utkast DER, og bytt dit.
@@ -392,6 +398,34 @@
     samlingerIds = [...(indexSnap.samlinger ?? [])];
     if (activeSamling && !samlingerIds.includes(activeSamling)) activeSamling = null;
     syncSamlingerView();
+  }
+
+  /** Gjenopprett mal-utkastene fra et snapshot (null = tatt før init, hopp over).
+   *  Speiler restoreSamlinger, med «finnes ikke»-baseline for aldri publiserte maler. */
+  function restoreMaler(indexSnap, malerSnap) {
+    if (!malerIndexStore || !indexSnap) return;
+    const current = JSON.stringify({
+      index: malerIndexStore.data,
+      maler: Object.fromEntries(Object.entries(malStores).map(([id, st]) => [id, st.data])),
+    });
+    if (current === JSON.stringify({ index: indexSnap, maler: malerSnap })) return;
+    malerIndexStore.replace(indexSnap);
+    malerIndexStore.save();
+    for (const id of Object.keys(malStores)) {
+      if (!(id in malerSnap)) {
+        localStorage.removeItem(`urd-draft-mal-${id}`);
+        delete malStores[id];
+      }
+    }
+    for (const [id, data] of Object.entries(malerSnap)) {
+      if (!malStores[id]) {
+        malStores[id] = createDraftStore(`urd-draft-mal-${id}`, () => publishedMaler[id] ?? null, draftSaveError);
+      }
+      malStores[id].replace(data);
+      malStores[id].save();
+    }
+    malerIds = [...(indexSnap.maler ?? [])];
+    pushMalerToPreview();
   }
 
   /** Gjenopprett plugin-utkastet fra et snapshot (null = tatt før init, hopp over).
@@ -482,6 +516,7 @@
     await selectPage(new URLSearchParams(location.search).get('page') ?? siteDraft.pages[0].id);
     await initPlugins();
     await initSamlinger();
+    await initMaler();
     await checkAuth();
     // Publiseringsgrunnlaget krever innlogging: uinnlogget ville kallet
     // bare gitt 401-støy i konsollen. Etter innlogging (OAuth-redirect)
@@ -510,8 +545,15 @@
     });
   }
 
+  /** Som askConfirm, men med tekstfelt: løser med teksten ved OK, null ved avbrudd. */
+  function askPrompt({ title, lines = [], value = '', placeholder = '', okLabel = ta('confirm.ok'), cancelLabel = ta('confirm.cancel') }) {
+    return new Promise((resolve) => {
+      confirmBox = { title, lines, okLabel, cancelLabel, resolve, prompt: true, value, placeholder };
+    });
+  }
+
   function answerConfirm(ok) {
-    confirmBox?.resolve(ok);
+    confirmBox?.resolve(confirmBox.prompt ? (ok ? confirmBox.value : null) : ok);
     confirmBox = null;
   }
 
@@ -1835,6 +1877,8 @@
       onReviewDone: handleReviewDone,
       onBlockFlag: handleBlockFlag,
       onCollectionEdit: handleCollectionEdit,
+      onSaveTemplate: handleSaveTemplate,
+      onDeleteTemplate: handleDeleteTemplate,
       onPluginBlocks: (msg) => { pluginBlocks = msg.blocks ?? []; },
       // Sidestilt kolonnebredde dratt i preview: skurer i samme dra
       // koalesceres til ETT angre-steg (edit:-prefikset).
@@ -1854,6 +1898,7 @@
     bridge?.sendPlugins($state.snapshot(pluginsView)?.enabled ?? []);
     bridge?.sendViewport(viewMode);
     pushCollectionsToPreview();
+    pushMalerToPreview();
     if (siteStore.hasDraft()) pushSiteToPreview();
     // Upubliserte sider finnes ikke på serveren (iframen faller tilbake
     // til forsiden): editorens data er kilden og må alltid sendes.
@@ -2253,6 +2298,93 @@
     ['publications', ta('collectionKind.publications')],
     ['custom', ta('collectionKind.custom')],
   ];
+
+  /* ---------- Maler (0.6.7): brukermaler i content/maler/ ---------- */
+  // Samme mønster som samlinger: indeks-store + én store per malfil, med
+  // «finnes ikke»-baseline (null) til første publisering (0.6.7.1-regelen).
+  let malerIndexStore = null;
+  let malStores = {};
+  /** Publisert baseline per mal-id (null = aldri publisert): brukes når angring gjenskaper en slettet mals store. */
+  let publishedMaler = {};
+  /** Sant først når initMaler har fylt ALLE stores; snapshot() tar med maler først da. */
+  let malerReady = false;
+  let malerIds = $state([]);
+
+  async function initMaler() {
+    let index = { version: 1, maler: [] };
+    try {
+      index = await (await fetch('/content/maler.json')).json();
+    } catch { /* ingen indeks er helt greit */ }
+    malerIndexStore = createDraftStore('urd-draft-maler', () => index, draftSaveError);
+    malerIds = [...(malerIndexStore.data.maler ?? [])];
+    for (const id of malerIds) {
+      let published = null;
+      try {
+        published = await (await fetch(`/content/maler/${id}.json`)).json();
+      } catch { /* ny, upublisert mal */ }
+      publishedMaler[id] = published;
+      malStores[id] = createDraftStore(`urd-draft-mal-${id}`, () => published, draftSaveError);
+      // Utkast fra en nyere editor forkastes (samme vern som side/site).
+      if ((malStores[id].data?.schemaVersion ?? 1) > MAL_SCHEMA_VERSION) malStores[id].reset();
+    }
+    malerReady = true;
+    pushMalerToPreview();
+  }
+
+  /** Send mal-utkastene til previewens Mine maler-fane (rene kopier, aldri $state-proxier). */
+  function pushMalerToPreview() {
+    const list = malerIds
+      .map((id) => (malStores[id]?.data ? { id, ...JSON.parse(JSON.stringify(malStores[id].data)) } : null))
+      .filter(Boolean)
+      .map(({ id, mal, section, blocks }) => ({ id, name: mal.name, kind: mal.kind, section, blocks }));
+    bridge?.sendMaler(list);
+  }
+
+  /** «Lagre som mal» fra previewen: navngi, slug til id, lagre som utkast. */
+  async function handleSaveTemplate(msg) {
+    const kind = msg.kind === 'blocks' ? 'blocks' : 'section';
+    const payload = kind === 'blocks' ? msg.blocks : msg.section;
+    if (!payload || !malerIndexStore) return;
+    const name = (await askPrompt({
+      title: ta('canvas.templateNamePrompt'),
+      placeholder: ta('ph.templateName'),
+    }))?.trim();
+    if (!name) return;
+    const id = malId(name);
+    if (!id) {
+      setStatus(ta('status.invalidName'), 'error');
+      return;
+    }
+    if (malerIds.includes(id)) {
+      setStatus(ta('status.templateExists'), 'error');
+      return;
+    }
+    pushHistory('maler');
+    const fresh = { schemaVersion: MAL_SCHEMA_VERSION, mal: { name, kind }, [kind]: payload };
+    malStores[id] = createDraftStore(`urd-draft-mal-${id}`, () => null, draftSaveError);
+    malStores[id].replace(fresh);
+    malStores[id].save();
+    malerIndexStore.data.maler = [...malerIds, id];
+    malerIndexStore.save();
+    malerIds = [...malerIds, id];
+    setStatus(ta('status.templateSaved', { name }), 'ok');
+    pushMalerToPreview();
+  }
+
+  /** Sletteknappen i Mine maler-fanen: bekreft, fjern fil-utkast og indeks-innslag. */
+  async function handleDeleteTemplate(msg) {
+    const mal = malStores[msg.id]?.data?.mal;
+    if (!mal) return;
+    const ok = await askConfirm({ title: ta('confirm.deleteTemplate', { name: mal.name }) });
+    if (!ok) return;
+    pushHistory('maler');
+    localStorage.removeItem(`urd-draft-mal-${msg.id}`);
+    delete malStores[msg.id];
+    malerIndexStore.data.maler = malerIds.filter((x) => x !== msg.id);
+    malerIndexStore.save();
+    malerIds = malerIds.filter((x) => x !== msg.id);
+    pushMalerToPreview();
+  }
 
   async function initSamlinger() {
     let index = { version: 1, samlinger: [] };
@@ -3768,6 +3900,17 @@
       }
       syncSamlingerView();
     }
+    if (malerIndexStore) {
+      malerIndexStore.reset();
+      malerIds = [...(malerIndexStore.data.maler ?? [])];
+      // Aldri publiserte maler (finnes-ikke-baseline) forsvinner med utkastet;
+      // publiserte går tilbake til publisert tilstand.
+      for (const id of Object.keys(malStores)) {
+        if (malerIds.includes(id)) malStores[id].reset();
+        else { localStorage.removeItem(`urd-draft-mal-${id}`); delete malStores[id]; }
+      }
+      pushMalerToPreview();
+    }
     linkSiteDraft();
     grid = { snap: true, ...siteDraft.grid };
     updateDirty();
@@ -5184,6 +5327,11 @@
         {#each confirmBox.lines as line (line)}
           <p class="panel-hint confirm-line">{line}</p>
         {/each}
+        {#if confirmBox.prompt}
+          <!-- svelte-ignore a11y_autofocus (modal med ett felt: fokus hører i feltet) -->
+          <input autofocus bind:value={confirmBox.value} placeholder={confirmBox.placeholder}
+            onkeydown={(e) => e.key === 'Enter' && confirmBox.value.trim() && answerConfirm(true)} />
+        {/if}
         <span class="setup-actions">
           <button class="ghost" onclick={() => answerConfirm(false)}>{confirmBox.cancelLabel}</button>
           <button class="primary" onclick={() => answerConfirm(true)}>{confirmBox.okLabel}</button>

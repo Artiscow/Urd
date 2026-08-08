@@ -36,11 +36,14 @@
  *                  { type: 'urd-move-block-section', fromSectionId, toSectionId, blockId, frame } (blokk sluppet i annen seksjon)
  *                  { type: 'urd-collection-edit', collection, entryId, field, value } (klikk-og-skriv/bildebytte i samling-blokken)
  *                  { type: 'urd-nav-width', width }           (sidestilt kolonnebredde dratt i preview)
+ *                  { type: 'urd-save-template', kind, section | blocks } (Lagre som mal: navnløst snapshot; editoren navngir og lagrer)
+ *                  { type: 'urd-delete-template', id }        (sletteknappen i Mine maler-fanen; editoren bekrefter og sletter)
  *   editor → side: { type: 'urd-chrome', visible }            (vis/skjul editeringshåndtak)
  *                  { type: 'urd-show-grid', visible }         (vis gridet i alle seksjoner)
  *                  { type: 'urd-show-guides', visible }       (hjelpelinjer: senter/innholdsbredde i alle seksjoner)
  *                  { type: 'urd-select', blockId }            (marker blokk editoren nettopp bygde, f.eks. + Ny blokk)
  *                  { type: 'urd-admin-theme', colors }        (adminens fargetema {bg, surface, accent, text}: editor-menyene i previewen følger admin, ikke siden)
+ *                  { type: 'urd-maler', maler }               (mal-utkastene: liste av {id, name, kind, section?, blocks?}; Mine maler-fanen leser dem)
  */
 
 /**
@@ -77,6 +80,8 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-block-flag') handlers.onBlockFlag?.(msg);
     if (msg?.type === 'urd-collection-edit') handlers.onCollectionEdit?.(msg);
     if (msg?.type === 'urd-nav-width') handlers.onNavWidth?.(msg);
+    if (msg?.type === 'urd-save-template') handlers.onSaveTemplate?.(msg);
+    if (msg?.type === 'urd-delete-template') handlers.onDeleteTemplate?.(msg);
   };
   window.addEventListener('message', listener);
 
@@ -100,6 +105,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     },
     sendCollections(collections) {
       post({ type: 'urd-collections', collections });
+    },
+    /** Mal-utkastene til Mine maler-fanen i «+ Ny seksjon» (rene kopier). */
+    sendMaler(maler) {
+      post({ type: 'urd-maler', maler });
     },
     sendViewport(mode) {
       post({ type: 'urd-viewport', mode });
