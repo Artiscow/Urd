@@ -2,6 +2,16 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.6.7.1): Middels-reviewrunden
+
+- [ ] Håndredigert innhold uten version-felt (fjern `"version"` fra en blokk i en sidefil lokalt): blokken rendres riktig (migrert som v1), ikke som om den var gjeldende format
+- [ ] Ny samling: opprett en samling UTEN innslag og publiser umiddelbart; commiten inneholder både content/samlinger/<id>.json og indeksen (før: kun indeksen)
+- [ ] Driftet deploy heles: en publisert indeks som lister en samling uten fil gir et tomt, redigerbart utkast i panelet, og neste publisering skriver filen
+- [ ] Mobilvisning: en side med faq/galleri/samling/kalender/skjema/kart med MER innhold enn desktophøyden viser alt uten at innholdet flyter over blokken under (naturlig høyde i stabling)
+- [ ] /api/geocode uinnlogget (logg ut, kall /api/geocode?q=Oslo direkte) gir 401 Not signed in; kartblokkens adressesøk i admin virker som før når du er logget inn
+- [ ] Panel-titlene Blokker, Rutenett og Historikk viser intro-forklaringene som tooltip (Rutenett begge avsnittene); Automatisk-knappen i Tema forklarer avledede mørke farger; lag-pilene forklarer tegnerekkefølgen; Sekunder per bilde forklarer galleribakgrunnens avspilling
+- [ ] Ingen prosaavsnitt igjen i noen paneler utenom tomtilstander, statuser og feilmeldinger
+
 ### Testrunde-batch (0.6.6.6.4): Sider/Samlinger/Plugins-prosa og undermeny-fiksene
 
 - [ ] Panel-titlene Sider, Samlinger og Plugins viser intro-forklaringen som tooltip ved hover på tittelen; ingen prosaavsnitt øverst i de tre panelene

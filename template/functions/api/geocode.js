@@ -6,7 +6,11 @@
  *
  * Brukes kun i editoren (når eieren klikker «Bruk»), ikke ved hver sidelasting:
  * koordinatene lagres i blokken, så besøkende laster kartet direkte fra OSM.
+ *
+ * Krever innlogget økt (som latest.js): uten vakten er dette en åpen proxy
+ * mot Nominatim, og misbruk kan få deployment-IP-en bannlyst.
  */
+import { readCookie } from '../_lib/cookies.js';
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -19,6 +23,7 @@ const json = (body, status = 200) =>
   });
 
 export async function onRequestGet({ request }) {
+  if (!readCookie(request, 'urd_gh')) return json({ error: 'Not signed in', code: 'notLoggedIn' }, 401);
   const q = (new URL(request.url).searchParams.get('q') ?? '').trim();
   if (q.length < 3) return json({ error: 'Enter an address or a place', code: 'queryTooShort' }, 400);
 

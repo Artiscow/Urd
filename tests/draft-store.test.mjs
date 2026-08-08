@@ -70,3 +70,15 @@ test('korrupt utkast faller tilbake til publisert tilstand', () => {
   assert.equal(store.data.title, 'A');
   assert.equal(store.hasDraft(), false);
 });
+
+test('finnes-ikke-baseline (null): ferskt innhold er utkast til første publisering', () => {
+  const store = createDraftStore('urd-draft-test', () => null);
+  assert.equal(store.data, null);
+  assert.equal(store.hasDraft(), false);
+
+  store.replace({ schemaVersion: 1, id: 'ny', entries: [] });
+  assert.equal(store.save(), true);
+  // Selv tomt, ferskt innhold er ulikt «finnes ikke», så utkastet består
+  // (uten dette kan indeksen publiseres uten tilhørende fil).
+  assert.equal(store.hasDraft(), true);
+});

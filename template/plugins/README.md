@@ -128,6 +128,11 @@ seksjoner i «+ Ny blokk», «+ Ny seksjon» og Blokker-panelet. En blokk-def
 kan i tillegg ha `variants: [{ label, props }, …]`: da blir den en
 foldemeny i blokkmenyene (kalenderen bruker det til visningene sine).
 
+Blokker der innholdet selv bestemmer høyden (autovekst via `urd-grow`,
+som kalender/skjema/kart) skal sette `autoGrow: true` på blokk-defen:
+da får blokken naturlig høyde i mobilvisningens autostabling i stedet
+for den faste desktophøyden, så høyere mobilinnhold aldri klippes.
+
 **Innstillinger i Egenskaper (felt-kontrakten)**: har blokken din enkle
 innstillinger (tekst, tall, av/på, valg, sted), deklarer dem som `fields`
 på blokk-defen i stedet for å bygge et eget config-panel - admin rendrer

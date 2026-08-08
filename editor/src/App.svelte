@@ -380,9 +380,10 @@
     }
     for (const [id, data] of Object.entries(samlingerSnap)) {
       if (!samlingStores[id]) {
-        // Angret sletting: baseline er publisert tilstand, eller fresh-tom for en samling som aldri rakk å publiseres (speiler addSamling).
-        const baseline = publishedSamlinger[id]
-          ?? { schemaVersion: 1, id, name: data.name ?? id, kind: data.kind ?? 'custom', entries: [] };
+        // Angret sletting: baseline er publisert tilstand, eller «finnes
+        // ikke» (null) for en samling som aldri rakk å publiseres
+        // (speiler addSamling, så hasDraft() forblir sann til publisering).
+        const baseline = publishedSamlinger[id] ?? null;
         samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => baseline, draftSaveError);
       }
       samlingStores[id].replace(data);
@@ -556,11 +557,14 @@
 
   /* Panel-introene (prosa-regelen, ADR-0016): forklaringen bor som tooltip
      på panel-tittelen, aldri som avsnitt i panelet. Paneler uten oppslag
-     har ingen intro. */
+     har ingen intro; flere nøkler settes sammen med linjeskift. */
   const PANEL_INTROS = {
-    pages: 'hint.pages.drafts',
-    collections: 'hint.collections.intro',
-    plugins: 'hint.plugins.intro',
+    pages: ['hint.pages.drafts'],
+    blocks: ['hint.blocks.intro'],
+    grid: ['hint.grid.intro', 'hint.grid.section'],
+    collections: ['hint.collections.intro'],
+    plugins: ['hint.plugins.intro'],
+    history: ['hint.history.intro'],
   };
 
   /** Admin-språkvelgeren: språkene med sine EGNE navn (endonymer, aldri
@@ -2262,9 +2266,19 @@
       try {
         published = await (await fetch(`/content/samlinger/${id}.json`)).json();
       } catch { /* ny, upublisert samling */ }
-      published ??= { schemaVersion: 1, id, name: id, kind: 'custom', entries: [] };
+      // Upublisert samling har baseline «finnes ikke» (null), aldri en
+      // syntetisk publisert-tilstand: ellers kan utkastet være likt den
+      // falske baselinen, hasDraft() bli usann, og indeksen publiseres
+      // uten filen (indeks/fil-drift).
       publishedSamlinger[id] = published;
       samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => published, draftSaveError);
+      if (!published && !samlingStores[id].data) {
+        // Indeks uten fil og uten utkast (driftet deploy): gi et tomt
+        // utkast så panelet virker; finnes-ikke-baselinen gjør at filen
+        // publiseres ved neste publisering og driften heles.
+        samlingStores[id].replace({ schemaVersion: 1, id, name: id, kind: 'custom', entries: [] });
+        samlingStores[id].save();
+      }
     }
     samlingerReady = true;
     syncSamlingerView();
@@ -2322,8 +2336,9 @@
     }
     pushHistory('samlinger');
     const fresh = { schemaVersion: 1, id, name, kind: newSamlingKind, entries: [] };
-    publishedSamlinger[id] = { ...fresh, entries: [] };
-    samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => ({ ...fresh, entries: [] }), draftSaveError);
+    // Baseline er «finnes ikke» (null) til første publisering: en fersk
+    // samling skal ha hasDraft() sann, ellers publiseres indeksen uten filen.
+    samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => null, draftSaveError);
     samlingStores[id].replace(fresh);
     samlingStores[id].save();
     samlingerIndexStore.data.samlinger = [...samlingerIds, id];
@@ -4099,7 +4114,7 @@
 
         {#if activePanel}
           <aside class="panel">
-            <h2 title={PANEL_INTROS[activePanel] ? ta(PANEL_INTROS[activePanel]) : undefined}>{PANEL_LABELS[activePanel]}</h2>
+            <h2 title={PANEL_INTROS[activePanel]?.map((k) => ta(k)).join('\n')}>{PANEL_LABELS[activePanel]}</h2>
 
             {#if activePanel === 'pages'}
               <div class="panel-body">
@@ -4419,7 +4434,8 @@
                   <div class="ctl-row autorow">
                     <span class="autolbl">{ta('lbl.darkColors')}</span>
                     <span class="seg">
-                      <button type="button" class:on={altAuto} onclick={() => setAltAuto(true)}>{ta('opt.auto')}</button>
+                      <button type="button" class:on={altAuto} title={ta('hint.theme.autoDark')}
+                        onclick={() => setAltAuto(true)}>{ta('opt.auto')}</button>
                       <button type="button" class:on={!altAuto} onclick={() => setAltAuto(false)}>{ta('opt.custom')}</button>
                     </span>
                   </div>
@@ -4457,9 +4473,6 @@
                       </div>
                     {/each}
                   </div>
-                  {#if altAuto}
-                    <p class="panel-hint">{ta('hint.theme.autoDark')}</p>
-                  {/if}
                 {/if}
 
                 <div class="theme-previews">
@@ -4501,7 +4514,6 @@
             {:else if activePanel === 'blocks'}
               <div class="panel-body" class:locked={viewMode === 'mobile'}
                 title={viewMode === 'mobile' ? ta('tip.blocks.mobileLocked') : undefined}>
-                <p class="panel-hint">{ta('hint.blocks.intro')}</p>
                 <details class="group">
                   <summary>{ta('blocks.text')}</summary>
                   <div class="group-items">
@@ -4570,7 +4582,6 @@
               </div>
             {:else if activePanel === 'grid'}
               <div class="panel-body">
-                <p class="panel-hint">{ta('hint.grid.intro')}</p>
                 <label>
                   {ta('lbl.gridSize')}
                   <span class="gridmenu-value">{grid.size} px</span>
@@ -4583,7 +4594,6 @@
                   {ta('lbl.gridSnap')}
                 </label>
 
-                <p class="panel-hint">{ta('hint.grid.section')}</p>
               </div>
             {:else if activePanel === 'properties'}
               <div class="panel-body">
@@ -5027,7 +5037,6 @@
               </div>
             {:else if activePanel === 'history'}
               <div class="panel-body">
-                <p class="panel-hint">{ta('hint.history.intro')}</p>
                 {#if historyList === null}
                   <p class="panel-hint">{ta('hint.history.loading')}</p>
                 {:else}
@@ -5214,7 +5223,6 @@
 </div>
 
 {#snippet backgroundLayers(bg, layers)}
-  <p class="panel-hint">{ta('hint.bg.order')}</p>
   {#each layers as layer, i (i)}
     <div class="bg-layer">
       <span class="nav-line">
@@ -5222,8 +5230,10 @@
           options={BG_TYPES.map(([id, def]) => [id, def.labelKey ? ta(def.labelKey) : def.label])}
           onchange={(v) => changeBgLayerType(bg, i, v)} />
         <span class="row-tools">
-          <button class="ghost row-tool" onclick={() => moveBgLayer(bg, i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-          <button class="ghost row-tool" onclick={() => moveBgLayer(bg, i, 1)}
+          <button class="ghost row-tool" title={ta('hint.bg.order')}
+            onclick={() => moveBgLayer(bg, i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+          <button class="ghost row-tool" title={ta('hint.bg.order')}
+            onclick={() => moveBgLayer(bg, i, 1)}
             disabled={i === layers.length - 1}>{@html ICONS.down}</button>
           <button class="ghost row-tool" title={ta('tip.bg.removeLayer')} onclick={() => removeBgLayer(bg, i)}>{@html ICONS.cross}</button>
         </span>
@@ -5403,7 +5413,7 @@
           <Dropdown value={layer.props.fit ?? 'cover'}
             options={[['cover', ta('opt.fit.cover')], ['contain', ta('opt.fit.contain')]]}
             onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
-        <label>{ta('lbl.secondsPerImage')}
+        <label title={ta('hint.bg.gallery')}>{ta('lbl.secondsPerImage')}
           <input type="number" min="2" max="120" value={layer.props.interval ?? 6}
             onchange={(e) => setBgProp(bg, i, 'interval', Number(e.target.value))} /></label>
         <label>{ta('lbl.transition')}

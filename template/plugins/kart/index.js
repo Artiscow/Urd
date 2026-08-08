@@ -224,6 +224,7 @@ function finnOssSection() {
 export function register(Urd) {
   Urd.blocks.define('kart', {
     version: 1,
+    autoGrow: true,
     label: 'Kart',
     labelKey: 'kart.edit.blockLabel',
     defaults: () => ({ location: '', zoom: 15, height: 320 }),

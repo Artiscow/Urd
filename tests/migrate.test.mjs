@@ -53,6 +53,21 @@ test('nyere data enn motoren gir plassholder (trygg nedgradering)', () => {
   assert.deepEqual(result.props, { a: 1 });
 });
 
+test('manglende version behandles som v1 og migreres, aldri som gjeldende', () => {
+  const result = lift({ type: 'text', props: { text: '<p>Hei</p>' } }, textV3);
+  assert.equal(result.ok, true);
+  assert.equal(result.version, 3);
+  assert.deepEqual(result.props, { html: '<p>Hei</p>', align: 'left' });
+});
+
+test('manglende version med def på v1 passerer som v1', () => {
+  const props = { html: '<p>Hei</p>' };
+  const result = lift({ type: 'text', props }, { version: 1, migrations: {} });
+  assert.equal(result.ok, true);
+  assert.equal(result.version, 1);
+  assert.deepEqual(result.props, props);
+});
+
 test('migreringer muterer aldri original-props', () => {
   const original = { text: '<p>Hei</p>' };
   const grisete = {
