@@ -19,7 +19,8 @@
  */
 import { frameToCss } from './render.js';
 import { makeId } from './sections/presets.js';
-import { cloneSectionForInsert } from './maler-model.js';
+import { cloneSectionForInsert, cloneBlocksForInsert } from './maler-model.js';
+import { searchItems } from './palette-search.js';
 import { presetThumb } from './preset-thumb.js';
 import { openImageEditor, closeImageEditor } from './image-editor.js';
 import { applyImageStyle } from './blocks/image.js';
@@ -342,6 +343,53 @@ function addBlockAdder(host, section, grid) {
   // åpnes med DOBBELTKLIKK på seksjonsflaten; da lander blokken der.
   // Åpnet fra knappen er punktet null, og editoren sentrerer som før.
   menu._urdAt = null;
+
+  // Blokk-søket (0.6.7, variant B: flat treffliste). Alt som legges i
+  // menyen registreres i searchables med sin synlige etikett og en run
+  // som klikker den EKTE knappen, så treff og meny aldri kan divergere.
+  const searchables = [];
+  const searchWrap = document.createElement('div');
+  searchWrap.className = 'urd-block-search';
+  searchWrap.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>';
+  const searchInput = document.createElement('input');
+  searchInput.type = 'text';
+  searchInput.placeholder = ta('canvas.searchBlocks');
+  searchWrap.appendChild(searchInput);
+  const hits = document.createElement('div');
+  hits.className = 'urd-block-hits';
+  menu.append(searchWrap, hits);
+  const renderHits = () => {
+    const query = searchInput.value;
+    if (!query.trim()) {
+      menu.classList.remove('urd-searching');
+      hits.replaceChildren();
+      return;
+    }
+    menu.classList.add('urd-searching');
+    hits.replaceChildren();
+    const all = searchables.concat(menu._urdMalerSearchables ?? []);
+    const found = searchItems(all, query, (item) => item.label);
+    if (!found.length) {
+      const empty = document.createElement('div');
+      empty.className = 'urd-search-empty';
+      empty.textContent = ta('canvas.searchEmpty');
+      hits.appendChild(empty);
+      return;
+    }
+    for (const item of found) {
+      const b = document.createElement('button');
+      b.textContent = item.label;
+      b.addEventListener('click', item.run);
+      hits.appendChild(b);
+    }
+  };
+  searchInput.addEventListener('input', renderHits);
+  menu._urdSearchReset = () => {
+    searchInput.value = '';
+    renderHits();
+  };
+  menu._urdSearchFocus = () => searchInput.focus();
+
   const kindButton = (parent, kind, label) => {
     const b = document.createElement('button');
     b.textContent = label;
@@ -350,6 +398,7 @@ function addBlockAdder(host, section, grid) {
       resetBlockAdder(wrap);
     });
     parent.appendChild(b);
+    searchables.push({ label, run: () => b.click() });
   };
   for (const [kind, label] of BLOCK_KINDS) kindButton(menu, kind, label);
 
@@ -400,38 +449,76 @@ function addBlockAdder(host, section, grid) {
       resetBlockAdder(wrap);
     };
     // Blokker med variants (f.eks. kalenderens visninger) får en foldemeny som Former.
+    const defLabel = def.labelKey ? ta(def.labelKey) : (def.label ?? type);
     if (Array.isArray(def.variants) && def.variants.length) {
       const toggle = document.createElement('button');
       toggle.className = 'urd-add-block-shapes-toggle';
-      toggle.textContent = `${def.labelKey ? ta(def.labelKey) : (def.label ?? type)} ▾`;
+      toggle.textContent = `${defLabel} ▾`;
       toggle.title = title;
       const sub = document.createElement('div');
       sub.className = 'urd-add-block-shapes';
       for (const variant of def.variants) {
         const b = document.createElement('button');
-        b.textContent = variant.labelKey ? ta(variant.labelKey) : variant.label;
+        const variantLabel = variant.labelKey ? ta(variant.labelKey) : variant.label;
+        b.textContent = variantLabel;
         b.addEventListener('click', () => buildAndPost(variant.props ?? {}));
         sub.appendChild(b);
+        // I trefflisten flates folden ut: «Kalender: Måned» som egen rad.
+        searchables.push({ label: `${defLabel}: ${variantLabel}`, run: () => b.click() });
       }
       toggle.addEventListener('click', () => {
         const open = sub.classList.toggle('open');
-        toggle.textContent = `${def.labelKey ? ta(def.labelKey) : (def.label ?? type)} ${open ? '▴' : '▾'}`;
+        toggle.textContent = `${defLabel} ${open ? '▴' : '▾'}`;
       });
       menu.append(toggle, sub);
       continue;
     }
     const b = document.createElement('button');
-    b.textContent = def.labelKey ? ta(def.labelKey) : (def.label ?? type);
+    b.textContent = defLabel;
     b.title = title;
     b.addEventListener('click', () => buildAndPost());
     menu.appendChild(b);
+    searchables.push({ label: defLabel, run: () => b.click() });
   }
+  // Mine maler (blokkgrupper, 0.6.7, snippets-modellen): lagrede grupper i
+  // SAMME meny som blokkene. Innholdet bygges ved hver åpning, så listen
+  // alltid er fersk (lagring/sletting skjer uten at seksjonen rerendres).
+  const malerWrap = document.createElement('div');
+  menu.appendChild(malerWrap);
+  menu._urdRefreshMaler = () => {
+    malerWrap.replaceChildren();
+    menu._urdMalerSearchables = [];
+    const groupMaler = maler.filter((m) => m.kind === 'blocks' && Array.isArray(m.blocks));
+    if (!groupMaler.length) return;
+    const divider = document.createElement('div');
+    divider.className = 'urd-add-block-plugins';
+    divider.textContent = ta('canvas.tabMyTemplates');
+    malerWrap.appendChild(divider);
+    for (const mal of groupMaler) {
+      const b = document.createElement('button');
+      b.textContent = mal.name;
+      b.title = ta('canvas.insertGroup');
+      b.addEventListener('click', () => {
+        // Dobbeltklikk-åpnet: gruppen lander med øvre venstre hjørne på
+        // klikkpunktet; ellers beholdes lagrede posisjoner (kun klem).
+        insertBlocksMal(mal, section.id, menu._urdAt);
+        resetBlockAdder(wrap);
+      });
+      malerWrap.appendChild(b);
+      menu._urdMalerSearchables.push({ label: mal.name, run: () => b.click() });
+    }
+  };
   openBtn.addEventListener('click', () => {
     // Fra knappen: nullstill ev. dobbeltklikk-plassering av menyen.
     const wasOpen = menu.classList.contains('open');
     menu._urdAt = null;
     resetBlockAdder(wrap);
-    if (!wasOpen) menu.classList.add('open');
+    if (!wasOpen) {
+      menu._urdRefreshMaler?.();
+      menu._urdSearchReset?.();
+      menu.classList.add('open');
+      menu._urdSearchFocus?.();
+    }
   });
   // enhanceSection kjører etter HVER rerender på samme host-element: lytterne legges kun én gang og slår opp gjeldende meny ved hendelsen, ellers hoper det seg opp én lytter per rerender.
   if (!host._urdAdderLeaveWired) {
@@ -462,7 +549,10 @@ function addBlockAdder(host, section, grid) {
       // Ved pekeren vises menyen alene: chip-knappen skjules (CSS-en på
       // .urd-at-pointer), så det ikke står en «+ Ny blokk» over menyen.
       curWrap.classList.add('urd-at-pointer');
+      curMenu._urdRefreshMaler?.();
+      curMenu._urdSearchReset?.();
       curMenu.classList.add('open');
+      curMenu._urdSearchFocus?.();
       // Menyen henger normalt mot venstre fra pekeren (right: 0). Nær
       // venstre kant ville den gått ut av skjermen: da åpnes den mot
       // høyre for pekeren i stedet.
@@ -2103,6 +2193,15 @@ function buildMultiBar() {
   const distH = btn(svg('<path d="M3 3v18M21 3v18"/><rect x="7" y="9" width="3" height="6"/><rect x="14" y="9" width="3" height="6"/>'), ta('canvas.distributeH'), () => applyDistribute('x'));
   const distV = btn(svg('<path d="M3 3h18M3 21h18"/><rect x="9" y="7" width="6" height="3"/><rect x="9" y="14" width="6" height="3"/>'), ta('canvas.distributeV'), () => applyDistribute('y'));
   multiBar._urdDist = [distH, distV];
+  // «Lagre gruppe som mal» (0.6.7, snippets-modellen): hele utvalget
+  // lagres som gjenbrukbar blokkgruppe; navngiving og lagring skjer i
+  // editoren (urd-save-template), gruppen dukker opp i blokkmenyene.
+  const saveGroup = btn(svg('<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/>'), ta('canvas.saveGroup'), () => {
+    const blocks = selectedEls().map((el) => el._urdCtx?.block).filter(Boolean);
+    if (blocks.length < 2) return;
+    post({ type: 'urd-save-template', kind: 'blocks', blocks: JSON.parse(JSON.stringify(blocks)) });
+  });
+  saveGroup.classList.add('urd-multi-save');
   // Dra-håndtaket: grip hele utvalget og dra det samlet (egen knapp ved
   // siden av søppelikonet); bokføres som ETT angre-steg ved slipp.
   const grip = document.createElement('button');
@@ -2275,6 +2374,30 @@ function pasteClipboard(source = clipboard) {
   multiIds = blocks.length > 1 ? new Set(blocks.map((b) => b.id)) : new Set();
   selectedBlockId = blocks[0].id;
   post({ type: 'urd-select-block', sectionId, blockId: selectedBlockId });
+}
+
+/** Sett inn en blokkgruppe-mal i en seksjon: re-id + anker/klem via
+ *  maler-model (re-id-regelen i SKJEMA.md), ETT angre-steg via
+ *  urd-add-blocks, og det innsatte blir det nye utvalget (samme hale
+ *  som pasteClipboard). anchor = {x i %, y i px} eller null. */
+function insertBlocksMal(mal, sectionId, anchor) {
+  const { blocks, minBottom } = cloneBlocksForInsert(mal.blocks, makeId, { anchor });
+  post({ type: 'urd-add-blocks', sectionId, blocks, minBottom, moves: [] });
+  document.querySelectorAll('.urd-block.urd-selected, .urd-block.urd-multi-selected')
+    .forEach((b) => b.classList.remove('urd-selected', 'urd-multi-selected'));
+  multiSectionId = sectionId;
+  multiIds = blocks.length > 1 ? new Set(blocks.map((b) => b.id)) : new Set();
+  selectedBlockId = blocks[0].id;
+  post({ type: 'urd-select-block', sectionId, blockId: selectedBlockId });
+}
+
+/** Blokker-panelets Mine maler-gruppe (urd-insert-template): sett inn i
+ *  aktiv seksjon (ellers første) med lagrede posisjoner, kun klem. */
+export function insertTemplate(id) {
+  const mal = maler.find((m) => m.id === id && m.kind === 'blocks' && Array.isArray(m.blocks));
+  const host = document.querySelector('.urd-section-active') ?? document.querySelector('.urd-section');
+  if (!mal || !host) return;
+  insertBlocksMal(mal, host.dataset.sectionId, null);
 }
 
 /** Ctrl+D med flerutvalg: dupliser utvalget (via lim inn-flyten). */

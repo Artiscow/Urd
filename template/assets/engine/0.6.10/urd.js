@@ -253,6 +253,9 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-maler') {
       // Mal-utkastene fra editoren: vises i Mine maler-fanen i «+ Ny seksjon».
       window.UrdPreviewEdit?.setMaler?.(msg.maler);
+    } else if (msg?.type === 'urd-insert-template') {
+      // Blokker-panelets Mine maler: sett inn blokkgruppe-malen i aktiv seksjon.
+      window.UrdPreviewEdit?.insertTemplate?.(msg.id);
     } else if (msg?.type === 'urd-close-menus') {
       // Eieren klikket i admin-panelene: lukk åpne menyer (preset-galleri, blokkmeny).
       window.UrdPreviewEdit?.closeMenus();

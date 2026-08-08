@@ -15,6 +15,7 @@
   import { validateManifest, satisfiesEngine } from '$engine/plugins.js';
   import { makeId } from '$engine/sections/presets.js';
   import { malId, MAL_SCHEMA_VERSION } from '$engine/maler-model.js';
+  import { searchItems as searchBlockItems } from '$engine/palette-search.js';
   // Bakgrunns- og animasjonsdefinisjonene gjenbrukes for etiketter og
   // standardverdier, så editor og motor aldri drifter fra hverandre.
   import { colorLayer } from '$engine/backgrounds/color.js';
@@ -3656,6 +3657,51 @@
     });
   }
 
+  /* Blokk-søket i panelet (0.6.7, variant B: flat treffliste). Indeksen
+     bygges av de SYNLIGE etikettene panelet alt viser: kjerneblokker,
+     former, blokkgruppe-maler og plugin-blokker (varianter flatet ut). */
+  let blockSearch = $state('');
+
+  function panelBlockItems() {
+    const items = [
+      { label: ta('blocks.text'), act: 'block', kind: 'text' },
+      { label: ta('ui.textBox'), act: 'block', kind: 'text-box' },
+      { label: ta('blocks.button'), act: 'block', kind: 'button' },
+      { label: ta('blocks.image'), act: 'image' },
+      { label: ta('blocks.video'), act: 'block', kind: 'video' },
+      { label: ta('blocks.icon'), act: 'block', kind: 'icon' },
+      { label: ta('blocks.samling'), act: 'block', kind: 'samling' },
+      { label: ta('blocks.faq'), act: 'block', kind: 'faq' },
+      { label: ta('ui.emptyGallery'), act: 'block', kind: 'galleri' },
+      { label: ta('ui.galleryWithImages'), act: 'galleryImages' },
+      { label: ta('shape.line'), act: 'block', kind: 'shape-line' },
+      { label: ta('shape.arrow'), act: 'block', kind: 'shape-arrow' },
+      { label: ta('shape.circle'), act: 'block', kind: 'shape-circle' },
+      { label: ta('shape.rect'), act: 'block', kind: 'shape-rect' },
+      { label: ta('shape.triangle'), act: 'block', kind: 'shape-triangle' },
+    ];
+    for (const id of malerIds) {
+      const mal = malStores[id]?.data?.mal;
+      if (mal?.kind === 'blocks') items.push({ label: mal.name, act: 'mal', id });
+    }
+    for (const entry of pluginBlocks) {
+      if (entry.variants?.length) {
+        for (const variant of entry.variants) {
+          items.push({ label: `${entry.label}: ${variant.label}`, act: 'plugin', entry, props: variant.props });
+        }
+      } else {
+        items.push({ label: entry.label, act: 'plugin', entry });
+      }
+    }
+    return items;
+  }
+
+  function runPanelItem(item) {
+    if (item.act === 'block') addBlock(item.kind);
+    else if (item.act === 'plugin') addPluginBlock(item.entry, item.props ?? {});
+    else if (item.act === 'mal') bridge?.sendInsertTemplate(item.id);
+  }
+
   /** «+ Legg til blokk» i en seksjon: bygg blokken og legg den der.
    *  Med klikkpunkt (msg.at, fra dobbeltklikk på seksjonsflaten) lander
    *  blokken sentrert på punktet, klemt og snappet (frameAtPoint);
@@ -4713,6 +4759,29 @@
             {:else if activePanel === 'blocks'}
               <div class="panel-body" class:locked={viewMode === 'mobile'}
                 title={viewMode === 'mobile' ? ta('tip.blocks.mobileLocked') : undefined}>
+                <input type="text" bind:value={blockSearch}
+                  placeholder={ta('canvas.searchBlocks')} title={ta('canvas.searchBlocks')} />
+                {#if blockSearch.trim()}
+                  <!-- Variant B (eiervalg 9. august 2026): aktivt søk viser en
+                       flat, rangert treffliste i stedet for gruppene. -->
+                  {#each searchBlockItems(panelBlockItems(), blockSearch, (item) => item.label) as item (item.label)}
+                    {#if item.act === 'image'}
+                      <label class="ghost filepick" title={ta('tip.webpAuto')}>
+                        {item.label}
+                        <input type="file" accept="image/*" onchange={addImage} />
+                      </label>
+                    {:else if item.act === 'galleryImages'}
+                      <label class="ghost filepick" title={ta('tip.blocks.galleryImages')}>
+                        {item.label}
+                        <input type="file" accept="image/*" multiple onchange={addGalleryBlock} />
+                      </label>
+                    {:else}
+                      <button class="ghost" onclick={() => runPanelItem(item)}>{item.label}</button>
+                    {/if}
+                  {:else}
+                    <p class="panel-hint">{ta('canvas.searchEmpty')}</p>
+                  {/each}
+                {:else}
                 <details class="group">
                   <summary>{ta('blocks.text')}</summary>
                   <div class="group-items">
@@ -4755,6 +4824,18 @@
                     <button class="ghost" onclick={() => addBlock('shape-triangle')}>{ta('shape.triangle')}</button>
                   </div>
                 </details>
+                {#if malerIds.some((id) => malStores[id]?.data?.mal?.kind === 'blocks')}
+                  {@const blockGroupMaler = malerIds.filter((id) => malStores[id]?.data?.mal?.kind === 'blocks')}
+                  <details class="group">
+                    <summary>{ta('canvas.tabMyTemplates')}</summary>
+                    <div class="group-items">
+                      {#each blockGroupMaler as id (id)}
+                        <button class="ghost" title={ta('canvas.insertGroup')}
+                          onclick={() => bridge?.sendInsertTemplate(id)}>{malStores[id].data.mal.name}</button>
+                      {/each}
+                    </div>
+                  </details>
+                {/if}
                 {#if pluginBlocks.length}
                   <details class="group">
                     <summary>{ta('panel.plugins')}</summary>
@@ -4777,6 +4858,7 @@
                       {/each}
                     </div>
                   </details>
+                {/if}
                 {/if}
               </div>
             {:else if activePanel === 'grid'}

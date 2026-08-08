@@ -2,6 +2,23 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.6.7.6): Søk i blokkvelgeren
+
+- [ ] + Ny blokk: søkefeltet er fokusert ved åpning; å skrive filtrerer til en flat treffliste (menyens grupper skjules), og å tømme feltet gir menyen tilbake
+- [ ] Kalender-visningene dukker opp som egne treff («Kalender: Måned»); blokkgruppe-maler og plugin-blokker er søkbare; treff-klikk setter inn (dobbeltklikk-åpnet: på klikkpunktet)
+- [ ] Diakritikk og store/små bokstaver spiller ingen rolle (f.eks. «gallerí» finner Galleri); tomtreff viser forklarende linje
+- [ ] Blokker-panelet: samme søk øverst; flat treffliste erstatter gruppene, bilde/galleri-treff åpner filvelger som før
+- [ ] Søket matcher på admin-språket (bytt til engelsk: «ima» finner Image)
+
+### Testrunde-batch (0.6.7.5): Blokkgruppe som gjenbrukbar
+
+- [ ] Marker to eller flere blokker: bokmerke-knappen i utvalgslinjen åpner navnedialogen, og gruppen dukker opp under «Mine maler» i + Ny blokk-menyen og i Blokker-panelet
+- [ ] Innsetting fra canvas-menyen (knapp-åpnet) beholder gruppens lagrede posisjoner; dobbeltklikk-åpnet lander gruppen ved klikkpunktet; begge klemmes innenfor seksjonen
+- [ ] Innsetting fra Blokker-panelet lander i aktiv seksjon; innbyrdes oppsett bevart, det innsatte er nytt utvalg, ETT Ctrl+Z fjerner hele gruppen
+- [ ] Gruppen kan settes inn på en ANNEN side enn den ble lagret på
+- [ ] Lagre en gruppe, åpne + Ny blokk uten å gjøre noe annet: gruppen står i menyen (listen bygges fersk ved åpning)
+- [ ] Publisering av en blokkgruppe-mal (mot urd-web): filen har kind blocks, bilder i gruppen materialiseres til media/
+
 ### Testrunde-batch (0.6.7.4): Publisering av maler (mot urd-web)
 
 - [ ] Lagre en mal og publiser: commiten inneholder content/maler/<id>.json og oppdatert content/maler.json; «Upubliserte endringer»-merket forsvinner, og malen består i Mine maler etter reload
