@@ -2,12 +2,16 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.6.6.6.1-2): panel-språkets fundament og Innhold/Stil-fanene
 
-### Testrunde-batch (0.6.0.14): dra-håndtak for multiutvalget
-
-- [ ] Marker flere blokker (dra-markering eller Ctrl+klikk): utvalgslinjen viser gripe-knappen ved siden av søppelikonet, og å dra i den flytter ALLE markerte blokker samlet med livevisning; gruppen stopper mot seksjonskantene
-- [ ] Slipp bokføres som ETT angre-steg (ett Ctrl+Z stiller hele gruppen tilbake), og verktøylinjen følger utvalget under draet uten at draet dør når pekeren krysser andre seksjoner eller forlater vinduet
-- [ ] Seksjonsverktøylinjen er som før (↑ ↓ ⤓ ×, ingen gripe-knapp), og ingen flytende håndtak-pille vises topp-senter i seksjonene
+- [ ] Tema-panelet ser uendret ut etter klasse-konsolideringen: Standard-chipene (aksent når valgt, dempet ellers, klikk bytter standard-skjema), LYS/MØRK-etikettene, palett-radene, typografi- og hjørneprøvene på sample-flatene
+- [ ] Oppdatering-panelet ser uendret ut: «slettes»-chipene og «Behold min»-kolonneetiketten (nå delte klasser) står som før
+- [ ] Egenskaper: Innhold/Stil-fanene vises øverst for alle blokktyper; hver innstilling ligger på riktig fane (innhold vs. utseende), og fanevalget huskes når du bytter blokk
+- [ ] Blokkmenyen (tannhjulet på blokkens verktøylinje) viser de samme fanene og oppfører seg likt som panelet
+- [ ] Tekstblokkens Innhold-fane viser tomtilstanden som peker til tekstlinjen; Stil-fanen har justering/tekstboks/kortstil
+- [ ] Bildeblokk: lightbox står under Innhold og forsvinner når lenke fylles inn; galleriets lightbox står under Stil
+- [ ] Tooltips i stedet for prosa: min-høyde (seksjon), videolenke, ikonfarge, eget ikonbilde, samlingsvelger og maks antall (to ulike tips), galleri-miniatyrene, «Plassering, lag og rotasjon»-summaryen og plugin-«Innstillinger …»-knappen viser forklaringen ved hover; ingen prosaavsnitt igjen i Egenskaper utenom tomtilstander og place-søkestatus
+- [ ] Kjernespråk: admin på nynorsk/nordsamisk viser fanene og tomtilstanden på bokmål; samling-tooltipene er oversatt i alle fem språk
 
 ### Testrunde-batch (0.6.0.13): panel-design, kjernespråk og bug-runden
 

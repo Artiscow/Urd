@@ -730,6 +730,11 @@
   let placeStatus = $state({});
   let placeBusy = $state(false);
 
+  /* Innhold/Stil-fanen i blokk-egenskapene (ADR-0016). Valget huskes på
+     tvers av markeringer, så en stilrunde over flere blokker slipper å
+     bytte fane per blokk. */
+  let propsTab = $state('content');
+
   const clampField = (f, v) => {
     if (!Number.isFinite(v)) v = f.min ?? 0;
     if (f.min != null) v = Math.max(f.min, v);
@@ -4380,7 +4385,7 @@
               <div class="panel-body">
                 {#snippet themePreview(pal, cap)}
                   <div class="theme-pvw">
-                    {#if cap}<div class="tpv-cap">{cap}</div>{/if}
+                    {#if cap}<div class="mini-label tpv-cap">{cap}</div>{/if}
                     <div class="tpv-demo" style="--tv-bg:{themeHex(pal.bg, pal)};--tv-surface:{themeHex(pal.surface, pal)};--tv-text:{themeHex(pal.text, pal)};--tv-accent:{themeHex(pal.accent, pal)};--tv-accent-ink:{themeHex(pal['accent-text'] ?? pal.bg, pal)}">
                       <div class="tpv-h">{ta('preview.heading')}</div>
                       <div class="tpv-card">{ta('preview.cardBody')}</div>
@@ -4407,7 +4412,7 @@
                   {ta('lbl.dualMode')}
                 </label>
                 {#if dualMode}
-                  <div class="autorow">
+                  <div class="ctl-row autorow">
                     <span class="autolbl">{ta('lbl.darkColors')}</span>
                     <span class="seg">
                       <button type="button" class:on={altAuto} onclick={() => setAltAuto(true)}>{ta('opt.auto')}</button>
@@ -4416,9 +4421,9 @@
                   </div>
                 {/if}
 
-                <div class="palhead">
-                  {#if dualMode}<span class="palname">{ta('lbl.light')}</span>{/if}
-                  <button type="button" class="stdtag" class:ghost={stdMode !== 'light'}
+                <div class="ctl-row palhead">
+                  {#if dualMode}<span class="mini-label">{ta('lbl.light')}</span>{/if}
+                  <button type="button" class="chip" class:accent={stdMode === 'light'}
                     title={ta('tip.theme.defaultScheme')} onclick={() => setThemeScheme('light')}>{ta('common.standard')}</button>
                 </div>
                 <div class="palcells">
@@ -4433,9 +4438,9 @@
                 </div>
 
                 {#if dualMode}
-                  <div class="palhead">
-                    <span class="palname">{ta('lbl.dark')}</span>
-                    <button type="button" class="stdtag" class:ghost={stdMode !== 'dark'}
+                  <div class="ctl-row palhead">
+                    <span class="mini-label">{ta('lbl.dark')}</span>
+                    <button type="button" class="chip" class:accent={stdMode === 'dark'}
                       title={ta('tip.theme.darkDefault')} onclick={() => setThemeScheme('dark')}>{ta('common.standard')}</button>
                   </div>
                   <div class="palcells" class:autopal={altAuto}>
@@ -4467,7 +4472,7 @@
                     <label>{ta('lbl.bodyText')}
                       <Dropdown value={siteDraft.theme.tokens.font.body} options={fontOptions('body')}
                         onchange={(v) => setFontToken('body', v)} /></label>
-                    <div class="typo-sample">
+                    <div class="sample typo-sample">
                       <div class="ts-h" style="font-family:{siteDraft.theme.tokens.font.heading}">{ta('preview.heading')}</div>
                       <div class="ts-b" style="font-family:{siteDraft.theme.tokens.font.body}">{ta('preview.bodySample')}</div>
                     </div>
@@ -4477,14 +4482,14 @@
                 <details class="group">
                   <summary>{ta('group.shape')}</summary>
                   <div class="group-items">
-                    <div class="form-prev" style="--r-sm:{siteDraft.theme.tokens.radius.sm};--r-md:{siteDraft.theme.tokens.radius.md}">
+                    <div class="sample form-prev" style="--r-sm:{siteDraft.theme.tokens.radius.sm};--r-md:{siteDraft.theme.tokens.radius.md}">
                       <span class="fp-btn">{ta('preview.button')}</span>
                       <span class="fp-card">{ta('preview.card')}</span>
                     </div>
-                    <label class="rng-lab">{ta('lbl.smallCorners')}<span class="gridmenu-value">{siteDraft.theme.tokens.radius.sm}</span></label>
+                    <label class="ctl-row">{ta('lbl.smallCorners')}<span class="gridmenu-value">{siteDraft.theme.tokens.radius.sm}</span></label>
                     <input type="range" min="0" max="24" step="1" value={radiusNum(siteDraft.theme.tokens.radius.sm)}
                       oninput={(e) => setRadiusPx('sm', Number(e.target.value))} />
-                    <label class="rng-lab">{ta('lbl.largeCorners')}<span class="gridmenu-value">{siteDraft.theme.tokens.radius.md}</span></label>
+                    <label class="ctl-row">{ta('lbl.largeCorners')}<span class="gridmenu-value">{siteDraft.theme.tokens.radius.md}</span></label>
                     <input type="range" min="0" max="40" step="1" value={radiusNum(siteDraft.theme.tokens.radius.md)}
                       oninput={(e) => setRadiusPx('md', Number(e.target.value))} /></div>
                 </details>
@@ -4583,10 +4588,9 @@
                   {@render blockPropsUI()}
                 {:else if activeSectionId}
                   <p class="panel-strong">{ta('lbl.section')}</p>
-                  <label>{ta('lbl.minHeight')}
+                  <label title={ta('hint.props.minHeight')}>{ta('lbl.minHeight')}
                     <input class="token-input" value={sectionMinHeight} placeholder={ta('ph.minHeight')}
                       onchange={(e) => setSectionHeight(e.target.value)} /></label>
-                  <p class="panel-hint">{ta('hint.props.minHeight')}</p>
                   <hr class="gridmenu-divider" />
                   <label class="gridmenu-snap">
                     <input type="checkbox" checked={sectionGrid !== null}
@@ -5091,7 +5095,7 @@
                       <div class="update-row">
                         <span class="update-path" title={c.path}>{c.path}</span>
                         <span class="update-flags">
-                          {#if c.action === 'delete'}<span class="update-tag">{ta('update.actionDelete')}</span>{/if}
+                          {#if c.action === 'delete'}<span class="chip">{ta('update.actionDelete')}</span>{/if}
                           <span class="update-warn" title={ta(`update.conflict.${c.conflict}`)}>{@html ICONS.warn}</span>
                         </span>
                       </div>
@@ -5104,21 +5108,21 @@
                         {#each updateInfo.changes.filter((c) => c.atom && !c.conflict) as c (c.path)}
                           <div class="update-row">
                             <span class="update-path" title={c.path}>{c.path}</span>
-                            {#if c.action === 'delete'}<span class="update-tag">{ta('update.actionDelete')}</span>{/if}
+                            {#if c.action === 'delete'}<span class="chip">{ta('update.actionDelete')}</span>{/if}
                           </div>
                         {/each}
                       </div>
                     </details>
                     {#if updateInfo.changes.some((c) => !c.atom)}
-                      <div class="update-opt-head">
+                      <div class="ctl-row update-opt-head">
                         <p class="panel-strong">{ta('update.optionalTitle')}</p>
-                        <span class="update-opt-label">{ta('update.keepMine')}</span>
+                        <span class="mini-label">{ta('update.keepMine')}</span>
                       </div>
                       {#each updateInfo.changes.filter((c) => !c.atom) as c (c.path)}
                         <div class="update-row">
                           <span class="update-path" class:skipped={updateSkip.has(c.path)} title={c.path}>{c.path}</span>
                           <span class="update-flags">
-                            {#if c.action === 'delete'}<span class="update-tag">{ta('update.actionDelete')}</span>{/if}
+                            {#if c.action === 'delete'}<span class="chip">{ta('update.actionDelete')}</span>{/if}
                             {#if c.conflict}<span class="update-warn" title={ta(`update.conflict.${c.conflict}`)}>{@html ICONS.warn}</span>{/if}
                             <input type="checkbox" checked={updateSkip.has(c.path)}
                               onchange={() => toggleUpdateSkip(c.path)}
@@ -5494,375 +5498,398 @@
 {/snippet}
 
 {#snippet blockPropsUI()}
+  <!-- Innhold/Stil-modellen (ADR-0016): Innhold er det blokken sier og
+       viser, Stil er utseende, bevegelse og plassering. -->
+  <div class="props-tabs">
+    <span class="seg">
+      <button type="button" class:on={propsTab === 'content'}
+        onclick={() => (propsTab = 'content')}>{ta('props.tabContent')}</button>
+      <button type="button" class:on={propsTab === 'style'}
+        onclick={() => (propsTab = 'style')}>{ta('props.tabStyle')}</button>
+    </span>
+  </div>
 
-  {#if selectedBlock.type === 'text'}
-    <label>{ta('lbl.align')}
-      <Dropdown value={selectedBlock.props.align ?? 'left'}
-        options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
-        onchange={(v) => setBlockProp('align', v)} /></label>
-    <label class="gridmenu-snap">
-      <input type="checkbox" checked={Boolean(selectedBlock.props.box)}
-        onchange={(e) => setBlockProp('box', e.target.checked)} />
-      {ta('lbl.textBoxToggle')}
-    </label>
-    {#if selectedBlock.props.box}
-      {@render kortstilUI()}
-    {/if}
-    <!-- Font, størrelse, linje- og bokstavavstand settes i tekst-editorens
-         verktøylinje (gjelder markert tekst), ikke her. -->
-  {:else if selectedBlock.type === 'faq'}
-    <label class="gridmenu-snap" title={ta('tip.faq.multi')}>
-      <input type="checkbox" checked={Boolean(selectedBlock.props.multi)}
-        onchange={(e) => setBlockProp('multi', e.target.checked)} />
-      {ta('lbl.faqMulti')}
-    </label>
-    <p class="panel-strong">{ta('lbl.questions')}</p>
-    {#each selectedBlock.props.items ?? [] as item, i (i)}
-      <span class="nav-line">
-        <input value={item.q} title={ta('tip.faq.question')}
-          onchange={(e) => setFaqItem(i, { q: e.target.value })} />
-        <span class="row-tools">
-          <button class="ghost row-tool" onclick={() => moveFaqItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-          <button class="ghost row-tool" onclick={() => moveFaqItem(i, 1)}
-            disabled={i === (selectedBlock.props.items?.length ?? 0) - 1}>{@html ICONS.down}</button>
-          <button class="ghost row-tool" title={ta('tip.faq.remove')} onclick={() => removeFaqItem(i)}>{@html ICONS.cross}</button>
+  {#if propsTab === 'content'}
+    {#if selectedBlock.type === 'text'}
+      <!-- Tekst, font og størrelse settes inline med tekst-editorens
+           verktøylinje; blokken har ingen innholdsfelt i panelet. -->
+      <p class="panel-hint">{ta('hint.textInline')}</p>
+    {:else if selectedBlock.type === 'faq'}
+      <label class="gridmenu-snap" title={ta('tip.faq.multi')}>
+        <input type="checkbox" checked={Boolean(selectedBlock.props.multi)}
+          onchange={(e) => setBlockProp('multi', e.target.checked)} />
+        {ta('lbl.faqMulti')}
+      </label>
+      <p class="panel-strong">{ta('lbl.questions')}</p>
+      {#each selectedBlock.props.items ?? [] as item, i (i)}
+        <span class="nav-line">
+          <input value={item.q} title={ta('tip.faq.question')}
+            onchange={(e) => setFaqItem(i, { q: e.target.value })} />
+          <span class="row-tools">
+            <button class="ghost row-tool" onclick={() => moveFaqItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+            <button class="ghost row-tool" onclick={() => moveFaqItem(i, 1)}
+              disabled={i === (selectedBlock.props.items?.length ?? 0) - 1}>{@html ICONS.down}</button>
+            <button class="ghost row-tool" title={ta('tip.faq.remove')} onclick={() => removeFaqItem(i)}>{@html ICONS.cross}</button>
+          </span>
         </span>
-      </span>
-    {/each}
-    <button class="ghost action" onclick={addFaqItem}>{ta('ui.addQuestion')}</button>
-    <p class="panel-strong">{ta('lbl.cardStyle')}</p>
-    {@render kortstilUI()}
-  {:else if selectedBlock.type === 'button'}
-    <label>{ta('blocks.text')}
-      <input value={selectedBlock.props.label}
-        onchange={(e) => setBlockProp('label', e.target.value)} /></label>
-    <label>{ta('lbl.goesTo')}
-      <Dropdown value={selectedBlock.props.page ?? '__href'}
-        options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.externalLink')]]}
-        onchange={(v) => {
-          const page = v === '__href' ? null : v;
-          mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-            b.props.page = page;
-            if (page) b.props.href = null;
-          });
-        }} /></label>
-    {#if !selectedBlock.props.page}
-      <input placeholder={ta('ph.url')}
-        value={selectedBlock.props.href === '#' ? '' : selectedBlock.props.href ?? ''}
-        onchange={(e) => setBlockProp('href', e.target.value || null)} />
+      {/each}
+      <button class="ghost action" onclick={addFaqItem}>{ta('ui.addQuestion')}</button>
+    {:else if selectedBlock.type === 'button'}
+      <label>{ta('blocks.text')}
+        <input value={selectedBlock.props.label}
+          onchange={(e) => setBlockProp('label', e.target.value)} /></label>
+      <label>{ta('lbl.goesTo')}
+        <Dropdown value={selectedBlock.props.page ?? '__href'}
+          options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.externalLink')]]}
+          onchange={(v) => {
+            const page = v === '__href' ? null : v;
+            mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+              b.props.page = page;
+              if (page) b.props.href = null;
+            });
+          }} /></label>
+      {#if !selectedBlock.props.page}
+        <input placeholder={ta('ph.url')}
+          value={selectedBlock.props.href === '#' ? '' : selectedBlock.props.href ?? ''}
+          onchange={(e) => setBlockProp('href', e.target.value || null)} />
+      {/if}
+    {:else if selectedBlock.type === 'image'}
+      <label class="ghost filepick">
+        {ta('ui.changeImage')}
+        <input type="file" accept="image/*" onchange={replaceImage} />
+      </label>
+      <label>{ta('lbl.description')}
+        <input value={selectedBlock.props.alt ?? ''} placeholder={ta('ph.altText')}
+          onchange={(e) => setBlockProp('alt', e.target.value)} /></label>
+      <label>{ta('lbl.link')}
+        <input value={selectedBlock.props.href ?? ''} placeholder={ta('ph.optionalImageLink')}
+          onchange={(e) => setBlockProp('href', e.target.value || null)} /></label>
+      {#if !selectedBlock.props.href}
+        <label class="gridmenu-snap" title={ta('tip.lightbox')}>
+          <input type="checkbox" checked={Boolean(selectedBlock.props.lightbox)}
+            onchange={(e) => setBlockProp('lightbox', e.target.checked)} />
+          {ta('lbl.lightbox')}
+        </label>
+      {/if}
+    {:else if selectedBlock.type === 'video'}
+      <label title={ta('hint.video')}>{ta('lbl.videoUrl')}</label>
+      <input value={selectedBlock.props.url ?? ''} placeholder={ta('ph.videoUrl')}
+        onchange={(e) => setBlockProp('url', e.target.value)} />
+      <label>{ta('lbl.videoTitle')}
+        <input value={selectedBlock.props.title ?? ''}
+          onchange={(e) => setBlockProp('title', e.target.value)} /></label>
+    {:else if selectedBlock.type === 'icon'}
+      <label>{ta('blocks.icon')}
+        <span class="toolbar-row">
+          <GlyphPicker value={selectedBlock.props.glyph ?? '★'}
+            icon={selectedBlock.props.icon ?? null}
+            image={selectedBlock.props.image ?? null}
+            onpick={(glyph) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+              b.props.glyph = glyph;
+              b.props.icon = null;
+              b.props.image = null;
+            })}
+            onicon={(id) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+              b.props.icon = id;
+              b.props.image = null;
+            })}
+            onimage={(dataUrl) => setBlockProp('image', dataUrl)} />
+          {#if !selectedBlock.props.icon}
+            <input class="token-input" value={selectedBlock.props.glyph ?? ''} maxlength="4"
+              title={ta('tip.icon.typeGlyph')}
+              onchange={(e) => setBlockProp('glyph', e.target.value || '★')} />
+          {:else}
+            <button class="ghost" title={ta('tip.icon.backToGlyph')}
+              onclick={() => setBlockProp('icon', null)}>{ta('ui.removeDrawnIcon')}</button>
+          {/if}
+        </span></label>
+      {#if selectedBlock.props.image}
+        <span class="toolbar-row" title={ta('hint.icon.ownImage')}>
+          <img class="site-icon-preview" src={selectedBlock.props.image} alt={ta('gp.ownIcon')} />
+          <button class="ghost" onclick={() => setBlockProp('image', null)}>{ta('ui.removeOwnIcon')}</button>
+        </span>
+      {/if}
+    {:else if selectedBlock.type === 'samling'}
+      <label title={ta('tip.samling.source')}>{ta('blocks.samling')}
+        <Dropdown value={selectedBlock.props.collection ?? ''}
+          options={[['', ta('common.choose')], ...samlingerIds.map((id) => [id, samlingerView[id]?.name ?? id])]}
+          onchange={(v) => setBlockProp('collection', v || null)} /></label>
+      <label title={ta('tip.samling.limit')}>{ta('lbl.maxCount')}
+        <input type="number" min="0" max="100" value={selectedBlock.props.limit ?? 6}
+          onchange={(e) => setBlockProp('limit', Number(e.target.value))} /></label>
+      <label class="gridmenu-snap">
+        <input type="checkbox" checked={selectedBlock.props.newestFirst !== false}
+          onchange={(e) => setBlockProp('newestFirst', e.target.checked)} />
+        {ta('lbl.newestFirst')}
+      </label>
+    {:else if selectedBlock.type === 'galleri'}
+      <label class="ghost filepick" title={ta('tip.gallery.addImages')}>
+        {ta('ui.addImages')}
+        <input type="file" accept="image/*" multiple onchange={addGalleryImages} />
+      </label>
+      {#each selectedBlock.props.images ?? [] as img, i (i)}
+        <div class="bg-layer">
+          <span class="toolbar-row" title={ta('hint.gallery')}>
+            <img class="site-icon-preview" src={img.src} alt="" />
+            <span class="row-tools">
+              <button class="ghost row-tool" onclick={() => moveGalleryImage(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+              <button class="ghost row-tool" onclick={() => moveGalleryImage(i, 1)}
+                disabled={i === selectedBlock.props.images.length - 1}>{@html ICONS.down}</button>
+              <button class="ghost row-tool" title={ta('tip.removeImage')} onclick={() => removeGalleryImage(i)}>{@html ICONS.cross}</button>
+            </span>
+          </span>
+          <label>{ta('lbl.description')}
+            <input value={img.alt ?? ''} placeholder={ta('ph.altShort')}
+              onchange={(e) => setGalleryImageField(i, 'alt', e.target.value)} /></label>
+          <label>{ta('lbl.link')}
+            <input value={img.href ?? ''} placeholder={ta('ph.galleryHref')}
+              onchange={(e) => setGalleryImageField(i, 'href', e.target.value || null)} /></label>
+        </div>
+      {/each}
+    {:else if selectedBlock.type === 'shape'}
+      <label>{ta('blocks.shape')}
+        <Dropdown value={selectedBlock.props.kind}
+          options={SHAPE_KINDS}
+          onchange={(v) => setBlockProp('kind', v)} /></label>
+    {:else}
+      <!-- Plugin-blokker: en def med `fields` (felt-kontrakten) får innstillingene
+           rendret her; ellers åpner knappen pluginens eget config-panel i
+           forhåndsvisningen (kalender/skjema). -->
+      {@const pluginFields = pluginBlocks.find((b) => b.type === selectedBlock.type)?.fields ?? []}
+      {#if pluginFields.length}
+        {#each pluginFields as f (f.key)}
+          {#if f.type === 'place'}
+            {@const k = `${selectedBlock.blockId}:${f.key}`}
+            <label>{f.label}
+              <input type="text" placeholder={f.placeholder}
+                value={placeDrafts[k] ?? selectedBlock.props[f.key] ?? ''}
+                oninput={(e) => { placeDrafts[k] = e.target.value; }}
+                onkeydown={(e) => { if (e.key === 'Enter') searchPlace(f); }} /></label>
+            <button class="ghost" disabled={placeBusy} onclick={() => searchPlace(f)}>{ta('props.place.search')}</button>
+            {#if placeStatus[k]}
+              <p class="panel-hint" class:place-error={placeStatus[k].err}>{placeStatus[k].text}</p>
+            {/if}
+          {:else if f.type === 'number'}
+            <label>{f.label}
+              <input type="number" min={f.min} max={f.max} step={f.step ?? 1}
+                value={selectedBlock.props[f.key]}
+                onchange={(e) => setBlockProp(f.key, clampField(f, Number(e.target.value)))} /></label>
+          {:else if f.type === 'toggle'}
+            <label class="gridmenu-snap">
+              <input type="checkbox" checked={Boolean(selectedBlock.props[f.key])}
+                onchange={(e) => setBlockProp(f.key, e.target.checked)} />
+              {f.label}
+            </label>
+          {:else if f.type === 'select'}
+            <label>{f.label}
+              <Dropdown value={selectedBlock.props[f.key]}
+                options={(f.options ?? []).map((o) => [o.value, o.label])}
+                onchange={(v) => setBlockProp(f.key, v)} /></label>
+          {:else}
+            <label>{f.label}
+              <input type="text" placeholder={f.placeholder} value={selectedBlock.props[f.key] ?? ''}
+                onchange={(e) => setBlockProp(f.key, e.target.value)} /></label>
+          {/if}
+        {/each}
+      {:else}
+        <button class="ghost" title={ta('hint.pluginBlock')}
+          onclick={() => bridge?.sendOpenConfig(selectedBlock.blockId)}>{ta('ui.settings')}</button>
+      {/if}
     {/if}
-    <label>{ta('lbl.style')}
-      <Dropdown value={selectedBlock.props.style}
-        options={[['primary', ta('opt.btn.primary')], ['secondary', ta('opt.btn.secondary')]]}
-        onchange={(v) => setBlockProp('style', v)} /></label>
-  {:else if selectedBlock.type === 'image'}
-    <label class="ghost filepick">
-      {ta('ui.changeImage')}
-      <input type="file" accept="image/*" onchange={replaceImage} />
-    </label>
-    <label>{ta('lbl.description')}
-      <input value={selectedBlock.props.alt ?? ''} placeholder={ta('ph.altText')}
-        onchange={(e) => setBlockProp('alt', e.target.value)} /></label>
-    <label>{ta('lbl.fit')}
-      <Dropdown value={selectedBlock.props.fit ?? 'cover'}
-        options={[['cover', ta('opt.fitFrame.cover')], ['contain', ta('opt.fitFrame.contain')]]}
-        onchange={(v) => setBlockProp('fit', v)} /></label>
-    <label>{ta('lbl.radius')}
-      <Dropdown value={selectedBlock.props.radius ?? ''}
-        options={[['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]]}
-        onchange={(v) => setBlockProp('radius', v || null)} /></label>
-    <label>{ta('lbl.link')}
-      <input value={selectedBlock.props.href ?? ''} placeholder={ta('ph.optionalImageLink')}
-        onchange={(e) => setBlockProp('href', e.target.value || null)} /></label>
-    {#if !selectedBlock.props.href}
+  {:else}
+    {#if selectedBlock.type === 'text'}
+      <label>{ta('lbl.align')}
+        <Dropdown value={selectedBlock.props.align ?? 'left'}
+          options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
+          onchange={(v) => setBlockProp('align', v)} /></label>
+      <label class="gridmenu-snap">
+        <input type="checkbox" checked={Boolean(selectedBlock.props.box)}
+          onchange={(e) => setBlockProp('box', e.target.checked)} />
+        {ta('lbl.textBoxToggle')}
+      </label>
+      {#if selectedBlock.props.box}
+        {@render kortstilUI()}
+      {/if}
+      <hr class="gridmenu-divider" />
+    {:else if selectedBlock.type === 'faq'}
+      <p class="panel-strong">{ta('lbl.cardStyle')}</p>
+      {@render kortstilUI()}
+      <hr class="gridmenu-divider" />
+    {:else if selectedBlock.type === 'button'}
+      <label>{ta('lbl.style')}
+        <Dropdown value={selectedBlock.props.style}
+          options={[['primary', ta('opt.btn.primary')], ['secondary', ta('opt.btn.secondary')]]}
+          onchange={(v) => setBlockProp('style', v)} /></label>
+      <hr class="gridmenu-divider" />
+    {:else if selectedBlock.type === 'image'}
+      <label>{ta('lbl.fit')}
+        <Dropdown value={selectedBlock.props.fit ?? 'cover'}
+          options={[['cover', ta('opt.fitFrame.cover')], ['contain', ta('opt.fitFrame.contain')]]}
+          onchange={(v) => setBlockProp('fit', v)} /></label>
+      <label>{ta('lbl.radius')}
+        <Dropdown value={selectedBlock.props.radius ?? ''}
+          options={[['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]]}
+          onchange={(v) => setBlockProp('radius', v || null)} /></label>
+      <label>{ta('lbl.focusX')}
+        <span class="gridmenu-value">{Math.round((selectedBlock.props.x ?? 0.5) * 100)}%</span></label>
+      <input type="range" min="0" max="1" step="0.01" value={selectedBlock.props.x ?? 0.5}
+        oninput={(e) => setBlockProp('x', Number(e.target.value))} />
+      <label>{ta('lbl.focusY')}
+        <span class="gridmenu-value">{Math.round((selectedBlock.props.y ?? 0.5) * 100)}%</span></label>
+      <input type="range" min="0" max="1" step="0.01" value={selectedBlock.props.y ?? 0.5}
+        oninput={(e) => setBlockProp('y', Number(e.target.value))} />
+      <label title={ta('tip.zoomCrop')}>{ta('lbl.zoom')}
+        <span class="gridmenu-value">{(selectedBlock.props.zoom ?? 1).toFixed(2)}x</span></label>
+      <input type="range" min="1" max="3" step="0.01" value={selectedBlock.props.zoom ?? 1}
+        oninput={(e) => setBlockProp('zoom', Number(e.target.value))} />
+      <label>{ta('lbl.brightness')}
+        <span class="gridmenu-value">{Math.round((selectedBlock.props.brightness ?? 1) * 100)}%</span></label>
+      <input type="range" min="0.2" max="2" step="0.01" value={selectedBlock.props.brightness ?? 1}
+        oninput={(e) => setBlockProp('brightness', Number(e.target.value))} />
+      <label>{ta('lbl.contrast')}
+        <span class="gridmenu-value">{Math.round((selectedBlock.props.contrast ?? 1) * 100)}%</span></label>
+      <input type="range" min="0.2" max="2" step="0.01" value={selectedBlock.props.contrast ?? 1}
+        oninput={(e) => setBlockProp('contrast', Number(e.target.value))} />
+      <label>{ta('lbl.saturate')}
+        <span class="gridmenu-value">{Math.round((selectedBlock.props.saturate ?? 1) * 100)}%</span></label>
+      <input type="range" min="0" max="2" step="0.01" value={selectedBlock.props.saturate ?? 1}
+        oninput={(e) => setBlockProp('saturate', Number(e.target.value))} />
+      <button class="ghost action" title={ta('tip.resetAdjust')}
+        onclick={() => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+          b.props.brightness = 1; b.props.contrast = 1; b.props.saturate = 1;
+        })}>{ta('ui.resetAdjust')}</button>
+      <hr class="gridmenu-divider" />
+    {:else if selectedBlock.type === 'icon'}
+      <label>{ta('lbl.sizePx')}
+        <input type="number" min="8" max="400" value={selectedBlock.props.size ?? 48}
+          onchange={(e) => setBlockProp('size', Number(e.target.value))} /></label>
+      <label title={ta('hint.icon.color')}>{ta('lbl.color')}
+        <ColorPicker value={selectedBlock.props.color ?? 'accent'} tokens={themeSwatches()}
+          onchange={(v) => setBlockProp('color', v)} /></label>
+      <hr class="gridmenu-divider" />
+    {:else if selectedBlock.type === 'samling'}
+      <label>{ta('lbl.view')}
+        <Dropdown value={selectedBlock.props.view ?? 'cards'}
+          options={[['cards', ta('opt.collectionView.cards')], ['list', ta('opt.collectionView.list')], ['archive', ta('opt.collectionView.archive')]]}
+          onchange={(v) => setBlockProp('view', v)} /></label>
+      <hr class="gridmenu-divider" />
+    {:else if selectedBlock.type === 'galleri'}
+      <label>{ta('lbl.view')}
+        <Dropdown value={selectedBlock.props.view ?? 'grid'}
+          options={[['grid', ta('opt.galleryView.grid')], ['carousel', ta('opt.galleryView.carousel')], ['slides', ta('opt.galleryView.slides')]]}
+          onchange={(v) => setBlockProp('view', v)} /></label>
+      {#if (selectedBlock.props.view ?? 'grid') === 'grid'}
+        <label>{ta('lbl.columns')}
+          <input type="number" min="1" max="6" value={selectedBlock.props.columns ?? 3}
+            onchange={(e) => setBlockProp('columns', Number(e.target.value))} /></label>
+        <label>{ta('lbl.imageGap')}
+          <span class="gridmenu-value">{selectedBlock.props.gap ?? 12} px</span></label>
+        <input type="range" min="0" max="32" step="2" value={selectedBlock.props.gap ?? 12}
+          oninput={(e) => setBlockProp('gap', Number(e.target.value))} />
+      {/if}
+      {#if selectedBlock.props.view === 'slides'}
+        <label>{ta('lbl.secondsPerImage')}
+          <input type="number" min="2" max="60" value={selectedBlock.props.interval ?? 5}
+            onchange={(e) => setBlockProp('interval', Number(e.target.value))} /></label>
+      {/if}
+      <label>{ta('lbl.radius')}
+        <Dropdown value={selectedBlock.props.radius ?? ''}
+          options={[['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]]}
+          onchange={(v) => setBlockProp('radius', v || null)} /></label>
       <label class="gridmenu-snap" title={ta('tip.lightbox')}>
-        <input type="checkbox" checked={Boolean(selectedBlock.props.lightbox)}
+        <input type="checkbox" checked={selectedBlock.props.lightbox !== false}
           onchange={(e) => setBlockProp('lightbox', e.target.checked)} />
         {ta('lbl.lightbox')}
       </label>
-    {/if}
-    <label>{ta('lbl.focusX')}
-      <span class="gridmenu-value">{Math.round((selectedBlock.props.x ?? 0.5) * 100)}%</span></label>
-    <input type="range" min="0" max="1" step="0.01" value={selectedBlock.props.x ?? 0.5}
-      oninput={(e) => setBlockProp('x', Number(e.target.value))} />
-    <label>{ta('lbl.focusY')}
-      <span class="gridmenu-value">{Math.round((selectedBlock.props.y ?? 0.5) * 100)}%</span></label>
-    <input type="range" min="0" max="1" step="0.01" value={selectedBlock.props.y ?? 0.5}
-      oninput={(e) => setBlockProp('y', Number(e.target.value))} />
-    <label title={ta('tip.zoomCrop')}>{ta('lbl.zoom')}
-      <span class="gridmenu-value">{(selectedBlock.props.zoom ?? 1).toFixed(2)}x</span></label>
-    <input type="range" min="1" max="3" step="0.01" value={selectedBlock.props.zoom ?? 1}
-      oninput={(e) => setBlockProp('zoom', Number(e.target.value))} />
-    <label>{ta('lbl.brightness')}
-      <span class="gridmenu-value">{Math.round((selectedBlock.props.brightness ?? 1) * 100)}%</span></label>
-    <input type="range" min="0.2" max="2" step="0.01" value={selectedBlock.props.brightness ?? 1}
-      oninput={(e) => setBlockProp('brightness', Number(e.target.value))} />
-    <label>{ta('lbl.contrast')}
-      <span class="gridmenu-value">{Math.round((selectedBlock.props.contrast ?? 1) * 100)}%</span></label>
-    <input type="range" min="0.2" max="2" step="0.01" value={selectedBlock.props.contrast ?? 1}
-      oninput={(e) => setBlockProp('contrast', Number(e.target.value))} />
-    <label>{ta('lbl.saturate')}
-      <span class="gridmenu-value">{Math.round((selectedBlock.props.saturate ?? 1) * 100)}%</span></label>
-    <input type="range" min="0" max="2" step="0.01" value={selectedBlock.props.saturate ?? 1}
-      oninput={(e) => setBlockProp('saturate', Number(e.target.value))} />
-    <button class="ghost action" title={ta('tip.resetAdjust')}
-      onclick={() => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-        b.props.brightness = 1; b.props.contrast = 1; b.props.saturate = 1;
-      })}>{ta('ui.resetAdjust')}</button>
-  {:else if selectedBlock.type === 'video'}
-    <label>{ta('lbl.videoUrl')}</label>
-    <input value={selectedBlock.props.url ?? ''} placeholder={ta('ph.videoUrl')}
-      onchange={(e) => setBlockProp('url', e.target.value)} />
-    <label>{ta('lbl.videoTitle')}
-      <input value={selectedBlock.props.title ?? ''}
-        onchange={(e) => setBlockProp('title', e.target.value)} /></label>
-    <p class="panel-hint">{ta('hint.video')}</p>
-  {:else if selectedBlock.type === 'icon'}
-    <label>{ta('blocks.icon')}
-      <span class="toolbar-row">
-        <GlyphPicker value={selectedBlock.props.glyph ?? '★'}
-          icon={selectedBlock.props.icon ?? null}
-          image={selectedBlock.props.image ?? null}
-          onpick={(glyph) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-            b.props.glyph = glyph;
-            b.props.icon = null;
-            b.props.image = null;
-          })}
-          onicon={(id) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-            b.props.icon = id;
-            b.props.image = null;
-          })}
-          onimage={(dataUrl) => setBlockProp('image', dataUrl)} />
-        {#if !selectedBlock.props.icon}
-          <input class="token-input" value={selectedBlock.props.glyph ?? ''} maxlength="4"
-            title={ta('tip.icon.typeGlyph')}
-            onchange={(e) => setBlockProp('glyph', e.target.value || '★')} />
-        {:else}
-          <button class="ghost" title={ta('tip.icon.backToGlyph')}
-            onclick={() => setBlockProp('icon', null)}>{ta('ui.removeDrawnIcon')}</button>
-        {/if}
-      </span></label>
-    {#if selectedBlock.props.image}
-      <span class="toolbar-row">
-        <img class="site-icon-preview" src={selectedBlock.props.image} alt={ta('gp.ownIcon')} />
-        <button class="ghost" onclick={() => setBlockProp('image', null)}>{ta('ui.removeOwnIcon')}</button>
-      </span>
-      <p class="panel-hint">{ta('hint.icon.ownImage')}</p>
-    {/if}
-    <label>{ta('lbl.sizePx')}
-      <input type="number" min="8" max="400" value={selectedBlock.props.size ?? 48}
-        onchange={(e) => setBlockProp('size', Number(e.target.value))} /></label>
-    <label>{ta('lbl.color')}
-      <ColorPicker value={selectedBlock.props.color ?? 'accent'} tokens={themeSwatches()}
-        onchange={(v) => setBlockProp('color', v)} /></label>
-    <p class="panel-hint">{ta('hint.icon.color')}</p>
-  {:else if selectedBlock.type === 'samling'}
-    <label>{ta('blocks.samling')}
-      <Dropdown value={selectedBlock.props.collection ?? ''}
-        options={[['', ta('common.choose')], ...samlingerIds.map((id) => [id, samlingerView[id]?.name ?? id])]}
-        onchange={(v) => setBlockProp('collection', v || null)} /></label>
-    <label>{ta('lbl.view')}
-      <Dropdown value={selectedBlock.props.view ?? 'cards'}
-        options={[['cards', ta('opt.collectionView.cards')], ['list', ta('opt.collectionView.list')], ['archive', ta('opt.collectionView.archive')]]}
-        onchange={(v) => setBlockProp('view', v)} /></label>
-    <label>{ta('lbl.maxCount')}
-      <input type="number" min="0" max="100" value={selectedBlock.props.limit ?? 6}
-        onchange={(e) => setBlockProp('limit', Number(e.target.value))} /></label>
-    <label class="gridmenu-snap">
-      <input type="checkbox" checked={selectedBlock.props.newestFirst !== false}
-        onchange={(e) => setBlockProp('newestFirst', e.target.checked)} />
-      {ta('lbl.newestFirst')}
-    </label>
-    <p class="panel-hint">{ta('hint.samling')}</p>
-  {:else if selectedBlock.type === 'galleri'}
-    <label>{ta('lbl.view')}
-      <Dropdown value={selectedBlock.props.view ?? 'grid'}
-        options={[['grid', ta('opt.galleryView.grid')], ['carousel', ta('opt.galleryView.carousel')], ['slides', ta('opt.galleryView.slides')]]}
-        onchange={(v) => setBlockProp('view', v)} /></label>
-    {#if (selectedBlock.props.view ?? 'grid') === 'grid'}
-      <label>{ta('lbl.columns')}
-        <input type="number" min="1" max="6" value={selectedBlock.props.columns ?? 3}
-          onchange={(e) => setBlockProp('columns', Number(e.target.value))} /></label>
-      <label>{ta('lbl.imageGap')}
-        <span class="gridmenu-value">{selectedBlock.props.gap ?? 12} px</span></label>
-      <input type="range" min="0" max="32" step="2" value={selectedBlock.props.gap ?? 12}
-        oninput={(e) => setBlockProp('gap', Number(e.target.value))} />
-    {/if}
-    {#if selectedBlock.props.view === 'slides'}
-      <label>{ta('lbl.secondsPerImage')}
-        <input type="number" min="2" max="60" value={selectedBlock.props.interval ?? 5}
-          onchange={(e) => setBlockProp('interval', Number(e.target.value))} /></label>
-    {/if}
-    <label>{ta('lbl.radius')}
-      <Dropdown value={selectedBlock.props.radius ?? ''}
-        options={[['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]]}
-        onchange={(v) => setBlockProp('radius', v || null)} /></label>
-    <label class="gridmenu-snap" title={ta('tip.lightbox')}>
-      <input type="checkbox" checked={selectedBlock.props.lightbox !== false}
-        onchange={(e) => setBlockProp('lightbox', e.target.checked)} />
-      {ta('lbl.lightbox')}
-    </label>
-    <hr class="gridmenu-divider" />
-    <label class="ghost filepick" title={ta('tip.gallery.addImages')}>
-      {ta('ui.addImages')}
-      <input type="file" accept="image/*" multiple onchange={addGalleryImages} />
-    </label>
-    {#each selectedBlock.props.images ?? [] as img, i (i)}
-      <div class="bg-layer">
-        <span class="toolbar-row">
-          <img class="site-icon-preview" src={img.src} alt="" />
-          <span class="row-tools">
-            <button class="ghost row-tool" onclick={() => moveGalleryImage(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-            <button class="ghost row-tool" onclick={() => moveGalleryImage(i, 1)}
-              disabled={i === selectedBlock.props.images.length - 1}>{@html ICONS.down}</button>
-            <button class="ghost row-tool" title={ta('tip.removeImage')} onclick={() => removeGalleryImage(i)}>{@html ICONS.cross}</button>
-          </span>
-        </span>
-        <label>{ta('lbl.description')}
-          <input value={img.alt ?? ''} placeholder={ta('ph.altShort')}
-            onchange={(e) => setGalleryImageField(i, 'alt', e.target.value)} /></label>
-        <label>{ta('lbl.link')}
-          <input value={img.href ?? ''} placeholder={ta('ph.galleryHref')}
-            onchange={(e) => setGalleryImageField(i, 'href', e.target.value || null)} /></label>
-      </div>
-    {/each}
-    <p class="panel-hint">{ta('hint.gallery')}</p>
-  {:else if selectedBlock.type === 'shape'}
-    <label>{ta('blocks.shape')}
-      <Dropdown value={selectedBlock.props.kind}
-        options={SHAPE_KINDS}
-        onchange={(v) => setBlockProp('kind', v)} /></label>
-    <label>{ta('lbl.color')}
-      <Dropdown value={selectedBlock.props.color}
-        options={COLOR_TOKENS}
-        onchange={(v) => setBlockProp('color', v)} /></label>
-    <label>{ta('lbl.thickness')}
-      <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
-        onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
-    <label class="gridmenu-snap" title={ta('tip.shape.fill')}>
-      <input type="checkbox" checked={Boolean(selectedBlock.props.fill)}
-        onchange={(e) => setBlockProp('fill', e.target.checked ? selectedBlock.props.color : null)} />
-      {ta('lbl.filled')}
-    </label>
-  {:else}
-    <!-- Plugin-blokker: en def med `fields` (felt-kontrakten) får innstillingene
-         rendret her; ellers åpner knappen pluginens eget config-panel i
-         forhåndsvisningen (kalender/skjema). -->
-    {@const pluginFields = pluginBlocks.find((b) => b.type === selectedBlock.type)?.fields ?? []}
-    {#if pluginFields.length}
-      {#each pluginFields as f (f.key)}
-        {#if f.type === 'place'}
-          {@const k = `${selectedBlock.blockId}:${f.key}`}
-          <label>{f.label}
-            <input type="text" placeholder={f.placeholder}
-              value={placeDrafts[k] ?? selectedBlock.props[f.key] ?? ''}
-              oninput={(e) => { placeDrafts[k] = e.target.value; }}
-              onkeydown={(e) => { if (e.key === 'Enter') searchPlace(f); }} /></label>
-          <button class="ghost" disabled={placeBusy} onclick={() => searchPlace(f)}>{ta('props.place.search')}</button>
-          {#if placeStatus[k]}
-            <p class="panel-hint" class:place-error={placeStatus[k].err}>{placeStatus[k].text}</p>
-          {/if}
-        {:else if f.type === 'number'}
-          <label>{f.label}
-            <input type="number" min={f.min} max={f.max} step={f.step ?? 1}
-              value={selectedBlock.props[f.key]}
-              onchange={(e) => setBlockProp(f.key, clampField(f, Number(e.target.value)))} /></label>
-        {:else if f.type === 'toggle'}
-          <label class="gridmenu-snap">
-            <input type="checkbox" checked={Boolean(selectedBlock.props[f.key])}
-              onchange={(e) => setBlockProp(f.key, e.target.checked)} />
-            {f.label}
-          </label>
-        {:else if f.type === 'select'}
-          <label>{f.label}
-            <Dropdown value={selectedBlock.props[f.key]}
-              options={(f.options ?? []).map((o) => [o.value, o.label])}
-              onchange={(v) => setBlockProp(f.key, v)} /></label>
-        {:else}
-          <label>{f.label}
-            <input type="text" placeholder={f.placeholder} value={selectedBlock.props[f.key] ?? ''}
-              onchange={(e) => setBlockProp(f.key, e.target.value)} /></label>
-        {/if}
-      {/each}
-    {:else}
-      <button class="ghost" onclick={() => bridge?.sendOpenConfig(selectedBlock.blockId)}>{ta('ui.settings')}</button>
-      <p class="panel-hint">{ta('hint.pluginBlock')}</p>
-    {/if}
-  {/if}
-
-  <hr class="gridmenu-divider" />
-  <label title={ta('tip.props.blockAnim')}>{ta('lbl.animIn')}
-    <Dropdown value={isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : ''}
-      options={ENTRANCE_OPTIONS}
-      onchange={(v) => setBlockAnimation(v || null)} /></label>
-  {#if isEntrance(selectedBlock.animation)}
-    <label>{ta('lbl.durationMs')}
-      <input type="number" min="100" max="4000" step="100"
-        value={selectedBlock.animation.props.duration}
-        onchange={(e) => setBlockAnimProp('duration', Number(e.target.value))} /></label>
-    <label>{ta('lbl.delayMs')}
-      <input type="number" min="0" max="4000" step="100"
-        value={selectedBlock.animation.props.delay}
-        onchange={(e) => setBlockAnimProp('delay', Number(e.target.value))} /></label>
-  {/if}
-  <label title={ta('tip.props.blockHover')}>{ta('lbl.onHover')}
-    <Dropdown value={selectedBlock.hover?.type ?? (selectedBlock.animation && !isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : '')}
-      options={HOVER_OPTIONS}
-      onchange={(v) => setBlockHover(v || null)} /></label>
-
-  {#if viewMode === 'desktop'}
-    <hr class="gridmenu-divider" />
-    <label class="gridmenu-snap" title={ta('tip.sticky')}>
-      <input type="checkbox" checked={Boolean(selectedBlock.sticky)}
-        onchange={(e) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-          b.sticky = e.target.checked ? { offset: 16, until: null } : null;
-        })} />
-      {ta('lbl.sticky')}
-    </label>
-    {#if selectedBlock.sticky}
-      <label title={ta('tip.stickyOffset')}>{ta('lbl.stickyOffset')}
-        <input type="number" min="0" max="400" value={selectedBlock.sticky.offset ?? 16}
-          onchange={(e) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-            b.sticky = { ...b.sticky, offset: Math.max(0, Number(e.target.value) || 0) };
-          })} /></label>
-      <label title={ta('tip.stickyUntil')}>{ta('lbl.stickyUntil')}
-        <Dropdown value={selectedBlock.sticky.until ?? ''}
-          options={stickyUntilOptions()}
-          onchange={(v) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-            b.sticky = { ...b.sticky, until: v || null };
-          })} /></label>
-    {/if}
-  {/if}
-
-  <hr class="gridmenu-divider" />
-  <details class="group frame-group">
-    <summary>{ta('group.placement')}</summary>
-    <div class="group-items">
-      <p class="panel-hint">{ta('hint.placement')}</p>
-      {#if viewMode === 'desktop'}
-        <div class="frame-grid">
-          <label>{ta('frame.x')}<input type="number" step="0.5" value={selectedBlock.frame.x}
-            onchange={(e) => setBlockFrame('x', Number(e.target.value))} /></label>
-          <label>{ta('frame.y')}<input type="number" step="1" value={selectedBlock.frame.y}
-            onchange={(e) => setBlockFrame('y', Number(e.target.value))} /></label>
-          <label>{ta('frame.w')}<input type="number" step="0.5" min="1" value={selectedBlock.frame.w}
-            onchange={(e) => setBlockFrame('w', Number(e.target.value))} /></label>
-          <label>{ta('frame.h')}<input type="number" step="1" min="1" value={selectedBlock.frame.h}
-            onchange={(e) => setBlockFrame('h', Number(e.target.value))} /></label>
-          <label title={ta('tip.frameZ')}>
-            {ta('frame.z')}<input type="number" step="1" value={selectedBlock.frame.z ?? 1}
-            onchange={(e) => setBlockFrame('z', Number(e.target.value))} /></label>
-          <label>{ta('frame.rot')}<input type="number" step="1" value={selectedBlock.frame.rot ?? 0}
-            onchange={(e) => setBlockFrame('rot', Number(e.target.value))} /></label>
-        </div>
-      {/if}
-      <label class="gridmenu-snap" title={ta('tip.decor')}>
-        <input type="checkbox" checked={selectedBlock.decor}
-          onchange={(e) => setBlockDecor(e.target.checked)} />
-        {ta('lbl.decor')}
+      <hr class="gridmenu-divider" />
+    {:else if selectedBlock.type === 'shape'}
+      <label>{ta('lbl.color')}
+        <Dropdown value={selectedBlock.props.color}
+          options={COLOR_TOKENS}
+          onchange={(v) => setBlockProp('color', v)} /></label>
+      <label>{ta('lbl.thickness')}
+        <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
+          onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
+      <label class="gridmenu-snap" title={ta('tip.shape.fill')}>
+        <input type="checkbox" checked={Boolean(selectedBlock.props.fill)}
+          onchange={(e) => setBlockProp('fill', e.target.checked ? selectedBlock.props.color : null)} />
+        {ta('lbl.filled')}
       </label>
-    </div>
-  </details>
+      <hr class="gridmenu-divider" />
+    {/if}
+
+    <label title={ta('tip.props.blockAnim')}>{ta('lbl.animIn')}
+      <Dropdown value={isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : ''}
+        options={ENTRANCE_OPTIONS}
+        onchange={(v) => setBlockAnimation(v || null)} /></label>
+    {#if isEntrance(selectedBlock.animation)}
+      <label>{ta('lbl.durationMs')}
+        <input type="number" min="100" max="4000" step="100"
+          value={selectedBlock.animation.props.duration}
+          onchange={(e) => setBlockAnimProp('duration', Number(e.target.value))} /></label>
+      <label>{ta('lbl.delayMs')}
+        <input type="number" min="0" max="4000" step="100"
+          value={selectedBlock.animation.props.delay}
+          onchange={(e) => setBlockAnimProp('delay', Number(e.target.value))} /></label>
+    {/if}
+    <label title={ta('tip.props.blockHover')}>{ta('lbl.onHover')}
+      <Dropdown value={selectedBlock.hover?.type ?? (selectedBlock.animation && !isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : '')}
+        options={HOVER_OPTIONS}
+        onchange={(v) => setBlockHover(v || null)} /></label>
+
+    {#if viewMode === 'desktop'}
+      <hr class="gridmenu-divider" />
+      <label class="gridmenu-snap" title={ta('tip.sticky')}>
+        <input type="checkbox" checked={Boolean(selectedBlock.sticky)}
+          onchange={(e) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+            b.sticky = e.target.checked ? { offset: 16, until: null } : null;
+          })} />
+        {ta('lbl.sticky')}
+      </label>
+      {#if selectedBlock.sticky}
+        <label title={ta('tip.stickyOffset')}>{ta('lbl.stickyOffset')}
+          <input type="number" min="0" max="400" value={selectedBlock.sticky.offset ?? 16}
+            onchange={(e) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+              b.sticky = { ...b.sticky, offset: Math.max(0, Number(e.target.value) || 0) };
+            })} /></label>
+        <label title={ta('tip.stickyUntil')}>{ta('lbl.stickyUntil')}
+          <Dropdown value={selectedBlock.sticky.until ?? ''}
+            options={stickyUntilOptions()}
+            onchange={(v) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+              b.sticky = { ...b.sticky, until: v || null };
+            })} /></label>
+      {/if}
+    {/if}
+
+    <hr class="gridmenu-divider" />
+    <details class="group frame-group">
+      <summary title={ta('hint.placement')}>{ta('group.placement')}</summary>
+      <div class="group-items">
+        {#if viewMode === 'desktop'}
+          <div class="frame-grid">
+            <label>{ta('frame.x')}<input type="number" step="0.5" value={selectedBlock.frame.x}
+              onchange={(e) => setBlockFrame('x', Number(e.target.value))} /></label>
+            <label>{ta('frame.y')}<input type="number" step="1" value={selectedBlock.frame.y}
+              onchange={(e) => setBlockFrame('y', Number(e.target.value))} /></label>
+            <label>{ta('frame.w')}<input type="number" step="0.5" min="1" value={selectedBlock.frame.w}
+              onchange={(e) => setBlockFrame('w', Number(e.target.value))} /></label>
+            <label>{ta('frame.h')}<input type="number" step="1" min="1" value={selectedBlock.frame.h}
+              onchange={(e) => setBlockFrame('h', Number(e.target.value))} /></label>
+            <label title={ta('tip.frameZ')}>
+              {ta('frame.z')}<input type="number" step="1" value={selectedBlock.frame.z ?? 1}
+              onchange={(e) => setBlockFrame('z', Number(e.target.value))} /></label>
+            <label>{ta('frame.rot')}<input type="number" step="1" value={selectedBlock.frame.rot ?? 0}
+              onchange={(e) => setBlockFrame('rot', Number(e.target.value))} /></label>
+          </div>
+        {/if}
+        <label class="gridmenu-snap" title={ta('tip.decor')}>
+          <input type="checkbox" checked={selectedBlock.decor}
+            onchange={(e) => setBlockDecor(e.target.checked)} />
+          {ta('lbl.decor')}
+        </label>
+      </div>
+    </details>
+  {/if}
 {/snippet}
 
 <!-- Blokkmenyen: alle blokk-innstillingene i en flytende meny ved blokken
@@ -6732,18 +6759,9 @@
 
   .update-flags { display: flex; align-items: center; gap: 0.4rem; flex: none; }
 
-  .update-tag {
-    border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
-    border-radius: 999px;
-    padding: 0 0.45rem;
-    font-size: 0.68rem;
-    opacity: 0.7;
-  }
-
   .update-warn { color: #e0b04a; display: inline-flex; }
 
-  .update-opt-head { display: flex; align-items: baseline; justify-content: space-between; margin-top: 0.2rem; }
-  .update-opt-label { font-size: 0.68rem; letter-spacing: 0.03em; text-transform: uppercase; opacity: 0.55; }
+  .update-opt-head { margin-top: 0.2rem; }
 
   .update-headers {
     max-height: 10rem;
@@ -6909,6 +6927,22 @@
     opacity: 1;
   }
 
+  /* Panel-språket (ADR-0016): delte byggeklosser alle panelene komponerer.
+     Kontekstklassene lenger ned bærer kun marger og barnestiler, aldri
+     egne kopier av disse oppskriftene. */
+  .ctl-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+  .mini-label { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.6; }
+  .chip { border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 999px; padding: 2px 9px; font: 600 10px system-ui, sans-serif; background: transparent; color: inherit; opacity: 0.75; }
+  button.chip { cursor: pointer; }
+  .chip.accent { border-color: var(--urd-color-accent); background: color-mix(in srgb, var(--urd-color-accent) 20%, transparent); opacity: 1; }
+  .sample { padding: 11px 12px; background: color-mix(in srgb, currentColor 5%, transparent); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); border-radius: 9px; }
+
+  /* Innhold/Stil-fanene øverst i blokk-egenskapene (ADR-0016): full bredde,
+     ellers segmentkontrollens vanlige oppskrift. */
+  .props-tabs { display: flex; margin-bottom: 2px; }
+  .props-tabs .seg { flex: 1; }
+  .props-tabs .seg button { flex: 1; padding: 5px 0; font-size: 12px; }
+
   /* Tema-forslag: rad med palett-miniatyrer (alle på én rad) */
   .theme-presets { display: flex; gap: 6px; margin: 6px 0 12px; }
   .theme-preset {
@@ -6922,16 +6956,13 @@
   .theme-preset .tp-band i { flex: 1; }
   .theme-preset small { display: block; text-align: center; font-size: 9px; padding: 2px 0 3px; opacity: 0.8; }
 
-  /* Farger: Auto/Egne, palett-rader (Lys+Mørk), Standard-tag */
-  .autorow { display: flex; align-items: center; justify-content: space-between; margin: 8px 0 2px; }
+  /* Farger: Auto/Egne, palett-rader (Lys+Mørk), Standard-chip */
+  .autorow { margin: 8px 0 2px; }
   .autorow .autolbl { font-size: 0.85rem; opacity: 0.75; }
   .seg { display: inline-flex; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 999px; overflow: hidden; }
   .seg button { border: 0; background: transparent; color: inherit; font: 600 11px system-ui, sans-serif; padding: 3px 11px; cursor: pointer; }
   .seg button.on { background: var(--urd-color-accent); color: var(--urd-color-bg); }
-  .palhead { display: flex; align-items: center; justify-content: space-between; margin: 13px 0 6px; }
-  .palname { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
-  .stdtag { border: 1px solid var(--urd-color-accent); background: color-mix(in srgb, var(--urd-color-accent) 20%, transparent); color: inherit; font: 600 9.5px system-ui, sans-serif; padding: 2px 9px; border-radius: 999px; cursor: pointer; }
-  .stdtag.ghost { border-color: color-mix(in srgb, currentColor 18%, transparent); background: transparent; opacity: 0.6; }
+  .palhead { margin: 13px 0 6px; }
   .palcells { display: flex; gap: 6px; }
   .palcells .palcol { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
   .palcells :global(.cp) { display: block; width: 100%; }
@@ -6943,7 +6974,7 @@
   /* Forhåndsvisning: hvordan hver farge påvirker siden (lys + mørk ved dual) */
   .theme-previews { display: flex; gap: 10px; margin-top: 13px; }
   .theme-pvw { flex: 1; min-width: 0; }
-  .tpv-cap { font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.5; margin-bottom: 5px; }
+  .tpv-cap { margin-bottom: 5px; }
   .tpv-demo { border-radius: 9px; border: 1px solid color-mix(in srgb, currentColor 12%, transparent); background: var(--tv-bg); color: var(--tv-text); padding: 9px 10px 10px; }
   .tpv-h { font-weight: 700; font-size: 12px; margin-bottom: 5px; }
   .tpv-card { background: var(--tv-surface); border: 1px solid color-mix(in srgb, var(--tv-text) 12%, transparent); border-radius: 7px; padding: 6px 8px; font-size: 10px; color: color-mix(in srgb, var(--tv-text) 62%, transparent); margin-bottom: 8px; }
@@ -6951,14 +6982,13 @@
   .tpv-btn { background: var(--tv-accent); color: var(--tv-accent-ink); font: 600 10.5px system-ui, sans-serif; padding: 5px 11px; border-radius: 999px; }
   .tpv-lnk { color: var(--tv-accent); font: 600 10.5px system-ui, sans-serif; border-bottom: 1.5px solid currentColor; }
 
-  /* Typografi-prøve + Form-hjørneprøve */
-  .typo-sample { margin-top: 10px; padding: 11px 12px; background: color-mix(in srgb, currentColor 5%, transparent); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); border-radius: 9px; }
+  /* Typografi-prøve + Form-hjørneprøve (flaten kommer fra .sample) */
+  .typo-sample { margin-top: 10px; }
   .typo-sample .ts-h { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
   .typo-sample .ts-b { font-size: 12.5px; opacity: 0.7; line-height: 1.5; }
-  .form-prev { display: flex; align-items: center; gap: 12px; padding: 12px; background: color-mix(in srgb, currentColor 5%, transparent); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); border-radius: 9px; margin-bottom: 10px; }
+  .form-prev { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
   .form-prev .fp-btn { background: var(--urd-color-accent); color: var(--urd-color-bg); font: 600 12px system-ui, sans-serif; padding: 8px 15px; border-radius: var(--r-sm); }
   .form-prev .fp-card { flex: 1; height: 42px; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); border-radius: var(--r-md); display: grid; place-items: center; font-size: 11px; opacity: 0.7; }
-  .rng-lab { display: flex; align-items: center; justify-content: space-between; }
 
   /* Bryterrader som moderne innstillinger: tekst til venstre, bryter
      ytterst til høyre (markupen har input først; row-reverse snur) */
