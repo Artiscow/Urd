@@ -347,8 +347,6 @@ export default {
     'hint.history.loading': 'Hentar historikken…',
     'hint.icon.color': 'Temafarge eller eigen farge. Gjeld teikna ikon og tekst-glyfar (★ ✓ →); emoji har sine eigne fargar.',
     'hint.icon.ownImage': 'Blokka viser det opplasta ikonet; teiknet blir brukt igjen når du fjernar det.',
-    'hint.nav.intro': 'Menyen øvst på sida. Endringar blir viste live i førehandsvisinga.',
-    'hint.nav.logoFields': 'Talfelta: bilethøgd og avrunding (px).',
     'hint.nav.logoHome': 'Logoen er også «Heim»-knappen (klikk går til framsida).',
     'hint.nav.submenu': 'Punkt med undermeny får ein pilknapp i menyen; utan eiga lenkje blir heile punktet opnaren.',
     'hint.pages.autoMenu': 'Nye sider blir automatisk lagde i menyen og startar tomme.',

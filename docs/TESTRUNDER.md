@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.6.6.6.3): Nav/Footer-prosa og uskarphet-fiksen
+
+- [ ] Nav-panelet: tooltips på Logo-gruppens summary (Hjem-knapp-forklaringen) og Meny-punkter-summaryen (undermeny-forklaringen); ingen prosaavsnitt igjen i panelet, og tallfeltene for logobilde (høyde/avrunding) forklarer seg selv via egne tooltips
+- [ ] Footer-panelet ser og virker uendret ut (ingen endringer gjort)
+- [ ] Uskarphet bak menyen virker igjen i alle nav-varianter (bar, flytende, flytende firkant/tab, sidestilt) og i undermeny/mobilpanel; av/på-bryteren i Nav-panelet har umiddelbar effekt begge veier
+- [ ] Sideoverganger på publisert side (Chromium-familien): fortsatt myk krysstoning med nav og footer i ro, nå som navnene settes i pageswap/pagereveal i stedet for statisk CSS
+- [ ] Etter neste oppdatering av urd-web: uskarpheten virker også der (fiksen ligger i base.css + urd.js, begge i motor-atomgruppen)
+
 ### Testrunde-batch (0.6.6.6.1-2): panel-språkets fundament og Innhold/Stil-fanene
 
 - [ ] Tema-panelet ser uendret ut etter klasse-konsolideringen: Standard-chipene (aksent når valgt, dempet ellers, klikk bytter standard-skjema), LYS/MØRK-etikettene, palett-radene, typografi- og hjørneprøvene på sample-flatene

@@ -350,8 +350,6 @@ export default {
     'hint.history.loading': 'Viežžá historihka…',
     'hint.icon.color': 'Fáddáivdni dahje iežas ivdni. Guoská sárgojuvvon ikonaide ja teakstamearkkaide (★ ✓ →); emojiin leat iežaset ivnnit.',
     'hint.icon.ownImage': 'Blohkka čájeha bajásviežžojuvvon ikona; mearka geavahuvvo fas go válddát dan eret.',
-    'hint.nav.intro': 'Fállu siiddu bajimusas. Rievdadusat čájehuvvojit dakkaviđe ovdačájeheamis.',
-    'hint.nav.logoFields': 'Lohkogiettit: govva allodat ja jorbadeapmi (px).',
     'hint.nav.logoHome': 'Logo lea maiddái «Ruoktot»-boallu (coahkkaleapmi doalvu ovdasiidui).',
     'hint.nav.submenu': 'Čuokkis mas lea vuollefállu oažžu njuolaboalu fálus; almmá iežas liŋkka haga šaddá olles čuokkis rahppin.',
     'hint.pages.autoMenu': 'Ođđa siiddut biddjojuvvojit automáhtalaččat fállui ja álget guorusin.',

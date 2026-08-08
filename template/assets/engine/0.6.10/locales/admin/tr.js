@@ -347,8 +347,6 @@ export default {
     'hint.history.loading': 'Geçmiş getiriliyor…',
     'hint.icon.color': 'Tema rengi ya da özel renk. Çizili simgeler ve metin glifleri için geçerlidir (★ ✓ →); emojilerin kendi renkleri vardır.',
     'hint.icon.ownImage': 'Blok yüklenen simgeyi gösterir; onu kaldırınca karakter yeniden kullanılır.',
-    'hint.nav.intro': 'Sayfanın üstündeki menü. Değişiklikler önizlemede canlı görünür.',
-    'hint.nav.logoFields': 'Sayı alanları: görsel yüksekliği ve yuvarlatma (px).',
     'hint.nav.logoHome': 'Logo aynı zamanda «Ana sayfa» düğmesidir (tıklama ana sayfaya götürür).',
     'hint.nav.submenu': 'Alt menüsü olan öğe menüde bir ok düğmesi alır; kendi bağlantısı yoksa öğenin tamamı açıcı olur.',
     'hint.pages.autoMenu': 'Yeni sayfalar menüye otomatik eklenir ve boş başlar.',

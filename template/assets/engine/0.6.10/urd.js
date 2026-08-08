@@ -99,6 +99,36 @@ function mountToTop() {
 }
 
 /**
+ * Cross-document View Transitions (ADR-0011): nav og footer får
+ * view-transition-name KUN i selve overgangsvinduet (pageswap ved utreise,
+ * pagereveal ved innreise), så side-chromen står i ro mens innholdet toner.
+ * Et statisk navn i CSS gjorde elementene til backdrop-roots, som slo av
+ * menyens backdrop-filter (uskarpheten bak nav) i all vanlig visning.
+ * Uten cross-document-støtte fyrer hendelsene aldri: navnene settes ikke,
+ * og siden navigerer som før (sluttilstand).
+ */
+function wireViewTransitionNames() {
+  const setNames = (on) => {
+    for (const id of ['urd-nav', 'urd-footer']) {
+      const el = document.getElementById(id);
+      if (on) el?.style.setProperty('view-transition-name', id);
+      else el?.style.removeProperty('view-transition-name');
+    }
+  };
+  window.addEventListener('pageswap', (event) => {
+    if (event.viewTransition) setNames(true);
+  });
+  window.addEventListener('pagereveal', (event) => {
+    // Uten overgang (også bfcache-gjenoppliving etter en avbrutt utreise)
+    // skal navnene være borte, ellers står backdrop-rooten på og uskarpheten
+    // forblir av.
+    if (!event.viewTransition) { setNames(false); return; }
+    setNames(true);
+    event.viewTransition.finished.finally(() => setNames(false));
+  });
+}
+
+/**
  * Nettstedsikonet (favicon) fra site.json: overstyrer standard-ikonet i
  * index.html. Additivt felt; uten ikon beholdes Urd-merket.
  */
@@ -358,6 +388,8 @@ export async function boot(opts) {
   opts.footer.id = 'urd-footer';
   opts.root.insertAdjacentElement('afterend', opts.footer);
   mountToTop();
+  // Inert i preview (sidebytter skjer via postMessage, aldri navigasjon).
+  wireViewTransitionNames();
 
   // Tomt sideregister (håndredigert site.json) gir en tom side, ikke krasj.
   const entry = resolvePage(site) ?? { id: 'tom', title: '', file: 'content/pages/finnes-ikke.json' };

@@ -4123,9 +4123,8 @@
               </div>
             {:else if activePanel === 'nav'}
               <div class="panel-body">
-                <p class="panel-hint">{ta('hint.nav.intro')}</p>
                 <details class="group">
-                  <summary>{ta('group.logo')}</summary>
+                  <summary title={ta('hint.nav.logoHome')}>{ta('group.logo')}</summary>
                   <div class="group-items">
                     <label>{ta('common.type')}
                       <Dropdown value={siteDraft.nav.logo?.type ?? 'text'}
@@ -4165,7 +4164,6 @@
                           value={siteDraft.nav.logo?.radius ?? 0}
                           onchange={(e) => setLogo({ radius: Number(e.target.value) })} />
                       </span>
-                      <p class="panel-hint">{ta('hint.nav.logoFields')}</p>
                     {/if}
                     {#if siteDraft.nav.logo?.type === 'both'}
                       <label>{ta('lbl.order')}
@@ -4173,7 +4171,6 @@
                           options={[['image-first', ta('opt.logo.imageFirst')], ['text-first', ta('opt.logo.textFirst')]]}
                           onchange={(v) => setLogo({ order: v })} /></label>
                     {/if}
-                    <p class="panel-hint">{ta('hint.nav.logoHome')}</p>
                   </div>
                 </details>
                 <details class="group">
@@ -4292,7 +4289,7 @@
                   </div>
                 </details>
                 <details class="group" open>
-                  <summary>{ta('group.menuItems')}</summary>
+                  <summary title={ta('hint.nav.submenu')}>{ta('group.menuItems')}</summary>
                   <div class="group-items">
                 {#each siteDraft.nav.items as item, i}
                   <div class="nav-row">
@@ -4345,7 +4342,6 @@
                   {/each}
                 {/each}
                     <button class="ghost action" onclick={addNavItem}>{ta('ui.addMenuItem')}</button>
-                    <p class="panel-hint">{ta('hint.nav.submenu')}</p>
                   </div>
                 </details>
               </div>

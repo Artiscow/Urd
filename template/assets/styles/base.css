@@ -3211,22 +3211,15 @@ body.urd-marqueeing {
 }
 
 /* Side-overganger (ADR-0011): cross-document View Transitions gir myk
-   krysstoning mellom sidene på det publiserte nettstedet, ren CSS uten JS.
-   Gaten er at-regelen selv: motorer uten støtte ignorerer den og navigerer
-   som før (sluttilstand). Editor-preview berøres aldri - der skjer
-   sidebytter via postMessage, ikke navigasjon. Nav og footer får egne
-   view-transition-name så side-chromen står i ro mens innholdet toner;
-   navnene er inerte utenom en aktiv overgang. */
+   krysstoning mellom sidene på det publiserte nettstedet. Gaten er
+   at-regelen selv: motorer uten støtte ignorerer den og navigerer som før
+   (sluttilstand). Editor-preview berøres aldri - der skjer sidebytter via
+   postMessage, ikke navigasjon. Nav og footer får view-transition-name kun
+   i selve overgangsvinduet (wireViewTransitionNames i urd.js): et statisk
+   navn her gjorde dem til backdrop-roots, som slo av menyens
+   backdrop-filter (uskarpheten bak nav) i all vanlig visning. */
 @view-transition {
   navigation: auto;
-}
-
-#urd-nav {
-  view-transition-name: urd-nav;
-}
-
-#urd-footer {
-  view-transition-name: urd-footer;
 }
 
 /* Redusert bevegelse: overgangen beholdes (navigasjonen er like rask),

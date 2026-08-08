@@ -350,8 +350,6 @@ export default {
     'hint.history.loading': 'Henter historikken…',
     'hint.icon.color': 'Temafarge eller egen farge. Gjelder tegnede ikoner og tekst-glyfer (★ ✓ →); emoji har sine egne farger.',
     'hint.icon.ownImage': 'Blokken viser det opplastede ikonet; tegnet brukes igjen når du fjerner det.',
-    'hint.nav.intro': 'Menyen øverst på siden. Endringer vises live i forhåndsvisningen.',
-    'hint.nav.logoFields': 'Tallfeltene: bildehøyde og avrunding (px).',
     'hint.nav.logoHome': 'Logoen er også «Hjem»-knappen (klikk går til forsiden).',
     'hint.nav.submenu': 'Punkt med undermeny får en pilknapp i menyen; uten egen lenke blir hele punktet åpneren.',
     'hint.pages.autoMenu': 'Nye sider legges automatisk i menyen og starter tomme.',

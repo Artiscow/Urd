@@ -347,8 +347,6 @@ export default {
     'hint.history.loading': 'Fetching the history…',
     'hint.icon.color': 'Theme colour or a custom colour. Applies to drawn icons and text glyphs (★ ✓ →); emoji keep their own colours.',
     'hint.icon.ownImage': 'The block shows the uploaded icon; the character is used again when you remove it.',
-    'hint.nav.intro': 'The menu at the top of the page. Changes appear live in the preview.',
-    'hint.nav.logoFields': 'The number fields: image height and rounding (px).',
     'hint.nav.logoHome': 'The logo is also the «Home» button (clicking goes to the front page).',
     'hint.nav.submenu': 'Items with a submenu get an arrow button in the menu; without a link of its own the whole item becomes the opener.',
     'hint.pages.autoMenu': 'New pages are added to the menu automatically and start empty.',
