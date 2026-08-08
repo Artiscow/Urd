@@ -288,9 +288,11 @@
       !pendingPublished.has(p.id) && localStorage.getItem(`urd-draft-${p.id}`) !== null) ?? false;
     const anySamlingDraft = samlingerIndexStore?.hasDraft()
       || Object.values(samlingStores).some((st) => st.hasDraft());
+    const anyMalDraft = malerIndexStore?.hasDraft()
+      || Object.values(malStores).some((st) => st.hasDraft());
     dirty = anyPageDraft
       || (store?.hasDraft() && !pendingPublished.has(pageId))
-      || siteStore?.hasDraft() || pluginsStore?.hasDraft() || anySamlingDraft || false;
+      || siteStore?.hasDraft() || pluginsStore?.hasDraft() || anySamlingDraft || anyMalDraft || false;
   }
 
   /**
@@ -425,6 +427,7 @@
       malStores[id].save();
     }
     malerIds = [...(indexSnap.maler ?? [])];
+    updateDirty();
     pushMalerToPreview();
   }
 
@@ -2368,6 +2371,7 @@
     malerIndexStore.save();
     malerIds = [...malerIds, id];
     setStatus(ta('status.templateSaved', { name }), 'ok');
+    updateDirty();
     pushMalerToPreview();
   }
 
@@ -2383,6 +2387,7 @@
     malerIndexStore.data.maler = malerIds.filter((x) => x !== msg.id);
     malerIndexStore.save();
     malerIds = malerIds.filter((x) => x !== msg.id);
+    updateDirty();
     pushMalerToPreview();
   }
 
@@ -3812,20 +3817,26 @@
     }
   }
 
+  /** Én blokks bilder - delt av sidepublisering og blokkgruppe-maler. */
+  function materializeBlockImages(block, files) {
+    if (block.type === 'image') materializeField(block.props, 'src', block.props.alt, files);
+    // Ikon-blokkens eget opplastede ikon publiseres som media-fil på samme måte.
+    if (block.type === 'icon') materializeField(block.props, 'image', 'ikon', files);
+    if (block.type === 'galleri') {
+      for (const img of block.props.images ?? []) materializeField(img, 'src', img.alt || 'galleri', files);
+    }
+  }
+
+  /** Én seksjons bilder (bakgrunn + blokker) - delt av sidepublisering og seksjons-maler. */
+  function materializeSection(section, files) {
+    // Bakgrunnsbilder følger samme flyt som bildeblokker.
+    materializeBackground(section.background, files);
+    for (const block of section.blocks) materializeBlockImages(block, files);
+  }
+
   function materializeImages(page) {
     const files = [];
-    for (const section of page.sections) {
-      // Bakgrunnsbilder følger samme flyt som bildeblokker.
-      materializeBackground(section.background, files);
-      for (const block of section.blocks) {
-        if (block.type === 'image') materializeField(block.props, 'src', block.props.alt, files);
-        // Ikon-blokkens eget opplastede ikon publiseres som media-fil på samme måte.
-        if (block.type === 'icon') materializeField(block.props, 'image', 'ikon', files);
-        if (block.type === 'galleri') {
-          for (const img of block.props.images ?? []) materializeField(img, 'src', img.alt || 'galleri', files);
-        }
-      }
-    }
+    for (const section of page.sections) materializeSection(section, files);
     return files;
   }
 
@@ -4024,6 +4035,34 @@
       publishedTitles.push('samlinger');
     }
 
+    // Mal-endringer publiseres som content/maler/-filer + indeks (0.6.7.4),
+    // samme mønster som samlinger; bilder i malen materialiseres til media/.
+    const changedMaler = Object.entries(malStores).filter(([, st]) => st.hasDraft());
+    if (changedMaler.length || malerIndexStore?.hasDraft()) {
+      for (const [id, st] of changedMaler) {
+        const out = JSON.parse(JSON.stringify(st.data));
+        if (out.section) materializeSection(out.section, files);
+        for (const block of out.blocks ?? []) materializeBlockImages(block, files);
+        files.push({ path: `content/maler/${id}.json`, content: JSON.stringify(out, null, 2) + '\n', encoding: 'utf-8' });
+        draftKeys.push(`urd-draft-mal-${id}`);
+      }
+      if (malerIndexStore?.hasDraft()) {
+        files.push({ path: 'content/maler.json', content: JSON.stringify(malerIndexStore.data, null, 2) + '\n', encoding: 'utf-8' });
+        draftKeys.push('urd-draft-maler');
+        // Maler fjernet fra indeksen slettes fra repoet (opprettes id-en også i samme publisering, vinner create-listen).
+        let publishedIndex = { maler: [] };
+        try {
+          publishedIndex = await (await fetch('/content/maler.json')).json();
+        } catch { /* ingen publisert indeks ennå */ }
+        const created = new Set(files.map((f) => f.path));
+        for (const id of publishedIndex.maler ?? []) {
+          const path = `content/maler/${id}.json`;
+          if (!malerIds.includes(id) && !created.has(path)) files.push({ path, delete: true });
+        }
+      }
+      publishedTitles.push('maler');
+    }
+
     // Plugin-endringer (aktivert/deaktivert/lagt til) publiseres som plugins.json.
     if (pluginsStore?.hasDraft()) {
       files.push({ path: 'plugins/plugins.json', content: JSON.stringify(pluginsStore.data, null, 2) + '\n', encoding: 'utf-8' });
@@ -4121,6 +4160,23 @@
           samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => publishedSamling, draftSaveError);
         }
         syncSamlingerView();
+      }
+      if (malerIndexStore) {
+        // Speil materialiseringen inn i minnet (samme deterministiske stier som klonene fikk).
+        for (const st of Object.values(malStores)) {
+          if (st.data?.section) materializeSection(st.data.section, []);
+          for (const block of st.data?.blocks ?? []) materializeBlockImages(block, []);
+        }
+        const publishedMalIndex = JSON.parse(JSON.stringify(malerIndexStore.data));
+        malerIndexStore = createDraftStore('urd-draft-maler', () => publishedMalIndex, draftSaveError);
+        publishedMaler = {};
+        for (const id of malerIds) {
+          if (!malStores[id]) continue;
+          const publishedMal = JSON.parse(JSON.stringify(malStores[id].data));
+          publishedMaler[id] = publishedMal;
+          malStores[id] = createDraftStore(`urd-draft-mal-${id}`, () => publishedMal, draftSaveError);
+        }
+        pushMalerToPreview();
       }
       grid = { snap: true, ...siteDraft.grid };
       const pageSnap = JSON.parse(JSON.stringify(store.data));

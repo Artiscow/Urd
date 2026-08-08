@@ -20,6 +20,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.6.7.4 - Publisering av maler - 8. august 2026
+- MALENE UT AV LOCALSTORAGE OG INN I REPOET, alt etter samlinger-forbildet: endrede mal-utkast blir content/maler/<id>.json i commiten, indeks-utkastet blir content/maler.json, og maler fjernet fra indeksen slettes fra repoet med samme create-vern (en id som gjenoppstår i samme publisering slettes aldri). Utkastnøklene ryddes etter vellykket commit; «maler» føres i publiseringsmeldingen. «Upubliserte endringer»-merket teller nå også mal-utkast (bevisst utsatt fra forrige runde til Publiser-knappen faktisk kunne holde løftet).
+- BILDE-MATERIALISERINGEN REFAKTORERT til delte hjelpere materializeSection (bakgrunn + blokker) og materializeBlockImages, brukt av både sidepubliseringen (uendret adferd) og malene: base64-bilder i en seksjons- eller blokkgruppe-mal blir deterministiske media/-filer i samme commit, aldri base64 i malfilen.
+- RE-BASELINING ETTER PUBLISERING speiler samlinger-mønsteret: materialiseringen speiles inn i minnet, mal-stores og indeks-store gjenskapes mot ny publisert baseline, publishedMaler fylles (riktig angre-baseline etter publisering), previewen får fersk liste.
+- VERIFISERT: editor-bygg grønt med gjenbygd bundel, 308/308 tester, alle skjemavalideringene. Selve publiseringen krever functions (deployet side) og er testrunde-punkt mot urd-web.
+
 ### 0.6.7.3 - Lagre som mal og Mine maler i seksjonsgalleriet - 8. august 2026
 - FØRSTE FERDIG NÅR-KRITERIUM LEVERT (editor-lokalt; publisering i neste runde): en egen seksjon kan lagres som mal og settes inn igjen fra + Ny seksjon. Designrunde med tre artifact-utkast (liste-rader, rutenett, segmentfaner); eieren valgte VARIANT C: to segmentfaner i galleriet, «Innebygde» (kjerne- og plugin-presets som før) og «Mine maler» (2-kolonners rutenett med ekte presetThumb-miniatyrer, navn og sletteknapp ved pek). Fanevalget huskes i økta; tomtilstanden forklarer hvordan første mal lagres.
 - LAGRE-FLYTEN: bokmerke-knapp (tegnet SVG) i seksjonsverktøylinjen poster et navnløst snapshot (urd-save-template); editoren navngir i ny askPrompt-dialog (bekreftelsesdialogen utvidet med tekstfelt og Enter-innsending), slugger til mal-id og lagrer som utkast med «finnes ikke»-baseline (0.6.7.1-regelen). Duplikat/ugyldig navn gir statusfeil. Sletting går via kortets sletteknapp med askConfirm i editoren (urd-delete-template).
