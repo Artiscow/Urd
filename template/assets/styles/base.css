@@ -3623,15 +3623,21 @@ body.urd-mobile .urd-section-resize-top {
 }
 
 /* Fanene i preset-galleriet (Mine maler, 0.6.7, variant C): segmentkontroll
-   i full bredde rett under tittelen; fanevalget huskes per økt. */
+   i full bredde rett under tittelen; fanevalget huskes per økt.
+   Selektorene går via .urd-preset-menu og resetter transform/opacity:
+   barens chip-regel (.urd-add-section button) treffer ellers alle
+   knapper i menyen (samme grunn som .urd-preset-choice-resetene). */
 .urd-preview .urd-preset-tabs {
   display: flex;
   padding: 0 6px 6px;
 }
 
-.urd-preview .urd-preset-tabs button {
+.urd-preview .urd-preset-menu .urd-preset-tabs button {
   flex: 1;
+  transform: none;
+  opacity: 1;
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 18%, transparent);
+  border-radius: 0;
   background: transparent;
   color: inherit;
   font: 600 11px system-ui, sans-serif;
@@ -3639,16 +3645,16 @@ body.urd-mobile .urd-section-resize-top {
   cursor: pointer;
 }
 
-.urd-preview .urd-preset-tabs button:first-child {
+.urd-preview .urd-preset-menu .urd-preset-tabs button:first-child {
   border-radius: 999px 0 0 999px;
   border-right: 0;
 }
 
-.urd-preview .urd-preset-tabs button:last-child {
+.urd-preview .urd-preset-menu .urd-preset-tabs button:last-child {
   border-radius: 0 999px 999px 0;
 }
 
-.urd-preview .urd-preset-tabs button.on {
+.urd-preview .urd-preset-menu .urd-preset-tabs button.on {
   background: var(--urd-admin-accent, #5f6a75);
   border-color: var(--urd-admin-accent, #5f6a75);
   color: var(--urd-admin-accent-text, #fff);
@@ -3667,10 +3673,12 @@ body.urd-mobile .urd-section-resize-top {
   position: relative;
 }
 
-.urd-preview .urd-mal-pick {
+.urd-preview .urd-preset-menu .urd-mal-pick {
   display: grid;
   gap: 4px;
   width: 100%;
+  transform: none;
+  opacity: 1;
   padding: 6px;
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 14%, transparent);
   border-radius: 8px;
@@ -3681,7 +3689,7 @@ body.urd-mobile .urd-section-resize-top {
   text-align: center;
 }
 
-.urd-preview .urd-mal-pick:hover {
+.urd-preview .urd-preset-menu .urd-mal-pick:hover {
   border-color: var(--urd-admin-accent, #5f6a75);
   background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 12%, transparent);
 }
@@ -3708,11 +3716,13 @@ body.urd-mobile .urd-section-resize-top {
   white-space: nowrap;
 }
 
-.urd-preview .urd-mal-del {
+.urd-preview .urd-preset-menu .urd-mal-del {
   position: absolute;
   top: 10px;
   right: 10px;
   display: none;
+  transform: none;
+  opacity: 1;
   border: 0;
   border-radius: 5px;
   padding: 2px 6px;

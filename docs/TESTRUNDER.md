@@ -2,6 +2,13 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.6.7.7): Slash-kommando og galleri-CSS-fiksen
+
+- [ ] Trykk «/» med pekeren i en seksjon: + Ny blokk-menyen åpner ved pekeren med søkefeltet fokusert; skriv «knapp» og Enter setter inn en knapp på pekerpunktet
+- [ ] «/» uten peker i noen seksjon åpner menyen i den aktive seksjonen; Escape lukker; «/» gjør ingenting i Ren visning, på mobilvisning eller mens du skriver i et felt
+- [ ] Seksjonsgalleriet (+ Ny seksjon): «Ny seksjon»-tittelen, fanene og malkortene ligger på hver sin linje uten overlapp; malkortets miniatyr er klippet inne i rammen (ingen stiplet ellipse)
+- [ ] Chip-knappen «+ Ny seksjon» på seksjonsgrensene ser uendret ut (stiplet pille som før)
+
 ### Testrunde-batch (0.6.7.6): Søk i blokkvelgeren
 
 - [ ] + Ny blokk: søkefeltet er fokusert ved åpning; å skrive filtrerer til en flat treffliste (menyens grupper skjules), og å tømme feltet gir menyen tilbake

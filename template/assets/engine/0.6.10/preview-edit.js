@@ -49,6 +49,54 @@ export function setMaler(list) {
 /** Fanevalget i preset-galleriet huskes per økt (variant C, eiervalg 8. august 2026). */
 let presetTabMaler = false;
 
+/** Siste pekerposisjon på lerretet: slash-kommandoen åpner blokkmenyen der. */
+let lastPointer = null;
+document.addEventListener('pointermove', (event) => {
+  lastPointer = { x: event.clientX, y: event.clientY };
+}, { passive: true });
+
+/**
+ * Åpne en seksjons + Ny blokk-meny, delt av dobbeltklikk og slash: med
+ * punkt lander blokken der (_urdAt) og menyen står ved pekeren; uten
+ * åpnes den fra chip-posisjonen. Søkefeltet nullstilles og fokuseres.
+ */
+function openBlockMenuAt(host, clientX = null, clientY = null) {
+  const wrap = host.querySelector('.urd-add-block');
+  const menu = wrap?.querySelector('.urd-add-block-menu');
+  if (!wrap || !menu) return;
+  const rect = host.getBoundingClientRect();
+  if (clientX != null) {
+    menu._urdAt = {
+      x: Math.round(((clientX - rect.left) / rect.width) * 10000) / 100,
+      y: Math.round(clientY - rect.top),
+    };
+    wrap.style.left = `${Math.round(clientX - rect.left)}px`;
+    wrap.style.top = `${Math.round(clientY - rect.top)}px`;
+    wrap.style.right = 'auto';
+    // Ved pekeren vises menyen alene: chip-knappen skjules (CSS-en på
+    // .urd-at-pointer), så det ikke står en «+ Ny blokk» over menyen.
+    wrap.classList.add('urd-at-pointer');
+  } else {
+    menu._urdAt = null;
+  }
+  menu._urdRefreshMaler?.();
+  menu._urdSearchReset?.();
+  menu.classList.add('open');
+  menu._urdSearchFocus?.();
+  if (clientX != null) {
+    // Menyen henger normalt mot venstre fra pekeren (right: 0). Nær
+    // venstre kant ville den gått ut av skjermen: da åpnes den mot
+    // høyre for pekeren i stedet.
+    menu.style.left = '';
+    menu.style.right = '';
+    const menuWidth = menu.getBoundingClientRect().width;
+    if (clientX - menuWidth < 8) {
+      menu.style.left = '0';
+      menu.style.right = 'auto';
+    }
+  }
+}
+
 /** Lukker åpne menyer (preset-galleri, blokkmeny). Kalles også via urd-close-menus når eieren klikker i admin-panelene, som iframens egne klikk-lyttere aldri ser. */
 let collapseOpenPresetMenu = null;
 export function closeMenus() {
@@ -384,6 +432,13 @@ function addBlockAdder(host, section, grid) {
     }
   };
   searchInput.addEventListener('input', renderHits);
+  searchInput.addEventListener('keydown', (event) => {
+    // Enter setter inn første treff (slash-flyten: «/», skriv, Enter);
+    // Escape lukker menyen. Stoppes så lerret-snarveiene aldri ser dem.
+    if (event.key === 'Enter') hits.querySelector('button')?.click();
+    else if (event.key === 'Escape') resetBlockAdder(wrap);
+    event.stopPropagation();
+  });
   menu._urdSearchReset = () => {
     searchInput.value = '';
     renderHits();
@@ -535,34 +590,7 @@ function addBlockAdder(host, section, grid) {
       const target = event.target instanceof Element ? event.target : null;
       if (!target) return;
       if (target.closest('.urd-block, .urd-add-block, .urd-add-section, .urd-section-toolbar, .urd-section-resize, .urd-section-resize-top, .urd-hint-chip, .urd-hint-card')) return;
-      const curWrap = host.querySelector('.urd-add-block');
-      const curMenu = curWrap?.querySelector('.urd-add-block-menu');
-      if (!curWrap || !curMenu) return;
-      const rect = host.getBoundingClientRect();
-      curMenu._urdAt = {
-        x: Math.round(((event.clientX - rect.left) / rect.width) * 10000) / 100,
-        y: Math.round(event.clientY - rect.top),
-      };
-      curWrap.style.left = `${Math.round(event.clientX - rect.left)}px`;
-      curWrap.style.top = `${Math.round(event.clientY - rect.top)}px`;
-      curWrap.style.right = 'auto';
-      // Ved pekeren vises menyen alene: chip-knappen skjules (CSS-en på
-      // .urd-at-pointer), så det ikke står en «+ Ny blokk» over menyen.
-      curWrap.classList.add('urd-at-pointer');
-      curMenu._urdRefreshMaler?.();
-      curMenu._urdSearchReset?.();
-      curMenu.classList.add('open');
-      curMenu._urdSearchFocus?.();
-      // Menyen henger normalt mot venstre fra pekeren (right: 0). Nær
-      // venstre kant ville den gått ut av skjermen: da åpnes den mot
-      // høyre for pekeren i stedet.
-      curMenu.style.left = '';
-      curMenu.style.right = '';
-      const menuWidth = curMenu.getBoundingClientRect().width;
-      if (event.clientX - menuWidth < 8) {
-        curMenu.style.left = '0';
-        curMenu.style.right = 'auto';
-      }
+      openBlockMenuAt(host, event.clientX, event.clientY);
     });
   }
 
@@ -1965,6 +1993,24 @@ window.addEventListener('keydown', (event) => {
   if ((event.key === 'Delete' || event.key === 'Backspace') && multiIds.size > 1) {
     event.preventDefault();
     deleteSelection();
+    return;
+  }
+
+  // Slash-kommando (0.6.7): «/» åpner + Ny blokk-menyen med søkefeltet
+  // fokusert, i den aktive seksjonen (ellers seksjonen under pekeren);
+  // står pekeren i seksjonen, lander blokken på pekerpunktet.
+  if (event.key === '/' && !ctrl && !event.altKey) {
+    if (isMobile() || document.body.classList.contains('urd-chrome-off')) return;
+    const active = document.querySelector('.urd-section-active');
+    const under = lastPointer
+      ? document.elementFromPoint(lastPointer.x, lastPointer.y)?.closest?.('.urd-section') ?? null
+      : null;
+    const host = active ?? under ?? document.querySelector('.urd-section');
+    if (!host) return;
+    event.preventDefault();
+    closeMenus();
+    if (lastPointer && host === under) openBlockMenuAt(host, lastPointer.x, lastPointer.y);
+    else openBlockMenuAt(host);
     return;
   }
 
