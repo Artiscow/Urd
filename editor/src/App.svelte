@@ -554,6 +554,15 @@
   ];
   const PANEL_LABELS = Object.fromEntries(PANEL_GROUPS.flat().map((id) => [id, ta(`panel.${id}`)]));
 
+  /* Panel-introene (prosa-regelen, ADR-0016): forklaringen bor som tooltip
+     på panel-tittelen, aldri som avsnitt i panelet. Paneler uten oppslag
+     har ingen intro. */
+  const PANEL_INTROS = {
+    pages: 'hint.pages.drafts',
+    collections: 'hint.collections.intro',
+    plugins: 'hint.plugins.intro',
+  };
+
   /** Admin-språkvelgeren: språkene med sine EGNE navn (endonymer, aldri
    *  oversatt, aldri flagg); «Automatisk» følger enhetsspråket og er
    *  standarden - et valg huskes per nettleser (urd-admin-lang). */
@@ -4090,11 +4099,10 @@
 
         {#if activePanel}
           <aside class="panel">
-            <h2>{PANEL_LABELS[activePanel]}</h2>
+            <h2 title={PANEL_INTROS[activePanel] ? ta(PANEL_INTROS[activePanel]) : undefined}>{PANEL_LABELS[activePanel]}</h2>
 
             {#if activePanel === 'pages'}
               <div class="panel-body">
-                <p class="panel-hint">{ta('hint.pages.drafts')}</p>
                 {#each siteDraft.pages as p (p.id)}
                   <div class="page-row" class:current={p.id === pageId}>
                     <input class="page-title" value={p.title} title={ta('tip.pages.title')}
@@ -4118,8 +4126,8 @@
                 <hr class="gridmenu-divider" />
                 <input placeholder={ta('ph.newPageName')} bind:value={newPageTitle}
                   onkeydown={(e) => e.key === 'Enter' && addPage()} />
-                <button class="ghost action" onclick={addPage} disabled={!newPageTitle.trim()}>{ta('ui.createPage')}</button>
-                <p class="panel-hint">{ta('hint.pages.autoMenu')}</p>
+                <button class="ghost action" title={ta('hint.pages.autoMenu')}
+                  onclick={addPage} disabled={!newPageTitle.trim()}>{ta('ui.createPage')}</button>
               </div>
             {:else if activePanel === 'nav'}
               <div class="panel-body">
@@ -4886,7 +4894,6 @@
               </div>
             {:else if activePanel === 'collections'}
               <div class="panel-body">
-                <p class="panel-hint">{ta('hint.collections.intro')}</p>
                 {#if samlingerIds.length}
                   <label>{ta('blocks.samling')}
                     <Dropdown value={activeSamling ?? ''}
@@ -4955,7 +4962,6 @@
               </div>
             {:else if activePanel === 'plugins'}
               <div class="panel-body">
-                <p class="panel-hint">{ta('hint.plugins.intro')}</p>
                 {#if !knownPlugins().length}
                   <p class="panel-hint">{ta('hint.plugins.empty')}</p>
                 {/if}
@@ -4990,7 +4996,7 @@
                 {/each}
                 {#if pluginsFound.length}
                   <hr class="gridmenu-divider" />
-                  <p class="panel-hint">{ta('hint.plugins.found')}</p>
+                  <p class="panel-strong">{ta('hint.plugins.found')}</p>
                   {#each pluginsFound as id (id)}
                     <div class="plugin-row">
                       <span class="plugin-head">

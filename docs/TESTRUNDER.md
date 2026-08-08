@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.6.6.6.4): Sider/Samlinger/Plugins-prosa og undermeny-fiksene
+
+- [ ] Panel-titlene Sider, Samlinger og Plugins viser intro-forklaringen som tooltip ved hover på tittelen; ingen prosaavsnitt øverst i de tre panelene
+- [ ] Opprett side-knappen forklarer auto-meny-adferden i tooltip; «Funnet i repoets plugins/-mappe:» står som fet etikett over funn-listen
+- [ ] Plugins-panelets tomtilstander og varsler er uendret (ingen plugins, ingen nye funnet, ødelagt plugin, motorkrav, CSP)
+- [ ] Undermenyen følger barens tone når nav-en har lag-bakgrunn (fargelag flates til slør); med kun bilde-/gradientlag gjelder standard-sløret som før
+- [ ] Nedtrekket har ingen lys glorie i mørkt tema (kort, piller, utfall og mobilpanel); i lyst tema ser skyggene ut som før
+- [ ] Innstillinger-panelet ser uendret ut (kun revidert)
+
 ### Testrunde-batch (0.6.6.6.3): Nav/Footer-prosa og uskarphet-fiksen
 
 - [ ] Nav-panelet: tooltips på Logo-gruppens summary (Hjem-knapp-forklaringen) og Meny-punkter-summaryen (undermeny-forklaringen); ingen prosaavsnitt igjen i panelet, og tallfeltene for logobilde (høyde/avrunding) forklarer seg selv via egne tooltips

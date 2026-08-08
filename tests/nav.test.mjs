@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { resolveItem, navItems, navClasses, navSurface, navSubSurface, hostClasses, clampSideWidth, navScrollState } = await engineImport('nav-model.js');
+const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, navScrollState } = await engineImport('nav-model.js');
 
 const PAGES = [
   { id: 'hjem', title: 'Hjem', path: '/' },
@@ -305,6 +305,30 @@ test('navSubSurface: undermenyen får kun sløret, aldri bildet, som standard', 
   assert.ok(withImage.includes('url("/media/m.webp")'));
   // Ugyldig bilde slipper ikke gjennom selv med subImage
   assert.equal(navSubSurface({ image: 'https://evil.example/x.png', subImage: true }), undefined);
+});
+
+test('navLayerVeil: fargelagene flates til ett slør, bilde/gradient holdes ute', () => {
+  // Uten fargelag: null, CSS-standarden gjelder
+  assert.equal(navLayerVeil(), null);
+  assert.equal(navLayerVeil([]), null);
+  assert.equal(navLayerVeil([{ type: 'gradient', props: {} }, { type: 'image', props: {} }]), null);
+  // Ett fargelag med styrke: sløret med lagets dekkevne
+  assert.equal(
+    navLayerVeil([{ type: 'color', props: { value: 'surface', opacity: 0.45 } }]),
+    'color-mix(in srgb, var(--urd-color-surface) 45%, transparent)',
+  );
+  // Flere fargelag mikses i tegnerekkefølge (senere lag over tidligere)
+  assert.equal(
+    navLayerVeil([
+      { type: 'color', props: { value: 'bg', opacity: 1 } },
+      { type: 'gradient', props: {} },
+      { type: 'color', props: { value: 'accent', opacity: 0.2 } },
+    ]),
+    'color-mix(in srgb, var(--urd-color-accent) 20%, color-mix(in srgb, var(--urd-color-bg) 100%, transparent))',
+  );
+  // Styrke 0 og manglende props tåles (opacity uten verdi = 1, verdi uten farge = bg)
+  assert.equal(navLayerVeil([{ type: 'color', props: { value: 'text', opacity: 0 } }]), null);
+  assert.equal(navLayerVeil([{ type: 'color' }]), 'color-mix(in srgb, var(--urd-color-bg) 100%, transparent)');
 });
 
 test('clampSideWidth: klemmes til 180-400, søppel gir standarden 250', () => {

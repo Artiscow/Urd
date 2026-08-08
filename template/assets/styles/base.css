@@ -2070,8 +2070,10 @@ body:has(dialog:modal) {
   border-radius: var(--urd-radius-sm);
   /* Skyggen skal kun falle nedover: kortet ligger kant i kant med barens
      bunn, og blur uten negativ spredning ville blødd oppover og lagt et
-     mørkt bånd på baren (samme fargebug som utfall-varianten hadde) */
-  box-shadow: 0 14px 28px -8px color-mix(in srgb, var(--urd-color-text) 18%, transparent);
+     mørkt bånd på baren (samme fargebug som utfall-varianten hadde).
+     Alltid svartbasert: en tekstfarget skygge blir en lys glorie i mørkt
+     tema, og nedtrekket skal matche baren, som ikke har noen. */
+  box-shadow: 0 14px 28px -8px rgb(0 0 0 / 18%);
   grid-template-columns: repeat(var(--urd-nav-sub-cols, 1), 1fr);
 }
 
@@ -2115,7 +2117,7 @@ body:has(dialog:modal) {
   backdrop-filter: var(--urd-nav-blur, blur(8px));
   border-radius: 999px;
   padding: 0.45rem 1.1rem;
-  box-shadow: 0 6px 14px -4px color-mix(in srgb, var(--urd-color-text) 15%, transparent);
+  box-shadow: 0 6px 14px -4px rgb(0 0 0 / 15%);
 }
 
 .urd-nav-sub-lines .urd-nav-sub {
@@ -2147,7 +2149,7 @@ body:has(dialog:modal) {
   border-radius: 0 0 var(--urd-radius-md) var(--urd-radius-md);
   /* Skyggen skal kun falle nedover: negativ spredning hindrer at blur-en
      blør oppover og legger et mørkt bånd på selve baren */
-  box-shadow: 0 16px 24px -8px color-mix(in srgb, var(--urd-color-text) 15%, transparent);
+  box-shadow: 0 16px 24px -8px rgb(0 0 0 / 15%);
 }
 
 /* Mobilmeny: burgeren erstatter listen; åpen liste blir et kolonnepanel
@@ -2183,7 +2185,7 @@ body.urd-mobile .urd-nav.urd-nav-open .urd-nav-list,
   padding: 0.75rem clamp(1rem, 4vw, 2.5rem) 1rem;
   background: var(--urd-nav-sub-bg, color-mix(in srgb, var(--urd-color-surface) 85%, transparent));
   backdrop-filter: var(--urd-nav-blur, blur(8px));
-  box-shadow: 0 12px 24px color-mix(in srgb, var(--urd-color-text) 15%, transparent);
+  box-shadow: 0 12px 24px rgb(0 0 0 / 15%);
   max-height: calc(100vh - 4rem);
   overflow-y: auto;
 }
