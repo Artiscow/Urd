@@ -225,11 +225,17 @@ Denne kontrakten er grunnen til at en Urd-oppdatering aldri knuser en bygget sid
 
 ## Maler
 
-En brukerlaget mal er en serialisert seksjon (eller hel side) lagret i `content/maler/<navn>.json` - samme form som over, med et lite metahode:
+En brukerlaget mal er en serialisert seksjon, blokkgruppe eller side lagret i `content/maler/<id>.json` (id er slug av navnet, samme id-regime som samlinger) - samme form som over, med et lite metahode. Nyttelast-nøkkelen er lik `mal.kind` (`section` | `blocks` | `page`):
 
 ```json
 { "schemaVersion": 1, "mal": { "name": "Vår hero", "kind": "section" }, "section": { … } }
+{ "schemaVersion": 1, "mal": { "name": "Kort-trio", "kind": "blocks" }, "blocks": [ … ] }
+{ "schemaVersion": 1, "mal": { "name": "Kampanjeside", "kind": "page" }, "page": { … } }
 ```
+
+- **Indeksfilen `content/maler.json`** (`{ "version": 1, "maler": ["<id>", …] }`) lister mal-id-ene, samme presedens som samlinger (ADR-0007): statiske hoster kan ikke liste mapper. Malrepoet skipper tom indeks.
+- **Re-id-regelen**: id-ene i malfilen er opphav og lagres urørt; HVER innsetting dypkloner og tildeler nye id-er (seksjon og alle blokker) før noe legges i sidedata, så samme mal kan settes inn flere ganger uten kollisjon. Blokkgrupper lagres med frames som de står; anker-flytting og klem innenfor seksjonen skjer ved innsetting, aldri ved lagring (hjelperne bor i motorens `maler-model.js`).
+- Skjemaet er `schema/mal.schema.json` (gjenbruker page-skjemaets seksjon- og blokkdefinisjoner); `npm run validate` validerer alle malene i indeksen pluss to syntetiske caser bygget fra en preset.
 
 «Lagre som mal» i editoren (v0.6) skriver disse; preset-velgeren viser dem side om side med kjerne-presets. En mal kan pakkes som plugin for deling.
 

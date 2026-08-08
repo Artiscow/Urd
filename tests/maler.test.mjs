@@ -1,0 +1,95 @@
+/**
+ * Mal-modellen (0.6.7): kontraktstester for maler-model.js - id-regimet,
+ * re-id-invariantene ved innsetting og anker/klem-geometrien for
+ * blokkgrupper. Skjemakontrakten (mal.schema.json) valideres i
+ * editor/scripts/validate.mjs; her testes de rene funksjonene.
+ */
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { engineImport } from './_engine.mjs';
+const { malId, cloneSectionForInsert, cloneBlocksForInsert, MAL_KINDS, MAL_SCHEMA_VERSION } = await engineImport('maler-model.js');
+
+let counter = 0;
+const makeId = (prefix) => `${prefix}-test-${++counter}`;
+
+const block = (id, frame) => ({
+  id, type: 'text', version: 1, props: { html: '<p>Hei</p>' },
+  frames: { desktop: { x: 10, y: 20, w: 30, h: 40, z: 1, rot: 0, ...frame }, mobile: null },
+});
+
+const section = () => ({
+  id: 'sec-opphav', version: 1, preset: 'hero',
+  size: { minHeight: '60vh' },
+  background: { version: 1, layers: [] },
+  blocks: [block('blk-a'), block('blk-b', { x: 50, y: 200 })],
+  responsive: { mobile: { mode: 'auto', attention: null } },
+});
+
+test('malId: slug av navnet, tom streng for ugyldig navn', () => {
+  assert.equal(malId('Vår hero'), 'var-hero');
+  assert.equal(malId('  Kort-trio!  '), 'kort-trio');
+  assert.equal(malId('!!!'), '');
+  assert.equal(malId(''), '');
+  assert.equal(malId(undefined), '');
+});
+
+test('kontraktskonstantene står', () => {
+  assert.deepEqual(MAL_KINDS, ['section', 'blocks', 'page']);
+  assert.equal(MAL_SCHEMA_VERSION, 1);
+});
+
+test('cloneSectionForInsert: alle id-er nye, originalen urørt, geometri bevart', () => {
+  const original = section();
+  const before = JSON.stringify(original);
+  const out = cloneSectionForInsert(original, makeId);
+
+  assert.notEqual(out.id, original.id);
+  assert.ok(out.id.startsWith('sec-test-'));
+  for (const [i, b] of out.blocks.entries()) {
+    assert.notEqual(b.id, original.blocks[i].id);
+    assert.ok(b.id.startsWith('blk-test-'));
+    assert.deepEqual(b.frames, original.blocks[i].frames);
+    assert.deepEqual(b.props, original.blocks[i].props);
+  }
+  assert.equal(JSON.stringify(original), before);
+});
+
+test('to innsettinger av samme mal gir disjunkte id-sett', () => {
+  const original = section();
+  const a = cloneSectionForInsert(original, makeId);
+  const b = cloneSectionForInsert(original, makeId);
+  const ids = (s) => [s.id, ...s.blocks.map((x) => x.id)];
+  assert.equal(new Set([...ids(a), ...ids(b)]).size, ids(a).length + ids(b).length);
+});
+
+test('cloneBlocksForInsert uten anker: posisjoner beholdes, minBottom riktig', () => {
+  const blocks = [block('blk-a'), block('blk-b', { x: 50, y: 200 })];
+  const { blocks: out, minBottom } = cloneBlocksForInsert(blocks, makeId);
+  assert.deepEqual(out.map((b) => [b.frames.desktop.x, b.frames.desktop.y]), [[10, 20], [50, 200]]);
+  assert.equal(minBottom, 240);
+  assert.ok(out.every((b) => b.id.startsWith('blk-test-')));
+});
+
+test('cloneBlocksForInsert med anker: gruppen flyttes samlet, innbyrdes oppsett bevart', () => {
+  const blocks = [block('blk-a'), block('blk-b', { x: 50, y: 200 })];
+  const { blocks: out } = cloneBlocksForInsert(blocks, makeId, { anchor: { x: 20, y: 100 } });
+  // Øvre venstre hjørne (min x=10, min y=20) skal treffe ankeret: delta (10, 80).
+  assert.deepEqual(out.map((b) => [b.frames.desktop.x, b.frames.desktop.y]), [[20, 100], [60, 280]]);
+});
+
+test('cloneBlocksForInsert: ankeret klemmes så gruppen holder seg i seksjonen', () => {
+  const blocks = [block('blk-a'), block('blk-b', { x: 50, y: 200 })];
+  // Anker langt til høyre: maks høyrekant er x=50 + w=30 = 80, så dx klemmes til 20.
+  const { blocks: out } = cloneBlocksForInsert(blocks, makeId, { anchor: { x: 95, y: 0 } });
+  assert.deepEqual(out.map((b) => b.frames.desktop.x), [30, 70]);
+  // Negativt anker i y klemmes til 0 for øverste blokk.
+  const { blocks: up } = cloneBlocksForInsert(blocks, makeId, { anchor: { x: 10, y: -500 } });
+  assert.equal(Math.min(...up.map((b) => b.frames.desktop.y)), 0);
+});
+
+test('cloneBlocksForInsert: frames.mobile følger med urørt (som lim inn)', () => {
+  const b = block('blk-a');
+  b.frames.mobile = { x: 0, y: 0, w: 100, h: 40, z: 1, rot: 0 };
+  const { blocks: out } = cloneBlocksForInsert([b], makeId, { anchor: { x: 30, y: 60 } });
+  assert.deepEqual(out[0].frames.mobile, b.frames.mobile);
+});

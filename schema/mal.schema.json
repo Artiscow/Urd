@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://urd.dev/schema/mal.schema.json",
+  "title": "Urd brukermal (content/maler/<id>.json)",
+  "description": "En brukerlaget mal: en serialisert seksjon, blokkgruppe eller side med et lite metahode. Nyttelast-nøkkelen er lik mal.kind; id-ene i filen er opphav og tildeles på nytt ved hver innsetting (se docs/SKJEMA.md, Maler).",
+  "type": "object",
+  "required": ["schemaVersion", "mal"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "mal": {
+      "type": "object",
+      "required": ["name", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["section", "blocks", "page"] }
+      }
+    },
+    "section": { "$ref": "https://urd.dev/schema/page.schema.json#/$defs/section" },
+    "blocks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "https://urd.dev/schema/page.schema.json#/$defs/block" }
+    },
+    "page": { "$ref": "https://urd.dev/schema/page.schema.json" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "mal": { "type": "object", "properties": { "kind": { "const": "section" } } } } },
+      "then": { "required": ["section"], "not": { "anyOf": [{ "required": ["blocks"] }, { "required": ["page"] }] } }
+    },
+    {
+      "if": { "properties": { "mal": { "type": "object", "properties": { "kind": { "const": "blocks" } } } } },
+      "then": { "required": ["blocks"], "not": { "anyOf": [{ "required": ["section"] }, { "required": ["page"] }] } }
+    },
+    {
+      "if": { "properties": { "mal": { "type": "object", "properties": { "kind": { "const": "page" } } } } },
+      "then": { "required": ["page"], "not": { "anyOf": [{ "required": ["section"] }, { "required": ["blocks"] }] } }
+    }
+  ]
+}

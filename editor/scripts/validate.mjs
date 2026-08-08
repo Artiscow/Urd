@@ -18,12 +18,14 @@ const siteSchema = load('schema/site.schema.json');
 const pageSchema = load('schema/page.schema.json');
 const pluginSchema = load('schema/plugin.schema.json');
 const collectionSchema = load('schema/collection.schema.json');
+const malSchema = load('schema/mal.schema.json');
 ajv.addSchema(siteSchema); // page.schema.json refererer site.schema.json ($id)
+ajv.addSchema(pageSchema); // mal.schema.json refererer page-skjemaets $defs ($id)
 
 const cases = [
   ['template/content/site.json', siteSchema.$id],
-  ['template/content/pages/hjem.json', pageSchema],
-  ['template/content/pages/om-oss.json', pageSchema],
+  ['template/content/pages/hjem.json', pageSchema.$id],
+  ['template/content/pages/om-oss.json', pageSchema.$id],
   ['template/plugins/kalender/plugin.json', pluginSchema],
   ['template/plugins/skjema/plugin.json', pluginSchema],
   ['template/plugins/kart/plugin.json', pluginSchema],
@@ -33,6 +35,12 @@ const cases = [
 // Alle samlinger fra indeksfilen valideres mot collection-skjemaet (ADR-0007).
 for (const id of load('template/content/samlinger.json').samlinger ?? []) {
   cases.push([`template/content/samlinger/${id}.json`, collectionSchema]);
+}
+
+// Alle maler fra indeksfilen valideres mot mal-skjemaet (samme mønster;
+// malrepoet skipper tom indeks, så listen er gjerne tom her).
+for (const id of load('template/content/maler.json').maler ?? []) {
+  cases.push([`template/content/maler/${id}.json`, malSchema]);
 }
 
 let failed = false;
@@ -65,7 +73,7 @@ for (const def of defs.values()) {
   sections.push(section);
 }
 const presetPage = { schemaVersion: 1, meta: { id: 'presets', title: 'Presets' }, sections };
-const validatePresets = typeof pageSchema === 'string' ? ajv.getSchema(pageSchema) : ajv.compile(pageSchema);
+const validatePresets = ajv.getSchema(pageSchema.$id);
 if (validatePresets(presetPage)) {
   console.log(`OK    seksjonspresets (${defs.size} presets mot page-skjemaet)`);
 } else {
@@ -75,5 +83,28 @@ if (validatePresets(presetPage)) {
     console.error(`      ${err.instancePath || '(rot)'}: ${err.message}`);
   }
 }
+
+// Syntetiske mal-caser: indeksen skipper tom, så kontrakten valideres med en
+// seksjons- og en blokkgruppe-mal bygget fra en ekte preset. Re-id-regelen og
+// geometrien testes i tests/maler.test.mjs; her gjelder skjemakontrakten.
+// En preset med blokker (den første, «tom», har ingen).
+const malSection = [...defs.values()].map((d) => d.create()).find((s) => s.blocks.length > 0);
+const syntheticMaler = [
+  { schemaVersion: 1, mal: { name: 'Testmal seksjon', kind: 'section' }, section: malSection },
+  { schemaVersion: 1, mal: { name: 'Testmal gruppe', kind: 'blocks' }, blocks: malSection.blocks },
+];
+const validateMal = ajv.compile(malSchema);
+let malOk = true;
+for (const sample of syntheticMaler) {
+  if (!validateMal(sample)) {
+    failed = true;
+    malOk = false;
+    console.error(`FEIL  syntetisk mal (${sample.mal.kind})`);
+    for (const err of validateMal.errors ?? []) {
+      console.error(`      ${err.instancePath || '(rot)'}: ${err.message}`);
+    }
+  }
+}
+if (malOk) console.log('OK    syntetiske maler (2 mot mal-skjemaet)');
 
 process.exit(failed ? 1 : 0);

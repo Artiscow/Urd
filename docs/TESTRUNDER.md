@@ -2,6 +2,11 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.6.7.2): Mal-formatet (datagrunn, ingen UI ennå)
+
+- [ ] `npm run validate` viser «OK syntetiske maler (2 mot mal-skjemaet)» og ingen strict-advarsler; CI grønn
+- [ ] Den tomme content/maler.json deployes uten å påvirke noe (ingen 404-er eller endret oppførsel på siden)
+
 ### Testrunde-batch (0.6.7.1): Middels-reviewrunden
 
 - [ ] Håndredigert innhold uten version-felt (fjern `"version"` fra en blokk i en sidefil lokalt): blokken rendres riktig (migrert som v1), ikke som om den var gjeldende format
