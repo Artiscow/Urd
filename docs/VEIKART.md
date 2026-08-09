@@ -72,6 +72,8 @@ Fasen styres som milepælene 0.6.1-0.6.9 i [BACKLOG.md](BACKLOG.md), og vokste u
 - Er ting rotete?
 - Noe som ikke er lett å forstå eller lett å misforstå?
 
+Fasen styres som milepælene 0.7.0-0.7.11 i [BACKLOG.md](BACKLOG.md) (delt opp 9. august 2026: arkitekturavklaringene bredde og mobil først, deretter blokker, butikk og synlighet, finpuss mot slutten).
+
 **Port:** en testbestilling går gjennom handlekurv, bestillingsskjema og e-post på en deployet side; publisert side har meta/og-felter, sitemap, robots og 404; intuitivitets-gjennomgangen er gjennomført og funnene sortert inn i backloggen; arkitektur-avklaringene (mobil, innholdsbredde, klientside-navigasjon) er landet med ADR eller eksplisitt flyttet.
 
 ## v0.8 - Optimalisering
