@@ -84,6 +84,24 @@ if (validatePresets(presetPage)) {
   }
 }
 
+// Startpakkene (innebygde side-maler, 0.6.7.12): hver bygde side skal være
+// skjemagyldig. Preset-referansene og id-unikheten testes i
+// tests/page-presets.test.mjs; her gjelder skjemakontrakten.
+const { PAGE_PRESETS, buildPagePreset } = await import(new URL(`template/assets/engine/${engineVersion}/page-presets.js`, `file://${root}`));
+let pagePresetOk = true;
+for (const preset of PAGE_PRESETS) {
+  const built = buildPagePreset(preset.id, { pageId: 'startpakke', title: 'Startpakke' });
+  if (!validatePresets(built)) {
+    failed = true;
+    pagePresetOk = false;
+    console.error(`FEIL  startpakke (${preset.id})`);
+    for (const err of validatePresets.errors ?? []) {
+      console.error(`      ${err.instancePath || '(rot)'}: ${err.message}`);
+    }
+  }
+}
+if (pagePresetOk) console.log(`OK    startpakker (${PAGE_PRESETS.length} mot page-skjemaet)`);
+
 // Syntetiske mal-caser: indeksen skipper tom, så kontrakten valideres med en
 // seksjons-, en blokkgruppe- og en side-mal bygget fra ekte presets.
 // Re-id-regelen og geometrien testes i tests/maler.test.mjs; her gjelder

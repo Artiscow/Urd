@@ -115,6 +115,26 @@ const sitat = (fr, props = {}) => ({
   frames: fr,
 });
 
+/* Tidslinje-blokk (0.6.7.11): hendelser langs en tegnet linje. */
+const tidslinje = (fr, items) => ({
+  id: makeId('blk'),
+  type: 'tidslinje',
+  version: 1,
+  props: { items, variant: 'venstre', marker: 'fylt', accent: null },
+  animation: null,
+  frames: fr,
+});
+
+/* Statistikk-blokk (0.6.7.11): ett nøkkeltall med etikett og tell-opp. */
+const statistikk = (fr, props = {}) => ({
+  id: makeId('blk'),
+  type: 'statistikk',
+  version: 1,
+  props: { value: '4800', prefix: '', suffix: '', label: '', countUp: true, ...props },
+  animation: null,
+  frames: fr,
+});
+
 const bg = (...layers) => ({ version: 1, layers });
 const colorLayer = (value) => ({ type: 'color', version: 1, props: { value } });
 const glowLayer = (x, y, opacity, radius = 0.5) => ({
@@ -505,6 +525,23 @@ export function registerSectionPresets(Urd) {
     ]),
   });
 
+  Urd.sections.define('tidslinje', {
+    label: 'Tidslinje',
+    labelKey: 'preset.tidslinje.label',
+    group: 'Kort og lister',
+    groupKey: 'presetGroup.cards',
+    hint: 'Historien som hendelser langs en linje',
+    hintKey: 'preset.tidslinje.hint',
+    create: () => section('tidslinje', '480px', bg(colorLayer('bg')), [
+      text(frame(25, 24, 50, 36), ta('seed.tidslinje.title'), { align: 'center' }),
+      tidslinje(frame(25, 88, 50, 330), [
+        { year: '2019', title: ta('seed.tidslinje.t1'), text: ta('seed.tidslinje.text') },
+        { year: '2022', title: ta('seed.tidslinje.t2'), text: ta('seed.tidslinje.text') },
+        { year: '2026', title: ta('seed.tidslinje.t3'), text: ta('seed.tidslinje.text') },
+      ]),
+    ]),
+  });
+
   Urd.sections.define('steg', {
     label: 'Steg for steg',
     labelKey: 'preset.steg.label',
@@ -645,30 +682,27 @@ export function registerSectionPresets(Urd) {
     groupKey: 'presetGroup.highlight',
     hint: 'Tre store tall med etikett',
     hintKey: 'preset.statistikk.hint',
+    // Modernisert i 0.6.7.12: bruker statistikk-blokken (tell-opp ved entré)
+    // i stedet for to tekstblokker per tall.
     create: () => {
-      const stat = (x, col, value, label) => {
-        // Tallrammen har litt slark over fontens linjeboks (h2 med size 44 blir ~76px hoy).
-        const num = text(frame(x, 72, 25, 84), `<h2>${value}</h2>`, { align: 'center', size: 44 });
-        const lbl = text(frame(x, 160, 25, 36), `<p>${label}</p>`, { align: 'center' });
-        num.mobileOrder = cardOrder(72, col, 0);
-        lbl.mobileOrder = cardOrder(72, col, 1);
-        return [num, lbl];
+      const stat = (x, col, value, suffix, label) => {
+        const s = statistikk(frame(x, 76, 25, 120), { value, suffix, label });
+        s.mobileOrder = cardOrder(76, col, 0);
+        return s;
       };
       return section('statistikk', '260px', bg(colorLayer('surface')), [
-        ...stat(6, 0, '120+', ta('seed.stats.l1')),
-        ...stat(37.5, 1, '25', ta('seed.stats.l2')),
-        ...stat(69, 2, '1981', ta('seed.stats.l3')),
+        stat(6, 0, '120', '+', ta('seed.stats.l1')),
+        stat(37.5, 1, '25', '', ta('seed.stats.l2')),
+        stat(69, 2, '1981', '', ta('seed.stats.l3')),
       ]);
     },
     itemLabel: 'tall',
     itemLabelKey: 'item.number',
     item: (sec) => {
-      const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 72, 140, 25, 124);
-      const num = text(frame(x, y, 25, 84), '<h2>42</h2>', { align: 'center', size: 44 });
-      const lbl = text(frame(x, y + 88, 25, 36), `<p>${ta('seed.stats.newLabel')}</p>`, { align: 'center' });
-      num.mobileOrder = cardOrder(72, n, 0);
-      lbl.mobileOrder = cardOrder(72, n, 1);
-      return { blocks: [num, lbl], bottom: y + 152 };
+      const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 76, 140, 25, 120);
+      const s = statistikk(frame(x, y, 25, 120), { value: '42', label: ta('seed.stats.newLabel') });
+      s.mobileOrder = cardOrder(76, n, 0);
+      return { blocks: [s], bottom: y + 148 };
     },
   });
 

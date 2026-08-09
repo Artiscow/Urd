@@ -2,6 +2,24 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.6.7.13): Nytt + Ny seksjon-galleri (G2 + F2)
+
+- [ ] Galleriet åpnes med kategorifelt (Alle, Grunnleggende, Kort og lister, Fremheving, Plugins, Mine maler) og søkefeltet fokusert; nederste seksjonsgrense åpner fortsatt oppover
+- [ ] Kategoriene: Alle viser gruppene med klistrede overskrifter; et kategorivalg viser kun sine kort uten overskrift; valget huskes til neste åpning i samme økt; Plugins-kategorien finnes kun med aktive plugin-presets/-maler
+- [ ] Søket treffer på tvers av presets, plugin-presets og egne maler uansett valgt kategori; Enter setter inn første treff; Escape lukker; tomtreff-linjen vises
+- [ ] Fargene: hver kategori har sin egen tone (prikk, overskrift, kortkant, aktivt valg, søketreffenes kort); bytt admin-tema og se at hele paletten følger med; grå-temaet gir dempede men skilbare toner
+- [ ] Hint vises som tooltip ved pek på kortene; Mine maler har tomtilstand, kryss-sletting og re-id-innsetting som før
+- [ ] Ingen chip-stil (stiplet ellipse/forskyvning) på noen knapp i galleriet
+- [ ] Markøren langs venstre kant av valgt seksjon er borte; palett-innsetting havner fortsatt i sist klikkede seksjon, og Ren visning er uendret
+
+### Testrunde-batch (0.6.7.12): Innebygde side-maler (startpakkene)
+
+- [ ] «Ny side fra mal»-rutenettet viser Innebygde-gruppen (Tom side + fem startpakker med miniatyrer) også uten egne side-maler; Mine maler-gruppen kommer under når egne maler finnes (merk: rutenettet forsvinner ikke lenger når siste egne mal slettes, det var 0.6.7.10-atferden)
+- [ ] Opprett en side fra hver startpakke: riktige seksjoner i riktig rekkefølge, redigerbar som vanlig, og Om oss inneholder tidslinje-blokken
+- [ ] Tidslinje-presetet ligger i + Ny seksjon under Kort og lister
+- [ ] Statistikk-presetet gir tre statistikk-blokker (tell-opp hos besøkende); «+ tall» legger til en fjerde
+- [ ] To sider fra samme startpakke deler ingen id-er (rediger den ene, den andre står urørt)
+
 ### Testrunde-batch (0.6.7.11): Tidslinje-, sitat- og statistikk-blokkene
 
 - [ ] De tre blokkene kan settes inn fra Blokker-panelet, panelsøket OG lerret-menyen (+ Ny blokk/dobbeltklikk/slash); FAQ står i hovedlisten i lerret-menyen, ikke under Plugin-blokker

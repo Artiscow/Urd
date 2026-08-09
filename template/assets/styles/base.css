@@ -3628,10 +3628,10 @@ body.urd-mobile .urd-section-resize-top {
   display: grid;
 }
 
-/* Aktiv seksjon (sist klikket): nye blokker fra paletten havner her */
-.urd-preview .urd-section-active {
-  box-shadow: inset 3px 0 0 var(--urd-admin-accent, #5f6a75);
-}
+/* Aktiv seksjon (sist klikket): nye blokker fra paletten havner her.
+   Klassen er rent funksjonell - kantmarkøren den tegnet ble fjernet på
+   eierbeskjed 9. august 2026 (verktøylinjen viser alt hvilken seksjon
+   som er aktiv). */
 
 /* Markert blokk: varig omriss og alltid synlige håndtak */
 .urd-preview .urd-block.urd-selected {
@@ -3761,19 +3761,21 @@ body.urd-mobile .urd-section-resize-top {
   pointer-events: auto;
 }
 
+/* Kategori-sidefelt-formen (G2, 0.6.7.13): smalt kategorifelt til venstre,
+   søk + rutenett til høyre. Scrollen bor i innholdsfeltet, ikke i menyen. */
 .urd-preview .urd-preset-menu {
   position: absolute;
   top: 8px;
   left: 50%;
   transform: translateX(-50%);
-  width: 340px;
-  max-height: 360px;
-  overflow-y: auto;
+  display: flex;
+  width: min(560px, calc(100vw - 16px));
+  max-height: min(70vh, 460px);
+  overflow: hidden;
   background: var(--urd-color-bg);
   border: 1px solid color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 45%, transparent);
   border-radius: 10px;
   box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
-  padding: 6px;
   text-align: left;
   z-index: 1003;
 }
@@ -3783,24 +3785,147 @@ body.urd-mobile .urd-section-resize-top {
   bottom: 8px;
 }
 
-.urd-preview .urd-preset-head {
+/* Kategorifargene (F2, eiervalg 9. august 2026): fem faste steg avledet av
+   admin-aksenten. Uten relativ fargesyntaks-støtte faller alle stegene
+   tilbake til aksenten alene (dagens utseende, ADR-0011-mønsteret). Rødt
+   brukes ikke (reservert destruktive handlinger). Metningsgulvet max(c, 0.09)
+   gir grå-temaet dempede, men skilbare toner. */
+.urd-preview .urd-preset-menu {
+  --urd-kat-1: var(--urd-admin-accent, #5f6a75);
+  --urd-kat-2: var(--urd-admin-accent, #5f6a75);
+  --urd-kat-3: var(--urd-admin-accent, #5f6a75);
+  --urd-kat-4: var(--urd-admin-accent, #5f6a75);
+  --urd-kat-5: var(--urd-admin-accent, #5f6a75);
+}
+
+@supports (color: oklch(from red l max(c, 0.09) calc(h + 48))) {
+  .urd-preview .urd-preset-menu {
+    --urd-kat-1: oklch(from var(--urd-admin-accent, #5f6a75) l max(c, 0.09) h);
+    --urd-kat-2: oklch(from var(--urd-admin-accent, #5f6a75) l max(c, 0.09) calc(h + 243));
+    --urd-kat-3: oklch(from var(--urd-admin-accent, #5f6a75) l max(c, 0.09) calc(h + 153));
+    --urd-kat-4: oklch(from var(--urd-admin-accent, #5f6a75) l max(c, 0.09) calc(h + 48));
+    --urd-kat-5: oklch(from var(--urd-admin-accent, #5f6a75) l max(c, 0.09) calc(h - 62));
+  }
+}
+
+/* Kategoriprikken: bæres av kategoriknappene og gruppeoverskriftene. */
+.urd-preview .urd-preset-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--urd-kat, var(--urd-admin-accent, #5f6a75));
+}
+
+/* «Alle» peker på hele paletten: prikken er en liten gradient over stegene. */
+.urd-preview .urd-preset-rail-alle .urd-preset-dot {
+  background: linear-gradient(135deg, var(--urd-kat-1), var(--urd-kat-3));
+}
+
+.urd-preview .urd-preset-rail {
+  flex: 0 0 122px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 8px 6px;
+  flex-direction: column;
+  gap: 2px;
+  align-items: stretch;
+  padding: 8px 6px;
+  border-right: 1px solid color-mix(in srgb, var(--urd-color-text) 10%, transparent);
+  overflow-y: auto;
+}
+
+.urd-preview .urd-preset-rail-title {
+  padding: 0 6px 6px;
   font-size: 12px;
   font-weight: 600;
   color: var(--urd-color-text);
 }
 
+/* Kategorknappene: chip-regelen (.urd-add-section button) treffer alle
+   knapper i baren, så selektoren går via .urd-preset-menu og resetter
+   transform/opacity (0.6.7.7-lærdommen). */
+.urd-preview .urd-preset-menu .urd-preset-rail button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transform: none;
+  opacity: 1;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  font: 600 11.5px system-ui, sans-serif;
+  padding: 5px 7px;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.urd-preview .urd-preset-menu .urd-preset-rail button:hover {
+  background: color-mix(in srgb, var(--urd-kat, var(--urd-admin-accent, #5f6a75)) 14%, transparent);
+}
+
+/* Aktivt kategorivalg fylles med kategoriens EGEN farge (F2). */
+.urd-preview .urd-preset-menu .urd-preset-rail button.on {
+  background: color-mix(in srgb, var(--urd-kat, var(--urd-admin-accent, #5f6a75)) 26%, transparent);
+  color: var(--urd-color-text);
+}
+
+/* Mine maler skilles fra preset-kategoriene med en tynn strek. */
+.urd-preview .urd-preset-menu .urd-preset-rail .urd-preset-rail-maler {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--urd-color-text) 10%, transparent);
+  border-radius: 0 0 7px 7px;
+}
+
+.urd-preview .urd-preset-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.urd-preview .urd-preset-top {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 6px 4px;
+}
+
+.urd-preview .urd-preset-menu .urd-preset-search {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 18%, transparent);
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  font: 12px system-ui, sans-serif;
+  padding: 5px 8px;
+  outline: none;
+}
+
+.urd-preview .urd-preset-menu .urd-preset-search:focus {
+  border-color: var(--urd-admin-accent, #5f6a75);
+}
+
+.urd-preview .urd-preset-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 6px 6px;
+}
+
 .urd-preview .urd-preset-menu .urd-preset-close {
   transform: none;
+  opacity: 1;
   border: 0;
   background: transparent;
   border-radius: 6px;
   font-size: 14px;
   line-height: 1;
   padding: 2px 7px;
+  cursor: pointer;
 }
 
 /* Bytt oppsett-stripen (0.6.7, variant B): horisontal miniatyr-rekke som
@@ -3946,51 +4071,13 @@ body.urd-mobile .urd-section-resize-top {
   color: color-mix(in srgb, var(--urd-color-text) 55%, transparent);
 }
 
-/* Fanene i preset-galleriet (Mine maler, 0.6.7, variant C): segmentkontroll
-   i full bredde rett under tittelen; fanevalget huskes per økt.
-   Selektorene går via .urd-preset-menu og resetter transform/opacity:
-   barens chip-regel (.urd-add-section button) treffer ellers alle
-   knapper i menyen (samme grunn som .urd-preset-choice-resetene). */
-.urd-preview .urd-preset-tabs {
-  display: flex;
-  padding: 0 6px 6px;
-}
-
-.urd-preview .urd-preset-menu .urd-preset-tabs button {
-  flex: 1;
-  transform: none;
-  opacity: 1;
-  border: 1px solid color-mix(in srgb, var(--urd-color-text) 18%, transparent);
-  border-radius: 0;
-  background: transparent;
-  color: inherit;
-  font: 600 11px system-ui, sans-serif;
-  padding: 5px 0;
-  cursor: pointer;
-}
-
-.urd-preview .urd-preset-menu .urd-preset-tabs button:first-child {
-  border-radius: 999px 0 0 999px;
-  border-right: 0;
-}
-
-.urd-preview .urd-preset-menu .urd-preset-tabs button:last-child {
-  border-radius: 0 999px 999px 0;
-}
-
-.urd-preview .urd-preset-menu .urd-preset-tabs button.on {
-  background: var(--urd-admin-accent, #5f6a75);
-  border-color: var(--urd-admin-accent, #5f6a75);
-  color: var(--urd-admin-accent-text, #fff);
-}
-
-/* Mine maler-fanen: 2-kolonners rutenett med stor miniatyr, navn og
+/* Mine maler-kategorien: 2-kolonners rutenett med stor miniatyr, navn og
    sletteknapp (vises ved pek på kortet) */
 .urd-preview .urd-mal-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px;
-  padding: 2px 6px 8px;
+  padding: 2px 0 2px;
 }
 
 .urd-preview .urd-mal-card {
@@ -4004,7 +4091,7 @@ body.urd-mobile .urd-section-resize-top {
   transform: none;
   opacity: 1;
   padding: 6px;
-  border: 1px solid color-mix(in srgb, var(--urd-color-text) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--urd-kat, var(--urd-color-text)) 30%, transparent);
   border-radius: 8px;
   background: transparent;
   color: inherit;
@@ -4014,8 +4101,8 @@ body.urd-mobile .urd-section-resize-top {
 }
 
 .urd-preview .urd-preset-menu .urd-mal-pick:hover {
-  border-color: var(--urd-admin-accent, #5f6a75);
-  background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 12%, transparent);
+  border-color: color-mix(in srgb, var(--urd-kat, var(--urd-admin-accent, #5f6a75)) 75%, transparent);
+  background: color-mix(in srgb, var(--urd-kat, var(--urd-admin-accent, #5f6a75)) 12%, transparent);
 }
 
 .urd-preview .urd-mal-thumb {
@@ -4073,34 +4160,59 @@ body.urd-mobile .urd-section-resize-top {
   align-items: center;
 }
 
+/* Gruppeoverskriftene i «Alle»-visningen klistres i toppen av scrollfeltet,
+   så man alltid ser hvilken gruppe kortene under tilhører. Teksten tones i
+   kategoriens farge (F2). */
 .urd-preview .urd-preset-group {
-  padding: 8px 8px 3px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--urd-color-bg);
+  padding: 8px 2px 3px;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--urd-color-text) 55%, transparent);
+  color: color-mix(in srgb, var(--urd-kat, var(--urd-color-text)) 70%, var(--urd-color-text));
 }
 
-.urd-preview .urd-preset-menu .urd-preset-choice {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
+/* Preset-rutenettet (G2): kort med miniatyr over navnet; hintet bor i
+   tooltip (title), ikke som permanent undertekst. */
+.urd-preview .urd-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 2px 0 6px;
+}
+
+.urd-preview .urd-preset-menu .urd-preset-card {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
   transform: none;
-  border: 1px solid transparent;
+  opacity: 1;
+  border: 1px solid color-mix(in srgb, var(--urd-kat, var(--urd-color-text)) 30%, transparent);
   border-radius: 8px;
   background: transparent;
-  padding: 6px 8px;
-  text-align: left;
-  opacity: 1;
+  color: inherit;
+  font: inherit;
+  padding: 5px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.urd-preview .urd-preset-menu .urd-preset-card:hover {
+  background: color-mix(in srgb, var(--urd-kat, var(--urd-admin-accent, #5f6a75)) 12%, transparent);
+  border-color: color-mix(in srgb, var(--urd-kat, var(--urd-admin-accent, #5f6a75)) 75%, transparent);
 }
 
 /* Auto-generert miniatyr (preset-thumb.js): skjematisk skisse av seksjonen */
 .urd-preview .urd-preset-thumb {
-  flex: 0 0 auto;
-  width: 84px;
-  height: 48px;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 20%, transparent);
   border-radius: 5px;
@@ -4112,27 +4224,12 @@ body.urd-mobile .urd-section-resize-top {
   height: 100%;
 }
 
-.urd-preview .urd-preset-body {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-}
-
-.urd-preview .urd-preset-menu .urd-preset-choice:hover {
-  background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 14%, transparent);
-  border-color: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 45%, transparent);
-  border-style: solid;
-}
-
 .urd-preview .urd-preset-label {
-  font-size: 12.5px;
+  font-size: 11.5px;
   font-weight: 600;
-}
-
-.urd-preview .urd-preset-hint {
-  font-size: 11px;
-  color: color-mix(in srgb, var(--urd-color-text) 60%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Seksjonens verktøylinje (flytt opp/ned, tilpass høyde, slett) - synlig
@@ -4209,10 +4306,6 @@ body.urd-mobile .urd-section-resize-top {
 /* Redaksjonelle markeringer sitter som klasser på selve seksjonen og kan
    ikke display:none-es: effektene nulles i stedet, så Ren visning er
    identisk med publisert side. */
-.urd-preview.urd-chrome-off .urd-section-active {
-  box-shadow: none;
-}
-
 .urd-preview.urd-chrome-off .urd-attention {
   outline: none;
 }

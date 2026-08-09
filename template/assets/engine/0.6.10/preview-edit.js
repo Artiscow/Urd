@@ -47,8 +47,9 @@ export function setMaler(list) {
   maler = Array.isArray(list) ? list : [];
 }
 
-/** Fanevalget i preset-galleriet huskes per økt (variant C, eiervalg 8. august 2026). */
-let presetTabMaler = false;
+/** Kategorivalget i preset-galleriet huskes per økt (G2 kategori-sidefelt,
+ *  eiervalg 9. august 2026; avløste segmentfanene fra variant C). */
+let presetCategory = 'alle';
 
 /** Oppsettenes visningsnavn (nøklene i kjernespråkene). */
 const LAYOUT_LABEL_KEYS = {
@@ -843,116 +844,120 @@ function makeSectionAdder(index, above = null) {
     bar.classList.add('open');
     bar.replaceChildren();
 
-    // Preset-galleriet: gruppert etter def.group med def.hint som beskrivelse.
-    // Feltene er valgfrie; presets uten group havner under «Annet».
-    // Gruppene beholder registerets rekkefølge.
+    // Preset-galleriet i kategori-sidefelt-formen (G2, eiervalg 9. august
+    // 2026): smalt kategorifelt til venstre (Alle, kjernegruppene, Plugins,
+    // Mine maler), rutenett med søk til høyre. Gruppene beholder registerets
+    // rekkefølge; presets uten group havner under «Annet».
     const menu = document.createElement('div');
     menu.className = 'urd-preset-menu';
     // Den nederste grensen ligger ved sidens slutt, der iframen ikke har plass under: åpne galleriet oppover i stedet.
     // På en tom side (kun én grense) finnes ingenting over, da åpnes det fortsatt nedover.
     if (!bar.nextElementSibling && bar.previousElementSibling) menu.classList.add('urd-preset-up');
 
-    const head = document.createElement('div');
-    head.className = 'urd-preset-head';
-    const title = document.createElement('span');
-    title.textContent = ta('canvas.newSectionTitle');
+    // Kildene samles ÉN gang ved åpning: kjernegruppene på group-STRENGEN
+    // (visningen via groupKey - plugin-kontrakten), plugin-presets og
+    // plugin-leverte maler (kind section, via re-id-regelen) i egen gruppe.
+    const groups = new Map();
+    const pluginDefs = [];
+    for (const id of window.Urd.sections.ids()) {
+      const def = window.Urd.sections.get(id);
+      if (def.fromPlugin) {
+        pluginDefs.push(def);
+        continue;
+      }
+      const group = def.group ?? '';
+      if (!groups.has(group)) groups.set(group, { labelKey: def.groupKey ?? null, defs: [] });
+      groups.get(group).defs.push(def);
+    }
+    for (const id of window.Urd.maler?.ids?.() ?? []) {
+      const mal = window.Urd.maler.get(id);
+      if (mal?.kind !== 'section' || !mal.section) continue;
+      pluginDefs.push({ label: mal.name ?? id, fromPlugin: mal.fromPlugin, create: () => cloneSectionForInsert(mal.section, makeId) });
+    }
+    if (pluginDefs.length) groups.set('__plugins', { labelKey: 'panel.plugins', defs: pluginDefs });
+    const groupLabel = (name, labelKey) => (labelKey ? ta(labelKey) : (name || ta('canvas.groupOther')));
+
+    // Kategorifargene (F2, eiervalg 9. august 2026): hver gruppe får et fast
+    // fargesteg avledet av admin-aksenten i base.css (--urd-kat-1..5, syklisk
+    // ved flere grupper); Mine maler har alltid steg 5. Fargen settes som
+    // --urd-kat på kort, overskrifter og kategoriknapper.
+    const MAL_KAT = 5;
+    const katFor = new Map([...groups.keys()].map((name, i) => [name, (i % 5) + 1]));
+    const setKat = (el, kat) => el.style.setProperty('--urd-kat', `var(--urd-kat-${kat})`);
+    const makeDot = () => {
+      const dot = document.createElement('span');
+      dot.className = 'urd-preset-dot';
+      return dot;
+    };
+
+    // Kategorifeltet: Alle + gruppene + Mine maler (relevans-regelen: en tom
+    // plugin-gruppe finnes ikke i groups og får dermed ingen knapp).
+    const rail = document.createElement('div');
+    rail.className = 'urd-preset-rail';
+    const railTitle = document.createElement('span');
+    railTitle.className = 'urd-preset-rail-title';
+    railTitle.textContent = ta('canvas.newSectionTitle');
+    rail.appendChild(railTitle);
+
+    const main = document.createElement('div');
+    main.className = 'urd-preset-main';
+    const top = document.createElement('div');
+    top.className = 'urd-preset-top';
+    const search = document.createElement('input');
+    search.type = 'text';
+    search.className = 'urd-preset-search';
+    search.placeholder = ta('canvas.searchSections');
+    search.title = ta('canvas.searchSections');
     const cancel = document.createElement('button');
+    cancel.type = 'button';
     cancel.className = 'urd-preset-close';
     cancel.textContent = '×';
     cancel.title = ta('confirm.cancel');
     cancel.addEventListener('click', collapse);
-    head.append(title, cancel);
-    menu.appendChild(head);
-
-    // To segmentfaner (variant C, eiervalg 8. august 2026): innebygde
-    // presets og Mine maler (lagrede seksjons-maler). Fanevalget huskes
-    // per økt i presetTabMaler.
-    const tabs = document.createElement('div');
-    tabs.className = 'urd-preset-tabs';
-    const tabPresets = document.createElement('button');
-    tabPresets.type = 'button';
-    tabPresets.textContent = ta('canvas.tabPresets');
-    const tabMaler = document.createElement('button');
-    tabMaler.type = 'button';
-    tabMaler.textContent = ta('canvas.tabMyTemplates');
-    tabs.append(tabPresets, tabMaler);
-    menu.appendChild(tabs);
+    top.append(search, cancel);
     const content = document.createElement('div');
-    menu.appendChild(content);
+    content.className = 'urd-preset-content';
+    main.append(top, content);
+    menu.append(rail, main);
 
-    // Innebygde-fanen: kjernens presets grupperes som før; plugin-presets
-    // samles i en egen «Plugins»-seksjon under alt det innebygde.
-    const renderPresets = () => {
-      content.replaceChildren();
-      const groups = new Map();
-      const pluginDefs = [];
-      for (const id of window.Urd.sections.ids()) {
-        const def = window.Urd.sections.get(id);
-        if (def.fromPlugin) {
-          pluginDefs.push(def);
-          continue;
-        }
-        // Grupperingen skjer på group-STRENGEN (id); kun visningen oversettes
-        // (groupKey med group som fallback - plugin-kontrakten).
-        const group = def.group ?? '';
-        if (!groups.has(group)) groups.set(group, { labelKey: def.groupKey ?? null, defs: [] });
-        groups.get(group).defs.push(def);
-      }
-      // Plugin-leverte maler (Urd.maler, kind section) flettes inn i
-      // plugin-gruppen som vanlige valg: create() går via re-id-regelen,
-      // så presetThumb og innsetting virker uendret.
-      for (const id of window.Urd.maler?.ids?.() ?? []) {
-        const mal = window.Urd.maler.get(id);
-        if (mal?.kind !== 'section' || !mal.section) continue;
-        pluginDefs.push({ label: mal.name ?? id, fromPlugin: mal.fromPlugin, create: () => cloneSectionForInsert(mal.section, makeId) });
-      }
-      if (pluginDefs.length) groups.set('__plugins', { labelKey: 'panel.plugins', defs: pluginDefs });
-      for (const [name, { labelKey, defs }] of groups) {
-        const heading = document.createElement('div');
-        heading.className = 'urd-preset-group';
-        heading.textContent = labelKey ? ta(labelKey) : (name || ta('canvas.groupOther'));
-        content.appendChild(heading);
-        for (const def of defs) {
-          const choice = document.createElement('button');
-          choice.type = 'button';
-          choice.className = 'urd-preset-choice';
-          // Auto-generert miniatyr fra presetens faktiske data (dataene
-          // forkastes). En kastende plugin-preset skal aldri velte menyen:
-          // da vises valget uten skisse, som før.
-          try {
-            const thumb = document.createElement('span');
-            thumb.className = 'urd-preset-thumb';
-            thumb.insertAdjacentHTML('afterbegin', presetThumb(def.create()));
-            choice.appendChild(thumb);
-          } catch { /* tekstvalg uten miniatyr */ }
-          const body = document.createElement('span');
-          body.className = 'urd-preset-body';
-          choice.appendChild(body);
-          const label = document.createElement('span');
-          label.className = 'urd-preset-label';
-          label.textContent = def.labelKey ? ta(def.labelKey) : def.label;
-          body.appendChild(label);
-          if (def.hintKey || def.hint) {
-            const hint = document.createElement('span');
-            hint.className = 'urd-preset-hint';
-            hint.textContent = def.hintKey ? ta(def.hintKey) : def.hint;
-            body.appendChild(hint);
-          }
-          choice.addEventListener('click', () => {
-            post({ type: 'urd-add-section', index, section: def.create() });
-            // Rerenderingen fjerner menyen fra DOM: rydd document-lytteren nå i stedet for ved neste tilfeldige klikk.
-            cleanupOutside();
-          });
-          content.appendChild(choice);
-        }
-      }
+    /** Preset-kort i rutenettet: miniatyr + navn, hintet som tooltip.
+     *  En kastende plugin-preset skal aldri velte menyen: tekstkort uten
+     *  skisse i stedet (samme vern som før). */
+    const buildCard = (def, kat) => {
+      const choice = document.createElement('button');
+      choice.type = 'button';
+      choice.className = 'urd-preset-card';
+      setKat(choice, kat);
+      if (def.hintKey || def.hint) choice.title = def.hintKey ? ta(def.hintKey) : def.hint;
+      try {
+        const thumb = document.createElement('span');
+        thumb.className = 'urd-preset-thumb';
+        thumb.insertAdjacentHTML('afterbegin', presetThumb(def.create()));
+        choice.appendChild(thumb);
+      } catch { /* tekstkort uten miniatyr */ }
+      const label = document.createElement('span');
+      label.className = 'urd-preset-label';
+      label.textContent = def.labelKey ? ta(def.labelKey) : def.label;
+      choice.appendChild(label);
+      choice.addEventListener('click', () => {
+        post({ type: 'urd-add-section', index, section: def.create() });
+        // Rerenderingen fjerner menyen fra DOM: rydd document-lytteren nå i stedet for ved neste tilfeldige klikk.
+        cleanupOutside();
+      });
+      return choice;
     };
 
-    // Mine maler-fanen: rutenett med stor miniatyr, navn og sletteknapp.
+    const buildGrid = (entries) => {
+      const grid = document.createElement('div');
+      grid.className = 'urd-preset-grid';
+      for (const { def, kat } of entries) grid.appendChild(buildCard(def, kat));
+      return grid;
+    };
+
+    // Mine maler: rutenett med stor miniatyr, navn og sletteknapp.
     // Innsetting går via cloneSectionForInsert (re-id-regelen i SKJEMA.md):
     // nye id-er hver gang, så samme mal kan settes inn flere ganger.
     const renderMaler = () => {
-      content.replaceChildren();
       const list = maler.filter((m) => m.kind === 'section' && m.section);
       if (!list.length) {
         const empty = document.createElement('div');
@@ -996,22 +1001,97 @@ function makeSectionAdder(index, above = null) {
           cleanupOutside();
           collapse();
         });
+        setKat(card, MAL_KAT);
         card.append(pick, del);
         grid.appendChild(card);
       }
       content.appendChild(grid);
     };
 
-    const applyTab = () => {
-      tabPresets.classList.toggle('on', !presetTabMaler);
-      tabMaler.classList.toggle('on', presetTabMaler);
-      if (presetTabMaler) renderMaler();
-      else renderPresets();
+    // Søket går alltid på tvers av alle kategorier (flat, rangert treffliste
+    // som blokkmenyens, eiervalg 0.6.7.6) og matcher de synlige etikettene.
+    const searchables = [];
+    for (const [name, { defs }] of groups) {
+      for (const def of defs) searchables.push({ label: def.labelKey ? ta(def.labelKey) : def.label, def, kat: katFor.get(name) });
+    }
+    const malDef = (mal) => ({ label: mal.name, create: () => cloneSectionForInsert(mal.section, makeId) });
+
+    const renderContent = () => {
+      content.replaceChildren();
+      const query = search.value.trim();
+      if (query) {
+        const all = [...searchables,
+          ...maler.filter((m) => m.kind === 'section' && m.section).map((m) => ({ label: m.name, def: malDef(m), kat: MAL_KAT }))];
+        const found = searchItems(all, query, (item) => item.label);
+        if (!found.length) {
+          const empty = document.createElement('div');
+          empty.className = 'urd-mal-empty';
+          empty.textContent = ta('canvas.searchEmpty');
+          content.appendChild(empty);
+          return;
+        }
+        content.appendChild(buildGrid(found));
+        return;
+      }
+      if (presetCategory === 'maler') {
+        renderMaler();
+        return;
+      }
+      for (const [name, { labelKey, defs }] of groups) {
+        if (presetCategory !== 'alle' && presetCategory !== name) continue;
+        const kat = katFor.get(name);
+        // Én valgt kategori trenger ingen overskrift over seg selv.
+        if (presetCategory === 'alle') {
+          const heading = document.createElement('div');
+          heading.className = 'urd-preset-group';
+          setKat(heading, kat);
+          heading.append(makeDot(), document.createTextNode(groupLabel(name, labelKey)));
+          content.appendChild(heading);
+        }
+        content.appendChild(buildGrid(defs.map((def) => ({ def, kat }))));
+      }
     };
-    tabPresets.addEventListener('click', () => { presetTabMaler = false; applyTab(); });
-    tabMaler.addEventListener('click', () => { presetTabMaler = true; applyTab(); });
-    applyTab();
+
+    // Kategorknappene; valget huskes per økt. Aktivt søk vinner over
+    // kategorien til feltet tømmes.
+    const railButtons = new Map();
+    const addRailButton = (id, label, kat) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      if (id === 'alle') btn.classList.add('urd-preset-rail-alle');
+      if (id === 'maler') btn.classList.add('urd-preset-rail-maler');
+      if (kat) setKat(btn, kat);
+      btn.append(makeDot(), document.createTextNode(label));
+      btn.addEventListener('click', () => {
+        presetCategory = id;
+        search.value = '';
+        applyCategory();
+      });
+      railButtons.set(id, btn);
+      rail.appendChild(btn);
+    };
+    addRailButton('alle', ta('canvas.groupAll'), 1);
+    for (const [name, { labelKey }] of groups) addRailButton(name, groupLabel(name, labelKey), katFor.get(name));
+    addRailButton('maler', ta('canvas.tabMyTemplates'), MAL_KAT);
+    if (!railButtons.has(presetCategory)) presetCategory = 'alle';
+
+    const applyCategory = () => {
+      for (const [id, btn] of railButtons) btn.classList.toggle('on', id === presetCategory);
+      renderContent();
+    };
+    search.addEventListener('input', renderContent);
+    search.addEventListener('keydown', (event) => {
+      // Enter setter inn første treff; Escape lukker (som blokkmenyen).
+      if (event.key === 'Enter') content.querySelector('.urd-preset-card, .urd-mal-pick')?.click();
+      if (event.key === 'Escape') {
+        cleanupOutside();
+        collapse();
+      }
+      event.stopPropagation();
+    });
+    applyCategory();
     bar.appendChild(menu);
+    search.focus();
 
     // Klikk utenfor menyen lukker den, samme forventning som ellers i editoren.
     // Listeneren ryddes ved lukking og ved preset-valg.

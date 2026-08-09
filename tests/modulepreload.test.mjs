@@ -88,6 +88,7 @@ const EDITOR_ONLY = [
   'preview-edit.js', 'preset-thumb.js', 'image-editor.js', 'imageTools.js',
   'color-picker.js', 'dropdown.js', 'glyphs.js', 'fonts.js', 'text-typo.js',
   'place.js', 'section-size.js', 'selection.js', 'lightbox.js', 'hint.js',
+  'page-presets.js',
 ];
 
 test('motormappa finnes og heter det urd.json.engine sier', () => {

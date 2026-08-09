@@ -16,6 +16,7 @@
   import { makeId } from '$engine/sections/presets.js';
   import { malId, MAL_SCHEMA_VERSION, MAL_KINDS, clonePageForInsert } from '$engine/maler-model.js';
   import { pageThumb } from '$engine/preset-thumb.js';
+  import { PAGE_PRESETS, buildPagePreset } from '$engine/page-presets.js';
   import { searchItems as searchBlockItems } from '$engine/palette-search.js';
   // Bakgrunns- og animasjonsdefinisjonene gjenbrukes for etiketter og
   // standardverdier, så editor og motor aldri drifter fra hverandre.
@@ -2044,8 +2045,15 @@
   let newPageTitle = $state('');
 
   /* «Ny side fra mal» (0.6.7.10, eiervalg N2): rutenettet under opprett-
-     feltet velger hva neste nye side starter fra; null er tom side. */
+     feltet velger hva neste nye side starter fra; null er tom side, en
+     'preset:<id>' er en innebygd startpakke, alt annet er en egen side-mal. */
   let newPageMal = $state(null);
+
+  /* Startpakke-miniatyrene bygges én gang (create() per seksjon er billig,
+     men rutenettet rerendres ved hvert tastetrykk i navnefeltet). */
+  const builtinPageThumbs = Object.fromEntries(PAGE_PRESETS.map((p) => [
+    p.id, pageThumb(buildPagePreset(p.id, { pageId: 'forhandsvisning', title: '' })),
+  ]));
 
   /* Kebab-menyen per side-rad (eiervalg A3): id-en til raden med åpen meny.
      Lukkes ved klikk utenfor, Escape og vindus-blur (settings-mønsteret). */
@@ -2085,13 +2093,17 @@
       setStatus(err, 'error');
       return;
     }
-    // Malfilen lagrer opphavs-id-er; klonen re-id-er alt og setter meta til
-    // den nye siden (re-id-regelen i SKJEMA.md). liftPageFile-vasken gjør
+    // Startpakker bygges ferske (create() gir nye id-er og oversatte seeds);
+    // egne maler lagrer opphavs-id-er, så klonen re-id-er alt og setter meta
+    // til den nye siden (re-id-regelen i SKJEMA.md). liftPageFile-vasken gjør
     // maler lagret under eldre skjemaversjoner trygge.
-    const malPage = newPageMal ? malStores[newPageMal]?.data?.page : null;
-    const fresh = malPage
-      ? clonePageForInsert(liftPageFile(JSON.parse(JSON.stringify(malPage)), siteStore.data), makeId, { id: slug, title })
-      : blankPage({ id: slug, title });
+    const malPage = newPageMal && !newPageMal.startsWith('preset:')
+      ? malStores[newPageMal]?.data?.page : null;
+    const fresh = newPageMal?.startsWith('preset:')
+      ? (buildPagePreset(newPageMal.slice(7), { pageId: slug, title }) ?? blankPage({ id: slug, title }))
+      : malPage
+        ? clonePageForInsert(liftPageFile(JSON.parse(JSON.stringify(malPage)), siteStore.data), makeId, { id: slug, title })
+        : blankPage({ id: slug, title });
     siteMutate('pages', () => {
       siteDraft.pages.push({ id: slug, title, path: `/${slug}`, file: `content/pages/${slug}.json` });
       // Nye sider legges rett i menyen; Nav-panelet kan fjerne dem.
@@ -4551,15 +4563,28 @@
                   onkeydown={(e) => e.key === 'Enter' && addPage()} />
                 <button class="ghost action" title={ta('hint.pages.autoMenu')}
                   onclick={addPage} disabled={!newPageTitle.trim()}>{ta('ui.createPage')}</button>
-                {#if malerIds.some((id) => malStores[id]?.data?.mal?.kind === 'page')}
-                  <div class="page-mal-grid">
-                    <div class="page-mal-card" class:picked={newPageMal === null}>
-                      <button class="page-mal-pick" title={ta('tip.pages.blankPick')}
-                        onclick={() => (newPageMal = null)}>
-                        <span class="page-mal-thumb">{@html pageThumb({ sections: [] })}</span>
-                        <span class="page-mal-name">{ta('ui.blankPage')}</span>
+                <span class="mini-label">{ta('canvas.tabPresets')}</span>
+                <div class="page-mal-grid">
+                  <div class="page-mal-card" class:picked={newPageMal === null}>
+                    <button class="page-mal-pick" title={ta('tip.pages.blankPick')}
+                      onclick={() => (newPageMal = null)}>
+                      <span class="page-mal-thumb">{@html pageThumb({ sections: [] })}</span>
+                      <span class="page-mal-name">{ta('ui.blankPage')}</span>
+                    </button>
+                  </div>
+                  {#each PAGE_PRESETS as p (p.id)}
+                    <div class="page-mal-card" class:picked={newPageMal === `preset:${p.id}`}>
+                      <button class="page-mal-pick" title={ta('tip.pages.templatePick', { name: ta(p.labelKey) })}
+                        onclick={() => (newPageMal = newPageMal === `preset:${p.id}` ? null : `preset:${p.id}`)}>
+                        <span class="page-mal-thumb">{@html builtinPageThumbs[p.id]}</span>
+                        <span class="page-mal-name">{ta(p.labelKey)}</span>
                       </button>
                     </div>
+                  {/each}
+                </div>
+                {#if malerIds.some((id) => malStores[id]?.data?.mal?.kind === 'page')}
+                  <span class="mini-label">{ta('canvas.tabMyTemplates')}</span>
+                  <div class="page-mal-grid">
                     {#each malerIds.filter((id) => malStores[id]?.data?.mal?.kind === 'page') as id (id)}
                       <div class="page-mal-card" class:picked={newPageMal === id}>
                         <button class="page-mal-pick" title={ta('tip.pages.templatePick', { name: malStores[id].data.mal.name })}
