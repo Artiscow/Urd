@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.6.7.10): Side-maler
+
+- [ ] Kebab-menyen på en side-rad: «Lagre som mal» og «Slett siden» (forsiden mangler slett); lukkes ved klikk utenfor og Escape
+- [ ] Lagre en side som mal (både den aktive og en annen side): navnedialog, statusmelding, og rutenettet «Ny side fra mal» dukker opp under + Opprett side
+- [ ] Rutenettet: Tom side + malene med miniatyrer som ligner sidene; valgt kort huskes til neste opprettelse; kryss sletter malen (med bekreftelse) og rutenettet forsvinner når siste mal er borte
+- [ ] Opprett side fra mal: nytt navn/slug, alle seksjoner og blokker med, redigerbar som vanlig; å sette inn fra samme mal to ganger gir ingen id-kollisjoner (rediger den ene, den andre står urørt)
+- [ ] Ctrl+Z etter mal-lagring og etter side-opprettelse ruller tilbake som ett steg per handling
+- [ ] Publisering av en side-mal (mot urd-web): filen har kind page, bilder i sidens seksjoner materialiseres til media/
+
 ### Testrunde-batch (0.6.7.9): Bytt oppsett og Urd.maler-fundamentet
 
 - [ ] Layout-knappen vises i seksjonsverktøylinjen kun for seksjoner med minst to bevegelige blokker (ikke for tomme/en-blokks seksjoner eller rene dekor-seksjoner)

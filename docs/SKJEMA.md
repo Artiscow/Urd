@@ -234,8 +234,8 @@ En brukerlaget mal er en serialisert seksjon, blokkgruppe eller side lagret i `c
 ```
 
 - **Indeksfilen `content/maler.json`** (`{ "version": 1, "maler": ["<id>", …] }`) lister mal-id-ene, samme presedens som samlinger (ADR-0007): statiske hoster kan ikke liste mapper. Malrepoet skipper tom indeks.
-- **Re-id-regelen**: id-ene i malfilen er opphav og lagres urørt; HVER innsetting dypkloner og tildeler nye id-er (seksjon og alle blokker) før noe legges i sidedata, så samme mal kan settes inn flere ganger uten kollisjon. Blokkgrupper lagres med frames som de står; anker-flytting og klem innenfor seksjonen skjer ved innsetting, aldri ved lagring (hjelperne bor i motorens `maler-model.js`).
-- Skjemaet er `schema/mal.schema.json` (gjenbruker page-skjemaets seksjon- og blokkdefinisjoner); `npm run validate` validerer alle malene i indeksen pluss to syntetiske caser bygget fra en preset.
+- **Re-id-regelen**: id-ene i malfilen er opphav og lagres urørt; HVER innsetting dypkloner og tildeler nye id-er (seksjon og alle blokker) før noe legges i sidedata, så samme mal kan settes inn flere ganger uten kollisjon. Blokkgrupper lagres med frames som de står; anker-flytting og klem innenfor seksjonen skjer ved innsetting, aldri ved lagring (hjelperne bor i motorens `maler-model.js`). For side-maler (`kind: "page"`) gjelder i tillegg: `meta.id` og `meta.title` settes til den NYE sidens slug og tittel ved innsetting (slugen valideres mot reserverte navn og eksisterende sider, aldri en generert blokk-id), og alle seksjons- og blokk-id-er på tvers av seksjonene re-ides.
+- Skjemaet er `schema/mal.schema.json` (gjenbruker page-skjemaets seksjon- og blokkdefinisjoner; `page`-nyttelasten er en hel sidefil); `npm run validate` validerer alle malene i indeksen pluss tre syntetiske caser bygget fra presets.
 
 «Lagre som mal» i editoren (v0.6) skriver disse; preset-velgeren viser dem side om side med kjerne-presets. En mal kan pakkes som plugin for deling.
 

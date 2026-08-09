@@ -38,6 +38,25 @@ export function cloneSectionForInsert(section, makeId) {
 }
 
 /**
+ * Klargjør en side-mal for innsetting: dyp klone der meta peker på den NYE
+ * siden (id er sidens slug, validert av kalleren mot reserverte navn og
+ * eksisterende sider - aldri en makeId-streng), og alle seksjoner og blokker
+ * får nye id-er. Geometri, props og schemaVersion røres ikke.
+ * @param {object} page Sidefilen fra malen (muteres ikke)
+ * @param {(prefix: string) => string} makeId Id-fabrikken (sections/presets.js)
+ * @param {{id: string, title: string}} meta Den nye sidens slug og tittel
+ */
+export function clonePageForInsert(page, makeId, { id, title }) {
+  const out = structuredClone(page);
+  out.meta = { ...out.meta, id, title };
+  for (const section of out.sections ?? []) {
+    section.id = makeId('sec');
+    for (const block of section.blocks ?? []) block.id = makeId('blk');
+  }
+  return out;
+}
+
+/**
  * Klargjør en blokkgruppe-mal for innsetting: dyp klone med nye id-er, hele
  * gruppen flyttet så øvre venstre hjørne treffer ankeret (klemt innenfor
  * seksjonen av groupDelta), og minBottom for seksjonsvekst (urd-add-blocks).

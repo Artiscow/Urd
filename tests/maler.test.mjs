@@ -7,7 +7,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { malId, cloneSectionForInsert, cloneBlocksForInsert, MAL_KINDS, MAL_SCHEMA_VERSION } = await engineImport('maler-model.js');
+const { malId, cloneSectionForInsert, cloneBlocksForInsert, clonePageForInsert, MAL_KINDS, MAL_SCHEMA_VERSION } = await engineImport('maler-model.js');
 
 let counter = 0;
 const makeId = (prefix) => `${prefix}-test-${++counter}`;
@@ -92,4 +92,41 @@ test('cloneBlocksForInsert: frames.mobile følger med urørt (som lim inn)', () 
   b.frames.mobile = { x: 0, y: 0, w: 100, h: 40, z: 1, rot: 0 };
   const { blocks: out } = cloneBlocksForInsert([b], makeId, { anchor: { x: 30, y: 60 } });
   assert.deepEqual(out[0].frames.mobile, b.frames.mobile);
+});
+
+const page = () => ({
+  schemaVersion: 3,
+  meta: { id: 'kampanje-opphav', title: 'Kampanjen' },
+  sections: [section(), { ...section(), id: 'sec-to', blocks: [block('blk-c')] }],
+});
+
+test('clonePageForInsert: meta erstattes, alle id-er nye, originalen urørt', () => {
+  const original = page();
+  const before = JSON.stringify(original);
+  const out = clonePageForInsert(original, makeId, { id: 'sommer', title: 'Sommer' });
+
+  assert.equal(out.meta.id, 'sommer');
+  assert.equal(out.meta.title, 'Sommer');
+  assert.equal(out.schemaVersion, original.schemaVersion);
+  assert.equal(out.sections.length, original.sections.length);
+  for (const [i, s] of out.sections.entries()) {
+    assert.notEqual(s.id, original.sections[i].id);
+    assert.ok(s.id.startsWith('sec-test-'));
+    assert.equal(s.preset, original.sections[i].preset);
+    for (const [j, b] of s.blocks.entries()) {
+      assert.notEqual(b.id, original.sections[i].blocks[j].id);
+      assert.ok(b.id.startsWith('blk-test-'));
+      assert.deepEqual(b.frames, original.sections[i].blocks[j].frames);
+      assert.deepEqual(b.props, original.sections[i].blocks[j].props);
+    }
+  }
+  assert.equal(JSON.stringify(original), before);
+});
+
+test('clonePageForInsert: to innsettinger gir disjunkte id-sett', () => {
+  const original = page();
+  const ids = (p) => p.sections.flatMap((s) => [s.id, ...s.blocks.map((b) => b.id)]);
+  const a = ids(clonePageForInsert(original, makeId, { id: 'a', title: 'A' }));
+  const b = ids(clonePageForInsert(original, makeId, { id: 'b', title: 'B' }));
+  assert.equal(new Set([...a, ...b]).size, a.length + b.length);
 });

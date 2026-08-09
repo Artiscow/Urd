@@ -44,7 +44,7 @@
  *                  { type: 'urd-show-guides', visible }       (hjelpelinjer: senter/innholdsbredde i alle seksjoner)
  *                  { type: 'urd-select', blockId }            (marker blokk editoren nettopp bygde, f.eks. + Ny blokk)
  *                  { type: 'urd-admin-theme', colors }        (adminens fargetema {bg, surface, accent, text}: editor-menyene i previewen følger admin, ikke siden)
- *                  { type: 'urd-maler', maler }               (mal-utkastene: liste av {id, name, kind, section?, blocks?}; Mine maler-fanen leser dem)
+ *                  { type: 'urd-maler', maler }               (mal-utkastene: liste av {id, name, kind, section?, blocks?, page?}; Mine maler-fanen leser dem)
  *                  { type: 'urd-insert-template', id }        (Blokker-panelets Mine maler: sett inn blokkgruppe-mal i aktiv seksjon)
  */
 

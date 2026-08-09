@@ -85,13 +85,14 @@ if (validatePresets(presetPage)) {
 }
 
 // Syntetiske mal-caser: indeksen skipper tom, så kontrakten valideres med en
-// seksjons- og en blokkgruppe-mal bygget fra en ekte preset. Re-id-regelen og
-// geometrien testes i tests/maler.test.mjs; her gjelder skjemakontrakten.
-// En preset med blokker (den første, «tom», har ingen).
+// seksjons-, en blokkgruppe- og en side-mal bygget fra ekte presets.
+// Re-id-regelen og geometrien testes i tests/maler.test.mjs; her gjelder
+// skjemakontrakten. En preset med blokker (den første, «tom», har ingen).
 const malSection = [...defs.values()].map((d) => d.create()).find((s) => s.blocks.length > 0);
 const syntheticMaler = [
   { schemaVersion: 1, mal: { name: 'Testmal seksjon', kind: 'section' }, section: malSection },
   { schemaVersion: 1, mal: { name: 'Testmal gruppe', kind: 'blocks' }, blocks: malSection.blocks },
+  { schemaVersion: 1, mal: { name: 'Testmal side', kind: 'page' }, page: presetPage },
 ];
 const validateMal = ajv.compile(malSchema);
 let malOk = true;
@@ -105,6 +106,6 @@ for (const sample of syntheticMaler) {
     }
   }
 }
-if (malOk) console.log('OK    syntetiske maler (2 mot mal-skjemaet)');
+if (malOk) console.log('OK    syntetiske maler (3 mot mal-skjemaet)');
 
 process.exit(failed ? 1 : 0);

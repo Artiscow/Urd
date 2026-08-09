@@ -146,11 +146,8 @@ function blockShapes(type, x, y, w, h, props) {
   return rect(x, y, w, h, token('surface', FALLBACK_SURFACE), ' rx="1.5"');
 }
 
-/**
- * @param {object} section En fersk seksjon fra en presets create() (dataene forkastes etterpå)
- * @returns {string} Skjematisk SVG-miniatyr av seksjonen
- */
-export function presetThumb(section, { w = 120, h = 68 } = {}) {
+/** Én seksjons skisse-innhold (bakgrunn + glød + blokker) i et w x h-felt. */
+function sectionShapes(section, w, h) {
   const blocks = Array.isArray(section?.blocks) ? section.blocks : [];
   const bottoms = blocks.map((b) => (b.frames?.desktop?.y ?? 0) + (b.frames?.desktop?.h ?? 0));
   const contentH = Math.max(
@@ -177,5 +174,39 @@ export function presetThumb(section, { w = 120, h = 68 } = {}) {
     parts.push(blockShapes(block.type, x, y, bw, bh, block.props));
   }
 
+  return parts.join('');
+}
+
+/**
+ * @param {object} section En fersk seksjon fra en presets create() (dataene forkastes etterpå)
+ * @returns {string} Skjematisk SVG-miniatyr av seksjonen
+ */
+export function presetThumb(section, { w = 120, h = 68 } = {}) {
+  return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${sectionShapes(section, w, h)}</svg>`;
+}
+
+/**
+ * Side-miniatyr: seksjonene stablet som bånd, vektet etter minstehøyde, så
+ * kortet viser SIDENS oppbygning (hero stor, cta liten). Brukes av «Ny side
+ * fra mal»-rutenettet i Sider-panelet; tåler tom side (rent bakgrunnsfelt).
+ * @param {object} page Sidefil ({ sections: [...] }); dataene forkastes etterpå
+ * @returns {string} Skjematisk SVG-miniatyr av hele siden
+ */
+export function pageThumb(page, { w = 96, h = 116, max = 6 } = {}) {
+  const sections = (Array.isArray(page?.sections) ? page.sections : []).slice(0, max);
+  if (!sections.length) {
+    return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${rect(0, 0, w, h, token('bg', FALLBACK_BG))}</svg>`;
+  }
+  const gap = 1;
+  const weights = sections.map((s) => clamp(parseMinHeightPx(s?.size?.minHeight), 160, 900));
+  const sum = weights.reduce((a, b) => a + b, 0);
+  const avail = h - gap * (sections.length - 1);
+  const parts = [];
+  let y = 0;
+  for (let i = 0; i < sections.length; i += 1) {
+    const bandH = Math.max(6, (weights[i] / sum) * avail);
+    parts.push(`<g transform="translate(0 ${r1(y)})">${sectionShapes(sections[i], w, bandH)}</g>`);
+    y += bandH + gap;
+  }
   return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${parts.join('')}</svg>`;
 }

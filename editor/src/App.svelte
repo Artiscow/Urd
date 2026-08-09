@@ -14,7 +14,8 @@
   import { ta, taApiError, adminLang as currentAdminLang } from '$engine/i18n.js';
   import { validateManifest, satisfiesEngine } from '$engine/plugins.js';
   import { makeId } from '$engine/sections/presets.js';
-  import { malId, MAL_SCHEMA_VERSION } from '$engine/maler-model.js';
+  import { malId, MAL_SCHEMA_VERSION, MAL_KINDS, clonePageForInsert } from '$engine/maler-model.js';
+  import { pageThumb } from '$engine/preset-thumb.js';
   import { searchItems as searchBlockItems } from '$engine/palette-search.js';
   // Bakgrunns- og animasjonsdefinisjonene gjenbrukes for etiketter og
   // standardverdier, så editor og motor aldri drifter fra hverandre.
@@ -59,6 +60,8 @@
     minus: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg>',
     gear: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
     guides: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M3.5 9.2h17M3.5 14.8h17M9.2 3.5v17M14.8 3.5v17"/></svg>',
+    kebab: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>',
+    bookmark: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/></svg>',
     fit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/></svg>',
   };
 
@@ -2001,6 +2004,28 @@
 
   let newPageTitle = $state('');
 
+  /* «Ny side fra mal» (0.6.7.10, eiervalg N2): rutenettet under opprett-
+     feltet velger hva neste nye side starter fra; null er tom side. */
+  let newPageMal = $state(null);
+
+  /* Kebab-menyen per side-rad (eiervalg A3): id-en til raden med åpen meny.
+     Lukkes ved klikk utenfor, Escape og vindus-blur (settings-mønsteret). */
+  let pageMenuFor = $state(null);
+  $effect(() => {
+    if (!pageMenuFor) return;
+    const onDown = (e) => { if (!e.target.closest?.('.page-menu-wrap')) pageMenuFor = null; };
+    const onKey = (e) => { if (e.key === 'Escape') pageMenuFor = null; };
+    const onBlur = () => { pageMenuFor = null; };
+    document.addEventListener('pointerdown', onDown, true);
+    document.addEventListener('keydown', onKey);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      document.removeEventListener('pointerdown', onDown, true);
+      document.removeEventListener('keydown', onKey);
+      window.removeEventListener('blur', onBlur);
+    };
+  });
+
   /** Speiler guard.js: mapper som aldri kan bli sider. */
   const RESERVED_SLUGS = ['admin', 'api', 'assets', 'content', 'media', 'plugins', 'functions', 'readme'];
 
@@ -2021,16 +2046,33 @@
       setStatus(err, 'error');
       return;
     }
+    // Malfilen lagrer opphavs-id-er; klonen re-id-er alt og setter meta til
+    // den nye siden (re-id-regelen i SKJEMA.md). liftPageFile-vasken gjør
+    // maler lagret under eldre skjemaversjoner trygge.
+    const malPage = newPageMal ? malStores[newPageMal]?.data?.page : null;
+    const fresh = malPage
+      ? clonePageForInsert(liftPageFile(JSON.parse(JSON.stringify(malPage)), siteStore.data), makeId, { id: slug, title })
+      : blankPage({ id: slug, title });
     siteMutate('pages', () => {
       siteDraft.pages.push({ id: slug, title, path: `/${slug}`, file: `content/pages/${slug}.json` });
       // Nye sider legges rett i menyen; Nav-panelet kan fjerne dem.
       siteDraft.nav.items.push({ label: title, page: slug });
     });
-    // Sidens eget utkast: en blank side, klar til publisering.
-    writeDraftKey(`urd-draft-${slug}`, JSON.stringify(blankPage({ id: slug, title })));
+    // Sidens eget utkast, klart til publisering.
+    writeDraftKey(`urd-draft-${slug}`, JSON.stringify(fresh));
     updateDirty();
     newPageTitle = '';
+    newPageMal = null;
     selectPage(slug);
+  }
+
+  /** Kebab-menyens «Lagre som mal»: sidens gjeldende data inn i mal-kjernen. */
+  async function savePageAsTemplate(entry) {
+    pageMenuFor = null;
+    const data = entry.id === pageId
+      ? JSON.parse(JSON.stringify(store.data))
+      : await readPageDraft(entry);
+    await saveTemplate('page', data);
   }
 
   function renamePage(entry, rawTitle) {
@@ -2055,23 +2097,24 @@
     }
   }
 
+  /** En annen sides gjeldende data: utkast, ellers publisert, ellers blank. */
+  async function readPageDraft(entry) {
+    const raw = localStorage.getItem(`urd-draft-${entry.id}`);
+    if (raw) {
+      try { return JSON.parse(raw); } catch { /* korrupt: hentes på nytt */ }
+    }
+    try {
+      const res = await fetch(`/${entry.file}`);
+      if (res.ok) return liftPageFile(await res.json(), siteStore.data);
+    } catch { /* upublisert side uten utkast */ }
+    return blankPage(entry);
+  }
+
   /** Endrer en annen sides utkast (lager utkast fra publisert ved behov). */
   async function patchPageDraft(entry, fn) {
-    const key = `urd-draft-${entry.id}`;
-    let page = null;
-    const raw = localStorage.getItem(key);
-    if (raw) {
-      try { page = JSON.parse(raw); } catch { /* korrupt: hentes på nytt */ }
-    }
-    if (!page) {
-      try {
-        const res = await fetch(`/${entry.file}`);
-        if (res.ok) page = liftPageFile(await res.json(), siteStore.data);
-      } catch { /* upublisert side uten utkast */ }
-    }
-    if (!page) page = blankPage(entry);
+    const page = await readPageDraft(entry);
     fn(page);
-    writeDraftKey(key, JSON.stringify(page));
+    writeDraftKey(`urd-draft-${entry.id}`, JSON.stringify(page));
     updateDirty();
   }
 
@@ -2371,14 +2414,19 @@
     const list = malerIds
       .map((id) => (malStores[id]?.data ? { id, ...JSON.parse(JSON.stringify(malStores[id].data)) } : null))
       .filter(Boolean)
-      .map(({ id, mal, section, blocks }) => ({ id, name: mal.name, kind: mal.kind, section, blocks }));
+      .map(({ id, mal, section, blocks, page }) => ({ id, name: mal.name, kind: mal.kind, section, blocks, page }));
     bridge?.sendMaler(list);
   }
 
-  /** «Lagre som mal» fra previewen: navngi, slug til id, lagre som utkast. */
-  async function handleSaveTemplate(msg) {
-    const kind = msg.kind === 'blocks' ? 'blocks' : 'section';
-    const payload = kind === 'blocks' ? msg.blocks : msg.section;
+  /** «Lagre som mal» fra previewen (seksjon/blokkgruppe); side-maler kommer
+   *  editor-internt fra Sider-panelet via samme kjerne. */
+  function handleSaveTemplate(msg) {
+    const kind = MAL_KINDS.includes(msg.kind) ? msg.kind : 'section';
+    return saveTemplate(kind, msg[kind]);
+  }
+
+  /** Felles mal-lagring: navngi, slug til id, lagre som utkast. */
+  async function saveTemplate(kind, payload) {
     if (!payload || !malerIndexStore) return;
     const name = (await askPrompt({
       title: ta('canvas.templateNamePrompt'),
@@ -2414,6 +2462,7 @@
     const ok = await askConfirm({ title: ta('confirm.deleteTemplate', { name: mal.name }) });
     if (!ok) return;
     pushHistory('maler');
+    if (newPageMal === msg.id) newPageMal = null;
     localStorage.removeItem(`urd-draft-mal-${msg.id}`);
     delete malStores[msg.id];
     malerIndexStore.data.maler = malerIds.filter((x) => x !== msg.id);
@@ -4120,6 +4169,7 @@
         const out = JSON.parse(JSON.stringify(st.data));
         if (out.section) materializeSection(out.section, files);
         for (const block of out.blocks ?? []) materializeBlockImages(block, files);
+        for (const section of out.page?.sections ?? []) materializeSection(section, files);
         files.push({ path: `content/maler/${id}.json`, content: JSON.stringify(out, null, 2) + '\n', encoding: 'utf-8' });
         draftKeys.push(`urd-draft-mal-${id}`);
       }
@@ -4243,6 +4293,7 @@
         for (const st of Object.values(malStores)) {
           if (st.data?.section) materializeSection(st.data.section, []);
           for (const block of st.data?.blocks ?? []) materializeBlockImages(block, []);
+          for (const section of st.data?.page?.sections ?? []) materializeSection(section, []);
         }
         const publishedMalIndex = JSON.parse(JSON.stringify(malerIndexStore.data));
         malerIndexStore = createDraftStore('urd-draft-maler', () => publishedMalIndex, draftSaveError);
@@ -4411,10 +4462,21 @@
                     <span class="row-tools">
                       <button class="ghost row-tool" title={ta('tip.pages.open')}
                         disabled={p.id === pageId} onclick={() => selectPage(p.id)}>{@html ICONS.right}</button>
-                      {#if p.path !== '/'}
-                        <button class="ghost row-tool" title={ta('tip.pages.delete')}
-                          onclick={() => deletePage(p)}>{@html ICONS.cross}</button>
-                      {/if}
+                      <span class="page-menu-wrap">
+                        <button class="ghost row-tool" title={ta('tip.pages.menu')}
+                          onclick={() => (pageMenuFor = pageMenuFor === p.id ? null : p.id)}>{@html ICONS.kebab}</button>
+                        {#if pageMenuFor === p.id}
+                          <div class="page-menu">
+                            <button class="ghost" onclick={() => savePageAsTemplate(p)}>
+                              {@html ICONS.bookmark} {ta('ui.savePageTemplate')}</button>
+                            {#if p.path !== '/'}
+                              <button class="ghost danger" title={ta('tip.pages.delete')}
+                                onclick={() => { pageMenuFor = null; deletePage(p); }}>
+                                {@html ICONS.cross} {ta('ui.deletePage')}</button>
+                            {/if}
+                          </div>
+                        {/if}
+                      </span>
                     </span>
                   </div>
                 {/each}
@@ -4423,6 +4485,28 @@
                   onkeydown={(e) => e.key === 'Enter' && addPage()} />
                 <button class="ghost action" title={ta('hint.pages.autoMenu')}
                   onclick={addPage} disabled={!newPageTitle.trim()}>{ta('ui.createPage')}</button>
+                {#if malerIds.some((id) => malStores[id]?.data?.mal?.kind === 'page')}
+                  <div class="page-mal-grid">
+                    <div class="page-mal-card" class:picked={newPageMal === null}>
+                      <button class="page-mal-pick" title={ta('tip.pages.blankPick')}
+                        onclick={() => (newPageMal = null)}>
+                        <span class="page-mal-thumb">{@html pageThumb({ sections: [] })}</span>
+                        <span class="page-mal-name">{ta('ui.blankPage')}</span>
+                      </button>
+                    </div>
+                    {#each malerIds.filter((id) => malStores[id]?.data?.mal?.kind === 'page') as id (id)}
+                      <div class="page-mal-card" class:picked={newPageMal === id}>
+                        <button class="page-mal-pick" title={ta('tip.pages.templatePick', { name: malStores[id].data.mal.name })}
+                          onclick={() => (newPageMal = newPageMal === id ? null : id)}>
+                          <span class="page-mal-thumb">{@html pageThumb(malStores[id].data.page)}</span>
+                          <span class="page-mal-name">{malStores[id].data.mal.name}</span>
+                        </button>
+                        <button class="page-mal-del" title={ta('canvas.deleteTemplate')}
+                          onclick={() => handleDeleteTemplate({ id })}>{@html ICONS.cross}</button>
+                      </div>
+                    {/each}
+                  </div>
+                {/if}
               </div>
             {:else if activePanel === 'nav'}
               <div class="panel-body">
@@ -6972,6 +7056,113 @@
     width: 2.1rem;
     padding: 0;
     justify-content: center;
+  }
+
+  /* Kebab-menyen per side-rad (0.6.7.10): forankret i raden, flyter over
+     panelet; lukking (utenfor-klikk/Escape/blur) styres i skriptet. */
+  .page-menu-wrap {
+    position: relative;
+    display: inline-flex;
+    align-self: stretch;
+  }
+
+  .page-menu {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    right: 0;
+    z-index: 40;
+    min-width: 10.5rem;
+    display: grid;
+    gap: 0.15rem;
+    padding: 0.3rem;
+    background: var(--urd-color-surface, #151a23);
+    border: 1px solid rgb(255 255 255 / 14%);
+    border-radius: 9px;
+    box-shadow: 0 14px 30px -16px rgb(0 0 0 / 80%);
+  }
+
+  .page-menu .ghost {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    white-space: nowrap;
+  }
+
+  .page-menu .ghost.danger {
+    color: #e05252;
+  }
+
+  /* «Ny side fra mal»-rutenettet (0.6.7.10, eiervalg N2): kort med
+     side-miniatyr; valgt kort styrer hva + Opprett side starter fra. */
+  .page-mal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  .page-mal-card {
+    position: relative;
+    min-width: 0;
+  }
+
+  .page-mal-pick {
+    width: 100%;
+    display: grid;
+    gap: 0.3rem;
+    justify-items: center;
+    padding: 0.4rem;
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 14%);
+    border-radius: 9px;
+    cursor: pointer;
+  }
+
+  .page-mal-card.picked .page-mal-pick {
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  .page-mal-thumb {
+    width: 100%;
+  }
+
+  .page-mal-thumb :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
+  }
+
+  .page-mal-name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    opacity: 0.85;
+  }
+
+  .page-mal-del {
+    position: absolute;
+    top: 0.3rem;
+    right: 0.3rem;
+    width: 1.4rem;
+    height: 1.4rem;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    background: rgb(0 0 0 / 55%);
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.75;
+  }
+
+  .page-mal-del:hover {
+    opacity: 1;
   }
 
   .token-input {
