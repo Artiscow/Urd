@@ -1,6 +1,6 @@
 > **Merk (juli 2026):** Dette er den opprinnelige, rå idemyldringen for Urd og beholdes som historikk.
-> Den gjeldende og strukturerte planen ligger i [docs/](docs/) - se særlig
-> [VISJON.md](docs/VISJON.md), [ARKITEKTUR.md](docs/ARKITEKTUR.md), [SKJEMA.md](docs/SKJEMA.md) og [VEIKART.md](docs/VEIKART.md).
+> Den gjeldende og strukturerte planen ligger i denne mappa - se særlig
+> [VISJON.md](VISJON.md), [ARKITEKTUR.md](ARKITEKTUR.md), [SKJEMA.md](SKJEMA.md) og [VEIKART.md](VEIKART.md).
 > Alle punktene under er sporet inn i veikartet (se sporbarhetstabellen i VEIKART.md).
 
 Nettsidebygger:

@@ -6,7 +6,7 @@ Byggemåte-delen er med av en grunn: for en avhengighetsfri vanilla-motor bor de
 
 **Byggere sett på ved navn:** Webflow, Framer, Wix (klassisk) + Wix Studio, Squarespace (Fluid Engine), WordPress Gutenberg + Full Site Editing, Elementor, Bricks, Carrd, Ghost, Publii, GrapesJS/Silex, samt AI-byggere (Wix, Framer, Hostinger, Durable, GoDaddy, B12, Squarespace Blueprint) i del 2.9.
 
-**Om støtte-tall:** browser-støtte er per tidlig 2026 og skal ALLTID gates med `@supports`/`@media` i en råservert motor. Native og CSS-primitiver legges bak feature-deteksjon slik at nettleseren faller ned til et fungerende grunnlag. Enkelte markedstall (DOM-noder, JS-vekt) er retningsgivende.
+**Om støtte-tall:** browser-støtte er per tidlig 2026 og skal ALLTID gates med `@supports`/`@media` i en råservert motor. Kontrollert på nytt 10. august 2026, med fire endringer verdt å kjenne: **CSS Anchor Positioning er nå Baseline 2026** (Chrome 125+, Firefox 132+, Safari 18.2+), men `@position-try` krever Safari 26+ og Firefox 147+ og trenger egen gren; **`contrast-color()` ble Baseline Newly available i april 2026** (Chrome 147, Firefox 146, Safari 26); **`::scroll-marker()`/`::scroll-button()`** er i Chrome 135+ og Safari 19+, men Firefox står bak flagg, så karusell-primitivene er ikke klare; og **`appearance: base-select`** er fortsatt Chromium-only, så ADR-0009s forbud mot native `<select>` står. Levende status og gater for de uklare bor i BACKLOG under 0.7.0. Native og CSS-primitiver legges bak feature-deteksjon slik at nettleseren faller ned til et fungerende grunnlag. Enkelte markedstall (DOM-noder, JS-vekt) er retningsgivende.
 
 ---
 
@@ -62,7 +62,7 @@ Den dominerende nye formen: prompt til generert flersidig start til fullt redige
 - **Kuratert vs åpen:** Squarespace Blueprint bruker faste merkevare-personligheter og designer-palettes (guardrails gir jevnere resultat for ikke-designere); Wix/Framer/Durable er åpne samtaler.
 - **Trend:** stive veivisere (Wix ADI, pensjonert nov. 2024) erstattes av samtale + fullt redigerbart lerret. Ikke bygg en blindvei-generator; alt skal være redigerbart etterpå.
 
-**Urd i dag:** ingen. Krever en ekstern tjeneste, som står i spenn med avhengighetsfri/statisk (se del 7).
+**Urd i dag:** ingen generator, og ingen er planlagt. Veien er valgt 10. august 2026 og festet i [ADR-0017](../adr/0017-ai-via-lokal-mcp-server.md): en lokal, avhengighetsfri MCP-server i det klonede repoet, som eierens EGEN agentklient (Claude Code, VS Code, Cursor) kobler seg til. Det er en annen form enn generatorene over: ingen prompt-til-side-veiviser, men full lese- og redigeringstilgang til innholdet gjennom motorens egne presets og fabrikker. Merk hvordan feltet flyttet seg i 2026: Sanity, Contentful, Storyblok, Strapi og Payload sendte alle MCP-servere, og det er nå den formen AI faktisk tar i et CMS, ikke veiviseren. Lesedelen bygges i v0.8, skrivedelen i v0.9.
 
 ### 1.10 Tomtilstander og oppdagbarhet
 Tomtilstand som innsettingsprompt («+» på tom linje, tom seksjon som sier «legg til / generer her»), søk i palett, tooltips og onboarding. AI-byggere erstatter det blanke lerretet med en generert start (anti-blank-page).
@@ -226,7 +226,7 @@ Per kategori, med (a) hvordan det tilbys og (b) slik bygges det moderne. For par
 
 **Leveranse-siden.** Urd treffer allerede flere leveringsmønstre: inline klikk-og-skriv + Office-linjen (1.2), preset-miniatyrer (1.8), token-swatches i Tema-panelet (1.4), tomtilstand + hjelpechip (1.10), temastyrt Dropdown (aldri native select). Tynt i dag: ingen slash/søk-innsetting eller command palette (1.1), ingen Innhold/Stil-splitt (1.2), ingen struktur/lag-tre (1.3), ingen gjenbrukbare grupper (1.5).
 
-**Bygge-siden.** Urd koder allerede flere av de moderne invariantene fra del 2 og 7: `crypto.getRandomValues` (ikke `randomUUID`), AbortController-skopede lyttere som kobles fra ved rerender, autovekst som melder KUN høyde (ingen teleport), ingen native select i temastyrt UI, hover vaktet med `pointerType === 'mouse'`, snapshot før `postMessage`, `IntersectionObserver` for entré, faq som disclosure, og målt runner for sømløs pan-loop-gradient. Mulige flytt til native/CSS (status 29. juli 2026: faq, lightbox/modal og parallaks er flyttet, levert 0.6.6.5.7; tema uten FOUC levert 0.6.6.5.11; menyer bevisst utsatt til anchor positioning er baseline): faq -> `<details name>`; egen lightbox -> `<dialog>`; egne menyer -> Popover API; rAF-parallaks -> scroll-drevet CSS bak `@supports`; sticky-JS der `position: sticky` holder.
+**Bygge-siden.** Urd koder allerede flere av de moderne invariantene fra del 2 og 7: `crypto.getRandomValues` (ikke `randomUUID`), AbortController-skopede lyttere som kobles fra ved rerender, autovekst som melder KUN høyde (ingen teleport), ingen native select i temastyrt UI, hover vaktet med `pointerType === 'mouse'`, snapshot før `postMessage`, `IntersectionObserver` for entré, faq som disclosure, og målt runner for sømløs pan-loop-gradient. Mulige flytt til native/CSS (status 29. juli 2026: faq, lightbox/modal og parallaks er flyttet, levert 0.6.6.5.7; tema uten FOUC levert 0.6.6.5.11; menyer var utsatt til anchor positioning ble baseline, og den gaten åpnet 10. august 2026 - arbeidet er milepæl 0.7.12, som fant at det STØRSTE bruksstedet ikke er nav men fire håndrullede popovere i editor og motor: `Dropdown.svelte`, motorens `dropdown.js`, `ColorPicker.svelte` og `GlyphPicker.svelte`): faq -> `<details name>`; egen lightbox -> `<dialog>`; egne menyer -> Popover API; rAF-parallaks -> scroll-drevet CSS bak `@supports`; sticky-JS der `position: sticky` holder.
 
 ---
 
@@ -244,7 +244,7 @@ Rangert etter (passform x verdi / innsats). Rene funksjonshull (SEO, galleri, RS
 7. **Kuraterte designtokens som ett valg** (font-pakker + palett-temaer). Høy. Lav-middels.
 8. **Command palette (Cmd+K).** Middels-høy (kraftbrukere). Middels.
 9. **Rikere tomtilstander** (preset-forslag i tom seksjon/side). Høy. Lav.
-10. **AI-veiviser (opt-in, horisont).** Lav uten videre (krever ekstern tjeneste, mot avhengighetsfri). Høy. Kun som valgfritt tillegg via endepunkt.
+10. **AI-veiviser (opt-in, horisont).** Lav uten videre (krever ekstern tjeneste, mot avhengighetsfri). Høy. Kun som valgfritt tillegg via endepunkt. Oppdatert 10. august 2026: premisset gjelder fortsatt for en VEIVISER, men ikke for AI som helhet. En lokal MCP-server er avhengighetsfri og krever ingen ekstern tjeneste, og er valgt som veien i [ADR-0017](../adr/0017-ai-via-lokal-mcp-server.md).
 
 ### 5b. Byggemåte-grep (native/CSS som sletter skjør JS)
 1. **Native top-layer for overlegg:** `<dialog>`/`showModal()` for lightbox/modal, Popover API for menyer. Fjerner z-index-krig, fokusfeller og outside-click-lyttere. Svært høy passform (Urd er vanilla). Middels.
@@ -285,7 +285,7 @@ Flere av disse er allerede Urds motor-lekser (se AGENTS.md). De som er markert �
 
 - **Native masonry** (`grid-lanes`/`item-flow`) - i flyt, kun flagg/Tech Preview; ikke stole på.
 - **Anchor positioning, scroll-drevne animasjoner, `closedby`, `interpolate-size`** - gates alltid med `@supports`, aldri antatt.
-- **Ekstern AI-tjeneste som kjerneavhengighet** - mot avhengighetsfri/statisk; AI-veiviser kun som opt-in-tillegg via et endepunkt.
+- **Ekstern AI-tjeneste som kjerneavhengighet** - mot avhengighetsfri/statisk. Avvisningen står, men den gjelder KJERNEAVHENGIGHETEN, ikke AI som sådan: [ADR-0017](../adr/0017-ai-via-lokal-mcp-server.md) (10. august 2026) velger en lokal MCP-server som verken ringer noe sted, lagrer nøkler eller er del av den bygde siden. Modellen er eierens egen, kjørt av eierens egen klient. En prompt-til-side-veiviser er fortsatt ikke planlagt.
 - **Absolutt fri posisjonering** (klassisk Wix) - responsivt skjørt.
 - **Klassebasert cascade-styling som kjerne** (Webflow/Bricks) - stylesheet-database-abstraksjon mot «rå filer, ingen bygging»; vurderes, ikke uten videre.
 - **Tunge marketplace-runtimes** (Framer/Elementor-økosystem) - Urds plugin-modell med CSP-opt-in er veien.

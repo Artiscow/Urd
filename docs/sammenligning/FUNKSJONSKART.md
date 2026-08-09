@@ -1,6 +1,6 @@
 # Funksjonskart: Urd mot de andre nettsidebyggerne
 
-Helhetlig funksjonssammenligning gjort 22.-23. juli 2026 (midt i v0.6 «Økosystem»): hva har de andre byggerne, hva bor inni funksjonene deres, og hva bør Urd ha? Fakta om de andre byggerne er hentet via kildebelagt web-research (leverandørdokumentasjon der mulig, kryssverifisert med tre uavhengige kontrollører per påstand); Urd-siden er inventaret fra samme dato. Kartet er et øyeblikksbilde: leveringsstatus for anbefalingene eies av [BACKLOG.md](../BACKLOG.md), og «levert»-merkene er lagt til i ettertid (siste gjennomgang 29. juli 2026, med milepæl-referansene oversatt til dagens backlog-numre).
+Helhetlig funksjonssammenligning gjort 22.-23. juli 2026 (midt i v0.6 «Økosystem»): hva har de andre byggerne, hva bor inni funksjonene deres, og hva bør Urd ha? Fakta om de andre byggerne er hentet via kildebelagt web-research (leverandørdokumentasjon der mulig, kryssverifisert med tre uavhengige kontrollører per påstand); Urd-siden er inventaret fra samme dato. Kartet er et øyeblikksbilde: leveringsstatus for anbefalingene eies av [BACKLOG.md](../BACKLOG.md), og «levert»-merkene er lagt til i ettertid (siste gjennomgang 29. juli 2026, med milepæl-referansene oversatt til dagens backlog-numre). Kartet fikk et tillegg 10. august 2026: kategori 13 (AI og agentverktøy) fantes ikke i den opprinnelige sammenligningen, og tilgjengelighetsvurderingen i kategori 12 er korrigert.
 
 **Byggere i sammenligningen:** Squarespace, Wix (inkl. Wix Studio), Webflow, Framer, Carrd, Google Sites, Shopify (butikk-referanse), WordPress/Gutenberg (+ Elementor), Publii, Ghost, Blogger, GrapesJS/Silex.
 
@@ -114,13 +114,27 @@ Helhetlig funksjonssammenligning gjort 22.-23. juli 2026 (midt i v0.6 «Økosyst
 
 **De andre byggerne:** analytics innebygd hos alle store (generell kunnskap); passordvern/medlemsområder hos Squarespace/Wix/Ghost (generell kunnskap); kodeinjisering gatet bak betalte planer hos Squarespace (kilde: dok); Wix Studio uten lys/mørk-støtte (kilde: dok).
 
-**Urd i dag (A):** ARIA-korrekt nav, fokushåndtering, reduced-motion, personvern som standard (ingen sporing = ingen cookie-banner nødvendig - en FORDEL mot alle de store).
+**Urd i dag (A på utdata, C på editoren):** ARIA-korrekt nav, fokushåndtering, reduced-motion, personvern som standard (ingen sporing = ingen cookie-banner nødvendig - en FORDEL mot alle de store). KORRIGERT 10. august 2026: A-en gjaldt den PUBLISERTE siden, og der står den. Editoren er ikke i nærheten: `App.svelte` har 197 `<label>`-tagger og null `for`-attributter, `:focus-visible` finnes ikke i admin-CSS, og flere kontroller er knapp-baserte komponenter pakket i en `<label>`, som ikke gir dem noe tilgjengelig navn i det hele tatt. Se **C17**.
 
 **Planlagt (B):** admin/besøkende-i18n nb+en (0.6.8).
 
 **Utenfor scope (D):** innlogging/medlemsområde, fulltekstsøk, sanntid (dokumentert); kodeinjisering i kjernen (sanitizer-vernet; plugins er veien).
 
 **Gap:** personvennlig analytics-oppskrift eller referanse-plugin (**C14** - Cloudflare Web Analytics/Plausible via CSP-opt-in, helt i Urds ånd); kontrast-varsel i Tema-panelet (**C15** - bygget og bevisst fjernet i 0.6.6.5.4: den levende forhåndsvisningen dekker lesbarheten). Passordvern: dokumenteres som verts-funksjon (Cloudflare Access), ikke bygges (D).
+
+## 13. AI og agentverktøy (tillegg 10. august 2026)
+
+Kategorien fantes ikke i sammenligningen 22.-23. juli 2026, fordi feltet så annerledes ut da. Den er lagt til fordi den ble et reelt skille i løpet av 2026.
+
+**De andre byggerne:** to helt ulike former. (1) **Generatorer i nettsidebyggerne:** prompt til generert flersidig start til redigerbart lerret (Wix, Framer, Hostinger, Durable, GoDaddy, B12, Squarespace Blueprint); se ELEMENTKART 1.9 for leveringsmønstrene. (2) **MCP-servere i CMS-ene:** Sanity, Contentful, Storyblok, Strapi og Payload sendte alle MCP-servere i 2026, som lar en agentklient lese og redigere innhold direkte. Form 2 er det som faktisk ble bordet-innsats; form 1 er markedsføring så lenge alt uansett skal redigeres etterpå.
+
+**Urd i dag (C):** ingenting. Null AI-, LLM- eller MCP-kode i repoet.
+
+**Planlagt (B):** lokal, avhengighetsfri MCP-server i det klonede repoet ([ADR-0017](../adr/0017-ai-via-lokal-mcp-server.md), vedtatt 10. august 2026): lesedel i v0.8, skrivedel i v0.9. Eierens EGEN agentklient kobler seg til; Urd sender aldri noe selv og lagrer ingen nøkkel.
+
+**Utenfor scope (D):** prompt-til-side-generator, og enhver ekstern AI-tjeneste som kjerneavhengighet.
+
+**Gap:** **C16** (MCP-server). Merk at Urd har et strukturelt fortrinn her de fleste av de andre mangler: innholdet ER git-eide JSON-filer med skjema, så en agent trenger verken API-nøkkel, hostet endepunkt eller sesjon for å jobbe med det.
 
 ---
 
@@ -145,6 +159,8 @@ Helhetlig funksjonssammenligning gjort 22.-23. juli 2026 (midt i v0.6 «Økosyst
 | C15 | **Kontrast-varsel i Tema-panelet** | Avvist: bygget og fjernet i 0.6.6.5.4 (forhåndsvisningen dekker lesbarheten) | Tilgjengelighet ved fargevalg; bygger rett på accent-text |
 | C10 | **Audio-blokk** (HTML5, git-eid fil) | Forslag og Ideer | Nisje, men billig og statisk-vennlig |
 | C13 | **Redirects-håndtering** (generert hostfil) | Må avklares (0.6.9-gaten: hostspesifikk, grenser mot Urd-eide filer) | Standard hos alle store, men rører _headers/vertsmodellen |
+| C16 | **MCP-server** (lokal, avhengighetsfri; lar eierens egen agentklient lese og redigere innholdet) | v0.8 lesing, v0.9 skriving (ADR-0017) | Ble bordet-innsats for et CMS i 2026 (Sanity, Contentful, Storyblok, Strapi, Payload); git-eid JSON gjør det billigere for Urd enn for dem |
+| C17 | **Tilgjengelighet i editoren** (id/for-kobling, tilgjengelige navn på knapp-baserte kontroller, synlig fokus, tastaturvei) | 0.7.11 Tilgjengelighetsrunden | Utdata er alt sterkt, editoren er ikke; og forskrift om universell utforming av IKT treffer målgruppen direkte |
 
 **Notater (ikke egne punkter):** komponent-/symbolgjenbruk vurderes under 0.6.7 «Lagre som mal»; megameny og scroll-scrub kun ved dokumentert behov; planlagt publisering begrenses av statisk vert (publiser-ved-dato-filter er nærmeste); nettbrett-breakpoint forblir bevisst utsatt.
 

@@ -8,10 +8,15 @@ og prosjektet følger [semantisk versjonering](https://semver.org/lang/no/).
 ## [Ulansert]
 
 Hvert innslag arver nummeret til backlog-punktet arbeidet hører under, pluss
-ett siffer for rekkefølge (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). Arbeid som ikke
+ett siffer for rekkefølge (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). Sifferet legges
+kun på når milepælen faktisk får mer enn én commit: lander hele milepælen i én
+commit, er nummeret milepælens eget (0.7.1, ikke 0.7.1.1), og åpnes milepælen
+senere igjen, fortsetter de nye commitene på 0.7.1.2, 0.7.1.3 … slik at det
+flate nummeret leses som 0.7.1.1. Arbeid som ikke
 hører under noen milepæl (arbeidsflyt, kodegjennomganger, vedlikehold) hører
 under fasens stående «Løpende»-punkt i backloggen og nummereres 0.6.0.1,
-0.6.0.2 … (neste fase: 0.7.0.x). Flate fasenumre (0.6.34, 0.6.35) deles ikke
+0.6.0.2 … (neste fase: 0.7.0.x), og er alltid firedelt siden punktet aldri
+lukkes. Flate fasenumre (0.6.34, 0.6.35) deles ikke
 lenger ut - de leses feilaktig som milepæl-plassering - men de historiske
 består, siden commit-titler i git ikke kan skrives om. Fase-slippet døpes til
 det siste nummeret ved gaten. Push-innslag arver commit-spennet siden forrige
@@ -20,7 +25,25 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
-### 0.7.1.1 - v0.7 i gang: oppryddingsrunden, festing i grupper og til skjermen, og strammere CHANGELOG-form - 9. august 2026
+### 0.7.0.1 - Moderniseringsgjennomgang av v0.7, to nye milepæler og ADR-0017 om AI via lokal MCP-server - 10. august 2026
+
+Gjennomgang av backloggen og kartene i docs/sammenligning mot dagens plattformstøtte, for både det som er bygget og det som er planlagt. Kartene er skrevet 22.-27. juli 2026 med støttetall «per tidlig 2026»; flere har flyttet seg, og én backlog-beslutning hvilte på et tall som ikke lenger stemte.
+
+- Moderniser-seksjonen utsatte menyer til Popover API fordi anchor positioning var «~82 %, ikke baseline». Den er Baseline 2026 nå, så gaten er åpnet og den lovede «egen runde» er milepæl **0.7.12 Forankringsrunden**.
+- Gjennomgangen fant at det største bruksstedet for forankring ikke er nav (som alt posisjonerer undermenyer i CSS) men fire uavhengige håndrullede popovere som hver måler viewport og vender seg selv: `Dropdown.svelte`, motorens `dropdown.js`, `ColorPicker.svelte` og `GlyphPicker.svelte`. Runden sletter kode i stedet for å legge til.
+- `contrast-color()` ble baseline i april 2026 i alle tre motorene, og er lagt inn i samme milepæl: den løser lesbarhet mot eierens aksentfarge, som kontrast-varselet i Tema-panelet skulle løst før det ble fjernet igjen i 0.6.6.5.4.
+- Tilgjengelighet lå som ett kosmetisk delpunkt under editor-finpuss, men målingen viste noe verre: `App.svelte` har 197 `<label>`-tagger og null `for`-attributter, `:focus-visible` finnes ikke i `editor/src/`, og flere `<label>` pakker knapp-baserte komponenter, som dermed ikke har noe tilgjengelig navn i det hele tatt. Punktet er hevet til milepæl **0.7.11 Tilgjengelighetsrunden**, med utdata mot WCAG 2.1 AA som den viktigste halvdelen.
+- 0.7.8 begrunnet hele den håndrullede ruteren med at Speculation Rules er Chromium-only. Speculation Rules er nå et fokusområde i Interop 2026 og cross-document View Transitions er i Safari 18.2+, så punktet har fått en «mål først»-port: mål faktisk navigasjonskostnad i en ikke-Chromium-nettleser før ruteren bygges, og lukk milepælen om forskjellen er liten.
+- SEO-pakken manglet JSON-LD. `Organization`/`LocalBusiness` og `Event` er lagt til i 0.7.6, siden det er ren statisk markering og feltene stort sett finnes fra før.
+- Tre plattformfunksjoner ble vurdert og IKKE tatt: `::scroll-marker()`/`::scroll-button()` (Firefox bak flagg), `appearance: base-select` (Chromium-only, ville ellers pensjonert ADR-0009) og MCP-protokollversjonen. De står som vaktliste under 0.7.0 med hver sin eksplisitte gate.
+- Node-versjonen er kun festet i CI, uten `.nvmrc` eller `engines`-felt; bumpen til gjeldende LTS er loggført under 0.7.0. `content-visibility` brukes kun til `<details>`-overgangen og aldri til seksjoner under folden, notert til v0.8-ytelsesarbeidet, og AVIF-halvdelen av 5b.6 er notert som praktisk gjennomførbar siden `imageTools.js` alt koder i nettleseren.
+- «Ekstern AI-tjeneste» sto kun i ELEMENTKART som en avvist kjerneavhengighet. **ADR-0017** velger i stedet en lokal, avhengighetsfri MCP-server i `template/mcp/`, rå JSON-RPC over stdio uten SDK, som eierens egen agentklient kobler seg til. Avvisningen av kjerneavhengigheten står; det er formen som var feil, ikke prinsippet.
+- ADR-0017 fester at skriveretten er `isAllowedPath` fra guard.js innskrenket til `content/`, at struktur alltid bygges av motorens egne fabrikker (modellen velger preset, den former ikke JSON), og at verktøylistene avledes fra motorens registre så en ny blokktype dukker opp uten at noen redigerer noe. Lesedelen er lagt til v0.8, skrivedelen til v0.9, siden 0.7.2 endrer `frames`-semantikken skriveverktøyene setter geometri i.
+- Kartene er oppdatert der de nå var direkte misvisende: støttetallene i ELEMENTKART, AI-statusen tre steder der, og et helt nytt kapittel 13 i FUNKSJONSKART, som ikke hadde noen AI-kategori i det hele tatt. Tilgjengelighets-vurderingen der sto som A uten å skille utdata fra editor, og er korrigert.
+- En lenkesjekk over hele docs fanget seks brutte relative lenker med feilaktig `docs/`-prefiks fra en fil som selv ligger i docs: de fem i PLAN.md som ble loggført som uløst funn i 0.6.8.9, pluss én i CHANGELOG til en brukerveiledning som siden er flyttet. Prefiksene er fjernet, og den flyttede filen er avlenket med ny plassering nevnt i teksten.
+- Milepæl 0.7.1 landet i én commit, men innslaget ble likevel døpt 0.7.1.1, der sifferet ikke bar informasjon. Ny regel i AGENTS.md: rekkefølge-sifferet legges kun på når milepælen faktisk får mer enn én commit, og åpnes den igjen senere fortsetter nummereringen på 0.7.1.2. Regelen er speilet i CHANGELOG-innledningen og backlog-innledningen, og innslaget er døpt om til 0.7.1 i logg, backlog og testrunder.
+
+### 0.7.1 - v0.7 i gang: oppryddingsrunden, festing i grupper og til skjermen, og strammere CHANGELOG-form - 9. august 2026
 
 Første arbeidsrunde i v0.7. Hoveddelen er milepæl 0.7.1 (Lav-funnene fra kodegjennomgangen 27. juli 2026 og de to bugsene fra testingen, hvert funn re-verifisert mot dagens kilde før fiks), pluss sticky-oppfølgingen testingen utløste. De tre siste punktene hører under fasens løpende punkt 0.7.0.
 
@@ -998,7 +1021,7 @@ Basert på nettresearch av Squarespace, Wix og Gutenberg (funn og kilder i samta
 - Dekor-knappen (✦) forklarer nå fargene i tooltipen (gul = pynt som skjules i automatisk mobil-layout, grå = innhold som vises), og teksten følger tilstanden.
 
 ### 0.5.1.4 - brukerveiledning - 17. juli 2026
-- Ny [docs/BRUKERVEILEDNING.md](docs/BRUKERVEILEDNING.md): veiledning for sideeiere (editoren, blokker, dekor-flagget, seksjoner, grid, mobil, publisering). Utvides løpende; full opprydding er planlagt mot v0.9.
+- Ny `docs/BRUKERVEILEDNING.md` (senere flyttet til docs/languages/user-guide/GUIDE-nb.md): veiledning for sideeiere (editoren, blokker, dekor-flagget, seksjoner, grid, mobil, publisering). Utvides løpende; full opprydding er planlagt mot v0.9.
 
 ### 0.5.1.3 - gruppene som menyknapper - 17. juli 2026
 - Gruppene i Blokker-panelet ser ut som blokk-knappene (full bredde, samme ramme) med ▸/▾-pil til høyre; åpnet gruppe viser blokkene som vertikal liste under, lett innrykket.

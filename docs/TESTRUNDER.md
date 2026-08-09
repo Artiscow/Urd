@@ -2,7 +2,7 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
-### Testrunde-batch (0.7.1.1): Oppryddingsrunden og sticky-utvidelsene
+### Testrunde-batch (0.7.1): Oppryddingsrunden og sticky-utvidelsene
 
 - [ ] Sticky: sett «Fest ved scrolling» på en blokk i en seksjon som er høyere enn blokken, og se i Ren visning at blokken fester seg SYNLIG under den klistrede menyen (før la den seg bak menyen); demoen er «Les mer»-knappen på Om oss
 - [ ] Sticky med krympende meny (Nav-panelet, «Ved scrolling» = krymp): stopp scrollingen midt i krympingen og se at avstanden justerer seg når menyen er ferdig krympet, ikke først ved neste scroll
