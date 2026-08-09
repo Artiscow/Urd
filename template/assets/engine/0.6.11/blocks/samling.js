@@ -270,8 +270,13 @@ export const samlingBlock = {
       }
       const view = VIEWS[props.view] ?? renderCards;
       editCtx = ctx.preview && ctx.viewport !== 'mobile' ? { collection: props.collection } : null;
-      view(host, entries);
-      editCtx = null;
+      // finally: kaster visningen, ville modulglobalen ellers blitt stående og
+      // lekket denne samlingens redigeringskontekst inn i neste blokk som rendres.
+      try {
+        view(host, entries);
+      } finally {
+        editCtx = null;
+      }
 
       // Hjelpechipen (ADR-0008): blokken har spesialfunksjoner og forklarer seg selv.
       if (ctx.preview && ctx.viewport !== 'mobile') {

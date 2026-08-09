@@ -6,11 +6,17 @@
 
 import { resolveColor } from './theme.js';
 
-// Samme vern som favicon-flyten i urd.js (SAFE_ICON_RE): kun kjente
-// bildeformer (base64-data-URL eller site-relativ sti) slippes inn i
-// CSS-url(); alt annet (eksterne verter, tegn som knekker url("…"))
-// ignoreres. Ankret regex med vilje - CodeQL gjenkjenner det som barriere.
+// Trygg bildekilde: kun kjente bildeformer (base64-data-URL for upubliserte
+// opplastinger, eller site-relativ sti til media/) slippes inn i img.src og
+// CSS-url(); alt annet (eksterne verter, tegn som knekker url("…")) ignoreres.
+// Ankret regex med vilje - CodeQL gjenkjenner det som barriere. Delt vokter
+// for favicon, nav-logo og -bakgrunn, footer-logo, ikonblokk og bildelaget.
 const SAFE_IMAGE_RE = /^(?:data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+|\/(?!\/)[\w%./-]*)$/;
+
+/** @param {unknown} src @returns {boolean} */
+export function isSafeImage(src) {
+  return typeof src === 'string' && SAFE_IMAGE_RE.test(src);
+}
 
 // Trygg lenke-URL for nav-/footer-lenker (item.href): kun http(s), mailto og
 // tel, som footer-sosiallenkene. javascript:/data: og alt annet avvises, så en
@@ -184,7 +190,7 @@ export function hostClasses(site) {
 export function navSurface(style = {}) {
   const out = {};
   const hasVeil = style.bg || style.bgOpacity != null;
-  if (style.image && SAFE_IMAGE_RE.test(style.image)) {
+  if (isSafeImage(style.image)) {
     // Sløret gjentas som gradient-lag over bildet; uten egne valg brukes
     // standardflaten (surface 85 %), så teksten alltid har bakgrunn å stå på.
     const color = resolveColor(style.bg ?? 'surface');
@@ -228,7 +234,7 @@ function veil(style) {
  * @returns {string|undefined}
  */
 export function navSubSurface(style = {}) {
-  if (style.image && SAFE_IMAGE_RE.test(style.image) && style.subImage === true) {
+  if (isSafeImage(style.image) && style.subImage === true) {
     return navSurface(style).bg;
   }
   if (style.bg || style.bgOpacity != null) return veil(style);

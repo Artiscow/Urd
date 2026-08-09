@@ -11,7 +11,7 @@
  * styles av body.urd-mobile (breakpointet settes i urd.js fra site.json).
  */
 
-import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, navScrollState } from './nav-model.js';
+import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, navScrollState, isSafeImage } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
 import { t } from './i18n.js';
@@ -229,9 +229,11 @@ export function renderNav(site, host) {
     return span;
   };
 
-  if (logoDef.type === 'image') {
+  // En utrygg bildekilde faller tilbake til logoteksten (samme vokter som
+  // nav-bakgrunnen og faviconet), så menyen aldri står uten merke.
+  if (logoDef.type === 'image' && isSafeImage(logoDef.value)) {
     logo.appendChild(logoImg(logoDef.value));
-  } else if (logoDef.type === 'both' && logoDef.image) {
+  } else if (logoDef.type === 'both' && isSafeImage(logoDef.image)) {
     // Bilde + tekst, i valgt rekkefølge.
     if ((logoDef.order ?? 'image-first') === 'image-first') {
       logo.append(logoImg(logoDef.image), logoText());

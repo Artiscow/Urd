@@ -57,8 +57,31 @@ export async function onRequestGet({ request, env }) {
 
   if (!upstream.ok) return json({ error: `The calendar source responded ${upstream.status}`, code: 'calendarUpstreamStatus', status: upstream.status }, 502);
 
-  const text = await upstream.text();
-  if (text.length > MAX_BYTES) return json({ error: 'The calendar file is too large', code: 'calendarTooLarge' }, 502);
+  const tooLarge = () => json({ error: 'The calendar file is too large', code: 'calendarTooLarge' }, 502);
+
+  // Størrelsen håndheves FØR kroppen bufres: oppgitt lengde avviser med én gang,
+  // og uten oppgitt lengde teller vi bytes mens strømmen leses og avbryter ved
+  // grensen. (En ren .text() ville bufret hele svaret først, og lengden på den
+  // ferdige strengen teller UTF-16-enheter, ikke bytes.)
+  const declared = Number(upstream.headers.get('content-length'));
+  if (Number.isFinite(declared) && declared > MAX_BYTES) return tooLarge();
+
+  const reader = upstream.body?.getReader();
+  const decoder = new TextDecoder('utf-8');
+  let text = '';
+  let bytes = 0;
+  while (reader) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    bytes += value.byteLength;
+    if (bytes > MAX_BYTES) {
+      await reader.cancel();
+      return tooLarge();
+    }
+    text += decoder.decode(value, { stream: true });
+  }
+  // Uten kropp forblir text tom, og iCal-sjekken under svarer calendarNotIcs.
+  text += decoder.decode();
   if (!/BEGIN:VCALENDAR/i.test(text.slice(0, 4000))) {
     return json({ error: 'The response from the source is not an iCal file', code: 'calendarNotIcs' }, 502);
   }

@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, navScrollState } = await engineImport('nav-model.js');
+const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, navScrollState, isSafeImage } = await engineImport('nav-model.js');
 
 const PAGES = [
   { id: 'hjem', title: 'Hjem', path: '/' },
@@ -50,6 +50,23 @@ test('resolveItem: site-interne stier og ankere er gyldige mål uten external', 
     assert.equal(item.external, false, ok);
     assert.equal(item.missing, false, ok);
   }
+});
+
+// Delt bildevokter for favicon, nav-/footer-logo, ikonblokk og bildelagene:
+// kilden havner i img.src og i CSS-url(), så alt utenfor de to kjente formene avvises.
+test('isSafeImage: media-stier og base64-data-URL-er godtas', () => {
+  for (const ok of ['/media/logo.webp', '/media/styret/leder.webp', '/', 'data:image/png;base64,iVBORw0KGgo=']) {
+    assert.equal(isSafeImage(ok), true, ok);
+  }
+});
+
+test('isSafeImage: eksterne verter, protokoll-relative stier og url-brytere avvises', () => {
+  const bad = [
+    'https://ond.no/x.png', '//ond.no/x.png', 'javascript:alert(1)',
+    'data:text/html,<script>', 'media/logo.webp', '/media/logo.webp") ; background: url("x',
+    '/media/a"b.webp', '', '  /media/logo.webp', null, undefined, 42, {},
+  ];
+  for (const value of bad) assert.equal(isSafeImage(value), false, String(value));
 });
 
 test('navItems: punkter uten undermeny er kind link', () => {

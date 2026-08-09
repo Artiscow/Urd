@@ -7,6 +7,7 @@
  */
 
 import { resolveColor } from './theme.js';
+import { isSafeImage } from './nav-model.js';
 import { iconSvg, ICON_LIBRARY } from './icons.js';
 import { t } from './i18n.js';
 import { renderBackgroundLayers } from './render.js';
@@ -204,7 +205,7 @@ function buildCta(cta) {
 function buildBrandIdentity(brand) {
   const el = document.createElement('div');
   el.className = 'urd-footer-brand-id';
-  const hasLogo = (brand.mode === 'image' || brand.mode === 'both') && brand.logo;
+  const hasLogo = (brand.mode === 'image' || brand.mode === 'both') && isSafeImage(brand.logo);
   const showTitle = brand.mode !== 'image' || !hasLogo;
   if (hasLogo) {
     const img = document.createElement('img');

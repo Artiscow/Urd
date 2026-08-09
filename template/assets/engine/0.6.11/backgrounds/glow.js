@@ -16,8 +16,13 @@ export const glowLayer = {
    */
   render(el, props) {
     const color = resolveColor(props.color);
-    el.style.background = `radial-gradient(circle at ${props.x * 100}% ${props.y * 100}%, ${color} 0%, transparent ${props.radius * 100}%)`;
-    // Gamle lag kan mangle feltet (lift fyller ikke inn defaults): fall tilbake til standardverdien i stedet for "undefined" (som CSS ignorerer, altså full styrke).
+    // Gamle lag kan mangle feltene (lift fyller ikke inn defaults): fall tilbake til
+    // standardverdiene. Uten dette blir plassering og radius NaN%, og CSS forkaster
+    // hele gradienten, altså et usynlig lag i stedet for et med standardutseende.
+    const x = props.x ?? 0.5;
+    const y = props.y ?? 0.3;
+    const radius = props.radius ?? 0.5;
+    el.style.background = `radial-gradient(circle at ${x * 100}% ${y * 100}%, ${color} 0%, transparent ${radius * 100}%)`;
     el.style.opacity = String(props.opacity ?? 0.35);
   },
 };

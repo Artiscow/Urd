@@ -3,7 +3,7 @@
  * Kjøres med `npm run validate` (og i CI). Feiler med kode 1 og tydelig
  * utskrift hvis noe ikke stemmer med kontrakten.
  */
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
@@ -24,13 +24,26 @@ ajv.addSchema(pageSchema); // mal.schema.json refererer page-skjemaets $defs ($i
 
 const cases = [
   ['template/content/site.json', siteSchema.$id],
-  ['template/content/pages/hjem.json', pageSchema.$id],
-  ['template/content/pages/om-oss.json', pageSchema.$id],
   ['template/plugins/kalender/plugin.json', pluginSchema],
   ['template/plugins/skjema/plugin.json', pluginSchema],
   ['template/plugins/kart/plugin.json', pluginSchema],
   ['template/plugins/sprak-svensk/plugin.json', pluginSchema],
 ];
+
+// Alle sider fra sideregisteret valideres, ikke en håndplukket liste: da fanges
+// både en ny side ingen husket å legge til her, og en registeroppføring som
+// peker på en fil som ikke finnes (load kaster med stien). Filer på disk som
+// IKKE står i registeret tas med i tillegg, så en foreldreløs sidefil aldri
+// blir liggende uvalidert.
+const registered = new Set();
+for (const page of load('template/content/site.json').pages ?? []) {
+  registered.add(`template/${page.file}`);
+  cases.push([`template/${page.file}`, pageSchema.$id]);
+}
+for (const name of readdirSync(new URL('template/content/pages/', `file://${root}`))) {
+  const path = `template/content/pages/${name}`;
+  if (name.endsWith('.json') && !registered.has(path)) cases.push([path, pageSchema.$id]);
+}
 
 // Alle samlinger fra indeksfilen valideres mot collection-skjemaet (ADR-0007).
 for (const id of load('template/content/samlinger.json').samlinger ?? []) {

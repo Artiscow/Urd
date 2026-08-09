@@ -2,6 +2,32 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.1.1): Oppryddingsrunden og sticky-utvidelsene
+
+- [ ] Sticky: sett «Fest ved scrolling» på en blokk i en seksjon som er høyere enn blokken, og se i Ren visning at blokken fester seg SYNLIG under den klistrede menyen (før la den seg bak menyen); demoen er «Les mer»-knappen på Om oss
+- [ ] Sticky med krympende meny (Nav-panelet, «Ved scrolling» = krymp): stopp scrollingen midt i krympingen og se at avstanden justerer seg når menyen er ferdig krympet, ikke først ved neste scroll
+- [ ] Sticky med sidestilt meny og med «Ved scrolling» = skjul: avstanden er uendret i begge (kolonnen tar ikke plass i toppen; en utglidd meny beholder avstanden med vilje)
+- [ ] Hjelpetekstene på Fest ved scrolling og avstanden nevner at seksjonen må være høyere enn blokken, og at menyhøyden legges til automatisk (nb, engelsk, tyrkisk, nynorsk)
+- [ ] Bekreftelsesdialogen (f.eks. «Lagre som mal» eller «Slett mal»): Escape avbryter, klikk på det mørke bakteppet avbryter, og klikket treffer ikke knapper i panelet under; Enter i navnefeltet lagrer fortsatt; marker tekst i navnefeltet og slipp musa utenfor dialogen (skal IKKE lukke)
+- [ ] Escape med både dialog og blokkmeny åpen lukker kun dialogen
+- [ ] Publisering, angre-publisering og Oppdatering-panelets sjekk fungerer som før (CSRF-vernet er lagt om til Sec-Fetch-Site); test i minst to nettlesere, gjerne en personvern-orientert
+- [ ] Innlogging: logg inn og ut som vanlig; en feilet innlogging skal gi «GitHub avviste innloggingen», aldri en rå serverfeil
+- [ ] Kalender-pluginen henter feeden som før (proxyen leser nå strømmen med bytegrense)
+- [ ] Nav-logo, footer-logo, ikonblokk med eget bilde, bildelag og bildegalleri-lag viser bildene som før, både i editor og publisert
+- [ ] Seksjon med glød-lag som ble laget før radius/plassering fantes: laget vises (var usynlig)
+- [ ] Festing virker nå i vanlig redigeringsvisning: sett «Fest ved scrolling» på en blokk og scroll i editoren; blokken fester seg uten at du må bytte til Ren visning
+- [ ] Blokker med festing har en nål i hjørnet i redigering, med hjelpetekst ved peker; nålen er borte i Ren visning og på publisert side
+- [ ] Ta tak i en festet blokk: den faller tilbake til sin ekte plass mens du drar, og fester seg igjen når du slipper
+- [ ] Flytt en festet blokk med piltastene, og med juster/fordel fra flerutvalgs-linja: blokken skal IKKE hoppe tilbake til den gamle plassen ved neste scroll
+- [ ] Dra et flerutvalg med festede blokker fra håndtaket i flerutvalgs-linja: ingen hopp, og festingen tas opp igjen ved slipp
+- [ ] Marker to eller flere blokker og trykk «Fest gruppen»: de festes samlet og beholder avstanden seg imellom i stedet for å legge seg oppå hverandre; demoen er intro-teksten og «Les mer» på Om oss
+- [ ] Gruppen slipper samlet ved seksjonens slutt, og blokker som med vilje overlapper beholder rekkefølgen sin foran/bak mens gruppen er festet
+- [ ] Trykk «Fest gruppen» igjen: festingen fjernes fra alle de valgte blokkene, og ett angre-steg gjenoppretter den
+- [ ] Fest til skjermen: sett Festemåte til «Til skjermen» på en blokk, velg plassering og se at den står i det punktet hele siden gjennom; demoen er «Til toppen»-knappen på Om oss
+- [ ] Ved «Til skjermen» vises Plassering i vinduet i stedet for Slipp taket; velger du «Midt i vinduet» skjules avstandsfeltet (det har ingen effekt der)
+- [ ] Publisert side: både gruppefestingen og den skjermdokkede knappen oppfører seg som i Ren visning; mobilvisningen har ingen festing i det hele tatt
+- [ ] Gjør en side med festede blokker mindre i vindusbredden: festede blokker og grupper følger seksjonsbredden, og dokkede blokker holder seg innenfor vinduet
+
 ### Testrunde-batch (0.6.6.4.6): Nye rollesett og stagger-finpussen
 
 - [ ] Seksjonstema i Egenskaper er et prøve-rutenett med åtte kort tegnet i sidens egne temafarger; prøvene endres når temaet endres; valgt kort markeres og Standard nullstiller

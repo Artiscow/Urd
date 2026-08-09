@@ -14,6 +14,7 @@ import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION } from './migrate.js';
 import { applyTheme } from './theme.js';
 import { renderPage, renderSection } from './render.js';
 import { renderNav } from './nav.js';
+import { isSafeImage } from './nav-model.js';
 import { renderFooter } from './footer.js';
 import { textBlock } from './blocks/text.js';
 import { imageBlock } from './blocks/image.js';
@@ -143,10 +144,9 @@ function wireViewTransitionNames() {
  * index.html. Additivt felt; uten ikon beholdes Urd-merket.
  */
 function applyFavicon(href) {
-  if (!href) return;
-  // Kun kjente ikonformer (data:image base64 eller site-relativ sti); samme ankrede regex-vokter som admin, jf. CodeQL-funnene på favicon-flyten.
-  if (typeof href !== 'string') return;
-  if (!/^(?:data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+|\/(?!\/)[\w%./-]*)$/.test(href)) return;
+  // Kun kjente ikonformer (data:image base64 eller site-relativ sti); delt
+  // vokter med nav-logo, footer-logo og bildelagene, jf. CodeQL-funnene på favicon-flyten.
+  if (!isSafeImage(href)) return;
   let link = document.querySelector('link[rel="icon"]');
   if (!link) {
     link = document.createElement('link');
@@ -214,7 +214,10 @@ function enablePreview(state, opts) {
       const i = state.page.sections.findIndex((s) => s.id === msg.section.id);
       if (i >= 0) state.page.sections[i] = msg.section;
     } else if (msg?.type === 'urd-preview-full' && msg.page) {
+      // Samme normalisering som boot(): en side uten sections skal gi tom
+      // visning, ikke kaste i renderPage (og i findIndex ved neste melding).
       state.page = msg.page;
+      if (!Array.isArray(state.page.sections)) state.page.sections = [];
       renderPage(state.page, state.site, root, vp());
       // Sidebytte i editoren: footeren kan ha per-side-synlighet (hideOn).
       if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);

@@ -9,6 +9,7 @@
  * laget forsvinner fra DOM (re-render-churn i preview).
  */
 import { canAutoplay, normalizeInterval, stepIndex } from '../galleri-model.js';
+import { isSafeImage } from '../nav-model.js';
 import { bgSize, bgPosition } from './image.js';
 
 export const bildegalleriLayer = {
@@ -23,7 +24,8 @@ export const bildegalleriLayer = {
    *          interval?: number, fade?: number, opacity?: number, blur?: number}} props
    */
   render(el, props) {
-    const images = (props.images ?? []).filter((img) => img?.src);
+    // Kildene går rett inn i CSS-url(), så de siles gjennom samme vokter som bildelaget.
+    const images = (props.images ?? []).filter((img) => isSafeImage(img?.src));
     if (!images.length) return;
 
     el.classList.add('urd-bg-galleri');

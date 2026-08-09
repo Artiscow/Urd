@@ -4,6 +4,7 @@
  * farger; temafargen gjelder tekst-glyfer (★ ✓ → osv.).
  */
 import { resolveColor } from '../theme.js';
+import { isSafeImage } from '../nav-model.js';
 import { iconSvg } from '../icons.js';
 
 export const iconBlock = {
@@ -18,7 +19,8 @@ export const iconBlock = {
    */
   render(el, props) {
     // Eget opplastet ikon (additivt felt): bildet vises i tegnstørrelsen og vinner over glyfen til det fjernes.
-    if (typeof props.image === 'string' && props.image) {
+    // Utrygg kilde behandles som ingen kilde, altså samme vei som et bilde som feiler ved lasting.
+    if (isSafeImage(props.image)) {
       const img = document.createElement('img');
       img.src = props.image;
       img.alt = '';

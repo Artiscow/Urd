@@ -128,7 +128,7 @@
         "decor": { "type": "boolean", "default": false, "description": "Dekor-blokk: utelates fra auto-avledet mobil-layout" },
         "mobileOrder": { "type": "number", "description": "Overstyrer sorteringsnøkkelen i auto-avledet mobil-stabling (tolkes på samme skala som desktop-y). Additivt felt fra v0.5: seksjonsmalene bruker det til å holde kort samlet." },
         "sticky": {
-          "description": "Fest ved scrolling (additivt felt fra v0.6, kun desktop): blokken festes ved vindustoppen og slipper når egen seksjon (until: null) eller en senere seksjon (until: seksjons-id) er passert",
+          "description": "Fest ved scrolling (additivt felt fra v0.6, kun desktop): blokken festes ved vindustoppen og slipper når egen seksjon (until: null) eller en senere seksjon (until: seksjons-id) er passert. Med mode 'screen' dokkes blokken i stedet til et fast punkt i vinduet for hele siden",
           "oneOf": [
             { "type": "null" },
             {
@@ -136,8 +136,27 @@
               "required": ["offset"],
               "additionalProperties": false,
               "properties": {
-                "offset": { "type": "number", "minimum": 0, "description": "Avstand fra vinduets topp i px mens blokken er festet" },
+                "offset": { "type": "number", "minimum": 0, "description": "Avstand fra vinduets topp i px mens blokken er festet; med mode 'screen' avstanden fra de dokkede kantene" },
                 "until": {
+                  "oneOf": [
+                    { "type": "null" },
+                    { "$ref": "#/$defs/id" }
+                  ]
+                },
+                "mode": {
+                  "type": "string",
+                  "enum": ["scroll", "screen"],
+                  "default": "scroll",
+                  "description": "Additivt felt fra v0.7: 'scroll' fester ved vindustoppen når blokken nås og slipper ved grensen, 'screen' dokker blokken i vinduet for hele siden (until gjelder ikke)"
+                },
+                "dock": {
+                  "type": "string",
+                  "enum": ["top-left", "top-center", "top-right", "middle-left", "middle-center", "middle-right", "bottom-left", "bottom-center", "bottom-right"],
+                  "default": "bottom-right",
+                  "description": "Additivt felt fra v0.7: ankerpunktet i vinduet ved mode 'screen'"
+                },
+                "group": {
+                  "description": "Additivt felt fra v0.7: blokker med samme gruppe-id festes og slippes som én enhet og beholder plasseringen seg imellom. Gruppen styres av det FØRSTE medlemmets offset/until/mode/dock",
                   "oneOf": [
                     { "type": "null" },
                     { "$ref": "#/$defs/id" }

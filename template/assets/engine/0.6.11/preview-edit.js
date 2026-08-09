@@ -33,6 +33,7 @@ import { SIZE_MIN, SIZE_MAX, clampSize, stepSize, LINE_HEIGHTS, stepIndent, matc
 import { frameAtPoint } from './place.js';
 import { topDrag } from './section-size.js';
 import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
+import { suspendSticky, resumeSticky } from './sticky.js';
 // Modulen lastes dynamisk av urd.js ETTER at admin-ordboka er lastet
 // (initAdminLocale), så ta() er trygg også på modulnivå her.
 import { ta } from './i18n.js';
@@ -2276,6 +2277,7 @@ window.addEventListener('keydown', (event) => {
     // ville etterlatt en usynlig endring som holdt utkastet skittent).
     const parts = selectedEls().map((e) => ({ el: e, ctx: e._urdCtx })).filter((p) => p.ctx);
     const d = dir[0] ? groupDelta(parts.map((p) => p.ctx.block.frames.desktop), r1(dir[0] * stepPx * pctPerPx), 0) : { dx: 0 };
+    suspendSticky();
     for (const p of parts) {
       const frame = { ...p.ctx.block.frames.desktop };
       if (dir[0]) frame.x = r1(frame.x + d.dx);
@@ -2284,6 +2286,7 @@ window.addEventListener('keydown', (event) => {
       Object.assign(p.el.style, frameToCss(frame));
       post({ type: 'urd-move', sectionId: p.ctx.section.id, blockId: p.ctx.block.id, frame, frameKey: 'desktop', coalesce: true, groupKey: 'multi-arrow' });
     }
+    resumeSticky();
     updateMultiToolbar();
     return;
   }
@@ -2292,7 +2295,9 @@ window.addEventListener('keydown', (event) => {
   if (dir[0]) frame.x = clamp(r1(frame.x + dir[0] * stepPx * pctPerPx), 0, r1(100 - frame.w));
   if (dir[1]) frame.y = frame.y + dir[1] * stepPx;
   ctx.block.frames.desktop = frame;
+  suspendSticky();
   Object.assign(el.style, frameToCss(frame));
+  resumeSticky();
   // coalesce: en skur av piltastetrykk blir ett angre-steg.
   post({ type: 'urd-move', sectionId: ctx.section.id, blockId: selectedBlockId, frame, frameKey: 'desktop', coalesce: true });
 });
@@ -2461,6 +2466,21 @@ function buildMultiBar() {
     post({ type: 'urd-save-template', kind: 'blocks', blocks: JSON.parse(JSON.stringify(blocks)) });
   });
   saveGroup.classList.add('urd-multi-save');
+  // «Fest gruppen»: hele utvalget får samme gruppe-id og festes som ÉN
+  // enhet, så blokkene beholder plasseringen seg imellom i stedet for at
+  // alle legger seg oppå hverandre ved vindustoppen. Er utvalget alt
+  // festet som gruppe, løser knappen festingen igjen.
+  btn(svg('<path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/>'), ta('canvas.stickyGroup'), () => {
+    const blocks = selectedEls().map((el) => el._urdCtx?.block).filter(Boolean);
+    if (blocks.length < 2) return;
+    const grouped = blocks.every((b) => b.sticky?.group);
+    post({
+      type: 'urd-sticky-group',
+      sectionId: multiSectionId,
+      blockIds: blocks.map((b) => b.id),
+      on: !grouped,
+    });
+  });
   // Dra-håndtaket: grip hele utvalget og dra det samlet (egen knapp ved
   // siden av søppelikonet); bokføres som ETT angre-steg ved slipp.
   const grip = document.createElement('button');
@@ -2488,6 +2508,9 @@ function startSelectionDrag(event) {
   event.stopPropagation();
   const handle = event.currentTarget;
   handle.setPointerCapture(event.pointerId);
+  // Som enkeltdraget: festede blokker løses tilbake til sin ekte plass før
+  // draget skriver geometri på dem.
+  suspendSticky();
 
   const width = host.getBoundingClientRect().width;
   const startX = event.clientX;
@@ -2511,6 +2534,7 @@ function startSelectionDrag(event) {
     handle.removeEventListener('pointermove', move);
     handle.removeEventListener('pointerup', up);
     handle.removeEventListener('pointercancel', cancel);
+    resumeSticky();
     if (commit && (delta.dx || delta.dy)) {
       applySelectionMoves(items.map((it) => ({ id: it.id, x: r2(it.x + delta.dx), y: it.y + delta.dy })));
     } else {
@@ -2567,6 +2591,9 @@ function selectionItems() {
 /** Bokfør en liste flyttinger som ETT angre-steg (delt groupKey). */
 function applySelectionMoves(moves) {
   if (!moves.length) return;
+  // Skriver geometri rett på elementene uten re-render, så festingen må
+  // slippe taket først (ellers måles neste feste mot den gamle plassen).
+  suspendSticky();
   const key = makeId('malign');
   for (const move of moves) {
     const el = document.querySelector(`.urd-block[data-block-id="${CSS.escape(move.id)}"]`);
@@ -2579,6 +2606,7 @@ function applySelectionMoves(moves) {
     Object.assign(el.style, frameToCss(frame));
     post({ type: 'urd-move', sectionId: ctx.section.id, blockId: move.id, frame, frameKey: 'desktop', coalesce: true, groupKey: key });
   }
+  resumeSticky();
   updateMultiToolbar();
 }
 
@@ -2885,6 +2913,17 @@ function enhanceBlock(el, block, section, grid, host) {
   resizeHandle.title = ta('canvas.dragResize');
   el.appendChild(resizeHandle);
 
+  // Festing er ellers usynlig så lenge man ikke scroller: en nål i hjørnet
+  // viser at blokken har «Fest ved scrolling» på. Kun desktop, som feltet.
+  if (!mobile && block.sticky) {
+    const PIN_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></svg>';
+    const pin = document.createElement('div');
+    pin.className = 'urd-sticky-badge';
+    pin.innerHTML = PIN_SVG;
+    pin.title = ta('lbl.sticky');
+    el.appendChild(pin);
+  }
+
   wireDrag(moveHandle, 'move');
   wireDrag(resizeHandle, 'resize');
   // Hele blokkflaten kan også dras direkte (⠿ består). Terskel gjør at
@@ -2974,6 +3013,14 @@ function enhanceBlock(el, block, section, grid, host) {
       // (markering, caret) forblir klikk.
       const threshold = opts.surface ? 4 : 0;
       let started = threshold === 0;
+      // Festede blokker løses tilbake til sin ekte plass før draget skriver
+      // geometri. Et rent klikk (terskelen ikke passert) suspenderer ingenting.
+      // Paret må være nøyaktig: en umatchet gjenopptaking ville avbrutt
+      // suspenderingen til et annet dra som pågår samtidig.
+      let holdsSticky = false;
+      const holdSticky = () => { if (!holdsSticky) { holdsSticky = true; suspendSticky(); } };
+      const dropSticky = () => { if (holdsSticky) { holdsSticky = false; resumeSticky(); } };
+      if (started) holdSticky();
 
       const start = { x: event.clientX, y: event.clientY };
       const orig = { ...(block.frames[frameKey] ?? block.frames.desktop) };
@@ -3058,6 +3105,7 @@ function enhanceBlock(el, block, section, grid, host) {
         if (!started) {
           if (Math.abs(ev.clientX - start.x) + Math.abs(ev.clientY - start.y) < threshold) return;
           started = true;
+          holdSticky();
         }
         // Shift holdt inne = midlertidig fri plassering (0,1 % / 1 px);
         // ellers styrer grid.snap.
@@ -3096,11 +3144,26 @@ function enhanceBlock(el, block, section, grid, host) {
         Object.assign(el.style, frameToCss(current));
       };
 
+      // Avbrutt dra (nettleseren tar over pekeren, eller elementet byttes ut
+      // midt i draet): rydd og slipp festingen, ellers ville den blitt stående
+      // suspendert for resten av økta.
+      const onCancel = () => {
+        handle.removeEventListener('pointermove', onMove);
+        handle.removeEventListener('pointerup', onUp);
+        handle.removeEventListener('pointercancel', onCancel);
+        overlay.remove();
+        clearGuides();
+        dropSticky();
+      };
+
       const onUp = () => {
         handle.removeEventListener('pointermove', onMove);
         handle.removeEventListener('pointerup', onUp);
+        handle.removeEventListener('pointercancel', onCancel);
         overlay.remove();
         clearGuides();
+        // Fester på nytt fra blokkens NYE utgangsverdier.
+        dropSticky();
         if (!started) return;
 
         // Gruppe-dra: bokfør hele utvalget som ETT angre-steg (delt
@@ -3149,6 +3212,7 @@ function enhanceBlock(el, block, section, grid, host) {
 
       handle.addEventListener('pointermove', onMove);
       handle.addEventListener('pointerup', onUp);
+      handle.addEventListener('pointercancel', onCancel);
     });
   }
 }

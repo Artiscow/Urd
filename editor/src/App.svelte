@@ -584,6 +584,26 @@
     confirmBox = null;
   }
 
+  // Skiller et klikk på bakteppet fra et tekstdrag som startet inne i kortet:
+  // begge ender med samme klikk-mål, men bare det første begynte på bakteppet.
+  let confirmDownOnOverlay = false;
+
+  // Escape avbryter, som i alle andre lukkbare flater i editoren. Egen lytter
+  // fremfor den globale keydown-handleren: dialogen skal svare på Escape så
+  // lenge fokus står i admin-dokumentet, og stopPropagation hindrer at samme
+  // tastetrykk også lukker blokkmenyen bak. Ingen blur-lukking (en modal skal
+  // overleve at forhåndsvisnings-iframen tar fokus).
+  $effect(() => {
+    if (!confirmBox) return;
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return;
+      e.stopPropagation();
+      answerConfirm(false);
+    };
+    document.addEventListener('keydown', onKey, true);
+    return () => document.removeEventListener('keydown', onKey, true);
+  });
+
   /* ---------- Oppsettsveiviseren ---------- */
 
   let showSetup = $state(false);
@@ -749,6 +769,14 @@
    *  editor-koordinater, null = lukket. Innholdet er samme snippet som
    *  Egenskaper-panelet. */
   let blockMenu = $state(null);
+
+  /** Ankerpunktene for «fest til skjermen»: vertikal-horisontal, som
+   *  dockPosition i motoren leser dem. */
+  const DOCK_OPTIONS = [
+    ['top-left', 'opt.dock.topLeft'], ['top-center', 'opt.dock.topCenter'], ['top-right', 'opt.dock.topRight'],
+    ['middle-left', 'opt.dock.middleLeft'], ['middle-center', 'opt.dock.middleCenter'], ['middle-right', 'opt.dock.middleRight'],
+    ['bottom-left', 'opt.dock.bottomLeft'], ['bottom-center', 'opt.dock.bottomCenter'], ['bottom-right', 'opt.dock.bottomRight'],
+  ];
 
   /** «Slipp taket»-valgene for sticky: kun seksjonene ETTER blokkens
    *  egen (festing bakover gir ikke mening; innstillinger vises kun
@@ -1971,6 +1999,7 @@
       onBlockFlag: handleBlockFlag,
       onCollectionEdit: handleCollectionEdit,
       onSaveTemplate: handleSaveTemplate,
+      onStickyGroup: handleStickyGroup,
       onDeleteTemplate: handleDeleteTemplate,
       onApplyLayout: handleApplyLayout,
       onPluginBlocks: (msg) => { pluginBlocks = msg.blocks ?? []; },
@@ -2501,6 +2530,29 @@
   function handleSaveTemplate(msg) {
     const kind = MAL_KINDS.includes(msg.kind) ? msg.kind : 'section';
     return saveTemplate(kind, msg[kind]);
+  }
+
+  /** «Fest gruppen» fra flerutvalgs-linja: hele utvalget deler én sticky-gruppe
+   *  og festes som én enhet, eller løses opp igjen. ETT angre-steg for hele
+   *  utvalget, som de andre gruppehandlingene. */
+  function handleStickyGroup(msg) {
+    const ids = msg.blockIds ?? [];
+    const { section } = readBlock(msg.sectionId, ids[0]);
+    if (!section || !ids.length) return;
+    pushHistory(`sticky-group:${msg.sectionId}`);
+    const group = msg.on ? makeId('stk') : null;
+    for (const block of section.blocks) {
+      if (!ids.includes(block.id)) continue;
+      // Av: festingen fjernes helt. På: eksisterende avstand/grense beholdes
+      // så en blokk som alt var festet ikke mister innstillingene sine.
+      block.sticky = group ? { offset: 16, until: null, ...block.sticky, group } : null;
+    }
+    markDesktopChange(section, 'blokk-endret');
+    store.save();
+    updateDirty();
+    bridge?.sendSection(pageId, section);
+    syncSelectedBlock();
+    setStatus(ta(msg.on ? 'status.stickyGrouped' : 'status.stickyUngrouped'));
   }
 
   /** Felles mal-lagring: navngi, slug til id, lagre som utkast. */
@@ -5717,7 +5769,14 @@
   {/if}
 
   {#if confirmBox}
-    <div class="setup-overlay">
+    <!-- Klikk på bakteppet avbryter (samme som lysbordets ::backdrop). Lukkingen
+         skjer på click, ikke pointerdown, så klikket er ferdig før dialogen
+         forsvinner og aldri treffer panelet under. -->
+    <!-- Bakteppet er en musesnarvei: Escape er tastaturveien og Avbryt-knappen den fokuserbare. -->
+    <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+    <div class="setup-overlay"
+      onpointerdown={(e) => (confirmDownOnOverlay = e.target === e.currentTarget)}
+      onclick={(e) => confirmDownOnOverlay && e.target === e.currentTarget && answerConfirm(false)}>
       <div class="setup-card">
         <h2>{confirmBox.title}</h2>
         {#each confirmBox.lines as line (line)}
@@ -6483,17 +6542,37 @@
         {ta('lbl.sticky')}
       </label>
       {#if selectedBlock.sticky}
-        <label title={ta('tip.stickyOffset')}>{ta('lbl.stickyOffset')}
-          <input type="number" min="0" max="400" value={selectedBlock.sticky.offset ?? 16}
-            onchange={(e) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-              b.sticky = { ...b.sticky, offset: Math.max(0, Number(e.target.value) || 0) };
-            })} /></label>
-        <label title={ta('tip.stickyUntil')}>{ta('lbl.stickyUntil')}
-          <Dropdown value={selectedBlock.sticky.until ?? ''}
-            options={stickyUntilOptions()}
+        <label title={ta('tip.stickyMode')}>{ta('lbl.stickyMode')}
+          <Dropdown value={selectedBlock.sticky.mode ?? 'scroll'}
+            options={[['scroll', ta('opt.sticky.modeScroll')], ['screen', ta('opt.sticky.modeScreen')]]}
             onchange={(v) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
-              b.sticky = { ...b.sticky, until: v || null };
+              b.sticky = { ...b.sticky, mode: v };
             })} /></label>
+        <!-- Avstanden gjelder kun kanter blokken faktisk dokkes til: er begge
+             akser sentrert, har den ingen effekt og skjules. -->
+        {#if selectedBlock.sticky.mode !== 'screen' || (selectedBlock.sticky.dock ?? 'bottom-right') !== 'middle-center'}
+          <label title={selectedBlock.sticky.mode === 'screen' ? ta('tip.stickyEdge') : ta('tip.stickyOffset')}>
+            {selectedBlock.sticky.mode === 'screen' ? ta('lbl.stickyEdge') : ta('lbl.stickyOffset')}
+            <input type="number" min="0" max="400" value={selectedBlock.sticky.offset ?? 16}
+              onchange={(e) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+                b.sticky = { ...b.sticky, offset: Math.max(0, Number(e.target.value) || 0) };
+              })} /></label>
+        {/if}
+        {#if selectedBlock.sticky.mode === 'screen'}
+          <label title={ta('tip.stickyDock')}>{ta('lbl.stickyDock')}
+            <Dropdown value={selectedBlock.sticky.dock ?? 'bottom-right'}
+              options={DOCK_OPTIONS.map(([v, key]) => [v, ta(key)])}
+              onchange={(v) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+                b.sticky = { ...b.sticky, dock: v };
+              })} /></label>
+        {:else}
+          <label title={ta('tip.stickyUntil')}>{ta('lbl.stickyUntil')}
+            <Dropdown value={selectedBlock.sticky.until ?? ''}
+              options={stickyUntilOptions()}
+              onchange={(v) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
+                b.sticky = { ...b.sticky, until: v || null };
+              })} /></label>
+        {/if}
       {/if}
     {/if}
 

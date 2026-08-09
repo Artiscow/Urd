@@ -3672,6 +3672,27 @@ body.urd-mobile .urd-section-resize-top {
   display: block;
 }
 
+/* Nål på blokker med «Fest ved scrolling»: festingen er usynlig så lenge
+   man ikke scroller, så merket viser at den er på. Alltid synlig med chrome
+   på (ikke bare ved peker), og borte i Ren visning som resten av chromen. */
+.urd-preview .urd-sticky-badge {
+  position: absolute;
+  top: -7px;
+  left: -7px;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--urd-admin-accent, #5f6a75);
+  color: #fff;
+  z-index: 1000;
+}
+
+.urd-preview.urd-chrome-off .urd-sticky-badge {
+  display: none;
+}
+
 /* «+ Ny seksjon»-barene svever OPPÅ skillet mellom seksjonene og tar
    null plass i flyten, slik at seksjonene ligger kant i kant nøyaktig
    som besøkende ser dem (kun i preview) */

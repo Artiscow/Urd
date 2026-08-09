@@ -183,6 +183,11 @@ export function renderSection(section, site, host, opts = {}) {
         el.classList.add('urd-sticky-able');
         el.dataset.stickyOffset = String(block.sticky.offset);
         el.dataset.stickyUntil = block.sticky.until ?? '';
+        // Additive felt: modus ('screen' dokker til vinduet), dokkpunkt og
+        // gruppe-id (blokker med samme id festes samlet).
+        el.dataset.stickyMode = block.sticky.mode ?? 'scroll';
+        el.dataset.stickyDock = block.sticky.dock ?? 'bottom-right';
+        el.dataset.stickyGroup = block.sticky.group ?? '';
       }
       maxBottomPx = Math.max(maxBottomPx, frame.y + frame.h);
       renderBlock(Urd, el, block, ctx);

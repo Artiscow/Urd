@@ -31,7 +31,12 @@ export async function onRequestGet({ request, env }) {
       code,
     }),
   });
-  const token = (await tokenRes.json()).access_token;
+  // GitHub kan svare med feilstatus eller en HTML-feilside i stedet for JSON
+  // (driftsforstyrrelser): da skal innloggingen avvises pent, ikke kaste en 500.
+  let token;
+  try {
+    if (tokenRes.ok) token = (await tokenRes.json()).access_token;
+  } catch { /* uleselig svar behandles som avvist innlogging */ }
   if (!token) {
     return new Response('GitHub rejected the sign-in (expired code?)', { status: 401 });
   }

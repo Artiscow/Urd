@@ -17,6 +17,8 @@
  *   henger etter ved scroll. bleed: la parallaksen flyte inn i naboseksjonene.
  */
 
+import { isSafeImage } from '../nav-model.js';
+
 /** Maks vertikal reisevei (andel av vindushøyden) et parallax-lag får ved full
  *  styrke. Kraftig, siden fri-plasserings-bildet (skala + posisjon) ikke MÅ fylle
  *  seksjonen: det forskyves rent uten overskann/zoom, så utslaget kan være stort. */
@@ -250,7 +252,9 @@ export const imageLayer = {
    * @param {{src: string, fit?: 'cover'|'egen'|'contain'|'repeat', x?: number, y?: number, size?: number, opacity?: number, blur?: number, parallax?: number, bleed?: 'none'|'up'|'down'|'both'}} props
    */
   render(el, props) {
-    if (!props.src) return;
+    // Tom eller utrygg kilde gir intet lag: kilden går rett inn i CSS-url(),
+    // så den må gjennom samme vokter som nav-bakgrunnen (delt isSafeImage).
+    if (!isSafeImage(props.src)) return;
     el.style.opacity = String(props.opacity ?? 1);
     // Klipping: retnings-clip-path styrt av bleed (inset(0) = klipp til seksjonen).
     el.style.clipPath = bleedClip(props.bleed);
