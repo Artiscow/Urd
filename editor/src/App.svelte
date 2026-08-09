@@ -235,6 +235,25 @@
    * Desktop-strukturendring i en manuelt mobil-tilpasset seksjon:
    * flagg seksjonen for mobil-tilsyn (regler i docs/SKJEMA.md#mobil-tilsyn).
    */
+  /** «Bytt oppsett» (0.6.7): variantens rammer + minHeight bokføres som
+   *  ETT angre-steg; mobil-tilsynet flagges som ved andre desktop-endringer. */
+  function handleApplyLayout(msg) {
+    const section = store.data.sections.find((x) => x.id === msg.sectionId);
+    if (!section) return;
+    pushHistory('layout');
+    for (const move of msg.frames ?? []) {
+      const block = section.blocks.find((b) => b.id === move.blockId);
+      if (block) block.frames.desktop = { ...block.frames.desktop, ...move.frame };
+    }
+    section.size = { ...section.size, minHeight: msg.minHeight };
+    markDesktopChange(section, 'oppsett-byttet');
+    if (msg.sectionId === activeSectionId) sectionMinHeight = msg.minHeight;
+    if (selectedBlock?.sectionId === msg.sectionId) syncSelectedBlock();
+    store.save();
+    updateDirty();
+    bridge?.sendSection(pageId, section);
+  }
+
   function markDesktopChange(section, reason) {
     if (!section || section.responsive?.mobile?.mode !== 'manual') return;
     if (section.responsive.mobile.attention?.needed) return;
@@ -1883,6 +1902,7 @@
       onCollectionEdit: handleCollectionEdit,
       onSaveTemplate: handleSaveTemplate,
       onDeleteTemplate: handleDeleteTemplate,
+      onApplyLayout: handleApplyLayout,
       onPluginBlocks: (msg) => { pluginBlocks = msg.blocks ?? []; },
       // Sidestilt kolonnebredde dratt i preview: skurer i samme dra
       // koalesceres til ETT angre-steg (edit:-prefikset).
@@ -1921,6 +1941,17 @@
   /* Urd-innstillingene (admin-tema + språk) bor i en popover nede i railen,
      ikke i topbaren. Lukkes ved klikk utenfor og Escape. */
   let settingsOpen = $state(false);
+
+  /* Bytt oppsett-velgerens form (eiervalg 9. august 2026): stripe over
+     seksjonen (standard) eller galleri-meny; personlig arbeidsflate-
+     preferanse i localStorage (som tema/språk). Previewen leser nøkkelen
+     ved hver åpning (delt opprinnelse), så byttet virker uten omlasting. */
+  let layoutPickerPref = $state(localStorage.getItem('urd-layout-picker') === 'menu' ? 'menu' : 'strip');
+  function setLayoutPicker(v) {
+    layoutPickerPref = v === 'menu' ? 'menu' : 'strip';
+    if (layoutPickerPref === 'menu') localStorage.setItem('urd-layout-picker', 'menu');
+    else localStorage.removeItem('urd-layout-picker');
+  }
   let settingsEl = $state(null);
   $effect(() => {
     if (!settingsOpen) return;
@@ -4352,6 +4383,10 @@
                   <Dropdown value={adminTheme} options={ADMIN_THEMES} onchange={(v) => (adminTheme = v)} /></label>
                 <label title={ta('topbar.language.title')}>{ta('settings.language')}
                   <Dropdown value={adminLangChoice} options={[['auto', ta('lang.auto')], ...adminLangOptions()]} onchange={setAdminLang} /></label>
+                <label title={ta('tip.settings.layoutPicker')}>{ta('settings.layoutPicker')}
+                  <Dropdown value={layoutPickerPref}
+                    options={[['strip', ta('settings.layoutPickerStrip')], ['menu', ta('settings.layoutPickerMenu')]]}
+                    onchange={setLayoutPicker} /></label>
               </div>
             {/if}
           </span>

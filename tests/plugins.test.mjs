@@ -83,3 +83,17 @@ test('checkProvides: melder både brutte løfter og udeklarerte definisjoner', (
   assert.ok(diffs.some((d) => d.includes('lovet-men-mangler')));
   assert.ok(diffs.some((d) => d.includes('udeklarert')));
 });
+
+test('staging: maler-registeret (0.6.7) tar imot plugin-maler med fromPlugin-merke', () => {
+  const Urd = { blocks: createRegistry('blocks'), sections: createRegistry('sections'), backgrounds: createRegistry('backgrounds'), animations: createRegistry('animations'), maler: createRegistry('maler') };
+  const staging = createStagedUrd(Urd, 'Testplugin');
+  staging.staged.maler.define('var-hero', { name: 'Vår hero', kind: 'section', section: { id: 'sec-opphav', version: 1, blocks: [] } });
+  assert.equal(Urd.maler.get('var-hero'), undefined, 'ingenting registreres før commit');
+  staging.commit();
+  const mal = Urd.maler.get('var-hero');
+  assert.equal(mal.kind, 'section');
+  assert.equal(mal.fromPlugin, 'Testplugin', 'plugin-maler merkes som annet plugin-innhold');
+  // provides.maler-løftet kontrolleres som de andre slagene.
+  const diffs = checkProvides({ maler: ['var-hero'] }, { maler: ['var-hero'] });
+  assert.equal(diffs.length, 0);
+});

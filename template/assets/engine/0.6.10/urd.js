@@ -42,6 +42,10 @@ export const Urd = {
   sections: createRegistry('sections'),
   backgrounds: createRegistry('backgrounds'),
   animations: createRegistry('animations'),
+  // Plugin-leverte maler (0.6.7, samme def-form som malfilene: {name, kind,
+  // section|blocks}); seksjonsgalleriet fletter kind section inn i
+  // plugin-gruppen. Pakking/deling av maler hører til 0.6.9.
+  maler: createRegistry('maler'),
 };
 
 // Globalt tilgjengelig for plugins (register(Urd)) og editorens preview-bro.

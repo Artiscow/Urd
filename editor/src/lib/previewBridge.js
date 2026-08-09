@@ -38,6 +38,7 @@
  *                  { type: 'urd-nav-width', width }           (sidestilt kolonnebredde dratt i preview)
  *                  { type: 'urd-save-template', kind, section | blocks } (Lagre som mal: navnløst snapshot; editoren navngir og lagrer)
  *                  { type: 'urd-delete-template', id }        (sletteknappen i Mine maler-fanen; editoren bekrefter og sletter)
+ *                  { type: 'urd-apply-layout', sectionId, frames, minHeight } (bytt oppsett: variantens rammer + høyde i ETT angre-steg)
  *   editor → side: { type: 'urd-chrome', visible }            (vis/skjul editeringshåndtak)
  *                  { type: 'urd-show-grid', visible }         (vis gridet i alle seksjoner)
  *                  { type: 'urd-show-guides', visible }       (hjelpelinjer: senter/innholdsbredde i alle seksjoner)
@@ -83,6 +84,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-nav-width') handlers.onNavWidth?.(msg);
     if (msg?.type === 'urd-save-template') handlers.onSaveTemplate?.(msg);
     if (msg?.type === 'urd-delete-template') handlers.onDeleteTemplate?.(msg);
+    if (msg?.type === 'urd-apply-layout') handlers.onApplyLayout?.(msg);
   };
   window.addEventListener('message', listener);
 

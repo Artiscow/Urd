@@ -2,28 +2,21 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
-### Testrunde-batch (0.6.7.7): Slash-kommando og galleri-CSS-fiksen
+### Testrunde-batch (0.6.7.9): Bytt oppsett og Urd.maler-fundamentet
 
-- [ ] Trykk «/» med pekeren i en seksjon: + Ny blokk-menyen åpner ved pekeren med søkefeltet fokusert; skriv «knapp» og Enter setter inn en knapp på pekerpunktet
-- [ ] «/» uten peker i noen seksjon åpner menyen i den aktive seksjonen; Escape lukker; «/» gjør ingenting i Ren visning, på mobilvisning eller mens du skriver i et felt
-- [ ] Seksjonsgalleriet (+ Ny seksjon): «Ny seksjon»-tittelen, fanene og malkortene ligger på hver sin linje uten overlapp; malkortets miniatyr er klippet inne i rammen (ingen stiplet ellipse)
-- [ ] Chip-knappen «+ Ny seksjon» på seksjonsgrensene ser uendret ut (stiplet pille som før)
+- [ ] Layout-knappen vises i seksjonsverktøylinjen kun for seksjoner med minst to bevegelige blokker (ikke for tomme/en-blokks seksjoner eller rene dekor-seksjoner)
+- [ ] Stripen: klistret rett under verktøylinjen gjennom hele seksjonen, ligger over den flytende nav-en, viser riktige varianter (splitt/hero kun med tekst OG media) med miniatyrer som ligner seksjonen
+- [ ] Bytte flytter blokkene uten å endre innhold/høyder; dekor og former står urørt; ETT Ctrl+Z ruller hele byttet tilbake; alt er redigerbart etterpå
+- [ ] Bytte på en seksjon med manuell mobil-layout flagger mobil-tilsynet (gult merke)
+- [ ] Urd-innstillingene (tannhjulet): «Bytt oppsett-velgeren» bytter til galleri-meny-formen uten omlasting; menyen har tittel, lukkeknapp og samme kort; valget huskes per nettleser
+- [ ] Velgeren lukkes ved valg, nytt knappeklikk, klikk utenfor og Escape (begge formene)
 
-### Testrunde-batch (0.6.7.6): Søk i blokkvelgeren
+### Testrunde-batch (0.6.7.8): Oppsetts-modellen (ren logikk, ingen UI ennå)
 
-- [ ] + Ny blokk: søkefeltet er fokusert ved åpning; å skrive filtrerer til en flat treffliste (menyens grupper skjules), og å tømme feltet gir menyen tilbake
-- [ ] Kalender-visningene dukker opp som egne treff («Kalender: Måned»); blokkgruppe-maler og plugin-blokker er søkbare; treff-klikk setter inn (dobbeltklikk-åpnet: på klikkpunktet)
-- [ ] Diakritikk og store/små bokstaver spiller ingen rolle (f.eks. «gallerí» finner Galleri); tomtreff viser forklarende linje
-- [ ] Blokker-panelet: samme søk øverst; flat treffliste erstatter gruppene, bilde/galleri-treff åpner filvelger som før
-- [ ] Søket matcher på admin-språket (bytt til engelsk: «ima» finner Image)
+- [ ] Kun automatisk dekning i denne runden (tests/section-layouts.test.mjs); den manuelle testingen av bytt oppsett kommer med UI-et i 0.6.7.9-batchen
 
 ### Testrunde-batch (0.6.7.5): Blokkgruppe som gjenbrukbar
 
-- [ ] Marker to eller flere blokker: bokmerke-knappen i utvalgslinjen åpner navnedialogen, og gruppen dukker opp under «Mine maler» i + Ny blokk-menyen og i Blokker-panelet
-- [ ] Innsetting fra canvas-menyen (knapp-åpnet) beholder gruppens lagrede posisjoner; dobbeltklikk-åpnet lander gruppen ved klikkpunktet; begge klemmes innenfor seksjonen
-- [ ] Innsetting fra Blokker-panelet lander i aktiv seksjon; innbyrdes oppsett bevart, det innsatte er nytt utvalg, ETT Ctrl+Z fjerner hele gruppen
-- [ ] Gruppen kan settes inn på en ANNEN side enn den ble lagret på
-- [ ] Lagre en gruppe, åpne + Ny blokk uten å gjøre noe annet: gruppen står i menyen (listen bygges fersk ved åpning)
 - [ ] Publisering av en blokkgruppe-mal (mot urd-web): filen har kind blocks, bilder i gruppen materialiseres til media/
 
 ### Testrunde-batch (0.6.7.4): Publisering av maler (mot urd-web)
@@ -33,30 +26,11 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 - [ ] Slett en publisert mal og publiser: filen slettes fra repoet, indeksen krymper; en ny mal med samme navn i samme publisering overlever (create-vernet)
 - [ ] Ctrl+Z rett etter publisering ruller mal-endringen tilbake som utkast mot NY publisert baseline (angre gjenskaper det publiserte innholdet, ikke gammel tilstand)
 
-### Testrunde-batch (0.6.7.3): Lagre som mal og Mine maler
-
-- [ ] Bokmerke-knappen i seksjonsverktøylinjen åpner navnedialogen; Enter og OK lagrer, Avbryt lagrer ingenting; duplikatnavn og navn uten gyldige tegn gir feilmelding i statuslinjen
-- [ ] + Ny seksjon har fanene «Innebygde» og «Mine maler»; fanevalget huskes til neste åpning i samme økt
-- [ ] Mine maler viser malene i rutenett med miniatyr som ligner seksjonen; tomtilstanden vises når ingen maler finnes
-- [ ] Innsetting fra Mine maler legger seksjonen på riktig plass; samme mal to ganger gir ingen advarsler/kollisjoner, og Ctrl+Z fjerner én innsetting per trykk
-- [ ] Sletteknappen på kortet spør om bekreftelse og fjerner malen; Ctrl+Z bringer den tilbake
-- [ ] Malene overlever reload (localStorage-utkast); «Forkast utkast» fjerner aldri-publiserte maler
-- [ ] Kjernespråk: admin på engelsk/tyrkisk viser fanene og dialogen oversatt; nynorsk/nordsamisk faller til bokmål
-
-### Testrunde-batch (0.6.7.2): Mal-formatet (datagrunn, ingen UI ennå)
-
-- [ ] `npm run validate` viser «OK syntetiske maler (2 mot mal-skjemaet)» og ingen strict-advarsler; CI grønn
-- [ ] Den tomme content/maler.json deployes uten å påvirke noe (ingen 404-er eller endret oppførsel på siden)
 
 ### Testrunde-batch (0.6.7.1): Middels-reviewrunden
 
-- [ ] Håndredigert innhold uten version-felt (fjern `"version"` fra en blokk i en sidefil lokalt): blokken rendres riktig (migrert som v1), ikke som om den var gjeldende format
-- [ ] Ny samling: opprett en samling UTEN innslag og publiser umiddelbart; commiten inneholder både content/samlinger/<id>.json og indeksen (før: kun indeksen)
-- [ ] Driftet deploy heles: en publisert indeks som lister en samling uten fil gir et tomt, redigerbart utkast i panelet, og neste publisering skriver filen
 - [ ] Mobilvisning: en side med faq/galleri/samling/kalender/skjema/kart med MER innhold enn desktophøyden viser alt uten at innholdet flyter over blokken under (naturlig høyde i stabling)
-- [ ] /api/geocode uinnlogget (logg ut, kall /api/geocode?q=Oslo direkte) gir 401 Not signed in; kartblokkens adressesøk i admin virker som før når du er logget inn
-- [ ] Panel-titlene Blokker, Rutenett og Historikk viser intro-forklaringene som tooltip (Rutenett begge avsnittene); Automatisk-knappen i Tema forklarer avledede mørke farger; lag-pilene forklarer tegnerekkefølgen; Sekunder per bilde forklarer galleribakgrunnens avspilling
-- [ ] Ingen prosaavsnitt igjen i noen paneler utenom tomtilstander, statuser og feilmeldinger
+
 
 ### Testrunde-batch (0.6.6.6.4): Sider/Samlinger/Plugins-prosa og undermeny-fiksene
 

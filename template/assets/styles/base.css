@@ -3578,6 +3578,105 @@ body.urd-mobile .urd-section-resize-top {
   padding: 2px 7px;
 }
 
+/* Bytt oppsett-stripen (0.6.7, variant B): horisontal miniatyr-rekke som
+   klistres til skjermen mens man er i seksjonen (som verktøylinjen, rett
+   under den), så valget alltid er synlig også i høye seksjoner. Samme
+   z som nav/verktøylinje: senere i DOM vinner, så stripen ligger over
+   den flytende menyen. */
+.urd-preview .urd-layout-strip {
+  position: sticky;
+  top: 96px;
+  z-index: 100001;
+  display: flex;
+  gap: 6px;
+  margin: 0 8px;
+  padding: 6px;
+  overflow-x: auto;
+  background: color-mix(in srgb, var(--urd-color-bg) 88%, transparent);
+  backdrop-filter: blur(4px);
+  border: 1px solid color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 45%, transparent);
+  border-radius: 10px;
+}
+
+/* Galleri-meny-varianten (personlig valg i Urd-innstillingene): samme
+   kort i et 2-kolonners panel forankret ved verktøylinjen, også klistret. */
+.urd-preview .urd-layout-menu {
+  position: sticky;
+  top: 96px;
+  z-index: 100001;
+  width: min(320px, calc(100% - 16px));
+  margin: 0 8px 0 auto;
+  padding: 6px;
+  background: var(--urd-color-bg);
+  border: 1px solid color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 45%, transparent);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
+}
+
+.urd-preview .urd-layout-menu .urd-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.urd-preview .urd-layout-menu .urd-layout-close {
+  transform: none;
+  opacity: 1;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 7px;
+  cursor: pointer;
+}
+
+.urd-preview .urd-layout-strip .urd-layout-card,
+.urd-preview .urd-layout-menu .urd-layout-card {
+  flex: 0 0 108px;
+  display: grid;
+  gap: 4px;
+  padding: 4px;
+  transform: none;
+  opacity: 1;
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 14%, transparent);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--urd-color-text);
+  font: inherit;
+  cursor: pointer;
+  text-align: center;
+}
+
+.urd-preview .urd-layout-strip .urd-layout-card:hover,
+.urd-preview .urd-layout-menu .urd-layout-card:hover {
+  border-color: var(--urd-admin-accent, #5f6a75);
+  background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 12%, transparent);
+}
+
+.urd-preview .urd-layout-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 18%, transparent);
+  border-radius: 5px;
+}
+
+.urd-preview .urd-layout-thumb svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.urd-preview .urd-layout-name {
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Blokk-søket i + Ny blokk-menyen (0.6.7, variant B): felt øverst; ved
    aktivt søk skjules menyens vanlige innhold og en flat, rangert
    treffliste vises i stedet (urd-searching-klassen). */

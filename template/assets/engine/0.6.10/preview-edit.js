@@ -21,6 +21,7 @@ import { frameToCss } from './render.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './maler-model.js';
 import { searchItems } from './palette-search.js';
+import { applicableLayouts, layoutFrames } from './section-layouts.js';
 import { presetThumb } from './preset-thumb.js';
 import { openImageEditor, closeImageEditor } from './image-editor.js';
 import { applyImageStyle } from './blocks/image.js';
@@ -48,6 +49,110 @@ export function setMaler(list) {
 
 /** Fanevalget i preset-galleriet huskes per økt (variant C, eiervalg 8. august 2026). */
 let presetTabMaler = false;
+
+/** Oppsettenes visningsnavn (nøklene i kjernespråkene). */
+const LAYOUT_LABEL_KEYS = {
+  'stack-center': 'canvas.layout.stackCenter',
+  'stack-left': 'canvas.layout.stackLeft',
+  'split-media-right': 'canvas.layout.splitMediaRight',
+  'split-media-left': 'canvas.layout.splitMediaLeft',
+  'two-columns': 'canvas.layout.twoColumns',
+  'hero-top': 'canvas.layout.heroTop',
+};
+
+/** Ett oppsettskort per anvendelig variant: miniatyr fra seksjonens EGNE
+ *  blokker med variantens rammer; klikk poster urd-apply-layout (ETT
+ *  angre-steg i editoren) og kaller done(). */
+function buildLayoutCards(section, grid, done) {
+  const cards = [];
+  for (const id of applicableLayouts(section.blocks)) {
+    const result = layoutFrames(id, section.blocks, grid);
+    if (!result) continue;
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'urd-layout-card';
+    try {
+      const clone = structuredClone(section);
+      for (const { blockId, frame } of result.frames) {
+        const b = clone.blocks.find((x) => x.id === blockId);
+        if (b) b.frames.desktop = { ...b.frames.desktop, ...frame };
+      }
+      clone.size = { ...clone.size, minHeight: result.minHeight };
+      const thumb = document.createElement('span');
+      thumb.className = 'urd-layout-thumb';
+      thumb.insertAdjacentHTML('afterbegin', presetThumb(clone));
+      card.appendChild(thumb);
+    } catch { /* tekstvalg uten miniatyr */ }
+    const name = document.createElement('span');
+    name.className = 'urd-layout-name';
+    name.textContent = ta(LAYOUT_LABEL_KEYS[id] ?? id);
+    card.appendChild(name);
+    card.addEventListener('click', () => {
+      post({ type: 'urd-apply-layout', sectionId: section.id, frames: result.frames, minHeight: result.minHeight });
+      done();
+    });
+    cards.push(card);
+  }
+  return cards;
+}
+
+/**
+ * «Bytt oppsett»-velgeren (0.6.7): stripe over seksjonen (standard) eller
+ * galleri-meny, etter den personlige preferansen i Urd-innstillingene
+ * (urd-layout-picker i delt localStorage; leses ved hver åpning, så
+ * byttet virker uten omlasting). Begge klistres til skjermen i seksjonen
+ * og lukkes ved nytt knappeklikk, valg, klikk utenfor og Escape.
+ */
+function toggleLayoutPicker(host, section, grid) {
+  const existing = host.querySelector('.urd-layout-strip, .urd-layout-menu');
+  document.querySelectorAll('.urd-layout-strip, .urd-layout-menu').forEach((el) => el.remove());
+  if (existing) return;
+
+  const asMenu = localStorage.getItem('urd-layout-picker') === 'menu';
+  const picker = document.createElement('div');
+  const outside = (event) => {
+    // Knappen selv toggler; uten unntaket ville capture-lytteren fjernet
+    // velgeren før klikket, og toggelen bygget den opp igjen.
+    if (picker.contains(event.target) || event.target.closest?.('.urd-layout-btn')) return;
+    cleanup();
+  };
+  const onKey = (event) => {
+    if (event.key === 'Escape') cleanup();
+  };
+  function cleanup() {
+    document.removeEventListener('pointerdown', outside, true);
+    document.removeEventListener('keydown', onKey, true);
+    picker.remove();
+  }
+
+  const cards = buildLayoutCards(section, grid, cleanup);
+  if (asMenu) {
+    picker.className = 'urd-layout-menu';
+    const head = document.createElement('div');
+    head.className = 'urd-preset-head';
+    const title = document.createElement('span');
+    title.textContent = ta('canvas.layoutTitle');
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'urd-layout-close';
+    close.textContent = '×';
+    close.title = ta('confirm.cancel');
+    close.addEventListener('click', cleanup);
+    head.append(title, close);
+    const grid2 = document.createElement('div');
+    grid2.className = 'urd-layout-grid';
+    grid2.append(...cards);
+    picker.append(head, grid2);
+  } else {
+    picker.className = 'urd-layout-strip';
+    picker.append(...cards);
+  }
+  host.appendChild(picker);
+  setTimeout(() => {
+    document.addEventListener('pointerdown', outside, true);
+    document.addEventListener('keydown', onKey, true);
+  }, 0);
+}
 
 /** Siste pekerposisjon på lerretet: slash-kommandoen åpner blokkmenyen der. */
 let lastPointer = null;
@@ -789,6 +894,14 @@ function makeSectionAdder(index, above = null) {
         const group = def.group ?? '';
         if (!groups.has(group)) groups.set(group, { labelKey: def.groupKey ?? null, defs: [] });
         groups.get(group).defs.push(def);
+      }
+      // Plugin-leverte maler (Urd.maler, kind section) flettes inn i
+      // plugin-gruppen som vanlige valg: create() går via re-id-regelen,
+      // så presetThumb og innsetting virker uendret.
+      for (const id of window.Urd.maler?.ids?.() ?? []) {
+        const mal = window.Urd.maler.get(id);
+        if (mal?.kind !== 'section' || !mal.section) continue;
+        pluginDefs.push({ label: mal.name ?? id, fromPlugin: mal.fromPlugin, create: () => cloneSectionForInsert(mal.section, makeId) });
       }
       if (pluginDefs.length) groups.set('__plugins', { labelKey: 'panel.plugins', defs: pluginDefs });
       for (const [name, { labelKey, defs }] of groups) {
@@ -1777,6 +1890,16 @@ function addSectionToolbar(host, section, grid) {
       host.style.minHeight = minHeight;
       post({ type: 'urd-section-size', sectionId: section.id, minHeight });
     });
+    // «Bytt oppsett» (0.6.7): kun når seksjonen har noe å bytte på
+    // (relevans-regelen: minst to bevegelige blokker).
+    if (applicableLayouts(section.blocks).length) {
+      const layoutBtn = document.createElement('button');
+      layoutBtn.className = 'urd-layout-btn';
+      layoutBtn.title = ta('canvas.changeLayout');
+      layoutBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="8" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>';
+      layoutBtn.addEventListener('click', () => toggleLayoutPicker(host, section, grid));
+      bar.appendChild(layoutBtn);
+    }
     // «Lagre som mal» (0.6.7): navnløst snapshot til editoren, som navngir
     // og lagrer utkastet. Re-id skjer først ved innsetting, aldri her.
     const save = document.createElement('button');
