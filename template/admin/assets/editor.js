@@ -2731,7 +2731,7 @@ wr([
 	"change"
 ]);
 //#endregion
-//#region ../template/assets/engine/0.6.10/imageTools.js
+//#region ../template/assets/engine/0.6.11/imageTools.js
 var Gi = 1600, Ki = .82, qi = .6;
 async function Ji(e, t = Gi) {
 	if (Xi(e)) return Zi(await e.text());
@@ -2795,7 +2795,7 @@ function na(e) {
 	return t.toString(16).padStart(8, "0");
 }
 //#endregion
-//#region ../template/assets/engine/0.6.10/glyphs.js
+//#region ../template/assets/engine/0.6.11/glyphs.js
 var ra = "urd-recent-glyphs", ia = [
 	["glyphCat.symbols", "★ ☆ ✦ ✧ ✩ ✪ ✫ ✭ ✮ ✯ ✵ ✳ ✴ ❖ ❋ ✿ ❀ ❁ ✾ ❃ ☘ ◆ ◇ ● ○ ◎ ■ □ ▣ ▲ △ ▼ ▽ ⬡ ⬢ ♦ ♠ ♣ ♥ ♡ ✓ ✔ ✕ ✖ ✗ ✘ ✚ ✜ ☀ ☾ ♪ ♫ ♬ ☮ ☯ ⚜ ⚓ ⚡ ☂ ✂ ✏ ✒ ✉ ☎ ⌛ ⏳ ♻ ⚠ ☑ ⚙ § © ® ™ ° ± × ÷ ∞ ≈ ≠ ≤ ≥ € £ ¥ • ‣ ⁂"],
 	["glyphCat.arrows", "→ ← ↑ ↓ ↔ ↕ ↗ ↘ ↙ ↖ ⇒ ⇐ ⇑ ⇓ ⇔ ➜ ➤ ➔ ↩ ↪ ⤴ ⤵ ↺ ↻ ⟲ ⟳ « » ‹ ›"],
@@ -2826,7 +2826,7 @@ function sa(e) {
 	return t;
 }
 //#endregion
-//#region ../template/assets/engine/0.6.10/icons.js
+//#region ../template/assets/engine/0.6.11/icons.js
 var ca = "fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"", la = "fill=\"currentColor\" stroke=\"none\"", ua = {
 	facebook: {
 		label: "Facebook",
@@ -3568,7 +3568,7 @@ function Pa(e, t) {
 	return n;
 }
 //#endregion
-//#region ../template/assets/engine/0.6.10/plugins.js
+//#region ../template/assets/engine/0.6.11/plugins.js
 function Fa(e) {
 	let t = /^(\d+)\.(\d+)\.(\d+)$/.exec(String(e).trim());
 	return t ? [
@@ -3598,7 +3598,7 @@ function za(e) {
 	return (e.entry !== void 0 || !n) && (typeof e.entry != "string" || !e.entry.endsWith(".js")) && t.push("entry mangler eller er ikke en .js-fil"), (e.provides !== void 0 || !n) && (!e.provides || typeof e.provides != "object") && t.push("provides mangler"), e.languages !== void 0 && t.push(...Si(e.languages)), e.locales !== void 0 && typeof e.locales != "boolean" && t.push("locales må være boolsk"), e.names !== void 0 && (typeof e.names != "object" || e.names === null || Array.isArray(e.names) || Object.values(e.names).some((e) => typeof e != "string" || !e)) && t.push("names må være et objekt med språkkode til navn"), t;
 }
 //#endregion
-//#region ../template/assets/engine/0.6.10/sections/presets.js
+//#region ../template/assets/engine/0.6.11/sections/presets.js
 function Ba(e) {
 	return typeof crypto < "u" && crypto.randomUUID ? `${e}-${crypto.randomUUID().slice(0, 8)}` : `${e}-${[...crypto.getRandomValues(/* @__PURE__ */ new Uint8Array(4))].map((e) => e.toString(16).padStart(2, "0")).join("")}`;
 }
@@ -4360,7 +4360,7 @@ function oo(e) {
 	});
 }
 //#endregion
-//#region ../template/assets/engine/0.6.10/maler-model.js
+//#region ../template/assets/engine/0.6.11/maler-model.js
 var so = [
 	"section",
 	"blocks",
@@ -4383,7 +4383,7 @@ function lo(e, t, { id: n, title: r }) {
 	return i;
 }
 //#endregion
-//#region ../template/assets/engine/0.6.10/preset-thumb.js
+//#region ../template/assets/engine/0.6.11/preset-thumb.js
 var uo = /^#[0-9a-fA-F]{3,8}$/, fo = /^[a-z][a-z0-9-]*$/, po = "#171c26", mo = "#232a38", ho = "#98a1b3", go = "#7c5cff", _o = (e, t) => `var(--urd-color-${e}, ${t})`;
 function vo(e, t) {
 	return typeof e == "string" ? uo.test(e) ? e : fo.test(e) ? _o(e, t) : t : t;
@@ -4491,7 +4491,7 @@ function jo(e, { w: t = 96, h: n = 116, max: r = 6 } = {}) {
 	return `<svg viewBox="0 0 ${t} ${n}" width="${t}" height="${n}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${c.join("")}</svg>`;
 }
 //#endregion
-//#region ../template/assets/engine/0.6.10/page-presets.js
+//#region ../template/assets/engine/0.6.11/page-presets.js
 var Mo = /* @__PURE__ */ new Map();
 oo({ sections: { define: (e, t) => Mo.set(e, t) } });
 var No = [
@@ -4560,7 +4560,7 @@ function Po(e, { pageId: t, title: n }) {
 	} : null;
 }
 //#endregion
-//#region ../template/assets/engine/0.6.10/palette-search.js
+//#region ../template/assets/engine/0.6.11/palette-search.js
 function Fo(e) {
 	return String(e ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
@@ -4576,7 +4576,7 @@ function Lo(e, t, n) {
 	})).filter((e) => e.rank >= 0).sort((e, t) => e.rank - t.rank || e.i - t.i).map((e) => e.item);
 }
 //#endregion
-//#region ../template/assets/engine/0.6.10/theme.js
+//#region ../template/assets/engine/0.6.11/theme.js
 function Ro(e, t) {
 	let n = e.tokens || {}, r = e.scheme === "dark" ? "dark" : "light";
 	if (!e.alt?.tokens || t === r) return n;
@@ -4694,7 +4694,7 @@ function qo(e, t) {
 	return n == null || r == null ? null : (Math.max(n, r) + .05) / (Math.min(n, r) + .05);
 }
 //#endregion
-//#region ../template/assets/engine/0.6.10/backgrounds/color.js
+//#region ../template/assets/engine/0.6.11/backgrounds/color.js
 var Jo = {
 	version: 1,
 	label: "Farge",
@@ -4998,7 +4998,7 @@ var js = {
 	}
 };
 //#endregion
-//#region ../template/assets/engine/0.6.10/galleri-model.js
+//#region ../template/assets/engine/0.6.11/galleri-model.js
 function Ms(e, t, n) {
 	return !Number.isFinite(n) || n < 1 ? 0 : (((Number.isFinite(e) ? e : 0) + t) % n + n) % n;
 }
@@ -5010,7 +5010,7 @@ function Ps(e, { min: t = 2, fallback: n = 5 } = {}) {
 	return !Number.isFinite(r) || r <= 0 ? n : Math.max(t, r);
 }
 //#endregion
-//#region ../template/assets/engine/0.6.10/backgrounds/bildegalleri.js
+//#region ../template/assets/engine/0.6.11/backgrounds/bildegalleri.js
 var Fs = {
 	version: 1,
 	label: "Bildegalleri",
@@ -5069,7 +5069,7 @@ var Fs = {
 	}
 };
 //#endregion
-//#region ../template/assets/engine/0.6.10/footer-thumb.js
+//#region ../template/assets/engine/0.6.11/footer-thumb.js
 function Is(e = {}) {
 	let t = "#2fd6b6", n = "#5c6b64", r = e.mega ? "#16221d" : "#0e1512", i = e.cols ?? 0, a = e.social ?? 0, o = `<svg viewBox="0 0 160 80" preserveAspectRatio="none" aria-hidden="true"><rect width="160" height="80" fill="${r}"/>`;
 	if (e.mega && (o += `<circle cx="20" cy="6" r="34" fill="${t}" opacity="0.18"/>`), e.bigcta) return o += `<rect x="45" y="18" width="70" height="8" rx="3" fill="${n}" opacity="0.85"/>`, o += `<rect x="56" y="32" width="48" height="4" rx="2" fill="${n}" opacity="0.5"/>`, o += `<rect x="62" y="43" width="36" height="10" rx="3" fill="${t}"/>`, o += Ls(n, e.baselineLinks), o + "</svg>";
@@ -5097,7 +5097,7 @@ function Ls(e, t = 0) {
 	return n += `<rect x="8" y="70" width="40" height="3" rx="1.5" fill="${e}" opacity="0.6"/>`, t && (n += `<g fill="${e}" opacity="0.6">` + Array.from({ length: t }, (e, t) => `<rect x="${120 - t * 16}" y="70" width="12" height="3" rx="1.5"/>`).join("") + "</g>"), n;
 }
 //#endregion
-//#region ../template/assets/engine/0.6.10/animations/core.js
+//#region ../template/assets/engine/0.6.11/animations/core.js
 var Rs = () => ({
 	duration: 600,
 	delay: 0
@@ -5159,7 +5159,7 @@ var Rs = () => ({
 	["font.courier", "'Courier New', monospace"]
 ];
 //#endregion
-//#region ../template/assets/engine/0.6.10/place.js
+//#region ../template/assets/engine/0.6.11/place.js
 function Vs(e) {
 	let t = (e) => Math.round(e * 100) / 100, n = Math.max(0, t(100 - e.w)), r = Math.min(n, Math.max(0, t(e.x - e.w / 2))), i = Math.max(0, e.y - e.h / 2), a = e.snap === !1 || e.grid?.snap === !1, o = e.grid?.size || 8;
 	return i = a ? Math.round(i) : Math.round(i / o) * o, {

@@ -8,7 +8,7 @@ Rekkefølgen er bevisst: **motor → publiseringsløkke → editor-dybde.** Moto
 
 Dokumenter (VISJON, ARKITEKTUR, SKJEMA, VEIKART, ADR-er), JSON Schema-kontrakt i `schema/`, repo-skjelett med motor-stubber, eksempelinnhold, editor-skall og functions-stubber. `migrate.js` implementeres for ekte - invarianten først.
 
-**Port:** eksempeldataene validerer mot skjemaene; dokumentene er godkjent av eier.
+**Port:** eksempeldataene validerer mot skjemaene; dokumentene er godkjente.
 
 ## v0.2 - «Tynn skive» *(levert 16. juli 2026)*
 
@@ -51,7 +51,7 @@ redigeringsflatene bygges på den nye layouten:
 - Oppsettsveiviser ved første besøk (navn, farger, logo, GitHub/Cloudflare-kobling).
 - Historikk- og angre-publisering-UI (`history`/`revert`).
 
-## v0.6 - Økosystem
+## v0.6 - Økosystem *(levert 9. august 2026)*
 
 - Plugin-lasting for alvor: plugins leverer **egne blokker, seksjonspresets, bakgrunner, animasjoner og maler** via `register(Urd)`. Kalender-pluginen som referanseeksempel; kart og skjema som ytterligere referanse-plugins.
 - **Arkiv/datablokk-mønsteret**: blokker som rendrer samlinger av innslag (nyheter, oppslag, styrer), designet sammen med kalender-pluginen. Kalender-avhengige presets: nyheter, oppslagstavle, «Hva skjer».
@@ -61,7 +61,7 @@ redigeringsflatene bygges på den nye layouten:
 
 Fasen styres som milepælene 0.6.1-0.6.9 i [BACKLOG.md](BACKLOG.md), og vokste underveis med et editor- og designløft (0.6.6), maler og gjenbruk (0.6.7) og flerspråk-rammeverket (0.6.8).
 
-**Port:** klon malen via «Use this template», bygg en side i admin, installer kalender-pluginen, og kjør oppdateringsknappen: alt overlever.
+**Port:** klon malen via «Use this template», bygg en side i admin, installer kalender-pluginen, og kjør oppdateringsknappen: alt overlever. *(Bestått 9. august 2026.)*
 
 ## v0.7 - Finpuss + butikk
 - **Butikk uten betalingsgateway som kjernefunksjon** (ApeironLF-modellen, valgt 18. juli 2026): produktkort-blokk med varianter, handlekurv (localStorage + skuff), bestillingsskjema til e-post/valgfritt endepunkt, betaling via Vipps-nummer-instruks. Avhengighetsfri, git-eid katalog; bygges på v0.6-datablokk-mønsteret. Detaljer i [BACKLOG.md](BACKLOG.md).

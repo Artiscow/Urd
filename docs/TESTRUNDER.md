@@ -118,7 +118,7 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 - [ ] Feiltekster utenfor admin er engelske (f.eks. logg ut og kall /api/github/latest direkte: «Not signed in»), mens admin fortsatt viser feil oversatt på admin-språket via api-kodene
 - [ ] Kjernespråk-modellen: bytt admin-språk til nynorsk eller nordsamisk; de nye tekstene (place-søket, slett utvalget, oppdateringspanelet) vises på bokmål uten hull eller feil
 
-### Testrunde-batch (0.6.9.x): splitt, oppdaterer og fase-slipp (samlet og slått sammen etter eierens beskjed 5. august 2026)
+### Testrunde-batch (0.6.9.x): splitt, oppdaterer og fase-slipp (samlet og slått sammen 5. august 2026)
 
 **README-ene, docs-strukturen og designrunden (0.6.9.10)**
 
