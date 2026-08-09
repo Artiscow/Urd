@@ -64,7 +64,7 @@ Fasen styres som milepælene 0.6.1-0.6.9 i [BACKLOG.md](BACKLOG.md), og vokste u
 **Port:** klon malen via «Use this template», bygg en side i admin, installer kalender-pluginen, og kjør oppdateringsknappen: alt overlever. *(Bestått 9. august 2026.)*
 
 ## v0.7 - Finpuss + butikk
-- **Butikk uten betalingsgateway som kjernefunksjon** (ApeironLF-modellen, valgt 18. juli 2026): produktkort-blokk med varianter, handlekurv (localStorage + skuff), bestillingsskjema til e-post/valgfritt endepunkt, betaling via Vipps-nummer-instruks. Avhengighetsfri, git-eid katalog; bygges på v0.6-datablokk-mønsteret. Detaljer i [BACKLOG.md](BACKLOG.md).
+- **Butikk uten betalingsgateway som kjernefunksjon** (ApeironLF-modellen, valgt 18. juli 2026): produktkort-blokk med varianter, handlekurv (localStorage + skuff), bestillingsskjema til e-post/valgfritt endepunkt, betaling via Vipps-nummer-instruks. Avhengighetsfri, git-eid katalog; bygges på v0.6-datablokk-mønsteret. Ekte betalings-kasse er flyttet inn i fasen som valgfritt lag oppå skjema-kassen (9. august 2026); kjernen forblir gateway-fri. Detaljer i [BACKLOG.md](BACKLOG.md).
 - **SEO-grunnpakke** (fra funksjonskartet 23. juli 2026, se [FUNKSJONSKART.md](sammenligning/FUNKSJONSKART.md)): per-side meta/og-felter, sitemap, robots, 404, canonical. Pluss RSS for samlinger, flere skjema-felttyper, video-bakgrunnslag og CSV/tabell; detaljer i backloggen.
 - **Arkitektur-arbeid lagt til fasen underveis** (detaljer i [BACKLOG.md](BACKLOG.md)): mobil-revurderingen (egen mobilmodell?), fast innholdsbredde (egen ADR: gjør layouten breddeinvariant, fikser fold-avviket i admin og flow-out-bugene) og klientside-navigasjon.
 - Sjekke alle funksjoner og se om noe mangler eller ikke fungerer godt. (Funksjonssammenligningen mot andre byggere er gjort 23. juli 2026 - FUNKSJONSKART.md; gjenstår: egen gjennomgang av intuitivitet og rot.)
@@ -72,7 +72,7 @@ Fasen styres som milepælene 0.6.1-0.6.9 i [BACKLOG.md](BACKLOG.md), og vokste u
 - Er ting rotete?
 - Noe som ikke er lett å forstå eller lett å misforstå?
 
-Fasen styres som milepælene 0.7.0-0.7.11 i [BACKLOG.md](BACKLOG.md) (delt opp 9. august 2026: arkitekturavklaringene bredde og mobil først, deretter blokker, butikk og synlighet, finpuss mot slutten).
+Fasen styres som milepælene 0.7.0-0.7.10 i [BACKLOG.md](BACKLOG.md) (delt opp 9. august 2026: arkitekturavklaringene bredde og mobil først, deretter blokker, butikk og synlighet, finpuss mot slutten).
 
 **Port:** en testbestilling går gjennom handlekurv, bestillingsskjema og e-post på en deployet side; publisert side har meta/og-felter, sitemap, robots og 404; intuitivitets-gjennomgangen er gjennomført og funnene sortert inn i backloggen; arkitektur-avklaringene (mobil, innholdsbredde, klientside-navigasjon) er landet med ADR eller eksplisitt flyttet.
 
@@ -101,6 +101,8 @@ Vi bruker Urd som en fremmed bruker, uten snarveier:
 - Slipp deretter en Urd-oppdatering som inneholder en **ekte blokkendring (v1→v2 med migrering)**, og kjør oppdater-knappen på Urd-Design-siden.
 
 Frem til v0.6 er `template/` både verksted og demo (urdweb); det er greit så lenge eksempelinnholdet holdes presentabelt. Fra v0.6 er malen et eget repo, og Urd-Design blir den første siden som lever som en ekte brukers.
+
+Samlet til fasen 9. august 2026 (detaljer i [BACKLOG.md](BACKLOG.md)): dokumentasjonsrunden (oppsettsguide-friksjon, troubleshoot, readme-strukturen) og utgivelses-/oppdaterer-herdingen - begge dekker guidene og koden generalprøven prøver ut.
 
 **Port:** Urd-Design overlever oppdateringen uten tap av innhold eller manuell inngripen - løfte 2 bevist i praksis, ikke bare i testsuiten.
 
