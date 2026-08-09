@@ -12,7 +12,7 @@
 import { createRegistry } from './registry.js';
 import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION } from './migrate.js';
 import { applyTheme } from './theme.js';
-import { renderPage, renderSection } from './render.js';
+import { applySiteLayout, renderPage, renderSection } from './render.js';
 import { renderNav } from './nav.js';
 import { isSafeImage } from './nav-model.js';
 import { renderFooter } from './footer.js';
@@ -342,6 +342,7 @@ function enablePreview(state, opts) {
       state.site.nav ??= { version: 1, items: [] };
       const rerender = () => {
         applyTheme(state.site.theme);
+        applySiteLayout(state.site);
         applyFavicon(state.site.site?.icon);
         if (opts.nav) renderNav(state.site, opts.nav);
         if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);
@@ -394,6 +395,7 @@ export async function boot(opts) {
   // settes fra samme kilde (skallene hardkoder "no" som pre-JS-standard).
   document.documentElement.lang = await initSiteLocale(site.site.lang);
   applyTheme(site.theme);
+  applySiteLayout(site);
   applyFavicon(site.site.icon);
   const engine = await enginePromise;
   // I preview eier EDITOREN plugin-listen (utkastet i plugins.json): boot laster ingenting,

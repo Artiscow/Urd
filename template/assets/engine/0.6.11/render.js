@@ -59,6 +59,24 @@ export function renderBackgroundLayers(host, background) {
  * @param {{x: number, y: number, w: number, h: number, z?: number, rot?: number}} frame
  * @returns {{left: string, top: string, width: string, height: string, zIndex: string, transform: string}}
  */
+/**
+ * Skriver nettstedets layout-tokens på rot-elementet (ADR-0018). Kanvasen
+ * i hver seksjon leser dem, så én skriving styrer hele siden.
+ *
+ * Ligger her og ikke i en egen modul med vilje: nye motormoduler trekkes
+ * inn i den statiske import-lukningen, som modulepreload-testen tvinger
+ * inn i alle HTML-skallene.
+ *
+ * @param {object} site site.json (løftet)
+ * @param {HTMLElement} [root] Elementet tokenene settes på
+ */
+export function applySiteLayout(site, root = document.documentElement) {
+  const width = site?.layout?.contentWidth ?? 1200;
+  const gutter = site?.layout?.gutter ?? 24;
+  root.style.setProperty('--urd-canvas-w', width === 'full' ? '100%' : `${width}px`);
+  root.style.setProperty('--urd-canvas-gutter-desktop', `${Number(gutter) || 0}px`);
+}
+
 export function frameToCss(frame) {
   return {
     left: `${frame.x}%`,
@@ -135,6 +153,19 @@ export function renderSection(section, site, host, opts = {}) {
 
   renderBackgroundLayers(host, section.background);
 
+  // Innholdsflaten (ADR-0018): seksjonen er full vindusbredde og eier
+  // bakgrunnen, kanvasen binder innholdet til designbredden og sentrerer
+  // det. Blokkenes x/w er prosent AV DENNE, ikke av vinduet, så layouten
+  // slutter å vokse med skjermen. Bredden settes i CSS (base.css), ikke
+  // her, så editoren kan MÅLE den i stedet for å regne den ut.
+  const canvas = document.createElement('div');
+  canvas.className = 'urd-canvas';
+  // Per-seksjon overstyring: 'full' gir kant-til-kant innhold (helter,
+  // skillelinjer), en CSS-lengde gir egen bredde for denne seksjonen.
+  const secWidth = section.size?.maxWidth;
+  if (secWidth) canvas.style.setProperty('--urd-canvas-w', secWidth === 'full' ? '100%' : secWidth);
+  host.appendChild(canvas);
+
   const mode = section.responsive?.mobile?.mode ?? 'auto';
 
   if (viewport === 'mobile' && mode !== 'manual') {
@@ -154,7 +185,7 @@ export function renderSection(section, site, host, opts = {}) {
       renderBlock(Urd, el, block, ctx);
       flow.appendChild(el);
     }
-    host.appendChild(flow);
+    canvas.appendChild(flow);
     host.style.minHeight = 'auto';
   } else {
     // Absolutt posisjonering: desktop-frames, eller mobil-frames i
@@ -191,7 +222,7 @@ export function renderSection(section, site, host, opts = {}) {
       }
       maxBottomPx = Math.max(maxBottomPx, frame.y + frame.h);
       renderBlock(Urd, el, block, ctx);
-      host.appendChild(el);
+      canvas.appendChild(el);
     }
 
     if (viewport === 'mobile') {

@@ -38,6 +38,26 @@ import { suspendSticky, resumeSticky } from './sticky.js';
 // (initAdminLocale), så ta() er trygg også på modulnivå her.
 import { ta } from './i18n.js';
 
+/**
+ * Innholdsflaten i en seksjon (ADR-0018). Blokkenes x/w er prosent AV
+ * DENNE, ikke av seksjonen, så alt som regner om piksler til prosent (dra,
+ * resize, piltaster, marquee, materialisering av mobil-frames) må måle her.
+ *
+ * Vi MÅLER flaten i stedet for å regne ut min()-uttrykket fra site.layout:
+ * regner editoren selv, kan den komme til en annen bredde enn motoren, og
+ * da flytter blokkene seg av seg selv. Fallback til seksjonen dekker eldre
+ * DOM som ennå ikke er rerendret.
+ *
+ * Seksjonens EGEN geometri (høyde, topp, bunn) leses fortsatt fra host:
+ * bakgrunnen og seksjonshøyden er fullbredde og hører ikke til flaten.
+ *
+ * @param {HTMLElement} host Seksjonselementet
+ * @returns {HTMLElement}
+ */
+function canvasOf(host) {
+  return host.querySelector(':scope > .urd-canvas') ?? host;
+}
+
 /** Mobilvisning? Motoren setter body-klassen ut fra breakpointet. */
 const isMobile = () => document.body.classList.contains('urd-mobile');
 
@@ -172,10 +192,13 @@ function openBlockMenuAt(host, clientX = null, clientY = null) {
   const menu = wrap?.querySelector('.urd-add-block-menu');
   if (!wrap || !menu) return;
   const rect = host.getBoundingClientRect();
+  // Blokkens landingspunkt er prosent av INNHOLDSFLATEN, mens menyen selv
+  // er et barn av seksjonen og plasseres mot den. To ulike rammer.
+  const canvasRect = canvasOf(host).getBoundingClientRect();
   if (clientX != null) {
     menu._urdAt = {
-      x: Math.round(((clientX - rect.left) / rect.width) * 10000) / 100,
-      y: Math.round(clientY - rect.top),
+      x: Math.round(((clientX - canvasRect.left) / canvasRect.width) * 10000) / 100,
+      y: Math.round(clientY - canvasRect.top),
     };
     wrap.style.left = `${Math.round(clientX - rect.left)}px`;
     wrap.style.top = `${Math.round(clientY - rect.top)}px`;
@@ -746,7 +769,7 @@ function addSectionTopHandle(host, section, grid) {
     const startScrollY = window.scrollY;
     // Blokk-elementene og utgangs-y samles ÉN gang: ingen rerender skjer
     // under draget (elementbytte ville sluppet pekerfangsten).
-    const parts = [...host.querySelectorAll(':scope > .urd-block')].map((el) => {
+    const parts = [...canvasOf(host).querySelectorAll(':scope > .urd-block')].map((el) => {
       const block = section.blocks.find((b) => b.id === el.dataset.blockId);
       return block ? { el, block, y: block.frames.desktop.y } : null;
     }).filter(Boolean);
@@ -2017,8 +2040,13 @@ function addSectionToolbar(host, section, grid) {
  * så et pågående dra ikke avbrytes; editoren bokfører via meldingen.
  */
 function materializeMobile(host, section) {
-  const flow = host.querySelector(':scope > .urd-flow');
-  const hostRect = host.getBoundingClientRect();
+  // Flyten og de materialiserte framene bor begge i innholdsflaten. På
+  // mobil er flaten identisk med seksjonen (margen er 0 under brekkpunktet),
+  // men målingen går via canvasOf uansett, så koden forblir riktig om
+  // mobil-revurderingen senere binder også der.
+  const canvas = canvasOf(host);
+  const flow = canvas.querySelector(':scope > .urd-flow');
+  const hostRect = canvas.getBoundingClientRect();
   const frames = [];
   const flowEls = flow ? [...flow.querySelectorAll(':scope > .urd-block')] : [];
 
@@ -2054,7 +2082,7 @@ function materializeMobile(host, section) {
     if (!block) continue;
     el.classList.remove('urd-block-flow');
     Object.assign(el.style, frameToCss(block.frames.mobile));
-    host.appendChild(el);
+    canvas.appendChild(el);
   }
   flow?.remove();
   const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.mobile.y + b.frames.mobile.h));
@@ -2267,7 +2295,7 @@ window.addEventListener('keydown', (event) => {
   event.preventDefault();
 
   const stepPx = event.shiftKey ? 1 : ctx.grid.size;
-  const pctPerPx = 100 / ctx.host.clientWidth;
+  const pctPerPx = 100 / canvasOf(ctx.host).clientWidth;
   const r1 = (v) => Math.round(v * 10) / 10;
 
   if (multiIds.size > 1) {
@@ -2354,18 +2382,22 @@ document.addEventListener('pointerdown', (event) => {
   if (!host) return;
   if (target.closest('.urd-block, .urd-add-block, .urd-add-section, .urd-section-toolbar, .urd-section-resize, .urd-section-resize-top, .urd-hint-chip, .urd-hint-card, .urd-multi-toolbar, .urd-text-toolbar')) return;
 
-  const startRect = host.getBoundingClientRect();
+  // Marquee-rektangelet og treffdeteksjonen måles mot innholdsflaten:
+  // blokkenes offsetLeft/offsetTop er relative til den (den er deres
+  // offsetParent), så begge sider av sammenligningen må ha samme ramme.
+  const canvas = canvasOf(host);
+  const startRect = canvas.getBoundingClientRect();
   const start = { x: event.clientX - startRect.left, y: event.clientY - startRect.top };
   let rectEl = null;
 
   const onMove = (ev) => {
-    const hostRect = host.getBoundingClientRect();
+    const hostRect = canvas.getBoundingClientRect();
     const cur = { x: ev.clientX - hostRect.left, y: ev.clientY - hostRect.top };
     if (!rectEl) {
       if (Math.abs(cur.x - start.x) + Math.abs(cur.y - start.y) < 6) return;
       rectEl = document.createElement('div');
       rectEl.className = 'urd-marquee';
-      host.appendChild(rectEl);
+      canvas.appendChild(rectEl);
       document.body.classList.add('urd-marqueeing');
       document.getSelection()?.removeAllRanges();
     }
@@ -2379,7 +2411,7 @@ document.addEventListener('pointerdown', (event) => {
     rectEl.style.top = `${rect.top}px`;
     rectEl.style.width = `${rect.right - rect.left}px`;
     rectEl.style.height = `${rect.bottom - rect.top}px`;
-    const blocks = [...host.querySelectorAll(':scope > .urd-block')].map((el) => ({
+    const blocks = [...canvas.querySelectorAll(':scope > .urd-block')].map((el) => ({
       id: el.dataset.blockId,
       left: el.offsetLeft,
       top: el.offsetTop,
@@ -2512,7 +2544,7 @@ function startSelectionDrag(event) {
   // draget skriver geometri på dem.
   suspendSticky();
 
-  const width = host.getBoundingClientRect().width;
+  const width = canvasOf(host).getBoundingClientRect().width;
   const startX = event.clientX;
   const startY = event.clientY;
   const r2 = (v) => Math.round(v * 100) / 100;
@@ -2739,7 +2771,9 @@ function showGridOverlay(host, grid) {
   const overlay = document.createElement('div');
   overlay.className = 'urd-grid-overlay';
   overlay.style.backgroundSize = `${grid.size}px ${grid.size}px`;
-  host.appendChild(overlay);
+  // I innholdsflaten, ikke i seksjonen: snappingen er relativ til flaten,
+  // så rutene må starte der blokkene starter.
+  canvasOf(host).appendChild(overlay);
   return overlay;
 }
 
@@ -3026,8 +3060,9 @@ function enhanceBlock(el, block, section, grid, host) {
       const orig = { ...(block.frames[frameKey] ?? block.frames.desktop) };
       // Gruppe-dra: er blokken del av et flerutvalg, følger resten med
       // (samme delta, klemt så hele gruppen holder seg innenfor bredden).
+      const canvas = canvasOf(host);
       const groupParts = (!mobile && kind === 'move' && multiIds.size > 1 && multiIds.has(block.id))
-        ? [...host.querySelectorAll(':scope > .urd-block')]
+        ? [...canvas.querySelectorAll(':scope > .urd-block')]
             .filter((o) => o !== el && multiIds.has(o.dataset.blockId))
             .map((o) => {
               const b = section.blocks.find((x) => x.id === o.dataset.blockId);
@@ -3039,18 +3074,18 @@ function enhanceBlock(el, block, section, grid, host) {
       // Frames er fysiske (x/w i %, y/h i px); gridet styrer KUN hva vi
       // snapper mot: kvadratiske ruter på grid.size px. Snap av gir fri
       // plassering (0,1 % / 1 px-presisjon).
-      const pctPerPx = 100 / host.clientWidth;
+      const pctPerPx = 100 / canvas.clientWidth;
       const colStep = grid.size * pctPerPx;
       const r2 = (v) => Math.round(v * 100) / 100;
       const overlay = showGridOverlay(host, grid);
       let current = orig;
 
-      // Smart guides (à la Wix): naboblokkers kanter/senter + seksjonens
+      // Smart guides (à la Wix): naboblokkers kanter/senter + innholdsflatens
       // midtlinje som snappelinjer. Målene samles ved dra-start.
       const GUIDE_TOL = 5;
-      const xTargets = [host.clientWidth / 2];
+      const xTargets = [canvas.clientWidth / 2];
       const yTargets = [];
-      for (const other of host.querySelectorAll(':scope > .urd-block')) {
+      for (const other of canvas.querySelectorAll(':scope > .urd-block')) {
         if (other === el) continue;
         const left = other.offsetLeft;
         const top = other.offsetTop;
@@ -3067,15 +3102,15 @@ function enhanceBlock(el, block, section, grid, host) {
         g.className = `urd-smart-guide urd-smart-guide-${axis}`;
         if (axis === 'v') g.style.left = `${px}px`;
         else g.style.top = `${px}px`;
-        host.appendChild(g);
+        canvas.appendChild(g);
         guideEls.push(g);
       };
       /** Justerer current mot nærmeste snappelinje og tegner den. */
       const applyGuides = () => {
         clearGuides();
         if (kind !== 'move') return;
-        const wPx = (current.w / 100) * host.clientWidth;
-        let leftPx = (current.x / 100) * host.clientWidth;
+        const wPx = (current.w / 100) * canvas.clientWidth;
+        let leftPx = (current.x / 100) * canvas.clientWidth;
         let best = null;
         for (const t of xTargets) {
           for (const edge of [0, wPx / 2, wPx]) {
@@ -3085,7 +3120,7 @@ function enhanceBlock(el, block, section, grid, host) {
         }
         if (best) {
           leftPx += best.d;
-          current = { ...current, x: clamp(r2((leftPx * 100) / host.clientWidth), 0, r2(100 - current.w)) };
+          current = { ...current, x: clamp(r2((leftPx * 100) / canvas.clientWidth), 0, r2(100 - current.w)) };
           drawGuide('v', best.line);
         }
         best = null;

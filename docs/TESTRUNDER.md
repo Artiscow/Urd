@@ -2,6 +2,26 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.2): Breddegrepet, bundet innholdsbredde
+
+Layouten er lagt om, så denne batchen er bredere enn vanlig. Det viktigste er de to første punktene: ser presetene riktige ut, og virker lerretet fortsatt som før.
+
+- [ ] VISUELT, det eneste ingen test kan avgjøre: sett inn ALLE 24 seksjonspresetene på en tom side og se over hver enkelt ved 1200 px. Se særlig etter tekst som ligger for trangt, kort som er blitt smalere enn innholdet, og elementer som var ment å gå kant til kant
+- [ ] De fem startpakkene (Ny side-galleriet) ser riktige ut; de komponerer de samme presetene, så feil her skal være arvet ovenfra
+- [ ] De fire demosidene (Hjem, Om oss, Kaker, Kontakt) ser riktige ut i Ren visning på en bred skjerm: innholdet står i en sentrert kolonne, mens seksjonsbakgrunnene fortsatt går HELT ut til kantene
+- [ ] Lerretet: dra en blokk, endre størrelse fra nedre høyre hjørne, flytt med piltaster (også med Shift), dra et flerutvalg, og dra i seksjonens topp- og bunnkant. Alt skal treffe der pekeren er, uten forskyvning mot venstre eller høyre
+- [ ] Marquee (dra et utvalgsrektangel i tom seksjonsflate): rektangelet følger pekeren, og blokkene det dekker blir markert (ikke naboene ved siden av)
+- [ ] Rutenettet (Vis grid) og de smarte hjelpelinjene ligger på innholdsflaten, ikke forskjøvet ut i margen; midtlinja treffer midten av innholdet
+- [ ] Fest ved scrolling: en festet blokk beholder sin bredde og venstrekant i det den fester seg (skal IKKE hoppe mot venstre skjermkant). Test både vanlig festing, gruppefesting og «Til skjermen»-dokking
+- [ ] Ny knapp i verktøylinja ved zoom-kontrollen bytter mellom skjermformat og fyll. I skjermformat kan det bli en stripe over/under eller på sidene; i fyll fyller lerretet panelet som før
+- [ ] Folden: lag en seksjon med minstehøyde `85vh` og en seksjon under. I skjermformat skal seksjonen under IKKE være synlig før du scroller, og det skal stemme med hva en ekte nettleser viser ved 1248 px bredde
+- [ ] Nettsted-panelet har «Innholdsbredde» med seks trinn pluss Full skjermbredde. Bytt mellom 960, 1200 og Full og se at forhåndsvisningen følger med med én gang
+- [ ] Sett `"maxWidth": "full"` på én seksjon i en sidefil (håndredigert) og se at kun den seksjonen går kant til kant
+- [ ] Tekstblokker: åpne en side med mye tekst i en smal blokk og se at rammen vokser av seg selv ved rendring, ikke bare når du skriver. Rammen skal ALDRI krympe av seg selv
+- [ ] Mobilvisning er uendret: auto-stabling ser ut som før, og en seksjon satt til manuell mobil-layout beholder plasseringene sine
+- [ ] Publiser og sjekk den deployede siden: samme utseende som i Ren visning, og `site.json` har fått `schemaVersion: 2` med `layout`-feltet
+- [ ] Bytt språk i admin til engelsk og tyrkisk og sjekk de nye tekstene: Innholdsbredde, Full skjermbredde, «(standard)»-merket, og de to hjelpetekstene på lerretsmodus-knappen
+
 ### Testrunde-batch (0.7.1): Oppryddingsrunden og sticky-utvidelsene
 
 - [ ] Sticky: sett «Fest ved scrolling» på en blokk i en seksjon som er høyere enn blokken, og se i Ren visning at blokken fester seg SYNLIG under den klistrede menyen (før la den seg bak menyen); demoen er «Les mer»-knappen på Om oss

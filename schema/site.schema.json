@@ -27,6 +27,21 @@
         "mobile": { "type": "integer", "minimum": 200, "description": "Maks bredde (px) som regnes som mobil" }
       }
     },
+    "layout": {
+      "type": "object",
+      "description": "Sidelayout (additivt fra v0.7, ADR-0018): innholdet bindes av en designbredde med fullbredde seksjonsbakgrunn. Fylles inn av site-migreringen 1 -> 2.",
+      "additionalProperties": false,
+      "properties": {
+        "contentWidth": {
+          "description": "Designbredde i px, eller 'full' for ubunden fullbredde (Urds oppførsel før v0.7). Tall og ikke CSS-lengde, siden editoren regner målbredden for forhåndsvisningen ut fra den.",
+          "oneOf": [
+            { "type": "integer", "minimum": 320 },
+            { "const": "full" }
+          ]
+        },
+        "gutter": { "type": "integer", "minimum": 0, "description": "Minste sidemarg (px) mellom innholdsflaten og vinduskanten. Gjelder kun over mobilbrekkpunktet." }
+      }
+    },
     "grid": { "$ref": "#/$defs/grid" },
     "theme": {
       "type": "object",

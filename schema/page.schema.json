@@ -45,7 +45,7 @@
           "additionalProperties": false,
           "properties": {
             "minHeight": { "type": "string", "description": "CSS-lengde, f.eks. '85vh'" },
-            "maxWidth": { "type": "string" }
+            "maxWidth": { "type": "string", "description": "Overstyrer nettstedets innholdsbredde for denne seksjonen (tatt i bruk i v0.7, ADR-0018): CSS-lengde, eller 'full' for kant-til-kant innhold. Fravær = arv site.layout.contentWidth." }
           }
         },
         "grid": {

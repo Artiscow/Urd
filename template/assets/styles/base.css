@@ -67,6 +67,28 @@ img, video {
    og editor og publisert side skal se identiske ut. */
 .urd-section {
   position: relative;
+  --urd-canvas-gutter: 0px;
+}
+
+/* Innholdsflaten (ADR-0018): seksjonen er full vindusbredde og eier
+   bakgrunnen, kanvasen binder innholdet til designbredden og sentrerer det.
+   Blokkenes x/w er prosent AV DENNE, så layouten slutter å vokse med
+   skjermen. Margen gjelder kun over mobilbrekkpunktet, så alle lagrede
+   frames.mobile beholder betydningen sin (mobilmodellen er egen milepæl).
+
+   ADVARSEL: denne regelen skal ALDRI få transform, filter, perspective,
+   backdrop-filter, contain, container-type eller will-change. Alle sju
+   lager containing block for position: fixed, og ville drept festede og
+   skjermdokkede blokker (sticky.js). Håndheves av tests/canvas.test.mjs. */
+body:not(.urd-mobile) .urd-section {
+  --urd-canvas-gutter: var(--urd-canvas-gutter-desktop, 24px);
+}
+
+.urd-canvas {
+  position: relative;
+  min-height: inherit;
+  width: min(100% - 2 * var(--urd-canvas-gutter), var(--urd-canvas-w, 100%));
+  margin-inline: auto;
 }
 
 /* Roterte/overhengende blokker skal ikke gi sidescrolling */

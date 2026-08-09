@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "site": {
     "title": "Urd",
     "lang": "no",
@@ -9,6 +9,10 @@
   },
   "breakpoints": {
     "mobile": 640
+  },
+  "layout": {
+    "contentWidth": 1200,
+    "gutter": 24
   },
   "grid": {
     "size": 16,

@@ -88,5 +88,34 @@ export const textBlock = {
         });
       });
     }
+
+    // Sikkerhetsnett ved RENDER, ikke bare ved skriving (ADR-0018). Lagret
+    // høyde er piksler, mens ombrytningen avhenger av bredden: endres
+    // innholdsbredden, skriftstørrelsen eller språket, blir en tekst som
+    // sto perfekt for høy for sin egen boks. Lytteren over fanger det bare
+    // mens noen faktisk skriver, så samme måling gjøres her, etter samme
+    // mønster som datablokkene (sitat, statistikk, faq ...).
+    //
+    // Veksten er ENVEIS: rammen krymper aldri av seg selv, siden en tom
+    // eller kort tekst skal beholde plassen eieren har gitt den. Toleransen
+    // hindrer at avrunding gir evige småjusteringer.
+    requestAnimationFrame(() => {
+      if (!el.isConnected || ctx.viewport === 'mobile') return;
+      const needed = content.scrollHeight;
+      if (needed <= el.clientHeight + 4) return;
+      const step = ctx.grid?.size ?? 8;
+      const newH = Math.ceil(needed / step) * step;
+      el.style.height = `${newH}px`;
+      // Hos besøkende retter vi kun visningen; i preview bokføres den nye
+      // høyden i utkastet, så neste publisering slipper å måle på nytt.
+      if (!ctx.preview) return;
+      const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
+      if (!block || block.frames.desktop.h === newH) return;
+      block.frames.desktop = { ...block.frames.desktop, h: newH };
+      window.parent?.postMessage(
+        { type: 'urd-grow', sectionId: ctx.section.id, blockId: el.dataset.blockId, h: newH },
+        location.origin,
+      );
+    });
   },
 };

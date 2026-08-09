@@ -34,3 +34,27 @@ test('previewScale: gulv 0.1 hindrer scale(0) / uendelig smått', () => {
   assert.equal(previewScale(0, 1600, 'fit'), 1);           // umålt -> fitScale 1
   assert.equal(previewScale(10, 100000, 'fit'), 0.1);      // absurd smal ramme -> gulv
 });
+
+// Enhetsmodus (ADR-0018): mål-viewporten har både bredde og høyde, og
+// skalaen tilpasses begge akser, så folden stemmer med det besøkende ser.
+
+test('enhetsmodus: den STRAMMESTE aksen bestemmer skalaen', () => {
+  // Bredden ville gitt 0.8, høyden 0.5 -> høyden vinner (bar på sidene).
+  assert.equal(previewScale(800, 1000, 'fit', 400, 800), 0.5);
+  // Motsatt: bredden er strammest -> bar over og under.
+  assert.equal(previewScale(500, 1000, 'fit', 800, 800), 0.5);
+});
+
+test('enhetsmodus skalerer aldri opp, selv når begge akser har overskudd', () => {
+  assert.equal(previewScale(2000, 1000, 'fit', 2000, 800), 1);
+});
+
+test('targetH 0 er fyll-modus: skalaen forblir rent bredde-drevet', () => {
+  // Samme svar med og uten høydeargumenter, så gamle kall er uendret.
+  assert.equal(previewScale(800, 1000, 'fit', 100, 0), previewScale(800, 1000, 'fit'));
+  assert.equal(previewScale(800, 1000, 'fit', 100, 0), 0.8);
+});
+
+test('full er 1:1 uansett høydemål', () => {
+  assert.equal(previewScale(400, 1600, 'full', 200, 800), 1);
+});

@@ -64,6 +64,9 @@
     kebab: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>',
     bookmark: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/></svg>',
     fit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/></svg>',
+    // Lerretsmodus: skjermramme med foldlinje (enhet) mot utfylt flate (fyll)
+    canvasDevice: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M2 14h20" stroke-dasharray="3 2"/></svg>',
+    canvasFill: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>',
   };
 
   /**
@@ -166,7 +169,13 @@
   // besøkende med fullt vindu) og skaleres ned for å passe .frame-wrap, i stedet
   // for å reflowe inn i restplassen etter chromen. Da er render-en identisk med
   // publisert; kun visningsstørrelsen (zoom) endres. Se lib/preview-scale.js.
+  // Mål-viewporten (ADR-0018). Mobilmålet er iPhone-formatet, som også er
+  // Framers standard mobil-brekkpunkt. Desktop-bredden kommer fra
+  // site.layout: over designbredden gir enhver bredde identisk render, så
+  // vi pinner den minste ærlige i stedet for admin-vinduets tilfeldige mål.
   const MOBILE_W = 390;
+  const MOBILE_H = 844;
+  const DESKTOP_H = 800;
   let frameWrapEl = $state(null);
   let frameW = $state(0);            // .frame-wrap sin målte innerflate (px)
   let frameH = $state(0);
@@ -174,12 +183,20 @@
   /** Zoom for redigerings-lerretet: 'fit' tilpasser vinduet, 'full' = ekte 1:1. */
   let zoomMode = $state('fit'); // 'fit' | 'manual' (steppes med +/-)
   let manualZoom = $state(1);
-  let targetW = $derived(viewMode === 'mobile' ? MOBILE_W : winW);
-  // Skalaen er BREDDE-drevet: siden rendrer i full målbredde og skaleres til
-  // rammebredden. Iframen gjøres tilsvarende høyere (frameH/scale), så den
-  // SKALERTE høyden fyller .frame-wrap - ingen topp/bunn-barer; siden scroller
-  // inni iframen som en ekte side.
-  let scale = $derived(zoomMode === 'manual' ? manualZoom : previewScale(frameW, targetW, 'fit'));
+  /** Lerretsmodus: 'device' pinner høyden så folden stemmer, 'fill' fyller
+   *  panelet som før v0.7 (mer arbeidsflate, men vh løses mot panelet). */
+  let canvasMode = $state('device'); // 'device' | 'fill'
+  /** Designbredden fra site-utkastet; 'full' betyr ubunden (før v0.7). */
+  let contentWidth = $derived(siteDraft?.layout?.contentWidth ?? 1200);
+  let contentGutter = $derived(siteDraft?.layout?.gutter ?? 24);
+  let desktopW = $derived(contentWidth === 'full' ? winW : contentWidth + 2 * contentGutter);
+  let targetW = $derived(viewMode === 'mobile' ? MOBILE_W : desktopW);
+  // Høyden pinnes kun i enhetsmodus. I fyll-modus er targetH 0, og skalaen
+  // blir rent bredde-drevet som før (iframen gjøres tilsvarende høyere).
+  let targetH = $derived(canvasMode === 'fill' ? 0 : (viewMode === 'mobile' ? MOBILE_H : DESKTOP_H));
+  let scale = $derived(zoomMode === 'manual'
+    ? manualZoom
+    : previewScale(frameW, targetW, 'fit', frameH, targetH));
 
   /** Zoom-stepperne: 10 %-poengs trinn fra gjeldende visning, klemt 10-400 %. */
   function stepZoom(dir) {
@@ -187,9 +204,12 @@
     manualZoom = next / 100;
     zoomMode = 'manual';
   }
-  let iframeH = $derived(scale > 0 ? frameH / scale : frameH);
+  // Enhetsmodus: iframen ER mål-viewporten, så 100vh betyr det samme her som
+  // hos en besøkende. Fyll-modus: iframen strekkes så den SKALERTE høyden
+  // fyller .frame-wrap, altså ingen barer, men vh følger panelet.
+  let iframeH = $derived(targetH > 0 ? targetH : (scale > 0 ? frameH / scale : frameH));
   let stageW = $derived(targetW * scale);
-  let stageH = $derived(frameH);
+  let stageH = $derived(targetH > 0 ? targetH * scale : frameH);
 
   // Klikk hvor som helst i admin (paneler, topplinje) lukker åpne menyer i forhåndsvisningen;
   // iframens egne utenfor-klikk-lyttere ser aldri disse klikkene.
@@ -2364,6 +2384,30 @@
     siteMutate('edit:site-desc', () => { siteDraft.site.description = value; });
   }
 
+  /** Innholdsbredden (site.layout.contentWidth, ADR-0018): designbredden
+   *  blokkenes prosenter måles mot. Faste trinn i stedet for fritt tall:
+   *  bredden er en designkonstant, ikke en finjustering, og hvert trinn
+   *  svarer til en etablert layoutbredde. En håndredigert verdi utenfor
+   *  lista bevares som eget alternativ øverst. */
+  const CONTENT_WIDTHS = [1600, 1440, 1280, 1200, 1080, 960];
+
+  function contentWidthOptions() {
+    const cur = siteDraft?.layout?.contentWidth ?? 1200;
+    const known = cur === 'full' || CONTENT_WIDTHS.includes(cur);
+    return [
+      ...(known ? [] : [[String(cur), `${cur} px`]]),
+      ...CONTENT_WIDTHS.map((w) => [String(w), w === 1200 ? ta('lbl.contentWidthStd', { n: w }) : `${w} px`]),
+      ['full', ta('lbl.contentWidthFull')],
+    ];
+  }
+
+  function setContentWidth(v) {
+    const next = v === 'full' ? 'full' : Number(v);
+    siteMutate('edit:site-width', () => {
+      siteDraft.layout = { ...(siteDraft.layout ?? { gutter: 24 }), contentWidth: next };
+    });
+  }
+
   /** Besøkende-språket (site.lang, ADR-0012): den historiske verdien 'no'
    *  vises som bokmål; en håndredigert verdi utenfor lista bevares som
    *  eget alternativ øverst så ingenting ødelegges av å åpne panelet. */
@@ -4524,6 +4568,10 @@
             onclick={() => (viewMode = 'mobile')} title={ta('tip.mobileView')}>{@html ICONS.phone}</button>
         </span>
         <span class="zoomswitch">
+          <button class="ghost" class:active={canvasMode === 'device'}
+            onclick={() => (canvasMode = canvasMode === 'device' ? 'fill' : 'device')}
+            title={ta(canvasMode === 'device' ? 'tip.canvasDevice' : 'tip.canvasFill')}
+            >{@html canvasMode === 'device' ? ICONS.canvasDevice : ICONS.canvasFill}</button>
           <button class="ghost" class:active={zoomMode === 'fit'}
             onclick={() => (zoomMode = 'fit')} title={ta('tip.zoomFit')}>{@html ICONS.fit}</button>
           <button class="ghost" onclick={() => stepZoom(-1)} title={ta('tip.zoomOut')}>{@html ICONS.minus}</button>
@@ -4915,6 +4963,10 @@
                 <label title={ta('site.langTitle')}>{ta('site.langLabel')}
                   <Dropdown value={siteLangValue()} options={siteLangOptions()}
                     onchange={(v) => setSiteLang(v)} /></label>
+                <label title={ta('tip.site.contentWidth')}>{ta('lbl.contentWidth')}
+                  <Dropdown value={String(siteDraft?.layout?.contentWidth ?? 1200)}
+                    options={contentWidthOptions()}
+                    onchange={(v) => setContentWidth(v)} /></label>
                 <hr class="gridmenu-divider" />
                 <label>{ta('lbl.siteIcon')}
                   {#if siteDraft.site.icon}

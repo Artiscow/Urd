@@ -52,7 +52,7 @@ export function lift(data, def) {
 export const PAGE_SCHEMA_VERSION = 1;
 
 /** Gjeldende versjon av site.json-formatet. */
-export const SITE_SCHEMA_VERSION = 1;
+export const SITE_SCHEMA_VERSION = 2;
 
 /**
  * Migreringer på filnivå. Hver funksjon løfter nøyaktig én versjon og
@@ -64,7 +64,13 @@ export const SITE_SCHEMA_VERSION = 1;
  */
 const pageMigrations = {};
 
-const siteMigrations = {};
+const siteMigrations = {
+  // 1 -> 2 (breddegrepet, ADR-0018): innholdet bindes av en designbredde i
+  // stedet for å følge vindusbredden. Standarden skrives inn eksplisitt i
+  // stedet for å utledes ved lesing, så motoren og editoren aldri kan komme
+  // til hver sin verdi. Pre-v1 er utseende-endringen akseptert (ADR-0005).
+  1: (site) => ({ ...site, layout: site.layout ?? { contentWidth: 1200, gutter: 24 } }),
+};
 
 /**
  * Løfter site.json til gjeldende schemaVersion. Samme regler som

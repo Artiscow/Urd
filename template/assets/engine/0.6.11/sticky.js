@@ -148,16 +148,21 @@ function applySticky() {
     }
 
     const sectionRect = section.getBoundingClientRect();
+    // To rammer, med vilje (ADR-0018): blokkens left/width er prosent av
+    // INNHOLDSFLATEN, mens slippgrensen er seksjonens topp og bunn. Måler
+    // vi begge mot seksjonen, får festede blokker feil bredde og glir mot
+    // venstre kant i det de festes.
+    const canvasRect = (section.querySelector(':scope > .urd-canvas') ?? section).getBoundingClientRect();
     // Geometrien leses fra mellomlagringen mens blokken er festet (inline-
     // verdiene er da overskrevet), ellers ferskt fra elementet.
     const geoms = new Map(members.map((el) => [el, el._urdStickyBase ?? readGeom(el)]));
     // Medlemmenes mål i px, felles for begge modusene. left/width regnes fra
-    // seksjonsrekten hver gang (tåler resize); rotasjon og høyde røres aldri.
+    // kanvasrekten hver gang (tåler resize); rotasjon og høyde røres aldri.
     const boxes = members.map((el) => ({
       el,
-      x: sectionRect.width * ((parseFloat(geoms.get(el).left) || 0) / 100),
+      x: canvasRect.left - sectionRect.left + canvasRect.width * ((parseFloat(geoms.get(el).left) || 0) / 100),
       y: geoms.get(el).y,
-      w: sectionRect.width * ((parseFloat(geoms.get(el).width) || 0) / 100),
+      w: canvasRect.width * ((parseFloat(geoms.get(el).width) || 0) / 100),
       h: el.offsetHeight,
     }));
     const box = groupBox(boxes);

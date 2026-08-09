@@ -25,6 +25,25 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.2 - Breddegrepet: innholdet bindes av en designbredde - 10. august 2026
+
+Milepæl 0.7.2, første arkitekturavklaring i v0.7. Beslutningene og avgrensningene står i [ADR-0018](adr/0018-bundet-innholdsbredde.md).
+
+- Blokkene var prosent av HELE vindusbredden uten øvre grense, så et tekstfelt på `w: 50` var 490 px bredt på en liten bærbar og 1200 px på en ultrabred skjerm. Ny node `.urd-canvas` per seksjon binder innholdet til en designbredde (`site.layout.contentWidth`, standard 1200), mens seksjonen beholder full bredde og eier bakgrunnen.
+- `frameToCss` er uendret: det er hva prosentene måles MOT som endret seg, ikke hva de betyr. `.urd-bg-layer` er også urørt, så fullbredde bakgrunn med bundet innhold koster ingen `100vw`-utbryter.
+- Designbredden 1200 er valgt mot feltet: Framers standard skrivebords-brekkpunkt er 1200 (og mobil 390, som er nøyaktig editorens `MOBILE_W`), Squarespaces vanlige standard er 1200, Bootstraps xl-container er 1140. 1440 ble forkastet fordi den først binder over 1488 px vindusbredde og dermed knapt gir invarians i praksis.
+- Editoren MÅLER innholdsflaten i stedet for å regne ut `min()`-uttrykket fra site.json. Regner den selv, kan den komme til en annen bredde enn motoren, og da flytter blokkene seg av seg selv; det var også avgjørende mot å legge `calc()` i `frameToCss`.
+- `sticky.js` utledet blokkens venstrekant og bredde fra seksjonsrekten. Den leser nå kanvasrekten for x/w og seksjonsrekten for slippgrensen, med forskyvningen mellom kantene lagt inn i x, ellers ville festede blokker hoppet mot venstre kant i det de festet seg.
+- Rundt femten målesteder i `preview-edit.js` (dra, resize, piltaster, marquee, gruppedra, blokkmeny, materialisering av mobil-frames) målte seksjonen og ville regnet feil prosent. De går nå via en felles `canvasOf`-hjelper, så et glemt sted er mekanisk søkbart.
+- Grid-overlegget, marquee-rektangelet og de smarte hjelpelinjene måtte flytte INN i kanvasen, ikke bare måles mot den: blokkenes `offsetLeft` er relativ til sin offsetParent, som nå er kanvasen, så treffdeteksjonen sammenlignet ellers to ulike rammer.
+- Forhåndsvisningen rendret ved `window.innerWidth`, så layouten avhang av admin-vinduets tilfeldige bredde. Målbredden pinnes nå fra `site.layout`, siden enhver bredde over designbredden gir identisk render.
+- Fold-avviket hadde en andre årsak breddegrepet ikke rører: `100vh` løses mot lerretets sideforhold. Lerretet har nå en kanonisk mål-viewport (1248 x 800 desktop, 390 x 844 mobil) og tilpasses på begge akser, så folden stemmer. Fyll-modus fra 0.6.6.5.9 beholdes som eget knappevalg i stedet for å slettes.
+- Tekstblokken vokste KUN mens noen faktisk skrev, så en breddeendring ville latt lagret høyde stå og teksten renne ut av sin egen boks. Den har nå samme render-tids sikkerhetsnett som de seks datablokkene, med enveis vekst og toleranse mot evige småjusteringer.
+- `SITE_SCHEMA_VERSION` bumpet til 2 med en migrering som skriver `layout` eksplisitt inn, i stedet for å la standarden utledes ved lesing to steder. `section.size.maxWidth` fantes i skjemaet uten implementasjon og uten dokumentasjon; det er nå per-seksjon overstyring og rømningsluke for kant-til-kant innhold.
+- Ny `tests/canvas.test.mjs` feiler hvis `.urd-canvas` får `transform`, `filter`, `perspective`, `backdrop-filter`, `contain`, `container-type` eller `will-change`. Alle sju lager containing block for `position: fixed` og ville drept festingen fra 0.7.1 uten at noen annen test merket det. Samme funn diskvalifiserte både nedskaleringsmodellen og container queries på lerretsnivå.
+- Konverteringen trengte ingen dataendringer: invariantene ble kjørt over alle 24 seksjonspresets, 42 demoblokker og plugin-presetene uten treff. Prosentene overlever proporsjonalt, og høydene retter seg selv med det nye sikkerhetsnettet; invariantene (`x >= 0`, `x + w <= 100`, `w > 0`, `h > 0`) er lagt til som faste tester.
+- Innholdsbredden er redigerbar i Nettsted-panelet i seks faste trinn pluss full bredde, med håndredigerte verdier bevart som eget alternativ. Faste trinn fordi bredden er en designkonstant, ikke en finjustering.
+
 ### 0.7.0.1 - Moderniseringsgjennomgang av v0.7, to nye milepæler og ADR-0017 om AI via lokal MCP-server - 10. august 2026
 
 Gjennomgang av backloggen og kartene i docs/sammenligning mot dagens plattformstøtte, for både det som er bygget og det som er planlagt. Kartene er skrevet 22.-27. juli 2026 med støttetall «per tidlig 2026»; flere har flyttet seg, og én backlog-beslutning hvilte på et tall som ikke lenger stemte.

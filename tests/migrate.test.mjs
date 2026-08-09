@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { lift } = await engineImport('migrate.js');
+const { lift, liftSiteFile, SITE_SCHEMA_VERSION } = await engineImport('migrate.js');
 
 const textV3 = {
   version: 3,
@@ -77,4 +77,33 @@ test('migreringer muterer aldri original-props', () => {
   const result = lift({ type: 'text', version: 1, props: original }, grisete);
   assert.equal(result.ok, true);
   assert.deepEqual(original, { text: '<p>Hei</p>' });
+});
+
+// Site-migreringen 1 -> 2: breddegrepet (ADR-0018). Standarden skrives inn
+// eksplisitt i stedet for å utledes ved lesing, så motoren og editoren
+// aldri kan komme til hver sin verdi.
+
+test('site v1 uten layout løftes med designbredden skrevet inn', () => {
+  const lifted = liftSiteFile({ schemaVersion: 1, site: { title: 'Test', lang: 'no' } });
+  assert.equal(lifted.schemaVersion, SITE_SCHEMA_VERSION);
+  assert.deepEqual(lifted.layout, { contentWidth: 1200, gutter: 24 });
+});
+
+test('site v1 med eget layout-felt beholder verdiene sine', () => {
+  const eget = { contentWidth: 'full', gutter: 0 };
+  const lifted = liftSiteFile({ schemaVersion: 1, layout: eget });
+  assert.equal(lifted.schemaVersion, SITE_SCHEMA_VERSION);
+  assert.deepEqual(lifted.layout, eget);
+});
+
+test('site på gjeldende versjon røres ikke av løftingen', () => {
+  const site = { schemaVersion: SITE_SCHEMA_VERSION, layout: { contentWidth: 980, gutter: 12 } };
+  assert.deepEqual(liftSiteFile(site).layout, { contentWidth: 980, gutter: 12 });
+});
+
+test('site-løftingen muterer aldri originalen', () => {
+  const original = { schemaVersion: 1, site: { title: 'Test', lang: 'no' } };
+  liftSiteFile(original);
+  assert.equal(original.schemaVersion, 1);
+  assert.equal(original.layout, undefined);
 });

@@ -26,7 +26,14 @@ const assertBlock = (block, presetId) => {
   for (const key of ['x', 'y', 'w', 'h', 'z']) {
     assert.equal(typeof d[key], 'number', `${presetId}: frame.${key} er ikke tall`);
   }
+  // Med bundet innholdsbredde (ADR-0018) er prosentene av innholdsflaten,
+  // ikke av vinduet, så en blokk utenfor 0-100 havner i margen der det ikke
+  // finnes plass i det hele tatt. Høyden må være positiv av samme grunn:
+  // en frame med h <= 0 er usynlig, ikke bare liten.
+  assert.ok(d.x >= 0, `${presetId}: blokk starter utenfor innholdsflaten (x=${d.x})`);
   assert.ok(d.x + d.w <= 100.01, `${presetId}: blokk stikker ut av seksjonen (${d.x + d.w}%)`);
+  assert.ok(d.w > 0, `${presetId}: blokk uten bredde (w=${d.w})`);
+  assert.ok(d.h > 0, `${presetId}: blokk uten høyde (h=${d.h})`);
 };
 
 test('presets: create() gir velformede seksjoner', () => {
