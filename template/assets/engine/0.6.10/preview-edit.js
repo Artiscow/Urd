@@ -438,7 +438,8 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
 const BLOCK_KINDS = [
   ['text', ta('blocks.text')], ['text-box', ta('ui.textBox')], ['button', ta('blocks.button')],
   ['image', ta('blocks.image')], ['video', ta('blocks.video')], ['icon', ta('blocks.icon')],
-  ['samling', ta('blocks.samling')], ['galleri', ta('blocks.galleri')],
+  ['samling', ta('blocks.samling')], ['galleri', ta('blocks.galleri')], ['faq', ta('blocks.faq')],
+  ['tidslinje', ta('blocks.tidslinje')], ['sitat', ta('blocks.sitat')], ['statistikk', ta('blocks.statistikk')],
 ];
 
 /** Formene bor i sin egen utfoldbare undermeny («Former») i + Ny blokk. */
@@ -447,8 +448,10 @@ const SHAPE_KINDS = [
   ['shape-rect', ta('shape.rect')], ['shape-triangle', ta('shape.triangle')],
 ];
 
-/** Kjerneblokk-typene (paletten i editoren eier byggingen av disse). */
-const CORE_BLOCK_TYPES = new Set(['text', 'image', 'button', 'shape', 'video', 'icon', 'samling', 'galleri']);
+/** Kjerneblokk-typene (paletten i editoren eier byggingen av disse). faq
+ *  manglet her frem til 0.6.7.11 og lakk inn i Plugin-blokker-gruppen. */
+const CORE_BLOCK_TYPES = new Set(['text', 'image', 'button', 'shape', 'video', 'icon', 'samling', 'galleri',
+  'faq', 'tidslinje', 'sitat', 'statistikk']);
 
 /**
  * Lukker en «+ Ny blokk»-meny og nullstiller dobbeltklikk-tilstanden:

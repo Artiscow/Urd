@@ -903,6 +903,32 @@
     });
   }
 
+  /* Tidslinje-blokken: hendelseslisten redigeres her; tekstene også rett i preview. */
+
+  function setTlItem(i, patch) {
+    mutateBlock(`edit:${selectedBlock.blockId}:tl${i}`, (b) => {
+      b.props.items[i] = { ...b.props.items[i], ...patch };
+    });
+  }
+
+  function addTlItem() {
+    mutateBlock('tl-item', (b) => {
+      (b.props.items ??= []).push({ year: '', title: ta('seed.tidslinje.newTitle'), text: '' });
+    });
+  }
+
+  function removeTlItem(i) {
+    mutateBlock('tl-item', (b) => { b.props.items.splice(i, 1); });
+  }
+
+  function moveTlItem(i, dir) {
+    const j = i + dir;
+    mutateBlock('tl-item', (b) => {
+      if (j < 0 || j >= b.props.items.length) return;
+      [b.props.items[i], b.props.items[j]] = [b.props.items[j], b.props.items[i]];
+    });
+  }
+
   function setBlockDecor(on) {
     mutateBlock('decor', (b) => { b.decor = on; });
   }
@@ -918,6 +944,19 @@
         b.props.src = img.dataUrl;
         b.props.alt = b.props.alt || slugify(file.name).replaceAll('-', ' ');
       });
+    } catch {
+      setStatus(ta('status.imageReadError'), 'error');
+    }
+  }
+
+  /** Sitat-blokkens portrett (kort-varianten): samme webp-vei som bildeblokken. */
+  async function setSitatPortrett(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      const img = await compressOrTrim(file);
+      mutateBlock(`edit:${selectedBlock.blockId}`, (b) => { b.props.image = img.dataUrl; });
     } catch {
       setStatus(ta('status.imageReadError'), 'error');
     }
@@ -3646,6 +3685,30 @@
       },
       w: 50, h: 220,
     },
+    tidslinje: {
+      type: 'tidslinje',
+      props: {
+        items: [
+          { year: '2019', title: ta('seed.tidslinje.t1'), text: ta('seed.tidslinje.text') },
+          { year: '2022', title: ta('seed.tidslinje.t2'), text: ta('seed.tidslinje.text') },
+          { year: '2026', title: ta('seed.tidslinje.t3'), text: ta('seed.tidslinje.text') },
+        ],
+        variant: 'venstre',
+        marker: 'fylt',
+        accent: null,
+      },
+      w: 42, h: 260,
+    },
+    sitat: {
+      type: 'sitat',
+      props: { text: ta('seed.sitat.text'), attribution: ta('seed.sitat.name'), role: ta('seed.sitat.role'), variant: 'stor', image: '', accent: null },
+      w: 44, h: 180,
+    },
+    statistikk: {
+      type: 'statistikk',
+      props: { value: '4800', prefix: '', suffix: '+', label: ta('seed.statistikk.label'), countUp: true },
+      w: 20, h: 90,
+    },
   };
 
   function buildBlock(kind) {
@@ -3752,6 +3815,9 @@
       { label: ta('blocks.icon'), act: 'block', kind: 'icon' },
       { label: ta('blocks.samling'), act: 'block', kind: 'samling' },
       { label: ta('blocks.faq'), act: 'block', kind: 'faq' },
+      { label: ta('blocks.tidslinje'), act: 'block', kind: 'tidslinje' },
+      { label: ta('blocks.sitat'), act: 'block', kind: 'sitat' },
+      { label: ta('blocks.statistikk'), act: 'block', kind: 'statistikk' },
       { label: ta('ui.emptyGallery'), act: 'block', kind: 'galleri' },
       { label: ta('ui.galleryWithImages'), act: 'galleryImages' },
       { label: ta('shape.line'), act: 'block', kind: 'shape-line' },
@@ -4922,6 +4988,12 @@
                   onclick={() => addBlock('samling')}>{ta('blocks.samling')}</button>
                 <button class="ghost" title={ta('tip.blocks.faq')}
                   onclick={() => addBlock('faq')}>{ta('blocks.faq')}</button>
+                <button class="ghost" title={ta('tip.blocks.tidslinje')}
+                  onclick={() => addBlock('tidslinje')}>{ta('blocks.tidslinje')}</button>
+                <button class="ghost" title={ta('tip.blocks.sitat')}
+                  onclick={() => addBlock('sitat')}>{ta('blocks.sitat')}</button>
+                <button class="ghost" title={ta('tip.blocks.statistikk')}
+                  onclick={() => addBlock('statistikk')}>{ta('blocks.statistikk')}</button>
                 <details class="group">
                   <summary>{ta('blocks.galleri')}</summary>
                   <div class="group-items">
@@ -5951,6 +6023,48 @@
         </span>
       {/each}
       <button class="ghost action" onclick={addFaqItem}>{ta('ui.addQuestion')}</button>
+    {:else if selectedBlock.type === 'tidslinje'}
+      <p class="panel-strong">{ta('lbl.tlItems')}</p>
+      {#each selectedBlock.props.items ?? [] as item, i (i)}
+        <span class="nav-line">
+          <input class="tl-year" value={item.year} placeholder={ta('ph.tlYear')} title={ta('tip.tl.year')}
+            onchange={(e) => setTlItem(i, { year: e.target.value })} />
+          <input value={item.title} title={ta('tip.tl.title')}
+            onchange={(e) => setTlItem(i, { title: e.target.value })} />
+          <span class="row-tools">
+            <button class="ghost row-tool" onclick={() => moveTlItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+            <button class="ghost row-tool" onclick={() => moveTlItem(i, 1)}
+              disabled={i === (selectedBlock.props.items?.length ?? 0) - 1}>{@html ICONS.down}</button>
+            <button class="ghost row-tool" title={ta('tip.tl.remove')} onclick={() => removeTlItem(i)}>{@html ICONS.cross}</button>
+          </span>
+        </span>
+        <input value={item.text} placeholder={ta('ph.tlText')} title={ta('tip.tl.text')}
+          onchange={(e) => setTlItem(i, { text: e.target.value })} />
+      {/each}
+      <button class="ghost action" onclick={addTlItem}>{ta('ui.addTlItem')}</button>
+    {:else if selectedBlock.type === 'sitat'}
+      <label>{ta('lbl.sitatText')}
+        <input value={selectedBlock.props.text ?? ''}
+          onchange={(e) => setBlockProp('text', e.target.value)} /></label>
+      <label>{ta('lbl.sitatName')}
+        <input value={selectedBlock.props.attribution ?? ''}
+          onchange={(e) => setBlockProp('attribution', e.target.value)} /></label>
+      <label>{ta('lbl.sitatRole')}
+        <input value={selectedBlock.props.role ?? ''}
+          onchange={(e) => setBlockProp('role', e.target.value)} /></label>
+    {:else if selectedBlock.type === 'statistikk'}
+      <label>{ta('lbl.statValue')}
+        <input value={selectedBlock.props.value ?? ''} title={ta('tip.stat.value')}
+          onchange={(e) => setBlockProp('value', e.target.value)} /></label>
+      <label>{ta('lbl.statPrefix')}
+        <input value={selectedBlock.props.prefix ?? ''}
+          onchange={(e) => setBlockProp('prefix', e.target.value)} /></label>
+      <label>{ta('lbl.statSuffix')}
+        <input value={selectedBlock.props.suffix ?? ''}
+          onchange={(e) => setBlockProp('suffix', e.target.value)} /></label>
+      <label>{ta('lbl.statLabel')}
+        <input value={selectedBlock.props.label ?? ''}
+          onchange={(e) => setBlockProp('label', e.target.value)} /></label>
     {:else if selectedBlock.type === 'button'}
       <label>{ta('blocks.text')}
         <input value={selectedBlock.props.label}
@@ -6131,6 +6245,44 @@
     {:else if selectedBlock.type === 'faq'}
       <p class="panel-strong">{ta('lbl.cardStyle')}</p>
       {@render kortstilUI()}
+      <hr class="gridmenu-divider" />
+    {:else if selectedBlock.type === 'tidslinje'}
+      <label>{ta('lbl.variant')}
+        <Dropdown value={selectedBlock.props.variant ?? 'venstre'}
+          options={[['venstre', ta('opt.tl.venstre')], ['veksler', ta('opt.tl.veksler')]]}
+          onchange={(v) => setBlockProp('variant', v)} /></label>
+      <label>{ta('lbl.tlMarker')}
+        <Dropdown value={selectedBlock.props.marker ?? 'fylt'}
+          options={[['fylt', ta('opt.tl.fylt')], ['ring', ta('opt.tl.ring')]]}
+          onchange={(v) => setBlockProp('marker', v)} /></label>
+      <label>{ta('lbl.color')}
+        <ColorPicker value={selectedBlock.props.accent ?? 'accent'} tokens={themeSwatches()}
+          onchange={(v) => setBlockProp('accent', v === 'accent' ? null : v)} /></label>
+      <hr class="gridmenu-divider" />
+    {:else if selectedBlock.type === 'sitat'}
+      <label>{ta('lbl.variant')}
+        <Dropdown value={selectedBlock.props.variant ?? 'stor'}
+          options={[['stor', ta('opt.sitat.stor')], ['kort', ta('opt.sitat.kort')]]}
+          onchange={(v) => setBlockProp('variant', v)} /></label>
+      {#if selectedBlock.props.variant === 'kort'}
+        <label class="ghost filepick">
+          {ta('ui.sitatPortrett')}
+          <input type="file" accept="image/*" onchange={setSitatPortrett} />
+        </label>
+        {#if selectedBlock.props.image}
+          <button class="ghost" onclick={() => setBlockProp('image', '')}>{ta('ui.sitatPortrettFjern')}</button>
+        {/if}
+      {/if}
+      <label>{ta('lbl.color')}
+        <ColorPicker value={selectedBlock.props.accent ?? 'accent'} tokens={themeSwatches()}
+          onchange={(v) => setBlockProp('accent', v === 'accent' ? null : v)} /></label>
+      <hr class="gridmenu-divider" />
+    {:else if selectedBlock.type === 'statistikk'}
+      <label class="gridmenu-snap" title={ta('tip.stat.countUp')}>
+        <input type="checkbox" checked={selectedBlock.props.countUp !== false}
+          onchange={(e) => setBlockProp('countUp', e.target.checked)} />
+        {ta('lbl.statCountUp')}
+      </label>
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'button'}
       <label>{ta('lbl.style')}
@@ -6989,6 +7141,11 @@
     flex: 0 0 5.5rem;
     min-width: 0;
     opacity: 0.8;
+  }
+
+  /* Tidslinje-panelets årsfelt: smalt, tittelen tar resten av raden. */
+  .nav-line input.tl-year {
+    flex: 0 0 3.6rem;
   }
 
   .page-path {

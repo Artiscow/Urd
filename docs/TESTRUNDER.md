@@ -2,6 +2,16 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.6.7.11): Tidslinje-, sitat- og statistikk-blokkene
+
+- [ ] De tre blokkene kan settes inn fra Blokker-panelet, panelsøket OG lerret-menyen (+ Ny blokk/dobbeltklikk/slash); FAQ står i hovedlisten i lerret-menyen, ikke under Plugin-blokker
+- [ ] Tidslinjen: klikk-og-skriv på år/tittel/tekst; hendelser kan legges til/flyttes/fjernes i Egenskaper; variantene venstre/veksler og markørene fylt/ring; aksentfargen følger valgt farge
+- [ ] Sitatet: variantene stor/kort; portrettvalg (og fjern-knapp) vises kun for kort-varianten; portrettet publiseres som media/-fil
+- [ ] Statistikken: tell-opp hos besøkende (publisert side) ved første entré, med bevart tallform (mellomrom/desimal); står stille ved prefers-reduced-motion og i editoren; hjelpechipen forklarer
+- [ ] Faq- og sitat-presetene i + Ny seksjon gir blokkene (ikke tekstbokser); eldre sider med den gamle faq-preset-formen rendres uendret
+- [ ] Bytt oppsett behandler de nye blokkene som tekst (splitt-variantene legger dem i tekstkolonnen)
+- [ ] Mobil: alle tre vokser naturlig i stablingen (ingen klipt tekst ved mer innhold enn desktophøyden)
+
 ### Testrunde-batch (0.6.7.10): Side-maler
 
 - [ ] Kebab-menyen på en side-rad: «Lagre som mal» og «Slett siden» (forsiden mangler slett); lukkes ved klikk utenfor og Escape

@@ -142,6 +142,29 @@ function blockShapes(type, x, y, w, h, props) {
     parts.push(`<polygon points="${r1(cx - s / 2)},${r1(cy - s)} ${r1(cx - s / 2)},${r1(cy + s)} ${r1(cx + s)},${r1(cy)}" fill="${token('text', FALLBACK_TEXT)}" opacity="0.6"/>`);
     return parts.join('');
   }
+  if (type === 'tidslinje') {
+    const parts = [rect(x + 1, y, 1.4, h, token('accent', FALLBACK_ACCENT), ' opacity="0.7" rx="0.7"')];
+    for (let i = 0; i < 3; i += 1) {
+      const cy = y + h * (0.18 + i * 0.32);
+      parts.push(`<circle cx="${r1(x + 1.7)}" cy="${r1(cy)}" r="1.6" fill="${token('accent', FALLBACK_ACCENT)}"/>`);
+      parts.push(rect(x + 5, cy - 1, w * 0.5, 2, token('text', FALLBACK_TEXT), ' opacity="0.5" rx="1"'));
+    }
+    return parts.join('');
+  }
+  if (type === 'sitat') {
+    return [
+      `<text x="${r1(x + w / 2)}" y="${r1(y + h * 0.34)}" text-anchor="middle" font-size="${r1(Math.min(w, h) * 0.5)}" font-family="Georgia, serif" fill="${token('accent', FALLBACK_ACCENT)}">“</text>`,
+      rect(x + w * 0.15, y + h * 0.48, w * 0.7, 2, token('text', FALLBACK_TEXT), ' opacity="0.6" rx="1"'),
+      rect(x + w * 0.25, y + h * 0.62, w * 0.5, 2, token('text', FALLBACK_TEXT), ' opacity="0.6" rx="1"'),
+      rect(x + w * 0.35, y + h * 0.82, w * 0.3, 1.6, token('text', FALLBACK_TEXT), ' opacity="0.35" rx="0.8"'),
+    ].join('');
+  }
+  if (type === 'statistikk') {
+    return [
+      rect(x + w * 0.28, y + h * 0.15, w * 0.44, h * 0.42, token('accent', FALLBACK_ACCENT), ' opacity="0.85" rx="1"'),
+      rect(x + w * 0.32, y + h * 0.72, w * 0.36, 1.6, token('text', FALLBACK_TEXT), ' opacity="0.4" rx="0.8"'),
+    ].join('');
+  }
   // Ukjent type (f.eks. fra plugin): rolig kortomriss.
   return rect(x, y, w, h, token('surface', FALLBACK_SURFACE), ' rx="1.5"');
 }

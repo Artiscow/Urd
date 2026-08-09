@@ -254,6 +254,231 @@ html {
   }
 }
 
+/* Tidslinjen: hendelser langs en tegnet linje, ren CSS (0.6.7.11). Aksenten
+   følger temaet, men kan overstyres per blokk (--urd-tl-accent). */
+.urd-tidslinje {
+  --urd-tl-line: var(--urd-tl-accent, var(--urd-color-accent));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  position: relative;
+}
+
+/* Venstre-varianten: linjen langs venstre kant, innholdet innrykket. */
+.urd-tidslinje-venstre {
+  padding-left: 1.6rem;
+}
+
+.urd-tidslinje-venstre::before {
+  content: '';
+  position: absolute;
+  left: 0.45rem;
+  top: 0.4rem;
+  bottom: 0.4rem;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--urd-tl-line);
+  opacity: 0.55;
+}
+
+.urd-tl-item {
+  position: relative;
+}
+
+.urd-tidslinje-venstre .urd-tl-item::before {
+  content: '';
+  position: absolute;
+  left: -1.47rem;
+  top: 0.3rem;
+  width: 0.62rem;
+  height: 0.62rem;
+  border-radius: 999px;
+  background: var(--urd-tl-line);
+  border: 2px solid var(--urd-tl-line);
+}
+
+/* Ring-markøren: åpen sirkel på linjen i stedet for fylt prikk. */
+.urd-tidslinje-ring .urd-tl-item::before {
+  background: var(--urd-color-bg);
+}
+
+/* Veksler-varianten: linjen i midten, kortene annenhver side. */
+.urd-tidslinje-veksler::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0.4rem;
+  bottom: 0.4rem;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--urd-tl-line);
+  opacity: 0.55;
+  transform: translateX(-50%);
+}
+
+.urd-tidslinje-veksler .urd-tl-item {
+  width: 46%;
+  background: color-mix(in srgb, var(--urd-color-surface) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 12%, transparent);
+  border-radius: var(--urd-radius-sm);
+  padding: 0.55rem 0.8rem;
+}
+
+.urd-tidslinje-veksler .urd-tl-item:nth-child(even) {
+  align-self: flex-end;
+}
+
+.urd-tidslinje-veksler .urd-tl-item::before {
+  content: '';
+  position: absolute;
+  top: 0.75rem;
+  right: calc(-4.35% - 0.31rem);
+  width: 0.62rem;
+  height: 0.62rem;
+  border-radius: 999px;
+  background: var(--urd-tl-line);
+  border: 2px solid var(--urd-tl-line);
+}
+
+.urd-tidslinje-veksler .urd-tl-item:nth-child(even)::before {
+  right: auto;
+  left: calc(-4.35% - 0.31rem);
+}
+
+.urd-tl-year {
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--urd-tl-line);
+}
+
+.urd-tl-title {
+  font-weight: 650;
+  font-family: var(--urd-font-heading);
+}
+
+.urd-tl-text {
+  font-size: 0.92em;
+  opacity: 0.8;
+}
+
+/* Sitatet: semantisk figure/blockquote (0.6.7.11). Glyfen tegnes i ::before. */
+.urd-sitat {
+  --urd-sitat-glyf: var(--urd-sitat-accent, var(--urd-color-accent));
+  margin: 0;
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+}
+
+.urd-sitat blockquote {
+  margin: 0;
+  font-style: italic;
+}
+
+.urd-sitat-stor {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.urd-sitat-stor .urd-sitat-text {
+  font-size: 1.35em;
+  line-height: 1.45;
+  text-wrap: balance;
+}
+
+.urd-sitat-stor::before {
+  content: '\201C';
+  font-family: Georgia, serif;
+  font-size: 3em;
+  line-height: 0.55;
+  color: var(--urd-sitat-glyf);
+}
+
+.urd-sitat-kort {
+  background: color-mix(in srgb, var(--urd-color-surface) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 12%, transparent);
+  border-radius: var(--urd-radius-md);
+  padding: 1rem 1.2rem;
+}
+
+.urd-sitat-kort .urd-sitat-text {
+  font-size: 0.98em;
+}
+
+.urd-sitat-portrett {
+  width: 3rem;
+  height: 3rem;
+  flex: none;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid var(--urd-sitat-glyf);
+}
+
+.urd-sitat-caption {
+  margin-top: 0.55rem;
+  font-size: 0.82em;
+  display: flex;
+  gap: 0.45em;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.urd-sitat-stor .urd-sitat-caption {
+  justify-content: center;
+}
+
+.urd-sitat-name {
+  font-weight: 650;
+  font-style: normal;
+}
+
+.urd-sitat-role {
+  opacity: 0.65;
+  font-style: normal;
+}
+
+/* Statistikken: ett nøkkeltall med etikett (0.6.7.11). Tabular-nums så
+   tell-opp-animasjonen ikke hopper i bredden underveis. */
+.urd-statistikk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  text-align: center;
+}
+
+.urd-stat-tall {
+  font-family: var(--urd-font-heading);
+  font-size: 2.1em;
+  font-weight: 750;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  gap: 0.06em;
+}
+
+.urd-stat-tall > span:first-child,
+.urd-stat-tall > span:last-child {
+  color: var(--urd-color-accent);
+}
+
+.urd-stat-verdi {
+  color: var(--urd-color-text);
+}
+
+.urd-stat-label {
+  font-size: 0.74em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
 /* Formateringslinjen for tekstfelt (kun preview-modus): vises over
    blokken så lenge feltet redigeres. To faste rader (Office-stil) stables
    i en kolonne; de utvidbare underradene legger seg under. */

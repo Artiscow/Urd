@@ -12,7 +12,7 @@ const r2 = (v) => Math.round(v * 100) / 100;
 
 /** Tekstlige typer leses som tekstkolonnen i splitt-oppsettene; alt annet
  *  bevegelig (bilde, video, galleri, ikon, samling, plugin-blokker) er media. */
-const TEXT_TYPES = new Set(['text', 'button', 'faq']);
+const TEXT_TYPES = new Set(['text', 'button', 'faq', 'tidslinje', 'sitat', 'statistikk']);
 
 /** Blokkene et oppsett får flytte: aldri dekor, aldri former. */
 export function movableBlocks(blocks) {
