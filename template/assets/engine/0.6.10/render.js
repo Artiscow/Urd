@@ -169,6 +169,9 @@ export function renderSection(section, site, host, opts = {}) {
       const el = document.createElement('div');
       el.className = 'urd-block';
       el.dataset.blockId = block.id;
+      // Dekor-merket leses av stagger-animasjonen (dekor er pynt og skal
+      // ikke forsinke innholdsbølgen); mobilflyten filtrerer på feltet selv.
+      if (block.decor) el.dataset.decor = '1';
       const frame = viewport === 'mobile'
         ? (block.frames.mobile ?? block.frames.desktop)
         : block.frames.desktop;

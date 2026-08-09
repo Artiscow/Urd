@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flatpak-spawn --host bash -c 'cd /home/wibbi/.cache/urd-e2e && node rollesett.mjs 2>&1')",
+      "Bash(cp /home/wibbi/.cache/urd-e2e/skjermbilde.png /tmp/claude-1000/-home-wibbi-Documents-GitHub-Urd/bc2efb1a-8cae-452b-84ad-ea30b6bd155f/scratchpad/rollesett.png)"
+    ]
+  }
+}

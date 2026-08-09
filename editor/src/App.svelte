@@ -28,7 +28,7 @@
   import { bildegalleriLayer } from '$engine/backgrounds/bildegalleri.js';
   import { footerThumb } from '$engine/footer-thumb.js';
   import { coreAnimations } from '$engine/animations/core.js';
-  import { SECTION_THEME_LABELS, contrastRatio, relativeLuminance, buildThemeCss } from '$engine/theme.js';
+  import { SECTION_THEME_LABELS, sectionThemeVars, contrastRatio, relativeLuminance, buildThemeCss } from '$engine/theme.js';
   import { compressToWebp, svgToDataUrl, tightSvgViewBox, svgViewBox, slugify, contentHash, mediaExtension, WARN_BYTES } from '$engine/imageTools.js';
   import { FONT_STACKS } from '$engine/fonts.js';
   import { frameAtPoint } from '$engine/place.js';
@@ -1046,6 +1046,30 @@
     });
   }
 
+  /** Rollesett-prøvene i Egenskaper (V1, eiervalg 9. august 2026): sett
+   *  sidens FAKTISKE temafarger inn i rolle-oppskriftene, så hver prøve er
+   *  levende (ADR-0016). Oppskriftene refererer kun --urd-base-*-kopiene,
+   *  så en ren tekstsubstitusjon gir gyldige CSS-farger (color-mix består). */
+  function sectionThemeSample(role) {
+    const dark = siteDraft.theme.scheme === 'dark';
+    const pal = dark
+      ? { ...siteDraft.theme.tokens.color, ...(siteDraft.theme.alt?.tokens?.color ?? {}) }
+      : siteDraft.theme.tokens.color;
+    const subst = (v) => v
+      .replaceAll('var(--urd-base-bg)', pal.bg)
+      .replaceAll('var(--urd-base-surface)', pal.surface)
+      .replaceAll('var(--urd-base-text)', pal.text)
+      .replaceAll('var(--urd-base-accent)', pal.accent)
+      .replaceAll('var(--urd-base-accent-text)', pal['accent-text']);
+    const vars = sectionThemeVars(role);
+    return {
+      bg: vars['--urd-color-bg'] ? subst(vars['--urd-color-bg']) : pal.bg,
+      surface: vars['--urd-color-surface'] ? subst(vars['--urd-color-surface']) : pal.surface,
+      text: vars['--urd-color-text'] ? subst(vars['--urd-color-text']) : pal.text,
+      accent: vars['--urd-color-accent'] ? subst(vars['--urd-color-accent']) : pal.accent,
+    };
+  }
+
   function onSelectSection(msg) {
     activeSectionId = msg.sectionId;
     syncSectionMirrors(store?.data.sections.find((s) => s.id === msg.sectionId));
@@ -1410,6 +1434,9 @@
   const isEntrance = (anim) => Boolean(anim && coreAnimations[anim.type]?.entrance);
   const ENTRANCE_OPTIONS = [['', ta('common.none')],
     ...Object.entries(coreAnimations).filter(([, def]) => def.entrance).map(([id, def]) => [id, def.labelKey ? ta(def.labelKey) : def.label])];
+  // Blokk-nedtrekket: gruppeanimasjoner (stagger) er seksjonsnivå og gjorde
+  // stille ingenting på en blokk - de filtreres bort her (0.6.6.4.6).
+  const BLOCK_ENTRANCE_OPTIONS = ENTRANCE_OPTIONS.filter(([id]) => !coreAnimations[id]?.group);
   const HOVER_OPTIONS = [['', ta('common.none')],
     ...Object.entries(coreAnimations).filter(([, def]) => !def.entrance).map(([id, def]) => [id, def.labelKey ? ta(def.labelKey) : def.label])];
 
@@ -1467,10 +1494,10 @@
     bridge?.sendDemoAnim(activeSectionId);
   }
 
-  /** Streng-prop på seksjonsanimasjonen (stagger-mønster). */
-  function setSectionAnimPattern(pattern) {
+  /** Streng-prop på seksjonsanimasjonen (stagger-mønster og -effekt). */
+  function setSectionAnimStr(name, value) {
     mutateSection('edit:section-anim', (s) => {
-      if (s.animation) s.animation.props.pattern = pattern;
+      if (s.animation) s.animation.props[name] = value;
     });
     bridge?.sendDemoAnim(activeSectionId);
   }
@@ -5118,10 +5145,21 @@
                   {/if}
 
                   <hr class="gridmenu-divider" />
-                  <label title={ta('tip.props.sectionTheme')}>{ta('lbl.sectionTheme')}
-                    <Dropdown value={sectionTheme}
-                      options={[['', ta('common.standard')], ...Object.entries(SECTION_THEME_LABELS).map(([id, key]) => [id, ta(key)])]}
-                      onchange={(v) => setSectionTheme(v)} /></label>
+                  <p class="panel-strong" title={ta('tip.props.sectionTheme')}>{ta('lbl.sectionTheme')}</p>
+                  <div class="rs-grid">
+                    {#each [['', 'common.standard'], ...Object.entries(SECTION_THEME_LABELS)] as [id, key] (id)}
+                      {@const c = sectionThemeSample(id)}
+                      <button class="rs-card" class:on={sectionTheme === id}
+                        title={ta('tip.props.sectionTheme')} onclick={() => setSectionTheme(id)}>
+                        <span class="rs-sample" style="background: {c.bg}">
+                          <i class="rs-line" style="background: {c.text}"></i>
+                          <i class="rs-chip" style="background: {c.surface}"></i>
+                          <i class="rs-dot" style="background: {c.accent}"></i>
+                        </span>
+                        <span class="rs-name">{ta(key)}</span>
+                      </button>
+                    {/each}
+                  </div>
                   <label title={ta('tip.props.anchor')}>{ta('lbl.anchor')}
                     <span class="row-tools">
                       <span class="gridmenu-value">#{activeSectionId}</span>
@@ -5142,18 +5180,22 @@
                     <label>{ta('lbl.durationMs')}
                       <input type="number" min="100" max="4000" step="100" value={sectionAnim.props.duration}
                         onchange={(e) => setSectionAnimProp('duration', Number(e.target.value))} /></label>
+                    <label>{ta('lbl.delayMs')}
+                      <input type="number" min="0" max="4000" step="100" value={sectionAnim.props.delay ?? 0}
+                        onchange={(e) => setSectionAnimProp('delay', Number(e.target.value))} /></label>
                     {#if sectionAnim.type === 'stagger'}
+                      <label title={ta('tip.props.staggerEffect')}>{ta('lbl.staggerEffect')}
+                        <Dropdown value={sectionAnim.props.effect ?? 'slide-up'}
+                          options={[['fade-in', ta('anim.fadeIn')], ['slide-up', ta('anim.slideUp')], ['zoom-in', ta('anim.zoomIn')]]}
+                          onchange={(v) => setSectionAnimStr('effect', v)} /></label>
                       <label title={ta('tip.props.staggerStep')}>{ta('lbl.stepMs')}
                         <input type="number" min="0" max="1000" step="10" value={sectionAnim.props.step ?? 90}
                           onchange={(e) => setSectionAnimProp('step', Number(e.target.value))} /></label>
                       <label title={ta('tip.props.staggerPattern')}>{ta('lbl.pattern')}
                         <Dropdown value={sectionAnim.props.pattern ?? 'sequence'}
-                          options={[['sequence', ta('opt.stagger.sequence')], ['columns', ta('opt.stagger.columns')]]}
-                          onchange={(v) => setSectionAnimPattern(v)} /></label>
-                    {:else}
-                      <label>{ta('lbl.delayMs')}
-                        <input type="number" min="0" max="4000" step="100" value={sectionAnim.props.delay}
-                          onchange={(e) => setSectionAnimProp('delay', Number(e.target.value))} /></label>
+                          options={[['sequence', ta('opt.stagger.sequence')], ['columns', ta('opt.stagger.columns')],
+                            ['rows', ta('opt.stagger.rows')], ['center', ta('opt.stagger.center')]]}
+                          onchange={(v) => setSectionAnimStr('pattern', v)} /></label>
                     {/if}
                   {/if}
                   <label title={ta('tip.props.sectionHover')}>{ta('lbl.onHover')}
@@ -6414,7 +6456,7 @@
 
     <label title={ta('tip.props.blockAnim')}>{ta('lbl.animIn')}
       <Dropdown value={isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : ''}
-        options={ENTRANCE_OPTIONS}
+        options={BLOCK_ENTRANCE_OPTIONS}
         onchange={(v) => setBlockAnimation(v || null)} /></label>
     {#if isEntrance(selectedBlock.animation)}
       <label>{ta('lbl.durationMs')}
@@ -7345,6 +7387,73 @@
 
   .page-mal-del:hover {
     opacity: 1;
+  }
+
+  /* Seksjonstema-velgeren (V1, 0.6.6.4.6): levende prøver i sidens faktiske
+     temafarger - bakgrunn med tekstlinje, kort-chip og aksentprikk. */
+  .rs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+  }
+
+  .rs-card {
+    display: grid;
+    gap: 0.25rem;
+    min-width: 0;
+    padding: 0.3rem;
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 14%);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .rs-card.on {
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  .rs-sample {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 2rem;
+    padding: 0 6px;
+    border-radius: 5px;
+    border: 1px solid rgb(0 0 0 / 15%);
+  }
+
+  .rs-sample i {
+    display: block;
+    border-radius: 2px;
+  }
+
+  .rs-line {
+    flex: 1;
+    height: 3px;
+    opacity: 0.75;
+  }
+
+  .rs-chip {
+    width: 15px;
+    height: 11px;
+    border: 1px solid rgb(0 0 0 / 10%);
+  }
+
+  .rs-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+  }
+
+  .rs-name {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .token-input {

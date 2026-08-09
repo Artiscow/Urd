@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.6.6.4.6): Nye rollesett og stagger-finpussen
+
+- [ ] Seksjonstema i Egenskaper er et prøve-rutenett med åtte kort tegnet i sidens egne temafarger; prøvene endres når temaet endres; valgt kort markeres og Standard nullstiller
+- [ ] De fire nye rollesettene (Dus, Dempet, Dyp, Uthevede kort) ser riktige ut i både lys og mørk modus, med lesbar tekst og synlige kort; aksentknapper beholder originalfargen
+- [ ] Stagger: korteffekten (ton inn/gli opp/zoom) kan velges og demo-spilles i previewen ved hver endring (effekt, trinn, mønster, forsinkelse)
+- [ ] Mønstrene Kolonnevis/Radvis klynger kort som er nesten på linje; Fra midten bølger utover fra midtkortet; dekor-blokker står stille
+- [ ] Blokkens Animasjon inn-nedtrekk tilbyr ikke Stagger (kun seksjonens)
+- [ ] Publisert side: stagger spiller ved første entré, står stille ved prefers-reduced-motion
+
 ### Testrunde-batch (0.6.7.13): Nytt + Ny seksjon-galleri (G2 + F2)
 
 - [ ] Galleriet åpnes med kategorifelt (Alle, Grunnleggende, Kort og lister, Fremheving, Plugins, Mine maler) og søkefeltet fokusert; nederste seksjonsgrense åpner fortsatt oppover

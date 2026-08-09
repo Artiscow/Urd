@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { coreAnimations, staggerColumnDelays } = await engineImport('animations/core.js');
+const { coreAnimations, staggerColumnDelays, staggerCenterDelays } = await engineImport('animations/core.js');
 const { lift } = await engineImport('migrate.js');
 
 test('kjerneanimasjonene følger version+migrate-kontrakten', () => {
@@ -38,12 +38,27 @@ test('inngangsanimasjonene har varighet som standard (stagger bruker trinn i ste
 });
 
 test('staggerColumnDelays: kort i samme kolonne deler trinn, bølgen følger stigende x', () => {
-  // 4 kolonner x 2 rader (leserekkefølge): kol-indeks = posisjon-rang * step.
-  const positions = [0, 1, 2, 3, 0, 1, 2, 3];
+  // 4 kolonner x 2 rader (leserekkefølge, px-posisjoner): klynge-indeks * step.
+  const positions = [0, 200, 400, 600, 0, 200, 400, 600];
   assert.deepEqual(staggerColumnDelays(positions, 100), [0, 100, 200, 300, 0, 100, 200, 300]);
   // Uordnede/ujevne x-verdier rangeres stigende, ikke etter rekkefølge.
-  assert.deepEqual(staggerColumnDelays([30, 10, 10, 30], 50), [50, 0, 0, 50]);
+  assert.deepEqual(staggerColumnDelays([300, 10, 10, 300], 50), [50, 0, 0, 50]);
   assert.deepEqual(staggerColumnDelays([], 100), []);
+});
+
+test('staggerColumnDelays: nesten-på-linje kort klynges med toleransen', () => {
+  // 8px-bøttene fra 0.6.6.5.4 delte kort som var 9px fra hverandre; med
+  // toleransen (24px) regnes de som samme kolonne.
+  assert.deepEqual(staggerColumnDelays([0, 9, 300, 318], 100), [0, 0, 100, 100]);
+  // Over toleransen skilles de fortsatt.
+  assert.deepEqual(staggerColumnDelays([0, 40, 300], 100, 24), [0, 100, 200]);
+});
+
+test('staggerCenterDelays: midten først, symmetrisk utover, partall gir midtpar', () => {
+  assert.deepEqual(staggerCenterDelays(5, 100), [200, 100, 0, 100, 200]);
+  assert.deepEqual(staggerCenterDelays(4, 100), [100, 0, 0, 100]);
+  assert.deepEqual(staggerCenterDelays(1, 100), [0]);
+  assert.deepEqual(staggerCenterDelays(0, 100), []);
 });
 
 test('ukjent animasjonstype gir plassholder, aldri krasj', () => {

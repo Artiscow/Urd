@@ -297,17 +297,24 @@ export function placeBlock(block, root) {
 /**
  * Spiller en inngangsanimasjon på nytt (demo når editoren endrer den):
  * snapp tilbake til starttilstanden uten transition, og gli inn igjen.
+ * Stagger-verter har effektklassene på BARNA (hvert med sin forskjøvne
+ * delay), så der spilles hele gruppen på nytt (0.6.6.4.6-fiksen; før ga
+ * stagger-endringer ingen visuell tilbakemelding).
  */
 export function demoAnimation(el) {
   if (!el) return;
-  const entrance = ['urd-anim-fade-in', 'urd-anim-slide-up', 'urd-anim-zoom-in']
-    .some((c) => el.classList.contains(c));
-  if (!entrance) return;
-  el.style.transition = 'none';
-  el.classList.remove('urd-anim-in');
+  const ENTRANCE = ['urd-anim-fade-in', 'urd-anim-slide-up', 'urd-anim-zoom-in'];
+  const targets = el.classList.contains('urd-anim-stagger')
+    ? [...el.querySelectorAll(ENTRANCE.map((c) => `.${c}`).join(', '))]
+    : ENTRANCE.some((c) => el.classList.contains(c)) ? [el] : [];
+  if (!targets.length) return;
+  for (const t of targets) {
+    t.style.transition = 'none';
+    t.classList.remove('urd-anim-in');
+  }
   void el.offsetWidth; // tving reflow så starttilstanden faktisk settes
-  el.style.transition = '';
-  requestAnimationFrame(() => el.classList.add('urd-anim-in'));
+  for (const t of targets) t.style.transition = '';
+  requestAnimationFrame(() => targets.forEach((t) => t.classList.add('urd-anim-in')));
 }
 
 /** Om vedvarende grid-visning er på (styrt av editorens grid-meny). */
