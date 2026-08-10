@@ -47,6 +47,7 @@
  *                  { type: 'urd-admin-theme', colors }        (adminens fargetema {bg, surface, accent, text}: editor-menyene i previewen følger admin, ikke siden)
  *                  { type: 'urd-maler', maler }               (mal-utkastene: liste av {id, name, kind, section?, blocks?, page?}; Mine maler-fanen leser dem)
  *                  { type: 'urd-insert-template', id }        (Blokker-panelets Mine maler: sett inn blokkgruppe-mal i aktiv seksjon)
+ *                  { type: 'urd-zoom', scale }                (lerretets zoom; håndtakene mot-skalerer seg så de holder admin-størrelse)
  */
 
 /**
@@ -121,6 +122,11 @@ export function createPreviewBridge(iframe, handlers = {}) {
     },
     sendViewport(mode) {
       post({ type: 'urd-viewport', mode });
+    },
+    /** Lerretets zoom, så editeringshåndtakene kan mot-skalere seg og holde
+     *  samme skjermstørrelse som admin-panelene uansett zoomnivå. */
+    sendZoom(scale) {
+      post({ type: 'urd-zoom', scale });
     },
     /** Klikk i admin-panelene skal lukke åpne menyer i forhåndsvisningen. */
     sendCloseMenus() {

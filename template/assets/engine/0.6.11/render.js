@@ -71,10 +71,12 @@ export function renderBackgroundLayers(host, background) {
  * @param {HTMLElement} [root] Elementet tokenene settes på
  */
 export function applySiteLayout(site, root = document.documentElement) {
-  const width = site?.layout?.contentWidth ?? 1200;
-  const gutter = site?.layout?.gutter ?? 24;
+  const width = site?.layout?.contentWidth ?? 1440;
+  // Margen er PROSENT AV VINDUSBREDDEN (vw), ikke piksler: den virker bare i
+  // båndet der bredden ikke binder ennå, og der skal luften følge skjermen.
+  const gutter = site?.layout?.gutter ?? 6;
   root.style.setProperty('--urd-canvas-w', width === 'full' ? '100%' : `${width}px`);
-  root.style.setProperty('--urd-canvas-gutter-desktop', `${Number(gutter) || 0}px`);
+  root.style.setProperty('--urd-canvas-gutter-desktop', `${Number(gutter) || 0}vw`);
 }
 
 export function frameToCss(frame) {

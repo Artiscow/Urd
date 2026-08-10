@@ -6,21 +6,48 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 Layouten er lagt om, så denne batchen er bredere enn vanlig. Det viktigste er de to første punktene: ser presetene riktige ut, og virker lerretet fortsatt som før.
 
-- [ ] VISUELT, det eneste ingen test kan avgjøre: sett inn ALLE 24 seksjonspresetene på en tom side og se over hver enkelt ved 1200 px. Se særlig etter tekst som ligger for trangt, kort som er blitt smalere enn innholdet, og elementer som var ment å gå kant til kant
+- [ ] VISUELT, det eneste ingen test kan avgjøre: sett inn ALLE 24 seksjonspresetene på en tom side og se over hver enkelt ved 1440 px. Se særlig etter tekst som ligger for trangt, kort som er blitt smalere enn innholdet, og elementer som var ment å gå kant til kant
 - [ ] De fem startpakkene (Ny side-galleriet) ser riktige ut; de komponerer de samme presetene, så feil her skal være arvet ovenfra
 - [ ] De fire demosidene (Hjem, Om oss, Kaker, Kontakt) ser riktige ut i Ren visning på en bred skjerm: innholdet står i en sentrert kolonne, mens seksjonsbakgrunnene fortsatt går HELT ut til kantene
 - [ ] Lerretet: dra en blokk, endre størrelse fra nedre høyre hjørne, flytt med piltaster (også med Shift), dra et flerutvalg, og dra i seksjonens topp- og bunnkant. Alt skal treffe der pekeren er, uten forskyvning mot venstre eller høyre
 - [ ] Marquee (dra et utvalgsrektangel i tom seksjonsflate): rektangelet følger pekeren, og blokkene det dekker blir markert (ikke naboene ved siden av)
 - [ ] Rutenettet (Vis grid) og de smarte hjelpelinjene ligger på innholdsflaten, ikke forskjøvet ut i margen; midtlinja treffer midten av innholdet
 - [ ] Fest ved scrolling: en festet blokk beholder sin bredde og venstrekant i det den fester seg (skal IKKE hoppe mot venstre skjermkant). Test både vanlig festing, gruppefesting og «Til skjermen»-dokking
-- [ ] Ny knapp i verktøylinja ved zoom-kontrollen bytter mellom skjermformat og fyll. I skjermformat kan det bli en stripe over/under eller på sidene; i fyll fyller lerretet panelet som før
-- [ ] Folden: lag en seksjon med minstehøyde `85vh` og en seksjon under. I skjermformat skal seksjonen under IKKE være synlig før du scroller, og det skal stemme med hva en ekte nettleser viser ved 1248 px bredde
-- [ ] Nettsted-panelet har «Innholdsbredde» med seks trinn pluss Full skjermbredde. Bytt mellom 960, 1200 og Full og se at forhåndsvisningen følger med med én gang
+- [ ] Folden: lag en seksjon med minstehøyde `85vh` og en seksjon under. Seksjonen under skal IKKE være synlig før du scroller, og det skal stemme med hva en ekte nettleser viser ved 1488 px bredde
 - [ ] Sett `"maxWidth": "full"` på én seksjon i en sidefil (håndredigert) og se at kun den seksjonen går kant til kant
 - [ ] Tekstblokker: åpne en side med mye tekst i en smal blokk og se at rammen vokser av seg selv ved rendring, ikke bare når du skriver. Rammen skal ALDRI krympe av seg selv
 - [ ] Mobilvisning er uendret: auto-stabling ser ut som før, og en seksjon satt til manuell mobil-layout beholder plasseringene sine
 - [ ] Publiser og sjekk den deployede siden: samme utseende som i Ren visning, og `site.json` har fått `schemaVersion: 2` med `layout`-feltet
-- [ ] Bytt språk i admin til engelsk og tyrkisk og sjekk de nye tekstene: Innholdsbredde, Full skjermbredde, «(standard)»-merket, og de to hjelpetekstene på lerretsmodus-knappen
+
+### Testrunde-batch (0.7.2.2): Innholdsbredde-innstillingen og enhetsbryteren
+
+Standarden ble korrigert fra 1200 til 1440 etter ny research, sidemargen byttet fra piksler til prosent av vindusbredden, og de to punktene om lerretsmodus i 0.7.2-batchen over er erstattet av enhetsbryteren her. Letterboksen er fjernet igjen: siden skal vises slik den faktisk vises.
+
+- [ ] Nettsted-panelet: Innholdsbredde har en levende prøve med tre striper (1920, 1536, 1366). Endre bredden og se at stripene og margtallene følger med med én gang
+- [ ] Prøven forteller sannheten: ved 1440 skal 1920 og 1536 vise en tydelig stripe med marg, mens 1366 vises DEMPET (bredden binder ikke der). Ved 1600 skal 1536 bli dempet
+- [ ] Hurtigvalgene Kompakt, Standard, Bred og Full markerer riktig knapp, og Standard er valgt fra start på et nytt nettsted
+- [ ] Skyveknappen for bredde går 960 til 1920 i trinn på 20, og forsvinner når Full er valgt (den har ingen effekt der)
+- [ ] Sidemargen vises som fire trinn (Ingen, Liten, Middels, Stor) med Middels valgt fra start; Ingen gir innhold helt ut til kanten på smale skjermer
+- [ ] Under Avansert ligger det rå vw-tallet med skyveknapp 0 til 12. Hjelpeteksten forklarer hva vw betyr med konkrete tall
+- [ ] Marg-kolonnen viser tall der bredden binder og bindestrek der den ikke gjør det
+- [ ] MARGEN FØLGER SKJERMEN: gjør nettleservinduet smalere i Ren visning og se at luften i kantene krymper proporsjonalt, ikke står fast. Over cirka 1640 px skal margen derimot vokse, fordi det da er innholdsbredden som bestemmer
+- [ ] «Skjerm»-lerretet er 1920 px, altså en fast referanseskjerm. Dra i sidemarg-skyveknappen og se at zoom-prosenten IKKE endrer seg og at siden ikke blir større eller mindre; kun Bærbar og Nettbrett skal vise margendringen, siden margen ikke har effekt på 1920
+- [ ] INGEN BARER: lerretet fyller panelet i alle fire enheter og i Ren visning, uten striper på sidene. Sjekk særlig med sidemarg satt til Ingen, som var verst før
+- [ ] HERO VOKSER IKKE PÅ HOVER: før vokste seksjonen med verktøylinjens høyde når pekeren traff den, og krympet igjen når den forlot. Beveg pekeren inn og ut av toppseksjonen på Hjem og se at ingenting flytter seg
+- [ ] Under prøven står «Bredden slår inn fra N px vindusbredde». Sjekk at tallet endrer seg både når du endrer bredden og når du endrer margen (1440 med Middels skal gi 1637)
+- [ ] HÅNDTAKENE HOLDER ADMIN-STØRRELSE: zoom inn og ut med minus og pluss, og se at «+ Ny seksjon», «+ Ny blokk», seksjonsverktøylinja, blokkens resize- og roterhåndtak, tekst-verktøylinja og flerutvalgs-linja beholder samme størrelse som knappene i admin-panelene. Sjekk på 30 %, 100 % og 300 %
+- [ ] Håndtakene sitter der de skal ved alle zoomnivåer: resize-håndtaket i nedre høyre hjørne av blokken, roter-håndtaket i øvre høyre, «+ Ny blokk» øverst til høyre i seksjonen. De skal ikke drive vekk fra ankeret sitt når du zoomer
+- [ ] Rutenettet, marquee-rektangelet og de smarte hjelpelinjene skal derimot IKKE holde konstant størrelse: de måler sidens egen geometri og skal følge zoomen som resten av siden
+- [ ] INGEN SCROLLBAR I FORHÅNDSVISNINGEN i det hele tatt: verken en strek inntil sidens innhold eller en langs kanten av flaten. Scrolling skal likevel virke som før med hjul og touch, både i redigering og Ren visning
+- [ ] «Se siden» og den publiserte siden skal derimot ha helt vanlig scrollbar: skjulingen gjelder KUN forhåndsvisningen
+- [ ] INGEN PUMPING: åpne og lukk admin-panelene og dra vindusstørrelsen sakte fram og tilbake. Siden skal ikke veksle mellom to størrelser eller blafre; den skal skalere jevnt
+- [ ] Zoom manuelt til 200 eller 300 % med pluss-knappen: DA skal du kunne dra lerretet sidelengs for å nå resten. Trykk Tilpass, og panoreringen skal forsvinne igjen
+- [ ] Enhetsbryteren i verktøylinja har fire knapper: Skjerm, Bærbar, Nettbrett, Telefon. Hver skal gi riktig lerretsstørrelse, og hjelpeteksten skal vise målene
+- [ ] Skjerm-knappen følger designbredden: endrer du innholdsbredden i Nettsted-panelet, endres lerretets bredde tilsvarende
+- [ ] Nettbrett og Bærbar skal fortsatt være SKRIVEBORDSvisning i motoren: blokkene ligger absolutt plassert, Egenskaper viser plasseringsfeltene, og Fest ved scrolling kan settes. Kun Telefon skal gi mobilvisning
+- [ ] Mobil-tilsyn-merket øverst hopper fortsatt til telefonvisning når du klikker det
+- [ ] Zoom-kontrollen (Tilpass, minus, prosent, pluss) virker uendret i alle fire enheter
+- [ ] Bytt språk i admin til engelsk og tyrkisk og sjekk de nye tekstene: Innholdsbredde, hurtigvalgene, Bredde, Sidemarg, Skjerm/Marg-etikettene under prøven, og hjelpeteksten på hver av de fire enhetsknappene
 
 ### Testrunde-batch (0.7.1): Oppryddingsrunden og sticky-utvidelsene
 

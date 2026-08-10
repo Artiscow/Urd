@@ -325,6 +325,16 @@ function enablePreview(state, opts) {
         }
         window.parent?.postMessage({ type: 'urd-plugin-blocks', blocks }, location.origin);
       });
+    } else if (msg?.type === 'urd-zoom') {
+      // Lerretet skaleres med transform på iframen, så ALT inni krymper med
+      // zoomen, også editeringshåndtakene. De skal derimot holde samme
+      // skjermstørrelse som admin-panelene, så de mot-skaleres med 1/zoom.
+      // Kun en CSS-variabel: ingen rerender, og besøkende ser den aldri.
+      const z = Number(msg.scale);
+      document.documentElement.style.setProperty(
+        '--urd-chrome-scale',
+        Number.isFinite(z) && z > 0 ? String(1 / z) : '1',
+      );
     } else if (msg?.type === 'urd-viewport' && (msg.mode === 'desktop' || msg.mode === 'mobile')) {
       // Forhåndsvisningen følger editorens visningsvalg, aldri iframe-bredden:
       // et smalt admin-vindu skal ikke vippe previewen til mobil og gjemme strukturverktøyene.

@@ -67,29 +67,30 @@ const stubRoot = () => {
   return { props, style: { setProperty: (k, v) => props.set(k, v) } };
 };
 
-test('applySiteLayout skriver bredde og marg fra site.layout', () => {
+test('applySiteLayout skriver bredde i px og marg i vw', () => {
   const root = stubRoot();
-  applySiteLayout({ layout: { contentWidth: 960, gutter: 16 } }, root);
+  applySiteLayout({ layout: { contentWidth: 960, gutter: 9 } }, root);
   assert.equal(root.props.get('--urd-canvas-w'), '960px');
-  assert.equal(root.props.get('--urd-canvas-gutter-desktop'), '16px');
+  // Enheten er det som skiller en marg som følger skjermen fra en fast en.
+  assert.equal(root.props.get('--urd-canvas-gutter-desktop'), '9vw');
 });
 
 test('applySiteLayout: "full" gir ubunden flate', () => {
   const root = stubRoot();
   applySiteLayout({ layout: { contentWidth: 'full', gutter: 0 } }, root);
   assert.equal(root.props.get('--urd-canvas-w'), '100%');
-  assert.equal(root.props.get('--urd-canvas-gutter-desktop'), '0px');
+  assert.equal(root.props.get('--urd-canvas-gutter-desktop'), '0vw');
 });
 
 test('applySiteLayout uten layout-felt faller til standarden', () => {
   const root = stubRoot();
   applySiteLayout({}, root);
-  assert.equal(root.props.get('--urd-canvas-w'), '1200px');
-  assert.equal(root.props.get('--urd-canvas-gutter-desktop'), '24px');
+  assert.equal(root.props.get('--urd-canvas-w'), '1440px');
+  assert.equal(root.props.get('--urd-canvas-gutter-desktop'), '6vw');
 });
 
 test('applySiteLayout tåler manglende site uten å kaste', () => {
   const root = stubRoot();
   applySiteLayout(undefined, root);
-  assert.equal(root.props.get('--urd-canvas-w'), '1200px');
+  assert.equal(root.props.get('--urd-canvas-w'), '1440px');
 });

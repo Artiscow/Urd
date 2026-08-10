@@ -52,7 +52,7 @@ export function lift(data, def) {
 export const PAGE_SCHEMA_VERSION = 1;
 
 /** Gjeldende versjon av site.json-formatet. */
-export const SITE_SCHEMA_VERSION = 2;
+export const SITE_SCHEMA_VERSION = 3;
 
 /**
  * Migreringer på filnivå. Hver funksjon løfter nøyaktig én versjon og
@@ -69,7 +69,12 @@ const siteMigrations = {
   // stedet for å følge vindusbredden. Standarden skrives inn eksplisitt i
   // stedet for å utledes ved lesing, så motoren og editoren aldri kan komme
   // til hver sin verdi. Pre-v1 er utseende-endringen akseptert (ADR-0005).
-  1: (site) => ({ ...site, layout: site.layout ?? { contentWidth: 1200, gutter: 24 } }),
+  1: (site) => ({ ...site, layout: site.layout ?? { contentWidth: 1440, gutter: 6 } }),
+  // 2 -> 3: sidemargen byttet fra piksler til PROSENT AV VINDUSBREDDEN.
+  // Den gamle verdien kan ikke regnes om meningsfullt (24 px er ikke en fast
+  // andel av noe), så alle settes til standarden. Pre-v1 er den lille
+  // utseende-endringen akseptert (ADR-0005).
+  2: (site) => ({ ...site, layout: { ...(site.layout ?? { contentWidth: 1440 }), gutter: 6 } }),
 };
 
 /**

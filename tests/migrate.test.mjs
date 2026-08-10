@@ -79,26 +79,36 @@ test('migreringer muterer aldri original-props', () => {
   assert.deepEqual(original, { text: '<p>Hei</p>' });
 });
 
-// Site-migreringen 1 -> 2: breddegrepet (ADR-0018). Standarden skrives inn
+// Site-migreringene for breddegrepet (ADR-0018). Standarden skrives inn
 // eksplisitt i stedet for å utledes ved lesing, så motoren og editoren
 // aldri kan komme til hver sin verdi.
 
 test('site v1 uten layout løftes med designbredden skrevet inn', () => {
   const lifted = liftSiteFile({ schemaVersion: 1, site: { title: 'Test', lang: 'no' } });
   assert.equal(lifted.schemaVersion, SITE_SCHEMA_VERSION);
-  assert.deepEqual(lifted.layout, { contentWidth: 1200, gutter: 24 });
+  assert.deepEqual(lifted.layout, { contentWidth: 1440, gutter: 6 });
 });
 
-test('site v1 med eget layout-felt beholder verdiene sine', () => {
-  const eget = { contentWidth: 'full', gutter: 0 };
-  const lifted = liftSiteFile({ schemaVersion: 1, layout: eget });
+test('site v1 med eget layout-felt beholder BREDDEN gjennom begge stegene', () => {
+  const lifted = liftSiteFile({ schemaVersion: 1, layout: { contentWidth: 'full', gutter: 0 } });
   assert.equal(lifted.schemaVersion, SITE_SCHEMA_VERSION);
-  assert.deepEqual(lifted.layout, eget);
+  assert.equal(lifted.layout.contentWidth, 'full');
+});
+
+// 2 -> 3: margen byttet fra piksler til prosent av vindusbredden. En gammel
+// px-verdi ville blitt lest som en absurd stor prosent (24 px ville blitt
+// 24 % av skjermen), så den settes til standarden i stedet for å regnes om.
+
+test('site v2 med px-marg får standardmargen i vw', () => {
+  const lifted = liftSiteFile({ schemaVersion: 2, layout: { contentWidth: 1200, gutter: 24 } });
+  assert.equal(lifted.schemaVersion, SITE_SCHEMA_VERSION);
+  assert.equal(lifted.layout.gutter, 6);
+  assert.equal(lifted.layout.contentWidth, 1200, 'bredden skal overleve margbyttet');
 });
 
 test('site på gjeldende versjon røres ikke av løftingen', () => {
-  const site = { schemaVersion: SITE_SCHEMA_VERSION, layout: { contentWidth: 980, gutter: 12 } };
-  assert.deepEqual(liftSiteFile(site).layout, { contentWidth: 980, gutter: 12 });
+  const site = { schemaVersion: SITE_SCHEMA_VERSION, layout: { contentWidth: 980, gutter: 9 } };
+  assert.deepEqual(liftSiteFile(site).layout, { contentWidth: 980, gutter: 9 });
 });
 
 test('site-løftingen muterer aldri originalen', () => {

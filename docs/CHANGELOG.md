@@ -25,6 +25,20 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.2.2 - Breddegrepet ferdigstilt: 1440 som standard, relativ sidemarg og fire ekte enheter i lerretet - 10. august 2026
+
+Oppfølging etter testing av 0.7.2. Beslutningene og avgrensningene er oppdatert i [ADR-0018](adr/0018-bundet-innholdsbredde.md).
+
+- Standardbredden var satt til 1200 på feil grunnlag: begrunnelsen brukte Framers 1200, som er et BREKKPUNKT og ikke en innholdsbredde, og designbransjens 1440, som er ARTBOARDET og ikke containeren inni. Ny gjennomgang mot Wix Studio (1600 standard), Squarespace (anbefalt 1440) og Webflow (940 arv, i dag 1140 til 1440) ga 1440, som også fjerner de 720 tomme pikslene 1200 lot stå på en 1920-skjerm.
+- Innholdsbredden var kun et nedtrekk med seks trinn. Den er nå en egen innstilling med levende prøve mot de tre vanligste skjermbreddene, fire hurtigvalg, fri justering 960 til 1920, og en linje som sier fra hvilken vindusbredde bredden faktisk slår inn.
+- Sidemargen var faste piksler, som er greit på telefon men lar innholdet nesten klistre seg til kanten på nettbrett. Den er nå prosent av vindusbredden (schemaVersion 3), vist som skalaen Ingen/Liten/Middels/Stor med det rå vw-tallet under Avansert. Den gamle px-verdien regnes ikke om, den settes til standarden, siden 24 px ellers ville blitt lest som 24 % av skjermen.
+- Med relativ marg er bindingsgrensen ikke lenger `bredde + 2 × marg` men `bredde / (1 − 2 × marg/100)`, altså 1637 og ikke 1488 med standardverdiene. Ren funksjon `bindingWidth` med test, og tallet vises i panelet.
+- Lerretets visningsmodus var en forvirrende bryter mellom skjermformat og fyll. Den er erstattet av fire ekte enhetsstørrelser etter Squarespace-modellen (Skjerm, Bærbar, Nettbrett, Telefon), der bare Telefon gir mobilvisning i motoren. Skrivebordslerretet er en fast referanseskjerm på 1920, ikke bindingsbredden, som ellers ville latt sidemargen endre zoomen og dermed størrelsen på hele siden.
+- Hero-seksjonen vokste hver gang pekeren traff den og krympet igjen når den forlot: seksjonens verktøylinje er sticky og dermed et flyt-element, og var seksjonens ENESTE til kanvasen kom i tillegg. Kanvasen er nå absolutt plassert på skrivebord, og i flyten kun på mobil der `.urd-flow` må drive høyden.
+- Editeringshåndtakene krympet med zoomen, så de var vanskelige å treffe på 59 %. Ny melding `urd-zoom` gir motoren skalaen, og håndtakene mot-skalerer seg til admin-størrelse. Rutenettet, marquee-rektangelet og hjelpelinjene er bevisst holdt utenfor: de måler sidens egen geometri.
+- Forhåndsvisningsflaten målte seg med `getBoundingClientRect`, som er border-boksen og inkluderer scrollbarene. Med `overflow: auto` ble det en selvforsterkende løkke der scrollbaren spiste plass, flaten ble målt for bredt og scrollbaren ble stående. Flaten måler nå innholdsboksen og scroller ikke i det hele tatt; panorering slås kun på når man har zoomet manuelt forbi den.
+- Forhåndsvisningen viste sidens egen scrollbar som en strek inntil innholdet. Regelen som skjuler den fantes fra før, men gjaldt kun mobilvisning; den er utvidet til hele forhåndsvisningen. Besøkende og «Se siden» beholder vanlig scrollbar.
+
 ### 0.7.2 - Breddegrepet: innholdet bindes av en designbredde - 10. august 2026
 
 Milepæl 0.7.2, første arkitekturavklaring i v0.7. Beslutningene og avgrensningene står i [ADR-0018](adr/0018-bundet-innholdsbredde.md).

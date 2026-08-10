@@ -85,10 +85,24 @@ body:not(.urd-mobile) .urd-section {
 }
 
 .urd-canvas {
-  position: relative;
-  min-height: inherit;
+  /* ABSOLUTT, ikke i flyten: seksjonens verktøylinje i editoren er sticky og
+     dermed et flyt-element, og var seksjonens ENESTE. Lå kanvasen i flyten,
+     ville seksjonen vokst med verktøylinjens høyde hver gang pekeren traff
+     den, og krympet igjen når den forlot. Absolutt plassering gjenoppretter
+     invarianten. Trygt for festede blokker: kun transform, filter og
+     containment lager containing block for fixed, ikke position. */
+  position: absolute;
+  inset: 0;
   width: min(100% - 2 * var(--urd-canvas-gutter), var(--urd-canvas-w, 100%));
   margin-inline: auto;
+}
+
+/* Mobil auto-layout er ekte dokumentflyt, og der MÅ kanvasen ligge i flyten:
+   seksjonshøyden er `auto` og drives av .urd-flow inni. */
+body.urd-mobile .urd-canvas {
+  position: relative;
+  inset: auto;
+  min-height: inherit;
 }
 
 /* Roterte/overhengende blokker skal ikke gi sidescrolling */
@@ -505,6 +519,10 @@ html {
    blokken så lenge feltet redigeres. To faste rader (Office-stil) stables
    i en kolonne; de utvidbare underradene legger seg under. */
 .urd-text-toolbar {
+  /* Mot-skalering (urd-zoom): ankeret settes av JS i viewport-
+     koordinater, så origin må være det hjørnet. */
+  transform: scale(var(--urd-chrome-scale, 1));
+  transform-origin: top left;
   position: fixed;
   z-index: 100002;
   display: none;
@@ -1918,6 +1936,10 @@ body:has(dialog:modal) {
    delta i flyten (en flyt-marg kollapset tidligere ut av seksjonen og
    ga et bakgrunnsløst bånd øverst i alle seksjoner). */
 .urd-preview .urd-add-block {
+  /* Mot-skalering: håndtaket skal ha samme skjermstørrelse som
+     admin-panelene uansett zoom (urd-zoom). */
+  transform: scale(var(--urd-chrome-scale, 1));
+  transform-origin: top right;
   position: absolute;
   top: 46px;
   right: 10px;
@@ -2899,6 +2921,10 @@ body.urd-marqueeing {
 }
 
 .urd-multi-toolbar {
+  /* Mot-skalering (urd-zoom): ankeret settes av JS i viewport-
+     koordinater, så origin må være det hjørnet. */
+  transform: scale(var(--urd-chrome-scale, 1));
+  transform-origin: top left;
   position: fixed;
   z-index: 100002;
   display: none;
@@ -3520,13 +3546,17 @@ body.urd-marqueeing {
   opacity: 1;
 }
 
-/* Editorens mobilvisning: skjul viewport-scrollbaren i forhåndsvisningen
-   (scrolling virker fortsatt med hjul/touch) */
-html:has(body.urd-preview.urd-mobile) {
+/* Forhåndsvisningen: skjul viewport-scrollbaren (scrolling virker fortsatt
+   med hjul og touch). Lerretet er en nedskalert iframe, ikke et ekte vindu,
+   så høyden er editorens og ikke besøkendes; scrollbaren måler dermed noe
+   som ikke finnes hos en besøkende, og legger seg som en strek inntil
+   innholdet. Besøkende og «Se siden» beholder nettleserens vanlige
+   scrollbar. Gjaldt kun mobilvisning til 10. august 2026. */
+html:has(body.urd-preview) {
   scrollbar-width: none;
 }
 
-html:has(body.urd-preview.urd-mobile)::-webkit-scrollbar {
+html:has(body.urd-preview)::-webkit-scrollbar {
   display: none;
 }
 
@@ -3569,6 +3599,10 @@ body.urd-mobile .urd-section-resize-top {
 }
 
 .urd-preview .urd-edit-toolbar {
+  /* Mot-skalering: håndtaket skal ha samme skjermstørrelse som
+     admin-panelene uansett zoom (urd-zoom). */
+  transform: scale(var(--urd-chrome-scale, 1));
+  transform-origin: bottom left;
   position: absolute;
   bottom: 100%;
   left: 0;
@@ -3610,6 +3644,10 @@ body.urd-mobile .urd-section-resize-top {
 }
 
 .urd-preview .urd-edit-resize {
+  /* Mot-skalering: håndtaket skal ha samme skjermstørrelse som
+     admin-panelene uansett zoom (urd-zoom). */
+  transform: scale(var(--urd-chrome-scale, 1));
+  transform-origin: bottom right;
   position: absolute;
   right: -6px;
   bottom: -6px;
@@ -3628,6 +3666,10 @@ body.urd-mobile .urd-section-resize-top {
 
 /* Rotasjonshåndtak: liten sirkel i blokkens høyre overkant */
 .urd-preview .urd-edit-rotate {
+  /* Mot-skalering: håndtaket skal ha samme skjermstørrelse som
+     admin-panelene uansett zoom (urd-zoom). */
+  transform: scale(var(--urd-chrome-scale, 1));
+  transform-origin: top right;
   position: absolute;
   top: -8px;
   right: -8px;
@@ -3755,7 +3797,9 @@ body.urd-mobile .urd-section-resize-top {
   align-items: center;
 }
 .urd-preview #urd-root > .urd-add-section:only-child > button {
-  transform: none;
+  /* Tom side: baren fyller flaten, så chipen skal ikke sentreres på en
+     nullhøyde-linje. Mot-skaleringen beholdes. */
+  transform: scale(var(--urd-chrome-scale, 1));
 }
 
 .urd-preview .urd-add-section::before {
@@ -3773,7 +3817,9 @@ body.urd-mobile .urd-section-resize-top {
 }
 
 .urd-preview .urd-add-section button {
-  transform: translateY(-50%);
+  /* translateY sentrerer chipen på den 0 px høye baren; scale er
+     mot-skaleringen som holder admin-størrelse uansett zoom (urd-zoom). */
+  transform: translateY(-50%) scale(var(--urd-chrome-scale, 1));
   border: 1px dashed color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 60%, transparent);
   border-radius: 999px;
   background: var(--urd-color-bg);
@@ -4279,6 +4325,10 @@ body.urd-mobile .urd-section-resize-top {
    kun mens pekeren er i seksjonen; ligger alltid øverst (over løftede
    blokker) */
 .urd-preview .urd-section-toolbar {
+  /* Mot-skalering: håndtaket skal ha samme skjermstørrelse som
+     admin-panelene uansett zoom (urd-zoom). */
+  transform: scale(var(--urd-chrome-scale, 1));
+  transform-origin: top right;
   /* Klistret i seksjonen (ikke absolute): i seksjoner høyere enn viewporten følger
      verktøylinjen med, så «+ kort»-knappen alltid kan nås ved gjentatte tillegg.
      Verktøylinjen er seksjonens eneste flyt-element, så den starter alltid øverst. */

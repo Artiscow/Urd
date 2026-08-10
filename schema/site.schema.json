@@ -39,7 +39,7 @@
             { "const": "full" }
           ]
         },
-        "gutter": { "type": "integer", "minimum": 0, "description": "Minste sidemarg (px) mellom innholdsflaten og vinduskanten. Gjelder kun over mobilbrekkpunktet." }
+        "gutter": { "type": "integer", "minimum": 0, "maximum": 20, "description": "Minste sidemarg mellom innholdsflaten og vinduskanten, i PROSENT AV VINDUSBREDDEN (vw). Var px til schemaVersion 2. Gjelder kun over mobilbrekkpunktet, og har bare effekt der contentWidth ikke binder ennå." }
       }
     },
     "grid": { "$ref": "#/$defs/grid" },

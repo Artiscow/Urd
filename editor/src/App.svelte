@@ -7,6 +7,11 @@
   import GlyphPicker from './lib/GlyphPicker.svelte';
   import { createPreviewBridge } from './lib/previewBridge.js';
   import { previewScale } from './lib/preview-scale.js';
+  import {
+    WIDTH_MIN, WIDTH_MAX, WIDTH_STEP, GUTTER_MIN, GUTTER_MAX, GUTTER_STEP,
+    WIDTH_PRESETS, GUTTER_PRESETS, REF_SCREENS,
+    clampWidth, clampGutter, contentBand, presetOf, bindingWidth,
+  } from './lib/content-width.js';
   import Dropdown from './lib/Dropdown.svelte';
   import IconEditor from './lib/IconEditor.svelte';
   // Editoren deler migreringskoden med motoren (samme fil, bundles inn).
@@ -47,7 +52,6 @@
 
   /** Tegnede SVG-ikoner (strek-stil, currentColor) - aldri emoji. */
   const ICONS = {
-    desktop: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></svg>',
     copy: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
     phone: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="8" y="3" width="8" height="18" rx="2"/><path d="M11 17.5h2"/></svg>',
     pencil: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"/></svg>',
@@ -64,9 +68,11 @@
     kebab: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>',
     bookmark: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/></svg>',
     fit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/></svg>',
-    // Lerretsmodus: skjermramme med foldlinje (enhet) mot utfylt flate (fyll)
-    canvasDevice: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M2 14h20" stroke-dasharray="3 2"/></svg>',
-    canvasFill: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>',
+    // Mål-enhetene i lerretsbryteren: skjerm, bærbar, nettbrett, telefon
+    device_desktop: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="13" rx="2"/><path d="M8 21h8M12 16v5"/></svg>',
+    device_laptop: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></svg>',
+    device_tablet: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M11 18.5h2"/></svg>',
+    device_mobile: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18.5h2"/></svg>',
   };
 
   /**
@@ -161,21 +167,28 @@
   /** Ren forhåndsvisning: skjuler alle editeringshåndtak i iframen */
   let chromeVisible = $state(true);
 
-  /** Editorens visning: 'desktop' eller 'mobile' (iframe smales til
-   *  mobilbredde; motorens matchMedia bytter modus selv). */
-  let viewMode = $state('desktop');
+  /** Lerretets mål-enhet (ADR-0018, Squarespace-modellen): hver knapp er en
+   *  EKTE skjermstørrelse, ikke en visningsmodus. Da finnes det ingen «feil»
+   *  modus å stå i, og folden stemmer i alle fire. Skrivebordsbredden er
+   *  ikke en konstant: den følger designbredden, siden enhver bredde over
+   *  den gir identisk render.
+   *  `viewport` er det MOTOREN får vite (den kjenner bare desktop/mobil),
+   *  så nettbrett og bærbar er skrivebordsvisning for motoren. */
+  const DEVICES = [
+    { id: 'desktop', width: null, viewport: 'desktop' },
+    { id: 'laptop', width: 1280, viewport: 'desktop' },
+    { id: 'tablet', width: 810, viewport: 'desktop' },
+    { id: 'mobile', width: 390, viewport: 'mobile' },
+  ];
+  let deviceId = $state('desktop');
+  let device = $derived(DEVICES.find((d) => d.id === deviceId) ?? DEVICES[0]);
+  /** Motorens viewport. Alt som spør «er vi på mobil» leser denne. */
+  let viewMode = $derived(device.viewport);
 
   // Skalert lerret: iframen rendrer siden i full vindus-viewport (samme som en
   // besøkende med fullt vindu) og skaleres ned for å passe .frame-wrap, i stedet
   // for å reflowe inn i restplassen etter chromen. Da er render-en identisk med
   // publisert; kun visningsstørrelsen (zoom) endres. Se lib/preview-scale.js.
-  // Mål-viewporten (ADR-0018). Mobilmålet er iPhone-formatet, som også er
-  // Framers standard mobil-brekkpunkt. Desktop-bredden kommer fra
-  // site.layout: over designbredden gir enhver bredde identisk render, så
-  // vi pinner den minste ærlige i stedet for admin-vinduets tilfeldige mål.
-  const MOBILE_W = 390;
-  const MOBILE_H = 844;
-  const DESKTOP_H = 800;
   let frameWrapEl = $state(null);
   let frameW = $state(0);            // .frame-wrap sin målte innerflate (px)
   let frameH = $state(0);
@@ -183,20 +196,26 @@
   /** Zoom for redigerings-lerretet: 'fit' tilpasser vinduet, 'full' = ekte 1:1. */
   let zoomMode = $state('fit'); // 'fit' | 'manual' (steppes med +/-)
   let manualZoom = $state(1);
-  /** Lerretsmodus: 'device' pinner høyden så folden stemmer, 'fill' fyller
-   *  panelet som før v0.7 (mer arbeidsflate, men vh løses mot panelet). */
-  let canvasMode = $state('device'); // 'device' | 'fill'
-  /** Designbredden fra site-utkastet; 'full' betyr ubunden (før v0.7). */
-  let contentWidth = $derived(siteDraft?.layout?.contentWidth ?? 1200);
-  let contentGutter = $derived(siteDraft?.layout?.gutter ?? 24);
-  let desktopW = $derived(contentWidth === 'full' ? winW : contentWidth + 2 * contentGutter);
-  let targetW = $derived(viewMode === 'mobile' ? MOBILE_W : desktopW);
-  // Høyden pinnes kun i enhetsmodus. I fyll-modus er targetH 0, og skalaen
-  // blir rent bredde-drevet som før (iframen gjøres tilsvarende høyere).
-  let targetH = $derived(canvasMode === 'fill' ? 0 : (viewMode === 'mobile' ? MOBILE_H : DESKTOP_H));
+  /** Skrivebordslerretet er en FAST, representativ skjerm: 1920x1080 er den
+   *  vanligste skrivebordsoppløsningen.
+   *
+   *  Det var tidligere bindingsbredden, altså den smaleste skjermen der
+   *  innholdet når designbredden. Det var galt av to grunner: lerretsbredden
+   *  ble da avhengig av sidemargen, så å dra i margen endret zoomen og fikk
+   *  alt til å se større eller mindre ut, og et smalt lerret ga letterboks
+   *  rundt siden. En fast referanseskjerm gjør begge deler borte, og margen
+   *  blir synlig der den faktisk virker: på Bærbar og Nettbrett. */
+  const DESKTOP_REF = 1920;
+  let desktopW = $derived(layoutWidth === 'full' ? winW : DESKTOP_REF);
+  /** Fra hvilken vindusbredde innholdet faktisk når designbredden. Vises
+   *  under prøven, siden den ikke er «bredde pluss marger» med relativ marg. */
+  let bindsFrom = $derived(bindingWidth(layoutWidth, layoutGutter));
+  let targetW = $derived(device.width ?? desktopW);
+  // Skalaen er BREDDE-drevet. Se kommentaren ved iframeH: høyden pinnes ikke,
+  // fordi det ville gitt barer rundt lerretet.
   let scale = $derived(zoomMode === 'manual'
     ? manualZoom
-    : previewScale(frameW, targetW, 'fit', frameH, targetH));
+    : previewScale(frameW, targetW, 'fit'));
 
   /** Zoom-stepperne: 10 %-poengs trinn fra gjeldende visning, klemt 10-400 %. */
   function stepZoom(dir) {
@@ -204,12 +223,27 @@
     manualZoom = next / 100;
     zoomMode = 'manual';
   }
-  // Enhetsmodus: iframen ER mål-viewporten, så 100vh betyr det samme her som
-  // hos en besøkende. Fyll-modus: iframen strekkes så den SKALERTE høyden
-  // fyller .frame-wrap, altså ingen barer, men vh følger panelet.
-  let iframeH = $derived(targetH > 0 ? targetH : (scale > 0 ? frameH / scale : frameH));
+  // Lerretet FYLLER panelet: iframen gjøres tilsvarende høyere, så den
+  // skalerte høyden dekker .frame-wrap og det aldri blir svarte striper
+  // over og under siden. Bredden er fortsatt pinnet til enheten, og det er
+  // bredden som avgjør om layouten er riktig.
+  //
+  // Å pinne HØYDEN også ville gitt en helt nøyaktig fold, men prisen er
+  // synlige barer rundt lerretet. Den byttehandelen er avvist (testfunn
+  // 10. august 2026): en unøyaktig fold er en usynlig kostnad, barer er en
+  // synlig.
+  let iframeH = $derived(scale > 0 ? frameH / scale : frameH);
   let stageW = $derived(targetW * scale);
-  let stageH = $derived(targetH > 0 ? targetH * scale : frameH);
+  let stageH = $derived(frameH);
+  /** Kan lerretet panoreres? Kun når man har zoomet MANUELT forbi flaten.
+   *
+   *  I tilpass-modus skal flaten aldri kunne scrolles: siden har allerede sin
+   *  egen scrollbar inne i iframen, og en scrollbar rundt lerretet i tillegg
+   *  er både en scrollbar for mye og en selvforsterkende løkke (scrollbaren
+   *  spiser plass, flaten måles smalere, lerretet skaleres om, scrollbaren
+   *  kommer og går, og siden pumper). Toleransen på 1 px hindrer at den
+   *  vipper frem og tilbake akkurat på grensen. */
+  let canPan = $derived(stageW > frameW + 1 || stageH > frameH + 1);
 
   // Klikk hvor som helst i admin (paneler, topplinje) lukker åpne menyer i forhåndsvisningen;
   // iframens egne utenfor-klikk-lyttere ser aldri disse klikkene.
@@ -226,6 +260,13 @@
     bridge?.sendViewport(mode);
   });
 
+  // Zoomen meldes inn så editeringshåndtakene kan mot-skalere seg og holde
+  // samme størrelse som admin-panelene (se urd-zoom i previewBridge).
+  $effect(() => {
+    const z = scale;
+    bridge?.sendZoom(z);
+  });
+
   // Målviewporten følger det levende vinduets indre mål.
   $effect(() => {
     const onResize = () => { winW = window.innerWidth; };
@@ -238,9 +279,15 @@
   $effect(() => {
     const el = frameWrapEl;
     if (!el || typeof ResizeObserver === 'undefined') return;
+    // clientWidth/Height, IKKE getBoundingClientRect: rekten er border-boksen
+    // og inkluderer scrollbarene. Med overflow: auto ble det en selvforsterkende
+    // løkke: en scrollbar fikk oss til å måle for bredt, lerretsboksen ble satt
+    // til den for store verdien, innholdet overflyt med nøyaktig scrollbarens
+    // tykkelse, og scrollbaren ble derfor stående (testfunn 10. august 2026).
+    // Innholdsboksen gir dessuten heltall, så flyttall-avrunding ikke kan gi
+    // et lerret en brøkdels piksel for bredt.
     const measure = () => {
-      const r = el.getBoundingClientRect();
-      frameW = r.width; frameH = r.height;
+      frameW = el.clientWidth; frameH = el.clientHeight;
     };
     measure(); // umiddelbart, så første ramme ikke blinker på scale 1
     const ro = new ResizeObserver(measure);
@@ -2385,28 +2432,32 @@
   }
 
   /** Innholdsbredden (site.layout.contentWidth, ADR-0018): designbredden
-   *  blokkenes prosenter måles mot. Faste trinn i stedet for fritt tall:
-   *  bredden er en designkonstant, ikke en finjustering, og hvert trinn
-   *  svarer til en etablert layoutbredde. En håndredigert verdi utenfor
-   *  lista bevares som eget alternativ øverst. */
-  const CONTENT_WIDTHS = [1600, 1440, 1280, 1200, 1080, 960];
+   *  blokkenes prosenter måles mot. Modellen (grenser, hurtigvalg,
+   *  referanseskjermer, båndberegning) bor som rene funksjoner i
+   *  lib/content-width.js, så prøven regner på det samme som motoren gjør. */
+  let layoutWidth = $derived(siteDraft?.layout?.contentWidth ?? 1440);
+  /** Sidemargen i prosent av vindusbredden (vw), ikke px. */
+  let layoutGutter = $derived(siteDraft?.layout?.gutter ?? 6);
+  let widthPreset = $derived(presetOf(layoutWidth));
+  let gutterPreset = $derived(GUTTER_PRESETS.find((p) => p.gutter === layoutGutter)?.id ?? null);
+  /** En håndredigert marg utenfor skalaen ville vært usynlig i normalvisningen,
+   *  så Avansert står åpen fra start når verdien ikke svarer til et trinn. */
+  let gutterAdvanced = $state(false);
+  /** Skyveknappen trenger et tall også når bredden står på «full». */
+  let widthSlider = $derived(layoutWidth === 'full' ? WIDTH_MAX : clampWidth(layoutWidth));
+  /** Prøven: én stripe per referanseskjerm, med andel og om bredden binder der. */
+  let widthBands = $derived(REF_SCREENS.map((screen) => ({
+    screen,
+    ...contentBand(layoutWidth, layoutGutter, screen),
+  })));
 
-  function contentWidthOptions() {
-    const cur = siteDraft?.layout?.contentWidth ?? 1200;
-    const known = cur === 'full' || CONTENT_WIDTHS.includes(cur);
-    return [
-      ...(known ? [] : [[String(cur), `${cur} px`]]),
-      ...CONTENT_WIDTHS.map((w) => [String(w), w === 1200 ? ta('lbl.contentWidthStd', { n: w }) : `${w} px`]),
-      ['full', ta('lbl.contentWidthFull')],
-    ];
-  }
-
-  function setContentWidth(v) {
-    const next = v === 'full' ? 'full' : Number(v);
-    siteMutate('edit:site-width', () => {
-      siteDraft.layout = { ...(siteDraft.layout ?? { gutter: 24 }), contentWidth: next };
+  function setLayout(patch, key) {
+    siteMutate(key, () => {
+      siteDraft.layout = { contentWidth: layoutWidth, gutter: layoutGutter, ...patch };
     });
   }
+  const setContentWidth = (w) => setLayout({ contentWidth: w === 'full' ? 'full' : clampWidth(w) }, 'edit:site-width');
+  const setContentGutter = (g) => setLayout({ gutter: clampGutter(g) }, 'edit:site-gutter');
 
   /** Besøkende-språket (site.lang, ADR-0012): den historiske verdien 'no'
    *  vises som bokmål; en håndredigert verdi utenfor lista bevares som
@@ -4562,16 +4613,14 @@
           onclick={() => togglePanel('pages')}>{pageEntry()?.title ?? ''}</button>
 
         <span class="viewswitch">
-          <button class="ghost" class:active={viewMode === 'desktop'}
-            onclick={() => (viewMode = 'desktop')} title={ta('tip.desktopView')}>{@html ICONS.desktop}</button>
-          <button class="ghost" class:active={viewMode === 'mobile'}
-            onclick={() => (viewMode = 'mobile')} title={ta('tip.mobileView')}>{@html ICONS.phone}</button>
+          {#each DEVICES as d (d.id)}
+            <button class="ghost" class:active={deviceId === d.id}
+              onclick={() => (deviceId = d.id)}
+              title={ta(`tip.view.${d.id}`, { w: d.width ?? desktopW, c: contentBand(layoutWidth, layoutGutter, d.width ?? desktopW).width })}
+              >{@html ICONS[`device_${d.id}`]}</button>
+          {/each}
         </span>
         <span class="zoomswitch">
-          <button class="ghost" class:active={canvasMode === 'device'}
-            onclick={() => (canvasMode = canvasMode === 'device' ? 'fill' : 'device')}
-            title={ta(canvasMode === 'device' ? 'tip.canvasDevice' : 'tip.canvasFill')}
-            >{@html canvasMode === 'device' ? ICONS.canvasDevice : ICONS.canvasFill}</button>
           <button class="ghost" class:active={zoomMode === 'fit'}
             onclick={() => (zoomMode = 'fit')} title={ta('tip.zoomFit')}>{@html ICONS.fit}</button>
           <button class="ghost" onclick={() => stepZoom(-1)} title={ta('tip.zoomOut')}>{@html ICONS.minus}</button>
@@ -4583,7 +4632,7 @@
       {/if}
 
       {#if attentionCount > 0}
-        <button class="badge attention" onclick={() => (viewMode = 'mobile')}
+        <button class="badge attention" onclick={() => (deviceId = 'mobile')}
           title={ta('tip.attention')}>
           {@html ICONS.phone} {ta(attentionCount === 1 ? 'ui.attentionOne' : 'ui.attentionMany', { n: attentionCount })}
         </button>
@@ -4963,10 +5012,63 @@
                 <label title={ta('site.langTitle')}>{ta('site.langLabel')}
                   <Dropdown value={siteLangValue()} options={siteLangOptions()}
                     onchange={(v) => setSiteLang(v)} /></label>
-                <label title={ta('tip.site.contentWidth')}>{ta('lbl.contentWidth')}
-                  <Dropdown value={String(siteDraft?.layout?.contentWidth ?? 1200)}
-                    options={contentWidthOptions()}
-                    onchange={(v) => setContentWidth(v)} /></label>
+                <hr class="gridmenu-divider" />
+                <p class="panel-strong" title={ta('tip.site.contentWidth')}>{ta('lbl.contentWidth')}</p>
+                <!-- Levende prøve: én stripe per vanlig skjermbredde, så det er
+                     synlig HVOR bredden binder og hvor flaten går fluid. -->
+                <div class="sample cw-sample">
+                  {#each widthBands as band (band.screen)}
+                    <div class="cw-row">
+                      <span class="mini-label cw-screen">{band.screen}</span>
+                      <span class="cw-bar" class:fluid={!band.bound}>
+                        <span class="cw-fill" style="width:{band.pct}%"></span>
+                      </span>
+                      <span class="gridmenu-value cw-margin">{band.bound ? `${band.margin}` : '-'}</span>
+                    </div>
+                  {/each}
+                  <div class="cw-legend">
+                    <span class="mini-label">{ta('lbl.screenPx')}</span>
+                    <span class="mini-label">{ta('lbl.marginPx')}</span>
+                  </div>
+                  {#if layoutWidth !== 'full'}
+                    <div class="mini-label cw-binds">{ta('lbl.bindsFrom', { n: bindsFrom })}</div>
+                  {/if}
+                </div>
+                <div class="seg cw-seg">
+                  {#each WIDTH_PRESETS as p (p.id)}
+                    <button class:on={widthPreset === p.id}
+                      onclick={() => setContentWidth(p.width)}>{ta(`lbl.width.${p.id}`)}</button>
+                  {/each}
+                </div>
+                {#if layoutWidth !== 'full'}
+                  <div class="ctl-row" title={ta('tip.site.contentWidthFree')}>
+                    <span class="mini-label">{ta('lbl.widthFree')}</span>
+                    <input type="range" min={WIDTH_MIN} max={WIDTH_MAX} step={WIDTH_STEP}
+                      value={widthSlider}
+                      oninput={(e) => setContentWidth(e.target.valueAsNumber)} />
+                    <span class="gridmenu-value">{widthSlider} px</span>
+                  </div>
+                {/if}
+                <p class="mini-label" title={ta('tip.site.gutter')}>{ta('lbl.gutter')}</p>
+                <div class="seg cw-seg">
+                  {#each GUTTER_PRESETS as p (p.id)}
+                    <button class:on={gutterPreset === p.id}
+                      onclick={() => setContentGutter(p.gutter)}>{ta(`lbl.gutter.${p.id}`)}</button>
+                  {/each}
+                </div>
+                <details class="group" open={gutterPreset === null || gutterAdvanced}
+                  ontoggle={(e) => (gutterAdvanced = e.currentTarget.open)}>
+                  <summary>{ta('group.advanced')}</summary>
+                  <div class="group-items">
+                    <div class="ctl-row" title={ta('tip.site.gutterVw')}>
+                      <span class="mini-label">{ta('lbl.gutterVw')}</span>
+                      <input type="range" min={GUTTER_MIN} max={GUTTER_MAX} step={GUTTER_STEP}
+                        value={layoutGutter}
+                        oninput={(e) => setContentGutter(e.target.valueAsNumber)} />
+                      <span class="gridmenu-value">{layoutGutter} vw</span>
+                    </div>
+                  </div>
+                </details>
                 <hr class="gridmenu-divider" />
                 <label>{ta('lbl.siteIcon')}
                   {#if siteDraft.site.icon}
@@ -5798,7 +5900,7 @@
         {/if}
       {/if}
 
-      <div class="frame-wrap" class:mobile={viewMode === 'mobile'} bind:this={frameWrapEl}>
+      <div class="frame-wrap" class:mobile={viewMode === 'mobile'} class:pan={canPan} bind:this={frameWrapEl}>
         <!-- .stage har den SKALERTE størrelsen, så scroll/sentrering får en ekte
              boks (en transformert iframe alene utvider ikke forelderens scroll). -->
         <div class="stage" style="width:{stageW}px; height:{stageH}px">
@@ -7883,6 +7985,39 @@
   .chip.accent { border-color: var(--urd-color-accent); background: color-mix(in srgb, var(--urd-color-accent) 20%, transparent); opacity: 1; }
   .sample { padding: 11px 12px; background: color-mix(in srgb, currentColor 5%, transparent); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); border-radius: 9px; }
 
+  /* Innholdsbredde-prøven (ADR-0018): én stripe per vanlig skjermbredde.
+     Sporet er skjermen, fyllet er innholdsflaten, så forholdet mellom dem
+     ER innstillingen. Fluid stripe (bredden binder ikke der) tegnes dempet,
+     så det er synlig hvor innstillingen faktisk har effekt. */
+  .cw-sample { display: grid; gap: 5px; }
+  .cw-row { display: grid; grid-template-columns: 2.6rem 1fr 2.2rem; align-items: center; gap: 8px; }
+  .cw-screen { text-align: right; opacity: 0.55; }
+  .cw-bar {
+    position: relative;
+    display: block;
+    height: 13px;
+    border-radius: 3px;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+    border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+    overflow: hidden;
+  }
+  .cw-fill {
+    display: block;
+    height: 100%;
+    margin-inline: auto;
+    background: var(--urd-color-accent);
+    transition: width 0.12s ease;
+  }
+  .cw-bar.fluid .cw-fill { background: color-mix(in srgb, var(--urd-color-accent) 35%, transparent); }
+  .cw-margin { text-align: right; font-size: 10px; opacity: 0.7; }
+  .cw-legend { display: flex; justify-content: space-between; padding-top: 2px; opacity: 0.45; }
+  .cw-binds { padding-top: 7px; text-transform: none; letter-spacing: 0; opacity: 0.55; }
+  .cw-seg { display: flex; width: 100%; }
+  .cw-seg button { flex: 1; white-space: nowrap; }
+  /* Skyveknappene i kontroll-radene: etiketten venstre, verdien ytterst
+     høyre, sporet tar resten. */
+  .ctl-row input[type="range"] { flex: 1; min-width: 0; }
+
   /* Innhold/Stil-fanene øverst i blokk-egenskapene (ADR-0016): full bredde,
      ellers segmentkontrollens vanlige oppskrift. */
   .props-tabs { display: flex; margin-bottom: 2px; }
@@ -8108,13 +8243,21 @@
   .frame-wrap {
     flex: 1;
     min-height: 0;
-    overflow: auto;
+    /* Ingen scrollbar rundt lerretet: siden scroller inni iframen med sin
+       EGEN scrollbar, så en her ville vært den andre. Kun manuell zoom forbi
+       flaten slår på panorering (.pan). */
+    overflow: hidden;
     display: flex;
     /* 'safe' hindrer at topp/venstre klippes bort når lerretet er større enn
        flaten (100%-modus): da forankres det i stedet for å sentreres vekk. */
     justify-content: safe center;
     align-items: safe center;
     background: #08090d;            /* letterbox-flate rundt lerretet */
+  }
+
+  /* Manuell zoom forbi flaten: da MÅ man kunne panorere for å nå resten. */
+  .frame-wrap.pan {
+    overflow: auto;
   }
 
   /* Lerretsboksen har den SKALERTE størrelsen; iframen inni står i full
