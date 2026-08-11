@@ -14,10 +14,60 @@ Layouten er lagt om, så denne batchen er bredere enn vanlig. Det viktigste er d
 - [ ] Rutenettet (Vis grid) og de smarte hjelpelinjene ligger på innholdsflaten, ikke forskjøvet ut i margen; midtlinja treffer midten av innholdet
 - [ ] Fest ved scrolling: en festet blokk beholder sin bredde og venstrekant i det den fester seg (skal IKKE hoppe mot venstre skjermkant). Test både vanlig festing, gruppefesting og «Til skjermen»-dokking
 - [ ] Folden: lag en seksjon med minstehøyde `85vh` og en seksjon under. Seksjonen under skal IKKE være synlig før du scroller, og det skal stemme med hva en ekte nettleser viser ved 1488 px bredde
-- [ ] Sett `"maxWidth": "full"` på én seksjon i en sidefil (håndredigert) og se at kun den seksjonen går kant til kant
+- [x] Sett `"maxWidth": "full"` på én seksjon i en sidefil (håndredigert) og se at kun den seksjonen går kant til kant
 - [ ] Tekstblokker: åpne en side med mye tekst i en smal blokk og se at rammen vokser av seg selv ved rendring, ikke bare når du skriver. Rammen skal ALDRI krympe av seg selv
 - [ ] Mobilvisning er uendret: auto-stabling ser ut som før, og en seksjon satt til manuell mobil-layout beholder plasseringene sine
 - [ ] Publiser og sjekk den deployede siden: samme utseende som i Ren visning, og `site.json` har fått `schemaVersion: 2` med `layout`-feltet
+
+### Testrunde-batch (0.7.2.5): Topplinja folder seg, og bekreftelsen flyttet ut av knappen
+
+Forkast-knappen oppfører seg annerledes enn i 0.7.2.4-batchen under: den vokser ikke lenger når den væpnes, og andre klikk skjer på en egen pille. De tre punktene om væpning og andre klikk der er erstattet av punktene her.
+
+- [ ] TOPPLINJA HOLDER ÉN HØYDE: dra admin-vinduet sakte fra bredt til smalt og se at linja aldri brytes til to rader. Merk at nettleserzoom teller: på 125 % er et 1920 px vindu 1536 px for foldingen
+- [ ] Trinnene kommer i denne rekkefølgen når vinduet smalner: «Forkast utkast» mister teksten og blir sirkelen, ENHET/ZOOM/VIS forsvinner, «Ren visning» og «Se siden» blir rene ikoner og GitHub-brukeren viker, Vis-klyngen blir meny, Enhet-klyngen blir meny og «Upublisert» blir «!», Zoom-klyngen blir meny
+- [ ] Ingenting overlapper på noen bredde. Sjekk særlig at «!» og forkast-sirkelen ikke legger seg oppå verktøyknappene, og at «Publiser» aldri havner utenfor vinduskanten
+- [ ] En foldet klynge viser sin egen verdi på knappen: enhetsikonet for valgt enhet, zoom-prosenten som tall, og rutenett-ikonet markert når rutenett eller hjelpelinjer står på
+- [ ] Menyene åpnes og lukkes med klikk utenfor og med Escape. Zoom-menyen skal bli stående åpen mens du klikker minus og pluss flere ganger
+- [ ] Zoom-knappen endrer ikke bredde når tallet går fra to til tre sifre (20 % til 100 %), så naboknappene står stille
+- [ ] Gjør vinduet bredt igjen og se at klyngene folder seg ut i motsatt rekkefølge, og at en åpen meny ikke blir hengende
+- [ ] FORKAST, FØRSTE KLIKK: knappen skifter til fylt rød, men endrer IKKE bredde. En pille med «Sikker?» dukker opp rett under topplinja, sentrert under knappen, med frostet bakgrunn
+- [ ] FORKAST, ANDRE KLIKK: ett klikk på «Sikker?»-pilla skal forkaste. Den skal ALDRI kreve to klikk
+- [ ] «Sikker?»-pilla er dempet med rød kant og rød tekst i hvile, og blir tydelig fylt rød med hvit tekst når pekeren er over den
+- [ ] Den runde forkast-knappen skal også skifte farge under pekeren, både i hvile og når den er væpnet
+- [ ] Klikk et annet sted eller trykk Escape mens pilla er framme: den skal forsvinne uten å forkaste noe. Test begge
+- [ ] Gjør vinduet så smalt det går og gjenta hele forkast-flyten: pilla skal fortsatt være synlig og klikkbar, og «Publiser» skal stå i ro
+- [ ] «Se siden» har fått et pil-ut-av-ramme-ikon og teksten er uten ↗-tegnet. Sjekk at knappen ikke blir tom når den folder til rent ikon
+- [ ] Bytt admin-språk til engelsk og tyrkisk og sjekk menyradene i de tre foldede klyngene, samt at foldingen skjer tidsnok på tyrkisk (som har de lengste tekstene)
+
+### Testrunde-batch (0.7.2.4): Opprydding i topplinja og sideskinnen
+
+- [ ] Urd-merket er borte fra topplinja og står nederst i sideskinnen, til venstre for tannhjulet, med en skillelinje over
+- [ ] Verktøyene står i tre merkede klynger: ENHET (fire enheter), ZOOM (minus, prosent, pluss, tilpass) og VIS (rutenett, hjelpelinjer). Hver klynge har en lett ramme, og knappene inni har ikke lenger egen kant
+- [ ] Aktiv knapp inne i en klynge markeres fortsatt tydelig (valgt enhet, Tilpass, rutenett på)
+- [ ] «Publiser» klistrer seg ikke lenger til vinduskanten
+- [ ] Utkast-statusen er en dempet gul pille med kant, ikke en fylt aksentflate. «Publiser» skal være den ENESTE fylte knappen i hele topplinja
+- [ ] Forkast er en liten rød sirkel med gjenopprett-ikon (pil med urviser). Hjelpeteksten forklarer hva den gjør
+- [ ] FØRSTE KLIKK VÆPNER: sirkelen blir fylt rød og utvider seg til «Sikker?». Knappene til høyre (Ren visning, Se siden, Publiser) skal IKKE flytte seg når den vokser
+- [ ] Andre klikk forkaster. Klikk et annet sted, eller Escape, avvæpner uten å forkaste. Test begge; avvæpningen var koblet til den gamle knappeklassen og måtte rettes
+- [ ] Sideskinnen har versal-etikettene DENNE SIDEN, NETTSTEDET og SYSTEM over hver gruppe, og de gamle skillestrekene er borte
+- [ ] Skinnen er strammet til: smalere (9,5rem), monospace, mindre skrift og ingen mellomrom mellom punktene. Med tolv punkter skal den ikke lenger fylle nesten hele lerretshøyden
+- [ ] Aktivt panel markeres med farget tekst og en strek i venstrekanten, ikke lenger med en fylt pille. Sjekk at det er tydelig hvilket panel som er åpent
+- [ ] Utkast-pilla er like stor som knappene rundt seg, ikke halvparten. Teksten er kortet til «Upublisert»
+- [ ] Bytt admin-språk til engelsk og tyrkisk og sjekk alle seks nye etikettene
+
+### Testrunde-batch (0.7.2.3): Rutenett, hjelpelinjer og størrelsen på redigeringshåndtakene
+
+- [ ] HÅNDTAKENE ER STORE FRA START: last admin på nytt og se at «+ Ny seksjon», «+ Ny blokk», seksjonsverktøylinja og blokkhåndtakene har admin-størrelse MED EN GANG, uten at du først må røre zoomen. Dette var feilen: zoomen ble ikke meldt inn ved lasting
+- [ ] Seksjonsgalleriet («+ Ny seksjon» klikket) er nå i admin-størrelse og ikke krympet med lerretet. Sjekk på 50 % og 150 %
+- [ ] Drastrimlene i seksjonens topp- og bunnkant er like lette å treffe uansett zoom
+- [ ] OMRISSET LIGGER PÅ RUTENE: slå på rutenettet, dra en blokk så den snapper, og se at den blå rammen rundt blokken følger rutelinjene. Den lå før 2 px utenfor og kunne derfor aldri treffe
+- [ ] Rutenettets linjer er skarpe og synlige på alle zoomnivåer, ikke bleke og uskarpe. Selve rutestørrelsen skal fortsatt følge zoomen, altså bli mindre når du zoomer ut
+- [ ] Hjelpelinjene er tydeligere enn før og synlige mot både lyse og mørke seksjoner
+- [ ] NY BRYTER FOR RUTENETTET i verktøylinja ved siden av hjelpelinje-knappen. Rutenettet skal nå kunne stå på uten at Grid-panelet er åpent, valget skal huskes ved omlasting, og det skal ikke slås av når du bytter panel eller setter inn en ny seksjon
+- [ ] Bytt admin-språk til engelsk og tyrkisk og sjekk hjelpeteksten på den nye rutenett-knappen
+- [ ] De to knappene har nå ULIKE ikoner: rutenett er et nett, hjelpelinjer er en boks med krysset stiplet innretting. De var før nesten identiske
+- [ ] Hjelpelinjene er magenta og tydelig synlige mot alle seksjonsfarger. Fargen er bevisst fast og følger ikke admin-temaet, så den skiller seg fra rutenettet
+- [ ] «+ Ny blokk» og seksjonens verktøylinje overlapper ikke lenger i øvre høyre hjørne. Sjekk på 50 %, 74 % og 150 % zoom, siden det var avstanden som ikke skalerte med
 
 ### Testrunde-batch (0.7.2.2): Innholdsbredde-innstillingen og enhetsbryteren
 

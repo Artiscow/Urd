@@ -64,10 +64,22 @@
     plus: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
     minus: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg>',
     gear: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
-    guides: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M3.5 9.2h17M3.5 14.8h17M9.2 3.5v17M14.8 3.5v17"/></svg>',
+    // Hjelpelinjer: en boks med krysset innrettingslinjer. Var tidligere et
+    // rutenett-ikon og dermed umulig å skille fra rutenett-knappen ved siden av.
+    guides: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20" stroke-dasharray="3 3"/><rect x="7.5" y="7.5" width="9" height="9" rx="1.5"/></svg>',
     kebab: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>',
     bookmark: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/></svg>',
     fit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/></svg>',
+    gridToggle: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>',
+    // Forkast utkast: gjenopprett, altså pil med urviser. IKKE ren tilbake-pil,
+    // som er den universelle angre-glyfen; forkast er noe annet enn angre.
+    restore: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 9"/><path d="M12 8v4.5l3 1.8"/></svg>',
+    // Nedtrekksmerket på de sammenfoldede verktøymenyene. Egen liten vinkel,
+    // ikke `down`, som er flytt-ned-pila og leses som en handling.
+    caret: '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+    // Se siden: åpner en ny fane, så pil ut av ramme. Erstatter ↗-tegnet som
+    // lå i oversettelsene, siden knappen blir rent ikon på smale vinduer.
+    external: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4l-8 8"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
     // Mål-enhetene i lerretsbryteren: skjerm, bærbar, nettbrett, telefon
     device_desktop: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="13" rx="2"/><path d="M8 21h8M12 16v5"/></svg>',
     device_laptop: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></svg>',
@@ -709,6 +721,8 @@
     ['site', 'theme', 'nav', 'footer', 'collections', 'plugins'],
     ['history', 'update'],
   ];
+  /** Versal-etikett over hver gruppe i skinnen, i samme rekkefølge. */
+  const PANEL_GROUP_KEYS = ['rail.thisPage', 'rail.site', 'rail.system'];
   const PANEL_LABELS = Object.fromEntries(PANEL_GROUPS.flat().map((id) => [id, ta(`panel.${id}`)]));
 
   /* Panel-introene (prosa-regelen, ADR-0016): forklaringen bor som tooltip
@@ -777,7 +791,7 @@
   function togglePanel(name) {
     activePanel = activePanel === name ? null : name;
     // Gridet vises i forhåndsvisningen så lenge Grid-panelet er åpent.
-    bridge?.sendShowGrid(activePanel === 'grid');
+    // Rutenettet styres av sin egen bryter, ikke av at panelet er åpent.
     if (activePanel === 'history') loadHistory();
     if (activePanel === 'update' && !updateBusy) loadUpdateCheck();
   }
@@ -1625,7 +1639,7 @@
     store.save();
     updateDirty();
     bridge?.sendSection(pageId, section);
-    if (activePanel === 'grid') bridge?.sendShowGrid(true);
+    if (gridOn) bridge?.sendShowGrid(true);
   }
 
   function setSectionGrid(field, value) {
@@ -1637,7 +1651,7 @@
     store.save();
     updateDirty();
     bridge?.sendSection(pageId, section);
-    if (activePanel === 'grid') bridge?.sendShowGrid(true);
+    if (gridOn) bridge?.sendShowGrid(true);
   }
 
   /** Grid-kontrollene: endringer lagres i site-utkastet og pushes live.
@@ -1651,7 +1665,7 @@
     pushSiteToPreview();
     // sendSite rerendrer siden; slå grid-visningen på igjen etterpå
     // (postMessage er ordnet, så dette ankommer etter rerenderingen).
-    if (activePanel === 'grid') bridge?.sendShowGrid(true);
+    if (gridOn) bridge?.sendShowGrid(true);
   }
 
   async function checkAuth() {
@@ -2087,6 +2101,10 @@
     // og viewporten følger editorens valg (ikke iframe-bredden).
     bridge?.sendPlugins($state.snapshot(pluginsView)?.enabled ?? []);
     bridge?.sendViewport(viewMode);
+    // Zoomen MÅ sendes på nytt her: uten den står --urd-chrome-scale på 1
+    // til noen tilfeldigvis rører zoomen, og håndtakene rendres i lerretets
+    // nedskalerte størrelse i stedet for admin-størrelse.
+    bridge?.sendZoom(scale);
     pushCollectionsToPreview();
     pushMalerToPreview();
     if (siteStore.hasDraft()) pushSiteToPreview();
@@ -2095,7 +2113,7 @@
     const unpublished = !site.pages.some((p) => p.id === pageId);
     if (store.hasDraft() || unpublished) bridge?.sendPage(pageId, store.data);
     if (!chromeVisible) bridge?.sendChrome(false);
-    if (activePanel === 'grid') bridge?.sendShowGrid(true);
+    if (gridOn) bridge?.sendShowGrid(true);
     if (guidesOn) bridge?.sendShowGuides(true);
     sendAdminTheme();
   }
@@ -2136,10 +2154,63 @@
     };
   });
 
+  /* Topplinja folder seg i faste trinn i stedet for å bryte til to rader
+     (valgt 10. august 2026). De fleste trinnene er ren CSS nederst i fila,
+     men de tre som bytter en verktøyklynge mot en meny endrer STRUKTUR og må
+     derfor også leses i JS. Klyngene viker én om gangen, i rekkefølge etter
+     hvor ofte de brukes: Vis sjeldnest, så Enhet, og Zoom sist. Tallene her
+     er nøyaktig de samme som media-spørringene, ikke en måling av innholdet,
+     og tvillingskapet vaktes i tests/topbar-fold.test.mjs. */
+  const FOLD_MQ = { view: 1079, device: 999, zoom: 919 };
+  let toolMenu = $state(null);
+  let toolMenuEl = $state(null);
+  let folded = $state({ view: false, device: false, zoom: false });
+  $effect(() => {
+    const offs = Object.entries(FOLD_MQ).map(([key, px]) => {
+      const mq = window.matchMedia(`(max-width: ${px}px)`);
+      const sync = () => { folded[key] = mq.matches; };
+      sync();
+      mq.addEventListener('change', sync);
+      return () => mq.removeEventListener('change', sync);
+    });
+    return () => offs.forEach((off) => off());
+  });
+
+  /* En klynge som er foldet ut igjen har ingen meny; valget ryddes med den. */
+  $effect(() => {
+    if (toolMenu && !folded[toolMenu]) toolMenu = null;
+  });
+
+  /* Én åpen verktøymeny om gangen, samme lukkemønster som innstillingene. */
+  $effect(() => {
+    if (!toolMenu) return;
+    const onDown = (e) => { if (!toolMenuEl?.contains(e.target)) toolMenu = null; };
+    const onKey = (e) => { if (e.key === 'Escape') toolMenu = null; };
+    const onBlur = () => { toolMenu = null; };
+    document.addEventListener('pointerdown', onDown, true);
+    document.addEventListener('keydown', onKey);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      document.removeEventListener('pointerdown', onDown, true);
+      document.removeEventListener('keydown', onKey);
+      window.removeEventListener('blur', onBlur);
+    };
+  });
+
   function toggleGuides() {
     guidesOn = !guidesOn;
     localStorage.setItem('urd-guides', guidesOn ? '1' : '0');
     bridge?.sendShowGuides(guidesOn);
+  }
+
+  /** Rutenettet på/av. Var bundet til at Grid-PANELET sto åpent, så man
+   *  måtte gi fra seg panelplassen for å se rutene. Nå en egen bryter ved
+   *  siden av hjelpelinjene, husket i localStorage som dem. */
+  let gridOn = $state(localStorage.getItem('urd-grid-overlay') === '1');
+  function toggleGrid() {
+    gridOn = !gridOn;
+    localStorage.setItem('urd-grid-overlay', gridOn ? '1' : '0');
+    bridge?.sendShowGrid(gridOn);
   }
 
   /** Intern lenke klikket i forhåndsvisningen: bytt side ordentlig. */
@@ -3747,10 +3818,8 @@
     // Ny seksjon markeres og Egenskaper åpnes, klar til justering.
     activeSectionId = msg.section.id;
     syncSectionMirrors(msg.section);
-    if (activePanel !== 'properties') {
-      activePanel = 'properties';
-      bridge?.sendShowGrid(false);
-    }
+    // Rutenettet har sin egen bryter; et panelbytte rører den ikke.
+    activePanel = 'properties';
   }
 
   function handleMoveSection(msg) {
@@ -4234,24 +4303,29 @@
     return files;
   }
 
-  // «Forkast utkast» krever to klikk: første klikk væpner knappen (rød,
-  // «Sikker?»), andre klikk forkaster. Klikk hvor som helst ellers,
-  // Escape eller fokus inn i forhåndsvisningen avvæpner.
+  // «Forkast utkast» krever to klikk på TO forskjellige flater: første klikk
+  // væpner knappen, og bekreftelsen er en egen flytende pille under
+  // topplinja. Knappen holder bredden når den væpnes. Klikk hvor som helst
+  // ellers, Escape eller fokus inn i forhåndsvisningen avvæpner.
   let discardArmed = $state(false);
+  let discardWrapEl = $state(null);
 
   function requestDiscard() {
-    if (!discardArmed) {
-      discardArmed = true;
-      return;
-    }
+    discardArmed = !discardArmed;
+  }
+
+  function confirmDiscard() {
     discardArmed = false;
     discard();
   }
 
   $effect(() => {
     if (!discardArmed) return;
+    // `contains` mot det bundne skallet dekker både knappen og pilla, også
+    // når treffet lander på en SVG-node inni dem. Samme mønster som
+    // innstillingene og verktøymenyene.
     const disarm = (e) => {
-      if (!e.target?.closest?.('.discard-btn')) discardArmed = false;
+      if (!discardWrapEl?.contains(e.target)) discardArmed = false;
     };
     const onKey = (e) => {
       if (e.key === 'Escape') discardArmed = false;
@@ -4259,11 +4333,13 @@
     // Klikk i forhåndsvisningen (iframen) når aldri dette dokumentet,
     // men flytter fokus ut av vinduet - window-blur dekker det.
     const onBlur = () => (discardArmed = false);
-    window.addEventListener('pointerdown', disarm, true);
+    // Utenfor-klikk avvæpner på click: da avmonteres bekreftelsespilla først
+    // etter at klikket den eventuelt gjaldt har landet.
+    window.addEventListener('click', disarm, true);
     window.addEventListener('keydown', onKey, true);
     window.addEventListener('blur', onBlur);
     return () => {
-      window.removeEventListener('pointerdown', disarm, true);
+      window.removeEventListener('click', disarm, true);
       window.removeEventListener('keydown', onKey, true);
       window.removeEventListener('blur', onBlur);
     };
@@ -4601,48 +4677,150 @@
 
   <header class="topbar" class:hidden={!chromeVisible}>
     <span class="topbar-group">
-      <span class="brand" title="Urd">
-        <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M12 32V10l16 6.5V32" fill="none" stroke="var(--urd-brand)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
-        <span class="brand-word">Urd</span>
-      </span>
-
       {#if site}
         <!-- Gjeldende side: klikk åpner Sider-panelet (nedtrekket ble
              overflødig da panelet kom, men siden man står på må synes) -->
-        <button class="ghost" title={ta('tip.switchPage')}
+        <button class="ghost page-btn" title={ta('tip.switchPage')}
           onclick={() => togglePanel('pages')}>{pageEntry()?.title ?? ''}</button>
 
-        <span class="viewswitch">
-          {#each DEVICES as d (d.id)}
-            <button class="ghost" class:active={deviceId === d.id}
-              onclick={() => (deviceId = d.id)}
-              title={ta(`tip.view.${d.id}`, { w: d.width ?? desktopW, c: contentBand(layoutWidth, layoutGutter, d.width ?? desktopW).width })}
-              >{@html ICONS[`device_${d.id}`]}</button>
-          {/each}
+        <!-- Klyngene folder seg én om gangen (FOLD_MQ), ikke alle på samme
+             terskel: et enkelt trinn som byttet elleve kontroller mot tre
+             menyknapper ble et for stort sprang. En foldet klynge bærer sin
+             egen gjeldende verdi på knappen (enhetsikon, zoom-prosent), så
+             tilstanden kan leses uten å åpne menyen.
+
+             `display: contents` på skallet: det finnes bare for at klikk-
+             utenfor-testen skal ha ÉN node å spørre, og skal ikke lage en
+             egen boks i linja. -->
+        <span class="toolset" bind:this={toolMenuEl}>
+          {#if folded.device}
+            <span class="toolmenu">
+              <button class="ghost" class:active={toolMenu === 'device'}
+                title={ta('lbl.group.device')}
+                onclick={() => (toolMenu = toolMenu === 'device' ? null : 'device')}
+                >{@html ICONS[`device_${deviceId}`]}{@html ICONS.caret}</button>
+              {#if toolMenu === 'device'}
+                <div class="tool-pop">
+                  {#each DEVICES as d (d.id)}
+                    <button class="ghost" class:active={deviceId === d.id}
+                      onclick={() => { deviceId = d.id; toolMenu = null; }}
+                      title={ta(`tip.view.${d.id}`, { w: d.width ?? desktopW, c: contentBand(layoutWidth, layoutGutter, d.width ?? desktopW).width })}
+                      >{@html ICONS[`device_${d.id}`]} {ta(`lbl.device.${d.id}`)}</button>
+                  {/each}
+                </div>
+              {/if}
+            </span>
+          {:else}
+            <!-- Elleve kontroller på rad med identisk kantlinje leses som én
+                 stripe. Tre merkede klynger i stedet: Enhet, Zoom, Vis. -->
+            <span class="tool-cap">{ta('lbl.group.device')}</span>
+            <span class="viewswitch toolgrp">
+              {#each DEVICES as d (d.id)}
+                <button class="ghost" class:active={deviceId === d.id}
+                  onclick={() => (deviceId = d.id)}
+                  title={ta(`tip.view.${d.id}`, { w: d.width ?? desktopW, c: contentBand(layoutWidth, layoutGutter, d.width ?? desktopW).width })}
+                  >{@html ICONS[`device_${d.id}`]}</button>
+              {/each}
+            </span>
+          {/if}
+
+          {#if folded.zoom}
+            <span class="toolmenu">
+              <button class="ghost" class:active={toolMenu === 'zoom'}
+                title={ta('lbl.group.zoom')}
+                onclick={() => (toolMenu = toolMenu === 'zoom' ? null : 'zoom')}
+                ><span class="zoom-cap">{Math.round(scale * 100)}%</span>{@html ICONS.caret}</button>
+              {#if toolMenu === 'zoom'}
+                <!-- Menyen blir stående under stegging: zoom justeres i flere
+                     klikk, og en meny som lukket seg for hvert klikk ville
+                     kreve at den ble åpnet på nytt for hvert trinn. -->
+                <div class="tool-pop">
+                  <div class="tool-pop-row">
+                    <button class="ghost" onclick={() => stepZoom(-1)} title={ta('tip.zoomOut')}>{@html ICONS.minus}</button>
+                    <span class="zoom-readout" title={ta('tip.zoomCurrent')}>{Math.round(scale * 100)}%</span>
+                    <button class="ghost" onclick={() => stepZoom(1)} title={ta('tip.zoomIn')}>{@html ICONS.plus}</button>
+                  </div>
+                  <button class="ghost" class:active={zoomMode === 'fit'}
+                    onclick={() => (zoomMode = 'fit')} title={ta('tip.zoomFit')}
+                    >{@html ICONS.fit} {ta('lbl.zoom.fit')}</button>
+                </div>
+              {/if}
+            </span>
+          {:else}
+            <span class="tool-cap">{ta('lbl.group.zoom')}</span>
+            <span class="zoomswitch toolgrp">
+              <button class="ghost" onclick={() => stepZoom(-1)} title={ta('tip.zoomOut')}>{@html ICONS.minus}</button>
+              <span class="zoom-readout" title={ta('tip.zoomCurrent')}>{Math.round(scale * 100)}%</span>
+              <button class="ghost" onclick={() => stepZoom(1)} title={ta('tip.zoomIn')}>{@html ICONS.plus}</button>
+              <button class="ghost" class:active={zoomMode === 'fit'}
+                onclick={() => (zoomMode = 'fit')} title={ta('tip.zoomFit')}>{@html ICONS.fit}</button>
+            </span>
+          {/if}
+
+          {#if folded.view}
+            <span class="toolmenu">
+              <button class="ghost" class:active={toolMenu === 'view' || gridOn || guidesOn}
+                title={ta('lbl.group.view')}
+                onclick={() => (toolMenu = toolMenu === 'view' ? null : 'view')}
+                >{@html ICONS.gridToggle}{@html ICONS.caret}</button>
+              {#if toolMenu === 'view'}
+                <div class="tool-pop">
+                  <button class="ghost" class:active={gridOn} onclick={toggleGrid}
+                    title={ta('tip.gridToggle')}>{@html ICONS.gridToggle} {ta('lbl.view.grid')}</button>
+                  <button class="ghost" class:active={guidesOn} onclick={toggleGuides}
+                    title={ta('tip.guides')}>{@html ICONS.guides} {ta('lbl.view.guides')}</button>
+                </div>
+              {/if}
+            </span>
+          {:else}
+            <span class="tool-cap">{ta('lbl.group.view')}</span>
+            <span class="toolgrp">
+              <button class="ghost" class:active={gridOn} onclick={toggleGrid}
+                title={ta('tip.gridToggle')}>{@html ICONS.gridToggle}</button>
+              <button class="ghost" class:active={guidesOn} onclick={toggleGuides}
+                title={ta('tip.guides')}>{@html ICONS.guides}</button>
+            </span>
+          {/if}
         </span>
-        <span class="zoomswitch">
-          <button class="ghost" class:active={zoomMode === 'fit'}
-            onclick={() => (zoomMode = 'fit')} title={ta('tip.zoomFit')}>{@html ICONS.fit}</button>
-          <button class="ghost" onclick={() => stepZoom(-1)} title={ta('tip.zoomOut')}>{@html ICONS.minus}</button>
-          <span class="zoom-readout" title={ta('tip.zoomCurrent')}>{Math.round(scale * 100)}%</span>
-          <button class="ghost" onclick={() => stepZoom(1)} title={ta('tip.zoomIn')}>{@html ICONS.plus}</button>
-        </span>
-        <button class="ghost guides-btn" class:active={guidesOn} onclick={toggleGuides}
-          title={ta('tip.guides')}>{@html ICONS.guides}</button>
       {/if}
 
       {#if attentionCount > 0}
         <button class="badge attention" onclick={() => (deviceId = 'mobile')}
           title={ta('tip.attention')}>
-          {@html ICONS.phone} {ta(attentionCount === 1 ? 'ui.attentionOne' : 'ui.attentionMany', { n: attentionCount })}
+          {@html ICONS.phone}
+          <span class="btn-label">{ta(attentionCount === 1 ? 'ui.attentionOne' : 'ui.attentionMany', { n: attentionCount })}</span>
+          <span class="badge-mini">{attentionCount}</span>
         </button>
       {/if}
 
+    </span>
+
+    <span class="topbar-group topbar-draft">
       {#if dirty}
-        <span class="badge">{ta('ui.unpublished')}</span>
-        <button class="ghost discard-btn" class:armed={discardArmed} onclick={requestDiscard}
-          title={discardArmed ? ta('tip.discardArmed') : ta('tip.discard')}
-        >{discardArmed ? ta('ui.discardConfirm') : ta('ui.discard')}</button>
+        <!-- Statusen er en TILSTAND, ikke en handling: pilleformen består, men
+             den fylte aksentflaten er byttet mot chip-idiomet (ADR-0016), så
+             Publiser er den eneste fylte flaten i linja. -->
+        <!-- Smaleste trinn viser bare utropstegnet; tittelen bærer ordet, og
+             begge formene er aria-hidden så opplesing får det én gang. -->
+        <span class="chip draft-chip" title={ta('ui.unpublished')} aria-label={ta('ui.unpublished')}>
+          <span class="chip-full" aria-hidden="true">{ta('ui.unpublished')}</span>
+          <span class="chip-mini" aria-hidden="true">!</span>
+        </span>
+        <!-- Forkast er destruktiv og tar ellers prime plass. Full pille når det
+             er rom, ellers en liten rød sirkel. Gjenopprett-glyfen, ikke
+             tilbake-pil: den siste betyr angre. Knappen holder bredden når den
+             væpnes; bekreftelsen kommer som en egen pille under linja. -->
+        <!-- Skallet finnes for forankringen: pilla sentreres under KNAPPEN,
+             ikke under gruppa, så den peker på det den bekrefter. -->
+        <span class="discard-wrap" bind:this={discardWrapEl}>
+          <button class="discard-dot" class:armed={discardArmed} onclick={requestDiscard}
+            title={discardArmed ? ta('tip.discardArmed') : ta('tip.discard')}
+          >{@html ICONS.restore}<span class="discard-label">{ta('ui.discard')}</span></button>
+          {#if discardArmed}
+            <button class="discard-confirm" onclick={confirmDiscard} title={ta('tip.discardArmed')}
+              >{@html ICONS.restore} {ta('ui.discardConfirm')}</button>
+          {/if}
+        </span>
       {/if}
     </span>
 
@@ -4652,15 +4830,19 @@
         class="ghost"
         onclick={toggleChrome}
         title={chromeVisible ? ta('tip.chromeHide') : ta('tip.chromeShow')}
-      >{#if chromeVisible}{@html ICONS.eye} {ta('ui.cleanView')}{:else}{@html ICONS.pencil} {ta('ui.edit')}{/if}</button>
+      >{#if chromeVisible}{@html ICONS.eye} <span class="btn-label">{ta('ui.cleanView')}</span>{:else}{@html ICONS.pencil} <span class="btn-label">{ta('ui.edit')}</span>{/if}</button>
       {#if auth?.loggedIn}
         <span class="who" title={auth.allowed ? ta('tip.hasPublishAccess') : ta('tip.noPublishAccess')}>
           {#if !auth.allowed}{@html ICONS.warn}{/if}{auth.login}
         </span>
       {:else if auth}
+        <!-- Innlogging beholder teksten på alle bredder: uten ikon ville
+             knappen blitt tom, og den er inngangen til å publisere i det hele
+             tatt. -->
         <a class="ghost" href="/api/github/login">{ta('ui.loginGitHub')}</a>
       {/if}
-      <a class="ghost" href={pageEntry()?.path ?? '/'} target="_blank" rel="noopener">{ta('ui.viewSite')}</a>
+      <a class="ghost" href={pageEntry()?.path ?? '/'} target="_blank" rel="noopener"
+        title={ta('ui.viewSite')}>{@html ICONS.external} <span class="btn-label">{ta('ui.viewSite')}</span></a>
       <button class="primary" onclick={publish} disabled={!dirty}>{ta('ui.publish')}</button>
     {/if}
     </span>
@@ -4671,14 +4853,20 @@
       {#if chromeVisible}
         <nav class="rail">
           {#each PANEL_GROUPS as group, gi (gi)}
-            {#if gi > 0}
-              <hr class="rail-sep" />
-            {/if}
+            <!-- Gruppene fantes fra før, men var usynlige: bare en tynn strek
+                 skilte sideverktøy, nettstedsinnstillinger og system. -->
+            <span class="rail-group">{ta(PANEL_GROUP_KEYS[gi])}</span>
             {#each group as name (name)}
               <button class:active={activePanel === name} onclick={() => togglePanel(name)}>{PANEL_LABELS[name]}</button>
             {/each}
           {/each}
           <span class="rail-settings" bind:this={settingsEl}>
+            <!-- Merket bor nederst i skinnen ved tannhjulet, ikke i topplinja:
+                 der tok det plassen «Sikker?» trenger for å vokse. -->
+            <span class="rail-brand" title="Urd">
+              <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M12 32V10l16 6.5V32" fill="none" stroke="var(--urd-brand)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              <span class="brand-word">Urd</span>
+            </span>
             <button class="rail-gear" class:active={settingsOpen} title={ta('settings.title')}
               onclick={() => (settingsOpen = !settingsOpen)}>{@html ICONS.gear}</button>
             {#if settingsOpen}
@@ -6893,23 +7081,21 @@
 
   .topbar {
     display: flex;
-    flex-wrap: wrap;
+    /* Linja bryter ALDRI til to rader: høyden er fast, og det som ikke får
+       plass foldes bort i trinn (se foldetrinnene nederst i fila). */
+    flex-wrap: nowrap;
     justify-content: space-between;
     align-items: center;
     gap: 0.5rem 0.75rem;
-    padding: 0.6rem 1rem;
+    /* Mer luft til høyre: Publiser er det siste øyet lander på og skal ikke
+       klistre seg til vinduskanten. */
+    padding: 0.6rem 1.4rem 0.6rem 1rem;
     background: var(--urd-color-surface, #151a23);
     border-bottom: 1px solid rgb(255 255 255 / 8%);
     font-size: 0.9rem;
   }
 
-  .brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 1.05rem;
-    font-weight: 700;
-  }
+  /* .rail-brand eier merkets form; her står bare glyfens og ordets egne mål. */
   .brand-mark {
     width: 1.4rem;
     height: 1.4rem;
@@ -6919,19 +7105,38 @@
     letter-spacing: 0.01em;
   }
 
-  /* To grupper som bryter hver for seg: venstre (verktøy) og høyre
-     (visning/publisering). Ser ryddig ut på alle bredder. */
+  /* Tre grupper på én rad: venstre (verktøy), midten (utkast-status) og høyre
+     (visning/publisering). Ingen av dem bryter. */
   .topbar-group {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     gap: 0.5rem 0.75rem;
-    min-width: 0;
+    /* min-width: auto (arvet) stopper gruppa ved min-innhold, altså
+       sidenavn-knappens min-width pluss resten av kontrollene. */
+  }
+
+  /* Kontrollene beholder sin naturlige bredde: det er foldetrinnene, ikke
+     krymping, som skaffer plass. Bare sidenavnet under får gi etter. */
+  .topbar-group > * {
+    flex: none;
+  }
+
+  /* Sidenavnet er fritt og er derfor det eneste som får krympe. Blokkvisning
+     gir ellipse i stedet for knappenes inline-flex. */
+  .topbar .page-btn {
+    display: block;
+    flex: 0 1 auto;
+    min-width: 3rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .topbar-right {
     margin-left: auto;
     justify-content: flex-end;
+    flex: none;
   }
 
   /* Knapper med SVG-ikon: ikon og tekst på linje, loddrett sentrert */
@@ -7008,24 +7213,39 @@
     min-height: 0;
   }
 
+  /* Tettheten er hentet fra mockupen: smal skinne, ingen mellomrom mellom
+     punktene, og monospace som binder skinnen til Urds egen tone. Med tolv
+     punkter ble den forrige, luftigere varianten nesten like høy som lerretet. */
   .rail {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 8px 6px;
+    /* Lengste etikett er «Oppdatering»: elleve tegn i 0.74rem monospace er
+       drøyt 80 px, pluss to ganger 0.9rem innrykk. 8.5rem gir luft uten at
+       skinnen tar plass fra lerretet. */
+    width: 8.5rem;
+    flex: none;
+    gap: 0;
+    padding: 0.55rem 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.74rem;
     background: var(--urd-color-surface, #151a23);
     border-right: 1px solid rgb(255 255 255 / 8%);
     overflow-y: auto;
   }
 
   .rail button {
-    border: 1px solid transparent;
+    border: 0;
     background: transparent;
-    font-size: 0.82rem;
-    padding: 0.5em 0.7em;
+    font-family: inherit;
+    font-size: inherit;
+    padding: 0.24rem 0.9rem;
+    /* Den globale knappestilen gjør alle knapper til inline-flex med
+       justify-content: center. På en flex-container overstyrer det all
+       tekstjustering, så text-align alene gjorde ingenting her. */
+    justify-content: flex-start;
     text-align: left;
-    border-radius: 8px;
-    opacity: 0.8;
+    border-radius: 0;
+    opacity: 0.75;
   }
 
   .rail button:hover {
@@ -7037,18 +7257,49 @@
      flytter teksten seg bittelitt ved hvert valg (observasjon fra testrundene). */
   /* Innstillings-tannhjulet nederst i railen + popoveren over det.
      position: fixed klippes ikke av railens overflow. */
-  .rail-settings {
-    margin-top: auto;
-    padding-top: 8px;
-    display: flex;
+  /* Versal-etikett over hver gruppe. Gruppene fantes fra før, men var
+     usynlige: bare en tynn strek skilte tre ulike nivåer. */
+  .rail-group {
+    font-size: 0.54rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.45;
+    padding: 0.8rem 0.9rem 0.15rem;
   }
 
+  .rail-group:first-child { padding-top: 0.2rem; }
+
+  /* Merket bor nederst ved tannhjulet: venstre side merke, høyre side
+     innstillinger, med en skillelinje over. */
+  .rail-settings {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.55rem 0 0.1rem;
+    border-top: 1px solid rgb(255 255 255 / 10%);
+    margin-inline: 0.9rem;
+  }
+
+  .rail-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+    font-weight: 700;
+    font-size: 0.8rem;
+  }
+
+  .rail-brand .brand-mark { width: 16px; height: 16px; flex: none; }
+
   .rail-gear {
-    flex: 1;
+    /* Merket står til venstre og tar bredden; tannhjulet er kvadratisk. */
+    flex: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0.5em 0 !important;
+    padding: 0.5em !important;
   }
 
   .rail-gear.active {
@@ -7079,17 +7330,16 @@
     font-size: 0.8rem;
   }
 
+  /* Aktiv er farget tekst med en strek i venstrekanten, ikke en fylt pille:
+     tolv fylte piller under hverandre ble tungt, og streken leser tydeligere
+     som «du er her» i en liste. */
   .rail button.active {
     opacity: 1;
-    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 28%, transparent);
-    border-color: var(--urd-color-accent, #7c5cff);
+    background: transparent;
+    color: var(--urd-color-accent, #7c5cff);
+    box-shadow: inset 2px 0 0 var(--urd-color-accent, #7c5cff);
   }
 
-  .rail-sep {
-    border: 0;
-    border-top: 1px solid rgb(255 255 255 / 10%);
-    margin: 0.3rem 0.4rem;
-  }
 
   .panel {
     width: 300px;
@@ -8223,22 +8473,8 @@
     color: #fff;
   }
 
-  /* Væpnet «Forkast utkast»: rød og «Sikker?» til man klikker et annet
-     sted. Fast bredde så topplinjen ikke hopper når teksten byttes. */
-  .discard-btn {
-    min-width: 9.5em;
-  }
 
-  .discard-btn.armed {
-    background: #c22f2f;
-    border-color: #e05252;
-    color: #fff;
-  }
 
-  .discard-btn.armed:hover:not(:disabled) {
-    background: #d63a3a;
-    border-color: #e05252;
-  }
 
   .frame-wrap {
     flex: 1;
@@ -8292,18 +8528,283 @@
     align-items: center;
   }
 
-  .viewswitch .active,
-  .zoomswitch .active {
+  /* Verktøyklyngene: lett ramme rundt hver gruppe, med en versal-etikett
+     foran. Knappene inni mister sin egen kant, så gruppen leses som én
+     enhet i stedet for som tre til fire løse knapper. */
+  .toolgrp {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid rgb(255 255 255 / 11%);
+    border-radius: 8px;
+  }
+
+  .toolgrp .ghost { border-color: transparent; }
+  .toolgrp .ghost.active { border-color: var(--urd-color-accent, #7c5cff); }
+
+  .tool-cap {
+    font-size: 0.56rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.5;
+    white-space: nowrap;
+  }
+
+  /* Utkast-statusen står i sin egen gruppe mellom verktøyene og utgivelsen,
+     så den ikke leses som en del av verken det ene eller det andre. */
+  .topbar-draft {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: none;
+    /* Forankring for bekreftelsespilla, som svever under linja. */
+    position: relative;
+  }
+
+  .draft-chip {
+    /* Flex, ikke inline: kortformen «!» skal kunne sentreres i en sirkel med
+       satt bredde og høyde på det smaleste foldetrinnet. */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-color: color-mix(in srgb, #e2b84a 55%, transparent);
+    background: color-mix(in srgb, #e2b84a 13%, transparent);
+    color: #e2b84a;
+    opacity: 1;
+    /* .chip er 10px, dimensjonert for panelene der teksten rundt er liten.
+       I topplinja bruker knappene font: inherit (0.9rem), så chipen må opp
+       for ikke å bli halvparten så stor som alt ved siden av. */
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.3em 0.8em;
+  }
+
+  /* Bredest: full pille med teksten. Fra første foldetrinn: bare sirkelen.
+     Væpnet vokser den MOT VENSTRE til «Sikker?», så alt til høyre står stille
+     i det man klikker. */
+  .discard-dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    height: 1.7rem;
+    padding: 0 0.75rem 0 0.6rem;
+    flex: none;
+    border: 1px solid color-mix(in srgb, #e2705f 55%, transparent);
+    background: color-mix(in srgb, #e2705f 12%, transparent);
+    color: #e2705f;
+    border-radius: 999px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.78rem;
+  }
+
+  /* :not(:disabled) gir hover-reglene i forkast-familien like mange ledd som
+     den globale `button:hover:not(:disabled)`, så den røde flaten slår
+     gjennom det hvite sløret der. */
+  .discard-dot:hover:not(:disabled) {
+    background: color-mix(in srgb, #e2705f 22%, transparent);
+    border-color: color-mix(in srgb, #e2705f 70%, transparent);
+  }
+
+  /* Væpnet endrer farge, ikke bredde: bekreftelsen bor i pilla under. */
+  .discard-dot.armed,
+  .discard-dot.armed:hover:not(:disabled) {
+    background: #d94f3d;
+    border-color: #d94f3d;
+    color: #fff;
+  }
+
+  .discard-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Bekreftelsen svever under topplinja, sentrert under knappen den hører
+     til. Egen flate og eget klikkmål: en ny plassering krever et bevisst
+     treff, så et raskt dobbeltklikk på forkast-knappen kan ikke kaste
+     utkastet ved uhell. */
+  .discard-confirm {
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100002;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+    padding: 0.4rem 0.95rem;
+    border: 1px solid color-mix(in srgb, #e2705f 55%, transparent);
+    border-radius: 999px;
+    /* Hvile låner forkast-knappens hviledrakt: mørk flate, rød kant, rød
+       tekst. Tett flate her holder pilla lesbar uten frost-støtte; frosten
+       legges på i @supports under. */
+    background: var(--urd-color-surface, #151a23);
+    color: #e2705f;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 8px 22px rgb(0 0 0 / 40%);
+  }
+
+  /* Under pekeren fylles den helt: den farlige handlingen slår ut i farge i
+     det øyeblikket den kan utløses. */
+  .discard-confirm:hover:not(:disabled) {
+    background: #d94f3d;
+    border-color: #d94f3d;
+    color: #fff;
+  }
+
+  @supports (backdrop-filter: blur(1px)) {
+    .discard-confirm {
+      background: color-mix(in srgb, var(--urd-color-surface, #151a23) 72%, transparent);
+      backdrop-filter: blur(14px);
+    }
+    /* Frosten gjelder hviletilstanden. Hover er tett rød, uavhengig av hva
+       som ligger bak. */
+    .discard-confirm:hover:not(:disabled) {
+      background: #d94f3d;
+      backdrop-filter: none;
+    }
+  }
+
+  /* ---- Foldetrinnene ------------------------------------------------------
+     Topplinja holder én høyde og folder seg i faste trinn, i denne
+     rekkefølgen: forkast-teksten, gruppe-etikettene, knappetekstene til
+     høyre, og så klyngene ÉN OM GANGEN. Tersklene er kalibrert etter det
+     LENGSTE språket (tyrkisk), ikke bokmål, så et trinn aldri slår inn for
+     sent og linja må bryte. De tre siste har hver sin tvilling i FOLD_MQ.
+     Kortformene skjules her, før trinnene som slår dem på: lik spesifisitet
+     gjør at kilderekkefølgen avgjør. */
+  .badge-mini,
+  .chip-mini { display: none; }
+
+  /* Trinn 1: forkast-knappen slipper teksten og blir sirkelen. */
+  @media (max-width: 1499px) {
+    .discard-dot {
+      width: 1.7rem;
+      padding: 0;
+    }
+    .discard-label { display: none; }
+  }
+
+  /* Trinn 2: versal-etikettene over klyngene forsvinner. Klyngerammene står
+     igjen, så de tre gruppene leses fortsatt hver for seg. */
+  @media (max-width: 1359px) {
+    .tool-cap { display: none; }
+  }
+
+  /* Trinn 3: knappene til høyre blir rene ikoner, og GitHub-brukeren viker.
+     Publiser beholder alltid ordet: det er linjas eneste farlige handling. */
+  @media (max-width: 1179px) {
+    .btn-label { display: none; }
+    .badge-mini { display: inline; }
+    .who { display: none; }
+  }
+
+  /* Trinn 4: Vis-klyngen blir meny (FOLD_MQ.view). Rutenett og hjelpelinjer
+     slås av og på sjelden, så den viker først av de tre. */
+  @media (max-width: 1079px) {
+    .topbar { gap: 0.5rem; }
+    .topbar-group { gap: 0.5rem; }
+  }
+
+  /* Trinn 5: Enhet-klyngen blir meny (FOLD_MQ.device) og statusen blir «!». */
+  @media (max-width: 999px) {
+    .chip-full { display: none; }
+    .chip-mini { display: inline; }
+    /* Statusen blir en sirkel på størrelse med forkast-sirkelen ved siden av,
+       så de to leses som ett par i stedet for som pille pluss prikk. */
+    .draft-chip {
+      width: 1.7rem;
+      height: 1.7rem;
+      padding: 0;
+    }
+  }
+
+  /* Trinn 6: Zoom-klyngen blir meny (FOLD_MQ.zoom). Zoom justeres oftest av
+     de tre og beholder derfor pluss og minus lengst. Mellomrom og kantmarg
+     strammes samtidig helt inn: nå er de det siste som er å ta av. */
+  @media (max-width: 919px) {
+    .topbar {
+      gap: 0.4rem;
+      padding-inline: 0.7rem;
+    }
+    .topbar-group { gap: 0.4rem; }
+  }
+
+  /* Skallet rundt klyngene finnes bare som ÉN node for klikk-utenfor-testen;
+     det skal ikke lage en boks, så barna ligger rett i topplinjas flex. */
+  .toolset { display: contents; }
+
+  /* De sammenfoldede klyngene: en knapp som bærer gjeldende verdi, og en
+     popover under. Bare én er åpen om gangen. */
+  .toolmenu {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .toolmenu > .ghost {
+    gap: 0.25em;
+    padding: 0.35em 0.55em;
+  }
+
+  /* Zoom-tallet skifter mellom to og tre sifre. Fast bredde med tabellsiffer
+     holder knappen like bred gjennom hele skalaen og fyller flaten. */
+  .zoom-cap {
+    min-width: 2.6em;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tool-pop {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 100002;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 10.5rem;
+    padding: 6px;
+    border-radius: 10px;
+    border: 1px solid rgb(255 255 255 / 12%);
+    background: var(--urd-color-surface, #151a23);
+    box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+  }
+
+  /* Loddrett meny: ikon og tekst starter i venstrekanten, ikke sentrert som
+     den globale knappestilen gjør. */
+  .tool-pop .ghost {
+    justify-content: flex-start;
+    width: 100%;
+    border-color: transparent;
+  }
+
+  .tool-pop .ghost.active {
     border-color: var(--urd-color-accent, #7c5cff);
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 15%, transparent);
   }
 
-  /* Hjelpelinje-knappen står alene i topbaren og trenger sin egen,
-     tydelige på-tilstand (aktiv-stilene over er container-avgrenset). */
-  .guides-btn.active {
+  .tool-pop-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .tool-pop-row .ghost {
+    width: auto;
+    justify-content: center;
+  }
+
+  .viewswitch .active,
+  .zoomswitch .active {
     border-color: var(--urd-color-accent, #7c5cff);
-    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 22%, transparent);
-    color: var(--urd-color-accent, #7c5cff);
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 15%, transparent);
   }
 
   .zoom-readout {

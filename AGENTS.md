@@ -70,6 +70,7 @@ CI kjører de samme tre pluss bygg-samsvar-sjekken (tests.yml), CodeQL skanner v
 - **Ingen forklarende prosa i admin-panelene** (regel fastsatt 23. juli 2026): innstillinger forklares i «?»-tooltips (title-attributtet) eller hjelpechipen, aldri som tekstavsnitt (panel-hint o.l.) i panelet. Innstillinger som kun gjelder en variant/et valg skal stå RETT UNDER valget de hører til.
 - **Innstillinger vises KUN når de er relevante** (regel fastsatt 23. juli 2026): et valg som ikke har effekt med gjeldende variant/stil skal skjules, ikke stå inert (f.eks. effektfargen kun for hover-stiler med effekt, kolonne-valg kun for sidestilt). Etiketten skal si hva innstillingen faktisk styrer i det valget («Glødfarge» for løft med glød, ikke generisk «Hover-farge»), og valglister filtreres til de variantene som gir mening.
 - **Kode-kommentarer brytes ved setningsgrense, aldri midt i en setning.** Match omkringliggende kode i kommentar-tetthet, navngiving og idiom.
+- **Kode-kommentarer beskriver, de retter ikke** (regel fastsatt 11. august 2026): en kommentar sier hva koden gjør. Rettelsesfortellinger hører aldri hjemme i en kildefil: hva som var galt før, hva et tidligere forsøk gjorde, hva som «ellers ville skjedd», eller at noe «ikke lenger» er slik. Hendelsesforløpet eies av CHANGELOG, og et funn fra en gjennomgang skrives der, ikke i fila. Kontrastform er tillatt når den beskriver valget («farget tekst med strek, ikke en fylt pille»), men ikke når den beskriver historie («ikke lenger flex: 1»).
 
 ## Motor-lekser (gjentatte fallgruver)
 

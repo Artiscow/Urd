@@ -25,6 +25,43 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.2.5 - Redigeringslaget etter breddegrepet: rutenett, håndtak, en ryddet topplinje og en linje som folder seg - 11. august 2026
+
+Oppfølging etter testing av 0.7.2.2. Testrunde-batchene 0.7.2.3, 0.7.2.4 og 0.7.2.5 hører alle til denne committen.
+
+Rutenett, hjelpelinjer og håndtak:
+
+- Redigeringshåndtakene var små ved lasting og ble først riktige når man rørte zoomen: skalaen ble aldri meldt inn ved oppstart. `onReady` sender den nå.
+- Blokkomrisset lå 2 px utenfor blokken og kunne derfor aldri treffe rutelinjene. `outline-offset` er null, så omrisset ligger på kanten som snapper.
+- Rutenettets og hjelpelinjenes linjer ble sub-piksel og nesten usynlige på nedskalert lerret. Linjebredden mot-skaleres nå; rutestørrelsen gjør det bevisst ikke, siden den er sidens egen geometri.
+- Rutenett og hjelpelinjer hadde nesten identiske ikoner. Hjelpelinjene har fått en boks med krysset stiplet innretting, og fargen er fast magenta med skygge i stedet for admin-aksenten, så de skiller seg fra rutenettet uansett tema.
+- Rutenettet kunne bare stå på mens Grid-panelet var åpent. Egen bryter i verktøylinja med valget lagret, uavhengig av panelet.
+- «+ Ny blokk» og seksjonens verktøylinje la seg oppå hverandre på nedskalert lerret: chipen mot-skalerte, men avstanden var fast 46/10 px. Avstanden mot-skaleres nå med den.
+
+Topplinja og sideskinnen:
+
+- Elleve kontroller på rad med lik kantlinje leste som én stripe. De står nå i tre merkede klynger, ENHET, ZOOM og VIS, med felles ramme og uten egen kant på knappene inni.
+- Urd-merket tok plass i topplinja uten å gjøre noe der. Det står nå nederst i sideskinnen ved tannhjulet, med en skillelinje over, og topplinja er frigjort til verktøy.
+- Utkast-statusen var en fylt aksentflate og konkurrerte med Publiser. Den er nå en dempet gul chip, så Publiser er den eneste fylte flaten i linja.
+- Forkast utkast tok prime plass midt i linja for en handling som brukes sjelden. Den er en rød pille som faller til en sirkel med gjenopprett-ikon når plassen krever det.
+- Sideskinnen var nesten like høy som lerretet med tolv punkter. Den er strammet til 8,5 rem monospace uten mellomrom mellom punktene, med versal-gruppetitler og aktivt panel markert som en strek i venstrekanten.
+- Skinnens etiketter ble sentrert tross `text-align: left`: den globale knappestilen gjør alle knapper til inline-flex med `justify-content: center`. Skinnen setter nå `flex-start`.
+
+Foldingen av topplinja:
+
+- Topplinja brøt til to rader på smale vinduer og endret høyde. Den folder seg nå i seks faste trinn og holder én høyde: forkast-teksten, gruppe-etikettene, knappetekstene til høyre, og så de tre klyngene én om gangen.
+- Klyngene foldet først alle på samme terskel, som ble et for stort sprang. De viker nå én om gangen etter hvor ofte de brukes: Vis, så Enhet, så Zoom.
+- «Sikker?» utvidet knappen og dyttet Publiser ut av vinduet på det smaleste. Bekreftelsen er nå en flytende frostet pille under linja, sentrert under knappen, som samtidig gjør at et dobbeltklikk på samme sted ikke kan forkaste noe.
+- Bekreftelsespilla måtte klikkes flere ganger: avvæpningen lyttet på `pointerdown`, og mikrotask-sjekken mellom lytterne rakk å avmontere pilla før klikket landet. Den lytter nå på `click` og spør det bundne elementet med `contains` i stedet for en selektor.
+- Hover-fargene i forkast-familien slo aldri gjennom: den globale `button:hover:not(:disabled)` veier tyngre enn klasse pluss pseudoklasse og la sitt hvite slør over den røde flaten. Reglene teller nå like mange ledd.
+- Ny `tests/topbar-fold.test.mjs` feiler hvis topplinja får `flex-wrap: wrap`, hvis to klynger deler foldeterskel, hvis en JS-terskel mangler sin tvilling i CSS, eller hvis en kortform skjules etter at den slås på (lik spesifisitet gjør at kilderekkefølgen avgjør).
+- `ui.viewSite` hadde ↗ bakt inn i teksten og ble tom som rent ikon. Tegnet er fjernet i alle fem ordbøkene og erstattet av et ekte pil-ut-av-ramme-ikon.
+- Sju nye tekstnøkler i nb, en-GB og tr for menyradene i de foldede klyngene.
+
+Arbeidsflyt:
+
+- Ny regel i [AGENTS.md](../AGENTS.md): kode-kommentarer beskriver hva koden gjør og skal ikke fortelle om feil som ble rettet eller hva som ellers ville skjedd. Kommentarene fra denne runden er skrevet om etter regelen.
+
 ### 0.7.2.2 - Breddegrepet ferdigstilt: 1440 som standard, relativ sidemarg og fire ekte enheter i lerretet - 10. august 2026
 
 Oppfølging etter testing av 0.7.2. Beslutningene og avgrensningene er oppdatert i [ADR-0018](adr/0018-bundet-innholdsbredde.md).
