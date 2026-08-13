@@ -14,8 +14,8 @@
  *   side → editor: { type: 'urd-edit', sectionId, blockId, props, rerender? }  (klikk-og-skriv/bildeeditor)
  *                  { type: 'urd-move', sectionId, blockId, frame, frameKey }  (dra/resize)
  *                  { type: 'urd-grow', sectionId, blockId, h }  (auto-høyde for datablokker: KUN h, aldri x/y)
- *                  { type: 'urd-mobile-manual', sectionId, frames } (seksjon materialisert)
- *                  { type: 'urd-mobile-auto', sectionId }           (tilbake til auto)
+ *                  { type: 'urd-mobile-reset', sectionId, blockId? } (nullstill mobiloverstyringer; uten blockId hele seksjonen, ADR-0019)
+ *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder } (pil-flytting i mobil-leserekkefølgen)
  *                  { type: 'urd-review-done', sectionId }           (mobil gjennomgått)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor }
  *                  { type: 'urd-delete', sectionId, blockId | blockIds } (blockIds fra multimarkering: hele utvalget i ett angre-steg)
@@ -48,6 +48,7 @@
  *                  { type: 'urd-maler', maler }               (mal-utkastene: liste av {id, name, kind, section?, blocks?, page?}; Mine maler-fanen leser dem)
  *                  { type: 'urd-insert-template', id }        (Blokker-panelets Mine maler: sett inn blokkgruppe-mal i aktiv seksjon)
  *                  { type: 'urd-zoom', scale }                (lerretets zoom; håndtakene mot-skalerer seg så de holder admin-størrelse)
+ *                  { type: 'urd-scroll-section', sectionId }  (rull previewen til seksjonen; tilsynsmerket i topplinja)
  */
 
 /**
@@ -78,8 +79,8 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-add-blocks') handlers.onAddBlocks?.(msg);
     if (msg?.type === 'urd-request-block') handlers.onRequestBlock?.(msg);
     if (msg?.type === 'urd-move-block-section') handlers.onMoveBlockSection?.(msg);
-    if (msg?.type === 'urd-mobile-manual') handlers.onMobileManual?.(msg);
-    if (msg?.type === 'urd-mobile-auto') handlers.onMobileAuto?.(msg);
+    if (msg?.type === 'urd-mobile-reset') handlers.onMobileReset?.(msg);
+    if (msg?.type === 'urd-mobile-order') handlers.onMobileOrder?.(msg);
     if (msg?.type === 'urd-review-done') handlers.onReviewDone?.(msg);
     if (msg?.type === 'urd-block-flag') handlers.onBlockFlag?.(msg);
     if (msg?.type === 'urd-collection-edit') handlers.onCollectionEdit?.(msg);
@@ -154,6 +155,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     },
     sendAttention(sectionId, needed) {
       post({ type: 'urd-attention', sectionId, needed });
+    },
+    /** Rull previewen til en seksjon (tilsynsmerket i topplinja). */
+    sendScrollSection(sectionId) {
+      post({ type: 'urd-scroll-section', sectionId });
     },
     /** Spill en inngangsanimasjon som demo (blockId null = seksjonen). */
     sendDemoAnim(sectionId, blockId = null) {

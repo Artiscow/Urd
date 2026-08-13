@@ -256,9 +256,14 @@ function enablePreview(state, opts) {
       // config-bryteren i blokken (samme toggle som den gamle gear-pillen).
       root.querySelector(`[data-block-id="${msg.blockId}"] .urd-cfg-toggle`)?.click();
     } else if (msg?.type === 'urd-attention' && msg.sectionId) {
-      // Editoren oppdaget desktop-drift i en manuell seksjon: marker live.
+      // Editoren oppdaget desktop-drift i en overstyrt seksjon: marker live.
       root.querySelector(`[data-section-id="${msg.sectionId}"]`)
         ?.classList.toggle('urd-attention', msg.needed !== false);
+    } else if (msg?.type === 'urd-scroll-section' && msg.sectionId) {
+      // Tilsynsmerket i topplinja: rull til seksjonen som trenger
+      // gjennomgang, så merket peker på et sted og ikke bare en modus.
+      root.querySelector(`[data-section-id="${msg.sectionId}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else if (msg?.type === 'urd-collections' && msg.collections) {
       // Samlingsutkast fra editoren: brukes i stedet for serverfilene, og alt som viser samlinger rendres på nytt.
       setCollectionsDraft(msg.collections);

@@ -157,19 +157,38 @@ html {
   position: absolute;
 }
 
-/* Auto-avledet mobil-layout: vanlig flyt i én kolonne (render.js) */
+/* Mobil-radnettet (ADR-0019): én kolonne med 8 px-rader som vokser med
+   innholdet (minmax). Urørte blokker auto-plasseres i leserekkefølge
+   (sparse: de hopper alltid NEDENFOR pinnede bånd, aldri inn i hull over),
+   pinnede blokker får eksplisitte radspor fra render.js. Ingen gap:
+   radsporene er koordinatsystemet, så luften mellom flytblokker ligger i
+   margin-bottom og rommes av radspennet. Radhøyden 8 speiler MOBILE_ROW i
+   migrate.js. */
 .urd-flow {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 90%;
-  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 100%;
+  grid-auto-rows: minmax(8px, auto);
+  grid-auto-flow: row;
   padding: 24px 0;
 }
 
+/* Flytblokk: 90 % bredde sentrert (som den gamle flyten); render.js
+   overstyrer bredde/marg ved partielle plasseringer. */
 .urd-block-flow {
   position: static;
+  width: 90%;
+  justify-self: center;
+  margin-bottom: 16px;
+}
+
+/* Pinnet blokk: radspor og bredde settes av render.js. Ingen marg: en marg
+   utenfor sporene ville blåst opp radene og forskjøvet koordinatsystemet.
+   position: static er trygt for z: rutenett-elementer stables etter z-index
+   også uten posisjonering. */
+.urd-block-pinned {
+  position: static;
+  margin: 0;
 }
 
 /* Innhold i tekstblokker: lister, sitater og lenker fra
@@ -3588,6 +3607,116 @@ body.urd-mobile .urd-section-resize-top {
 .urd-preview .urd-edit-toolbar .urd-edit-decor.on {
   background: #e2b84a;
   color: #1a1508;
+}
+
+/* Tilsynskortet i mobilvisning: hva som skjedde, når, og gjennomgått-
+   knappen. Mot-skaleres som resten av redigeringslaget (urd-zoom). */
+.urd-preview .urd-attention-card {
+  position: absolute;
+  top: calc(8px * var(--urd-chrome-scale, 1));
+  left: 50%;
+  transform: translateX(-50%) scale(var(--urd-chrome-scale, 1));
+  transform-origin: top center;
+  z-index: 100000;
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+  max-width: 320px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, #e2b84a 55%, transparent);
+  background: color-mix(in srgb, var(--urd-admin-surface, #151a23) 92%, #e2b84a);
+  color: var(--urd-admin-text, #e6e8ea);
+  font: 500 12.5px system-ui, sans-serif;
+  box-shadow: 0 8px 22px rgb(0 0 0 / 35%);
+}
+
+.urd-preview .urd-attention-since {
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+.urd-preview .urd-attention-card button {
+  margin-top: 2px;
+  border: 0;
+  border-radius: 999px;
+  padding: 4px 12px;
+  background: #e2b84a;
+  color: #1a1508;
+  font: 600 12px system-ui, sans-serif;
+  cursor: pointer;
+}
+
+/* Nål-merket på en overstyrt mobilblokk: viser at blokken ikke lenger
+   følger desktop. Samme form som sticky-nålen, gul som tilsynet. */
+.urd-preview .urd-mobile-pin {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  z-index: 100000;
+  display: grid;
+  place-items: center;
+  width: calc(18px * var(--urd-chrome-scale, 1));
+  height: calc(18px * var(--urd-chrome-scale, 1));
+  border-radius: 50%;
+  background: #e2b84a;
+  color: #1a1508;
+  pointer-events: none;
+}
+
+.urd-preview .urd-mobile-pin svg {
+  width: calc(11px * var(--urd-chrome-scale, 1));
+  height: calc(11px * var(--urd-chrome-scale, 1));
+}
+
+/* Væpnet nullstilling («Sikker?») i seksjonsverktøylinja */
+.urd-preview .urd-section-toolbar button.urd-armed {
+  background: #d94f3d;
+  color: #fff;
+}
+
+/* Skjult på mobil-lista: flytende panel under seksjonsverktøylinja, med
+   en rad per skjult blokk og øye-knappen som viser den igjen. */
+.urd-preview .urd-hidden-list {
+  position: absolute;
+  top: calc(46px * var(--urd-chrome-scale, 1));
+  right: calc(10px * var(--urd-chrome-scale, 1));
+  transform: scale(var(--urd-chrome-scale, 1));
+  transform-origin: top right;
+  z-index: 100001;
+  display: grid;
+  gap: 2px;
+  min-width: 170px;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  background: var(--urd-admin-surface, #151a23);
+  color: var(--urd-admin-text, #e6e8ea);
+  font: 500 12px system-ui, sans-serif;
+  box-shadow: 0 8px 22px rgb(0 0 0 / 35%);
+}
+
+.urd-preview .urd-hidden-list > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 4px 3px 8px;
+}
+
+.urd-preview .urd-hidden-list button {
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  padding: 4px;
+  background: rgb(255 255 255 / 8%);
+  color: inherit;
+  cursor: pointer;
+}
+
+.urd-preview .urd-hidden-list button:hover {
+  background: rgb(255 255 255 / 16%);
 }
 
 /* Editeringslaget - gjelder KUN i preview-modus (body.urd-preview,

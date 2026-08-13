@@ -25,6 +25,21 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.3 - Synket mobilmodell per blokk: radnettet - 13. august 2026
+
+Milepæl 0.7.3, mobil-revurderingen. Modellen er besluttet i [ADR-0019](adr/0019-synket-mobilmodell.md); feltstudien bak (Squarespace, Wix, Wix Studio, Framer, m-dot-avvisningen) står der med kilder.
+
+- Første håndjustering i mobilvisning materialiserte ALLE seksjonens blokker med målte piksel-frames og kuttet koblingen til desktop for hele seksjonen. Overstyringen er nå per blokk: en dratt blokk pinnes til radnettet, resten fortsetter å følge desktop.
+- Mobil rendres i ett radnett for alle seksjoner (CSS-grid, én kolonne, minmax(8px, auto)-rader): urørte blokker auto-plasseres i leserekkefølge, pinnede får eksplisitte radspor, og radene vokser med innholdet uten JS. Ny ren `mobilePlacementToCss` i render.js; auto/manuell-skillet og mobil-minHeight-styringen utgår.
+- `frames.mobile` byttet form fra full frame til partiell plassering `{x?, w?, row?, rows?, z?, rot?}` (PAGE_SCHEMA_VERSION 1 til 2, migrering i migrate.js): materialiserte frames konverteres til radspor, byte-like desktop-kopier nulles, `mode: manual` leses men skrives aldri igjen, og attention.reason-tokens ble engelske etter datakontrakt-regelen.
+- Tilsynsmerket i topplinja byttet bare til mobilvisning uten å si hva eller hvor, og reason/since ble skrevet men aldri lest. Merket ruller nå til seksjonen, som viser et kort med oversatt årsak og relativ tid, og flagget settes kun på seksjoner som faktisk har overstyringer.
+- ↺ tilbake-til-auto slettet alt håndarbeid i ett klikk uten bekreftelse. Nullstilling finnes nå per blokk (uten seremoni) og per seksjon med to-klikks «Sikker?»; seksjonsnullstillingen beholder skjult-på-mobil-valgene.
+- `decor` betydde både «utenfor entré-bølgen» og «skjul i auto-mobilflyt», og skjulingen virket ikke i manuelle seksjoner. Nytt felt `hideMobile` eier mobilskjulingen i hele renderstien; `decor` er kun animasjon. Ny «N skjult»-chip i mobilverktøylinja gjør skjulte blokker gjenoppdagbare med øye-knapp per blokk.
+- `mobileOrder` var skrive-bare fra presetene. Flytende blokker har nå pil opp/ned i mobilvisningens blokkverktøylinje (ren `reorderMobileKey` med midtpunkt-nøkler), så håndbygde kort kan holdes samlet.
+- Delete/Backspace slettet blokker i mobilvisning selv om slett-knappen er skjult der; begge har nå mobil-vakt. Nye desktop-blokker i en overstyrt seksjon landet på desktop-posisjonen utenfor 390 px-skjermen; de flyter nå inn i mobil-rekkefølgen.
+- Meldingskontrakten: `urd-mobile-manual` og `urd-mobile-auto` erstattet av `urd-mobile-reset {sectionId, blockId?}`, nye `urd-mobile-order` og `urd-scroll-section`.
+- 22 nye tester (radnett-CSS, stackOrder-filterbyttet med regresjonsvakt for decor, sidemigreringen med idempotens og amputert data, rekkefølgenøklene).
+
 ### 0.7.2.5 - Redigeringslaget etter breddegrepet: rutenett, håndtak, en ryddet topplinje og en linje som folder seg - 11. august 2026
 
 Oppfølging etter testing av 0.7.2.2. Testrunde-batchene 0.7.2.3, 0.7.2.4 og 0.7.2.5 hører alle til denne committen.

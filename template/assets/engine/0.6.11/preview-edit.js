@@ -5,19 +5,20 @@
  * Lastes KUN i preview-modus (dynamisk import i urd.js) - besøkende
  * laster aldri denne filen. Endringer meldes til editoren, som eier
  * utkastet:
- *   side → editor: { type: 'urd-move',   sectionId, blockId, frame, frameKey }
+ *   side → editor: { type: 'urd-move',   sectionId, blockId, frame, frameKey }  (frameKey 'mobile': frame er en radnett-plassering, ADR-0019)
  *                  { type: 'urd-delete', sectionId, blockId | blockIds }  (blockIds: multiutvalg i ett angre-steg)
  *                  { type: 'urd-add-section', index, section }
  *                  { type: 'urd-move-section', sectionId, dir }
  *                  { type: 'urd-delete-section', sectionId }
  *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: toppkant-håndtaket flytter alle blokkene i samme angre-steg)
- *                  { type: 'urd-mobile-manual', sectionId, frames }  (seksjon materialisert)
- *                  { type: 'urd-mobile-auto', sectionId }            (tilbake til auto)
+ *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (nullstill mobiloverstyringer; uten blockId hele seksjonen)
+ *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder }  (pil-flytting i mobil-leserekkefølgen)
  *                  { type: 'urd-review-done', sectionId }            (mobil gjennomgått)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor }
  *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (åpne blokkmenyen i editoren)
  */
-import { frameToCss } from './render.js';
+import { frameToCss, mobilePlacementToCss, reorderMobileKey } from './render.js';
+import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './maler-model.js';
 import { searchItems } from './palette-search.js';
@@ -36,7 +37,7 @@ import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selecti
 import { suspendSticky, resumeSticky } from './sticky.js';
 // Modulen lastes dynamisk av urd.js ETTER at admin-ordboka er lastet
 // (initAdminLocale), så ta() er trygg også på modulnivå her.
-import { ta } from './i18n.js';
+import { ta, adminLang } from './i18n.js';
 
 /**
  * Innholdsflaten i en seksjon (ADR-0018). Blokkenes x/w er prosent AV
@@ -1959,19 +1960,35 @@ function addSectionToolbar(host, section, grid) {
   };
 
   if (isMobile()) {
-    const mobile = section.responsive?.mobile;
-    if (mobile?.attention?.needed) {
-      mk('✓', ta('canvas.mobileReviewed'), (event) => {
-        section.responsive.mobile.attention = null;
-        host.classList.remove('urd-attention');
-        event.target.remove();
-        post({ type: 'urd-review-done', sectionId: section.id });
-      });
+    const attention = section.responsive?.mobile?.attention;
+    if (attention?.needed) {
+      // Tilsynskortet: HVA skjedde (oversatt reason) og NÅR (relativ tid),
+      // med gjennomgått-knappen ved siden av. Kortet er svaret på at det
+      // gamle merket bare sa «trenger tilsyn» uten å si hva eller hvor.
+      host.appendChild(buildAttentionCard(host, section, attention));
     }
-    if (mobile?.mode === 'manual') {
-      mk('↺', ta('canvas.mobileAuto'), () => {
-        post({ type: 'urd-mobile-auto', sectionId: section.id });
+    // Nullstilling vises kun når seksjonen faktisk har mobiloverstyringer.
+    if (section.blocks.some((b) => b.frames?.mobile)) {
+      const reset = document.createElement('button');
+      reset.textContent = '↺';
+      reset.title = ta('canvas.mobileReset');
+      armConfirm(reset, () => post({ type: 'urd-mobile-reset', sectionId: section.id }));
+      bar.appendChild(reset);
+    }
+    // Skjulte blokker er ellers usynlige i mobilvisning: chipen gjør dem
+    // gjenoppdagbare, med en øye-knapp per blokk som viser den igjen.
+    const hidden = section.blocks.filter((b) => b.hideMobile);
+    if (hidden.length) {
+      const chip = document.createElement('button');
+      chip.className = 'urd-hidden-chip';
+      chip.textContent = ta('canvas.hiddenCount', { n: hidden.length });
+      chip.title = ta('canvas.hiddenList');
+      chip.addEventListener('click', () => {
+        const open = host.querySelector(':scope > .urd-hidden-list');
+        if (open) { open.remove(); return; }
+        host.appendChild(buildHiddenList(section, hidden));
       });
+      bar.appendChild(chip);
     }
   } else {
     // Utvidbare presets: «+ kort/rad/person»-knapp som legger til NESTE element i seksjonen.
@@ -2033,62 +2050,133 @@ function addSectionToolbar(host, section, grid) {
 }
 
 /**
- * Første håndjustering i mobilvisning: seksjonen går til manuell modus,
- * og ALLE blokkene får konkrete mobil-frames lest fra flyt-posisjonene
- * i øyeblikket (dekor-blokker, som ikke er i flyten, arver desktop-
- * framen som utgangspunkt). DOM-en konverteres på stedet uten rerender,
- * så et pågående dra ikke avbrytes; editoren bokfører via meldingen.
+ * To-klikks bekreftelse på en destruktiv knapp: første klikk væpner den
+ * (rød, «Sikker?»), andre klikk utfører. Klikk utenfor eller Escape
+ * avvæpner. Lytterne ryddes i alle utganger.
  */
-function materializeMobile(host, section) {
-  // Flyten og de materialiserte framene bor begge i innholdsflaten. På
-  // mobil er flaten identisk med seksjonen (margen er 0 under brekkpunktet),
-  // men målingen går via canvasOf uansett, så koden forblir riktig om
-  // mobil-revurderingen senere binder også der.
-  const canvas = canvasOf(host);
-  const flow = canvas.querySelector(':scope > .urd-flow');
-  const hostRect = canvas.getBoundingClientRect();
-  const frames = [];
-  const flowEls = flow ? [...flow.querySelectorAll(':scope > .urd-block')] : [];
-
-  for (const el of flowEls) {
-    const block = section.blocks.find((b) => b.id === el.dataset.blockId);
-    if (!block) continue;
-    const r = el.getBoundingClientRect();
-    block.frames.mobile = {
-      x: Math.round(((r.left - hostRect.left) / hostRect.width) * 10000) / 100,
-      y: Math.round(r.top - hostRect.top),
-      w: Math.round((r.width / hostRect.width) * 10000) / 100,
-      h: Math.round(r.height),
-      z: block.frames.desktop.z ?? 1,
-      rot: block.frames.desktop.rot ?? 0,
-    };
-    frames.push({ blockId: block.id, frame: block.frames.mobile });
-  }
-  for (const block of section.blocks) {
-    if (!block.frames.mobile) {
-      block.frames.mobile = { ...block.frames.desktop };
-      frames.push({ blockId: block.id, frame: block.frames.mobile });
-    }
-  }
-
-  section.responsive = {
-    ...(section.responsive ?? {}),
-    mobile: { mode: 'manual', attention: section.responsive?.mobile?.attention ?? null },
+function armConfirm(btn, onConfirm) {
+  const label = btn.textContent;
+  let armed = false;
+  let cleanup = null;
+  const disarm = () => {
+    armed = false;
+    btn.classList.remove('urd-armed');
+    btn.textContent = label;
+    cleanup?.();
+    cleanup = null;
   };
+  btn.addEventListener('click', () => {
+    if (armed) {
+      disarm();
+      onConfirm();
+      return;
+    }
+    armed = true;
+    btn.classList.add('urd-armed');
+    btn.textContent = ta('canvas.confirmReset');
+    const onDown = (ev) => { if (!btn.contains(ev.target)) disarm(); };
+    const onKey = (ev) => { if (ev.key === 'Escape') disarm(); };
+    document.addEventListener('pointerdown', onDown, true);
+    document.addEventListener('keydown', onKey, true);
+    cleanup = () => {
+      document.removeEventListener('pointerdown', onDown, true);
+      document.removeEventListener('keydown', onKey, true);
+    };
+  });
+}
 
-  // Konverter DOM-en: ut av flyten, inn i absolutt posisjonering.
-  for (const el of flowEls) {
-    const block = section.blocks.find((b) => b.id === el.dataset.blockId);
-    if (!block) continue;
-    el.classList.remove('urd-block-flow');
-    Object.assign(el.style, frameToCss(block.frames.mobile));
-    canvas.appendChild(el);
+/** Relativ tid for tilsynskortet, i adminspråket («for 2 timer siden»). */
+function relativeTime(iso) {
+  const then = Date.parse(iso);
+  if (!Number.isFinite(then)) return '';
+  try {
+    const rtf = new Intl.RelativeTimeFormat(adminLang(), { numeric: 'auto' });
+    const mins = Math.round((Date.now() - then) / 60000);
+    if (Math.abs(mins) < 60) return rtf.format(-mins, 'minute');
+    const hours = Math.round(mins / 60);
+    if (Math.abs(hours) < 24) return rtf.format(-hours, 'hour');
+    return rtf.format(-Math.round(hours / 24), 'day');
+  } catch {
+    return '';
   }
-  flow?.remove();
-  const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.mobile.y + b.frames.mobile.h));
-  host.style.minHeight = `${maxBottom}px`;
+}
 
-  post({ type: 'urd-mobile-manual', sectionId: section.id, frames });
+/**
+ * Tilsynskortet i mobilvisning: hva som skjedde på skrivebordet (oversatt
+ * attention.reason), når (relativ tid fra attention.since), og
+ * gjennomgått-knappen. reason-tokens uten oversettelse (f.eks. fra en
+ * nyere motor) faller til fellesteksten.
+ */
+function buildAttentionCard(host, section, attention) {
+  const card = document.createElement('div');
+  card.className = 'urd-attention-card';
+
+  const text = document.createElement('div');
+  const key = `canvas.attention.${attention.reason}`;
+  const label = ta(key);
+  text.textContent = label === key ? ta('canvas.attention.fallback') : label;
+  card.appendChild(text);
+
+  const when = relativeTime(attention.since);
+  if (when) {
+    const time = document.createElement('div');
+    time.className = 'urd-attention-since';
+    time.textContent = when;
+    card.appendChild(time);
+  }
+
+  const ok = document.createElement('button');
+  ok.textContent = `✓ ${ta('canvas.mobileReviewedShort')}`;
+  ok.title = ta('canvas.mobileReviewed');
+  ok.addEventListener('click', () => {
+    section.responsive.mobile.attention = null;
+    host.classList.remove('urd-attention');
+    card.remove();
+    post({ type: 'urd-review-done', sectionId: section.id });
+  });
+  card.appendChild(ok);
+  return card;
+}
+
+/**
+ * Lista over blokker som er skjult på mobil (chipen i seksjonens
+ * verktøylinje): typeetikett + øye-knapp som viser blokken igjen.
+ */
+function buildHiddenList(section, hidden) {
+  const EYE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/></svg>';
+  const list = document.createElement('div');
+  list.className = 'urd-hidden-list';
+  for (const block of hidden) {
+    const row = document.createElement('div');
+    const def = window.Urd.blocks.get(block.type);
+    const name = document.createElement('span');
+    name.textContent = def?.labelKey ? ta(def.labelKey) : (def?.label ?? block.type);
+    row.appendChild(name);
+    const show = document.createElement('button');
+    show.innerHTML = EYE_SVG;
+    show.title = ta('canvas.showBlock');
+    show.addEventListener('click', () => {
+      block.hideMobile = false;
+      post({ type: 'urd-block-flag', sectionId: section.id, blockId: block.id, hideMobile: false });
+    });
+    row.appendChild(show);
+    list.appendChild(row);
+  }
+  return list;
+}
+
+/**
+ * Radindeksen (1-basert) ved en y-avstand fra radnettets innholdstopp.
+ * Sporlista er de FAKTISKE radhøydene (grodde spor er høyere enn
+ * MOBILE_ROW); forbi siste spor fortsetter nettet i MOBILE_ROW-steg.
+ */
+function rowAtOffset(tracks, y) {
+  let sum = 0;
+  for (let i = 0; i < tracks.length; i++) {
+    sum += tracks[i];
+    if (y < sum) return i + 1;
+  }
+  return tracks.length + 1 + Math.max(0, Math.floor((y - sum) / MOBILE_ROW));
 }
 
 function post(msg) {
@@ -2231,8 +2319,10 @@ window.addEventListener('keydown', (event) => {
   }
 
   // Utvalgs-sletting trenger ikke enkeltblokk-anker (marquee kan stå
-  // uten et etter gruppe-operasjoner).
+  // uten et etter gruppe-operasjoner). Sletting er strukturarbeid og
+  // hører til desktopvisningen, som de andre snarveiene.
   if ((event.key === 'Delete' || event.key === 'Backspace') && multiIds.size > 1) {
+    if (isMobile()) return;
     event.preventDefault();
     deleteSelection();
     return;
@@ -2283,6 +2373,7 @@ window.addEventListener('keydown', (event) => {
   }
 
   if (event.key === 'Delete' || event.key === 'Backspace') {
+    if (isMobile()) return;
     event.preventDefault();
     post({ type: 'urd-delete', sectionId: ctx.section.id, blockId: selectedBlockId });
     selectBlock(null);
@@ -2785,8 +2876,6 @@ function enhanceBlock(el, block, section, grid, host) {
   el._urdCtx = { block, section, grid, host };
 
   const mobile = isMobile();
-  const activeFrame = () =>
-    (mobile ? (block.frames.mobile ?? block.frames.desktop) : block.frames.desktop);
 
   const toolbar = document.createElement('div');
   toolbar.className = 'urd-edit-toolbar';
@@ -2823,6 +2912,42 @@ function enhanceBlock(el, block, section, grid, host) {
   moveHandle.textContent = '⠿';
   moveHandle.title = ta('canvas.dragMove');
   toolbar.appendChild(moveHandle);
+
+  // Flytende mobilblokk: piler som flytter den i leserekkefølgen (skriver
+  // mobileOrder). Pinnede blokker deltar ikke i flyten og får ↺ i stedet.
+  if (mobile && !Number.isFinite(block.frames.mobile?.row)) {
+    for (const [glyph, dir, key] of [['↑', -1, 'canvas.orderUp'], ['↓', 1, 'canvas.orderDown']]) {
+      const btn = document.createElement('button');
+      btn.textContent = glyph;
+      btn.title = ta(key);
+      btn.addEventListener('click', () => {
+        const order = reorderMobileKey(section.blocks, block.id, dir);
+        if (order === null) return;
+        block.mobileOrder = order;
+        post({ type: 'urd-mobile-order', sectionId: section.id, blockId: block.id, mobileOrder: order });
+      });
+      toolbar.appendChild(btn);
+    }
+  }
+
+  // Overstyrt mobilblokk: nål-merke som viser tilstanden, og en ↺ som
+  // nuller KUN denne blokkens overstyring (tilbake til synk med desktop).
+  if (mobile && block.frames.mobile) {
+    const MOBILE_PIN_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></svg>';
+    const pin = document.createElement('div');
+    pin.className = 'urd-mobile-pin';
+    pin.innerHTML = MOBILE_PIN_SVG;
+    pin.title = ta('canvas.mobilePinned');
+    el.appendChild(pin);
+
+    const resetBtn = document.createElement('button');
+    resetBtn.textContent = '↺';
+    resetBtn.title = ta('canvas.mobileResetBlock');
+    resetBtn.addEventListener('click', () => {
+      post({ type: 'urd-mobile-reset', sectionId: section.id, blockId: block.id });
+    });
+    toolbar.appendChild(resetBtn);
+  }
 
   // z-orden: legg blokken øverst/nederst blant seksjonens blokker.
   const bumpZ = (dir) => {
@@ -2867,29 +2992,27 @@ function enhanceBlock(el, block, section, grid, host) {
     backBtn.addEventListener('click', () => bumpZ(-1));
     toolbar.appendChild(backBtn);
 
-    // Dekor-flagget vises som mobil-synlighet - det er det flagget GJØR:
-    // telefon = blokken vises i automatisk mobil-layout, overstrøket
-    // telefon = den skjules (pynt/dekor). Ikonet ER tilstanden (tegnet
+    // Mobil-synlighet: telefon = blokken vises på mobil, overstrøket
+    // telefon = den skjules (hideMobile). Ikonet ER tilstanden (tegnet
     // SVG, ikke emoji); tooltipen forklarer klikket.
     const PHONE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.2h3"/></svg>';
     const PHONE_OFF_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.2h3"/><path d="M3.5 3.5l17 17"/></svg>';
-    const decorBtn = document.createElement('button');
-    decorBtn.className = 'urd-edit-decor';
-    const syncDecor = () => {
-      decorBtn.innerHTML = block.decor ? PHONE_OFF_SVG : PHONE_SVG;
-      decorBtn.title = block.decor
-        ? ta('canvas.decorHidden')
-        : ta('canvas.decorShown');
-      decorBtn.classList.toggle('on', Boolean(block.decor));
+    const hideBtn = document.createElement('button');
+    hideBtn.className = 'urd-edit-decor';
+    const syncHide = () => {
+      hideBtn.innerHTML = block.hideMobile ? PHONE_OFF_SVG : PHONE_SVG;
+      hideBtn.title = block.hideMobile
+        ? ta('canvas.hideMobileOn')
+        : ta('canvas.hideMobileOff');
+      hideBtn.classList.toggle('on', Boolean(block.hideMobile));
     };
-    syncDecor();
-    decorBtn.addEventListener('click', () => {
-      block.decor = !block.decor;
-      el.classList.toggle('urd-decor', block.decor);
-      syncDecor();
-      post({ type: 'urd-block-flag', sectionId: section.id, blockId: block.id, decor: block.decor });
+    syncHide();
+    hideBtn.addEventListener('click', () => {
+      block.hideMobile = !block.hideMobile;
+      syncHide();
+      post({ type: 'urd-block-flag', sectionId: section.id, blockId: block.id, hideMobile: block.hideMobile });
     });
-    toolbar.appendChild(decorBtn);
+    toolbar.appendChild(hideBtn);
 
     const DUP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>';
     if (block.type === 'image') {
@@ -3010,6 +3133,123 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
+   * Mobil-dra: pinner ÉN blokk til radnettet (ADR-0019). Under draget
+   * posisjoneres elementet absolutt i flytflaten, så resten av nettet
+   * flyter om seg og viser layouten blokken pinnes inn i. Ved slipp
+   * regnes plasseringen om til radspor via de faktiske sporhøydene
+   * (grodde spor er høyere enn MOBILE_ROW), DOM-en konverteres på stedet
+   * og editoren bokfører via urd-move med frameKey 'mobile'.
+   */
+  function mobileDrag(handle, event, kind, opts = {}) {
+    const canvas = canvasOf(host);
+    const flowEl = canvas.querySelector(':scope > .urd-flow');
+    if (!flowEl) return;
+    const flowRect = flowEl.getBoundingClientRect();
+    const padTop = parseFloat(getComputedStyle(flowEl).paddingTop) || 0;
+    const startRect = el.getBoundingClientRect();
+
+    const start = { x: event.clientX, y: event.clientY };
+    const orig = {
+      left: startRect.left - flowRect.left,
+      top: startRect.top - flowRect.top,
+      w: startRect.width,
+      h: startRect.height,
+    };
+    let current = { ...orig };
+    // Flate-dra starter først etter en liten terskel, så klikk forblir klikk.
+    const threshold = opts.surface ? 4 : 0;
+    let started = false;
+
+    const begin = () => {
+      started = true;
+      // Ut av nettet og inn i fri posisjonering; nettet flyter om seg.
+      el.style.position = 'absolute';
+      el.style.left = `${orig.left}px`;
+      el.style.top = `${orig.top}px`;
+      el.style.width = `${orig.w}px`;
+      if (kind === 'resize') el.style.height = `${orig.h}px`;
+      el.style.marginLeft = '0';
+      el.style.zIndex = '100001';
+    };
+    if (threshold === 0) begin();
+
+    const onMove = (ev) => {
+      if (!started) {
+        if (Math.abs(ev.clientX - start.x) + Math.abs(ev.clientY - start.y) < threshold) return;
+        begin();
+      }
+      const dx = ev.clientX - start.x;
+      const dy = ev.clientY - start.y;
+      if (kind === 'move') {
+        current = {
+          ...orig,
+          left: clamp(orig.left + dx, 0, Math.max(0, canvas.clientWidth - orig.w)),
+          top: Math.max(0, orig.top + dy),
+        };
+        el.style.left = `${current.left}px`;
+        el.style.top = `${current.top}px`;
+      } else {
+        current = {
+          ...orig,
+          w: clamp(orig.w + dx, 24, canvas.clientWidth - orig.left),
+          h: Math.max(MOBILE_ROW, orig.h + dy),
+        };
+        el.style.width = `${current.w}px`;
+        el.style.height = `${current.h}px`;
+      }
+    };
+
+    const finish = () => {
+      handle.removeEventListener('pointermove', onMove);
+      handle.removeEventListener('pointerup', onUp);
+      handle.removeEventListener('pointercancel', finish);
+    };
+
+    const onUp = () => {
+      finish();
+      if (!started) return;
+
+      // Radindeksen leses mot sporhøydene UTEN blokken (den står absolutt
+      // nå), som er nettopp nettet den pinnes inn i.
+      const tracks = getComputedStyle(flowEl).gridTemplateRows
+        .split(' ').map(parseFloat).filter(Number.isFinite);
+      const rect = el.getBoundingClientRect();
+      const r2 = (v) => Math.round(v * 100) / 100;
+      const wPct = r2((rect.width / canvas.clientWidth) * 100);
+      const old = block.frames.mobile;
+      const placement = {
+        x: clamp(r2((current.left / canvas.clientWidth) * 100), 0, r2(100 - wPct)),
+        w: wPct,
+        row: rowAtOffset(tracks, current.top - padTop),
+        rows: Math.max(1, Math.round(rect.height / MOBILE_ROW)),
+      };
+      if (Number.isFinite(old?.z)) placement.z = old.z;
+      if (old?.rot) placement.rot = old.rot;
+      block.frames.mobile = placement;
+
+      // Konverter DOM-en tilbake til nettet med den nye plasseringen.
+      el.style.position = '';
+      el.style.left = '';
+      el.style.top = '';
+      el.style.width = '';
+      el.style.height = '';
+      el.style.marginLeft = '';
+      el.style.zIndex = '';
+      el.classList.remove('urd-block-flow');
+      el.classList.add('urd-block-pinned');
+      const def = window.Urd.blocks.get(block.type);
+      const autoGrow = block.type === 'text' || Boolean(def?.autoGrow);
+      Object.assign(el.style, mobilePlacementToCss(placement, block.frames.desktop, { autoGrow }));
+
+      post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: placement, frameKey: 'mobile' });
+    };
+
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp);
+    handle.addEventListener('pointercancel', finish);
+  }
+
+  /**
    * Felles dra-logikk for flytting og resize. Piksler oversettes til
    * grid-enheter og rundes fortløpende, så blokken snapper synlig
    * mens man drar. Ved slipp meldes den nye framen til editoren.
@@ -3023,9 +3263,9 @@ function enhanceBlock(el, block, section, grid, host) {
         // teksten - klikk uten dra velger den, klikk igjen redigerer.
         if (target?.closest('.urd-text[contenteditable="true"]') && selectedBlockId === block.id && multiIds.size <= 1) return;
         if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button, input, select, textarea, .urd-samling-editable, .urd-samling-image-edit, .urd-faq-q, .urd-kal-config, .urd-skjema-config, .urd-kart-config')) return;
-        // Auto-mobil: første materialisering skal være et bevisst valg
+        // Flytende mobilblokk: første pinning skal være et bevisst valg
         // (dra i ⠿), ikke et klikk på blokken.
-        if (mobile && (section.responsive?.mobile?.mode ?? 'auto') !== 'manual') return;
+        if (mobile && !Number.isFinite(block.frames.mobile?.row)) return;
         event.preventDefault();
       } else {
         event.preventDefault();
@@ -3036,12 +3276,13 @@ function enhanceBlock(el, block, section, grid, host) {
       }
       handle.setPointerCapture(event.pointerId);
 
-      // Første håndjustering i mobilvisning: seksjonen materialiseres
-      // (auto → manuell) før draet fortsetter på samme element.
-      if (mobile && (section.responsive?.mobile?.mode ?? 'auto') !== 'manual') {
-        materializeMobile(host, section);
+      // Mobil har sin egen dra-mekanikk: draget pinner ÉN blokk til
+      // radnettet, resten fortsetter å flyte (ADR-0019).
+      if (mobile) {
+        mobileDrag(handle, event, kind, opts);
+        return;
       }
-      const frameKey = mobile ? 'mobile' : 'desktop';
+      const frameKey = 'desktop';
 
       // Flate-dra starter først etter en liten terskel, så klikk
       // (markering, caret) forblir klikk.
@@ -3061,7 +3302,7 @@ function enhanceBlock(el, block, section, grid, host) {
       // Gruppe-dra: er blokken del av et flerutvalg, følger resten med
       // (samme delta, klemt så hele gruppen holder seg innenfor bredden).
       const canvas = canvasOf(host);
-      const groupParts = (!mobile && kind === 'move' && multiIds.size > 1 && multiIds.has(block.id))
+      const groupParts = (kind === 'move' && multiIds.size > 1 && multiIds.has(block.id))
         ? [...canvas.querySelectorAll(':scope > .urd-block')]
             .filter((o) => o !== el && multiIds.has(o.dataset.blockId))
             .map((o) => {
@@ -3217,10 +3458,10 @@ function enhanceBlock(el, block, section, grid, host) {
           return;
         }
 
-        // Slippes blokkens SENTRUM over en annen seksjon (desktop),
-        // flytter blokken dit - grid og tilhørighet skal følge seksjonen
-        // den faktisk ligger i, ikke den den kom fra.
-        if (kind === 'move' && !mobile) {
+        // Slippes blokkens SENTRUM over en annen seksjon, flytter blokken
+        // dit - grid og tilhørighet skal følge seksjonen den faktisk
+        // ligger i, ikke den den kom fra.
+        if (kind === 'move') {
           const rect = el.getBoundingClientRect();
           const target = document
             .elementsFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)

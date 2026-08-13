@@ -14,7 +14,7 @@
  *    der faller tilbake til desktop-framen), og seksjonshøyden beregnes
  *    fra nederste mobil-frame.
  */
-import { lift } from './migrate.js';
+import { lift, MOBILE_ROW, MOBILE_GAP } from './migrate.js';
 import { applyAnimation } from './animations/core.js';
 import { applySectionTheme } from './theme.js';
 import { refreshSticky } from './sticky.js';
@@ -91,20 +91,103 @@ export function frameToCss(frame) {
 }
 
 /**
- * Leserekkefølgen for auto-avledet mobil-stabling: sortert på desktop-y,
- * deretter x; dekor-blokker utelates. Ren funksjon, testet.
+ * Leserekkefølgen i mobil-radnettet: sortert på desktop-y, deretter x;
+ * blokker med hideMobile utelates. Pinnede blokker (frames.mobile med row)
+ * er MED, i samme leserekkefølge: auto-plasseringen hopper over dem, men
+ * DOM-rekkefølgen bærer opplesingsrekkefølgen. Ren funksjon, testet.
  *
  * @param {Array<object>} blocks Seksjonens blokker
- * @returns {Array<object>} Blokkene som skal stables, i rekkefølge
+ * @returns {Array<object>} Blokkene som skal rendres på mobil, i rekkefølge
  */
 export function stackOrder(blocks) {
   // mobileOrder (additivt felt) overstyrer sorteringsnøkkelen og tolkes på samme skala som desktop-y.
   // Presetene bruker det til å holde kort samlet (ikon + boks) i stedet for at y-sorteringen splitter kortene i bånd; blokker uten feltet sorterer som før.
   const key = (block) => block.mobileOrder ?? block.frames.desktop.y;
   return blocks
-    .filter((block) => !block.decor && block.frames?.desktop)
+    .filter((block) => !block.hideMobile && block.frames?.desktop)
     .slice()
     .sort((a, b) => (key(a) - key(b)) || (a.frames.desktop.x - b.frames.desktop.x));
+}
+
+/**
+ * Ny mobileOrder-nøkkel for å flytte en blokk ett hakk opp eller ned i
+ * mobil-leserekkefølgen. Ren funksjon, testet.
+ *
+ * Nøkkelen legges MELLOM naboenes nøkler (midtpunkt), så ingen andre
+ * blokker trenger nye nøkler. Kun flytende blokker deltar: pinnede har
+ * eksplisitt rad og står utenfor flytrekkefølgen. Returnerer null når
+ * blokken alt står i enden (eller ikke flyter).
+ *
+ * @param {Array<object>} blocks Seksjonens blokker
+ * @param {string} blockId Blokken som skal flyttes
+ * @param {number} dir -1 = tidligere, 1 = senere
+ * @returns {number|null} Ny mobileOrder, eller null når flytting er umulig
+ */
+export function reorderMobileKey(blocks, blockId, dir) {
+  const flow = stackOrder(blocks).filter((b) => !Number.isFinite(b.frames.mobile?.row));
+  const i = flow.findIndex((b) => b.id === blockId);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= flow.length) return null;
+  const key = (b) => b.mobileOrder ?? b.frames.desktop.y;
+  const target = key(flow[j]);
+  const beyond = flow[j + dir] ? key(flow[j + dir]) : null;
+  const next = beyond === null ? target + dir * 16 : (target + beyond) / 2;
+  // Like nabonøkler gir et midtpunkt som ikke flytter noe (rekkefølgen
+  // avgjøres da av x-tiebreaket); legg nøkkelen et knepp forbi i stedet.
+  const nudged = next === target ? target + dir * 0.01 : next;
+  return Math.round(nudged * 100) / 100;
+}
+
+/**
+ * Oversetter en mobil-plassering til CSS for radnettet (ADR-0019).
+ * Ren funksjon (ingen DOM), testet i tests/render.test.mjs.
+ *
+ * `placement` er blokkens frames.mobile: null betyr at blokken følger
+ * desktop fullt ut, et objekt uten `row` overstyrer kun feltene som står
+ * der (blokken flyter fortsatt), og et objekt med `row` pinner blokken til
+ * eksplisitte radspor. Radene er minmax(MOBILE_ROW, auto) og vokser med
+ * innholdet, så en radposisjon er en posisjon i komposisjonen, ikke en
+ * frossen pikselavstand.
+ *
+ * @param {{x?: number, w?: number, row?: number, rows?: number, z?: number, rot?: number}|null} placement
+ * @param {{x: number, y: number, w: number, h: number, z?: number, rot?: number}} desktop Blokkens desktop-frame
+ * @param {{autoGrow?: boolean}} [opts] autoGrow: tekst og datablokker med naturlig høyde
+ * @returns {object} Stilkart for Object.assign(el.style, ...)
+ */
+export function mobilePlacementToCss(placement, desktop, opts = {}) {
+  const css = {};
+  const rot = placement?.rot ?? desktop.rot;
+  if (rot) css.transform = `rotate(${rot}deg)`;
+  if (placement?.z != null) css.zIndex = String(placement.z);
+
+  if (Number.isFinite(placement?.row)) {
+    // Pinnet: eksplisitte radspor. Uten rows avledes spennet fra
+    // desktophøyden. Høyden settes ikke: elementet strekkes til sporene
+    // sine (grid-stretch), og vokser innholdet, vokser sporene med.
+    const rows = Number.isFinite(placement.rows)
+      ? placement.rows
+      : Math.max(1, Math.ceil(desktop.h / MOBILE_ROW));
+    css.gridRow = `${placement.row} / span ${rows}`;
+    css.width = `${placement.w ?? desktop.w}%`;
+    css.marginLeft = `${placement.x ?? desktop.x}%`;
+    css.justifySelf = 'start';
+    return css;
+  }
+
+  // Flyter: auto-plassert. Partielle overstyringer gjelder kun feltene
+  // som faktisk står i plasseringen.
+  if (placement?.w != null) css.width = `${placement.w}%`;
+  if (placement?.x != null) {
+    css.marginLeft = `${placement.x}%`;
+    css.justifySelf = 'start';
+  }
+  if (!opts.autoGrow) {
+    // Fast høyde fra desktop; spennet rommer margin-bottom (MOBILE_GAP fra
+    // base.css), så radsporene forblir MOBILE_ROW px og aldri blåses opp.
+    css.height = `${desktop.h}px`;
+    css.gridRow = `auto / span ${Math.max(1, Math.ceil((desktop.h + MOBILE_GAP) / MOBILE_ROW))}`;
+  }
+  return css;
 }
 
 /**
@@ -168,30 +251,33 @@ export function renderSection(section, site, host, opts = {}) {
   if (secWidth) canvas.style.setProperty('--urd-canvas-w', secWidth === 'full' ? '100%' : secWidth);
   host.appendChild(canvas);
 
-  const mode = section.responsive?.mobile?.mode ?? 'auto';
-
-  if (viewport === 'mobile' && mode !== 'manual') {
-    // Auto-avledet: vanlig flyt i én kolonne, tekst får naturlig høyde.
+  if (viewport === 'mobile') {
+    // Mobil-radnettet (ADR-0019): én sti for alle seksjoner. Urørte
+    // blokker auto-plasseres i leserekkefølge, pinnede får eksplisitte
+    // radspor, og minmax-radene lar innholdet vokse uten JS.
     const flow = document.createElement('div');
     flow.className = 'urd-flow';
     for (const block of stackOrder(section.blocks)) {
       const el = document.createElement('div');
-      el.className = 'urd-block urd-block-flow';
+      const pinned = Number.isFinite(block.frames.mobile?.row);
+      el.className = pinned ? 'urd-block urd-block-pinned' : 'urd-block urd-block-flow';
       el.dataset.blockId = block.id;
-      // Autovoksende blokker (def.autoGrow: faq/galleri/samling og plugin-
-      // blokker med eget innhold) får naturlig høyde i mobilflyten: fast
-      // desktophøyde ville klippet høyere mobilinnhold over neste blokk.
+      // Dekor-merket leses av stagger-animasjonen (dekor er pynt og skal
+      // ikke forsinke innholdsbølgen).
+      if (block.decor) el.dataset.decor = '1';
+      // Autovoksende blokker (tekst, og def.autoGrow: faq/galleri/samling
+      // og plugin-blokker med eget innhold) får naturlig høyde: fast
+      // desktophøyde ville klippet høyere mobilinnhold.
       const def = Urd.blocks.get(block.type);
-      if (block.type !== 'text' && !def?.autoGrow) el.style.height = `${block.frames.desktop.h}px`;
-      if (block.frames.desktop.rot) el.style.transform = `rotate(${block.frames.desktop.rot}deg)`;
+      const autoGrow = block.type === 'text' || Boolean(def?.autoGrow);
+      Object.assign(el.style, mobilePlacementToCss(block.frames.mobile, block.frames.desktop, { autoGrow }));
       renderBlock(Urd, el, block, ctx);
       flow.appendChild(el);
     }
     canvas.appendChild(flow);
     host.style.minHeight = 'auto';
   } else {
-    // Absolutt posisjonering: desktop-frames, eller mobil-frames i
-    // manuell modus (null faller tilbake til desktop-framen).
+    // Desktop: absolutt posisjonering fra desktop-frames.
     let maxBottomPx = 0;
     for (const block of section.blocks) {
       // En blokk uten desktop-frame (håndredigert/ødelagt data) hoppes over i stedet for å velte hele seksjonen.
@@ -205,14 +291,12 @@ export function renderSection(section, site, host, opts = {}) {
       // Dekor-merket leses av stagger-animasjonen (dekor er pynt og skal
       // ikke forsinke innholdsbølgen); mobilflyten filtrerer på feltet selv.
       if (block.decor) el.dataset.decor = '1';
-      const frame = viewport === 'mobile'
-        ? (block.frames.mobile ?? block.frames.desktop)
-        : block.frames.desktop;
+      const frame = block.frames.desktop;
       Object.assign(el.style, frameToCss(frame));
       // Sticky («fest ved scrolling», additivt felt): kun merking her;
       // selve festingen gjør sticky.js ved scroll. Kun desktop - mobil-
       // visningen er dokumentflyt og ignorerer feltet.
-      if (viewport !== 'mobile' && block.sticky && typeof block.sticky.offset === 'number') {
+      if (block.sticky && typeof block.sticky.offset === 'number') {
         el.classList.add('urd-sticky-able');
         el.dataset.stickyOffset = String(block.sticky.offset);
         el.dataset.stickyUntil = block.sticky.until ?? '';
@@ -227,16 +311,10 @@ export function renderSection(section, site, host, opts = {}) {
       canvas.appendChild(el);
     }
 
-    if (viewport === 'mobile') {
-      // Mobil manuell: høyden følger nederste mobil-frame (ren funksjon
-      // av lagrede data - identisk i editor og produksjon).
-      host.style.minHeight = `${maxBottomPx}px`;
-    } else {
-      // Seksjonshøyden er brukerens: blokker kan bevisst henge utover
-      // kanten (seksjoner klipper aldri). Uten satt høyde brukes
-      // blokkenes utstrekning.
-      host.style.minHeight = section.size?.minHeight ?? `${maxBottomPx}px`;
-    }
+    // Seksjonshøyden er brukerens: blokker kan bevisst henge utover
+    // kanten (seksjoner klipper aldri). Uten satt høyde brukes
+    // blokkenes utstrekning.
+    host.style.minHeight = section.size?.minHeight ?? `${maxBottomPx}px`;
   }
 
   // Valgfri seksjonsanimasjon (additivt felt fra v0.5). Inn-animasjonen

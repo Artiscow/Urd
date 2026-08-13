@@ -314,6 +314,15 @@
       .filter((s) => s.responsive?.mobile?.attention?.needed).length ?? 0;
   }
 
+  /** Tilsynsmerket: bytt til mobilvisning og rull til første seksjon som
+   *  trenger gjennomgang. Scrollen sendes etter at viewport-effekten har
+   *  flushet (postMessage er FIFO, så rekkefølgen er garantert). */
+  function jumpToAttention() {
+    const target = store?.data.sections.find((s) => s.responsive?.mobile?.attention?.needed);
+    deviceId = 'mobile';
+    if (target) setTimeout(() => bridge?.sendScrollSection(target.id), 0);
+  }
+
   /**
    * Desktop-strukturendring i en manuelt mobil-tilpasset seksjon:
    * flagg seksjonen for mobil-tilsyn (regler i docs/SKJEMA.md#mobil-tilsyn).
@@ -329,7 +338,7 @@
       if (block) block.frames.desktop = { ...block.frames.desktop, ...move.frame };
     }
     section.size = { ...section.size, minHeight: msg.minHeight };
-    markDesktopChange(section, 'oppsett-byttet');
+    markDesktopChange(section, 'layout-changed');
     if (msg.sectionId === activeSectionId) sectionMinHeight = msg.minHeight;
     if (selectedBlock?.sectionId === msg.sectionId) syncSelectedBlock();
     store.save();
@@ -337,13 +346,22 @@
     bridge?.sendSection(pageId, section);
   }
 
+  /** Har seksjonen minst én blokk med mobiloverstyring (ADR-0019)? */
+  function hasMobileOverrides(section) {
+    return section?.blocks?.some((b) => b.frames?.mobile) ?? false;
+  }
+
   function markDesktopChange(section, reason) {
-    if (!section || section.responsive?.mobile?.mode !== 'manual') return;
-    if (section.responsive.mobile.attention?.needed) return;
-    section.responsive.mobile.attention = {
-      needed: true,
-      reason,
-      since: new Date().toISOString(),
+    // Kun seksjoner med overstyringer kan drifte fra desktop; resten
+    // avledes på nytt ved hver render og trenger aldri tilsyn.
+    if (!section || !hasMobileOverrides(section)) return;
+    if (section.responsive?.mobile?.attention?.needed) return;
+    section.responsive = {
+      ...(section.responsive ?? {}),
+      mobile: {
+        ...(section.responsive?.mobile ?? { mode: 'auto' }),
+        attention: { needed: true, reason, since: new Date().toISOString() },
+      },
     };
     updateAttention();
     bridge?.sendAttention(section.id, true);
@@ -821,6 +839,7 @@
       blockId: selectedBlock.blockId,
       type: block.type,
       decor: Boolean(block.decor),
+      hideMobile: Boolean(block.hideMobile),
       props: JSON.parse(JSON.stringify(block.props)),
       frame: { ...block.frames.desktop },
       animation: block.animation ? JSON.parse(JSON.stringify(block.animation)) : null,
@@ -897,7 +916,7 @@
     if (!block) return;
     pushHistory(key);
     fn(block, section);
-    markDesktopChange(section, 'blokk-endret');
+    markDesktopChange(section, 'block-edited');
     store.save();
     updateDirty();
     bridge?.sendSection(pageId, section);
@@ -1041,6 +1060,10 @@
 
   function setBlockDecor(on) {
     mutateBlock('decor', (b) => { b.decor = on; });
+  }
+
+  function setBlockHideMobile(on) {
+    mutateBlock('hide-mobile', (b) => { b.hideMobile = on; });
   }
 
   /** Bytt bilde i en bildeblokk (samme webp-flyt som + Bilde). */
@@ -2074,8 +2097,8 @@
       onAddBlocks: (msg) => insertBlocks(msg.sectionId, msg.blocks, msg.minBottom, msg.moves),
       onRequestBlock: handleRequestBlock,
       onMoveBlockSection: handleMoveBlockSection,
-      onMobileManual: handleMobileManual,
-      onMobileAuto: handleMobileAuto,
+      onMobileReset: handleMobileReset,
+      onMobileOrder: handleMobileOrder,
       onReviewDone: handleReviewDone,
       onBlockFlag: handleBlockFlag,
       onCollectionEdit: handleCollectionEdit,
@@ -2713,7 +2736,7 @@
       // så en blokk som alt var festet ikke mister innstillingene sine.
       block.sticky = group ? { offset: 16, until: null, ...block.sticky, group } : null;
     }
-    markDesktopChange(section, 'blokk-endret');
+    markDesktopChange(section, 'block-edited');
     store.save();
     updateDirty();
     bridge?.sendSection(pageId, section);
@@ -3716,7 +3739,7 @@
     pushHistory(msg.coalesce ? `edit:${msg.groupKey ?? msg.blockId}` : 'move-block');
     const key = msg.frameKey === 'mobile' ? 'mobile' : 'desktop';
     block.frames[key] = msg.frame;
-    if (key === 'desktop') markDesktopChange(section, 'desktop-endret-etter-mobil');
+    if (key === 'desktop') markDesktopChange(section, 'desktop-changed-after-mobile');
     store.save();
     updateDirty();
     if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
@@ -3749,34 +3772,38 @@
     if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
   }
 
-  /** Seksjon materialisert i mobilvisning: manuell modus + alle frames. */
-  function handleMobileManual(msg) {
+  /** ↺ i mobilvisning: nullstill mobiloverstyringer, hele seksjonen eller
+   *  én blokk (ADR-0019). hideMobile beholdes: synlighet er intensjon. */
+  function handleMobileReset(msg) {
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     if (!section) return;
-    pushHistory('mobile-manual');
-    for (const { blockId, frame } of msg.frames) {
-      const block = section.blocks.find((b) => b.id === blockId);
-      if (block) block.frames.mobile = frame;
+    pushHistory('mobile-reset');
+    if (msg.blockId) {
+      const block = section.blocks.find((b) => b.id === msg.blockId);
+      if (block) block.frames.mobile = null;
+    } else {
+      for (const block of section.blocks) block.frames.mobile = null;
     }
-    section.responsive = {
-      ...(section.responsive ?? {}),
-      mobile: { mode: 'manual', attention: section.responsive?.mobile?.attention ?? null },
-    };
-    store.save();
-    updateDirty();
-    // Ingen sendSection: iframen har allerede konvertert seg selv.
-  }
-
-  /** ↺ i mobilvisning: tilbake til auto-avledet layout. */
-  function handleMobileAuto(msg) {
-    const section = store.data.sections.find((s) => s.id === msg.sectionId);
-    if (!section) return;
-    pushHistory('mobile-auto');
-    for (const block of section.blocks) block.frames.mobile = null;
-    section.responsive = { ...(section.responsive ?? {}), mobile: { mode: 'auto', attention: null } };
+    // Uten overstyringer er det ingenting igjen som kan drifte fra desktop.
+    if (!hasMobileOverrides(section) && section.responsive?.mobile) {
+      section.responsive.mobile.attention = null;
+    }
     store.save();
     updateDirty();
     updateAttention();
+    bridge?.sendSection(pageId, section);
+  }
+
+  /** Pil-flytting i mobil-leserekkefølgen: bokfør ny mobileOrder-nøkkel
+   *  og rerender seksjonen, så auto-plasseringen stokker om. */
+  function handleMobileOrder(msg) {
+    const section = store.data.sections.find((s) => s.id === msg.sectionId);
+    const block = section?.blocks.find((b) => b.id === msg.blockId);
+    if (!block || typeof msg.mobileOrder !== 'number') return;
+    pushHistory('mobile-order');
+    block.mobileOrder = msg.mobileOrder;
+    store.save();
+    updateDirty();
     bridge?.sendSection(pageId, section);
   }
 
@@ -3791,15 +3818,21 @@
     updateAttention();
   }
 
-  /** Dekor-flagget: blokken utelates fra auto-avledet mobil-layout. */
+  /** Blokkflagg fra previewen: decor (entré-bølgen) og/eller hideMobile. */
   function handleBlockFlag(msg) {
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     const block = section?.blocks.find((b) => b.id === msg.blockId);
     if (!block) return;
-    pushHistory('decor');
-    block.decor = msg.decor;
+    pushHistory('block-flag');
+    if (typeof msg.decor === 'boolean') block.decor = msg.decor;
+    if (typeof msg.hideMobile === 'boolean') block.hideMobile = msg.hideMobile;
     store.save();
     updateDirty();
+    // hideMobile endrer mobil-renderingen; i mobilvisning må seksjonen
+    // tegnes på nytt for at blokken faktisk skal komme eller gå.
+    if (typeof msg.hideMobile === 'boolean' && viewMode === 'mobile') {
+      bridge?.sendSection(pageId, section);
+    }
     if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
   }
 
@@ -3864,7 +3897,7 @@
       block.frames.desktop = { ...block.frames.desktop, y: block.frames.desktop.y + move.dy };
     }
     if (msg.moves?.length) {
-      markDesktopChange(section, 'seksjonshøyde');
+      markDesktopChange(section, 'section-height');
       if (selectedBlock?.sectionId === msg.sectionId) syncSelectedBlock();
     }
     if (msg.sectionId === activeSectionId) sectionMinHeight = msg.minHeight;
@@ -3884,8 +3917,8 @@
     // Mobil-layouten avledes på nytt i den nye seksjonen.
     block.frames.mobile = null;
     to.blocks.push(block);
-    markDesktopChange(from, 'blokk-flyttet');
-    markDesktopChange(to, 'blokk-flyttet');
+    markDesktopChange(from, 'block-moved');
+    markDesktopChange(to, 'block-moved');
     store.save();
     updateDirty();
     updateAttention();
@@ -3905,7 +3938,7 @@
     pushHistory('delete-block');
     section.blocks = section.blocks.filter((b) => !ids.includes(b.id));
     if (ids.includes(selectedBlock?.blockId)) selectedBlock = null;
-    markDesktopChange(section, 'blokk-slettet');
+    markDesktopChange(section, 'block-deleted');
     store.save();
     updateDirty();
     bridge?.sendSection(pageId, section);
@@ -3918,14 +3951,14 @@
     text: { type: 'text', props: { html: ta('seed.text'), align: 'left' }, w: 33, h: 28 },
     'text-box': { type: 'text', props: { html: ta('seed.textBox'), align: 'left', box: true }, w: 30, h: 150 },
     button: { type: 'button', props: { label: ta('seed.newButton'), page: null, href: null, style: 'primary' }, w: 20, h: 36 },
-    'shape-line': { type: 'shape', decor: true, props: { kind: 'line', color: 'accent', thickness: 2, fill: null }, w: 25, h: 8 },
-    'shape-arrow': { type: 'shape', decor: true, props: { kind: 'arrow', color: 'accent', thickness: 2, fill: null }, w: 25, h: 16 },
-    'shape-circle': { type: 'shape', decor: true, props: { kind: 'circle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
-    'shape-rect': { type: 'shape', decor: true, props: { kind: 'rect', color: 'accent', thickness: 2, fill: null }, w: 20, h: 110 },
-    'shape-triangle': { type: 'shape', decor: true, props: { kind: 'triangle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
+    'shape-line': { type: 'shape', decor: true, hideMobile: true, props: { kind: 'line', color: 'accent', thickness: 2, fill: null }, w: 25, h: 8 },
+    'shape-arrow': { type: 'shape', decor: true, hideMobile: true, props: { kind: 'arrow', color: 'accent', thickness: 2, fill: null }, w: 25, h: 16 },
+    'shape-circle': { type: 'shape', decor: true, hideMobile: true, props: { kind: 'circle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
+    'shape-rect': { type: 'shape', decor: true, hideMobile: true, props: { kind: 'rect', color: 'accent', thickness: 2, fill: null }, w: 20, h: 110 },
+    'shape-triangle': { type: 'shape', decor: true, hideMobile: true, props: { kind: 'triangle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
     image: { type: 'image', props: { src: '', alt: '', fit: 'cover', radius: 'md', href: null }, w: 30, h: 220 },
     video: { type: 'video', props: { url: '', title: 'Video' }, w: 45, h: 300 },
-    icon: { type: 'icon', decor: true, props: { glyph: '★', color: 'accent', size: 48 }, w: 8, h: 64 },
+    icon: { type: 'icon', decor: true, hideMobile: true, props: { glyph: '★', color: 'accent', size: 48 }, w: 8, h: 64 },
     samling: { type: 'samling', props: { collection: null, view: 'cards', limit: 6, newestFirst: true }, w: 90, h: 200 },
     galleri: { type: 'galleri', props: { images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5 }, w: 90, h: 320 },
     faq: {
@@ -3973,9 +4006,10 @@
       id: makeId('blk'),
       type: d.type,
       version: 1,
-      // Former er dekor som standard: de utelates fra auto-avledet
-      // mobil-layout (kan skrus av per blokk med telefon-togglen).
+      // Former er dekor som standard: utenfor entré-bølgen (decor) og
+      // skjult på mobil (hideMobile); begge kan skrus av per blokk.
       decor: Boolean(d.decor),
+      hideMobile: Boolean(d.hideMobile),
       props: structuredClone(d.props),
       animation: null,
       frames: { desktop: { x: 4, y: 8, w: d.w, h: d.h, z: 1, rot: 0 }, mobile: null },
@@ -4001,7 +4035,7 @@
     const topZ = Math.max(0, ...section.blocks.map((b) => b.frames?.desktop?.z ?? 1)) + 1;
     if (block.frames?.desktop) block.frames.desktop = { ...block.frames.desktop, z: topZ };
     section.blocks.push(block);
-    markDesktopChange(section, 'blokk-lagt-til');
+    markDesktopChange(section, 'block-added');
     store.save();
     updateDirty();
     bridge?.sendSection(pageId, section);
@@ -4025,7 +4059,7 @@
     if (minBottom && current.endsWith('px') && Number.parseFloat(current) < minBottom) {
       section.size = { ...section.size, minHeight: `${minBottom}px` };
     }
-    markDesktopChange(section, 'blokk-lagt-til');
+    markDesktopChange(section, 'block-added');
     store.save();
     updateDirty();
     bridge?.sendSection(pageId, section);
@@ -4785,7 +4819,7 @@
       {/if}
 
       {#if attentionCount > 0}
-        <button class="badge attention" onclick={() => (deviceId = 'mobile')}
+        <button class="badge attention" onclick={jumpToAttention}
           title={ta('tip.attention')}>
           {@html ICONS.phone}
           <span class="btn-label">{ta(attentionCount === 1 ? 'ui.attentionOne' : 'ui.attentionMany', { n: attentionCount })}</span>
@@ -6939,6 +6973,11 @@
               onchange={(e) => setBlockFrame('rot', Number(e.target.value))} /></label>
           </div>
         {/if}
+        <label class="gridmenu-snap" title={ta('tip.hideMobile')}>
+          <input type="checkbox" checked={selectedBlock.hideMobile}
+            onchange={(e) => setBlockHideMobile(e.target.checked)} />
+          {ta('lbl.hideMobile')}
+        </label>
         <label class="gridmenu-snap" title={ta('tip.decor')}>
           <input type="checkbox" checked={selectedBlock.decor}
             onchange={(e) => setBlockDecor(e.target.checked)} />

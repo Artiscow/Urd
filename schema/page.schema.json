@@ -94,7 +94,7 @@
               "required": ["mode"],
               "additionalProperties": false,
               "properties": {
-                "mode": { "enum": ["auto", "manual"] },
+                "mode": { "enum": ["auto", "manual"], "description": "Legacy fra schemaVersion 2 (ADR-0019): overstyringer bor per blokk i frames.mobile. 'manual' leses av migreringen, skrives aldri igjen." },
                 "attention": {
                   "description": "Mobil-tilsyn-flagget - redaksjonell metadata, ignoreres av besøkende-motoren",
                   "oneOf": [
@@ -125,8 +125,9 @@
         "id": { "$ref": "#/$defs/id" },
         "type": { "type": "string", "minLength": 1 },
         "version": { "$ref": "#/$defs/version" },
-        "decor": { "type": "boolean", "default": false, "description": "Dekor-blokk: utelates fra auto-avledet mobil-layout" },
-        "mobileOrder": { "type": "number", "description": "Overstyrer sorteringsnøkkelen i auto-avledet mobil-stabling (tolkes på samme skala som desktop-y). Additivt felt fra v0.5: seksjonsmalene bruker det til å holde kort samlet." },
+        "decor": { "type": "boolean", "default": false, "description": "Dekor-blokk: utelates fra entré-animasjonens innholdsbølge. Fra schemaVersion 2 (ADR-0019) styrer feltet KUN animasjon; mobilskjulingen bor i hideMobile." },
+        "hideMobile": { "type": "boolean", "default": false, "description": "Skjul blokken på mobil (additivt felt fra v0.7, ADR-0019). Avløser decor som mobilfilter og virker i hele mobil-renderstien." },
+        "mobileOrder": { "type": "number", "description": "Overstyrer sorteringsnøkkelen i mobil-leserekkefølgen (tolkes på samme skala som desktop-y). Additivt felt fra v0.5: seksjonsmalene bruker det til å holde kort samlet." },
         "sticky": {
           "description": "Fest ved scrolling (additivt felt fra v0.6, kun desktop): blokken festes ved vindustoppen og slipper når egen seksjon (until: null) eller en senere seksjon (until: seksjons-id) er passert. Med mode 'screen' dokkes blokken i stedet til et fast punkt i vinduet for hele siden",
           "oneOf": [
@@ -187,14 +188,27 @@
           "properties": {
             "desktop": { "$ref": "#/$defs/frame" },
             "mobile": {
-              "description": "null = auto-avledet (én kolonne i leserekkefølge); objekt = manuell overstyring",
+              "description": "Mobil-overstyring per blokk (ADR-0019): null = blokken følger desktop (auto-plassert i radnettet); objekt = partiell plassering, der kun feltene som står der overstyrer. Med row er blokken pinnet til eksplisitte radspor.",
               "oneOf": [
                 { "type": "null" },
-                { "$ref": "#/$defs/frame" }
+                { "$ref": "#/$defs/mobilePlacement" }
               ]
             }
           }
         }
+      }
+    },
+    "mobilePlacement": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Partiell radnett-plassering (ADR-0019). Radene er minmax(8px, auto) og vokser med innholdet, så row/rows er posisjoner i komposisjonen, ikke frosne pikselavstander. Uten row flyter blokken fortsatt, og kun x/w overstyrer.",
+      "properties": {
+        "x": { "type": "number", "minimum": 0, "maximum": 100, "description": "Venstrekant i % av innholdsflaten" },
+        "w": { "type": "number", "exclusiveMinimum": 0, "maximum": 100, "description": "Bredde i % av innholdsflaten" },
+        "row": { "type": "integer", "minimum": 1, "description": "Startrad (1-basert) i radnettet; tilstedeværelse = pinnet" },
+        "rows": { "type": "integer", "minimum": 1, "description": "Radspenn; fravær = avledet fra desktophøyden" },
+        "z": { "type": "integer", "default": 1, "description": "Lagrekkefølge" },
+        "rot": { "type": "number", "default": 0, "description": "Rotasjon i grader" }
       }
     },
     "frame": {

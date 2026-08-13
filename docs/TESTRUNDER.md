@@ -2,6 +2,32 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.3): Synket mobilmodell per blokk (radnettet)
+
+Mobilmodellen er lagt om ([ADR-0019](adr/0019-synket-mobilmodell.md)): materialiseringen alt-eller-ingenting per seksjon er borte, mobil-overstyringer er per blokk, og mobil rendres i ett radnett for alle seksjoner. Punktene om materialisering i eldre batcher beskriver den gamle modellen.
+
+- [ ] MOBILVISNING SER UT SOM FØR på de fire demosidene: én kolonne i leserekkefølge, tekst med naturlig høyde, former/pynt skjult. Ingen av demosidene har overstyringer, så dette er ren regresjonssjekk
+- [ ] Ren visning i et smalt nettleservindu (under 640 px) viser det samme som editorens mobilvisning
+- [ ] PINNING: dra en blokk i ⠿ i mobilvisning. KUN den blokken pinnes (nål-merke oppe til venstre); resten av seksjonen fortsetter å flyte rundt den. Slipp og se at blokken står der du slapp den
+- [ ] Dra en blokk på tvers og se at flytende blokker aldri legger seg OPPÅ den pinnede: de hopper nedenfor båndet dens
+- [ ] Resize i mobilvisning pinner også, og ny bredde/høyde står seg etter rerender (bytt seksjon og tilbake)
+- [ ] SYNKEN: pin én blokk i en seksjon, bytt til desktop og flytt en ANNEN blokk. Tilbake i mobilvisning skal den andre blokken ha flyttet seg med (den følger desktop), mens den pinnede står
+- [ ] Ny blokk lagt til på desktop i en seksjon med pinninger: den flyter inn i mobil-rekkefølgen sin (etter desktop-y), aldri utenfor 390 px-skjermen
+- [ ] Tekstvekst: gjør en tekstblokk lengre og se i mobilvisning at raden vokser og at en pinnet blokk under flytter seg MED (radposisjonen er i komposisjonen, ikke frossen)
+- [ ] TILSYNET: med en pinnet blokk i seksjonen, endre noe på desktop. Merket i topplinja teller opp; klikk på det skal bytte til mobilvisning OG rulle til seksjonen, som viser et kort med HVA som skjedde og NÅR (relativ tid)
+- [ ] «✓ Gjennomgått» på kortet fjerner både kortet og telleren i topplinja
+- [ ] En seksjon UTEN overstyringer skal aldri få tilsynsflagg uansett hva du gjør på desktop
+- [ ] ↺ på en pinnet blokk (blokkverktøylinja) nuller KUN den blokken tilbake til flyt; ↺ i seksjonsverktøylinja krever to klikk («Sikker?», rød) og nuller hele seksjonen, men beholder skjult-på-mobil-valgene
+- [ ] Angre (Ctrl+Z) etter pinning, etter per-blokk-↺ og etter seksjons-↺ gjenoppretter riktig
+- [ ] SKJUL PÅ MOBIL: telefon-togglen på blokkverktøylinja (desktop) skjuler blokken på mobil, også om den er pinnet. Avkryssingen «Skjul på mobil» i Egenskaper/Plassering gjør det samme; «Dekor» er nå KUN entré-bølgen
+- [ ] Skjulte blokker: seksjonens mobilverktøylinje viser «N skjult»-chipen; klikk åpner lista, og øye-knappen henter blokken tilbake
+- [ ] REKKEFØLGE: pil opp/ned på en flytende blokk i mobilvisning flytter den i leserekkefølgen; håndbygde kort kan holdes samlet. Pinnede blokker har ikke piler
+- [ ] Delete/Backspace i mobilvisning sletter INGENTING (verken enkeltblokk eller utvalg); i desktopvisning virker de som før
+- [ ] Entré-animasjonen med stagger: dekor-blokker venter fortsatt ikke på tur i innholdsbølgen (decor-flagget virker som før)
+- [ ] GAMMELT INNHOLD: en side laget FØR omleggingen med en håndjustert mobil-seksjon (mode manual) åpnes uten feil: blokkene står omtrent der de ble satt (±8 px loddrett), dekor-blokkene er skjult, og publisering skriver schemaVersion 2
+- [ ] Publisert mobil er lik editorens mobilvisning på en deployet side
+- [ ] Bytt admin-språk til engelsk og tyrkisk og sjekk tilsynskortet, chipen, pilene og de nye tooltipene
+
 ### Testrunde-batch (0.7.2): Breddegrepet, bundet innholdsbredde
 
 Layouten er lagt om, så denne batchen er bredere enn vanlig. Det viktigste er de to første punktene: ser presetene riktige ut, og virker lerretet fortsatt som før.

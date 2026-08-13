@@ -49,7 +49,17 @@ export function lift(data, def) {
 }
 
 /** Gjeldende versjon av sidefil-formatet (content/pages/*.json). */
-export const PAGE_SCHEMA_VERSION = 1;
+export const PAGE_SCHEMA_VERSION = 2;
+
+/**
+ * Radhøyden i mobil-radnettet (ADR-0019), i px. En modellkonstant på linje
+ * med brekkpunktet: aldri koblet til grid.size, som er et snappeverktøy
+ * for desktop.
+ */
+export const MOBILE_ROW = 8;
+
+/** Loddrett luft mellom flytblokker i mobil-radnettet, i px. */
+export const MOBILE_GAP = 16;
 
 /** Gjeldende versjon av site.json-formatet. */
 export const SITE_SCHEMA_VERSION = 3;
@@ -57,12 +67,61 @@ export const SITE_SCHEMA_VERSION = 3;
 /**
  * Migreringer på filnivå. Hver funksjon løfter nøyaktig én versjon og
  * får hele sidefilen (klonet) + site.json som kontekst.
- *
- * Tomme siden pre-v1-innbakingen (fase-slippet av v0.6): utviklingsformatene
- * ble versjon 1 igjen, og pre-v1-stegene ble slettet (se ADR-0005).
- * Fra v1.0 fylles de ved hver formatendring.
  */
-const pageMigrations = {};
+
+/** Flytens topp-padding i det gamle mobilformatet: materialiseringen målte
+ *  y fra flatetoppen, altså inkludert paddingen, så den trekkes fra før
+ *  radindeksen regnes ut. */
+const V1_FLOW_PAD = 24;
+
+/** attention.reason-tokens var norske i v1; datakontrakter bruker engelske
+ *  identifikatorer. */
+const V1_REASONS = {
+  'oppsett-byttet': 'layout-changed',
+  'blokk-endret': 'block-edited',
+  'desktop-endret-etter-mobil': 'desktop-changed-after-mobile',
+  'seksjonshøyde': 'section-height',
+  'blokk-flyttet': 'block-moved',
+  'blokk-slettet': 'block-deleted',
+  'blokk-lagt-til': 'block-added',
+};
+
+const pageMigrations = {
+  // 1 -> 2 (synket mobilmodell, ADR-0019): frames.mobile bytter form fra
+  // full frame {x,y,w,h} til partiell radnett-plassering {x,w,row,rows},
+  // seksjonsmodusen 'manual' pensjoneres, og dekor-blokker får det nye
+  // hideMobile-feltet som overtar mobilskjulingen. Pre-v1 er utseende-
+  // endringen (radkvantisering ±8 px) akseptert (ADR-0005).
+  1: (page) => {
+    for (const section of page.sections ?? []) {
+      const mobile = section.responsive?.mobile;
+      for (const block of section.blocks ?? []) {
+        if (block.decor) block.hideMobile = true;
+        const m = block.frames?.mobile;
+        if (!m) continue;
+        const d = block.frames.desktop;
+        if (d && m.x === d.x && m.y === d.y && m.w === d.w && m.h === d.h) {
+          // Ren kopi av desktop-framen er materialiseringens fallback for
+          // blokker utenfor flyten, aldri en håndsatt plassering.
+          block.frames.mobile = null;
+          continue;
+        }
+        const placement = { x: m.x, w: m.w };
+        if (Number.isFinite(m.y)) {
+          placement.row = Math.max(1, Math.round((m.y - V1_FLOW_PAD) / MOBILE_ROW) + 1);
+          placement.rows = Number.isFinite(m.h) ? Math.max(1, Math.ceil(m.h / MOBILE_ROW)) : 1;
+        }
+        if (Number.isFinite(m.z) && m.z !== 1) placement.z = m.z;
+        if (m.rot) placement.rot = m.rot;
+        block.frames.mobile = placement;
+      }
+      if (mobile?.mode === 'manual') mobile.mode = 'auto';
+      const reason = mobile?.attention?.reason;
+      if (reason && V1_REASONS[reason]) mobile.attention.reason = V1_REASONS[reason];
+    }
+    return page;
+  },
+};
 
 const siteMigrations = {
   // 1 -> 2 (breddegrepet, ADR-0018): innholdet bindes av en designbredde i
