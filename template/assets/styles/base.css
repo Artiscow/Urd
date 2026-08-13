@@ -174,20 +174,21 @@ html {
 }
 
 /* Flytblokk: 90 % bredde sentrert (som den gamle flyten); render.js
-   overstyrer bredde/marg ved partielle plasseringer. */
+   overstyrer bredde/marg ved partielle plasseringer. position: relative
+   (uten offset) deltar i rutenettet som static, og forankrer samtidig
+   redigeringslagets absolutte barn (verktøylinje, resize-håndtak,
+   nål-merke) til BLOKKEN i stedet for til flytflaten. */
 .urd-block-flow {
-  position: static;
+  position: relative;
   width: 90%;
   justify-self: center;
   margin-bottom: 16px;
 }
 
 /* Pinnet blokk: radspor og bredde settes av render.js. Ingen marg: en marg
-   utenfor sporene ville blåst opp radene og forskjøvet koordinatsystemet.
-   position: static er trygt for z: rutenett-elementer stables etter z-index
-   også uten posisjonering. */
+   utenfor sporene ville blåst opp radene og forskjøvet koordinatsystemet. */
 .urd-block-pinned {
-  position: static;
+  position: relative;
   margin: 0;
 }
 
@@ -1960,9 +1961,9 @@ body:has(dialog:modal) {
   transform: scale(var(--urd-chrome-scale, 1));
   transform-origin: top right;
   position: absolute;
-  /* Avstanden må mot-skaleres sammen med chipen: seksjonsverktøylinja over
-     vokser også, og med fast 46 px la de to seg oppå hverandre på nedskalert
-     lerret (testfunn 10. august 2026). */
+  /* Avstanden mot-skaleres sammen med chipen: seksjonsverktøylinja over
+     mot-skaleres også, så en fast avstand holder de to fra hverandre på
+     alle zoomnivåer. */
   top: calc(46px * var(--urd-chrome-scale, 1));
   right: calc(10px * var(--urd-chrome-scale, 1));
   /* Over blokk-løftet (99999): en overhengende blokk skal ikke dekke knappen */
@@ -2907,11 +2908,11 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open .urd-nav-list,
 .urd-preview .urd-smart-guide {
   position: absolute;
   z-index: 1001;
-  /* Tykkelsen mot-skaleres (urd-zoom): en 1 px linje ble sub-piksel og
-     nesten usynlig på nedskalert lerret. Fargen er BEVISST fast magenta og
-     ikke admin-aksenten: hjelpelinjer skal skille seg fra både rutenettet
-     (som bruker aksenten) og fra sidens egne farger, uansett admin-tema.
-     Samme konvensjon som Figma og Wix. Skyggen gir kontrast mot lyse flater. */
+  /* Tykkelsen mot-skaleres (urd-zoom), så linja holder skjermtykkelsen sin
+     på alle zoomnivåer. Fargen er BEVISST fast magenta og ikke admin-
+     aksenten: hjelpelinjer skal skille seg fra både rutenettet (som bruker
+     aksenten) og fra sidens egne farger, uansett admin-tema. Samme
+     konvensjon som Figma og Wix. Skyggen gir kontrast mot lyse flater. */
   background: #ff2d87;
   box-shadow: 0 0 0 calc(1px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 55%, transparent);
   pointer-events: none;
@@ -3726,10 +3727,9 @@ body.urd-mobile .urd-section-resize-top {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  /* Linjebredden mot-skaleres (urd-zoom): en 1 px linje ble sub-piksel på et
-     nedskalert lerret, altså både blek og uskarp, og rutene så da ut til å
-     ligge på siden av blokkenes kanter. Selve rutestørrelsen skal derimot
-     IKKE mot-skaleres: den er sidens egen geometri og må følge zoomen. */
+  /* Linjebredden mot-skaleres (urd-zoom), så strekene holder skjermbredden
+     sin og forblir skarpe på alle zoomnivåer. Selve rutestørrelsen
+     mot-skaleres IKKE: den er sidens egen geometri og følger zoomen. */
   background-image:
     linear-gradient(to right, color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 45%, transparent) calc(1px * var(--urd-chrome-scale, 1)), transparent calc(1px * var(--urd-chrome-scale, 1))),
     linear-gradient(to bottom, color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 45%, transparent) calc(1px * var(--urd-chrome-scale, 1)), transparent calc(1px * var(--urd-chrome-scale, 1)));

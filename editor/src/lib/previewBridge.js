@@ -17,7 +17,7 @@
  *                  { type: 'urd-mobile-reset', sectionId, blockId? } (nullstill mobiloverstyringer; uten blockId hele seksjonen, ADR-0019)
  *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder } (pil-flytting i mobil-leserekkefølgen)
  *                  { type: 'urd-review-done', sectionId }           (mobil gjennomgått)
- *                  { type: 'urd-block-flag', sectionId, blockId, decor }
+ *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
  *                  { type: 'urd-delete', sectionId, blockId | blockIds } (blockIds fra multimarkering: hele utvalget i ett angre-steg)
  *                  { type: 'urd-add-section', index, section }
  *                  { type: 'urd-move-section', sectionId, dir }

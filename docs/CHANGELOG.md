@@ -25,6 +25,18 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.2.5-0.7.3p - Push-klargjøring: chrome-ankringen i radnettet og mal-migreringen - 13. august 2026
+
+Funn fra den uavhengige gjennomgangen av hele diffen (0.7.2.5 og 0.7.3), rettet før push:
+
+- Blokk-chromen i mobilvisning (verktøylinje, resize-håndtak, nål-merke) ankret til flytflaten i stedet for til blokken: radnett-blokkene var `position: static`, så absolutte barn løste seg mot `.urd-flow`. Alle nåler havnet i flatens øvre venstre hjørne, og resize-håndtaket i nedre høyre uansett blokk. Blokkene er nå `position: relative`, som deltar likt i rutenettet og forankrer chromen riktig.
+- Seksjons- og blokkgruppe-maler settes inn utenom sideløftet, så en mal lagret før radnettet bar `frames.mobile` i den gamle full-frame-formen rett inn i en v2-side, der skjemaet avviser den. Konverteringen er trukket ut som `liftMobileFrame` i migrate.js og kjøres nå også ved mal-innsetting (maler-model.js), med tester.
+- «Skjul på mobil» i Egenskaper gikk gjennom mutateBlock og utløste tilsynsflagget med teksten «En blokk ble endret på skrivebordet», mens telefon-togglen i lerretet satte samme felt uten flagg. Panel-veien går nå utenom flaggingen: synlighet er mobil-intensjon, ikke desktop-drift (ADR-0019).
+- `mobilePlacementToCss` arvet `rot` fra desktop-framen men ikke `z`, så en pinnet blokk med desktop-z mistet lagrekkefølgen sin på mobil. Begge arves nå likt.
+- Tre avvik mellom dokument og kode: render.js-filhodet beskrev den pensjonerte auto/manuell-modellen, ADR-0019 §2 manglet flyt-luften i radspenn-formelen, og seksjonsnullstillingens omfang i §5 lovte å nulle bruker-satt mobileOrder, som dataene ikke kan skille fra preset-satt; §5 sier nå at rekkefølge bevares som intensjon. `decor` sitt fritak fra oppsettsbytte (section-layouts.js) var dessuten benektet av «kun animasjon»-formuleringen i ADR og SKJEMA; begge nevner nå fritaket. Meldingskatalogene manglet hideMobile-feltet i urd-block-flag.
+- Ni kommentarer fra 0.7.2.5-runden (og én ny) brøt regelen om at kommentarer beskriver og ikke retter, til tross for at samme runde innførte regelen; alle er skrevet om deskriptivt.
+- De nye mobilknappene (nullstill, pil opp/ned, hake) brukte typografiske tegn; de er byttet til tegnede SVG-er etter chrome-regelen, og armConfirm bytter innerHTML så væpningen overlever ikonbytte.
+
 ### 0.7.3 - Synket mobilmodell per blokk: radnettet - 13. august 2026
 
 Milepæl 0.7.3, mobil-revurderingen. Modellen er besluttet i [ADR-0019](adr/0019-synket-mobilmodell.md); feltstudien bak (Squarespace, Wix, Wix Studio, Framer, m-dot-avvisningen) står der med kilder.

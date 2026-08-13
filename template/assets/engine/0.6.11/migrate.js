@@ -86,6 +86,29 @@ const V1_REASONS = {
   'blokk-lagt-til': 'block-added',
 };
 
+/**
+ * Løfter en blokks frames.mobile fra v1-formen (full frame {x, y, w, h})
+ * til radnett-plasseringen (ADR-0019). En plassering i ny form (uten y/h)
+ * returneres urørt, og en byte-lik kopi av desktop-framen gir null: det
+ * var materialiseringens fallback for blokker utenfor flyten, aldri en
+ * håndsatt plassering. Brukes av sidemigreringen OG av mal-innsettingen
+ * (maler-model.js), som setter inn lagrede nyttelaster utenom sideløftet.
+ */
+export function liftMobileFrame(m, desktop) {
+  if (!m || !('y' in m || 'h' in m)) return m ?? null;
+  if (desktop && m.x === desktop.x && m.y === desktop.y && m.w === desktop.w && m.h === desktop.h) {
+    return null;
+  }
+  const placement = { x: m.x, w: m.w };
+  if (Number.isFinite(m.y)) {
+    placement.row = Math.max(1, Math.round((m.y - V1_FLOW_PAD) / MOBILE_ROW) + 1);
+    placement.rows = Number.isFinite(m.h) ? Math.max(1, Math.ceil(m.h / MOBILE_ROW)) : 1;
+  }
+  if (Number.isFinite(m.z) && m.z !== 1) placement.z = m.z;
+  if (m.rot) placement.rot = m.rot;
+  return placement;
+}
+
 const pageMigrations = {
   // 1 -> 2 (synket mobilmodell, ADR-0019): frames.mobile bytter form fra
   // full frame {x,y,w,h} til partiell radnett-plassering {x,w,row,rows},
@@ -97,23 +120,9 @@ const pageMigrations = {
       const mobile = section.responsive?.mobile;
       for (const block of section.blocks ?? []) {
         if (block.decor) block.hideMobile = true;
-        const m = block.frames?.mobile;
-        if (!m) continue;
-        const d = block.frames.desktop;
-        if (d && m.x === d.x && m.y === d.y && m.w === d.w && m.h === d.h) {
-          // Ren kopi av desktop-framen er materialiseringens fallback for
-          // blokker utenfor flyten, aldri en håndsatt plassering.
-          block.frames.mobile = null;
-          continue;
+        if (block.frames?.mobile) {
+          block.frames.mobile = liftMobileFrame(block.frames.mobile, block.frames.desktop);
         }
-        const placement = { x: m.x, w: m.w };
-        if (Number.isFinite(m.y)) {
-          placement.row = Math.max(1, Math.round((m.y - V1_FLOW_PAD) / MOBILE_ROW) + 1);
-          placement.rows = Number.isFinite(m.h) ? Math.max(1, Math.ceil(m.h / MOBILE_ROW)) : 1;
-        }
-        if (Number.isFinite(m.z) && m.z !== 1) placement.z = m.z;
-        if (m.rot) placement.rot = m.rot;
-        block.frames.mobile = placement;
       }
       if (mobile?.mode === 'manual') mobile.mode = 'auto';
       const reason = mobile?.attention?.reason;

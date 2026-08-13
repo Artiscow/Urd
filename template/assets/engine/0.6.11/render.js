@@ -7,12 +7,11 @@
  *
  * To viewporter (opts.viewport):
  *  - 'desktop': absolutt posisjonering fra frames.desktop.
- *  - 'mobile' med responsive.mobile.mode 'auto': blokkene rendres som
- *    vanlig dokumentflyt i én kolonne, sortert i leserekkefølge
- *    (stackOrder); dekor-blokker utelates. Tekst får naturlig høyde.
- *  - 'mobile' med mode 'manual': absolutt fra frames.mobile (en null
- *    der faller tilbake til desktop-framen), og seksjonshøyden beregnes
- *    fra nederste mobil-frame.
+ *  - 'mobile': radnettet (ADR-0019), én sti for alle seksjoner. Blokker
+ *    uten frames.mobile auto-plasseres i leserekkefølge (stackOrder);
+ *    blokker med row i frames.mobile pinnes til eksplisitte radspor.
+ *    hideMobile-blokker utelates, tekst og autovoksende blokker får
+ *    naturlig høyde, og seksjonshøyden følger av rutenettet.
  */
 import { lift, MOBILE_ROW, MOBILE_GAP } from './migrate.js';
 import { applyAnimation } from './animations/core.js';
@@ -156,9 +155,12 @@ export function reorderMobileKey(blocks, blockId, dir) {
  */
 export function mobilePlacementToCss(placement, desktop, opts = {}) {
   const css = {};
+  // z og rot faller begge tilbake til desktop-framen: plasseringen
+  // overstyrer kun feltene som faktisk står i den.
   const rot = placement?.rot ?? desktop.rot;
   if (rot) css.transform = `rotate(${rot}deg)`;
-  if (placement?.z != null) css.zIndex = String(placement.z);
+  const z = placement?.z ?? desktop.z;
+  if (z != null) css.zIndex = String(z);
 
   if (Number.isFinite(placement?.row)) {
     // Pinnet: eksplisitte radspor. Uten rows avledes spennet fra

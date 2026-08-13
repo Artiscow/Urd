@@ -9,6 +9,7 @@
  */
 import { slugify } from './imageTools.js';
 import { groupDelta } from './selection.js';
+import { liftMobileFrame } from './migrate.js';
 
 /** Gjeldende versjon av malfil-formatet (content/maler/*.json). */
 export const MAL_SCHEMA_VERSION = 1;
@@ -24,6 +25,15 @@ export function malId(name) {
 
 const r2 = (v) => Math.round(v * 100) / 100;
 
+/** Mal-nyttelaster settes inn utenom sideløftet, så en mal lagret før
+ *  radnettet (ADR-0019) kan bære frames.mobile i den gamle full-frame-
+ *  formen. Løftes per blokk ved innsetting. */
+function liftBlockMobile(block) {
+  if (block.frames?.mobile) {
+    block.frames.mobile = liftMobileFrame(block.frames.mobile, block.frames.desktop);
+  }
+}
+
 /**
  * Klargjør en seksjons-mal for innsetting: dyp klone med ny seksjons-id og
  * nye blokk-id-er. Geometri og props røres ikke.
@@ -33,7 +43,10 @@ const r2 = (v) => Math.round(v * 100) / 100;
 export function cloneSectionForInsert(section, makeId) {
   const out = structuredClone(section);
   out.id = makeId('sec');
-  for (const block of out.blocks ?? []) block.id = makeId('blk');
+  for (const block of out.blocks ?? []) {
+    block.id = makeId('blk');
+    liftBlockMobile(block);
+  }
   return out;
 }
 
@@ -61,7 +74,8 @@ export function clonePageForInsert(page, makeId, { id, title }) {
  * gruppen flyttet så øvre venstre hjørne treffer ankeret (klemt innenfor
  * seksjonen av groupDelta), og minBottom for seksjonsvekst (urd-add-blocks).
  * Uten anker beholdes de lagrede posisjonene (kun klem). Innbyrdes oppsett
- * bevares alltid; frames.mobile følger med urørt (som lim inn).
+ * bevares alltid; frames.mobile følger med, løftet til radnett-formen om
+ * malen er lagret i den gamle.
  * @param {Array<object>} blocks Blokkene fra malfilen (muteres ikke)
  * @param {(prefix: string) => string} makeId Id-fabrikken
  * @param {{anchor?: {x: number, y: number}|null}} [opts] Anker i seksjonskoordinater (x i %, y i px)
@@ -69,7 +83,10 @@ export function clonePageForInsert(page, makeId, { id, title }) {
  */
 export function cloneBlocksForInsert(blocks, makeId, { anchor = null } = {}) {
   const out = structuredClone(blocks);
-  for (const block of out) block.id = makeId('blk');
+  for (const block of out) {
+    block.id = makeId('blk');
+    liftBlockMobile(block);
+  }
   const frames = out.map((b) => b.frames.desktop);
   const minX = Math.min(...frames.map((f) => f.x));
   const minY = Math.min(...frames.map((f) => f.y));

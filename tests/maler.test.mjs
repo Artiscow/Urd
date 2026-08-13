@@ -87,11 +87,26 @@ test('cloneBlocksForInsert: ankeret klemmes så gruppen holder seg i seksjonen',
   assert.equal(Math.min(...up.map((b) => b.frames.desktop.y)), 0);
 });
 
-test('cloneBlocksForInsert: frames.mobile følger med urørt (som lim inn)', () => {
+test('cloneBlocksForInsert: frames.mobile i radnett-formen følger med urørt', () => {
   const b = block('blk-a');
-  b.frames.mobile = { x: 0, y: 0, w: 100, h: 40, z: 1, rot: 0 };
+  b.frames.mobile = { x: 0, w: 100, row: 4, rows: 5 };
   const { blocks: out } = cloneBlocksForInsert([b], makeId, { anchor: { x: 30, y: 60 } });
-  assert.deepEqual(out[0].frames.mobile, b.frames.mobile);
+  assert.deepEqual(out[0].frames.mobile, { x: 0, w: 100, row: 4, rows: 5 });
+});
+
+test('cloneBlocksForInsert: gammel full mobil-frame løftes til radnett-formen', () => {
+  const b = block('blk-a');
+  // Mal lagret før ADR-0019: full frame med y/h, ikke lik desktop-framen.
+  b.frames.mobile = { x: 5, y: 104, w: 90, h: 120, z: 1, rot: 0 };
+  const { blocks: out } = cloneBlocksForInsert([b], makeId, {});
+  assert.deepEqual(out[0].frames.mobile, { x: 5, w: 90, row: 11, rows: 15 });
+});
+
+test('cloneSectionForInsert: byte-lik desktop-kopi i gammel mal nulles', () => {
+  const sec = section();
+  sec.blocks[0].frames.mobile = { ...sec.blocks[0].frames.desktop };
+  const out = cloneSectionForInsert(sec, makeId);
+  assert.equal(out.blocks[0].frames.mobile, null);
 });
 
 const page = () => ({

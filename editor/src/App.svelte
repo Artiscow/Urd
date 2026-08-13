@@ -77,8 +77,8 @@
     // Nedtrekksmerket på de sammenfoldede verktøymenyene. Egen liten vinkel,
     // ikke `down`, som er flytt-ned-pila og leses som en handling.
     caret: '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
-    // Se siden: åpner en ny fane, så pil ut av ramme. Erstatter ↗-tegnet som
-    // lå i oversettelsene, siden knappen blir rent ikon på smale vinduer.
+    // Se siden: åpner en ny fane, så pil ut av ramme. Ekte ikon, ikke et
+    // tegn i teksten: knappen er rent ikon på smale vinduer.
     external: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4l-8 8"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
     // Mål-enhetene i lerretsbryteren: skjerm, bærbar, nettbrett, telefon
     device_desktop: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="13" rx="2"/><path d="M8 21h8M12 16v5"/></svg>',
@@ -292,12 +292,9 @@
     const el = frameWrapEl;
     if (!el || typeof ResizeObserver === 'undefined') return;
     // clientWidth/Height, IKKE getBoundingClientRect: rekten er border-boksen
-    // og inkluderer scrollbarene. Med overflow: auto ble det en selvforsterkende
-    // løkke: en scrollbar fikk oss til å måle for bredt, lerretsboksen ble satt
-    // til den for store verdien, innholdet overflyt med nøyaktig scrollbarens
-    // tykkelse, og scrollbaren ble derfor stående (testfunn 10. august 2026).
-    // Innholdsboksen gir dessuten heltall, så flyttall-avrunding ikke kan gi
-    // et lerret en brøkdels piksel for bredt.
+    // og inkluderer eventuelle scrollbarer, mens innholdsboksen er flaten
+    // lerretet faktisk kan bruke. Innholdsboksen gir dessuten heltall, så
+    // flyttall-avrunding ikke kan gi et lerret en brøkdels piksel for bredt.
     const measure = () => {
       frameW = el.clientWidth; frameH = el.clientHeight;
     };
@@ -1062,8 +1059,18 @@
     mutateBlock('decor', (b) => { b.decor = on; });
   }
 
+  /** Skjul på mobil er en MOBIL-intensjon, ikke en desktop-endring: den
+   *  går utenom mutateBlock så tilsynsflagget aldri utløses av den (samme
+   *  regel som telefon-togglen i lerretet, ADR-0019). */
   function setBlockHideMobile(on) {
-    mutateBlock('hide-mobile', (b) => { b.hideMobile = on; });
+    const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
+    if (!block) return;
+    pushHistory('hide-mobile');
+    block.hideMobile = on;
+    store.save();
+    updateDirty();
+    bridge?.sendSection(pageId, section);
+    syncSelectedBlock();
   }
 
   /** Bytt bilde i en bildeblokk (samme webp-flyt som + Bilde). */
@@ -2124,9 +2131,8 @@
     // og viewporten følger editorens valg (ikke iframe-bredden).
     bridge?.sendPlugins($state.snapshot(pluginsView)?.enabled ?? []);
     bridge?.sendViewport(viewMode);
-    // Zoomen MÅ sendes på nytt her: uten den står --urd-chrome-scale på 1
-    // til noen tilfeldigvis rører zoomen, og håndtakene rendres i lerretets
-    // nedskalerte størrelse i stedet for admin-størrelse.
+    // Zoomen sendes ved hver klargjøring, så håndtakene mot-skaleres til
+    // admin-størrelse fra første render.
     bridge?.sendZoom(scale);
     pushCollectionsToPreview();
     pushMalerToPreview();
@@ -2226,9 +2232,8 @@
     bridge?.sendShowGuides(guidesOn);
   }
 
-  /** Rutenettet på/av. Var bundet til at Grid-PANELET sto åpent, så man
-   *  måtte gi fra seg panelplassen for å se rutene. Nå en egen bryter ved
-   *  siden av hjelpelinjene, husket i localStorage som dem. */
+  /** Rutenettet på/av: egen bryter ved siden av hjelpelinjene, uavhengig
+   *  av Grid-panelet, husket i localStorage som dem. */
   let gridOn = $state(localStorage.getItem('urd-grid-overlay') === '1');
   function toggleGrid() {
     gridOn = !gridOn;
@@ -4887,8 +4892,8 @@
       {#if chromeVisible}
         <nav class="rail">
           {#each PANEL_GROUPS as group, gi (gi)}
-            <!-- Gruppene fantes fra før, men var usynlige: bare en tynn strek
-                 skilte sideverktøy, nettstedsinnstillinger og system. -->
+            <!-- Versal-etikett over hver gruppe: sideverktøy,
+                 nettstedsinnstillinger og system leses som tre nivåer. -->
             <span class="rail-group">{ta(PANEL_GROUP_KEYS[gi])}</span>
             {#each group as name (name)}
               <button class:active={activePanel === name} onclick={() => togglePanel(name)}>{PANEL_LABELS[name]}</button>
@@ -7252,9 +7257,9 @@
     min-height: 0;
   }
 
-  /* Tettheten er hentet fra mockupen: smal skinne, ingen mellomrom mellom
-     punktene, og monospace som binder skinnen til Urds egen tone. Med tolv
-     punkter ble den forrige, luftigere varianten nesten like høy som lerretet. */
+  /* Tett skinne: smal, ingen mellomrom mellom punktene, og monospace som
+     binder skinnen til Urds egen tone. Tolv punkter skal ta et lite hjørne
+     av lerretshøyden, ikke det meste av den. */
   .rail {
     display: flex;
     flex-direction: column;
@@ -7296,8 +7301,8 @@
      flytter teksten seg bittelitt ved hvert valg (observasjon fra testrundene). */
   /* Innstillings-tannhjulet nederst i railen + popoveren over det.
      position: fixed klippes ikke av railens overflow. */
-  /* Versal-etikett over hver gruppe. Gruppene fantes fra før, men var
-     usynlige: bare en tynn strek skilte tre ulike nivåer. */
+  /* Versal-etikett over hver gruppe, så de tre nivåene leses som grupper
+     og ikke som én lang liste. */
   .rail-group {
     font-size: 0.54rem;
     letter-spacing: 0.14em;

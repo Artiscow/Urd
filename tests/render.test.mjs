@@ -109,9 +109,10 @@ test('mobilePlacementToCss: z og rot følger plasseringen', () => {
   assert.equal(css.transform, 'rotate(-8deg)');
 });
 
-test('mobilePlacementToCss: rot arves fra desktop når plasseringen mangler den', () => {
-  const css = mobilePlacementToCss(null, { ...desktop, rot: 12 }, { autoGrow: true });
+test('mobilePlacementToCss: z og rot arves fra desktop når plasseringen mangler dem', () => {
+  const css = mobilePlacementToCss(null, { ...desktop, z: 7, rot: 12 }, { autoGrow: true });
   assert.equal(css.transform, 'rotate(12deg)');
+  assert.equal(css.zIndex, '7');
 });
 
 test('reorderMobileKey: ned gir midtpunktet mellom de to neste', () => {

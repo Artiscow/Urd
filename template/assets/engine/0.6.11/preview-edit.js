@@ -14,7 +14,7 @@
  *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (nullstill mobiloverstyringer; uten blockId hele seksjonen)
  *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder }  (pil-flytting i mobil-leserekkefølgen)
  *                  { type: 'urd-review-done', sectionId }            (mobil gjennomgått)
- *                  { type: 'urd-block-flag', sectionId, blockId, decor }
+ *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
  *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (åpne blokkmenyen i editoren)
  */
 import { frameToCss, mobilePlacementToCss, reorderMobileKey } from './render.js';
@@ -1962,15 +1962,14 @@ function addSectionToolbar(host, section, grid) {
   if (isMobile()) {
     const attention = section.responsive?.mobile?.attention;
     if (attention?.needed) {
-      // Tilsynskortet: HVA skjedde (oversatt reason) og NÅR (relativ tid),
-      // med gjennomgått-knappen ved siden av. Kortet er svaret på at det
-      // gamle merket bare sa «trenger tilsyn» uten å si hva eller hvor.
+      // Tilsynskortet: HVA skjedde (oversatt reason) og NÅR (relativ
+      // tid), med gjennomgått-knappen ved siden av.
       host.appendChild(buildAttentionCard(host, section, attention));
     }
     // Nullstilling vises kun når seksjonen faktisk har mobiloverstyringer.
     if (section.blocks.some((b) => b.frames?.mobile)) {
       const reset = document.createElement('button');
-      reset.textContent = '↺';
+      reset.innerHTML = RESET_SVG;
       reset.title = ta('canvas.mobileReset');
       armConfirm(reset, () => post({ type: 'urd-mobile-reset', sectionId: section.id }));
       bar.appendChild(reset);
@@ -2055,13 +2054,13 @@ function addSectionToolbar(host, section, grid) {
  * avvæpner. Lytterne ryddes i alle utganger.
  */
 function armConfirm(btn, onConfirm) {
-  const label = btn.textContent;
+  const label = btn.innerHTML;
   let armed = false;
   let cleanup = null;
   const disarm = () => {
     armed = false;
     btn.classList.remove('urd-armed');
-    btn.textContent = label;
+    btn.innerHTML = label;
     cleanup?.();
     cleanup = null;
   };
@@ -2126,7 +2125,8 @@ function buildAttentionCard(host, section, attention) {
   }
 
   const ok = document.createElement('button');
-  ok.textContent = `✓ ${ta('canvas.mobileReviewedShort')}`;
+  ok.innerHTML = CHECK_SVG;
+  ok.append(` ${ta('canvas.mobileReviewedShort')}`);
   ok.title = ta('canvas.mobileReviewed');
   ok.addEventListener('click', () => {
     section.responsive.mobile.attention = null;
@@ -2164,6 +2164,13 @@ function buildHiddenList(section, hidden) {
   }
   return list;
 }
+
+// Tegnede ikoner for mobilknappene (ADR-0009: aldri tegn/emoji i chrome):
+// nullstill (pil mot urviseren), pil opp/ned (rekkefølge) og hake.
+const RESET_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4v6h6"/><path d="M3.5 13a8.5 8.5 0 1 0 2-5.5L3 10"/></svg>';
+const ORDER_UP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V4"/><path d="M5 11l7-7 7 7"/></svg>';
+const ORDER_DOWN_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M5 13l7 7 7-7"/></svg>';
+const CHECK_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 7"/></svg>';
 
 /**
  * Radindeksen (1-basert) ved en y-avstand fra radnettets innholdstopp.
@@ -2916,9 +2923,9 @@ function enhanceBlock(el, block, section, grid, host) {
   // Flytende mobilblokk: piler som flytter den i leserekkefølgen (skriver
   // mobileOrder). Pinnede blokker deltar ikke i flyten og får ↺ i stedet.
   if (mobile && !Number.isFinite(block.frames.mobile?.row)) {
-    for (const [glyph, dir, key] of [['↑', -1, 'canvas.orderUp'], ['↓', 1, 'canvas.orderDown']]) {
+    for (const [svg, dir, key] of [[ORDER_UP_SVG, -1, 'canvas.orderUp'], [ORDER_DOWN_SVG, 1, 'canvas.orderDown']]) {
       const btn = document.createElement('button');
-      btn.textContent = glyph;
+      btn.innerHTML = svg;
       btn.title = ta(key);
       btn.addEventListener('click', () => {
         const order = reorderMobileKey(section.blocks, block.id, dir);
@@ -2941,7 +2948,7 @@ function enhanceBlock(el, block, section, grid, host) {
     el.appendChild(pin);
 
     const resetBtn = document.createElement('button');
-    resetBtn.textContent = '↺';
+    resetBtn.innerHTML = RESET_SVG;
     resetBtn.title = ta('canvas.mobileResetBlock');
     resetBtn.addEventListener('click', () => {
       post({ type: 'urd-mobile-reset', sectionId: section.id, blockId: block.id });
