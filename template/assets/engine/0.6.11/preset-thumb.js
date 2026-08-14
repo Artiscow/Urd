@@ -54,42 +54,67 @@ function bgFill(section) {
   return token('bg', FALLBACK_BG);
 }
 
-/** Tekstblokk: 1-3 linjer; overskrifter gir en tykkere førstelinje. */
+/**
+ * Tekstblokk: 1-3 linjer; overskrifter gir en tykkere førstelinje.
+ * Linjemålene krymper proporsjonalt når feltet er lavere enn naturlig
+ * (side-miniatyrenes bånd), med gulv så første linje alltid setter et
+ * lesbart spor - en overskrift skal aldri forsvinne fra kortet.
+ * box-tekster (kort-flate i motoren) får kortet tegnet bak linjene.
+ */
 function textShapes(x, y, w, h, props) {
   const heading = /<h[1-3]/.test(String(props?.html ?? ''));
   const centered = props?.align === 'center';
   const textFill = token('text', FALLBACK_TEXT);
   const parts = [];
+  if (props?.box) parts.push(rect(x, y, w, h, token('surface', FALLBACK_SURFACE), ' rx="1.5"'));
+  const pad = props?.box ? Math.min(2, w * 0.06) : 0;
+  const ix = x + pad;
+  const iw = w - pad * 2;
   const widths = [0.72, 0.9, 0.5];
-  let ly = y + 1;
+  const natural = [heading ? 4 : 2.2, 2.2, 2.2];
+  const naturalH = natural[0] + natural[1] + natural[2] + 2.4 * 2 + 2;
+  const f = clamp(h / naturalH, 0, 1);
+  let ly = y + pad + Math.min(1, h * 0.08);
   for (let i = 0; i < 3; i++) {
-    const lh = i === 0 && heading ? 4 : 2.2;
-    if (ly + lh > y + h) break;
-    const lw = w * widths[i];
-    const lx = centered ? x + (w - lw) / 2 : x;
-    parts.push(rect(lx, ly, lw, lh, textFill, ` opacity="${i === 0 ? 0.8 : 0.4}" rx="1"`));
-    ly += lh + 2.4;
+    const lh = Math.min(Math.max(i === 0 ? (heading ? 1.4 : 1) : 0.8, natural[i] * f), Math.max(h, 1));
+    if (i > 0 && ly + lh > y + h - pad) break;
+    const lw = iw * widths[i];
+    const lx = centered ? ix + (iw - lw) / 2 : ix;
+    parts.push(rect(lx, ly, lw, lh, textFill, ` opacity="${i === 0 ? 0.8 : 0.4}" rx="${r1(Math.min(1, lh / 2))}"`));
+    ly += lh + Math.max(0.8, 2.4 * f);
   }
   return parts.join('');
 }
 
-/** Bilderamme med fjell og sol (den klassiske plassholder-glyfen). */
-function imageShapes(x, y, w, h) {
+/**
+ * Bilderamme. Med bilde satt: flate med fjell og sol (den klassiske
+ * plassholder-glyfen). Uten bilde tegnes den TOMME tilstanden (stiplet
+ * omriss og blek glyf), som er det den nye siden faktisk viser.
+ */
+function imageShapes(x, y, w, h, empty = false) {
   const textFill = token('text', FALLBACK_TEXT);
-  const parts = [rect(x, y, w, h, token('surface', FALLBACK_SURFACE), ' rx="1.5"')];
+  const parts = [];
+  if (empty) {
+    parts.push(rect(x, y, w, h, token('surface', FALLBACK_SURFACE), ' rx="1.5" opacity="0.35"'));
+    parts.push(`<rect x="${r1(x + 0.4)}" y="${r1(y + 0.4)}" width="${r1(Math.max(w - 0.8, 1))}" height="${r1(Math.max(h - 0.8, 1))}" fill="none" stroke="${textFill}" stroke-width="0.6" stroke-dasharray="2 2" opacity="0.35" rx="1.5"/>`);
+  } else {
+    parts.push(rect(x, y, w, h, token('surface', FALLBACK_SURFACE), ' rx="1.5"'));
+  }
+  const glyphOpacity = empty ? 0.15 : 0.4;
   const px = (f) => r1(x + w * f);
   const py = (f) => r1(y + h * f);
-  parts.push(`<polygon points="${px(0.08)},${py(0.9)} ${px(0.42)},${py(0.38)} ${px(0.62)},${py(0.68)} ${px(0.75)},${py(0.5)} ${px(0.92)},${py(0.9)}" fill="${textFill}" opacity="0.4"/>`);
-  parts.push(`<circle cx="${px(0.28)}" cy="${py(0.26)}" r="${r1(Math.max(1, Math.min(w, h) * 0.1))}" fill="${textFill}" opacity="0.5"/>`);
+  parts.push(`<polygon points="${px(0.08)},${py(0.9)} ${px(0.42)},${py(0.38)} ${px(0.62)},${py(0.68)} ${px(0.75)},${py(0.5)} ${px(0.92)},${py(0.9)}" fill="${textFill}" opacity="${glyphOpacity}"/>`);
+  parts.push(`<circle cx="${px(0.28)}" cy="${py(0.26)}" r="${r1(Math.max(1, Math.min(w, h) * 0.1))}" fill="${textFill}" opacity="${r1(glyphOpacity + 0.1)}"/>`);
   return parts.join('');
 }
 
-/** Galleri: tre fliser side om side inne i rammen. */
-function galleriShapes(x, y, w, h) {
+/** Galleri: tre fliser side om side inne i rammen; tomt galleri tegnes tomt. */
+function galleriShapes(x, y, w, h, props) {
+  const empty = !(Array.isArray(props?.images) && props.images.length);
   const gap = Math.max(1, w * 0.03);
   const tw = (w - gap * 2) / 3;
   const parts = [];
-  for (let i = 0; i < 3; i++) parts.push(imageShapes(x + i * (tw + gap), y, tw, h));
+  for (let i = 0; i < 3; i++) parts.push(imageShapes(x + i * (tw + gap), y, tw, h, empty));
   return parts.join('');
 }
 
@@ -123,9 +148,23 @@ function shapeShapes(x, y, w, h, props) {
 
 function blockShapes(type, x, y, w, h, props) {
   if (type === 'text') return textShapes(x, y, w, h, props);
-  if (type === 'image') return imageShapes(x, y, w, h);
-  if (type === 'galleri') return galleriShapes(x, y, w, h);
+  if (type === 'image') return imageShapes(x, y, w, h, !props?.src);
+  if (type === 'galleri') return galleriShapes(x, y, w, h, props);
   if (type === 'samling') return samlingShapes(x, y, w, h);
+  if (type === 'faq') {
+    // Trekkspill: rader med flate + spørsmålslinje og chevron-prikk.
+    const rows = clamp(Math.floor(h / 5), 2, 3);
+    const gap = Math.max(0.6, h * 0.04);
+    const rowH = (h - gap * (rows - 1)) / rows;
+    const parts = [];
+    for (let i = 0; i < rows; i += 1) {
+      const ry = y + i * (rowH + gap);
+      parts.push(rect(x, ry, w, rowH, token('surface', FALLBACK_SURFACE), ' rx="1"'));
+      parts.push(rect(x + w * 0.06, ry + rowH / 2 - 0.7, w * 0.55, 1.4, token('text', FALLBACK_TEXT), ' opacity="0.5" rx="0.7"'));
+      parts.push(`<circle cx="${r1(x + w * 0.92)}" cy="${r1(ry + rowH / 2)}" r="0.9" fill="${token('text', FALLBACK_TEXT)}" opacity="0.4"/>`);
+    }
+    return parts.join('');
+  }
   if (type === 'shape') return shapeShapes(x, y, w, h, props);
   if (type === 'button') {
     return rect(x, y, w, h, token('accent', FALLBACK_ACCENT), ` rx="${r1(Math.min(h / 2, 4))}"`);
@@ -187,12 +226,17 @@ function sectionShapes(section, w, h) {
     parts.push(`<circle cx="${r1(clamp(p.x ?? 0.5, 0, 1) * w)}" cy="${r1(clamp(p.y ?? 0.3, 0, 1) * h)}" r="${r1(w * clamp(p.radius ?? 0.5, 0.1, 1) * 0.5)}" fill="${safeColor(p.color, FALLBACK_ACCENT)}" opacity="${r1(clamp(p.opacity ?? 0.3, 0, 0.5))}"/>`);
   }
 
+  // Innholdsflaten (ADR-0018): blokkenes x/w er prosent av den bundne
+  // kanvasen, ikke av full bredde. En fast sidemarg speiler standardmargen,
+  // så innholdet står innrykket som på den faktiske siden.
+  const inset = w * 0.06;
+  const cw = w - inset * 2;
   for (const block of blocks) {
     const d = block.frames?.desktop;
     if (!d) continue;
-    const x = clamp((d.x ?? 0) * (w / 100), 0, w - 2);
+    const x = clamp(inset + (d.x ?? 0) * (cw / 100), 0, w - 2);
     const y = clamp((d.y ?? 0) * sy, 0, h - 2);
-    const bw = clamp((d.w ?? 10) * (w / 100), 2, w - x);
+    const bw = clamp((d.w ?? 10) * (cw / 100), 2, w - x);
     const bh = clamp((d.h ?? 20) * sy, 2, h - y);
     parts.push(blockShapes(block.type, x, y, bw, bh, block.props));
   }

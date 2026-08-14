@@ -84,7 +84,7 @@
     "scroll": "shrink",
     "logo": {
       "type": "image",
-      "value": "/media/logo-0e227b01.svg",
+      "value": "/media/logo-91963a12.svg",
       "size": 40,
       "order": "image-first",
       "bold": false,
@@ -141,7 +141,7 @@
       "title": "Urd",
       "tagline": "Bygg din egen nettside for din lille forening helt gratis!",
       "mode": "both",
-      "logo": "/media/footer-logo-b18c5fc9.svg",
+      "logo": "/media/footer-logo-84804c80.svg",
       "logoHeight": 40
     },
     "columns": [

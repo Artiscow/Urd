@@ -25,6 +25,24 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.2 - Bug-runden: nav-klaring, chrome-stabling, dokking, folding, malbilder og logo - 14. august 2026
+
+Bugs-lista i backloggen gjennomgått samlet; alle femten punktene er levert.
+
+- Flytende/overlay-meny sto utenfor flyten uten kompensasjon og dekket innholdet øverst på siden (desktop og mobil). nav.js måler nå menyhøyden (`--urd-nav-h`, ResizeObserver), og første seksjon får automatisk klaring: innholdsflaten skyves ned og seksjonen vokser tilsvarende, mens bakgrunnen fortsatt fyller opp bak menyen. Høyde-dragene i preview-edit og sticky-målingene regner klaringen ut og inn.
+- Lange menypunkter brøt over flere linjer på nettbrett-bredder. Punktene brytes aldri (nowrap), og nav.js folder hele lista til burger ut fra faktisk målt overflyt med hysterese, uavhengig av mobil-brekkpunktet.
+- Mobilmenyen hang med 8 px luft under den flytende pillen (bevisst den gang, feil i praksis). Panelet ligger nå kant i kant som én sammenhengende flate; pillen flater ut de nedre hjørnene mens panelet er åpent.
+- Øverste «+ Ny seksjon»-chip mistet mot-skaleringen (en eldre overstyring byttet ut hele transformen), lå i menybåndet og forsvant når pekeren nærmet seg. Chipen er nå skalert som de andre og legges under den målte menyhøyden, der den kan ses og klikkes.
+- Seksjonsverktøylinja (position: sticky med rå `top: 56px`) la seg over «+ Ny blokk»-chipen i øverste seksjon. Klistre-avstanden leser nå målt menyhøyde pluss mot-skalert luft, og chipen leser klaringsvaren, så de to kolliderer ikke på noe zoomnivå.
+- ⠿-håndtakets clickbox var omtrent halvert: seksjonsgrense-stripene (z 100000) stjal klikkene i båndet der blokkverktøylinja bor. Stripene slipper klikk gjennom mens en blokk i seksjonen er hovret eller markert; grepet på seksjonslinjen består ellers.
+- Fest-ved-scroll-nålen mot-skalerte ikke (9 skjerm-px ved 57 % zoom) og spiste klikk i blokkens hjørne. Den skaleres nå som mobil-nålen og slipper klikk gjennom.
+- En skjermdokket blokk kunne ikke flyttes med dra: draget løste festingen (blokken teleporterte), skrev desktop-framen i stillhet og re-dokket til samme punkt. Draget flytter nå selve dokkingen: blokken følger pekeren, og slippet velger nærmeste av de ni ankerpunktene (ny ren `nearestDock` i sticky-model.js, ny `urd-sticky-dock`-melding). Desktop-framen røres aldri.
+- Fest til skjermen virket ikke på mobil (tre uavhengige sperrer). Skjermdokking gjelder nå også mobil, der blokken dokkes mot sin egen målte størrelse; scroll-festing er fortsatt desktop-eneste siden radnettet er dokumentflyt. SKJEMA.md oppdatert tilsvarende.
+- «Forkast utkast» forsvant i ett hardt reflow-hopp (ingen animasjon fantes; sidenavnet slukte plassen). Klyngen glir nå ut med rask fade + fly mot høyre (150 ms) før plassen kollapser; rent klipp ved prefers-reduced-motion.
+- Malbildene i Sider-panelet lignet ikke sidene de lager: alle tekstlinjer forsvant i side-båndene (absolutte linjehøyder med avbrudd), faq ble blank flate, tomme bilder/gallerier ble tegnet fylte, box-kort mistet flaten sin, innholdet sto kant til kant og alt i adminens standardpalett. Generatoren (preset-thumb.js) er nå skala-bevisst med gulv så overskrifter alltid setter spor, tegner faq som trekkspillrader, tomme mediablokker som tomme, kortflater og innrykk, og malbilde-rutenettene får sidens fargetokens som inline-vars. Ny testfil vokter fidelitetsreglene.
+- Logoens rune sto ikke på ordmerkets grunnlinje, og fila hadde mye dødflate (mest til høyre, siden ordmerkets bredde flyter med systemfonten). Runen er tegnet på grunnlinja i versalhøyde, ordmerket er låst med `textLength` så bredden er fontuavhengig, og viewBoxen er klippet mot glyf-blekket. Samme retting i brand-variantene; admin-skinnens merke baseline-justeres via beskåret viewBox; favicon-runen er optisk sentrert i alle fem skallene, editor-fallbacken og footer-logoen. Media-filene fikk nye innholds-hashede navn, og de gamle versjonene er bevart i docs/brand/legacy/.
+- Backloggen: ny milepæl 0.7.13 Elementgjennomgangen (systematisk sammenligning mot ApeironLF og de andre byggerne; ApeironLF-mønstrene fra skjermbildegjennomgangen flyttet inn), Forslag og Ideer sortert inn i milepælene (audio til 0.7.4; font-pakker, eget tema og bakgrunn-over-bakgrunn til 0.7.9; kant-resize, rutenett-rework, command palette, drop-target og layout-chip til 0.7.10; touchvennlighet til v0.9), og nye bugs- og editor-finpuss-punkter ført inn.
+
 ### 0.7.2.5-0.7.3p - Push-klargjøring: chrome-ankringen i radnettet og mal-migreringen - 13. august 2026
 
 Funn fra den uavhengige gjennomgangen av hele diffen (0.7.2.5 og 0.7.3), rettet før push:

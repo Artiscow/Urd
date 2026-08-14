@@ -411,6 +411,50 @@ export function renderNav(site, host) {
   nav.appendChild(tools);
   host.appendChild(nav);
 
+  // Målt menyhøyde som CSS-var på rotelementet: nav-klaringen i base.css
+  // (meny utenfor flyten) og chrome-parkeringen i preview leser den.
+  // Avstanden måles fra vertens topp til nav-ens underkant (offsetTop tar
+  // med pillens toppluft). Kolonne-varianten tar ingen topphøyde.
+  const setNavH = () => {
+    const h = isSide ? 0 : nav.offsetTop + nav.offsetHeight;
+    document.documentElement.style.setProperty('--urd-nav-h', `${h}px`);
+  };
+
+  // Innholdsbevisst folding: menypunktene brytes aldri (nowrap i base.css),
+  // så når punktene ikke lenger får plass i bredden, foldes hele lista til
+  // burger via samme klasse som mobil-brekkpunktet. Utbrettet fullbredde
+  // huskes (foldNeeds), for etter folding er lista skjult og kan ikke
+  // måles: utfolding skjer først når baren er bredere enn behovet, og
+  // måles så på nytt i tilfelle behovet har vokst.
+  let foldNeeds = 0;
+  const evalFold = () => {
+    if (isSide || mobileMq.matches) return;
+    if (!nav.classList.contains('urd-nav-mobile')) {
+      if (nav.scrollWidth > nav.clientWidth + 1) {
+        foldNeeds = nav.scrollWidth;
+        nav.classList.add('urd-nav-mobile');
+      }
+    } else if (nav.clientWidth > foldNeeds + 8) {
+      nav.classList.remove('urd-nav-mobile');
+      if (nav.scrollWidth > nav.clientWidth + 1) {
+        foldNeeds = nav.scrollWidth;
+        nav.classList.add('urd-nav-mobile');
+      } else {
+        setMobileOpen(false);
+      }
+    }
+  };
+
+  // ResizeObserver på nav-en (ikke verten: en vert utenfor flyten har
+  // ingen egen høyde å observere) fanger vindusbredde, font-lasting og
+  // scroll-krymp; den leverer alltid en første måling ved observe.
+  const navRo = new ResizeObserver(() => {
+    setNavH();
+    evalFold();
+  });
+  navRo.observe(nav);
+  signal.addEventListener('abort', () => navRo.disconnect());
+
   // Kolonnens hover-lukking: alle trekkspill lukkes samlet når pekeren
   // forlater hele menyen; ny inntreden innen fristen avbryter lukkingen.
   if (isColumn && mouseHover) {

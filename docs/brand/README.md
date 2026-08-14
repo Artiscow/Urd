@@ -4,9 +4,10 @@ Merket er uruz-runen (ᚢ) tegnet i én strek, med ordmerket «Urd» ved siden. 
 
 ## Filer
 
-- `urd-mark-<farge>.svg` - kun runen (gjennomsiktig bakgrunn), til der du trenger selve merket.
-- `urd-logo-<farge>.svg` - full lockup: rune + «Urd»-ordmerke.
-- `urd-favicon.svg` - runen i turkis på mørk avrundet flate (samme som nettleserfanen bruker).
+- `urd-mark-<farge>.svg` - kun runen (gjennomsiktig bakgrunn), til der du trenger selve merket. ViewBoxen er strammet rundt runen med jevn luft (justert 14. august 2026).
+- `urd-logo-<farge>.svg` - full lockup: rune + «Urd»-ordmerke. Runen står på ordmerkets grunnlinje i versalhøyde, og viewBoxen er strammet rundt merket (justert 14. august 2026).
+- `urd-favicon.svg` - runen i turkis på mørk avrundet flate (samme som nettleserfanen bruker). Runen står i optisk senter av flaten (justert 14. august 2026).
+- `legacy/` - filene slik de så ut før justeringene (runen optisk sentrert på em-boksen i lockupen, romslige viewBoxer, runen lavt i favicon-flaten), bevart som backup.
 
 Ordmerket bruker en system-sans (`Segoe UI`/`system-ui`-stack). Trenger du garantert lik gjengivelse på tvers av maskiner, gjør teksten om til bane i et vektorverktøy.
 

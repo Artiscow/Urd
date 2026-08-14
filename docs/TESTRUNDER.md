@@ -2,6 +2,34 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.0.2): Bug-runden - nav-klaring, chrome, dokking, malbilder og logo
+
+Alle femten punktene fra Bugs-lista. Det viktigste er nav-klaringen (endrer hvordan første seksjon rendres under flytende meny, på alle eksisterende sider) og dokk-draget.
+
+- [ ] NAV-KLARING desktop: med flytende/overlay-meny (demosidene bruker floating-square) starter innholdet i første seksjon UNDER menyen, mens seksjonsbakgrunnen fortsatt fyller helt opp bak den. Sjekk Hjem-siden: hero-teksten skal ikke lenger ligge under menyen
+- [ ] Nav-klaring mobil: samme i mobilvisning og i Ren visning i smalt vindu; første seksjons innhold starter under menyen
+- [ ] Nav-klaring publisert: en deployet side viser det samme som previewen (klaringen er motor-CSS, ikke editor-chrome)
+- [ ] Med meny I flyten (sticky vanlig bar, ikke floating/overlay) er ingenting endret: ingen ekstra luft øverst
+- [ ] Se over alle fire demosidene etter klaringen: toppseksjonene har fått innholdet skjøvet ned med menyhøyden, og noen kan trenge en visuell justering
+- [ ] Høyde-drag (bunn og topp) på FØRSTE seksjon under flytende meny: draget treffer der pekeren er, høyden i panelet/dataene er innholdshøyden (uten klaringen), og ingenting «kryper» ved gjentatte drag
+- [ ] Fest ved scrolling på en blokk i første seksjon under flytende meny: fester og slipper på riktig sted (kanvas-forskyvningen er regnet inn)
+- [ ] NETTBRETT-FOLDING: gjør vinduet gradvis smalere med mange/lange menypunkter: punktene brytes ALDRI inne i etiketten; i stedet folder menyen til burger når det blir for trangt, og folder ut igjen når det blir plass (uten flimring på grensen)
+- [ ] Mobilmeny-gapet: åpne burgeren med flytende pille (alle tre variantene: pille, firkant, tab): panelet ligger kant i kant med pillen som én flate, pillens nedre hjørner flater ut mens panelet er åpent
+- [ ] Øverste «+ Ny seksjon»: hover øverst i første seksjon: chipen vises UNDER menyen, har samme størrelse som de andre ny-seksjon-chipene på alle zoomnivåer, og kan faktisk klikkes
+- [ ] Seksjonsverktøylinja og «+ Ny blokk»: i øverste seksjon overlapper de ikke lenger, på 100 % og på nedskalert lerret; verktøylinja parkerer under menyen ved scrolling i høye seksjoner
+- [ ] ⠿-håndtaket: hele håndtaket (og resten av blokkverktøylinja) kan treffes også når blokken står nær seksjonstoppen; seksjonslinje-draget virker fortsatt når pekeren IKKE kommer fra en blokk
+- [ ] Fest-ved-scroll-nålen: samme skjermstørrelse på alle zoomnivåer, og den blokkerer ikke lenger klikk i blokkens øvre venstre hjørne
+- [ ] DOKK-DRAG: en blokk med «Til skjermen»-dokking dras med ⠿ eller flaten: den følger pekeren, og slippet dokker den til nærmeste av de ni ankerpunktene. Egenskaper-panelets dokkvalg viser det nye punktet, angre virker, og desktop-posisjonen (bytt til vanlig festing og se) er urørt
+- [ ] Dokk-drag på en dokk-GRUPPE (flerutvalg festet som gruppe): hele gruppen følger med til det nye ankerpunktet
+- [ ] MOBIL-DOKKING: en skjermdokket blokk vises dokket i mobilvisning og på publisert mobil; scroll-festing (vanlig modus) er fortsatt uvirksom på mobil. Nålen vises på mobil kun for skjermdokkede
+- [ ] Forkast utkast: klyngen glir ut med rask fade mot høyre før plassen kollapser; med prefers-reduced-motion er det rent klipp. Publisering gir samme utgang
+- [ ] MALBILDENE (Sider-panelet): Landingsside-kortet viser overskriftsspor i alle båndene, Kontakt/Arrangement viser trekkspillrader for faq, Portefølje viser TOMME bildefliser (stiplet), kort-flatene vises, innholdet står innrykket fra kanten, og fargene følger sidens tema (teal på demosiden, ikke lilla)
+- [ ] Egne sidemaler (Mine maler) tegnes med samme forbedringer
+- [ ] LOGO: nav-logoen har runen på grunnlinja i versalhøyde med tett beskåret flate (lik luft venstre/høyre); juster logostørrelsen i Nav-panelet om merket nå står for stort
+- [ ] Admin-skinnen nederst: runen står på grunnlinja til «Urd»-ordet
+- [ ] Favicon i nettleserfanen og footer-logoen: runen står i optisk senter av flaten
+- [ ] Regresjon: smart guides, marquee, flerutvalg-dra og blokk-dra i vanlige seksjoner virker som før (stripene slipper kun klikk når en blokk er hovret/markert)
+
 ### Testrunde-batch (0.7.3): Synket mobilmodell per blokk (radnettet)
 
 Mobilmodellen er lagt om ([ADR-0019](adr/0019-synket-mobilmodell.md)): materialiseringen alt-eller-ingenting per seksjon er borte, mobil-overstyringer er per blokk, og mobil rendres i ett radnett for alle seksjoner. Punktene om materialisering i eldre batcher beskriver den gamle modellen.

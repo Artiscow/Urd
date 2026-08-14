@@ -7,7 +7,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { stickyState, groupBox, dockPosition } = await engineImport('sticky-model.js');
+const { stickyState, groupBox, dockPosition, nearestDock } = await engineImport('sticky-model.js');
 
 // Standardoppsett: seksjon fra 1000, blokk 200 inn i seksjonen, 100 høy,
 // egen seksjons bunn på 2000, festes 16 px fra vindustoppen.
@@ -107,4 +107,22 @@ test('dockPosition: en boks større enn vinduet skyves aldri utenfor', () => {
   const pos = dockPosition('bottom-right', 24, big, VIEW);
   assert.deepEqual(pos, { left: 0, top: 0 });
   assert.deepEqual(dockPosition('middle-center', 0, big, VIEW), { left: 0, top: 0 });
+});
+
+test('nearestDock: senterpunktet velger i det tredelte rutenettet', () => {
+  const view = { w: 900, h: 600 };
+  assert.equal(nearestDock({ left: 10, top: 10, w: 100, h: 50 }, view), 'top-left');
+  assert.equal(nearestDock({ left: 750, top: 500, w: 100, h: 50 }, view), 'bottom-right');
+  assert.equal(nearestDock({ left: 400, top: 275, w: 100, h: 50 }, view), 'middle-center');
+  assert.equal(nearestDock({ left: 400, top: 10, w: 100, h: 50 }, view), 'top-center');
+  assert.equal(nearestDock({ left: 10, top: 275, w: 100, h: 50 }, view), 'middle-left');
+});
+
+test('nearestDock: nøklene matcher dockPosition-aksene', () => {
+  const view = { w: 900, h: 600 };
+  const dock = nearestDock({ left: 750, top: 10, w: 100, h: 50 }, view);
+  assert.equal(dock, 'top-right');
+  // Rundtur: dokkpunktet fra slippet gir en gyldig plassering.
+  const pos = dockPosition(dock, 24, { w: 100, h: 50 }, view);
+  assert.deepEqual(pos, { left: 776, top: 24 });
 });

@@ -66,6 +66,23 @@ export function dockPosition(dock, margin, box, view) {
   return { left, top };
 }
 
+/**
+ * Nærmeste dokkpunkt for en boks som er sluppet i vinduet: senterpunktet
+ * avgjør i et tredelt rutenett (venstre/senter/høyre x topp/midt/bunn).
+ * Nøklene matcher skjemaets dock-enum (midtraden heter 'middle').
+ * Ren funksjon, testet i tests/sticky.test.mjs.
+ * @param {{left: number, top: number, w: number, h: number}} box boksen i vindus-px
+ * @param {{w: number, h: number}} view vindusmålene i px
+ * @returns {string} dock-nøkkel ('top-left' … 'bottom-right')
+ */
+export function nearestDock(box, view) {
+  const cx = box.left + box.w / 2;
+  const cy = box.top + box.h / 2;
+  const horz = cx < view.w / 3 ? 'left' : cx > (2 * view.w) / 3 ? 'right' : 'center';
+  const vert = cy < view.h / 3 ? 'top' : cy > (2 * view.h) / 3 ? 'bottom' : 'middle';
+  return `${vert}-${horz}`;
+}
+
 export function stickyState(scrollY, m) {
   // Ugyldig eller for tidlig grense (over blokkens naturlige plass):
   // festing gir ikke mening, blokken står alltid der den står.

@@ -90,19 +90,35 @@ body:not(.urd-mobile) .urd-section {
      ville seksjonen vokst med verktøylinjens høyde hver gang pekeren traff
      den, og krympet igjen når den forlot. Absolutt plassering gjenoppretter
      invarianten. Trygt for festede blokker: kun transform, filter og
-     containment lager containing block for fixed, ikke position. */
+     containment lager containing block for fixed, ikke position.
+     Nav-klaringen (--urd-section-clear, satt kun på første seksjon under en
+     meny utenfor flyten) skyver innholdsflaten ned; seksjonen vokser
+     tilsvarende via min-height-kalkylen i render.js, så flaten beholder
+     høyden sin og bakgrunnen fyller helt opp bak menyen. */
   position: absolute;
   inset: 0;
+  top: var(--urd-section-clear, 0px);
   width: min(100% - 2 * var(--urd-canvas-gutter), var(--urd-canvas-w, 100%));
   margin-inline: auto;
 }
 
 /* Mobil auto-layout er ekte dokumentflyt, og der MÅ kanvasen ligge i flyten:
-   seksjonshøyden er `auto` og drives av .urd-flow inni. */
+   seksjonshøyden er `auto` og drives av .urd-flow inni. Nav-klaringen blir
+   padding i flyten. */
 body.urd-mobile .urd-canvas {
   position: relative;
   inset: auto;
   min-height: inherit;
+  padding-top: var(--urd-section-clear, 0px);
+}
+
+/* Nav-klaring: en flytende/overlay-meny står utenfor flyten og dekket
+   ellers innholdet øverst på siden. Første seksjon får klaringsvaren satt
+   til målt menyhøyde (--urd-nav-h skrives av nav.js); canvas-reglene over
+   omsetter den. Menyer i flyten (sticky/kolonne) trenger ingen klaring. */
+#urd-nav.urd-nav-float + #urd-root > .urd-section:first-of-type,
+#urd-nav.urd-nav-overlay + #urd-root > .urd-section:first-of-type {
+  --urd-section-clear: var(--urd-nav-h, 0px);
 }
 
 /* Roterte/overhengende blokker skal ikke gi sidescrolling */
@@ -1963,8 +1979,10 @@ body:has(dialog:modal) {
   position: absolute;
   /* Avstanden mot-skaleres sammen med chipen: seksjonsverktøylinja over
      mot-skaleres også, så en fast avstand holder de to fra hverandre på
-     alle zoomnivåer. */
-  top: calc(46px * var(--urd-chrome-scale, 1));
+     alle zoomnivåer. Nav-klaringen (--urd-section-clear, kun første seksjon
+     under en meny utenfor flyten) legges til, så chipen starter under den
+     parkerte verktøylinja i stedet for bak menyen. */
+  top: calc(var(--urd-section-clear, 0px) + 46px * var(--urd-chrome-scale, 1));
   right: calc(10px * var(--urd-chrome-scale, 1));
   /* Over blokk-løftet (99999): en overhengende blokk skal ikke dekke knappen */
   z-index: 100000;
@@ -2204,6 +2222,15 @@ body:has(dialog:modal) {
   align-items: center;
   gap: 1.25rem;
   list-style: none;
+}
+
+/* Vannrette menypunkter brytes aldri inne i etiketten: blir det for trangt,
+   folder nav.js hele lista til burger (innholdsbevisst folding) i stedet
+   for at lange punkter brekker over flere linjer. Mobilpanelet (kolonne)
+   beholder vanlig bryting - der er radene fullbredde. */
+body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-list a,
+body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
+  white-space: nowrap;
 }
 
 /* Menypunktenes plassering (nav.layout): logoen står alltid først.
@@ -2822,11 +2849,20 @@ body.urd-chrome-off .urd-nav-side-resize {
   display: none;
 }
 
-/* Mobilpanelet skal ikke arve pillens fasong: eget lag med luft under */
+/* Mobilpanelet henger kant i kant under pillen som én sammenhengende
+   flate: kun de nedre hjørnene rundes, og pillen flater ut sine nedre
+   hjørner mens panelet er åpent (longhands, så hver variants toppfasong
+   består). */
 body.urd-mobile .urd-nav-var-floating.urd-nav-open .urd-nav-list,
 .urd-nav-mobile.urd-nav-var-floating.urd-nav-open .urd-nav-list {
-  top: calc(100% + 0.5rem);
-  border-radius: var(--urd-radius-md);
+  top: 100%;
+  border-radius: 0 0 var(--urd-radius-md) var(--urd-radius-md);
+}
+
+body.urd-mobile .urd-nav-var-floating.urd-nav-open,
+.urd-nav-mobile.urd-nav-var-floating.urd-nav-open {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 /* Hover-stiler for menylenkene (nav.style.hover, additivt fra v0.6).
@@ -3614,7 +3650,7 @@ body.urd-mobile .urd-section-resize-top {
    knappen. Mot-skaleres som resten av redigeringslaget (urd-zoom). */
 .urd-preview .urd-attention-card {
   position: absolute;
-  top: calc(8px * var(--urd-chrome-scale, 1));
+  top: calc(var(--urd-section-clear, 0px) + 8px * var(--urd-chrome-scale, 1));
   left: 50%;
   transform: translateX(-50%) scale(var(--urd-chrome-scale, 1));
   transform-origin: top center;
@@ -3680,7 +3716,7 @@ body.urd-mobile .urd-section-resize-top {
    en rad per skjult blokk og øye-knappen som viser den igjen. */
 .urd-preview .urd-hidden-list {
   position: absolute;
-  top: calc(46px * var(--urd-chrome-scale, 1));
+  top: calc(var(--urd-section-clear, 0px) + 46px * var(--urd-chrome-scale, 1));
   right: calc(10px * var(--urd-chrome-scale, 1));
   transform: scale(var(--urd-chrome-scale, 1));
   transform-origin: top right;
@@ -3884,16 +3920,24 @@ body.urd-mobile .urd-section-resize-top {
    på (ikke bare ved peker), og borte i Ren visning som resten av chromen. */
 .urd-preview .urd-sticky-badge {
   position: absolute;
-  top: -7px;
-  left: -7px;
-  width: 16px;
-  height: 16px;
+  /* Mot-skalering (urd-zoom): merket holder admin-størrelse som nål-merket
+     for mobil (.urd-mobile-pin), og slipper klikk gjennom til blokken. */
+  top: calc(-7px * var(--urd-chrome-scale, 1));
+  left: calc(-7px * var(--urd-chrome-scale, 1));
+  width: calc(16px * var(--urd-chrome-scale, 1));
+  height: calc(16px * var(--urd-chrome-scale, 1));
   display: grid;
   place-items: center;
   border-radius: 50%;
   background: var(--urd-admin-accent, #5f6a75);
   color: #fff;
   z-index: 1000;
+  pointer-events: none;
+}
+
+.urd-preview .urd-sticky-badge svg {
+  width: calc(11px * var(--urd-chrome-scale, 1));
+  height: calc(11px * var(--urd-chrome-scale, 1));
 }
 
 .urd-preview.urd-chrome-off .urd-sticky-badge {
@@ -3979,11 +4023,20 @@ body.urd-mobile .urd-section-resize-top {
   border-style: solid;
 }
 
-/* Den øverste baren ligger rett under den klistrede menyen: pillen
-   legges UNDER grenselinjen i stedet for oppå den, så den ikke
-   forsvinner bak menyen */
+/* Den øverste baren: chipen legges UNDER grenselinjen i stedet for oppå
+   den, med mot-skaleringen i behold (en ren translateY her mistet den
+   tidligere, så chipen fikk feil størrelse). */
 #urd-root > .urd-add-section:first-child > button {
-  transform: translateY(4px);
+  transform: translateY(4px) scale(var(--urd-chrome-scale, 1));
+  transform-origin: top center;
+}
+
+/* Med menyen utenfor flyten (flytende pille/overlay) ligger grenselinjen i
+   menybåndet: chipen legges under den målte menyhøyden (--urd-nav-h fra
+   nav.js), så den kan ses og klikkes i stedet for å ligge bak menyen. */
+#urd-nav.urd-nav-float + #urd-root > .urd-add-section:first-child > button,
+#urd-nav.urd-nav-overlay + #urd-root > .urd-add-section:first-child > button {
+  transform: translateY(calc(var(--urd-nav-h, 0px) + 6px)) scale(var(--urd-chrome-scale, 1));
 }
 
 /* Preset-galleriet (åpen «+ Ny seksjon»): gruppert panel med rulling.
@@ -4478,9 +4531,11 @@ body.urd-mobile .urd-section-resize-top {
   transform-origin: top right;
   /* Klistret i seksjonen (ikke absolute): i seksjoner høyere enn viewporten følger
      verktøylinjen med, så «+ kort»-knappen alltid kan nås ved gjentatte tillegg.
-     Verktøylinjen er seksjonens eneste flyt-element, så den starter alltid øverst. */
+     Verktøylinjen er seksjonens eneste flyt-element, så den starter alltid øverst.
+     Klistre-avstanden leser målt menyhøyde (--urd-nav-h fra nav.js), så linja
+     parkerer rett under menyen i stedet for på en gjettet fast avstand. */
   position: sticky;
-  top: 56px;
+  top: calc(var(--urd-nav-h, 56px) + 8px * var(--urd-chrome-scale, 1));
   display: none;
   gap: 2px;
   width: fit-content;
@@ -4586,6 +4641,19 @@ body.urd-mobile .urd-section-resize-top {
 .urd-preview .urd-section:has(> .urd-section-resize-top:hover),
 .urd-preview .urd-section:has(> .urd-section-resize-top:active) {
   box-shadow: inset 0 2px 0 var(--urd-admin-accent, #5f6a75);
+}
+
+/* Blokk-chromet vinner over seksjonsgrensene mens en blokk er hovret eller
+   markert: verktøylinja (med ⠿) ligger over blokkens overkant, altså i
+   grensebåndet, og stripene (z 100000, over blokk-løftet) stjal ellers
+   klikkene der. Stripene i blokkens egen seksjon slipper klikk gjennom, og
+   det samme gjør forrige seksjons bunnstripe (grensen deles). Grepet på
+   seksjonslinjen består så snart pekeren ikke kommer fra blokken. */
+.urd-preview .urd-section:has(.urd-editable:hover) > .urd-section-resize,
+.urd-preview .urd-section:has(.urd-editable:hover) > .urd-section-resize-top,
+.urd-preview .urd-section:has(.urd-block.urd-selected) > .urd-section-resize-top,
+.urd-preview .urd-section:has(+ .urd-add-section + .urd-section .urd-editable:hover) > .urd-section-resize {
+  pointer-events: none;
 }
 
 /* Retningsvisende peker mens en seksjonsgrense dras (preview-edit setter

@@ -35,6 +35,7 @@ import { frameAtPoint } from './place.js';
 import { topDrag } from './section-size.js';
 import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
 import { suspendSticky, resumeSticky } from './sticky.js';
+import { nearestDock } from './sticky-model.js';
 // Modulen lastes dynamisk av urd.js ETTER at admin-ordboka er lastet
 // (initAdminLocale), så ta() er trygg også på modulnivå her.
 import { ta, adminLang } from './i18n.js';
@@ -57,6 +58,23 @@ import { ta, adminLang } from './i18n.js';
  */
 function canvasOf(host) {
   return host.querySelector(':scope > .urd-canvas') ?? host;
+}
+
+/**
+ * Nav-klaringen for seksjonen (0 utenom første seksjon under en meny
+ * utenfor flyten, se base.css): avstanden innholdsflaten er skjøvet ned.
+ * Måles som kanvasens forskyvning, så høyde-dragene kan regne i rene
+ * innholdshøyder (samme tall som size.minHeight i dataene).
+ */
+function sectionClearance(host) {
+  const canvas = host.querySelector(':scope > .urd-canvas');
+  if (!canvas) return 0;
+  return Math.max(0, Math.round(canvas.getBoundingClientRect().top - host.getBoundingClientRect().top));
+}
+
+/** Inline-minHeight med nav-klaringen, samme kalkyle som render.js skriver. */
+function styleMinHeight(px) {
+  return `calc(${px}px + var(--urd-section-clear, 0px))`;
 }
 
 /** Mobilvisning? Motoren setter body-klassen ut fra breakpointet. */
@@ -432,7 +450,9 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
     event.preventDefault();
     target.setPointerCapture(event.pointerId);
     const startY = event.clientY;
-    const startHeight = host.getBoundingClientRect().height;
+    // Klaringen holdes utenfor regnestykket: px er ren innholdshøyde,
+    // samme tall som lagres i size.minHeight.
+    const startHeight = host.getBoundingClientRect().height - sectionClearance(host);
     const cursor = dragCursor();
     let px = startHeight;
     let moved = false;
@@ -445,7 +465,7 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
       // Piksel-presist når snap er av eller Shift holdes inne.
       const free = grid.snap === false || ev.shiftKey;
       px = free ? Math.round(px) : Math.round(px / grid.size) * grid.size;
-      host.style.minHeight = `${px}px`;
+      host.style.minHeight = styleMinHeight(px);
     };
     const onUp = () => {
       target.removeEventListener('pointermove', onMove);
@@ -766,7 +786,8 @@ function addSectionTopHandle(host, section, grid) {
     event.stopPropagation();
     handle.setPointerCapture(event.pointerId);
     const startY = event.clientY;
-    const startHeight = host.getBoundingClientRect().height;
+    // Ren innholdshøyde (uten nav-klaringen), som i bunnkant-draget.
+    const startHeight = host.getBoundingClientRect().height - sectionClearance(host);
     const startScrollY = window.scrollY;
     // Blokk-elementene og utgangs-y samles ÉN gang: ingen rerender skjer
     // under draget (elementbytte ville sluppet pekerfangsten).
@@ -789,7 +810,7 @@ function addSectionTopHandle(host, section, grid) {
         grid,
         free: ev.shiftKey,
       });
-      host.style.minHeight = `${result.minHeightPx}px`;
+      host.style.minHeight = styleMinHeight(result.minHeightPx);
       for (const p of parts) p.el.style.top = `${p.y + result.dy}px`;
       // Innholdet skal stå visuelt stille: dokumentet under seksjons-
       // toppen flytter seg result.dy, scrollen følger. Absolutt mot
@@ -2015,9 +2036,10 @@ function addSectionToolbar(host, section, grid) {
     mk('↓', ta('canvas.sectionDown'), () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
     mk('⤓', ta('canvas.fitHeight'), () => {
       const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
-      const minHeight = `${Math.max(grid.size * 3, maxBottom + grid.size)}px`;
+      const px = Math.max(grid.size * 3, maxBottom + grid.size);
+      const minHeight = `${px}px`;
       section.size = { ...section.size, minHeight };
-      host.style.minHeight = minHeight;
+      host.style.minHeight = styleMinHeight(px);
       post({ type: 'urd-section-size', sectionId: section.id, minHeight });
     });
     // «Bytt oppsett» (0.6.7): kun når seksjonen har noe å bytte på
@@ -3078,8 +3100,9 @@ function enhanceBlock(el, block, section, grid, host) {
   el.appendChild(resizeHandle);
 
   // Festing er ellers usynlig så lenge man ikke scroller: en nål i hjørnet
-  // viser at blokken har «Fest ved scrolling» på. Kun desktop, som feltet.
-  if (!mobile && block.sticky) {
+  // viser at blokken har «Fest ved scrolling» på. På mobil gjelder kun
+  // skjermdokking, så nålen følger den grensen.
+  if (block.sticky && (!mobile || block.sticky.mode === 'screen')) {
     const PIN_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></svg>';
     const pin = document.createElement('div');
     pin.className = 'urd-sticky-badge';
@@ -3271,8 +3294,9 @@ function enhanceBlock(el, block, section, grid, host) {
         if (target?.closest('.urd-text[contenteditable="true"]') && selectedBlockId === block.id && multiIds.size <= 1) return;
         if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button, input, select, textarea, .urd-samling-editable, .urd-samling-image-edit, .urd-faq-q, .urd-kal-config, .urd-skjema-config, .urd-kart-config')) return;
         // Flytende mobilblokk: første pinning skal være et bevisst valg
-        // (dra i ⠿), ikke et klikk på blokken.
-        if (mobile && !Number.isFinite(block.frames.mobile?.row)) return;
+        // (dra i ⠿), ikke et klikk på blokken. En skjermdokket blokk er
+        // unntatt: der flytter draget dokkingen, ikke radnettet.
+        if (mobile && !Number.isFinite(block.frames.mobile?.row) && !el.classList.contains('urd-sticky-fixed')) return;
         event.preventDefault();
       } else {
         event.preventDefault();
@@ -3282,6 +3306,66 @@ function enhanceBlock(el, block, section, grid, host) {
         selectBlock(el, { keepMulti: multiIds.has(block.id) });
       }
       handle.setPointerCapture(event.pointerId);
+
+      // Skjermdokket blokk: draget flytter DOKKINGEN, ikke rammen.
+      // Blokken følger pekeren som fixed, og ved slipp velges nærmeste av
+      // de ni ankerpunktene fra der den lander (nearestDock). Vanlig dra
+      // ville løst festingen (suspendSticky) og teleportert blokken
+      // tilbake til seksjonen i det grepet startet.
+      if (kind === 'move' && el.classList.contains('urd-sticky-fixed') && el.dataset.stickyMode === 'screen') {
+        const threshold = opts.surface ? 4 : 0;
+        let started = threshold === 0;
+        let holds = false;
+        const hold = () => { if (!holds) { holds = true; suspendSticky({ keep: el }); } };
+        const drop = () => { if (holds) { holds = false; resumeSticky(); } };
+        if (started) hold();
+        const start = { x: event.clientX, y: event.clientY };
+        const orig = { left: parseFloat(el.style.left) || 0, top: parseFloat(el.style.top) || 0 };
+        const onDockMove = (ev) => {
+          if (!started) {
+            if (Math.abs(ev.clientX - start.x) + Math.abs(ev.clientY - start.y) < threshold) return;
+            started = true;
+            hold();
+          }
+          el.style.left = `${orig.left + (ev.clientX - start.x)}px`;
+          el.style.top = `${orig.top + (ev.clientY - start.y)}px`;
+        };
+        const finishDock = (commit) => {
+          handle.removeEventListener('pointermove', onDockMove);
+          handle.removeEventListener('pointerup', onDockUp);
+          handle.removeEventListener('pointercancel', onDockCancel);
+          if (commit && started) {
+            const rect = el.getBoundingClientRect();
+            const dock = nearestDock(
+              { left: rect.left, top: rect.top, w: rect.width, h: rect.height },
+              { w: document.documentElement.clientWidth, h: window.innerHeight },
+            );
+            // Dokk-gruppen følger med: applySticky leser lederens dock, og
+            // publiserte data må si det samme for hvert medlem.
+            const groupId = el.dataset.stickyGroup;
+            const members = groupId
+              ? [...document.querySelectorAll(`.urd-sticky-able[data-sticky-group="${CSS.escape(groupId)}"]`)]
+              : [el];
+            for (const m of members) {
+              if (m.dataset.stickyDock === dock) continue;
+              m.dataset.stickyDock = dock;
+              const sid = m.closest('.urd-section')?.dataset.sectionId;
+              if (sid && m.dataset.blockId) {
+                post({ type: 'urd-sticky-dock', sectionId: sid, blockId: m.dataset.blockId, dock });
+              }
+            }
+            if (block.sticky) block.sticky = { ...block.sticky, dock };
+          }
+          // Gjenopptak til slutt: da dokkes gruppen mot det nye punktet.
+          drop();
+        };
+        const onDockUp = () => finishDock(true);
+        const onDockCancel = () => finishDock(false);
+        handle.addEventListener('pointermove', onDockMove);
+        handle.addEventListener('pointerup', onDockUp);
+        handle.addEventListener('pointercancel', onDockCancel);
+        return;
+      }
 
       // Mobil har sin egen dra-mekanikk: draget pinner ÉN blokk til
       // radnettet, resten fortsetter å flyte (ADR-0019).

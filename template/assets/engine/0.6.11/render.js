@@ -273,6 +273,16 @@ export function renderSection(section, site, host, opts = {}) {
       const def = Urd.blocks.get(block.type);
       const autoGrow = block.type === 'text' || Boolean(def?.autoGrow);
       Object.assign(el.style, mobilePlacementToCss(block.frames.mobile, block.frames.desktop, { autoGrow }));
+      // Skjermdokking gjelder også mobil: sticky.js dokker blokken mot
+      // dens egen målte størrelse. Scroll-festing er desktop-eneste
+      // (radnettet er dokumentflyt), så den modusen merkes ikke her.
+      if (block.sticky && typeof block.sticky.offset === 'number' && block.sticky.mode === 'screen') {
+        el.classList.add('urd-sticky-able');
+        el.dataset.stickyOffset = String(block.sticky.offset);
+        el.dataset.stickyMode = 'screen';
+        el.dataset.stickyDock = block.sticky.dock ?? 'bottom-right';
+        el.dataset.stickyGroup = block.sticky.group ?? '';
+      }
       renderBlock(Urd, el, block, ctx);
       flow.appendChild(el);
     }
@@ -296,8 +306,8 @@ export function renderSection(section, site, host, opts = {}) {
       const frame = block.frames.desktop;
       Object.assign(el.style, frameToCss(frame));
       // Sticky («fest ved scrolling», additivt felt): kun merking her;
-      // selve festingen gjør sticky.js ved scroll. Kun desktop - mobil-
-      // visningen er dokumentflyt og ignorerer feltet.
+      // selve festingen gjør sticky.js ved scroll. Mobilgrenen over merker
+      // kun skjermdokking (scroll-festing hører til absolutt layout).
       if (block.sticky && typeof block.sticky.offset === 'number') {
         el.classList.add('urd-sticky-able');
         el.dataset.stickyOffset = String(block.sticky.offset);
@@ -315,8 +325,10 @@ export function renderSection(section, site, host, opts = {}) {
 
     // Seksjonshøyden er brukerens: blokker kan bevisst henge utover
     // kanten (seksjoner klipper aldri). Uten satt høyde brukes
-    // blokkenes utstrekning.
-    host.style.minHeight = section.size?.minHeight ?? `${maxBottomPx}px`;
+    // blokkenes utstrekning. Nav-klaringen (--urd-section-clear, 0 utenom
+    // første seksjon under en meny utenfor flyten, se base.css) legges
+    // oppå, så innholdsflaten beholder høyden sin når den skyves ned.
+    host.style.minHeight = `calc(${section.size?.minHeight ?? `${maxBottomPx}px`} + var(--urd-section-clear, 0px))`;
   }
 
   // Valgfri seksjonsanimasjon (additivt felt fra v0.5). Inn-animasjonen

@@ -38,6 +38,7 @@
  *                  { type: 'urd-nav-width', width }           (sidestilt kolonnebredde dratt i preview)
  *                  { type: 'urd-save-template', kind, section | blocks } (Lagre som mal: navnløst snapshot; editoren navngir og lagrer)
  *                  { type: 'urd-sticky-group', sectionId, blockIds, on } (Fest gruppen: felles sticky-gruppe på hele utvalget, eller løs den opp)
+ *                  { type: 'urd-sticky-dock', sectionId, blockId, dock } (skjermdokket blokk dratt til nytt ankerpunkt)
  *                  { type: 'urd-delete-template', id }        (sletteknappen i Mine maler-fanen; editoren bekrefter og sletter)
  *                  { type: 'urd-apply-layout', sectionId, frames, minHeight } (bytt oppsett: variantens rammer + høyde i ETT angre-steg)
  *   editor → side: { type: 'urd-chrome', visible }            (vis/skjul editeringshåndtak)
@@ -87,6 +88,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-nav-width') handlers.onNavWidth?.(msg);
     if (msg?.type === 'urd-save-template') handlers.onSaveTemplate?.(msg);
     if (msg?.type === 'urd-sticky-group') handlers.onStickyGroup?.(msg);
+    if (msg?.type === 'urd-sticky-dock') handlers.onStickyDock?.(msg);
     if (msg?.type === 'urd-delete-template') handlers.onDeleteTemplate?.(msg);
     if (msg?.type === 'urd-apply-layout') handlers.onApplyLayout?.(msg);
   };

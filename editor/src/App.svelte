@@ -2,6 +2,7 @@
   // Editor-skallet for v0.2 «tynn skive»: preview-iframe med den ekte
   // siden, klikk-og-skriv på tekstblokker, utkast i localStorage og
   // publiseringsknapp mot /api/github/commit.
+  import { fly } from 'svelte/transition';
   import { createDraftStore } from './lib/draftStore.js';
   import ColorPicker from './lib/ColorPicker.svelte';
   import GlyphPicker from './lib/GlyphPicker.svelte';
@@ -33,7 +34,7 @@
   import { bildegalleriLayer } from '$engine/backgrounds/bildegalleri.js';
   import { footerThumb } from '$engine/footer-thumb.js';
   import { coreAnimations } from '$engine/animations/core.js';
-  import { SECTION_THEME_LABELS, sectionThemeVars, contrastRatio, relativeLuminance, buildThemeCss } from '$engine/theme.js';
+  import { SECTION_THEME_LABELS, sectionThemeVars, contrastRatio, relativeLuminance, buildThemeCss, safeCssValue } from '$engine/theme.js';
   import { compressToWebp, svgToDataUrl, tightSvgViewBox, svgViewBox, slugify, contentHash, mediaExtension, WARN_BYTES } from '$engine/imageTools.js';
   import { FONT_STACKS } from '$engine/fonts.js';
   import { frameAtPoint } from '$engine/place.js';
@@ -866,6 +867,9 @@
    *  editor-koordinater, null = lukket. Innholdet er samme snippet som
    *  Egenskaper-panelet. */
   let blockMenu = $state(null);
+
+  /** Redusert bevegelse: exit-overganger (utkast-klyngen) blir rent klipp. */
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /** Ankerpunktene for «fest til skjermen»: vertikal-horisontal, som
    *  dockPosition i motoren leser dem. */
@@ -2111,6 +2115,7 @@
       onCollectionEdit: handleCollectionEdit,
       onSaveTemplate: handleSaveTemplate,
       onStickyGroup: handleStickyGroup,
+      onStickyDock: handleStickyDock,
       onDeleteTemplate: handleDeleteTemplate,
       onApplyLayout: handleApplyLayout,
       onPluginBlocks: (msg) => { pluginBlocks = msg.blocks ?? []; },
@@ -2276,6 +2281,17 @@
   const builtinPageThumbs = Object.fromEntries(PAGE_PRESETS.map((p) => [
     p.id, pageThumb(buildPagePreset(p.id, { pageId: 'forhandsvisning', title: '' })),
   ]));
+
+  /** Sidens fargetokens som inline-vars på malbilde-rutenettene: miniatyrene
+   *  tegner med var(--urd-color-*) og skal vise SIDENS palett, ikke adminens
+   *  (admin laster aldri content/theme.css). Ugyldige verdier droppes. */
+  const thumbThemeStyle = $derived.by(() => {
+    const c = siteDraft?.theme?.tokens?.color ?? {};
+    return ['bg', 'surface', 'text', 'accent']
+      .filter((k) => typeof c[k] === 'string' && safeCssValue(c[k]))
+      .map((k) => `--urd-color-${k}: ${c[k]};`)
+      .join(' ');
+  });
 
   /* Kebab-menyen per side-rad (eiervalg A3): id-en til raden med åpen meny.
      Lukkes ved klikk utenfor, Escape og vindus-blur (settings-mønsteret). */
@@ -2577,7 +2593,7 @@
 
   // Admin-fanen viser nettstedsikonet når det finnes, ellers Urd-merket (samme SVG som i admin/index.html; kan ikke leses fra link-elementet, for favicon-boot.js kan alt ha byttet det).
   // Kun kjente ikonformer slippes gjennom (data:image eller site-relativ sti), så utkastdata aldri kan bli en aktiv URL (CodeQL-funn #1-3).
-  const URD_MARK_ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0e14'/%3E%3Cpath d='M19.2 51.2V16l25.6 10.4V51.2' fill='none' stroke='%2315b39a' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E";
+  const URD_MARK_ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0e14'/%3E%3Cpath d='M19.2 49.6V14.4l25.6 10.4V49.6' fill='none' stroke='%2315b39a' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E";
   // Anket regex i stedet for startsWith: CodeQL gjenkjenner RegExp.test som barriere, så varslene på denne flyten lukkes.
   const SAFE_ICON_RE = /^(?:data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+|\/(?!\/)[\w%./-]*)$/;
   $effect(() => {
@@ -2724,6 +2740,21 @@
   function handleSaveTemplate(msg) {
     const kind = MAL_KINDS.includes(msg.kind) ? msg.kind : 'section';
     return saveTemplate(kind, msg[kind]);
+  }
+
+  /** Skjermdokket blokk dratt til nytt ankerpunkt i previewen. Dokkpunktet
+   *  gjelder begge flater (vindus-anker, ikke layout), så mobil-tilsynet
+   *  utløses ikke. */
+  function handleStickyDock(msg) {
+    const { section, block } = readBlock(msg.sectionId, msg.blockId);
+    if (!section || !block?.sticky) return;
+    if (!DOCK_OPTIONS.some(([value]) => value === msg.dock)) return;
+    pushHistory(`sticky-dock:${msg.blockId}`);
+    block.sticky = { ...block.sticky, dock: msg.dock };
+    store.save();
+    updateDirty();
+    bridge?.sendSection(pageId, section);
+    syncSelectedBlock();
   }
 
   /** «Fest gruppen» fra flerutvalgs-linja: hele utvalget deler én sticky-gruppe
@@ -4836,6 +4867,10 @@
 
     <span class="topbar-group topbar-draft">
       {#if dirty}
+        <!-- Klyngen glir ut mot høyre med en rask fade når utkastet forkastes
+             eller publiseres; plassen kollapser først etterpå, så linja aldri
+             hopper midt i bevegelsen. Redusert bevegelse gir rent klipp. -->
+        <span class="draft-cluster" out:fly={{ x: 24, duration: reducedMotion ? 0 : 150 }}>
         <!-- Statusen er en TILSTAND, ikke en handling: pilleformen består, men
              den fylte aksentflaten er byttet mot chip-idiomet (ADR-0016), så
              Publiser er den eneste fylte flaten i linja. -->
@@ -4859,6 +4894,7 @@
             <button class="discard-confirm" onclick={confirmDiscard} title={ta('tip.discardArmed')}
               >{@html ICONS.restore} {ta('ui.discardConfirm')}</button>
           {/if}
+        </span>
         </span>
       {/if}
     </span>
@@ -4903,7 +4939,9 @@
             <!-- Merket bor nederst i skinnen ved tannhjulet, ikke i topplinja:
                  der tok det plassen «Sikker?» trenger for å vokse. -->
             <span class="rail-brand" title="Urd">
-              <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M12 32V10l16 6.5V32" fill="none" stroke="var(--urd-brand)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              <!-- viewBox er beskåret til glyfens visuelle boks (strek medregnet),
+                   så svg-bunnen ER runens fot og baseline-justeringen treffer. -->
+              <svg class="brand-mark" viewBox="10.3 8.3 19.4 25.4" aria-hidden="true"><path d="M12 32V10l16 6.5V32" fill="none" stroke="var(--urd-brand)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
               <span class="brand-word">Urd</span>
             </span>
             <button class="rail-gear" class:active={settingsOpen} title={ta('settings.title')}
@@ -4967,7 +5005,7 @@
                 <button class="ghost action" title={ta('hint.pages.autoMenu')}
                   onclick={addPage} disabled={!newPageTitle.trim()}>{ta('ui.createPage')}</button>
                 <span class="mini-label">{ta('canvas.tabPresets')}</span>
-                <div class="page-mal-grid">
+                <div class="page-mal-grid" style={thumbThemeStyle}>
                   <div class="page-mal-card" class:picked={newPageMal === null}>
                     <button class="page-mal-pick" title={ta('tip.pages.blankPick')}
                       onclick={() => (newPageMal = null)}>
@@ -4987,7 +5025,7 @@
                 </div>
                 {#if malerIds.some((id) => malStores[id]?.data?.mal?.kind === 'page')}
                   <span class="mini-label">{ta('canvas.tabMyTemplates')}</span>
-                  <div class="page-mal-grid">
+                  <div class="page-mal-grid" style={thumbThemeStyle}>
                     {#each malerIds.filter((id) => malStores[id]?.data?.mal?.kind === 'page') as id (id)}
                       <div class="page-mal-card" class:picked={newPageMal === id}>
                         <button class="page-mal-pick" title={ta('tip.pages.templatePick', { name: malStores[id].data.mal.name })}
@@ -7328,14 +7366,17 @@
 
   .rail-brand {
     display: inline-flex;
-    align-items: center;
+    /* Runen står på ordets grunnlinje: svg-en (uten egen baseline) justeres
+       med underkanten, som er glyfens fot takket være den beskårne viewBoxen. */
+    align-items: baseline;
     gap: 0.35rem;
     min-width: 0;
     font-weight: 700;
     font-size: 0.8rem;
   }
 
-  .rail-brand .brand-mark { width: 16px; height: 16px; flex: none; }
+  /* Høyde i em: runen holder seg like over versalhøyden, som i logofila. */
+  .rail-brand .brand-mark { width: auto; height: 0.8em; flex: none; }
 
   .rail-gear {
     /* Merket står til venstre og tar bredden; tannhjulet er kvadratisk. */
@@ -8604,6 +8645,13 @@
     flex: none;
     /* Forankring for bekreftelsespilla, som svever under linja. */
     position: relative;
+  }
+
+  /* Skall for exit-overgangen: chip + forkast glir ut som ETT stykke. */
+  .draft-cluster {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
   }
 
   .draft-chip {

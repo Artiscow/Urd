@@ -22,7 +22,7 @@
  */
 import { stickyState, groupBox, dockPosition } from './sticky-model.js';
 
-/** Under navens 100002 og editor-chromen, over vanlig innhold. */
+/** Under menyen og editor-chromet, over vanlig innhold. */
 const FIXED_Z = '900';
 
 let wired = false;
@@ -63,10 +63,14 @@ export function refreshSticky() {
  * Redigering som skriver geometri (dra, resize, juster/fordel, piltaster)
  * starter: løs alle festede blokker tilbake til sin ekte plass. Uten dette
  * ville skrivingen lagt left/top oppå en fastfrosset blokk.
+ * opts.keep unntar ett element: dokk-draget flytter blokken MENS den er
+ * festet, og en løsing ville teleportert den ut av grepet.
  */
-export function suspendSticky() {
+export function suspendSticky(opts = {}) {
   if (suspendDepth++ === 0) {
-    for (const el of document.querySelectorAll('.urd-sticky-able')) release(el);
+    for (const el of document.querySelectorAll('.urd-sticky-able')) {
+      if (el !== opts.keep) release(el);
+    }
   }
 }
 
@@ -84,6 +88,9 @@ function readGeom(el) {
     left: el.style.left,
     width: el.style.width,
     z: el.style.zIndex,
+    // Mobil-radnettet plasserer med margin-left (%); en prosentmarg på et
+    // fixed element ville forskjøvet dokkingen, så den nulles ved festing.
+    ml: el.style.marginLeft,
   };
 }
 
@@ -94,6 +101,7 @@ function restore(el, base) {
   el.style.width = base.width;
   el.style.top = base.top;
   el.style.zIndex = base.z;
+  el.style.marginLeft = base.ml ?? '';
 }
 
 /**
@@ -116,7 +124,9 @@ function applySticky() {
   const els = document.querySelectorAll('.urd-sticky-able');
   if (!els.length) return;
   const body = document.body;
-  const inactive = body.classList.contains('urd-mobile');
+  // Mobil er dokumentflyt: scroll-festing gjelder ikke der, men
+  // skjermdokking gjør det (render.js merker kun screen-modus på mobil).
+  const mobile = body.classList.contains('urd-mobile');
   const scrollY = window.scrollY;
   // En klistret meny ligger over den festede blokken (nav har høyere z-index,
   // og å heve blokken over menyen ville lagt den oppå undermenyene). Derfor
@@ -141,9 +151,30 @@ function applySticky() {
     const section = lead.closest('.urd-section');
     // En transformert seksjonsforfar ville gjort fixed relativ til seg
     // selv (containing block); da er festing meningsløs - stå stille.
-    const blocked = inactive || !section || getComputedStyle(section).transform !== 'none';
+    const blocked = !section || getComputedStyle(section).transform !== 'none'
+      || (mobile && lead.dataset.stickyMode !== 'screen');
     if (blocked) {
       for (const el of members) release(el);
+      continue;
+    }
+
+    // Mobil skjermdokking: hver blokk dokkes for seg mot sin egen målte
+    // størrelse (radnettet har ingen frames å regne gruppegeometri fra).
+    if (mobile) {
+      const view = { w: document.documentElement.clientWidth, h: window.innerHeight };
+      for (const el of members) {
+        const base = el._urdStickyBase ?? readGeom(el);
+        const w = el.offsetWidth;
+        const pos = dockPosition(el.dataset.stickyDock, Number(el.dataset.stickyOffset) || 0, { w, h: el.offsetHeight }, view);
+        el._urdStickyBase ??= base;
+        el.classList.add('urd-sticky-fixed');
+        el.style.position = 'fixed';
+        el.style.marginLeft = '0';
+        el.style.width = `${w}px`;
+        el.style.top = `${pos.top}px`;
+        el.style.left = `${pos.left}px`;
+        el.style.zIndex = String(Number(FIXED_Z) + (Number(base.z) || 0));
+      }
       continue;
     }
 
@@ -153,6 +184,10 @@ function applySticky() {
     // vi begge mot seksjonen, får festede blokker feil bredde og glir mot
     // venstre kant i det de festes.
     const canvasRect = (section.querySelector(':scope > .urd-canvas') ?? section).getBoundingClientRect();
+    // Kanvasen kan være skjøvet ned i seksjonen (nav-klaringen i første
+    // seksjon under en meny utenfor flyten): blokkens style.top er
+    // kanvas-relativ, mens feste- og slippgrensene regnes mot seksjonen.
+    const canvasTop = canvasRect.top - sectionRect.top;
     // Geometrien leses fra mellomlagringen mens blokken er festet (inline-
     // verdiene er da overskrevet), ellers ferskt fra elementet.
     const geoms = new Map(members.map((el) => [el, el._urdStickyBase ?? readGeom(el)]));
@@ -205,7 +240,7 @@ function applySticky() {
     // avstanden, og medlemmene beholder plassen sin inne i boksen.
     const state = stickyState(scrollY, {
       sectionTop,
-      blockY: box.y,
+      blockY: box.y + canvasTop,
       blockH: box.h,
       limitBottom,
       offset: (Number(lead.dataset.stickyOffset) || 0) + navH,
@@ -218,9 +253,10 @@ function applySticky() {
       } else if (state.mode === 'parked') {
         // Parkert overskriver top, så mellomlagringen må BESTÅ: uten den ville
         // neste måling lest parkeringshøyden som blokkens naturlige plass.
+        // parkY er seksjonsrelativ; style.top er kanvas-relativ.
         b.el._urdStickyBase ??= geoms.get(b.el);
         restore(b.el, b.el._urdStickyBase);
-        b.el.style.top = `${state.y + (b.y - box.y)}px`;
+        b.el.style.top = `${state.y - canvasTop + (b.y - box.y)}px`;
       } else {
         release(b.el);
       }

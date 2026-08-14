@@ -118,16 +118,31 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 - [ ] Gå gjennom kommentarer i filer og fjern unødvendige
 
 ## Bugs, (dårlige) funksjoner og ting som ellers må gjøres
-- [ ] Urd logoens 'n' er ikke på lik vertikal linje som "Urd" 
-- [ ] Flytende nav går over tekst og sidelement i mobil visning.
-- [ ] Seksjoner øverst på siden må automatisk dyttes ned (desktop og mobil), eller opprettes med ekstra plass øverst, slik at nav aldri dekker innhold (14. august 2026; hører sammen med flytende-nav-punktet over)
-- [ ] Nav i nettbrett-visning bør folde seg til menyknapp tidligere når menypunktene er lange, så punkter ikke brytes over flere linjer på en merkelig måte (14. august 2026)
-- [ ] Mobil/smal nav har et gap mellom topplinja og nedtrekksmenyen (14. august 2026); helskjerms-alternativet står i 0.7.13 Elementgjennomgangen
+
+Punktene merket [x] er levert i 0.7.0.2 (14. august 2026) og venter på testrunde-batch 0.7.0.2 i [TESTRUNDER.md](TESTRUNDER.md).
+
+- [x] Urd logoens 'n' er ikke på lik vertikal linje som "Urd" 
+- [x] Flytende nav går over tekst og sidelement i mobil visning.
+- [x] Seksjoner øverst på siden må automatisk dyttes ned (desktop og mobil), eller opprettes med ekstra plass øverst, slik at nav aldri dekker innhold (14. august 2026; hører sammen med flytende-nav-punktet over)
+- [x] Nav i nettbrett-visning bør folde seg til menyknapp tidligere når menypunktene er lange, så punkter ikke brytes over flere linjer på en merkelig måte (14. august 2026)
+- [x] Mobil/smal nav har et gap mellom topplinja og nedtrekksmenyen (14. august 2026); helskjerms-alternativet står i 0.7.13 Elementgjennomgangen
+- [x] Fest ved scroll ikonet må skalere likt som nye blokker, blokkpunkt meny og seksjons meny
+- [x] Øverste "ny seksjon" er under nav
+- [x] Øverste "ny seksjon" er ikke lik de andre ny seksjon knappene: burde følge lik størrelse
+- [x] Seksjonsknappene går over "ny blokk" chippen i øverste seksjon
+- [x] et objekt som er Festet til skjermen (ved scrolling) kan ikke bli manuelt flyttet ved klikk og dra - 
+- [x] Fest ved scroll (til skjerm) fungerer ikke for mobil
+- [x] Forkast utkast animasjon (fly til høyre) ser for statisk ut- burde være quick fade + fly til høyre, eller ingen animasjon i det heletatt
+- [x] En blokks elementpunkter som ⠿ har for liten clickbox - clickbox er halvparten av boksen faktiske størrelse
+- [x] (Preview) bildene for templates på sider er ikke like som de sidene som blir laget /artifact-design
+- [x] "Ny seksjon" under nav kan ikke klikkes - forsvinner når musepekeren går nær den 
 
 ## Forslag og Ideer
 
 - [ ] Påskeegg: mulighet til å legge inn hemmeligheter/easter eggs på nettsidene
 - [ ] Eksporter mal(er) - eksporter som plugin, eksporter gruppe av maler
+- [ ] Burdere om "ny blokk" er nødvendig å ha i seksjonene- Flytte til et panel?
+- [ ] In-page instillingsmeny følger ikke urd sin skalering- alt som ikke er sideelement burde følge størrelse likt som ny blokk meny og urd admin system.
 
 Sortert inn i milepælene 14. august 2026: audio-blokken (C10) til 0.7.4; font-pakker, lagre eget tema og bakgrunn-over-bakgrunn/faste sidebarer til 0.7.9; kant-resize, rutenett/hjelpelinje-rework, command palette, drop-target og layout-hjelpechipen til 0.7.10; ApeironLF-mønstrene til 0.7.13; touchvennlighet for admin og side til v0.9. Deklarativ per-brekkpunkt-variant (LAERDOMMER 5.11) er AVVIST i [ADR-0019](adr/0019-synket-mobilmodell.md) (13. august 2026: løser stil-per-brekkpunkt, ikke layout-synk).
 
