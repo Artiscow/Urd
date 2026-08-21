@@ -26,9 +26,11 @@ import { readFileSync } from 'node:fs';
 const SRC = readFileSync(new URL('../editor/src/App.svelte', import.meta.url), 'utf-8');
 const NO_COMMENTS = SRC.replace(/\/\*[\s\S]*?\*\//g, '');
 
-/** Deklarasjonene i regelen for én selektor, uten kommentarer. */
+/** Deklarasjonene i regelen for én selektor, uten kommentarer.
+ *  Alle regex-metategn escapes, ikke bare punktum (CodeQL
+ *  js/incomplete-sanitization). */
 function ruleBody(selector) {
-  const esc = selector.replace(/[.]/g, '\\.');
+  const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const match = NO_COMMENTS.match(new RegExp(`(^|\\})\\s*${esc}\\s*\\{([^}]*)\\}`, 'm'));
   return match ? match[2] : null;
 }

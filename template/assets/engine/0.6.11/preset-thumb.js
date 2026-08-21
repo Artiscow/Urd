@@ -204,6 +204,48 @@ function blockShapes(type, x, y, w, h, props) {
       rect(x + w * 0.32, y + h * 0.72, w * 0.36, 1.6, token('text', FALLBACK_TEXT), ' opacity="0.4" rx="0.8"'),
     ].join('');
   }
+  if (type === 'tabell') {
+    // Overskriftsbånd + radlinjer med kolonnedelere.
+    const headH = Math.max(1.6, h * 0.22);
+    const parts = [rect(x, y, w, headH, token('accent', FALLBACK_ACCENT), ' opacity="0.5" rx="0.8"')];
+    const rows = clamp(Math.floor((h - headH) / 3.2), 1, 3);
+    for (let i = 0; i < rows; i += 1) {
+      parts.push(rect(x, y + headH + 1 + i * ((h - headH - 1) / rows), w, 1, token('text', FALLBACK_TEXT), ' opacity="0.3"'));
+    }
+    parts.push(rect(x + w * 0.33, y, 0.6, h, token('text', FALLBACK_TEXT), ' opacity="0.2"'));
+    parts.push(rect(x + w * 0.66, y, 0.6, h, token('text', FALLBACK_TEXT), ' opacity="0.2"'));
+    return parts.join('');
+  }
+  if (type === 'deling') {
+    // Rad av små ikonskiver.
+    const r = Math.max(1.2, Math.min(h / 2, w / 9));
+    const parts = [];
+    for (let i = 0; i < 4; i += 1) {
+      parts.push(`<circle cx="${r1(x + r + i * (r * 2 + 1.5))}" cy="${r1(y + h / 2)}" r="${r1(r)}" fill="${token('accent', FALLBACK_ACCENT)}" opacity="0.8"/>`);
+    }
+    return parts.join('');
+  }
+  if (type === 'nedteller') {
+    // Fire enhetsbokser med tall-spor.
+    const gap = Math.max(0.8, w * 0.03);
+    const bw = (w - gap * 3) / 4;
+    const parts = [];
+    for (let i = 0; i < 4; i += 1) {
+      const bx = x + i * (bw + gap);
+      parts.push(rect(bx, y, bw, h, token('surface', FALLBACK_SURFACE), ' rx="1"'));
+      parts.push(rect(bx + bw * 0.25, y + h * 0.2, bw * 0.5, h * 0.35, token('accent', FALLBACK_ACCENT), ' opacity="0.85" rx="0.8"'));
+    }
+    return parts.join('');
+  }
+  if (type === 'audio') {
+    // Spillerlinje: flate med avspillingstrekant og fremdriftsstripe.
+    const parts = [rect(x, y, w, h, token('surface', FALLBACK_SURFACE), ' rx="1.5"')];
+    const cy = y + h / 2;
+    const s = Math.max(1.2, h * 0.28);
+    parts.push(`<polygon points="${r1(x + w * 0.06)},${r1(cy - s)} ${r1(x + w * 0.06)},${r1(cy + s)} ${r1(x + w * 0.06 + s * 1.4)},${r1(cy)}" fill="${token('accent', FALLBACK_ACCENT)}" opacity="0.85"/>`);
+    parts.push(rect(x + w * 0.2, cy - 0.6, w * 0.7, 1.2, token('text', FALLBACK_TEXT), ' opacity="0.35" rx="0.6"'));
+    return parts.join('');
+  }
   // Ukjent type (f.eks. fra plugin): rolig kortomriss.
   return rect(x, y, w, h, token('surface', FALLBACK_SURFACE), ' rx="1.5"');
 }

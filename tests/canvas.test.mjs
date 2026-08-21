@@ -32,10 +32,13 @@ const FORBIDDEN = [
   'will-change',
 ];
 
-/** Hent deklarasjonene i regelen for en selektor, uten kommentarer. */
+/** Hent deklarasjonene i regelen for en selektor, uten kommentarer.
+ *  Alle regex-metategn escapes, i alle forekomster, ikke bare første
+ *  punktum (CodeQL js/incomplete-sanitization). */
 function ruleBody(css, selector) {
   const stripped = css.replace(/\/\*[\s\S]*?\*\//g, '');
-  const match = stripped.match(new RegExp(`(^|\\})\\s*${selector.replace('.', '\\.')}\\s*\\{([^}]*)\\}`, 'm'));
+  const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = stripped.match(new RegExp(`(^|\\})\\s*${esc}\\s*\\{([^}]*)\\}`, 'm'));
   return match ? match[2] : null;
 }
 

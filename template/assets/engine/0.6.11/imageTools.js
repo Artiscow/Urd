@@ -123,7 +123,15 @@ export function svgViewBox(svgText) {
 
 /** Media-filendelse fra en data-URL: SVG beholder vektoren, resten er webp. */
 export function mediaExtension(dataUrl) {
-  return /^data:image\/svg\+xml[;,]/.test(dataUrl || '') ? 'svg' : 'webp';
+  const url = dataUrl || '';
+  if (/^data:image\/svg\+xml[;,]/.test(url)) return 'svg';
+  // Lydfiler publiseres uendret (ingen canvas-vei å komprimere gjennom),
+  // så filendelsen avledes av MIME-typen.
+  const audio = url.match(/^data:audio\/([a-z0-9.+-]+)[;,]/i)?.[1]?.toLowerCase();
+  if (audio) {
+    return { mpeg: 'mp3', mp3: 'mp3', mp4: 'm4a', 'x-m4a': 'm4a', aac: 'aac', wav: 'wav', 'x-wav': 'wav', ogg: 'ogg', webm: 'webm', flac: 'flac' }[audio] ?? 'mp3';
+  }
+  return 'webp';
 }
 
 /** Filnavn → trygg slug for media/-stier. */

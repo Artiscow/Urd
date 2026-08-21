@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  isEmail, isSpam, validate, buildMailto, buildPayload, endpointOrigin,
+  isEmail, isSpam, isIsoDate, validate, buildMailto, buildPayload, endpointOrigin,
 } from '../template/plugins/skjema/form.js';
 
 const FIELDS = [
@@ -71,4 +71,62 @@ test('buildPayload: feltverdier + ekstra kontekst, honeypot ikke med', () => {
 test('endpointOrigin: henter opprinnelsen, null ved ugyldig', () => {
   assert.equal(endpointOrigin('https://script.google.com/macros/s/abc/exec'), 'https://script.google.com');
   assert.equal(endpointOrigin('ikke en url'), null);
+});
+
+// Felttypene fra 0.7.4: nedtrekk/radio med alternativliste, avkryssing
+// (boolsk verdi) og dato (ISO-form fra input type=date).
+
+test('isIsoDate: gyldig kalenderdato på ISO-form', () => {
+  assert.ok(isIsoDate('2026-08-14'));
+  assert.ok(isIsoDate('2024-02-29'));
+  assert.ok(!isIsoDate('2026-02-30'));
+  assert.ok(!isIsoDate('14.08.2026'));
+  assert.ok(!isIsoDate(''));
+});
+
+test('validate: avkryssing er boolsk, påkrevd = må være krysset av', () => {
+  const fields = [{ id: 'samtykke', label: 'Samtykke', type: 'checkbox', required: true }];
+  assert.equal(validate(fields, { samtykke: false }).ok, false);
+  assert.equal(validate(fields, { samtykke: 'false' }).ok, false);
+  assert.equal(validate(fields, { samtykke: true }).ok, true);
+  const optional = [{ ...fields[0], required: false }];
+  assert.equal(validate(optional, { samtykke: false }).ok, true);
+});
+
+test('validate: nedtrekk og radio godtar kun verdier fra alternativlisten', () => {
+  const fields = [{ id: 'gruppe', label: 'Gruppe', type: 'select', required: true, options: ['A', 'B'] }];
+  assert.equal(validate(fields, { gruppe: 'A' }).ok, true);
+  assert.equal(validate(fields, { gruppe: 'tuklet' }).ok, false);
+  assert.equal(validate(fields, { gruppe: '' }).ok, false);
+  const radio = [{ ...fields[0], type: 'radio', required: false }];
+  assert.equal(validate(radio, { gruppe: '' }).ok, true);
+  assert.equal(validate(radio, { gruppe: 'C' }).ok, false);
+});
+
+test('validate: dato må være gyldig ISO-dato når den er utfylt', () => {
+  const fields = [{ id: 'dato', label: 'Dato', type: 'date', required: false }];
+  assert.equal(validate(fields, { dato: '2026-08-14' }).ok, true);
+  assert.equal(validate(fields, { dato: 'i går' }).ok, false);
+  assert.equal(validate(fields, { dato: '' }).ok, true);
+});
+
+test('buildMailto: avkrysset boks blir ja-ordet, tom boks utelates', () => {
+  const fields = [
+    { id: 'navn', label: 'Navn', type: 'text', required: true },
+    { id: 'nyhetsbrev', label: 'Nyhetsbrev', type: 'checkbox', required: false },
+  ];
+  const url = buildMailto('post@x.no', 'Emne', fields, { navn: 'Ola', nyhetsbrev: true }, { yes: 'Ja' });
+  assert.match(url, /Nyhetsbrev%3A%20Ja/);
+  const without = buildMailto('post@x.no', 'Emne', fields, { navn: 'Ola', nyhetsbrev: false }, { yes: 'Ja' });
+  assert.ok(!without.includes('Nyhetsbrev'));
+});
+
+test('buildPayload: avkryssing sendes som ekte boolsk', () => {
+  const fields = [
+    { id: 'navn', label: 'Navn', type: 'text', required: true },
+    { id: 'samtykke', label: 'Samtykke', type: 'checkbox', required: true },
+  ];
+  const payload = buildPayload(fields, { navn: ' Ola ', samtykke: true });
+  assert.deepEqual(payload, { navn: 'Ola', samtykke: true });
+  assert.equal(buildPayload(fields, { navn: 'Ola' }).samtykke, false);
 });

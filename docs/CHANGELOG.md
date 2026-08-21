@@ -25,6 +25,20 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.4 - Blokk- og feltrunden: skjema-felttyper, tabell, delingsknapper, nedteller og lyd - 14. august 2026
+
+Milepæl 0.7.4. Funksjonskartets C5 (felttyper), C8 (tabell), C9 (deling + nedteller) og C10 (lyd), etter kartenes oppskrifter i [sammenligning/](sammenligning/).
+
+- Skjema-pluginen hadde bare tekst/e-post/telefon/flerlinjes. Fire nye felttyper: nedtrekk og dato er native kontroller hos besøkende med `color-scheme` (ADR-0009 forbyr kun redigerings-UI), radiovalg rendres som `fieldset`/`legend`, og avkryssing bærer boolsk verdi hele veien (påkrevd = må krysses av, ja-ordet i mailto-kroppen, ekte boolsk i endepunkt-payloaden). Nedtrekk/radio får alternativene som kommaseparert liste i felt-editoren (nytt additivt felt `options`), og validering avviser verdier utenfor listen. Ni nye tester.
+- Ny kjerneblokk `tabell`: semantisk `<table>` i overflow-x-wrapper (brede tabeller ruller i egen flate), celler skrives rett på lerretet, rader/kolonner styres i Egenskaper; stilvalg for linjer (rader/rutenett/ingen), striper og overskriftsrad. Autovekst.
+- Ny kjerneblokk `deling`: statiske delingslenker uten sporing (Facebook, X, LinkedIn, WhatsApp, e-post) med ikonbibliotekets tegnede SVG-er; adressen leses ved klikk. «Kopier lenke» bruker Clipboard API og vises kun der API-et finnes (ADR-0011).
+- Ny kjerneblokk `nedteller`: tikker mot et datetime-local-mål og viser ferdig-tekst etterpå; enhetsordene er egne nøkler i stedet for Intl.RelativeTimeFormat (kalender-leksa: nordsamisk mangler i ICU). Tikkingen er setInterval-logikk, ikke animasjon.
+- Ny kjerneblokk `audio`: native `<audio controls>` med git-eid fil under CSP-ens `default-src 'self'`; opplasting går samme data-URL-til-media-flyt som bildene (`materializeField` og `mediaExtension` kan nå audio-MIME-typer). Valgfri tittel skrives på lerretet.
+- Alle fire blokkene kan settes inn fra begge blokkmenyene med Innhold/Stil-panel, hjelpechip, miniatyr-skisser og i18n i kjernespråkene; `BLOCK_LABELS` fikk samtidig de fire manglende 0.6-typene (samling/tidslinje/sitat/statistikk), som falt tilbake til rå typenavn i Egenskaper-headeren.
+- Autovekst-blokkene leste `parseFloat(style.minHeight)`, som etter nav-klaringen (0.7.0.2) er en calc(): NaN gjorde at veksten kunne overskrive klaringen og krympe seksjoner. Rettet på alle ti stedene med delt klaringsbevisst `growSectionTo` i render.js (pluginene fikk selvbærende variant).
+- Blokkverktøylinja lå alltid over blokken; øverst på siden (eller under den klistrede menyen) finnes ingen synlig plass der, og linja var unåelig. Den flippes nå under blokken, målt mot viewporten i det pekeren treffer blokken (dra og scrolling rendrer aldri på nytt, så render-tidspunktet var feil målepunkt).
+- CodeQL-varsel (js/incomplete-sanitization): testenes `ruleBody`-hjelpere escapet kun punktum (topbar-fold) eller kun første punktum (canvas) når selektoren ble regex; begge escaper nå alle metategn.
+
 ### 0.7.0.2 - Bug-runden: nav-klaring, chrome-stabling, dokking, folding, malbilder og logo - 14. august 2026
 
 Bugs-lista i backloggen gjennomgått samlet; alle femten punktene er levert.

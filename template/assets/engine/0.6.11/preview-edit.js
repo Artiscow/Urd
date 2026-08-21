@@ -493,6 +493,8 @@ const BLOCK_KINDS = [
   ['image', ta('blocks.image')], ['video', ta('blocks.video')], ['icon', ta('blocks.icon')],
   ['samling', ta('blocks.samling')], ['galleri', ta('blocks.galleri')], ['faq', ta('blocks.faq')],
   ['tidslinje', ta('blocks.tidslinje')], ['sitat', ta('blocks.sitat')], ['statistikk', ta('blocks.statistikk')],
+  ['tabell', ta('blocks.tabell')], ['deling', ta('blocks.deling')], ['nedteller', ta('blocks.nedteller')],
+  ['audio', ta('blocks.audio')],
 ];
 
 /** Formene bor i sin egen utfoldbare undermeny («Former») i + Ny blokk. */
@@ -504,7 +506,7 @@ const SHAPE_KINDS = [
 /** Kjerneblokk-typene (paletten i editoren eier byggingen av disse). faq
  *  manglet her frem til 0.6.7.11 og lakk inn i Plugin-blokker-gruppen. */
 const CORE_BLOCK_TYPES = new Set(['text', 'image', 'button', 'shape', 'video', 'icon', 'samling', 'galleri',
-  'faq', 'tidslinje', 'sitat', 'statistikk']);
+  'faq', 'tidslinje', 'sitat', 'statistikk', 'tabell', 'deling', 'nedteller', 'audio']);
 
 /**
  * Lukker en «+ Ny blokk»-meny og nullstiller dobbeltklikk-tilstanden:
@@ -2908,6 +2910,19 @@ function enhanceBlock(el, block, section, grid, host) {
 
   const toolbar = document.createElement('div');
   toolbar.className = 'urd-edit-toolbar';
+  // Verktøylinja står over blokken; øverst på siden eller rett under menyen
+  // finnes ingen synlig plass der (over dokumenttoppen eller bak menyen).
+  // Da flippes den under blokken. Måles mot VIEWPORTEN i det pekeren
+  // treffer blokken (og ved markering): posisjonen endres av både dra og
+  // scrolling, som aldri rendrer på nytt.
+  const updateToolbarSide = () => {
+    const cs = getComputedStyle(document.documentElement);
+    const navH = Number.parseFloat(cs.getPropertyValue('--urd-nav-h')) || 0;
+    const scale = Number.parseFloat(cs.getPropertyValue('--urd-chrome-scale')) || 1;
+    toolbar.classList.toggle('urd-toolbar-under', el.getBoundingClientRect().top < navH + 34 * scale);
+  };
+  updateToolbarSide();
+  el.addEventListener('pointerenter', updateToolbarSide);
 
   // Den felles bildeeditoren for bildeblokker: alle feltene, med live DOM-oppdatering
   // (kun bildebytte trenger rerender, og da lukkes panelet).

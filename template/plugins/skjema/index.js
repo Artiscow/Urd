@@ -19,7 +19,13 @@ import { createDropdown } from '/assets/urd/dropdown.js';
 import { t, ta } from '/assets/urd/i18n.js';
 
 /** Felttype-id + etikett-NØKKEL (ta-oppslag ved bruk; aldri på modulnivå). */
-const FIELD_TYPES = [['text', 'skjema.edit.typeText'], ['email', 'skjema.edit.typeEmail'], ['tel', 'skjema.edit.typeTel'], ['textarea', 'skjema.edit.typeTextarea']];
+const FIELD_TYPES = [
+  ['text', 'skjema.edit.typeText'], ['email', 'skjema.edit.typeEmail'], ['tel', 'skjema.edit.typeTel'], ['textarea', 'skjema.edit.typeTextarea'],
+  ['select', 'skjema.edit.typeSelect'], ['checkbox', 'skjema.edit.typeCheckbox'], ['radio', 'skjema.edit.typeRadio'], ['date', 'skjema.edit.typeDate'],
+];
+
+/** Felttyper med alternativliste (feltets `options`, additivt fra v0.7). */
+const OPTION_TYPES = new Set(['select', 'radio']);
 
 const el2 = (tag, className, textContent) => {
   const node = document.createElement(tag);
@@ -38,16 +44,74 @@ const post = (msg) => window.parent?.postMessage(msg, location.origin);
 /* ---------- Skjemarendering ---------- */
 
 function fieldControl(field) {
+  // Nedtrekk hos besøkende er NATIVE select med color-scheme (ADR-0009 gjelder
+  // kun redigerings-UI); en tom plassholder-opsjon gjør påkrevd-sjekken mulig.
+  if (field.type === 'select') {
+    const control = el2('select', 'urd-skjema-input urd-skjema-select');
+    const placeholder = el2('option', null, t('skjema.choose'));
+    placeholder.value = '';
+    control.appendChild(placeholder);
+    for (const option of field.options ?? []) {
+      const node = el2('option', null, option);
+      node.value = option;
+      control.appendChild(node);
+    }
+    control.name = field.id;
+    control.dataset.fieldId = field.id;
+    return control;
+  }
   const control = field.type === 'textarea'
     ? el2('textarea', 'urd-skjema-input')
     : el2('input', 'urd-skjema-input');
-  if (field.type !== 'textarea') control.type = field.type === 'email' ? 'email' : field.type === 'tel' ? 'tel' : 'text';
+  if (field.type !== 'textarea') {
+    control.type = field.type === 'email' ? 'email'
+      : field.type === 'tel' ? 'tel'
+        : field.type === 'date' ? 'date'
+          : field.type === 'checkbox' ? 'checkbox' : 'text';
+  }
   if (field.type === 'textarea') control.rows = 4;
   control.name = field.id;
   control.id = `${field.id}-in`;
-  if (field.required) control.required = true;
+  if (field.required && field.type !== 'checkbox') control.required = true;
   control.dataset.fieldId = field.id;
   return control;
+}
+
+/** Én skjemarad for feltet: struktur og kontroll varierer med typen. */
+function fieldRow(field, controls) {
+  const star = field.required ? ' *' : '';
+  // Radiogruppe: fieldset/legend i stedet for label-innpakking, én radio per
+  // alternativ med delt name. Høsting leser gruppens :checked.
+  if (field.type === 'radio') {
+    const row = el2('fieldset', 'urd-skjema-row urd-skjema-fieldset');
+    row.appendChild(el2('legend', 'urd-skjema-label', field.label + star));
+    for (const option of field.options ?? []) {
+      const optLabel = el2('label', 'urd-skjema-check');
+      const radio = el2('input');
+      radio.type = 'radio';
+      radio.name = field.id;
+      radio.value = option;
+      optLabel.append(radio, el2('span', null, option));
+      row.appendChild(optLabel);
+    }
+    controls[field.id] = row;
+    return row;
+  }
+  // Avkryssing: boksen står FØR etiketten, som konvensjonen er.
+  if (field.type === 'checkbox') {
+    const row = el2('label', 'urd-skjema-row urd-skjema-checkrow');
+    const inner = el2('span', 'urd-skjema-check');
+    const control = fieldControl(field);
+    controls[field.id] = control;
+    inner.append(control, el2('span', 'urd-skjema-label', field.label + star));
+    row.appendChild(inner);
+    return row;
+  }
+  const row = el2('label', 'urd-skjema-row');
+  const control = fieldControl(field);
+  controls[field.id] = control;
+  row.append(el2('span', 'urd-skjema-label', field.label + star), control);
+  return row;
 }
 
 function renderForm(host, props, ctx) {
@@ -57,13 +121,10 @@ function renderForm(host, props, ctx) {
 
   const controls = {};
   for (const field of fields) {
-    const row = el2('label', 'urd-skjema-row');
-    const labelText = el2('span', 'urd-skjema-label', field.label + (field.required ? ' *' : ''));
-    const control = fieldControl(field);
-    controls[field.id] = control;
+    const row = fieldRow(field, controls);
     const error = el2('span', 'urd-skjema-error');
     error.dataset.for = field.id;
-    row.append(labelText, control, error);
+    row.appendChild(error);
     form.appendChild(row);
   }
 
@@ -94,8 +155,15 @@ function renderForm(host, props, ctx) {
     event.preventDefault();
     status.className = 'urd-skjema-status';
     status.textContent = '';
+    // Per-type høsting: avkryssing er boolsk, radiogruppen leser :checked,
+    // resten leser .value.
     const values = {};
-    for (const field of fields) values[field.id] = controls[field.id]?.value ?? '';
+    for (const field of fields) {
+      const control = controls[field.id];
+      values[field.id] = field.type === 'checkbox' ? control?.checked === true
+        : field.type === 'radio' ? (control?.querySelector('input:checked')?.value ?? '')
+          : (control?.value ?? '');
+    }
 
     // Spam: lat som om det gikk bra, men send ingenting (ikke tips boten).
     if (isSpam(honeypot.value)) {
@@ -104,7 +172,12 @@ function renderForm(host, props, ctx) {
       return;
     }
 
-    const result = validate(fields, values, { required: t('skjema.required'), email: t('skjema.invalidEmail') });
+    const result = validate(fields, values, {
+      required: t('skjema.required'),
+      email: t('skjema.invalidEmail'),
+      choice: t('skjema.invalidChoice'),
+      date: t('skjema.invalidDate'),
+    });
     showErrors(result.errors);
     if (!result.ok) return;
 
@@ -137,7 +210,7 @@ function renderForm(host, props, ctx) {
         submit.disabled = false;
       }
     } else {
-      const url = buildMailto(props.recipient, props.subject || t('skjema.subjectDefault'), fields, values);
+      const url = buildMailto(props.recipient, props.subject || t('skjema.subjectDefault'), fields, values, { yes: t('skjema.yes') });
       if (!url) {
         status.classList.add('feil');
         status.textContent = t('skjema.noRecipient');
@@ -194,8 +267,10 @@ function configPanel(el, props, ctx) {
   };
   syncMode();
 
-  // Feltredigering: legg til, endre navn/type/påkrevd, fjern.
-  let fields = (props.fields ?? []).map((f) => ({ ...f }));
+  // Feltredigering: legg til, endre navn/type/påkrevd, fjern. Nedtrekk og
+  // radio får en egen alternativlinje (kommaseparert) rett under raden sin;
+  // typebytte re-rendrer listen så linjen vises kun der den gjelder.
+  let fields = (props.fields ?? []).map((f) => ({ ...f, options: Array.isArray(f.options) ? [...f.options] : undefined }));
   const fieldList = el2('div', 'urd-skjema-fieldlist');
   const renderFields = () => {
     fieldList.replaceChildren();
@@ -206,7 +281,7 @@ function configPanel(el, props, ctx) {
       const typeDd = createDropdown({
         value: field.type,
         options: FIELD_TYPES.map(([value, key]) => [value, ta(key)]),
-        onchange: (value) => { field.type = value; },
+        onchange: (value) => { field.type = value; renderFields(); },
       });
       const req = el2('label', 'urd-skjema-fieldreq');
       const reqBox = el2('input');
@@ -220,6 +295,14 @@ function configPanel(el, props, ctx) {
       del.addEventListener('click', () => { fields.splice(index, 1); renderFields(); });
       row.append(name, typeDd.el, req, del);
       fieldList.appendChild(row);
+      if (OPTION_TYPES.has(field.type)) {
+        const opts = textInput((field.options ?? []).join(', '), ta('skjema.edit.optionsPh'));
+        opts.classList.add('urd-skjema-fieldopts');
+        opts.addEventListener('input', () => {
+          field.options = opts.value.split(',').map((v) => v.trim()).filter(Boolean);
+        });
+        fieldList.appendChild(opts);
+      }
     });
   };
   renderFields();
@@ -234,7 +317,15 @@ function configPanel(el, props, ctx) {
   apply.type = 'button';
   apply.addEventListener('click', () => {
     const cleaned = fields
-      .map((f) => ({ id: f.id || fieldId(), label: (f.label || ta('skjema.edit.fieldFallback')).trim(), type: f.type || 'text', required: f.required !== false }))
+      .map((f) => ({
+        id: f.id || fieldId(),
+        label: (f.label || ta('skjema.edit.fieldFallback')).trim(),
+        type: f.type || 'text',
+        required: f.required !== false,
+        // Alternativlisten følger kun typene som bruker den; et typebytte
+        // bort fra nedtrekk/radio etterlater ingen foreldreløs liste.
+        ...(OPTION_TYPES.has(f.type) ? { options: (f.options ?? []).filter(Boolean) } : {}),
+      }))
       .filter((f) => f.label);
     post({
       type: 'urd-edit',
@@ -291,8 +382,13 @@ function autoGrow(el, host, ctx) {
     const sectionEl = el.closest('.urd-section');
     if (sectionEl) {
       const bottom = el.offsetTop + needed + 24;
-      const current = Number.parseFloat(sectionEl.style.minHeight) || 0;
-      if (bottom > current) sectionEl.style.minHeight = `${bottom}px`;
+      // Nav-klaringen (--urd-section-clear) er med i computed min-height, men
+      // ikke i innholdshøyden: den holdes utenfor sammenligningen og skrives
+      // tilbake i kalkylen (samme form som render.js setter).
+      const cs = getComputedStyle(sectionEl);
+      const clear = Number.parseFloat(cs.getPropertyValue('--urd-section-clear')) || 0;
+      const current = (Number.parseFloat(cs.minHeight) || 0) - clear;
+      if (bottom > current) sectionEl.style.minHeight = `calc(${bottom}px + var(--urd-section-clear, 0px))`;
     }
     if (ctx.preview) {
       const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
@@ -318,6 +414,14 @@ const SKJEMA_CSS = `
   border-radius: var(--urd-radius-sm); padding: 8px 10px; width: 100%; }
 .urd-skjema-input:focus { outline: 2px solid var(--urd-color-accent); outline-offset: 1px; }
 textarea.urd-skjema-input { resize: vertical; min-height: 90px; }
+/* Native nedtrekk/dato hos besøkende (ADR-0009 gjelder kun redigerings-UI):
+   color-scheme lar popup og datovelger følge brukerens OS-tema. */
+.urd-skjema-select, .urd-skjema-input[type="date"] { color-scheme: light dark; }
+.urd-skjema-fieldset { border: 0; padding: 0; margin: 0; }
+.urd-skjema-fieldset legend { padding: 0; margin-bottom: 4px; }
+.urd-skjema-check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.urd-skjema-check input { accent-color: var(--urd-color-accent); width: 16px; height: 16px; margin: 0; }
+.urd-skjema-checkrow .urd-skjema-label { font-weight: 400; }
 .urd-skjema-error { font-size: 0.8em; color: #e05252; min-height: 0; }
 .urd-skjema-error:empty { display: none; }
 .urd-skjema-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
@@ -349,6 +453,7 @@ textarea.urd-skjema-input { resize: vertical; min-height: 90px; }
   border: 1px solid rgb(255 255 255 / 20%); border-radius: 6px; padding: 5px 7px; width: 100%; }
 .urd-skjema-fieldlist { display: grid; gap: 6px; }
 .urd-skjema-fieldrow { display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px; align-items: center; }
+.urd-skjema-fieldopts { margin: -2px 0 2px; }
 .urd-skjema-fieldreq { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; white-space: nowrap; }
 .urd-skjema-fielddel { font: inherit; color: #e05252; background: transparent; border: 0; cursor: pointer; padding: 2px 6px; }
 .urd-skjema-addfield, .urd-skjema-apply { font: 600 12px/1 system-ui, sans-serif; cursor: pointer;

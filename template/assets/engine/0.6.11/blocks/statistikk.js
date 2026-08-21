@@ -9,6 +9,7 @@
  */
 // Kun kalt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
 import { ta, adminLocaleReady } from '../i18n.js';
+import { growSectionTo } from '../render.js';
 
 /**
  * Tolker visningsverdien som tall (ren, node-testbar): sifrene med valgfritt
@@ -150,11 +151,7 @@ export const statistikkBlock = {
       if (Math.abs(needed - el.clientHeight) > 8 && ctx.viewport !== 'mobile') {
         el.style.height = `${needed}px`;
         const sectionEl = el.closest('.urd-section');
-        if (sectionEl) {
-          const bottom = el.offsetTop + needed + 24;
-          const current = Number.parseFloat(sectionEl.style.minHeight) || 0;
-          if (bottom > current) sectionEl.style.minHeight = `${bottom}px`;
-        }
+        if (sectionEl) growSectionTo(sectionEl, el.offsetTop + needed + 24);
         if (ctx.preview) {
           const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
           if (block && block.frames.desktop.h !== needed) {

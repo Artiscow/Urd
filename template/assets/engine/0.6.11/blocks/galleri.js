@@ -16,6 +16,7 @@
  * bevegelse, i skjulte faner, og i preview med redigeringschrome på.
  */
 import { applyImageStyle } from './image.js';
+import { growSectionTo } from '../render.js';
 import { stepIndex, canAutoplay, normalizeInterval, gridColumns } from '../galleri-model.js';
 import { isSafeHref } from '../nav-model.js';
 // ta/adminLocaleReady: kun kallt i preview (etter at admin-ordboka er lastet), aldri på modulnivå.
@@ -262,11 +263,7 @@ export const galleriBlock = {
       if (Math.abs(needed - el.clientHeight) > 8) {
         el.style.height = `${needed}px`;
         const sectionEl = el.closest('.urd-section');
-        if (sectionEl) {
-          const bottom = el.offsetTop + needed + 24;
-          const current = Number.parseFloat(sectionEl.style.minHeight) || 0;
-          if (bottom > current) sectionEl.style.minHeight = `${bottom}px`;
-        }
+        if (sectionEl) growSectionTo(sectionEl, el.offsetTop + needed + 24);
         if (ctx.preview) {
           const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
           if (block && block.frames.desktop.h !== needed) {

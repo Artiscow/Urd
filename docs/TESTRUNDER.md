@@ -2,6 +2,27 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.4): Blokk- og feltrunden
+
+Fire nye kjerneblokker og fire nye skjema-felttyper. Alt kan testes lokalt, men mailto/endepunkt og deling trenger en deployet side for full flyt.
+
+- [ ] SKJEMA: legg til felt av hver ny type (nedtrekk, avkryssing, radiovalg, dato) i felt-editoren; nedtrekk/radio får alternativlinjen (kommaseparert), og typebytte bort fra dem fjerner linjen
+- [ ] Besøkende-skjemaet: nedtrekk viser «Velg …» først og følger OS-temaet i popupen; radiogruppen har gruppeetikett; avkryssing står FØR etiketten; dato bruker nettleserens datovelger
+- [ ] Validering: påkrevd avkryssing må krysses av, påkrevd nedtrekk/radio må ha valg, ugyldig dato avvises; feilmeldingene står ved feltet på sidens språk
+- [ ] Innsending (deployet): mailto-kroppen skriver «Felt: Ja» for avkrysset boks og utelater en tom; endepunkt-payloaden har ekte boolsk for avkryssing
+- [ ] TABELL: sett inn fra begge blokkmenyene; skriv i cellene på lerretet; + / - rad og kolonne i Egenskaper virker og bevarer innholdet; overskriftsrad, striper og linjevalg (rader/rutenett/ingen) tegner riktig
+- [ ] Tabell bredere enn blokken ruller sidelengs i egen flate (også publisert og på mobil), uten at siden får vannrett scrolling
+- [ ] DELING: knappene åpner riktig delings-URL med SIDENS adresse (test fra en underside); e-post åpner e-postklienten; «Kopier lenke» kopierer og viser Kopiert-kvittering; ingen tredjeparts-forespørsler i nettverksfanen
+- [ ] Deling-stil: ikoner/ikon+navn-variantene, størrelse og farge (tema-token og egen) virker
+- [ ] NEDTELLER: teller riktig mot målet og tikker hvert sekund; «Vis sekunder» av skjuler boksen; passert mål viser ferdig-teksten, som kan skrives på lerretet
+- [ ] Nedteller-enhetene (dager/timer/minutter/sekunder) følger sidens språk i Ren visning og publisert
+- [ ] AUDIO: velg en lydfil i Egenskaper (data-URL i utkast), spilleren virker i preview; publisering skriver fila til media/ med riktig filendelse og spilleren virker deployet (CSP)
+- [ ] Audio: stor fil gir størrelsesvarsel; «Fjern lydfil» tilbake til plassholderen; tittel over spilleren kan skrives på lerretet
+- [ ] Mobil: alle fire blokkene får naturlig høyde i radnettet (ingen klipping eller overlapp); deling-knappene og nedteller-boksene radbryter pent på 390 px
+- [ ] Miniatyrene: de fire nye blokkene tegnes gjenkjennelig i seksjons- og sidemaler-kortene
+- [ ] Verktøylinje-vippen: dra en blokk helt øverst på siden eller rett under den klistrede menyen: blokkverktøylinja legger seg UNDER blokken med én gang (uten omlasting), og vanlige blokker beholder linja over
+- [ ] Autovekst etter klaringsrettelsen: en seksjon med faq/samling/skjema vokser fortsatt riktig når innholdet vokser, og første seksjon under flytende meny BEHOLDER nav-klaringen når autovekst-blokker justerer seg
+
 ### Testrunde-batch (0.7.0.2): Bug-runden - nav-klaring, chrome, dokking, malbilder og logo
 
 Alle femten punktene fra Bugs-lista. Det viktigste er nav-klaringen (endrer hvordan første seksjon rendres under flytende meny, på alle eksisterende sider) og dokk-draget.

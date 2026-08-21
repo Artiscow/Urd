@@ -1063,6 +1063,50 @@
     mutateBlock('decor', (b) => { b.decor = on; });
   }
 
+  /** Tabellens form: rader/kolonner legges til og fjernes i enden;
+   *  radsettet rektangulariseres først, så håndredigert data tåles. */
+  function tabellResize(dRows, dCols) {
+    mutateBlock(`edit:${selectedBlock.blockId}:tabell-form`, (b) => {
+      let rows = (Array.isArray(b.props.rows) && b.props.rows.length ? b.props.rows : [['']])
+        .map((row) => (Array.isArray(row) ? row.map((cell) => String(cell ?? '')) : ['']));
+      const cols = Math.max(1, ...rows.map((row) => row.length));
+      rows = rows.map((row) => [...row, ...Array(cols - row.length).fill('')]);
+      if (dRows > 0) rows.push(Array(cols).fill(''));
+      else if (dRows < 0 && rows.length > 1) rows.pop();
+      if (dCols > 0) rows = rows.map((row) => [...row, '']);
+      else if (dCols < 0 && cols > 1) rows = rows.map((row) => row.slice(0, cols - 1));
+      b.props.rows = rows;
+    });
+  }
+
+  /** Delingsknappenes tjenester: valgene lagres i fast visningsrekkefølge. */
+  function toggleDelingService(service, on) {
+    mutateBlock(`edit:${selectedBlock.blockId}:deling`, (b) => {
+      const order = ['facebook', 'x', 'linkedin', 'whatsapp', 'email', 'copy'];
+      const set = new Set(b.props.services ?? []);
+      if (on) set.add(service);
+      else set.delete(service);
+      b.props.services = order.filter((s) => set.has(s));
+    });
+  }
+
+  /** Lydfil → data-URL i utkastet; publisering skriver den til media/.
+   *  Lyd komprimeres ikke (ingen canvas-vei), så størrelsen varsles. */
+  function setAudioFile(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setBlockProp('src', String(reader.result ?? ''));
+      if (file.size > WARN_BYTES) {
+        setStatus(ta('status.audioLarge', { kb: Math.round(file.size / 1024) }), 'error');
+      }
+    };
+    reader.onerror = () => setStatus(ta('status.imageReadError'), 'error');
+    reader.readAsDataURL(file);
+  }
+
   /** Skjul på mobil er en MOBIL-intensjon, ikke en desktop-endring: den
    *  går utenom mutateBlock så tilsynsflagget aldri utløses av den (samme
    *  regel som telefon-togglen i lerretet, ADR-0019). */
@@ -1110,7 +1154,7 @@
   // typografirad).
 
   /** Navn på blokktypene i panelet. */
-  const BLOCK_LABELS = { text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), galleri: ta('blocks.galleri'), faq: ta('blocks.faq') };
+  const BLOCK_LABELS = { text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), galleri: ta('blocks.galleri'), faq: ta('blocks.faq'), samling: ta('blocks.samling'), tidslinje: ta('blocks.tidslinje'), sitat: ta('blocks.sitat'), statistikk: ta('blocks.statistikk'), tabell: ta('blocks.tabell'), deling: ta('blocks.deling'), nedteller: ta('blocks.nedteller'), audio: ta('blocks.audio') };
   const SHAPE_KINDS = [
     ['line', ta('shape.line')], ['arrow', ta('shape.arrow')], ['circle', ta('shape.circle')],
     ['rect', ta('shape.rect')], ['triangle', ta('shape.triangle')],
@@ -4033,6 +4077,41 @@
       props: { value: '4800', prefix: '', suffix: '+', label: ta('seed.statistikk.label'), countUp: true },
       w: 20, h: 90,
     },
+    tabell: {
+      type: 'tabell',
+      props: {
+        header: true,
+        striped: false,
+        lines: 'rows',
+        rows: [
+          [ta('seed.tabell.h1'), ta('seed.tabell.h2'), ta('seed.tabell.h3')],
+          [ta('seed.tabell.r1c1'), ta('seed.tabell.r1c2'), ''],
+          [ta('seed.tabell.r2c1'), ta('seed.tabell.r2c2'), ''],
+        ],
+      },
+      w: 50, h: 160,
+    },
+    deling: {
+      type: 'deling',
+      props: { services: ['facebook', 'x', 'linkedin', 'whatsapp', 'email', 'copy'], variant: 'icons', size: 38, color: '' },
+      w: 34, h: 48,
+    },
+    nedteller: {
+      type: 'nedteller',
+      // Målet seedes 30 dager fram (kl. 18), så blokken teller fra første stund.
+      props: {
+        target: (() => {
+          const d = new Date(Date.now() + 30 * 86400 * 1000);
+          const p = (n) => String(n).padStart(2, '0');
+          return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T18:00`;
+        })(),
+        doneText: ta('seed.nedteller.done'),
+        variant: 'boxes',
+        showSeconds: true,
+      },
+      w: 40, h: 110,
+    },
+    audio: { type: 'audio', props: { src: '', title: '', loop: false }, w: 34, h: 80 },
   };
 
   function buildBlock(kind) {
@@ -4143,6 +4222,10 @@
       { label: ta('blocks.tidslinje'), act: 'block', kind: 'tidslinje' },
       { label: ta('blocks.sitat'), act: 'block', kind: 'sitat' },
       { label: ta('blocks.statistikk'), act: 'block', kind: 'statistikk' },
+      { label: ta('blocks.tabell'), act: 'block', kind: 'tabell' },
+      { label: ta('blocks.deling'), act: 'block', kind: 'deling' },
+      { label: ta('blocks.nedteller'), act: 'block', kind: 'nedteller' },
+      { label: ta('blocks.audio'), act: 'block', kind: 'audio' },
       { label: ta('ui.emptyGallery'), act: 'block', kind: 'galleri' },
       { label: ta('ui.galleryWithImages'), act: 'galleryImages' },
       { label: ta('shape.line'), act: 'block', kind: 'shape-line' },
@@ -4314,10 +4397,11 @@
    * Samme bildeinnhold gir samme filnavn (deterministisk hash), så
    * republisering aldri dupliserer filer.
    */
-  /** Gjør en data-URL i obj[field] om til media-fil; muterer obj. */
+  /** Gjør en data-URL i obj[field] om til media-fil; muterer obj.
+   *  Bilder og lyd deler flyten; mediaExtension velger filendelsen. */
   function materializeField(obj, field, name, files) {
     const src = obj?.[field];
-    if (!src?.startsWith('data:image/')) return;
+    if (!src?.startsWith('data:image/') && !src?.startsWith('data:audio/')) return;
     const base64 = src.split(',', 2)[1];
     const path = `media/${slugify(name || 'bilde')}-${contentHash(base64)}.${mediaExtension(src)}`;
     files.push({ path, content: base64, encoding: 'base64' });
@@ -4342,6 +4426,7 @@
     if (block.type === 'galleri') {
       for (const img of block.props.images ?? []) materializeField(img, 'src', img.alt || 'galleri', files);
     }
+    if (block.type === 'audio') materializeField(block.props, 'src', block.props.title || 'lyd', files);
   }
 
   /** Én seksjons bilder (bakgrunn + blokker) - delt av sidepublisering og seksjons-maler. */
@@ -5517,6 +5602,14 @@
                   onclick={() => addBlock('sitat')}>{ta('blocks.sitat')}</button>
                 <button class="ghost" title={ta('tip.blocks.statistikk')}
                   onclick={() => addBlock('statistikk')}>{ta('blocks.statistikk')}</button>
+                <button class="ghost" title={ta('tip.blocks.tabell')}
+                  onclick={() => addBlock('tabell')}>{ta('blocks.tabell')}</button>
+                <button class="ghost" title={ta('tip.blocks.deling')}
+                  onclick={() => addBlock('deling')}>{ta('blocks.deling')}</button>
+                <button class="ghost" title={ta('tip.blocks.nedteller')}
+                  onclick={() => addBlock('nedteller')}>{ta('blocks.nedteller')}</button>
+                <button class="ghost" title={ta('tip.blocks.audio')}
+                  onclick={() => addBlock('audio')}>{ta('blocks.audio')}</button>
                 <details class="group">
                   <summary>{ta('blocks.galleri')}</summary>
                   <div class="group-items">
@@ -6610,6 +6703,52 @@
       <label>{ta('lbl.statLabel')}
         <input value={selectedBlock.props.label ?? ''}
           onchange={(e) => setBlockProp('label', e.target.value)} /></label>
+    {:else if selectedBlock.type === 'tabell'}
+      <!-- Cellene skrives rett på lerretet; panelet eier formen på rutenettet. -->
+      <span class="toolbar-row">
+        <button class="ghost" onclick={() => tabellResize(1, 0)}>{ta('ui.addRow')}</button>
+        <button class="ghost" onclick={() => tabellResize(-1, 0)}>{ta('ui.removeRow')}</button>
+      </span>
+      <span class="toolbar-row">
+        <button class="ghost" onclick={() => tabellResize(0, 1)}>{ta('ui.addColumn')}</button>
+        <button class="ghost" onclick={() => tabellResize(0, -1)}>{ta('ui.removeColumn')}</button>
+      </span>
+      <label class="gridmenu-snap" title={ta('tip.tabell.header')}>
+        <input type="checkbox" checked={selectedBlock.props.header !== false}
+          onchange={(e) => setBlockProp('header', e.target.checked)} />
+        {ta('lbl.tabellHeader')}
+      </label>
+    {:else if selectedBlock.type === 'deling'}
+      {#each [['facebook', 'Facebook'], ['x', 'X'], ['linkedin', 'LinkedIn'], ['whatsapp', 'WhatsApp'], ['email', ta('opt.deling.email')], ['copy', ta('opt.deling.copy')]] as [service, label] (service)}
+        <label class="gridmenu-snap">
+          <input type="checkbox" checked={(selectedBlock.props.services ?? []).includes(service)}
+            onchange={(e) => toggleDelingService(service, e.target.checked)} />
+          {label}
+        </label>
+      {/each}
+    {:else if selectedBlock.type === 'nedteller'}
+      <label>{ta('lbl.nedtellerTarget')}
+        <input type="datetime-local" value={selectedBlock.props.target ?? ''}
+          onchange={(e) => setBlockProp('target', e.target.value)} /></label>
+      <label title={ta('tip.nedteller.done')}>{ta('lbl.nedtellerDone')}
+        <input value={selectedBlock.props.doneText ?? ''}
+          onchange={(e) => setBlockProp('doneText', e.target.value)} /></label>
+    {:else if selectedBlock.type === 'audio'}
+      <label class="ghost filepick" title={ta('tip.blocks.audioFile')}>
+        {ta('ui.chooseAudio')}
+        <input type="file" accept="audio/*" onchange={setAudioFile} />
+      </label>
+      {#if selectedBlock.props.src}
+        <button class="ghost" onclick={() => setBlockProp('src', '')}>{ta('ui.removeAudio')}</button>
+      {/if}
+      <label>{ta('lbl.audioTitle')}
+        <input value={selectedBlock.props.title ?? ''}
+          onchange={(e) => setBlockProp('title', e.target.value)} /></label>
+      <label class="gridmenu-snap">
+        <input type="checkbox" checked={Boolean(selectedBlock.props.loop)}
+          onchange={(e) => setBlockProp('loop', e.target.checked)} />
+        {ta('lbl.audioLoop')}
+      </label>
     {:else if selectedBlock.type === 'button'}
       <label>{ta('blocks.text')}
         <input value={selectedBlock.props.label}
@@ -6827,6 +6966,40 @@
         <input type="checkbox" checked={selectedBlock.props.countUp !== false}
           onchange={(e) => setBlockProp('countUp', e.target.checked)} />
         {ta('lbl.statCountUp')}
+      </label>
+      <hr class="gridmenu-divider" />
+    {:else if selectedBlock.type === 'tabell'}
+      <label>{ta('lbl.tabellLines')}
+        <Dropdown value={selectedBlock.props.lines ?? 'rows'}
+          options={[['rows', ta('opt.tabell.rows')], ['grid', ta('opt.tabell.grid')], ['none', ta('common.none')]]}
+          onchange={(v) => setBlockProp('lines', v)} /></label>
+      <label class="gridmenu-snap">
+        <input type="checkbox" checked={Boolean(selectedBlock.props.striped)}
+          onchange={(e) => setBlockProp('striped', e.target.checked)} />
+        {ta('lbl.tabellStriped')}
+      </label>
+      <hr class="gridmenu-divider" />
+    {:else if selectedBlock.type === 'deling'}
+      <label>{ta('lbl.variant')}
+        <Dropdown value={selectedBlock.props.variant ?? 'icons'}
+          options={[['icons', ta('opt.deling.icons')], ['labels', ta('opt.deling.labels')]]}
+          onchange={(v) => setBlockProp('variant', v)} /></label>
+      <label>{ta('lbl.size')}
+        <input type="number" min="24" max="64" value={selectedBlock.props.size ?? 38}
+          onchange={(e) => setBlockProp('size', Number(e.target.value) || 38)} /></label>
+      <label>{ta('lbl.color')}
+        <ColorPicker value={selectedBlock.props.color || 'accent'} tokens={themeSwatches()}
+          onchange={(v) => setBlockProp('color', v === 'accent' ? '' : v)} /></label>
+      <hr class="gridmenu-divider" />
+    {:else if selectedBlock.type === 'nedteller'}
+      <label>{ta('lbl.variant')}
+        <Dropdown value={selectedBlock.props.variant ?? 'boxes'}
+          options={[['boxes', ta('opt.nedteller.boxes')], ['plain', ta('opt.nedteller.plain')]]}
+          onchange={(v) => setBlockProp('variant', v)} /></label>
+      <label class="gridmenu-snap">
+        <input type="checkbox" checked={selectedBlock.props.showSeconds !== false}
+          onchange={(e) => setBlockProp('showSeconds', e.target.checked)} />
+        {ta('lbl.nedtellerSeconds')}
       </label>
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'button'}

@@ -551,6 +551,183 @@ html {
   opacity: 0.7;
 }
 
+/* Tabellen (0.7.4): semantisk table i en overflow-wrapper, så brede
+   tabeller ruller i sin egen flate i stedet for å velte siden. */
+.urd-tabell {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.urd-tabell-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+
+.urd-tabell-table th,
+.urd-tabell-table td {
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.urd-tabell-table th {
+  font-weight: 650;
+  border-bottom: 2px solid color-mix(in srgb, var(--urd-color-text) 35%, transparent);
+}
+
+.urd-tabell-lines-rows td {
+  border-bottom: 1px solid color-mix(in srgb, var(--urd-color-text) 15%, transparent);
+}
+
+.urd-tabell-lines-grid th,
+.urd-tabell-lines-grid td {
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 18%, transparent);
+}
+
+.urd-tabell-striped tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--urd-color-text) 6%, transparent);
+}
+
+/* Tomme celler beholder klikkeflate under redigering. */
+.urd-preview .urd-tabell-table [contenteditable]:empty::after {
+  content: '\00a0';
+}
+
+/* Delingsknappene (0.7.4): rene lenker med tegnede ikoner, uten sporing. */
+.urd-deling {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.urd-deling-knapp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: var(--urd-deling-size, 38px);
+  height: var(--urd-deling-size, 38px);
+  border-radius: 50%;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--urd-color-bg);
+  background: var(--urd-deling-color, var(--urd-color-accent));
+  text-decoration: none;
+  font: inherit;
+}
+
+.urd-deling-knapp:hover {
+  filter: brightness(1.12);
+}
+
+.urd-deling-ikon {
+  display: block;
+  width: 55%;
+  height: 55%;
+}
+
+/* Kun ikoner som standard; navnvarianten gjør knappene til piller. */
+.urd-deling-navn {
+  display: none;
+  font-size: 0.85em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.urd-deling-labels .urd-deling-knapp {
+  width: auto;
+  border-radius: 999px;
+  padding: 0 calc(var(--urd-deling-size, 38px) * 0.35);
+}
+
+.urd-deling-labels .urd-deling-ikon {
+  width: calc(var(--urd-deling-size, 38px) * 0.5);
+  height: calc(var(--urd-deling-size, 38px) * 0.5);
+}
+
+.urd-deling-labels .urd-deling-navn {
+  display: inline;
+}
+
+/* Nedtelleren (0.7.4): enhetsbokser med tabular-nums, så tikkingen aldri
+   hopper i bredden. */
+.urd-nedteller {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.urd-nedteller-enhet {
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+  min-width: 64px;
+  padding: 10px 12px;
+  border-radius: var(--urd-radius-md, 12px);
+  background: color-mix(in srgb, var(--urd-color-text) 7%, transparent);
+}
+
+.urd-nedteller-enkel .urd-nedteller-enhet {
+  background: none;
+  padding: 4px 6px;
+  min-width: 48px;
+}
+
+.urd-nedteller-tall {
+  font-family: var(--urd-font-heading);
+  font-size: 1.9em;
+  font-weight: 750;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--urd-color-accent);
+}
+
+.urd-nedteller-navn {
+  font-size: 0.72em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.urd-nedteller-ferdig {
+  font-family: var(--urd-font-heading);
+  font-size: 1.3em;
+  font-weight: 650;
+}
+
+/* Lydblokken (0.7.4): native spiller med valgfri tittel over. */
+.urd-audio {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+
+.urd-audio audio {
+  width: 100%;
+  /* Spillerens chrome følger brukerens OS-tema, som datovelgeren i skjemaet. */
+  color-scheme: light dark;
+}
+
+.urd-audio-tittel {
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+.urd-preview .urd-audio-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  min-height: 54px;
+  border: 1px dashed color-mix(in srgb, var(--urd-color-text) 35%, transparent);
+  border-radius: var(--urd-radius-sm, 6px);
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
 /* Formateringslinjen for tekstfelt (kun preview-modus): vises over
    blokken så lenge feltet redigeres. To faste rader (Office-stil) stables
    i en kolonne; de utvidbare underradene legger seg under. */
@@ -3793,8 +3970,18 @@ body.urd-mobile .urd-section-resize-top {
   z-index: 1000;
 }
 
-/* Verktøylinjen står ALLTID over blokken, også nær seksjonstoppen:
-   seksjoner klipper aldri, så det er ingenting å vike for (eiers valg). */
+/* Verktøylinjen står over blokken, også nær seksjonstoppen: seksjoner
+   klipper aldri, så det er som regel ingenting å vike for. Unntaket er
+   blokker øverst på SIDEN: der finnes ingen plass over dokumenttoppen, og
+   preview-edit setter klassen som flipper linja under blokken i stedet. */
+.urd-preview .urd-edit-toolbar.urd-toolbar-under {
+  bottom: auto;
+  top: 100%;
+  padding-bottom: 0;
+  /* Usynlig bro opp til blokk-kanten, samme rolle som padding-bottom over */
+  padding-top: 5px;
+  transform-origin: top left;
+}
 
 .urd-preview .urd-editable:hover .urd-edit-toolbar,
 .urd-preview .urd-edit-toolbar:hover {

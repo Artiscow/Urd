@@ -399,8 +399,13 @@ function autoGrow(el, host, ctx) {
     const sectionEl = el.closest('.urd-section');
     if (sectionEl) {
       const bottom = el.offsetTop + needed + 24;
-      const current = Number.parseFloat(sectionEl.style.minHeight) || 0;
-      if (bottom > current) sectionEl.style.minHeight = `${bottom}px`;
+      // Nav-klaringen (--urd-section-clear) er med i computed min-height, men
+      // ikke i innholdshøyden: den holdes utenfor sammenligningen og skrives
+      // tilbake i kalkylen (samme form som render.js setter).
+      const cs = getComputedStyle(sectionEl);
+      const clear = Number.parseFloat(cs.getPropertyValue('--urd-section-clear')) || 0;
+      const current = (Number.parseFloat(cs.minHeight) || 0) - clear;
+      if (bottom > current) sectionEl.style.minHeight = `calc(${bottom}px + var(--urd-section-clear, 0px))`;
     }
     if (ctx.preview) {
       const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);

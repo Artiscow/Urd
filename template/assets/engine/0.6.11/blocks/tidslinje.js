@@ -11,6 +11,7 @@
  */
 // Kun kalt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
 import { ta } from '../i18n.js';
+import { growSectionTo } from '../render.js';
 
 const SAFE_HEX = /^#[0-9a-fA-F]{3,8}$/;
 const SAFE_TOKEN = /^[a-z][a-z0-9-]*$/;
@@ -104,11 +105,7 @@ export const tidslinjeBlock = {
       if (Math.abs(needed - el.clientHeight) > 8 && ctx.viewport !== 'mobile') {
         el.style.height = `${needed}px`;
         const sectionEl = el.closest('.urd-section');
-        if (sectionEl) {
-          const bottom = el.offsetTop + needed + 24;
-          const current = Number.parseFloat(sectionEl.style.minHeight) || 0;
-          if (bottom > current) sectionEl.style.minHeight = `${bottom}px`;
-        }
+        if (sectionEl) growSectionTo(sectionEl, el.offsetTop + needed + 24);
         if (ctx.preview) {
           const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
           if (block && block.frames.desktop.h !== needed) {

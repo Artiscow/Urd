@@ -78,6 +78,22 @@ export function applySiteLayout(site, root = document.documentElement) {
   root.style.setProperty('--urd-canvas-gutter-desktop', `${Number(gutter) || 0}vw`);
 }
 
+/**
+ * Løfter seksjonens min-height så innhold ned til `bottom` px (i innholds-
+ * flatens koordinater) får plass. Brukes av autovoksende blokker. Nav-
+ * klaringen (--urd-section-clear) holdes utenfor sammenligningen og skrives
+ * tilbake i kalkylen, samme form som renderSection setter: computed
+ * min-height er klaring medregnet, mens `bottom` er ren innholdshøyde.
+ * @param {HTMLElement} sectionEl Seksjonselementet
+ * @param {number} bottom Innholdets nederste kant i px
+ */
+export function growSectionTo(sectionEl, bottom) {
+  const cs = getComputedStyle(sectionEl);
+  const clear = Number.parseFloat(cs.getPropertyValue('--urd-section-clear')) || 0;
+  const current = (Number.parseFloat(cs.minHeight) || 0) - clear;
+  if (bottom > current) sectionEl.style.minHeight = `calc(${bottom}px + var(--urd-section-clear, 0px))`;
+}
+
 export function frameToCss(frame) {
   return {
     left: `${frame.x}%`,
