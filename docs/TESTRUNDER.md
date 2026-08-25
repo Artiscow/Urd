@@ -2,6 +2,24 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.5.1): Butikken
+
+Produktkatalog, tre nye blokker, butikk-/kasse-sider, quick view, katalogflyt og CSV. Kurv/quick view kan testes lokalt; mailto/endepunkt-bestilling trenger en deployet side.
+
+- [ ] KATALOG: Samlinger-panelet kan opprette en samling av typen Produkter; produktfeltene (pris, medlemspris, badge, størrelser, farger med bilde) vises KUN for produktsamlinger; dato- og lenkefeltene vises IKKE for produkter; sammendragslinjen viser tittel · pris
+- [ ] PRODUKTKORT: blokken viser eksempelkatalogen med badge, pris («Medlem: …» når satt), størrelseschips og fargechips; fargevalg med eget bilde bytter kortbildet; «Legg i handlekurv» gir Lagt i kurven-kvittering og teller opp kurv-badgen
+- [ ] Nytt produkt uten pris viser ingen prisrad («0 kr» skal aldri stå der); prisen dukker opp når den settes i panelet
+- [ ] KATALOGFLYT: «+ Produkt»-kortet sist i rutenettet legger et nytt produkt bakerst (ett Ctrl+Z fjerner det); adderen står også på tom katalog; ingen adder når Maks antall er nådd, i Ren visning, hos besøkende eller i mobilvisning
+- [ ] Egenskaper på produktkort-blokken: «+ Nytt produkt» legger til; «Rediger produktkatalogen» åpner Samlinger-panelet med katalogen aktiv; uten noen produktsamling vises «+ Opprett produktkatalog», som oppretter «Produkter», binder blokken og angres i ETT steg
+- [ ] QUICK VIEW (Ren visning/deployet): klikk på kortets bilde eller tittel åpner produktdialogen med bildegalleri (miniatyrer bytter hovedbilde), full tekst, variantvalg og kjøp; Escape og backdrop-klikk lukker; Enter/mellomrom på fokusert kort åpner; i redigeringsmodus åpner klikk ALDRI dialogen (klikk-og-skriv eier klikket)
+- [ ] HANDLEKURV: knappen viser antall-badge (skjult på 0), skuffen åpner med linjer, +/−-styring, fjerning, sum og «Til kassen»-lenken når kasseside er valgt; skuffen er ALDRI synlig før klikk; endring i en annen fane oppdaterer badgen
+- [ ] KASSE (deployet for full flyt): sammendraget følger kurven live; navn + gyldig e-post kreves; mailto åpner utkast med ordrelinjer, sum og kontaktfelt (kurven består); endepunkt-modus sender JSON og tømmer kurven ved OK-svar; honeypot-utfylling gir stille «sendt»; Vipps-instruksen vises når nummer er satt
+- [ ] BUTIKK-SIDER: «Ny side fra mal» viser startpakkene Butikk og Kasse; begge bygger gyldige sider, og handlekurvens Kasseside-valg + skuffens «Til kassen» navigerer til kassesiden
+- [ ] Butikk-seksjonspresetet: kort med kant leses på både lyst og mørkt tema; badge ligger over bildehjørnet med bilde og som statisk chip uten; miniatyrene i «+ Ny seksjon» og «+ Ny blokk» tegner produkt/handlekurv/kasse gjenkjennelig
+- [ ] CSV: Eksporter laster ned katalogen (regneark-vennlig, størrelser/farger med |); Importer erstatter innslagene, tåler komma-desimal, hopper over rader uten tittel, og angre gjenoppretter; datoløst produkt runde-tripper
+- [ ] Mobil/publisert: produktkort, kurvskuff og kasse har naturlig høyde i mobil-radnettet; ingen vannrett scrolling; en side UTEN butikk-blokker er upåvirket (ingen kurv-lyttere/CSS-effekter)
+- [ ] i18n: bytt admin-språk til en-GB og tr - blokk-etiketter, Egenskaper-knapper, hint-chips og tomtilstander er oversatt; besøkende-side på en-GB/tr viser kurv/kasse/quick view-tekster oversatt
+
 ### Testrunde-batch (0.7.4): Blokk- og feltrunden
 
 Fire nye kjerneblokker og fire nye skjema-felttyper. Alt kan testes lokalt, men mailto/endepunkt og deling trenger en deployet side for full flyt.

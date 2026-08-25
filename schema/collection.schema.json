@@ -10,7 +10,7 @@
     "schemaVersion": { "type": "integer", "minimum": 1 },
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
     "name": { "type": "string", "minLength": 1 },
-    "kind": { "enum": ["news", "notices", "publications", "custom"] },
+    "kind": { "enum": ["news", "notices", "publications", "products", "custom"] },
     "entries": {
       "type": "array",
       "items": {
@@ -25,6 +25,27 @@
           "image": { "type": "string", "description": "Sti i media/ (data-URL i utkast); materialiseres ved publisering" },
           "href": { "type": "string", "description": "Valgfri lenke (intern sti eller ekstern URL); gjør tittelen klikkbar" },
           "imageAlt": { "type": "string", "description": "Alt-tekst for innslagsbildet (additivt fra v0.6)" },
+          "price": { "type": "number", "minimum": 0, "description": "Produktpris (kind products, additivt fra v0.7); valuta-ordet settes på produkt-blokken" },
+          "memberPrice": { "type": "number", "minimum": 0, "description": "Valgfri medlemspris (kind products); vises ved siden av ordinær pris" },
+          "badge": { "type": "string", "description": "Kort merkelapp på produktkortet (kind products), f.eks. Nyhet eller Tilbud" },
+          "sizes": {
+            "type": "array",
+            "description": "Størrelsesvalg (kind products); vises som valg-chips på kortet",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "colors": {
+            "type": "array",
+            "description": "Fargevalg (kind products); et valg med eget bilde bytter kortets bilde",
+            "items": {
+              "type": "object",
+              "required": ["name"],
+              "additionalProperties": false,
+              "properties": {
+                "name": { "type": "string", "minLength": 1 },
+                "image": { "type": "string", "description": "Sti i media/ (data-URL i utkast); materialiseres ved publisering" }
+              }
+            }
+          },
           "imageStyle": {
             "type": "object",
             "description": "Ikke-destruktiv bildestil (additivt fra v0.6): fokuspunkt, filtre, tilpasning, form, zoom, avrunding",

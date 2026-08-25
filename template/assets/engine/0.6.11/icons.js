@@ -60,6 +60,7 @@ export const ICON_LIBRARY = {
   image: { label: 'Bilde', body: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="8.8" cy="9.3" r="1.6"/><path d="M20.5 15.5l-4.7-4.7-9.3 8.7"/>' },
   document: { label: 'Dokument', body: '<path d="M13.5 3H6.8A1.8 1.8 0 0 0 5 4.8v14.4A1.8 1.8 0 0 0 6.8 21h10.4a1.8 1.8 0 0 0 1.8-1.8V8.5z"/><path d="M13.5 3v5.5H19"/><path d="M8.5 13h7M8.5 16.5h7"/>' },
   'shopping-bag': { label: 'Handlepose', body: '<path d="M5.5 8h13l-1 12a1.8 1.8 0 0 1-1.8 1.5H8.3A1.8 1.8 0 0 1 6.5 20z"/><path d="M8.8 10.5V7a3.2 3.2 0 0 1 6.4 0v3.5"/>' },
+  cart: { label: 'Handlekurv', body: '<circle cx="9.3" cy="19.3" r="1.5"/><circle cx="17.3" cy="19.3" r="1.5"/><path d="M3 4.5h2.4l2.3 10.6a1.8 1.8 0 0 0 1.8 1.4h7.6a1.8 1.8 0 0 0 1.8-1.4L20.8 8H6.1"/>' },
   gift: { label: 'Gave', body: '<rect x="3.5" y="8" width="17" height="4"/><path d="M5 12v8.5h14V12"/><path d="M12 8v12.5"/><path d="M12 8s-4.5.3-5.5-1.8C5.8 4.7 7.8 3.3 9.3 4.4 10.8 5.5 12 8 12 8z"/><path d="M12 8s4.5.3 5.5-1.8c.7-1.5-1.3-2.9-2.8-1.8C13.2 5.5 12 8 12 8z"/>' },
   wrench: { label: 'Verktøy', body: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/>' },
   lock: { label: 'Lås', body: '<rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/>' },
@@ -85,7 +86,7 @@ export const ICON_CATEGORIES = [
   ['iconCat.social', ['facebook', 'instagram', 'x', 'linkedin', 'youtube', 'tiktok', 'whatsapp', 'snapchat', 'pinterest', 'spotify', 'discord', 'github']],
   ['iconCat.communication', ['mail', 'phone', 'smartphone', 'chat', 'send', 'globe', 'rss']],
   ['iconCat.placeTime', ['map-pin', 'map', 'home', 'clock', 'calendar']],
-  ['iconCat.symbols', ['heart', 'star', 'check', 'cross', 'plus', 'info', 'question', 'warning', 'zap', 'sun', 'moon', 'leaf', 'music', 'camera', 'image', 'document', 'shopping-bag', 'gift', 'wrench', 'lock', 'search', 'user', 'users', 'thumbs-up']],
+  ['iconCat.symbols', ['heart', 'star', 'check', 'cross', 'plus', 'info', 'question', 'warning', 'zap', 'sun', 'moon', 'leaf', 'music', 'camera', 'image', 'document', 'shopping-bag', 'cart', 'gift', 'wrench', 'lock', 'search', 'user', 'users', 'thumbs-up']],
   ['iconCat.arrows', ['arrow-right', 'arrow-left', 'arrow-up', 'arrow-down', 'external-link', 'download', 'share']],
 ];
 

@@ -85,6 +85,35 @@ const samling = (fr, view, props = {}) => ({
   frames: fr,
 });
 
+/* Butikk-blokkene (0.7.5): produktkort fra en produktsamling + handlekurv.
+   collection settes av eieren i Egenskaper (som samling-blokken). */
+const produkt = (fr, props = {}) => ({
+  id: makeId('blk'),
+  type: 'produkt',
+  version: 1,
+  props: { collection: null, limit: 0, columns: 0, currency: 'kr', ...props },
+  animation: null,
+  frames: fr,
+});
+
+const handlekurv = (fr, props = {}) => ({
+  id: makeId('blk'),
+  type: 'handlekurv',
+  version: 1,
+  props: { variant: 'button', href: '', currency: 'kr', ...props },
+  animation: null,
+  frames: fr,
+});
+
+const kasse = (fr, props = {}) => ({
+  id: makeId('blk'),
+  type: 'kasse',
+  version: 1,
+  props: { recipient: '', endpoint: '', vipps: '', currency: 'kr', ...props },
+  animation: null,
+  frames: fr,
+});
+
 /* Galleri-blokk: bildene legges til av eieren i Egenskaper (flervalg). */
 const galleri = (fr, props = {}) => ({
   id: makeId('blk'),
@@ -608,7 +637,7 @@ export function registerSectionPresets(Urd) {
     labelKey: 'preset.produkter.label',
     group: 'Kort og lister',
     groupKey: 'presetGroup.cards',
-    hint: 'Tre produktkort; pek Kjøp-knappen på en betalingslenke (f.eks. Vipps)',
+    hint: 'Tre håndbygde produktkort med egen kjøpslenke; Butikk-presetet gir ekte produkter med handlekurv',
     hintKey: 'preset.produkter.hint',
     create: () => {
       const product = (x, col, name, price) => {
@@ -639,6 +668,33 @@ export function registerSectionPresets(Urd) {
       blocks.forEach((block, i) => { block.mobileOrder = cardOrder(88, n, i); });
       return { blocks, bottom: y + 356 };
     },
+  });
+
+  Urd.sections.define('butikk', {
+    label: 'Butikk',
+    labelKey: 'preset.butikk.label',
+    group: 'Kort og lister',
+    groupKey: 'presetGroup.cards',
+    hint: 'Ekte produktkort fra en produktsamling, med handlekurv',
+    hintKey: 'preset.butikk.hint',
+    create: () => section('butikk', '440px', bg(colorLayer('bg')), [
+      text(frame(6, 28, 50, 38), ta('seed.butikk.title')),
+      handlekurv(frame(78, 28, 16, 48)),
+      produkt(frame(6, 96, 88, 320)),
+    ]),
+  });
+
+  Urd.sections.define('kasse', {
+    label: 'Kasse',
+    labelKey: 'preset.kasse.label',
+    group: 'Kort og lister',
+    groupKey: 'presetGroup.cards',
+    hint: 'Bestillingsskjema som sender handlekurven som e-post eller til et endepunkt',
+    hintKey: 'preset.kasse.hint',
+    create: () => section('kasse', '560px', bg(colorLayer('bg')), [
+      text(frame(6, 28, 50, 38), ta('seed.kasse.title')),
+      kasse(frame(25, 96, 50, 430)),
+    ]),
   });
 
   /* ---------- Fremheving ---------- */

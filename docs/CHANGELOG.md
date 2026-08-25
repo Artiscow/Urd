@@ -25,6 +25,20 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.5.1 - Butikken: produktkatalog, handlekurv, kasse, butikk-sider og katalogflyten - 25. august 2026
+
+Milepæl 0.7.5 minus det valgfrie betalingslaget. Gateway-fri butikk etter ApeironLF-modellen (BACKLOG 0.7.5), bygget på datablokk-mønsteret: katalogen er en samling, blokkene er maler over den.
+
+- Produktkatalogen: samlinger har fått typen `products` med additive felt pris, medlemspris, badge, størrelser og farger (fargevalg med eget bilde bytter kortets bilde); Samlinger-panelet viser produktfeltene kun for produktsamlinger, og publiseringen materialiserer også fargebildene. Skjema, SKJEMA.md og eksempelkatalogen `produkter.json` i samme runde.
+- Tre nye kjerneblokker: `produkt` (kort med bilde, badge, pris/medlemspris, variantchips og kjøpsknapp), `handlekurv` (antall-badge + skuff på native `<dialog>`) og `kasse` (bestillingsskjema med honeypot som sender kurven som mailto-utkast eller JSON til endepunkt; Vipps-nummer vises som betalingsinstruks). Ren kurv- og ordrelogikk i `engine/butikk.js` med tester; kurven bor i localStorage uten sporing.
+- Butikken som side: startpakkene Butikk og Kasse i «Ny side fra mal», nytt kasse-seksjonspreset, og Butikk-seksjonspresetet med ekte produktblokker; v0.5-presetets hint peker dit. Grunnlag: research-runde 25. august 2026 mot Wix/Squarespace/Webflow (de skaffolder butikk-/kasse-sider automatisk).
+- Quick view (Squarespace-mønsteret): klikk på kortets bilde/tittel hos besøkende åpner produktdetaljene i en native `<dialog>` med bildegalleri, full tekst, variantvalg og kjøp - produktside uten sidebytte til v0.8-bakingen gir permalinker.
+- Katalogflyten (testfunn: ingen synlig måte å legge til produkter): «+ Produkt»-adderkort i blokken (ny melding `urd-collection-add`), «+ Nytt produkt»/«Rediger produktkatalogen»/«+ Opprett produktkatalog» i Egenskaper (kryssjump til Samlinger-panelet; opprett + bind i ett angre-steg), kind-bevisst innslags-seed (produkter uten dato, legges sist), pris i stedet for dato i panelets sammendragslinje, og dato/lenke-feltene skjult for produkter.
+- CSV-import/-eksport for samlinger (funksjonskartet C12): eksport laster ned innslagene RFC 4180-kvotet, import erstatter dem header-styrt med angre-støtte; ren logikk i `engine/samlinger-csv.js` (kun editoren bundler den), med tester.
+- Testfunn i butikk-presetet, rettet: kurvskuffen sto permanent synlig fordi `display: flex` på dialogen overstyrte nettleserens `dialog:not([open])`-skjuling (display settes nå kun i `[open]`); badgen la seg over tittelen på produkter uten bilde (statisk chip uten bilde, over bildehjørnet med); kortene forsvant mot mørk bakgrunn der surface ligner bakgrunnen (tynn color-mix-kant).
+- Prisraden vises kun når pris er satt, så et nytt produkt ikke viser «0 kr».
+- Nytt tegnet kurv-ikon i ikonbiblioteket, miniatyr-skisser for produkt/handlekurv/kasse, og i18n for admin og besøkende i nb, en-GB og tr.
+
 ### 0.7.4 - Blokk- og feltrunden: skjema-felttyper, tabell, delingsknapper, nedteller og lyd - 14. august 2026
 
 Milepæl 0.7.4. Funksjonskartets C5 (felttyper), C8 (tabell), C9 (deling + nedteller) og C10 (lyd), etter kartenes oppskrifter i [sammenligning/](sammenligning/).

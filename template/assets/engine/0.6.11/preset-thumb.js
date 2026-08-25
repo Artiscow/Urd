@@ -246,6 +246,42 @@ function blockShapes(type, x, y, w, h, props) {
     parts.push(rect(x + w * 0.2, cy - 0.6, w * 0.7, 1.2, token('text', FALLBACK_TEXT), ' opacity="0.35" rx="0.6"'));
     return parts.join('');
   }
+  if (type === 'produkt') {
+    // Produktkort: tre kort med bildefelt, prislinje og kjøpsknapp.
+    const gap = Math.max(0.8, w * 0.03);
+    const cw = (w - gap * 2) / 3;
+    const parts = [];
+    for (let i = 0; i < 3; i += 1) {
+      const cx = x + i * (cw + gap);
+      parts.push(rect(cx, y, cw, h, token('surface', FALLBACK_SURFACE), ' rx="1"'));
+      parts.push(rect(cx + cw * 0.08, y + h * 0.06, cw * 0.84, h * 0.42, token('text', FALLBACK_TEXT), ' opacity="0.15" rx="0.8"'));
+      parts.push(rect(cx + cw * 0.08, y + h * 0.56, cw * 0.6, 1.4, token('text', FALLBACK_TEXT), ' opacity="0.5" rx="0.7"'));
+      parts.push(rect(cx + cw * 0.08, y + h * 0.72, cw * 0.35, 1.4, token('accent', FALLBACK_ACCENT), ' opacity="0.85" rx="0.7"'));
+      parts.push(rect(cx + cw * 0.08, y + h * 0.84, cw * 0.84, h * 0.1, token('accent', FALLBACK_ACCENT), ' opacity="0.6" rx="1"'));
+    }
+    return parts.join('');
+  }
+  if (type === 'handlekurv') {
+    // Kurvskive med antall-prikk oppe til høyre.
+    const r = Math.max(1.5, Math.min(w, h) / 2.4);
+    const cx = x + w / 2;
+    const cy = y + h / 2;
+    return [
+      `<circle cx="${r1(cx)}" cy="${r1(cy)}" r="${r1(r)}" fill="${token('surface', FALLBACK_SURFACE)}"/>`,
+      rect(cx - r * 0.5, cy - r * 0.25, r, r * 0.55, token('text', FALLBACK_TEXT), ' opacity="0.5" rx="0.4"'),
+      `<circle cx="${r1(cx + r * 0.75)}" cy="${r1(cy - r * 0.75)}" r="${r1(Math.max(0.9, r * 0.35))}" fill="${token('accent', FALLBACK_ACCENT)}"/>`,
+    ].join('');
+  }
+  if (type === 'kasse') {
+    // Ordrelinjer øverst, to feltbånd og en send-knapp nederst.
+    return [
+      rect(x, y, w * 0.7, 1.2, token('text', FALLBACK_TEXT), ' opacity="0.5" rx="0.6"'),
+      rect(x, y + h * 0.12, w * 0.5, 1.2, token('text', FALLBACK_TEXT), ' opacity="0.35" rx="0.6"'),
+      rect(x, y + h * 0.3, w, h * 0.14, token('surface', FALLBACK_SURFACE), ' rx="1"'),
+      rect(x, y + h * 0.5, w, h * 0.14, token('surface', FALLBACK_SURFACE), ' rx="1"'),
+      rect(x, y + h * 0.78, w * 0.45, h * 0.16, token('accent', FALLBACK_ACCENT), ' opacity="0.85" rx="1.2"'),
+    ].join('');
+  }
   // Ukjent type (f.eks. fra plugin): rolig kortomriss.
   return rect(x, y, w, h, token('surface', FALLBACK_SURFACE), ' rx="1.5"');
 }

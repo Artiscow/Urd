@@ -728,6 +728,499 @@ html {
   opacity: 0.7;
 }
 
+/* Butikken (0.7.5): produktkort fra en produktsamling. Kortlisten er et
+   responsivt grid; blokken kan låse kolonnetallet i Stil. */
+.urd-produkt-kortliste {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 18px;
+  width: 100%;
+}
+
+.urd-produkt-kort {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  background: var(--urd-color-surface);
+  /* Tynn kant, så kortet leses også der surface er nesten lik bakgrunnen. */
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 14%, transparent);
+  border-radius: var(--urd-radius-md, 10px);
+}
+
+.urd-produkt-bilde {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--urd-radius-sm, 6px);
+}
+
+.urd-produkt-bilde img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.urd-produkt-badge {
+  align-self: flex-start;
+  padding: 3px 9px;
+  background: var(--urd-color-accent);
+  color: var(--urd-color-bg);
+  border-radius: 999px;
+  font-size: 0.72em;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+/* Med bilde legges badgen over bildets øvre venstre hjørne; uten bilde
+   står den som statisk chip over tittelen (aldri oppå tekst). */
+.urd-produkt-badge-over {
+  position: absolute;
+  top: 22px;
+  left: 22px;
+}
+
+.urd-produkt-tittel {
+  font-family: var(--urd-font-heading);
+  font-size: 1.05em;
+}
+
+.urd-produkt-tekst {
+  font-size: 0.88em;
+  opacity: 0.85;
+}
+
+.urd-produkt-pris {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.urd-produkt-medlem {
+  font-size: 0.82em;
+  opacity: 0.75;
+}
+
+.urd-produkt-valg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.urd-produkt-chip {
+  padding: 4px 10px;
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 30%, transparent);
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8em;
+  cursor: pointer;
+}
+
+.urd-produkt-chip[aria-pressed="true"] {
+  border-color: var(--urd-color-accent);
+  background: color-mix(in srgb, var(--urd-color-accent) 16%, transparent);
+}
+
+.urd-produkt-kjop {
+  margin-top: auto;
+  padding: 9px 14px;
+  border: none;
+  border-radius: var(--urd-radius-sm, 6px);
+  background: var(--urd-color-accent);
+  color: var(--urd-color-bg);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+.urd-produkt-lagt {
+  opacity: 0.85;
+}
+
+/* «+ Produkt»-adderen (kun editor): stiplet kort sist i rutenettet. */
+.urd-preview .urd-produkt-adder {
+  min-height: 180px;
+  border: 1px dashed color-mix(in srgb, var(--urd-color-text) 35%, transparent);
+  border-radius: var(--urd-radius-md, 10px);
+  background: transparent;
+  color: inherit;
+  opacity: 0.6;
+  font: inherit;
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+/* Quick view (kun besøkende): produktdetaljene i en native <dialog>.
+   display settes KUN i åpen tilstand, ellers ville dialogens innebygde
+   dialog:not([open]) { display: none } vært overstyrt. */
+.urd-produkt-apner {
+  cursor: pointer;
+}
+
+.urd-produkt-dialog {
+  width: min(720px, 94vw);
+  max-height: 90dvh;
+  border: none;
+  padding: 22px;
+  background: var(--urd-color-bg);
+  color: var(--urd-color-text);
+  border-radius: var(--urd-radius-md, 10px);
+  box-shadow: 0 18px 60px rgb(0 0 0 / 0.35);
+}
+
+.urd-produkt-dialog::backdrop {
+  background: rgb(0 0 0 / 0.4);
+}
+
+.urd-produkt-dialog[open] .urd-produkt-dialogkropp {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 640px) {
+  .urd-produkt-dialog[open] .urd-produkt-dialogkropp {
+    grid-template-columns: 1fr;
+  }
+}
+
+.urd-produkt-lukk {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  padding: 5px;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.urd-produkt-lukk svg {
+  width: 100%;
+  height: 100%;
+}
+
+.urd-produkt-galleri {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.urd-produkt-galleri > img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--urd-radius-sm, 6px);
+}
+
+.urd-produkt-miniatyrer {
+  display: flex;
+  gap: 6px;
+}
+
+.urd-produkt-miniatyrer img {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: var(--urd-radius-sm, 6px);
+  cursor: pointer;
+}
+
+.urd-produkt-dialoginfo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: start;
+}
+
+.urd-produkt-dialoginfo .urd-produkt-tittel {
+  font-size: 1.3em;
+}
+
+.urd-produkt-dialoginfo .urd-produkt-kjop {
+  margin-top: 8px;
+}
+
+/* Handlekurven: knapp med antall-badge; skuffen er en native <dialog>
+   forankret til høyre kant (ADR-0011). */
+.urd-handlekurv-knapp {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 25%, transparent);
+  border-radius: 999px;
+  background: var(--urd-color-surface);
+  color: inherit;
+  font: inherit;
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+.urd-handlekurv-ikonknapp {
+  padding: 9px;
+}
+
+.urd-handlekurv-ikon {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+}
+
+.urd-handlekurv-ikon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.urd-handlekurv-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  padding: 0 4px;
+  background: var(--urd-color-accent);
+  color: var(--urd-color-bg);
+  border-radius: 999px;
+  font-size: 0.68em;
+  font-weight: 700;
+}
+
+.urd-handlekurv-dialog {
+  /* Skuff langs høyre kant: dialogens standard-sentrering overstyres. */
+  margin: 0 0 0 auto;
+  width: min(380px, 92vw);
+  height: 100dvh;
+  max-height: 100dvh;
+  border: none;
+  padding: 18px;
+  background: var(--urd-color-bg);
+  color: var(--urd-color-text);
+  box-shadow: -12px 0 40px rgb(0 0 0 / 0.25);
+}
+
+/* display settes KUN i åpen tilstand: en display-verdi på selve dialogen
+   ville overstyrt nettleserens dialog:not([open]) { display: none } og
+   vist skuffen permanent. */
+.urd-handlekurv-dialog[open] {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.urd-handlekurv-dialog::backdrop {
+  background: rgb(0 0 0 / 0.35);
+}
+
+.urd-handlekurv-hode {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.urd-handlekurv-lukk,
+.urd-handlekurv-fjern {
+  width: 26px;
+  height: 26px;
+  padding: 4px;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.urd-handlekurv-lukk svg,
+.urd-handlekurv-fjern svg {
+  width: 100%;
+  height: 100%;
+}
+
+.urd-handlekurv-kropp {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+}
+
+.urd-handlekurv-tom {
+  opacity: 0.7;
+}
+
+.urd-handlekurv-linjer {
+  display: grid;
+  gap: 10px;
+}
+
+.urd-handlekurv-linje {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--urd-color-text) 15%, transparent);
+}
+
+.urd-handlekurv-minibilde {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: var(--urd-radius-sm, 6px);
+}
+
+.urd-handlekurv-info {
+  display: grid;
+  font-size: 0.88em;
+}
+
+.urd-handlekurv-variant {
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.urd-handlekurv-antall {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.urd-handlekurv-steg {
+  width: 22px;
+  height: 22px;
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 25%, transparent);
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.85em;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.urd-handlekurv-tall {
+  min-width: 18px;
+  text-align: center;
+  font-size: 0.88em;
+  font-variant-numeric: tabular-nums;
+}
+
+.urd-handlekurv-linjesum {
+  font-size: 0.88em;
+  font-variant-numeric: tabular-nums;
+}
+
+.urd-handlekurv-sum {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.05em;
+}
+
+.urd-handlekurv-kasse {
+  display: block;
+  padding: 11px 14px;
+  background: var(--urd-color-accent);
+  color: var(--urd-color-bg);
+  border-radius: var(--urd-radius-sm, 6px);
+  text-align: center;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* Kassen: ordresammendrag + bestillingsskjema (mailto/endepunkt, ADR-0006). */
+.urd-kasse {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+}
+
+.urd-kasse-linjer {
+  margin: 0;
+  padding: 0 0 0 1.2em;
+  display: grid;
+  gap: 4px;
+  font-size: 0.9em;
+}
+
+.urd-kasse-sum {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--urd-color-text) 20%, transparent);
+}
+
+.urd-kasse-tom {
+  margin: 0;
+  opacity: 0.7;
+}
+
+.urd-kasse-skjema {
+  display: grid;
+  gap: 10px;
+}
+
+.urd-kasse-felt {
+  display: grid;
+  gap: 4px;
+  font-size: 0.85em;
+}
+
+.urd-kasse-input {
+  padding: 9px 10px;
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 25%, transparent);
+  border-radius: var(--urd-radius-sm, 6px);
+  background: var(--urd-color-surface);
+  color: inherit;
+  font: inherit;
+  font-size: 0.95em;
+}
+
+/* Honeypot: ut av synsfeltet, aldri display:none (bots sjekker det). */
+.urd-kasse-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.urd-kasse-vipps {
+  margin: 0;
+  font-size: 0.88em;
+  opacity: 0.85;
+}
+
+.urd-kasse-send {
+  justify-self: start;
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--urd-radius-sm, 6px);
+  background: var(--urd-color-accent);
+  color: var(--urd-color-bg);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.urd-kasse-status {
+  margin: 0;
+  font-size: 0.88em;
+}
+
+.urd-kasse-feil {
+  color: #c0392b;
+}
+
 /* Formateringslinjen for tekstfelt (kun preview-modus): vises over
    blokken så lenge feltet redigeres. To faste rader (Office-stil) stables
    i en kolonne; de utvidbare underradene legger seg under. */
@@ -4767,6 +5260,7 @@ body.urd-mobile .urd-section-resize-top {
 .urd-preview.urd-chrome-off .urd-marquee,
 .urd-preview.urd-chrome-off .urd-multi-toolbar,
 .urd-preview.urd-chrome-off .urd-samling-image-adder,
+.urd-preview.urd-chrome-off .urd-produkt-adder,
 .urd-preview.urd-chrome-off .urd-samling-placeholder,
 .urd-preview.urd-chrome-off .urd-grid-overlay {
   display: none !important;

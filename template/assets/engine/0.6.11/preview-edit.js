@@ -494,7 +494,8 @@ const BLOCK_KINDS = [
   ['samling', ta('blocks.samling')], ['galleri', ta('blocks.galleri')], ['faq', ta('blocks.faq')],
   ['tidslinje', ta('blocks.tidslinje')], ['sitat', ta('blocks.sitat')], ['statistikk', ta('blocks.statistikk')],
   ['tabell', ta('blocks.tabell')], ['deling', ta('blocks.deling')], ['nedteller', ta('blocks.nedteller')],
-  ['audio', ta('blocks.audio')],
+  ['audio', ta('blocks.audio')], ['produkt', ta('blocks.produkt')], ['handlekurv', ta('blocks.handlekurv')],
+  ['kasse', ta('blocks.kasse')],
 ];
 
 /** Formene bor i sin egen utfoldbare undermeny («Former») i + Ny blokk. */
@@ -506,7 +507,7 @@ const SHAPE_KINDS = [
 /** Kjerneblokk-typene (paletten i editoren eier byggingen av disse). faq
  *  manglet her frem til 0.6.7.11 og lakk inn i Plugin-blokker-gruppen. */
 const CORE_BLOCK_TYPES = new Set(['text', 'image', 'button', 'shape', 'video', 'icon', 'samling', 'galleri',
-  'faq', 'tidslinje', 'sitat', 'statistikk', 'tabell', 'deling', 'nedteller', 'audio']);
+  'faq', 'tidslinje', 'sitat', 'statistikk', 'tabell', 'deling', 'nedteller', 'audio', 'produkt', 'handlekurv', 'kasse']);
 
 /**
  * Lukker en «+ Ny blokk»-meny og nullstiller dobbeltklikk-tilstanden:

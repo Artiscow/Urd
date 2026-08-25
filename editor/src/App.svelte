@@ -21,6 +21,7 @@
   import { validateManifest, satisfiesEngine } from '$engine/plugins.js';
   import { makeId } from '$engine/sections/presets.js';
   import { malId, MAL_SCHEMA_VERSION, MAL_KINDS, clonePageForInsert } from '$engine/maler-model.js';
+  import { entriesToCsv, csvToEntries } from '$engine/samlinger-csv.js';
   import { pageThumb } from '$engine/preset-thumb.js';
   import { PAGE_PRESETS, buildPagePreset } from '$engine/page-presets.js';
   import { searchItems as searchBlockItems } from '$engine/palette-search.js';
@@ -915,7 +916,8 @@
   function mutateBlock(key, fn) {
     const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
     if (!block) return;
-    pushHistory(key);
+    // key null = kalleren har alt pushet historikk (flersteg i ETT angre-steg).
+    if (key) pushHistory(key);
     fn(block, section);
     markDesktopChange(section, 'block-edited');
     store.save();
@@ -1154,7 +1156,7 @@
   // typografirad).
 
   /** Navn på blokktypene i panelet. */
-  const BLOCK_LABELS = { text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), galleri: ta('blocks.galleri'), faq: ta('blocks.faq'), samling: ta('blocks.samling'), tidslinje: ta('blocks.tidslinje'), sitat: ta('blocks.sitat'), statistikk: ta('blocks.statistikk'), tabell: ta('blocks.tabell'), deling: ta('blocks.deling'), nedteller: ta('blocks.nedteller'), audio: ta('blocks.audio') };
+  const BLOCK_LABELS = { text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), galleri: ta('blocks.galleri'), faq: ta('blocks.faq'), samling: ta('blocks.samling'), tidslinje: ta('blocks.tidslinje'), sitat: ta('blocks.sitat'), statistikk: ta('blocks.statistikk'), tabell: ta('blocks.tabell'), deling: ta('blocks.deling'), nedteller: ta('blocks.nedteller'), audio: ta('blocks.audio'), produkt: ta('blocks.produkt'), handlekurv: ta('blocks.handlekurv'), kasse: ta('blocks.kasse') };
   const SHAPE_KINDS = [
     ['line', ta('shape.line')], ['arrow', ta('shape.arrow')], ['circle', ta('shape.circle')],
     ['rect', ta('shape.rect')], ['triangle', ta('shape.triangle')],
@@ -2157,6 +2159,7 @@
       onReviewDone: handleReviewDone,
       onBlockFlag: handleBlockFlag,
       onCollectionEdit: handleCollectionEdit,
+      onCollectionAdd: handleCollectionAdd,
       onSaveTemplate: handleSaveTemplate,
       onStickyGroup: handleStickyGroup,
       onStickyDock: handleStickyDock,
@@ -2735,6 +2738,7 @@
     ['news', ta('collectionKind.news')],
     ['notices', ta('collectionKind.notices')],
     ['publications', ta('collectionKind.publications')],
+    ['products', ta('collectionKind.products')],
     ['custom', ta('collectionKind.custom')],
   ];
 
@@ -2928,6 +2932,13 @@
     syncSamlingerView(pushPreview);
   }
 
+  /** «+ Produkt»-adderen i produkt-blokken (urd-collection-add fra iframen). */
+  function handleCollectionAdd(msg) {
+    // Slettet/ukjent samling: no-op (guarden hindrer også et dødt angre-steg).
+    if (!samlingStores[msg.collection]) return;
+    addSamlingEntry(msg.collection);
+  }
+
   /** Klikk-og-skriv/bildebytte i samling-blokken (urd-collection-edit fra iframen). */
   function handleCollectionEdit(msg) {
     const { collection, entryId, field, value } = msg;
@@ -2943,16 +2954,9 @@
     }, field === 'image');
   }
 
-  function addSamling() {
-    const name = newSamlingName.trim();
-    if (!name) return;
-    const id = slugify(name);
-    if (!id || samlingerIds.includes(id)) {
-      setStatus(id ? ta('status.collectionExists') : ta('status.invalidName'), 'error');
-      return;
-    }
-    pushHistory('samlinger');
-    const fresh = { schemaVersion: 1, id, name, kind: newSamlingKind, entries: [] };
+  /** Oppretter og aktiverer en samling (kalleren eier historikk-steget). */
+  function insertSamling(id, name, kind) {
+    const fresh = { schemaVersion: 1, id, name, kind, entries: [] };
     // Baseline er «finnes ikke» (null) til første publisering: en fersk
     // samling skal ha hasDraft() sann, ellers publiseres indeksen uten filen.
     samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => null, draftSaveError);
@@ -2962,9 +2966,33 @@
     samlingerIndexStore.save();
     samlingerIds = [...samlingerIds, id];
     activeSamling = id;
-    newSamlingName = '';
     updateDirty();
     syncSamlingerView();
+  }
+
+  function addSamling() {
+    const name = newSamlingName.trim();
+    if (!name) return;
+    const id = slugify(name);
+    if (!id || samlingerIds.includes(id)) {
+      setStatus(id ? ta('status.collectionExists') : ta('status.invalidName'), 'error');
+      return;
+    }
+    pushHistory('samlinger');
+    insertSamling(id, name, newSamlingKind);
+    newSamlingName = '';
+  }
+
+  /** «+ Opprett produktkatalog» i produkt-blokkens Egenskaper: samling + binding i ETT angre-steg. */
+  function createCatalogForBlock() {
+    const name = ta('seed.productCatalogName');
+    const base = slugify(name) || 'produkter';
+    let id = base;
+    // Slug-dedup: en ikke-produkt-samling kan alt eie basenavnet.
+    for (let n = 2; samlingerIds.includes(id); n += 1) id = `${base}-${n}`;
+    pushHistory('samlinger');
+    insertSamling(id, name, 'products');
+    mutateBlock(null, (b) => { b.props.collection = id; });
   }
 
   function removeSamling(id) {
@@ -2981,12 +3009,18 @@
 
   function addSamlingEntry(id) {
     mutateSamling(id, `samling:${id}:add-entry`, (data) => {
-      data.entries.unshift({
-        id: makeId('innslag'),
-        title: ta('seed.newEntry'),
-        date: new Date().toISOString().slice(0, 10),
-        text: '',
-      });
+      if (data.kind === 'products') {
+        // Produkter: ingen dato (irrelevant), pris settes i panelet; legges SIST
+        // så adder-kortet i previewen får det nye kortet ved siden av seg.
+        data.entries.push({ id: makeId('innslag'), title: ta('seed.newProduct'), text: '' });
+      } else {
+        data.entries.unshift({
+          id: makeId('innslag'),
+          title: ta('seed.newEntry'),
+          date: new Date().toISOString().slice(0, 10),
+          text: '',
+        });
+      }
     });
   }
 
@@ -3020,6 +3054,79 @@
     if (!file) return;
     const img = await compressOrTrim(file);
     setEntryField(id, entryId, 'image', img.dataUrl);
+  }
+
+  /** Produktfeltene (kind products): størrelseslisten skrives kommaseparert. */
+  function setEntrySizes(id, entryId, text) {
+    const sizes = text.split(',').map((s) => s.trim()).filter(Boolean);
+    setEntryField(id, entryId, 'sizes', sizes.length ? sizes : '');
+  }
+
+  function addEntryColor(id, entryId) {
+    mutateSamling(id, `samling:${id}:${entryId}:colors`, (data) => {
+      const entry = data.entries.find((e) => e.id === entryId);
+      if (!entry) return;
+      entry.colors = [...(entry.colors ?? []), { name: ta('ph.colorName') }];
+    });
+  }
+
+  function setEntryColor(id, entryId, index, field, value) {
+    mutateSamling(id, `edit:samling:${id}:${entryId}:color:${index}:${field}`, (data) => {
+      const color = data.entries.find((e) => e.id === entryId)?.colors?.[index];
+      if (!color) return;
+      // Navnet kan aldri tømmes (skjemaet krever det); bildet kan fjernes.
+      if (field === 'image' && !value) delete color.image;
+      else if (value) color[field] = value;
+    });
+  }
+
+  async function setEntryColorImage(id, entryId, index, event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    const img = await compressOrTrim(file);
+    setEntryColor(id, entryId, index, 'image', img.dataUrl);
+  }
+
+  function removeEntryColor(id, entryId, index) {
+    mutateSamling(id, `samling:${id}:${entryId}:colors`, (data) => {
+      const entry = data.entries.find((e) => e.id === entryId);
+      if (!entry?.colors) return;
+      entry.colors = entry.colors.filter((_, i) => i !== index);
+      if (!entry.colors.length) delete entry.colors;
+    });
+  }
+
+  /** CSV-eksport (funksjonskartet C12): innslagene lastes ned som <id>.csv. */
+  function exportSamlingCsv(id) {
+    const data = samlingStores[id]?.data;
+    if (!data) return;
+    const url = URL.createObjectURL(new Blob([entriesToCsv(data.entries)], { type: 'text/csv' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${id}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /** CSV-import: ERSTATTER samlingens innslag med radene fra fila (angre finnes).
+   *  Manglende/ugyldige id-er får nye; ren parsing bor i engine/samlinger-csv.js. */
+  async function importSamlingCsv(id, event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    const parsed = csvToEntries(await file.text());
+    if (!parsed) {
+      setStatus(ta('status.csvInvalid'), 'error');
+      return;
+    }
+    const used = new Set();
+    for (const entry of parsed.entries) {
+      if (!/^[a-z0-9][a-z0-9-]*$/.test(entry.id) || used.has(entry.id)) entry.id = makeId('innslag');
+      used.add(entry.id);
+    }
+    mutateSamling(id, `samling:${id}:import`, (data) => { data.entries = parsed.entries; });
+    setStatus(ta('status.csvImported', { count: String(parsed.entries.length) }), 'ok');
   }
 
   /* ---------- Plugins-panelet ---------- */
@@ -4112,6 +4219,9 @@
       w: 40, h: 110,
     },
     audio: { type: 'audio', props: { src: '', title: '', loop: false }, w: 34, h: 80 },
+    produkt: { type: 'produkt', props: { collection: null, limit: 0, columns: 0, currency: 'kr' }, w: 90, h: 300 },
+    handlekurv: { type: 'handlekurv', props: { variant: 'button', href: '', currency: 'kr' }, w: 16, h: 48 },
+    kasse: { type: 'kasse', props: { recipient: '', endpoint: '', vipps: '', currency: 'kr' }, w: 44, h: 430 },
   };
 
   function buildBlock(kind) {
@@ -4226,6 +4336,9 @@
       { label: ta('blocks.deling'), act: 'block', kind: 'deling' },
       { label: ta('blocks.nedteller'), act: 'block', kind: 'nedteller' },
       { label: ta('blocks.audio'), act: 'block', kind: 'audio' },
+      { label: ta('blocks.produkt'), act: 'block', kind: 'produkt' },
+      { label: ta('blocks.handlekurv'), act: 'block', kind: 'handlekurv' },
+      { label: ta('blocks.kasse'), act: 'block', kind: 'kasse' },
       { label: ta('ui.emptyGallery'), act: 'block', kind: 'galleri' },
       { label: ta('ui.galleryWithImages'), act: 'galleryImages' },
       { label: ta('shape.line'), act: 'block', kind: 'shape-line' },
@@ -4406,6 +4519,12 @@
     const path = `media/${slugify(name || 'bilde')}-${contentHash(base64)}.${mediaExtension(src)}`;
     files.push({ path, content: base64, encoding: 'base64' });
     obj[field] = `/${path}`;
+  }
+
+  /** Ett samlingsinnslags bilder: hovedbildet + produktfargenes bilder (kind products). */
+  function materializeEntryImages(entry, files) {
+    materializeField(entry, 'image', entry.title, files);
+    for (const color of entry.colors ?? []) materializeField(color, 'image', `${entry.title}-${color.name}`, files);
   }
 
   /** Bakgrunnslagenes bilder (image + bildegalleri) - delt av seksjon, nav og footer. */
@@ -4623,7 +4742,7 @@
     if (changedSamlinger.length || samlingerIndexStore?.hasDraft()) {
       for (const [id, st] of changedSamlinger) {
         const out = JSON.parse(JSON.stringify(st.data));
-        for (const entry of out.entries) materializeField(entry, 'image', entry.title, files);
+        for (const entry of out.entries) materializeEntryImages(entry, files);
         files.push({ path: `content/samlinger/${id}.json`, content: JSON.stringify(out, null, 2) + '\n', encoding: 'utf-8' });
         draftKeys.push(`urd-draft-samling-${id}`);
       }
@@ -4758,7 +4877,7 @@
       if (samlingerIndexStore) {
         // Speil materialiseringen inn i minnet (samme deterministiske stier som klonene fikk).
         for (const st of Object.values(samlingStores)) {
-          for (const entry of st.data.entries) materializeField(entry, 'image', entry.title, []);
+          for (const entry of st.data.entries) materializeEntryImages(entry, []);
         }
         const publishedIndex = JSON.parse(JSON.stringify(samlingerIndexStore.data));
         samlingerIndexStore = createDraftStore('urd-draft-samlinger', () => publishedIndex, draftSaveError);
@@ -5610,6 +5729,12 @@
                   onclick={() => addBlock('nedteller')}>{ta('blocks.nedteller')}</button>
                 <button class="ghost" title={ta('tip.blocks.audio')}
                   onclick={() => addBlock('audio')}>{ta('blocks.audio')}</button>
+                <button class="ghost" title={ta('tip.blocks.produkt')}
+                  onclick={() => addBlock('produkt')}>{ta('blocks.produkt')}</button>
+                <button class="ghost" title={ta('tip.blocks.handlekurv')}
+                  onclick={() => addBlock('handlekurv')}>{ta('blocks.handlekurv')}</button>
+                <button class="ghost" title={ta('tip.blocks.kasse')}
+                  onclick={() => addBlock('kasse')}>{ta('blocks.kasse')}</button>
                 <details class="group">
                   <summary>{ta('blocks.galleri')}</summary>
                   <div class="group-items">
@@ -6017,13 +6142,21 @@
                   {@const samling = samlingerView[activeSamling]}
                   <span class="toolbar-row">
                     <button class="ghost action" onclick={() => addSamlingEntry(activeSamling)}>{ta('ui.addEntry')}</button>
+                    <button class="ghost action" title={ta('tip.collections.exportCsv')}
+                      onclick={() => exportSamlingCsv(activeSamling)}>{ta('ui.exportCsv')}</button>
+                    <label class="ghost filepick" title={ta('tip.collections.importCsv')}>
+                      {ta('ui.importCsv')}
+                      <input type="file" accept=".csv,text/csv" onchange={(e) => importSamlingCsv(activeSamling, e)} />
+                    </label>
                     <button class="ghost row-tool" title={ta('tip.collections.deleteCollection')}
                       onclick={() => removeSamling(activeSamling)}>{@html ICONS.cross}</button>
                   </span>
                   {#each samling.entries as entry, i (entry.id)}
                     <!-- Sammenleggbart innslag: tittel + dato i summary, feltene inni (plassbruk i panelet) -->
                     <details class="group samling-entry">
-                      <summary>{entry.title.replace(/<[^>]*>/g, '')}{entry.date ? ` · ${entry.date}` : ''}</summary>
+                      <summary>{entry.title.replace(/<[^>]*>/g, '')}{samling.kind === 'products'
+                        ? (entry.price != null ? ` · ${entry.price}` : '')
+                        : (entry.date ? ` · ${entry.date}` : '')}</summary>
                       <div class="group-items">
                         <span class="toolbar-row">
                           <input value={entry.title} title={ta('lbl.title')}
@@ -6036,15 +6169,19 @@
                               onclick={() => removeEntry(activeSamling, entry.id)}>{@html ICONS.cross}</button>
                           </span>
                         </span>
-                        <label>{ta('lbl.date')}
-                          <input type="date" value={entry.date ?? ''}
-                            onchange={(e) => setEntryField(activeSamling, entry.id, 'date', e.target.value)} /></label>
+                        {#if samling.kind !== 'products'}
+                          <label>{ta('lbl.date')}
+                            <input type="date" value={entry.date ?? ''}
+                              onchange={(e) => setEntryField(activeSamling, entry.id, 'date', e.target.value)} /></label>
+                        {/if}
                         <textarea rows="3" placeholder={ta('ph.collections.text')}
                           value={entry.text ?? ''}
                           onchange={(e) => setEntryField(activeSamling, entry.id, 'text', e.target.value)}></textarea>
-                        <label>{ta('lbl.link')}
-                          <input value={entry.href ?? ''} placeholder={ta('ph.collections.href')}
-                            onchange={(e) => setEntryField(activeSamling, entry.id, 'href', e.target.value)} /></label>
+                        {#if samling.kind !== 'products'}
+                          <label>{ta('lbl.link')}
+                            <input value={entry.href ?? ''} placeholder={ta('ph.collections.href')}
+                              onchange={(e) => setEntryField(activeSamling, entry.id, 'href', e.target.value)} /></label>
+                        {/if}
                         <span class="toolbar-row">
                           <label class="ghost filepick">
                             {entry.image ? ta('ui.changeImage') : ta('ui.addImage')}
@@ -6056,6 +6193,37 @@
                               onclick={() => setEntryField(activeSamling, entry.id, 'image', '')}>{@html ICONS.cross}</button>
                           {/if}
                         </span>
+                        {#if samling.kind === 'products'}
+                          <!-- Produktfeltene (butikken): pris, medlemspris, badge, størrelser og farger. -->
+                          <label>{ta('lbl.price')}
+                            <input type="number" min="0" step="0.01" value={entry.price ?? ''}
+                              onchange={(e) => setEntryField(activeSamling, entry.id, 'price', e.target.value === '' ? '' : Number(e.target.value))} /></label>
+                          <label title={ta('tip.entry.memberPrice')}>{ta('lbl.memberPrice')}
+                            <input type="number" min="0" step="0.01" value={entry.memberPrice ?? ''}
+                              onchange={(e) => setEntryField(activeSamling, entry.id, 'memberPrice', e.target.value === '' ? '' : Number(e.target.value))} /></label>
+                          <label title={ta('tip.entry.badge')}>{ta('lbl.productBadge')}
+                            <input value={entry.badge ?? ''}
+                              onchange={(e) => setEntryField(activeSamling, entry.id, 'badge', e.target.value)} /></label>
+                          <label title={ta('tip.entry.sizes')}>{ta('lbl.sizes')}
+                            <input value={(entry.sizes ?? []).join(', ')} placeholder={ta('ph.sizes')}
+                              onchange={(e) => setEntrySizes(activeSamling, entry.id, e.target.value)} /></label>
+                          {#each entry.colors ?? [] as color, ci (ci)}
+                            <span class="toolbar-row">
+                              <input value={color.name} placeholder={ta('ph.colorName')}
+                                onchange={(e) => setEntryColor(activeSamling, entry.id, ci, 'name', e.target.value)} />
+                              <label class="ghost filepick">
+                                {color.image ? ta('ui.changeImage') : ta('ui.addImage')}
+                                <input type="file" accept="image/*" onchange={(e) => setEntryColorImage(activeSamling, entry.id, ci, e)} />
+                              </label>
+                              {#if color.image}
+                                <img class="site-icon-preview" src={color.image} alt="" />
+                              {/if}
+                              <button class="ghost row-tool" onclick={() => removeEntryColor(activeSamling, entry.id, ci)}>{@html ICONS.cross}</button>
+                            </span>
+                          {/each}
+                          <button class="ghost action" title={ta('tip.entry.colors')}
+                            onclick={() => addEntryColor(activeSamling, entry.id)}>{ta('ui.addColor')}</button>
+                        {/if}
                       </div>
                     </details>
                   {/each}
@@ -6837,6 +7005,49 @@
           onchange={(e) => setBlockProp('newestFirst', e.target.checked)} />
         {ta('lbl.newestFirst')}
       </label>
+    {:else if selectedBlock.type === 'produkt'}
+      <label title={ta('tip.produkt.source')}>{ta('blocks.samling')}
+        <Dropdown value={selectedBlock.props.collection ?? ''}
+          options={[['', ta('common.choose')], ...samlingerIds.filter((id) => samlingerView[id]?.kind === 'products').map((id) => [id, samlingerView[id]?.name ?? id])]}
+          onchange={(v) => setBlockProp('collection', v || null)} /></label>
+      {#if selectedBlock.props.collection && samlingerView[selectedBlock.props.collection]?.kind === 'products'}
+        <span class="toolbar-row">
+          <button class="ghost action" title={ta('tip.produkt.addProduct')}
+            onclick={() => addSamlingEntry(selectedBlock.props.collection)}>{ta('ui.addProduct')}</button>
+          <button class="ghost action" title={ta('tip.produkt.editCatalog')}
+            onclick={() => { activeSamling = selectedBlock.props.collection; activePanel = 'collections'; }}>{ta('ui.editCatalog')}</button>
+        </span>
+      {:else if !samlingerIds.some((id) => samlingerView[id]?.kind === 'products')}
+        <button class="ghost action" title={ta('tip.produkt.createCatalog')}
+          onclick={createCatalogForBlock}>{ta('ui.createCatalog')}</button>
+      {/if}
+      <label title={ta('tip.samling.limit')}>{ta('lbl.maxCount')}
+        <input type="number" min="0" max="100" value={selectedBlock.props.limit ?? 0}
+          onchange={(e) => setBlockProp('limit', Number(e.target.value))} /></label>
+      <label title={ta('tip.produkt.currency')}>{ta('lbl.currency')}
+        <input value={selectedBlock.props.currency ?? 'kr'}
+          onchange={(e) => setBlockProp('currency', e.target.value)} /></label>
+    {:else if selectedBlock.type === 'handlekurv'}
+      <label title={ta('tip.handlekurv.checkout')}>{ta('lbl.checkoutPage')}
+        <Dropdown value={selectedBlock.props.href ?? ''}
+          options={[['', ta('common.none')], ...siteDraft.pages.map((p) => [p.path, p.title])]}
+          onchange={(v) => setBlockProp('href', v)} /></label>
+      <label title={ta('tip.produkt.currency')}>{ta('lbl.currency')}
+        <input value={selectedBlock.props.currency ?? 'kr'}
+          onchange={(e) => setBlockProp('currency', e.target.value)} /></label>
+    {:else if selectedBlock.type === 'kasse'}
+      <label title={ta('tip.kasse.recipient')}>{ta('lbl.recipientEmail')}
+        <input type="email" value={selectedBlock.props.recipient ?? ''}
+          onchange={(e) => setBlockProp('recipient', e.target.value.trim())} /></label>
+      <label title={ta('tip.kasse.endpoint')}>{ta('lbl.endpointUrl')}
+        <input type="url" value={selectedBlock.props.endpoint ?? ''}
+          onchange={(e) => setBlockProp('endpoint', e.target.value.trim())} /></label>
+      <label title={ta('tip.kasse.vipps')}>{ta('lbl.vippsNumber')}
+        <input value={selectedBlock.props.vipps ?? ''}
+          onchange={(e) => setBlockProp('vipps', e.target.value.trim())} /></label>
+      <label title={ta('tip.produkt.currency')}>{ta('lbl.currency')}
+        <input value={selectedBlock.props.currency ?? 'kr'}
+          onchange={(e) => setBlockProp('currency', e.target.value)} /></label>
     {:else if selectedBlock.type === 'galleri'}
       <label class="ghost filepick" title={ta('tip.gallery.addImages')}>
         {ta('ui.addImages')}
@@ -7059,6 +7270,17 @@
         <Dropdown value={selectedBlock.props.view ?? 'cards'}
           options={[['cards', ta('opt.collectionView.cards')], ['list', ta('opt.collectionView.list')], ['archive', ta('opt.collectionView.archive')]]}
           onchange={(v) => setBlockProp('view', v)} /></label>
+      <hr class="gridmenu-divider" />
+    {:else if selectedBlock.type === 'produkt'}
+      <label title={ta('tip.produkt.columns')}>{ta('lbl.columns')}
+        <input type="number" min="0" max="6" value={selectedBlock.props.columns ?? 0}
+          onchange={(e) => setBlockProp('columns', Number(e.target.value))} /></label>
+      <hr class="gridmenu-divider" />
+    {:else if selectedBlock.type === 'handlekurv'}
+      <label>{ta('lbl.view')}
+        <Dropdown value={selectedBlock.props.variant ?? 'button'}
+          options={[['button', ta('opt.handlekurv.button')], ['icon', ta('opt.handlekurv.icon')]]}
+          onchange={(v) => setBlockProp('variant', v)} /></label>
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'galleri'}
       <label>{ta('lbl.view')}

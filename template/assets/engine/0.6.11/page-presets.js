@@ -26,6 +26,10 @@ export const PAGE_PRESETS = [
   { id: 'kontakt', labelKey: 'pageTemplate.contact', sections: ['hero-sentrert', 'kontakt', 'faq'] },
   { id: 'portefolje', labelKey: 'pageTemplate.portfolio', sections: ['hero-sentrert', 'galleri', 'sitat', 'cta'] },
   { id: 'arrangement', labelKey: 'pageTemplate.event', sections: ['hovedoppslag', 'arrangementer', 'steg', 'faq', 'cta'] },
+  // Butikkmønsteret (0.7.5): butikken er en egen side, og kassen sin egen -
+  // eieren peker handlekurvens Kasseside-valg på kassesiden etterpå.
+  { id: 'butikk', labelKey: 'pageTemplate.butikk', sections: ['hero-sentrert', 'butikk', 'faq', 'cta'] },
+  { id: 'kasse', labelKey: 'pageTemplate.kasse', sections: ['kasse', 'kontakt'] },
 ];
 
 /**

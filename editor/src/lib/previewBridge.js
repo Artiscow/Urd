@@ -35,6 +35,7 @@
  *                  { type: 'urd-request-block', sectionId, kind, at? } («+ Legg til blokk»; at = klikkpunkt {x i %, y i px}, uten = sentrert)
  *                  { type: 'urd-move-block-section', fromSectionId, toSectionId, blockId, frame } (blokk sluppet i annen seksjon)
  *                  { type: 'urd-collection-edit', collection, entryId, field, value } (klikk-og-skriv/bildebytte i samling-blokken)
+ *                  { type: 'urd-collection-add', collection } (nytt innslag fra «+ Produkt»-adderen i produkt-blokken)
  *                  { type: 'urd-nav-width', width }           (sidestilt kolonnebredde dratt i preview)
  *                  { type: 'urd-save-template', kind, section | blocks } (Lagre som mal: navnløst snapshot; editoren navngir og lagrer)
  *                  { type: 'urd-sticky-group', sectionId, blockIds, on } (Fest gruppen: felles sticky-gruppe på hele utvalget, eller løs den opp)
@@ -85,6 +86,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-review-done') handlers.onReviewDone?.(msg);
     if (msg?.type === 'urd-block-flag') handlers.onBlockFlag?.(msg);
     if (msg?.type === 'urd-collection-edit') handlers.onCollectionEdit?.(msg);
+    if (msg?.type === 'urd-collection-add') handlers.onCollectionAdd?.(msg);
     if (msg?.type === 'urd-nav-width') handlers.onNavWidth?.(msg);
     if (msg?.type === 'urd-save-template') handlers.onSaveTemplate?.(msg);
     if (msg?.type === 'urd-sticky-group') handlers.onStickyGroup?.(msg);
