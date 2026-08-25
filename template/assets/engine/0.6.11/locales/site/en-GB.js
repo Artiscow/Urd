@@ -61,6 +61,8 @@ export default {
     'butikk.missingTarget': 'The checkout is missing a recipient or endpoint.',
     'butikk.vippsHint': 'Payment: Vipps to {number}.',
     'butikk.quickView': 'View the product',
+    'butikk.payWithVipps': 'Pay with Vipps',
+    'butikk.vippsUnavailable': 'Payment is not set up for this site yet.',
     'nedteller.days': 'days',
     'nedteller.hours': 'hours',
     'nedteller.minutes': 'minutes',

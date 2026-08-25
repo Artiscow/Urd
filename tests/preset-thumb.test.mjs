@@ -75,3 +75,10 @@ test('tom side gir rent bakgrunnsfelt', () => {
   const svg = pageThumb({ sections: [] });
   assert.match(svg, /--urd-color-bg/);
 });
+
+test('rollesett overtoner bakgrunnen i skissen (dyp = tekst-token, dus = surface)', () => {
+  const dyp = presetThumb({ ...section([textBlock('<h2>x</h2>')]), theme: 'dyp' });
+  assert.match(dyp, /^<svg[^>]*>\s*<rect[^>]*fill="var\(--urd-color-text/, 'dyp-bånd skal ha tekst-tonet bakgrunn');
+  const dus = presetThumb({ ...section([textBlock('<h2>x</h2>')]), theme: 'dus' });
+  assert.match(dus, /^<svg[^>]*>\s*<rect[^>]*fill="var\(--urd-color-surface/, 'dus-bånd skal ha surface-tonet bakgrunn');
+});

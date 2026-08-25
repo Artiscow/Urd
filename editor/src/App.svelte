@@ -35,7 +35,7 @@
   import { bildegalleriLayer } from '$engine/backgrounds/bildegalleri.js';
   import { footerThumb } from '$engine/footer-thumb.js';
   import { coreAnimations } from '$engine/animations/core.js';
-  import { SECTION_THEME_LABELS, sectionThemeVars, contrastRatio, relativeLuminance, buildThemeCss, safeCssValue } from '$engine/theme.js';
+  import { SECTION_THEME_LABELS, sectionThemeVars, contrastRatio, relativeLuminance, buildThemeCss, safeCssValue, resolveThemeMode, activeTokens } from '$engine/theme.js';
   import { compressToWebp, svgToDataUrl, tightSvgViewBox, svgViewBox, slugify, contentHash, mediaExtension, WARN_BYTES } from '$engine/imageTools.js';
   import { FONT_STACKS } from '$engine/fonts.js';
   import { frameAtPoint } from '$engine/place.js';
@@ -1240,10 +1240,9 @@
    *  levende (ADR-0016). Oppskriftene refererer kun --urd-base-*-kopiene,
    *  så en ren tekstsubstitusjon gir gyldige CSS-farger (color-mix består). */
   function sectionThemeSample(role) {
-    const dark = siteDraft.theme.scheme === 'dark';
-    const pal = dark
-      ? { ...siteDraft.theme.tokens.color, ...(siteDraft.theme.alt?.tokens?.color ?? {}) }
-      : siteDraft.theme.tokens.color;
+    // Prøvene følger forhåndsvisningens aktive modus (previewPalette merger
+    // alt-tokens via motorens activeTokens, så scheme: 'dark' løses riktig).
+    const pal = previewPalette;
     const subst = (v) => v
       .replaceAll('var(--urd-base-bg)', pal.bg)
       .replaceAll('var(--urd-base-surface)', pal.surface)
@@ -1599,9 +1598,37 @@
   const navBgCtx = { mutate: navBgMutate, keyPrefix: 'navbg', keyId: 'nav' };
   const footerBgCtx = { mutate: footerMutate, keyPrefix: 'footerbg', keyId: 'footer' };
 
+  /** Forhåndsvisningens lys/mørk-modus: lagret valg vinner, ellers OS (samme
+   *  oppløsning som motorens applyTheme). Iframe-bryteren skriver localStorage
+   *  fra sin egen browsing context, så storage-hendelsen når admin-vinduet. */
+  const readPreviewMode = () => {
+    let stored = null;
+    try { stored = localStorage.getItem('urd-theme-mode'); } catch { /* privat modus: følg OS */ }
+    return resolveThemeMode(siteDraft?.theme?.scheme, stored,
+      window.matchMedia('(prefers-color-scheme: dark)').matches);
+  };
+  let previewMode = $state('light');
+  $effect(() => {
+    previewMode = readPreviewMode();
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const update = (e) => {
+      if (e instanceof StorageEvent && e.key && e.key !== 'urd-theme-mode') return;
+      previewMode = readPreviewMode();
+    };
+    mq.addEventListener('change', update);
+    window.addEventListener('storage', update);
+    return () => {
+      mq.removeEventListener('change', update);
+      window.removeEventListener('storage', update);
+    };
+  });
+  /** Paletten slik lerretet faktisk viser den (aktiv modus, alt-merge via motoren). */
+  const previewPalette = $derived(siteDraft?.theme ? (activeTokens(siteDraft.theme, previewMode).color ?? {}) : {});
+
   /** Temafargene som hurtigvalg i fargevelgeren (velgeren løser opp
-   *  token-navn selv, så ingen hexFor-omregning trengs lenger). */
-  const themeSwatches = () => Object.entries(siteDraft?.theme.tokens.color ?? {}).map(([n, hex]) => [n, hex]);
+   *  token-navn selv, så ingen hexFor-omregning trengs lenger). Prøvene
+   *  følger forhåndsvisningens aktive lys/mørk-modus. */
+  const themeSwatches = () => Object.entries(previewPalette);
 
   /** Tema-panelets avledede tilstand (Farger-området). */
   const PALETTE_KEYS = [['bg', ta('palette.bg'), ta('palette.bgShort')], ['surface', ta('palette.surface'), ta('palette.surfaceShort')], ['text', ta('palette.text'), ta('palette.textShort')], ['accent', ta('palette.accent'), ta('palette.accentShort')], ['accent-text', ta('palette.accentText'), ta('palette.accentTextShort')]];
@@ -4221,7 +4248,7 @@
     audio: { type: 'audio', props: { src: '', title: '', loop: false }, w: 34, h: 80 },
     produkt: { type: 'produkt', props: { collection: null, limit: 0, columns: 0, currency: 'kr' }, w: 90, h: 300 },
     handlekurv: { type: 'handlekurv', props: { variant: 'button', href: '', currency: 'kr' }, w: 16, h: 48 },
-    kasse: { type: 'kasse', props: { recipient: '', endpoint: '', vipps: '', currency: 'kr' }, w: 44, h: 430 },
+    kasse: { type: 'kasse', props: { recipient: '', endpoint: '', vipps: '', currency: 'kr', vippsCheckout: false }, w: 44, h: 430 },
   };
 
   function buildBlock(kind) {
@@ -5362,6 +5389,22 @@
                               if (v === 'none') delete siteDraft.nav.scroll; else siteDraft.nav.scroll = v;
                             })} /></label>
                       {/if}
+                    {/if}
+                    <label class="gridmenu-snap" title={ta('tip.nav.cart')}>
+                      <input type="checkbox" checked={siteDraft.nav.cart?.show === true}
+                        onchange={(e) => siteMutate('nav', () => {
+                          if (e.target.checked) siteDraft.nav.cart = { ...(siteDraft.nav.cart ?? {}), show: true };
+                          else delete siteDraft.nav.cart;
+                        })} />
+                      {ta('lbl.navCart')}
+                    </label>
+                    {#if siteDraft.nav.cart?.show}
+                      <label title={ta('tip.handlekurv.checkout')}>{ta('lbl.checkoutPage')}
+                        <Dropdown value={siteDraft.nav.cart?.href ?? ''}
+                          options={[['', ta('common.none')], ...siteDraft.pages.map((p) => [p.path, p.title])]}
+                          onchange={(v) => siteMutate('nav', () => {
+                            if (v) siteDraft.nav.cart.href = v; else delete siteDraft.nav.cart.href;
+                          })} /></label>
                     {/if}
                     <label>{ta('lbl.navHover')}
                       <Dropdown value={siteDraft.nav.style?.hover ?? 'standard'}
@@ -7045,6 +7088,11 @@
       <label title={ta('tip.kasse.vipps')}>{ta('lbl.vippsNumber')}
         <input value={selectedBlock.props.vipps ?? ''}
           onchange={(e) => setBlockProp('vipps', e.target.value.trim())} /></label>
+      <label class="gridmenu-snap" title={ta('tip.kasse.vippsCheckout')}>
+        <input type="checkbox" checked={selectedBlock.props.vippsCheckout === true}
+          onchange={(e) => setBlockProp('vippsCheckout', e.target.checked)} />
+        {ta('lbl.vippsCheckout')}
+      </label>
       <label title={ta('tip.produkt.currency')}>{ta('lbl.currency')}
         <input value={selectedBlock.props.currency ?? 'kr'}
           onchange={(e) => setBlockProp('currency', e.target.value)} /></label>

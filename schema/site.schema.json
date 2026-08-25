@@ -129,6 +129,16 @@
           "default": false,
           "description": "Legg fullbredde-linjen oppå toppseksjonen i stedet for i eget bånd over den, så en gjennomsiktig meny avslører hero bak seg (additivt fra v0.6). Gjelder kun variant bar; toppseksjonen bør ha nok klaring øverst. Floating/sidestilt ligger allerede utenfor flyten."
         },
+        "cart": {
+          "type": "object",
+          "description": "Handlekurv i verktøy-klyngen (butikken, additivt fra v0.7): knapp med antall-badge som åpner kurvskuffen. Utelatt = ingen kurv i menyen.",
+          "additionalProperties": false,
+          "properties": {
+            "show": { "type": "boolean", "default": false },
+            "href": { "type": "string", "description": "Kassesidens sti (skuffens «Til kassen»-lenke); tom = ingen lenke" },
+            "currency": { "type": "string", "description": "Valuta-ordet i skuffen (standard kr)" }
+          }
+        },
         "style": {
           "type": "object",
           "description": "Menyens utseende (additivt fra v0.5). Utelatte felt = standard.",

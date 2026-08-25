@@ -670,25 +670,146 @@ export function registerSectionPresets(Urd) {
     },
   });
 
+  /* ---------- Butikk ---------- */
+
   Urd.sections.define('butikk', {
     label: 'Butikk',
     labelKey: 'preset.butikk.label',
-    group: 'Kort og lister',
-    groupKey: 'presetGroup.cards',
+    group: 'Butikk',
+    groupKey: 'presetGroup.butikk',
     hint: 'Ekte produktkort fra en produktsamling, med handlekurv',
     hintKey: 'preset.butikk.hint',
-    create: () => section('butikk', '440px', bg(colorLayer('bg')), [
+    // Handlekurven står under chrome-båndet (y 88), så blokkverktøylinja
+    // hennes aldri havner bak den sticky seksjonsverktøylinja.
+    create: () => section('butikk', '544px', bg(colorLayer('bg')), [
       text(frame(6, 28, 50, 38), ta('seed.butikk.title')),
-      handlekurv(frame(78, 28, 16, 48)),
-      produkt(frame(6, 96, 88, 320)),
+      handlekurv(frame(78, 88, 16, 48)),
+      produkt(frame(6, 176, 88, 320)),
     ]),
+  });
+
+  Urd.sections.define('butikk-hero', {
+    label: 'Butikk-hero',
+    labelKey: 'preset.butikk-hero.label',
+    group: 'Butikk',
+    groupKey: 'presetGroup.butikk',
+    hint: 'Kampanjebånd: stor overskrift, undertekst, CTA og kampanjebilde',
+    hintKey: 'preset.butikk-hero.hint',
+    create: () => {
+      const blocks = [
+        text(frame(6, 48, 52, 96), ta('seed.butikkHero.title')),
+        text(frame(6, 152, 40, 48), ta('seed.butikkHero.sub')),
+        button(frame(6, 216, 17, 42), ta('seed.butikkHero.cta')),
+        image(frame(62, 40, 32, 300)),
+      ];
+      blocks.forEach((b, i) => { b.mobileOrder = cardOrder(48, i < 3 ? 0 : 1, i); });
+      return section('butikk-hero', '400px', { version: 1, layers: [
+        colorLayer('bg'),
+        glowLayer(0.8, 0.25, 0.28, 0.6),
+        { type: 'grain', version: 1, props: { opacity: 0.05 } },
+      ] }, blocks);
+    },
+  });
+
+  Urd.sections.define('butikk-kategorier', {
+    label: 'Butikk-kategorier',
+    labelKey: 'preset.butikk-kategorier.label',
+    group: 'Butikk',
+    groupKey: 'presetGroup.butikk',
+    hint: 'Fire kategorifliser med bilde og navn; lenken settes på bildet i Egenskaper',
+    hintKey: 'preset.butikk-kategorier.hint',
+    create: () => {
+      const tile = (x, col, name) => {
+        const img = image(frame(x, 88, 21, 170));
+        const label = text(frame(x, 266, 21, 34), ta('seed.butikkKategorier.tile', { name }), { align: 'center' });
+        img.mobileOrder = cardOrder(88, col, 0);
+        label.mobileOrder = cardOrder(88, col, 1);
+        return [img, label];
+      };
+      const sec = section('butikk-kategorier', '360px', bg(colorLayer('bg')), [
+        text(frame(6, 28, 60, 38), ta('seed.butikkKategorier.title')),
+        ...tile(6, 0, ta('seed.butikkKategorier.cat1')),
+        ...tile(29.5, 1, ta('seed.butikkKategorier.cat2')),
+        ...tile(53, 2, ta('seed.butikkKategorier.cat3')),
+        ...tile(76.5, 3, ta('seed.butikkKategorier.cat4')),
+      ]);
+      sec.theme = 'dus';
+      return sec;
+    },
+    itemLabel: 'kategori',
+    itemLabelKey: 'item.category',
+    item: (sec) => {
+      const { x, y, n } = freeSlot(sec, 4, 6, 23.5, 88, 220, 21, 212);
+      const img = image(frame(x, y, 21, 170));
+      const label = text(frame(x, y + 178, 21, 34), ta('seed.butikkKategorier.tile', { name: ta('seed.butikkKategorier.newCat') }), { align: 'center' });
+      img.mobileOrder = cardOrder(88, n, 0);
+      label.mobileOrder = cardOrder(88, n, 1);
+      return { blocks: [img, label], bottom: y + 220 };
+    },
+  });
+
+  Urd.sections.define('butikk-tillit', {
+    label: 'Butikk-tillit',
+    labelKey: 'preset.butikk-tillit.label',
+    group: 'Butikk',
+    groupKey: 'presetGroup.butikk',
+    hint: 'Tre tillitspunkter med ikon og tekst (retur, hjelp, trygg bestilling)',
+    hintKey: 'preset.butikk-tillit.hint',
+    create: () => {
+      const pair = (x, col, key, glyph) => {
+        const ic = icon(frame(x + 10.5, 88, 4, 52), glyph, 44);
+        const txt = text(frame(x, 148, 25, 96), ta(key), { align: 'center' });
+        ic.mobileOrder = cardOrder(88, col, 0);
+        txt.mobileOrder = cardOrder(88, col, 1);
+        return [ic, txt];
+      };
+      const sec = section('butikk-tillit', '300px', bg(colorLayer('bg')), [
+        text(frame(6, 28, 60, 38), ta('seed.butikkTillit.title')),
+        ...pair(6, 0, 'seed.butikkTillit.t1', '✓'),
+        ...pair(37.5, 1, 'seed.butikkTillit.t2', '↻'),
+        ...pair(69, 2, 'seed.butikkTillit.t3', '✉'),
+      ]);
+      sec.theme = 'dempet';
+      return sec;
+    },
+    itemLabel: 'kort',
+    itemLabelKey: 'item.card',
+    item: (sec) => {
+      const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 148, 216, 25, 156, -60);
+      const ic = icon(frame(x + 10.5, y - 60, 4, 52), '✓', 44);
+      const txt = text(frame(x, y, 25, 96), ta('seed.butikkTillit.newItem'), { align: 'center' });
+      ic.mobileOrder = cardOrder(88, n, 0);
+      txt.mobileOrder = cardOrder(88, n, 1);
+      return { blocks: [ic, txt], bottom: y + 104 };
+    },
+  });
+
+  Urd.sections.define('butikk-utstilling', {
+    label: 'Butikk-utstilling',
+    labelKey: 'preset.butikk-utstilling.label',
+    group: 'Butikk',
+    groupKey: 'presetGroup.butikk',
+    hint: 'Statement-bånd: stor typografi, tekst, CTA og bilde på dyp flate',
+    hintKey: 'preset.butikk-utstilling.hint',
+    create: () => {
+      const blocks = [
+        text(frame(6, 56, 52, 100), ta('seed.butikkUtstilling.title')),
+        text(frame(6, 164, 42, 56), ta('seed.butikkUtstilling.text')),
+        button(frame(6, 236, 18, 42), ta('seed.butikkUtstilling.cta')),
+        image(frame(62, 48, 32, 240)),
+      ];
+      blocks.forEach((b, i) => { b.mobileOrder = cardOrder(56, i < 3 ? 0 : 1, i); });
+      const sec = section('butikk-utstilling', '340px', bg(colorLayer('bg')), blocks);
+      sec.theme = 'dyp';
+      return sec;
+    },
   });
 
   Urd.sections.define('kasse', {
     label: 'Kasse',
     labelKey: 'preset.kasse.label',
-    group: 'Kort og lister',
-    groupKey: 'presetGroup.cards',
+    group: 'Butikk',
+    groupKey: 'presetGroup.butikk',
     hint: 'Bestillingsskjema som sender handlekurven som e-post eller til et endepunkt',
     hintKey: 'preset.kasse.hint',
     create: () => section('kasse', '560px', bg(colorLayer('bg')), [

@@ -64,6 +64,8 @@ export default {
     'butikk.missingTarget': 'Kassen mangler mottaker eller endepunkt.',
     'butikk.vippsHint': 'Betaling: Vipps til {number}.',
     'butikk.quickView': 'Vis produktet',
+    'butikk.payWithVipps': 'Betal med Vipps',
+    'butikk.vippsUnavailable': 'Betaling er ikke satt opp for denne siden ennå.',
     'nedteller.days': 'dager',
     'nedteller.hours': 'timer',
     'nedteller.minutes': 'minutter',

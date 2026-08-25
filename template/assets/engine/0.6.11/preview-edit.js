@@ -3308,7 +3308,10 @@ function enhanceBlock(el, block, section, grid, host) {
         // redigerer man teksten). En uvalgt blokk dras fritt også fra
         // teksten - klikk uten dra velger den, klikk igjen redigerer.
         if (target?.closest('.urd-text[contenteditable="true"]') && selectedBlockId === block.id && multiIds.size <= 1) return;
-        if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button, input, select, textarea, .urd-samling-editable, .urd-samling-image-edit, .urd-faq-q, .urd-kal-config, .urd-skjema-config, .urd-kart-config')) return;
+        // Handlekurv-knappen følger tekstblokkens totrinn: valgt blokk =
+        // native klikk (skuffen åpner), uvalgt blokk = flate-dra og markering.
+        if (target?.closest('.urd-handlekurv-knapp') && selectedBlockId === block.id && multiIds.size <= 1) return;
+        if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button:not(.urd-handlekurv-knapp), input, select, textarea, dialog, .urd-samling-editable, .urd-samling-image-edit, .urd-faq-q, .urd-kal-config, .urd-skjema-config, .urd-kart-config')) return;
         // Flytende mobilblokk: første pinning skal være et bevisst valg
         // (dra i ⠿), ikke et klikk på blokken. En skjermdokket blokk er
         // unntatt: der flytter draget dokkingen, ikke radnettet.

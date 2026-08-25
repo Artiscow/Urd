@@ -14,6 +14,9 @@
 import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, navScrollState, isSafeImage } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
+import { readCart, cartCount, onCartChange } from './butikk.js';
+import { createCartDrawer } from './blocks/handlekurv.js';
+import { iconSvg } from './icons.js';
 import { t } from './i18n.js';
 
 /** Hvor lenge undermenyen står åpen etter at pekeren forlater punktet. */
@@ -249,6 +252,35 @@ export function renderNav(site, host) {
   // et alt-motstykke) og burgeren. Tom klynge skjules i CSS (:empty).
   const tools = document.createElement('span');
   tools.className = 'urd-nav-tools';
+
+  // Handlekurven i menyen (butikken, additivt nav.cart): knapp med
+  // antall-badge som åpner samme kurvskuff som handlekurv-blokken.
+  if (site.nav?.cart?.show) {
+    const cartCfg = site.nav.cart;
+    const cartBtn = document.createElement('button');
+    cartBtn.className = 'urd-nav-cart';
+    cartBtn.type = 'button';
+    cartBtn.setAttribute('aria-label', t('butikk.cart'));
+    cartBtn.innerHTML = iconSvg('cart') ?? '';
+    const cartBadge = document.createElement('span');
+    cartBadge.className = 'urd-nav-cart-badge';
+    cartBadge.hidden = true;
+    cartBtn.appendChild(cartBadge);
+    const drawer = createCartDrawer({ href: cartCfg.href ?? '', currency: cartCfg.currency || 'kr' });
+    nav.appendChild(drawer.dialog);
+    const paintCart = () => {
+      const count = cartCount(readCart());
+      cartBadge.textContent = String(count);
+      cartBadge.hidden = count === 0;
+    };
+    paintCart();
+    onCartChange(nav, () => {
+      paintCart();
+      drawer.refresh();
+    });
+    cartBtn.addEventListener('click', () => drawer.open(), { signal });
+    tools.appendChild(cartBtn);
+  }
 
   if (site.theme?.alt?.tokens) {
     const themeBtn = document.createElement('button');

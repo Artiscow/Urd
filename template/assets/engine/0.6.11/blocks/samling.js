@@ -238,6 +238,9 @@ function emptyState(el, ctx, message) {
 export const samlingBlock = {
   version: 1,
   autoGrow: true,
+  // Samlingskonsument: urd-collections-meldingen rerendrer kun seksjoner med
+  // blokker som bærer dette flagget (scrollposisjonen bevares).
+  usesCollections: true,
   label: 'Samling',
   labelKey: 'blocks.samling',
   defaults: () => ({ collection: null, view: 'cards', limit: 6, newestFirst: true }),

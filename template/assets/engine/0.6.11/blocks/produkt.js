@@ -19,7 +19,7 @@ import { applyEntryImageStyle } from './samling.js';
 import { growSectionTo } from '../render.js';
 import { stripActiveContent } from '../sanitize.js';
 import { iconSvg } from '../icons.js';
-import { readCart, writeCart, cartAdd, itemKey, variantLabel, formatPrice } from '../butikk.js';
+import { readCart, writeCart, cartAdd, itemKey, variantLabel, formatPrice, altCardImage } from '../butikk.js';
 // Kun kalt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
 import { ta, adminLocaleReady, t } from '../i18n.js';
 
@@ -206,6 +206,18 @@ function renderCard(entry, props, editable) {
     wrap = el2('span', 'urd-samling-imgwrap urd-produkt-bilde');
     wrap.appendChild(img);
     applyEntryImageStyle(wrap, entry);
+    // Sekundærbilde (første fargebilde): tones inn ved hover (CSS-først,
+    // ADR-0011); viker når et fargevalg med eget bilde er aktivt.
+    const alt = altCardImage(entry);
+    if (alt) {
+      const altImg = document.createElement('img');
+      altImg.src = alt;
+      altImg.alt = '';
+      altImg.loading = 'lazy';
+      altImg.draggable = false;
+      altImg.className = 'urd-produkt-bilde-alt';
+      wrap.appendChild(altImg);
+    }
     card.appendChild(wrap);
   }
   if (entry.badge) {
@@ -228,6 +240,7 @@ function renderCard(entry, props, editable) {
       chosenColor = name;
       const picked = colors.find((c) => c.name === name);
       if (img) img.src = picked?.image || baseImage;
+      wrap?.classList.toggle('urd-produkt-farge-valgt', Boolean(picked?.image));
     }));
   }
 
@@ -274,6 +287,9 @@ function emptyState(el, ctx, message, action) {
 export const produktBlock = {
   version: 1,
   autoGrow: true,
+  // Samlingskonsument: urd-collections-meldingen rerendrer kun seksjoner med
+  // blokker som bærer dette flagget (scrollposisjonen bevares).
+  usesCollections: true,
   label: 'Produktkort',
   labelKey: 'blocks.produkt',
   defaults: () => ({ collection: null, limit: 0, columns: 0, currency: 'kr' }),
@@ -349,7 +365,7 @@ export const produktBlock = {
           if (el.querySelector('.urd-hint-chip')) return;
           attachHint(el, {
             title: ta('hintProdukt.title'),
-            lines: [ta('hintProdukt.l1'), ta('hintProdukt.l2'), ta('hintProdukt.l3')],
+            lines: [ta('hintProdukt.l1'), ta('hintProdukt.l2'), ta('hintProdukt.l3'), ta('hintProdukt.l4')],
           });
         });
       }

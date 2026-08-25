@@ -25,6 +25,18 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.5.2 - Betalingslaget, butikkdesignet og tre testfunn - 25. august 2026
+
+Resten av milepæl 0.7.5: det valgfrie betalingslaget (0.7.5.d) og designrunden (0.7.5.e) etter testfunnene på 0.7.5.1 og research mot Shopify-referansen lttstore.com.
+
+- Det valgfrie betalingslaget ([ADR-0020](adr/0020-valgfritt-betalingslag-vipps-checkout.md)): kasse-blokkens `vippsCheckout`-prop viser en «Betal med Vipps»-knapp som sender kurven til sidens egen funksjon `/api/vipps/checkout`; funksjonen regner summen på nytt fra den git-eide katalogen (aldri klientens tall), oppretter Checkout-sesjonen og redirecter til Vipps - ingen tredjeparts-skript, ingen CSP-endring. Retur med `?bestilt=1` gir kvittering og tømmer kurven; uten Cloudflare-hemmelighetene degraderer knappen pent. Ren logikk i functions/_lib/vipps.js med tester; api.-nøkler for de seks nye feilkodene i alle fem admin-ordbøker.
+- Testfunn: Egenskaper viste bakgrunnen som hvit mens lerretet var svart. Fargeprøvene leste alltid lys-paletten; nå følger de forhåndsvisningens aktive modus (lagret valg, ellers OS, via motorens activeTokens) og flipper live ved OS-bytte og iframe-månebryteren. Samme grep rettet en invertert palett i seksjonstema-prøvene for sider med mørkt hovedtema.
+- Testfunn: handlekurv-blokken satt fast. Blokkflaten er en knapp som flate-draget nektet å starte på, og hvert klikk åpnet skuffen (som fryser siden via top layer). Nå gjelder totrinns-mønsteret fra tekstblokkene: første klikk velger, flate-dra flytter, andre klikk åpner; besøkende uendret.
+- Testfunn: siden hoppet til toppen ved produktredigering. Hver endring kjørte full renderPage og dokumentkollapsen klemte scrollY til 0; urd-collections rerendrer nå kun seksjoner med samlingsblokker (nytt def-flagg `usesCollections`), og de gjenværende helrendrene (tema, angre på samme side) bevarer scrollposisjonen eksplisitt.
+- Ny Butikk-gruppe i «+ Ny seksjon» (designrunden, husstilen + LTT-anatomien): butikk-hero (kampanjebånd med glow og korn), butikk-kategorier (fire bildefliser, «+ kategori»-knapp), butikk-tillit (tre ikon+tekst-par) og butikk-utstilling (statement-bånd) - seksjonsrollene dus/dempet/dyp tas i bruk for første gang, så fargerytmen følger temaet i begge moduser. Butikk-startpakken redesignet (hero + luft mellom kurv og produkter etter testfunn), og ny Butikkforside-startpakke gir hele butikkfronten i ett valg. Miniatyrene toner rollebånd ærlig i galleriet.
+- Produktkortene viser neste fargebilde ved hover (LTT-mønsteret): ren CSS, aldri på touch, og et aktivt fargevalg med eget bilde vinner; sekundærbildet er første fargebilde (null skjemaendring).
+- Handlekurv i nav-en (additivt `nav.cart`, tre-steder-regelen fulgt): kurvknapp med antall-badge i verktøy-klyngen som åpner samme skuff som blokken (skuffen trukket ut som delt `createCartDrawer`); slås på i Nav-panelet med kasseside-valg.
+
 ### 0.7.5.1 - Butikken: produktkatalog, handlekurv, kasse, butikk-sider og katalogflyten - 25. august 2026
 
 Milepæl 0.7.5 minus det valgfrie betalingslaget. Gateway-fri butikk etter ApeironLF-modellen (BACKLOG 0.7.5), bygget på datablokk-mønsteret: katalogen er en samling, blokkene er maler over den.

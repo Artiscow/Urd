@@ -2,6 +2,23 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.5.2): Betalingslaget, butikkdesignet og testfunn-fiksene
+
+Betalingslaget trenger en deployet side med Vipps-testavtale (MT-miljøet, VIPPS_API_BASE=https://apitest.vipps.no); resten kan testes lokalt.
+
+- [ ] VIPPS: uten hemmeligheter i Cloudflare viser «Betal med Vipps» en rolig utilgjengelig-tekst (503), og skjema-kassen virker uendret; lokalt (ingen functions) det samme
+- [ ] Vipps med testavtale (deployet): knappen redirecter til Vipps Checkout med riktig sum (regnet server-side); en tuklet payload (ukjent produkt-id, negativt antall) avvises; retur til kassesiden med ?bestilt=1 viser kvittering, tømmer kurven, og en oppfrisking etterpå tømmer IKKE en ny kurv
+- [ ] Kasse-Egenskaper: Vipps Checkout-avkryssingen viser/skjuler knappen; tooltip forklarer Cloudflare-oppsettet
+- [ ] FARGEPRØVER: med OS i mørk modus viser Egenskaper-prøvene alt-paletten; klikk på månebryteren i forhåndsvisningen flipper prøvene og seksjonstema-prøvene live; en side med scheme: dark viser riktig palett i lys modus
+- [ ] HANDLEKURV-BLOKK: første klikk på kurvpillen velger blokken (ingen skuff), flate-dra flytter den, andre klikk åpner skuffen; hos besøkende åpner første klikk som før; gamle sider med kurven på y=28 kan fortsatt velges og flyttes
+- [ ] SCROLL-RO: scroll til produktbåndet og rediger tittel/pris/nytt produkt i Samlinger-panelet - siden står i ro; tema-endringer og angre på samme side beholder også posisjonen
+- [ ] BUTIKK-GRUPPEN: + Ny seksjon viser Butikk-gruppen med butikk, butikk-hero, butikk-kategorier, butikk-tillit, butikk-utstilling og kasse; miniatyrene toner dus/dempet/dyp-båndene ulikt bg-bånd
+- [ ] Rollebåndene (dus/dempet/dyp) leses riktig i BEGGE moduser på lerretet og publisert; «+ kategori» og «+ kort» fyller neste ledige rute
+- [ ] Startpakkene: «Ny side fra mal» viser Butikk (redesignet med hero) og Butikkforside; begge bygger gyldige sider med fungerende produktbånd, og det er luft mellom kurvpillen og produktkortene
+- [ ] HOVER-BYTTE: produktkort med fargebilde viser neste bilde ved hover (ikke på touch); et valgt fargevalg med eget bilde vinner over hover; kort uten fargebilder er uendret
+- [ ] NAV-KURV: «Handlekurv i menyen» i Nav-panelet viser kurvknapp med badge i verktøy-klyngen; badgen teller med produktkortenes kjøp og på tvers av faner; skuffen åpner/lukker og «Til kassen» følger kasseside-valget; mobilmenyen viser også kurven
+- [ ] i18n: en-GB og tr for de nye preset-etikettene, Nav-panelets kurvvalg og Vipps-tekstene
+
 ### Testrunde-batch (0.7.5.1): Butikken
 
 Produktkatalog, tre nye blokker, butikk-/kasse-sider, quick view, katalogflyt og CSV. Kurv/quick view kan testes lokalt; mailto/endepunkt-bestilling trenger en deployet side.

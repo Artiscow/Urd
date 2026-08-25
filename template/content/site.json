@@ -112,6 +112,9 @@
     ],
     "layout": "left",
     "sticky": true,
+    "cart": {
+      "show": false
+    },
     "style": {
       "background": {
         "version": 1,

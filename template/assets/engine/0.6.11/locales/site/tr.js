@@ -60,6 +60,8 @@ export default {
     'butikk.missingTarget': 'Kasada alıcı veya uç nokta eksik.',
     'butikk.vippsHint': 'Ödeme: {number} numarasına Vipps.',
     'butikk.quickView': 'Ürünü görüntüle',
+    'butikk.payWithVipps': 'Vipps ile öde',
+    'butikk.vippsUnavailable': 'Bu site için ödeme henüz kurulmadı.',
     'nedteller.days': 'gün',
     'nedteller.hours': 'saat',
     'nedteller.minutes': 'dakika',

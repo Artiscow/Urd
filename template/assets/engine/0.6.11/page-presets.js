@@ -28,7 +28,10 @@ export const PAGE_PRESETS = [
   { id: 'arrangement', labelKey: 'pageTemplate.event', sections: ['hovedoppslag', 'arrangementer', 'steg', 'faq', 'cta'] },
   // Butikkmønsteret (0.7.5): butikken er en egen side, og kassen sin egen -
   // eieren peker handlekurvens Kasseside-valg på kassesiden etterpå.
-  { id: 'butikk', labelKey: 'pageTemplate.butikk', sections: ['hero-sentrert', 'butikk', 'faq', 'cta'] },
+  // butikkforside er den fulle butikkfronten (Shopify-mønsteret): kampanje-
+  // hero, produktbånd, kategorifliser, statement-bånd, tillit og CTA.
+  { id: 'butikk', labelKey: 'pageTemplate.butikk', sections: ['butikk-hero', 'butikk', 'faq', 'cta'] },
+  { id: 'butikkforside', labelKey: 'pageTemplate.butikkforside', sections: ['butikk-hero', 'butikk', 'butikk-kategorier', 'butikk-utstilling', 'butikk-tillit', 'cta'] },
   { id: 'kasse', labelKey: 'pageTemplate.kasse', sections: ['kasse', 'kontakt'] },
 ];
 

@@ -10,7 +10,7 @@ import { engineImport } from './_engine.mjs';
 
 const {
   cartAdd, cartSetQty, cartRemove, cartCount, cartTotal, itemKey, variantLabel, formatPrice,
-  isEmail, orderLines, buildOrderBody, buildOrderMailto, buildOrderPayload,
+  isEmail, orderLines, buildOrderBody, buildOrderMailto, buildOrderPayload, altCardImage,
 } = await engineImport('butikk.js');
 
 const KAKE = { key: 'kake|Stor', id: 'kake', title: 'Sjokoladekake', price: 350 };
@@ -63,6 +63,14 @@ test('formatPrice: heltall uten desimaler, ellers komma, valuta-ordet etter', ()
   assert.equal(formatPrice(49.5), '49,50 kr');
   assert.equal(formatPrice(120, ''), '120');
   assert.equal(formatPrice('tull'), '');
+});
+
+test('altCardImage: første fargebilde ulikt hovedbildet, ellers null', () => {
+  assert.equal(altCardImage({ image: '/a.webp', colors: [{ name: 'Rød' }, { name: 'Blå', image: '/b.webp' }] }), '/b.webp');
+  assert.equal(altCardImage({ image: '/a.webp', colors: [{ name: 'Rød', image: '/a.webp' }] }), null);
+  assert.equal(altCardImage({ colors: [{ name: 'Blå', image: '/b.webp' }] }), '/b.webp');
+  assert.equal(altCardImage({ image: '/a.webp' }), null);
+  assert.equal(altCardImage(null), null);
 });
 
 test('isEmail: vanlige adresser godtas, åpenbare feil avvises', () => {

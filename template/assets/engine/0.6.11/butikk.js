@@ -91,6 +91,15 @@ export function formatPrice(value, currency = 'kr') {
   return currency ? `${text} ${currency}` : text;
 }
 
+/** Kortets sekundærbilde (hover-bytte): første fargebilde ulikt hovedbildet. */
+export function altCardImage(entry) {
+  const main = entry?.image || '';
+  for (const color of entry?.colors ?? []) {
+    if (color?.image && color.image !== main) return color.image;
+  }
+  return null;
+}
+
 /** Praktisk e-postsjekk (ikke RFC-fullstendig, men fanger vanlige feil). */
 export function isEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value ?? '').trim());

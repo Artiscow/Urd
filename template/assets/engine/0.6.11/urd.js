@@ -219,6 +219,14 @@ function enablePreview(state, opts) {
     });
     return langQueue;
   }
+  /** Bevarer scrollposisjonen over en full rerender: dokumentet kollapser
+   *  forbigående mens datablokkene måler asynkront, og nettleseren klemmer
+   *  ellers scrollY. Gjenopprettes etter to rAF (etter regrow-layouten). */
+  const keepScroll = (fn) => {
+    const y = window.scrollY;
+    fn();
+    requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, y)));
+  };
   window.addEventListener('message', (event) => {
     if (event.origin !== location.origin) return; // kun editoren på samme site
     const msg = event.data;
@@ -230,9 +238,13 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-preview-full' && msg.page) {
       // Samme normalisering som boot(): en side uten sections skal gi tom
       // visning, ikke kaste i renderPage (og i findIndex ved neste melding).
+      // Samme side (angre/gjenta o.l.) beholder scrollposisjonen; et ekte
+      // sidebytte skal naturlig starte øverst.
+      const samePage = msg.page?.meta?.id === state.page?.meta?.id;
       state.page = msg.page;
       if (!Array.isArray(state.page.sections)) state.page.sections = [];
-      renderPage(state.page, state.site, root, vp());
+      const paint = () => renderPage(state.page, state.site, root, vp());
+      if (samePage) keepScroll(paint); else paint();
       // Sidebytte i editoren: footeren kan ha per-side-synlighet (hideOn).
       if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);
     } else if (msg?.type === 'urd-chrome') {
@@ -279,9 +291,17 @@ function enablePreview(state, opts) {
       root.querySelector(`[data-section-id="${msg.sectionId}"]`)
         ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else if (msg?.type === 'urd-collections' && msg.collections) {
-      // Samlingsutkast fra editoren: brukes i stedet for serverfilene, og alt som viser samlinger rendres på nytt.
+      // Samlingsutkast fra editoren: brukes i stedet for serverfilene. Kun
+      // seksjoner med samlingsblokker rendres på nytt: en full renderPage
+      // kollapser dokumentet forbigående (datablokkene måler asynkront), og
+      // nettleseren klemmer da scrollposisjonen til toppen.
       setCollectionsDraft(msg.collections);
-      renderPage(state.page, state.site, root, vp());
+      const usesCollections = (b) => Boolean(Urd.blocks.get(b.type)?.usesCollections);
+      for (const section of state.page.sections ?? []) {
+        if (!Array.isArray(section.blocks) || !section.blocks.some(usesCollections)) continue;
+        const host = root.querySelector(`[data-section-id="${section.id}"]`);
+        if (host) renderSection(section, state.site, host, vp());
+      }
     } else if (msg?.type === 'urd-maler') {
       // Mal-utkastene fra editoren: vises i Mine maler-fanen i «+ Ny seksjon».
       window.UrdPreviewEdit?.setMaler?.(msg.maler);
@@ -369,14 +389,14 @@ function enablePreview(state, opts) {
       state.site.pages ??= [];
       state.site.theme ??= { version: 1, tokens: {} };
       state.site.nav ??= { version: 1, items: [] };
-      const rerender = () => {
+      const rerender = () => keepScroll(() => {
         applyTheme(state.site.theme);
         applySiteLayout(state.site);
         applyFavicon(state.site.site?.icon);
         if (opts.nav) renderNav(state.site, opts.nav);
         if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);
         renderPage(state.page, state.site, root, vp());
-      };
+      });
       // Endret site.lang i utkastet: last besøkende-localen på nytt FØR
       // re-render, så previewen er WYSIWYG også for språket (booten leste
       // den publiserte site.json og kan ha et annet språk). Plugin-tekstene

@@ -76,6 +76,40 @@ function renderDrawer(body, props, currency) {
   }
 }
 
+/**
+ * Kurvskuffen som gjenbrukbar fabrikk: blokka OG nav-kurven (nav.js) bygger
+ * samme skuff. Kalleren fester dialogen i DOM-en og kaller open()/refresh().
+ */
+export function createCartDrawer({ href = '', currency = 'kr' } = {}) {
+  const dialog = document.createElement('dialog');
+  dialog.className = 'urd-handlekurv-dialog';
+  const head = el2('div', 'urd-handlekurv-hode');
+  head.appendChild(el2('strong', null, t('butikk.cart')));
+  const close = el2('button', 'urd-handlekurv-lukk');
+  close.type = 'button';
+  close.innerHTML = iconSvg('cross') ?? '';
+  close.setAttribute('aria-label', t('butikk.close'));
+  close.addEventListener('click', () => dialog.close());
+  head.appendChild(close);
+  dialog.appendChild(head);
+  const body = el2('div', 'urd-handlekurv-kropp');
+  dialog.appendChild(body);
+  // Lysavvisning: klikk på ::backdrop treffer selve dialog-elementet.
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+  return {
+    dialog,
+    open() {
+      renderDrawer(body, { href }, currency);
+      dialog.showModal();
+    },
+    refresh() {
+      if (dialog.open) renderDrawer(body, { href }, currency);
+    },
+  };
+}
+
 export const handlekurvBlock = {
   version: 1,
   autoGrow: true,
@@ -105,24 +139,8 @@ export const handlekurvBlock = {
     btn.appendChild(badge);
     el.appendChild(btn);
 
-    const dialog = document.createElement('dialog');
-    dialog.className = 'urd-handlekurv-dialog';
-    const head = el2('div', 'urd-handlekurv-hode');
-    head.appendChild(el2('strong', null, t('butikk.cart')));
-    const close = el2('button', 'urd-handlekurv-lukk');
-    close.type = 'button';
-    close.innerHTML = iconSvg('cross') ?? '';
-    close.setAttribute('aria-label', t('butikk.close'));
-    close.addEventListener('click', () => dialog.close());
-    head.appendChild(close);
-    dialog.appendChild(head);
-    const body = el2('div', 'urd-handlekurv-kropp');
-    dialog.appendChild(body);
-    // Lysavvisning: klikk på ::backdrop treffer selve dialog-elementet.
-    dialog.addEventListener('click', (event) => {
-      if (event.target === dialog) dialog.close();
-    });
-    el.appendChild(dialog);
+    const drawer = createCartDrawer({ href: props.href ?? '', currency });
+    el.appendChild(drawer.dialog);
 
     const updateBadge = () => {
       const count = cartCount(readCart());
@@ -130,15 +148,24 @@ export const handlekurvBlock = {
       badge.hidden = count === 0;
     };
     updateBadge();
+    // I redigering åpner skuffen først når blokken alt var valgt VED trykket
+    // (markeringen skjer på pointerdown, før click): totrinns-mønsteret fra
+    // tekstblokkene. Første klikk velger blokken, andre åpner skuffen.
+    let openArmed = !ctx.preview;
+    if (ctx.preview) {
+      btn.addEventListener('pointerdown', () => {
+        openArmed = el.closest('.urd-block')?.classList.contains('urd-selected') ?? false;
+      });
+    }
     btn.addEventListener('click', () => {
-      renderDrawer(body, props, currency);
-      dialog.showModal();
+      if (!openArmed) return;
+      drawer.open();
     });
 
     // Kurvendringer fra produktkort/skuffen selv: badge alltid, skuffen når åpen.
     onCartChange(el, () => {
       updateBadge();
-      if (dialog.open) renderDrawer(body, props, currency);
+      drawer.refresh();
     });
 
     if (editable) {

@@ -42,8 +42,15 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const rect = (x, y, w, h, fill, extra = '') =>
   `<rect x="${r1(x)}" y="${r1(y)}" width="${r1(Math.max(w, 1))}" height="${r1(Math.max(h, 1))}" fill="${fill}"${extra}/>`;
 
-/** Bakgrunnsfyllet: første farge-/gradientlag bestemmer tonen. */
+/** Bakgrunnsfyllet: første farge-/gradientlag bestemmer tonen. Et rollesett
+ *  (section.theme) overtoner token-bakgrunnen, så bånd med invers/dus/dempet
+ *  rolle leses ærlig i galleriet i stedet for som nok en bg-flate. */
 function bgFill(section) {
+  if (section?.theme) {
+    if (section.theme === 'invers' || section.theme === 'dyp') return token('text', FALLBACK_TEXT);
+    if (section.theme === 'aksent') return token('accent', FALLBACK_ACCENT);
+    return token('surface', FALLBACK_SURFACE);
+  }
   for (const layer of section?.background?.layers ?? []) {
     if (layer.type === 'color') return safeColor(layer.props?.value, FALLBACK_BG);
     if (layer.type === 'gradient') {

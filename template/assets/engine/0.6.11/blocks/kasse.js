@@ -43,7 +43,7 @@ export const kasseBlock = {
   autoGrow: true,
   label: 'Kasse',
   labelKey: 'blocks.kasse',
-  defaults: () => ({ recipient: '', endpoint: '', vipps: '', currency: 'kr' }),
+  defaults: () => ({ recipient: '', endpoint: '', vipps: '', currency: 'kr', vippsCheckout: false }),
   migrations: {},
   /**
    * @param {HTMLElement} el
@@ -94,9 +94,11 @@ export const kasseBlock = {
       form.appendChild(el2('p', 'urd-kasse-vipps', t('butikk.vippsHint', { number: props.vipps })));
     }
 
+    const buttons = el2('div', 'urd-kasse-knapper');
     const submit = el2('button', 'urd-kasse-send', t('butikk.sendOrder'));
     submit.type = 'submit';
-    form.appendChild(submit);
+    buttons.appendChild(submit);
+    form.appendChild(buttons);
 
     const status = el2('p', 'urd-kasse-status');
     status.setAttribute('aria-live', 'polite');
@@ -107,6 +109,59 @@ export const kasseBlock = {
       status.hidden = false;
       status.classList.toggle('urd-kasse-feil', Boolean(isError));
     };
+
+    // Det valgfrie betalingslaget (ADR-0020): knappen sender kurven til
+    // sidens egen funksjon, som regner summen på nytt fra katalogen og
+    // svarer med Vipps-sesjonens URL; betalingen skjer hos Vipps.
+    if (props.vippsCheckout) {
+      const pay = el2('button', 'urd-kasse-vippsbetal', t('butikk.payWithVipps'));
+      pay.type = 'button';
+      pay.addEventListener('click', async () => {
+        if (editable) return;
+        const items = readCart();
+        if (!items.length) {
+          setStatus(t('butikk.cartEmpty'), true);
+          return;
+        }
+        pay.disabled = true;
+        try {
+          const res = await fetch('/api/vipps/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              order: items.map(({ id, qty, variant }) => ({ id, qty, ...(variant ? { variant } : {}) })),
+              contact: {
+                name: nameInput.value.trim(),
+                email: emailInput.value.trim(),
+                phone: phoneInput.value.trim(),
+                comment: commentInput.value.trim(),
+              },
+              returnPath: location.pathname,
+            }),
+          });
+          const data = await res.json().catch(() => null);
+          if (res.ok && data?.url) {
+            location.href = data.url;
+            return;
+          }
+          setStatus(t(res.status === 503 ? 'butikk.vippsUnavailable' : 'butikk.sendFailed'), true);
+        } catch {
+          setStatus(t('butikk.sendFailed'), true);
+        }
+        pay.disabled = false;
+      });
+      buttons.appendChild(pay);
+    }
+
+    // Retur fra betalingen (?bestilt=1): kvittering + tøm kurven. Parameteren
+    // ryddes bort, så en oppfrisking ikke tømmer en ny kurv.
+    if (new URLSearchParams(location.search).has('bestilt')) {
+      writeCart([]);
+      setStatus(t('butikk.orderSent'), false);
+      const url = new URL(location.href);
+      url.searchParams.delete('bestilt');
+      history.replaceState(null, '', url);
+    }
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
