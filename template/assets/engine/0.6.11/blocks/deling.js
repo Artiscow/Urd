@@ -105,8 +105,10 @@ export const delingBlock = {
       // navigasjon kan ha byttet side siden blokken ble tegnet.
       link.href = '#';
       link.addEventListener('click', (event) => {
-        if (editable) { event.preventDefault(); return; }
         event.preventDefault();
+        // Aldri åpne delingsvinduer fra editoren, heller ikke i mobilvisningen
+        // (ctx.preview, aldri editable: den er falsk i mobil-viewporten).
+        if (ctx.preview) return;
         const target = shareUrl(service, location.href, document.title);
         if (!target) return;
         if (service === 'email') location.href = target;

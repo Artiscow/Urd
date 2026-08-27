@@ -188,7 +188,7 @@ function openQuickView(card, entry, props) {
   dialog.showModal();
 }
 
-function renderCard(entry, props, editable) {
+function renderCard(entry, props, editable, preview) {
   const card = el2('article', 'urd-produkt-kort');
   let chosenSize = null;
   let chosenColor = null;
@@ -247,8 +247,9 @@ function renderCard(entry, props, editable) {
   card.appendChild(buyButton(entry, props.currency, colors, () => ({ size: chosenSize, color: chosenColor })));
 
   // Quick view hos besøkende: bilde og tittel åpner detaljvisningen.
-  // I editoren eier klikk redigeringen (klikk-og-skriv), så ingen kobling der.
-  if (!editable) {
+  // I editoren eier klikk redigeringen (klikk-og-skriv), så ingen kobling der -
+  // heller ikke i mobilvisningen (preview-flagget, aldri editable).
+  if (!preview) {
     for (const target of [wrap, title].filter(Boolean)) {
       target.classList.add('urd-produkt-apner');
       target.setAttribute('role', 'button');
@@ -348,7 +349,7 @@ export const produktBlock = {
       const grid = el2('div', 'urd-produkt-kortliste');
       const columns = Math.min(6, Math.max(0, Number(props.columns) || 0));
       if (columns) grid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
-      for (const entry of entries) grid.appendChild(renderCard(entry, props, editable));
+      for (const entry of entries) grid.appendChild(renderCard(entry, props, editable, Boolean(ctx.preview)));
       host.appendChild(grid);
       fit();
 

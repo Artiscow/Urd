@@ -117,7 +117,8 @@ export const kasseBlock = {
       const pay = el2('button', 'urd-kasse-vippsbetal', t('butikk.payWithVipps'));
       pay.type = 'button';
       pay.addEventListener('click', async () => {
-        if (editable) return;
+        // Samme sendevakt som skjemaet: aldri i preview, uansett viewport.
+        if (ctx.preview) return;
         const items = readCart();
         if (!items.length) {
           setStatus(t('butikk.cartEmpty'), true);
@@ -154,8 +155,9 @@ export const kasseBlock = {
     }
 
     // Retur fra betalingen (?bestilt=1): kvittering + tøm kurven. Parameteren
-    // ryddes bort, så en oppfrisking ikke tømmer en ny kurv.
-    if (new URLSearchParams(location.search).has('bestilt')) {
+    // ryddes bort, så en oppfrisking ikke tømmer en ny kurv. Kun med
+    // betalingslaget på: ellers kunne en delt lenke tømme kurven.
+    if (props.vippsCheckout && !ctx.preview && new URLSearchParams(location.search).has('bestilt')) {
       writeCart([]);
       setStatus(t('butikk.orderSent'), false);
       const url = new URL(location.href);
@@ -165,8 +167,9 @@ export const kasseBlock = {
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      // I editoren sendes aldri noe (som delingslenkene).
-      if (editable) return;
+      // I editoren sendes aldri noe, heller ikke i mobilvisningen (ctx.preview,
+      // aldri editable: den er falsk i mobil-viewporten).
+      if (ctx.preview) return;
       // Utfylt honeypot: forkast i stillhet, vis suksess så boten gir seg.
       if (hp.value.trim()) {
         setStatus(t('butikk.orderSent'), false);

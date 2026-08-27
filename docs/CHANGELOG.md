@@ -25,6 +25,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.2-0.7.5.2p - Push-klargjøring: sendevaktene i editorens mobilvisning - 27. august 2026
+
+Funn fra den uavhengige gjennomgangen av hele diffen (bug-runden, blokk- og feltrunden og butikk-milepælen), rettet før push:
+
+- Kasse- og deling-blokkene brukte `editable` (preview OG desktop-viewport) som sendevakt, så i editorens MOBILVISNING fyrte ekte sendinger: kasse-innsending åpnet mailto/POST-et til endepunktet, «Betal med Vipps» opprettet en ekte sesjon og navigerte preview-iframen til Vipps, og delingsknappene åpnet ekte delingsvinduer med `?preview=1`-adressen. Vaktene bruker nå `ctx.preview` (mønsteret skjema-pluginen alt fulgte); `editable` består for redigerings-affordansene. Produktkortets quick view fikk samme grep, så dialogen aldri åpner i editoren.
+- Kvitteringsgrenen `?bestilt=1` i kassen kjørte ubetinget, så en delt/konstruert lenke til en side med kasse-blokk kunne tømme kurven til den som klikket. Grenen krever nå at betalingslaget er slått på og at siden ikke er i preview.
+
 ### 0.7.5.2 - Betalingslaget, butikkdesignet og tre testfunn - 25. august 2026
 
 Resten av milepæl 0.7.5: det valgfrie betalingslaget (0.7.5.d) og designrunden (0.7.5.e) etter testfunnene på 0.7.5.1 og research mot Shopify-referansen lttstore.com.
