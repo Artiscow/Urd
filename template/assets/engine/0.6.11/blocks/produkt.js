@@ -17,7 +17,7 @@
 import { getCollection } from '../samlinger.js';
 import { applyEntryImageStyle } from './samling.js';
 import { growSectionTo } from '../render.js';
-import { stripActiveContent } from '../sanitize.js';
+import { stripActiveContent, plainText } from '../sanitize.js';
 import { iconSvg } from '../icons.js';
 import { readCart, writeCart, cartAdd, itemKey, variantLabel, formatPrice, altCardImage } from '../butikk.js';
 // Kun kalt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
@@ -98,7 +98,7 @@ function buyButton(entry, currency, colors, getChoice) {
       key: itemKey(entry.id, variant),
       id: entry.id,
       // Tittelen er rik tekst; kurvlinjen trenger ren tekst.
-      title: String(entry.title ?? '').replace(/<[^>]*>/g, '').trim(),
+      title: plainText(entry.title),
       price: Number(entry.price) || 0,
       variant: variant || undefined,
       image: chosen?.image || entry.image || undefined,

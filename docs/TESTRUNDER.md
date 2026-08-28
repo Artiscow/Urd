@@ -2,6 +2,11 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.0.3): Tag-stripping-fiksen og avhengighetsbumpene
+
+- [ ] Editoren virker som før etter Svelte/Vite-bumpene: åpne admin, rediger, angre, bytt panel og publiser uten nye feil i konsollen
+- [ ] Et produkt med formatert tittel (fet/kursiv) viser ren tekst i kurvlinjen (skuffen og kassen) og i Samlinger-panelets sammendragslinje; å tømme tittelen på lerretet beholder fortsatt den gamle
+
 ### Testrunde-batch (0.7.5.2): Betalingslaget, butikkdesignet og testfunn-fiksene
 
 Betalingslaget trenger en deployet side med Vipps-testavtale (MT-miljøet, VIPPS_API_BASE=https://apitest.vipps.no); resten kan testes lokalt.

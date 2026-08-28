@@ -25,6 +25,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.3 - CodeQL-funnet om tag-stripping og editor-avhengighetene - 28. august 2026
+
+- CodeQL flagget tag-strippingen `/<[^>]*>/g` («Incomplete multi-character sanitization»): én regex-pass kan la tagg-rester overleve. De tre stedene som lager ren tekst av rik tekst-titler (kurvlinjen i produkt-blokken, tomhetssjekken og panel-sammendraget i editoren) parser nå markupen i et inert dokument og leser tekstinnholdet: ny `plainText` i motorens sanitize.js og tilsvarende `plainTitle` i App.svelte.
+- Dependabot-PR #14 (utvikling-mindre-gruppen) tatt lokalt i stedet for merge, så låsefil og gjenbygd bundel lander i samme commit: @sveltejs/vite-plugin-svelte 7.3.0, svelte 5.56.10 og vite 8.2.2. PR-en lukker seg selv når versjonene når main.
+
 ### 0.7.0.2-0.7.5.2p - Push-klargjøring: sendevaktene i editorens mobilvisning - 27. august 2026
 
 Funn fra den uavhengige gjennomgangen av hele diffen (bug-runden, blokk- og feltrunden og butikk-milepælen), rettet før push:

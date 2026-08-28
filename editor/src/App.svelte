@@ -2966,13 +2966,20 @@
     addSamlingEntry(msg.collection);
   }
 
+  /** Ren tekst fra en rik tekst-tittel: parses i et inert dokument (samme
+   *  grep som motorens sanitize.js), aldri med en regex som kan la rester stå. */
+  function plainTitle(html) {
+    const doc = new DOMParser().parseFromString(String(html ?? ''), 'text/html');
+    return (doc.body.textContent ?? '').trim();
+  }
+
   /** Klikk-og-skriv/bildebytte i samling-blokken (urd-collection-edit fra iframen). */
   function handleCollectionEdit(msg) {
     const { collection, entryId, field, value } = msg;
     if (!['title', 'text', 'image', 'imageAlt', 'imageStyle'].includes(field)) return;
     // Tom tittel beholdes ikke (skjemaet krever tittel); gammel tittel består til noe skrives.
     // Tittelen er rik tekst, så tomhet vurderes uten markup.
-    if (field === 'title' && !String(value ?? '').replace(/<[^>]*>/g, '').trim()) return;
+    if (field === 'title' && !plainTitle(value)) return;
     mutateSamling(collection, `edit:samling:${collection}:${entryId}:${field}`, (data) => {
       const entry = data.entries.find((e) => e.id === entryId);
       if (!entry) return;
@@ -6197,7 +6204,7 @@
                   {#each samling.entries as entry, i (entry.id)}
                     <!-- Sammenleggbart innslag: tittel + dato i summary, feltene inni (plassbruk i panelet) -->
                     <details class="group samling-entry">
-                      <summary>{entry.title.replace(/<[^>]*>/g, '')}{samling.kind === 'products'
+                      <summary>{plainTitle(entry.title)}{samling.kind === 'products'
                         ? (entry.price != null ? ` · ${entry.price}` : '')
                         : (entry.date ? ` · ${entry.date}` : '')}</summary>
                       <div class="group-items">

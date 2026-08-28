@@ -13,3 +13,13 @@ export function stripActiveContent(root) {
   }
   root.querySelectorAll('script, iframe, object, embed').forEach((n) => n.remove());
 }
+
+/**
+ * Ren tekst fra rik tekst (kurvlinjer, tomhetssjekk, panel-sammendrag):
+ * markupen parses i et inert dokument og tekstinnholdet leses ut, så ingen
+ * tagg-rester kan overleve slik de kan med en regex-pass.
+ */
+export function plainText(html) {
+  const doc = new DOMParser().parseFromString(String(html ?? ''), 'text/html');
+  return (doc.body.textContent ?? '').trim();
+}

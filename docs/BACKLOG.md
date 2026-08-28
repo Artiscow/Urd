@@ -130,6 +130,7 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 
 - [ ] Et element som er over et annet, men mindre i størrelse, kan ikke velges fordi et element automatisk velges og går over et annet ved hover
 - [ ] Tilbake til topp knappen burde følge page widht eller site margin
+- [ ] "Tilbakestill" må trykkes to ganger for å utløses. Animasjon triggerer på begge klikk, men funksjon fungerer kun ved andre klikk.
 
 ## Forslag og Ideer
 
@@ -139,6 +140,9 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 - [ ] In-page instillingsmeny følger ikke urd sin skalering- alt som ikke er sideelement burde følge størrelse likt som ny blokk meny og urd admin system.
 - [ ] Start-up tutorial - med ekstra wiki
 - [ ] Gif/webm støtte
+- [ ] Flytte nav settings inn i "sider"/"Pages"
+- [ ] Klikk og dra nav underseksjoner i admin panel
+- [ ] Overwrite for størrelse på nav logo for mobil-visning
 
 Sortert inn i milepælene 14. august 2026: audio-blokken (C10) til 0.7.4; font-pakker, lagre eget tema og bakgrunn-over-bakgrunn/faste sidebarer til 0.7.9; kant-resize, rutenett/hjelpelinje-rework, command palette, drop-target og layout-hjelpechipen til 0.7.10; ApeironLF-mønstrene til 0.7.13; touchvennlighet for admin og side til v0.9. Deklarativ per-brekkpunkt-variant (LAERDOMMER 5.11) er AVVIST i [ADR-0019](adr/0019-synket-mobilmodell.md) (13. august 2026: løser stil-per-brekkpunkt, ikke layout-synk).
 
