@@ -340,11 +340,11 @@ html {
 }
 
 /* Venstre-varianten: linjen langs venstre kant, innholdet innrykket. */
-.urd-tidslinje-venstre {
+.urd-tidslinje-left {
   padding-left: 1.6rem;
 }
 
-.urd-tidslinje-venstre::before {
+.urd-tidslinje-left::before {
   content: '';
   position: absolute;
   left: 0.45rem;
@@ -360,7 +360,7 @@ html {
   position: relative;
 }
 
-.urd-tidslinje-venstre .urd-tl-item::before {
+.urd-tidslinje-left .urd-tl-item::before {
   content: '';
   position: absolute;
   left: -1.47rem;
@@ -378,7 +378,7 @@ html {
 }
 
 /* Veksler-varianten: linjen i midten, kortene annenhver side. */
-.urd-tidslinje-veksler::before {
+.urd-tidslinje-alternating::before {
   content: '';
   position: absolute;
   left: 50%;
@@ -391,7 +391,7 @@ html {
   transform: translateX(-50%);
 }
 
-.urd-tidslinje-veksler .urd-tl-item {
+.urd-tidslinje-alternating .urd-tl-item {
   width: 46%;
   background: color-mix(in srgb, var(--urd-color-surface) 70%, transparent);
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 12%, transparent);
@@ -399,11 +399,11 @@ html {
   padding: 0.55rem 0.8rem;
 }
 
-.urd-tidslinje-veksler .urd-tl-item:nth-child(even) {
+.urd-tidslinje-alternating .urd-tl-item:nth-child(even) {
   align-self: flex-end;
 }
 
-.urd-tidslinje-veksler .urd-tl-item::before {
+.urd-tidslinje-alternating .urd-tl-item::before {
   content: '';
   position: absolute;
   top: 0.75rem;
@@ -415,7 +415,7 @@ html {
   border: 2px solid var(--urd-tl-line);
 }
 
-.urd-tidslinje-veksler .urd-tl-item:nth-child(even)::before {
+.urd-tidslinje-alternating .urd-tl-item:nth-child(even)::before {
   right: auto;
   left: calc(-4.35% - 0.31rem);
 }
@@ -451,19 +451,19 @@ html {
   font-style: italic;
 }
 
-.urd-sitat-stor {
+.urd-sitat-large {
   flex-direction: column;
   align-items: center;
   text-align: center;
 }
 
-.urd-sitat-stor .urd-sitat-text {
+.urd-sitat-large .urd-sitat-text {
   font-size: 1.35em;
   line-height: 1.45;
   text-wrap: balance;
 }
 
-.urd-sitat-stor::before {
+.urd-sitat-large::before {
   content: '\201C';
   font-family: Georgia, serif;
   font-size: 3em;
@@ -471,14 +471,14 @@ html {
   color: var(--urd-sitat-glyf);
 }
 
-.urd-sitat-kort {
+.urd-sitat-short {
   background: color-mix(in srgb, var(--urd-color-surface) 70%, transparent);
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 12%, transparent);
   border-radius: var(--urd-radius-md);
   padding: 1rem 1.2rem;
 }
 
-.urd-sitat-kort .urd-sitat-text {
+.urd-sitat-short .urd-sitat-text {
   font-size: 0.98em;
 }
 
@@ -500,7 +500,7 @@ html {
   flex-wrap: wrap;
 }
 
-.urd-sitat-stor .urd-sitat-caption {
+.urd-sitat-large .urd-sitat-caption {
   justify-content: center;
 }
 

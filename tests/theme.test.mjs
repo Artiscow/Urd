@@ -69,11 +69,11 @@ test('sectionThemeVars: kjente roller gir overstyringer, Standard/ukjent gir {}'
   assert.deepEqual(sectionThemeVars('standard'), {});
   assert.deepEqual(sectionThemeVars(undefined), {});
   assert.deepEqual(sectionThemeVars('finnes-ikke'), {});
-  assert.deepEqual(sectionThemeVars('flate'), SECTION_THEMES.flate);
-  assert.equal(sectionThemeVars('aksent')['--urd-color-bg'], 'var(--urd-base-accent)');
+  assert.deepEqual(sectionThemeVars('surface'), SECTION_THEMES.surface);
+  assert.equal(sectionThemeVars('accent')['--urd-color-bg'], 'var(--urd-base-accent)');
   // Invers bytter bg<->text via BASIS-kopier (ikke levende tokens = ingen sykel).
-  assert.equal(sectionThemeVars('invers')['--urd-color-bg'], 'var(--urd-base-text)');
-  assert.equal(sectionThemeVars('invers')['--urd-color-text'], 'var(--urd-base-bg)');
+  assert.equal(sectionThemeVars('inverse')['--urd-color-bg'], 'var(--urd-base-text)');
+  assert.equal(sectionThemeVars('inverse')['--urd-color-text'], 'var(--urd-base-bg)');
   for (const vars of Object.values(SECTION_THEMES)) {
     for (const v of Object.values(vars)) {
       assert.ok(!/var\(--urd-color-/.test(v), `rolle skal ikke referere levende --urd-color-* (${v})`);

@@ -25,10 +25,10 @@ export function accentCss(value) {
 }
 
 export const tidslinjeBlock = {
-  version: 1,
+  version: 2,
   autoGrow: true,
   label: 'Tidslinje',
-  labelKey: 'blocks.tidslinje',
+  labelKey: 'blocks.timeline',
   // Seed-regelen (ADR-0012): ta() kalles kun her ved innsetting i preview.
   defaults: () => ({
     items: [
@@ -36,11 +36,18 @@ export const tidslinjeBlock = {
       { year: '2022', title: ta('seed.tidslinje.t2'), text: ta('seed.tidslinje.text') },
       { year: '2026', title: ta('seed.tidslinje.t3'), text: ta('seed.tidslinje.text') },
     ],
-    variant: 'venstre',
-    marker: 'fylt',
+    variant: 'left',
+    marker: 'filled',
     accent: null,
   }),
-  migrations: {},
+  migrations: {
+    // 1 -> 2 (ADR-0021): Norwegian variant/marker values renamed to English.
+    1: (props) => ({
+      ...props,
+      variant: props.variant === 'veksler' ? 'alternating' : props.variant === 'venstre' ? 'left' : props.variant,
+      marker: props.marker === 'fylt' ? 'filled' : props.marker,
+    }),
+  },
   /**
    * @param {HTMLElement} el
    * @param {{items: Array<{year: string, title: string, text: string}>, variant?: string, marker?: string, accent?: string|null}} props
@@ -48,7 +55,7 @@ export const tidslinjeBlock = {
    */
   render(el, props, ctx) {
     const host = document.createElement('ol');
-    host.className = `urd-tidslinje urd-tidslinje-${props.variant === 'veksler' ? 'veksler' : 'venstre'}`;
+    host.className = `urd-tidslinje urd-tidslinje-${props.variant === 'alternating' ? 'alternating' : 'left'}`;
     if (props.marker === 'ring') host.classList.add('urd-tidslinje-ring');
     // Aksentfargen kun som validert hex/tematoken; ellers temaets aksent.
     const accent = accentCss(props.accent);

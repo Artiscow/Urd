@@ -216,7 +216,7 @@ export const galleriBlock = {
   version: 1,
   autoGrow: true,
   label: 'Galleri',
-  labelKey: 'blocks.galleri',
+  labelKey: 'blocks.gallery',
   defaults: () => ({
     images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5,
   }),

@@ -43,7 +43,7 @@ export const delingBlock = {
   // Naturlig høyde i mobil-radnettet (knappene radbryter på smale skjermer).
   autoGrow: true,
   label: 'Delingsknapper',
-  labelKey: 'blocks.deling',
+  labelKey: 'blocks.share',
   defaults: () => ({
     services: ['facebook', 'x', 'linkedin', 'whatsapp', 'email', 'copy'],
     variant: 'icons',

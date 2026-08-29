@@ -228,18 +228,18 @@ export function resolveColor(value) {
  * selv. Blokkene arver overstyringene via resolveColor -> var(--urd-color-*).
  */
 export const SECTION_THEMES = {
-  flate: {
+  surface: {
     '--urd-color-bg': 'var(--urd-base-surface)',
     '--urd-color-surface': 'color-mix(in srgb, var(--urd-base-text) 7%, var(--urd-base-surface))',
   },
-  aksent: {
+  accent: {
     '--urd-color-bg': 'var(--urd-base-accent)',
     '--urd-color-surface': 'color-mix(in srgb, var(--urd-base-accent) 82%, #000)',
     '--urd-color-text': 'var(--urd-base-accent-text)',
     '--urd-color-accent': 'var(--urd-base-accent-text)',
     '--urd-color-accent-text': 'var(--urd-base-accent)',
   },
-  invers: {
+  inverse: {
     '--urd-color-bg': 'var(--urd-base-text)',
     // 78/22 (ikke 88/12): kortene (surface) må ha nok separasjon fra den
     // inverterte bakgrunnen, ellers blir de grumsete (testfunn).
@@ -248,24 +248,24 @@ export const SECTION_THEMES = {
   },
   // De fire under kom i 0.6.6.4.6 (eiervalg 9. august 2026, alle fire skissene).
   // Dus: aksenten som svakt pastell-skjær over hele seksjonen.
-  dus: {
+  soft: {
     '--urd-color-bg': 'color-mix(in srgb, var(--urd-base-accent) 12%, var(--urd-base-bg))',
     '--urd-color-surface': 'color-mix(in srgb, var(--urd-base-accent) 8%, var(--urd-base-surface))',
   },
   // Dempet: lavmælt gråtonet sone med mykere tekst for sekundært innhold.
-  dempet: {
+  muted: {
     '--urd-color-bg': 'color-mix(in srgb, var(--urd-base-text) 5%, var(--urd-base-bg))',
     '--urd-color-surface': 'color-mix(in srgb, var(--urd-base-text) 10%, var(--urd-base-bg))',
     '--urd-color-text': 'color-mix(in srgb, var(--urd-base-text) 82%, var(--urd-base-bg))',
   },
   // Dyp: invers med aksentskjær - kontrastsonen tar merkevarefargen i seg.
-  dyp: {
+  deep: {
     '--urd-color-bg': 'color-mix(in srgb, var(--urd-base-accent) 30%, var(--urd-base-text))',
     '--urd-color-surface': 'color-mix(in srgb, var(--urd-base-accent) 40%, var(--urd-base-text))',
     '--urd-color-text': 'var(--urd-base-bg)',
   },
   // Uthevede kort: seksjonen står som Standard, kun flaten (kortene) tones.
-  uthevet: {
+  highlighted: {
     '--urd-color-surface': 'color-mix(in srgb, var(--urd-base-accent) 14%, var(--urd-base-surface))',
   },
 };
@@ -274,13 +274,13 @@ export const SECTION_THEMES = {
 /** Visningsnavn-NØKLER (ta-oppslag hos konsumenten; modulen ligger i
  *  besøkende-lukningen og kan aldri kalle ta() på modulnivå). */
 export const SECTION_THEME_LABELS = {
-  flate: 'sectionTheme.flate',
-  aksent: 'sectionTheme.aksent',
-  invers: 'sectionTheme.invers',
-  dus: 'sectionTheme.dus',
-  dempet: 'sectionTheme.dempet',
-  dyp: 'sectionTheme.dyp',
-  uthevet: 'sectionTheme.uthevet',
+  surface: 'sectionTheme.surface',
+  accent: 'sectionTheme.accent',
+  inverse: 'sectionTheme.inverse',
+  soft: 'sectionTheme.soft',
+  muted: 'sectionTheme.muted',
+  deep: 'sectionTheme.deep',
+  highlighted: 'sectionTheme.highlighted',
 };
 
 /** Alle token-nøkler noen rolle kan sette - brukes til å nullstille før ny rolle. */

@@ -493,11 +493,11 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
 const BLOCK_KINDS = [
   ['text', ta('blocks.text')], ['text-box', ta('ui.textBox')], ['button', ta('blocks.button')],
   ['image', ta('blocks.image')], ['video', ta('blocks.video')], ['icon', ta('blocks.icon')],
-  ['samling', ta('blocks.samling')], ['galleri', ta('blocks.galleri')], ['faq', ta('blocks.faq')],
-  ['tidslinje', ta('blocks.tidslinje')], ['sitat', ta('blocks.sitat')], ['statistikk', ta('blocks.statistikk')],
-  ['tabell', ta('blocks.tabell')], ['deling', ta('blocks.deling')], ['nedteller', ta('blocks.nedteller')],
-  ['audio', ta('blocks.audio')], ['produkt', ta('blocks.produkt')], ['handlekurv', ta('blocks.handlekurv')],
-  ['kasse', ta('blocks.kasse')],
+  ['collection', ta('blocks.collection')], ['gallery', ta('blocks.gallery')], ['faq', ta('blocks.faq')],
+  ['timeline', ta('blocks.timeline')], ['quote', ta('blocks.quote')], ['stats', ta('blocks.stats')],
+  ['table', ta('blocks.table')], ['share', ta('blocks.share')], ['countdown', ta('blocks.countdown')],
+  ['audio', ta('blocks.audio')], ['product', ta('blocks.product')], ['cart', ta('blocks.cart')],
+  ['checkout', ta('blocks.checkout')],
 ];
 
 /** Formene bor i sin egen utfoldbare undermeny («Former») i + Ny blokk. */
@@ -508,8 +508,8 @@ const SHAPE_KINDS = [
 
 /** Kjerneblokk-typene (paletten i editoren eier byggingen av disse). faq
  *  manglet her frem til 0.6.7.11 og lakk inn i Plugin-blokker-gruppen. */
-const CORE_BLOCK_TYPES = new Set(['text', 'image', 'button', 'shape', 'video', 'icon', 'samling', 'galleri',
-  'faq', 'tidslinje', 'sitat', 'statistikk', 'tabell', 'deling', 'nedteller', 'audio', 'produkt', 'handlekurv', 'kasse']);
+const CORE_BLOCK_TYPES = new Set(['text', 'image', 'button', 'shape', 'video', 'icon', 'collection', 'gallery',
+  'faq', 'timeline', 'quote', 'stats', 'table', 'share', 'countdown', 'audio', 'product', 'cart', 'checkout']);
 
 /**
  * Lukker en «+ Ny blokk»-meny og nullstiller dobbeltklikk-tilstanden:

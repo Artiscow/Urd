@@ -45,9 +45,9 @@ test('tomt bilde tegnes som tom tilstand, satt bilde som fylt', () => {
 });
 
 test('tomt galleri tegnes tomt, fylt galleri fylt', () => {
-  const empty = presetThumb(section([{ type: 'galleri', frames: { desktop: { x: 5, y: 20, w: 90, h: 200 } }, props: { images: [] } }]));
+  const empty = presetThumb(section([{ type: 'gallery', frames: { desktop: { x: 5, y: 20, w: 90, h: 200 } }, props: { images: [] } }]));
   assert.match(empty, /stroke-dasharray/);
-  const filled = presetThumb(section([{ type: 'galleri', frames: { desktop: { x: 5, y: 20, w: 90, h: 200 } }, props: { images: ['/media/a.jpg'] } }]));
+  const filled = presetThumb(section([{ type: 'gallery', frames: { desktop: { x: 5, y: 20, w: 90, h: 200 } }, props: { images: ['/media/a.jpg'] } }]));
   assert.ok(!filled.includes('stroke-dasharray'));
 });
 
@@ -76,9 +76,9 @@ test('tom side gir rent bakgrunnsfelt', () => {
   assert.match(svg, /--urd-color-bg/);
 });
 
-test('rollesett overtoner bakgrunnen i skissen (dyp = tekst-token, dus = surface)', () => {
-  const dyp = presetThumb({ ...section([textBlock('<h2>x</h2>')]), theme: 'dyp' });
-  assert.match(dyp, /^<svg[^>]*>\s*<rect[^>]*fill="var\(--urd-color-text/, 'dyp-bånd skal ha tekst-tonet bakgrunn');
-  const dus = presetThumb({ ...section([textBlock('<h2>x</h2>')]), theme: 'dus' });
-  assert.match(dus, /^<svg[^>]*>\s*<rect[^>]*fill="var\(--urd-color-surface/, 'dus-bånd skal ha surface-tonet bakgrunn');
+test('rollesett overtoner bakgrunnen i skissen (deep = tekst-token, soft = surface)', () => {
+  const deep = presetThumb({ ...section([textBlock('<h2>x</h2>')]), theme: 'deep' });
+  assert.match(deep, /^<svg[^>]*>\s*<rect[^>]*fill="var\(--urd-color-text/, 'deep-bånd skal ha tekst-tonet bakgrunn');
+  const soft = presetThumb({ ...section([textBlock('<h2>x</h2>')]), theme: 'soft' });
+  assert.match(soft, /^<svg[^>]*>\s*<rect[^>]*fill="var\(--urd-color-surface/, 'soft-bånd skal ha surface-tonet bakgrunn');
 });

@@ -49,7 +49,7 @@
     ['gradient', gradientLayer],
     ['glow', glowLayer],
     ['image', imageLayer],
-    ['bildegalleri', bildegalleriLayer],
+    ['slideshow', bildegalleriLayer],
     ['video', videoLayer],
     ['grain', grainLayer],
   ];
@@ -1159,7 +1159,7 @@
   // typografirad).
 
   /** Navn på blokktypene i panelet. */
-  const BLOCK_LABELS = { text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), galleri: ta('blocks.galleri'), faq: ta('blocks.faq'), samling: ta('blocks.samling'), tidslinje: ta('blocks.tidslinje'), sitat: ta('blocks.sitat'), statistikk: ta('blocks.statistikk'), tabell: ta('blocks.tabell'), deling: ta('blocks.deling'), nedteller: ta('blocks.nedteller'), audio: ta('blocks.audio'), produkt: ta('blocks.produkt'), handlekurv: ta('blocks.handlekurv'), kasse: ta('blocks.kasse') };
+  const BLOCK_LABELS = { text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), galleri: ta('blocks.gallery'), faq: ta('blocks.faq'), samling: ta('blocks.collection'), tidslinje: ta('blocks.timeline'), sitat: ta('blocks.quote'), statistikk: ta('blocks.stats'), tabell: ta('blocks.table'), deling: ta('blocks.share'), nedteller: ta('blocks.countdown'), audio: ta('blocks.audio'), produkt: ta('blocks.product'), handlekurv: ta('blocks.cart'), kasse: ta('blocks.checkout') };
   const SHAPE_KINDS = [
     ['line', ta('shape.line')], ['arrow', ta('shape.arrow')], ['circle', ta('shape.circle')],
     ['rect', ta('shape.rect')], ['triangle', ta('shape.triangle')],
@@ -4308,8 +4308,8 @@
     image: { type: 'image', props: { src: '', alt: '', fit: 'cover', radius: 'md', href: null }, w: 30, h: 220 },
     video: { type: 'video', props: { url: '', title: 'Video' }, w: 45, h: 300 },
     icon: { type: 'icon', decor: true, hideMobile: true, props: { glyph: '★', color: 'accent', size: 48 }, w: 8, h: 64 },
-    samling: { type: 'samling', props: { collection: null, view: 'cards', limit: 6, newestFirst: true }, w: 90, h: 200 },
-    galleri: { type: 'galleri', props: { images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5 }, w: 90, h: 320 },
+    collection: { type: 'collection', props: { collection: null, view: 'cards', limit: 6, newestFirst: true }, w: 90, h: 200 },
+    gallery: { type: 'gallery', props: { images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5 }, w: 90, h: 320 },
     faq: {
       type: 'faq',
       props: {
@@ -4322,32 +4322,32 @@
       },
       w: 50, h: 220,
     },
-    tidslinje: {
-      type: 'tidslinje',
+    timeline: {
+      type: 'timeline',
       props: {
         items: [
           { year: '2019', title: ta('seed.tidslinje.t1'), text: ta('seed.tidslinje.text') },
           { year: '2022', title: ta('seed.tidslinje.t2'), text: ta('seed.tidslinje.text') },
           { year: '2026', title: ta('seed.tidslinje.t3'), text: ta('seed.tidslinje.text') },
         ],
-        variant: 'venstre',
-        marker: 'fylt',
+        variant: 'left',
+        marker: 'filled',
         accent: null,
       },
       w: 42, h: 260,
     },
-    sitat: {
-      type: 'sitat',
-      props: { text: ta('seed.sitat.text'), attribution: ta('seed.sitat.name'), role: ta('seed.sitat.role'), variant: 'stor', image: '', accent: null },
+    quote: {
+      type: 'quote',
+      props: { text: ta('seed.sitat.text'), attribution: ta('seed.sitat.name'), role: ta('seed.sitat.role'), variant: 'large', image: '', accent: null },
       w: 44, h: 180,
     },
-    statistikk: {
-      type: 'statistikk',
+    stats: {
+      type: 'stats',
       props: { value: '4800', prefix: '', suffix: '+', label: ta('seed.statistikk.label'), countUp: true },
       w: 20, h: 90,
     },
-    tabell: {
-      type: 'tabell',
+    table: {
+      type: 'table',
       props: {
         header: true,
         striped: false,
@@ -4360,13 +4360,13 @@
       },
       w: 50, h: 160,
     },
-    deling: {
-      type: 'deling',
+    share: {
+      type: 'share',
       props: { services: ['facebook', 'x', 'linkedin', 'whatsapp', 'email', 'copy'], variant: 'icons', size: 38, color: '' },
       w: 34, h: 48,
     },
-    nedteller: {
-      type: 'nedteller',
+    countdown: {
+      type: 'countdown',
       // Målet seedes 30 dager fram (kl. 18), så blokken teller fra første stund.
       props: {
         target: (() => {
@@ -4381,9 +4381,9 @@
       w: 40, h: 110,
     },
     audio: { type: 'audio', props: { src: '', title: '', loop: false }, w: 34, h: 80 },
-    produkt: { type: 'produkt', props: { collection: null, limit: 0, columns: 0, currency: 'kr' }, w: 90, h: 300 },
-    handlekurv: { type: 'handlekurv', props: { variant: 'button', href: '', currency: 'kr' }, w: 16, h: 48 },
-    kasse: { type: 'kasse', props: { recipient: '', endpoint: '', vipps: '', currency: 'kr', vippsCheckout: false }, w: 44, h: 430 },
+    product: { type: 'product', props: { collection: null, limit: 0, columns: 0, currency: 'kr' }, w: 90, h: 300 },
+    cart: { type: 'cart', props: { variant: 'button', href: '', currency: 'kr' }, w: 16, h: 48 },
+    checkout: { type: 'checkout', props: { recipient: '', endpoint: '', vipps: '', currency: 'kr', vippsCheckout: false }, w: 44, h: 430 },
   };
 
   function buildBlock(kind) {
@@ -4489,19 +4489,19 @@
       { label: ta('blocks.image'), act: 'image' },
       { label: ta('blocks.video'), act: 'block', kind: 'video' },
       { label: ta('blocks.icon'), act: 'block', kind: 'icon' },
-      { label: ta('blocks.samling'), act: 'block', kind: 'samling' },
+      { label: ta('blocks.collection'), act: 'block', kind: 'collection' },
       { label: ta('blocks.faq'), act: 'block', kind: 'faq' },
-      { label: ta('blocks.tidslinje'), act: 'block', kind: 'tidslinje' },
-      { label: ta('blocks.sitat'), act: 'block', kind: 'sitat' },
-      { label: ta('blocks.statistikk'), act: 'block', kind: 'statistikk' },
-      { label: ta('blocks.tabell'), act: 'block', kind: 'tabell' },
-      { label: ta('blocks.deling'), act: 'block', kind: 'deling' },
-      { label: ta('blocks.nedteller'), act: 'block', kind: 'nedteller' },
+      { label: ta('blocks.timeline'), act: 'block', kind: 'timeline' },
+      { label: ta('blocks.quote'), act: 'block', kind: 'quote' },
+      { label: ta('blocks.stats'), act: 'block', kind: 'stats' },
+      { label: ta('blocks.table'), act: 'block', kind: 'table' },
+      { label: ta('blocks.share'), act: 'block', kind: 'share' },
+      { label: ta('blocks.countdown'), act: 'block', kind: 'countdown' },
       { label: ta('blocks.audio'), act: 'block', kind: 'audio' },
-      { label: ta('blocks.produkt'), act: 'block', kind: 'produkt' },
-      { label: ta('blocks.handlekurv'), act: 'block', kind: 'handlekurv' },
-      { label: ta('blocks.kasse'), act: 'block', kind: 'kasse' },
-      { label: ta('ui.emptyGallery'), act: 'block', kind: 'galleri' },
+      { label: ta('blocks.product'), act: 'block', kind: 'product' },
+      { label: ta('blocks.cart'), act: 'block', kind: 'cart' },
+      { label: ta('blocks.checkout'), act: 'block', kind: 'checkout' },
+      { label: ta('ui.emptyGallery'), act: 'block', kind: 'gallery' },
       { label: ta('ui.galleryWithImages'), act: 'galleryImages' },
       { label: ta('shape.line'), act: 'block', kind: 'shape-line' },
       { label: ta('shape.arrow'), act: 'block', kind: 'shape-arrow' },
@@ -4561,7 +4561,7 @@
     // Egenskaper-panelet følger etter). Samme UX som paletten.
     bridge?.sendSelect(block.id);
     if (msg.kind === 'image') setStatus(ta('status.imageBlockAdded'));
-    if (msg.kind === 'galleri') setStatus(ta('status.galleryBlockAdded'));
+    if (msg.kind === 'gallery') setStatus(ta('status.galleryBlockAdded'));
   }
 
   /** + Bilde: komprimer til webp og legg i utkastet som data-URL.
@@ -4644,7 +4644,7 @@
       reportUpload(0, failed, big);
       return;
     }
-    const block = buildBlock('galleri');
+    const block = buildBlock('gallery');
     block.props.images = images;
     requestPlacement(block);
     reportUpload(images.length, failed, big);
@@ -4693,7 +4693,7 @@
   function materializeBackground(background, files) {
     for (const layer of background?.layers ?? []) {
       if (layer.type === 'image') materializeField(layer.props, 'src', 'bakgrunn', files);
-      if (layer.type === 'bildegalleri') {
+      if (layer.type === 'slideshow') {
         for (const img of layer.props.images ?? []) materializeField(img, 'src', 'bakgrunn', files);
       }
       if (layer.type === 'video') {
@@ -4708,8 +4708,8 @@
     if (block.type === 'image') materializeField(block.props, 'src', block.props.alt, files);
     // Ikon-blokkens eget opplastede ikon publiseres som media-fil på samme måte.
     if (block.type === 'icon') materializeField(block.props, 'image', 'ikon', files);
-    if (block.type === 'galleri') {
-      for (const img of block.props.images ?? []) materializeField(img, 'src', img.alt || 'galleri', files);
+    if (block.type === 'gallery') {
+      for (const img of block.props.images ?? []) materializeField(img, 'src', img.alt || 'gallery', files);
     }
     if (block.type === 'audio') materializeField(block.props, 'src', block.props.title || 'lyd', files);
   }
@@ -4724,7 +4724,7 @@
   function materializeImages(page) {
     const files = [];
     // Delingsbildet (meta.og.image) materialiseres som blokkbildene.
-    if (page.meta?.og) materializeField(page.meta.og, 'image', 'deling', files);
+    if (page.meta?.og) materializeField(page.meta.og, 'image', 'share', files);
     for (const section of page.sections) materializeSection(section, files);
     return files;
   }
@@ -5959,35 +5959,35 @@
                   onclick={() => addBlock('video')}>{ta('blocks.video')}</button>
                 <button class="ghost" title={ta('tip.blocks.icon')}
                   onclick={() => addBlock('icon')}>{ta('blocks.icon')}</button>
-                <button class="ghost" title={ta('tip.blocks.samling')}
-                  onclick={() => addBlock('samling')}>{ta('blocks.samling')}</button>
+                <button class="ghost" title={ta('tip.blocks.collection')}
+                  onclick={() => addBlock('collection')}>{ta('blocks.collection')}</button>
                 <button class="ghost" title={ta('tip.blocks.faq')}
                   onclick={() => addBlock('faq')}>{ta('blocks.faq')}</button>
-                <button class="ghost" title={ta('tip.blocks.tidslinje')}
-                  onclick={() => addBlock('tidslinje')}>{ta('blocks.tidslinje')}</button>
-                <button class="ghost" title={ta('tip.blocks.sitat')}
-                  onclick={() => addBlock('sitat')}>{ta('blocks.sitat')}</button>
-                <button class="ghost" title={ta('tip.blocks.statistikk')}
-                  onclick={() => addBlock('statistikk')}>{ta('blocks.statistikk')}</button>
-                <button class="ghost" title={ta('tip.blocks.tabell')}
-                  onclick={() => addBlock('tabell')}>{ta('blocks.tabell')}</button>
-                <button class="ghost" title={ta('tip.blocks.deling')}
-                  onclick={() => addBlock('deling')}>{ta('blocks.deling')}</button>
-                <button class="ghost" title={ta('tip.blocks.nedteller')}
-                  onclick={() => addBlock('nedteller')}>{ta('blocks.nedteller')}</button>
+                <button class="ghost" title={ta('tip.blocks.timeline')}
+                  onclick={() => addBlock('timeline')}>{ta('blocks.timeline')}</button>
+                <button class="ghost" title={ta('tip.blocks.quote')}
+                  onclick={() => addBlock('quote')}>{ta('blocks.quote')}</button>
+                <button class="ghost" title={ta('tip.blocks.stats')}
+                  onclick={() => addBlock('stats')}>{ta('blocks.stats')}</button>
+                <button class="ghost" title={ta('tip.blocks.table')}
+                  onclick={() => addBlock('table')}>{ta('blocks.table')}</button>
+                <button class="ghost" title={ta('tip.blocks.share')}
+                  onclick={() => addBlock('share')}>{ta('blocks.share')}</button>
+                <button class="ghost" title={ta('tip.blocks.countdown')}
+                  onclick={() => addBlock('countdown')}>{ta('blocks.countdown')}</button>
                 <button class="ghost" title={ta('tip.blocks.audio')}
                   onclick={() => addBlock('audio')}>{ta('blocks.audio')}</button>
-                <button class="ghost" title={ta('tip.blocks.produkt')}
-                  onclick={() => addBlock('produkt')}>{ta('blocks.produkt')}</button>
-                <button class="ghost" title={ta('tip.blocks.handlekurv')}
-                  onclick={() => addBlock('handlekurv')}>{ta('blocks.handlekurv')}</button>
-                <button class="ghost" title={ta('tip.blocks.kasse')}
-                  onclick={() => addBlock('kasse')}>{ta('blocks.kasse')}</button>
+                <button class="ghost" title={ta('tip.blocks.product')}
+                  onclick={() => addBlock('product')}>{ta('blocks.product')}</button>
+                <button class="ghost" title={ta('tip.blocks.cart')}
+                  onclick={() => addBlock('cart')}>{ta('blocks.cart')}</button>
+                <button class="ghost" title={ta('tip.blocks.checkout')}
+                  onclick={() => addBlock('checkout')}>{ta('blocks.checkout')}</button>
                 <details class="group">
-                  <summary>{ta('blocks.galleri')}</summary>
+                  <summary>{ta('blocks.gallery')}</summary>
                   <div class="group-items">
                     <button class="ghost" title={ta('tip.blocks.gallery')}
-                      onclick={() => addBlock('galleri')}>{ta('ui.emptyGallery')}</button>
+                      onclick={() => addBlock('gallery')}>{ta('ui.emptyGallery')}</button>
                     <label class="ghost filepick" title={ta('tip.blocks.galleryImages')}>
                       {ta('ui.galleryWithImages')}
                       <input type="file" accept="image/*" multiple onchange={addGalleryBlock} />
@@ -6381,7 +6381,7 @@
             {:else if activePanel === 'collections'}
               <div class="panel-body">
                 {#if samlingerIds.length}
-                  <label>{ta('blocks.samling')}
+                  <label>{ta('blocks.collection')}
                     <Dropdown value={activeSamling ?? ''}
                       options={[['', ta('common.choose')], ...samlingerIds.map((id) => [id, samlingerView[id]?.name ?? id])]}
                       onchange={(v) => (activeSamling = v || null)} /></label>
@@ -6915,7 +6915,7 @@
               options={[['none', ta('common.none')], ['up', ta('opt.bleed.up')], ['down', ta('opt.bleed.down')], ['both', ta('opt.brand.both')]]}
               onchange={(v) => setBgProp(bg, i, 'bleed', v)} /></label>
         {/if}
-      {:else if layer.type === 'bildegalleri'}
+      {:else if layer.type === 'slideshow'}
         <label class="ghost filepick" title={ta('tip.bg.addImages')}>
           {ta('ui.addImages')}
           <input type="file" accept="image/*" multiple onchange={(e) => addBgGalleryImages(bg, i, e)} />
@@ -7113,7 +7113,7 @@
         </span>
       {/each}
       <button class="ghost action" onclick={addFaqItem}>{ta('ui.addQuestion')}</button>
-    {:else if selectedBlock.type === 'tidslinje'}
+    {:else if selectedBlock.type === 'timeline'}
       <p class="panel-strong">{ta('lbl.tlItems')}</p>
       {#each selectedBlock.props.items ?? [] as item, i (i)}
         <span class="nav-line">
@@ -7132,7 +7132,7 @@
           onchange={(e) => setTlItem(i, { text: e.target.value })} />
       {/each}
       <button class="ghost action" onclick={addTlItem}>{ta('ui.addTlItem')}</button>
-    {:else if selectedBlock.type === 'sitat'}
+    {:else if selectedBlock.type === 'quote'}
       <label>{ta('lbl.sitatText')}
         <input value={selectedBlock.props.text ?? ''}
           onchange={(e) => setBlockProp('text', e.target.value)} /></label>
@@ -7142,7 +7142,7 @@
       <label>{ta('lbl.sitatRole')}
         <input value={selectedBlock.props.role ?? ''}
           onchange={(e) => setBlockProp('role', e.target.value)} /></label>
-    {:else if selectedBlock.type === 'statistikk'}
+    {:else if selectedBlock.type === 'stats'}
       <label>{ta('lbl.statValue')}
         <input value={selectedBlock.props.value ?? ''} title={ta('tip.stat.value')}
           onchange={(e) => setBlockProp('value', e.target.value)} /></label>
@@ -7155,7 +7155,7 @@
       <label>{ta('lbl.statLabel')}
         <input value={selectedBlock.props.label ?? ''}
           onchange={(e) => setBlockProp('label', e.target.value)} /></label>
-    {:else if selectedBlock.type === 'tabell'}
+    {:else if selectedBlock.type === 'table'}
       <!-- Cellene skrives rett på lerretet; panelet eier formen på rutenettet. -->
       <span class="toolbar-row">
         <button class="ghost" onclick={() => tabellResize(1, 0)}>{ta('ui.addRow')}</button>
@@ -7170,7 +7170,7 @@
           onchange={(e) => setBlockProp('header', e.target.checked)} />
         {ta('lbl.tabellHeader')}
       </label>
-    {:else if selectedBlock.type === 'deling'}
+    {:else if selectedBlock.type === 'share'}
       {#each [['facebook', 'Facebook'], ['x', 'X'], ['linkedin', 'LinkedIn'], ['whatsapp', 'WhatsApp'], ['email', ta('opt.deling.email')], ['copy', ta('opt.deling.copy')]] as [service, label] (service)}
         <label class="gridmenu-snap">
           <input type="checkbox" checked={(selectedBlock.props.services ?? []).includes(service)}
@@ -7178,7 +7178,7 @@
           {label}
         </label>
       {/each}
-    {:else if selectedBlock.type === 'nedteller'}
+    {:else if selectedBlock.type === 'countdown'}
       <label>{ta('lbl.nedtellerTarget')}
         <input type="datetime-local" value={selectedBlock.props.target ?? ''}
           onchange={(e) => setBlockProp('target', e.target.value)} /></label>
@@ -7276,8 +7276,8 @@
           <button class="ghost" onclick={() => setBlockProp('image', null)}>{ta('ui.removeOwnIcon')}</button>
         </span>
       {/if}
-    {:else if selectedBlock.type === 'samling'}
-      <label title={ta('tip.samling.source')}>{ta('blocks.samling')}
+    {:else if selectedBlock.type === 'collection'}
+      <label title={ta('tip.samling.source')}>{ta('blocks.collection')}
         <Dropdown value={selectedBlock.props.collection ?? ''}
           options={[['', ta('common.choose')], ...samlingerIds.map((id) => [id, samlingerView[id]?.name ?? id])]}
           onchange={(v) => setBlockProp('collection', v || null)} /></label>
@@ -7289,8 +7289,8 @@
           onchange={(e) => setBlockProp('newestFirst', e.target.checked)} />
         {ta('lbl.newestFirst')}
       </label>
-    {:else if selectedBlock.type === 'produkt'}
-      <label title={ta('tip.produkt.source')}>{ta('blocks.samling')}
+    {:else if selectedBlock.type === 'product'}
+      <label title={ta('tip.produkt.source')}>{ta('blocks.collection')}
         <Dropdown value={selectedBlock.props.collection ?? ''}
           options={[['', ta('common.choose')], ...samlingerIds.filter((id) => samlingerView[id]?.kind === 'products').map((id) => [id, samlingerView[id]?.name ?? id])]}
           onchange={(v) => setBlockProp('collection', v || null)} /></label>
@@ -7311,7 +7311,7 @@
       <label title={ta('tip.produkt.currency')}>{ta('lbl.currency')}
         <input value={selectedBlock.props.currency ?? 'kr'}
           onchange={(e) => setBlockProp('currency', e.target.value)} /></label>
-    {:else if selectedBlock.type === 'handlekurv'}
+    {:else if selectedBlock.type === 'cart'}
       <label title={ta('tip.handlekurv.checkout')}>{ta('lbl.checkoutPage')}
         <Dropdown value={selectedBlock.props.href ?? ''}
           options={[['', ta('common.none')], ...siteDraft.pages.map((p) => [p.path, p.title])]}
@@ -7319,7 +7319,7 @@
       <label title={ta('tip.produkt.currency')}>{ta('lbl.currency')}
         <input value={selectedBlock.props.currency ?? 'kr'}
           onchange={(e) => setBlockProp('currency', e.target.value)} /></label>
-    {:else if selectedBlock.type === 'kasse'}
+    {:else if selectedBlock.type === 'checkout'}
       <label title={ta('tip.kasse.recipient')}>{ta('lbl.recipientEmail')}
         <input type="email" value={selectedBlock.props.recipient ?? ''}
           onchange={(e) => setBlockProp('recipient', e.target.value.trim())} /></label>
@@ -7337,7 +7337,7 @@
       <label title={ta('tip.produkt.currency')}>{ta('lbl.currency')}
         <input value={selectedBlock.props.currency ?? 'kr'}
           onchange={(e) => setBlockProp('currency', e.target.value)} /></label>
-    {:else if selectedBlock.type === 'galleri'}
+    {:else if selectedBlock.type === 'gallery'}
       <label class="ghost filepick" title={ta('tip.gallery.addImages')}>
         {ta('ui.addImages')}
         <input type="file" accept="image/*" multiple onchange={addGalleryImages} />
@@ -7430,25 +7430,25 @@
       <p class="panel-strong">{ta('lbl.cardStyle')}</p>
       {@render kortstilUI()}
       <hr class="gridmenu-divider" />
-    {:else if selectedBlock.type === 'tidslinje'}
+    {:else if selectedBlock.type === 'timeline'}
       <label>{ta('lbl.variant')}
-        <Dropdown value={selectedBlock.props.variant ?? 'venstre'}
-          options={[['venstre', ta('opt.tl.venstre')], ['veksler', ta('opt.tl.veksler')]]}
+        <Dropdown value={selectedBlock.props.variant ?? 'left'}
+          options={[['left', ta('opt.tl.left')], ['alternating', ta('opt.tl.alternating')]]}
           onchange={(v) => setBlockProp('variant', v)} /></label>
       <label>{ta('lbl.tlMarker')}
-        <Dropdown value={selectedBlock.props.marker ?? 'fylt'}
-          options={[['fylt', ta('opt.tl.fylt')], ['ring', ta('opt.tl.ring')]]}
+        <Dropdown value={selectedBlock.props.marker ?? 'filled'}
+          options={[['filled', ta('opt.tl.filled')], ['ring', ta('opt.tl.ring')]]}
           onchange={(v) => setBlockProp('marker', v)} /></label>
       <label>{ta('lbl.color')}
         <ColorPicker value={selectedBlock.props.accent ?? 'accent'} tokens={themeSwatches()}
           onchange={(v) => setBlockProp('accent', v === 'accent' ? null : v)} /></label>
       <hr class="gridmenu-divider" />
-    {:else if selectedBlock.type === 'sitat'}
+    {:else if selectedBlock.type === 'quote'}
       <label>{ta('lbl.variant')}
-        <Dropdown value={selectedBlock.props.variant ?? 'stor'}
-          options={[['stor', ta('opt.sitat.stor')], ['kort', ta('opt.sitat.kort')]]}
+        <Dropdown value={selectedBlock.props.variant ?? 'large'}
+          options={[['large', ta('opt.sitat.large')], ['short', ta('opt.sitat.short')]]}
           onchange={(v) => setBlockProp('variant', v)} /></label>
-      {#if selectedBlock.props.variant === 'kort'}
+      {#if selectedBlock.props.variant === 'short'}
         <label class="ghost filepick">
           {ta('ui.sitatPortrett')}
           <input type="file" accept="image/*" onchange={setSitatPortrett} />
@@ -7461,14 +7461,14 @@
         <ColorPicker value={selectedBlock.props.accent ?? 'accent'} tokens={themeSwatches()}
           onchange={(v) => setBlockProp('accent', v === 'accent' ? null : v)} /></label>
       <hr class="gridmenu-divider" />
-    {:else if selectedBlock.type === 'statistikk'}
+    {:else if selectedBlock.type === 'stats'}
       <label class="gridmenu-snap" title={ta('tip.stat.countUp')}>
         <input type="checkbox" checked={selectedBlock.props.countUp !== false}
           onchange={(e) => setBlockProp('countUp', e.target.checked)} />
         {ta('lbl.statCountUp')}
       </label>
       <hr class="gridmenu-divider" />
-    {:else if selectedBlock.type === 'tabell'}
+    {:else if selectedBlock.type === 'table'}
       <label>{ta('lbl.tabellLines')}
         <Dropdown value={selectedBlock.props.lines ?? 'rows'}
           options={[['rows', ta('opt.tabell.rows')], ['grid', ta('opt.tabell.grid')], ['none', ta('common.none')]]}
@@ -7479,7 +7479,7 @@
         {ta('lbl.tabellStriped')}
       </label>
       <hr class="gridmenu-divider" />
-    {:else if selectedBlock.type === 'deling'}
+    {:else if selectedBlock.type === 'share'}
       <label>{ta('lbl.variant')}
         <Dropdown value={selectedBlock.props.variant ?? 'icons'}
           options={[['icons', ta('opt.deling.icons')], ['labels', ta('opt.deling.labels')]]}
@@ -7491,7 +7491,7 @@
         <ColorPicker value={selectedBlock.props.color || 'accent'} tokens={themeSwatches()}
           onchange={(v) => setBlockProp('color', v === 'accent' ? '' : v)} /></label>
       <hr class="gridmenu-divider" />
-    {:else if selectedBlock.type === 'nedteller'}
+    {:else if selectedBlock.type === 'countdown'}
       <label>{ta('lbl.variant')}
         <Dropdown value={selectedBlock.props.variant ?? 'boxes'}
           options={[['boxes', ta('opt.nedteller.boxes')], ['plain', ta('opt.nedteller.plain')]]}
@@ -7554,24 +7554,24 @@
         <ColorPicker value={selectedBlock.props.color ?? 'accent'} tokens={themeSwatches()}
           onchange={(v) => setBlockProp('color', v)} /></label>
       <hr class="gridmenu-divider" />
-    {:else if selectedBlock.type === 'samling'}
+    {:else if selectedBlock.type === 'collection'}
       <label>{ta('lbl.view')}
         <Dropdown value={selectedBlock.props.view ?? 'cards'}
           options={[['cards', ta('opt.collectionView.cards')], ['list', ta('opt.collectionView.list')], ['archive', ta('opt.collectionView.archive')]]}
           onchange={(v) => setBlockProp('view', v)} /></label>
       <hr class="gridmenu-divider" />
-    {:else if selectedBlock.type === 'produkt'}
+    {:else if selectedBlock.type === 'product'}
       <label title={ta('tip.produkt.columns')}>{ta('lbl.columns')}
         <input type="number" min="0" max="6" value={selectedBlock.props.columns ?? 0}
           onchange={(e) => setBlockProp('columns', Number(e.target.value))} /></label>
       <hr class="gridmenu-divider" />
-    {:else if selectedBlock.type === 'handlekurv'}
+    {:else if selectedBlock.type === 'cart'}
       <label>{ta('lbl.view')}
         <Dropdown value={selectedBlock.props.variant ?? 'button'}
           options={[['button', ta('opt.handlekurv.button')], ['icon', ta('opt.handlekurv.icon')]]}
           onchange={(v) => setBlockProp('variant', v)} /></label>
       <hr class="gridmenu-divider" />
-    {:else if selectedBlock.type === 'galleri'}
+    {:else if selectedBlock.type === 'gallery'}
       <label>{ta('lbl.view')}
         <Dropdown value={selectedBlock.props.view ?? 'grid'}
           options={[['grid', ta('opt.galleryView.grid')], ['carousel', ta('opt.galleryView.carousel')], ['slides', ta('opt.galleryView.slides')]]}

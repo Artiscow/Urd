@@ -145,3 +145,23 @@ test('clonePageForInsert: to innsettinger gir disjunkte id-sett', () => {
   const b = ids(clonePageForInsert(original, makeId, { id: 'b', title: 'B' }));
   assert.equal(new Set([...a, ...b]).size, a.length + b.length);
 });
+
+// Contract token lifting at insertion (ADR-0021): payloads saved before v3
+// carry Norwegian tokens and bypass the page lift.
+
+test('cloneSectionForInsert renames old contract tokens in the payload', () => {
+  const old = section();
+  old.theme = 'dus';
+  old.background.layers.push({ type: 'bildegalleri', version: 1, props: {} });
+  old.blocks.push({ ...block('blk-c'), type: 'handlekurv' });
+  const out = cloneSectionForInsert(old, makeId);
+  assert.equal(out.theme, 'soft');
+  assert.equal(out.background.layers[0].type, 'slideshow');
+  assert.equal(out.blocks[2].type, 'cart');
+  assert.equal(old.blocks[2].type, 'handlekurv');
+});
+
+test('cloneBlocksForInsert renames old block types in the group', () => {
+  const out = cloneBlocksForInsert([{ ...block('blk-a'), type: 'produkt' }], makeId);
+  assert.equal(out.blocks[0].type, 'product');
+});

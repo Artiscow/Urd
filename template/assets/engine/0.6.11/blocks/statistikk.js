@@ -57,7 +57,7 @@ export const statistikkBlock = {
   version: 1,
   autoGrow: true,
   label: 'Statistikk',
-  labelKey: 'blocks.statistikk',
+  labelKey: 'blocks.stats',
   // Seed-regelen (ADR-0012): ta() kalles kun her ved innsetting i preview.
   defaults: () => ({
     value: '4800',

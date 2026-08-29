@@ -9,7 +9,7 @@
  */
 import { slugify } from './imageTools.js';
 import { groupDelta } from './selection.js';
-import { liftMobileFrame } from './migrate.js';
+import { liftMobileFrame, liftContractTokens } from './migrate.js';
 
 /** Gjeldende versjon av malfil-formatet (content/maler/*.json). */
 export const MAL_SCHEMA_VERSION = 1;
@@ -47,6 +47,9 @@ export function cloneSectionForInsert(section, makeId) {
     block.id = makeId('blk');
     liftBlockMobile(block);
   }
+  // Templates saved before v3 carry the old Norwegian contract tokens
+  // (ADR-0021); renamed here since payloads bypass the page lift.
+  liftContractTokens(out);
   return out;
 }
 
@@ -87,6 +90,7 @@ export function cloneBlocksForInsert(blocks, makeId, { anchor = null } = {}) {
     block.id = makeId('blk');
     liftBlockMobile(block);
   }
+  liftContractTokens(out);
   const frames = out.map((b) => b.frames.desktop);
   const minX = Math.min(...frames.map((f) => f.x));
   const minY = Math.min(...frames.map((f) => f.y));

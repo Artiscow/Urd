@@ -192,3 +192,78 @@ test('side-løftingen muterer aldri originalen', () => {
   assert.equal(original.sections[0].responsive.mobile.mode, 'manual');
   assert.equal(original.sections[0].blocks[0].frames.mobile.y, 104);
 });
+
+// Page migration 2 -> 3 (ADR-0021): Norwegian contract tokens (block types,
+// background layer types, section theme roles) renamed to English.
+
+/** A v2 page carrying every renamed core token, plus plugin/unknown tokens
+ *  that the migration must leave alone. */
+const v2Page = () => ({
+  schemaVersion: 2,
+  meta: { id: 'test', title: 'Test' },
+  sections: [{
+    id: 'sec-1',
+    version: 1,
+    theme: 'dyp',
+    background: { version: 1, layers: [
+      { type: 'bildegalleri', version: 1, props: {} },
+      { type: 'image', version: 1, props: {} },
+    ] },
+    blocks: [
+      { id: 'b1', type: 'samling', version: 1, props: {}, frames: { desktop: { x: 0, y: 0, w: 50, h: 100 } } },
+      { id: 'b2', type: 'galleri', version: 1, props: {}, frames: { desktop: { x: 0, y: 0, w: 50, h: 100 } } },
+      { id: 'b3', type: 'tidslinje', version: 1, props: {}, frames: { desktop: { x: 0, y: 0, w: 50, h: 100 } } },
+      { id: 'b4', type: 'sitat', version: 1, props: {}, frames: { desktop: { x: 0, y: 0, w: 50, h: 100 } } },
+      { id: 'b5', type: 'statistikk', version: 1, props: {}, frames: { desktop: { x: 0, y: 0, w: 50, h: 100 } } },
+      { id: 'b6', type: 'tabell', version: 1, props: {}, frames: { desktop: { x: 0, y: 0, w: 50, h: 100 } } },
+      { id: 'b7', type: 'deling', version: 1, props: {}, frames: { desktop: { x: 0, y: 0, w: 50, h: 100 } } },
+      { id: 'b8', type: 'nedteller', version: 1, props: {}, frames: { desktop: { x: 0, y: 0, w: 50, h: 100 } } },
+      { id: 'b9', type: 'produkt', version: 1, props: {}, frames: { desktop: { x: 0, y: 0, w: 50, h: 100 } } },
+      { id: 'b10', type: 'handlekurv', version: 1, props: {}, frames: { desktop: { x: 0, y: 0, w: 50, h: 100 } } },
+      { id: 'b11', type: 'kasse', version: 1, props: {}, frames: { desktop: { x: 0, y: 0, w: 50, h: 100 } } },
+      { id: 'b12', type: 'kalender', version: 1, props: {}, frames: { desktop: { x: 0, y: 0, w: 50, h: 100 } } },
+      { id: 'b13', type: 'text', version: 1, props: {}, frames: { desktop: { x: 0, y: 0, w: 50, h: 100 } } },
+    ],
+  }],
+});
+
+test('page v2 -> v3: every core token is renamed', () => {
+  const lifted = liftPageFile(v2Page(), {});
+  assert.equal(lifted.schemaVersion, PAGE_SCHEMA_VERSION);
+  const section = lifted.sections[0];
+  assert.equal(section.theme, 'deep');
+  assert.deepEqual(section.blocks.map((b) => b.type), [
+    'collection', 'gallery', 'timeline', 'quote', 'stats', 'table',
+    'share', 'countdown', 'product', 'cart', 'checkout', 'kalender', 'text',
+  ]);
+  assert.deepEqual(section.background.layers.map((l) => l.type), ['slideshow', 'image']);
+});
+
+test('page v2 -> v3: plugin-owned and English tokens pass through untouched', () => {
+  const lifted = liftPageFile(v2Page(), {});
+  const section = lifted.sections[0];
+  assert.equal(section.blocks[11].type, 'kalender');
+  assert.equal(section.blocks[12].type, 'text');
+});
+
+test('page v1 lifts straight through to v3 in one pass', () => {
+  const page = v2Page();
+  page.schemaVersion = 1;
+  const lifted = liftPageFile(page, {});
+  assert.equal(lifted.schemaVersion, PAGE_SCHEMA_VERSION);
+  assert.equal(lifted.sections[0].blocks[0].type, 'collection');
+});
+
+test('page v3 output is idempotent under a second lift', () => {
+  const once = liftPageFile(v2Page(), {});
+  const twice = liftPageFile(once, {});
+  assert.deepEqual(twice, once);
+});
+
+test('page v2 -> v3 never mutates the original', () => {
+  const original = v2Page();
+  liftPageFile(original, {});
+  assert.equal(original.schemaVersion, 2);
+  assert.equal(original.sections[0].theme, 'dyp');
+  assert.equal(original.sections[0].blocks[0].type, 'samling');
+});

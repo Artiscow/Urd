@@ -78,7 +78,7 @@ const hoverLift = () => ({ type: 'hover-lift', version: 1, props: {} });
 /* Samling-blokk (ADR-0007): collection settes av eieren i Egenskaper; null gir veiledende tomtilstand. */
 const samling = (fr, view, props = {}) => ({
   id: makeId('blk'),
-  type: 'samling',
+  type: 'collection',
   version: 1,
   props: { collection: null, view, limit: 6, newestFirst: true, ...props },
   animation: null,
@@ -89,7 +89,7 @@ const samling = (fr, view, props = {}) => ({
    collection settes av eieren i Egenskaper (som samling-blokken). */
 const produkt = (fr, props = {}) => ({
   id: makeId('blk'),
-  type: 'produkt',
+  type: 'product',
   version: 1,
   props: { collection: null, limit: 0, columns: 0, currency: 'kr', ...props },
   animation: null,
@@ -98,7 +98,7 @@ const produkt = (fr, props = {}) => ({
 
 const handlekurv = (fr, props = {}) => ({
   id: makeId('blk'),
-  type: 'handlekurv',
+  type: 'cart',
   version: 1,
   props: { variant: 'button', href: '', currency: 'kr', ...props },
   animation: null,
@@ -107,7 +107,7 @@ const handlekurv = (fr, props = {}) => ({
 
 const kasse = (fr, props = {}) => ({
   id: makeId('blk'),
-  type: 'kasse',
+  type: 'checkout',
   version: 1,
   props: { recipient: '', endpoint: '', vipps: '', currency: 'kr', ...props },
   animation: null,
@@ -117,7 +117,7 @@ const kasse = (fr, props = {}) => ({
 /* Galleri-blokk: bildene legges til av eieren i Egenskaper (flervalg). */
 const galleri = (fr, props = {}) => ({
   id: makeId('blk'),
-  type: 'galleri',
+  type: 'gallery',
   version: 1,
   props: { images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5, ...props },
   animation: null,
@@ -137,9 +137,9 @@ const faq = (fr, items) => ({
 /* Sitat-blokk (0.6.7.11): semantisk figure/blockquote med attribusjon. */
 const sitat = (fr, props = {}) => ({
   id: makeId('blk'),
-  type: 'sitat',
+  type: 'quote',
   version: 1,
-  props: { text: '', attribution: '', role: '', variant: 'stor', image: '', accent: null, ...props },
+  props: { text: '', attribution: '', role: '', variant: 'large', image: '', accent: null, ...props },
   animation: null,
   frames: fr,
 });
@@ -147,9 +147,9 @@ const sitat = (fr, props = {}) => ({
 /* Tidslinje-blokk (0.6.7.11): hendelser langs en tegnet linje. */
 const tidslinje = (fr, items) => ({
   id: makeId('blk'),
-  type: 'tidslinje',
+  type: 'timeline',
   version: 1,
-  props: { items, variant: 'venstre', marker: 'fylt', accent: null },
+  props: { items, variant: 'left', marker: 'filled', accent: null },
   animation: null,
   frames: fr,
 });
@@ -157,7 +157,7 @@ const tidslinje = (fr, items) => ({
 /* Statistikk-blokk (0.6.7.11): ett nøkkeltall med etikett og tell-opp. */
 const statistikk = (fr, props = {}) => ({
   id: makeId('blk'),
-  type: 'statistikk',
+  type: 'stats',
   version: 1,
   props: { value: '4800', prefix: '', suffix: '', label: '', countUp: true, ...props },
   animation: null,
@@ -733,7 +733,7 @@ export function registerSectionPresets(Urd) {
         ...tile(53, 2, ta('seed.butikkKategorier.cat3')),
         ...tile(76.5, 3, ta('seed.butikkKategorier.cat4')),
       ]);
-      sec.theme = 'dus';
+      sec.theme = 'soft';
       return sec;
     },
     itemLabel: 'kategori',
@@ -769,7 +769,7 @@ export function registerSectionPresets(Urd) {
         ...pair(37.5, 1, 'seed.butikkTillit.t2', '↻'),
         ...pair(69, 2, 'seed.butikkTillit.t3', '✉'),
       ]);
-      sec.theme = 'dempet';
+      sec.theme = 'muted';
       return sec;
     },
     itemLabel: 'kort',
@@ -800,7 +800,7 @@ export function registerSectionPresets(Urd) {
       ];
       blocks.forEach((b, i) => { b.mobileOrder = cardOrder(56, i < 3 ? 0 : 1, i); });
       const sec = section('butikk-utstilling', '340px', bg(colorLayer('bg')), blocks);
-      sec.theme = 'dyp';
+      sec.theme = 'deep';
       return sec;
     },
   });

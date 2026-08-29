@@ -114,7 +114,7 @@ export const handlekurvBlock = {
   version: 1,
   autoGrow: true,
   label: 'Handlekurv',
-  labelKey: 'blocks.handlekurv',
+  labelKey: 'blocks.cart',
   defaults: () => ({ variant: 'button', href: '', currency: 'kr' }),
   migrations: {},
   /**

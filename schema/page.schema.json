@@ -49,7 +49,7 @@
         },
         "theme": {
           "type": "string",
-          "description": "Ferdig seksjonstema (rollesett, additivt fra v0.6): 'flate'/'aksent'/'invers' overstyrer temaets fargetokens på seksjonen; fravær = Standard (ingen overstyring). Ukjent rolle ignoreres."
+          "description": "Ferdig seksjonstema (rollesett, additivt fra v0.6): 'surface'/'accent'/'inverse' m.fl. overstyrer temaets fargetokens på seksjonen; fravær = Standard (ingen overstyring). Ukjent rolle ignoreres. Norske rolleverdier fra før v3 løftes av sidemigreringen (ADR-0021)."
         },
         "size": {
           "type": "object",

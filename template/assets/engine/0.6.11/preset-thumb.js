@@ -47,8 +47,8 @@ const rect = (x, y, w, h, fill, extra = '') =>
  *  rolle leses ærlig i galleriet i stedet for som nok en bg-flate. */
 function bgFill(section) {
   if (section?.theme) {
-    if (section.theme === 'invers' || section.theme === 'dyp') return token('text', FALLBACK_TEXT);
-    if (section.theme === 'aksent') return token('accent', FALLBACK_ACCENT);
+    if (section.theme === 'inverse' || section.theme === 'deep') return token('text', FALLBACK_TEXT);
+    if (section.theme === 'accent') return token('accent', FALLBACK_ACCENT);
     return token('surface', FALLBACK_SURFACE);
   }
   for (const layer of section?.background?.layers ?? []) {
@@ -156,8 +156,8 @@ function shapeShapes(x, y, w, h, props) {
 function blockShapes(type, x, y, w, h, props) {
   if (type === 'text') return textShapes(x, y, w, h, props);
   if (type === 'image') return imageShapes(x, y, w, h, !props?.src);
-  if (type === 'galleri') return galleriShapes(x, y, w, h, props);
-  if (type === 'samling') return samlingShapes(x, y, w, h);
+  if (type === 'gallery') return galleriShapes(x, y, w, h, props);
+  if (type === 'collection') return samlingShapes(x, y, w, h);
   if (type === 'faq') {
     // Trekkspill: rader med flate + spørsmålslinje og chevron-prikk.
     const rows = clamp(Math.floor(h / 5), 2, 3);
@@ -188,7 +188,7 @@ function blockShapes(type, x, y, w, h, props) {
     parts.push(`<polygon points="${r1(cx - s / 2)},${r1(cy - s)} ${r1(cx - s / 2)},${r1(cy + s)} ${r1(cx + s)},${r1(cy)}" fill="${token('text', FALLBACK_TEXT)}" opacity="0.6"/>`);
     return parts.join('');
   }
-  if (type === 'tidslinje') {
+  if (type === 'timeline') {
     const parts = [rect(x + 1, y, 1.4, h, token('accent', FALLBACK_ACCENT), ' opacity="0.7" rx="0.7"')];
     for (let i = 0; i < 3; i += 1) {
       const cy = y + h * (0.18 + i * 0.32);
@@ -197,7 +197,7 @@ function blockShapes(type, x, y, w, h, props) {
     }
     return parts.join('');
   }
-  if (type === 'sitat') {
+  if (type === 'quote') {
     return [
       `<text x="${r1(x + w / 2)}" y="${r1(y + h * 0.34)}" text-anchor="middle" font-size="${r1(Math.min(w, h) * 0.5)}" font-family="Georgia, serif" fill="${token('accent', FALLBACK_ACCENT)}">“</text>`,
       rect(x + w * 0.15, y + h * 0.48, w * 0.7, 2, token('text', FALLBACK_TEXT), ' opacity="0.6" rx="1"'),
@@ -205,13 +205,13 @@ function blockShapes(type, x, y, w, h, props) {
       rect(x + w * 0.35, y + h * 0.82, w * 0.3, 1.6, token('text', FALLBACK_TEXT), ' opacity="0.35" rx="0.8"'),
     ].join('');
   }
-  if (type === 'statistikk') {
+  if (type === 'stats') {
     return [
       rect(x + w * 0.28, y + h * 0.15, w * 0.44, h * 0.42, token('accent', FALLBACK_ACCENT), ' opacity="0.85" rx="1"'),
       rect(x + w * 0.32, y + h * 0.72, w * 0.36, 1.6, token('text', FALLBACK_TEXT), ' opacity="0.4" rx="0.8"'),
     ].join('');
   }
-  if (type === 'tabell') {
+  if (type === 'table') {
     // Overskriftsbånd + radlinjer med kolonnedelere.
     const headH = Math.max(1.6, h * 0.22);
     const parts = [rect(x, y, w, headH, token('accent', FALLBACK_ACCENT), ' opacity="0.5" rx="0.8"')];
@@ -223,7 +223,7 @@ function blockShapes(type, x, y, w, h, props) {
     parts.push(rect(x + w * 0.66, y, 0.6, h, token('text', FALLBACK_TEXT), ' opacity="0.2"'));
     return parts.join('');
   }
-  if (type === 'deling') {
+  if (type === 'share') {
     // Rad av små ikonskiver.
     const r = Math.max(1.2, Math.min(h / 2, w / 9));
     const parts = [];
@@ -232,7 +232,7 @@ function blockShapes(type, x, y, w, h, props) {
     }
     return parts.join('');
   }
-  if (type === 'nedteller') {
+  if (type === 'countdown') {
     // Fire enhetsbokser med tall-spor.
     const gap = Math.max(0.8, w * 0.03);
     const bw = (w - gap * 3) / 4;
@@ -253,7 +253,7 @@ function blockShapes(type, x, y, w, h, props) {
     parts.push(rect(x + w * 0.2, cy - 0.6, w * 0.7, 1.2, token('text', FALLBACK_TEXT), ' opacity="0.35" rx="0.6"'));
     return parts.join('');
   }
-  if (type === 'produkt') {
+  if (type === 'product') {
     // Produktkort: tre kort med bildefelt, prislinje og kjøpsknapp.
     const gap = Math.max(0.8, w * 0.03);
     const cw = (w - gap * 2) / 3;
@@ -268,7 +268,7 @@ function blockShapes(type, x, y, w, h, props) {
     }
     return parts.join('');
   }
-  if (type === 'handlekurv') {
+  if (type === 'cart') {
     // Kurvskive med antall-prikk oppe til høyre.
     const r = Math.max(1.5, Math.min(w, h) / 2.4);
     const cx = x + w / 2;
@@ -279,7 +279,7 @@ function blockShapes(type, x, y, w, h, props) {
       `<circle cx="${r1(cx + r * 0.75)}" cy="${r1(cy - r * 0.75)}" r="${r1(Math.max(0.9, r * 0.35))}" fill="${token('accent', FALLBACK_ACCENT)}"/>`,
     ].join('');
   }
-  if (type === 'kasse') {
+  if (type === 'checkout') {
     // Ordrelinjer øverst, to feltbånd og en send-knapp nederst.
     return [
       rect(x, y, w * 0.7, 1.2, token('text', FALLBACK_TEXT), ' opacity="0.5" rx="0.6"'),

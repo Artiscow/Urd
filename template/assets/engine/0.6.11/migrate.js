@@ -49,7 +49,7 @@ export function lift(data, def) {
 }
 
 /** Gjeldende versjon av sidefil-formatet (content/pages/*.json). */
-export const PAGE_SCHEMA_VERSION = 2;
+export const PAGE_SCHEMA_VERSION = 3;
 
 /**
  * Radhøyden i mobil-radnettet (ADR-0019), i px. En modellkonstant på linje
@@ -109,6 +109,63 @@ export function liftMobileFrame(m, desktop) {
   return placement;
 }
 
+/**
+ * Core block types were Norwegian before v3; data contracts use English
+ * identifiers (ADR-0021). Plugin-owned types (kalender, kart, skjema) are
+ * deliberately absent: old plugin folders in user repos keep defining the
+ * old ids forever, so those are resolved through registry aliases instead.
+ */
+export const V2_BLOCK_TYPES = {
+  samling: 'collection',
+  galleri: 'gallery',
+  tidslinje: 'timeline',
+  sitat: 'quote',
+  statistikk: 'stats',
+  tabell: 'table',
+  deling: 'share',
+  nedteller: 'countdown',
+  produkt: 'product',
+  handlekurv: 'cart',
+  kasse: 'checkout',
+};
+
+/** Background layer types renamed in v3 (ADR-0021). */
+export const V2_LAYER_TYPES = {
+  bildegalleri: 'slideshow',
+};
+
+/** Section theme roles renamed in v3 (ADR-0021); see SECTION_THEMES in theme.js. */
+export const V2_SECTION_THEMES = {
+  flate: 'surface',
+  aksent: 'accent',
+  invers: 'inverse',
+  dus: 'soft',
+  dempet: 'muted',
+  dyp: 'deep',
+  uthevet: 'highlighted',
+};
+
+/**
+ * Renames contract tokens (block types, background layer types and section
+ * theme roles) in place. Accepts a section-like object ({blocks, background,
+ * theme}) or a bare block array. Used by pageMigrations[2] and by template
+ * insertion (templates-model), which inserts stored payloads outside the
+ * page lift.
+ */
+export function liftContractTokens(target) {
+  const blocks = Array.isArray(target) ? target : target.blocks ?? [];
+  for (const block of blocks) {
+    if (V2_BLOCK_TYPES[block.type]) block.type = V2_BLOCK_TYPES[block.type];
+  }
+  if (!Array.isArray(target)) {
+    for (const layer of target.background?.layers ?? []) {
+      if (V2_LAYER_TYPES[layer.type]) layer.type = V2_LAYER_TYPES[layer.type];
+    }
+    if (V2_SECTION_THEMES[target.theme]) target.theme = V2_SECTION_THEMES[target.theme];
+  }
+  return target;
+}
+
 const pageMigrations = {
   // 1 -> 2 (synket mobilmodell, ADR-0019): frames.mobile bytter form fra
   // full frame {x,y,w,h} til partiell radnett-plassering {x,w,row,rows},
@@ -128,6 +185,12 @@ const pageMigrations = {
       const reason = mobile?.attention?.reason;
       if (reason && V1_REASONS[reason]) mobile.attention.reason = V1_REASONS[reason];
     }
+    return page;
+  },
+  // 2 -> 3 (ADR-0021): core block and background layer types renamed from
+  // Norwegian to English contract identifiers.
+  2: (page) => {
+    for (const section of page.sections ?? []) liftContractTokens(section);
     return page;
   },
 };

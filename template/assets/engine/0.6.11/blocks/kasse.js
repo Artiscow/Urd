@@ -42,7 +42,7 @@ export const kasseBlock = {
   version: 1,
   autoGrow: true,
   label: 'Kasse',
-  labelKey: 'blocks.kasse',
+  labelKey: 'blocks.checkout',
   defaults: () => ({ recipient: '', endpoint: '', vipps: '', currency: 'kr', vippsCheckout: false }),
   migrations: {},
   /**

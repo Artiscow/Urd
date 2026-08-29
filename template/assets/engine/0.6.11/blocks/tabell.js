@@ -28,7 +28,7 @@ export const tabellBlock = {
   version: 1,
   autoGrow: true,
   label: 'Tabell',
-  labelKey: 'blocks.tabell',
+  labelKey: 'blocks.table',
   // Seed-regelen (ADR-0012): ta() kalles kun her ved innsetting i preview.
   defaults: () => ({
     header: true,

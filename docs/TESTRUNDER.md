@@ -2,6 +2,18 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.14.2): Kontrakt-tokens til engelsk med migrering
+
+Kjernen i testen er invarianten: en side bygget FØR renamet skal se identisk ut etter.
+
+- [ ] MIGRERING: en side lagret før denne versjonen (v2, gjerne med butikk-, samlings-, galleri-, tidslinje- og sitatblokker, seksjonsroller og bildegalleri-lag) åpner identisk i editoren og hos besøkende; publisering skriver den løftede formen (schemaVersion 3, engelske tokens) uten visuell endring
+- [ ] Gamle localStorage-utkast (fra før renamet) lastes og rendres riktig
+- [ ] En lagret mal (seksjon/blokkgruppe) fra før renamet settes inn med riktige blokker; en side-mal likeså
+- [ ] TIDSLINJE/SITAT: variantvalgene i Egenskaper (venstre/vekslende linje, stort/kort sitat) og markørvalget virker; gamle blokker med norske verdier viser samme variant som før
+- [ ] SEKSJONSROLLER: rollevelgeren viser alle sju rollene med riktige farger i begge moduser; gamle sider med norske roller beholder fargene
+- [ ] Kalender-/kart-/skjemablokker (plugin-typene) er uendret på gamle og nye sider
+- [ ] i18n: blokk-etikettene, rollene og variantvalgene har riktige tekster i nb, en-GB og tr
+
 ### Testrunde-batch (0.7.7): Video-bakgrunnslag og mediegrensene
 
 Laget og grensene kan testes lokalt; materialiseringen ved publisering trenger en deployet side.

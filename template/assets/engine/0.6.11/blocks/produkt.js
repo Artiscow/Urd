@@ -295,7 +295,7 @@ export const produktBlock = {
   // på blokk-elementet (render.js hopper over; kortene animeres i render).
   animPerCard: true,
   label: 'Produktkort',
-  labelKey: 'blocks.produkt',
+  labelKey: 'blocks.product',
   defaults: () => ({ collection: null, limit: 0, columns: 0, currency: 'kr' }),
   migrations: {},
   /**

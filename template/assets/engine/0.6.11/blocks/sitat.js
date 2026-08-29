@@ -15,29 +15,35 @@ import { growSectionTo } from '../render.js';
 import { accentCss } from './tidslinje.js';
 
 export const sitatBlock = {
-  version: 1,
+  version: 2,
   autoGrow: true,
   label: 'Sitat',
-  labelKey: 'blocks.sitat',
+  labelKey: 'blocks.quote',
   // Seed-regelen (ADR-0012): ta() kalles kun her ved innsetting i preview.
   defaults: () => ({
     text: ta('seed.sitat.text'),
     attribution: ta('seed.sitat.name'),
     role: ta('seed.sitat.role'),
-    variant: 'stor',
+    variant: 'large',
     image: '',
     accent: null,
   }),
-  migrations: {},
+  migrations: {
+    // 1 -> 2 (ADR-0021): Norwegian variant values renamed to English.
+    1: (props) => ({
+      ...props,
+      variant: props.variant === 'kort' ? 'short' : props.variant === 'stor' ? 'large' : props.variant,
+    }),
+  },
   /**
    * @param {HTMLElement} el
    * @param {{text: string, attribution: string, role: string, variant?: string, image?: string, accent?: string|null}} props
    * @param {object} ctx Render-kontekst
    */
   render(el, props, ctx) {
-    const kort = props.variant === 'kort';
+    const kort = props.variant === 'short';
     const host = document.createElement('figure');
-    host.className = `urd-sitat urd-sitat-${kort ? 'kort' : 'stor'}`;
+    host.className = `urd-sitat urd-sitat-${kort ? 'short' : 'large'}`;
     // Aksenten (glyf og portrettring) kun som validert hex/tematoken.
     const accent = accentCss(props.accent);
     if (accent) host.style.setProperty('--urd-sitat-accent', accent);

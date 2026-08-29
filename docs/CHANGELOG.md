@@ -25,6 +25,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.14.2 - Engelsk-renskingen: kontrakt-tokens med sidemigrering v3 - 30. august 2026
+
+- Sidemigrering v2 → v3 (ADR-0021): de 11 norske blokktypene (samling/galleri/tidslinje/sitat/statistikk/tabell/deling/nedteller/produkt/handlekurv/kasse → collection/gallery/timeline/quote/stats/table/share/countdown/product/cart/checkout) og lagtypen bildegalleri → slideshow løftes av `pageMigrations[2]` via eksportert `liftContractTokens`; mal-nyttelaster løftes ved innsetting (maler-model.js) siden de går utenom sideløftet. Migreringstester med full token-fixture, idempotens og mutasjonsvern.
+- Funn under gjennomføringen: seksjonsrollene (`section.theme`: flate/aksent/invers/dus/dempet/dyp/uthevet → surface/accent/inverse/soft/muted/deep/highlighted) og prop-enumverdiene i tidslinje (venstre/veksler/fylt) og sitat (stor/kort) var også persistert norsk kontrakt utenfor kartleggingen; rollene tas av samme sidemigrering, prop-verdiene av blokkenes egne v2-migreringer (ADR-0005), og en systematisk skanning av alle blokkdefinisjoners litteraler fant ingen flere. Kartet i ADR-0021 er utvidet.
+- Registry-aliasmekanismen (registry.js): gammel kontrakt-id løses til gjeldende definisjon ved miss, direkte define vinner alltid; tas i bruk for plugin-tokens i etappe .4. Med test.
+- i18n-nøklene (blocks.*, tip.blocks.*, bgLayer.slideshow, sectionTheme.*, opt-verdinøklene) renamet i alle fem admin-ordbøker og alle konsumenter; klasse-suffiksene urd-tidslinje-left/-alternating og urd-sitat-large/-short byttet i base.css med nytt stempel i alle fem skall; eksempeldata løftet til schemaVersion 3 og SKJEMA.md/skjema-beskrivelsen oppdatert i samme commit.
+
 ### 0.7.14.1 - Engelsk-renskingen: ADR-0021, regelen og milepælen - 30. august 2026
 
 Første etappe av milepæl 0.7.14: all norsk tekst i koden skal bli engelsk, inkludert datakontrakt-verdiene (besluttet 30. august 2026).

@@ -242,7 +242,7 @@ export const samlingBlock = {
   // blokker som bærer dette flagget (scrollposisjonen bevares).
   usesCollections: true,
   label: 'Samling',
-  labelKey: 'blocks.samling',
+  labelKey: 'blocks.collection',
   defaults: () => ({ collection: null, view: 'cards', limit: 6, newestFirst: true }),
   migrations: {},
   /**

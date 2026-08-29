@@ -97,3 +97,19 @@ test('staging: maler-registeret (0.6.7) tar imot plugin-maler med fromPlugin-mer
   const diffs = checkProvides({ maler: ['var-hero'] }, { maler: ['var-hero'] });
   assert.equal(diffs.length, 0);
 });
+
+// Registry aliases (ADR-0021): old contract ids resolve to the current
+// definition, while a plugin that still defines the old id wins directly.
+test('registry alias resolves an old id, direct define wins over alias', async () => {
+  const { createRegistry } = await engineImport('registry.js');
+  const reg = createRegistry('blocks');
+  const nyDef = { version: 1 };
+  reg.define('calendar', nyDef);
+  reg.alias('kalender', 'calendar');
+  assert.equal(reg.get('kalender'), nyDef);
+  assert.equal(reg.get('calendar'), nyDef);
+  const gammelDef = { version: 1 };
+  reg.define('kalender', gammelDef);
+  assert.equal(reg.get('kalender'), gammelDef);
+  assert.equal(reg.get('ukjent'), undefined);
+});
