@@ -82,7 +82,7 @@ Fasen er delt opp i milepæler 9. august 2026: arkitekturavklaringene (bredde, m
   - [x] 0.7.14.1 ADR-0021, AGENTS.md-regelen («All tekst i kode er engelsk») og denne milepælen
   - [x] 0.7.14.2 Blokktypene + lagtypen `bildegalleri` med sidemigrering v3 (pageMigrations[2], liftContractTokens for mal-innsetting, registry-aliasmekanismen), i18n-nøklene blocks.*/bgLayer.*, eksempeldata løftet, SKJEMA.md. Utvidet under gjennomføringen: seksjonsrollene (samme sidemigrering) og prop-enumverdiene i timeline/quote (blokkenes egne v2-migreringer) var også persistert norsk kontrakt
   - [x] 0.7.14.3 Preset-idene med sidemigrering v4 (pageMigrations[3]), page-presets-startpakkene, preset.<id>.*-nøklene, eksempelsider løftet
-  - [ ] 0.7.14.4 Plugin-laget: mapper/ider/blokk- og preset-ider/CSS/locales for referanse-pluginene, motor-aliaser for de gamle idene, provides.maler->templates dual-read, Urd.maler-alias, alias-matrisetest
+  - [x] 0.7.14.4 Plugin-laget: mapper/ider/blokk- og preset-ider/CSS/locales for referanse-pluginene, motor-aliaser for de gamle idene, provides.maler->templates dual-read, Urd.maler-alias, alias-matrisetest
   - [ ] 0.7.14.5 Motorfil-renames (git mv av ~14 moduler) med modulepreload-listene i alle skall, tests/_engine.mjs og editorens $engine-importer; forhåndssjekk av dynamiske import()-kall
   - [ ] 0.7.14.6 JS-identifikatorene, resterende i18n-nøkler (hint*/opt*/canvas*), urd-maler->urd-templates-meldingen, utkastnøkkel-migreringen (migrate-on-read i draft-storen)
   - [ ] 0.7.14.7 CSS-klassene (urd-handlekurv-*->urd-cart-* osv., nytt djb2-stempel i alle 5 skall, kopiene byte-like); breaking for egendefinert CSS, bokføres i CHANGELOG

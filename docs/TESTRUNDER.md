@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.14.4): Plugin-laget med aliaser
+
+- [ ] Fersk side: kalender-, kart- og skjemablokkene virker som før (blokkmeny, redigering, preview og publisert); Hva skjer-/Finn oss-/Kontaktskjema-presetene finnes i seksjonsgalleriet med riktige navn
+- [ ] GAMMEL SIDE + NY MOTOR + GAMMEL PLUGIN-MAPPE: en side bygget før renamet (blokktype kalender/kart/skjema, preset hva-skjer) rendrer riktig med de gamle plugin-mappene i repoet (direkte treff)
+- [ ] GAMMEL SIDE + NY PLUGIN-MAPPE: samme side med de NYE plugin-mappene rendrer riktig via aliasene (blokker og preset-adder)
+- [ ] Kartpluginens CSP-instruks viser fortsatt riktig frame-src-linje; skjemainnsending og kalenderens ICS-kilder virker
+- [ ] Svensk språkpakke (lang-sv) kan aktiveres og gir svensk besøkende-språk
+- [ ] i18n: plugin-tekstene (kalendervisninger, skjemafelt, kart) er uendret i nb/en-GB/tr
+
 ### Testrunde-batch (0.7.14.3): Preset-idene til engelsk med migrering
 
 - [ ] En side lagret før renamet (med f.eks. butikk-, steg- og hovedoppslag-seksjoner) beholder «+ kort/rad»-adderknappen i seksjonsverktøylinjen etter innlasting (preset-oppslaget virker via migreringen)

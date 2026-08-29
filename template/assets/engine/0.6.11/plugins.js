@@ -83,7 +83,7 @@ const KINDS = [
   ['sections', 'sectionPresets'],
   ['backgrounds', 'backgrounds'],
   ['animations', 'animations'],
-  ['maler', 'maler'],
+  ['templates', 'templates'],
 ];
 
 /**
@@ -106,6 +106,9 @@ export function createStagedUrd(Urd, pluginName = null) {
       ids: () => Urd[kind].ids(),
     };
   }
+  // Legacy alias (ADR-0021): plugins written before the rename register
+  // their templates through urd.maler.
+  staged.maler = staged.templates;
   return {
     staged,
     /** @returns {string[]} Advarsler (f.eks. id-kollisjoner som ble hoppet over) */
@@ -140,7 +143,10 @@ export function createStagedUrd(Urd, pluginName = null) {
 export function checkProvides(provides, defined) {
   const diffs = [];
   for (const [, provideKey] of KINDS) {
-    const promised = provides?.[provideKey] ?? [];
+    // Dual-read (ADR-0021): the manifest key was 'maler' before the rename.
+    const promised = provides?.[provideKey]
+      ?? (provideKey === 'templates' ? provides?.maler : undefined)
+      ?? [];
     const actual = defined[provideKey] ?? [];
     for (const id of promised) {
       if (!actual.includes(id)) diffs.push(`lover ${provideKey}/${id} men definerte den ikke`);

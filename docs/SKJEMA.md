@@ -277,26 +277,28 @@ Statiske hoster kan ikke liste mapper, så en indeksfil peker ut aktive plugins:
 Hver plugin er en mappe med manifest + ES-modul (kalender-referansepluginen viser hele formen):
 
 ```json
-// plugins/kalender/plugin.json
+// plugins/calendar/plugin.json
 {
-  "id": "kalender",
+  "id": "calendar",
   "name": "Kalender",
   "names": { "nb": "Kalender", "nn": "Kalender", "en-GB": "Calendar", "se": "Kaleandar", "tr": "Takvim" },
   "locales": true,
   "version": "1.0.0",
   "requiresEngine": ">=0.6.8 <1.0.0",
   "entry": "index.js",
-  "provides": { "blocks": ["kalender"], "sectionPresets": ["hva-skjer"], "backgrounds": [], "animations": [], "maler": [] }
+  "provides": { "blocks": ["calendar"], "sectionPresets": ["whats-on"], "backgrounds": [], "animations": [], "templates": [] }
 }
 ```
 
 ```js
-// plugins/kalender/index.js
+// plugins/calendar/index.js
 export function register(Urd) {
-  Urd.blocks.define('kalender', { version: 1, /* … */ });
-  Urd.sections.define('hva-skjer', { label: 'Hva skjer', /* … */ });
+  Urd.blocks.define('calendar', { version: 1, /* … */ });
+  Urd.sections.define('whats-on', { label: 'Hva skjer', /* … */ });
 }
 ```
+
+Provides-nøkkelen `templates` het `maler` før ADR-0021; det gamle navnet leses fortsatt (dual-read i plugins.js), og gamle plugins som registrerer via `Urd.maler` treffer samme register som `Urd.templates`. Motoren aliaser de gamle referanseplugin-idene (blokkene kalender/kart/skjema → calendar/map/form, presetene hva-skjer/finn-oss/kontaktskjema → whats-on/find-us/contact-form), så sider bygget før renamet virker både med gamle og manuelt oppdaterte plugin-mapper.
 
 Valgfrie manifest-felt (alle additive):
 

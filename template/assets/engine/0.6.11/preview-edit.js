@@ -927,8 +927,8 @@ function makeSectionAdder(index, above = null) {
       if (!groups.has(group)) groups.set(group, { labelKey: def.groupKey ?? null, defs: [] });
       groups.get(group).defs.push(def);
     }
-    for (const id of window.Urd.maler?.ids?.() ?? []) {
-      const mal = window.Urd.maler.get(id);
+    for (const id of window.Urd.templates?.ids?.() ?? []) {
+      const mal = window.Urd.templates.get(id);
       if (mal?.kind !== 'section' || !mal.section) continue;
       pluginDefs.push({ label: mal.name ?? id, fromPlugin: mal.fromPlugin, create: () => cloneSectionForInsert(mal.section, makeId) });
     }

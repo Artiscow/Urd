@@ -125,7 +125,7 @@
         },
         {
           "id": "blk-ef036d5f",
-          "type": "kalender",
+          "type": "calendar",
           "version": 1,
           "props": {
             "sources": [
@@ -190,7 +190,7 @@
     {
       "id": "sec-72471997",
       "version": 1,
-      "preset": "hva-skjer",
+      "preset": "whats-on",
       "size": {
         "minHeight": "1280px"
       },
@@ -275,7 +275,7 @@
         },
         {
           "id": "blk-2d9ebc4e",
-          "type": "kart",
+          "type": "map",
           "version": 1,
           "props": {
             "location": "https://www.openstreetmap.org/#map=18/63.426891/10.396446",

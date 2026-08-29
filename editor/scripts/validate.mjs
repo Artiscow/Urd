@@ -24,10 +24,10 @@ ajv.addSchema(pageSchema); // mal.schema.json refererer page-skjemaets $defs ($i
 
 const cases = [
   ['template/content/site.json', siteSchema.$id],
-  ['template/plugins/kalender/plugin.json', pluginSchema],
-  ['template/plugins/skjema/plugin.json', pluginSchema],
-  ['template/plugins/kart/plugin.json', pluginSchema],
-  ['template/plugins/sprak-svensk/plugin.json', pluginSchema],
+  ['template/plugins/calendar/plugin.json', pluginSchema],
+  ['template/plugins/form/plugin.json', pluginSchema],
+  ['template/plugins/map/plugin.json', pluginSchema],
+  ['template/plugins/lang-sv/plugin.json', pluginSchema],
 ];
 
 // Alle sider fra sideregisteret valideres, ikke en håndplukket liste: da fanges

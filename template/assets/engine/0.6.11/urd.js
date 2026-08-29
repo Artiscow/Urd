@@ -58,8 +58,12 @@ export const Urd = {
   // Plugin-leverte maler (0.6.7, samme def-form som malfilene: {name, kind,
   // section|blocks}); seksjonsgalleriet fletter kind section inn i
   // plugin-gruppen. Pakking/deling av maler hører til 0.6.9.
-  maler: createRegistry('maler'),
+  templates: createRegistry('templates'),
 };
+
+// Legacy alias (ADR-0021): plugins written before the rename register
+// through Urd.maler; both names refer to the same registry forever.
+Urd.maler = Urd.templates;
 
 // Globalt tilgjengelig for plugins (register(Urd)) og editorens preview-bro.
 window.Urd = Urd;
@@ -93,6 +97,16 @@ function registerCore() {
   Urd.backgrounds.define('video', videoLayer);
   for (const [id, def] of Object.entries(coreAnimations)) Urd.animations.define(id, def);
   registerSectionPresets(Urd);
+  // Old plugin contract ids resolve to the renamed reference plugins
+  // (ADR-0021): a manually updated plugin folder defines the new ids, while
+  // pages built before the rename still carry the old ones. A plugin that
+  // still defines the old id wins directly (registry alias semantics).
+  Urd.blocks.alias('kalender', 'calendar');
+  Urd.blocks.alias('kart', 'map');
+  Urd.blocks.alias('skjema', 'form');
+  Urd.sections.alias('hva-skjer', 'whats-on');
+  Urd.sections.alias('finn-oss', 'find-us');
+  Urd.sections.alias('kontaktskjema', 'contact-form');
 }
 
 /**

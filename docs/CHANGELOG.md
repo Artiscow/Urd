@@ -25,6 +25,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.14.4 - Engelsk-renskingen: plugin-laget med aliaser - 30. august 2026
+
+- Referansepluginene renamet (ADR-0021): mappene og idene kalender→calendar, kart→map, skjema→form, sprak-svensk→lang-sv, med blokk-/preset-ider (whats-on/find-us/contact-form), CSS-klasser (urd-cal-/urd-map-/urd-form-), i18n-nøkkelrom og locale-filer i samme runde; plugins.json aktiverer de nye idene og hjem.json bruker dem nativt.
+- Kompatibilitetslaget for gamle sider og gamle plugin-mapper (userPaths oppdateres aldri): motoren aliaser de seks gamle idene i registerCore, `Urd.maler` er varig alias for det renamede `Urd.templates`-registeret, staging-laget speiler aliaset, og `checkProvides` dual-leser det gamle manifest-feltet `provides.maler`. plugin.schema.json har `templates`-nøkkelen med `maler` som legacy; SKJEMA.md og plugins/README oppdatert. Tester for hele matrisen.
+- To funn fra verifiseringen: preset-fabrikkene i pluginene bar fortsatt blokktypene som `type: 'kalender'` m.fl. (fanget av residual-greppen), og validate.mjs hadde hardkodede stier til de gamle plugin-mappene (fanget av valideringssteget); begge rettet før commit.
+
 ### 0.7.14.3 - Engelsk-renskingen: preset-idene med sidemigrering v4 - 30. august 2026
 
 - Sidemigrering v3 → v4 (ADR-0021): de 26 norske kjerne-preset-idene (tom/hero-sentrert/funksjonskort/nyheter/oppslagstavle/arrangementer/hovedoppslag/butikk-familien/kasse m.fl. → blank/hero-centered/feature-cards/news/noticeboard/events/lead-story/shop-*/checkout m.fl.) løftes av `V3_PRESET_IDS` i `liftContractTokens`, så mal-innsettingen dekkes samtidig; plugin-presetene (hva-skjer/finn-oss/kontaktskjema) er bevisst utenfor mappen, med test på at de passerer urørt.

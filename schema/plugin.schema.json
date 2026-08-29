@@ -84,7 +84,8 @@
         "sectionPresets": { "$ref": "#/$defs/idList" },
         "backgrounds": { "$ref": "#/$defs/idList" },
         "animations": { "$ref": "#/$defs/idList" },
-        "maler": { "$ref": "#/$defs/idList" }
+        "templates": { "$ref": "#/$defs/idList" },
+        "maler": { "$ref": "#/$defs/idList", "$comment": "Legacy-navnet for templates (ADR-0021); leses fortsatt, skrives ikke i nye manifest." }
       }
     }
   },
