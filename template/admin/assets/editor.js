@@ -4975,7 +4975,7 @@ function Go(e) {
 	});
 }
 //#endregion
-//#region ../template/assets/engine/0.6.11/maler-model.js
+//#region ../template/assets/engine/0.6.11/templates-model.js
 var Ko = [
 	"section",
 	"blocks",
@@ -4998,7 +4998,7 @@ function Jo(e, t, { id: n, title: r }) {
 	return i;
 }
 //#endregion
-//#region ../template/assets/engine/0.6.11/samlinger-csv.js
+//#region ../template/assets/engine/0.6.11/collections-csv.js
 var Yo = [
 	"id",
 	"title",
@@ -5822,7 +5822,7 @@ function Ac(e, t, n, r) {
 	xc() ? Oc(e, t, n, r) : bc(e, t, n, r);
 }
 //#endregion
-//#region ../template/assets/engine/0.6.11/galleri-model.js
+//#region ../template/assets/engine/0.6.11/gallery-model.js
 function jc(e, t, n) {
 	return !Number.isFinite(n) || n < 1 ? 0 : (((Number.isFinite(e) ? e : 0) + t) % n + n) % n;
 }
@@ -5834,7 +5834,7 @@ function Nc(e, { min: t = 2, fallback: n = 5 } = {}) {
 	return !Number.isFinite(r) || r <= 0 ? n : Math.max(t, r);
 }
 //#endregion
-//#region ../template/assets/engine/0.6.11/backgrounds/bildegalleri.js
+//#region ../template/assets/engine/0.6.11/backgrounds/slideshow.js
 var Pc = {
 	version: 1,
 	label: "Bildegalleri",
@@ -9865,7 +9865,7 @@ function Cf(e, t) {
 			samlinger: []
 		};
 		try {
-			e = await (await fetch("/content/samlinger.json")).json();
+			e = await (await fetch("/content/collections.json")).json();
 		} catch {}
 		io = Yi("urd-draft-samlinger", () => e, S), P(co, [...io.data.samlinger ?? []], !0);
 		for (let e of z(co)) {
@@ -11897,13 +11897,13 @@ function Cf(e, t) {
 			}
 			if (io?.hasDraft()) {
 				e.push({
-					path: "content/samlinger.json",
+					path: "content/collections.json",
 					content: JSON.stringify(io.data, null, 2) + "\n",
 					encoding: "utf-8"
 				}), n.push("urd-draft-samlinger");
 				let t = { samlinger: [] };
 				try {
-					t = await (await fetch("/content/samlinger.json")).json();
+					t = await (await fetch("/content/collections.json")).json();
 				} catch {}
 				let r = new Set(e.map((e) => e.path));
 				for (let n of t.samlinger ?? []) {

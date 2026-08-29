@@ -8,8 +8,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { parseStatValue, formatStatValue } = await engineImport('blocks/statistikk.js');
-const { accentCss } = await engineImport('blocks/tidslinje.js');
+const { parseStatValue, formatStatValue } = await engineImport('blocks/stats.js');
+const { accentCss } = await engineImport('blocks/timeline.js');
 
 test('parseStatValue: rene tall med gruppering og desimal tolkes', () => {
   assert.deepEqual(parseStatValue('4800'), { num: 4800, decimals: 0 });

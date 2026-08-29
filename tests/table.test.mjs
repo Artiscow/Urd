@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { tabellBlock, normalizeRows } = await engineImport('blocks/tabell.js');
+const { tabellBlock, normalizeRows } = await engineImport('blocks/table.js');
 
 test('normalizeRows: korte rader fylles ut til rektangel', () => {
   assert.deepEqual(normalizeRows([['a', 'b', 'c'], ['d']]), [['a', 'b', 'c'], ['d', '', '']]);

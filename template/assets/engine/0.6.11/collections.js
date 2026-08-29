@@ -1,6 +1,6 @@
 /**
  * Samlinger (datablokk-mønsteret, ADR-0007): datahenting og rene hjelpere.
- * Hjelperne er uten DOM og testes i tests/samlinger.test.mjs; samling-blokken (blocks/samling.js) bruker dem.
+ * Hjelperne er uten DOM og testes i tests/samlinger.test.mjs; samling-blokken (blocks/collection.js) bruker dem.
  */
 import { dates } from './i18n.js';
 

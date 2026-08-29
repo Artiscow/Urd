@@ -1,5 +1,5 @@
 /**
- * Kontraktstester for samlingenes CSV-import/-eksport (engine/samlinger-csv.js):
+ * Kontraktstester for samlingenes CSV-import/-eksport (engine/collections-csv.js):
  * runde-tripp, RFC 4180-anførselstegn, listefeltene (|), tallfeltene og
  * header-styrt tolkning. Panel-flyten (nedlasting/fil-les) testes manuelt.
  */
@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { entriesToCsv, csvToEntries, parseCsv } = await engineImport('samlinger-csv.js');
+const { entriesToCsv, csvToEntries, parseCsv } = await engineImport('collections-csv.js');
 
 const ENTRIES = [
   { id: 'sjokoladekake', title: 'Sjokoladekake', text: 'Saftig, med "mørk" ganache', price: 350, badge: 'Bestselger', sizes: ['Liten', 'Stor'] },

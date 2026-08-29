@@ -9,7 +9,7 @@
  * bakgrunnsklikk lukker. Body-scroll låses av body:has(dialog:modal) i
  * base.css, ingen JS-bokføring.
  */
-import { stepIndex } from './galleri-model.js';
+import { stepIndex } from './gallery-model.js';
 import { t } from './i18n.js';
 
 let overlay = null;

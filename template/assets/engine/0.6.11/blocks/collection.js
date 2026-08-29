@@ -7,7 +7,7 @@
  * Datahentingen er asynkron: render tegner skallet synkront og fyller når
  * samlingen er lastet; manglende samling gir rolig tomtilstand, aldri krasj.
  */
-import { getCollection, sortEntries, groupByYear, dateBadge } from '../samlinger.js';
+import { getCollection, sortEntries, groupByYear, dateBadge } from '../collections.js';
 import { growSectionTo } from '../render.js';
 import { stripActiveContent } from '../sanitize.js';
 import { isSafeHref } from '../nav-model.js';

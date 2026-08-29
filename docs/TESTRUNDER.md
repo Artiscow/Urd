@@ -2,6 +2,12 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.14.5): Motorfil-renames
+
+- [ ] Lokal server (dev-server.py): forsiden og alle undersider laster uten 404 i nettverkspanelet (alle modulepreloads treffer); editoren åpner og alle blokktyper rendrer
+- [ ] Butikkflyten ende til ende etter filflyttingen: produktkort, kurvskuff, kasse og nav-kurv virker (shop.js/cart.js/checkout.js)
+- [ ] Galleri med lightbox, samlingsblokk, maler-innsetting og CSV-eksport/-import virker (gallery-model/collections/collections-csv/templates-model)
+
 ### Testrunde-batch (0.7.14.4): Plugin-laget med aliaser
 
 - [ ] Fersk side: kalender-, kart- og skjemablokkene virker som før (blokkmeny, redigering, preview og publisert); Hva skjer-/Finn oss-/Kontaktskjema-presetene finnes i seksjonsgalleriet med riktige navn

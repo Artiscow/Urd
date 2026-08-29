@@ -3,8 +3,8 @@
  * localStorage-lagring. Kurven er en flat liste av linjer {key, id, title,
  * price, qty, variant?, image?}; key identifiserer produkt + variantvalg,
  * så samme produkt i to størrelser er to linjer. De rene hjelperne muterer
- * aldri input og testes i tests/butikk.test.mjs; blokkene (blocks/produkt.js
- * og blocks/handlekurv.js) står for rendering.
+ * aldri input og testes i tests/butikk.test.mjs; blokkene (blocks/product.js
+ * og blocks/cart.js) står for rendering.
  *
  * Kjernen er gateway-fri: kurven bor hos den besøkende (localStorage),
  * og bestillingen sendes som skjema i kassen. Ingen nettverkskall her.

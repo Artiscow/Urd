@@ -25,6 +25,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.14.5 - Engelsk-renskingen: motorfil- og testfil-renames - 30. august 2026
+
+- 17 motorfiler git mv-et til engelske navn (ADR-0021): shop.js, collections.js, collections-csv.js, gallery-model.js, templates-model.js, de 11 blokkfilene og backgrounds/slideshow.js, pluss ti testfiler med norske navn. Alle statiske importer, editorens $engine-importer, testenes engineImport-stier og modulepreload-listen i skallene oppdatert i samme commit (slug-kopiene byte-like re-kopiert).
+- Forhåndssjekkene fant ingen dynamiske import()-kall mot de flyttede modulene og ingen re-eksporter i /assets/urd-skallene; sti-omtalene i SKJEMA.md, BACKLOG.md og AGENTS-modullisten fulgte med (historiske CHANGELOG-innslag står urørt).
+
 ### 0.7.14.4 - Engelsk-renskingen: plugin-laget med aliaser - 30. august 2026
 
 - Referansepluginene renamet (ADR-0021): mappene og idene kalender→calendar, kart→map, skjema→form, sprak-svensk→lang-sv, med blokk-/preset-ider (whats-on/find-us/contact-form), CSS-klasser (urd-cal-/urd-map-/urd-form-), i18n-nøkkelrom og locale-filer i samme runde; plugins.json aktiverer de nye idene og hjem.json bruker dem nativt.

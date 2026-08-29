@@ -1,6 +1,6 @@
 /**
  * Kjerneblokk: kasse (butikken). Bestillingsskjema uten betalingsgateway:
- * ordresammendraget leses fra kurven (butikk.js), kontaktfeltene (navn,
+ * ordresammendraget leses fra kurven (shop.js), kontaktfeltene (navn,
  * e-post, telefon, kommentar) valideres, og bestillingen sendes som
  * e-postutkast (mailto, null oppsett) eller som JSON til et valgfritt
  * endepunkt. Honeypot-feltet stopper enkle bots (utfylt = forkastet i
@@ -10,7 +10,7 @@
 import {
   readCart, writeCart, cartTotal, formatPrice, orderLines,
   buildOrderBody, buildOrderMailto, buildOrderPayload, isEmail, onCartChange,
-} from '../butikk.js';
+} from '../shop.js';
 import { growSectionTo } from '../render.js';
 // Kun kalt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
 import { ta, adminLocaleReady, t } from '../i18n.js';

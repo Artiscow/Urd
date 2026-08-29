@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { countdownParts, parseTarget, nedtellerBlock } = await engineImport('blocks/nedteller.js');
+const { countdownParts, parseTarget, nedtellerBlock } = await engineImport('blocks/countdown.js');
 
 test('countdownParts: deler tiden i dager/timer/minutter/sekunder', () => {
   const now = Date.UTC(2026, 7, 14, 12, 0, 0);

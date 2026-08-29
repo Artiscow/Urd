@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { shareUrl, SHARE_SERVICES, delingBlock } = await engineImport('blocks/deling.js');
+const { shareUrl, SHARE_SERVICES, delingBlock } = await engineImport('blocks/share.js');
 
 const URL_EX = 'https://forening.no/side?a=1&b=2';
 const TITLE = 'Vår side & mer';

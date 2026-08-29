@@ -1,5 +1,5 @@
 /**
- * Kontraktstester for butikkens rene kurvlogikk (engine/butikk.js): linjer
+ * Kontraktstester for butikkens rene kurvlogikk (engine/shop.js): linjer
  * slås sammen per nøkkel, antall klemmes, sum og antall regnes riktig, og
  * prisvisningen er deterministisk. DOM/localStorage (readCart/writeCart)
  * testes manuelt (testrundene).
@@ -11,7 +11,7 @@ import { engineImport } from './_engine.mjs';
 const {
   cartAdd, cartSetQty, cartRemove, cartCount, cartTotal, itemKey, variantLabel, formatPrice,
   isEmail, orderLines, buildOrderBody, buildOrderMailto, buildOrderPayload, altCardImage,
-} = await engineImport('butikk.js');
+} = await engineImport('shop.js');
 
 const KAKE = { key: 'kake|Stor', id: 'kake', title: 'Sjokoladekake', price: 350 };
 

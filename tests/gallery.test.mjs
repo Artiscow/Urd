@@ -6,11 +6,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { stepIndex, canAutoplay, normalizeInterval, gridColumns } = await engineImport('galleri-model.js');
+const { stepIndex, canAutoplay, normalizeInterval, gridColumns } = await engineImport('gallery-model.js');
 const { presetThumb, parseMinHeightPx } = await engineImport('preset-thumb.js');
 const { registerSectionPresets } = await engineImport('sections/presets.js');
-const { galleriBlock } = await engineImport('blocks/galleri.js');
-const { bildegalleriLayer } = await engineImport('backgrounds/bildegalleri.js');
+const { galleriBlock } = await engineImport('blocks/gallery.js');
+const { bildegalleriLayer } = await engineImport('backgrounds/slideshow.js');
 
 test('stepIndex: rundgang begge veier', () => {
   assert.equal(stepIndex(0, 1, 3), 1);

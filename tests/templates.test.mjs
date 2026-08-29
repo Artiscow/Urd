@@ -1,5 +1,5 @@
 /**
- * Mal-modellen (0.6.7): kontraktstester for maler-model.js - id-regimet,
+ * Mal-modellen (0.6.7): kontraktstester for templates-model.js - id-regimet,
  * re-id-invariantene ved innsetting og anker/klem-geometrien for
  * blokkgrupper. Skjemakontrakten (mal.schema.json) valideres i
  * editor/scripts/validate.mjs; her testes de rene funksjonene.
@@ -7,7 +7,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { malId, cloneSectionForInsert, cloneBlocksForInsert, clonePageForInsert, MAL_KINDS, MAL_SCHEMA_VERSION } = await engineImport('maler-model.js');
+const { malId, cloneSectionForInsert, cloneBlocksForInsert, clonePageForInsert, MAL_KINDS, MAL_SCHEMA_VERSION } = await engineImport('templates-model.js');
 
 let counter = 0;
 const makeId = (prefix) => `${prefix}-test-${++counter}`;

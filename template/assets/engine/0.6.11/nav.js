@@ -14,8 +14,8 @@
 import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, navScrollState, isSafeImage } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
-import { readCart, cartCount, onCartChange } from './butikk.js';
-import { createCartDrawer } from './blocks/handlekurv.js';
+import { readCart, cartCount, onCartChange } from './shop.js';
+import { createCartDrawer } from './blocks/cart.js';
 import { iconSvg } from './icons.js';
 import { t } from './i18n.js';
 

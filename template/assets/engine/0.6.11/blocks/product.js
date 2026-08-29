@@ -3,7 +3,7 @@
  * Rendrer innslagene i en produktsamling (kind «products») som kort med
  * bilde, badge, pris (og evt. medlemspris), størrelses- og fargevalg og
  * «Legg i handlekurv». Fargevalg med eget bilde bytter kortets bilde.
- * Katalogen er git-eid data; kurven bor hos den besøkende (butikk.js).
+ * Katalogen er git-eid data; kurven bor hos den besøkende (shop.js).
  *
  * Hos besøkende åpner klikk på bilde/tittel en quick view: produktdetaljene
  * i en native <dialog> (ADR-0011) med bildegalleri, full tekst, variantvalg
@@ -14,12 +14,12 @@
  * Innholdet er strukturert DATA: tittel/tekst er rik tekst gjennom samme
  * vern som samling-blokken, alt annet rendres med textContent.
  */
-import { getCollection } from '../samlinger.js';
-import { applyEntryImageStyle } from './samling.js';
+import { getCollection } from '../collections.js';
+import { applyEntryImageStyle } from './collection.js';
 import { growSectionTo, renderCardAnimations } from '../render.js';
 import { stripActiveContent, plainText } from '../sanitize.js';
 import { iconSvg } from '../icons.js';
-import { readCart, writeCart, cartAdd, itemKey, variantLabel, formatPrice, altCardImage } from '../butikk.js';
+import { readCart, writeCart, cartAdd, itemKey, variantLabel, formatPrice, altCardImage } from '../shop.js';
 // Kun kalt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
 import { ta, adminLocaleReady, t } from '../i18n.js';
 

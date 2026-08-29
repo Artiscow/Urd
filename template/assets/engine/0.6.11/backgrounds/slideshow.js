@@ -8,7 +8,7 @@
  * aldri tones inn mot et halvlastet bilde. Timeren rydder seg selv når
  * laget forsvinner fra DOM (re-render-churn i preview).
  */
-import { canAutoplay, normalizeInterval, stepIndex } from '../galleri-model.js';
+import { canAutoplay, normalizeInterval, stepIndex } from '../gallery-model.js';
 import { isSafeImage } from '../nav-model.js';
 import { bgSize, bgPosition } from './image.js';
 

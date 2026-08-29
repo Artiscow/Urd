@@ -92,7 +92,7 @@ const V1_REASONS = {
  * returneres urørt, og en byte-lik kopi av desktop-framen gir null: det
  * var materialiseringens fallback for blokker utenfor flyten, aldri en
  * håndsatt plassering. Brukes av sidemigreringen OG av mal-innsettingen
- * (maler-model.js), som setter inn lagrede nyttelaster utenom sideløftet.
+ * (templates-model.js), som setter inn lagrede nyttelaster utenom sideløftet.
  */
 export function liftMobileFrame(m, desktop) {
   if (!m || !('y' in m || 'h' in m)) return m ?? null;

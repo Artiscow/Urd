@@ -20,7 +20,7 @@
 import { frameToCss, mobilePlacementToCss, reorderMobileKey } from './render.js';
 import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
-import { cloneSectionForInsert, cloneBlocksForInsert } from './maler-model.js';
+import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
 import { searchItems } from './palette-search.js';
 import { applicableLayouts, layoutFrames } from './section-layouts.js';
 import { presetThumb } from './preset-thumb.js';

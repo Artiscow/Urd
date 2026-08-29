@@ -2,10 +2,10 @@
  * Kjerneblokk: handlekurv (butikken). En knapp med antall-badge som åpner
  * en skuff bygget på native `<dialog>`/showModal (ADR-0011: top-layer,
  * ::backdrop, fokusfelle og Escape gratis). Kurven bor i localStorage
- * (butikk.js); skuffen viser linjene med antall-styring, sum og en valgfri
+ * (shop.js); skuffen viser linjene med antall-styring, sum og en valgfri
  * lenke til kassesiden. Badge og skuff følger urd-cart-change-hendelsen.
  */
-import { readCart, writeCart, cartSetQty, cartRemove, cartCount, cartTotal, formatPrice, onCartChange } from '../butikk.js';
+import { readCart, writeCart, cartSetQty, cartRemove, cartCount, cartTotal, formatPrice, onCartChange } from '../shop.js';
 import { iconSvg } from '../icons.js';
 // Kun kalt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
 import { ta, adminLocaleReady, t } from '../i18n.js';

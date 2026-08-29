@@ -12,7 +12,7 @@
 // Kun kalt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
 import { ta } from '../i18n.js';
 import { growSectionTo } from '../render.js';
-import { accentCss } from './tidslinje.js';
+import { accentCss } from './timeline.js';
 
 export const sitatBlock = {
   version: 2,

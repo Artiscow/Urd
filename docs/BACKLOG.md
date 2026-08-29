@@ -14,7 +14,7 @@ Fasen er delt opp i milepæler 9. august 2026: arkitekturavklaringene (bredde, m
 
 - **0.7.0 Løpende** (stående punkt, viderefører 0.6.0-konvensjonen): arbeidsflyt, kodegjennomganger og vedlikehold som ikke hører under noen milepæl; innslag nummereres 0.7.0.x. Ingen «Ferdig når»-linje, punktet lukkes aldri
   - [ ] Vaktliste fra moderniseringsgjennomgangen 10. august 2026: plattformfunksjoner som er interessante men ikke klare. Hver har en eksplisitt gate, slik ADR-0011 krever; sjekkes ved fasegjennomganger, bygges ikke før gaten er passert
-    - `::scroll-marker()` / `::scroll-button()` (Chrome 135+, Safari 19+, Firefox bak flagg): ville erstattet de håndrullede prikkene og pilene i `blocks/galleri.js`, og trolig motorens eneste `setInterval`. Gate: baseline i alle tre motorene
+    - `::scroll-marker()` / `::scroll-button()` (Chrome 135+, Safari 19+, Firefox bak flagg): ville erstattet de håndrullede prikkene og pilene i `blocks/gallery.js`, og trolig motorens eneste `setInterval`. Gate: baseline i alle tre motorene
     - `appearance: base-select` (Chromium-only): den eneste veien som noen gang kan pensjonere ADR-0009s forbud mot native `<select>` og dermed BEGGE nedtrekks-implementasjonene. Gate: Firefox og Safari i stabil
     - MCP-protokollversjonen (nyeste spesifikasjon er 2026-07-28; roots, sampling og logging er deprekert med minst tolv måneders levetid). Urd bruker ingen av dem, men versjonen sjekkes før MCP-koden bygges i v0.8 (ADR-0017)
   - [ ] Node-versjonen er kun festet i CI (`tests.yml` og `release.yml`, begge `node-version: 22`), og repoet har verken `.nvmrc` eller `engines`-felt. Bump til gjeldende LTS-linje og fest den ett sted så CI og lokal utvikling ikke driver fra hverandre
@@ -83,7 +83,7 @@ Fasen er delt opp i milepæler 9. august 2026: arkitekturavklaringene (bredde, m
   - [x] 0.7.14.2 Blokktypene + lagtypen `bildegalleri` med sidemigrering v3 (pageMigrations[2], liftContractTokens for mal-innsetting, registry-aliasmekanismen), i18n-nøklene blocks.*/bgLayer.*, eksempeldata løftet, SKJEMA.md. Utvidet under gjennomføringen: seksjonsrollene (samme sidemigrering) og prop-enumverdiene i timeline/quote (blokkenes egne v2-migreringer) var også persistert norsk kontrakt
   - [x] 0.7.14.3 Preset-idene med sidemigrering v4 (pageMigrations[3]), page-presets-startpakkene, preset.<id>.*-nøklene, eksempelsider løftet
   - [x] 0.7.14.4 Plugin-laget: mapper/ider/blokk- og preset-ider/CSS/locales for referanse-pluginene, motor-aliaser for de gamle idene, provides.maler->templates dual-read, Urd.maler-alias, alias-matrisetest
-  - [ ] 0.7.14.5 Motorfil-renames (git mv av ~14 moduler) med modulepreload-listene i alle skall, tests/_engine.mjs og editorens $engine-importer; forhåndssjekk av dynamiske import()-kall
+  - [x] 0.7.14.5 Motorfil-renames (git mv av ~14 moduler) med modulepreload-listene i alle skall, tests/_engine.mjs og editorens $engine-importer; forhåndssjekk av dynamiske import()-kall. Ti norske testfilnavn tatt i samme etappe
   - [ ] 0.7.14.6 JS-identifikatorene, resterende i18n-nøkler (hint*/opt*/canvas*), urd-maler->urd-templates-meldingen, utkastnøkkel-migreringen (migrate-on-read i draft-storen)
   - [ ] 0.7.14.7 CSS-klassene (urd-handlekurv-*->urd-cart-* osv., nytt djb2-stempel i alle 5 skall, kopiene byte-like); breaking for egendefinert CSS, bokføres i CHANGELOG
   - [ ] 0.7.14.8 icons.js-lokaliseringen: labelKey per ikon + icon.*-nøkler i nb/en-GB/tr, engelske fallback-etiketter

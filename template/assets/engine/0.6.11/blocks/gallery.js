@@ -17,7 +17,7 @@
  */
 import { applyImageStyle } from './image.js';
 import { growSectionTo } from '../render.js';
-import { stepIndex, canAutoplay, normalizeInterval, gridColumns } from '../galleri-model.js';
+import { stepIndex, canAutoplay, normalizeInterval, gridColumns } from '../gallery-model.js';
 import { isSafeHref } from '../nav-model.js';
 // ta/adminLocaleReady: kun kallt i preview (etter at admin-ordboka er lastet), aldri på modulnivå.
 import { t, ta, adminLocaleReady } from '../i18n.js';

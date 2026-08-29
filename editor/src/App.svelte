@@ -20,8 +20,8 @@
   import { ta, taApiError, adminLang as currentAdminLang } from '$engine/i18n.js';
   import { validateManifest, satisfiesEngine } from '$engine/plugins.js';
   import { makeId } from '$engine/sections/presets.js';
-  import { malId, MAL_SCHEMA_VERSION, MAL_KINDS, clonePageForInsert } from '$engine/maler-model.js';
-  import { entriesToCsv, csvToEntries } from '$engine/samlinger-csv.js';
+  import { malId, MAL_SCHEMA_VERSION, MAL_KINDS, clonePageForInsert } from '$engine/templates-model.js';
+  import { entriesToCsv, csvToEntries } from '$engine/collections-csv.js';
   import { buildSitemapXml, buildRobotsTxt, buildRssXml, FEED_KINDS } from '$engine/feeds.js';
   import { pageThumb } from '$engine/preset-thumb.js';
   import { PAGE_PRESETS, buildPagePreset } from '$engine/page-presets.js';
@@ -33,7 +33,7 @@
   import { glowLayer } from '$engine/backgrounds/glow.js';
   import { grainLayer } from '$engine/backgrounds/grain.js';
   import { imageLayer } from '$engine/backgrounds/image.js';
-  import { bildegalleriLayer } from '$engine/backgrounds/bildegalleri.js';
+  import { bildegalleriLayer } from '$engine/backgrounds/slideshow.js';
   import { videoLayer } from '$engine/backgrounds/video.js';
   import { footerThumb } from '$engine/footer-thumb.js';
   import { coreAnimations } from '$engine/animations/core.js';
@@ -3032,7 +3032,7 @@
   async function initSamlinger() {
     let index = { version: 1, samlinger: [] };
     try {
-      index = await (await fetch('/content/samlinger.json')).json();
+      index = await (await fetch('/content/collections.json')).json();
     } catch { /* ingen indeks er helt greit */ }
     samlingerIndexStore = createDraftStore('urd-draft-samlinger', () => index, draftSaveError);
     samlingerIds = [...(samlingerIndexStore.data.samlinger ?? [])];
@@ -3271,7 +3271,7 @@
   }
 
   /** CSV-import: ERSTATTER samlingens innslag med radene fra fila (angre finnes).
-   *  Manglende/ugyldige id-er får nye; ren parsing bor i engine/samlinger-csv.js. */
+   *  Manglende/ugyldige id-er får nye; ren parsing bor i engine/collections-csv.js. */
   async function importSamlingCsv(id, event) {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -4931,12 +4931,12 @@
         draftKeys.push(`urd-draft-samling-${id}`);
       }
       if (samlingerIndexStore?.hasDraft()) {
-        files.push({ path: 'content/samlinger.json', content: JSON.stringify(samlingerIndexStore.data, null, 2) + '\n', encoding: 'utf-8' });
+        files.push({ path: 'content/collections.json', content: JSON.stringify(samlingerIndexStore.data, null, 2) + '\n', encoding: 'utf-8' });
         draftKeys.push('urd-draft-samlinger');
         // Samlinger fjernet fra indeksen slettes fra repoet (opprettes de også i samme publisering, vinner create-listen over).
         let publishedIndex = { samlinger: [] };
         try {
-          publishedIndex = await (await fetch('/content/samlinger.json')).json();
+          publishedIndex = await (await fetch('/content/collections.json')).json();
         } catch { /* ingen publisert indeks ennå */ }
         const created = new Set(files.map((f) => f.path));
         for (const id of publishedIndex.samlinger ?? []) {
