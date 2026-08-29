@@ -78,6 +78,21 @@ Fasen er delt opp i milepæler 9. august 2026: arkitekturavklaringene (bredde, m
   - [ ] LTT-gapene (lttstore.com-gjennomgangen 25. august 2026, for full Shopify-butikkfront-identitet): horisontal produktkarusell som view-variant på produkt-blokken; klient-side søk over den git-eide katalogen (mulig statisk); kontoer/ønskeliste/regionvelger er statisk uoppnåelig og dokumentert utenfor scope; nyhetsbrevarkiv og socialgalleri er alt komponerbare med samling/galleri (oppskrifter, ikke hull); hover-bildebytte på kortene levert i 0.7.5.e
 
   Ferdig når: gjennomgangen er dokumentert med hull-lista sortert inn i backloggen, og ApeironLF-mønstrene over er levert eller eksplisitt sortert til senere milepæler.
+- [ ] **0.7.14 Engelsk-renskingen** (ny milepæl 30. august 2026, [ADR-0021](adr/0021-engelsk-kodetekst-og-kontraktsidentifikatorer.md)): all norsk tekst i koden gjøres engelsk, inkludert datakontrakt-verdiene, mens norsk består i ordbøkene, docs, nettstedsinnhold og bevisste norske testdata. Kontrakten tas først (risikoen lander mens alt annet er urørt), kommentarsveipen sist (oversettelsene skrives mot endelige engelske identifikatorer). Lagringsstiene i brukerrepoer (content/samlinger/, content/maler/, sideslugs) beholdes; se ADR-ens avgrensninger. Navnekartet står i ADR-0021.
+  - [x] 0.7.14.1 ADR-0021, AGENTS.md-regelen («All tekst i kode er engelsk») og denne milepælen
+  - [ ] 0.7.14.2 Blokktypene + lagtypen `bildegalleri` med sidemigrering v3 (pageMigrations[2], liftContractTokens for mal-innsetting, registry-aliasmekanismen), i18n-nøklene blocks.*/bgLayer.*, eksempeldata løftet, SKJEMA.md
+  - [ ] 0.7.14.3 Preset-idene med sidemigrering v4 (pageMigrations[3]), page-presets-startpakkene, preset.<id>.*-nøklene, eksempelsider løftet
+  - [ ] 0.7.14.4 Plugin-laget: mapper/ider/blokk- og preset-ider/CSS/locales for referanse-pluginene, motor-aliaser for de gamle idene, provides.maler->templates dual-read, Urd.maler-alias, alias-matrisetest
+  - [ ] 0.7.14.5 Motorfil-renames (git mv av ~14 moduler) med modulepreload-listene i alle skall, tests/_engine.mjs og editorens $engine-importer; forhåndssjekk av dynamiske import()-kall
+  - [ ] 0.7.14.6 JS-identifikatorene, resterende i18n-nøkler (hint*/opt*/canvas*), urd-maler->urd-templates-meldingen, utkastnøkkel-migreringen (migrate-on-read i draft-storen)
+  - [ ] 0.7.14.7 CSS-klassene (urd-handlekurv-*->urd-cart-* osv., nytt djb2-stempel i alle 5 skall, kopiene byte-like); breaking for egendefinert CSS, bokføres i CHANGELOG
+  - [ ] 0.7.14.8 icons.js-lokaliseringen: labelKey per ikon + icon.*-nøkler i nb/en-GB/tr, engelske fallback-etiketter
+  - [ ] 0.7.14.9 Resterende strenger: fallback-litteraler, hardkodede titler/placeholders (med nøkler), feil-/konsollmeldinger, check-release.mjs, dev-server.py, workflow-stegnavnene, skjema-beskrivelsestekstene
+  - [ ] 0.7.14.10 Testene: 477 beskrivelser og assertion-meldinger til engelsk, testfil-renames; norske fixture-data består som bevisst testinnhold
+  - [ ] 0.7.14.11-.16 Kommentarsveipen (~5 450 linjer i seks batcher: preview-edit.js; App.svelte; motor-rot A; motor-rot B + blocks/backgrounds/sections/animations; editor/src/lib; base.css med nytt stempel + skall + workflows + dev-server + scripts + ordbok-headere + plugin-kommentarer), med kommentarreglene i AGENTS.md anvendt samtidig; bundel-diffen skal være tom for rene kommentarbatcher
+  - [ ] 0.7.14.17 Sluttaudit (repo-vid æøå-grep pluss stopwordliste) + push-klargjøring
+
+  Ferdig når: norsk-auditen er ren utenfor locales/, docs/, content/, readme/ og bevisste fixtures; migrerings- og aliastestene dekker alle gamle tokens med idempotens og plugin-matrisen; og alle suiter, bygg og validering er grønne.
 
 ## Til v0.8 og senere faser HUSK: Se /sammenligning før vi starter
 

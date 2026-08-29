@@ -25,6 +25,14 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.14.1 - Engelsk-renskingen: ADR-0021, regelen og milepælen - 30. august 2026
+
+Første etappe av milepæl 0.7.14: all norsk tekst i koden skal bli engelsk, inkludert datakontrakt-verdiene (besluttet 30. august 2026).
+
+- Ny regel i AGENTS.md (Skrivestil): all tekst i kode er engelsk; norsk består kun i språkordbøkene, dokumentasjonen og nettstedsinnhold. KANONISK-punktet forlikt med regelen.
+- Ny [ADR-0021](adr/0021-engelsk-kodetekst-og-kontraktsidentifikatorer.md): navnekartet for blokktyper/preset-ider/plugin-tokens, migreringsmodellen (stegvise sidemigreringer for kjernetokens, registry-aliaser for plugin-eide tokens siden gamle plugin-mapper i brukerrepoer aldri oppdateres), og avgrensningene (lagringsstiene i brukerrepoer beholdes, CSS-klassene renames uten migrering).
+- Backlog-milepæl 0.7.14 med de sytten etappene som delpunkter og observerbar Ferdig når-linje (repo-vid norsk-audit ren, migrerings-/aliastester dekker alle gamle tokens).
+
 ### 0.7.7 - Video-bakgrunnslag og mediegrensene - 30. august 2026
 
 Milepæl 0.7.7 (funksjonskartet C6). Sammenligningskartene ble lest i sin helhet før leveransen ble lukket; gjennomlesningen ga observer-avspillingen, parallax-pariteten og en kartrettelse (C7).
