@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.14.3): Preset-idene til engelsk med migrering
+
+- [ ] En side lagret før renamet (med f.eks. butikk-, steg- og hovedoppslag-seksjoner) beholder «+ kort/rad»-adderknappen i seksjonsverktøylinjen etter innlasting (preset-oppslaget virker via migreringen)
+- [ ] «+ Ny seksjon»-galleriet viser alle gruppene med riktige etiketter og miniatyrer; Butikk-gruppen heter fortsatt Butikk i nb (nøkkelen er presetGroup.shop)
+- [ ] «Ny side fra mal» viser alle åtte startpakkene med riktige navn i nb/en-GB/tr, og alle bygger gyldige sider
+- [ ] En gammel lagret mal med norsk preset-id på seksjonen settes inn og beholder adder-knappen
+- [ ] Ukjent side-adresse viser fortsatt tom side uten konsollfeil (fallback-oppføringen)
+
 ### Testrunde-batch (0.7.14.2): Kontrakt-tokens til engelsk med migrering
 
 Kjernen i testen er invarianten: en side bygget FØR renamet skal se identisk ut etter.

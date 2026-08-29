@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "meta": {
     "id": "om-oss",
     "title": "Om oss"
@@ -8,7 +8,7 @@
     {
       "id": "sec-82c3367e",
       "version": 1,
-      "preset": "hovedoppslag",
+      "preset": "lead-story",
       "size": {
         "minHeight": "976px"
       },

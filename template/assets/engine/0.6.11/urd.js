@@ -465,7 +465,7 @@ export async function boot(opts) {
   wireViewTransitionNames();
 
   // Tomt sideregister (håndredigert site.json) gir en tom side, ikke krasj.
-  const entry = resolvePage(site) ?? { id: 'tom', title: '', file: 'content/pages/finnes-ikke.json' };
+  const entry = resolvePage(site) ?? { id: 'empty', title: '', file: 'content/pages/missing.json' };
   // Versjonsløfting på filnivå: eldre sidefiler løftes til gjeldende
   // format i minnet (disk skrives først ved neste publisering).
   // Mangler sidefilen (halvferdig deploy, håndredigert register), vises

@@ -21,18 +21,18 @@ registerSectionPresets({ sections: { define: (id, def) => defs.set(id, def) } })
 
 /** Startpakkene i visningsrekkefølge; sections er kjerne-preset-id-er. */
 export const PAGE_PRESETS = [
-  { id: 'landing', labelKey: 'pageTemplate.landing', sections: ['hero', 'funksjonskort', 'statistikk', 'sitat', 'cta'] },
-  { id: 'om-oss', labelKey: 'pageTemplate.about', sections: ['hero-sentrert', 'team', 'tidslinje', 'sponsorer', 'cta'] },
-  { id: 'kontakt', labelKey: 'pageTemplate.contact', sections: ['hero-sentrert', 'kontakt', 'faq'] },
-  { id: 'portefolje', labelKey: 'pageTemplate.portfolio', sections: ['hero-sentrert', 'galleri', 'sitat', 'cta'] },
-  { id: 'arrangement', labelKey: 'pageTemplate.event', sections: ['hovedoppslag', 'arrangementer', 'steg', 'faq', 'cta'] },
+  { id: 'landing', labelKey: 'pageTemplate.landing', sections: ['hero', 'feature-cards', 'stats', 'quote', 'cta'] },
+  { id: 'about', labelKey: 'pageTemplate.about', sections: ['hero-centered', 'team', 'timeline', 'sponsors', 'cta'] },
+  { id: 'contact', labelKey: 'pageTemplate.contact', sections: ['hero-centered', 'contact', 'faq'] },
+  { id: 'portfolio', labelKey: 'pageTemplate.portfolio', sections: ['hero-centered', 'gallery', 'quote', 'cta'] },
+  { id: 'event', labelKey: 'pageTemplate.event', sections: ['lead-story', 'events', 'steps', 'faq', 'cta'] },
   // Butikkmønsteret (0.7.5): butikken er en egen side, og kassen sin egen -
   // eieren peker handlekurvens Kasseside-valg på kassesiden etterpå.
   // butikkforside er den fulle butikkfronten (Shopify-mønsteret): kampanje-
   // hero, produktbånd, kategorifliser, statement-bånd, tillit og CTA.
-  { id: 'butikk', labelKey: 'pageTemplate.butikk', sections: ['butikk-hero', 'butikk', 'faq', 'cta'] },
-  { id: 'butikkforside', labelKey: 'pageTemplate.butikkforside', sections: ['butikk-hero', 'butikk', 'butikk-kategorier', 'butikk-utstilling', 'butikk-tillit', 'cta'] },
-  { id: 'kasse', labelKey: 'pageTemplate.kasse', sections: ['kasse', 'kontakt'] },
+  { id: 'shop', labelKey: 'pageTemplate.shop', sections: ['shop-hero', 'shop', 'faq', 'cta'] },
+  { id: 'shop-front', labelKey: 'pageTemplate.shopFront', sections: ['shop-hero', 'shop', 'shop-categories', 'shop-showcase', 'shop-trust', 'cta'] },
+  { id: 'checkout', labelKey: 'pageTemplate.checkout', sections: ['checkout', 'contact'] },
 ];
 
 /**

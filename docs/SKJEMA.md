@@ -14,7 +14,7 @@ Nettstedets rot: identitet, sideregister, navigasjon, grid og tema.
 
 ```json
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "site": { "title": "Min forening", "lang": "no", "description": "" },
   "breakpoints": { "mobile": 640 },
   "layout": { "contentWidth": 1440, "gutter": 6 },
@@ -245,7 +245,7 @@ while (data.version < def.version) {
 - **I minnet:** lasting muterer aldri repoet. JSON på disk skrives først ved neste publisering (da i løftet form).
 - **Rene funksjoner:** migreringer får props inn og gir props ut. Ingen DOM, ingen sideeffekter - de kan enhetstestes trivielt.
 - **Manglende migrering eller ukjent type:** plassholder-rendering, original-JSON urørt. Aldri kast, aldri slett.
-- **Filnivå:** `schemaVersion` løftes med samme stegvise mønster for strukturelle endringer, implementert i `liftPageFile()`/`liftSiteFile()` i migrate.js. Sidetabellen har stegene 1 → 2 (mobilmodellen, ADR-0019) og 2 → 3 (kontrakt-tokens til engelsk, ADR-0021); mal-nyttelaster løftes tilsvarende ved innsetting via `liftContractTokens` (maler-model.js), siden de settes inn utenom sideløftet.
+- **Filnivå:** `schemaVersion` løftes med samme stegvise mønster for strukturelle endringer, implementert i `liftPageFile()`/`liftSiteFile()` i migrate.js. Sidetabellen har stegene 1 → 2 (mobilmodellen, ADR-0019), 2 → 3 (kontrakt-tokens til engelsk, ADR-0021) og 3 → 4 (kjerne-preset-idene, ADR-0021); mal-nyttelaster løftes tilsvarende ved innsetting via `liftContractTokens` (maler-model.js), siden de settes inn utenom sideløftet.
 
 Denne kontrakten er grunnen til at en Urd-oppdatering aldri knuser en bygget side - og fra første reelle formatendring etter v1.0 skal testsuiten alltid inneholde minst én reell v(n)→v(n+1)-migrering som bevis (maskineriet selv er dekket av de syntetiske testene i `tests/migrate.test.mjs`).
 

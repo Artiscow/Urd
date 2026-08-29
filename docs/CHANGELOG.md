@@ -25,6 +25,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.14.3 - Engelsk-renskingen: preset-idene med sidemigrering v4 - 30. august 2026
+
+- Sidemigrering v3 → v4 (ADR-0021): de 26 norske kjerne-preset-idene (tom/hero-sentrert/funksjonskort/nyheter/oppslagstavle/arrangementer/hovedoppslag/butikk-familien/kasse m.fl. → blank/hero-centered/feature-cards/news/noticeboard/events/lead-story/shop-*/checkout m.fl.) løftes av `V3_PRESET_IDS` i `liftContractTokens`, så mal-innsettingen dekkes samtidig; plugin-presetene (hva-skjer/finn-oss/kontaktskjema) er bevisst utenfor mappen, med test på at de passerer urørt.
+- Alle define/section-kall i sections/presets.js, startpakkene i page-presets.js (nye ids about/contact/portfolio/event/shop/shop-front/checkout med oppdaterte seksjonslister), `presetGroup.shop`, `pageTemplate`-nøklene og preset.*-nøklene i alle fem admin-ordbøker renamet i samme commit; eksempelsidene løftet til schemaVersion 4 med nye preset-verdier og SKJEMA.md-migreringsavsnittet utvidet.
+- To funn fra verifiseringen underveis: `galleri`-preset-paret manglet i rename-løkka (fanget av startpakke-testen) og presets.js-konsumentene av `presetGroup.butikk` hang etter ordbok-renamet (fanget av residual-greppen); begge rettet før commit.
+- Småstrenger i randsonen: App-ens nye-side-preset er `'blank'`, og urd.js-fallbacken for ukjent side heter nå `empty`/`missing.json`.
+
 ### 0.7.14.2 - Engelsk-renskingen: kontrakt-tokens med sidemigrering v3 - 30. august 2026
 
 - Sidemigrering v2 → v3 (ADR-0021): de 11 norske blokktypene (samling/galleri/tidslinje/sitat/statistikk/tabell/deling/nedteller/produkt/handlekurv/kasse → collection/gallery/timeline/quote/stats/table/share/countdown/product/cart/checkout) og lagtypen bildegalleri → slideshow løftes av `pageMigrations[2]` via eksportert `liftContractTokens`; mal-nyttelaster løftes ved innsetting (maler-model.js) siden de går utenom sideløftet. Migreringstester med full token-fixture, idempotens og mutasjonsvern.

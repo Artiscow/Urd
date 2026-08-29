@@ -205,6 +205,7 @@ const v2Page = () => ({
     id: 'sec-1',
     version: 1,
     theme: 'dyp',
+    preset: 'butikk',
     background: { version: 1, layers: [
       { type: 'bildegalleri', version: 1, props: {} },
       { type: 'image', version: 1, props: {} },
@@ -232,6 +233,7 @@ test('page v2 -> v3: every core token is renamed', () => {
   assert.equal(lifted.schemaVersion, PAGE_SCHEMA_VERSION);
   const section = lifted.sections[0];
   assert.equal(section.theme, 'deep');
+  assert.equal(section.preset, 'shop');
   assert.deepEqual(section.blocks.map((b) => b.type), [
     'collection', 'gallery', 'timeline', 'quote', 'stats', 'table',
     'share', 'countdown', 'product', 'cart', 'checkout', 'kalender', 'text',
@@ -266,4 +268,20 @@ test('page v2 -> v3 never mutates the original', () => {
   assert.equal(original.schemaVersion, 2);
   assert.equal(original.sections[0].theme, 'dyp');
   assert.equal(original.sections[0].blocks[0].type, 'samling');
+});
+
+test('page v3 written between the rename steps still gets its presets lifted', () => {
+  const page = v2Page();
+  page.schemaVersion = 3;
+  page.sections[0].preset = 'hero-sentrert';
+  const lifted = liftPageFile(page, {});
+  assert.equal(lifted.schemaVersion, PAGE_SCHEMA_VERSION);
+  assert.equal(lifted.sections[0].preset, 'hero-centered');
+});
+
+test('plugin preset ids pass the preset lift untouched', () => {
+  const page = v2Page();
+  page.sections[0].preset = 'hva-skjer';
+  const lifted = liftPageFile(page, {});
+  assert.equal(lifted.sections[0].preset, 'hva-skjer');
 });

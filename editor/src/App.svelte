@@ -2138,7 +2138,7 @@
       sections: [{
         id: makeId('sec'),
         version: 1,
-        preset: 'tom',
+        preset: 'blank',
         size: { minHeight: '40vh' },
         grid: null,
         background: { version: 1, layers: [{ type: 'color', version: 1, props: { value: 'bg' } }] },

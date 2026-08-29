@@ -49,7 +49,7 @@ export function lift(data, def) {
 }
 
 /** Gjeldende versjon av sidefil-formatet (content/pages/*.json). */
-export const PAGE_SCHEMA_VERSION = 3;
+export const PAGE_SCHEMA_VERSION = 4;
 
 /**
  * Radhøyden i mobil-radnettet (ADR-0019), i px. En modellkonstant på linje
@@ -146,6 +146,40 @@ export const V2_SECTION_THEMES = {
 };
 
 /**
+ * Core section preset ids renamed in v4 (ADR-0021). Plugin preset ids
+ * (hva-skjer, finn-oss, kontaktskjema) are deliberately absent; they resolve
+ * through registry aliases like the plugin block types.
+ */
+export const V3_PRESET_IDS = {
+  tom: 'blank',
+  'hero-sentrert': 'hero-centered',
+  bilder: 'images',
+  galleri: 'gallery',
+  kontakt: 'contact',
+  funksjonskort: 'feature-cards',
+  'funksjonskort-enkel': 'feature-cards-simple',
+  nyheter: 'news',
+  'nyheter-samling': 'news-collection',
+  oppslagstavle: 'noticeboard',
+  publikasjonsarkiv: 'publication-archive',
+  arrangementer: 'events',
+  tidslinje: 'timeline',
+  steg: 'steps',
+  hovedoppslag: 'lead-story',
+  produkter: 'products',
+  butikk: 'shop',
+  'butikk-hero': 'shop-hero',
+  'butikk-kategorier': 'shop-categories',
+  'butikk-tillit': 'shop-trust',
+  'butikk-utstilling': 'shop-showcase',
+  kasse: 'checkout',
+  sitat: 'quote',
+  statistikk: 'stats',
+  sponsorer: 'sponsors',
+  medlemskap: 'membership',
+};
+
+/**
  * Renames contract tokens (block types, background layer types and section
  * theme roles) in place. Accepts a section-like object ({blocks, background,
  * theme}) or a bare block array. Used by pageMigrations[2] and by template
@@ -162,6 +196,7 @@ export function liftContractTokens(target) {
       if (V2_LAYER_TYPES[layer.type]) layer.type = V2_LAYER_TYPES[layer.type];
     }
     if (V2_SECTION_THEMES[target.theme]) target.theme = V2_SECTION_THEMES[target.theme];
+    if (V3_PRESET_IDS[target.preset]) target.preset = V3_PRESET_IDS[target.preset];
   }
   return target;
 }
@@ -190,6 +225,13 @@ const pageMigrations = {
   // 2 -> 3 (ADR-0021): core block and background layer types renamed from
   // Norwegian to English contract identifiers.
   2: (page) => {
+    for (const section of page.sections ?? []) liftContractTokens(section);
+    return page;
+  },
+  // 3 -> 4 (ADR-0021): core section preset ids renamed. liftContractTokens
+  // covers presets too, so a v2 page gets them in the first step and this
+  // step is its no-op second pass; pages written at exactly v3 need it.
+  3: (page) => {
     for (const section of page.sections ?? []) liftContractTokens(section);
     return page;
   },
