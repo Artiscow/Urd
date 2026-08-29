@@ -347,9 +347,11 @@ export function placeBlock(block, root) {
 export function demoAnimation(el) {
   if (!el) return;
   const ENTRANCE = ['urd-anim-fade-in', 'urd-anim-slide-up', 'urd-anim-zoom-in'];
-  const targets = el.classList.contains('urd-anim-stagger')
-    ? [...el.querySelectorAll(ENTRANCE.map((c) => `.${c}`).join(', '))]
-    : ENTRANCE.some((c) => el.classList.contains(c)) ? [el] : [];
+  // Bærer elementet en inngangsklasse selv, spilles det; ellers er det en
+  // gruppe-vert (stagger/kortvis) og de inngangsklassede etterkommerne spilles.
+  const targets = ENTRANCE.some((c) => el.classList.contains(c))
+    ? [el]
+    : [...el.querySelectorAll(ENTRANCE.map((c) => `.${c}`).join(', '))];
   if (!targets.length) return;
   for (const t of targets) {
     t.style.transition = 'none';

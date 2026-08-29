@@ -14,6 +14,10 @@
 
 const entranceDefaults = () => ({ duration: 600, delay: 0 });
 
+/* Standard trinn-tid (ms) mellom målene i gruppe-innganger: stagger-defaulten
+   og kortvis animasjon (applyCardAnimation) deler samme rytme. */
+const STAGGER_STEP = 90;
+
 export const coreAnimations = {
   'fade-in': { version: 1, label: 'Ton inn', labelKey: 'anim.fadeIn', entrance: true, defaults: entranceDefaults, migrations: {} },
   'slide-up': { version: 1, label: 'Gli opp', labelKey: 'anim.slideUp', entrance: true, defaults: entranceDefaults, migrations: {} },
@@ -27,7 +31,7 @@ export const coreAnimations = {
   // (additiv fra 0.6.6.4.6, eldre data mangler feltet og leses som 0).
   stagger: {
     version: 1, label: 'Stagger (kortgruppe)', labelKey: 'anim.stagger', entrance: true, group: true,
-    defaults: () => ({ duration: 600, delay: 0, step: 90, effect: 'slide-up', pattern: 'sequence' }),
+    defaults: () => ({ duration: 600, delay: 0, step: STAGGER_STEP, effect: 'slide-up', pattern: 'sequence' }),
     migrations: {},
   },
 };
@@ -72,8 +76,25 @@ export function staggerCenterDelays(count, step) {
 
 /** Delt observer: legger på .urd-anim-in første gang elementet er synlig. */
 let observer = null;
-// Seksjoner med stagger: verten observeres, men det er BARNA som slippes.
+// Gruppe-innganger (stagger/kortvis): verten observeres, men MÅLENE slippes.
 const staggerGroups = new WeakMap();
+
+/**
+ * Felles slipp for gruppe-innganger (stagger og kortvis): i preview og ved
+ * redusert bevegelse vises slutt-tilstanden straks; ellers slippes målene
+ * samlet første gang verten er synlig.
+ * @returns {boolean} true når målene faktisk venter på synlighet
+ */
+function releaseGroup(host, targets, ctx) {
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (ctx.preview || reduced) {
+    targets.forEach((el) => el.classList.add('urd-anim-in'));
+    return false;
+  }
+  staggerGroups.set(host, targets);
+  entranceObserver().observe(host);
+  return true;
+}
 
 /**
  * Inngangsanimasjonen spilles når elementet blir synlig - også hvis det er
@@ -110,7 +131,7 @@ function entranceObserver() {
  */
 function applyStagger(host, props, ctx) {
   const effect = STAGGER_EFFECTS.includes(props.effect) ? props.effect : 'slide-up';
-  const step = Number.isFinite(props.step) ? Math.max(0, props.step) : 90;
+  const step = Number.isFinite(props.step) ? Math.max(0, props.step) : STAGGER_STEP;
   const base = Number.isFinite(props.delay) ? Math.max(0, props.delay) : 0;
   host.classList.add('urd-anim-stagger');
   // Kort-blokkene: alle .urd-block i seksjonen som ikke alt har egen
@@ -131,14 +152,7 @@ function applyStagger(host, props, ctx) {
     if (props.duration != null) el.style.setProperty('--urd-anim-duration', `${props.duration}ms`);
     el.style.setProperty('--urd-anim-delay', `${base + delays[i]}ms`);
   });
-
-  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  if (ctx.preview || reduced) {
-    targets.forEach((el) => el.classList.add('urd-anim-in'));
-    return;
-  }
-  staggerGroups.set(host, targets);
-  entranceObserver().observe(host);
+  releaseGroup(host, targets, ctx);
 }
 
 /**
@@ -169,4 +183,45 @@ export function applyAnimation(el, type, props, def, ctx = {}) {
     return;
   }
   entranceObserver().observe(el);
+}
+
+/**
+ * Kortvis animasjon (blokker med animPerCard-flagget): blokkens
+ * inngangsanimasjon spilles per kort med index-forskjøvet delay fra ÉN
+ * felles trigger (blokkens synlighet), som stagger; pekereffekter legges
+ * på hvert kort. I preview/reduced-motion vises slutt-tilstanden straks.
+ *
+ * @param {HTMLElement} el Blokk-elementet (triggeren)
+ * @param {HTMLElement[]} cards Kort-elementene i rekkefølge
+ * @param {string} type Animasjonstype (nøkkel i registeret)
+ * @param {{duration?: number, delay?: number}} props Løftede props
+ * @param {{entrance?: boolean, group?: boolean}} def Typedefinisjonen
+ * @param {{preview?: boolean}} [ctx] Render-kontekst
+ */
+export function applyCardAnimation(el, cards, type, props, def, ctx = {}) {
+  // Stagger er seksjonsnivå og gir ikke mening kortvis.
+  if (def.group || !cards.length) return;
+  if (!def.entrance) {
+    for (const card of cards) applyAnimation(card, type, props, def, ctx);
+    return;
+  }
+  const base = Math.max(0, Number(props.delay) || 0);
+  cards.forEach((card, i) => {
+    card.classList.add(`urd-anim-${type}`);
+    if (props.duration != null) card.style.setProperty('--urd-anim-duration', `${props.duration}ms`);
+    card.style.setProperty('--urd-anim-delay', `${base + i * STAGGER_STEP}ms`);
+  });
+  if (releaseGroup(el, cards, ctx)) {
+    // Etter inngangen ryddes forsinkelsen bort: kombinasjonsregelen for
+    // inngang + pekereffekt (base.css) gjenbruker variabelen i transitionen,
+    // og tilbakeløftet skal ikke arve kortets forskjøvne start.
+    for (const card of cards) {
+      const clearDelay = (event) => {
+        if (event.target !== card || event.propertyName !== 'opacity') return;
+        card.style.removeProperty('--urd-anim-delay');
+        card.removeEventListener('transitionend', clearDelay);
+      };
+      card.addEventListener('transitionend', clearDelay);
+    }
+  }
 }

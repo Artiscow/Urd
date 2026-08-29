@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.5.3): Kortvis animasjon og nav-kurvens klaring
+
+- [ ] KORTVIS: produktblokk med Ton inn/Gli opp hos besøkende: kortene spiller enkeltvis med forskjøvet start når blokken scrolles inn, ikke blokken som helhet; med Løft ved peker løfter hvert kort seg individuelt, umiddelbart også langt ut i rekka, og tilbakeløftet henger ikke
+- [ ] Editor-demo: å velge animasjon på produktblokken spiller kortbølgen på lerretet; en produktblokk uten katalog (eller med tom) toner fortsatt blokk-elementet, valget er aldri stumt
+- [ ] Seksjon med stagger som også har en produktblokk med egen animasjon/hover: blokken dobbelt-animeres ikke (kun kortene spiller)
+- [ ] Redusert bevegelse (OS-innstilling): kortene vises straks uten animasjon
+- [ ] NAV-KURV: luft mellom kurvknappen og lys/mørk-bryteren (badgen berører ikke bryteren); uten alt-tema står kurven kant i kant med klyngens kant; mobilmenyen og sidefelt-nav ser riktig ut
+
 ### Testrunde-batch (0.7.0.3): Tag-stripping-fiksen og avhengighetsbumpene
 
 - [ ] Editoren virker som før etter Svelte/Vite-bumpene: åpne admin, rediger, angre, bytt panel og publiser uten nye feil i konsollen

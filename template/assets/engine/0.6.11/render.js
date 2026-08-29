@@ -14,7 +14,7 @@
  *    naturlig høyde, og seksjonshøyden følger av rutenettet.
  */
 import { lift, MOBILE_ROW, MOBILE_GAP } from './migrate.js';
-import { applyAnimation } from './animations/core.js';
+import { applyAnimation, applyCardAnimation } from './animations/core.js';
 import { applySectionTheme } from './theme.js';
 import { refreshSticky } from './sticky.js';
 import { t } from './i18n.js';
@@ -368,13 +368,22 @@ export function renderSection(section, site, host, opts = {}) {
 
 /** Felles blokk-rendering med migrering og plassholder-fallback. */
 function renderBlock(Urd, el, block, ctx) {
-  const lifted = lift(block, Urd.blocks.get(block.type));
+  const def = Urd.blocks.get(block.type);
+  const lifted = lift(block, def);
   if (lifted.ok) {
     try {
-      Urd.blocks.get(block.type).render(el, lifted.props, ctx);
+      def.render(el, lifted.props, ctx);
       // Inn-animasjon og pekereffekt er uavhengige felt og kan kombineres.
-      renderAnimation(Urd, el, block.animation, ctx);
-      renderAnimation(Urd, el, block.hover, ctx);
+      // Kortvis-blokker (animPerCard) sprer feltene på kortene sine selv
+      // via renderCardAnimations når kortene er hentet; markøren settes
+      // synkront her: seksjons-stagger velger målene sine i samme task,
+      // før kortene og klassene deres finnes.
+      if (!def.animPerCard) {
+        renderAnimation(Urd, el, block.animation, ctx);
+        renderAnimation(Urd, el, block.hover, ctx);
+      } else if (block.animation?.type || block.hover?.type) {
+        el.classList.add('urd-anim-kortvis');
+      }
     } catch (err) {
       console.warn(`Urd: blokk '${block.type}' feilet under render`, err);
       renderPlaceholder(el, block.type);
@@ -385,16 +394,33 @@ function renderBlock(Urd, el, block, ctx) {
 }
 
 /**
+ * Kortvis animasjon for blokker med animPerCard-flagget: blokkens
+ * animasjons- og hover-felt spres på kortene i stedet for blokk-elementet.
+ * Kortene finnes først etter datahenting, så blokken kaller selv når de
+ * er bygget; uten kort kan blokken sende seg selv som eneste mål, så
+ * feltene aldri står døde. Registeret leses fra window.Urd (satt av
+ * urd.js før første render; direkte import ville gitt en sirkel).
+ */
+export function renderCardAnimations(el, cards, block, ctx) {
+  if (!window.Urd) return;
+  for (const animation of [block?.animation, block?.hover]) {
+    renderAnimation(window.Urd, el, animation, ctx,
+      (target, type, props, def, c) => applyCardAnimation(target, cards, type, props, def, c));
+  }
+}
+
+/**
  * Valgfri animasjon på blokk/seksjon. Ukjent eller feilende animasjon
  * viser innholdet uanimert - animasjon er dekor og velter aldri siden.
+ * apply-parameteren lar kortvis-stien dele løftet og vernet her.
  */
-function renderAnimation(Urd, el, animation, ctx) {
+function renderAnimation(Urd, el, animation, ctx, apply = applyAnimation) {
   if (!animation?.type) return;
   const def = Urd.animations.get(animation.type);
   const lifted = lift(animation, def);
   if (!lifted.ok) return;
   try {
-    applyAnimation(el, animation.type, lifted.props, def, ctx);
+    apply(el, animation.type, lifted.props, def, ctx);
   } catch (err) {
     console.warn(`Urd: animasjonen '${animation.type}' feilet`, err);
   }

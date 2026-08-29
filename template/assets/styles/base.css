@@ -2133,6 +2133,18 @@ body.urd-chrome-off .urd-imged {
     box-shadow 0.2s ease;
 }
 
+/* Under peker gjelder rask transform, så løftet starter umiddelbart selv
+   når inngangens delay-variabel står på elementet (kortvis forskjøvet
+   start); inngangen selv treffer sjelden et element som alt er under
+   peker. */
+.urd-anim-slide-up.urd-anim-hover-lift:hover,
+.urd-anim-zoom-in.urd-anim-hover-lift:hover {
+  transition:
+    opacity var(--urd-anim-duration, 600ms) ease var(--urd-anim-delay, 0ms),
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
 .urd-anim-hover-lift:hover {
   transform: translateY(-4px);
 }
@@ -3032,6 +3044,13 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
   cursor: pointer;
   padding: 0.35rem;
   opacity: 0.85;
+}
+
+/* Klaringen mot neste verktøy ligger på naboen: badgen henger utenfor
+   knappen, og en kurv sist i klyngen skal stå kant i kant. */
+.urd-nav-cart + .urd-nav-theme,
+.urd-nav-cart + .urd-nav-burger {
+  margin-inline-start: 0.5rem;
 }
 
 .urd-nav-cart:hover,

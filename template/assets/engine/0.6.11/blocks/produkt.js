@@ -16,7 +16,7 @@
  */
 import { getCollection } from '../samlinger.js';
 import { applyEntryImageStyle } from './samling.js';
-import { growSectionTo } from '../render.js';
+import { growSectionTo, renderCardAnimations } from '../render.js';
 import { stripActiveContent, plainText } from '../sanitize.js';
 import { iconSvg } from '../icons.js';
 import { readCart, writeCart, cartAdd, itemKey, variantLabel, formatPrice, altCardImage } from '../butikk.js';
@@ -291,6 +291,9 @@ export const produktBlock = {
   // Samlingskonsument: urd-collections-meldingen rerendrer kun seksjoner med
   // blokker som bærer dette flagget (scrollposisjonen bevares).
   usesCollections: true,
+  // Kortvis animasjon: blokkens inngang/pekereffekt spilles per kort, ikke
+  // på blokk-elementet (render.js hopper over; kortene animeres i render).
+  animPerCard: true,
   label: 'Produktkort',
   labelKey: 'blocks.produkt',
   defaults: () => ({ collection: null, limit: 0, columns: 0, currency: 'kr' }),
@@ -304,8 +307,13 @@ export const produktBlock = {
     const host = el2('div', 'urd-produkt');
     el.appendChild(host);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
+    // Blokkens egne data: deles av autoveksten (urd-grow) og animasjonene.
+    const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
 
     if (!props.collection) {
+      // Uten kort spilles animasjonsfeltene på blokk-elementet, som på
+      // andre blokker, så valget i Egenskaper aldri står stumt.
+      if (block) renderCardAnimations(el, [el], block, ctx);
       adminLocaleReady.then(() => {
         if (host.isConnected) emptyState(el, ctx, ta('canvas.produktEmpty'));
       });
@@ -325,7 +333,6 @@ export const produktBlock = {
           const sectionEl = el.closest('.urd-section');
           if (sectionEl) growSectionTo(sectionEl, el.offsetTop + needed + 24);
           if (ctx.preview) {
-            const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
             if (block && block.frames.desktop.h !== needed) {
               block.frames.desktop = { ...block.frames.desktop, h: needed };
               // KUN høyden meldes (urd-grow), aldri hele framen.
@@ -339,6 +346,7 @@ export const produktBlock = {
       let entries = all;
       if (props.limit > 0) entries = entries.slice(0, props.limit);
       if (!entries.length) {
+        if (block) renderCardAnimations(el, [el], block, ctx);
         adminLocaleReady.then(() => {
           if (!host.isConnected) return;
           emptyState(el, ctx, ta('canvas.produktNoEntries', { name: data?.name ?? props.collection }),
@@ -349,9 +357,14 @@ export const produktBlock = {
       const grid = el2('div', 'urd-produkt-kortliste');
       const columns = Math.min(6, Math.max(0, Number(props.columns) || 0));
       if (columns) grid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
-      for (const entry of entries) grid.appendChild(renderCard(entry, props, editable, Boolean(ctx.preview)));
+      const cards = entries.map((entry) => renderCard(entry, props, editable, Boolean(ctx.preview)));
+      grid.append(...cards);
       host.appendChild(grid);
       fit();
+
+      // Kortvis animasjon (animPerCard): blokkens inngangsanimasjon spilles
+      // per kort med forskjøvet start, og pekereffekten løfter kort for kort.
+      if (block) renderCardAnimations(el, cards, block, ctx);
 
       if (editable) {
         Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {

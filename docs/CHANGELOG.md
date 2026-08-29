@@ -25,6 +25,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.5.3 - Kortvis animasjon på produktkortene og luft rundt nav-kurven - 29. august 2026
+
+- Testfunn: animasjon på produktblokken spilte blokken som én enhet. Blokkens inngang/pekereffekt spres nå kortvis (def-flagget `animPerCard`): hvert kort toner/glir inn med forskjøvet start, og løftet spilles per kort; uten kort spilles feltene på blokk-elementet, så valget i Egenskaper aldri står stumt (SKJEMA.md).
+- Testfunn: nav-kurven lå helt inntil lys/mørk-bryteren (antall-badgen henger utenfor knappen). Klaringen ligger nå på naboen via nabo-selektor, så en kurv sist i klyngen fortsatt står kant i kant.
+- Gjennomgang av diffen (ti vinkler) fant tre feil i den nye kortvis-mekanikken, rettet før commit: markøren som skulle holde seksjons-stagger unna blokk-elementet kom alltid for sent (settes nå synkront i renderBlock), hover-løftet arvet kortets inngangsforsinkelse gjennom kombinasjonsregelen i base.css (rask :hover-transform pluss delay-opprydding etter inngangen), og animasjonsdemoen var stum for produktblokker uten kort (blokk-fallback; demoAnimation velger nå mål strukturelt i stedet for via markørklasser).
+- Avduplisering fra samme gjennomgang: delt releaseGroup-slipp for stagger og kortvis, trinn-tallet samlet i én STAGGER_STEP, delt animasjonskonvolutt (apply-parameter på renderAnimation), og hevet blokk-oppslag pluss kortsamling ved bygging i produkt.js.
+
 ### 0.7.0.3 - CodeQL-funnet om tag-stripping og editor-avhengighetene - 28. august 2026
 
 - CodeQL flagget tag-strippingen `/<[^>]*>/g` («Incomplete multi-character sanitization»): én regex-pass kan la tagg-rester overleve. De tre stedene som lager ren tekst av rik tekst-titler (kurvlinjen i produkt-blokken, tomhetssjekken og panel-sammendraget i editoren) parser nå markupen i et inert dokument og leser tekstinnholdet: ny `plainText` i motorens sanitize.js og tilsvarende `plainTitle` i App.svelte.
