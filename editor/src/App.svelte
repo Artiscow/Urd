@@ -22,6 +22,7 @@
   import { makeId } from '$engine/sections/presets.js';
   import { malId, MAL_SCHEMA_VERSION, MAL_KINDS, clonePageForInsert } from '$engine/maler-model.js';
   import { entriesToCsv, csvToEntries } from '$engine/samlinger-csv.js';
+  import { buildSitemapXml, buildRobotsTxt, buildRssXml, FEED_KINDS } from '$engine/feeds.js';
   import { pageThumb } from '$engine/preset-thumb.js';
   import { PAGE_PRESETS, buildPagePreset } from '$engine/page-presets.js';
   import { searchItems as searchBlockItems } from '$engine/palette-search.js';
@@ -2146,6 +2147,7 @@
       activeSectionId = null;
       sectionGrid = null;
       updateDirty();
+      readSeoDraft();
       updateAttention();
       status = '';
     })();
@@ -2457,6 +2459,91 @@
       bridge?.sendPage(pageId, store.data);
     } else {
       patchPageDraft(entry, (p) => { p.meta.title = title; });
+    }
+  }
+
+  /** Reaktivt speil av den åpne sidens SEO-felter (Sider-panelet leser dette;
+   *  sannheten bor i store.data.meta og speiles inn ved sidebytte). */
+  let seoDraft = $state({ description: '', ogTitle: '', ogDescription: '', ogImage: '' });
+
+  function readSeoDraft() {
+    const meta = store?.data?.meta ?? {};
+    seoDraft = {
+      description: meta.description ?? '',
+      ogTitle: meta.og?.title ?? '',
+      ogDescription: meta.og?.description ?? '',
+      ogImage: meta.og?.image ?? '',
+    };
+  }
+
+  /** SEO-feltene på den åpne siden (Søk og deling). Tomme felt slettes fra
+   *  meta, så sidefilen holder seg ren; og-objektet fjernes når det tømmes. */
+  function setPageSeo(field, rawValue) {
+    const value = String(rawValue ?? '').trim();
+    if (field === 'description') {
+      if (value) store.data.meta.description = value;
+      else delete store.data.meta.description;
+    } else {
+      const key = { ogTitle: 'title', ogDescription: 'description', ogImage: 'image' }[field];
+      const og = { ...(store.data.meta.og ?? {}) };
+      if (value) og[key] = value;
+      else delete og[key];
+      if (Object.keys(og).length) store.data.meta.og = og;
+      else delete store.data.meta.og;
+    }
+    store.save();
+    updateDirty();
+    readSeoDraft();
+    const entry = siteDraft.pages.find((p) => p.id === pageId);
+    missingSeo[pageId] = entry?.noindex ? false : !store.data.meta.description;
+  }
+
+  /** Skjul fra søkemotorer: flagget bor i SIDEREGISTERET (site.json), så
+   *  publiseringen kan filtrere sitemapen uten å laste alle sidefilene. */
+  function setPageNoindex(checked) {
+    const entry = siteDraft.pages.find((p) => p.id === pageId);
+    if (!entry) return;
+    siteMutate('edit:page-noindex', () => {
+      if (checked) entry.noindex = true;
+      else delete entry.noindex;
+    });
+    // Skjulte sider er utenfor søk og markeres aldri som mangelfulle.
+    missingSeo[pageId] = checked ? false : !store?.data?.meta?.description;
+  }
+
+  /** Sider som mangler metabeskrivelse (varselmarkøren i Sider-panelet):
+   *  beregnes når panelet åpnes; den åpne siden oppdateres ved redigering. */
+  let missingSeo = $state({});
+
+  async function refreshMissingSeo() {
+    const out = {};
+    for (const entry of siteDraft.pages) {
+      if (entry.noindex) continue;
+      if (entry.id === pageId) {
+        out[entry.id] = !store?.data?.meta?.description;
+        continue;
+      }
+      const page = await readPageDraft(entry);
+      out[entry.id] = !page?.meta?.description;
+    }
+    missingSeo = out;
+  }
+
+  $effect(() => {
+    if (activePanel === 'pages' && pageId) refreshMissingSeo();
+  });
+
+  /** Delingsbildet: komprimeres som andre bilder og materialiseres til
+   *  media/ ved publisering. */
+  async function uploadOgImage(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      const img = await compressOrTrim(file);
+      setPageSeo('ogImage', img.dataUrl);
+    } catch {
+      setStatus(ta('status.imageReadError'), 'error');
     }
   }
 
@@ -3206,7 +3293,7 @@
         (header.split(';').map((s) => s.trim()).find((s) => s.startsWith(`${name} `)) ?? '')
           .split(/\s+/).slice(1),
       );
-      liveCsp = { frameSrc: directive('frame-src'), connectSrc: directive('connect-src') };
+      liveCsp = { frameSrc: directive('frame-src'), connectSrc: directive('connect-src'), scriptSrc: directive('script-src') };
     } catch {
       liveCsp = { unknown: true };
     }
@@ -3216,11 +3303,12 @@
    *  vises i instruksen (innstillinger vises kun når de er relevante). */
   function cspMissing(csp) {
     const need = [
+      ...(csp.scriptSrc ?? []).map((host) => ['script-src', host]),
       ...(csp.connectSrc ?? []).map((host) => ['connect-src', host]),
       ...(csp.frameSrc ?? []).map((host) => ['frame-src', host]),
     ];
     if (!liveCsp || liveCsp.unknown) return [];
-    const present = { 'connect-src': liveCsp.connectSrc, 'frame-src': liveCsp.frameSrc };
+    const present = { 'script-src': liveCsp.scriptSrc, 'connect-src': liveCsp.connectSrc, 'frame-src': liveCsp.frameSrc };
     return need.filter(([dir, host]) => !present[dir]?.has(host)).map(([dir, host]) => `${dir} ${host}`);
   }
 
@@ -4591,6 +4679,8 @@
 
   function materializeImages(page) {
     const files = [];
+    // Delingsbildet (meta.og.image) materialiseres som blokkbildene.
+    if (page.meta?.og) materializeField(page.meta.og, 'image', 'deling', files);
     for (const section of page.sections) materializeSection(section, files);
     return files;
   }
@@ -4778,6 +4868,22 @@
         const out = JSON.parse(JSON.stringify(st.data));
         for (const entry of out.entries) materializeEntryImages(entry, files);
         files.push({ path: `content/samlinger/${id}.json`, content: JSON.stringify(out, null, 2) + '\n', encoding: 'utf-8' });
+        // Daterte samlinger får RSS-feed i samme publisering (SEO-pakken):
+        // innslagene som ren tekst, adressene fra opprinnelsen admin kjører på.
+        if (FEED_KINDS.includes(out.kind)) {
+          files.push({
+            path: `content/samlinger/${id}.xml`,
+            content: buildRssXml({
+              title: out.name ?? id,
+              origin: location.origin,
+              path: `/content/samlinger/${id}.xml`,
+              items: out.entries.map((e) => ({
+                id: e.id, title: plainTitle(e.title), text: plainTitle(e.text), date: e.date, href: e.href,
+              })),
+            }),
+            encoding: 'utf-8',
+          });
+        }
         draftKeys.push(`urd-draft-samling-${id}`);
       }
       if (samlingerIndexStore?.hasDraft()) {
@@ -4845,6 +4951,12 @@
         }
       }
     } catch { /* uten index-kopiene virker siden fortsatt på SPA-hoster */ }
+
+    // Synlighetsfilene (SEO-pakken): sitemap og robots regenereres ved hver
+    // publisering fra opprinnelsen admin kjører på - uendret innhold gir
+    // identiske blobber og ingen diff, som index-kopiene.
+    files.push({ path: 'sitemap.xml', content: buildSitemapXml(siteDraft.pages, location.origin), encoding: 'utf-8' });
+    files.push({ path: 'robots.txt', content: buildRobotsTxt(location.origin), encoding: 'utf-8' });
 
     // Slettede og flyttede sider: diff mot publisert site.json. Serveren
     // hopper stille over stier som alt er borte fra repoet.
@@ -5216,6 +5328,9 @@
                       <input class="page-slug" value={p.path.slice(1)} title={ta('tip.pages.slug')}
                         onchange={(e) => setPageSlug(p, e.target.value)} />
                     {/if}
+                    {#if missingSeo[p.id]}
+                      <span class="seo-warn" title={ta('tip.pages.missingDescription')}>{@html ICONS.warn}</span>
+                    {/if}
                     <span class="row-tools">
                       <button class="ghost row-tool" title={ta('tip.pages.open')}
                         disabled={p.id === pageId} onclick={() => selectPage(p.id)}>{@html ICONS.right}</button>
@@ -5237,6 +5352,45 @@
                     </span>
                   </div>
                 {/each}
+                <details class="group">
+                  <summary>{ta('ui.seoGroup', { page: siteDraft.pages.find((p) => p.id === pageId)?.title ?? '' })}</summary>
+                  <div class="group-items">
+                    <label title={ta('tip.seo.description')}>{ta('lbl.seoDescription')}
+                      <textarea rows="2" value={seoDraft.description}
+                        onchange={(e) => setPageSeo('description', e.target.value)}></textarea>
+                    </label>
+                    <label title={ta('tip.seo.ogTitle')}>{ta('lbl.ogTitle')}
+                      <input value={seoDraft.ogTitle}
+                        placeholder={siteDraft.pages.find((p) => p.id === pageId)?.title ?? ''}
+                        onchange={(e) => setPageSeo('ogTitle', e.target.value)} />
+                    </label>
+                    <label title={ta('tip.seo.ogDescription')}>{ta('lbl.ogDescription')}
+                      <textarea rows="2" value={seoDraft.ogDescription} placeholder={seoDraft.description}
+                        onchange={(e) => setPageSeo('ogDescription', e.target.value)}></textarea>
+                    </label>
+                    <label title={ta('tip.seo.ogImage')}>{ta('lbl.ogImage')}
+                      {#if seoDraft.ogImage}
+                        <img class="site-icon-preview" src={seoDraft.ogImage} alt={ta('lbl.ogImage')} />
+                      {/if}
+                    </label>
+                    <span class="toolbar-row">
+                      <label class="ghost filepick tb-grow" title={ta('tip.seo.ogImage')}>
+                        {seoDraft.ogImage ? ta('ui.changeImage') : ta('ui.chooseImage')}
+                        <input type="file" accept="image/*" onchange={uploadOgImage} />
+                      </label>
+                      {#if seoDraft.ogImage}
+                        <button class="ghost row-tool" title={ta('tip.seo.removeOgImage')}
+                          onclick={() => setPageSeo('ogImage', '')}>{@html ICONS.cross}</button>
+                      {/if}
+                    </span>
+                    <label class="gridmenu-snap" title={ta('tip.seo.hideFromSearch')}>
+                      <input type="checkbox"
+                        checked={siteDraft.pages.find((p) => p.id === pageId)?.noindex === true}
+                        onchange={(e) => setPageNoindex(e.target.checked)} />
+                      {ta('lbl.hideFromSearch')}
+                    </label>
+                  </div>
+                </details>
                 <hr class="gridmenu-divider" />
                 <input placeholder={ta('ph.newPageName')} bind:value={newPageTitle}
                   onkeydown={(e) => e.key === 'Enter' && addPage()} />
@@ -8069,6 +8223,13 @@
     display: flex;
     align-items: center;
     gap: 0.35rem;
+  }
+
+  /* Varselmarkøren for sider uten metabeskrivelse (Søk og deling) */
+  .seo-warn {
+    display: inline-flex;
+    flex: none;
+    color: #e2b84a;
   }
 
   .samling-entry {

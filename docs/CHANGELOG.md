@@ -25,6 +25,19 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.6 - SEO- og synlighetspakken - 29. august 2026
+
+Milepæl 0.7.6 (funksjonskartets C3/C4/C14, Urds største hull mot de andre byggerne). Sammenligningskartene ble gjennomgått etter byggingen og ga to tillegg (X-kortet og robots-kontrollen); full crawler-effekt kommer med v0.8-bakingen som planlagt.
+
+- Per-side SEO-felter: additive `meta.description` og `meta.og` (tittel/beskrivelse/bilde) på sidefilene, redigert i Sider-panelets nye «Søk og deling»-gruppe for den åpne siden; delingsbildet komprimeres og materialiseres til media/ ved publisering. Skjema, SKJEMA.md og eksempeldata i samme runde.
+- Motoren setter head-metadata hos besøkende (ny `engine/seo.js` i den statiske lukningen): metabeskrivelse, canonical, og-feltene med fallback-trapp (sidetittel/beskrivelse/nettstedsikon), X-kortet (`twitter:card`) og JSON-LD `Organization` fra Nettsted-panelet. Aldri i preview.
+- Publiserings-genererte synlighetsfiler (ny `engine/feeds.js`, rene node-testede byggere): hver publisering skriver sitemap.xml og robots.txt fra opprinnelsen admin kjører på, og daterte samlinger (news/notices/publications) får RSS-feed på `content/samlinger/<id>.xml` når de publiseres. Vokteren og eierskapskontrakten utvidet i takt (sitemap/robots publiserbare, xml kun under content/), med guard-tester.
+- Robots-kontroll per side: additivt `noindex`-flagg på sideregisterinnslaget («Skjul fra søkemotorer» i panelet) gir robots-noindex uten canonical og utelater siden fra sitemapen; flagget bor i registeret så publiseringen slipper å laste alle sidefilene.
+- Sider uten metabeskrivelse får varselmarkør i Sider-panelet (tegnet warn-ikon med tooltip); oppdateres live ved redigering, og skjulte sider markeres aldri.
+- Urd-eid statisk 404-side (`404.html`, selvbærende med temafargene uten motorreferanser, så den slipper kopi-oppfriskningsplikten) og standard robots.txt i malen; publisering nektes å skrive 404-siden.
+- Analytics-referanseplugin (`plugins/analytics/`, shipper deaktivert): Cloudflare Web Analytics uten cookies, token i git-eid plugin.json, målescript kun hos besøkende; CSP-behovene deklareres i manifestet og `cspMissing` håndterer nå også script-src. Sporingsfri kjerne som før.
+- Modullisten i AGENTS.md over buntede motorfiler manglet `samlinger-csv` (bundlet siden 0.7.5); `feeds` er lagt til sammen med den.
+
 ### 0.7.5.3 - Kortvis animasjon på produktkortene og luft rundt nav-kurven - 29. august 2026
 
 - Testfunn: animasjon på produktblokken spilte blokken som én enhet. Blokkens inngang/pekereffekt spres nå kortvis (def-flagget `animPerCard`): hvert kort toner/glir inn med forskjøvet start, og løftet spilles per kort; uten kort spilles feltene på blokk-elementet, så valget i Egenskaper aldri står stumt (SKJEMA.md).

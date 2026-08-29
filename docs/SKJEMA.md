@@ -80,6 +80,10 @@ En side er en vertikal rekke seksjoner.
 }
 ```
 
+**SEO-feltene på `meta`** (additive fra v0.7, settes i Sider-panelet for den åpne siden): `description` (metabeskrivelsen, også og:description-fallback) og `og` = `{ "title", "description", "image" }` (Open Graph-delingsfeltene; utelatte felt faller tilbake til sidetittel, beskrivelse og nettstedsikonet, og `og.image` materialiseres til `media/` ved publisering som andre bilder). Motoren setter taggene i dokumenthodet hos besøkende (`engine/seo.js`): metabeskrivelse, canonical (opprinnelse + sti), og-feltene, X-kort-taggen (`twitter:card`, resten leses fra og-feltene) og JSON-LD (`Organization` fra Nettsted-panelets navn/beskrivelse/ikon). Preview får aldri taggene (`?preview=1` er ingen kanonisk side). Sideregisterets innslag i site.json har i tillegg det additive flagget `noindex` («Skjul fra søkemotorer» i samme panelgruppe): siden får robots-noindex uten canonical og utelates fra sitemap.xml; flagget bor i registeret, ikke sidefila, så publiseringen kan filtrere sitemapen uten å laste alle sidene.
+
+**Publiserings-genererte synlighetsfiler** (`engine/feeds.js`, samme mønster som theme.css): hver publisering skriver `sitemap.xml` (alle sider i registeret) og `robots.txt` (alt åpent unntatt `/admin/`, med sitemap-peker) fra opprinnelsen admin kjører på; daterte samlinger (kind `news`, `notices`, `publications`) får RSS-feed på `content/samlinger/<id>.xml` når de publiseres. 404-siden er Urd-eid statisk (`404.html`, selvbærende med temafargene) og serveres av verten for ukjente stier.
+
 ### Seksjon
 
 En seksjon er alltid den samme generiske containeren - egen størrelse, egen bakgrunnsstabel, valgfritt grid-overstyr, og et fritt lerret av blokker. «Seksjonstyper» finnes ikke som kodeveier: hero, galleri og footer er **presets** (datafabrikker) som produserer en startseksjon du deretter kan endre fritt.

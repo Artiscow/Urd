@@ -70,7 +70,8 @@
       "id": "kontakt",
       "title": "Kontakt",
       "path": "/kontakt",
-      "file": "content/pages/kontakt.json"
+      "file": "content/pages/kontakt.json",
+      "noindex": false
     },
     {
       "id": "kaker",

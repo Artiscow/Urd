@@ -3,6 +3,7 @@
   "schemaVersion": 1,
   "ownedPaths": [
     "index.html",
+    "404.html",
     "urd.json",
     "_headers",
     "speculation-rules.json",
@@ -17,6 +18,8 @@
   "userPaths": [
     "content/**",
     "media/**",
-    "plugins/**"
+    "plugins/**",
+    "sitemap.xml",
+    "robots.txt"
   ]
 }

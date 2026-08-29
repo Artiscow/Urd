@@ -46,6 +46,7 @@ import { registerSectionPresets } from './sections/presets.js';
 import { loadPlugins, loadPluginList, applyPluginSiteLocales } from './plugins.js';
 import { setCollectionsDraft } from './samlinger.js';
 import { initSticky, refreshSticky } from './sticky.js';
+import { applyHeadMeta } from './seo.js';
 import { t, ta, initSiteLocale, initAdminLocale, requestedLang, siteLang } from './i18n.js';
 
 export const Urd = {
@@ -475,6 +476,9 @@ export async function boot(opts) {
     page = { schemaVersion: PAGE_SCHEMA_VERSION, meta: { id: entry.id, title: entry.title }, sections: [] };
   }
   document.title = `${page.meta?.title ?? entry.title ?? ''} - ${site.site.title}`;
+  // SEO-metadata (beskrivelse, canonical, og-felter, JSON-LD) settes kun hos
+  // besøkende: preview-adressen (?preview=1) er aldri en kanonisk side.
+  if (!preview) applyHeadMeta(site, page, location.origin, location.pathname, entry);
   // Footeren rendres nå som side-id-en er kjent (per-side hideOn-synlighet).
   renderFooter(site, opts.footer, page.meta?.id ?? entry.id);
 

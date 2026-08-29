@@ -2,7 +2,11 @@
   "schemaVersion": 2,
   "meta": {
     "id": "hjem",
-    "title": "Hjem"
+    "title": "Hjem",
+    "description": "Eksempelsiden til Urd: en avhengighetsfri nettsidebygger der repoet er nettsiden.",
+    "og": {
+      "title": "Urd - nettsidebyggeren"
+    }
   },
   "sections": [
     {

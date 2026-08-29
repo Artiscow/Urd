@@ -2,6 +2,21 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.6): SEO- og synlighetspakken
+
+Head-taggene og markøren kan testes lokalt; de publiserings-genererte filene (sitemap/robots/RSS), 404-siden og analytics trenger en deployet side.
+
+- [ ] SØK OG DELING: gruppen i Sider-panelet viser den åpne sidens navn; beskrivelse, delingstittel/-beskrivelse og delingsbilde lagres i utkastet og publiseres; view-source på publisert side viser description, canonical, og:-taggene, twitter:card og JSON-LD (aldri i preview-iframen)
+- [ ] Fallback-trappa: en side uten egne felt får og:description fra nettstedsbeskrivelsen og og:image fra nettstedsikonet; deling av en side i sosiale medier viser riktig kort
+- [ ] Delingsbildet materialiseres til media/ ved publisering (data-URL forsvinner fra sidefila)
+- [ ] SKJUL FRA SØK: avkryssingen gir robots-noindex uten canonical på den publiserte siden, siden utelates fra sitemap.xml, og varselmarkøren vises ikke for skjulte sider
+- [ ] MARKØREN: sider uten beskrivelse viser gult varselikon i Sider-panelet (også nye sider); den forsvinner i det beskrivelsen skrives og kommer tilbake når den tømmes
+- [ ] SITEMAP/ROBOTS: publisering skriver sitemap.xml med alle synlige sider (absolutte adresser) og robots.txt med Disallow: /admin/ og sitemap-peker; ny publisering uten endringer gir ingen diff i filene
+- [ ] RSS: endre nyhets-samlingen og publiser - content/samlinger/nyheter.xml finnes med innslag, pubDate og escapede titler; produktkatalogen får aldri feed
+- [ ] 404: en ukjent adresse på deployet side viser 404-siden med temafargene og forsidelenke (status 404); lokalt degraderer det pent
+- [ ] ANALYTICS: aktivert plugin uten token gjør ingenting; med token og _headers-linjene lastes beacon hos besøkende men aldri i preview; Plugins-panelet viser script-src- og connect-src-linjene når de mangler i CSP-en
+- [ ] i18n: en-GB og tr for Søk og deling-feltene, avkryssingen og markør-tooltipen
+
 ### Testrunde-batch (0.7.5.3): Kortvis animasjon og nav-kurvens klaring
 
 - [ ] KORTVIS: produktblokk med Ton inn/Gli opp hos besøkende: kortene spiller enkeltvis med forskjøvet start når blokken scrolles inn, ikke blokken som helhet; med Løft ved peker løfter hvert kort seg individuelt, umiddelbart også langt ut i rekka, og tilbakeløftet henger ikke

@@ -17,11 +17,14 @@ test('innholdsstier er tillatt', () => {
     'content/pages/hjem.json',
     'content/maler/var-hero.json',
     'content/theme.css',
+    'content/samlinger/nyheter.xml',
     'media/styret/leder.webp',
     'media/logo.svg',
     'media/foto.PNG',
     'media/undermappe/bilde.jpg',
     'plugins/plugins.json',
+    'sitemap.xml',
+    'robots.txt',
   ]) {
     assert.equal(isAllowedPath(path), true, path);
   }
@@ -42,6 +45,9 @@ test('kjørbare endelser under innholdsprefiksene er forbudt', () => {
     'media/.dotfil',
     'content/evil.js',
     'content/x.html',
+    'media/x.xml',
+    'annet.xml',
+    'feed.txt',
   ]) {
     assert.equal(isAllowedPath(path), false, path);
   }
@@ -57,6 +63,7 @@ test('kode- og konfigstier er forbudt', () => {
     'assets/urd/i18n.js',
     'urd.json',
     'index.html',
+    '404.html',
     '_headers',
     '_redirects',
     '.gitignore',

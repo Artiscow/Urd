@@ -14,7 +14,18 @@
       "additionalProperties": false,
       "properties": {
         "id": { "$ref": "#/$defs/id" },
-        "title": { "type": "string", "minLength": 1 }
+        "title": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "description": "Sidens beskrivelse (meta description, additivt fra v0.7); brukes også som og:description-fallback" },
+        "og": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Delingsfelter (Open Graph, additivt fra v0.7); utelatte felt faller tilbake til sidetittel/beskrivelse/nettstedsikon",
+          "properties": {
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "image": { "type": "string", "description": "Delingsbilde: /media/-sti (materialiseres ved publisering)" }
+          }
+        }
       }
     },
     "sections": {

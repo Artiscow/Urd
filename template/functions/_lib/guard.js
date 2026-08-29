@@ -10,7 +10,7 @@
 
 /** Stier publisering ALDRI får skrive (prefiks- eller eksaktmatch). */
 const DENY_PREFIXES = ['functions/', '.github/', 'admin/', 'assets/engine/', 'assets/urd/'];
-const DENY_EXACT = ['_headers', '_redirects', 'urd.json', 'index.html', '.gitignore', 'wrangler.toml'];
+const DENY_EXACT = ['_headers', '_redirects', 'urd.json', 'index.html', '404.html', '.gitignore', 'wrangler.toml'];
 
 /**
  * Stier publisering FÅR skrive, med endelse-allowlist per prefiks.
@@ -18,10 +18,12 @@ const DENY_EXACT = ['_headers', '_redirects', 'urd.json', 'index.html', '.gitign
  * vanlige rasterformater tas med som romslighet for manuelt git-lagt media.
  */
 const ALLOW_PREFIX_EXTENSIONS = {
-  'content/': ['json', 'css'],
+  'content/': ['json', 'css', 'xml'],
   'media/': ['webp', 'svg', 'png', 'jpg', 'jpeg', 'gif', 'avif', 'ico'],
 };
-const ALLOW_EXACT = ['plugins/plugins.json'];
+// Synlighetsfilene (SEO-pakken) genereres av publiseringen på rotnivå;
+// xml/txt kan aldri kjøre under script-src 'self'.
+const ALLOW_EXACT = ['plugins/plugins.json', 'sitemap.xml', 'robots.txt'];
 
 /**
  * Sideruting: publisering får skrive `<slug>/index.html` (kopi av
@@ -68,6 +70,7 @@ export function isAllowedPath(path) {
  */
 export const OWNED_PATTERNS = [
   'index.html',
+  '404.html',
   'urd.json',
   '_headers',
   'speculation-rules.json',
@@ -79,7 +82,7 @@ export const OWNED_PATTERNS = [
   'assets/styles/base.css',
   'functions/**',
 ];
-export const USER_PATTERNS = ['content/**', 'media/**', 'plugins/**'];
+export const USER_PATTERNS = ['content/**', 'media/**', 'plugins/**', 'sitemap.xml', 'robots.txt'];
 
 /** @param {string} pattern Eksakt sti eller `prefiks/**` */
 export function matchesPattern(pattern, path) {

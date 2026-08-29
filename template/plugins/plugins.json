@@ -6,6 +6,7 @@
     "kart"
   ],
   "disabled": [
-    "sprak-svensk"
+    "sprak-svensk",
+    "analytics"
   ]
 }
