@@ -58,7 +58,7 @@ Helhetlig funksjonssammenligning gjort 22.-23. juli 2026 (midt i v0.6 «Økosyst
 
 **Planlagt (B):** footer med kolonner og sosiale lenker (0.6.6, siden levert i 0.6.33 + 0.6.6.5.2).
 
-**Gap:** scroll-adferd for nav (**C7**); megameny (notat - vurderes først hvis reelle sider trenger det).
+**Gap:** scroll-adferd for nav (**C7**, levert 0.6.6.5.12: `nav.scroll` med krymp/skjul); megameny (notat - vurderes først hvis reelle sider trenger det).
 
 ## 6. SEO og metadata
 
@@ -147,7 +147,7 @@ Kategorien fantes ikke i sammenligningen 22.-23. juli 2026, fordi feltet så ann
 | C4 | **RSS-feed for samlinger** (statisk XML ved publisering) | v0.7 | Billig, statisk-vennlig, standard overalt; nyhetssamlingene fortjener abonnenter |
 | C5 | **Flere skjema-felttyper** (nedtrekk, avkryssing, radio, dato) | v0.7 (før butikk-kassen, som gjenbruker dem) | Feltbiblioteket er tynt mot alle; ren utvidelse av eksisterende plugin |
 | C1 | **Linjeavstand (+ evt. bokstavavstand)** per tekstfelt | Levert 0.6.6.2 | Eneste reelle hull i teksteditoren mot Squarespace/Gutenberg |
-| C7 | **Nav scroll-adferd** (krymp/skjul ved scroll ned, vis ved scroll opp) | 0.6.6.5 (nav-design videre) | Standard hos alle store; naturlig fortsettelse av M5 |
+| C7 | **Nav scroll-adferd** (krymp/skjul ved scroll ned, vis ved scroll opp) | Levert 0.6.6.5.12 (`nav.scroll`: shrink/hide, ren navScrollState) | Standard hos alle store; naturlig fortsettelse av M5 |
 | C7b | **Parallax-bakgrunnslag + stagger-animasjon** for kortgrupper | Levert 0.6.6.4 del 2 | Mest designverdi per innsats i animasjonskategorien |
 | C6 | **Video-bakgrunnslag** (selvhostet mp4/webm-loop) | v0.7 | Wix/Squarespace-paritet; personvennlig når filen er git-eid (størrelsesgrense må settes) |
 | C12 | **CSV-import/-eksport for samlinger** | v0.7 (sammen med butikk-katalogen) | Wix-paritet; senker terskelen for å flytte inn medlemslister/produkter |

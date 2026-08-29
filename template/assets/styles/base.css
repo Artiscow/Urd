@@ -4300,7 +4300,8 @@ body.urd-marqueeing {
    støtte kobler JS den rAF-drevne varianten i stedet. Stille (sluttilstand) på
    mobil og ved redusert bevegelse. */
 @supports (animation-timeline: view()) {
-  .urd-bg-image.urd-parallax-css {
+  .urd-bg-image.urd-parallax-css,
+  .urd-bg-video.urd-parallax-css {
     animation: urd-parallax-y linear both;
     animation-timeline: view();
   }
@@ -4310,14 +4311,16 @@ body.urd-marqueeing {
     to { transform: translateY(var(--urd-px-shift, 0px)); }
   }
 
-  body.urd-mobile .urd-bg-image.urd-parallax-css {
+  body.urd-mobile .urd-bg-image.urd-parallax-css,
+  body.urd-mobile .urd-bg-video.urd-parallax-css {
     animation: none;
     transform: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .urd-bg-image.urd-parallax-css {
+  .urd-bg-image.urd-parallax-css,
+  .urd-bg-video.urd-parallax-css {
     animation: none;
     transform: none;
   }

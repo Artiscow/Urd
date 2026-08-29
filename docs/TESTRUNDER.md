@@ -2,6 +2,18 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.7): Video-bakgrunnslag og mediegrensene
+
+Laget og grensene kan testes lokalt; materialiseringen ved publisering trenger en deployet side.
+
+- [ ] VIDEOLAG: nytt lag av typen Video i Egenskaper-bakgrunnen: velg mp4/webm-fil, laget vises og spiller på lerretet; plakatbilde, utsnitt (cover/contain med x/y), dekkevne og parallax med styrke virker
+- [ ] Avspilling: videoen spiller kun mens seksjonen er i viewporten (pauser utenfor); en side med videolag under folden laster ikke filen ved sidelast (nettverkspanelet viser kun metadata før scroll)
+- [ ] Redusert bevegelse (OS-innstilling): plakaten vises som stillbilde med samme utsnitt; uten plakat vises lagene under, aldri et tomt hull
+- [ ] GRENSER: video over 4 MB gir varsel men beholdes, over 15 MB avvises med beskjed; en fil som ikke er mp4/webm avvises med formatmelding
+- [ ] Publisering (deployet): videoens data-URL materialiseres til media/ (plakaten også) og den publiserte siden spiller videoen; lydblokkens mp3 publiseres nå uten avvisning fra vokteren
+- [ ] Parallax: dybdevirkningen på videolaget matcher bildelagets; mobilvisning og redusert bevegelse holder laget i ro
+- [ ] i18n: en-GB og tr for videolagets etiketter, filvalgene og statusmeldingene
+
 ### Testrunde-batch (0.7.6): SEO- og synlighetspakken
 
 Head-taggene og markøren kan testes lokalt; de publiserings-genererte filene (sitemap/robots/RSS), 404-siden og analytics trenger en deployet side.

@@ -25,6 +25,16 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.7 - Video-bakgrunnslag og mediegrensene - 30. august 2026
+
+Milepæl 0.7.7 (funksjonskartet C6). Sammenligningskartene ble lest i sin helhet før leveransen ble lukket; gjennomlesningen ga observer-avspillingen, parallax-pariteten og en kartrettelse (C7).
+
+- Nytt bakgrunnslag Video (ny `backgrounds/video.js`): selvhostet mp4/webm-loop fra media/ (git-eid, ingen tredjepartsverter) med plakatbilde, utsnitt (cover/contain med x/y), dekkevne og parallax via bildelagets delte maskineri (ny eksportert `mountLayerParallax` i image.js). Kilden voktes med ankret regex etter CodeQL-mønsteret. SKJEMA.md og panel-styringen i samme runde (lagene er generiske typedProps i skjemaet, så schema/ er uendret).
+- Avspillingen startes av en delt IntersectionObserver (spiller kun i viewporten, aldri autoplay-attributtet) med preload=metadata, så en video under folden ikke koster hele filen ved sidelast. Ved prefers-reduced-motion spilles aldri video: plakaten vises som stillbilde, og uten plakat utelates laget. Laget er ren dekor (aria-hidden).
+- Mediegrensene avklart samlet (SKJEMA.md): bilder komprimeres som før med varsel over 400 kB, lyd varsler ved samme grense, video varsler ved 4 MB (utkastet bor i localStorage) og avvises hardt ved 15 MB (Cloudflare Pages-grensen); statustekster for feil format, varsel og avvisning i alle kjernespråkene.
+- Funn fra grenserunden: vokterens media-liste hadde kun bildeendelser, så lydblokkens filer (levert 0.7.4) ville blitt avvist av commit-endepunktet ved publisering; listen dekker nå lyd- og videoformatene, med guard-tester.
+- Kartrettelse fra gjennomlesningen: nav-ens scroll-adferd (C7) var alt levert 0.6.6.5.12, men FUNKSJONSKART manglet levert-merket; tabellraden og gap-linjen er merket, så elementgjennomgangen slipper å ettergå den.
+
 ### 0.7.6 - SEO- og synlighetspakken - 29. august 2026
 
 Milepæl 0.7.6 (funksjonskartets C3/C4/C14, Urds største hull mot de andre byggerne). Sammenligningskartene ble gjennomgått etter byggingen og ga to tillegg (X-kortet og robots-kontrollen); full crawler-effekt kommer med v0.8-bakingen som planlagt.

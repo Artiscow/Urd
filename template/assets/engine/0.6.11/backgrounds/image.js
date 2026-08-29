@@ -303,13 +303,21 @@ export const imageLayer = {
     }
 
     el.appendChild(img);
-    // Parallax (additivt fra v0.6): laget henger etter ved scroll. Moderne
-    // nettlesere driver det med scroll-drevet CSS (kompositor-tråd, ingen scroll-
-    // lytter); eldre faller tilbake til den rAF-drevne varianten.
-    if (props.parallax > 0) {
-      const fit = props.fit ?? 'cover';
-      if (supportsScrollTimeline()) mountParallaxCss(img, props.parallax, blurMargin, fit);
-      else mountParallax(img, props.parallax, blurMargin, fit);
-    }
+    // Parallax (additivt fra v0.6): laget henger etter ved scroll.
+    if (props.parallax > 0) mountLayerParallax(img, props.parallax, blurMargin, props.fit ?? 'cover');
   },
 };
+
+/**
+ * Kobler parallax på et lag-element (bilde eller video, delt med video-laget):
+ * moderne nettlesere driver det med scroll-drevet CSS (kompositor-tråd, ingen
+ * scroll-lytter); eldre faller tilbake til den rAF-drevne varianten.
+ * @param {HTMLElement} el Lag-elementet
+ * @param {number} speed Styrke 0..1
+ * @param {number} blurMargin Uskarphetens rand i px (0 uten blur)
+ * @param {'vanlig'|'flislegg'|'cover'|'egen'|'contain'|'repeat'} fit
+ */
+export function mountLayerParallax(el, speed, blurMargin, fit) {
+  if (supportsScrollTimeline()) mountParallaxCss(el, speed, blurMargin, fit);
+  else mountParallax(el, speed, blurMargin, fit);
+}

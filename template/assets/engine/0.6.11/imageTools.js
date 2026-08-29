@@ -9,6 +9,14 @@ const TARGET_QUALITY = 0.82;
 const FALLBACK_QUALITY = 0.6;
 /** Over dette varsles brukeren (git og statiske hoster liker små filer). */
 export const WARN_BYTES = 400_000;
+/* Mediegrensene, satt samlet (0.7.7): bilder komprimeres til webp (maks
+   1600px, varsel over WARN_BYTES), lyd publiseres uendret (varsel over
+   WARN_BYTES), video varsles over VIDEO_WARN_BYTES og avvises hardt over
+   VIDEO_MAX_BYTES - godt under vertens filgrense (Cloudflare Pages 25 MiB),
+   og med margin for at base64-utkastet i localStorage kan sprenge kvoten
+   (da består utkastet kun i minnet til det publiseres, og editoren varsler). */
+export const VIDEO_WARN_BYTES = 4_000_000;
+export const VIDEO_MAX_BYTES = 15_000_000;
 
 /**
  * Komprimerer en bildefil til webp, maks 1600px på lengste side.
@@ -131,6 +139,9 @@ export function mediaExtension(dataUrl) {
   if (audio) {
     return { mpeg: 'mp3', mp3: 'mp3', mp4: 'm4a', 'x-m4a': 'm4a', aac: 'aac', wav: 'wav', 'x-wav': 'wav', ogg: 'ogg', webm: 'webm', flac: 'flac' }[audio] ?? 'mp3';
   }
+  // Video publiseres også uendret; opplastingen slipper kun mp4/webm inn.
+  const video = url.match(/^data:video\/([a-z0-9.+-]+)[;,]/i)?.[1]?.toLowerCase();
+  if (video) return video === 'webm' ? 'webm' : 'mp4';
   return 'webp';
 }
 

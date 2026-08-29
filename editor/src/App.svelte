@@ -34,10 +34,11 @@
   import { grainLayer } from '$engine/backgrounds/grain.js';
   import { imageLayer } from '$engine/backgrounds/image.js';
   import { bildegalleriLayer } from '$engine/backgrounds/bildegalleri.js';
+  import { videoLayer } from '$engine/backgrounds/video.js';
   import { footerThumb } from '$engine/footer-thumb.js';
   import { coreAnimations } from '$engine/animations/core.js';
   import { SECTION_THEME_LABELS, sectionThemeVars, contrastRatio, relativeLuminance, buildThemeCss, safeCssValue, resolveThemeMode, activeTokens } from '$engine/theme.js';
-  import { compressToWebp, svgToDataUrl, tightSvgViewBox, svgViewBox, slugify, contentHash, mediaExtension, WARN_BYTES } from '$engine/imageTools.js';
+  import { compressToWebp, svgToDataUrl, tightSvgViewBox, svgViewBox, slugify, contentHash, mediaExtension, WARN_BYTES, VIDEO_WARN_BYTES, VIDEO_MAX_BYTES } from '$engine/imageTools.js';
   import { FONT_STACKS } from '$engine/fonts.js';
   import { frameAtPoint } from '$engine/place.js';
   import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '$engine/icons.js';
@@ -49,6 +50,7 @@
     ['glow', glowLayer],
     ['image', imageLayer],
     ['bildegalleri', bildegalleriLayer],
+    ['video', videoLayer],
     ['grain', grainLayer],
   ];
   const BG_DEFS = Object.fromEntries(BG_TYPES);
@@ -1547,6 +1549,44 @@
     try {
       const img = await compressOrTrim(file);
       setBgProp(bg, i, 'src', img.dataUrl);
+    } catch {
+      setStatus(ta('status.imageReadError'), 'error');
+    }
+  }
+
+  /** Videofil → data-URL i utkastet (mediegrensene fra imageTools: hard
+   *  grense og varsel); publisering skriver den til media/ som bildene. */
+  function setBgVideo(bg, i, event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!['video/mp4', 'video/webm'].includes(file.type)) {
+      setStatus(ta('status.videoFormat'), 'error');
+      return;
+    }
+    if (file.size > VIDEO_MAX_BYTES) {
+      setStatus(ta('status.videoTooLarge', { mb: (file.size / 1_000_000).toFixed(1), max: Math.round(VIDEO_MAX_BYTES / 1_000_000) }), 'error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setBgProp(bg, i, 'src', String(reader.result ?? ''));
+      if (file.size > VIDEO_WARN_BYTES) {
+        setStatus(ta('status.videoLarge', { mb: (file.size / 1_000_000).toFixed(1) }), 'error');
+      }
+    };
+    reader.onerror = () => setStatus(ta('status.imageReadError'), 'error');
+    reader.readAsDataURL(file);
+  }
+
+  /** Plakatbildet for videolaget (stillbildet ved redusert bevegelse). */
+  async function setBgPoster(bg, i, event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      const img = await compressOrTrim(file);
+      setBgProp(bg, i, 'poster', img.dataUrl);
     } catch {
       setStatus(ta('status.imageReadError'), 'error');
     }
@@ -4636,7 +4676,7 @@
    *  Bilder og lyd deler flyten; mediaExtension velger filendelsen. */
   function materializeField(obj, field, name, files) {
     const src = obj?.[field];
-    if (!src?.startsWith('data:image/') && !src?.startsWith('data:audio/')) return;
+    if (!src?.startsWith('data:image/') && !src?.startsWith('data:audio/') && !src?.startsWith('data:video/')) return;
     const base64 = src.split(',', 2)[1];
     const path = `media/${slugify(name || 'bilde')}-${contentHash(base64)}.${mediaExtension(src)}`;
     files.push({ path, content: base64, encoding: 'base64' });
@@ -4655,6 +4695,10 @@
       if (layer.type === 'image') materializeField(layer.props, 'src', 'bakgrunn', files);
       if (layer.type === 'bildegalleri') {
         for (const img of layer.props.images ?? []) materializeField(img, 'src', 'bakgrunn', files);
+      }
+      if (layer.type === 'video') {
+        materializeField(layer.props, 'src', 'video', files);
+        materializeField(layer.props, 'poster', 'plakat', files);
       }
     }
   }
@@ -6916,6 +6960,42 @@
         <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity ?? 1}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
         <p class="panel-hint">{ta('hint.bg.gallery')}</p>
+      {:else if layer.type === 'video'}
+        <label class="ghost filepick" title={ta('tip.bg.videoFile')}>
+          {layer.props.src ? ta('ui.changeVideo') : ta('ui.chooseVideo')}
+          <input type="file" accept="video/mp4,video/webm" onchange={(e) => setBgVideo(bg, i, e)} />
+        </label>
+        <label class="ghost filepick" title={ta('tip.bg.poster')}>
+          {layer.props.poster ? ta('ui.changeImage') : ta('ui.choosePoster')}
+          <input type="file" accept="image/*" onchange={(e) => setBgPoster(bg, i, e)} />
+        </label>
+        <label title={ta('tip.bg.fit')}>{ta('lbl.fit')}
+          <Dropdown value={layer.props.fit ?? 'cover'}
+            options={[['cover', ta('opt.fit.cover')], ['contain', ta('opt.fit.contain')]]}
+            onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
+        <label class="sub">{ta('lbl.horizontal')}
+          <span class="gridmenu-value">{Math.round((layer.props.x ?? 0.5) * 100)}%</span></label>
+        <input type="range" min="0" max="1" step="0.01" value={layer.props.x ?? 0.5}
+          oninput={(e) => setBgProp(bg, i, 'x', Number(e.target.value))} />
+        <label class="sub">{ta('lbl.vertical')}
+          <span class="gridmenu-value">{Math.round((layer.props.y ?? 0.5) * 100)}%</span></label>
+        <input type="range" min="0" max="1" step="0.01" value={layer.props.y ?? 0.5}
+          oninput={(e) => setBgProp(bg, i, 'y', Number(e.target.value))} />
+        <label>{ta('lbl.strength')}
+          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
+        <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity ?? 1}
+          oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
+        <label class="gridmenu-snap" title={ta('tip.bg.parallax')}>
+          <input type="checkbox" checked={(layer.props.parallax ?? 0) > 0}
+            onchange={(e) => setBgProp(bg, i, 'parallax', e.target.checked ? 0.3 : 0)} />
+          {ta('lbl.parallax')}
+        </label>
+        {#if (layer.props.parallax ?? 0) > 0}
+          <label>{ta('lbl.parallaxStrength')}
+            <span class="gridmenu-value">{Math.round((layer.props.parallax ?? 0) * 100)}%</span></label>
+          <input type="range" min="0.1" max="1" step="0.01" value={layer.props.parallax ?? 0.3}
+            oninput={(e) => setBgProp(bg, i, 'parallax', Number(e.target.value))} />
+        {/if}
       {/if}
     </div>
   {/each}

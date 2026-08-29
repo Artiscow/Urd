@@ -19,7 +19,10 @@ const DENY_EXACT = ['_headers', '_redirects', 'urd.json', 'index.html', '404.htm
  */
 const ALLOW_PREFIX_EXTENSIONS = {
   'content/': ['json', 'css', 'xml'],
-  'media/': ['webp', 'svg', 'png', 'jpg', 'jpeg', 'gif', 'avif', 'ico'],
+  // Lyd- og videoendelsene dekker audio-blokken og video-bakgrunnslaget
+  // (publiseres uendret fra data-URL-er); ingen av dem kan kjøre som skript.
+  'media/': ['webp', 'svg', 'png', 'jpg', 'jpeg', 'gif', 'avif', 'ico',
+    'mp3', 'm4a', 'aac', 'wav', 'ogg', 'flac', 'mp4', 'webm'],
 };
 // Synlighetsfilene (SEO-pakken) genereres av publiseringen på rotnivå;
 // xml/txt kan aldri kjøre under script-src 'self'.
