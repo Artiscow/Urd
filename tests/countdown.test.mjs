@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { countdownParts, parseTarget, nedtellerBlock } = await engineImport('blocks/countdown.js');
+const { countdownParts, parseTarget, countdownBlock } = await engineImport('blocks/countdown.js');
 
 test('countdownParts: deler tiden i dager/timer/minutter/sekunder', () => {
   const now = Date.UTC(2026, 7, 14, 12, 0, 0);
@@ -29,8 +29,8 @@ test('parseTarget: datetime-local-formen tolkes, søppel gir null', () => {
 });
 
 test('defaults: målet seedes fram i tid på datetime-local-form', () => {
-  const d = nedtellerBlock.defaults();
-  assert.equal(nedtellerBlock.version, 1);
+  const d = countdownBlock.defaults();
+  assert.equal(countdownBlock.version, 1);
   assert.match(d.target, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
   assert.ok(parseTarget(d.target) > Date.now());
 });

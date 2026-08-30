@@ -37,7 +37,7 @@ export function parseTarget(target) {
   return Number.isFinite(ms) ? ms : null;
 }
 
-export const nedtellerBlock = {
+export const countdownBlock = {
   version: 1,
   // Naturlig høyde i mobil-radnettet (boksene radbryter på smale skjermer).
   autoGrow: true,
@@ -50,7 +50,7 @@ export const nedtellerBlock = {
     const pad = (n) => String(n).padStart(2, '0');
     return {
       target: `${soon.getFullYear()}-${pad(soon.getMonth() + 1)}-${pad(soon.getDate())}T18:00`,
-      doneText: ta('seed.nedteller.done'),
+      doneText: ta('seed.countdown.done'),
       variant: 'boxes',
       showSeconds: true,
     };
@@ -69,10 +69,10 @@ export const nedtellerBlock = {
 
     const target = parseTarget(props.target);
     const units = [
-      ['days', t('nedteller.days')],
-      ['hours', t('nedteller.hours')],
-      ['minutes', t('nedteller.minutes')],
-      ...(props.showSeconds !== false ? [['seconds', t('nedteller.seconds')]] : []),
+      ['days', t('countdown.days')],
+      ['hours', t('countdown.hours')],
+      ['minutes', t('countdown.minutes')],
+      ...(props.showSeconds !== false ? [['seconds', t('countdown.seconds')]] : []),
     ];
     const cells = {};
     for (const [unit, label] of units) {
@@ -133,8 +133,8 @@ export const nedtellerBlock = {
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {
-          title: ta('hintNedteller.title'),
-          lines: [ta('hintNedteller.l1'), ta('hintNedteller.l2'), ta('hintNedteller.l3')],
+          title: ta('hintCountdown.title'),
+          lines: [ta('hintCountdown.l1'), ta('hintCountdown.l2'), ta('hintCountdown.l3')],
         });
       });
     }

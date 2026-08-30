@@ -9,8 +9,8 @@ import { engineImport } from './_engine.mjs';
 const { stepIndex, canAutoplay, normalizeInterval, gridColumns } = await engineImport('gallery-model.js');
 const { presetThumb, parseMinHeightPx } = await engineImport('preset-thumb.js');
 const { registerSectionPresets } = await engineImport('sections/presets.js');
-const { galleriBlock } = await engineImport('blocks/gallery.js');
-const { bildegalleriLayer } = await engineImport('backgrounds/slideshow.js');
+const { galleryBlock } = await engineImport('blocks/gallery.js');
+const { slideshowLayer } = await engineImport('backgrounds/slideshow.js');
 
 test('stepIndex: rundgang begge veier', () => {
   assert.equal(stepIndex(0, 1, 3), 1);
@@ -95,11 +95,11 @@ test('presetThumb: slipper aldri uvaliderte strenger inn i SVG-en', () => {
 });
 
 test('galleri-blokken: def-kontrakten', () => {
-  assert.equal(galleriBlock.version, 1);
-  assert.equal(typeof galleriBlock.render, 'function');
-  assert.ok(galleriBlock.migrations);
-  const a = galleriBlock.defaults();
-  const b = galleriBlock.defaults();
+  assert.equal(galleryBlock.version, 1);
+  assert.equal(typeof galleryBlock.render, 'function');
+  assert.ok(galleryBlock.migrations);
+  const a = galleryBlock.defaults();
+  const b = galleryBlock.defaults();
   assert.notEqual(a.images, b.images, 'defaults() må gi ferske objekter');
   assert.equal(a.view, 'grid');
   assert.equal(a.lightbox, true);
@@ -107,11 +107,11 @@ test('galleri-blokken: def-kontrakten', () => {
 });
 
 test('bildegalleri-laget: def-kontrakten', () => {
-  assert.equal(bildegalleriLayer.version, 1);
-  assert.equal(typeof bildegalleriLayer.render, 'function');
-  assert.ok(bildegalleriLayer.migrations);
-  const a = bildegalleriLayer.defaults();
-  assert.notEqual(a.images, bildegalleriLayer.defaults().images, 'defaults() må gi ferske objekter');
+  assert.equal(slideshowLayer.version, 1);
+  assert.equal(typeof slideshowLayer.render, 'function');
+  assert.ok(slideshowLayer.migrations);
+  const a = slideshowLayer.defaults();
+  assert.notEqual(a.images, slideshowLayer.defaults().images, 'defaults() må gi ferske objekter');
   assert.deepEqual(a.images, []);
   assert.equal(a.fit, 'cover');
 });

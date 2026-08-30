@@ -12,14 +12,14 @@ import { groupDelta } from './selection.js';
 import { liftMobileFrame, liftContractTokens } from './migrate.js';
 
 /** Gjeldende versjon av malfil-formatet (content/maler/*.json). */
-export const MAL_SCHEMA_VERSION = 1;
+export const TEMPLATE_SCHEMA_VERSION = 1;
 
 /** Gyldige mal-slag; nyttelast-nøkkelen i filen er lik slaget. */
-export const MAL_KINDS = ['section', 'blocks', 'page'];
+export const TEMPLATE_KINDS = ['section', 'blocks', 'page'];
 
 /** Mal-id fra visningsnavnet (samme id-regime som samlinger); tom streng
  *  betyr ugyldig navn og skal avvises av kalleren. */
-export function malId(name) {
+export function templateId(name) {
   return slugify(String(name ?? ''), '');
 }
 

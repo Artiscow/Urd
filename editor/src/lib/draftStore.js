@@ -11,9 +11,21 @@
  * @param {string} key localStorage-nøkkel, f.eks. 'urd-draft-hjem'
  * @param {() => object} loadPublished Gir publisert tilstand (parset JSON)
  * @param {(err: Error) => void} [onSaveError] Kalles når persistering feiler (typisk full kvote)
+ * @param {string} [legacyKey] Nøkkelnavnet før ADR-0021; et utkast under det flyttes til `key` ved lesing
  * @returns {{data: object, save(): boolean, reset(): object, hasDraft(): boolean}}
  */
-export function createDraftStore(key, loadPublished, onSaveError) {
+export function createDraftStore(key, loadPublished, onSaveError, legacyKey) {
+  // Migrate-on-read (ADR-0021): a draft saved under the pre-rename key is
+  // moved to the new key once; an existing draft under the new key wins.
+  if (legacyKey) {
+    const old = localStorage.getItem(legacyKey);
+    if (old !== null) {
+      if (localStorage.getItem(key) === null) {
+        try { localStorage.setItem(key, old); } catch { /* full kvote: utkastet består under gammel nøkkel */ }
+      }
+      if (localStorage.getItem(key) !== null) localStorage.removeItem(legacyKey);
+    }
+  }
   // Kloning via JSON, ikke structuredClone: innholdet er ren JSON per
   // kontrakt, og JSON tåler Svelte 5-reaktive proxier (structuredClone
   // kaster DataCloneError på dem).

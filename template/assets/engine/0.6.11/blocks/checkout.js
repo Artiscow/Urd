@@ -27,18 +27,18 @@ function renderSummary(box, currency) {
   box.textContent = '';
   const items = readCart();
   if (!items.length) {
-    box.appendChild(el2('p', 'urd-kasse-tom', t('butikk.cartEmpty')));
+    box.appendChild(el2('p', 'urd-kasse-tom', t('shop.cartEmpty')));
     return;
   }
   const list = el2('ul', 'urd-kasse-linjer');
   for (const line of orderLines(items, currency)) list.appendChild(el2('li', null, line));
   box.appendChild(list);
   const sum = el2('div', 'urd-kasse-sum');
-  sum.append(el2('span', null, t('butikk.total')), el2('strong', null, formatPrice(cartTotal(items), currency)));
+  sum.append(el2('span', null, t('shop.total')), el2('strong', null, formatPrice(cartTotal(items), currency)));
   box.appendChild(sum);
 }
 
-export const kasseBlock = {
+export const checkoutBlock = {
   version: 1,
   autoGrow: true,
   label: 'Kasse',
@@ -74,10 +74,10 @@ export const kasseBlock = {
       form.appendChild(label);
       return input;
     };
-    const nameInput = field('butikk.name', 'input', 'text');
-    const emailInput = field('butikk.email', 'input', 'email');
-    const phoneInput = field('butikk.phone', 'input', 'tel');
-    const commentInput = field('butikk.comment', 'textarea');
+    const nameInput = field('shop.name', 'input', 'text');
+    const emailInput = field('shop.email', 'input', 'email');
+    const phoneInput = field('shop.phone', 'input', 'tel');
+    const commentInput = field('shop.comment', 'textarea');
 
     // Honeypot: skjult felt bots fyller ut; mennesker ser og treffer det aldri.
     const hpWrap = el2('label', 'urd-kasse-hp');
@@ -91,11 +91,11 @@ export const kasseBlock = {
     form.appendChild(hpWrap);
 
     if (props.vipps) {
-      form.appendChild(el2('p', 'urd-kasse-vipps', t('butikk.vippsHint', { number: props.vipps })));
+      form.appendChild(el2('p', 'urd-kasse-vipps', t('shop.vippsHint', { number: props.vipps })));
     }
 
     const buttons = el2('div', 'urd-kasse-knapper');
-    const submit = el2('button', 'urd-kasse-send', t('butikk.sendOrder'));
+    const submit = el2('button', 'urd-kasse-send', t('shop.sendOrder'));
     submit.type = 'submit';
     buttons.appendChild(submit);
     form.appendChild(buttons);
@@ -114,14 +114,14 @@ export const kasseBlock = {
     // sidens egen funksjon, som regner summen på nytt fra katalogen og
     // svarer med Vipps-sesjonens URL; betalingen skjer hos Vipps.
     if (props.vippsCheckout) {
-      const pay = el2('button', 'urd-kasse-vippsbetal', t('butikk.payWithVipps'));
+      const pay = el2('button', 'urd-kasse-vippsbetal', t('shop.payWithVipps'));
       pay.type = 'button';
       pay.addEventListener('click', async () => {
         // Samme sendevakt som skjemaet: aldri i preview, uansett viewport.
         if (ctx.preview) return;
         const items = readCart();
         if (!items.length) {
-          setStatus(t('butikk.cartEmpty'), true);
+          setStatus(t('shop.cartEmpty'), true);
           return;
         }
         pay.disabled = true;
@@ -145,9 +145,9 @@ export const kasseBlock = {
             location.href = data.url;
             return;
           }
-          setStatus(t(res.status === 503 ? 'butikk.vippsUnavailable' : 'butikk.sendFailed'), true);
+          setStatus(t(res.status === 503 ? 'shop.vippsUnavailable' : 'shop.sendFailed'), true);
         } catch {
-          setStatus(t('butikk.sendFailed'), true);
+          setStatus(t('shop.sendFailed'), true);
         }
         pay.disabled = false;
       });
@@ -159,7 +159,7 @@ export const kasseBlock = {
     // betalingslaget på: ellers kunne en delt lenke tømme kurven.
     if (props.vippsCheckout && !ctx.preview && new URLSearchParams(location.search).has('bestilt')) {
       writeCart([]);
-      setStatus(t('butikk.orderSent'), false);
+      setStatus(t('shop.orderSent'), false);
       const url = new URL(location.href);
       url.searchParams.delete('bestilt');
       history.replaceState(null, '', url);
@@ -172,18 +172,18 @@ export const kasseBlock = {
       if (ctx.preview) return;
       // Utfylt honeypot: forkast i stillhet, vis suksess så boten gir seg.
       if (hp.value.trim()) {
-        setStatus(t('butikk.orderSent'), false);
+        setStatus(t('shop.orderSent'), false);
         return;
       }
       const items = readCart();
       if (!items.length) {
-        setStatus(t('butikk.cartEmpty'), true);
+        setStatus(t('shop.cartEmpty'), true);
         return;
       }
       const name = nameInput.value.trim();
       const email = emailInput.value.trim();
       if (!name || !isEmail(email)) {
-        setStatus(t('butikk.fillRequired'), true);
+        setStatus(t('shop.fillRequired'), true);
         return;
       }
       const contact = { name, email, phone: phoneInput.value.trim(), comment: commentInput.value.trim() };
@@ -198,25 +198,25 @@ export const kasseBlock = {
           // Endepunktet har bekreftet: kurven er levert og tømmes.
           writeCart([]);
           form.reset();
-          setStatus(t('butikk.orderSent'), false);
+          setStatus(t('shop.orderSent'), false);
         } catch {
-          setStatus(t('butikk.sendFailed'), true);
+          setStatus(t('shop.sendFailed'), true);
         }
         return;
       }
       if (props.recipient) {
         const body = buildOrderBody(items, {
-          [t('butikk.name')]: name,
-          [t('butikk.email')]: email,
-          [t('butikk.phone')]: contact.phone,
-          [t('butikk.comment')]: contact.comment,
-        }, currency, t('butikk.total'));
-        location.href = buildOrderMailto(props.recipient, t('butikk.orderSubject', { site: document.title }), body);
+          [t('shop.name')]: name,
+          [t('shop.email')]: email,
+          [t('shop.phone')]: contact.phone,
+          [t('shop.comment')]: contact.comment,
+        }, currency, t('shop.total'));
+        location.href = buildOrderMailto(props.recipient, t('shop.orderSubject', { site: document.title }), body);
         // mailto åpner et utkast: kurven består til e-posten faktisk er sendt.
-        setStatus(t('butikk.orderDraft'), false);
+        setStatus(t('shop.orderDraft'), false);
         return;
       }
-      setStatus(t('butikk.missingTarget'), true);
+      setStatus(t('shop.missingTarget'), true);
     });
     host.appendChild(form);
 
@@ -225,8 +225,8 @@ export const kasseBlock = {
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {
-          title: ta('hintKasse.title'),
-          lines: [ta('hintKasse.l1'), ta('hintKasse.l2'), ta('hintKasse.l3')],
+          title: ta('hintCheckout.title'),
+          lines: [ta('hintCheckout.l1'), ta('hintCheckout.l2'), ta('hintCheckout.l3')],
         });
       });
     }

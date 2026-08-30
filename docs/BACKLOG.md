@@ -84,7 +84,7 @@ Fasen er delt opp i milepæler 9. august 2026: arkitekturavklaringene (bredde, m
   - [x] 0.7.14.3 Preset-idene med sidemigrering v4 (pageMigrations[3]), page-presets-startpakkene, preset.<id>.*-nøklene, eksempelsider løftet
   - [x] 0.7.14.4 Plugin-laget: mapper/ider/blokk- og preset-ider/CSS/locales for referanse-pluginene, motor-aliaser for de gamle idene, provides.maler->templates dual-read, Urd.maler-alias, alias-matrisetest
   - [x] 0.7.14.5 Motorfil-renames (git mv av ~14 moduler) med modulepreload-listene i alle skall, tests/_engine.mjs og editorens $engine-importer; forhåndssjekk av dynamiske import()-kall. Ti norske testfilnavn tatt i samme etappe
-  - [ ] 0.7.14.6 JS-identifikatorene, resterende i18n-nøkler (hint*/opt*/canvas*), urd-maler->urd-templates-meldingen, utkastnøkkel-migreringen (migrate-on-read i draft-storen)
+  - [x] 0.7.14.6 JS-identifikatorene, resterende i18n-nøkler (hint*/opt*/canvas*), urd-maler->urd-templates-meldingen, utkastnøkkel-migreringen (migrate-on-read i draft-storen). Også site-ordbokgruppene (shop./share./countdown.) og footer-malenes ider
   - [ ] 0.7.14.7 CSS-klassene (urd-handlekurv-*->urd-cart-* osv., nytt djb2-stempel i alle 5 skall, kopiene byte-like); breaking for egendefinert CSS, bokføres i CHANGELOG
   - [ ] 0.7.14.8 icons.js-lokaliseringen: labelKey per ikon + icon.*-nøkler i nb/en-GB/tr, engelske fallback-etiketter
   - [ ] 0.7.14.9 Resterende strenger: fallback-litteraler, hardkodede titler/placeholders (med nøkler), feil-/konsollmeldinger, check-release.mjs, dev-server.py, workflow-stegnavnene, skjema-beskrivelsestekstene

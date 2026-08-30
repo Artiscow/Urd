@@ -2411,40 +2411,40 @@ var Ai = {
 		"gallery.imageN": "Bilde {n}",
 		"video.unknownUrl": "Ukjent videolenke (YouTube og Vimeo støttes)",
 		"video.emptyHint": "Lim inn en YouTube- eller Vimeo-lenke i Egenskaper",
-		"deling.share": "Del på {service}",
-		"deling.email": "Del på e-post",
-		"deling.copy": "Kopier lenke",
-		"deling.copied": "Kopiert!",
-		"butikk.addToCart": "Legg i handlekurv",
-		"butikk.added": "Lagt i kurven!",
-		"butikk.memberPrice": "Medlem: {price}",
-		"butikk.cart": "Handlekurv",
-		"butikk.cartEmpty": "Handlekurven er tom.",
-		"butikk.total": "Sum",
-		"butikk.checkout": "Til kassen",
-		"butikk.close": "Lukk",
-		"butikk.remove": "Fjern varen",
-		"butikk.increase": "Flere",
-		"butikk.decrease": "Færre",
-		"butikk.name": "Navn",
-		"butikk.email": "E-post",
-		"butikk.phone": "Telefon",
-		"butikk.comment": "Kommentar",
-		"butikk.sendOrder": "Send bestilling",
-		"butikk.orderSubject": "Bestilling fra {site}",
-		"butikk.orderSent": "Takk! Bestillingen er sendt.",
-		"butikk.orderDraft": "E-postutkastet er åpnet - send det for å fullføre bestillingen.",
-		"butikk.fillRequired": "Fyll ut navn og en gyldig e-postadresse.",
-		"butikk.sendFailed": "Kunne ikke sende akkurat nå. Prøv igjen senere.",
-		"butikk.missingTarget": "Kassen mangler mottaker eller endepunkt.",
-		"butikk.vippsHint": "Betaling: Vipps til {number}.",
-		"butikk.quickView": "Vis produktet",
-		"butikk.payWithVipps": "Betal med Vipps",
-		"butikk.vippsUnavailable": "Betaling er ikke satt opp for denne siden ennå.",
-		"nedteller.days": "dager",
-		"nedteller.hours": "timer",
-		"nedteller.minutes": "minutter",
-		"nedteller.seconds": "sekunder",
+		"share.share": "Del på {service}",
+		"share.email": "Del på e-post",
+		"share.copy": "Kopier lenke",
+		"share.copied": "Kopiert!",
+		"shop.addToCart": "Legg i handlekurv",
+		"shop.added": "Lagt i kurven!",
+		"shop.memberPrice": "Medlem: {price}",
+		"shop.cart": "Handlekurv",
+		"shop.cartEmpty": "Handlekurven er tom.",
+		"shop.total": "Sum",
+		"shop.checkout": "Til kassen",
+		"shop.close": "Lukk",
+		"shop.remove": "Fjern varen",
+		"shop.increase": "Flere",
+		"shop.decrease": "Færre",
+		"shop.name": "Navn",
+		"shop.email": "E-post",
+		"shop.phone": "Telefon",
+		"shop.comment": "Kommentar",
+		"shop.sendOrder": "Send bestilling",
+		"shop.orderSubject": "Bestilling fra {site}",
+		"shop.orderSent": "Takk! Bestillingen er sendt.",
+		"shop.orderDraft": "E-postutkastet er åpnet - send det for å fullføre bestillingen.",
+		"shop.fillRequired": "Fyll ut navn og en gyldig e-postadresse.",
+		"shop.sendFailed": "Kunne ikke sende akkurat nå. Prøv igjen senere.",
+		"shop.missingTarget": "Kassen mangler mottaker eller endepunkt.",
+		"shop.vippsHint": "Betaling: Vipps til {number}.",
+		"shop.quickView": "Vis produktet",
+		"shop.payWithVipps": "Betal med Vipps",
+		"shop.vippsUnavailable": "Betaling er ikke satt opp for denne siden ennå.",
+		"countdown.days": "dager",
+		"countdown.hours": "timer",
+		"countdown.minutes": "minutter",
+		"countdown.seconds": "sekunder",
 		"render.missingPlugin": "Blokktypen '{type}' er ikke tilgjengelig (mangler plugin eller nyere Urd?)"
 	},
 	dates: {
@@ -2636,20 +2636,29 @@ function Ji(e, { delay: t = 0, duration: n = 400, easing: r = Ki, x: i = 0, y: a
 }
 //#endregion
 //#region src/lib/draftStore.js
-function Yi(e, t, n) {
-	let r = t(), i = JSON.stringify(r), a = JSON.parse(i), o = localStorage.getItem(e);
-	if (o) try {
-		a = JSON.parse(o);
+function Yi(e, t, n, r) {
+	if (r) {
+		let t = localStorage.getItem(r);
+		if (t !== null) {
+			if (localStorage.getItem(e) === null) try {
+				localStorage.setItem(e, t);
+			} catch {}
+			localStorage.getItem(e) !== null && localStorage.removeItem(r);
+		}
+	}
+	let i = t(), a = JSON.stringify(i), o = JSON.parse(a), s = localStorage.getItem(e);
+	if (s) try {
+		o = JSON.parse(s);
 	} catch {
 		localStorage.removeItem(e);
 	}
 	return {
 		get data() {
-			return a;
+			return o;
 		},
 		save() {
-			let t = JSON.stringify(a);
-			if (t === i) return localStorage.removeItem(e), !0;
+			let t = JSON.stringify(o);
+			if (t === a) return localStorage.removeItem(e), !0;
 			try {
 				return localStorage.setItem(e, t), !0;
 			} catch (e) {
@@ -2657,14 +2666,14 @@ function Yi(e, t, n) {
 			}
 		},
 		reset() {
-			return localStorage.removeItem(e), a = JSON.parse(i), a;
+			return localStorage.removeItem(e), o = JSON.parse(a), o;
 		},
 		replace(e) {
-			return a = e, a;
+			return o = e, o;
 		},
 		amendBaseline(e) {
-			let t = JSON.parse(i);
-			e(t), i = JSON.stringify(t);
+			let t = JSON.parse(a);
+			e(t), a = JSON.stringify(t);
 		},
 		hasDraft() {
 			return localStorage.getItem(e) !== null;
@@ -3565,10 +3574,10 @@ function Va(e, t = {}) {
 				collections: e
 			});
 		},
-		sendMaler(e) {
+		sendTemplates(e) {
 			r({
-				type: "urd-maler",
-				maler: e
+				type: "urd-templates",
+				templates: e
 			});
 		},
 		sendInsertTemplate(e) {
@@ -4608,21 +4617,21 @@ function Go(e) {
 		groupKey: "presetGroup.cards",
 		hint: "Historien som hendelser langs en linje",
 		hintKey: "preset.timeline.hint",
-		create: () => Wo("timeline", "480px", Lo(Ro("bg")), [Q(Z(25, 24, 50, 36), Y("seed.tidslinje.title"), { align: "center" }), Fo(Z(25, 88, 50, 330), [
+		create: () => Wo("timeline", "480px", Lo(Ro("bg")), [Q(Z(25, 24, 50, 36), Y("seed.timeline.title"), { align: "center" }), Fo(Z(25, 88, 50, 330), [
 			{
 				year: "2019",
-				title: Y("seed.tidslinje.t1"),
-				text: Y("seed.tidslinje.text")
+				title: Y("seed.timeline.t1"),
+				text: Y("seed.timeline.text")
 			},
 			{
 				year: "2022",
-				title: Y("seed.tidslinje.t2"),
-				text: Y("seed.tidslinje.text")
+				title: Y("seed.timeline.t2"),
+				text: Y("seed.timeline.text")
 			},
 			{
 				year: "2026",
-				title: Y("seed.tidslinje.t3"),
-				text: Y("seed.tidslinje.text")
+				title: Y("seed.timeline.t3"),
+				text: Y("seed.timeline.text")
 			}
 		])])
 	}), e.sections.define("steps", {
@@ -4740,7 +4749,7 @@ function Go(e) {
 		hint: "Ekte produktkort fra en produktsamling, med handlekurv",
 		hintKey: "preset.shop.hint",
 		create: () => Wo("shop", "544px", Lo(Ro("bg")), [
-			Q(Z(6, 28, 50, 38), Y("seed.butikk.title")),
+			Q(Z(6, 28, 50, 38), Y("seed.shop.title")),
 			Ao(Z(78, 88, 16, 48)),
 			ko(Z(6, 176, 88, 320))
 		])
@@ -4753,9 +4762,9 @@ function Go(e) {
 		hintKey: "preset.shop-hero.hint",
 		create: () => {
 			let e = [
-				Q(Z(6, 48, 52, 96), Y("seed.butikkHero.title")),
-				Q(Z(6, 152, 40, 48), Y("seed.butikkHero.sub")),
-				To(Z(6, 216, 17, 42), Y("seed.butikkHero.cta")),
+				Q(Z(6, 48, 52, 96), Y("seed.shopHero.title")),
+				Q(Z(6, 152, 40, 48), Y("seed.shopHero.sub")),
+				To(Z(6, 216, 17, 42), Y("seed.shopHero.cta")),
 				wo(Z(62, 40, 32, 300))
 			];
 			return e.forEach((e, t) => {
@@ -4782,21 +4791,21 @@ function Go(e) {
 		hintKey: "preset.shop-categories.hint",
 		create: () => {
 			let e = (e, t, n) => {
-				let r = wo(Z(e, 88, 21, 170)), i = Q(Z(e, 266, 21, 34), Y("seed.butikkKategorier.tile", { name: n }), { align: "center" });
+				let r = wo(Z(e, 88, 21, 170)), i = Q(Z(e, 266, 21, 34), Y("seed.shopCategories.tile", { name: n }), { align: "center" });
 				return r.mobileOrder = Uo(88, t, 0), i.mobileOrder = Uo(88, t, 1), [r, i];
 			}, t = Wo("shop-categories", "360px", Lo(Ro("bg")), [
-				Q(Z(6, 28, 60, 38), Y("seed.butikkKategorier.title")),
-				...e(6, 0, Y("seed.butikkKategorier.cat1")),
-				...e(29.5, 1, Y("seed.butikkKategorier.cat2")),
-				...e(53, 2, Y("seed.butikkKategorier.cat3")),
-				...e(76.5, 3, Y("seed.butikkKategorier.cat4"))
+				Q(Z(6, 28, 60, 38), Y("seed.shopCategories.title")),
+				...e(6, 0, Y("seed.shopCategories.cat1")),
+				...e(29.5, 1, Y("seed.shopCategories.cat2")),
+				...e(53, 2, Y("seed.shopCategories.cat3")),
+				...e(76.5, 3, Y("seed.shopCategories.cat4"))
 			]);
 			return t.theme = "soft", t;
 		},
 		itemLabel: "kategori",
 		itemLabelKey: "item.category",
 		item: (e) => {
-			let { x: t, y: n, n: r } = Ho(e, 4, 6, 23.5, 88, 220, 21, 212), i = wo(Z(t, n, 21, 170)), a = Q(Z(t, n + 178, 21, 34), Y("seed.butikkKategorier.tile", { name: Y("seed.butikkKategorier.newCat") }), { align: "center" });
+			let { x: t, y: n, n: r } = Ho(e, 4, 6, 23.5, 88, 220, 21, 212), i = wo(Z(t, n, 21, 170)), a = Q(Z(t, n + 178, 21, 34), Y("seed.shopCategories.tile", { name: Y("seed.shopCategories.newCat") }), { align: "center" });
 			return i.mobileOrder = Uo(88, r, 0), a.mobileOrder = Uo(88, r, 1), {
 				blocks: [i, a],
 				bottom: n + 220
@@ -4814,17 +4823,17 @@ function Go(e) {
 				let i = Eo(Z(e + 10.5, 88, 4, 52), r, 44), a = Q(Z(e, 148, 25, 96), Y(n), { align: "center" });
 				return i.mobileOrder = Uo(88, t, 0), a.mobileOrder = Uo(88, t, 1), [i, a];
 			}, t = Wo("shop-trust", "300px", Lo(Ro("bg")), [
-				Q(Z(6, 28, 60, 38), Y("seed.butikkTillit.title")),
-				...e(6, 0, "seed.butikkTillit.t1", "✓"),
-				...e(37.5, 1, "seed.butikkTillit.t2", "↻"),
-				...e(69, 2, "seed.butikkTillit.t3", "✉")
+				Q(Z(6, 28, 60, 38), Y("seed.shopTrust.title")),
+				...e(6, 0, "seed.shopTrust.t1", "✓"),
+				...e(37.5, 1, "seed.shopTrust.t2", "↻"),
+				...e(69, 2, "seed.shopTrust.t3", "✉")
 			]);
 			return t.theme = "muted", t;
 		},
 		itemLabel: "kort",
 		itemLabelKey: "item.card",
 		item: (e) => {
-			let { x: t, y: n, n: r } = Ho(e, 3, 6, 31.5, 148, 216, 25, 156, -60), i = Eo(Z(t + 10.5, n - 60, 4, 52), "✓", 44), a = Q(Z(t, n, 25, 96), Y("seed.butikkTillit.newItem"), { align: "center" });
+			let { x: t, y: n, n: r } = Ho(e, 3, 6, 31.5, 148, 216, 25, 156, -60), i = Eo(Z(t + 10.5, n - 60, 4, 52), "✓", 44), a = Q(Z(t, n, 25, 96), Y("seed.shopTrust.newItem"), { align: "center" });
 			return i.mobileOrder = Uo(88, r, 0), a.mobileOrder = Uo(88, r, 1), {
 				blocks: [i, a],
 				bottom: n + 104
@@ -4839,9 +4848,9 @@ function Go(e) {
 		hintKey: "preset.shop-showcase.hint",
 		create: () => {
 			let e = [
-				Q(Z(6, 56, 52, 100), Y("seed.butikkUtstilling.title")),
-				Q(Z(6, 164, 42, 56), Y("seed.butikkUtstilling.text")),
-				To(Z(6, 236, 18, 42), Y("seed.butikkUtstilling.cta")),
+				Q(Z(6, 56, 52, 100), Y("seed.shopShowcase.title")),
+				Q(Z(6, 164, 42, 56), Y("seed.shopShowcase.text")),
+				To(Z(6, 236, 18, 42), Y("seed.shopShowcase.cta")),
 				wo(Z(62, 48, 32, 240))
 			];
 			e.forEach((e, t) => {
@@ -4857,7 +4866,7 @@ function Go(e) {
 		groupKey: "presetGroup.shop",
 		hint: "Bestillingsskjema som sender handlekurven som e-post eller til et endepunkt",
 		hintKey: "preset.checkout.hint",
-		create: () => Wo("checkout", "560px", Lo(Ro("bg")), [Q(Z(6, 28, 50, 38), Y("seed.kasse.title")), jo(Z(25, 96, 50, 430))])
+		create: () => Wo("checkout", "560px", Lo(Ro("bg")), [Q(Z(6, 28, 50, 38), Y("seed.checkout.title")), jo(Z(25, 96, 50, 430))])
 	}), e.sections.define("cta", {
 		label: "CTA-banner",
 		labelKey: "preset.cta.label",
@@ -4878,9 +4887,9 @@ function Go(e) {
 		hint: "Stort sitat med attribusjon",
 		hintKey: "preset.quote.hint",
 		create: () => Wo("quote", "300px", Lo(Ro("bg")), [Po(Z(20, 56, 60, 190), {
-			text: Y("seed.sitat.text"),
-			attribution: Y("seed.sitat.name"),
-			role: Y("seed.sitat.role")
+			text: Y("seed.quoteBlock.text"),
+			attribution: Y("seed.quoteBlock.name"),
+			role: Y("seed.quoteBlock.role")
 		})])
 	}), e.sections.define("stats", {
 		label: "Statistikk",
@@ -6795,17 +6804,17 @@ function Cf(e, t) {
 						q(a, z(t).year), J(a, "placeholder", e), J(a, "title", r), q(o, z(t).title), J(o, "title", i), u.disabled = n === (z(A).props.items?.length ?? 0) - 1, J(d, "title", s), q(f, z(t).text), J(f, "placeholder", c), J(f, "title", l);
 					}, [
 						() => Y("ph.tlYear"),
-						() => Y("tip.tl.year"),
-						() => Y("tip.tl.title"),
-						() => Y("tip.tl.remove"),
+						() => Y("tip.timeline.year"),
+						() => Y("tip.timeline.title"),
+						() => Y("tip.timeline.remove"),
 						() => Y("ph.tlText"),
-						() => Y("tip.tl.text")
+						() => Y("tip.timeline.text")
 					]), B("change", a, (e) => Gt(n, { year: e.target.value })), B("change", o, (e) => Gt(n, { title: e.target.value })), B("click", l, () => Jt(n, -1)), B("click", u, () => Jt(n, 1)), B("click", d, () => qt(n)), B("change", f, (e) => Gt(n, { text: e.target.value })), H(e, r);
 				});
 				var a = L(i, 2), o = F(a, !0);
 				k(a), R((e, t) => {
 					U(r, e), U(o, t);
-				}, [() => Y("lbl.tlItems"), () => Y("ui.addTlItem")]), B("click", a, Kt), H(e, t);
+				}, [() => Y("lbl.timelineItems"), () => Y("ui.addTlItem")]), B("click", a, Kt), H(e, t);
 			}, o = (e) => {
 				var t = xl(), n = I(t), r = F(n), i = L(r);
 				K(i), k(n);
@@ -6815,9 +6824,9 @@ function Cf(e, t) {
 				K(u), k(c), R((e, t, n) => {
 					U(r, `${e ?? ""} `), q(i, z(A).props.text ?? ""), U(o, `${t ?? ""} `), q(s, z(A).props.attribution ?? ""), U(l, `${n ?? ""} `), q(u, z(A).props.role ?? "");
 				}, [
-					() => Y("lbl.sitatText"),
-					() => Y("lbl.sitatName"),
-					() => Y("lbl.sitatRole")
+					() => Y("lbl.quoteText"),
+					() => Y("lbl.quoteName"),
+					() => Y("lbl.quoteRole")
 				]), B("change", i, (e) => M("text", e.target.value)), B("change", s, (e) => M("attribution", e.target.value)), B("change", u, (e) => M("role", e.target.value)), H(e, t);
 			}, s = (e) => {
 				var t = Sl(), n = I(t), r = F(n), i = L(r);
@@ -6855,8 +6864,8 @@ function Cf(e, t) {
 					() => Y("ui.removeRow"),
 					() => Y("ui.addColumn"),
 					() => Y("ui.removeColumn"),
-					() => Y("tip.tabell.header"),
-					() => Y("lbl.tabellHeader")
+					() => Y("tip.table.header"),
+					() => Y("lbl.tableHeader")
 				]), B("click", r, () => Xt(1, 0)), B("click", a, () => Xt(-1, 0)), B("click", c, () => Xt(0, 1)), B("click", u, () => Xt(0, -1)), B("change", p, (e) => M("header", e.target.checked)), H(e, t);
 			}, u = (e) => {
 				var t = Fr();
@@ -6865,8 +6874,8 @@ function Cf(e, t) {
 					["x", "X"],
 					["linkedin", "LinkedIn"],
 					["whatsapp", "WhatsApp"],
-					["email", Y("opt.deling.email")],
-					["copy", Y("opt.deling.copy")]
+					["email", Y("opt.share.email")],
+					["copy", Y("opt.share.copy")]
 				], ([e, t]) => e, (e, t) => {
 					var n = /* @__PURE__ */ j(() => h(z(t), 2));
 					let r = () => z(n)[0], i = () => z(n)[1];
@@ -6884,9 +6893,9 @@ function Cf(e, t) {
 				K(s), k(a), R((e, t, n) => {
 					U(r, `${e ?? ""} `), q(i, z(A).props.target ?? ""), J(a, "title", t), U(o, `${n ?? ""} `), q(s, z(A).props.doneText ?? "");
 				}, [
-					() => Y("lbl.nedtellerTarget"),
-					() => Y("tip.nedteller.done"),
-					() => Y("lbl.nedtellerDone")
+					() => Y("lbl.countdownTarget"),
+					() => Y("tip.countdown.done"),
+					() => Y("lbl.countdownDone")
 				]), B("change", i, (e) => M("target", e.target.value)), B("change", s, (e) => M("doneText", e.target.value)), H(e, t);
 			}, f = (e) => {
 				var t = Dl(), n = I(t), r = F(n), i = L(r);
@@ -7062,9 +7071,9 @@ function Cf(e, t) {
 				k(c), R((e, t, i, c, d) => {
 					J(n, "title", e), U(r, `${t ?? ""} `), J(a, "title", i), U(o, `${c ?? ""} `), q(s, z(A).props.limit ?? 6), bi(l, z(A).props.newestFirst !== !1), U(u, ` ${d ?? ""}`);
 				}, [
-					() => Y("tip.samling.source"),
+					() => Y("tip.collection.source"),
 					() => Y("blocks.collection"),
-					() => Y("tip.samling.limit"),
+					() => Y("tip.collection.limit"),
 					() => Y("lbl.maxCount"),
 					() => Y("lbl.newestFirst")
 				]), B("change", s, (e) => M("limit", Number(e.target.value))), B("change", l, (e) => M("newestFirst", e.target.checked)), H(e, t);
@@ -7090,9 +7099,9 @@ function Cf(e, t) {
 					k(i), k(t), R((e, t, o, s) => {
 						J(n, "title", e), U(r, t), J(i, "title", o), U(a, s);
 					}, [
-						() => Y("tip.produkt.addProduct"),
+						() => Y("tip.product.addProduct"),
 						() => Y("ui.addProduct"),
-						() => Y("tip.produkt.editCatalog"),
+						() => Y("tip.product.editCatalog"),
 						() => Y("ui.editCatalog")
 					]), B("click", n, () => Vo(z(A).props.collection)), B("click", i, () => {
 						P(uo, z(A).props.collection, !0), P(ct, "collections");
@@ -7101,7 +7110,7 @@ function Cf(e, t) {
 					var t = Ll(), n = F(t, !0);
 					k(t), R((e, r) => {
 						J(t, "title", e), U(n, r);
-					}, [() => Y("tip.produkt.createCatalog"), () => Y("ui.createCatalog")]), B("click", t, zo), H(e, t);
+					}, [() => Y("tip.product.createCatalog"), () => Y("ui.createCatalog")]), B("click", t, zo), H(e, t);
 				}, c = /* @__PURE__ */ j(() => !z(co).some((e) => z(lo)[e]?.kind === "products"));
 				W(a, (e) => {
 					z(A).props.collection && z(lo)[z(A).props.collection]?.kind === "products" ? e(o) : z(c) && e(s, 1);
@@ -7112,11 +7121,11 @@ function Cf(e, t) {
 				K(m), k(f), R((e, t, i, a, o, s) => {
 					J(n, "title", e), U(r, `${t ?? ""} `), J(l, "title", i), U(u, `${a ?? ""} `), q(d, z(A).props.limit ?? 0), J(f, "title", o), U(p, `${s ?? ""} `), q(m, z(A).props.currency ?? "kr");
 				}, [
-					() => Y("tip.produkt.source"),
+					() => Y("tip.product.source"),
 					() => Y("blocks.collection"),
-					() => Y("tip.samling.limit"),
+					() => Y("tip.collection.limit"),
 					() => Y("lbl.maxCount"),
-					() => Y("tip.produkt.currency"),
+					() => Y("tip.product.currency"),
 					() => Y("lbl.currency")
 				]), B("change", d, (e) => M("limit", Number(e.target.value))), B("change", m, (e) => M("currency", e.target.value)), H(e, t);
 			}, b = (e) => {
@@ -7138,9 +7147,9 @@ function Cf(e, t) {
 				K(s), k(a), R((e, t, i, c) => {
 					J(n, "title", e), U(r, `${t ?? ""} `), J(a, "title", i), U(o, `${c ?? ""} `), q(s, z(A).props.currency ?? "kr");
 				}, [
-					() => Y("tip.handlekurv.checkout"),
+					() => Y("tip.cart.checkout"),
 					() => Y("lbl.checkoutPage"),
-					() => Y("tip.produkt.currency"),
+					() => Y("tip.product.currency"),
 					() => Y("lbl.currency")
 				]), B("change", s, (e) => M("currency", e.target.value)), H(e, t);
 			}, x = (e) => {
@@ -7158,15 +7167,15 @@ function Cf(e, t) {
 				K(g), k(m), R((e, t, _, v, y, b, x, S, C, w) => {
 					J(n, "title", e), U(r, `${t ?? ""} `), q(i, z(A).props.recipient ?? ""), J(a, "title", _), U(o, `${v ?? ""} `), q(s, z(A).props.endpoint ?? ""), J(c, "title", y), U(l, `${b ?? ""} `), q(u, z(A).props.vipps ?? ""), J(d, "title", x), bi(f, z(A).props.vippsCheckout === !0), U(p, ` ${S ?? ""}`), J(m, "title", C), U(h, `${w ?? ""} `), q(g, z(A).props.currency ?? "kr");
 				}, [
-					() => Y("tip.kasse.recipient"),
+					() => Y("tip.checkout.recipient"),
 					() => Y("lbl.recipientEmail"),
-					() => Y("tip.kasse.endpoint"),
+					() => Y("tip.checkout.endpoint"),
 					() => Y("lbl.endpointUrl"),
-					() => Y("tip.kasse.vipps"),
+					() => Y("tip.checkout.vipps"),
 					() => Y("lbl.vippsNumber"),
-					() => Y("tip.kasse.vippsCheckout"),
+					() => Y("tip.checkout.vippsCheckout"),
 					() => Y("lbl.vippsCheckout"),
-					() => Y("tip.produkt.currency"),
+					() => Y("tip.product.currency"),
 					() => Y("lbl.currency")
 				]), B("change", i, (e) => M("recipient", e.target.value.trim())), B("change", s, (e) => M("endpoint", e.target.value.trim())), B("change", u, (e) => M("vipps", e.target.value.trim())), B("change", f, (e) => M("vippsCheckout", e.target.checked)), B("change", g, (e) => M("currency", e.target.value)), H(e, t);
 			}, S = (e) => {
@@ -7327,7 +7336,7 @@ function Cf(e, t) {
 			}, o = (e) => {
 				var t = Yl(), n = I(t), r = F(n), i = L(r);
 				{
-					let e = /* @__PURE__ */ j(() => z(A).props.variant ?? "left"), t = /* @__PURE__ */ j(() => [["left", Y("opt.tl.left")], ["alternating", Y("opt.tl.alternating")]]);
+					let e = /* @__PURE__ */ j(() => z(A).props.variant ?? "left"), t = /* @__PURE__ */ j(() => [["left", Y("opt.timeline.left")], ["alternating", Y("opt.timeline.alternating")]]);
 					X(i, {
 						get value() {
 							return z(e);
@@ -7341,7 +7350,7 @@ function Cf(e, t) {
 				k(n);
 				var a = L(n, 2), o = F(a), s = L(o);
 				{
-					let e = /* @__PURE__ */ j(() => z(A).props.marker ?? "filled"), t = /* @__PURE__ */ j(() => [["filled", Y("opt.tl.filled")], ["ring", Y("opt.tl.ring")]]);
+					let e = /* @__PURE__ */ j(() => z(A).props.marker ?? "filled"), t = /* @__PURE__ */ j(() => [["filled", Y("opt.timeline.filled")], ["ring", Y("opt.timeline.ring")]]);
 					X(s, {
 						get value() {
 							return z(e);
@@ -7370,13 +7379,13 @@ function Cf(e, t) {
 					U(r, `${e ?? ""} `), U(o, `${t ?? ""} `), U(l, `${n ?? ""} `);
 				}, [
 					() => Y("lbl.variant"),
-					() => Y("lbl.tlMarker"),
+					() => Y("lbl.timelineMarker"),
 					() => Y("lbl.color")
 				]), H(e, t);
 			}, s = (e) => {
 				var t = Zl(), n = I(t), r = F(n), i = L(r);
 				{
-					let e = /* @__PURE__ */ j(() => z(A).props.variant ?? "large"), t = /* @__PURE__ */ j(() => [["large", Y("opt.sitat.large")], ["short", Y("opt.sitat.short")]]);
+					let e = /* @__PURE__ */ j(() => z(A).props.variant ?? "large"), t = /* @__PURE__ */ j(() => [["large", Y("opt.quote.large")], ["short", Y("opt.quote.short")]]);
 					X(i, {
 						get value() {
 							return z(e);
@@ -7393,11 +7402,11 @@ function Cf(e, t) {
 					k(n);
 					var a = L(n, 2), o = (e) => {
 						var t = El(), n = F(t, !0);
-						k(t), R((e) => U(n, e), [() => Y("ui.sitatPortrettFjern")]), B("click", t, () => M("image", "")), H(e, t);
+						k(t), R((e) => U(n, e), [() => Y("ui.quotePortraitRemove")]), B("click", t, () => M("image", "")), H(e, t);
 					};
 					W(a, (e) => {
 						z(A).props.image && e(o);
-					}), R((e) => U(r, `${e ?? ""} `), [() => Y("ui.sitatPortrett")]), B("change", i, tn), H(e, t);
+					}), R((e) => U(r, `${e ?? ""} `), [() => Y("ui.quotePortrait")]), B("change", i, tn), H(e, t);
 				};
 				W(a, (e) => {
 					z(A).props.variant === "short" && e(o);
@@ -7429,8 +7438,8 @@ function Cf(e, t) {
 				var t = $l(), n = I(t), r = F(n), i = L(r);
 				{
 					let e = /* @__PURE__ */ j(() => z(A).props.lines ?? "rows"), t = /* @__PURE__ */ j(() => [
-						["rows", Y("opt.tabell.rows")],
-						["grid", Y("opt.tabell.grid")],
+						["rows", Y("opt.table.rows")],
+						["grid", Y("opt.table.grid")],
 						["none", Y("common.none")]
 					]);
 					X(i, {
@@ -7450,14 +7459,14 @@ function Cf(e, t) {
 				k(a), Ie(2), R((e, t, n) => {
 					U(r, `${e ?? ""} `), bi(o, t), U(s, ` ${n ?? ""}`);
 				}, [
-					() => Y("lbl.tabellLines"),
+					() => Y("lbl.tableLines"),
 					() => !!z(A).props.striped,
-					() => Y("lbl.tabellStriped")
+					() => Y("lbl.tableStriped")
 				]), B("change", o, (e) => M("striped", e.target.checked)), H(e, t);
 			}, u = (e) => {
 				var t = eu(), n = I(t), r = F(n), i = L(r);
 				{
-					let e = /* @__PURE__ */ j(() => z(A).props.variant ?? "icons"), t = /* @__PURE__ */ j(() => [["icons", Y("opt.deling.icons")], ["labels", Y("opt.deling.labels")]]);
+					let e = /* @__PURE__ */ j(() => z(A).props.variant ?? "icons"), t = /* @__PURE__ */ j(() => [["icons", Y("opt.share.icons")], ["labels", Y("opt.share.labels")]]);
 					X(i, {
 						get value() {
 							return z(e);
@@ -7494,7 +7503,7 @@ function Cf(e, t) {
 			}, d = (e) => {
 				var t = $l(), n = I(t), r = F(n), i = L(r);
 				{
-					let e = /* @__PURE__ */ j(() => z(A).props.variant ?? "boxes"), t = /* @__PURE__ */ j(() => [["boxes", Y("opt.nedteller.boxes")], ["plain", Y("opt.nedteller.plain")]]);
+					let e = /* @__PURE__ */ j(() => z(A).props.variant ?? "boxes"), t = /* @__PURE__ */ j(() => [["boxes", Y("opt.countdown.boxes")], ["plain", Y("opt.countdown.plain")]]);
 					X(i, {
 						get value() {
 							return z(e);
@@ -7511,7 +7520,7 @@ function Cf(e, t) {
 				var s = L(o);
 				k(a), Ie(2), R((e, t) => {
 					U(r, `${e ?? ""} `), bi(o, z(A).props.showSeconds !== !1), U(s, ` ${t ?? ""}`);
-				}, [() => Y("lbl.variant"), () => Y("lbl.nedtellerSeconds")]), B("change", o, (e) => M("showSeconds", e.target.checked)), H(e, t);
+				}, [() => Y("lbl.variant"), () => Y("lbl.countdownSeconds")]), B("change", o, (e) => M("showSeconds", e.target.checked)), H(e, t);
 			}, f = (e) => {
 				var t = tu(), n = I(t), r = F(n), i = L(r);
 				{
@@ -7654,11 +7663,11 @@ function Cf(e, t) {
 				var t = iu(), n = I(t), r = F(n), i = L(r);
 				K(i), k(n), Ie(2), R((e, t) => {
 					J(n, "title", e), U(r, `${t ?? ""} `), q(i, z(A).props.columns ?? 0);
-				}, [() => Y("tip.produkt.columns"), () => Y("lbl.columns")]), B("change", i, (e) => M("columns", Number(e.target.value))), H(e, t);
+				}, [() => Y("tip.product.columns"), () => Y("lbl.columns")]), B("change", i, (e) => M("columns", Number(e.target.value))), H(e, t);
 			}, _ = (e) => {
 				var t = tu(), n = I(t), r = F(n), i = L(r);
 				{
-					let e = /* @__PURE__ */ j(() => z(A).props.variant ?? "button"), t = /* @__PURE__ */ j(() => [["button", Y("opt.handlekurv.button")], ["icon", Y("opt.handlekurv.icon")]]);
+					let e = /* @__PURE__ */ j(() => z(A).props.variant ?? "button"), t = /* @__PURE__ */ j(() => [["button", Y("opt.cart.button")], ["icon", Y("opt.cart.icon")]]);
 					X(i, {
 						get value() {
 							return z(e);
@@ -8191,11 +8200,11 @@ function Cf(e, t) {
 			samlinger: t
 		})) {
 			io.replace(e), io.save();
-			for (let e of Object.keys(ao)) e in t || (localStorage.removeItem(`urd-draft-samling-${e}`), delete ao[e]);
+			for (let e of Object.keys(ao)) e in t || (localStorage.removeItem(`urd-draft-collection-${e}`), localStorage.removeItem(`urd-draft-samling-${e}`), delete ao[e]);
 			for (let [e, n] of Object.entries(t)) {
 				if (!ao[e]) {
 					let t = oo[e] ?? null;
-					ao[e] = Yi(`urd-draft-samling-${e}`, () => t, S);
+					ao[e] = Yi(`urd-draft-collection-${e}`, () => t, S, `urd-draft-samling-${e}`);
 				}
 				ao[e].replace(n), ao[e].save();
 			}
@@ -8211,8 +8220,8 @@ function Cf(e, t) {
 			maler: t
 		})) {
 			_o.replace(e), _o.save();
-			for (let e of Object.keys(vo)) e in t || (localStorage.removeItem(`urd-draft-mal-${e}`), delete vo[e]);
-			for (let [e, n] of Object.entries(t)) vo[e] || (vo[e] = Yi(`urd-draft-mal-${e}`, () => bo[e] ?? null, S)), vo[e].replace(n), vo[e].save();
+			for (let e of Object.keys(vo)) e in t || (localStorage.removeItem(`urd-draft-template-${e}`), localStorage.removeItem(`urd-draft-mal-${e}`), delete vo[e]);
+			for (let [e, n] of Object.entries(t)) vo[e] || (vo[e] = Yi(`urd-draft-template-${e}`, () => bo[e] ?? null, S, `urd-draft-mal-${e}`)), vo[e].replace(n), vo[e].save();
 			P(Z, [...e.maler ?? []], !0), O(), wo();
 		}
 	}
@@ -8534,7 +8543,7 @@ function Cf(e, t) {
 		jt("tl-item", (e) => {
 			(e.props.items ??= []).push({
 				year: "",
-				title: Y("seed.tidslinje.newTitle"),
+				title: Y("seed.timeline.newTitle"),
 				text: ""
 			});
 		});
@@ -9780,13 +9789,13 @@ function Cf(e, t) {
 		try {
 			e = await (await fetch("/content/maler.json")).json();
 		} catch {}
-		_o = Yi("urd-draft-maler", () => e, S), P(Z, [..._o.data.maler ?? []], !0);
+		_o = Yi("urd-draft-templates", () => e, S, "urd-draft-maler"), P(Z, [..._o.data.maler ?? []], !0);
 		for (let e of z(Z)) {
 			let t = null;
 			try {
 				t = await (await fetch(`/content/maler/${e}.json`)).json();
 			} catch {}
-			bo[e] = t, vo[e] = Yi(`urd-draft-mal-${e}`, () => t, S), (vo[e].data?.schemaVersion ?? 1) > 1 && vo[e].reset();
+			bo[e] = t, vo[e] = Yi(`urd-draft-template-${e}`, () => t, S, `urd-draft-mal-${e}`), (vo[e].data?.schemaVersion ?? 1) > 1 && vo[e].reset();
 		}
 		Co = !0, wo();
 	}
@@ -9802,7 +9811,7 @@ function Cf(e, t) {
 			blocks: r,
 			page: i
 		}));
-		E?.sendMaler(e);
+		E?.sendTemplates(e);
 	}
 	function To(e) {
 		let t = Ko.includes(e.kind) ? e.kind : "section";
@@ -9853,11 +9862,11 @@ function Cf(e, t) {
 			},
 			[e]: t
 		};
-		vo[r] = Yi(`urd-draft-mal-${r}`, () => null, S), vo[r].replace(i), vo[r].save(), _o.data.maler = [...z(Z), r], _o.save(), P(Z, [...z(Z), r], !0), x(Y("status.templateSaved", { name: n }), "ok"), O(), wo();
+		vo[r] = Yi(`urd-draft-template-${r}`, () => null, S, `urd-draft-mal-${r}`), vo[r].replace(i), vo[r].save(), _o.data.maler = [...z(Z), r], _o.save(), P(Z, [...z(Z), r], !0), x(Y("status.templateSaved", { name: n }), "ok"), O(), wo();
 	}
 	async function ko(e) {
 		let t = vo[e.id]?.data?.mal;
-		t && await Qe({ title: Y("confirm.deleteTemplate", { name: t.name }) }) && (Re("maler"), z(Ai) === e.id && P(Ai, null), localStorage.removeItem(`urd-draft-mal-${e.id}`), delete vo[e.id], _o.data.maler = z(Z).filter((t) => t !== e.id), _o.save(), P(Z, z(Z).filter((t) => t !== e.id), !0), O(), wo());
+		t && await Qe({ title: Y("confirm.deleteTemplate", { name: t.name }) }) && (Re("maler"), z(Ai) === e.id && P(Ai, null), localStorage.removeItem(`urd-draft-template-${e.id}`), localStorage.removeItem(`urd-draft-mal-${e.id}`), delete vo[e.id], _o.data.maler = z(Z).filter((t) => t !== e.id), _o.save(), P(Z, z(Z).filter((t) => t !== e.id), !0), O(), wo());
 	}
 	async function Ao() {
 		let e = {
@@ -9867,13 +9876,13 @@ function Cf(e, t) {
 		try {
 			e = await (await fetch("/content/collections.json")).json();
 		} catch {}
-		io = Yi("urd-draft-samlinger", () => e, S), P(co, [...io.data.samlinger ?? []], !0);
+		io = Yi("urd-draft-collections", () => e, S, "urd-draft-samlinger"), P(co, [...io.data.samlinger ?? []], !0);
 		for (let e of z(co)) {
 			let t = null;
 			try {
 				t = await (await fetch(`/content/samlinger/${e}.json`)).json();
 			} catch {}
-			oo[e] = t, ao[e] = Yi(`urd-draft-samling-${e}`, () => t, S), !t && !ao[e].data && (ao[e].replace({
+			oo[e] = t, ao[e] = Yi(`urd-draft-collection-${e}`, () => t, S, `urd-draft-samling-${e}`), !t && !ao[e].data && (ao[e].replace({
 				schemaVersion: 1,
 				id: e,
 				name: e,
@@ -9922,7 +9931,7 @@ function Cf(e, t) {
 			kind: n,
 			entries: []
 		};
-		ao[e] = Yi(`urd-draft-samling-${e}`, () => null, S), ao[e].replace(r), ao[e].save(), io.data.samlinger = [...z(co), e], io.save(), P(co, [...z(co), e], !0), P(uo, e, !0), O(), jo();
+		ao[e] = Yi(`urd-draft-collection-${e}`, () => null, S, `urd-draft-samling-${e}`), ao[e].replace(r), ao[e].save(), io.data.samlinger = [...z(co), e], io.save(), P(co, [...z(co), e], !0), P(uo, e, !0), O(), jo();
 	}
 	function Ro() {
 		let e = z(fo).trim();
@@ -9942,7 +9951,7 @@ function Cf(e, t) {
 		});
 	}
 	function Bo(e) {
-		Re("samlinger"), localStorage.removeItem(`urd-draft-samling-${e}`), delete ao[e], io.data.samlinger = z(co).filter((t) => t !== e), io.save(), P(co, z(co).filter((t) => t !== e), !0), z(uo) === e && P(uo, null), O(), jo();
+		Re("samlinger"), localStorage.removeItem(`urd-draft-collection-${e}`), localStorage.removeItem(`urd-draft-samling-${e}`), delete ao[e], io.data.samlinger = z(co).filter((t) => t !== e), io.save(), P(co, z(co).filter((t) => t !== e), !0), z(uo) === e && P(uo, null), O(), jo();
 	}
 	function Vo(e) {
 		No(e, `samling:${e}:add-entry`, (e) => {
@@ -10214,8 +10223,8 @@ function Cf(e, t) {
 			}
 		},
 		{
-			id: "sentrert",
-			label: Y("footerTemplate.sentrert"),
+			id: "centered",
+			label: Y("footerTemplate.centered"),
 			thumb: {
 				center: !0,
 				row: !0,
@@ -10223,8 +10232,8 @@ function Cf(e, t) {
 			}
 		},
 		{
-			id: "kolonner",
-			label: Y("footerTemplate.kolonner"),
+			id: "columns",
+			label: Y("footerTemplate.columns"),
 			thumb: {
 				tag: !0,
 				cols: 3,
@@ -10244,8 +10253,8 @@ function Cf(e, t) {
 			}
 		},
 		{
-			id: "nyhetsbrev",
-			label: Y("footerTemplate.nyhetsbrev"),
+			id: "newsletter",
+			label: Y("footerTemplate.newsletter"),
 			thumb: {
 				tag: !0,
 				cta: !0,
@@ -10255,8 +10264,8 @@ function Cf(e, t) {
 			}
 		},
 		{
-			id: "storcta",
-			label: Y("footerTemplate.storcta"),
+			id: "bigcta",
+			label: Y("footerTemplate.bigcta"),
 			thumb: {
 				center: !0,
 				bigcta: !0,
@@ -10264,8 +10273,8 @@ function Cf(e, t) {
 			}
 		},
 		{
-			id: "kontakt",
-			label: Y("footerTemplate.kontakt"),
+			id: "contact",
+			label: Y("footerTemplate.contact"),
 			thumb: {
 				tag: !0,
 				cols: 3,
@@ -10302,7 +10311,7 @@ function Cf(e, t) {
 			social: i(["facebook", "instagram"]),
 			copyright: o,
 			baseline: [a(Y("seed.footer.privacy"), "#")]
-		} : e === "sentrert" ? {
+		} : e === "centered" ? {
 			align: "center",
 			brand: { title: t },
 			linkRow: r(5),
@@ -10312,7 +10321,7 @@ function Cf(e, t) {
 				"x"
 			]),
 			copyright: `${o} · ${Y("seed.footer.madeWith")}`
-		} : e === "kolonner" ? {
+		} : e === "columns" ? {
 			align: "left",
 			brand: {
 				title: t,
@@ -10401,7 +10410,7 @@ function Cf(e, t) {
 				a(Y("seed.footer.terms"), "#"),
 				a(Y("seed.footer.cookies"), "#")
 			]
-		} : e === "nyhetsbrev" ? {
+		} : e === "newsletter" ? {
 			align: "left",
 			brand: {
 				title: t,
@@ -10428,7 +10437,7 @@ function Cf(e, t) {
 			social: i(["facebook", "instagram"]),
 			copyright: o,
 			baseline: [a(Y("seed.footer.privacy"), "#")]
-		} : e === "storcta" ? {
+		} : e === "bigcta" ? {
 			align: "center",
 			cta: {
 				kind: "button",
@@ -10446,7 +10455,7 @@ function Cf(e, t) {
 			]),
 			copyright: o,
 			baseline: [a(Y("seed.footer.privacy"), "#"), a(Y("seed.footer.terms"), "#")]
-		} : e === "kontakt" ? {
+		} : e === "contact" ? {
 			align: "left",
 			brand: {
 				title: t,
@@ -11255,18 +11264,18 @@ function Cf(e, t) {
 				items: [
 					{
 						year: "2019",
-						title: Y("seed.tidslinje.t1"),
-						text: Y("seed.tidslinje.text")
+						title: Y("seed.timeline.t1"),
+						text: Y("seed.timeline.text")
 					},
 					{
 						year: "2022",
-						title: Y("seed.tidslinje.t2"),
-						text: Y("seed.tidslinje.text")
+						title: Y("seed.timeline.t2"),
+						text: Y("seed.timeline.text")
 					},
 					{
 						year: "2026",
-						title: Y("seed.tidslinje.t3"),
-						text: Y("seed.tidslinje.text")
+						title: Y("seed.timeline.t3"),
+						text: Y("seed.timeline.text")
 					}
 				],
 				variant: "left",
@@ -11279,9 +11288,9 @@ function Cf(e, t) {
 		quote: {
 			type: "quote",
 			props: {
-				text: Y("seed.sitat.text"),
-				attribution: Y("seed.sitat.name"),
-				role: Y("seed.sitat.role"),
+				text: Y("seed.quoteBlock.text"),
+				attribution: Y("seed.quoteBlock.name"),
+				role: Y("seed.quoteBlock.role"),
 				variant: "large",
 				image: "",
 				accent: null
@@ -11295,7 +11304,7 @@ function Cf(e, t) {
 				value: "4800",
 				prefix: "",
 				suffix: "+",
-				label: Y("seed.statistikk.label"),
+				label: Y("seed.statsBlock.label"),
 				countUp: !0
 			},
 			w: 20,
@@ -11309,18 +11318,18 @@ function Cf(e, t) {
 				lines: "rows",
 				rows: [
 					[
-						Y("seed.tabell.h1"),
-						Y("seed.tabell.h2"),
-						Y("seed.tabell.h3")
+						Y("seed.table.h1"),
+						Y("seed.table.h2"),
+						Y("seed.table.h3")
 					],
 					[
-						Y("seed.tabell.r1c1"),
-						Y("seed.tabell.r1c2"),
+						Y("seed.table.r1c1"),
+						Y("seed.table.r1c2"),
 						""
 					],
 					[
-						Y("seed.tabell.r2c1"),
-						Y("seed.tabell.r2c2"),
+						Y("seed.table.r2c1"),
+						Y("seed.table.r2c2"),
 						""
 					]
 				]
@@ -11353,7 +11362,7 @@ function Cf(e, t) {
 					let e = new Date(Date.now() + 2592e6), t = (e) => String(e).padStart(2, "0");
 					return `${e.getFullYear()}-${t(e.getMonth() + 1)}-${t(e.getDate())}T18:00`;
 				})(),
-				doneText: Y("seed.nedteller.done"),
+				doneText: Y("seed.countdown.done"),
 				variant: "boxes",
 				showSeconds: !0
 			},
@@ -11817,7 +11826,7 @@ function Cf(e, t) {
 		}
 		if (_o) {
 			_o.reset(), P(Z, [..._o.data.maler ?? []], !0);
-			for (let e of Object.keys(vo)) z(Z).includes(e) ? vo[e].reset() : (localStorage.removeItem(`urd-draft-mal-${e}`), delete vo[e]);
+			for (let e of Object.keys(vo)) z(Z).includes(e) ? vo[e].reset() : (localStorage.removeItem(`urd-draft-template-${e}`), localStorage.removeItem(`urd-draft-mal-${e}`), delete vo[e]);
 			wo();
 		}
 		ke(), P(te, {
@@ -11900,7 +11909,7 @@ function Cf(e, t) {
 					path: "content/collections.json",
 					content: JSON.stringify(io.data, null, 2) + "\n",
 					encoding: "utf-8"
-				}), n.push("urd-draft-samlinger");
+				}), n.push("urd-draft-collections", "urd-draft-samlinger");
 				let t = { samlinger: [] };
 				try {
 					t = await (await fetch("/content/collections.json")).json();
@@ -11934,7 +11943,7 @@ function Cf(e, t) {
 					path: "content/maler.json",
 					content: JSON.stringify(_o.data, null, 2) + "\n",
 					encoding: "utf-8"
-				}), n.push("urd-draft-maler");
+				}), n.push("urd-draft-templates", "urd-draft-maler");
 				let t = { maler: [] };
 				try {
 					t = await (await fetch("/content/maler.json")).json();
@@ -12011,11 +12020,11 @@ function Cf(e, t) {
 			if (io) {
 				for (let e of Object.values(ao)) for (let t of e.data.entries) Cp(t, []);
 				let e = JSON.parse(JSON.stringify(io.data));
-				io = Yi("urd-draft-samlinger", () => e, S), oo = {};
+				io = Yi("urd-draft-collections", () => e, S, "urd-draft-samlinger"), oo = {};
 				for (let e of z(co)) {
 					if (!ao[e]) continue;
 					let t = JSON.parse(JSON.stringify(ao[e].data));
-					oo[e] = t, ao[e] = Yi(`urd-draft-samling-${e}`, () => t, S);
+					oo[e] = t, ao[e] = Yi(`urd-draft-collection-${e}`, () => t, S, `urd-draft-samling-${e}`);
 				}
 				jo();
 			}
@@ -12026,11 +12035,11 @@ function Cf(e, t) {
 					for (let t of e.data?.page?.sections ?? []) Ep(t, []);
 				}
 				let e = JSON.parse(JSON.stringify(_o.data));
-				_o = Yi("urd-draft-maler", () => e, S), bo = {};
+				_o = Yi("urd-draft-templates", () => e, S, "urd-draft-maler"), bo = {};
 				for (let e of z(Z)) {
 					if (!vo[e]) continue;
 					let t = JSON.parse(JSON.stringify(vo[e].data));
-					bo[e] = t, vo[e] = Yi(`urd-draft-mal-${e}`, () => t, S);
+					bo[e] = t, vo[e] = Yi(`urd-draft-template-${e}`, () => t, S, `urd-draft-mal-${e}`);
 				}
 				wo();
 			}
@@ -12861,7 +12870,7 @@ function Cf(e, t) {
 						}
 						k(t), R((e, r) => {
 							J(t, "title", e), U(n, `${r ?? ""} `);
-						}, [() => Y("tip.handlekurv.checkout"), () => Y("lbl.checkoutPage")]), H(e, t);
+						}, [() => Y("tip.cart.checkout"), () => Y("lbl.checkoutPage")]), H(e, t);
 					};
 					W(xe, (e) => {
 						z(D).nav.cart?.show && e(Se);

@@ -22,7 +22,7 @@ function renderDrawer(body, props, currency) {
   body.textContent = '';
   const items = readCart();
   if (!items.length) {
-    body.appendChild(el2('p', 'urd-handlekurv-tom', t('butikk.cartEmpty')));
+    body.appendChild(el2('p', 'urd-handlekurv-tom', t('shop.cartEmpty')));
     return;
   }
   const list = el2('div', 'urd-handlekurv-linjer');
@@ -43,12 +43,12 @@ function renderDrawer(body, props, currency) {
     const qty = el2('div', 'urd-handlekurv-antall');
     const minus = el2('button', 'urd-handlekurv-steg', '−');
     minus.type = 'button';
-    minus.setAttribute('aria-label', t('butikk.decrease'));
+    minus.setAttribute('aria-label', t('shop.decrease'));
     minus.addEventListener('click', () => writeCart(cartSetQty(readCart(), item.key, item.qty - 1)));
     const count = el2('span', 'urd-handlekurv-tall', String(item.qty));
     const plus = el2('button', 'urd-handlekurv-steg', '+');
     plus.type = 'button';
-    plus.setAttribute('aria-label', t('butikk.increase'));
+    plus.setAttribute('aria-label', t('shop.increase'));
     plus.addEventListener('click', () => writeCart(cartSetQty(readCart(), item.key, item.qty + 1)));
     qty.append(minus, count, plus);
     row.appendChild(qty);
@@ -57,7 +57,7 @@ function renderDrawer(body, props, currency) {
     const remove = el2('button', 'urd-handlekurv-fjern', '');
     remove.type = 'button';
     remove.innerHTML = iconSvg('cross') ?? '';
-    remove.setAttribute('aria-label', t('butikk.remove'));
+    remove.setAttribute('aria-label', t('shop.remove'));
     remove.addEventListener('click', () => writeCart(cartRemove(readCart(), item.key)));
     row.appendChild(remove);
     list.appendChild(row);
@@ -65,12 +65,12 @@ function renderDrawer(body, props, currency) {
   body.appendChild(list);
 
   const foot = el2('div', 'urd-handlekurv-sum');
-  foot.appendChild(el2('span', null, t('butikk.total')));
+  foot.appendChild(el2('span', null, t('shop.total')));
   foot.appendChild(el2('strong', null, formatPrice(cartTotal(items), currency)));
   body.appendChild(foot);
 
   if (props.href) {
-    const checkout = el2('a', 'urd-handlekurv-kasse', t('butikk.checkout'));
+    const checkout = el2('a', 'urd-handlekurv-kasse', t('shop.checkout'));
     checkout.href = props.href;
     body.appendChild(checkout);
   }
@@ -84,11 +84,11 @@ export function createCartDrawer({ href = '', currency = 'kr' } = {}) {
   const dialog = document.createElement('dialog');
   dialog.className = 'urd-handlekurv-dialog';
   const head = el2('div', 'urd-handlekurv-hode');
-  head.appendChild(el2('strong', null, t('butikk.cart')));
+  head.appendChild(el2('strong', null, t('shop.cart')));
   const close = el2('button', 'urd-handlekurv-lukk');
   close.type = 'button';
   close.innerHTML = iconSvg('cross') ?? '';
-  close.setAttribute('aria-label', t('butikk.close'));
+  close.setAttribute('aria-label', t('shop.close'));
   close.addEventListener('click', () => dialog.close());
   head.appendChild(close);
   dialog.appendChild(head);
@@ -110,7 +110,7 @@ export function createCartDrawer({ href = '', currency = 'kr' } = {}) {
   };
 }
 
-export const handlekurvBlock = {
+export const cartBlock = {
   version: 1,
   autoGrow: true,
   label: 'Handlekurv',
@@ -131,9 +131,9 @@ export const handlekurvBlock = {
     const icon = el2('span', 'urd-handlekurv-ikon');
     icon.innerHTML = iconSvg('cart') ?? '';
     btn.appendChild(icon);
-    const label = el2('span', 'urd-handlekurv-etikett', t('butikk.cart'));
+    const label = el2('span', 'urd-handlekurv-etikett', t('shop.cart'));
     if (props.variant !== 'icon') btn.appendChild(label);
-    btn.setAttribute('aria-label', t('butikk.cart'));
+    btn.setAttribute('aria-label', t('shop.cart'));
     const badge = el2('span', 'urd-handlekurv-badge', '0');
     badge.hidden = true;
     btn.appendChild(badge);
@@ -173,8 +173,8 @@ export const handlekurvBlock = {
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {
-          title: ta('hintHandlekurv.title'),
-          lines: [ta('hintHandlekurv.l1'), ta('hintHandlekurv.l2'), ta('hintHandlekurv.l3')],
+          title: ta('hintCart.title'),
+          lines: [ta('hintCart.l1'), ta('hintCart.l2'), ta('hintCart.l3')],
         });
       });
     }

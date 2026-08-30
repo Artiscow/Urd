@@ -260,7 +260,7 @@ export function renderNav(site, host) {
     const cartBtn = document.createElement('button');
     cartBtn.className = 'urd-nav-cart';
     cartBtn.type = 'button';
-    cartBtn.setAttribute('aria-label', t('butikk.cart'));
+    cartBtn.setAttribute('aria-label', t('shop.cart'));
     cartBtn.innerHTML = iconSvg('cart') ?? '';
     const cartBadge = document.createElement('span');
     cartBadge.className = 'urd-nav-cart-badge';

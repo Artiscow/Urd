@@ -81,14 +81,14 @@ function priceRow(entry, currency) {
   row.appendChild(el2('strong', null, formatPrice(entry.price, currency)));
   if (entry.memberPrice != null) {
     row.appendChild(el2('span', 'urd-produkt-medlem',
-      t('butikk.memberPrice', { price: formatPrice(entry.memberPrice, currency) })));
+      t('shop.memberPrice', { price: formatPrice(entry.memberPrice, currency) })));
   }
   return row;
 }
 
 /** Kjøpsknapp med lagt-i-kurven-kvittering; getChoice() leser gjeldende variantvalg. */
 function buyButton(entry, currency, colors, getChoice) {
-  const buy = el2('button', 'urd-produkt-kjop', t('butikk.addToCart'));
+  const buy = el2('button', 'urd-produkt-kjop', t('shop.addToCart'));
   buy.type = 'button';
   buy.addEventListener('click', () => {
     const { size, color } = getChoice();
@@ -103,10 +103,10 @@ function buyButton(entry, currency, colors, getChoice) {
       variant: variant || undefined,
       image: chosen?.image || entry.image || undefined,
     }));
-    buy.textContent = t('butikk.added');
+    buy.textContent = t('shop.added');
     buy.classList.add('urd-produkt-lagt');
     setTimeout(() => {
-      buy.textContent = t('butikk.addToCart');
+      buy.textContent = t('shop.addToCart');
       buy.classList.remove('urd-produkt-lagt');
     }, 1400);
   });
@@ -130,7 +130,7 @@ function openQuickView(card, entry, props) {
     const close = el2('button', 'urd-produkt-lukk');
     close.type = 'button';
     close.innerHTML = iconSvg('cross') ?? '';
-    close.setAttribute('aria-label', t('butikk.close'));
+    close.setAttribute('aria-label', t('shop.close'));
     close.addEventListener('click', () => dialog.close());
     dialog.appendChild(close);
 
@@ -253,7 +253,7 @@ function renderCard(entry, props, editable, preview) {
     for (const target of [wrap, title].filter(Boolean)) {
       target.classList.add('urd-produkt-apner');
       target.setAttribute('role', 'button');
-      target.setAttribute('aria-label', t('butikk.quickView'));
+      target.setAttribute('aria-label', t('shop.quickView'));
       target.tabIndex = 0;
       const open = () => openQuickView(card, entry, props);
       target.addEventListener('click', open);
@@ -285,7 +285,7 @@ function emptyState(el, ctx, message, action) {
   el.appendChild(box);
 }
 
-export const produktBlock = {
+export const productBlock = {
   version: 1,
   autoGrow: true,
   // Samlingskonsument: urd-collections-meldingen rerendrer kun seksjoner med
@@ -315,7 +315,7 @@ export const produktBlock = {
       // andre blokker, så valget i Egenskaper aldri står stumt.
       if (block) renderCardAnimations(el, [el], block, ctx);
       adminLocaleReady.then(() => {
-        if (host.isConnected) emptyState(el, ctx, ta('canvas.produktEmpty'));
+        if (host.isConnected) emptyState(el, ctx, ta('canvas.productEmpty'));
       });
       return;
     }
@@ -349,7 +349,7 @@ export const produktBlock = {
         if (block) renderCardAnimations(el, [el], block, ctx);
         adminLocaleReady.then(() => {
           if (!host.isConnected) return;
-          emptyState(el, ctx, ta('canvas.produktNoEntries', { name: data?.name ?? props.collection }),
+          emptyState(el, ctx, ta('canvas.productNoEntries', { name: data?.name ?? props.collection }),
             editable ? adderCard(props.collection) : null);
         });
         return;
@@ -378,8 +378,8 @@ export const produktBlock = {
           // Hjelpechipen (ADR-0008): katalogen bor i Samlinger-panelet.
           if (el.querySelector('.urd-hint-chip')) return;
           attachHint(el, {
-            title: ta('hintProdukt.title'),
-            lines: [ta('hintProdukt.l1'), ta('hintProdukt.l2'), ta('hintProdukt.l3'), ta('hintProdukt.l4')],
+            title: ta('hintProduct.title'),
+            lines: [ta('hintProduct.l1'), ta('hintProduct.l2'), ta('hintProduct.l3'), ta('hintProduct.l4')],
           });
         });
       }

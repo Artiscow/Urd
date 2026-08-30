@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { tabellBlock, normalizeRows } = await engineImport('blocks/table.js');
+const { tableBlock, normalizeRows } = await engineImport('blocks/table.js');
 
 test('normalizeRows: korte rader fylles ut til rektangel', () => {
   assert.deepEqual(normalizeRows([['a', 'b', 'c'], ['d']]), [['a', 'b', 'c'], ['d', '', '']]);
@@ -19,8 +19,8 @@ test('normalizeRows: søppel gir minst 1 x 1, kun strenger', () => {
 });
 
 test('defaults: overskriftsrad, radlinjer og 3 x 3 seededet rutenett', () => {
-  const d = tabellBlock.defaults();
-  assert.equal(tabellBlock.version, 1);
+  const d = tableBlock.defaults();
+  assert.equal(tableBlock.version, 1);
   assert.equal(d.header, true);
   assert.equal(d.lines, 'rows');
   assert.equal(d.rows.length, 3);

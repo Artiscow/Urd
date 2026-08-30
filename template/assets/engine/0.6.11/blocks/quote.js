@@ -14,16 +14,16 @@ import { ta } from '../i18n.js';
 import { growSectionTo } from '../render.js';
 import { accentCss } from './timeline.js';
 
-export const sitatBlock = {
+export const quoteBlock = {
   version: 2,
   autoGrow: true,
   label: 'Sitat',
   labelKey: 'blocks.quote',
   // Seed-regelen (ADR-0012): ta() kalles kun her ved innsetting i preview.
   defaults: () => ({
-    text: ta('seed.sitat.text'),
-    attribution: ta('seed.sitat.name'),
-    role: ta('seed.sitat.role'),
+    text: ta('seed.quoteBlock.text'),
+    attribution: ta('seed.quoteBlock.name'),
+    role: ta('seed.quoteBlock.role'),
     variant: 'large',
     image: '',
     accent: null,

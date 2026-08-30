@@ -82,3 +82,27 @@ test('finnes-ikke-baseline (null): ferskt innhold er utkast til første publiser
   // (uten dette kan indeksen publiseres uten tilhørende fil).
   assert.equal(store.hasDraft(), true);
 });
+
+// Migrate-on-read for renamed draft keys (ADR-0021).
+
+test('legacy draft key moves to the new key on read', () => {
+  mock.map.set('urd-draft-samling-x', JSON.stringify({ a: 1 }));
+  const store = createDraftStore('urd-draft-collection-x', () => ({ a: 0 }), undefined, 'urd-draft-samling-x');
+  assert.deepEqual(store.data, { a: 1 });
+  assert.equal(mock.getItem('urd-draft-samling-x'), null, 'legacy key is removed after the move');
+  assert.equal(mock.getItem('urd-draft-collection-x'), JSON.stringify({ a: 1 }));
+});
+
+test('an existing draft under the new key wins over a stale legacy draft', () => {
+  mock.map.set('urd-draft-collection-y', JSON.stringify({ a: 2 }));
+  mock.map.set('urd-draft-samling-y', JSON.stringify({ a: 1 }));
+  const store = createDraftStore('urd-draft-collection-y', () => ({ a: 0 }), undefined, 'urd-draft-samling-y');
+  assert.deepEqual(store.data, { a: 2 });
+  assert.equal(mock.getItem('urd-draft-samling-y'), null);
+});
+
+test('no legacy key present leaves the store untouched', () => {
+  const store = createDraftStore('urd-draft-collection-z', () => ({ a: 0 }), undefined, 'urd-draft-samling-z');
+  assert.deepEqual(store.data, { a: 0 });
+  assert.equal(store.hasDraft(), false);
+});

@@ -212,7 +212,7 @@ function renderSlides(host, props, ctx, blockEl) {
 
 const VIEWS = { grid: renderGrid, carousel: renderCarousel, slides: renderSlides };
 
-export const galleriBlock = {
+export const galleryBlock = {
   version: 1,
   autoGrow: true,
   label: 'Galleri',

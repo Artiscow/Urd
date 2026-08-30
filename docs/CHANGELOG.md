@@ -25,6 +25,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.14.6 - Engelsk-renskingen: identifikatorene, nøkkelrommene og editor-internene - 30. august 2026
+
+- ~90 norske JS-identifikatorer renamet i motor, editor og tester (ADR-0021): blokk-eksportene, samlinger-/maler-/butikk-rotede navn, TEMPLATE_-konstantene og preset-fabrikkene; kollisjonssjekken fant en indre `product`-hjelper i products-preseten som ble `productCard` før topp-fabrikken tok navnet.
+- Resterende norske i18n-nøkkelrom renamet i alle ordbøker og konsumenter: hint-/tip-/opt-/lbl-gruppene, canvas.product*, ui.quotePortrait*, seed-gruppene (blokk-seedene fikk seed.quoteBlock/seed.statsBlock siden preset-seedene seed.quote/seed.stats alt fantes med kolliderende undernøkler), site-gruppene shop./share./countdown., og footer-malenes ider + footerTemplate-nøkler.
+- Editor-meldingen `urd-maler` er nå `urd-templates` med `templates`-payload (begge ender), og utkastnøklene er renamet med migrate-on-read i draft-storen: gammelt utkast flyttes til ny nøkkel ved lesing, nytt utkast vinner over foreldet gammelt, og oppryddingen etter publisering sletter begge sett. Tre nye tester.
+
 ### 0.7.14.5 - Engelsk-renskingen: motorfil- og testfil-renames - 30. august 2026
 
 - 17 motorfiler git mv-et til engelske navn (ADR-0021): shop.js, collections.js, collections-csv.js, gallery-model.js, templates-model.js, de 11 blokkfilene og backgrounds/slideshow.js, pluss ti testfiler med norske navn. Alle statiske importer, editorens $engine-importer, testenes engineImport-stier og modulepreload-listen i skallene oppdatert i samme commit (slug-kopiene byte-like re-kopiert).

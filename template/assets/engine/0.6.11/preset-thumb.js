@@ -116,7 +116,7 @@ function imageShapes(x, y, w, h, empty = false) {
 }
 
 /** Galleri: tre fliser side om side inne i rammen; tomt galleri tegnes tomt. */
-function galleriShapes(x, y, w, h, props) {
+function galleryShapes(x, y, w, h, props) {
   const empty = !(Array.isArray(props?.images) && props.images.length);
   const gap = Math.max(1, w * 0.03);
   const tw = (w - gap * 2) / 3;
@@ -126,7 +126,7 @@ function galleriShapes(x, y, w, h, props) {
 }
 
 /** Samling: tre små kort med tekstlinje under. */
-function samlingShapes(x, y, w, h) {
+function collectionShapes(x, y, w, h) {
   const gap = Math.max(1, w * 0.03);
   const tw = (w - gap * 2) / 3;
   const parts = [];
@@ -156,8 +156,8 @@ function shapeShapes(x, y, w, h, props) {
 function blockShapes(type, x, y, w, h, props) {
   if (type === 'text') return textShapes(x, y, w, h, props);
   if (type === 'image') return imageShapes(x, y, w, h, !props?.src);
-  if (type === 'gallery') return galleriShapes(x, y, w, h, props);
-  if (type === 'collection') return samlingShapes(x, y, w, h);
+  if (type === 'gallery') return galleryShapes(x, y, w, h, props);
+  if (type === 'collection') return collectionShapes(x, y, w, h);
   if (type === 'faq') {
     // Trekkspill: rader med flate + spørsmålslinje og chevron-prikk.
     const rows = clamp(Math.floor(h / 5), 2, 3);

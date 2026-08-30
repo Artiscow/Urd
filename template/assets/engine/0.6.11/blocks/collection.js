@@ -235,7 +235,7 @@ function emptyState(el, ctx, message) {
   el.appendChild(el2('div', 'urd-samling-empty', message));
 }
 
-export const samlingBlock = {
+export const collectionBlock = {
   version: 1,
   autoGrow: true,
   // Samlingskonsument: urd-collections-meldingen rerendrer kun seksjoner med
@@ -288,12 +288,12 @@ export const samlingBlock = {
         Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
           if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
           attachHint(el, {
-            title: ta('hintSamling.title'),
+            title: ta('hintCollection.title'),
             lines: [
-              ta('hintSamling.l1'),
-              ta('hintSamling.l2'),
-              ta('hintSamling.l3'),
-              ta('hintSamling.l4'),
+              ta('hintCollection.l1'),
+              ta('hintCollection.l2'),
+              ta('hintCollection.l3'),
+              ta('hintCollection.l4'),
             ],
           });
         });

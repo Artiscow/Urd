@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.14.6): Identifikatorene, nøkkelrommene og utkastnøklene
+
+- [ ] UTKAST-MIGRERING: med et upublisert samlings-/mal-utkast fra FØR denne versjonen i nettleseren: åpne admin - utkastet overlever (vises med endringsmerke), og gamle urd-draft-samling*/-mal*-nøkler er borte fra localStorage
+- [ ] Kurvskuff, kasse og nedteller viser riktige tekster hos besøkende i alle fem språk (site-gruppene shop./share./countdown.)
+- [ ] Egenskaper-panelene for tidslinje, sitat, tabell, nedteller, deling og handlekurv viser riktige etiketter/valg i nb, en-GB og tr; hjelpechipene («?») åpner med riktig innhold
+- [ ] Footer-malvelgeren viser alle åtte oppsettene med riktige navn og bygger riktig footer
+- [ ] Mine maler-fanen i «+ Ny seksjon» viser mal-utkastene (urd-templates-meldingen) og innsetting virker
+
 ### Testrunde-batch (0.7.14.5): Motorfil-renames
 
 - [ ] Lokal server (dev-server.py): forsiden og alle undersider laster uten 404 i nettverkspanelet (alle modulepreloads treffer); editoren åpner og alle blokktyper rendrer

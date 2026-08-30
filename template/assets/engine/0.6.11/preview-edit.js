@@ -80,10 +80,10 @@ function styleMinHeight(px) {
 /** Mobilvisning? Motoren setter body-klassen ut fra breakpointet. */
 const isMobile = () => document.body.classList.contains('urd-mobile');
 
-/** Mal-utkastene fra editoren (urd-maler-meldingen): {id, name, kind, section?, blocks?}.
+/** Mal-utkastene fra editoren (urd-templates-meldingen): {id, name, kind, section?, blocks?}.
  *  Editoren eier listen; her vises den i Mine maler-fanen i «+ Ny seksjon». */
 let maler = [];
-export function setMaler(list) {
+export function setTemplates(list) {
   maler = Array.isArray(list) ? list : [];
 }
 
@@ -704,17 +704,17 @@ function addBlockAdder(host, section, grid) {
   // Mine maler (blokkgrupper, 0.6.7, snippets-modellen): lagrede grupper i
   // SAMME meny som blokkene. Innholdet bygges ved hver åpning, så listen
   // alltid er fersk (lagring/sletting skjer uten at seksjonen rerendres).
-  const malerWrap = document.createElement('div');
-  menu.appendChild(malerWrap);
+  const templatesWrap = document.createElement('div');
+  menu.appendChild(templatesWrap);
   menu._urdRefreshMaler = () => {
-    malerWrap.replaceChildren();
+    templatesWrap.replaceChildren();
     menu._urdMalerSearchables = [];
     const groupMaler = maler.filter((m) => m.kind === 'blocks' && Array.isArray(m.blocks));
     if (!groupMaler.length) return;
     const divider = document.createElement('div');
     divider.className = 'urd-add-block-plugins';
     divider.textContent = ta('canvas.tabMyTemplates');
-    malerWrap.appendChild(divider);
+    templatesWrap.appendChild(divider);
     for (const mal of groupMaler) {
       const b = document.createElement('button');
       b.textContent = mal.name;
@@ -722,10 +722,10 @@ function addBlockAdder(host, section, grid) {
       b.addEventListener('click', () => {
         // Dobbeltklikk-åpnet: gruppen lander med øvre venstre hjørne på
         // klikkpunktet; ellers beholdes lagrede posisjoner (kun klem).
-        insertBlocksMal(mal, section.id, menu._urdAt);
+        insertBlocksTemplate(mal, section.id, menu._urdAt);
         resetBlockAdder(wrap);
       });
-      malerWrap.appendChild(b);
+      templatesWrap.appendChild(b);
       menu._urdMalerSearchables.push({ label: mal.name, run: () => b.click() });
     }
   };
@@ -939,7 +939,7 @@ function makeSectionAdder(index, above = null) {
     // fargesteg avledet av admin-aksenten i base.css (--urd-kat-1..5, syklisk
     // ved flere grupper); Mine maler har alltid steg 5. Fargen settes som
     // --urd-kat på kort, overskrifter og kategoriknapper.
-    const MAL_KAT = 5;
+    const TEMPLATE_CAT = 5;
     const katFor = new Map([...groups.keys()].map((name, i) => [name, (i % 5) + 1]));
     const setKat = (el, kat) => el.style.setProperty('--urd-kat', `var(--urd-kat-${kat})`);
     const makeDot = () => {
@@ -1015,7 +1015,7 @@ function makeSectionAdder(index, above = null) {
     // Mine maler: rutenett med stor miniatyr, navn og sletteknapp.
     // Innsetting går via cloneSectionForInsert (re-id-regelen i SKJEMA.md):
     // nye id-er hver gang, så samme mal kan settes inn flere ganger.
-    const renderMaler = () => {
+    const renderTemplates = () => {
       const list = maler.filter((m) => m.kind === 'section' && m.section);
       if (!list.length) {
         const empty = document.createElement('div');
@@ -1059,7 +1059,7 @@ function makeSectionAdder(index, above = null) {
           cleanupOutside();
           collapse();
         });
-        setKat(card, MAL_KAT);
+        setKat(card, TEMPLATE_CAT);
         card.append(pick, del);
         grid.appendChild(card);
       }
@@ -1072,14 +1072,14 @@ function makeSectionAdder(index, above = null) {
     for (const [name, { defs }] of groups) {
       for (const def of defs) searchables.push({ label: def.labelKey ? ta(def.labelKey) : def.label, def, kat: katFor.get(name) });
     }
-    const malDef = (mal) => ({ label: mal.name, create: () => cloneSectionForInsert(mal.section, makeId) });
+    const templateDef = (mal) => ({ label: mal.name, create: () => cloneSectionForInsert(mal.section, makeId) });
 
     const renderContent = () => {
       content.replaceChildren();
       const query = search.value.trim();
       if (query) {
         const all = [...searchables,
-          ...maler.filter((m) => m.kind === 'section' && m.section).map((m) => ({ label: m.name, def: malDef(m), kat: MAL_KAT }))];
+          ...maler.filter((m) => m.kind === 'section' && m.section).map((m) => ({ label: m.name, def: templateDef(m), kat: TEMPLATE_CAT }))];
         const found = searchItems(all, query, (item) => item.label);
         if (!found.length) {
           const empty = document.createElement('div');
@@ -1092,7 +1092,7 @@ function makeSectionAdder(index, above = null) {
         return;
       }
       if (presetCategory === 'maler') {
-        renderMaler();
+        renderTemplates();
         return;
       }
       for (const [name, { labelKey, defs }] of groups) {
@@ -1130,7 +1130,7 @@ function makeSectionAdder(index, above = null) {
     };
     addRailButton('alle', ta('canvas.groupAll'), 1);
     for (const [name, { labelKey }] of groups) addRailButton(name, groupLabel(name, labelKey), katFor.get(name));
-    addRailButton('maler', ta('canvas.tabMyTemplates'), MAL_KAT);
+    addRailButton('maler', ta('canvas.tabMyTemplates'), TEMPLATE_CAT);
     if (!railButtons.has(presetCategory)) presetCategory = 'alle';
 
     const applyCategory = () => {
@@ -2824,7 +2824,7 @@ function pasteClipboard(source = clipboard) {
  *  maler-model (re-id-regelen i SKJEMA.md), ETT angre-steg via
  *  urd-add-blocks, og det innsatte blir det nye utvalget (samme hale
  *  som pasteClipboard). anchor = {x i %, y i px} eller null. */
-function insertBlocksMal(mal, sectionId, anchor) {
+function insertBlocksTemplate(mal, sectionId, anchor) {
   const { blocks, minBottom } = cloneBlocksForInsert(mal.blocks, makeId, { anchor });
   post({ type: 'urd-add-blocks', sectionId, blocks, minBottom, moves: [] });
   document.querySelectorAll('.urd-block.urd-selected, .urd-block.urd-multi-selected')
@@ -2841,7 +2841,7 @@ export function insertTemplate(id) {
   const mal = maler.find((m) => m.id === id && m.kind === 'blocks' && Array.isArray(m.blocks));
   const host = document.querySelector('.urd-section-active') ?? document.querySelector('.urd-section');
   if (!mal || !host) return;
-  insertBlocksMal(mal, host.dataset.sectionId, null);
+  insertBlocksTemplate(mal, host.dataset.sectionId, null);
 }
 
 /** Ctrl+D med flerutvalg: dupliser utvalget (via lim inn-flyten). */

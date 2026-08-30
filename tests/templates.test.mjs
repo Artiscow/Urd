@@ -7,7 +7,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { malId, cloneSectionForInsert, cloneBlocksForInsert, clonePageForInsert, MAL_KINDS, MAL_SCHEMA_VERSION } = await engineImport('templates-model.js');
+const { templateId, cloneSectionForInsert, cloneBlocksForInsert, clonePageForInsert, TEMPLATE_KINDS, TEMPLATE_SCHEMA_VERSION } = await engineImport('templates-model.js');
 
 let counter = 0;
 const makeId = (prefix) => `${prefix}-test-${++counter}`;
@@ -25,17 +25,17 @@ const section = () => ({
   responsive: { mobile: { mode: 'auto', attention: null } },
 });
 
-test('malId: slug av navnet, tom streng for ugyldig navn', () => {
-  assert.equal(malId('Vår hero'), 'var-hero');
-  assert.equal(malId('  Kort-trio!  '), 'kort-trio');
-  assert.equal(malId('!!!'), '');
-  assert.equal(malId(''), '');
-  assert.equal(malId(undefined), '');
+test('templateId: slug av navnet, tom streng for ugyldig navn', () => {
+  assert.equal(templateId('Vår hero'), 'var-hero');
+  assert.equal(templateId('  Kort-trio!  '), 'kort-trio');
+  assert.equal(templateId('!!!'), '');
+  assert.equal(templateId(''), '');
+  assert.equal(templateId(undefined), '');
 });
 
 test('kontraktskonstantene står', () => {
-  assert.deepEqual(MAL_KINDS, ['section', 'blocks', 'page']);
-  assert.equal(MAL_SCHEMA_VERSION, 1);
+  assert.deepEqual(TEMPLATE_KINDS, ['section', 'blocks', 'page']);
+  assert.equal(TEMPLATE_SCHEMA_VERSION, 1);
 });
 
 test('cloneSectionForInsert: alle id-er nye, originalen urørt, geometri bevart', () => {

@@ -38,7 +38,7 @@ export function shareUrl(service, pageUrl, title) {
   return null;
 }
 
-export const delingBlock = {
+export const shareBlock = {
   version: 1,
   // Naturlig høyde i mobil-radnettet (knappene radbryter på smale skjermer).
   autoGrow: true,
@@ -86,7 +86,7 @@ export const delingBlock = {
         btn.addEventListener('click', async () => {
           try {
             await navigator.clipboard.writeText(location.href);
-            btn.querySelector('.urd-deling-navn').textContent = t('deling.copied');
+            btn.querySelector('.urd-deling-navn').textContent = t('share.copied');
             btn.classList.add('urd-deling-kopiert');
             setTimeout(() => {
               btn.querySelector('.urd-deling-navn').textContent = label;
@@ -116,7 +116,7 @@ export const delingBlock = {
       });
       link.innerHTML = inner;
       link.querySelector('.urd-deling-navn').textContent = label;
-      const aria = brand ? t('deling.share', { service: brand }) : label;
+      const aria = brand ? t('share.share', { service: brand }) : label;
       link.title = aria;
       link.setAttribute('aria-label', aria);
       host.appendChild(link);
@@ -127,8 +127,8 @@ export const delingBlock = {
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {
-          title: ta('hintDeling.title'),
-          lines: [ta('hintDeling.l1'), ta('hintDeling.l2'), ta('hintDeling.l3')],
+          title: ta('hintShare.title'),
+          lines: [ta('hintShare.l1'), ta('hintShare.l2'), ta('hintShare.l3')],
         });
       });
     }

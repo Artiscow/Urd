@@ -53,7 +53,7 @@ export function formatStatValue(n, reference, decimals) {
   return text;
 }
 
-export const statistikkBlock = {
+export const statsBlock = {
   version: 1,
   autoGrow: true,
   label: 'Statistikk',
@@ -63,7 +63,7 @@ export const statistikkBlock = {
     value: '4800',
     prefix: '',
     suffix: '+',
-    label: ta('seed.statistikk.label'),
+    label: ta('seed.statsBlock.label'),
     countUp: true,
   }),
   migrations: {},
@@ -115,8 +115,8 @@ export const statistikkBlock = {
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {
-          title: ta('hintStatistikk.title'),
-          lines: [ta('hintStatistikk.l1'), ta('hintStatistikk.l2'), ta('hintStatistikk.l3')],
+          title: ta('hintStats.title'),
+          lines: [ta('hintStats.l1'), ta('hintStats.l2'), ta('hintStats.l3')],
         });
       });
     }

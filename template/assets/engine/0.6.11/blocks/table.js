@@ -24,7 +24,7 @@ export function normalizeRows(rows) {
   return safe.map((row) => [...row, ...Array(cols - row.length).fill('')]);
 }
 
-export const tabellBlock = {
+export const tableBlock = {
   version: 1,
   autoGrow: true,
   label: 'Tabell',
@@ -35,9 +35,9 @@ export const tabellBlock = {
     striped: false,
     lines: 'rows',
     rows: [
-      [ta('seed.tabell.h1'), ta('seed.tabell.h2'), ta('seed.tabell.h3')],
-      [ta('seed.tabell.r1c1'), ta('seed.tabell.r1c2'), ''],
-      [ta('seed.tabell.r2c1'), ta('seed.tabell.r2c2'), ''],
+      [ta('seed.table.h1'), ta('seed.table.h2'), ta('seed.table.h3')],
+      [ta('seed.table.r1c1'), ta('seed.table.r1c2'), ''],
+      [ta('seed.table.r2c1'), ta('seed.table.r2c2'), ''],
     ],
   }),
   migrations: {},
@@ -105,8 +105,8 @@ export const tabellBlock = {
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {
-          title: ta('hintTabell.title'),
-          lines: [ta('hintTabell.l1'), ta('hintTabell.l2'), ta('hintTabell.l3')],
+          title: ta('hintTable.title'),
+          lines: [ta('hintTable.l1'), ta('hintTable.l2'), ta('hintTable.l3')],
         });
       });
     }

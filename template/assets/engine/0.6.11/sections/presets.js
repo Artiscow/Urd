@@ -76,7 +76,7 @@ const icon = (fr, glyph, size = 40) => ({
 const hoverLift = () => ({ type: 'hover-lift', version: 1, props: {} });
 
 /* Samling-blokk (ADR-0007): collection settes av eieren i Egenskaper; null gir veiledende tomtilstand. */
-const samling = (fr, view, props = {}) => ({
+const collection = (fr, view, props = {}) => ({
   id: makeId('blk'),
   type: 'collection',
   version: 1,
@@ -87,7 +87,7 @@ const samling = (fr, view, props = {}) => ({
 
 /* Butikk-blokkene (0.7.5): produktkort fra en produktsamling + handlekurv.
    collection settes av eieren i Egenskaper (som samling-blokken). */
-const produkt = (fr, props = {}) => ({
+const product = (fr, props = {}) => ({
   id: makeId('blk'),
   type: 'product',
   version: 1,
@@ -96,7 +96,7 @@ const produkt = (fr, props = {}) => ({
   frames: fr,
 });
 
-const handlekurv = (fr, props = {}) => ({
+const cart = (fr, props = {}) => ({
   id: makeId('blk'),
   type: 'cart',
   version: 1,
@@ -105,7 +105,7 @@ const handlekurv = (fr, props = {}) => ({
   frames: fr,
 });
 
-const kasse = (fr, props = {}) => ({
+const checkout = (fr, props = {}) => ({
   id: makeId('blk'),
   type: 'checkout',
   version: 1,
@@ -115,7 +115,7 @@ const kasse = (fr, props = {}) => ({
 });
 
 /* Galleri-blokk: bildene legges til av eieren i Egenskaper (flervalg). */
-const galleri = (fr, props = {}) => ({
+const gallery = (fr, props = {}) => ({
   id: makeId('blk'),
   type: 'gallery',
   version: 1,
@@ -135,7 +135,7 @@ const faq = (fr, items) => ({
 });
 
 /* Sitat-blokk (0.6.7.11): semantisk figure/blockquote med attribusjon. */
-const sitat = (fr, props = {}) => ({
+const quote = (fr, props = {}) => ({
   id: makeId('blk'),
   type: 'quote',
   version: 1,
@@ -145,7 +145,7 @@ const sitat = (fr, props = {}) => ({
 });
 
 /* Tidslinje-blokk (0.6.7.11): hendelser langs en tegnet linje. */
-const tidslinje = (fr, items) => ({
+const timeline = (fr, items) => ({
   id: makeId('blk'),
   type: 'timeline',
   version: 1,
@@ -155,7 +155,7 @@ const tidslinje = (fr, items) => ({
 });
 
 /* Statistikk-blokk (0.6.7.11): ett nøkkeltall med etikett og tell-opp. */
-const statistikk = (fr, props = {}) => ({
+const stats = (fr, props = {}) => ({
   id: makeId('blk'),
   type: 'stats',
   version: 1,
@@ -285,7 +285,7 @@ export function registerSectionPresets(Urd) {
     hintKey: 'preset.gallery.hint',
     create: () => section('gallery', '440px', bg(colorLayer('bg')), [
       text(frame(4, 24, 50, 32), ta('seed.gallery.title')),
-      galleri(frame(4, 72, 92, 320)),
+      gallery(frame(4, 72, 92, 320)),
     ]),
   });
 
@@ -430,7 +430,7 @@ export function registerSectionPresets(Urd) {
     hintKey: 'preset.news-collection.hint',
     create: () => section('news-collection', '300px', bg(colorLayer('bg')), [
       text(frame(6, 28, 50, 38), ta('seed.news.title')),
-      samling(frame(6, 88, 88, 180), 'cards'),
+      collection(frame(6, 88, 88, 180), 'cards'),
     ]),
   });
 
@@ -443,7 +443,7 @@ export function registerSectionPresets(Urd) {
     hintKey: 'preset.noticeboard.hint',
     create: () => section('noticeboard', '300px', bg(colorLayer('surface')), [
       text(frame(6, 28, 50, 38), ta('seed.noticeboard.title')),
-      samling(frame(6, 88, 88, 180), 'list', { limit: 8 }),
+      collection(frame(6, 88, 88, 180), 'list', { limit: 8 }),
     ]),
   });
 
@@ -456,7 +456,7 @@ export function registerSectionPresets(Urd) {
     hintKey: 'preset.publication-archive.hint',
     create: () => section('publication-archive', '300px', bg(colorLayer('bg')), [
       text(frame(6, 28, 60, 38), ta('seed.archive.title')),
-      samling(frame(6, 88, 88, 180), 'archive', { limit: 0 }),
+      collection(frame(6, 88, 88, 180), 'archive', { limit: 0 }),
     ]),
   });
 
@@ -562,11 +562,11 @@ export function registerSectionPresets(Urd) {
     hint: 'Historien som hendelser langs en linje',
     hintKey: 'preset.timeline.hint',
     create: () => section('timeline', '480px', bg(colorLayer('bg')), [
-      text(frame(25, 24, 50, 36), ta('seed.tidslinje.title'), { align: 'center' }),
-      tidslinje(frame(25, 88, 50, 330), [
-        { year: '2019', title: ta('seed.tidslinje.t1'), text: ta('seed.tidslinje.text') },
-        { year: '2022', title: ta('seed.tidslinje.t2'), text: ta('seed.tidslinje.text') },
-        { year: '2026', title: ta('seed.tidslinje.t3'), text: ta('seed.tidslinje.text') },
+      text(frame(25, 24, 50, 36), ta('seed.timeline.title'), { align: 'center' }),
+      timeline(frame(25, 88, 50, 330), [
+        { year: '2019', title: ta('seed.timeline.t1'), text: ta('seed.timeline.text') },
+        { year: '2022', title: ta('seed.timeline.t2'), text: ta('seed.timeline.text') },
+        { year: '2026', title: ta('seed.timeline.t3'), text: ta('seed.timeline.text') },
       ]),
     ]),
   });
@@ -640,7 +640,7 @@ export function registerSectionPresets(Urd) {
     hint: 'Tre håndbygde produktkort med egen kjøpslenke; Butikk-presetet gir ekte produkter med handlekurv',
     hintKey: 'preset.products.hint',
     create: () => {
-      const product = (x, col, name, price) => {
+      const productCard = (x, col, name, price) => {
         const blocks = [
           image(frame(x, 88, 25, 200)),
           text(frame(x, 296, 25, 76), ta('seed.products.card', { name, price }), { align: 'center' }),
@@ -651,9 +651,9 @@ export function registerSectionPresets(Urd) {
       };
       return section('products', '470px', bg(colorLayer('bg')), [
         text(frame(6, 28, 50, 38), ta('seed.products.title')),
-        ...product(6, 0, ta('seed.products.name'), ta('seed.products.price1')),
-        ...product(37.5, 1, ta('seed.products.name'), ta('seed.products.price2')),
-        ...product(69, 2, ta('seed.products.name'), ta('seed.products.price3')),
+        ...productCard(6, 0, ta('seed.products.name'), ta('seed.products.price1')),
+        ...productCard(37.5, 1, ta('seed.products.name'), ta('seed.products.price2')),
+        ...productCard(69, 2, ta('seed.products.name'), ta('seed.products.price3')),
       ]);
     },
     itemLabel: 'produkt',
@@ -682,9 +682,9 @@ export function registerSectionPresets(Urd) {
     // Handlekurven står under chrome-båndet (y 88), så blokkverktøylinja
     // hennes aldri havner bak den sticky seksjonsverktøylinja.
     create: () => section('shop', '544px', bg(colorLayer('bg')), [
-      text(frame(6, 28, 50, 38), ta('seed.butikk.title')),
-      handlekurv(frame(78, 88, 16, 48)),
-      produkt(frame(6, 176, 88, 320)),
+      text(frame(6, 28, 50, 38), ta('seed.shop.title')),
+      cart(frame(78, 88, 16, 48)),
+      product(frame(6, 176, 88, 320)),
     ]),
   });
 
@@ -697,9 +697,9 @@ export function registerSectionPresets(Urd) {
     hintKey: 'preset.shop-hero.hint',
     create: () => {
       const blocks = [
-        text(frame(6, 48, 52, 96), ta('seed.butikkHero.title')),
-        text(frame(6, 152, 40, 48), ta('seed.butikkHero.sub')),
-        button(frame(6, 216, 17, 42), ta('seed.butikkHero.cta')),
+        text(frame(6, 48, 52, 96), ta('seed.shopHero.title')),
+        text(frame(6, 152, 40, 48), ta('seed.shopHero.sub')),
+        button(frame(6, 216, 17, 42), ta('seed.shopHero.cta')),
         image(frame(62, 40, 32, 300)),
       ];
       blocks.forEach((b, i) => { b.mobileOrder = cardOrder(48, i < 3 ? 0 : 1, i); });
@@ -721,17 +721,17 @@ export function registerSectionPresets(Urd) {
     create: () => {
       const tile = (x, col, name) => {
         const img = image(frame(x, 88, 21, 170));
-        const label = text(frame(x, 266, 21, 34), ta('seed.butikkKategorier.tile', { name }), { align: 'center' });
+        const label = text(frame(x, 266, 21, 34), ta('seed.shopCategories.tile', { name }), { align: 'center' });
         img.mobileOrder = cardOrder(88, col, 0);
         label.mobileOrder = cardOrder(88, col, 1);
         return [img, label];
       };
       const sec = section('shop-categories', '360px', bg(colorLayer('bg')), [
-        text(frame(6, 28, 60, 38), ta('seed.butikkKategorier.title')),
-        ...tile(6, 0, ta('seed.butikkKategorier.cat1')),
-        ...tile(29.5, 1, ta('seed.butikkKategorier.cat2')),
-        ...tile(53, 2, ta('seed.butikkKategorier.cat3')),
-        ...tile(76.5, 3, ta('seed.butikkKategorier.cat4')),
+        text(frame(6, 28, 60, 38), ta('seed.shopCategories.title')),
+        ...tile(6, 0, ta('seed.shopCategories.cat1')),
+        ...tile(29.5, 1, ta('seed.shopCategories.cat2')),
+        ...tile(53, 2, ta('seed.shopCategories.cat3')),
+        ...tile(76.5, 3, ta('seed.shopCategories.cat4')),
       ]);
       sec.theme = 'soft';
       return sec;
@@ -741,7 +741,7 @@ export function registerSectionPresets(Urd) {
     item: (sec) => {
       const { x, y, n } = freeSlot(sec, 4, 6, 23.5, 88, 220, 21, 212);
       const img = image(frame(x, y, 21, 170));
-      const label = text(frame(x, y + 178, 21, 34), ta('seed.butikkKategorier.tile', { name: ta('seed.butikkKategorier.newCat') }), { align: 'center' });
+      const label = text(frame(x, y + 178, 21, 34), ta('seed.shopCategories.tile', { name: ta('seed.shopCategories.newCat') }), { align: 'center' });
       img.mobileOrder = cardOrder(88, n, 0);
       label.mobileOrder = cardOrder(88, n, 1);
       return { blocks: [img, label], bottom: y + 220 };
@@ -764,10 +764,10 @@ export function registerSectionPresets(Urd) {
         return [ic, txt];
       };
       const sec = section('shop-trust', '300px', bg(colorLayer('bg')), [
-        text(frame(6, 28, 60, 38), ta('seed.butikkTillit.title')),
-        ...pair(6, 0, 'seed.butikkTillit.t1', '✓'),
-        ...pair(37.5, 1, 'seed.butikkTillit.t2', '↻'),
-        ...pair(69, 2, 'seed.butikkTillit.t3', '✉'),
+        text(frame(6, 28, 60, 38), ta('seed.shopTrust.title')),
+        ...pair(6, 0, 'seed.shopTrust.t1', '✓'),
+        ...pair(37.5, 1, 'seed.shopTrust.t2', '↻'),
+        ...pair(69, 2, 'seed.shopTrust.t3', '✉'),
       ]);
       sec.theme = 'muted';
       return sec;
@@ -777,7 +777,7 @@ export function registerSectionPresets(Urd) {
     item: (sec) => {
       const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 148, 216, 25, 156, -60);
       const ic = icon(frame(x + 10.5, y - 60, 4, 52), '✓', 44);
-      const txt = text(frame(x, y, 25, 96), ta('seed.butikkTillit.newItem'), { align: 'center' });
+      const txt = text(frame(x, y, 25, 96), ta('seed.shopTrust.newItem'), { align: 'center' });
       ic.mobileOrder = cardOrder(88, n, 0);
       txt.mobileOrder = cardOrder(88, n, 1);
       return { blocks: [ic, txt], bottom: y + 104 };
@@ -793,9 +793,9 @@ export function registerSectionPresets(Urd) {
     hintKey: 'preset.shop-showcase.hint',
     create: () => {
       const blocks = [
-        text(frame(6, 56, 52, 100), ta('seed.butikkUtstilling.title')),
-        text(frame(6, 164, 42, 56), ta('seed.butikkUtstilling.text')),
-        button(frame(6, 236, 18, 42), ta('seed.butikkUtstilling.cta')),
+        text(frame(6, 56, 52, 100), ta('seed.shopShowcase.title')),
+        text(frame(6, 164, 42, 56), ta('seed.shopShowcase.text')),
+        button(frame(6, 236, 18, 42), ta('seed.shopShowcase.cta')),
         image(frame(62, 48, 32, 240)),
       ];
       blocks.forEach((b, i) => { b.mobileOrder = cardOrder(56, i < 3 ? 0 : 1, i); });
@@ -813,8 +813,8 @@ export function registerSectionPresets(Urd) {
     hint: 'Bestillingsskjema som sender handlekurven som e-post eller til et endepunkt',
     hintKey: 'preset.checkout.hint',
     create: () => section('checkout', '560px', bg(colorLayer('bg')), [
-      text(frame(6, 28, 50, 38), ta('seed.kasse.title')),
-      kasse(frame(25, 96, 50, 430)),
+      text(frame(6, 28, 50, 38), ta('seed.checkout.title')),
+      checkout(frame(25, 96, 50, 430)),
     ]),
   });
 
@@ -844,10 +844,10 @@ export function registerSectionPresets(Urd) {
     // Modernisert i 0.6.7.11: bruker sitat-blokken (semantisk blockquote)
     // i stedet for to løse tekstblokker.
     create: () => section('quote', '300px', bg(colorLayer('bg')), [
-      sitat(frame(20, 56, 60, 190), {
-        text: ta('seed.sitat.text'),
-        attribution: ta('seed.sitat.name'),
-        role: ta('seed.sitat.role'),
+      quote(frame(20, 56, 60, 190), {
+        text: ta('seed.quoteBlock.text'),
+        attribution: ta('seed.quoteBlock.name'),
+        role: ta('seed.quoteBlock.role'),
       }),
     ]),
   });
@@ -863,7 +863,7 @@ export function registerSectionPresets(Urd) {
     // i stedet for to tekstblokker per tall.
     create: () => {
       const stat = (x, col, value, suffix, label) => {
-        const s = statistikk(frame(x, 76, 25, 120), { value, suffix, label });
+        const s = stats(frame(x, 76, 25, 120), { value, suffix, label });
         s.mobileOrder = cardOrder(76, col, 0);
         return s;
       };
@@ -877,7 +877,7 @@ export function registerSectionPresets(Urd) {
     itemLabelKey: 'item.number',
     item: (sec) => {
       const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 76, 140, 25, 120);
-      const s = statistikk(frame(x, y, 25, 120), { value: '42', label: ta('seed.stats.newLabel') });
+      const s = stats(frame(x, y, 25, 120), { value: '42', label: ta('seed.stats.newLabel') });
       s.mobileOrder = cardOrder(76, n, 0);
       return { blocks: [s], bottom: y + 148 };
     },

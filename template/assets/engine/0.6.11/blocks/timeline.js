@@ -24,7 +24,7 @@ export function accentCss(value) {
   return null;
 }
 
-export const tidslinjeBlock = {
+export const timelineBlock = {
   version: 2,
   autoGrow: true,
   label: 'Tidslinje',
@@ -32,9 +32,9 @@ export const tidslinjeBlock = {
   // Seed-regelen (ADR-0012): ta() kalles kun her ved innsetting i preview.
   defaults: () => ({
     items: [
-      { year: '2019', title: ta('seed.tidslinje.t1'), text: ta('seed.tidslinje.text') },
-      { year: '2022', title: ta('seed.tidslinje.t2'), text: ta('seed.tidslinje.text') },
-      { year: '2026', title: ta('seed.tidslinje.t3'), text: ta('seed.tidslinje.text') },
+      { year: '2019', title: ta('seed.timeline.t1'), text: ta('seed.timeline.text') },
+      { year: '2022', title: ta('seed.timeline.t2'), text: ta('seed.timeline.text') },
+      { year: '2026', title: ta('seed.timeline.t3'), text: ta('seed.timeline.text') },
     ],
     variant: 'left',
     marker: 'filled',

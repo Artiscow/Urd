@@ -47,7 +47,7 @@
  *                  { type: 'urd-show-guides', visible }       (hjelpelinjer: senter/innholdsbredde i alle seksjoner)
  *                  { type: 'urd-select', blockId }            (marker blokk editoren nettopp bygde, f.eks. + Ny blokk)
  *                  { type: 'urd-admin-theme', colors }        (adminens fargetema {bg, surface, accent, text}: editor-menyene i previewen følger admin, ikke siden)
- *                  { type: 'urd-maler', maler }               (mal-utkastene: liste av {id, name, kind, section?, blocks?, page?}; Mine maler-fanen leser dem)
+ *                  { type: 'urd-templates', templates }               (mal-utkastene: liste av {id, name, kind, section?, blocks?, page?}; Mine maler-fanen leser dem)
  *                  { type: 'urd-insert-template', id }        (Blokker-panelets Mine maler: sett inn blokkgruppe-mal i aktiv seksjon)
  *                  { type: 'urd-zoom', scale }                (lerretets zoom; håndtakene mot-skalerer seg så de holder admin-størrelse)
  *                  { type: 'urd-scroll-section', sectionId }  (rull previewen til seksjonen; tilsynsmerket i topplinja)
@@ -118,8 +118,8 @@ export function createPreviewBridge(iframe, handlers = {}) {
       post({ type: 'urd-collections', collections });
     },
     /** Mal-utkastene til Mine maler-fanen i «+ Ny seksjon» (rene kopier). */
-    sendMaler(maler) {
-      post({ type: 'urd-maler', maler });
+    sendTemplates(templates) {
+      post({ type: 'urd-templates', templates });
     },
     /** Blokker-panelets Mine maler: sett inn blokkgruppe-malen i aktiv seksjon. */
     sendInsertTemplate(id) {

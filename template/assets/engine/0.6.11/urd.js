@@ -22,25 +22,25 @@ import { buttonBlock } from './blocks/button.js';
 import { shapeBlock } from './blocks/shape.js';
 import { videoBlock } from './blocks/video.js';
 import { iconBlock } from './blocks/icon.js';
-import { samlingBlock } from './blocks/collection.js';
-import { galleriBlock } from './blocks/gallery.js';
+import { collectionBlock } from './blocks/collection.js';
+import { galleryBlock } from './blocks/gallery.js';
 import { faqBlock } from './blocks/faq.js';
-import { tidslinjeBlock } from './blocks/timeline.js';
-import { sitatBlock } from './blocks/quote.js';
-import { statistikkBlock } from './blocks/stats.js';
-import { tabellBlock } from './blocks/table.js';
-import { delingBlock } from './blocks/share.js';
-import { nedtellerBlock } from './blocks/countdown.js';
+import { timelineBlock } from './blocks/timeline.js';
+import { quoteBlock } from './blocks/quote.js';
+import { statsBlock } from './blocks/stats.js';
+import { tableBlock } from './blocks/table.js';
+import { shareBlock } from './blocks/share.js';
+import { countdownBlock } from './blocks/countdown.js';
 import { audioBlock } from './blocks/audio.js';
-import { produktBlock } from './blocks/product.js';
-import { handlekurvBlock } from './blocks/cart.js';
-import { kasseBlock } from './blocks/checkout.js';
+import { productBlock } from './blocks/product.js';
+import { cartBlock } from './blocks/cart.js';
+import { checkoutBlock } from './blocks/checkout.js';
 import { colorLayer } from './backgrounds/color.js';
 import { gradientLayer } from './backgrounds/gradient.js';
 import { glowLayer } from './backgrounds/glow.js';
 import { grainLayer } from './backgrounds/grain.js';
 import { imageLayer } from './backgrounds/image.js';
-import { bildegalleriLayer } from './backgrounds/slideshow.js';
+import { slideshowLayer } from './backgrounds/slideshow.js';
 import { videoLayer } from './backgrounds/video.js';
 import { coreAnimations } from './animations/core.js';
 import { registerSectionPresets } from './sections/presets.js';
@@ -75,25 +75,25 @@ function registerCore() {
   Urd.blocks.define('shape', shapeBlock);
   Urd.blocks.define('video', videoBlock);
   Urd.blocks.define('icon', iconBlock);
-  Urd.blocks.define('collection', samlingBlock);
-  Urd.blocks.define('gallery', galleriBlock);
+  Urd.blocks.define('collection', collectionBlock);
+  Urd.blocks.define('gallery', galleryBlock);
   Urd.blocks.define('faq', faqBlock);
-  Urd.blocks.define('timeline', tidslinjeBlock);
-  Urd.blocks.define('quote', sitatBlock);
-  Urd.blocks.define('stats', statistikkBlock);
-  Urd.blocks.define('table', tabellBlock);
-  Urd.blocks.define('share', delingBlock);
-  Urd.blocks.define('countdown', nedtellerBlock);
+  Urd.blocks.define('timeline', timelineBlock);
+  Urd.blocks.define('quote', quoteBlock);
+  Urd.blocks.define('stats', statsBlock);
+  Urd.blocks.define('table', tableBlock);
+  Urd.blocks.define('share', shareBlock);
+  Urd.blocks.define('countdown', countdownBlock);
   Urd.blocks.define('audio', audioBlock);
-  Urd.blocks.define('product', produktBlock);
-  Urd.blocks.define('cart', handlekurvBlock);
-  Urd.blocks.define('checkout', kasseBlock);
+  Urd.blocks.define('product', productBlock);
+  Urd.blocks.define('cart', cartBlock);
+  Urd.blocks.define('checkout', checkoutBlock);
   Urd.backgrounds.define('color', colorLayer);
   Urd.backgrounds.define('gradient', gradientLayer);
   Urd.backgrounds.define('glow', glowLayer);
   Urd.backgrounds.define('grain', grainLayer);
   Urd.backgrounds.define('image', imageLayer);
-  Urd.backgrounds.define('slideshow', bildegalleriLayer);
+  Urd.backgrounds.define('slideshow', slideshowLayer);
   Urd.backgrounds.define('video', videoLayer);
   for (const [id, def] of Object.entries(coreAnimations)) Urd.animations.define(id, def);
   registerSectionPresets(Urd);
@@ -319,9 +319,9 @@ function enablePreview(state, opts) {
         const host = root.querySelector(`[data-section-id="${section.id}"]`);
         if (host) renderSection(section, state.site, host, vp());
       }
-    } else if (msg?.type === 'urd-maler') {
+    } else if (msg?.type === 'urd-templates') {
       // Mal-utkastene fra editoren: vises i Mine maler-fanen i «+ Ny seksjon».
-      window.UrdPreviewEdit?.setMaler?.(msg.maler);
+      window.UrdPreviewEdit?.setTemplates?.(msg.templates);
     } else if (msg?.type === 'urd-insert-template') {
       // Blokker-panelets Mine maler: sett inn blokkgruppe-malen i aktiv seksjon.
       window.UrdPreviewEdit?.insertTemplate?.(msg.id);

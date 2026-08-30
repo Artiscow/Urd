@@ -12,7 +12,7 @@ import { canAutoplay, normalizeInterval, stepIndex } from '../gallery-model.js';
 import { isSafeImage } from '../nav-model.js';
 import { bgSize, bgPosition } from './image.js';
 
-export const bildegalleriLayer = {
+export const slideshowLayer = {
   version: 1,
   label: 'Bildegalleri',
   labelKey: 'bgLayer.slideshow',

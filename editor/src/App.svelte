@@ -20,7 +20,7 @@
   import { ta, taApiError, adminLang as currentAdminLang } from '$engine/i18n.js';
   import { validateManifest, satisfiesEngine } from '$engine/plugins.js';
   import { makeId } from '$engine/sections/presets.js';
-  import { malId, MAL_SCHEMA_VERSION, MAL_KINDS, clonePageForInsert } from '$engine/templates-model.js';
+  import { templateId, TEMPLATE_SCHEMA_VERSION, TEMPLATE_KINDS, clonePageForInsert } from '$engine/templates-model.js';
   import { entriesToCsv, csvToEntries } from '$engine/collections-csv.js';
   import { buildSitemapXml, buildRobotsTxt, buildRssXml, FEED_KINDS } from '$engine/feeds.js';
   import { pageThumb } from '$engine/preset-thumb.js';
@@ -33,7 +33,7 @@
   import { glowLayer } from '$engine/backgrounds/glow.js';
   import { grainLayer } from '$engine/backgrounds/grain.js';
   import { imageLayer } from '$engine/backgrounds/image.js';
-  import { bildegalleriLayer } from '$engine/backgrounds/slideshow.js';
+  import { slideshowLayer } from '$engine/backgrounds/slideshow.js';
   import { videoLayer } from '$engine/backgrounds/video.js';
   import { footerThumb } from '$engine/footer-thumb.js';
   import { coreAnimations } from '$engine/animations/core.js';
@@ -49,7 +49,7 @@
     ['gradient', gradientLayer],
     ['glow', glowLayer],
     ['image', imageLayer],
-    ['slideshow', bildegalleriLayer],
+    ['slideshow', slideshowLayer],
     ['video', videoLayer],
     ['grain', grainLayer],
   ];
@@ -409,13 +409,13 @@
     // nypubliserte som bare venter på deploy.
     const anyPageDraft = siteDraft?.pages?.some((p) =>
       !pendingPublished.has(p.id) && localStorage.getItem(`urd-draft-${p.id}`) !== null) ?? false;
-    const anySamlingDraft = samlingerIndexStore?.hasDraft()
-      || Object.values(samlingStores).some((st) => st.hasDraft());
-    const anyMalDraft = malerIndexStore?.hasDraft()
-      || Object.values(malStores).some((st) => st.hasDraft());
+    const anyCollectionDraft = collectionsIndexStore?.hasDraft()
+      || Object.values(collectionStores).some((st) => st.hasDraft());
+    const anyTemplateDraft = templatesIndexStore?.hasDraft()
+      || Object.values(templateStores).some((st) => st.hasDraft());
     dirty = anyPageDraft
       || (store?.hasDraft() && !pendingPublished.has(pageId))
-      || siteStore?.hasDraft() || pluginsStore?.hasDraft() || anySamlingDraft || anyMalDraft || false;
+      || siteStore?.hasDraft() || pluginsStore?.hasDraft() || anyCollectionDraft || anyTemplateDraft || false;
   }
 
   /**
@@ -435,13 +435,13 @@
       pageId,
       page: store.data,
       site: siteStore.data,
-      samlingerIndex: samlingerReady ? samlingerIndexStore.data : null,
+      samlingerIndex: samlingerReady ? collectionsIndexStore.data : null,
       samlinger: samlingerReady
-        ? Object.fromEntries(Object.entries(samlingStores).map(([id, st]) => [id, st.data]))
+        ? Object.fromEntries(Object.entries(collectionStores).map(([id, st]) => [id, st.data]))
         : {},
-      malerIndex: malerReady ? malerIndexStore.data : null,
-      maler: malerReady
-        ? Object.fromEntries(Object.entries(malStores).map(([id, st]) => [id, st.data]))
+      malerIndex: templatesReady ? templatesIndexStore.data : null,
+      maler: templatesReady
+        ? Object.fromEntries(Object.entries(templateStores).map(([id, st]) => [id, st.data]))
         : {},
       plugins: pluginsStore?.data ?? null,
     });
@@ -463,7 +463,7 @@
     grid = { snap: true, ...siteDraft.grid };
     pushSiteToPreview();
     // Samlinger/maler/plugins gjenopprettes FØR sidebytte-grenen under, ellers ville kryss-side-angring miste de delene av snapshotet.
-    restoreSamlinger(samlingerIndex, samlinger ?? {});
+    restoreCollections(samlingerIndex, samlinger ?? {});
     restoreMaler(malerIndex, maler ?? {});
     restorePlugins(plugins);
 
@@ -494,64 +494,66 @@
 
   /** Gjenopprett samlingsutkastene fra et snapshot (null = tatt før init, hopp over).
    *  Stores som mangler gjenskapes mot publisert baseline; stores utenfor snapshotet fjernes. */
-  function restoreSamlinger(indexSnap, samlingerSnap) {
-    if (!samlingerIndexStore || !indexSnap) return;
+  function restoreCollections(indexSnap, samlingerSnap) {
+    if (!collectionsIndexStore || !indexSnap) return;
     const current = JSON.stringify({
-      index: samlingerIndexStore.data,
-      samlinger: Object.fromEntries(Object.entries(samlingStores).map(([id, st]) => [id, st.data])),
+      index: collectionsIndexStore.data,
+      samlinger: Object.fromEntries(Object.entries(collectionStores).map(([id, st]) => [id, st.data])),
     });
     if (current === JSON.stringify({ index: indexSnap, samlinger: samlingerSnap })) return;
-    samlingerIndexStore.replace(indexSnap);
-    samlingerIndexStore.save();
-    for (const id of Object.keys(samlingStores)) {
+    collectionsIndexStore.replace(indexSnap);
+    collectionsIndexStore.save();
+    for (const id of Object.keys(collectionStores)) {
       if (!(id in samlingerSnap)) {
+        localStorage.removeItem(`urd-draft-collection-${id}`);
         localStorage.removeItem(`urd-draft-samling-${id}`);
-        delete samlingStores[id];
+        delete collectionStores[id];
       }
     }
     for (const [id, data] of Object.entries(samlingerSnap)) {
-      if (!samlingStores[id]) {
+      if (!collectionStores[id]) {
         // Angret sletting: baseline er publisert tilstand, eller «finnes
         // ikke» (null) for en samling som aldri rakk å publiseres
-        // (speiler addSamling, så hasDraft() forblir sann til publisering).
-        const baseline = publishedSamlinger[id] ?? null;
-        samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => baseline, draftSaveError);
+        // (speiler addCollection, så hasDraft() forblir sann til publisering).
+        const baseline = publishedCollections[id] ?? null;
+        collectionStores[id] = createDraftStore(`urd-draft-collection-${id}`, () => baseline, draftSaveError, `urd-draft-samling-${id}`);
       }
-      samlingStores[id].replace(data);
-      samlingStores[id].save();
+      collectionStores[id].replace(data);
+      collectionStores[id].save();
     }
     samlingerIds = [...(indexSnap.samlinger ?? [])];
-    if (activeSamling && !samlingerIds.includes(activeSamling)) activeSamling = null;
-    syncSamlingerView();
+    if (activeCollection && !samlingerIds.includes(activeCollection)) activeCollection = null;
+    syncCollectionsView();
   }
 
   /** Gjenopprett mal-utkastene fra et snapshot (null = tatt før init, hopp over).
-   *  Speiler restoreSamlinger, med «finnes ikke»-baseline for aldri publiserte maler. */
+   *  Speiler restoreCollections, med «finnes ikke»-baseline for aldri publiserte maler. */
   function restoreMaler(indexSnap, malerSnap) {
-    if (!malerIndexStore || !indexSnap) return;
+    if (!templatesIndexStore || !indexSnap) return;
     const current = JSON.stringify({
-      index: malerIndexStore.data,
-      maler: Object.fromEntries(Object.entries(malStores).map(([id, st]) => [id, st.data])),
+      index: templatesIndexStore.data,
+      maler: Object.fromEntries(Object.entries(templateStores).map(([id, st]) => [id, st.data])),
     });
     if (current === JSON.stringify({ index: indexSnap, maler: malerSnap })) return;
-    malerIndexStore.replace(indexSnap);
-    malerIndexStore.save();
-    for (const id of Object.keys(malStores)) {
+    templatesIndexStore.replace(indexSnap);
+    templatesIndexStore.save();
+    for (const id of Object.keys(templateStores)) {
       if (!(id in malerSnap)) {
+        localStorage.removeItem(`urd-draft-template-${id}`);
         localStorage.removeItem(`urd-draft-mal-${id}`);
-        delete malStores[id];
+        delete templateStores[id];
       }
     }
     for (const [id, data] of Object.entries(malerSnap)) {
-      if (!malStores[id]) {
-        malStores[id] = createDraftStore(`urd-draft-mal-${id}`, () => publishedMaler[id] ?? null, draftSaveError);
+      if (!templateStores[id]) {
+        templateStores[id] = createDraftStore(`urd-draft-template-${id}`, () => publishedTemplates[id] ?? null, draftSaveError, `urd-draft-mal-${id}`);
       }
-      malStores[id].replace(data);
-      malStores[id].save();
+      templateStores[id].replace(data);
+      templateStores[id].save();
     }
-    malerIds = [...(indexSnap.maler ?? [])];
+    templateIds = [...(indexSnap.maler ?? [])];
     updateDirty();
-    pushMalerToPreview();
+    pushTemplatesToPreview();
   }
 
   /** Gjenopprett plugin-utkastet fra et snapshot (null = tatt før init, hopp over).
@@ -1048,7 +1050,7 @@
 
   function addTlItem() {
     mutateBlock('tl-item', (b) => {
-      (b.props.items ??= []).push({ year: '', title: ta('seed.tidslinje.newTitle'), text: '' });
+      (b.props.items ??= []).push({ year: '', title: ta('seed.timeline.newTitle'), text: '' });
     });
   }
 
@@ -1070,7 +1072,7 @@
 
   /** Tabellens form: rader/kolonner legges til og fjernes i enden;
    *  radsettet rektangulariseres først, så håndredigert data tåles. */
-  function tabellResize(dRows, dCols) {
+  function tableResize(dRows, dCols) {
     mutateBlock(`edit:${selectedBlock.blockId}:tabell-form`, (b) => {
       let rows = (Array.isArray(b.props.rows) && b.props.rows.length ? b.props.rows : [['']])
         .map((row) => (Array.isArray(row) ? row.map((cell) => String(cell ?? '')) : ['']));
@@ -1085,7 +1087,7 @@
   }
 
   /** Delingsknappenes tjenester: valgene lagres i fast visningsrekkefølge. */
-  function toggleDelingService(service, on) {
+  function toggleShareService(service, on) {
     mutateBlock(`edit:${selectedBlock.blockId}:deling`, (b) => {
       const order = ['facebook', 'x', 'linkedin', 'whatsapp', 'email', 'copy'];
       const set = new Set(b.props.services ?? []);
@@ -1143,7 +1145,7 @@
   }
 
   /** Sitat-blokkens portrett (kort-varianten): samme webp-vei som bildeblokken. */
-  async function setSitatPortrett(event) {
+  async function setQuotePortrait(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
@@ -2256,7 +2258,7 @@
     // admin-størrelse fra første render.
     bridge?.sendZoom(scale);
     pushCollectionsToPreview();
-    pushMalerToPreview();
+    pushTemplatesToPreview();
     if (siteStore.hasDraft()) pushSiteToPreview();
     // Upubliserte sider finnes ikke på serveren (iframen faller tilbake
     // til forsiden): editorens data er kilden og må alltid sendes.
@@ -2390,7 +2392,7 @@
   /* «Ny side fra mal» (0.6.7.10, eiervalg N2): rutenettet under opprett-
      feltet velger hva neste nye side starter fra; null er tom side, en
      'preset:<id>' er en innebygd startpakke, alt annet er en egen side-mal. */
-  let newPageMal = $state(null);
+  let newPageTemplate = $state(null);
 
   /* Startpakke-miniatyrene bygges én gang (create() per seksjon er billig,
      men rutenettet rerendres ved hvert tastetrykk i navnefeltet). */
@@ -2451,12 +2453,12 @@
     // egne maler lagrer opphavs-id-er, så klonen re-id-er alt og setter meta
     // til den nye siden (re-id-regelen i SKJEMA.md). liftPageFile-vasken gjør
     // maler lagret under eldre skjemaversjoner trygge.
-    const malPage = newPageMal && !newPageMal.startsWith('preset:')
-      ? malStores[newPageMal]?.data?.page : null;
-    const fresh = newPageMal?.startsWith('preset:')
-      ? (buildPagePreset(newPageMal.slice(7), { pageId: slug, title }) ?? blankPage({ id: slug, title }))
-      : malPage
-        ? clonePageForInsert(liftPageFile(JSON.parse(JSON.stringify(malPage)), siteStore.data), makeId, { id: slug, title })
+    const templatePage = newPageTemplate && !newPageTemplate.startsWith('preset:')
+      ? templateStores[newPageTemplate]?.data?.page : null;
+    const fresh = newPageTemplate?.startsWith('preset:')
+      ? (buildPagePreset(newPageTemplate.slice(7), { pageId: slug, title }) ?? blankPage({ id: slug, title }))
+      : templatePage
+        ? clonePageForInsert(liftPageFile(JSON.parse(JSON.stringify(templatePage)), siteStore.data), makeId, { id: slug, title })
         : blankPage({ id: slug, title });
     siteMutate('pages', () => {
       siteDraft.pages.push({ id: slug, title, path: `/${slug}`, file: `content/pages/${slug}.json` });
@@ -2467,7 +2469,7 @@
     writeDraftKey(`urd-draft-${slug}`, JSON.stringify(fresh));
     updateDirty();
     newPageTitle = '';
-    newPageMal = null;
+    newPageTemplate = null;
     selectPage(slug);
   }
 
@@ -2876,17 +2878,17 @@
 
   // Samlinger er delt nettstedsdata (som nav/footer): indeksfil + én fil per samling,
   // hver med egen draftStore. Redigering går gjennom Ctrl+Z-historikken (som sider/site).
-  let samlingerIndexStore = null;
-  let samlingStores = {};
+  let collectionsIndexStore = null;
+  let collectionStores = {};
   /** Publisert baseline per samling-id: brukes når angring gjenskaper en slettet samlings store. */
-  let publishedSamlinger = {};
+  let publishedCollections = {};
   /** Sant først når initSamlinger har fylt ALLE stores; snapshot() tar med samlinger først da. */
   let samlingerReady = false;
   let samlingerIds = $state([]);
-  let samlingerView = $state({});
-  let activeSamling = $state(null);
-  let newSamlingName = $state('');
-  let newSamlingKind = $state('news');
+  let collectionsView = $state({});
+  let activeCollection = $state(null);
+  let newCollectionName = $state('');
+  let newCollectionKind = $state('news');
 
   const SAMLING_KINDS = [
     ['news', ta('collectionKind.news')],
@@ -2899,48 +2901,48 @@
   /* ---------- Maler (0.6.7): brukermaler i content/maler/ ---------- */
   // Samme mønster som samlinger: indeks-store + én store per malfil, med
   // «finnes ikke»-baseline (null) til første publisering (0.6.7.1-regelen).
-  let malerIndexStore = null;
-  let malStores = {};
+  let templatesIndexStore = null;
+  let templateStores = {};
   /** Publisert baseline per mal-id (null = aldri publisert): brukes når angring gjenskaper en slettet mals store. */
-  let publishedMaler = {};
+  let publishedTemplates = {};
   /** Sant først når initMaler har fylt ALLE stores; snapshot() tar med maler først da. */
-  let malerReady = false;
-  let malerIds = $state([]);
+  let templatesReady = false;
+  let templateIds = $state([]);
 
   async function initMaler() {
     let index = { version: 1, maler: [] };
     try {
       index = await (await fetch('/content/maler.json')).json();
     } catch { /* ingen indeks er helt greit */ }
-    malerIndexStore = createDraftStore('urd-draft-maler', () => index, draftSaveError);
-    malerIds = [...(malerIndexStore.data.maler ?? [])];
-    for (const id of malerIds) {
+    templatesIndexStore = createDraftStore('urd-draft-templates', () => index, draftSaveError, 'urd-draft-maler');
+    templateIds = [...(templatesIndexStore.data.maler ?? [])];
+    for (const id of templateIds) {
       let published = null;
       try {
         published = await (await fetch(`/content/maler/${id}.json`)).json();
       } catch { /* ny, upublisert mal */ }
-      publishedMaler[id] = published;
-      malStores[id] = createDraftStore(`urd-draft-mal-${id}`, () => published, draftSaveError);
+      publishedTemplates[id] = published;
+      templateStores[id] = createDraftStore(`urd-draft-template-${id}`, () => published, draftSaveError, `urd-draft-mal-${id}`);
       // Utkast fra en nyere editor forkastes (samme vern som side/site).
-      if ((malStores[id].data?.schemaVersion ?? 1) > MAL_SCHEMA_VERSION) malStores[id].reset();
+      if ((templateStores[id].data?.schemaVersion ?? 1) > TEMPLATE_SCHEMA_VERSION) templateStores[id].reset();
     }
-    malerReady = true;
-    pushMalerToPreview();
+    templatesReady = true;
+    pushTemplatesToPreview();
   }
 
   /** Send mal-utkastene til previewens Mine maler-fane (rene kopier, aldri $state-proxier). */
-  function pushMalerToPreview() {
-    const list = malerIds
-      .map((id) => (malStores[id]?.data ? { id, ...JSON.parse(JSON.stringify(malStores[id].data)) } : null))
+  function pushTemplatesToPreview() {
+    const list = templateIds
+      .map((id) => (templateStores[id]?.data ? { id, ...JSON.parse(JSON.stringify(templateStores[id].data)) } : null))
       .filter(Boolean)
       .map(({ id, mal, section, blocks, page }) => ({ id, name: mal.name, kind: mal.kind, section, blocks, page }));
-    bridge?.sendMaler(list);
+    bridge?.sendTemplates(list);
   }
 
   /** «Lagre som mal» fra previewen (seksjon/blokkgruppe); side-maler kommer
    *  editor-internt fra Sider-panelet via samme kjerne. */
   function handleSaveTemplate(msg) {
-    const kind = MAL_KINDS.includes(msg.kind) ? msg.kind : 'section';
+    const kind = TEMPLATE_KINDS.includes(msg.kind) ? msg.kind : 'section';
     return saveTemplate(kind, msg[kind]);
   }
 
@@ -2984,49 +2986,50 @@
 
   /** Felles mal-lagring: navngi, slug til id, lagre som utkast. */
   async function saveTemplate(kind, payload) {
-    if (!payload || !malerIndexStore) return;
+    if (!payload || !templatesIndexStore) return;
     const name = (await askPrompt({
       title: ta('canvas.templateNamePrompt'),
       placeholder: ta('ph.templateName'),
     }))?.trim();
     if (!name) return;
-    const id = malId(name);
+    const id = templateId(name);
     if (!id) {
       setStatus(ta('status.invalidName'), 'error');
       return;
     }
-    if (malerIds.includes(id)) {
+    if (templateIds.includes(id)) {
       setStatus(ta('status.templateExists'), 'error');
       return;
     }
     pushHistory('maler');
-    const fresh = { schemaVersion: MAL_SCHEMA_VERSION, mal: { name, kind }, [kind]: payload };
-    malStores[id] = createDraftStore(`urd-draft-mal-${id}`, () => null, draftSaveError);
-    malStores[id].replace(fresh);
-    malStores[id].save();
-    malerIndexStore.data.maler = [...malerIds, id];
-    malerIndexStore.save();
-    malerIds = [...malerIds, id];
+    const fresh = { schemaVersion: TEMPLATE_SCHEMA_VERSION, mal: { name, kind }, [kind]: payload };
+    templateStores[id] = createDraftStore(`urd-draft-template-${id}`, () => null, draftSaveError, `urd-draft-mal-${id}`);
+    templateStores[id].replace(fresh);
+    templateStores[id].save();
+    templatesIndexStore.data.maler = [...templateIds, id];
+    templatesIndexStore.save();
+    templateIds = [...templateIds, id];
     setStatus(ta('status.templateSaved', { name }), 'ok');
     updateDirty();
-    pushMalerToPreview();
+    pushTemplatesToPreview();
   }
 
   /** Sletteknappen i Mine maler-fanen: bekreft, fjern fil-utkast og indeks-innslag. */
   async function handleDeleteTemplate(msg) {
-    const mal = malStores[msg.id]?.data?.mal;
+    const mal = templateStores[msg.id]?.data?.mal;
     if (!mal) return;
     const ok = await askConfirm({ title: ta('confirm.deleteTemplate', { name: mal.name }) });
     if (!ok) return;
     pushHistory('maler');
-    if (newPageMal === msg.id) newPageMal = null;
+    if (newPageTemplate === msg.id) newPageTemplate = null;
+    localStorage.removeItem(`urd-draft-template-${msg.id}`);
     localStorage.removeItem(`urd-draft-mal-${msg.id}`);
-    delete malStores[msg.id];
-    malerIndexStore.data.maler = malerIds.filter((x) => x !== msg.id);
-    malerIndexStore.save();
-    malerIds = malerIds.filter((x) => x !== msg.id);
+    delete templateStores[msg.id];
+    templatesIndexStore.data.maler = templateIds.filter((x) => x !== msg.id);
+    templatesIndexStore.save();
+    templateIds = templateIds.filter((x) => x !== msg.id);
     updateDirty();
-    pushMalerToPreview();
+    pushTemplatesToPreview();
   }
 
   async function initSamlinger() {
@@ -3034,8 +3037,8 @@
     try {
       index = await (await fetch('/content/collections.json')).json();
     } catch { /* ingen indeks er helt greit */ }
-    samlingerIndexStore = createDraftStore('urd-draft-samlinger', () => index, draftSaveError);
-    samlingerIds = [...(samlingerIndexStore.data.samlinger ?? [])];
+    collectionsIndexStore = createDraftStore('urd-draft-collections', () => index, draftSaveError, 'urd-draft-samlinger');
+    samlingerIds = [...(collectionsIndexStore.data.samlinger ?? [])];
     for (const id of samlingerIds) {
       let published = null;
       try {
@@ -3045,52 +3048,52 @@
       // syntetisk publisert-tilstand: ellers kan utkastet være likt den
       // falske baselinen, hasDraft() bli usann, og indeksen publiseres
       // uten filen (indeks/fil-drift).
-      publishedSamlinger[id] = published;
-      samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => published, draftSaveError);
-      if (!published && !samlingStores[id].data) {
+      publishedCollections[id] = published;
+      collectionStores[id] = createDraftStore(`urd-draft-collection-${id}`, () => published, draftSaveError, `urd-draft-samling-${id}`);
+      if (!published && !collectionStores[id].data) {
         // Indeks uten fil og uten utkast (driftet deploy): gi et tomt
         // utkast så panelet virker; finnes-ikke-baselinen gjør at filen
         // publiseres ved neste publisering og driften heles.
-        samlingStores[id].replace({ schemaVersion: 1, id, name: id, kind: 'custom', entries: [] });
-        samlingStores[id].save();
+        collectionStores[id].replace({ schemaVersion: 1, id, name: id, kind: 'custom', entries: [] });
+        collectionStores[id].save();
       }
     }
     samlingerReady = true;
-    syncSamlingerView();
+    syncCollectionsView();
   }
 
-  function syncSamlingerView(pushPreview = true) {
+  function syncCollectionsView(pushPreview = true) {
     const view = {};
     for (const id of samlingerIds) {
-      if (samlingStores[id]) view[id] = JSON.parse(JSON.stringify(samlingStores[id].data));
+      if (collectionStores[id]) view[id] = JSON.parse(JSON.stringify(collectionStores[id].data));
     }
-    samlingerView = view;
+    collectionsView = view;
     // Ved klikk-og-skriv i selve blokken hoppes preview-dyttet over: iframen viser alt teksten, og et rerender midt i skrivingen ville mistet skrivemarkøren.
     if (pushPreview) pushCollectionsToPreview();
   }
 
   /** Send samlingsutkastene til previewen (rene kopier; $state-proxier kan aldri postMessages). */
   function pushCollectionsToPreview() {
-    bridge?.sendCollections($state.snapshot(samlingerView) ?? {});
+    bridge?.sendCollections($state.snapshot(collectionsView) ?? {});
   }
 
   /** Felles flyt for samlingsendringer: historikk, muter, lagre, oppdater speil og preview.
    *  key er angre-nøkkelen (edit:-prefiks koalescerer skurer av samme handling). */
-  function mutateSamling(id, key, fn, pushPreview = true) {
-    const store = samlingStores[id];
+  function mutateCollection(id, key, fn, pushPreview = true) {
+    const store = collectionStores[id];
     if (!store) return;
     pushHistory(key);
     fn(store.data);
     store.save();
     updateDirty();
-    syncSamlingerView(pushPreview);
+    syncCollectionsView(pushPreview);
   }
 
   /** «+ Produkt»-adderen i produkt-blokken (urd-collection-add fra iframen). */
   function handleCollectionAdd(msg) {
     // Slettet/ukjent samling: no-op (guarden hindrer også et dødt angre-steg).
-    if (!samlingStores[msg.collection]) return;
-    addSamlingEntry(msg.collection);
+    if (!collectionStores[msg.collection]) return;
+    addCollectionEntry(msg.collection);
   }
 
   /** Ren tekst fra en rik tekst-tittel: parses i et inert dokument (samme
@@ -3107,7 +3110,7 @@
     // Tom tittel beholdes ikke (skjemaet krever tittel); gammel tittel består til noe skrives.
     // Tittelen er rik tekst, så tomhet vurderes uten markup.
     if (field === 'title' && !plainTitle(value)) return;
-    mutateSamling(collection, `edit:samling:${collection}:${entryId}:${field}`, (data) => {
+    mutateCollection(collection, `edit:samling:${collection}:${entryId}:${field}`, (data) => {
       const entry = data.entries.find((e) => e.id === entryId);
       if (!entry) return;
       if (value === '' && field !== 'title') delete entry[field];
@@ -3120,19 +3123,19 @@
     const fresh = { schemaVersion: 1, id, name, kind, entries: [] };
     // Baseline er «finnes ikke» (null) til første publisering: en fersk
     // samling skal ha hasDraft() sann, ellers publiseres indeksen uten filen.
-    samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => null, draftSaveError);
-    samlingStores[id].replace(fresh);
-    samlingStores[id].save();
-    samlingerIndexStore.data.samlinger = [...samlingerIds, id];
-    samlingerIndexStore.save();
+    collectionStores[id] = createDraftStore(`urd-draft-collection-${id}`, () => null, draftSaveError, `urd-draft-samling-${id}`);
+    collectionStores[id].replace(fresh);
+    collectionStores[id].save();
+    collectionsIndexStore.data.samlinger = [...samlingerIds, id];
+    collectionsIndexStore.save();
     samlingerIds = [...samlingerIds, id];
-    activeSamling = id;
+    activeCollection = id;
     updateDirty();
-    syncSamlingerView();
+    syncCollectionsView();
   }
 
-  function addSamling() {
-    const name = newSamlingName.trim();
+  function addCollection() {
+    const name = newCollectionName.trim();
     if (!name) return;
     const id = slugify(name);
     if (!id || samlingerIds.includes(id)) {
@@ -3140,8 +3143,8 @@
       return;
     }
     pushHistory('samlinger');
-    insertSamling(id, name, newSamlingKind);
-    newSamlingName = '';
+    insertSamling(id, name, newCollectionKind);
+    newCollectionName = '';
   }
 
   /** «+ Opprett produktkatalog» i produkt-blokkens Egenskaper: samling + binding i ETT angre-steg. */
@@ -3158,18 +3161,19 @@
 
   function removeSamling(id) {
     pushHistory('samlinger');
-    localStorage.removeItem(`urd-draft-samling-${id}`);
-    delete samlingStores[id];
-    samlingerIndexStore.data.samlinger = samlingerIds.filter((x) => x !== id);
-    samlingerIndexStore.save();
+    localStorage.removeItem(`urd-draft-collection-${id}`);
+        localStorage.removeItem(`urd-draft-samling-${id}`);
+    delete collectionStores[id];
+    collectionsIndexStore.data.samlinger = samlingerIds.filter((x) => x !== id);
+    collectionsIndexStore.save();
     samlingerIds = samlingerIds.filter((x) => x !== id);
-    if (activeSamling === id) activeSamling = null;
+    if (activeCollection === id) activeCollection = null;
     updateDirty();
-    syncSamlingerView();
+    syncCollectionsView();
   }
 
-  function addSamlingEntry(id) {
-    mutateSamling(id, `samling:${id}:add-entry`, (data) => {
+  function addCollectionEntry(id) {
+    mutateCollection(id, `samling:${id}:add-entry`, (data) => {
       if (data.kind === 'products') {
         // Produkter: ingen dato (irrelevant), pris settes i panelet; legges SIST
         // så adder-kortet i previewen får det nye kortet ved siden av seg.
@@ -3186,7 +3190,7 @@
   }
 
   function setEntryField(id, entryId, field, value) {
-    mutateSamling(id, `edit:samling:${id}:${entryId}:${field}`, (data) => {
+    mutateCollection(id, `edit:samling:${id}:${entryId}:${field}`, (data) => {
       const entry = data.entries.find((e) => e.id === entryId);
       if (!entry) return;
       if (value === '' && field !== 'title') delete entry[field];
@@ -3195,7 +3199,7 @@
   }
 
   function moveEntry(id, index, dir) {
-    mutateSamling(id, `samling:${id}:move-entry`, (data) => {
+    mutateCollection(id, `samling:${id}:move-entry`, (data) => {
       const j = index + dir;
       if (j < 0 || j >= data.entries.length) return;
       [data.entries[index], data.entries[j]] = [data.entries[j], data.entries[index]];
@@ -3203,7 +3207,7 @@
   }
 
   function removeEntry(id, entryId) {
-    mutateSamling(id, `samling:${id}:remove-entry`, (data) => {
+    mutateCollection(id, `samling:${id}:remove-entry`, (data) => {
       data.entries = data.entries.filter((e) => e.id !== entryId);
     });
   }
@@ -3224,7 +3228,7 @@
   }
 
   function addEntryColor(id, entryId) {
-    mutateSamling(id, `samling:${id}:${entryId}:colors`, (data) => {
+    mutateCollection(id, `samling:${id}:${entryId}:colors`, (data) => {
       const entry = data.entries.find((e) => e.id === entryId);
       if (!entry) return;
       entry.colors = [...(entry.colors ?? []), { name: ta('ph.colorName') }];
@@ -3232,7 +3236,7 @@
   }
 
   function setEntryColor(id, entryId, index, field, value) {
-    mutateSamling(id, `edit:samling:${id}:${entryId}:color:${index}:${field}`, (data) => {
+    mutateCollection(id, `edit:samling:${id}:${entryId}:color:${index}:${field}`, (data) => {
       const color = data.entries.find((e) => e.id === entryId)?.colors?.[index];
       if (!color) return;
       // Navnet kan aldri tømmes (skjemaet krever det); bildet kan fjernes.
@@ -3250,7 +3254,7 @@
   }
 
   function removeEntryColor(id, entryId, index) {
-    mutateSamling(id, `samling:${id}:${entryId}:colors`, (data) => {
+    mutateCollection(id, `samling:${id}:${entryId}:colors`, (data) => {
       const entry = data.entries.find((e) => e.id === entryId);
       if (!entry?.colors) return;
       entry.colors = entry.colors.filter((_, i) => i !== index);
@@ -3259,8 +3263,8 @@
   }
 
   /** CSV-eksport (funksjonskartet C12): innslagene lastes ned som <id>.csv. */
-  function exportSamlingCsv(id) {
-    const data = samlingStores[id]?.data;
+  function exportCollectionCsv(id) {
+    const data = collectionStores[id]?.data;
     if (!data) return;
     const url = URL.createObjectURL(new Blob([entriesToCsv(data.entries)], { type: 'text/csv' }));
     const a = document.createElement('a');
@@ -3272,7 +3276,7 @@
 
   /** CSV-import: ERSTATTER samlingens innslag med radene fra fila (angre finnes).
    *  Manglende/ugyldige id-er får nye; ren parsing bor i engine/collections-csv.js. */
-  async function importSamlingCsv(id, event) {
+  async function importCollectionCsv(id, event) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
@@ -3286,7 +3290,7 @@
       if (!/^[a-z0-9][a-z0-9-]*$/.test(entry.id) || used.has(entry.id)) entry.id = makeId('innslag');
       used.add(entry.id);
     }
-    mutateSamling(id, `samling:${id}:import`, (data) => { data.entries = parsed.entries; });
+    mutateCollection(id, `samling:${id}:import`, (data) => { data.entries = parsed.entries; });
     setStatus(ta('status.csvImported', { count: String(parsed.entries.length) }), 'ok');
   }
 
@@ -3539,12 +3543,12 @@
      thumb-beskrivelse til den visuelle mal-velgeren (footerThumb). */
   const FOOTER_TEMPLATES = [
     { id: 'minimal', label: ta('footerTemplate.minimal'), thumb: { center: true, social: 2, baselineLinks: 1 } },
-    { id: 'sentrert', label: ta('footerTemplate.sentrert'), thumb: { center: true, row: true, social: 3 } },
-    { id: 'kolonner', label: ta('footerTemplate.kolonner'), thumb: { tag: true, cols: 3, social: 3, baselineLinks: 2 } },
+    { id: 'centered', label: ta('footerTemplate.centered'), thumb: { center: true, row: true, social: 3 } },
+    { id: 'columns', label: ta('footerTemplate.columns'), thumb: { tag: true, cols: 3, social: 3, baselineLinks: 2 } },
     { id: 'sitemap', label: ta('footerTemplate.sitemap'), thumb: { tag: true, fat: true, cols: 4, social: 4, baselineLinks: 3 } },
-    { id: 'nyhetsbrev', label: ta('footerTemplate.nyhetsbrev'), thumb: { tag: true, cta: true, cols: 2, social: 2, baselineLinks: 1 } },
-    { id: 'storcta', label: ta('footerTemplate.storcta'), thumb: { center: true, bigcta: true, baselineLinks: 2 } },
-    { id: 'kontakt', label: ta('footerTemplate.kontakt'), thumb: { tag: true, cols: 3, social: 2, baselineLinks: 1 } },
+    { id: 'newsletter', label: ta('footerTemplate.newsletter'), thumb: { tag: true, cta: true, cols: 2, social: 2, baselineLinks: 1 } },
+    { id: 'bigcta', label: ta('footerTemplate.bigcta'), thumb: { center: true, bigcta: true, baselineLinks: 2 } },
+    { id: 'contact', label: ta('footerTemplate.contact'), thumb: { tag: true, cols: 3, social: 2, baselineLinks: 1 } },
     { id: 'mega', label: ta('footerTemplate.mega'), thumb: { tag: true, mega: true, cols: 2, social: 4, baselineLinks: 2 } },
   ];
 
@@ -3562,11 +3566,11 @@
       return { align: 'center', brand: { title }, social: soc(['facebook', 'instagram']),
         copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
     }
-    if (name === 'sentrert') {
+    if (name === 'centered') {
       return { align: 'center', brand: { title }, linkRow: pageLinks(5),
         social: soc(['facebook', 'instagram', 'x']), copyright: `${copyright} · ${ta('seed.footer.madeWith')}` };
     }
-    if (name === 'kolonner') {
+    if (name === 'columns') {
       return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline1') },
         columns: [
           { title: ta('seed.footer.colPages'), links: pageLinks(4) },
@@ -3587,7 +3591,7 @@
         social: soc(['facebook', 'instagram', 'linkedin', 'youtube']), copyright,
         baseline: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.terms'), '#'), ext(ta('seed.footer.cookies'), '#')] };
     }
-    if (name === 'nyhetsbrev') {
+    if (name === 'newsletter') {
       return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline3') },
         cta: { kind: 'newsletter', heading: ta('seed.footer.newsletterHeading'), label: ta('seed.footer.newsletterButton'), recipient: ta('seed.email'), success: ta('seed.footer.newsletterSuccess') },
         columns: [
@@ -3596,13 +3600,13 @@
         ],
         social: soc(['facebook', 'instagram']), copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
     }
-    if (name === 'storcta') {
+    if (name === 'bigcta') {
       return { align: 'center',
         cta: { kind: 'button', big: true, heading: ta('seed.footer.ctaHeading'), sub: ta('seed.footer.ctaSub'), label: ta('seed.join'), href: '#' },
         linkRow: pageLinks(4), social: soc(['facebook', 'instagram', 'x']), copyright,
         baseline: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.terms'), '#')] };
     }
-    if (name === 'kontakt') {
+    if (name === 'contact') {
       return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline4') },
         columns: [
           { title: ta('seed.footer.colVisit'), links: [ext(ta('seed.footer.address'), '#'), ext(ta('seed.email'), 'mailto:post@dinforening.no'), ext('+47 22 00 00 00', 'tel:+4722000000')] },
@@ -4326,9 +4330,9 @@
       type: 'timeline',
       props: {
         items: [
-          { year: '2019', title: ta('seed.tidslinje.t1'), text: ta('seed.tidslinje.text') },
-          { year: '2022', title: ta('seed.tidslinje.t2'), text: ta('seed.tidslinje.text') },
-          { year: '2026', title: ta('seed.tidslinje.t3'), text: ta('seed.tidslinje.text') },
+          { year: '2019', title: ta('seed.timeline.t1'), text: ta('seed.timeline.text') },
+          { year: '2022', title: ta('seed.timeline.t2'), text: ta('seed.timeline.text') },
+          { year: '2026', title: ta('seed.timeline.t3'), text: ta('seed.timeline.text') },
         ],
         variant: 'left',
         marker: 'filled',
@@ -4338,12 +4342,12 @@
     },
     quote: {
       type: 'quote',
-      props: { text: ta('seed.sitat.text'), attribution: ta('seed.sitat.name'), role: ta('seed.sitat.role'), variant: 'large', image: '', accent: null },
+      props: { text: ta('seed.quoteBlock.text'), attribution: ta('seed.quoteBlock.name'), role: ta('seed.quoteBlock.role'), variant: 'large', image: '', accent: null },
       w: 44, h: 180,
     },
     stats: {
       type: 'stats',
-      props: { value: '4800', prefix: '', suffix: '+', label: ta('seed.statistikk.label'), countUp: true },
+      props: { value: '4800', prefix: '', suffix: '+', label: ta('seed.statsBlock.label'), countUp: true },
       w: 20, h: 90,
     },
     table: {
@@ -4353,9 +4357,9 @@
         striped: false,
         lines: 'rows',
         rows: [
-          [ta('seed.tabell.h1'), ta('seed.tabell.h2'), ta('seed.tabell.h3')],
-          [ta('seed.tabell.r1c1'), ta('seed.tabell.r1c2'), ''],
-          [ta('seed.tabell.r2c1'), ta('seed.tabell.r2c2'), ''],
+          [ta('seed.table.h1'), ta('seed.table.h2'), ta('seed.table.h3')],
+          [ta('seed.table.r1c1'), ta('seed.table.r1c2'), ''],
+          [ta('seed.table.r2c1'), ta('seed.table.r2c2'), ''],
         ],
       },
       w: 50, h: 160,
@@ -4374,7 +4378,7 @@
           const p = (n) => String(n).padStart(2, '0');
           return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T18:00`;
         })(),
-        doneText: ta('seed.nedteller.done'),
+        doneText: ta('seed.countdown.done'),
         variant: 'boxes',
         showSeconds: true,
       },
@@ -4509,8 +4513,8 @@
       { label: ta('shape.rect'), act: 'block', kind: 'shape-rect' },
       { label: ta('shape.triangle'), act: 'block', kind: 'shape-triangle' },
     ];
-    for (const id of malerIds) {
-      const mal = malStores[id]?.data?.mal;
+    for (const id of templateIds) {
+      const mal = templateStores[id]?.data?.mal;
       if (mal?.kind === 'blocks') items.push({ label: mal.name, act: 'mal', id });
     }
     for (const entry of pluginBlocks) {
@@ -4798,25 +4802,26 @@
       pluginsStore.reset();
       syncPluginsView();
     }
-    if (samlingerIndexStore) {
-      samlingerIndexStore.reset();
-      samlingerIds = [...(samlingerIndexStore.data.samlinger ?? [])];
-      for (const id of Object.keys(samlingStores)) {
-        if (samlingerIds.includes(id)) samlingStores[id].reset();
-        else delete samlingStores[id];
+    if (collectionsIndexStore) {
+      collectionsIndexStore.reset();
+      samlingerIds = [...(collectionsIndexStore.data.samlinger ?? [])];
+      for (const id of Object.keys(collectionStores)) {
+        if (samlingerIds.includes(id)) collectionStores[id].reset();
+        else delete collectionStores[id];
       }
-      syncSamlingerView();
+      syncCollectionsView();
     }
-    if (malerIndexStore) {
-      malerIndexStore.reset();
-      malerIds = [...(malerIndexStore.data.maler ?? [])];
+    if (templatesIndexStore) {
+      templatesIndexStore.reset();
+      templateIds = [...(templatesIndexStore.data.maler ?? [])];
       // Aldri publiserte maler (finnes-ikke-baseline) forsvinner med utkastet;
       // publiserte går tilbake til publisert tilstand.
-      for (const id of Object.keys(malStores)) {
-        if (malerIds.includes(id)) malStores[id].reset();
-        else { localStorage.removeItem(`urd-draft-mal-${id}`); delete malStores[id]; }
+      for (const id of Object.keys(templateStores)) {
+        if (templateIds.includes(id)) templateStores[id].reset();
+        else { localStorage.removeItem(`urd-draft-template-${id}`);
+        localStorage.removeItem(`urd-draft-mal-${id}`); delete templateStores[id]; }
       }
-      pushMalerToPreview();
+      pushTemplatesToPreview();
     }
     linkSiteDraft();
     grid = { snap: true, ...siteDraft.grid };
@@ -4906,8 +4911,8 @@
     }
 
     // Samlinger: endrede filer, indeksfilen og slettinger (diff mot publisert indeks).
-    const changedSamlinger = Object.entries(samlingStores).filter(([, st]) => st.hasDraft());
-    if (changedSamlinger.length || samlingerIndexStore?.hasDraft()) {
+    const changedSamlinger = Object.entries(collectionStores).filter(([, st]) => st.hasDraft());
+    if (changedSamlinger.length || collectionsIndexStore?.hasDraft()) {
       for (const [id, st] of changedSamlinger) {
         const out = JSON.parse(JSON.stringify(st.data));
         for (const entry of out.entries) materializeEntryImages(entry, files);
@@ -4930,9 +4935,9 @@
         }
         draftKeys.push(`urd-draft-samling-${id}`);
       }
-      if (samlingerIndexStore?.hasDraft()) {
-        files.push({ path: 'content/collections.json', content: JSON.stringify(samlingerIndexStore.data, null, 2) + '\n', encoding: 'utf-8' });
-        draftKeys.push('urd-draft-samlinger');
+      if (collectionsIndexStore?.hasDraft()) {
+        files.push({ path: 'content/collections.json', content: JSON.stringify(collectionsIndexStore.data, null, 2) + '\n', encoding: 'utf-8' });
+        draftKeys.push('urd-draft-collections', 'urd-draft-samlinger');
         // Samlinger fjernet fra indeksen slettes fra repoet (opprettes de også i samme publisering, vinner create-listen over).
         let publishedIndex = { samlinger: [] };
         try {
@@ -4949,8 +4954,8 @@
 
     // Mal-endringer publiseres som content/maler/-filer + indeks (0.6.7.4),
     // samme mønster som samlinger; bilder i malen materialiseres til media/.
-    const changedMaler = Object.entries(malStores).filter(([, st]) => st.hasDraft());
-    if (changedMaler.length || malerIndexStore?.hasDraft()) {
+    const changedMaler = Object.entries(templateStores).filter(([, st]) => st.hasDraft());
+    if (changedMaler.length || templatesIndexStore?.hasDraft()) {
       for (const [id, st] of changedMaler) {
         const out = JSON.parse(JSON.stringify(st.data));
         if (out.section) materializeSection(out.section, files);
@@ -4959,9 +4964,9 @@
         files.push({ path: `content/maler/${id}.json`, content: JSON.stringify(out, null, 2) + '\n', encoding: 'utf-8' });
         draftKeys.push(`urd-draft-mal-${id}`);
       }
-      if (malerIndexStore?.hasDraft()) {
-        files.push({ path: 'content/maler.json', content: JSON.stringify(malerIndexStore.data, null, 2) + '\n', encoding: 'utf-8' });
-        draftKeys.push('urd-draft-maler');
+      if (templatesIndexStore?.hasDraft()) {
+        files.push({ path: 'content/maler.json', content: JSON.stringify(templatesIndexStore.data, null, 2) + '\n', encoding: 'utf-8' });
+        draftKeys.push('urd-draft-templates', 'urd-draft-maler');
         // Maler fjernet fra indeksen slettes fra repoet (opprettes id-en også i samme publisering, vinner create-listen).
         let publishedIndex = { maler: [] };
         try {
@@ -4970,7 +4975,7 @@
         const created = new Set(files.map((f) => f.path));
         for (const id of publishedIndex.maler ?? []) {
           const path = `content/maler/${id}.json`;
-          if (!malerIds.includes(id) && !created.has(path)) files.push({ path, delete: true });
+          if (!templateIds.includes(id) && !created.has(path)) files.push({ path, delete: true });
         }
       }
       publishedTitles.push('maler');
@@ -5064,39 +5069,39 @@
         pluginsStore = createDraftStore('urd-draft-plugins', () => publishedPlugins, draftSaveError);
         syncPluginsView();
       }
-      if (samlingerIndexStore) {
+      if (collectionsIndexStore) {
         // Speil materialiseringen inn i minnet (samme deterministiske stier som klonene fikk).
-        for (const st of Object.values(samlingStores)) {
+        for (const st of Object.values(collectionStores)) {
           for (const entry of st.data.entries) materializeEntryImages(entry, []);
         }
-        const publishedIndex = JSON.parse(JSON.stringify(samlingerIndexStore.data));
-        samlingerIndexStore = createDraftStore('urd-draft-samlinger', () => publishedIndex, draftSaveError);
-        publishedSamlinger = {};
+        const publishedIndex = JSON.parse(JSON.stringify(collectionsIndexStore.data));
+        collectionsIndexStore = createDraftStore('urd-draft-collections', () => publishedIndex, draftSaveError, 'urd-draft-samlinger');
+        publishedCollections = {};
         for (const id of samlingerIds) {
-          if (!samlingStores[id]) continue;
-          const publishedSamling = JSON.parse(JSON.stringify(samlingStores[id].data));
-          publishedSamlinger[id] = publishedSamling;
-          samlingStores[id] = createDraftStore(`urd-draft-samling-${id}`, () => publishedSamling, draftSaveError);
+          if (!collectionStores[id]) continue;
+          const publishedSamling = JSON.parse(JSON.stringify(collectionStores[id].data));
+          publishedCollections[id] = publishedSamling;
+          collectionStores[id] = createDraftStore(`urd-draft-collection-${id}`, () => publishedSamling, draftSaveError, `urd-draft-samling-${id}`);
         }
-        syncSamlingerView();
+        syncCollectionsView();
       }
-      if (malerIndexStore) {
+      if (templatesIndexStore) {
         // Speil materialiseringen inn i minnet (samme deterministiske stier som klonene fikk).
-        for (const st of Object.values(malStores)) {
+        for (const st of Object.values(templateStores)) {
           if (st.data?.section) materializeSection(st.data.section, []);
           for (const block of st.data?.blocks ?? []) materializeBlockImages(block, []);
           for (const section of st.data?.page?.sections ?? []) materializeSection(section, []);
         }
-        const publishedMalIndex = JSON.parse(JSON.stringify(malerIndexStore.data));
-        malerIndexStore = createDraftStore('urd-draft-maler', () => publishedMalIndex, draftSaveError);
-        publishedMaler = {};
-        for (const id of malerIds) {
-          if (!malStores[id]) continue;
-          const publishedMal = JSON.parse(JSON.stringify(malStores[id].data));
-          publishedMaler[id] = publishedMal;
-          malStores[id] = createDraftStore(`urd-draft-mal-${id}`, () => publishedMal, draftSaveError);
+        const publishedTemplateIndex = JSON.parse(JSON.stringify(templatesIndexStore.data));
+        templatesIndexStore = createDraftStore('urd-draft-templates', () => publishedTemplateIndex, draftSaveError, 'urd-draft-maler');
+        publishedTemplates = {};
+        for (const id of templateIds) {
+          if (!templateStores[id]) continue;
+          const publishedMal = JSON.parse(JSON.stringify(templateStores[id].data));
+          publishedTemplates[id] = publishedMal;
+          templateStores[id] = createDraftStore(`urd-draft-template-${id}`, () => publishedMal, draftSaveError, `urd-draft-mal-${id}`);
         }
-        pushMalerToPreview();
+        pushTemplatesToPreview();
       }
       grid = { snap: true, ...siteDraft.grid };
       const pageSnap = JSON.parse(JSON.stringify(store.data));
@@ -5442,32 +5447,32 @@
                   onclick={addPage} disabled={!newPageTitle.trim()}>{ta('ui.createPage')}</button>
                 <span class="mini-label">{ta('canvas.tabPresets')}</span>
                 <div class="page-mal-grid" style={thumbThemeStyle}>
-                  <div class="page-mal-card" class:picked={newPageMal === null}>
+                  <div class="page-mal-card" class:picked={newPageTemplate === null}>
                     <button class="page-mal-pick" title={ta('tip.pages.blankPick')}
-                      onclick={() => (newPageMal = null)}>
+                      onclick={() => (newPageTemplate = null)}>
                       <span class="page-mal-thumb">{@html pageThumb({ sections: [] })}</span>
                       <span class="page-mal-name">{ta('ui.blankPage')}</span>
                     </button>
                   </div>
                   {#each PAGE_PRESETS as p (p.id)}
-                    <div class="page-mal-card" class:picked={newPageMal === `preset:${p.id}`}>
+                    <div class="page-mal-card" class:picked={newPageTemplate === `preset:${p.id}`}>
                       <button class="page-mal-pick" title={ta('tip.pages.templatePick', { name: ta(p.labelKey) })}
-                        onclick={() => (newPageMal = newPageMal === `preset:${p.id}` ? null : `preset:${p.id}`)}>
+                        onclick={() => (newPageTemplate = newPageTemplate === `preset:${p.id}` ? null : `preset:${p.id}`)}>
                         <span class="page-mal-thumb">{@html builtinPageThumbs[p.id]}</span>
                         <span class="page-mal-name">{ta(p.labelKey)}</span>
                       </button>
                     </div>
                   {/each}
                 </div>
-                {#if malerIds.some((id) => malStores[id]?.data?.mal?.kind === 'page')}
+                {#if templateIds.some((id) => templateStores[id]?.data?.mal?.kind === 'page')}
                   <span class="mini-label">{ta('canvas.tabMyTemplates')}</span>
                   <div class="page-mal-grid" style={thumbThemeStyle}>
-                    {#each malerIds.filter((id) => malStores[id]?.data?.mal?.kind === 'page') as id (id)}
-                      <div class="page-mal-card" class:picked={newPageMal === id}>
-                        <button class="page-mal-pick" title={ta('tip.pages.templatePick', { name: malStores[id].data.mal.name })}
-                          onclick={() => (newPageMal = newPageMal === id ? null : id)}>
-                          <span class="page-mal-thumb">{@html pageThumb(malStores[id].data.page)}</span>
-                          <span class="page-mal-name">{malStores[id].data.mal.name}</span>
+                    {#each templateIds.filter((id) => templateStores[id]?.data?.mal?.kind === 'page') as id (id)}
+                      <div class="page-mal-card" class:picked={newPageTemplate === id}>
+                        <button class="page-mal-pick" title={ta('tip.pages.templatePick', { name: templateStores[id].data.mal.name })}
+                          onclick={() => (newPageTemplate = newPageTemplate === id ? null : id)}>
+                          <span class="page-mal-thumb">{@html pageThumb(templateStores[id].data.page)}</span>
+                          <span class="page-mal-name">{templateStores[id].data.mal.name}</span>
                         </button>
                         <button class="page-mal-del" title={ta('canvas.deleteTemplate')}
                           onclick={() => handleDeleteTemplate({ id })}>{@html ICONS.cross}</button>
@@ -5604,7 +5609,7 @@
                       {ta('lbl.navCart')}
                     </label>
                     {#if siteDraft.nav.cart?.show}
-                      <label title={ta('tip.handlekurv.checkout')}>{ta('lbl.checkoutPage')}
+                      <label title={ta('tip.cart.checkout')}>{ta('lbl.checkoutPage')}
                         <Dropdown value={siteDraft.nav.cart?.href ?? ''}
                           options={[['', ta('common.none')], ...siteDraft.pages.map((p) => [p.path, p.title])]}
                           onchange={(v) => siteMutate('nav', () => {
@@ -6004,14 +6009,14 @@
                     <button class="ghost" onclick={() => addBlock('shape-triangle')}>{ta('shape.triangle')}</button>
                   </div>
                 </details>
-                {#if malerIds.some((id) => malStores[id]?.data?.mal?.kind === 'blocks')}
-                  {@const blockGroupMaler = malerIds.filter((id) => malStores[id]?.data?.mal?.kind === 'blocks')}
+                {#if templateIds.some((id) => templateStores[id]?.data?.mal?.kind === 'blocks')}
+                  {@const blockGroupTemplates = templateIds.filter((id) => templateStores[id]?.data?.mal?.kind === 'blocks')}
                   <details class="group">
                     <summary>{ta('canvas.tabMyTemplates')}</summary>
                     <div class="group-items">
-                      {#each blockGroupMaler as id (id)}
+                      {#each blockGroupTemplates as id (id)}
                         <button class="ghost" title={ta('canvas.insertGroup')}
-                          onclick={() => bridge?.sendInsertTemplate(id)}>{malStores[id].data.mal.name}</button>
+                          onclick={() => bridge?.sendInsertTemplate(id)}>{templateStores[id].data.mal.name}</button>
                       {/each}
                     </div>
                   </details>
@@ -6382,22 +6387,22 @@
               <div class="panel-body">
                 {#if samlingerIds.length}
                   <label>{ta('blocks.collection')}
-                    <Dropdown value={activeSamling ?? ''}
-                      options={[['', ta('common.choose')], ...samlingerIds.map((id) => [id, samlingerView[id]?.name ?? id])]}
-                      onchange={(v) => (activeSamling = v || null)} /></label>
+                    <Dropdown value={activeCollection ?? ''}
+                      options={[['', ta('common.choose')], ...samlingerIds.map((id) => [id, collectionsView[id]?.name ?? id])]}
+                      onchange={(v) => (activeCollection = v || null)} /></label>
                 {/if}
-                {#if activeSamling && samlingerView[activeSamling]}
-                  {@const samling = samlingerView[activeSamling]}
+                {#if activeCollection && collectionsView[activeCollection]}
+                  {@const samling = collectionsView[activeCollection]}
                   <span class="toolbar-row">
-                    <button class="ghost action" onclick={() => addSamlingEntry(activeSamling)}>{ta('ui.addEntry')}</button>
+                    <button class="ghost action" onclick={() => addCollectionEntry(activeCollection)}>{ta('ui.addEntry')}</button>
                     <button class="ghost action" title={ta('tip.collections.exportCsv')}
-                      onclick={() => exportSamlingCsv(activeSamling)}>{ta('ui.exportCsv')}</button>
+                      onclick={() => exportCollectionCsv(activeCollection)}>{ta('ui.exportCsv')}</button>
                     <label class="ghost filepick" title={ta('tip.collections.importCsv')}>
                       {ta('ui.importCsv')}
-                      <input type="file" accept=".csv,text/csv" onchange={(e) => importSamlingCsv(activeSamling, e)} />
+                      <input type="file" accept=".csv,text/csv" onchange={(e) => importCollectionCsv(activeCollection, e)} />
                     </label>
                     <button class="ghost row-tool" title={ta('tip.collections.deleteCollection')}
-                      onclick={() => removeSamling(activeSamling)}>{@html ICONS.cross}</button>
+                      onclick={() => removeSamling(activeCollection)}>{@html ICONS.cross}</button>
                   </span>
                   {#each samling.entries as entry, i (entry.id)}
                     <!-- Sammenleggbart innslag: tittel + dato i summary, feltene inni (plassbruk i panelet) -->
@@ -6408,69 +6413,69 @@
                       <div class="group-items">
                         <span class="toolbar-row">
                           <input value={entry.title} title={ta('lbl.title')}
-                            onchange={(e) => setEntryField(activeSamling, entry.id, 'title', e.target.value || 'Uten tittel')} />
+                            onchange={(e) => setEntryField(activeCollection, entry.id, 'title', e.target.value || 'Uten tittel')} />
                           <span class="row-tools">
-                            <button class="ghost row-tool" onclick={() => moveEntry(activeSamling, i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-                            <button class="ghost row-tool" onclick={() => moveEntry(activeSamling, i, 1)}
+                            <button class="ghost row-tool" onclick={() => moveEntry(activeCollection, i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+                            <button class="ghost row-tool" onclick={() => moveEntry(activeCollection, i, 1)}
                               disabled={i === samling.entries.length - 1}>{@html ICONS.down}</button>
                             <button class="ghost row-tool" title={ta('tip.collections.deleteEntry')}
-                              onclick={() => removeEntry(activeSamling, entry.id)}>{@html ICONS.cross}</button>
+                              onclick={() => removeEntry(activeCollection, entry.id)}>{@html ICONS.cross}</button>
                           </span>
                         </span>
                         {#if samling.kind !== 'products'}
                           <label>{ta('lbl.date')}
                             <input type="date" value={entry.date ?? ''}
-                              onchange={(e) => setEntryField(activeSamling, entry.id, 'date', e.target.value)} /></label>
+                              onchange={(e) => setEntryField(activeCollection, entry.id, 'date', e.target.value)} /></label>
                         {/if}
                         <textarea rows="3" placeholder={ta('ph.collections.text')}
                           value={entry.text ?? ''}
-                          onchange={(e) => setEntryField(activeSamling, entry.id, 'text', e.target.value)}></textarea>
+                          onchange={(e) => setEntryField(activeCollection, entry.id, 'text', e.target.value)}></textarea>
                         {#if samling.kind !== 'products'}
                           <label>{ta('lbl.link')}
                             <input value={entry.href ?? ''} placeholder={ta('ph.collections.href')}
-                              onchange={(e) => setEntryField(activeSamling, entry.id, 'href', e.target.value)} /></label>
+                              onchange={(e) => setEntryField(activeCollection, entry.id, 'href', e.target.value)} /></label>
                         {/if}
                         <span class="toolbar-row">
                           <label class="ghost filepick">
                             {entry.image ? ta('ui.changeImage') : ta('ui.addImage')}
-                            <input type="file" accept="image/*" onchange={(e) => setEntryImage(activeSamling, entry.id, e)} />
+                            <input type="file" accept="image/*" onchange={(e) => setEntryImage(activeCollection, entry.id, e)} />
                           </label>
                           {#if entry.image}
                             <img class="site-icon-preview" src={entry.image} alt="" />
                             <button class="ghost row-tool" title={ta('tip.removeImage')}
-                              onclick={() => setEntryField(activeSamling, entry.id, 'image', '')}>{@html ICONS.cross}</button>
+                              onclick={() => setEntryField(activeCollection, entry.id, 'image', '')}>{@html ICONS.cross}</button>
                           {/if}
                         </span>
                         {#if samling.kind === 'products'}
                           <!-- Produktfeltene (butikken): pris, medlemspris, badge, størrelser og farger. -->
                           <label>{ta('lbl.price')}
                             <input type="number" min="0" step="0.01" value={entry.price ?? ''}
-                              onchange={(e) => setEntryField(activeSamling, entry.id, 'price', e.target.value === '' ? '' : Number(e.target.value))} /></label>
+                              onchange={(e) => setEntryField(activeCollection, entry.id, 'price', e.target.value === '' ? '' : Number(e.target.value))} /></label>
                           <label title={ta('tip.entry.memberPrice')}>{ta('lbl.memberPrice')}
                             <input type="number" min="0" step="0.01" value={entry.memberPrice ?? ''}
-                              onchange={(e) => setEntryField(activeSamling, entry.id, 'memberPrice', e.target.value === '' ? '' : Number(e.target.value))} /></label>
+                              onchange={(e) => setEntryField(activeCollection, entry.id, 'memberPrice', e.target.value === '' ? '' : Number(e.target.value))} /></label>
                           <label title={ta('tip.entry.badge')}>{ta('lbl.productBadge')}
                             <input value={entry.badge ?? ''}
-                              onchange={(e) => setEntryField(activeSamling, entry.id, 'badge', e.target.value)} /></label>
+                              onchange={(e) => setEntryField(activeCollection, entry.id, 'badge', e.target.value)} /></label>
                           <label title={ta('tip.entry.sizes')}>{ta('lbl.sizes')}
                             <input value={(entry.sizes ?? []).join(', ')} placeholder={ta('ph.sizes')}
-                              onchange={(e) => setEntrySizes(activeSamling, entry.id, e.target.value)} /></label>
+                              onchange={(e) => setEntrySizes(activeCollection, entry.id, e.target.value)} /></label>
                           {#each entry.colors ?? [] as color, ci (ci)}
                             <span class="toolbar-row">
                               <input value={color.name} placeholder={ta('ph.colorName')}
-                                onchange={(e) => setEntryColor(activeSamling, entry.id, ci, 'name', e.target.value)} />
+                                onchange={(e) => setEntryColor(activeCollection, entry.id, ci, 'name', e.target.value)} />
                               <label class="ghost filepick">
                                 {color.image ? ta('ui.changeImage') : ta('ui.addImage')}
-                                <input type="file" accept="image/*" onchange={(e) => setEntryColorImage(activeSamling, entry.id, ci, e)} />
+                                <input type="file" accept="image/*" onchange={(e) => setEntryColorImage(activeCollection, entry.id, ci, e)} />
                               </label>
                               {#if color.image}
                                 <img class="site-icon-preview" src={color.image} alt="" />
                               {/if}
-                              <button class="ghost row-tool" onclick={() => removeEntryColor(activeSamling, entry.id, ci)}>{@html ICONS.cross}</button>
+                              <button class="ghost row-tool" onclick={() => removeEntryColor(activeCollection, entry.id, ci)}>{@html ICONS.cross}</button>
                             </span>
                           {/each}
                           <button class="ghost action" title={ta('tip.entry.colors')}
-                            onclick={() => addEntryColor(activeSamling, entry.id)}>{ta('ui.addColor')}</button>
+                            onclick={() => addEntryColor(activeCollection, entry.id)}>{ta('ui.addColor')}</button>
                         {/if}
                       </div>
                     </details>
@@ -6481,13 +6486,13 @@
                   <hr class="gridmenu-divider" />
                 {/if}
                 <label>{ta('lbl.newCollectionName')}
-                  <input bind:value={newSamlingName} placeholder={ta('ph.collections.name')}
-                    onkeydown={(e) => e.key === 'Enter' && addSamling()} /></label>
+                  <input bind:value={newCollectionName} placeholder={ta('ph.collections.name')}
+                    onkeydown={(e) => e.key === 'Enter' && addCollection()} /></label>
                 <label>{ta('common.type')}
-                  <Dropdown value={newSamlingKind}
+                  <Dropdown value={newCollectionKind}
                     options={SAMLING_KINDS}
-                    onchange={(v) => (newSamlingKind = v)} /></label>
-                <button class="ghost action" onclick={addSamling} disabled={!newSamlingName.trim()}>{ta('ui.createCollection')}</button>
+                    onchange={(v) => (newCollectionKind = v)} /></label>
+                <button class="ghost action" onclick={addCollection} disabled={!newCollectionName.trim()}>{ta('ui.createCollection')}</button>
               </div>
             {:else if activePanel === 'plugins'}
               <div class="panel-body">
@@ -7114,32 +7119,32 @@
       {/each}
       <button class="ghost action" onclick={addFaqItem}>{ta('ui.addQuestion')}</button>
     {:else if selectedBlock.type === 'timeline'}
-      <p class="panel-strong">{ta('lbl.tlItems')}</p>
+      <p class="panel-strong">{ta('lbl.timelineItems')}</p>
       {#each selectedBlock.props.items ?? [] as item, i (i)}
         <span class="nav-line">
-          <input class="tl-year" value={item.year} placeholder={ta('ph.tlYear')} title={ta('tip.tl.year')}
+          <input class="tl-year" value={item.year} placeholder={ta('ph.tlYear')} title={ta('tip.timeline.year')}
             onchange={(e) => setTlItem(i, { year: e.target.value })} />
-          <input value={item.title} title={ta('tip.tl.title')}
+          <input value={item.title} title={ta('tip.timeline.title')}
             onchange={(e) => setTlItem(i, { title: e.target.value })} />
           <span class="row-tools">
             <button class="ghost row-tool" onclick={() => moveTlItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
             <button class="ghost row-tool" onclick={() => moveTlItem(i, 1)}
               disabled={i === (selectedBlock.props.items?.length ?? 0) - 1}>{@html ICONS.down}</button>
-            <button class="ghost row-tool" title={ta('tip.tl.remove')} onclick={() => removeTlItem(i)}>{@html ICONS.cross}</button>
+            <button class="ghost row-tool" title={ta('tip.timeline.remove')} onclick={() => removeTlItem(i)}>{@html ICONS.cross}</button>
           </span>
         </span>
-        <input value={item.text} placeholder={ta('ph.tlText')} title={ta('tip.tl.text')}
+        <input value={item.text} placeholder={ta('ph.tlText')} title={ta('tip.timeline.text')}
           onchange={(e) => setTlItem(i, { text: e.target.value })} />
       {/each}
       <button class="ghost action" onclick={addTlItem}>{ta('ui.addTlItem')}</button>
     {:else if selectedBlock.type === 'quote'}
-      <label>{ta('lbl.sitatText')}
+      <label>{ta('lbl.quoteText')}
         <input value={selectedBlock.props.text ?? ''}
           onchange={(e) => setBlockProp('text', e.target.value)} /></label>
-      <label>{ta('lbl.sitatName')}
+      <label>{ta('lbl.quoteName')}
         <input value={selectedBlock.props.attribution ?? ''}
           onchange={(e) => setBlockProp('attribution', e.target.value)} /></label>
-      <label>{ta('lbl.sitatRole')}
+      <label>{ta('lbl.quoteRole')}
         <input value={selectedBlock.props.role ?? ''}
           onchange={(e) => setBlockProp('role', e.target.value)} /></label>
     {:else if selectedBlock.type === 'stats'}
@@ -7158,31 +7163,31 @@
     {:else if selectedBlock.type === 'table'}
       <!-- Cellene skrives rett på lerretet; panelet eier formen på rutenettet. -->
       <span class="toolbar-row">
-        <button class="ghost" onclick={() => tabellResize(1, 0)}>{ta('ui.addRow')}</button>
-        <button class="ghost" onclick={() => tabellResize(-1, 0)}>{ta('ui.removeRow')}</button>
+        <button class="ghost" onclick={() => tableResize(1, 0)}>{ta('ui.addRow')}</button>
+        <button class="ghost" onclick={() => tableResize(-1, 0)}>{ta('ui.removeRow')}</button>
       </span>
       <span class="toolbar-row">
-        <button class="ghost" onclick={() => tabellResize(0, 1)}>{ta('ui.addColumn')}</button>
-        <button class="ghost" onclick={() => tabellResize(0, -1)}>{ta('ui.removeColumn')}</button>
+        <button class="ghost" onclick={() => tableResize(0, 1)}>{ta('ui.addColumn')}</button>
+        <button class="ghost" onclick={() => tableResize(0, -1)}>{ta('ui.removeColumn')}</button>
       </span>
-      <label class="gridmenu-snap" title={ta('tip.tabell.header')}>
+      <label class="gridmenu-snap" title={ta('tip.table.header')}>
         <input type="checkbox" checked={selectedBlock.props.header !== false}
           onchange={(e) => setBlockProp('header', e.target.checked)} />
-        {ta('lbl.tabellHeader')}
+        {ta('lbl.tableHeader')}
       </label>
     {:else if selectedBlock.type === 'share'}
-      {#each [['facebook', 'Facebook'], ['x', 'X'], ['linkedin', 'LinkedIn'], ['whatsapp', 'WhatsApp'], ['email', ta('opt.deling.email')], ['copy', ta('opt.deling.copy')]] as [service, label] (service)}
+      {#each [['facebook', 'Facebook'], ['x', 'X'], ['linkedin', 'LinkedIn'], ['whatsapp', 'WhatsApp'], ['email', ta('opt.share.email')], ['copy', ta('opt.share.copy')]] as [service, label] (service)}
         <label class="gridmenu-snap">
           <input type="checkbox" checked={(selectedBlock.props.services ?? []).includes(service)}
-            onchange={(e) => toggleDelingService(service, e.target.checked)} />
+            onchange={(e) => toggleShareService(service, e.target.checked)} />
           {label}
         </label>
       {/each}
     {:else if selectedBlock.type === 'countdown'}
-      <label>{ta('lbl.nedtellerTarget')}
+      <label>{ta('lbl.countdownTarget')}
         <input type="datetime-local" value={selectedBlock.props.target ?? ''}
           onchange={(e) => setBlockProp('target', e.target.value)} /></label>
-      <label title={ta('tip.nedteller.done')}>{ta('lbl.nedtellerDone')}
+      <label title={ta('tip.countdown.done')}>{ta('lbl.countdownDone')}
         <input value={selectedBlock.props.doneText ?? ''}
           onchange={(e) => setBlockProp('doneText', e.target.value)} /></label>
     {:else if selectedBlock.type === 'audio'}
@@ -7277,11 +7282,11 @@
         </span>
       {/if}
     {:else if selectedBlock.type === 'collection'}
-      <label title={ta('tip.samling.source')}>{ta('blocks.collection')}
+      <label title={ta('tip.collection.source')}>{ta('blocks.collection')}
         <Dropdown value={selectedBlock.props.collection ?? ''}
-          options={[['', ta('common.choose')], ...samlingerIds.map((id) => [id, samlingerView[id]?.name ?? id])]}
+          options={[['', ta('common.choose')], ...samlingerIds.map((id) => [id, collectionsView[id]?.name ?? id])]}
           onchange={(v) => setBlockProp('collection', v || null)} /></label>
-      <label title={ta('tip.samling.limit')}>{ta('lbl.maxCount')}
+      <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
         <input type="number" min="0" max="100" value={selectedBlock.props.limit ?? 6}
           onchange={(e) => setBlockProp('limit', Number(e.target.value))} /></label>
       <label class="gridmenu-snap">
@@ -7290,51 +7295,51 @@
         {ta('lbl.newestFirst')}
       </label>
     {:else if selectedBlock.type === 'product'}
-      <label title={ta('tip.produkt.source')}>{ta('blocks.collection')}
+      <label title={ta('tip.product.source')}>{ta('blocks.collection')}
         <Dropdown value={selectedBlock.props.collection ?? ''}
-          options={[['', ta('common.choose')], ...samlingerIds.filter((id) => samlingerView[id]?.kind === 'products').map((id) => [id, samlingerView[id]?.name ?? id])]}
+          options={[['', ta('common.choose')], ...samlingerIds.filter((id) => collectionsView[id]?.kind === 'products').map((id) => [id, collectionsView[id]?.name ?? id])]}
           onchange={(v) => setBlockProp('collection', v || null)} /></label>
-      {#if selectedBlock.props.collection && samlingerView[selectedBlock.props.collection]?.kind === 'products'}
+      {#if selectedBlock.props.collection && collectionsView[selectedBlock.props.collection]?.kind === 'products'}
         <span class="toolbar-row">
-          <button class="ghost action" title={ta('tip.produkt.addProduct')}
-            onclick={() => addSamlingEntry(selectedBlock.props.collection)}>{ta('ui.addProduct')}</button>
-          <button class="ghost action" title={ta('tip.produkt.editCatalog')}
-            onclick={() => { activeSamling = selectedBlock.props.collection; activePanel = 'collections'; }}>{ta('ui.editCatalog')}</button>
+          <button class="ghost action" title={ta('tip.product.addProduct')}
+            onclick={() => addCollectionEntry(selectedBlock.props.collection)}>{ta('ui.addProduct')}</button>
+          <button class="ghost action" title={ta('tip.product.editCatalog')}
+            onclick={() => { activeCollection = selectedBlock.props.collection; activePanel = 'collections'; }}>{ta('ui.editCatalog')}</button>
         </span>
-      {:else if !samlingerIds.some((id) => samlingerView[id]?.kind === 'products')}
-        <button class="ghost action" title={ta('tip.produkt.createCatalog')}
+      {:else if !samlingerIds.some((id) => collectionsView[id]?.kind === 'products')}
+        <button class="ghost action" title={ta('tip.product.createCatalog')}
           onclick={createCatalogForBlock}>{ta('ui.createCatalog')}</button>
       {/if}
-      <label title={ta('tip.samling.limit')}>{ta('lbl.maxCount')}
+      <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
         <input type="number" min="0" max="100" value={selectedBlock.props.limit ?? 0}
           onchange={(e) => setBlockProp('limit', Number(e.target.value))} /></label>
-      <label title={ta('tip.produkt.currency')}>{ta('lbl.currency')}
+      <label title={ta('tip.product.currency')}>{ta('lbl.currency')}
         <input value={selectedBlock.props.currency ?? 'kr'}
           onchange={(e) => setBlockProp('currency', e.target.value)} /></label>
     {:else if selectedBlock.type === 'cart'}
-      <label title={ta('tip.handlekurv.checkout')}>{ta('lbl.checkoutPage')}
+      <label title={ta('tip.cart.checkout')}>{ta('lbl.checkoutPage')}
         <Dropdown value={selectedBlock.props.href ?? ''}
           options={[['', ta('common.none')], ...siteDraft.pages.map((p) => [p.path, p.title])]}
           onchange={(v) => setBlockProp('href', v)} /></label>
-      <label title={ta('tip.produkt.currency')}>{ta('lbl.currency')}
+      <label title={ta('tip.product.currency')}>{ta('lbl.currency')}
         <input value={selectedBlock.props.currency ?? 'kr'}
           onchange={(e) => setBlockProp('currency', e.target.value)} /></label>
     {:else if selectedBlock.type === 'checkout'}
-      <label title={ta('tip.kasse.recipient')}>{ta('lbl.recipientEmail')}
+      <label title={ta('tip.checkout.recipient')}>{ta('lbl.recipientEmail')}
         <input type="email" value={selectedBlock.props.recipient ?? ''}
           onchange={(e) => setBlockProp('recipient', e.target.value.trim())} /></label>
-      <label title={ta('tip.kasse.endpoint')}>{ta('lbl.endpointUrl')}
+      <label title={ta('tip.checkout.endpoint')}>{ta('lbl.endpointUrl')}
         <input type="url" value={selectedBlock.props.endpoint ?? ''}
           onchange={(e) => setBlockProp('endpoint', e.target.value.trim())} /></label>
-      <label title={ta('tip.kasse.vipps')}>{ta('lbl.vippsNumber')}
+      <label title={ta('tip.checkout.vipps')}>{ta('lbl.vippsNumber')}
         <input value={selectedBlock.props.vipps ?? ''}
           onchange={(e) => setBlockProp('vipps', e.target.value.trim())} /></label>
-      <label class="gridmenu-snap" title={ta('tip.kasse.vippsCheckout')}>
+      <label class="gridmenu-snap" title={ta('tip.checkout.vippsCheckout')}>
         <input type="checkbox" checked={selectedBlock.props.vippsCheckout === true}
           onchange={(e) => setBlockProp('vippsCheckout', e.target.checked)} />
         {ta('lbl.vippsCheckout')}
       </label>
-      <label title={ta('tip.produkt.currency')}>{ta('lbl.currency')}
+      <label title={ta('tip.product.currency')}>{ta('lbl.currency')}
         <input value={selectedBlock.props.currency ?? 'kr'}
           onchange={(e) => setBlockProp('currency', e.target.value)} /></label>
     {:else if selectedBlock.type === 'gallery'}
@@ -7433,11 +7438,11 @@
     {:else if selectedBlock.type === 'timeline'}
       <label>{ta('lbl.variant')}
         <Dropdown value={selectedBlock.props.variant ?? 'left'}
-          options={[['left', ta('opt.tl.left')], ['alternating', ta('opt.tl.alternating')]]}
+          options={[['left', ta('opt.timeline.left')], ['alternating', ta('opt.timeline.alternating')]]}
           onchange={(v) => setBlockProp('variant', v)} /></label>
-      <label>{ta('lbl.tlMarker')}
+      <label>{ta('lbl.timelineMarker')}
         <Dropdown value={selectedBlock.props.marker ?? 'filled'}
-          options={[['filled', ta('opt.tl.filled')], ['ring', ta('opt.tl.ring')]]}
+          options={[['filled', ta('opt.timeline.filled')], ['ring', ta('opt.timeline.ring')]]}
           onchange={(v) => setBlockProp('marker', v)} /></label>
       <label>{ta('lbl.color')}
         <ColorPicker value={selectedBlock.props.accent ?? 'accent'} tokens={themeSwatches()}
@@ -7446,15 +7451,15 @@
     {:else if selectedBlock.type === 'quote'}
       <label>{ta('lbl.variant')}
         <Dropdown value={selectedBlock.props.variant ?? 'large'}
-          options={[['large', ta('opt.sitat.large')], ['short', ta('opt.sitat.short')]]}
+          options={[['large', ta('opt.quote.large')], ['short', ta('opt.quote.short')]]}
           onchange={(v) => setBlockProp('variant', v)} /></label>
       {#if selectedBlock.props.variant === 'short'}
         <label class="ghost filepick">
-          {ta('ui.sitatPortrett')}
-          <input type="file" accept="image/*" onchange={setSitatPortrett} />
+          {ta('ui.quotePortrait')}
+          <input type="file" accept="image/*" onchange={setQuotePortrait} />
         </label>
         {#if selectedBlock.props.image}
-          <button class="ghost" onclick={() => setBlockProp('image', '')}>{ta('ui.sitatPortrettFjern')}</button>
+          <button class="ghost" onclick={() => setBlockProp('image', '')}>{ta('ui.quotePortraitRemove')}</button>
         {/if}
       {/if}
       <label>{ta('lbl.color')}
@@ -7469,20 +7474,20 @@
       </label>
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'table'}
-      <label>{ta('lbl.tabellLines')}
+      <label>{ta('lbl.tableLines')}
         <Dropdown value={selectedBlock.props.lines ?? 'rows'}
-          options={[['rows', ta('opt.tabell.rows')], ['grid', ta('opt.tabell.grid')], ['none', ta('common.none')]]}
+          options={[['rows', ta('opt.table.rows')], ['grid', ta('opt.table.grid')], ['none', ta('common.none')]]}
           onchange={(v) => setBlockProp('lines', v)} /></label>
       <label class="gridmenu-snap">
         <input type="checkbox" checked={Boolean(selectedBlock.props.striped)}
           onchange={(e) => setBlockProp('striped', e.target.checked)} />
-        {ta('lbl.tabellStriped')}
+        {ta('lbl.tableStriped')}
       </label>
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'share'}
       <label>{ta('lbl.variant')}
         <Dropdown value={selectedBlock.props.variant ?? 'icons'}
-          options={[['icons', ta('opt.deling.icons')], ['labels', ta('opt.deling.labels')]]}
+          options={[['icons', ta('opt.share.icons')], ['labels', ta('opt.share.labels')]]}
           onchange={(v) => setBlockProp('variant', v)} /></label>
       <label>{ta('lbl.size')}
         <input type="number" min="24" max="64" value={selectedBlock.props.size ?? 38}
@@ -7494,12 +7499,12 @@
     {:else if selectedBlock.type === 'countdown'}
       <label>{ta('lbl.variant')}
         <Dropdown value={selectedBlock.props.variant ?? 'boxes'}
-          options={[['boxes', ta('opt.nedteller.boxes')], ['plain', ta('opt.nedteller.plain')]]}
+          options={[['boxes', ta('opt.countdown.boxes')], ['plain', ta('opt.countdown.plain')]]}
           onchange={(v) => setBlockProp('variant', v)} /></label>
       <label class="gridmenu-snap">
         <input type="checkbox" checked={selectedBlock.props.showSeconds !== false}
           onchange={(e) => setBlockProp('showSeconds', e.target.checked)} />
-        {ta('lbl.nedtellerSeconds')}
+        {ta('lbl.countdownSeconds')}
       </label>
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'button'}
@@ -7561,14 +7566,14 @@
           onchange={(v) => setBlockProp('view', v)} /></label>
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'product'}
-      <label title={ta('tip.produkt.columns')}>{ta('lbl.columns')}
+      <label title={ta('tip.product.columns')}>{ta('lbl.columns')}
         <input type="number" min="0" max="6" value={selectedBlock.props.columns ?? 0}
           onchange={(e) => setBlockProp('columns', Number(e.target.value))} /></label>
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'cart'}
       <label>{ta('lbl.view')}
         <Dropdown value={selectedBlock.props.variant ?? 'button'}
-          options={[['button', ta('opt.handlekurv.button')], ['icon', ta('opt.handlekurv.icon')]]}
+          options={[['button', ta('opt.cart.button')], ['icon', ta('opt.cart.icon')]]}
           onchange={(v) => setBlockProp('variant', v)} /></label>
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'gallery'}
