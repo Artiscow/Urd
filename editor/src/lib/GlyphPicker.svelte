@@ -94,7 +94,7 @@
           <div class="gp-group">{ta(name)}</div>
           <div class="gp-grid">
             {#each ids as id (id)}
-              <button type="button" class="gp-cell gp-cell-icon" title={ICON_LIBRARY[id].label}
+              <button type="button" class="gp-cell gp-cell-icon" title={ta(ICON_LIBRARY[id].labelKey)}
                 class:active={id === icon}
                 onclick={() => pickIcon(id)}><span class="gp-svg">{@html iconSvg(id)}</span></button>
             {/each}

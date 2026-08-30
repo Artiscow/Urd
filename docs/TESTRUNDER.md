@@ -2,6 +2,11 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.14.8): Ikonetikettene
+
+- [ ] Glyf-/ikonvelgeren viser norske tooltips på ikonene i nb (som før), engelske i en-GB og tyrkiske i tr
+- [ ] Footer-panelets sosial-ikon-nedtrekk viser oversatte navn; publisert footer har aria-labels på ikonlenkene
+
 ### Testrunde-batch (0.7.14.7): CSS-klassene
 
 - [ ] Visuell gjennomgang av alle blokktyper på lerret og publisert i BEGGE moduser: produktkort med hover-bildebytte, kurvskuff, kasse, galleri (grid/karusell/slides + lightbox), samlingsvisningene, sitat (stort/kort med portrett), tidslinje (venstre/vekslende), tabell, nedteller, deling, statistikk - alt ser ut som før klasse-renamet

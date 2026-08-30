@@ -3793,7 +3793,7 @@
   // Sosial-ikonene i nedtrekket: de sosiale og kommunikasjonskategoriene fra ikonbiblioteket.
   const SOCIAL_ICON_OPTIONS = ICON_CATEGORIES
     .filter(([cat]) => cat === 'iconCat.social' || cat === 'iconCat.communication')
-    .flatMap(([, ids]) => ids.map((id) => [id, ICON_LIBRARY[id].label]));
+    .flatMap(([, ids]) => ids.map((id) => [id, ta(ICON_LIBRARY[id].labelKey)]));
 
   function setNavLabel(i, value) {
     siteMutate(`edit:nav-label-${i}`, () => { siteDraft.nav.items[i].label = value; });

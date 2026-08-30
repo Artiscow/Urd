@@ -25,6 +25,10 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.14.8 - Engelsk-renskingen: icons.js-lokaliseringen - 30. august 2026
+
+- Ikonbibliotekets 56 etiketter var norske literaler uten oversettelsesnøkkel (lokaliseringshull fra 0.6): hvert ikon har nå `labelKey` (icon.*) med engelsk fallback i koden, nøklene ligger i nb (uendrede norske tekster), en-GB og tr, og GlyphPicker-tooltipen og sosial-ikon-nedtrekket slår opp via ta(). Footer-ikonenes aria-labels hos besøkende bruker fallback-etiketten (i praksis merkenavn).
+
 ### 0.7.14.7 - Engelsk-renskingen: CSS-klassene - 30. august 2026
 
 - Alle ~120 norske klassenavn renamet i motor, base.css, editor og tester (ADR-0021): prefiksfamiliene (urd-cart, urd-product, urd-checkout, urd-collection, urd-gallery, urd-quote, urd-timeline, urd-table, urd-countdown, urd-share, urd-stats, urd-template, urd-category) OG de norske suffiksene (-count, -button, -body, -image, -buy, -glyph, -portrait, -unit m.fl.), pluss CSS-variablene, urd-anim-cardwise, urd-bg-video-poster, urd-footer-inner/-prefix og `.code` i 404.html. Nytt base.css-stempel i alle fem skall.
