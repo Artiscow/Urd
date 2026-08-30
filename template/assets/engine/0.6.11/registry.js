@@ -13,7 +13,7 @@ export function createRegistry(kind) {
   const aliases = new Map();
   return {
     define(id, def) {
-      if (defs.has(id)) throw new Error(`Urd.${kind}: '${id}' er allerede definert`);
+      if (defs.has(id)) throw new Error(`Urd.${kind}: '${id}' is already defined`);
       defs.set(id, def);
     },
     // Resolves an old contract id to its current one (ADR-0021). Aliases are

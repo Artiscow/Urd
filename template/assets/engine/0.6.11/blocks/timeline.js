@@ -27,7 +27,7 @@ export function accentCss(value) {
 export const timelineBlock = {
   version: 2,
   autoGrow: true,
-  label: 'Tidslinje',
+  label: 'Timeline',
   labelKey: 'blocks.timeline',
   // Seed-regelen (ADR-0012): ta() kalles kun her ved innsetting i preview.
   defaults: () => ({

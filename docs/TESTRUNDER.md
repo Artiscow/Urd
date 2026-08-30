@@ -2,6 +2,13 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.14.9): Resterende strenger
+
+- [ ] Preset-galleriet og blokkmenyene viser riktige (norske) etiketter og hint i nb; plugin-presetene ligger i Kort og lister-gruppen i ALLE språk (ikke egen gruppe i en-GB/tr)
+- [ ] Chrome-tekstene er oversatt: tom bilde-/galleriblokk på lerretet, «Skriv tekst»-placeholder, videoskjoldets tooltip, kolonnebredde-gripen i sidestilt nav (nb/en-GB/tr)
+- [ ] Kontaktskjemaets valideringsmeldinger hos besøkende er fortsatt på sidespråket
+- [ ] Lokal server starter med engelske meldinger; en ugyldig SVG-opplasting avvises fortsatt pent
+
 ### Testrunde-batch (0.7.14.8): Ikonetikettene
 
 - [ ] Glyf-/ikonvelgeren viser norske tooltips på ikonene i nb (som før), engelske i en-GB og tyrkiske i tr

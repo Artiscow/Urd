@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://urd.dev/schema/collection.schema.json",
-  "title": "Urd samling (content/samlinger/<id>.json)",
-  "description": "En samling likeartede innslag (nyheter, oppslag, publikasjoner) som rendres av samling-blokken. Kontrakten er beskrevet i docs/SKJEMA.md og ADR-0007.",
+  "title": "Urd collection (content/samlinger/<id>.json)",
+  "description": "A collection of entries of the same kind (news, notices, publications) rendered by the collection block. The contract is described in docs/SKJEMA.md and ADR-0007.",
   "type": "object",
   "required": ["schemaVersion", "id", "name", "kind", "entries"],
   "additionalProperties": false,
@@ -19,42 +19,42 @@
         "additionalProperties": false,
         "properties": {
           "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-          "title": { "type": "string", "minLength": 1, "description": "Rik tekst (sikker HTML-delmengde); ren tekst avledes med textContent der data trengs" },
-          "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "description": "ISO-dato (YYYY-MM-DD); brukes til sortering, dato-badge og år-gruppering" },
-          "text": { "type": "string", "description": "Rik tekst (sikker HTML-delmengde, samme vern som tekstblokker); title er alltid ren tekst" },
-          "image": { "type": "string", "description": "Sti i media/ (data-URL i utkast); materialiseres ved publisering" },
-          "href": { "type": "string", "description": "Valgfri lenke (intern sti eller ekstern URL); gjør tittelen klikkbar" },
-          "imageAlt": { "type": "string", "description": "Alt-tekst for innslagsbildet (additivt fra v0.6)" },
-          "price": { "type": "number", "minimum": 0, "description": "Produktpris (kind products, additivt fra v0.7); valuta-ordet settes på produkt-blokken" },
-          "memberPrice": { "type": "number", "minimum": 0, "description": "Valgfri medlemspris (kind products); vises ved siden av ordinær pris" },
-          "badge": { "type": "string", "description": "Kort merkelapp på produktkortet (kind products), f.eks. Nyhet eller Tilbud" },
+          "title": { "type": "string", "minLength": 1, "description": "Rich text (safe HTML subset); plain text is derived with textContent where data is needed" },
+          "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "description": "ISO date (YYYY-MM-DD); used for sorting, the date badge and year grouping" },
+          "text": { "type": "string", "description": "Rich text (safe HTML subset, same protection as text blocks); title is always plain text" },
+          "image": { "type": "string", "description": "Path in media/ (data URL in draft); materialized at publish" },
+          "href": { "type": "string", "description": "Optional link (internal path or external URL); makes the title clickable" },
+          "imageAlt": { "type": "string", "description": "Alt text for the entry image (additive from v0.6)" },
+          "price": { "type": "number", "minimum": 0, "description": "Product price (kind products, additive from v0.7); the currency word is set on the product block" },
+          "memberPrice": { "type": "number", "minimum": 0, "description": "Optional member price (kind products); shown next to the regular price" },
+          "badge": { "type": "string", "description": "Short label on the product card (kind products), e.g. New or Sale" },
           "sizes": {
             "type": "array",
-            "description": "Størrelsesvalg (kind products); vises som valg-chips på kortet",
+            "description": "Size options (kind products); shown as choice chips on the card",
             "items": { "type": "string", "minLength": 1 }
           },
           "colors": {
             "type": "array",
-            "description": "Fargevalg (kind products); et valg med eget bilde bytter kortets bilde",
+            "description": "Color options (kind products); an option with its own image swaps the card's image",
             "items": {
               "type": "object",
               "required": ["name"],
               "additionalProperties": false,
               "properties": {
                 "name": { "type": "string", "minLength": 1 },
-                "image": { "type": "string", "description": "Sti i media/ (data-URL i utkast); materialiseres ved publisering" }
+                "image": { "type": "string", "description": "Path in media/ (data URL in draft); materialized at publish" }
               }
             }
           },
           "imageStyle": {
             "type": "object",
-            "description": "Ikke-destruktiv bildestil (additivt fra v0.6): fokuspunkt, filtre, tilpasning, form, zoom, avrunding",
+            "description": "Non-destructive image style (additive from v0.6): focus point, filters, fit, shape, zoom, rounding",
             "additionalProperties": false,
             "properties": {
               "fit": { "enum": ["cover", "contain"] },
               "radius": { "enum": ["sm", "md"] },
-              "shape": { "enum": ["wide", "square", "portrait", "circle"], "description": "Rammens form (sideforhold); circle er 1:1 med full avrunding" },
-              "zoom": { "type": "number", "minimum": 1, "maximum": 3, "description": "Beskjærer inn mot fokuspunktet; rammen klipper resten" },
+              "shape": { "enum": ["wide", "square", "portrait", "circle"], "description": "The frame's shape (aspect ratio); circle is 1:1 with full rounding" },
+              "zoom": { "type": "number", "minimum": 1, "maximum": 3, "description": "Crops in toward the focus point; the frame clips the rest" },
               "x": { "type": "number", "minimum": 0, "maximum": 1 },
               "y": { "type": "number", "minimum": 0, "maximum": 1 },
               "brightness": { "type": "number", "minimum": 0, "maximum": 2 },

@@ -11,7 +11,7 @@ import { ta } from '../i18n.js';
 
 export const textBlock = {
   version: 1,
-  label: 'Tekst',
+  label: 'Text',
   labelKey: 'blocks.text',
   defaults: () => ({ html: ta('seed.text'), align: 'left', box: false }),
   migrations: {},

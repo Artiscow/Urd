@@ -10,6 +10,7 @@
  */
 
 import { isSafeHref } from '../nav-model.js';
+import { ta } from '../i18n.js';
 
 /** Anvender den ikke-destruktive bildestilen på rammen + bildet.
  *  @param {HTMLElement} frame Rammeelementet (.urd-image-frame) med <img> inni */
@@ -35,7 +36,7 @@ export function applyImageStyle(frame, props) {
 
 export const imageBlock = {
   version: 1,
-  label: 'Bilde',
+  label: 'Image',
   labelKey: 'blocks.image',
   defaults: () => ({
     src: '', alt: '', fit: 'cover', radius: 'md', href: null,
@@ -57,7 +58,7 @@ export const imageBlock = {
       if (ctx.preview) {
         const empty = document.createElement('div');
         empty.className = 'urd-image-empty';
-        empty.textContent = 'Velg bilde i Egenskaper';
+        empty.textContent = ta('canvas.imageEmpty');
         el.appendChild(empty);
       }
       return;

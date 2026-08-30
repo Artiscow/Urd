@@ -556,7 +556,7 @@ export function register(Urd) {
   Urd.blocks.define('form', {
     version: 1,
     autoGrow: true,
-    label: 'Skjema',
+    label: 'Form',
     labelKey: 'form.edit.blockLabel',
     defaults: () => ({
       recipient: '', subject: '', mode: 'mailto', endpoint: '',
@@ -567,10 +567,11 @@ export function register(Urd) {
   });
 
   Urd.sections.define('contact-form', {
-    label: 'Kontaktskjema',
+    label: 'Contact form',
     labelKey: 'form.edit.presetLabel',
-    group: 'Kort og lister',
-    hint: 'Kontaktskjema som sender via e-post (eller eget endepunkt)',
+    group: 'Cards and lists',
+    groupKey: 'presetGroup.cards',
+    hint: 'Contact form that sends via email (or your own endpoint)',
     hintKey: 'form.edit.presetHint',
     create: kontaktSection,
   });

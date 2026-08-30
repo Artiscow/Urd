@@ -7,7 +7,7 @@ import { resolveColor } from '../theme.js';
 
 export const shapeBlock = {
   version: 1,
-  label: 'Form',
+  label: 'Shape',
   labelKey: 'blocks.shape',
   defaults: () => ({ kind: 'line', color: 'accent', thickness: 2, fill: null }),
   migrations: {},

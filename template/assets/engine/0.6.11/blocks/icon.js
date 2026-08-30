@@ -9,7 +9,7 @@ import { iconSvg } from '../icons.js';
 
 export const iconBlock = {
   version: 1,
-  label: 'Ikon',
+  label: 'Icon',
   labelKey: 'blocks.icon',
   defaults: () => ({ glyph: '★', color: 'accent', size: 48 }),
   migrations: {},

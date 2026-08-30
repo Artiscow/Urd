@@ -17,7 +17,7 @@ import { accentCss } from './timeline.js';
 export const quoteBlock = {
   version: 2,
   autoGrow: true,
-  label: 'Sitat',
+  label: 'Quote',
   labelKey: 'blocks.quote',
   // Seed-regelen (ADR-0012): ta() kalles kun her ved innsetting i preview.
   defaults: () => ({

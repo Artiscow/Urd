@@ -113,7 +113,7 @@ export function createCartDrawer({ href = '', currency = 'kr' } = {}) {
 export const cartBlock = {
   version: 1,
   autoGrow: true,
-  label: 'Handlekurv',
+  label: 'Basket',
   labelKey: 'blocks.cart',
   defaults: () => ({ variant: 'button', href: '', currency: 'kr' }),
   migrations: {},

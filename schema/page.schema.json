@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://urd.dev/schema/page.schema.json",
-  "title": "Urd sidefil (content/pages/*.json)",
-  "description": "En side: metadata + vertikal rekke seksjoner. Hver seksjon er en generisk container med bakgrunnsstabel og fritt blokk-lerret. Kontrakten er beskrevet i docs/SKJEMA.md.",
+  "title": "Urd page file (content/pages/*.json)",
+  "description": "A page: metadata plus a vertical run of sections. Each section is a generic container with a background stack and a free block canvas. The contract is described in docs/SKJEMA.md.",
   "type": "object",
   "required": ["schemaVersion", "meta", "sections"],
   "additionalProperties": false,
@@ -15,15 +15,15 @@
       "properties": {
         "id": { "$ref": "#/$defs/id" },
         "title": { "type": "string", "minLength": 1 },
-        "description": { "type": "string", "description": "Sidens beskrivelse (meta description, additivt fra v0.7); brukes også som og:description-fallback" },
+        "description": { "type": "string", "description": "The page's description (meta description, additive from v0.7); also used as the og:description fallback" },
         "og": {
           "type": "object",
           "additionalProperties": false,
-          "description": "Delingsfelter (Open Graph, additivt fra v0.7); utelatte felt faller tilbake til sidetittel/beskrivelse/nettstedsikon",
+          "description": "Sharing fields (Open Graph, additive from v0.7); omitted fields fall back to the page title/description/site icon",
           "properties": {
             "title": { "type": "string" },
             "description": { "type": "string" },
-            "image": { "type": "string", "description": "Delingsbilde: /media/-sti (materialiseres ved publisering)" }
+            "image": { "type": "string", "description": "Sharing image: /media/ path (materialized at publish)" }
           }
         }
       }
@@ -45,22 +45,22 @@
         "version": { "$ref": "#/$defs/version" },
         "preset": {
           "type": ["string", "null"],
-          "description": "Presetsen seksjonen ble laget fra - kun opphavsinfo, styrer ingenting"
+          "description": "The preset the section was created from - provenance only, controls nothing"
         },
         "theme": {
           "type": "string",
-          "description": "Ferdig seksjonstema (rollesett, additivt fra v0.6): 'surface'/'accent'/'inverse' m.fl. overstyrer temaets fargetokens på seksjonen; fravær = Standard (ingen overstyring). Ukjent rolle ignoreres. Norske rolleverdier fra før v3 løftes av sidemigreringen (ADR-0021)."
+          "description": "Ready-made section theme (role set, additive from v0.6): 'surface'/'accent'/'inverse' and others override the theme's color tokens on the section; absence = Standard (no override). Unknown roles are ignored. Norwegian role values from before v3 are lifted by the page migration (ADR-0021)."
         },
         "size": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "minHeight": { "type": "string", "description": "CSS-lengde, f.eks. '85vh'" },
-            "maxWidth": { "type": "string", "description": "Overstyrer nettstedets innholdsbredde for denne seksjonen (tatt i bruk i v0.7, ADR-0018): CSS-lengde, eller 'full' for kant-til-kant innhold. Fravær = arv site.layout.contentWidth." }
+            "minHeight": { "type": "string", "description": "CSS length, e.g. '85vh'" },
+            "maxWidth": { "type": "string", "description": "Overrides the site's content width for this section (adopted in v0.7, ADR-0018): CSS length, or 'full' for edge-to-edge content. Absence = inherit site.layout.contentWidth." }
           }
         },
         "grid": {
-          "description": "null = arv nettstedets grid; objekt = overstyr per seksjon",
+          "description": "null = inherit the site's grid; object = override per section",
           "oneOf": [
             { "type": "null" },
             { "$ref": "site.schema.json#/$defs/grid" }
@@ -79,14 +79,14 @@
           }
         },
         "animation": {
-          "description": "Valgfri inngangsanimasjon for hele seksjonen (additivt felt fra v0.5)",
+          "description": "Optional entrance animation for the whole section (additive field from v0.5)",
           "oneOf": [
             { "type": "null" },
             { "$ref": "#/$defs/typedProps" }
           ]
         },
         "hover": {
-          "description": "Valgfri pekereffekt for hele seksjonen (additivt felt fra v0.6) - uavhengig av animation, de kan kombineres",
+          "description": "Optional pointer effect for the whole section (additive field from v0.6) - independent of animation, they can be combined",
           "oneOf": [
             { "type": "null" },
             { "$ref": "#/$defs/typedProps" }
@@ -105,9 +105,9 @@
               "required": ["mode"],
               "additionalProperties": false,
               "properties": {
-                "mode": { "enum": ["auto", "manual"], "description": "Legacy fra schemaVersion 2 (ADR-0019): overstyringer bor per blokk i frames.mobile. 'manual' leses av migreringen, skrives aldri igjen." },
+                "mode": { "enum": ["auto", "manual"], "description": "Legacy from schemaVersion 2 (ADR-0019): overrides live per block in frames.mobile. 'manual' is read by the migration, never written again." },
                 "attention": {
-                  "description": "Mobil-tilsyn-flagget - redaksjonell metadata, ignoreres av besøkende-motoren",
+                  "description": "The mobile-attention flag - editorial metadata, ignored by the visitor engine",
                   "oneOf": [
                     { "type": "null" },
                     {
@@ -136,11 +136,11 @@
         "id": { "$ref": "#/$defs/id" },
         "type": { "type": "string", "minLength": 1 },
         "version": { "$ref": "#/$defs/version" },
-        "decor": { "type": "boolean", "default": false, "description": "Dekor-blokk: utelates fra entré-animasjonens innholdsbølge. Fra schemaVersion 2 (ADR-0019) styrer feltet KUN animasjon; mobilskjulingen bor i hideMobile." },
-        "hideMobile": { "type": "boolean", "default": false, "description": "Skjul blokken på mobil (additivt felt fra v0.7, ADR-0019). Avløser decor som mobilfilter og virker i hele mobil-renderstien." },
-        "mobileOrder": { "type": "number", "description": "Overstyrer sorteringsnøkkelen i mobil-leserekkefølgen (tolkes på samme skala som desktop-y). Additivt felt fra v0.5: seksjonsmalene bruker det til å holde kort samlet." },
+        "decor": { "type": "boolean", "default": false, "description": "Decor block: excluded from the entrance animation's content wave. From schemaVersion 2 (ADR-0019) the field controls ONLY animation; the mobile hiding lives in hideMobile." },
+        "hideMobile": { "type": "boolean", "default": false, "description": "Hide the block on mobile (additive field from v0.7, ADR-0019). Supersedes decor as the mobile filter and applies throughout the mobile render path." },
+        "mobileOrder": { "type": "number", "description": "Overrides the sort key in the mobile reading order (interpreted on the same scale as desktop y). Additive field from v0.5: the section templates use it to keep cards together." },
         "sticky": {
-          "description": "Fest ved scrolling (additivt felt fra v0.6, kun desktop): blokken festes ved vindustoppen og slipper når egen seksjon (until: null) eller en senere seksjon (until: seksjons-id) er passert. Med mode 'screen' dokkes blokken i stedet til et fast punkt i vinduet for hele siden",
+          "description": "Pin on scroll (additive field from v0.6, desktop only): the block is pinned at the top of the viewport and released when its own section (until: null) or a later section (until: section id) has been passed. With mode 'screen' the block instead docks to a fixed point in the viewport for the whole page",
           "oneOf": [
             { "type": "null" },
             {
@@ -148,7 +148,7 @@
               "required": ["offset"],
               "additionalProperties": false,
               "properties": {
-                "offset": { "type": "number", "minimum": 0, "description": "Avstand fra vinduets topp i px mens blokken er festet; med mode 'screen' avstanden fra de dokkede kantene" },
+                "offset": { "type": "number", "minimum": 0, "description": "Distance from the top of the viewport in px while the block is pinned; with mode 'screen' the distance from the docked edges" },
                 "until": {
                   "oneOf": [
                     { "type": "null" },
@@ -159,16 +159,16 @@
                   "type": "string",
                   "enum": ["scroll", "screen"],
                   "default": "scroll",
-                  "description": "Additivt felt fra v0.7: 'scroll' fester ved vindustoppen når blokken nås og slipper ved grensen, 'screen' dokker blokken i vinduet for hele siden (until gjelder ikke)"
+                  "description": "Additive field from v0.7: 'scroll' pins at the top of the viewport when the block is reached and releases at the boundary, 'screen' docks the block in the viewport for the whole page (until does not apply)"
                 },
                 "dock": {
                   "type": "string",
                   "enum": ["top-left", "top-center", "top-right", "middle-left", "middle-center", "middle-right", "bottom-left", "bottom-center", "bottom-right"],
                   "default": "bottom-right",
-                  "description": "Additivt felt fra v0.7: ankerpunktet i vinduet ved mode 'screen'"
+                  "description": "Additive field from v0.7: the anchor point in the viewport with mode 'screen'"
                 },
                 "group": {
-                  "description": "Additivt felt fra v0.7: blokker med samme gruppe-id festes og slippes som én enhet og beholder plasseringen seg imellom. Gruppen styres av det FØRSTE medlemmets offset/until/mode/dock",
+                  "description": "Additive field from v0.7: blocks with the same group id are pinned and released as one unit and keep their placement relative to each other. The group is controlled by the FIRST member's offset/until/mode/dock",
                   "oneOf": [
                     { "type": "null" },
                     { "$ref": "#/$defs/id" }
@@ -178,7 +178,7 @@
             }
           ]
         },
-        "props": { "type": "object", "description": "Typespesifikke props - eies av blokkdefinisjonens versjon/migreringer" },
+        "props": { "type": "object", "description": "Type-specific props - owned by the block definition's version/migrations" },
         "animation": {
           "oneOf": [
             { "type": "null" },
@@ -186,7 +186,7 @@
           ]
         },
         "hover": {
-          "description": "Valgfri pekereffekt (additivt felt fra v0.6) - uavhengig av animation, de kan kombineres",
+          "description": "Optional pointer effect (additive field from v0.6) - independent of animation, they can be combined",
           "oneOf": [
             { "type": "null" },
             { "$ref": "#/$defs/typedProps" }
@@ -199,7 +199,7 @@
           "properties": {
             "desktop": { "$ref": "#/$defs/frame" },
             "mobile": {
-              "description": "Mobil-overstyring per blokk (ADR-0019): null = blokken følger desktop (auto-plassert i radnettet); objekt = partiell plassering, der kun feltene som står der overstyrer. Med row er blokken pinnet til eksplisitte radspor.",
+              "description": "Per-block mobile override (ADR-0019): null = the block follows desktop (auto-placed in the row grid); object = partial placement, where only the fields present override. With row the block is pinned to explicit row tracks.",
               "oneOf": [
                 { "type": "null" },
                 { "$ref": "#/$defs/mobilePlacement" }
@@ -212,28 +212,28 @@
     "mobilePlacement": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Partiell radnett-plassering (ADR-0019). Radene er minmax(8px, auto) og vokser med innholdet, så row/rows er posisjoner i komposisjonen, ikke frosne pikselavstander. Uten row flyter blokken fortsatt, og kun x/w overstyrer.",
+      "description": "Partial row-grid placement (ADR-0019). The rows are minmax(8px, auto) and grow with the content, so row/rows are positions in the composition, not frozen pixel distances. Without row the block still flows, and only x/w override.",
       "properties": {
-        "x": { "type": "number", "minimum": 0, "maximum": 100, "description": "Venstrekant i % av innholdsflaten" },
-        "w": { "type": "number", "exclusiveMinimum": 0, "maximum": 100, "description": "Bredde i % av innholdsflaten" },
-        "row": { "type": "integer", "minimum": 1, "description": "Startrad (1-basert) i radnettet; tilstedeværelse = pinnet" },
-        "rows": { "type": "integer", "minimum": 1, "description": "Radspenn; fravær = avledet fra desktophøyden" },
-        "z": { "type": "integer", "default": 1, "description": "Lagrekkefølge" },
-        "rot": { "type": "number", "default": 0, "description": "Rotasjon i grader" }
+        "x": { "type": "number", "minimum": 0, "maximum": 100, "description": "Left edge in % of the content surface" },
+        "w": { "type": "number", "exclusiveMinimum": 0, "maximum": 100, "description": "Width in % of the content surface" },
+        "row": { "type": "integer", "minimum": 1, "description": "Start row (1-based) in the row grid; presence = pinned" },
+        "rows": { "type": "integer", "minimum": 1, "description": "Row span; absence = derived from the desktop height" },
+        "z": { "type": "integer", "default": 1, "description": "Layer order" },
+        "rot": { "type": "number", "default": 0, "description": "Rotation in degrees" }
       }
     },
     "frame": {
       "type": "object",
       "required": ["x", "y", "w", "h"],
       "additionalProperties": false,
-      "description": "Fysiske enheter: x/w i prosent av seksjonsbredden, y/h i px. Gridet er kun et snappeverktøy og påvirker aldri plasseringen.",
+      "description": "Physical units: x/w in percent of the section width, y/h in px. The grid is only a snapping tool and never affects placement.",
       "properties": {
-        "x": { "type": "number", "minimum": 0, "maximum": 100, "description": "Venstrekant i % av seksjonsbredden" },
-        "y": { "type": "number", "description": "Overkant i px (kan være negativ: blokken henger over seksjonstoppen)" },
-        "w": { "type": "number", "exclusiveMinimum": 0, "maximum": 100, "description": "Bredde i % av seksjonsbredden" },
-        "h": { "type": "number", "exclusiveMinimum": 0, "description": "Høyde i px" },
-        "z": { "type": "integer", "default": 1, "description": "Lagrekkefølge" },
-        "rot": { "type": "number", "default": 0, "description": "Rotasjon i grader" }
+        "x": { "type": "number", "minimum": 0, "maximum": 100, "description": "Left edge in % of the section width" },
+        "y": { "type": "number", "description": "Top edge in px (can be negative: the block hangs above the section top)" },
+        "w": { "type": "number", "exclusiveMinimum": 0, "maximum": 100, "description": "Width in % of the section width" },
+        "h": { "type": "number", "exclusiveMinimum": 0, "description": "Height in px" },
+        "z": { "type": "integer", "default": 1, "description": "Layer order" },
+        "rot": { "type": "number", "default": 0, "description": "Rotation in degrees" }
       }
     },
     "typedProps": {

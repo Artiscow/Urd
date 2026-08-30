@@ -27,7 +27,7 @@ export function normalizeRows(rows) {
 export const tableBlock = {
   version: 1,
   autoGrow: true,
-  label: 'Tabell',
+  label: 'Table',
   labelKey: 'blocks.table',
   // Seed-regelen (ADR-0012): ta() kalles kun her ved innsetting i preview.
   defaults: () => ({

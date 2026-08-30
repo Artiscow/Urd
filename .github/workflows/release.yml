@@ -16,11 +16,11 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tagg som skal synkes (vX.Y.Z, må finnes i repoet)'
+        description: 'Tag to sync (vX.Y.Z, must exist in the repo)'
         required: true
         type: string
       prerelease:
-        description: 'Prerelease-synk (rc): hopper over CHANGELOG-sjekken'
+        description: 'Prerelease sync (rc): skips the CHANGELOG check'
         type: boolean
         default: false
 
@@ -38,7 +38,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Utled tagg og prerelease-flagg
+      - name: Resolve tag and prerelease flag
         id: meta
         env:
           EVENT: ${{ github.event_name }}
@@ -63,7 +63,7 @@ jobs:
         with:
           node-version: 22
 
-      - name: Versjonskonsistens (engine == tagg == CHANGELOG)
+      - name: Version consistency (engine == tag == CHANGELOG)
         env:
           TAG: ${{ steps.meta.outputs.tag }}
           PRERELEASE: ${{ steps.meta.outputs.prerelease }}
@@ -74,12 +74,12 @@ jobs:
             node scripts/check-release.mjs "$TAG"
           fi
 
-      - name: Motor- og vernetester
+      - name: Engine and guard tests
         # Billig røykvern på nøyaktig innholdet som synkes; full CI (bygg,
         # validering, bygg-samsvar) har allerede kjørt på pushen bak taggen.
         run: node --test tests/*.mjs
 
-      - name: Sjekk ut malrepoet
+      - name: Check out the template repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ env.TEMPLATE_REPO }}
@@ -89,7 +89,7 @@ jobs:
           # historikk er liten (én commit per utgivelse).
           fetch-depth: 0
 
-      - name: Synk template/ som én squashet commit og tagg
+      - name: Sync template/ as one squashed commit and tag
         env:
           TAG: ${{ steps.meta.outputs.tag }}
         run: |
@@ -124,7 +124,7 @@ jobs:
           # en manuell commit i malrepoet aldri kan gi tagg uten innhold.
           git push --atomic origin HEAD "refs/tags/$TAG"
 
-      - name: Publiser utgivelsesnotatene til malrepoet
+      - name: Publish the release notes to the template repo
         # Oppdatering-panelet viser notatene («Om vX.Y.Z»); de finnes kun i
         # monorepo-releasen, så de kopieres hit. Hoppes over ved dispatch
         # (ingen release-body) og tåler at releasen alt finnes.

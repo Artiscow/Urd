@@ -41,7 +41,7 @@ export const countdownBlock = {
   version: 1,
   // Naturlig høyde i mobil-radnettet (boksene radbryter på smale skjermer).
   autoGrow: true,
-  label: 'Nedteller',
+  label: 'Countdown',
   labelKey: 'blocks.countdown',
   // Seed-regelen (ADR-0012): ta() kalles kun her ved innsetting i preview.
   // Målet seedes 30 dager fram, så blokken teller fra første stund.

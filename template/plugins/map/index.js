@@ -230,7 +230,7 @@ export function register(Urd) {
   Urd.blocks.define('map', {
     version: 1,
     autoGrow: true,
-    label: 'Kart',
+    label: 'Map',
     labelKey: 'map.edit.blockLabel',
     defaults: () => ({ location: '', zoom: 15, height: 320 }),
     // Felt-kontrakten: innstillingene rendres i adminens Egenskaper-panel.
@@ -246,10 +246,11 @@ export function register(Urd) {
   });
 
   Urd.sections.define('find-us', {
-    label: 'Finn oss',
+    label: 'Find us',
     labelKey: 'map.edit.presetLabel',
-    group: 'Kort og lister',
-    hint: 'Kart med adressen deres (personvennlig OpenStreetMap)',
+    group: 'Cards and lists',
+    groupKey: 'presetGroup.cards',
+    hint: 'Map with your address (privacy-friendly OpenStreetMap)',
     hintKey: 'map.edit.presetHint',
     create: finnOssSection,
   });

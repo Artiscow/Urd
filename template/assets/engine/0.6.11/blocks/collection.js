@@ -38,7 +38,7 @@ function wireImageEdit(target, entry) {
   if (!editCtx) return;
   const collection = editCtx.collection;
   target.classList.add('urd-collection-image-edit');
-  target.title = 'Klikk for å redigere bildet';
+  target.title = ta('canvas.editImage');
   target.addEventListener('click', async () => {
     const { openImageEditor } = await import('../image-editor.js');
     openImageEditor(target, {
@@ -81,7 +81,7 @@ function textOrPlaceholder(entry) {
     stripActiveContent(node);
   } else {
     node.classList.add('urd-collection-placeholder');
-    node.dataset.placeholder = 'Skriv tekst …';
+    node.dataset.placeholder = ta('canvas.textPlaceholder');
   }
   return editable(node, entry.id, 'text', true);
 }
@@ -241,7 +241,7 @@ export const collectionBlock = {
   // Samlingskonsument: urd-collections-meldingen rerendrer kun seksjoner med
   // blokker som bærer dette flagget (scrollposisjonen bevares).
   usesCollections: true,
-  label: 'Samling',
+  label: 'Collection',
   labelKey: 'blocks.collection',
   defaults: () => ({ collection: null, view: 'cards', limit: 6, newestFirst: true }),
   migrations: {},

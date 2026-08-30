@@ -65,7 +65,7 @@ export async function gh(token, path, init = {}, attempt = 1) {
       return gh(token, path, init, attempt + 1);
     }
     const isJson = res.headers.get('content-type')?.includes('json');
-    const detail = isJson ? (await res.text()).slice(0, 300) : '(HTML-feilside fra GitHub)';
+    const detail = isJson ? (await res.text()).slice(0, 300) : '(HTML error page from GitHub)';
     const error = new Error(`GitHub ${init.method ?? 'GET'} ${path} responded ${res.status}: ${detail}`);
     error.status = res.status;
     throw error;

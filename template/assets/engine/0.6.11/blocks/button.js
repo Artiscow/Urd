@@ -9,7 +9,7 @@ import { ta } from '../i18n.js';
 
 export const buttonBlock = {
   version: 1,
-  label: 'Knapp',
+  label: 'Button',
   labelKey: 'blocks.button',
   defaults: () => ({ label: ta('seed.readMore'), page: null, href: null, style: 'primary' }),
   migrations: {},
@@ -25,7 +25,7 @@ export const buttonBlock = {
     if (props.page) {
       const target = ctx.site.pages.find((p) => p.id === props.page);
       a.href = target ? target.path : '#';
-      if (!target) console.warn(`Urd: knappen peker på ukjent side '${props.page}'`);
+      if (!target) console.warn(`Urd: button points to unknown page '${props.page}'`);
     } else {
       // Delt vokter (nav/footer + interne stier/anker): en utrygg href (javascript:/data:) skal aldri bli en levende lenke hos besøkende.
       a.href = isSafeHref(props.href) ? props.href : '#';

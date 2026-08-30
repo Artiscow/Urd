@@ -17,13 +17,13 @@ const prerelease = flag === '--prerelease';
 const errors = [];
 
 if (!tag || !/^v\d+\.\d+\.\d+$/.test(tag)) {
-  console.error(`FEIL  taggen må ha formen vX.Y.Z (fikk: ${tag ?? '(mangler)'})`);
+  console.error(`FAIL  the tag must have the form vX.Y.Z (got: ${tag ?? '(missing)'})`);
   process.exit(1);
 }
 
 const engine = JSON.parse(readFileSync('template/urd.json', 'utf-8')).engine;
 if (`v${engine}` !== tag) {
-  errors.push(`taggen ${tag} matcher ikke urd.json.engine (${engine})`);
+  errors.push(`tag ${tag} does not match urd.json.engine (${engine})`);
 }
 
 // Motormappa skal finnes under navnet engine-feltet oppgir (ADR-0013);
@@ -32,7 +32,7 @@ if (`v${engine}` !== tag) {
 try {
   if (!statSync(`template/assets/engine/${engine}`).isDirectory()) throw new Error();
 } catch {
-  errors.push(`motormappa template/assets/engine/${engine}/ finnes ikke`);
+  errors.push(`engine folder template/assets/engine/${engine}/ does not exist`);
 }
 
 if (!prerelease) {
@@ -42,17 +42,17 @@ if (!prerelease) {
   const changelog = readFileSync('docs/CHANGELOG.md', 'utf-8');
   const heading = changelog.match(/^## \[(?!Ulansert\])([^\]]+)\]/m)?.[1];
   if (heading !== engine) {
-    errors.push(`CHANGELOG-overskriften er [${heading ?? '(ingen)'}], ventet [${engine}]`);
+    errors.push(`the CHANGELOG heading is [${heading ?? '(none)'}], expected [${engine}]`);
   }
 
   const pkg = JSON.parse(readFileSync('editor/package.json', 'utf-8')).version;
   if (pkg !== engine) {
-    errors.push(`editor/package.json er ${pkg}, ventet ${engine}`);
+    errors.push(`editor/package.json is ${pkg}, expected ${engine}`);
   }
 }
 
 if (errors.length) {
-  for (const err of errors) console.error(`FEIL  ${err}`);
+  for (const err of errors) console.error(`FAIL  ${err}`);
   process.exit(1);
 }
-console.log(`OK    ${tag}: engine, mappe${prerelease ? '' : ', CHANGELOG og package.json'} stemmer`);
+console.log(`OK    ${tag}: engine, folder${prerelease ? '' : ', CHANGELOG and package.json'} all match`);

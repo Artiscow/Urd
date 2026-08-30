@@ -488,7 +488,7 @@ export async function boot(opts) {
   try {
     page = liftPageFile(await (await fetch(`/${entry.file}`)).json(), rawSite);
   } catch {
-    console.warn(`Urd: fant ikke sidefilen '${entry.file}' - viser tom side`);
+    console.warn(`Urd: could not load page file '${entry.file}' - rendering an empty page`);
     page = { schemaVersion: PAGE_SCHEMA_VERSION, meta: { id: entry.id, title: entry.title }, sections: [] };
   }
   document.title = `${page.meta?.title ?? entry.title ?? ''} - ${site.site.title}`;

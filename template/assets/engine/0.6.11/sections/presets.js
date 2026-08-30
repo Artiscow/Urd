@@ -210,11 +210,11 @@ export function registerSectionPresets(Urd) {
   /* ---------- Grunnleggende ---------- */
 
   Urd.sections.define('blank', {
-    label: 'Tom seksjon',
+    label: 'Empty section',
     labelKey: 'preset.blank.label',
-    group: 'Grunnleggende',
+    group: 'Basics',
     groupKey: 'presetGroup.basic',
-    hint: 'Blankt lerret å bygge fritt på',
+    hint: 'A blank canvas to build on freely',
     hintKey: 'preset.blank.hint',
     create: () => section('blank', '40vh', bg(colorLayer('bg')), []),
   });
@@ -222,9 +222,9 @@ export function registerSectionPresets(Urd) {
   Urd.sections.define('hero', {
     label: 'Hero',
     labelKey: 'preset.hero.label',
-    group: 'Grunnleggende',
+    group: 'Basics',
     groupKey: 'presetGroup.basic',
-    hint: 'Stor åpning med gradient og glød, venstrestilt',
+    hint: 'Large opening with gradient and glow, left-aligned',
     hintKey: 'preset.hero.hint',
     create: () => section('hero', '70vh', {
       version: 1,
@@ -241,11 +241,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('hero-centered', {
-    label: 'Hero, sentrert',
+    label: 'Hero, centred',
     labelKey: 'preset.hero-centered.label',
-    group: 'Grunnleggende',
+    group: 'Basics',
     groupKey: 'presetGroup.basic',
-    hint: 'Sentrert åpning med to knapper',
+    hint: 'Centred opening with two buttons',
     hintKey: 'preset.hero-centered.hint',
     create: () => section('hero-centered', '60vh', bg(colorLayer('bg')), [
       text(frame(15, 64, 70, 44), ta('seed.heroCenter.title'), { align: 'center' }),
@@ -256,11 +256,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('images', {
-    label: 'Bilder',
+    label: 'Images',
     labelKey: 'preset.images.label',
-    group: 'Grunnleggende',
+    group: 'Basics',
     groupKey: 'presetGroup.basic',
-    hint: 'Tittel og tre bilderammer',
+    hint: 'Title and three image frames',
     hintKey: 'preset.images.hint',
     create: () => section('images', '360px', bg(colorLayer('bg')), [
       text(frame(4, 24, 50, 32), ta('seed.images.title')),
@@ -268,7 +268,7 @@ export function registerSectionPresets(Urd) {
       image(frame(36, 72, 28, 220)),
       image(frame(68, 72, 28, 220)),
     ]),
-    itemLabel: 'bilde',
+    itemLabel: 'image',
     itemLabelKey: 'item.image',
     item: (sec) => {
       const { x, y } = freeSlot(sec, 3, 4, 32, 72, 244, 28, 220);
@@ -277,11 +277,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('gallery', {
-    label: 'Galleri',
+    label: 'Gallery',
     labelKey: 'preset.gallery.label',
-    group: 'Grunnleggende',
+    group: 'Basics',
     groupKey: 'presetGroup.basic',
-    hint: 'Bildegalleri i rutenett med fullskjermvisning (lightbox)',
+    hint: 'Image gallery in a grid with full-screen view (lightbox)',
     hintKey: 'preset.gallery.hint',
     create: () => section('gallery', '440px', bg(colorLayer('bg')), [
       text(frame(4, 24, 50, 32), ta('seed.gallery.title')),
@@ -290,11 +290,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('contact', {
-    label: 'Kontakt',
+    label: 'Contact',
     labelKey: 'preset.contact.label',
-    group: 'Grunnleggende',
+    group: 'Basics',
     groupKey: 'presetGroup.basic',
-    hint: 'Kontaktinfo i kort med e-postknapp',
+    hint: 'Contact details in a card with an email button',
     hintKey: 'preset.contact.hint',
     create: () => section('contact', '320px', bg(colorLayer('surface'), glowLayer(0.2, 0.8, 0.2)), [
       text(frame(10, 32, 40, 36), ta('seed.contact.title')),
@@ -311,11 +311,11 @@ export function registerSectionPresets(Urd) {
   /* ---------- Kort og lister ---------- */
 
   Urd.sections.define('feature-cards', {
-    label: 'Funksjonskort',
+    label: 'Feature cards',
     labelKey: 'preset.feature-cards.label',
-    group: 'Kort og lister',
+    group: 'Cards and lists',
     groupKey: 'presetGroup.cards',
-    hint: 'Tre kort med ikon, tittel og tekst',
+    hint: 'Three cards with icon, title and text',
     hintKey: 'preset.feature-cards.hint',
     create: () => {
       const card = (x, col, glyph, title) => {
@@ -335,7 +335,7 @@ export function registerSectionPresets(Urd) {
         ...card(69, 2, '✓', ta('seed.features.card3')),
       ]);
     },
-    itemLabel: 'kort',
+    itemLabel: 'card',
     itemLabelKey: 'item.card',
     item: (sec) => {
       const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 152, 296, 25, 264, -64);
@@ -351,11 +351,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('feature-cards-simple', {
-    label: 'Funksjonskort uten ikoner',
+    label: 'Feature cards without icons',
     labelKey: 'preset.feature-cards-simple.label',
-    group: 'Kort og lister',
+    group: 'Cards and lists',
     groupKey: 'presetGroup.cards',
-    hint: 'Tre kort med tittel og tekst (uten ikonene over)',
+    hint: 'Three cards with title and text (without the icons above)',
     hintKey: 'preset.feature-cards-simple.hint',
     create: () => {
       const card = (x, col, title) => {
@@ -373,7 +373,7 @@ export function registerSectionPresets(Urd) {
         card(69, 2, ta('seed.features.card3')),
       ]);
     },
-    itemLabel: 'kort',
+    itemLabel: 'card',
     itemLabelKey: 'item.card',
     item: (sec) => {
       const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 88, 232, 25, 200);
@@ -387,11 +387,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('news', {
-    label: 'Nyheter',
+    label: 'News',
     labelKey: 'preset.news.label',
-    group: 'Kort og lister',
+    group: 'Cards and lists',
     groupKey: 'presetGroup.cards',
-    hint: 'Tre nyhetskort med bilde, tag og dato',
+    hint: 'Three news cards with image, tag and date',
     hintKey: 'preset.news.hint',
     create: () => {
       const card = (x, col) => {
@@ -408,7 +408,7 @@ export function registerSectionPresets(Urd) {
         ...card(6, 0), ...card(37.5, 1), ...card(69, 2),
       ]);
     },
-    itemLabel: 'sak',
+    itemLabel: 'story',
     itemLabelKey: 'item.story',
     item: (sec) => {
       const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 88, 344, 25, 328);
@@ -422,11 +422,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('news-collection', {
-    label: 'Nyheter (samling)',
+    label: 'News (collection)',
     labelKey: 'preset.news-collection.label',
-    group: 'Kort og lister',
+    group: 'Cards and lists',
     groupKey: 'presetGroup.cards',
-    hint: 'Nyhetskort fra en samling: skriv innslag, kortene følger med',
+    hint: 'News cards from a collection: write entries, the cards follow',
     hintKey: 'preset.news-collection.hint',
     create: () => section('news-collection', '300px', bg(colorLayer('bg')), [
       text(frame(6, 28, 50, 38), ta('seed.news.title')),
@@ -435,11 +435,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('noticeboard', {
-    label: 'Oppslagstavle',
+    label: 'Noticeboard',
     labelKey: 'preset.noticeboard.label',
-    group: 'Kort og lister',
+    group: 'Cards and lists',
     groupKey: 'presetGroup.cards',
-    hint: 'Datert liste fra en samling (oppslag/kunngjøringer)',
+    hint: 'Dated list from a collection (notices/announcements)',
     hintKey: 'preset.noticeboard.hint',
     create: () => section('noticeboard', '300px', bg(colorLayer('surface')), [
       text(frame(6, 28, 50, 38), ta('seed.noticeboard.title')),
@@ -448,11 +448,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('publication-archive', {
-    label: 'Publikasjonsarkiv',
+    label: 'Publication archive',
     labelKey: 'preset.publication-archive.label',
-    group: 'Kort og lister',
+    group: 'Cards and lists',
     groupKey: 'presetGroup.cards',
-    hint: 'År-gruppert arkiv fra en samling (utgaver, referater, rapporter)',
+    hint: 'Year-grouped archive from a collection (issues, minutes, reports)',
     hintKey: 'preset.publication-archive.hint',
     create: () => section('publication-archive', '300px', bg(colorLayer('bg')), [
       text(frame(6, 28, 60, 38), ta('seed.archive.title')),
@@ -461,11 +461,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('events', {
-    label: 'Arrangementer',
+    label: 'Events',
     labelKey: 'preset.events.label',
-    group: 'Kort og lister',
+    group: 'Cards and lists',
     groupKey: 'presetGroup.cards',
-    hint: 'Tre rader med dato-badge og påmeldingsknapp',
+    hint: 'Three rows with date badge and sign-up button',
     hintKey: 'preset.events.hint',
     create: () => {
       const row = (y, day, month, title) => [
@@ -480,7 +480,7 @@ export function registerSectionPresets(Urd) {
         ...row(304, '8', ta('seed.events.monthSep'), ta('seed.events.row3')),
       ]);
     },
-    itemLabel: 'rad',
+    itemLabel: 'row',
     itemLabelKey: 'item.row',
     item: (sec) => {
       const y = maxBottom(sec) + 16;
@@ -496,11 +496,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('team', {
-    label: 'Team/styret',
+    label: 'Team/board',
     labelKey: 'preset.team.label',
-    group: 'Kort og lister',
+    group: 'Cards and lists',
     groupKey: 'presetGroup.cards',
-    hint: 'Portretter med navn, verv og e-post',
+    hint: 'Portraits with name, role and email',
     hintKey: 'preset.team.hint',
     create: () => {
       const member = (x, col, role) => {
@@ -534,9 +534,9 @@ export function registerSectionPresets(Urd) {
   Urd.sections.define('faq', {
     label: 'FAQ',
     labelKey: 'preset.faq.label',
-    group: 'Kort og lister',
+    group: 'Cards and lists',
     groupKey: 'presetGroup.cards',
-    hint: 'Spørsmål og svar i kort',
+    hint: 'Questions and answers in cards',
     hintKey: 'preset.faq.hint',
     // Modernisert i 0.6.7.11: bruker faq-blokken (levert 0.6.6.4) i stedet
     // for tekstboks-etterligningen. Nye spørsmål legges til i Egenskaper
@@ -555,11 +555,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('timeline', {
-    label: 'Tidslinje',
+    label: 'Timeline',
     labelKey: 'preset.timeline.label',
-    group: 'Kort og lister',
+    group: 'Cards and lists',
     groupKey: 'presetGroup.cards',
-    hint: 'Historien som hendelser langs en linje',
+    hint: 'Your story as events along a line',
     hintKey: 'preset.timeline.hint',
     create: () => section('timeline', '480px', bg(colorLayer('bg')), [
       text(frame(25, 24, 50, 36), ta('seed.timeline.title'), { align: 'center' }),
@@ -572,11 +572,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('steps', {
-    label: 'Steg for steg',
+    label: 'Step by step',
     labelKey: 'preset.steps.label',
-    group: 'Kort og lister',
+    group: 'Cards and lists',
     groupKey: 'presetGroup.cards',
-    hint: 'Tre nummererte kort',
+    hint: 'Three numbered cards',
     hintKey: 'preset.steps.hint',
     create: () => {
       const step = (x, col, title) => {
@@ -595,7 +595,7 @@ export function registerSectionPresets(Urd) {
         ...step(69, 2, ta('seed.steps.s3')),
       ]);
     },
-    itemLabel: 'steg',
+    itemLabel: 'step',
     itemLabelKey: 'item.step',
     item: (sec) => {
       const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 88, 272, 25, 240);
@@ -610,11 +610,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('lead-story', {
-    label: 'Hovedoppslag',
+    label: 'Lead story',
     labelKey: 'preset.lead-story.label',
-    group: 'Kort og lister',
+    group: 'Cards and lists',
     groupKey: 'presetGroup.cards',
-    hint: 'Én stor sak og to små ved siden',
+    hint: 'One big story and two small beside it',
     hintKey: 'preset.lead-story.hint',
     create: () => {
       // mobileOrder holder hovedsaken samlet (bilde, ingress, knapp) foran småsakene i mobil-stablingen.
@@ -633,11 +633,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('products', {
-    label: 'Produkter',
+    label: 'Products',
     labelKey: 'preset.products.label',
-    group: 'Kort og lister',
+    group: 'Cards and lists',
     groupKey: 'presetGroup.cards',
-    hint: 'Tre håndbygde produktkort med egen kjøpslenke; Butikk-presetet gir ekte produkter med handlekurv',
+    hint: 'Three hand-built product cards with their own buy link; the Shop preset gives real products with a basket',
     hintKey: 'preset.products.hint',
     create: () => {
       const productCard = (x, col, name, price) => {
@@ -656,7 +656,7 @@ export function registerSectionPresets(Urd) {
         ...productCard(69, 2, ta('seed.products.name'), ta('seed.products.price3')),
       ]);
     },
-    itemLabel: 'produkt',
+    itemLabel: 'product',
     itemLabelKey: 'item.product',
     item: (sec) => {
       const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 88, 348, 25, 332);
@@ -673,11 +673,11 @@ export function registerSectionPresets(Urd) {
   /* ---------- Butikk ---------- */
 
   Urd.sections.define('shop', {
-    label: 'Butikk',
+    label: 'Shop',
     labelKey: 'preset.shop.label',
-    group: 'Butikk',
+    group: 'Shop',
     groupKey: 'presetGroup.shop',
-    hint: 'Ekte produktkort fra en produktsamling, med handlekurv',
+    hint: 'Real product cards from a product collection, with a basket',
     hintKey: 'preset.shop.hint',
     // Handlekurven står under chrome-båndet (y 88), så blokkverktøylinja
     // hennes aldri havner bak den sticky seksjonsverktøylinja.
@@ -689,11 +689,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('shop-hero', {
-    label: 'Butikk-hero',
+    label: 'Shop hero',
     labelKey: 'preset.shop-hero.label',
-    group: 'Butikk',
+    group: 'Shop',
     groupKey: 'presetGroup.shop',
-    hint: 'Kampanjebånd: stor overskrift, undertekst, CTA og kampanjebilde',
+    hint: 'Campaign band: big heading, subtext, CTA and a campaign image',
     hintKey: 'preset.shop-hero.hint',
     create: () => {
       const blocks = [
@@ -712,11 +712,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('shop-categories', {
-    label: 'Butikk-kategorier',
+    label: 'Shop categories',
     labelKey: 'preset.shop-categories.label',
-    group: 'Butikk',
+    group: 'Shop',
     groupKey: 'presetGroup.shop',
-    hint: 'Fire kategorifliser med bilde og navn; lenken settes på bildet i Egenskaper',
+    hint: 'Four category tiles with image and name; set the link on the image in Properties',
     hintKey: 'preset.shop-categories.hint',
     create: () => {
       const tile = (x, col, name) => {
@@ -736,7 +736,7 @@ export function registerSectionPresets(Urd) {
       sec.theme = 'soft';
       return sec;
     },
-    itemLabel: 'kategori',
+    itemLabel: 'category',
     itemLabelKey: 'item.category',
     item: (sec) => {
       const { x, y, n } = freeSlot(sec, 4, 6, 23.5, 88, 220, 21, 212);
@@ -749,11 +749,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('shop-trust', {
-    label: 'Butikk-tillit',
+    label: 'Shop trust',
     labelKey: 'preset.shop-trust.label',
-    group: 'Butikk',
+    group: 'Shop',
     groupKey: 'presetGroup.shop',
-    hint: 'Tre tillitspunkter med ikon og tekst (retur, hjelp, trygg bestilling)',
+    hint: 'Three trust points with icon and text (returns, help, safe ordering)',
     hintKey: 'preset.shop-trust.hint',
     create: () => {
       const pair = (x, col, key, glyph) => {
@@ -772,7 +772,7 @@ export function registerSectionPresets(Urd) {
       sec.theme = 'muted';
       return sec;
     },
-    itemLabel: 'kort',
+    itemLabel: 'card',
     itemLabelKey: 'item.card',
     item: (sec) => {
       const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 148, 216, 25, 156, -60);
@@ -785,11 +785,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('shop-showcase', {
-    label: 'Butikk-utstilling',
+    label: 'Shop feature',
     labelKey: 'preset.shop-showcase.label',
-    group: 'Butikk',
+    group: 'Shop',
     groupKey: 'presetGroup.shop',
-    hint: 'Statement-bånd: stor typografi, tekst, CTA og bilde på dyp flate',
+    hint: 'Statement band: big typography, text, CTA and an image on a deep surface',
     hintKey: 'preset.shop-showcase.hint',
     create: () => {
       const blocks = [
@@ -806,11 +806,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('checkout', {
-    label: 'Kasse',
+    label: 'Checkout',
     labelKey: 'preset.checkout.label',
-    group: 'Butikk',
+    group: 'Shop',
     groupKey: 'presetGroup.shop',
-    hint: 'Bestillingsskjema som sender handlekurven som e-post eller til et endepunkt',
+    hint: 'Order form that sends the basket as an email or to an endpoint',
     hintKey: 'preset.checkout.hint',
     create: () => section('checkout', '560px', bg(colorLayer('bg')), [
       text(frame(6, 28, 50, 38), ta('seed.checkout.title')),
@@ -821,11 +821,11 @@ export function registerSectionPresets(Urd) {
   /* ---------- Fremheving ---------- */
 
   Urd.sections.define('cta', {
-    label: 'CTA-banner',
+    label: 'CTA banner',
     labelKey: 'preset.cta.label',
-    group: 'Fremheving',
+    group: 'Highlight',
     groupKey: 'presetGroup.highlight',
-    hint: 'Full bredde med én tydelig handling',
+    hint: 'Full width with one clear action',
     hintKey: 'preset.cta.hint',
     create: () => section('cta', '280px', bg(colorLayer('surface'), glowLayer(0.5, 0.5, 0.3, 0.7)), [
       text(frame(20, 56, 60, 40), ta('seed.cta.title'), { align: 'center' }),
@@ -835,11 +835,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('quote', {
-    label: 'Sitat',
+    label: 'Quote',
     labelKey: 'preset.quote.label',
-    group: 'Fremheving',
+    group: 'Highlight',
     groupKey: 'presetGroup.highlight',
-    hint: 'Stort sitat med attribusjon',
+    hint: 'Large quote with attribution',
     hintKey: 'preset.quote.hint',
     // Modernisert i 0.6.7.11: bruker sitat-blokken (semantisk blockquote)
     // i stedet for to løse tekstblokker.
@@ -853,11 +853,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('stats', {
-    label: 'Statistikk',
+    label: 'Statistics',
     labelKey: 'preset.stats.label',
-    group: 'Fremheving',
+    group: 'Highlight',
     groupKey: 'presetGroup.highlight',
-    hint: 'Tre store tall med etikett',
+    hint: 'Three big numbers with labels',
     hintKey: 'preset.stats.hint',
     // Modernisert i 0.6.7.12: bruker statistikk-blokken (tell-opp ved entré)
     // i stedet for to tekstblokker per tall.
@@ -873,7 +873,7 @@ export function registerSectionPresets(Urd) {
         stat(69, 2, '1981', '', ta('seed.stats.l3')),
       ]);
     },
-    itemLabel: 'tall',
+    itemLabel: 'number',
     itemLabelKey: 'item.number',
     item: (sec) => {
       const { x, y, n } = freeSlot(sec, 3, 6, 31.5, 76, 140, 25, 120);
@@ -884,11 +884,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('sponsors', {
-    label: 'Sponsorer',
+    label: 'Sponsors',
     labelKey: 'preset.sponsors.label',
-    group: 'Fremheving',
+    group: 'Highlight',
     groupKey: 'presetGroup.highlight',
-    hint: 'Logorad i gråtone med lenker',
+    hint: 'Greyscale logo row with links',
     hintKey: 'preset.sponsors.hint',
     create: () => {
       // saturate 0 gir gråtonede logoer (klassisk sponsorband).
@@ -913,11 +913,11 @@ export function registerSectionPresets(Urd) {
   });
 
   Urd.sections.define('membership', {
-    label: 'Medlemskap',
+    label: 'Membership',
     labelKey: 'preset.membership.label',
-    group: 'Fremheving',
+    group: 'Highlight',
     groupKey: 'presetGroup.highlight',
-    hint: 'Prisnivåer med fordeler og Vipps-linje',
+    hint: 'Price tiers with benefits and a Vipps line',
     hintKey: 'preset.membership.hint',
     create: () => section('membership', '500px', bg(colorLayer('surface')), [
       text(frame(6, 28, 50, 38), ta('seed.membership.title')),

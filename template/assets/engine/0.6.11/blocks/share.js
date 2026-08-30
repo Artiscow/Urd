@@ -42,7 +42,7 @@ export const shareBlock = {
   version: 1,
   // Naturlig høyde i mobil-radnettet (knappene radbryter på smale skjermer).
   autoGrow: true,
-  label: 'Delingsknapper',
+  label: 'Share buttons',
   labelKey: 'blocks.share',
   defaults: () => ({
     services: ['facebook', 'x', 'linkedin', 'whatsapp', 'email', 'copy'],

@@ -4682,7 +4682,7 @@
     const src = obj?.[field];
     if (!src?.startsWith('data:image/') && !src?.startsWith('data:audio/') && !src?.startsWith('data:video/')) return;
     const base64 = src.split(',', 2)[1];
-    const path = `media/${slugify(name || 'bilde')}-${contentHash(base64)}.${mediaExtension(src)}`;
+    const path = `media/${slugify(name || 'image')}-${contentHash(base64)}.${mediaExtension(src)}`;
     files.push({ path, content: base64, encoding: 'base64' });
     obj[field] = `/${path}`;
   }

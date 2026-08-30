@@ -6,7 +6,7 @@ import { resolveColor } from '../theme.js';
 
 export const colorLayer = {
   version: 1,
-  label: 'Farge',
+  label: 'Colour',
   labelKey: 'bgLayer.color',
   defaults: () => ({ value: 'bg', opacity: 1 }),
   migrations: {},

@@ -4,7 +4,7 @@
  * CSP-en i _headers har et bevisst frame-src-unntak for akkurat disse
  * to vertene - andre embeds krever plugin og eget CSP-valg hos eieren.
  */
-import { t } from '../i18n.js';
+import { t, ta } from '../i18n.js';
 
 /** Finner innbyggings-URL for en kjent videotjeneste, ellers null. */
 export function embedUrl(raw) {
@@ -82,7 +82,7 @@ export const videoBlock = {
     if (ctx.preview && ctx.viewport !== 'mobile') {
       const shield = document.createElement('div');
       shield.className = 'urd-video-shield';
-      shield.title = 'Videoen spilles på den publiserte siden';
+      shield.title = ta('canvas.videoOnPublished');
       el.appendChild(shield);
     }
   },

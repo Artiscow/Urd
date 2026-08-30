@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Lokal testserver for Urd.
+"""Local test server for Urd.
 
-Samme jobb som `python3 -m http.server` fra template/, men hver respons
-sendes med `Cache-Control: no-store`. Uten den regelen gjetter nettleseren
-hvor lenge filene er ferske (heuristisk caching), og forhåndsvisningens
-motorfiler (ES-module-importene i iframen) blir hengende igjen selv ved
-hard reload. Med denne serveren holder vanlig reload alltid.
+Does the same job as `python3 -m http.server` from template/, but every
+response is sent with `Cache-Control: no-store`. Without that rule the
+browser guesses how long files stay fresh (heuristic caching), and the
+preview's engine files (the ES module imports in the iframe) linger even
+across a hard reload. With this server a plain reload always holds.
 
-Bruk fra repo-roten (eller hvor som helst; template/ finnes relativt til
-skriptet):
+Run from the repo root (or anywhere; template/ is found relative to the
+script):
 
     python3 dev-server.py          # port 8000
-    python3 dev-server.py 8123     # valgfri port
+    python3 dev-server.py 8123     # optional port
 """
 
 import contextlib
@@ -23,14 +23,14 @@ import sys
 
 
 class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
-    # HTTP/1.1 med keep-alive: raskere enn 1.0 under motorens
-    # modul-lastestorm (en tilkobling per fil ellers).
+    # HTTP/1.1 with keep-alive: faster than 1.0 during the engine's
+    # module loading storm (one connection per file otherwise).
     protocol_version = 'HTTP/1.1'
 
-    # Betingede forespørsler strippes FØR send_head: ellers svarer
-    # SimpleHTTPRequestHandler «304 Not Modified» på If-Modified-Since, og da
-    # bruker nettleseren sin gamle kopi (motorfiler ble hengende igjen selv
-    # med no-store). Uten disse headerne sendes alltid en fersk 200.
+    # Conditional requests are stripped BEFORE send_head: otherwise
+    # SimpleHTTPRequestHandler answers "304 Not Modified" to
+    # If-Modified-Since and the browser keeps its stale copy. Without
+    # these headers a fresh 200 is always sent.
     def _strip_conditional(self):
         for header in ('If-Modified-Since', 'If-None-Match', 'If-Range'):
             while header in self.headers:
@@ -52,8 +52,8 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
 
 
 class DualStackServer(http.server.ThreadingHTTPServer):
-    # Samme binding som `python3 -m http.server`: IPv6 og IPv4 samtidig,
-    # siden nettlesere gjerne prøver ::1 først for localhost.
+    # Same binding as `python3 -m http.server`: IPv6 and IPv4 at once,
+    # since browsers tend to try ::1 first for localhost.
     address_family = socket.AF_INET6
 
     def server_bind(self):
@@ -66,7 +66,7 @@ def main():
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
     root = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'template')
     if not os.path.isdir(root):
-        print(f'Fant ikke {root} - ligger dev-server.py i repo-roten?')
+        print(f'Could not find {root} - is dev-server.py in the repo root?')
         sys.exit(1)
     handler = functools.partial(NoCacheHandler, directory=root)
     try:
@@ -75,20 +75,20 @@ def main():
         except OSError as err:
             if err.errno == 98:  # EADDRINUSE
                 raise
-            # IPv6 utilgjengelig på maskinen: fall tilbake til ren IPv4.
+            # IPv6 unavailable on this machine: fall back to plain IPv4.
             server = http.server.ThreadingHTTPServer(('0.0.0.0', port), handler)
     except OSError as err:
         if err.errno == 98:
-            print(f'Port {port} er opptatt (kjører en annen server fremdeles?).')
-            print(f'Stopp den, eller velg en annen port: python3 dev-server.py {port + 1}')
+            print(f'Port {port} is busy (is another server still running?).')
+            print(f'Stop it, or pick another port: python3 dev-server.py {port + 1}')
             sys.exit(1)
         raise
     with server:
-        print(f'Urd-testserver: http://localhost:{port} (serverer {root}, caching av)', flush=True)
+        print(f'Urd test server: http://localhost:{port} (serving {root}, caching off)', flush=True)
         try:
             server.serve_forever()
         except KeyboardInterrupt:
-            print('\nStoppet.')
+            print('\nStopped.')
 
 
 if __name__ == '__main__':

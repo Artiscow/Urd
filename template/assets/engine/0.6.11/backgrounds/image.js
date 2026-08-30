@@ -243,7 +243,7 @@ function mountParallaxCss(img, speed, blurMargin, fit) {
 
 export const imageLayer = {
   version: 1,
-  label: 'Bilde',
+  label: 'Image',
   labelKey: 'bgLayer.image',
   defaults: () => ({ src: '', fit: 'vanlig', x: 0.5, y: 0.5, size: 1, opacity: 1, blur: 0, parallax: 0, bleed: 'none' }),
   migrations: {},

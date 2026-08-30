@@ -91,7 +91,7 @@ export async function loadPackStrings(code, kind) {
     const mod = await import(`/plugins/${pack.plugin}/locales/${kind}/${code}.js`);
     return mod.default?.strings ?? null;
   } catch {
-    console.warn(`Urd: språkpakken '${pack.plugin}' lover ${kind}-tekster for '${code}', men locales/${kind}/${code}.js kunne ikke lastes`);
+    console.warn(`Urd: language pack '${pack.plugin}' promises ${kind} strings for '${code}', but locales/${kind}/${code}.js could not be loaded`);
     return null;
   }
 }

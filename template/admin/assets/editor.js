@@ -2528,16 +2528,16 @@ function Fi(e) {
 }
 function Ii(e) {
 	let t = [];
-	if (!Array.isArray(e)) return ["languages må være en liste"];
+	if (!Array.isArray(e)) return ["languages must be a list"];
 	for (let n of e) {
 		if (!n || typeof n != "object" || Array.isArray(n)) {
-			t.push("languages: hvert innslag må være et objekt");
+			t.push("languages: every entry must be an object");
 			continue;
 		}
 		let e = String(n.code ?? "");
-		Mi.test(e) ? Fi(e) && t.push(`languages: '${e}' er innebygd i Urd og kan ikke overstyres`) : t.push(`languages: '${e}' er ikke en gyldig språkkode`), (typeof n.name != "string" || !n.name.trim()) && t.push(`languages/${e}: name mangler (språkets eget navn)`);
-		for (let r of ["site", "admin"]) n[r] !== void 0 && typeof n[r] != "boolean" && t.push(`languages/${e}: ${r} må være boolsk`);
-		n.site !== !0 && n.admin !== !0 && t.push(`languages/${e}: må dekke site, admin eller begge`);
+		Mi.test(e) ? Fi(e) && t.push(`languages: '${e}' er innebygd i Urd og kan ikke overstyres`) : t.push(`languages: '${e}' is not a valid language code`), (typeof n.name != "string" || !n.name.trim()) && t.push(`languages/${e}: name is missing (the language's own name)`);
+		for (let r of ["site", "admin"]) n[r] !== void 0 && typeof n[r] != "boolean" && t.push(`languages/${e}: ${r} must be a boolean`);
+		n.site !== !0 && n.admin !== !0 && t.push(`languages/${e}: must cover site, admin or both`);
 	}
 	return t;
 }
@@ -3003,8 +3003,8 @@ function ma(e) {
 }
 function ha(e) {
 	let t = String(e ?? "");
-	if (!/<svg[\s>]/i.test(t)) throw Error("Ugyldig SVG");
-	if (/<\s*script[\s>]/i.test(t) || /<\s*foreignObject[\s>]/i.test(t) || /\son[a-z]+\s*=/i.test(t) || /javascript:/i.test(t)) throw Error("SVG-en inneholder skript eller hendelser og kan ikke brukes");
+	if (!/<svg[\s>]/i.test(t)) throw Error("Invalid SVG");
+	if (/<\s*script[\s>]/i.test(t) || /<\s*foreignObject[\s>]/i.test(t) || /\son[a-z]+\s*=/i.test(t) || /javascript:/i.test(t)) throw Error("The SVG contains scripts or event handlers and cannot be used");
 	let n = new Blob([t]).size, r = `data:${pa};base64,${btoa(unescape(encodeURIComponent(t)))}`, i = t.match(/<svg\b[^>]*>/i)?.[0] ?? "", a = i.match(/viewBox\s*=\s*["']\s*([-\d.]+(?:[\s,]+[-\d.]+){3})\s*["']/i)?.[1]?.split(/[\s,]+/).map(Number);
 	return {
 		dataUrl: r,
@@ -3051,7 +3051,7 @@ function va(e) {
 	let r = t.match(/^data:video\/([a-z0-9.+-]+)[;,]/i)?.[1]?.toLowerCase();
 	return r ? r === "webm" ? "webm" : "mp4" : "webp";
 }
-function ya(e, t = "bilde") {
+function ya(e, t = "image") {
 	return e.replace(/\.[^.]+$/, "").toLowerCase().replaceAll("æ", "ae").replaceAll("ø", "o").replaceAll("å", "a").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || t;
 }
 function ba(e) {
@@ -4108,10 +4108,10 @@ function yo(e, t) {
 var bo = /^[a-z0-9][a-z0-9-]*$/;
 function xo(e) {
 	let t = [];
-	if (!e || typeof e != "object") return ["manifestet er ikke et objekt"];
-	bo.test(e.id ?? "") || t.push("id mangler eller er ugyldig"), (typeof e.name != "string" || !e.name) && t.push("name mangler"), _o(e.version ?? "") || t.push("version er ikke semver"), (typeof e.requiresEngine != "string" || !e.requiresEngine) && t.push("requiresEngine mangler");
+	if (!e || typeof e != "object") return ["the manifest is not an object"];
+	bo.test(e.id ?? "") || t.push("id is missing or invalid"), (typeof e.name != "string" || !e.name) && t.push("name is missing"), _o(e.version ?? "") || t.push("version is not semver"), (typeof e.requiresEngine != "string" || !e.requiresEngine) && t.push("requiresEngine is missing");
 	let n = Array.isArray(e.languages) && e.languages.length > 0;
-	return (e.entry !== void 0 || !n) && (typeof e.entry != "string" || !e.entry.endsWith(".js")) && t.push("entry mangler eller er ikke en .js-fil"), (e.provides !== void 0 || !n) && (!e.provides || typeof e.provides != "object") && t.push("provides mangler"), e.languages !== void 0 && t.push(...Ii(e.languages)), e.locales !== void 0 && typeof e.locales != "boolean" && t.push("locales må være boolsk"), e.names !== void 0 && (typeof e.names != "object" || e.names === null || Array.isArray(e.names) || Object.values(e.names).some((e) => typeof e != "string" || !e)) && t.push("names må være et objekt med språkkode til navn"), t;
+	return (e.entry !== void 0 || !n) && (typeof e.entry != "string" || !e.entry.endsWith(".js")) && t.push("entry is missing or is not a .js file"), (e.provides !== void 0 || !n) && (!e.provides || typeof e.provides != "object") && t.push("provides is missing"), e.languages !== void 0 && t.push(...Ii(e.languages)), e.locales !== void 0 && typeof e.locales != "boolean" && t.push("locales must be a boolean"), e.names !== void 0 && (typeof e.names != "object" || e.names === null || Array.isArray(e.names) || Object.values(e.names).some((e) => typeof e != "string" || !e)) && t.push("names must be an object mapping language code to name"), t;
 }
 //#endregion
 //#region ../template/assets/engine/0.6.11/sections/presets.js
@@ -4357,19 +4357,19 @@ var Co = () => ({ mobile: {
 });
 function Go(e) {
 	e.sections.define("blank", {
-		label: "Tom seksjon",
+		label: "Empty section",
 		labelKey: "preset.blank.label",
-		group: "Grunnleggende",
+		group: "Basics",
 		groupKey: "presetGroup.basic",
-		hint: "Blankt lerret å bygge fritt på",
+		hint: "A blank canvas to build on freely",
 		hintKey: "preset.blank.hint",
 		create: () => Wo("blank", "40vh", Lo(Ro("bg")), [])
 	}), e.sections.define("hero", {
 		label: "Hero",
 		labelKey: "preset.hero.label",
-		group: "Grunnleggende",
+		group: "Basics",
 		groupKey: "presetGroup.basic",
-		hint: "Stor åpning med gradient og glød, venstrestilt",
+		hint: "Large opening with gradient and glow, left-aligned",
 		hintKey: "preset.hero.hint",
 		create: () => Wo("hero", "70vh", {
 			version: 1,
@@ -4396,11 +4396,11 @@ function Go(e) {
 			To(Z(8.33, 118, 20, 32), Y("seed.readMore"))
 		])
 	}), e.sections.define("hero-centered", {
-		label: "Hero, sentrert",
+		label: "Hero, centred",
 		labelKey: "preset.hero-centered.label",
-		group: "Grunnleggende",
+		group: "Basics",
 		groupKey: "presetGroup.basic",
-		hint: "Sentrert åpning med to knapper",
+		hint: "Centred opening with two buttons",
 		hintKey: "preset.hero-centered.hint",
 		create: () => Wo("hero-centered", "60vh", Lo(Ro("bg")), [
 			Q(Z(15, 64, 70, 44), Y("seed.heroCenter.title"), { align: "center" }),
@@ -4409,11 +4409,11 @@ function Go(e) {
 			To(Z(51.5, 160, 17, 40), Y("seed.readMore"), { style: "secondary" })
 		])
 	}), e.sections.define("images", {
-		label: "Bilder",
+		label: "Images",
 		labelKey: "preset.images.label",
-		group: "Grunnleggende",
+		group: "Basics",
 		groupKey: "presetGroup.basic",
-		hint: "Tittel og tre bilderammer",
+		hint: "Title and three image frames",
 		hintKey: "preset.images.hint",
 		create: () => Wo("images", "360px", Lo(Ro("bg")), [
 			Q(Z(4, 24, 50, 32), Y("seed.images.title")),
@@ -4421,7 +4421,7 @@ function Go(e) {
 			wo(Z(36, 72, 28, 220)),
 			wo(Z(68, 72, 28, 220))
 		]),
-		itemLabel: "bilde",
+		itemLabel: "image",
 		itemLabelKey: "item.image",
 		item: (e) => {
 			let { x: t, y: n } = Ho(e, 3, 4, 32, 72, 244, 28, 220);
@@ -4431,19 +4431,19 @@ function Go(e) {
 			};
 		}
 	}), e.sections.define("gallery", {
-		label: "Galleri",
+		label: "Gallery",
 		labelKey: "preset.gallery.label",
-		group: "Grunnleggende",
+		group: "Basics",
 		groupKey: "presetGroup.basic",
-		hint: "Bildegalleri i rutenett med fullskjermvisning (lightbox)",
+		hint: "Image gallery in a grid with full-screen view (lightbox)",
 		hintKey: "preset.gallery.hint",
 		create: () => Wo("gallery", "440px", Lo(Ro("bg")), [Q(Z(4, 24, 50, 32), Y("seed.gallery.title")), Mo(Z(4, 72, 92, 320))])
 	}), e.sections.define("contact", {
-		label: "Kontakt",
+		label: "Contact",
 		labelKey: "preset.contact.label",
-		group: "Grunnleggende",
+		group: "Basics",
 		groupKey: "presetGroup.basic",
-		hint: "Kontaktinfo i kort med e-postknapp",
+		hint: "Contact details in a card with an email button",
 		hintKey: "preset.contact.hint",
 		create: () => Wo("contact", "320px", Lo(Ro("surface"), zo(.2, .8, .2)), [
 			Q(Z(10, 32, 40, 36), Y("seed.contact.title")),
@@ -4451,11 +4451,11 @@ function Go(e) {
 			To(Z(60, 100, 22, 40), Y("seed.contact.button"), { href: "mailto:post@dinforening.no" })
 		])
 	}), e.sections.define("feature-cards", {
-		label: "Funksjonskort",
+		label: "Feature cards",
 		labelKey: "preset.feature-cards.label",
-		group: "Kort og lister",
+		group: "Cards and lists",
 		groupKey: "presetGroup.cards",
-		hint: "Tre kort med ikon, tittel og tekst",
+		hint: "Three cards with icon, title and text",
 		hintKey: "preset.feature-cards.hint",
 		create: () => {
 			let e = (e, t, n, r) => {
@@ -4472,7 +4472,7 @@ function Go(e) {
 				...e(69, 2, "✓", Y("seed.features.card3"))
 			]);
 		},
-		itemLabel: "kort",
+		itemLabel: "card",
 		itemLabelKey: "item.card",
 		item: (e) => {
 			let { x: t, y: n, n: r } = Ho(e, 3, 6, 31.5, 152, 296, 25, 264, -64), i = Eo(Z(t + 10.5, n - 64, 4, 52), "✦"), a = Q(Z(t, n, 25, 200), Y("seed.features.card", { title: Y("seed.features.newTitle") }), {
@@ -4485,11 +4485,11 @@ function Go(e) {
 			};
 		}
 	}), e.sections.define("feature-cards-simple", {
-		label: "Funksjonskort uten ikoner",
+		label: "Feature cards without icons",
 		labelKey: "preset.feature-cards-simple.label",
-		group: "Kort og lister",
+		group: "Cards and lists",
 		groupKey: "presetGroup.cards",
-		hint: "Tre kort med tittel og tekst (uten ikonene over)",
+		hint: "Three cards with title and text (without the icons above)",
 		hintKey: "preset.feature-cards-simple.hint",
 		create: () => {
 			let e = (e, t, n) => {
@@ -4506,7 +4506,7 @@ function Go(e) {
 				e(69, 2, Y("seed.features.card3"))
 			]);
 		},
-		itemLabel: "kort",
+		itemLabel: "card",
 		itemLabelKey: "item.card",
 		item: (e) => {
 			let { x: t, y: n, n: r } = Ho(e, 3, 6, 31.5, 88, 232, 25, 200), i = Q(Z(t, n, 25, 200), Y("seed.features.card", { title: Y("seed.features.newTitle") }), {
@@ -4519,11 +4519,11 @@ function Go(e) {
 			};
 		}
 	}), e.sections.define("news", {
-		label: "Nyheter",
+		label: "News",
 		labelKey: "preset.news.label",
-		group: "Kort og lister",
+		group: "Cards and lists",
 		groupKey: "presetGroup.cards",
-		hint: "Tre nyhetskort med bilde, tag og dato",
+		hint: "Three news cards with image, tag and date",
 		hintKey: "preset.news.hint",
 		create: () => {
 			let e = (e, t) => {
@@ -4538,7 +4538,7 @@ function Go(e) {
 				...e(69, 2)
 			]);
 		},
-		itemLabel: "sak",
+		itemLabel: "story",
 		itemLabelKey: "item.story",
 		item: (e) => {
 			let { x: t, y: n, n: r } = Ho(e, 3, 6, 31.5, 88, 344, 25, 328), i = wo(Z(t, n, 25, 160)), a = Q(Z(t, n + 168, 25, 160), Y("seed.news.card"));
@@ -4548,35 +4548,35 @@ function Go(e) {
 			};
 		}
 	}), e.sections.define("news-collection", {
-		label: "Nyheter (samling)",
+		label: "News (collection)",
 		labelKey: "preset.news-collection.label",
-		group: "Kort og lister",
+		group: "Cards and lists",
 		groupKey: "presetGroup.cards",
-		hint: "Nyhetskort fra en samling: skriv innslag, kortene følger med",
+		hint: "News cards from a collection: write entries, the cards follow",
 		hintKey: "preset.news-collection.hint",
 		create: () => Wo("news-collection", "300px", Lo(Ro("bg")), [Q(Z(6, 28, 50, 38), Y("seed.news.title")), Oo(Z(6, 88, 88, 180), "cards")])
 	}), e.sections.define("noticeboard", {
-		label: "Oppslagstavle",
+		label: "Noticeboard",
 		labelKey: "preset.noticeboard.label",
-		group: "Kort og lister",
+		group: "Cards and lists",
 		groupKey: "presetGroup.cards",
-		hint: "Datert liste fra en samling (oppslag/kunngjøringer)",
+		hint: "Dated list from a collection (notices/announcements)",
 		hintKey: "preset.noticeboard.hint",
 		create: () => Wo("noticeboard", "300px", Lo(Ro("surface")), [Q(Z(6, 28, 50, 38), Y("seed.noticeboard.title")), Oo(Z(6, 88, 88, 180), "list", { limit: 8 })])
 	}), e.sections.define("publication-archive", {
-		label: "Publikasjonsarkiv",
+		label: "Publication archive",
 		labelKey: "preset.publication-archive.label",
-		group: "Kort og lister",
+		group: "Cards and lists",
 		groupKey: "presetGroup.cards",
-		hint: "År-gruppert arkiv fra en samling (utgaver, referater, rapporter)",
+		hint: "Year-grouped archive from a collection (issues, minutes, reports)",
 		hintKey: "preset.publication-archive.hint",
 		create: () => Wo("publication-archive", "300px", Lo(Ro("bg")), [Q(Z(6, 28, 60, 38), Y("seed.archive.title")), Oo(Z(6, 88, 88, 180), "archive", { limit: 0 })])
 	}), e.sections.define("events", {
-		label: "Arrangementer",
+		label: "Events",
 		labelKey: "preset.events.label",
-		group: "Kort og lister",
+		group: "Cards and lists",
 		groupKey: "presetGroup.cards",
-		hint: "Tre rader med dato-badge og påmeldingsknapp",
+		hint: "Three rows with date badge and sign-up button",
 		hintKey: "preset.events.hint",
 		create: () => {
 			let e = (e, t, n, r) => [
@@ -4597,7 +4597,7 @@ function Go(e) {
 				...e(304, "8", Y("seed.events.monthSep"), Y("seed.events.row3"))
 			]);
 		},
-		itemLabel: "rad",
+		itemLabel: "row",
 		itemLabelKey: "item.row",
 		item: (e) => {
 			let t = Bo(e) + 16;
@@ -4614,11 +4614,11 @@ function Go(e) {
 			};
 		}
 	}), e.sections.define("team", {
-		label: "Team/styret",
+		label: "Team/board",
 		labelKey: "preset.team.label",
-		group: "Kort og lister",
+		group: "Cards and lists",
 		groupKey: "presetGroup.cards",
-		hint: "Portretter med navn, verv og e-post",
+		hint: "Portraits with name, role and email",
 		hintKey: "preset.team.hint",
 		create: () => {
 			let e = (e, t, n) => {
@@ -4644,9 +4644,9 @@ function Go(e) {
 	}), e.sections.define("faq", {
 		label: "FAQ",
 		labelKey: "preset.faq.label",
-		group: "Kort og lister",
+		group: "Cards and lists",
 		groupKey: "presetGroup.cards",
-		hint: "Spørsmål og svar i kort",
+		hint: "Questions and answers in cards",
 		hintKey: "preset.faq.hint",
 		create: () => Wo("faq", "520px", Lo(Ro("bg")), [
 			Q(Z(25, 24, 50, 36), Y("seed.faq.title"), { align: "center" }),
@@ -4667,11 +4667,11 @@ function Go(e) {
 			Q(Z(20, 416, 60, 32), Y("seed.faq.more"), { align: "center" })
 		])
 	}), e.sections.define("timeline", {
-		label: "Tidslinje",
+		label: "Timeline",
 		labelKey: "preset.timeline.label",
-		group: "Kort og lister",
+		group: "Cards and lists",
 		groupKey: "presetGroup.cards",
-		hint: "Historien som hendelser langs en linje",
+		hint: "Your story as events along a line",
 		hintKey: "preset.timeline.hint",
 		create: () => Wo("timeline", "480px", Lo(Ro("bg")), [Q(Z(25, 24, 50, 36), Y("seed.timeline.title"), { align: "center" }), Fo(Z(25, 88, 50, 330), [
 			{
@@ -4691,11 +4691,11 @@ function Go(e) {
 			}
 		])])
 	}), e.sections.define("steps", {
-		label: "Steg for steg",
+		label: "Step by step",
 		labelKey: "preset.steps.label",
-		group: "Kort og lister",
+		group: "Cards and lists",
 		groupKey: "presetGroup.cards",
-		hint: "Tre nummererte kort",
+		hint: "Three numbered cards",
 		hintKey: "preset.steps.hint",
 		create: () => {
 			let e = (e, t, n) => {
@@ -4715,7 +4715,7 @@ function Go(e) {
 				...e(69, 2, Y("seed.steps.s3"))
 			]);
 		},
-		itemLabel: "steg",
+		itemLabel: "step",
 		itemLabelKey: "item.step",
 		item: (e) => {
 			let { x: t, y: n, n: r } = Ho(e, 3, 6, 31.5, 88, 272, 25, 240), i = Q(Z(t, n, 25, 72), `<h3>${r + 1}</h3>`, {
@@ -4731,11 +4731,11 @@ function Go(e) {
 			};
 		}
 	}), e.sections.define("lead-story", {
-		label: "Hovedoppslag",
+		label: "Lead story",
 		labelKey: "preset.lead-story.label",
-		group: "Kort og lister",
+		group: "Cards and lists",
 		groupKey: "presetGroup.cards",
-		hint: "Én stor sak og to små ved siden",
+		hint: "One big story and two small beside it",
 		hintKey: "preset.lead-story.hint",
 		create: () => {
 			let e = [
@@ -4752,11 +4752,11 @@ function Go(e) {
 			}), Wo("lead-story", "540px", Lo(Ro("bg")), e);
 		}
 	}), e.sections.define("products", {
-		label: "Produkter",
+		label: "Products",
 		labelKey: "preset.products.label",
-		group: "Kort og lister",
+		group: "Cards and lists",
 		groupKey: "presetGroup.cards",
-		hint: "Tre håndbygde produktkort med egen kjøpslenke; Butikk-presetet gir ekte produkter med handlekurv",
+		hint: "Three hand-built product cards with their own buy link; the Shop preset gives real products with a basket",
 		hintKey: "preset.products.hint",
 		create: () => {
 			let e = (e, t, n, r) => {
@@ -4779,7 +4779,7 @@ function Go(e) {
 				...e(69, 2, Y("seed.products.name"), Y("seed.products.price3"))
 			]);
 		},
-		itemLabel: "produkt",
+		itemLabel: "product",
 		itemLabelKey: "item.product",
 		item: (e) => {
 			let { x: t, y: n, n: r } = Ho(e, 3, 6, 31.5, 88, 348, 25, 332), i = [
@@ -4798,11 +4798,11 @@ function Go(e) {
 			};
 		}
 	}), e.sections.define("shop", {
-		label: "Butikk",
+		label: "Shop",
 		labelKey: "preset.shop.label",
-		group: "Butikk",
+		group: "Shop",
 		groupKey: "presetGroup.shop",
-		hint: "Ekte produktkort fra en produktsamling, med handlekurv",
+		hint: "Real product cards from a product collection, with a basket",
 		hintKey: "preset.shop.hint",
 		create: () => Wo("shop", "544px", Lo(Ro("bg")), [
 			Q(Z(6, 28, 50, 38), Y("seed.shop.title")),
@@ -4810,11 +4810,11 @@ function Go(e) {
 			ko(Z(6, 176, 88, 320))
 		])
 	}), e.sections.define("shop-hero", {
-		label: "Butikk-hero",
+		label: "Shop hero",
 		labelKey: "preset.shop-hero.label",
-		group: "Butikk",
+		group: "Shop",
 		groupKey: "presetGroup.shop",
-		hint: "Kampanjebånd: stor overskrift, undertekst, CTA og kampanjebilde",
+		hint: "Campaign band: big heading, subtext, CTA and a campaign image",
 		hintKey: "preset.shop-hero.hint",
 		create: () => {
 			let e = [
@@ -4839,11 +4839,11 @@ function Go(e) {
 			}, e);
 		}
 	}), e.sections.define("shop-categories", {
-		label: "Butikk-kategorier",
+		label: "Shop categories",
 		labelKey: "preset.shop-categories.label",
-		group: "Butikk",
+		group: "Shop",
 		groupKey: "presetGroup.shop",
-		hint: "Fire kategorifliser med bilde og navn; lenken settes på bildet i Egenskaper",
+		hint: "Four category tiles with image and name; set the link on the image in Properties",
 		hintKey: "preset.shop-categories.hint",
 		create: () => {
 			let e = (e, t, n) => {
@@ -4858,7 +4858,7 @@ function Go(e) {
 			]);
 			return t.theme = "soft", t;
 		},
-		itemLabel: "kategori",
+		itemLabel: "category",
 		itemLabelKey: "item.category",
 		item: (e) => {
 			let { x: t, y: n, n: r } = Ho(e, 4, 6, 23.5, 88, 220, 21, 212), i = wo(Z(t, n, 21, 170)), a = Q(Z(t, n + 178, 21, 34), Y("seed.shopCategories.tile", { name: Y("seed.shopCategories.newCat") }), { align: "center" });
@@ -4868,11 +4868,11 @@ function Go(e) {
 			};
 		}
 	}), e.sections.define("shop-trust", {
-		label: "Butikk-tillit",
+		label: "Shop trust",
 		labelKey: "preset.shop-trust.label",
-		group: "Butikk",
+		group: "Shop",
 		groupKey: "presetGroup.shop",
-		hint: "Tre tillitspunkter med ikon og tekst (retur, hjelp, trygg bestilling)",
+		hint: "Three trust points with icon and text (returns, help, safe ordering)",
 		hintKey: "preset.shop-trust.hint",
 		create: () => {
 			let e = (e, t, n, r) => {
@@ -4886,7 +4886,7 @@ function Go(e) {
 			]);
 			return t.theme = "muted", t;
 		},
-		itemLabel: "kort",
+		itemLabel: "card",
 		itemLabelKey: "item.card",
 		item: (e) => {
 			let { x: t, y: n, n: r } = Ho(e, 3, 6, 31.5, 148, 216, 25, 156, -60), i = Eo(Z(t + 10.5, n - 60, 4, 52), "✓", 44), a = Q(Z(t, n, 25, 96), Y("seed.shopTrust.newItem"), { align: "center" });
@@ -4896,11 +4896,11 @@ function Go(e) {
 			};
 		}
 	}), e.sections.define("shop-showcase", {
-		label: "Butikk-utstilling",
+		label: "Shop feature",
 		labelKey: "preset.shop-showcase.label",
-		group: "Butikk",
+		group: "Shop",
 		groupKey: "presetGroup.shop",
-		hint: "Statement-bånd: stor typografi, tekst, CTA og bilde på dyp flate",
+		hint: "Statement band: big typography, text, CTA and an image on a deep surface",
 		hintKey: "preset.shop-showcase.hint",
 		create: () => {
 			let e = [
@@ -4916,19 +4916,19 @@ function Go(e) {
 			return t.theme = "deep", t;
 		}
 	}), e.sections.define("checkout", {
-		label: "Kasse",
+		label: "Checkout",
 		labelKey: "preset.checkout.label",
-		group: "Butikk",
+		group: "Shop",
 		groupKey: "presetGroup.shop",
-		hint: "Bestillingsskjema som sender handlekurven som e-post eller til et endepunkt",
+		hint: "Order form that sends the basket as an email or to an endpoint",
 		hintKey: "preset.checkout.hint",
 		create: () => Wo("checkout", "560px", Lo(Ro("bg")), [Q(Z(6, 28, 50, 38), Y("seed.checkout.title")), jo(Z(25, 96, 50, 430))])
 	}), e.sections.define("cta", {
-		label: "CTA-banner",
+		label: "CTA banner",
 		labelKey: "preset.cta.label",
-		group: "Fremheving",
+		group: "Highlight",
 		groupKey: "presetGroup.highlight",
-		hint: "Full bredde med én tydelig handling",
+		hint: "Full width with one clear action",
 		hintKey: "preset.cta.hint",
 		create: () => Wo("cta", "280px", Lo(Ro("surface"), zo(.5, .5, .3, .7)), [
 			Q(Z(20, 56, 60, 40), Y("seed.cta.title"), { align: "center" }),
@@ -4936,11 +4936,11 @@ function Go(e) {
 			To(Z(42, 148, 16, 42), Y("seed.join"))
 		])
 	}), e.sections.define("quote", {
-		label: "Sitat",
+		label: "Quote",
 		labelKey: "preset.quote.label",
-		group: "Fremheving",
+		group: "Highlight",
 		groupKey: "presetGroup.highlight",
-		hint: "Stort sitat med attribusjon",
+		hint: "Large quote with attribution",
 		hintKey: "preset.quote.hint",
 		create: () => Wo("quote", "300px", Lo(Ro("bg")), [Po(Z(20, 56, 60, 190), {
 			text: Y("seed.quoteBlock.text"),
@@ -4948,11 +4948,11 @@ function Go(e) {
 			role: Y("seed.quoteBlock.role")
 		})])
 	}), e.sections.define("stats", {
-		label: "Statistikk",
+		label: "Statistics",
 		labelKey: "preset.stats.label",
-		group: "Fremheving",
+		group: "Highlight",
 		groupKey: "presetGroup.highlight",
-		hint: "Tre store tall med etikett",
+		hint: "Three big numbers with labels",
 		hintKey: "preset.stats.hint",
 		create: () => {
 			let e = (e, t, n, r, i) => {
@@ -4969,7 +4969,7 @@ function Go(e) {
 				e(69, 2, "1981", "", Y("seed.stats.l3"))
 			]);
 		},
-		itemLabel: "tall",
+		itemLabel: "number",
 		itemLabelKey: "item.number",
 		item: (e) => {
 			let { x: t, y: n, n: r } = Ho(e, 3, 6, 31.5, 76, 140, 25, 120), i = Io(Z(t, n, 25, 120), {
@@ -4982,11 +4982,11 @@ function Go(e) {
 			};
 		}
 	}), e.sections.define("sponsors", {
-		label: "Sponsorer",
+		label: "Sponsors",
 		labelKey: "preset.sponsors.label",
-		group: "Fremheving",
+		group: "Highlight",
 		groupKey: "presetGroup.highlight",
-		hint: "Logorad i gråtone med lenker",
+		hint: "Greyscale logo row with links",
 		hintKey: "preset.sponsors.hint",
 		create: () => {
 			let e = (e) => wo(Z(e, 108, 18.5, 100), {
@@ -5018,11 +5018,11 @@ function Go(e) {
 			};
 		}
 	}), e.sections.define("membership", {
-		label: "Medlemskap",
+		label: "Membership",
 		labelKey: "preset.membership.label",
-		group: "Fremheving",
+		group: "Highlight",
 		groupKey: "presetGroup.highlight",
-		hint: "Prisnivåer med fordeler og Vipps-linje",
+		hint: "Price tiers with benefits and a Vipps line",
 		hintKey: "preset.membership.hint",
 		create: () => Wo("membership", "500px", Lo(Ro("surface")), [
 			Q(Z(6, 28, 50, 38), Y("seed.membership.title")),
@@ -5580,7 +5580,7 @@ function Us(e, t) {
 //#region ../template/assets/engine/0.6.11/backgrounds/color.js
 var Ws = {
 	version: 1,
-	label: "Farge",
+	label: "Colour",
 	labelKey: "bgLayer.color",
 	defaults: () => ({
 		value: "bg",
@@ -5749,7 +5749,7 @@ var nc = {
 	}
 }, rc = {
 	version: 1,
-	label: "Glød",
+	label: "Glow",
 	labelKey: "bgLayer.glow",
 	defaults: () => ({
 		x: .5,
@@ -5765,7 +5765,7 @@ var nc = {
 	}
 }, ic = "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22128%22%20height%3D%22128%22%3E%3Cfilter%20id%3D%22n%22%3E%3CfeTurbulence%20type%3D%22fractalNoise%22%20baseFrequency%3D%220.9%22%20numOctaves%3D%222%22%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%22128%22%20height%3D%22128%22%20filter%3D%22url(%23n)%22%2F%3E%3C%2Fsvg%3E\")", ac = {
 	version: 1,
-	label: "Korn",
+	label: "Grain",
 	labelKey: "bgLayer.grain",
 	defaults: () => ({ opacity: .06 }),
 	migrations: {},
@@ -5849,7 +5849,7 @@ function Oc(e, t, n, r) {
 }
 var kc = {
 	version: 1,
-	label: "Bilde",
+	label: "Image",
 	labelKey: "bgLayer.image",
 	defaults: () => ({
 		src: "",
@@ -5902,7 +5902,7 @@ function Nc(e, { min: t = 2, fallback: n = 5 } = {}) {
 //#region ../template/assets/engine/0.6.11/backgrounds/slideshow.js
 var Pc = {
 	version: 1,
-	label: "Bildegalleri",
+	label: "Image gallery",
 	labelKey: "bgLayer.slideshow",
 	defaults: () => ({
 		images: [],
@@ -6036,7 +6036,7 @@ var Uc = () => ({
 }), Wc = 90, Gc = {
 	"fade-in": {
 		version: 1,
-		label: "Ton inn",
+		label: "Fade in",
 		labelKey: "anim.fadeIn",
 		entrance: !0,
 		defaults: Uc,
@@ -6044,7 +6044,7 @@ var Uc = () => ({
 	},
 	"slide-up": {
 		version: 1,
-		label: "Gli opp",
+		label: "Slide up",
 		labelKey: "anim.slideUp",
 		entrance: !0,
 		defaults: Uc,
@@ -6052,7 +6052,7 @@ var Uc = () => ({
 	},
 	"zoom-in": {
 		version: 1,
-		label: "Zoom inn",
+		label: "Zoom in",
 		labelKey: "anim.zoomIn",
 		entrance: !0,
 		defaults: Uc,
@@ -6060,7 +6060,7 @@ var Uc = () => ({
 	},
 	"hover-lift": {
 		version: 1,
-		label: "Løft ved peker",
+		label: "Lift on pointer",
 		labelKey: "anim.hoverLift",
 		entrance: !1,
 		defaults: () => ({}),
@@ -6068,7 +6068,7 @@ var Uc = () => ({
 	},
 	stagger: {
 		version: 1,
-		label: "Stagger (kortgruppe)",
+		label: "Stagger (card group)",
 		labelKey: "anim.stagger",
 		entrance: !0,
 		group: !0,
@@ -11818,7 +11818,7 @@ function Cf(e, t) {
 	function Sp(e, t, n, r) {
 		let i = e?.[t];
 		if (!i?.startsWith("data:image/") && !i?.startsWith("data:audio/") && !i?.startsWith("data:video/")) return;
-		let a = i.split(",", 2)[1], o = `media/${ya(n || "bilde")}-${ba(a)}.${va(i)}`;
+		let a = i.split(",", 2)[1], o = `media/${ya(n || "image")}-${ba(a)}.${va(i)}`;
 		r.push({
 			path: o,
 			content: a,

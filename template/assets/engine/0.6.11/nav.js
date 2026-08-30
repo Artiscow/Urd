@@ -17,7 +17,7 @@ import { renderBackgroundLayers } from './render.js';
 import { readCart, cartCount, onCartChange } from './shop.js';
 import { createCartDrawer } from './blocks/cart.js';
 import { iconSvg } from './icons.js';
-import { t } from './i18n.js';
+import { t, ta } from './i18n.js';
 
 /** Hvor lenge undermenyen står åpen etter at pekeren forlater punktet. */
 const HOVER_CLOSE_DELAY = 250;
@@ -345,7 +345,7 @@ export function renderNav(site, host) {
   const items = navItems(site);
   items.forEach((item, index) => {
     if (item.missing && !item.external) {
-      console.warn(`Urd: nav-element peker på ukjent side (${item.label})`);
+      console.warn(`Urd: nav item points to unknown page (${item.label})`);
     }
     const li = document.createElement('li');
 
@@ -391,7 +391,7 @@ export function renderNav(site, host) {
     sub.id = subId;
     for (const child of item.children) {
       if (child.missing && !child.external) {
-        console.warn(`Urd: nav-element peker på ukjent side (${child.label})`);
+        console.warn(`Urd: nav item points to unknown page (${child.label})`);
       }
       const childLi = document.createElement('li');
       childLi.appendChild(makeLink(child));
@@ -508,7 +508,7 @@ export function renderNav(site, host) {
   if (isSide && document.body.classList.contains('urd-preview')) {
     const grip = document.createElement('div');
     grip.className = 'urd-nav-side-resize';
-    grip.title = 'Dra for å endre kolonnebredden';
+    grip.title = ta('tip.nav.colResize');
     const rightSide = hc.host.includes('urd-nav-side-host-right');
     grip.addEventListener('pointerdown', (event) => {
       event.preventDefault();

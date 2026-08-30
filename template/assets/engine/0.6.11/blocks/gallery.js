@@ -96,7 +96,7 @@ function makeTile(props, index, ctx, blockEl) {
     // Chrome på: bildeeditoren. Ren visning: lightboxen, som hos besøkende.
     // Avgjørelsen tas ved klikk, så Ren visning-bryteren ikke trenger re-render.
     tile.classList.add('urd-gallery-edit');
-    tile.title = 'Klikk for å redigere bildet';
+    tile.title = ta('canvas.editImage');
     tile.addEventListener('click', (event) => {
       event.preventDefault();
       if (chromeOff()) {
@@ -215,7 +215,7 @@ const VIEWS = { grid: renderGrid, carousel: renderCarousel, slides: renderSlides
 export const galleryBlock = {
   version: 1,
   autoGrow: true,
-  label: 'Galleri',
+  label: 'Gallery',
   labelKey: 'blocks.gallery',
   defaults: () => ({
     images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5,
@@ -230,7 +230,7 @@ export const galleryBlock = {
    */
   render(el, props, ctx) {
     if (!props.images?.length) {
-      if (ctx.preview) el.appendChild(el2('div', 'urd-gallery-empty', 'Legg til bilder i Egenskaper'));
+      if (ctx.preview) el.appendChild(el2('div', 'urd-gallery-empty', ta('canvas.galleryEmpty')));
       return;
     }
     const host = el2('div', 'urd-gallery');

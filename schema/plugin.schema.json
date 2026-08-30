@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://urd.dev/schema/plugin.schema.json",
-  "title": "Urd plugin-manifest (plugins/<id>/plugin.json)",
-  "description": "Manifest for en Urd-plugin. Pluginens entry er en ES-modul som eksporterer register(Urd) og bruker samme define-APIer som kjernen - inkludert migreringskontrakten. Se docs/SKJEMA.md.",
+  "title": "Urd plugin manifest (plugins/<id>/plugin.json)",
+  "description": "Manifest for an Urd plugin. The plugin's entry is an ES module that exports register(Urd) and uses the same define APIs as the core - including the migration contract. See docs/SKJEMA.md.",
   "type": "object",
   "required": ["id", "name", "version", "requiresEngine"],
   "allOf": [
     {
-      "$comment": "entry og provides er påkrevd for alt annet enn en ren språkpakke, som ikke har kode å kjøre (0.6.8.10).",
+      "$comment": "entry and provides are required for anything but a pure language pack, which has no code to run (0.6.8.10).",
       "if": { "not": { "required": ["languages"], "properties": { "languages": { "type": "array", "minItems": 1 } } } },
       "then": { "required": ["entry", "provides"] }
     }
@@ -19,17 +19,17 @@
     "version": {
       "type": "string",
       "pattern": "^\\d+\\.\\d+\\.\\d+$",
-      "description": "Semver for pluginen selv"
+      "description": "Semver for the plugin itself"
     },
     "requiresEngine": {
       "type": "string",
       "minLength": 1,
-      "description": "Semver-intervall for kompatibel motorversjon, f.eks. \">=0.1.0 <1.0.0\""
+      "description": "Semver range for compatible engine versions, e.g. \">=0.1.0 <1.0.0\""
     },
     "entry": { "type": "string", "pattern": "\\.js$" },
     "names": {
       "type": "object",
-      "description": "Valgfritt (additivt fra 0.6.8): visningsnavn per admin-språk (ADR-0012). Nøkkel = språkkode (nb/nn/en-GB/se/tr), verdi = navn; admin viser names[admin-språket] med name som fallback.",
+      "description": "Optional (additive from 0.6.8): display name per admin language (ADR-0012). Key = language code (nb/nn/en-GB/se/tr), value = name; admin shows names[admin language] with name as fallback.",
       "additionalProperties": false,
       "patternProperties": {
         "^[a-zA-Z-]+$": { "type": "string", "minLength": 1 }
@@ -37,11 +37,11 @@
     },
     "locales": {
       "type": "boolean",
-      "description": "Valgfritt (additivt fra 0.6.8): true lover locales/{nb,nn,en-GB,se,tr}.js med pluginens tekster (ADR-0012). Lasteren legger dem i besøkende-registret (site-språket) og i preview også i admin-registret; paritetstesten holder filene i synk."
+      "description": "Optional (additive from 0.6.8): true promises locales/{nb,nn,en-GB,se,tr}.js with the plugin's texts (ADR-0012). The loader puts them in the visitor registry (the site language) and in preview also in the admin registry; the parity test keeps the files in sync."
     },
     "languages": {
       "type": "array",
-      "description": "Valgfritt (additivt fra 0.6.8.10): språk pluginen leverer som SPRÅKPAKKE (ADR-0012). Hvert innslag lover locales/site/<code>.js og/eller locales/admin/<code>.js. En pakke kan ikke overstyre Urds innebygde språk (nb, nn, en-GB, se, tr), og en ren språkpakke trenger verken entry eller provides.",
+      "description": "Optional (additive from 0.6.8.10): languages the plugin delivers as a LANGUAGE PACK (ADR-0012). Each entry promises locales/site/<code>.js and/or locales/admin/<code>.js. A pack cannot override Urd's built-in languages (nb, nn, en-GB, se, tr), and a pure language pack needs neither entry nor provides.",
       "items": {
         "type": "object",
         "required": ["code", "name"],
@@ -51,15 +51,15 @@
             "type": "string",
             "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$",
             "not": { "enum": ["nb", "nn", "en-GB", "se", "tr"] },
-            "description": "Språkkoden (BCP 47), f.eks. \"sv\" eller \"pt-BR\". Urds innebygde språk kan ikke overstyres av en plugin."
+            "description": "The language code (BCP 47), e.g. \"sv\" or \"pt-BR\". Urd's built-in languages cannot be overridden by a plugin."
           },
           "name": {
             "type": "string",
             "minLength": 1,
-            "description": "Språkets EGET navn (endonym), som vises i språkvelgerne"
+            "description": "The language's OWN name (endonym), shown in the language pickers"
           },
-          "site": { "type": "boolean", "description": "Pakken dekker besøkende-tekstene (locales/site/<code>.js)" },
-          "admin": { "type": "boolean", "description": "Pakken dekker admin-chromen (locales/admin/<code>.js)" }
+          "site": { "type": "boolean", "description": "The pack covers the visitor texts (locales/site/<code>.js)" },
+          "admin": { "type": "boolean", "description": "The pack covers the admin chrome (locales/admin/<code>.js)" }
         },
         "anyOf": [
           { "required": ["site"], "properties": { "site": { "const": true } } },
@@ -69,7 +69,7 @@
     },
     "csp": {
       "type": "object",
-      "description": "Valgfritt (additivt fra v0.6): eksterne opprinnelser pluginen trenger CSP-unntak for. _headers endres aldri automatisk; admin viser behovet til eieren (se ADR-0006).",
+      "description": "Optional (additive from v0.6): external origins the plugin needs CSP exceptions for. _headers is never changed automatically; admin shows the need to the owner (see ADR-0006).",
       "additionalProperties": false,
       "properties": {
         "connectSrc": { "$ref": "#/$defs/originList" },
@@ -85,7 +85,7 @@
         "backgrounds": { "$ref": "#/$defs/idList" },
         "animations": { "$ref": "#/$defs/idList" },
         "templates": { "$ref": "#/$defs/idList" },
-        "maler": { "$ref": "#/$defs/idList", "$comment": "Legacy-navnet for templates (ADR-0021); leses fortsatt, skrives ikke i nye manifest." }
+        "maler": { "$ref": "#/$defs/idList", "$comment": "The legacy name for templates (ADR-0021); still read, not written in new manifests." }
       }
     }
   },

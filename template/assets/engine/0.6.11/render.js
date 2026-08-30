@@ -42,7 +42,7 @@ export function renderBackgroundLayers(host, background) {
       Urd.backgrounds.get(layer.type).render(el, lifted.props);
       host.appendChild(el);
     } catch (err) {
-      console.warn(`Urd: bakgrunnslag '${layer.type}' feilet under render`, err);
+      console.warn(`Urd: bakgrunnslag '${layer.type}' failed to render`, err);
     }
   }
 }
@@ -310,7 +310,7 @@ export function renderSection(section, site, host, opts = {}) {
     for (const block of section.blocks) {
       // En blokk uten desktop-frame (håndredigert/ødelagt data) hoppes over i stedet for å velte hele seksjonen.
       if (!block.frames?.desktop) {
-        console.warn(`Urd: blokk '${block.id ?? block.type}' mangler frames.desktop - hoppes over`);
+        console.warn(`Urd: blokk '${block.id ?? block.type}' is missing frames.desktop - skipped`);
         continue;
       }
       const el = document.createElement('div');
@@ -385,7 +385,7 @@ function renderBlock(Urd, el, block, ctx) {
         el.classList.add('urd-anim-cardwise');
       }
     } catch (err) {
-      console.warn(`Urd: blokk '${block.type}' feilet under render`, err);
+      console.warn(`Urd: blokk '${block.type}' failed to render`, err);
       renderPlaceholder(el, block.type);
     }
   } else {

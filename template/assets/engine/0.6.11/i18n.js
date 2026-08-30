@@ -74,20 +74,20 @@ export function isBuiltinLang(code) {
  */
 export function validateLanguages(list) {
   const errors = [];
-  if (!Array.isArray(list)) return ['languages må være en liste'];
+  if (!Array.isArray(list)) return ['languages must be a list'];
   for (const entry of list) {
     if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
-      errors.push('languages: hvert innslag må være et objekt');
+      errors.push('languages: every entry must be an object');
       continue;
     }
     const code = String(entry.code ?? '');
-    if (!LANG_CODE_RE.test(code)) errors.push(`languages: '${code}' er ikke en gyldig språkkode`);
+    if (!LANG_CODE_RE.test(code)) errors.push(`languages: '${code}' is not a valid language code`);
     else if (isBuiltinLang(code)) errors.push(`languages: '${code}' er innebygd i Urd og kan ikke overstyres`);
-    if (typeof entry.name !== 'string' || !entry.name.trim()) errors.push(`languages/${code}: name mangler (språkets eget navn)`);
+    if (typeof entry.name !== 'string' || !entry.name.trim()) errors.push(`languages/${code}: name is missing (the language's own name)`);
     for (const kind of ['site', 'admin']) {
-      if (entry[kind] !== undefined && typeof entry[kind] !== 'boolean') errors.push(`languages/${code}: ${kind} må være boolsk`);
+      if (entry[kind] !== undefined && typeof entry[kind] !== 'boolean') errors.push(`languages/${code}: ${kind} must be a boolean`);
     }
-    if (entry.site !== true && entry.admin !== true) errors.push(`languages/${code}: må dekke site, admin eller begge`);
+    if (entry.site !== true && entry.admin !== true) errors.push(`languages/${code}: must cover site, admin or both`);
   }
   return errors;
 }

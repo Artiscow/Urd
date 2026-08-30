@@ -41,7 +41,7 @@ function renderSummary(box, currency) {
 export const checkoutBlock = {
   version: 1,
   autoGrow: true,
-  label: 'Kasse',
+  label: 'Checkout',
   labelKey: 'blocks.checkout',
   defaults: () => ({ recipient: '', endpoint: '', vipps: '', currency: 'kr', vippsCheckout: false }),
   migrations: {},

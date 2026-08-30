@@ -1,4 +1,4 @@
-name: Tester
+name: Tests
 
 on:
   push:
@@ -17,22 +17,22 @@ jobs:
           cache: npm
           cache-dependency-path: editor/package-lock.json
 
-      - name: Motor- og vernetester
+      - name: Engine and guard tests
         run: node --test tests/*.mjs
 
-      - name: Installer editor-avhengigheter
+      - name: Install editor dependencies
         working-directory: editor
         run: npm ci
 
-      - name: Valider eksempeldata mot skjemaene
+      - name: Validate example data against the schemas
         working-directory: editor
         run: npm run validate
 
-      - name: Editoren bygger
+      - name: Editor builds
         working-directory: editor
         run: npm run build
 
-      - name: Committet editor-bygg matcher kilden
+      - name: Committed editor build matches the source
         # Bundelen i template/admin/assets er bygget artefakt som committes:
         # avviker den fra det kilden faktisk produserer, er den enten glemt
         # gjenbygget eller manipulert - begge skal stoppe CI.

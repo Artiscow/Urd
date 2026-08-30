@@ -45,10 +45,10 @@ export function isIsoDate(value) {
 export function validate(fields, values, messages = {}) {
   // Meldingsmalene kan overstyres (index.js sender besøkende-språkets
   // tekster via t()); standardene er bokmål så node-testene er selvbærende.
-  const requiredMsg = messages.required ?? '{label} må fylles ut';
-  const emailMsg = messages.email ?? 'Skriv en gyldig e-postadresse';
-  const choiceMsg = messages.choice ?? 'Velg et av alternativene';
-  const dateMsg = messages.date ?? 'Skriv en gyldig dato';
+  const requiredMsg = messages.required ?? '{label} is required';
+  const emailMsg = messages.email ?? 'Enter a valid email address';
+  const choiceMsg = messages.choice ?? 'Choose one of the options';
+  const dateMsg = messages.date ?? 'Enter a valid date';
   const errors = {};
   for (const field of fields) {
     // Boolsk før strengtvang: String(false) er en ikke-tom streng og ville

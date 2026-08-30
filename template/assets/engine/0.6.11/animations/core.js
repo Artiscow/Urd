@@ -19,10 +19,10 @@ const entranceDefaults = () => ({ duration: 600, delay: 0 });
 const STAGGER_STEP = 90;
 
 export const coreAnimations = {
-  'fade-in': { version: 1, label: 'Ton inn', labelKey: 'anim.fadeIn', entrance: true, defaults: entranceDefaults, migrations: {} },
-  'slide-up': { version: 1, label: 'Gli opp', labelKey: 'anim.slideUp', entrance: true, defaults: entranceDefaults, migrations: {} },
-  'zoom-in': { version: 1, label: 'Zoom inn', labelKey: 'anim.zoomIn', entrance: true, defaults: entranceDefaults, migrations: {} },
-  'hover-lift': { version: 1, label: 'Løft ved peker', labelKey: 'anim.hoverLift', entrance: false, defaults: () => ({}), migrations: {} },
+  'fade-in': { version: 1, label: 'Fade in', labelKey: 'anim.fadeIn', entrance: true, defaults: entranceDefaults, migrations: {} },
+  'slide-up': { version: 1, label: 'Slide up', labelKey: 'anim.slideUp', entrance: true, defaults: entranceDefaults, migrations: {} },
+  'zoom-in': { version: 1, label: 'Zoom in', labelKey: 'anim.zoomIn', entrance: true, defaults: entranceDefaults, migrations: {} },
+  'hover-lift': { version: 1, label: 'Lift on pointer', labelKey: 'anim.hoverLift', entrance: false, defaults: () => ({}), migrations: {} },
   // Stagger er en GRUPPE-inngangsanimasjon (kun seksjonsnivå): den animerer
   // ikke seksjonen selv, men slipper seksjonens kort-blokker inn forskjøvet fra
   // ÉN felles trigger. pattern: 'sequence' (ett trinn per kort), 'columns'/
@@ -30,7 +30,7 @@ export const coreAnimations = {
   // 'center' (utover fra midten av rekka). delay er felles grunnforsinkelse
   // (additiv fra 0.6.6.4.6, eldre data mangler feltet og leses som 0).
   stagger: {
-    version: 1, label: 'Stagger (kortgruppe)', labelKey: 'anim.stagger', entrance: true, group: true,
+    version: 1, label: 'Stagger (card group)', labelKey: 'anim.stagger', entrance: true, group: true,
     defaults: () => ({ duration: 600, delay: 0, step: STAGGER_STEP, effect: 'slide-up', pattern: 'sequence' }),
     migrations: {},
   },

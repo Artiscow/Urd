@@ -634,7 +634,7 @@ export function register(Urd) {
   Urd.blocks.define('calendar', {
     version: 1,
     autoGrow: true,
-    label: 'Kalender',
+    label: 'Calendar',
     labelKey: 'calendar.edit.blockLabel',
     defaults: () => ({ sources: [], view: 'list', limit: 6, showCategories: true, showSubscribe: true }),
     // Foldemenyen i blokkmenyene: én variant per visning (generisk variants-felt).
@@ -645,10 +645,11 @@ export function register(Urd) {
   });
 
   Urd.sections.define('whats-on', {
-    label: 'Hva skjer',
+    label: 'What is on',
     labelKey: 'calendar.edit.presetLabel',
-    group: 'Kort og lister',
-    hint: 'Arrangementsliste fra en abonnerbar kalender (iCal/Google)',
+    group: 'Cards and lists',
+    groupKey: 'presetGroup.cards',
+    hint: 'Event list from a subscribable calendar (iCal/Google)',
     hintKey: 'calendar.edit.presetHint',
     create: hvaSkjerSection,
   });

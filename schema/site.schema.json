@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://urd.dev/schema/site.schema.json",
   "title": "Urd site.json",
-  "description": "Nettstedets rot: identitet, sideregister, navigasjon, grid og tema. Kontrakten er beskrevet i docs/SKJEMA.md.",
+  "description": "The site root: identity, page registry, navigation, grid and theme. The contract is described in docs/SKJEMA.md.",
   "type": "object",
   "required": ["schemaVersion", "site", "grid", "theme", "pages", "nav"],
   "additionalProperties": false,
@@ -16,30 +16,30 @@
         "title": { "type": "string", "minLength": 1 },
         "lang": { "type": "string", "minLength": 2 },
         "description": { "type": "string" },
-        "icon": { "type": "string", "description": "Nettstedsikon (favicon): sti i media/ (data-URL i utkast). Additivt felt fra v0.5." },
-        "setup": { "type": "boolean", "description": "Additivt fra v0.6: true i malens standardinnhold utløser oppsettsveiviseren i admin; veiviseren fjerner feltet ved fullføring. Erstatter den gamle strengmatchingen på malens standardnavn." }
+        "icon": { "type": "string", "description": "Site icon (favicon): path in media/ (data URL in draft). Additive field from v0.5." },
+        "setup": { "type": "boolean", "description": "Additive from v0.6: true in the template's default content triggers the setup wizard in admin; the wizard removes the field on completion. Replaces the old string matching on the template's default name." }
       }
     },
     "breakpoints": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "mobile": { "type": "integer", "minimum": 200, "description": "Maks bredde (px) som regnes som mobil" }
+        "mobile": { "type": "integer", "minimum": 200, "description": "Max width (px) counted as mobile" }
       }
     },
     "layout": {
       "type": "object",
-      "description": "Sidelayout (additivt fra v0.7, ADR-0018): innholdet bindes av en designbredde med fullbredde seksjonsbakgrunn. Fylles inn av site-migreringen 1 -> 2.",
+      "description": "Page layout (additive from v0.7, ADR-0018): the content is bound by a design width with full-width section backgrounds. Filled in by the site migration 1 -> 2.",
       "additionalProperties": false,
       "properties": {
         "contentWidth": {
-          "description": "Designbredde i px, eller 'full' for ubunden fullbredde (Urds oppførsel før v0.7). Tall og ikke CSS-lengde, siden editoren regner målbredden for forhåndsvisningen ut fra den.",
+          "description": "Design width in px, or 'full' for unbound full width (Urd's behavior before v0.7). A number rather than a CSS length, since the editor computes the preview's target width from it.",
           "oneOf": [
             { "type": "integer", "minimum": 320 },
             { "const": "full" }
           ]
         },
-        "gutter": { "type": "integer", "minimum": 0, "maximum": 20, "description": "Minste sidemarg mellom innholdsflaten og vinduskanten, i PROSENT AV VINDUSBREDDEN (vw). Var px til schemaVersion 2. Gjelder kun over mobilbrekkpunktet, og har bare effekt der contentWidth ikke binder ennå." }
+        "gutter": { "type": "integer", "minimum": 0, "maximum": 20, "description": "Minimum side margin between the content surface and the viewport edge, in PERCENT OF THE VIEWPORT WIDTH (vw). Was px until schemaVersion 2. Applies only above the mobile breakpoint, and only has effect where contentWidth does not bind yet." }
       }
     },
     "grid": { "$ref": "#/$defs/grid" },
@@ -51,7 +51,7 @@
         "version": { "type": "integer", "minimum": 1 },
         "tokens": {
           "type": "object",
-          "description": "Grupper av design-tokens; mappes til CSS-variabler --urd-<gruppe>-<navn>",
+          "description": "Groups of design tokens; mapped to CSS variables --urd-<group>-<name>",
           "additionalProperties": {
             "type": "object",
             "additionalProperties": { "type": "string" }
@@ -60,21 +60,21 @@
         "scheme": {
           "enum": ["light", "dark"],
           "default": "light",
-          "description": "Hovedtemaets lyshet (additivt fra v0.6): hva lys/mørk-bryteren og prefers-color-scheme regner hovedtokens som."
+          "description": "The main theme's lightness (additive from v0.6): what the light/dark toggle and prefers-color-scheme treat the main tokens as."
         },
         "alt": {
           "type": "object",
-          "description": "Alternativt tema for lys/mørk-bryteren (additivt fra v0.6): token-grupper som overstyrer hovedtokens i motsatt modus av scheme. Finnes feltet, viser nav-en bryteren.",
+          "description": "Alternate theme for the light/dark toggle (additive from v0.6): token groups that override the main tokens in the opposite mode of scheme. If the field exists, the nav shows the toggle.",
           "required": ["tokens"],
           "additionalProperties": false,
           "properties": {
             "auto": {
               "type": "boolean",
-              "description": "Additivt fra v0.6: er true auto-avledes alt-fargene fra hovedtemaet (invertert lyshet) og re-avledes når en hovedfarge endres; false/utelatt = eieren styrer alt-fargene selv."
+              "description": "Additive from v0.6: if true the alt colors are auto-derived from the main theme (inverted lightness) and re-derived when a main color changes; false/omitted = the owner controls the alt colors."
             },
             "tokens": {
               "type": "object",
-              "description": "Samme form som theme.tokens; utelatte verdier arver hovedtemaet",
+              "description": "Same shape as theme.tokens; omitted values inherit the main theme",
               "additionalProperties": {
                 "type": "object",
                 "additionalProperties": { "type": "string" }
@@ -86,7 +86,7 @@
     },
     "pages": {
       "type": "array",
-      "description": "Sideregisteret - nav, ruting og adminpaneler deriveres herfra",
+      "description": "The page registry - nav, routing and admin panels are derived from it",
       "items": {
         "type": "object",
         "required": ["id", "title", "path", "file"],
@@ -96,7 +96,7 @@
           "title": { "type": "string", "minLength": 1 },
           "path": { "type": "string", "pattern": "^/" },
           "file": { "type": "string", "pattern": "^content/pages/.+\\.json$" },
-          "noindex": { "type": "boolean", "description": "Skjul siden fra søkemotorer (additivt fra v0.7): meta robots noindex, ingen canonical, og utelatt fra sitemap.xml" }
+          "noindex": { "type": "boolean", "description": "Hide the page from search engines (additive from v0.7): meta robots noindex, no canonical, and omitted from sitemap.xml" }
         }
       }
     },
@@ -109,141 +109,141 @@
         "layout": {
           "enum": ["left", "center", "right"],
           "default": "right",
-          "description": "Menypunktenes plassering (logoen står alltid først). Additivt felt fra v0.5."
+          "description": "Placement of the menu items (the logo always comes first). Additive field from v0.5."
         },
         "sticky": {
           "type": "boolean",
           "default": true,
-          "description": "Menyen følger med når man blar nedover (false = ligger kun øverst). Additivt felt fra v0.5."
+          "description": "The menu follows along when scrolling down (false = sits only at the top). Additive field from v0.5."
         },
         "scroll": {
           "enum": ["shrink", "hide"],
-          "description": "Scroll-adferd for klistret topplinje (additivt fra v0.6): shrink = menyen krymper etter et stykke scrolling, hide = skjules ved scrolling nedover og vises igjen ved scrolling oppover (alltid synlig øverst). Utelatt = vanlig. Ignoreres for sidestilt variant og når sticky er false."
+          "description": "Scroll behavior for the sticky top bar (additive from v0.6): shrink = the menu shrinks after some scrolling, hide = hidden when scrolling down and shown again when scrolling up (always visible at the top). Omitted = normal. Ignored for the side variant and when sticky is false."
         },
         "variant": {
           "enum": ["bar", "floating", "floating-square", "floating-tab", "side-left", "side-right"],
           "default": "bar",
-          "description": "Menyens form (additivt fra v0.6): bar = stripe i full bredde, floating = pille som svever over innholdet, floating-square = det samme uten avrundede kanter, floating-tab = flytende med firkant topp og kun de to nedre hjørnene avrundet (henger ned fra toppen), side-left/side-right = fast kolonne langs kanten (mobil og trange vinduer faller tilbake til topplinje med burger)."
+          "description": "The menu's form (additive from v0.6): bar = full-width strip, floating = pill floating above the content, floating-square = the same without rounded corners, floating-tab = floating with a square top and only the two lower corners rounded (hangs down from the top), side-left/side-right = fixed column along the edge (mobile and narrow windows fall back to a top bar with a burger)."
         },
         "overlay": {
           "type": "boolean",
           "default": false,
-          "description": "Legg fullbredde-linjen oppå toppseksjonen i stedet for i eget bånd over den, så en gjennomsiktig meny avslører hero bak seg (additivt fra v0.6). Gjelder kun variant bar; toppseksjonen bør ha nok klaring øverst. Floating/sidestilt ligger allerede utenfor flyten."
+          "description": "Place the full-width bar on top of the first section instead of in its own band above it, so a transparent menu reveals the hero behind it (additive from v0.6). Applies only to variant bar; the first section should have enough clearance at the top. Floating/side variants already sit outside the flow."
         },
         "cart": {
           "type": "object",
-          "description": "Handlekurv i verktøy-klyngen (butikken, additivt fra v0.7): knapp med antall-badge som åpner kurvskuffen. Utelatt = ingen kurv i menyen.",
+          "description": "Shopping cart in the tools cluster (the shop, additive from v0.7): button with a count badge that opens the cart drawer. Omitted = no cart in the menu.",
           "additionalProperties": false,
           "properties": {
             "show": { "type": "boolean", "default": false },
-            "href": { "type": "string", "description": "Kassesidens sti (skuffens «Til kassen»-lenke); tom = ingen lenke" },
-            "currency": { "type": "string", "description": "Valuta-ordet i skuffen (standard kr)" }
+            "href": { "type": "string", "description": "The checkout page's path (the drawer's \"Go to checkout\" link); empty = no link" },
+            "currency": { "type": "string", "description": "The currency word in the drawer (default kr)" }
           }
         },
         "style": {
           "type": "object",
-          "description": "Menyens utseende (additivt fra v0.5). Utelatte felt = standard.",
+          "description": "The menu's appearance (additive from v0.5). Omitted fields = default.",
           "additionalProperties": false,
           "properties": {
-            "background": { "$ref": "#/$defs/background", "description": "Lagbasert bakgrunn (additivt fra v0.6): overtar flaten når den finnes; de gamle bg/image-feltene gjelder kun uten lag (bakoverkompat)." },
-            "bg": { "type": "string", "description": "Bakgrunnsfarge: theme-token eller rå farge (gammel enkel form; erstattet av background-lag i editoren)" },
-            "bgOpacity": { "type": "number", "minimum": 0, "maximum": 1, "description": "Bakgrunnens dekkevne (0 = gjennomsiktig)" },
-            "blur": { "type": "boolean", "default": true, "description": "Uskarphet bak menyen" },
-            "textColor": { "type": "string", "description": "Tekstfarge i menyen (tom = temaets tekstfarge)" },
+            "background": { "$ref": "#/$defs/background", "description": "Layer-based background (additive from v0.6): takes over the surface when present; the old bg/image fields apply only without layers (backward compat)." },
+            "bg": { "type": "string", "description": "Background color: theme token or raw color (old simple form; replaced by background layers in the editor)" },
+            "bgOpacity": { "type": "number", "minimum": 0, "maximum": 1, "description": "The background's opacity (0 = transparent)" },
+            "blur": { "type": "boolean", "default": true, "description": "Blur behind the menu" },
+            "textColor": { "type": "string", "description": "Text color in the menu (empty = the theme's text color)" },
             "hover": {
               "enum": ["standard", "underline", "pill", "lift-plain", "lift"],
               "default": "standard",
-              "description": "Hover-stil for menylenkene (additivt fra v0.6): standard = aksentfarge, underline = glidende understrek, pill = avrundet bakgrunn, lift-plain = løft uten glød, lift = løft med glød."
+              "description": "Hover style for the menu links (additive from v0.6): standard = accent color, underline = sliding underline, pill = rounded background, lift-plain = lift without glow, lift = lift with glow."
             },
             "hoverGlow": {
               "type": "number",
               "minimum": 0,
               "maximum": 1,
               "default": 0.6,
-              "description": "Glødstyrken for hover-stilen lift (additivt fra v0.6); gløden ligger bak teksten."
+              "description": "Glow strength for the lift hover style (additive from v0.6); the glow sits behind the text."
             },
             "glow": {
               "type": "boolean",
               "default": false,
-              "description": "Glød rundt den flytende pillen (additivt fra v0.6; gjelder kun variant floating)."
+              "description": "Glow around the floating pill (additive from v0.6; applies only to variant floating)."
             },
             "topGap": {
               "type": "boolean",
               "default": true,
-              "description": "Luft over den flytende pillen (additivt fra v0.6; false = pillen ligger helt i toppen)."
+              "description": "Space above the floating pill (additive from v0.6; false = the pill sits flush at the top)."
             },
-            "image": { "type": "string", "description": "Bakgrunnsbilde i menyen (additivt fra v0.6): sti i media/ (data-URL i utkast). bg/bgOpacity legger seg som slør over bildet." },
+            "image": { "type": "string", "description": "Background image in the menu (additive from v0.6): path in media/ (data URL in draft). bg/bgOpacity is laid as a veil over the image." },
             "imageOpacity": {
               "type": "number",
               "minimum": 0,
               "maximum": 1,
               "default": 1,
-              "description": "Bildestyrke (additivt fra v0.6): under 1 tones bildet mot bakgrunnsfargen."
+              "description": "Image strength (additive from v0.6): below 1 the image is faded toward the background color."
             },
             "imageY": {
               "type": "number",
               "minimum": 0,
               "maximum": 100,
               "default": 50,
-              "description": "Bildeutsnitt i høyden (additivt fra v0.6): 0 = toppen av bildet, 100 = bunnen."
+              "description": "Vertical image crop (additive from v0.6): 0 = top of the image, 100 = bottom."
             },
             "imageX": {
               "type": "number",
               "minimum": 0,
               "maximum": 100,
               "default": 50,
-              "description": "Bildeutsnitt i bredden (additivt fra v0.6): 0 = venstre kant, 100 = høyre. Monner mest i sidestilt kolonne."
+              "description": "Horizontal image crop (additive from v0.6): 0 = left edge, 100 = right. Matters most in the side column."
             },
             "subImage": {
               "type": "boolean",
               "default": false,
-              "description": "Bakgrunnsbildet vises også i undermenyen og mobilpanelet (additivt fra v0.6; standard er kun fargesløret)."
+              "description": "The background image is also shown in the submenu and the mobile panel (additive from v0.6; the default is the color veil only)."
             },
             "subStyle": {
               "enum": ["card", "flat", "pills", "lines", "flyout"],
               "default": "card",
-              "description": "Undermenyens design (additivt fra v0.6): card = kort med skygge, flat = ren flate, pills = pille-punkter, lines = liste med skillelinjer, flyout = utfall i full menybredde."
+              "description": "The submenu's design (additive from v0.6): card = card with shadow, flat = plain surface, pills = pill items, lines = list with dividers, flyout = flyout in full menu width."
             },
             "subPillColor": {
               "type": "string",
-              "description": "Pille-punktenes farge når subStyle er pills: theme-token eller rå farge (additivt fra v0.6; standard er undermenyens flate)."
+              "description": "The pill items' color when subStyle is pills: theme token or raw color (additive from v0.6; the default is the submenu's surface)."
             },
             "subColumns": {
               "type": "number",
               "minimum": 1,
               "maximum": 4,
               "default": 1,
-              "description": "Kolonner i undermenyen (additivt fra v0.6): punktene legges i rutenett (2 gir 2x2, 2x3 osv.)."
+              "description": "Columns in the submenu (additive from v0.6): the items are laid out in a grid (2 gives 2x2, 2x3 and so on)."
             },
             "sideAlign": {
               "enum": ["left", "center", "right"],
               "default": "left",
-              "description": "Tekstjustering av punktene i den sidestilte kolonnen (additivt fra v0.6)."
+              "description": "Text alignment of the items in the side column (additive from v0.6)."
             },
             "sidePlacement": {
               "enum": ["top", "middle", "bottom"],
               "default": "top",
-              "description": "Vertikal plassering av menylisten i den sidestilte kolonnen (additivt fra v0.6). Eget felt: layout gjelder kun topplinjen."
+              "description": "Vertical placement of the menu list in the side column (additive from v0.6). Separate field: layout applies only to the top bar."
             },
             "width": {
               "type": "number",
               "minimum": 180,
               "maximum": 400,
               "default": 250,
-              "description": "Den sidestilte kolonnens bredde i px (additivt fra v0.6); justeres ved å dra i kolonnekanten i editoren."
+              "description": "The side column's width in px (additive from v0.6); adjusted by dragging the column edge in the editor."
             },
             "hoverColor": {
               "type": "string",
-              "description": "Hover-effektens farge (strek/pille-flate/glød): theme-token eller rå farge (additivt fra v0.6; standard aksent)."
+              "description": "The hover effect's color (underline/pill surface/glow): theme token or raw color (additive from v0.6; default accent)."
             },
             "hoverTextColor": {
               "type": "string",
-              "description": "Tekstfargen ved hover: theme-token eller rå farge (additivt fra v0.6; standard aksent)."
+              "description": "The text color on hover: theme token or raw color (additive from v0.6; default accent)."
             },
             "size": {
               "enum": ["sm", "md", "lg", "xl"],
               "default": "md",
-              "description": "Menyens størrelse (additivt fra v0.6): padding og skrift i fire trinn; md = dagens utseende."
+              "description": "The menu's size (additive from v0.6): padding and font in four steps; md = the current look."
             }
           }
         },
@@ -252,16 +252,16 @@
           "required": ["type", "value"],
           "additionalProperties": false,
           "properties": {
-            "type": { "enum": ["text", "image", "both"], "description": "both = bilde + tekst (additivt fra v0.5)" },
-            "value": { "type": "string", "description": "Tekst (type text/both) eller bilde-URL (type image)" },
-            "image": { "type": "string", "description": "Bilde-URL når type er both" },
-            "size": { "type": "number", "minimum": 12, "maximum": 128, "description": "Bildehøyde i px (standard 32)" },
-            "order": { "enum": ["image-first", "text-first"], "default": "image-first", "description": "Rekkefølge når type er both" },
-            "font": { "type": "string", "description": "Fontstabel for logoteksten (tom = temaets overskriftsfont)" },
-            "textSize": { "type": "number", "minimum": 8, "maximum": 96, "description": "Tekststørrelse i px (tom = arv)" },
+            "type": { "enum": ["text", "image", "both"], "description": "both = image + text (additive from v0.5)" },
+            "value": { "type": "string", "description": "Text (type text/both) or image URL (type image)" },
+            "image": { "type": "string", "description": "Image URL when type is both" },
+            "size": { "type": "number", "minimum": 12, "maximum": 128, "description": "Image height in px (default 32)" },
+            "order": { "enum": ["image-first", "text-first"], "default": "image-first", "description": "Order when type is both" },
+            "font": { "type": "string", "description": "Font stack for the logo text (empty = the theme's heading font)" },
+            "textSize": { "type": "number", "minimum": 8, "maximum": 96, "description": "Text size in px (empty = inherit)" },
             "bold": { "type": "boolean", "default": true },
             "italic": { "type": "boolean", "default": false },
-            "radius": { "type": "number", "minimum": 0, "maximum": 64, "description": "Bildets avrunding i px" }
+            "radius": { "type": "number", "minimum": 0, "maximum": 64, "description": "The image's corner rounding in px" }
           }
         },
         "items": {
@@ -272,19 +272,19 @@
             "additionalProperties": false,
             "properties": {
               "label": { "type": "string", "minLength": 1 },
-              "page": { "$ref": "#/$defs/id", "description": "Id fra sideregisteret" },
-              "href": { "type": "string", "description": "Lenkemål når page ikke er satt: ekstern lenke (https/mailto/tel) eller site-intern sti/anker til en seksjon (#seksjons-id, /sti#seksjons-id; additivt fra v0.6)" },
+              "page": { "$ref": "#/$defs/id", "description": "Id from the page registry" },
+              "href": { "type": "string", "description": "Link target when page is not set: external link (https/mailto/tel) or site-internal path/anchor to a section (#section-id, /path#section-id; additive from v0.6)" },
               "children": {
                 "type": "array",
-                "description": "Undermeny, ett nivå (additivt fra v0.6). Et punkt med children men uten page/href er en ren åpner (hele punktet åpner undermenyen); med eget mål vises lenken pluss en pilknapp.",
+                "description": "Submenu, one level (additive from v0.6). An item with children but no page/href is a pure opener (the whole item opens the submenu); with a target of its own the link is shown plus an arrow button.",
                 "items": {
                   "type": "object",
                   "required": ["label"],
                   "additionalProperties": false,
                   "properties": {
                     "label": { "type": "string", "minLength": 1 },
-                    "page": { "$ref": "#/$defs/id", "description": "Id fra sideregisteret" },
-                    "href": { "type": "string", "description": "Lenkemål når page ikke er satt: ekstern lenke (https/mailto/tel) eller site-intern sti/anker til en seksjon (#seksjons-id, /sti#seksjons-id; additivt fra v0.6)" }
+                    "page": { "$ref": "#/$defs/id", "description": "Id from the page registry" },
+                    "href": { "type": "string", "description": "Link target when page is not set: external link (https/mailto/tel) or site-internal path/anchor to a section (#section-id, /path#section-id; additive from v0.6)" }
                   },
                   "oneOf": [
                     { "required": ["page"] },
@@ -305,36 +305,36 @@
     },
     "footer": {
       "type": "object",
-      "description": "Delt footer på alle sider (additivt felt fra v0.5). Utelatt/skjult = ingen footer.",
+      "description": "Shared footer on all pages (additive field from v0.5). Omitted/hidden = no footer.",
       "required": ["version"],
       "additionalProperties": false,
       "properties": {
         "version": { "type": "integer", "minimum": 1 },
         "show": { "type": "boolean", "default": false },
-        "hideOn": { "type": "array", "items": { "type": "string" }, "description": "Side-id-er der footeren skjules (per-side-unntak, additivt fra v0.6); standard (fraværende) er synlig på alle sider når show er på." },
-        "text": { "type": "string", "description": "Linjer skilt med linjeskift; hver linje blir et avsnitt. Bakoverkompatibel enkel form" },
+        "hideOn": { "type": "array", "items": { "type": "string" }, "description": "Page ids where the footer is hidden (per-page exception, additive from v0.6); the default (absent) is visible on all pages when show is on." },
+        "text": { "type": "string", "description": "Lines separated by line breaks; each line becomes a paragraph. Backward-compatible simple form" },
         "align": { "enum": ["left", "center", "right"], "default": "center" },
         "brand": {
           "type": "object",
-          "description": "Merkevare-kolonnen (additivt fra v0.6): tittel, tagline og valgfri opplastet logo.",
+          "description": "The brand column (additive from v0.6): title, tagline and optional uploaded logo.",
           "additionalProperties": false,
           "properties": {
             "title": { "type": "string" },
             "tagline": { "type": "string" },
-            "mode": { "enum": ["text", "image", "both"], "default": "text", "description": "Merket vises som tekst, opplastet logo (bilde), eller begge (logo + tekst). Speiler nav-logoen. Additivt fra v0.6." },
-            "logo": { "type": "string", "description": "Opplastet logo: sti i media/ (data-URL i utkast). Vises når mode er image/both." },
-            "logoHeight": { "type": "number", "minimum": 16, "maximum": 160, "default": 40, "description": "Logohøyde i px." }
+            "mode": { "enum": ["text", "image", "both"], "default": "text", "description": "The brand is shown as text, uploaded logo (image), or both (logo + text). Mirrors the nav logo. Additive from v0.6." },
+            "logo": { "type": "string", "description": "Uploaded logo: path in media/ (data URL in draft). Shown when mode is image/both." },
+            "logoHeight": { "type": "number", "minimum": 16, "maximum": 160, "default": 40, "description": "Logo height in px." }
           }
         },
         "columns": {
           "type": "array",
-          "description": "Lenkekolonner (additivt fra v0.6). En kolonne uten gyldige lenker rendres ikke.",
+          "description": "Link columns (additive from v0.6). A column without valid links is not rendered.",
           "items": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
               "title": { "type": "string" },
-              "wide": { "type": "boolean", "default": false, "description": "Tving kolonnen bred (todelt); ellers auto ved > 6 lenker (additivt fra v0.6)." },
+              "wide": { "type": "boolean", "default": false, "description": "Force the column wide (two-column); otherwise auto at > 6 links (additive from v0.6)." },
               "links": {
                 "type": "array",
                 "items": {
@@ -343,8 +343,8 @@
                   "additionalProperties": false,
                   "properties": {
                     "label": { "type": "string" },
-                    "page": { "$ref": "#/$defs/id", "description": "Id fra sideregisteret" },
-                    "href": { "type": "string", "description": "Lenkemål når page ikke er satt: ekstern lenke (https/mailto/tel) eller site-intern sti/anker til en seksjon (#seksjons-id, /sti#seksjons-id; additivt fra v0.6)" }
+                    "page": { "$ref": "#/$defs/id", "description": "Id from the page registry" },
+                    "href": { "type": "string", "description": "Link target when page is not set: external link (https/mailto/tel) or site-internal path/anchor to a section (#section-id, /path#section-id; additive from v0.6)" }
                   },
                   "not": { "required": ["page", "href"] }
                 }
@@ -354,38 +354,38 @@
         },
         "social": {
           "type": "array",
-          "description": "Sosiale lenker (additivt fra v0.6): ikon-id fra ikonbiblioteket + URL (http/https/mailto/tel).",
+          "description": "Social links (additive from v0.6): icon id from the icon library + URL (http/https/mailto/tel).",
           "items": {
             "type": "object",
             "required": ["icon", "url"],
             "additionalProperties": false,
             "properties": {
-              "icon": { "type": "string", "description": "Id fra ikonbiblioteket (icons.js)" },
+              "icon": { "type": "string", "description": "Id from the icon library (icons.js)" },
               "url": { "type": "string" }
             }
           }
         },
-        "copyright": { "type": "string", "description": "Bunnlinje (additivt fra v0.6); faller tilbake til text når fraværende" },
-        "bg": { "type": "string", "description": "Bakgrunnsfarge: temafarge-token eller egen verdi (gammel enkel form; erstattet av background-lag i editoren). Default = temaets surface" },
-        "background": { "$ref": "#/$defs/background", "description": "Lagbasert bakgrunn (additivt fra v0.6): overtar flaten når den finnes; det gamle bg-feltet gjelder kun uten lag (bakoverkompat)." },
-        "baseline": { "type": "array", "description": "Bunnlinjas valgfrie høyre-lenker (additivt fra v0.6): personvern/vilkår/«Laget med Urd».", "items": { "$ref": "#/$defs/footerLink" } },
-        "linkRow": { "type": "array", "description": "Doormat-lenkerad: én sentrert rad med lenker (additivt fra v0.6; Sentrert- og Stor CTA-malen).", "items": { "$ref": "#/$defs/footerLink" } },
-        "columnsAlign": { "enum": ["left", "center"], "default": "left", "description": "Justering av en bred (todelt) kolonnes overskrift (additivt fra v0.6)." },
+        "copyright": { "type": "string", "description": "Bottom line (additive from v0.6); falls back to text when absent" },
+        "bg": { "type": "string", "description": "Background color: theme color token or custom value (old simple form; replaced by background layers in the editor). Default = the theme's surface" },
+        "background": { "$ref": "#/$defs/background", "description": "Layer-based background (additive from v0.6): takes over the surface when present; the old bg field applies only without layers (backward compat)." },
+        "baseline": { "type": "array", "description": "The bottom line's optional right-side links (additive from v0.6): privacy/terms/\"Made with Urd\".", "items": { "$ref": "#/$defs/footerLink" } },
+        "linkRow": { "type": "array", "description": "Doormat link row: one centered row of links (additive from v0.6; the Centered and Big CTA templates).", "items": { "$ref": "#/$defs/footerLink" } },
+        "columnsAlign": { "enum": ["left", "center"], "default": "left", "description": "Alignment of a wide (two-column) column's heading (additive from v0.6)." },
         "cta": {
           "type": "object",
-          "description": "Handlingsoppfordring (additivt fra v0.6): knapp (lenke) eller nyhetsbrev (e-postfelt + moderne endepunkt-innsending).",
+          "description": "Call to action (additive from v0.6): button (link) or newsletter (email field + modern endpoint submission).",
           "additionalProperties": false,
           "properties": {
             "kind": { "enum": ["button", "newsletter"], "default": "button" },
-            "big": { "type": "boolean", "default": false, "description": "Stor sentrert variant (Stor CTA)." },
+            "big": { "type": "boolean", "default": false, "description": "Big centered variant (Big CTA)." },
             "heading": { "type": "string" },
-            "sub": { "type": "string", "description": "Undertekst" },
-            "label": { "type": "string", "description": "Knappetekst" },
-            "page": { "$ref": "#/$defs/id", "description": "Knapp-mål: id fra sideregisteret" },
-            "href": { "type": "string", "description": "Knapp-mål når page ikke er satt: ekstern lenke/mailto eller site-intern sti/anker til en seksjon (#seksjons-id; additivt fra v0.6)" },
-            "endpoint": { "type": "string", "description": "Nyhetsbrev-endepunkt (Formspree/Mailchimp/Buttondown/egen Cloudflare-function); sendes med fetch (POST JSON). Ekstern vert krever connect-src i _headers (ADR-0006)." },
-            "recipient": { "type": "string", "description": "Mailto-fallback når endpoint mangler" },
-            "success": { "type": "string", "description": "Inline bekreftelse etter påmelding" }
+            "sub": { "type": "string", "description": "Subtext" },
+            "label": { "type": "string", "description": "Button text" },
+            "page": { "$ref": "#/$defs/id", "description": "Button target: id from the page registry" },
+            "href": { "type": "string", "description": "Button target when page is not set: external link/mailto or site-internal path/anchor to a section (#section-id; additive from v0.6)" },
+            "endpoint": { "type": "string", "description": "Newsletter endpoint (Formspree/Mailchimp/Buttondown/own Cloudflare function); sent with fetch (POST JSON). An external host requires connect-src in _headers (ADR-0006)." },
+            "recipient": { "type": "string", "description": "Mailto fallback when endpoint is missing" },
+            "success": { "type": "string", "description": "Inline confirmation after signup" }
           }
         }
       }
@@ -399,8 +399,8 @@
       "additionalProperties": false,
       "properties": {
         "label": { "type": "string" },
-        "page": { "$ref": "#/$defs/id", "description": "Id fra sideregisteret" },
-        "href": { "type": "string", "description": "Lenkemål når page ikke er satt: ekstern lenke (https/mailto/tel) eller site-intern sti/anker til en seksjon (#seksjons-id, /sti#seksjons-id; additivt fra v0.6)" }
+        "page": { "$ref": "#/$defs/id", "description": "Id from the page registry" },
+        "href": { "type": "string", "description": "Link target when page is not set: external link (https/mailto/tel) or site-internal path/anchor to a section (#section-id, /path#section-id; additive from v0.6)" }
       },
       "not": { "required": ["page", "href"] }
     },
@@ -408,9 +408,9 @@
       "type": "object",
       "required": ["size"],
       "additionalProperties": false,
-      "description": "Snappeverktøy: kvadratiske ruter. Påvirker aldri plassering.",
+      "description": "Snapping tool: square cells. Never affects placement.",
       "properties": {
-        "size": { "type": "number", "minimum": 2, "maximum": 256, "description": "Rutestørrelse i px (mindre = tettere)" },
+        "size": { "type": "number", "minimum": 2, "maximum": 256, "description": "Cell size in px (smaller = tighter)" },
         "snap": { "type": "boolean", "default": true }
       }
     },
@@ -426,7 +426,7 @@
     },
     "background": {
       "type": "object",
-      "description": "Lagbasert bakgrunn (color/gradient/glow/grain/image/bildegalleri) - samme modell som seksjonsbakgrunnen. Additivt fra v0.6; delt av nav og footer.",
+      "description": "Layer-based background (color/gradient/glow/grain/image/slideshow) - the same model as the section background. Additive from v0.6; shared by nav and footer.",
       "required": ["version", "layers"],
       "additionalProperties": false,
       "properties": {

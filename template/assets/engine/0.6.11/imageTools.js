@@ -70,12 +70,12 @@ export function svgToDataUrl(text) {
   const raw = String(text ?? '');
   // Ankrede regex-barrierer (CodeQL gjenkjenner dem): må se ut som en SVG, og
   // ingen av skript-vektorene får finnes.
-  if (!/<svg[\s>]/i.test(raw)) throw new Error('Ugyldig SVG');
+  if (!/<svg[\s>]/i.test(raw)) throw new Error('Invalid SVG');
   if (/<\s*script[\s>]/i.test(raw)
     || /<\s*foreignObject[\s>]/i.test(raw)
     || /\son[a-z]+\s*=/i.test(raw)
     || /javascript:/i.test(raw)) {
-    throw new Error('SVG-en inneholder skript eller hendelser og kan ikke brukes');
+    throw new Error('The SVG contains scripts or event handlers and cannot be used');
   }
   const bytes = new Blob([raw]).size;
   // encodeURIComponent-omveien lar btoa takle ikke-ASCII (æøå i tittel/desc).
@@ -146,7 +146,7 @@ export function mediaExtension(dataUrl) {
 }
 
 /** Filnavn → trygg slug for media/-stier. */
-export function slugify(name, fallback = 'bilde') {
+export function slugify(name, fallback = 'image') {
   return name
     .replace(/\.[^.]+$/, '')
     .toLowerCase()

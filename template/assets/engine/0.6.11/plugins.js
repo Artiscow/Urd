@@ -54,26 +54,26 @@ const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
  */
 export function validateManifest(manifest) {
   const errors = [];
-  if (!manifest || typeof manifest !== 'object') return ['manifestet er ikke et objekt'];
-  if (!ID_RE.test(manifest.id ?? '')) errors.push('id mangler eller er ugyldig');
-  if (typeof manifest.name !== 'string' || !manifest.name) errors.push('name mangler');
-  if (!parseSemver(manifest.version ?? '')) errors.push('version er ikke semver');
-  if (typeof manifest.requiresEngine !== 'string' || !manifest.requiresEngine) errors.push('requiresEngine mangler');
+  if (!manifest || typeof manifest !== 'object') return ['the manifest is not an object'];
+  if (!ID_RE.test(manifest.id ?? '')) errors.push('id is missing or invalid');
+  if (typeof manifest.name !== 'string' || !manifest.name) errors.push('name is missing');
+  if (!parseSemver(manifest.version ?? '')) errors.push('version is not semver');
+  if (typeof manifest.requiresEngine !== 'string' || !manifest.requiresEngine) errors.push('requiresEngine is missing');
   // En ren SPRÅKPAKKE har ingen kode: da er entry og provides valgfrie.
   // Er de likevel oppgitt, gjelder de vanlige kravene.
   const isLanguagePack = Array.isArray(manifest.languages) && manifest.languages.length > 0;
   if (manifest.entry !== undefined || !isLanguagePack) {
-    if (typeof manifest.entry !== 'string' || !manifest.entry.endsWith('.js')) errors.push('entry mangler eller er ikke en .js-fil');
+    if (typeof manifest.entry !== 'string' || !manifest.entry.endsWith('.js')) errors.push('entry is missing or is not a .js file');
   }
   if (manifest.provides !== undefined || !isLanguagePack) {
-    if (!manifest.provides || typeof manifest.provides !== 'object') errors.push('provides mangler');
+    if (!manifest.provides || typeof manifest.provides !== 'object') errors.push('provides is missing');
   }
   if (manifest.languages !== undefined) errors.push(...validateLanguages(manifest.languages));
   // Valgfrie flerspråk-felt (additive fra 0.6.8): locales lover locales/<lang>.js-filer,
   // names er visningsnavn per admin-språk.
-  if (manifest.locales !== undefined && typeof manifest.locales !== 'boolean') errors.push('locales må være boolsk');
+  if (manifest.locales !== undefined && typeof manifest.locales !== 'boolean') errors.push('locales must be a boolean');
   if (manifest.names !== undefined && (typeof manifest.names !== 'object' || manifest.names === null || Array.isArray(manifest.names)
-    || Object.values(manifest.names).some((v) => typeof v !== 'string' || !v))) errors.push('names må være et objekt med språkkode til navn');
+    || Object.values(manifest.names).some((v) => typeof v !== 'string' || !v))) errors.push('names must be an object mapping language code to name');
   return errors;
 }
 
@@ -99,7 +99,7 @@ export function createStagedUrd(Urd, pluginName = null) {
   for (const [kind] of KINDS) {
     staged[kind] = {
       define(id, def) {
-        if (!ID_RE.test(id ?? '')) throw new Error(`Urd.${kind}: ugyldig id '${id}'`);
+        if (!ID_RE.test(id ?? '')) throw new Error(`Urd.${kind}: invalid id '${id}'`);
         captured.get(kind).push([id, pluginName ? { ...def, fromPlugin: pluginName } : def]);
       },
       get: (id) => Urd[kind].get(id),
@@ -149,10 +149,10 @@ export function checkProvides(provides, defined) {
       ?? [];
     const actual = defined[provideKey] ?? [];
     for (const id of promised) {
-      if (!actual.includes(id)) diffs.push(`lover ${provideKey}/${id} men definerte den ikke`);
+      if (!actual.includes(id)) diffs.push(`promises ${provideKey}/${id} but never defined it`);
     }
     for (const id of actual) {
-      if (!promised.includes(id)) diffs.push(`definerte ${provideKey}/${id} uten å love den i provides`);
+      if (!promised.includes(id)) diffs.push(`defined ${provideKey}/${id} without promising it in provides`);
     }
   }
   return diffs;
@@ -181,7 +181,7 @@ async function loadPluginLocale(id, lang) {
     const extra = lang !== 'nb' ? await load(lang).catch(() => null) : null;
     return { ...base, ...(extra ?? {}) };
   } catch {
-    console.warn(`Urd: plugin '${id}' lover locales, men locales/nb.js kunne ikke lastes`);
+    console.warn(`Urd: plugin '${id}' promises locales, but locales/nb.js could not be loaded`);
     return null;
   }
 }
@@ -222,11 +222,11 @@ export async function loadPluginById(Urd, engineVersion, id) {
     const manifest = await (await fetch(`/plugins/${id}/plugin.json`)).json();
     const errors = validateManifest(manifest);
     if (errors.length) {
-      console.warn(`Urd: plugin '${id}' har ugyldig manifest: ${errors.join('; ')}`);
+      console.warn(`Urd: plugin '${id}' has an invalid manifest: ${errors.join('; ')}`);
       return;
     }
     if (!satisfiesEngine(engineVersion, manifest.requiresEngine)) {
-      console.warn(`Urd: plugin '${id}' krever motor '${manifest.requiresEngine}', denne er ${engineVersion} - hoppes over`);
+      console.warn(`Urd: plugin '${id}' requires engine '${manifest.requiresEngine}', this is ${engineVersion} - skipped`);
       return;
     }
     // Ordboka lastes FØR register()/render, så pluginens t()/ta()-oppslag
@@ -248,7 +248,7 @@ export async function loadPluginById(Urd, engineVersion, id) {
     }
     const mod = await import(/* @vite-ignore */ `/plugins/${id}/${manifest.entry}`);
     if (typeof mod.register !== 'function') {
-      console.warn(`Urd: plugin '${id}' mangler register()-eksport`);
+      console.warn(`Urd: plugin '${id}' is missing a register() export`);
       return;
     }
     // fromPlugin bærer VISNINGSNAVNET (manifest.names for admin-språket når
@@ -260,11 +260,11 @@ export async function loadPluginById(Urd, engineVersion, id) {
       console.warn(`Urd: plugin '${id}': ${warning}`);
     }
     for (const diff of checkProvides(manifest.provides, staging.defined())) {
-      console.warn(`Urd: plugin '${id}' bryter provides-kontrakten: ${diff}`);
+      console.warn(`Urd: plugin '${id}' breaks the provides contract: ${diff}`);
     }
     loadedPlugins.add(id);
   } catch (err) {
-    console.warn(`Urd: plugin '${id}' kunne ikke lastes`, err);
+    console.warn(`Urd: plugin '${id}' could not be loaded`, err);
   }
 }
 

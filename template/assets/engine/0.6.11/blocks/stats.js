@@ -56,7 +56,7 @@ export function formatStatValue(n, reference, decimals) {
 export const statsBlock = {
   version: 1,
   autoGrow: true,
-  label: 'Statistikk',
+  label: 'Statistic',
   labelKey: 'blocks.stats',
   // Seed-regelen (ADR-0012): ta() kalles kun her ved innsetting i preview.
   defaults: () => ({

@@ -7,7 +7,7 @@ const NOISE_URI = `url("data:image/svg+xml,${encodeURIComponent(NOISE_SVG).repla
 
 export const grainLayer = {
   version: 1,
-  label: 'Korn',
+  label: 'Grain',
   labelKey: 'bgLayer.grain',
   defaults: () => ({ opacity: 0.06 }),
   migrations: {},

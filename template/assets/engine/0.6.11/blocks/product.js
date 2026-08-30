@@ -42,7 +42,7 @@ function richNode(tag, className, entry, field, collection, editable) {
     stripActiveContent(node);
   } else {
     node.classList.add('urd-collection-placeholder');
-    node.dataset.placeholder = 'Skriv tekst …';
+    node.dataset.placeholder = ta('canvas.textPlaceholder');
   }
   if (editable) {
     node.contentEditable = 'true';
@@ -294,7 +294,7 @@ export const productBlock = {
   // Kortvis animasjon: blokkens inngang/pekereffekt spilles per kort, ikke
   // på blokk-elementet (render.js hopper over; kortene animeres i render).
   animPerCard: true,
-  label: 'Produktkort',
+  label: 'Product cards',
   labelKey: 'blocks.product',
   defaults: () => ({ collection: null, limit: 0, columns: 0, currency: 'kr' }),
   migrations: {},

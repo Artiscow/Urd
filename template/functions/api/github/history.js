@@ -34,7 +34,7 @@ export async function onRequestGet({ request, env }) {
         sha: c.sha,
         // Kun første linje: resten er detaljer for git, ikke for panelet.
         message: c.commit.message.split('\n')[0],
-        author: c.author?.login ?? c.commit.author?.name ?? 'ukjent',
+        author: c.author?.login ?? c.commit.author?.name ?? 'unknown',
         date: c.commit.author?.date ?? null,
       })),
     });

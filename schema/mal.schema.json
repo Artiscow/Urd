@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://urd.dev/schema/mal.schema.json",
-  "title": "Urd brukermal (content/maler/<id>.json)",
-  "description": "En brukerlaget mal: en serialisert seksjon, blokkgruppe eller side med et lite metahode. Nyttelast-nøkkelen er lik mal.kind; id-ene i filen er opphav og tildeles på nytt ved hver innsetting (se docs/SKJEMA.md, Maler).",
+  "title": "Urd user template (content/maler/<id>.json)",
+  "description": "A user-made template: a serialized section, block group or page with a small meta header. The payload key equals mal.kind; the ids in the file are provenance and are reassigned on every insertion (see docs/SKJEMA.md, Maler).",
   "type": "object",
   "required": ["schemaVersion", "mal"],
   "additionalProperties": false,

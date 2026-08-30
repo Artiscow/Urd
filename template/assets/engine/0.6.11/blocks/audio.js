@@ -11,7 +11,7 @@ export const audioBlock = {
   version: 1,
   // Naturlig høyde i mobil-radnettet (spillerens høyde er nettleserens).
   autoGrow: true,
-  label: 'Lyd',
+  label: 'Audio',
   labelKey: 'blocks.audio',
   defaults: () => ({ src: '', title: '', loop: false }),
   migrations: {},

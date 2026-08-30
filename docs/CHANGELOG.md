@@ -25,6 +25,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.14.9 - Engelsk-renskingen: resterende strenger - 30. august 2026
+
+- 133 norske fallback-etiketter (label/hint/group/itemLabel i presets, blokker, bakgrunner, animasjoner, footer) byttet programmatisk til en-GB-ordbokas verdier, så fallback og oversettelse aldri spriker; samme grep for referansepluginene fra deres egne en-GB-filer. Funn: plugin-presetene manglet groupKey og dannet egen gruppe i ikke-norske språk; de har nå presetGroup.cards.
+- Alle feil-/konsollmeldinger i motoren (registry, plugins, i18n, language-packs, render, nav, urd, button, imageTools), de to functions-fragmentene, check-release.mjs, form-pluginens validerings-fallbacks, dev-server.py og workflow-stegnavnene er engelske; HTML-kommentarene i skallene oversatt med kopiene byte-like.
+- Hardkodede chrome-tekster fikk oversettelsesnøkler (ADR-0012): canvas.editImage/textPlaceholder/videoOnPublished/imageEmpty/galleryEmpty og tip.nav.colResize i nb/en-GB/tr, med ta()-oppslag i konsumentene; slugify-fallbacken heter image.
+- Skjemafilenes 164 beskrivelses-/kommentar-/tittelstrenger oversatt til engelsk (uavhengig agent, JSON-gyldighet og full validering bekreftet); de ekte norske stinavnene i brukerrepoer står bevisst, og slideshow-laget omtales med riktig id.
+
 ### 0.7.14.8 - Engelsk-renskingen: icons.js-lokaliseringen - 30. august 2026
 
 - Ikonbibliotekets 56 etiketter var norske literaler uten oversettelsesnøkkel (lokaliseringshull fra 0.6): hvert ikon har nå `labelKey` (icon.*) med engelsk fallback i koden, nøklene ligger i nb (uendrede norske tekster), en-GB og tr, og GlyphPicker-tooltipen og sosial-ikon-nedtrekket slår opp via ta(). Footer-ikonenes aria-labels hos besøkende bruker fallback-etiketten (i praksis merkenavn).
