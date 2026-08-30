@@ -58,13 +58,13 @@ export const shareBlock = {
    */
   render(el, props, ctx) {
     const host = document.createElement('div');
-    host.className = `urd-deling${props.variant === 'labels' ? ' urd-deling-labels' : ''}`;
+    host.className = `urd-share${props.variant === 'labels' ? ' urd-share-labels' : ''}`;
     const size = Math.min(64, Math.max(24, Number(props.size) || 38));
-    host.style.setProperty('--urd-deling-size', `${size}px`);
+    host.style.setProperty('--urd-share-size', `${size}px`);
     // Fargen valideres som hex eller tematoken; alt annet gir aksentfargen.
     const color = String(props.color ?? '');
-    if (/^#[0-9a-fA-F]{3,8}$/.test(color)) host.style.setProperty('--urd-deling-color', color);
-    else if (/^[a-z][a-z0-9-]*$/.test(color)) host.style.setProperty('--urd-deling-color', `var(--urd-color-${color})`);
+    if (/^#[0-9a-fA-F]{3,8}$/.test(color)) host.style.setProperty('--urd-share-color', color);
+    else if (/^[a-z][a-z0-9-]*$/.test(color)) host.style.setProperty('--urd-share-color', `var(--urd-color-${color})`);
     el.appendChild(host);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
 
@@ -72,25 +72,25 @@ export const shareBlock = {
     for (const [service, icon, brand] of SHARE_SERVICES) {
       if (!wanted.includes(service)) continue;
       const label = brand ?? t(service === 'copy' ? 'deling.copy' : 'deling.email');
-      const inner = `<span class="urd-deling-ikon">${iconSvg(icon) ?? ''}</span><span class="urd-deling-navn"></span>`;
+      const inner = `<span class="urd-share-icon">${iconSvg(icon) ?? ''}</span><span class="urd-share-name"></span>`;
       if (service === 'copy') {
         // Kopier lenke: kun med Clipboard API (funksjonssjekk, ADR-0011).
         if (!navigator.clipboard?.writeText) continue;
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'urd-deling-knapp';
+        btn.className = 'urd-share-button';
         btn.innerHTML = inner;
-        btn.querySelector('.urd-deling-navn').textContent = label;
+        btn.querySelector('.urd-share-name').textContent = label;
         btn.title = label;
         btn.setAttribute('aria-label', label);
         btn.addEventListener('click', async () => {
           try {
             await navigator.clipboard.writeText(location.href);
-            btn.querySelector('.urd-deling-navn').textContent = t('share.copied');
-            btn.classList.add('urd-deling-kopiert');
+            btn.querySelector('.urd-share-name').textContent = t('share.copied');
+            btn.classList.add('urd-share-copied');
             setTimeout(() => {
-              btn.querySelector('.urd-deling-navn').textContent = label;
-              btn.classList.remove('urd-deling-kopiert');
+              btn.querySelector('.urd-share-name').textContent = label;
+              btn.classList.remove('urd-share-copied');
             }, 1600);
           } catch {
             // Avslått tillatelse: knappen står urørt, ingen feiltilstand å vise.
@@ -100,7 +100,7 @@ export const shareBlock = {
         continue;
       }
       const link = document.createElement('a');
-      link.className = 'urd-deling-knapp';
+      link.className = 'urd-share-button';
       // Adressen og tittelen leses ved klikk, ikke ved render: klientside-
       // navigasjon kan ha byttet side siden blokken ble tegnet.
       link.href = '#';
@@ -115,7 +115,7 @@ export const shareBlock = {
         else window.open(target, '_blank', 'noopener');
       });
       link.innerHTML = inner;
-      link.querySelector('.urd-deling-navn').textContent = label;
+      link.querySelector('.urd-share-name').textContent = label;
       const aria = brand ? t('share.share', { service: brand }) : label;
       link.title = aria;
       link.setAttribute('aria-label', aria);

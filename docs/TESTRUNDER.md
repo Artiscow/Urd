@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.14.7): CSS-klassene
+
+- [ ] Visuell gjennomgang av alle blokktyper på lerret og publisert i BEGGE moduser: produktkort med hover-bildebytte, kurvskuff, kasse, galleri (grid/karusell/slides + lightbox), samlingsvisningene, sitat (stort/kort med portrett), tidslinje (venstre/vekslende), tabell, nedteller, deling, statistikk - alt ser ut som før klasse-renamet
+- [ ] Kortvis-animasjonen på produktblokken spiller fortsatt (urd-anim-cardwise-markøren)
+- [ ] Videobakgrunnens plakat ved redusert bevegelse og nav-krympingen ved scrolling virker (variabel-renames)
+- [ ] 404-siden ser riktig ut (`.code`-klassen)
+- [ ] En side med egendefinert CSS mot gamle klassenavn dokumenteres som kjent brudd (CHANGELOG-notatet), ikke som bug
+
 ### Testrunde-batch (0.7.14.6): Identifikatorene, nøkkelrommene og utkastnøklene
 
 - [ ] UTKAST-MIGRERING: med et upublisert samlings-/mal-utkast fra FØR denne versjonen i nettleseren: åpne admin - utkastet overlever (vises med endringsmerke), og gamle urd-draft-samling*/-mal*-nøkler er borte fra localStorage

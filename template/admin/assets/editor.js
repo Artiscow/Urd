@@ -5860,7 +5860,7 @@ var Pc = {
 	render(e, t) {
 		let n = (t.images ?? []).filter((e) => sc(e?.src));
 		if (!n.length) return;
-		e.classList.add("urd-bg-galleri"), e.style.opacity = String(t.opacity ?? 1), t.blur > 0 && (e.style.filter = `blur(${t.blur}px)`, e.style.inset = `-${t.blur * 2}px`);
+		e.classList.add("urd-bg-slideshow"), e.style.opacity = String(t.opacity ?? 1), t.blur > 0 && (e.style.filter = `blur(${t.blur}px)`, e.style.inset = `-${t.blur * 2}px`);
 		let r = Math.max(0, Number(t.fade) || 0);
 		e.style.setProperty("--urd-bgg-fade", `${r}s`);
 		let i = (e, n) => {
@@ -5937,7 +5937,7 @@ var zc = (e, t, n, r) => {
 		if (e.style.opacity = String(t.opacity ?? 1), window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
 			if (!sc(t.poster)) return;
 			let n = document.createElement("img");
-			n.className = "urd-bg-video-plakat", n.alt = "", n.setAttribute("aria-hidden", "true"), n.src = t.poster, zc(n, t.fit, t.x, t.y), e.appendChild(n);
+			n.className = "urd-bg-video-poster", n.alt = "", n.setAttribute("aria-hidden", "true"), n.src = t.poster, zc(n, t.fit, t.x, t.y), e.appendChild(n);
 			return;
 		}
 		let n = document.createElement("video");

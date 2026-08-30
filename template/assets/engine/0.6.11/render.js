@@ -382,7 +382,7 @@ function renderBlock(Urd, el, block, ctx) {
         renderAnimation(Urd, el, block.animation, ctx);
         renderAnimation(Urd, el, block.hover, ctx);
       } else if (block.animation?.type || block.hover?.type) {
-        el.classList.add('urd-anim-kortvis');
+        el.classList.add('urd-anim-cardwise');
       }
     } catch (err) {
       console.warn(`Urd: blokk '${block.type}' feilet under render`, err);

@@ -41,12 +41,12 @@ function richNode(tag, className, entry, field, collection, editable) {
     node.innerHTML = value;
     stripActiveContent(node);
   } else {
-    node.classList.add('urd-samling-placeholder');
+    node.classList.add('urd-collection-placeholder');
     node.dataset.placeholder = 'Skriv tekst …';
   }
   if (editable) {
     node.contentEditable = 'true';
-    node.classList.add('urd-samling-editable', 'urd-text');
+    node.classList.add('urd-collection-editable', 'urd-text');
     node.addEventListener('input', () => {
       post({ type: 'urd-collection-edit', collection, entryId: entry.id, field, value: node.innerHTML });
     });
@@ -56,10 +56,10 @@ function richNode(tag, className, entry, field, collection, editable) {
 
 /** Valg-chips (størrelse/farge): én rad knapper der ett valg kan være aktivt. */
 function choiceRow(className, labels, onPick) {
-  const row = el2('div', `urd-produkt-valg ${className}`);
+  const row = el2('div', `urd-product-options ${className}`);
   let active = null;
   for (const label of labels) {
-    const btn = el2('button', 'urd-produkt-chip', label);
+    const btn = el2('button', 'urd-product-chip', label);
     btn.type = 'button';
     btn.setAttribute('aria-pressed', 'false');
     btn.addEventListener('click', () => {
@@ -77,10 +77,10 @@ function choiceRow(className, labels, onPick) {
 /** Prisrad: vises kun når prisen er satt (nytt produkt skal ikke vise «0 kr»). */
 function priceRow(entry, currency) {
   if (entry.price == null) return null;
-  const row = el2('div', 'urd-produkt-pris');
+  const row = el2('div', 'urd-product-price');
   row.appendChild(el2('strong', null, formatPrice(entry.price, currency)));
   if (entry.memberPrice != null) {
-    row.appendChild(el2('span', 'urd-produkt-medlem',
+    row.appendChild(el2('span', 'urd-product-member',
       t('shop.memberPrice', { price: formatPrice(entry.memberPrice, currency) })));
   }
   return row;
@@ -88,7 +88,7 @@ function priceRow(entry, currency) {
 
 /** Kjøpsknapp med lagt-i-kurven-kvittering; getChoice() leser gjeldende variantvalg. */
 function buyButton(entry, currency, colors, getChoice) {
-  const buy = el2('button', 'urd-produkt-kjop', t('shop.addToCart'));
+  const buy = el2('button', 'urd-product-buy', t('shop.addToCart'));
   buy.type = 'button';
   buy.addEventListener('click', () => {
     const { size, color } = getChoice();
@@ -104,10 +104,10 @@ function buyButton(entry, currency, colors, getChoice) {
       image: chosen?.image || entry.image || undefined,
     }));
     buy.textContent = t('shop.added');
-    buy.classList.add('urd-produkt-lagt');
+    buy.classList.add('urd-product-added');
     setTimeout(() => {
       buy.textContent = t('shop.addToCart');
-      buy.classList.remove('urd-produkt-lagt');
+      buy.classList.remove('urd-product-added');
     }, 1400);
   });
   return buy;
@@ -119,33 +119,33 @@ function buyButton(entry, currency, colors, getChoice) {
  * Bygges ved første åpning og gjenbrukes.
  */
 function openQuickView(card, entry, props) {
-  let dialog = card.querySelector('.urd-produkt-dialog');
+  let dialog = card.querySelector('.urd-product-dialog');
   if (!dialog) {
     dialog = document.createElement('dialog');
-    dialog.className = 'urd-produkt-dialog';
+    dialog.className = 'urd-product-dialog';
     const colors = Array.isArray(entry.colors) ? entry.colors.filter((c) => c?.name) : [];
     let size = null;
     let color = null;
 
-    const close = el2('button', 'urd-produkt-lukk');
+    const close = el2('button', 'urd-product-close');
     close.type = 'button';
     close.innerHTML = iconSvg('cross') ?? '';
     close.setAttribute('aria-label', t('shop.close'));
     close.addEventListener('click', () => dialog.close());
     dialog.appendChild(close);
 
-    const body = el2('div', 'urd-produkt-dialogkropp');
+    const body = el2('div', 'urd-product-dialogbody');
     const images = [entry.image, ...colors.map((c) => c.image)].filter(Boolean)
       .filter((src, i, all) => all.indexOf(src) === i);
     let mainImg = null;
     if (images.length) {
-      const gallery = el2('div', 'urd-produkt-galleri');
+      const gallery = el2('div', 'urd-product-gallery');
       mainImg = document.createElement('img');
       mainImg.src = images[0];
       mainImg.alt = entry.imageAlt ?? '';
       gallery.appendChild(mainImg);
       if (images.length > 1) {
-        const thumbs = el2('div', 'urd-produkt-miniatyrer');
+        const thumbs = el2('div', 'urd-product-thumbs');
         for (const src of images) {
           const thumb = document.createElement('img');
           thumb.src = src;
@@ -158,18 +158,18 @@ function openQuickView(card, entry, props) {
       body.appendChild(gallery);
     }
 
-    const info = el2('div', 'urd-produkt-dialoginfo');
-    if (entry.badge) info.appendChild(el2('span', 'urd-produkt-badge', entry.badge));
-    const title = richNode('strong', 'urd-produkt-tittel', entry, 'title', props.collection, false);
+    const info = el2('div', 'urd-product-dialoginfo');
+    if (entry.badge) info.appendChild(el2('span', 'urd-product-badge', entry.badge));
+    const title = richNode('strong', 'urd-product-title', entry, 'title', props.collection, false);
     if (title) info.appendChild(title);
-    const text = richNode('div', 'urd-produkt-tekst', entry, 'text', props.collection, false);
+    const text = richNode('div', 'urd-product-text', entry, 'text', props.collection, false);
     if (text) info.appendChild(text);
     const price = priceRow(entry, props.currency);
     if (price) info.appendChild(price);
     const sizes = Array.isArray(entry.sizes) ? entry.sizes.filter(Boolean) : [];
-    if (sizes.length) info.appendChild(choiceRow('urd-produkt-storrelser', sizes, (v) => { size = v; }));
+    if (sizes.length) info.appendChild(choiceRow('urd-product-sizes', sizes, (v) => { size = v; }));
     if (colors.length) {
-      info.appendChild(choiceRow('urd-produkt-farger', colors.map((c) => c.name), (name) => {
+      info.appendChild(choiceRow('urd-product-colors', colors.map((c) => c.name), (name) => {
         color = name;
         const picked = colors.find((c) => c.name === name);
         if (mainImg) mainImg.src = picked?.image || images[0];
@@ -189,7 +189,7 @@ function openQuickView(card, entry, props) {
 }
 
 function renderCard(entry, props, editable, preview) {
-  const card = el2('article', 'urd-produkt-kort');
+  const card = el2('article', 'urd-product-card');
   let chosenSize = null;
   let chosenColor = null;
 
@@ -203,7 +203,7 @@ function renderCard(entry, props, editable, preview) {
     img.src = baseImage;
     img.loading = 'lazy';
     img.draggable = false;
-    wrap = el2('span', 'urd-samling-imgwrap urd-produkt-bilde');
+    wrap = el2('span', 'urd-collection-imgwrap urd-product-image');
     wrap.appendChild(img);
     applyEntryImageStyle(wrap, entry);
     // Sekundærbilde (første fargebilde): tones inn ved hover (CSS-først,
@@ -215,32 +215,32 @@ function renderCard(entry, props, editable, preview) {
       altImg.alt = '';
       altImg.loading = 'lazy';
       altImg.draggable = false;
-      altImg.className = 'urd-produkt-bilde-alt';
+      altImg.className = 'urd-product-image-alt';
       wrap.appendChild(altImg);
     }
     card.appendChild(wrap);
   }
   if (entry.badge) {
-    card.appendChild(el2('span', `urd-produkt-badge${img ? ' urd-produkt-badge-over' : ''}`, entry.badge));
+    card.appendChild(el2('span', `urd-product-badge${img ? ' urd-product-badge-over' : ''}`, entry.badge));
   }
 
-  const title = richNode('strong', 'urd-produkt-tittel', entry, 'title', props.collection, editable);
+  const title = richNode('strong', 'urd-product-title', entry, 'title', props.collection, editable);
   if (title) card.appendChild(title);
-  const text = richNode('div', 'urd-produkt-tekst', entry, 'text', props.collection, editable);
+  const text = richNode('div', 'urd-product-text', entry, 'text', props.collection, editable);
   if (text) card.appendChild(text);
   const price = priceRow(entry, props.currency);
   if (price) card.appendChild(price);
 
   const sizes = Array.isArray(entry.sizes) ? entry.sizes.filter(Boolean) : [];
-  if (sizes.length) card.appendChild(choiceRow('urd-produkt-storrelser', sizes, (v) => { chosenSize = v; }));
+  if (sizes.length) card.appendChild(choiceRow('urd-product-sizes', sizes, (v) => { chosenSize = v; }));
 
   const colors = Array.isArray(entry.colors) ? entry.colors.filter((c) => c?.name) : [];
   if (colors.length) {
-    card.appendChild(choiceRow('urd-produkt-farger', colors.map((c) => c.name), (name) => {
+    card.appendChild(choiceRow('urd-product-colors', colors.map((c) => c.name), (name) => {
       chosenColor = name;
       const picked = colors.find((c) => c.name === name);
       if (img) img.src = picked?.image || baseImage;
-      wrap?.classList.toggle('urd-produkt-farge-valgt', Boolean(picked?.image));
+      wrap?.classList.toggle('urd-product-color-selected', Boolean(picked?.image));
     }));
   }
 
@@ -251,7 +251,7 @@ function renderCard(entry, props, editable, preview) {
   // heller ikke i mobilvisningen (preview-flagget, aldri editable).
   if (!preview) {
     for (const target of [wrap, title].filter(Boolean)) {
-      target.classList.add('urd-produkt-apner');
+      target.classList.add('urd-product-opener');
       target.setAttribute('role', 'button');
       target.setAttribute('aria-label', t('shop.quickView'));
       target.tabIndex = 0;
@@ -270,7 +270,7 @@ function renderCard(entry, props, editable, preview) {
 
 /** «+ Produkt»-adderen (kun editor): ber editoren legge et nytt produkt i samlingen. */
 function adderCard(collection) {
-  const btn = el2('button', 'urd-produkt-adder', ta('canvas.addProduct'));
+  const btn = el2('button', 'urd-product-adder', ta('canvas.addProduct'));
   btn.type = 'button';
   btn.addEventListener('click', () => {
     post({ type: 'urd-collection-add', collection });
@@ -280,7 +280,7 @@ function adderCard(collection) {
 
 function emptyState(el, ctx, message, action) {
   if (!ctx.preview) return;
-  const box = el2('div', 'urd-samling-empty', message);
+  const box = el2('div', 'urd-collection-empty', message);
   if (action) box.appendChild(action);
   el.appendChild(box);
 }
@@ -304,7 +304,7 @@ export const productBlock = {
    * @param {object} ctx Render-kontekst
    */
   render(el, props, ctx) {
-    const host = el2('div', 'urd-produkt');
+    const host = el2('div', 'urd-product');
     el.appendChild(host);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
     // Blokkens egne data: deles av autoveksten (urd-grow) og animasjonene.
@@ -354,7 +354,7 @@ export const productBlock = {
         });
         return;
       }
-      const grid = el2('div', 'urd-produkt-kortliste');
+      const grid = el2('div', 'urd-product-cardlist');
       const columns = Math.min(6, Math.max(0, Number(props.columns) || 0));
       if (columns) grid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
       const cards = entries.map((entry) => renderCard(entry, props, editable, Boolean(ctx.preview)));

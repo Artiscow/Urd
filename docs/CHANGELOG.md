@@ -25,6 +25,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.14.7 - Engelsk-renskingen: CSS-klassene - 30. august 2026
+
+- Alle ~120 norske klassenavn renamet i motor, base.css, editor og tester (ADR-0021): prefiksfamiliene (urd-cart, urd-product, urd-checkout, urd-collection, urd-gallery, urd-quote, urd-timeline, urd-table, urd-countdown, urd-share, urd-stats, urd-template, urd-category) OG de norske suffiksene (-count, -button, -body, -image, -buy, -glyph, -portrait, -unit m.fl.), pluss CSS-variablene, urd-anim-cardwise, urd-bg-video-poster, urd-footer-inner/-prefix og `.code` i 404.html. Nytt base.css-stempel i alle fem skall.
+- BREAKING for egendefinert CSS: klassene er runtime-genererte og aldri persistert (ingen migrering), men egne stilark som sikter på de gamle norske klassenavnene må oppdateres til de nye.
+
 ### 0.7.14.6 - Engelsk-renskingen: identifikatorene, nøkkelrommene og editor-internene - 30. august 2026
 
 - ~90 norske JS-identifikatorer renamet i motor, editor og tester (ADR-0021): blokk-eksportene, samlinger-/maler-/butikk-rotede navn, TEMPLATE_-konstantene og preset-fabrikkene; kollisjonssjekken fant en indre `product`-hjelper i products-preseten som ble `productCard` før topp-fabrikken tok navnet.

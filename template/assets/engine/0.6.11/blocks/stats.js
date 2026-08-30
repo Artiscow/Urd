@@ -74,17 +74,17 @@ export const statsBlock = {
    */
   render(el, props, ctx) {
     const host = document.createElement('div');
-    host.className = 'urd-statistikk';
+    host.className = 'urd-stats';
     el.appendChild(host);
     const post = (msg) => window.parent?.postMessage(msg, location.origin);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
 
     const row = document.createElement('div');
-    row.className = 'urd-stat-tall';
+    row.className = 'urd-stat-number';
     const prefix = document.createElement('span');
     prefix.textContent = props.prefix ?? '';
     const value = document.createElement('span');
-    value.className = 'urd-stat-verdi';
+    value.className = 'urd-stat-value';
     value.textContent = props.value ?? '';
     const suffix = document.createElement('span');
     suffix.textContent = props.suffix ?? '';

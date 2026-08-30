@@ -48,7 +48,7 @@ export const tableBlock = {
    */
   render(el, props, ctx) {
     const host = document.createElement('div');
-    host.className = 'urd-tabell';
+    host.className = 'urd-table';
     el.appendChild(host);
     const post = (msg) => window.parent?.postMessage(msg, location.origin);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
@@ -56,7 +56,7 @@ export const tableBlock = {
     const rows = normalizeRows(props.rows);
     const table = document.createElement('table');
     const lines = ['rows', 'grid', 'none'].includes(props.lines) ? props.lines : 'rows';
-    table.className = `urd-tabell-table urd-tabell-lines-${lines}${props.striped ? ' urd-tabell-striped' : ''}`;
+    table.className = `urd-table-table urd-table-lines-${lines}${props.striped ? ' urd-table-striped' : ''}`;
 
     const makeCell = (tag, text) => {
       const cell = document.createElement(tag);

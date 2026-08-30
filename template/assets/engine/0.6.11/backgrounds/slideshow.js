@@ -28,7 +28,7 @@ export const slideshowLayer = {
     const images = (props.images ?? []).filter((img) => isSafeImage(img?.src));
     if (!images.length) return;
 
-    el.classList.add('urd-bg-galleri');
+    el.classList.add('urd-bg-slideshow');
     el.style.opacity = String(props.opacity ?? 1);
     // Litt overskalering ved blur, så kantene ikke "blør" transparent
     // (samme triks som bildelaget).

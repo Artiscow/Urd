@@ -24,7 +24,7 @@ const post = (msg) => window.parent?.postMessage(msg, location.origin);
 function editable(node, entryId, field, html = false) {
   if (!editCtx) return node;
   node.contentEditable = 'true';
-  node.classList.add('urd-samling-editable');
+  node.classList.add('urd-collection-editable');
   const collection = editCtx.collection;
   node.addEventListener('input', () => {
     post({ type: 'urd-collection-edit', collection, entryId, field, value: html ? node.innerHTML : node.textContent });
@@ -37,7 +37,7 @@ function editable(node, entryId, field, html = false) {
 function wireImageEdit(target, entry) {
   if (!editCtx) return;
   const collection = editCtx.collection;
-  target.classList.add('urd-samling-image-edit');
+  target.classList.add('urd-collection-image-edit');
   target.title = 'Klikk for å redigere bildet';
   target.addEventListener('click', async () => {
     const { openImageEditor } = await import('../image-editor.js');
@@ -75,12 +75,12 @@ function wireImageEdit(target, entry) {
  *  gir den flytende teksteditoren gratis i preview. Tomme felter vises som redigerbare plassholdere. */
 function textOrPlaceholder(entry) {
   if (!entry.text && !editCtx) return null;
-  const node = el2('div', 'urd-text urd-samling-text');
+  const node = el2('div', 'urd-text urd-collection-text');
   if (entry.text) {
     node.innerHTML = entry.text;
     stripActiveContent(node);
   } else {
-    node.classList.add('urd-samling-placeholder');
+    node.classList.add('urd-collection-placeholder');
     node.dataset.placeholder = 'Skriv tekst …';
   }
   return editable(node, entry.id, 'text', true);
@@ -93,7 +93,7 @@ function imageOrAdder(entry, className) {
     return img;
   }
   if (!editCtx) return null;
-  const adder = el2('button', 'urd-samling-image-adder', '+ Bilde');
+  const adder = el2('button', 'urd-collection-image-adder', '+ Bilde');
   adder.type = 'button';
   wireImageEdit(adder, entry);
   return adder;
@@ -111,7 +111,7 @@ const el2 = (tag, className, textContent) => {
 function titleNode(entry) {
   // Delt vokter (nav/footer + interne stier/anker): utrygg href gir tittel uten lenke.
   const tag = entry.href && isSafeHref(entry.href) && !editCtx ? 'a' : 'strong';
-  const node = el2(tag, 'urd-samling-title');
+  const node = el2(tag, 'urd-collection-title');
   node.innerHTML = entry.title;
   stripActiveContent(node);
   if (tag === 'a') {
@@ -150,13 +150,13 @@ export function applyEntryImageStyle(node, entry) {
   node.style.height = style.shape ? 'auto' : '';
 }
 
-function imageNode(entry, className = 'urd-samling-image') {
+function imageNode(entry, className = 'urd-collection-image') {
   if (!entry.image) return null;
   const img = document.createElement('img');
   img.src = entry.image;
   img.loading = 'lazy';
   img.draggable = false;
-  const wrap = el2('span', `urd-samling-imgwrap ${className}`);
+  const wrap = el2('span', `urd-collection-imgwrap ${className}`);
   wrap.appendChild(img);
   applyEntryImageStyle(wrap, entry);
   return wrap;
@@ -165,20 +165,20 @@ function imageNode(entry, className = 'urd-samling-image') {
 function badgeNode(entry) {
   const badge = dateBadge(entry.date);
   if (!badge) return null;
-  const box = el2('div', 'urd-samling-badge');
+  const box = el2('div', 'urd-collection-badge');
   box.append(el2('strong', null, badge.day), el2('span', null, badge.month));
   return box;
 }
 
 /** Kortgrid: bilde + dato + tittel + tekst per innslag. */
 function renderCards(host, entries) {
-  const grid = el2('div', 'urd-samling-cards');
+  const grid = el2('div', 'urd-collection-cards');
   for (const entry of entries) {
-    const card = el2('article', 'urd-samling-card');
-    const img = imageOrAdder(entry, 'urd-samling-image');
+    const card = el2('article', 'urd-collection-card');
+    const img = imageOrAdder(entry, 'urd-collection-image');
     if (img) card.appendChild(img);
     const badge = dateBadge(entry.date);
-    if (badge) card.appendChild(el2('span', 'urd-samling-date', `${badge.day}. ${badge.month} ${badge.year}`));
+    if (badge) card.appendChild(el2('span', 'urd-collection-date', `${badge.day}. ${badge.month} ${badge.year}`));
     card.appendChild(titleNode(entry));
     const text = textOrPlaceholder(entry);
     if (text) card.appendChild(text);
@@ -189,14 +189,14 @@ function renderCards(host, entries) {
 
 /** Liste: rad med dato-badge + tittel/tekst (ApeironLF-stilen). */
 function renderList(host, entries) {
-  const list = el2('div', 'urd-samling-list');
+  const list = el2('div', 'urd-collection-list');
   for (const entry of entries) {
-    const row = el2('article', 'urd-samling-row');
+    const row = el2('article', 'urd-collection-row');
     const badge = badgeNode(entry);
     if (badge) row.appendChild(badge);
-    const thumb = imageOrAdder(entry, 'urd-samling-thumb');
+    const thumb = imageOrAdder(entry, 'urd-collection-thumb');
     if (thumb) row.appendChild(thumb);
-    const body = el2('div', 'urd-samling-body');
+    const body = el2('div', 'urd-collection-body');
     body.appendChild(titleNode(entry));
     const text = textOrPlaceholder(entry);
     if (text) body.appendChild(text);
@@ -208,15 +208,15 @@ function renderList(host, entries) {
 
 /** Arkiv: år-overskrifter med innslagene under (publikasjoner/utgaver). */
 function renderArchive(host, entries) {
-  const wrap = el2('div', 'urd-samling-archive');
+  const wrap = el2('div', 'urd-collection-archive');
   for (const group of groupByYear(entries)) {
-    wrap.appendChild(el2('h3', 'urd-samling-year', group.year ?? 'Uten dato'));
-    const list = el2('div', 'urd-samling-list');
+    wrap.appendChild(el2('h3', 'urd-collection-year', group.year ?? 'Uten dato'));
+    const list = el2('div', 'urd-collection-list');
     for (const entry of group.entries) {
-      const row = el2('article', 'urd-samling-row');
-      const thumb = imageOrAdder(entry, 'urd-samling-thumb');
+      const row = el2('article', 'urd-collection-row');
+      const thumb = imageOrAdder(entry, 'urd-collection-thumb');
       if (thumb) row.appendChild(thumb);
-      const body = el2('div', 'urd-samling-body');
+      const body = el2('div', 'urd-collection-body');
       body.appendChild(titleNode(entry));
       const text = textOrPlaceholder(entry);
       if (text) body.appendChild(text);
@@ -232,7 +232,7 @@ const VIEWS = { cards: renderCards, list: renderList, archive: renderArchive };
 
 function emptyState(el, ctx, message) {
   if (!ctx.preview) return;
-  el.appendChild(el2('div', 'urd-samling-empty', message));
+  el.appendChild(el2('div', 'urd-collection-empty', message));
 }
 
 export const collectionBlock = {
@@ -251,7 +251,7 @@ export const collectionBlock = {
    * @param {object} ctx
    */
   render(el, props, ctx) {
-    const host = el2('div', 'urd-samling');
+    const host = el2('div', 'urd-collection');
     el.appendChild(host);
 
     if (!props.collection) {

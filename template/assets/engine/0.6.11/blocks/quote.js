@@ -43,17 +43,17 @@ export const quoteBlock = {
   render(el, props, ctx) {
     const kort = props.variant === 'short';
     const host = document.createElement('figure');
-    host.className = `urd-sitat urd-sitat-${kort ? 'short' : 'large'}`;
+    host.className = `urd-quote urd-quote-${kort ? 'short' : 'large'}`;
     // Aksenten (glyf og portrettring) kun som validert hex/tematoken.
     const accent = accentCss(props.accent);
-    if (accent) host.style.setProperty('--urd-sitat-accent', accent);
+    if (accent) host.style.setProperty('--urd-quote-accent', accent);
     el.appendChild(host);
     const post = (msg) => window.parent?.postMessage(msg, location.origin);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
 
     if (kort && props.image) {
       const img = document.createElement('img');
-      img.className = 'urd-sitat-portrett';
+      img.className = 'urd-quote-portrait';
       img.alt = props.attribution ?? '';
       img.loading = 'lazy';
       img.decoding = 'async';
@@ -62,17 +62,17 @@ export const quoteBlock = {
     }
 
     const body = document.createElement('div');
-    body.className = 'urd-sitat-body';
+    body.className = 'urd-quote-body';
     const quote = document.createElement('blockquote');
-    quote.className = 'urd-sitat-text';
+    quote.className = 'urd-quote-text';
     quote.textContent = props.text ?? '';
     const caption = document.createElement('figcaption');
-    caption.className = 'urd-sitat-caption';
+    caption.className = 'urd-quote-caption';
     const name = document.createElement('span');
-    name.className = 'urd-sitat-name';
+    name.className = 'urd-quote-name';
     name.textContent = props.attribution ?? '';
     const role = document.createElement('span');
-    role.className = 'urd-sitat-role';
+    role.className = 'urd-quote-role';
     role.textContent = props.role ?? '';
     caption.append(name, role);
     body.append(quote, caption);

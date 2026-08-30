@@ -69,7 +69,7 @@ export const videoLayer = {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
       if (!isSafeImage(props.poster)) return;
       const still = document.createElement('img');
-      still.className = 'urd-bg-video-plakat';
+      still.className = 'urd-bg-video-poster';
       still.alt = '';
       still.setAttribute('aria-hidden', 'true');
       still.src = props.poster;

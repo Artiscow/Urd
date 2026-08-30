@@ -327,9 +327,9 @@ html {
 }
 
 /* Tidslinjen: hendelser langs en tegnet linje, ren CSS (0.6.7.11). Aksenten
-   følger temaet, men kan overstyres per blokk (--urd-tl-accent). */
-.urd-tidslinje {
-  --urd-tl-line: var(--urd-tl-accent, var(--urd-color-accent));
+   følger temaet, men kan overstyres per blokk (--urd-timeline-accent). */
+.urd-timeline {
+  --urd-timeline-line: var(--urd-timeline-accent, var(--urd-color-accent));
   list-style: none;
   margin: 0;
   padding: 0;
@@ -340,11 +340,11 @@ html {
 }
 
 /* Venstre-varianten: linjen langs venstre kant, innholdet innrykket. */
-.urd-tidslinje-left {
+.urd-timeline-left {
   padding-left: 1.6rem;
 }
 
-.urd-tidslinje-left::before {
+.urd-timeline-left::before {
   content: '';
   position: absolute;
   left: 0.45rem;
@@ -352,15 +352,15 @@ html {
   bottom: 0.4rem;
   width: 2px;
   border-radius: 2px;
-  background: var(--urd-tl-line);
+  background: var(--urd-timeline-line);
   opacity: 0.55;
 }
 
-.urd-tl-item {
+.urd-timeline-item {
   position: relative;
 }
 
-.urd-tidslinje-left .urd-tl-item::before {
+.urd-timeline-left .urd-timeline-item::before {
   content: '';
   position: absolute;
   left: -1.47rem;
@@ -368,17 +368,17 @@ html {
   width: 0.62rem;
   height: 0.62rem;
   border-radius: 999px;
-  background: var(--urd-tl-line);
-  border: 2px solid var(--urd-tl-line);
+  background: var(--urd-timeline-line);
+  border: 2px solid var(--urd-timeline-line);
 }
 
 /* Ring-markøren: åpen sirkel på linjen i stedet for fylt prikk. */
-.urd-tidslinje-ring .urd-tl-item::before {
+.urd-timeline-ring .urd-timeline-item::before {
   background: var(--urd-color-bg);
 }
 
 /* Veksler-varianten: linjen i midten, kortene annenhver side. */
-.urd-tidslinje-alternating::before {
+.urd-timeline-alternating::before {
   content: '';
   position: absolute;
   left: 50%;
@@ -386,12 +386,12 @@ html {
   bottom: 0.4rem;
   width: 2px;
   border-radius: 2px;
-  background: var(--urd-tl-line);
+  background: var(--urd-timeline-line);
   opacity: 0.55;
   transform: translateX(-50%);
 }
 
-.urd-tidslinje-alternating .urd-tl-item {
+.urd-timeline-alternating .urd-timeline-item {
   width: 46%;
   background: color-mix(in srgb, var(--urd-color-surface) 70%, transparent);
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 12%, transparent);
@@ -399,11 +399,11 @@ html {
   padding: 0.55rem 0.8rem;
 }
 
-.urd-tidslinje-alternating .urd-tl-item:nth-child(even) {
+.urd-timeline-alternating .urd-timeline-item:nth-child(even) {
   align-self: flex-end;
 }
 
-.urd-tidslinje-alternating .urd-tl-item::before {
+.urd-timeline-alternating .urd-timeline-item::before {
   content: '';
   position: absolute;
   top: 0.75rem;
@@ -411,87 +411,87 @@ html {
   width: 0.62rem;
   height: 0.62rem;
   border-radius: 999px;
-  background: var(--urd-tl-line);
-  border: 2px solid var(--urd-tl-line);
+  background: var(--urd-timeline-line);
+  border: 2px solid var(--urd-timeline-line);
 }
 
-.urd-tidslinje-alternating .urd-tl-item:nth-child(even)::before {
+.urd-timeline-alternating .urd-timeline-item:nth-child(even)::before {
   right: auto;
   left: calc(-4.35% - 0.31rem);
 }
 
-.urd-tl-year {
+.urd-timeline-year {
   font-size: 0.78em;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--urd-tl-line);
+  color: var(--urd-timeline-line);
 }
 
-.urd-tl-title {
+.urd-timeline-title {
   font-weight: 650;
   font-family: var(--urd-font-heading);
 }
 
-.urd-tl-text {
+.urd-timeline-text {
   font-size: 0.92em;
   opacity: 0.8;
 }
 
 /* Sitatet: semantisk figure/blockquote (0.6.7.11). Glyfen tegnes i ::before. */
-.urd-sitat {
-  --urd-sitat-glyf: var(--urd-sitat-accent, var(--urd-color-accent));
+.urd-quote {
+  --urd-quote-glyph: var(--urd-quote-accent, var(--urd-color-accent));
   margin: 0;
   display: flex;
   gap: 0.9rem;
   align-items: flex-start;
 }
 
-.urd-sitat blockquote {
+.urd-quote blockquote {
   margin: 0;
   font-style: italic;
 }
 
-.urd-sitat-large {
+.urd-quote-large {
   flex-direction: column;
   align-items: center;
   text-align: center;
 }
 
-.urd-sitat-large .urd-sitat-text {
+.urd-quote-large .urd-quote-text {
   font-size: 1.35em;
   line-height: 1.45;
   text-wrap: balance;
 }
 
-.urd-sitat-large::before {
+.urd-quote-large::before {
   content: '\201C';
   font-family: Georgia, serif;
   font-size: 3em;
   line-height: 0.55;
-  color: var(--urd-sitat-glyf);
+  color: var(--urd-quote-glyph);
 }
 
-.urd-sitat-short {
+.urd-quote-short {
   background: color-mix(in srgb, var(--urd-color-surface) 70%, transparent);
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 12%, transparent);
   border-radius: var(--urd-radius-md);
   padding: 1rem 1.2rem;
 }
 
-.urd-sitat-short .urd-sitat-text {
+.urd-quote-short .urd-quote-text {
   font-size: 0.98em;
 }
 
-.urd-sitat-portrett {
+.urd-quote-portrait {
   width: 3rem;
   height: 3rem;
   flex: none;
   border-radius: 999px;
   object-fit: cover;
-  border: 2px solid var(--urd-sitat-glyf);
+  border: 2px solid var(--urd-quote-glyph);
 }
 
-.urd-sitat-caption {
+.urd-quote-caption {
   margin-top: 0.55rem;
   font-size: 0.82em;
   display: flex;
@@ -500,23 +500,23 @@ html {
   flex-wrap: wrap;
 }
 
-.urd-sitat-large .urd-sitat-caption {
+.urd-quote-large .urd-quote-caption {
   justify-content: center;
 }
 
-.urd-sitat-name {
+.urd-quote-name {
   font-weight: 650;
   font-style: normal;
 }
 
-.urd-sitat-role {
+.urd-quote-role {
   opacity: 0.65;
   font-style: normal;
 }
 
 /* Statistikken: ett nøkkeltall med etikett (0.6.7.11). Tabular-nums så
    tell-opp-animasjonen ikke hopper i bredden underveis. */
-.urd-statistikk {
+.urd-stats {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -524,7 +524,7 @@ html {
   text-align: center;
 }
 
-.urd-stat-tall {
+.urd-stat-number {
   font-family: var(--urd-font-heading);
   font-size: 2.1em;
   font-weight: 750;
@@ -535,12 +535,12 @@ html {
   gap: 0.06em;
 }
 
-.urd-stat-tall > span:first-child,
-.urd-stat-tall > span:last-child {
+.urd-stat-number > span:first-child,
+.urd-stat-number > span:last-child {
   color: var(--urd-color-accent);
 }
 
-.urd-stat-verdi {
+.urd-stat-value {
   color: var(--urd-color-text);
 }
 
@@ -553,115 +553,115 @@ html {
 
 /* Tabellen (0.7.4): semantisk table i en overflow-wrapper, så brede
    tabeller ruller i sin egen flate i stedet for å velte siden. */
-.urd-tabell {
+.urd-table {
   width: 100%;
   overflow-x: auto;
 }
 
-.urd-tabell-table {
+.urd-table-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.95em;
 }
 
-.urd-tabell-table th,
-.urd-tabell-table td {
+.urd-table-table th,
+.urd-table-table td {
   padding: 8px 12px;
   text-align: left;
   vertical-align: top;
 }
 
-.urd-tabell-table th {
+.urd-table-table th {
   font-weight: 650;
   border-bottom: 2px solid color-mix(in srgb, var(--urd-color-text) 35%, transparent);
 }
 
-.urd-tabell-lines-rows td {
+.urd-table-lines-rows td {
   border-bottom: 1px solid color-mix(in srgb, var(--urd-color-text) 15%, transparent);
 }
 
-.urd-tabell-lines-grid th,
-.urd-tabell-lines-grid td {
+.urd-table-lines-grid th,
+.urd-table-lines-grid td {
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 18%, transparent);
 }
 
-.urd-tabell-striped tbody tr:nth-child(even) {
+.urd-table-striped tbody tr:nth-child(even) {
   background: color-mix(in srgb, var(--urd-color-text) 6%, transparent);
 }
 
 /* Tomme celler beholder klikkeflate under redigering. */
-.urd-preview .urd-tabell-table [contenteditable]:empty::after {
+.urd-preview .urd-table-table [contenteditable]:empty::after {
   content: '\00a0';
 }
 
 /* Delingsknappene (0.7.4): rene lenker med tegnede ikoner, uten sporing. */
-.urd-deling {
+.urd-share {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
 }
 
-.urd-deling-knapp {
+.urd-share-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: var(--urd-deling-size, 38px);
-  height: var(--urd-deling-size, 38px);
+  width: var(--urd-share-size, 38px);
+  height: var(--urd-share-size, 38px);
   border-radius: 50%;
   border: 0;
   padding: 0;
   cursor: pointer;
   color: var(--urd-color-bg);
-  background: var(--urd-deling-color, var(--urd-color-accent));
+  background: var(--urd-share-color, var(--urd-color-accent));
   text-decoration: none;
   font: inherit;
 }
 
-.urd-deling-knapp:hover {
+.urd-share-button:hover {
   filter: brightness(1.12);
 }
 
-.urd-deling-ikon {
+.urd-share-icon {
   display: block;
   width: 55%;
   height: 55%;
 }
 
 /* Kun ikoner som standard; navnvarianten gjør knappene til piller. */
-.urd-deling-navn {
+.urd-share-name {
   display: none;
   font-size: 0.85em;
   font-weight: 600;
   white-space: nowrap;
 }
 
-.urd-deling-labels .urd-deling-knapp {
+.urd-share-labels .urd-share-button {
   width: auto;
   border-radius: 999px;
-  padding: 0 calc(var(--urd-deling-size, 38px) * 0.35);
+  padding: 0 calc(var(--urd-share-size, 38px) * 0.35);
 }
 
-.urd-deling-labels .urd-deling-ikon {
-  width: calc(var(--urd-deling-size, 38px) * 0.5);
-  height: calc(var(--urd-deling-size, 38px) * 0.5);
+.urd-share-labels .urd-share-icon {
+  width: calc(var(--urd-share-size, 38px) * 0.5);
+  height: calc(var(--urd-share-size, 38px) * 0.5);
 }
 
-.urd-deling-labels .urd-deling-navn {
+.urd-share-labels .urd-share-name {
   display: inline;
 }
 
 /* Nedtelleren (0.7.4): enhetsbokser med tabular-nums, så tikkingen aldri
    hopper i bredden. */
-.urd-nedteller {
+.urd-countdown {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   align-items: stretch;
 }
 
-.urd-nedteller-enhet {
+.urd-countdown-unit {
   display: grid;
   gap: 2px;
   justify-items: center;
@@ -671,13 +671,13 @@ html {
   background: color-mix(in srgb, var(--urd-color-text) 7%, transparent);
 }
 
-.urd-nedteller-enkel .urd-nedteller-enhet {
+.urd-countdown-plain .urd-countdown-unit {
   background: none;
   padding: 4px 6px;
   min-width: 48px;
 }
 
-.urd-nedteller-tall {
+.urd-countdown-number {
   font-family: var(--urd-font-heading);
   font-size: 1.9em;
   font-weight: 750;
@@ -686,14 +686,14 @@ html {
   color: var(--urd-color-accent);
 }
 
-.urd-nedteller-navn {
+.urd-countdown-name {
   font-size: 0.72em;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.7;
 }
 
-.urd-nedteller-ferdig {
+.urd-countdown-done {
   font-family: var(--urd-font-heading);
   font-size: 1.3em;
   font-weight: 650;
@@ -712,7 +712,7 @@ html {
   color-scheme: light dark;
 }
 
-.urd-audio-tittel {
+.urd-audio-title {
   font-weight: 600;
   font-size: 0.95em;
 }
@@ -730,14 +730,14 @@ html {
 
 /* Butikken (0.7.5): produktkort fra en produktsamling. Kortlisten er et
    responsivt grid; blokken kan låse kolonnetallet i Stil. */
-.urd-produkt-kortliste {
+.urd-product-cardlist {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 18px;
   width: 100%;
 }
 
-.urd-produkt-kort {
+.urd-product-card {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -749,7 +749,7 @@ html {
   border-radius: var(--urd-radius-md, 10px);
 }
 
-.urd-produkt-bilde {
+.urd-product-image {
   position: relative;
   display: block;
   width: 100%;
@@ -758,7 +758,7 @@ html {
   border-radius: var(--urd-radius-sm, 6px);
 }
 
-.urd-produkt-bilde img {
+.urd-product-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -766,24 +766,24 @@ html {
 
 /* Sekundærbildet (første fargebilde) tones inn ved hover; et aktivt
    fargevalg med eget bilde vinner over hover-byttet. */
-.urd-produkt-bilde .urd-produkt-bilde-alt {
+.urd-product-image .urd-product-image-alt {
   position: absolute;
   inset: 0;
   opacity: 0;
   transition: opacity 0.25s;
 }
 
-.urd-produkt-kort:hover .urd-produkt-bilde:not(.urd-produkt-farge-valgt) .urd-produkt-bilde-alt {
+.urd-product-card:hover .urd-product-image:not(.urd-product-color-selected) .urd-product-image-alt {
   opacity: 1;
 }
 
 @media (hover: none) {
-  .urd-produkt-bilde .urd-produkt-bilde-alt {
+  .urd-product-image .urd-product-image-alt {
     display: none;
   }
 }
 
-.urd-produkt-badge {
+.urd-product-badge {
   align-self: flex-start;
   padding: 3px 9px;
   background: var(--urd-color-accent);
@@ -796,40 +796,40 @@ html {
 
 /* Med bilde legges badgen over bildets øvre venstre hjørne; uten bilde
    står den som statisk chip over tittelen (aldri oppå tekst). */
-.urd-produkt-badge-over {
+.urd-product-badge-over {
   position: absolute;
   top: 22px;
   left: 22px;
 }
 
-.urd-produkt-tittel {
+.urd-product-title {
   font-family: var(--urd-font-heading);
   font-size: 1.05em;
 }
 
-.urd-produkt-tekst {
+.urd-product-text {
   font-size: 0.88em;
   opacity: 0.85;
 }
 
-.urd-produkt-pris {
+.urd-product-price {
   display: flex;
   align-items: baseline;
   gap: 10px;
 }
 
-.urd-produkt-medlem {
+.urd-product-member {
   font-size: 0.82em;
   opacity: 0.75;
 }
 
-.urd-produkt-valg {
+.urd-product-options {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.urd-produkt-chip {
+.urd-product-chip {
   padding: 4px 10px;
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 30%, transparent);
   border-radius: 999px;
@@ -840,12 +840,12 @@ html {
   cursor: pointer;
 }
 
-.urd-produkt-chip[aria-pressed="true"] {
+.urd-product-chip[aria-pressed="true"] {
   border-color: var(--urd-color-accent);
   background: color-mix(in srgb, var(--urd-color-accent) 16%, transparent);
 }
 
-.urd-produkt-kjop {
+.urd-product-buy {
   margin-top: auto;
   padding: 9px 14px;
   border: none;
@@ -858,12 +858,12 @@ html {
   cursor: pointer;
 }
 
-.urd-produkt-lagt {
+.urd-product-added {
   opacity: 0.85;
 }
 
 /* «+ Produkt»-adderen (kun editor): stiplet kort sist i rutenettet. */
-.urd-preview .urd-produkt-adder {
+.urd-preview .urd-product-adder {
   min-height: 180px;
   border: 1px dashed color-mix(in srgb, var(--urd-color-text) 35%, transparent);
   border-radius: var(--urd-radius-md, 10px);
@@ -878,11 +878,11 @@ html {
 /* Quick view (kun besøkende): produktdetaljene i en native <dialog>.
    display settes KUN i åpen tilstand, ellers ville dialogens innebygde
    dialog:not([open]) { display: none } vært overstyrt. */
-.urd-produkt-apner {
+.urd-product-opener {
   cursor: pointer;
 }
 
-.urd-produkt-dialog {
+.urd-product-dialog {
   width: min(720px, 94vw);
   max-height: 90dvh;
   border: none;
@@ -893,23 +893,23 @@ html {
   box-shadow: 0 18px 60px rgb(0 0 0 / 0.35);
 }
 
-.urd-produkt-dialog::backdrop {
+.urd-product-dialog::backdrop {
   background: rgb(0 0 0 / 0.4);
 }
 
-.urd-produkt-dialog[open] .urd-produkt-dialogkropp {
+.urd-product-dialog[open] .urd-product-dialogbody {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
 
 @media (max-width: 640px) {
-  .urd-produkt-dialog[open] .urd-produkt-dialogkropp {
+  .urd-product-dialog[open] .urd-product-dialogbody {
     grid-template-columns: 1fr;
   }
 }
 
-.urd-produkt-lukk {
+.urd-product-close {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -923,30 +923,30 @@ html {
   opacity: 0.7;
 }
 
-.urd-produkt-lukk svg {
+.urd-product-close svg {
   width: 100%;
   height: 100%;
 }
 
-.urd-produkt-galleri {
+.urd-product-gallery {
   display: grid;
   gap: 8px;
   align-content: start;
 }
 
-.urd-produkt-galleri > img {
+.urd-product-gallery > img {
   width: 100%;
   aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: var(--urd-radius-sm, 6px);
 }
 
-.urd-produkt-miniatyrer {
+.urd-product-thumbs {
   display: flex;
   gap: 6px;
 }
 
-.urd-produkt-miniatyrer img {
+.urd-product-thumbs img {
   width: 52px;
   height: 52px;
   object-fit: cover;
@@ -954,24 +954,24 @@ html {
   cursor: pointer;
 }
 
-.urd-produkt-dialoginfo {
+.urd-product-dialoginfo {
   display: flex;
   flex-direction: column;
   gap: 10px;
   align-items: start;
 }
 
-.urd-produkt-dialoginfo .urd-produkt-tittel {
+.urd-product-dialoginfo .urd-product-title {
   font-size: 1.3em;
 }
 
-.urd-produkt-dialoginfo .urd-produkt-kjop {
+.urd-product-dialoginfo .urd-product-buy {
   margin-top: 8px;
 }
 
 /* Handlekurven: knapp med antall-badge; skuffen er en native <dialog>
    forankret til høyre kant (ADR-0011). */
-.urd-handlekurv-knapp {
+.urd-cart-button {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -986,22 +986,22 @@ html {
   cursor: pointer;
 }
 
-.urd-handlekurv-ikonknapp {
+.urd-cart-iconbutton {
   padding: 9px;
 }
 
-.urd-handlekurv-ikon {
+.urd-cart-icon {
   display: inline-flex;
   width: 20px;
   height: 20px;
 }
 
-.urd-handlekurv-ikon svg {
+.urd-cart-icon svg {
   width: 100%;
   height: 100%;
 }
 
-.urd-handlekurv-badge {
+.urd-cart-badge {
   position: absolute;
   top: -6px;
   right: -6px;
@@ -1017,7 +1017,7 @@ html {
   font-weight: 700;
 }
 
-.urd-handlekurv-dialog {
+.urd-cart-dialog {
   /* Skuff langs høyre kant: dialogens standard-sentrering overstyres. */
   margin: 0 0 0 auto;
   width: min(380px, 92vw);
@@ -1033,24 +1033,24 @@ html {
 /* display settes KUN i åpen tilstand: en display-verdi på selve dialogen
    ville overstyrt nettleserens dialog:not([open]) { display: none } og
    vist skuffen permanent. */
-.urd-handlekurv-dialog[open] {
+.urd-cart-dialog[open] {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.urd-handlekurv-dialog::backdrop {
+.urd-cart-dialog::backdrop {
   background: rgb(0 0 0 / 0.35);
 }
 
-.urd-handlekurv-hode {
+.urd-cart-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.urd-handlekurv-lukk,
-.urd-handlekurv-fjern {
+.urd-cart-close,
+.urd-cart-remove {
   width: 26px;
   height: 26px;
   padding: 4px;
@@ -1061,29 +1061,29 @@ html {
   opacity: 0.7;
 }
 
-.urd-handlekurv-lukk svg,
-.urd-handlekurv-fjern svg {
+.urd-cart-close svg,
+.urd-cart-remove svg {
   width: 100%;
   height: 100%;
 }
 
-.urd-handlekurv-kropp {
+.urd-cart-body {
   display: flex;
   flex-direction: column;
   gap: 14px;
   overflow-y: auto;
 }
 
-.urd-handlekurv-tom {
+.urd-cart-empty {
   opacity: 0.7;
 }
 
-.urd-handlekurv-linjer {
+.urd-cart-lines {
   display: grid;
   gap: 10px;
 }
 
-.urd-handlekurv-linje {
+.urd-cart-line {
   display: grid;
   grid-template-columns: auto 1fr auto auto auto;
   align-items: center;
@@ -1092,30 +1092,30 @@ html {
   border-bottom: 1px solid color-mix(in srgb, var(--urd-color-text) 15%, transparent);
 }
 
-.urd-handlekurv-minibilde {
+.urd-cart-thumb {
   width: 40px;
   height: 40px;
   object-fit: cover;
   border-radius: var(--urd-radius-sm, 6px);
 }
 
-.urd-handlekurv-info {
+.urd-cart-info {
   display: grid;
   font-size: 0.88em;
 }
 
-.urd-handlekurv-variant {
+.urd-cart-variant {
   font-size: 0.85em;
   opacity: 0.7;
 }
 
-.urd-handlekurv-antall {
+.urd-cart-count {
   display: inline-flex;
   align-items: center;
   gap: 4px;
 }
 
-.urd-handlekurv-steg {
+.urd-cart-step {
   width: 22px;
   height: 22px;
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 25%, transparent);
@@ -1128,25 +1128,25 @@ html {
   cursor: pointer;
 }
 
-.urd-handlekurv-tall {
+.urd-cart-number {
   min-width: 18px;
   text-align: center;
   font-size: 0.88em;
   font-variant-numeric: tabular-nums;
 }
 
-.urd-handlekurv-linjesum {
+.urd-cart-linetotal {
   font-size: 0.88em;
   font-variant-numeric: tabular-nums;
 }
 
-.urd-handlekurv-sum {
+.urd-cart-total {
   display: flex;
   justify-content: space-between;
   font-size: 1.05em;
 }
 
-.urd-handlekurv-kasse {
+.urd-cart-checkout {
   display: block;
   padding: 11px 14px;
   background: var(--urd-color-accent);
@@ -1158,13 +1158,13 @@ html {
 }
 
 /* Kassen: ordresammendrag + bestillingsskjema (mailto/endepunkt, ADR-0006). */
-.urd-kasse {
+.urd-checkout {
   display: grid;
   gap: 16px;
   width: 100%;
 }
 
-.urd-kasse-linjer {
+.urd-checkout-lines {
   margin: 0;
   padding: 0 0 0 1.2em;
   display: grid;
@@ -1172,30 +1172,30 @@ html {
   font-size: 0.9em;
 }
 
-.urd-kasse-sum {
+.urd-checkout-total {
   display: flex;
   justify-content: space-between;
   padding-top: 8px;
   border-top: 1px solid color-mix(in srgb, var(--urd-color-text) 20%, transparent);
 }
 
-.urd-kasse-tom {
+.urd-checkout-empty {
   margin: 0;
   opacity: 0.7;
 }
 
-.urd-kasse-skjema {
+.urd-checkout-form {
   display: grid;
   gap: 10px;
 }
 
-.urd-kasse-felt {
+.urd-checkout-field {
   display: grid;
   gap: 4px;
   font-size: 0.85em;
 }
 
-.urd-kasse-input {
+.urd-checkout-input {
   padding: 9px 10px;
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 25%, transparent);
   border-radius: var(--urd-radius-sm, 6px);
@@ -1206,7 +1206,7 @@ html {
 }
 
 /* Honeypot: ut av synsfeltet, aldri display:none (bots sjekker det). */
-.urd-kasse-hp {
+.urd-checkout-hp {
   position: absolute;
   left: -9999px;
   width: 1px;
@@ -1214,20 +1214,20 @@ html {
   overflow: hidden;
 }
 
-.urd-kasse-vipps {
+.urd-checkout-vipps {
   margin: 0;
   font-size: 0.88em;
   opacity: 0.85;
 }
 
-.urd-kasse-knapper {
+.urd-checkout-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
 
 /* Betal med Vipps (ADR-0020): merkevarefargen, uavhengig av tema. */
-.urd-kasse-vippsbetal {
+.urd-checkout-vippspay {
   padding: 10px 18px;
   border: none;
   border-radius: var(--urd-radius-sm, 6px);
@@ -1238,12 +1238,12 @@ html {
   cursor: pointer;
 }
 
-.urd-kasse-vippsbetal:disabled {
+.urd-checkout-vippspay:disabled {
   opacity: 0.6;
   cursor: default;
 }
 
-.urd-kasse-send {
+.urd-checkout-send {
   padding: 10px 18px;
   border: none;
   border-radius: var(--urd-radius-sm, 6px);
@@ -1254,12 +1254,12 @@ html {
   cursor: pointer;
 }
 
-.urd-kasse-status {
+.urd-checkout-status {
   margin: 0;
   font-size: 0.88em;
 }
 
-.urd-kasse-feil {
+.urd-checkout-error {
   color: #c0392b;
 }
 
@@ -2167,7 +2167,7 @@ body.urd-chrome-off .urd-imged {
   /* Galleri- og bakgrunnstoningene: JS-en nekter alt å spille automatisk
      ved redusert bevegelse; dette fjerner også selve toningen ved manuell
      blaing i lysbildevisningen. */
-  .urd-galleri-slide,
+  .urd-gallery-slide,
   .urd-bg-slide {
     transition: none;
   }
@@ -2175,17 +2175,17 @@ body.urd-chrome-off .urd-imged {
 
 /* Samling-blokken (ADR-0007): tre visninger over strukturerte innslag.
    Indre layout er flyt/grid, aldri frames per innslag. */
-.urd-samling {
+.urd-collection {
   width: 100%;
 }
 
-.urd-samling-cards {
+.urd-collection-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1.25rem;
 }
 
-.urd-samling-card {
+.urd-collection-card {
   display: grid;
   gap: 0.4rem;
   align-content: start;
@@ -2196,63 +2196,63 @@ body.urd-chrome-off .urd-imged {
 }
 
 /* Bildeinnpakningen: rammen eier form/avrunding og klipper zoom-beskjæringen */
-.urd-samling-imgwrap {
+.urd-collection-imgwrap {
   display: block;
   position: relative;
   overflow: hidden;
 }
 
-.urd-samling-imgwrap img {
+.urd-collection-imgwrap img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.urd-samling-image {
+.urd-collection-image {
   width: calc(100% + 2rem);
   margin: -1rem -1rem 0.35rem;
   height: 150px;
   border-radius: var(--urd-radius-md) var(--urd-radius-md) 0 0;
 }
 
-.urd-samling-date {
+.urd-collection-date {
   font-size: 0.78em;
   opacity: 0.65;
 }
 
-.urd-samling-title {
+.urd-collection-title {
   font-family: var(--urd-font-heading);
   font-weight: 600;
   color: inherit;
 }
 
-a.urd-samling-title {
+a.urd-collection-title {
   color: var(--urd-color-accent);
   text-decoration: none;
 }
 
-a.urd-samling-title:hover {
+a.urd-collection-title:hover {
   text-decoration: underline;
 }
 
-.urd-samling-text {
+.urd-collection-text {
   font-size: 0.9em;
   opacity: 0.85;
 }
 
-.urd-samling-list {
+.urd-collection-list {
   display: grid;
   gap: 0.9rem;
 }
 
-.urd-samling-row {
+.urd-collection-row {
   display: flex;
   gap: 0.9rem;
   align-items: flex-start;
 }
 
-.urd-samling-badge {
+.urd-collection-badge {
   flex: 0 0 auto;
   width: 3.2rem;
   text-align: center;
@@ -2262,55 +2262,55 @@ a.urd-samling-title:hover {
   border-radius: var(--urd-radius-sm);
 }
 
-.urd-samling-badge strong {
+.urd-collection-badge strong {
   display: block;
   font-size: 1.15em;
   line-height: 1.1;
 }
 
-.urd-samling-badge span {
+.urd-collection-badge span {
   font-size: 0.7em;
   opacity: 0.7;
   text-transform: uppercase;
 }
 
-.urd-samling-thumb {
+.urd-collection-thumb {
   flex: 0 0 auto;
   width: 56px;
   height: 56px;
   border-radius: var(--urd-radius-sm);
 }
 
-.urd-samling-year {
+.urd-collection-year {
   margin: 1rem 0 0.5rem;
   opacity: 0.85;
 }
 
-.urd-samling-archive .urd-samling-year:first-child {
+.urd-collection-archive .urd-collection-year:first-child {
   margin-top: 0;
 }
 
 /* Redigering i preview: tittel/tekst er klikk-og-skriv, bilder byttes med klikk */
-.urd-preview .urd-samling-editable:hover {
+.urd-preview .urd-collection-editable:hover {
   outline: 1px dashed color-mix(in srgb, var(--urd-color-accent) 60%, transparent);
   outline-offset: 2px;
 }
 
-.urd-preview .urd-samling-placeholder:empty::before {
+.urd-preview .urd-collection-placeholder:empty::before {
   content: attr(data-placeholder);
   opacity: 0.45;
 }
 
-.urd-preview .urd-samling-image-edit {
+.urd-preview .urd-collection-image-edit {
   cursor: pointer;
 }
 
-.urd-preview .urd-samling-image-edit:hover {
+.urd-preview .urd-collection-image-edit:hover {
   outline: 2px dashed color-mix(in srgb, var(--urd-color-accent) 60%, transparent);
   outline-offset: -2px;
 }
 
-.urd-preview .urd-samling-image-adder {
+.urd-preview .urd-collection-image-adder {
   min-height: 56px;
   border: 1px dashed color-mix(in srgb, var(--urd-color-text) 35%, transparent);
   border-radius: var(--urd-radius-sm);
@@ -2321,20 +2321,20 @@ a.urd-samling-title:hover {
   font-size: 0.8em;
 }
 
-.urd-samling-card .urd-samling-image-adder {
+.urd-collection-card .urd-collection-image-adder {
   width: calc(100% + 2rem);
   margin: -1rem -1rem 0.35rem;
   min-height: 90px;
   border-radius: var(--urd-radius-md) var(--urd-radius-md) 0 0;
 }
 
-.urd-samling-row .urd-samling-image-adder {
+.urd-collection-row .urd-collection-image-adder {
   flex: 0 0 auto;
   width: 56px;
 }
 
 /* Tomtilstand: kun i editorens preview (besøkende ser ingenting), samme mønster som bildeblokken */
-.urd-preview .urd-samling-empty {
+.urd-preview .urd-collection-empty {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2418,13 +2418,13 @@ a.urd-samling-title:hover {
 /* Galleri-blokken: tre visninger (rutenett/karusell/lysbilde) over samme
    bildeliste. Flisene er rammer som klipper (som .urd-image-frame);
    klikkbare fliser er button/a uten egen knappestil. */
-.urd-galleri {
+.urd-gallery {
   position: relative;
   width: 100%;
   height: 100%;
 }
 
-.urd-galleri-tile {
+.urd-gallery-tile {
   display: block;
   overflow: hidden;
   padding: 0;
@@ -2433,44 +2433,44 @@ a.urd-samling-title:hover {
   cursor: default;
 }
 
-button.urd-galleri-tile,
-a.urd-galleri-tile {
+button.urd-gallery-tile,
+a.urd-gallery-tile {
   cursor: zoom-in;
 }
 
-.urd-preview:not(.urd-chrome-off) .urd-galleri-edit {
+.urd-preview:not(.urd-chrome-off) .urd-gallery-edit {
   cursor: pointer;
 }
 
-.urd-galleri-tile img {
+.urd-gallery-tile img {
   display: block;
   width: 100%;
   height: 100%;
 }
 
-.urd-galleri-grid {
+.urd-gallery-grid {
   display: grid;
-  grid-template-columns: repeat(var(--urd-galleri-cols, 3), 1fr);
-  gap: var(--urd-galleri-gap, 12px);
+  grid-template-columns: repeat(var(--urd-gallery-cols, 3), 1fr);
+  gap: var(--urd-gallery-gap, 12px);
   height: auto;
 }
 
-.urd-galleri-grid .urd-galleri-tile {
+.urd-gallery-grid .urd-gallery-tile {
   width: 100%;
   aspect-ratio: 1 / 1;
 }
 
 /* Karusell: sidescroll med snap; pilene ruller et skjermbreddehopp. */
-.urd-galleri-track {
+.urd-gallery-track {
   display: flex;
-  gap: var(--urd-galleri-gap, 12px);
+  gap: var(--urd-gallery-gap, 12px);
   height: 100%;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: thin;
 }
 
-.urd-galleri-track .urd-galleri-tile {
+.urd-gallery-track .urd-gallery-tile {
   flex: 0 0 auto;
   height: 100%;
   aspect-ratio: 4 / 3;
@@ -2478,12 +2478,12 @@ a.urd-galleri-tile {
 }
 
 /* Lysbilde: stablede slides, kun .on er synlig (og klikkbar). */
-.urd-galleri-slides {
+.urd-gallery-slides {
   height: 100%;
   overflow: hidden;
 }
 
-.urd-galleri-slide {
+.urd-gallery-slide {
   position: absolute;
   inset: 0;
   opacity: 0;
@@ -2491,17 +2491,17 @@ a.urd-galleri-tile {
   pointer-events: none;
 }
 
-.urd-galleri-slide.on {
+.urd-gallery-slide.on {
   opacity: 1;
   pointer-events: auto;
 }
 
-.urd-galleri-slide .urd-galleri-tile {
+.urd-gallery-slide .urd-gallery-tile {
   width: 100%;
   height: 100%;
 }
 
-.urd-galleri-nav {
+.urd-gallery-nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -2519,24 +2519,24 @@ a.urd-galleri-tile {
   cursor: pointer;
 }
 
-.urd-galleri-nav:hover {
+.urd-gallery-nav:hover {
   background: color-mix(in srgb, var(--urd-color-accent) 35%, var(--urd-color-bg));
 }
 
-.urd-galleri-nav:focus-visible {
+.urd-gallery-nav:focus-visible {
   outline: 2px solid var(--urd-color-accent);
   outline-offset: 2px;
 }
 
-.urd-galleri-prev {
+.urd-gallery-prev {
   left: 10px;
 }
 
-.urd-galleri-next {
+.urd-gallery-next {
   right: 10px;
 }
 
-.urd-galleri-dots {
+.urd-gallery-dots {
   position: absolute;
   bottom: 10px;
   left: 50%;
@@ -2546,7 +2546,7 @@ a.urd-galleri-tile {
   gap: 7px;
 }
 
-.urd-galleri-dot {
+.urd-gallery-dot {
   top: auto;
   transform: none;
   position: static;
@@ -2556,12 +2556,12 @@ a.urd-galleri-tile {
   background: color-mix(in srgb, var(--urd-color-text) 45%, transparent);
 }
 
-.urd-galleri-dot.on {
+.urd-gallery-dot.on {
   background: var(--urd-color-accent);
 }
 
 /* Tom-tilstand: kun i editorens preview, samme mønster som bildeblokken */
-.urd-galleri-empty {
+.urd-gallery-empty {
   display: grid;
   place-items: center;
   height: 100%;
@@ -2676,7 +2676,7 @@ body:has(dialog:modal) {
 }
 
 /* Bildegalleri-bakgrunnslaget: to stablede bilder som krysstoner. */
-.urd-bg-galleri {
+.urd-bg-slideshow {
   overflow: hidden;
 }
 
@@ -2889,7 +2889,7 @@ body:has(dialog:modal) {
 /* Scroll-adferd (nav.scroll, tilstandsklassene settes av nav.js fra ren
    navScrollState): 'hide' glir verten ut over toppen med translate
    (kompositor, aldri top/margin), 'shrink' krymper paddingen via
-   --urd-nav-shrink-faktoren (engangs-overgang, ikke scroll-drevet).
+   --urd-nav-shrink-factor (engangs-overgang, ikke scroll-drevet).
    Overgangene ligger på modusklassen, så menyer uten scroll-adferd
    aldri får transition. */
 .urd-nav-scroll {
@@ -3881,7 +3881,7 @@ body.urd-marqueeing {
 }
 
 /* Rik footer: merkevare, kolonner, sosiale lenker og bunnlinje.
-   #urd-footer-prefiks kreves for å slå basisregelen (#urd-footer .urd-footer,
+   #urd-footer-prefix kreves for å slå basisregelen (#urd-footer .urd-footer,
    id+klasse) som ellers holder display: grid og gjør footeren til én kolonne. */
 #urd-footer .urd-footer-rich {
   display: block;
@@ -4866,20 +4866,20 @@ body.urd-mobile .urd-section-resize-top {
    brukes ikke (reservert destruktive handlinger). Metningsgulvet max(c, 0.09)
    gir grå-temaet dempede, men skilbare toner. */
 .urd-preview .urd-preset-menu {
-  --urd-kat-1: var(--urd-admin-accent, #5f6a75);
-  --urd-kat-2: var(--urd-admin-accent, #5f6a75);
-  --urd-kat-3: var(--urd-admin-accent, #5f6a75);
-  --urd-kat-4: var(--urd-admin-accent, #5f6a75);
-  --urd-kat-5: var(--urd-admin-accent, #5f6a75);
+  --urd-category-1: var(--urd-admin-accent, #5f6a75);
+  --urd-category-2: var(--urd-admin-accent, #5f6a75);
+  --urd-category-3: var(--urd-admin-accent, #5f6a75);
+  --urd-category-4: var(--urd-admin-accent, #5f6a75);
+  --urd-category-5: var(--urd-admin-accent, #5f6a75);
 }
 
 @supports (color: oklch(from red l max(c, 0.09) calc(h + 48))) {
   .urd-preview .urd-preset-menu {
-    --urd-kat-1: oklch(from var(--urd-admin-accent, #5f6a75) l max(c, 0.09) h);
-    --urd-kat-2: oklch(from var(--urd-admin-accent, #5f6a75) l max(c, 0.09) calc(h + 243));
-    --urd-kat-3: oklch(from var(--urd-admin-accent, #5f6a75) l max(c, 0.09) calc(h + 153));
-    --urd-kat-4: oklch(from var(--urd-admin-accent, #5f6a75) l max(c, 0.09) calc(h + 48));
-    --urd-kat-5: oklch(from var(--urd-admin-accent, #5f6a75) l max(c, 0.09) calc(h - 62));
+    --urd-category-1: oklch(from var(--urd-admin-accent, #5f6a75) l max(c, 0.09) h);
+    --urd-category-2: oklch(from var(--urd-admin-accent, #5f6a75) l max(c, 0.09) calc(h + 243));
+    --urd-category-3: oklch(from var(--urd-admin-accent, #5f6a75) l max(c, 0.09) calc(h + 153));
+    --urd-category-4: oklch(from var(--urd-admin-accent, #5f6a75) l max(c, 0.09) calc(h + 48));
+    --urd-category-5: oklch(from var(--urd-admin-accent, #5f6a75) l max(c, 0.09) calc(h - 62));
   }
 }
 
@@ -4894,7 +4894,7 @@ body.urd-mobile .urd-section-resize-top {
 
 /* «Alle» peker på hele paletten: prikken er en liten gradient over stegene. */
 .urd-preview .urd-preset-rail-alle .urd-preset-dot {
-  background: linear-gradient(135deg, var(--urd-kat-1), var(--urd-kat-3));
+  background: linear-gradient(135deg, var(--urd-category-1), var(--urd-category-3));
 }
 
 .urd-preview .urd-preset-rail {
@@ -4947,7 +4947,7 @@ body.urd-mobile .urd-section-resize-top {
 }
 
 /* Mine maler skilles fra preset-kategoriene med en tynn strek. */
-.urd-preview .urd-preset-menu .urd-preset-rail .urd-preset-rail-maler {
+.urd-preview .urd-preset-menu .urd-preset-rail .urd-preset-rail-templates {
   margin-top: 6px;
   padding-top: 8px;
   border-top: 1px solid color-mix(in srgb, var(--urd-color-text) 10%, transparent);
@@ -5148,18 +5148,18 @@ body.urd-mobile .urd-section-resize-top {
 
 /* Mine maler-kategorien: 2-kolonners rutenett med stor miniatyr, navn og
    sletteknapp (vises ved pek på kortet) */
-.urd-preview .urd-mal-grid {
+.urd-preview .urd-template-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px;
   padding: 2px 0 2px;
 }
 
-.urd-preview .urd-mal-card {
+.urd-preview .urd-template-card {
   position: relative;
 }
 
-.urd-preview .urd-preset-menu .urd-mal-pick {
+.urd-preview .urd-preset-menu .urd-template-pick {
   display: grid;
   gap: 4px;
   width: 100%;
@@ -5175,12 +5175,12 @@ body.urd-mobile .urd-section-resize-top {
   text-align: center;
 }
 
-.urd-preview .urd-preset-menu .urd-mal-pick:hover {
+.urd-preview .urd-preset-menu .urd-template-pick:hover {
   border-color: color-mix(in srgb, var(--urd-kat, var(--urd-admin-accent, #5f6a75)) 75%, transparent);
   background: color-mix(in srgb, var(--urd-kat, var(--urd-admin-accent, #5f6a75)) 12%, transparent);
 }
 
-.urd-preview .urd-mal-thumb {
+.urd-preview .urd-template-thumb {
   width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
@@ -5188,13 +5188,13 @@ body.urd-mobile .urd-section-resize-top {
   border-radius: 5px;
 }
 
-.urd-preview .urd-mal-thumb svg {
+.urd-preview .urd-template-thumb svg {
   display: block;
   width: 100%;
   height: 100%;
 }
 
-.urd-preview .urd-mal-name {
+.urd-preview .urd-template-name {
   font-size: 11.5px;
   font-weight: 600;
   overflow: hidden;
@@ -5202,7 +5202,7 @@ body.urd-mobile .urd-section-resize-top {
   white-space: nowrap;
 }
 
-.urd-preview .urd-preset-menu .urd-mal-del {
+.urd-preview .urd-preset-menu .urd-template-delete {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -5219,11 +5219,11 @@ body.urd-mobile .urd-section-resize-top {
   line-height: 1.4;
 }
 
-.urd-preview .urd-mal-card:hover .urd-mal-del {
+.urd-preview .urd-template-card:hover .urd-template-delete {
   display: block;
 }
 
-.urd-preview .urd-mal-empty {
+.urd-preview .urd-template-empty {
   padding: 8px 10px 10px;
   font-size: 11.5px;
   color: color-mix(in srgb, var(--urd-color-text) 55%, transparent);
@@ -5365,15 +5365,15 @@ body.urd-mobile .urd-section-resize-top {
 .urd-preview.urd-chrome-off .urd-page-guide,
 .urd-preview.urd-chrome-off .urd-marquee,
 .urd-preview.urd-chrome-off .urd-multi-toolbar,
-.urd-preview.urd-chrome-off .urd-samling-image-adder,
-.urd-preview.urd-chrome-off .urd-produkt-adder,
-.urd-preview.urd-chrome-off .urd-samling-placeholder,
+.urd-preview.urd-chrome-off .urd-collection-image-adder,
+.urd-preview.urd-chrome-off .urd-product-adder,
+.urd-preview.urd-chrome-off .urd-collection-placeholder,
 .urd-preview.urd-chrome-off .urd-grid-overlay {
   display: none !important;
 }
 
-.urd-preview.urd-chrome-off .urd-samling-editable:hover,
-.urd-preview.urd-chrome-off .urd-samling-image-edit:hover {
+.urd-preview.urd-chrome-off .urd-collection-editable:hover,
+.urd-preview.urd-chrome-off .urd-collection-image-edit:hover {
   outline: none;
 }
 

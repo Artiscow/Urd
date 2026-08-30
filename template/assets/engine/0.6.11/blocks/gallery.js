@@ -75,7 +75,7 @@ function makeTile(props, index, ctx, blockEl) {
   // Delt vokter (nav/footer + interne stier/anker): utrygg href gir flis uten lenke (lightbox tar over).
   const asLink = Boolean(img.href) && isSafeHref(img.href) && !ctx.preview;
   const clickable = ctx.preview || props.lightbox;
-  const tile = el2(asLink ? 'a' : clickable ? 'button' : 'span', 'urd-galleri-tile');
+  const tile = el2(asLink ? 'a' : clickable ? 'button' : 'span', 'urd-gallery-tile');
   if (asLink) tile.href = img.href;
   if (tile.tagName === 'BUTTON') tile.type = 'button';
 
@@ -95,7 +95,7 @@ function makeTile(props, index, ctx, blockEl) {
   if (ctx.preview) {
     // Chrome på: bildeeditoren. Ren visning: lightboxen, som hos besøkende.
     // Avgjørelsen tas ved klikk, så Ren visning-bryteren ikke trenger re-render.
-    tile.classList.add('urd-galleri-edit');
+    tile.classList.add('urd-gallery-edit');
     tile.title = 'Klikk for å redigere bildet';
     tile.addEventListener('click', (event) => {
       event.preventDefault();
@@ -112,14 +112,14 @@ function makeTile(props, index, ctx, blockEl) {
 }
 
 function renderGrid(host, props, ctx, blockEl) {
-  host.classList.add('urd-galleri-grid');
-  host.style.setProperty('--urd-galleri-cols', String(gridColumns(props.columns, props.images.length, ctx.viewport)));
-  host.style.setProperty('--urd-galleri-gap', `${Number(props.gap) || 0}px`);
+  host.classList.add('urd-gallery-grid');
+  host.style.setProperty('--urd-gallery-cols', String(gridColumns(props.columns, props.images.length, ctx.viewport)));
+  host.style.setProperty('--urd-gallery-gap', `${Number(props.gap) || 0}px`);
   props.images.forEach((_, i) => host.appendChild(makeTile(props, i, ctx, blockEl)));
 }
 
 function navButton(dir, label, onclick) {
-  const btn = el2('button', `urd-galleri-nav urd-galleri-${dir}`);
+  const btn = el2('button', `urd-gallery-nav urd-gallery-${dir}`);
   btn.type = 'button';
   btn.title = label;
   btn.setAttribute('aria-label', label);
@@ -135,8 +135,8 @@ function navButton(dir, label, onclick) {
 }
 
 function renderCarousel(host, props, ctx, blockEl) {
-  host.classList.add('urd-galleri-carousel');
-  const track = el2('div', 'urd-galleri-track');
+  host.classList.add('urd-gallery-carousel');
+  const track = el2('div', 'urd-gallery-track');
   props.images.forEach((_, i) => track.appendChild(makeTile(props, i, ctx, blockEl)));
   host.appendChild(track);
   if (props.images.length > 1) {
@@ -147,10 +147,10 @@ function renderCarousel(host, props, ctx, blockEl) {
 }
 
 function renderSlides(host, props, ctx, blockEl) {
-  host.classList.add('urd-galleri-slides');
+  host.classList.add('urd-gallery-slides');
   const count = props.images.length;
   const slides = props.images.map((_, i) => {
-    const slide = el2('div', 'urd-galleri-slide');
+    const slide = el2('div', 'urd-gallery-slide');
     slide.appendChild(makeTile(props, i, ctx, blockEl));
     host.appendChild(slide);
     return slide;
@@ -190,9 +190,9 @@ function renderSlides(host, props, ctx, blockEl) {
   if (count > 1) {
     host.appendChild(navButton('prev', t('gallery.prevImage'), () => manual(-1)));
     host.appendChild(navButton('next', t('gallery.nextImage'), () => manual(1)));
-    const dotRow = el2('div', 'urd-galleri-dots');
+    const dotRow = el2('div', 'urd-gallery-dots');
     props.images.forEach((_, i) => {
-      const dot = el2('button', 'urd-galleri-dot urd-galleri-nav');
+      const dot = el2('button', 'urd-gallery-dot urd-gallery-nav');
       dot.type = 'button';
       dot.setAttribute('aria-label', t('gallery.imageN', { n: i + 1 }));
       dot.addEventListener('click', (event) => {
@@ -230,10 +230,10 @@ export const galleryBlock = {
    */
   render(el, props, ctx) {
     if (!props.images?.length) {
-      if (ctx.preview) el.appendChild(el2('div', 'urd-galleri-empty', 'Legg til bilder i Egenskaper'));
+      if (ctx.preview) el.appendChild(el2('div', 'urd-gallery-empty', 'Legg til bilder i Egenskaper'));
       return;
     }
-    const host = el2('div', 'urd-galleri');
+    const host = el2('div', 'urd-gallery');
     el.appendChild(host);
     (VIEWS[props.view] ?? renderGrid)(host, props, ctx, el);
 

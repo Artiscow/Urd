@@ -63,7 +63,7 @@ export const countdownBlock = {
    */
   render(el, props, ctx) {
     const host = document.createElement('div');
-    host.className = `urd-nedteller${props.variant === 'plain' ? ' urd-nedteller-enkel' : ''}`;
+    host.className = `urd-countdown${props.variant === 'plain' ? ' urd-countdown-plain' : ''}`;
     el.appendChild(host);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
 
@@ -77,19 +77,19 @@ export const countdownBlock = {
     const cells = {};
     for (const [unit, label] of units) {
       const box = document.createElement('div');
-      box.className = 'urd-nedteller-enhet';
+      box.className = 'urd-countdown-unit';
       const value = document.createElement('div');
-      value.className = 'urd-nedteller-tall';
+      value.className = 'urd-countdown-number';
       value.textContent = '0';
       const name = document.createElement('div');
-      name.className = 'urd-nedteller-navn';
+      name.className = 'urd-countdown-name';
       name.textContent = label;
       box.append(value, name);
       host.appendChild(box);
       cells[unit] = value;
     }
     const doneEl = document.createElement('div');
-    doneEl.className = 'urd-nedteller-ferdig';
+    doneEl.className = 'urd-countdown-done';
     doneEl.textContent = props.doneText ?? '';
 
     const paint = () => {

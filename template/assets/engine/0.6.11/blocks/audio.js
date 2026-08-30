@@ -41,7 +41,7 @@ export const audioBlock = {
 
     if (props.title) {
       const title = document.createElement('div');
-      title.className = 'urd-audio-tittel';
+      title.className = 'urd-audio-title';
       title.textContent = props.title;
       host.appendChild(title);
       if (editable) {

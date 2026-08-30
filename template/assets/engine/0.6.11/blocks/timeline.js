@@ -55,21 +55,21 @@ export const timelineBlock = {
    */
   render(el, props, ctx) {
     const host = document.createElement('ol');
-    host.className = `urd-tidslinje urd-tidslinje-${props.variant === 'alternating' ? 'alternating' : 'left'}`;
-    if (props.marker === 'ring') host.classList.add('urd-tidslinje-ring');
+    host.className = `urd-timeline urd-timeline-${props.variant === 'alternating' ? 'alternating' : 'left'}`;
+    if (props.marker === 'ring') host.classList.add('urd-timeline-ring');
     // Aksentfargen kun som validert hex/tematoken; ellers temaets aksent.
     const accent = accentCss(props.accent);
-    if (accent) host.style.setProperty('--urd-tl-accent', accent);
+    if (accent) host.style.setProperty('--urd-timeline-accent', accent);
     el.appendChild(host);
     const post = (msg) => window.parent?.postMessage(msg, location.origin);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
 
     /** Leser gjeldende tekster ut av DOM-en og melder hele items-listen. */
     const postItems = () => {
-      const items = [...host.querySelectorAll('.urd-tl-item')].map((item) => ({
-        year: item.querySelector('.urd-tl-year')?.textContent ?? '',
-        title: item.querySelector('.urd-tl-title')?.textContent ?? '',
-        text: item.querySelector('.urd-tl-text')?.textContent ?? '',
+      const items = [...host.querySelectorAll('.urd-timeline-item')].map((item) => ({
+        year: item.querySelector('.urd-timeline-year')?.textContent ?? '',
+        title: item.querySelector('.urd-timeline-title')?.textContent ?? '',
+        text: item.querySelector('.urd-timeline-text')?.textContent ?? '',
       }));
       post({
         type: 'urd-edit',
@@ -81,11 +81,11 @@ export const timelineBlock = {
 
     for (const entry of props.items ?? []) {
       const item = document.createElement('li');
-      item.className = 'urd-tl-item';
+      item.className = 'urd-timeline-item';
       const fields = [
-        ['urd-tl-year', entry.year],
-        ['urd-tl-title', entry.title],
-        ['urd-tl-text', entry.text],
+        ['urd-timeline-year', entry.year],
+        ['urd-timeline-title', entry.title],
+        ['urd-timeline-text', entry.text],
       ];
       for (const [cls, value] of fields) {
         const node = document.createElement('div');

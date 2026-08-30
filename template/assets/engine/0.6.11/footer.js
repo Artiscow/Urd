@@ -31,7 +31,7 @@ import {
 /**
  * Full lagbasert bakgrunn (additivt fra v0.6, delt med seksjoner og nav): en
  * backdrop bak footer-innholdet med samme lagstakk som seksjonene. Prepend-es
- * i .urd-footer-inneren så den ligger bak wrap/bunnlinje. Returnerer true når
+ * i .urd-footer-inner så den ligger bak wrap/bunnlinje. Returnerer true når
  * lag ble tegnet (da hopper rik-formen over den gamle footer.bg-fargen).
  */
 function mountFooterBg(footer, inner) {

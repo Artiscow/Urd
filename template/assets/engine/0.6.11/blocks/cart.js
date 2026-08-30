@@ -22,39 +22,39 @@ function renderDrawer(body, props, currency) {
   body.textContent = '';
   const items = readCart();
   if (!items.length) {
-    body.appendChild(el2('p', 'urd-handlekurv-tom', t('shop.cartEmpty')));
+    body.appendChild(el2('p', 'urd-cart-empty', t('shop.cartEmpty')));
     return;
   }
-  const list = el2('div', 'urd-handlekurv-linjer');
+  const list = el2('div', 'urd-cart-lines');
   for (const item of items) {
-    const row = el2('div', 'urd-handlekurv-linje');
+    const row = el2('div', 'urd-cart-line');
     if (item.image) {
       const img = document.createElement('img');
       img.src = item.image;
       img.alt = '';
-      img.className = 'urd-handlekurv-minibilde';
+      img.className = 'urd-cart-thumb';
       row.appendChild(img);
     }
-    const info = el2('div', 'urd-handlekurv-info');
+    const info = el2('div', 'urd-cart-info');
     info.appendChild(el2('strong', null, item.title));
-    if (item.variant) info.appendChild(el2('span', 'urd-handlekurv-variant', item.variant));
+    if (item.variant) info.appendChild(el2('span', 'urd-cart-variant', item.variant));
     row.appendChild(info);
 
-    const qty = el2('div', 'urd-handlekurv-antall');
-    const minus = el2('button', 'urd-handlekurv-steg', '−');
+    const qty = el2('div', 'urd-cart-count');
+    const minus = el2('button', 'urd-cart-step', '−');
     minus.type = 'button';
     minus.setAttribute('aria-label', t('shop.decrease'));
     minus.addEventListener('click', () => writeCart(cartSetQty(readCart(), item.key, item.qty - 1)));
-    const count = el2('span', 'urd-handlekurv-tall', String(item.qty));
-    const plus = el2('button', 'urd-handlekurv-steg', '+');
+    const count = el2('span', 'urd-cart-number', String(item.qty));
+    const plus = el2('button', 'urd-cart-step', '+');
     plus.type = 'button';
     plus.setAttribute('aria-label', t('shop.increase'));
     plus.addEventListener('click', () => writeCart(cartSetQty(readCart(), item.key, item.qty + 1)));
     qty.append(minus, count, plus);
     row.appendChild(qty);
 
-    row.appendChild(el2('span', 'urd-handlekurv-linjesum', formatPrice(item.price * item.qty, currency)));
-    const remove = el2('button', 'urd-handlekurv-fjern', '');
+    row.appendChild(el2('span', 'urd-cart-linetotal', formatPrice(item.price * item.qty, currency)));
+    const remove = el2('button', 'urd-cart-remove', '');
     remove.type = 'button';
     remove.innerHTML = iconSvg('cross') ?? '';
     remove.setAttribute('aria-label', t('shop.remove'));
@@ -64,13 +64,13 @@ function renderDrawer(body, props, currency) {
   }
   body.appendChild(list);
 
-  const foot = el2('div', 'urd-handlekurv-sum');
+  const foot = el2('div', 'urd-cart-total');
   foot.appendChild(el2('span', null, t('shop.total')));
   foot.appendChild(el2('strong', null, formatPrice(cartTotal(items), currency)));
   body.appendChild(foot);
 
   if (props.href) {
-    const checkout = el2('a', 'urd-handlekurv-kasse', t('shop.checkout'));
+    const checkout = el2('a', 'urd-cart-checkout', t('shop.checkout'));
     checkout.href = props.href;
     body.appendChild(checkout);
   }
@@ -82,17 +82,17 @@ function renderDrawer(body, props, currency) {
  */
 export function createCartDrawer({ href = '', currency = 'kr' } = {}) {
   const dialog = document.createElement('dialog');
-  dialog.className = 'urd-handlekurv-dialog';
-  const head = el2('div', 'urd-handlekurv-hode');
+  dialog.className = 'urd-cart-dialog';
+  const head = el2('div', 'urd-cart-head');
   head.appendChild(el2('strong', null, t('shop.cart')));
-  const close = el2('button', 'urd-handlekurv-lukk');
+  const close = el2('button', 'urd-cart-close');
   close.type = 'button';
   close.innerHTML = iconSvg('cross') ?? '';
   close.setAttribute('aria-label', t('shop.close'));
   close.addEventListener('click', () => dialog.close());
   head.appendChild(close);
   dialog.appendChild(head);
-  const body = el2('div', 'urd-handlekurv-kropp');
+  const body = el2('div', 'urd-cart-body');
   dialog.appendChild(body);
   // Lysavvisning: klikk på ::backdrop treffer selve dialog-elementet.
   dialog.addEventListener('click', (event) => {
@@ -126,15 +126,15 @@ export const cartBlock = {
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
     const currency = props.currency || 'kr';
 
-    const btn = el2('button', `urd-handlekurv-knapp${props.variant === 'icon' ? ' urd-handlekurv-ikonknapp' : ''}`);
+    const btn = el2('button', `urd-cart-button${props.variant === 'icon' ? ' urd-cart-iconbutton' : ''}`);
     btn.type = 'button';
-    const icon = el2('span', 'urd-handlekurv-ikon');
+    const icon = el2('span', 'urd-cart-icon');
     icon.innerHTML = iconSvg('cart') ?? '';
     btn.appendChild(icon);
-    const label = el2('span', 'urd-handlekurv-etikett', t('shop.cart'));
+    const label = el2('span', 'urd-cart-label', t('shop.cart'));
     if (props.variant !== 'icon') btn.appendChild(label);
     btn.setAttribute('aria-label', t('shop.cart'));
-    const badge = el2('span', 'urd-handlekurv-badge', '0');
+    const badge = el2('span', 'urd-cart-badge', '0');
     badge.hidden = true;
     btn.appendChild(badge);
     el.appendChild(btn);

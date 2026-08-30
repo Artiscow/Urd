@@ -27,13 +27,13 @@ function renderSummary(box, currency) {
   box.textContent = '';
   const items = readCart();
   if (!items.length) {
-    box.appendChild(el2('p', 'urd-kasse-tom', t('shop.cartEmpty')));
+    box.appendChild(el2('p', 'urd-checkout-empty', t('shop.cartEmpty')));
     return;
   }
-  const list = el2('ul', 'urd-kasse-linjer');
+  const list = el2('ul', 'urd-checkout-lines');
   for (const line of orderLines(items, currency)) list.appendChild(el2('li', null, line));
   box.appendChild(list);
-  const sum = el2('div', 'urd-kasse-sum');
+  const sum = el2('div', 'urd-checkout-total');
   sum.append(el2('span', null, t('shop.total')), el2('strong', null, formatPrice(cartTotal(items), currency)));
   box.appendChild(sum);
 }
@@ -51,25 +51,25 @@ export const checkoutBlock = {
    * @param {object} ctx Render-kontekst
    */
   render(el, props, ctx) {
-    const host = el2('div', 'urd-kasse');
+    const host = el2('div', 'urd-checkout');
     el.appendChild(host);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
     const currency = props.currency || 'kr';
 
-    const summary = el2('div', 'urd-kasse-sammendrag');
+    const summary = el2('div', 'urd-checkout-summary');
     renderSummary(summary, currency);
     host.appendChild(summary);
     onCartChange(el, () => renderSummary(summary, currency));
 
-    const form = el2('form', 'urd-kasse-skjema');
+    const form = el2('form', 'urd-checkout-form');
     form.noValidate = true;
     const field = (labelKey, tag, type) => {
-      const label = el2('label', 'urd-kasse-felt');
+      const label = el2('label', 'urd-checkout-field');
       label.appendChild(el2('span', null, t(labelKey)));
       const input = document.createElement(tag);
       if (type) input.type = type;
       if (tag === 'textarea') input.rows = 3;
-      input.className = 'urd-kasse-input';
+      input.className = 'urd-checkout-input';
       label.appendChild(input);
       form.appendChild(label);
       return input;
@@ -80,7 +80,7 @@ export const checkoutBlock = {
     const commentInput = field('shop.comment', 'textarea');
 
     // Honeypot: skjult felt bots fyller ut; mennesker ser og treffer det aldri.
-    const hpWrap = el2('label', 'urd-kasse-hp');
+    const hpWrap = el2('label', 'urd-checkout-hp');
     hpWrap.setAttribute('aria-hidden', 'true');
     const hp = document.createElement('input');
     hp.type = 'text';
@@ -91,30 +91,30 @@ export const checkoutBlock = {
     form.appendChild(hpWrap);
 
     if (props.vipps) {
-      form.appendChild(el2('p', 'urd-kasse-vipps', t('shop.vippsHint', { number: props.vipps })));
+      form.appendChild(el2('p', 'urd-checkout-vipps', t('shop.vippsHint', { number: props.vipps })));
     }
 
-    const buttons = el2('div', 'urd-kasse-knapper');
-    const submit = el2('button', 'urd-kasse-send', t('shop.sendOrder'));
+    const buttons = el2('div', 'urd-checkout-buttons');
+    const submit = el2('button', 'urd-checkout-send', t('shop.sendOrder'));
     submit.type = 'submit';
     buttons.appendChild(submit);
     form.appendChild(buttons);
 
-    const status = el2('p', 'urd-kasse-status');
+    const status = el2('p', 'urd-checkout-status');
     status.setAttribute('aria-live', 'polite');
     status.hidden = true;
     form.appendChild(status);
     const setStatus = (text, isError) => {
       status.textContent = text;
       status.hidden = false;
-      status.classList.toggle('urd-kasse-feil', Boolean(isError));
+      status.classList.toggle('urd-checkout-error', Boolean(isError));
     };
 
     // Det valgfrie betalingslaget (ADR-0020): knappen sender kurven til
     // sidens egen funksjon, som regner summen på nytt fra katalogen og
     // svarer med Vipps-sesjonens URL; betalingen skjer hos Vipps.
     if (props.vippsCheckout) {
-      const pay = el2('button', 'urd-kasse-vippsbetal', t('shop.payWithVipps'));
+      const pay = el2('button', 'urd-checkout-vippspay', t('shop.payWithVipps'));
       pay.type = 'button';
       pay.addEventListener('click', async () => {
         // Samme sendevakt som skjemaet: aldri i preview, uansett viewport.

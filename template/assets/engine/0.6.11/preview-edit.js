@@ -936,12 +936,12 @@ function makeSectionAdder(index, above = null) {
     const groupLabel = (name, labelKey) => (labelKey ? ta(labelKey) : (name || ta('canvas.groupOther')));
 
     // Kategorifargene (F2, eiervalg 9. august 2026): hver gruppe får et fast
-    // fargesteg avledet av admin-aksenten i base.css (--urd-kat-1..5, syklisk
+    // fargesteg avledet av admin-aksenten i base.css (--urd-category-1..5, syklisk
     // ved flere grupper); Mine maler har alltid steg 5. Fargen settes som
     // --urd-kat på kort, overskrifter og kategoriknapper.
     const TEMPLATE_CAT = 5;
     const katFor = new Map([...groups.keys()].map((name, i) => [name, (i % 5) + 1]));
-    const setKat = (el, kat) => el.style.setProperty('--urd-kat', `var(--urd-kat-${kat})`);
+    const setKat = (el, kat) => el.style.setProperty('--urd-kat', `var(--urd-category-${kat})`);
     const makeDot = () => {
       const dot = document.createElement('span');
       dot.className = 'urd-preset-dot';
@@ -1019,27 +1019,27 @@ function makeSectionAdder(index, above = null) {
       const list = maler.filter((m) => m.kind === 'section' && m.section);
       if (!list.length) {
         const empty = document.createElement('div');
-        empty.className = 'urd-mal-empty';
+        empty.className = 'urd-template-empty';
         empty.textContent = ta('canvas.templatesEmpty');
         content.appendChild(empty);
         return;
       }
       const grid = document.createElement('div');
-      grid.className = 'urd-mal-grid';
+      grid.className = 'urd-template-grid';
       for (const mal of list) {
         const card = document.createElement('div');
-        card.className = 'urd-mal-card';
+        card.className = 'urd-template-card';
         const pick = document.createElement('button');
         pick.type = 'button';
-        pick.className = 'urd-mal-pick';
+        pick.className = 'urd-template-pick';
         try {
           const thumb = document.createElement('span');
-          thumb.className = 'urd-mal-thumb';
+          thumb.className = 'urd-template-thumb';
           thumb.insertAdjacentHTML('afterbegin', presetThumb(mal.section));
           pick.appendChild(thumb);
         } catch { /* tekstvalg uten miniatyr */ }
         const nameEl = document.createElement('span');
-        nameEl.className = 'urd-mal-name';
+        nameEl.className = 'urd-template-name';
         nameEl.textContent = mal.name;
         pick.appendChild(nameEl);
         pick.addEventListener('click', () => {
@@ -1048,7 +1048,7 @@ function makeSectionAdder(index, above = null) {
         });
         const del = document.createElement('button');
         del.type = 'button';
-        del.className = 'urd-mal-del';
+        del.className = 'urd-template-delete';
         del.textContent = '×';
         del.title = ta('canvas.deleteTemplate');
         del.addEventListener('click', (event) => {
@@ -1083,7 +1083,7 @@ function makeSectionAdder(index, above = null) {
         const found = searchItems(all, query, (item) => item.label);
         if (!found.length) {
           const empty = document.createElement('div');
-          empty.className = 'urd-mal-empty';
+          empty.className = 'urd-template-empty';
           empty.textContent = ta('canvas.searchEmpty');
           content.appendChild(empty);
           return;
@@ -1117,7 +1117,7 @@ function makeSectionAdder(index, above = null) {
       const btn = document.createElement('button');
       btn.type = 'button';
       if (id === 'alle') btn.classList.add('urd-preset-rail-alle');
-      if (id === 'maler') btn.classList.add('urd-preset-rail-maler');
+      if (id === 'maler') btn.classList.add('urd-preset-rail-templates');
       if (kat) setKat(btn, kat);
       btn.append(makeDot(), document.createTextNode(label));
       btn.addEventListener('click', () => {
@@ -1140,7 +1140,7 @@ function makeSectionAdder(index, above = null) {
     search.addEventListener('input', renderContent);
     search.addEventListener('keydown', (event) => {
       // Enter setter inn første treff; Escape lukker (som blokkmenyen).
-      if (event.key === 'Enter') content.querySelector('.urd-preset-card, .urd-mal-pick')?.click();
+      if (event.key === 'Enter') content.querySelector('.urd-preset-card, .urd-template-pick')?.click();
       if (event.key === 'Escape') {
         cleanupOutside();
         collapse();
@@ -3312,8 +3312,8 @@ function enhanceBlock(el, block, section, grid, host) {
         if (target?.closest('.urd-text[contenteditable="true"]') && selectedBlockId === block.id && multiIds.size <= 1) return;
         // Handlekurv-knappen følger tekstblokkens totrinn: valgt blokk =
         // native klikk (skuffen åpner), uvalgt blokk = flate-dra og markering.
-        if (target?.closest('.urd-handlekurv-knapp') && selectedBlockId === block.id && multiIds.size <= 1) return;
-        if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button:not(.urd-handlekurv-knapp), input, select, textarea, dialog, .urd-samling-editable, .urd-samling-image-edit, .urd-faq-q, .urd-kal-config, .urd-skjema-config, .urd-kart-config')) return;
+        if (target?.closest('.urd-cart-button') && selectedBlockId === block.id && multiIds.size <= 1) return;
+        if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button:not(.urd-cart-button), input, select, textarea, dialog, .urd-collection-editable, .urd-collection-image-edit, .urd-faq-q, .urd-kal-config, .urd-skjema-config, .urd-kart-config')) return;
         // Flytende mobilblokk: første pinning skal være et bevisst valg
         // (dra i ⠿), ikke et klikk på blokken. En skjermdokket blokk er
         // unntatt: der flytter draget dokkingen, ikke radnettet.
