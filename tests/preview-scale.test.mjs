@@ -1,60 +1,61 @@
 /**
- * Skalamatten for redigerings-lerretet (editor/src/lib/preview-scale.js):
- * bredde-drevet fitScale, previewScale klemmer «fit» til <=1 og gir «full»
- * eksakt 1, med gulv og trygge svar på umålte mål. Rene funksjoner.
+ * The scale math for the editing canvas (editor/src/lib/preview-scale.js):
+ * width-driven fitScale, previewScale clamps "fit" to <=1 and gives "full"
+ * exactly 1, with a floor and safe answers for unmeasured dimensions. Pure
+ * functions.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fitScale, previewScale } from '../editor/src/lib/preview-scale.js';
 
-test('fitScale: rammebredde / målbredde', () => {
+test('fitScale: frame width / target width', () => {
   assert.ok(Math.abs(fitScale(1494, 1600) - 1494 / 1600) < 1e-9);
   assert.ok(Math.abs(fitScale(1194, 1600) - 1194 / 1600) < 1e-9);
 });
 
-test('fitScale: umålte/ugyldige mål gir 1', () => {
+test('fitScale: unmeasured/invalid dimensions give 1', () => {
   assert.equal(fitScale(0, 1600), 1);
   assert.equal(fitScale(1494, 0), 1);
   assert.equal(fitScale(NaN, 1600), 1);
 });
 
-test('previewScale fit: aldri over 1 (ingen oppskalering)', () => {
-  // Ramme bredere enn målet -> ville gitt >1, klemmes til 1.
+test('previewScale fit: never above 1 (no upscaling)', () => {
+  // Frame wider than the target -> would give >1, clamped to 1.
   assert.equal(previewScale(2000, 1280, 'fit'), 1);
-  // Ramme smalere enn målet -> nedskalering.
+  // Frame narrower than the target -> downscaling.
   assert.ok(Math.abs(previewScale(1494, 1600, 'fit') - 1494 / 1600) < 1e-9);
 });
 
-test('previewScale full: alltid eksakt 1:1', () => {
+test('previewScale full: always exactly 1:1', () => {
   assert.equal(previewScale(400, 1600, 'full'), 1);
   assert.equal(previewScale(3000, 1600, 'full'), 1);
 });
 
-test('previewScale: gulv 0.1 hindrer scale(0) / uendelig smått', () => {
-  assert.equal(previewScale(0, 1600, 'fit'), 1);           // umålt -> fitScale 1
-  assert.equal(previewScale(10, 100000, 'fit'), 0.1);      // absurd smal ramme -> gulv
+test('previewScale: the 0.1 floor prevents scale(0) / infinitely small', () => {
+  assert.equal(previewScale(0, 1600, 'fit'), 1);           // unmeasured -> fitScale 1
+  assert.equal(previewScale(10, 100000, 'fit'), 0.1);      // absurdly narrow frame -> floor
 });
 
-// Enhetsmodus (ADR-0018): mål-viewporten har både bredde og høyde, og
-// skalaen tilpasses begge akser, så folden stemmer med det besøkende ser.
+// Device mode (ADR-0018): the target viewport has both width and height, and
+// the scale adapts to both axes, so the fold matches what the visitor sees.
 
-test('enhetsmodus: den STRAMMESTE aksen bestemmer skalaen', () => {
-  // Bredden ville gitt 0.8, høyden 0.5 -> høyden vinner (bar på sidene).
+test('device mode: the TIGHTEST axis decides the scale', () => {
+  // The width would give 0.8, the height 0.5 -> the height wins (bars on the sides).
   assert.equal(previewScale(800, 1000, 'fit', 400, 800), 0.5);
-  // Motsatt: bredden er strammest -> bar over og under.
+  // The other way: the width is tightest -> bars above and below.
   assert.equal(previewScale(500, 1000, 'fit', 800, 800), 0.5);
 });
 
-test('enhetsmodus skalerer aldri opp, selv når begge akser har overskudd', () => {
+test('device mode never scales up, even when both axes have slack', () => {
   assert.equal(previewScale(2000, 1000, 'fit', 2000, 800), 1);
 });
 
-test('targetH 0 er fyll-modus: skalaen forblir rent bredde-drevet', () => {
-  // Samme svar med og uten høydeargumenter, så gamle kall er uendret.
+test('targetH 0 is fill mode: the scale stays purely width-driven', () => {
+  // The same answer with and without height arguments, so old calls are unchanged.
   assert.equal(previewScale(800, 1000, 'fit', 100, 0), previewScale(800, 1000, 'fit'));
   assert.equal(previewScale(800, 1000, 'fit', 100, 0), 0.8);
 });
 
-test('full er 1:1 uansett høydemål', () => {
+test('full is 1:1 regardless of the height target', () => {
   assert.equal(previewScale(400, 1600, 'full', 200, 800), 1);
 });

@@ -1,13 +1,16 @@
 /**
- * Test av video-blokkens URL-parsing. Sikkerhetsrelevant: CSP-ens frame-src stoler på at KUN youtube-nocookie og player.vimeo slipper gjennom, så en fremmed vert må aldri kunne smugles inn i iframe-src.
- * Dekker også privatlenke-hashene fra sveipen 19. juli 2026 (vimeo.com/<id>/<hash> og ?h=).
+ * Tests for the video block's URL parsing. Security-relevant: the CSP's
+ * frame-src trusts that ONLY youtube-nocookie and player.vimeo pass, so a
+ * foreign host must never be smuggled into the iframe src.
+ * Also covers the private-link hashes from the July 19, 2026 sweep
+ * (vimeo.com/<id>/<hash> and ?h=).
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 const { embedUrl } = await engineImport('blocks/video.js');
 
-test('kjente videolenker gir personvennlig embed-URL', () => {
+test('known video links give a privacy-friendly embed URL', () => {
   assert.equal(embedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ'),
     'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
   assert.equal(embedUrl('https://youtu.be/dQw4w9WgXcQ'),
@@ -20,14 +23,14 @@ test('kjente videolenker gir personvennlig embed-URL', () => {
     'https://player.vimeo.com/video/76979871?dnt=1');
 });
 
-test('vimeo-privatlenker beholder hashen (kreves for private videoer)', () => {
+test('vimeo private links keep the hash (required for private videos)', () => {
   assert.equal(embedUrl('https://vimeo.com/76979871/abcdef1234'),
     'https://player.vimeo.com/video/76979871?h=abcdef1234&dnt=1');
   assert.equal(embedUrl('https://player.vimeo.com/video/76979871?h=abcdef1234'),
     'https://player.vimeo.com/video/76979871?h=abcdef1234&dnt=1');
 });
 
-test('ukjente verter og ugyldige lenker avvises', () => {
+test('unknown hosts and invalid links are rejected', () => {
   for (const raw of [
     'https://evil.com/embed/x',
     'https://player.vimeo.com/',

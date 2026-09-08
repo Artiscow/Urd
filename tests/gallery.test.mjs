@@ -1,7 +1,6 @@
 /**
- * Kontraktstester for galleri-batchen: den rene logikken (galleri-model),
- * miniatyr-generatoren (preset-thumb) og def-kontraktene til galleri-blokken
- * og bildegalleri-bakgrunnslaget. DOM-rendering testes manuelt.
+ * Contract tests for the gallery batch: the pure logic (gallery-model), the thumbnail generator (preset-thumb) and the def contracts of the gallery block and the slideshow background layer.
+ * DOM rendering is tested manually.
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -12,7 +11,7 @@ const { registerSectionPresets } = await engineImport('sections/presets.js');
 const { galleryBlock } = await engineImport('blocks/gallery.js');
 const { slideshowLayer } = await engineImport('backgrounds/slideshow.js');
 
-test('stepIndex: rundgang begge veier', () => {
+test('stepIndex: wraps around both ways', () => {
   assert.equal(stepIndex(0, 1, 3), 1);
   assert.equal(stepIndex(2, 1, 3), 0);
   assert.equal(stepIndex(0, -1, 3), 2);
@@ -20,14 +19,14 @@ test('stepIndex: rundgang begge veier', () => {
   assert.equal(stepIndex(0, 5, 3), 2);
 });
 
-test('stepIndex: tom og ugyldig liste gir alltid 0', () => {
+test('stepIndex: an empty or invalid list always gives 0', () => {
   assert.equal(stepIndex(0, 1, 0), 0);
   assert.equal(stepIndex(4, 1, 1), 0);
   assert.equal(stepIndex(0, 1, Number.NaN), 0);
   assert.equal(stepIndex(Number.NaN, 1, 3), 1);
 });
 
-test('canAutoplay: aldri med under to bilder eller redusert bevegelse', () => {
+test('canAutoplay: never with fewer than two images or reduced motion', () => {
   assert.equal(canAutoplay({ count: 3 }), true);
   assert.equal(canAutoplay({ count: 1 }), false);
   assert.equal(canAutoplay({ count: 0 }), false);
@@ -35,17 +34,18 @@ test('canAutoplay: aldri med under to bilder eller redusert bevegelse', () => {
   assert.equal(canAutoplay(), false);
 });
 
-test('normalizeInterval: gulv og trygg standard', () => {
+test('normalizeInterval: floor and safe default', () => {
   assert.equal(normalizeInterval(5), 5);
   assert.equal(normalizeInterval(0.5), 2);
   assert.equal(normalizeInterval(0), 5);
   assert.equal(normalizeInterval(-3), 5);
+  // 'tull' is deliberate Norwegian garbage input (any non-number).
   assert.equal(normalizeInterval('tull'), 5);
   assert.equal(normalizeInterval(undefined), 5);
   assert.equal(normalizeInterval(2.5), 2.5);
 });
 
-test('gridColumns: klem 1..6, aldri flere enn bildene, maks 2 på mobil', () => {
+test('gridColumns: clamp 1..6, never more than the images, max 2 on mobile', () => {
   assert.equal(gridColumns(3, 9, 'desktop'), 3);
   assert.equal(gridColumns(8, 9, 'desktop'), 6);
   assert.equal(gridColumns(0, 9, 'desktop'), 3);
@@ -56,7 +56,7 @@ test('gridColumns: klem 1..6, aldri flere enn bildene, maks 2 på mobil', () => 
   assert.equal(gridColumns(1, 9, 'mobile'), 1);
 });
 
-test('parseMinHeightPx: px, vh og søppel', () => {
+test('parseMinHeightPx: px, vh and garbage', () => {
   assert.equal(parseMinHeightPx('360px'), 360);
   assert.equal(parseMinHeightPx('70vh'), 560);
   assert.equal(parseMinHeightPx('40vh'), 320);
@@ -65,27 +65,27 @@ test('parseMinHeightPx: px, vh og søppel', () => {
   assert.equal(parseMinHeightPx('-20px'), 400);
 });
 
-test('presetThumb: gyldig skisse for alle registrerte presets', () => {
+test('presetThumb: a valid sketch for every registered preset', () => {
   const defs = new Map();
   registerSectionPresets({ sections: { define: (id, def) => defs.set(id, def) } });
-  assert.ok(defs.size >= 18, `ventet minst 18 presets, fikk ${defs.size}`);
+  assert.ok(defs.size >= 18, `expected at least 18 presets, got ${defs.size}`);
   for (const [id, def] of defs) {
     const svg = presetThumb(def.create());
-    assert.ok(svg.startsWith('<svg '), `${id}: miniatyren er ikke en SVG`);
-    assert.ok(svg.endsWith('</svg>'), `${id}: miniatyren er ikke lukket`);
-    assert.ok(!svg.includes('NaN') && !svg.includes('undefined'), `${id}: ugyldige tall i miniatyren`);
-    assert.ok(svg.includes('viewBox="0 0 120 68"'), `${id}: feil viewBox`);
+    assert.ok(svg.startsWith('<svg '), `${id}: the thumbnail is not an SVG`);
+    assert.ok(svg.endsWith('</svg>'), `${id}: the thumbnail is not closed`);
+    assert.ok(!svg.includes('NaN') && !svg.includes('undefined'), `${id}: invalid numbers in the thumbnail`);
+    assert.ok(svg.includes('viewBox="0 0 120 68"'), `${id}: wrong viewBox`);
   }
 });
 
-test('presetThumb: tåler tom og mangelfull seksjon', () => {
+test('presetThumb: tolerates an empty or incomplete section', () => {
   for (const section of [undefined, {}, { blocks: [{ type: 'ukjent' }] }]) {
     const svg = presetThumb(section);
     assert.ok(svg.startsWith('<svg ') && !svg.includes('NaN'));
   }
 });
 
-test('presetThumb: slipper aldri uvaliderte strenger inn i SVG-en', () => {
+test('presetThumb: never lets unvalidated strings into the SVG', () => {
   const svg = presetThumb({
     size: { minHeight: '300px' },
     background: { layers: [{ type: 'color', props: { value: '"><script>alert(1)</script>' } }] },
@@ -94,24 +94,24 @@ test('presetThumb: slipper aldri uvaliderte strenger inn i SVG-en', () => {
   assert.ok(!svg.includes('script') && !svg.includes('javascript'));
 });
 
-test('galleri-blokken: def-kontrakten', () => {
+test('the gallery block: the def contract', () => {
   assert.equal(galleryBlock.version, 1);
   assert.equal(typeof galleryBlock.render, 'function');
   assert.ok(galleryBlock.migrations);
   const a = galleryBlock.defaults();
   const b = galleryBlock.defaults();
-  assert.notEqual(a.images, b.images, 'defaults() må gi ferske objekter');
+  assert.notEqual(a.images, b.images, 'defaults() must give fresh objects');
   assert.equal(a.view, 'grid');
   assert.equal(a.lightbox, true);
   assert.deepEqual(a.images, []);
 });
 
-test('bildegalleri-laget: def-kontrakten', () => {
+test('the slideshow layer: the def contract', () => {
   assert.equal(slideshowLayer.version, 1);
   assert.equal(typeof slideshowLayer.render, 'function');
   assert.ok(slideshowLayer.migrations);
   const a = slideshowLayer.defaults();
-  assert.notEqual(a.images, slideshowLayer.defaults().images, 'defaults() må gi ferske objekter');
+  assert.notEqual(a.images, slideshowLayer.defaults().images, 'defaults() must give fresh objects');
   assert.deepEqual(a.images, []);
   assert.equal(a.fit, 'cover');
 });

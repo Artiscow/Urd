@@ -1,6 +1,6 @@
 /**
- * Kontraktstester for typografilogikken i tekst-verktøylinjen
- * (text-typo.js): størrelsesklemming, innrykkssteg og fontstack-match.
+ * Contract tests for the typography logic in the text toolbar
+ * (text-typo.js): size clamping, indent steps and font stack matching.
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -11,7 +11,7 @@ const {
   LINE_HEIGHTS, stepIndent, firstFamily, matchFontStack,
 } = await engineImport('text-typo.js');
 
-test('clampSize: runder, klemmer og avviser ugyldig', () => {
+test('clampSize: rounds, clamps and rejects invalid', () => {
   assert.equal(clampSize(16.6), 17);
   assert.equal(clampSize(4), SIZE_MIN);
   assert.equal(clampSize(500), SIZE_MAX);
@@ -19,24 +19,24 @@ test('clampSize: runder, klemmer og avviser ugyldig', () => {
   assert.equal(clampSize('abc'), null);
 });
 
-test('stepSize: stepper og stopper i grensene', () => {
+test('stepSize: steps and stops at the limits', () => {
   assert.equal(stepSize(16, 1), 17);
   assert.equal(stepSize(16, -1), 15);
   assert.equal(stepSize(SIZE_MIN, -1), SIZE_MIN);
   assert.equal(stepSize(SIZE_MAX, 1), SIZE_MAX);
 });
 
-test('ladderStep: hopper til nærmeste trinn i retningen, klemmer i endene', () => {
+test('ladderStep: jumps to the nearest rung in the direction, clamps at the ends', () => {
   assert.equal(ladderStep(12, 1), 14);
   assert.equal(ladderStep(12, -1), 11);
-  // Verdi mellom trinn runder til neste trinn i retningen.
+  // A value between rungs rounds to the next rung in the direction.
   assert.equal(ladderStep(13, 1), 14);
   assert.equal(ladderStep(13, -1), 12);
   assert.equal(ladderStep(SIZE_LADDER[0], -1), SIZE_MIN);
   assert.equal(ladderStep(SIZE_MAX, 1), SIZE_MAX);
 });
 
-test('stepIndent: 2em-steg, tom streng ved null, tak ved 16em', () => {
+test('stepIndent: 2em steps, empty string at zero, cap at 16em', () => {
   assert.equal(stepIndent('', 1), '2em');
   assert.equal(stepIndent('2em', 1), '4em');
   assert.equal(stepIndent('4em', -1), '2em');
@@ -45,28 +45,29 @@ test('stepIndent: 2em-steg, tom streng ved null, tak ved 16em', () => {
   assert.equal(stepIndent('16em', 1), '16em');
 });
 
-test('stepIndent: verdier i andre enheter nullstilles og steppes fra 0', () => {
+test('stepIndent: values in other units reset and step from 0', () => {
   assert.equal(stepIndent('40px', 1), '2em');
   assert.equal(stepIndent('40px', -1), '');
 });
 
-test('firstFamily: første fontnavn uten fnutter, små bokstaver', () => {
+test('firstFamily: first font name without quotes, lowercase', () => {
   assert.equal(firstFamily("'Courier New', monospace"), 'courier new');
   assert.equal(firstFamily('Arial, Helvetica, sans-serif'), 'arial');
   assert.equal(firstFamily('"Trebuchet MS"'), 'trebuchet ms');
   assert.equal(firstFamily(''), '');
 });
 
-test('matchFontStack: kjent stack matches på første fontnavn, ukjent gir Arv', () => {
+test('matchFontStack: a known stack matches on the first font name, unknown gives inherit', () => {
   assert.equal(matchFontStack('Verdana, Geneva, sans-serif'), 'Verdana, Geneva, sans-serif');
-  // Beregnet stil kan mangle resten av stacken; første navn holder.
+  // Computed style may lack the rest of the stack; the first name is enough.
   assert.equal(matchFontStack('"Courier New"'), "'Courier New', monospace");
   assert.equal(matchFontStack('"Comic Sans MS", cursive'), '');
   assert.equal(matchFontStack(''), '');
 });
 
-test('LINE_HEIGHTS: fem valg der første er Arv (UI-kontrakten)', () => {
+test('LINE_HEIGHTS: five choices where the first is inherit (the UI contract)', () => {
   assert.equal(LINE_HEIGHTS.length, 5);
+  // 'Arv' ("inherit") is the expected label value from the module.
   assert.deepEqual(LINE_HEIGHTS[0], ['', 'Arv']);
   for (const [value, label] of LINE_HEIGHTS.slice(1)) {
     assert.ok(Number(value) > 0);

@@ -1,8 +1,6 @@
 /**
- * Test av utkastlagringen (editor/src/lib/draftStore.js): baseline-invarianten
- * («har utkast» er sant hvis og bare hvis nøkkelen finnes) og kvotevernet
- * (full localStorage skal aldri passere stille). Kjøres i node med en
- * Map-basert localStorage-mock.
+ * Tests of the draft store (editor/src/lib/draftStore.js): the baseline invariant ("has draft" is true if and only if the key exists) and the quota guard (a full localStorage must never pass silently).
+ * Runs in node with a Map-based localStorage mock.
  */
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
@@ -15,7 +13,7 @@ const mock = {
   },
   setItem(key, value) {
     if (this.failNextSet) {
-      const err = new Error('kvote full');
+      const err = new Error('quota full');
       err.name = 'QuotaExceededError';
       throw err;
     }
@@ -34,7 +32,7 @@ beforeEach(() => {
   mock.failNextSet = false;
 });
 
-test('save persisterer ved diff og sletter nøkkelen ved likhet med publisert', () => {
+test('save persists on diff and deletes the key when equal to published', () => {
   const store = createDraftStore('urd-draft-test', () => ({ title: 'A' }));
   assert.equal(store.hasDraft(), false);
 
@@ -47,7 +45,7 @@ test('save persisterer ved diff og sletter nøkkelen ved likhet med publisert', 
   assert.equal(store.hasDraft(), false);
 });
 
-test('kvotefeil melder onSaveError, returnerer false og beholder data i minnet', () => {
+test('a quota error reports onSaveError, returns false and keeps the data in memory', () => {
   let reported = null;
   const store = createDraftStore('urd-draft-test', () => ({ title: 'A' }), (err) => { reported = err; });
   store.data.title = 'B';
@@ -58,32 +56,34 @@ test('kvotefeil melder onSaveError, returnerer false og beholder data i minnet',
   assert.equal(store.data.title, 'B');
   assert.equal(store.hasDraft(), false);
 
-  // Neste forsøk med plass igjen lykkes uten videre.
+  // The next attempt with room to spare succeeds without further ado.
   mock.failNextSet = false;
   assert.equal(store.save(), true);
   assert.equal(store.hasDraft(), true);
 });
 
-test('korrupt utkast faller tilbake til publisert tilstand', () => {
+test('a corrupt draft falls back to the published state', () => {
+  // Deliberately broken JSON as stored draft content.
   mock.map.set('urd-draft-test', '{ikke json');
   const store = createDraftStore('urd-draft-test', () => ({ title: 'A' }));
   assert.equal(store.data.title, 'A');
   assert.equal(store.hasDraft(), false);
 });
 
-test('finnes-ikke-baseline (null): ferskt innhold er utkast til første publisering', () => {
+test('missing baseline (null): fresh content is a draft until the first publish', () => {
   const store = createDraftStore('urd-draft-test', () => null);
   assert.equal(store.data, null);
   assert.equal(store.hasDraft(), false);
 
   store.replace({ schemaVersion: 1, id: 'ny', entries: [] });
   assert.equal(store.save(), true);
-  // Selv tomt, ferskt innhold er ulikt «finnes ikke», så utkastet består
-  // (uten dette kan indeksen publiseres uten tilhørende fil).
+  // Even empty, fresh content differs from "does not exist", so the draft persists
+  // (without this the index can be published without its accompanying file).
   assert.equal(store.hasDraft(), true);
 });
 
 // Migrate-on-read for renamed draft keys (ADR-0021).
+// The 'urd-draft-samling-*' keys are deliberate legacy Norwegian keys.
 
 test('legacy draft key moves to the new key on read', () => {
   mock.map.set('urd-draft-samling-x', JSON.stringify({ a: 1 }));

@@ -1,8 +1,6 @@
 /**
- * Oppdaterings-planen (ADR-0014): ren logikk, tre-lister inn og
- * endringssett ut. Scenarioene speiler regeltabellen i update-plan.js,
- * inkludert motorbytte-swappen (gammel versjonert mappe slettes, ny legges
- * inn) som faller ut av de generiske reglene uten egen kode.
+ * The update plan (ADR-0014): pure logic, tree listings in and a change set out.
+ * The scenarios mirror the rule table in update-plan.js, including the engine swap (the old versioned folder is deleted, the new one added) which falls out of the generic rules without dedicated code.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -12,7 +10,7 @@ import {
 
 const change = (plan, path) => plan.changes.find((c) => c.path === path);
 
-test('highestVersionTag: høyeste treparts vinner, andre navn ignoreres', () => {
+test('highestVersionTag: the highest three-part wins, other names are ignored', () => {
   assert.equal(highestVersionTag(['v0.6.8', 'v0.6.9', 'v0.6.10']), 'v0.6.10');
   assert.equal(highestVersionTag(['v0.9.1', 'v1.0.0', 'v0.10.2']), 'v1.0.0');
   assert.equal(highestVersionTag(['v0.6.9-rc.1', 'utkast', 'v0.6']), null);
@@ -21,7 +19,8 @@ test('highestVersionTag: høyeste treparts vinner, andre navn ignoreres', () => 
   assert.equal(highestVersionTag(undefined), null);
 });
 
-test('isAtomPath: motorgruppen låses, functions og løse rotfiler er valgfrie', () => {
+test('isAtomPath: the engine group is locked, functions and loose root files are optional', () => {
+  // 'kaker/index.html' is a page slug copy: user-named and deliberately Norwegian.
   for (const path of ['index.html', 'urd.json', 'admin/assets/editor.js',
     'assets/engine/0.7.0/boot.js', 'assets/urd/i18n.js', 'assets/styles/base.css',
     'kaker/index.html']) {
@@ -32,7 +31,7 @@ test('isAtomPath: motorgruppen låses, functions og løse rotfiler er valgfrie',
   }
 });
 
-test('ren oppdatering: endret oppstrøms + urørt lokalt skrives uten konflikt', () => {
+test('clean update: changed upstream + untouched locally is written without conflict', () => {
   const plan = planUpdate(
     { 'index.html': 'a', 'functions/f.js': 'x' },
     { 'index.html': 'b', 'functions/f.js': 'x' },
@@ -42,7 +41,7 @@ test('ren oppdatering: endret oppstrøms + urørt lokalt skrives uten konflikt',
   assert.equal(plan.upToDate, false);
 });
 
-test('motorbytte: gammel versjonert mappe slettes, ny legges inn', () => {
+test('engine swap: the old versioned folder is deleted, the new one added', () => {
   const plan = planUpdate(
     { 'assets/engine/0.6.8/boot.js': 'a', 'assets/urd/i18n.js': 's1' },
     { 'assets/engine/0.7.0/boot.js': 'b', 'assets/urd/i18n.js': 's2' },
@@ -53,7 +52,8 @@ test('motorbytte: gammel versjonert mappe slettes, ny legges inn', () => {
   assert.deepEqual(change(plan, 'assets/urd/i18n.js'), { path: 'assets/urd/i18n.js', action: 'write', atom: true, conflict: null });
 });
 
-test('håndredigert fil flagges: edited, created og editedDelete', () => {
+test('a hand-edited file is flagged: edited, created and editedDelete', () => {
+  // File names and contents are deliberate Norwegian fixture values.
   const plan = planUpdate(
     { 'functions/f.js': 'base', 'functions/g.js': 'base', 'functions/borte.js': 'base' },
     { 'functions/f.js': 'ny', 'functions/ny.js': 'ny' },
@@ -62,23 +62,23 @@ test('håndredigert fil flagges: edited, created og editedDelete', () => {
   assert.equal(change(plan, 'functions/f.js').conflict, 'edited');
   assert.equal(change(plan, 'functions/ny.js').conflict, 'created');
   assert.deepEqual(change(plan, 'functions/borte.js'), { path: 'functions/borte.js', action: 'delete', atom: false, conflict: 'editedDelete' });
-  // g.js: fjernet oppstrøms + urørt lokalt = stille sletting.
+  // g.js: removed upstream + untouched locally = silent deletion.
   assert.deepEqual(change(plan, 'functions/g.js'), { path: 'functions/g.js', action: 'delete', atom: false, conflict: null });
 });
 
-test('uendret oppstrøms røres aldri, men gjenopprettes om den mangler', () => {
+test('unchanged upstream is never touched, but restored if missing', () => {
   const plan = planUpdate(
     { 'functions/f.js': 'x', 'functions/slettet.js': 'x', 'index.html': 'a' },
     { 'functions/f.js': 'x', 'functions/slettet.js': 'x', 'index.html': 'b' },
     { 'functions/f.js': 'LOKALT-ENDRET', 'index.html': 'a' },
   );
-  // Lokale endringer i en fil oppstrøms ikke rørte, består i stillhet.
+  // Local edits to a file upstream did not touch persist silently.
   assert.equal(change(plan, 'functions/f.js'), undefined);
-  // En eid fil brukeren har slettet ved et uhell, gjenopprettes.
+  // An owned file the user deleted by accident is restored.
   assert.deepEqual(change(plan, 'functions/slettet.js'), { path: 'functions/slettet.js', action: 'write', atom: false, conflict: null });
 });
 
-test('brukereide stier og _headers er alltid utenfor planen', () => {
+test('user-owned paths and _headers are always outside the plan', () => {
   const plan = planUpdate(
     { 'content/site.json': 'a', '_headers': 'h1', 'media/x.webp': 'a' },
     { 'content/site.json': 'b', '_headers': 'h2', 'media/x.webp': 'b' },
@@ -88,7 +88,7 @@ test('brukereide stier og _headers er alltid utenfor planen', () => {
   assert.equal(plan.upToDate, true);
 });
 
-test('allerede på mål-innholdet gir ingen endring', () => {
+test('already at the target content gives no change', () => {
   const plan = planUpdate(
     { 'index.html': 'a' },
     { 'index.html': 'b' },
@@ -97,7 +97,7 @@ test('allerede på mål-innholdet gir ingen endring', () => {
   assert.equal(plan.upToDate, true);
 });
 
-test('chunkEntries: deler i grupper og bevarer rekkefølgen', () => {
+test('chunkEntries: splits into groups and preserves the order', () => {
   const entries = Array.from({ length: 7 }, (_, i) => i);
   assert.deepEqual(chunkEntries(entries, 3), [[0, 1, 2], [3, 4, 5], [6]]);
   assert.deepEqual(chunkEntries([], 3), []);

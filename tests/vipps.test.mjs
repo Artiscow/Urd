@@ -1,8 +1,9 @@
 /**
- * Kontraktstester for betalingslagets rene logikk (functions/_lib/vipps.js,
- * ADR-0020): konfigurasjonslesing, payload-validering (aldri klientens
- * priser), øre-omregning mot katalogen og sesjonskroppen. Endepunktet og
- * selve betalingen testes manuelt mot MT-miljøet (testrundene).
+ * Contract tests for the payment layer's pure logic (functions/_lib/vipps.js,
+ * ADR-0020): configuration reading, payload validation (never the client's
+ * prices), ore conversion against the catalog and the session body. The
+ * endpoint and the actual payment are tested manually against the MT
+ * environment (the test rounds).
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -15,12 +16,13 @@ const ENV = {
   VIPPS_MSN: '123456',
 };
 
+// Deliberate Norwegian fixture ids and names: this is user catalog data.
 const CATALOGS = [
   { kind: 'products', entries: [{ id: 'kake', price: 350 }, { id: 'boller', price: 49.5 }, { id: 'gratis' }] },
   { kind: 'news', entries: [{ id: 'kake', price: 1 }] },
 ];
 
-test('vippsConfig: null uten alle hemmelighetene, standard api-base ellers', () => {
+test('vippsConfig: null without all the secrets, default api base otherwise', () => {
   assert.equal(vippsConfig({}), null);
   assert.equal(vippsConfig({ ...ENV, VIPPS_MSN: '' }), null);
   const config = vippsConfig(ENV);
@@ -28,7 +30,7 @@ test('vippsConfig: null uten alle hemmelighetene, standard api-base ellers', () 
   assert.equal(vippsConfig({ ...ENV, VIPPS_API_BASE: 'https://apitest.vipps.no' }).apiBase, 'https://apitest.vipps.no');
 });
 
-test('validOrderPayload: renser linjer og kontakt, klemmer antall, avviser tull', () => {
+test('validOrderPayload: cleans lines and contact, clamps quantity, rejects nonsense', () => {
   const clean = validOrderPayload({
     order: [{ id: 'kake', qty: 2, variant: 'Stor', price: 1 }],
     contact: { name: ' Kari ', email: 'kari@forening.no' },
@@ -44,30 +46,30 @@ test('validOrderPayload: renser linjer og kontakt, klemmer antall, avviser tull'
   assert.equal(validOrderPayload({ order: [{ id: 'kake', qty: 100 }] }), null);
 });
 
-test('validOrderPayload: retursti må være intern; alt annet gir rot', () => {
+test('validOrderPayload: return path must be internal; anything else gives the root', () => {
   assert.equal(validOrderPayload({ order: [{ id: 'kake', qty: 1 }], returnPath: 'https://ond.no/' }).returnPath, '/');
   assert.equal(validOrderPayload({ order: [{ id: 'kake', qty: 1 }], returnPath: '//ond.no' }).returnPath, '/');
   assert.equal(validOrderPayload({ order: [{ id: 'kake', qty: 1 }] }).returnPath, '/');
 });
 
-test('orderAmountOre: regner fra katalogen, aldri klienten; ukjent/prisløs id avviser', () => {
+test('orderAmountOre: computes from the catalog, never the client; unknown/priceless id rejects', () => {
   assert.equal(orderAmountOre([{ id: 'kake', qty: 2 }], CATALOGS), 70000);
   assert.equal(orderAmountOre([{ id: 'boller', qty: 1 }], CATALOGS), 4950);
   assert.equal(orderAmountOre([{ id: 'ukjent', qty: 1 }], CATALOGS), null);
   assert.equal(orderAmountOre([{ id: 'gratis', qty: 1 }], CATALOGS), null);
 });
 
-test('orderAmountOre: kun products-samlinger teller', () => {
+test('orderAmountOre: only products collections count', () => {
   assert.equal(orderAmountOre([{ id: 'kake', qty: 1 }], [{ kind: 'news', entries: [{ id: 'kake', price: 1 }] }]), null);
 });
 
-test('makeReference: Vipps-formen [a-zA-Z0-9-]{8,50}', () => {
+test('makeReference: the Vipps shape [a-zA-Z0-9-]{8,50}', () => {
   const ref = makeReference();
   assert.match(ref, /^[a-zA-Z0-9-]{8,50}$/);
   assert.notEqual(makeReference(), ref);
 });
 
-test('buildSession: retur-URL på egen origin, beløp i øre, beskrivelse med linjer', () => {
+test('buildSession: return URL on own origin, amount in ore, description with lines', () => {
   const body = buildSession({
     amountOre: 70000,
     reference: 'urd-abc123def456',

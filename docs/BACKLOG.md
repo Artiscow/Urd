@@ -88,7 +88,7 @@ Fasen er delt opp i milepæler 9. august 2026: arkitekturavklaringene (bredde, m
   - [x] 0.7.14.7 CSS-klassene (urd-handlekurv-*->urd-cart-* osv., nytt djb2-stempel i alle 5 skall, kopiene byte-like); breaking for egendefinert CSS, bokført i CHANGELOG. Også de norske suffiksene og CSS-variablene
   - [x] 0.7.14.8 icons.js-lokaliseringen: labelKey per ikon + icon.*-nøkler i nb/en-GB/tr, engelske fallback-etiketter
   - [x] 0.7.14.9 Resterende strenger: fallback-litteraler, hardkodede titler/placeholders (med nøkler), feil-/konsollmeldinger, check-release.mjs, dev-server.py, workflow-stegnavnene, skjema-beskrivelsestekstene
-  - [ ] 0.7.14.10 Testene: 477 beskrivelser og assertion-meldinger til engelsk, testfil-renames; norske fixture-data består som bevisst testinnhold
+  - [x] 0.7.14.10 Testene: beskrivelser, assertion-meldinger og kommentarer til engelsk (testfil-renames tatt i .5); norske fixture-data består som bevisst testinnhold, markert der det ikke er opplagt
   - [ ] 0.7.14.11-.16 Kommentarsveipen (~5 450 linjer i seks batcher: preview-edit.js; App.svelte; motor-rot A; motor-rot B + blocks/backgrounds/sections/animations; editor/src/lib; base.css med nytt stempel + skall + workflows + dev-server + scripts + ordbok-headere + plugin-kommentarer), med kommentarreglene i AGENTS.md anvendt samtidig; bundel-diffen skal være tom for rene kommentarbatcher
   - [ ] 0.7.14.17 Sluttaudit (repo-vid æøå-grep pluss stopwordliste) + push-klargjøring
 

@@ -1,19 +1,22 @@
 /**
- * Vakt mot at HTML-skallene siger fra motorkilden og fra ADR-0013-invariantene.
+ * Guard against the HTML shells drifting from the engine source and from the
+ * ADR-0013 invariants.
  *
- * Besøkersiden forhåndslaster hele den statiske import-grafen fra boot.js med
- * <link rel="modulepreload"> (ellers oppdager nettleseren importene lag for
- * lag, et serielt fossefall). Denne testen regner ut lukningen på nytt fra
- * kilden og krever at HTML-lista er nøyaktig lik: verken en manglende modul
- * (som da faller tilbake til fossefall) eller en ekstra (som f.eks. et
- * editor-lag besøkende aldri skal hente). Samme kultur som bygg-samsvar-sjekken.
+ * The visitor page preloads the full static import graph from boot.js with
+ * <link rel="modulepreload"> (otherwise the browser discovers the imports
+ * layer by layer, a serial waterfall). This test recomputes the closure from
+ * the source and requires the HTML list to be exactly equal: neither a
+ * missing module (which then falls back to the waterfall) nor an extra one
+ * (such as an editor layer visitors must never fetch). Same culture as the
+ * build conformity check.
  *
- * Med motorversjoneringen (ADR-0013) vokter den også: at mappenavnet er lik
- * urd.json.engine, at slug-kopiene av index.html er byte-like roten (de skrives
- * som rå kopier ved publisering, og drift gir foreldreløse kopier ved bump),
- * at skallmodulene i assets/urd/ re-eksporterer fra gjeldende versjon, at
- * _headers har de versjonsnøytrale immutable-reglene, og at base.css-stempelet
- * i skallene matcher filinnholdet.
+ * With the engine versioning (ADR-0013) it also guards: that the directory
+ * name equals urd.json.engine, that the slug copies of index.html are
+ * byte-identical to the root (they are written as raw copies at publish, and
+ * drift gives orphaned copies at a bump), that the shell modules in
+ * assets/urd/ re-export from the current version, that _headers has the
+ * version-neutral immutable rules, and that the base.css stamp in the shells
+ * matches the file content.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -26,24 +29,24 @@ const INDEX = new URL('index.html', TEMPLATE);
 const SLUG_COPIES = ['om-oss', 'kaker', 'kontakt'];
 const URD_DIR = new URL('assets/urd/', TEMPLATE);
 
-/** Fjern blokk- og linjekommentarer FØR matching, så en utkommentert eller
- *  dynamisk import aldri teller med. */
+/** Strip block and line comments BEFORE matching, so a commented-out or
+ *  dynamic import never counts. */
 function stripComments(src) {
   return src
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
 }
 
-/** Kun statiske importer: `import ... from './x.js'` og bivirknings-formen
- *  `import './x.js'`. Ankret på `import` etterfulgt av IKKE `(`, så
- *  `import(` (dynamisk) aldri matcher. */
+/** Static imports only: `import ... from './x.js'` and the side-effect form
+ *  `import './x.js'`. Anchored on `import` followed by NOT `(`, so
+ *  `import(` (dynamic) never matches. */
 const STATIC_RE = /\bimport\b(?!\s*\()(?:[\s\S]*?\bfrom\b)?\s*['"](\.[^'"]+)['"]/g;
 
 function staticSpecs(src) {
   return [...stripComments(src).matchAll(STATIC_RE)].map((m) => m[1]);
 }
 
-/** Den statiske import-lukningen av boot.js, som motor-relative navn. */
+/** The static import closure of boot.js, as engine-relative names. */
 function closure() {
   const seen = new Set();
   const names = new Set();
@@ -51,8 +54,9 @@ function closure() {
     if (seen.has(url.href)) return;
     seen.add(url.href);
     names.add(url.href.slice(ENGINE_DIR.href.length));
-    // Samle spesifikatorene FØR rekursjon: en delt global regex' lastIndex
-    // korrumperes av reentrans, så matchAll (egen iterasjon) er nødvendig.
+    // Collect the specifiers BEFORE recursing: a shared global regex's
+    // lastIndex is corrupted by reentrancy, so matchAll (its own iteration)
+    // is required.
     const specs = staticSpecs(readFileSync(url, 'utf8'));
     for (const spec of specs) walk(new URL(spec, url));
   }
@@ -60,9 +64,9 @@ function closure() {
   return names;
 }
 
-/** modulepreload-href-ene i index.html, som motor-relative navn.
- *  Prefikset er den VERSJONERTE mappa: en referanse uten versjon (eller med
- *  feil versjon) matcher ikke og feiler som manglende preload. */
+/** The modulepreload hrefs in index.html, as engine-relative names.
+ *  The prefix is the VERSIONED directory: a reference without a version (or
+ *  with the wrong version) does not match and fails as a missing preload. */
 function preloadNames() {
   const html = readFileSync(INDEX, 'utf8');
   const names = new Set();
@@ -75,15 +79,15 @@ function preloadNames() {
   return names;
 }
 
-/** Samme innholdshash som imageTools.contentHash (djb2, 8 hex-tegn). */
+/** Same content hash as imageTools.contentHash (djb2, 8 hex chars). */
 function contentHash(text) {
   let hash = 5381;
   for (let i = 0; i < text.length; i++) hash = ((hash << 5) + hash + text.charCodeAt(i)) >>> 0;
   return hash.toString(16).padStart(8, '0');
 }
 
-// Moduler som lastes dynamisk (await import) eller kun i editoren: de skal
-// ALDRI forhåndslastes for besøkende.
+// Modules loaded dynamically (await import) or only in the editor: they must
+// NEVER be preloaded for visitors.
 const EDITOR_ONLY = [
   'preview-edit.js', 'preset-thumb.js', 'image-editor.js', 'imageTools.js',
   'color-picker.js', 'dropdown.js', 'glyphs.js', 'fonts.js', 'text-typo.js',
@@ -91,98 +95,98 @@ const EDITOR_ONLY = [
   'page-presets.js',
 ];
 
-test('motormappa finnes og heter det urd.json.engine sier', () => {
-  assert.ok(statSync(ENGINE_DIR).isDirectory(), `mangler mappe for motorversjonen ${ENGINE_VERSION}`);
-  // Nøyaktig ÉN versjonert mappe: en glemt sletting av forrige versjon ville
-  // blåst opp repoet og skjult at HTML-referansene peker feil.
+test('the engine directory exists and is named what urd.json.engine says', () => {
+  assert.ok(statSync(ENGINE_DIR).isDirectory(), `missing directory for engine version ${ENGINE_VERSION}`);
+  // Exactly ONE versioned directory: a forgotten deletion of the previous
+  // version would bloat the repo and hide that the HTML references point wrong.
   const versions = readdirSync(new URL('assets/engine/', TEMPLATE));
-  assert.deepEqual(versions, [ENGINE_VERSION], `assets/engine/ skal kun ha ${ENGINE_VERSION}: ${versions.join(', ')}`);
+  assert.deepEqual(versions, [ENGINE_VERSION], `assets/engine/ must only contain ${ENGINE_VERSION}: ${versions.join(', ')}`);
 });
 
-test('modulepreload i index.html matcher boot.js sin statiske import-lukning', () => {
+test('modulepreload in index.html matches the static import closure of boot.js', () => {
   const want = closure();
   const have = preloadNames();
   const missing = [...want].filter((n) => !have.has(n)).sort();
   const extra = [...have].filter((n) => !want.has(n)).sort();
-  assert.deepEqual(missing, [], `mangler modulepreload for: ${missing.join(', ')}`);
-  assert.deepEqual(extra, [], `overflødig modulepreload for: ${extra.join(', ')}`);
+  assert.deepEqual(missing, [], `missing modulepreload for: ${missing.join(', ')}`);
+  assert.deepEqual(extra, [], `superfluous modulepreload for: ${extra.join(', ')}`);
 });
 
-test('alle motor-referanser i index.html bruker den versjonerte stien', () => {
+test('all engine references in index.html use the versioned path', () => {
   const html = readFileSync(INDEX, 'utf8');
   const re = /\/assets\/engine\/([^"']+)/g;
   for (const [, rest] of html.matchAll(re)) {
     assert.ok(
       rest.startsWith(`${ENGINE_VERSION}/`),
-      `uversjonert motor-referanse i index.html: /assets/engine/${rest}`,
+      `unversioned engine reference in index.html: /assets/engine/${rest}`,
     );
   }
 });
 
-test('slug-kopiene av index.html er byte-like roten', () => {
-  // Kopiene skrives som rå kopier av servert rot ved publisering; driver de i
-  // malen (slik theme.css-lenken og theme-init.js gjorde), arver ferske kloner
-  // avviket til første publisering.
+test('the slug copies of index.html are byte-identical to the root', () => {
+  // The copies are written as raw copies of the served root at publish; if
+  // they drift in the template, fresh clones inherit the deviation until the
+  // first publish.
   const root = readFileSync(INDEX, 'utf8');
   for (const slug of SLUG_COPIES) {
     const copy = readFileSync(new URL(`${slug}/index.html`, TEMPLATE), 'utf8');
-    assert.equal(copy, root, `${slug}/index.html har drevet fra rot-index.html`);
+    assert.equal(copy, root, `${slug}/index.html has drifted from the root index.html`);
   }
 });
 
-test('skallene i assets/urd/ re-eksporterer fra gjeldende motorversjon', () => {
+test('the shells in assets/urd/ re-export from the current engine version', () => {
   const shellFiles = (dir) => readdirSync(dir, { recursive: true })
     .filter((name) => String(name).endsWith('.js'))
     .map((name) => new URL(String(name).replaceAll('\\', '/'), dir));
   const shells = shellFiles(URD_DIR);
-  assert.ok(shells.length >= 9, `fant kun ${shells.length} skall i assets/urd/`);
-  // Skallene er re-exports (`export * from` / `export { default } from`),
-  // ikke importer, så de trenger sin egen spesifikator-regex.
+  assert.ok(shells.length >= 9, `found only ${shells.length} shells in assets/urd/`);
+  // The shells are re-exports (`export * from` / `export { default } from`),
+  // not imports, so they need their own specifier regex.
   const EXPORT_FROM_RE = /\bexport\b[^;]*?\bfrom\b\s*['"](\.[^'"]+)['"]/g;
   for (const url of shells) {
     const src = readFileSync(url, 'utf8');
     const specs = [...stripComments(src).matchAll(EXPORT_FROM_RE)].map((m) => m[1]);
-    assert.equal(specs.length, 1, `${url.pathname}: et skall skal ha nøyaktig én re-export`);
+    assert.equal(specs.length, 1, `${url.pathname}: a shell must have exactly one re-export`);
     const target = new URL(specs[0], url);
     assert.ok(
       target.href.startsWith(ENGINE_DIR.href),
-      `${url.pathname} peker utenfor motorversjonen ${ENGINE_VERSION}: ${specs[0]}`,
+      `${url.pathname} points outside engine version ${ENGINE_VERSION}: ${specs[0]}`,
     );
-    assert.ok(statSync(target).isFile(), `${url.pathname} peker på en fil som ikke finnes: ${specs[0]}`);
+    assert.ok(statSync(target).isFile(), `${url.pathname} points to a file that does not exist: ${specs[0]}`);
   }
 });
 
-test('_headers har de versjonsnøytrale immutable-reglene', () => {
+test('_headers has the version-neutral immutable rules', () => {
   const headers = readFileSync(new URL('_headers', TEMPLATE), 'utf8');
   for (const rule of ['/assets/engine/*', '/assets/styles/base.css', '/media/*']) {
     const idx = headers.indexOf(`\n${rule}\n`);
-    assert.ok(idx !== -1, `_headers mangler regelen ${rule}`);
+    assert.ok(idx !== -1, `_headers is missing the rule ${rule}`);
     const block = headers.slice(idx, headers.indexOf('\n\n', idx + 1) === -1 ? undefined : headers.indexOf('\n\n', idx + 1));
-    assert.match(block, /immutable/, `${rule}-blokken i _headers mangler immutable`);
+    assert.match(block, /immutable/, `the ${rule} block in _headers is missing immutable`);
   }
-  // Regelen skal være versjonsnøytral: _headers er håndredigerbar (ADR-0006)
-  // og skal aldri trenge endring ved motor-bump.
-  assert.ok(!headers.includes(`/assets/engine/${ENGINE_VERSION}`), '_headers skal ikke inneholde en versjonert motorsti');
+  // The rule must be version-neutral: _headers is hand-editable (ADR-0006)
+  // and must never need changes at an engine bump.
+  assert.ok(!headers.includes(`/assets/engine/${ENGINE_VERSION}`), '_headers must not contain a versioned engine path');
 });
 
-test('base.css-stempelet i HTML-skallene matcher filinnholdet', () => {
+test('the base.css stamp in the HTML shells matches the file content', () => {
   const stamp = contentHash(readFileSync(new URL('assets/styles/base.css', TEMPLATE), 'utf8'));
   for (const file of ['index.html', 'admin/index.html']) {
     const html = readFileSync(new URL(file, TEMPLATE), 'utf8');
     const m = html.match(/href="\/assets\/styles\/base\.css\?v=([0-9a-f]{8})"/);
-    assert.ok(m, `${file} mangler stemplet base.css-referanse`);
-    assert.equal(m[1], stamp, `${file} har utdatert base.css-stempel (ventet ${stamp})`);
+    assert.ok(m, `${file} is missing the stamped base.css reference`);
+    assert.equal(m[1], stamp, `${file} has an outdated base.css stamp (expected ${stamp})`);
   }
 });
 
-test('editor-laget er IKKE i den besøker-kritiske lukningen', () => {
+test('the editor layer is NOT in the visitor-critical closure', () => {
   const want = closure();
   for (const mod of EDITOR_ONLY) {
-    assert.equal(want.has(mod), false, `${mod} skal lastes dynamisk, ikke forhåndslastes`);
+    assert.equal(want.has(mod), false, `${mod} must be loaded dynamically, not preloaded`);
   }
 });
 
-test('lukningsvandreren utelater kommentert og dynamisk import', () => {
+test('the closure walker excludes commented and dynamic imports', () => {
   const src = `
     import { a } from './a.js';
     // import { b } from './b.js';

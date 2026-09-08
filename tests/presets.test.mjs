@@ -1,6 +1,6 @@
 /**
- * Kontraktstest for seksjonspresetene: hver create() gir en velformet seksjon, og hver item() plasserer nye elementer uten å overlappe eksisterende blokker.
- * Skjemavalidering av det samme skjer i editor/scripts/validate.mjs (ajv bor der); denne testen dekker strukturen og plasseringsgeometrien.
+ * Contract test for the section presets: every create() gives a well-formed section, and every item() places new elements without overlapping existing blocks.
+ * Schema validation of the same happens in editor/scripts/validate.mjs (ajv lives there); this test covers the structure and the placement geometry.
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -17,50 +17,48 @@ const overlaps = (a, b) => {
 };
 
 const assertBlock = (block, presetId) => {
-  assert.ok(block.id, `${presetId}: blokk mangler id`);
-  assert.ok(block.type, `${presetId}: blokk mangler type`);
-  assert.equal(block.version, 1, `${presetId}: blokk mangler version`);
-  assert.ok(block.props, `${presetId}: blokk mangler props`);
+  assert.ok(block.id, `${presetId}: block missing id`);
+  assert.ok(block.type, `${presetId}: block missing type`);
+  assert.equal(block.version, 1, `${presetId}: block missing version`);
+  assert.ok(block.props, `${presetId}: block missing props`);
   const d = block.frames?.desktop;
-  assert.ok(d, `${presetId}: blokk mangler desktop-frame`);
+  assert.ok(d, `${presetId}: block missing desktop frame`);
   for (const key of ['x', 'y', 'w', 'h', 'z']) {
-    assert.equal(typeof d[key], 'number', `${presetId}: frame.${key} er ikke tall`);
+    assert.equal(typeof d[key], 'number', `${presetId}: frame.${key} is not a number`);
   }
-  // Med bundet innholdsbredde (ADR-0018) er prosentene av innholdsflaten,
-  // ikke av vinduet, så en blokk utenfor 0-100 havner i margen der det ikke
-  // finnes plass i det hele tatt. Høyden må være positiv av samme grunn:
-  // en frame med h <= 0 er usynlig, ikke bare liten.
-  assert.ok(d.x >= 0, `${presetId}: blokk starter utenfor innholdsflaten (x=${d.x})`);
-  assert.ok(d.x + d.w <= 100.01, `${presetId}: blokk stikker ut av seksjonen (${d.x + d.w}%)`);
-  assert.ok(d.w > 0, `${presetId}: blokk uten bredde (w=${d.w})`);
-  assert.ok(d.h > 0, `${presetId}: blokk uten høyde (h=${d.h})`);
+  // With bound content width (ADR-0018) the percentages are of the content band, not the window, so a block outside 0-100 lands in the gutter where there is no room at all.
+  // The height must be positive for the same reason: a frame with h <= 0 is invisible, not just small.
+  assert.ok(d.x >= 0, `${presetId}: block starts outside the content band (x=${d.x})`);
+  assert.ok(d.x + d.w <= 100.01, `${presetId}: block sticks out of the section (${d.x + d.w}%)`);
+  assert.ok(d.w > 0, `${presetId}: block without width (w=${d.w})`);
+  assert.ok(d.h > 0, `${presetId}: block without height (h=${d.h})`);
 };
 
-test('presets: create() gir velformede seksjoner', () => {
-  assert.ok(defs.size >= 18, `ventet minst 18 presets, fikk ${defs.size}`);
+test('presets: create() gives well-formed sections', () => {
+  assert.ok(defs.size >= 18, `expected at least 18 presets, got ${defs.size}`);
   for (const [id, def] of defs) {
     const section = def.create();
-    assert.ok(section.id && section.preset === id, `${id}: seksjonen mangler id/preset`);
-    assert.ok(section.background?.layers?.length, `${id}: seksjonen mangler bakgrunn`);
-    assert.ok(section.size?.minHeight, `${id}: seksjonen mangler minstehøyde`);
+    assert.ok(section.id && section.preset === id, `${id}: section missing id/preset`);
+    assert.ok(section.background?.layers?.length, `${id}: section missing background`);
+    assert.ok(section.size?.minHeight, `${id}: section missing min height`);
     for (const block of section.blocks) assertBlock(block, id);
     const ids = section.blocks.map((b) => b.id);
-    assert.equal(new Set(ids).size, ids.length, `${id}: dupliserte blokk-ider`);
+    assert.equal(new Set(ids).size, ids.length, `${id}: duplicate block ids`);
   }
 });
 
-test('presets: create() gir ferske objekter hver gang', () => {
+test('presets: create() gives fresh objects every time', () => {
   for (const [id, def] of defs) {
     const a = def.create();
     const b = def.create();
-    assert.notEqual(a.id, b.id, `${id}: to kall deler seksjons-id`);
+    assert.notEqual(a.id, b.id, `${id}: two calls share a section id`);
     if (a.blocks.length) {
-      assert.notEqual(a.blocks[0], b.blocks[0], `${id}: to kall deler blokkobjekter`);
+      assert.notEqual(a.blocks[0], b.blocks[0], `${id}: two calls share block objects`);
     }
   }
 });
 
-/** Speiler editorens insertBlocks: moves flyttes først, så legges blokkene til. */
+/** Mirrors the editor's insertBlocks: moves are applied first, then the blocks are added. */
 const applyItem = (section, next) => {
   for (const move of next.moves ?? []) {
     const block = section.blocks.find((b) => b.id === move.blockId);
@@ -76,45 +74,45 @@ const assertNoOverlap = (section, next, id, hint) => {
     for (const existing of section.blocks) {
       if (moved.has(existing.id) || next.blocks.includes(existing)) continue;
       assert.ok(!overlaps(block.frames.desktop, existing.frames.desktop),
-        `${id}${hint}: nytt element (${block.type} @ ${block.frames.desktop.x},${block.frames.desktop.y}) overlapper ${existing.type} @ ${existing.frames.desktop.x},${existing.frames.desktop.y}`);
+        `${id}${hint}: new element (${block.type} @ ${block.frames.desktop.x},${block.frames.desktop.y}) overlaps ${existing.type} @ ${existing.frames.desktop.x},${existing.frames.desktop.y}`);
     }
     assert.ok(next.bottom >= block.frames.desktop.y + block.frames.desktop.h,
-      `${id}${hint}: bottom (${next.bottom}) dekker ikke det nye elementet`);
+      `${id}${hint}: bottom (${next.bottom}) does not cover the new element`);
   }
 };
 
-test('presets: item() plasserer nye elementer uten overlapp, to runder', () => {
+test('presets: item() places new elements without overlap, two rounds', () => {
   for (const [id, def] of defs) {
     if (!def.item) continue;
-    assert.ok(def.itemLabel, `${id}: item uten itemLabel`);
+    assert.ok(def.itemLabel, `${id}: item without itemLabel`);
     const section = def.create();
     for (let round = 0; round < 2; round++) {
       const next = def.item(section);
-      assert.ok(Number.isFinite(next.bottom), `${id}: item() mangler bottom`);
-      assert.ok(next.blocks.length, `${id}: item() ga ingen blokker`);
+      assert.ok(Number.isFinite(next.bottom), `${id}: item() missing bottom`);
+      assert.ok(next.blocks.length, `${id}: item() gave no blocks`);
       assertNoOverlap(section, next, id, '');
       applyItem(section, next);
-      // Etter påføring skal ingenting i seksjonen overlappe (fanger moves som flytter for lite).
+      // After applying, nothing in the section may overlap (catches moves that move too little).
       for (let i = 0; i < section.blocks.length; i++) {
         for (let j = i + 1; j < section.blocks.length; j++) {
           assert.ok(!overlaps(section.blocks[i].frames.desktop, section.blocks[j].frames.desktop),
-            `${id}: overlapp etter item-påføring (${section.blocks[i].type} og ${section.blocks[j].type})`);
+            `${id}: overlap after applying item (${section.blocks[i].type} and ${section.blocks[j].type})`);
         }
       }
     }
   }
 });
 
-test('presets: item() fyller igjen hullet når et element i midten er slettet', () => {
+test('presets: item() fills the gap when a middle element is deleted', () => {
   for (const [id, def] of defs) {
     if (!def.item) continue;
     const section = def.create();
     const first = def.item(section);
     applyItem(section, first);
-    // Slett det FØRSTE tillagte elementet (midt i utlegget for rutenett-presetene) og be om et nytt.
+    // Delete the FIRST added element (mid-layout for the grid presets) and ask for a new one.
     const removed = new Set(first.blocks.map((b) => b.id));
     section.blocks = section.blocks.filter((b) => !removed.has(b.id));
     const second = def.item(section);
-    assertNoOverlap(section, second, id, ' (etter sletting)');
+    assertNoOverlap(section, second, id, ' (after deletion)');
   }
 });

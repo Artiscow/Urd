@@ -1,7 +1,6 @@
 /**
- * Test av plugin-lastingens byggeklosser (v0.6 M1): semver-intervallsjekken for requiresEngine,
- * manifest-valideringen, staging/rollback-laget og provides-kontrollen.
- * Selve fetch/import-flyten er nettleserkode og dekkes av fasegatens manuelle port.
+ * Tests of the plugin loading building blocks (v0.6 M1): the semver range check for requiresEngine, the manifest validation, the staging/rollback layer and the provides check.
+ * The fetch/import flow itself is browser code and is covered by the phase gate's manual port.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,7 +8,7 @@ import { engineImport } from './_engine.mjs';
 const { parseSemver, satisfiesEngine, validateManifest, createStagedUrd, checkProvides } = await engineImport('plugins.js');
 const { createRegistry } = await engineImport('registry.js');
 
-test('parseSemver: gyldige og ugyldige former', () => {
+test('parseSemver: valid and invalid forms', () => {
   assert.deepEqual(parseSemver('0.6.1'), [0, 6, 1]);
   assert.deepEqual(parseSemver('12.0.3'), [12, 0, 3]);
   for (const bad of ['0.6', 'v1.2.3', '1.2.3-beta', '', 'abc', '1.2.x']) {
@@ -17,11 +16,11 @@ test('parseSemver: gyldige og ugyldige former', () => {
   }
 });
 
-test('satisfiesEngine: intervaller, caret, tilde og eksakt', () => {
+test('satisfiesEngine: ranges, caret, tilde and exact', () => {
   assert.ok(satisfiesEngine('0.6.0', '>=0.1.0 <1.0.0'));
   assert.ok(!satisfiesEngine('1.0.0', '>=0.1.0 <1.0.0'));
   assert.ok(satisfiesEngine('0.6.3', '^0.6.0'));
-  assert.ok(!satisfiesEngine('0.7.0', '^0.6.0'), 'caret på 0.y låser minor');
+  assert.ok(!satisfiesEngine('0.7.0', '^0.6.0'), 'caret on 0.y locks minor');
   assert.ok(satisfiesEngine('1.4.9', '^1.2.0'));
   assert.ok(!satisfiesEngine('2.0.0', '^1.2.0'));
   assert.ok(satisfiesEngine('0.6.5', '~0.6.1'));
@@ -32,14 +31,15 @@ test('satisfiesEngine: intervaller, caret, tilde og eksakt', () => {
   assert.ok(satisfiesEngine('0.6.0', '<=0.6.0'));
 });
 
-test('satisfiesEngine: uforståelige krav avviser (aldri last i blinde)', () => {
+test('satisfiesEngine: unintelligible requirements reject (never load blindly)', () => {
+  // 'nyeste' is deliberate garbage input (a non-semver word).
   for (const range of ['', '  ', 'nyeste', '>=abc', '1.x', null, undefined]) {
     assert.equal(satisfiesEngine('0.6.0', range), false, String(range));
   }
   assert.equal(satisfiesEngine('ikke-semver', '>=0.1.0'), false);
 });
 
-test('validateManifest: speiler skjemakravene', () => {
+test('validateManifest: mirrors the schema requirements', () => {
   const good = { id: 'kalender', name: 'Kalender', version: '0.1.0', requiresEngine: '>=0.6.0 <1.0.0', entry: 'index.js', provides: { blocks: ['kalender'] } };
   assert.deepEqual(validateManifest(good), []);
   assert.ok(validateManifest(null).length);
@@ -49,33 +49,34 @@ test('validateManifest: speiler skjemakravene', () => {
   assert.ok(validateManifest({ ...good, provides: null }).length);
 });
 
-test('staging: definisjoner tas i bruk kun ved commit, og id-kollisjoner hoppes over med varsel', () => {
+test('staging: definitions take effect only at commit, and id collisions are skipped with a warning', () => {
   const Urd = { blocks: createRegistry('blocks'), sections: createRegistry('sections'), backgrounds: createRegistry('backgrounds'), animations: createRegistry('animations') };
   Urd.blocks.define('tekst', { version: 1 });
 
   const staging = createStagedUrd(Urd);
   staging.staged.blocks.define('kalender', { version: 1 });
   staging.staged.blocks.define('tekst', { version: 9 });
-  assert.equal(Urd.blocks.get('kalender'), undefined, 'ingenting registreres før commit');
+  assert.equal(Urd.blocks.get('kalender'), undefined, 'nothing is registered before commit');
 
   const warnings = staging.commit();
-  assert.ok(Urd.blocks.get('kalender'), 'ny definisjon er registrert etter commit');
-  assert.equal(Urd.blocks.get('tekst').version, 1, 'kollisjon overskriver aldri kjernen');
+  assert.ok(Urd.blocks.get('kalender'), 'the new definition is registered after commit');
+  assert.equal(Urd.blocks.get('tekst').version, 1, 'a collision never overwrites the core');
   assert.equal(warnings.length, 1);
 });
 
-test('staging: en register() som kaster etterlater ingenting', () => {
+test('staging: a register() that throws leaves nothing behind', () => {
   const Urd = { blocks: createRegistry('blocks'), sections: createRegistry('sections'), backgrounds: createRegistry('backgrounds'), animations: createRegistry('animations') };
   const staging = createStagedUrd(Urd);
   assert.throws(() => {
     staging.staged.blocks.define('en', { version: 1 });
-    throw new Error('plugin feiler halvveis i register()');
+    throw new Error('plugin fails halfway through register()');
   });
-  // commit() kalles aldri ved feil (loadPlugins fanger kastet), så registeret er urørt.
+  // commit() is never called on failure (loadPlugins catches the throw), so the registry is untouched.
   assert.equal(Urd.blocks.get('en'), undefined);
 });
 
-test('checkProvides: melder både brutte løfter og udeklarerte definisjoner', () => {
+test('checkProvides: reports both broken promises and undeclared definitions', () => {
+  // Deliberate Norwegian fixture ids: the diffs quote the ids verbatim.
   const provides = { blocks: ['kalender', 'lovet-men-mangler'] };
   const defined = { blocks: ['kalender', 'udeklarert'], sectionPresets: [], backgrounds: [], animations: [] };
   const diffs = checkProvides(provides, defined);
@@ -84,16 +85,16 @@ test('checkProvides: melder både brutte løfter og udeklarerte definisjoner', (
   assert.ok(diffs.some((d) => d.includes('udeklarert')));
 });
 
-test('staging: templates-registeret (0.6.7) tar imot plugin-maler med fromPlugin-merke', () => {
+test('staging: the templates registry (0.6.7) accepts plugin templates with a fromPlugin mark', () => {
   const Urd = { blocks: createRegistry('blocks'), sections: createRegistry('sections'), backgrounds: createRegistry('backgrounds'), animations: createRegistry('animations'), templates: createRegistry('templates') };
   const staging = createStagedUrd(Urd, 'Testplugin');
   staging.staged.templates.define('var-hero', { name: 'Vår hero', kind: 'section', section: { id: 'sec-opphav', version: 1, blocks: [] } });
-  assert.equal(Urd.templates.get('var-hero'), undefined, 'ingenting registreres før commit');
+  assert.equal(Urd.templates.get('var-hero'), undefined, 'nothing is registered before commit');
   staging.commit();
-  const mal = Urd.templates.get('var-hero');
-  assert.equal(mal.kind, 'section');
-  assert.equal(mal.fromPlugin, 'Testplugin', 'plugin-maler merkes som annet plugin-innhold');
-  // provides.templates-løftet kontrolleres som de andre slagene.
+  const tpl = Urd.templates.get('var-hero');
+  assert.equal(tpl.kind, 'section');
+  assert.equal(tpl.fromPlugin, 'Testplugin', 'plugin templates are marked like other plugin content');
+  // The provides.templates promise is checked like the other kinds.
   const diffs = checkProvides({ templates: ['var-hero'] }, { templates: ['var-hero'] });
   assert.equal(diffs.length, 0);
 });
@@ -103,14 +104,14 @@ test('staging: templates-registeret (0.6.7) tar imot plugin-maler med fromPlugin
 test('registry alias resolves an old id, direct define wins over alias', async () => {
   const { createRegistry } = await engineImport('registry.js');
   const reg = createRegistry('blocks');
-  const nyDef = { version: 1 };
-  reg.define('calendar', nyDef);
+  const newDef = { version: 1 };
+  reg.define('calendar', newDef);
   reg.alias('kalender', 'calendar');
-  assert.equal(reg.get('kalender'), nyDef);
-  assert.equal(reg.get('calendar'), nyDef);
-  const gammelDef = { version: 1 };
-  reg.define('kalender', gammelDef);
-  assert.equal(reg.get('kalender'), gammelDef);
+  assert.equal(reg.get('kalender'), newDef);
+  assert.equal(reg.get('calendar'), newDef);
+  const oldDef = { version: 1 };
+  reg.define('kalender', oldDef);
+  assert.equal(reg.get('kalender'), oldDef);
   assert.equal(reg.get('ukjent'), undefined);
 });
 
@@ -125,6 +126,6 @@ test('staged urd exposes maler as a legacy alias for templates', () => {
   const staging = createStagedUrd(Urd, 'Gammel plugin');
   staging.staged.maler.define('festival', { name: 'Festival', kind: 'section', section: {} });
   staging.commit();
-  assert.ok(Urd.templates.get('festival'), 'legacy maler-define lander i templates-registret');
+  assert.ok(Urd.templates.get('festival'), 'a legacy maler define lands in the templates registry');
   assert.deepEqual(staging.defined().templates, ['festival']);
 });

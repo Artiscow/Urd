@@ -25,6 +25,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.14.10 - Engelsk-renskingen: testene - 30. august 2026
+
+- Alle 53 testfiler + _engine.mjs oversatt til engelsk (tre parallelle agenter på disjunkte filsett): ~500 testnavn, ~130 assertion-meldinger og ~450 kommentarlinjer, med kommentarreglene anvendt (to historiefortellende kommentarer omskrevet deskriptivt, en person-attribusjon gjort upersonlig). Testantallet er uendret (503) og bundelen urørt.
+- Norske fixture-DATA består bevisst (samlingstitler, ICS-hendelser, æøå-normaliseringsfixtures, søppel-input, legacy-tokens migreringene løfter) og er markert med korte engelske deliberate-kommentarer der det kunne sett ut som en glipp; tankestrek-vaktenes egne literaler står som logikk.
+- Etterarbeid fra gjennomgangen: norske lokale test-identifikatorer (høy/langt/hullete/grisete/nyDef/KAKE m.fl.) renamet, og en gjenværende norsk assertion-melding fra etappe .4 oversatt.
+
 ### 0.7.14.9 - Engelsk-renskingen: resterende strenger - 30. august 2026
 
 - 133 norske fallback-etiketter (label/hint/group/itemLabel i presets, blokker, bakgrunner, animasjoner, footer) byttet programmatisk til en-GB-ordbokas verdier, så fallback og oversettelse aldri spriker; samme grep for referansepluginene fra deres egne en-GB-filer. Funn: plugin-presetene manglet groupKey og dannet egen gruppe i ikke-norske språk; de har nå presetGroup.cards.

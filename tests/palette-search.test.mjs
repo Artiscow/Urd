@@ -1,20 +1,23 @@
 /**
- * Blokk-søket (palette-search.js): normalisering, rangering og stabil
- * filtrering for innsettingsmenyene.
+ * The block search (palette-search.js): normalization, ranking and stable
+ * filtering for the insertion menus.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 const { normalize, rankLabel, matchLabel, searchItems } = await engineImport('palette-search.js');
 
-test('normalize: små bokstaver og diakritikk-stripp', () => {
+// The Norwegian labels below are deliberate fixtures: they exercise the text
+// normalization (diacritics, word starts) on realistic UI labels.
+
+test('normalize: lowercase and diacritics stripped', () => {
   assert.equal(normalize('Galleri'), 'galleri');
   assert.equal(normalize('Gallerí'), 'galleri');
   assert.equal(normalize('BÖLÜM'), 'bolum');
   assert.equal(normalize(undefined), '');
 });
 
-test('matchLabel: delstreng uansett form; tomt søk matcher alt', () => {
+test('matchLabel: substring in any form; an empty query matches everything', () => {
   assert.equal(matchLabel('Bilde', 'bil'), true);
   assert.equal(matchLabel('Bildegalleri', 'GALLERI'), true);
   assert.equal(matchLabel('Galleri', 'gallerí'), true);
@@ -23,14 +26,14 @@ test('matchLabel: delstreng uansett form; tomt søk matcher alt', () => {
   assert.equal(matchLabel('Tekst', '   '), true);
 });
 
-test('rankLabel: start foran ordstart foran delstreng foran bom', () => {
+test('rankLabel: start before word start before substring before miss', () => {
   assert.equal(rankLabel('Kalender', 'ka'), 0);
   assert.equal(rankLabel('Min kalender', 'ka'), 1);
   assert.equal(rankLabel('Lokalkart', 'ka'), 2);
   assert.equal(rankLabel('Tekst', 'ka'), -1);
 });
 
-test('searchItems: beste rang først, stabil rekkefølge innen lik rang', () => {
+test('searchItems: best rank first, stable order within equal rank', () => {
   const items = [
     { label: 'Lokalkart' },
     { label: 'Kalender: Liste' },
@@ -42,6 +45,6 @@ test('searchItems: beste rang først, stabil rekkefølge innen lik rang', () => 
     searchItems(items, 'ka', (x) => x.label).map((x) => x.label),
     ['Kalender: Liste', 'Kalender: Måned', 'Min kalender', 'Lokalkart'],
   );
-  // Tomt søk: alt, i original rekkefølge.
+  // Empty query: everything, in the original order.
   assert.equal(searchItems(items, '', (x) => x.label).length, 5);
 });

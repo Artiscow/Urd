@@ -1,7 +1,7 @@
 /**
- * Test av publiserings-vernet: sti-allowlisten og ALLOWED_LOGINS.
- * Dette er sikkerhetskritisk kode (se ADR-0003): publisering skal aldri
- * kunne skrive kode eller konfigurasjon, kun innhold.
+ * Test of the publishing guard: the path allowlist and ALLOWED_LOGINS.
+ * This is security-critical code (see ADR-0003): publishing must never
+ * be able to write code or configuration, only content.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -11,7 +11,10 @@ import {
   OWNED_PATTERNS, USER_PATTERNS, matchesPattern, isOwnedPath, isUserPath, isPageIndexCopy,
 } from '../template/functions/_lib/guard.js';
 
-test('innholdsstier er tillatt', () => {
+// Norwegian path segments below (maler, samlinger, om-oss, ...) are
+// deliberate: user-repo paths are user data and keep their names (ADR-0021).
+
+test('content paths are allowed', () => {
   for (const path of [
     'content/site.json',
     'content/pages/hjem.json',
@@ -34,9 +37,9 @@ test('innholdsstier er tillatt', () => {
   }
 });
 
-test('kjørbare endelser under innholdsprefiksene er forbudt', () => {
-  // Invarianten «aldri kode» gjelder også filtype: media/x.js ville
-  // ellers kjørt under script-src 'self' fra en kapret publisher-økt.
+test('executable extensions under the content prefixes are forbidden', () => {
+  // The "never code" invariant also applies to file type: media/x.js would
+  // otherwise run under script-src 'self' from a hijacked publisher session.
   for (const path of [
     'media/x.js',
     'media/X.JS',
@@ -57,7 +60,7 @@ test('kjørbare endelser under innholdsprefiksene er forbudt', () => {
   }
 });
 
-test('kode- og konfigstier er forbudt', () => {
+test('code and config paths are forbidden', () => {
   for (const path of [
     'functions/api/github/commit.js',
     'functions/evil.js',
@@ -78,7 +81,7 @@ test('kode- og konfigstier er forbudt', () => {
   }
 });
 
-test('side-index er tillatt, men aldri rot eller reserverte mapper', () => {
+test('page index is allowed, but never the root or reserved directories', () => {
   for (const path of ['om-oss/index.html', 'kontakt/index.html', 'side-2/index.html']) {
     assert.equal(isAllowedPath(path), true, path);
   }
@@ -96,13 +99,13 @@ test('side-index er tillatt, men aldri rot eller reserverte mapper', () => {
   ]) {
     assert.equal(isAllowedPath(path), false, path);
   }
-  // html er ikke en tillatt endelse under innholdsprefiksene, så en
-  // index.html der avvises også (kun <slug>/index.html-kopier er lov).
+  // html is not an allowed extension under the content prefixes, so an
+  // index.html there is also rejected (only <slug>/index.html copies are legal).
   assert.equal(isAllowedPath('content/index.html'), false);
   assert.equal(isAllowedPath('media/index.html'), false);
 });
 
-test('stitriks avvises', () => {
+test('path tricks are rejected', () => {
   for (const path of [
     'content/../functions/evil.js',
     '/content/site.json',
@@ -114,7 +117,7 @@ test('stitriks avvises', () => {
   }
 });
 
-test('ALLOWED_LOGINS: kommaseparert, case-ufølsom, tom liste nekter alle', () => {
+test('ALLOWED_LOGINS: comma-separated, case-insensitive, empty list denies everyone', () => {
   const env = { ALLOWED_LOGINS: 'Kari, ola-nordmann' };
   assert.equal(isAllowedLogin('kari', env), true);
   assert.equal(isAllowedLogin('OLA-NORDMANN', env), true);
@@ -123,18 +126,18 @@ test('ALLOWED_LOGINS: kommaseparert, case-ufølsom, tom liste nekter alle', () =
   assert.equal(isAllowedLogin('kari', { ALLOWED_LOGINS: '' }), false);
 });
 
-test('urd.json ownedPaths avvises av publiseringsvokteren (kontraktene i synk)', async () => {
-  // guard.js er HÅNDHEVEREN; urd.json er den deklarative kontrakten oppdaterings-
-  // mekanismen skal bruke (v0.6). Denne testen fanger drift mellom de to.
+test('urd.json ownedPaths are rejected by the publishing guard (contracts in sync)', async () => {
+  // guard.js is the ENFORCER; urd.json is the declarative contract the update
+  // mechanism uses (v0.6). This test catches drift between the two.
   const { readFile } = await import('node:fs/promises');
   const manifest = JSON.parse(await readFile(new URL('../template/urd.json', import.meta.url), 'utf8'));
   for (const pattern of manifest.ownedPaths) {
     const sample = pattern.endsWith('/**') ? `${pattern.slice(0, -3)}/x.js` : pattern;
-    assert.equal(isAllowedPath(sample), false, `ownedPath '${pattern}' (prøvd som '${sample}') slapp gjennom vokteren`);
+    assert.equal(isAllowedPath(sample), false, `ownedPath '${pattern}' (tried as '${sample}') slipped past the guard`);
   }
 });
 
-test('per-side index.html-kopier tillates, reserverte slugs avvises', () => {
+test('per-page index.html copies are allowed, reserved slugs are rejected', () => {
   assert.equal(isAllowedPath('kaker/index.html'), true);
   assert.equal(isAllowedPath('om-oss/index.html'), true);
   for (const path of ['admin/index.html', 'api/index.html', 'assets/index.html', 'functions/index.html', 'plugins/index.html', 'readme/index.html']) {
@@ -142,18 +145,18 @@ test('per-side index.html-kopier tillates, reserverte slugs avvises', () => {
   }
 });
 
-/* ---------- Eierskapskartet for oppdatereren (0.6.9, ADR-0014) ---------- */
+/* ---------- The ownership map for the updater (0.6.9, ADR-0014) ---------- */
 
 const manifest = JSON.parse(readFileSync(new URL('../template/urd.json', import.meta.url), 'utf8'));
 
-test('eierskapskartet i guard.js er identisk med urd.json', () => {
-  // guard.js speiler urd.json (functions kan ikke lese repofiler ved
-  // kjøring); denne testen er det som hindrer de to i å drive.
+test('the ownership map in guard.js is identical to urd.json', () => {
+  // guard.js mirrors urd.json (functions cannot read repo files at
+  // runtime); this test is what keeps the two from drifting.
   assert.deepEqual(OWNED_PATTERNS, manifest.ownedPaths);
   assert.deepEqual(USER_PATTERNS, manifest.userPaths);
 });
 
-test('matchesPattern: eksakt sti og prefiks/**', () => {
+test('matchesPattern: exact path and prefix/**', () => {
   assert.equal(matchesPattern('urd.json', 'urd.json'), true);
   assert.equal(matchesPattern('urd.json', 'urd.json.bak'), false);
   assert.equal(matchesPattern('admin/**', 'admin/index.html'), true);
@@ -162,7 +165,7 @@ test('matchesPattern: eksakt sti og prefiks/**', () => {
   assert.equal(matchesPattern('admin/**', 'admin'), false);
 });
 
-test('isOwnedPath/isUserPath: eksempler og stitriks', () => {
+test('isOwnedPath/isUserPath: examples and path tricks', () => {
   for (const path of ['urd.json', '_headers', 'speculation-rules.json', 'index.html',
     'admin/assets/editor.js', 'assets/engine/0.6.10/urd.js', 'assets/urd/i18n.js',
     'assets/styles/base.css', 'functions/api/github/update.js']) {
@@ -183,10 +186,10 @@ test('isOwnedPath/isUserPath: eksempler og stitriks', () => {
   assert.equal(isPageIndexCopy('index.html'), false);
 });
 
-test('hver faktiske fil i template/ er eid, brukereid eller side-kopi', () => {
-  // Fullstendighets-invarianten oppdateringsplanen hviler på: en sti uten
-  // klassifisering ville falt utenfor både publisering og oppdaterer.
-  // Dukker en ny toppnivå-fil opp, MÅ den inn i urd.json (owned/user).
+test('every actual file in template/ is owned, user-owned or a page copy', () => {
+  // The completeness invariant the update plan rests on: a path without a
+  // classification would fall outside both publishing and the updater.
+  // If a new top-level file appears, it MUST go into urd.json (owned/user).
   const root = new URL('../template/', import.meta.url);
   const files = readdirSync(root, { recursive: true, withFileTypes: true })
     .filter((entry) => entry.isFile())
@@ -194,17 +197,17 @@ test('hver faktiske fil i template/ er eid, brukereid eller side-kopi', () => {
       .slice(root.pathname.length)
       .replace(/^\/+/, ''))
     .filter((name) => !name.includes('/.') && !name.startsWith('.'));
-  assert.ok(files.length > 80, `fant bare ${files.length} filer - listingen er trolig gal`);
+  assert.ok(files.length > 80, `found only ${files.length} files - the listing is probably wrong`);
   for (const path of files) {
     const classes = [isOwnedPath(path), isUserPath(path), isPageIndexCopy(path)].filter(Boolean);
-    assert.equal(classes.length, 1, `${path} skal ha nøyaktig én eierskapsklasse (fikk ${classes.length})`);
+    assert.equal(classes.length, 1, `${path} must have exactly one ownership class (got ${classes.length})`);
   }
 });
 
-test('eid og publiserbar er disjunkte klasser', () => {
-  // Publisering og oppdaterer skal aldri kunne skrive samme sti - unntatt
-  // side-kopiene, som publisering skriver og oppdatereren frisker opp
-  // (kopi-oppfriskningsplikten i ADR-0013).
+test('owned and publishable are disjoint classes', () => {
+  // Publishing and the updater must never be able to write the same path -
+  // except the page copies, which publishing writes and the updater
+  // refreshes (the copy refresh duty in ADR-0013).
   for (const pattern of manifest.ownedPaths) {
     const sample = pattern.endsWith('/**') ? `${pattern.slice(0, -3)}/x.js` : pattern;
     assert.equal(isOwnedPath(sample) && isAllowedPath(sample), false, sample);

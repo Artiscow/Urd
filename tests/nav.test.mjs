@@ -1,40 +1,41 @@
 /**
- * Kontraktstester for nav-ens rene logikk (nav-model.js): oppslag mot
- * sideregisteret, kind-klassifisering av menypunkter med undermeny og
- * utseende-beregningen. DOM-rendering (nav.js) testes manuelt.
+ * Contract tests for the nav's pure logic (nav-model.js): lookups against
+ * the page registry, kind classification of menu items with submenus and
+ * the appearance computation. DOM rendering (nav.js) is tested manually.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, navScrollState, isSafeImage } = await engineImport('nav-model.js');
 
+// Deliberately Norwegian page titles and slugs: user data stays Norwegian (ADR-0021).
 const PAGES = [
   { id: 'hjem', title: 'Hjem', path: '/' },
   { id: 'om-oss', title: 'Om oss', path: '/om-oss' },
 ];
 
-test('resolveItem: side slås opp til path i sideregisteret', () => {
+test('resolveItem: page is resolved to its path in the page registry', () => {
   assert.deepEqual(resolveItem({ label: 'Om oss', page: 'om-oss' }, PAGES), {
     label: 'Om oss', href: '/om-oss', external: false, missing: false,
   });
 });
 
-test('resolveItem: ukjent side gir # med missing-flagg', () => {
+test('resolveItem: unknown page gives # with the missing flag', () => {
   const item = resolveItem({ label: 'Borte', page: 'finnes-ikke' }, PAGES);
   assert.equal(item.href, '#');
   assert.equal(item.missing, true);
   assert.equal(item.external, false);
 });
 
-test('resolveItem: href er ekstern lenke', () => {
+test('resolveItem: href is an external link', () => {
   assert.deepEqual(resolveItem({ label: 'Ut', href: 'https://eksempel.no' }, PAGES), {
     label: 'Ut', href: 'https://eksempel.no', external: true, missing: false,
   });
-  // mailto/tel er også trygge skjemaer.
+  // mailto/tel are safe schemes too.
   assert.equal(resolveItem({ label: 'Send', href: 'mailto:a@b.no' }, PAGES).external, true);
 });
 
-test('resolveItem: utrygg href avvises til # med missing', () => {
+test('resolveItem: unsafe href is rejected to # with missing', () => {
   for (const bad of ['javascript:alert(1)', 'data:text/html,x', 'example.no', '  ', '', '//ond.no/x', '/\\ond.no']) {
     const item = resolveItem({ label: 'Farlig', href: bad }, PAGES);
     assert.equal(item.href, '#', bad);
@@ -43,7 +44,7 @@ test('resolveItem: utrygg href avvises til # med missing', () => {
   }
 });
 
-test('resolveItem: site-interne stier og ankere er gyldige mål uten external', () => {
+test('resolveItem: site-internal paths and anchors are valid targets without external', () => {
   for (const ok of ['#kontakt', '#s-abc123', '/om-oss#kontakt', '/om-oss']) {
     const item = resolveItem({ label: 'Til seksjon', href: ok }, PAGES);
     assert.equal(item.href, ok, ok);
@@ -52,15 +53,16 @@ test('resolveItem: site-interne stier og ankere er gyldige mål uten external', 
   }
 });
 
-// Delt bildevokter for favicon, nav-/footer-logo, ikonblokk og bildelagene:
-// kilden havner i img.src og i CSS-url(), så alt utenfor de to kjente formene avvises.
-test('isSafeImage: media-stier og base64-data-URL-er godtas', () => {
+// Shared image guard for favicon, nav/footer logo, icon block and the image
+// layers: the source ends up in img.src and in CSS url(), so anything outside
+// the two known forms is rejected.
+test('isSafeImage: media paths and base64 data URLs are accepted', () => {
   for (const ok of ['/media/logo.webp', '/media/styret/leder.webp', '/', 'data:image/png;base64,iVBORw0KGgo=']) {
     assert.equal(isSafeImage(ok), true, ok);
   }
 });
 
-test('isSafeImage: eksterne verter, protokoll-relative stier og url-brytere avvises', () => {
+test('isSafeImage: external hosts, protocol-relative paths and url() breakouts are rejected', () => {
   const bad = [
     'https://ond.no/x.png', '//ond.no/x.png', 'javascript:alert(1)',
     'data:text/html,<script>', 'media/logo.webp', '/media/logo.webp") ; background: url("x',
@@ -69,14 +71,14 @@ test('isSafeImage: eksterne verter, protokoll-relative stier og url-brytere avvi
   for (const value of bad) assert.equal(isSafeImage(value), false, String(value));
 });
 
-test('navItems: punkter uten undermeny er kind link', () => {
+test('navItems: items without a submenu are kind link', () => {
   const site = { pages: PAGES, nav: { items: [{ label: 'Hjem', page: 'hjem' }] } };
   const [item] = navItems(site);
   assert.equal(item.kind, 'link');
   assert.deepEqual(item.children, []);
 });
 
-test('navItems: eget mål + undermeny gir kind split', () => {
+test('navItems: own target + submenu gives kind split', () => {
   const site = {
     pages: PAGES,
     nav: { items: [{ label: 'Om', page: 'om-oss', children: [{ label: 'Hjem', page: 'hjem' }] }] },
@@ -87,7 +89,7 @@ test('navItems: eget mål + undermeny gir kind split', () => {
   assert.deepEqual(item.children, [{ label: 'Hjem', href: '/', external: false, missing: false }]);
 });
 
-test('navItems: kun undermeny gir kind toggle uten eget mål', () => {
+test('navItems: submenu only gives kind toggle without an own target', () => {
   const site = {
     pages: PAGES,
     nav: { items: [{ label: 'Mer', children: [{ label: 'Ut', href: 'https://eksempel.no' }] }] },
@@ -99,12 +101,12 @@ test('navItems: kun undermeny gir kind toggle uten eget mål', () => {
   assert.equal(item.children[0].external, true);
 });
 
-test('navItems: tom undermeny regnes som vanlig lenke', () => {
+test('navItems: empty submenu counts as a plain link', () => {
   const site = { pages: PAGES, nav: { items: [{ label: 'Hjem', page: 'hjem', children: [] }] } };
   assert.equal(navItems(site)[0].kind, 'link');
 });
 
-test('navItems: barnebarn ignoreres defensivt (ett nivå)', () => {
+test('navItems: grandchildren are ignored defensively (one level)', () => {
   const site = {
     pages: PAGES,
     nav: { items: [{ label: 'Mer', children: [{ label: 'Hjem', page: 'hjem', children: [{ label: 'Dypt', page: 'om-oss' }] }] }] },
@@ -114,32 +116,32 @@ test('navItems: barnebarn ignoreres defensivt (ett nivå)', () => {
   assert.equal(item.children[0].children, undefined);
 });
 
-test('navClasses: standard layout er right', () => {
+test('navClasses: default layout is right', () => {
   assert.equal(navClasses({ nav: {} }), 'urd-nav urd-nav-right');
   assert.equal(navClasses({ nav: { layout: 'center' } }), 'urd-nav urd-nav-center');
 });
 
-test('navClasses: flytende variant og hover-stil gir egne klasser', () => {
+test('navClasses: floating variant and hover style give their own classes', () => {
   assert.equal(
     navClasses({ nav: { variant: 'floating', style: { hover: 'underline' } } }),
     'urd-nav urd-nav-right urd-nav-var-floating urd-nav-hover-underline',
   );
 });
 
-test('navClasses: standardene bar og standard gir ingen ekstra klasser', () => {
+test('navClasses: the defaults bar and standard give no extra classes', () => {
   assert.equal(navClasses({ nav: { variant: 'bar', style: { hover: 'standard' } } }), 'urd-nav urd-nav-right');
 });
 
-test('navClasses: løft uten glød er egen hover-stil', () => {
+test('navClasses: lift without glow is its own hover style', () => {
   assert.equal(navClasses({ nav: { style: { hover: 'lift-plain' } } }), 'urd-nav urd-nav-right urd-nav-hover-lift-plain');
 });
 
-test('navClasses: glød kun som tilvalg på flytende pille', () => {
+test('navClasses: glow only as an option on the floating pill', () => {
   assert.equal(
     navClasses({ nav: { variant: 'floating', style: { glow: true } } }),
     'urd-nav urd-nav-right urd-nav-var-floating urd-nav-glow',
   );
-  // Uten glow-flagget: ingen glød; glow uten floating: ingen effekt
+  // Without the glow flag: no glow; glow without floating: no effect
   assert.equal(
     navClasses({ nav: { variant: 'floating' } }),
     'urd-nav urd-nav-right urd-nav-var-floating',
@@ -147,40 +149,40 @@ test('navClasses: glød kun som tilvalg på flytende pille', () => {
   assert.equal(navClasses({ nav: { style: { glow: true } } }), 'urd-nav urd-nav-right');
 });
 
-test('navSurface: uten style gjelder CSS-standardene', () => {
+test('navSurface: without style the CSS defaults apply', () => {
   assert.deepEqual(navSurface(), {});
   assert.deepEqual(navSurface({}), {});
 });
 
-test('navSurface: theme-token med dekkevne gir color-mix over CSS-varen', () => {
+test('navSurface: theme token with opacity gives color-mix over the CSS variable', () => {
   assert.equal(
     navSurface({ bg: 'accent', bgOpacity: 0.5 }).bg,
     'color-mix(in srgb, var(--urd-color-accent) 50%, transparent)',
   );
 });
 
-test('navSurface: rå farge brukes uendret i blandingen', () => {
+test('navSurface: raw color is used unchanged in the mix', () => {
   assert.equal(
     navSurface({ bg: '#102030' }).bg,
     'color-mix(in srgb, #102030 85%, transparent)',
   );
 });
 
-test('navSurface: kun dekkevne gir surface-token som standardfarge', () => {
+test('navSurface: opacity alone gives the surface token as default color', () => {
   assert.equal(
     navSurface({ bgOpacity: 1 }).bg,
     'color-mix(in srgb, var(--urd-color-surface) 100%, transparent)',
   );
 });
 
-test('navSurface: blur av og egen tekstfarge', () => {
+test('navSurface: blur off and custom text color', () => {
   const out = navSurface({ blur: false, textColor: 'text' });
   assert.equal(out.blur, false);
   assert.equal(out.color, 'var(--urd-color-text)');
   assert.equal(out.bg, undefined);
 });
 
-test('navSurface: bakgrunnsbilde får standardsløret over seg', () => {
+test('navSurface: background image gets the default veil over it', () => {
   assert.equal(
     navSurface({ image: '/media/meny-abc.webp' }).bg,
     'linear-gradient(color-mix(in srgb, var(--urd-color-surface) 85%, transparent), '
@@ -189,35 +191,35 @@ test('navSurface: bakgrunnsbilde får standardsløret over seg', () => {
   );
 });
 
-test('navSurface: bildestyrke under 1 gir eget tonelag under sløret', () => {
+test('navSurface: image strength below 1 gives its own tint layer under the veil', () => {
   const bg = navSurface({ image: '/media/meny-abc.webp', imageOpacity: 0.4 }).bg;
-  // Tonelaget bruker bakgrunnsfargen med 60 % (1 - 0.4) dekkevne
+  // The tint layer uses the background color at 60% (1 - 0.4) opacity
   assert.ok(bg.includes('color-mix(in srgb, var(--urd-color-surface) 60%, transparent)'));
-  // Full styrke gir INTET ekstra lag (to gradienter ville doblet sløret)
+  // Full strength gives NO extra layer (two gradients would double the veil)
   const full = navSurface({ image: '/media/meny-abc.webp', imageOpacity: 1 }).bg;
   assert.equal(full.split('linear-gradient').length - 1, 1);
 });
 
-test('navSurface: bildeutsnitt i høyden klemmes til 0-100', () => {
+test('navSurface: vertical image crop is clamped to 0-100', () => {
   assert.ok(navSurface({ image: '/media/m.webp', imageY: 20 }).bg.endsWith('url("/media/m.webp") 50% 20% / cover'));
   assert.ok(navSurface({ image: '/media/m.webp', imageY: 150 }).bg.endsWith('50% 100% / cover'));
   assert.ok(navSurface({ image: '/media/m.webp', imageY: -5 }).bg.endsWith('50% 0% / cover'));
 });
 
-test('navSurface: ugyldig bilde ignoreres (vern mot url()-brudd og eksterne verter)', () => {
-  // Ukodet SVG-data-URL med tegn som ville knekt url("…")
+test('navSurface: invalid image is ignored (guard against url() breakouts and external hosts)', () => {
+  // Unencoded SVG data URL with characters that would break url("...")
   const svg = 'data:image/svg+xml,<svg xmlns="http://x"></svg>';
   assert.equal(navSurface({ image: svg }).bg, undefined);
-  // Ekstern URL slippes ikke inn i CSS-en
+  // External URL is not let into the CSS
   assert.equal(navSurface({ image: 'https://evil.example/x.png' }).bg, undefined);
-  // Sløret består selv om bildet forkastes
+  // The veil survives even when the image is discarded
   assert.equal(
     navSurface({ image: svg, bg: 'accent', bgOpacity: 0.4 }).bg,
     'color-mix(in srgb, var(--urd-color-accent) 40%, transparent)',
   );
 });
 
-test('navSurface: bilde med egen farge og dekkevne i sløret', () => {
+test('navSurface: image with custom color and opacity in the veil', () => {
   assert.equal(
     navSurface({ image: 'data:image/webp;base64,AA==', bg: 'accent', bgOpacity: 0.3 }).bg,
     'linear-gradient(color-mix(in srgb, var(--urd-color-accent) 30%, transparent), '
@@ -226,16 +228,16 @@ test('navSurface: bilde med egen farge og dekkevne i sløret', () => {
   );
 });
 
-test('navClasses: pille uten luft over får flush-klassen', () => {
+test('navClasses: pill without top gap gets the flush class', () => {
   assert.equal(
     navClasses({ nav: { variant: 'floating', style: { topGap: false } } }),
     'urd-nav urd-nav-right urd-nav-var-floating urd-nav-flush',
   );
-  // topGap utenfor floating har ingen effekt
+  // topGap outside floating has no effect
   assert.equal(navClasses({ nav: { style: { topGap: false } } }), 'urd-nav urd-nav-right');
 });
 
-test('hostClasses: variantene styrer vert- og body-klassene', () => {
+test('hostClasses: the variants control the host and body classes', () => {
   assert.deepEqual(hostClasses({ nav: {} }), { host: [], body: [] });
   assert.deepEqual(hostClasses({ nav: { variant: 'floating' } }), { host: ['urd-nav-float'], body: [] });
   assert.deepEqual(hostClasses({ nav: { variant: 'side-left' } }),
@@ -244,18 +246,18 @@ test('hostClasses: variantene styrer vert- og body-klassene', () => {
     { host: ['urd-nav-side-host', 'urd-nav-side-host-right'], body: ['urd-side-right'] });
 });
 
-test('hostClasses: overlay gjelder kun bar, ikke floating/sidestilt', () => {
-  // Bar (standard) med overlay: verten tas ut av flyten.
+test('hostClasses: overlay applies only to bar, not floating/side', () => {
+  // Bar (default) with overlay: the host is taken out of the flow.
   assert.deepEqual(hostClasses({ nav: { overlay: true } }), { host: ['urd-nav-overlay'], body: [] });
-  // Floating og sidestilt ligger allerede utenfor flyten: overlay-flagget gir ingen ekstra klasse.
+  // Floating and side already sit outside the flow: the overlay flag adds no class.
   assert.deepEqual(hostClasses({ nav: { variant: 'floating', overlay: true } }), { host: ['urd-nav-float'], body: [] });
   assert.deepEqual(hostClasses({ nav: { variant: 'side-left', overlay: true } }),
     { host: ['urd-nav-side-host', 'urd-nav-side-host-left'], body: ['urd-side-left'] });
-  // Uten flagget: ingen overlay.
+  // Without the flag: no overlay.
   assert.deepEqual(hostClasses({ nav: { overlay: false } }), { host: [], body: [] });
 });
 
-test('navClasses/hostClasses: firkant-varianten er flytende uten avrunding', () => {
+test('navClasses/hostClasses: the square variant is floating without rounding', () => {
   assert.equal(
     navClasses({ nav: { variant: 'floating-square', style: { glow: true } } }),
     'urd-nav urd-nav-right urd-nav-var-floating urd-nav-square urd-nav-glow',
@@ -263,12 +265,12 @@ test('navClasses/hostClasses: firkant-varianten er flytende uten avrunding', () 
   assert.deepEqual(hostClasses({ nav: { variant: 'floating-square' } }), { host: ['urd-nav-float'], body: [] });
 });
 
-test('navClasses/hostClasses: tab-varianten er flytende med kun de nedre hjørnene avrundet', () => {
+test('navClasses/hostClasses: the tab variant is floating with only the lower corners rounded', () => {
   assert.equal(
     navClasses({ nav: { variant: 'floating-tab' } }),
     'urd-nav urd-nav-right urd-nav-var-floating urd-nav-tab',
   );
-  // Glød/luft arves fra flytende-basen, som for pille og firkant.
+  // Glow/gap are inherited from the floating base, as for pill and square.
   assert.equal(
     navClasses({ nav: { variant: 'floating-tab', style: { glow: true, topGap: false } } }),
     'urd-nav urd-nav-right urd-nav-var-floating urd-nav-tab urd-nav-glow urd-nav-flush',
@@ -276,15 +278,15 @@ test('navClasses/hostClasses: tab-varianten er flytende med kun de nedre hjørne
   assert.deepEqual(hostClasses({ nav: { variant: 'floating-tab' } }), { host: ['urd-nav-float'], body: [] });
 });
 
-test('navClasses: størrelse gir klasse kun utenfor standarden (md)', () => {
+test('navClasses: size gives a class only outside the default (md)', () => {
   assert.equal(navClasses({ nav: { style: { size: 'sm' } } }), 'urd-nav urd-nav-right urd-nav-size-sm');
   assert.equal(navClasses({ nav: { style: { size: 'xl' } } }), 'urd-nav urd-nav-right urd-nav-size-xl');
   assert.equal(navClasses({ nav: { style: { size: 'md' } } }), 'urd-nav urd-nav-right');
-  // Frie strenger hvitelistes bort - klassenavn bygges aldri av rå data
+  // Free-form strings are allowlisted away - class names are never built from raw data
   assert.equal(navClasses({ nav: { style: { size: 'evil injection' } } }), 'urd-nav urd-nav-right');
 });
 
-test('navClasses: tekstjustering og undermeny-design gir hvitelistede klasser', () => {
+test('navClasses: text alignment and submenu design give allowlisted classes', () => {
   assert.equal(navClasses({ nav: { style: { sideAlign: 'center' } } }), 'urd-nav urd-nav-right urd-nav-salign-center');
   assert.equal(navClasses({ nav: { style: { sideAlign: 'left' } } }), 'urd-nav urd-nav-right');
   assert.equal(navClasses({ nav: { style: { subStyle: 'flyout' } } }), 'urd-nav urd-nav-right urd-nav-sub-flyout');
@@ -292,49 +294,49 @@ test('navClasses: tekstjustering og undermeny-design gir hvitelistede klasser', 
   assert.equal(navClasses({ nav: { style: { subStyle: 'x"y' } } }), 'urd-nav urd-nav-right');
 });
 
-test('navClasses: kolonneplassering er eget felt med øverst som standard', () => {
+test('navClasses: column placement is its own field with top as the default', () => {
   assert.equal(navClasses({ nav: { style: { sidePlacement: 'middle' } } }), 'urd-nav urd-nav-right urd-nav-splace-middle');
   assert.equal(navClasses({ nav: { style: { sidePlacement: 'bottom' } } }), 'urd-nav urd-nav-right urd-nav-splace-bottom');
   assert.equal(navClasses({ nav: { style: { sidePlacement: 'top' } } }), 'urd-nav urd-nav-right');
-  // layout skal ikke lenger påvirke kolonnens vertikale plassering; eldre
-  // sider med layout: left får dermed øverst som standard, ikke nederst
+  // layout does not affect the column's vertical placement; older sites
+  // with layout: left therefore get top as the default, not bottom
   assert.equal(navClasses({ nav: { layout: 'left', style: {} } }), 'urd-nav urd-nav-left');
   assert.equal(navClasses({ nav: { style: { sidePlacement: 'evil injection' } } }), 'urd-nav urd-nav-right');
 });
 
-test('navSurface: bildeutsnitt i bredden klemmes til 0-100', () => {
+test('navSurface: horizontal image crop is clamped to 0-100', () => {
   assert.ok(navSurface({ image: '/media/m.webp', imageX: 20 }).bg.endsWith('url("/media/m.webp") 20% 50% / cover'));
   assert.ok(navSurface({ image: '/media/m.webp', imageX: 150 }).bg.endsWith('100% 50% / cover'));
   assert.ok(navSurface({ image: '/media/m.webp', imageX: -5, imageY: 80 }).bg.endsWith('0% 80% / cover'));
 });
 
-test('navSubSurface: undermenyen får kun sløret, aldri bildet, som standard', () => {
-  // Uten style: CSS-standarden gjelder (undefined)
+test('navSubSurface: the submenu gets only the veil, never the image, by default', () => {
+  // Without style: the CSS default applies (undefined)
   assert.equal(navSubSurface(), undefined);
   assert.equal(navSubSurface({ image: '/media/m.webp' }), undefined);
-  // Med egne farger: sløret alene
+  // With custom colors: the veil alone
   assert.equal(
     navSubSurface({ image: '/media/m.webp', bg: 'accent', bgOpacity: 0.4 }),
     'color-mix(in srgb, var(--urd-color-accent) 40%, transparent)',
   );
-  // subImage: true gir hele bakgrunnen med bildelagene
+  // subImage: true gives the full background with the image layers
   const withImage = navSubSurface({ image: '/media/m.webp', subImage: true });
   assert.ok(withImage.includes('url("/media/m.webp")'));
-  // Ugyldig bilde slipper ikke gjennom selv med subImage
+  // An invalid image does not slip through even with subImage
   assert.equal(navSubSurface({ image: 'https://evil.example/x.png', subImage: true }), undefined);
 });
 
-test('navLayerVeil: fargelagene flates til ett slør, bilde/gradient holdes ute', () => {
-  // Uten fargelag: null, CSS-standarden gjelder
+test('navLayerVeil: the color layers are flattened to one veil, image/gradient kept out', () => {
+  // Without color layers: null, the CSS default applies
   assert.equal(navLayerVeil(), null);
   assert.equal(navLayerVeil([]), null);
   assert.equal(navLayerVeil([{ type: 'gradient', props: {} }, { type: 'image', props: {} }]), null);
-  // Ett fargelag med styrke: sløret med lagets dekkevne
+  // One color layer with strength: the veil with the layer's opacity
   assert.equal(
     navLayerVeil([{ type: 'color', props: { value: 'surface', opacity: 0.45 } }]),
     'color-mix(in srgb, var(--urd-color-surface) 45%, transparent)',
   );
-  // Flere fargelag mikses i tegnerekkefølge (senere lag over tidligere)
+  // Multiple color layers are mixed in paint order (later layers over earlier)
   assert.equal(
     navLayerVeil([
       { type: 'color', props: { value: 'bg', opacity: 1 } },
@@ -343,12 +345,12 @@ test('navLayerVeil: fargelagene flates til ett slør, bilde/gradient holdes ute'
     ]),
     'color-mix(in srgb, var(--urd-color-accent) 20%, color-mix(in srgb, var(--urd-color-bg) 100%, transparent))',
   );
-  // Styrke 0 og manglende props tåles (opacity uten verdi = 1, verdi uten farge = bg)
+  // Strength 0 and missing props are tolerated (opacity without value = 1, value without color = bg)
   assert.equal(navLayerVeil([{ type: 'color', props: { value: 'text', opacity: 0 } }]), null);
   assert.equal(navLayerVeil([{ type: 'color' }]), 'color-mix(in srgb, var(--urd-color-bg) 100%, transparent)');
 });
 
-test('clampSideWidth: klemmes til 180-400, søppel gir standarden 250', () => {
+test('clampSideWidth: clamped to 180-400, garbage gives the default 250', () => {
   assert.equal(clampSideWidth(300), 300);
   assert.equal(clampSideWidth(100), 180);
   assert.equal(clampSideWidth(900), 400);
@@ -357,29 +359,29 @@ test('clampSideWidth: klemmes til 180-400, søppel gir standarden 250', () => {
   assert.equal(clampSideWidth('tull'), 250);
 });
 
-test('navScrollState: uten modus er menyen alltid normal og synlig', () => {
+test('navScrollState: without a mode the menu is always normal and visible', () => {
   assert.deepEqual(navScrollState(undefined, 0, 500, true), { compact: false, hidden: false });
   assert.deepEqual(navScrollState('tull', 0, 500, true), { compact: false, hidden: false });
 });
 
-test('navScrollState: shrink er kompakt først etter toppsonen', () => {
+test('navScrollState: shrink is compact only after the top zone', () => {
   assert.deepEqual(navScrollState('shrink', 0, 40, false), { compact: false, hidden: false });
   assert.deepEqual(navScrollState('shrink', 40, 200, false), { compact: true, hidden: false });
-  // Shrink skjuler aldri, uansett retning.
+  // Shrink never hides, regardless of direction.
   assert.equal(navScrollState('shrink', 500, 300, false).hidden, false);
 });
 
-test('navScrollState: hide skjuler ved scroll ned og viser ved scroll opp', () => {
+test('navScrollState: hide hides on scroll down and shows on scroll up', () => {
   assert.deepEqual(navScrollState('hide', 100, 200, false), { compact: false, hidden: true });
   assert.deepEqual(navScrollState('hide', 200, 100, true), { compact: false, hidden: false });
 });
 
-test('navScrollState: hide er alltid synlig i toppsonen', () => {
+test('navScrollState: hide is always visible in the top zone', () => {
   assert.deepEqual(navScrollState('hide', 200, 50, true), { compact: false, hidden: false });
   assert.deepEqual(navScrollState('hide', 0, 0, true), { compact: false, hidden: false });
 });
 
-test('navScrollState: småbevegelser under dirr-vernet beholder tilstanden', () => {
+test('navScrollState: small movements below the jitter guard keep the state', () => {
   assert.equal(navScrollState('hide', 200, 202, true).hidden, true);
   assert.equal(navScrollState('hide', 200, 198, false).hidden, false);
 });

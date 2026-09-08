@@ -1,7 +1,7 @@
 /**
- * Test av kjerne-invarianten: stegvis versjonsløfting i migrate.js.
- * Kjøres med `node --test tests/` (krever Node 18+, kun for utvikling av
- * Urd selv - klonede sider trenger fortsatt aldri Node).
+ * Test of the core invariant: stepwise version lifting in migrate.js.
+ * Run with `node --test tests/` (requires Node 18+, only for developing
+ * Urd itself - cloned sites still never need Node).
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -16,21 +16,23 @@ const textV3 = {
   },
 };
 
-test('v1-data løftes stegvis til v3', () => {
+// Fixture HTML '<p>Hei</p>' is deliberately Norwegian test content.
+
+test('v1 data is lifted stepwise to v3', () => {
   const result = lift({ type: 'text', version: 1, props: { text: '<p>Hei</p>' } }, textV3);
   assert.equal(result.ok, true);
   assert.equal(result.version, 3);
   assert.deepEqual(result.props, { html: '<p>Hei</p>', align: 'left' });
 });
 
-test('data på nåværende versjon passerer uendret', () => {
+test('data on the current version passes through unchanged', () => {
   const props = { html: '<p>Hei</p>', align: 'center' };
   const result = lift({ type: 'text', version: 3, props }, textV3);
   assert.equal(result.ok, true);
   assert.deepEqual(result.props, props);
 });
 
-test('ukjent type gir plassholder og original-props urørt', () => {
+test('unknown type gives a placeholder and the original props untouched', () => {
   const props = { foo: 'bar' };
   const result = lift({ type: 'borte-plugin', version: 2, props }, undefined);
   assert.equal(result.ok, false);
@@ -38,29 +40,29 @@ test('ukjent type gir plassholder og original-props urørt', () => {
   assert.deepEqual(result.props, props);
 });
 
-test('manglende migreringssteg gir plassholder, aldri kast', () => {
-  const hullete = { version: 3, migrations: { 2: (p) => p } };
-  const result = lift({ type: 'text', version: 1, props: { a: 1 } }, hullete);
+test('missing migration step gives a placeholder, never a throw', () => {
+  const gappy = { version: 3, migrations: { 2: (p) => p } };
+  const result = lift({ type: 'text', version: 1, props: { a: 1 } }, gappy);
   assert.equal(result.ok, false);
   assert.equal(result.placeholder, 'missing-migration');
   assert.deepEqual(result.props, { a: 1 });
 });
 
-test('nyere data enn motoren gir plassholder (trygg nedgradering)', () => {
+test('data newer than the engine gives a placeholder (safe downgrade)', () => {
   const result = lift({ type: 'text', version: 5, props: { a: 1 } }, textV3);
   assert.equal(result.ok, false);
   assert.equal(result.placeholder, 'newer-than-engine');
   assert.deepEqual(result.props, { a: 1 });
 });
 
-test('manglende version behandles som v1 og migreres, aldri som gjeldende', () => {
+test('missing version is treated as v1 and migrated, never as current', () => {
   const result = lift({ type: 'text', props: { text: '<p>Hei</p>' } }, textV3);
   assert.equal(result.ok, true);
   assert.equal(result.version, 3);
   assert.deepEqual(result.props, { html: '<p>Hei</p>', align: 'left' });
 });
 
-test('manglende version med def på v1 passerer som v1', () => {
+test('missing version with a def on v1 passes as v1', () => {
   const props = { html: '<p>Hei</p>' };
   const result = lift({ type: 'text', props }, { version: 1, migrations: {} });
   assert.equal(result.ok, true);
@@ -68,61 +70,63 @@ test('manglende version med def på v1 passerer som v1', () => {
   assert.deepEqual(result.props, props);
 });
 
-test('migreringer muterer aldri original-props', () => {
+test('migrations never mutate the original props', () => {
   const original = { text: '<p>Hei</p>' };
-  const grisete = {
+  const mutating = {
     version: 2,
     migrations: { 1: (props) => { props.text = 'ENDRET'; return { html: props.text }; } },
   };
-  const result = lift({ type: 'text', version: 1, props: original }, grisete);
+  const result = lift({ type: 'text', version: 1, props: original }, mutating);
   assert.equal(result.ok, true);
   assert.deepEqual(original, { text: '<p>Hei</p>' });
 });
 
-// Site-migreringene for breddegrepet (ADR-0018). Standarden skrives inn
-// eksplisitt i stedet for å utledes ved lesing, så motoren og editoren
-// aldri kan komme til hver sin verdi.
+// The site migrations for the width model (ADR-0018). The default is written
+// in explicitly instead of being derived at read time, so the engine and the
+// editor can never arrive at different values.
 
-test('site v1 uten layout løftes med designbredden skrevet inn', () => {
+test('site v1 without layout is lifted with the design width written in', () => {
   const lifted = liftSiteFile({ schemaVersion: 1, site: { title: 'Test', lang: 'no' } });
   assert.equal(lifted.schemaVersion, SITE_SCHEMA_VERSION);
   assert.deepEqual(lifted.layout, { contentWidth: 1440, gutter: 6 });
 });
 
-test('site v1 med eget layout-felt beholder BREDDEN gjennom begge stegene', () => {
+test('site v1 with its own layout field keeps the WIDTH through both steps', () => {
   const lifted = liftSiteFile({ schemaVersion: 1, layout: { contentWidth: 'full', gutter: 0 } });
   assert.equal(lifted.schemaVersion, SITE_SCHEMA_VERSION);
   assert.equal(lifted.layout.contentWidth, 'full');
 });
 
-// 2 -> 3: margen byttet fra piksler til prosent av vindusbredden. En gammel
-// px-verdi ville blitt lest som en absurd stor prosent (24 px ville blitt
-// 24 % av skjermen), så den settes til standarden i stedet for å regnes om.
+// 2 -> 3: the gutter switched from pixels to percent of the viewport width.
+// An old px value would be read as an absurdly large percentage (24 px would
+// become 24% of the screen), so it is set to the default instead of converted.
 
-test('site v2 med px-marg får standardmargen i vw', () => {
+test('site v2 with a px gutter gets the default gutter in vw', () => {
   const lifted = liftSiteFile({ schemaVersion: 2, layout: { contentWidth: 1200, gutter: 24 } });
   assert.equal(lifted.schemaVersion, SITE_SCHEMA_VERSION);
   assert.equal(lifted.layout.gutter, 6);
-  assert.equal(lifted.layout.contentWidth, 1200, 'bredden skal overleve margbyttet');
+  assert.equal(lifted.layout.contentWidth, 1200, 'the width must survive the gutter switch');
 });
 
-test('site på gjeldende versjon røres ikke av løftingen', () => {
+test('site on the current version is untouched by the lift', () => {
   const site = { schemaVersion: SITE_SCHEMA_VERSION, layout: { contentWidth: 980, gutter: 9 } };
   assert.deepEqual(liftSiteFile(site).layout, { contentWidth: 980, gutter: 9 });
 });
 
-test('site-løftingen muterer aldri originalen', () => {
+test('the site lift never mutates the original', () => {
   const original = { schemaVersion: 1, site: { title: 'Test', lang: 'no' } };
   liftSiteFile(original);
   assert.equal(original.schemaVersion, 1);
   assert.equal(original.layout, undefined);
 });
 
-// Side-migreringen 1 -> 2 (synket mobilmodell, ADR-0019): materialiserte
-// mobil-frames konverteres til partielle radnett-plasseringer, seksjonsmodusen
-// 'manual' pensjoneres, decor gir hideMobile, og reason-tokens blir engelske.
+// Page migration 1 -> 2 (synced mobile model, ADR-0019): materialized mobile
+// frames are converted to partial row-grid placements, the section mode
+// 'manual' is retired, decor gives hideMobile, and reason tokens become English.
 
-/** En v1-side med én manuell seksjon slik materialiseringen skrev den. */
+/** A v1 page with one manual section as the materialization wrote it.
+ *  The reason token 'desktop-endret-etter-mobil' is deliberately the old
+ *  Norwegian contract value the migration must rename. */
 const v1Page = () => ({
   schemaVersion: 1,
   meta: { id: 'test', title: 'Test' },
@@ -130,9 +134,9 @@ const v1Page = () => ({
     id: 'sec-1',
     version: 1,
     blocks: [
-      // Håndsatt mobil-frame: y 104 med flyt-padding 24 gir rad 11, h 120 gir 15 rader.
+      // Hand-placed mobile frame: y 104 with flow padding 24 gives row 11, h 120 gives 15 rows.
       { id: 'a', type: 'text', version: 1, props: {}, frames: { desktop: { x: 10, y: 40, w: 50, h: 200 }, mobile: { x: 5, y: 104, w: 90, h: 120, z: 2, rot: 0 } } },
-      // Byte-lik desktop-kopi: materialiserings-fallbacken, aldri intensjonell.
+      // Byte-identical desktop copy: the materialization fallback, never intentional.
       { id: 'b', type: 'shape', version: 1, decor: true, props: {}, frames: { desktop: { x: 0, y: 0, w: 20, h: 8 }, mobile: { x: 0, y: 0, w: 20, h: 8 } } },
       { id: 'c', type: 'text', version: 1, props: {}, frames: { desktop: { x: 0, y: 300, w: 100, h: 60 }, mobile: null } },
     ],
@@ -140,7 +144,7 @@ const v1Page = () => ({
   }],
 });
 
-test('side v1: håndsatt mobil-frame blir partiell radnett-plassering', () => {
+test('page v1: hand-placed mobile frame becomes a partial row-grid placement', () => {
   const lifted = liftPageFile(v1Page(), {});
   assert.equal(lifted.schemaVersion, PAGE_SCHEMA_VERSION);
   const a = lifted.sections[0].blocks[0];
@@ -153,14 +157,14 @@ test('side v1: håndsatt mobil-frame blir partiell radnett-plassering', () => {
   });
 });
 
-test('side v1: byte-lik desktop-kopi nulles og seksjonen går til auto', () => {
+test('page v1: byte-identical desktop copy is nulled and the section goes to auto', () => {
   const lifted = liftPageFile(v1Page(), {});
   const section = lifted.sections[0];
   assert.equal(section.blocks[1].frames.mobile, null);
   assert.equal(section.responsive.mobile.mode, 'auto');
 });
 
-test('side v1: decor gir hideMobile, og attention bevares med engelsk token', () => {
+test('page v1: decor gives hideMobile, and attention is kept with the English token', () => {
   const lifted = liftPageFile(v1Page(), {});
   const section = lifted.sections[0];
   assert.equal(section.blocks[1].hideMobile, true);
@@ -172,20 +176,20 @@ test('side v1: decor gir hideMobile, og attention bevares med engelsk token', ()
   });
 });
 
-test('side v2 røres ikke av løftingen (idempotens)', () => {
+test('page v2 is untouched by the lift (idempotence)', () => {
   const once = liftPageFile(v1Page(), {});
   const twice = liftPageFile(once, {});
   assert.deepEqual(twice, once);
 });
 
-test('side v1: amputert mobil-frame uten y blir flytende overstyring, aldri kast', () => {
+test('page v1: amputated mobile frame without y becomes a floating override, never a throw', () => {
   const page = v1Page();
   page.sections[0].blocks[0].frames.mobile = { x: 5, w: 90 };
   const lifted = liftPageFile(page, {});
   assert.deepEqual(lifted.sections[0].blocks[0].frames.mobile, { x: 5, w: 90 });
 });
 
-test('side-løftingen muterer aldri originalen', () => {
+test('the page lift never mutates the original', () => {
   const original = v1Page();
   liftPageFile(original, {});
   assert.equal(original.schemaVersion, 1);

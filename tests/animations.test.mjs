@@ -1,7 +1,7 @@
 /**
- * Animasjonene er registertyper under samme version+migrate-kontrakt som
- * blokker og bakgrunnslag (løfte 2): en Urd-oppdatering skal kunne endre
- * en animasjons props uten å knekke publiserte sider.
+ * The animations are registry types under the same version+migrate contract
+ * as blocks and background layers (promise 2): an Urd update must be able to
+ * change an animation's props without breaking published sites.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,7 +9,7 @@ import { engineImport } from './_engine.mjs';
 const { coreAnimations, staggerColumnDelays, staggerCenterDelays } = await engineImport('animations/core.js');
 const { lift } = await engineImport('migrate.js');
 
-test('kjerneanimasjonene følger version+migrate-kontrakten', () => {
+test('the core animations follow the version+migrate contract', () => {
   const ids = Object.keys(coreAnimations);
   assert.deepEqual(ids.sort(), ['fade-in', 'hover-lift', 'slide-up', 'stagger', 'zoom-in']);
   for (const [id, def] of Object.entries(coreAnimations)) {
@@ -22,13 +22,13 @@ test('kjerneanimasjonene følger version+migrate-kontrakten', () => {
   }
 });
 
-test('inngangsanimasjonene har varighet som standard (stagger bruker trinn i stedet for forsinkelse)', () => {
+test('the entrance animations have a duration by default (stagger uses step instead of delay)', () => {
   for (const [id, def] of Object.entries(coreAnimations)) {
     if (!def.entrance) continue;
     const props = def.defaults();
     assert.equal(typeof props.duration, 'number', id);
     if (def.group) {
-      // Stagger er en gruppeanimasjon: trinn/effekt/mønster i stedet for delay.
+      // Stagger is a group animation: step/effect/pattern instead of delay.
       assert.equal(typeof props.step, 'number', id);
       assert.equal(typeof props.pattern, 'string', id);
     } else {
@@ -37,31 +37,31 @@ test('inngangsanimasjonene har varighet som standard (stagger bruker trinn i ste
   }
 });
 
-test('staggerColumnDelays: kort i samme kolonne deler trinn, bølgen følger stigende x', () => {
-  // 4 kolonner x 2 rader (leserekkefølge, px-posisjoner): klynge-indeks * step.
+test('staggerColumnDelays: cards in the same column share a step, the wave follows rising x', () => {
+  // 4 columns x 2 rows (reading order, px positions): cluster index * step.
   const positions = [0, 200, 400, 600, 0, 200, 400, 600];
   assert.deepEqual(staggerColumnDelays(positions, 100), [0, 100, 200, 300, 0, 100, 200, 300]);
-  // Uordnede/ujevne x-verdier rangeres stigende, ikke etter rekkefølge.
+  // Unordered/uneven x values are ranked ascending, not by order.
   assert.deepEqual(staggerColumnDelays([300, 10, 10, 300], 50), [50, 0, 0, 50]);
   assert.deepEqual(staggerColumnDelays([], 100), []);
 });
 
-test('staggerColumnDelays: nesten-på-linje kort klynges med toleransen', () => {
-  // 8px-bøttene fra 0.6.6.5.4 delte kort som var 9px fra hverandre; med
-  // toleransen (24px) regnes de som samme kolonne.
+test('staggerColumnDelays: nearly aligned cards are clustered by the tolerance', () => {
+  // The 8px buckets from 0.6.6.5.4 split cards that were 9px apart; with the
+  // tolerance (24px) they count as the same column.
   assert.deepEqual(staggerColumnDelays([0, 9, 300, 318], 100), [0, 0, 100, 100]);
-  // Over toleransen skilles de fortsatt.
+  // Above the tolerance they are still separated.
   assert.deepEqual(staggerColumnDelays([0, 40, 300], 100, 24), [0, 100, 200]);
 });
 
-test('staggerCenterDelays: midten først, symmetrisk utover, partall gir midtpar', () => {
+test('staggerCenterDelays: the middle first, symmetric outwards, even count gives a middle pair', () => {
   assert.deepEqual(staggerCenterDelays(5, 100), [200, 100, 0, 100, 200]);
   assert.deepEqual(staggerCenterDelays(4, 100), [100, 0, 0, 100]);
   assert.deepEqual(staggerCenterDelays(1, 100), [0]);
   assert.deepEqual(staggerCenterDelays(0, 100), []);
 });
 
-test('ukjent animasjonstype gir plassholder, aldri krasj', () => {
+test('an unknown animation type gives a placeholder, never a crash', () => {
   const lifted = lift({ type: 'wobble', version: 1, props: {} }, undefined);
   assert.equal(lifted.ok, false);
   assert.equal(lifted.placeholder, 'unknown-type');

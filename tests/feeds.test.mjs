@@ -1,7 +1,8 @@
 /**
- * Kontraktstester for synlighetsfilene (engine/feeds.js): sitemap, robots
- * og RSS bygges deterministisk, med XML-escaping og trygge fallbacker.
- * Publiserings-siden (at filene faktisk committes) testes manuelt.
+ * Contract tests for the visibility files (engine/feeds.js): sitemap, robots
+ * and RSS are built deterministically, with XML escaping and safe fallbacks.
+ * The publishing side (that the files are actually committed) is tested
+ * manually.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,12 +10,13 @@ import { engineImport } from './_engine.mjs';
 
 const { escapeXml, buildSitemapXml, buildRobotsTxt, buildRssXml, FEED_KINDS } = await engineImport('feeds.js');
 
-test('escapeXml: alle fem entitetene', () => {
+test('escapeXml: all five entities', () => {
   assert.equal(escapeXml(`<a href="x">&'`), '&lt;a href=&quot;x&quot;&gt;&amp;&apos;');
   assert.equal(escapeXml(null), '');
 });
 
-test('buildSitemapXml: alle sider, forsiden uten dobbel skråstrek', () => {
+test('buildSitemapXml: all pages, the front page without a double slash', () => {
+  // Norwegian page slugs are deliberate fixture data (user site content).
   const xml = buildSitemapXml(
     [{ path: '/' }, { path: '/om-oss' }, { path: '/kaker' }],
     'https://eksempel.no/',
@@ -27,7 +29,7 @@ test('buildSitemapXml: alle sider, forsiden uten dobbel skråstrek', () => {
   assert.equal((xml.match(/<url>/g) ?? []).length, 3);
 });
 
-test('buildSitemapXml: skjulte sider (noindex) utelates', () => {
+test('buildSitemapXml: hidden pages (noindex) are left out', () => {
   const xml = buildSitemapXml(
     [{ path: '/' }, { path: '/intern', noindex: true }],
     'https://eksempel.no',
@@ -36,20 +38,21 @@ test('buildSitemapXml: skjulte sider (noindex) utelates', () => {
   assert.equal((xml.match(/<url>/g) ?? []).length, 1);
 });
 
-test('buildRobotsTxt: admin stengt, sitemap-peker', () => {
+test('buildRobotsTxt: admin closed, sitemap pointer', () => {
   const txt = buildRobotsTxt('https://eksempel.no');
   assert.ok(txt.includes('User-agent: *'));
   assert.ok(txt.includes('Disallow: /admin/'));
   assert.ok(txt.includes('Sitemap: https://eksempel.no/sitemap.xml'));
 });
 
-test('FEED_KINDS: daterte samlingstyper, aldri produkter', () => {
+test('FEED_KINDS: dated collection kinds, never products', () => {
   assert.ok(FEED_KINDS.includes('news'));
   assert.ok(!FEED_KINDS.includes('products'));
   assert.ok(!FEED_KINDS.includes('custom'));
 });
 
-test('buildRssXml: kanal, innslag, datoer og escaping', () => {
+test('buildRssXml: channel, items, dates and escaping', () => {
+  // Norwegian titles and paths are deliberate fixture data (user site content).
   const xml = buildRssXml({
     title: 'Nyheter & notiser',
     origin: 'https://eksempel.no',
@@ -64,12 +67,13 @@ test('buildRssXml: kanal, innslag, datoer og escaping', () => {
   assert.ok(xml.includes('<link>https://eksempel.no/kaker</link>'));
   assert.ok(xml.includes('<pubDate>Sat, 01 Aug 2026'));
   assert.ok(xml.includes('<guid isPermaLink="false">/content/samlinger/nyheter.xml#a1</guid>'));
-  // Innslag uten lenke peker på forsiden, og uten dato utelates pubDate.
+  // An item without a link points at the front page, and without a date
+  // pubDate is left out.
   assert.ok(xml.includes('<link>https://eksempel.no/</link>'));
   assert.equal((xml.match(/<pubDate>/g) ?? []).length, 1);
 });
 
-test('buildRssXml: ugyldig dato gir intet pubDate, tom liste gir gyldig kanal', () => {
+test('buildRssXml: an invalid date gives no pubDate, an empty list gives a valid channel', () => {
   const bad = buildRssXml({
     title: 'X', origin: 'https://x.no', path: '/f.xml',
     items: [{ id: 'a', title: 'T', date: 'ikke-en-dato' }],

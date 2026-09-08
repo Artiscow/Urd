@@ -1,6 +1,6 @@
 /**
- * Kontraktstester for kalender-pluginens rene ICS-modul (parser, gjentakelses-
- * ekspansjon og konvensjonene). DOM-rendering og henting testes manuelt.
+ * Contract tests for the calendar plugin's pure ICS module (parser, recurrence expansion and the conventions).
+ * DOM rendering and fetching are tested manually.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,11 +9,12 @@ import {
   splitCategory, findSignupLink, normalizeSourceUrl, subscribeLinks,
 } from '../template/plugins/calendar/ics.js';
 
+// The ICS fixtures carry deliberate Norwegian event content (titles, locations, signup lines): calendar feeds are user data.
 const wrap = (body) => `BEGIN:VCALENDAR\r\nX-WR-CALNAME:Testkalender\r\n${body}\r\nEND:VCALENDAR\r\n`;
 
 const event = (lines) => wrap(`BEGIN:VEVENT\r\n${lines.join('\r\n')}\r\nEND:VEVENT`);
 
-test('parser: kalendernavn, felter og utfoldede fortsettelseslinjer', () => {
+test('parser: calendar name, fields and unfolded continuation lines', () => {
   const { name, events } = parseIcs(event([
     'UID:a1',
     'SUMMARY:Konsert: Vårslepp med et veldig lang',
@@ -30,7 +31,7 @@ test('parser: kalendernavn, felter og utfoldede fortsettelseslinjer', () => {
   assert.match(events[0].description, /Linje en\nPåmelding/);
 });
 
-test('datoformer: UTC, heldag og TZID konverteres riktig', () => {
+test('date forms: UTC, all-day and TZID convert correctly', () => {
   const { events } = parseIcs(wrap([
     'BEGIN:VEVENT', 'UID:u', 'SUMMARY:UTC', 'DTSTART:20260601T120000Z', 'END:VEVENT',
     'BEGIN:VEVENT', 'UID:h', 'SUMMARY:Heldag', 'DTSTART;VALUE=DATE:20260601', 'END:VEVENT',
@@ -39,11 +40,11 @@ test('datoformer: UTC, heldag og TZID konverteres riktig', () => {
   assert.equal(events.length, 3);
   assert.equal(partsToMs(events[0].start), Date.UTC(2026, 5, 1, 12));
   assert.equal(events[1].start.allDay, true);
-  // 1. juni er sommertid i Oslo (UTC+2): 14:00 veggtid = 12:00 UTC.
+  // June 1 is daylight saving time in Oslo (UTC+2): 14:00 wall time = 12:00 UTC.
   assert.equal(partsToMs(events[2].start), Date.UTC(2026, 5, 1, 12));
 });
 
-test('enkelthendelse: havner i vinduet med varighet fra DTEND', () => {
+test('single event: lands in the window with duration from DTEND', () => {
   const occs = expandEvents(parseIcs(event([
     'UID:x', 'SUMMARY:Møte', 'DTSTART:20260910T180000Z', 'DTEND:20260910T193000Z',
   ])).events, { from: Date.UTC(2026, 8, 1), to: Date.UTC(2026, 9, 1) });
@@ -51,31 +52,31 @@ test('enkelthendelse: havner i vinduet med varighet fra DTEND', () => {
   assert.equal(occs[0].end - occs[0].start, 90 * 60 * 1000);
 });
 
-test('RRULE WEEKLY med BYDAY og COUNT: riktige dager, riktig antall', () => {
+test('RRULE WEEKLY with BYDAY and COUNT: correct days, correct count', () => {
   const occs = expandEvents(parseIcs(event([
     'UID:w', 'SUMMARY:Trening',
     'DTSTART;TZID=Europe/Oslo:20260901T190000',
     'RRULE:FREQ=WEEKLY;BYDAY=TU,TH;COUNT=5',
   ])).events, { from: Date.UTC(2026, 7, 1), to: Date.UTC(2026, 11, 1) });
   assert.equal(occs.length, 5);
-  // 1. september 2026 er en tirsdag; mønsteret blir ti-to-ti-to-ti.
+  // September 1, 2026 is a Tuesday; the pattern becomes Tue-Thu-Tue-Thu-Tue.
   const days = occs.map((o) => new Date(o.start).getUTCDay());
   assert.deepEqual(days, [2, 4, 2, 4, 2]);
 });
 
-test('RRULE med UNTIL og EXDATE: stopper og hopper over', () => {
+test('RRULE with UNTIL and EXDATE: stops and skips', () => {
   const occs = expandEvents(parseIcs(event([
     'UID:u2', 'SUMMARY:Ukesmøte',
     'DTSTART:20260901T170000Z',
     'RRULE:FREQ=WEEKLY;UNTIL=20260929T170000Z',
     'EXDATE:20260915T170000Z',
   ])).events, { from: Date.UTC(2026, 7, 1), to: Date.UTC(2026, 11, 1) });
-  // 1., 8., 22. og 29. september (15. er EXDATE, UNTIL er inklusiv).
+  // September 1, 8, 22 and 29 (the 15th is EXDATE, UNTIL is inclusive).
   assert.equal(occs.length, 4);
   assert.ok(!occs.some((o) => o.start === Date.UTC(2026, 8, 15, 17)));
 });
 
-test('RRULE MONTHLY med ordnet BYDAY (2TU): andre tirsdag hver måned', () => {
+test('RRULE MONTHLY with ordinal BYDAY (2TU): second Tuesday every month', () => {
   const occs = expandEvents(parseIcs(event([
     'UID:m', 'SUMMARY:Styremøte',
     'DTSTART:20260908T180000Z',
@@ -83,11 +84,11 @@ test('RRULE MONTHLY med ordnet BYDAY (2TU): andre tirsdag hver måned', () => {
   ])).events, { from: Date.UTC(2026, 8, 1), to: Date.UTC(2027, 0, 1) });
   assert.equal(occs.length, 3);
   const dates = occs.map((o) => new Date(o.start).getUTCDate());
-  // Andre tirsdag i sep/okt/nov 2026: 8., 13., 10.
+  // Second Tuesday of Sep/Oct/Nov 2026: the 8th, 13th and 10th.
   assert.deepEqual(dates, [8, 13, 10]);
 });
 
-test('RECURRENCE-ID: overstyringen erstatter basisforekomsten', () => {
+test('RECURRENCE-ID: the override replaces the base occurrence', () => {
   const occs = expandEvents(parseIcs(wrap([
     'BEGIN:VEVENT', 'UID:r', 'SUMMARY:Kurs',
     'DTSTART:20260901T170000Z', 'RRULE:FREQ=WEEKLY;COUNT=3', 'END:VEVENT',
@@ -100,28 +101,28 @@ test('RECURRENCE-ID: overstyringen erstatter basisforekomsten', () => {
   assert.ok(!occs.some((o) => o.start === Date.UTC(2026, 8, 8, 17)));
 });
 
-test('STATUS:CANCELLED gir ingen forekomst', () => {
+test('STATUS:CANCELLED gives no occurrence', () => {
   const occs = expandEvents(parseIcs(event([
     'UID:c', 'SUMMARY:Avlyst', 'STATUS:CANCELLED', 'DTSTART:20260910T180000Z',
   ])).events, { from: Date.UTC(2026, 8, 1), to: Date.UTC(2026, 9, 1) });
   assert.equal(occs.length, 0);
 });
 
-test('splitCategory: «Kategori: Tittel»-konvensjonen', () => {
+test('splitCategory: the "Category: Title" convention', () => {
   assert.deepEqual(splitCategory('Konsert: Vårslepp'), { category: 'Konsert', title: 'Vårslepp' });
   assert.deepEqual(splitCategory('Vanlig tittel uten kategori'), { category: null, title: 'Vanlig tittel uten kategori' });
-  // URL-koloner er ikke kategorier.
+  // URL colons are not categories.
   assert.equal(splitCategory('https://x.no').category, null);
 });
 
-test('findSignupLink: påmeldingslinje foretrekkes, ellers første URL', () => {
+test('findSignupLink: a signup line is preferred, otherwise the first URL', () => {
   const desc = 'Les mer: https://forening.no/om\nPåmelding: https://forening.no/pameld';
   assert.equal(findSignupLink(desc), 'https://forening.no/pameld');
   assert.equal(findSignupLink('Se https://a.no/info.'), 'https://a.no/info');
   assert.equal(findSignupLink('Ingen lenke her'), null);
 });
 
-test('normalizeSourceUrl: webcal, http-løft og Google-id', () => {
+test('normalizeSourceUrl: webcal, http upgrade and Google id', () => {
   assert.equal(normalizeSourceUrl('webcal://x.no/kal.ics'), 'https://x.no/kal.ics');
   assert.equal(normalizeSourceUrl('http://x.no/kal.ics'), 'https://x.no/kal.ics');
   assert.equal(
@@ -131,7 +132,7 @@ test('normalizeSourceUrl: webcal, http-løft og Google-id', () => {
   assert.equal(normalizeSourceUrl('ikke en kilde'), null);
 });
 
-test('subscribeLinks: webcal alltid, Google-lenke for Google-kilder', () => {
+test('subscribeLinks: webcal always, Google link for Google sources', () => {
   const google = subscribeLinks('abc@gmail.com');
   assert.match(google.webcal, /^webcal:\/\/calendar\.google\.com\//);
   assert.match(google.google, /^https:\/\/calendar\.google\.com\/calendar\/r\?cid=/);

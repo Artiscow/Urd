@@ -1,8 +1,6 @@
 /**
- * Mal-modellen (0.6.7): kontraktstester for templates-model.js - id-regimet,
- * re-id-invariantene ved innsetting og anker/klem-geometrien for
- * blokkgrupper. Skjemakontrakten (mal.schema.json) valideres i
- * editor/scripts/validate.mjs; her testes de rene funksjonene.
+ * The template model (0.6.7): contract tests for templates-model.js - the id regime, the re-id invariants at insertion and the anchor/clamp geometry for block groups.
+ * The schema contract (mal.schema.json) is validated in editor/scripts/validate.mjs; the pure functions are tested here.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -25,7 +23,8 @@ const section = () => ({
   responsive: { mobile: { mode: 'auto', attention: null } },
 });
 
-test('templateId: slug av navnet, tom streng for ugyldig navn', () => {
+test('templateId: slug of the name, empty string for an invalid name', () => {
+  // Deliberate Norwegian template names: the slugging must fold letters like the a-ring.
   assert.equal(templateId('Vår hero'), 'var-hero');
   assert.equal(templateId('  Kort-trio!  '), 'kort-trio');
   assert.equal(templateId('!!!'), '');
@@ -33,12 +32,12 @@ test('templateId: slug av navnet, tom streng for ugyldig navn', () => {
   assert.equal(templateId(undefined), '');
 });
 
-test('kontraktskonstantene står', () => {
+test('the contract constants hold', () => {
   assert.deepEqual(TEMPLATE_KINDS, ['section', 'blocks', 'page']);
   assert.equal(TEMPLATE_SCHEMA_VERSION, 1);
 });
 
-test('cloneSectionForInsert: alle id-er nye, originalen urørt, geometri bevart', () => {
+test('cloneSectionForInsert: all ids new, original untouched, geometry preserved', () => {
   const original = section();
   const before = JSON.stringify(original);
   const out = cloneSectionForInsert(original, makeId);
@@ -54,7 +53,7 @@ test('cloneSectionForInsert: alle id-er nye, originalen urørt, geometri bevart'
   assert.equal(JSON.stringify(original), before);
 });
 
-test('to innsettinger av samme mal gir disjunkte id-sett', () => {
+test('two insertions of the same template give disjoint id sets', () => {
   const original = section();
   const a = cloneSectionForInsert(original, makeId);
   const b = cloneSectionForInsert(original, makeId);
@@ -62,7 +61,7 @@ test('to innsettinger av samme mal gir disjunkte id-sett', () => {
   assert.equal(new Set([...ids(a), ...ids(b)]).size, ids(a).length + ids(b).length);
 });
 
-test('cloneBlocksForInsert uten anker: posisjoner beholdes, minBottom riktig', () => {
+test('cloneBlocksForInsert without an anchor: positions kept, minBottom correct', () => {
   const blocks = [block('blk-a'), block('blk-b', { x: 50, y: 200 })];
   const { blocks: out, minBottom } = cloneBlocksForInsert(blocks, makeId);
   assert.deepEqual(out.map((b) => [b.frames.desktop.x, b.frames.desktop.y]), [[10, 20], [50, 200]]);
@@ -70,39 +69,39 @@ test('cloneBlocksForInsert uten anker: posisjoner beholdes, minBottom riktig', (
   assert.ok(out.every((b) => b.id.startsWith('blk-test-')));
 });
 
-test('cloneBlocksForInsert med anker: gruppen flyttes samlet, innbyrdes oppsett bevart', () => {
+test('cloneBlocksForInsert with an anchor: the group moves as one, internal layout preserved', () => {
   const blocks = [block('blk-a'), block('blk-b', { x: 50, y: 200 })];
   const { blocks: out } = cloneBlocksForInsert(blocks, makeId, { anchor: { x: 20, y: 100 } });
-  // Øvre venstre hjørne (min x=10, min y=20) skal treffe ankeret: delta (10, 80).
+  // The top left corner (min x=10, min y=20) must hit the anchor: delta (10, 80).
   assert.deepEqual(out.map((b) => [b.frames.desktop.x, b.frames.desktop.y]), [[20, 100], [60, 280]]);
 });
 
-test('cloneBlocksForInsert: ankeret klemmes så gruppen holder seg i seksjonen', () => {
+test('cloneBlocksForInsert: the anchor is clamped so the group stays inside the section', () => {
   const blocks = [block('blk-a'), block('blk-b', { x: 50, y: 200 })];
-  // Anker langt til høyre: maks høyrekant er x=50 + w=30 = 80, så dx klemmes til 20.
+  // Anchor far to the right: max right edge is x=50 + w=30 = 80, so dx is clamped to 20.
   const { blocks: out } = cloneBlocksForInsert(blocks, makeId, { anchor: { x: 95, y: 0 } });
   assert.deepEqual(out.map((b) => b.frames.desktop.x), [30, 70]);
-  // Negativt anker i y klemmes til 0 for øverste blokk.
+  // A negative anchor in y is clamped to 0 for the topmost block.
   const { blocks: up } = cloneBlocksForInsert(blocks, makeId, { anchor: { x: 10, y: -500 } });
   assert.equal(Math.min(...up.map((b) => b.frames.desktop.y)), 0);
 });
 
-test('cloneBlocksForInsert: frames.mobile i radnett-formen følger med urørt', () => {
+test('cloneBlocksForInsert: frames.mobile in the row grid form travels along untouched', () => {
   const b = block('blk-a');
   b.frames.mobile = { x: 0, w: 100, row: 4, rows: 5 };
   const { blocks: out } = cloneBlocksForInsert([b], makeId, { anchor: { x: 30, y: 60 } });
   assert.deepEqual(out[0].frames.mobile, { x: 0, w: 100, row: 4, rows: 5 });
 });
 
-test('cloneBlocksForInsert: gammel full mobil-frame løftes til radnett-formen', () => {
+test('cloneBlocksForInsert: an old full mobile frame is lifted to the row grid form', () => {
   const b = block('blk-a');
-  // Mal lagret før ADR-0019: full frame med y/h, ikke lik desktop-framen.
+  // A template saved before ADR-0019: full frame with y/h, not equal to the desktop frame.
   b.frames.mobile = { x: 5, y: 104, w: 90, h: 120, z: 1, rot: 0 };
   const { blocks: out } = cloneBlocksForInsert([b], makeId, {});
   assert.deepEqual(out[0].frames.mobile, { x: 5, w: 90, row: 11, rows: 15 });
 });
 
-test('cloneSectionForInsert: byte-lik desktop-kopi i gammel mal nulles', () => {
+test('cloneSectionForInsert: a byte-equal desktop copy in an old template is nulled', () => {
   const sec = section();
   sec.blocks[0].frames.mobile = { ...sec.blocks[0].frames.desktop };
   const out = cloneSectionForInsert(sec, makeId);
@@ -115,7 +114,7 @@ const page = () => ({
   sections: [section(), { ...section(), id: 'sec-to', blocks: [block('blk-c')] }],
 });
 
-test('clonePageForInsert: meta erstattes, alle id-er nye, originalen urørt', () => {
+test('clonePageForInsert: meta replaced, all ids new, original untouched', () => {
   const original = page();
   const before = JSON.stringify(original);
   const out = clonePageForInsert(original, makeId, { id: 'sommer', title: 'Sommer' });
@@ -138,7 +137,7 @@ test('clonePageForInsert: meta erstattes, alle id-er nye, originalen urørt', ()
   assert.equal(JSON.stringify(original), before);
 });
 
-test('clonePageForInsert: to innsettinger gir disjunkte id-sett', () => {
+test('clonePageForInsert: two insertions give disjoint id sets', () => {
   const original = page();
   const ids = (p) => p.sections.flatMap((s) => [s.id, ...s.blocks.map((b) => b.id)]);
   const a = ids(clonePageForInsert(original, makeId, { id: 'a', title: 'A' }));

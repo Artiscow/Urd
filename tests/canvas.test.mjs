@@ -1,16 +1,17 @@
 /**
- * Vakt om innholdsflaten (ADR-0018) og om festingen som lever oppå den.
+ * Guard for the content canvas (ADR-0018) and for the pinning that lives on
+ * top of it.
  *
- * `.urd-canvas` binder blokkene til designbredden. Får den transform,
- * filter, perspective, backdrop-filter, contain, container-type eller
- * will-change, blir den containing block for `position: fixed`, og da dør
- * festede og skjermdokkede blokker (sticky.js) i stillhet: de ville
- * plassert seg relativt til kanvasen i stedet for til vinduet. Feilen er
- * usynlig i alle enhetstester og oppdages først som en visuell bug, så den
- * vaktes mekanisk her i stedet for med en kommentar.
+ * `.urd-canvas` binds the blocks to the design width. If it gets transform,
+ * filter, perspective, backdrop-filter, contain, container-type or
+ * will-change, it becomes the containing block for `position: fixed`, and
+ * pinned and screen-docked blocks (sticky.js) die silently: they would
+ * position themselves relative to the canvas instead of the window. The bug
+ * is invisible in all unit tests and only surfaces as a visual defect, so it
+ * is guarded mechanically here instead of with a comment.
  *
- * Samme sjanger som modulepreload-testen: les kilden, regn ut på nytt, krev
- * likhet.
+ * Same genre as the modulepreload test: read the source, recompute, require
+ * equality.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -21,7 +22,7 @@ const { applySiteLayout } = await engineImport('render.js');
 
 const CSS = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf-8');
 
-/** Egenskaper som lager containing block for position: fixed. */
+/** Properties that create a containing block for position: fixed. */
 const FORBIDDEN = [
   'transform',
   'filter',
@@ -32,9 +33,9 @@ const FORBIDDEN = [
   'will-change',
 ];
 
-/** Hent deklarasjonene i regelen for en selektor, uten kommentarer.
- *  Alle regex-metategn escapes, i alle forekomster, ikke bare første
- *  punktum (CodeQL js/incomplete-sanitization). */
+/** Get the declarations in the rule for a selector, comments stripped.
+ *  All regex metacharacters are escaped, in every occurrence, not just the
+ *  first dot (CodeQL js/incomplete-sanitization). */
 function ruleBody(css, selector) {
   const stripped = css.replace(/\/\*[\s\S]*?\*\//g, '');
   const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -42,57 +43,57 @@ function ruleBody(css, selector) {
   return match ? match[2] : null;
 }
 
-test('.urd-canvas finnes i base.css', () => {
-  assert.ok(ruleBody(CSS, '.urd-canvas'), 'regelen .urd-canvas mangler');
+test('.urd-canvas exists in base.css', () => {
+  assert.ok(ruleBody(CSS, '.urd-canvas'), 'rule .urd-canvas is missing');
 });
 
-test('.urd-canvas har ingen egenskap som lager containing block for fixed', () => {
+test('.urd-canvas has no property that creates a containing block for fixed', () => {
   const body = ruleBody(CSS, '.urd-canvas');
   for (const prop of FORBIDDEN) {
     assert.ok(
       !new RegExp(`(^|;|\\s)${prop}\\s*:`).test(body),
-      `.urd-canvas setter ${prop}, som ville drept festede blokker (ADR-0018)`,
+      `.urd-canvas sets ${prop}, which would kill pinned blocks (ADR-0018)`,
     );
   }
 });
 
-test('.urd-canvas binder bredden og sentrerer', () => {
+test('.urd-canvas binds the width and centers', () => {
   const body = ruleBody(CSS, '.urd-canvas');
-  assert.match(body, /width:\s*min\(/, 'bredden skal være bundet med min()');
-  assert.match(body, /--urd-canvas-w/, 'bredden skal lese --urd-canvas-w');
-  assert.match(body, /margin-inline:\s*auto/, 'flaten skal sentreres');
+  assert.match(body, /width:\s*min\(/, 'the width must be bound with min()');
+  assert.match(body, /--urd-canvas-w/, 'the width must read --urd-canvas-w');
+  assert.match(body, /margin-inline:\s*auto/, 'the canvas must be centered');
 });
 
-// applySiteLayout er ren nok til å testes med en minimal stubb: den rører
-// bare setProperty på ett element.
+// applySiteLayout is pure enough to test with a minimal stub: it only
+// touches setProperty on one element.
 const stubRoot = () => {
   const props = new Map();
   return { props, style: { setProperty: (k, v) => props.set(k, v) } };
 };
 
-test('applySiteLayout skriver bredde i px og marg i vw', () => {
+test('applySiteLayout writes width in px and gutter in vw', () => {
   const root = stubRoot();
   applySiteLayout({ layout: { contentWidth: 960, gutter: 9 } }, root);
   assert.equal(root.props.get('--urd-canvas-w'), '960px');
-  // Enheten er det som skiller en marg som følger skjermen fra en fast en.
+  // The unit is what separates a gutter that follows the screen from a fixed one.
   assert.equal(root.props.get('--urd-canvas-gutter-desktop'), '9vw');
 });
 
-test('applySiteLayout: "full" gir ubunden flate', () => {
+test('applySiteLayout: "full" gives an unbound canvas', () => {
   const root = stubRoot();
   applySiteLayout({ layout: { contentWidth: 'full', gutter: 0 } }, root);
   assert.equal(root.props.get('--urd-canvas-w'), '100%');
   assert.equal(root.props.get('--urd-canvas-gutter-desktop'), '0vw');
 });
 
-test('applySiteLayout uten layout-felt faller til standarden', () => {
+test('applySiteLayout without a layout field falls back to the default', () => {
   const root = stubRoot();
   applySiteLayout({}, root);
   assert.equal(root.props.get('--urd-canvas-w'), '1440px');
   assert.equal(root.props.get('--urd-canvas-gutter-desktop'), '6vw');
 });
 
-test('applySiteLayout tåler manglende site uten å kaste', () => {
+test('applySiteLayout tolerates a missing site without throwing', () => {
   const root = stubRoot();
   applySiteLayout(undefined, root);
   assert.equal(root.props.get('--urd-canvas-w'), '1440px');

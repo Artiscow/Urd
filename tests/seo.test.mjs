@@ -1,7 +1,7 @@
 /**
- * Kontraktstester for SEO-metadataen (engine/seo.js): tagg-bygging med
- * fallback-trappene og JSON-LD-formen. DOM-skrivingen (applyHeadMeta)
- * testes manuelt (testrundene).
+ * Contract tests for the SEO metadata (engine/seo.js): tag building with the
+ * fallback ladders and the JSON-LD shape. The DOM writing (applyHeadMeta) is
+ * tested manually (the test rounds).
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,11 +9,13 @@ import { engineImport } from './_engine.mjs';
 
 const { pageMetaTags, siteJsonLd } = await engineImport('seo.js');
 
+// Norwegian titles, descriptions and slugs below are deliberate fixture data
+// (user site content).
 const SITE = { site: { title: 'Urd', description: 'Testside', icon: '/media/ikon.webp' } };
 
 const find = (tags, key, value) => tags.find((t) => t.attrs[key] === value);
 
-test('pageMetaTags: beskrivelse, canonical og og-feltene', () => {
+test('pageMetaTags: description, canonical and the og fields', () => {
   const page = { meta: { title: 'Kaker', description: 'Kakesiden', og: { title: 'Kaker hos oss', image: '/media/kake.webp' } } };
   const tags = pageMetaTags(SITE, page, 'https://eksempel.no', '/kaker');
   assert.equal(find(tags, 'name', 'description').attrs.content, 'Kakesiden');
@@ -25,10 +27,10 @@ test('pageMetaTags: beskrivelse, canonical og og-feltene', () => {
   assert.equal(find(tags, 'property', 'og:site_name').attrs.content, 'Urd');
 });
 
-test('pageMetaTags: fallback-trappa uten egne felt', () => {
+test('pageMetaTags: the fallback ladder without own fields', () => {
   const tags = pageMetaTags(SITE, { meta: { id: 'hjem', title: 'Hjem' } }, 'https://eksempel.no', '/');
-  // Uten sidebeskrivelse settes ingen meta description, men og:description
-  // faller til nettstedsbeskrivelsen og og:image til nettstedsikonet.
+  // Without a page description no meta description is set, but og:description
+  // falls back to the site description and og:image to the site icon.
   assert.equal(find(tags, 'name', 'description'), undefined);
   assert.equal(find(tags, 'property', 'og:title').attrs.content, 'Hjem');
   assert.equal(find(tags, 'property', 'og:description').attrs.content, 'Testside');
@@ -36,21 +38,21 @@ test('pageMetaTags: fallback-trappa uten egne felt', () => {
   assert.equal(find(tags, 'rel', 'canonical').attrs.href, 'https://eksempel.no/');
 });
 
-test('pageMetaTags: tomt nettsted gir aldri krasj eller tomme tagger', () => {
+test('pageMetaTags: an empty site never gives a crash or empty tags', () => {
   const tags = pageMetaTags({}, {}, 'https://eksempel.no', '/');
   assert.equal(find(tags, 'name', 'description'), undefined);
   assert.equal(find(tags, 'property', 'og:image'), undefined);
   assert.equal(find(tags, 'property', 'og:description'), undefined);
 });
 
-test('pageMetaTags: X-kortet følger bildet', () => {
+test('pageMetaTags: the X card follows the image', () => {
   const withImage = pageMetaTags(SITE, { meta: {} }, 'https://x.no', '/');
   assert.equal(find(withImage, 'name', 'twitter:card').attrs.content, 'summary_large_image');
   const without = pageMetaTags({}, {}, 'https://x.no', '/');
   assert.equal(find(without, 'name', 'twitter:card').attrs.content, 'summary');
 });
 
-test('pageMetaTags: skjult side får noindex uten canonical, men beholder deling', () => {
+test('pageMetaTags: a hidden page gets noindex without canonical, but keeps sharing', () => {
   const tags = pageMetaTags(SITE, { meta: { title: 'Intern' } }, 'https://x.no', '/intern', { noindex: true });
   assert.equal(find(tags, 'name', 'robots').attrs.content, 'noindex');
   assert.equal(find(tags, 'rel', 'canonical'), undefined);
@@ -60,7 +62,7 @@ test('pageMetaTags: skjult side får noindex uten canonical, men beholder deling
   assert.ok(find(open, 'rel', 'canonical'));
 });
 
-test('siteJsonLd: Organization med navn, adresse, beskrivelse og logo', () => {
+test('siteJsonLd: Organization with name, address, description and logo', () => {
   const data = siteJsonLd(SITE, 'https://eksempel.no');
   assert.equal(data['@context'], 'https://schema.org');
   assert.equal(data['@type'], 'Organization');
@@ -70,7 +72,7 @@ test('siteJsonLd: Organization med navn, adresse, beskrivelse og logo', () => {
   assert.equal(data.logo, 'https://eksempel.no/media/ikon.webp');
 });
 
-test('siteJsonLd: valgfrie felt utelates når de mangler', () => {
+test('siteJsonLd: optional fields are left out when they are missing', () => {
   const data = siteJsonLd({ site: { title: 'X' } }, 'https://x.no');
   assert.equal(data.name, 'X');
   assert.ok(!('description' in data));

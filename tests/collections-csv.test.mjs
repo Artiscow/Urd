@@ -1,7 +1,8 @@
 /**
- * Kontraktstester for samlingenes CSV-import/-eksport (engine/collections-csv.js):
- * runde-tripp, RFC 4180-anførselstegn, listefeltene (|), tallfeltene og
- * header-styrt tolkning. Panel-flyten (nedlasting/fil-les) testes manuelt.
+ * Contract tests for the collections CSV import/export (engine/collections-csv.js):
+ * round trip, RFC 4180 quoting, the list fields (|), the number fields and
+ * header-driven interpretation. The panel flow (download/file read) is tested
+ * manually.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,12 +10,13 @@ import { engineImport } from './_engine.mjs';
 
 const { entriesToCsv, csvToEntries, parseCsv } = await engineImport('collections-csv.js');
 
+// Deliberate Norwegian fixture entries: this is user collection content.
 const ENTRIES = [
   { id: 'sjokoladekake', title: 'Sjokoladekake', text: 'Saftig, med "mørk" ganache', price: 350, badge: 'Bestselger', sizes: ['Liten', 'Stor'] },
   { id: 'boller', title: 'Kanelboller, 6 stk.', price: 120, memberPrice: 100, colors: [{ name: 'Grønn', image: '/media/x.webp' }, { name: 'Rosa' }] },
 ];
 
-test('entriesToCsv: header + rader, komma og anførselstegn pakkes', () => {
+test('entriesToCsv: header + rows, commas and quotes are wrapped', () => {
   const csv = entriesToCsv(ENTRIES);
   const lines = csv.trim().split('\n');
   assert.ok(lines[0].startsWith('id,title,'));
@@ -25,7 +27,7 @@ test('entriesToCsv: header + rader, komma og anførselstegn pakkes', () => {
   assert.ok(csv.includes('Grønn|Rosa'));
 });
 
-test('runde-tripp: eksport → import bevarer felter (fargebilder unntatt)', () => {
+test('round trip: export then import preserves fields (color images excepted)', () => {
   const { entries, skipped } = csvToEntries(entriesToCsv(ENTRIES));
   assert.equal(skipped, 0);
   assert.equal(entries.length, 2);
@@ -36,12 +38,12 @@ test('runde-tripp: eksport → import bevarer felter (fargebilder unntatt)', () 
   assert.deepEqual(entries[1].colors, [{ name: 'Grønn' }, { name: 'Rosa' }]);
 });
 
-test('parseCsv: anførselstegn med linjeskift og CRLF, tomme rader forkastes', () => {
+test('parseCsv: quotes with newlines and CRLF, empty rows are discarded', () => {
   const rows = parseCsv('a,"b\nc",d\r\n\r\ne,f,g\n');
   assert.deepEqual(rows, [['a', 'b\nc', 'd'], ['e', 'f', 'g']]);
 });
 
-test('csvToEntries: header-styrt rekkefølge, komma-desimal, rader uten tittel hoppes', () => {
+test('csvToEntries: header-driven order, comma decimals, rows without a title are skipped', () => {
   const parsed = csvToEntries('price,title\n"49,50",Bolle\n120,\n');
   assert.equal(parsed.entries.length, 1);
   assert.equal(parsed.entries[0].price, 49.5);
@@ -49,7 +51,7 @@ test('csvToEntries: header-styrt rekkefølge, komma-desimal, rader uten tittel h
   assert.equal(parsed.skipped, 1);
 });
 
-test('csvToEntries: uten title-kolonne eller rader gir null', () => {
+test('csvToEntries: without a title column or rows gives null', () => {
   assert.equal(csvToEntries('id,name\n1,x\n'), null);
   assert.equal(csvToEntries('id,title\n'), null);
   assert.equal(csvToEntries(''), null);

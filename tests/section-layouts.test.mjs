@@ -1,9 +1,6 @@
 /**
- * Oppsetts-modellen (section-layouts.js): klassifisering, leseordre og
- * layout-variantene som rene frames+minHeight-funksjoner. Invariantene:
- * alle bevegelige blokker får ramme innenfor 0-100 % i x/w, høyder og
- * rotasjon røres aldri, dekor/former røres aldri, resultatet er
- * deterministisk, og for få/feil blokker gir ingen varianter.
+ * The layout model (section-layouts.js): classification, reading order and the layout variants as pure frames+minHeight functions.
+ * The invariants: every movable block gets a frame within 0-100 % in x/w, heights and rotation are never touched, decor/shapes are never touched, the result is deterministic, and too few/wrong blocks give no variants.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -18,6 +15,7 @@ const block = (id, type, frame = {}, extra = {}) => ({
 
 const GRID = { size: 24 };
 
+// Deliberate Norwegian block ids: the assertions quote them verbatim.
 const heroish = () => [
   block('tekst', 'text', { x: 8, y: 30, w: 40, h: 60 }),
   block('knapp', 'button', { x: 8, y: 110, w: 20, h: 44 }),
@@ -26,28 +24,28 @@ const heroish = () => [
   block('dekor', 'image', { x: 0, y: 0, w: 10, h: 10 }, { decor: true }),
 ];
 
-test('movableBlocks: dekor og former holdes utenfor', () => {
+test('movableBlocks: decor and shapes are kept out', () => {
   assert.deepEqual(movableBlocks(heroish()).map((b) => b.id), ['tekst', 'knapp', 'bilde']);
 });
 
-test('readingOrder: (y, x), stabil på id', () => {
+test('readingOrder: (y, x), stable on id', () => {
   const order = readingOrder(movableBlocks(heroish())).map((b) => b.id);
   assert.deepEqual(order, ['bilde', 'tekst', 'knapp']);
 });
 
-test('applicableLayouts: alle seks med tekst+media, kun stable/kolonner uten media', () => {
+test('applicableLayouts: all six with text+media, only stacks/columns without media', () => {
   assert.deepEqual(applicableLayouts(heroish()), LAYOUT_IDS);
-  const bareTekst = [block('a', 'text'), block('b', 'button', { y: 80 })];
-  assert.deepEqual(applicableLayouts(bareTekst), ['stack-center', 'stack-left', 'two-columns']);
+  const textOnly = [block('a', 'text'), block('b', 'button', { y: 80 })];
+  assert.deepEqual(applicableLayouts(textOnly), ['stack-center', 'stack-left', 'two-columns']);
 });
 
-test('faerre enn to bevegelige blokker gir ingen varianter', () => {
+test('fewer than two movable blocks give no variants', () => {
   assert.deepEqual(applicableLayouts([block('a', 'text')]), []);
   assert.deepEqual(applicableLayouts([block('a', 'text'), block('p', 'shape')]), []);
   assert.equal(layoutFrames('stack-center', [block('a', 'text')], GRID), null);
 });
 
-test('alle varianter: hver bevegelig blokk faar ramme innenfor 0-100, h/rot uroert', () => {
+test('all variants: every movable block gets a frame within 0-100, h/rot untouched', () => {
   const blocks = heroish();
   for (const id of LAYOUT_IDS) {
     const result = layoutFrames(id, blocks, GRID);
@@ -55,17 +53,17 @@ test('alle varianter: hver bevegelig blokk faar ramme innenfor 0-100, h/rot uroe
     assert.equal(result.frames.length, 3, id);
     for (const { blockId, frame } of result.frames) {
       const original = blocks.find((b) => b.id === blockId).frames.desktop;
-      assert.ok(frame.x >= 0 && frame.x + frame.w <= 100, `${id}:${blockId} innenfor bredden`);
+      assert.ok(frame.x >= 0 && frame.x + frame.w <= 100, `${id}:${blockId} within the width`);
       assert.ok(frame.y >= 0, `${id}:${blockId} y >= 0`);
-      assert.equal(frame.h, original.h, `${id}:${blockId} hoeyde uroert`);
-      assert.equal(frame.rot, original.rot, `${id}:${blockId} rotasjon uroert`);
+      assert.equal(frame.h, original.h, `${id}:${blockId} height untouched`);
+      assert.equal(frame.rot, original.rot, `${id}:${blockId} rotation untouched`);
     }
-    // Dekor og former har ingen rammer i resultatet.
+    // Decor and shapes have no frames in the result.
     assert.ok(!result.frames.some((f) => f.blockId === 'pynt' || f.blockId === 'dekor'), id);
   }
 });
 
-test('minHeight >= nederste blokk + marg, samme regel som tilpass hoeyde', () => {
+test('minHeight >= the lowest block + margin, same rule as fit height', () => {
   for (const id of LAYOUT_IDS) {
     const result = layoutFrames(id, heroish(), GRID);
     const maxBottom = Math.max(...result.frames.map(({ frame }) => frame.y + frame.h));
@@ -73,13 +71,13 @@ test('minHeight >= nederste blokk + marg, samme regel som tilpass hoeyde', () =>
   }
 });
 
-test('deterministisk: samme inndata gir identisk resultat', () => {
+test('deterministic: the same input gives an identical result', () => {
   const a = JSON.stringify(layoutFrames('two-columns', heroish(), GRID));
   const b = JSON.stringify(layoutFrames('two-columns', heroish(), GRID));
   assert.equal(a, b);
 });
 
-test('split-media-right: tekst venstre, media hoeyre; speilet for -left', () => {
+test('split-media-right: text left, media right; mirrored for -left', () => {
   const right = layoutFrames('split-media-right', heroish(), GRID);
   const get = (res, id) => res.frames.find((f) => f.blockId === id).frame;
   assert.equal(get(right, 'tekst').x, 8);
@@ -89,19 +87,19 @@ test('split-media-right: tekst venstre, media hoeyre; speilet for -left', () => 
   assert.equal(get(left, 'bilde').x, 8);
 });
 
-test('hero-top: stoerste media i full bredde oeverst, resten midtstilt under', () => {
+test('hero-top: the largest media full width at the top, the rest centered below', () => {
   const result = layoutFrames('hero-top', heroish(), GRID);
   const hero = result.frames.find((f) => f.blockId === 'bilde').frame;
   assert.equal(hero.w, 84);
   assert.equal(hero.y, GRID.size);
   for (const { blockId, frame } of result.frames) {
     if (blockId === 'bilde') continue;
-    assert.ok(frame.y > hero.y + hero.h - 1, `${blockId} under heroen`);
-    assert.equal(frame.x, (100 - frame.w) / 2, `${blockId} midtstilt`);
+    assert.ok(frame.y > hero.y + hero.h - 1, `${blockId} below the hero`);
+    assert.equal(frame.x, (100 - frame.w) / 2, `${blockId} centered`);
   }
 });
 
-test('two-columns: neste blokk i korteste kolonne (balansering)', () => {
+test('two-columns: the next block in the shortest column (balancing)', () => {
   const blocks = [
     block('hoy', 'image', { x: 8, y: 10, w: 40, h: 300 }),
     block('a', 'text', { x: 52, y: 20, w: 40, h: 50 }),
@@ -109,7 +107,7 @@ test('two-columns: neste blokk i korteste kolonne (balansering)', () => {
   ];
   const result = layoutFrames('two-columns', blocks, GRID);
   const get = (id) => result.frames.find((f) => f.blockId === id).frame;
-  // «hoy» tar venstre kolonne; a og b stables begge i hoeyre.
+  // The tall block ('hoy') takes the left column; a and b both stack in the right one.
   assert.equal(get('hoy').x, 8);
   assert.equal(get('a').x, 52);
   assert.equal(get('b').x, 52);
