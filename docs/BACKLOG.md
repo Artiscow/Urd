@@ -89,7 +89,13 @@ Fasen er delt opp i milepæler 9. august 2026: arkitekturavklaringene (bredde, m
   - [x] 0.7.14.8 icons.js-lokaliseringen: labelKey per ikon + icon.*-nøkler i nb/en-GB/tr, engelske fallback-etiketter
   - [x] 0.7.14.9 Resterende strenger: fallback-litteraler, hardkodede titler/placeholders (med nøkler), feil-/konsollmeldinger, check-release.mjs, dev-server.py, workflow-stegnavnene, skjema-beskrivelsestekstene
   - [x] 0.7.14.10 Testene: beskrivelser, assertion-meldinger og kommentarer til engelsk (testfil-renames tatt i .5); norske fixture-data består som bevisst testinnhold, markert der det ikke er opplagt
-  - [ ] 0.7.14.11-.16 Kommentarsveipen (~5 450 linjer i seks batcher: preview-edit.js; App.svelte; motor-rot A; motor-rot B + blocks/backgrounds/sections/animations; editor/src/lib; base.css med nytt stempel + skall + workflows + dev-server + scripts + ordbok-headere + plugin-kommentarer), med kommentarreglene i AGENTS.md anvendt samtidig; bundel-diffen skal være tom for rene kommentarbatcher
+  - [x] 0.7.14.11 Kommentarsveipen, batch 1: preview-edit.js (571 kommentarlinjer oversatt, kommentarreglene anvendt, bundelen urørt)
+  - [ ] 0.7.14.12 Kommentarsveipen, batch 2: App.svelte (872 kommentarlinjer; krever gjenbygg)
+  - [ ] 0.7.14.13 Kommentarsveipen, batch 3: motor-rot A (urd, render, nav, nav-model, migrate, theme m.fl.)
+  - [ ] 0.7.14.14 Kommentarsveipen, batch 4: motor-rot B + blocks/ + backgrounds/ + sections/ + animations/
+  - [ ] 0.7.14.15 Kommentarsveipen, batch 5: editor/src/lib + main.js (krever gjenbygg)
+  - [ ] 0.7.14.16 Kommentarsveipen, batch 6: base.css (nytt stempel) + skall + workflows + dev-server + scripts + ordbok-headere + plugin-kommentarer
+    (felles for batchene: kommentarreglene i AGENTS.md anvendes samtidig; bundel-diffen skal være tom for rene kommentarbatcher)
   - [ ] 0.7.14.17 Sluttaudit (repo-vid æøå-grep pluss stopwordliste) + push-klargjøring
 
   Ferdig når: norsk-auditen er ren utenfor locales/, docs/, content/, readme/ og bevisste fixtures; migrerings- og aliastestene dekker alle gamle tokens med idempotens og plugin-matrisen; og alle suiter, bygg og validering er grønne.

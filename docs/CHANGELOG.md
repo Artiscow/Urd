@@ -25,6 +25,10 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.14.11 - Engelsk-renskingen: kommentarsveipen, preview-edit.js - 8. september 2026
+
+- Alle norske kommentarer i preview-edit.js (571 linjer, ~150 kommentarer/JSDoc-blokker) oversatt til engelsk med kommentarreglene anvendt: historikk- og attribusjonsfragmenter strøket (versjonsnummer-tagger, daterte eiervalg-parenteser, hendelsesfortellinger som «faq manglet her frem til 0.6.7.11»), flerlinje-kommentarer brutt om ved setningsgrense. Kun kommentartekst er endret; meldingsnavnene og ADR-referansene står ordrett, og bundelen er urørt (fila buntes ikke).
+
 ### 0.7.14.10 - Engelsk-renskingen: testene - 30. august 2026
 
 - Alle 53 testfiler + _engine.mjs oversatt til engelsk (tre parallelle agenter på disjunkte filsett): ~500 testnavn, ~130 assertion-meldinger og ~450 kommentarlinjer, med kommentarreglene anvendt (to historiefortellende kommentarer omskrevet deskriptivt, en person-attribusjon gjort upersonlig). Testantallet er uendret (503) og bundelen urørt.

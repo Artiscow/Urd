@@ -1,21 +1,21 @@
 /**
- * Editeringslaget for preview-modus: dra, resize (med grid-snapping) og
- * slett direkte i den ekte siden inne i editorens iframe.
+ * The editing layer for preview mode: drag, resize (with grid snapping) and
+ * delete directly in the real page inside the editor's iframe.
  *
- * Lastes KUN i preview-modus (dynamisk import i urd.js) - besøkende
- * laster aldri denne filen. Endringer meldes til editoren, som eier
- * utkastet:
- *   side → editor: { type: 'urd-move',   sectionId, blockId, frame, frameKey }  (frameKey 'mobile': frame er en radnett-plassering, ADR-0019)
- *                  { type: 'urd-delete', sectionId, blockId | blockIds }  (blockIds: multiutvalg i ett angre-steg)
+ * Loaded ONLY in preview mode (dynamic import in urd.js) - visitors never
+ * load this file. Changes are reported to the editor, which owns the
+ * draft:
+ *   page → editor: { type: 'urd-move',   sectionId, blockId, frame, frameKey }  (frameKey 'mobile': frame is a row-grid placement, ADR-0019)
+ *                  { type: 'urd-delete', sectionId, blockId | blockIds }  (blockIds: multi-selection in one undo step)
  *                  { type: 'urd-add-section', index, section }
  *                  { type: 'urd-move-section', sectionId, dir }
  *                  { type: 'urd-delete-section', sectionId }
- *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: toppkant-håndtaket flytter alle blokkene i samme angre-steg)
- *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (nullstill mobiloverstyringer; uten blockId hele seksjonen)
- *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder }  (pil-flytting i mobil-leserekkefølgen)
- *                  { type: 'urd-review-done', sectionId }            (mobil gjennomgått)
+ *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: the top-edge handle moves all blocks in the same undo step)
+ *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (reset mobile overrides; without blockId, the whole section)
+ *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder }  (arrow move in the mobile reading order)
+ *                  { type: 'urd-review-done', sectionId }            (mobile reviewed)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
- *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (åpne blokkmenyen i editoren)
+ *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (open the block menu in the editor)
  */
 import { frameToCss, mobilePlacementToCss, reorderMobileKey } from './render.js';
 import { MOBILE_ROW } from './migrate.js';
@@ -36,24 +36,26 @@ import { topDrag } from './section-size.js';
 import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
 import { suspendSticky, resumeSticky } from './sticky.js';
 import { nearestDock } from './sticky-model.js';
-// Modulen lastes dynamisk av urd.js ETTER at admin-ordboka er lastet
-// (initAdminLocale), så ta() er trygg også på modulnivå her.
+// This module is loaded dynamically by urd.js AFTER the admin dictionary
+// is loaded (initAdminLocale), so ta() is safe even at module level here.
 import { ta, adminLang } from './i18n.js';
 
 /**
- * Innholdsflaten i en seksjon (ADR-0018). Blokkenes x/w er prosent AV
- * DENNE, ikke av seksjonen, så alt som regner om piksler til prosent (dra,
- * resize, piltaster, marquee, materialisering av mobil-frames) må måle her.
+ * The content surface of a section (ADR-0018). Block x/w are percentages OF
+ * THIS surface, not of the section, so everything that converts pixels to
+ * percent (drag, resize, arrow keys, marquee, materializing mobile frames)
+ * must measure here.
  *
- * Vi MÅLER flaten i stedet for å regne ut min()-uttrykket fra site.layout:
- * regner editoren selv, kan den komme til en annen bredde enn motoren, og
- * da flytter blokkene seg av seg selv. Fallback til seksjonen dekker eldre
- * DOM som ennå ikke er rerendret.
+ * We MEASURE the surface instead of computing the min() expression from
+ * site.layout: if the editor computes it itself, it can arrive at a
+ * different width than the engine, and then blocks drift by themselves.
+ * The fallback to the section covers older DOM not yet re-rendered.
  *
- * Seksjonens EGEN geometri (høyde, topp, bunn) leses fortsatt fra host:
- * bakgrunnen og seksjonshøyden er fullbredde og hører ikke til flaten.
+ * The section's OWN geometry (height, top, bottom) is still read from host:
+ * the background and section height are full-width and not part of the
+ * surface.
  *
- * @param {HTMLElement} host Seksjonselementet
+ * @param {HTMLElement} host The section element
  * @returns {HTMLElement}
  */
 function canvasOf(host) {
@@ -61,10 +63,10 @@ function canvasOf(host) {
 }
 
 /**
- * Nav-klaringen for seksjonen (0 utenom første seksjon under en meny
- * utenfor flyten, se base.css): avstanden innholdsflaten er skjøvet ned.
- * Måles som kanvasens forskyvning, så høyde-dragene kan regne i rene
- * innholdshøyder (samme tall som size.minHeight i dataene).
+ * The nav clearance for the section (0 except for the first section under
+ * an out-of-flow menu, see base.css): how far the content surface is pushed
+ * down. Measured as the canvas offset, so the height drags can work in pure
+ * content heights (the same numbers as size.minHeight in the data).
  */
 function sectionClearance(host) {
   const canvas = host.querySelector(':scope > .urd-canvas');
@@ -72,26 +74,26 @@ function sectionClearance(host) {
   return Math.max(0, Math.round(canvas.getBoundingClientRect().top - host.getBoundingClientRect().top));
 }
 
-/** Inline-minHeight med nav-klaringen, samme kalkyle som render.js skriver. */
+/** Inline minHeight including the nav clearance, the same calculation render.js writes. */
 function styleMinHeight(px) {
   return `calc(${px}px + var(--urd-section-clear, 0px))`;
 }
 
-/** Mobilvisning? Motoren setter body-klassen ut fra breakpointet. */
+/** Mobile view? The engine sets the body class from the breakpoint. */
 const isMobile = () => document.body.classList.contains('urd-mobile');
 
-/** Mal-utkastene fra editoren (urd-templates-meldingen): {id, name, kind, section?, blocks?}.
- *  Editoren eier listen; her vises den i Mine maler-fanen i «+ Ny seksjon». */
+/** The template drafts from the editor (the urd-templates message): {id, name, kind, section?, blocks?}.
+ *  The editor owns the list; here it feeds the My templates tab in "+ New section". */
 let maler = [];
 export function setTemplates(list) {
   maler = Array.isArray(list) ? list : [];
 }
 
-/** Kategorivalget i preset-galleriet huskes per økt (G2 kategori-sidefelt,
- *  eiervalg 9. august 2026; avløste segmentfanene fra variant C). */
+/** The category choice in the preset gallery is remembered per session
+ *  (category sidebar). */
 let presetCategory = 'alle';
 
-/** Oppsettenes visningsnavn (nøklene i kjernespråkene). */
+/** Display names for the layouts (keys in the core languages). */
 const LAYOUT_LABEL_KEYS = {
   'stack-center': 'canvas.layout.stackCenter',
   'stack-left': 'canvas.layout.stackLeft',
@@ -101,9 +103,9 @@ const LAYOUT_LABEL_KEYS = {
   'hero-top': 'canvas.layout.heroTop',
 };
 
-/** Ett oppsettskort per anvendelig variant: miniatyr fra seksjonens EGNE
- *  blokker med variantens rammer; klikk poster urd-apply-layout (ETT
- *  angre-steg i editoren) og kaller done(). */
+/** One layout card per applicable variant: a thumbnail from the section's
+ *  OWN blocks with the variant's frames; a click posts urd-apply-layout
+ *  (ONE undo step in the editor) and calls done(). */
 function buildLayoutCards(section, grid, done) {
   const cards = [];
   for (const id of applicableLayouts(section.blocks)) {
@@ -123,7 +125,7 @@ function buildLayoutCards(section, grid, done) {
       thumb.className = 'urd-layout-thumb';
       thumb.insertAdjacentHTML('afterbegin', presetThumb(clone));
       card.appendChild(thumb);
-    } catch { /* tekstvalg uten miniatyr */ }
+    } catch { /* text-only card without a thumbnail */ }
     const name = document.createElement('span');
     name.className = 'urd-layout-name';
     name.textContent = ta(LAYOUT_LABEL_KEYS[id] ?? id);
@@ -138,11 +140,12 @@ function buildLayoutCards(section, grid, done) {
 }
 
 /**
- * «Bytt oppsett»-velgeren (0.6.7): stripe over seksjonen (standard) eller
- * galleri-meny, etter den personlige preferansen i Urd-innstillingene
- * (urd-layout-picker i delt localStorage; leses ved hver åpning, så
- * byttet virker uten omlasting). Begge klistres til skjermen i seksjonen
- * og lukkes ved nytt knappeklikk, valg, klikk utenfor og Escape.
+ * The "Change layout" picker: a strip above the section (default) or a
+ * gallery menu, following the personal preference in the Urd settings
+ * (urd-layout-picker in shared localStorage; read on every open, so
+ * switching works without a reload). Both stick to the screen within the
+ * section and close on another button click, a choice, an outside click
+ * and Escape.
  */
 function toggleLayoutPicker(host, section, grid) {
   const existing = host.querySelector('.urd-layout-strip, .urd-layout-menu');
@@ -152,8 +155,9 @@ function toggleLayoutPicker(host, section, grid) {
   const asMenu = localStorage.getItem('urd-layout-picker') === 'menu';
   const picker = document.createElement('div');
   const outside = (event) => {
-    // Knappen selv toggler; uten unntaket ville capture-lytteren fjernet
-    // velgeren før klikket, og toggelen bygget den opp igjen.
+    // The button itself toggles; without this exception the capture
+    // listener would remove the picker before the click, and the toggle
+    // would rebuild it.
     if (picker.contains(event.target) || event.target.closest?.('.urd-layout-btn')) return;
     cleanup();
   };
@@ -195,24 +199,26 @@ function toggleLayoutPicker(host, section, grid) {
   }, 0);
 }
 
-/** Siste pekerposisjon på lerretet: slash-kommandoen åpner blokkmenyen der. */
+/** Last pointer position on the canvas: the slash command opens the block menu there. */
 let lastPointer = null;
 document.addEventListener('pointermove', (event) => {
   lastPointer = { x: event.clientX, y: event.clientY };
 }, { passive: true });
 
 /**
- * Åpne en seksjons + Ny blokk-meny, delt av dobbeltklikk og slash: med
- * punkt lander blokken der (_urdAt) og menyen står ved pekeren; uten
- * åpnes den fra chip-posisjonen. Søkefeltet nullstilles og fokuseres.
+ * Open a section's + New block menu, shared by double-click and slash: with
+ * a point, the block lands there (_urdAt) and the menu sits at the pointer;
+ * without one it opens from the chip position. The search field is reset
+ * and focused.
  */
 function openBlockMenuAt(host, clientX = null, clientY = null) {
   const wrap = host.querySelector('.urd-add-block');
   const menu = wrap?.querySelector('.urd-add-block-menu');
   if (!wrap || !menu) return;
   const rect = host.getBoundingClientRect();
-  // Blokkens landingspunkt er prosent av INNHOLDSFLATEN, mens menyen selv
-  // er et barn av seksjonen og plasseres mot den. To ulike rammer.
+  // The block's landing point is a percentage of the CONTENT SURFACE, while
+  // the menu itself is a child of the section and is positioned against it.
+  // Two different frames.
   const canvasRect = canvasOf(host).getBoundingClientRect();
   if (clientX != null) {
     menu._urdAt = {
@@ -222,8 +228,8 @@ function openBlockMenuAt(host, clientX = null, clientY = null) {
     wrap.style.left = `${Math.round(clientX - rect.left)}px`;
     wrap.style.top = `${Math.round(clientY - rect.top)}px`;
     wrap.style.right = 'auto';
-    // Ved pekeren vises menyen alene: chip-knappen skjules (CSS-en på
-    // .urd-at-pointer), så det ikke står en «+ Ny blokk» over menyen.
+    // At the pointer the menu appears alone: the chip button is hidden (the
+    // CSS on .urd-at-pointer), so no "+ New block" sits above the menu.
     wrap.classList.add('urd-at-pointer');
   } else {
     menu._urdAt = null;
@@ -233,9 +239,9 @@ function openBlockMenuAt(host, clientX = null, clientY = null) {
   menu.classList.add('open');
   menu._urdSearchFocus?.();
   if (clientX != null) {
-    // Menyen henger normalt mot venstre fra pekeren (right: 0). Nær
-    // venstre kant ville den gått ut av skjermen: da åpnes den mot
-    // høyre for pekeren i stedet.
+    // The menu normally hangs to the left of the pointer (right: 0). Near
+    // the left edge it would run off screen: there it opens to the right
+    // of the pointer instead.
     menu.style.left = '';
     menu.style.right = '';
     const menuWidth = menu.getBoundingClientRect().width;
@@ -246,7 +252,7 @@ function openBlockMenuAt(host, clientX = null, clientY = null) {
   }
 }
 
-/** Lukker åpne menyer (preset-galleri, blokkmeny). Kalles også via urd-close-menus når eieren klikker i admin-panelene, som iframens egne klikk-lyttere aldri ser. */
+/** Closes open menus (preset gallery, block menu). Also called via urd-close-menus when the owner clicks in the admin panels, which the iframe's own click listeners never see. */
 let collapseOpenPresetMenu = null;
 export function closeMenus() {
   collapseOpenPresetMenu?.();
@@ -261,25 +267,25 @@ export function closeMenus() {
 }
 
 /**
- * Kobler editeringshåndtak på alle blokkene i en rendret seksjon.
- * Kalles av render.js etter hver (re)rendering i preview-modus.
+ * Attaches editing handles to all blocks in a rendered section.
+ * Called by render.js after every (re)render in preview mode.
  *
- * @param {HTMLElement} host Seksjonselementet
- * @param {object} section Seksjonsdata
- * @param {{columns: number, rowHeight: number}} grid Effektivt grid
+ * @param {HTMLElement} host The section element
+ * @param {object} section Section data
+ * @param {{columns: number, rowHeight: number}} grid Effective grid
  */
 export function enhanceSection(host, section, grid) {
   for (const el of host.querySelectorAll('.urd-block')) {
     const block = section.blocks.find((b) => b.id === el.dataset.blockId);
     if (block) enhanceBlock(el, block, section, grid, host);
   }
-  // Markeringen skal overleve rerendringer (f.eks. endringer fra
-  // Egenskaper-panelet, som rerendrer hele seksjonen).
+  // The selection must survive re-renders (e.g. changes from the
+  // Properties panel, which re-renders the whole section).
   if (selectedBlockId) {
     host.querySelector(`.urd-block[data-block-id="${selectedBlockId}"]`)?.classList.add('urd-selected');
   }
-  // Multimarkeringen likeså (inkl. et nettopp innlimt utvalg, der
-  // id-ene ble satt FØR rerendringen fant elementene).
+  // Likewise the multi-selection (including a freshly pasted selection,
+  // where the ids were set BEFORE the re-render found the elements).
   if (multiIds.size && host.dataset.sectionId === multiSectionId) {
     for (const id of multiIds) {
       host.querySelector(`.urd-block[data-block-id="${CSS.escape(id)}"]`)?.classList.add('urd-multi-selected');
@@ -287,23 +293,24 @@ export function enhanceSection(host, section, grid) {
     updateMultiToolbar();
   }
   addSectionToolbar(host, section, grid);
-  // Strukturendring (seksjonshøyde) hører til desktopvisningen.
+  // Structural changes (section height) belong to the desktop view.
   if (!isMobile()) {
     addSectionHeightHandle(host, section, grid);
     addSectionTopHandle(host, section, grid);
     addBlockAdder(host, section, grid);
   }
-  // Vedvarende grid-visning (grid-menyen i editoren er åpen) skal
-  // overleve rerendringer av seksjonen.
+  // Persistent grid display (the grid menu in the editor is open) must
+  // survive re-renders of the section.
   if (gridOverlaysOn) showGridOverlay(host, grid).classList.add('urd-grid-persistent');
-  // Hjelpelinjene likeså (re-render fjerner overlegg-elementene).
+  // Likewise the guide lines (a re-render removes the overlay elements).
   if (guideOverlaysOn) addGuideOverlays(host);
 }
 
 /**
- * Plasserer en ny blokk fra editorens palett midt i brukerens synsfelt:
- * i den aktive seksjonen, ellers seksjonen nærmest midten av viewporten.
- * Iframen vet hvor brukeren har scrollet; det gjør ikke editoren.
+ * Places a new block from the editor's palette in the middle of the user's
+ * view: in the active section, otherwise the section closest to the middle
+ * of the viewport. The iframe knows where the user has scrolled; the
+ * editor does not.
  */
 export function placeBlock(block, root) {
   let host = root.querySelector('.urd-section-active');
@@ -328,27 +335,27 @@ export function placeBlock(block, root) {
   frame.x = Math.round(((100 - frame.w) / 2) * 100) / 100;
 
   post({ type: 'urd-add-block', sectionId: host.dataset.sectionId, block });
-  // Den nye blokken markeres med en gang (samme mønster som dupliser):
-  // rerendringen etter urd-add-block leser selectedBlockId, editoren
-  // følger etter via urd-select-block, og Ctrl+D/piltaster virker
-  // uten et ekstra klikk først (testfunn 23. juli 2026).
+  // The new block is selected immediately (same pattern as duplicate):
+  // the re-render after urd-add-block reads selectedBlockId, the editor
+  // follows via urd-select-block, and Ctrl+D/arrow keys work without an
+  // extra click first.
   document.querySelectorAll('.urd-block.urd-selected').forEach((b) => b.classList.remove('urd-selected'));
   selectedBlockId = block.id;
   post({ type: 'urd-select-block', sectionId: host.dataset.sectionId, blockId: block.id });
 }
 
 /**
- * Spiller en inngangsanimasjon på nytt (demo når editoren endrer den):
- * snapp tilbake til starttilstanden uten transition, og gli inn igjen.
- * Stagger-verter har effektklassene på BARNA (hvert med sin forskjøvne
- * delay), så der spilles hele gruppen på nytt (0.6.6.4.6-fiksen; før ga
- * stagger-endringer ingen visuell tilbakemelding).
+ * Replays an entrance animation (demo when the editor changes it): snap
+ * back to the start state without a transition, then glide in again.
+ * Stagger hosts have the effect classes on their CHILDREN (each with its
+ * own offset delay), so there the whole group is replayed.
  */
 export function demoAnimation(el) {
   if (!el) return;
   const ENTRANCE = ['urd-anim-fade-in', 'urd-anim-slide-up', 'urd-anim-zoom-in'];
-  // Bærer elementet en inngangsklasse selv, spilles det; ellers er det en
-  // gruppe-vert (stagger/kortvis) og de inngangsklassede etterkommerne spilles.
+  // If the element carries an entrance class itself, it is played; otherwise
+  // it is a group host (stagger/per-card) and the entrance-classed
+  // descendants are played.
   const targets = ENTRANCE.some((c) => el.classList.contains(c))
     ? [el]
     : [...el.querySelectorAll(ENTRANCE.map((c) => `.${c}`).join(', '))];
@@ -357,17 +364,17 @@ export function demoAnimation(el) {
     t.style.transition = 'none';
     t.classList.remove('urd-anim-in');
   }
-  void el.offsetWidth; // tving reflow så starttilstanden faktisk settes
+  void el.offsetWidth; // force a reflow so the start state actually applies
   for (const t of targets) t.style.transition = '';
   requestAnimationFrame(() => targets.forEach((t) => t.classList.add('urd-anim-in')));
 }
 
-/** Om vedvarende grid-visning er på (styrt av editorens grid-meny). */
+/** Whether persistent grid display is on (controlled by the editor's grid menu). */
 let gridOverlaysOn = false;
 
 /**
- * Slår grid-visning i alle seksjoner av/på. Brukes mens grid-menyen i
- * editoren er åpen, så innstillingsendringer ses umiddelbart.
+ * Toggles the grid display in all sections. Used while the grid menu in
+ * the editor is open, so setting changes are seen immediately.
  */
 export function toggleGridOverlays(visible, page, site) {
   gridOverlaysOn = visible;
@@ -380,15 +387,15 @@ export function toggleGridOverlays(visible, page, site) {
   }
 }
 
-/** Om hjelpelinjene er på (styrt av editorens topplinje-knapp). */
+/** Whether the guide lines are on (controlled by the editor's top bar button). */
 let guideOverlaysOn = false;
 
 /**
- * Alltid synlige hjelpelinjer for hele siden: sidens vertikale senter,
- * hver seksjons horisontale senter, og innholdsbredde-linjene på
- * 4 %/96 % (palettens og presetenes standardmarg). Stiplet, i motsetning
- * til de heltrukne smarte linjene som kun vises under dra. Kun editor-
- * chrome: skjules i Ren visning og finnes aldri hos besøkende.
+ * Always-visible guide lines for the whole page: the page's vertical
+ * center, each section's horizontal center, and the content-width lines at
+ * 4%/96% (the default margin of the palette and presets). Dashed, in
+ * contrast to the solid smart lines shown only during drag. Editor chrome
+ * only: hidden in Clean view and never present for visitors.
  */
 export function toggleGuideOverlays(visible) {
   guideOverlaysOn = visible;
@@ -411,20 +418,22 @@ function addGuideOverlays(host) {
 }
 
 /**
- * Felles høyde-dra: flytter seksjonens underkant (size.minHeight), snappet
- * til gridet. Brukes av håndtaket i seksjonens underkant OG av «+ Ny
- * seksjon»-baren (som ligger på samme grense). Lagres i px (rerender kan
- * fortsatt vokse seksjonen hvis blokkene trenger mer, se render.js).
+ * Shared height drag: moves the section's bottom edge (size.minHeight),
+ * snapped to the grid. Used by the handle at the section's bottom edge AND
+ * by the "+ New section" bar (which sits on the same boundary). Stored in
+ * px (a re-render can still grow the section if the blocks need more, see
+ * render.js).
  *
- * Draget starter først etter en liten terskel, slik at target også kan
- * være en klikkbar knapp; opts.onDragged kalles da (før knappens click),
- * så klikket kan undertrykkes.
+ * The drag only starts after a small threshold, so target can also be a
+ * clickable button; opts.onDragged is then called (before the button's
+ * click), so the click can be suppressed.
  */
 /**
- * Retningsvisende peker under seksjonshøyde-drag: pil ned når man drar
- * ned, pil opp når man drar opp (CSS-klassene i base.css overstyrer alt
- * med !important, siden pekeren ellers følger elementet under den).
- * Liten terskel mot dirring; retningen beholdes til den faktisk snur.
+ * Direction-indicating cursor during section height drags: arrow down when
+ * dragging down, arrow up when dragging up (the CSS classes in base.css
+ * override everything with !important, since the cursor otherwise follows
+ * the element beneath it). Small threshold against jitter; the direction
+ * is kept until it actually reverses.
  */
 function dragCursor() {
   let lastY = null;
@@ -452,8 +461,8 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
     event.preventDefault();
     target.setPointerCapture(event.pointerId);
     const startY = event.clientY;
-    // Klaringen holdes utenfor regnestykket: px er ren innholdshøyde,
-    // samme tall som lagres i size.minHeight.
+    // The clearance is kept out of the calculation: px is pure content
+    // height, the same number stored in size.minHeight.
     const startHeight = host.getBoundingClientRect().height - sectionClearance(host);
     const cursor = dragCursor();
     let px = startHeight;
@@ -464,7 +473,7 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
       moved = true;
       cursor.move(ev.clientY);
       px = Math.max(grid.size * 3, startHeight + (ev.clientY - startY));
-      // Piksel-presist når snap er av eller Shift holdes inne.
+      // Pixel-precise when snapping is off or Shift is held.
       const free = grid.snap === false || ev.shiftKey;
       px = free ? Math.round(px) : Math.round(px / grid.size) * grid.size;
       host.style.minHeight = styleMinHeight(px);
@@ -486,9 +495,9 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
 }
 
 /**
- * «+ Legg til blokk» nederst i seksjonen (vises ved hover): klikk åpner
- * en meny med alle blokktypene, og valget meldes til editoren, som
- * bygger blokken og legger den i akkurat denne seksjonen.
+ * "+ Add block" at the bottom of the section (shown on hover): a click
+ * opens a menu of all block kinds, and the choice is reported to the
+ * editor, which builds the block and puts it in this exact section.
  */
 const BLOCK_KINDS = [
   ['text', ta('blocks.text')], ['text-box', ta('ui.textBox')], ['button', ta('blocks.button')],
@@ -500,20 +509,19 @@ const BLOCK_KINDS = [
   ['checkout', ta('blocks.checkout')],
 ];
 
-/** Formene bor i sin egen utfoldbare undermeny («Former») i + Ny blokk. */
+/** The shapes live in their own expandable submenu ("Shapes") in + New block. */
 const SHAPE_KINDS = [
   ['shape-line', ta('shape.line')], ['shape-arrow', ta('shape.arrow')], ['shape-circle', ta('shape.circle')],
   ['shape-rect', ta('shape.rect')], ['shape-triangle', ta('shape.triangle')],
 ];
 
-/** Kjerneblokk-typene (paletten i editoren eier byggingen av disse). faq
- *  manglet her frem til 0.6.7.11 og lakk inn i Plugin-blokker-gruppen. */
+/** The core block types (the editor's palette owns building these). */
 const CORE_BLOCK_TYPES = new Set(['text', 'image', 'button', 'shape', 'video', 'icon', 'collection', 'gallery',
   'faq', 'timeline', 'quote', 'stats', 'table', 'share', 'countdown', 'audio', 'product', 'cart', 'checkout']);
 
 /**
- * Lukker en «+ Ny blokk»-meny og nullstiller dobbeltklikk-tilstanden:
- * chip-knappen tilbake i hjørnet, sideklemmingen av menyen fjernet.
+ * Closes a "+ New block" menu and resets the double-click state: the chip
+ * button back in the corner, the menu's edge clamping removed.
  */
 function resetBlockAdder(wrap) {
   wrap.classList.remove('urd-at-pointer');
@@ -528,8 +536,8 @@ function resetBlockAdder(wrap) {
   }
 }
 
-/** Klikk hvor som helst utenfor en åpen blokkmeny lukker den. Én
- *  document-lytter for hele siden, koblet første gang en meny bygges. */
+/** A click anywhere outside an open block menu closes it. One document
+ *  listener for the whole page, wired the first time a menu is built. */
 let blockMenuOutsideWired = false;
 function wireBlockMenuOutsideClose() {
   if (blockMenuOutsideWired) return;
@@ -553,14 +561,15 @@ function addBlockAdder(host, section, grid) {
 
   const menu = document.createElement('div');
   menu.className = 'urd-add-block-menu';
-  // Klikkpunktet (seksjonsrelativt: x i %, y i px) settes når menyen
-  // åpnes med DOBBELTKLIKK på seksjonsflaten; da lander blokken der.
-  // Åpnet fra knappen er punktet null, og editoren sentrerer som før.
+  // The click point (section-relative: x in %, y in px) is set when the
+  // menu opens via DOUBLE-CLICK on the section surface; the block then
+  // lands there. Opened from the button, the point is null and the editor
+  // centers the block.
   menu._urdAt = null;
 
-  // Blokk-søket (0.6.7, variant B: flat treffliste). Alt som legges i
-  // menyen registreres i searchables med sin synlige etikett og en run
-  // som klikker den EKTE knappen, så treff og meny aldri kan divergere.
+  // The block search (flat hit list). Everything added to the menu is
+  // registered in searchables with its visible label and a run that clicks
+  // the REAL button, so hits and menu can never diverge.
   const searchables = [];
   const searchWrap = document.createElement('div');
   searchWrap.className = 'urd-block-search';
@@ -599,8 +608,9 @@ function addBlockAdder(host, section, grid) {
   };
   searchInput.addEventListener('input', renderHits);
   searchInput.addEventListener('keydown', (event) => {
-    // Enter setter inn første treff (slash-flyten: «/», skriv, Enter);
-    // Escape lukker menyen. Stoppes så lerret-snarveiene aldri ser dem.
+    // Enter inserts the first hit (the slash flow: "/", type, Enter);
+    // Escape closes the menu. Stopped so the canvas shortcuts never see
+    // them.
     if (event.key === 'Enter') hits.querySelector('button')?.click();
     else if (event.key === 'Escape') resetBlockAdder(wrap);
     event.stopPropagation();
@@ -623,7 +633,7 @@ function addBlockAdder(host, section, grid) {
   };
   for (const [kind, label] of BLOCK_KINDS) kindButton(menu, kind, label);
 
-  // Formene i egen utfoldbar undermeny, så hovedmenyen holder seg kort.
+  // The shapes go in their own expandable submenu, keeping the main menu short.
   const shapesToggle = document.createElement('button');
   shapesToggle.className = 'urd-add-block-shapes-toggle';
   shapesToggle.textContent = `${ta('group.shapes')} ▾`;
@@ -635,8 +645,9 @@ function addBlockAdder(host, section, grid) {
     shapesToggle.textContent = `${ta('group.shapes')} ${open ? '▴' : '▾'}`;
   });
   menu.append(shapesToggle, shapes);
-  // Plugin-blokker: egen seksjon under det innebygde. Previewen har
-  // registrene (og dermed defaults), så blokken bygges her og sendes ferdig.
+  // Plugin blocks: their own section below the built-ins. The preview has
+  // the registries (and thus defaults), so the block is built here and sent
+  // complete.
   const pluginTypes = window.Urd.blocks.ids().filter((type) => !CORE_BLOCK_TYPES.has(type));
   if (pluginTypes.length) {
     const divider = document.createElement('div');
@@ -648,8 +659,8 @@ function addBlockAdder(host, section, grid) {
     const def = window.Urd.blocks.get(type);
     const title = typeof def.fromPlugin === 'string' ? ta('tip.blocks.fromPlugin', { plugin: def.fromPlugin }) : ta('tip.blocks.fromPluginGeneric');
     const buildAndPost = (extraProps = {}) => {
-      // Åpnet med dobbeltklikk: plugin-blokken lander på klikkpunktet
-      // (samme rene plassering som editoren bruker for kjerneblokkene).
+      // Opened via double-click: the plugin block lands on the click point
+      // (the same pure placement the editor uses for core blocks).
       const w = 50;
       const h = 260;
       const pos = menu._urdAt
@@ -669,7 +680,7 @@ function addBlockAdder(host, section, grid) {
       });
       resetBlockAdder(wrap);
     };
-    // Blokker med variants (f.eks. kalenderens visninger) får en foldemeny som Former.
+    // Blocks with variants (e.g. the calendar's views) get a fold-out menu like Shapes.
     const defLabel = def.labelKey ? ta(def.labelKey) : (def.label ?? type);
     if (Array.isArray(def.variants) && def.variants.length) {
       const toggle = document.createElement('button');
@@ -684,7 +695,7 @@ function addBlockAdder(host, section, grid) {
         b.textContent = variantLabel;
         b.addEventListener('click', () => buildAndPost(variant.props ?? {}));
         sub.appendChild(b);
-        // I trefflisten flates folden ut: «Kalender: Måned» som egen rad.
+        // In the hit list the fold is flattened: "Calendar: Month" as its own row.
         searchables.push({ label: `${defLabel}: ${variantLabel}`, run: () => b.click() });
       }
       toggle.addEventListener('click', () => {
@@ -701,9 +712,10 @@ function addBlockAdder(host, section, grid) {
     menu.appendChild(b);
     searchables.push({ label: defLabel, run: () => b.click() });
   }
-  // Mine maler (blokkgrupper, 0.6.7, snippets-modellen): lagrede grupper i
-  // SAMME meny som blokkene. Innholdet bygges ved hver åpning, så listen
-  // alltid er fersk (lagring/sletting skjer uten at seksjonen rerendres).
+  // My templates (block groups, the snippets model): saved groups in the
+  // SAME menu as the blocks. The content is built on every open, so the
+  // list is always fresh (saving/deleting happens without the section
+  // re-rendering).
   const templatesWrap = document.createElement('div');
   menu.appendChild(templatesWrap);
   menu._urdRefreshMaler = () => {
@@ -720,8 +732,9 @@ function addBlockAdder(host, section, grid) {
       b.textContent = mal.name;
       b.title = ta('canvas.insertGroup');
       b.addEventListener('click', () => {
-        // Dobbeltklikk-åpnet: gruppen lander med øvre venstre hjørne på
-        // klikkpunktet; ellers beholdes lagrede posisjoner (kun klem).
+        // Opened via double-click: the group lands with its top-left corner
+        // on the click point; otherwise the stored positions are kept
+        // (clamping only).
         insertBlocksTemplate(mal, section.id, menu._urdAt);
         resetBlockAdder(wrap);
       });
@@ -730,7 +743,7 @@ function addBlockAdder(host, section, grid) {
     }
   };
   openBtn.addEventListener('click', () => {
-    // Fra knappen: nullstill ev. dobbeltklikk-plassering av menyen.
+    // From the button: reset any double-click placement of the menu.
     const wasOpen = menu.classList.contains('open');
     menu._urdAt = null;
     resetBlockAdder(wrap);
@@ -741,16 +754,16 @@ function addBlockAdder(host, section, grid) {
       menu._urdSearchFocus?.();
     }
   });
-  // enhanceSection kjører etter HVER rerender på samme host-element: lytterne legges kun én gang og slår opp gjeldende meny ved hendelsen, ellers hoper det seg opp én lytter per rerender.
+  // enhanceSection runs after EVERY re-render on the same host element: the listeners are added only once and look up the current menu at event time, otherwise one listener piles up per re-render.
   if (!host._urdAdderLeaveWired) {
     host._urdAdderLeaveWired = true;
-    // Menyen lukkes IKKE når pekeren forlater seksjonen: den står til man
-    // klikker utenfor (outside-pointerdown) eller velger en blokk. Ingen
-    // mouseleave-lukking.
-    // Dobbeltklikk på tom seksjonsflate åpner menyen VED PEKEREN, og
-    // blokken lander på klikkpunktet (valgt adferd: «+ ny blokk der man
-    // klikker»). Aldri i blokker (dobbeltklikk er ordmarkering/bilde-
-    // editor der) eller på editeringshåndtak.
+    // The menu does NOT close when the pointer leaves the section: it stays
+    // until a click outside (outside-pointerdown) or a block is chosen.
+    // No mouseleave closing.
+    // Double-click on empty section surface opens the menu AT THE POINTER,
+    // and the block lands on the click point ("+ new block where you
+    // click"). Never inside blocks (double-click is word selection/image
+    // editor there) or on editing handles.
     host.addEventListener('dblclick', (event) => {
       if (isMobile()) return;
       const target = event.target instanceof Element ? event.target : null;
@@ -764,7 +777,7 @@ function addBlockAdder(host, section, grid) {
   host.appendChild(wrap);
 }
 
-/** Dra-håndtak i underkant av seksjonen: justerer size.minHeight. */
+/** Drag handle at the section's bottom edge: adjusts size.minHeight. */
 function addSectionHeightHandle(host, section, grid) {
   const handle = document.createElement('div');
   handle.className = 'urd-section-resize';
@@ -774,12 +787,13 @@ function addSectionHeightHandle(host, section, grid) {
 }
 
 /**
- * Dra-håndtak i TOPPKANTEN av seksjonen: gir/fjerner luft øverst.
- * Seksjonen vokser/krymper i toppen og alle blokkene forskyves
- * tilsvarende (topDrag i section-size.js), så innholdet står visuelt
- * stille - scrollposisjonen kompenseres med veksten. Naboseksjonene
- * røres aldri, og hele draget meldes som ETT urd-section-size med
- * moves (ett angre-steg i editoren). Bunnkant-håndtaket består.
+ * Drag handle at the TOP EDGE of the section: adds/removes space at the
+ * top. The section grows/shrinks at the top and all blocks are shifted
+ * accordingly (topDrag in section-size.js), so the content stands
+ * visually still - the scroll position is compensated by the growth.
+ * Neighboring sections are never touched, and the whole drag is reported
+ * as ONE urd-section-size with moves (one undo step in the editor). The
+ * bottom-edge handle remains.
  */
 function addSectionTopHandle(host, section, grid) {
   const handle = document.createElement('div');
@@ -791,11 +805,12 @@ function addSectionTopHandle(host, section, grid) {
     event.stopPropagation();
     handle.setPointerCapture(event.pointerId);
     const startY = event.clientY;
-    // Ren innholdshøyde (uten nav-klaringen), som i bunnkant-draget.
+    // Pure content height (without the nav clearance), as in the bottom-edge drag.
     const startHeight = host.getBoundingClientRect().height - sectionClearance(host);
     const startScrollY = window.scrollY;
-    // Blokk-elementene og utgangs-y samles ÉN gang: ingen rerender skjer
-    // under draget (elementbytte ville sluppet pekerfangsten).
+    // The block elements and starting y are collected ONCE: no re-render
+    // happens during the drag (an element swap would drop the pointer
+    // capture).
     const parts = [...canvasOf(host).querySelectorAll(':scope > .urd-block')].map((el) => {
       const block = section.blocks.find((b) => b.id === el.dataset.blockId);
       return block ? { el, block, y: block.frames.desktop.y } : null;
@@ -817,12 +832,13 @@ function addSectionTopHandle(host, section, grid) {
       });
       host.style.minHeight = styleMinHeight(result.minHeightPx);
       for (const p of parts) p.el.style.top = `${p.y + result.dy}px`;
-      // Innholdet skal stå visuelt stille: dokumentet under seksjons-
-      // toppen flytter seg result.dy, scrollen følger. Absolutt mot
-      // startverdien (aldri akkumulert scrollBy: det driver). Nær
-      // dokumenttoppen finnes ikke nok scroll å kompensere med, og
-      // innholdet glir synlig - akseptert kanttilfelle. Eksplisitt
-      // instant: kompensasjonen må aldri arve scroll-behavior: smooth.
+      // The content must stand visually still: the document below the
+      // section top moves by result.dy, and the scroll follows. Absolute
+      // against the start value (never accumulated scrollBy: that drifts).
+      // Near the document top there is not enough scroll to compensate
+      // with, and the content visibly slides - an accepted edge case.
+      // Explicitly instant: the compensation must never inherit
+      // scroll-behavior: smooth.
       window.scrollTo({ top: Math.max(0, startScrollY + result.dy), behavior: 'instant' });
     };
     const onUp = () => {
@@ -847,21 +863,22 @@ function addSectionTopHandle(host, section, grid) {
 }
 
 /**
- * Legger «+ Ny seksjon»-barer mellom (og rundt) seksjonene. Kalles av
- * render.js etter hver hele siderendering i preview-modus.
+ * Adds "+ New section" bars between (and around) the sections. Called by
+ * render.js after every full page render in preview mode.
  *
- * @param {HTMLElement} root Sidens rotelement
- * @param {object} page Sidedata (for antall seksjoner)
- * @param {object} site site.json (gridet for dra på seksjonsgrensen)
+ * @param {HTMLElement} root The page's root element
+ * @param {object} page Page data (for the section count)
+ * @param {object} site site.json (the grid for dragging on the section boundary)
  */
 export function enhancePage(root, page, site) {
   initTextToolbar();
   root.querySelectorAll('.urd-add-section').forEach((el) => el.remove());
-  // Mobilvisning er justering og tilsyn, ikke strukturbygging.
+  // The mobile view is for adjustment and review, not building structure.
   if (isMobile()) return;
   const hosts = [...root.querySelectorAll(':scope > .urd-section')];
-  // Baren ligger på grensen mellom to seksjoner: dra i den flytter
-  // grensen (= høyden på seksjonen OVER), akkurat som seksjonslinjen.
+  // The bar sits on the boundary between two sections: dragging it moves
+  // the boundary (= the height of the section ABOVE), just like the
+  // section line.
   const above = (i) => (i > 0 ? {
     host: hosts[i - 1],
     section: page.sections[i - 1],
@@ -871,8 +888,9 @@ export function enhancePage(root, page, site) {
   root.appendChild(makeSectionAdder(hosts.length, above(hosts.length)));
 }
 
-/** Baren med «+ Ny seksjon»; klikk viser preset-valgene fra registeret,
- *  dra flytter seksjonsgrensen (når det finnes en seksjon over). */
+/** The "+ New section" bar; a click shows the preset choices from the
+ *  registry, dragging moves the section boundary (when a section exists
+ *  above). */
 function makeSectionAdder(index, above = null) {
   const bar = document.createElement('div');
   bar.className = 'urd-add-section';
@@ -890,7 +908,7 @@ function makeSectionAdder(index, above = null) {
     wireHeightDrag(openBtn, above.host, above.section, above.grid, {
       onDragged: () => { dragged = true; },
     });
-    // Et fullført dra skal ikke også åpne preset-menyen.
+    // A completed drag must not also open the preset menu.
     openBtn.addEventListener('click', (e) => {
       if (dragged) {
         dragged = false;
@@ -902,19 +920,20 @@ function makeSectionAdder(index, above = null) {
     bar.classList.add('open');
     bar.replaceChildren();
 
-    // Preset-galleriet i kategori-sidefelt-formen (G2, eiervalg 9. august
-    // 2026): smalt kategorifelt til venstre (Alle, kjernegruppene, Plugins,
-    // Mine maler), rutenett med søk til høyre. Gruppene beholder registerets
-    // rekkefølge; presets uten group havner under «Annet».
+    // The preset gallery in category-sidebar form: a narrow category list
+    // on the left (All, the core groups, Plugins, My templates), a grid
+    // with search on the right. The groups keep the registry's order;
+    // presets without a group land under "Other".
     const menu = document.createElement('div');
     menu.className = 'urd-preset-menu';
-    // Den nederste grensen ligger ved sidens slutt, der iframen ikke har plass under: åpne galleriet oppover i stedet.
-    // På en tom side (kun én grense) finnes ingenting over, da åpnes det fortsatt nedover.
+    // The bottom boundary sits at the end of the page, where the iframe has no room below: open the gallery upward instead.
+    // On an empty page (only one boundary) there is nothing above, so it still opens downward.
     if (!bar.nextElementSibling && bar.previousElementSibling) menu.classList.add('urd-preset-up');
 
-    // Kildene samles ÉN gang ved åpning: kjernegruppene på group-STRENGEN
-    // (visningen via groupKey - plugin-kontrakten), plugin-presets og
-    // plugin-leverte maler (kind section, via re-id-regelen) i egen gruppe.
+    // The sources are collected ONCE at opening: core groups keyed by the
+    // group STRING (display via groupKey - the plugin contract), plugin
+    // presets and plugin-provided templates (kind section, via the re-id
+    // rule) in their own group.
     const groups = new Map();
     const pluginDefs = [];
     for (const id of window.Urd.sections.ids()) {
@@ -935,10 +954,10 @@ function makeSectionAdder(index, above = null) {
     if (pluginDefs.length) groups.set('__plugins', { labelKey: 'panel.plugins', defs: pluginDefs });
     const groupLabel = (name, labelKey) => (labelKey ? ta(labelKey) : (name || ta('canvas.groupOther')));
 
-    // Kategorifargene (F2, eiervalg 9. august 2026): hver gruppe får et fast
-    // fargesteg avledet av admin-aksenten i base.css (--urd-category-1..5, syklisk
-    // ved flere grupper); Mine maler har alltid steg 5. Fargen settes som
-    // --urd-kat på kort, overskrifter og kategoriknapper.
+    // The category colors: each group gets a fixed color step derived from
+    // the admin accent in base.css (--urd-category-1..5, cyclic with more
+    // groups); My templates always has step 5. The color is set as
+    // --urd-kat on cards, headings and category buttons.
     const TEMPLATE_CAT = 5;
     const katFor = new Map([...groups.keys()].map((name, i) => [name, (i % 5) + 1]));
     const setKat = (el, kat) => el.style.setProperty('--urd-kat', `var(--urd-category-${kat})`);
@@ -948,8 +967,9 @@ function makeSectionAdder(index, above = null) {
       return dot;
     };
 
-    // Kategorifeltet: Alle + gruppene + Mine maler (relevans-regelen: en tom
-    // plugin-gruppe finnes ikke i groups og får dermed ingen knapp).
+    // The category rail: All + the groups + My templates (the relevance
+    // rule: an empty plugin group does not exist in groups and therefore
+    // gets no button).
     const rail = document.createElement('div');
     rail.className = 'urd-preset-rail';
     const railTitle = document.createElement('span');
@@ -978,9 +998,9 @@ function makeSectionAdder(index, above = null) {
     main.append(top, content);
     menu.append(rail, main);
 
-    /** Preset-kort i rutenettet: miniatyr + navn, hintet som tooltip.
-     *  En kastende plugin-preset skal aldri velte menyen: tekstkort uten
-     *  skisse i stedet (samme vern som før). */
+    /** Preset card in the grid: thumbnail + name, the hint as a tooltip.
+     *  A throwing plugin preset must never topple the menu: a text card
+     *  without a sketch instead. */
     const buildCard = (def, kat) => {
       const choice = document.createElement('button');
       choice.type = 'button';
@@ -992,14 +1012,14 @@ function makeSectionAdder(index, above = null) {
         thumb.className = 'urd-preset-thumb';
         thumb.insertAdjacentHTML('afterbegin', presetThumb(def.create()));
         choice.appendChild(thumb);
-      } catch { /* tekstkort uten miniatyr */ }
+      } catch { /* text-only card without a thumbnail */ }
       const label = document.createElement('span');
       label.className = 'urd-preset-label';
       label.textContent = def.labelKey ? ta(def.labelKey) : def.label;
       choice.appendChild(label);
       choice.addEventListener('click', () => {
         post({ type: 'urd-add-section', index, section: def.create() });
-        // Rerenderingen fjerner menyen fra DOM: rydd document-lytteren nå i stedet for ved neste tilfeldige klikk.
+        // The re-render removes the menu from the DOM: clean up the document listener now instead of at the next stray click.
         cleanupOutside();
       });
       return choice;
@@ -1012,9 +1032,10 @@ function makeSectionAdder(index, above = null) {
       return grid;
     };
 
-    // Mine maler: rutenett med stor miniatyr, navn og sletteknapp.
-    // Innsetting går via cloneSectionForInsert (re-id-regelen i SKJEMA.md):
-    // nye id-er hver gang, så samme mal kan settes inn flere ganger.
+    // My templates: a grid with a large thumbnail, name and delete button.
+    // Insertion goes via cloneSectionForInsert (the re-id rule in
+    // SKJEMA.md): new ids every time, so the same template can be inserted
+    // multiple times.
     const renderTemplates = () => {
       const list = maler.filter((m) => m.kind === 'section' && m.section);
       if (!list.length) {
@@ -1037,7 +1058,7 @@ function makeSectionAdder(index, above = null) {
           thumb.className = 'urd-template-thumb';
           thumb.insertAdjacentHTML('afterbegin', presetThumb(mal.section));
           pick.appendChild(thumb);
-        } catch { /* tekstvalg uten miniatyr */ }
+        } catch { /* text-only card without a thumbnail */ }
         const nameEl = document.createElement('span');
         nameEl.className = 'urd-template-name';
         nameEl.textContent = mal.name;
@@ -1052,8 +1073,8 @@ function makeSectionAdder(index, above = null) {
         del.textContent = '×';
         del.title = ta('canvas.deleteTemplate');
         del.addEventListener('click', (event) => {
-          // Editoren eier bekreftelsen og slettingen; menyen lukkes så
-          // listen er fersk neste gang den åpnes.
+          // The editor owns the confirmation and deletion; the menu closes
+          // so the list is fresh the next time it opens.
           event.stopPropagation();
           post({ type: 'urd-delete-template', id: mal.id });
           cleanupOutside();
@@ -1066,8 +1087,8 @@ function makeSectionAdder(index, above = null) {
       content.appendChild(grid);
     };
 
-    // Søket går alltid på tvers av alle kategorier (flat, rangert treffliste
-    // som blokkmenyens, eiervalg 0.6.7.6) og matcher de synlige etikettene.
+    // The search always spans all categories (a flat, ranked hit list like
+    // the block menu's) and matches the visible labels.
     const searchables = [];
     for (const [name, { defs }] of groups) {
       for (const def of defs) searchables.push({ label: def.labelKey ? ta(def.labelKey) : def.label, def, kat: katFor.get(name) });
@@ -1098,7 +1119,7 @@ function makeSectionAdder(index, above = null) {
       for (const [name, { labelKey, defs }] of groups) {
         if (presetCategory !== 'alle' && presetCategory !== name) continue;
         const kat = katFor.get(name);
-        // Én valgt kategori trenger ingen overskrift over seg selv.
+        // A single chosen category needs no heading above itself.
         if (presetCategory === 'alle') {
           const heading = document.createElement('div');
           heading.className = 'urd-preset-group';
@@ -1110,8 +1131,8 @@ function makeSectionAdder(index, above = null) {
       }
     };
 
-    // Kategorknappene; valget huskes per økt. Aktivt søk vinner over
-    // kategorien til feltet tømmes.
+    // The category buttons; the choice is remembered per session. An
+    // active search wins over the category until the field is cleared.
     const railButtons = new Map();
     const addRailButton = (id, label, kat) => {
       const btn = document.createElement('button');
@@ -1139,7 +1160,7 @@ function makeSectionAdder(index, above = null) {
     };
     search.addEventListener('input', renderContent);
     search.addEventListener('keydown', (event) => {
-      // Enter setter inn første treff; Escape lukker (som blokkmenyen).
+      // Enter inserts the first hit; Escape closes (like the block menu).
       if (event.key === 'Enter') content.querySelector('.urd-preset-card, .urd-template-pick')?.click();
       if (event.key === 'Escape') {
         cleanupOutside();
@@ -1151,8 +1172,9 @@ function makeSectionAdder(index, above = null) {
     bar.appendChild(menu);
     search.focus();
 
-    // Klikk utenfor menyen lukker den, samme forventning som ellers i editoren.
-    // Listeneren ryddes ved lukking og ved preset-valg.
+    // A click outside the menu closes it, the same expectation as elsewhere
+    // in the editor. The listener is cleaned up on close and on preset
+    // choice.
     const outside = (event) => {
       if (!menu.contains(event.target)) {
         cleanupOutside();
@@ -1174,12 +1196,12 @@ function makeSectionAdder(index, above = null) {
 }
 
 /**
- * Formateringslinjen for tekstfelt (à la Squarespace): vises over BLOKKEN
- * så lenge et tekstfelt redigeres, med overskriftsnivå, fet/kursiv/
- * understrek, farger, lenke, justering, lister, sitat og fjern-formatering.
- * Kommandoene går via contenteditable (execCommand), som utløser
- * input-hendelsen i text.js - lagringen gjenbruker hele utkastflyten.
- * (Font og grunnstørrelse per felt bor i Egenskaper-panelet.)
+ * The formatting toolbar for text fields (Squarespace-style): shown above
+ * the BLOCK while a text field is being edited, with heading level,
+ * bold/italic/underline, colors, link, alignment, lists, quote and clear
+ * formatting. The commands go via contenteditable (execCommand), which
+ * fires the input event in text.js - saving reuses the whole draft flow.
+ * (Font and base size per field live in the Properties panel.)
  */
 let textToolbarReady = false;
 
@@ -1189,9 +1211,10 @@ function initTextToolbar() {
 
   const bar = document.createElement('div');
   bar.className = 'urd-text-toolbar';
-  // Klikk i linjen skal ikke flytte fokus ut av tekstfeltet. Unntak: select
-  // og input MÅ få mousedown, ellers åpner ikke nivåvelgeren seg og
-  // lenkefeltet kan ikke klikkes i; fokusvekslingen deres håndteres eksplisitt.
+  // Clicks in the toolbar must not move focus out of the text field.
+  // Exception: select and input MUST receive mousedown, otherwise the
+  // level picker will not open and the link field cannot be clicked; their
+  // focus switching is handled explicitly.
   bar.addEventListener('mousedown', (event) => {
     if (event.target instanceof Element && event.target.closest('select, input')) return;
     event.preventDefault();
@@ -1199,7 +1222,7 @@ function initTextToolbar() {
 
   const exec = (name, value = null) => document.execCommand(name, false, value);
 
-  // Fargevelger og lenkefelt flytter fokus/markering: markeringen lagres før og gjenopprettes ved bruk.
+  // The color picker and link field move focus/selection: the selection is saved beforehand and restored on use.
   let savedRange = null;
   const saveSelection = () => {
     const sel = document.getSelection();
@@ -1212,15 +1235,16 @@ function initTextToolbar() {
     sel.addRange(savedRange);
   };
 
-  /** Grupper som radbrytes SAMLET, så ingen enslig knapp havner på egen linje. */
+  /** Groups that wrap AS A WHOLE, so no lone button ends up on its own line. */
   let group = null;
   const startGroup = (host) => {
     group = document.createElement('span');
     group.className = 'urd-tt-group';
     host.appendChild(group);
   };
-  // Knapper med en execCommand-tilstand (fet, justering, lister ...) merkes
-  // aktive når markøren står i formatet. cmd = queryCommandState-navnet.
+  // Buttons with an execCommand state (bold, alignment, lists ...) are
+  // marked active when the caret sits in the format. cmd = the
+  // queryCommandState name.
   const stateButtons = [];
   const btn = (html, title, run, cmd) => {
     const b = document.createElement('button');
@@ -1232,20 +1256,21 @@ function initTextToolbar() {
     return b;
   };
 
-  // To FASTE rader (Office/Word-stil): rad 1 = struktur + størrelse, rad 2 =
-  // tegnformatering + avsnitt. De utvidbare underradene (farger, avstand,
-  // tegn, lenke) legges under begge.
+  // Two FIXED rows (Office/Word style): row 1 = structure + size, row 2 =
+  // character formatting + paragraph. The expandable subrows (colors,
+  // spacing, glyphs, link) go below both.
   const row1 = document.createElement('div');
   row1.className = 'urd-tt-row';
   const row2 = document.createElement('div');
   row2.className = 'urd-tt-row';
   bar.append(row1, row2);
 
-  // --- Sentinel-normalisering: én teknikk for alle inline-stiler på
-  // MARKERINGEN (størrelse, font, bokstavavstand). execCommand('fontName')
-  // gjør range-kirurgien (splitter delvis markerte tekstnoder, går over
-  // flere avsnitt); etterpå byttes markørene ut med rene span-er. styleWithCSS
-  // røres aldri, så themeify (font[color]) består. ---
+  // --- Sentinel normalization: one technique for all inline styles on the
+  // SELECTION (size, font, letter spacing). execCommand('fontName') does
+  // the range surgery (splits partially selected text nodes, spans
+  // multiple paragraphs); afterwards the markers are swapped for clean
+  // spans. styleWithCSS is never touched, so themeify (font[color])
+  // survives. ---
   const SENTINEL = 'urd-marker';
 
   const unwrap = (el) => {
@@ -1254,8 +1279,8 @@ function initTextToolbar() {
     while (el.firstChild) parent.insertBefore(el.firstChild, el);
     parent.removeChild(el);
   };
-  // Markørene: font[face] (standard uten styleWithCSS) ELLER en span med
-  // font-family satt til sentinelen (enkelte nettlesere, f.eks. Firefox).
+  // The markers: font[face] (the default without styleWithCSS) OR a span
+  // with font-family set to the sentinel (some browsers, e.g. Firefox).
   const collectMarkers = () => {
     const out = [...activeText.querySelectorAll(`font[face="${SENTINEL}"]`)];
     for (const el of activeText.querySelectorAll('span[style]')) {
@@ -1263,8 +1288,8 @@ function initTextToolbar() {
     }
     return out;
   };
-  // Fjern samme prop fra etterkommere (så den ytterste span-en vinner), og
-  // rydd tomme span-er.
+  // Remove the same prop from descendants (so the outermost span wins),
+  // and clean up empty spans.
   const stripDescendantProp = (root, prop) => {
     for (const el of [...root.querySelectorAll('[style]')]) {
       if (!el.style[prop]) continue;
@@ -1283,8 +1308,8 @@ function initTextToolbar() {
     sel.removeAllRanges();
     sel.addRange(range);
   };
-  // Kollapset markør: utvid til ordet skrivemarkøren står i (som Word), aldri
-  // med et usynlig tegn i lagret HTML.
+  // Collapsed caret: expand to the word the caret sits in (like Word),
+  // never with an invisible character in the stored HTML.
   const expandToWord = () => {
     const sel = document.getSelection();
     if (!sel || !sel.rangeCount || !sel.isCollapsed) return;
@@ -1303,7 +1328,7 @@ function initTextToolbar() {
     sel.removeAllRanges();
     sel.addRange(r);
   };
-  // Sett en fast inline-verdi (value null/'' = fjern stilen, «Arv») på markeringen.
+  // Set a fixed inline value (value null/'' = remove the style, "Inherit") on the selection.
   const applyInlineStyle = (prop, value) => {
     if (!activeText) return;
     expandToWord();
@@ -1328,9 +1353,10 @@ function initTextToolbar() {
     reselect(made);
     activeText.dispatchEvent(new Event('input', { bubbles: true }));
   };
-  // Størrelse per run (A-opp/A-ned og ±1px): hver tekst-run steppes ut fra
-  // SIN egen beregnede størrelse, så blandede markeringer beholdes. Går rett
-  // på tekstnodene (ikke via fontName-markør, som slår naborun-er sammen).
+  // Size per run (A-up/A-down and ±1px): each text run is stepped from ITS
+  // own computed size, so mixed selections are preserved. Works directly
+  // on the text nodes (not via a fontName marker, which merges neighboring
+  // runs).
   const applySizeStep = (read) => {
     if (!activeText) return;
     expandToWord();
@@ -1338,7 +1364,7 @@ function initTextToolbar() {
     if (!sel || !sel.rangeCount) return;
     const range = sel.getRangeAt(0);
     if (range.collapsed) return;
-    // Del tekstnodene ved markeringsgrensene, så runene aligner på noder.
+    // Split the text nodes at the selection boundaries, so the runs align on nodes.
     if (range.startContainer.nodeType === 3 && range.startOffset > 0) {
       const after = range.startContainer.splitText(range.startOffset);
       range.setStart(after, 0);
@@ -1359,8 +1385,8 @@ function initTextToolbar() {
     for (const tn of runs) {
       const parent = tn.parentElement;
       const next = read(parseFloat(getComputedStyle(parent).fontSize));
-      // Er runen HELE innholdet i en størrelse-span? Oppdater den på stedet,
-      // så gjentatt stepping ikke stabler nye span-er.
+      // Is the run the ENTIRE content of a size span? Update it in place,
+      // so repeated stepping does not stack new spans.
       if (parent.tagName === 'SPAN' && parent.childNodes.length === 1 && parent.style.fontSize) {
         parent.style.fontSize = `${next}px`;
         made.push(parent);
@@ -1376,8 +1402,8 @@ function initTextToolbar() {
     activeText.dispatchEvent(new Event('input', { bubbles: true }));
   };
 
-  // Blokk-nivå-operasjoner (linjeavstand, innrykk): påvirker avsnittene i
-  // markeringen, ikke enkeltord.
+  // Block-level operations (line height, indent): affect the paragraphs in
+  // the selection, not individual words.
   const BLOCK_SEL = 'p,h1,h2,h3,h4,h5,h6,li,blockquote,div';
   const blocksInRange = () => {
     const sel = document.getSelection();
@@ -1386,7 +1412,7 @@ function initTextToolbar() {
     const leaf = (list) => list.filter((el) => !list.some((o) => o !== el && el.contains(o)));
     let hits = leaf([...activeText.querySelectorAll(BLOCK_SEL)].filter((el) => range.intersectsNode(el)));
     if (!hits.length) {
-      // Bare tekstnoder rett i feltet: normaliser til ett avsnitt først.
+      // Only bare text nodes directly in the field: normalize to one paragraph first.
       exec('formatBlock', 'p');
       hits = leaf([...activeText.querySelectorAll(BLOCK_SEL)].filter((el) => range.intersectsNode(el)));
     }
@@ -1403,7 +1429,7 @@ function initTextToolbar() {
   const applyIndent = (dir) => {
     if (!activeText) return;
     const hits = blocksInRange();
-    // Rene lister: la nettleseren lage/rive nivåer (riktig ul-nesting).
+    // Pure lists: let the browser create/tear down levels (correct ul nesting).
     if (hits.length && hits.every((el) => el.tagName === 'LI')) {
       exec(dir > 0 ? 'indent' : 'outdent');
       return;
@@ -1416,9 +1442,10 @@ function initTextToolbar() {
     activeText.dispatchEvent(new Event('input', { bubbles: true }));
   };
 
-  // ---------------- RAD 1: struktur og størrelse ----------------
-  // Overskriftsnivå: temastyrt nedtrekk (ADR-0009: aldri native select i
-  // redigerings-UI). Nedtrekket stjeler ikke fokus, så markeringen står.
+  // ---------------- ROW 1: structure and size ----------------
+  // Heading level: a themed dropdown (ADR-0009: never a native select in
+  // editing UI). The dropdown does not steal focus, so the selection
+  // remains.
   startGroup(row1);
   const level = createDropdown({
     value: 'p',
@@ -1428,8 +1455,9 @@ function initTextToolbar() {
   });
   group.appendChild(level.el);
 
-  // Font for MARKERINGEN (ikke hele feltet; feltets font bor i Egenskaper).
-  // «Arv fra tema» fjerner font-family fra markeringen.
+  // Font for the SELECTION (not the whole field; the field's font lives in
+  // Properties). "Inherit from theme" removes font-family from the
+  // selection.
   const fontDd = createDropdown({
     value: '',
     title: ta('tt.fontTitle'),
@@ -1438,8 +1466,9 @@ function initTextToolbar() {
   });
   group.appendChild(fontDd.el);
 
-  // Størrelse for MARKERINGEN: tallfelt med minus/pluss (±1px). Feltet stjeler
-  // fokus, så markeringen lagres/gjenopprettes (linkRow-mønsteret).
+  // Size for the SELECTION: a number field with minus/plus (±1px). The
+  // field steals focus, so the selection is saved/restored (the linkRow
+  // pattern).
   const MINUS_SVG = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 6h7"/></svg>';
   const PLUS_SVG = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 2.5v7M2.5 6h7"/></svg>';
 
@@ -1461,8 +1490,8 @@ function initTextToolbar() {
     sizeInput.value = String(px);
     applyInlineStyle('fontSize', `${px}px`);
   };
-  // Lagre markeringen FØR fokus flyttes til feltet (på pointerdown står den
-  // ennå i teksten; ved focus kan den være borte).
+  // Save the selection BEFORE focus moves to the field (at pointerdown it
+  // is still in the text; by focus it may be gone).
   sizeInput.addEventListener('pointerdown', saveSelection);
   sizeInput.addEventListener('change', () => { applySizeFromField(); reposition(); });
   sizeInput.addEventListener('keydown', (event) => {
@@ -1471,7 +1500,7 @@ function initTextToolbar() {
   group.appendChild(sizeInput);
   btn(PLUS_SVG, ta('tt.sizePlus'), () => applySizeStep((cur) => stepSize(cur, 1)));
 
-  // ---------------- RAD 2: tegnformatering og avsnitt ----------------
+  // ---------------- ROW 2: character formatting and paragraph ----------------
   startGroup(row2);
   btn(`<b>${ta('format.boldLetter')}</b>`, ta('tt.bold'), () => exec('bold'), 'bold');
   btn(`<i>${ta('format.italicLetter')}</i>`, ta('tt.italic'), () => exec('italic'), 'italic');
@@ -1480,8 +1509,9 @@ function initTextToolbar() {
   btn('<span class="urd-tt-supsub">A<sup>2</sup></span>', ta('tt.superscript'), () => exec('superscript'), 'superscript');
   btn('<span class="urd-tt-supsub">A<sub>2</sub></span>', ta('tt.subscript'), () => exec('subscript'), 'subscript');
 
-  // Farger: samlet i en nedtrekksrad (palettikonet er nedtrekksknappen),
-  // så hovedlinjen holder seg smal. Selve raden bygges lenger ned (colorRow).
+  // Colors: collected in a dropdown row (the palette icon is the dropdown
+  // button), keeping the main toolbar narrow. The row itself is built
+  // further down (colorRow).
   startGroup(row2);
   const PALETTE_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="9" r="1" fill="currentColor"/><circle cx="15.5" cy="9" r="1" fill="currentColor"/><circle cx="8.5" cy="15" r="1" fill="currentColor"/><path d="M21 12a9 9 0 0 1-9 9c2.5-2 1-4.5 3-5.5s6 .5 6-3.5z"/></svg>';
   btn(PALETTE_SVG, ta('tt.colors'), () => toggleColorRow());
@@ -1493,7 +1523,7 @@ function initTextToolbar() {
   btn(alignIcon('center'), ta('tt.alignCenter'), () => exec('justifyCenter'), 'justifyCenter');
   btn(alignIcon('right'), ta('tt.alignRight'), () => exec('justifyRight'), 'justifyRight');
   btn(alignIcon('justify'), ta('tt.alignJustify'), () => exec('justifyFull'), 'justifyFull');
-  // Linje- og bokstavavstand: egen nedtrekksrad bak avstandsknappen.
+  // Line and letter spacing: their own dropdown row behind the spacing button.
   const SPACING_SVG = '<svg width="16" height="14" viewBox="0 0 16 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2.5v9M1.2 4.2 3 2.4l1.8 1.8M1.2 9.8 3 11.6l1.8-1.8M7.5 3.5h7.5M7.5 7h7.5M7.5 10.5h7.5"/></svg>';
   btn(SPACING_SVG, ta('tt.spacing'), () => toggleSpacingRow());
 
@@ -1509,15 +1539,16 @@ function initTextToolbar() {
 
   startGroup(row2);
   const QUOTE_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5C3.8 5 2 6.8 2 9s1.8 4 4 4c.3 0 .5 0 .8-.1C6.2 14.8 5 16.4 3.4 17.4l1.2 1.8C8 17 10 13.7 10 10.2 10 7.2 8.3 5 6 5z"/><path d="M17 5c-2.2 0-4 1.8-4 4s1.8 4 4 4c.3 0 .5 0 .8-.1-.6 1.9-1.8 3.5-3.4 4.5l1.2 1.8C19 17 21 13.7 21 10.2 21 7.2 19.3 5 17 5z"/></svg>';
-  // Sitat er en av/på-bryter: står markøren i et sitat, gjøres det til avsnitt igjen.
+  // Quote is a toggle: if the caret sits in a quote, it becomes a paragraph again.
   const quoteBtn = btn(QUOTE_SVG, ta('tt.quote'), () => {
     let inQuote = false;
     try { inQuote = (document.queryCommandValue('formatBlock') || '').toLowerCase() === 'blockquote'; } catch { /* noop */ }
     exec('formatBlock', inQuote ? 'p' : 'blockquote');
   });
-  // Tegnmenyen: samme utvalg som ikon-blokkens tegnvelger (delt modul i
-  // glyphs.js), satt inn ved markøren. Knappen er et tegnet smilefjes
-  // (aldri emoji i editor-chrome); selve tegnene er innhold.
+  // The glyph menu: the same selection as the icon block's glyph picker
+  // (shared module in glyphs.js), inserted at the caret. The button is a
+  // drawn smiley (never emoji in editor chrome); the glyphs themselves are
+  // content.
   const GLYPH_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9.5" x2="9" y2="9.5"/><line x1="15" y1="9.5" x2="15" y2="9.5"/><path d="M8.5 14.5c.8 1.2 2 2 3.5 2s2.7-.8 3.5-2"/></svg>';
   btn(GLYPH_SVG, ta('tt.glyphs'), () => toggleGlyphRow());
 
@@ -1529,7 +1560,7 @@ function initTextToolbar() {
     exec('removeFormat');
     exec('unlink');
     exec('formatBlock', 'p');
-    // removeFormat rører ikke blokk-nivå-stil: nullstill også avsnittene.
+    // removeFormat does not touch block-level style: reset the paragraphs too.
     for (const el of blocksInRange()) {
       el.style.lineHeight = '';
       el.style.marginLeft = '';
@@ -1537,7 +1568,7 @@ function initTextToolbar() {
     }
   });
 
-  // Inline lenkefelt (moderne flyt, ingen prompt): åpnes av lenkeknappen på egen rad i linjen.
+  // Inline link field (modern flow, no prompt): opened by the link button on its own row in the toolbar.
   const linkRow = document.createElement('div');
   linkRow.className = 'urd-tt-linkrow';
   const linkInput = document.createElement('input');
@@ -1552,7 +1583,7 @@ function initTextToolbar() {
 
   const applyLink = () => {
     const trimmed = linkInput.value.trim();
-    // Kun vanlige lenkeformer: aktive URL-skjemaer skal aldri bli klikkbare hos besøkende.
+    // Only ordinary link forms: active URL schemes must never become clickable for visitors.
     if (/^(javascript|data|vbscript):/i.test(trimmed)) return;
     restoreSelection();
     if (trimmed) exec('createLink', trimmed);
@@ -1579,7 +1610,7 @@ function initTextToolbar() {
     glyphRow.classList.remove('vis');
     spacingRow.classList.remove('vis');
     saveSelection();
-    // Forhåndsutfyll med eksisterende lenke når markøren står i en.
+    // Prefill with the existing link when the caret sits in one.
     const sel = document.getSelection();
     const anchorEl = sel?.anchorNode instanceof HTMLElement ? sel.anchorNode : sel?.anchorNode?.parentElement;
     linkInput.value = anchorEl?.closest('a')?.getAttribute('href') ?? '';
@@ -1587,10 +1618,11 @@ function initTextToolbar() {
     linkInput.focus();
   }
 
-  // Temafarge-kommandoene: execCommand kan bare skrive en FAST farge; etterpå
-  // byttes den til var(--urd-color-<token>) i feltet, så innholdet følger
-  // temabytter. execCommand normaliserer farger ulikt (hex/rgb), så matchingen
-  // skjer på rgb-form. Egne farger forblir frikoblet hex, med vilje.
+  // The theme color commands: execCommand can only write a FIXED color;
+  // afterwards it is swapped for var(--urd-color-<token>) in the field, so
+  // the content follows theme switches. execCommand normalizes colors
+  // differently (hex/rgb), so matching happens in rgb form. Custom colors
+  // deliberately remain detached hex.
   const normColor = (value) => {
     if (!value) return '';
     const v = String(value).trim().toLowerCase();
@@ -1616,12 +1648,13 @@ function initTextToolbar() {
         el.style[styleProp] = `var(--urd-color-${token})`;
       }
     }
-    // Byttet skjer utenfor execCommand: meld input selv, så utkastet lagres.
+    // The swap happens outside execCommand: dispatch input ourselves, so the draft is saved.
     activeText.dispatchEvent(new Event('input', { bubbles: true }));
   };
 
-  // Fargeraden (nedtrekket bak palettikonet): temafarger og egen tekstfarge,
-  // så utheving med aksent/egen farge og fjern utheving.
+  // The color row (the dropdown behind the palette icon): theme colors and
+  // custom text color, then highlighting with accent/custom color and
+  // remove highlight.
   const colorRow = document.createElement('div');
   colorRow.className = 'urd-tt-colorrow';
   bar.insertBefore(colorRow, linkRow);
@@ -1633,14 +1666,14 @@ function initTextToolbar() {
     colorRow.appendChild(b);
     return b;
   };
-  // Fargemenyen lukkes IKKE ved valg (så man kan prøve flere farger); den
-  // lukkes bare når hele linjen forsvinner, en annen underrad åpnes, eller
-  // palettikonet trykkes igjen (toggleColorRow).
+  // The color menu does NOT close on choice (so several colors can be
+  // tried); it only closes when the whole toolbar disappears, another
+  // subrow opens, or the palette icon is pressed again (toggleColorRow).
   //
-  // Den delte fargevelgeren melder onpick LIVE ved hvert valg. Etter hvert
-  // execCommand endres DOM-en, så en fast lagret Range blir ugjyldig. Derfor
-  // fornyes markeringen etter HVER påføring (saveSelection), slik at neste
-  // live-kall treffer samme tekst - den universelle koblings-fiksen.
+  // The shared color picker reports onpick LIVE on every choice. Each
+  // execCommand changes the DOM, so a fixed stored Range becomes invalid.
+  // The selection is therefore renewed after EVERY application
+  // (saveSelection), so the next live call hits the same text.
   const pickInto = (apply) => (hex) => {
     restoreSelection();
     apply(hex);
@@ -1689,12 +1722,12 @@ function initTextToolbar() {
     colorRow.classList.toggle('vis');
   }
 
-  // Tegnraden (bak smilefjes-knappen): «Nylige» + kategoriene fra den
-  // delte tegnmodulen, i et rullbart rutenett. Tegnet settes inn ved
-  // markøren via insertText, som utløser input-hendelsen i text.js -
-  // lagringen gjenbruker utkastflyten. Raden bygges først når den åpnes
-  // (flere hundre knapper); nylig-listen deles med admin-velgeren via
-  // samme localStorage-nøkkel.
+  // The glyph row (behind the smiley button): "Recent" + the categories
+  // from the shared glyph module, in a scrollable grid. The glyph is
+  // inserted at the caret via insertText, which fires the input event in
+  // text.js - saving reuses the draft flow. The row is built only when it
+  // opens (several hundred buttons); the recent list is shared with the
+  // admin picker via the same localStorage key.
   const glyphRow = document.createElement('div');
   glyphRow.className = 'urd-tt-glyphrow';
   bar.insertBefore(glyphRow, linkRow);
@@ -1758,10 +1791,10 @@ function initTextToolbar() {
     reposition();
   }
 
-  // Avstandsraden (bak avstandsknappen): linjeavstand-presetene og
-  // bokstavavstand for MARKERINGEN. Linjeavstand gjelder avsnittene i
-  // markeringen, bokstavavstand gjelder tegnene. Alt er additivt inline;
-  // «Arv» fjerner overstyringen.
+  // The spacing row (behind the spacing button): the line-height presets
+  // and letter spacing for the SELECTION. Line height applies to the
+  // paragraphs in the selection, letter spacing to the characters.
+  // Everything is additive inline; "Inherit" removes the override.
   const spacingRow = document.createElement('div');
   spacingRow.className = 'urd-tt-spacerow';
   bar.insertBefore(spacingRow, linkRow);
@@ -1814,13 +1847,14 @@ function initTextToolbar() {
 
   document.body.appendChild(bar);
 
-  // Linjen vises så lenge et tekstfelt har fokus, forankret ved MARKERINGEN
-  // (blokk-rekten som fallback), klemt under sidens klistrede meny.
+  // The toolbar is shown while a text field has focus, anchored at the
+  // SELECTION (the block rect as fallback), clamped below the page's
+  // sticky menu.
   let activeText = null;
-  // Blokk-id-en til det aktive feltet: prop-endringer (typografiraden,
-  // Egenskaper-panelet) re-rendrer seksjonen og bytter ut elementet, så
-  // linjen finner det igjen via id-en. Nulles ved bevisst lukking, ellers
-  // ville linjen aldri slippe taket.
+  // The block id of the active field: prop changes (the typography row,
+  // the Properties panel) re-render the section and swap out the element,
+  // so the toolbar finds it again via the id. Cleared on deliberate close,
+  // otherwise the toolbar would never let go.
   let activeBlockId = null;
 
   const reposition = () => {
@@ -1835,9 +1869,9 @@ function initTextToolbar() {
       spacingRow.classList.remove('vis');
       return;
     }
-    // Linjen forankres alltid ved TOPPEN av tekstfeltet (blokken), ikke ved
-    // markøren, så den står i ro mens man skriver. En ugyldig rekt (blokken
-    // ikke lagt ut ennå) skal ikke flytte linjen.
+    // The toolbar is always anchored at the TOP of the text field (the
+    // block), not at the caret, so it stays put while typing. An invalid
+    // rect (the block not laid out yet) must not move the toolbar.
     const block = activeText.closest('.urd-block') ?? activeText;
     const anchor = block.getBoundingClientRect();
     if (!anchor || (!anchor.width && !anchor.height)) return;
@@ -1845,19 +1879,20 @@ function initTextToolbar() {
     const navHeight = document.getElementById('urd-nav')?.offsetHeight ?? 0;
     const left = Math.max(8, Math.min(anchor.left, window.innerWidth - bar.offsetWidth - 8));
     let top = anchor.top - bar.offsetHeight - 10;
-    // Over blokken; men aldri under den klistrede menyen (da klemmes den rett
-    // under menyen, fortsatt nær toppen av feltet).
+    // Above the block; but never under the sticky menu (then it is clamped
+    // right below the menu, still near the top of the field).
     if (top < navHeight + 8) top = navHeight + 8;
     bar.style.left = `${left}px`;
     bar.style.top = `${top}px`;
-    // Nivåvelgeren og sitatknappen speiler markørens plassering.
+    // The level picker and quote button mirror the caret's position.
     try {
       const value = (document.queryCommandValue('formatBlock') || 'p').toLowerCase();
       level.set(['h1', 'h2', 'h3'].includes(value) ? value : 'p');
       quoteBtn.classList.toggle('active', value === 'blockquote');
-    } catch { /* enkelte nettlesere nekter før første kommando */ }
-    // Formatknappene (fet, kursiv, justering, lister, hevet/senket) merkes
-    // aktive når markøren står i formatet.
+    } catch { /* some browsers refuse before the first command */ }
+    // The format buttons (bold, italic, alignment, lists,
+    // superscript/subscript) are marked active when the caret sits in the
+    // format.
     for (const [b, cmd] of stateButtons) {
       let on = false;
       try { on = document.queryCommandState(cmd); } catch { /* noop */ }
@@ -1866,8 +1901,9 @@ function initTextToolbar() {
     syncTypoControls();
   };
 
-  // Størrelsesfeltet og font-nedtrekket speiler markeringen. Kjøres fra
-  // reposition (selectionchange), aldri mens brukeren skriver i selve feltet.
+  // The size field and font dropdown mirror the selection. Run from
+  // reposition (selectionchange), never while the user is typing in the
+  // field itself.
   let lastFontSet = '';
   const styledAncestor = (node) => {
     let el = node?.nodeType === 3 ? node.parentElement : node;
@@ -1877,14 +1913,15 @@ function initTextToolbar() {
     const sel = document.getSelection();
     if (!sel || !sel.rangeCount) return null;
     const range = sel.getRangeAt(0);
-    // Kollapset markør: størrelsen der markøren står.
+    // Collapsed caret: the size where the caret sits.
     if (range.collapsed) {
       const el = styledAncestor(range.startContainer);
       return el ? Math.round(parseFloat(getComputedStyle(el).fontSize)) : null;
     }
-    // Ellers: mål faktisk størrelse på hver MARKERT tekst-run. Vi går på
-    // tekstnodene, ikke selection-endepunktene, fordi de kan peke på en
-    // container (etter reselect med setStartBefore) og gi feltets basestørrelse.
+    // Otherwise: measure the actual size of every SELECTED text run. We
+    // walk the text nodes, not the selection endpoints, because those can
+    // point at a container (after reselect with setStartBefore) and yield
+    // the field's base size.
     const sizes = new Set();
     const walker = document.createTreeWalker(activeText, NodeFilter.SHOW_TEXT);
     let n;
@@ -1894,7 +1931,7 @@ function initTextToolbar() {
       }
     }
     if (sizes.size === 0) return null;
-    return sizes.size === 1 ? [...sizes][0] : null; // blandet -> tomt
+    return sizes.size === 1 ? [...sizes][0] : null; // mixed -> empty
   };
   const selectionFamily = () => {
     let el = styledAncestor(document.getSelection()?.anchorNode);
@@ -1930,13 +1967,13 @@ function initTextToolbar() {
     if (target) reposition();
   });
   document.addEventListener('focusout', () => {
-    // Vent et blunk: fokus kan være på vei til selve linjen (eller lenkefeltet).
+    // Wait a beat: focus may be on its way to the toolbar itself (or the link field).
     requestAnimationFrame(() => {
       const el = document.activeElement;
       if (el instanceof HTMLElement && (bar.contains(el) || el.closest('.urd-text[contenteditable="true"]'))) return;
-      // Ble feltet BYTTET UT av en re-render (typografi-/panelendring),
-      // ikke forlatt av brukeren? Da gjenoppkobler reposition via
-      // blokk-id-en i stedet for å lukke linjen.
+      // Was the field SWAPPED OUT by a re-render (typography/panel
+      // change), not abandoned by the user? Then reposition reconnects
+      // via the block id instead of closing the toolbar.
       if (activeText && !activeText.isConnected && activeBlockId) {
         reposition();
         return;
@@ -1946,10 +1983,11 @@ function initTextToolbar() {
       reposition();
     });
   });
-  // Klikk hvor som helst utenfor feltet lukker linjen. Flate-draget i preview
-  // sluker mousedown (preventDefault), så tekstfeltet mister aldri fokus av seg
-  // selv; derfor lukkes det eksplisitt her. Klikk i linjen, fargevelgeren,
-  // bildeeditoren eller et annet tekstfelt skal IKKE lukke (de håndterer selv).
+  // A click anywhere outside the field closes the toolbar. The surface
+  // drag in preview swallows mousedown (preventDefault), so the text field
+  // never loses focus by itself; it is therefore closed explicitly here.
+  // Clicks in the toolbar, the color picker, the image editor or another
+  // text field must NOT close it (they handle themselves).
   document.addEventListener('pointerdown', (event) => {
     if (!activeText) return;
     const target = event.target instanceof Element ? event.target : null;
@@ -1962,8 +2000,8 @@ function initTextToolbar() {
     reposition();
   }, true);
   document.addEventListener('selectionchange', () => {
-    // Kun når markeringen faktisk står i det aktive feltet; ellers ville
-    // klikk andre steder pånytt-posisjonert linjen ut av kontekst.
+    // Only when the selection actually sits in the active field; otherwise
+    // clicks elsewhere would reposition the toolbar out of context.
     const sel = document.getSelection();
     if (activeText && sel?.anchorNode && activeText.contains(sel.anchorNode)) reposition();
   });
@@ -1971,8 +2009,8 @@ function initTextToolbar() {
   window.addEventListener('resize', () => { if (activeText) reposition(); });
 }
 
-/** Verktøylinje øverst til høyre i seksjonen. Desktop: flytt opp/ned,
- *  tilpass høyde, slett. Mobil: gjennomgått (✓) og tilbake til auto (↺). */
+/** Toolbar at the section's top right. Desktop: move up/down, fit height,
+ *  delete. Mobile: reviewed (✓) and back to auto (↺). */
 function addSectionToolbar(host, section, grid) {
   const bar = document.createElement('div');
   bar.className = 'urd-section-toolbar';
@@ -1988,11 +2026,11 @@ function addSectionToolbar(host, section, grid) {
   if (isMobile()) {
     const attention = section.responsive?.mobile?.attention;
     if (attention?.needed) {
-      // Tilsynskortet: HVA skjedde (oversatt reason) og NÅR (relativ
-      // tid), med gjennomgått-knappen ved siden av.
+      // The attention card: WHAT happened (translated reason) and WHEN
+      // (relative time), with the reviewed button beside it.
       host.appendChild(buildAttentionCard(host, section, attention));
     }
-    // Nullstilling vises kun når seksjonen faktisk har mobiloverstyringer.
+    // Reset is shown only when the section actually has mobile overrides.
     if (section.blocks.some((b) => b.frames?.mobile)) {
       const reset = document.createElement('button');
       reset.innerHTML = RESET_SVG;
@@ -2000,8 +2038,9 @@ function addSectionToolbar(host, section, grid) {
       armConfirm(reset, () => post({ type: 'urd-mobile-reset', sectionId: section.id }));
       bar.appendChild(reset);
     }
-    // Skjulte blokker er ellers usynlige i mobilvisning: chipen gjør dem
-    // gjenoppdagbare, med en øye-knapp per blokk som viser den igjen.
+    // Hidden blocks are otherwise invisible in the mobile view: the chip
+    // makes them rediscoverable, with an eye button per block that shows
+    // it again.
     const hidden = section.blocks.filter((b) => b.hideMobile);
     if (hidden.length) {
       const chip = document.createElement('button');
@@ -2016,23 +2055,24 @@ function addSectionToolbar(host, section, grid) {
       bar.appendChild(chip);
     }
   } else {
-    // Utvidbare presets: «+ kort/rad/person»-knapp som legger til NESTE element i seksjonen.
-    // Fabrikken (def.item) bor i preset-definisjonen; seksjonen forblir en generisk container.
+    // Extensible presets: a "+ card/row/person" button that adds the NEXT item to the section.
+    // The factory (def.item) lives in the preset definition; the section remains a generic container.
     const def = section.preset ? window.Urd.sections.get(section.preset) : null;
     if (def?.item) {
       const itemLabel = def.itemLabelKey ? ta(def.itemLabelKey) : (def.itemLabel ?? ta('canvas.itemFallback'));
       mk(`+ ${itemLabel}`, ta('canvas.addItemTitle', { label: itemLabel }), (event) => {
-        // Deaktiver til seksjonen rerendres: et dobbeltklikk før rundturen ville lagt to element i samme rute.
+        // Disable until the section re-renders: a double-click before the round trip would put two items in the same slot.
         event.target.disabled = true;
         const next = def.item(section);
         post({ type: 'urd-add-blocks', sectionId: section.id, blocks: next.blocks, minBottom: next.bottom, moves: next.moves ?? [] });
-        // Marker og rull til det nye elementet etter rerenderingen: en ny TOM ramme er identisk
-        // med naboene sine, så uten dette ser klikket dødt ut (reelt funn i testrundene).
+        // Select and scroll to the new item after the re-render: a new
+        // EMPTY frame is identical to its neighbors, so without this the
+        // click looks dead.
         setTimeout(() => {
           const el = document.querySelector(`.urd-block[data-block-id="${next.blocks[0].id}"]`);
           if (!el) return;
           selectBlock(el);
-          // 'nearest' i stedet for 'center': minimal flytting, så pluss-knappen forblir i synsfeltet ved gjentatte tillegg.
+          // 'nearest' instead of 'center': minimal movement, so the plus button stays in view during repeated additions.
           el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }, 150);
       });
@@ -2047,8 +2087,8 @@ function addSectionToolbar(host, section, grid) {
       host.style.minHeight = styleMinHeight(px);
       post({ type: 'urd-section-size', sectionId: section.id, minHeight });
     });
-    // «Bytt oppsett» (0.6.7): kun når seksjonen har noe å bytte på
-    // (relevans-regelen: minst to bevegelige blokker).
+    // "Change layout": only when the section has something to change
+    // (the relevance rule: at least two movable blocks).
     if (applicableLayouts(section.blocks).length) {
       const layoutBtn = document.createElement('button');
       layoutBtn.className = 'urd-layout-btn';
@@ -2057,8 +2097,8 @@ function addSectionToolbar(host, section, grid) {
       layoutBtn.addEventListener('click', () => toggleLayoutPicker(host, section, grid));
       bar.appendChild(layoutBtn);
     }
-    // «Lagre som mal» (0.6.7): navnløst snapshot til editoren, som navngir
-    // og lagrer utkastet. Re-id skjer først ved innsetting, aldri her.
+    // "Save as template": a nameless snapshot to the editor, which names
+    // and stores the draft. Re-id happens only at insertion, never here.
     const save = document.createElement('button');
     save.className = 'urd-save-template';
     save.title = ta('canvas.saveTemplate');
@@ -2076,9 +2116,9 @@ function addSectionToolbar(host, section, grid) {
 }
 
 /**
- * To-klikks bekreftelse på en destruktiv knapp: første klikk væpner den
- * (rød, «Sikker?»), andre klikk utfører. Klikk utenfor eller Escape
- * avvæpner. Lytterne ryddes i alle utganger.
+ * Two-click confirmation on a destructive button: the first click arms it
+ * (red, "Sure?"), the second click executes. A click outside or Escape
+ * disarms. The listeners are cleaned up on every exit.
  */
 function armConfirm(btn, onConfirm) {
   const label = btn.innerHTML;
@@ -2111,7 +2151,7 @@ function armConfirm(btn, onConfirm) {
   });
 }
 
-/** Relativ tid for tilsynskortet, i adminspråket («for 2 timer siden»). */
+/** Relative time for the attention card, in the admin language ("2 hours ago"). */
 function relativeTime(iso) {
   const then = Date.parse(iso);
   if (!Number.isFinite(then)) return '';
@@ -2128,10 +2168,10 @@ function relativeTime(iso) {
 }
 
 /**
- * Tilsynskortet i mobilvisning: hva som skjedde på skrivebordet (oversatt
- * attention.reason), når (relativ tid fra attention.since), og
- * gjennomgått-knappen. reason-tokens uten oversettelse (f.eks. fra en
- * nyere motor) faller til fellesteksten.
+ * The attention card in the mobile view: what happened on desktop
+ * (translated attention.reason), when (relative time from
+ * attention.since), and the reviewed button. reason tokens without a
+ * translation (e.g. from a newer engine) fall back to the generic text.
  */
 function buildAttentionCard(host, section, attention) {
   const card = document.createElement('div');
@@ -2166,8 +2206,8 @@ function buildAttentionCard(host, section, attention) {
 }
 
 /**
- * Lista over blokker som er skjult på mobil (chipen i seksjonens
- * verktøylinje): typeetikett + øye-knapp som viser blokken igjen.
+ * The list of blocks hidden on mobile (the chip in the section toolbar):
+ * a type label + an eye button that shows the block again.
  */
 function buildHiddenList(section, hidden) {
   const EYE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/></svg>';
@@ -2192,17 +2232,19 @@ function buildHiddenList(section, hidden) {
   return list;
 }
 
-// Tegnede ikoner for mobilknappene (ADR-0009: aldri tegn/emoji i chrome):
-// nullstill (pil mot urviseren), pil opp/ned (rekkefølge) og hake.
+// Drawn icons for the mobile buttons (ADR-0009: never glyphs/emoji in
+// chrome): reset (counterclockwise arrow), arrow up/down (order) and a
+// check mark.
 const RESET_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4v6h6"/><path d="M3.5 13a8.5 8.5 0 1 0 2-5.5L3 10"/></svg>';
 const ORDER_UP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V4"/><path d="M5 11l7-7 7 7"/></svg>';
 const ORDER_DOWN_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M5 13l7 7 7-7"/></svg>';
 const CHECK_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 7"/></svg>';
 
 /**
- * Radindeksen (1-basert) ved en y-avstand fra radnettets innholdstopp.
- * Sporlista er de FAKTISKE radhøydene (grodde spor er høyere enn
- * MOBILE_ROW); forbi siste spor fortsetter nettet i MOBILE_ROW-steg.
+ * The row index (1-based) at a y offset from the row grid's content top.
+ * The track list holds the ACTUAL row heights (grown tracks are taller
+ * than MOBILE_ROW); past the last track the grid continues in MOBILE_ROW
+ * steps.
  */
 function rowAtOffset(tracks, y) {
   let sum = 0;
@@ -2217,9 +2259,9 @@ function post(msg) {
   window.parent?.postMessage(msg, location.origin);
 }
 
-// Ctrl+Z / Ctrl+Shift+Z inne i iframen videresendes til editoren, som eier
-// historikken - MED MINDRE fokus står i redigerbar tekst (der skal
-// nettleserens egen tekst-angring gjelde; urd-edit holder utkastet i synk).
+// Ctrl+Z / Ctrl+Shift+Z inside the iframe is forwarded to the editor,
+// which owns the history - UNLESS focus sits in editable text (there the
+// browser's own text undo applies; urd-edit keeps the draft in sync).
 window.addEventListener('keydown', (event) => {
   if (!(event.ctrlKey || event.metaKey)) return;
   const key = event.key.toLowerCase();
@@ -2230,22 +2272,23 @@ window.addEventListener('keydown', (event) => {
   post({ type: 'urd-undo', redo: key === 'y' || event.shiftKey });
 });
 
-// Markering: klikk på en blokk gir den varig fokus (håndtakene holder seg
-// synlige, se base.css). Klikk utenfor alle blokker avvelger. Markeringen
-// overlever rerender via id-en.
+// Selection: clicking a block gives it lasting focus (the handles stay
+// visible, see base.css). Clicking outside all blocks deselects. The
+// selection survives re-renders via the id.
 let selectedBlockId = null;
 
 /**
- * Multimarkering: et utvalg av blokker i ÉN seksjon (id-er + seksjonen
- * de bor i). selectedBlockId er alltid primærblokken i utvalget.
- * Utvalget bygges med shift-klikk eller marquee (dra på tom flate),
- * og behandles som én enhet ved dra, piltaster, sletting og Ctrl+C/D/V.
+ * Multi-selection: a set of blocks in ONE section (ids + the section they
+ * live in). selectedBlockId is always the primary block of the set. The
+ * set is built with shift-click or marquee (dragging on empty surface),
+ * and is treated as one unit for drag, arrow keys, deletion and
+ * Ctrl+C/D/V.
  */
 let multiIds = new Set();
 let multiSectionId = null;
 
-/** Utklippstavlen for Ctrl+C/V: blokk-JSON + kildeseksjonen. Lever i
- *  previewens modultilstand, så den nullstilles ved sidebytte. */
+/** The clipboard for Ctrl+C/V: block JSON + the source section. Lives in
+ *  the preview's module state, so it resets on page switch. */
 let clipboard = null;
 
 function selectedEls() {
@@ -2270,20 +2313,20 @@ function clearMulti() {
   applyMultiClasses();
 }
 
-/** Shift-klikk: legg til/fjern blokken i utvalget (innenfor én seksjon). */
+/** Shift-click: add/remove the block in the set (within one section). */
 function toggleMulti(el) {
   const id = el.dataset.blockId;
   const sec = el.closest('.urd-section')?.dataset.sectionId ?? null;
   if (multiSectionId && multiSectionId !== sec) clearMulti();
   multiSectionId = sec;
-  // Utgangspunktet er den allerede markerte blokken (samme seksjon).
+  // The starting point is the already selected block (same section).
   if (!multiIds.size && selectedBlockId && selectedBlockId !== id) {
     const cur = document.querySelector(`.urd-block[data-block-id="${CSS.escape(selectedBlockId)}"]`);
     if (cur?.closest('.urd-section')?.dataset.sectionId === sec) multiIds.add(selectedBlockId);
   }
   if (multiIds.has(id)) {
     multiIds.delete(id);
-    // Primærblokken forblir en som fortsatt er med i utvalget.
+    // The primary block remains one still part of the set.
     const rest = selectedEls();
     selectBlock(rest[0] ?? null, { keepMulti: true });
   } else {
@@ -2311,11 +2354,11 @@ function selectBlock(el, opts = {}) {
   }
 }
 
-// Intern navigasjon i preview går via editoren (som bytter side og holder
-// nedtrekket i synk); eksterne lenker åpnes i ny fane i stedet for å dra
-// iframen ut av redigeringsmodus. Lenker INNE i blokker (knapper, bilder,
-// tekstlenker) utløses aldri i redigering: klikket markerer blokken, og
-// lenken testes via «Se siden».
+// Internal navigation in preview goes via the editor (which switches page
+// and keeps the dropdown in sync); external links open in a new tab
+// instead of pulling the iframe out of editing mode. Links INSIDE blocks
+// (buttons, images, text links) never trigger while editing: the click
+// selects the block, and the link is tested via "View page".
 document.addEventListener('click', (event) => {
   const a = event.target instanceof HTMLElement ? event.target.closest('a[href]') : null;
   if (!a) return;
@@ -2334,17 +2377,17 @@ document.addEventListener('click', (event) => {
   }
 });
 
-// Tastatur på markert blokk/utvalg: piltaster flytter (grid-steg;
-// Shift = 1 px), Delete sletter, Esc avmarkerer, Ctrl+C/V kopierer og
-// limer inn med bevart oppsett, Ctrl+D dupliserer. Aldri når fokus står
-// i tekst/felt, og flytting gjelder desktopvisningen.
+// Keyboard on a selected block/set: arrow keys move (grid steps;
+// Shift = 1 px), Delete deletes, Esc deselects, Ctrl+C/V copies and
+// pastes with the layout preserved, Ctrl+D duplicates. Never when focus
+// sits in text/fields, and moving applies to the desktop view.
 window.addEventListener('keydown', (event) => {
   const target = event.target;
   if (target instanceof HTMLElement
     && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
   const ctrl = event.ctrlKey || event.metaKey;
 
-  // Ctrl+V trenger ingen markering: lim inn der den aktive seksjonen er.
+  // Ctrl+V needs no selection: paste where the active section is.
   if (ctrl && event.key.toLowerCase() === 'v') {
     if (isMobile() || !clipboard) return;
     event.preventDefault();
@@ -2352,9 +2395,9 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
-  // Utvalgs-sletting trenger ikke enkeltblokk-anker (marquee kan stå
-  // uten et etter gruppe-operasjoner). Sletting er strukturarbeid og
-  // hører til desktopvisningen, som de andre snarveiene.
+  // Set deletion needs no single-block anchor (a marquee can be left
+  // without one after group operations). Deletion is structural work and
+  // belongs to the desktop view, like the other shortcuts.
   if ((event.key === 'Delete' || event.key === 'Backspace') && multiIds.size > 1) {
     if (isMobile()) return;
     event.preventDefault();
@@ -2362,9 +2405,10 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
-  // Slash-kommando (0.6.7): «/» åpner + Ny blokk-menyen med søkefeltet
-  // fokusert, i den aktive seksjonen (ellers seksjonen under pekeren);
-  // står pekeren i seksjonen, lander blokken på pekerpunktet.
+  // Slash command: "/" opens the + New block menu with the search field
+  // focused, in the active section (otherwise the section under the
+  // pointer); if the pointer sits in the section, the block lands at the
+  // pointer point.
   if (event.key === '/' && !ctrl && !event.altKey) {
     if (isMobile() || document.body.classList.contains('urd-chrome-off')) return;
     const active = document.querySelector('.urd-section-active');
@@ -2424,10 +2468,10 @@ window.addEventListener('keydown', (event) => {
   const r1 = (v) => Math.round(v * 10) / 10;
 
   if (multiIds.size > 1) {
-    // Hele utvalget flyttes med samme delta, klemt så gruppen holder
-    // seg innenfor bredden; en skur av trykk blir ett angre-steg.
-    // Aksen som IKKE flyttes røres aldri (avrunding av en urørt x/y
-    // ville etterlatt en usynlig endring som holdt utkastet skittent).
+    // The whole set moves by the same delta, clamped so the group stays
+    // within the width; a burst of presses becomes one undo step.
+    // The axis NOT being moved is never touched (rounding an untouched
+    // x/y would leave an invisible change keeping the draft dirty).
     const parts = selectedEls().map((e) => ({ el: e, ctx: e._urdCtx })).filter((p) => p.ctx);
     const d = dir[0] ? groupDelta(parts.map((p) => p.ctx.block.frames.desktop), r1(dir[0] * stepPx * pctPerPx), 0) : { dx: 0 };
     suspendSticky();
@@ -2451,19 +2495,19 @@ window.addEventListener('keydown', (event) => {
   suspendSticky();
   Object.assign(el.style, frameToCss(frame));
   resumeSticky();
-  // coalesce: en skur av piltastetrykk blir ett angre-steg.
+  // coalesce: a burst of arrow-key presses becomes one undo step.
   post({ type: 'urd-move', sectionId: ctx.section.id, blockId: selectedBlockId, frame, frameKey: 'desktop', coalesce: true });
 });
 
-// Aktiv seksjon: paletten i editoren legger nye blokker i den sist klikkede
-// seksjonen, markert med en aksentlinje i venstre kant.
+// Active section: the editor's palette puts new blocks in the last
+// clicked section, marked with an accent line at the left edge.
 //
-// markActiveVisual setter KUN klassen (palett-hintet). markActive poster i
-// tillegg urd-select-section, som får editoren til å vise SEKSJONENS
-// egenskaper - det skal kun skje når man klikker den bare seksjonsflaten,
-// aldri når man rører en blokk eller et blokk-håndtak (da bærer blokkens
-// eget urd-select-block seksjonskonteksten, og Egenskaper skal bli på
-// blokken).
+// markActiveVisual sets ONLY the class (the palette hint). markActive
+// additionally posts urd-select-section, which makes the editor show the
+// SECTION's properties - that must only happen when the bare section
+// surface is clicked, never when a block or a block handle is touched
+// (then the block's own urd-select-block carries the section context, and
+// Properties stays on the block).
 function markActiveVisual(host) {
   document.querySelectorAll('.urd-section-active').forEach((s) => {
     if (s !== host) s.classList.remove('urd-section-active');
@@ -2477,28 +2521,29 @@ function markActive(host) {
 
 document.addEventListener('pointerdown', (event) => {
   const target = event.target instanceof HTMLElement ? event.target : null;
-  // Klikk i multi-verktøylinjen skal aldri endre utvalget den virker på.
+  // Clicks in the multi toolbar must never change the set it acts on.
   if (target?.closest('.urd-multi-toolbar')) return;
   const blockEl = target?.closest('.urd-block') ?? null;
   if (blockEl && event.shiftKey && !isMobile()) {
     toggleMulti(blockEl);
   } else if (blockEl && multiIds.size > 1 && multiIds.has(blockEl.dataset.blockId)) {
-    // Klikk på et medlem beholder utvalget (gruppe-dra), men gjør
-    // blokken til primær.
+    // Clicking a member keeps the set (group drag), but makes the block
+    // primary.
     selectBlock(blockEl, { keepMulti: true });
   } else {
     selectBlock(blockEl);
   }
-  // Klikk på en blokk skal ikke poste seksjonsvalg (Egenskaper blir på
-  // blokken); kun den bare seksjonsflaten bytter til seksjonens egenskaper.
+  // Clicking a block must not post a section choice (Properties stays on
+  // the block); only the bare section surface switches to the section's
+  // properties.
   const host = target?.closest('.urd-section');
   if (blockEl) markActiveVisual(host);
   else markActive(host);
 });
 
-// Marquee: dra på tom seksjonsflate tegner en markeringsramme, og alle
-// blokker den overlapper blir utvalget (klikk uten dra forblir klikk;
-// utvalget avgrenses til seksjonen draget startet i).
+// Marquee: dragging on empty section surface draws a selection frame, and
+// every block it overlaps becomes the set (a click without a drag remains
+// a click; the set is limited to the section the drag started in).
 document.addEventListener('pointerdown', (event) => {
   if (event.button !== 0 || event.shiftKey || isMobile()) return;
   if (document.body.classList.contains('urd-chrome-off')) return;
@@ -2507,9 +2552,10 @@ document.addEventListener('pointerdown', (event) => {
   if (!host) return;
   if (target.closest('.urd-block, .urd-add-block, .urd-add-section, .urd-section-toolbar, .urd-section-resize, .urd-section-resize-top, .urd-hint-chip, .urd-hint-card, .urd-multi-toolbar, .urd-text-toolbar')) return;
 
-  // Marquee-rektangelet og treffdeteksjonen måles mot innholdsflaten:
-  // blokkenes offsetLeft/offsetTop er relative til den (den er deres
-  // offsetParent), så begge sider av sammenligningen må ha samme ramme.
+  // The marquee rectangle and hit detection are measured against the
+  // content surface: the blocks' offsetLeft/offsetTop are relative to it
+  // (it is their offsetParent), so both sides of the comparison must
+  // share the same frame.
   const canvas = canvasOf(host);
   const startRect = canvas.getBoundingClientRect();
   const start = { x: event.clientX - startRect.left, y: event.clientY - startRect.top };
@@ -2570,10 +2616,10 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
-/* ---------- Multimarkering: verktøylinje, kopier/lim inn ---------- */
+/* ---------- Multi-selection: toolbar, copy/paste ---------- */
 
-/** Sletter hele utvalget som ETT angre-steg (delt av Delete-tasten og
- *  verktøylinjens slett-knapp). */
+/** Deletes the whole set as ONE undo step (shared by the Delete key and
+ *  the toolbar's delete button). */
 function deleteSelection() {
   const ctx = selectedEls()[0]?._urdCtx;
   const sectionId = multiSectionId ?? ctx?.section?.id;
@@ -2582,13 +2628,13 @@ function deleteSelection() {
   selectBlock(null);
 }
 
-/** Flytende verktøylinje over utvalget: juster/fordel + antall. */
+/** Floating toolbar above the set: align/distribute + count. */
 let multiBar = null;
 
 function buildMultiBar() {
   multiBar = document.createElement('div');
   multiBar.className = 'urd-multi-toolbar';
-  // Klikk i linjen skal ikke boble til dokumentets markeringslytter.
+  // Clicks in the toolbar must not bubble to the document's selection listener.
   multiBar.addEventListener('pointerdown', (event) => event.stopPropagation());
 
   const count = document.createElement('span');
@@ -2614,19 +2660,19 @@ function buildMultiBar() {
   const distH = btn(svg('<path d="M3 3v18M21 3v18"/><rect x="7" y="9" width="3" height="6"/><rect x="14" y="9" width="3" height="6"/>'), ta('canvas.distributeH'), () => applyDistribute('x'));
   const distV = btn(svg('<path d="M3 3h18M3 21h18"/><rect x="9" y="7" width="6" height="3"/><rect x="9" y="14" width="6" height="3"/>'), ta('canvas.distributeV'), () => applyDistribute('y'));
   multiBar._urdDist = [distH, distV];
-  // «Lagre gruppe som mal» (0.6.7, snippets-modellen): hele utvalget
-  // lagres som gjenbrukbar blokkgruppe; navngiving og lagring skjer i
-  // editoren (urd-save-template), gruppen dukker opp i blokkmenyene.
+  // "Save group as template" (the snippets model): the whole set is saved
+  // as a reusable block group; naming and storage happen in the editor
+  // (urd-save-template), and the group appears in the block menus.
   const saveGroup = btn(svg('<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/>'), ta('canvas.saveGroup'), () => {
     const blocks = selectedEls().map((el) => el._urdCtx?.block).filter(Boolean);
     if (blocks.length < 2) return;
     post({ type: 'urd-save-template', kind: 'blocks', blocks: JSON.parse(JSON.stringify(blocks)) });
   });
   saveGroup.classList.add('urd-multi-save');
-  // «Fest gruppen»: hele utvalget får samme gruppe-id og festes som ÉN
-  // enhet, så blokkene beholder plasseringen seg imellom i stedet for at
-  // alle legger seg oppå hverandre ved vindustoppen. Er utvalget alt
-  // festet som gruppe, løser knappen festingen igjen.
+  // "Pin the group": the whole set gets the same group id and is pinned
+  // as ONE unit, so the blocks keep their relative placement instead of
+  // all piling up at the top of the window. If the set is already pinned
+  // as a group, the button unpins it.
   btn(svg('<path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/>'), ta('canvas.stickyGroup'), () => {
     const blocks = selectedEls().map((el) => el._urdCtx?.block).filter(Boolean);
     if (blocks.length < 2) return;
@@ -2638,8 +2684,8 @@ function buildMultiBar() {
       on: !grouped,
     });
   });
-  // Dra-håndtaket: grip hele utvalget og dra det samlet (egen knapp ved
-  // siden av søppelikonet); bokføres som ETT angre-steg ved slipp.
+  // The drag handle: grab the whole set and drag it together (its own
+  // button next to the trash icon); recorded as ONE undo step on release.
   const grip = document.createElement('button');
   grip.className = 'urd-multi-drag';
   grip.title = ta('canvas.dragSelected');
@@ -2651,12 +2697,13 @@ function buildMultiBar() {
   document.body.appendChild(multiBar);
 }
 
-/** Dra hele utvalget samlet fra håndtaket i verktøylinjen: livevisning
- *  under draet (klemt av groupDelta så gruppen holder seg i seksjonen),
- *  bokført som ETT angre-steg ved slipp. Avbrudd stiller alt tilbake. */
+/** Drag the whole set together from the toolbar handle: a live view
+ *  during the drag (clamped by groupDelta so the group stays in the
+ *  section), recorded as ONE undo step on release. Cancel restores
+ *  everything. */
 function startSelectionDrag(event) {
-  // isPrimary-vakten: en finger nummer to på håndtaket skal ikke starte
-  // et konkurrerende dra med egne lyttere som kjemper om delta.
+  // The isPrimary guard: a second finger on the handle must not start a
+  // competing drag with its own listeners fighting over the delta.
   if (event.button !== 0 || !event.isPrimary) return;
   const items = selectionItems();
   const host = selectedEls()[0]?.closest('.urd-section');
@@ -2665,8 +2712,8 @@ function startSelectionDrag(event) {
   event.stopPropagation();
   const handle = event.currentTarget;
   handle.setPointerCapture(event.pointerId);
-  // Som enkeltdraget: festede blokker løses tilbake til sin ekte plass før
-  // draget skriver geometri på dem.
+  // As with the single drag: pinned blocks are released back to their real
+  // place before the drag writes geometry on them.
   suspendSticky();
 
   const width = canvasOf(host).getBoundingClientRect().width;
@@ -2680,7 +2727,7 @@ function startSelectionDrag(event) {
       const el = document.querySelector(`.urd-block[data-block-id="${CSS.escape(it.id)}"]`);
       if (el) Object.assign(el.style, frameToCss(frameFor(it)));
     }
-    // Verktøylinjen følger utvalget, så håndtaket ligger under pekeren hele veien.
+    // The toolbar follows the set, so the handle stays under the pointer the whole way.
     updateMultiToolbar();
   };
   const move = (e) => {
@@ -2718,7 +2765,7 @@ function updateMultiToolbar() {
     return;
   }
   multiBar._urdCount.textContent = ta('canvas.selectedCount', { n: els.length });
-  // Fordel-knappene krever minst tre blokker (innstillinger kun når relevante).
+  // The distribute buttons require at least three blocks (settings only when relevant).
   for (const b of multiBar._urdDist) b.style.display = els.length >= 3 ? '' : 'none';
   multiBar.classList.add('vis');
   const rects = els.map((el) => el.getBoundingClientRect());
@@ -2731,11 +2778,11 @@ function updateMultiToolbar() {
   multiBar.style.top = `${y}px`;
 }
 
-// Linjen følger utvalget ved scrolling/resize (fixed posisjonering).
+// The toolbar follows the set on scroll/resize (fixed positioning).
 window.addEventListener('scroll', () => { if (multiIds.size > 1) updateMultiToolbar(); }, { passive: true, capture: true });
 window.addEventListener('resize', () => { if (multiIds.size > 1) updateMultiToolbar(); });
 
-/** Utvalgets frames som rene items for align/distribute. */
+/** The set's frames as plain items for align/distribute. */
 function selectionItems() {
   return selectedEls()
     .map((el) => {
@@ -2745,11 +2792,12 @@ function selectionItems() {
     .filter(Boolean);
 }
 
-/** Bokfør en liste flyttinger som ETT angre-steg (delt groupKey). */
+/** Record a list of moves as ONE undo step (shared groupKey). */
 function applySelectionMoves(moves) {
   if (!moves.length) return;
-  // Skriver geometri rett på elementene uten re-render, så festingen må
-  // slippe taket først (ellers måles neste feste mot den gamle plassen).
+  // Writes geometry straight onto the elements without a re-render, so
+  // the pinning must let go first (otherwise the next pin is measured
+  // against the old place).
   suspendSticky();
   const key = makeId('malign');
   for (const move of moves) {
@@ -2775,7 +2823,7 @@ function applyDistribute(axis) {
   applySelectionMoves(distributeMoves(selectionItems(), axis));
 }
 
-/** Ctrl+C: utvalget (eller den ene markerte blokken) til utklippstavlen. */
+/** Ctrl+C: the set (or the single selected block) to the clipboard. */
 function copySelection(ctx) {
   const ids = multiIds.size > 1 ? multiIds : new Set([selectedBlockId]);
   const blocks = ctx.section.blocks.filter((b) => ids.has(b.id));
@@ -2784,11 +2832,12 @@ function copySelection(ctx) {
 }
 
 /**
- * Ctrl+V: lim inn utklippstavlen med bevart innbyrdes oppsett - alle
- * blokkene får SAMME forskyvning (litt ned/høyre, klemt av groupDelta
- * så hele gruppen holder seg innenfor seksjonen). Målet er den aktive
- * seksjonen, ellers kildeseksjonen, ellers den første. Sendes samlet
- * som urd-add-blocks = ETT angre-steg, og det nye utvalget markeres.
+ * Ctrl+V: paste the clipboard with the internal layout preserved - all
+ * blocks get the SAME offset (slightly down/right, clamped by groupDelta
+ * so the whole group stays within the section). The target is the active
+ * section, otherwise the source section, otherwise the first. Sent
+ * together as urd-add-blocks = ONE undo step, and the new set is
+ * selected.
  */
 function pasteClipboard(source = clipboard) {
   if (!source?.blocks?.length) return;
@@ -2808,10 +2857,11 @@ function pasteClipboard(source = clipboard) {
   });
   const minBottom = Math.max(...blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
   post({ type: 'urd-add-blocks', sectionId, blocks, minBottom, moves: [] });
-  // Nytt lim inn fortsetter fra det innlimte (stables ikke oppå hverandre).
+  // The next paste continues from the pasted content (no stacking on top of each other).
   if (source === clipboard) clipboard = { sectionId, blocks: JSON.parse(JSON.stringify(blocks)) };
-  // Det innlimte blir det nye utvalget: rerendringen etter urd-add-blocks
-  // leser multiIds/selectedBlockId (enhanceSection), editoren følger etter.
+  // The pasted content becomes the new set: the re-render after
+  // urd-add-blocks reads multiIds/selectedBlockId (enhanceSection), and
+  // the editor follows.
   document.querySelectorAll('.urd-block.urd-selected, .urd-block.urd-multi-selected')
     .forEach((b) => b.classList.remove('urd-selected', 'urd-multi-selected'));
   multiSectionId = sectionId;
@@ -2820,10 +2870,10 @@ function pasteClipboard(source = clipboard) {
   post({ type: 'urd-select-block', sectionId, blockId: selectedBlockId });
 }
 
-/** Sett inn en blokkgruppe-mal i en seksjon: re-id + anker/klem via
- *  maler-model (re-id-regelen i SKJEMA.md), ETT angre-steg via
- *  urd-add-blocks, og det innsatte blir det nye utvalget (samme hale
- *  som pasteClipboard). anchor = {x i %, y i px} eller null. */
+/** Insert a block-group template into a section: re-id + anchor/clamp via
+ *  the template model (the re-id rule in SKJEMA.md), ONE undo step via
+ *  urd-add-blocks, and the inserted content becomes the new set (the same
+ *  tail as pasteClipboard). anchor = {x in %, y in px} or null. */
 function insertBlocksTemplate(mal, sectionId, anchor) {
   const { blocks, minBottom } = cloneBlocksForInsert(mal.blocks, makeId, { anchor });
   post({ type: 'urd-add-blocks', sectionId, blocks, minBottom, moves: [] });
@@ -2835,8 +2885,9 @@ function insertBlocksTemplate(mal, sectionId, anchor) {
   post({ type: 'urd-select-block', sectionId, blockId: selectedBlockId });
 }
 
-/** Blokker-panelets Mine maler-gruppe (urd-insert-template): sett inn i
- *  aktiv seksjon (ellers første) med lagrede posisjoner, kun klem. */
+/** The Blocks panel's My templates group (urd-insert-template): insert
+ *  into the active section (otherwise the first) with stored positions,
+ *  clamping only. */
 export function insertTemplate(id) {
   const mal = maler.find((m) => m.id === id && m.kind === 'blocks' && Array.isArray(m.blocks));
   const host = document.querySelector('.urd-section-active') ?? document.querySelector('.urd-section');
@@ -2844,7 +2895,7 @@ export function insertTemplate(id) {
   insertBlocksTemplate(mal, host.dataset.sectionId, null);
 }
 
-/** Ctrl+D med flerutvalg: dupliser utvalget (via lim inn-flyten). */
+/** Ctrl+D with a multi-selection: duplicate the set (via the paste flow). */
 function duplicateSelection(ctx) {
   const ids = [...multiIds];
   const blocks = ctx.section.blocks.filter((b) => ids.includes(b.id));
@@ -2852,23 +2903,23 @@ function duplicateSelection(ctx) {
 }
 
 /**
- * Marker en blokk via id (broen: editoren bygde nettopp blokken selv,
- * f.eks. fra «+ Ny blokk»-menyen, og previewen kjenner ikke id-en før
- * seksjonen er rerendret). Kalles ETTER rerendringen.
+ * Select a block by id (the bridge: the editor just built the block
+ * itself, e.g. from the + New block menu, and the preview does not know
+ * the id until the section is re-rendered). Called AFTER the re-render.
  */
 export function selectById(blockId) {
   const el = document.querySelector(`.urd-block[data-block-id="${CSS.escape(blockId)}"]`);
   if (el) selectBlock(el);
 }
 
-/** Dupliser markert blokk (broen: Ctrl+D med fokus i admin-panelene). */
+/** Duplicate the selected block (the bridge: Ctrl+D with focus in the admin panels). */
 export function duplicateSelected() {
   if (isMobile() || !selectedBlockId) return;
   const ctx = document.querySelector(`.urd-block[data-block-id="${selectedBlockId}"]`)?._urdCtx;
   if (ctx) duplicateBlock(ctx.section, ctx.block);
 }
 
-/** Dupliser en blokk: kopi med ny id, litt forskjøvet, i samme seksjon. */
+/** Duplicate a block: a copy with a new id, slightly offset, in the same section. */
 function duplicateBlock(section, block) {
   const copy = JSON.parse(JSON.stringify(block));
   copy.id = makeId('blk');
@@ -2879,25 +2930,26 @@ function duplicateBlock(section, block) {
     y: f.y + 16,
   };
   post({ type: 'urd-add-block', sectionId: section.id, block: copy });
-  // Duplikatet blir den markerte blokken: rerendringen etter urd-add-block
-  // markerer den (enhanceSection leser selectedBlockId), og editoren følger
-  // etter via urd-select-block så Egenskaper-panelet viser kopien.
+  // The duplicate becomes the selected block: the re-render after
+  // urd-add-block selects it (enhanceSection reads selectedBlockId), and
+  // the editor follows via urd-select-block so the Properties panel shows
+  // the copy.
   document.querySelectorAll('.urd-block.urd-selected').forEach((b) => b.classList.remove('urd-selected'));
   selectedBlockId = copy.id;
   post({ type: 'urd-select-block', sectionId: section.id, blockId: copy.id });
 }
 
 /**
- * Synlig grid-overlegg i seksjonen mens man drar/resizer, så snappingen
- * har noe å snappe synlig mot. Linjene tegnes med CSS-gradienter i
- * nøyaktig kolonnebredde/radhøyde.
+ * Visible grid overlay in the section while dragging/resizing, so the
+ * snapping has something visible to snap against. The lines are drawn
+ * with CSS gradients at the exact column width/row height.
  */
 function showGridOverlay(host, grid) {
   const overlay = document.createElement('div');
   overlay.className = 'urd-grid-overlay';
   overlay.style.backgroundSize = `${grid.size}px ${grid.size}px`;
-  // I innholdsflaten, ikke i seksjonen: snappingen er relativ til flaten,
-  // så rutene må starte der blokkene starter.
+  // In the content surface, not in the section: the snapping is relative
+  // to the surface, so the cells must start where the blocks start.
   canvasOf(host).appendChild(overlay);
   return overlay;
 }
@@ -2906,18 +2958,19 @@ function enhanceBlock(el, block, section, grid, host) {
   el.classList.add('urd-editable');
   if (block.id === selectedBlockId) el.classList.add('urd-selected');
   if (block.decor) el.classList.add('urd-decor');
-  // Tastaturhåndtereren (piltaster/Delete) trenger blokkens kontekst.
+  // The keyboard handler (arrow keys/Delete) needs the block's context.
   el._urdCtx = { block, section, grid, host };
 
   const mobile = isMobile();
 
   const toolbar = document.createElement('div');
   toolbar.className = 'urd-edit-toolbar';
-  // Verktøylinja står over blokken; øverst på siden eller rett under menyen
-  // finnes ingen synlig plass der (over dokumenttoppen eller bak menyen).
-  // Da flippes den under blokken. Måles mot VIEWPORTEN i det pekeren
-  // treffer blokken (og ved markering): posisjonen endres av både dra og
-  // scrolling, som aldri rendrer på nytt.
+  // The toolbar sits above the block; at the top of the page or right
+  // below the menu there is no visible room there (above the document top
+  // or behind the menu). Then it flips below the block. Measured against
+  // the VIEWPORT when the pointer hits the block (and on selection): the
+  // position is changed by both dragging and scrolling, which never
+  // re-render.
   const updateToolbarSide = () => {
     const cs = getComputedStyle(document.documentElement);
     const navH = Number.parseFloat(cs.getPropertyValue('--urd-nav-h')) || 0;
@@ -2927,20 +2980,21 @@ function enhanceBlock(el, block, section, grid, host) {
   updateToolbarSide();
   el.addEventListener('pointerenter', updateToolbarSide);
 
-  // Den felles bildeeditoren for bildeblokker: alle feltene, med live DOM-oppdatering
-  // (kun bildebytte trenger rerender, og da lukkes panelet).
+  // The shared image editor for image blocks: all the fields, with live DOM updates
+  // (only an image swap needs a re-render, and then the panel closes).
   const openBlockImageEditor = () => {
     const frame = () => el.querySelector('.urd-image-frame');
-    // Full editor: bytt/fjern, alt, tilpasning, zoom, avrunding, lenke,
-    // fokuspunkt (med tredelingsgitter) og filtre (gråtone/nullstill).
+    // The full editor: swap/remove, alt, fit, zoom, rounding, link, focus
+    // point (with a rule-of-thirds grid) and filters (grayscale/reset).
     openImageEditor(frame() ?? el.querySelector('img') ?? el, {
       fields: ['image', 'remove', 'alt', 'fit', 'zoom', 'radius', 'href', 'focus', 'filters'],
       get: (field) => (field === 'image' ? block.props.src || null : block.props[field]),
       set: (field, value) => {
         const key = field === 'image' ? 'src' : field;
         block.props = { ...block.props, [key]: value };
-        // Bytte/fjerne bilde krever ny render (rammen bygges på nytt); andre
-        // felt oppdateres live via den delte applyImageStyle.
+        // Swapping/removing the image requires a new render (the frame is
+        // rebuilt); other fields update live via the shared
+        // applyImageStyle.
         const node = frame();
         if (node && field !== 'image') applyImageStyle(node, block.props);
         post({ type: 'urd-edit', sectionId: section.id, blockId: block.id, props: block.props, rerender: field === 'image' });
@@ -2960,8 +3014,9 @@ function enhanceBlock(el, block, section, grid, host) {
   moveHandle.title = ta('canvas.dragMove');
   toolbar.appendChild(moveHandle);
 
-  // Flytende mobilblokk: piler som flytter den i leserekkefølgen (skriver
-  // mobileOrder). Pinnede blokker deltar ikke i flyten og får ↺ i stedet.
+  // Flowing mobile block: arrows that move it in the reading order
+  // (writes mobileOrder). Pinned blocks do not take part in the flow and
+  // get ↺ instead.
   if (mobile && !Number.isFinite(block.frames.mobile?.row)) {
     for (const [svg, dir, key] of [[ORDER_UP_SVG, -1, 'canvas.orderUp'], [ORDER_DOWN_SVG, 1, 'canvas.orderDown']]) {
       const btn = document.createElement('button');
@@ -2977,8 +3032,8 @@ function enhanceBlock(el, block, section, grid, host) {
     }
   }
 
-  // Overstyrt mobilblokk: nål-merke som viser tilstanden, og en ↺ som
-  // nuller KUN denne blokkens overstyring (tilbake til synk med desktop).
+  // Overridden mobile block: a pin badge showing the state, and a ↺ that
+  // resets ONLY this block's override (back in sync with desktop).
   if (mobile && block.frames.mobile) {
     const MOBILE_PIN_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></svg>';
     const pin = document.createElement('div');
@@ -2996,7 +3051,7 @@ function enhanceBlock(el, block, section, grid, host) {
     toolbar.appendChild(resetBtn);
   }
 
-  // z-orden: legg blokken øverst/nederst blant seksjonens blokker.
+  // z-order: put the block at the top/bottom among the section's blocks.
   const bumpZ = (dir) => {
     const others = section.blocks.filter((b) => b.id !== block.id);
     const zs = others.map((b) => b.frames.desktop.z ?? 1);
@@ -3006,14 +3061,14 @@ function enhanceBlock(el, block, section, grid, host) {
     } else if (!zs.length || Math.min(...zs) > 1) {
       z = 1;
     } else {
-      // Noen ligger allerede på bunnen: skyv de andre ett hakk opp i
-      // stedet, så denne kan legges nederst (z går aldri under 1).
+      // Someone already sits at the bottom: push the others one notch up
+      // instead, so this one can go last (z never goes below 1).
       z = 1;
       for (const other of others) {
         const frame = { ...other.frames.desktop, z: (other.frames.desktop.z ?? 1) + 1 };
         other.frames.desktop = frame;
         host.querySelector(`[data-block-id="${other.id}"]`)?.style.setProperty('z-index', String(frame.z));
-        // groupKey samler hele z-omordningen (alle blokkene) i ETT angre-steg hos editoren.
+        // groupKey collects the whole z reordering (all blocks) into ONE undo step in the editor.
         post({ type: 'urd-move', sectionId: section.id, blockId: other.id, frame, coalesce: true, groupKey: `z-${block.id}` });
       }
     }
@@ -3022,8 +3077,8 @@ function enhanceBlock(el, block, section, grid, host) {
     el.style.zIndex = String(z);
     post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame, coalesce: true, groupKey: `z-${block.id}` });
   };
-  // Struktur (z-orden, dekor, sletting) redigeres i desktopvisning;
-  // mobilvisningen er ren layoutjustering.
+  // Structure (z-order, decor, deletion) is edited in the desktop view;
+  // the mobile view is pure layout adjustment.
   if (!mobile) {
     const Z_FRONT_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14"/><path d="M12 20V9"/><path d="M7 13l5-5 5 5"/></svg>';
     const Z_BACK_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20h14"/><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/></svg>';
@@ -3039,9 +3094,9 @@ function enhanceBlock(el, block, section, grid, host) {
     backBtn.addEventListener('click', () => bumpZ(-1));
     toolbar.appendChild(backBtn);
 
-    // Mobil-synlighet: telefon = blokken vises på mobil, overstrøket
-    // telefon = den skjules (hideMobile). Ikonet ER tilstanden (tegnet
-    // SVG, ikke emoji); tooltipen forklarer klikket.
+    // Mobile visibility: phone = the block is shown on mobile, crossed-out
+    // phone = it is hidden (hideMobile). The icon IS the state (a drawn
+    // SVG, not emoji); the tooltip explains the click.
     const PHONE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.2h3"/></svg>';
     const PHONE_OFF_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.2h3"/><path d="M3.5 3.5l17 17"/></svg>';
     const hideBtn = document.createElement('button');
@@ -3076,16 +3131,17 @@ function enhanceBlock(el, block, section, grid, host) {
     dupBtn.addEventListener('click', () => duplicateBlock(section, block));
     toolbar.appendChild(dupBtn);
 
-    // Blokkmeny: alle blokk-innstillingene i en flytende meny ved blokken
-    // (kalender-mønsteret, valgt 23. juli 2026). Selve menyen bor i
-    // editoren (samme kontroller som Egenskaper); her meldes kun hvor.
+    // Block menu: all the block settings in a floating menu by the block
+    // (the calendar pattern). The menu itself lives in the editor (the
+    // same controls as Properties); only the position is reported here.
     const GEAR_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.06-.4.1-.8.1-1.2z"/></svg>';
     const menuBtn = document.createElement('button');
     menuBtn.innerHTML = GEAR_SVG;
     menuBtn.title = ta('canvas.blockMenu');
-    // Uten stopp ville pointerdown boble til dokumentets markeringslytter,
-    // som kan utløse en re-render (seksjonsaktivering) FØR click fyrer -
-    // og da byttes knappen ut midt i klikket (samme vern som håndtakene).
+    // Without the stop, pointerdown would bubble to the document's
+    // selection listener, which can trigger a re-render (section
+    // activation) BEFORE click fires - and then the button is swapped out
+    // mid-click (the same guard as the handles).
     menuBtn.addEventListener('pointerdown', (event) => event.stopPropagation());
     menuBtn.addEventListener('click', () => {
       selectBlock(el);
@@ -3105,7 +3161,7 @@ function enhanceBlock(el, block, section, grid, host) {
     deleteBtn.title = ta('canvas.deleteBlock');
     deleteBtn.addEventListener('click', () => {
       post({ type: 'urd-delete', sectionId: section.id, blockId: block.id });
-      // Uten avvalg ville en fantom-markering av den slettede blokken overleve i modultilstanden.
+      // Without deselecting, a phantom selection of the deleted block would survive in the module state.
       selectBlock(null);
     });
     toolbar.appendChild(deleteBtn);
@@ -3117,9 +3173,9 @@ function enhanceBlock(el, block, section, grid, host) {
   resizeHandle.title = ta('canvas.dragResize');
   el.appendChild(resizeHandle);
 
-  // Festing er ellers usynlig så lenge man ikke scroller: en nål i hjørnet
-  // viser at blokken har «Fest ved scrolling» på. På mobil gjelder kun
-  // skjermdokking, så nålen følger den grensen.
+  // Pinning is otherwise invisible until you scroll: a pin in the corner
+  // shows that the block has "Pin on scroll" enabled. On mobile only
+  // screen docking applies, so the pin follows that boundary.
   if (block.sticky && (!mobile || block.sticky.mode === 'screen')) {
     const PIN_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></svg>';
     const pin = document.createElement('div');
@@ -3131,14 +3187,16 @@ function enhanceBlock(el, block, section, grid, host) {
 
   wireDrag(moveHandle, 'move');
   wireDrag(resizeHandle, 'resize');
-  // Hele blokkflaten kan også dras direkte (⠿ består). Terskel gjør at
-  // klikk forblir klikk; redigerbar tekst og håndtak er unntatt.
+  // The whole block surface can also be dragged directly (⠿ remains). A
+  // threshold keeps clicks as clicks; editable text and handles are
+  // exempt.
   wireDrag(el, 'move', { surface: true });
-  // Lenker/bilder skal aldri starte nettleserens egen dra-oppførsel.
+  // Links/images must never start the browser's own drag behavior.
   el.addEventListener('dragstart', (event) => event.preventDefault());
 
-  // Rotasjonshåndtak (kun desktop: rot bor i desktop-framen). Dras rundt
-  // blokkens sentrum; snapper til 15°-steg, Shift gir fri vinkel.
+  // Rotation handle (desktop only: rot lives in the desktop frame).
+  // Dragged around the block's center; snaps to 15° steps, Shift gives a
+  // free angle.
   if (!mobile) {
     const rotHandle = document.createElement('div');
     rotHandle.className = 'urd-edit-rotate';
@@ -3181,12 +3239,13 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * Mobil-dra: pinner ÉN blokk til radnettet (ADR-0019). Under draget
-   * posisjoneres elementet absolutt i flytflaten, så resten av nettet
-   * flyter om seg og viser layouten blokken pinnes inn i. Ved slipp
-   * regnes plasseringen om til radspor via de faktiske sporhøydene
-   * (grodde spor er høyere enn MOBILE_ROW), DOM-en konverteres på stedet
-   * og editoren bokfører via urd-move med frameKey 'mobile'.
+   * Mobile drag: pins ONE block to the row grid (ADR-0019). During the
+   * drag the element is positioned absolutely in the flow surface, so the
+   * rest of the grid reflows around it and shows the layout the block is
+   * being pinned into. On release the placement is converted to row
+   * tracks via the actual track heights (grown tracks are taller than
+   * MOBILE_ROW), the DOM is converted in place and the editor records it
+   * via urd-move with frameKey 'mobile'.
    */
   function mobileDrag(handle, event, kind, opts = {}) {
     const canvas = canvasOf(host);
@@ -3204,13 +3263,13 @@ function enhanceBlock(el, block, section, grid, host) {
       h: startRect.height,
     };
     let current = { ...orig };
-    // Flate-dra starter først etter en liten terskel, så klikk forblir klikk.
+    // A surface drag only starts after a small threshold, so clicks remain clicks.
     const threshold = opts.surface ? 4 : 0;
     let started = false;
 
     const begin = () => {
       started = true;
-      // Ut av nettet og inn i fri posisjonering; nettet flyter om seg.
+      // Out of the grid and into free positioning; the grid reflows.
       el.style.position = 'absolute';
       el.style.left = `${orig.left}px`;
       el.style.top = `${orig.top}px`;
@@ -3257,8 +3316,9 @@ function enhanceBlock(el, block, section, grid, host) {
       finish();
       if (!started) return;
 
-      // Radindeksen leses mot sporhøydene UTEN blokken (den står absolutt
-      // nå), som er nettopp nettet den pinnes inn i.
+      // The row index is read against the track heights WITHOUT the block
+      // (it is absolutely positioned now), which is exactly the grid it is
+      // being pinned into.
       const tracks = getComputedStyle(flowEl).gridTemplateRows
         .split(' ').map(parseFloat).filter(Number.isFinite);
       const rect = el.getBoundingClientRect();
@@ -3275,7 +3335,7 @@ function enhanceBlock(el, block, section, grid, host) {
       if (old?.rot) placement.rot = old.rot;
       block.frames.mobile = placement;
 
-      // Konverter DOM-en tilbake til nettet med den nye plasseringen.
+      // Convert the DOM back into the grid with the new placement.
       el.style.position = '';
       el.style.left = '';
       el.style.top = '';
@@ -3298,41 +3358,45 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * Felles dra-logikk for flytting og resize. Piksler oversettes til
-   * grid-enheter og rundes fortløpende, så blokken snapper synlig
-   * mens man drar. Ved slipp meldes den nye framen til editoren.
+   * Shared drag logic for moving and resizing. Pixels are translated to
+   * grid units and rounded continuously, so the block snaps visibly while
+   * dragging. On release the new frame is reported to the editor.
    */
   function wireDrag(handle, kind, opts = {}) {
     handle.addEventListener('pointerdown', (event) => {
       if (opts.surface) {
         const target = event.target instanceof HTMLElement ? event.target : null;
-        // Redigerbar tekst er kun unntatt når blokken ALT er valgt (da
-        // redigerer man teksten). En uvalgt blokk dras fritt også fra
-        // teksten - klikk uten dra velger den, klikk igjen redigerer.
+        // Editable text is only exempt when the block is ALREADY selected
+        // (then the text is being edited). An unselected block drags
+        // freely from the text too - a click without a drag selects it,
+        // another click edits.
         if (target?.closest('.urd-text[contenteditable="true"]') && selectedBlockId === block.id && multiIds.size <= 1) return;
-        // Handlekurv-knappen følger tekstblokkens totrinn: valgt blokk =
-        // native klikk (skuffen åpner), uvalgt blokk = flate-dra og markering.
+        // The cart button follows the text block's two-step model: selected
+        // block = native click (the drawer opens), unselected block =
+        // surface drag and selection.
         if (target?.closest('.urd-cart-button') && selectedBlockId === block.id && multiIds.size <= 1) return;
         if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button:not(.urd-cart-button), input, select, textarea, dialog, .urd-collection-editable, .urd-collection-image-edit, .urd-faq-q, .urd-kal-config, .urd-skjema-config, .urd-kart-config')) return;
-        // Flytende mobilblokk: første pinning skal være et bevisst valg
-        // (dra i ⠿), ikke et klikk på blokken. En skjermdokket blokk er
-        // unntatt: der flytter draget dokkingen, ikke radnettet.
+        // Flowing mobile block: the first pinning must be a deliberate
+        // choice (dragging ⠿), not a click on the block. A screen-docked
+        // block is exempt: there the drag moves the docking, not the row
+        // grid.
         if (mobile && !Number.isFinite(block.frames.mobile?.row) && !el.classList.contains('urd-sticky-fixed')) return;
         event.preventDefault();
       } else {
         event.preventDefault();
         event.stopPropagation();
         markActiveVisual(host);
-        // Grep i ⠿/resize på et utvalgs-medlem skal ikke kollapse utvalget.
+        // Grabbing ⠿/resize on a set member must not collapse the set.
         selectBlock(el, { keepMulti: multiIds.has(block.id) });
       }
       handle.setPointerCapture(event.pointerId);
 
-      // Skjermdokket blokk: draget flytter DOKKINGEN, ikke rammen.
-      // Blokken følger pekeren som fixed, og ved slipp velges nærmeste av
-      // de ni ankerpunktene fra der den lander (nearestDock). Vanlig dra
-      // ville løst festingen (suspendSticky) og teleportert blokken
-      // tilbake til seksjonen i det grepet startet.
+      // Screen-docked block: the drag moves the DOCKING, not the frame.
+      // The block follows the pointer as fixed, and on release the
+      // nearest of the nine anchor points is chosen from where it lands
+      // (nearestDock). A regular drag would release the pinning
+      // (suspendSticky) and teleport the block back to the section the
+      // moment the grab started.
       if (kind === 'move' && el.classList.contains('urd-sticky-fixed') && el.dataset.stickyMode === 'screen') {
         const threshold = opts.surface ? 4 : 0;
         let started = threshold === 0;
@@ -3361,8 +3425,8 @@ function enhanceBlock(el, block, section, grid, host) {
               { left: rect.left, top: rect.top, w: rect.width, h: rect.height },
               { w: document.documentElement.clientWidth, h: window.innerHeight },
             );
-            // Dokk-gruppen følger med: applySticky leser lederens dock, og
-            // publiserte data må si det samme for hvert medlem.
+            // The dock group comes along: applySticky reads the leader's
+            // dock, and published data must say the same for every member.
             const groupId = el.dataset.stickyGroup;
             const members = groupId
               ? [...document.querySelectorAll(`.urd-sticky-able[data-sticky-group="${CSS.escape(groupId)}"]`)]
@@ -3377,7 +3441,7 @@ function enhanceBlock(el, block, section, grid, host) {
             }
             if (block.sticky) block.sticky = { ...block.sticky, dock };
           }
-          // Gjenopptak til slutt: da dokkes gruppen mot det nye punktet.
+          // Resume last: then the group docks against the new point.
           drop();
         };
         const onDockUp = () => finishDock(true);
@@ -3388,22 +3452,22 @@ function enhanceBlock(el, block, section, grid, host) {
         return;
       }
 
-      // Mobil har sin egen dra-mekanikk: draget pinner ÉN blokk til
-      // radnettet, resten fortsetter å flyte (ADR-0019).
+      // Mobile has its own drag mechanics: the drag pins ONE block to the
+      // row grid, the rest keep flowing (ADR-0019).
       if (mobile) {
         mobileDrag(handle, event, kind, opts);
         return;
       }
       const frameKey = 'desktop';
 
-      // Flate-dra starter først etter en liten terskel, så klikk
-      // (markering, caret) forblir klikk.
+      // A surface drag only starts after a small threshold, so clicks
+      // (selection, caret) remain clicks.
       const threshold = opts.surface ? 4 : 0;
       let started = threshold === 0;
-      // Festede blokker løses tilbake til sin ekte plass før draget skriver
-      // geometri. Et rent klikk (terskelen ikke passert) suspenderer ingenting.
-      // Paret må være nøyaktig: en umatchet gjenopptaking ville avbrutt
-      // suspenderingen til et annet dra som pågår samtidig.
+      // Pinned blocks are released back to their real place before the
+      // drag writes geometry. A pure click (threshold not passed)
+      // suspends nothing. The pair must be exact: an unmatched resume
+      // would cut short the suspension of another drag in progress.
       let holdsSticky = false;
       const holdSticky = () => { if (!holdsSticky) { holdsSticky = true; suspendSticky(); } };
       const dropSticky = () => { if (holdsSticky) { holdsSticky = false; resumeSticky(); } };
@@ -3411,8 +3475,9 @@ function enhanceBlock(el, block, section, grid, host) {
 
       const start = { x: event.clientX, y: event.clientY };
       const orig = { ...(block.frames[frameKey] ?? block.frames.desktop) };
-      // Gruppe-dra: er blokken del av et flerutvalg, følger resten med
-      // (samme delta, klemt så hele gruppen holder seg innenfor bredden).
+      // Group drag: if the block is part of a multi-selection, the rest
+      // follow (same delta, clamped so the whole group stays within the
+      // width).
       const canvas = canvasOf(host);
       const groupParts = (kind === 'move' && multiIds.size > 1 && multiIds.has(block.id))
         ? [...canvas.querySelectorAll(':scope > .urd-block')]
@@ -3424,17 +3489,18 @@ function enhanceBlock(el, block, section, grid, host) {
             .filter(Boolean)
         : [];
       const groupKey = groupParts.length ? makeId('mdrag') : null;
-      // Frames er fysiske (x/w i %, y/h i px); gridet styrer KUN hva vi
-      // snapper mot: kvadratiske ruter på grid.size px. Snap av gir fri
-      // plassering (0,1 % / 1 px-presisjon).
+      // Frames are physical (x/w in %, y/h in px); the grid controls ONLY
+      // what we snap against: square cells of grid.size px. Snapping off
+      // gives free placement (0.1% / 1 px precision).
       const pctPerPx = 100 / canvas.clientWidth;
       const colStep = grid.size * pctPerPx;
       const r2 = (v) => Math.round(v * 100) / 100;
       const overlay = showGridOverlay(host, grid);
       let current = orig;
 
-      // Smart guides (à la Wix): naboblokkers kanter/senter + innholdsflatens
-      // midtlinje som snappelinjer. Målene samles ved dra-start.
+      // Smart guides (Wix-style): neighboring blocks' edges/centers + the
+      // content surface's midline as snap lines. The targets are
+      // collected at drag start.
       const GUIDE_TOL = 5;
       const xTargets = [canvas.clientWidth / 2];
       const yTargets = [];
@@ -3458,7 +3524,7 @@ function enhanceBlock(el, block, section, grid, host) {
         canvas.appendChild(g);
         guideEls.push(g);
       };
-      /** Justerer current mot nærmeste snappelinje og tegner den. */
+      /** Adjusts current toward the nearest snap line and draws it. */
       const applyGuides = () => {
         clearGuides();
         if (kind !== 'move') return;
@@ -3495,8 +3561,8 @@ function enhanceBlock(el, block, section, grid, host) {
           started = true;
           holdSticky();
         }
-        // Shift holdt inne = midlertidig fri plassering (0,1 % / 1 px);
-        // ellers styrer grid.snap.
+        // Shift held = temporary free placement (0.1% / 1 px); otherwise
+        // grid.snap decides.
         const free = grid.snap === false || ev.shiftKey;
         const snapPct = free ? (v) => Math.round(v * 10) / 10 : (v) => r2(Math.round(v / colStep) * colStep);
         const snapPx = free ? Math.round : (v) => Math.round(v / grid.size) * grid.size;
@@ -3506,8 +3572,8 @@ function enhanceBlock(el, block, section, grid, host) {
           ? {
               ...orig,
               x: clamp(snapPct(orig.x + dx), 0, r2(100 - orig.w)),
-              // y er ubegrenset i begge retninger: blokker kan bevisst
-              // henge over seksjonstoppen, akkurat som under bunnen.
+              // y is unbounded in both directions: blocks can deliberately
+              // hang above the section top, just as below the bottom.
               y: snapPx(orig.y + dy),
             }
           : {
@@ -3515,12 +3581,13 @@ function enhanceBlock(el, block, section, grid, host) {
               w: clamp(snapPct(orig.w + dx), r2(colStep), r2(100 - orig.x)),
               h: Math.max(4, snapPx(orig.h + dy)),
             };
-        // Shift = helt fritt: da hopper vi også over smart guides.
+        // Shift = fully free: then smart guides are skipped too.
         if (!free) applyGuides();
         else clearGuides();
         if (groupParts.length) {
-          // Deltaet klemmes mot gruppens samlede bredde-grenser; y er
-          // ubegrenset som ved enkelt-dra (blokker kan henge utenfor).
+          // The delta is clamped against the group's combined width
+          // limits; y is unbounded as in a single drag (blocks may hang
+          // outside).
           const d = groupDelta([orig, ...groupParts.map((g) => g.orig)], current.x - orig.x, 0);
           const dyPx = current.y - orig.y;
           current = { ...current, x: r2(orig.x + d.dx) };
@@ -3532,9 +3599,9 @@ function enhanceBlock(el, block, section, grid, host) {
         Object.assign(el.style, frameToCss(current));
       };
 
-      // Avbrutt dra (nettleseren tar over pekeren, eller elementet byttes ut
-      // midt i draet): rydd og slipp festingen, ellers ville den blitt stående
-      // suspendert for resten av økta.
+      // Aborted drag (the browser takes over the pointer, or the element
+      // is swapped out mid-drag): clean up and release the pinning,
+      // otherwise it would stay suspended for the rest of the session.
       const onCancel = () => {
         handle.removeEventListener('pointermove', onMove);
         handle.removeEventListener('pointerup', onUp);
@@ -3550,12 +3617,13 @@ function enhanceBlock(el, block, section, grid, host) {
         handle.removeEventListener('pointercancel', onCancel);
         overlay.remove();
         clearGuides();
-        // Fester på nytt fra blokkens NYE utgangsverdier.
+        // Re-pins from the block's NEW base values.
         dropSticky();
         if (!started) return;
 
-        // Gruppe-dra: bokfør hele utvalget som ETT angre-steg (delt
-        // groupKey) og hopp over seksjonsbytte (utvalget bor i én seksjon).
+        // Group drag: record the whole set as ONE undo step (shared
+        // groupKey) and skip section transfer (the set lives in one
+        // section).
         if (groupParts.length) {
           if (current.x === orig.x && current.y === orig.y) return;
           const dx = r2(current.x - orig.x);
@@ -3570,9 +3638,9 @@ function enhanceBlock(el, block, section, grid, host) {
           return;
         }
 
-        // Slippes blokkens SENTRUM over en annen seksjon, flytter blokken
-        // dit - grid og tilhørighet skal følge seksjonen den faktisk
-        // ligger i, ikke den den kom fra.
+        // If the block's CENTER is released over another section, the
+        // block moves there - grid and ownership must follow the section
+        // it actually sits in, not the one it came from.
         if (kind === 'move') {
           const rect = el.getBoundingClientRect();
           const target = document
