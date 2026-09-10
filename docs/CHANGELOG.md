@@ -25,6 +25,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.14.12 - Engelsk-renskingen: kommentarsveipen, App.svelte - 10. september 2026
+
+- Alle norske kommentarer i App.svelte (~330 kommentarer, ~700 linjer: JSDoc, linje-, Svelte-HTML- og CSS-kommentarer) oversatt til engelsk med kommentarreglene anvendt: to kommentarer slettet helt (reversert-forsøk-fortelling, død veikart-notis), versjonstagger og daterte attribusjoner strøket, «var tidligere»-fortellinger omskrevet deskriptivt. Bundel-diffen etter gjenbygg er tom, så ingen kode er rørt.
+- Testfunn: tests/topbar-fold.test.mjs ankrer på kommentar-overskriften «---- Foldetrinnene» (slicer kilden på strengen); overskriften står med engelsk gloss og peker til testen.
+- Fire norske strenglitteraler notert til sluttauditen (utenfor kommentar-kontrakten): to console.warn-meldinger, commit-malen «Oppdater ... via Urd-admin» og fallbacken «Uten tittel».
+
 ### 0.7.14.11 - Engelsk-renskingen: kommentarsveipen, preview-edit.js - 8. september 2026
 
 - Alle norske kommentarer i preview-edit.js (571 linjer, ~150 kommentarer/JSDoc-blokker) oversatt til engelsk med kommentarreglene anvendt: historikk- og attribusjonsfragmenter strøket (versjonsnummer-tagger, daterte eiervalg-parenteser, hendelsesfortellinger som «faq manglet her frem til 0.6.7.11»), flerlinje-kommentarer brutt om ved setningsgrense. Kun kommentartekst er endret; meldingsnavnene og ADR-referansene står ordrett, og bundelen er urørt (fila buntes ikke).

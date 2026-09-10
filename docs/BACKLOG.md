@@ -90,13 +90,13 @@ Fasen er delt opp i milepæler 9. august 2026: arkitekturavklaringene (bredde, m
   - [x] 0.7.14.9 Resterende strenger: fallback-litteraler, hardkodede titler/placeholders (med nøkler), feil-/konsollmeldinger, check-release.mjs, dev-server.py, workflow-stegnavnene, skjema-beskrivelsestekstene
   - [x] 0.7.14.10 Testene: beskrivelser, assertion-meldinger og kommentarer til engelsk (testfil-renames tatt i .5); norske fixture-data består som bevisst testinnhold, markert der det ikke er opplagt
   - [x] 0.7.14.11 Kommentarsveipen, batch 1: preview-edit.js (571 kommentarlinjer oversatt, kommentarreglene anvendt, bundelen urørt)
-  - [ ] 0.7.14.12 Kommentarsveipen, batch 2: App.svelte (872 kommentarlinjer; krever gjenbygg)
+  - [x] 0.7.14.12 Kommentarsveipen, batch 2: App.svelte (~700 kommentarlinjer oversatt, bundel-diffen tom; «---- Foldetrinnene»-overskriften beholdt som testanker med engelsk gloss)
   - [ ] 0.7.14.13 Kommentarsveipen, batch 3: motor-rot A (urd, render, nav, nav-model, migrate, theme m.fl.)
   - [ ] 0.7.14.14 Kommentarsveipen, batch 4: motor-rot B + blocks/ + backgrounds/ + sections/ + animations/
   - [ ] 0.7.14.15 Kommentarsveipen, batch 5: editor/src/lib + main.js (krever gjenbygg)
   - [ ] 0.7.14.16 Kommentarsveipen, batch 6: base.css (nytt stempel) + skall + workflows + dev-server + scripts + ordbok-headere + plugin-kommentarer
     (felles for batchene: kommentarreglene i AGENTS.md anvendes samtidig; bundel-diffen skal være tom for rene kommentarbatcher)
-  - [ ] 0.7.14.17 Sluttaudit (repo-vid æøå-grep pluss stopwordliste) + push-klargjøring
+  - [ ] 0.7.14.17 Sluttaudit (repo-vid æøå-grep pluss stopwordliste) + push-klargjøring. Kjente rester å vurdere: fire norske strenglitteraler i App.svelte (to console.warn-meldinger, commit-malen «Oppdater ... via Urd-admin», fallbacken «Uten tittel»)
 
   Ferdig når: norsk-auditen er ren utenfor locales/, docs/, content/, readme/ og bevisste fixtures; migrerings- og aliastestene dekker alle gamle tokens med idempotens og plugin-matrisen; og alle suiter, bygg og validering er grønne.
 
@@ -168,6 +168,7 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 - [ ] Visningsside for butikk og/eller utgivelser lignende Internet Archive
 - [ ] friere valg av possisjon for mørk/lys modus og handlekurv knapp i nav
 - [ ] For form på nav bar legg til en slider med 'avrunding' istedenfor å ha to instillinger hvor en er for harde kanter og en for avrundet
+- [ ] For nav: Mulighet for seksjon over nav menyen som er en del av nav/følger nav + valgmulighet om den skal følge sticky nav
 
 Sortert inn i milepælene 14. august 2026: audio-blokken (C10) til 0.7.4; font-pakker, lagre eget tema og bakgrunn-over-bakgrunn/faste sidebarer til 0.7.9; kant-resize, rutenett/hjelpelinje-rework, command palette, drop-target og layout-hjelpechipen til 0.7.10; ApeironLF-mønstrene til 0.7.13; touchvennlighet for admin og side til v0.9. Deklarativ per-brekkpunkt-variant (LAERDOMMER 5.11) er AVVIST i [ADR-0019](adr/0019-synket-mobilmodell.md) (13. august 2026: løser stil-per-brekkpunkt, ikke layout-synk).
 

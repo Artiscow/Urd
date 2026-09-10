@@ -1,7 +1,7 @@
 <script>
-  // Editor-skallet for v0.2 «tynn skive»: preview-iframe med den ekte
-  // siden, klikk-og-skriv på tekstblokker, utkast i localStorage og
-  // publiseringsknapp mot /api/github/commit.
+  // The editor shell: preview iframe with the real page, click-and-type
+  // on text blocks, drafts in localStorage and a publish button against
+  // /api/github/commit.
   import { fly } from 'svelte/transition';
   import { createDraftStore } from './lib/draftStore.js';
   import ColorPicker from './lib/ColorPicker.svelte';
@@ -15,7 +15,7 @@
   } from './lib/content-width.js';
   import Dropdown from './lib/Dropdown.svelte';
   import IconEditor from './lib/IconEditor.svelte';
-  // Editoren deler migreringskoden med motoren (samme fil, bundles inn).
+  // The editor shares the migration code with the engine (same file, bundled in).
   import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION, SITE_SCHEMA_VERSION } from '$engine/migrate.js';
   import { ta, taApiError, adminLang as currentAdminLang } from '$engine/i18n.js';
   import { validateManifest, satisfiesEngine } from '$engine/plugins.js';
@@ -26,8 +26,8 @@
   import { pageThumb } from '$engine/preset-thumb.js';
   import { PAGE_PRESETS, buildPagePreset } from '$engine/page-presets.js';
   import { searchItems as searchBlockItems } from '$engine/palette-search.js';
-  // Bakgrunns- og animasjonsdefinisjonene gjenbrukes for etiketter og
-  // standardverdier, så editor og motor aldri drifter fra hverandre.
+  // The background and animation definitions are reused for labels and
+  // defaults, so the editor and the engine never drift apart.
   import { colorLayer } from '$engine/backgrounds/color.js';
   import { gradientLayer } from '$engine/backgrounds/gradient.js';
   import { glowLayer } from '$engine/backgrounds/glow.js';
@@ -43,7 +43,7 @@
   import { frameAtPoint } from '$engine/place.js';
   import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '$engine/icons.js';
 
-  /** Bakgrunnslagtypene i den rekkefølgen de tilbys i panelet. */
+  /** The background layer types in the order they are offered in the panel. */
   const BG_TYPES = [
     ['color', colorLayer],
     ['gradient', gradientLayer],
@@ -55,7 +55,7 @@
   ];
   const BG_DEFS = Object.fromEntries(BG_TYPES);
 
-  /** Tegnede SVG-ikoner (strek-stil, currentColor) - aldri emoji. */
+  /** Drawn SVG icons (stroke style, currentColor) - never emoji. */
   const ICONS = {
     copy: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
     phone: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="8" y="3" width="8" height="18" rx="2"/><path d="M11 17.5h2"/></svg>',
@@ -69,23 +69,23 @@
     plus: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
     minus: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg>',
     gear: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
-    // Hjelpelinjer: en boks med krysset innrettingslinjer. Var tidligere et
-    // rutenett-ikon og dermed umulig å skille fra rutenett-knappen ved siden av.
+    // Guides: a box with crossed alignment lines, distinguishable from the
+    // grid button next to it.
     guides: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20" stroke-dasharray="3 3"/><rect x="7.5" y="7.5" width="9" height="9" rx="1.5"/></svg>',
     kebab: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>',
     bookmark: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/></svg>',
     fit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/></svg>',
     gridToggle: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>',
-    // Forkast utkast: gjenopprett, altså pil med urviser. IKKE ren tilbake-pil,
-    // som er den universelle angre-glyfen; forkast er noe annet enn angre.
+    // Discard draft: restore, i.e. an arrow with a clock face. NOT a plain
+    // back arrow, which is the universal undo glyph; discard is not undo.
     restore: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 9"/><path d="M12 8v4.5l3 1.8"/></svg>',
-    // Nedtrekksmerket på de sammenfoldede verktøymenyene. Egen liten vinkel,
-    // ikke `down`, som er flytt-ned-pila og leses som en handling.
+    // The dropdown marker on the collapsed tool menus. Its own small chevron,
+    // not `down`, which is the move-down arrow and reads as an action.
     caret: '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
-    // Se siden: åpner en ny fane, så pil ut av ramme. Ekte ikon, ikke et
-    // tegn i teksten: knappen er rent ikon på smale vinduer.
+    // View site: opens a new tab, so an arrow leaving a frame. A real icon,
+    // not a character in the text: the button is icon-only on narrow windows.
     external: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4l-8 8"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
-    // Mål-enhetene i lerretsbryteren: skjerm, bærbar, nettbrett, telefon
+    // The target devices in the canvas switcher: desktop, laptop, tablet, phone
     device_desktop: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="13" rx="2"/><path d="M8 21h8M12 16v5"/></svg>',
     device_laptop: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></svg>',
     device_tablet: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M11 18.5h2"/></svg>',
@@ -93,9 +93,10 @@
   };
 
   /**
-   * Adminens eget fargetema (KUN editoren - nettsidens tema styres av
-   * brukeren i Tema-panelet). Velges i topplinjen, lagres per nettleser.
-   * Palettene er definert som CSS-variabler i stilblokken under.
+   * The admin's own color theme (the editor ONLY - the site's theme is
+   * controlled by the user in the Theme panel). Picked in the top bar,
+   * stored per browser. The palettes are defined as CSS variables in the
+   * style block below.
    */
   const ADMIN_THEMES = [
     ['lilla', ta('adminTheme.lilla')],
@@ -114,9 +115,10 @@
     sendAdminTheme();
   });
 
-  /** Melder adminens temafarger til previewen: editor-menyene der inne
-   *  (blokkmenyen, seksjonsgalleriet) følger admin, ikke siden. Leses
-   *  fra dokumentets faktiske variabler, så palettene bor ett sted. */
+  /** Reports the admin's theme colors to the preview: the editor menus in
+   *  there (block menu, section gallery) follow the admin, not the page.
+   *  Read from the document's actual variables, so the palettes live in
+   *  one place. */
   function sendAdminTheme() {
     const style = getComputedStyle(document.documentElement);
     const accent = style.getPropertyValue('--urd-color-accent').trim();
@@ -125,14 +127,13 @@
       surface: style.getPropertyValue('--urd-color-surface').trim(),
       accent,
       text: style.getPropertyValue('--urd-color-text').trim(),
-      // Lesbar tekst PÅ admin-aksenten: chromen brukte hardkodet hvit, som ga
-      // lav kontrast på lyse admin-aksenter (Gull/Glo). Velg svart/hvit etter
-      // aksentens luminans, så «hvit på lys» aldri oppstår.
+      // Readable text ON the admin accent: pick black or white by the
+      // accent's luminance, so white-on-light never occurs.
       'accent-text': readableOn(accent),
     });
   }
 
-  /** Svart eller hvit tekst - det som har best WCAG-kontrast mot bakgrunnen. */
+  /** Black or white text - whichever has the best WCAG contrast against the background. */
   function readableOn(bg) {
     const l = relativeLuminance(bg);
     if (l == null) return '#ffffff';
@@ -143,11 +144,11 @@
   let pageId = $state(null);
   let dirty = $state(false);
   let status = $state('');
-  /** 'info' | 'ok' | 'error' - styrer fargen på status-chipen */
+  /** 'info' | 'ok' | 'error' - controls the color of the status chip */
   let statusKind = $state('info');
   let statusSeq = 0;
 
-  /** Sett statusmeldingen; 'ok'-meldinger rydder seg selv etter 8 s. */
+  /** Set the status message; 'ok' messages clear themselves after 8 s. */
   function setStatus(msg, kind = 'info') {
     status = msg;
     statusKind = kind;
@@ -161,12 +162,12 @@
       }, 8000);
     }
   }
-  /** Felles feilmelding når et utkast ikke får plass i localStorage (delt av alle draftStores). */
+  /** Shared error message when a draft does not fit in localStorage (used by all draftStores). */
   function draftSaveError() {
     setStatus(ta('status.storageFull'), 'error');
   }
 
-  /** Direkte utkast-skriving (utenom draftStore) med samme kvotevern. */
+  /** Direct draft write (outside draftStore) with the same quota guard. */
   function writeDraftKey(key, value) {
     try {
       localStorage.setItem(key, value);
@@ -176,21 +177,21 @@
   }
 
   let iframeEl = $state(null);
-  /** null = publiseringslag utilgjengelig (f.eks. enkel lokalserver uten functions) */
+  /** null = publishing layer unavailable (e.g. a simple local server without functions) */
   let auth = $state(null);
-  /** Speil av site-utkastets grid: kvadratiske ruter, én størrelse */
+  /** Mirror of the site draft's grid: square cells, one size */
   let grid = $state({ size: 16, snap: true });
 
-  /** Ren forhåndsvisning: skjuler alle editeringshåndtak i iframen */
+  /** Clean preview: hides all editing handles in the iframe */
   let chromeVisible = $state(true);
 
-  /** Lerretets mål-enhet (ADR-0018, Squarespace-modellen): hver knapp er en
-   *  EKTE skjermstørrelse, ikke en visningsmodus. Da finnes det ingen «feil»
-   *  modus å stå i, og folden stemmer i alle fire. Skrivebordsbredden er
-   *  ikke en konstant: den følger designbredden, siden enhver bredde over
-   *  den gir identisk render.
-   *  `viewport` er det MOTOREN får vite (den kjenner bare desktop/mobil),
-   *  så nettbrett og bærbar er skrivebordsvisning for motoren. */
+  /** The canvas target device (ADR-0018, the Squarespace model): each button
+   *  is a REAL screen size, not a view mode. Then there is no "wrong" mode
+   *  to be in, and the fold is correct in all four. The desktop width is
+   *  not a constant: it follows the design width, since any width above it
+   *  renders identically.
+   *  `viewport` is what the ENGINE gets to know (it only knows
+   *  desktop/mobile), so tablet and laptop are desktop view to the engine. */
   const DEVICES = [
     { id: 'desktop', width: null, viewport: 'desktop' },
     { id: 'laptop', width: 1280, viewport: 'desktop' },
@@ -199,116 +200,119 @@
   ];
   let deviceId = $state('desktop');
   let device = $derived(DEVICES.find((d) => d.id === deviceId) ?? DEVICES[0]);
-  /** Motorens viewport. Alt som spør «er vi på mobil» leser denne. */
+  /** The engine's viewport. Everything that asks "are we on mobile" reads this. */
   let viewMode = $derived(device.viewport);
 
-  // Skalert lerret: iframen rendrer siden i full vindus-viewport (samme som en
-  // besøkende med fullt vindu) og skaleres ned for å passe .frame-wrap, i stedet
-  // for å reflowe inn i restplassen etter chromen. Da er render-en identisk med
-  // publisert; kun visningsstørrelsen (zoom) endres. Se lib/preview-scale.js.
+  // Scaled canvas: the iframe renders the page in a full window viewport
+  // (same as a visitor with a full window) and is scaled down to fit
+  // .frame-wrap, instead of reflowing into the space left over after the
+  // chrome. The render is then identical to the published page; only the
+  // display size (zoom) changes. See lib/preview-scale.js.
   let frameWrapEl = $state(null);
-  let frameW = $state(0);            // .frame-wrap sin målte innerflate (px)
+  let frameW = $state(0);            // measured inner surface of .frame-wrap (px)
   let frameH = $state(0);
   let winW = $state(typeof window !== 'undefined' ? window.innerWidth : 1280);
-  /** Zoom for redigerings-lerretet: 'fit' tilpasser vinduet, 'full' = ekte 1:1. */
-  let zoomMode = $state('fit'); // 'fit' | 'manual' (steppes med +/-)
+  /** Zoom for the editing canvas: 'fit' adapts to the window, 'full' = true 1:1. */
+  let zoomMode = $state('fit'); // 'fit' | 'manual' (stepped with +/-)
   let manualZoom = $state(1);
-  /** Skrivebordslerretet er en FAST, representativ skjerm: 1920x1080 er den
-   *  vanligste skrivebordsoppløsningen.
+  /** The desktop canvas is a FIXED, representative screen: 1920x1080 is the
+   *  most common desktop resolution.
    *
-   *  Det var tidligere bindingsbredden, altså den smaleste skjermen der
-   *  innholdet når designbredden. Det var galt av to grunner: lerretsbredden
-   *  ble da avhengig av sidemargen, så å dra i margen endret zoomen og fikk
-   *  alt til å se større eller mindre ut, og et smalt lerret ga letterboks
-   *  rundt siden. En fast referanseskjerm gjør begge deler borte, og margen
-   *  blir synlig der den faktisk virker: på Bærbar og Nettbrett. */
+   *  A fixed reference screen, not the binding width (the narrowest screen
+   *  where the content reaches the design width): with the binding width
+   *  the canvas width would depend on the side margin, so dragging the
+   *  margin would change the zoom and make everything look larger or
+   *  smaller, and a narrow canvas would letterbox the page. A fixed
+   *  reference screen avoids both, and the margin shows up where it
+   *  actually applies: on Laptop and Tablet. */
   const DESKTOP_REF = 1920;
   let desktopW = $derived(layoutWidth === 'full' ? winW : DESKTOP_REF);
-  /** Fra hvilken vindusbredde innholdet faktisk når designbredden. Vises
-   *  under prøven, siden den ikke er «bredde pluss marger» med relativ marg. */
+  /** The window width from which the content actually reaches the design
+   *  width. Shown under the sample, since it is not "width plus margins"
+   *  when the margin is relative. */
   let bindsFrom = $derived(bindingWidth(layoutWidth, layoutGutter));
   let targetW = $derived(device.width ?? desktopW);
-  // Skalaen er BREDDE-drevet. Se kommentaren ved iframeH: høyden pinnes ikke,
-  // fordi det ville gitt barer rundt lerretet.
+  // The scale is WIDTH-driven. See the comment at iframeH: the height is
+  // not pinned, because that would put bars around the canvas.
   let scale = $derived(zoomMode === 'manual'
     ? manualZoom
     : previewScale(frameW, targetW, 'fit'));
 
-  /** Zoom-stepperne: 10 %-poengs trinn fra gjeldende visning, klemt 10-400 %. */
+  /** The zoom steppers: 10 percentage-point steps from the current view, clamped 10-400 %. */
   function stepZoom(dir) {
     const next = Math.min(400, Math.max(10, (Math.round(Math.round(scale * 100) / 10) + dir) * 10));
     manualZoom = next / 100;
     zoomMode = 'manual';
   }
-  // Lerretet FYLLER panelet: iframen gjøres tilsvarende høyere, så den
-  // skalerte høyden dekker .frame-wrap og det aldri blir svarte striper
-  // over og under siden. Bredden er fortsatt pinnet til enheten, og det er
-  // bredden som avgjør om layouten er riktig.
+  // The canvas FILLS the panel: the iframe is made correspondingly taller,
+  // so the scaled height covers .frame-wrap and there are never black bars
+  // above and below the page. The width is still pinned to the device, and
+  // the width is what decides whether the layout is correct.
   //
-  // Å pinne HØYDEN også ville gitt en helt nøyaktig fold, men prisen er
-  // synlige barer rundt lerretet. Den byttehandelen er avvist (testfunn
-  // 10. august 2026): en unøyaktig fold er en usynlig kostnad, barer er en
-  // synlig.
+  // Pinning the HEIGHT too would give a perfectly accurate fold, but at
+  // the price of visible bars around the canvas: an inaccurate fold is an
+  // invisible cost, bars are a visible one.
   let iframeH = $derived(scale > 0 ? frameH / scale : frameH);
   let stageW = $derived(targetW * scale);
   let stageH = $derived(frameH);
-  /** Kan lerretet panoreres? Kun når man har zoomet MANUELT forbi flaten.
+  /** Can the canvas be panned? Only after zooming MANUALLY past the surface.
    *
-   *  I tilpass-modus skal flaten aldri kunne scrolles: siden har allerede sin
-   *  egen scrollbar inne i iframen, og en scrollbar rundt lerretet i tillegg
-   *  er både en scrollbar for mye og en selvforsterkende løkke (scrollbaren
-   *  spiser plass, flaten måles smalere, lerretet skaleres om, scrollbaren
-   *  kommer og går, og siden pumper). Toleransen på 1 px hindrer at den
-   *  vipper frem og tilbake akkurat på grensen. */
+   *  In fit mode the surface must never scroll: the page already has its
+   *  own scrollbar inside the iframe, and a scrollbar around the canvas on
+   *  top of that is both one scrollbar too many and a self-reinforcing loop
+   *  (the scrollbar eats space, the surface measures narrower, the canvas
+   *  rescales, the scrollbar comes and goes, and the page pumps). The 1 px
+   *  tolerance keeps it from flipping back and forth right at the edge. */
   let canPan = $derived(stageW > frameW + 1 || stageH > frameH + 1);
 
-  // Klikk hvor som helst i admin (paneler, topplinje) lukker åpne menyer i forhåndsvisningen;
-  // iframens egne utenfor-klikk-lyttere ser aldri disse klikkene.
+  // A click anywhere in the admin (panels, top bar) closes open menus in
+  // the preview; the iframe's own outside-click listeners never see these clicks.
   $effect(() => {
     const closeMenus = () => bridge?.sendCloseMenus();
     document.addEventListener('pointerdown', closeMenus, true);
     return () => document.removeEventListener('pointerdown', closeMenus, true);
   });
 
-  // Forhåndsvisningens viewport følger visningsvalget, ikke iframe-bredden:
-  // et smalt admin-vindu skal aldri vippe previewen til mobil og gjemme strukturverktøyene.
+  // The preview's viewport follows the view choice, not the iframe width:
+  // a narrow admin window must never tip the preview into mobile and hide
+  // the structure tools.
   $effect(() => {
     const mode = viewMode;
     bridge?.sendViewport(mode);
   });
 
-  // Zoomen meldes inn så editeringshåndtakene kan mot-skalere seg og holde
-  // samme størrelse som admin-panelene (se urd-zoom i previewBridge).
+  // The zoom is reported so the editing handles can counter-scale and stay
+  // the same size as the admin panels (see urd-zoom in previewBridge).
   $effect(() => {
     const z = scale;
     bridge?.sendZoom(z);
   });
 
-  // Målviewporten følger det levende vinduets indre mål.
+  // The target viewport follows the live window's inner dimensions.
   $effect(() => {
     const onResize = () => { winW = window.innerWidth; };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   });
 
-  // .frame-wrap endrer størrelse ved panel/skinne åpne-lukke OG vindus-resize;
-  // mål den så skalaen alltid passer den faktiske lerretsflaten.
+  // .frame-wrap changes size on panel/rail open-close AND window resize;
+  // measure it so the scale always fits the actual canvas surface.
   $effect(() => {
     const el = frameWrapEl;
     if (!el || typeof ResizeObserver === 'undefined') return;
-    // clientWidth/Height, IKKE getBoundingClientRect: rekten er border-boksen
-    // og inkluderer eventuelle scrollbarer, mens innholdsboksen er flaten
-    // lerretet faktisk kan bruke. Innholdsboksen gir dessuten heltall, så
-    // flyttall-avrunding ikke kan gi et lerret en brøkdels piksel for bredt.
+    // clientWidth/Height, NOT getBoundingClientRect: the rect is the border
+    // box and includes any scrollbars, while the content box is the surface
+    // the canvas can actually use. The content box also yields integers, so
+    // float rounding cannot make a canvas a fraction of a pixel too wide.
     const measure = () => {
       frameW = el.clientWidth; frameH = el.clientHeight;
     };
-    measure(); // umiddelbart, så første ramme ikke blinker på scale 1
+    measure(); // immediately, so the first frame does not flash at scale 1
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
   });
-  /** Antall seksjoner på siden som trenger mobil-tilsyn */
+  /** Number of sections on the page that need mobile review */
   let attentionCount = $state(0);
 
   function updateAttention() {
@@ -316,9 +320,9 @@
       .filter((s) => s.responsive?.mobile?.attention?.needed).length ?? 0;
   }
 
-  /** Tilsynsmerket: bytt til mobilvisning og rull til første seksjon som
-   *  trenger gjennomgang. Scrollen sendes etter at viewport-effekten har
-   *  flushet (postMessage er FIFO, så rekkefølgen er garantert). */
+  /** The review badge: switch to mobile view and scroll to the first
+   *  section that needs review. The scroll is sent after the viewport
+   *  effect has flushed (postMessage is FIFO, so the order is guaranteed). */
   function jumpToAttention() {
     const target = store?.data.sections.find((s) => s.responsive?.mobile?.attention?.needed);
     deviceId = 'mobile';
@@ -326,11 +330,11 @@
   }
 
   /**
-   * Desktop-strukturendring i en manuelt mobil-tilpasset seksjon:
-   * flagg seksjonen for mobil-tilsyn (regler i docs/SKJEMA.md#mobil-tilsyn).
+   * Desktop structure change in a manually mobile-adapted section:
+   * flag the section for mobile review (rules in docs/SKJEMA.md#mobil-tilsyn).
    */
-  /** «Bytt oppsett» (0.6.7): variantens rammer + minHeight bokføres som
-   *  ETT angre-steg; mobil-tilsynet flagges som ved andre desktop-endringer. */
+  /** "Switch layout": the variant's frames + minHeight are recorded as ONE
+   *  undo step; mobile review is flagged as for other desktop changes. */
   function handleApplyLayout(msg) {
     const section = store.data.sections.find((x) => x.id === msg.sectionId);
     if (!section) return;
@@ -348,14 +352,14 @@
     bridge?.sendSection(pageId, section);
   }
 
-  /** Har seksjonen minst én blokk med mobiloverstyring (ADR-0019)? */
+  /** Does the section have at least one block with a mobile override (ADR-0019)? */
   function hasMobileOverrides(section) {
     return section?.blocks?.some((b) => b.frames?.mobile) ?? false;
   }
 
   function markDesktopChange(section, reason) {
-    // Kun seksjoner med overstyringer kan drifte fra desktop; resten
-    // avledes på nytt ved hver render og trenger aldri tilsyn.
+    // Only sections with overrides can drift from desktop; the rest are
+    // re-derived on every render and never need review.
     if (!section || !hasMobileOverrides(section)) return;
     if (section.responsive?.mobile?.attention?.needed) return;
     section.responsive = {
@@ -374,39 +378,40 @@
   let bridge = null;
 
   /**
-   * Reaktivt speil av site-UTKASTET (sider, nav, tema): panelene leser og
-   * muterer dette. `site` er den PUBLISERTE tilstanden og brukes kun som
-   * diff-grunnlag ved publisering (slettede/flyttede sider).
+   * Reactive mirror of the site DRAFT (pages, nav, theme): the panels read
+   * and mutate this. `site` is the PUBLISHED state and is only used as the
+   * diff baseline when publishing (deleted/moved pages).
    */
   let siteDraft = $state(null);
 
-  /** Kobler siteDraft og siteStore til samme objekt (via Svelte-proxyen). */
+  /** Links siteDraft and siteStore to the same object (via the Svelte proxy). */
   function linkSiteDraft() {
     siteDraft = siteStore.data;
     siteStore.replace(siteDraft);
   }
 
   /**
-   * Site-utkastet til forhåndsvisningen. ALLTID via denne: siteDraft er
-   * en Svelte-proxy, og postMessage (structured clone) kaster
-   * DataCloneError på proxier - $state.snapshot gir et rent objekt.
+   * The site draft for the preview. ALWAYS through this: siteDraft is a
+   * Svelte proxy, and postMessage (structured clone) throws DataCloneError
+   * on proxies - $state.snapshot yields a plain object.
    */
   function pushSiteToPreview() {
     bridge?.sendSite($state.snapshot(siteDraft));
   }
 
   /**
-   * Nypubliserte sider som ennå ikke finnes på serveren: utkastet beholdes
-   * som kilde til deployen er ferdig, men skal ikke telle som «upublisert».
-   * Ryddes automatisk når siden lastes fra serveren første gang.
+   * Newly published pages that do not yet exist on the server: the draft is
+   * kept as the source until the deploy finishes, but must not count as
+   * "unpublished". Cleaned up automatically the first time the page is
+   * loaded from the server.
    */
   const pendingPublished = new Set();
 
   const pageEntry = () => siteDraft.pages.find((p) => p.id === pageId);
 
   function updateDirty() {
-    // Utkast på ALLE sider teller, ikke bare den man står på - men ikke
-    // nypubliserte som bare venter på deploy.
+    // Drafts on ALL pages count, not just the current one - but not newly
+    // published pages that are just waiting for deploy.
     const anyPageDraft = siteDraft?.pages?.some((p) =>
       !pendingPublished.has(p.id) && localStorage.getItem(`urd-draft-${p.id}`) !== null) ?? false;
     const anyCollectionDraft = collectionsIndexStore?.hasDraft()
@@ -419,18 +424,23 @@
   }
 
   /**
-   * Angre/gjenta: snapshot-basert historikk over side-, site-, samling- og
-   * plugin-utkastene. pushHistory kalles FØR hver mutasjon; tastene brukes
-   * til å slå sammen skurer av samme handling (hvert tastetrykk i en
-   * tekstblokk skal ikke bli hvert sitt angre-steg).
+   * Undo/redo: snapshot-based history over the page, site, collection and
+   * plugin drafts. pushHistory is called BEFORE every mutation; the keys
+   * are used to merge bursts of the same action (each keystroke in a text
+   * block must not become its own undo step).
    */
   const history = [];
   const redoStack = [];
   let lastHistoryKey = null;
 
   function snapshot() {
-    // pageId følger med: angring på tvers av sidebytter må legge sideinnholdet tilbake på SIDEN det kom fra, ikke i gjeldende sides utkast.
-    // Samlinger/plugins er null til init-flyten deres er FERDIG (samlingerReady-flagget, ikke bare at indeks-storen finnes: stores fylles asynkront etterpå, og et snapshot fra det vinduet ville manglet samlinger som en angring så ville slettet); restore hopper over null-delene.
+    // pageId is included: undo across page switches must put the page
+    // content back on the PAGE it came from, not into the current page's draft.
+    // Collections/plugins are null until their init flow has FINISHED (the
+    // samlingerReady flag, not merely the index store existing: the stores
+    // fill asynchronously afterwards, and a snapshot from that window would
+    // miss collections that an undo would then delete); restore skips the
+    // null parts.
     return JSON.stringify({
       pageId,
       page: store.data,
@@ -462,12 +472,14 @@
     siteStore.save();
     grid = { snap: true, ...siteDraft.grid };
     pushSiteToPreview();
-    // Samlinger/maler/plugins gjenopprettes FØR sidebytte-grenen under, ellers ville kryss-side-angring miste de delene av snapshotet.
+    // Collections/templates/plugins are restored BEFORE the page-switch
+    // branch below, otherwise cross-page undo would lose those parts of the snapshot.
     restoreCollections(samlingerIndex, samlinger ?? {});
     restoreMaler(malerIndex, maler ?? {});
     restorePlugins(plugins);
 
-    // Snapshotet hører til en annen side (angring over et sidebytte): legg sideinnholdet tilbake som utkast DER, og bytt dit.
+    // The snapshot belongs to another page (undo across a page switch): put
+    // the page content back as a draft THERE, and switch to it.
     if (snapPageId && snapPageId !== pageId && siteDraft.pages.some((p) => p.id === snapPageId)) {
       writeDraftKey(`urd-draft-${snapPageId}`, JSON.stringify(page));
       selectPage(snapPageId, { keepHistory: true });
@@ -479,12 +491,12 @@
     store.save();
     updateDirty();
     updateAttention();
-    // Panel-speilene må følge de gjenopprettede dataene, ellers viser
-    // Egenskaper/seksjonspanelet gamle verdier og angringen ser død ut.
+    // The panel mirrors must follow the restored data, otherwise the
+    // Properties/section panel shows stale values and the undo looks dead.
     syncSelectedBlock();
     syncSectionMirrors(store.data.sections.find((s) => s.id === activeSectionId));
-    // Angring kan fjerne siden man står på (angret sideopprettelse):
-    // da byttes det til forsiden i stedet for å bli stående i løse luften.
+    // Undo can remove the page you are on (an undone page creation):
+    // then switch to the front page instead of being left hanging.
     if (!siteDraft.pages.some((p) => p.id === pageId)) {
       selectPage(siteDraft.pages[0].id, { keepHistory: true });
     } else {
@@ -492,8 +504,8 @@
     }
   }
 
-  /** Gjenopprett samlingsutkastene fra et snapshot (null = tatt før init, hopp over).
-   *  Stores som mangler gjenskapes mot publisert baseline; stores utenfor snapshotet fjernes. */
+  /** Restore the collection drafts from a snapshot (null = taken before init, skip).
+   *  Missing stores are recreated against the published baseline; stores outside the snapshot are removed. */
   function restoreCollections(indexSnap, samlingerSnap) {
     if (!collectionsIndexStore || !indexSnap) return;
     const current = JSON.stringify({
@@ -512,9 +524,9 @@
     }
     for (const [id, data] of Object.entries(samlingerSnap)) {
       if (!collectionStores[id]) {
-        // Angret sletting: baseline er publisert tilstand, eller «finnes
-        // ikke» (null) for en samling som aldri rakk å publiseres
-        // (speiler addCollection, så hasDraft() forblir sann til publisering).
+        // Undone deletion: the baseline is the published state, or "does
+        // not exist" (null) for a collection that never got published
+        // (mirrors addCollection, so hasDraft() stays true until publish).
         const baseline = publishedCollections[id] ?? null;
         collectionStores[id] = createDraftStore(`urd-draft-collection-${id}`, () => baseline, draftSaveError, `urd-draft-samling-${id}`);
       }
@@ -526,8 +538,8 @@
     syncCollectionsView();
   }
 
-  /** Gjenopprett mal-utkastene fra et snapshot (null = tatt før init, hopp over).
-   *  Speiler restoreCollections, med «finnes ikke»-baseline for aldri publiserte maler. */
+  /** Restore the template drafts from a snapshot (null = taken before init, skip).
+   *  Mirrors restoreCollections, with a "does not exist" baseline for never-published templates. */
   function restoreMaler(indexSnap, malerSnap) {
     if (!templatesIndexStore || !indexSnap) return;
     const current = JSON.stringify({
@@ -556,8 +568,8 @@
     pushTemplatesToPreview();
   }
 
-  /** Gjenopprett plugin-utkastet fra et snapshot (null = tatt før init, hopp over).
-   *  Diff-vaktet: kun en reell plugin-endring skal koste en preview-reboot. */
+  /** Restore the plugin draft from a snapshot (null = taken before init, skip).
+   *  Diff-guarded: only a real plugin change should cost a preview reboot. */
   function restorePlugins(pluginsSnap) {
     if (!pluginsStore || !pluginsSnap) return;
     if (JSON.stringify(pluginsStore.data) === JSON.stringify(pluginsSnap)) return;
@@ -583,8 +595,8 @@
     setStatus(ta('status.redone'));
   }
 
-  // Klikk hvor som helst i admin utenfor blokkmenyen lukker den (klikk i
-  // previewen håndteres via onSelectBlock; iframe-klikk når ikke hit).
+  // A click anywhere in the admin outside the block menu closes it (clicks
+  // in the preview are handled via onSelectBlock; iframe clicks never reach here).
   function onPointerdownWindow(e) {
     if (!blockMenu) return;
     if (e.target instanceof Element && e.target.closest('.block-menu')) return;
@@ -598,10 +610,11 @@
     }
     if (!(e.ctrlKey || e.metaKey)) return;
     const key = e.key.toLowerCase();
-    // Ctrl+D med fokus i admin-panelene: dupliser markert blokk i previewen
-    // (ellers går snarveien til nettleserens bokmerke-dialog). Kun ekte
-    // SKRIVEFELT beholder nettleserens snarvei; tall, brytere og slidere
-    // (der fokus blir stående etter et panelvalg) skal ikke sluke Ctrl+D.
+    // Ctrl+D with focus in the admin panels: duplicate the selected block
+    // in the preview (otherwise the shortcut opens the browser's bookmark
+    // dialog). Only real TEXT FIELDS keep the browser shortcut; numbers,
+    // toggles and sliders (where focus lingers after a panel choice) must
+    // not swallow Ctrl+D.
     if (key === 'd') {
       const t = e.target;
       const inTextField = t instanceof HTMLElement
@@ -614,9 +627,9 @@
     }
     if (key !== 'z' && key !== 'y') return;
     const t = e.target;
-    // Fritekstfelter beholder nettleserens egen angring; alt annet
-    // (tall, brytere, glidere, FARGEVELGERE - fokus blir stående i dem
-    // etter valg) bruker editorens historikk.
+    // Free-text fields keep the browser's own undo; everything else
+    // (numbers, toggles, sliders, COLOR PICKERS - focus lingers in them
+    // after a choice) uses the editor's history.
     const nativeUndo = t instanceof HTMLElement
       && (t.isContentEditable || t.tagName === 'TEXTAREA'
         || (t.tagName === 'INPUT' && !['number', 'checkbox', 'range', 'color'].includes(t.type)));
@@ -629,14 +642,15 @@
   async function init() {
     site = liftSiteFile(await (await fetch('/content/site.json')).json());
     siteStore = createDraftStore('urd-draft-site', () => site, draftSaveError);
-    // Site-utkast med høyere schemaVersion enn motoren forkastes, samme
-    // vern som for sideutkastene (liftSiteFile lar dem ellers passere).
+    // Site drafts with a higher schemaVersion than the engine are
+    // discarded, the same guard as for page drafts (liftSiteFile would
+    // otherwise let them through).
     if ((siteStore.data.schemaVersion ?? 1) > SITE_SCHEMA_VERSION) {
       console.warn(`Urd: site-utkastet har schemaVersion ${siteStore.data.schemaVersion} (motoren har ${SITE_SCHEMA_VERSION}) og forkastes`);
-      // site er $state: structuredClone på proxyen kaster (snapshot-leksen).
+      // site is $state: structuredClone on the proxy throws (the snapshot lesson).
       siteStore.replace($state.snapshot(site));
     }
-    // Utkast fra eldre format kan ligge i localStorage: løft dem.
+    // Drafts in an older format can sit in localStorage: lift them.
     siteStore.replace(liftSiteFile(siteStore.data));
     siteStore.save();
     linkSiteDraft();
@@ -646,13 +660,13 @@
     await initSamlinger();
     await initMaler();
     await checkAuth();
-    // Publiseringsgrunnlaget krever innlogging: uinnlogget ville kallet
-    // bare gitt 401-støy i konsollen. Etter innlogging (OAuth-redirect)
-    // lastes siden på nytt, så grunnlaget hentes da her.
+    // The publish baseline requires login: signed out, the call would just
+    // produce 401 noise in the console. After login (OAuth redirect) the
+    // page reloads, so the baseline is fetched here then.
     if (auth) refreshBaseSha();
-    // Oppsettsveiviseren: første besøk på en fersk klon og ikke avvist
-    // tidligere. Utløses KUN av malens eksplisitte signal (site.setup);
-    // veiviseren fjerner feltet ved fullføring, så det aldri vises igjen.
+    // The setup wizard: first visit on a fresh clone and not dismissed
+    // before. Triggered ONLY by the template's explicit signal (site.setup);
+    // the wizard removes the field on completion, so it never shows again.
     if (siteDraft.site.setup === true && !localStorage.getItem('urd-setup-done')) {
       setupName = siteDraft.site.title;
       setupAccent = siteDraft.theme.tokens.color.accent;
@@ -661,10 +675,11 @@
     }
   }
 
-  /* ---------- Bekreftelsesdialogen ---------- */
+  /* ---------- The confirmation dialog ---------- */
 
-  // Editorens egen erstatning for confirm(): promise-basert modal i samme stil som oppsettsveiviseren.
-  // Kun én om gangen (publisering og angring er sekvensielle flyter).
+  // The editor's own replacement for confirm(): a promise-based modal in
+  // the same style as the setup wizard. Only one at a time (publishing and
+  // undo are sequential flows).
   let confirmBox = $state(null);
 
   function askConfirm({ title, lines = [], okLabel = ta('confirm.ok'), cancelLabel = ta('confirm.cancel') }) {
@@ -673,7 +688,7 @@
     });
   }
 
-  /** Som askConfirm, men med tekstfelt: løser med teksten ved OK, null ved avbrudd. */
+  /** Like askConfirm, but with a text field: resolves with the text on OK, null on cancel. */
   function askPrompt({ title, lines = [], value = '', placeholder = '', okLabel = ta('confirm.ok'), cancelLabel = ta('confirm.cancel') }) {
     return new Promise((resolve) => {
       confirmBox = { title, lines, okLabel, cancelLabel, resolve, prompt: true, value, placeholder };
@@ -685,15 +700,17 @@
     confirmBox = null;
   }
 
-  // Skiller et klikk på bakteppet fra et tekstdrag som startet inne i kortet:
-  // begge ender med samme klikk-mål, men bare det første begynte på bakteppet.
+  // Distinguishes a click on the backdrop from a text drag that started
+  // inside the card: both end with the same click target, but only the
+  // former began on the backdrop.
   let confirmDownOnOverlay = false;
 
-  // Escape avbryter, som i alle andre lukkbare flater i editoren. Egen lytter
-  // fremfor den globale keydown-handleren: dialogen skal svare på Escape så
-  // lenge fokus står i admin-dokumentet, og stopPropagation hindrer at samme
-  // tastetrykk også lukker blokkmenyen bak. Ingen blur-lukking (en modal skal
-  // overleve at forhåndsvisnings-iframen tar fokus).
+  // Escape cancels, like every other closable surface in the editor. Its
+  // own listener rather than the global keydown handler: the dialog must
+  // respond to Escape as long as focus is in the admin document, and
+  // stopPropagation keeps the same keystroke from also closing the block
+  // menu behind it. No blur closing (a modal must survive the preview
+  // iframe taking focus).
   $effect(() => {
     if (!confirmBox) return;
     const onKey = (e) => {
@@ -705,7 +722,7 @@
     return () => document.removeEventListener('keydown', onKey, true);
   });
 
-  /* ---------- Oppsettsveiviseren ---------- */
+  /* ---------- The setup wizard ---------- */
 
   let showSetup = $state(false);
   let setupName = $state('');
@@ -725,31 +742,33 @@
       siteDraft.nav.logo = { type: 'text', value: name };
       siteDraft.theme.tokens.color.accent = setupAccent;
       siteDraft.theme.tokens.color.bg = setupBg;
-      // Signalet er brukt: neste publisering fjerner det fra site.json, så veiviseren aldri går igjen for andre redaktører.
+      // The signal is spent: the next publish removes it from site.json, so
+      // the wizard never runs again for other editors.
       delete siteDraft.site.setup;
     });
     closeSetup();
     setStatus(ta('status.setupDone'), 'ok');
   }
 
-  /** Aktivt panel i venstre panelvelger (null = lukket) */
+  /** Active panel in the left panel picker (null = closed) */
   let activePanel = $state(null);
-  /** Panelene gruppert etter arbeidsflyt: bygge siden, style nettstedet,
-   *  verktøy. Vises med skillelinjer i panelvelgeren. Id-ene er stabile
-   *  engelske identifikatorer (aldri visningstekst, 0.6.8.2);
-   *  PANEL_LABELS eier det brukeren ser. */
+  /** The panels grouped by workflow: build the page, style the site,
+   *  tools. Shown with dividers in the panel picker. The ids are stable
+   *  English identifiers (never display text); PANEL_LABELS owns what the
+   *  user sees. */
   const PANEL_GROUPS = [
     ['pages', 'blocks', 'properties', 'grid'],
     ['site', 'theme', 'nav', 'footer', 'collections', 'plugins'],
     ['history', 'update'],
   ];
-  /** Versal-etikett over hver gruppe i skinnen, i samme rekkefølge. */
+  /** Uppercase label above each group in the rail, in the same order. */
   const PANEL_GROUP_KEYS = ['rail.thisPage', 'rail.site', 'rail.system'];
   const PANEL_LABELS = Object.fromEntries(PANEL_GROUPS.flat().map((id) => [id, ta(`panel.${id}`)]));
 
-  /* Panel-introene (prosa-regelen, ADR-0016): forklaringen bor som tooltip
-     på panel-tittelen, aldri som avsnitt i panelet. Paneler uten oppslag
-     har ingen intro; flere nøkler settes sammen med linjeskift. */
+  /* The panel intros (the prose rule, ADR-0016): the explanation lives as
+     a tooltip on the panel title, never as a paragraph in the panel.
+     Panels without an entry have no intro; multiple keys are joined with
+     line breaks. */
   const PANEL_INTROS = {
     pages: ['hint.pages.drafts'],
     blocks: ['hint.blocks.intro'],
@@ -759,9 +778,10 @@
     history: ['hint.history.intro'],
   };
 
-  /** Admin-språkvelgeren: språkene med sine EGNE navn (endonymer, aldri
-   *  oversatt, aldri flagg); «Automatisk» følger enhetsspråket og er
-   *  standarden - et valg huskes per nettleser (urd-admin-lang). */
+  /** The admin language picker: the languages under their OWN names
+   *  (endonyms, never translated, never flags); "Automatic" follows the
+   *  device language and is the default - a choice is remembered per
+   *  browser (urd-admin-lang). */
   const LANG_OPTIONS = [
     ['se', 'Davvisámegiella'],
     ['en-GB', 'English (UK)'],
@@ -770,16 +790,17 @@
     ['tr', 'Türkçe'],
   ];
 
-  /** Språk fra språkpakke-plugins (0.6.8.10): koder motoren ikke har
-   *  innebygd. Alfabetisk på språkets eget navn, som de innebygde. */
+  /** Languages from language-pack plugins: codes the engine does not have
+   *  built in. Alphabetical by the language's own name, like the built-ins. */
   const sortLangs = (list) => [...list].sort((a, b) => a[1].localeCompare(b[1]));
   function packLangOptions(ids, kind) {
     const out = [];
     for (const id of ids) {
       for (const lang of pluginInfo[id]?.languages ?? []) {
-        // Rå manifest-data: et ødelagt innslag (uten navn/kode, eller med en
-        // innebygd kode) hoppes over i stedet for å felle panelet - motorens
-        // lasting filtrerer det samme, så velgeren skal aldri love mer.
+        // Raw manifest data: a broken entry (missing name/code, or with a
+        // built-in code) is skipped instead of taking down the panel - the
+        // engine's loading filters the same way, so the picker must never
+        // promise more.
         if (lang?.[kind] !== true) continue;
         if (typeof lang.code !== 'string' || typeof lang.name !== 'string' || !lang.name) continue;
         if (LANG_OPTIONS.some(([code]) => code === lang.code)) continue;
@@ -788,40 +809,42 @@
     }
     return out;
   }
-  /** Admin-velgeren følger den PUBLISERTE plugin-lista: det er den motoren
-   *  leser ved oppstart, så et valg herfra virker med én gang. Et lagret
-   *  valg som ikke finnes lenger (pakken er fjernet) beholdes som eget
-   *  alternativ, så velgeren aldri står tom. */
+  /** The admin picker follows the PUBLISHED plugin list: that is what the
+   *  engine reads at startup, so a choice from here works right away. A
+   *  stored choice that no longer exists (the pack was removed) is kept as
+   *  its own option, so the picker never stands empty. */
   function adminLangOptions() {
     const options = sortLangs([...LANG_OPTIONS, ...packLangOptions(publishedPluginIds, 'admin')]);
     const known = adminLangChoice === 'auto' || options.some(([code]) => code === adminLangChoice);
     return known ? options : [[adminLangChoice, adminLangChoice], ...options];
   }
-  /** Besøkende-språket følger utkastet: site.lang publiseres sammen med
-   *  plugin-utkastet, så en pakke som slås på nå gjelder samme publisering. */
+  /** The visitor language follows the draft: site.lang is published
+   *  together with the plugin draft, so a pack enabled now applies to the
+   *  same publish. */
   const sitePackLangs = () => packLangOptions(pluginsView?.enabled ?? [], 'site');
   const adminLangChoice = localStorage.getItem('urd-admin-lang') ?? 'auto';
   function setAdminLang(v) {
     if (v === adminLangChoice) return;
     if (v === 'auto') localStorage.removeItem('urd-admin-lang');
     else localStorage.setItem('urd-admin-lang', v);
-    // Språkbytte er en omlasting (Publii-modellen): ordbøkene leses ved
-    // oppstart, og iframen følger med.
+    // A language switch is a reload (the Publii model): the dictionaries
+    // are read at startup, and the iframe follows.
     location.reload();
   }
 
   function togglePanel(name) {
     activePanel = activePanel === name ? null : name;
-    // Gridet vises i forhåndsvisningen så lenge Grid-panelet er åpent.
-    // Rutenettet styres av sin egen bryter, ikke av at panelet er åpent.
+    // The grid is shown in the preview while the Grid panel is open.
+    // The grid overlay is controlled by its own toggle, not by the panel being open.
     if (activePanel === 'history') loadHistory();
     if (activePanel === 'update' && !updateBusy) loadUpdateCheck();
   }
 
   /**
-   * Markert blokk i forhåndsvisningen, som reaktiv KOPI for Egenskaper-
-   * panelet (utkastdataene selv er ikke reaktive). Synkes fra utkastet
-   * ved valg, ved panel-endringer og ved endringer gjort i iframen.
+   * The selected block in the preview, as a reactive COPY for the
+   * Properties panel (the draft data itself is not reactive). Synced from
+   * the draft on selection, on panel changes and on changes made in the
+   * iframe.
    */
   let selectedBlock = $state(null);
 
@@ -853,41 +876,42 @@
   }
 
   function onSelectBlock(msg) {
-    // Klikk i previewen (blokk eller lerret) lukker blokkmenyen. onBlockMenu
-    // kaller denne FØR den åpner menyen, så gjenåpning virker.
+    // A click in the preview (block or canvas) closes the block menu.
+    // onBlockMenu calls this BEFORE opening the menu, so reopening works.
     blockMenu = null;
     if (!msg.blockId) {
       selectedBlock = null;
       return;
     }
     selectedBlock = { sectionId: msg.sectionId, blockId: msg.blockId };
-    // Blokkens seksjon blir palett-målet (blokk-gester poster ikke lenger
-    // urd-select-section, så Egenskaper ikke rives fra blokken til seksjonen).
+    // The block's section becomes the palette target (block gestures do not
+    // post urd-select-section, so Properties is not torn from the block to
+    // the section).
     if (msg.sectionId) activeSectionId = msg.sectionId;
     syncSelectedBlock();
-    // (Auto-åpning av Egenskaper ved blokk-klikk ble prøvd og reversert
-    // etter testrunde; kun NY SEKSJON åpner panelet automatisk.)
+    // Only a NEW SECTION opens the Properties panel automatically; a block
+    // click never does.
   }
 
-  /** Blokkmenyen (tannhjulet på blokkens verktøylinje): posisjon i
-   *  editor-koordinater, null = lukket. Innholdet er samme snippet som
-   *  Egenskaper-panelet. */
+  /** The block menu (the gear on the block's toolbar): position in editor
+   *  coordinates, null = closed. The content is the same snippet as the
+   *  Properties panel. */
   let blockMenu = $state(null);
 
-  /** Redusert bevegelse: exit-overganger (utkast-klyngen) blir rent klipp. */
+  /** Reduced motion: exit transitions (the draft cluster) become a plain cut. */
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /** Ankerpunktene for «fest til skjermen»: vertikal-horisontal, som
-   *  dockPosition i motoren leser dem. */
+  /** The anchor points for "pin to screen": vertical-horizontal, as
+   *  dockPosition in the engine reads them. */
   const DOCK_OPTIONS = [
     ['top-left', 'opt.dock.topLeft'], ['top-center', 'opt.dock.topCenter'], ['top-right', 'opt.dock.topRight'],
     ['middle-left', 'opt.dock.middleLeft'], ['middle-center', 'opt.dock.middleCenter'], ['middle-right', 'opt.dock.middleRight'],
     ['bottom-left', 'opt.dock.bottomLeft'], ['bottom-center', 'opt.dock.bottomCenter'], ['bottom-right', 'opt.dock.bottomRight'],
   ];
 
-  /** «Slipp taket»-valgene for sticky: kun seksjonene ETTER blokkens
-   *  egen (festing bakover gir ikke mening; innstillinger vises kun
-   *  når de er relevante). */
+  /** The "let go" options for sticky: only the sections AFTER the block's
+   *  own (pinning backwards makes no sense; settings are shown only when
+   *  relevant). */
   function stickyUntilOptions() {
     const sections = store?.data.sections ?? [];
     const idx = sections.findIndex((s) => s.id === selectedBlock?.sectionId);
@@ -903,11 +927,12 @@
     const MENU_W = 300;
     const ir = iframeEl?.getBoundingClientRect();
     if (!ir) return;
-    // Ved siden av blokken: til høyre om det er plass, ellers til venstre,
-    // klemt innenfor vinduet (menyen selv scroller ved lite høyde).
-    // ir er den SKALERTE iframe-rekta; msg.rect er blokka i iframens EGNE
-    // (uskalerte) koordinater, så indre punkt må ganges med scale før de legges
-    // til iframens vindusposisjon (visuelt = ir + scale * indre).
+    // Beside the block: to the right if there is room, otherwise to the
+    // left, clamped inside the window (the menu itself scrolls when height
+    // is short). ir is the SCALED iframe rect; msg.rect is the block in the
+    // iframe's OWN (unscaled) coordinates, so inner points must be
+    // multiplied by scale before being added to the iframe's window
+    // position (visual = ir + scale * inner).
     let left = ir.left + scale * msg.rect.right + 12;
     if (left + MENU_W > window.innerWidth - 8) {
       left = Math.max(8, ir.left + scale * msg.rect.left - MENU_W - 12);
@@ -917,11 +942,11 @@
     blockMenu = { left, top };
   }
 
-  /** Felles flyt for blokk-endringer fra Egenskaper-panelet. */
+  /** Shared flow for block changes from the Properties panel. */
   function mutateBlock(key, fn) {
     const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
     if (!block) return;
-    // key null = kalleren har alt pushet historikk (flersteg i ETT angre-steg).
+    // key null = the caller has already pushed history (multiple steps in ONE undo step).
     if (key) pushHistory(key);
     fn(block, section);
     markDesktopChange(section, 'block-edited');
@@ -932,25 +957,26 @@
   }
 
   function setBlockProp(name, value) {
-    // Nøkkelen inkluderer egenskapsnavnet: endring av etikett og deretter stil skal være TO angre-steg, mens en skur i samme felt koalesceres.
+    // The key includes the property name: changing the label and then the
+    // style must be TWO undo steps, while a burst in the same field coalesces.
     mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b) => { b.props[name] = value; });
   }
 
-  /** Flere props i ETT angre-steg (felt-kontraktens place-felt skriver tre). */
+  /** Multiple props in ONE undo step (the field contract's place field writes three). */
   function setBlockProps(name, patch) {
     mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b) => { Object.assign(b.props, patch); });
   }
 
-  /* Felt-kontrakten (plugin-blokker, `fields` i urd-plugin-blocks): utkast og
-     søkestatus for place-felt, nøklet per blokk+felt så et blokkbytte viser
-     den markerte blokkens egne verdier. */
+  /* The field contract (plugin blocks, `fields` in urd-plugin-blocks):
+     drafts and search status for place fields, keyed per block+field so a
+     block switch shows the selected block's own values. */
   let placeDrafts = $state({});
   let placeStatus = $state({});
   let placeBusy = $state(false);
 
-  /* Innhold/Stil-fanen i blokk-egenskapene (ADR-0016). Valget huskes på
-     tvers av markeringer, så en stilrunde over flere blokker slipper å
-     bytte fane per blokk. */
+  /* The Content/Style tab in the block properties (ADR-0016). The choice is
+     remembered across selections, so a styling pass over several blocks
+     avoids switching tab per block. */
   let propsTab = $state('content');
 
   const clampField = (f, v) => {
@@ -960,9 +986,10 @@
     return v;
   };
 
-  /** place-feltet skriver teksten til feltets key og koordinater til lat/lon:
-   *  «lat, lon» tolkes lokalt, lenker skrives urørt (pluginen tolker dem ved
-   *  rendring), alt annet geokodes via /api/geocode. */
+  /** The place field writes the text to the field's key and coordinates to
+   *  lat/lon: "lat, lon" is parsed locally, links are written untouched
+   *  (the plugin interprets them at render), everything else is geocoded
+   *  via /api/geocode. */
   async function searchPlace(f) {
     const blockId = selectedBlock.blockId;
     const k = `${blockId}:${f.key}`;
@@ -978,8 +1005,9 @@
     try {
       const res = await fetch(`/api/geocode?q=${encodeURIComponent(raw)}`);
       const data = await res.json().catch(() => null);
-      // Markeringen kan ha byttet blokk mens søket var i flukt: da skal
-      // svaret forkastes, ellers skrives koordinatene i feil blokks props.
+      // The selection may have switched block while the search was in
+      // flight: then the reply must be discarded, otherwise the coordinates
+      // are written to the wrong block's props.
       if (selectedBlock?.blockId !== blockId) return;
       if (res.ok && Number.isFinite(data?.lat)) {
         setBlockProps(f.key, { [f.key]: raw, lat: data.lat, lon: data.lon });
@@ -1001,8 +1029,8 @@
     });
   }
 
-  /** Kortstilen (boxStyle, additiv): null-verdier i patchen fjerner feltet,
-   *  og et tomt objekt fjernes helt (= basisstilen). */
+  /** The card style (boxStyle, additive): null values in the patch remove
+   *  the field, and an empty object is removed entirely (= the base style). */
   function setBoxStyle(patch) {
     mutateBlock(`edit:${selectedBlock.blockId}:boxStyle`, (b) => {
       const next = { ...(b.props.boxStyle ?? {}), ...patch };
@@ -1014,7 +1042,7 @@
     });
   }
 
-  /* FAQ-blokken: spørsmålslisten redigeres her; tekstene også rett i preview. */
+  /* The FAQ block: the question list is edited here; the texts also directly in the preview. */
 
   function setFaqItem(i, patch) {
     mutateBlock(`edit:${selectedBlock.blockId}:faq${i}`, (b) => {
@@ -1040,7 +1068,7 @@
     });
   }
 
-  /* Tidslinje-blokken: hendelseslisten redigeres her; tekstene også rett i preview. */
+  /* The timeline block: the event list is edited here; the texts also directly in the preview. */
 
   function setTlItem(i, patch) {
     mutateBlock(`edit:${selectedBlock.blockId}:tl${i}`, (b) => {
@@ -1070,8 +1098,8 @@
     mutateBlock('decor', (b) => { b.decor = on; });
   }
 
-  /** Tabellens form: rader/kolonner legges til og fjernes i enden;
-   *  radsettet rektangulariseres først, så håndredigert data tåles. */
+  /** The table's shape: rows/columns are added and removed at the end;
+   *  the row set is rectangularized first, so hand-edited data is tolerated. */
   function tableResize(dRows, dCols) {
     mutateBlock(`edit:${selectedBlock.blockId}:tabell-form`, (b) => {
       let rows = (Array.isArray(b.props.rows) && b.props.rows.length ? b.props.rows : [['']])
@@ -1086,7 +1114,7 @@
     });
   }
 
-  /** Delingsknappenes tjenester: valgene lagres i fast visningsrekkefølge. */
+  /** The share buttons' services: the choices are stored in a fixed display order. */
   function toggleShareService(service, on) {
     mutateBlock(`edit:${selectedBlock.blockId}:deling`, (b) => {
       const order = ['facebook', 'x', 'linkedin', 'whatsapp', 'email', 'copy'];
@@ -1097,8 +1125,8 @@
     });
   }
 
-  /** Lydfil → data-URL i utkastet; publisering skriver den til media/.
-   *  Lyd komprimeres ikke (ingen canvas-vei), så størrelsen varsles. */
+  /** Audio file to data URL in the draft; publishing writes it to media/.
+   *  Audio is not compressed (no canvas path), so the size is warned about. */
   function setAudioFile(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -1114,9 +1142,9 @@
     reader.readAsDataURL(file);
   }
 
-  /** Skjul på mobil er en MOBIL-intensjon, ikke en desktop-endring: den
-   *  går utenom mutateBlock så tilsynsflagget aldri utløses av den (samme
-   *  regel som telefon-togglen i lerretet, ADR-0019). */
+  /** Hide on mobile is a MOBILE intent, not a desktop change: it bypasses
+   *  mutateBlock so the review flag is never triggered by it (same rule as
+   *  the phone toggle in the canvas, ADR-0019). */
   function setBlockHideMobile(on) {
     const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
     if (!block) return;
@@ -1128,7 +1156,7 @@
     syncSelectedBlock();
   }
 
-  /** Bytt bilde i en bildeblokk (samme webp-flyt som + Bilde). */
+  /** Replace the image in an image block (same webp flow as + Image). */
   async function replaceImage(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -1144,7 +1172,7 @@
     }
   }
 
-  /** Sitat-blokkens portrett (kort-varianten): samme webp-vei som bildeblokken. */
+  /** The quote block's portrait (the card variant): same webp path as the image block. */
   async function setQuotePortrait(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -1157,10 +1185,10 @@
     }
   }
 
-  // FONT_STACKS bor i motorens fonts.js (deles med teksteditor-linjens
-  // typografirad).
+  // FONT_STACKS lives in the engine's fonts.js (shared with the text editor
+  // bar's typography row).
 
-  /** Navn på blokktypene i panelet. */
+  /** Names of the block types in the panel. */
   const BLOCK_LABELS = { text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), galleri: ta('blocks.gallery'), faq: ta('blocks.faq'), samling: ta('blocks.collection'), tidslinje: ta('blocks.timeline'), sitat: ta('blocks.quote'), statistikk: ta('blocks.stats'), tabell: ta('blocks.table'), deling: ta('blocks.share'), nedteller: ta('blocks.countdown'), audio: ta('blocks.audio'), produkt: ta('blocks.product'), handlekurv: ta('blocks.cart'), kasse: ta('blocks.checkout') };
   const SHAPE_KINDS = [
     ['line', ta('shape.line')], ['arrow', ta('shape.arrow')], ['circle', ta('shape.circle')],
@@ -1170,18 +1198,18 @@
     ['accent', ta('color.accent')], ['text', ta('color.text')], ['surface', ta('color.surface')], ['bg', ta('color.bg')],
   ];
 
-  /** Sist klikkede seksjon i forhåndsvisningen: paletten legger nye
-   *  blokker her, og grid-menyen kan gi den eget grid. */
+  /** The most recently clicked section in the preview: the palette adds
+   *  new blocks here, and the grid menu can give it its own grid. */
   let activeSectionId = $state(null);
-  /** Speil av den aktive seksjonens grid-overstyring (null = arver) */
+  /** Mirror of the active section's grid override (null = inherits) */
   let sectionGrid = $state(null);
-  /** Speil av den aktive seksjonens minstehøyde (for Egenskaper-panelet) */
+  /** Mirror of the active section's minimum height (for the Properties panel) */
   let sectionMinHeight = $state('');
-  /** Speil av den aktive seksjonens bakgrunnslag og animasjon */
+  /** Mirror of the active section's background layers and animation */
   let sectionBg = $state([]);
   let sectionAnim = $state(null);
   let sectionHover = $state(null);
-  /** Speil av den aktive seksjonens rollesett (seksjonstema), '' = Standard */
+  /** Mirror of the active section's role set (section theme), '' = Default */
   let sectionTheme = $state('');
 
   function syncSectionMirrors(section) {
@@ -1193,11 +1221,12 @@
     sectionTheme = section?.theme ?? '';
   }
 
-  /* Mål for «Dekk»/«Vis hele»-knappene på bilde-bakgrunnslag: seksjonsboksen (målt
-     i preview-iframen, samme-origin) og bildets naturlige mål lar oss regne ut
-     skalaen som akkurat fyller/viser hele bildet. */
-  let secBox = $state(null);            // { w, h } for den valgte seksjonen
-  const imgNat = $state({});            // src -> { w, h } (naturlige bildemål)
+  /* Measurements for the "Cover"/"Show all" buttons on image background
+     layers: the section box (measured in the preview iframe, same-origin)
+     and the image's natural size let us compute the scale that exactly
+     fills/shows the whole image. */
+  let secBox = $state(null);            // { w, h } for the selected section
+  const imgNat = $state({});            // src -> { w, h } (natural image size)
 
   function measureSecBox() {
     try {
@@ -1208,8 +1237,8 @@
     } catch { secBox = null; }
   }
 
-  // Mål på nytt når valgt seksjon endres (etter at preview har rendret) og når
-  // preview-iframen endrer størrelse.
+  // Re-measure when the selected section changes (after the preview has
+  // rendered) and when the preview iframe resizes.
   $effect(() => {
     activeSectionId; sectionBg;
     requestAnimationFrame(() => requestAnimationFrame(measureSecBox));
@@ -1221,7 +1250,7 @@
     ro.observe(el);
     return () => ro.disconnect();
   });
-  // Last bildenes naturlige mål (for rom-utregningen).
+  // Load the images' natural sizes (for the space calculation).
   $effect(() => {
     for (const l of sectionBg) {
       const src = l?.props?.src;
@@ -1233,20 +1262,20 @@
     }
   });
 
-  /** Ferdig seksjonstema (rollesett): presentasjon, ingen mobil-invalidering. */
+  /** Ready-made section theme (role set): presentation, no mobile invalidation. */
   function setSectionTheme(role) {
     mutateSection('section-theme', (s) => {
       if (role) s.theme = role; else delete s.theme;
     });
   }
 
-  /** Rollesett-prøvene i Egenskaper (V1, eiervalg 9. august 2026): sett
-   *  sidens FAKTISKE temafarger inn i rolle-oppskriftene, så hver prøve er
-   *  levende (ADR-0016). Oppskriftene refererer kun --urd-base-*-kopiene,
-   *  så en ren tekstsubstitusjon gir gyldige CSS-farger (color-mix består). */
+  /** The role-set samples in Properties: substitute the page's ACTUAL
+   *  theme colors into the role recipes, so each sample is live
+   *  (ADR-0016). The recipes reference only the --urd-base-* copies, so a
+   *  plain text substitution yields valid CSS colors (color-mix survives). */
   function sectionThemeSample(role) {
-    // Prøvene følger forhåndsvisningens aktive modus (previewPalette merger
-    // alt-tokens via motorens activeTokens, så scheme: 'dark' løses riktig).
+    // The samples follow the preview's active mode (previewPalette merges
+    // alt tokens via the engine's activeTokens, so scheme: 'dark' resolves correctly).
     const pal = previewPalette;
     const subst = (v) => v
       .replaceAll('var(--urd-base-bg)', pal.bg)
@@ -1268,7 +1297,7 @@
     syncSectionMirrors(store?.data.sections.find((s) => s.id === msg.sectionId));
   }
 
-  /** Felles flyt for seksjons-endringer fra Egenskaper-panelet. */
+  /** Shared flow for section changes from the Properties panel. */
   function mutateSection(key, fn) {
     const section = store.data.sections.find((s) => s.id === activeSectionId);
     if (!section) return;
@@ -1280,16 +1309,17 @@
     syncSectionMirrors(section);
   }
 
-  /* ---------- Bakgrunnseditoren ---------- */
+  /* ---------- The background editor ---------- */
 
-  /** Valgt lagtype for «+ Legg til lag» */
+  /** Selected layer type for "+ Add layer" */
   let newBgType = $state('color');
 
-  /* Bakgrunnseditoren er delt mellom seksjon, nav og footer via en snippet
-     (backgroundLayers) som deler denne komponentens scoped stiler. Hver
-     handler tar en `bg`-kontekst {mutate, keyPrefix, keyId}: `mutate(key, fn)`
-     der fn(target) muterer target.background (seksjon / nav.style / footer),
-     keyPrefix/keyId gir stabile history-koalescerings-nøkler per mål. */
+  /* The background editor is shared between section, nav and footer via a
+     snippet (backgroundLayers) that shares this component's scoped styles.
+     Each handler takes a `bg` context {mutate, keyPrefix, keyId}:
+     `mutate(key, fn)` where fn(target) mutates target.background
+     (section / nav.style / footer), keyPrefix/keyId give stable history
+     coalescing keys per target. */
 
   function addBgLayer(bg, type) {
     bg.mutate(bg.keyPrefix, (t) => {
@@ -1301,8 +1331,9 @@
   function removeBgLayer(bg, i) {
     bg.mutate(bg.keyPrefix, (t) => {
       t.background.layers.splice(i, 1);
-      // Tom lagliste rydder background helt, så mål uten bakgrunn ikke bærer
-      // et tomt {version,layers}-objekt (og nav/footer faller tilbake til flat).
+      // An empty layer list cleans background away entirely, so targets
+      // without a background do not carry an empty {version,layers} object
+      // (and nav/footer fall back to flat).
       if (!t.background.layers.length) delete t.background;
     });
   }
@@ -1322,14 +1353,16 @@
     });
   }
 
-  /* Fokuspunkt-dra på bilde-bakgrunnslaget: en liten forhåndsvisningsboks der man
-     drar et punkt for å sette x/y (0..1) samtidig. Samme fokus-idé som bildeeditoren. */
+  /* Focal-point drag on the image background layer: a small preview box
+     where dragging a point sets x/y (0..1) at once. Same focus idea as the
+     image editor. */
   function startFocalDrag(event, bg, i, axes = 'xy') {
     event.preventDefault();
     const pad = event.currentTarget;
-    // Pekerfangst på pad-elementet: da får det ALLE pekerhendelser til knappen
-    // slippes, også når musen drar over preview-iframen (som ellers spiser dem,
-    // så draget «henger igjen» etter at man slipper utenfor).
+    // Pointer capture on the pad element: it then gets ALL pointer events
+    // until the button is released, also when the mouse drags across the
+    // preview iframe (which otherwise eats them, so the drag "sticks"
+    // after releasing outside).
     pad.setPointerCapture?.(event.pointerId);
     const move = (e) => {
       const r = pad.getBoundingClientRect();
@@ -1353,8 +1386,8 @@
     pad.addEventListener('pointercancel', up);
   }
 
-  /* Størrelse (Egen størrelse-modus): stepper/tallfelt skriver `size` som brøk,
-     klemt til 10-400 %. */
+  /* Size (custom size mode): the stepper/number field writes `size` as a
+     fraction, clamped to 10-400 %. */
   const clampBgSize = (v) => Math.min(4, Math.max(0.1, v));
   function stepBgSize(bg, i, cur, delta) {
     setBgProp(bg, i, 'size', clampBgSize(Math.round((cur + delta) * 100) / 100));
@@ -1363,9 +1396,10 @@
     const n = Number(pct);
     if (Number.isFinite(n)) setBgProp(bg, i, 'size', clampBgSize(n / 100));
   }
-  /* «Dekk»/«Vis hele»: regn ut skalaen fra bilde- og seksjonsmål og sett den, så
-     Fyll/Vis-hele blir forhåndsvalg man kan finjustere videre (ikke egne moduser).
-     r = høyde/bredde-forholdet mellom seksjon og bilde ved 100 % bredde. */
+  /* "Cover"/"Show all": compute the scale from the image and section sizes
+     and set it, so Fill/Show-all become presets that can be fine-tuned
+     further (not separate modes). r = the height/width ratio between
+     section and image at 100 % width. */
   function setBgFillSize(bg, i, layer, mode) {
     const nat = imgNat[layer.props.src];
     if (!nat?.w || !nat?.h || !secBox?.w || !secBox?.h) return;
@@ -1375,7 +1409,7 @@
     setBgProp(bg, i, 'size', clampBgSize(Math.round(size * 100) / 100));
   }
 
-  /* Gradient-editoren (frie stopp + lineær/radiell). */
+  /* The gradient editor (free stops + linear/radial). */
 
   function gradientProps(layer) {
     return layer.props;
@@ -1391,7 +1425,7 @@
     mutateGradient(bg, i, `edit:${bg.keyPrefix}-${bg.keyId}-${i}-${name}`, (p) => { p[name] = value; });
   }
 
-  /** Formbytte nullstiller animasjonen om den ikke finnes for den nye formen. */
+  /** A shape switch resets the animation if it does not exist for the new shape. */
   const GRAD_ANIMATIONS = {
     linear: [['none', ta('common.none')], ['pan', ta('opt.gradAnim.pan')], ['pan-loop', ta('opt.gradAnim.panLoop')], ['rotate', ta('opt.gradAnim.rotate')]],
     radial: [['none', ta('common.none')], ['pulse', ta('opt.gradAnim.pulse')], ['orbit', ta('opt.gradAnim.orbit')]],
@@ -1410,7 +1444,7 @@
     });
   }
 
-  /** Ny farge nederst i listen, med plass som en gjennomsnittsfarge. */
+  /** New color at the bottom of the list, with a share equal to the average. */
   function addGradStop(bg, i) {
     mutateGradient(bg, i, bg.keyPrefix, (p) => {
       const avg = Math.round(p.stops.reduce((a, s) => a + (Number(s.share) || 0), 0) / p.stops.length) || 50;
@@ -1431,14 +1465,15 @@
     });
   }
 
-  /** Pågående dra-omsortering av gradientfarger: {layer, from, insert}
-   *  eller null. insert er innsettingsplassen (0..antall), tegnet som en
-   *  strek over raden (eller under den siste). */
+  /** Ongoing drag reordering of gradient colors: {layer, from, insert}
+   *  or null. insert is the insertion slot (0..count), drawn as a line
+   *  above the row (or below the last one). */
   let stopDrag = $state(null);
 
-  /** Pekerbasert dra (ikke HTML5-dnd: den ga verken visuell indikator
-   *  eller pålitelig slipp på naboraden). Raden man drar dempes, og
-   *  innsettingsstreken følger pekeren; slipp utfører ETT angre-steg. */
+  /** Pointer-based drag (not HTML5 dnd: it gives neither a visual
+   *  indicator nor a reliable drop on the neighboring row). The dragged
+   *  row is dimmed, and the insertion line follows the pointer; the drop
+   *  performs ONE undo step. */
   function startStopDrag(bg, event, layerI, si) {
     if (event.button !== 0) return;
     event.preventDefault();
@@ -1446,9 +1481,10 @@
     const row = event.currentTarget.closest('.grad-stop');
     stopDrag = { layer: layerI, from: si, insert: si };
 
-    // Spøkelsesrad: en kopi av hele raden (med fargen) følger pekeren,
-    // så man ser HVA man drar, ikke bare hvor det lander. Inline-stil,
-    // siden kopien bor på document.body utenfor komponent-treet.
+    // Ghost row: a copy of the whole row (with the color) follows the
+    // pointer, so you see WHAT you are dragging, not just where it lands.
+    // Inline style, since the copy lives on document.body outside the
+    // component tree.
     const rect = row.getBoundingClientRect();
     const grabY = event.clientY - rect.top;
     const ghost = row.cloneNode(true);
@@ -1484,7 +1520,7 @@
     window.addEventListener('pointerup', up);
   }
 
-  /** Bytt lagtype i etterkant (laget beholder plassen, props nullstilles). */
+  /** Change the layer type afterwards (the layer keeps its slot, props reset). */
   function changeBgLayerType(bg, i, type) {
     bg.mutate(bg.keyPrefix, (t) => {
       if (t.background.layers[i].type === type) return;
@@ -1492,10 +1528,11 @@
     });
   }
 
-  /** Bakgrunnsbilde: samme webp-flyt som bildeblokken. */
-  /* Måler motivets omfang i en SVG via canvas-piksler (SVG rendret som BILDE,
-     ikke live-DOM - trygt: ingen skript-kjøring, og svgToDataUrl har alt avvist
-     skript-SVG-er). Returnerer bounding-boksen i SVG-ens brukerkoordinater. */
+  /** Background image: same webp flow as the image block. */
+  /* Measures the subject's extent in an SVG via canvas pixels (the SVG is
+     rendered as an IMAGE, not live DOM - safe: no script execution, and
+     svgToDataUrl has already rejected script SVGs). Returns the bounding
+     box in the SVG's user coordinates. */
   async function svgContentBBox(dataUrl, vb) {
     try {
       const img = new Image();
@@ -1522,12 +1559,13 @@
     } catch { return null; }
   }
 
-  /* Opplastet SVG: valider + auto-trim (stram viewBox til motivet, fjern død plass)
-     så Dekk/skala/posisjon oppfører seg rundt selve logoen. Faller pent tilbake til
-     den utrimmede SVG-en hvis noe ikke lar seg måle. */
+  /* Uploaded SVG: validate + auto-trim (tighten the viewBox to the
+     subject, remove dead space) so Cover/scale/position behave around the
+     logo itself. Falls back gracefully to the untrimmed SVG if something
+     cannot be measured. */
   async function svgAutoTrim(file) {
     const text = await file.text();
-    const first = svgToDataUrl(text); // validerer (kaster på skript-SVG) + encoder
+    const first = svgToDataUrl(text); // validates (throws on script SVG) + encodes
     const vb = svgViewBox(text);
     if (!vb) return first;
     const bbox = await svgContentBBox(first.dataUrl, vb);
@@ -1537,8 +1575,9 @@
     try { return svgToDataUrl(trimmed); } catch { return first; }
   }
 
-  /* SVG-er auto-trimmes (stram viewBox til motivet); raster komprimeres til webp.
-     Felles inngang for alle bilde-opplastinger, så en SVG-logo/-ikon fyller plassen. */
+  /* SVGs are auto-trimmed (viewBox tightened to the subject); raster is
+     compressed to webp. Shared entry for all image uploads, so an SVG
+     logo/icon fills its space. */
   async function compressOrTrim(file) {
     const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name || '');
     return isSvg ? svgAutoTrim(file) : compressToWebp(file);
@@ -1556,8 +1595,9 @@
     }
   }
 
-  /** Videofil → data-URL i utkastet (mediegrensene fra imageTools: hard
-   *  grense og varsel); publisering skriver den til media/ som bildene. */
+  /** Video file to data URL in the draft (the media limits from
+   *  imageTools: hard cap and warning); publishing writes it to media/
+   *  like the images. */
   function setBgVideo(bg, i, event) {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -1581,7 +1621,7 @@
     reader.readAsDataURL(file);
   }
 
-  /** Plakatbildet for videolaget (stillbildet ved redusert bevegelse). */
+  /** The poster image for the video layer (the still shown with reduced motion). */
   async function setBgPoster(bg, i, event) {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -1594,8 +1634,9 @@
     }
   }
 
-  /* Bildegalleri-laget: bildelisten redigeres som bakgrunnslagene ellers,
-     men med flervalgs-opplasting (hele bunken i ETT angre-steg). */
+  /* The slideshow layer: the image list is edited like the other
+     background layers, but with multi-select upload (the whole batch in
+     ONE undo step). */
 
   async function addBgGalleryImages(bg, i, event) {
     const files = [...(event.target.files ?? [])];
@@ -1632,8 +1673,9 @@
     });
   }
 
-  /** bg-kontekstene for de tre målene (seksjon/nav/footer). Seksjonen bruker
-   *  mirror-speilet sectionBg; nav/footer leser reaktivt fra siteDraft. */
+  /** The bg contexts for the three targets (section/nav/footer). The
+   *  section uses the sectionBg mirror; nav/footer read reactively from
+   *  siteDraft. */
   function navBgMutate(key, fn) {
     siteMutate(key, () => { siteDraft.nav.style ??= {}; fn(siteDraft.nav.style); });
   }
@@ -1641,12 +1683,13 @@
   const navBgCtx = { mutate: navBgMutate, keyPrefix: 'navbg', keyId: 'nav' };
   const footerBgCtx = { mutate: footerMutate, keyPrefix: 'footerbg', keyId: 'footer' };
 
-  /** Forhåndsvisningens lys/mørk-modus: lagret valg vinner, ellers OS (samme
-   *  oppløsning som motorens applyTheme). Iframe-bryteren skriver localStorage
-   *  fra sin egen browsing context, så storage-hendelsen når admin-vinduet. */
+  /** The preview's light/dark mode: a stored choice wins, otherwise the OS
+   *  (same resolution as the engine's applyTheme). The iframe toggle
+   *  writes localStorage from its own browsing context, so the storage
+   *  event reaches the admin window. */
   const readPreviewMode = () => {
     let stored = null;
-    try { stored = localStorage.getItem('urd-theme-mode'); } catch { /* privat modus: følg OS */ }
+    try { stored = localStorage.getItem('urd-theme-mode'); } catch { /* private mode: follow the OS */ }
     return resolveThemeMode(siteDraft?.theme?.scheme, stored,
       window.matchMedia('(prefers-color-scheme: dark)').matches);
   };
@@ -1665,15 +1708,15 @@
       window.removeEventListener('storage', update);
     };
   });
-  /** Paletten slik lerretet faktisk viser den (aktiv modus, alt-merge via motoren). */
+  /** The palette as the canvas actually shows it (active mode, alt merge via the engine). */
   const previewPalette = $derived(siteDraft?.theme ? (activeTokens(siteDraft.theme, previewMode).color ?? {}) : {});
 
-  /** Temafargene som hurtigvalg i fargevelgeren (velgeren løser opp
-   *  token-navn selv, så ingen hexFor-omregning trengs lenger). Prøvene
-   *  følger forhåndsvisningens aktive lys/mørk-modus. */
+  /** The theme colors as quick picks in the color picker (the picker
+   *  resolves token names itself, so no hexFor conversion is needed).
+   *  The samples follow the preview's active light/dark mode. */
   const themeSwatches = () => Object.entries(previewPalette);
 
-  /** Tema-panelets avledede tilstand (Farger-området). */
+  /** The Theme panel's derived state (the Colors area). */
   const PALETTE_KEYS = [['bg', ta('palette.bg'), ta('palette.bgShort')], ['surface', ta('palette.surface'), ta('palette.surfaceShort')], ['text', ta('palette.text'), ta('palette.textShort')], ['accent', ta('palette.accent'), ta('palette.accentShort')], ['accent-text', ta('palette.accentText'), ta('palette.accentTextShort')]];
   const dualMode = $derived(!!siteDraft?.theme.alt);
   const altAuto = $derived(siteDraft?.theme.alt?.auto === true);
@@ -1681,20 +1724,20 @@
   const lightPal = $derived(siteDraft?.theme.tokens.color ?? {});
   const darkPal = $derived({ ...(siteDraft?.theme.tokens.color ?? {}), ...(siteDraft?.theme.alt?.tokens?.color ?? {}) });
 
-  /* ---------- Animasjoner ---------- */
+  /* ---------- Animations ---------- */
 
   function animObj(type) {
     return { type, version: coreAnimations[type].version, props: coreAnimations[type].defaults() };
   }
 
-  /** Inn-animasjon og pekereffekt er uavhengige felt (animation/hover) og
-   *  kan kombineres. Eldre sider kan ha en pekereffekt lagret i animation
-   *  (feltene var ett til 0.6.30): normaliseres til hover ved neste edit. */
+  /** Entrance animation and hover effect are independent fields
+   *  (animation/hover) and can be combined. Older pages can have a hover
+   *  effect stored in animation: it is normalized to hover on the next edit. */
   const isEntrance = (anim) => Boolean(anim && coreAnimations[anim.type]?.entrance);
   const ENTRANCE_OPTIONS = [['', ta('common.none')],
     ...Object.entries(coreAnimations).filter(([, def]) => def.entrance).map(([id, def]) => [id, def.labelKey ? ta(def.labelKey) : def.label])];
-  // Blokk-nedtrekket: gruppeanimasjoner (stagger) er seksjonsnivå og gjorde
-  // stille ingenting på en blokk - de filtreres bort her (0.6.6.4.6).
+  // The block dropdown: group animations (stagger) are section-level and
+  // do nothing on a block - they are filtered out here.
   const BLOCK_ENTRANCE_OPTIONS = ENTRANCE_OPTIONS.filter(([id]) => !coreAnimations[id]?.group);
   const HOVER_OPTIONS = [['', ta('common.none')],
     ...Object.entries(coreAnimations).filter(([, def]) => !def.entrance).map(([id, def]) => [id, def.labelKey ? ta(def.labelKey) : def.label])];
@@ -1711,7 +1754,7 @@
       normalizeAnim(b);
       b.animation = type ? animObj(type) : null;
     });
-    // Spill animasjonen én gang som demo (etter rerenderingen; postMessage er ordnet).
+    // Play the animation once as a demo (after the rerender; postMessage is ordered).
     if (selectedBlock) bridge?.sendDemoAnim(selectedBlock.sectionId, selectedBlock.blockId);
   }
 
@@ -1753,7 +1796,7 @@
     bridge?.sendDemoAnim(activeSectionId);
   }
 
-  /** Streng-prop på seksjonsanimasjonen (stagger-mønster og -effekt). */
+  /** String prop on the section animation (stagger pattern and effect). */
   function setSectionAnimStr(name, value) {
     mutateSection('edit:section-anim', (s) => {
       if (s.animation) s.animation.props[name] = value;
@@ -1761,7 +1804,7 @@
     bridge?.sendDemoAnim(activeSectionId);
   }
 
-  /** Høyde fra Egenskaper-panelet: px-tall eller CSS-verdi (40vh, 50%). */
+  /** Height from the Properties panel: px number or CSS value (40vh, 50%). */
   function setSectionHeight(raw) {
     const section = store.data.sections.find((s) => s.id === activeSectionId);
     if (!section) return;
@@ -1804,8 +1847,8 @@
     if (gridOn) bridge?.sendShowGrid(true);
   }
 
-  /** Grid-kontrollene: endringer lagres i site-utkastet og pushes live.
-   *  Gridet er kun et snappeverktøy; å endre det flytter aldri innhold. */
+  /** The grid controls: changes are stored in the site draft and pushed
+   *  live. The grid is only a snapping tool; changing it never moves content. */
   function setGrid(field, value) {
     pushHistory('grid:site');
     grid = { ...grid, [field]: value };
@@ -1813,8 +1856,8 @@
     siteStore.save();
     updateDirty();
     pushSiteToPreview();
-    // sendSite rerendrer siden; slå grid-visningen på igjen etterpå
-    // (postMessage er ordnet, så dette ankommer etter rerenderingen).
+    // sendSite rerenders the page; turn the grid overlay back on afterwards
+    // (postMessage is ordered, so this arrives after the rerender).
     if (gridOn) bridge?.sendShowGrid(true);
   }
 
@@ -1826,16 +1869,16 @@
       } else if (res.status !== 503) {
         auth = null;
       }
-      // 503 = GitHub er nede i øyeblikket: behold innloggingsstatusen vi har.
+      // 503 = GitHub is down at the moment: keep the login status we have.
     } catch {
       auth = null;
     }
   }
 
   /**
-   * HEAD-commiten da editoren lastet (eller sist publiserte): grunnlaget
-   * for konfliktvarselet. null = ukjent (ikke innlogget / lokal server),
-   * da hoppes sjekken stille over.
+   * The HEAD commit when the editor loaded (or last published): the
+   * baseline for the conflict warning. null = unknown (not logged in /
+   * local server), in which case the check is silently skipped.
    */
   let baseSha = null;
 
@@ -1843,20 +1886,22 @@
     try {
       const res = await fetch('/api/github/latest');
       if (res.ok) baseSha = (await res.json()).head ?? null;
-    } catch { /* publiseringslag utilgjengelig */ }
+    } catch { /* publishing layer unavailable */ }
   }
 
   /**
-   * Konfliktsjekk før publisering: har noen andre publisert siden vi
-   * lastet, og rører vi de samme filene? Returnerer {ok, head}: ok=false
-   * betyr at redaktøren avbrøt; head er HEAD-en vi observerte og sendes
-   * som expect til commit-endepunktet (tetter vinduet mellom sjekk og
+   * Conflict check before publishing: has someone else published since we
+   * loaded, and do we touch the same files? Returns {ok, head}: ok=false
+   * means the editor canceled; head is the HEAD we observed and is sent as
+   * expect to the commit endpoint (closes the window between check and
    * commit server-side).
    */
   async function confirmNoConflict(files) {
     if (!baseSha) {
-      // Grunnlaget glapp ved innlasting (GitHub nede): hent HEAD nå, så expect i det minste tetter commit-vinduet.
-      // Uten opprinnelig grunnlag kan vi ikke diffe, så redaktøren må ta valget eksplisitt i stedet for at vernet hoppes stille over.
+      // The baseline slipped at load (GitHub down): fetch HEAD now, so
+      // expect at least closes the commit window. Without the original
+      // baseline we cannot diff, so the editor must make the call
+      // explicitly instead of the guard being silently skipped.
       await refreshBaseSha();
       const ok = await askConfirm({
         title: ta('confirm.conflictUnknown.title'),
@@ -1873,15 +1918,15 @@
     try {
       const res = await fetch(`/api/github/latest?base=${baseSha}`);
       if (res.ok) data = await res.json().catch(() => null);
-    } catch { /* utilgjengelig: vi stopper ikke publiseringen på det */ }
+    } catch { /* unavailable: we do not stop the publish over that */ }
     if (!data?.head) return { ok: true, head: null };
 
     const head = data.head;
     if (head === baseSha) return { ok: true, head };
 
     const mine = new Set(files.map((f) => f.path));
-    // Avkortet diff (svært store endringer): vi VET ikke om det er
-    // overlapp, så redaktøren må ta valget.
+    // Truncated diff (very large changes): we do NOT know whether there is
+    // overlap, so the editor must make the call.
     const overlap = data.truncated
       ? [ta('confirm.conflict.truncated')]
       : (data.changedFiles ?? []).filter((p) => mine.has(p));
@@ -1900,9 +1945,9 @@
     return { ok, head };
   }
 
-  /* ---------- Historikk-panelet ---------- */
+  /* ---------- The History panel ---------- */
 
-  /** null = ikke lastet ennå; [] = lastet og tomt */
+  /** null = not loaded yet; [] = loaded and empty */
   let historyList = $state(null);
   let historyError = $state('');
   let historyBusy = $state(false);
@@ -1926,9 +1971,9 @@
     }
   }
 
-  // Historikk-datoene følger admin-språket (Intl har alle de innebygde).
-  // Et språkpakke-språk kan være en kode Intl ikke godtar: da faller vi til
-  // nettleserens eget format i stedet for å felle hele panelet.
+  // The history dates follow the admin language (Intl has all the
+  // built-ins). A language-pack language can be a code Intl rejects: then
+  // we fall back to the browser's own format instead of taking down the panel.
   const historyDate = (() => {
     const opts = { dateStyle: 'short', timeStyle: 'short' };
     try {
@@ -1939,10 +1984,10 @@
   })();
 
   /**
-   * Etter en angring viser editoren fortsatt innholdet fra FØR angringen
-   * (den gjenopprettede versjonen finnes først på serveren etter deploy).
-   * Å publisere fra den tilstanden ville stille gjeninnført det som ble
-   * angret - derfor sperres publisering til admin er lastet på nytt.
+   * After a revert the editor still shows the content from BEFORE the
+   * revert (the restored version exists on the server only after deploy).
+   * Publishing from that state would silently reintroduce what was
+   * reverted - so publishing is blocked until the admin is reloaded.
    */
   let revertedSinceLoad = false;
 
@@ -1987,11 +2032,12 @@
   }
 
   /**
-   * Etter angring: poll de serverte innholdsfilene til deployen faktisk er
-   * ute, forkast utkastene (serveren er nå fasiten) og last admin på nytt
-   * automatisk - i stedet for å be eieren laste på nytt selv. Endrer ingen
-   * av filene seg innen fristen (treg utrulling, eller en publisering som
-   * bare rørte filer vi ikke poller), beholdes dagens sperre og melding.
+   * After a revert: poll the served content files until the deploy is
+   * actually out, discard the drafts (the server is now the source of
+   * truth) and reload the admin automatically - instead of asking the
+   * owner to reload. If none of the files change within the deadline
+   * (slow rollout, or a publish that only touched files we do not poll),
+   * the current block and message are kept.
    */
   async function awaitRevertDeploy() {
     const paths = ['/content/site.json', ...siteDraft.pages.map((p) => `/${p.file}`)];
@@ -2012,7 +2058,8 @@
       const now = await snap();
       if (paths.some((path) => now[path] !== null && before[path] !== null && now[path] !== before[path])) {
         setStatus(ta('status.revertDeployed'), 'ok');
-        // Utkastene beskriver tilstanden fra FØR angringen; serveren er fasiten nå.
+        // The drafts describe the state from BEFORE the revert; the server
+        // is the source of truth now.
         for (const key of Object.keys(localStorage).filter((k) => k.startsWith('urd-draft-'))) {
           localStorage.removeItem(key);
         }
@@ -2024,14 +2071,14 @@
     setStatus(ta('status.revertDeployTimeout'), 'error');
   }
 
-  /* ---------- Oppdatereren (0.6.9, ADR-0014) ---------- */
+  /* ---------- The updater (ADR-0014) ---------- */
 
-  /** Svaret fra GET-sjekken (null = ikke lastet ennå). */
+  /** The response from the GET check (null = not loaded yet). */
   let updateInfo = $state(null);
   let updateError = $state(null);
   let updateBusy = $state(false);
-  /** Valgfrie filer eieren vil beholde sin egen versjon av (kun utenfor
-   *  motor-atomgruppen; serveren validerer det samme). */
+  /** Optional files the owner wants to keep their own version of (only
+   *  outside the engine atom group; the server validates the same). */
   let updateSkip = $state(new Set());
 
   async function loadUpdateCheck() {
@@ -2095,8 +2142,8 @@
         await awaitUpdateDeploy(updateInfo.target.replace(/^v/, ''));
       } else if (res.status === 409) {
         setStatus(taApiError(data) ?? ta('update.checkFailed'), 'error');
-        // Avventes: ellers nulles updateBusy under re-sjekken, og panelet
-        // står blankt i et vindu der en ekstra sjekk kan slippe gjennom.
+        // Awaited: otherwise updateBusy is cleared during the re-check, and
+        // the panel sits blank in a window where an extra check can slip through.
         await loadUpdateCheck();
       } else {
         setStatus(taApiError(data) ?? ta('update.failed'), 'error');
@@ -2108,10 +2155,10 @@
   }
 
   /**
-   * Etter oppdaterings-commiten: poll /urd.json til engine-feltet melder
-   * målversjonen (deployen er ute), og last admin på nytt så den nye
-   * bundelen og motoren tas i bruk. Utkastene beholdes: oppdatereren rører
-   * aldri brukereide filer, så de er like gyldige etterpå.
+   * After the update commit: poll /urd.json until the engine field reports
+   * the target version (the deploy is out), and reload the admin so the
+   * new bundle and engine take effect. The drafts are kept: the updater
+   * never touches user-owned files, so they are just as valid afterwards.
    */
   async function awaitUpdateDeploy(version) {
     for (let attempt = 0; attempt < 18; attempt++) {
@@ -2124,15 +2171,15 @@
           location.reload();
           return;
         }
-      } catch { /* midlertidig nede under utrulling: fortsett å polle */ }
+      } catch { /* temporarily down during rollout: keep polling */ }
     }
     setStatus(ta('update.deployTimeout'), 'error');
   }
 
-  /** Løper mens en sides data lastes; urd-ready venter på denne. */
+  /** Runs while a page's data loads; urd-ready waits on this. */
   let pageLoading = null;
 
-  /** Tom side for nyopprettede sider (må validere mot page-skjemaet). */
+  /** Empty page for newly created pages (must validate against the page schema). */
   function blankPage(entry) {
     return {
       schemaVersion: PAGE_SCHEMA_VERSION,
@@ -2153,38 +2200,40 @@
     pageId = id;
     pageLoading = (async () => {
       const entry = pageEntry();
-      // Nye sider finnes ikke på serveren ennå: 404, eller SPA-fallback
-      // som svarer 200 med HTML (json() kaster). Da er en blank side
-      // grunnlaget, og et eventuelt utkast i localStorage vinner uansett.
+      // New pages do not exist on the server yet: 404, or an SPA fallback
+      // answering 200 with HTML (json() throws). Then a blank page is the
+      // baseline, and any draft in localStorage wins regardless.
       let published = null;
       try {
         const res = await fetch(`/${entry.file}`);
-        // Eldre sidefiler løftes til gjeldende format før redigering, slik at
-        // utkast og publisering alltid er på nyeste schemaVersion. Gamle
-        // utkast i localStorage løftes også.
+        // Older page files are lifted to the current format before editing,
+        // so drafts and publishing are always on the latest schemaVersion.
+        // Old drafts in localStorage are lifted too.
         if (res.ok) published = liftPageFile(await res.json(), siteStore.data);
-      } catch { /* ny, upublisert side */ }
+      } catch { /* new, unpublished page */ }
       if (published) {
-        // Siden er ute på serveren: en eventuell vente-på-deploy-markering
-        // er ferdig (store.save() under rydder utkastet om det er likt).
+        // The page is out on the server: any wait-for-deploy marker is done
+        // (store.save() below cleans the draft if it is identical).
         pendingPublished.delete(id);
       } else {
         published = blankPage(entry);
       }
       store = createDraftStore(`urd-draft-${id}`, () => published, draftSaveError);
-      // Et utkast med HØYERE schemaVersion enn motoren (skrevet av en nyere
-      // Urd, eller liggende igjen fra før pre-v1-innbakingen) kan verken
-      // redigeres eller publiseres trygt: liftPageFile lar det passere
-      // urørt, lagene rendres som plassholdere, og en publisering ville
-      // sementert det. Forkast utkastet; serveren er fasiten.
+      // A draft with a HIGHER schemaVersion than the engine (written by a
+      // newer Urd) can neither be edited nor published safely: liftPageFile
+      // lets it pass untouched, the layers render as placeholders, and a
+      // publish would cement it. Discard the draft; the server is the
+      // source of truth.
       if ((store.data.schemaVersion ?? 1) > PAGE_SCHEMA_VERSION) {
         console.warn(`Urd: utkastet for '${id}' har schemaVersion ${store.data.schemaVersion} (motoren har ${PAGE_SCHEMA_VERSION}) og forkastes`);
         store.replace(structuredClone(published));
       }
       store.replace(liftPageFile(store.data, siteStore.data));
       store.save();
-      // Angre-historikken overlever sidebytter: snapshots bærer pageId, og restore bytter tilbake til riktig side.
-      // Uten keepHistory nulles bare koalesce-nøkkelen, så neste endring alltid får eget steg.
+      // The undo history survives page switches: snapshots carry pageId,
+      // and restore switches back to the right page. Without keepHistory
+      // only the coalesce key is cleared, so the next change always gets
+      // its own step.
       if (!keepHistory) lastHistoryKey = null;
       activeSectionId = null;
       sectionGrid = null;
@@ -2194,15 +2243,17 @@
       status = '';
     })();
     await pageLoading;
-    // Iframen bytter src via pageId; utkastet pushes når motoren melder
-    // seg klar (urd-ready), aldri på iframe-load (da lytter ingen ennå).
+    // The iframe switches src via pageId; the draft is pushed when the
+    // engine reports ready (urd-ready), never on iframe load (no one is
+    // listening yet then).
   }
 
   function onIframeLoad() {
     bridge?.destroy();
-    // Klikk i previewen (blokk, tekstfelt, lerret) lukker blokkmenyen. Iframen
-    // er samme opprinnelse, så vi lytter direkte; tannhjul-klikket lukker først
-    // og gjenåpner via urd-block-menu-meldingen etterpå (den kommer senere).
+    // A click in the preview (block, text field, canvas) closes the block
+    // menu. The iframe is same-origin, so we listen directly; the gear
+    // click closes first and reopens via the urd-block-menu message
+    // afterwards (it arrives later).
     iframeEl?.contentDocument?.addEventListener('pointerdown', () => {
       if (blockMenu) blockMenu = null;
     }, true);
@@ -2237,8 +2288,8 @@
       onDeleteTemplate: handleDeleteTemplate,
       onApplyLayout: handleApplyLayout,
       onPluginBlocks: (msg) => { pluginBlocks = msg.blocks ?? []; },
-      // Sidestilt kolonnebredde dratt i preview: skurer i samme dra
-      // koalesceres til ETT angre-steg (edit:-prefikset).
+      // Side-by-side column width dragged in the preview: bursts in the
+      // same drag coalesce into ONE undo step (the edit: prefix).
       onNavWidth: (msg) => siteMutate('edit:nav-width', () => {
         siteDraft.nav.style ??= {};
         siteDraft.nav.style.width = msg.width;
@@ -2246,22 +2297,23 @@
     });
   }
 
-  /** Motoren i iframen lytter nå: send utkast og gjeldende editor-tilstand. */
+  /** The engine in the iframe is listening now: send the draft and the current editor state. */
   async function onReady() {
     await pageLoading;
     await pluginsReady;
-    // Plugin-utkastets aktive liste og visningsvalget: previewen laster plugins fra UTKASTET,
-    // og viewporten følger editorens valg (ikke iframe-bredden).
+    // The plugin draft's enabled list and the view choice: the preview
+    // loads plugins from the DRAFT, and the viewport follows the editor's
+    // choice (not the iframe width).
     bridge?.sendPlugins($state.snapshot(pluginsView)?.enabled ?? []);
     bridge?.sendViewport(viewMode);
-    // Zoomen sendes ved hver klargjøring, så håndtakene mot-skaleres til
-    // admin-størrelse fra første render.
+    // The zoom is sent on every ready handshake, so the handles are
+    // counter-scaled to admin size from the first render.
     bridge?.sendZoom(scale);
     pushCollectionsToPreview();
     pushTemplatesToPreview();
     if (siteStore.hasDraft()) pushSiteToPreview();
-    // Upubliserte sider finnes ikke på serveren (iframen faller tilbake
-    // til forsiden): editorens data er kilden og må alltid sendes.
+    // Unpublished pages do not exist on the server (the iframe falls back
+    // to the front page): the editor's data is the source and must always be sent.
     const unpublished = !site.pages.some((p) => p.id === pageId);
     if (store.hasDraft() || unpublished) bridge?.sendPage(pageId, store.data);
     if (!chromeVisible) bridge?.sendChrome(false);
@@ -2270,18 +2322,18 @@
     sendAdminTheme();
   }
 
-  /** Hjelpelinjer på/av: personlig arbeidsflate-preferanse, huskes i
-   *  localStorage (ikke sidedata) og gjenetableres i onReady. */
+  /** Guides on/off: a personal workspace preference, remembered in
+   *  localStorage (not page data) and re-established in onReady. */
   let guidesOn = $state(localStorage.getItem('urd-guides') === '1');
 
-  /* Urd-innstillingene (admin-tema + språk) bor i en popover nede i railen,
-     ikke i topbaren. Lukkes ved klikk utenfor og Escape. */
+  /* The Urd settings (admin theme + language) live in a popover at the
+     bottom of the rail, not in the top bar. Closed by outside click and Escape. */
   let settingsOpen = $state(false);
 
-  /* Bytt oppsett-velgerens form (eiervalg 9. august 2026): stripe over
-     seksjonen (standard) eller galleri-meny; personlig arbeidsflate-
-     preferanse i localStorage (som tema/språk). Previewen leser nøkkelen
-     ved hver åpning (delt opprinnelse), så byttet virker uten omlasting. */
+  /* The switch-layout picker's form: a strip above the section (default)
+     or a gallery menu; a personal workspace preference in localStorage
+     (like theme/language). The preview reads the key on every opening
+     (shared origin), so the switch works without a reload. */
   let layoutPickerPref = $state(localStorage.getItem('urd-layout-picker') === 'menu' ? 'menu' : 'strip');
   function setLayoutPicker(v) {
     layoutPickerPref = v === 'menu' ? 'menu' : 'strip';
@@ -2293,8 +2345,9 @@
     if (!settingsOpen) return;
     const onDown = (e) => { if (!settingsEl?.contains(e.target)) settingsOpen = false; };
     const onKey = (e) => { if (e.key === 'Escape') settingsOpen = false; };
-    // Klikk i forhåndsvisnings-iframen når aldri editorens document; iframen
-    // tar fokus og admin-vinduet blurres - samme lukkemønster som ColorPicker.
+    // A click in the preview iframe never reaches the editor's document;
+    // the iframe takes focus and the admin window blurs - same closing
+    // pattern as ColorPicker.
     const onBlur = () => { settingsOpen = false; };
     document.addEventListener('pointerdown', onDown, true);
     document.addEventListener('keydown', onKey);
@@ -2306,13 +2359,14 @@
     };
   });
 
-  /* Topplinja folder seg i faste trinn i stedet for å bryte til to rader
-     (valgt 10. august 2026). De fleste trinnene er ren CSS nederst i fila,
-     men de tre som bytter en verktøyklynge mot en meny endrer STRUKTUR og må
-     derfor også leses i JS. Klyngene viker én om gangen, i rekkefølge etter
-     hvor ofte de brukes: Vis sjeldnest, så Enhet, og Zoom sist. Tallene her
-     er nøyaktig de samme som media-spørringene, ikke en måling av innholdet,
-     og tvillingskapet vaktes i tests/topbar-fold.test.mjs. */
+  /* The top bar folds in fixed steps instead of wrapping to two rows.
+     Most steps are pure CSS at the bottom of the file, but the three that
+     swap a tool cluster for a menu change STRUCTURE and must therefore
+     also be read in JS. The clusters yield one at a time, ordered by how
+     often they are used: View first, then Device, and Zoom last. The
+     numbers here are exactly the same as the media queries, not a
+     measurement of the content, and the twinship is guarded in
+     tests/topbar-fold.test.mjs. */
   const FOLD_MQ = { view: 1079, device: 999, zoom: 919 };
   let toolMenu = $state(null);
   let toolMenuEl = $state(null);
@@ -2328,12 +2382,12 @@
     return () => offs.forEach((off) => off());
   });
 
-  /* En klynge som er foldet ut igjen har ingen meny; valget ryddes med den. */
+  /* A cluster that has unfolded again has no menu; the choice is cleaned up with it. */
   $effect(() => {
     if (toolMenu && !folded[toolMenu]) toolMenu = null;
   });
 
-  /* Én åpen verktøymeny om gangen, samme lukkemønster som innstillingene. */
+  /* One open tool menu at a time, same closing pattern as the settings. */
   $effect(() => {
     if (!toolMenu) return;
     const onDown = (e) => { if (!toolMenuEl?.contains(e.target)) toolMenu = null; };
@@ -2355,8 +2409,8 @@
     bridge?.sendShowGuides(guidesOn);
   }
 
-  /** Rutenettet på/av: egen bryter ved siden av hjelpelinjene, uavhengig
-   *  av Grid-panelet, husket i localStorage som dem. */
+  /** The grid overlay on/off: its own toggle next to the guides,
+   *  independent of the Grid panel, remembered in localStorage like them. */
   let gridOn = $state(localStorage.getItem('urd-grid-overlay') === '1');
   function toggleGrid() {
     gridOn = !gridOn;
@@ -2364,7 +2418,7 @@
     bridge?.sendShowGrid(gridOn);
   }
 
-  /** Intern lenke klikket i forhåndsvisningen: bytt side ordentlig. */
+  /** Internal link clicked in the preview: switch page properly. */
   function onNavigate(msg) {
     const path = msg.path.replace(/\/$/, '') || '/';
     const entry = siteDraft.pages.find((p) => p.path === path);
@@ -2372,10 +2426,10 @@
   }
 
   /**
-   * Felles flyt for alle site-endringer fra panelene (sider, nav, tema):
-   * historikk FØR mutasjonen, så lagre, merk og push live til preview.
-   * Nøkler med edit:-prefiks slås sammen i angre-historikken (skurer av
-   * tastetrykk/fargedrag blir ett angre-steg).
+   * Shared flow for all site changes from the panels (pages, nav, theme):
+   * history BEFORE the mutation, then save, mark and push live to the
+   * preview. Keys with the edit: prefix are merged in the undo history
+   * (bursts of keystrokes/color drags become one undo step).
    */
   function siteMutate(key, fn) {
     pushHistory(key);
@@ -2385,24 +2439,25 @@
     pushSiteToPreview();
   }
 
-  /* ---------- Sider-panelet ---------- */
+  /* ---------- The Pages panel ---------- */
 
   let newPageTitle = $state('');
 
-  /* «Ny side fra mal» (0.6.7.10, eiervalg N2): rutenettet under opprett-
-     feltet velger hva neste nye side starter fra; null er tom side, en
-     'preset:<id>' er en innebygd startpakke, alt annet er en egen side-mal. */
+  /* "New page from template": the grid below the create field picks what
+     the next new page starts from; null is a blank page, a 'preset:<id>'
+     is a built-in starter pack, anything else is a user page template. */
   let newPageTemplate = $state(null);
 
-  /* Startpakke-miniatyrene bygges én gang (create() per seksjon er billig,
-     men rutenettet rerendres ved hvert tastetrykk i navnefeltet). */
+  /* The starter-pack thumbnails are built once (create() per section is
+     cheap, but the grid rerenders on every keystroke in the name field). */
   const builtinPageThumbs = Object.fromEntries(PAGE_PRESETS.map((p) => [
     p.id, pageThumb(buildPagePreset(p.id, { pageId: 'forhandsvisning', title: '' })),
   ]));
 
-  /** Sidens fargetokens som inline-vars på malbilde-rutenettene: miniatyrene
-   *  tegner med var(--urd-color-*) og skal vise SIDENS palett, ikke adminens
-   *  (admin laster aldri content/theme.css). Ugyldige verdier droppes. */
+  /** The site's color tokens as inline vars on the template thumbnail
+   *  grids: the thumbnails draw with var(--urd-color-*) and must show the
+   *  SITE's palette, not the admin's (the admin never loads
+   *  content/theme.css). Invalid values are dropped. */
   const thumbThemeStyle = $derived.by(() => {
     const c = siteDraft?.theme?.tokens?.color ?? {};
     return ['bg', 'surface', 'text', 'accent']
@@ -2411,8 +2466,8 @@
       .join(' ');
   });
 
-  /* Kebab-menyen per side-rad (eiervalg A3): id-en til raden med åpen meny.
-     Lukkes ved klikk utenfor, Escape og vindus-blur (settings-mønsteret). */
+  /* The kebab menu per page row: the id of the row with an open menu.
+     Closed by outside click, Escape and window blur (the settings pattern). */
   let pageMenuFor = $state(null);
   $effect(() => {
     if (!pageMenuFor) return;
@@ -2429,7 +2484,7 @@
     };
   });
 
-  /** Speiler guard.js: mapper som aldri kan bli sider. */
+  /** Mirrors guard.js: directories that can never become pages. */
   const RESERVED_SLUGS = ['admin', 'api', 'assets', 'content', 'media', 'plugins', 'functions', 'readme'];
 
   function pageSlugError(slug, ignoreId = null) {
@@ -2449,10 +2504,11 @@
       setStatus(err, 'error');
       return;
     }
-    // Startpakker bygges ferske (create() gir nye id-er og oversatte seeds);
-    // egne maler lagrer opphavs-id-er, så klonen re-id-er alt og setter meta
-    // til den nye siden (re-id-regelen i SKJEMA.md). liftPageFile-vasken gjør
-    // maler lagret under eldre skjemaversjoner trygge.
+    // Starter packs are built fresh (create() yields new ids and
+    // translated seeds); user templates store origin ids, so the clone
+    // re-ids everything and sets meta to the new page (the re-id rule in
+    // SKJEMA.md). The liftPageFile wash makes templates stored under older
+    // schema versions safe.
     const templatePage = newPageTemplate && !newPageTemplate.startsWith('preset:')
       ? templateStores[newPageTemplate]?.data?.page : null;
     const fresh = newPageTemplate?.startsWith('preset:')
@@ -2462,10 +2518,10 @@
         : blankPage({ id: slug, title });
     siteMutate('pages', () => {
       siteDraft.pages.push({ id: slug, title, path: `/${slug}`, file: `content/pages/${slug}.json` });
-      // Nye sider legges rett i menyen; Nav-panelet kan fjerne dem.
+      // New pages go straight into the menu; the Nav panel can remove them.
       siteDraft.nav.items.push({ label: title, page: slug });
     });
-    // Sidens eget utkast, klart til publisering.
+    // The page's own draft, ready to publish.
     writeDraftKey(`urd-draft-${slug}`, JSON.stringify(fresh));
     updateDirty();
     newPageTitle = '';
@@ -2473,7 +2529,7 @@
     selectPage(slug);
   }
 
-  /** Kebab-menyens «Lagre som mal»: sidens gjeldende data inn i mal-kjernen. */
+  /** The kebab menu's "Save as template": the page's current data into the template core. */
   async function savePageAsTemplate(entry) {
     pageMenuFor = null;
     const data = entry.id === pageId
@@ -2488,12 +2544,12 @@
     const old = entry.title;
     siteMutate('pages', () => {
       entry.title = title;
-      // Menypunkter som fortsatt het det gamle følger med.
+      // Menu items still carrying the old name follow along.
       for (const item of siteDraft.nav.items) {
         if (item.page === entry.id && item.label === old) item.label = title;
       }
     });
-    // Sidefilens meta.title holdes i takt (den styrer fanetittelen).
+    // The page file's meta.title is kept in step (it drives the tab title).
     if (entry.id === pageId) {
       store.data.meta.title = title;
       store.save();
@@ -2504,8 +2560,8 @@
     }
   }
 
-  /** Reaktivt speil av den åpne sidens SEO-felter (Sider-panelet leser dette;
-   *  sannheten bor i store.data.meta og speiles inn ved sidebytte). */
+  /** Reactive mirror of the open page's SEO fields (the Pages panel reads
+   *  this; the truth lives in store.data.meta and is mirrored in on page switch). */
   let seoDraft = $state({ description: '', ogTitle: '', ogDescription: '', ogImage: '' });
 
   function readSeoDraft() {
@@ -2518,8 +2574,9 @@
     };
   }
 
-  /** SEO-feltene på den åpne siden (Søk og deling). Tomme felt slettes fra
-   *  meta, så sidefilen holder seg ren; og-objektet fjernes når det tømmes. */
+  /** The SEO fields on the open page (Search and sharing). Empty fields
+   *  are deleted from meta, so the page file stays clean; the og object is
+   *  removed when emptied. */
   function setPageSeo(field, rawValue) {
     const value = String(rawValue ?? '').trim();
     if (field === 'description') {
@@ -2540,8 +2597,9 @@
     missingSeo[pageId] = entry?.noindex ? false : !store.data.meta.description;
   }
 
-  /** Skjul fra søkemotorer: flagget bor i SIDEREGISTERET (site.json), så
-   *  publiseringen kan filtrere sitemapen uten å laste alle sidefilene. */
+  /** Hide from search engines: the flag lives in the PAGE REGISTRY
+   *  (site.json), so publishing can filter the sitemap without loading all
+   *  the page files. */
   function setPageNoindex(checked) {
     const entry = siteDraft.pages.find((p) => p.id === pageId);
     if (!entry) return;
@@ -2549,12 +2607,12 @@
       if (checked) entry.noindex = true;
       else delete entry.noindex;
     });
-    // Skjulte sider er utenfor søk og markeres aldri som mangelfulle.
+    // Hidden pages are outside search and are never marked as lacking.
     missingSeo[pageId] = checked ? false : !store?.data?.meta?.description;
   }
 
-  /** Sider som mangler metabeskrivelse (varselmarkøren i Sider-panelet):
-   *  beregnes når panelet åpnes; den åpne siden oppdateres ved redigering. */
+  /** Pages missing a meta description (the warning marker in the Pages
+   *  panel): computed when the panel opens; the open page updates on edit. */
   let missingSeo = $state({});
 
   async function refreshMissingSeo() {
@@ -2575,8 +2633,8 @@
     if (activePanel === 'pages' && pageId) refreshMissingSeo();
   });
 
-  /** Delingsbildet: komprimeres som andre bilder og materialiseres til
-   *  media/ ved publisering. */
+  /** The sharing image: compressed like other images and materialized to
+   *  media/ on publish. */
   async function uploadOgImage(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -2589,20 +2647,20 @@
     }
   }
 
-  /** En annen sides gjeldende data: utkast, ellers publisert, ellers blank. */
+  /** Another page's current data: draft, else published, else blank. */
   async function readPageDraft(entry) {
     const raw = localStorage.getItem(`urd-draft-${entry.id}`);
     if (raw) {
-      try { return JSON.parse(raw); } catch { /* korrupt: hentes på nytt */ }
+      try { return JSON.parse(raw); } catch { /* corrupt: fetched again */ }
     }
     try {
       const res = await fetch(`/${entry.file}`);
       if (res.ok) return liftPageFile(await res.json(), siteStore.data);
-    } catch { /* upublisert side uten utkast */ }
+    } catch { /* unpublished page without a draft */ }
     return blankPage(entry);
   }
 
-  /** Endrer en annen sides utkast (lager utkast fra publisert ved behov). */
+  /** Changes another page's draft (creates a draft from published as needed). */
   async function patchPageDraft(entry, fn) {
     const page = await readPageDraft(entry);
     fn(page);
@@ -2618,22 +2676,24 @@
       setStatus(err, 'error');
       return;
     }
-    // Kun adressen endres; id (og dermed utkastnøkkel og filnavn) består,
-    // så interne referanser (nav) aldri ryker. Publisering rydder den
-    // gamle adressens index.html via diffen mot publisert site.json.
+    // Only the address changes; the id (and thus the draft key and file
+    // name) remains, so internal references (nav) never break. Publishing
+    // cleans the old address's index.html via the diff against the
+    // published site.json.
     siteMutate('pages', () => {
       entry.path = `/${slug}`;
     });
   }
 
   function deletePage(entry) {
-    if (entry.path === '/') return; // forsiden kan aldri slettes
+    if (entry.path === '/') return; // the front page can never be deleted
     siteMutate('pages', () => {
       siteDraft.pages = siteDraft.pages.filter((p) => p.id !== entry.id);
-      // Punkter med undermeny overlever at egen side slettes: målet fjernes
-      // og punktet blir en ren åpner, så barna (som kan peke på levende
-      // sider) ikke forsvinner stille. Undermenypunkter som pekte på siden
-      // ryddes; punkter uten både mål og barn til slutt fjernes helt.
+      // Items with a submenu survive their own page being deleted: the
+      // target is removed and the item becomes a pure opener, so the
+      // children (which can point to living pages) do not vanish silently.
+      // Submenu items that pointed to the page are cleaned up; items left
+      // with neither target nor children are removed entirely.
       siteDraft.nav.items = siteDraft.nav.items.filter((i) => i.page !== entry.id || i.children);
       for (const item of siteDraft.nav.items) {
         if (item.page === entry.id) delete item.page;
@@ -2643,12 +2703,12 @@
       }
       siteDraft.nav.items = siteDraft.nav.items.filter((i) => i.page || i.href || i.children);
     });
-    // Sidens eget utkast beholdes: Ctrl+Z gjenoppretter alt.
+    // The page's own draft is kept: Ctrl+Z restores everything.
     if (entry.id === pageId) selectPage(siteDraft.pages[0].id);
     setStatus(ta('status.pageRemoved'));
   }
 
-  /* ---------- Nav-panelet ---------- */
+  /* ---------- The Nav panel ---------- */
 
   function setLogo(patch) {
     siteMutate('edit:nav-logo', () => {
@@ -2657,8 +2717,8 @@
   }
 
   /**
-   * Logotype-bytte. value betyr tekst (text/both) eller bilde-URL (image),
-   * så feltene flyttes med når betydningen skifter.
+   * Logo type switch. value means text (text/both) or image URL (image),
+   * so the fields are moved along when the meaning shifts.
    */
   function setLogoType(type) {
     siteMutate('nav', () => {
@@ -2684,7 +2744,7 @@
     });
   }
 
-  /** Logobilde: samme webp-flyt som bildeblokken (materialiseres ved publisering). */
+  /** Logo image: same webp flow as the image block (materialized on publish). */
   async function uploadLogoImage(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -2701,8 +2761,8 @@
     }
   }
 
-  /** Nettstedsikon (favicon): lite webp, materialiseres ved publisering. */
-  // Ikon-editoren (IconEditor): kilden som redigeres. null = lukket.
+  /** Site icon (favicon): small webp, materialized on publish. */
+  // The icon editor (IconEditor): the source being edited. null = closed.
   let iconEditorImage = $state(null);
 
   async function uploadSiteIcon(event) {
@@ -2711,9 +2771,10 @@
     if (!file) return;
     const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name || '');
     if (isSvg) {
-      // SVG auto-trimmes (stram viewBox til motivet) FØR ikon-editoren, så det
-      // rasteriserte faviconet fylles tett av merket. Faviconet forblir raster:
-      // universell støtte (Safari bruker ikke SVG-favicon).
+      // The SVG is auto-trimmed (viewBox tightened to the subject) BEFORE
+      // the icon editor, so the rasterized favicon is filled tightly by
+      // the mark. The favicon stays raster: universal support (Safari does
+      // not use SVG favicons).
       try {
         const img = await svgAutoTrim(file);
         iconEditorImage = img.dataUrl;
@@ -2722,7 +2783,7 @@
       }
       return;
     }
-    // Les rå fil i full oppløsning, så editoren har noe å beskjære og zoome i.
+    // Read the raw file at full resolution, so the editor has something to crop and zoom in.
     const reader = new FileReader();
     reader.onload = () => { iconEditorImage = String(reader.result); };
     reader.onerror = () => setStatus(ta('status.imageReadError'), 'error');
@@ -2738,32 +2799,34 @@
     siteMutate('edit:site-icon', () => { delete siteDraft.site.icon; });
   }
 
-  /** Nettstedsnavnet (site.title): halve fanetittelen (`<side> - <navn>`) og
-   *  standardteksten i menylogoen. edit:-nøkkel så en skriveøkt blir ett angre-steg. */
+  /** The site name (site.title): half the tab title (`<page> - <name>`)
+   *  and the default text in the menu logo. edit: key so a typing session
+   *  becomes one undo step. */
   function setSiteName(value) {
     siteMutate('edit:site-title', () => { siteDraft.site.title = value; });
   }
 
-  /** Nettstedsbeskrivelsen (site.description): brukt av søkemotorer og ved deling. */
+  /** The site description (site.description): used by search engines and when sharing. */
   function setSiteDescription(value) {
     siteMutate('edit:site-desc', () => { siteDraft.site.description = value; });
   }
 
-  /** Innholdsbredden (site.layout.contentWidth, ADR-0018): designbredden
-   *  blokkenes prosenter måles mot. Modellen (grenser, hurtigvalg,
-   *  referanseskjermer, båndberegning) bor som rene funksjoner i
-   *  lib/content-width.js, så prøven regner på det samme som motoren gjør. */
+  /** The content width (site.layout.contentWidth, ADR-0018): the design
+   *  width the blocks' percentages are measured against. The model
+   *  (limits, quick picks, reference screens, band calculation) lives as
+   *  pure functions in lib/content-width.js, so the sample computes on
+   *  the same thing the engine does. */
   let layoutWidth = $derived(siteDraft?.layout?.contentWidth ?? 1440);
-  /** Sidemargen i prosent av vindusbredden (vw), ikke px. */
+  /** The side margin in percent of the window width (vw), not px. */
   let layoutGutter = $derived(siteDraft?.layout?.gutter ?? 6);
   let widthPreset = $derived(presetOf(layoutWidth));
   let gutterPreset = $derived(GUTTER_PRESETS.find((p) => p.gutter === layoutGutter)?.id ?? null);
-  /** En håndredigert marg utenfor skalaen ville vært usynlig i normalvisningen,
-   *  så Avansert står åpen fra start når verdien ikke svarer til et trinn. */
+  /** A hand-edited margin outside the scale would be invisible in the
+   *  normal view, so Advanced starts open when the value matches no step. */
   let gutterAdvanced = $state(false);
-  /** Skyveknappen trenger et tall også når bredden står på «full». */
+  /** The slider needs a number even when the width is set to "full". */
   let widthSlider = $derived(layoutWidth === 'full' ? WIDTH_MAX : clampWidth(layoutWidth));
-  /** Prøven: én stripe per referanseskjerm, med andel og om bredden binder der. */
+  /** The sample: one strip per reference screen, with the share and whether the width binds there. */
   let widthBands = $derived(REF_SCREENS.map((screen) => ({
     screen,
     ...contentBand(layoutWidth, layoutGutter, screen),
@@ -2777,9 +2840,9 @@
   const setContentWidth = (w) => setLayout({ contentWidth: w === 'full' ? 'full' : clampWidth(w) }, 'edit:site-width');
   const setContentGutter = (g) => setLayout({ gutter: clampGutter(g) }, 'edit:site-gutter');
 
-  /** Besøkende-språket (site.lang, ADR-0012): den historiske verdien 'no'
-   *  vises som bokmål; en håndredigert verdi utenfor lista bevares som
-   *  eget alternativ øverst så ingenting ødelegges av å åpne panelet. */
+  /** The visitor language (site.lang, ADR-0012): the legacy value 'no' is
+   *  shown as Bokmål; a hand-edited value outside the list is preserved as
+   *  its own option at the top so opening the panel breaks nothing. */
   function siteLangValue() {
     const cur = siteDraft.site.lang ?? 'no';
     return cur === 'no' ? 'nb' : cur;
@@ -2794,13 +2857,18 @@
     siteMutate('site', () => { siteDraft.site.lang = v; });
   }
 
-  // Admin-fanen viser nettstedsikonet når det finnes, ellers Urd-merket (samme SVG som i admin/index.html; kan ikke leses fra link-elementet, for favicon-boot.js kan alt ha byttet det).
-  // Kun kjente ikonformer slippes gjennom (data:image eller site-relativ sti), så utkastdata aldri kan bli en aktiv URL (CodeQL-funn #1-3).
+  // The admin tab shows the site icon when it exists, otherwise the Urd
+  // mark (same SVG as in admin/index.html; it cannot be read from the
+  // link element, because favicon-boot.js may already have swapped it).
+  // Only known icon shapes are let through (data:image or a site-relative
+  // path), so draft data can never become an active URL.
   const URD_MARK_ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0e14'/%3E%3Cpath d='M19.2 49.6V14.4l25.6 10.4V49.6' fill='none' stroke='%2315b39a' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E";
-  // Anket regex i stedet for startsWith: CodeQL gjenkjenner RegExp.test som barriere, så varslene på denne flyten lukkes.
+  // Anchored regex instead of startsWith: CodeQL recognizes RegExp.test as
+  // a barrier, so the alerts on this flow are closed.
   const SAFE_ICON_RE = /^(?:data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+|\/(?!\/)[\w%./-]*)$/;
   $effect(() => {
-    // Før utkastet er lastet styrer favicon-boot.js fanen; å røre den her ville gjeninnført ikonblinket.
+    // Until the draft is loaded, favicon-boot.js controls the tab;
+    // touching it here would make the icon flash.
     if (!siteDraft?.site) return;
     const href = siteDraft.site.icon;
     const link = document.querySelector('link[rel="icon"]');
@@ -2820,18 +2888,18 @@
   function setNavStyle(name, value) {
     siteMutate(`edit:nav-style-${name}`, () => {
       siteDraft.nav.style ??= {};
-      // Standardverdier lagres ikke i fila (kall med undefined fjerner feltet).
+      // Defaults are not stored in the file (a call with undefined removes the field).
       if (value === undefined) delete siteDraft.nav.style[name];
       else siteDraft.nav.style[name] = value;
     });
   }
 
-  /** Variant-avledninger for panelet: sidestilt og flytende viser egne valg. */
+  /** Variant derivations for the panel: side-by-side and floating show their own options. */
   const sideVariant = $derived(siteDraft?.nav?.variant === 'side-left' || siteDraft?.nav?.variant === 'side-right');
   const floatingVariant = $derived(['floating', 'floating-square', 'floating-tab'].includes(siteDraft?.nav?.variant));
 
-  /** Effektfargen ved hover: kun der stilen har en effekt, med etikett som
-      sier hva fargen faktisk styrer i den valgte stilen. */
+  /** The effect color on hover: only where the style has an effect, with a
+      label saying what the color actually controls in the chosen style. */
   const HOVER_COLOR_LABELS = {
     underline: [ta('hoverColor.underline.label'), ta('hoverColor.underline.title')],
     pill: [ta('hoverColor.pill.label'), ta('hoverColor.pill.title')],
@@ -2839,7 +2907,7 @@
   };
   const hoverColorLabel = $derived(HOVER_COLOR_LABELS[siteDraft?.nav?.style?.hover] ?? null);
 
-  /** Variant (additivt fra v0.6): standarden (bar) lagres ikke i fila. */
+  /** Variant (additive): the default (bar) is not stored in the file. */
   function setNavVariant(value) {
     siteMutate('nav', () => {
       if (value === 'bar') delete siteDraft.nav.variant;
@@ -2847,7 +2915,7 @@
     });
   }
 
-  /** Glød rundt den flytende pillen: av er standard og lagres ikke i fila. */
+  /** Glow around the floating pill: off is the default and is not stored in the file. */
   function setNavGlow(on) {
     siteMutate('nav', () => {
       siteDraft.nav.style ??= {};
@@ -2856,7 +2924,7 @@
     });
   }
 
-  /** Luft over pillen: på er standard og lagres ikke i fila. */
+  /** Air above the pill: on is the default and is not stored in the file. */
   function setNavTopGap(on) {
     siteMutate('nav', () => {
       siteDraft.nav.style ??= {};
@@ -2865,7 +2933,7 @@
     });
   }
 
-  /** Hover-stil (additivt fra v0.6): standarden lagres ikke i fila. */
+  /** Hover style (additive): the default is not stored in the file. */
   function setNavHover(value) {
     siteMutate('nav', () => {
       siteDraft.nav.style ??= {};
@@ -2874,15 +2942,16 @@
     });
   }
 
-  /* ---------- Samlinger-panelet (ADR-0007) ---------- */
+  /* ---------- The Collections panel (ADR-0007) ---------- */
 
-  // Samlinger er delt nettstedsdata (som nav/footer): indeksfil + én fil per samling,
-  // hver med egen draftStore. Redigering går gjennom Ctrl+Z-historikken (som sider/site).
+  // Collections are shared site data (like nav/footer): an index file +
+  // one file per collection, each with its own draftStore. Editing goes
+  // through the Ctrl+Z history (like pages/site).
   let collectionsIndexStore = null;
   let collectionStores = {};
-  /** Publisert baseline per samling-id: brukes når angring gjenskaper en slettet samlings store. */
+  /** Published baseline per collection id: used when undo recreates a deleted collection's store. */
   let publishedCollections = {};
-  /** Sant først når initSamlinger har fylt ALLE stores; snapshot() tar med samlinger først da. */
+  /** True only once initSamlinger has filled ALL stores; snapshot() includes collections only then. */
   let samlingerReady = false;
   let samlingerIds = $state([]);
   let collectionsView = $state({});
@@ -2898,14 +2967,14 @@
     ['custom', ta('collectionKind.custom')],
   ];
 
-  /* ---------- Maler (0.6.7): brukermaler i content/maler/ ---------- */
-  // Samme mønster som samlinger: indeks-store + én store per malfil, med
-  // «finnes ikke»-baseline (null) til første publisering (0.6.7.1-regelen).
+  /* ---------- Templates: user templates in content/maler/ ---------- */
+  // Same pattern as collections: an index store + one store per template
+  // file, with a "does not exist" baseline (null) until the first publish.
   let templatesIndexStore = null;
   let templateStores = {};
-  /** Publisert baseline per mal-id (null = aldri publisert): brukes når angring gjenskaper en slettet mals store. */
+  /** Published baseline per template id (null = never published): used when undo recreates a deleted template's store. */
   let publishedTemplates = {};
-  /** Sant først når initMaler har fylt ALLE stores; snapshot() tar med maler først da. */
+  /** True only once initMaler has filled ALL stores; snapshot() includes templates only then. */
   let templatesReady = false;
   let templateIds = $state([]);
 
@@ -2913,24 +2982,24 @@
     let index = { version: 1, maler: [] };
     try {
       index = await (await fetch('/content/maler.json')).json();
-    } catch { /* ingen indeks er helt greit */ }
+    } catch { /* no index is perfectly fine */ }
     templatesIndexStore = createDraftStore('urd-draft-templates', () => index, draftSaveError, 'urd-draft-maler');
     templateIds = [...(templatesIndexStore.data.maler ?? [])];
     for (const id of templateIds) {
       let published = null;
       try {
         published = await (await fetch(`/content/maler/${id}.json`)).json();
-      } catch { /* ny, upublisert mal */ }
+      } catch { /* new, unpublished template */ }
       publishedTemplates[id] = published;
       templateStores[id] = createDraftStore(`urd-draft-template-${id}`, () => published, draftSaveError, `urd-draft-mal-${id}`);
-      // Utkast fra en nyere editor forkastes (samme vern som side/site).
+      // Drafts from a newer editor are discarded (same guard as page/site).
       if ((templateStores[id].data?.schemaVersion ?? 1) > TEMPLATE_SCHEMA_VERSION) templateStores[id].reset();
     }
     templatesReady = true;
     pushTemplatesToPreview();
   }
 
-  /** Send mal-utkastene til previewens Mine maler-fane (rene kopier, aldri $state-proxier). */
+  /** Send the template drafts to the preview's My templates tab (plain copies, never $state proxies). */
   function pushTemplatesToPreview() {
     const list = templateIds
       .map((id) => (templateStores[id]?.data ? { id, ...JSON.parse(JSON.stringify(templateStores[id].data)) } : null))
@@ -2939,16 +3008,16 @@
     bridge?.sendTemplates(list);
   }
 
-  /** «Lagre som mal» fra previewen (seksjon/blokkgruppe); side-maler kommer
-   *  editor-internt fra Sider-panelet via samme kjerne. */
+  /** "Save as template" from the preview (section/block group); page
+   *  templates come editor-internally from the Pages panel via the same core. */
   function handleSaveTemplate(msg) {
     const kind = TEMPLATE_KINDS.includes(msg.kind) ? msg.kind : 'section';
     return saveTemplate(kind, msg[kind]);
   }
 
-  /** Skjermdokket blokk dratt til nytt ankerpunkt i previewen. Dokkpunktet
-   *  gjelder begge flater (vindus-anker, ikke layout), så mobil-tilsynet
-   *  utløses ikke. */
+  /** Screen-docked block dragged to a new anchor point in the preview. The
+   *  dock point applies to both surfaces (a window anchor, not layout), so
+   *  mobile review is not triggered. */
   function handleStickyDock(msg) {
     const { section, block } = readBlock(msg.sectionId, msg.blockId);
     if (!section || !block?.sticky) return;
@@ -2961,9 +3030,9 @@
     syncSelectedBlock();
   }
 
-  /** «Fest gruppen» fra flerutvalgs-linja: hele utvalget deler én sticky-gruppe
-   *  og festes som én enhet, eller løses opp igjen. ETT angre-steg for hele
-   *  utvalget, som de andre gruppehandlingene. */
+  /** "Pin the group" from the multi-select bar: the whole selection shares
+   *  one sticky group and is pinned as one unit, or dissolved again. ONE
+   *  undo step for the whole selection, like the other group actions. */
   function handleStickyGroup(msg) {
     const ids = msg.blockIds ?? [];
     const { section } = readBlock(msg.sectionId, ids[0]);
@@ -2972,8 +3041,8 @@
     const group = msg.on ? makeId('stk') : null;
     for (const block of section.blocks) {
       if (!ids.includes(block.id)) continue;
-      // Av: festingen fjernes helt. På: eksisterende avstand/grense beholdes
-      // så en blokk som alt var festet ikke mister innstillingene sine.
+      // Off: the pinning is removed entirely. On: existing offset/limit is
+      // kept so a block that was already pinned does not lose its settings.
       block.sticky = group ? { offset: 16, until: null, ...block.sticky, group } : null;
     }
     markDesktopChange(section, 'block-edited');
@@ -2984,7 +3053,7 @@
     setStatus(ta(msg.on ? 'status.stickyGrouped' : 'status.stickyUngrouped'));
   }
 
-  /** Felles mal-lagring: navngi, slug til id, lagre som utkast. */
+  /** Shared template saving: name it, slug to id, save as a draft. */
   async function saveTemplate(kind, payload) {
     if (!payload || !templatesIndexStore) return;
     const name = (await askPrompt({
@@ -3014,7 +3083,7 @@
     pushTemplatesToPreview();
   }
 
-  /** Sletteknappen i Mine maler-fanen: bekreft, fjern fil-utkast og indeks-innslag. */
+  /** The delete button in the My templates tab: confirm, remove the file draft and the index entry. */
   async function handleDeleteTemplate(msg) {
     const mal = templateStores[msg.id]?.data?.mal;
     if (!mal) return;
@@ -3036,24 +3105,24 @@
     let index = { version: 1, samlinger: [] };
     try {
       index = await (await fetch('/content/collections.json')).json();
-    } catch { /* ingen indeks er helt greit */ }
+    } catch { /* no index is perfectly fine */ }
     collectionsIndexStore = createDraftStore('urd-draft-collections', () => index, draftSaveError, 'urd-draft-samlinger');
     samlingerIds = [...(collectionsIndexStore.data.samlinger ?? [])];
     for (const id of samlingerIds) {
       let published = null;
       try {
         published = await (await fetch(`/content/samlinger/${id}.json`)).json();
-      } catch { /* ny, upublisert samling */ }
-      // Upublisert samling har baseline «finnes ikke» (null), aldri en
-      // syntetisk publisert-tilstand: ellers kan utkastet være likt den
-      // falske baselinen, hasDraft() bli usann, og indeksen publiseres
-      // uten filen (indeks/fil-drift).
+      } catch { /* new, unpublished collection */ }
+      // An unpublished collection has the baseline "does not exist"
+      // (null), never a synthetic published state: otherwise the draft can
+      // equal the false baseline, hasDraft() turn false, and the index be
+      // published without the file (index/file drift).
       publishedCollections[id] = published;
       collectionStores[id] = createDraftStore(`urd-draft-collection-${id}`, () => published, draftSaveError, `urd-draft-samling-${id}`);
       if (!published && !collectionStores[id].data) {
-        // Indeks uten fil og uten utkast (driftet deploy): gi et tomt
-        // utkast så panelet virker; finnes-ikke-baselinen gjør at filen
-        // publiseres ved neste publisering og driften heles.
+        // Index without a file and without a draft (drifted deploy): give
+        // an empty draft so the panel works; the does-not-exist baseline
+        // makes the file publish on the next publish and heals the drift.
         collectionStores[id].replace({ schemaVersion: 1, id, name: id, kind: 'custom', entries: [] });
         collectionStores[id].save();
       }
@@ -3068,17 +3137,20 @@
       if (collectionStores[id]) view[id] = JSON.parse(JSON.stringify(collectionStores[id].data));
     }
     collectionsView = view;
-    // Ved klikk-og-skriv i selve blokken hoppes preview-dyttet over: iframen viser alt teksten, og et rerender midt i skrivingen ville mistet skrivemarkøren.
+    // On click-and-type in the block itself the preview push is skipped:
+    // the iframe already shows the text, and a rerender mid-typing would
+    // lose the caret.
     if (pushPreview) pushCollectionsToPreview();
   }
 
-  /** Send samlingsutkastene til previewen (rene kopier; $state-proxier kan aldri postMessages). */
+  /** Send the collection drafts to the preview (plain copies; $state proxies can never be postMessaged). */
   function pushCollectionsToPreview() {
     bridge?.sendCollections($state.snapshot(collectionsView) ?? {});
   }
 
-  /** Felles flyt for samlingsendringer: historikk, muter, lagre, oppdater speil og preview.
-   *  key er angre-nøkkelen (edit:-prefiks koalescerer skurer av samme handling). */
+  /** Shared flow for collection changes: history, mutate, save, update
+   *  the mirror and the preview. key is the undo key (the edit: prefix
+   *  coalesces bursts of the same action). */
   function mutateCollection(id, key, fn, pushPreview = true) {
     const store = collectionStores[id];
     if (!store) return;
@@ -3089,26 +3161,28 @@
     syncCollectionsView(pushPreview);
   }
 
-  /** «+ Produkt»-adderen i produkt-blokken (urd-collection-add fra iframen). */
+  /** The "+ Product" adder in the product block (urd-collection-add from the iframe). */
   function handleCollectionAdd(msg) {
-    // Slettet/ukjent samling: no-op (guarden hindrer også et dødt angre-steg).
+    // Deleted/unknown collection: no-op (the guard also prevents a dead undo step).
     if (!collectionStores[msg.collection]) return;
     addCollectionEntry(msg.collection);
   }
 
-  /** Ren tekst fra en rik tekst-tittel: parses i et inert dokument (samme
-   *  grep som motorens sanitize.js), aldri med en regex som kan la rester stå. */
+  /** Plain text from a rich-text title: parsed in an inert document (same
+   *  approach as the engine's sanitize.js), never with a regex that can
+   *  leave remnants. */
   function plainTitle(html) {
     const doc = new DOMParser().parseFromString(String(html ?? ''), 'text/html');
     return (doc.body.textContent ?? '').trim();
   }
 
-  /** Klikk-og-skriv/bildebytte i samling-blokken (urd-collection-edit fra iframen). */
+  /** Click-and-type/image swap in the collection block (urd-collection-edit from the iframe). */
   function handleCollectionEdit(msg) {
     const { collection, entryId, field, value } = msg;
     if (!['title', 'text', 'image', 'imageAlt', 'imageStyle'].includes(field)) return;
-    // Tom tittel beholdes ikke (skjemaet krever tittel); gammel tittel består til noe skrives.
-    // Tittelen er rik tekst, så tomhet vurderes uten markup.
+    // An empty title is not kept (the schema requires a title); the old
+    // title remains until something is typed. The title is rich text, so
+    // emptiness is judged without markup.
     if (field === 'title' && !plainTitle(value)) return;
     mutateCollection(collection, `edit:samling:${collection}:${entryId}:${field}`, (data) => {
       const entry = data.entries.find((e) => e.id === entryId);
@@ -3118,11 +3192,12 @@
     }, field === 'image');
   }
 
-  /** Oppretter og aktiverer en samling (kalleren eier historikk-steget). */
+  /** Creates and activates a collection (the caller owns the history step). */
   function insertSamling(id, name, kind) {
     const fresh = { schemaVersion: 1, id, name, kind, entries: [] };
-    // Baseline er «finnes ikke» (null) til første publisering: en fersk
-    // samling skal ha hasDraft() sann, ellers publiseres indeksen uten filen.
+    // The baseline is "does not exist" (null) until the first publish: a
+    // fresh collection must have hasDraft() true, otherwise the index is
+    // published without the file.
     collectionStores[id] = createDraftStore(`urd-draft-collection-${id}`, () => null, draftSaveError, `urd-draft-samling-${id}`);
     collectionStores[id].replace(fresh);
     collectionStores[id].save();
@@ -3147,12 +3222,12 @@
     newCollectionName = '';
   }
 
-  /** «+ Opprett produktkatalog» i produkt-blokkens Egenskaper: samling + binding i ETT angre-steg. */
+  /** "+ Create product catalog" in the product block's Properties: collection + binding in ONE undo step. */
   function createCatalogForBlock() {
     const name = ta('seed.productCatalogName');
     const base = slugify(name) || 'produkter';
     let id = base;
-    // Slug-dedup: en ikke-produkt-samling kan alt eie basenavnet.
+    // Slug dedup: a non-product collection can already own the base name.
     for (let n = 2; samlingerIds.includes(id); n += 1) id = `${base}-${n}`;
     pushHistory('samlinger');
     insertSamling(id, name, 'products');
@@ -3175,8 +3250,9 @@
   function addCollectionEntry(id) {
     mutateCollection(id, `samling:${id}:add-entry`, (data) => {
       if (data.kind === 'products') {
-        // Produkter: ingen dato (irrelevant), pris settes i panelet; legges SIST
-        // så adder-kortet i previewen får det nye kortet ved siden av seg.
+        // Products: no date (irrelevant), the price is set in the panel;
+        // added LAST so the adder card in the preview gets the new card
+        // next to it.
         data.entries.push({ id: makeId('innslag'), title: ta('seed.newProduct'), text: '' });
       } else {
         data.entries.unshift({
@@ -3212,7 +3288,7 @@
     });
   }
 
-  /** Innslagsbilde: samme webp-flyt som blokkbilder; materialiseres ved publisering. */
+  /** Entry image: same webp flow as block images; materialized on publish. */
   async function setEntryImage(id, entryId, event) {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -3221,7 +3297,7 @@
     setEntryField(id, entryId, 'image', img.dataUrl);
   }
 
-  /** Produktfeltene (kind products): størrelseslisten skrives kommaseparert. */
+  /** The product fields (kind products): the size list is written comma-separated. */
   function setEntrySizes(id, entryId, text) {
     const sizes = text.split(',').map((s) => s.trim()).filter(Boolean);
     setEntryField(id, entryId, 'sizes', sizes.length ? sizes : '');
@@ -3239,7 +3315,7 @@
     mutateCollection(id, `edit:samling:${id}:${entryId}:color:${index}:${field}`, (data) => {
       const color = data.entries.find((e) => e.id === entryId)?.colors?.[index];
       if (!color) return;
-      // Navnet kan aldri tømmes (skjemaet krever det); bildet kan fjernes.
+      // The name can never be emptied (the schema requires it); the image can be removed.
       if (field === 'image' && !value) delete color.image;
       else if (value) color[field] = value;
     });
@@ -3262,7 +3338,7 @@
     });
   }
 
-  /** CSV-eksport (funksjonskartet C12): innslagene lastes ned som <id>.csv. */
+  /** CSV export: the entries are downloaded as <id>.csv. */
   function exportCollectionCsv(id) {
     const data = collectionStores[id]?.data;
     if (!data) return;
@@ -3274,8 +3350,9 @@
     URL.revokeObjectURL(url);
   }
 
-  /** CSV-import: ERSTATTER samlingens innslag med radene fra fila (angre finnes).
-   *  Manglende/ugyldige id-er får nye; ren parsing bor i engine/collections-csv.js. */
+  /** CSV import: REPLACES the collection's entries with the rows from the
+   *  file (undo exists). Missing/invalid ids get new ones; pure parsing
+   *  lives in engine/collections-csv.js. */
   async function importCollectionCsv(id, event) {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -3294,12 +3371,14 @@
     setStatus(ta('status.csvImported', { count: String(parsed.entries.length) }), 'ok');
   }
 
-  /* ---------- Plugins-panelet ---------- */
+  /* ---------- The Plugins panel ---------- */
 
-  // plugins.json gjennom samme utkastflyt som resten: endringer er utkast til de publiseres.
-  // Merk: forhåndsvisningen laster plugins fra SERVEREN ved boot, så aktivering vises først etter publisering og deploy.
+  // plugins.json goes through the same draft flow as the rest: changes are
+  // drafts until they are published. Note: the preview loads plugins from
+  // the SERVER at boot, so activation shows only after publish and deploy.
   let pluginsStore = null;
-  /** Eksplisitt løfte som finnes fra første øyeblikk: onReady venter ALLTID på det, så en rask iframe aldri kan få tom plugin-liste (kappløpet var tydeligst på lokal server). */
+  /** Explicit promise that exists from the first moment: onReady ALWAYS
+   *  waits on it, so a fast iframe can never get an empty plugin list. */
   let resolvePluginsReady;
   const pluginsReady = new Promise((resolve) => { resolvePluginsReady = resolve; });
   let pluginsView = $state(null);
@@ -3307,25 +3386,26 @@
   let pluginEngine = $state('0.0.0');
   let newPluginId = $state('');
   let pluginError = $state('');
-  /** Plugin-mapper funnet i repoet (via publiseringslaget) som ikke står i plugins.json ennå. */
+  /** Plugin directories found in the repo (via the publishing layer) that are not in plugins.json yet. */
   let pluginsFound = $state([]);
-  /** Pluginene som er aktive i den PUBLISERTE plugins.json (ikke utkastet):
-   *  admin-språkvelgeren kan kun tilby språkpakker motoren alt kan laste. */
+  /** The plugins enabled in the PUBLISHED plugins.json (not the draft):
+   *  the admin language picker can only offer language packs the engine
+   *  can already load. */
   let publishedPluginIds = $state([]);
-  /** 'pending' | 'ok' | 'unavailable': skriv-inn-navn-feltet er kun reserveløsning når oppdagelsen ikke virker. */
+  /** 'pending' | 'ok' | 'unavailable': the type-a-name field is only a fallback when discovery does not work. */
   let pluginDiscovery = $state('pending');
 
-  /** Alle plugin-idene panelet kjenner: aktive + deaktiverte (mappene består i repoet). */
+  /** All plugin ids the panel knows: enabled + disabled (the directories remain in the repo). */
   const knownPlugins = () => [...new Set([...(pluginsView?.enabled ?? []), ...(pluginsView?.disabled ?? [])])];
 
   function syncPluginsView() {
     pluginsView = JSON.parse(JSON.stringify(pluginsStore.data));
   }
 
-  /** Sidens LEVENDE CSP, lest fra svar-headerne (Cloudflare setter den fra
-   *  _headers på alle stier). null = ikke lastet; {unknown: true} = ingen
-   *  CSP-header (lokal utvikling): da blokkeres ingenting, og instruksen
-   *  ville bare vært støy. */
+  /** The site's LIVE CSP, read from the response headers (Cloudflare sets
+   *  it from _headers on all paths). null = not loaded; {unknown: true} =
+   *  no CSP header (local development): then nothing is blocked, and the
+   *  instructions would just be noise. */
   let liveCsp = $state(null);
 
   async function loadLiveCsp() {
@@ -3343,8 +3423,8 @@
     }
   }
 
-  /** Manifest-CSP-behov som IKKE alt står i den levende CSP-en: kun de
-   *  vises i instruksen (innstillinger vises kun når de er relevante). */
+  /** Manifest CSP needs NOT already in the live CSP: only those are shown
+   *  in the instructions (settings are shown only when relevant). */
   function cspMissing(csp) {
     const need = [
       ...(csp.scriptSrc ?? []).map((host) => ['script-src', host]),
@@ -3361,22 +3441,25 @@
     let published = { version: 1, enabled: [] };
     try {
       published = await (await fetch('/plugins/plugins.json')).json();
-    } catch { /* ingen plugin-indeks er helt greit */ }
+    } catch { /* no plugin index is perfectly fine */ }
     publishedPluginIds = published.enabled ?? [];
     pluginsStore = createDraftStore('urd-draft-plugins', () => published, draftSaveError);
     syncPluginsView();
     try {
       pluginEngine = (await (await fetch('/urd.json')).json()).engine ?? '0.0.0';
-    } catch { /* uten manifest vises versjonskrav uten vurdering */ }
+    } catch { /* without the manifest, version requirements are shown unassessed */ }
     for (const id of knownPlugins()) loadPluginInfo(id);
     discoverPlugins();
     resolvePluginsReady();
-    // Belte og bukseseler mot klar-kappløpet: har iframen alt meldt seg, dyttes listen nå.
+    // Belt and suspenders against the ready race: if the iframe has
+    // already reported in, the list is pushed now.
     bridge?.sendPlugins($state.snapshot(pluginsView)?.enabled ?? []);
   }
 
-  /** Spør publiseringslaget om plugin-mappene i repoet (statisk hosting kan ikke liste mapper).
-   *  Utilgjengelig endepunkt (lokal server, ikke innlogget) er helt greit: da gjelder skriv-inn-navn-flyten. */
+  /** Asks the publishing layer for the plugin directories in the repo
+   *  (static hosting cannot list directories). An unavailable endpoint
+   *  (local server, not logged in) is perfectly fine: then the
+   *  type-a-name flow applies. */
   async function discoverPlugins() {
     try {
       const res = await fetch('/api/github/plugins');
@@ -3394,7 +3477,7 @@
     }
   }
 
-  /** Ratebegrenset/utilgjengelig endepunkt: vis sist kjente funnliste fra lokal buffer i stedet for ingenting. */
+  /** Rate-limited/unavailable endpoint: show the last known find list from the local cache instead of nothing. */
   function useCachedDiscovery() {
     try {
       const cached = JSON.parse(localStorage.getItem('urd-plugins-found') ?? '[]');
@@ -3404,11 +3487,11 @@
         pluginDiscovery = 'ok';
         return;
       }
-    } catch { /* korrupt buffer ignoreres */ }
+    } catch { /* a corrupt cache is ignored */ }
     pluginDiscovery = 'unavailable';
   }
 
-  /** Henter og vurderer manifestet til én plugin (navn, versjon, krav, provides, csp). */
+  /** Fetches and assesses one plugin's manifest (name, version, requirements, provides, csp). */
   async function loadPluginInfo(id) {
     try {
       const manifest = await (await fetch(`/plugins/${id}/plugin.json`)).json();
@@ -3436,12 +3519,12 @@
     reloadPreview();
   }
 
-  /** Plugin-endringer krever fersk boot i previewen (import kan ikke angres); onReady sender ny liste. */
+  /** Plugin changes require a fresh boot in the preview (an import cannot be undone); onReady sends the new list. */
   function reloadPreview() {
     if (iframeEl) iframeEl.src = iframeEl.src;
   }
 
-  /** Fjerner pluginen fra begge listene; selve mappen i plugins/ består i repoet. */
+  /** Removes the plugin from both lists; the directory itself in plugins/ remains in the repo. */
   function removePlugin(id) {
     pushHistory('plugins');
     const d = pluginsStore.data;
@@ -3478,7 +3561,7 @@
     setPluginEnabled(id, true);
   }
 
-  /* ---------- Footer-panelet ---------- */
+  /* ---------- The Footer panel ---------- */
 
   function footerMutate(key, fn) {
     siteMutate(key, () => {
@@ -3487,8 +3570,8 @@
     });
   }
 
-  /* Rik footer (additiv fra v0.6): merkevare, kolonner, sosiale lenker,
-   * bunnlinje og bakgrunn. Speiler nav-handlerne, men gjennom footerMutate. */
+  /* Rich footer (additive): brand, columns, social links, bottom line and
+   * background. Mirrors the nav handlers, but through footerMutate. */
 
   function setFooterBrand(field, value) {
     footerMutate(`edit:footer-brand-${field}`, (f) => {
@@ -3498,8 +3581,8 @@
     });
   }
 
-  /* Footer-logo (tekst/logo/begge, speiler nav-logoen): opplasting til webp,
-     materialiseres til media/ ved publisering. */
+  /* Footer logo (text/logo/both, mirrors the nav logo): uploaded to webp,
+     materialized to media/ on publish. */
   function setFooterBrandMode(value) {
     footerMutate('footer', (f) => {
       f.brand ??= {};
@@ -3538,9 +3621,10 @@
     });
   }
 
-  /* Footer-maler: åtte research-baserte startoppsett, bygget fra sidens egne
-     sider og tittel. Fyller footeren; alt redigeres videre. Hver har en liten
-     thumb-beskrivelse til den visuelle mal-velgeren (footerThumb). */
+  /* Footer templates: eight research-based starting layouts, built from
+     the site's own pages and title. They fill the footer; everything can
+     be edited further. Each has a small thumb description for the visual
+     template picker (footerThumb). */
   const FOOTER_TEMPLATES = [
     { id: 'minimal', label: ta('footerTemplate.minimal'), thumb: { center: true, social: 2, baselineLinks: 1 } },
     { id: 'centered', label: ta('footerTemplate.centered'), thumb: { center: true, row: true, social: 3 } },
@@ -3553,9 +3637,10 @@
   ];
 
   function footerTemplateConfig(name) {
-    // ALLTID nøytral plassholder, ALDRI sidetittelen: sidetittelen kan inneholde
-    // hva som helst (f.eks. et versjonsnummer på en testside), og eksempeltekst
-    // skal aldri ha versjonsnummer. Eieren skriver inn sitt eget navn.
+    // ALWAYS a neutral placeholder, NEVER the site title: the site title
+    // can contain anything (e.g. a version number on a test site), and
+    // sample text must never carry a version number. The owner types in
+    // their own name.
     const title = ta('seed.orgName');
     const pages = siteDraft.pages ?? [];
     const pageLinks = (n) => pages.slice(0, n).map((p) => ({ label: p.title || p.id, page: p.id }));
@@ -3615,7 +3700,7 @@
         ],
         social: soc(['facebook', 'instagram']), copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
     }
-    // mega: kolonner + bakgrunnslag (glød + korn).
+    // mega: columns + background layers (glow + grain).
     return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline5') },
       columns: [
         { title: ta('seed.footer.colExplore'), links: pageLinks(4) },
@@ -3629,20 +3714,21 @@
       ] } };
   }
 
-  /** Bruk et footer-oppsett: erstatter innholds-feltene og skrur footeren på. */
+  /** Apply a footer layout: replaces the content fields and turns the footer on. */
   function applyFooterTemplate(name) {
     footerMutate('footer-template', (f) => {
       const t = footerTemplateConfig(name);
       f.show = true;
-      delete f.text; // «Enkel tekst» er den gamle formen; malene bruker rik footer.
+      delete f.text; // "Simple text" is the legacy form; the templates use the rich footer.
       for (const k of ['align', 'brand', 'columns', 'social', 'copyright', 'baseline', 'linkRow', 'cta', 'columnsAlign', 'background']) {
         if (t[k] !== undefined) f[k] = t[k]; else delete f[k];
       }
     });
   }
 
-  /* Generiske lenkeliste-handlere for bunnlinje-lenker (baseline) og doormat-
-     raden (linkRow) - samme form som kolonne-lenkene, men på en flat liste. */
+  /* Generic link-list handlers for the bottom-line links (baseline) and
+     the doormat row (linkRow) - same shape as the column links, but on a
+     flat list. */
   function addFooterListLink(field) {
     footerMutate('footer', (f) => {
       f[field] ??= [];
@@ -3673,12 +3759,12 @@
     footerMutate(`edit:footer-${field}-href-${i}`, (f) => { f[field][i].href = value; });
   }
 
-  /** Kolonne-justering: overskriften til en bred (todelt) kolonne. */
+  /** Column alignment: the heading of a wide (two-part) column. */
   function setFooterColumnsAlign(value) {
     footerMutate('footer', (f) => { if (value === 'center') f.columnsAlign = 'center'; else delete f.columnsAlign; });
   }
 
-  /* Handlingsoppfordring (CTA): knapp (lenke) eller nyhetsbrev (e-postfelt). */
+  /* Call to action (CTA): a button (link) or newsletter (email field). */
   function enableFooterCta(on) {
     footerMutate('footer', (f) => { if (on) f.cta ??= { kind: 'button', label: ta('seed.join') }; else delete f.cta; });
   }
@@ -3697,7 +3783,7 @@
     });
   }
 
-  /** Per-side synlighet: footeren vises på alle sider unntatt de i hideOn. */
+  /** Per-page visibility: the footer shows on all pages except those in hideOn. */
   function toggleFooterOnPage(pageId, show) {
     footerMutate('footer', (f) => {
       const hide = new Set(f.hideOn ?? []);
@@ -3790,7 +3876,8 @@
     footerMutate(`edit:footer-social-url-${si}`, (f) => { f.social[si].url = value; });
   }
 
-  // Sosial-ikonene i nedtrekket: de sosiale og kommunikasjonskategoriene fra ikonbiblioteket.
+  // The social icons in the dropdown: the social and communication
+  // categories from the icon library.
   const SOCIAL_ICON_OPTIONS = ICON_CATEGORIES
     .filter(([cat]) => cat === 'iconCat.social' || cat === 'iconCat.communication')
     .flatMap(([, ids]) => ids.map((id) => [id, ta(ICON_LIBRARY[id].labelKey)]));
@@ -3799,9 +3886,10 @@
     siteMutate(`edit:nav-label-${i}`, () => { siteDraft.nav.items[i].label = value; });
   }
 
-  /** Mål: en side fra registeret, '__href' = ekstern lenke, eller '__none' =
-   *  ren åpner for undermenyen (tilbys kun for punkter med undermeny).
-   *  Skjemaet tillater kun ett av feltene page/href, så resten fjernes. */
+  /** Target: a page from the registry, '__href' = external link, or
+   *  '__none' = a pure opener for the submenu (offered only for items with
+   *  a submenu). The schema allows only one of page/href, so the rest are
+   *  removed. */
   function setNavTarget(i, value) {
     siteMutate('nav', () => {
       const item = siteDraft.nav.items[i];
@@ -3839,8 +3927,9 @@
     });
   }
 
-  /* Undermeny (ett nivå, additivt fra v0.6): barna har alltid eget mål;
-   * forelderen kan i tillegg være ren åpner ('__none' i setNavTarget). */
+  /* Submenu (one level, additive): the children always have their own
+   * target; the parent can additionally be a pure opener ('__none' in
+   * setNavTarget). */
 
   function addNavChild(i) {
     siteMutate('nav', () => {
@@ -3883,20 +3972,21 @@
       const item = siteDraft.nav.items[i];
       item.children.splice(j, 1);
       if (item.children.length === 0) {
-        // Tom undermeny fjernes fra fila; en ren åpner uten barn har ikke
-        // lenger noe mål og får forsiden, så punktet forblir gyldig.
+        // An empty submenu is removed from the file; a pure opener without
+        // children has no target and gets the front page, so the item
+        // stays valid.
         delete item.children;
         if (!item.page && !item.href) item.page = siteDraft.pages[0].id;
       }
     });
   }
 
-  /* ---------- Tema-panelet ---------- */
+  /* ---------- The Theme panel ---------- */
 
   function setColorToken(name, value) {
     siteMutate(`edit:theme-color-${name}`, () => {
       siteDraft.theme.tokens.color[name] = value;
-      // Auto-avledet mørkt tema følger de lyse fargene automatisk.
+      // An auto-derived dark theme follows the light colors automatically.
       if (siteDraft.theme.alt?.auto) siteDraft.theme.alt.tokens.color = suggestAltColors();
     });
   }
@@ -3909,10 +3999,11 @@
     siteMutate('theme', () => { siteDraft.theme.tokens.radius[name] = value; });
   }
 
-  /* ---------- Lys/mørk-bryteren (alternativt tema) ---------- */
+  /* ---------- The light/dark toggle (alternate theme) ---------- */
 
-  /** Inverterer lysheten til en #rrggbb-farge (HSL: L -> 1-L); annet passerer urørt.
-   *  Brukes som FORSLAG til alt-temaet - eieren justerer selv etterpå. */
+  /** Inverts the lightness of a #rrggbb color (HSL: L -> 1-L); anything
+   *  else passes untouched. Used as a SUGGESTION for the alt theme - the
+   *  owner adjusts it afterwards. */
   function invertLightness(hex) {
     const m = /^#([0-9a-f]{6})$/i.exec(hex ?? '');
     if (!m) return hex;
@@ -3964,7 +4055,7 @@
   function setAltColorToken(name, value) {
     siteMutate(`edit:theme-alt-${name}`, () => {
       siteDraft.theme.alt.tokens.color[name] = value;
-      // Å styre en mørk farge selv slår av auto-avledningen.
+      // Setting a dark color yourself turns off the auto derivation.
       siteDraft.theme.alt.auto = false;
     });
   }
@@ -3976,7 +4067,7 @@
     });
   }
 
-  /** Lys og mørk modus av/på: oppretter (auto-avledet) eller fjerner alt-temaet. */
+  /** Light and dark mode on/off: creates (auto-derived) or removes the alt theme. */
   function setDualMode(on) {
     siteMutate('theme', () => {
       if (on) siteDraft.theme.alt = { auto: true, tokens: { color: suggestAltColors() } };
@@ -3984,7 +4075,7 @@
     });
   }
 
-  /** Mørke farger: Auto (avledet fra de lyse) eller Egne (styres selv). */
+  /** Dark colors: Auto (derived from the light ones) or Custom (set manually). */
   function setAltAuto(auto) {
     siteMutate('theme', () => {
       siteDraft.theme.alt ??= { tokens: { color: suggestAltColors() } };
@@ -3993,7 +4084,7 @@
     });
   }
 
-  /** Font-nedtrekkets valg: kjente stabler + evt. gjeldende egendefinerte. */
+  /** The font dropdown's options: known stacks + any current custom one. */
   function fontOptions(which) {
     const cur = siteDraft.theme.tokens.font[which];
     return [
@@ -4002,16 +4093,17 @@
     ];
   }
 
-  /** Hjørne-radius fra glidebryter (px). */
+  /** Corner radius from a slider (px). */
   const radiusNum = (v) => parseInt(v, 10) || 0;
   function setRadiusPx(name, n) { setRadiusToken(name, `${n}px`); }
 
-  /** Løser en token-verdi til hex for forhåndsvisning (token-navn slås opp i paletten). */
+  /** Resolves a token value to hex for preview (token names are looked up in the palette). */
   const themeHex = (v, pal) => (v && pal && pal[v]) ? pal[v] : v;
 
-  /* Ferdige tema-forslag: fyller alle fargetokens + lys/mørk i ett klikk, så
-     finjusterer eieren fritt (startpunkt, som seksjonstemaene). Fonter/avrunding
-     røres ikke. Natt er mørk-først (scheme dark); resten lyse med mørkt alt. */
+  /* Ready-made theme suggestions: fill all color tokens + light/dark in
+     one click, then the owner fine-tunes freely (a starting point, like
+     the section themes). Fonts/radii are untouched. Natt is dark-first
+     (scheme dark); the rest are light with a dark alt. */
   const THEME_PRESET_KEYS = ['bg', 'surface', 'text', 'accent', 'accent-text'];
   const THEME_PRESETS = [
     { id: 'bronn', name: ta('themePreset.bronn.name'), note: ta('themePreset.bronn.note'),
@@ -4034,7 +4126,7 @@
       dark: { bg: '#0d0f1a', surface: '#171b2e', text: '#e7e9f5', accent: '#8091ff', 'accent-text': '#0a0c18' } },
   ];
 
-  /** Anvend et tema-forslag: hovedmodus + alt-modus fylles fra paletten. */
+  /** Apply a theme suggestion: main mode + alt mode are filled from the palette. */
   function applyThemePreset(pr) {
     siteMutate('theme', () => {
       const dark = pr.scheme === 'dark';
@@ -4046,7 +4138,7 @@
     });
   }
 
-  /** Hvilket forslag som matcher gjeldende palett (for markering); null når eieren har finjustert. */
+  /** Which suggestion matches the current palette (for highlighting); null once the owner has fine-tuned. */
   const activeThemePreset = $derived.by(() => {
     if (!siteDraft) return null;
     const cur = siteDraft.theme.tokens.color;
@@ -4064,8 +4156,8 @@
     bridge?.sendChrome(chromeVisible);
   }
 
-  /** Klikk-og-skriv-endring fra iframen: oppdater utkastet. Iframen viser
-   *  allerede endringen, så vi pusher ikke tilbake (det ville ødelagt fokus). */
+  /** Click-and-type change from the iframe: update the draft. The iframe
+   *  already shows the change, so we do not push back (that would break focus). */
   function handleEdit(msg) {
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     const block = section?.blocks.find((b) => b.id === msg.blockId);
@@ -4075,20 +4167,22 @@
     store.save();
     updateDirty();
     if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
-    // Bildeeditoren ber om rerender ved bildebytte (tomme blokker har ingen img å oppdatere live);
-    // tekst-redigering gjør det aldri (ekko midt i skrivingen ville mistet skrivemarkøren).
+    // The image editor requests a rerender on image swap (empty blocks
+    // have no img to update live); text editing never does (an echo
+    // mid-typing would lose the caret).
     if (msg.rerender) bridge?.sendSection(pageId, section);
     status = '';
   }
 
-  /** Dra/resize fra iframen: iframen viser allerede den snappede
-   *  posisjonen, så vi bare bokfører den i utkastet. */
+  /** Drag/resize from the iframe: the iframe already shows the snapped
+   *  position, so we just record it in the draft. */
   function handleMove(msg) {
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     const block = section?.blocks.find((b) => b.id === msg.blockId);
     if (!block) return;
-    // coalesce: automatisk vekst under skriving hører til samme angre-steg som selve skrivingen.
-    // groupKey (fra z-omordningen) samler flytting av FLERE blokker i ett steg.
+    // coalesce: automatic growth during typing belongs to the same undo
+    // step as the typing itself. groupKey (from the z reordering) gathers
+    // moves of SEVERAL blocks into one step.
     pushHistory(msg.coalesce ? `edit:${msg.groupKey ?? msg.blockId}` : 'move-block');
     const key = msg.frameKey === 'mobile' ? 'mobile' : 'desktop';
     block.frames[key] = msg.frame;
@@ -4098,20 +4192,18 @@
     if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
   }
 
-  /** Automatisk høydevekst for datablokker (samling/kalender/skjema/kart):
-   *  KUN h endres, aldri x/y, så en dratt blokk aldri teleporteres tilbake.
-   *  Coalesces med blokkens redigering (samme angre-steg). */
+  /** Automatic height growth for data blocks (collection/calendar/form/map):
+   *  ONLY h changes, never x/y, so a dragged block is never teleported
+   *  back. Coalesces with the block's edit (same undo step). */
   function handleGrow(msg) {
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     const block = section?.blocks.find((b) => b.id === msg.blockId);
     if (!block?.frames?.desktop || block.frames.desktop.h === msg.h) return;
-    // Autovekst er en MÅLING, ikke en redigering: datablokker melder
-    // høyden sin ved HVER rendering, og målingen varierer med innhold,
-    // feed-svar og vindu. Målingen bokføres derfor i BÅDE utkastet og
-    // sammenligningsgrunnlaget, så den aldri alene utgjør «upubliserte
-    // endringer» (testfunn 23. juli 2026: merket dukket opp av seg
-    // selv ved lasting, kom tilbake etter Forkast utkast, og ble stående
-    // etter at alt var angret - målte høyder skilte utkast fra publisert).
+    // Autogrowth is a MEASUREMENT, not an edit: data blocks report their
+    // height on EVERY render, and the measurement varies with content,
+    // feed responses and window. The measurement is therefore recorded in
+    // BOTH the draft and the comparison baseline, so it never by itself
+    // constitutes "unpublished changes".
     store.amendBaseline((base) => {
       const s = base.sections.find((x) => x.id === msg.sectionId);
       const b = s?.blocks.find((x) => x.id === msg.blockId);
@@ -4119,14 +4211,14 @@
     });
     if (store.hasDraft()) pushHistory(`edit:${msg.blockId}`);
     block.frames.desktop.h = msg.h;
-    // save() rydder utkastnøkkelen når målingen var eneste forskjell.
+    // save() cleans the draft key when the measurement was the only difference.
     store.save();
     updateDirty();
     if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
   }
 
-  /** ↺ i mobilvisning: nullstill mobiloverstyringer, hele seksjonen eller
-   *  én blokk (ADR-0019). hideMobile beholdes: synlighet er intensjon. */
+  /** ↺ in mobile view: reset mobile overrides, the whole section or one
+   *  block (ADR-0019). hideMobile is kept: visibility is intent. */
   function handleMobileReset(msg) {
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     if (!section) return;
@@ -4137,7 +4229,7 @@
     } else {
       for (const block of section.blocks) block.frames.mobile = null;
     }
-    // Uten overstyringer er det ingenting igjen som kan drifte fra desktop.
+    // Without overrides there is nothing left that can drift from desktop.
     if (!hasMobileOverrides(section) && section.responsive?.mobile) {
       section.responsive.mobile.attention = null;
     }
@@ -4147,8 +4239,8 @@
     bridge?.sendSection(pageId, section);
   }
 
-  /** Pil-flytting i mobil-leserekkefølgen: bokfør ny mobileOrder-nøkkel
-   *  og rerender seksjonen, så auto-plasseringen stokker om. */
+  /** Arrow move in the mobile reading order: record the new mobileOrder
+   *  key and rerender the section, so the auto placement reshuffles. */
   function handleMobileOrder(msg) {
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     const block = section?.blocks.find((b) => b.id === msg.blockId);
@@ -4160,7 +4252,7 @@
     bridge?.sendSection(pageId, section);
   }
 
-  /** ✓ i mobilvisning: mobil-layouten er gjennomgått. */
+  /** ✓ in mobile view: the mobile layout has been reviewed. */
   function handleReviewDone(msg) {
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     if (!section?.responsive?.mobile) return;
@@ -4171,7 +4263,7 @@
     updateAttention();
   }
 
-  /** Blokkflagg fra previewen: decor (entré-bølgen) og/eller hideMobile. */
+  /** Block flags from the preview: decor (the entrance wave) and/or hideMobile. */
   function handleBlockFlag(msg) {
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     const block = section?.blocks.find((b) => b.id === msg.blockId);
@@ -4181,30 +4273,31 @@
     if (typeof msg.hideMobile === 'boolean') block.hideMobile = msg.hideMobile;
     store.save();
     updateDirty();
-    // hideMobile endrer mobil-renderingen; i mobilvisning må seksjonen
-    // tegnes på nytt for at blokken faktisk skal komme eller gå.
+    // hideMobile changes the mobile render; in mobile view the section
+    // must be redrawn for the block to actually appear or disappear.
     if (typeof msg.hideMobile === 'boolean' && viewMode === 'mobile') {
       bridge?.sendSection(pageId, section);
     }
     if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
   }
 
-  /** Ny seksjon fra «+ Ny seksjon» i iframen (seksjonen er allerede
-   *  bygget av presetens create() der inne). */
+  /** New section from "+ New section" in the iframe (the section is
+   *  already built by the preset's create() in there). */
   function handleAddSection(msg) {
     pushHistory('add-section');
-    // Vern: en seksjon MÅ ha id (skjemaet krever det). Kjernepresetene setter
-    // den selv, men en plugin-preset kan glemme den, og en id-løs seksjon ville
-    // gjort sidefilen ugyldig ved publisering. Tildel en her om den mangler.
+    // Guard: a section MUST have an id (the schema requires it). The core
+    // presets set it themselves, but a plugin preset can forget it, and an
+    // id-less section would make the page file invalid on publish. Assign
+    // one here if it is missing.
     if (!msg.section.id) msg.section.id = makeId('sec');
     store.data.sections.splice(msg.index, 0, msg.section);
     store.save();
     updateDirty();
     bridge?.sendPage(pageId, store.data);
-    // Ny seksjon markeres og Egenskaper åpnes, klar til justering.
+    // The new section is selected and Properties opens, ready for tuning.
     activeSectionId = msg.section.id;
     syncSectionMirrors(msg.section);
-    // Rutenettet har sin egen bryter; et panelbytte rører den ikke.
+    // The grid overlay has its own toggle; a panel switch does not touch it.
     activePanel = 'properties';
   }
 
@@ -4226,7 +4319,7 @@
       activeSectionId = null;
       sectionGrid = null;
     }
-    // En markert blokk i den slettede seksjonen skal ikke bli stående i Egenskaper-panelet.
+    // A selected block in the deleted section must not linger in the Properties panel.
     if (selectedBlock?.sectionId === msg.sectionId) selectedBlock = null;
     store.data.sections = store.data.sections.filter((x) => x.id !== msg.sectionId);
     store.save();
@@ -4234,16 +4327,16 @@
     bridge?.sendPage(pageId, store.data);
   }
 
-  /** Høyde-dra i iframen: iframen viser allerede den nye høyden,
-   *  så vi bare bokfører den. */
+  /** Height drag in the iframe: the iframe already shows the new height,
+   *  so we just record it. */
   function handleSectionSize(msg) {
     const section = store.data.sections.find((x) => x.id === msg.sectionId);
     if (!section) return;
     pushHistory('section-size');
     section.size = { ...section.size, minHeight: msg.minHeight };
-    // Toppkant-håndtaket: seksjonen vokste/krympet i toppen, og alle
-    // blokkene forskyves i SAMME angre-steg (innholdet sto visuelt
-    // stille i previewen; her bokføres de nye y-ene).
+    // The top-edge handle: the section grew/shrank at the top, and all the
+    // blocks are shifted in the SAME undo step (the content stood visually
+    // still in the preview; the new y values are recorded here).
     for (const move of msg.moves ?? []) {
       const block = section.blocks.find((b) => b.id === move.blockId);
       if (!block) continue;
@@ -4258,7 +4351,7 @@
     updateDirty();
   }
 
-  /** Blokk sluppet i en annen seksjon: flytt den dit i utkastet. */
+  /** Block dropped in another section: move it there in the draft. */
   function handleMoveBlockSection(msg) {
     const from = store.data.sections.find((s) => s.id === msg.fromSectionId);
     const to = store.data.sections.find((s) => s.id === msg.toSectionId);
@@ -4267,7 +4360,7 @@
     pushHistory('move-block');
     from.blocks = from.blocks.filter((b) => b.id !== msg.blockId);
     block.frames.desktop = msg.frame;
-    // Mobil-layouten avledes på nytt i den nye seksjonen.
+    // The mobile layout is re-derived in the new section.
     block.frames.mobile = null;
     to.blocks.push(block);
     markDesktopChange(from, 'block-moved');
@@ -4282,11 +4375,11 @@
     }
   }
 
-  /** Sletting: fjern fra utkastet og rerender seksjonen i iframen. */
+  /** Deletion: remove from the draft and rerender the section in the iframe. */
   function handleDelete(msg) {
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     if (!section) return;
-    // blockIds (multimarkering): hele utvalget slettes som ETT angre-steg.
+    // blockIds (multi-select): the whole selection is deleted as ONE undo step.
     const ids = msg.blockIds ?? [msg.blockId];
     pushHistory('delete-block');
     section.blocks = section.blocks.filter((b) => !ids.includes(b.id));
@@ -4297,9 +4390,8 @@
     bridge?.sendSection(pageId, section);
   }
 
-  /** Blokkpaletten: ny blokk nederst i første seksjon, klar til å dras dit
-   *  den skal. (Seksjonvalg og «+ Ny seksjon» kommer senere i v0.3.) */
-  /** w i prosent av seksjonsbredden, h i px (fysiske enheter). */
+  /** The block palette: a new block ready to be dragged where it belongs. */
+  /** w in percent of the section width, h in px (physical units). */
   const BLOCK_DEFAULTS = {
     text: { type: 'text', props: { html: ta('seed.text'), align: 'left' }, w: 33, h: 28 },
     'text-box': { type: 'text', props: { html: ta('seed.textBox'), align: 'left', box: true }, w: 30, h: 150 },
@@ -4371,7 +4463,7 @@
     },
     countdown: {
       type: 'countdown',
-      // Målet seedes 30 dager fram (kl. 18), så blokken teller fra første stund.
+      // The target is seeded 30 days ahead (at 18:00), so the block counts from the start.
       props: {
         target: (() => {
           const d = new Date(Date.now() + 30 * 86400 * 1000);
@@ -4397,8 +4489,8 @@
       id: makeId('blk'),
       type: d.type,
       version: 1,
-      // Former er dekor som standard: utenfor entré-bølgen (decor) og
-      // skjult på mobil (hideMobile); begge kan skrus av per blokk.
+      // Shapes are decor by default: outside the entrance wave (decor) and
+      // hidden on mobile (hideMobile); both can be turned off per block.
       decor: Boolean(d.decor),
       hideMobile: Boolean(d.hideMobile),
       props: structuredClone(d.props),
@@ -4407,8 +4499,8 @@
     };
   }
 
-  /** Iframen plasserer blokken midt i synsfeltet (den vet hvor brukeren
-   *  har scrollet) og melder tilbake via urd-add-block → insertBlock. */
+  /** The iframe places the block in the middle of the viewport (it knows
+   *  where the user has scrolled) and reports back via urd-add-block → insertBlock. */
   function requestPlacement(block) {
     if (bridge) {
       bridge.sendPlaceBlock(block);
@@ -4421,8 +4513,8 @@
     const section = store.data.sections.find((s) => s.id === sectionId) ?? store.data.sections[0];
     if (!section) return;
     pushHistory('add-block');
-    // Nye og dupliserte blokker legges ØVERST i lagrekkefølgen, så de aldri
-    // gjemmer seg bak det som alt står i seksjonen (valgt 19. juli 2026).
+    // New and duplicated blocks go to the TOP of the stacking order, so
+    // they never hide behind what is already in the section.
     const topZ = Math.max(0, ...section.blocks.map((b) => b.frames?.desktop?.z ?? 1)) + 1;
     if (block.frames?.desktop) block.frames.desktop = { ...block.frames.desktop, z: topZ };
     section.blocks.push(block);
@@ -4432,9 +4524,11 @@
     bridge?.sendSection(pageId, section);
   }
 
-  /** «+ kort/rad»-knappen på en seksjon: preset-elementet kommer som en gruppe blokker i ETT angre-steg.
-   *  moves flytter eksisterende blokker samtidig (FAQ skyver avslutningslinjen ned), i samme steg.
-   *  Seksjonen vokser til minBottom når minstehøyden er i px (item-presetene bruker alltid px). */
+  /** The "+ card/row" button on a section: the preset item arrives as a
+   *  group of blocks in ONE undo step. moves shifts existing blocks at the
+   *  same time (FAQ pushes the closing line down), in the same step. The
+   *  section grows to minBottom when the min height is in px (the item
+   *  presets always use px). */
   function insertBlocks(sectionId, blocks, minBottom, moves) {
     const section = store.data.sections.find((s) => s.id === sectionId);
     if (!section || !blocks?.length) return;
@@ -4460,14 +4554,15 @@
     requestPlacement(buildBlock(kind));
   }
 
-  /** Plugin-blokkene i Blokker-panelet: previewen meldte type/label/defaults
-   *  ved plugin-lasting (urd-plugin-blocks), så blokken kan bygges her. */
+  /** The plugin blocks in the Blocks panel: the preview reported
+   *  type/label/defaults at plugin load (urd-plugin-blocks), so the block
+   *  can be built here. */
   let pluginBlocks = $state([]);
 
   function addPluginBlock(entry, extraProps = {}) {
-    // pluginBlocks er $state: structuredClone på en reaktiv proxy kaster
-    // DataCloneError (samme felle som postMessage), så klikket døde stille.
-    // Snapshot gir rene objekter; virker også på ikke-reaktive verdier.
+    // pluginBlocks is $state: structuredClone on a reactive proxy throws
+    // DataCloneError (same trap as postMessage). Snapshot yields plain
+    // objects; it also works on non-reactive values.
     const raw = $state.snapshot(entry);
     requestPlacement({
       id: makeId('blk'),
@@ -4480,9 +4575,9 @@
     });
   }
 
-  /* Blokk-søket i panelet (0.6.7, variant B: flat treffliste). Indeksen
-     bygges av de SYNLIGE etikettene panelet alt viser: kjerneblokker,
-     former, blokkgruppe-maler og plugin-blokker (varianter flatet ut). */
+  /* The block search in the panel (a flat hit list). The index is built
+     from the VISIBLE labels the panel already shows: core blocks, shapes,
+     block-group templates and plugin blocks (variants flattened). */
   let blockSearch = $state('');
 
   function panelBlockItems() {
@@ -4535,11 +4630,12 @@
     else if (item.act === 'mal') bridge?.sendInsertTemplate(item.id);
   }
 
-  /** «+ Legg til blokk» i en seksjon: bygg blokken og legg den der.
-   *  Med klikkpunkt (msg.at, fra dobbeltklikk på seksjonsflaten) lander
-   *  blokken sentrert på punktet, klemt og snappet (frameAtPoint);
-   *  uten sentreres den vannrett som før. Bilde starter tomt (velges i
-   *  Egenskaper - fildialog kan ikke åpnes fra en postMessage). */
+  /** "+ Add block" in a section: build the block and put it there. With a
+   *  click point (msg.at, from a double click on the section surface) the
+   *  block lands centered on the point, clamped and snapped
+   *  (frameAtPoint); without one it is centered horizontally. Image
+   *  starts empty (picked in Properties - a file dialog cannot be opened
+   *  from a postMessage). */
   function handleRequestBlock(msg) {
     const block = buildBlock(msg.kind);
     if (!block) return;
@@ -4560,16 +4656,16 @@
       block.frames.desktop.y = 40;
     }
     insertBlock(msg.sectionId, block);
-    // Den nye blokken markeres (previewen kjenner ikke id-en før
-    // rerendringen; selectById svarer med urd-select-block, så
-    // Egenskaper-panelet følger etter). Samme UX som paletten.
+    // The new block is selected (the preview does not know the id until
+    // the rerender; selectById replies with urd-select-block, so the
+    // Properties panel follows). Same UX as the palette.
     bridge?.sendSelect(block.id);
     if (msg.kind === 'image') setStatus(ta('status.imageBlockAdded'));
     if (msg.kind === 'gallery') setStatus(ta('status.galleryBlockAdded'));
   }
 
-  /** + Bilde: komprimer til webp og legg i utkastet som data-URL.
-   *  Ved publisering materialiseres den til en fil i media/. */
+  /** + Image: compress to webp and put in the draft as a data URL.
+   *  On publish it is materialized to a file in media/. */
   async function addImage(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -4584,8 +4680,8 @@
       return;
     }
 
-    // Startbredde 30 % av seksjonen; høyden følger bildets sideforhold
-    // med en antatt seksjonsbredde (justeres uansett fritt etterpå).
+    // Start width 30 % of the section; the height follows the image's
+    // aspect ratio with an assumed section width (freely adjusted afterwards anyway).
     const height = Math.round((img.height / img.width) * 0.3 * (iframeEl?.clientWidth ?? 1280));
     requestPlacement({
       id: makeId('blk'),
@@ -4602,8 +4698,8 @@
     }
   }
 
-  /** Flere bilder i én opplasting (galleriene): komprimer alle;
-   *  ett uleselig bilde stopper ikke resten av bunken. */
+  /** Multiple images in one upload (the galleries): compress all;
+   *  one unreadable image does not stop the rest of the batch. */
   async function compressMany(fileList) {
     const images = [];
     let failed = 0;
@@ -4626,7 +4722,7 @@
     else setStatus(ok ? '' : ta('status.noImagesAdded'));
   }
 
-  /** + Legg til bilder i en markert galleri-blokk: hele bunken i ETT angre-steg. */
+  /** + Add images to a selected gallery block: the whole batch in ONE undo step. */
   async function addGalleryImages(event) {
     const files = [...(event.target.files ?? [])];
     event.target.value = '';
@@ -4637,7 +4733,7 @@
     reportUpload(images.length, failed, big);
   }
 
-  /** «Galleri med bilder» i paletten: bygg blokken ferdig fylt. */
+  /** "Gallery with images" in the palette: build the block pre-filled. */
   async function addGalleryBlock(event) {
     const files = [...(event.target.files ?? [])];
     event.target.value = '';
@@ -4671,13 +4767,13 @@
   }
 
   /**
-   * Gjør upubliserte bilder (data-URL-er i utkastet) om til filer i
-   * media/, og bytter src til stien. Returnerer fillisten for commiten.
-   * Samme bildeinnhold gir samme filnavn (deterministisk hash), så
-   * republisering aldri dupliserer filer.
+   * Turns unpublished images (data URLs in the draft) into files in
+   * media/, and switches src to the path. Returns the file list for the
+   * commit. The same image content yields the same file name
+   * (deterministic hash), so republishing never duplicates files.
    */
-  /** Gjør en data-URL i obj[field] om til media-fil; muterer obj.
-   *  Bilder og lyd deler flyten; mediaExtension velger filendelsen. */
+  /** Turns a data URL in obj[field] into a media file; mutates obj.
+   *  Images and audio share the flow; mediaExtension picks the extension. */
   function materializeField(obj, field, name, files) {
     const src = obj?.[field];
     if (!src?.startsWith('data:image/') && !src?.startsWith('data:audio/') && !src?.startsWith('data:video/')) return;
@@ -4687,13 +4783,13 @@
     obj[field] = `/${path}`;
   }
 
-  /** Ett samlingsinnslags bilder: hovedbildet + produktfargenes bilder (kind products). */
+  /** One collection entry's images: the main image + the product colors' images (kind products). */
   function materializeEntryImages(entry, files) {
     materializeField(entry, 'image', entry.title, files);
     for (const color of entry.colors ?? []) materializeField(color, 'image', `${entry.title}-${color.name}`, files);
   }
 
-  /** Bakgrunnslagenes bilder (image + bildegalleri) - delt av seksjon, nav og footer. */
+  /** The background layers' images (image + slideshow) - shared by section, nav and footer. */
   function materializeBackground(background, files) {
     for (const layer of background?.layers ?? []) {
       if (layer.type === 'image') materializeField(layer.props, 'src', 'bakgrunn', files);
@@ -4707,10 +4803,10 @@
     }
   }
 
-  /** Én blokks bilder - delt av sidepublisering og blokkgruppe-maler. */
+  /** One block's images - shared by page publishing and block-group templates. */
   function materializeBlockImages(block, files) {
     if (block.type === 'image') materializeField(block.props, 'src', block.props.alt, files);
-    // Ikon-blokkens eget opplastede ikon publiseres som media-fil på samme måte.
+    // The icon block's own uploaded icon is published as a media file the same way.
     if (block.type === 'icon') materializeField(block.props, 'image', 'ikon', files);
     if (block.type === 'gallery') {
       for (const img of block.props.images ?? []) materializeField(img, 'src', img.alt || 'gallery', files);
@@ -4718,29 +4814,29 @@
     if (block.type === 'audio') materializeField(block.props, 'src', block.props.title || 'lyd', files);
   }
 
-  /** Én seksjons bilder (bakgrunn + blokker) - delt av sidepublisering og seksjons-maler. */
+  /** One section's images (background + blocks) - shared by page publishing and section templates. */
   function materializeSection(section, files) {
-    // Bakgrunnsbilder følger samme flyt som bildeblokker.
+    // Background images follow the same flow as image blocks.
     materializeBackground(section.background, files);
     for (const block of section.blocks) materializeBlockImages(block, files);
   }
 
   function materializeImages(page) {
     const files = [];
-    // Delingsbildet (meta.og.image) materialiseres som blokkbildene.
+    // The sharing image (meta.og.image) is materialized like the block images.
     if (page.meta?.og) materializeField(page.meta.og, 'image', 'share', files);
     for (const section of page.sections) materializeSection(section, files);
     return files;
   }
 
-  /** Logo-opplastinger i site-utkastet (nav.logo) materialiseres likt. */
+  /** Logo uploads in the site draft (nav.logo) are materialized the same way. */
   function materializeSiteImages(site) {
     const files = [];
     const logo = site.nav?.logo;
     if (logo?.type === 'image') materializeField(logo, 'value', 'logo', files);
     if (logo?.type === 'both') materializeField(logo, 'image', 'logo', files);
-    // Gammelt enkelt nav-bakgrunnsbilde (bakoverkompat) + de nye lag-bakgrunnene
-    // på nav og footer.
+    // The legacy single nav background image (back compat) + the layered
+    // backgrounds on nav and footer.
     if (site.nav?.style) materializeField(site.nav.style, 'image', 'meny', files);
     materializeBackground(site.nav?.style?.background, files);
     materializeBackground(site.footer?.background, files);
@@ -4749,10 +4845,10 @@
     return files;
   }
 
-  // «Forkast utkast» krever to klikk på TO forskjellige flater: første klikk
-  // væpner knappen, og bekreftelsen er en egen flytende pille under
-  // topplinja. Knappen holder bredden når den væpnes. Klikk hvor som helst
-  // ellers, Escape eller fokus inn i forhåndsvisningen avvæpner.
+  // "Discard draft" requires two clicks on TWO different surfaces: the
+  // first click arms the button, and the confirmation is its own floating
+  // pill below the top bar. The button keeps its width when armed. A click
+  // anywhere else, Escape or focus into the preview disarms.
   let discardArmed = $state(false);
   let discardWrapEl = $state(null);
 
@@ -4767,20 +4863,20 @@
 
   $effect(() => {
     if (!discardArmed) return;
-    // `contains` mot det bundne skallet dekker både knappen og pilla, også
-    // når treffet lander på en SVG-node inni dem. Samme mønster som
-    // innstillingene og verktøymenyene.
+    // `contains` against the bound shell covers both the button and the
+    // pill, also when the hit lands on an SVG node inside them. Same
+    // pattern as the settings and the tool menus.
     const disarm = (e) => {
       if (!discardWrapEl?.contains(e.target)) discardArmed = false;
     };
     const onKey = (e) => {
       if (e.key === 'Escape') discardArmed = false;
     };
-    // Klikk i forhåndsvisningen (iframen) når aldri dette dokumentet,
-    // men flytter fokus ut av vinduet - window-blur dekker det.
+    // A click in the preview (the iframe) never reaches this document, but
+    // moves focus out of the window - window blur covers that.
     const onBlur = () => (discardArmed = false);
-    // Utenfor-klikk avvæpner på click: da avmonteres bekreftelsespilla først
-    // etter at klikket den eventuelt gjaldt har landet.
+    // Outside clicks disarm on click: the confirmation pill is then
+    // unmounted only after the click it may have targeted has landed.
     window.addEventListener('click', disarm, true);
     window.addEventListener('keydown', onKey, true);
     window.addEventListener('blur', onBlur);
@@ -4814,8 +4910,8 @@
     if (templatesIndexStore) {
       templatesIndexStore.reset();
       templateIds = [...(templatesIndexStore.data.maler ?? [])];
-      // Aldri publiserte maler (finnes-ikke-baseline) forsvinner med utkastet;
-      // publiserte går tilbake til publisert tilstand.
+      // Never-published templates (does-not-exist baseline) vanish with the
+      // draft; published ones return to the published state.
       for (const id of Object.keys(templateStores)) {
         if (templateIds.includes(id)) templateStores[id].reset();
         else { localStorage.removeItem(`urd-draft-template-${id}`);
@@ -4828,7 +4924,7 @@
     updateDirty();
     status = '';
     pushSiteToPreview();
-    // Forkasting kan fjerne siden man står på (upublisert ny side).
+    // Discarding can remove the page you are on (an unpublished new page).
     if (!siteDraft.pages.some((p) => p.id === pageId)) {
       selectPage(siteDraft.pages[0].id);
     } else {
@@ -4842,9 +4938,10 @@
       return;
     }
     if (updateBusy) {
-      // Publisering skriver slug-kopier fra SERVERT rot-index; i deploy-
-      // vinduet etter en motoroppdatering peker den fortsatt på slettet
-      // motormappe, og kopiene ville knekt alle undersidene (ADR-0013).
+      // Publishing writes slug copies from the SERVED root index; in the
+      // deploy window after an engine update it still points to the
+      // deleted engine directory, and the copies would break all the
+      // subpages (ADR-0013).
       setStatus(ta('update.publishBlocked'), 'error');
       return;
     }
@@ -4854,7 +4951,7 @@
     const draftKeys = [];
     const newPageIds = [];
 
-    // ALLE sider med utkast publiseres, ikke bare den man står på.
+    // ALL pages with drafts are published, not just the current one.
     for (const entry of siteDraft.pages) {
       const key = `urd-draft-${entry.id}`;
       const isNew = pendingPublished.has(entry.id) || !site.pages.some((p) => p.id === entry.id);
@@ -4866,38 +4963,41 @@
         if (raw) {
           try {
             page = liftPageFile(JSON.parse(raw), siteStore.data);
-          } catch { /* korrupt utkast hoppes over */ }
+          } catch { /* a corrupt draft is skipped */ }
         }
       }
-      // En ny side skal ALDRI publiseres uten sidefil (besøkende ville
-      // fått en død adresse): mangler utkastet, publiseres en blank side.
+      // A new page must NEVER be published without a page file (visitors
+      // would get a dead address): if the draft is missing, a blank page
+      // is published.
       if (!page && isNew) page = blankPage(entry);
       if (!page) continue;
-      // Klon før materialisering: utkastene i minnet røres ikke før
-      // commiten faktisk lykkes (en avbrutt publisering skal aldri
-      // etterlate bildereferanser til filer som ikke finnes).
+      // Clone before materializing: the drafts in memory are untouched
+      // until the commit actually succeeds (an aborted publish must never
+      // leave image references to files that do not exist).
       const out = JSON.parse(JSON.stringify(page));
-      // Upubliserte bilder blir egne filer i media/ i samme commit.
+      // Unpublished images become their own files in media/ in the same commit.
       files.push(...materializeImages(out));
       files.push({ path: entry.file, content: JSON.stringify(out, null, 2) + '\n', encoding: 'utf-8' });
       publishedTitles.push(entry.title);
-      // Nye sider finnes ikke på serveren før deployen er ferdig: utkastet
-      // beholdes som kilde til da, og ryddes automatisk ved neste besøk.
+      // New pages do not exist on the server until the deploy finishes:
+      // the draft is kept as the source until then, and cleaned up
+      // automatically on the next visit.
       if (isNew) newPageIds.push(entry.id);
       else draftKeys.push(key);
     }
 
     if (siteStore.hasDraft()) {
-      // Klon også her: logo-opplastinger materialiseres uten å røre
-      // utkastet i minnet før commiten er trygt inne.
+      // Clone here too: logo uploads are materialized without touching the
+      // draft in memory until the commit is safely in.
       const siteOut = JSON.parse(JSON.stringify(siteDraft));
       files.push(...materializeSiteImages(siteOut));
       files.push({ path: 'content/site.json', content: JSON.stringify(siteOut, null, 2) + '\n', encoding: 'utf-8' });
-      // Materialiser temaet som render-blokkerende light-dark()-CSS (FOUC-fri
-      // første paint). Én fil dekker alle sider; index.html-kopiene lenker til den.
+      // Materialize the theme as render-blocking light-dark() CSS
+      // (FOUC-free first paint). One file covers all pages; the index.html
+      // copies link to it.
       files.push({ path: 'content/theme.css', content: buildThemeCss(siteOut.theme), encoding: 'utf-8' });
       draftKeys.push('urd-draft-site');
-      // Navngi HVA i nettstedsoppsettet som endret seg (til historikken).
+      // Name WHAT in the site setup changed (for the history).
       const eq = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
       if (!eq(site.theme, siteDraft.theme)) publishedTitles.push('tema');
       if (!eq(site.nav, siteDraft.nav)) publishedTitles.push('menyen');
@@ -4910,15 +5010,16 @@
       if (!eq(restA, restB)) publishedTitles.push('nettstedsinfo');
     }
 
-    // Samlinger: endrede filer, indeksfilen og slettinger (diff mot publisert indeks).
+    // Collections: changed files, the index file and deletions (diff against the published index).
     const changedSamlinger = Object.entries(collectionStores).filter(([, st]) => st.hasDraft());
     if (changedSamlinger.length || collectionsIndexStore?.hasDraft()) {
       for (const [id, st] of changedSamlinger) {
         const out = JSON.parse(JSON.stringify(st.data));
         for (const entry of out.entries) materializeEntryImages(entry, files);
         files.push({ path: `content/samlinger/${id}.json`, content: JSON.stringify(out, null, 2) + '\n', encoding: 'utf-8' });
-        // Daterte samlinger får RSS-feed i samme publisering (SEO-pakken):
-        // innslagene som ren tekst, adressene fra opprinnelsen admin kjører på.
+        // Dated collections get an RSS feed in the same publish (the SEO
+        // package): the entries as plain text, the addresses from the
+        // origin the admin runs on.
         if (FEED_KINDS.includes(out.kind)) {
           files.push({
             path: `content/samlinger/${id}.xml`,
@@ -4938,11 +5039,12 @@
       if (collectionsIndexStore?.hasDraft()) {
         files.push({ path: 'content/collections.json', content: JSON.stringify(collectionsIndexStore.data, null, 2) + '\n', encoding: 'utf-8' });
         draftKeys.push('urd-draft-collections', 'urd-draft-samlinger');
-        // Samlinger fjernet fra indeksen slettes fra repoet (opprettes de også i samme publisering, vinner create-listen over).
+        // Collections removed from the index are deleted from the repo (if
+        // also created in the same publish, the create list above wins).
         let publishedIndex = { samlinger: [] };
         try {
           publishedIndex = await (await fetch('/content/collections.json')).json();
-        } catch { /* ingen publisert indeks ennå */ }
+        } catch { /* no published index yet */ }
         const created = new Set(files.map((f) => f.path));
         for (const id of publishedIndex.samlinger ?? []) {
           const path = `content/samlinger/${id}.json`;
@@ -4952,8 +5054,9 @@
       publishedTitles.push('samlinger');
     }
 
-    // Mal-endringer publiseres som content/maler/-filer + indeks (0.6.7.4),
-    // samme mønster som samlinger; bilder i malen materialiseres til media/.
+    // Template changes are published as content/maler/ files + index, the
+    // same pattern as collections; images in the template are materialized
+    // to media/.
     const changedMaler = Object.entries(templateStores).filter(([, st]) => st.hasDraft());
     if (changedMaler.length || templatesIndexStore?.hasDraft()) {
       for (const [id, st] of changedMaler) {
@@ -4967,11 +5070,12 @@
       if (templatesIndexStore?.hasDraft()) {
         files.push({ path: 'content/maler.json', content: JSON.stringify(templatesIndexStore.data, null, 2) + '\n', encoding: 'utf-8' });
         draftKeys.push('urd-draft-templates', 'urd-draft-maler');
-        // Maler fjernet fra indeksen slettes fra repoet (opprettes id-en også i samme publisering, vinner create-listen).
+        // Templates removed from the index are deleted from the repo (if
+        // the id is also created in the same publish, the create list wins).
         let publishedIndex = { maler: [] };
         try {
           publishedIndex = await (await fetch('/content/maler.json')).json();
-        } catch { /* ingen publisert indeks ennå */ }
+        } catch { /* no published index yet */ }
         const created = new Set(files.map((f) => f.path));
         for (const id of publishedIndex.maler ?? []) {
           const path = `content/maler/${id}.json`;
@@ -4981,17 +5085,17 @@
       publishedTitles.push('maler');
     }
 
-    // Plugin-endringer (aktivert/deaktivert/lagt til) publiseres som plugins.json.
+    // Plugin changes (enabled/disabled/added) are published as plugins.json.
     if (pluginsStore?.hasDraft()) {
       files.push({ path: 'plugins/plugins.json', content: JSON.stringify(pluginsStore.data, null, 2) + '\n', encoding: 'utf-8' });
       draftKeys.push('urd-draft-plugins');
       publishedTitles.push('plugins');
     }
 
-    // Sideruting på alle statiske hoster: hver side utenom forsiden får
-    // sin egen <sti>/index.html (kopi av rot-index.html; motoren ruter på
-    // pathname). Genereres ved hver publisering - uendrede kopier gir
-    // identiske blobber og dermed ingen diff i commiten.
+    // Page routing on all static hosts: every page except the front page
+    // gets its own <path>/index.html (a copy of the root index.html; the
+    // engine routes on pathname). Generated on every publish - unchanged
+    // copies yield identical blobs and thus no diff in the commit.
     try {
       const html = await (await fetch('/index.html')).text();
       for (const p of siteDraft.pages) {
@@ -4999,17 +5103,20 @@
           files.push({ path: `${p.path.slice(1)}/index.html`, content: html, encoding: 'utf-8' });
         }
       }
-    } catch { /* uten index-kopiene virker siden fortsatt på SPA-hoster */ }
+    } catch { /* without the index copies the site still works on SPA hosts */ }
 
-    // Synlighetsfilene (SEO-pakken): sitemap og robots regenereres ved hver
-    // publisering fra opprinnelsen admin kjører på - uendret innhold gir
-    // identiske blobber og ingen diff, som index-kopiene.
+    // The visibility files (the SEO package): sitemap and robots are
+    // regenerated on every publish from the origin the admin runs on -
+    // unchanged content yields identical blobs and no diff, like the
+    // index copies.
     files.push({ path: 'sitemap.xml', content: buildSitemapXml(siteDraft.pages, location.origin), encoding: 'utf-8' });
     files.push({ path: 'robots.txt', content: buildRobotsTxt(location.origin), encoding: 'utf-8' });
 
-    // Slettede og flyttede sider: diff mot publisert site.json. Serveren
-    // hopper stille over stier som alt er borte fra repoet.
-    // En sti som OGSÅ opprettes i samme commit (to sider som bytter adresse) må ikke slettes: siste innslag med samme sti vinner i Git-treet, så en slik sletting ville fjernet den nye kopien.
+    // Deleted and moved pages: diff against the published site.json. The
+    // server silently skips paths already gone from the repo. A path ALSO
+    // created in the same commit (two pages swapping addresses) must not
+    // be deleted: the last entry with the same path wins in the Git tree,
+    // so such a deletion would remove the new copy.
     const created = new Set(files.map((f) => f.path));
     const del = (path) => { if (!created.has(path)) files.push({ path, delete: true }); };
     for (const p of site.pages) {
@@ -5022,8 +5129,8 @@
       }
     }
 
-    // Konfliktvarsel: har noen andre publisert siden vi lastet, og rører
-    // de samme filene, må redaktøren aktivt velge å publisere likevel.
+    // Conflict warning: if someone else has published since we loaded and
+    // we touch the same files, the editor must actively choose to publish anyway.
     const conflict = await confirmNoConflict(files);
     if (!conflict.ok) {
       setStatus(ta('status.publishAborted'), 'error');
@@ -5033,8 +5140,8 @@
     const body = {
       message: `Oppdater ${publishedTitles.join(', ') || 'nettstedet'} via Urd-admin`,
       files,
-      // HEAD-en konfliktsjekken så: serveren avviser med 409 om noen
-      // rekker å publisere i selve commit-vinduet.
+      // The HEAD the conflict check saw: the server rejects with 409 if
+      // someone manages to publish inside the commit window itself.
       ...(conflict.head ? { expect: conflict.head } : {}),
     };
     let res = null;
@@ -5044,23 +5151,24 @@
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(body),
       });
-    } catch { /* nettverksfeil håndteres under */ }
+    } catch { /* network errors are handled below */ }
 
     if (res?.ok) {
-      // Ny HEAD = vår commit: konfliktgrunnlaget flyttes frem.
+      // New HEAD = our commit: the conflict baseline moves forward.
       const { sha } = await res.json().catch(() => ({}));
       if (sha) baseSha = sha;
       else refreshBaseSha();
-      // Speil materialiseringen inn i minnet nå som commiten er trygt
-      // inne (samme deterministiske stier som klonene fikk).
+      // Mirror the materialization into memory now that the commit is
+      // safely in (the same deterministic paths the clones got).
       materializeImages(store.data);
       materializeSiteImages(siteDraft);
-      // Utkastene ER nå det publiserte; behold dataene i minnet (serveren
-      // serverer gammel JSON til deployen er ferdig) og fjern bare merkene.
+      // The drafts ARE now the published state; keep the data in memory
+      // (the server serves old JSON until the deploy finishes) and remove
+      // only the markers.
       for (const key of draftKeys) localStorage.removeItem(key);
       for (const id of newPageIds) pendingPublished.add(id);
-      // Publisert grunnlag = utkastet: bygg store-baselines på nytt, så
-      // «Forkast utkast» aldri ruller tilbake forbi denne publiseringen.
+      // Published baseline = the draft: rebuild the store baselines, so
+      // "Discard draft" never rolls back past this publish.
       site = JSON.parse(JSON.stringify(siteDraft));
       siteStore = createDraftStore('urd-draft-site', () => site, draftSaveError);
       linkSiteDraft();
@@ -5070,7 +5178,7 @@
         syncPluginsView();
       }
       if (collectionsIndexStore) {
-        // Speil materialiseringen inn i minnet (samme deterministiske stier som klonene fikk).
+        // Mirror the materialization into memory (the same deterministic paths the clones got).
         for (const st of Object.values(collectionStores)) {
           for (const entry of st.data.entries) materializeEntryImages(entry, []);
         }
@@ -5086,7 +5194,7 @@
         syncCollectionsView();
       }
       if (templatesIndexStore) {
-        // Speil materialiseringen inn i minnet (samme deterministiske stier som klonene fikk).
+        // Mirror the materialization into memory (the same deterministic paths the clones got).
         for (const st of Object.values(templateStores)) {
           if (st.data?.section) materializeSection(st.data.section, []);
           for (const block of st.data?.blocks ?? []) materializeBlockImages(block, []);
@@ -5107,7 +5215,7 @@
       const pageSnap = JSON.parse(JSON.stringify(store.data));
       store = createDraftStore(`urd-draft-${pageId}`, () => pageSnap, draftSaveError);
       if (pendingPublished.has(pageId)) {
-        // Ny side: utkastet er kilden til deployen er ferdig - behold det.
+        // New page: the draft is the source until the deploy finishes - keep it.
         writeDraftKey(`urd-draft-${pageId}`, JSON.stringify(pageSnap));
       }
       updateDirty();
@@ -5121,9 +5229,9 @@
     } else if (res?.status === 403) {
       setStatus(taApiError(await res.json().catch(() => null)) ?? ta('status.noPublishAccess'), 'error');
     } else if (res?.status === 409) {
-      // Noen rakk å publisere i selve commit-vinduet: utkastene er urørt,
-      // og baseSha står stille, så et nytt forsøk kjører konfliktsjekken
-      // på nytt og fanger opp de ferske endringene.
+      // Someone published inside the commit window itself: the drafts are
+      // untouched, and baseSha stands still, so a retry runs the conflict
+      // check again and picks up the fresh changes.
       setStatus(ta('status.publishRace'), 'error');
     } else if (res) {
       setStatus(taApiError(await res.json().catch(() => null))
@@ -5140,27 +5248,27 @@
 
 <div class="editor">
   {#if !chromeVisible}
-    <!-- Ren visning: alt editor-UI er skjult så siden får full flate -->
+    <!-- Clean view: all editor UI is hidden so the page gets the full surface -->
     <button class="chrome-restore" onclick={toggleChrome} title={ta('tip.backToEdit')}>{@html ICONS.pencil} {ta('ui.edit')}</button>
   {/if}
 
   <header class="topbar" class:hidden={!chromeVisible}>
     <span class="topbar-group">
       {#if site}
-        <!-- Gjeldende side: klikk åpner Sider-panelet (nedtrekket ble
-             overflødig da panelet kom, men siden man står på må synes) -->
+        <!-- Current page: a click opens the Pages panel; the page you are
+             on must stay visible -->
         <button class="ghost page-btn" title={ta('tip.switchPage')}
           onclick={() => togglePanel('pages')}>{pageEntry()?.title ?? ''}</button>
 
-        <!-- Klyngene folder seg én om gangen (FOLD_MQ), ikke alle på samme
-             terskel: et enkelt trinn som byttet elleve kontroller mot tre
-             menyknapper ble et for stort sprang. En foldet klynge bærer sin
-             egen gjeldende verdi på knappen (enhetsikon, zoom-prosent), så
-             tilstanden kan leses uten å åpne menyen.
+        <!-- The clusters fold one at a time (FOLD_MQ), not all at the same
+             threshold: a single step swapping eleven controls for three
+             menu buttons would be too big a jump. A folded cluster carries
+             its own current value on the button (device icon, zoom
+             percent), so the state can be read without opening the menu.
 
-             `display: contents` på skallet: det finnes bare for at klikk-
-             utenfor-testen skal ha ÉN node å spørre, og skal ikke lage en
-             egen boks i linja. -->
+             `display: contents` on the shell: it exists only so the
+             outside-click test has ONE node to ask, and must not create
+             its own box in the bar. -->
         <span class="toolset" bind:this={toolMenuEl}>
           {#if folded.device}
             <span class="toolmenu">
@@ -5180,8 +5288,8 @@
               {/if}
             </span>
           {:else}
-            <!-- Elleve kontroller på rad med identisk kantlinje leses som én
-                 stripe. Tre merkede klynger i stedet: Enhet, Zoom, Vis. -->
+            <!-- Eleven controls in a row with identical borders read as one
+                 strip. Three labeled clusters instead: Device, Zoom, View. -->
             <span class="tool-cap">{ta('lbl.group.device')}</span>
             <span class="viewswitch toolgrp">
               {#each DEVICES as d (d.id)}
@@ -5200,9 +5308,9 @@
                 onclick={() => (toolMenu = toolMenu === 'zoom' ? null : 'zoom')}
                 ><span class="zoom-cap">{Math.round(scale * 100)}%</span>{@html ICONS.caret}</button>
               {#if toolMenu === 'zoom'}
-                <!-- Menyen blir stående under stegging: zoom justeres i flere
-                     klikk, og en meny som lukket seg for hvert klikk ville
-                     kreve at den ble åpnet på nytt for hvert trinn. -->
+                <!-- The menu stays open while stepping: zoom is adjusted in
+                     several clicks, and a menu that closed on every click
+                     would have to be reopened for each step. -->
                 <div class="tool-pop">
                   <div class="tool-pop-row">
                     <button class="ghost" onclick={() => stepZoom(-1)} title={ta('tip.zoomOut')}>{@html ICONS.minus}</button>
@@ -5266,25 +5374,28 @@
 
     <span class="topbar-group topbar-draft">
       {#if dirty}
-        <!-- Klyngen glir ut mot høyre med en rask fade når utkastet forkastes
-             eller publiseres; plassen kollapser først etterpå, så linja aldri
-             hopper midt i bevegelsen. Redusert bevegelse gir rent klipp. -->
+        <!-- The cluster slides out to the right with a quick fade when the
+             draft is discarded or published; the space collapses only
+             afterwards, so the bar never jumps mid-motion. Reduced motion
+             gives a plain cut. -->
         <span class="draft-cluster" out:fly={{ x: 24, duration: reducedMotion ? 0 : 150 }}>
-        <!-- Statusen er en TILSTAND, ikke en handling: pilleformen består, men
-             den fylte aksentflaten er byttet mot chip-idiomet (ADR-0016), så
-             Publiser er den eneste fylte flaten i linja. -->
-        <!-- Smaleste trinn viser bare utropstegnet; tittelen bærer ordet, og
-             begge formene er aria-hidden så opplesing får det én gang. -->
+        <!-- The status is a STATE, not an action: the pill shape remains,
+             but with the chip idiom rather than a filled accent surface
+             (ADR-0016), so Publish is the only filled surface in the bar. -->
+        <!-- The narrowest step shows only the exclamation mark; the title
+             carries the word, and both forms are aria-hidden so screen
+             readers get it once. -->
         <span class="chip draft-chip" title={ta('ui.unpublished')} aria-label={ta('ui.unpublished')}>
           <span class="chip-full" aria-hidden="true">{ta('ui.unpublished')}</span>
           <span class="chip-mini" aria-hidden="true">!</span>
         </span>
-        <!-- Forkast er destruktiv og tar ellers prime plass. Full pille når det
-             er rom, ellers en liten rød sirkel. Gjenopprett-glyfen, ikke
-             tilbake-pil: den siste betyr angre. Knappen holder bredden når den
-             væpnes; bekreftelsen kommer som en egen pille under linja. -->
-        <!-- Skallet finnes for forankringen: pilla sentreres under KNAPPEN,
-             ikke under gruppa, så den peker på det den bekrefter. -->
+        <!-- Discard is destructive and would otherwise take prime space. A
+             full pill when there is room, otherwise a small red circle.
+             The restore glyph, not a back arrow: the latter means undo.
+             The button keeps its width when armed; the confirmation comes
+             as its own pill below the bar. -->
+        <!-- The shell exists for the anchoring: the pill is centered under
+             the BUTTON, not under the group, so it points at what it confirms. -->
         <span class="discard-wrap" bind:this={discardWrapEl}>
           <button class="discard-dot" class:armed={discardArmed} onclick={requestDiscard}
             title={discardArmed ? ta('tip.discardArmed') : ta('tip.discard')}
@@ -5310,9 +5421,8 @@
           {#if !auth.allowed}{@html ICONS.warn}{/if}{auth.login}
         </span>
       {:else if auth}
-        <!-- Innlogging beholder teksten på alle bredder: uten ikon ville
-             knappen blitt tom, og den er inngangen til å publisere i det hele
-             tatt. -->
+        <!-- Login keeps its text at all widths: without an icon the button
+             would be empty, and it is the entry point to publishing at all. -->
         <a class="ghost" href="/api/github/login">{ta('ui.loginGitHub')}</a>
       {/if}
       <a class="ghost" href={pageEntry()?.path ?? '/'} target="_blank" rel="noopener"
@@ -5327,19 +5437,21 @@
       {#if chromeVisible}
         <nav class="rail">
           {#each PANEL_GROUPS as group, gi (gi)}
-            <!-- Versal-etikett over hver gruppe: sideverktøy,
-                 nettstedsinnstillinger og system leses som tre nivåer. -->
+            <!-- Uppercase label above each group: page tools, site settings
+                 and system read as three levels. -->
             <span class="rail-group">{ta(PANEL_GROUP_KEYS[gi])}</span>
             {#each group as name (name)}
               <button class:active={activePanel === name} onclick={() => togglePanel(name)}>{PANEL_LABELS[name]}</button>
             {/each}
           {/each}
           <span class="rail-settings" bind:this={settingsEl}>
-            <!-- Merket bor nederst i skinnen ved tannhjulet, ikke i topplinja:
-                 der tok det plassen «Sikker?» trenger for å vokse. -->
+            <!-- The mark lives at the bottom of the rail by the gear, not in
+                 the top bar: there it would take the space the discard
+                 confirmation needs to grow. -->
             <span class="rail-brand" title="Urd">
-              <!-- viewBox er beskåret til glyfens visuelle boks (strek medregnet),
-                   så svg-bunnen ER runens fot og baseline-justeringen treffer. -->
+              <!-- The viewBox is cropped to the glyph's visual box (stroke
+                   included), so the svg bottom IS the rune's foot and the
+                   baseline alignment lands. -->
               <svg class="brand-mark" viewBox="10.3 8.3 19.4 25.4" aria-hidden="true"><path d="M12 32V10l16 6.5V32" fill="none" stroke="var(--urd-brand)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
               <span class="brand-word">Urd</span>
             </span>
@@ -5494,7 +5606,7 @@
                     {#if (siteDraft.nav.logo?.type ?? 'text') !== 'image'}
                       <input value={siteDraft.nav.logo?.value ?? ''} placeholder={ta('ph.nav.logoName')}
                         oninput={(e) => setLogo({ value: e.target.value })} />
-                      <!-- Stilrad à la tekstbehandler: font | px | F K -->
+                      <!-- Style row like a word processor: font | px | B I -->
                       <span class="toolbar-row">
                         <Dropdown title={ta('tip.nav.logoFont')}
                           value={siteDraft.nav.logo?.font ?? ''}
@@ -5646,8 +5758,9 @@
                 <details class="group">
                   <summary>{ta('group.submenu')}</summary>
                   <div class="group-items">
-                    <!-- Sidestilt: undermenyene er trekkspill i kolonnen, så
-                         kort-rammen, ren flate og utfall gir ingen mening der -->
+                    <!-- Side variant: the submenus are accordions in the
+                         column, so the card frame, flat surface and flyout
+                         make no sense there -->
                     <label>{ta('lbl.design')}
                       <Dropdown value={siteDraft.nav.style?.subStyle ?? 'card'}
                         options={sideVariant
@@ -5680,7 +5793,7 @@
                       <button class="ghost row-tool" title={ta('tip.nav.removeItem')}
                         onclick={() => removeNavItem(i)}>{@html ICONS.cross}</button>
                     </span>
-                    <!-- Wrapper-span beholder grid-plasseringen (.nav-row .nav-target) -->
+                    <!-- The wrapper span keeps the grid placement (.nav-row .nav-target) -->
                     <span class="nav-target">
                       <Dropdown value={item.page ?? (item.href != null ? '__href' : '__none')} title={ta('tip.linkTarget')}
                         options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')],
@@ -5736,8 +5849,8 @@
                     onchange={(v) => setSiteLang(v)} /></label>
                 <hr class="gridmenu-divider" />
                 <p class="panel-strong" title={ta('tip.site.contentWidth')}>{ta('lbl.contentWidth')}</p>
-                <!-- Levende prøve: én stripe per vanlig skjermbredde, så det er
-                     synlig HVOR bredden binder og hvor flaten går fluid. -->
+                <!-- Live sample: one strip per common screen width, so it is
+                     visible WHERE the width binds and where it goes fluid. -->
                 <div class="sample cw-sample">
                   {#each widthBands as band (band.screen)}
                     <div class="cw-row">
@@ -5927,8 +6040,8 @@
                 <input type="text" bind:value={blockSearch}
                   placeholder={ta('canvas.searchBlocks')} title={ta('canvas.searchBlocks')} />
                 {#if blockSearch.trim()}
-                  <!-- Variant B (eiervalg 9. august 2026): aktivt søk viser en
-                       flat, rangert treffliste i stedet for gruppene. -->
+                  <!-- An active search shows a flat, ranked hit list instead
+                       of the groups. -->
                   {#each searchBlockItems(panelBlockItems(), blockSearch, (item) => item.label) as item (item.label)}
                     {#if item.act === 'image'}
                       <label class="ghost filepick" title={ta('tip.webpAuto')}>
@@ -6405,7 +6518,7 @@
                       onclick={() => removeSamling(activeCollection)}>{@html ICONS.cross}</button>
                   </span>
                   {#each samling.entries as entry, i (entry.id)}
-                    <!-- Sammenleggbart innslag: tittel + dato i summary, feltene inni (plassbruk i panelet) -->
+                    <!-- Collapsible entry: title + date in the summary, the fields inside (panel space) -->
                     <details class="group samling-entry">
                       <summary>{plainTitle(entry.title)}{samling.kind === 'products'
                         ? (entry.price != null ? ` · ${entry.price}` : '')
@@ -6447,7 +6560,7 @@
                           {/if}
                         </span>
                         {#if samling.kind === 'products'}
-                          <!-- Produktfeltene (butikken): pris, medlemspris, badge, størrelser og farger. -->
+                          <!-- The product fields (the shop): price, member price, badge, sizes and colors. -->
                           <label>{ta('lbl.price')}
                             <input type="number" min="0" step="0.01" value={entry.price ?? ''}
                               onchange={(e) => setEntryField(activeCollection, entry.id, 'price', e.target.value === '' ? '' : Number(e.target.value))} /></label>
@@ -6549,7 +6662,7 @@
                     <p class="panel-hint">{ta('hint.plugins.autoDiscover')}</p>
                   {/if}
                 {:else}
-                  <!-- Reserveløsning når repo-oppdagelsen er utilgjengelig (lokal server / ikke innlogget) -->
+                  <!-- Fallback when repo discovery is unavailable (local server / not logged in) -->
                   <hr class="gridmenu-divider" />
                   <input placeholder={ta('ph.plugins.folder')} bind:value={newPluginId}
                     onkeydown={(e) => e.key === 'Enter' && addPlugin()} />
@@ -6624,8 +6737,9 @@
                         </div>
                       </details>
                     {/if}
-                    <!-- Håndredigerte motorfiler skal ses uten klikk; resten av
-                         atomgruppen er én samlet swap og foldes sammen. -->
+                    <!-- Hand-edited engine files must be seen without a click;
+                         the rest of the atom group is one combined swap and
+                         is folded away. -->
                     {#each updateInfo.changes.filter((c) => c.atom && c.conflict) as c (c.path)}
                       <div class="update-row">
                         <span class="update-path" title={c.path}>{c.path}</span>
@@ -6680,8 +6794,8 @@
       {/if}
 
       <div class="frame-wrap" class:mobile={viewMode === 'mobile'} class:pan={canPan} bind:this={frameWrapEl}>
-        <!-- .stage har den SKALERTE størrelsen, så scroll/sentrering får en ekte
-             boks (en transformert iframe alene utvider ikke forelderens scroll). -->
+        <!-- .stage has the SCALED size, so scrolling/centering gets a real
+             box (a transformed iframe alone does not expand its parent's scroll). -->
         <div class="stage" style="width:{stageW}px; height:{stageH}px">
           <iframe
             bind:this={iframeEl}
@@ -6702,10 +6816,11 @@
   {/if}
 
   {#if confirmBox}
-    <!-- Klikk på bakteppet avbryter (samme som lysbordets ::backdrop). Lukkingen
-         skjer på click, ikke pointerdown, så klikket er ferdig før dialogen
-         forsvinner og aldri treffer panelet under. -->
-    <!-- Bakteppet er en musesnarvei: Escape er tastaturveien og Avbryt-knappen den fokuserbare. -->
+    <!-- A click on the backdrop cancels (same as the lightbox ::backdrop).
+         Closing happens on click, not pointerdown, so the click finishes
+         before the dialog disappears and never hits the panel below. -->
+    <!-- The backdrop is a mouse shortcut: Escape is the keyboard path and
+         the Cancel button the focusable one. -->
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
     <div class="setup-overlay"
       onpointerdown={(e) => (confirmDownOnOverlay = e.target === e.currentTarget)}
@@ -6716,7 +6831,7 @@
           <p class="panel-hint confirm-line">{line}</p>
         {/each}
         {#if confirmBox.prompt}
-          <!-- svelte-ignore a11y_autofocus (modal med ett felt: fokus hører i feltet) -->
+          <!-- svelte-ignore a11y_autofocus (single-field modal: focus belongs in the field) -->
           <input autofocus bind:value={confirmBox.value} placeholder={confirmBox.placeholder}
             onkeydown={(e) => e.key === 'Enter' && confirmBox.value.trim() && answerConfirm(true)} />
         {/if}
@@ -6729,7 +6844,7 @@
   {/if}
 
   {#if showSetup}
-    <!-- Oppsettsveiviser: første besøk på en fersk klon -->
+    <!-- Setup wizard: first visit on a fresh clone -->
     <div class="setup-overlay">
       <div class="setup-card">
         <h2>{ta('setup.title')}</h2>
@@ -7058,8 +7173,8 @@
       options={[['', ta('opt.border.theme')], ['none', ta('common.none')], ['custom', ta('opt.border.custom')]]}
       onchange={(v) => setBoxStyle({ border: v === 'custom' ? { color: 'accent', width: 1 } : v || null })} /></label>
   {#if bs.border !== 'none'}
-    <!-- Kantfarge/Tykkelse vises OGSÅ for «Temaets (tynn)»: å velge en farge
-         gjør den til en egen (fargbar) kantlinje. -->
+    <!-- Border color/thickness is ALSO shown for the theme (thin) border:
+         picking a color turns it into its own (colorable) border. -->
     {@const bd = typeof bs.border === 'object' ? bs.border : { color: 'text', width: 1 }}
     <label>{ta('lbl.borderColor')}
       <ColorPicker value={bd.color} tokens={themeSwatches()}
@@ -7082,8 +7197,8 @@
 {/snippet}
 
 {#snippet blockPropsUI()}
-  <!-- Innhold/Stil-modellen (ADR-0016): Innhold er det blokken sier og
-       viser, Stil er utseende, bevegelse og plassering. -->
+  <!-- The Content/Style model (ADR-0016): Content is what the block says
+       and shows, Style is appearance, motion and placement. -->
   <div class="props-tabs">
     <span class="seg">
       <button type="button" class:on={propsTab === 'content'}
@@ -7095,8 +7210,8 @@
 
   {#if propsTab === 'content'}
     {#if selectedBlock.type === 'text'}
-      <!-- Tekst, font og størrelse settes inline med tekst-editorens
-           verktøylinje; blokken har ingen innholdsfelt i panelet. -->
+      <!-- Text, font and size are set inline with the text editor's
+           toolbar; the block has no content fields in the panel. -->
       <p class="panel-hint">{ta('hint.textInline')}</p>
     {:else if selectedBlock.type === 'faq'}
       <label class="gridmenu-snap" title={ta('tip.faq.multi')}>
@@ -7161,7 +7276,7 @@
         <input value={selectedBlock.props.label ?? ''}
           onchange={(e) => setBlockProp('label', e.target.value)} /></label>
     {:else if selectedBlock.type === 'table'}
-      <!-- Cellene skrives rett på lerretet; panelet eier formen på rutenettet. -->
+      <!-- The cells are typed directly on the canvas; the panel owns the grid's shape. -->
       <span class="toolbar-row">
         <button class="ghost" onclick={() => tableResize(1, 0)}>{ta('ui.addRow')}</button>
         <button class="ghost" onclick={() => tableResize(-1, 0)}>{ta('ui.removeRow')}</button>
@@ -7372,9 +7487,9 @@
           options={SHAPE_KINDS}
           onchange={(v) => setBlockProp('kind', v)} /></label>
     {:else}
-      <!-- Plugin-blokker: en def med `fields` (felt-kontrakten) får innstillingene
-           rendret her; ellers åpner knappen pluginens eget config-panel i
-           forhåndsvisningen (kalender/skjema). -->
+      <!-- Plugin blocks: a def with `fields` (the field contract) gets its
+           settings rendered here; otherwise the button opens the plugin's
+           own config panel in the preview (calendar/form). -->
       {@const pluginFields = pluginBlocks.find((b) => b.type === selectedBlock.type)?.fields ?? []}
       {#if pluginFields.length}
         {#each pluginFields as f (f.key)}
@@ -7656,8 +7771,8 @@
             onchange={(v) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
               b.sticky = { ...b.sticky, mode: v };
             })} /></label>
-        <!-- Avstanden gjelder kun kanter blokken faktisk dokkes til: er begge
-             akser sentrert, har den ingen effekt og skjules. -->
+        <!-- The offset applies only to edges the block is actually docked
+             to: with both axes centered it has no effect and is hidden. -->
         {#if selectedBlock.sticky.mode !== 'screen' || (selectedBlock.sticky.dock ?? 'bottom-right') !== 'middle-center'}
           <label title={selectedBlock.sticky.mode === 'screen' ? ta('tip.stickyEdge') : ta('tip.stickyOffset')}>
             {selectedBlock.sticky.mode === 'screen' ? ta('lbl.stickyEdge') : ta('lbl.stickyOffset')}
@@ -7720,9 +7835,10 @@
   {/if}
 {/snippet}
 
-<!-- Blokkmenyen: alle blokk-innstillingene i en flytende meny ved blokken
-     (kalender-mønsteret; åpnes fra tannhjulet på blokkens verktøylinje).
-     Samme snippet som Egenskaper-panelet, så de to aldri divergerer. -->
+<!-- The block menu: all block settings in a floating menu next to the
+     block (the calendar pattern; opened from the gear on the block's
+     toolbar). The same snippet as the Properties panel, so the two never
+     diverge. -->
 {#if blockMenu && selectedBlock}
   <div class="block-menu" style="left: {blockMenu.left}px; top: {blockMenu.top}px">
     <header class="block-menu-head">
@@ -7736,16 +7852,16 @@
 {/if}
 
 <style>
-  /* Adminens fargetemaer: overstyrer motorens standardvariabler KUN i
-     admin-dokumentet (forhåndsvisningens iframe har sitt eget dokument
-     og følger brukerens tema). Velges i topplinjen. */
-  /* Urd-merkevarepalett (logo/merke): brønn-turkis primær, med alle
-     fargevariantene bevart. Fast merkevarefarge, uavhengig av admin-temaet. */
+  /* The admin's color themes: override the engine's default variables
+     ONLY in the admin document (the preview iframe has its own document
+     and follows the user's theme). Picked in the top bar. */
+  /* The Urd brand palette (logo/mark): well-teal primary, with all the
+     color variants kept. A fixed brand color, independent of the admin theme. */
   :global(:root) {
-    --urd-brand: #15b39a;         /* brønn-turkis (primær, Urds brønn + Yggdrasil) */
-    --urd-brand-bronze: #c9a227;  /* runestein-bronse */
-    --urd-brand-indigo: #7c5cff;  /* skjebne-indigo */
-    --urd-brand-mono: #eaf1ed;    /* monokrom (off-white) */
+    --urd-brand: #15b39a;         /* well-teal (primary, Urd's well + Yggdrasil) */
+    --urd-brand-bronze: #c9a227;  /* runestone bronze */
+    --urd-brand-indigo: #7c5cff;  /* fate indigo */
+    --urd-brand-mono: #eaf1ed;    /* monochrome (off-white) */
   }
 
   :global(:root[data-admin-theme='lilla']) {
@@ -7776,7 +7892,7 @@
     --urd-color-text: #e6e8ea;
   }
 
-  /* Nordlys: Nord-paletten (arktisk, lav metning) */
+  /* Nordlys: the Nord palette (arctic, low saturation) */
   :global(:root[data-admin-theme='nordlys']) {
     --urd-color-bg: #232831;
     --urd-color-surface: #2e3440;
@@ -7784,7 +7900,7 @@
     --urd-color-text: #eceff4;
   }
 
-  /* Skumring: Tokyo Night (neon-natt, blå) */
+  /* Skumring: Tokyo Night (neon night, blue) */
   :global(:root[data-admin-theme='skumring']) {
     --urd-color-bg: #16161e;
     --urd-color-surface: #1a1b26;
@@ -7792,7 +7908,7 @@
     --urd-color-text: #c0caf5;
   }
 
-  /* Glo: Gruvbox (varm, glødende oransje) */
+  /* Glo: Gruvbox (warm, glowing orange) */
   :global(:root[data-admin-theme='glo']) {
     --urd-color-bg: #1d2021;
     --urd-color-surface: #282828;
@@ -7800,7 +7916,7 @@
     --urd-color-text: #ebdbb2;
   }
 
-  /* Egen slank, mørk scrollbar i hele admin, så den ikke stikker seg ut */
+  /* Our own slim, dark scrollbar across the admin, so it does not stand out */
   :global(*) {
     scrollbar-width: thin;
     scrollbar-color: rgb(255 255 255 / 22%) transparent;
@@ -7832,7 +7948,7 @@
 
   .chrome-restore {
     position: fixed;
-    /* Under nettsidens egen topplinje, klar av både nav og scrollbar */
+    /* Below the site's own top bar, clear of both nav and scrollbar */
     top: 64px;
     right: 28px;
     z-index: 200;
@@ -7852,21 +7968,22 @@
 
   .topbar {
     display: flex;
-    /* Linja bryter ALDRI til to rader: høyden er fast, og det som ikke får
-       plass foldes bort i trinn (se foldetrinnene nederst i fila). */
+    /* The bar NEVER wraps to two rows: the height is fixed, and what does
+       not fit is folded away in steps (see the fold steps at the bottom of
+       the file). */
     flex-wrap: nowrap;
     justify-content: space-between;
     align-items: center;
     gap: 0.5rem 0.75rem;
-    /* Mer luft til høyre: Publiser er det siste øyet lander på og skal ikke
-       klistre seg til vinduskanten. */
+    /* More air on the right: Publish is the last thing the eye lands on
+       and must not stick to the window edge. */
     padding: 0.6rem 1.4rem 0.6rem 1rem;
     background: var(--urd-color-surface, #151a23);
     border-bottom: 1px solid rgb(255 255 255 / 8%);
     font-size: 0.9rem;
   }
 
-  /* .rail-brand eier merkets form; her står bare glyfens og ordets egne mål. */
+  /* .rail-brand owns the mark's shape; only the glyph's and word's own sizes live here. */
   .brand-mark {
     width: 1.4rem;
     height: 1.4rem;
@@ -7876,25 +7993,25 @@
     letter-spacing: 0.01em;
   }
 
-  /* Tre grupper på én rad: venstre (verktøy), midten (utkast-status) og høyre
-     (visning/publisering). Ingen av dem bryter. */
+  /* Three groups on one row: left (tools), middle (draft status) and
+     right (view/publishing). None of them wrap. */
   .topbar-group {
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
     gap: 0.5rem 0.75rem;
-    /* min-width: auto (arvet) stopper gruppa ved min-innhold, altså
-       sidenavn-knappens min-width pluss resten av kontrollene. */
+    /* min-width: auto (inherited) stops the group at min-content, i.e.
+       the page-name button's min-width plus the rest of the controls. */
   }
 
-  /* Kontrollene beholder sin naturlige bredde: det er foldetrinnene, ikke
-     krymping, som skaffer plass. Bare sidenavnet under får gi etter. */
+  /* The controls keep their natural width: the fold steps, not shrinking,
+     make room. Only the page name below is allowed to give way. */
   .topbar-group > * {
     flex: none;
   }
 
-  /* Sidenavnet er fritt og er derfor det eneste som får krympe. Blokkvisning
-     gir ellipse i stedet for knappenes inline-flex. */
+  /* The page name is free text and is therefore the only thing allowed to
+     shrink. Block display gives an ellipsis instead of the buttons' inline-flex. */
   .topbar .page-btn {
     display: block;
     flex: 0 1 auto;
@@ -7910,7 +8027,7 @@
     flex: none;
   }
 
-  /* Knapper med SVG-ikon: ikon og tekst på linje, loddrett sentrert */
+  /* Buttons with an SVG icon: icon and text in line, vertically centered */
   .topbar .ghost,
   .chrome-restore,
   .badge.attention {
@@ -7927,12 +8044,12 @@
     font-size: 0.78rem;
   }
 
-  /* Statusmeldinger som toast nederst til høyre: forstyrrer ikke
-     topplinjen og kan leses uansett hvor man jobber */
+  /* Status messages as a toast in the bottom right: does not disturb the
+     top bar and can be read wherever you are working */
   .toast {
     position: fixed;
     bottom: 22px;
-    /* Klar av forhåndsvisningens scrollbar og høyrekanten */
+    /* Clear of the preview's scrollbar and the right edge */
     right: 34px;
     z-index: 300;
     display: flex;
@@ -7977,22 +8094,22 @@
     font-size: 0.82rem;
   }
 
-  /* Arbeidsflaten: panelvelger-linje | panel (valgfritt) | forhåndsvisning */
+  /* The workspace: panel picker rail | panel (optional) | preview */
   .workspace {
     flex: 1;
     display: flex;
     min-height: 0;
   }
 
-  /* Tett skinne: smal, ingen mellomrom mellom punktene, og monospace som
-     binder skinnen til Urds egen tone. Tolv punkter skal ta et lite hjørne
-     av lerretshøyden, ikke det meste av den. */
+  /* A tight rail: narrow, no gaps between the items, and monospace that
+     ties the rail to Urd's own tone. Twelve items should take a small
+     corner of the canvas height, not most of it. */
   .rail {
     display: flex;
     flex-direction: column;
-    /* Lengste etikett er «Oppdatering»: elleve tegn i 0.74rem monospace er
-       drøyt 80 px, pluss to ganger 0.9rem innrykk. 8.5rem gir luft uten at
-       skinnen tar plass fra lerretet. */
+    /* The longest label is "Oppdatering": eleven characters in 0.74rem
+       monospace is just over 80 px, plus twice 0.9rem indent. 8.5rem gives
+       air without the rail taking space from the canvas. */
     width: 8.5rem;
     flex: none;
     gap: 0;
@@ -8010,9 +8127,9 @@
     font-family: inherit;
     font-size: inherit;
     padding: 0.24rem 0.9rem;
-    /* Den globale knappestilen gjør alle knapper til inline-flex med
-       justify-content: center. På en flex-container overstyrer det all
-       tekstjustering, så text-align alene gjorde ingenting her. */
+    /* The global button style makes all buttons inline-flex with
+       justify-content: center. On a flex container that overrides all
+       text alignment, so text-align alone has no effect here. */
     justify-content: flex-start;
     text-align: left;
     border-radius: 0;
@@ -8024,12 +8141,12 @@
     background: rgb(255 255 255 / 6%);
   }
 
-  /* Aktiv markeres av bakgrunn + kant alene: font-vekt endres IKKE, ellers
-     flytter teksten seg bittelitt ved hvert valg (observasjon fra testrundene). */
-  /* Innstillings-tannhjulet nederst i railen + popoveren over det.
-     position: fixed klippes ikke av railens overflow. */
-  /* Versal-etikett over hver gruppe, så de tre nivåene leses som grupper
-     og ikke som én lang liste. */
+  /* Active is marked by background + edge alone: the font weight does NOT
+     change, otherwise the text shifts slightly on every selection. */
+  /* The settings gear at the bottom of the rail + the popover above it.
+     position: fixed is not clipped by the rail's overflow. */
+  /* Uppercase label above each group, so the three levels read as groups
+     and not as one long list. */
   .rail-group {
     font-size: 0.54rem;
     letter-spacing: 0.14em;
@@ -8040,8 +8157,8 @@
 
   .rail-group:first-child { padding-top: 0.2rem; }
 
-  /* Merket bor nederst ved tannhjulet: venstre side merke, høyre side
-     innstillinger, med en skillelinje over. */
+  /* The mark lives at the bottom by the gear: mark on the left, settings
+     on the right, with a divider above. */
   .rail-settings {
     margin-top: auto;
     display: flex;
@@ -8055,8 +8172,9 @@
 
   .rail-brand {
     display: inline-flex;
-    /* Runen står på ordets grunnlinje: svg-en (uten egen baseline) justeres
-       med underkanten, som er glyfens fot takket være den beskårne viewBoxen. */
+    /* The rune stands on the word's baseline: the svg (with no baseline of
+       its own) is aligned by its bottom edge, which is the glyph's foot
+       thanks to the cropped viewBox. */
     align-items: baseline;
     gap: 0.35rem;
     min-width: 0;
@@ -8064,11 +8182,11 @@
     font-size: 0.8rem;
   }
 
-  /* Høyde i em: runen holder seg like over versalhøyden, som i logofila. */
+  /* Height in em: the rune stays just above cap height, as in the logo file. */
   .rail-brand .brand-mark { width: auto; height: 0.8em; flex: none; }
 
   .rail-gear {
-    /* Merket står til venstre og tar bredden; tannhjulet er kvadratisk. */
+    /* The mark stands on the left and takes the width; the gear is square. */
     flex: none;
     display: flex;
     align-items: center;
@@ -8104,9 +8222,9 @@
     font-size: 0.8rem;
   }
 
-  /* Aktiv er farget tekst med en strek i venstrekanten, ikke en fylt pille:
-     tolv fylte piller under hverandre ble tungt, og streken leser tydeligere
-     som «du er her» i en liste. */
+  /* Active is colored text with a line at the left edge, not a filled
+     pill: twelve filled pills stacked read heavy, and the line reads more
+     clearly as "you are here" in a list. */
   .rail button.active {
     opacity: 1;
     background: transparent;
@@ -8132,13 +8250,13 @@
 
   .panel-body {
     display: grid;
-    /* minmax(0, 1fr): kolonnen kan aldri bli bredere enn panelet, så
-       radene klemmes i stedet for å gi horisontal scrolling */
+    /* minmax(0, 1fr): the column can never grow wider than the panel, so
+       the rows are squeezed instead of causing horizontal scrolling */
     grid-template-columns: minmax(0, 1fr);
     gap: 0.6rem;
   }
 
-  /* Blokkmenyen: flytende utgave av Egenskaper-innholdet ved blokken */
+  /* The block menu: a floating version of the Properties content next to the block */
   .block-menu {
     position: fixed;
     z-index: 320;
@@ -8169,7 +8287,7 @@
     min-height: 0;
   }
 
-  /* Avhukingsbokser som moderne brytere: pille med knott som glir */
+  /* Checkboxes as modern toggles: a pill with a sliding knob */
   input[type='checkbox'] {
     appearance: none;
     width: 2.1rem;
@@ -8204,8 +8322,8 @@
     transform: translateX(0.9rem);
   }
 
-  /* Alle «rad-knappene» i panelet (blokker, grupper, filvelger) deler
-     samme høyde og utlegg, så listen ser jevn ut */
+  /* All the "row buttons" in the panel (blocks, groups, file picker)
+     share the same height and layout, so the list looks even */
   .panel-body .ghost,
   .group summary {
     display: flex;
@@ -8215,9 +8333,10 @@
     box-sizing: border-box;
   }
 
-  /* Listeknapper i panelene er venstrestilte (radene skal kunne leses
-     som en liste), selv om knapper ellers sentrerer innholdet.
-     Handlingsknapper (.action: «+ Opprett side», «+ Legg til lag» osv.) sentreres som vanlige knapper. */
+  /* List buttons in the panels are left-aligned (the rows must read as a
+     list), even though buttons otherwise center their content. Action
+     buttons (.action: create page, add layer, etc.) are centered like
+     regular buttons. */
   .panel-body .ghost {
     justify-content: flex-start;
   }
@@ -8250,8 +8369,8 @@
     pointer-events: none;
   }
 
-  /* Felles kontrollhøyde (2.2rem) og -størrelse i panelene: felt
-     og knapper skal flukte uansett hvor de står */
+  /* Shared control height (2.2rem) and size in the panels: fields and
+     buttons must line up wherever they stand */
   .panel-body input:not([type]),
   .panel-body input[type='number'] {
     font: inherit;
@@ -8265,7 +8384,7 @@
     min-width: 0;
   }
 
-  /* Tall-stepper (−/[tall]/+), som størrelsesfeltet i teksteditoren. */
+  /* Number stepper (−/[number]/+), like the size field in the text editor. */
   .num-stepper {
     display: inline-flex;
     align-items: center;
@@ -8303,14 +8422,14 @@
     background: rgb(255 255 255 / 10%);
   }
 
-  /* Sider- og nav-radene: tittel/etikett tar plassen, verktøyene er smale */
+  /* The page and nav rows: title/label takes the space, the tools are narrow */
   .page-row {
     display: flex;
     align-items: center;
     gap: 0.35rem;
   }
 
-  /* Varselmarkøren for sider uten metabeskrivelse (Søk og deling) */
+  /* The warning marker for pages without a meta description (Search and sharing) */
   .seo-warn {
     display: inline-flex;
     flex: none;
@@ -8376,8 +8495,8 @@
     padding-left: 0.4rem;
   }
 
-  /* To kolonner: felt | verktøy. Mål- og lenkefeltene ligger i samme
-     kolonne som navnefeltet, så alle slutter på samme høyrekant. */
+  /* Two columns: field | tools. The target and link fields sit in the
+     same column as the name field, so they all end on the same right edge. */
   .nav-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -8396,7 +8515,7 @@
     grid-column: 1;
   }
 
-  /* Sosial-ikonets forhåndsvisning i Footer-panelet */
+  /* The social icon's preview in the Footer panel */
   .footer-soc-preview {
     flex: 0 0 1.15rem;
     width: 1.15rem;
@@ -8410,7 +8529,7 @@
     display: block;
   }
 
-  /* Visuell footer-mal-velger: miniatyr-rutenett (footerThumb-SVG). */
+  /* The visual footer template picker: a thumbnail grid (footerThumb SVG). */
   .footer-tpick {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -8448,7 +8567,7 @@
     text-align: center;
   }
 
-  /* Undermenyrader: innrykket under forelderpunktet, med markert kant */
+  /* Submenu rows: indented under the parent item, with a marked edge */
   .nav-sub-row {
     margin-left: 0.8rem;
     padding-left: 0.5rem;
@@ -8474,7 +8593,7 @@
     opacity: 0.8;
   }
 
-  /* Tidslinje-panelets årsfelt: smalt, tittelen tar resten av raden. */
+  /* The timeline panel's year field: narrow, the title takes the rest of the row. */
   .nav-line input.tl-year {
     flex: 0 0 3.6rem;
   }
@@ -8488,12 +8607,12 @@
     display: flex;
     gap: 0.2rem;
     flex-shrink: 0;
-    /* Strekk til radens høyde, så knappene blir like høye som feltet */
+    /* Stretch to the row's height, so the buttons match the field's height */
     align-self: stretch;
   }
 
-  /* Gradientfargenes dra-håndtak: rekkefølgen dras med pekeren
-     (startStopDrag); raden dempes og innsettingsstreken følger med */
+  /* The gradient colors' drag handle: the order is dragged with the
+     pointer (startStopDrag); the row is dimmed and the insertion line follows */
   .grad-grip {
     display: inline-flex;
     align-items: center;
@@ -8524,7 +8643,7 @@
     box-shadow: 0 2px 0 0 var(--urd-color-accent);
   }
 
-  /* Kompakte fargeknapper i gradientradene (samme høyde som radknappene) */
+  /* Compact color buttons in the gradient rows (same height as the row buttons) */
   .grad-stop :global(.cp-swatch) {
     width: 1.7rem;
     height: 1.7rem;
@@ -8535,9 +8654,9 @@
     font-size: 0.8rem;
   }
 
-  /* Radknapper (piler/kryss): fast kvadratisk bredde og sentrert glyf,
-     følger feltets høyde - ikke blokk-knappenes minhøyde eller
-     panellistens venstrestilling */
+  /* Row buttons (arrows/cross): fixed square width and centered glyph,
+     follows the field's height - not the block buttons' min height or the
+     panel list's left alignment */
   .panel-body .row-tool {
     min-height: 0;
     height: 100%;
@@ -8546,8 +8665,8 @@
     justify-content: center;
   }
 
-  /* Kebab-menyen per side-rad (0.6.7.10): forankret i raden, flyter over
-     panelet; lukking (utenfor-klikk/Escape/blur) styres i skriptet. */
+  /* The kebab menu per page row: anchored in the row, floats above the
+     panel; closing (outside click/Escape/blur) is handled in the script. */
   .page-menu-wrap {
     position: relative;
     display: inline-flex;
@@ -8580,8 +8699,8 @@
     color: #e05252;
   }
 
-  /* «Ny side fra mal»-rutenettet (0.6.7.10, eiervalg N2): kort med
-     side-miniatyr; valgt kort styrer hva + Opprett side starter fra. */
+  /* The "new page from template" grid: cards with a page thumbnail; the
+     picked card decides what + Create page starts from. */
   .page-mal-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -8653,8 +8772,8 @@
     opacity: 1;
   }
 
-  /* Seksjonstema-velgeren (V1, 0.6.6.4.6): levende prøver i sidens faktiske
-     temafarger - bakgrunn med tekstlinje, kort-chip og aksentprikk. */
+  /* The section theme picker: live samples in the site's actual theme
+     colors - a background with a text line, card chip and accent dot. */
   .rs-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -8737,7 +8856,7 @@
     object-fit: cover;
   }
 
-  /* Bakgrunnslagene i seksjonsegenskapene */
+  /* The background layers in the section properties */
   .bg-layer {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -8746,7 +8865,7 @@
     border-left: 2px solid rgb(255 255 255 / 12%);
   }
 
-  /* Kompakte verktøyrader (à la tekstbehandler) i panelene */
+  /* Compact toolbar rows (word-processor style) in the panels */
   .toolbar-row {
     display: flex;
     align-items: center;
@@ -8782,7 +8901,7 @@
     min-width: 0;
   }
 
-  /* Historikk-panelet */
+  /* The History panel */
   .history-row {
     display: grid;
     gap: 0.15rem;
@@ -8806,8 +8925,8 @@
     font-size: 0.76rem;
   }
 
-  /* Oppdaterings-panelet (0.6.9, redesignet 0.6.10): versjonskort, foldede
-     grupper og filrader i panel-pilotens idiom. */
+  /* The Update panel: version card, folded groups and file rows in the
+     panel idiom. */
   .update-versions { display: flex; align-items: center; gap: 0.45rem; font-size: 0.85rem; }
   .update-from { opacity: 0.7; }
   .update-arrow { display: inline-flex; opacity: 0.55; }
@@ -8827,7 +8946,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    direction: rtl; /* lange stier klippes i STARTEN, filnavnet er det som teller */
+    direction: rtl; /* long paths are clipped at the START, the file name is what matters */
     text-align: left;
   }
 
@@ -8855,7 +8974,7 @@
 
   .update-run { margin-top: 0.5rem; width: 100%; }
 
-  /* Oppsettsveiviseren */
+  /* The setup wizard */
   .confirm-line {
     opacity: 0.9;
     margin: 0;
@@ -8912,7 +9031,7 @@
     gap: 0.6rem;
   }
 
-  /* Felt inni panel-etiketter skal aldri sprenge bredden */
+  /* Fields inside panel labels must never blow up the width */
   .panel-body label > input {
     min-width: 0;
     max-width: 100%;
@@ -8931,7 +9050,7 @@
     resize: vertical;
   }
 
-  /* Posisjon/størrelse-feltene i Egenskaper: to kolonner med smale felt */
+  /* The position/size fields in Properties: two columns of narrow fields */
   .frame-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -8942,8 +9061,8 @@
     width: 4.2rem;
   }
 
-  /* Grupper i panelet (Tekst, Former): ser ut som blokk-knappene, men med
-     pil - åpnes til en vertikal liste av blokker under */
+  /* Groups in the panel (Text, Shapes): look like the block buttons, but
+     with an arrow - open into a vertical list of blocks below */
   .group summary {
     list-style: none;
     justify-content: space-between;
@@ -8966,8 +9085,8 @@
     border-color: var(--urd-color-accent, #7c5cff);
   }
 
-  /* «Plassering, lag og rotasjon» er en SEKSJONS-foldemeny, ikke en chip:
-     dropp pille-rammen, la den lese som en enkel overskriftsrad. */
+  /* The placement group is a SECTION fold, not a chip: drop the pill
+     frame, let it read as a simple heading row. */
   .frame-group summary {
     border: 0;
     border-radius: 0;
@@ -8980,8 +9099,8 @@
     border-color: transparent;
   }
 
-  /* Grupper er grid-elementer: uten min-width 0 nekter de å krympe til
-     panelbredden, og innholdet (fargevelgere, brytere) kuttes i kanten */
+  /* Groups are grid items: without min-width 0 they refuse to shrink to
+     the panel width, and the content (color pickers, toggles) is cut at the edge */
   .group {
     min-width: 0;
   }
@@ -9000,15 +9119,15 @@
     opacity: 0.65;
   }
 
-  /* Felt-kontraktens søkestatus (place-felt): feil i destruktiv-rødt. */
+  /* The field contract's search status (place fields): errors in destructive red. */
   .panel-hint.place-error {
     color: #e05252;
     opacity: 1;
   }
 
-  /* Panel-språket (ADR-0016): delte byggeklosser alle panelene komponerer.
-     Kontekstklassene lenger ned bærer kun marger og barnestiler, aldri
-     egne kopier av disse oppskriftene. */
+  /* The panel language (ADR-0016): shared building blocks all the panels
+     compose. The context classes further down carry only margins and
+     child styles, never their own copies of these recipes. */
   .ctl-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
   .mini-label { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.6; }
   .chip { border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 999px; padding: 2px 9px; font: 600 10px system-ui, sans-serif; background: transparent; color: inherit; opacity: 0.75; }
@@ -9016,10 +9135,11 @@
   .chip.accent { border-color: var(--urd-color-accent); background: color-mix(in srgb, var(--urd-color-accent) 20%, transparent); opacity: 1; }
   .sample { padding: 11px 12px; background: color-mix(in srgb, currentColor 5%, transparent); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); border-radius: 9px; }
 
-  /* Innholdsbredde-prøven (ADR-0018): én stripe per vanlig skjermbredde.
-     Sporet er skjermen, fyllet er innholdsflaten, så forholdet mellom dem
-     ER innstillingen. Fluid stripe (bredden binder ikke der) tegnes dempet,
-     så det er synlig hvor innstillingen faktisk har effekt. */
+  /* The content-width sample (ADR-0018): one strip per common screen
+     width. The track is the screen, the fill is the content surface, so
+     the ratio between them IS the setting. A fluid strip (the width does
+     not bind there) is drawn dimmed, so it is visible where the setting
+     actually has effect. */
   .cw-sample { display: grid; gap: 5px; }
   .cw-row { display: grid; grid-template-columns: 2.6rem 1fr 2.2rem; align-items: center; gap: 8px; }
   .cw-screen { text-align: right; opacity: 0.55; }
@@ -9045,17 +9165,17 @@
   .cw-binds { padding-top: 7px; text-transform: none; letter-spacing: 0; opacity: 0.55; }
   .cw-seg { display: flex; width: 100%; }
   .cw-seg button { flex: 1; white-space: nowrap; }
-  /* Skyveknappene i kontroll-radene: etiketten venstre, verdien ytterst
-     høyre, sporet tar resten. */
+  /* The sliders in the control rows: the label on the left, the value at
+     the far right, the track takes the rest. */
   .ctl-row input[type="range"] { flex: 1; min-width: 0; }
 
-  /* Innhold/Stil-fanene øverst i blokk-egenskapene (ADR-0016): full bredde,
-     ellers segmentkontrollens vanlige oppskrift. */
+  /* The Content/Style tabs at the top of the block properties (ADR-0016):
+     full width, otherwise the segment control's usual recipe. */
   .props-tabs { display: flex; margin-bottom: 2px; }
   .props-tabs .seg { flex: 1; }
   .props-tabs .seg button { flex: 1; padding: 5px 0; font-size: 12px; }
 
-  /* Tema-forslag: rad med palett-miniatyrer (alle på én rad) */
+  /* Theme suggestions: a row of palette thumbnails (all on one row) */
   .theme-presets { display: flex; gap: 6px; margin: 6px 0 12px; }
   .theme-preset {
     flex: 1; min-width: 0; padding: 0; cursor: pointer; color: inherit; background: transparent;
@@ -9068,7 +9188,7 @@
   .theme-preset .tp-band i { flex: 1; }
   .theme-preset small { display: block; text-align: center; font-size: 9px; padding: 2px 0 3px; opacity: 0.8; }
 
-  /* Farger: Auto/Egne, palett-rader (Lys+Mørk), Standard-chip */
+  /* Colors: Auto/Custom, palette rows (Light+Dark), Standard chip */
   .autorow { margin: 8px 0 2px; }
   .autorow .autolbl { font-size: 0.85rem; opacity: 0.75; }
   .seg { display: inline-flex; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 999px; overflow: hidden; }
@@ -9083,7 +9203,7 @@
   .palcells .palhex { text-align: center; font: 400 9px ui-monospace, monospace; opacity: 0.7; letter-spacing: -0.02em; }
   .palcells.autopal .palcol { opacity: 0.7; }
 
-  /* Forhåndsvisning: hvordan hver farge påvirker siden (lys + mørk ved dual) */
+  /* Preview: how each color affects the page (light + dark with dual mode) */
   .theme-previews { display: flex; gap: 10px; margin-top: 13px; }
   .theme-pvw { flex: 1; min-width: 0; }
   .tpv-cap { margin-bottom: 5px; }
@@ -9094,7 +9214,7 @@
   .tpv-btn { background: var(--tv-accent); color: var(--tv-accent-ink); font: 600 10.5px system-ui, sans-serif; padding: 5px 11px; border-radius: 999px; }
   .tpv-lnk { color: var(--tv-accent); font: 600 10.5px system-ui, sans-serif; border-bottom: 1.5px solid currentColor; }
 
-  /* Typografi-prøve + Form-hjørneprøve (flaten kommer fra .sample) */
+  /* Typography sample + shape corner sample (the surface comes from .sample) */
   .typo-sample { margin-top: 10px; }
   .typo-sample .ts-h { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
   .typo-sample .ts-b { font-size: 12.5px; opacity: 0.7; line-height: 1.5; }
@@ -9102,8 +9222,8 @@
   .form-prev .fp-btn { background: var(--urd-color-accent); color: var(--urd-color-bg); font: 600 12px system-ui, sans-serif; padding: 8px 15px; border-radius: var(--r-sm); }
   .form-prev .fp-card { flex: 1; height: 42px; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); border-radius: var(--r-md); display: grid; place-items: center; font-size: 11px; opacity: 0.7; }
 
-  /* Bryterrader som moderne innstillinger: tekst til venstre, bryter
-     ytterst til høyre (markupen har input først; row-reverse snur) */
+  /* Toggle rows as modern settings: text on the left, the toggle at the
+     far right (the markup has the input first; row-reverse flips it) */
   .gridmenu-snap {
     flex-direction: row-reverse;
     justify-content: space-between;
@@ -9115,7 +9235,7 @@
     opacity: 0.75;
   }
 
-  /* Bilde-bakgrunnslag: fokuspunkt-pad (dra), under-sliders og størrelse-stepper */
+  /* Image background layer: focal-point pad (drag), sub-sliders and size stepper */
   .focalpad {
     position: relative;
     width: 100%;
@@ -9173,7 +9293,7 @@
     font-variant-numeric: tabular-nums;
   }
   .sizeunit { opacity: 0.6; }
-  /* «Dekk» / «Vis hele»-hurtigknapper for Størrelse */
+  /* "Cover" / "Show all" quick buttons for Size */
   .sizefill { display: flex; gap: 6px; margin: 0 0 8px; }
   .sizefill button {
     flex: 1;
@@ -9213,8 +9333,8 @@
     text-decoration: none;
   }
 
-  /* Knapper skal SE UT som knapper: fylt flate, tydelig hover og et
-     lite trykk ved klikk. Felt (input) forblir flate. */
+  /* Buttons must LOOK like buttons: a filled surface, clear hover and a
+     small press on click. Fields (input) stay flat. */
   button,
   .ghost {
     display: inline-flex;
@@ -9235,8 +9355,8 @@
     transform: translateY(1px);
   }
 
-  /* Kontroller skal ikke arve sidens luftige line-height (1.6 fra
-     base.css via font: inherit): stram linjeboks gir jevn sentrering */
+  /* Controls must not inherit the page's airy line-height (1.6 from
+     base.css via font: inherit): a tight line box gives even centering */
   button,
   .ghost,
   input {
@@ -9260,26 +9380,28 @@
   .frame-wrap {
     flex: 1;
     min-height: 0;
-    /* Ingen scrollbar rundt lerretet: siden scroller inni iframen med sin
-       EGEN scrollbar, så en her ville vært den andre. Kun manuell zoom forbi
-       flaten slår på panorering (.pan). */
+    /* No scrollbar around the canvas: the page scrolls inside the iframe
+       with its OWN scrollbar, so one here would be the second. Only
+       manual zoom past the surface enables panning (.pan). */
     overflow: hidden;
     display: flex;
-    /* 'safe' hindrer at topp/venstre klippes bort når lerretet er større enn
-       flaten (100%-modus): da forankres det i stedet for å sentreres vekk. */
+    /* 'safe' keeps the top/left from being clipped when the canvas is
+       larger than the surface (100% mode): it is then anchored instead of
+       centered away. */
     justify-content: safe center;
     align-items: safe center;
-    background: #08090d;            /* letterbox-flate rundt lerretet */
+    background: #08090d;            /* letterbox surface around the canvas */
   }
 
-  /* Manuell zoom forbi flaten: da MÅ man kunne panorere for å nå resten. */
+  /* Manual zoom past the surface: then panning MUST be possible to reach the rest. */
   .frame-wrap.pan {
     overflow: auto;
   }
 
-  /* Lerretsboksen har den SKALERTE størrelsen; iframen inni står i full
-     målviewport og skaleres med transform (se markup), så render-en er
-     identisk med publisert - kun visningsstørrelsen endres. */
+  /* The stage box has the SCALED size; the iframe inside stands in the
+     full target viewport and is scaled with transform (see markup), so
+     the render is identical to the published page - only the display
+     size changes. */
   .stage {
     flex: 0 0 auto;
     position: relative;
@@ -9291,8 +9413,8 @@
     display: block;
   }
 
-  /* Mobilvisning: iframen står i 390px (motorens matchMedia styres av
-     urd-viewport, ikke bredden) og skaleres for å passe; mørk backdrop. */
+  /* Mobile view: the iframe stands at 390px (the engine's matchMedia is
+     driven by urd-viewport, not the width) and is scaled to fit; dark backdrop. */
   .frame-wrap.mobile {
     background: #08090d;
   }
@@ -9309,9 +9431,9 @@
     align-items: center;
   }
 
-  /* Verktøyklyngene: lett ramme rundt hver gruppe, med en versal-etikett
-     foran. Knappene inni mister sin egen kant, så gruppen leses som én
-     enhet i stedet for som tre til fire løse knapper. */
+  /* The tool clusters: a light frame around each group, with an
+     uppercase label in front. The buttons inside lose their own border,
+     so the group reads as one unit instead of three or four loose buttons. */
   .toolgrp {
     display: inline-flex;
     align-items: center;
@@ -9332,18 +9454,18 @@
     white-space: nowrap;
   }
 
-  /* Utkast-statusen står i sin egen gruppe mellom verktøyene og utgivelsen,
-     så den ikke leses som en del av verken det ene eller det andre. */
+  /* The draft status stands in its own group between the tools and
+     publishing, so it does not read as part of either. */
   .topbar-draft {
     display: flex;
     align-items: center;
     gap: 0.4rem;
     flex: none;
-    /* Forankring for bekreftelsespilla, som svever under linja. */
+    /* Anchor for the confirmation pill, which floats below the bar. */
     position: relative;
   }
 
-  /* Skall for exit-overgangen: chip + forkast glir ut som ETT stykke. */
+  /* Shell for the exit transition: chip + discard slide out as ONE piece. */
   .draft-cluster {
     display: inline-flex;
     align-items: center;
@@ -9351,8 +9473,8 @@
   }
 
   .draft-chip {
-    /* Flex, ikke inline: kortformen «!» skal kunne sentreres i en sirkel med
-       satt bredde og høyde på det smaleste foldetrinnet. */
+    /* Flex, not inline: the short form "!" must center in a circle with a
+       set width and height at the narrowest fold step. */
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -9360,17 +9482,18 @@
     background: color-mix(in srgb, #e2b84a 13%, transparent);
     color: #e2b84a;
     opacity: 1;
-    /* .chip er 10px, dimensjonert for panelene der teksten rundt er liten.
-       I topplinja bruker knappene font: inherit (0.9rem), så chipen må opp
-       for ikke å bli halvparten så stor som alt ved siden av. */
+    /* .chip is 10px, sized for the panels where the surrounding text is
+       small. In the top bar the buttons use font: inherit (0.9rem), so
+       the chip must go up to avoid being half the size of everything
+       next to it. */
     font-size: 0.78rem;
     font-weight: 600;
     padding: 0.3em 0.8em;
   }
 
-  /* Bredest: full pille med teksten. Fra første foldetrinn: bare sirkelen.
-     Væpnet vokser den MOT VENSTRE til «Sikker?», så alt til høyre står stille
-     i det man klikker. */
+  /* Widest: a full pill with the text. From the first fold step: just the
+     circle. Armed, it grows TO THE LEFT, so everything to the right
+     stands still as you click. */
   .discard-dot {
     display: inline-flex;
     align-items: center;
@@ -9388,15 +9511,15 @@
     font-size: 0.78rem;
   }
 
-  /* :not(:disabled) gir hover-reglene i forkast-familien like mange ledd som
-     den globale `button:hover:not(:disabled)`, så den røde flaten slår
-     gjennom det hvite sløret der. */
+  /* :not(:disabled) gives the hover rules in the discard family as many
+     parts as the global `button:hover:not(:disabled)`, so the red surface
+     wins over the white veil there. */
   .discard-dot:hover:not(:disabled) {
     background: color-mix(in srgb, #e2705f 22%, transparent);
     border-color: color-mix(in srgb, #e2705f 70%, transparent);
   }
 
-  /* Væpnet endrer farge, ikke bredde: bekreftelsen bor i pilla under. */
+  /* Armed changes color, not width: the confirmation lives in the pill below. */
   .discard-dot.armed,
   .discard-dot.armed:hover:not(:disabled) {
     background: #d94f3d;
@@ -9410,10 +9533,10 @@
     align-items: center;
   }
 
-  /* Bekreftelsen svever under topplinja, sentrert under knappen den hører
-     til. Egen flate og eget klikkmål: en ny plassering krever et bevisst
-     treff, så et raskt dobbeltklikk på forkast-knappen kan ikke kaste
-     utkastet ved uhell. */
+  /* The confirmation floats below the top bar, centered under the button
+     it belongs to. Its own surface and its own click target: a new
+     position requires a deliberate hit, so a quick double click on the
+     discard button cannot throw away the draft by accident. */
   .discard-confirm {
     position: absolute;
     top: calc(100% + 0.6rem);
@@ -9427,9 +9550,9 @@
     padding: 0.4rem 0.95rem;
     border: 1px solid color-mix(in srgb, #e2705f 55%, transparent);
     border-radius: 999px;
-    /* Hvile låner forkast-knappens hviledrakt: mørk flate, rød kant, rød
-       tekst. Tett flate her holder pilla lesbar uten frost-støtte; frosten
-       legges på i @supports under. */
+    /* Rest borrows the discard button's resting dress: dark surface, red
+       border, red text. A solid surface here keeps the pill readable
+       without frost support; the frost is added in @supports below. */
     background: var(--urd-color-surface, #151a23);
     color: #e2705f;
     font: inherit;
@@ -9439,8 +9562,8 @@
     box-shadow: 0 8px 22px rgb(0 0 0 / 40%);
   }
 
-  /* Under pekeren fylles den helt: den farlige handlingen slår ut i farge i
-     det øyeblikket den kan utløses. */
+  /* Under the pointer it fills completely: the dangerous action flares
+     into color the moment it can be triggered. */
   .discard-confirm:hover:not(:disabled) {
     background: #d94f3d;
     border-color: #d94f3d;
@@ -9452,26 +9575,27 @@
       background: color-mix(in srgb, var(--urd-color-surface, #151a23) 72%, transparent);
       backdrop-filter: blur(14px);
     }
-    /* Frosten gjelder hviletilstanden. Hover er tett rød, uavhengig av hva
-       som ligger bak. */
+    /* The frost applies to the resting state. Hover is solid red,
+       regardless of what lies behind. */
     .discard-confirm:hover:not(:disabled) {
       background: #d94f3d;
       backdrop-filter: none;
     }
   }
 
-  /* ---- Foldetrinnene ------------------------------------------------------
-     Topplinja holder én høyde og folder seg i faste trinn, i denne
-     rekkefølgen: forkast-teksten, gruppe-etikettene, knappetekstene til
-     høyre, og så klyngene ÉN OM GANGEN. Tersklene er kalibrert etter det
-     LENGSTE språket (tyrkisk), ikke bokmål, så et trinn aldri slår inn for
-     sent og linja må bryte. De tre siste har hver sin tvilling i FOLD_MQ.
-     Kortformene skjules her, før trinnene som slår dem på: lik spesifisitet
-     gjør at kilderekkefølgen avgjør. */
+  /* ---- Foldetrinnene (the fold steps; tests/topbar-fold.test.mjs anchors
+     on this heading) ---------------------------------------------------------
+     The top bar keeps one height and folds in fixed steps, in this order:
+     the discard text, the group labels, the button texts on the right,
+     and then the clusters ONE AT A TIME. The thresholds are calibrated
+     for the LONGEST language (Turkish), not Bokmål, so a step never kicks
+     in too late and forces the bar to wrap. The last three each have a
+     twin in FOLD_MQ. The short forms are hidden here, before the steps
+     that turn them on: equal specificity means source order decides. */
   .badge-mini,
   .chip-mini { display: none; }
 
-  /* Trinn 1: forkast-knappen slipper teksten og blir sirkelen. */
+  /* Step 1: the discard button drops its text and becomes the circle. */
   @media (max-width: 1499px) {
     .discard-dot {
       width: 1.7rem;
@@ -9480,33 +9604,34 @@
     .discard-label { display: none; }
   }
 
-  /* Trinn 2: versal-etikettene over klyngene forsvinner. Klyngerammene står
-     igjen, så de tre gruppene leses fortsatt hver for seg. */
+  /* Step 2: the uppercase labels above the clusters disappear. The
+     cluster frames remain, so the three groups still read separately. */
   @media (max-width: 1359px) {
     .tool-cap { display: none; }
   }
 
-  /* Trinn 3: knappene til høyre blir rene ikoner, og GitHub-brukeren viker.
-     Publiser beholder alltid ordet: det er linjas eneste farlige handling. */
+  /* Step 3: the buttons on the right become pure icons, and the GitHub
+     user yields. Publish always keeps its word: it is the bar's only
+     dangerous action. */
   @media (max-width: 1179px) {
     .btn-label { display: none; }
     .badge-mini { display: inline; }
     .who { display: none; }
   }
 
-  /* Trinn 4: Vis-klyngen blir meny (FOLD_MQ.view). Rutenett og hjelpelinjer
-     slås av og på sjelden, så den viker først av de tre. */
+  /* Step 4: the View cluster becomes a menu (FOLD_MQ.view). Grid and
+     guides are toggled rarely, so it yields first of the three. */
   @media (max-width: 1079px) {
     .topbar { gap: 0.5rem; }
     .topbar-group { gap: 0.5rem; }
   }
 
-  /* Trinn 5: Enhet-klyngen blir meny (FOLD_MQ.device) og statusen blir «!». */
+  /* Step 5: the Device cluster becomes a menu (FOLD_MQ.device) and the status becomes "!". */
   @media (max-width: 999px) {
     .chip-full { display: none; }
     .chip-mini { display: inline; }
-    /* Statusen blir en sirkel på størrelse med forkast-sirkelen ved siden av,
-       så de to leses som ett par i stedet for som pille pluss prikk. */
+    /* The status becomes a circle the size of the discard circle next to
+       it, so the two read as one pair instead of pill plus dot. */
     .draft-chip {
       width: 1.7rem;
       height: 1.7rem;
@@ -9514,9 +9639,10 @@
     }
   }
 
-  /* Trinn 6: Zoom-klyngen blir meny (FOLD_MQ.zoom). Zoom justeres oftest av
-     de tre og beholder derfor pluss og minus lengst. Mellomrom og kantmarg
-     strammes samtidig helt inn: nå er de det siste som er å ta av. */
+  /* Step 6: the Zoom cluster becomes a menu (FOLD_MQ.zoom). Zoom is
+     adjusted most often of the three and therefore keeps plus and minus
+     the longest. Gaps and edge margins are tightened fully at the same
+     time: now they are the last thing left to take. */
   @media (max-width: 919px) {
     .topbar {
       gap: 0.4rem;
@@ -9525,12 +9651,13 @@
     .topbar-group { gap: 0.4rem; }
   }
 
-  /* Skallet rundt klyngene finnes bare som ÉN node for klikk-utenfor-testen;
-     det skal ikke lage en boks, så barna ligger rett i topplinjas flex. */
+  /* The shell around the clusters exists only as ONE node for the
+     outside-click test; it must not create a box, so the children sit
+     directly in the top bar's flex. */
   .toolset { display: contents; }
 
-  /* De sammenfoldede klyngene: en knapp som bærer gjeldende verdi, og en
-     popover under. Bare én er åpen om gangen. */
+  /* The folded clusters: a button carrying the current value, and a
+     popover below. Only one is open at a time. */
   .toolmenu {
     position: relative;
     display: inline-flex;
@@ -9541,8 +9668,9 @@
     padding: 0.35em 0.55em;
   }
 
-  /* Zoom-tallet skifter mellom to og tre sifre. Fast bredde med tabellsiffer
-     holder knappen like bred gjennom hele skalaen og fyller flaten. */
+  /* The zoom number alternates between two and three digits. A fixed
+     width with tabular figures keeps the button equally wide across the
+     whole scale and fills the surface. */
   .zoom-cap {
     min-width: 2.6em;
     text-align: center;
@@ -9565,8 +9693,8 @@
     box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
   }
 
-  /* Loddrett meny: ikon og tekst starter i venstrekanten, ikke sentrert som
-     den globale knappestilen gjør. */
+  /* Vertical menu: icon and text start at the left edge, not centered
+     as the global button style does. */
   .tool-pop .ghost {
     justify-content: flex-start;
     width: 100%;
