@@ -1,25 +1,25 @@
 /**
- * Avhengighetsfri iCal-parser og gjentakelses-ekspander for kalender-pluginen.
- * REN modul (ingen DOM, ingen fetch): alt her kan enhetstestes i node, og
- * index.js står for henting og rendering.
+ * Dependency-free iCal parser and recurrence expander for the calendar
+ * plugin. A PURE module (no DOM, no fetch): everything here is unit-testable
+ * in node, and index.js handles fetching and rendering.
  *
- * Omfanget er den praktiske delmengden foreningskalendere bruker (Google
- * Calendar, Outlook, Nextcloud): VEVENT med DTSTART/DTEND (UTC, TZID eller
- * heldag), RRULE med FREQ/INTERVAL/COUNT/UNTIL/BYDAY/BYMONTHDAY, EXDATE og
- * RECURRENCE-ID-overstyringer. Ukjente egenskaper ignoreres rolig.
+ * The scope is the practical subset that club calendars use (Google
+ * Calendar, Outlook, Nextcloud): VEVENT with DTSTART/DTEND (UTC, TZID or
+ * all-day), RRULE with FREQ/INTERVAL/COUNT/UNTIL/BYDAY/BYMONTHDAY, EXDATE
+ * and RECURRENCE-ID overrides. Unknown properties are ignored quietly.
  *
- * Tidssoner løses med Intl-API-et (ingen tabeller): veggtid i sonen
- * konverteres til UTC ved offset-estimering, som er DST-korrekt.
+ * Time zones are resolved with the Intl API (no tables): wall time in the
+ * zone is converted to UTC by estimating the offset, which is DST-correct.
  */
 
-/* ---------- Linje- og egenskapsparsing ---------- */
+/* ---------- Line and property parsing ---------- */
 
-/** Fold ut fortsettelseslinjer (RFC 5545: linjeskift + mellomrom/tab). */
+/** Unfolds continuation lines (RFC 5545: line break + space/tab). */
 function unfold(text) {
   return String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n[ \t]/g, '');
 }
 
-/** Én innholdslinje → { name, params, value }. Kolon inne i "..." tilhører parametre. */
+/** One content line → { name, params, value }. A colon inside "..." belongs to the parameters. */
 function parseLine(line) {
   let inQuotes = false;
   let split = -1;
@@ -41,17 +41,17 @@ function parseLine(line) {
   return { name: name.toUpperCase(), params, value };
 }
 
-/** Tekstverdier: \n, \, \; og \\ er escapet i iCal. */
+/** Text values: \n, \, \; and \\ are escaped in iCal. */
 function unescapeText(value) {
   return String(value)
     .replace(/\\n/gi, '\n')
     .replace(/\\([,;\\])/g, '$1');
 }
 
-/* ---------- Dato og tidssone ---------- */
+/* ---------- Date and time zone ---------- */
 
-/** Veggtid i en IANA-sone → UTC-ms. Offset estimeres med Intl og justeres én
- *  gang til, som fanger DST-overganger. Ukjent sone faller tilbake til lokal tid. */
+/** Wall time in an IANA zone → UTC ms. The offset is estimated with Intl and
+ *  adjusted once more, which catches DST transitions. An unknown zone falls back to local time. */
 function zonedToUtc(y, mo, d, h, mi, s, timeZone) {
   let formatter;
   try {
@@ -75,7 +75,7 @@ function zonedToUtc(y, mo, d, h, mi, s, timeZone) {
   return utc;
 }
 
-/** Dato-verdi → { y, mo, d, h, mi, s, allDay, tzid } (veggtid + sone), eller null. */
+/** Date value → { y, mo, d, h, mi, s, allDay, tzid } (wall time + zone), or null. */
 function parseDateParts(value, params = {}) {
   const v = String(value).trim();
   let m = /^(\d{4})(\d{2})(\d{2})$/.exec(v);
@@ -93,7 +93,7 @@ function parseDateParts(value, params = {}) {
   };
 }
 
-/** Veggtid-deler → UTC-ms. Heldag tolkes som lokal midnatt (rendres som dato). */
+/** Wall-time parts → UTC ms. All-day is read as local midnight (rendered as a date). */
 export function partsToMs(parts) {
   if (!parts) return NaN;
   const { y, mo, d, h, mi, s, tzid, allDay } = parts;
@@ -102,7 +102,7 @@ export function partsToMs(parts) {
   return zonedToUtc(y, mo, d, h, mi, s, tzid);
 }
 
-/** Kalender-aritmetikk på veggtid-deler (DST-trygt: klokkeslettet består). */
+/** Calendar arithmetic on wall-time parts (DST-safe: the clock time survives). */
 function addDays(parts, days) {
   const base = new Date(Date.UTC(parts.y, parts.mo - 1, parts.d + days));
   return { ...parts, y: base.getUTCFullYear(), mo: base.getUTCMonth() + 1, d: base.getUTCDate() };
@@ -119,12 +119,12 @@ const daysInMonth = (y, mo) => new Date(Date.UTC(y, mo, 0)).getUTCDate();
 
 const BYDAY_CODES = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 };
 
-/* ---------- VEVENT-parsing ---------- */
+/* ---------- VEVENT parsing ---------- */
 
 /**
- * Parser en hel iCal-tekst.
- * @returns {{ name: string|null, events: object[] }} events er RÅ hendelser
- *   (én per VEVENT, gjentakelser IKKE ekspandert); se expandEvents.
+ * Parses a whole iCal text.
+ * @returns {{ name: string|null, events: object[] }} events are RAW events
+ *   (one per VEVENT, recurrences NOT expanded); see expandEvents.
  */
 export function parseIcs(text) {
   const lines = unfold(text).split('\n');
@@ -200,9 +200,9 @@ function parseRrule(value) {
   };
 }
 
-/* ---------- Ekspansjon ---------- */
+/* ---------- Expansion ---------- */
 
-/** Genererer veggtid-starter for en regel, fra DTSTART og fremover (sortert). */
+/** Generates wall-time starts for a rule, from DTSTART onwards (sorted). */
 function* ruleStarts(startParts, rule) {
   const guard = 3000;
   let produced = 0;
@@ -213,7 +213,7 @@ function* ruleStarts(startParts, rule) {
     }
   } else if (rule.freq === 'WEEKLY') {
     const days = (rule.byday?.length ? rule.byday.map((b) => b.day) : [weekday(startParts)]).sort();
-    // Uken ankres i DTSTART-dagens uke (ukestart søndag, som getUTCDay).
+    // The week is anchored in the week of the DTSTART day (weeks start on Sunday, like getUTCDay).
     const weekAnchor = addDays(startParts, -weekday(startParts));
     for (let week = 0; produced < guard; week += rule.interval) {
       for (const day of days) {
@@ -230,7 +230,7 @@ function* ruleStarts(startParts, rule) {
       let candidates = [];
       if (rule.byday?.length) {
         for (const { ord, day } of rule.byday) {
-          // n-te (eller n-te siste) ukedag i måneden; ord 0 = alle.
+          // The nth (or nth from last) weekday of the month; ord 0 means all of them.
           const matches = [];
           for (let d = 1; d <= dim; d++) {
             if (weekday({ ...month, d }) === day) matches.push(d);
@@ -262,11 +262,11 @@ function* ruleStarts(startParts, rule) {
 }
 
 /**
- * Ekspanderer rå hendelser til konkrete forekomster i et vindu.
- * RECURRENCE-ID-hendelser overstyrer basisforekomsten sin, EXDATE fjerner,
- * STATUS:CANCELLED fjerner. Resultatet er sortert på start.
+ * Expands raw events into concrete occurrences inside a window.
+ * A RECURRENCE-ID event overrides its base occurrence, EXDATE removes one,
+ * and STATUS:CANCELLED removes one. The result is sorted by start.
  *
- * @param {object[]} events fra parseIcs
+ * @param {object[]} events from parseIcs
  * @param {{ from?: Date|number, to?: Date|number, max?: number }} window
  * @returns {Array<{ summary, description, location, url, start: number, end: number, allDay: boolean, uid }>}
  */
@@ -274,7 +274,7 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
   const fromMs = Number(from);
   const toMs = to != null ? Number(to) : fromMs + 400 * 24 * 3600 * 1000;
 
-  // Overstyringer: uid + basisforekomstens start → erstatningshendelse.
+  // Overrides: uid + the base occurrence's start → the replacement event.
   const overrides = new Map();
   for (const event of events) {
     if (event.uid && event.recurrenceId) {
@@ -301,7 +301,7 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
     if (event.recurrenceId) continue;
     const startMs = partsToMs(event.start);
     if (!Number.isFinite(startMs)) continue;
-    // Heldagshendelsers DTEND er eksklusiv i iCal; ellers er varighet = DTEND - DTSTART.
+    // DTEND is exclusive for all-day events in iCal; otherwise the duration is DTEND - DTSTART.
     const durationMs = event.end
       ? Math.max(0, partsToMs(event.end) - startMs - (event.start.allDay ? 24 * 3600 * 1000 : 0))
       : (event.start.allDay ? 0 : 3600 * 1000);
@@ -337,20 +337,20 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
   return out.slice(0, max);
 }
 
-/* ---------- Konvensjoner (ApeironLF-mønstrene) ---------- */
+/* ---------- Conventions (the ApeironLF patterns) ---------- */
 
-/** «Kategori: Tittel» → { category, title }; uten kolon-prefiks er category null. */
+/** "Category: Title" → { category, title }; without a colon prefix category is null. */
 export function splitCategory(summary) {
   const m = /^([^:]{1,24}):\s+(.+)$/.exec(String(summary ?? '').trim());
   if (!m || /https?$/i.test(m[1])) return { category: null, title: String(summary ?? '').trim() };
   return { category: m[1].trim(), title: m[2].trim() };
 }
 
-/** Påmeldingslenke fra beskrivelsen: en linje med «påmelding» foretrekkes, ellers første URL. */
+/** Signup link from the description: a line naming a signup wins, otherwise the first URL. */
 export function findSignupLink(description) {
   const text = String(description ?? '');
   const urlPattern = /https?:\/\/[^\s<>"')\]]+/i;
-  // Avsluttende skilletegn hører til setningen, ikke lenken.
+  // Trailing punctuation belongs to the sentence, not to the link.
   const clean = (url) => url.replace(/[.,;:!?]+$/, '');
   for (const line of text.split('\n')) {
     if (/påmeld|pamel|sign\s?up|registrer/i.test(line)) {
@@ -363,10 +363,10 @@ export function findSignupLink(description) {
 }
 
 /**
- * Normaliserer en kilde slik eieren skriver den:
- * webcal:// → https://, https beholdes, http løftes til https, og en ren
- * Google-kalender-id (noe@gmail.com / ...@group.calendar.google.com) blir
- * dens offentlige ICS-adresse. Ukjent form gir null.
+ * Normalizes a source the way the owner writes it:
+ * webcal:// → https://, https is kept, http is lifted to https, and a bare
+ * Google calendar id (someone@gmail.com / ...@group.calendar.google.com)
+ * becomes its public ICS address. An unknown form gives null.
  */
 export function normalizeSourceUrl(input) {
   const raw = String(input ?? '').trim();
@@ -380,7 +380,7 @@ export function normalizeSourceUrl(input) {
   return null;
 }
 
-/** Abonner-lenker for en kilde: webcal alltid; Google-kalendere får også «legg til i Google». */
+/** Subscribe links for a source: webcal always; Google calendars also get "add to Google". */
 export function subscribeLinks(url) {
   const normalized = normalizeSourceUrl(url);
   if (!normalized) return null;

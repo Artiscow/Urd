@@ -1,6 +1,6 @@
 /**
- * Kalender-pluginens tekstar, norsk nynorsk. Legg seg oppå bokmålsbasen
- * (nb.js); paritetstesten held nøkkelsetta i synk.
+ * Calendar plugin texts, Norwegian Nynorsk (nn). Layered on top of the nb
+ * base (nb.js); the parity test keeps the key sets in sync.
  */
 export default {
   lang: 'nn',

@@ -1,9 +1,9 @@
 /**
- * Admin-tekster, norsk bokmål (basen: lastes alltid først, andre språk
- * legges oppå, så manglende nøkler faller tilbake hit). Kjøretids-lastes
- * av editorens main.js og av preview-chromen - aldri bundlet, så en
- * oversettelsesendring krever ingen bygging. Paritetstesten
- * (tests/i18n.test.mjs) holder språkfilene i synk.
+ * Admin strings, Norwegian Bokmål (the base: always loaded first, other
+ * languages layer on top, so missing keys fall back here). Loaded at
+ * runtime by the editor's main.js and by the preview chrome, never
+ * bundled, so a translation change needs no build. The parity test
+ * (tests/i18n.test.mjs) keeps the language files in sync.
  */
 export default {
   lang: 'nb',

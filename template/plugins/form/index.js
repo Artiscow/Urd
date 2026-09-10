@@ -1,30 +1,32 @@
 /**
- * Skjema-referansepluginen (v0.6 M4): et contact-form etter ApeironLF-modellen.
- * Sender som standard via mottakerens e-postklient (mailto, null oppsett), eller
- * til et valgfritt endepunkt (eierens Apps Script / Pages Function) via fetch.
- * Honeypot-felt mot bots. Følger kalender-referansen: egen CSS via én style-tag,
- * hover-konfigpanel, hjelpechip (ADR-0008), temastyrte nedtrekk (ADR-0009).
+ * The form reference plugin: a contact form following the ApeironLF model.
+ * By default it sends through the visitor's email client (mailto, zero
+ * setup), or to an optional endpoint (the owner's Apps Script or Pages
+ * Function) via fetch. A honeypot field guards against bots. It follows the
+ * calendar reference: its own CSS in one style tag, a hover config panel, a
+ * help chip (ADR-0008) and theme-driven dropdowns (ADR-0009).
  *
- * Besøkende-input settes ALDRI som HTML (kun .value/textContent). Endepunkt-modus
- * krever at eieren åpner connect-src for endepunktet i _headers (ADR-0006);
- * blir innsendingen blokkert, forklarer blokken den nøyaktige linjen.
+ * Visitor input is NEVER set as HTML (only .value/textContent). Endpoint mode
+ * requires the owner to open connect-src for the endpoint in _headers
+ * (ADR-0006); when a submission is blocked, the block explains the exact line.
  */
 import {
   isSpam, validate, buildMailto, buildPayload, endpointOrigin,
 } from './form.js';
 import { createDropdown } from '/assets/urd/dropdown.js';
-// Flerspråk (ADR-0012): t() for besøkende-tekster (site-språket), ta() for
-// editor-chromen og seed-defaults (admin-språket). Ordboka (locales/) lastes
-// av plugin-lasteren FØR register() - t/ta kalles aldri på modulnivå.
+// Multilingual (ADR-0012): t() for visitor texts (the site language), ta()
+// for the editor chrome and the seed defaults (the admin language). The
+// dictionary (locales/) is loaded by the plugin loader BEFORE register() -
+// t/ta are never called at module level.
 import { t, ta } from '/assets/urd/i18n.js';
 
-/** Felttype-id + etikett-NØKKEL (ta-oppslag ved bruk; aldri på modulnivå). */
+/** Field type id + label KEY (looked up with ta at use time; never at module level). */
 const FIELD_TYPES = [
   ['text', 'form.edit.typeText'], ['email', 'form.edit.typeEmail'], ['tel', 'form.edit.typeTel'], ['textarea', 'form.edit.typeTextarea'],
   ['select', 'form.edit.typeSelect'], ['checkbox', 'form.edit.typeCheckbox'], ['radio', 'form.edit.typeRadio'], ['date', 'form.edit.typeDate'],
 ];
 
-/** Felttyper med alternativliste (feltets `options`, additivt fra v0.7). */
+/** Field types that carry an option list (the field's `options`). */
 const OPTION_TYPES = new Set(['select', 'radio']);
 
 const el2 = (tag, className, textContent) => {
@@ -41,11 +43,12 @@ const fieldId = () => {
 
 const post = (msg) => window.parent?.postMessage(msg, location.origin);
 
-/* ---------- Skjemarendering ---------- */
+/* ---------- Form rendering ---------- */
 
 function fieldControl(field) {
-  // Nedtrekk hos besøkende er NATIVE select med color-scheme (ADR-0009 gjelder
-  // kun redigerings-UI); en tom plassholder-opsjon gjør påkrevd-sjekken mulig.
+  // A visitor-facing dropdown is a NATIVE select with color-scheme (ADR-0009
+  // covers editing UI only); an empty placeholder option is what makes the
+  // required check possible.
   if (field.type === 'select') {
     const control = el2('select', 'urd-form-input urd-form-select');
     const placeholder = el2('option', null, t('form.choose'));
@@ -77,11 +80,11 @@ function fieldControl(field) {
   return control;
 }
 
-/** Én skjemarad for feltet: struktur og kontroll varierer med typen. */
+/** One form row for the field: structure and control vary with the type. */
 function fieldRow(field, controls) {
   const star = field.required ? ' *' : '';
-  // Radiogruppe: fieldset/legend i stedet for label-innpakking, én radio per
-  // alternativ med delt name. Høsting leser gruppens :checked.
+  // Radio group: fieldset/legend instead of a wrapping label, one radio per
+  // option sharing a name. Harvesting reads the group's :checked.
   if (field.type === 'radio') {
     const row = el2('fieldset', 'urd-form-row urd-form-fieldset');
     row.appendChild(el2('legend', 'urd-form-label', field.label + star));
@@ -97,7 +100,7 @@ function fieldRow(field, controls) {
     controls[field.id] = row;
     return row;
   }
-  // Avkryssing: boksen står FØR etiketten, som konvensjonen er.
+  // Checkbox: the box comes BEFORE the label, as the convention is.
   if (field.type === 'checkbox') {
     const row = el2('label', 'urd-form-row urd-form-checkrow');
     const inner = el2('span', 'urd-form-check');
@@ -128,7 +131,7 @@ function renderForm(host, props, ctx) {
     form.appendChild(row);
   }
 
-  // Honeypot: skjult for mennesker, bots fyller det ut. Aldri synlig, aldri tab-bar.
+  // Honeypot: hidden from humans, filled in by bots. Never visible, never tabbable.
   const honeypot = el2('input', 'urd-form-hp');
   honeypot.type = 'text';
   honeypot.name = 'nettside';
@@ -155,8 +158,8 @@ function renderForm(host, props, ctx) {
     event.preventDefault();
     status.className = 'urd-form-status';
     status.textContent = '';
-    // Per-type høsting: avkryssing er boolsk, radiogruppen leser :checked,
-    // resten leser .value.
+    // Per-type harvesting: a checkbox is boolean, a radio group reads
+    // :checked, and the rest read .value.
     const values = {};
     for (const field of fields) {
       const control = controls[field.id];
@@ -165,7 +168,7 @@ function renderForm(host, props, ctx) {
           : (control?.value ?? '');
     }
 
-    // Spam: lat som om det gikk bra, men send ingenting (ikke tips boten).
+    // Spam: act as if it went through, but send nothing (do not tip off the bot).
     if (isSpam(honeypot.value)) {
       status.classList.add('ok');
       status.textContent = props.successText || t('form.thanks');
@@ -224,7 +227,7 @@ function renderForm(host, props, ctx) {
   host.appendChild(form);
 }
 
-/* ---------- Konfigpanel (i forhåndsvisningen) ---------- */
+/* ---------- Config panel (in the preview) ---------- */
 
 function configPanel(el, props, ctx) {
   const gear = el2('button', 'urd-form-gear urd-cfg-toggle', `⚙ ${ta('form.edit.gear')}`);
@@ -267,9 +270,10 @@ function configPanel(el, props, ctx) {
   };
   syncMode();
 
-  // Feltredigering: legg til, endre navn/type/påkrevd, fjern. Nedtrekk og
-  // radio får en egen alternativlinje (kommaseparert) rett under raden sin;
-  // typebytte re-rendrer listen så linjen vises kun der den gjelder.
+  // Field editing: add, change name/type/required, remove. Select and radio
+  // get their own option line (comma separated) right under their row;
+  // changing the type re-renders the list, so the line shows only where it
+  // applies.
   let fields = (props.fields ?? []).map((f) => ({ ...f, options: Array.isArray(f.options) ? [...f.options] : undefined }));
   const fieldList = el2('div', 'urd-form-fieldlist');
   const renderFields = () => {
@@ -322,8 +326,8 @@ function configPanel(el, props, ctx) {
         label: (f.label || ta('form.edit.fieldFallback')).trim(),
         type: f.type || 'text',
         required: f.required !== false,
-        // Alternativlisten følger kun typene som bruker den; et typebytte
-        // bort fra nedtrekk/radio etterlater ingen foreldreløs liste.
+        // The option list follows only the types that use it, so changing
+        // the type away from select or radio leaves no orphaned list.
         ...(OPTION_TYPES.has(f.type) ? { options: (f.options ?? []).filter(Boolean) } : {}),
       }))
       .filter((f) => f.label);
@@ -373,7 +377,7 @@ function configPanel(el, props, ctx) {
   return [gear, panel];
 }
 
-/* ---------- Autovekst (samme mønster som samling/kalender) ---------- */
+/* ---------- Auto-grow (the same pattern as collection and calendar) ---------- */
 
 function autoGrow(el, host, ctx) {
   const needed = host.scrollHeight;
@@ -382,9 +386,9 @@ function autoGrow(el, host, ctx) {
     const sectionEl = el.closest('.urd-section');
     if (sectionEl) {
       const bottom = el.offsetTop + needed + 24;
-      // Nav-klaringen (--urd-section-clear) er med i computed min-height, men
-      // ikke i innholdshøyden: den holdes utenfor sammenligningen og skrives
-      // tilbake i kalkylen (samme form som render.js setter).
+      // The nav clearance (--urd-section-clear) is part of the computed
+      // min-height but not of the content height: it is kept out of the
+      // comparison and written back into the calc (the shape render.js sets).
       const cs = getComputedStyle(sectionEl);
       const clear = Number.parseFloat(cs.getPropertyValue('--urd-section-clear')) || 0;
       const current = (Number.parseFloat(cs.minHeight) || 0) - clear;
@@ -394,8 +398,8 @@ function autoGrow(el, host, ctx) {
       const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
       if (block && block.frames.desktop.h !== needed) {
         block.frames.desktop = { ...block.frames.desktop, h: needed };
-        // KUN høyden meldes (urd-grow), aldri hele framen: ellers ville en
-        // dratt blokk teleporteres tilbake til snapshotets gamle x/y.
+        // ONLY the height is posted (urd-grow), never the whole frame: a
+        // dragged block would otherwise teleport back to the snapshot's old x/y.
         post({ type: 'urd-grow', sectionId: ctx.section.id, blockId: el.dataset.blockId, h: needed });
       }
     }
@@ -414,8 +418,8 @@ const SKJEMA_CSS = `
   border-radius: var(--urd-radius-sm); padding: 8px 10px; width: 100%; }
 .urd-form-input:focus { outline: 2px solid var(--urd-color-accent); outline-offset: 1px; }
 textarea.urd-form-input { resize: vertical; min-height: 90px; }
-/* Native nedtrekk/dato hos besøkende (ADR-0009 gjelder kun redigerings-UI):
-   color-scheme lar popup og datovelger følge brukerens OS-tema. */
+/* Native select and date input for visitors (ADR-0009 covers editing UI only):
+   color-scheme lets the popup and the date picker follow the user's OS theme. */
 .urd-form-select, .urd-form-input[type="date"] { color-scheme: light dark; }
 .urd-form-fieldset { border: 0; padding: 0; margin: 0; }
 .urd-form-fieldset legend { padding: 0; margin-bottom: 4px; }
@@ -434,10 +438,10 @@ textarea.urd-form-input { resize: vertical; min-height: 90px; }
 .urd-form-status.feil { color: #e05252; }
 .urd-form-tools { position: absolute; top: -32px; right: -6px; z-index: 5;
   display: flex; gap: 4px; align-items: center;
-  /* Usynlig bro ned til blokk-kanten, så hover overlever veien opp */
+  /* An invisible bridge down to the block edge, so hover survives the trip up */
   padding-bottom: 8px; }
 .urd-form-tools .urd-hint-chip { position: static; }
-/* Config-bryteren er skjult: innstillingene åpnes fra blokkens Egenskaper. */
+/* The config toggle is hidden: the settings open from the block's Properties panel. */
 .urd-form-gear { display: none; }
 .urd-block:hover .urd-form-gear, .urd-form-gear:focus-visible,
 .urd-form:has(.urd-form-config.vis) .urd-form-gear { opacity: 0.92; pointer-events: auto; }
@@ -471,7 +475,7 @@ function injectCss() {
   document.head.appendChild(style);
 }
 
-/* ---------- Blokken ---------- */
+/* ---------- The block ---------- */
 
 function renderSkjema(el, props, ctx) {
   injectCss();
@@ -481,7 +485,7 @@ function renderSkjema(el, props, ctx) {
 
   if (ctx.preview && ctx.viewport !== 'mobile') {
     const [gear, panel] = configPanel(el, props, ctx);
-    // «?» og «⚙ Skjema» i samme rad øverst til høyre, med hover-bro (klar av rotasjonshåndtaket).
+    // The help chip and the form gear share one row at the top right, with a hover bridge (clear of the rotation handle).
     const tools = el2('div', 'urd-form-tools');
     tools.appendChild(gear);
     host.append(tools, panel);
@@ -504,15 +508,16 @@ function renderSkjema(el, props, ctx) {
   autoGrow(el, host, ctx);
 }
 
-/* ---------- «Kontaktskjema»-preset ---------- */
+/* ---------- The contact-form preset ---------- */
 
 const blockId = () => {
   const bytes = crypto.getRandomValues(new Uint8Array(4));
   return 'blk-' + [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
 };
 
-// Seed-regelen (ADR-0012): feltetikettene skrives inn i props ved innsetting,
-// oversatt ÉN gang med admin-språket (ta i fabrikk-kroppen).
+// The seed rule (ADR-0012): the field labels are written into props at
+// insertion time, translated ONCE with the admin language (ta in the factory
+// body).
 const defaultFields = () => [
   { id: 'navn', label: ta('form.edit.fieldName'), type: 'text', required: true },
   { id: 'epost', label: ta('form.edit.fieldEmail'), type: 'email', required: true },
@@ -549,7 +554,7 @@ function kontaktSection() {
   };
 }
 
-/* ---------- Registrering ---------- */
+/* ---------- Registration ---------- */
 
 /** @param {typeof window.Urd} Urd */
 export function register(Urd) {

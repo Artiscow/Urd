@@ -1,6 +1,7 @@
 /**
- * Besøkande-tekstar, norsk nynorsk. Legg seg oppå bokmålsbasen (nb.js);
- * paritetstesten held nøkkelsetta i synk. Datonamn kjem frå Intl.
+ * Visitor-facing strings, Norwegian Nynorsk. Overlays the Bokmål base
+ * (nb.js); the parity test keeps the key sets in sync. Date names come
+ * from Intl.
  */
 export default {
   lang: 'nn',

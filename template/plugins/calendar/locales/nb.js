@@ -1,8 +1,9 @@
 /**
- * Kalender-pluginens tekster, norsk bokmål (basen: lastes alltid først,
- * valgt språk legges oppå). Kjøretids-lastes av plugin-lasteren (ADR-0012);
- * paritetstesten (tests/i18n.test.mjs) holder språkfilene i synk.
- * Besøkende-nøkler under calendar.*, editor-chrome under calendar.edit.*.
+ * Calendar plugin texts, Norwegian (nb). This is the BASE: it is always
+ * loaded first, and the selected language is layered on top. Loaded at
+ * runtime by the plugin loader (ADR-0012); the parity test
+ * (tests/i18n.test.mjs) keeps the language files in sync.
+ * Visitor keys live under calendar.*, editor chrome under calendar.edit.*.
  */
 export default {
   lang: 'nb',

@@ -1,7 +1,7 @@
-/* Urd basestiler: reset + theme-token-variabler.
-   :root under er Urds STANDARDtema som trygg fallback (enkeltverdier). Sidens
-   EGNE farger kommer fra content/theme.css (materialisert ved publisering, lastet
-   rett etter denne fila) og theme.js sin injiserte <style>; begge vinner. */
+/* Urd base styles: reset + theme token variables.
+   The :root below is Urd's DEFAULT theme as a safe fallback (single values). The
+   site's OWN colors come from content/theme.css (materialized at publish time, loaded
+   right after this file) and the <style> injected by theme.js; both win. */
 
 :root {
   --urd-color-bg: #f7f8fb;
@@ -15,10 +15,10 @@
   --urd-space-section: clamp(3rem, 8vw, 6rem);
 }
 
-/* Standardtemaet følger OS-lyshet der light-dark() støttes (Baseline 2024): fjerner
-   FOUC-en de gamle mørke default-tokenene ga (malt før JS/innhold lastet). color-scheme
-   får nettleser-chrome (scrollbar/formfelt) til å matche; et manuelt valg overstyrer
-   via data-urd-theme (satt av theme-init.js før paint). Sidens egen theme.css vinner. */
+/* The default theme follows OS lightness where light-dark() is supported (Baseline 2024),
+   which keeps the first paint from flashing a palette the site does not use. color-scheme
+   makes browser chrome (scrollbar, form fields) match; a manual choice overrides
+   via data-urd-theme (set by theme-init.js before paint). The site's own theme.css wins. */
 @supports (color: light-dark(#000, #fff)) {
   :root {
     color-scheme: light dark;
@@ -38,9 +38,9 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  /* Lerretsbakgrunnen (bak body): på skjermer med brøkskalering runder 100vh
-     av og etterlater en sub-piksel stripe nederst der dette laget vises. Med
-     surface matcher stripen footeren/panelene, så det ikke blir en mørk linje. */
+  /* The canvas background (behind body): on displays with fractional scaling 100vh
+     rounds off and leaves a sub-pixel strip at the bottom where this layer shows. With
+     surface the strip matches the footer and the panels, so it does not read as a dark line. */
   background: var(--urd-color-surface);
 }
 
@@ -62,39 +62,39 @@ img, video {
   display: block;
 }
 
-/* Seksjonscontainer: posisjoneringskontekst for blokk-frames.
-   Klipper ALDRI innhold: blokker kan bevisst henge over seksjonslinjen,
-   og editor og publisert side skal se identiske ut. */
+/* Section container: the positioning context for block frames.
+   NEVER clips content: blocks may deliberately overhang the section boundary,
+   and the editor and the published page must look identical. */
 .urd-section {
   position: relative;
   --urd-canvas-gutter: 0px;
 }
 
-/* Innholdsflaten (ADR-0018): seksjonen er full vindusbredde og eier
-   bakgrunnen, kanvasen binder innholdet til designbredden og sentrerer det.
-   Blokkenes x/w er prosent AV DENNE, så layouten slutter å vokse med
-   skjermen. Margen gjelder kun over mobilbrekkpunktet, så alle lagrede
-   frames.mobile beholder betydningen sin (mobilmodellen er egen milepæl).
+/* The content surface (ADR-0018): the section is full window width and owns the
+   background, while the canvas binds the content to the design width and centers it.
+   Block x/w are percentages OF THIS, so the layout stops growing with the
+   screen. The gutter applies only above the mobile breakpoint, so every stored
+   frames.mobile keeps its meaning (the mobile model is its own milestone).
 
-   ADVARSEL: denne regelen skal ALDRI få transform, filter, perspective,
-   backdrop-filter, contain, container-type eller will-change. Alle sju
-   lager containing block for position: fixed, og ville drept festede og
-   skjermdokkede blokker (sticky.js). Håndheves av tests/canvas.test.mjs. */
+   WARNING: this rule must NEVER get transform, filter, perspective,
+   backdrop-filter, contain, container-type or will-change. All seven
+   create a containing block for position: fixed, and would break pinned and
+   viewport-docked blocks (sticky.js). Enforced by tests/canvas.test.mjs. */
 body:not(.urd-mobile) .urd-section {
   --urd-canvas-gutter: var(--urd-canvas-gutter-desktop, 24px);
 }
 
 .urd-canvas {
-  /* ABSOLUTT, ikke i flyten: seksjonens verktøylinje i editoren er sticky og
-     dermed et flyt-element, og var seksjonens ENESTE. Lå kanvasen i flyten,
-     ville seksjonen vokst med verktøylinjens høyde hver gang pekeren traff
-     den, og krympet igjen når den forlot. Absolutt plassering gjenoppretter
-     invarianten. Trygt for festede blokker: kun transform, filter og
-     containment lager containing block for fixed, ikke position.
-     Nav-klaringen (--urd-section-clear, satt kun på første seksjon under en
-     meny utenfor flyten) skyver innholdsflaten ned; seksjonen vokser
-     tilsvarende via min-height-kalkylen i render.js, så flaten beholder
-     høyden sin og bakgrunnen fyller helt opp bak menyen. */
+  /* ABSOLUTE, not in flow: the section toolbar in the editor is sticky and
+     therefore an in-flow element, and the section's ONLY one. With the canvas in
+     flow, the section would grow by the toolbar height every time the pointer hit
+     it, and shrink again when it left. Absolute placement keeps the
+     invariant. Safe for pinned blocks: only transform, filter and
+     containment create a containing block for fixed, not position.
+     The nav clearance (--urd-section-clear, set only on the first section under a
+     menu outside the flow) pushes the content surface down; the section grows
+     correspondingly via the min-height calculation in render.js, so the surface keeps
+     its height and the background fills all the way up behind the menu. */
   position: absolute;
   inset: 0;
   top: var(--urd-section-clear, 0px);
@@ -102,9 +102,9 @@ body:not(.urd-mobile) .urd-section {
   margin-inline: auto;
 }
 
-/* Mobil auto-layout er ekte dokumentflyt, og der MÅ kanvasen ligge i flyten:
-   seksjonshøyden er `auto` og drives av .urd-flow inni. Nav-klaringen blir
-   padding i flyten. */
+/* Mobile auto layout is real document flow, and there the canvas MUST be in flow:
+   the section height is `auto` and driven by .urd-flow inside. The nav clearance becomes
+   padding in the flow. */
 body.urd-mobile .urd-canvas {
   position: relative;
   inset: auto;
@@ -112,31 +112,31 @@ body.urd-mobile .urd-canvas {
   padding-top: var(--urd-section-clear, 0px);
 }
 
-/* Nav-klaring: en flytende/overlay-meny står utenfor flyten og dekket
-   ellers innholdet øverst på siden. Første seksjon får klaringsvaren satt
-   til målt menyhøyde (--urd-nav-h skrives av nav.js); canvas-reglene over
-   omsetter den. Menyer i flyten (sticky/kolonne) trenger ingen klaring. */
+/* Nav clearance: a floating or overlay menu sits outside the flow and would
+   otherwise cover the content at the top of the page. The first section gets the
+   clearance variable set to the measured menu height (--urd-nav-h is written by nav.js);
+   the canvas rules above translate it. Menus in flow (sticky/column) need no clearance. */
 #urd-nav.urd-nav-float + #urd-root > .urd-section:first-of-type,
 #urd-nav.urd-nav-overlay + #urd-root > .urd-section:first-of-type {
   --urd-section-clear: var(--urd-nav-h, 0px);
 }
 
-/* Roterte/overhengende blokker skal ikke gi sidescrolling */
+/* Rotated and overhanging blocks must not cause horizontal scrolling */
 html {
   overflow-x: clip;
 }
 
-/* Bakgrunnslag fyller seksjonen og ligger bak blokkene */
+/* The background layer fills the section and sits behind the blocks */
 .urd-bg-layer {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
-/* Lagbasert bakgrunn for nav og footer (delt med seksjoner): en backdrop-
-   container bak innholdet. z-index -1 legger lagene bak nav/footer-innholdet,
-   men foran elementets egen flate; overflow klipper bildelag til (avrundede)
-   kanter. Verten (.urd-nav / .urd-footer) er en stacking context. */
+/* Layered background for nav and footer (shared with sections): a backdrop
+   container behind the content. z-index -1 puts the layers behind the nav/footer content
+   but in front of the element's own surface; overflow clips image layers to the
+   (rounded) edges. The host (.urd-nav / .urd-footer) is a stacking context. */
 .urd-nav-bg,
 .urd-footer-bg {
   position: absolute;
@@ -147,8 +147,8 @@ html {
   pointer-events: none;
 }
 
-/* Slank scrollbar i temaets farger (matcher editorens, og ser bedre ut
-   enn nettleser-standarden på mørke sider) */
+/* Slim scrollbar in the theme colors (matches the editor's, and looks better
+   than the browser default on dark pages) */
 html {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--urd-color-text) 25%, transparent) transparent;
@@ -168,17 +168,17 @@ html {
   background: transparent;
 }
 
-/* Blokker posisjoneres absolutt av render.js (frameToCss) */
+/* Blocks are positioned absolutely by render.js (frameToCss) */
 .urd-block {
   position: absolute;
 }
 
-/* Mobil-radnettet (ADR-0019): én kolonne med 8 px-rader som vokser med
-   innholdet (minmax). Urørte blokker auto-plasseres i leserekkefølge
-   (sparse: de hopper alltid NEDENFOR pinnede bånd, aldri inn i hull over),
-   pinnede blokker får eksplisitte radspor fra render.js. Ingen gap:
-   radsporene er koordinatsystemet, så luften mellom flytblokker ligger i
-   margin-bottom og rommes av radspennet. Radhøyden 8 speiler MOBILE_ROW i
+/* The mobile row grid (ADR-0019): one column of 8 px rows that grow with
+   the content (minmax). Untouched blocks are auto-placed in reading order
+   (sparse: they always jump BELOW pinned bands, never into gaps above),
+   pinned blocks get explicit row tracks from render.js. No gap:
+   the row tracks are the coordinate system, so the air between flow blocks lives in
+   margin-bottom and is covered by the row span. The row height 8 mirrors MOBILE_ROW in
    migrate.js. */
 .urd-flow {
   position: relative;
@@ -189,11 +189,11 @@ html {
   padding: 24px 0;
 }
 
-/* Flytblokk: 90 % bredde sentrert (som den gamle flyten); render.js
-   overstyrer bredde/marg ved partielle plasseringer. position: relative
-   (uten offset) deltar i rutenettet som static, og forankrer samtidig
-   redigeringslagets absolutte barn (verktøylinje, resize-håndtak,
-   nål-merke) til BLOKKEN i stedet for til flytflaten. */
+/* Flow block: 90 % width, centered; render.js
+   overrides width and margin for partial placements. position: relative
+   (with no offsets) takes part in the grid as static, and at the same time anchors
+   the editing layer's absolute children (toolbar, resize handles,
+   pin marker) to the BLOCK rather than to the flow surface. */
 .urd-block-flow {
   position: relative;
   width: 90%;
@@ -201,15 +201,15 @@ html {
   margin-bottom: 16px;
 }
 
-/* Pinnet blokk: radspor og bredde settes av render.js. Ingen marg: en marg
-   utenfor sporene ville blåst opp radene og forskjøvet koordinatsystemet. */
+/* Pinned block: row track and width are set by render.js. No margin: a margin
+   outside the tracks would inflate the rows and shift the coordinate system. */
 .urd-block-pinned {
   position: relative;
   margin: 0;
 }
 
-/* Innhold i tekstblokker: lister, sitater og lenker fra
-   formateringslinjen (global reset nuller ellers listeinnrykk) */
+/* Content inside text blocks: lists, quotes and links from
+   the formatting bar (the global reset otherwise zeroes list indentation) */
 .urd-text ul,
 .urd-text ol {
   padding-left: 1.3em;
@@ -225,33 +225,33 @@ html {
   color: var(--urd-color-accent);
 }
 
-/* Tekstboks: tekstblokk med innholdet i et kort (props.box på tekstblokken).
-   Følger temaets flatefarge og radius. */
+/* Text box: a text block with its content in a card (props.box on the text block).
+   Follows the theme's surface color and radius. */
 .urd-text-box {
   box-sizing: border-box;
   background: var(--urd-color-surface);
-  /* Temaets tynne kantlinje: synlig nok til å lese som en kant (var 12 %,
-     nesten usynlig). «Egen farge» i kortstilen overstyrer den. */
+  /* The theme's thin border: visible enough to read as an edge.
+     "Custom color" in the card style overrides it. */
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 22%, transparent);
   border-radius: var(--urd-radius-md);
   padding: 1rem 1.25rem;
 }
 
-/* FAQ-akkordeonen: spørsmålskort (deler .urd-text-box-basisstilen) der
-   svaret foldes ut med grid-rows-overgangen (0fr -> 1fr). */
+/* The FAQ accordion: question cards (sharing the .urd-text-box base style) where
+   the answer unfolds with the ::details-content height transition below. */
 .urd-faq {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-/* Hvert spørsmål er et native <details>. */
+/* Each question is a native <details>. */
 .urd-faq-item {
   padding: 0.75rem 1.25rem;
 }
 
-/* <summary>: skjul standard-trekanten (flex fjerner den i Chromium; list-style
-   og webkit-markøren dekker resten). */
+/* <summary>: hide the default triangle (flex removes it in Chromium; list-style
+   and the webkit marker cover the rest). */
 .urd-faq-head {
   display: flex;
   align-items: center;
@@ -292,10 +292,10 @@ html {
   padding-top: 0.5rem;
 }
 
-/* Myk utfolding der nettleseren støtter ::details-content + interpolate-size
-   (Chromium tidlig 2026): svaret glir ut/inn i høyde. Uten støtte folder native
-   <details> svaret ut momentant. content-visibility-overgangen (allow-discrete)
-   holder innholdet synlig gjennom sammenleggingen. */
+/* Soft unfolding where the browser supports ::details-content + interpolate-size
+   (Chromium early 2026): the answer slides open and closed in height. Without support
+   native <details> reveals the answer instantly. The content-visibility transition
+   (allow-discrete) keeps the content visible through the collapse. */
 @supports (interpolate-size: allow-keywords) {
   .urd-faq {
     interpolate-size: allow-keywords;
@@ -326,8 +326,8 @@ html {
   }
 }
 
-/* Tidslinjen: hendelser langs en tegnet linje, ren CSS (0.6.7.11). Aksenten
-   følger temaet, men kan overstyres per blokk (--urd-timeline-accent). */
+/* The timeline: events along a drawn line, pure CSS. The accent
+   follows the theme, but can be overridden per block (--urd-timeline-accent). */
 .urd-timeline {
   --urd-timeline-line: var(--urd-timeline-accent, var(--urd-color-accent));
   list-style: none;
@@ -339,7 +339,7 @@ html {
   position: relative;
 }
 
-/* Venstre-varianten: linjen langs venstre kant, innholdet innrykket. */
+/* The left variant: the line along the left edge, the content indented. */
 .urd-timeline-left {
   padding-left: 1.6rem;
 }
@@ -372,12 +372,12 @@ html {
   border: 2px solid var(--urd-timeline-line);
 }
 
-/* Ring-markøren: åpen sirkel på linjen i stedet for fylt prikk. */
+/* The ring marker: an open circle on the line instead of a filled dot. */
 .urd-timeline-ring .urd-timeline-item::before {
   background: var(--urd-color-bg);
 }
 
-/* Veksler-varianten: linjen i midten, kortene annenhver side. */
+/* The alternating variant: the line down the middle, cards on alternating sides. */
 .urd-timeline-alternating::before {
   content: '';
   position: absolute;
@@ -437,7 +437,7 @@ html {
   opacity: 0.8;
 }
 
-/* Sitatet: semantisk figure/blockquote (0.6.7.11). Glyfen tegnes i ::before. */
+/* The quote: a semantic figure/blockquote. The glyph is drawn in ::before. */
 .urd-quote {
   --urd-quote-glyph: var(--urd-quote-accent, var(--urd-color-accent));
   margin: 0;
@@ -514,8 +514,8 @@ html {
   font-style: normal;
 }
 
-/* Statistikken: ett nøkkeltall med etikett (0.6.7.11). Tabular-nums så
-   tell-opp-animasjonen ikke hopper i bredden underveis. */
+/* The stat: one key figure with a label. Tabular nums so
+   the count-up animation does not jump in width along the way. */
 .urd-stats {
   display: flex;
   flex-direction: column;
@@ -551,8 +551,8 @@ html {
   opacity: 0.7;
 }
 
-/* Tabellen (0.7.4): semantisk table i en overflow-wrapper, så brede
-   tabeller ruller i sin egen flate i stedet for å velte siden. */
+/* The table: a semantic table in an overflow wrapper, so wide
+   tables scroll in their own surface instead of breaking the page layout. */
 .urd-table {
   width: 100%;
   overflow-x: auto;
@@ -589,12 +589,12 @@ html {
   background: color-mix(in srgb, var(--urd-color-text) 6%, transparent);
 }
 
-/* Tomme celler beholder klikkeflate under redigering. */
+/* Empty cells keep a click target while editing. */
 .urd-preview .urd-table-table [contenteditable]:empty::after {
   content: '\00a0';
 }
 
-/* Delingsknappene (0.7.4): rene lenker med tegnede ikoner, uten sporing. */
+/* Share buttons: plain links with drawn icons, no tracking. */
 .urd-share {
   display: flex;
   flex-wrap: wrap;
@@ -629,7 +629,7 @@ html {
   height: 55%;
 }
 
-/* Kun ikoner som standard; navnvarianten gjør knappene til piller. */
+/* Icons only by default; the name variant turns the buttons into pills. */
 .urd-share-name {
   display: none;
   font-size: 0.85em;
@@ -652,8 +652,8 @@ html {
   display: inline;
 }
 
-/* Nedtelleren (0.7.4): enhetsbokser med tabular-nums, så tikkingen aldri
-   hopper i bredden. */
+/* The countdown: unit boxes with tabular nums, so the ticking never
+   jumps in width. */
 .urd-countdown {
   display: flex;
   flex-wrap: wrap;
@@ -699,7 +699,7 @@ html {
   font-weight: 650;
 }
 
-/* Lydblokken (0.7.4): native spiller med valgfri tittel over. */
+/* The audio block: a native player with an optional title above. */
 .urd-audio {
   display: grid;
   gap: 6px;
@@ -708,7 +708,7 @@ html {
 
 .urd-audio audio {
   width: 100%;
-  /* Spillerens chrome følger brukerens OS-tema, som datovelgeren i skjemaet. */
+  /* The player chrome follows the user's OS theme, like the date picker in the form. */
   color-scheme: light dark;
 }
 
@@ -728,8 +728,8 @@ html {
   opacity: 0.7;
 }
 
-/* Butikken (0.7.5): produktkort fra en produktsamling. Kortlisten er et
-   responsivt grid; blokken kan låse kolonnetallet i Stil. */
+/* The shop: product cards from a product collection. The card list is a
+   responsive grid; the block can lock the column count in Style. */
 .urd-product-cardlist {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -744,7 +744,7 @@ html {
   gap: 8px;
   padding: 14px;
   background: var(--urd-color-surface);
-  /* Tynn kant, så kortet leses også der surface er nesten lik bakgrunnen. */
+  /* A thin border, so the card reads even where surface is nearly the background color. */
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 14%, transparent);
   border-radius: var(--urd-radius-md, 10px);
 }
@@ -764,8 +764,8 @@ html {
   object-fit: cover;
 }
 
-/* Sekundærbildet (første fargebilde) tones inn ved hover; et aktivt
-   fargevalg med eget bilde vinner over hover-byttet. */
+/* The secondary image (the first color image) fades in on hover; an active
+   color choice with an image of its own wins over the hover swap. */
 .urd-product-image .urd-product-image-alt {
   position: absolute;
   inset: 0;
@@ -794,8 +794,8 @@ html {
   letter-spacing: 0.02em;
 }
 
-/* Med bilde legges badgen over bildets øvre venstre hjørne; uten bilde
-   står den som statisk chip over tittelen (aldri oppå tekst). */
+/* With an image the badge is placed over the image's top left corner; without an
+   image it sits as a static chip above the title (never on top of text). */
 .urd-product-badge-over {
   position: absolute;
   top: 22px;
@@ -862,7 +862,7 @@ html {
   opacity: 0.85;
 }
 
-/* «+ Produkt»-adderen (kun editor): stiplet kort sist i rutenettet. */
+/* The "+ Product" adder (editor only): a dashed card last in the grid. */
 .urd-preview .urd-product-adder {
   min-height: 180px;
   border: 1px dashed color-mix(in srgb, var(--urd-color-text) 35%, transparent);
@@ -875,9 +875,9 @@ html {
   cursor: pointer;
 }
 
-/* Quick view (kun besøkende): produktdetaljene i en native <dialog>.
-   display settes KUN i åpen tilstand, ellers ville dialogens innebygde
-   dialog:not([open]) { display: none } vært overstyrt. */
+/* Quick view (visitors only): the product details in a native <dialog>.
+   display is set ONLY in the open state, otherwise the built-in
+   dialog:not([open]) { display: none } would be overridden. */
 .urd-product-opener {
   cursor: pointer;
 }
@@ -969,8 +969,8 @@ html {
   margin-top: 8px;
 }
 
-/* Handlekurven: knapp med antall-badge; skuffen er en native <dialog>
-   forankret til høyre kant (ADR-0011). */
+/* The cart: a button with a count badge; the drawer is a native <dialog>
+   anchored to the right edge (ADR-0011). */
 .urd-cart-button {
   position: relative;
   display: inline-flex;
@@ -1018,7 +1018,7 @@ html {
 }
 
 .urd-cart-dialog {
-  /* Skuff langs høyre kant: dialogens standard-sentrering overstyres. */
+  /* A drawer along the right edge: the dialog's default centering is overridden. */
   margin: 0 0 0 auto;
   width: min(380px, 92vw);
   height: 100dvh;
@@ -1030,9 +1030,9 @@ html {
   box-shadow: -12px 0 40px rgb(0 0 0 / 0.25);
 }
 
-/* display settes KUN i åpen tilstand: en display-verdi på selve dialogen
-   ville overstyrt nettleserens dialog:not([open]) { display: none } og
-   vist skuffen permanent. */
+/* display is set ONLY in the open state: a display value on the dialog itself
+   would override the browser's dialog:not([open]) { display: none } and
+   show the drawer permanently. */
 .urd-cart-dialog[open] {
   display: flex;
   flex-direction: column;
@@ -1157,7 +1157,7 @@ html {
   font-weight: 600;
 }
 
-/* Kassen: ordresammendrag + bestillingsskjema (mailto/endepunkt, ADR-0006). */
+/* Checkout: order summary + order form (mailto/endpoint, ADR-0006). */
 .urd-checkout {
   display: grid;
   gap: 16px;
@@ -1205,7 +1205,7 @@ html {
   font-size: 0.95em;
 }
 
-/* Honeypot: ut av synsfeltet, aldri display:none (bots sjekker det). */
+/* Honeypot: moved out of view, never display:none (bots check for that). */
 .urd-checkout-hp {
   position: absolute;
   left: -9999px;
@@ -1226,7 +1226,7 @@ html {
   gap: 10px;
 }
 
-/* Betal med Vipps (ADR-0020): merkevarefargen, uavhengig av tema. */
+/* Pay with Vipps (ADR-0020): the brand color, independent of the theme. */
 .urd-checkout-vippspay {
   padding: 10px 18px;
   border: none;
@@ -1263,12 +1263,12 @@ html {
   color: #c0392b;
 }
 
-/* Formateringslinjen for tekstfelt (kun preview-modus): vises over
-   blokken så lenge feltet redigeres. To faste rader (Office-stil) stables
-   i en kolonne; de utvidbare underradene legger seg under. */
+/* The formatting bar for text fields (preview mode only): shown above
+   the block for as long as the field is being edited. Two fixed rows (Office style)
+   stack in a column; the expandable sub-rows sit below them. */
 .urd-text-toolbar {
-  /* Mot-skalering (urd-zoom): ankeret settes av JS i viewport-
-     koordinater, så origin må være det hjørnet. */
+  /* Counter-scaling (urd-zoom): the anchor is set by JS in viewport
+     coordinates, so the origin has to be that corner. */
   transform: scale(var(--urd-chrome-scale, 1));
   transform-origin: top left;
   position: fixed;
@@ -1285,7 +1285,7 @@ html {
   box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
 }
 
-/* Hver faste rad: knappegrupper som radbryter ved trang plass. */
+/* Each fixed row: button groups that wrap when space is tight. */
 .urd-tt-row {
   display: flex;
   align-items: center;
@@ -1299,7 +1299,7 @@ html {
   margin-top: 4px;
 }
 
-/* Grupper radbrytes SAMLET (ingen enslige knapper på egen linje), med skillelinje mellom */
+/* Groups wrap AS A UNIT (never a lone button on its own line), with a divider between */
 .urd-tt-group {
   display: inline-flex;
   align-items: center;
@@ -1312,8 +1312,8 @@ html {
   margin-left: 2px;
 }
 
-/* Størrelsesfeltet: smalt, sentrert tall mellom minus/pluss. De innebygde
-   opp/ned-pilene skjules (− / + gjør jobben); feltet kan fremdeles skrives i. */
+/* The size field: a narrow, centered number between minus and plus. The built-in
+   up/down arrows are hidden (− / + do the job); the field can still be typed in. */
 .urd-tt-size {
   width: 3.2em;
   text-align: center;
@@ -1327,7 +1327,7 @@ html {
   margin: 0;
 }
 
-/* Hevet/senket-knappene: A med liten 2-er. */
+/* The superscript/subscript buttons: an A with a small 2. */
 .urd-tt-supsub {
   font: 600 12px/1 system-ui, sans-serif;
 }
@@ -1336,8 +1336,8 @@ html {
   font-size: 8px;
 }
 
-/* Aktiv formatknapp: markøren står i formatet (fet, justering, lister ...).
-   Nøytral markering (uavhengig av sidens tema), tydelig mot den mørke linjen. */
+/* Active format button: the caret sits inside that format (bold, alignment, lists ...).
+   A neutral highlight (independent of the site theme), clear against the dark bar. */
 .urd-text-toolbar button.active {
   background: rgb(120 160 255 / 34%);
   color: #fff;
@@ -1348,7 +1348,7 @@ html {
   background: rgb(120 160 255 / 44%);
 }
 
-/* Linjeavstand-knappene i avstandsraden. */
+/* The line-height buttons in the spacing row. */
 .urd-text-toolbar .urd-tt-lh {
   min-width: 0;
   padding: 0 6px;
@@ -1356,7 +1356,7 @@ html {
 }
 
 
-/* Inline lenkefelt (egen underrad i linjen når lenkeknappen er aktiv) */
+/* Inline link field (its own sub-row in the bar while the link button is active) */
 .urd-tt-linkrow {
   display: none;
   gap: 4px;
@@ -1370,7 +1370,7 @@ html {
   display: flex;
 }
 
-/* Fargeraden (nedtrekket bak palettikonet): egen underrad, som lenkefeltet */
+/* The color row (the dropdown behind the palette icon): its own sub-row, like the link field */
 .urd-tt-colorrow {
   display: none;
   gap: 2px;
@@ -1384,7 +1384,7 @@ html {
   display: flex;
 }
 
-/* Avstandsraden (bak avstandsknappen): linjeavstand-preset + bokstavavstand */
+/* The spacing row (behind the spacing button): line-height presets + letter spacing */
 .urd-tt-spacerow {
   display: none;
   flex-wrap: wrap;
@@ -1406,7 +1406,7 @@ html {
   color: rgb(232 234 240 / 60%);
 }
 
-/* Tallfeltene (størrelse, bokstavavstand); tomt felt = arv fra tema */
+/* The number fields (size, letter spacing); an empty field means inherit from the theme */
 .urd-tt-num {
   width: 4em;
   font: 12px/1.3 system-ui, sans-serif;
@@ -1417,8 +1417,8 @@ html {
   padding: 3px 4px;
 }
 
-/* Tegnraden (nedtrekket bak smilefjes-knappen): rullbart rutenett med
-   tegn og emoji, samme utvalg som ikon-blokkens tegnvelger */
+/* The glyph row (the dropdown behind the smiley button): a scrollable grid of
+   characters and emoji, the same selection as the icon block's glyph picker */
 .urd-tt-glyphrow {
   display: none;
   flex-basis: 100%;
@@ -1452,7 +1452,7 @@ html {
   font-weight: 400;
 }
 
-/* «Egen tekstfarge»: A med regnbueunderstrek */
+/* "Custom text color": an A with a rainbow underline */
 .urd-text-toolbar .urd-tt-acolor {
   display: inline-block;
   padding: 1px 3px 2px;
@@ -1539,7 +1539,7 @@ html {
   border: 1px solid rgb(255 255 255 / 30%);
 }
 
-/* Justeringsikoner: tre streker med ulik linjering */
+/* Alignment icons: three bars with different alignment */
 .urd-ticon {
   display: grid;
   gap: 3px;
@@ -1568,7 +1568,7 @@ html {
   justify-self: center;
 }
 
-/* Listeikoner: punkt/nummer + strek per rad */
+/* List icons: a bullet or number plus a bar per row */
 .urd-licon {
   display: grid;
   gap: 3px;
@@ -1610,7 +1610,7 @@ html {
   font-size: 8px;
 }
 
-/* Uthevingsknappen: A på aksentfarget «tusj»-bakgrunn; fri-varianten har omriss */
+/* The highlight button: an A on an accent-colored marker background; the free variant is outlined */
 .urd-text-toolbar .urd-tt-hl {
   display: inline-block;
   padding: 1px 4px;
@@ -1625,7 +1625,7 @@ html {
   border: 1px dashed rgb(255 255 255 / 45%);
 }
 
-/* «Fjern utheving»: A-chip med rød skråstrek over */
+/* "Remove highlight": an A chip with a red diagonal stroke across it */
 .urd-text-toolbar .urd-tt-hl-none {
   background: linear-gradient(to top right, transparent 44%, #e05252 44% 56%, transparent 56%);
   color: #e8eaf0;
@@ -1636,14 +1636,14 @@ body.urd-chrome-off .urd-text-toolbar {
   display: none !important;
 }
 
-/* Den felles fargevelgeren (color-picker.js): flytende kort i preview-modus */
+/* The shared color picker (color-picker.js): a floating card in preview mode */
 .urd-cp {
   position: fixed;
   z-index: 100003;
   width: 236px;
   display: grid;
-  /* Bind kolonnen til boksbredden: uten dette blir den implisitte grid-
-     kolonnen max-content-bred (RGB-feltene) og innholdet flyter ut av boksen. */
+  /* Bind the column to the box width: without this the implicit grid column
+     becomes max-content wide (the RGB fields) and the content spills out of the box. */
   grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   padding: 10px;
@@ -1724,7 +1724,7 @@ body.urd-chrome-off .urd-text-toolbar {
   box-shadow: 0 0 0 1px rgb(0 0 0 / 45%);
 }
 
-/* Gjennomsiktighetsglideren: sjakkbrett + fargegradient settes inline (følger fargen) */
+/* The alpha slider: checkerboard + color gradient are set inline (they follow the color) */
 .urd-cp-alpha {
   width: 100%;
   height: 12px;
@@ -1866,10 +1866,10 @@ body.urd-chrome-off .urd-cp {
   display: none !important;
 }
 
-/* Hjelpechipen (ADR-0008) styles seg selv: engine/hint.js injiserer sin egen
-   style-tag, så chipen aldri kan stå ustylet med en utdatert base.css. */
+/* The help chip (ADR-0008) styles itself: engine/hint.js injects its own
+   style tag, so the chip can never end up unstyled with an outdated base.css. */
 
-/* Den felles bildeeditoren (image-editor.js): flytende panel i preview-modus */
+/* The shared image editor (image-editor.js): a floating panel in preview mode */
 .urd-imged {
   position: fixed;
   z-index: 100002;
@@ -1957,8 +1957,8 @@ body.urd-chrome-off .urd-cp {
   opacity: 0.62;
 }
 
-/* Tredelingsgitter (som i kameraer): over bildet på lerretet mens editoren
-   er åpen, og i panelets miniatyr. Svake linjer på tredjedelene. */
+/* Rule-of-thirds grid (as in cameras): over the image on the canvas while the editor
+   is open, and in the panel thumbnail. Faint lines at the thirds. */
 .urd-imged-grid,
 .urd-imged-thumbgrid {
   background-image:
@@ -2047,7 +2047,7 @@ body.urd-chrome-off .urd-imged-grid {
   color-scheme: dark;
 }
 
-/* Segmenterte valg (Tilpasning/Avrunding): stylet erstatning for native select */
+/* Segmented choices (Fit/Rounding): a styled replacement for a native select */
 .urd-imged-seg {
   display: flex;
   padding: 2px;
@@ -2081,11 +2081,11 @@ body.urd-chrome-off .urd-imged {
   display: none !important;
 }
 
-/* Animasjoner (Urd.animations). Inngangsanimasjonene starter usynlige og
-   glir inn når .urd-anim-in settes (IntersectionObserver i animations/
-   core.js). Varighet/forsinkelse settes som CSS-variabler per element.
-   Blokker med rotasjon har inline transform som vinner: da spilles kun
-   opacity-delen, bevisst. */
+/* Animations (Urd.animations). Entrance animations start invisible and
+   slide in when .urd-anim-in is set (IntersectionObserver in animations/
+   core.js). Duration and delay are set as CSS variables per element.
+   Blocks with rotation carry an inline transform that wins: there only the
+   opacity part plays, deliberately. */
 .urd-anim-fade-in,
 .urd-anim-slide-up,
 .urd-anim-zoom-in {
@@ -2112,12 +2112,12 @@ body.urd-chrome-off .urd-imged {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Kombinasjon: en blokk med BÅDE inngangsanimasjon OG «Løft ved peker».
-   Uten dette overstyrer hover-lift-regelen (senere i CSS-en) inngangens
-   transition, så opasiteten/formen hopper i stedet for å tone/gli inn.
-   Her dekker transitionen både inngangen (varighet/forsinkelse) og hover
-   (box-shadow). Fade-in bruker ikke transform til inngangen, så der er
-   hover-løftet snappy (0.2s); slide/zoom deler inngangens varighet. */
+/* Combination: a block with BOTH an entrance animation AND "Lift on hover".
+   Without this the hover-lift rule (later in the CSS) overrides the entrance
+   transition, so opacity and shape jump instead of fading or sliding in.
+   Here the transition covers both the entrance (duration, delay) and hover
+   (box-shadow). Fade-in does not use transform for the entrance, so there the
+   hover lift is snappy (0.2s); slide and zoom share the entrance duration. */
 .urd-anim-fade-in.urd-anim-hover-lift {
   transition:
     opacity var(--urd-anim-duration, 600ms) ease var(--urd-anim-delay, 0ms),
@@ -2133,10 +2133,10 @@ body.urd-chrome-off .urd-imged {
     box-shadow 0.2s ease;
 }
 
-/* Under peker gjelder rask transform, så løftet starter umiddelbart selv
-   når inngangens delay-variabel står på elementet (kortvis forskjøvet
-   start); inngangen selv treffer sjelden et element som alt er under
-   peker. */
+/* On hover a fast transform applies, so the lift starts immediately even
+   when the entrance delay variable sits on the element (a briefly offset
+   start); the entrance itself rarely hits an element that is already under
+   the pointer. */
 .urd-anim-slide-up.urd-anim-hover-lift:hover,
 .urd-anim-zoom-in.urd-anim-hover-lift:hover {
   transition:
@@ -2164,17 +2164,17 @@ body.urd-chrome-off .urd-imged {
     transition: none;
   }
 
-  /* Galleri- og bakgrunnstoningene: JS-en nekter alt å spille automatisk
-     ved redusert bevegelse; dette fjerner også selve toningen ved manuell
-     blaing i lysbildevisningen. */
+  /* Gallery and background cross-fades: the JS refuses to play anything
+     automatically under reduced motion; this also removes the fade itself when
+     paging manually in the slideshow view. */
   .urd-gallery-slide,
   .urd-bg-slide {
     transition: none;
   }
 }
 
-/* Samling-blokken (ADR-0007): tre visninger over strukturerte innslag.
-   Indre layout er flyt/grid, aldri frames per innslag. */
+/* The collection block (ADR-0007): three views over structured entries.
+   The inner layout is flow and grid, never frames per entry. */
 .urd-collection {
   width: 100%;
 }
@@ -2195,7 +2195,7 @@ body.urd-chrome-off .urd-imged {
   padding: 1rem;
 }
 
-/* Bildeinnpakningen: rammen eier form/avrunding og klipper zoom-beskjæringen */
+/* The image wrapper: the frame owns shape and rounding, and clips the zoom crop */
 .urd-collection-imgwrap {
   display: block;
   position: relative;
@@ -2290,7 +2290,7 @@ a.urd-collection-title:hover {
   margin-top: 0;
 }
 
-/* Redigering i preview: tittel/tekst er klikk-og-skriv, bilder byttes med klikk */
+/* Editing in preview: title and text are click-to-type, images are swapped with a click */
 .urd-preview .urd-collection-editable:hover {
   outline: 1px dashed color-mix(in srgb, var(--urd-color-accent) 60%, transparent);
   outline-offset: 2px;
@@ -2333,7 +2333,7 @@ a.urd-collection-title:hover {
   width: 56px;
 }
 
-/* Tomtilstand: kun i editorens preview (besøkende ser ingenting), samme mønster som bildeblokken */
+/* Empty state: editor preview only (visitors see nothing), the same pattern as the image block */
 .urd-preview .urd-collection-empty {
   display: flex;
   align-items: center;
@@ -2347,8 +2347,8 @@ a.urd-collection-title:hover {
   text-align: center;
 }
 
-/* Video-blokken: plassholder uten URL, og klikkskjold i redigering
-   (klikk skal markere blokken, ikke starte spilleren) */
+/* The video block: a placeholder without a URL, and a click shield while editing
+   (a click should select the block, not start the player) */
 .urd-video-empty {
   display: grid;
   place-items: center;
@@ -2366,7 +2366,7 @@ a.urd-collection-title:hover {
   inset: 0;
 }
 
-/* Ikon-blokken: glyfen sentreres i rammen */
+/* The icon block: the glyph is centered in the frame */
 .urd-icon {
   display: flex;
   align-items: center;
@@ -2377,7 +2377,7 @@ a.urd-collection-title:hover {
   user-select: none;
 }
 
-/* Tom bildeblokk: plassholder kun i editoren */
+/* Empty image block: a placeholder in the editor only */
 .urd-image-empty {
   display: grid;
   place-items: center;
@@ -2390,8 +2390,8 @@ a.urd-collection-title:hover {
   border-radius: var(--urd-radius-md);
 }
 
-/* Bilderammen: klipper bildet, så avrunding vises uansett tilpasning og
-   zoom beskjæres rent inn mot fokuspunktet. */
+/* The image frame: clips the image, so rounding shows whatever the fit is and
+   zoom crops cleanly towards the focal point. */
 .urd-image-frame {
   display: block;
   width: 100%;
@@ -2405,8 +2405,8 @@ a.urd-collection-title:hover {
   height: 100%;
 }
 
-/* Bildeblokk med lightbox: zoom-peker hos besøkende og i Ren visning;
-   med chrome på eier redigeringen klikket, så pekeren er nøytral der. */
+/* Image block with a lightbox: a zoom cursor for visitors and in Clean view;
+   with chrome on, editing owns the click, so the cursor is neutral there. */
 .urd-lightbox-able {
   cursor: zoom-in;
 }
@@ -2415,9 +2415,9 @@ a.urd-collection-title:hover {
   cursor: inherit;
 }
 
-/* Galleri-blokken: tre visninger (rutenett/karusell/lysbilde) over samme
-   bildeliste. Flisene er rammer som klipper (som .urd-image-frame);
-   klikkbare fliser er button/a uten egen knappestil. */
+/* The gallery block: three views (grid/carousel/slideshow) over the same
+   image list. The tiles are clipping frames (like .urd-image-frame);
+   clickable tiles are button/a without any button styling of their own. */
 .urd-gallery {
   position: relative;
   width: 100%;
@@ -2460,7 +2460,7 @@ a.urd-gallery-tile {
   aspect-ratio: 1 / 1;
 }
 
-/* Karusell: sidescroll med snap; pilene ruller et skjermbreddehopp. */
+/* Carousel: horizontal scroll with snap; the arrows scroll one viewport-width step. */
 .urd-gallery-track {
   display: flex;
   gap: var(--urd-gallery-gap, 12px);
@@ -2477,7 +2477,7 @@ a.urd-gallery-tile {
   scroll-snap-align: start;
 }
 
-/* Lysbilde: stablede slides, kun .on er synlig (og klikkbar). */
+/* Slideshow: stacked slides, only .on is visible (and clickable). */
 .urd-gallery-slides {
   height: 100%;
   overflow: hidden;
@@ -2560,7 +2560,7 @@ a.urd-gallery-tile {
   background: var(--urd-color-accent);
 }
 
-/* Tom-tilstand: kun i editorens preview, samme mønster som bildeblokken */
+/* Empty state: editor preview only, the same pattern as the image block */
 .urd-gallery-empty {
   display: grid;
   place-items: center;
@@ -2573,20 +2573,20 @@ a.urd-gallery-tile {
   border-radius: var(--urd-radius-md);
 }
 
-/* Scrollås mens en modal dialog er åpen (lysboksen i dag, enhver framtidig
-   showModal-flate automatisk): native :has()/:modal i stedet for JS-bokføring
-   av body.style.overflow. Uten :has-støtte (utenfor baseline-halen) mangler
-   kun låsen; dialogen selv virker som før. */
+/* Scroll lock while a modal dialog is open (the lightbox today, and any future
+   showModal surface automatically): native :has()/:modal instead of JS bookkeeping
+   of body.style.overflow. Without :has support (outside the baseline tail) only
+   the lock is missing; the dialog itself still works. */
 body:has(dialog:modal) {
   overflow: hidden;
 }
 
-/* Lightbox (engine/lightbox.js): fullskjermvisning hos besøkende og i Ren
-   visning. Over nav (5000), under editor-chromen (99999+). Mørk uansett
-   tema: den er et fotovisningsrom, ikke en temaflate. */
-/* Native <dialog> (showModal): top-layer, så ingen z-index trengs. UA-stilene
-   for margin/border/padding/maks nullstilles; den mørke bakgrunnen er ::backdrop.
-   display gates på [open] så den aldri vises mellom appendChild og showModal. */
+/* Lightbox (engine/lightbox.js): full-screen viewing for visitors and in Clean
+   view. Dark whatever the theme is: it is a photo viewing room, not a themed
+   surface. */
+/* Native <dialog> (showModal): top layer, so no z-index is needed. The UA styles
+   for margin/border/padding/max are zeroed; the dark background is ::backdrop.
+   display is gated on [open] so it never shows between appendChild and showModal. */
 .urd-lightbox {
   position: fixed;
   inset: 0;
@@ -2675,7 +2675,7 @@ body:has(dialog:modal) {
   transform: translateY(-50%);
 }
 
-/* Bildegalleri-bakgrunnslaget: to stablede bilder som krysstoner. */
+/* The image gallery background layer: two stacked images that cross-fade. */
 .urd-bg-slideshow {
   overflow: hidden;
 }
@@ -2691,24 +2691,24 @@ body:has(dialog:modal) {
   opacity: 1;
 }
 
-/* «+ Ny blokk» (hover-vist, kun preview): øverst til høyre i seksjonen,
-   under seksjonsverktøylinjen. Absolutt posisjon: pillen skal aldri
-   delta i flyten (en flyt-marg kollapset tidligere ut av seksjonen og
-   ga et bakgrunnsløst bånd øverst i alle seksjoner). */
+/* "+ New block" (revealed on hover, preview only): top right in the section,
+   below the section toolbar. Absolute position: the pill must never
+   take part in the flow (a flow margin would collapse out of the section and
+   leave a band without background at the top of every section). */
 .urd-preview .urd-add-block {
-  /* Mot-skalering: håndtaket skal ha samme skjermstørrelse som
-     admin-panelene uansett zoom (urd-zoom). */
+  /* Counter-scaling: the handle should keep the same on-screen size as
+     the admin panels at any zoom level (urd-zoom). */
   transform: scale(var(--urd-chrome-scale, 1));
   transform-origin: top right;
   position: absolute;
-  /* Avstanden mot-skaleres sammen med chipen: seksjonsverktøylinja over
-     mot-skaleres også, så en fast avstand holder de to fra hverandre på
-     alle zoomnivåer. Nav-klaringen (--urd-section-clear, kun første seksjon
-     under en meny utenfor flyten) legges til, så chipen starter under den
-     parkerte verktøylinja i stedet for bak menyen. */
+  /* The offset is counter-scaled along with the chip: the section toolbar above
+     is counter-scaled too, so a fixed offset keeps the two apart at
+     every zoom level. The nav clearance (--urd-section-clear, first section only,
+     under a menu outside the flow) is added, so the chip starts below the
+     parked toolbar instead of behind the menu. */
   top: calc(var(--urd-section-clear, 0px) + 46px * var(--urd-chrome-scale, 1));
   right: calc(10px * var(--urd-chrome-scale, 1));
-  /* Over blokk-løftet (99999): en overhengende blokk skal ikke dekke knappen */
+  /* Above the block lift (99999): an overhanging block must not cover the button */
   z-index: 100000;
   display: grid;
   justify-items: end;
@@ -2717,11 +2717,11 @@ body:has(dialog:modal) {
   transition: opacity 0.12s ease;
 }
 
-/* Editor-menyene (blokkmenyen og seksjonsgalleriet) følger Urd-adminens
-   fargetema, ikke siden som redigeres: editoren melder temaet inn som
-   --urd-admin-*-variabler (urd-admin-theme), og her overstyres sidens
-   variabler lokalt. Fallbackene er adminens standardtema («grå»), så
-   menyene er lesbare også når previewen åpnes utenfor admin. */
+/* The editor menus (the block menu and the section gallery) follow the Urd admin
+   color theme, not the page being edited: the editor reports the theme as
+   --urd-admin-* variables (urd-admin-theme), and here the page's variables are
+   overridden locally. The fallbacks are the admin default theme ("grey"), so the
+   menus stay readable even when the preview is opened outside admin. */
 .urd-preview .urd-add-block,
 .urd-preview .urd-add-section {
   --urd-color-bg: var(--urd-admin-bg, #0e0f11);
@@ -2735,10 +2735,10 @@ body:has(dialog:modal) {
   pointer-events: auto;
 }
 
-/* Åpnet med dobbeltklikk: menyen står alene ved pekeren, chip-knappen
-   skjules, og menyen holdes synlig uavhengig av hover-reglene. Hevet OVER
-   seksjons-chromet (+ Ny seksjon 100001, seksjonslinjene 100000), så det
-   ligger UNDER menyen i stedet for å stikke gjennom den. */
+/* Opened with a double click: the menu stands alone at the pointer, the chip button
+   is hidden, and the menu stays visible regardless of the hover rules. Raised ABOVE
+   the section chrome (+ New section 100001, the section lines 100000), so that chrome
+   sits UNDER the menu instead of poking through it. */
 .urd-preview .urd-add-block.urd-at-pointer {
   opacity: 1;
   pointer-events: auto;
@@ -2777,12 +2777,12 @@ body:has(dialog:modal) {
   box-shadow: 0 10px 30px rgb(0 0 0 / 45%);
 }
 
-/* Formene: utfoldbar undermeny som spenner begge kolonnene */
+/* Shapes: an expandable submenu spanning both columns */
 .urd-preview .urd-add-block-shapes-toggle {
   grid-column: 1 / -1;
 }
 
-/* Plugin-blokkene: egen merket seksjon under det innebygde */
+/* Plugin blocks: their own labelled section below the built-in ones */
 .urd-preview .urd-add-block-plugins {
   grid-column: 1 / -1;
   margin-top: 2px;
@@ -2798,7 +2798,7 @@ body:has(dialog:modal) {
 .urd-preview .urd-add-block-shapes {
   display: none;
   grid-column: 1 / -1;
-  /* minmax(0, 1fr): innrykket skal aldri presse høyrekolonnen ut av menyen */
+  /* minmax(0, 1fr): the indent must never push the right column out of the menu */
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 4px;
   padding: 4px 0 4px 8px;
@@ -2822,8 +2822,8 @@ body:has(dialog:modal) {
   padding: 6px 8px;
   text-align: left;
   cursor: pointer;
-  /* Lange etiketter uten mellomrom (f.eks. plugin-visninger) skal aldri
-     sprenge cellen: bryt ordet i stedet for å flyte utenfor menyen. */
+  /* Long labels without spaces (plugin views, for example) must never
+     burst the cell: break the word instead of overflowing the menu. */
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -2833,7 +2833,7 @@ body:has(dialog:modal) {
   background: color-mix(in srgb, var(--urd-color-accent) 12%, transparent);
 }
 
-/* Plassholder for ukjente typer: nøytral, aldri ødeleggende */
+/* Placeholder for unknown types: neutral, never destructive */
 .urd-placeholder {
   display: grid;
   place-items: center;
@@ -2843,26 +2843,26 @@ body:has(dialog:modal) {
   opacity: 0.6;
 }
 
-/* Navigasjon */
+/* Navigation */
 .urd-nav {
-  /* Basispaddingen settes av størrelsesklassene (urd-nav-size-*); pillen
-     skalerer den ned med calc, så størrelse og variant komponerer.
-     --urd-nav-shrink er scroll-krympen (urd-nav-compact på verten):
-     faktor 1 uten krymp, så alle varianter komponerer med den. */
+  /* The base padding is set by the size classes (urd-nav-size-*); the pill
+     scales it down with calc, so size and variant compose.
+     --urd-nav-shrink is the scroll shrink (urd-nav-compact on the host):
+     factor 1 when not shrunk, so every variant composes with it. */
   --urd-nav-pad: calc(var(--urd-nav-base-pad, 0.9rem) * var(--urd-nav-shrink, 1));
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   padding: var(--urd-nav-pad) clamp(1rem, 4vw, 2.5rem);
-  /* Bakgrunn og blur bor i varer (settes av nav.js fra nav.style):
-     undermenyer og mobilpanelet gjenbruker samme flate som selve menyen.
-     Blur må gå via custom property fordi backdrop-filter ikke arver. */
+  /* Background and blur live in variables (set by nav.js from nav.style):
+     submenus and the mobile panel reuse the same surface as the menu itself.
+     Blur has to go through a custom property because backdrop-filter does not inherit. */
   background: var(--urd-nav-bg, color-mix(in srgb, var(--urd-color-surface) 85%, transparent));
   backdrop-filter: var(--urd-nav-blur, blur(8px));
   color: var(--urd-color-text);
-  /* Ankerpunkt for mobilpanelet, og egen stacking context så nedtrekk og
-     panel ligger over etterfølgende innhold også når menyen ikke er sticky */
+  /* Anchor point for the mobile panel, and its own stacking context so dropdowns and
+     the panel sit above following content even when the menu is not sticky */
   position: relative;
   z-index: 5000;
 }
@@ -2871,27 +2871,27 @@ body:has(dialog:modal) {
   z-index: 100001;
 }
 
-/* Klistret meny: sticky ligger på verten (header-elementet), som kan
-   forlate sin plass i flyten - nav-en selv kan ikke (se nav.js) */
+/* Sticky menu: sticky lives on the host (the header element), which may
+   leave its place in the flow - the nav itself may not (see nav.js) */
 .urd-nav-sticky {
   position: sticky;
   top: 0;
-  /* Over innholdet: det skal gli under menyen, ikke gjennom den */
+  /* Above the content: it should slide under the menu, not through it */
   z-index: 5000;
 }
 
-/* I preview løftes menyen over seksjonshåndtakene (100000), så barene
-   fortsatt glir under den; editorpanelene (100001+) ligger over alt */
+/* In preview the menu is raised above the section handles (100000), so the bars
+   still slide under it; the editor panels (100001+) sit above everything */
 .urd-preview .urd-nav-sticky {
   z-index: 100001;
 }
 
-/* Scroll-adferd (nav.scroll, tilstandsklassene settes av nav.js fra ren
-   navScrollState): 'hide' glir verten ut over toppen med translate
-   (kompositor, aldri top/margin), 'shrink' krymper paddingen via
-   --urd-nav-shrink-factor (engangs-overgang, ikke scroll-drevet).
-   Overgangene ligger på modusklassen, så menyer uten scroll-adferd
-   aldri får transition. */
+/* Scroll behavior (nav.scroll, the state classes are set by nav.js from pure
+   navScrollState): 'hide' slides the host out past the top with translate
+   (compositor, never top/margin), 'shrink' shrinks the padding via
+   the --urd-nav-shrink factor (a one-off transition, not scroll driven).
+   The transitions live on the mode class, so menus without scroll behavior
+   never get a transition. */
 .urd-nav-scroll {
   transition: translate 0.28s ease;
 }
@@ -2901,7 +2901,7 @@ body:has(dialog:modal) {
 }
 
 .urd-nav-hidden {
-  /* Ekstra klaring så skygge/glød følger med ut av synsfeltet */
+  /* Extra clearance so the shadow and glow follow it out of view */
   translate: 0 calc(-100% - 24px);
 }
 
@@ -2929,36 +2929,36 @@ body:has(dialog:modal) {
 .urd-nav-logo img {
   height: var(--urd-logo-size, 2rem);
   display: block;
-  /* Store logoer vokser UT av linjen (inn i padding/innholdet under),
-     ikke linjen selv - menyhøyden styres ikke av bildet. Margen skalerer
-     med bildehøyden, så bidraget til barhøyden er konstant uansett
-     størrelse (fast del kalibrert mot 2rem-logoen). */
+  /* Large logos grow OUT of the bar (into the padding and the content below),
+     not the bar itself - the menu height is not driven by the image. The margin
+     scales with the image height, so the contribution to the bar height is constant
+     at any size (the fixed part is calibrated against the 2rem logo). */
   margin-block: calc(-1 * var(--urd-nav-pad) + 2px - (var(--urd-logo-size, 2rem) - 2rem) / 2);
 }
 
 .urd-nav-list {
   display: flex;
-  /* Listen spenner barens innerhøyde og sentrerer punktene selv: da kan
-     punkter med undermeny strekkes til full høyde, så undermenyens
-     top: 100 % lander NØYAKTIG på barens bunn (aldri oppå baren, selv når
-     verktøyklyngen er høyere enn tekstpunktene) */
+  /* The list spans the inner height of the bar and centers the items itself: items
+     with a submenu can then stretch to full height, so the submenu's
+     top: 100 % lands EXACTLY on the bottom of the bar (never on top of it, even when
+     the tool cluster is taller than the text items) */
   align-self: stretch;
   align-items: center;
   gap: 1.25rem;
   list-style: none;
 }
 
-/* Vannrette menypunkter brytes aldri inne i etiketten: blir det for trangt,
-   folder nav.js hele lista til burger (innholdsbevisst folding) i stedet
-   for at lange punkter brekker over flere linjer. Mobilpanelet (kolonne)
-   beholder vanlig bryting - der er radene fullbredde. */
+/* Horizontal menu items never wrap inside the label: when space runs short,
+   nav.js folds the whole list into the burger (content-aware folding) instead
+   of letting long items break across several lines. The mobile panel (a column)
+   keeps normal wrapping - there the rows are full width. */
 body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-list a,
 body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
   white-space: nowrap;
 }
 
-/* Menypunktenes plassering (nav.layout): logoen står alltid først.
-   right er standard (dagens utseende via space-between). */
+/* Placement of the menu items (nav.layout): the logo always comes first.
+   right is the default, achieved with space-between. */
 .urd-nav-center .urd-nav-list {
   margin: 0 auto;
 }
@@ -2979,15 +2979,15 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
   opacity: 0.85;
 }
 
-/* Hover-tekstfargen kan overstyres (nav.style.hoverTextColor); standard
-   er aksentfargen som før */
+/* The hover text color can be overridden (nav.style.hoverTextColor); the default
+   is the accent color */
 .urd-nav-list a:hover,
 .urd-nav-list a:focus-visible {
   opacity: 1;
   color: var(--urd-nav-hover-text, var(--urd-color-accent));
 }
 
-/* Synlig tastaturfokus på alt interaktivt i menyen */
+/* Visible keyboard focus on everything interactive in the menu */
 .urd-nav a:focus-visible,
 .urd-nav button:focus-visible {
   outline: 2px solid var(--urd-color-accent);
@@ -2995,9 +2995,9 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
   border-radius: var(--urd-radius-sm);
 }
 
-/* Verktøy-klyngen ytterst til høyre: lys/mørk-bryter og burger.
-   Tom klynge (intet alt-tema, desktop) skjules helt, så menylisten
-   fortsatt ender helt ute på kanten. */
+/* The tool cluster at the far right: light/dark toggle and burger.
+   An empty cluster (no alternate theme, desktop) is hidden entirely, so the menu
+   list still ends flush with the edge. */
 .urd-nav-tools {
   display: flex;
   align-items: center;
@@ -3008,8 +3008,8 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
   display: none;
 }
 
-/* Med verktøy-klyngen etter listen må plasseringen styres av auto-marger,
-   ikke space-between (tre barn ville blitt spredt jevnt utover) */
+/* With the tool cluster after the list, placement has to be driven by auto margins,
+   not space-between (three children would be spread evenly apart) */
 .urd-nav-right .urd-nav-list {
   margin-left: auto;
 }
@@ -3018,7 +3018,7 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
   margin-left: auto;
 }
 
-/* Lys/mørk-bryteren (vises kun når temaet har et alt-motstykke) */
+/* The light/dark toggle (shown only when the theme has an alternate counterpart) */
 .urd-nav-theme {
   display: inline-flex;
   align-items: center;
@@ -3031,8 +3031,8 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
   opacity: 0.85;
 }
 
-/* Handlekurven i menyen (nav.cart): samme uttrykk som temabryteren,
-   med antall-badge oppe til høyre. */
+/* The cart in the menu (nav.cart): the same expression as the theme toggle,
+   with a count badge at the top right. */
 .urd-nav-cart {
   position: relative;
   display: inline-flex;
@@ -3046,8 +3046,8 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
   opacity: 0.85;
 }
 
-/* Klaringen mot neste verktøy ligger på naboen: badgen henger utenfor
-   knappen, og en kurv sist i klyngen skal stå kant i kant. */
+/* The clearance towards the next tool sits on the neighbor: the badge hangs outside
+   the button, and a cart last in the cluster should sit flush. */
 .urd-nav-cart + .urd-nav-theme,
 .urd-nav-cart + .urd-nav-burger {
   margin-inline-start: 0.5rem;
@@ -3086,7 +3086,7 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
   color: var(--urd-color-accent);
 }
 
-/* Burgeren (mobilmenyens åpner): skjult på desktop, vises via body.urd-mobile */
+/* The burger (the mobile menu opener): hidden on desktop, shown via body.urd-mobile */
 .urd-nav-burger {
   display: none;
   align-items: center;
@@ -3098,13 +3098,13 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
   padding: 0.35rem;
 }
 
-/* Undermenyer (disclosure): punktet er lenke + pilknapp (split) eller én
-   knapp med tittel + pil (toggle); pilen snur når menyen er åpen */
+/* Submenus (disclosure): the item is a link plus a caret button (split) or a single
+   button with title plus caret (toggle); the caret flips when the menu is open */
 .urd-nav-has-sub {
   position: relative;
   display: flex;
-  /* Full barhøyde (se .urd-nav-list): undermenyens anker er punktets
-     underkant, og den skal være barens bunn */
+  /* Full bar height (see .urd-nav-list): the submenu is anchored to the item's
+     bottom edge, and that edge has to be the bottom of the bar */
   align-self: stretch;
   align-items: center;
   gap: 0.15rem;
@@ -3145,8 +3145,8 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
 .urd-nav-sub {
   display: none;
   position: absolute;
-  /* Ankres UNDER baren, ikke rett under menypunktet: punktet er midtstilt
-     i baren, så top: 100% alene ville landet inni den (over nav-teksten) */
+  /* Anchored BELOW the bar, not directly below the menu item: the item is centered
+     in the bar, so top: 100% alone would land inside it (over the nav text) */
   top: calc(100% + var(--urd-nav-pad, 0.9rem));
   left: 0;
   z-index: 1;
@@ -3154,22 +3154,22 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
   margin: 0;
   padding: 0.5rem;
   list-style: none;
-  /* Egen flate-var: som standard kun fargesløret, aldri bakgrunnsbildet
-     (nav.style.subImage skrur bildet på; nav.js setter varen) */
+  /* Its own surface variable: by default only the color veil, never the background
+     image (nav.style.subImage turns the image on; nav.js sets the variable) */
   background: var(--urd-nav-sub-bg, color-mix(in srgb, var(--urd-color-surface) 85%, transparent));
-  /* Varen arver fra nav-en, også når nav.style skrur bluren av */
+  /* The variable inherits from the nav, also when nav.style turns the blur off */
   backdrop-filter: var(--urd-nav-blur, blur(8px));
   border-radius: var(--urd-radius-sm);
-  /* Skyggen skal kun falle nedover: kortet ligger kant i kant med barens
-     bunn, og blur uten negativ spredning ville blødd oppover og lagt et
-     mørkt bånd på baren (samme fargebug som utfall-varianten hadde).
-     Alltid svartbasert: en tekstfarget skygge blir en lys glorie i mørkt
-     tema, og nedtrekket skal matche baren, som ikke har noen. */
+  /* The shadow must only fall downwards: the card sits flush with the bottom
+     of the bar, and a blur without negative spread would bleed upwards and lay
+     a dark band across the bar.
+     Always black-based: a text-colored shadow becomes a bright halo in a dark
+     theme, and the dropdown should match the bar, which has none. */
   box-shadow: 0 14px 28px -8px rgb(0 0 0 / 18%);
   grid-template-columns: repeat(var(--urd-nav-sub-cols, 1), 1fr);
 }
 
-/* Med menypunktene til høyre må undermenyen holde seg innenfor kanten */
+/* With the menu items on the right, the submenu has to stay inside the edge */
 .urd-nav-right .urd-nav-sub {
   left: auto;
   right: 0;
@@ -3186,9 +3186,9 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
   white-space: nowrap;
 }
 
-/* Undermeny-design (nav.style.subStyle, additivt fra v0.6): standarden er
-   kortet over (card); variantklassen står på nav-elementet. Kolonnetallet
-   (--urd-nav-sub-cols) settes av nav.js og virker i alle variantene. */
+/* Submenu design (nav.style.subStyle): the default is the
+   card above (card); the variant class sits on the nav element. The column count
+   (--urd-nav-sub-cols) is set by nav.js and works in every variant. */
 .urd-nav-sub-flat .urd-nav-sub {
   border-radius: 0;
   box-shadow: none;
@@ -3203,8 +3203,8 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
 }
 
 .urd-nav-sub-pills .urd-nav-sub a {
-  /* Egen pillefarge (nav.style.subPillColor) med undermeny-flaten som
-     standard; skyggen kun nedover (se kortet over) */
+  /* Its own pill color (nav.style.subPillColor) with the submenu surface as the
+     default; the shadow falls downwards only (see the card above) */
   background: var(--urd-nav-sub-pill, var(--urd-nav-sub-bg, color-mix(in srgb, var(--urd-color-surface) 92%, transparent)));
   backdrop-filter: var(--urd-nav-blur, blur(8px));
   border-radius: 999px;
@@ -3227,9 +3227,9 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
   border-top: 1px solid color-mix(in srgb, var(--urd-color-text) 15%, transparent);
 }
 
-/* Utfall: undermenyen spenner hele menybredden. Punktet slipper å være
-   ankeret (position: static), så nav-en selv (position: relative) blir
-   beholderen, og top: 100% lander rett under baren. */
+/* Flyout: the submenu spans the full menu width. The item stops being
+   the anchor (position: static), so the nav itself (position: relative) becomes
+   the container, and top: 100% lands right below the bar. */
 .urd-nav-sub-flyout .urd-nav-has-sub {
   position: static;
 }
@@ -3239,20 +3239,20 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
   right: 0;
   top: 100%;
   border-radius: 0 0 var(--urd-radius-md) var(--urd-radius-md);
-  /* Skyggen skal kun falle nedover: negativ spredning hindrer at blur-en
-     blør oppover og legger et mørkt bånd på selve baren */
+  /* The shadow must only fall downwards: negative spread keeps the blur from
+     bleeding upwards and laying a dark band across the bar itself */
   box-shadow: 0 16px 24px -8px rgb(0 0 0 / 15%);
 }
 
-/* Mobilmeny: burgeren erstatter listen; åpen liste blir et kolonnepanel
-   under menyen med egen flate (--urd-nav-sub-bg, uten bakgrunnsbildet),
-   og undermenyene blir statiske trekkspill i stedet for svevende bokser.
-   (Sidestilt på trange vinduer trenger ingen egne regler: nav.js rendrer
-   den som vanlig topplinje - effektiv variant bar - under 900px.)
-   Tvilling-selektorene .urd-nav-mobile (klasse på nav-en, satt av nav.js
-   fra FAKTISK bredde) gir burgeren også i previewens desktop-modus, der
-   body.urd-mobile eies av editorens viewport-valg - hold dem alltid
-   samlet i samme regelblokk. */
+/* Mobile menu: the burger replaces the list; an open list becomes a column panel
+   below the menu with its own surface (--urd-nav-sub-bg, without the background
+   image), and the submenus become static accordions instead of floating boxes.
+   (A side column in narrow windows needs no rules of its own: nav.js renders
+   it as an ordinary top bar - effective variant bar - below 900px.)
+   The twin selectors .urd-nav-mobile (a class on the nav, set by nav.js
+   from the ACTUAL width) give the burger in the preview's desktop mode too, where
+   body.urd-mobile is owned by the editor's viewport choice - always keep them
+   together in the same rule block. */
 body.urd-mobile .urd-nav-list,
 .urd-nav-mobile .urd-nav-list {
   display: none;
@@ -3286,7 +3286,7 @@ body.urd-mobile .urd-nav-list a,
 .urd-nav-mobile .urd-nav-list a {
   display: block;
   padding: 0.5rem 0;
-  /* Hover-pillens 999px-radius skal ikke ligge på fullbredde mobilrader */
+  /* The hover pill's 999px radius must not apply to full-width mobile rows */
   border-radius: var(--urd-radius-sm);
 }
 
@@ -3311,13 +3311,13 @@ body.urd-mobile .urd-nav-sub,
   box-shadow: none;
 }
 
-/* Flytende variant (nav.variant, additivt fra v0.6): løsrevet pille med
-   luft mot kantene. Verten (header) er fortsatt sticky i full bredde;
-   pillen sentreres inni den og fester dermed med toppluft. */
-/* Verten tas ut av flyten når pillen flyter: innholdet starter øverst og
-   pillen svever over hero-en. Sticky gir fixed (følger med ved scrolling),
-   ellers absolute (blir igjen øverst). pointer-events slippes gjennom
-   stripene ved siden av pillen, så innholdet bak kan klikkes. */
+/* Floating variant (nav.variant): a detached pill with
+   air towards the edges. The host (header) is still sticky at full width;
+   the pill is centered inside it and therefore sticks with air above it. */
+/* The host leaves the flow when the pill floats: the content starts at the top and
+   the pill hovers over the hero. Sticky gives fixed (it follows on scroll),
+   otherwise absolute (it stays behind at the top). pointer-events pass through
+   the strips beside the pill, so the content behind can be clicked. */
 .urd-nav-float {
   position: absolute;
   top: 0;
@@ -3339,9 +3339,9 @@ body.urd-mobile .urd-nav-sub,
   pointer-events: auto;
 }
 
-/* Overlay (nav.overlay, kun variant bar): fullbredde-linjen tas ut av flyten
-   og legges oppå toppseksjonen, så toppseksjonens bakgrunn fyller helt opp og
-   en gjennomsiktig meny avslører hero bak seg. Sticky blir fixed, som float. */
+/* Overlay (nav.overlay, variant bar only): the full-width bar leaves the flow
+   and is laid over the top section, so the top section's background fills all the way
+   up and a transparent menu reveals the hero behind it. Sticky becomes fixed, like float. */
 .urd-nav-overlay {
   position: absolute;
   top: 0;
@@ -3359,40 +3359,40 @@ body.urd-mobile .urd-nav-sub,
 }
 
 .urd-nav-var-floating {
-  /* Padding via varen, ikke padding-block: logobildets negative
-     margin-triks er kalibrert mot --urd-nav-pad og må følge med.
-     Pillen skalerer basispaddingen ned, så størrelsesvalget komponerer. */
+  /* Padding through the variable, not padding-block: the logo image's negative
+     margin trick is calibrated against --urd-nav-pad and has to follow it.
+     The pill scales the base padding down, so the size choice composes. */
   --urd-nav-pad: calc(var(--urd-nav-base-pad, 0.9rem) * 0.67 * var(--urd-nav-shrink, 1));
   margin: 0.75rem auto 0;
   width: min(1100px, calc(100% - 2rem));
   border-radius: 999px;
 }
 
-/* Firkant-varianten (nav.variant floating-square): pillen uten avrunding */
+/* The square variant (nav.variant floating-square): the pill without rounding */
 .urd-nav-var-floating.urd-nav-square {
   border-radius: 0;
 }
 
-/* Tab-varianten (nav.variant floating-tab): firkant topp, kun de to nedre
-   hjørnene avrundet - henger ned fra toppen. Arver luft over + sidemarg fra
-   basen; med topGap: false (urd-nav-flush) blir det en nedhengende header. */
+/* The tab variant (nav.variant floating-tab): a square top, only the two lower
+   corners rounded - it hangs down from the top. Inherits the air above and the side
+   margin from the base; with topGap: false (urd-nav-flush) it becomes a hanging header. */
 .urd-nav-var-floating.urd-nav-tab {
   border-radius: 0 0 var(--urd-radius-md) var(--urd-radius-md);
 }
 
-/* Glød rundt pillen: tilvalg (av som standard) */
+/* Glow around the pill: opt-in (off by default) */
 .urd-nav-glow {
   box-shadow: 0 8px 30px color-mix(in srgb, var(--urd-color-accent) 35%, transparent);
 }
 
-/* Uten luft over: pillen ligger helt i toppen (nav.style.topGap: false) */
+/* Without air above: the pill sits right at the top (nav.style.topGap: false) */
 .urd-nav-var-floating.urd-nav-flush {
   margin-top: 0;
 }
 
-/* Fire størrelser (nav.style.size, additivt fra v0.6): md er standard og
-   trenger ingen klasse. Basispaddingen driver også logokalibreringen og
-   undermeny-ankeret, så alt følger med størrelsen. */
+/* Four sizes (nav.style.size): md is the default and
+   needs no class. The base padding also drives the logo calibration and the
+   submenu anchor, so everything follows the size. */
 .urd-nav-size-sm {
   --urd-nav-base-pad: 0.55rem;
   font-size: 0.85rem;
@@ -3408,16 +3408,16 @@ body.urd-mobile .urd-nav-sub,
   font-size: 1.15rem;
 }
 
-/* Sidestilt meny (nav.variant side-left/side-right): fast kolonne langs
-   kanten; body får innholds-padding på samme side (urd-side-*). Sticky
-   er irrelevant her - kolonnen står alltid fast. */
+/* Side menu (nav.variant side-left/side-right): a fixed column along
+   the edge; body gets content padding on the same side (urd-side-*). Sticky
+   is irrelevant here - the column is always fixed. */
 .urd-nav-side-host {
   position: fixed;
   top: 0;
   bottom: 0;
   left: 0;
-  /* Bredden styres av nav.style.width via variabelen (settes av nav.js på
-     body, så innholds-paddingen under leser samme verdi) */
+  /* The width is driven by nav.style.width through the variable (set by nav.js on
+     body, so the content padding below reads the same value) */
   width: var(--urd-nav-side-width, 250px);
   z-index: 5000;
 }
@@ -3451,7 +3451,7 @@ body.urd-side-right {
   justify-content: center;
 }
 
-/* Kolonneretning: auto-margene fra topplinje-oppsettet nullstilles */
+/* Column direction: the auto margins from the top-bar layout are reset */
 .urd-nav-side-host .urd-nav-list {
   flex-direction: column;
   align-items: stretch;
@@ -3459,21 +3459,21 @@ body.urd-side-right {
   margin: 1.5rem 0 0;
 }
 
-/* Ekstra spesifisitet med vilje: kolonneraden skal vinne over
-   hover-stilenes display/padding (de står senere i fila) */
+/* Extra specificity on purpose: the column row has to win over
+   the hover styles' display and padding (they come later in the file) */
 .urd-nav-side-host .urd-nav .urd-nav-list a {
   display: block;
   padding: 0.45rem 0.6rem;
   border-radius: var(--urd-radius-sm);
 }
 
-/* Verktøy-klyngen (bryter) nederst i kolonnen */
+/* The tool cluster (toggle) at the bottom of the column */
 .urd-nav-side-host .urd-nav-tools {
   margin: auto 0 0;
   justify-content: center;
 }
 
-/* Undermenyer blir trekkspill i kolonnen (som i mobilpanelet) */
+/* Submenus become accordions in the column (as in the mobile panel) */
 .urd-nav-side-host .urd-nav-has-sub {
   flex-wrap: wrap;
 }
@@ -3492,15 +3492,15 @@ body.urd-side-right {
   box-shadow: none;
 }
 
-/* Logobildets negative margin-triks gjelder topplinjen, ikke kolonnen */
+/* The logo image's negative margin trick applies to the top bar, not the column */
 .urd-nav-side-host .urd-nav-logo img {
   margin-block: 0;
 }
 
-/* Vertikal plassering i kolonnen (nav.style.sidePlacement): standard er
-   øverst, uavhengig av nav.layout (topplinjens begrep). Auto-margene
-   fordeler restplassen; verktøy-klyngen slipper sin auto-marg så listen
-   styrer. */
+/* Vertical placement in the column (nav.style.sidePlacement): the default is
+   the top, independent of nav.layout (a top-bar concept). The auto margins
+   distribute the remaining space; the tool cluster drops its auto margin so the
+   list is in charge. */
 .urd-nav-side-host .urd-nav-splace-middle .urd-nav-list {
   margin: auto 0;
 }
@@ -3514,9 +3514,9 @@ body.urd-side-right {
   margin-top: 1rem;
 }
 
-/* Pille-punkter og understrek-liste gjelder også trekkspillet i kolonnen;
-   kolonneradens radius/padding (den ekstra spesifikke regelen over) må
-   overstyres her, senere i fila med samme spesifisitet */
+/* Pill items and the underline list apply to the column accordion too;
+   the column row's radius and padding (the extra specific rule above) have to be
+   overridden here, later in the file with the same specificity */
 .urd-nav-side-host .urd-nav-sub-pills .urd-nav-sub a {
   border-radius: 999px;
   padding: 0.45rem 1.1rem;
@@ -3526,7 +3526,7 @@ body.urd-side-right {
   border-radius: 0;
 }
 
-/* Tekstjustering av punktene i kolonnen (nav.style.sideAlign) */
+/* Text alignment of the items in the column (nav.style.sideAlign) */
 .urd-nav-side-host .urd-nav-salign-center .urd-nav-list a,
 .urd-nav-side-host .urd-nav-salign-center .urd-nav-toggle {
   text-align: center;
@@ -3539,9 +3539,9 @@ body.urd-side-right {
   justify-content: flex-end;
 }
 
-/* Undermeny-pilen følger tekstjusteringen i kolonnen (eiers regel 23. juli
-   2026): høyrestilt tekst får pilen på VENSTRE side; midtstilt tekst
-   sentreres uten at pilen skyver på den (pilen står absolutt i kanten). */
+/* The submenu caret follows the text alignment in the column: right-aligned
+   text puts the caret on the LEFT side; centered text is centered without the
+   caret pushing it (the caret is placed absolutely at the edge). */
 .urd-nav-side-host .urd-nav-salign-right .urd-nav-has-sub > .urd-nav-caret {
   order: -1;
 }
@@ -3565,7 +3565,7 @@ body.urd-side-right {
   top: 0.1rem;
 }
 
-/* Dra-håndtak for kolonnebredden (kun preview; nav.js legger det på) */
+/* Drag handle for the column width (preview only; nav.js adds it) */
 .urd-nav-side-resize {
   position: absolute;
   top: 0;
@@ -3585,9 +3585,9 @@ body.urd-side-right {
   background: color-mix(in srgb, var(--urd-color-accent) 45%, transparent);
 }
 
-/* På mobil faller sidestilt tilbake til topplinjen med burger: kolonnen
-   blir vanlig sticky topplinje og body-paddingen fjernes. (Trange vinduer
-   under 900px håndteres i nav.js: effektiv variant bar, ingen egne regler.) */
+/* On mobile a side menu falls back to the top bar with a burger: the column
+   becomes an ordinary sticky top bar and the body padding is removed. (Narrow windows
+   below 900px are handled in nav.js: effective variant bar, no rules of their own.) */
 body.urd-mobile .urd-nav-side-host {
   position: sticky;
   bottom: auto;
@@ -3615,17 +3615,17 @@ body.urd-mobile.urd-side-right {
   padding-right: 0;
 }
 
-/* Dra-håndtaket for kolonnebredden (kun preview) skjules når kolonnen er
-   falt til topplinje, og i Ren visning */
+/* The drag handle for the column width (preview only) is hidden when the column has
+   fallen back to a top bar, and in Clean view */
 body.urd-mobile .urd-nav-side-resize,
 body.urd-chrome-off .urd-nav-side-resize {
   display: none;
 }
 
-/* Mobilpanelet henger kant i kant under pillen som én sammenhengende
-   flate: kun de nedre hjørnene rundes, og pillen flater ut sine nedre
-   hjørner mens panelet er åpent (longhands, så hver variants toppfasong
-   består). */
+/* The mobile panel hangs flush below the pill as one continuous
+   surface: only the lower corners are rounded, and the pill flattens its lower
+   corners while the panel is open (longhands, so the top shape of each variant
+   survives). */
 body.urd-mobile .urd-nav-var-floating.urd-nav-open .urd-nav-list,
 .urd-nav-mobile.urd-nav-var-floating.urd-nav-open .urd-nav-list {
   top: 100%;
@@ -3638,9 +3638,9 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open,
   border-bottom-right-radius: 0;
 }
 
-/* Hover-stiler for menylenkene (nav.style.hover, additivt fra v0.6).
-   Standard er aksentfarge-skiftet over; klassene under legger på mer.
-   Alt gjelder også :focus-visible, så tastatur får samme tilbakemelding. */
+/* Hover styles for the menu links (nav.style.hover).
+   The default is the accent color shift above; the classes below add more.
+   Everything applies to :focus-visible too, so the keyboard gets the same feedback. */
 .urd-nav-hover-underline .urd-nav-list a {
   position: relative;
 }
@@ -3681,15 +3681,15 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open,
   transition: transform 0.15s ease, text-shadow 0.15s ease;
 }
 
-/* Gløden ligger som text-shadow BAK tegnene; styrken styres av
-   nav.style.hoverGlow (nav.js setter varen som ferdig prosent) */
+/* The glow is a text-shadow BEHIND the characters; the strength is driven by
+   nav.style.hoverGlow (nav.js sets the variable as a finished percentage) */
 .urd-nav-hover-lift .urd-nav-list a:hover,
 .urd-nav-hover-lift .urd-nav-list a:focus-visible {
   transform: translateY(-2px);
   text-shadow: 0 4px 14px color-mix(in srgb, var(--urd-nav-hover, var(--urd-color-accent)) var(--urd-nav-hover-glow, 60%), transparent);
 }
 
-/* «Løft»: kun løftet, ingen glød */
+/* "Lift": the lift only, no glow */
 .urd-nav-hover-lift-plain .urd-nav-list a:hover,
 .urd-nav-hover-lift-plain .urd-nav-list a:focus-visible {
   transform: translateY(-2px);
@@ -3713,15 +3713,15 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open,
   }
 }
 
-/* Smart guides: snappelinjer mot naboblokker under dra (kun preview) */
+/* Smart guides: snap lines against neighboring blocks while dragging (preview only) */
 .urd-preview .urd-smart-guide {
   position: absolute;
   z-index: 1001;
-  /* Tykkelsen mot-skaleres (urd-zoom), så linja holder skjermtykkelsen sin
-     på alle zoomnivåer. Fargen er BEVISST fast magenta og ikke admin-
-     aksenten: hjelpelinjer skal skille seg fra både rutenettet (som bruker
-     aksenten) og fra sidens egne farger, uansett admin-tema. Samme
-     konvensjon som Figma og Wix. Skyggen gir kontrast mot lyse flater. */
+  /* The thickness is counter-scaled (urd-zoom), so the line keeps its on-screen
+     thickness at every zoom level. The color is DELIBERATELY a fixed magenta and not
+     the admin accent: guides must stand apart from both the grid (which uses
+     the accent) and the page's own colors, whatever the admin theme. The same
+     convention as Figma and Wix. The shadow gives contrast against light surfaces. */
   background: #ff2d87;
   box-shadow: 0 0 0 calc(1px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 55%, transparent);
   pointer-events: none;
@@ -3739,8 +3739,8 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open,
   height: calc(2px * var(--urd-chrome-scale, 1));
 }
 
-/* Multimarkering: utvalgsramme (marquee), medlems-markering og den
-   flytende juster/fordel-verktøylinjen */
+/* Multi-selection: the selection frame (marquee), member highlighting and the
+   floating align/distribute toolbar */
 .urd-preview .urd-marquee {
   position: absolute;
   z-index: 1002;
@@ -3759,8 +3759,8 @@ body.urd-marqueeing {
 }
 
 .urd-multi-toolbar {
-  /* Mot-skalering (urd-zoom): ankeret settes av JS i viewport-
-     koordinater, så origin må være det hjørnet. */
+  /* Counter-scaling (urd-zoom): the anchor is set by JS in viewport
+     coordinates, so the origin has to be that corner. */
   transform: scale(var(--urd-chrome-scale, 1));
   transform-origin: top left;
   position: fixed;
@@ -3797,13 +3797,13 @@ body.urd-marqueeing {
   background: rgb(255 255 255 / 12%);
 }
 
-/* Slett-knappen i utvalgslinjen: destruktiv tone ved pek. */
+/* The delete button in the selection bar: a destructive tone on hover. */
 .urd-multi-toolbar .urd-multi-delete:hover {
   background: rgb(224 82 82 / 25%);
   color: #ffb4b4;
 }
 
-/* Dra-håndtaket i utvalgslinjen: hele utvalget dras samlet. */
+/* The drag handle in the selection bar: the whole selection is dragged as one. */
 .urd-multi-toolbar .urd-multi-drag {
   cursor: grab;
   touch-action: none;
@@ -3820,9 +3820,9 @@ body.urd-marqueeing {
   white-space: nowrap;
 }
 
-/* Hjelpelinjer for hele siden (av/på-knappen ved visningsvalgene):
-   stiplet aksent, i motsetning til de heltrukne smarte dra-linjene.
-   Under smart-guidene i z, aldri klikkbare, aldri hos besøkende. */
+/* Page-wide guides (the on/off button next to the view choices):
+   a dashed accent, in contrast to the solid smart drag lines.
+   Below the smart guides in z, never clickable, never shown to visitors. */
 .urd-preview .urd-page-guide {
   position: absolute;
   z-index: 1000;
@@ -3852,7 +3852,7 @@ body.urd-marqueeing {
   );
 }
 
-/* Delt footer (site.footer): vises på alle sider når show er på */
+/* Shared footer (site.footer): shown on every page when show is on */
 #urd-footer .urd-footer {
   padding: 2rem clamp(1rem, 4vw, 2.5rem);
   background: var(--urd-color-surface);
@@ -3860,14 +3860,14 @@ body.urd-marqueeing {
   font-size: 0.9rem;
   display: grid;
   gap: 0.3rem;
-  /* Egen stacking context så en lagbasert bakgrunn (.urd-footer-bg, z-index -1)
-     ligger bak innholdet men foran footerens egen flate. */
+  /* Its own stacking context so a layered background (.urd-footer-bg, z-index -1)
+     sits behind the content but in front of the footer's own surface. */
   position: relative;
   isolation: isolate;
 }
 
-/* Påskrudd, men tom footer: en synlig, men helt tom flate (surface-bakgrunn),
-   ingen tekst. Fylles så snart noe legges inn i Footer-panelet. */
+/* Turned on but empty footer: a visible, completely empty surface (surface background),
+   no text. It fills as soon as something is entered in the Footer panel. */
 #urd-footer .urd-footer-empty {
   min-height: 4rem;
 }
@@ -3880,9 +3880,9 @@ body.urd-marqueeing {
   text-align: right;
 }
 
-/* Rik footer: merkevare, kolonner, sosiale lenker og bunnlinje.
-   #urd-footer-prefix kreves for å slå basisregelen (#urd-footer .urd-footer,
-   id+klasse) som ellers holder display: grid og gjør footeren til én kolonne. */
+/* Rich footer: brand, columns, social links and bottom line.
+   The #urd-footer prefix is required to beat the base rule (#urd-footer .urd-footer,
+   id+class) which otherwise keeps display: grid and makes the footer a single column. */
 #urd-footer .urd-footer-rich {
   display: block;
   padding: 0;
@@ -3893,9 +3893,9 @@ body.urd-marqueeing {
   margin: 0 auto;
   padding: 2.6rem clamp(1rem, 4vw, 2.5rem) 1.4rem;
 }
-/* Merke + lenkekolonner i ETT rutenett: like brede kolonner (1fr), lik gap,
-   alltid på én rad. --n = antall spor (en bred kolonne teller to). Kollapser
-   responsivt til 2 og 1 kolonne. Sentrert/doormat/Stor CTA bruker flex-kolonne. */
+/* Brand + link columns in ONE grid: equally wide columns (1fr), equal gap,
+   always on one row. --n = the number of tracks (a wide column counts as two). Collapses
+   responsively to 2 and 1 column. Centered/doormat/Large CTA use a flex column. */
 .urd-footer-top {
   display: grid;
   grid-template-columns: 1.7fr repeat(var(--n, 3), minmax(0, 1fr));
@@ -3908,7 +3908,7 @@ body.urd-marqueeing {
 .urd-footer-col {
   min-width: 0;
 }
-/* Lang kolonne: spenner over to spor, lenkene deles i to underkolonner. */
+/* Wide column: spans two tracks, the links split into two sub-columns. */
 .urd-footer-col-wide {
   grid-column: span 2;
 }
@@ -3921,7 +3921,7 @@ body.urd-marqueeing {
   break-inside: avoid;
   margin-bottom: 0.55rem;
 }
-/* «Sentrert» kolonne-justering: den brede kolonnens overskrift midtstilles. */
+/* "Centered" column alignment: the wide column's heading is centered. */
 .urd-footer-cols-center .urd-footer-col-wide h4 {
   text-align: center;
 }
@@ -3953,7 +3953,7 @@ body.urd-marqueeing {
     grid-template-columns: 1fr;
   }
 }
-/* Merket: tekst, logo (bilde) eller begge (logo + tekst side ved side). */
+/* The brand: text, a logo (image) or both (logo + text side by side). */
 .urd-footer-brand-id {
   display: flex;
   align-items: center;
@@ -4056,7 +4056,7 @@ body.urd-marqueeing {
   }
 }
 
-/* Bunnlinja: tekst til venstre, valgfrie lenker til høyre. */
+/* The bottom line: text on the left, optional links on the right. */
 .urd-footer-baseline-text {
   display: flex;
   flex-wrap: wrap;
@@ -4068,7 +4068,7 @@ body.urd-marqueeing {
   gap: 0.4rem 1.2rem;
 }
 
-/* Doormat-lenkeraden (Sentrert / Stor CTA): én sentrert rad med lenker. */
+/* The doormat link row (Centered / Large CTA): one centered row of links. */
 .urd-footer-linkrow {
   display: flex;
   flex-wrap: wrap;
@@ -4080,7 +4080,7 @@ body.urd-marqueeing {
   justify-content: center;
 }
 
-/* Handlingsoppfordring (CTA): overskrift + undertekst + knapp/nyhetsbrev. */
+/* Call to action (CTA): heading + subtext + button or newsletter. */
 .urd-footer-cta {
   margin-top: 1.1rem;
   max-width: 22rem;
@@ -4114,7 +4114,7 @@ body.urd-marqueeing {
   text-decoration: none;
   filter: brightness(1.06);
 }
-/* Stor sentrert CTA (Stor CTA-malen). */
+/* Large centered CTA (the Large CTA template). */
 .urd-footer-bigcta {
   max-width: 40rem;
   margin: 0 auto;
@@ -4134,7 +4134,7 @@ body.urd-marqueeing {
   margin-top: 1.1rem;
   padding: 0.7rem 1.4rem;
 }
-/* Nyhetsbrev-skjema. */
+/* Newsletter form. */
 .urd-footer-nl {
   margin-top: 0.7rem;
 }
@@ -4167,7 +4167,7 @@ body.urd-marqueeing {
 .urd-footer-nl-status.feil {
   color: #e5484d;
 }
-/* Honeypot: helt skjult for mennesker, synlig for bots. */
+/* Honeypot: completely hidden from humans, visible to bots. */
 .urd-footer-hp {
   position: absolute;
   left: -9999px;
@@ -4176,7 +4176,7 @@ body.urd-marqueeing {
   opacity: 0;
 }
 
-/* Knapper */
+/* Buttons */
 .urd-button {
   display: inline-flex;
   align-items: center;
@@ -4192,8 +4192,8 @@ body.urd-marqueeing {
 
 .urd-button-primary {
   background: var(--urd-color-accent);
-  /* Tekst på aksent (additivt token fra v0.6): uten token brukes bakgrunns-
-     fargen som før, så eksisterende paletter rendres uendret */
+  /* Text on accent: without the token the background color is used, so
+     palettes that do not define it render unchanged */
   color: var(--urd-color-accent-text, var(--urd-color-bg));
 }
 
@@ -4206,11 +4206,11 @@ body.urd-marqueeing {
   color: var(--urd-color-accent);
 }
 
-/* Animert gradientbakgrunn (pan/orbit): gradienten males på en 200 %-løper
-   (gradient.js) som forskyves med transform på kompositor-tråden, aldri
-   background-position (repaint av laget per frame). Verten klipper
-   (urd-bg-loop-host). translate-% er av løperen selv, så -50 % = en hel
-   flatebredde/-høyde: samme reisevei som den gamle position-utgaven. */
+/* Animated gradient background (pan/orbit): the gradient is painted on a 200 % runner
+   (gradient.js) that is offset with transform on the compositor thread, never
+   background-position (a repaint of the layer per frame). The host clips
+   (urd-bg-loop-host). The translate % is of the runner itself, so -50 % is one whole
+   surface width or height. */
 .urd-bg-pan-runner,
 .urd-bg-orbit-runner {
   position: absolute;
@@ -4229,11 +4229,11 @@ body.urd-marqueeing {
   to { transform: translate(-50%, -50%); }
 }
 
-/* Én-veis panorering: sirkulær gjentakende gradient (siste farge glir
-   tilbake til første) på en oversized løper som forskyves nøyaktig én
-   periode langs gradientaksen per runde (px-mål fra loopGeometry i
-   gradient.js) - sømløst for enhver vinkel eieren setter. Verten
-   klipper, så løperen aldri stikker ut av seksjonen. */
+/* One-way panning: a circular repeating gradient (the last color slides
+   back into the first) on an oversized runner that is offset by exactly one
+   period along the gradient axis per cycle (px measurements from loopGeometry in
+   gradient.js) - seamless for any angle the owner sets. The host
+   clips, so the runner never sticks out of the section. */
 .urd-bg-loop-host {
   overflow: hidden;
 }
@@ -4248,8 +4248,8 @@ body.urd-marqueeing {
   to { transform: translate(var(--urd-loop-dx, 0px), var(--urd-loop-dy, 0px)); }
 }
 
-/* Rotasjon: vinkelen spinner via den registrerte --urd-grad-spin
-   (CSS.registerProperty i gradient.js); uten støtte står den stille */
+/* Rotation: the angle spins through the registered --urd-grad-spin
+   (CSS.registerProperty in gradient.js); without support it stands still */
 .urd-bg-rotate {
   animation: urd-bg-rotate 40s linear infinite;
 }
@@ -4258,8 +4258,8 @@ body.urd-marqueeing {
   to { --urd-grad-spin: 360deg; }
 }
 
-/* Pulsering (radiell): styrken puster rundt lagets egen opacity;
-   0/100 %-rammene arver inline-verdien, så pusten alltid starter der */
+/* Pulsing (radial): the strength breathes around the layer's own opacity;
+   the 0/100 % frames inherit the inline value, so the breath always starts there */
 .urd-bg-pulse {
   animation: urd-bg-pulse 7s ease-in-out infinite;
 }
@@ -4268,9 +4268,9 @@ body.urd-marqueeing {
   50% { opacity: calc(var(--urd-bg-op, 1) * 0.45); }
 }
 
-/* Bane (radiell): løperen er forankret (inline left/top fra gradient.js)
-   så gradientens sentrum står på plass, og banen svinger den ±2 % av
-   egen størrelse (= 4 % av flaten, samme utslag som før) */
+/* Orbit (radial): the runner is anchored (inline left/top from gradient.js)
+   so the center of the gradient stays in place, and the orbit swings it ±2 % of
+   its own size (= 4 % of the surface) */
 .urd-bg-orbit-runner {
   animation: urd-bg-orbit 26s ease-in-out infinite;
 }
@@ -4292,13 +4292,13 @@ body.urd-marqueeing {
   }
 }
 
-/* Parallaks for bilde-bakgrunnslaget: scroll-drevet CSS på kompositor-tråden,
-   erstatter rAF/scroll-lytteren i backgrounds/image.js. Reiseveien settes som
-   --urd-px-shift (px) av mountParallaxCss (ved oppsett og resize, ikke scroll);
-   view()-tidslinjen scrubber translateY fra -shift (laget kommer inn nedenfra)
-   til +shift (laget forlater toppen), null i senter. Gates med @supports; uten
-   støtte kobler JS den rAF-drevne varianten i stedet. Stille (sluttilstand) på
-   mobil og ved redusert bevegelse. */
+/* Parallax for the image background layer: scroll-driven CSS on the compositor thread,
+   in place of the rAF/scroll listener in backgrounds/image.js. The travel is set as
+   --urd-px-shift (px) by mountParallaxCss (at setup and on resize, not on scroll);
+   the view() timeline scrubs translateY from -shift (the layer enters from below)
+   to +shift (the layer leaves the top), zero at the center. Gated with @supports; without
+   support JS wires up the rAF-driven variant instead. Still (end state) on
+   mobile and under reduced motion. */
 @supports (animation-timeline: view()) {
   .urd-bg-image.urd-parallax-css,
   .urd-bg-video.urd-parallax-css {
@@ -4326,20 +4326,20 @@ body.urd-marqueeing {
   }
 }
 
-/* Side-overganger (ADR-0011): cross-document View Transitions gir myk
-   krysstoning mellom sidene på det publiserte nettstedet. Gaten er
-   at-regelen selv: motorer uten støtte ignorerer den og navigerer som før
-   (sluttilstand). Editor-preview berøres aldri - der skjer sidebytter via
-   postMessage, ikke navigasjon. Nav og footer får view-transition-name kun
-   i selve overgangsvinduet (wireViewTransitionNames i urd.js): et statisk
-   navn her gjorde dem til backdrop-roots, som slo av menyens
-   backdrop-filter (uskarpheten bak nav) i all vanlig visning. */
+/* Page transitions (ADR-0011): cross-document View Transitions give a soft
+   cross-fade between the pages of the published site. The gate is
+   the at-rule itself: engines without support ignore it and navigate plainly
+   (end state). The editor preview is never affected - there page switches happen via
+   postMessage, not navigation. Nav and footer get a view-transition-name only
+   inside the transition window itself (wireViewTransitionNames in urd.js): a static
+   name here would make them backdrop roots, which turns off the menu's
+   backdrop-filter (the blur behind the nav) in all ordinary viewing. */
 @view-transition {
   navigation: auto;
 }
 
-/* Redusert bevegelse: overgangen beholdes (navigasjonen er like rask),
-   men all animasjon i den slås av, så byttet er et rent klipp. */
+/* Reduced motion: the transition is kept (navigation is just as fast),
+   but every animation inside it is turned off, so the switch is a clean cut. */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
   ::view-transition-old(*),
@@ -4348,17 +4348,17 @@ body.urd-marqueeing {
   }
 }
 
-/* Myk ankerscroll (blokk-lenker til #anker og «Til toppen»-pilen): native
-   scroll-behavior i stedet for JS-animasjon. Programmatiske scroll som skal
-   være umiddelbare (dra-kompensasjonen i preview-edit.js) sier behavior:
-   'instant' eksplisitt og berøres ikke. */
+/* Smooth anchor scrolling (block links to #anchor and the "Back to top" arrow): native
+   scroll-behavior instead of a JS animation. Programmatic scrolls that have to
+   be immediate (the drag compensation in preview-edit.js) say behavior:
+   'instant' explicitly and are left alone. */
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
   }
 }
 
-/* «Til toppen»-pilen (mountToTop i urd.js) */
+/* The "Back to top" arrow (mountToTop in urd.js) */
 .urd-totop {
   position: fixed;
   right: 16px;
@@ -4387,12 +4387,12 @@ body.urd-marqueeing {
   opacity: 1;
 }
 
-/* Forhåndsvisningen: skjul viewport-scrollbaren (scrolling virker fortsatt
-   med hjul og touch). Lerretet er en nedskalert iframe, ikke et ekte vindu,
-   så høyden er editorens og ikke besøkendes; scrollbaren måler dermed noe
-   som ikke finnes hos en besøkende, og legger seg som en strek inntil
-   innholdet. Besøkende og «Se siden» beholder nettleserens vanlige
-   scrollbar. Gjaldt kun mobilvisning til 10. august 2026. */
+/* The preview: hide the viewport scrollbar (scrolling still works
+   with wheel and touch). The canvas is a scaled-down iframe, not a real window,
+   so the height is the editor's and not the visitor's; the scrollbar therefore
+   measures something that does not exist for a visitor, and lands as a stripe
+   next to the content. Visitors and "View site" keep the browser's ordinary
+   scrollbar. */
 html:has(body.urd-preview) {
   scrollbar-width: none;
 }
@@ -4401,29 +4401,29 @@ html:has(body.urd-preview)::-webkit-scrollbar {
   display: none;
 }
 
-/* Mobilvisning i editoren: strukturverktøyene (add-barer, høydehåndtak)
-   skjules; mobil er layoutjustering og tilsyn */
+/* Mobile view in the editor: the structure tools (add bars, height handles)
+   are hidden; mobile is for layout adjustment and review */
 body.urd-mobile .urd-add-section,
 body.urd-mobile .urd-section-resize,
 body.urd-mobile .urd-section-resize-top {
   display: none !important;
 }
 
-/* Mobil-tilsyn: seksjonen trenger en gjennomgang av mobil-layouten
-   (redaksjonelt flagg, kun i preview) */
+/* Mobile review: the section needs a pass over the mobile layout
+   (an editorial flag, preview only) */
 .urd-preview .urd-attention {
   outline: 2px solid #e2b84a;
   outline-offset: -2px;
 }
 
-/* Dekor-toggle på blokkverktøylinjen */
+/* Decor toggle on the block toolbar */
 .urd-preview .urd-edit-toolbar .urd-edit-decor.on {
   background: #e2b84a;
   color: #1a1508;
 }
 
-/* Tilsynskortet i mobilvisning: hva som skjedde, når, og gjennomgått-
-   knappen. Mot-skaleres som resten av redigeringslaget (urd-zoom). */
+/* The review card in mobile view: what happened, when, and the reviewed
+   button. Counter-scaled like the rest of the editing layer (urd-zoom). */
 .urd-preview .urd-attention-card {
   position: absolute;
   top: calc(var(--urd-section-clear, 0px) + 8px * var(--urd-chrome-scale, 1));
@@ -4460,8 +4460,8 @@ body.urd-mobile .urd-section-resize-top {
   cursor: pointer;
 }
 
-/* Nål-merket på en overstyrt mobilblokk: viser at blokken ikke lenger
-   følger desktop. Samme form som sticky-nålen, gul som tilsynet. */
+/* The pin marker on an overridden mobile block: shows that the block is detached
+   from the desktop layout. The same shape as the sticky pin, yellow like the review flag. */
 .urd-preview .urd-mobile-pin {
   position: absolute;
   top: 2px;
@@ -4482,14 +4482,14 @@ body.urd-mobile .urd-section-resize-top {
   height: calc(11px * var(--urd-chrome-scale, 1));
 }
 
-/* Væpnet nullstilling («Sikker?») i seksjonsverktøylinja */
+/* Armed reset ("Sure?") in the section toolbar */
 .urd-preview .urd-section-toolbar button.urd-armed {
   background: #d94f3d;
   color: #fff;
 }
 
-/* Skjult på mobil-lista: flytende panel under seksjonsverktøylinja, med
-   en rad per skjult blokk og øye-knappen som viser den igjen. */
+/* The hidden-on-mobile list: a floating panel below the section toolbar, with
+   one row per hidden block and the eye button that brings it back. */
 .urd-preview .urd-hidden-list {
   position: absolute;
   top: calc(var(--urd-section-clear, 0px) + 46px * var(--urd-chrome-scale, 1));
@@ -4532,52 +4532,52 @@ body.urd-mobile .urd-section-resize-top {
   background: rgb(255 255 255 / 16%);
 }
 
-/* Editeringslaget - gjelder KUN i preview-modus (body.urd-preview,
-   satt av motoren inne i editorens iframe) */
+/* The editing layer - applies ONLY in preview mode (body.urd-preview,
+   set by the engine inside the editor's iframe) */
 .urd-preview .urd-grid-overlay {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  /* Linjebredden mot-skaleres (urd-zoom), så strekene holder skjermbredden
-     sin og forblir skarpe på alle zoomnivåer. Selve rutestørrelsen
-     mot-skaleres IKKE: den er sidens egen geometri og følger zoomen. */
+  /* The line width is counter-scaled (urd-zoom), so the lines keep their on-screen
+     width and stay crisp at every zoom level. The cell size itself is
+     NOT counter-scaled: it is the page's own geometry and follows the zoom. */
   background-image:
     linear-gradient(to right, color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 45%, transparent) calc(1px * var(--urd-chrome-scale, 1)), transparent calc(1px * var(--urd-chrome-scale, 1))),
     linear-gradient(to bottom, color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 45%, transparent) calc(1px * var(--urd-chrome-scale, 1)), transparent calc(1px * var(--urd-chrome-scale, 1)));
 }
 
 .urd-preview .urd-editable:hover {
-  /* PAA kanten, ikke utenfor: boksen er det som snapper til rutenettet. */
+  /* ON the edge, not outside it: the box is what snaps to the grid. */
   outline: calc(1px * var(--urd-chrome-scale, 1)) dashed var(--urd-admin-accent, #5f6a75);
   outline-offset: 0;
 }
 
 .urd-preview .urd-edit-toolbar {
-  /* Mot-skalering: håndtaket skal ha samme skjermstørrelse som
-     admin-panelene uansett zoom (urd-zoom). */
+  /* Counter-scaling: the handle should keep the same on-screen size as
+     the admin panels at any zoom level (urd-zoom). */
   transform: scale(var(--urd-chrome-scale, 1));
   transform-origin: bottom left;
   position: absolute;
   bottom: 100%;
   left: 0;
-  /* Usynlig bro ned til blokk-kanten, så hover ikke mistes på veien
-     opp til håndtakene */
+  /* An invisible bridge down to the block edge, so hover is not lost on the way
+     up to the handles */
   padding-bottom: 5px;
   display: none;
   gap: 2px;
   z-index: 1000;
 }
 
-/* Verktøylinjen står over blokken, også nær seksjonstoppen: seksjoner
-   klipper aldri, så det er som regel ingenting å vike for. Unntaket er
-   blokker øverst på SIDEN: der finnes ingen plass over dokumenttoppen, og
-   preview-edit setter klassen som flipper linja under blokken i stedet. */
+/* The toolbar sits above the block, also near the top of a section: sections
+   never clip, so there is usually nothing to make room for. The exception is
+   blocks at the top of the PAGE: there is no room above the top of the document, and
+   preview-edit sets the class that flips the bar below the block instead. */
 .urd-preview .urd-edit-toolbar.urd-toolbar-under {
   bottom: auto;
   top: 100%;
   padding-bottom: 0;
-  /* Usynlig bro opp til blokk-kanten, samme rolle som padding-bottom over */
+  /* An invisible bridge up to the block edge, the same role as padding-bottom above */
   padding-top: 5px;
   transform-origin: top left;
 }
@@ -4609,8 +4609,8 @@ body.urd-mobile .urd-section-resize-top {
 }
 
 .urd-preview .urd-edit-resize {
-  /* Mot-skalering: håndtaket skal ha samme skjermstørrelse som
-     admin-panelene uansett zoom (urd-zoom). */
+  /* Counter-scaling: the handle should keep the same on-screen size as
+     the admin panels at any zoom level (urd-zoom). */
   transform: scale(var(--urd-chrome-scale, 1));
   transform-origin: bottom right;
   position: absolute;
@@ -4629,10 +4629,10 @@ body.urd-mobile .urd-section-resize-top {
   display: block;
 }
 
-/* Rotasjonshåndtak: liten sirkel i blokkens høyre overkant */
+/* Rotation handle: a small circle at the block's top right corner */
 .urd-preview .urd-edit-rotate {
-  /* Mot-skalering: håndtaket skal ha samme skjermstørrelse som
-     admin-panelene uansett zoom (urd-zoom). */
+  /* Counter-scaling: the handle should keep the same on-screen size as
+     the admin panels at any zoom level (urd-zoom). */
   transform: scale(var(--urd-chrome-scale, 1));
   transform-origin: top right;
   position: absolute;
@@ -4657,18 +4657,13 @@ body.urd-mobile .urd-section-resize-top {
   display: grid;
 }
 
-/* Aktiv seksjon (sist klikket): nye blokker fra paletten havner her.
-   Klassen er rent funksjonell - kantmarkøren den tegnet ble fjernet på
-   eierbeskjed 9. august 2026 (verktøylinjen viser alt hvilken seksjon
-   som er aktiv). */
-
-/* Markert blokk: varig omriss og alltid synlige håndtak */
+/* Selected block: a persistent outline and always visible handles */
 .urd-preview .urd-block.urd-selected {
   outline: calc(2px * var(--urd-chrome-scale, 1)) solid var(--urd-admin-accent, #5f6a75);
   outline-offset: 0;
 }
 
-/* Hele blokkflaten kan dras direkte; redigerbar tekst beholder tekstmarkør */
+/* The whole block surface can be dragged directly; editable text keeps the text cursor */
 .urd-preview .urd-editable {
   cursor: move;
 }
@@ -4677,10 +4672,10 @@ body.urd-mobile .urd-section-resize-top {
   cursor: text;
 }
 
-/* Under redigering løftes hovret/markert blokk visuelt øverst, slik at
-   håndtakene alltid kan nås selv om andre blokker ligger over (z-orden).
-   Ekte lagrekkefølge vises når blokken avmarkeres - og ALLTID i Ren
-   visning (chrome-off), som skal være nøyaktig det besøkende ser. */
+/* While editing, the hovered or selected block is raised visually to the top, so that
+   the handles can always be reached even if other blocks lie above it (z order).
+   The true layer order is shown when the block is deselected - and ALWAYS in Clean
+   view (chrome-off), which must be exactly what visitors see. */
 .urd-preview:not(.urd-chrome-off) .urd-editable:hover {
   z-index: 99998 !important;
 }
@@ -4701,13 +4696,13 @@ body.urd-mobile .urd-section-resize-top {
   display: block;
 }
 
-/* Nål på blokker med «Fest ved scrolling»: festingen er usynlig så lenge
-   man ikke scroller, så merket viser at den er på. Alltid synlig med chrome
-   på (ikke bare ved peker), og borte i Ren visning som resten av chromen. */
+/* A pin on blocks with "Pin on scroll": the pinning is invisible until you
+   scroll, so the marker shows that it is on. Always visible with chrome
+   on (not only on hover), and gone in Clean view like the rest of the chrome. */
 .urd-preview .urd-sticky-badge {
   position: absolute;
-  /* Mot-skalering (urd-zoom): merket holder admin-størrelse som nål-merket
-     for mobil (.urd-mobile-pin), og slipper klikk gjennom til blokken. */
+  /* Counter-scaling (urd-zoom): the marker keeps admin size like the mobile pin
+     marker (.urd-mobile-pin), and lets clicks through to the block. */
   top: calc(-7px * var(--urd-chrome-scale, 1));
   left: calc(-7px * var(--urd-chrome-scale, 1));
   width: calc(16px * var(--urd-chrome-scale, 1));
@@ -4730,9 +4725,9 @@ body.urd-mobile .urd-section-resize-top {
   display: none;
 }
 
-/* «+ Ny seksjon»-barene svever OPPÅ skillet mellom seksjonene og tar
-   null plass i flyten, slik at seksjonene ligger kant i kant nøyaktig
-   som besøkende ser dem (kun i preview) */
+/* The "+ New section" bars float ON TOP OF the boundary between sections and take
+   zero space in the flow, so the sections sit flush exactly
+   as visitors see them (preview only) */
 .urd-preview .urd-add-section {
   position: relative;
   height: 0;
@@ -4740,14 +4735,14 @@ body.urd-mobile .urd-section-resize-top {
   display: flex;
   justify-content: center;
   gap: 6px;
-  /* Over seksjonslinje-grepene (.urd-section-resize/-top, 100000): der
-     chippen står skal den kunne KLIKKES, ikke fanges av dra-flaten
-     (chippen drar uansett selv samme grense via wireHeightDrag). Baren
-     selv er 0 px høy og pointer-events: none, så det er kun chip-pillen
-     og galleriet som ligger over noe. */
+  /* Above the section line grips (.urd-section-resize/-top, 100000): where
+     the chip sits it has to be CLICKABLE, not captured by the drag surface
+     (the chip drags that same boundary itself via wireHeightDrag anyway). The bar
+     itself is 0 px tall and pointer-events: none, so only the chip pill
+     and the gallery sit above anything. */
   z-index: 100001;
-  /* Skjult til musen er over en tilstøtende seksjon (eller baren selv):
-     mindre støy, og den øverste baren kolliderer ikke med menyen */
+  /* Hidden until the mouse is over an adjacent section (or the bar itself):
+     less noise, and the topmost bar does not collide with the menu */
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.12s ease;
@@ -4760,9 +4755,9 @@ body.urd-mobile .urd-section-resize-top {
   pointer-events: auto;
 }
 
-/* Tom side: den eneste baren har ingen naboseksjon å bli avslørt av, så
-   hover-reglene over kan aldri vise den. Da står den alltid framme og fyller
-   flaten som en tom-tilstand, ellers blir siden umulig å bygge videre på. */
+/* Empty page: the only bar has no neighboring section to be revealed by, so
+   the hover rules above can never show it. It therefore stays visible and fills
+   the surface as an empty state, otherwise the page cannot be built on at all. */
 .urd-preview #urd-root > .urd-add-section:only-child {
   opacity: 1;
   pointer-events: auto;
@@ -4770,8 +4765,8 @@ body.urd-mobile .urd-section-resize-top {
   align-items: center;
 }
 .urd-preview #urd-root > .urd-add-section:only-child > button {
-  /* Tom side: baren fyller flaten, så chipen skal ikke sentreres på en
-     nullhøyde-linje. Mot-skaleringen beholdes. */
+  /* Empty page: the bar fills the surface, so the chip must not be centered on a
+     zero-height line. The counter-scaling is kept. */
   transform: scale(var(--urd-chrome-scale, 1));
 }
 
@@ -4790,8 +4785,8 @@ body.urd-mobile .urd-section-resize-top {
 }
 
 .urd-preview .urd-add-section button {
-  /* translateY sentrerer chipen på den 0 px høye baren; scale er
-     mot-skaleringen som holder admin-størrelse uansett zoom (urd-zoom). */
+  /* translateY centers the chip on the 0 px tall bar; scale is
+     the counter-scaling that keeps admin size at any zoom (urd-zoom). */
   transform: translateY(-50%) scale(var(--urd-chrome-scale, 1));
   border: 1px dashed color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 60%, transparent);
   border-radius: 999px;
@@ -4809,38 +4804,38 @@ body.urd-mobile .urd-section-resize-top {
   border-style: solid;
 }
 
-/* Den øverste baren: chipen legges UNDER grenselinjen i stedet for oppå
-   den, med mot-skaleringen i behold (en ren translateY her mistet den
-   tidligere, så chipen fikk feil størrelse). */
+/* The topmost bar: the chip is placed BELOW the boundary line instead of on top
+   of it, with the counter-scaling intact (a bare translateY here would drop it
+   and give the chip the wrong size). */
 #urd-root > .urd-add-section:first-child > button {
   transform: translateY(4px) scale(var(--urd-chrome-scale, 1));
   transform-origin: top center;
 }
 
-/* Med menyen utenfor flyten (flytende pille/overlay) ligger grenselinjen i
-   menybåndet: chipen legges under den målte menyhøyden (--urd-nav-h fra
-   nav.js), så den kan ses og klikkes i stedet for å ligge bak menyen. */
+/* With the menu outside the flow (floating pill or overlay) the boundary line sits in
+   the menu band: the chip is placed below the measured menu height (--urd-nav-h from
+   nav.js), so it can be seen and clicked instead of sitting behind the menu. */
 #urd-nav.urd-nav-float + #urd-root > .urd-add-section:first-child > button,
 #urd-nav.urd-nav-overlay + #urd-root > .urd-add-section:first-child > button {
   transform: translateY(calc(var(--urd-nav-h, 0px) + 6px)) scale(var(--urd-chrome-scale, 1));
 }
 
-/* Preset-galleriet (åpen «+ Ny seksjon»): gruppert panel med rulling.
-   Holdes synlig uavhengig av hover-reglene over via .open-klassen. */
+/* The preset gallery (an open "+ New section"): a grouped panel with scrolling.
+   Kept visible regardless of the hover rules above through the .open class. */
 .urd-preview .urd-add-section.open {
   opacity: 1;
   pointer-events: auto;
 }
 
-/* Kategori-sidefelt-formen (G2, 0.6.7.13): smalt kategorifelt til venstre,
-   søk + rutenett til høyre. Scrollen bor i innholdsfeltet, ikke i menyen. */
+/* The category sidebar form (G2): a narrow category rail on the left,
+   search + grid on the right. The scroll lives in the content pane, not in the menu. */
 .urd-preview .urd-preset-menu {
   position: absolute;
   top: 8px;
   left: 50%;
-  /* translateX sentrerer menyen; scale er mot-skaleringen som holder den i
-     admin-størrelse uansett zoom (urd-zoom). Origin øverst så den vokser
-     nedover fra baren i stedet for å flytte seg. */
+  /* translateX centers the menu; scale is the counter-scaling that keeps it at
+     admin size at any zoom (urd-zoom). The origin is at the top so it grows
+     downwards from the bar instead of moving. */
   transform: translateX(-50%) scale(var(--urd-chrome-scale, 1));
   transform-origin: top center;
   display: flex;
@@ -4860,11 +4855,11 @@ body.urd-mobile .urd-section-resize-top {
   bottom: 8px;
 }
 
-/* Kategorifargene (F2, eiervalg 9. august 2026): fem faste steg avledet av
-   admin-aksenten. Uten relativ fargesyntaks-støtte faller alle stegene
-   tilbake til aksenten alene (dagens utseende, ADR-0011-mønsteret). Rødt
-   brukes ikke (reservert destruktive handlinger). Metningsgulvet max(c, 0.09)
-   gir grå-temaet dempede, men skilbare toner. */
+/* The category colors (F2): five fixed steps derived from
+   the admin accent. Without relative color syntax support every step falls
+   back to the accent alone (the ADR-0011 pattern). Red is
+   not used (reserved for destructive actions). The saturation floor max(c, 0.09)
+   gives the grey theme muted but distinguishable tones. */
 .urd-preview .urd-preset-menu {
   --urd-category-1: var(--urd-admin-accent, #5f6a75);
   --urd-category-2: var(--urd-admin-accent, #5f6a75);
@@ -4883,7 +4878,7 @@ body.urd-mobile .urd-section-resize-top {
   }
 }
 
-/* Kategoriprikken: bæres av kategoriknappene og gruppeoverskriftene. */
+/* The category dot: carried by the category buttons and the group headings. */
 .urd-preview .urd-preset-dot {
   flex: none;
   width: 7px;
@@ -4892,7 +4887,7 @@ body.urd-mobile .urd-section-resize-top {
   background: var(--urd-kat, var(--urd-admin-accent, #5f6a75));
 }
 
-/* «Alle» peker på hele paletten: prikken er en liten gradient over stegene. */
+/* "All" points at the whole palette: the dot is a small gradient across the steps. */
 .urd-preview .urd-preset-rail-alle .urd-preset-dot {
   background: linear-gradient(135deg, var(--urd-category-1), var(--urd-category-3));
 }
@@ -4915,9 +4910,9 @@ body.urd-mobile .urd-section-resize-top {
   color: var(--urd-color-text);
 }
 
-/* Kategorknappene: chip-regelen (.urd-add-section button) treffer alle
-   knapper i baren, så selektoren går via .urd-preset-menu og resetter
-   transform/opacity (0.6.7.7-lærdommen). */
+/* The category buttons: the chip rule (.urd-add-section button) hits every
+   button in the bar, so the selector goes through .urd-preset-menu and resets
+   transform and opacity. */
 .urd-preview .urd-preset-menu .urd-preset-rail button {
   display: flex;
   align-items: center;
@@ -4940,13 +4935,13 @@ body.urd-mobile .urd-section-resize-top {
   background: color-mix(in srgb, var(--urd-kat, var(--urd-admin-accent, #5f6a75)) 14%, transparent);
 }
 
-/* Aktivt kategorivalg fylles med kategoriens EGEN farge (F2). */
+/* The active category choice is filled with the category's OWN color (F2). */
 .urd-preview .urd-preset-menu .urd-preset-rail button.on {
   background: color-mix(in srgb, var(--urd-kat, var(--urd-admin-accent, #5f6a75)) 26%, transparent);
   color: var(--urd-color-text);
 }
 
-/* Mine maler skilles fra preset-kategoriene med en tynn strek. */
+/* My templates are separated from the preset categories by a thin line. */
 .urd-preview .urd-preset-menu .urd-preset-rail .urd-preset-rail-templates {
   margin-top: 6px;
   padding-top: 8px;
@@ -5003,11 +4998,11 @@ body.urd-mobile .urd-section-resize-top {
   cursor: pointer;
 }
 
-/* Bytt oppsett-stripen (0.6.7, variant B): horisontal miniatyr-rekke som
-   klistres til skjermen mens man er i seksjonen (som verktøylinjen, rett
-   under den), så valget alltid er synlig også i høye seksjoner. Samme
-   z som nav/verktøylinje: senere i DOM vinner, så stripen ligger over
-   den flytende menyen. */
+/* The change-layout strip (variant B): a horizontal row of thumbnails that
+   sticks to the screen while you are in the section (like the toolbar, right
+   below it), so the choice stays visible in tall sections too. The same
+   z as the nav and the toolbar: later in the DOM wins, so the strip sits above
+   the floating menu. */
 .urd-preview .urd-layout-strip {
   position: sticky;
   top: 96px;
@@ -5023,8 +5018,8 @@ body.urd-mobile .urd-section-resize-top {
   border-radius: 10px;
 }
 
-/* Galleri-meny-varianten (personlig valg i Urd-innstillingene): samme
-   kort i et 2-kolonners panel forankret ved verktøylinjen, også klistret. */
+/* The gallery menu variant (a personal choice in the Urd settings): the same
+   cards in a 2-column panel anchored at the toolbar, also sticky. */
 .urd-preview .urd-layout-menu {
   position: sticky;
   top: 96px;
@@ -5102,9 +5097,9 @@ body.urd-mobile .urd-section-resize-top {
   text-overflow: ellipsis;
 }
 
-/* Blokk-søket i + Ny blokk-menyen (0.6.7, variant B): felt øverst; ved
-   aktivt søk skjules menyens vanlige innhold og en flat, rangert
-   treffliste vises i stedet (urd-searching-klassen). */
+/* Block search in the + New block menu (variant B): a field at the top; during
+   an active search the menu's ordinary content is hidden and a flat, ranked
+   result list is shown instead (the urd-searching class). */
 .urd-preview .urd-block-search {
   grid-column: 1 / -1;
   display: flex;
@@ -5134,7 +5129,7 @@ body.urd-mobile .urd-section-resize-top {
   display: none;
 }
 
-/* Treffene deltar i menyens eget rutenett (to kolonner) */
+/* The hits take part in the menu's own grid (two columns) */
 .urd-preview .urd-block-hits {
   display: contents;
 }
@@ -5146,8 +5141,8 @@ body.urd-mobile .urd-section-resize-top {
   color: color-mix(in srgb, var(--urd-color-text) 55%, transparent);
 }
 
-/* Mine maler-kategorien: 2-kolonners rutenett med stor miniatyr, navn og
-   sletteknapp (vises ved pek på kortet) */
+/* The My templates category: a 2-column grid with a large thumbnail, name and
+   delete button (revealed on hover over the card) */
 .urd-preview .urd-template-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -5229,15 +5224,15 @@ body.urd-mobile .urd-section-resize-top {
   color: color-mix(in srgb, var(--urd-color-text) 55%, transparent);
 }
 
-/* Lagre som mal-knappen i seksjonsverktøylinjen: SVG-ikonet sentreres */
+/* The save-as-template button in the section toolbar: the SVG icon is centered */
 .urd-preview .urd-section-toolbar .urd-save-template {
   display: inline-flex;
   align-items: center;
 }
 
-/* Gruppeoverskriftene i «Alle»-visningen klistres i toppen av scrollfeltet,
-   så man alltid ser hvilken gruppe kortene under tilhører. Teksten tones i
-   kategoriens farge (F2). */
+/* The group headings in the "All" view stick to the top of the scroll pane,
+   so you always see which group the cards below belong to. The text is tinted in
+   the category color (F2). */
 .urd-preview .urd-preset-group {
   position: sticky;
   top: 0;
@@ -5254,8 +5249,8 @@ body.urd-mobile .urd-section-resize-top {
   color: color-mix(in srgb, var(--urd-kat, var(--urd-color-text)) 70%, var(--urd-color-text));
 }
 
-/* Preset-rutenettet (G2): kort med miniatyr over navnet; hintet bor i
-   tooltip (title), ikke som permanent undertekst. */
+/* The preset grid (G2): cards with a thumbnail above the name; the hint lives in
+   the tooltip (title), not as a permanent subtitle. */
 .urd-preview .urd-preset-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -5284,7 +5279,7 @@ body.urd-mobile .urd-section-resize-top {
   border-color: color-mix(in srgb, var(--urd-kat, var(--urd-admin-accent, #5f6a75)) 75%, transparent);
 }
 
-/* Auto-generert miniatyr (preset-thumb.js): skjematisk skisse av seksjonen */
+/* Auto-generated thumbnail (preset-thumb.js): a schematic sketch of the section */
 .urd-preview .urd-preset-thumb {
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -5307,19 +5302,19 @@ body.urd-mobile .urd-section-resize-top {
   white-space: nowrap;
 }
 
-/* Seksjonens verktøylinje (flytt opp/ned, tilpass høyde, slett) - synlig
-   kun mens pekeren er i seksjonen; ligger alltid øverst (over løftede
-   blokker) */
+/* The section toolbar (move up/down, fit height, delete) - visible
+   only while the pointer is inside the section; always on top (above lifted
+   blocks) */
 .urd-preview .urd-section-toolbar {
-  /* Mot-skalering: håndtaket skal ha samme skjermstørrelse som
-     admin-panelene uansett zoom (urd-zoom). */
+  /* Counter-scaling: the handle should keep the same on-screen size as
+     the admin panels at any zoom level (urd-zoom). */
   transform: scale(var(--urd-chrome-scale, 1));
   transform-origin: top right;
-  /* Klistret i seksjonen (ikke absolute): i seksjoner høyere enn viewporten følger
-     verktøylinjen med, så «+ kort»-knappen alltid kan nås ved gjentatte tillegg.
-     Verktøylinjen er seksjonens eneste flyt-element, så den starter alltid øverst.
-     Klistre-avstanden leser målt menyhøyde (--urd-nav-h fra nav.js), så linja
-     parkerer rett under menyen i stedet for på en gjettet fast avstand. */
+  /* Sticky inside the section (not absolute): in sections taller than the viewport the
+     toolbar follows along, so the "+ card" button can always be reached when adding
+     repeatedly. The toolbar is the section's only in-flow element, so it always starts
+     at the top. The sticky offset reads the measured menu height (--urd-nav-h from
+     nav.js), so the bar parks right below the menu instead of at a guessed fixed offset. */
   position: sticky;
   top: calc(var(--urd-nav-h, 56px) + 8px * var(--urd-chrome-scale, 1));
   display: none;
@@ -5350,8 +5345,8 @@ body.urd-mobile .urd-section-resize-top {
   color: var(--urd-admin-accent-text, #fff);
 }
 
-/* Ren visning: editoren kan skjule alle editeringshåndtak, slik at siden
-   ses nøyaktig som besøkende ser den */
+/* Clean view: the editor can hide every editing handle, so the page
+   is seen exactly as visitors see it */
 .urd-preview.urd-chrome-off .urd-add-block,
 .urd-preview.urd-chrome-off .urd-add-section,
 .urd-preview.urd-chrome-off .urd-edit-toolbar,
@@ -5385,17 +5380,17 @@ body.urd-mobile .urd-section-resize-top {
   outline: none;
 }
 
-/* Redaksjonelle markeringer sitter som klasser på selve seksjonen og kan
-   ikke display:none-es: effektene nulles i stedet, så Ren visning er
-   identisk med publisert side. */
+/* Editorial markers sit as classes on the section itself and cannot
+   be display:none-d: the effects are zeroed instead, so Clean view is
+   identical to the published page. */
 .urd-preview.urd-chrome-off .urd-attention {
   outline: none;
 }
 
-/* Høyde-håndtaket i underkant av seksjonen: treffsonen er 10px, men den
-   synlige linjen ligger nøyaktig på seksjonens kant */
-/* Over blokk-løftet ved hover/markering (99998/99999): en blokk som henger
-   utover seksjonskanten skal aldri kunne stjele grepet på seksjonslinjen */
+/* The height handle at the bottom edge of the section: the hit zone is 10px, but the
+   visible line sits exactly on the section edge */
+/* Above the block lift on hover and selection (99998/99999): a block that hangs
+   past the section edge must never be able to steal the grip on the section line */
 .urd-preview .urd-section-resize {
   position: absolute;
   left: 0;
@@ -5406,15 +5401,15 @@ body.urd-mobile .urd-section-resize-top {
   z-index: 100000;
 }
 
-/* Hover-linjen tegnes som inset-skygge på selve seksjonen, så den alltid
-   ligger nøyaktig på den synlige bunnkanten */
+/* The hover line is drawn as an inset shadow on the section itself, so it always
+   sits exactly on the visible bottom edge */
 .urd-preview .urd-section:has(> .urd-section-resize:hover),
 .urd-preview .urd-section:has(> .urd-section-resize:active) {
   box-shadow: inset 0 -2px 0 var(--urd-admin-accent, #5f6a75);
 }
 
-/* Toppkant-håndtaket: speiler bunnhåndtaket, men gir/fjerner luft ØVERST
-   i seksjonen (blokkene følger med, innholdet står stille) */
+/* The top edge handle: mirrors the bottom handle, but adds or removes air at the TOP
+   of the section (the blocks come along, the content stays put) */
 .urd-preview .urd-section-resize-top {
   position: absolute;
   left: 0;
@@ -5430,12 +5425,12 @@ body.urd-mobile .urd-section-resize-top {
   box-shadow: inset 0 2px 0 var(--urd-admin-accent, #5f6a75);
 }
 
-/* Blokk-chromet vinner over seksjonsgrensene mens en blokk er hovret eller
-   markert: verktøylinja (med ⠿) ligger over blokkens overkant, altså i
-   grensebåndet, og stripene (z 100000, over blokk-løftet) stjal ellers
-   klikkene der. Stripene i blokkens egen seksjon slipper klikk gjennom, og
-   det samme gjør forrige seksjons bunnstripe (grensen deles). Grepet på
-   seksjonslinjen består så snart pekeren ikke kommer fra blokken. */
+/* The block chrome wins over the section boundaries while a block is hovered or
+   selected: the toolbar (with ⠿) sits above the block's top edge, that is, inside
+   the boundary band, and the strips (z 100000, above the block lift) would otherwise
+   steal the clicks there. The strips in the block's own section let clicks through, and
+   so does the previous section's bottom strip (the boundary is shared). The grip on
+   the section line holds as soon as the pointer does not come from the block. */
 .urd-preview .urd-section:has(.urd-editable:hover) > .urd-section-resize,
 .urd-preview .urd-section:has(.urd-editable:hover) > .urd-section-resize-top,
 .urd-preview .urd-section:has(.urd-block.urd-selected) > .urd-section-resize-top,
@@ -5443,9 +5438,9 @@ body.urd-mobile .urd-section-resize-top {
   pointer-events: none;
 }
 
-/* Retningsvisende peker mens en seksjonsgrense dras (preview-edit setter
-   klassen på rotelementet): pil ned når man drar ned, pil opp når man
-   drar opp. !important fordi pekeren ellers følger elementet under. */
+/* A directional cursor while a section boundary is dragged (preview-edit sets
+   the class on the root element): arrow down when dragging down, arrow up when
+   dragging up. !important because the cursor otherwise follows the element beneath. */
 html.urd-drag-down,
 html.urd-drag-down * {
   cursor: s-resize !important;

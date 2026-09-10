@@ -1,15 +1,15 @@
 /**
- * Ren logikk for det valgfrie Vipps Checkout-betalingslaget (ADR-0020):
- * konfigurasjonslesing, payload-validering, omregning til øre mot den
- * git-eide katalogen, og sesjonskroppen mot checkout/v3. Ingen fetch her;
- * endepunktet (api/vipps/checkout.js) står for nettverket. Testes i
+ * Pure logic for the optional Vipps Checkout payment layer (ADR-0020): reading
+ * the configuration, validating the payload, converting to øre against the
+ * git-owned catalogue, and the session body for checkout/v3. No fetch here;
+ * the endpoint (api/vipps/checkout.js) handles the network. Tested in
  * tests/vipps.test.mjs.
  *
- * Beløpet regnes ALLTID på nytt fra katalogen: kurven bor hos den
- * besøkende, så alt klienten sender kan være tuklet med.
+ * The amount is ALWAYS recomputed from the catalogue: the basket lives with
+ * the visitor, so anything the client sends may have been tampered with.
  */
 
-/** Leser konfigurasjonen fra env; null når betalingslaget ikke er satt opp. */
+/** Reads the configuration from env; null when the payment layer is not set up. */
 export function vippsConfig(env) {
   const clientId = env?.VIPPS_CLIENT_ID;
   const clientSecret = env?.VIPPS_CLIENT_SECRET;
@@ -25,13 +25,13 @@ export function vippsConfig(env) {
   };
 }
 
-/** Innslags-id-ene deler regime med samlingene (ankret, CodeQL-leksa). */
+/** Entry ids follow the same regime as the collections (anchored, the CodeQL lesson). */
 const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
 
 /**
- * Validerer og renser bestillings-payloaden fra klienten. Kun formen
- * godtas: ordrelinjer med kjent id-form og klemte antall, kontaktfelt som
- * korte strenger. Priser fra klienten ignoreres bevisst.
+ * Validates and cleans the order payload from the client. Only the shape is
+ * accepted: order lines with a known id form and clamped quantities, contact
+ * fields as short strings. Prices from the client are deliberately ignored.
  * @returns {{order: Array<{id: string, qty: number, variant?: string}>, contact: {name: string, email: string, phone: string, comment: string}}|null}
  */
 export function validOrderPayload(payload) {
@@ -53,7 +53,7 @@ export function validOrderPayload(payload) {
     order.push(clean);
   }
   const field = (value) => String(value ?? '').slice(0, 200).trim();
-  // Retursti: intern sti på egen side (ankret; aldri en full URL fra klienten).
+  // Return path: an internal path on our own site (anchored; never a full URL from the client).
   const rawPath = String(payload.returnPath ?? '/');
   const returnPath = /^\/[a-z0-9\-/]*$/.test(rawPath) && rawPath.length <= 200 ? rawPath : '/';
   return {
@@ -69,11 +69,11 @@ export function validOrderPayload(payload) {
 }
 
 /**
- * Regner ordresummen i øre mot katalogene (kind products). Ukjent id eller
- * produkt uten pris gir null (bestillingen avvises); medlemspris er
- * tillitsbasert visning og belastes aldri (ADR-0020).
- * @param {Array<{id: string, qty: number}>} order Renset ordre (validOrderPayload)
- * @param {Array<{kind?: string, entries?: Array}>} catalogs Samlingsfilene
+ * Computes the order total in øre against the catalogues (kind products). An
+ * unknown id or a product without a price gives null (the order is rejected);
+ * the member price is a trust-based display and is never charged (ADR-0020).
+ * @param {Array<{id: string, qty: number}>} order Cleaned order (validOrderPayload)
+ * @param {Array<{kind?: string, entries?: Array}>} catalogs The collection files
  * @returns {number|null}
  */
 export function orderAmountOre(order, catalogs) {
@@ -96,7 +96,7 @@ export function orderAmountOre(order, catalogs) {
   return sum;
 }
 
-/** Sesjonsreferanse på Vipps-formen [a-zA-Z0-9-]{8,50}. */
+/** Session reference in the Vipps form [a-zA-Z0-9-]{8,50}. */
 export function makeReference() {
   const bytes = crypto.getRandomValues(new Uint8Array(12));
   const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
@@ -104,9 +104,9 @@ export function makeReference() {
 }
 
 /**
- * Kroppen til POST {apiBase}/checkout/v3/session. Ordrelinjene og
- * kontaktfeltene følger med som beskrivelse, så bestillingen kan leses i
- * Vipps-portalen; siden lagrer ingenting selv (ADR-0020).
+ * The body for POST {apiBase}/checkout/v3/session. The order lines and the
+ * contact fields ride along as the description, so the order can be read in
+ * the Vipps portal; the site stores nothing itself (ADR-0020).
  */
 export function buildSession({ amountOre, reference, order, contact, origin, returnPath, callbackToken }) {
   const lines = order

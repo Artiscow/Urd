@@ -1,13 +1,13 @@
 /**
- * Versjonskonsistens-vakt for release-Action-en (se UTVIKLING.md).
+ * Version consistency guard for the release Action (see UTVIKLING.md).
  *
- * Sannhetskilden er engine-feltet i template/urd.json; git-taggen og
- * CHANGELOG-overskriften skal alltid stemme med den. Kjøres fra repo-roten:
+ * The source of truth is the engine field in template/urd.json; the git tag
+ * and the CHANGELOG heading must always agree with it. Run from the repo root:
  *
  *     node scripts/check-release.mjs v0.6.9 [--prerelease]
  *
- * Med --prerelease (rc-synk for oppdaterer-testing) hoppes CHANGELOG- og
- * editor/package.json-sjekkene over: en rc har ingen utgivelsesoverskrift.
+ * With --prerelease (the rc sync for updater testing) the CHANGELOG and
+ * editor/package.json checks are skipped: an rc has no release heading.
  */
 import { readFileSync, statSync } from 'node:fs';
 import process from 'node:process';
@@ -26,9 +26,9 @@ if (`v${engine}` !== tag) {
   errors.push(`tag ${tag} does not match urd.json.engine (${engine})`);
 }
 
-// Motormappa skal finnes under navnet engine-feltet oppgir (ADR-0013);
-// resten av invariantene (skall, HTML-referanser) dekkes av testsuiten,
-// som Action-en kjører etter denne sjekken.
+// The engine folder must exist under the name the engine field gives
+// (ADR-0013); the remaining invariants (shells, HTML references) are covered
+// by the test suite, which the Action runs after this check.
 try {
   if (!statSync(`template/assets/engine/${engine}`).isDirectory()) throw new Error();
 } catch {
@@ -36,9 +36,9 @@ try {
 }
 
 if (!prerelease) {
-  // Første utgivelsesoverskrift i CHANGELOG (## [X.Y.Z] - dato, Keep a
-  // Changelog) skal være denne versjonen: [Ulansert]-seksjonen skal altså
-  // være døpt om (eller tømt til) utgivelsen før taggingen.
+  // The first release heading in the CHANGELOG (## [X.Y.Z] - date, Keep a
+  // Changelog) must be this version: the [Ulansert] section has to be renamed
+  // (or emptied into) the release before tagging.
   const changelog = readFileSync('docs/CHANGELOG.md', 'utf-8');
   const heading = changelog.match(/^## \[(?!Ulansert\])([^\]]+)\]/m)?.[1];
   if (heading !== engine) {

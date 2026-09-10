@@ -1,9 +1,9 @@
 /**
- * Admin-teavsttat, davvisámegiella. Legger seg oppå bokmålsbasen (nb.js);
- * paritetstesten holder nøkkelsettene i synk.
+ * Admin strings, Northern Sami (davvisámegiella). Overlays the Bokmål
+ * base (nb.js); the parity test keeps the key sets in sync.
  *
- * MERK: maskinoversatt førsteutkast som trenger gjennomgang av en som
- * har nordsamisk som morsmål (se CONTRIBUTING.md).
+ * NOTE: a machine-translated first draft that needs review by a native
+ * Northern Sami speaker (see CONTRIBUTING.md).
  */
 export default {
   lang: 'se',

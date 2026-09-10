@@ -11,8 +11,8 @@ on:
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
-    # Dependabot-PR-er har lesetilgang-token og kan ikke laste opp
-    # CodeQL-resultater; analysen kjøres uansett på push etter merge.
+    # Dependabot PRs get a read-only token and cannot upload CodeQL
+    # results; the analysis runs on push after the merge anyway.
     if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
@@ -28,9 +28,10 @@ jobs:
       - uses: github/codeql-action/init@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd # v4.37.7
         with:
           languages: ${{ matrix.language }}
-          # Den committede editor-bundelen er GENERERT kode (bygget fra editor/src,
-          # som skannes): å analysere bundelen gir varsler på uleselige bundle-linjer,
-          # og hvert bygg flytter linjenumrene så varslene gjenoppstår med nye numre.
+          # The committed editor bundle is GENERATED code (built from editor/src,
+          # which is scanned): analysing the bundle raises alerts on unreadable
+          # bundle lines, and every build shifts the line numbers so the alerts
+          # reappear with new numbers.
           config: |
             paths-ignore:
               - template/admin/assets

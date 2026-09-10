@@ -1,8 +1,9 @@
 /**
- * Svenska besökartexter: motorns egen chrome (navigation, sidfot, ljusbox,
- * galleri, video). Filen har samma form som motorns locales/site/<kod>.js,
- * och nycklarna är desamma - bokmålsbasen ligger under, så en nyckel som
- * saknas här visas på bokmål i stället för att försvinna.
+ * Swedish visitor texts: the engine's own chrome (navigation, footer,
+ * lightbox, gallery, video). The file has the same shape as the engine's
+ * locales/site/<code>.js and the keys are identical - the nb base sits
+ * underneath, so a key missing here falls back to Norwegian instead of
+ * disappearing.
  */
 export default {
   lang: 'sv',

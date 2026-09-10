@@ -1,18 +1,20 @@
 /**
- * Kart-referansepluginen (v0.6 M4): personvennlig OpenStreetMap-innbygging.
- * Eieren limer inn koordinater eller en OSM-lenke; blokken bygger inn OSMs
- * offisielle iframe (ingen sporing, ingen tredjeparts-tiles). Følger kalender-
- * referansen: egen CSS via én style-tag og hjelpechip (ADR-0008). Innstillingene
- * rendres i Egenskaper-panelet via felt-kontrakten (`fields` på blokk-defen).
+ * The map reference plugin: privacy-friendly OpenStreetMap embedding. The
+ * owner pastes in coordinates or an OSM link; the block embeds OSM's official
+ * iframe (no tracking, no third-party tiles). It follows the calendar
+ * reference: its own CSS in one style tag and a help chip (ADR-0008). The
+ * settings are rendered in the Properties panel via the field contract
+ * (`fields` on the block definition).
  *
- * CSP (ADR-0006): iframe mot openstreetmap.org krever frame-src-unntak.
- * Manifestet deklarerer det, Plugins-panelet viser eieren linjen, og blir
- * kartet blokkert av CSP viser blokken den nøyaktige _headers-linjen.
+ * CSP (ADR-0006): an iframe towards openstreetmap.org needs a frame-src
+ * exception. The manifest declares it, the Plugins panel shows the owner the
+ * line, and if CSP blocks the map the block shows the exact _headers line.
  */
 import { parseLocation, buildEmbedUrl, buildLargerMapUrl, OSM_HOST } from './osm.js';
-// Flerspråk (ADR-0012): t() for besøkende-tekster (site-språket), ta() for
-// editor-chromen og seed (admin-språket). Ordboka (locales/) lastes av
-// plugin-lasteren FØR register() - t/ta kalles aldri på modulnivå.
+// Multilingual (ADR-0012): t() for visitor texts (the site language), ta()
+// for the editor chrome and seed text (the admin language). The dictionary
+// (locales/) is loaded by the plugin loader BEFORE register() - t/ta are
+// never called at module level.
 import { t, ta } from '/assets/urd/i18n.js';
 
 const el2 = (tag, className, textContent) => {
@@ -24,7 +26,7 @@ const el2 = (tag, className, textContent) => {
 
 const post = (msg) => window.parent?.postMessage(msg, location.origin);
 
-/* ---------- Tomtilstand og CSP-degradering ---------- */
+/* ---------- Empty state and CSP degradation ---------- */
 
 function emptyState(host, ctx) {
   if (!ctx.preview) return;
@@ -32,19 +34,19 @@ function emptyState(host, ctx) {
 }
 
 /**
- * Fanger et CSP-brudd på iframe-en (hvis en host IKKE har OpenStreetMap i
- * frame-src) og bytter den brukne iframen med noe rolig: en forklaring i
- * editoren, en «åpne kartet»-lenke hos besøkende. Urds standard _headers har
- * OSM alt godkjent, så dette slår normalt aldri til.
+ * Catches a CSP violation on the iframe (when a host does NOT have
+ * OpenStreetMap in frame-src) and replaces the broken iframe with something
+ * calm: an explanation in the editor, a link that opens the map for visitors.
+ * Urd's default _headers already allows OSM, so this normally never fires.
  */
 function watchCspBlock(host, frame, ctx, largerUrl) {
-  // Sammenlign den blokkerte verten EKSAKT (parset URL), aldri en delstreng:
-  // en delstreng-sjekk ville også slått til på f.eks. openstreetmap.org.example.com.
+  // Compare the blocked host EXACTLY (a parsed URL), never as a substring:
+  // a substring check would also match openstreetmap.org.example.com.
   let blockedHost = null;
-  try { blockedHost = new URL(OSM_HOST).hostname; } catch { /* OSM_HOST er en konstant, dette skjer ikke */ }
+  try { blockedHost = new URL(OSM_HOST).hostname; } catch { /* OSM_HOST is a constant, so this cannot happen */ }
   const onViolation = (event) => {
     let violatedHost = null;
-    try { violatedHost = new URL(event.blockedURI).hostname; } catch { /* blockedURI kan være «inline»/«eval» m.m. */ }
+    try { violatedHost = new URL(event.blockedURI).hostname; } catch { /* blockedURI can be "inline", "eval" and the like */ }
     if (!(event.violatedDirective?.startsWith('frame-src') && violatedHost && violatedHost === blockedHost)) return;
     document.removeEventListener('securitypolicyviolation', onViolation);
     frame.remove();
@@ -56,7 +58,7 @@ function watchCspBlock(host, frame, ctx, largerUrl) {
         el2('code', 'urd-map-code', `frame-src ${OSM_HOST}`),
       );
     } else {
-      // Besøkende får en rolig lenke i stedet for en brukket iframe.
+      // Visitors get a calm link instead of a broken iframe.
       const a = el2('a', 'urd-map-fallback', t('map.openOsm'));
       a.href = largerUrl;
       a.target = '_blank';
@@ -85,7 +87,7 @@ const KART_CSS = `
 .urd-map-note { font-size: 11px; opacity: 0.6; margin: 0; }
 .urd-map-tools { position: absolute; top: -32px; right: -6px; z-index: 5;
   display: flex; gap: 4px; align-items: center;
-  /* Usynlig bro ned til blokk-kanten, så hover overlever veien opp */
+  /* An invisible bridge down to the block edge, so hover survives the trip up */
   padding-bottom: 8px; }
 .urd-map-tools .urd-hint-chip { position: static; }
 `;
@@ -98,7 +100,7 @@ function injectCss() {
   document.head.appendChild(style);
 }
 
-/* ---------- Autovekst ---------- */
+/* ---------- Auto-grow ---------- */
 
 function autoGrow(el, host, ctx) {
   const needed = host.scrollHeight;
@@ -107,9 +109,9 @@ function autoGrow(el, host, ctx) {
     const sectionEl = el.closest('.urd-section');
     if (sectionEl) {
       const bottom = el.offsetTop + needed + 24;
-      // Nav-klaringen (--urd-section-clear) er med i computed min-height, men
-      // ikke i innholdshøyden: den holdes utenfor sammenligningen og skrives
-      // tilbake i kalkylen (samme form som render.js setter).
+      // The nav clearance (--urd-section-clear) is part of the computed
+      // min-height but not of the content height: it is kept out of the
+      // comparison and written back into the calc (the shape render.js sets).
       const cs = getComputedStyle(sectionEl);
       const clear = Number.parseFloat(cs.getPropertyValue('--urd-section-clear')) || 0;
       const current = (Number.parseFloat(cs.minHeight) || 0) - clear;
@@ -119,23 +121,23 @@ function autoGrow(el, host, ctx) {
       const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
       if (block && block.frames.desktop.h !== needed) {
         block.frames.desktop = { ...block.frames.desktop, h: needed };
-        // KUN høyden meldes (urd-grow), aldri hele framen: ellers ville en
-        // dratt blokk teleporteres tilbake til snapshotets gamle x/y.
+        // ONLY the height is posted (urd-grow), never the whole frame: a
+        // dragged block would otherwise teleport back to the snapshot's old x/y.
         post({ type: 'urd-grow', sectionId: ctx.section.id, blockId: el.dataset.blockId, h: needed });
       }
     }
   }
 }
 
-/* ---------- Blokken ---------- */
+/* ---------- The block ---------- */
 
 function renderKart(el, props, ctx) {
   injectCss();
   const host = el2('div', 'urd-map');
   el.appendChild(host);
 
-  // Lagrede koordinater (fra adressesøk eller forrige tolking) foretrekkes;
-  // ellers tolkes location-strengen (koordinater/OSM-lenke) direkte.
+  // Stored coordinates (from an address search or an earlier parse) win;
+  // otherwise the location string (coordinates or OSM link) is parsed here.
   const loc = (Number.isFinite(props.lat) && Number.isFinite(props.lon))
     ? { lat: props.lat, lon: props.lon, zoom: props.zoom }
     : parseLocation(props.location);
@@ -163,8 +165,9 @@ function renderKart(el, props, ctx) {
   }
 
   if (ctx.preview && ctx.viewport !== 'mobile') {
-    // Innstillingene (sted, zoom, høyde) bor i Egenskaper-panelet via
-    // felt-kontrakten (`fields` på blokk-defen); her gjenstår kun «?»-chipen.
+    // The settings (place, zoom, height) live in the Properties panel via
+    // the field contract (`fields` on the block definition); only the help
+    // chip belongs here.
     const tools = el2('div', 'urd-map-tools');
     host.append(tools);
     import('/assets/urd/hint.js').then(({ attachHint }) => {
@@ -186,7 +189,7 @@ function renderKart(el, props, ctx) {
   autoGrow(el, host, ctx);
 }
 
-/* ---------- «Finn oss»-preset ---------- */
+/* ---------- The find-us preset ---------- */
 
 const blockId = () => {
   const bytes = crypto.getRandomValues(new Uint8Array(4));
@@ -223,7 +226,7 @@ function finnOssSection() {
   };
 }
 
-/* ---------- Registrering ---------- */
+/* ---------- Registration ---------- */
 
 /** @param {typeof window.Urd} Urd */
 export function register(Urd) {
@@ -233,9 +236,10 @@ export function register(Urd) {
     label: 'Map',
     labelKey: 'map.edit.blockLabel',
     defaults: () => ({ location: '', zoom: 15, height: 320 }),
-    // Felt-kontrakten: innstillingene rendres i adminens Egenskaper-panel.
-    // `place` skriver {location, lat, lon} (adressesøk via /api/geocode i
-    // admin; koordinater og OSM-lenker tolkes av parseLocation ved rendring).
+    // The field contract: the settings are rendered in the admin Properties
+    // panel. `place` writes {location, lat, lon} (address search via
+    // /api/geocode in admin; coordinates and OSM links are parsed by
+    // parseLocation at render time).
     fields: [
       { key: 'location', type: 'place', labelKey: 'map.edit.location', placeholderKey: 'map.edit.locationPh' },
       { key: 'zoom', type: 'number', labelKey: 'map.edit.zoom', min: 1, max: 19 },

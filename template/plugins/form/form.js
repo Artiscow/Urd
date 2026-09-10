@@ -1,29 +1,29 @@
 /**
- * Ren skjemalogikk for skjema-pluginen (ingen DOM, ingen fetch): validering,
- * honeypot, mailto-bygging og payload-forming. Alt her enhetstestes i node;
- * index.js står for rendering og innsending.
+ * Pure form logic for the form plugin (no DOM, no fetch): validation,
+ * honeypot, mailto building and payload shaping. Everything here is
+ * unit-tested in node; index.js handles rendering and submission.
  *
- * Besøkende-input håndteres ALDRI som HTML: verdiene URL-encodes for mailto
- * og sendes som JSON til et valgfritt endepunkt. Honeypot er et skjult felt
- * bots fyller ut; er det utfylt, er innsendingen forkastet.
+ * Visitor input is NEVER treated as HTML: the values are URL-encoded for
+ * mailto and sent as JSON to an optional endpoint. The honeypot is a hidden
+ * field that bots fill in; when it is filled in, the submission is discarded.
  */
 
-/** Praktisk e-postsjekk (ikke RFC-fullstendig, men fanger vanlige feil). */
+/** A practical email check (not RFC-complete, but it catches the common mistakes). */
 export function isEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value ?? '').trim());
 }
 
 /**
- * Honeypot: bots fyller ut alle felt, også det skjulte. Er honeypot-feltet
- * utfylt, behandles innsendingen som spam.
+ * Honeypot: bots fill in every field, the hidden one included. When the
+ * honeypot field is filled in, the submission is treated as spam.
  * @param {string} honeypotValue
- * @returns {boolean} true = spam (skal forkastes)
+ * @returns {boolean} true = spam (discard the submission)
  */
 export function isSpam(honeypotValue) {
   return String(honeypotValue ?? '').trim() !== '';
 }
 
-/** Gyldig kalenderdato på ISO-form (YYYY-MM-DD), slik `<input type="date">` gir. */
+/** A valid calendar date in ISO form (YYYY-MM-DD), the way `<input type="date">` gives it. */
 export function isIsoDate(value) {
   const text = String(value ?? '').trim();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
@@ -33,26 +33,28 @@ export function isIsoDate(value) {
 }
 
 /**
- * Validerer innsamlede verdier mot feltdefinisjonene.
- * Avkryssing bærer boolsk verdi (påkrevd = må være krysset av); nedtrekk og
- * radio med `options` godtar kun verdier fra listen (vern mot tuklede
- * innsendinger til endepunkt-modus); dato må være gyldig ISO-dato.
+ * Validates the collected values against the field definitions.
+ * A checkbox carries a boolean value (required = it must be ticked); select
+ * and radio fields with `options` accept only values from that list (a guard
+ * against tampered submissions in endpoint mode); a date must be a valid ISO
+ * date.
  * @param {Array<{id, label, type, required, options?: string[]}>} fields
  * @param {Record<string,string|boolean>} values
- * @param {{required?: string, email?: string, choice?: string, date?: string}} [messages] Meldingsmaler ({label} byttes inn)
+ * @param {{required?: string, email?: string, choice?: string, date?: string}} [messages] Message templates ({label} is substituted)
  * @returns {{ ok: boolean, errors: Record<string,string> }}
  */
 export function validate(fields, values, messages = {}) {
-  // Meldingsmalene kan overstyres (index.js sender besøkende-språkets
-  // tekster via t()); standardene er bokmål så node-testene er selvbærende.
+  // The message templates can be overridden (index.js passes the visitor
+  // language's texts via t()); the defaults are English, so the node tests
+  // stand on their own.
   const requiredMsg = messages.required ?? '{label} is required';
   const emailMsg = messages.email ?? 'Enter a valid email address';
   const choiceMsg = messages.choice ?? 'Choose one of the options';
   const dateMsg = messages.date ?? 'Enter a valid date';
   const errors = {};
   for (const field of fields) {
-    // Boolsk før strengtvang: String(false) er en ikke-tom streng og ville
-    // sluppet en påkrevd, avkrysset-fri boks gjennom.
+    // Boolean before string coercion: String(false) is a non-empty string
+    // and would let a required, unticked box through.
     if (field.type === 'checkbox') {
       if (field.required && values[field.id] !== true) {
         errors[field.id] = requiredMsg.replaceAll('{label}', field.label);
@@ -77,9 +79,9 @@ export function validate(fields, values, messages = {}) {
   return { ok: Object.keys(errors).length === 0, errors };
 }
 
-/** «Felt: verdi»-linjer, én per felt med verdi (ren tekst, til e-postkropp).
- *  Avkrysset boks blir ja-ordet (opts.yes); en tom boks utelates som andre
- *  tomme felt. */
+/** "Field: value" lines, one per field that has a value (plain text, for the
+ *  email body). A ticked box becomes the yes word (opts.yes); an empty box is
+ *  left out like any other empty field. */
 function bodyLines(fields, values, opts = {}) {
   const yes = opts.yes ?? 'Ja';
   return fields
@@ -94,13 +96,13 @@ function bodyLines(fields, values, opts = {}) {
 }
 
 /**
- * Bygger en mailto-URL med emne og kropp fra feltene (alt URL-encodet).
- * @param {string} recipient mottakeradresse
+ * Builds a mailto URL with subject and body from the fields (all URL-encoded).
+ * @param {string} recipient recipient address
  * @param {string} subject
  * @param {Array} fields
  * @param {Record<string,string|boolean>} values
- * @param {{yes?: string}} [opts] ja-ordet for avkryssingsfelt (besøkende-språket)
- * @returns {string|null} null hvis mottakeren mangler
+ * @param {{yes?: string}} [opts] the yes word for checkbox fields (the visitor language)
+ * @returns {string|null} null when the recipient is missing
  */
 export function buildMailto(recipient, subject, fields, values, opts = {}) {
   const to = String(recipient ?? '').trim();
@@ -114,9 +116,9 @@ export function buildMailto(recipient, subject, fields, values, opts = {}) {
 }
 
 /**
- * Payload til et eksternt endepunkt: feltverdiene pluss avsenderkontekst.
- * Honeypot utelates bevisst (den er kun en klientvakt). Avkryssingsfelt
- * sendes som ekte boolsk, resten som trimmede strenger.
+ * Payload for an external endpoint: the field values plus sender context.
+ * The honeypot is deliberately left out (it is a client-side guard only).
+ * Checkbox fields are sent as real booleans, the rest as trimmed strings.
  * @returns {Record<string, string|boolean>}
  */
 export function buildPayload(fields, values, extra = {}) {
@@ -129,7 +131,7 @@ export function buildPayload(fields, values, extra = {}) {
   return out;
 }
 
-/** Endepunktets opprinnelse (til CSP-instruksen ved blokkert innsending). */
+/** The endpoint's origin (for the CSP instruction when a submission is blocked). */
 export function endpointOrigin(url) {
   try {
     return new URL(String(url).trim()).origin;

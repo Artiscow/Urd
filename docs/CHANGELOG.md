@@ -25,6 +25,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.14.16 - Engelsk-renskingen: kommentarsveipen, stilark, plugins og skript - 11. september 2026
+
+- Siste kommentarbatch: base.css (594 kommentarlinjer i 260 blokker, alle norske), de 17 plugin-filene, skript, workflows, functions og ordbok-headerne oversatt til engelsk. Én kommentar slettet helt, siden den hang på ingen regel og dokumenterte en fjernet kantmarkør med datert beslutning. Kommentarsveipen er dermed komplett: ingen norske kommentarer står igjen i koden.
+- Regresjon fra etappe .7 rettet: den norske originalen skrev «--urd-nav-shrink-faktoren», altså egenskapsnavnet med bestemt form hengt på, og rename-sveipen leste hele strengen som en identifikator. Kommentaren pekte dermed på et fantom-navn `--urd-nav-shrink-factor`; den sier nå «the --urd-nav-shrink factor».
+- Tre kommentarer beskrev feil tilstand og er rettet: `.urd-faq` omtalte en grid-rows-overgang (0fr til 1fr) der CSS-en bruker `::details-content`, en lightbox-kommentar hevdet en z-index-plassering regelen ikke setter, og form/form.js påsto at fallback-valideringsmeldingene var på bokmål etter at de ble engelske i etappe .9. Ordbok-headeren i admin/tr.js var tyrkisk og er nå engelsk som resten.
+- Nytt base.css-stempel `6b4ebcd3` i alle fem skall, slug-kopiene bekreftet byte-like. base.css er mekanisk verifisert byteidentisk utenfor kommentarene.
+
 ### 0.7.14.15 - Engelsk-renskingen: kommentarsveipen, editor-biblioteket - 11. september 2026
 
 - Alle norske kommentarer i editor/src/lib og main.js (9 filer, ~225 kommentarlinjer) oversatt til engelsk, tyngst postMessage-kontrakttabellen i previewBridge.js, der kolonnejusteringen og alle urd-*-meldingsnavn og payload-felt står byteidentiske. Bundel-diffen etter gjenbygg er tom, som er skarpeste bevis her siden alle ni filene buntes.

@@ -1,6 +1,6 @@
 /**
- * Yönetici metinleri, Türkçe. Bokmål tabanının (nb.js) üzerine yüklenir;
- * parite testi anahtar kümelerini eşit tutar.
+ * Admin strings, Turkish. Overlays the Bokmål base (nb.js); the parity
+ * test keeps the key sets in sync.
  */
 export default {
   lang: 'tr',

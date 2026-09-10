@@ -1,15 +1,15 @@
 /**
- * Analytics-referansepluginen (SEO-pakken, funksjonskartet C14):
- * personvennlig besøksmåling via Cloudflare Web Analytics - ingen cookies,
- * ingen fingerprinting, sporingsfri kjerne. Pluginen registrerer ingen
- * blokker: den legger kun målescriptet på besøkende sider når token er
- * satt i plugin.json (git-eid oppsett, se README.md).
+ * The analytics reference plugin (the SEO pack, feature map C14):
+ * privacy-friendly visitor measurement via Cloudflare Web Analytics - no
+ * cookies, no fingerprinting, a tracking-free core. The plugin registers no
+ * blocks: it only adds the measurement script on visitor-facing pages when a
+ * token is set in plugin.json (git-owned setup, see README.md).
  *
- * CSP (ADR-0006): script-src- og connect-src-unntakene deklareres i
- * manifestet; Plugins-panelet viser eieren de nøyaktige _headers-linjene.
+ * CSP (ADR-0006): the script-src and connect-src exceptions are declared in
+ * the manifest; the Plugins panel shows the owner the exact _headers lines.
  */
 export async function register() {
-  // Aldri i editorens preview: redigeringsøkter er ikke besøk.
+  // Never in the editor preview: editing sessions are not visits.
   if (new URLSearchParams(location.search).has('preview')) return;
   let config;
   try {

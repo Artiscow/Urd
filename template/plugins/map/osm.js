@@ -1,10 +1,10 @@
 /**
- * Ren OSM-logikk for kart-pluginen (ingen DOM): tolke en posisjon eieren
- * limer inn (koordinater eller en OpenStreetMap-lenke), bygge innbyggings-URL
- * og «større kart»-lenke. Alt her enhetstestes i node.
+ * Pure OSM logic for the map plugin (no DOM): reading a position the owner
+ * pastes in (coordinates or an OpenStreetMap link), building the embed URL
+ * and the larger-map link. Everything here is unit-tested in node.
  *
- * Personvern: kartet bygges inn som en ren OSM-iframe (ingen sporing, ingen
- * tredjeparts-tiles), så eieren trenger kun å åpne frame-src for openstreetmap.org.
+ * Privacy: the map is embedded as a plain OSM iframe (no tracking, no
+ * third-party tiles), so the owner only has to open frame-src for openstreetmap.org.
  */
 
 const clampLat = (n) => Math.max(-85, Math.min(85, n));
@@ -12,9 +12,9 @@ const clampLon = (n) => Math.max(-180, Math.min(180, n));
 const clampZoom = (n) => Math.max(1, Math.min(19, Math.round(n)));
 
 /**
- * Tolker eierens posisjonsinnskriving:
- *   - «59.913, 10.739» (breddegrad, lengdegrad)
- *   - en OSM-lenke: .../#map=15/59.913/10.739  eller  ...?mlat=59.913&mlon=10.739
+ * Reads the position the owner types in:
+ *   - "59.913, 10.739" (latitude, longitude)
+ *   - an OSM link: .../#map=15/59.913/10.739  or  ...?mlat=59.913&mlon=10.739
  * @param {string} input
  * @returns {{ lat: number, lon: number, zoom: number|null }|null}
  */
@@ -22,11 +22,11 @@ export function parseLocation(input) {
   const raw = String(input ?? '').trim();
   if (!raw) return null;
 
-  // Zoom hentes fra #map=zoom/lat/lon når lenken har det.
+  // The zoom comes from #map=zoom/lat/lon when the link carries it.
   const mapHash = /#map=(\d+)\/(-?\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)/.exec(raw);
   const zoom = mapHash ? clampZoom(+mapHash[1]) : null;
 
-  // Punktet: markøren (mlat/mlon) foretrekkes, ellers #map-sentrum.
+  // The point: the marker (mlat/mlon) is preferred, otherwise the #map centre.
   const mlat = /[?&]mlat=(-?\d+(?:\.\d+)?)/.exec(raw);
   const mlon = /[?&]mlon=(-?\d+(?:\.\d+)?)/.exec(raw);
   if (mlat && mlon) {
@@ -35,7 +35,7 @@ export function parseLocation(input) {
   if (mapHash) {
     return { lat: clampLat(+mapHash[2]), lon: clampLon(+mapHash[3]), zoom };
   }
-  // Rene koordinater «lat, lon» (komma eller mellomrom)
+  // Bare coordinates, "lat, lon" (separated by comma or space)
   const pair = /^(-?\d+(?:\.\d+)?)\s*[,\s]\s*(-?\d+(?:\.\d+)?)$/.exec(raw);
   if (pair) {
     return { lat: clampLat(+pair[1]), lon: clampLon(+pair[2]), zoom: null };
@@ -43,15 +43,15 @@ export function parseLocation(input) {
   return null;
 }
 
-/** Grovt gradspenn rundt sentrum ut fra zoom (til iframe-ens bbox). */
+/** A rough degree span around the centre, derived from the zoom (for the iframe bbox). */
 function span(zoom) {
-  // Dobles per zoom-nivå nedover; verdien er valgt så et typisk bynivå (15) gir et par kvartaler.
+  // Doubles for every zoom level down; the value is chosen so a typical city level (15) covers a couple of blocks.
   return 360 / 2 ** clampZoom(zoom);
 }
 
 /**
- * Innbyggings-URL til OpenStreetMaps offisielle iframe (export/embed.html).
- * Bygger en bbox rundt sentrum og setter en markør i punktet.
+ * Embed URL for OpenStreetMap's official iframe (export/embed.html).
+ * Builds a bbox around the centre and puts a marker at the point.
  * @param {{ lat: number, lon: number, zoom?: number }} loc
  * @returns {string}
  */
@@ -59,7 +59,7 @@ export function buildEmbedUrl({ lat, lon, zoom = 15 }) {
   const la = clampLat(lat);
   const lo = clampLon(lon);
   const d = span(zoom);
-  // Breddegrader komprimeres mot polene; juster bbox-høyden med cos(lat).
+  // Latitude compresses towards the poles; adjust the bbox height by cos(lat).
   const latPad = d * Math.max(0.2, Math.cos((la * Math.PI) / 180));
   const bbox = [clampLon(lo - d), clampLat(la - latPad), clampLon(lo + d), clampLat(la + latPad)];
   const params = new URLSearchParams({
@@ -70,12 +70,12 @@ export function buildEmbedUrl({ lat, lon, zoom = 15 }) {
   return `https://www.openstreetmap.org/export/embed.html?${params.toString()}`;
 }
 
-/** «Vis større kart»-lenke til openstreetmap.org for punktet. */
+/** The "view larger map" link to openstreetmap.org for the point. */
 export function buildLargerMapUrl({ lat, lon, zoom = 15 }) {
   const la = clampLat(lat).toFixed(5);
   const lo = clampLon(lon).toFixed(5);
   return `https://www.openstreetmap.org/?mlat=${la}&mlon=${lo}#map=${clampZoom(zoom)}/${la}/${lo}`;
 }
 
-/** Verten kart-pluginen trenger i frame-src (til CSP-instruksen). */
+/** The host the map plugin needs in frame-src (for the CSP instruction). */
 export const OSM_HOST = 'https://www.openstreetmap.org';

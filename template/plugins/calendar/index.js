@@ -1,27 +1,29 @@
 /**
- * Kalender-referansepluginen (v0.6 M3): abonnerbar arrangementskalender fra
- * iCal-feeder (Google Calendar, Nextcloud, Outlook m.fl.), bygget etter
- * ApeironLF-designkravene. Dette er også REFERANSEN for plugin-forfattere:
- * manifest med provides, blokk med versjon/migrering, seksjonspreset,
- * egen CSS via én style-tag, og redigering i preview via urd-edit.
+ * The calendar reference plugin: a subscribable event calendar built from
+ * iCal feeds (Google Calendar, Nextcloud, Outlook and others), following the
+ * ApeironLF design requirements. It is also the REFERENCE for plugin
+ * authors: a manifest with provides, a block with version and migrations, a
+ * section preset, its own CSS in one style tag, and editing in the preview
+ * via urd-edit.
  *
- * Henting går ALLTID via sidens egen feed-proxy (/api/ics): feed-verter
- * sender ikke CORS, og sidens CSP tillater kun connect-src 'self', så
- * pluginen trenger ingen CSP-unntak. Lokalt uten functions vises
- * eksempeldata i forhåndsvisningen og en rolig tomtilstand hos besøkende.
+ * Fetching ALWAYS goes through the site's own feed proxy (/api/ics): feed
+ * hosts send no CORS, and the site's CSP allows connect-src 'self' only, so
+ * the plugin needs no CSP exception. Locally, without functions, the preview
+ * shows demo data and visitors get a quiet empty state.
  *
- * Visninger: liste (dato-badge-rader), kort, måned og «neste» (panel for
- * neste arrangement). Konvensjoner: «Kategori: Tittel» gir kategori-chips
- * med filter, og en påmeldingslenke i beskrivelsen blir en knapp.
+ * Views: list (date-badge rows), cards, month and next (a panel for the next
+ * event). Conventions: "Category: Title" gives category chips with a filter,
+ * and a signup link in the description becomes a button.
  */
 import {
   parseIcs, expandEvents, splitCategory, findSignupLink,
   normalizeSourceUrl, subscribeLinks,
 } from './ics.js';
-// Flerspråk (ADR-0012): t() for besøkende-tekster (site-språket), ta() for
-// editor-chromen (admin-språket), dates() for måneds-/ukedagsnavn og tp()
-// for flertall. Ordboka (locales/) lastes av plugin-lasteren FØR register()
-// - t/ta kalles kun i render-/fabrikk-kropper, aldri på modulnivå.
+// Multilingual (ADR-0012): t() for visitor texts (the site language), ta()
+// for the editor chrome (the admin language), dates() for month and weekday
+// names, and tp() for plurals. The dictionary (locales/) is loaded by the
+// plugin loader BEFORE register() - t/ta are called only inside render and
+// factory bodies, never at module level.
 import { t, ta, tp, taApiError, dates } from '/assets/urd/i18n.js';
 
 const el2 = (tag, className, textContent) => {
@@ -31,7 +33,7 @@ const el2 = (tag, className, textContent) => {
   return node;
 };
 
-/* ---------- Henting (proxy + kort mellomlager) ---------- */
+/* ---------- Fetching (proxy + short-lived cache) ---------- */
 
 const CACHE_TTL = 10 * 60 * 1000;
 
@@ -40,18 +42,18 @@ async function fetchSource(url) {
   try {
     const cached = JSON.parse(sessionStorage.getItem(key) ?? 'null');
     if (cached && Date.now() - cached.t < CACHE_TTL) return cached.text;
-  } catch { /* korrupt mellomlager ignoreres */ }
+  } catch { /* a corrupt cache entry is ignored */ }
   const res = await fetch(`/api/ics?url=${encodeURIComponent(url)}`);
   if (!res.ok) {
     const detail = taApiError(await res.json().catch(() => null));
     throw new Error(detail ?? ta('calendar.edit.feedStatus', { status: res.status }));
   }
   const text = await res.text();
-  try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), text })); } catch { /* fullt lager er greit */ }
+  try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), text })); } catch { /* a full store is fine */ }
   return text;
 }
 
-/** Alle kilder → sorterte forekomster med kategori og påmeldingslenke. */
+/** All sources → sorted occurrences with category and signup link. */
 async function loadOccurrences(sources, limit) {
   const errors = [];
   const events = [];
@@ -72,7 +74,7 @@ async function loadOccurrences(sources, limit) {
   return { occurrences, errors };
 }
 
-/* ---------- Eksempeldata (kun forhåndsvisning uten kilder/feed) ---------- */
+/* ---------- Demo data (preview only, when no sources or feed) ---------- */
 
 function demoOccurrences() {
   const day = 24 * 3600 * 1000;
@@ -84,7 +86,7 @@ function demoOccurrences() {
   ];
 }
 
-/* ---------- Formatering ---------- */
+/* ---------- Formatting ---------- */
 
 const two = (n) => String(n).padStart(2, '0');
 
@@ -122,7 +124,7 @@ function signupNode(occ) {
   return a;
 }
 
-/* ---------- Visninger ---------- */
+/* ---------- Views ---------- */
 
 function renderList(host, occs) {
   const list = el2('div', 'urd-samling-list');
@@ -178,8 +180,9 @@ function renderNext(host, occs) {
   body.appendChild(titleRow);
   body.appendChild(el2('div', 'urd-cal-meta', metaLine(occ)));
   const days = Math.max(0, Math.round((occ.start - Date.now()) / (24 * 3600 * 1000)));
-  // Egne nøkler i stedet for Intl.RelativeTimeFormat: «I dag!»-stilen
-  // beholdes, og nordsamisk mangler i ICU (ville falt til rått tall).
+  // Dedicated keys instead of Intl.RelativeTimeFormat: the exclaiming
+  // today wording is kept, and ICU has no North Sami (it would fall back to
+  // a bare number).
   body.appendChild(el2('div', 'urd-cal-next-count', days === 0 ? t('calendar.today') : days === 1 ? t('calendar.tomorrow') : tp('calendar.inDays', days)));
   const signup = signupNode(occ);
   if (signup) body.appendChild(signup);
@@ -241,7 +244,7 @@ function renderMonth(host, occs) {
 
 const VIEWS = { list: renderList, cards: renderCards, month: renderMonth, next: renderNext };
 
-/* ---------- Abonner og kategori-filter ---------- */
+/* ---------- Subscribe and category filter ---------- */
 
 function subscribeRow(sources) {
   const row = el2('div', 'urd-cal-subscribe');
@@ -283,13 +286,13 @@ function categoryRow(occs, active, onpick) {
   return row;
 }
 
-/* ---------- Kildepanel i forhåndsvisningen ---------- */
+/* ---------- Source panel in the preview ---------- */
 
 function post(msg) {
   window.parent?.postMessage(msg, location.origin);
 }
 
-/** Visning-id + etikett-NØKKEL (ta-oppslag ved bruk; aldri på modulnivå). */
+/** View id + label KEY (looked up with ta at use time; never at module level). */
 const VIEW_NAMES = [['list', 'calendar.edit.viewList'], ['cards', 'calendar.edit.viewCards'], ['month', 'calendar.edit.viewMonth'], ['next', 'calendar.edit.viewNext']];
 
 function configPanel(el, props, ctx) {
@@ -304,8 +307,8 @@ function configPanel(el, props, ctx) {
   sources.placeholder = ta('calendar.edit.sourcesPh');
   sources.value = (props.sources ?? []).join('\n');
 
-  // Visning: temastyrte segmentknapper (native select-popuper følger OS-temaet
-  // og blir uleselige i mørke paneler).
+  // View: theme-driven segment buttons (native select popups follow the OS
+  // theme and turn unreadable in dark panels).
   let chosenView = props.view ?? 'list';
   const viewSeg = el2('div', 'urd-cal-seg');
   const viewButtons = [];
@@ -323,7 +326,7 @@ function configPanel(el, props, ctx) {
     viewSeg.appendChild(b);
   }
 
-  // Maks antall gjelder kun liste og kort; måned viser måneden og «neste» viser ett.
+  // The max count applies to list and cards only; month shows its month and next shows one.
   const limitLabel = label(ta('lbl.maxCount'));
   const limit = document.createElement('input');
   limit.type = 'number';
@@ -369,7 +372,7 @@ function configPanel(el, props, ctx) {
     categoriesLabel, subscribeLabel, apply,
   );
 
-  // Klikk utenfor panelet lukker det (klikk i panelet eller på knappen gjør ikke).
+  // A click outside the panel closes it (a click inside the panel or on the button does not).
   const onOutside = (event) => {
     if (!panel.isConnected) { close(); return; }
     if (panel.contains(event.target) || event.target === gear) return;
@@ -390,7 +393,7 @@ function configPanel(el, props, ctx) {
   return [gear, panel];
 }
 
-/* ---------- Autovekst (samme mønster som samling-blokken) ---------- */
+/* ---------- Auto-grow (the same pattern as the collection block) ---------- */
 
 function autoGrow(el, host, ctx) {
   const needed = host.scrollHeight;
@@ -399,9 +402,9 @@ function autoGrow(el, host, ctx) {
     const sectionEl = el.closest('.urd-section');
     if (sectionEl) {
       const bottom = el.offsetTop + needed + 24;
-      // Nav-klaringen (--urd-section-clear) er med i computed min-height, men
-      // ikke i innholdshøyden: den holdes utenfor sammenligningen og skrives
-      // tilbake i kalkylen (samme form som render.js setter).
+      // The nav clearance (--urd-section-clear) is part of the computed
+      // min-height but not of the content height: it is kept out of the
+      // comparison and written back into the calc (the shape render.js sets).
       const cs = getComputedStyle(sectionEl);
       const clear = Number.parseFloat(cs.getPropertyValue('--urd-section-clear')) || 0;
       const current = (Number.parseFloat(cs.minHeight) || 0) - clear;
@@ -411,15 +414,15 @@ function autoGrow(el, host, ctx) {
       const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
       if (block && block.frames.desktop.h !== needed) {
         block.frames.desktop = { ...block.frames.desktop, h: needed };
-        // KUN høyden meldes (urd-grow), aldri hele framen: ellers ville en
-        // dratt blokk teleporteres tilbake til snapshotets gamle x/y.
+        // ONLY the height is posted (urd-grow), never the whole frame: a
+        // dragged block would otherwise teleport back to the snapshot's old x/y.
         post({ type: 'urd-grow', sectionId: ctx.section.id, blockId: el.dataset.blockId, h: needed });
       }
     }
   }
 }
 
-/* ---------- Plugin-CSS: én style-tag, temafølgende tokens ---------- */
+/* ---------- Plugin CSS: one style tag, theme-following tokens ---------- */
 
 const KAL_CSS = `
 .urd-kal { width: 100%; display: grid; gap: 12px; position: relative; }
@@ -471,11 +474,11 @@ const KAL_CSS = `
 .urd-cal-note { font-size: 0.75em; opacity: 0.55; }
 .urd-cal-tools { position: absolute; top: -32px; right: -6px; z-index: 5;
   display: flex; gap: 4px; align-items: center;
-  /* Usynlig bro ned til blokk-kanten, så hover overlever veien opp */
+  /* An invisible bridge down to the block edge, so hover survives the trip up */
   padding-bottom: 8px; }
 .urd-cal-tools .urd-hint-chip { position: static; }
-/* Config-bryteren er skjult: innstillingene åpnes fra blokkens Egenskaper
-   (urd-cfg-toggle klikkes via urd-open-block-config). */
+/* The config toggle is hidden: the settings open from the block's Properties
+   panel (urd-cfg-toggle is clicked via urd-open-block-config). */
 .urd-cal-gear { display: none; }
 .urd-block:hover .urd-cal-gear, .urd-cal-gear:focus-visible,
 .urd-kal:has(.urd-cal-config.vis) .urd-cal-gear { opacity: 0.92; pointer-events: auto; }
@@ -509,7 +512,7 @@ function injectCss() {
   document.head.appendChild(style);
 }
 
-/* ---------- Blokken ---------- */
+/* ---------- The block ---------- */
 
 function renderCalendar(el, props, ctx) {
   injectCss();
@@ -523,11 +526,11 @@ function renderCalendar(el, props, ctx) {
     host.replaceChildren();
     if (ctx.preview && ctx.viewport !== 'mobile') {
       const [gear, panel] = configPanel(el, props, ctx);
-      // «?» og «⚙ Kilder» i samme rad øverst til høyre, klar av rotasjonshåndtaket.
+      // The help chip and the sources gear share one row at the top right, clear of the rotation handle.
       const tools = el2('div', 'urd-cal-tools');
       tools.appendChild(gear);
       host.append(tools, panel);
-      // Hjelpechipen (ADR-0008): blokker med spesialfunksjoner forklarer seg selv.
+      // The help chip (ADR-0008): blocks with special functions explain themselves.
       import('/assets/urd/hint.js').then(({ attachHint }) => {
         if (!host.isConnected || host.querySelector('.urd-hint-chip')) return;
         const chip = attachHint(tools, {
@@ -542,14 +545,14 @@ function renderCalendar(el, props, ctx) {
             ta('calendar.edit.hint7'),
           ],
         });
-        // «?» først, så «⚙ Kilder».
+        // The help chip first, then the gear.
         tools.insertBefore(chip, tools.firstChild);
       });
     }
     const filtered = activeCategory
       ? occurrences.filter((occ) => occ.category === activeCategory)
       : occurrences;
-    // Maks antall gjelder liste og kort; måneden viser sin måned og «neste» viser ett.
+    // The max count applies to list and cards; month shows its month and next shows one.
     const limited = (props.view === 'month' || props.view === 'next')
       ? filtered
       : filtered.slice(0, Math.max(1, props.limit ?? 6));
@@ -582,7 +585,7 @@ function renderCalendar(el, props, ctx) {
   loadOccurrences(sources, Math.max(1, props.limit ?? 6)).then(({ occurrences, errors }) => {
     if (!host.isConnected) return;
     if (!occurrences.length && errors.length) {
-      // Besøkende får rolig tomtilstand; forhåndsvisningen får feilen.
+      // Visitors get a quiet empty state; the preview gets the error.
       draw([], ctx.preview ? ta('calendar.edit.feedFailed', { error: errors[0] }) : null);
       return;
     }
@@ -590,7 +593,7 @@ function renderCalendar(el, props, ctx) {
   });
 }
 
-/* ---------- «Hva skjer»-preset ---------- */
+/* ---------- The whats-on preset ---------- */
 
 const presetId = () => {
   const bytes = crypto.getRandomValues(new Uint8Array(4));
@@ -627,7 +630,7 @@ function hvaSkjerSection() {
   };
 }
 
-/* ---------- Registrering ---------- */
+/* ---------- Registration ---------- */
 
 /** @param {typeof window.Urd} Urd */
 export function register(Urd) {
@@ -637,8 +640,9 @@ export function register(Urd) {
     label: 'Calendar',
     labelKey: 'calendar.edit.blockLabel',
     defaults: () => ({ sources: [], view: 'list', limit: 6, showCategories: true, showSubscribe: true }),
-    // Foldemenyen i blokkmenyene: én variant per visning (generisk variants-felt).
-    // labelKey løses av konsumentene (iframe-siden har plugin-ordboka).
+    // The fold-out menu in the block menus: one variant per view (the generic
+    // variants field). labelKey is resolved by the consumers (the iframe side
+    // has the plugin dictionary).
     variants: VIEW_NAMES.map(([view, labelKey]) => ({ label: view, labelKey, props: { view } })),
     migrations: {},
     render: renderCalendar,

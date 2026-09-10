@@ -1,9 +1,9 @@
 /**
- * Kárta-pluginens teavsttat, davvisámegiella. Legger seg oppå
- * bokmålsbasen (nb.js); paritetstesten holder nøkkelsettene i synk.
+ * Map plugin texts, North Sami (davvisámegiella). Layered on top of the nb
+ * base (nb.js); the parity test keeps the key sets in sync.
  *
- * MERK: maskinoversatt førsteutkast som trenger gjennomgang av en som
- * har nordsamisk som morsmål (se CONTRIBUTING.md).
+ * NOTE: a machine-translated first draft that needs review by a native
+ * North Sami speaker (see CONTRIBUTING.md).
  */
 export default {
   lang: 'se',

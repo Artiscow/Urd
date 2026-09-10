@@ -1,10 +1,10 @@
 /**
- * Besøkende-tekster, nordsamisk (davvisámegiella). Legger seg oppå
- * bokmålsbasen (nb.js); paritetstesten holder nøkkelsettene i synk.
- * Datonavn kommer fra Intl (ICU har full nordsamisk CLDR-data).
+ * Visitor-facing strings, Northern Sami (davvisámegiella). Overlays the
+ * Bokmål base (nb.js); the parity test keeps the key sets in sync. Date
+ * names come from Intl (ICU has complete Northern Sami CLDR data).
  *
- * MERK: maskinoversatt førsteutkast som trenger gjennomgang av en som
- * har nordsamisk som morsmål (se CONTRIBUTING.md).
+ * NOTE: a machine-translated first draft that needs review by a native
+ * Northern Sami speaker (see CONTRIBUTING.md).
  */
 export default {
   lang: 'se',

@@ -1,13 +1,13 @@
-# Release-synk (ADR-0004): speiler innholdet av template/ til det rene
-# urd-template-repoet («Use this template») som ÉN squashet commit per
-# utgivelse, og tagger malrepoet med versjonen. Taggen der er oppdaterens
-# sjekksum-baseline (blob-SHA-er sammenlignes mot den), så synk og tagging
-# skjer i samme kjøring og kan aldri drive fra hverandre.
+# Release sync (ADR-0004): mirrors the contents of template/ into the clean
+# urd-template repo ("Use this template") as ONE squashed commit per release,
+# and tags the template repo with the version. That tag is the updater's
+# checksum baseline (blob SHAs are compared against it), so the sync and the
+# tagging happen in the same run and can never drift apart.
 #
-# Krever secreten URD_TEMPLATE_PAT: en fine-grained PAT med contents
-# read/write KUN på malrepoet (GITHUB_TOKEN når ikke på tvers av repoer).
-# Actions er SHA-pinnede med versjonskommentar; dependabot-gruppen
-# actions-alle holder pinningene ferske.
+# Requires the secret URD_TEMPLATE_PAT: a fine-grained PAT with contents
+# read/write ONLY on the template repo (GITHUB_TOKEN does not reach across
+# repos). Actions are SHA-pinned with a version comment; the dependabot group
+# actions-alle keeps the pins fresh.
 name: Release
 
 on:
@@ -27,7 +27,7 @@ on:
 permissions:
   contents: read
 
-# Én synk om gangen: to samtidige kjøringer ville kappløpt om malrepoets HEAD.
+# One sync at a time: two concurrent runs would race for the template repo's HEAD.
 concurrency:
   group: release-sync
 
@@ -75,8 +75,9 @@ jobs:
           fi
 
       - name: Engine and guard tests
-        # Billig røykvern på nøyaktig innholdet som synkes; full CI (bygg,
-        # validering, bygg-samsvar) har allerede kjørt på pushen bak taggen.
+        # A cheap smoke guard on exactly the content being synced; full CI
+        # (build, validation, build match) has already run on the push behind
+        # the tag.
         run: node --test tests/*.mjs
 
       - name: Check out the template repo
@@ -85,8 +86,8 @@ jobs:
           repository: ${{ env.TEMPLATE_REPO }}
           token: ${{ secrets.URD_TEMPLATE_PAT }}
           path: urd-template
-          # Full historikk: push fra grunn klon er skjørt, og malrepoets
-          # historikk er liten (én commit per utgivelse).
+          # Full history: pushing from a shallow clone is fragile, and the
+          # template repo's history is small (one commit per release).
           fetch-depth: 0
 
       - name: Sync template/ as one squashed commit and tag
@@ -94,8 +95,8 @@ jobs:
           TAG: ${{ steps.meta.outputs.tag }}
         run: |
           set -eu
-          # Tøm arbeidskopien (alt unntatt .git) og kopier malen inn, så
-          # slettede filer i template/ også forsvinner fra malrepoet.
+          # Empty the working copy (everything but .git) and copy the template
+          # in, so files deleted in template/ also disappear from the template repo.
           find urd-template -mindepth 1 -maxdepth 1 -not -name '.git' -exec rm -rf {} +
           cp -a template/. urd-template/
           cd urd-template
@@ -107,9 +108,9 @@ jobs:
           else
             git commit -m "Urd $TAG"
           fi
-          # Idempotens ved omkjøring: en eksisterende tagg godtas kun hvis den
-          # alt peker på dette innholdet; ellers stoppes kjøringen (baseline-
-          # tagger skal aldri flyttes i stillhet).
+          # Idempotent on a re-run: an existing tag is accepted only if it
+          # already points at this content; otherwise the run stops (baseline
+          # tags must never be moved silently).
           if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
             if [ "$(git rev-parse "refs/tags/$TAG^{commit}")" = "$(git rev-parse HEAD)" ]; then
               echo "Taggen $TAG finnes allerede og peker riktig."
@@ -120,14 +121,14 @@ jobs:
           else
             git tag "$TAG"
           fi
-          # --atomic: gren og tagg går sammen eller ikke i det hele tatt, så
-          # en manuell commit i malrepoet aldri kan gi tagg uten innhold.
+          # --atomic: branch and tag go together or not at all, so a manual
+          # commit in the template repo can never leave a tag without content.
           git push --atomic origin HEAD "refs/tags/$TAG"
 
       - name: Publish the release notes to the template repo
-        # Oppdatering-panelet viser notatene («Om vX.Y.Z»); de finnes kun i
-        # monorepo-releasen, så de kopieres hit. Hoppes over ved dispatch
-        # (ingen release-body) og tåler at releasen alt finnes.
+        # The update panel shows the notes ("About vX.Y.Z"); they exist only
+        # in the monorepo release, so they are copied here. Skipped on dispatch
+        # (no release body) and tolerates the release already existing.
         if: github.event_name == 'release' && github.event.release.body != ''
         env:
           GH_TOKEN: ${{ secrets.URD_TEMPLATE_PAT }}

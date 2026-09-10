@@ -1,7 +1,7 @@
 /**
- * Validerer eksempelinnholdet i template/ mot JSON-skjemaene i schema/.
- * Kjøres med `npm run validate` (og i CI). Feiler med kode 1 og tydelig
- * utskrift hvis noe ikke stemmer med kontrakten.
+ * Validates the example content in template/ against the JSON schemas in
+ * schema/. Run with `npm run validate` (and in CI). Exits with code 1 and a
+ * clear printout if anything does not match the contract.
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -19,8 +19,8 @@ const pageSchema = load('schema/page.schema.json');
 const pluginSchema = load('schema/plugin.schema.json');
 const collectionSchema = load('schema/collection.schema.json');
 const malSchema = load('schema/mal.schema.json');
-ajv.addSchema(siteSchema); // page.schema.json refererer site.schema.json ($id)
-ajv.addSchema(pageSchema); // mal.schema.json refererer page-skjemaets $defs ($id)
+ajv.addSchema(siteSchema); // page.schema.json references site.schema.json ($id)
+ajv.addSchema(pageSchema); // mal.schema.json references the page schema's $defs ($id)
 
 const cases = [
   ['template/content/site.json', siteSchema.$id],
@@ -30,11 +30,11 @@ const cases = [
   ['template/plugins/lang-sv/plugin.json', pluginSchema],
 ];
 
-// Alle sider fra sideregisteret valideres, ikke en håndplukket liste: da fanges
-// både en ny side ingen husket å legge til her, og en registeroppføring som
-// peker på en fil som ikke finnes (load kaster med stien). Filer på disk som
-// IKKE står i registeret tas med i tillegg, så en foreldreløs sidefil aldri
-// blir liggende uvalidert.
+// Every page in the page registry is validated, not a hand-picked list: that
+// catches both a new page nobody remembered to add here, and a registry entry
+// pointing at a file that does not exist (load throws with the path). Files on
+// disk that are NOT in the registry are included as well, so an orphaned page
+// file is never left unvalidated.
 const registered = new Set();
 for (const page of load('template/content/site.json').pages ?? []) {
   registered.add(`template/${page.file}`);
@@ -45,13 +45,13 @@ for (const name of readdirSync(new URL('template/content/pages/', `file://${root
   if (name.endsWith('.json') && !registered.has(path)) cases.push([path, pageSchema.$id]);
 }
 
-// Alle samlinger fra indeksfilen valideres mot collection-skjemaet (ADR-0007).
+// Every collection in the index file is validated against the collection schema (ADR-0007).
 for (const id of load('template/content/samlinger.json').samlinger ?? []) {
   cases.push([`template/content/samlinger/${id}.json`, collectionSchema]);
 }
 
-// Alle maler fra indeksfilen valideres mot mal-skjemaet (samme mønster;
-// malrepoet skipper tom indeks, så listen er gjerne tom her).
+// Every template in the index file is validated against the mal schema (same
+// pattern; the template repo ships an empty index, so the list is often empty here).
 for (const id of load('template/content/maler.json').maler ?? []) {
   cases.push([`template/content/maler/${id}.json`, malSchema]);
 }
@@ -70,9 +70,9 @@ for (const [path, schema] of cases) {
   }
 }
 
-// Seksjonspresetene valideres også: hver create() pluss to item-runder skal gi skjemagyldige seksjoner.
-// Strukturen og plasseringsgeometrien testes i tests/presets.test.mjs; her er det skjemakontrakten som gjelder.
-// Motorstien er versjonert (ADR-0013): mappenavnet leses fra urd.json.engine.
+// The section presets are validated too: every create() plus two item rounds must yield schema-valid sections.
+// The structure and the placement geometry are tested in tests/presets.test.mjs; here it is the schema contract that applies.
+// The engine path is versioned (ADR-0013): the folder name is read from urd.json.engine.
 const engineVersion = JSON.parse(readFileSync(`${root}template/urd.json`, 'utf-8')).engine;
 const { registerSectionPresets } = await import(new URL(`template/assets/engine/${engineVersion}/sections/presets.js`, `file://${root}`));
 const defs = new Map();
@@ -97,9 +97,9 @@ if (validatePresets(presetPage)) {
   }
 }
 
-// Startpakkene (innebygde side-maler, 0.6.7.12): hver bygde side skal være
-// skjemagyldig. Preset-referansene og id-unikheten testes i
-// tests/page-presets.test.mjs; her gjelder skjemakontrakten.
+// The starter packs (built-in page templates): every built page must be
+// schema-valid. The preset references and the id uniqueness are tested in
+// tests/page-presets.test.mjs; here the schema contract applies.
 const { PAGE_PRESETS, buildPagePreset } = await import(new URL(`template/assets/engine/${engineVersion}/page-presets.js`, `file://${root}`));
 let pagePresetOk = true;
 for (const preset of PAGE_PRESETS) {
@@ -115,10 +115,10 @@ for (const preset of PAGE_PRESETS) {
 }
 if (pagePresetOk) console.log(`OK    startpakker (${PAGE_PRESETS.length} mot page-skjemaet)`);
 
-// Syntetiske mal-caser: indeksen skipper tom, så kontrakten valideres med en
-// seksjons-, en blokkgruppe- og en side-mal bygget fra ekte presets.
-// Re-id-regelen og geometrien testes i tests/maler.test.mjs; her gjelder
-// skjemakontrakten. En preset med blokker (den første, «tom», har ingen).
+// Synthetic template cases: the index ships empty, so the contract is validated
+// with a section, a block-group and a page template built from real presets.
+// The re-id rule and the geometry are tested in tests/maler.test.mjs; here the
+// schema contract applies. A preset with blocks (the first one, "empty", has none).
 const malSection = [...defs.values()].map((d) => d.create()).find((s) => s.blocks.length > 0);
 const syntheticMaler = [
   { schemaVersion: 1, mal: { name: 'Testmal seksjon', kind: 'section' }, section: malSection },
