@@ -1,12 +1,14 @@
 <script>
   /**
-   * Full ikon-editor for nettstedsikonet (favicon): beskjær til kvadrat, zoom,
-   * fokuspunkt (dra i forhåndsvisningen), filtre (lysstyrke/kontrast/metning +
-   * gråtone) og nullstill. Alt bakes til et 128px webp-ikon på «Bruk».
+   * Full icon editor for the site icon (favicon): crop to a square, zoom,
+   * focal point (drag in the preview), filters (brightness/contrast/saturation
+   * + grayscale) and reset. Everything is baked into a 128px webp icon on
+   * "Apply".
    *
-   * Favicon-en er en RASTER-fil (vises i nettleserfanen), så justeringene kan
-   * ikke ligge som CSS slik bildeblokken gjør; de tegnes inn i selve ikonet.
-   * ÉN coverDraw bruker samme matematikk til både forhåndsvisning og eksport.
+   * The favicon is a RASTER file (shown in the browser tab), so the
+   * adjustments cannot live as CSS the way the image block does it; they are
+   * drawn into the icon itself. ONE coverDraw uses the same math for both the
+   * preview and the export.
    */
   import { ta } from '$engine/i18n.js';
 
@@ -31,7 +33,7 @@
     loaded.src = image;
   });
 
-  /** Tegner bildet «cover» i et kvadrat, med zoom, fokuspunkt og filtre. */
+  /** Draws the image "cover" style in a square, with zoom, focal point and filters. */
   function coverDraw(ctx, size) {
     ctx.clearRect(0, 0, size, size);
     if (!img) return;
@@ -40,7 +42,7 @@
     const scale = base * zoom;
     const w = img.width * scale;
     const h = img.height * scale;
-    // Fokuspunktet i bildet legges i sentrum; klem så kvadratet alltid dekkes.
+    // The image's focal point is placed at the center; clamp so the square is always covered.
     let dx = size / 2 - focusX * w;
     let dy = size / 2 - focusY * h;
     dx = Math.min(0, Math.max(size - w, dx));
@@ -49,7 +51,7 @@
     ctx.filter = 'none';
   }
 
-  // Tegn forhåndsvisningen på nytt når noe endres (img og alle justeringene).
+  // Redraw the preview whenever something changes (img and all the adjustments).
   $effect(() => {
     img; zoom; focusX; focusY; brightness; contrast; saturate;
     if (canvasEl) coverDraw(canvasEl.getContext('2d'), PREVIEW);
@@ -64,7 +66,7 @@
     const w = img.width * scale;
     const h = img.height * scale;
     const move = (ev) => {
-      // Dra bildet: fokuspunktet flytter motsatt vei.
+      // Drag the image: the focal point moves the opposite way.
       focusX = Math.min(1, Math.max(0, focusX - (ev.clientX - lastX) / w));
       focusY = Math.min(1, Math.max(0, focusY - (ev.clientY - lastY) / h));
       lastX = ev.clientX;
@@ -161,7 +163,7 @@
     width: 220px;
     height: 220px;
     border-radius: 10px;
-    /* Sjakkbrett bak gjennomsiktige ikoner, så utsnittet er tydelig */
+    /* Checkerboard behind transparent icons, so the crop is clear */
     background: repeating-conic-gradient(rgb(255 255 255 / 8%) 0 25%, transparent 0 50%) 0 0 / 20px 20px,
       color-mix(in srgb, var(--urd-color-text, #fff) 6%, transparent);
     cursor: grab;

@@ -1,28 +1,29 @@
 /**
- * Skala for redigerings-lerretet: iframen rendrer siden i en MÅL-VIEWPORT og
- * skaleres ned for å passe `.frame-wrap`, i stedet for å reflowe inn i
- * restplassen. Da er render-en identisk med den publiserte siden; kun
- * visningsstørrelsen (zoom) endres. Rene funksjoner, node-testet.
+ * Scale for the editing canvas: the iframe renders the page in a TARGET
+ * VIEWPORT and is scaled down to fit `.frame-wrap`, instead of reflowing into
+ * the leftover space. The render is then identical to the published page; only
+ * the display size (zoom) changes. Pure functions, node-tested.
  *
- * To visningsmodi (ADR-0018):
+ * Two display modes (ADR-0018):
  *
- * - **Enhet** (standard): mål-viewporten har BÅDE bredde og høyde, og
- *   skalaen tilpasses begge akser. Da stemmer folden: en `85vh`-seksjon
- *   slutter der en besøkende ser den slutte. Prisen er en bar på den aksen
- *   som har overskudd (Squarespace- og DevTools-modellen).
- * - **Fyll**: kun bredden er pinnet, og iframen gjøres tilsvarende høyere,
- *   så lerretet fyller panelet uten barer. Dette var eneste modus til v0.7
- *   (0.6.6.5.9), og beholdes fordi det gir mest arbeidsflate; men `vh`
- *   løses da mot panelets sideforhold, så folden er ikke til å stole på.
+ * - **Device** (default): the target viewport has BOTH a width and a height,
+ *   and the scale fits both axes. The fold then holds: an `85vh` section ends
+ *   where a visitor sees it end. The price is a bar on whichever axis has
+ *   surplus (the Squarespace and DevTools model).
+ * - **Fill**: only the width is pinned, and the iframe is made correspondingly
+ *   taller, so the canvas fills the panel without bars. It gives the most
+ *   working surface, but `vh` then resolves against the panel's aspect ratio,
+ *   so the fold cannot be trusted.
  *
- * Fyll er `targetH = 0`, altså «ingen høydebegrensning».
+ * Fill is `targetH = 0`, that is "no height limit".
  */
 
 /**
- * Rå bredde-forhold: hvor mye målbredden må skaleres for å passe rammebredden.
- * Ugyldige/umålte mål gir 1 (ingen skalering før noe er målt).
- * @param {number} frameW Rammeboksens bredde (px)
- * @param {number} targetW Målviewportens bredde (px)
+ * Raw width ratio: how much the target width must be scaled to fit the frame
+ * width. Invalid/unmeasured targets give 1 (no scaling until something is
+ * measured).
+ * @param {number} frameW The frame box width (px)
+ * @param {number} targetW The target viewport width (px)
  * @returns {number}
  */
 export function fitScale(frameW, targetW) {
@@ -31,19 +32,20 @@ export function fitScale(frameW, targetW) {
 }
 
 /**
- * Den anvendte skalaen ut fra zoom-modus. «full» = ekte 1:1 (lerretet kan
- * overflyte og panoreres). «fit» tilpasser til målet, men skalerer ALDRI opp
- * over 1:1. Gulv på 0.1 hindrer scale(0) på et umålt/uendelig smalt vindu.
+ * The applied scale given the zoom mode. `full` = true 1:1 (the canvas may
+ * overflow and be panned). `fit` fits the target, but NEVER scales up beyond
+ * 1:1. The floor of 0.1 prevents scale(0) on an unmeasured/infinitely narrow
+ * window.
  *
- * Høydeargumentene er valgfrie: uten dem (eller med `targetH: 0`) er skalaen
- * rent bredde-drevet, som er fyll-modus. Med dem tilpasses begge akser, som
- * er enhetsmodus.
+ * The height arguments are optional: without them (or with `targetH: 0`) the
+ * scale is purely width-driven, which is fill mode. With them both axes are
+ * fitted, which is device mode.
  *
- * @param {number} frameW Rammeboksens bredde (px)
- * @param {number} targetW Målviewportens bredde (px)
+ * @param {number} frameW The frame box width (px)
+ * @param {number} targetW The target viewport width (px)
  * @param {'fit'|'full'} mode
- * @param {number} [frameH] Rammeboksens høyde (px)
- * @param {number} [targetH] Målviewportens høyde (px); 0 = ingen høydegrense
+ * @param {number} [frameH] The frame box height (px)
+ * @param {number} [targetH] The target viewport height (px); 0 = no height limit
  * @returns {number}
  */
 export function previewScale(frameW, targetW, mode, frameH = 0, targetH = 0) {

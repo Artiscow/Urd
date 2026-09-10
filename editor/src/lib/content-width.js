@@ -1,33 +1,35 @@
 /**
- * Modellen bak innholdsbredde-innstillingen (ADR-0018). Rene funksjoner,
- * node-testet, så den levende prøven i Nettsted-panelet regner på det samme
- * som motoren faktisk gjør.
+ * The model behind the content-width setting (ADR-0018). Pure functions,
+ * node-tested, so the live sample in the Site panel computes the same thing
+ * the engine actually does.
  *
- * Motorens CSS er `width: min(100% - 2 * gutter, contentWidth)` på
- * innholdsflaten. Alt her er den regelen uttrykt i JS for å KUNNE VISE hva
- * en verdi betyr; den brukes aldri til å plassere noe (editoren måler
- * flaten, se canvasOf i preview-edit.js).
+ * The engine's CSS is `width: min(100% - 2 * gutter, contentWidth)` on the
+ * content surface. Everything here is that rule expressed in JS so it can
+ * SHOW what a value means; it is never used to position anything (the editor
+ * measures the surface, see canvasOf in preview-edit.js).
  */
 
-/** Grensene for fri justering. Under 960 blir kolonnen smalere enn et
- *  nettbrett på tvers, over 1920 binder den ikke på vanlige skjermer. */
+/** The bounds for free adjustment. Below 960 the column gets narrower than a
+ *  tablet in landscape, above 1920 it does not bind on ordinary screens. */
 export const WIDTH_MIN = 960;
 export const WIDTH_MAX = 1920;
 export const WIDTH_STEP = 20;
 
 /**
- * Sidemargen mot vinduskanten, i PROSENT AV VINDUSBREDDEN (vw). Relativ og
- * ikke px, fordi margen kun har effekt i båndet der designbredden ikke binder
- * ennå: der skal luften følge skjermen. En fast marg som er passe på telefon
- * er for trang på nettbrett.
+ * The side margin against the window edge, in PERCENT OF THE WINDOW WIDTH
+ * (vw). Relative rather than px, because the margin only has an effect in the
+ * band where the design width does not bind yet: there the breathing space
+ * should follow the screen. A fixed margin that fits a phone is too tight on
+ * a tablet.
  *
- * Taket på 12 er der fordi 2 x 12 % allerede spiser en fjerdedel av skjermen.
+ * The ceiling of 12 is there because 2 x 12 % already eats a quarter of the
+ * screen.
  */
 export const GUTTER_MIN = 0;
 export const GUTTER_MAX = 12;
 export const GUTTER_STEP = 1;
 
-/** Skalaen som vises til vanlig; det rå tallet ligger under Avansert. */
+/** The scale shown by default; the raw number lives under Advanced. */
 export const GUTTER_PRESETS = [
   { id: 'none', gutter: 0 },
   { id: 'small', gutter: 3 },
@@ -36,9 +38,9 @@ export const GUTTER_PRESETS = [
 ];
 
 /**
- * Hurtigvalgene. Verdiene er hentet fra feltet: 1200 er nedre halvdel av
- * Squarespaces spenn, 1440 er praktikerkonsensus hos både Squarespace og
- * Webflow, 1600 er Wix Studios egen standard.
+ * The quick presets. The values come from the field: 1200 is the lower half of
+ * Squarespace's range, 1440 is the practitioner consensus at both Squarespace
+ * and Webflow, 1600 is Wix Studio's own default.
  */
 export const WIDTH_PRESETS = [
   { id: 'compact', width: 1200 },
@@ -48,13 +50,14 @@ export const WIDTH_PRESETS = [
 ];
 
 /**
- * Skjermbreddene prøven måles mot: de tre vanligste skrivebordsoppløsningene.
- * 1536 er en 1920-skjerm med 125 % skalering i Windows, altså ikke en egen
- * skjermstørrelse men den nest vanligste CSS-bredden i praksis.
+ * The screen widths the sample is measured against: the three most common
+ * desktop resolutions. 1536 is a 1920 screen at 125 % scaling in Windows, so
+ * not a screen size of its own but the second most common CSS width in
+ * practice.
  */
 export const REF_SCREENS = [1920, 1536, 1366];
 
-/** Klemmer og snapper en fri breddeverdi til lovlig område. */
+/** Clamps and snaps a free width value into the legal range. */
 export function clampWidth(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return 1440;
@@ -62,7 +65,7 @@ export function clampWidth(value) {
   return Math.min(WIDTH_MAX, Math.max(WIDTH_MIN, snapped));
 }
 
-/** Klemmer og snapper sidemargen (vw). */
+/** Clamps and snaps the side margin (vw). */
 export function clampGutter(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return 6;
@@ -71,15 +74,17 @@ export function clampGutter(value) {
 }
 
 /**
- * Den minste vindusbredden der innholdet faktisk NÅR designbredden.
+ * The smallest window width where the content actually REACHES the design
+ * width.
  *
- * Med en relativ marg er dette ikke `contentWidth + 2 * gutter`: margen vokser
- * selv med vinduet, så den bredden må løses ut av `W - 2*W*g/100 >= bredde`.
- * Med 1440 og 6 % blir svaret 1637, ikke 1488. Brukes som lerretsbredde for
- * «Skjerm», siden alt bredere gir identisk render.
+ * With a relative margin this is not `contentWidth + 2 * gutter`: the margin
+ * itself grows with the window, so that width has to be solved out of
+ * `W - 2*W*g/100 >= width`. With 1440 and 6 % the answer is 1637, not 1488.
+ * Used as the canvas width for "Screen", since anything wider renders
+ * identically.
  *
  * @param {number|'full'} contentWidth
- * @param {number} gutter Prosent av vindusbredden
+ * @param {number} gutter Percent of the window width
  * @returns {number}
  */
 export function bindingWidth(contentWidth, gutter) {
@@ -89,20 +94,20 @@ export function bindingWidth(contentWidth, gutter) {
 }
 
 /**
- * Hva innholdsflaten faktisk blir på en gitt skjermbredde.
+ * What the content surface actually becomes at a given screen width.
  *
  * @param {number|'full'} contentWidth
- * @param {number} gutter Prosent av vindusbredden
- * @param {number} screen Skjermens CSS-bredde
+ * @param {number} gutter Percent of the window width
+ * @param {number} screen The screen's CSS width
  * @returns {{width: number, margin: number, pct: number, bound: boolean}}
- *   `bound` er true når designbredden er det som begrenser (altså at
- *   innstillingen har effekt her); false betyr at flaten er fluid og
- *   fyller skjermen minus margene.
+ *   `bound` is true when the design width is what constrains (that is, the
+ *   setting has an effect here); false means the surface is fluid and fills
+ *   the screen minus the margins.
  */
 export function contentBand(contentWidth, gutter, screen) {
-  // Margen er en ANDEL av skjermen, så den må regnes ut per skjermbredde.
-  // Dette er hele grunnen til at prøven viser tre bredder: den samme
-  // innstillingen gir ulik marg på hver av dem.
+  // The margin is a SHARE of the screen, so it has to be computed per screen
+  // width. This is the whole reason the sample shows three widths: the same
+  // setting gives a different margin on each of them.
   const g = (Math.max(0, Number(gutter) || 0) / 100) * screen;
   const available = Math.max(0, screen - 2 * g);
   const bound = contentWidth !== 'full' && Number(contentWidth) < available;
@@ -115,7 +120,7 @@ export function contentBand(contentWidth, gutter, screen) {
   };
 }
 
-/** Hvilket hurtigvalg en verdi svarer til, eller null for en fri verdi. */
+/** Which quick preset a value corresponds to, or null for a free value. */
 export function presetOf(contentWidth) {
   return WIDTH_PRESETS.find((p) => p.width === contentWidth)?.id ?? null;
 }

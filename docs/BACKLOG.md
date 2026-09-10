@@ -93,7 +93,7 @@ Fasen er delt opp i milepæler 9. august 2026: arkitekturavklaringene (bredde, m
   - [x] 0.7.14.12 Kommentarsveipen, batch 2: App.svelte (~700 kommentarlinjer oversatt, bundel-diffen tom; «---- Foldetrinnene»-overskriften beholdt som testanker med engelsk gloss)
   - [x] 0.7.14.13 Kommentarsveipen, batch 3: motor-rot A (render, urd, nav, nav-model, sticky, sticky-model, i18n, theme, plugins, migrate, preset-thumb, imageTools; ~1 000 kommentarlinjer, bundel-diffen tom)
   - [x] 0.7.14.14 Kommentarsveipen, batch 4: motor-rot B + blocks/ + backgrounds/ + sections/ + animations/ (59 filer, ~1 300 kommentarlinjer; motoren er kommentarrenset i sin helhet, bundel-diffen tom)
-  - [ ] 0.7.14.15 Kommentarsveipen, batch 5: editor/src/lib + main.js (krever gjenbygg)
+  - [x] 0.7.14.15 Kommentarsveipen, batch 5: editor/src/lib + main.js (9 filer, ~225 kommentarlinjer; bundel-diffen tom)
   - [ ] 0.7.14.16 Kommentarsveipen, batch 6: base.css (nytt stempel) + skall + workflows + dev-server + scripts + ordbok-headere + plugin-kommentarer
     (felles for batchene: kommentarreglene i AGENTS.md anvendes samtidig; bundel-diffen skal være tom for rene kommentarbatcher)
   - [ ] 0.7.14.17 Sluttaudit (repo-vid æøå-grep pluss stopwordliste) + push-klargjøring. Kjente rester å vurdere: fire norske strenglitteraler i App.svelte (to console.warn-meldinger, commit-malen «Oppdater ... via Urd-admin», fallbacken «Uten tittel»), fem norske/blandede konsollmeldinger i render.js, valideringsmeldingen i i18n.js:85 og fem brukersynlige literaler i blocks/collection.js (tomtilstandene, går utenom ta()). Auditen må også dekke ASCII-fisert norsk (sok, naar, paa, forst, rekkefolge), som æøå-grepet ikke fanger

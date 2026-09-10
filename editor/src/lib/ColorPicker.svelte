@@ -1,15 +1,15 @@
 <script>
   /**
-   * Moderne fargevelger: flate for metning/lysstyrke, kulør-glider,
-   * hex-felt, nylige farger og temafargene som hurtigvalg.
+   * Modern color picker: a saturation/brightness field, a hue slider, a hex
+   * field, recent colors and the theme colors as quick picks.
    *
-   * Verdien er ENTEN #rrggbb ELLER et temafarge-NAVN (f.eks. 'accent'):
-   * å velge en temaprikk lagrer navnet, så innholdet omfarges når
-   * temaet endres (motorens resolveColor forstår begge). Flate/hex gir
-   * en frikoblet hex-verdi.
+   * The value is EITHER #rrggbb OR a theme color NAME (e.g. 'accent'):
+   * picking a theme dot stores the name, so the content is recolored when
+   * the theme changes (the engine's resolveColor understands both). The
+   * field/hex give a detached hex value.
    *
-   * Popoveren er position: fixed (panelene klipper absolute innhold),
-   * og lukkes ved klikk utenfor eller Escape.
+   * The popover is position: fixed (the panels clip absolute content),
+   * and closes on a click outside or Escape.
    */
   import { ta } from '$engine/i18n.js';
 
@@ -18,7 +18,7 @@
   const RECENT_KEY = 'urd-recent-colors';
   const SAVED_KEY = 'urd-saved-colors';
 
-  /** Visningsfargen: token-navn slås opp i temaprikkene. */
+  /** The display color: a token name is looked up among the theme dots. */
   const displayHex = () => {
     const token = tokens.find(([name]) => name === value);
     return token ? token[1] : value;
@@ -34,7 +34,7 @@
   let open = $state(false);
   let pos = $state({ top: 0, left: 0 });
 
-  // HSV-tilstand mens velgeren er åpen (a = gjennomsiktighet 0..1)
+  // HSV state while the picker is open (a = alpha 0..1)
   let h = $state(0);
   let s = $state(0);
   let v = $state(1);
@@ -82,7 +82,7 @@
     return rgbToHex(...hsvToRgb(h, s, v));
   }
 
-  /** Utgående verdi: #rrggbb, eller #rrggbbaa når gjennomsiktighet er valgt. */
+  /** Outgoing value: #rrggbb, or #rrggbbaa when an alpha is chosen. */
   function currentColor() {
     const hex = currentHex();
     return a >= 0.995 ? hex : hex + Math.round(a * 255).toString(16).padStart(2, '0');
@@ -122,10 +122,10 @@
     const r = rootEl.getBoundingClientRect();
     const W = 236;
     const H = 380;
-    // Popoveren holder seg innenfor panelets HØYREKANT, så den aldri
-    // henger ut over forhåndsvisningen. Panelet er smalere enn popoveren,
-    // så overskytende bredde går mot venstre (over verktøysrailen), som
-    // fortsatt er editorens egen flate.
+    // The popover stays inside the panel's RIGHT EDGE, so it never hangs out
+    // over the preview. The panel is narrower than the popover, so the excess
+    // width goes to the left (over the tool rail), which is still the
+    // editor's own surface.
     const panel = rootEl.closest('.panel-body')?.getBoundingClientRect();
     const rightEdge = panel ? panel.right : window.innerWidth;
     const left = Math.max(8, Math.min(r.right - W, rightEdge - W - 8));
@@ -136,14 +136,14 @@
 
   function close() {
     open = false;
-    // Husk fargen som nylig brukt (kun frikoblede hex-valg).
+    // Remember the color as recently used (detached hex picks only).
     if (lastPickedHex && lastPickedHex !== openedWith) {
       const next = [lastPickedHex, ...recent.filter((c) => c !== lastPickedHex)].slice(0, 8);
       localStorage.setItem(RECENT_KEY, JSON.stringify(next));
     }
   }
 
-  /** Temaprikk: lagre NAVNET, så elementet følger temaet. */
+  /** Theme dot: store the NAME, so the element follows the theme. */
   function pickToken(name, hex) {
     setFromHex(hex);
     hexText = hex;
@@ -174,7 +174,7 @@
     else hexText = currentHex();
   }
 
-  /** RGB-feltene: paritet med lerretets fargevelger. */
+  /** The RGB fields: parity with the canvas color picker. */
   function rgbValue(index) {
     return (hexToRgb(currentHex()) ?? [0, 0, 0])[index];
   }
@@ -186,21 +186,21 @@
     commit();
   }
 
-  /** Pipette (EyeDropper-API): plukk en farge fra hvor som helst på skjermen. */
+  /** Eyedropper (the EyeDropper API): pick a color from anywhere on the screen. */
   const hasEyeDropper = typeof window !== 'undefined' && 'EyeDropper' in window;
 
   async function pickFromScreen() {
     try {
       const result = await new window.EyeDropper().open();
       if (setFromHex(result.sRGBHex)) commit();
-    } catch { /* avbrutt pipette er helt greit */ }
+    } catch { /* a cancelled eyedropper is perfectly fine */ }
   }
 
   function pick(hex) {
     if (setFromHex(hex)) commit();
   }
 
-  /** Lagrede farger: eierens faste palett, delt lager med lerretets fargevelger. */
+  /** Saved colors: the owner's fixed palette, sharing storage with the canvas color picker. */
   function addSaved() {
     const color = currentColor();
     if (saved.includes(color)) return;
@@ -213,12 +213,13 @@
     localStorage.setItem(SAVED_KEY, JSON.stringify($state.snapshot(saved)));
   }
 
-  // Lukk KUN ved klikk utenfor eller Escape (som de fleste menyer). Ikke ved
-  // rulling: å klikke et felt/knapp inne i den flytende popoveren gir fokus,
-  // og nettleseren ruller da panelet litt for å vise elementet - det rullet
-  // skal ikke lukke velgeren (den lukkes ellers ved hvert innvendig klikk).
-  // Klikk i forhåndsvisnings-iframen når aldri documentets pointerdown;
-  // fokusflyttet dit gir window-blur, som også skal lukke.
+  // Close ONLY on a click outside or Escape (like most menus). Not on scroll:
+  // clicking a field/button inside the floating popover gives it focus, and
+  // the browser then scrolls the panel slightly to reveal the element - that
+  // scroll must not close the picker (it would otherwise close on every click
+  // inside it). A click in the preview iframe never reaches the document's
+  // pointerdown; the focus moving there gives a window blur, which must close
+  // it too.
   $effect(() => {
     if (!open) return;
     const onDown = (e) => {
@@ -248,9 +249,10 @@
       aria-label={ta('cp.clear')} onclick={() => onchange?.('')}>×</button>
   {/if}
   {#if open}
-    <!-- Velgeren ligger ofte inne i en <label>: uten preventDefault videresender
-         nettleseren klikk på ikke-interaktive flater (fargeflaten, tomrom) som et
-         klikk til label-ens knapp = fargeruten, som ville togglet velgeren lukket. -->
+    <!-- The picker often sits inside a <label>: without preventDefault the browser
+         forwards clicks on non-interactive surfaces (the color field, empty space)
+         as a click to the label's control = the swatch, which would toggle the
+         picker closed. -->
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
     <div class="cp-pop" style="top: {pos.top}px; left: {pos.left}px"
       onclick={(e) => e.preventDefault()}>
@@ -334,7 +336,7 @@
     cursor: pointer;
   }
 
-  /* Tom (ingen farge valgt): sjakkbrett + skråstrek, som «ingen». */
+  /* Empty (no color chosen): checkerboard + slash, reading as "none". */
   .cp-swatch.cp-empty {
     background:
       linear-gradient(to top right, transparent 46%, rgb(255 255 255 / 45%) 46% 54%, transparent 54%),
@@ -364,16 +366,16 @@
   .cp-pop {
     position: fixed;
     z-index: 500;
-    /* border-box: bredden her ER den synlige bredden, samme tall som
-       plasseringsutregningen i openPicker bruker (ellers henger boksen
-       20px lenger ut enn matematikken tror) */
+    /* border-box: the width here IS the visible width, the same number the
+       placement math in openPicker uses (otherwise the box hangs 20px
+       further out than the math thinks) */
     box-sizing: border-box;
     width: 236px;
     display: grid;
-    /* minmax(0, 1fr): en implisitt grid-kolonne er max-content-dimensjonert,
-       og den bredeste raden (hex-feltets naturlige bredde) ville gjort
-       kolonnen bredere enn boksen - innholdet fløt da ut av den (målt til
-       59px overflyt). Kolonnen skal aldri kunne overstige boksbredden. */
+    /* minmax(0, 1fr): an implicit grid column is max-content sized, and the
+       widest row (the hex field's natural width) would make the column wider
+       than the box, so the content would spill out of it. The column must
+       never exceed the box width. */
     grid-template-columns: minmax(0, 1fr);
     gap: 8px;
     padding: 10px;
@@ -429,7 +431,7 @@
     border: 1px solid rgb(0 0 0 / 40%);
   }
 
-  /* Gjennomsiktighetsglideren: sjakkbrett + fargegradient settes inline (følger fargen) */
+  /* The alpha slider: checkerboard + color gradient are set inline (they follow the color) */
   .cp-alpha {
     appearance: none;
     width: 100%;

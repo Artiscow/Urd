@@ -1,17 +1,17 @@
 /**
- * Utkastlagring: localStorage-utkast med baseline-sammenligning.
+ * Draft storage: a localStorage draft compared against a baseline.
  *
- * Prinsipp (validert i ApeironLF): «har upubliserte endringer» er sant
- * hvis og bare hvis utkastnøkkelen finnes i localStorage. save() sletter
- * derfor nøkkelen når utkastet er identisk med publisert tilstand, slik
- * at merket alltid er ærlig (f.eks. etter at brukeren angrer alt).
+ * Principle: "has unpublished changes" is true if and only if the draft key
+ * exists in localStorage. save() therefore deletes the key when the draft is
+ * identical to the published state, so the marker is always honest (for
+ * example after the user undoes everything).
  */
 
 /**
- * @param {string} key localStorage-nøkkel, f.eks. 'urd-draft-hjem'
- * @param {() => object} loadPublished Gir publisert tilstand (parset JSON)
- * @param {(err: Error) => void} [onSaveError] Kalles når persistering feiler (typisk full kvote)
- * @param {string} [legacyKey] Nøkkelnavnet før ADR-0021; et utkast under det flyttes til `key` ved lesing
+ * @param {string} key localStorage key, e.g. 'urd-draft-hjem'
+ * @param {() => object} loadPublished Returns the published state (parsed JSON)
+ * @param {(err: Error) => void} [onSaveError] Called when persisting fails (typically a full quota)
+ * @param {string} [legacyKey] The key name from before ADR-0021; a draft under it is moved to `key` on read
  * @returns {{data: object, save(): boolean, reset(): object, hasDraft(): boolean}}
  */
 export function createDraftStore(key, loadPublished, onSaveError, legacyKey) {
@@ -21,14 +21,14 @@ export function createDraftStore(key, loadPublished, onSaveError, legacyKey) {
     const old = localStorage.getItem(legacyKey);
     if (old !== null) {
       if (localStorage.getItem(key) === null) {
-        try { localStorage.setItem(key, old); } catch { /* full kvote: utkastet består under gammel nøkkel */ }
+        try { localStorage.setItem(key, old); } catch { /* full quota: the draft stays under the legacy key */ }
       }
       if (localStorage.getItem(key) !== null) localStorage.removeItem(legacyKey);
     }
   }
-  // Kloning via JSON, ikke structuredClone: innholdet er ren JSON per
-  // kontrakt, og JSON tåler Svelte 5-reaktive proxier (structuredClone
-  // kaster DataCloneError på dem).
+  // Cloning via JSON, not structuredClone: the content is plain JSON per the
+  // contract, and JSON tolerates Svelte 5 reactive proxies (structuredClone
+  // throws DataCloneError on them).
   const published = loadPublished();
   let baseline = JSON.stringify(published);
 
@@ -38,7 +38,7 @@ export function createDraftStore(key, loadPublished, onSaveError, legacyKey) {
     try {
       data = JSON.parse(raw);
     } catch {
-      localStorage.removeItem(key); // korrupt utkast: fall tilbake til publisert
+      localStorage.removeItem(key); // corrupt draft: fall back to published
     }
   }
 
@@ -46,10 +46,11 @@ export function createDraftStore(key, loadPublished, onSaveError, legacyKey) {
     get data() {
       return data;
     },
-    /** Persister utkastet; sletter nøkkelen hvis det er likt publisert.
-     *  Full kvote (base64-bilder i utkastet) skal aldri passere stille:
-     *  ethvert kast fra setItem melder onSaveError og gir false, og dataene
-     *  i minnet står urørt. Returnerer true når utkastet er persistert. */
+    /** Persist the draft; deletes the key if it equals the published state.
+     *  A full quota (base64 images in the draft) must never pass silently:
+     *  any throw from setItem reports onSaveError and returns false, and the
+     *  in-memory data is left untouched. Returns true when the draft is
+     *  persisted. */
     save() {
       const now = JSON.stringify(data);
       if (now === baseline) {
@@ -64,22 +65,22 @@ export function createDraftStore(key, loadPublished, onSaveError, legacyKey) {
         return false;
       }
     },
-    /** Forkast utkastet og gå tilbake til publisert tilstand. */
+    /** Discard the draft and go back to the published state. */
     reset() {
       localStorage.removeItem(key);
       data = JSON.parse(baseline);
       return data;
     },
-    /** Erstatt hele utkastet (brukes av angre/gjenta). Husk save() etterpå. */
+    /** Replace the whole draft (used by undo/redo). Remember to save() afterwards. */
     replace(next) {
       data = next;
       return data;
     },
     /**
-     * Juster sammenligningsgrunnlaget: for MÅLINGER (datablokkenes
-     * autovekst) som skal speiles i både utkast og baseline, slik at de
-     * aldri alene utgjør «upubliserte endringer». Mutatoren får en kopi
-     * av baseline-objektet; endringen skrives tilbake.
+     * Adjust the comparison baseline: for MEASUREMENTS (the data blocks'
+     * auto-growth) that are mirrored in both the draft and the baseline, so
+     * they never on their own constitute "unpublished changes". The mutator
+     * receives a copy of the baseline object; the change is written back.
      */
     amendBaseline(fn) {
       const base = JSON.parse(baseline);

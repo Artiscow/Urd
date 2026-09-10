@@ -1,9 +1,9 @@
 <script>
   /**
-   * Tegn-/emojivelger: knapp som viser gjeldende tegn og åpner en omfattende, kategorisert meny med nylige tegn øverst.
-   * Tegnsettet og nylig-logikken bor i motorens glyphs.js (delt med teksteditor-linjens tegnmeny, samme localStorage-nøkkel).
-   * Med onicon satt vises også motorens ikonbibliotek (tegnede SVG-er) øverst; med onimage satt kan et eget ikon-bilde lastes opp (webp-komprimert).
-   * Popoveren er position: fixed (panelene klipper absolute innhold) og lukkes ved klikk utenfor eller Escape, samme mønster som ColorPicker.
+   * Glyph/emoji picker: a button showing the current glyph that opens a broad, categorized menu with recent glyphs at the top.
+   * The glyph set and the recent-glyph logic live in the engine's glyphs.js (shared with the text editor bar's glyph menu, same localStorage key).
+   * With onicon set, the engine's icon library (drawn SVGs) is shown at the top as well; with onimage set, a custom icon image can be uploaded (webp-compressed).
+   * The popover is position: fixed (the panels clip absolute content) and closes on a click outside or Escape, the same pattern as ColorPicker.
    */
   import { compressToWebp } from '$engine/imageTools.js';
   import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from '$engine/glyphs.js';
@@ -49,7 +49,7 @@
     open = false;
   }
 
-  // Lukk ved klikk utenfor eller Escape (kun mens åpen)
+  // Close on a click outside or Escape (only while open)
   $effect(() => {
     if (!open) return;
     const onDown = (e) => {
@@ -178,8 +178,8 @@
     padding: 5px 0;
     cursor: pointer;
     text-align: center;
-    /* Knapper arver ikke tekstfarge: uten denne blir tegn og SVG-ikoner
-       svarte i den mørke menyen */
+    /* Buttons do not inherit the text color: without this, glyphs and SVG
+       icons come out black in the dark menu */
     color: #e8eaf0;
   }
 
@@ -192,7 +192,7 @@
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 16%, transparent);
   }
 
-  /* Tegnede SVG-ikoner fra motorens bibliotek: fast rutestørrelse, farges av teksten */
+  /* Drawn SVG icons from the engine's library: fixed cell size, colored by the text */
   .gp-cell-icon {
     display: inline-flex;
     align-items: center;

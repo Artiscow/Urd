@@ -1,15 +1,16 @@
 <script>
   /**
-   * Temastyrt nedtrekk (ADR-0009): native select-popuper tegnes av
-   * nettleseren/OS-et og blir uleselige i mørke paneler, så ALLE nedtrekk
-   * i admin bruker denne. options er [[verdi, etikett], …]; verdier
-   * sammenlignes som strenger, så '' og null kan brukes som «ingen».
+   * Theme-driven dropdown (ADR-0009): native select popups are drawn by the
+   * browser/OS and become unreadable in dark panels, so ALL dropdowns in
+   * admin use this one. options is [[value, label], …]; values are
+   * compared as strings, so '' and null can be used as "none".
    *
-   * Popoveren er position: fixed (panelene klipper absolute innhold),
-   * og lukkes ved klikk utenfor eller Escape. Ved rulling utenfor
-   * FØLGER den ankeret i stedet for å lukke: et klikk på en knapp
-   * nederst i panelet utløser en fokus-scroll i samme øyeblikk, og en
-   * lukk-ved-scroll-regel smalt da popupen igjen før man fikk valgt.
+   * The popover is position: fixed (the panels clip absolute content),
+   * and closes on a click outside or Escape. On a scroll outside it
+   * FOLLOWS the anchor instead of closing: clicking a button at the
+   * bottom of the panel triggers a focus scroll in the same instant,
+   * and a close-on-scroll rule would slam the popup shut before
+   * anything could be picked.
    */
   let { value = null, options = [], onchange, title = null, disabled = false } = $props();
 

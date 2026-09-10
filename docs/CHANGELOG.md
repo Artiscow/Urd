@@ -25,6 +25,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.14.15 - Engelsk-renskingen: kommentarsveipen, editor-biblioteket - 11. september 2026
+
+- Alle norske kommentarer i editor/src/lib og main.js (9 filer, ~225 kommentarlinjer) oversatt til engelsk, tyngst postMessage-kontrakttabellen i previewBridge.js, der kolonnejusteringen og alle urd-*-meldingsnavn og payload-felt står byteidentiske. Bundel-diffen etter gjenbygg er tom, som er skarpeste bevis her siden alle ni filene buntes.
+- Fire historiefortellinger omskrevet til nåtidsbeskrivelser: versjonstaggen i preview-scale.js, en proveniens-note i draftStore.js, og målings-/hendelsesfortellingene i ColorPicker.svelte og Dropdown.svelte. Kommentarene i draftStore.js om den gamle utkastnøkkelen og migrate-on-read står, siden de beskriver hva koden gjør.
+
 ### 0.7.14.14 - Engelsk-renskingen: kommentarsveipen, motor-rot B - 11. september 2026
 
 - Alle norske kommentarer i de 59 resterende motorfilene (bakgrunnslagene, animations/core, de 18 blokkfilene, sections/presets og de 32 gjenstående rotfilene; ~1 300 kommentarlinjer, fire parallelle agenter på disjunkte filsett) oversatt til engelsk med kommentarreglene anvendt. Motoren er dermed kommentarrenset i sin helhet. Bundel-diffen etter gjenbygg er tom.
