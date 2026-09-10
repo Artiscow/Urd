@@ -1,33 +1,34 @@
 /**
- * Ren tilstandslogikk for sticky blokker («fest ved scrolling»): gitt
- * scrollposisjon og dokumentmål avgjøres om blokken skal stå i sin
- * vanlige absolutte posisjon (static), festes ved vindustoppen (fixed)
- * eller parkeres ved slippgrensen (parked). DOM-arbeidet bor i
- * sticky.js; denne modulen er DOM-fri og kontraktstestes i
+ * Pure state logic for sticky blocks ("pin on scroll"): given the scroll
+ * position and document measurements, decides whether the block stays in
+ * its normal absolute position (static), pins at the window top (fixed)
+ * or parks at the release limit (parked). The DOM work lives in
+ * sticky.js; this module is DOM-free and contract-tested in
  * tests/sticky.test.mjs.
  *
- * Festing er posisjonering, ikke animasjon (ingen transitions), så
- * prefers-reduced-motion krever ingen særbehandling her.
+ * Pinning is positioning, not animation (no transitions), so
+ * prefers-reduced-motion needs no special handling here.
  */
 
 /**
  * @param {number} scrollY
  * @param {{
- *   sectionTop: number,   // seksjonens topp i dokument-px
- *   blockY: number,       // blokkens desktop-y (seksjonsrelativ px)
- *   blockH: number,       // blokkens høyde i px
- *   limitBottom: number,  // slippgrensen i dokument-px: bunnen av until-
- *                         // seksjonen, eller egen seksjons bunn uten until
- *   offset: number        // ønsket avstand fra vindustoppen
+ *   sectionTop: number,   // the section's top in document px
+ *   blockY: number,       // the block's desktop y (section-relative px)
+ *   blockH: number,       // the block's height in px
+ *   limitBottom: number,  // the release limit in document px: the bottom of
+ *                         // the until section, or the own section's bottom
+ *                         // without until
+ *   offset: number        // desired distance from the window top
  * }} m
  * @returns {{ mode: 'static' } | { mode: 'fixed', top: number } | { mode: 'parked', y: number }}
- *   parked.y er seksjonsrelativ px (kan overstige seksjonshøyden når
- *   until peker på en senere seksjon; seksjoner klipper aldri).
+ *   parked.y is section-relative px (may exceed the section height when
+ *   until points at a later section; sections never clip).
  */
 /**
- * Omsluttende boks for en gruppe festede blokker. Gruppen festes og slippes
- * som ÉN enhet, og hvert medlem beholder sin plass inne i boksen, i stedet
- * for at alle legger seg oppå hverandre ved vindustoppen.
+ * Bounding box for a group of pinned blocks. The group pins and releases
+ * as ONE unit, and each member keeps its place inside the box, instead of
+ * all of them piling up at the window top.
  * @param {Array<{x: number, y: number, w: number, h: number}>} items
  * @returns {{x: number, y: number, w: number, h: number}}
  */
@@ -40,20 +41,21 @@ export function groupBox(items) {
 }
 
 /**
- * Skjermdokking («fest til skjermen»): boksen legges i ett av ni ankerpunkter
- * i vinduet og blir stående der uansett scrolling. Marginen gjelder kun de
- * kantene boksen dokkes til; senterakser sentreres og ignorerer den.
- * @param {string} dock 'top-left' … 'bottom-right' (vertikal-horisontal)
- * @param {number} margin avstand fra de dokkede kantene i px
- * @param {{w: number, h: number}} box boksens mål i px
- * @param {{w: number, h: number}} view vindusmålene i px
- * @returns {{left: number, top: number}} posisjon i px fra vinduets venstre/topp
+ * Screen docking ("pin to screen"): the box is placed at one of nine anchor
+ * points in the window and stays there regardless of scrolling. The margin
+ * applies only to the edges the box docks to; center axes are centered and
+ * ignore it.
+ * @param {string} dock 'top-left' … 'bottom-right' (vertical-horizontal)
+ * @param {number} margin distance from the docked edges in px
+ * @param {{w: number, h: number}} box the box measurements in px
+ * @param {{w: number, h: number}} view the window measurements in px
+ * @returns {{left: number, top: number}} position in px from the window's left/top
  */
 export function dockPosition(dock, margin, box, view) {
   const [vert, horz] = String(dock || 'bottom-right').split('-');
   const m = Number.isFinite(margin) ? margin : 0;
-  // Er boksen større enn vinduet, vinner toppen/venstre kant: da er
-  // sentrering meningsløs, og innholdet skal ikke skyves ut av skjermen.
+  // If the box is larger than the window, the top/left edge wins: centering
+  // is then meaningless, and the content must not be pushed off screen.
   const center = (available) => Math.max(0, available / 2);
   let top;
   if (vert === 'top') top = m;
@@ -67,13 +69,13 @@ export function dockPosition(dock, margin, box, view) {
 }
 
 /**
- * Nærmeste dokkpunkt for en boks som er sluppet i vinduet: senterpunktet
- * avgjør i et tredelt rutenett (venstre/senter/høyre x topp/midt/bunn).
- * Nøklene matcher skjemaets dock-enum (midtraden heter 'middle').
- * Ren funksjon, testet i tests/sticky.test.mjs.
- * @param {{left: number, top: number, w: number, h: number}} box boksen i vindus-px
- * @param {{w: number, h: number}} view vindusmålene i px
- * @returns {string} dock-nøkkel ('top-left' … 'bottom-right')
+ * The nearest dock point for a box dropped in the window: the center point
+ * decides in a three-way grid (left/center/right x top/middle/bottom).
+ * The keys match the schema's dock enum (the middle row is 'middle').
+ * Pure function, tested in tests/sticky.test.mjs.
+ * @param {{left: number, top: number, w: number, h: number}} box the box in window px
+ * @param {{w: number, h: number}} view the window measurements in px
+ * @returns {string} dock key ('top-left' … 'bottom-right')
  */
 export function nearestDock(box, view) {
   const cx = box.left + box.w / 2;
@@ -84,17 +86,17 @@ export function nearestDock(box, view) {
 }
 
 export function stickyState(scrollY, m) {
-  // Ugyldig eller for tidlig grense (over blokkens naturlige plass):
-  // festing gir ikke mening, blokken står alltid der den står.
+  // Invalid or too-early limit (above the block's natural place): pinning
+  // makes no sense, the block always stays where it is.
   const parkY = m.limitBottom - m.sectionTop - m.blockH;
   if (parkY < m.blockY) return { mode: 'static' };
 
-  // Blokken har ikke nådd festepunktet ennå.
+  // The block has not reached the pin point yet.
   if (m.sectionTop + m.blockY - scrollY >= m.offset) return { mode: 'static' };
 
-  // Festet, så lenge det er plass mellom vindustoppen og slippgrensen.
+  // Pinned, as long as there is room between the window top and the release limit.
   if (m.offset + m.blockH <= m.limitBottom - scrollY) return { mode: 'fixed', top: m.offset };
 
-  // Slippgrensen er passert: blokken legges igjen ved grensen.
+  // The release limit is passed: the block is left behind at the limit.
   return { mode: 'parked', y: parkY };
 }

@@ -1,14 +1,14 @@
 /**
- * Bygger navigasjonen fra site.json - sideregisteret (site.pages) og
- * nav-dataene (site.nav). Ingenting hardkodes: nav-elementer med `page`
- * slår opp path i sideregisteret; elementer med `href` er eksterne lenker.
+ * Builds the navigation from site.json - the page register (site.pages) and
+ * the nav data (site.nav). Nothing is hardcoded: nav items with `page` look
+ * up their path in the page register; items with `href` are external links.
  *
- * Undermenyer følger WAI-ARIA-mønsteret «disclosure navigation» (ikke
- * menubar): ekte knapper med aria-expanded/aria-controls, naturlig
- * Tab-rekkefølge og ingen role="menu". Et punkt med både eget mål og
- * undermeny rendres som lenke + egen pilknapp, så siden alltid er nåbar.
- * Mobilmenyen (burgeren) er en ikke-modal disclosure av samme liste og
- * styles av body.urd-mobile (breakpointet settes i urd.js fra site.json).
+ * Submenus follow the WAI-ARIA "disclosure navigation" pattern (not
+ * menubar): real buttons with aria-expanded/aria-controls, natural Tab
+ * order and no role="menu". An item with both its own target and a submenu
+ * renders as a link plus its own arrow button, so the page stays reachable.
+ * The mobile menu (the burger) is a non-modal disclosure of the same list,
+ * styled by body.urd-mobile (the breakpoint is set in urd.js from site.json).
  */
 
 import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, navScrollState, isSafeImage } from './nav-model.js';
@@ -19,19 +19,19 @@ import { createCartDrawer } from './blocks/cart.js';
 import { iconSvg } from './icons.js';
 import { t, ta } from './i18n.js';
 
-/** Hvor lenge undermenyen står åpen etter at pekeren forlater punktet. */
+/** How long the submenu stays open after the pointer leaves the item. */
 const HOVER_CLOSE_DELAY = 250;
 
-// renderNav kjøres på nytt for hvert site-utkast fra editoren; controlleren
-// kobler fra forrige renderings lyttere (også de på document) så det aldri
-// finnes mer enn ett aktivt sett.
+// renderNav runs again for every site draft from the editor; the controller
+// detaches the previous render's listeners (including those on document) so
+// there is never more than one active set.
 let navController = null;
 
-// Sidestilt kolonne på trange vinduer: under 900px rendres menyen som en
-// VANLIG topplinje (effektiv variant bar) med horisontale punkter; burgeren
-// kommer først ved mobil-breakpointet, som for stripe-varianten (valgt
-// 23. juli 2026). Egen brytekant uavhengig av mobil-breakpointet OG av
-// editorens viewport-valg, så det virker også i previewens desktop-modus.
+// Side column on narrow windows: below 900px the menu renders as a REGULAR
+// top bar (effective variant bar) with horizontal items; the burger only
+// appears at the mobile breakpoint, as for the bar variant. A separate
+// break edge independent of the mobile breakpoint AND of the editor's
+// viewport choice, so it also works in the preview's desktop mode.
 const narrowMq = window.matchMedia('(max-width: 900px)');
 let lastRender = null;
 narrowMq.addEventListener('change', () => {
@@ -49,8 +49,8 @@ const SUN = svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9
 const MOON = svg('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>');
 
 /**
- * @param {object} site site.json, allerede parset
- * @param {HTMLElement} host Element navigasjonen bygges inn i
+ * @param {object} site site.json, already parsed
+ * @param {HTMLElement} host Element the navigation is built into
  */
 export function renderNav(site, host) {
   navController?.abort();
@@ -58,8 +58,8 @@ export function renderNav(site, host) {
   const signal = navController.signal;
   lastRender = { site, host };
 
-  // Trange vinduer: sidestilt rendres som vanlig topplinje (effektiv
-  // variant bar); breakpoint-lytteren over rendrer på nytt ved kryssing.
+  // Narrow windows: the side variant renders as a regular top bar
+  // (effective variant bar); the breakpoint listener above re-renders on crossing.
   const wantsSide = site.nav.variant === 'side-left' || site.nav.variant === 'side-right';
   const effSite = wantsSide && narrowMq.matches
     ? { ...site, nav: { ...site.nav, variant: 'bar' } }
@@ -67,26 +67,27 @@ export function renderNav(site, host) {
 
   host.replaceChildren();
   const nav = document.createElement('nav');
-  // layout (additivt fra v0.5): hvor menypunktene står; logoen er alltid
-  // først og fungerer som «Hjem»-knapp.
+  // layout (additive since v0.5): where the menu items sit; the logo is
+  // always first and doubles as the "Home" button.
   nav.className = navClasses(effSite);
-  // Burgeren følger den FAKTISKE bredden via egen klasse på nav-en: i
-  // preview eier editorens viewport-valg body.urd-mobile (og dermed
-  // strukturverktøyene), men menyen alene skal likevel bli mobil når
-  // vinduet er smalere enn mobil-breakpointet (testfunn 23. juli 2026).
-  // Hos besøkende settes body.urd-mobile ved samme terskel; dobbelt
-  // dekning i CSS-en er harmløs.
+  // The burger follows the ACTUAL width via its own class on the nav: in
+  // preview the editor's viewport choice owns body.urd-mobile (and with it
+  // the structure tools), but the menu alone must still go mobile when the
+  // window is narrower than the mobile breakpoint. For visitors,
+  // body.urd-mobile is set at the same threshold; the double coverage in
+  // the CSS is harmless.
   const mobileMq = window.matchMedia(`(max-width: ${site.breakpoints?.mobile ?? 640}px)`);
   mobileMq.addEventListener('change', () => renderNav(lastRender.site, lastRender.host), { signal });
   if (mobileMq.matches) nav.classList.add('urd-nav-mobile');
-  // Klistret meny (standard): sticky må ligge på VERTEN (header-elementet),
-  // ikke på nav-en - et sticky-element kan aldri forlate forelderen sin,
-  // og forelderen her er nøyaktig like høy som nav-en.
+  // Sticky menu (the default): sticky must sit on the HOST (the header
+  // element), not on the nav - a sticky element can never leave its parent,
+  // and the parent here is exactly as tall as the nav.
   host.classList.toggle('urd-nav-sticky', effSite.nav.sticky !== false);
-  // Varianten styrer verten og body: flytende tar verten ut av flyten
-  // (hero-en starter bak pillen), sidestilt gjør verten til fast kolonne
-  // og gir body innholds-padding. Alle klasser toggles hver rendering,
-  // så variantbytte i editoren aldri etterlater rester.
+  // The variant drives the host and body: floating takes the host out of
+  // the flow (the hero starts behind the pill), the side variant turns the
+  // host into a fixed column and gives body content padding. All classes
+  // are toggled on every render, so a variant switch in the editor never
+  // leaves leftovers.
   const hc = hostClasses(effSite);
   for (const cls of ['urd-nav-float', 'urd-nav-overlay', 'urd-nav-side-host', 'urd-nav-side-host-left', 'urd-nav-side-host-right']) {
     host.classList.toggle(cls, hc.host.includes(cls));
@@ -94,8 +95,8 @@ export function renderNav(site, host) {
   for (const cls of ['urd-side-left', 'urd-side-right']) {
     document.body.classList.toggle(cls, hc.body.includes(cls));
   }
-  // Sidekolonnens bredde: settes på body så både kolonnen og innholds-
-  // paddingen leser samme verdi.
+  // The side column's width: set on body so both the column and the
+  // content padding read the same value.
   const isSide = hc.body.length > 0;
   if (isSide) {
     document.body.style.setProperty('--urd-nav-side-width', `${clampSideWidth(site.nav.style?.width)}px`);
@@ -103,14 +104,15 @@ export function renderNav(site, host) {
     document.body.style.removeProperty('--urd-nav-side-width');
   }
 
-  // Scroll-adferd (nav.scroll, additivt fra v0.6): 'shrink' krymper menyen
-  // etter et stykke scrolling, 'hide' skjuler den ved scroll ned og viser
-  // ved scroll opp. Tilstanden regnes av ren navScrollState; kun meningsfull
-  // for klistret topplinje (ikke sidestilt, ikke sticky av). Som sticky
-  // blokker er adferden inaktiv under redigering (preview med chrome på) -
-  // en meny som stikker av under dra/scroll ville sloss med redigeringen -
-  // og alltid av mens mobilpanelet er åpent. Lytteren er rAF-throttlet,
-  // passiv og abortes med resten av renderingens lyttere.
+  // Scroll behavior (nav.scroll, additive since v0.6): 'shrink' shrinks the
+  // menu after some scrolling, 'hide' hides it on scroll down and shows it
+  // on scroll up. The state is computed by pure navScrollState; only
+  // meaningful for a sticky top bar (not the side variant, not sticky off).
+  // As with sticky blocks the behavior is inactive while editing (preview
+  // with chrome on) - a menu that runs off during drag/scroll would fight
+  // the editing - and always off while the mobile panel is open. The
+  // listener is rAF-throttled, passive and aborted with the rest of the
+  // render's listeners.
   const scrollMode = effSite.nav.scroll;
   const wantsScroll = (scrollMode === 'shrink' || scrollMode === 'hide')
     && !isSide && effSite.nav.sticky !== false;
@@ -145,14 +147,15 @@ export function renderNav(site, host) {
     applyScroll();
   }
 
-  // Utseende (nav.style, additivt fra v0.5): bakgrunnsfarge med dekkevne,
-  // uskarphet bak, og egen tekstfarge. Bakgrunnen settes som CSS-var så
-  // undermenyer og mobilpanelet arver samme flate; uten style gjelder
-  // CSS-standarden.
+  // Appearance (nav.style, additive since v0.5): background color with
+  // opacity, blur behind, and its own text color. The background is set as
+  // a CSS var so submenus and the mobile panel inherit the same surface;
+  // without style the CSS default applies.
   const surface = navSurface(site.nav.style);
-  // Full lagbasert bakgrunn (additivt fra v0.6, delt med seksjoner og footer):
-  // en backdrop bak nav-innholdet med samme lagstakk som seksjonene. Når den
-  // finnes overtar den flaten, og den gamle veil/bilde-stien hoppes over.
+  // Full layer-based background (additive since v0.6, shared with sections
+  // and the footer): a backdrop behind the nav content with the same layer
+  // stack as sections. When present it takes over the surface, and the
+  // plain veil/image path is skipped.
   const navBg = site.nav.style?.background;
   const hasNavBgLayers = Array.isArray(navBg?.layers) && navBg.layers.length > 0;
   if (hasNavBgLayers) {
@@ -160,46 +163,48 @@ export function renderNav(site, host) {
     backdrop.className = 'urd-nav-bg';
     renderBackgroundLayers(backdrop, navBg);
     nav.appendChild(backdrop);
-    // Lagene definerer flaten: nav-elementets egen bakgrunn gjøres gjennomsiktig
-    // (blur/frosted-glass virker fortsatt gjennom den).
+    // The layers define the surface: the nav element's own background is
+    // made transparent (blur/frosted glass still works through it).
     nav.style.setProperty('--urd-nav-bg', 'transparent');
-    // Undermenyen og mobilpanelet arver fargelagene som ett flatet slør,
-    // så nedtrekket følger barens tone i stedet for standard-sløret.
+    // The submenu and mobile panel inherit the color layers as one flattened
+    // veil, so the dropdown follows the bar's tone instead of the default veil.
     const layerVeil = navLayerVeil(navBg.layers);
     if (layerVeil) nav.style.setProperty('--urd-nav-sub-bg', layerVeil);
   } else if (surface.bg) {
     nav.style.setProperty('--urd-nav-bg', surface.bg);
   }
-  // Blur styres via custom property (arver til undermenyer og mobilpanel;
-  // backdrop-filter selv arver ikke, så inherit i CSS-en ville stoppet på li-en).
+  // Blur is driven via a custom property (inherits to submenus and the mobile
+  // panel; backdrop-filter itself does not inherit, so inherit in the CSS
+  // would stop at the li).
   if (surface.blur === false) nav.style.setProperty('--urd-nav-blur', 'none');
   if (surface.color) nav.style.color = surface.color;
-  // Undermenyen og mobilpanelet får sin egen flate: som standard kun
-  // fargesløret, aldri bakgrunnsbildet (subImage skrur bildet på). Med den nye
-  // lag-bakgrunnen beholder submeny/mobil veil-standarden (lagstakken gjelder
-  // hovedlinjen).
+  // The submenu and mobile panel get their own surface: by default only the
+  // color veil, never the background image (subImage turns the image on).
+  // With a layer background, submenu/mobile keep the veil default (the layer
+  // stack applies to the main bar).
   const subBg = navSubSurface(site.nav.style);
   if (subBg && !hasNavBgLayers) nav.style.setProperty('--urd-nav-sub-bg', subBg);
-  // Hover-farger (additive fra v0.6): effektfargen (strek/pille-flate/glød)
-  // og tekstfargen ved hover; uten valg gjelder aksentfargen som før.
+  // Hover colors (additive since v0.6): the effect color (underline/pill
+  // surface/glow) and the text color on hover; without a choice the accent
+  // color applies.
   if (site.nav.style?.hoverColor) {
     nav.style.setProperty('--urd-nav-hover', resolveColor(site.nav.style.hoverColor));
   }
   if (site.nav.style?.hoverTextColor) {
     nav.style.setProperty('--urd-nav-hover-text', resolveColor(site.nav.style.hoverTextColor));
   }
-  // Glødstyrke for «Løft med glød» (0..1, standard 0.6): settes som ferdig
-  // prosent, så CSS-ens color-mix kan bruke verdien rett.
+  // Glow strength for the lift-with-glow hover style (0..1, default 0.6):
+  // set as a finished percentage, so the CSS color-mix can use the value directly.
   const glowStrength = Number(site.nav.style?.hoverGlow);
   if (Number.isFinite(glowStrength)) {
     nav.style.setProperty('--urd-nav-hover-glow', `${Math.round(Math.min(1, Math.max(0, glowStrength)) * 100)}%`);
   }
-  // Pille-punktenes egen farge (subStyle pills); uten valg brukes
-  // undermeny-flaten som før.
+  // The pill items' own color (subStyle pills); without a choice the
+  // submenu surface is used.
   if (site.nav.style?.subPillColor) {
     nav.style.setProperty('--urd-nav-sub-pill', resolveColor(site.nav.style.subPillColor));
   }
-  // Undermeny-kolonner (n x n): punktene legges i grid med valgt kolonnetall.
+  // Submenu columns (n x n): the items are laid out in a grid with the chosen column count.
   const subCols = Math.round(Number(site.nav.style?.subColumns));
   if (subCols >= 2) nav.style.setProperty('--urd-nav-sub-cols', String(Math.min(4, subCols)));
 
@@ -213,15 +218,16 @@ export function renderNav(site, host) {
     const img = document.createElement('img');
     img.src = src;
     img.alt = site.site.title;
-    // Høyden settes via variabel, ikke inline height: CSS-kalibreringen
-    // (negativ blokkmarg som skalerer med størrelsen) holder barens høyde
-    // konstant uansett bildehøyde - bildet fyller ut, baren vokser aldri.
+    // The height is set via a variable, not inline height: the CSS
+    // calibration (a negative block margin scaling with the size) keeps the
+    // bar height constant regardless of image height - the image fills out,
+    // the bar never grows.
     img.style.setProperty('--urd-logo-size', `${logoDef.size ?? 32}px`);
     if (logoDef.radius) img.style.borderRadius = `${logoDef.radius}px`;
     return img;
   };
-  // Logoteksten kan stiles uavhengig av temaet (additive felt fra v0.5);
-  // standard er temaets overskriftsfont i fet.
+  // The logo text can be styled independently of the theme (additive fields
+  // since v0.5); the default is the theme's heading font in bold.
   const logoText = () => {
     const span = document.createElement('span');
     span.textContent = logoDef.value || site.site.title;
@@ -232,12 +238,12 @@ export function renderNav(site, host) {
     return span;
   };
 
-  // En utrygg bildekilde faller tilbake til logoteksten (samme vokter som
-  // nav-bakgrunnen og faviconet), så menyen aldri står uten merke.
+  // An unsafe image source falls back to the logo text (same guard as the
+  // nav background and the favicon), so the menu never lacks a brand mark.
   if (logoDef.type === 'image' && isSafeImage(logoDef.value)) {
     logo.appendChild(logoImg(logoDef.value));
   } else if (logoDef.type === 'both' && isSafeImage(logoDef.image)) {
-    // Bilde + tekst, i valgt rekkefølge.
+    // Image plus text, in the chosen order.
     if ((logoDef.order ?? 'image-first') === 'image-first') {
       logo.append(logoImg(logoDef.image), logoText());
     } else {
@@ -248,13 +254,14 @@ export function renderNav(site, host) {
   }
   nav.appendChild(logo);
 
-  // Verktøy-klyngen ytterst til høyre: lys/mørk-bryteren (når temaet har
-  // et alt-motstykke) og burgeren. Tom klynge skjules i CSS (:empty).
+  // The tool cluster at the far right: the light/dark toggle (when the
+  // theme has an alt counterpart) and the burger. An empty cluster is
+  // hidden in CSS (:empty).
   const tools = document.createElement('span');
   tools.className = 'urd-nav-tools';
 
-  // Handlekurven i menyen (butikken, additivt nav.cart): knapp med
-  // antall-badge som åpner samme kurvskuff som handlekurv-blokken.
+  // The cart in the menu (the shop, additive nav.cart): a button with a
+  // count badge that opens the same cart drawer as the cart block.
   if (site.nav?.cart?.show) {
     const cartCfg = site.nav.cart;
     const cartBtn = document.createElement('button');
@@ -288,7 +295,7 @@ export function renderNav(site, host) {
     themeBtn.type = 'button';
     const paintToggle = () => {
       const dark = themeMode() === 'dark';
-      // Ikonet viser modusen du BYTTER TIL (konvensjonen folk kjenner).
+      // The icon shows the mode you SWITCH TO (the convention people know).
       themeBtn.innerHTML = dark ? SUN : MOON;
       themeBtn.setAttribute('aria-label', dark ? t('nav.toLightTheme') : t('nav.toDarkTheme'));
     };
@@ -300,8 +307,8 @@ export function renderNav(site, host) {
     tools.appendChild(themeBtn);
   }
 
-  // Burgeren (kun synlig i mobilvisning via CSS): ikke-modal disclosure av
-  // menylisten - ingen fokusfelle eller scroll-lås, panelet scroller selv.
+  // The burger (only visible in mobile view via CSS): a non-modal disclosure
+  // of the menu list - no focus trap or scroll lock, the panel scrolls itself.
   const burger = document.createElement('button');
   burger.className = 'urd-nav-burger';
   burger.type = 'button';
@@ -323,7 +330,7 @@ export function renderNav(site, host) {
   list.className = 'urd-nav-list';
   list.id = 'urd-nav-menu';
 
-  /** Alle li-er med undermeny, for closeAll. */
+  /** All li elements with a submenu, for closeAll. */
   const subs = [];
   const setOpen = (entry, open) => {
     entry.li.classList.toggle('open', open);
@@ -333,12 +340,12 @@ export function renderNav(site, host) {
     for (const entry of subs) if (entry !== except) setOpen(entry, false);
   };
 
-  // Hover åpner kun på enheter med ekte peker - touch skal aldri få
-  // hover-tilstander som krever et ekstra trykk for å bli kvitt.
-  // I den sidestilte kolonnen er undermenyene trekkspill i flyten: der
-  // åpner hover, men lukker aldri per punkt - lukking ville kortet ned
-  // kolonnen under pekeren og gitt feilklikk. Trekkspillene lukkes først
-  // når pekeren forlater hele menyen (presisert 23. juli 2026).
+  // Hover only opens on devices with a real pointer - touch must never get
+  // hover states that take an extra tap to dismiss.
+  // In the side column the submenus are accordions in the flow: there,
+  // hover opens but never closes per item - closing would shorten the
+  // column under the pointer and cause misclicks. The accordions close
+  // only when the pointer leaves the whole menu.
   const isColumn = hc.host.includes('urd-nav-side-host');
   const mouseHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
@@ -363,8 +370,9 @@ export function renderNav(site, host) {
       return;
     }
 
-    // Punkt med undermeny: 'split' = lenke + egen pilknapp (siden er alltid
-    // nåbar); 'toggle' = én knapp bærer både tittelen og pilen.
+    // Item with a submenu: 'split' = link plus its own arrow button (the
+    // page stays reachable); 'toggle' = one button carries both the title
+    // and the arrow.
     li.className = 'urd-nav-has-sub';
     const subId = `urd-nav-sub-${index}`;
     const button = document.createElement('button');
@@ -409,15 +417,15 @@ export function renderNav(site, host) {
     }, { signal });
 
     if (mouseHover) {
-      // Kun ekte mus: på hybride enheter (laptop med touchskjerm) fyrer et
-      // trykk både pointerenter og click, og uten vakten ville undermenyen
-      // åpnet på enter og lukket igjen på click.
+      // Real mouse only: on hybrid devices (laptop with touchscreen) a tap
+      // fires both pointerenter and click, and without the guard the
+      // submenu would open on enter and close again on click.
       let closeTimer = null;
       li.addEventListener('pointerenter', (event) => {
         if (event.pointerType !== 'mouse') return;
         clearTimeout(closeTimer);
-        // I kolonnen holdes andre trekkspill åpne: lukking flytter punktene
-        // under pekeren. Lukkingen skjer samlet når menyen forlates.
+        // In the column, other accordions stay open: closing moves the items
+        // under the pointer. Closing happens collectively when the menu is left.
         if (!isColumn) closeAll(entry);
         setOpen(entry, true);
       }, { signal });
@@ -430,8 +438,8 @@ export function renderNav(site, host) {
       }
     }
 
-    // Tab ut av punktet lukker undermenyen - fokus skal aldri «etterlate»
-    // en åpen meny bak seg.
+    // Tabbing out of the item closes the submenu - focus must never leave
+    // an open menu behind.
     li.addEventListener('focusout', (event) => {
       if (!li.contains(event.relatedTarget)) setOpen(entry, false);
     }, { signal });
@@ -443,21 +451,22 @@ export function renderNav(site, host) {
   nav.appendChild(tools);
   host.appendChild(nav);
 
-  // Målt menyhøyde som CSS-var på rotelementet: nav-klaringen i base.css
-  // (meny utenfor flyten) og chrome-parkeringen i preview leser den.
-  // Avstanden måles fra vertens topp til nav-ens underkant (offsetTop tar
-  // med pillens toppluft). Kolonne-varianten tar ingen topphøyde.
+  // The measured menu height as a CSS var on the root element: the nav
+  // clearance in base.css (menu out of the flow) and the chrome parking in
+  // preview read it. The distance is measured from the host's top to the
+  // nav's bottom edge (offsetTop includes the pill's top gap). The column
+  // variant takes no top height.
   const setNavH = () => {
     const h = isSide ? 0 : nav.offsetTop + nav.offsetHeight;
     document.documentElement.style.setProperty('--urd-nav-h', `${h}px`);
   };
 
-  // Innholdsbevisst folding: menypunktene brytes aldri (nowrap i base.css),
-  // så når punktene ikke lenger får plass i bredden, foldes hele lista til
-  // burger via samme klasse som mobil-brekkpunktet. Utbrettet fullbredde
-  // huskes (foldNeeds), for etter folding er lista skjult og kan ikke
-  // måles: utfolding skjer først når baren er bredere enn behovet, og
-  // måles så på nytt i tilfelle behovet har vokst.
+  // Content-aware folding: menu items never wrap (nowrap in base.css), so
+  // when the items no longer fit in the width, the whole list folds to the
+  // burger via the same class as the mobile breakpoint. The unfolded full
+  // width is remembered (foldNeeds), because after folding the list is
+  // hidden and cannot be measured: unfolding happens only once the bar is
+  // wider than the need, and then measures again in case the need has grown.
   let foldNeeds = 0;
   const evalFold = () => {
     if (isSide || mobileMq.matches) return;
@@ -477,9 +486,9 @@ export function renderNav(site, host) {
     }
   };
 
-  // ResizeObserver på nav-en (ikke verten: en vert utenfor flyten har
-  // ingen egen høyde å observere) fanger vindusbredde, font-lasting og
-  // scroll-krymp; den leverer alltid en første måling ved observe.
+  // A ResizeObserver on the nav (not the host: a host out of the flow has
+  // no height of its own to observe) catches window width, font loading and
+  // scroll shrink; it always delivers a first measurement on observe.
   const navRo = new ResizeObserver(() => {
     setNavH();
     evalFold();
@@ -487,8 +496,9 @@ export function renderNav(site, host) {
   navRo.observe(nav);
   signal.addEventListener('abort', () => navRo.disconnect());
 
-  // Kolonnens hover-lukking: alle trekkspill lukkes samlet når pekeren
-  // forlater hele menyen; ny inntreden innen fristen avbryter lukkingen.
+  // The column's hover closing: all accordions close together when the
+  // pointer leaves the whole menu; re-entering within the delay cancels
+  // the closing.
   if (isColumn && mouseHover) {
     let columnTimer = null;
     nav.addEventListener('pointerenter', (event) => {
@@ -502,9 +512,9 @@ export function renderNav(site, host) {
     }, { signal });
   }
 
-  // Sidekolonnens bredde justeres ved å dra i innerkanten (kun i preview,
-  // som seksjonshøydene). Live-oppdatering via CSS-varen; ved slipp meldes
-  // bredden til editoren, som eier utkastet (urd-nav-width).
+  // The side column's width is adjusted by dragging its inner edge (preview
+  // only, like section heights). Live update via the CSS var; on release
+  // the width is reported to the editor, which owns the draft (urd-nav-width).
   if (isSide && document.body.classList.contains('urd-preview')) {
     const grip = document.createElement('div');
     grip.className = 'urd-nav-side-resize';
@@ -532,8 +542,8 @@ export function renderNav(site, host) {
     host.appendChild(grip);
   }
 
-  // Escape lukker nærmeste åpne lag og gir fokuset tilbake til knappen som
-  // åpnet det, så tastaturbrukere lander der de var.
+  // Escape closes the nearest open layer and returns focus to the button
+  // that opened it, so keyboard users land where they were.
   nav.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
     const openSub = subs.find((entry) => entry.li.classList.contains('open'));
@@ -546,7 +556,7 @@ export function renderNav(site, host) {
     }
   }, { signal });
 
-  // Klikk utenfor nav-en lukker både undermenyer og mobilpanelet.
+  // A click outside the nav closes both submenus and the mobile panel.
   document.addEventListener('pointerdown', (event) => {
     if (nav.contains(event.target)) return;
     closeAll();

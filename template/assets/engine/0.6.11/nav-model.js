@@ -1,16 +1,17 @@
 /**
- * Ren nav-logikk: klassifisering av menypunkter, oppslag i sideregisteret
- * og utseende-beregning. Ingen DOM - modulen er node-importerbar og dekkes
- * av tests/nav.test.mjs; DOM-byggingen bor i nav.js.
+ * Pure nav logic: classifying menu items, page-register lookups and
+ * appearance computation. No DOM - the module is node-importable and
+ * covered by tests/nav.test.mjs; the DOM building lives in nav.js.
  */
 
 import { resolveColor } from './theme.js';
 
-// Trygg bildekilde: kun kjente bildeformer (base64-data-URL for upubliserte
-// opplastinger, eller site-relativ sti til media/) slippes inn i img.src og
-// CSS-url(); alt annet (eksterne verter, tegn som knekker url("…")) ignoreres.
-// Ankret regex med vilje - CodeQL gjenkjenner det som barriere. Delt vokter
-// for favicon, nav-logo og -bakgrunn, footer-logo, ikonblokk og bildelaget.
+// Safe image source: only known image shapes (a base64 data URL for
+// unpublished uploads, or a site-relative path to media/) are let into
+// img.src and CSS url(); everything else (external hosts, characters that
+// break url("…")) is ignored. Anchored regex on purpose - CodeQL recognizes
+// it as a barrier. Shared guard for the favicon, nav logo and background,
+// footer logo, icon block and the image layer.
 const SAFE_IMAGE_RE = /^(?:data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+|\/(?!\/)[\w%./-]*)$/;
 
 /** @param {unknown} src @returns {boolean} */
@@ -18,10 +19,11 @@ export function isSafeImage(src) {
   return typeof src === 'string' && SAFE_IMAGE_RE.test(src);
 }
 
-// Trygg lenke-URL for nav-/footer-lenker (item.href): kun http(s), mailto og
-// tel, som footer-sosiallenkene. javascript:/data: og alt annet avvises, så en
-// urørt href aldri kan bli en aktiv URL. Ankret regex med vilje - CodeQL
-// gjenkjenner det som en barriere. Interne sider lenkes via `page`, ikke href.
+// Safe link URL for nav/footer links (item.href): only http(s), mailto and
+// tel, like the footer social links. javascript:/data: and everything else
+// is rejected, so an untouched href can never become an active URL.
+// Anchored regex on purpose - CodeQL recognizes it as a barrier. Internal
+// pages are linked via `page`, not href.
 const SAFE_URL_RE = /^(?:https?:\/\/|mailto:|tel:)[^\s]+$/i;
 
 /** @param {unknown} url @returns {boolean} */
@@ -29,12 +31,13 @@ export function isSafeUrl(url) {
   return typeof url === 'string' && SAFE_URL_RE.test(url.trim());
 }
 
-// Trygg blokk-href (knapp/bilde/samling/galleri): i tillegg til de eksterne
-// skjemaene over godtas site-interne stier ('/...', aldri protokoll-relative
-// '//...') og ankere ('#...'), som samlings-skjemaet dokumenterer for entry.href.
-// Backslash avvises i sti-grenen: nettlesere normaliserer '\' til '/' i
-// http(s)-URL-er, så '/\evil.no' ville ellers blitt protokoll-relativ likevel.
-// Ankret regex med vilje - CodeQL gjenkjenner det som en barriere.
+// Safe block href (button/image/collection/gallery): in addition to the
+// external schemes above, site-internal paths ('/...', never
+// protocol-relative '//...') and anchors ('#...') are accepted, as the
+// collection schema documents for entry.href. Backslash is rejected in the
+// path branch: browsers normalize '\' to '/' in http(s) URLs, so '/\evil.no'
+// would otherwise become protocol-relative anyway. Anchored regex on
+// purpose - CodeQL recognizes it as a barrier.
 const SAFE_INTERNAL_RE = /^(?:\/(?![/\\])[^\s\\]*|#[^\s]*)$/;
 
 /** @param {unknown} url @returns {boolean} */
@@ -43,14 +46,14 @@ export function isSafeHref(url) {
 }
 
 /**
- * Løser et menypunkt mot sideregisteret: `page` slås opp til path,
- * `href` er ekstern lenke ELLER site-intern sti/anker (additivt fra v0.6:
- * `#seksjons-id` og `/sti#seksjons-id` via isSafeHref, så footer-kolonner
- * og menypunkter kan peke på seksjoner - seksjonene rendres med DOM-id).
- * Ukjent side eller utrygg href gir '#' med missing-flagg (nav.js logger
- * advarselen - denne modulen har ingen sideeffekter).
+ * Resolves a menu item against the page register: `page` is looked up to a
+ * path, `href` is an external link OR a site-internal path/anchor (additive
+ * since v0.6: `#section-id` and `/path#section-id` via isSafeHref, so
+ * footer columns and menu items can point at sections - sections render
+ * with a DOM id). An unknown page or unsafe href yields '#' with a missing
+ * flag (nav.js logs the warning - this module has no side effects).
  * @param {{label: string, page?: string, href?: string}} item
- * @param {Array<{id: string, path: string}>} pages Sideregisteret (site.pages)
+ * @param {Array<{id: string, path: string}>} pages The page register (site.pages)
  * @returns {{label: string, href: string, external: boolean, missing: boolean}}
  */
 export function resolveItem(item, pages) {
@@ -60,16 +63,16 @@ export function resolveItem(item, pages) {
   }
   const href = (item.href ?? '').trim();
   if (isSafeUrl(href)) return { label: item.label, href, external: true, missing: false };
-  // Interne mål åpnes aldri i ny fane og får ingen rel - de er ikke eksterne.
+  // Internal targets never open in a new tab and get no rel - they are not external.
   if (isSafeHref(href)) return { label: item.label, href, external: false, missing: false };
   return { label: item.label, href: '#', external: false, missing: true };
 }
 
 /**
- * Bygger den flate menymodellen nav.js rendrer fra. Hvert punkt får `kind`:
- * 'link' (vanlig lenke), 'split' (eget mål + undermeny: lenke pluss pilknapp)
- * eller 'toggle' (kun undermeny: hele punktet er åpneren). Undermenyen er
- * ett nivå - eventuelle barnebarn ignoreres defensivt.
+ * Builds the flat menu model nav.js renders from. Each item gets a `kind`:
+ * 'link' (plain link), 'split' (own target plus submenu: link plus arrow
+ * button) or 'toggle' (submenu only: the whole item is the opener). The
+ * submenu is one level - any grandchildren are ignored defensively.
  * @param {{nav: {items?: Array<object>}, pages?: Array<object>}} site
  * @returns {Array<{label: string, href: string, external: boolean, missing: boolean, kind: string, children: Array<object>}>}
  */
@@ -81,8 +84,8 @@ export function navItems(site) {
       : [];
     const hasTarget = !!(item.page || item.href);
     const kind = children.length === 0 ? 'link' : hasTarget ? 'split' : 'toggle';
-    // Et toggle-punkt har ingen egen lenke - resolveItem ville flagget det
-    // som missing, så åpnere modelleres uten href.
+    // A toggle item has no link of its own - resolveItem would flag it as
+    // missing, so openers are modeled without an href.
     const own = kind === 'toggle'
       ? { label: item.label, href: '', external: false, missing: false }
       : resolveItem(item, pages);
@@ -91,16 +94,16 @@ export function navItems(site) {
 }
 
 /**
- * Scroll-adferd for menyen (nav.scroll, additivt fra v0.6): ren
- * tilstandsregning, DOM-delen bor i nav.js. 'shrink' = kompakt etter et
- * stykke scrolling; 'hide' = skjules ved scroll ned, vises ved scroll opp.
- * Nær toppen (under TOP_ZONE) er menyen alltid normal og synlig. Små
- * bevegelser under JITTER flipper aldri skjul-tilstanden (dirr-vern mot
- * f.eks. scroll-avrunding ved momentum-stopp).
+ * Scroll behavior for the menu (nav.scroll, additive since v0.6): pure
+ * state computation, the DOM part lives in nav.js. 'shrink' = compact
+ * after some scrolling; 'hide' = hidden on scroll down, shown on scroll up.
+ * Near the top (below TOP_ZONE) the menu is always normal and visible.
+ * Small movements below JITTER never flip the hidden state (jitter guard
+ * against e.g. scroll rounding at momentum stop).
  * @param {string|undefined} mode nav.scroll ('shrink' | 'hide' | undefined)
- * @param {number} prevY Forrige scrollY
- * @param {number} y Gjeldende scrollY
- * @param {boolean} prevHidden Om menyen var skjult
+ * @param {number} prevY Previous scrollY
+ * @param {number} y Current scrollY
+ * @param {boolean} prevHidden Whether the menu was hidden
  * @returns {{compact: boolean, hidden: boolean}}
  */
 export function navScrollState(mode, prevY, y, prevHidden) {
@@ -114,13 +117,13 @@ export function navScrollState(mode, prevY, y, prevHidden) {
 }
 
 /**
- * CSS-klassene på nav-elementet. Variant (flytende pille) og hover-stil
- * (additive fra v0.6) gir egne klasser kun når de avviker fra standarden,
- * så eksisterende sider rendres uendret.
+ * The CSS classes on the nav element. Variant (floating pill) and hover
+ * style (additive since v0.6) yield extra classes only when they deviate
+ * from the default, so existing sites render unchanged.
  * @param {{nav: {layout?: string, variant?: string, style?: {hover?: string}}}} site
  * @returns {string}
  */
-/** De flytende variantene (pille, firkant, tab) deler grunnklassen urd-nav-var-floating. */
+/** The floating variants (pill, square, tab) share the base class urd-nav-var-floating. */
 function isFloating(variant) {
   return variant === 'floating' || variant === 'floating-square' || variant === 'floating-tab';
 }
@@ -130,39 +133,38 @@ export function navClasses(site) {
   const variant = site.nav.variant;
   if (isFloating(variant)) {
     classes += ' urd-nav-var-floating';
-    // Firkant-varianten er pillen uten avrundede kanter (valgt 23. juli 2026).
+    // The square variant is the pill without rounded corners.
     if (variant === 'floating-square') classes += ' urd-nav-square';
-    // Tab-varianten henger ned: firkant topp, kun de nedre hjørnene avrundet.
+    // The tab variant hangs down: square top, only the bottom corners rounded.
     if (variant === 'floating-tab') classes += ' urd-nav-tab';
-    // Glød er et tilvalg for pillen (av som standard, valgt 22. juli 2026).
+    // Glow is an opt-in for the pill (off by default).
     if (site.nav.style?.glow) classes += ' urd-nav-glow';
-    // Luft over pillen er standard; topGap: false legger den helt i toppen.
+    // Space above the pill is the default; topGap: false puts it flush at the top.
     if (site.nav.style?.topGap === false) classes += ' urd-nav-flush';
   }
   const hover = site.nav.style?.hover;
   if (hover && hover !== 'standard') classes += ` urd-nav-hover-${hover}`;
-  // Størrelse (additivt fra v0.6): md er standard og gir ingen klasse.
-  // Verdiene hvitelistes - klassenavn skal aldri bygges av frie strenger.
+  // Size (additive since v0.6): md is the default and yields no class.
+  // The values are allowlisted - class names must never be built from free strings.
   const size = site.nav.style?.size;
   if (['sm', 'lg', 'xl'].includes(size)) classes += ` urd-nav-size-${size}`;
-  // Tekstjustering av punktene i den sidestilte kolonnen (standard venstre).
+  // Text alignment of the items in the side column (default left).
   const salign = site.nav.style?.sideAlign;
   if (['center', 'right'].includes(salign)) classes += ` urd-nav-salign-${salign}`;
-  // Vertikal plassering av menylisten i kolonnen (standard øverst). Eget
-  // felt, ikke nav.layout: layout er topplinjens begrep, og gjenbruk ga
-  // nederst som utilsiktet standard (testfunn 23. juli 2026).
+  // Vertical placement of the menu list in the column (default top). Its
+  // own field, not nav.layout: layout is the top bar's concept.
   const splace = site.nav.style?.sidePlacement;
   if (['middle', 'bottom'].includes(splace)) classes += ` urd-nav-splace-${splace}`;
-  // Undermeny-design (standard card = dagens kort).
+  // Submenu design (default is the card style).
   const sub = site.nav.style?.subStyle;
   if (['flat', 'pills', 'lines', 'flyout'].includes(sub)) classes += ` urd-nav-sub-${sub}`;
   return classes;
 }
 
 /**
- * Klasser for VERTEN (header-elementet) og body, avledet av varianten:
- * flytende tar verten ut av flyten; sidestilt gjør den til fast kolonne
- * og gir body innholds-padding på samme side.
+ * Classes for the HOST (the header element) and body, derived from the
+ * variant: floating takes the host out of the flow; the side variant turns
+ * it into a fixed column and gives body content padding on the same side.
  * @param {{nav: {variant?: string}}} site
  * @returns {{host: string[], body: string[]}}
  */
@@ -171,19 +173,20 @@ export function hostClasses(site) {
   if (isFloating(v)) return { host: ['urd-nav-float'], body: [] };
   if (v === 'side-left') return { host: ['urd-nav-side-host', 'urd-nav-side-host-left'], body: ['urd-side-left'] };
   if (v === 'side-right') return { host: ['urd-nav-side-host', 'urd-nav-side-host-right'], body: ['urd-side-right'] };
-  // Overlay gjelder kun fullbredde-linjen (bar): verten tas ut av flyten så
-  // toppseksjonen glir opp under menyen. Floating/sidestilt ligger allerede utenfor.
+  // Overlay only applies to the full-width bar: the host is taken out of the
+  // flow so the top section slides up under the menu. Floating/side already
+  // sit outside.
   if (site.nav.overlay) return { host: ['urd-nav-overlay'], body: [] };
   return { host: [], body: [] };
 }
 
 /**
- * Beregner utseende-overstyringene fra nav.style: `bg` er ferdig
- * bakgrunnsverdi for --urd-nav-bg (undermenyer og mobilpanelet
- * gjenbruker varen), `blur: false` skrur av uskarpheten, `color`
- * er tekstfargen. Med `image` (additivt fra v0.6) blir bakgrunnen
- * bildet med fargen/dekkevnen som slør over. Tomt objekt = CSS-
- * standardene gjelder.
+ * Computes the appearance overrides from nav.style: `bg` is the finished
+ * background value for --urd-nav-bg (submenus and the mobile panel reuse
+ * the var), `blur: false` turns the blur off, `color` is the text color.
+ * With `image` (additive since v0.6) the background becomes the image
+ * with the color/opacity as a veil on top. An empty object = the CSS
+ * defaults apply.
  * @param {{bg?: string, bgOpacity?: number, blur?: boolean, textColor?: string, image?: string}} [style]
  * @returns {{bg?: string, blur?: boolean, color?: string}}
  */
@@ -191,22 +194,23 @@ export function navSurface(style = {}) {
   const out = {};
   const hasVeil = style.bg || style.bgOpacity != null;
   if (isSafeImage(style.image)) {
-    // Sløret gjentas som gradient-lag over bildet; uten egne valg brukes
-    // standardflaten (surface 85 %), så teksten alltid har bakgrunn å stå på.
+    // The veil is repeated as a gradient layer over the image; without
+    // explicit choices the default surface is used (surface at 85 %), so
+    // the text always has a background to sit on.
     const color = resolveColor(style.bg ?? 'surface');
     const cover = veil(style);
     const layers = [`linear-gradient(${cover}, ${cover})`];
-    // Bildestyrke (0..1, standard 1): svakere bilde tones mot bakgrunns-
-    // fargen med et eget lag under sløret - CSS kan ikke sette opacity på
-    // ett enkelt bakgrunnslag.
+    // Image strength (0..1, default 1): a weaker image is toned toward the
+    // background color with its own layer under the veil - CSS cannot set
+    // opacity on a single background layer.
     const strength = style.imageOpacity ?? 1;
     if (strength < 1) {
       const fade = `color-mix(in srgb, ${color} ${Math.round((1 - strength) * 100)}%, transparent)`;
       layers.push(`linear-gradient(${fade}, ${fade})`);
     }
-    // Utsnitt (0..100, standard 50 midt på): høyden er det som monner i den
-    // lave brede stripen, bredden i den høye smale sidekolonnen - begge
-    // eksponeres, så valget virker i alle varianter.
+    // Crop position (0..100, default 50 centered): the height is what
+    // matters in the low wide bar, the width in the tall narrow side
+    // column - both are exposed, so the choice works in every variant.
     const x = Math.min(100, Math.max(0, style.imageX ?? 50));
     const y = Math.min(100, Math.max(0, style.imageY ?? 50));
     layers.push(`url("${style.image}") ${x}% ${y}% / cover`);
@@ -219,7 +223,7 @@ export function navSurface(style = {}) {
   return out;
 }
 
-/** Sløret alene (fargen med dekkevne), uten bildelagene. */
+/** The veil alone (the color with opacity), without the image layers. */
 function veil(style) {
   const color = resolveColor(style.bg ?? 'surface');
   const pct = Math.round((style.bgOpacity ?? 0.85) * 100);
@@ -227,9 +231,10 @@ function veil(style) {
 }
 
 /**
- * Bakgrunnen for undermenyen og mobilpanelet (--urd-nav-sub-bg): som
- * standard KUN sløret, aldri bakgrunnsbildet - bildet blir med bare når
- * eieren skrur på nav.style.subImage. Undefined = CSS-standarden gjelder.
+ * The background for the submenu and the mobile panel (--urd-nav-sub-bg):
+ * by default ONLY the veil, never the background image - the image comes
+ * along only when the owner turns on nav.style.subImage. Undefined = the
+ * CSS default applies.
  * @param {{bg?: string, bgOpacity?: number, image?: string, subImage?: boolean}} [style]
  * @returns {string|undefined}
  */
@@ -242,12 +247,12 @@ export function navSubSurface(style = {}) {
 }
 
 /**
- * Flater lagstakkens FARGELAG til ett slør for undermenyen og mobilpanelet,
- * så nedtrekket følger barens tone når nav-en har lag-bakgrunn. Bilde- og
- * gradientlag holdes ute, samme prinsipp som subImage: undermenyen får
- * aldri bildet. Lagene tegnes i listerekkefølge (første bakerst), så hvert
- * fargelag mikses over de forrige. Null = ingen fargelag, CSS-standarden
- * gjelder.
+ * Flattens the layer stack's COLOR layers into one veil for the submenu
+ * and the mobile panel, so the dropdown follows the bar's tone when the
+ * nav has a layer background. Image and gradient layers are kept out, the
+ * same principle as subImage: the submenu never gets the image. Layers are
+ * drawn in list order (first at the back), so each color layer is mixed
+ * over the previous ones. Null = no color layers, the CSS default applies.
  * @param {Array<{type?: string, props?: {value?: string, opacity?: number}}>} [layers]
  * @returns {string|null}
  */
@@ -264,8 +269,8 @@ export function navLayerVeil(layers) {
 }
 
 /**
- * Den sidestilte kolonnens bredde i px (nav.style.width), klemt til
- * fornuftige grenser; alt ugyldig gir standardbredden 250.
+ * The side column's width in px (nav.style.width), clamped to sensible
+ * bounds; anything invalid yields the default width 250.
  * @param {number|string|undefined} width
  * @returns {number}
  */

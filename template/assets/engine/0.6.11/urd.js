@@ -1,13 +1,13 @@
 /**
- * Urd-motoren - inngangspunkt.
+ * The Urd engine - entry point.
  *
- * Kjøres av template/index.html. Oppretter det globale Urd-objektet med
- * registrene, registrerer kjernetypene og plugins, finner riktig side fra
- * sideregisteret, og rendrer. All data versjonsløftes ved lasting
- * (migrate.js) - se docs/SKJEMA.md.
+ * Run by template/index.html. Creates the global Urd object with the
+ * registries, registers the core types and plugins, finds the right page in
+ * the page register, and renders. All data is version-lifted on load
+ * (migrate.js) - see docs/SKJEMA.md.
  *
- * I preview-modus (?preview=1) lytter motoren i tillegg på postMessage-
- * utkast fra editoren og rerendrer inkrementelt.
+ * In preview mode (?preview=1) the engine additionally listens for
+ * postMessage drafts from the editor and rerenders incrementally.
  */
 import { createRegistry } from './registry.js';
 import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION } from './migrate.js';
@@ -55,9 +55,9 @@ export const Urd = {
   sections: createRegistry('sections'),
   backgrounds: createRegistry('backgrounds'),
   animations: createRegistry('animations'),
-  // Plugin-leverte maler (0.6.7, samme def-form som malfilene: {name, kind,
-  // section|blocks}); seksjonsgalleriet fletter kind section inn i
-  // plugin-gruppen. Pakking/deling av maler hører til 0.6.9.
+  // Plugin-provided templates (same def shape as the template files: {name,
+  // kind, section|blocks}); the section gallery merges kind section into
+  // the plugin group.
   templates: createRegistry('templates'),
 };
 
@@ -65,7 +65,7 @@ export const Urd = {
 // through Urd.maler; both names refer to the same registry forever.
 Urd.maler = Urd.templates;
 
-// Globalt tilgjengelig for plugins (register(Urd)) og editorens preview-bro.
+// Globally available for plugins (register(Urd)) and the editor's preview bridge.
 window.Urd = Urd;
 
 function registerCore() {
@@ -110,8 +110,8 @@ function registerCore() {
 }
 
 /**
- * Motorversjonen fra urd.json: grunnlaget for pluginenes requiresEngine-sjekk.
- * Utilgjengelig manifest gir '0.0.0', som avviser versjonskravene i stedet for å laste i blinde.
+ * The engine version from urd.json: the basis for the plugins' requiresEngine check.
+ * An unreachable manifest yields '0.0.0', which rejects the version requirements instead of loading blindly.
  */
 async function engineVersion() {
   try {
@@ -122,7 +122,7 @@ async function engineVersion() {
 }
 
 /**
- * «Til toppen»-pil: dukker opp nede til høyre etter et stykke scrolling.
+ * "To top" arrow: appears at the bottom right after some scrolling.
  */
 function mountToTop() {
   const btn = document.createElement('button');
@@ -141,13 +141,13 @@ function mountToTop() {
 }
 
 /**
- * Cross-document View Transitions (ADR-0011): nav og footer får
- * view-transition-name KUN i selve overgangsvinduet (pageswap ved utreise,
- * pagereveal ved innreise), så side-chromen står i ro mens innholdet toner.
- * Et statisk navn i CSS gjorde elementene til backdrop-roots, som slo av
- * menyens backdrop-filter (uskarpheten bak nav) i all vanlig visning.
- * Uten cross-document-støtte fyrer hendelsene aldri: navnene settes ikke,
- * og siden navigerer som før (sluttilstand).
+ * Cross-document View Transitions (ADR-0011): nav and footer get a
+ * view-transition-name ONLY within the transition window itself (pageswap on
+ * departure, pagereveal on arrival), so the page chrome stays put while the
+ * content fades. A static name in CSS would make the elements backdrop
+ * roots, which disables the menu's backdrop-filter (the blur behind nav) in
+ * all normal display. Without cross-document support the events never fire:
+ * the names are not set, and the page navigates normally (end state).
  */
 function wireViewTransitionNames() {
   const setNames = (on) => {
@@ -161,9 +161,9 @@ function wireViewTransitionNames() {
     if (event.viewTransition) setNames(true);
   });
   window.addEventListener('pagereveal', (event) => {
-    // Uten overgang (også bfcache-gjenoppliving etter en avbrutt utreise)
-    // skal navnene være borte, ellers står backdrop-rooten på og uskarpheten
-    // forblir av.
+    // Without a transition (including bfcache revival after an aborted
+    // departure) the names must be gone, otherwise the backdrop root stays
+    // on and the blur remains off.
     if (!event.viewTransition) { setNames(false); return; }
     setNames(true);
     event.viewTransition.finished.finally(() => setNames(false));
@@ -171,12 +171,12 @@ function wireViewTransitionNames() {
 }
 
 /**
- * Nettstedsikonet (favicon) fra site.json: overstyrer standard-ikonet i
- * index.html. Additivt felt; uten ikon beholdes Urd-merket.
+ * The site icon (favicon) from site.json: overrides the default icon in
+ * index.html. Additive field; without an icon the Urd mark is kept.
  */
 function applyFavicon(href) {
-  // Kun kjente ikonformer (data:image base64 eller site-relativ sti); delt
-  // vokter med nav-logo, footer-logo og bildelagene, jf. CodeQL-funnene på favicon-flyten.
+  // Only known icon shapes (data:image base64 or a site-relative path);
+  // shared guard with the nav logo, the footer logo and the image layers.
   if (!isSafeImage(href)) return;
   let link = document.querySelector('link[rel="icon"]');
   if (!link) {
@@ -188,10 +188,10 @@ function applyFavicon(href) {
 }
 
 /**
- * Finner siden for gjeldende URL i sideregisteret.
- * ?page=<id> overstyrer (nyttig lokalt, der enkle filservere ikke
- * ruter path-ene); ellers matches location.pathname; fallback er
- * første side i registeret.
+ * Finds the page for the current URL in the page register.
+ * ?page=<id> overrides (useful locally, where simple file servers do not
+ * route the paths); otherwise location.pathname is matched; the fallback is
+ * the first page in the register.
  */
 function resolvePage(site) {
   const params = new URLSearchParams(location.search);
@@ -205,20 +205,21 @@ function resolvePage(site) {
 }
 
 /**
- * Kobler på postMessage-lytting og høyderapportering i preview-modus.
- * state = { page, site, viewport } deles med boot, slik at breakpoint-
- * bytte og editor-meldinger alltid jobber på samme data.
+ * Attaches postMessage listening and height reporting in preview mode.
+ * state = { page, site, viewport } is shared with boot, so breakpoint
+ * switches and editor messages always work on the same data.
  */
 function enablePreview(state, opts) {
   const root = opts.root;
   const vp = () => ({ preview: true, viewport: state.viewport });
 
-  /* Språkbytter i previewen serialiseres: initSiteLocale kan vente på nett
-     (pakkespråk), og et raskt bytte tilbake må ikke bli klobret av at den
-     GAMLE lastingen fullfører sist. Hver oppgave leser utkastets språk på
-     KJØRETIDSpunktet, så den siste i køen alltid lander på gjeldende valg;
-     langPending sier om noe er underveis, slik at hurtigveien (likt språk,
-     rendre synkront) aldri tas mens en lasting kan omgjøre den. */
+  /* Language switches in the preview are serialized: initSiteLocale can wait
+     on the network (pack languages), and a quick switch back must not be
+     clobbered by the OLD load finishing last. Each task reads the draft's
+     language at RUN time, so the last one in the queue always lands on the
+     current choice; langPending says whether something is in flight, so the
+     fast path (same language, render synchronously) is never taken while a
+     load could undo it. */
   let langQueue = Promise.resolve();
   let langPending = 0;
   const langOutOfSync = () => langPending > 0 || requestedLang(state.site.site?.lang) !== siteLang();
@@ -236,16 +237,17 @@ function enablePreview(state, opts) {
     });
     return langQueue;
   }
-  /** Bevarer scrollposisjonen over en full rerender: dokumentet kollapser
-   *  forbigående mens datablokkene måler asynkront, og nettleseren klemmer
-   *  ellers scrollY. Gjenopprettes etter to rAF (etter regrow-layouten). */
+  /** Preserves the scroll position across a full rerender: the document
+   *  collapses transiently while the data blocks measure asynchronously, and
+   *  the browser otherwise clamps scrollY. Restored after two rAF (after the
+   *  regrow layout). */
   const keepScroll = (fn) => {
     const y = window.scrollY;
     fn();
     requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, y)));
   };
   window.addEventListener('message', (event) => {
-    if (event.origin !== location.origin) return; // kun editoren på samme site
+    if (event.origin !== location.origin) return; // only the editor on the same site
     const msg = event.data;
     if (msg?.type === 'urd-preview' && msg.section) {
       const host = root.querySelector(`[data-section-id="${msg.section.id}"]`);
@@ -253,65 +255,66 @@ function enablePreview(state, opts) {
       const i = state.page.sections.findIndex((s) => s.id === msg.section.id);
       if (i >= 0) state.page.sections[i] = msg.section;
     } else if (msg?.type === 'urd-preview-full' && msg.page) {
-      // Samme normalisering som boot(): en side uten sections skal gi tom
-      // visning, ikke kaste i renderPage (og i findIndex ved neste melding).
-      // Samme side (angre/gjenta o.l.) beholder scrollposisjonen; et ekte
-      // sidebytte skal naturlig starte øverst.
+      // Same normalization as boot(): a page without sections must give an
+      // empty view, not throw in renderPage (and in findIndex on the next
+      // message). The same page (undo/redo and the like) keeps the scroll
+      // position; a real page switch naturally starts at the top.
       const samePage = msg.page?.meta?.id === state.page?.meta?.id;
       state.page = msg.page;
       if (!Array.isArray(state.page.sections)) state.page.sections = [];
       const paint = () => renderPage(state.page, state.site, root, vp());
       if (samePage) keepScroll(paint); else paint();
-      // Sidebytte i editoren: footeren kan ha per-side-synlighet (hideOn).
+      // Page switch in the editor: the footer can have per-page visibility (hideOn).
       if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);
     } else if (msg?.type === 'urd-chrome') {
-      // Ren visning: skjul/vis editeringshåndtakene (kun CSS, se base.css).
+      // Clean view: hide/show the editing handles (CSS only, see base.css).
       document.body.classList.toggle('urd-chrome-off', !msg.visible);
-      // Sticky blokker er kun aktive i Ren visning i editoren: fest/slipp
-      // umiddelbart ved bytte, ikke først ved neste scroll.
+      // Sticky blocks are only active in Clean view in the editor: pin/release
+      // immediately on switch, not first at the next scroll.
       refreshSticky();
     } else if (msg?.type === 'urd-show-grid') {
-      // Grid-menyen i editoren er åpen: vis gridet i alle seksjoner.
+      // The grid menu in the editor is open: show the grid in all sections.
       window.UrdPreviewEdit?.toggleGridOverlays(msg.visible, state.page, state.site);
     } else if (msg?.type === 'urd-admin-theme' && msg.colors) {
-      // Adminens fargetema: editor-menyene i previewen (blokkmenyen,
-      // seksjonsgalleriet) skal følge admin, ikke siden som redigeres.
-      // Verdiene legges som egne variabler; base.css bruker dem KUN på
-      // editor-chromen, aldri på sidens eget innhold.
+      // The admin color theme: the editor menus in the preview (the block
+      // menu, the section gallery) follow admin, not the page being edited.
+      // The values are set as separate variables; base.css uses them ONLY on
+      // the editor chrome, never on the page's own content.
       for (const key of ['bg', 'surface', 'accent', 'text', 'accent-text']) {
         if (typeof msg.colors[key] === 'string') {
           document.documentElement.style.setProperty(`--urd-admin-${key}`, msg.colors[key]);
         }
       }
     } else if (msg?.type === 'urd-show-guides') {
-      // Hjelpelinje-knappen i editoren: senter- og breddelinjer på/av.
+      // The guide button in the editor: center and width guides on/off.
       window.UrdPreviewEdit?.toggleGuideOverlays(msg.visible);
     } else if (msg?.type === 'urd-place-block' && msg.block) {
-      // Paletten: finn plassering midt i synsfeltet og meld tilbake.
+      // The palette: find a placement in the middle of the viewport and report back.
       window.UrdPreviewEdit?.placeBlock(msg.block, root);
     } else if (msg?.type === 'urd-demo-anim' && msg.sectionId) {
-      // Editoren endret en animasjon: spill den én gang som demo.
+      // The editor changed an animation: play it once as a demo.
       const host = root.querySelector(`[data-section-id="${msg.sectionId}"]`);
       const el = msg.blockId ? host?.querySelector(`[data-block-id="${msg.blockId}"]`) : host;
       window.UrdPreviewEdit?.demoAnimation(el);
     } else if (msg?.type === 'urd-open-block-config' && msg.blockId) {
-      // Plugin-blokkens innstillinger åpnes fra Egenskaper: klikk den skjulte
-      // config-bryteren i blokken (samme toggle som den gamle gear-pillen).
+      // The plugin block's settings open from Properties: click the hidden
+      // config toggle in the block.
       root.querySelector(`[data-block-id="${msg.blockId}"] .urd-cfg-toggle`)?.click();
     } else if (msg?.type === 'urd-attention' && msg.sectionId) {
-      // Editoren oppdaget desktop-drift i en overstyrt seksjon: marker live.
+      // The editor detected desktop drift in an overridden section: mark it live.
       root.querySelector(`[data-section-id="${msg.sectionId}"]`)
         ?.classList.toggle('urd-attention', msg.needed !== false);
     } else if (msg?.type === 'urd-scroll-section' && msg.sectionId) {
-      // Tilsynsmerket i topplinja: rull til seksjonen som trenger
-      // gjennomgang, så merket peker på et sted og ikke bare en modus.
+      // The attention badge in the top bar: scroll to the section that needs
+      // review, so the badge points at a place and not just a mode.
       root.querySelector(`[data-section-id="${msg.sectionId}"]`)
         ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else if (msg?.type === 'urd-collections' && msg.collections) {
-      // Samlingsutkast fra editoren: brukes i stedet for serverfilene. Kun
-      // seksjoner med samlingsblokker rendres på nytt: en full renderPage
-      // kollapser dokumentet forbigående (datablokkene måler asynkront), og
-      // nettleseren klemmer da scrollposisjonen til toppen.
+      // Collection drafts from the editor: used instead of the server files.
+      // Only sections with collection blocks are rerendered: a full
+      // renderPage collapses the document transiently (the data blocks
+      // measure asynchronously), and the browser then clamps the scroll
+      // position to the top.
       setCollectionsDraft(msg.collections);
       const usesCollections = (b) => Boolean(Urd.blocks.get(b.type)?.usesCollections);
       for (const section of state.page.sections ?? []) {
@@ -320,37 +323,40 @@ function enablePreview(state, opts) {
         if (host) renderSection(section, state.site, host, vp());
       }
     } else if (msg?.type === 'urd-templates') {
-      // Mal-utkastene fra editoren: vises i Mine maler-fanen i «+ Ny seksjon».
+      // The template drafts from the editor: shown in the My templates tab in "+ New section".
       window.UrdPreviewEdit?.setTemplates?.(msg.templates);
     } else if (msg?.type === 'urd-insert-template') {
-      // Blokker-panelets Mine maler: sett inn blokkgruppe-malen i aktiv seksjon.
+      // The Blocks panel's My templates: insert the block group template into the active section.
       window.UrdPreviewEdit?.insertTemplate?.(msg.id);
     } else if (msg?.type === 'urd-close-menus') {
-      // Eieren klikket i admin-panelene: lukk åpne menyer (preset-galleri, blokkmeny).
+      // The owner clicked in the admin panels: close open menus (preset gallery, block menu).
       window.UrdPreviewEdit?.closeMenus();
     } else if (msg?.type === 'urd-duplicate') {
-      // Ctrl+D med fokus i admin-panelene: dupliser markert blokk i previewen.
+      // Ctrl+D with focus in the admin panels: duplicate the selected block in the preview.
       window.UrdPreviewEdit?.duplicateSelected();
     } else if (msg?.type === 'urd-select' && msg.blockId) {
-      // Editoren bygde en blokk selv (+ Ny blokk-menyen): marker den.
+      // The editor built a block itself (the + New block menu): select it.
       window.UrdPreviewEdit?.selectById(msg.blockId);
     } else if (msg?.type === 'urd-plugins') {
-      // Editorens plugin-utkast: last de aktiverte pluginene (filene ligger alt i repoet)
-      // og rerendr, så plugins virker i forhåndsvisningen FØR publisering.
+      // The editor's plugin draft: load the enabled plugins (the files are
+      // already in the repo) and rerender, so plugins work in the preview
+      // BEFORE publishing.
       loadPluginList(Urd, state.engine, msg.enabled).then(async () => {
-        // Lista kan ha inneholdt en SPRÅKPAKKE: var utkastets språk ukjent
-        // da site-utkastet kom (eller ved boot), lastes det nå.
+        // The list may have contained a LANGUAGE PACK: if the draft's
+        // language was unknown when the site draft arrived (or at boot), it
+        // is loaded now.
         if (langOutOfSync()) await syncSiteLocale();
         renderPage(state.page, state.site, root, vp());
-        // Meld plugin-blokkene tilbake (type, label, defaults), så Blokker-
-        // panelet i admin kan vise dem i sin egen «Fra plugins»-seksjon.
+        // Report the plugin blocks back (type, label, defaults), so the
+        // Blocks panel in admin can show them in its own "From plugins" section.
         const blocks = [];
         for (const type of Urd.blocks.ids()) {
           const def = Urd.blocks.get(type);
           if (!def?.fromPlugin) continue;
-          // Admin-VINDUETS ordbok har aldri plugin-nøkler: etikettene løses
-          // HER (iframe-siden, der plugin-ordboka bor) og sendes som ferdige
-          // strenger. fromPlugin bærer alt visningsnavnet (manifest.names).
+          // The admin WINDOW's dictionary never has plugin keys: the labels
+          // are resolved HERE (the iframe side, where the plugin dictionary
+          // lives) and sent as finished strings. fromPlugin already carries
+          // the display name (manifest.names).
           blocks.push({
             type,
             label: def.labelKey ? ta(def.labelKey) : (def.label ?? type),
@@ -360,9 +366,10 @@ function enablePreview(state, opts) {
             variants: Array.isArray(def.variants)
               ? def.variants.map((v) => ({ label: v.labelKey ? ta(v.labelKey) : v.label, props: v.props ?? {} }))
               : [],
-            // Felt-kontrakten (additiv): en def med `fields` får innstillingene
-            // sine rendret rett i Egenskaper-panelet i stedet for et eget
-            // config-panel. Etikettene løses her av samme grunn som over.
+            // The field contract (additive): a def with `fields` gets its
+            // settings rendered directly in the Properties panel instead of
+            // a separate config panel. The labels are resolved here for the
+            // same reason as above.
             fields: Array.isArray(def.fields)
               ? def.fields.map((f) => ({
                   key: f.key,
@@ -382,25 +389,27 @@ function enablePreview(state, opts) {
         window.parent?.postMessage({ type: 'urd-plugin-blocks', blocks }, location.origin);
       });
     } else if (msg?.type === 'urd-zoom') {
-      // Lerretet skaleres med transform på iframen, så ALT inni krymper med
-      // zoomen, også editeringshåndtakene. De skal derimot holde samme
-      // skjermstørrelse som admin-panelene, så de mot-skaleres med 1/zoom.
-      // Kun en CSS-variabel: ingen rerender, og besøkende ser den aldri.
+      // The canvas is scaled with a transform on the iframe, so EVERYTHING
+      // inside shrinks with the zoom, including the editing handles. They
+      // should however keep the same screen size as the admin panels, so
+      // they are counter-scaled with 1/zoom. Only a CSS variable: no
+      // rerender, and visitors never see it.
       const z = Number(msg.scale);
       document.documentElement.style.setProperty(
         '--urd-chrome-scale',
         Number.isFinite(z) && z > 0 ? String(1 / z) : '1',
       );
     } else if (msg?.type === 'urd-viewport' && (msg.mode === 'desktop' || msg.mode === 'mobile')) {
-      // Forhåndsvisningen følger editorens visningsvalg, aldri iframe-bredden:
-      // et smalt admin-vindu skal ikke vippe previewen til mobil og gjemme strukturverktøyene.
+      // The preview follows the editor's view choice, never the iframe width:
+      // a narrow admin window must not flip the preview to mobile and hide the structure tools.
       state.viewport = msg.mode;
       document.body.classList.toggle('urd-mobile', state.viewport === 'mobile');
       renderPage(state.page, state.site, root, vp());
     } else if (msg?.type === 'urd-site' && msg.site) {
-      // Site-utkast fra editoren (grid, tema, nav): alt som avhenger av
-      // site.json rendres på nytt. Samme amputert-vern som i boot(): et
-      // utkast uten disse delene skal aldri kaste og fryse previewen.
+      // Site draft from the editor (grid, theme, nav): everything that
+      // depends on site.json is rerendered. Same truncation guard as in
+      // boot(): a draft missing these parts must never throw and freeze the
+      // preview.
       state.site = msg.site;
       state.site.site ??= { title: '', lang: 'no' };
       state.site.pages ??= [];
@@ -414,11 +423,12 @@ function enablePreview(state, opts) {
         if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);
         renderPage(state.page, state.site, root, vp());
       });
-      // Endret site.lang i utkastet: last besøkende-localen på nytt FØR
-      // re-render, så previewen er WYSIWYG også for språket (booten leste
-      // den publiserte site.json og kan ha et annet språk). Plugin-tekstene
-      // legges oppå igjen inne i syncSiteLocale: initSiteLocale bygger
-      // ordboka fra motorens nb-base, uten plugin-nøklene.
+      // Changed site.lang in the draft: reload the visitor locale BEFORE the
+      // re-render, so the preview is WYSIWYG for the language too (boot read
+      // the published site.json and may have a different language). The
+      // plugin texts are layered back on inside syncSiteLocale:
+      // initSiteLocale builds the dictionary from the engine's nb base,
+      // without the plugin keys.
       if (langOutOfSync()) {
         syncSiteLocale().then(rerender);
       } else {
@@ -427,63 +437,65 @@ function enablePreview(state, opts) {
     }
   });
 
-  // Meld fra til editoren at lytteren er koblet på: utkast som sendes
-  // før dette punktet ville gått tapt (iframe-load skjer før boot er ferdig).
-  // (Den gamle urd-preview-height-kanalen er fjernet: ingen lyttet på den,
-  // og iframen er CSS-dimensjonert i editoren.)
+  // Tell the editor the listener is attached: drafts sent before this
+  // point would be lost (the iframe load happens before boot finishes).
   window.parent?.postMessage({ type: 'urd-ready' }, location.origin);
 }
 
 /**
- * Starter motoren.
+ * Boots the engine.
  * @param {{root: HTMLElement, nav?: HTMLElement}} opts
  */
 export async function boot(opts) {
   registerCore();
 
-  // Start motorversjon-hentingen (urd.json) samtidig med site.json: de gjelder
-  // ikke hverandre, så de skal ikke ligge i seriell kø. Bare site.json blokkerer
-  // sideoppslaget; motorversjonen ventes på først rett før plugin-lastingen.
+  // Start the engine version fetch (urd.json) alongside site.json: they are
+  // independent, so they should not sit in a serial queue. Only site.json
+  // blocks the page lookup; the engine version is awaited first right
+  // before plugin loading.
   const enginePromise = engineVersion();
 
-  // Råfilen beholdes som migreringskontekst: v1-sideløftet trenger det
-  // OPPRINNELIGE gridet (columns/rowHeight), som det løftede sitet har mistet.
+  // The raw file is kept as migration context: the v1 page lift needs the
+  // ORIGINAL grid (columns/rowHeight), which the lifted site has lost.
   const rawSite = await (await fetch('/content/site.json')).json();
   const site = liftSiteFile(rawSite);
   const preview = new URLSearchParams(location.search).get('preview') === '1';
-  // Motoren tåler amputert site.json: manglende deler får tomme standarder i stedet for krasj (siden dør aldri av dårlig data).
+  // The engine tolerates a truncated site.json: missing parts get empty defaults instead of a crash (the page never dies from bad data).
   site.site ??= { title: '', lang: 'no' };
   site.pages ??= [];
   site.theme ??= { version: 1, tokens: {} };
   site.nav ??= { version: 1, items: [] };
-  // Besøkende-språket (ADR-0012): site.lang styrer motorens egne tekster
-  // og datonavn. Må være lastet FØR første render; dokumentets lang-attributt
-  // settes fra samme kilde (skallene hardkoder "no" som pre-JS-standard).
+  // The visitor language (ADR-0012): site.lang governs the engine's own
+  // texts and date names. Must be loaded BEFORE the first render; the
+  // document's lang attribute is set from the same source (the shells
+  // hardcode "no" as the pre-JS default).
   document.documentElement.lang = await initSiteLocale(site.site.lang);
   applyTheme(site.theme);
   applySiteLayout(site);
   applyFavicon(site.site.icon);
   const engine = await enginePromise;
-  // I preview eier EDITOREN plugin-listen (utkastet i plugins.json): boot laster ingenting,
-  // og urd-plugins-meldingen laster utkastets aktive plugins så de virker før publisering.
+  // In preview the EDITOR owns the plugin list (the draft in plugins.json): boot loads nothing,
+  // and the urd-plugins message loads the draft's active plugins so they work before publishing.
   if (!preview) await loadPlugins(Urd, engine);
 
   if (opts.nav) renderNav(site, opts.nav);
-  // Delt footer: eget element rett etter hovedinnholdet (index.html er
-  // Urd-eid og kan ikke endres av publisering, så elementet lages her).
+  // Shared footer: its own element right after the main content (index.html
+  // is Urd-owned and cannot be changed by publishing, so the element is
+  // created here).
   opts.footer = document.createElement('footer');
   opts.footer.id = 'urd-footer';
   opts.root.insertAdjacentElement('afterend', opts.footer);
   mountToTop();
-  // Inert i preview (sidebytter skjer via postMessage, aldri navigasjon).
+  // Inert in preview (page switches happen via postMessage, never navigation).
   wireViewTransitionNames();
 
-  // Tomt sideregister (håndredigert site.json) gir en tom side, ikke krasj.
+  // An empty page register (hand-edited site.json) gives an empty page, not a crash.
   const entry = resolvePage(site) ?? { id: 'empty', title: '', file: 'content/pages/missing.json' };
-  // Versjonsløfting på filnivå: eldre sidefiler løftes til gjeldende
-  // format i minnet (disk skrives først ved neste publisering).
-  // Mangler sidefilen (halvferdig deploy, håndredigert register), vises
-  // en tom side i stedet for krasj - siden dør aldri av dårlig data.
+  // Version lifting at file level: older page files are lifted to the
+  // current format in memory (disk is written first at the next publish).
+  // If the page file is missing (half-finished deploy, hand-edited
+  // register), an empty page is shown instead of a crash - the page never
+  // dies from bad data.
   let page;
   try {
     page = liftPageFile(await (await fetch(`/${entry.file}`)).json(), rawSite);
@@ -492,33 +504,34 @@ export async function boot(opts) {
     page = { schemaVersion: PAGE_SCHEMA_VERSION, meta: { id: entry.id, title: entry.title }, sections: [] };
   }
   document.title = `${page.meta?.title ?? entry.title ?? ''} - ${site.site.title}`;
-  // SEO-metadata (beskrivelse, canonical, og-felter, JSON-LD) settes kun hos
-  // besøkende: preview-adressen (?preview=1) er aldri en kanonisk side.
+  // SEO metadata (description, canonical, og: fields, JSON-LD) is set only
+  // for visitors: the preview address (?preview=1) is never a canonical page.
   if (!preview) applyHeadMeta(site, page, location.origin, location.pathname, entry);
-  // Footeren rendres nå som side-id-en er kjent (per-side hideOn-synlighet).
+  // The footer is rendered now that the page id is known (per-page hideOn visibility).
   renderFooter(site, opts.footer, page.meta?.id ?? entry.id);
 
   if (preview) {
-    // Canvas-chromen følger ADMIN-språket (to registre, ADR-0012):
-    // ordboka lastes FØR editeringslaget, med samme deteksjon som
-    // editorens main.js (delt localStorage, samme opprinnelse).
+    // The canvas chrome follows the ADMIN language (two registers,
+    // ADR-0012): the dictionary is loaded BEFORE the editing layer, with
+    // the same detection as the editor's main.js (shared localStorage,
+    // same origin).
     await initAdminLocale();
-    // Editeringslaget lastes dynamisk KUN i preview - besøkende henter
-    // aldri denne koden. Må være på plass før første rendering.
+    // The editing layer is loaded dynamically ONLY in preview - visitors
+    // never fetch this code. Must be in place before the first render.
     window.UrdPreviewEdit = await import('./preview-edit.js');
     document.body.classList.add('urd-preview');
   }
 
-  // Responsivt: viewporten følger skjermbredden (også i editorens
-  // preview, der iframen smales til mobilbredde). Ved kryssing av
-  // breakpointet rendres siden på nytt i riktig modus.
+  // Responsive: the viewport follows the screen width (also in the
+  // editor's preview, where the iframe is narrowed to mobile width). When
+  // the breakpoint is crossed, the page is rerendered in the right mode.
   const mq = window.matchMedia(`(max-width: ${site.breakpoints?.mobile ?? 640}px)`);
-  // I preview eier editoren viewporten (urd-viewport-meldingen); hos besøkende følger den skjermbredden.
+  // In preview the editor owns the viewport (the urd-viewport message); for visitors it follows the screen width.
   const state = { page, site, engine, viewport: preview ? 'desktop' : (mq.matches ? 'mobile' : 'desktop') };
   document.body.classList.toggle('urd-mobile', state.viewport === 'mobile');
 
   renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport });
-  // Sticky blokker («fest ved scrolling»): én scroll-lytter for hele siden.
+  // Sticky blocks ("pin on scroll"): one scroll listener for the whole page.
   initSticky();
 
   if (!preview) {

@@ -1,28 +1,29 @@
 /**
- * Bildeverktøy for editoren: komprimering til webp i nettleseren før
- * bildet i det hele tatt legges i utkastet (mønster fra ApeironLF).
- * Publiseringen materialiserer data-URL-ene til filer i media/.
+ * Image tools for the editor: compression to webp in the browser before
+ * the image even enters the draft. Publishing materializes the data URLs
+ * into files in media/.
  */
 
 const MAX_DIMENSION = 1600;
 const TARGET_QUALITY = 0.82;
 const FALLBACK_QUALITY = 0.6;
-/** Over dette varsles brukeren (git og statiske hoster liker små filer). */
+/** Above this the user is warned (git and static hosts like small files). */
 export const WARN_BYTES = 400_000;
-/* Mediegrensene, satt samlet (0.7.7): bilder komprimeres til webp (maks
-   1600px, varsel over WARN_BYTES), lyd publiseres uendret (varsel over
-   WARN_BYTES), video varsles over VIDEO_WARN_BYTES og avvises hardt over
-   VIDEO_MAX_BYTES - godt under vertens filgrense (Cloudflare Pages 25 MiB),
-   og med margin for at base64-utkastet i localStorage kan sprenge kvoten
-   (da består utkastet kun i minnet til det publiseres, og editoren varsler). */
+/* The media limits, set as one whole: images are compressed to webp (max
+   1600px, warning above WARN_BYTES), audio is published unchanged (warning
+   above WARN_BYTES), video warns above VIDEO_WARN_BYTES and is rejected
+   hard above VIDEO_MAX_BYTES - well below the host's file limit
+   (Cloudflare Pages 25 MiB), and with margin for the base64 draft in
+   localStorage blowing the quota (the draft then lives only in memory
+   until it is published, and the editor warns). */
 export const VIDEO_WARN_BYTES = 4_000_000;
 export const VIDEO_MAX_BYTES = 15_000_000;
 
 /**
- * Komprimerer en bildefil til webp, maks 1600px på lengste side.
- * SVG rasteriseres ikke: vektoren beholdes (etter sanitering), for en logo
- * skal være skarp i alle størrelser. Filnavnet ved publisering får riktig
- * endelse via mediaExtension.
+ * Compresses an image file to webp, max 1600px on the longest side.
+ * SVG is not rasterized: the vector is kept (after sanitizing), because a
+ * logo must be sharp at every size. The file name at publish time gets the
+ * right extension via mediaExtension.
  * @param {File} file
  * @returns {Promise<{dataUrl: string, bytes: number, width: number, height: number}>}
  */
@@ -58,18 +59,19 @@ function isSvgFile(file) {
 }
 
 /**
- * Validerer en SVG og pakker den som en base64 data-URL. Teksten reinterpreteres
- * ALDRI som markup i live-DOM (ingen DOMParser/innerHTML) - den går kun til en
- * data-URL og rendres via <img>/CSS (secure static mode, ingen skript). Den
- * publiserte /media-filen kan likevel åpnes direkte, så en SVG med skript-
- * vektorer AVVISES (ikke strippes: reject er robust, stripping kan omgås).
- * Logo-SVG-er inneholder aldri skript/hendelser, så dette rammer ikke ekte bruk.
+ * Validates an SVG and packs it as a base64 data URL. The text is NEVER
+ * reinterpreted as markup in the live DOM (no DOMParser/innerHTML) - it
+ * only goes into a data URL and renders via <img>/CSS (secure static mode,
+ * no scripts). The published /media file can still be opened directly, so
+ * an SVG with script vectors is REJECTED (not stripped: rejecting is
+ * robust, stripping can be bypassed). Logo SVGs never contain
+ * scripts/event handlers, so this does not hit real use.
  * @returns {{dataUrl: string, bytes: number, width: number, height: number}}
  */
 export function svgToDataUrl(text) {
   const raw = String(text ?? '');
-  // Ankrede regex-barrierer (CodeQL gjenkjenner dem): må se ut som en SVG, og
-  // ingen av skript-vektorene får finnes.
+  // Anchored regex barriers (CodeQL recognizes them): it must look like an
+  // SVG, and none of the script vectors may be present.
   if (!/<svg[\s>]/i.test(raw)) throw new Error('Invalid SVG');
   if (/<\s*script[\s>]/i.test(raw)
     || /<\s*foreignObject[\s>]/i.test(raw)
@@ -78,9 +80,9 @@ export function svgToDataUrl(text) {
     throw new Error('The SVG contains scripts or event handlers and cannot be used');
   }
   const bytes = new Blob([raw]).size;
-  // encodeURIComponent-omveien lar btoa takle ikke-ASCII (æøå i tittel/desc).
+  // The encodeURIComponent detour lets btoa handle non-ASCII (æøå in title/desc).
   const dataUrl = `data:${SVG_MIME};base64,${btoa(unescape(encodeURIComponent(raw)))}`;
-  // Mål leses fra ÅPNINGS-taggen (ikke barneelementer): viewBox foretrukket.
+  // Dimensions are read from the OPENING tag (not child elements): viewBox preferred.
   const svgTag = raw.match(/<svg\b[^>]*>/i)?.[0] ?? '';
   const box = svgTag.match(/viewBox\s*=\s*["']\s*([-\d.]+(?:[\s,]+[-\d.]+){3})\s*["']/i)?.[1]?.split(/[\s,]+/).map(Number);
   const width = box?.length === 4 ? box[2] : Number.parseFloat(svgTag.match(/\bwidth\s*=\s*["']?([\d.]+)/i)?.[1]) || 0;
@@ -89,15 +91,16 @@ export function svgToDataUrl(text) {
 }
 
 /**
- * Strammer en SVGs `viewBox` (og width/height) til motivets faktiske omfang, så
- * død plass rundt en logo fjernes og «bildeboksen» følger innholdet. Bounding-
- * boksen (i SVG-ens brukerkoordinater) måles utenfor denne funksjonen (canvas-
- * piksler i editoren); her gjøres kun den rene tekst-omskrivingen. En liten
- * luft-andel legges til. Ugyldig/tom boks -> teksten returneres uendret.
- * Ren funksjon (node-testet).
+ * Tightens an SVG's `viewBox` (and width/height) to the motif's actual
+ * extent, so dead space around a logo is removed and the image box follows
+ * the content. The bounding box (in the SVG's user coordinates) is
+ * measured outside this function (canvas pixels in the editor); only the
+ * pure text rewrite happens here. A small padding fraction is added.
+ * Invalid/empty box -> the text is returned unchanged. Pure function
+ * (node-tested).
  * @param {string} svgText
  * @param {{x: number, y: number, width: number, height: number}} bbox
- * @param {number} [padFrac] Luft som andel av største side (standard 0.04)
+ * @param {number} [padFrac] Padding as a fraction of the longest side (default 0.04)
  * @returns {string}
  */
 export function tightSvgViewBox(svgText, bbox, padFrac = 0.04) {
@@ -119,7 +122,7 @@ export function tightSvgViewBox(svgText, bbox, padFrac = 0.04) {
   return raw.replace(tag, newTag);
 }
 
-/** viewBox-tallene [minX, minY, w, h] fra en SVG-tekst, ellers null. */
+/** The viewBox numbers [minX, minY, w, h] from an SVG text, otherwise null. */
 export function svgViewBox(svgText) {
   const tag = String(svgText ?? '').match(/<svg\b[^>]*>/i)?.[0] ?? '';
   const vb = tag.match(/viewBox\s*=\s*["']\s*([-\d.]+(?:[\s,]+[-\d.]+){3})\s*["']/i)?.[1]?.split(/[\s,]+/).map(Number);
@@ -129,23 +132,23 @@ export function svgViewBox(svgText) {
   return w > 0 && h > 0 ? [0, 0, w, h] : null;
 }
 
-/** Media-filendelse fra en data-URL: SVG beholder vektoren, resten er webp. */
+/** Media file extension from a data URL: SVG keeps the vector, the rest is webp. */
 export function mediaExtension(dataUrl) {
   const url = dataUrl || '';
   if (/^data:image\/svg\+xml[;,]/.test(url)) return 'svg';
-  // Lydfiler publiseres uendret (ingen canvas-vei å komprimere gjennom),
-  // så filendelsen avledes av MIME-typen.
+  // Audio files are published unchanged (no canvas path to compress
+  // through), so the extension is derived from the MIME type.
   const audio = url.match(/^data:audio\/([a-z0-9.+-]+)[;,]/i)?.[1]?.toLowerCase();
   if (audio) {
     return { mpeg: 'mp3', mp3: 'mp3', mp4: 'm4a', 'x-m4a': 'm4a', aac: 'aac', wav: 'wav', 'x-wav': 'wav', ogg: 'ogg', webm: 'webm', flac: 'flac' }[audio] ?? 'mp3';
   }
-  // Video publiseres også uendret; opplastingen slipper kun mp4/webm inn.
+  // Video is also published unchanged; the upload only lets mp4/webm in.
   const video = url.match(/^data:video\/([a-z0-9.+-]+)[;,]/i)?.[1]?.toLowerCase();
   if (video) return video === 'webm' ? 'webm' : 'mp4';
   return 'webp';
 }
 
-/** Filnavn → trygg slug for media/-stier. */
+/** File name → safe slug for media/ paths. */
 export function slugify(name, fallback = 'image') {
   return name
     .replace(/\.[^.]+$/, '')
@@ -156,7 +159,7 @@ export function slugify(name, fallback = 'image') {
     .slice(0, 40) || fallback;
 }
 
-/** Kort, deterministisk hash av innholdet (samme bilde → samme filnavn). */
+/** Short, deterministic hash of the content (same image → same file name). */
 export function contentHash(text) {
   let hash = 5381;
   for (let i = 0; i < text.length; i++) hash = ((hash << 5) + hash + text.charCodeAt(i)) >>> 0;

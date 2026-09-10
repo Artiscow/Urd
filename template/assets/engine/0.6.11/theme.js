@@ -1,37 +1,40 @@
 /**
- * Mapper theme.tokens fra site.json til CSS-variabler på :root.
- * tokens.color.bg → --urd-color-bg, tokens.font.heading → --urd-font-heading, osv.
+ * Maps theme.tokens from site.json to CSS variables on :root.
+ * tokens.color.bg → --urd-color-bg, tokens.font.heading → --urd-font-heading, etc.
  *
- * Lys/mørk-bryteren (additivt fra v0.6): har temaet et `alt`-felt, finnes
- * siden i to moduser. `theme.scheme` sier hva HOVEDTEMAET er (light/dark,
- * standard light); alt-tokens overstyrer hovedtokens i motsatt modus.
- * Første besøk følger prefers-color-scheme; et aktivt valg med bryteren
- * (i nav-en) huskes i localStorage og vinner ved neste besøk.
+ * The light/dark toggle: if the theme has an `alt` field, the site exists
+ * in two modes. `theme.scheme` says what the MAIN theme is (light/dark,
+ * default light); alt tokens override the main tokens in the opposite mode.
+ * A first visit follows prefers-color-scheme; an active choice made with
+ * the toggle (in the nav) is remembered in localStorage and wins on the
+ * next visit.
  */
 
-/** localStorage-nøkkel for besøkendes aktive valg ('light'/'dark'). */
+/** localStorage key for the visitor's active choice ('light'/'dark'). */
 const MODE_KEY = 'urd-theme-mode';
 
-/** Gjeldende modus i denne økten (null før første applyTheme). */
+/** Current mode in this session (null before the first applyTheme). */
 let activeMode = null;
 
 /**
- * Ren modusoppløsning: et lagret valg vinner, ellers OS-preferansen.
- * @param {string|undefined} scheme theme.scheme ('light'/'dark', standard light)
- * @param {string|null} stored Lagret valg ('light'/'dark') eller null
- * @param {boolean} prefersDark Besøkendes prefers-color-scheme
+ * Pure mode resolution: a stored choice wins, otherwise the OS preference.
+ * @param {string|undefined} scheme theme.scheme ('light'/'dark', default light)
+ * @param {string|null} stored Stored choice ('light'/'dark') or null
+ * @param {boolean} prefersDark The visitor's prefers-color-scheme
  * @returns {'light'|'dark'}
  */
 export function resolveThemeMode(scheme, stored, prefersDark) {
   if (stored === 'light' || stored === 'dark') return stored;
-  // Uten alt-tema finnes bare hovedmodusen; scheme brukes da kun som svar.
+  // Without an alt theme only the main mode exists; scheme is then only
+  // used as the answer.
   return prefersDark ? 'dark' : 'light';
 }
 
 /**
- * Ren token-utvelgelse for en modus: hovedtokens, overstyrt gruppevis av
- * alt-tokens når modusen er motsatt av hovedtemaets scheme. Uten alt-tema
- * returneres hovedtokens uansett modus.
+ * Pure token selection for a mode: the main tokens, overridden group by
+ * group with the alt tokens when the mode is the opposite of the main
+ * theme's scheme. Without an alt theme the main tokens are returned
+ * regardless of mode.
  * @param {{tokens: object, scheme?: string, alt?: {tokens: object}}} theme
  * @param {'light'|'dark'} mode
  * @returns {Record<string, Record<string, string>>}
@@ -48,7 +51,7 @@ export function activeTokens(theme, mode) {
 }
 
 function readStoredMode() {
-  // localStorage kan være avslått (privat modus); da følges OS-preferansen.
+  // localStorage may be disabled (private mode); then the OS preference is followed.
   try { return localStorage.getItem(MODE_KEY); } catch { return null; }
 }
 
@@ -56,19 +59,20 @@ function applyTokens(tokens, root) {
   for (const [group, values] of Object.entries(tokens)) {
     for (const [name, value] of Object.entries(values)) {
       root.style.setProperty(`--urd-${group}-${name}`, value);
-      // Basis-kopi av fargetokenene: seksjonenes rollesett refererer disse
-      // (--urd-base-*) i stedet for de levende --urd-color-*, så en rolle som
-      // bytter bg<->text ikke lager en var()-sykel (se SECTION_THEMES).
+      // Base copy of the color tokens: the sections' role sets reference
+      // these (--urd-base-*) instead of the live --urd-color-*, so a role
+      // that swaps bg<->text does not create a var() cycle (see SECTION_THEMES).
       if (group === 'color') root.style.setProperty(`--urd-base-${name}`, value);
     }
   }
 }
 
-/* Ankret allowlist for en CSS-tokenverdi (CodeQL-vennlig barriere): kun tegn som
-   forekommer i farger/lengder/fontstacker. Char-klassen utelukker ; { } < > : @,
-   og vi avviser eksplisitt url()/kommentar/expression. Ugyldige tokens droppes, så
-   en innlogget publiser ikke kan injisere vilkårlig CSS gjennom temaet (buildThemeCss
-   skriver rå tekst, ikke via style.setProperty som stille avviser). */
+/* Anchored allowlist for a CSS token value (a CodeQL-friendly barrier): only
+   characters that occur in colors/lengths/font stacks. The char class excludes
+   ; { } < > : @, and url()/comments/expression are rejected explicitly.
+   Invalid tokens are dropped, so a logged-in publisher cannot inject arbitrary
+   CSS through the theme (buildThemeCss writes raw text, not via
+   style.setProperty which rejects silently). */
 const SAFE_CSS_VALUE = /^[a-zA-Z0-9#%.,()'"\s+\-*/]+$/;
 export function safeCssValue(value) {
   return typeof value === 'string'
@@ -77,12 +81,13 @@ export function safeCssValue(value) {
 }
 
 /**
- * Bygger en statisk CSS-streng som setter temaets fargetokens som
- * light-dark(lys, mørk) bak @supports, med enkeltverdi-fallback (hovedtemaet) for
- * eldre nettlesere. Materialiseres til content/theme.css ved publisering og lastes
- * render-blokkerende, så første paint har sidens faktiske farger uten FOUC.
- * color-scheme følger OS; et manuelt valg overstyrer via [data-urd-theme] (light-dark()
- * velger side etter beregnet color-scheme). Ren funksjon, gjenbruker activeTokens.
+ * Builds a static CSS string that sets the theme's color tokens as
+ * light-dark(light, dark) behind @supports, with a single-value fallback
+ * (the main theme) for older browsers. Materialized into content/theme.css
+ * at publish time and loaded render-blocking, so the first paint has the
+ * site's actual colors without FOUC. color-scheme follows the OS; a manual
+ * choice overrides via [data-urd-theme] (light-dark() picks its side from
+ * the computed color-scheme). Pure function, reuses activeTokens.
  * @param {{tokens: object, scheme?: string, alt?: {tokens: object}}} theme
  * @returns {string}
  */
@@ -92,9 +97,9 @@ export function buildThemeCss(theme) {
   const dark = activeTokens(theme, 'dark');
   const mainScheme = theme.scheme === 'dark' ? 'dark' : 'light';
 
-  const fallback = [];     // hovedtemaet som enkeltverdier (alle tokens)
-  const dualColor = [];    // farger ulike lys/mørk -> light-dark()
-  const altNonColor = [];  // ikke-farge ulik per modus (sjelden)
+  const fallback = [];     // the main theme as single values (all tokens)
+  const dualColor = [];    // colors that differ light/dark -> light-dark()
+  const altNonColor = [];  // non-color differing per mode (rare)
 
   const groups = new Set([...Object.keys(main), ...Object.keys(light), ...Object.keys(dark)]);
   for (const group of groups) {
@@ -112,7 +117,7 @@ export function buildThemeCss(theme) {
         fallback.push(`  --urd-${group}-${name}: ${mv};`);
         if (isColor) fallback.push(`  --urd-base-${name}: ${mv};`);
       }
-      if (lv === dv) continue; // like i begge moduser: enkeltverdien holder
+      if (lv === dv) continue; // equal in both modes: the single value suffices
       if (isColor && safeCssValue(lv) && safeCssValue(dv)) {
         dualColor.push({ name, lv, dv });
       } else if (!isColor && safeCssValue(lv) && safeCssValue(dv)) {
@@ -121,9 +126,10 @@ export function buildThemeCss(theme) {
     }
   }
 
-  // Uten en mørk variant (alt) er siden ett tema: lås color-scheme til det, ingen
-  // light-dark() og ingen bryter. Med variant følger color-scheme OS og light-dark()
-  // bærer begge sett; et manuelt valg overstyrer via [data-urd-theme].
+  // Without a dark variant (alt) the site is one theme: lock color-scheme
+  // to it, no light-dark() and no toggle. With a variant, color-scheme
+  // follows the OS and light-dark() carries both sets; a manual choice
+  // overrides via [data-urd-theme].
   const hasDual = dualColor.length > 0 || altNonColor.length > 0;
   let css = `:root {\n  color-scheme: ${hasDual ? 'light dark' : mainScheme};\n${fallback.join('\n')}\n}\n`;
   if (!hasDual) return css;
@@ -136,11 +142,11 @@ export function buildThemeCss(theme) {
   }
   css += '@supports (color: light-dark(#000, #fff)) {\n';
   if (ld.length) css += `  :root {\n${ld.join('\n')}\n  }\n`;
-  // Manuelt valg: color-scheme bestemmer hvilken side light-dark() velger.
+  // Manual choice: color-scheme decides which side light-dark() picks.
   css += '  :root[data-urd-theme="light"] { color-scheme: light; }\n';
   css += '  :root[data-urd-theme="dark"] { color-scheme: dark; }\n';
   if (altNonColor.length) {
-    // Ikke-farge kan ikke bruke light-dark(): styr per modus via media + attributt.
+    // Non-color cannot use light-dark(): steer per mode via media + attribute.
     const rows = (pick) => altNonColor.map((t) => `    --urd-${t.group}-${t.name}: ${pick(t)};`).join('\n');
     css += `  @media (prefers-color-scheme: dark) {\n    :root {\n${altNonColor.map((t) => `      --urd-${t.group}-${t.name}: ${t.dv};`).join('\n')}\n    }\n  }\n`;
     css += `  :root[data-urd-theme="light"] {\n${rows((t) => t.lv)}\n  }\n`;
@@ -150,14 +156,14 @@ export function buildThemeCss(theme) {
   return css;
 }
 
-/** Støtter nettleseren native light-dark()? (Baseline 2024; ellers JS-fallback.) */
+/** Does the browser support native light-dark()? (Baseline 2024; otherwise the JS fallback.) */
 function supportsLightDark() {
   return typeof window !== 'undefined' && !!window.CSS?.supports?.('color', 'light-dark(#000, #fff)');
 }
 
 /**
- * @param {{tokens: Record<string, Record<string, string>>}} theme `theme`-objektet fra site.json
- * @param {HTMLElement} [root] Element variablene settes på (standard: document.documentElement)
+ * @param {{tokens: Record<string, Record<string, string>>}} theme The `theme` object from site.json
+ * @param {HTMLElement} [root] Element the variables are set on (default: document.documentElement)
  */
 export function applyTheme(theme, root = document.documentElement) {
   const stored = readStoredMode();
@@ -167,9 +173,10 @@ export function applyTheme(theme, root = document.documentElement) {
     window.matchMedia('(prefers-color-scheme: dark)').matches,
   );
   if (supportsLightDark()) {
-    // Moderne: CSS-en bærer light-dark(). Injiser utkastets/sidens tokens som en
-    // <style> (så preview og live-endring virker), og la et lagret valg overstyre
-    // OS via data-urd-theme. Ingen inline --urd-color-* (ville klobbet light-dark()).
+    // Modern path: the CSS carries light-dark(). Inject the draft's/site's
+    // tokens as a <style> (so preview and live changes work), and let a
+    // stored choice override the OS via data-urd-theme. No inline
+    // --urd-color-* (it would clobber light-dark()).
     const doc = root.ownerDocument || document;
     let style = doc.getElementById('urd-theme');
     if (!style) {
@@ -181,27 +188,27 @@ export function applyTheme(theme, root = document.documentElement) {
     if (stored === 'light' || stored === 'dark') root.setAttribute('data-urd-theme', stored);
     else root.removeAttribute('data-urd-theme');
   } else {
-    // Fallback (ingen light-dark()): JS setter tokenene inline for løst modus.
+    // Fallback (no light-dark()): JS sets the tokens inline for the resolved mode.
     applyTokens(activeTokens(theme, activeMode), root);
   }
 }
 
-/** Gjeldende modus ('light'/'dark'); satt av applyTheme ved boot. */
+/** Current mode ('light'/'dark'); set by applyTheme at boot. */
 export function themeMode() {
   return activeMode ?? 'light';
 }
 
 /**
- * Bytter modus (nav-bryteren), husker valget og re-applikerer tokens.
+ * Switches mode (the nav toggle), remembers the choice and reapplies tokens.
  * @param {{tokens: object, scheme?: string, alt?: object}} theme
- * @returns {'light'|'dark'} Ny modus
+ * @returns {'light'|'dark'} The new mode
  */
 export function toggleThemeMode(theme) {
   activeMode = themeMode() === 'dark' ? 'light' : 'dark';
-  try { localStorage.setItem(MODE_KEY, activeMode); } catch { /* privat modus */ }
+  try { localStorage.setItem(MODE_KEY, activeMode); } catch { /* private mode */ }
   const root = document.documentElement;
   if (supportsLightDark()) {
-    // color-scheme (via data-urd-theme) bestemmer hvilken side light-dark() velger.
+    // color-scheme (via data-urd-theme) decides which side light-dark() picks.
     root.setAttribute('data-urd-theme', activeMode);
   } else {
     applyTokens(activeTokens(theme, activeMode), root);
@@ -210,9 +217,9 @@ export function toggleThemeMode(theme) {
 }
 
 /**
- * Løser en fargeverdi fra innhold til CSS. Enkle navn ('accent', 'bg')
- * tolkes som theme-tokens og blir var(--urd-color-<navn>); alt annet
- * ('#7c5cff', 'rgb(...)') brukes rått.
+ * Resolves a color value from content to CSS. Simple names ('accent', 'bg')
+ * are interpreted as theme tokens and become var(--urd-color-<name>);
+ * anything else ('#7c5cff', 'rgb(...)') is used raw.
  * @param {string} value
  * @returns {string}
  */
@@ -221,11 +228,11 @@ export function resolveColor(value) {
 }
 
 /**
- * Ferdige seksjonstemaer (rollesett, additivt fra v0.6): en rolle overstyrer
- * seksjonens fargetokens. Verdiene refererer BASIS-kopiene (--urd-base-*, satt
- * av applyTokens), ikke de levende --urd-color-*, så en rolle som bytter
- * bg<->text (invers) ikke lager en var()-sykel, og lys/mørk følger med av seg
- * selv. Blokkene arver overstyringene via resolveColor -> var(--urd-color-*).
+ * Ready-made section themes (role sets): a role overrides the section's
+ * color tokens. The values reference the BASE copies (--urd-base-*, set by
+ * applyTokens), not the live --urd-color-*, so a role that swaps bg<->text
+ * (inverse) does not create a var() cycle, and light/dark follows along by
+ * itself. The blocks inherit the overrides via resolveColor -> var(--urd-color-*).
  */
 export const SECTION_THEMES = {
   surface: {
@@ -241,38 +248,37 @@ export const SECTION_THEMES = {
   },
   inverse: {
     '--urd-color-bg': 'var(--urd-base-text)',
-    // 78/22 (ikke 88/12): kortene (surface) må ha nok separasjon fra den
-    // inverterte bakgrunnen, ellers blir de grumsete (testfunn).
+    // 78/22 (not 88/12): the cards (surface) need enough separation from
+    // the inverted background, or they turn muddy.
     '--urd-color-surface': 'color-mix(in srgb, var(--urd-base-text) 78%, var(--urd-base-bg))',
     '--urd-color-text': 'var(--urd-base-bg)',
   },
-  // De fire under kom i 0.6.6.4.6 (eiervalg 9. august 2026, alle fire skissene).
-  // Dus: aksenten som svakt pastell-skjær over hele seksjonen.
+  // Soft: the accent as a faint pastel tint across the whole section.
   soft: {
     '--urd-color-bg': 'color-mix(in srgb, var(--urd-base-accent) 12%, var(--urd-base-bg))',
     '--urd-color-surface': 'color-mix(in srgb, var(--urd-base-accent) 8%, var(--urd-base-surface))',
   },
-  // Dempet: lavmælt gråtonet sone med mykere tekst for sekundært innhold.
+  // Muted: a low-key gray-toned zone with softer text for secondary content.
   muted: {
     '--urd-color-bg': 'color-mix(in srgb, var(--urd-base-text) 5%, var(--urd-base-bg))',
     '--urd-color-surface': 'color-mix(in srgb, var(--urd-base-text) 10%, var(--urd-base-bg))',
     '--urd-color-text': 'color-mix(in srgb, var(--urd-base-text) 82%, var(--urd-base-bg))',
   },
-  // Dyp: invers med aksentskjær - kontrastsonen tar merkevarefargen i seg.
+  // Deep: inverse with an accent tint - the contrast zone takes on the brand color.
   deep: {
     '--urd-color-bg': 'color-mix(in srgb, var(--urd-base-accent) 30%, var(--urd-base-text))',
     '--urd-color-surface': 'color-mix(in srgb, var(--urd-base-accent) 40%, var(--urd-base-text))',
     '--urd-color-text': 'var(--urd-base-bg)',
   },
-  // Uthevede kort: seksjonen står som Standard, kun flaten (kortene) tones.
+  // Highlighted cards: the section stays Standard, only the surface (the cards) is tinted.
   highlighted: {
     '--urd-color-surface': 'color-mix(in srgb, var(--urd-base-accent) 14%, var(--urd-base-surface))',
   },
 };
 
-/** Etiketter til seksjonstema-velgeren (Standard er «ingen rolle»). */
-/** Visningsnavn-NØKLER (ta-oppslag hos konsumenten; modulen ligger i
- *  besøkende-lukningen og kan aldri kalle ta() på modulnivå). */
+/** Display-name KEYS for the section-theme picker (Standard is "no role"):
+ *  the ta lookup happens at the consumer; this module lives in the visitor
+ *  closure and can never call ta() at module level. */
 export const SECTION_THEME_LABELS = {
   surface: 'sectionTheme.surface',
   accent: 'sectionTheme.accent',
@@ -283,12 +289,12 @@ export const SECTION_THEME_LABELS = {
   highlighted: 'sectionTheme.highlighted',
 };
 
-/** Alle token-nøkler noen rolle kan sette - brukes til å nullstille før ny rolle. */
+/** Every token key any role can set - used to reset before a new role. */
 const SECTION_THEME_KEYS = [...new Set(Object.values(SECTION_THEMES).flatMap(Object.keys))];
 
 /**
- * Token-overstyringene for en rolle (ren funksjon, node-testet). Standard,
- * fravær og ukjent rolle gir ingen overstyring ({}).
+ * The token overrides for a role (pure function, node-tested). Standard,
+ * absence and an unknown role yield no overrides ({}).
  * @param {string|undefined} role
  * @returns {Record<string, string>}
  */
@@ -297,9 +303,9 @@ export function sectionThemeVars(role) {
 }
 
 /**
- * Setter (eller nullstiller) en seksjons rollesett på et element. Nullstiller
- * ALLE mulige rolle-nøkler først, så et bytte av rolle (eller til Standard) ved
- * inkrementell rerender aldri etterlater forrige rolles overstyringer.
+ * Applies (or resets) a section's role set on an element. Resets ALL
+ * possible role keys first, so switching role (or back to Standard) on an
+ * incremental rerender never leaves the previous role's overrides behind.
  * @param {HTMLElement} host
  * @param {string|undefined} role
  */
@@ -312,8 +318,9 @@ export function applySectionTheme(host, role) {
 }
 
 /**
- * WCAG relativ luminans (0..1) av en #rrggbb/#rgb-farge, eller null for en
- * verdi som ikke er en hex (token-navn/color-mix kan ikke måles statisk).
+ * WCAG relative luminance (0..1) of a #rrggbb/#rgb color, or null for a
+ * value that is not a hex (token names/color-mix cannot be measured
+ * statically).
  * @param {string} hex
  * @returns {number|null}
  */
@@ -330,8 +337,9 @@ export function relativeLuminance(hex) {
 }
 
 /**
- * WCAG-kontrastforhold (1..21) mellom to hex-farger, eller null når en av dem
- * ikke er en målbar hex (token-navn/color-mix). Ren funksjon, node-testet.
+ * WCAG contrast ratio (1..21) between two hex colors, or null when one of
+ * them is not a measurable hex (token names/color-mix). Pure function,
+ * node-tested.
  * @param {string} a @param {string} b
  * @returns {number|null}
  */

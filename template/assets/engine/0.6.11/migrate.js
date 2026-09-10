@@ -1,37 +1,39 @@
 /**
- * Stegvis versjonsløfting - Urds kjerne-invariant (se docs/adr/0005).
+ * Stepwise version lifting - Urd's core invariant (see docs/adr/0005).
  *
- * All data (blokker, bakgrunnslag, animasjoner, seksjoner) bærer `version`,
- * og hver typedefinisjon oppgir `version` + `migrations` der migrations[n]
- * løfter nøyaktig v(n) → v(n+1) som en ren funksjon (props inn, props ut).
+ * All data (blocks, background layers, animations, sections) carries
+ * `version`, and every type definition states `version` + `migrations`
+ * where migrations[n] lifts exactly v(n) → v(n+1) as a pure function
+ * (props in, props out).
  *
- * Løfting skjer i minnet ved lasting - filene på disk skrives først ved
- * neste publisering. Ved ukjent type eller manglende migrering droppes
- * ALDRI data: innslaget markeres som plassholder og originalen beholdes.
+ * Lifting happens in memory at load time - the files on disk are written
+ * only at the next publish. On an unknown type or a missing migration,
+ * data is NEVER dropped: the entry is marked as a placeholder and the
+ * original is kept.
  */
 
 /**
- * Løfter ett datainnslag til definisjonens nåværende versjon.
+ * Lifts one data entry to the definition's current version.
  *
  * @param {{type?: string, version: number, props: object}} data
- *   Innslag fra innholdsfil (muteres ikke).
+ *   Entry from a content file (not mutated).
  * @param {{version: number, migrations?: Record<number, (props: object) => object>}|undefined} def
- *   Typedefinisjon fra registeret, eller undefined om typen er ukjent.
+ *   Type definition from the registry, or undefined if the type is unknown.
  * @returns {{ok: boolean, version: number, props: object, placeholder?: string}}
- *   ok=true med løftede props, eller ok=false med `placeholder`-årsak og
- *   originale props urørt ('unknown-type' | 'missing-migration' | 'newer-than-engine').
+ *   ok=true with lifted props, or ok=false with a `placeholder` reason and
+ *   the original props untouched ('unknown-type' | 'missing-migration' | 'newer-than-engine').
  */
 export function lift(data, def) {
   if (!def) {
     return { ok: false, version: data.version, props: data.props, placeholder: 'unknown-type' };
   }
-  // Manglende/ugyldig version (håndredigert eller amputert data) behandles
-  // som v1, aldri som gjeldende: uten dette hopper while-løkken over alle
-  // migreringene (undefined < n er falsk) og gammelt format leses som nytt.
+  // A missing/invalid version (hand-edited or truncated data) is treated
+  // as v1, never as current: without this the while loop skips all the
+  // migrations (undefined < n is false) and the old format is read as new.
   const from = Number.isInteger(data.version) ? data.version : 1;
   if (from > def.version) {
-    // Innholdet er skrevet av en nyere motor - rendres som plassholder,
-    // aldri feiltolket eller nedgradert.
+    // The content was written by a newer engine - rendered as a
+    // placeholder, never misread or downgraded.
     return { ok: false, version: from, props: data.props, placeholder: 'newer-than-engine' };
   }
 
@@ -48,34 +50,34 @@ export function lift(data, def) {
   return { ok: true, version, props };
 }
 
-/** Gjeldende versjon av sidefil-formatet (content/pages/*.json). */
+/** Current version of the page file format (content/pages/*.json). */
 export const PAGE_SCHEMA_VERSION = 4;
 
 /**
- * Radhøyden i mobil-radnettet (ADR-0019), i px. En modellkonstant på linje
- * med brekkpunktet: aldri koblet til grid.size, som er et snappeverktøy
- * for desktop.
+ * The row height of the mobile row grid (ADR-0019), in px. A model
+ * constant on par with the breakpoint: never tied to grid.size, which is a
+ * snapping tool for desktop.
  */
 export const MOBILE_ROW = 8;
 
-/** Loddrett luft mellom flytblokker i mobil-radnettet, i px. */
+/** Vertical spacing between flow blocks in the mobile row grid, in px. */
 export const MOBILE_GAP = 16;
 
-/** Gjeldende versjon av site.json-formatet. */
+/** Current version of the site.json format. */
 export const SITE_SCHEMA_VERSION = 3;
 
 /**
- * Migreringer på filnivå. Hver funksjon løfter nøyaktig én versjon og
- * får hele sidefilen (klonet) + site.json som kontekst.
+ * File-level migrations. Each function lifts exactly one version and
+ * receives the whole page file (cloned) + site.json as context.
  */
 
-/** Flytens topp-padding i det gamle mobilformatet: materialiseringen målte
- *  y fra flatetoppen, altså inkludert paddingen, så den trekkes fra før
- *  radindeksen regnes ut. */
+/** The flow's top padding in the old mobile format: materialization
+ *  measured y from the top of the surface, that is including the padding,
+ *  so it is subtracted before the row index is computed. */
 const V1_FLOW_PAD = 24;
 
-/** attention.reason-tokens var norske i v1; datakontrakter bruker engelske
- *  identifikatorer. */
+/** attention.reason tokens were Norwegian in v1; data contracts use
+ *  English identifiers. */
 const V1_REASONS = {
   'oppsett-byttet': 'layout-changed',
   'blokk-endret': 'block-edited',
@@ -87,12 +89,13 @@ const V1_REASONS = {
 };
 
 /**
- * Løfter en blokks frames.mobile fra v1-formen (full frame {x, y, w, h})
- * til radnett-plasseringen (ADR-0019). En plassering i ny form (uten y/h)
- * returneres urørt, og en byte-lik kopi av desktop-framen gir null: det
- * var materialiseringens fallback for blokker utenfor flyten, aldri en
- * håndsatt plassering. Brukes av sidemigreringen OG av mal-innsettingen
- * (templates-model.js), som setter inn lagrede nyttelaster utenom sideløftet.
+ * Lifts a block's frames.mobile from the v1 shape (a full frame
+ * {x, y, w, h}) to the row-grid placement (ADR-0019). A placement already
+ * in the new shape (without y/h) is returned untouched, and a byte-equal
+ * copy of the desktop frame yields null: that was materialization's
+ * fallback for blocks outside the flow, never a hand-placed position.
+ * Used by the page migration AND by template insertion
+ * (templates-model.js), which inserts stored payloads outside the page lift.
  */
 export function liftMobileFrame(m, desktop) {
   if (!m || !('y' in m || 'h' in m)) return m ?? null;
@@ -202,11 +205,11 @@ export function liftContractTokens(target) {
 }
 
 const pageMigrations = {
-  // 1 -> 2 (synket mobilmodell, ADR-0019): frames.mobile bytter form fra
-  // full frame {x,y,w,h} til partiell radnett-plassering {x,w,row,rows},
-  // seksjonsmodusen 'manual' pensjoneres, og dekor-blokker får det nye
-  // hideMobile-feltet som overtar mobilskjulingen. Pre-v1 er utseende-
-  // endringen (radkvantisering ±8 px) akseptert (ADR-0005).
+  // 1 -> 2 (synced mobile model, ADR-0019): frames.mobile changes shape
+  // from a full frame {x,y,w,h} to a partial row-grid placement
+  // {x,w,row,rows}, the section mode 'manual' is retired, and decor blocks
+  // get the new hideMobile field that takes over mobile hiding. Pre-v1 the
+  // visual change (row quantization ±8 px) is accepted (ADR-0005).
   1: (page) => {
     for (const section of page.sections ?? []) {
       const mobile = section.responsive?.mobile;
@@ -238,21 +241,22 @@ const pageMigrations = {
 };
 
 const siteMigrations = {
-  // 1 -> 2 (breddegrepet, ADR-0018): innholdet bindes av en designbredde i
-  // stedet for å følge vindusbredden. Standarden skrives inn eksplisitt i
-  // stedet for å utledes ved lesing, så motoren og editoren aldri kan komme
-  // til hver sin verdi. Pre-v1 er utseende-endringen akseptert (ADR-0005).
+  // 1 -> 2 (bound content width, ADR-0018): the content is bound by a
+  // design width instead of following the window width. The default is
+  // written in explicitly instead of being derived at read time, so the
+  // engine and the editor can never arrive at different values. Pre-v1 the
+  // visual change is accepted (ADR-0005).
   1: (site) => ({ ...site, layout: site.layout ?? { contentWidth: 1440, gutter: 6 } }),
-  // 2 -> 3: sidemargen byttet fra piksler til PROSENT AV VINDUSBREDDEN.
-  // Den gamle verdien kan ikke regnes om meningsfullt (24 px er ikke en fast
-  // andel av noe), så alle settes til standarden. Pre-v1 er den lille
-  // utseende-endringen akseptert (ADR-0005).
+  // 2 -> 3: the page gutter changed from pixels to a PERCENTAGE OF THE
+  // WINDOW WIDTH. The old value cannot be converted meaningfully (24 px is
+  // not a fixed share of anything), so all are set to the default. Pre-v1
+  // the small visual change is accepted (ADR-0005).
   2: (site) => ({ ...site, layout: { ...(site.layout ?? { contentWidth: 1440 }), gutter: 6 } }),
 };
 
 /**
- * Løfter site.json til gjeldende schemaVersion. Samme regler som
- * liftPageFile: stegvis, aldri destruktivt, original muteres aldri.
+ * Lifts site.json to the current schemaVersion. Same rules as
+ * liftPageFile: stepwise, never destructive, the original is never mutated.
  */
 export function liftSiteFile(site) {
   let lifted = structuredClone(site);
@@ -268,13 +272,13 @@ export function liftSiteFile(site) {
 }
 
 /**
- * Løfter en sidefil til gjeldende schemaVersion. Stegvis og aldri
- * destruktivt: mangler et migreringssteg (eller er filen NYERE enn
- * motoren), returneres den urørt i stedet for å feiltolkes.
+ * Lifts a page file to the current schemaVersion. Stepwise and never
+ * destructive: if a migration step is missing (or the file is NEWER than
+ * the engine), it is returned untouched instead of being misread.
  *
- * @param {object} page Sidefil, allerede parset
- * @param {object} site site.json (kontekst for omregninger)
- * @returns {object} Løftet kopi (originalen muteres aldri)
+ * @param {object} page Page file, already parsed
+ * @param {object} site site.json (context for conversions)
+ * @returns {object} Lifted copy (the original is never mutated)
  */
 export function liftPageFile(page, site) {
   let lifted = structuredClone(page);

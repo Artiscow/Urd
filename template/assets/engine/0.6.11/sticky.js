@@ -1,37 +1,38 @@
 /**
- * Sticky blokker («fest ved scrolling»): DOM-delen. Tilstanden regnes av
- * de rene funksjonene i sticky-model.js; her måles dokumentet og modusen
- * påføres. Festingen er JS-basert position:fixed, ikke CSS sticky: sticky
- * kan aldri stikke ut av sin egen container, og until-modellen (hold festet
- * forbi egen seksjon) krever fritt tak.
+ * Sticky blocks ("pin on scroll"): the DOM part. The state is computed by
+ * the pure functions in sticky-model.js; here the document is measured and
+ * the mode applied. Pinning is JS-based position:fixed, not CSS sticky:
+ * sticky can never stick out of its own container, and the until model
+ * (stay pinned past the block's own section) needs a free hand.
  *
- * To modi: 'scroll' (standard) fester blokken ved vindustoppen når den nås
- * og slipper ved grensen, mens 'screen' dokker den i et fast punkt i vinduet
- * for hele siden. Blokker med samme sticky-group festes som én enhet og
- * beholder plasseringen seg imellom, i stedet for å legge seg oppå hverandre.
+ * Two modes: 'scroll' (the default) pins the block at the window top when
+ * it is reached and releases at the limit, while 'screen' docks it at a
+ * fixed point in the window for the whole page. Blocks with the same
+ * sticky-group are pinned as one unit and keep their relative placement,
+ * instead of piling on top of each other.
  *
- * Festing er aktiv også i editorens preview, så bryteren gjør noe synlig
- * der man slår den på. Konflikten med dra-redigeringen (begge skriver
- * left/top/width på blokken) løses ved at draget suspenderer festingen:
- * preview-edit kaller suspendSticky ved dra-start og resumeSticky ved
- * slipp, så blokken alltid redigeres der den faktisk hører hjemme.
- * Mobilvisningen er dokumentflyt og har aldri festing.
+ * Pinning is active in the editor preview too, so the toggle does
+ * something visible where it is switched on. The conflict with drag
+ * editing (both write left/top/width on the block) is resolved by the drag
+ * suspending the pinning: preview-edit calls suspendSticky on drag start
+ * and resumeSticky on release, so the block is always edited where it
+ * actually belongs. The mobile view is document flow and never has pinning.
  *
- * Festing er posisjonering uten transitions, så prefers-reduced-motion
- * krever ingen særbehandling.
+ * Pinning is positioning without transitions, so prefers-reduced-motion
+ * needs no special handling.
  */
 import { stickyState, groupBox, dockPosition } from './sticky-model.js';
 
-/** Under menyen og editor-chromet, over vanlig innhold. */
+/** Below the menu and the editor chrome, above regular content. */
 const FIXED_Z = '900';
 
 let wired = false;
 let ticking = false;
-// Teller, ikke flagg: to samtidige dra (to fingre) skal ikke la det første
-// slippet gjenoppta festingen mens det andre fortsatt pågår.
+// A counter, not a flag: with two simultaneous drags (two fingers) the
+// first release must not resume pinning while the second is still going.
 let suspendDepth = 0;
 
-/** Kobles én gang fra boot(); scroll/resize er rAF-throttlet. */
+/** Wired once from boot(); scroll/resize is rAF-throttled. */
 export function initSticky() {
   if (wired) return;
   wired = true;
@@ -45,26 +46,27 @@ export function initSticky() {
   };
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onScroll);
-  // Krympende meny (nav.scroll: 'shrink') endrer høyde med en overgang. Stopper
-  // scrollingen midt i den, ville avstanden under blitt stående på gammel
-  // menyhøyde til neste scroll; transitionend gir en siste måling.
+  // A shrinking menu (nav.scroll: 'shrink') changes height with a transition.
+  // If scrolling stops mid-transition, the offset below would stay at the
+  // stale menu height until the next scroll; transitionend gives a final
+  // measurement.
   document.addEventListener('transitionend', (e) => {
     if (e.target instanceof Element && e.target.id === 'urd-nav') onScroll();
   });
   applySticky();
 }
 
-/** Kalles etter re-render og ved bytte av Ren visning (urd-chrome). */
+/** Called after a re-render and when toggling clean view (urd-chrome). */
 export function refreshSticky() {
   if (wired) applySticky();
 }
 
 /**
- * Redigering som skriver geometri (dra, resize, juster/fordel, piltaster)
- * starter: løs alle festede blokker tilbake til sin ekte plass. Uten dette
- * ville skrivingen lagt left/top oppå en fastfrosset blokk.
- * opts.keep unntar ett element: dokk-draget flytter blokken MENS den er
- * festet, og en løsing ville teleportert den ut av grepet.
+ * Editing that writes geometry (drag, resize, align/distribute, arrow keys)
+ * is starting: release all pinned blocks back to their true place. Without
+ * this the write would put left/top on top of a frozen block.
+ * opts.keep exempts one element: the dock drag moves the block WHILE it is
+ * pinned, and a release would teleport it out of the grip.
  */
 export function suspendSticky(opts = {}) {
   if (suspendDepth++ === 0) {
@@ -74,13 +76,13 @@ export function suspendSticky(opts = {}) {
   }
 }
 
-/** Redigeringen ferdig: mål på nytt fra blokkenes nye utgangsverdier. */
+/** Editing done: measure again from the blocks' new base values. */
 export function resumeSticky() {
   suspendDepth = Math.max(0, suspendDepth - 1);
   if (suspendDepth === 0 && wired) applySticky();
 }
 
-/** Blokkens egne inline-verdier, slik render.js satte dem fra framen. */
+/** The block's own inline values, as render.js set them from the frame. */
 function readGeom(el) {
   return {
     y: parseFloat(el.style.top) || 0,
@@ -88,8 +90,8 @@ function readGeom(el) {
     left: el.style.left,
     width: el.style.width,
     z: el.style.zIndex,
-    // Mobil-radnettet plasserer med margin-left (%); en prosentmarg på et
-    // fixed element ville forskjøvet dokkingen, så den nulles ved festing.
+    // The mobile row grid places with margin-left (%); a percentage margin
+    // on a fixed element would shift the docking, so it is zeroed while pinned.
     ml: el.style.marginLeft,
   };
 }
@@ -105,11 +107,12 @@ function restore(el, base) {
 }
 
 /**
- * Slipper blokken tilbake til sine egne verdier og glemmer mellomlagringen.
- * Mellomlagringen finnes KUN mens blokken er festet: da er inline-verdiene
- * overskrevet og de opprinnelige må huskes. Står blokken fritt, leses de
- * ferskt hver gang, så en flytting fra piltaster eller juster/fordel (som
- * ikke rendrer previewen på nytt) aldri måles mot en foreldet posisjon.
+ * Releases the block back to its own values and forgets the stash. The
+ * stash exists ONLY while the block is pinned: then the inline values are
+ * overwritten and the originals must be remembered. When the block stands
+ * free, they are read fresh every time, so a move from arrow keys or
+ * align/distribute (which do not re-render the preview) is never measured
+ * against a stale position.
  */
 function release(el) {
   if (!el._urdStickyBase) return;
@@ -118,27 +121,28 @@ function release(el) {
 }
 
 function applySticky() {
-  // Suspendert (redigering skriver geometri): blokkene er alt løst tilbake
-  // til sin ekte plass, og en måling her ville lest mål midt i skrivingen.
+  // Suspended (editing is writing geometry): the blocks are already released
+  // back to their true place, and measuring here would read values mid-write.
   if (suspendDepth > 0) return;
   const els = document.querySelectorAll('.urd-sticky-able');
   if (!els.length) return;
   const body = document.body;
-  // Mobil er dokumentflyt: scroll-festing gjelder ikke der, men
-  // skjermdokking gjør det (render.js merker kun screen-modus på mobil).
+  // Mobile is document flow: scroll pinning does not apply there, but
+  // screen docking does (render.js only marks screen mode on mobile).
   const mobile = body.classList.contains('urd-mobile');
   const scrollY = window.scrollY;
-  // En klistret meny ligger over den festede blokken (nav har høyere z-index,
-  // og å heve blokken over menyen ville lagt den oppå undermenyene). Derfor
-  // festes blokken UNDER menyen: dens høyde legges til den valgte avstanden.
-  // Kun topplinjen tar plass i toppen; en sidestilt meny er en kolonne. Er
-  // menyen glidd ut (scroll-adferden 'hide'), beholdes avstanden likevel:
-  // en blokk som hoppet opp og ned i takt med menyen ville flimret.
+  // A sticky menu sits above the pinned block (the nav has a higher z-index,
+  // and raising the block above the menu would put it on top of the
+  // submenus). The block is therefore pinned BELOW the menu: its height is
+  // added to the chosen offset. Only the top bar takes space at the top; a
+  // side menu is a column. If the menu has slid away (scroll behavior
+  // 'hide'), the offset is kept anyway: a block hopping up and down in step
+  // with the menu would flicker.
   const stickyNav = document.querySelector('header#urd-nav.urd-nav-sticky:not(.urd-nav-side-host)');
   const navH = stickyNav ? stickyNav.offsetHeight : 0;
 
-  // Blokker med samme sticky-group festes som ÉN enhet; resten er egne
-  // grupper på ett medlem, så hele løkka under har samme form.
+  // Blocks with the same sticky-group are pinned as ONE unit; the rest are
+  // groups of one member each, so the whole loop below has the same shape.
   const groups = new Map();
   for (const [i, el] of els.entries()) {
     const key = el.dataset.stickyGroup || `solo-${i}`;
@@ -149,8 +153,8 @@ function applySticky() {
   for (const members of groups.values()) {
     const lead = members[0];
     const section = lead.closest('.urd-section');
-    // En transformert seksjonsforfar ville gjort fixed relativ til seg
-    // selv (containing block); da er festing meningsløs - stå stille.
+    // A transformed section ancestor would make fixed relative to itself
+    // (containing block); pinning is then meaningless - stand still.
     const blocked = !section || getComputedStyle(section).transform !== 'none'
       || (mobile && lead.dataset.stickyMode !== 'screen');
     if (blocked) {
@@ -158,8 +162,8 @@ function applySticky() {
       continue;
     }
 
-    // Mobil skjermdokking: hver blokk dokkes for seg mot sin egen målte
-    // størrelse (radnettet har ingen frames å regne gruppegeometri fra).
+    // Mobile screen docking: each block docks on its own against its own
+    // measured size (the row grid has no frames to compute group geometry from).
     if (mobile) {
       const view = { w: document.documentElement.clientWidth, h: window.innerHeight };
       for (const el of members) {
@@ -179,20 +183,23 @@ function applySticky() {
     }
 
     const sectionRect = section.getBoundingClientRect();
-    // To rammer, med vilje (ADR-0018): blokkens left/width er prosent av
-    // INNHOLDSFLATEN, mens slippgrensen er seksjonens topp og bunn. Måler
-    // vi begge mot seksjonen, får festede blokker feil bredde og glir mot
-    // venstre kant i det de festes.
+    // Two rects, on purpose (ADR-0018): the block's left/width are
+    // percentages of the CONTENT SURFACE, while the release limit is the
+    // section's top and bottom. Measuring both against the section gives
+    // pinned blocks the wrong width and makes them drift toward the left
+    // edge the moment they pin.
     const canvasRect = (section.querySelector(':scope > .urd-canvas') ?? section).getBoundingClientRect();
-    // Kanvasen kan være skjøvet ned i seksjonen (nav-klaringen i første
-    // seksjon under en meny utenfor flyten): blokkens style.top er
-    // kanvas-relativ, mens feste- og slippgrensene regnes mot seksjonen.
+    // The canvas can be pushed down inside the section (the nav clearance
+    // in the first section under an out-of-flow menu): the block's
+    // style.top is canvas-relative, while the pin and release limits are
+    // computed against the section.
     const canvasTop = canvasRect.top - sectionRect.top;
-    // Geometrien leses fra mellomlagringen mens blokken er festet (inline-
-    // verdiene er da overskrevet), ellers ferskt fra elementet.
+    // Geometry is read from the stash while the block is pinned (the inline
+    // values are then overwritten), otherwise fresh from the element.
     const geoms = new Map(members.map((el) => [el, el._urdStickyBase ?? readGeom(el)]));
-    // Medlemmenes mål i px, felles for begge modusene. left/width regnes fra
-    // kanvasrekten hver gang (tåler resize); rotasjon og høyde røres aldri.
+    // The members' measurements in px, shared by both modes. left/width are
+    // computed from the canvas rect every time (survives resize); rotation
+    // and height are never touched.
     const boxes = members.map((el) => ({
       el,
       x: canvasRect.left - sectionRect.left + canvasRect.width * ((parseFloat(geoms.get(el).left) || 0) / 100),
@@ -203,20 +210,21 @@ function applySticky() {
     const box = groupBox(boxes);
 
     const place = (el, left, top) => {
-      // Mellomlagres først når blokken faktisk festes: da overskrives
-      // inline-verdiene, og de opprinnelige må huskes til den slippes.
+      // Stashed only when the block actually pins: then the inline values
+      // are overwritten, and the originals must be remembered until release.
       el._urdStickyBase ??= geoms.get(el);
       el.classList.add('urd-sticky-fixed');
       el.style.position = 'fixed';
       el.style.top = `${top}px`;
       el.style.left = `${left}px`;
-      // Gruppens innbyrdes lagrekkefølge skal overleve festingen, så blokkens
-      // egen z legges oppå gulvet i stedet for å erstattes av det.
+      // The group's internal stacking order must survive pinning, so the
+      // block's own z is added on top of the floor instead of being replaced
+      // by it.
       el.style.zIndex = String(Number(FIXED_Z) + (Number(geoms.get(el).z) || 0));
     };
 
-    // Fest til skjermen: gruppen dokkes i et fast punkt i vinduet og blir
-    // stående der uansett scrolling. Slippgrensen gjelder ikke her.
+    // Pin to screen: the group docks at a fixed point in the window and
+    // stays there regardless of scrolling. The release limit does not apply here.
     if (lead.dataset.stickyMode === 'screen') {
       const view = { w: document.documentElement.clientWidth, h: window.innerHeight };
       const pos = dockPosition(lead.dataset.stickyDock, Number(lead.dataset.stickyOffset) || 0, box, view);
@@ -232,12 +240,12 @@ function applySticky() {
     const untilId = lead.dataset.stickyUntil;
     if (untilId) {
       const untilEl = document.querySelector(`.urd-section[data-section-id="${CSS.escape(untilId)}"]`);
-      // Slettet/ukjent until-seksjon degraderer til egen seksjons grense.
+      // A deleted/unknown until section degrades to the block's own section limit.
       if (untilEl) limitBottom = untilEl.getBoundingClientRect().bottom + scrollY;
     }
 
-    // Gruppen måles som én blokk: den fester seg når toppen av boksen når
-    // avstanden, og medlemmene beholder plassen sin inne i boksen.
+    // The group is measured as one block: it pins when the top of the box
+    // reaches the offset, and the members keep their place inside the box.
     const state = stickyState(scrollY, {
       sectionTop,
       blockY: box.y + canvasTop,
@@ -251,9 +259,9 @@ function applySticky() {
         b.el.style.width = `${b.w}px`;
         place(b.el, sectionRect.left + b.x, state.top + (b.y - box.y));
       } else if (state.mode === 'parked') {
-        // Parkert overskriver top, så mellomlagringen må BESTÅ: uten den ville
-        // neste måling lest parkeringshøyden som blokkens naturlige plass.
-        // parkY er seksjonsrelativ; style.top er kanvas-relativ.
+        // Parked overwrites top, so the stash must REMAIN: without it the
+        // next measurement would read the parking height as the block's
+        // natural place. parkY is section-relative; style.top is canvas-relative.
         b.el._urdStickyBase ??= geoms.get(b.el);
         restore(b.el, b.el._urdStickyBase);
         b.el.style.top = `${state.y - canvasTop + (b.y - box.y)}px`;

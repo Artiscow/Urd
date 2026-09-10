@@ -1,18 +1,19 @@
 /**
- * Auto-genererte preset-miniatyrer: en skjematisk SVG-skisse av seksjonen
- * en preset lager, tegnet fra de faktiske blokkene og bakgrunnen. Alltid i
- * synk med preseten, og følger sidens tema via CSS-variabler. Ren
- * strengbygging uten DOM, så generatoren testes med node --test.
+ * Auto-generated preset thumbnails: a schematic SVG sketch of the section
+ * a preset creates, drawn from the actual blocks and background. Always in
+ * sync with the preset, and follows the site's theme via CSS variables.
+ * Pure string building without the DOM, so the generator is tested with
+ * node --test.
  *
- * Ingen brukerstrenger interpoleres inn i SVG-en: farger slippes kun
- * gjennom som validert hex eller tematoken (ankrede regexer), alt annet
- * er tall vi selv har regnet ut. Trygg for insertAdjacentHTML.
+ * No user strings are interpolated into the SVG: colors only pass through
+ * as validated hex or theme tokens (anchored regexes), everything else is
+ * numbers we computed ourselves. Safe for insertAdjacentHTML.
  */
 
 const HEX_RE = /^#[0-9a-fA-F]{3,8}$/;
 const TOKEN_RE = /^[a-z][a-z0-9-]*$/;
 
-/* Nøytrale reservefarger når tema-variablene ikke finnes (f.eks. i tester). */
+/* Neutral fallback colors when the theme variables are absent (e.g. in tests). */
 const FALLBACK_BG = '#171c26';
 const FALLBACK_SURFACE = '#232a38';
 const FALLBACK_TEXT = '#98a1b3';
@@ -20,7 +21,7 @@ const FALLBACK_ACCENT = '#7c5cff';
 
 const token = (name, fallback) => `var(--urd-color-${name}, ${fallback})`;
 
-/** Tematoken eller hex → trygg SVG-fyllverdi; alt annet gir reserven. */
+/** Theme token or hex → safe SVG fill value; anything else yields the fallback. */
 function safeColor(value, fallback) {
   if (typeof value !== 'string') return fallback;
   if (HEX_RE.test(value)) return value;
@@ -28,7 +29,7 @@ function safeColor(value, fallback) {
   return fallback;
 }
 
-/** Seksjonens minstehøyde i px: '360px' → 360, '70vh' → 560 (vh-basis 800), søppel → 400. */
+/** The section's minimum height in px: '360px' → 360, '70vh' → 560 (vh base 800), garbage → 400. */
 export function parseMinHeightPx(minHeight, vhBase = 800) {
   const n = Number.parseFloat(minHeight);
   if (!Number.isFinite(n) || n <= 0) return 400;
@@ -42,9 +43,10 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const rect = (x, y, w, h, fill, extra = '') =>
   `<rect x="${r1(x)}" y="${r1(y)}" width="${r1(Math.max(w, 1))}" height="${r1(Math.max(h, 1))}" fill="${fill}"${extra}/>`;
 
-/** Bakgrunnsfyllet: første farge-/gradientlag bestemmer tonen. Et rollesett
- *  (section.theme) overtoner token-bakgrunnen, så bånd med invers/dus/dempet
- *  rolle leses ærlig i galleriet i stedet for som nok en bg-flate. */
+/** The background fill: the first color/gradient layer sets the tone. A
+ *  role set (section.theme) outweighs the token background, so bands with
+ *  an inverse/soft/muted role read honestly in the gallery instead of as
+ *  yet another bg surface. */
 function bgFill(section) {
   if (section?.theme) {
     if (section.theme === 'inverse' || section.theme === 'deep') return token('text', FALLBACK_TEXT);
@@ -62,11 +64,12 @@ function bgFill(section) {
 }
 
 /**
- * Tekstblokk: 1-3 linjer; overskrifter gir en tykkere førstelinje.
- * Linjemålene krymper proporsjonalt når feltet er lavere enn naturlig
- * (side-miniatyrenes bånd), med gulv så første linje alltid setter et
- * lesbart spor - en overskrift skal aldri forsvinne fra kortet.
- * box-tekster (kort-flate i motoren) får kortet tegnet bak linjene.
+ * Text block: 1-3 lines; headings give a thicker first line. The line
+ * dimensions shrink proportionally when the field is shorter than natural
+ * (the page thumbnails' bands), with a floor so the first line always
+ * leaves a readable trace - a heading must never vanish from the card.
+ * box texts (a card surface in the engine) get the card drawn behind the
+ * lines.
  */
 function textShapes(x, y, w, h, props) {
   const heading = /<h[1-3]/.test(String(props?.html ?? ''));
@@ -94,9 +97,10 @@ function textShapes(x, y, w, h, props) {
 }
 
 /**
- * Bilderamme. Med bilde satt: flate med fjell og sol (den klassiske
- * plassholder-glyfen). Uten bilde tegnes den TOMME tilstanden (stiplet
- * omriss og blek glyf), som er det den nye siden faktisk viser.
+ * Image frame. With an image set: a surface with mountains and a sun (the
+ * classic placeholder glyph). Without an image the EMPTY state is drawn
+ * (dashed outline and pale glyph), which is what the new page actually
+ * shows.
  */
 function imageShapes(x, y, w, h, empty = false) {
   const textFill = token('text', FALLBACK_TEXT);
@@ -115,7 +119,7 @@ function imageShapes(x, y, w, h, empty = false) {
   return parts.join('');
 }
 
-/** Galleri: tre fliser side om side inne i rammen; tomt galleri tegnes tomt. */
+/** Gallery: three tiles side by side inside the frame; an empty gallery is drawn empty. */
 function galleryShapes(x, y, w, h, props) {
   const empty = !(Array.isArray(props?.images) && props.images.length);
   const gap = Math.max(1, w * 0.03);
@@ -125,7 +129,7 @@ function galleryShapes(x, y, w, h, props) {
   return parts.join('');
 }
 
-/** Samling: tre små kort med tekstlinje under. */
+/** Collection: three small cards with a text line below. */
 function collectionShapes(x, y, w, h) {
   const gap = Math.max(1, w * 0.03);
   const tw = (w - gap * 2) / 3;
@@ -159,7 +163,7 @@ function blockShapes(type, x, y, w, h, props) {
   if (type === 'gallery') return galleryShapes(x, y, w, h, props);
   if (type === 'collection') return collectionShapes(x, y, w, h);
   if (type === 'faq') {
-    // Trekkspill: rader med flate + spørsmålslinje og chevron-prikk.
+    // Accordion: rows with a surface + question line and chevron dot.
     const rows = clamp(Math.floor(h / 5), 2, 3);
     const gap = Math.max(0.6, h * 0.04);
     const rowH = (h - gap * (rows - 1)) / rows;
@@ -212,7 +216,7 @@ function blockShapes(type, x, y, w, h, props) {
     ].join('');
   }
   if (type === 'table') {
-    // Overskriftsbånd + radlinjer med kolonnedelere.
+    // Header band + row lines with column dividers.
     const headH = Math.max(1.6, h * 0.22);
     const parts = [rect(x, y, w, headH, token('accent', FALLBACK_ACCENT), ' opacity="0.5" rx="0.8"')];
     const rows = clamp(Math.floor((h - headH) / 3.2), 1, 3);
@@ -224,7 +228,7 @@ function blockShapes(type, x, y, w, h, props) {
     return parts.join('');
   }
   if (type === 'share') {
-    // Rad av små ikonskiver.
+    // Row of small icon discs.
     const r = Math.max(1.2, Math.min(h / 2, w / 9));
     const parts = [];
     for (let i = 0; i < 4; i += 1) {
@@ -233,7 +237,7 @@ function blockShapes(type, x, y, w, h, props) {
     return parts.join('');
   }
   if (type === 'countdown') {
-    // Fire enhetsbokser med tall-spor.
+    // Four unit boxes with digit slots.
     const gap = Math.max(0.8, w * 0.03);
     const bw = (w - gap * 3) / 4;
     const parts = [];
@@ -245,7 +249,7 @@ function blockShapes(type, x, y, w, h, props) {
     return parts.join('');
   }
   if (type === 'audio') {
-    // Spillerlinje: flate med avspillingstrekant og fremdriftsstripe.
+    // Player bar: a surface with a play triangle and progress stripe.
     const parts = [rect(x, y, w, h, token('surface', FALLBACK_SURFACE), ' rx="1.5"')];
     const cy = y + h / 2;
     const s = Math.max(1.2, h * 0.28);
@@ -254,7 +258,7 @@ function blockShapes(type, x, y, w, h, props) {
     return parts.join('');
   }
   if (type === 'product') {
-    // Produktkort: tre kort med bildefelt, prislinje og kjøpsknapp.
+    // Product cards: three cards with an image field, price line and buy button.
     const gap = Math.max(0.8, w * 0.03);
     const cw = (w - gap * 2) / 3;
     const parts = [];
@@ -269,7 +273,7 @@ function blockShapes(type, x, y, w, h, props) {
     return parts.join('');
   }
   if (type === 'cart') {
-    // Kurvskive med antall-prikk oppe til høyre.
+    // Cart disc with a count dot in the top right.
     const r = Math.max(1.5, Math.min(w, h) / 2.4);
     const cx = x + w / 2;
     const cy = y + h / 2;
@@ -280,7 +284,7 @@ function blockShapes(type, x, y, w, h, props) {
     ].join('');
   }
   if (type === 'checkout') {
-    // Ordrelinjer øverst, to feltbånd og en send-knapp nederst.
+    // Order lines at the top, two field bands and a submit button at the bottom.
     return [
       rect(x, y, w * 0.7, 1.2, token('text', FALLBACK_TEXT), ' opacity="0.5" rx="0.6"'),
       rect(x, y + h * 0.12, w * 0.5, 1.2, token('text', FALLBACK_TEXT), ' opacity="0.35" rx="0.6"'),
@@ -289,11 +293,11 @@ function blockShapes(type, x, y, w, h, props) {
       rect(x, y + h * 0.78, w * 0.45, h * 0.16, token('accent', FALLBACK_ACCENT), ' opacity="0.85" rx="1.2"'),
     ].join('');
   }
-  // Ukjent type (f.eks. fra plugin): rolig kortomriss.
+  // Unknown type (e.g. from a plugin): a calm card outline.
   return rect(x, y, w, h, token('surface', FALLBACK_SURFACE), ' rx="1.5"');
 }
 
-/** Én seksjons skisse-innhold (bakgrunn + glød + blokker) i et w x h-felt. */
+/** One section's sketch content (background + glow + blocks) in a w x h field. */
 function sectionShapes(section, w, h) {
   const blocks = Array.isArray(section?.blocks) ? section.blocks : [];
   const bottoms = blocks.map((b) => (b.frames?.desktop?.y ?? 0) + (b.frames?.desktop?.h ?? 0));
@@ -304,16 +308,16 @@ function sectionShapes(section, w, h) {
   const sy = h / contentH;
   const parts = [rect(0, 0, w, h, bgFill(section))];
 
-  // Glød-lag som myk sirkel, så hero-aktige presets beholder karakteren sin.
+  // Glow layers as a soft circle, so hero-like presets keep their character.
   for (const layer of section?.background?.layers ?? []) {
     if (layer.type !== 'glow') continue;
     const p = layer.props ?? {};
     parts.push(`<circle cx="${r1(clamp(p.x ?? 0.5, 0, 1) * w)}" cy="${r1(clamp(p.y ?? 0.3, 0, 1) * h)}" r="${r1(w * clamp(p.radius ?? 0.5, 0.1, 1) * 0.5)}" fill="${safeColor(p.color, FALLBACK_ACCENT)}" opacity="${r1(clamp(p.opacity ?? 0.3, 0, 0.5))}"/>`);
   }
 
-  // Innholdsflaten (ADR-0018): blokkenes x/w er prosent av den bundne
-  // kanvasen, ikke av full bredde. En fast sidemarg speiler standardmargen,
-  // så innholdet står innrykket som på den faktiske siden.
+  // The content surface (ADR-0018): the blocks' x/w are percentages of the
+  // bound canvas, not of the full width. A fixed side margin mirrors the
+  // default gutter, so the content sits inset as on the actual page.
   const inset = w * 0.06;
   const cw = w - inset * 2;
   for (const block of blocks) {
@@ -330,19 +334,20 @@ function sectionShapes(section, w, h) {
 }
 
 /**
- * @param {object} section En fersk seksjon fra en presets create() (dataene forkastes etterpå)
- * @returns {string} Skjematisk SVG-miniatyr av seksjonen
+ * @param {object} section A fresh section from a preset's create() (the data is discarded afterwards)
+ * @returns {string} Schematic SVG thumbnail of the section
  */
 export function presetThumb(section, { w = 120, h = 68 } = {}) {
   return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${sectionShapes(section, w, h)}</svg>`;
 }
 
 /**
- * Side-miniatyr: seksjonene stablet som bånd, vektet etter minstehøyde, så
- * kortet viser SIDENS oppbygning (hero stor, cta liten). Brukes av «Ny side
- * fra mal»-rutenettet i Sider-panelet; tåler tom side (rent bakgrunnsfelt).
- * @param {object} page Sidefil ({ sections: [...] }); dataene forkastes etterpå
- * @returns {string} Skjematisk SVG-miniatyr av hele siden
+ * Page thumbnail: the sections stacked as bands, weighted by minimum
+ * height, so the card shows the PAGE's structure (hero large, cta small).
+ * Used by the new-page-from-template grid in the Pages panel; tolerates an
+ * empty page (a plain background field).
+ * @param {object} page Page file ({ sections: [...] }); the data is discarded afterwards
+ * @returns {string} Schematic SVG thumbnail of the whole page
  */
 export function pageThumb(page, { w = 96, h = 116, max = 6 } = {}) {
   const sections = (Array.isArray(page?.sections) ? page.sections : []).slice(0, max);

@@ -1,15 +1,15 @@
 /**
- * Plugin-lasting for alvor (v0.6 M1). Kontrakten er beskrevet i docs/SKJEMA.md og schema/plugin.schema.json.
+ * Plugin loading. The contract is described in docs/SKJEMA.md and schema/plugin.schema.json.
  *
- * Løftene her er de samme som for alt annet i Urd: en plugin som feiler stopper aldri siden,
- * og en plugin som er skrevet for en annen motorversjon avvises FØR den får definere noe.
- * register(Urd) kjøres mot et staging-lag: definisjonene tas i bruk kun hvis hele register() fullfører,
- * så en plugin som kaster halvveis etterlater aldri halvferdige registreringer.
+ * The promises here are the same as for everything else in Urd: a failing plugin never stops the site,
+ * and a plugin written for a different engine version is rejected BEFORE it gets to define anything.
+ * register(Urd) runs against a staging layer: the definitions are adopted only if all of register() completes,
+ * so a plugin that throws halfway never leaves half-finished registrations behind.
  */
 
 import { siteLang, adminLang, addSiteDict, addAdminDict, validateLanguages } from './i18n.js';
 
-/** Tolker «x.y.z» til [x, y, z], eller null når strengen ikke er semver. */
+/** Parses «x.y.z» into [x, y, z], or null when the string is not semver. */
 export function parseSemver(text) {
   const m = /^(\d+)\.(\d+)\.(\d+)$/.exec(String(text).trim());
   return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null;
@@ -18,10 +18,10 @@ export function parseSemver(text) {
 const cmp = (a, b) => (a[0] - b[0]) || (a[1] - b[1]) || (a[2] - b[2]);
 
 /**
- * Minimal, avhengighetsfri semver-intervallsjekk for requiresEngine.
- * Støtter mellomromsseparerte krav som ALLE må holde: >=x.y.z, >x.y.z, <=x.y.z, <x.y.z,
- * =x.y.z / x.y.z (eksakt), ^x.y.z (samme major; for 0.y: samme minor) og ~x.y.z (samme major.minor).
- * Ukjente/uparserbare krav gir false: en plugin med uforståelig krav skal ikke lastes i blinde.
+ * Minimal, dependency-free semver range check for requiresEngine.
+ * Supports space-separated requirements that must ALL hold: >=x.y.z, >x.y.z, <=x.y.z, <x.y.z,
+ * =x.y.z / x.y.z (exact), ^x.y.z (same major; for 0.y: same minor) and ~x.y.z (same major.minor).
+ * Unknown/unparseable requirements yield false: a plugin with an unintelligible requirement must not be loaded blindly.
  */
 export function satisfiesEngine(version, range) {
   const v = parseSemver(version);
@@ -49,8 +49,8 @@ export function satisfiesEngine(version, range) {
 const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
 
 /**
- * Speiler kravene i schema/plugin.schema.json (skjemaet kan ikke kjøres i nettleseren uten avhengigheter).
- * @returns {string[]} Feilmeldinger; tom liste = gyldig.
+ * Mirrors the requirements in schema/plugin.schema.json (the schema cannot run in the browser without dependencies).
+ * @returns {string[]} Error messages; empty list = valid.
  */
 export function validateManifest(manifest) {
   const errors = [];
@@ -59,8 +59,8 @@ export function validateManifest(manifest) {
   if (typeof manifest.name !== 'string' || !manifest.name) errors.push('name is missing');
   if (!parseSemver(manifest.version ?? '')) errors.push('version is not semver');
   if (typeof manifest.requiresEngine !== 'string' || !manifest.requiresEngine) errors.push('requiresEngine is missing');
-  // En ren SPRÅKPAKKE har ingen kode: da er entry og provides valgfrie.
-  // Er de likevel oppgitt, gjelder de vanlige kravene.
+  // A pure LANGUAGE PACK has no code: entry and provides are then optional.
+  // If they are given anyway, the usual requirements apply.
   const isLanguagePack = Array.isArray(manifest.languages) && manifest.languages.length > 0;
   if (manifest.entry !== undefined || !isLanguagePack) {
     if (typeof manifest.entry !== 'string' || !manifest.entry.endsWith('.js')) errors.push('entry is missing or is not a .js file');
@@ -69,15 +69,15 @@ export function validateManifest(manifest) {
     if (!manifest.provides || typeof manifest.provides !== 'object') errors.push('provides is missing');
   }
   if (manifest.languages !== undefined) errors.push(...validateLanguages(manifest.languages));
-  // Valgfrie flerspråk-felt (additive fra 0.6.8): locales lover locales/<lang>.js-filer,
-  // names er visningsnavn per admin-språk.
+  // Optional multilingual fields: locales promises locales/<lang>.js files,
+  // names is the display name per admin language.
   if (manifest.locales !== undefined && typeof manifest.locales !== 'boolean') errors.push('locales must be a boolean');
   if (manifest.names !== undefined && (typeof manifest.names !== 'object' || manifest.names === null || Array.isArray(manifest.names)
     || Object.values(manifest.names).some((v) => typeof v !== 'string' || !v))) errors.push('names must be an object mapping language code to name');
   return errors;
 }
 
-/** Registerslagene en plugin kan definere i, og manifest-nøkkelen som lover dem. */
+/** The registry kinds a plugin can define in, and the manifest key that promises them. */
 const KINDS = [
   ['blocks', 'blocks'],
   ['sections', 'sectionPresets'],
@@ -87,10 +87,10 @@ const KINDS = [
 ];
 
 /**
- * Staging-lag rundt Urd-registrene: register(Urd) definerer mot dette,
- * og commit() tar definisjonene i bruk først når hele register() har fullført.
- * pluginName merker definisjonene (def.fromPlugin), så menyene kan vise
- * plugin-innhold i egne «Fra plugins»-seksjoner.
+ * Staging layer around the Urd registries: register(Urd) defines against
+ * this, and commit() adopts the definitions only once all of register() has
+ * completed. pluginName marks the definitions (def.fromPlugin), so the
+ * menus can show plugin content in their own from-plugins sections.
  * @returns {{staged: object, commit: () => string[], defined: () => Record<string, string[]>}}
  */
 export function createStagedUrd(Urd, pluginName = null) {
@@ -111,7 +111,7 @@ export function createStagedUrd(Urd, pluginName = null) {
   staged.maler = staged.templates;
   return {
     staged,
-    /** @returns {string[]} Advarsler (f.eks. id-kollisjoner som ble hoppet over) */
+    /** @returns {string[]} Warnings (e.g. id collisions that were skipped) */
     commit() {
       const warnings = [];
       for (const [kind] of KINDS) {
@@ -136,9 +136,9 @@ export function createStagedUrd(Urd, pluginName = null) {
 }
 
 /**
- * Sammenlikner hva manifestet LOVER (provides) med hva register() faktisk definerte.
- * Avvik er aldri fatalt (pluginen virker), men logges så plugin-forfatteren ser kontraktsbruddet.
- * @returns {string[]} Avviksbeskrivelser
+ * Compares what the manifest PROMISES (provides) with what register() actually defined.
+ * A mismatch is never fatal (the plugin works), but it is logged so the plugin author sees the contract breach.
+ * @returns {string[]} Mismatch descriptions
  */
 export function checkProvides(provides, defined) {
   const diffs = [];
@@ -158,21 +158,22 @@ export function checkProvides(provides, defined) {
   return diffs;
 }
 
-/** Plugins som alt er lastet i denne siden: import kan ikke angres, så hver id lastes maks én gang. */
+/** Plugins already loaded in this page: an import cannot be undone, so each id is loaded at most once. */
 const loadedPlugins = new Set();
 
 /* ---------- Plugin-locales (ADR-0012) ---------- */
 
-/** Plugin-ider med locales: true som er lastet - brukes ved språkbytte i preview. */
+/** Loaded plugin ids with locales: true - used on language switches in the preview. */
 const localePlugins = new Set();
 
-/** Er dette editorens forhåndsvisning? Samme deteksjon som boot. */
+/** Is this the editor's preview? Same detection as boot. */
 const isPreview = () => new URLSearchParams(location.search).get('preview') === '1';
 
 /**
- * Laster én plugin-ordbok: nb-basen i bunn, valgt språk oppå (manglende
- * språkfil faller stille til nb, samme modell som admin-ordboka).
- * @returns {Promise<Record<string, string>|null>} null når selv basen mangler
+ * Loads one plugin dictionary: the nb base at the bottom, the chosen
+ * language on top (a missing language file falls silently back to nb, the
+ * same model as the admin dictionary).
+ * @returns {Promise<Record<string, string>|null>} null when even the base is missing
  */
 async function loadPluginLocale(id, lang) {
   const load = async (code) => (await import(/* @vite-ignore */ `/plugins/${id}/locales/${code}.js`)).default.strings;
@@ -186,8 +187,9 @@ async function loadPluginLocale(id, lang) {
   }
 }
 
-/** Legger pluginens tekster i registrene: besøkende-register med SITE-språket,
- *  og i preview I TILLEGG admin-registret med ADMIN-språket (canvas-chromen). */
+/** Puts the plugin's strings into the registries: the visitor registry with
+ *  the SITE language, and in the preview ALSO the admin registry with the
+ *  ADMIN language (the canvas chrome). */
 async function applyPluginLocale(id) {
   const strings = await loadPluginLocale(id, siteLang());
   if (!strings) return;
@@ -200,9 +202,10 @@ async function applyPluginLocale(id) {
 }
 
 /**
- * Legger plugin-tekstene inn i besøkende-registret på nytt. Kalles etter
- * initSiteLocale ved språkbytte i preview: initSiteLocale bygger ordboka
- * fra motorens nb-base, så plugin-nøklene må legges oppå igjen.
+ * Re-adds the plugin strings to the visitor registry. Called after
+ * initSiteLocale on a language switch in the preview: initSiteLocale builds
+ * the dictionary from the engine's nb base, so the plugin keys must be
+ * layered on top again.
  */
 export async function applyPluginSiteLocales() {
   for (const id of localePlugins) {
@@ -212,9 +215,9 @@ export async function applyPluginSiteLocales() {
 }
 
 /**
- * Laster ÉN plugin: manifest-fetch → validering → requiresEngine-sjekk →
- * import → register(staging) → commit → provides-kontroll. Feil på ett steg
- * hopper over pluginen med tydelig logg; siden lever alltid videre.
+ * Loads ONE plugin: manifest fetch → validation → requiresEngine check →
+ * import → register(staging) → commit → provides check. A failure at any
+ * step skips the plugin with a clear log line; the site always lives on.
  */
 export async function loadPluginById(Urd, engineVersion, id) {
   if (loadedPlugins.has(id)) return;
@@ -229,19 +232,20 @@ export async function loadPluginById(Urd, engineVersion, id) {
       console.warn(`Urd: plugin '${id}' requires engine '${manifest.requiresEngine}', this is ${engineVersion} - skipped`);
       return;
     }
-    // Ordboka lastes FØR register()/render, så pluginens t()/ta()-oppslag
-    // treffer fra første rendering. Besøkende: loadPlugins kjører etter
-    // initSiteLocale i boot. Preview: urd-plugins-meldingen kommer etter
-    // initAdminLocale, så begge registrene er klare.
+    // The dictionary is loaded BEFORE register()/render, so the plugin's
+    // t()/ta() lookups hit from the first rendering. Visitors: loadPlugins
+    // runs after initSiteLocale in boot. Preview: the urd-plugins message
+    // arrives after initAdminLocale, so both registries are ready.
     if (manifest.locales === true) await applyPluginLocale(id);
-    // Språkpakkens språk meldes inn før noe rendres, så previewen kjenner
-    // et utkast-aktivert pakkespråk uten å lese manifestene på nytt.
-    // Pakkemodulen hentes kun her, aldri for en plugin uten languages.
+    // The language pack's languages are registered before anything renders,
+    // so the preview knows a draft-enabled pack language without re-reading
+    // the manifests. The pack module is fetched only here, never for a
+    // plugin without languages.
     if (manifest.languages?.length) {
       const { registerPackLanguages } = await import(/* @vite-ignore */ '/assets/urd/language-packs.js');
       registerPackLanguages(id, manifest.languages);
     }
-    // Ren språkpakke: ingen entry, ingenting å kjøre.
+    // Pure language pack: no entry, nothing to run.
     if (!manifest.entry) {
       loadedPlugins.add(id);
       return;
@@ -251,8 +255,9 @@ export async function loadPluginById(Urd, engineVersion, id) {
       console.warn(`Urd: plugin '${id}' is missing a register() export`);
       return;
     }
-    // fromPlugin bærer VISNINGSNAVNET (manifest.names for admin-språket når
-    // det finnes): feltet brukes kun i editor-chromen («Fra pluginen …»).
+    // fromPlugin carries the DISPLAY NAME (manifest.names for the admin
+    // language when it exists): the field is used only in the editor
+    // chrome (tip.blocks.fromPlugin).
     const displayName = manifest.names?.[adminLang()] ?? manifest.name ?? id;
     const staging = createStagedUrd(Urd, displayName);
     mod.register(staging.staged);
@@ -268,22 +273,22 @@ export async function loadPluginById(Urd, engineVersion, id) {
   }
 }
 
-/** Laster en eksplisitt liste plugin-ider (editorens utkast i preview). */
+/** Loads an explicit list of plugin ids (the editor's draft in the preview). */
 export async function loadPluginList(Urd, engineVersion, ids) {
   for (const id of ids ?? []) await loadPluginById(Urd, engineVersion, id);
 }
 
 /**
- * Laster aktive plugins fra plugins/plugins.json mot en gitt motorversjon.
+ * Loads the enabled plugins from plugins/plugins.json against a given engine version.
  * @param {typeof window.Urd} Urd
- * @param {string} engineVersion Motorversjonen (fra urd.json)
+ * @param {string} engineVersion The engine version (from urd.json)
  */
 export async function loadPlugins(Urd, engineVersion) {
   let index;
   try {
     index = await (await fetch('/plugins/plugins.json')).json();
   } catch {
-    return; // ingen plugin-indeks er helt greit
+    return; // no plugin index is perfectly fine
   }
   await loadPluginList(Urd, engineVersion, index.enabled);
 }

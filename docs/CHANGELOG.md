@@ -25,6 +25,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.14.13 - Engelsk-renskingen: kommentarsveipen, motor-rot A - 10. september 2026
+
+- Alle norske kommentarer i de 12 tyngste motor-rot-filene (render, urd, nav, nav-model, sticky, sticky-model, i18n, theme, plugins, migrate, preset-thumb, imageTools; ~1 000 kommentarlinjer, tre parallelle agenter på disjunkte filsett) oversatt til engelsk med kommentarreglene anvendt: tre kommentarer slettet helt, versjonstagger og daterte attribusjoner strøket, siterte norske UI-etiketter i plugins.js omskrevet til stabile nøkkel-referanser. Migreringskommentarene beskriver fortsatt gamle skjemaversjoner (migreringens jobb), og «additive since»-markørene står som ADR-0005-kontraktsdokumentasjon. Bundel-diffen etter gjenbygg er tom.
+- Funn under sveipen: en foreldet JSDoc i render.js omtalte lagtypen «bildegalleri» (heter slideshow); rettet. Fem norske/blandede konsollmeldinger i render.js og valideringsmeldingen i i18n.js (linje 85) notert til sluttauditen.
+
 ### 0.7.14.12 - Engelsk-renskingen: kommentarsveipen, App.svelte - 10. september 2026
 
 - Alle norske kommentarer i App.svelte (~330 kommentarer, ~700 linjer: JSDoc, linje-, Svelte-HTML- og CSS-kommentarer) oversatt til engelsk med kommentarreglene anvendt: to kommentarer slettet helt (reversert-forsøk-fortelling, død veikart-notis), versjonstagger og daterte attribusjoner strøket, «var tidligere»-fortellinger omskrevet deskriptivt. Bundel-diffen etter gjenbygg er tom, så ingen kode er rørt.

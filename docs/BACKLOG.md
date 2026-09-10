@@ -91,12 +91,12 @@ Fasen er delt opp i milepæler 9. august 2026: arkitekturavklaringene (bredde, m
   - [x] 0.7.14.10 Testene: beskrivelser, assertion-meldinger og kommentarer til engelsk (testfil-renames tatt i .5); norske fixture-data består som bevisst testinnhold, markert der det ikke er opplagt
   - [x] 0.7.14.11 Kommentarsveipen, batch 1: preview-edit.js (571 kommentarlinjer oversatt, kommentarreglene anvendt, bundelen urørt)
   - [x] 0.7.14.12 Kommentarsveipen, batch 2: App.svelte (~700 kommentarlinjer oversatt, bundel-diffen tom; «---- Foldetrinnene»-overskriften beholdt som testanker med engelsk gloss)
-  - [ ] 0.7.14.13 Kommentarsveipen, batch 3: motor-rot A (urd, render, nav, nav-model, migrate, theme m.fl.)
+  - [x] 0.7.14.13 Kommentarsveipen, batch 3: motor-rot A (render, urd, nav, nav-model, sticky, sticky-model, i18n, theme, plugins, migrate, preset-thumb, imageTools; ~1 000 kommentarlinjer, bundel-diffen tom)
   - [ ] 0.7.14.14 Kommentarsveipen, batch 4: motor-rot B + blocks/ + backgrounds/ + sections/ + animations/
   - [ ] 0.7.14.15 Kommentarsveipen, batch 5: editor/src/lib + main.js (krever gjenbygg)
   - [ ] 0.7.14.16 Kommentarsveipen, batch 6: base.css (nytt stempel) + skall + workflows + dev-server + scripts + ordbok-headere + plugin-kommentarer
     (felles for batchene: kommentarreglene i AGENTS.md anvendes samtidig; bundel-diffen skal være tom for rene kommentarbatcher)
-  - [ ] 0.7.14.17 Sluttaudit (repo-vid æøå-grep pluss stopwordliste) + push-klargjøring. Kjente rester å vurdere: fire norske strenglitteraler i App.svelte (to console.warn-meldinger, commit-malen «Oppdater ... via Urd-admin», fallbacken «Uten tittel»)
+  - [ ] 0.7.14.17 Sluttaudit (repo-vid æøå-grep pluss stopwordliste) + push-klargjøring. Kjente rester å vurdere: fire norske strenglitteraler i App.svelte (to console.warn-meldinger, commit-malen «Oppdater ... via Urd-admin», fallbacken «Uten tittel»), fem norske/blandede konsollmeldinger i render.js og valideringsmeldingen i i18n.js:85
 
   Ferdig når: norsk-auditen er ren utenfor locales/, docs/, content/, readme/ og bevisste fixtures; migrerings- og aliastestene dekker alle gamle tokens med idempotens og plugin-matrisen; og alle suiter, bygg og validering er grønne.
 
