@@ -1,15 +1,15 @@
 /**
- * Ren logikk for multimarkering: marquee-treff, juster/fordel-beregning
- * og gruppe-forskyvning ved innliming. Alt arbeider på frame-verdier
- * (x/w i prosent av seksjonsbredden, y/h i px - samme fysiske enheter
- * som docs/SKJEMA.md) og er DOM-fritt, så matematikken kontraktstestes
- * i tests/selection.test.mjs. DOM-delen bor i preview-edit.js.
+ * Pure logic for multi-selection: marquee hits, align/distribute computation
+ * and group offset on paste. Everything works on frame values (x/w in percent
+ * of the section width, y/h in px - the same physical units as
+ * docs/SKJEMA.md) and is DOM free, so the maths is contract-tested in
+ * tests/selection.test.mjs. The DOM part lives in preview-edit.js.
  */
 
 /**
- * Hvilke blokker treffes av en marquee? Rekt og blokker i samme
- * koordinatsystem (seksjonsrelative px); en blokk er med når rektene
- * overlapper (delvis holder - man skal slippe å omslutte hele blokken).
+ * Which blocks does a marquee hit? Rect and blocks share a coordinate system
+ * (section-relative px); a block is included when the rects overlap (partial
+ * is enough - there is no need to enclose the whole block).
  *
  * @param {{ left: number, top: number, right: number, bottom: number }} rect
  * @param {Array<{ id: string, left: number, top: number, right: number, bottom: number }>} blocks
@@ -22,12 +22,12 @@ export function blocksInRect(rect, blocks) {
 }
 
 /**
- * Juster utvalget innenfor sin egen omsluttende boks: venstre/senter/
- * høyre bruker x/w (prosent), topp/midte/bunn bruker y/h (px).
+ * Align the selection inside its own bounding box: left/center/right use x/w
+ * (percent), top/middle/bottom use y/h (px).
  *
  * @param {Array<{ id: string, x: number, y: number, w: number, h: number }>} items
  * @param {'left'|'center'|'right'|'top'|'middle'|'bottom'} mode
- * @returns {Array<{ id: string, x?: number, y?: number }>} kun blokkene som faktisk flytter seg
+ * @returns {Array<{ id: string, x?: number, y?: number }>} only the blocks that actually move
  */
 export function alignMoves(items, mode) {
   if (items.length < 2) return [];
@@ -51,8 +51,9 @@ export function alignMoves(items, mode) {
 }
 
 /**
- * Fordel utvalget jevnt: første og siste blokk (etter posisjon) står i
- * ro, og luften MELLOM blokkene gjøres lik. Trenger minst tre blokker.
+ * Distribute the selection evenly: the first and last block (by position)
+ * stay put, and the space BETWEEN the blocks is made equal. Needs at least
+ * three blocks.
  *
  * @param {Array<{ id: string, x: number, y: number, w: number, h: number }>} items
  * @param {'x'|'y'} axis
@@ -80,13 +81,13 @@ export function distributeMoves(items, axis) {
 }
 
 /**
- * Klem en ønsket gruppe-forskyvning (innliming/duplisering) slik at
- * HELE utvalget holder seg innenfor seksjonsbredden og under toppen -
- * uten å forvrenge det innbyrdes oppsettet (alle får samme delta).
+ * Clamp a wanted group offset (paste/duplicate) so the WHOLE selection stays
+ * within the section width and below the top - without distorting the
+ * internal layout (every block gets the same delta).
  *
  * @param {Array<{ x: number, y: number, w: number, h: number }>} frames
- * @param {number} dx Ønsket forskyvning i % (kan bli klippet)
- * @param {number} dy Ønsket forskyvning i px (klippes mot toppen)
+ * @param {number} dx Wanted offset in % (may be clipped)
+ * @param {number} dy Wanted offset in px (clipped against the top)
  * @returns {{ dx: number, dy: number }}
  */
 export function groupDelta(frames, dx, dy) {

@@ -1,26 +1,27 @@
 /**
- * Kjerneblokk: samling (datablokk-mønsteret, ADR-0007). Rendrer innslagene i en
- * samling fra content/samlinger/ med en av tre visninger: kort (responsivt grid),
- * liste (rader med dato-badge) eller arkiv (år-gruppert).
+ * Core block: collection (the data-block pattern, ADR-0007). Renders the entries
+ * of a collection from content/samlinger/ in one of three views: cards (a
+ * responsive grid), list (rows with a date badge) or archive (grouped by year).
  *
- * Innholdet er strukturert DATA og rendres med textContent, aldri innerHTML.
- * Datahentingen er asynkron: render tegner skallet synkront og fyller når
- * samlingen er lastet; manglende samling gir rolig tomtilstand, aldri krasj.
+ * The content is structured DATA and renders with textContent, never innerHTML.
+ * Fetching the data is asynchronous: render draws the shell synchronously and
+ * fills it once the collection is loaded; a missing collection gives a calm empty
+ * state, never a crash.
  */
 import { getCollection, sortEntries, groupByYear, dateBadge } from '../collections.js';
 import { growSectionTo } from '../render.js';
 import { stripActiveContent } from '../sanitize.js';
 import { isSafeHref } from '../nav-model.js';
-// Kun kallt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
+// Only called in preview (after the admin dictionary is loaded): never at module level.
 import { ta, adminLocaleReady } from '../i18n.js';
 
-/** Redigeringskontekst mens en samling rendres i preview: {collection} eller null (besøkende). */
+/** Editing context while a collection renders in preview: {collection}, or null (visitors). */
 let editCtx = null;
 
 const post = (msg) => window.parent?.postMessage(msg, location.origin);
 
-/** Klikk-og-skriv på tittel/tekst rett i blokken: endringen meldes til editoren, som eier samlingsutkastet.
- *  Tittel lagres som ren tekst; innslagsteksten er rik (html: true) og lagrer sikker HTML (ADR-0007). */
+/** Click-and-type on the title/text right in the block: the change is posted to the editor, which owns the collection draft.
+ *  The title is stored as plain text; the entry text is rich (html: true) and stores safe HTML (ADR-0007). */
 function editable(node, entryId, field, html = false) {
   if (!editCtx) return node;
   node.contentEditable = 'true';
@@ -32,8 +33,8 @@ function editable(node, entryId, field, html = false) {
   return node;
 }
 
-/** Bilde-redigering i preview: klikk åpner den FELLES bildeeditoren med HELE paletten
- *  (dynamisk import: besøkende laster den aldri). Stilfeltene bor i entry.imageStyle (additivt). */
+/** Image editing in preview: a click opens the SHARED image editor with the WHOLE palette
+ *  (dynamic import: visitors never load it). The style fields live in entry.imageStyle (additive). */
 function wireImageEdit(target, entry) {
   if (!editCtx) return;
   const collection = editCtx.collection;
@@ -71,8 +72,8 @@ function wireImageEdit(target, entry) {
   });
 }
 
-/** Innslagstekst: rik (sikker HTML-delmengde, samme vern som tekstblokker). Klassen urd-text
- *  gir den flytende teksteditoren gratis i preview. Tomme felter vises som redigerbare plassholdere. */
+/** Entry text: rich (a safe HTML subset, the same sanitizing as text blocks). The urd-text class
+ *  gives the floating text editor for free in preview. Empty fields show as editable placeholders. */
 function textOrPlaceholder(entry) {
   if (!entry.text && !editCtx) return null;
   const node = el2('div', 'urd-text urd-collection-text');
@@ -106,10 +107,10 @@ const el2 = (tag, className, textContent) => {
   return node;
 };
 
-/** Tittel: rik tekst (sikker HTML-delmengde) med full teksteditor i preview (klassen urd-text
- *  gir den flytende linjen). Med lenke rendres den som anker hos besøkende; i editoren redigeres teksten. */
+/** Title: rich text (a safe HTML subset) with the full text editor in preview (the urd-text class
+ *  gives the floating bar). With a link it renders as an anchor for visitors; in the editor the text is edited. */
 function titleNode(entry) {
-  // Delt vokter (nav/footer + interne stier/anker): utrygg href gir tittel uten lenke.
+  // Shared guard (nav/footer plus internal paths and anchors): an unsafe href gives a title without a link.
   const tag = entry.href && isSafeHref(entry.href) && !editCtx ? 'a' : 'strong';
   const node = el2(tag, 'urd-collection-title');
   node.innerHTML = entry.title;
@@ -122,12 +123,12 @@ function titleNode(entry) {
   return editable(node, entry.id, 'title', true);
 }
 
-/** Formene: rammens sideforhold. Sirkel er 1:1 med full avrunding. */
+/** The shapes: the frame's aspect ratio. Circle is 1:1 with full rounding. */
 const SHAPE_ASPECTS = { wide: '16 / 9', square: '1 / 1', portrait: '3 / 4', circle: '1 / 1' };
 
-/** Innslagsbilde med den additive stilen (imageStyle) og beskrivelsen anvendt.
- *  node er innpakningen (span med img inni) eller en frittstående img: bildet får
- *  fokus/filtre/zoom, rammen får form og avrunding og klipper zoomen (overflow). */
+/** Entry image with the additive style (imageStyle) and the description applied.
+ *  node is the wrapper (a span with an img inside) or a standalone img: the image gets
+ *  focus, filters and zoom, the frame gets shape and rounding and clips the zoom (overflow). */
 export function applyEntryImageStyle(node, entry) {
   const img = node instanceof HTMLImageElement ? node : node.querySelector?.('img');
   if (!img) return;
@@ -170,7 +171,7 @@ function badgeNode(entry) {
   return box;
 }
 
-/** Kortgrid: bilde + dato + tittel + tekst per innslag. */
+/** Card grid: image, date, title and text per entry. */
 function renderCards(host, entries) {
   const grid = el2('div', 'urd-collection-cards');
   for (const entry of entries) {
@@ -187,7 +188,7 @@ function renderCards(host, entries) {
   host.appendChild(grid);
 }
 
-/** Liste: rad med dato-badge + tittel/tekst (ApeironLF-stilen). */
+/** List: a row with a date badge plus title and text (the ApeironLF style). */
 function renderList(host, entries) {
   const list = el2('div', 'urd-collection-list');
   for (const entry of entries) {
@@ -206,7 +207,7 @@ function renderList(host, entries) {
   host.appendChild(list);
 }
 
-/** Arkiv: år-overskrifter med innslagene under (publikasjoner/utgaver). */
+/** Archive: year headings with the entries below (publications and issues). */
 function renderArchive(host, entries) {
   const wrap = el2('div', 'urd-collection-archive');
   for (const group of groupByYear(entries)) {
@@ -238,8 +239,8 @@ function emptyState(el, ctx, message) {
 export const collectionBlock = {
   version: 1,
   autoGrow: true,
-  // Samlingskonsument: urd-collections-meldingen rerendrer kun seksjoner med
-  // blokker som bærer dette flagget (scrollposisjonen bevares).
+  // Collection consumer: the urd-collections message re-renders only sections
+  // with blocks carrying this flag (the scroll position is preserved).
   usesCollections: true,
   label: 'Collection',
   labelKey: 'blocks.collection',
@@ -260,7 +261,7 @@ export const collectionBlock = {
     }
 
     getCollection(props.collection).then((data) => {
-      // Blokken kan være rerendret/fjernet mens dataene ble hentet.
+      // The block may have been re-rendered or removed while the data was fetched.
       if (!host.isConnected) return;
       if (!data) {
         emptyState(el, ctx, `Fant ikke samlingen «${props.collection}» - sjekk Samlinger-panelet`);
@@ -274,17 +275,17 @@ export const collectionBlock = {
       }
       const view = VIEWS[props.view] ?? renderCards;
       editCtx = ctx.preview && ctx.viewport !== 'mobile' ? { collection: props.collection } : null;
-      // finally: kaster visningen, ville modulglobalen ellers blitt stående og
-      // lekket denne samlingens redigeringskontekst inn i neste blokk som rendres.
+      // finally: if the view throws, the module global would otherwise stay set
+      // and leak this collection's editing context into the next block rendered.
       try {
         view(host, entries);
       } finally {
         editCtx = null;
       }
 
-      // Hjelpechipen (ADR-0008): blokken har spesialfunksjoner og forklarer seg selv.
+      // The help chip (ADR-0008): the block has special functions and explains itself.
       if (ctx.preview && ctx.viewport !== 'mobile') {
-        // adminLocaleReady: første render kan skje før ordboka er lastet i boot.
+        // adminLocaleReady: the first render can happen before boot has loaded the dictionary.
         Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
           if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
           attachHint(el, {
@@ -299,9 +300,10 @@ export const collectionBlock = {
         });
       }
 
-      // Autovekst: samlingsinnhold er dynamisk, så rammen følger innholdet i stedet for at
-      // malene gjetter en stor fast høyde. Seksjonen løftes ved behov (kun visuelt hos
-      // besøkende; i editoren bokføres høyden i utkastet, som tekstblokkene gjør).
+      // Auto-grow: collection content is dynamic, so the frame follows the content instead
+      // of the templates guessing a large fixed height. The section is raised when needed
+      // (display only for visitors; in the editor the height is recorded in the draft, as
+      // the text blocks do).
       const needed = host.scrollHeight;
       if (Math.abs(needed - el.clientHeight) > 8 && ctx.viewport !== 'mobile') {
         el.style.height = `${needed}px`;
@@ -311,8 +313,8 @@ export const collectionBlock = {
           const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
           if (block && block.frames.desktop.h !== needed) {
             block.frames.desktop = { ...block.frames.desktop, h: needed };
-            // KUN høyden meldes (urd-grow), aldri hele framen: ellers ville en
-            // dratt blokk teleporteres tilbake til snapshotets gamle x/y.
+            // ONLY the height is posted (urd-grow), never the whole frame: otherwise
+            // a dragged block would teleport back to the snapshot's old x/y.
             post({ type: 'urd-grow', sectionId: ctx.section.id, blockId: el.dataset.blockId, h: needed });
           }
         }

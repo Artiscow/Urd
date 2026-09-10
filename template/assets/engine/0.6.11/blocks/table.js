@@ -1,18 +1,18 @@
 /**
- * Kjerneblokk: tabell (åpningstider, prislister). Semantisk `<table>` i en
- * overflow-x-wrapper, så brede tabeller ruller i sin egen flate i stedet for
- * å velte siden. Cellene redigeres rett på lerretet (klikk-og-skriv);
- * rader/kolonner legges til og fjernes i Egenskaper. Stilvalgene (overskrifts-
- * rad, stripete rader, linjer) bor i Stil-fanen.
+ * Core block: table (opening hours, price lists). A semantic `<table>` in an
+ * overflow-x wrapper, so wide tables scroll in their own surface instead of
+ * tipping the page over. Cells are edited straight on the canvas (click and
+ * type); rows and columns are added and removed in Properties. The style
+ * choices (header row, striped rows, lines) live in the Style tab.
  */
-// Kun kalt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
+// Only called in preview (after the admin dictionary has loaded): never at module level.
 import { ta, adminLocaleReady } from '../i18n.js';
 import { growSectionTo } from '../render.js';
 
 /**
- * Rektangulariserer radene (ren, node-testbar): alle rader like lange
- * (korte fylles med tomme celler), minst 1 x 1, kun strenger.
- * @param {unknown} rows props.rows slik de står i dataene
+ * Rectangularises the rows (pure, node-testable): all rows the same length
+ * (short ones padded with empty cells), at least 1 x 1, strings only.
+ * @param {unknown} rows props.rows as they stand in the data
  * @returns {string[][]}
  */
 export function normalizeRows(rows) {
@@ -29,7 +29,7 @@ export const tableBlock = {
   autoGrow: true,
   label: 'Table',
   labelKey: 'blocks.table',
-  // Seed-regelen (ADR-0012): ta() kalles kun her ved innsetting i preview.
+  // The seed rule (ADR-0012): ta() is called only here, on insertion in preview.
   defaults: () => ({
     header: true,
     striped: false,
@@ -44,7 +44,7 @@ export const tableBlock = {
   /**
    * @param {HTMLElement} el
    * @param {{header?: boolean, striped?: boolean, lines?: string, rows?: string[][]}} props
-   * @param {object} ctx Render-kontekst
+   * @param {object} ctx Render context
    */
   render(el, props, ctx) {
     const host = document.createElement('div');
@@ -81,8 +81,8 @@ export const tableBlock = {
     host.appendChild(table);
 
     if (editable) {
-      // Klikk-og-skriv per celle; hele radsettet leses fra DOM ved endring,
-      // så props alltid speiler det som faktisk står i tabellen.
+      // Click and type per cell; the whole row set is read from the DOM on
+      // change, so props always mirror what the table actually holds.
       const collect = () => [...table.rows].map((tr) => [...tr.cells].map((cell) => cell.textContent ?? ''));
       for (const tr of table.rows) {
         for (const cell of tr.cells) {
@@ -101,7 +101,7 @@ export const tableBlock = {
           });
         }
       }
-      // Hjelpechipen (ADR-0008): celle-på-lerret + rader/kolonner i panelet.
+      // The help chip (ADR-0008): cells on the canvas plus rows/columns in the panel.
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {
@@ -111,7 +111,7 @@ export const tableBlock = {
       });
     }
 
-    // Autovekst: rammen følger innholdshøyden. KUN høyden meldes (urd-grow).
+    // Auto-grow: the frame follows the content height. ONLY the height is reported (urd-grow).
     requestAnimationFrame(() => {
       if (!el.isConnected) return;
       const needed = host.scrollHeight;

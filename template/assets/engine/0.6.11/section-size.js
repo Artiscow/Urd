@@ -1,21 +1,21 @@
 /**
- * Ren logikk for toppkant-draget på seksjoner: seksjonen vokser/krymper
- * i TOPPEN, og alle blokkene forskyves tilsvarende slik at innholdet
- * står visuelt stille (blokkenes y måles fra seksjonstoppen). Naboene
- * røres aldri. DOM-fri så klemmene kan kontraktstestes
- * (tests/section-size.test.mjs); preview-edit.js eier selve draget.
+ * Pure logic for the section top-edge drag: the section grows/shrinks at
+ * the TOP, and every block is shifted accordingly so the content stays
+ * visually still (block y is measured from the section top). Neighbours
+ * are never touched. DOM-free so the clamps can be contract-tested
+ * (tests/section-size.test.mjs); preview-edit.js owns the drag itself.
  */
 
 /**
  * @param {{
- *   dyPointer: number,       // px pekeren er dratt: > 0 = NED (krymp), < 0 = OPP (voks)
- *   minHeightPx: number,     // seksjonens målte høyde ved dra-start
- *   blockYs: number[],       // alle blokkenes desktop-y ved dra-start
+ *   dyPointer: number,       // px the pointer has been dragged: > 0 = DOWN (shrink), < 0 = UP (grow)
+ *   minHeightPx: number,     // the section's measured height at drag start
+ *   blockYs: number[],       // every block's desktop y at drag start
  *   grid: { size: number, snap?: boolean },
- *   free?: boolean           // Shift holdes: piksel-presist, ingen snapping
+ *   free?: boolean           // Shift held: pixel-precise, no snapping
  * }} p
  * @returns {{ dy: number, minHeightPx: number }}
- *   dy = px alle blokker skal flyttes (y += dy); minHeightPx = ny høyde.
+ *   dy = px every block moves (y += dy); minHeightPx = the new height.
  */
 export function topDrag(p) {
   const size = p.grid?.size || 8;
@@ -24,13 +24,13 @@ export function topDrag(p) {
   grow = snapFree ? Math.round(grow) : Math.round(grow / size) * size;
 
   if (grow < 0) {
-    // Krymping tar luft OVENFRA: aldri mer enn at laveste blokk lander
-    // på y=0, og aldri under minstehøyden. En blokk som allerede henger
-    // over toppen (negativ y) stopper krymping via toppkanten helt -
-    // den skal ikke skyves videre; bunnhåndtaket finnes fortsatt.
+    // Shrinking takes space from ABOVE: never more than brings the topmost
+    // block to y=0, and never below the minimum height. A block that already
+    // hangs above the top (negative y) stops top-edge shrinking entirely -
+    // it must not be pushed further; the bottom handle is still there.
     const minY = p.blockYs.length ? Math.min(...p.blockYs) : Infinity;
     const room = Math.min(Math.max(0, minY), Math.max(0, p.minHeightPx - size * 3));
-    // || 0 normaliserer -0 (klemt til stillstand) til 0.
+    // || 0 normalizes -0 (clamped to a standstill) to 0.
     grow = Math.max(grow, -room) || 0;
   }
 

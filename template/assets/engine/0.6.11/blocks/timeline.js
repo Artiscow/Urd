@@ -1,22 +1,22 @@
 /**
- * Kjerneblokk: tidslinje. En vertikal liste av hendelser (år/tittel/tekst)
- * langs en tegnet linje med markører - ren CSS (ADR-0011), ingen JS-animasjon.
- * To varianter: «venstre» (linjen til venstre, innholdet til høyre) og
- * «veksler» (linjen i midten, kortene annenhver side; trenger blokkbredde).
- * Vertikal og breddeinvariant, så v0.7-breddegrepet ikke rører den.
+ * Core block: timeline. A vertical list of events (year/title/text) along a
+ * drawn line with markers - pure CSS (ADR-0011), no JS animation. Two
+ * variants: "left" (line on the left, content on the right) and "alternating"
+ * (line in the middle, cards on alternating sides; needs block width).
+ * Vertical and width invariant, so the v0.7 width work leaves it alone.
  *
- * I editoren er tekstene direkte redigerbare (klikk-og-skriv som FAQ);
- * rekkefølge og antall styres fra Egenskaper-panelet. Autovekst melder KUN
- * høyde (urd-grow), aldri hele framen.
+ * In the editor the texts are directly editable (click and type, as in FAQ);
+ * order and count are controlled from the Properties panel. Auto-grow reports
+ * ONLY height (urd-grow), never the whole frame.
  */
-// Kun kalt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
+// Only called in preview (after the admin dictionary has loaded): never at module level.
 import { ta } from '../i18n.js';
 import { growSectionTo } from '../render.js';
 
 const SAFE_HEX = /^#[0-9a-fA-F]{3,8}$/;
 const SAFE_TOKEN = /^[a-z][a-z0-9-]*$/;
 
-/** Fargeprop → trygg CSS-verdi: validert hex eller tematoken; ellers null. */
+/** Colour prop to a safe CSS value: validated hex or theme token; otherwise null. */
 export function accentCss(value) {
   if (typeof value !== 'string') return null;
   if (SAFE_HEX.test(value)) return value;
@@ -29,7 +29,7 @@ export const timelineBlock = {
   autoGrow: true,
   label: 'Timeline',
   labelKey: 'blocks.timeline',
-  // Seed-regelen (ADR-0012): ta() kalles kun her ved innsetting i preview.
+  // The seed rule (ADR-0012): ta() is called only here, on insertion in preview.
   defaults: () => ({
     items: [
       { year: '2019', title: ta('seed.timeline.t1'), text: ta('seed.timeline.text') },
@@ -51,20 +51,20 @@ export const timelineBlock = {
   /**
    * @param {HTMLElement} el
    * @param {{items: Array<{year: string, title: string, text: string}>, variant?: string, marker?: string, accent?: string|null}} props
-   * @param {object} ctx Render-kontekst
+   * @param {object} ctx Render context
    */
   render(el, props, ctx) {
     const host = document.createElement('ol');
     host.className = `urd-timeline urd-timeline-${props.variant === 'alternating' ? 'alternating' : 'left'}`;
     if (props.marker === 'ring') host.classList.add('urd-timeline-ring');
-    // Aksentfargen kun som validert hex/tematoken; ellers temaets aksent.
+    // The accent colour only as validated hex or theme token; otherwise the theme accent.
     const accent = accentCss(props.accent);
     if (accent) host.style.setProperty('--urd-timeline-accent', accent);
     el.appendChild(host);
     const post = (msg) => window.parent?.postMessage(msg, location.origin);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
 
-    /** Leser gjeldende tekster ut av DOM-en og melder hele items-listen. */
+    /** Reads the current texts out of the DOM and posts the whole items list. */
     const postItems = () => {
       const items = [...host.querySelectorAll('.urd-timeline-item')].map((item) => ({
         year: item.querySelector('.urd-timeline-year')?.textContent ?? '',
@@ -92,7 +92,7 @@ export const timelineBlock = {
         node.className = cls;
         node.textContent = value ?? '';
         if (editable) {
-          // Klikk-og-skriv: alle feltene er ren tekst (som FAQ-spørsmålet).
+          // Click and type: every field is plain text (like the FAQ question).
           try {
             node.contentEditable = 'plaintext-only';
           } catch {
@@ -105,7 +105,7 @@ export const timelineBlock = {
       host.appendChild(item);
     }
 
-    // Autovekst: rammen følger innholdshøyden. KUN høyden meldes (urd-grow).
+    // Auto-grow: the frame follows the content height. ONLY the height is reported (urd-grow).
     requestAnimationFrame(() => {
       if (!el.isConnected) return;
       const needed = host.scrollHeight;

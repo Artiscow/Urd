@@ -1,11 +1,11 @@
 /**
- * Felles registerfabrikk. Alle utvidbare typer i Urd (blokker, seksjons-
- * presets, bakgrunnslag, animasjoner) bruker samme register-mønster, og
- * plugins bruker de identiske define-API-ene som kjernen.
+ * Shared registry factory. Every extensible type in Urd (blocks, section
+ * presets, background layers, animations) uses the same registry pattern,
+ * and plugins use the identical define APIs as the core.
  */
 
 /**
- * @param {string} kind Navn på registeret, kun til feilmeldinger ('blocks', 'backgrounds', …)
+ * @param {string} kind Registry name, used only in error messages ('blocks', 'backgrounds', …)
  * @returns {{define: (id: string, def: object) => void, alias: (oldId: string, id: string) => void, get: (id: string) => object|undefined, ids: () => string[]}}
  */
 export function createRegistry(kind) {

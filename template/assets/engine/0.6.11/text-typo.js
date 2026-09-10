@@ -1,35 +1,35 @@
 /**
- * Ren typografilogikk for tekst-verktøylinjen («Office-linjen»):
- * størrelsessteg med klemming, innrykkssteg og fontstack-gjenkjenning.
- * Ingen DOM her; DOM-kirurgien (markør-normalisering) bor i
- * preview-edit.js og verifiseres i headless-nettleser.
+ * Pure typography logic for the text toolbar (the "Office bar"): size steps
+ * with clamping, indent steps and font stack recognition. No DOM here; the
+ * DOM surgery (caret normalisation) lives in preview-edit.js and is verified
+ * in a headless browser.
  */
 import { FONT_STACKS } from './fonts.js';
 
-/** Grensene for skriftstørrelse på markering, i px. */
+/** The bounds for font size on a selection, in px. */
 export const SIZE_MIN = 8;
 export const SIZE_MAX = 120;
 
-/** Rund av og klem til [SIZE_MIN, SIZE_MAX]; ugyldig tall gir null. */
+/** Round and clamp to [SIZE_MIN, SIZE_MAX]; an invalid number gives null. */
 export function clampSize(px) {
   const n = Math.round(Number(px));
   if (!Number.isFinite(n)) return null;
   return Math.min(SIZE_MAX, Math.max(SIZE_MIN, n));
 }
 
-/** Ett steg opp/ned fra en effektiv størrelse (delta i px, finjustering). */
+/** One step up or down from an effective size (delta in px, fine adjustment). */
 export function stepSize(px, delta) {
   return clampSize(Number(px) + Number(delta));
 }
 
 /**
- * Størrelses-stigen A-opp/A-ned hopper gjennom, slik Word/LibreOffice gjør:
- * små steg nede, større steg oppe. Verdier utenfor stigen runder til
- * nærmeste trinn i steppretningen.
+ * The size ladder that A-up/A-down jumps through, the way Word/LibreOffice
+ * does it: small steps at the bottom, larger steps at the top. Values outside
+ * the ladder round to the nearest rung in the step direction.
  */
 export const SIZE_LADDER = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 40, 48, 64, 80, 96, 120];
 
-/** Neste trinn opp (dir 1) eller ned (dir -1) på størrelses-stigen. */
+/** The next rung up (dir 1) or down (dir -1) on the size ladder. */
 export function ladderStep(px, dir) {
   const cur = Number(px);
   if (!Number.isFinite(cur)) return clampSize(px);
@@ -42,8 +42,8 @@ export function ladderStep(px, dir) {
 }
 
 /**
- * Linjeavstand-presetene i avstandsmenyen: [CSS-verdi, visningsnavn].
- * Tom verdi = Arv (fjerner overstyringen fra avsnittet).
+ * The line height presets in the spacing menu: [CSS value, display name].
+ * An empty value = Arv (removes the override from the paragraph).
  * @type {Array<[string, string]>}
  */
 export const LINE_HEIGHTS = [
@@ -54,14 +54,14 @@ export const LINE_HEIGHTS = [
   ['2', '2,0'],
 ];
 
-/** Innrykkssteget og taket, i em (relative steg følger skriftstørrelsen). */
+/** The indent step and the ceiling, in em (relative steps follow the font size). */
 export const INDENT_STEP_EM = 2;
 export const INDENT_MAX_EM = 16;
 
 /**
- * Ett innrykkssteg fra en marginLeft-verdi. Tom streng ved null innrykk
- * (style-attributtet kan droppes). Verdier i andre enheter enn em (f.eks.
- * gammel px-margin fra limt innhold) nullstilles og steppes fra 0.
+ * One indent step from a marginLeft value. Empty string at zero indent (the
+ * style attribute can be dropped). Values in units other than em (an old px
+ * margin from pasted content, say) are reset and stepped from 0.
  */
 export function stepIndent(marginLeft, dir) {
   const m = /^(\d+(?:\.\d+)?)em$/.exec(String(marginLeft || '').trim());
@@ -70,15 +70,15 @@ export function stepIndent(marginLeft, dir) {
   return next === 0 ? '' : `${next}em`;
 }
 
-/** Første fontnavn i en CSS-fontstack, normalisert (uten fnutter, små bokstaver). */
+/** The first font name in a CSS font stack, normalised (no quotes, lower case). */
 export function firstFamily(css) {
   const first = String(css || '').split(',')[0].trim().replace(/^['"]|['"]$/g, '');
   return first.toLowerCase();
 }
 
 /**
- * Finn FONT_STACKS-verdien hvis stack matcher en beregnet font-family
- * (sammenlignet på første fontnavn), ellers tom streng (vises som Arv).
+ * Find the FONT_STACKS value if the stack matches a computed font-family
+ * (compared on the first font name), otherwise an empty string (shown as Arv).
  */
 export function matchFontStack(css) {
   const wanted = firstFamily(css);

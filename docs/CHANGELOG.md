@@ -25,6 +25,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.14.14 - Engelsk-renskingen: kommentarsveipen, motor-rot B - 11. september 2026
+
+- Alle norske kommentarer i de 59 resterende motorfilene (bakgrunnslagene, animations/core, de 18 blokkfilene, sections/presets og de 32 gjenstående rotfilene; ~1 300 kommentarlinjer, fire parallelle agenter på disjunkte filsett) oversatt til engelsk med kommentarreglene anvendt. Motoren er dermed kommentarrenset i sin helhet. Bundel-diffen etter gjenbygg er tom.
+- Funn under sveipen: headeren i blocks/timeline.js dokumenterte fortsatt de gamle norske variantverdiene etter migreringen til left/alternating; tre kommentarer pekte på testfiler som ble renamet i etappe .5 (rettet til collections-csv.test.mjs, collections.test.mjs, gallery.test.mjs); CSS-kommentaren inne i stilstrengen i hint.js, som sendes til nettleseren, var fortsatt norsk og er oversatt.
+- Kommentarer skrevet i ASCII-fisert norsk (sok, rekkefolge, naar, paa, forst) i sections/presets.js var usynlige for æøå-sveipet; mønsteret er tatt inn i sluttauditen, og en egen skanning viser motoren ren og treff kun i editor/src (batch 5).
+- Fem brukersynlige norske strenglitteraler i blocks/collection.js (tomtilstandene) notert til sluttauditen: de går utenom ta(), i motsetning til de tilsvarende i blocks/product.js.
+
 ### 0.7.14.13 - Engelsk-renskingen: kommentarsveipen, motor-rot A - 10. september 2026
 
 - Alle norske kommentarer i de 12 tyngste motor-rot-filene (render, urd, nav, nav-model, sticky, sticky-model, i18n, theme, plugins, migrate, preset-thumb, imageTools; ~1 000 kommentarlinjer, tre parallelle agenter på disjunkte filsett) oversatt til engelsk med kommentarreglene anvendt: tre kommentarer slettet helt, versjonstagger og daterte attribusjoner strøket, siterte norske UI-etiketter i plugins.js omskrevet til stabile nøkkel-referanser. Migreringskommentarene beskriver fortsatt gamle skjemaversjoner (migreringens jobb), og «additive since»-markørene står som ADR-0005-kontraktsdokumentasjon. Bundel-diffen etter gjenbygg er tom.

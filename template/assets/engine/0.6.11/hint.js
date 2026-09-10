@@ -1,33 +1,33 @@
 /**
- * Hjelpechipen (ADR-0008): alle blokker/seksjoner/elementer med SPESIELLE
- * funksjoner skal ha en «?»-chip i forhåndsvisningen som åpner et vedvarende
- * hjelpekort med alle funksjonene forklart. Kortet blir stående til man
- * klikker utenfor eller trykker Escape, så det kan leses i ro.
+ * The help chip (ADR-0008): every block/section/element with SPECIAL features
+ * has a «?» chip in the preview that opens a persistent help card explaining
+ * all of them. The card stays up until you click outside or press Escape, so
+ * it can be read at leisure.
  *
- * Brukes av kjerneblokker OG plugins (samme regel for begge):
+ * Used by core blocks AND plugins (the same rule for both):
  *   import { attachHint } from '/assets/urd/hint.js';
- *   attachHint(vertselement, { title: 'Kalender', lines: ['…', '…'] });
+ *   attachHint(hostElement, { title: 'Calendar', lines: ['…', '…'] });
  *
- * Kun i preview-laget: kall den bare når ctx.preview er sann. Chip og kort
- * skjules i Ren visning (chrome-off) og hos besøkende finnes de aldri.
+ * Preview layer only: call it only when ctx.preview is true. Chip and card are
+ * hidden in Clean view (chrome-off) and never exist for visitors.
  */
 
-// Modulen lastes kun dynamisk i preview, etter at admin-ordboka er lastet
-// (kallstedene venter på adminLocaleReady), så ta() er trygg her.
+// The module is loaded dynamically in preview only, after the admin dictionary
+// is loaded (the call sites await adminLocaleReady), so ta() is safe here.
 import { ta } from './i18n.js';
 
 let openCard = null;
 let teardown = null;
 
-/* Selvforsynt stil (samme mønster som plugin-CSS): chipen er en liten sirkel
-   som KUN vises når pekeren er over blokken, akkurat som kildeknappen. */
+/* Self-contained styling (the same pattern as plugin CSS): the chip is a small
+   circle shown ONLY while the pointer is over the block, like the source button. */
 const HINT_CSS = `
 .urd-hint-chip {
   position: absolute; top: -32px; right: -6px; z-index: 5;
   width: 32px; height: 32px;
   display: inline-flex; align-items: center; justify-content: center;
   padding: 0; border-radius: 50%;
-  /* Gjennomsiktig kant = usynlig bro ned til blokk-kanten, så hover overlever veien opp */
+  /* A transparent border is an invisible bridge down to the block edge, so hover survives the trip up */
   border: 6px solid transparent;
   background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 80%, black);
   background-clip: padding-box;
@@ -67,9 +67,9 @@ export function closeHint() {
 }
 
 /**
- * @param {HTMLElement} host Elementet chipen legges i (bør ha position: relative/absolute)
- * @param {{ title: string, lines: string[] }} spec Tittel + én linje per funksjon
- * @returns {HTMLButtonElement} chipen (for egen posisjonering ved behov)
+ * @param {HTMLElement} host The element the chip is added to (should have position: relative/absolute)
+ * @param {{ title: string, lines: string[] }} spec Title plus one line per feature
+ * @returns {HTMLButtonElement} the chip (for custom positioning when needed)
  */
 export function attachHint(host, { title, lines = [] }) {
   injectCss();
@@ -103,7 +103,7 @@ export function attachHint(host, { title, lines = [] }) {
     const rect = chip.getBoundingClientRect();
     const W = 300;
     card.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - W - 8))}px`;
-    // Helst under chipen; ellers over, alltid innenfor viewporten.
+    // Preferably below the chip; otherwise above, always inside the viewport.
     let top = rect.bottom + 8;
     if (top + card.offsetHeight > window.innerHeight - 8) {
       top = Math.max(8, rect.top - card.offsetHeight - 8);

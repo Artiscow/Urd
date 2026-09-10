@@ -1,25 +1,24 @@
 /**
- * Kjerneblokk: galleri. Én blokk med tre visninger (Squarespace-modellen:
- * visningen er en prop, ikke egne blokktyper): rutenett (grid), karusell
- * (carousel, sidescroll med snap) og lysbilde (slides, ett bilde om gangen
- * med automatisk fremrykk).
+ * Core block: gallery. One block with three views (the Squarespace model: the
+ * view is a prop, not separate block types): grid, carousel (side scrolling with
+ * snap) and slides (one image at a time with automatic advance).
  *
- * Bildene bor i props.images med samme ikke-destruktive stilvokabular som
- * bildeblokken (style: fit/x/y/zoom/filtre); flisene rendres med den delte
- * applyImageStyle. Hos besøkende åpner klikk lightboxen (props.lightbox);
- * i preview åpner klikk bildeeditoren, og i Ren visning lightboxen, så
- * eieren får prøvd den før publisering. Lenke (href) vinner alltid over
+ * The images live in props.images with the same non-destructive style vocabulary
+ * as the image block (style: fit/x/y/zoom/filters); the tiles render with the
+ * shared applyImageStyle. For visitors a click opens the lightbox (props.lightbox);
+ * in preview a click opens the image editor, and in Clean view the lightbox, so
+ * the owner gets to try it before publishing. A link (href) always wins over the
  * lightbox.
  *
- * Lysbilde-timeren er motorens første setInterval: den rydder seg selv når
- * verten forsvinner fra DOM (re-render-churn), står stille ved redusert
- * bevegelse, i skjulte faner, og i preview med redigeringschrome på.
+ * The slide timer is the engine's first setInterval: it cleans itself up when the
+ * host disappears from the DOM (re-render churn), stands still under reduced
+ * motion, in hidden tabs, and in preview with the editing chrome on.
  */
 import { applyImageStyle } from './image.js';
 import { growSectionTo } from '../render.js';
 import { stepIndex, canAutoplay, normalizeInterval, gridColumns } from '../gallery-model.js';
 import { isSafeHref } from '../nav-model.js';
-// ta/adminLocaleReady: kun kallt i preview (etter at admin-ordboka er lastet), aldri på modulnivå.
+// ta/adminLocaleReady: only called in preview (after the admin dictionary is loaded), never at module level.
 import { t, ta, adminLocaleReady } from '../i18n.js';
 
 const post = (msg) => window.parent?.postMessage(msg, location.origin);
@@ -39,8 +38,8 @@ async function openLightboxAt(images, index) {
   openLightbox(images, index);
 }
 
-/** Bildeeditoren for én flis: adapteren leser/skriver props.images[index] og
- *  melder hele props til editoren (som eier utkastet). Fjern sletter flisen. */
+/** The image editor for one tile: the adapter reads and writes props.images[index]
+ *  and posts the whole props to the editor (which owns the draft). Remove deletes the tile. */
 async function openTileEditor(tile, props, index, ctx, blockEl) {
   const { openImageEditor } = await import('../image-editor.js');
   const img = props.images[index];
@@ -68,11 +67,11 @@ async function openTileEditor(tile, props, index, ctx, blockEl) {
   });
 }
 
-/** Én flis: ramme som klipper + img med den delte bildestilen. Elementet
- *  velges etter hva klikket skal gjøre: lenke (a), klikkbar (button) eller ren pynt (span). */
+/** One tile: a clipping frame plus an img with the shared image style. The element
+ *  is chosen by what the click should do: link (a), clickable (button) or pure decoration (span). */
 function makeTile(props, index, ctx, blockEl) {
   const img = props.images[index];
-  // Delt vokter (nav/footer + interne stier/anker): utrygg href gir flis uten lenke (lightbox tar over).
+  // Shared guard (nav/footer plus internal paths and anchors): an unsafe href gives a tile without a link (the lightbox takes over).
   const asLink = Boolean(img.href) && isSafeHref(img.href) && !ctx.preview;
   const clickable = ctx.preview || props.lightbox;
   const tile = el2(asLink ? 'a' : clickable ? 'button' : 'span', 'urd-gallery-tile');
@@ -83,7 +82,7 @@ function makeTile(props, index, ctx, blockEl) {
   image.src = img.src;
   image.loading = 'lazy';
   image.draggable = false;
-  // Samme lastevern som bildeblokken: vis bildet komplett, aldri stripevis.
+  // The same load guard as the image block: show the image complete, never in strips.
   if (!image.complete) {
     image.style.visibility = 'hidden';
     image.addEventListener('load', () => { image.style.visibility = ''; }, { once: true });
@@ -93,8 +92,8 @@ function makeTile(props, index, ctx, blockEl) {
   applyImageStyle(tile, { ...(img.style ?? {}), alt: img.alt, radius: props.radius });
 
   if (ctx.preview) {
-    // Chrome på: bildeeditoren. Ren visning: lightboxen, som hos besøkende.
-    // Avgjørelsen tas ved klikk, så Ren visning-bryteren ikke trenger re-render.
+    // Chrome on: the image editor. Clean view: the lightbox, as for visitors.
+    // The decision is made on click, so the Clean view switch needs no re-render.
     tile.classList.add('urd-gallery-edit');
     tile.title = ta('canvas.editImage');
     tile.addEventListener('click', (event) => {
@@ -164,8 +163,8 @@ function renderSlides(host, props, ctx, blockEl) {
     dots.forEach((dot, j) => dot.classList.toggle('on', j === i));
   };
 
-  // Selvryddende timer: verten forsvinner fra DOM ved hver re-render i
-  // preview, og da må intervallet dø med den (ellers stables ett per render).
+  // Self-cleaning timer: the host disappears from the DOM on every re-render in
+  // preview, and the interval has to die with it (otherwise one stacks up per render).
   let timerId = 0;
   const startTimer = () => {
     clearInterval(timerId);
@@ -176,8 +175,8 @@ function renderSlides(host, props, ctx, blockEl) {
         return;
       }
       if (document.hidden) return;
-      // I preview rykker lysbildet kun frem i Ren visning: mens man
-      // redigerer skal ingenting bevege seg under pekeren.
+      // In preview the slide advances only in Clean view: while editing, nothing
+      // should move under the pointer.
       if (ctx.preview && !chromeOff()) return;
       show(stepIndex(current, 1, count));
     }, normalizeInterval(props.interval) * 1000);
@@ -237,9 +236,9 @@ export const galleryBlock = {
     el.appendChild(host);
     (VIEWS[props.view] ?? renderGrid)(host, props, ctx, el);
 
-    // Hjelpechipen (ADR-0008): blokken har spesialfunksjoner og forklarer seg selv.
+    // The help chip (ADR-0008): the block has special functions and explains itself.
     if (ctx.preview && ctx.viewport !== 'mobile') {
-      // adminLocaleReady: første render kan skje før ordboka er lastet i boot.
+      // adminLocaleReady: the first render can happen before boot has loaded the dictionary.
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {
@@ -254,9 +253,10 @@ export const galleryBlock = {
       });
     }
 
-    // Autovekst for rutenettet: radhøyden følger antall bilder, så rammen
-    // følger innholdet (samme mønster som samling-blokken). Målingen må
-    // vente til blokken står i DOM: render kalles før appendChild.
+    // Auto-grow for the grid: the row height follows the number of images, so the
+    // frame follows the content (the same pattern as the collection block). The
+    // measurement has to wait until the block is in the DOM: render is called
+    // before appendChild.
     if (props.view === 'grid' && ctx.viewport !== 'mobile') requestAnimationFrame(() => {
       if (!el.isConnected) return;
       const needed = host.scrollHeight;
@@ -268,8 +268,8 @@ export const galleryBlock = {
           const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
           if (block && block.frames.desktop.h !== needed) {
             block.frames.desktop = { ...block.frames.desktop, h: needed };
-            // KUN høyden meldes (urd-grow), aldri hele framen: ellers ville en
-            // dratt blokk teleporteres tilbake til snapshotets gamle x/y.
+            // ONLY the height is posted (urd-grow), never the whole frame: otherwise
+            // a dragged block would teleport back to the snapshot's old x/y.
             post({ type: 'urd-grow', sectionId: ctx.section.id, blockId: el.dataset.blockId, h: needed });
           }
         }

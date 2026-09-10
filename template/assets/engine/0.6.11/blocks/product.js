@@ -1,18 +1,19 @@
 /**
- * Kjerneblokk: produktkort (butikken, datablokk-mønsteret ADR-0007).
- * Rendrer innslagene i en produktsamling (kind «products») som kort med
- * bilde, badge, pris (og evt. medlemspris), størrelses- og fargevalg og
- * «Legg i handlekurv». Fargevalg med eget bilde bytter kortets bilde.
- * Katalogen er git-eid data; kurven bor hos den besøkende (shop.js).
+ * Core block: product cards (the shop, the data-block pattern in ADR-0007).
+ * Renders the entries of a product collection (kind "products") as cards with
+ * image, badge, price (and an optional member price), size and color choices
+ * and an add-to-cart button. A color choice with its own image swaps the card
+ * image. The catalog is git-owned data; the cart lives with the visitor (shop.js).
  *
- * Hos besøkende åpner klikk på bilde/tittel en quick view: produktdetaljene
- * i en native <dialog> (ADR-0011) med bildegalleri, full tekst, variantvalg
- * og kjøpsknapp - produktsiden uten sidebytte (Squarespace-mønsteret).
- * I editoren eier klikk redigeringen, og et «+ Produkt»-kort sist i
- * rutenettet legger et nytt produkt i samlingen (urd-collection-add).
+ * For visitors, clicking the image or title opens a quick view: the product
+ * details in a native <dialog> (ADR-0011) with an image gallery, full text,
+ * variant choices and a buy button - the product page without a page change
+ * (the Squarespace pattern). In the editor clicks belong to editing, and a
+ * "+ Product" card at the end of the grid adds a new product to the collection
+ * (urd-collection-add).
  *
- * Innholdet er strukturert DATA: tittel/tekst er rik tekst gjennom samme
- * vern som samling-blokken, alt annet rendres med textContent.
+ * The content is structured DATA: title and text are rich text through the same
+ * sanitizing as the collection block, everything else renders with textContent.
  */
 import { getCollection } from '../collections.js';
 import { applyEntryImageStyle } from './collection.js';
@@ -20,7 +21,7 @@ import { growSectionTo, renderCardAnimations } from '../render.js';
 import { stripActiveContent, plainText } from '../sanitize.js';
 import { iconSvg } from '../icons.js';
 import { readCart, writeCart, cartAdd, itemKey, variantLabel, formatPrice, altCardImage } from '../shop.js';
-// Kun kalt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
+// Only called in preview (after the admin dictionary is loaded): never at module level.
 import { ta, adminLocaleReady, t } from '../i18n.js';
 
 const el2 = (tag, className, textContent) => {
@@ -32,7 +33,7 @@ const el2 = (tag, className, textContent) => {
 
 const post = (msg) => window.parent?.postMessage(msg, location.origin);
 
-/** Rik tekst-node (tittel/tekst) med klikk-og-skriv i preview (urd-collection-edit). */
+/** Rich text node (title/text) with click-and-type in preview (urd-collection-edit). */
 function richNode(tag, className, entry, field, collection, editable) {
   const value = entry[field];
   if (!value && !editable) return null;
@@ -54,7 +55,7 @@ function richNode(tag, className, entry, field, collection, editable) {
   return node;
 }
 
-/** Valg-chips (størrelse/farge): én rad knapper der ett valg kan være aktivt. */
+/** Choice chips (size/color): one row of buttons where a single choice can be active. */
 function choiceRow(className, labels, onPick) {
   const row = el2('div', `urd-product-options ${className}`);
   let active = null;
@@ -63,7 +64,7 @@ function choiceRow(className, labels, onPick) {
     btn.type = 'button';
     btn.setAttribute('aria-pressed', 'false');
     btn.addEventListener('click', () => {
-      // Klikk på det aktive valget opphever det (valg er valgfritt).
+      // Clicking the active choice clears it (choosing is optional).
       const next = active === label ? null : label;
       active = next;
       for (const other of row.children) other.setAttribute('aria-pressed', String(other === btn && next !== null));
@@ -74,7 +75,7 @@ function choiceRow(className, labels, onPick) {
   return row;
 }
 
-/** Prisrad: vises kun når prisen er satt (nytt produkt skal ikke vise «0 kr»). */
+/** Price row: shown only when a price is set (a new product must not show "0 kr"). */
 function priceRow(entry, currency) {
   if (entry.price == null) return null;
   const row = el2('div', 'urd-product-price');
@@ -86,7 +87,7 @@ function priceRow(entry, currency) {
   return row;
 }
 
-/** Kjøpsknapp med lagt-i-kurven-kvittering; getChoice() leser gjeldende variantvalg. */
+/** Buy button with an added-to-cart receipt; getChoice() reads the current variant choice. */
 function buyButton(entry, currency, colors, getChoice) {
   const buy = el2('button', 'urd-product-buy', t('shop.addToCart'));
   buy.type = 'button';
@@ -97,7 +98,7 @@ function buyButton(entry, currency, colors, getChoice) {
     writeCart(cartAdd(readCart(), {
       key: itemKey(entry.id, variant),
       id: entry.id,
-      // Tittelen er rik tekst; kurvlinjen trenger ren tekst.
+      // The title is rich text; the cart line needs plain text.
       title: plainText(entry.title),
       price: Number(entry.price) || 0,
       variant: variant || undefined,
@@ -114,9 +115,9 @@ function buyButton(entry, currency, colors, getChoice) {
 }
 
 /**
- * Quick view (kun besøkende): produktdetaljene i en native <dialog> med
- * galleri (hovedbilde + fargebilder), rik tekst og eget variantvalg.
- * Bygges ved første åpning og gjenbrukes.
+ * Quick view (visitors only): the product details in a native <dialog> with a
+ * gallery (main image plus color images), rich text and its own variant choices.
+ * Built on first open and reused.
  */
 function openQuickView(card, entry, props) {
   let dialog = card.querySelector('.urd-product-dialog');
@@ -179,7 +180,7 @@ function openQuickView(card, entry, props) {
     body.appendChild(info);
     dialog.appendChild(body);
 
-    // Lysavvisning: klikk på ::backdrop treffer selve dialog-elementet.
+    // Light dismiss: a click on ::backdrop hits the dialog element itself.
     dialog.addEventListener('click', (event) => {
       if (event.target === dialog) dialog.close();
     });
@@ -193,8 +194,8 @@ function renderCard(entry, props, editable, preview) {
   let chosenSize = null;
   let chosenColor = null;
 
-  // Bildet: samme ikke-destruktive stil som samlingsinnslag. Fargevalg med
-  // eget bilde bytter src; uten valg vises innslagets hovedbilde.
+  // The image: the same non-destructive styling as collection entries. A color
+  // choice with its own image swaps src; with no choice the entry's main image shows.
   const baseImage = entry.image ?? '';
   let img = null;
   let wrap = null;
@@ -206,8 +207,8 @@ function renderCard(entry, props, editable, preview) {
     wrap = el2('span', 'urd-collection-imgwrap urd-product-image');
     wrap.appendChild(img);
     applyEntryImageStyle(wrap, entry);
-    // Sekundærbilde (første fargebilde): tones inn ved hover (CSS-først,
-    // ADR-0011); viker når et fargevalg med eget bilde er aktivt.
+    // Secondary image (the first color image): fades in on hover (CSS-first,
+    // ADR-0011); gives way when a color choice with its own image is active.
     const alt = altCardImage(entry);
     if (alt) {
       const altImg = document.createElement('img');
@@ -246,9 +247,9 @@ function renderCard(entry, props, editable, preview) {
 
   card.appendChild(buyButton(entry, props.currency, colors, () => ({ size: chosenSize, color: chosenColor })));
 
-  // Quick view hos besøkende: bilde og tittel åpner detaljvisningen.
-  // I editoren eier klikk redigeringen (klikk-og-skriv), så ingen kobling der -
-  // heller ikke i mobilvisningen (preview-flagget, aldri editable).
+  // Quick view for visitors: the image and the title open the detail view.
+  // In the editor clicks belong to editing (click-and-type), so nothing is wired
+  // there - nor in the mobile view (the preview flag, never editable).
   if (!preview) {
     for (const target of [wrap, title].filter(Boolean)) {
       target.classList.add('urd-product-opener');
@@ -268,7 +269,7 @@ function renderCard(entry, props, editable, preview) {
   return card;
 }
 
-/** «+ Produkt»-adderen (kun editor): ber editoren legge et nytt produkt i samlingen. */
+/** The "+ Product" adder (editor only): asks the editor to add a new product to the collection. */
 function adderCard(collection) {
   const btn = el2('button', 'urd-product-adder', ta('canvas.addProduct'));
   btn.type = 'button';
@@ -288,11 +289,11 @@ function emptyState(el, ctx, message, action) {
 export const productBlock = {
   version: 1,
   autoGrow: true,
-  // Samlingskonsument: urd-collections-meldingen rerendrer kun seksjoner med
-  // blokker som bærer dette flagget (scrollposisjonen bevares).
+  // Collection consumer: the urd-collections message re-renders only sections
+  // with blocks carrying this flag (the scroll position is preserved).
   usesCollections: true,
-  // Kortvis animasjon: blokkens inngang/pekereffekt spilles per kort, ikke
-  // på blokk-elementet (render.js hopper over; kortene animeres i render).
+  // Per-card animation: the block's entrance and pointer effect play per card,
+  // not on the block element (render.js skips it; the cards are animated in render).
   animPerCard: true,
   label: 'Product cards',
   labelKey: 'blocks.product',
@@ -301,18 +302,18 @@ export const productBlock = {
   /**
    * @param {HTMLElement} el
    * @param {{collection: string|null, limit?: number, columns?: number, currency?: string}} props
-   * @param {object} ctx Render-kontekst
+   * @param {object} ctx Render context
    */
   render(el, props, ctx) {
     const host = el2('div', 'urd-product');
     el.appendChild(host);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
-    // Blokkens egne data: deles av autoveksten (urd-grow) og animasjonene.
+    // The block's own data: shared by the auto-grow (urd-grow) and the animations.
     const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
 
     if (!props.collection) {
-      // Uten kort spilles animasjonsfeltene på blokk-elementet, som på
-      // andre blokker, så valget i Egenskaper aldri står stumt.
+      // With no cards the animation fields play on the block element, as on
+      // other blocks, so the choice in Properties is never inert.
       if (block) renderCardAnimations(el, [el], block, ctx);
       adminLocaleReady.then(() => {
         if (host.isConnected) emptyState(el, ctx, ta('canvas.productEmpty'));
@@ -321,11 +322,12 @@ export const productBlock = {
     }
 
     getCollection(props.collection).then((data) => {
-      // Blokken kan være rerendret/fjernet mens dataene ble hentet.
+      // The block may have been re-rendered or removed while the data was fetched.
       if (!host.isConnected) return;
 
-      // Autovekst: kortene er dynamisk innhold, rammen følger dem (som samling).
-      // Kalles på nytt når adder-kortet legges til, så også dets rad måles.
+      // Auto-grow: the cards are dynamic content, the frame follows them (as in
+      // the collection block). Called again when the adder card is added, so its
+      // row is measured too.
       const fit = () => {
         const needed = host.scrollHeight;
         if (Math.abs(needed - el.clientHeight) > 8 && ctx.viewport !== 'mobile') {
@@ -335,7 +337,7 @@ export const productBlock = {
           if (ctx.preview) {
             if (block && block.frames.desktop.h !== needed) {
               block.frames.desktop = { ...block.frames.desktop, h: needed };
-              // KUN høyden meldes (urd-grow), aldri hele framen.
+              // ONLY the height is posted (urd-grow), never the whole frame.
               post({ type: 'urd-grow', sectionId: ctx.section.id, blockId: el.dataset.blockId, h: needed });
             }
           }
@@ -362,20 +364,20 @@ export const productBlock = {
       host.appendChild(grid);
       fit();
 
-      // Kortvis animasjon (animPerCard): blokkens inngangsanimasjon spilles
-      // per kort med forskjøvet start, og pekereffekten løfter kort for kort.
+      // Per-card animation (animPerCard): the block's entrance animation plays
+      // per card with a staggered start, and the pointer effect lifts card by card.
       if (block) renderCardAnimations(el, cards, block, ctx);
 
       if (editable) {
         Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
           if (!el.isConnected) return;
-          // Adderen kun når rutenettet ikke er avkortet av limit: et nytt
-          // innslag ville ellers vært utenfor visningen og klikket sett dødt ut.
+          // The adder only when the grid is not truncated by limit: a new entry
+          // would otherwise fall outside the view and the click would look dead.
           if (!(props.limit > 0 && all.length >= props.limit)) {
             grid.appendChild(adderCard(props.collection));
             fit();
           }
-          // Hjelpechipen (ADR-0008): katalogen bor i Samlinger-panelet.
+          // The help chip (ADR-0008): the catalog lives in the Collections panel.
           if (el.querySelector('.urd-hint-chip')) return;
           attachHint(el, {
             title: ta('hintProduct.title'),

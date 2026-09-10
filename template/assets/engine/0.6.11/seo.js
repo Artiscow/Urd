@@ -1,12 +1,12 @@
 /**
- * SEO-metadata i dokumenthodet (SEO-pakken): beskrivelse, canonical,
- * og-felter (Open Graph) og JSON-LD for nettstedet. Motoren setter taggene
- * ved rendering hos besøkende (index-skallet er Urd-eid og statisk, så
- * per-side metadata må legges på klientsiden frem til v0.8-bakingen).
- * Taggene bygges rene (node-testet); kun applyHeadMeta rører DOM.
+ * SEO metadata in the document head (the SEO pack): description, canonical,
+ * og fields (Open Graph) and JSON-LD for the site. The engine sets the tags
+ * when rendering for visitors (the index shell is Urd-owned and static, so
+ * per-page metadata has to be added client side until the v0.8 baking).
+ * The tags are built pure (node-tested); only applyHeadMeta touches the DOM.
  */
 
-/** Absolutt adresse fra en side-relativ sti (media-bilder, sider). */
+/** Absolute address from a page-relative path (media images, pages). */
 function absolute(origin, path) {
   try {
     return new URL(path, origin.replace(/\/+$/, '') + '/').href;
@@ -16,17 +16,17 @@ function absolute(origin, path) {
 }
 
 /**
- * Metataggene for en side: [{tag, attrs}] i innsettingsrekkefølge.
- * og-feltene faller tilbake trinnvis: og.title -> sidetittel, og.description
- * -> sidebeskrivelse -> nettstedsbeskrivelse, og.image -> nettstedsikonet.
- * X/Twitter-kortet trenger kun card-taggen (resten leses fra og-feltene).
- * Skjult side (noindex i sideregisteret) får robots-noindex og ingen
- * canonical, men beholder delingsfeltene (deling er et aktivt valg).
- * @param {object} site site.json-innholdet (løftet)
+ * The meta tags for a page: [{tag, attrs}] in insertion order.
+ * The og fields fall back stepwise: og.title -> page title, og.description
+ * -> page description -> site description, og.image -> the site icon.
+ * The X/Twitter card needs only the card tag (the rest is read from the og fields).
+ * A hidden page (noindex in the page registry) gets robots-noindex and no
+ * canonical, but keeps the sharing fields (sharing is a deliberate choice).
+ * @param {object} site the site.json content (migrated)
  * @param {{meta?: {title?: string, description?: string, og?: {title?: string, description?: string, image?: string}}}} page
- * @param {string} origin Sidens opprinnelse (https://...)
- * @param {string} path Sidens sti (/, /om-oss)
- * @param {{noindex?: boolean}} [entry] Sidens innslag i sideregisteret
+ * @param {string} origin The page's origin (https://...)
+ * @param {string} path The page's path (/, /om-oss)
+ * @param {{noindex?: boolean}} [entry] The page's entry in the page registry
  * @returns {{tag: string, attrs: Record<string, string>}[]}
  */
 export function pageMetaTags(site, page, origin, path, entry = {}) {
@@ -55,10 +55,10 @@ export function pageMetaTags(site, page, origin, path, entry = {}) {
 }
 
 /**
- * JSON-LD for nettstedet: Organization med navn, adresse, beskrivelse og
- * logo (feltene fra Nettsted-panelet). Rike søketreff for målgruppen
- * (forening, småbedrift) uten noen avhengighet.
- * @param {object} site site.json-innholdet (løftet)
+ * JSON-LD for the site: Organization with name, address, description and
+ * logo (the fields from the Site panel). Rich search results for the target
+ * audience (associations, small businesses) with no dependency.
+ * @param {object} site the site.json content (migrated)
  * @param {string} origin
  * @returns {object}
  */
@@ -77,9 +77,9 @@ export function siteJsonLd(site, origin) {
 }
 
 /**
- * Skriver metataggene og JSON-LD-en inn i <head>. Kalles per siderendering
- * hos besøkende; egne tidligere tagger byttes ut (klientside-navigasjon
- * senere skal kunne kalle igjen), merket med data-urd-seo.
+ * Writes the meta tags and the JSON-LD into <head>. Called per page render for
+ * visitors; its own earlier tags are replaced (client-side navigation can call
+ * it again), marked with data-urd-seo.
  */
 export function applyHeadMeta(site, page, origin, path, entry) {
   for (const el of document.head.querySelectorAll('[data-urd-seo]')) el.remove();

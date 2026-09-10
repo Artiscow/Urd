@@ -1,13 +1,14 @@
 /**
- * Kjerneblokk: handlekurv (butikken). En knapp med antall-badge som åpner
- * en skuff bygget på native `<dialog>`/showModal (ADR-0011: top-layer,
- * ::backdrop, fokusfelle og Escape gratis). Kurven bor i localStorage
- * (shop.js); skuffen viser linjene med antall-styring, sum og en valgfri
- * lenke til kassesiden. Badge og skuff følger urd-cart-change-hendelsen.
+ * Core block: basket (the shop). A button with a count badge that opens a
+ * drawer built on the native `<dialog>`/showModal (ADR-0011: top layer,
+ * ::backdrop, focus trap and Escape for free). The basket lives in
+ * localStorage (shop.js); the drawer shows the lines with quantity controls,
+ * the total and an optional link to the checkout page. Badge and drawer both
+ * follow the urd-cart-change event.
  */
 import { readCart, writeCart, cartSetQty, cartRemove, cartCount, cartTotal, formatPrice, onCartChange } from '../shop.js';
 import { iconSvg } from '../icons.js';
-// Kun kalt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
+// Only called in preview (after the admin dictionary has loaded): never at module level.
 import { ta, adminLocaleReady, t } from '../i18n.js';
 
 const el2 = (tag, className, textContent) => {
@@ -17,7 +18,7 @@ const el2 = (tag, className, textContent) => {
   return node;
 };
 
-/** Skuffens innhold bygges på nytt ved åpning og ved hver kurvendring. */
+/** The drawer content is rebuilt when it opens and on every basket change. */
 function renderDrawer(body, props, currency) {
   body.textContent = '';
   const items = readCart();
@@ -77,8 +78,9 @@ function renderDrawer(body, props, currency) {
 }
 
 /**
- * Kurvskuffen som gjenbrukbar fabrikk: blokka OG nav-kurven (nav.js) bygger
- * samme skuff. Kalleren fester dialogen i DOM-en og kaller open()/refresh().
+ * The basket drawer as a reusable factory: the block AND the nav basket
+ * (nav.js) build the same drawer. The caller attaches the dialog to the DOM
+ * and calls open()/refresh().
  */
 export function createCartDrawer({ href = '', currency = 'kr' } = {}) {
   const dialog = document.createElement('dialog');
@@ -94,7 +96,7 @@ export function createCartDrawer({ href = '', currency = 'kr' } = {}) {
   dialog.appendChild(head);
   const body = el2('div', 'urd-cart-body');
   dialog.appendChild(body);
-  // Lysavvisning: klikk på ::backdrop treffer selve dialog-elementet.
+  // Light dismiss: a click on the ::backdrop hits the dialog element itself.
   dialog.addEventListener('click', (event) => {
     if (event.target === dialog) dialog.close();
   });
@@ -120,7 +122,7 @@ export const cartBlock = {
   /**
    * @param {HTMLElement} el
    * @param {{variant?: string, href?: string, currency?: string}} props
-   * @param {object} ctx Render-kontekst
+   * @param {object} ctx Render context
    */
   render(el, props, ctx) {
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
@@ -148,9 +150,10 @@ export const cartBlock = {
       badge.hidden = count === 0;
     };
     updateBadge();
-    // I redigering åpner skuffen først når blokken alt var valgt VED trykket
-    // (markeringen skjer på pointerdown, før click): totrinns-mønsteret fra
-    // tekstblokkene. Første klikk velger blokken, andre åpner skuffen.
+    // While editing, the drawer opens only when the block was already selected
+    // AT the press (selection happens on pointerdown, before click): the
+    // two-step pattern from the text blocks. The first click selects the
+    // block, the second opens the drawer.
     let openArmed = !ctx.preview;
     if (ctx.preview) {
       btn.addEventListener('pointerdown', () => {
@@ -162,14 +165,14 @@ export const cartBlock = {
       drawer.open();
     });
 
-    // Kurvendringer fra produktkort/skuffen selv: badge alltid, skuffen når åpen.
+    // Basket changes from product cards or the drawer itself: badge always, drawer when open.
     onCartChange(el, () => {
       updateBadge();
       drawer.refresh();
     });
 
     if (editable) {
-      // Hjelpechipen (ADR-0008): kurven virker i forhåndsvisningen også.
+      // The help chip (ADR-0008): the basket works in the preview too.
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {

@@ -1,16 +1,16 @@
 /**
- * CSV-import/-eksport for samlinger (funksjonskartet C12): ren logikk uten
- * DOM, testet i tests/butikk.test.mjs-naboen tests/samlinger-csv.test.mjs.
- * Modulen importeres KUN av editoren (bundles der) og holdes bevisst
- * utenfor besøkende-lukningen: besøkende trenger den aldri.
+ * CSV import/export for collections (feature map C12): pure logic without DOM,
+ * tested in tests/collections-csv.test.mjs. The module is imported ONLY by the
+ * editor (bundled there) and deliberately kept outside the visitor closure:
+ * visitors never need it.
  *
- * Formatet er RFC 4180-aktig: komma-skilt, felt med komma/anførselstegn/
- * linjeskift pakkes i anførselstegn ("" er escapet anførselstegn). Første
- * rad er kolonnenavnene. Listefeltene sizes og colors skilles med «|»;
- * fargebilder følger ikke med i CSV (settes i panelet).
+ * The format is RFC 4180-like: comma separated, fields containing comma/quote/
+ * newline are wrapped in quotes ("" is an escaped quote). The first row holds
+ * the column names. The list fields sizes and colors are separated by «|»;
+ * color images are not carried in the CSV (they are set in the panel).
  */
 
-/** Kolonnene i eksport-rekkefølge. image er sti i media/ og runde-tripper. */
+/** The columns in export order. image is a path in media/ and round-trips. */
 const COLUMNS = ['id', 'title', 'date', 'text', 'href', 'image', 'price', 'memberPrice', 'badge', 'sizes', 'colors'];
 
 function csvField(value) {
@@ -18,14 +18,14 @@ function csvField(value) {
   return /[",\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
-/** Ett innslags celleverdi for en kolonne (lister og tall blir tekst). */
+/** One entry's cell value for a column (lists and numbers become text). */
 function cellFor(entry, column) {
   if (column === 'sizes') return (entry.sizes ?? []).join('|');
   if (column === 'colors') return (entry.colors ?? []).map((c) => c.name).join('|');
   return entry[column] ?? '';
 }
 
-/** Samlingens innslag som CSV-tekst (header + én rad per innslag). */
+/** The collection's entries as CSV text (header plus one row per entry). */
 export function entriesToCsv(entries) {
   const rows = [COLUMNS.join(',')];
   for (const entry of entries ?? []) {
@@ -34,7 +34,7 @@ export function entriesToCsv(entries) {
   return rows.join('\n') + '\n';
 }
 
-/** Rå CSV-tekst → rader av celler (håndterer anførselstegn og linjeskift i felt). */
+/** Raw CSV text → rows of cells (handles quotes and newlines inside fields). */
 export function parseCsv(text) {
   const rows = [];
   let row = [];
@@ -66,17 +66,17 @@ export function parseCsv(text) {
     row.push(cell);
     rows.push(row);
   }
-  // Helt tomme rader (doble linjeskift, avsluttende linje) forkastes.
+  // Completely empty rows (double newlines, a trailing line) are discarded.
   return rows.filter((r) => r.some((c) => c.trim() !== ''));
 }
 
 const splitList = (value) => String(value ?? '').split('|').map((s) => s.trim()).filter(Boolean);
 
 /**
- * CSV-tekst → innslag. Kolonnenavnene i første rad styrer tolkningen
- * (rekkefølgen er fri, ukjente kolonner ignoreres); rader uten tittel
- * hoppes over. id kan stå tom - kalleren tildeler da en ny.
- * @returns {{entries: object[], skipped: number}|null} null uten header/rader
+ * CSV text → entries. The column names in the first row drive the parsing
+ * (the order is free, unknown columns are ignored); rows without a title are
+ * skipped. id may be empty - the caller then assigns a new one.
+ * @returns {{entries: object[], skipped: number}|null} null without header/rows
  */
 export function csvToEntries(text) {
   const rows = parseCsv(text);
@@ -98,7 +98,7 @@ export function csvToEntries(text) {
     for (const field of ['price', 'memberPrice']) {
       const value = String(raw[field] ?? '').trim();
       if (value === '') continue;
-      // Komma-desimal fra regneark godtas; ugyldige tall hopper over feltet.
+      // Comma decimals from spreadsheets are accepted; invalid numbers skip the field.
       const n = Number(value.replace(',', '.'));
       if (Number.isFinite(n) && n >= 0) entry[field] = n;
     }

@@ -1,16 +1,17 @@
 /**
- * Ikonbiblioteket: tegnede SVG-ikoner (sosiale medier, kommunikasjon,
- * symboler, piler) som ikon-blokken kan vise i stedet for en glyf.
- * Ikonene er håndtegnede paths på et 24x24-rutenett, farges med
- * currentColor og skalerer skarpt i alle størrelser (i motsetning til
- * emoji, som har faste farger og varierer mellom plattformer).
+ * The icon library: drawn SVG icons (social media, communication, symbols,
+ * arrows) that the icon block can show instead of a glyph.
+ * The icons are hand-drawn paths on a 24x24 grid, colored with currentColor
+ * and scale crisply at every size (unlike emoji, which have fixed colors and
+ * vary between platforms).
  *
- * Id-ene er datakontrakt (lagres i props.icon) og er derfor engelske;
- * etikettene slås opp via labelKey (icon.*) med engelsk fallback (ADR-0021). Ukjent id skal aldri velte noe: iconSvg gir
- * null, og ikon-blokken faller tilbake til glyfen.
+ * The ids are data contract (stored in props.icon) and are therefore English;
+ * the labels are looked up via labelKey (icon.*) with an English fallback
+ * (ADR-0021). An unknown id must never topple anything: iconSvg returns null,
+ * and the icon block falls back to the glyph.
  */
 
-/** Ikoner tegnet med strek som standard; enkelte merker er fylte flater. */
+/** Icons are stroked by default; a few brand marks are filled shapes. */
 const STROKE = 'fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
 const FILL = 'fill="currentColor" stroke="none"';
 
@@ -78,10 +79,11 @@ export const ICON_LIBRARY = {
   share: { label: 'Share', labelKey: 'icon.share', body: '<circle cx="6" cy="12" r="2.6"/><circle cx="17.5" cy="5.5" r="2.6"/><circle cx="17.5" cy="18.5" r="2.6"/><path d="M8.4 10.8l6.8-4M8.4 13.2l6.8 4"/>' },
 };
 
-/** @type {Array<[string, string[]]>} Kategorinavn + ikon-ider, i visningsrekkefølge. */
-/* Kategorinavnene er NØKLER (ta-oppslag hos konsumenten; modulen ligger i
-   besøkende-lukningen og kan aldri kalle ta() på modulnivå). ICON_LIBRARY-
-   labelene under er merkenavn brukt i besøkende-aria-labels og oversettes aldri. */
+/** @type {Array<[string, string[]]>} Category names plus icon ids, in display order. */
+/* The category names are KEYS (looked up with ta() by the consumer; the module
+   sits in the visitor closure and can never call ta() at module level). The
+   ICON_LIBRARY labels are brand names used in visitor aria-labels and are never
+   translated. */
 export const ICON_CATEGORIES = [
   ['iconCat.social', ['facebook', 'instagram', 'x', 'linkedin', 'youtube', 'tiktok', 'whatsapp', 'snapchat', 'pinterest', 'spotify', 'discord', 'github']],
   ['iconCat.communication', ['mail', 'phone', 'smartphone', 'chat', 'send', 'globe', 'rss']],
@@ -91,8 +93,8 @@ export const ICON_CATEGORIES = [
 ];
 
 /**
- * Bygger den komplette SVG-strengen for et ikon, eller null for ukjent id.
- * Størrelsen settes av forelderen (width/height 100 %); fargen arves
+ * Builds the complete SVG string for an icon, or null for an unknown id.
+ * The size is set by the parent (width/height 100 %); the color is inherited
  * via currentColor.
  * @param {string} id
  * @returns {string|null}

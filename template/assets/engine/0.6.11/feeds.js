@@ -1,13 +1,13 @@
 /**
- * Publiserings-genererte synlighetsfiler (SEO-pakken): sitemap.xml,
- * robots.txt og RSS-feeder for daterte samlinger. Rene strengbyggere uten
- * DOM eller nettverk (node-testet); editoren kaller dem ved publisering og
- * committer resultatet som innholdsfiler, samme mønster som theme.css.
- * Absolutte adresser bygges fra opprinnelsen editoren kjører på (admin bor
- * på den deployerte siden).
+ * Publish-generated visibility files (the SEO pack): sitemap.xml, robots.txt
+ * and RSS feeds for dated collections. Pure string builders without DOM or
+ * network (node-tested); the editor calls them on publish and commits the
+ * result as content files, the same pattern as theme.css.
+ * Absolute addresses are built from the origin the editor runs on (admin lives
+ * on the deployed site).
  */
 
-/** XML-entiteter i tekstinnhold og attributter. */
+/** XML entities in text content and attributes. */
 export function escapeXml(text) {
   return String(text ?? '')
     .replaceAll('&', '&amp;')
@@ -18,9 +18,9 @@ export function escapeXml(text) {
 }
 
 /**
- * sitemap.xml for sideregisteret. Skjulte sider (noindex) utelates.
- * @param {{path: string, noindex?: boolean}[]} pages Sideregisteret (site.pages)
- * @param {string} origin F.eks. https://ekspempel.no (uten skråstrek)
+ * sitemap.xml for the page registry. Hidden pages (noindex) are left out.
+ * @param {{path: string, noindex?: boolean}[]} pages The page registry (site.pages)
+ * @param {string} origin E.g. https://ekspempel.no (without a trailing slash)
  * @returns {string}
  */
 export function buildSitemapXml(pages, origin) {
@@ -34,7 +34,7 @@ export function buildSitemapXml(pages, origin) {
 }
 
 /**
- * robots.txt: alt åpent unntatt admin, med peker til sitemapen.
+ * robots.txt: everything open except admin, pointing at the sitemap.
  * @param {string} origin
  * @returns {string}
  */
@@ -43,12 +43,12 @@ export function buildRobotsTxt(origin) {
   return `User-agent: *\nDisallow: /admin/\n\nSitemap: ${base}/sitemap.xml\n`;
 }
 
-/** Samlingstyper som får RSS-feed: datert innhold med abonnementsverdi. */
+/** Collection kinds that get an RSS feed: dated content worth subscribing to. */
 export const FEED_KINDS = ['news', 'notices', 'publications'];
 
 /**
- * RSS 2.0-feed for en samling. Innslagene leveres FERDIG som ren tekst
- * (rik tekst strippes av kalleren, som har DOM); datoer må være parsbare.
+ * RSS 2.0 feed for a collection. The entries arrive READY as plain text
+ * (rich text is stripped by the caller, which has the DOM); dates must be parsable.
  * @param {{title: string, description?: string, origin: string, path: string,
  *   items: {title: string, text?: string, date?: string, href?: string}[]}} feed
  * @returns {string}

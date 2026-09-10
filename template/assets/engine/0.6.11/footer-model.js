@@ -1,24 +1,24 @@
 /**
- * Ren footer-logikk: merkevare, kolonner, sosiale lenker og bunnlinje bygges
- * fra site.footer og sideregisteret. Ingen DOM - modulen er node-importerbar
- * og dekkes av tests/footer.test.mjs; DOM-byggingen bor i footer.js.
+ * Pure footer logic: brand, columns, social links and baseline are built from
+ * site.footer and the page registry. No DOM - the module is importable in node
+ * and covered by tests/footer.test.mjs; the DOM building lives in footer.js.
  */
 
 import { resolveItem, isSafeUrl } from './nav-model.js';
 
-// Trygg-URL-vokteren bor i nav-model (delt med resolveItem); re-eksporteres her
-// for footer.js og testene som importerer den herfra.
+// The safe-URL guard lives in nav-model (shared with resolveItem); re-exported
+// here for footer.js and the tests that import it from here.
 export { isSafeUrl };
 
-// Trygt til streng: håndredigert site.json kan ha tall/bool der modellen venter
-// tekst. Da gir vi tom streng i stedet for å la .trim()/.split() kaste og velte
-// hele footer-renderen (siden dør aldri av dårlig data).
+// Safe to string: hand-edited site.json can hold numbers/booleans where the
+// model expects text. An empty string keeps .trim()/.split() from throwing and
+// toppling the whole footer render (the page never dies of bad data).
 const str = (v) => (typeof v === 'string' ? v : '');
 
 /**
- * Merkevare-kolonnen: eksplisitt tittel + valgfri tagline. Ingen fallback til
- * sidetittelen - en footer som nettopp er skrudd på skal være tom, ikke fylles
- * med sidenavnet. Null når det ikke finnes noe å vise.
+ * The brand column: explicit title plus optional tagline. No fallback to the
+ * site title - a footer that was just switched on should be empty, not filled
+ * with the site name. Null when there is nothing to show.
  * @param {object} site
  * @returns {{title: string, tagline: string}|null}
  */
@@ -26,8 +26,8 @@ export function footerBrand(site) {
   const brand = site.footer?.brand ?? {};
   const title = str(brand.title).trim();
   const tagline = str(brand.tagline).trim();
-  // Merket kan være tekst, opplastet logo (bilde) eller begge (additivt fra
-  // v0.6, speiler nav-logoen). mode styrer hva som vises.
+  // The brand can be text, an uploaded logo (image) or both (additive since
+  // v0.6, mirroring the nav logo). mode controls what is shown.
   const logo = str(brand.logo).trim();
   const mode = brand.mode === 'image' || brand.mode === 'both' ? brand.mode : 'text';
   const hasLogo = logo && mode !== 'text';
@@ -36,9 +36,9 @@ export function footerBrand(site) {
 }
 
 /**
- * Kolonnene med resolverte lenker (page → sti, href → ekstern). Lenker uten
- * etikett hoppes over, og en kolonne uten gyldige lenker rendres ikke (en
- * ensom tittel er ikke verdt en kolonne i den ferdige footeren).
+ * The columns with resolved links (page → path, href → external). Links without
+ * a label are skipped, and a column with no valid links is not rendered (a lone
+ * title is not worth a column in the finished footer).
  * @param {object} site
  * @returns {Array<{title: string, links: Array<{label: string, href: string, external: boolean, missing: boolean}>}>}
  */
@@ -53,8 +53,8 @@ export function footerColumns(site) {
       return {
         title: str(col.title).trim(),
         links,
-        // Lang kolonne (mange lenker, eller eksplisitt col.wide): rendres over
-        // to spor og deles i to underkolonner, så footeren holder seg symmetrisk.
+        // Long column (many links, or an explicit col.wide): rendered across two
+        // tracks and split into two sub-columns, so the footer stays symmetric.
         wide: col.wide === true || links.length > 6,
       };
     })
@@ -62,8 +62,8 @@ export function footerColumns(site) {
 }
 
 /**
- * Bunnlinjas valgfrie høyre-lenker (personvern/vilkår/«Laget med Urd»),
- * resolvert som kolonne-lenkene. Additivt fra v0.6.
+ * The baseline's optional right-hand links (privacy/terms/«Made with Urd»),
+ * resolved like the column links. Additive since v0.6.
  * @param {object} site
  * @returns {Array<{label: string, href: string, external: boolean, missing: boolean}>}
  */
@@ -74,8 +74,8 @@ export function footerBaselineLinks(site) {
 }
 
 /**
- * Doormat-lenkeraden: én sentrert rad med lenker (Sentrert- og Stor CTA-malen).
- * Additivt fra v0.6.
+ * The doormat link row: one centered row of links (the Centered and Big CTA
+ * templates). Additive since v0.6.
  * @param {object} site
  * @returns {Array<{label: string, href: string, external: boolean, missing: boolean}>}
  */
@@ -86,10 +86,10 @@ export function footerLinkRow(site) {
 }
 
 /**
- * Handlingsoppfordringen (CTA, additivt fra v0.6): normalisert eller null.
- * `kind` er 'button' (knapp som lenke) eller 'newsletter' (e-postfelt). `big`
- * gir den store sentrerte varianten. Knapp-CTA krever knappetekst; nyhetsbrev
- * krever minst en overskrift - ellers er CTA-en tom (null).
+ * The call to action (CTA, additive since v0.6): normalized or null.
+ * `kind` is 'button' (button as a link) or 'newsletter' (email field). `big`
+ * gives the large centered variant. A button CTA requires button text; a
+ * newsletter requires at least a heading - otherwise the CTA is empty (null).
  * @param {object} site
  * @returns {{kind: string, heading: string, sub: string, label: string, big: boolean, target: object|null, endpoint: string, recipient: string, success: string}|null}
  */
@@ -106,8 +106,8 @@ export function footerCta(site) {
     kind,
     heading,
     sub: str(cta.sub).trim(),
-    // Tom label/success fylles av render-laget med besøkende-språkets
-    // standardtekst (footer.js + t()); modellen er språkfri (ADR-0012).
+    // An empty label/success is filled in by the render layer with the visitor
+    // language's default text (footer.js + t()); the model is language-free (ADR-0012).
     label: rawLabel,
     big: cta.big === true,
     target: kind === 'button' ? resolveItem({ label: rawLabel, page: cta.page, href: cta.href }, pages) : null,
@@ -118,8 +118,8 @@ export function footerCta(site) {
 }
 
 /**
- * Sosiale lenker: kun trygge URL-er slippes gjennom (footer.js verifiserer
- * i tillegg ikon-id-en via iconSvg og dropper ukjente).
+ * Social links: only safe URLs pass through (footer.js additionally verifies
+ * the icon id via iconSvg and drops unknown ones).
  * @param {object} site
  * @returns {Array<{icon: string, url: string}>}
  */
@@ -131,8 +131,8 @@ export function footerSocial(site) {
 }
 
 /**
- * Bunnlinja: eksplisitt copyright om satt, ellers de gamle text-linjene
- * (bakoverkompatibelt - en footer med kun text rendres som før).
+ * The baseline: explicit copyright when set, otherwise the plain text lines
+ * (backwards compatible: a footer with only text renders unchanged).
  * @param {object} site
  * @returns {Array<string>}
  */
@@ -144,8 +144,8 @@ export function footerBaseline(site) {
 }
 
 /**
- * Har footeren noe av det NYE innholdet (merkevare/kolonner/sosiale/copyright)?
- * Nei → footer.js beholder den gamle, byte-like tekst-rendringen.
+ * Does the footer have any rich content (brand/columns/social/copyright)?
+ * No → footer.js keeps the byte-identical plain text rendering.
  * @param {object} site
  * @returns {boolean}
  */

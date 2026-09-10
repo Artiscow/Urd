@@ -1,12 +1,12 @@
 /**
- * Bakgrunnslag: bildegalleri. Blar gjennom flere bilder med myk krysstoning
- * (hero-galleri). Med ett bilde, eller når den besøkende foretrekker
- * redusert bevegelse, degraderer laget til et statisk bildelag.
+ * Background layer: image gallery. Cycles through several images with a soft
+ * cross-fade (hero gallery). With a single image, or when the visitor prefers
+ * reduced motion, the layer degrades to a static image layer.
  *
- * Krysstoningen bruker to stablede barn (.urd-bg-slide) som bytter på å
- * være synlige; neste bilde forhåndslastes FØR toningen starter, så det
- * aldri tones inn mot et halvlastet bilde. Timeren rydder seg selv når
- * laget forsvinner fra DOM (re-render-churn i preview).
+ * The cross-fade uses two stacked children (.urd-bg-slide) that take turns
+ * being visible; the next image is preloaded BEFORE the fade starts, so it
+ * never fades in against a half-loaded image. The timer cleans itself up when
+ * the layer leaves the DOM (re-render churn in the preview).
  */
 import { canAutoplay, normalizeInterval, stepIndex } from '../gallery-model.js';
 import { isSafeImage } from '../nav-model.js';
@@ -24,14 +24,14 @@ export const slideshowLayer = {
    *          interval?: number, fade?: number, opacity?: number, blur?: number}} props
    */
   render(el, props) {
-    // Kildene går rett inn i CSS-url(), så de siles gjennom samme vokter som bildelaget.
+    // The sources go straight into CSS url(), so they pass the same guard as the image layer.
     const images = (props.images ?? []).filter((img) => isSafeImage(img?.src));
     if (!images.length) return;
 
     el.classList.add('urd-bg-slideshow');
     el.style.opacity = String(props.opacity ?? 1);
-    // Litt overskalering ved blur, så kantene ikke "blør" transparent
-    // (samme triks som bildelaget).
+    // A little oversizing when blurred, so the edges do not "bleed" transparent
+    // (the same trick as the image layer).
     if (props.blur > 0) {
       el.style.filter = `blur(${props.blur}px)`;
       el.style.inset = `-${props.blur * 2}px`;
@@ -46,8 +46,8 @@ export const slideshowLayer = {
       slide.style.backgroundPosition = bgPosition(img.x, img.y);
     };
 
-    // Samme lastevern som bildelaget: hold laget usynlig til første bilde
-    // er ferdig lastet, så det aldri dukker opp stripevis.
+    // Same load guard as the image layer: keep the layer invisible until the first
+    // image has finished loading, so it never appears in stripes.
     const probe = new Image();
     probe.src = images[0].src;
     if (!probe.complete) {
@@ -71,7 +71,7 @@ export const slideshowLayer = {
 
     let index = 0;
     let front = first;
-    // Toningen må rekke å bli ferdig før neste bytte.
+    // The fade must have time to finish before the next swap.
     const ms = Math.max(normalizeInterval(props.interval, { fallback: 6 }), fade + 0.5) * 1000;
     const timerId = setInterval(() => {
       if (!el.isConnected) {
@@ -95,7 +95,7 @@ export const slideshowLayer = {
         swap();
       } else {
         next.addEventListener('load', swap, { once: true });
-        // Et ødelagt bilde hoppes over, så rulleringen ikke står fast på det.
+        // A broken image is skipped, so the rotation does not get stuck on it.
         next.addEventListener('error', () => { index = nextIndex; }, { once: true });
       }
     }, ms);

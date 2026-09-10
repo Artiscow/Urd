@@ -1,14 +1,14 @@
 /**
- * Ren logikk for footer-CTA-ens nyhetsbrev-innsending: e-postvalidering,
- * honeypot-sjekk, endepunkt-payload og mailto-fallback. Ingen DOM, ingen fetch
- * (DOM-en og selve fetch-en bor i footer.js). Motoren skal aldri avhenge av en
- * plugin, så disse hjelperne speiler - men importerer IKKE - skjema-pluginens
- * form.js. Dekket av tests/footer-cta.test.mjs.
+ * Pure logic for the footer CTA's newsletter submission: email validation,
+ * honeypot check, endpoint payload and mailto fallback. No DOM, no fetch (the
+ * DOM and the fetch itself live in footer.js). The engine must never depend on
+ * a plugin, so these helpers mirror - but do NOT import - the form plugin's
+ * form.js. Covered by tests/footer-cta.test.mjs.
  */
 import { t } from './i18n.js';
 
-// Enkel e-postform (ikke RFC-komplett, samme som skjema-pluginen): noe før @,
-// noe etter, og et punktum i domenet.
+// Simple email shape (not RFC complete, the same as the form plugin): something
+// before @, something after, and a dot in the domain.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** @param {unknown} value @returns {boolean} */
@@ -16,14 +16,14 @@ export function isEmail(value) {
   return typeof value === 'string' && EMAIL_RE.test(value.trim());
 }
 
-/** Honeypot: et skjult felt som kun bots fyller ut. Ikke-tomt = spam. */
+/** Honeypot: a hidden field only bots fill in. Non-empty = spam. */
 export function isSpam(honeypot) {
   return typeof honeypot === 'string' && honeypot.trim() !== '';
 }
 
 /**
- * JSON-payload til nyhetsbrev-endepunktet (Formspree/Mailchimp/egen function).
- * `extra` (f.eks. { side: location.pathname }) legges først, e-posten sist.
+ * JSON payload for the newsletter endpoint (Formspree/Mailchimp/own function).
+ * `extra` (e.g. { side: location.pathname }) goes first, the email last.
  * @param {string} email
  * @param {Record<string, string>} [extra]
  * @returns {Record<string, string>}
@@ -33,9 +33,9 @@ export function buildNewsletterPayload(email, extra = {}) {
 }
 
 /**
- * Mailto-fallback når det ikke finnes et endepunkt. Null når mottaker mangler.
- * Mellomrom kodes som %20 (URLSearchParams gir +), slik at e-postklienter
- * tolker emne/tekst riktig - samme knep som skjema-pluginens buildMailto.
+ * Mailto fallback when there is no endpoint. Null when the recipient is missing.
+ * Spaces are encoded as %20 (URLSearchParams gives +), so email clients read the
+ * subject and body correctly - the same trick as the form plugin's buildMailto.
  * @param {string} recipient
  * @param {string} email
  * @returns {string|null}
@@ -51,8 +51,8 @@ export function buildNewsletterMailto(recipient, email) {
 }
 
 /**
- * Origin for et endepunkt (til _headers connect-src-instruksen i editoren).
- * Null ved ugyldig URL.
+ * Origin of an endpoint (for the _headers connect-src instruction in the editor).
+ * Null for an invalid URL.
  * @param {string} url
  * @returns {string|null}
  */

@@ -1,34 +1,36 @@
 /**
- * Kjerneblokk: FAQ-akkordeon. Bygget på det native <details name>-elementet:
- * svaret foldes ut ved klikk på spørsmålsraden (summary), nettleseren eier
- * åpen/lukket-tilstanden, tastatur- og skjermleser-semantikken, og `name` gir
- * eksklusiv utfolding (ett åpent svar av gangen) uten JS. Finn-på-siden åpner
- * automatisk et treff. Myk utfolding via ::details-content der nettleseren
- * støtter det (base.css, bak @supports); ellers folder svaret ut momentant.
+ * Core block: FAQ accordion. Built on the native <details name> element: the
+ * answer unfolds on a click on the question row (summary), the browser owns the
+ * open/closed state and the keyboard and screen reader semantics, and `name`
+ * gives exclusive unfolding (one open answer at a time) without JS. Find-in-page
+ * opens a match automatically. Soft unfolding via ::details-content where the
+ * browser supports it (base.css, behind @supports); otherwise the answer unfolds
+ * instantly.
  *
- * Hos besøkende åpner klikk hvor som helst på summary-raden. I editoren er
- * tekstene direkte redigerbare, så der setter klikk på spørsmålsteksten
- * skrivemerket; kun pil-ikonet folder ut.
+ * For visitors a click anywhere on the summary row opens it. In the editor the
+ * texts are directly editable, so there a click on the question text places the
+ * caret; only the arrow icon unfolds.
  *
- * Åpne/lukkede svar er visningstilstand, aldri innhold: blokkens lagrede høyde
- * er alltid den sammenfoldede (autovekst via urd-grow som de andre
- * datablokkene), og utfolding vokser kun visuelt.
+ * Open and closed answers are view state, never content: the block's stored
+ * height is always the collapsed one (auto-grow via urd-grow like the other data
+ * blocks), and unfolding grows only visually.
  */
 import { stripActiveContent } from '../sanitize.js';
 import { growSectionTo } from '../render.js';
 import { boxStyleCss } from '../box-style.js';
-// Kun kallt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
+// Only called in preview (after the admin dictionary is loaded): never at module level.
 import { ta, adminLocaleReady } from '../i18n.js';
 
 /**
- * Gruppenavnet for FAQ-elementene (ren, node-testbar). Uten `multi` deler alle
- * spørsmålene i blokken ett navn, som gir native eksklusiv utfolding (ett åpent
- * svar av gangen); med `multi` er navnet tomt så flere kan stå åpne. Navnet
- * bindes til blokk-id-en så to FAQ-blokker på samme side ikke slår hverandre av.
+ * The group name for the FAQ elements (pure, node-testable). Without `multi` all
+ * the questions in the block share one name, which gives native exclusive
+ * unfolding (one open answer at a time); with `multi` the name is empty so
+ * several can stay open. The name is bound to the block id so two FAQ blocks on
+ * the same page do not switch each other off.
  *
- * @param {string} blockId Blokkens id
- * @param {boolean} multi Om flere svar kan stå åpne samtidig
- * @returns {string} name-attributtet, eller '' når det ikke skal settes
+ * @param {string} blockId The block id
+ * @param {boolean} multi Whether several answers can be open at the same time
+ * @returns {string} The name attribute, or '' when it should not be set
  */
 export function groupName(blockId, multi) {
   return multi ? '' : `urd-faq-${blockId || 'x'}`;
@@ -41,7 +43,7 @@ export const faqBlock = {
   autoGrow: true,
   label: 'FAQ',
   labelKey: 'blocks.faq',
-  // Seed-regelen (ADR-0012): ta() kalles kun her ved innsetting i preview.
+  // The seed rule (ADR-0012): ta() is called only here, on insertion in preview.
   defaults: () => ({
     items: [
       { q: ta('seed.faq.q1'), a: ta('seed.faq.answer') },
@@ -54,7 +56,7 @@ export const faqBlock = {
   /**
    * @param {HTMLElement} el
    * @param {{items: Array<{q: string, a: string}>, multi?: boolean, boxStyle?: object}} props
-   * @param {object} ctx Render-kontekst
+   * @param {object} ctx Render context
    */
   render(el, props, ctx) {
     const host = document.createElement('div');
@@ -63,7 +65,7 @@ export const faqBlock = {
     const post = (msg) => window.parent?.postMessage(msg, location.origin);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
 
-    /** Leser gjeldende tekster ut av DOM-en og melder hele items-listen. */
+    /** Reads the current texts out of the DOM and posts the whole items list. */
     const postItems = () => {
       const items = [...host.querySelectorAll('.urd-faq-item')].map((item) => ({
         q: item.querySelector('.urd-faq-q')?.textContent ?? '',
@@ -77,9 +79,9 @@ export const faqBlock = {
       });
     };
 
-    /** Visuell høyde: sammenfoldet basis + de åpne svarene. Kun visning, aldri
-     *  bokført i utkastet (urd-grow melder alltid den sammenfoldede). Måler
-     *  svarenes egen høyde, uavhengig av utfoldingsanimasjonen. */
+    /** Visual height: the collapsed base plus the open answers. Display only,
+     *  never recorded in the draft (urd-grow always posts the collapsed height).
+     *  Measures the answers' own height, independent of the unfold animation. */
     const adjustHeight = () => {
       const openHeights = [...host.querySelectorAll('.urd-faq-item[open] .urd-faq-a')]
         .reduce((sum, a) => sum + a.scrollHeight, 0);
@@ -102,16 +104,15 @@ export const faqBlock = {
       const q = document.createElement('span');
       q.className = 'urd-faq-q';
       q.textContent = entry.q ?? '';
-      // Pil-ikonet er dekorativt: summary er selve den native veksleren, så
-      // ikonet skal ikke annonseres for seg (aria-hidden).
+      // The arrow icon is decorative: summary is the native toggle itself, so
+      // the icon must not be announced separately (aria-hidden).
       const chevron = document.createElement('span');
       chevron.className = 'urd-faq-toggle';
       chevron.setAttribute('aria-hidden', 'true');
       chevron.innerHTML = CHEVRON;
-      // Uten stopp ville pointerdown boble til blokkens dra-/markeringslyttere
-      // (den gamle knappen var dekket av «button»-unntaket i preview-edit).
-      // Stopper kun bobling, ikke standardhandlingen, så native toggle (click)
-      // fortsatt fyrer.
+      // Without the stop, pointerdown would bubble to the block's drag and
+      // selection listeners. Only bubbling is stopped, not the default action,
+      // so the native toggle (click) still fires.
       chevron.addEventListener('pointerdown', (event) => event.stopPropagation());
       head.append(q, chevron);
 
@@ -126,13 +127,14 @@ export const faqBlock = {
       item.append(head, region);
       host.appendChild(item);
 
-      // Native <details> vokser/krymper selv; vi justerer kun blokkrammens
-      // VISUELLE høyde (og seksjonens minHeight) så utfoldingen ikke klippes.
+      // Native <details> grows and shrinks on its own; we adjust only the block
+      // frame's VISUAL height (and the section's minHeight) so the unfolding is
+      // not clipped.
       item.addEventListener('toggle', adjustHeight);
 
       if (editable) {
-        // Klikk-og-skriv som tekstblokken: spørsmålet er ren tekst, svaret rik
-        // tekst (.urd-text[contenteditable] gir formateringslinjen).
+        // Click-and-type like the text block: the question is plain text, the
+        // answer rich text (.urd-text[contenteditable] gives the formatting bar).
         try {
           q.contentEditable = 'plaintext-only';
         } catch {
@@ -144,12 +146,13 @@ export const faqBlock = {
           postItems();
           adjustHeight();
         });
-        // Klikk på spørsmålsteksten skal sette skrivemerket, ikke folde ut; kun
-        // pil-ikonet veksler (native toggle på summary via chevron-klikket).
+        // A click on the question text places the caret rather than unfolding;
+        // only the arrow icon toggles (native toggle on summary via the chevron
+        // click).
         head.addEventListener('click', (event) => {
           if (!chevron.contains(event.target)) event.preventDefault();
         });
-        // Mellomrom/Enter mens spørsmålet redigeres skal skrives, ikke folde ut.
+        // Space and Enter while the question is edited are typed, not a toggle.
         q.addEventListener('keydown', (event) => {
           if (event.key === ' ' || event.key === 'Enter') event.stopPropagation();
         });
@@ -157,8 +160,8 @@ export const faqBlock = {
     });
 
     if (editable) {
-      // Hjelpechipen (ADR-0008): blokken har spesialfunksjoner og forklarer seg selv.
-      // adminLocaleReady: første render kan skje før ordboka er lastet i boot.
+      // The help chip (ADR-0008): the block has special functions and explains itself.
+      // adminLocaleReady: the first render can happen before boot has loaded the dictionary.
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {
@@ -173,9 +176,9 @@ export const faqBlock = {
       });
     }
 
-    // Autovekst (som samling-blokken): rammen følger den sammenfoldede høyden.
-    // Alle svar er lukket ved oppstart, så host.scrollHeight = sammenfoldet.
-    // KUN høyden meldes (urd-grow), aldri hele framen.
+    // Auto-grow (like the collection block): the frame follows the collapsed height.
+    // All answers are closed at startup, so host.scrollHeight = collapsed.
+    // ONLY the height is posted (urd-grow), never the whole frame.
     requestAnimationFrame(() => {
       if (!el.isConnected) return;
       el._urdFaqBase = host.scrollHeight;

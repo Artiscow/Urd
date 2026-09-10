@@ -1,11 +1,11 @@
 /**
- * Blokk-søket (0.6.7): ren tekstmatching for innsettingsmenyene. Matcher
- * mot de SYNLIGE (ta-oversatte) etikettene menyene alt viser, aldri mot
- * nøkler eller re-oversettelser. Diakritikk og store/små bokstaver
- * spiller ingen rolle (NFD-stripp). Ingen DOM - node-testbart.
+ * The block search: plain text matching for the insertion menus. Matches
+ * against the VISIBLE (ta-translated) labels the menus already show, never
+ * against keys or re-translations. Diacritics and letter case do not matter
+ * (NFD stripping). No DOM - node-testable.
  */
 
-/** Sammenlignbar form: små bokstaver uten diakritiske tegn. */
+/** Comparable form: lower case without diacritical marks. */
 export function normalize(str) {
   return String(str ?? '')
     .toLowerCase()
@@ -14,9 +14,9 @@ export function normalize(str) {
 }
 
 /**
- * Rangering for trefflisten: 0 = etiketten starter med søket, 1 = et ord i
- * etiketten starter med søket, 2 = søket finnes i etiketten, -1 = bom.
- * Tomt søk matcher alt (rang 2), så kalleren kan vise hele listen.
+ * Ranking for the hit list: 0 = the label starts with the query, 1 = a word in
+ * the label starts with the query, 2 = the query occurs in the label, -1 = miss.
+ * An empty query matches everything (rank 2), so the caller can show the whole list.
  */
 export function rankLabel(label, query) {
   const q = normalize(query).trim();
@@ -28,14 +28,14 @@ export function rankLabel(label, query) {
   return -1;
 }
 
-/** Sant når etiketten matcher søket (tomt søk matcher alt). */
+/** True when the label matches the query (an empty query matches everything). */
 export function matchLabel(label, query) {
   return rankLabel(label, query) >= 0;
 }
 
 /**
- * Filtrer og rangér en liste av innslag mot søket: beste rang først,
- * lik rang beholder listens rekkefølge (stabil sort).
+ * Filter and rank a list of entries against the query: best rank first,
+ * equal ranks keep the list order (stable sort).
  * @param {Array<object>} items
  * @param {string} query
  * @param {(item: object) => string} getLabel

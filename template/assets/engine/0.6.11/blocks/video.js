@@ -1,12 +1,12 @@
 /**
- * Kjerneblokk: video/embed. Lim inn en YouTube- eller Vimeo-lenke, så
- * rendres personvernvennlig innbygging (youtube-nocookie / dnt=1).
- * CSP-en i _headers har et bevisst frame-src-unntak for akkurat disse
- * to vertene - andre embeds krever plugin og eget CSP-valg hos eieren.
+ * Core block: video/embed. Paste a YouTube or Vimeo link and a
+ * privacy-friendly embed is rendered (youtube-nocookie / dnt=1).
+ * The CSP in _headers has a deliberate frame-src exception for exactly
+ * these two hosts; other embeds need a plugin and the owner's own CSP choice.
  */
 import { t, ta } from '../i18n.js';
 
-/** Finner innbyggings-URL for en kjent videotjeneste, ellers null. */
+/** Returns the embed URL for a known video service, otherwise null. */
 export function embedUrl(raw) {
   let url;
   try {
@@ -16,7 +16,7 @@ export function embedUrl(raw) {
   }
   const host = url.hostname.replace(/^www\./, '');
 
-  // YouTube-id-er er alfanumeriske med bindestrek/understrek; alt annet (deriblant ekstra sti-segmenter) avvises.
+  // YouTube ids are alphanumeric with hyphens/underscores; anything else (including extra path segments) is rejected.
   const ytId = (id) => (/^[\w-]{5,}$/.test(id ?? '') ? id : null);
 
   if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtube-nocookie.com') {
@@ -32,14 +32,14 @@ export function embedUrl(raw) {
     return id ? `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}` : null;
   }
   if (host === 'vimeo.com') {
-    // Privatlenker har formen vimeo.com/<id>/<hash>; hashen må med som ?h= for at spilleren skal godta videoen.
+    // Private links have the form vimeo.com/<id>/<hash>; the hash must be passed as ?h= for the player to accept the video.
     const [id, hash] = url.pathname.split('/').filter(Boolean);
     if (!/^\d+$/.test(id ?? '')) return null;
     const h = /^[a-f0-9]+$/i.test(hash ?? '') ? `h=${hash}&` : '';
     return `https://player.vimeo.com/video/${id}?${h}dnt=1`;
   }
   if (host === 'player.vimeo.com') {
-    // Kun ekte spiller-stier (/video/<id>) godtas, og en eventuell privathash (?h=) beholdes.
+    // Only real player paths (/video/<id>) are accepted, and any private hash (?h=) is kept.
     const m = /^\/video\/(\d+)\/?$/.exec(url.pathname);
     if (!m) return null;
     const hash = url.searchParams.get('h');
@@ -63,7 +63,7 @@ export const videoBlock = {
   render(el, props, ctx) {
     const src = embedUrl(props.url);
     if (!src) {
-      // Uten (gyldig) URL: rolig plassholder, aldri krasj.
+      // Without a valid URL: a quiet placeholder, never a crash.
       const hint = document.createElement('div');
       hint.className = 'urd-video-empty';
       hint.textContent = props.url ? t('video.unknownUrl') : t('video.emptyHint');
@@ -78,7 +78,7 @@ export const videoBlock = {
     frame.loading = 'lazy';
     frame.style.cssText = 'width:100%;height:100%;border:0;display:block;';
     el.appendChild(frame);
-    // I redigeringsmodus skal klikk markere blokken, ikke starte spilleren.
+    // In edit mode a click selects the block instead of starting the player.
     if (ctx.preview && ctx.viewport !== 'mobile') {
       const shield = document.createElement('div');
       shield.className = 'urd-video-shield';

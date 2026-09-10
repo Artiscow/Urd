@@ -1,16 +1,16 @@
 /**
- * Ren plasseringslogikk for nye blokker: «+ Ny blokk» skal legge blokken
- * DER eieren klikket i seksjonen, ikke på en fast plass. Holdes DOM-fri
- * så matematikken kan kontraktstestes (tests/place.test.mjs).
+ * Pure placement logic for new blocks: adding a block puts it WHERE the
+ * owner clicked in the section, not at a fixed spot. Kept DOM-free so the
+ * maths can be contract-tested (tests/place.test.mjs).
  */
 
 /**
- * Sentrerer en w×h-frame på et klikkpunkt, klemt innenfor seksjonen og
- * snappet til gridet. x/w er i prosent av seksjonsbredden, y/h/grid i px
- * (samme fysiske enheter som frames ellers, se docs/SKJEMA.md).
+ * Centres a w×h frame on a click point, clamped inside the section and
+ * snapped to the grid. x/w are percentages of the section width, y/h/grid
+ * in px (the same physical units as frames elsewhere, see docs/SKJEMA.md).
  *
  * @param {{ x: number, y: number, w: number, h: number, grid: { size: number, snap?: boolean }, snap?: boolean }} p
- *   x/y er klikkpunktet (seksjonsrelativt); p.snap === false gir fri plassering.
+ *   x/y is the click point (section-relative); p.snap === false gives free placement.
  * @returns {{ x: number, y: number }}
  */
 export function frameAtPoint(p) {

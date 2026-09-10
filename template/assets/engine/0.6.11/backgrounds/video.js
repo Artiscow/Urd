@@ -1,21 +1,21 @@
 /**
- * Bakgrunnslag: video (funksjonskartet C6). Selvhostet mp4/webm-loop fra
- * media/ (eller en data-URL for upubliserte opplastinger i utkast;
- * publisering materialiserer den til fil, samme flyt som bildelaget).
- * Personvennlig: filen er git-eid, ingen tredjepartsverter.
+ * Background layer: video (feature map C6). Self-hosted mp4/webm loop from
+ * media/ (or a data URL for unpublished uploads in a draft; publishing
+ * materializes it into a file, the same flow as the image layer).
+ * Privacy-friendly: the file is git-owned, no third-party hosts.
  *
- * Avspilling: autoplay krever muted + playsinline; loopen pauses utenfor
- * viewporten via delt IntersectionObserver (logikk, ikke animasjon,
- * ADR-0011). Ved prefers-reduced-motion spilles aldri video: plakatbildet
- * vises som stillbilde, og uten plakat utelates laget så lagene under
- * synes - alltid en sluttilstand, aldri skjult innhold.
+ * Playback: autoplay requires muted + playsinline; the loop is paused outside
+ * the viewport via a shared IntersectionObserver (logic, not animation,
+ * ADR-0011). With prefers-reduced-motion video never plays: the poster is
+ * shown as a still image, and without a poster the layer is left out so the
+ * layers below show through - always an end state, never hidden content.
  */
 
 import { isSafeImage } from '../nav-model.js';
 import { bgPosition, mountLayerParallax } from './image.js';
 
-/* Kilden går rett inn i video-elementets src: samme ankrede vokter-mønster
-   som bildelagene (isSafeImage), begrenset til media/-stier og video-data-URL-er. */
+/* The source goes straight into the video element's src: the same anchored guard
+   pattern as the image layers (isSafeImage), limited to media/ paths and video data URLs. */
 const SAFE_VIDEO_RE = /^(?:data:video\/[\w.+-]+;base64,[A-Za-z0-9+/=]+|\/media\/[\w%./-]+\.(?:mp4|webm))$/i;
 
 /** @param {unknown} src @returns {boolean} */
@@ -23,8 +23,8 @@ export function isSafeVideo(src) {
   return typeof src === 'string' && SAFE_VIDEO_RE.test(src);
 }
 
-// Delt observer: bakgrunnsvideoer spiller kun mens seksjonen er i viewporten.
-// Frakoblede elementer (etter re-render) lukes ut i callbacken.
+// Shared observer: background videos play only while the section is in the viewport.
+// Detached elements (after a re-render) are weeded out in the callback.
 let videoObserver = null;
 function observeVideo(video) {
   videoObserver ??= new IntersectionObserver((entries) => {
@@ -33,8 +33,8 @@ function observeVideo(video) {
         videoObserver.unobserve(entry.target);
         continue;
       }
-      // play() kan avvises av autoplay-policyen; da står plakaten/første
-      // ramme, som er en ren sluttilstand.
+      // play() can be rejected by the autoplay policy; the poster / first frame
+      // then stays, which is a clean end state.
       if (entry.isIntersecting) entry.target.play().catch(() => {});
       else entry.target.pause();
     }
@@ -65,7 +65,7 @@ export const videoLayer = {
     if (!isSafeVideo(props.src)) return;
     el.style.opacity = String(props.opacity ?? 1);
 
-    // Redusert bevegelse: plakatbildet som stillbilde (samme utsnitt).
+    // Reduced motion: the poster as a still image (same framing).
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
       if (!isSafeImage(props.poster)) return;
       const still = document.createElement('img');
@@ -85,20 +85,20 @@ export const videoLayer = {
     video.loop = true;
     video.playsInline = true;
     video.setAttribute('playsinline', '');
-    // Observeren starter avspillingen (aldri autoplay-attributtet), og med
-    // preload=metadata lastes selve filmen først når seksjonen nærmer seg
-    // viewporten - en video under folden koster ellers hele filen ved last.
+    // The observer starts playback (never the autoplay attribute), and with
+    // preload=metadata the film itself is loaded only when the section approaches
+    // the viewport - a video below the fold otherwise costs the whole file on load.
     video.preload = 'metadata';
     video.disablePictureInPicture = true;
-    // Ren dekor: bakgrunnen skal aldri annonseres av skjermlesere.
+    // Pure decoration: the background is never announced by screen readers.
     video.setAttribute('aria-hidden', 'true');
     if (isSafeImage(props.poster)) video.poster = props.poster;
     video.src = props.src;
     fillStyle(video, props.fit, props.x, props.y);
     el.appendChild(video);
     observeVideo(video);
-    // Parallax (additivt): bildelagets maskineri; cover overskanner kantene,
-    // contain forskyves fritt med luft rundt.
+    // Parallax (additive): the image layer's machinery; cover overscans the edges,
+    // contain shifts freely with space around it.
     if (props.parallax > 0) mountLayerParallax(video, props.parallax, 0, props.fit === 'contain' ? 'contain' : 'cover');
   },
 };

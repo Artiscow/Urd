@@ -1,18 +1,18 @@
 /**
- * Kjerneblokk: kasse (butikken). Bestillingsskjema uten betalingsgateway:
- * ordresammendraget leses fra kurven (shop.js), kontaktfeltene (navn,
- * e-post, telefon, kommentar) valideres, og bestillingen sendes som
- * e-postutkast (mailto, null oppsett) eller som JSON til et valgfritt
- * endepunkt. Honeypot-feltet stopper enkle bots (utfylt = forkastet i
- * stillhet). Betaling er en instruks: Vipps-nummeret vises under skjemaet.
- * Et eksternt endepunkt krever connect-src i _headers (ADR-0006).
+ * Core block: checkout (the shop). An order form without a payment gateway:
+ * the order summary is read from the basket (shop.js), the contact fields
+ * (name, email, phone, comment) are validated, and the order is sent as an
+ * email draft (mailto, zero setup) or as JSON to an optional endpoint. The
+ * honeypot field stops simple bots (filled in = discarded silently). Payment
+ * is an instruction: the Vipps number is shown below the form. An external
+ * endpoint requires connect-src in _headers (ADR-0006).
  */
 import {
   readCart, writeCart, cartTotal, formatPrice, orderLines,
   buildOrderBody, buildOrderMailto, buildOrderPayload, isEmail, onCartChange,
 } from '../shop.js';
 import { growSectionTo } from '../render.js';
-// Kun kalt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
+// Only called in preview (after the admin dictionary has loaded): never at module level.
 import { ta, adminLocaleReady, t } from '../i18n.js';
 
 const el2 = (tag, className, textContent) => {
@@ -22,7 +22,7 @@ const el2 = (tag, className, textContent) => {
   return node;
 };
 
-/** Ordresammendraget: linjene + sum, eller tom-teksten. Rebygges ved kurvendring. */
+/** The order summary: the lines plus the total, or the empty text. Rebuilt on basket change. */
 function renderSummary(box, currency) {
   box.textContent = '';
   const items = readCart();
@@ -48,7 +48,7 @@ export const checkoutBlock = {
   /**
    * @param {HTMLElement} el
    * @param {{recipient?: string, endpoint?: string, vipps?: string, currency?: string}} props
-   * @param {object} ctx Render-kontekst
+   * @param {object} ctx Render context
    */
   render(el, props, ctx) {
     const host = el2('div', 'urd-checkout');
@@ -79,7 +79,7 @@ export const checkoutBlock = {
     const phoneInput = field('shop.phone', 'input', 'tel');
     const commentInput = field('shop.comment', 'textarea');
 
-    // Honeypot: skjult felt bots fyller ut; mennesker ser og treffer det aldri.
+    // Honeypot: a hidden field bots fill in; humans never see or hit it.
     const hpWrap = el2('label', 'urd-checkout-hp');
     hpWrap.setAttribute('aria-hidden', 'true');
     const hp = document.createElement('input');
@@ -110,14 +110,14 @@ export const checkoutBlock = {
       status.classList.toggle('urd-checkout-error', Boolean(isError));
     };
 
-    // Det valgfrie betalingslaget (ADR-0020): knappen sender kurven til
-    // sidens egen funksjon, som regner summen på nytt fra katalogen og
-    // svarer med Vipps-sesjonens URL; betalingen skjer hos Vipps.
+    // The optional payment layer (ADR-0020): the button sends the basket to
+    // the site's own function, which recomputes the total from the catalogue
+    // and answers with the Vipps session URL; payment happens at Vipps.
     if (props.vippsCheckout) {
       const pay = el2('button', 'urd-checkout-vippspay', t('shop.payWithVipps'));
       pay.type = 'button';
       pay.addEventListener('click', async () => {
-        // Samme sendevakt som skjemaet: aldri i preview, uansett viewport.
+        // Same send guard as the form: never in preview, whatever the viewport.
         if (ctx.preview) return;
         const items = readCart();
         if (!items.length) {
@@ -154,9 +154,10 @@ export const checkoutBlock = {
       buttons.appendChild(pay);
     }
 
-    // Retur fra betalingen (?bestilt=1): kvittering + tøm kurven. Parameteren
-    // ryddes bort, så en oppfrisking ikke tømmer en ny kurv. Kun med
-    // betalingslaget på: ellers kunne en delt lenke tømme kurven.
+    // Return from payment (?bestilt=1): receipt plus empty the basket. The
+    // parameter is cleaned away so a refresh does not empty a new basket.
+    // Only with the payment layer on: otherwise a shared link could empty
+    // the basket.
     if (props.vippsCheckout && !ctx.preview && new URLSearchParams(location.search).has('bestilt')) {
       writeCart([]);
       setStatus(t('shop.orderSent'), false);
@@ -167,10 +168,10 @@ export const checkoutBlock = {
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      // I editoren sendes aldri noe, heller ikke i mobilvisningen (ctx.preview,
-      // aldri editable: den er falsk i mobil-viewporten).
+      // Nothing is ever sent from the editor, not even in the mobile view
+      // (ctx.preview, never editable: that one is false in the mobile viewport).
       if (ctx.preview) return;
-      // Utfylt honeypot: forkast i stillhet, vis suksess så boten gir seg.
+      // Honeypot filled in: discard silently, show success so the bot gives up.
       if (hp.value.trim()) {
         setStatus(t('shop.orderSent'), false);
         return;
@@ -195,7 +196,7 @@ export const checkoutBlock = {
             body: JSON.stringify(buildOrderPayload(items, contact)),
           });
           if (!res.ok) throw new Error(String(res.status));
-          // Endepunktet har bekreftet: kurven er levert og tømmes.
+          // The endpoint has confirmed: the basket is delivered, so it is emptied.
           writeCart([]);
           form.reset();
           setStatus(t('shop.orderSent'), false);
@@ -212,7 +213,7 @@ export const checkoutBlock = {
           [t('shop.comment')]: contact.comment,
         }, currency, t('shop.total'));
         location.href = buildOrderMailto(props.recipient, t('shop.orderSubject', { site: document.title }), body);
-        // mailto åpner et utkast: kurven består til e-posten faktisk er sendt.
+        // mailto opens a draft: the basket survives until the email is actually sent.
         setStatus(t('shop.orderDraft'), false);
         return;
       }
@@ -221,7 +222,7 @@ export const checkoutBlock = {
     host.appendChild(form);
 
     if (editable) {
-      // Hjelpechipen (ADR-0008): sendemåtene og honeypoten forklarer seg selv.
+      // The help chip (ADR-0008): the send methods and the honeypot explain themselves.
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {
@@ -231,7 +232,7 @@ export const checkoutBlock = {
       });
     }
 
-    // Autovekst: sammendraget varierer med kurven. KUN høyden meldes (urd-grow).
+    // Auto-grow: the summary varies with the basket. ONLY the height is reported (urd-grow).
     requestAnimationFrame(() => {
       if (!el.isConnected) return;
       const needed = host.scrollHeight;

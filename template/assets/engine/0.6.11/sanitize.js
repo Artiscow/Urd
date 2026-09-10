@@ -1,8 +1,8 @@
 /**
- * Delt besøkende-vern for rik tekst (tekstblokker og samlingsinnslag):
- * innlimt/lagret HTML kan bære event-attributter eller aktive elementer,
- * og legitim formatering trenger aldri noen av delene.
- * Eieren er betrodd for MARKUP; kjørbar kode strippes alltid ved rendering.
+ * Shared visitor-side protection for rich text (text blocks and collection
+ * entries): pasted or stored HTML can carry event attributes or active
+ * elements, and legitimate formatting never needs either.
+ * The owner is trusted for MARKUP; executable code is always stripped at render.
  */
 export function stripActiveContent(root) {
   for (const el of root.querySelectorAll('*')) {
@@ -15,9 +15,9 @@ export function stripActiveContent(root) {
 }
 
 /**
- * Ren tekst fra rik tekst (kurvlinjer, tomhetssjekk, panel-sammendrag):
- * markupen parses i et inert dokument og tekstinnholdet leses ut, så ingen
- * tagg-rester kan overleve slik de kan med en regex-pass.
+ * Plain text from rich text (cart lines, emptiness checks, panel summaries):
+ * the markup is parsed in an inert document and the text content read out,
+ * so no tag remnants can survive the way they can with a regex pass.
  */
 export function plainText(html) {
   const doc = new DOMParser().parseFromString(String(html ?? ''), 'text/html');

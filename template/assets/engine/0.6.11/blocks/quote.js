@@ -1,15 +1,15 @@
 /**
- * Kjerneblokk: sitat/testimonial. Semantisk <figure>/<blockquote> med
- * attribusjon i <figcaption> - det sitat-presetet (to tekstbokser) aldri
- * kunne gi. To varianter: «stor» (sentrert oppslag med anførselsglyf) og
- * «kort» (testimonial-kort med valgfritt portrett). Anførselsglyfen tegnes
- * i CSS (::before), aldri som innhold.
+ * Core block: quote/testimonial. Semantic <figure>/<blockquote> with the
+ * attribution in <figcaption>, which the quote preset (two text boxes)
+ * cannot give. Two variants: "large" (a centered spread with a quotation
+ * glyph) and "short" (a testimonial card with an optional portrait). The
+ * quotation glyph is drawn in CSS (::before), never as content.
  *
- * I editoren er sitatet, navnet og rollen direkte redigerbare (klikk-og-
- * skriv); portrettet velges i Egenskaper-panelet. Autovekst melder KUN
- * høyde (urd-grow), aldri hele framen.
+ * In the editor the quote, the name and the role are directly editable
+ * (click and type); the portrait is chosen in the properties panel.
+ * Auto-grow reports ONLY height (urd-grow), never the whole frame.
  */
-// Kun kalt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
+// Called only in preview (after the admin dictionary has loaded): never at module level.
 import { ta } from '../i18n.js';
 import { growSectionTo } from '../render.js';
 import { accentCss } from './timeline.js';
@@ -19,7 +19,7 @@ export const quoteBlock = {
   autoGrow: true,
   label: 'Quote',
   labelKey: 'blocks.quote',
-  // Seed-regelen (ADR-0012): ta() kalles kun her ved innsetting i preview.
+  // Seed rule (ADR-0012): ta() is called only here, on insertion in preview.
   defaults: () => ({
     text: ta('seed.quoteBlock.text'),
     attribution: ta('seed.quoteBlock.name'),
@@ -38,13 +38,13 @@ export const quoteBlock = {
   /**
    * @param {HTMLElement} el
    * @param {{text: string, attribution: string, role: string, variant?: string, image?: string, accent?: string|null}} props
-   * @param {object} ctx Render-kontekst
+   * @param {object} ctx Render context
    */
   render(el, props, ctx) {
     const kort = props.variant === 'short';
     const host = document.createElement('figure');
     host.className = `urd-quote urd-quote-${kort ? 'short' : 'large'}`;
-    // Aksenten (glyf og portrettring) kun som validert hex/tematoken.
+    // The accent (glyph and portrait ring) only as a validated hex value or theme token.
     const accent = accentCss(props.accent);
     if (accent) host.style.setProperty('--urd-quote-accent', accent);
     el.appendChild(host);
@@ -79,7 +79,7 @@ export const quoteBlock = {
     host.appendChild(body);
 
     if (editable) {
-      // Klikk-og-skriv: alle tre feltene er ren tekst.
+      // Click and type: all three fields are plain text.
       for (const [node, key] of [[quote, 'text'], [name, 'attribution'], [role, 'role']]) {
         try {
           node.contentEditable = 'plaintext-only';
@@ -97,7 +97,7 @@ export const quoteBlock = {
       }
     }
 
-    // Autovekst: rammen følger innholdshøyden. KUN høyden meldes (urd-grow).
+    // Auto-grow: the frame follows the content height. ONLY the height is reported (urd-grow).
     requestAnimationFrame(() => {
       if (!el.isConnected) return;
       const needed = host.scrollHeight;

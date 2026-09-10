@@ -1,33 +1,34 @@
 /**
- * Mal-modellen (0.6.7): rene hjelpere for brukermaler i content/maler/.
+ * The template model: pure helpers for user templates in content/maler/.
  *
- * Kontrakten (docs/SKJEMA.md, Maler): malfilen lagrer opphavs-id-ene urørt;
- * HVER innsetting dypkloner og tildeler nye id-er FØR posting, så samme mal
- * kan settes inn flere ganger uten kollisjon. Blokkgrupper lagres med frames
- * som de står; normalisering (anker + klem innenfor seksjonen) skjer her ved
- * innsetting, aldri ved lagring. Ingen DOM - node-testbart.
+ * The contract (docs/SKJEMA.md, Maler): the template file stores the source
+ * ids untouched; EVERY insertion deep-clones and assigns new ids BEFORE
+ * posting, so the same template can be inserted several times without
+ * collision. Block groups are stored with frames as they stand; normalisation
+ * (anchor plus clamp inside the section) happens here on insertion, never on
+ * save. No DOM - node-testable.
  */
 import { slugify } from './imageTools.js';
 import { groupDelta } from './selection.js';
 import { liftMobileFrame, liftContractTokens } from './migrate.js';
 
-/** Gjeldende versjon av malfil-formatet (content/maler/*.json). */
+/** Current version of the template file format (content/maler/*.json). */
 export const TEMPLATE_SCHEMA_VERSION = 1;
 
-/** Gyldige mal-slag; nyttelast-nøkkelen i filen er lik slaget. */
+/** Valid template kinds; the payload key in the file equals the kind. */
 export const TEMPLATE_KINDS = ['section', 'blocks', 'page'];
 
-/** Mal-id fra visningsnavnet (samme id-regime som samlinger); tom streng
- *  betyr ugyldig navn og skal avvises av kalleren. */
+/** Template id from the display name (the same id regime as collections); an
+ *  empty string means an invalid name and must be rejected by the caller. */
 export function templateId(name) {
   return slugify(String(name ?? ''), '');
 }
 
 const r2 = (v) => Math.round(v * 100) / 100;
 
-/** Mal-nyttelaster settes inn utenom sideløftet, så en mal lagret før
- *  radnettet (ADR-0019) kan bære frames.mobile i den gamle full-frame-
- *  formen. Løftes per blokk ved innsetting. */
+/** Template payloads are inserted outside the page lift, so a template saved
+ *  before the row grid (ADR-0019) can carry frames.mobile in the old
+ *  full-frame form. Lifted per block on insertion. */
 function liftBlockMobile(block) {
   if (block.frames?.mobile) {
     block.frames.mobile = liftMobileFrame(block.frames.mobile, block.frames.desktop);
@@ -35,10 +36,10 @@ function liftBlockMobile(block) {
 }
 
 /**
- * Klargjør en seksjons-mal for innsetting: dyp klone med ny seksjons-id og
- * nye blokk-id-er. Geometri og props røres ikke.
- * @param {object} section Seksjonen fra malfilen (muteres ikke)
- * @param {(prefix: string) => string} makeId Id-fabrikken (sections/presets.js)
+ * Prepares a section template for insertion: deep clone with a new section id
+ * and new block ids. Geometry and props are left alone.
+ * @param {object} section The section from the template file (not mutated)
+ * @param {(prefix: string) => string} makeId The id factory (sections/presets.js)
  */
 export function cloneSectionForInsert(section, makeId) {
   const out = structuredClone(section);
@@ -54,13 +55,13 @@ export function cloneSectionForInsert(section, makeId) {
 }
 
 /**
- * Klargjør en side-mal for innsetting: dyp klone der meta peker på den NYE
- * siden (id er sidens slug, validert av kalleren mot reserverte navn og
- * eksisterende sider - aldri en makeId-streng), og alle seksjoner og blokker
- * får nye id-er. Geometri, props og schemaVersion røres ikke.
- * @param {object} page Sidefilen fra malen (muteres ikke)
- * @param {(prefix: string) => string} makeId Id-fabrikken (sections/presets.js)
- * @param {{id: string, title: string}} meta Den nye sidens slug og tittel
+ * Prepares a page template for insertion: deep clone where meta points at the
+ * NEW page (id is the page slug, validated by the caller against reserved
+ * names and existing pages - never a makeId string), and every section and
+ * block gets new ids. Geometry, props and schemaVersion are left alone.
+ * @param {object} page The page file from the template (not mutated)
+ * @param {(prefix: string) => string} makeId The id factory (sections/presets.js)
+ * @param {{id: string, title: string}} meta The new page's slug and title
  */
 export function clonePageForInsert(page, makeId, { id, title }) {
   const out = structuredClone(page);
@@ -73,15 +74,15 @@ export function clonePageForInsert(page, makeId, { id, title }) {
 }
 
 /**
- * Klargjør en blokkgruppe-mal for innsetting: dyp klone med nye id-er, hele
- * gruppen flyttet så øvre venstre hjørne treffer ankeret (klemt innenfor
- * seksjonen av groupDelta), og minBottom for seksjonsvekst (urd-add-blocks).
- * Uten anker beholdes de lagrede posisjonene (kun klem). Innbyrdes oppsett
- * bevares alltid; frames.mobile følger med, løftet til radnett-formen om
- * malen er lagret i den gamle.
- * @param {Array<object>} blocks Blokkene fra malfilen (muteres ikke)
- * @param {(prefix: string) => string} makeId Id-fabrikken
- * @param {{anchor?: {x: number, y: number}|null}} [opts] Anker i seksjonskoordinater (x i %, y i px)
+ * Prepares a block group template for insertion: deep clone with new ids, the
+ * whole group moved so the top left corner lands on the anchor (clamped
+ * inside the section by groupDelta), and minBottom for section growth
+ * (urd-add-blocks). Without an anchor the stored positions are kept (clamp
+ * only). The internal layout is always preserved; frames.mobile comes along,
+ * lifted to the row grid form if the template was saved in the old one.
+ * @param {Array<object>} blocks The blocks from the template file (not mutated)
+ * @param {(prefix: string) => string} makeId The id factory
+ * @param {{anchor?: {x: number, y: number}|null}} [opts] Anchor in section coordinates (x in %, y in px)
  * @returns {{blocks: Array<object>, minBottom: number}}
  */
 export function cloneBlocksForInsert(blocks, makeId, { anchor = null } = {}) {

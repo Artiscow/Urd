@@ -1,10 +1,10 @@
 /**
- * Kjerneblokk: knapp. Lenker til en side i sideregisteret (page) eller
- * ekstern URL (href). page slås opp i ctx.site.pages ved render.
+ * Core block: button. Links to a page in the page registry (page) or an
+ * external URL (href). page is looked up in ctx.site.pages at render time.
  */
 import { isSafeHref } from '../nav-model.js';
 
-// Seed-regelen (ADR-0012): ta() kalles kun i defaults() ved innsetting i preview, aldri på modulnivå.
+// Seed rule (ADR-0012): ta() is called only in defaults(), on insertion in preview, never at module level.
 import { ta } from '../i18n.js';
 
 export const buttonBlock = {
@@ -27,7 +27,7 @@ export const buttonBlock = {
       a.href = target ? target.path : '#';
       if (!target) console.warn(`Urd: button points to unknown page '${props.page}'`);
     } else {
-      // Delt vokter (nav/footer + interne stier/anker): en utrygg href (javascript:/data:) skal aldri bli en levende lenke hos besøkende.
+      // Shared guard (nav/footer plus internal paths/anchors): an unsafe href (javascript:/data:) must never become a live link for visitors.
       a.href = isSafeHref(props.href) ? props.href : '#';
       if (props.href && !isSafeHref(props.href)) console.warn(`Urd: knappen har utrygg lenke '${props.href}'`);
     }

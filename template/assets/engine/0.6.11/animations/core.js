@@ -1,21 +1,21 @@
 /**
- * Kjerneanimasjoner. Registertyper med samme version+migrate-kontrakt som
- * blokker og bakgrunnslag (docs/SKJEMA.md): en Urd-oppdatering kan endre
- * en animasjons props trygt via migrations.
+ * Core animations. Registry types with the same version+migrate contract as
+ * blocks and background layers (docs/SKJEMA.md): an Urd update can change an
+ * animation's props safely via migrations.
  *
- * Inngangsanimasjonene (fade-in, slide-up, zoom-in) spilles når elementet
- * scrolles inn hos besøkende (IntersectionObserver). I editorens preview
- * vises SLUTT-tilstanden: redigering skal ikke utløse evige avspillinger.
- * prefers-reduced-motion respekteres (CSS-en i base.css nuller også ut).
+ * The entrance animations (fade-in, slide-up, zoom-in) play when the element
+ * scrolls into view for visitors (IntersectionObserver). In the editor preview
+ * the END state is shown: editing must not trigger endless playback.
+ * prefers-reduced-motion is respected (the CSS in base.css zeroes it out too).
  *
- * All CSS ligger i base.css (.urd-anim-*): definisjonene her setter kun
- * klasser og varighet/forsinkelse som CSS-variabler.
+ * All the CSS lives in base.css (.urd-anim-*): the definitions here only set
+ * classes and duration/delay as CSS variables.
  */
 
 const entranceDefaults = () => ({ duration: 600, delay: 0 });
 
-/* Standard trinn-tid (ms) mellom målene i gruppe-innganger: stagger-defaulten
-   og kortvis animasjon (applyCardAnimation) deler samme rytme. */
+/* Default step time (ms) between the targets in group entrances: the stagger
+   default and per-card animation (applyCardAnimation) share the same rhythm. */
 const STAGGER_STEP = 90;
 
 export const coreAnimations = {
@@ -23,12 +23,12 @@ export const coreAnimations = {
   'slide-up': { version: 1, label: 'Slide up', labelKey: 'anim.slideUp', entrance: true, defaults: entranceDefaults, migrations: {} },
   'zoom-in': { version: 1, label: 'Zoom in', labelKey: 'anim.zoomIn', entrance: true, defaults: entranceDefaults, migrations: {} },
   'hover-lift': { version: 1, label: 'Lift on pointer', labelKey: 'anim.hoverLift', entrance: false, defaults: () => ({}), migrations: {} },
-  // Stagger er en GRUPPE-inngangsanimasjon (kun seksjonsnivå): den animerer
-  // ikke seksjonen selv, men slipper seksjonens kort-blokker inn forskjøvet fra
-  // ÉN felles trigger. pattern: 'sequence' (ett trinn per kort), 'columns'/
-  // 'rows' (kort på samme x/y kommer samtidig, bølgen skyves bortover) eller
-  // 'center' (utover fra midten av rekka). delay er felles grunnforsinkelse
-  // (additiv fra 0.6.6.4.6, eldre data mangler feltet og leses som 0).
+  // Stagger is a GROUP entrance animation (section level only): it does not
+  // animate the section itself, but releases the section's card blocks staggered
+  // from ONE shared trigger. pattern: 'sequence' (one step per card), 'columns'/
+  // 'rows' (cards on the same x/y arrive together, the wave moves sideways) or
+  // 'center' (outwards from the middle of the row). delay is a shared base delay
+  // (additive since 0.6.6.4.6, older data lacks the field and reads as 0).
   stagger: {
     version: 1, label: 'Stagger (card group)', labelKey: 'anim.stagger', entrance: true, group: true,
     defaults: () => ({ duration: 600, delay: 0, step: STAGGER_STEP, effect: 'slide-up', pattern: 'sequence' }),
@@ -39,13 +39,12 @@ export const coreAnimations = {
 const STAGGER_EFFECTS = ['fade-in', 'slide-up', 'zoom-in'];
 
 /**
- * Forsinkelser (ms) for kolonne-/radvis stagger: posisjoner klynges med
- * toleranse (kort som er nesten på linje regnes som samme kolonne/rad; de
- * gamle 8px-bøttene delte dem), og bølgen skyves bortover stigende posisjon.
- * Ren funksjon (node-testet).
- * @param {number[]} positions x- eller y-posisjon i px per kort (samme rekkefølge som kortene)
- * @param {number} step Trinn-tid i ms
- * @param {number} [tolerance] Maks px-avstand som regnes som samme klynge
+ * Delays (ms) for column/row stagger: positions are clustered with a tolerance
+ * (cards that are almost aligned count as the same column/row), and the wave moves
+ * along by ascending position. Pure function (node-tested).
+ * @param {number[]} positions x or y position in px per card (same order as the cards)
+ * @param {number} step Step time in ms
+ * @param {number} [tolerance] Max px distance counted as the same cluster
  * @returns {number[]}
  */
 export function staggerColumnDelays(positions, step, tolerance = 24) {
@@ -62,11 +61,12 @@ export function staggerColumnDelays(positions, step, tolerance = 24) {
 }
 
 /**
- * Forsinkelser (ms) for «fra midten»-stagger: midtkortet (eller midtparet ved
- * partall) slippes først, så bølger rekka utover symmetrisk. Indeksbasert
- * (kortenes rekkefølge i seksjonen). Ren funksjon (node-testet).
- * @param {number} count Antall kort
- * @param {number} step Trinn-tid i ms
+ * Delays (ms) for the "from the center" stagger: the middle card (or the middle
+ * pair for an even count) is released first, then the row waves outwards
+ * symmetrically. Index-based (the order of the cards in the section). Pure function
+ * (node-tested).
+ * @param {number} count Number of cards
+ * @param {number} step Step time in ms
  * @returns {number[]}
  */
 export function staggerCenterDelays(count, step) {
@@ -74,16 +74,16 @@ export function staggerCenterDelays(count, step) {
   return Array.from({ length: count }, (_, i) => Math.floor(Math.abs(i - mid)) * step);
 }
 
-/** Delt observer: legger på .urd-anim-in første gang elementet er synlig. */
+/** Shared observer: adds .urd-anim-in the first time the element is visible. */
 let observer = null;
-// Gruppe-innganger (stagger/kortvis): verten observeres, men MÅLENE slippes.
+// Group entrances (stagger/per-card): the host is observed, but the TARGETS are released.
 const staggerGroups = new WeakMap();
 
 /**
- * Felles slipp for gruppe-innganger (stagger og kortvis): i preview og ved
- * redusert bevegelse vises slutt-tilstanden straks; ellers slippes målene
- * samlet første gang verten er synlig.
- * @returns {boolean} true når målene faktisk venter på synlighet
+ * Shared release for group entrances (stagger and per-card): in the preview and
+ * with reduced motion the end state is shown at once; otherwise the targets are
+ * released together the first time the host is visible.
+ * @returns {boolean} true when the targets actually wait for visibility
  */
 function releaseGroup(host, targets, ctx) {
   const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -97,25 +97,25 @@ function releaseGroup(host, targets, ctx) {
 }
 
 /**
- * Inngangsanimasjonen spilles når elementet blir synlig - også hvis det er
- * synlig alt ved innlasting (da tones/glir det inn like etter at siden vises,
- * som «Ton inn» skal). IntersectionObserver-callbacken kjører først etter at
- * starttilstanden (opacity 0 fra CSS) er malt, så overgangen spiller rent.
- * Elementer man scroller til senere spiller når de kommer inn i viewporten.
- * (I editorens preview vises SLUTT-tilstanden umiddelbart - se applyAnimation
- * - så observeren er kun aktiv hos besøkende og på publisert side.)
+ * The entrance animation plays when the element becomes visible - also when it is
+ * already visible at load (it then fades/slides in just after the page appears, as
+ * "Fade in" should). The IntersectionObserver callback runs only after the start
+ * state (opacity 0 from CSS) has been painted, so the transition plays cleanly.
+ * Elements scrolled to later play when they enter the viewport.
+ * (In the editor preview the END state is shown immediately - see applyAnimation
+ * - so the observer is only active for visitors and on the published page.)
  */
 function entranceObserver() {
   observer ??= new IntersectionObserver((entries) => {
     for (const entry of entries) {
       if (!entry.isIntersecting) continue;
-      // Elementer som er mye høyere enn viewporten (høye seksjoner) når aldri 15 % synlig andel.
-      // Da utløses i stedet på at synlig del dekker over halve viewporten, så innholdet ikke blir stående på opacity 0 for alltid.
+      // Elements much taller than the viewport (tall sections) never reach a 15 % visible ratio.
+      // They trigger instead once the visible part covers more than half the viewport, so the content is not left at opacity 0 forever.
       const tall = entry.rootBounds && entry.intersectionRect.height >= entry.rootBounds.height * 0.5;
       if (entry.intersectionRatio < 0.15 && !tall) continue;
       const el = entry.target;
       observer.unobserve(el);
-      // Stagger-vert: slipp BARNA (hvert med sin forskjøvne delay), ikke verten.
+      // Stagger host: release the CHILDREN (each with its staggered delay), not the host.
       const group = staggerGroups.get(el);
       if (group) group.forEach((child) => child.classList.add('urd-anim-in'));
       else el.classList.add('urd-anim-in');
@@ -125,18 +125,19 @@ function entranceObserver() {
 }
 
 /**
- * Stagger (gruppe): finn seksjonens kort-blokker (uten egen animasjon), gi dem
- * inngangseffekt + forskjøvet delay etter mønster, og slipp dem samlet fra
- * seksjonens synlighet. I preview/reduced-motion vises slutt-tilstanden straks.
+ * Stagger (group): find the section's card blocks (those without their own
+ * animation), give them an entrance effect + a staggered delay by pattern, and
+ * release them together from the section's visibility. In preview/reduced-motion
+ * the end state is shown at once.
  */
 function applyStagger(host, props, ctx) {
   const effect = STAGGER_EFFECTS.includes(props.effect) ? props.effect : 'slide-up';
   const step = Number.isFinite(props.step) ? Math.max(0, props.step) : STAGGER_STEP;
   const base = Number.isFinite(props.delay) ? Math.max(0, props.delay) : 0;
   host.classList.add('urd-anim-stagger');
-  // Kort-blokkene: alle .urd-block i seksjonen som ikke alt har egen
-  // animasjon. Dekor-blokker unntas (som i mobil-stablingen): de er pynt og
-  // skal ikke forsinke innholdsbølgen.
+  // The card blocks: every .urd-block in the section that does not already have its
+  // own animation. Decor blocks are excluded (as in the mobile stacking): they are
+  // ornament and must not delay the content wave.
   const targets = [...host.querySelectorAll('.urd-block')]
     .filter((el) => !/\burd-anim-/.test(el.className) && !el.dataset.decor);
   if (!targets.length) return;
@@ -156,18 +157,18 @@ function applyStagger(host, props, ctx) {
 }
 
 /**
- * Kobler en (allerede versjonsløftet) animasjon på et element.
- * Merk: blokker med rotasjon har inline transform som vinner over
- * animasjonsklassenes transform - da spilles kun opacity-delen.
+ * Hooks an (already version-lifted) animation onto an element.
+ * Note: blocks with rotation have an inline transform that beats the transform of
+ * the animation classes - only the opacity part then plays.
  *
  * @param {HTMLElement} el
- * @param {string} type Animasjonstype (nøkkel i registeret)
- * @param {{duration?: number, delay?: number}} props Løftede props
- * @param {{entrance?: boolean}} def Typedefinisjonen
- * @param {{preview?: boolean}} [ctx] Render-kontekst
+ * @param {string} type Animation type (key in the registry)
+ * @param {{duration?: number, delay?: number}} props Lifted props
+ * @param {{entrance?: boolean}} def The type definition
+ * @param {{preview?: boolean}} [ctx] Render context
  */
 export function applyAnimation(el, type, props, def, ctx = {}) {
-  // Gruppe-animasjon (stagger): animerer barna, ikke elementet selv.
+  // Group animation (stagger): animates the children, not the element itself.
   if (def.group) {
     applyStagger(el, props, ctx);
     return;
@@ -186,20 +187,20 @@ export function applyAnimation(el, type, props, def, ctx = {}) {
 }
 
 /**
- * Kortvis animasjon (blokker med animPerCard-flagget): blokkens
- * inngangsanimasjon spilles per kort med index-forskjøvet delay fra ÉN
- * felles trigger (blokkens synlighet), som stagger; pekereffekter legges
- * på hvert kort. I preview/reduced-motion vises slutt-tilstanden straks.
+ * Per-card animation (blocks with the animPerCard flag): the block's entrance
+ * animation plays per card with an index-staggered delay from ONE shared trigger
+ * (the block's visibility), like stagger; pointer effects are applied to each card.
+ * In preview/reduced-motion the end state is shown at once.
  *
- * @param {HTMLElement} el Blokk-elementet (triggeren)
- * @param {HTMLElement[]} cards Kort-elementene i rekkefølge
- * @param {string} type Animasjonstype (nøkkel i registeret)
- * @param {{duration?: number, delay?: number}} props Løftede props
- * @param {{entrance?: boolean, group?: boolean}} def Typedefinisjonen
- * @param {{preview?: boolean}} [ctx] Render-kontekst
+ * @param {HTMLElement} el The block element (the trigger)
+ * @param {HTMLElement[]} cards The card elements in order
+ * @param {string} type Animation type (key in the registry)
+ * @param {{duration?: number, delay?: number}} props Lifted props
+ * @param {{entrance?: boolean, group?: boolean}} def The type definition
+ * @param {{preview?: boolean}} [ctx] Render context
  */
 export function applyCardAnimation(el, cards, type, props, def, ctx = {}) {
-  // Stagger er seksjonsnivå og gir ikke mening kortvis.
+  // Stagger is section level and makes no sense per card.
   if (def.group || !cards.length) return;
   if (!def.entrance) {
     for (const card of cards) applyAnimation(card, type, props, def, ctx);
@@ -212,9 +213,9 @@ export function applyCardAnimation(el, cards, type, props, def, ctx = {}) {
     card.style.setProperty('--urd-anim-delay', `${base + i * STAGGER_STEP}ms`);
   });
   if (releaseGroup(el, cards, ctx)) {
-    // Etter inngangen ryddes forsinkelsen bort: kombinasjonsregelen for
-    // inngang + pekereffekt (base.css) gjenbruker variabelen i transitionen,
-    // og tilbakeløftet skal ikke arve kortets forskjøvne start.
+    // After the entrance the delay is cleared: the combination rule for entrance +
+    // pointer effect (base.css) reuses the variable in the transition, and the lift
+    // back must not inherit the card's staggered start.
     for (const card of cards) {
       const clearDelay = (event) => {
         if (event.target !== card || event.propertyName !== 'opacity') return;

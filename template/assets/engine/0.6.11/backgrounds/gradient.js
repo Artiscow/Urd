@@ -1,22 +1,22 @@
 /**
- * Bakgrunnslag: gradient. Lineær eller radiell. Fargene er en LISTE i
- * rekkefølge (først til sist langs gradienten), og hver farge har en
- * andel plass (share): hvor stor del av gradienten den dekker. En farge
- * med plass 0 gir en hard fargekant. Valgfri animasjon per form.
+ * Background layer: gradient. Linear or radial. The colors are a LIST in
+ * order (first to last along the gradient), and each color has a share of
+ * the space (share): how much of the gradient it covers. A color with a
+ * share of 0 gives a hard color edge. Optional animation per shape.
  *
- * Andelene er vekter: de normaliseres ved rendering, så summen trenger
- * ikke være 100. Hver farge males i midten av sitt bånd; CSS-en strekker
- * første og siste farge ut til kantene.
+ * The shares are weights: they are normalized at render time, so the sum
+ * need not be 100. Each color is painted in the middle of its band; the CSS
+ * stretches the first and last color out to the edges.
  */
 import { resolveColor } from '../theme.js';
 
-/** Gyldige animasjoner per form; alt annet rendres uanimert. */
+/** Valid animations per shape; anything else renders unanimated. */
 const ANIMATIONS = {
   linear: ['pan', 'pan-loop', 'rotate'],
   radial: ['pulse', 'orbit'],
 };
 
-/** Normaliserer andelene til fargeposisjoner (sentrum av hvert bånd, 0-100). */
+/** Normalizes the shares into color positions (the center of each band, 0-100). */
 function centers(stops) {
   const list = Array.isArray(stops) && stops.length ? stops : [{ color: '#0b0e14' }, { color: '#1a1030' }];
   const weights = list.map((s) => Math.max(0, Number(s?.share) || 0));
@@ -32,11 +32,11 @@ function centers(stops) {
   });
 }
 
-/** Sirkulær syklus for én-veis panorering (regnbue-modellen, valgt
- *  24. juli 2026): siste farge glir tilbake til første, så mønsteret leses
- *  1 2 3 4 1 2 3 4 - aldri speilet, og ingen farge synes to ganger
- *  samtidig (fast regel: en farge vises kun én gang med mindre den er
- *  lagt til to ganger). Posisjonene er prosent av ÉN periode. */
+/** Circular cycle for one-way panning (the rainbow model): the last color
+ *  glides back to the first, so the pattern reads 1 2 3 4 1 2 3 4 - never
+ *  mirrored, and no color is visible twice at the same time (a color shows
+ *  only once unless it has been added twice). The positions are percentages
+ *  of ONE period. */
 function cyclicCycle(list) {
   const r2 = (v) => Math.round(v * 100) / 100;
   const shift = list[0]?.at ?? 0;
@@ -47,38 +47,37 @@ function cyclicCycle(list) {
 }
 
 /**
- * Loopens geometri (ren, node-testbar): følger vinkelen eieren har satt.
- * Perioden er gradientlinjen gjennom flaten pluss AKKURAT nok til at den
- * skjulte delen av syklusen rommer den største fargen: da kan ingen
- * farge splittes over synsfeltets kanter (regelen fra 24. juli 2026:
- * ingen farge vises to ganger), samtidig som fargene beholder omtrent
- * samme størrelse som i den statiske gradienten (med 7 like farger er
- * perioden bare 1/6 lengre enn linjen, aldri dobbel). Forskyvningen er
- * nøyaktig én periode langs aksen - da er mønsteret identisk ved rundens
- * slutt, og loopen sømløs for ENHVER vinkel (CSS-vinkel: 0 = oppover,
- * 90 = mot høyre).
+ * The loop geometry (pure, node-testable): follows the angle the owner has set.
+ * The period is the gradient line across the surface plus JUST enough for the
+ * hidden part of the cycle to hold the largest color: no color can then be
+ * split across the edges of the visible area (the rule that no color shows
+ * twice), while the colors keep roughly the same size as in the static
+ * gradient (with 7 equal colors the period is only 1/6 longer than the line,
+ * never double). The shift is exactly one period along the axis - the pattern
+ * is then identical at the end of the round, and the loop seamless for ANY
+ * angle (CSS angle: 0 = upwards, 90 = to the right).
  *
- * @param {number} width Flatens bredde i px
- * @param {number} height Flatens høyde i px
- * @param {number} angleDeg Gradientvinkelen
- * @param {number} [maxShare] Største fargens normaliserte andel (0..1)
- * @returns {{period: number, dx: number, dy: number}} px, avrundet til 2 desimaler
+ * @param {number} width Surface width in px
+ * @param {number} height Surface height in px
+ * @param {number} angleDeg The gradient angle
+ * @param {number} [maxShare] The largest color's normalized share (0..1)
+ * @returns {{period: number, dx: number, dy: number}} px, rounded to 2 decimals
  */
 export function loopGeometry(width, height, angleDeg, maxShare = 0.5) {
   const rad = ((angleDeg % 360) * Math.PI) / 180;
-  // || 0 normaliserer -0 (flyttallsstøy ved rene vinkler).
+  // || 0 normalizes -0 (floating-point noise at exact angles).
   const r2 = (v) => Math.round(v * 100) / 100 || 0;
   const line = Math.abs(width * Math.sin(rad)) + Math.abs(height * Math.cos(rad));
-  // Klemmes så en ekstremt dominant farge ikke gir en absurd lang
-  // periode (og aldri deling på null).
+  // Clamped so an extremely dominant color cannot give an absurdly long
+  // period (and never a division by zero).
   const share = Math.min(Math.max(maxShare, 0), 0.9);
   const period = line / (1 - share);
   return { period: r2(period), dx: r2(Math.sin(rad) * period), dy: r2(-Math.cos(rad) * period) };
 }
 
 /**
- * Løperens gradient (ren): gjentakende gradient med syklusens posisjoner
- * omregnet til px av perioden, så mønsteret fliser sømløst langs aksen.
+ * The runner's gradient (pure): a repeating gradient with the cycle positions
+ * converted to px of the period, so the pattern tiles seamlessly along the axis.
  */
 export function loopGradientCss(stops, angleDeg, periodPx) {
   const css = stops
@@ -88,17 +87,17 @@ export function loopGradientCss(stops, angleDeg, periodPx) {
 }
 
 /**
- * Bygger hele render-oppskriften som en ren funksjon (node-testbar):
- * background-CSS, ekstra style-egenskaper (kebab-case, inkl. CSS-vars)
- * og animasjonsklassen.
+ * Builds the whole render recipe as a pure function (node-testable): the
+ * background CSS, extra style properties (kebab-case, including CSS vars)
+ * and the animation class.
  *
  * @param {{kind?: string, stops: Array<{color: string, share?: number}>, angle?: number, x?: number, y?: number, animation?: string, opacity?: number}} props
  * @returns {{background: string|null, className: string|null, styles: Record<string, string>, loop?: {angle: number, stops: Array<{color: string, at: number}>}, runner?: {className: string, background: string, left?: string, top?: string}}}
- *   loop settes kun for pan-loop: da males gradienten på en løper i px
- *   når flaten kan måles (se render), og background er null. runner
- *   settes for pan/orbit: gradienten males på en 200 %-løper som
- *   animeres med transform (kompositor) i stedet for background-position
- *   (repaint per frame); background er null også da.
+ *   loop is set only for pan-loop: the gradient is then painted on a runner
+ *   in px once the surface can be measured (see render), and background is
+ *   null. runner is set for pan/orbit: the gradient is painted on a 200 %
+ *   runner animated with transform (compositor) instead of background-position
+ *   (a repaint per frame); background is null there too.
  */
 export function gradientRender(props) {
   const kind = props.kind === 'radial' ? 'radial' : 'linear';
@@ -113,9 +112,9 @@ export function gradientRender(props) {
     const y = Math.round((props.y ?? 0.5) * 100);
     background = `radial-gradient(circle at ${x}% ${y}%, ${cssStops})`;
     if (anim === 'orbit') {
-      // Løperen forankres (left/top) så gradientens sentrum (x, y) står
-      // på samme punkt i flaten som uanimert; banen svinger løperen
-      // ±2 % av egen størrelse = 4 % av flaten (se urd-bg-orbit).
+      // The runner is anchored (left/top) so the gradient center (x, y) sits at
+      // the same point on the surface as when unanimated; the path swings the
+      // runner ±2 % of its own size = 4 % of the surface (see urd-bg-orbit).
       return {
         background: null,
         className: null,
@@ -127,9 +126,9 @@ export function gradientRender(props) {
   } else {
     const angle = props.angle ?? 160;
     if (anim === 'pan-loop') {
-      // Løper-modellen (se render): den rene oppskriften er syklusen,
-      // vinkelen og største fargeandel (styrer periodelengden);
-      // px-målene settes først når flaten kan måles.
+      // The runner model (see render): the pure recipe is the cycle, the angle
+      // and the largest color share (which drives the period length); the px
+      // measurements are set only once the surface can be measured.
       const weights = (props.stops ?? []).map((s) => Math.max(0, Number(s?.share) || 0));
       const sum = weights.reduce((a, b) => a + b, 0);
       const maxShare = sum > 0 ? Math.max(...weights) / sum : 1 / list.length;
@@ -144,8 +143,8 @@ export function gradientRender(props) {
       ? `linear-gradient(calc(var(--urd-grad-spin, 0deg) + ${angle}deg), ${cssStops})`
       : `linear-gradient(${angle}deg, ${cssStops})`;
     if (anim === 'pan') {
-      // Løperen er 200 % i begge ledd; glidningen til translate(-50%,
-      // -50%) tilsvarer den gamle background-position-reisen 0 -> 100 %.
+      // The runner is 200 % in both axes; the glide to translate(-50%, -50%)
+      // covers the same distance as a background-position travel 0 -> 100 %.
       return {
         background: null,
         className: null,
@@ -159,9 +158,9 @@ export function gradientRender(props) {
   return { background, className: anim ? (classNames[anim] ?? null) : null, styles };
 }
 
-/* Loop-løperne må måles på nytt når vinduet endrer størrelse (px-mål).
-   ÉN modulnivå-lytter; frakoblede løpere (etter re-render) lukes ut ved
-   at apply returnerer false. */
+/* The loop runners must be re-measured when the window is resized (px
+   measurements). ONE module-level listener; detached runners (after a
+   re-render) are weeded out when apply returns false. */
 const loopAppliers = new Set();
 let loopListenerOn = false;
 function registerLoopApply(apply) {
@@ -175,15 +174,15 @@ function registerLoopApply(apply) {
   });
 }
 
-/* Roter-animasjonen interpolerer en registrert vinkel-variabel; uten
-   støtte degraderer den til statisk gradient (dekor velter aldri siden). */
+/* The rotate animation interpolates a registered angle variable; without
+   support it degrades to a static gradient (decoration never topples the page). */
 let spinRegistered = false;
 function registerSpin() {
   if (spinRegistered) return;
   spinRegistered = true;
   try {
     CSS.registerProperty({ name: '--urd-grad-spin', syntax: '<angle>', inherits: false, initialValue: '0deg' });
-  } catch { /* alt annet enn førstegangsregistrering er uinteressant */ }
+  } catch { /* anything but the first registration is uninteresting */ }
 }
 
 export const gradientLayer = {
@@ -209,10 +208,10 @@ export const gradientLayer = {
     el.style.opacity = String(props.opacity ?? 1);
     for (const [name, value] of Object.entries(r.styles)) el.style.setProperty(name, value);
     if (r.loop) {
-      // Én-veis panorering følger eierens vinkel: en gjentakende gradient
-      // males på en oversized løper i px, og løperen forskyves nøyaktig
-      // én periode langs aksen per runde - sømløst for enhver vinkel.
-      // Px-målene krever lagt-ut flate, derfor rAF + resize-oppfrisking.
+      // One-way panning follows the owner's angle: a repeating gradient is
+      // painted on an oversized runner in px, and the runner is shifted exactly
+      // one period along the axis per round - seamless at any angle. The px
+      // measurements require a laid-out surface, hence rAF + resize refresh.
       el.classList.add('urd-bg-loop-host');
       const runner = document.createElement('div');
       runner.className = 'urd-bg-loop-runner';
@@ -235,10 +234,10 @@ export const gradientLayer = {
       return;
     }
     if (r.runner) {
-      // Pan/orbit: gradienten males på en 200 %-løper som forskyves med
-      // transform på kompositor-tråden i stedet for background-position
-      // (repaint av laget per frame). Verten klipper løperen, samme
-      // klasse som pan-loop bruker.
+      // Pan/orbit: the gradient is painted on a 200 % runner shifted with
+      // transform on the compositor thread instead of background-position (a
+      // repaint of the layer per frame). The host clips the runner, using the
+      // same class as pan-loop.
       el.classList.add('urd-bg-loop-host');
       const runner = document.createElement('div');
       runner.className = r.runner.className;

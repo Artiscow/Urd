@@ -1,19 +1,19 @@
 /**
- * Kjernens seksjonspresets: datafabrikker som produserer en startseksjon.
- * En preset er IKKE en kodevei - etter opprettelse er alle seksjoner
- * likestilte generiske containere (se docs/SKJEMA.md). Plugins kan
- * definere flere presets med samme API.
+ * The core section presets: data factories that produce a starting section.
+ * A preset is NOT a code path - once created, every section is an equal,
+ * generic container (see docs/SKJEMA.md). Plugins can define further presets
+ * through the same API.
  *
- * Biblioteket er bygget mot mønstrene fra sidekartleggingen 18. juli 2026 (inspirasjonssidene + ApeironLF, se docs/BACKLOG.md).
- * Alt er komposisjoner av eksisterende blokktyper med temafarge-tokens, så presetene følger brukerens palett.
- * `group` og `hint` er valgfrie felter som «+ Ny seksjon»-menyen bruker til gruppering og beskrivelse.
- * `item`/`itemLabel` er valgfrie fabrikker for gjentakende elementer: seksjonsverktøylinjen viser da en «+ kort/rad»-knapp.
+ * The library is built against the patterns from the site survey (the inspiration sites plus ApeironLF, see docs/BACKLOG.md).
+ * Everything is a composition of existing block types with theme colour tokens, so the presets follow the user's palette.
+ * `group` and `hint` are optional fields the "+ New section" menu uses for grouping and description.
+ * `item`/`itemLabel` are optional factories for repeating elements: the section toolbar then shows a "+ card/row" button.
  */
 
-/** Kort, kollisjonstrygg id for seksjoner/blokker laget i editoren.
- *  crypto.randomUUID finnes kun i sikre kontekster (https/localhost); på f.eks. http://0.0.0.0
- *  (lokal testserver) brukes crypto.getRandomValues (som virker overalt), ellers ville alt
- *  som lager nye id-er dødd stille der. */
+/** Short, collision-safe id for sections and blocks made in the editor.
+ *  crypto.randomUUID exists only in secure contexts (https/localhost); on for instance http://0.0.0.0
+ *  (the local test server) crypto.getRandomValues is used, since it works everywhere and anything
+ *  minting new ids would otherwise die silently there. */
 export function makeId(prefix) {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
@@ -23,15 +23,15 @@ export function makeId(prefix) {
   return `${prefix}-${hex}`;
 }
 
-// Seed-regelen (ADR-0012): ta() kalles KUN inne i fabrikkfunksjonene
-// (create/item/blokkfabrikkene), i innsettingsøyeblikket - aldri på
-// modulnivå. Modulen er i besøkende-lukningen og bundles; hos besøkende
-// kjører fabrikkene aldri.
+// The seed rule (ADR-0012): ta() is called ONLY inside the factory functions
+// (create/item/the block factories), at the moment of insertion - never at
+// module level. The module is in the visitor closure and gets bundled; at a
+// visitor the factories never run.
 import { ta } from '../i18n.js';
 
 const autoMobile = () => ({ mobile: { mode: 'auto', attention: null } });
 
-/* Blokkfabrikker: hver retur er et ferskt objekt, for presets kalles flere ganger og seksjoner må aldri dele delobjekter. */
+/* Block factories: every return is a fresh object, because presets are called several times and sections must never share sub-objects. */
 
 const frame = (x, y, w, h, z = 1) => ({ desktop: { x, y, w, h, z, rot: 0 }, mobile: null });
 
@@ -48,8 +48,8 @@ const image = (fr, props = {}) => ({
   id: makeId('blk'),
   type: 'image',
   version: 1,
-  // Tomt src: bildeblokken viser rammen, og eieren bytter bilde i Egenskaper.
-  // Bevisst ingen eksterne plassholder-URL-er (CSP).
+  // Empty src: the image block shows the frame, and the owner swaps the image in Properties.
+  // Deliberately no external placeholder URLs (CSP).
   props: { src: '', alt: ta('seed.imageAlt'), fit: 'cover', radius: 'md', href: null, ...props },
   animation: null,
   frames: fr,
@@ -75,7 +75,7 @@ const icon = (fr, glyph, size = 40) => ({
 
 const hoverLift = () => ({ type: 'hover-lift', version: 1, props: {} });
 
-/* Samling-blokk (ADR-0007): collection settes av eieren i Egenskaper; null gir veiledende tomtilstand. */
+/* Collection block (ADR-0007): collection is set by the owner in Properties; null gives a guiding empty state. */
 const collection = (fr, view, props = {}) => ({
   id: makeId('blk'),
   type: 'collection',
@@ -85,8 +85,8 @@ const collection = (fr, view, props = {}) => ({
   frames: fr,
 });
 
-/* Butikk-blokkene (0.7.5): produktkort fra en produktsamling + handlekurv.
-   collection settes av eieren i Egenskaper (som samling-blokken). */
+/* The shop blocks: product cards from a product collection plus a basket.
+   collection is set by the owner in Properties (as in the collection block). */
 const product = (fr, props = {}) => ({
   id: makeId('blk'),
   type: 'product',
@@ -114,7 +114,7 @@ const checkout = (fr, props = {}) => ({
   frames: fr,
 });
 
-/* Galleri-blokk: bildene legges til av eieren i Egenskaper (flervalg). */
+/* Gallery block: the images are added by the owner in Properties (multi-select). */
 const gallery = (fr, props = {}) => ({
   id: makeId('blk'),
   type: 'gallery',
@@ -124,7 +124,7 @@ const gallery = (fr, props = {}) => ({
   frames: fr,
 });
 
-/* FAQ-blokk: spørsmålslisten redigeres i Egenskaper og rett i previewen. */
+/* FAQ block: the question list is edited in Properties and straight in the preview. */
 const faq = (fr, items) => ({
   id: makeId('blk'),
   type: 'faq',
@@ -134,7 +134,7 @@ const faq = (fr, items) => ({
   frames: fr,
 });
 
-/* Sitat-blokk (0.6.7.11): semantisk figure/blockquote med attribusjon. */
+/* Quote block: semantic figure/blockquote with attribution. */
 const quote = (fr, props = {}) => ({
   id: makeId('blk'),
   type: 'quote',
@@ -144,7 +144,7 @@ const quote = (fr, props = {}) => ({
   frames: fr,
 });
 
-/* Tidslinje-blokk (0.6.7.11): hendelser langs en tegnet linje. */
+/* Timeline block: events along a drawn line. */
 const timeline = (fr, items) => ({
   id: makeId('blk'),
   type: 'timeline',
@@ -154,7 +154,7 @@ const timeline = (fr, items) => ({
   frames: fr,
 });
 
-/* Statistikk-blokk (0.6.7.11): ett nøkkeltall med etikett og tell-opp. */
+/* Statistics block: one key figure with a label and count-up. */
 const stats = (fr, props = {}) => ({
   id: makeId('blk'),
   type: 'stats',
@@ -170,15 +170,15 @@ const glowLayer = (x, y, opacity, radius = 0.5) => ({
   type: 'glow', version: 1, props: { x, y, color: 'accent', radius, opacity },
 });
 
-/* Utvidbare presets: item(section) lager NESTE element (kort/rad/logo) ferdig plassert i første LEDIGE rute (freeSlot under), så knappen virker også etter at eieren har slettet eller flyttet elementer.
-   item kan i tillegg returnere moves ([{blockId, dy}]) som flytter eksisterende blokker, f.eks. FAQ som skyver avslutningslinjen ned.
-   Plasseringen antar preset-utlegget; har eieren bygget om seksjonen helt, er det nye elementet fortsatt vanlige blokker som kan dras på plass. */
+/* Extendable presets: item(section) makes the NEXT element (card/row/logo) ready-placed in the first FREE slot (freeSlot below), so the button works even after the owner has deleted or moved elements.
+   item can additionally return moves ([{blockId, dy}]) that shift existing blocks, for instance FAQ pushing the closing line down.
+   The placement assumes the preset layout; if the owner has rebuilt the section entirely, the new element is still ordinary blocks that can be dragged into place. */
 const maxBottom = (sec) => Math.max(0, ...sec.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
 const gridSlot = (n, per, x0, dx, y0, dy) => ({ x: x0 + (n % per) * dx, y: y0 + Math.floor(n / per) * dy });
 
-/* Ledig-rute-sok: PROVER rutene i rekkefolge i stedet for aa telle elementer.
-   Da fylles hullet igjen naar eieren har slettet et element i midten, i stedet for at telleren synker og neste element legges oppaa et eksisterende.
-   yOff/h beskriver hele kortets fotavtrykk rundt ruten (f.eks. ikonet som ligger over boksen). */
+/* Free-slot search: TRIES the slots in order instead of counting elements.
+   That refills the hole when the owner has deleted an element in the middle, instead of the counter dropping and the next element landing on top of an existing one.
+   yOff/h describe the whole card's footprint around the slot (the icon sitting above the box, for instance). */
 const freeSlot = (sec, per, x0, dx, y0, dy, w, h, yOff = 0) => {
   const hits = (r) => sec.blocks.some((b) => {
     const d = b.frames.desktop;
@@ -191,8 +191,8 @@ const freeSlot = (sec, per, x0, dx, y0, dy, w, h, yOff = 0) => {
   return { x: x0, y: maxBottom(sec) + 16, n: 0 };
 };
 
-/* Mobil-stablingsnokkel: holder et korts blokker samlet i auto-stablingen (se stackOrder i render.js).
-   Nokkelen tolkes paa samme skala som desktop-y: kolonne 0 sorterer forst, og elementene i kortet holder innbyrdes rekkefolge. */
+/* Mobile stacking key: keeps a card's blocks together in the auto stacking (see stackOrder in render.js).
+   The key is read on the same scale as desktop y: column 0 sorts first, and the elements within the card keep their relative order. */
 const cardOrder = (baseY, col, idx) => baseY + col * 0.1 + idx * 0.01;
 
 const section = (preset, minHeight, background, blocks, grid = null) => ({
@@ -207,7 +207,7 @@ const section = (preset, minHeight, background, blocks, grid = null) => ({
 });
 
 export function registerSectionPresets(Urd) {
-  /* ---------- Grunnleggende ---------- */
+  /* ---------- Basics ---------- */
 
   Urd.sections.define('blank', {
     label: 'Empty section',
@@ -305,10 +305,10 @@ export function registerSectionPresets(Urd) {
     ]),
   });
 
-  /* Ingen «Footer»-seksjonspreset: den delte footeren bor i Footer-panelet
-     (site.footer), ikke som en seksjon per side. */
+  /* No "Footer" section preset: the shared footer lives in the Footer panel
+     (site.footer), not as a section per page. */
 
-  /* ---------- Kort og lister ---------- */
+  /* ---------- Cards and lists ---------- */
 
   Urd.sections.define('feature-cards', {
     label: 'Feature cards',
@@ -538,9 +538,9 @@ export function registerSectionPresets(Urd) {
     groupKey: 'presetGroup.cards',
     hint: 'Questions and answers in cards',
     hintKey: 'preset.faq.hint',
-    // Modernisert i 0.6.7.11: bruker faq-blokken (levert 0.6.6.4) i stedet
-    // for tekstboks-etterligningen. Nye spørsmål legges til i Egenskaper
-    // eller rett i previewen, så preset-item-knappen trengs ikke lenger.
+    // Uses the faq block rather than a text-box imitation. New questions are
+    // added in Properties or straight in the preview, so the preset needs no
+    // item button.
     create: () => section('faq', '520px', bg(colorLayer('bg')), [
       text(frame(25, 24, 50, 36), ta('seed.faq.title'), { align: 'center' }),
       faq(frame(20, 80, 60, 320), [
@@ -617,7 +617,7 @@ export function registerSectionPresets(Urd) {
     hint: 'One big story and two small beside it',
     hintKey: 'preset.lead-story.hint',
     create: () => {
-      // mobileOrder holder hovedsaken samlet (bilde, ingress, knapp) foran småsakene i mobil-stablingen.
+      // mobileOrder keeps the lead story together (image, intro, button) ahead of the small items in the mobile stacking.
       const blocks = [
         image(frame(6, 40, 55, 300)),
         text(frame(6, 348, 55, 108), ta('seed.feature.main')),
@@ -670,7 +670,7 @@ export function registerSectionPresets(Urd) {
     },
   });
 
-  /* ---------- Butikk ---------- */
+  /* ---------- Shop ---------- */
 
   Urd.sections.define('shop', {
     label: 'Shop',
@@ -679,8 +679,8 @@ export function registerSectionPresets(Urd) {
     groupKey: 'presetGroup.shop',
     hint: 'Real product cards from a product collection, with a basket',
     hintKey: 'preset.shop.hint',
-    // Handlekurven står under chrome-båndet (y 88), så blokkverktøylinja
-    // hennes aldri havner bak den sticky seksjonsverktøylinja.
+    // The basket sits below the chrome band (y 88), so its block toolbar
+    // never ends up behind the sticky section toolbar.
     create: () => section('shop', '544px', bg(colorLayer('bg')), [
       text(frame(6, 28, 50, 38), ta('seed.shop.title')),
       cart(frame(78, 88, 16, 48)),
@@ -818,7 +818,7 @@ export function registerSectionPresets(Urd) {
     ]),
   });
 
-  /* ---------- Fremheving ---------- */
+  /* ---------- Highlight ---------- */
 
   Urd.sections.define('cta', {
     label: 'CTA banner',
@@ -841,8 +841,8 @@ export function registerSectionPresets(Urd) {
     groupKey: 'presetGroup.highlight',
     hint: 'Large quote with attribution',
     hintKey: 'preset.quote.hint',
-    // Modernisert i 0.6.7.11: bruker sitat-blokken (semantisk blockquote)
-    // i stedet for to løse tekstblokker.
+    // Uses the quote block (semantic blockquote) rather than two loose text
+    // blocks.
     create: () => section('quote', '300px', bg(colorLayer('bg')), [
       quote(frame(20, 56, 60, 190), {
         text: ta('seed.quoteBlock.text'),
@@ -859,8 +859,8 @@ export function registerSectionPresets(Urd) {
     groupKey: 'presetGroup.highlight',
     hint: 'Three big numbers with labels',
     hintKey: 'preset.stats.hint',
-    // Modernisert i 0.6.7.12: bruker statistikk-blokken (tell-opp ved entré)
-    // i stedet for to tekstblokker per tall.
+    // Uses the statistics block (count-up on entry) rather than two text
+    // blocks per number.
     create: () => {
       const stat = (x, col, value, suffix, label) => {
         const s = stats(frame(x, 76, 25, 120), { value, suffix, label });
@@ -891,8 +891,8 @@ export function registerSectionPresets(Urd) {
     hint: 'Greyscale logo row with links',
     hintKey: 'preset.sponsors.hint',
     create: () => {
-      // saturate 0 gir gråtonede logoer (klassisk sponsorband).
-      // Logoen vises hel (contain) uten avrunding.
+      // saturate 0 gives greyscale logos (the classic sponsor band).
+      // The logo is shown whole (contain) without rounding.
       const logo = (x) => image(frame(x, 108, 18.5, 100),
         { alt: ta('seed.sponsors.alt'), fit: 'contain', radius: null, saturate: 0 });
       return section('sponsors', '280px', bg(colorLayer('bg')), [

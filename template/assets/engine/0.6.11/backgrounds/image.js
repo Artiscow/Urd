@@ -1,34 +1,35 @@
 /**
- * Bakgrunnslag: bilde. Viser en fil fra media/ (eller en data-URL for
- * upubliserte opplastinger i utkast; publisering materialiserer den til
- * en fil, samme flyt som bildeblokken).
+ * Background layer: image. Shows a file from media/ (or a data URL for
+ * unpublished uploads in a draft; publishing materializes it into a file,
+ * the same flow as the image block).
  *
- * Posisjon og størrelse styres CSS-native via `background-position` og
- * `background-size` på et indre `.urd-bg-image`-element (samme modell som
- * bildegalleri-laget), IKKE via transform. Transform brukes kun til parallax.
+ * Position and size are CSS-native via `background-position` and
+ * `background-size` on an inner `.urd-bg-image` element (same model as the
+ * image gallery layer), NOT via transform. Transform is used only for parallax.
  *
- * Felt (alle additive med trygge standarder):
- * - fit: 'cover' (fyll+beskjær), 'egen' (background-size %, breddrelativ - krymper
- *   OG forstørrer, beskjæres ikke av seksjonshøyden), 'contain' (vis hele), 'repeat'.
- * - x/y (0..1, 0.5 = sentrert): fokuspunkt via background-position-prosent. Punktet
- *   holder seg synlig uansett seksjonsformat, uten tomrom.
- * - size (brøk, 1 = 100% av bredden): kun i 'egen'-modus.
- * - blur (px): stemningsbakgrunn bak tekst. opacity (0..1). parallax (0..1): laget
- *   henger etter ved scroll. bleed: la parallaksen flyte inn i naboseksjonene.
+ * Fields (all additive with safe defaults):
+ * - fit: 'cover' (fill+crop), 'egen' (background-size %, width-relative - shrinks
+ *   AND enlarges, is not cropped by the section height), 'contain' (show all), 'repeat'.
+ * - x/y (0..1, 0.5 = centered): focal point via background-position percentages. The
+ *   point stays visible whatever the section format, with no empty space.
+ * - size (fraction, 1 = 100% of the width): only in 'egen' mode.
+ * - blur (px): mood background behind text. opacity (0..1). parallax (0..1): the layer
+ *   lags behind on scroll. bleed: let the parallax flow into the neighbouring sections.
  */
 
 import { isSafeImage } from '../nav-model.js';
 
-/** Maks vertikal reisevei (andel av vindushøyden) et parallax-lag får ved full
- *  styrke. Kraftig, siden fri-plasserings-bildet (skala + posisjon) ikke MÅ fylle
- *  seksjonen: det forskyves rent uten overskann/zoom, så utslaget kan være stort. */
+/** Maximum vertical travel (fraction of the viewport height) a parallax layer gets at
+ *  full strength. Generous, since the free-placement image (scale + position) does not
+ *  HAVE to fill the section: it shifts cleanly with no overscan/zoom, so the movement
+ *  can be large. */
 const MAX_SHIFT = 0.4;
 
 /**
- * background-position-strengen for et fokuspunkt (0.5/0.5 = sentrert). Ren
- * funksjon (node-testet). Samme mapping som bildegalleri-laget.
- * @param {number} x Fokus vannrett 0..1
- * @param {number} y Fokus loddrett 0..1
+ * The background-position string for a focal point (0.5/0.5 = centered). Pure
+ * function (node-tested). Same mapping as the image gallery layer.
+ * @param {number} x Focal point, horizontal 0..1
+ * @param {number} y Focal point, vertical 0..1
  * @returns {string}
  */
 export function bgPosition(x, y) {
@@ -36,25 +37,25 @@ export function bgPosition(x, y) {
 }
 
 /**
- * background-size-verdien. Fri-plasserings-modellen (`vanlig`/`flislegg`) bruker en
- * breddrelativ SKALA (`{size*100}%`, høyde = auto beholder forholdet), så brukeren
- * setter størrelsen selv. `cover`/`contain` beholdes som nøkkelord (bildegalleri-
- * laget og bakoverkompat). Ren funksjon (node-testet).
+ * The background-size value. The free-placement model (`vanlig`/`flislegg`) uses a
+ * width-relative SCALE (`{size*100}%`, height = auto keeps the aspect ratio), so the
+ * user sets the size themselves. `cover`/`contain` are kept as keywords (image
+ * gallery layer and backwards compatibility). Pure function (node-tested).
  * @param {'vanlig'|'flislegg'|'cover'|'contain'|'egen'|'repeat'} fit
- * @param {number} [size] Skala som brøk (1 = 100% av seksjonsbredden)
+ * @param {number} [size] Scale as a fraction (1 = 100% of the section width)
  * @returns {string}
  */
 export function bgSize(fit, size) {
   if (fit === 'contain') return 'contain';
   if (fit === 'cover') return 'cover';
-  // vanlig / flislegg / egen / repeat / annet -> breddrelativ skala
+  // vanlig / flislegg / egen / repeat / other -> width-relative scale
   return `${Math.max(0, size ?? 1) * 100}%`;
 }
 
 /**
- * clip-path for et lag ut fra bleed-retningen. Sidene klippes ALLTID ved kanten
- * (ingen vannrett bleed → ingen sidescroll); topp/bunn åpnes på bleed-siden så et
- * parallax-lag kan flyte inn i naboseksjonen. Ren funksjon (node-testet).
+ * clip-path for a layer from the bleed direction. The sides are ALWAYS clipped at the
+ * edge (no horizontal bleed → no sideways scrolling); top/bottom open on the bleed side
+ * so a parallax layer can flow into the neighbouring section. Pure function (node-tested).
  * @param {'none'|'up'|'down'|'both'} [bleed]
  * @returns {string}
  */
@@ -67,12 +68,12 @@ export function bleedClip(bleed) {
 }
 
 /**
- * Vertikal overskann (px) for et parallax-lag: nøyaktig reiseveien laget trenger
- * for å forskyves uten å avsløre kanter. Proporsjonal med styrken, så en lav
- * styrke gir minimal forstørring. Tak mot seksjonshøyden. Ren funksjon (node-testet).
- * @param {number} sectionH Seksjonens høyde
- * @param {number} viewportH Vindushøyde
- * @param {number} speed Styrke 0..1
+ * Vertical overscan (px) for a parallax layer: exactly the travel the layer needs
+ * to shift without revealing its edges. Proportional to the strength, so a low
+ * strength gives minimal enlargement. Capped against the section height. Pure function (node-tested).
+ * @param {number} sectionH The section height
+ * @param {number} viewportH Viewport height
+ * @param {number} speed Strength 0..1
  * @returns {number}
  */
 export function parallaxPad(sectionH, viewportH, speed, capFrac = 0.18) {
@@ -81,26 +82,26 @@ export function parallaxPad(sectionH, viewportH, speed, capFrac = 0.18) {
 }
 
 /**
- * translateY (px) for et parallax-lag: seksjonens senter målt mot viewport-
- * senteret, ganget med styrken, klemt til [-pad, pad] så det aldri forskyves
- * utenfor overskannet. Ren funksjon (node-testet).
- * @param {number} rectTop Seksjonens top i viewport-koordinater
- * @param {number} sectionH Seksjonens høyde
- * @param {number} viewportH Vindushøyde
- * @param {number} speed Styrke 0..1
- * @param {number} pad Overskann i px (grensen for forskyvningen)
+ * translateY (px) for a parallax layer: the section center measured against the
+ * viewport center, multiplied by the strength, clamped to [-pad, pad] so it never
+ * shifts outside the overscan. Pure function (node-tested).
+ * @param {number} rectTop The section top in viewport coordinates
+ * @param {number} sectionH The section height
+ * @param {number} viewportH Viewport height
+ * @param {number} speed Strength 0..1
+ * @param {number} pad Overscan in px (the limit for the shift)
  * @returns {number}
  */
 export function parallaxOffset(rectTop, sectionH, viewportH, speed, pad) {
   const sectionMid = rectTop + sectionH / 2;
   const raw = (viewportH / 2 - sectionMid) * Math.max(0, Math.min(1, speed)) * MAX_SHIFT;
   const lim = pad ?? parallaxPad(sectionH, viewportH, speed);
-  // `|| 0` normaliserer -0 til +0.
+  // `|| 0` normalizes -0 to +0.
   return Math.max(-lim, Math.min(lim, raw)) || 0;
 }
 
-// Aktive parallax-lag: ÉN modulnivå scroll-/resize-lytter forskyver dem via
-// rAF. Frakoblede lag (etter re-render) lukes ut når apply returnerer false.
+// Active parallax layers: ONE module-level scroll/resize listener shifts them via
+// rAF. Detached layers (after a re-render) are weeded out when apply returns false.
 const parallaxAppliers = new Set();
 let parallaxListening = false;
 let parallaxRaf = 0;
@@ -121,18 +122,19 @@ function registerParallax(apply) {
 }
 
 /**
- * Fester parallax på bilde-elementet: én rAF-drevet lytter forskyver det ved
- * scroll via `translateY`. Overskannet (top/bottom) hindrer at forskyvningen
- * avslører kanter; det er minst `blurMargin` (uskarphetens rand) og vokser til
- * parallax-reiseveien. AV på mobil og ved prefers-reduced-motion (da står laget
- * stille, kun uskarphetens rand beholdes).
- * Fyllmodus (cover/flislegg) MÅ overskanne (fyller seksjonen, så en gap ved kanten
- * er uakseptabel; overskann på flis koster ingen zoom, på cover en liten). Den
- * frie modellen (vanlig/egen/contain) viser bildet med luft rundt, så der trengs
- * INGEN overskann: bildet forskyves rent, uten zoom, og hele styrke-området merkes.
- * @param {HTMLElement} img Bilde-elementet
- * @param {number} speed Styrke 0..1
- * @param {number} blurMargin Uskarphetens rand i px (0 uten blur)
+ * Attaches parallax to the image element: one rAF-driven listener shifts it on
+ * scroll via `translateY`. The overscan (top/bottom) keeps the shift from revealing
+ * the edges; it is at least `blurMargin` (the blur fringe) and grows to the
+ * parallax travel. OFF on mobile and with prefers-reduced-motion (the layer then
+ * stands still, only the blur fringe is kept).
+ * Fill modes (cover/flislegg) MUST overscan (they fill the section, so a gap at the
+ * edge is unacceptable; overscan costs no zoom on a tile, a little on cover). The
+ * free model (vanlig/egen/contain) shows the image with space around it, so there NO
+ * overscan is needed: the image shifts cleanly, without zoom, and the whole strength
+ * range is noticeable.
+ * @param {HTMLElement} img The image element
+ * @param {number} speed Strength 0..1
+ * @param {number} blurMargin The blur fringe in px (0 without blur)
  * @param {'vanlig'|'flislegg'|'cover'|'egen'|'contain'|'repeat'} fit
  */
 function mountParallax(img, speed, blurMargin, fit) {
@@ -150,8 +152,8 @@ function mountParallax(img, speed, blurMargin, fit) {
     }
     const rect = (section ?? img).getBoundingClientRect();
     const vh = window.innerHeight || document.documentElement.clientHeight;
-    // `limit` klemmer bevegelsen (dy). Fyllmodus har et stramt tak (overskannet =
-    // motsatt zoom); den frie modellen kan bevege seg mye mer (ingen overskann).
+    // `limit` clamps the movement (dy). Fill modes have a tight cap (the overscan =
+    // inverse zoom); the free model can move much further (no overscan).
     const limit = parallaxPad(rect.height, vh, speed, fills ? 0.18 : 0.6);
     setInset(fills ? Math.max(blurMargin, limit) : blurMargin);
     const dy = parallaxOffset(rect.top, rect.height, vh, speed, limit);
@@ -159,30 +161,31 @@ function mountParallax(img, speed, blurMargin, fit) {
     return true;
   };
   registerParallax(apply);
-  // `renderBackgroundLayers` legger laget i DOM ETTER render(), så den første
-  // apply-en over kjører før seksjonen er målbar (overskann = 0). Kjør på nytt
-  // når laget er koblet og målt, ellers «vokser» bildet først ved neste scroll.
+  // `renderBackgroundLayers` puts the layer in the DOM AFTER render(), so the first
+  // apply above runs before the section is measurable (overscan = 0). Run it again
+  // once the layer is connected and measurable, otherwise the image only grows on
+  // the next scroll.
   if (typeof requestAnimationFrame === 'function') {
     requestAnimationFrame(() => requestAnimationFrame(apply));
   }
 }
 
 /**
- * Støtter nettleseren scroll-drevne animasjoner? Da driver kompositoren
- * parallaksen via `animation-timeline: view()` (CSS), og vi slipper både
- * scroll-lytteren og rAF-pumpen (mountParallaxCss). Ellers faller vi tilbake
- * til den rAF-drevne mountParallax. Gates også i CSS med `@supports`.
+ * Does the browser support scroll-driven animations? Then the compositor drives
+ * the parallax via `animation-timeline: view()` (CSS), and we avoid both the scroll
+ * listener and the rAF pump (mountParallaxCss). Otherwise we fall back to the
+ * rAF-driven mountParallax. Also gated in CSS with `@supports`.
  */
 function supportsScrollTimeline() {
   return typeof CSS !== 'undefined' && typeof CSS.supports === 'function'
     && CSS.supports('animation-timeline', 'view()');
 }
 
-// CSS-parallax: reiseveien (--urd-px-shift) og overskannet (top/bottom) settes
-// én gang og ved RESIZE, aldri ved scroll. Selve forskyvningen scrubbes av
-// view()-tidslinjen i base.css på kompositor-tråden. Delt resize-lytter med
-// samme opprydning som rAF-fallbacken: frakoblede lag lukes ut når måle-
-// funksjonen returnerer false.
+// CSS parallax: the travel (--urd-px-shift) and the overscan (top/bottom) are set
+// once and on RESIZE, never on scroll. The shift itself is scrubbed by the view()
+// timeline in base.css on the compositor thread. A shared resize listener with the
+// same cleanup as the rAF fallback: detached layers are weeded out when the measure
+// function returns false.
 const parallaxMeasurers = new Set();
 let measureBound = false;
 let measureRaf = 0;
@@ -202,15 +205,15 @@ function registerMeasure(measure) {
 }
 
 /**
- * Fester CSS-parallax på bilde-elementet: reiseveien og overskannet regnes ut
- * fra seksjonshøyden og vindushøyden (samme parallaxPad-formel som mountParallax),
- * men forskyvningen scrubbes av `animation-timeline: view()` i CSS - ingen scroll-
- * lytter, ingen rAF pr. bilde. Stille på mobil / ved redusert bevegelse (CSS
- * setter da animation:none; her holdes overskannet til uskarphetens rand så laget
- * står rent i sluttilstand).
- * @param {HTMLElement} img Bilde-elementet
- * @param {number} speed Styrke 0..1
- * @param {number} blurMargin Uskarphetens rand i px (0 uten blur)
+ * Attaches CSS parallax to the image element: the travel and the overscan are
+ * computed from the section height and the viewport height (the same parallaxPad
+ * formula as mountParallax), but the shift is scrubbed by `animation-timeline: view()`
+ * in CSS - no scroll listener, no rAF per image. Still on mobile / with reduced
+ * motion (CSS then sets animation:none; here the overscan is held at the blur fringe
+ * so the layer sits cleanly in its end state).
+ * @param {HTMLElement} img The image element
+ * @param {number} speed Strength 0..1
+ * @param {number} blurMargin The blur fringe in px (0 without blur)
  * @param {'vanlig'|'flislegg'|'cover'|'egen'|'contain'|'repeat'} fit
  */
 function mountParallaxCss(img, speed, blurMargin, fit) {
@@ -224,8 +227,8 @@ function mountParallaxCss(img, speed, blurMargin, fit) {
     const still = reduce || document.body.classList.contains('urd-mobile');
     const rect = (section ?? img).getBoundingClientRect();
     const vh = window.innerHeight || document.documentElement.clientHeight;
-    // Reisevei = parallaxPad (fyll: stramt tak; fri: stort tak). Overskann kun i
-    // fyllmodus når laget faktisk beveger seg; ellers holder uskarphetens rand.
+    // Travel = parallaxPad (fill: tight cap; free: large cap). Overscan only in fill
+    // mode when the layer actually moves; otherwise the blur fringe is enough.
     const shift = parallaxPad(rect.height, vh, speed, fills ? 0.18 : 0.6);
     const inset = (fills && !still) ? Math.max(blurMargin, shift) : blurMargin;
     img.style.setProperty('--urd-px-shift', `${shift}px`);
@@ -234,8 +237,8 @@ function mountParallaxCss(img, speed, blurMargin, fit) {
     return true;
   };
   registerMeasure(measure);
-  // Samme grunn som mountParallax: laget legges i DOM etter render(), så første
-  // måling må skje når seksjonen faktisk er målbar.
+  // Same reason as mountParallax: the layer is put in the DOM after render(), so the
+  // first measurement must happen when the section is actually measurable.
   if (typeof requestAnimationFrame === 'function') {
     requestAnimationFrame(() => requestAnimationFrame(measure));
   }
@@ -252,16 +255,16 @@ export const imageLayer = {
    * @param {{src: string, fit?: 'cover'|'egen'|'contain'|'repeat', x?: number, y?: number, size?: number, opacity?: number, blur?: number, parallax?: number, bleed?: 'none'|'up'|'down'|'both'}} props
    */
   render(el, props) {
-    // Tom eller utrygg kilde gir intet lag: kilden går rett inn i CSS-url(),
-    // så den må gjennom samme vokter som nav-bakgrunnen (delt isSafeImage).
+    // An empty or unsafe source yields no layer: the source goes straight into
+    // CSS url(), so it must pass the same guard as the nav background (shared isSafeImage).
     if (!isSafeImage(props.src)) return;
     el.style.opacity = String(props.opacity ?? 1);
-    // Klipping: retnings-clip-path styrt av bleed (inset(0) = klipp til seksjonen).
+    // Clipping: a directional clip-path driven by bleed (inset(0) = clip to the section).
     el.style.clipPath = bleedClip(props.bleed);
-    // Bleed NED/BEGGE: seksjonen under kommer senere i DOM og maler bakgrunnen sin
-    // oppå det som flyter ned. Løft laget til z-index 1 så det maler OVER neste
-    // seksjons bakgrunn (men fortsatt under innholdet dens, som ligger på z>=1
-    // senere i treet). Bleed OPP maler allerede over forrige seksjon (tre-rekkefølge).
+    // Bleed DOWN/BOTH: the section below comes later in the DOM and paints its own
+    // background on top of what flows down. Lift the layer to z-index 1 so it paints
+    // OVER the next section's background (but still under its content, which sits at
+    // z>=1 later in the tree). Bleed UP already paints over the previous section (tree order).
     el.style.zIndex = (props.bleed === 'down' || props.bleed === 'both') ? '1' : '';
 
     const img = document.createElement('div');
@@ -275,12 +278,12 @@ export const imageLayer = {
     img.style.backgroundImage = `url("${props.src}")`;
     img.style.backgroundSize = bgSize(props.fit, props.size);
     img.style.backgroundRepeat = tile ? 'repeat' : 'no-repeat';
-    // Plassering via background-position. Bildet er (som regel) MINDRE enn
-    // seksjonen, så 0/100 % = kant-i-kant venstre/høyre (intuitivt), og x/y kan gå
-    // UNDER 0 / OVER 1 for å legge motivet delvis eller helt utenfor kanten.
+    // Placement via background-position. The image is (usually) SMALLER than the
+    // section, so 0/100 % = flush left/right (intuitive), and x/y can go BELOW 0 /
+    // ABOVE 1 to put the subject partly or entirely outside the edge.
     img.style.backgroundPosition = bgPosition(props.x, props.y);
-    // Uskarphet: strekk bildet bittelitt utover kanten (klippes av laget) så den
-    // transparente randen blur() lager havner utenfor. Ingen forsettlig zoom.
+    // Blur: stretch the image a touch past the edge (clipped by the layer) so the
+    // transparent fringe blur() creates ends up outside. No deliberate zoom.
     let blurMargin = 0;
     if (props.blur > 0) {
       img.style.filter = `blur(${props.blur}px)`;
@@ -291,8 +294,8 @@ export const imageLayer = {
       img.style.bottom = `-${blurMargin}px`;
     }
 
-    // Samme lastevern som bildeblokken: laget holdes usynlig til bildet er
-    // ferdig lastet, så det aldri dukker opp stripevis.
+    // Same load guard as the image block: the layer is kept invisible until the image
+    // has finished loading, so it never appears in stripes.
     const probe = new Image();
     probe.src = props.src;
     if (!probe.complete) {
@@ -303,18 +306,18 @@ export const imageLayer = {
     }
 
     el.appendChild(img);
-    // Parallax (additivt fra v0.6): laget henger etter ved scroll.
+    // Parallax (additive since v0.6): the layer lags behind on scroll.
     if (props.parallax > 0) mountLayerParallax(img, props.parallax, blurMargin, props.fit ?? 'cover');
   },
 };
 
 /**
- * Kobler parallax på et lag-element (bilde eller video, delt med video-laget):
- * moderne nettlesere driver det med scroll-drevet CSS (kompositor-tråd, ingen
- * scroll-lytter); eldre faller tilbake til den rAF-drevne varianten.
- * @param {HTMLElement} el Lag-elementet
- * @param {number} speed Styrke 0..1
- * @param {number} blurMargin Uskarphetens rand i px (0 uten blur)
+ * Hooks parallax onto a layer element (image or video, shared with the video layer):
+ * modern browsers drive it with scroll-driven CSS (compositor thread, no scroll
+ * listener); older ones fall back to the rAF-driven variant.
+ * @param {HTMLElement} el The layer element
+ * @param {number} speed Strength 0..1
+ * @param {number} blurMargin The blur fringe in px (0 without blur)
  * @param {'vanlig'|'flislegg'|'cover'|'egen'|'contain'|'repeat'} fit
  */
 export function mountLayerParallax(el, speed, blurMargin, fit) {

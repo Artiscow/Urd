@@ -1,30 +1,31 @@
 /**
- * Språkpakker (ADR-0012): plugins som KUN leverer oversettelser. En pakke
- * deklarerer språkene sine i manifestet:
+ * Language packs (ADR-0012): plugins that supply ONLY translations. A pack
+ * declares its languages in the manifest:
  *
  *   "languages": [{ "code": "sv", "name": "Svenska", "site": true, "admin": false }]
  *
- * og legger filene i plugins/<id>/locales/site/<kode>.js og
- * plugins/<id>/locales/admin/<kode>.js - samme form som motorens egne
- * locale-filer, og samme overlay-regel: bokmålsbasen ligger i bunn, så en
- * pakke kan dekke alt eller bare deler. En pakke kan ikke overstyre et
- * innebygd språk (da ville en plugin kunne kapre nb), og trenger verken
- * entry eller provides: den har ingen kode å kjøre.
+ * and puts the files in plugins/<id>/locales/site/<code>.js and
+ * plugins/<id>/locales/admin/<code>.js, the same shape as the engine's own
+ * locale files and the same overlay rule: the bokmal base sits underneath, so
+ * a pack may cover everything or only parts. A pack cannot override a builtin
+ * language (that would let a plugin hijack nb), and needs neither entry nor
+ * provides: it has no code to run.
  *
- * Modulen er BEVISST utenfor motorens statiske import-lukning (ingen
- * modulepreload): den hentes kun når noen faktisk ber om et språk kjernen
- * ikke har, eller når en plugin med languages lastes. Den rene valideringen
- * av manifest-feltet bor derfor i i18n.js, som alt er lastet.
+ * The module is DELIBERATELY outside the engine's static import closure (no
+ * modulepreload): it is fetched only when something actually asks for a
+ * language the core does not have, or when a plugin with languages is loaded.
+ * The pure validation of the manifest field therefore lives in i18n.js, which
+ * is already loaded.
  */
 import { LANG_CODE_RE, isBuiltinLang, validateLanguages } from './i18n.js';
 
-/** Kode til { code, name, site, admin, plugin } for pakkene som er kjent nå. */
+/** Code to { code, name, site, admin, plugin } for the packs known so far. */
 const registry = new Map();
 
 /**
- * Melder inn språkene til én plugin. Kalles av plugin-lasteren, så pakker i
- * editorens UTKASTLISTE er kjent i previewen før de er publisert. Ugyldige
- * innslag hoppes over enkeltvis: resten av pakken skal fortsatt virke.
+ * Registers the languages of one plugin. Called by the plugin loader, so packs
+ * in the editor's DRAFT LIST are known in the preview before they are published.
+ * Invalid entries are skipped one by one: the rest of the pack still works.
  */
 export function registerPackLanguages(pluginId, list) {
   for (const entry of Array.isArray(list) ? list : []) {
@@ -39,8 +40,8 @@ export function registerPackLanguages(pluginId, list) {
   }
 }
 
-/* Manifest-gjennomgangen kjøres maks én gang per side: den er kun nødvendig
-   når noen ber om et språk kjernen ikke har, og svaret endrer seg ikke. */
+/* The manifest scan runs at most once per page: it is needed only when someone
+   asks for a language the core does not have, and the answer does not change. */
 let scan = null;
 
 async function scanEnabledPlugins() {
@@ -48,19 +49,19 @@ async function scanEnabledPlugins() {
   try {
     index = await (await fetch('/plugins/plugins.json')).json();
   } catch {
-    return; // ingen plugin-indeks er helt greit
+    return; // no plugin index at all is perfectly fine
   }
-  // Manifestene hentes parallelt: de gjelder ikke hverandre, og dette står
-  // foran første rendering når siden bruker et pakkespråk.
+  // The manifests are fetched in parallel: they do not depend on each other, and
+  // this sits in front of the first render when the site uses a pack language.
   await Promise.all((index.enabled ?? []).map(async (id) => {
     try {
       const manifest = await (await fetch(`/plugins/${id}/plugin.json`)).json();
       registerPackLanguages(id, manifest.languages);
-    } catch { /* uleselig manifest: plugin-lasteren advarer om det samme */ }
+    } catch { /* unreadable manifest: the plugin loader warns about the same thing */ }
   }));
 }
 
-/** Språkene de aktiverte pakkene tilbyr (manifestene leses ved første kall). */
+/** The languages the enabled packs offer (the manifests are read on the first call). */
 export async function packLanguages() {
   scan ??= scanEnabledPlugins();
   await scan;
@@ -68,8 +69,8 @@ export async function packLanguages() {
 }
 
 /**
- * Finner pakken som eier en språkkode. Registeret sjekkes først (plugins
- * som alt er lastet), deretter leses manifestene.
+ * Finds the pack that owns a language code. The registry is checked first
+ * (plugins already loaded), then the manifests are read.
  */
 async function findPack(code) {
   if (registry.has(code)) return registry.get(code);
@@ -78,10 +79,10 @@ async function findPack(code) {
 }
 
 /**
- * Henter tekstene en pakke tilbyr for ett register.
- * @param {string} code Språkkoden (aldri et innebygd språk)
+ * Fetches the strings a pack offers for one register.
+ * @param {string} code The language code (never a builtin language)
  * @param {'site'|'admin'} kind
- * @returns {Promise<Record<string, string>|null>} null når ingen pakke dekker det
+ * @returns {Promise<Record<string, string>|null>} null when no pack covers it
  */
 export async function loadPackStrings(code, kind) {
   if (!LANG_CODE_RE.test(String(code ?? '')) || isBuiltinLang(code)) return null;

@@ -1,14 +1,14 @@
 /**
- * Temastyrt nedtrekk for lerretet (ADR-0009): native select-popuper tegnes av
- * nettleseren/OS-et og blir uleselige i mørke verktøylinjer og paneler, så
- * ALT redigerings-UI i previewen (og plugins) bruker denne i stedet.
- * Selvforsynt stil (egen style-tag), som hint.js.
+ * Theme-driven dropdown for the canvas (ADR-0009): native select popups are
+ * drawn by the browser/OS and turn unreadable in dark toolbars and panels, so
+ * ALL editing UI in the preview (and plugins) uses this instead.
+ * Self-contained styling (its own style tag), like hint.js.
  *
- *   const dd = createDropdown({ value, options: [['p', 'Avsnitt'], …], onchange });
+ *   const dd = createDropdown({ value, options: [['p', 'Paragraph'], …], onchange });
  *   parent.appendChild(dd.el);  dd.set('h2');
  *
- * Knappene stjeler ikke fokus (mousedown forhindres), så markeringen i et
- * tekstfelt overlever valget - derfor passer den i tekst-verktøylinjen.
+ * The buttons do not steal focus (mousedown is prevented), so a text field's
+ * selection survives the choice - which is why it fits in the text toolbar.
  */
 
 let openMenu = null;
@@ -84,7 +84,7 @@ export function createDropdown({ value = null, options = [], onchange, title = '
   };
   set(value ?? options[0]?.[0]);
 
-  // Fokus skal bli der det er (tekstmarkeringen overlever valget).
+  // Focus stays where it is (the text selection survives the choice).
   root.addEventListener('mousedown', (event) => event.preventDefault());
 
   btn.addEventListener('click', () => {
@@ -106,7 +106,7 @@ export function createDropdown({ value = null, options = [], onchange, title = '
       });
       menu.appendChild(choice);
     }
-    // Fokusvernet må gjelde selve menyen også (den ligger i body, utenfor root).
+    // The focus guard must cover the menu itself too (it lives in body, outside root).
     menu.addEventListener('mousedown', (event) => event.preventDefault());
     document.body.appendChild(menu);
     openMenu = menu;

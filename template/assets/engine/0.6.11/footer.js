@@ -1,9 +1,9 @@
 /**
- * Delt footer: redigeres ETT sted (site.footer) og vises nederst på alle
- * sider. Additivt felt fra v0.5. To former: den gamle enkle (kun text-linjer,
- * rendres byte-likt som før) og den rike (merkevare, kolonner, sosiale lenker,
- * handlingsoppfordring, bunnlinje med lenker, bakgrunnslag). Ren logikk i
- * footer-model.js og footer-cta.js.
+ * Shared footer: edited in ONE place (site.footer) and shown at the bottom of
+ * every page. Additive field since v0.5. Two shapes: the simple one (text
+ * lines only) and the rich one (brand, columns, social links, call to action,
+ * baseline with links, background layers). Pure logic lives in footer-model.js
+ * and footer-cta.js.
  */
 
 import { resolveColor } from './theme.js';
@@ -29,10 +29,11 @@ import {
 } from './footer-cta.js';
 
 /**
- * Full lagbasert bakgrunn (additivt fra v0.6, delt med seksjoner og nav): en
- * backdrop bak footer-innholdet med samme lagstakk som seksjonene. Prepend-es
- * i .urd-footer-inner så den ligger bak wrap/bunnlinje. Returnerer true når
- * lag ble tegnet (da hopper rik-formen over den gamle footer.bg-fargen).
+ * Full layered background (additive since v0.6, shared with sections and nav):
+ * a backdrop behind the footer content with the same layer stack as sections.
+ * Prepended into .urd-footer-inner so it sits behind the wrap/baseline.
+ * Returns true when layers were drawn, in which case the rich shape skips the
+ * plain footer.bg color.
  */
 function mountFooterBg(footer, inner) {
   const bg = footer.background;
@@ -44,29 +45,29 @@ function mountFooterBg(footer, inner) {
   return true;
 }
 
-/** Sosial-raden: ett anker per lenke, ikonet er motorens egen tegnede SVG. */
+/** Social row: one anchor per link, the icon is the engine's own drawn SVG. */
 function buildSocial(social) {
   const row = document.createElement('div');
   row.className = 'urd-footer-social';
   for (const s of social) {
     const svg = iconSvg(s.icon);
-    if (!svg) continue; // ukjent ikon-id droppes stille
+    if (!svg) continue; // an unknown icon id is dropped silently
     const a = document.createElement('a');
     a.className = 'urd-footer-soc';
     a.href = s.url;
     a.rel = 'noopener noreferrer';
-    // Ikonets visningsnavn (merkenavn, språknøytralt) som tilgjengelig navn,
-    // aldri den rå ikon-id-en.
+    // The icon's display name (brand name, language neutral) as the accessible
+    // name, never the raw icon id.
     a.setAttribute('aria-label', ICON_LIBRARY[s.icon]?.label ?? s.icon);
-    // iconSvg er motorens egen, selvforfattede SVG (samme mønster som
-    // blocks/icon.js) - ikke brukerinnhold, trygt å sette som innerHTML.
+    // iconSvg is the engine's own, self-authored SVG (same pattern as
+    // blocks/icon.js), not user content, so it is safe to set as innerHTML.
     a.innerHTML = svg;
     row.appendChild(a);
   }
   return row;
 }
 
-/** En rad med lenker (bunnlinje-lenker eller doormat-raden). */
+/** A row of links (baseline links or the doormat row). */
 function buildLinks(links, className) {
   const el = document.createElement('nav');
   el.className = className;
@@ -81,18 +82,18 @@ function buildLinks(links, className) {
 }
 
 /**
- * Nyhetsbrev-skjemaet: e-postfelt + skjult honeypot + knapp, sendt med fetch
- * til et konfigurert endepunkt (moderne innsending, inline bekreftelse, ingen
- * sidelast). Uten endepunkt faller det tilbake til mailto. Speiler skjema-
- * pluginens innsending, men gjenbruker den rene footer-cta.js (motoren skal
- * aldri avhenge av en plugin). I preview sendes ingenting - kun bekreftelsen.
+ * The newsletter form: email field + hidden honeypot + button, submitted with
+ * fetch to a configured endpoint (inline confirmation, no page load). Without
+ * an endpoint it falls back to mailto. Mirrors the form plugin's submission,
+ * but reuses the pure footer-cta.js (the engine must never depend on a
+ * plugin). In preview nothing is sent, only the confirmation is shown.
  */
 function buildNewsletterForm(cta) {
   const form = document.createElement('form');
   form.className = 'urd-footer-nl';
   form.noValidate = true;
 
-  // Honeypot: skjult felt som kun bots fyller ut (CSS holder det ute av syne).
+  // Honeypot: hidden field that only bots fill in (CSS keeps it out of sight).
   const honeypot = document.createElement('input');
   honeypot.type = 'text';
   honeypot.name = 'nettside';
@@ -136,11 +137,12 @@ function buildNewsletterForm(cta) {
     event.preventDefault();
     status.className = 'urd-footer-nl-status';
     status.textContent = '';
-    // Honeypot utfylt: lat som det gikk bra, send ingenting (ikke tips boten).
+    // Honeypot filled in: act as if it succeeded and send nothing (never tip
+    // off the bot).
     if (isSpam(honeypot.value)) { done(); return; }
     const value = email.value.trim();
     if (!isEmail(value)) { fail(t('footer.newsletter.invalidEmail')); return; }
-    // I editorens preview sendes aldri noe på ekte - vis bekreftelsen.
+    // The editor preview never sends for real, it only shows the confirmation.
     if (document.body.classList.contains('urd-preview')) { done(); return; }
 
     if (cta.endpoint) {
@@ -169,7 +171,7 @@ function buildNewsletterForm(cta) {
   return form;
 }
 
-/** Handlingsoppfordringen: overskrift + undertekst + knapp/nyhetsbrev-skjema. */
+/** The call to action: heading + subtext + button or newsletter form. */
 function buildCta(cta) {
   const block = document.createElement('div');
   block.className = cta.big ? 'urd-footer-bigcta' : 'urd-footer-cta';
@@ -199,8 +201,8 @@ function buildCta(cta) {
 }
 
 /**
- * Merket: tekst, opplastet logo (bilde) eller begge (speiler nav-logoen).
- * Uten logo i image/both-modus faller det tilbake til tittelen.
+ * The brand: text, an uploaded logo (image) or both (mirrors the nav logo).
+ * Without a logo in image/both mode it falls back to the title.
  */
 function buildBrandIdentity(brand) {
   const el = document.createElement('div');
@@ -228,16 +230,17 @@ function buildBrandIdentity(brand) {
 }
 
 /**
- * @param {object} site site.json, allerede parset
- * @param {HTMLElement} host Elementet footeren bygges inn i
- * @param {string} [pageId] Gjeldende sides id - footeren skjules på sider i
- *   footer.hideOn (per-side-unntak; standard er synlig på alle sider).
+ * @param {object} site site.json, already parsed
+ * @param {HTMLElement} host The element the footer is built into
+ * @param {string} [pageId] Current page id; the footer is hidden on pages
+ *   listed in footer.hideOn (per-page exception, visible everywhere by
+ *   default).
  */
 export function renderFooter(site, host, pageId) {
   host.replaceChildren();
   host.style.removeProperty('background');
   const footer = site.footer;
-  // Skjult globalt (show av), eller skrudd av på nettopp denne siden.
+  // Hidden globally (show off), or turned off on this particular page.
   if (!footer?.show || (pageId && Array.isArray(footer.hideOn) && footer.hideOn.includes(pageId))) {
     host.style.display = 'none';
     return;
@@ -246,9 +249,9 @@ export function renderFooter(site, host, pageId) {
   const rich = hasRichFooter(site);
   const baseline = footerBaseline(site);
 
-  // Påskrudd, men uten innhold: en synlig, men HELT tom footer. Ingen tekst,
-  // ingen plassholder, ingen sidetittel - den fylles først når noe legges inn i
-  // Footer-panelet. (show av gir ingen footer i det hele tatt, over.)
+  // On, but with no content: a visible yet COMPLETELY empty footer. No text,
+  // no placeholder, no page title; it fills up once something is entered in
+  // the Footer panel. (show off gives no footer at all, handled above.)
   if (!rich && !baseline.length) {
     host.style.display = '';
     const inner = document.createElement('div');
@@ -258,7 +261,7 @@ export function renderFooter(site, host, pageId) {
     return;
   }
 
-  // Gammel form: kun text-linjer. Byte-likt som før, uten kolonner/social.
+  // Simple shape: text lines only, no columns or social row.
   if (!rich) {
     host.style.display = '';
     const inner = document.createElement('div');
@@ -274,7 +277,7 @@ export function renderFooter(site, host, pageId) {
     return;
   }
 
-  // Rik form.
+  // Rich shape.
   const brand = footerBrand(site);
   const columns = footerColumns(site);
   const social = footerSocial(site);
@@ -284,11 +287,11 @@ export function renderFooter(site, host, pageId) {
   host.style.display = '';
 
   const inner = document.createElement('div');
-  // Stor CTA sentrerer alltid; ellers følger justeringsvalget.
+  // A big CTA always centers; otherwise the alignment choice applies.
   const alignClass = cta && cta.big ? 'center' : footer.align ?? 'left';
   inner.className = `urd-footer urd-footer-rich urd-footer-${alignClass}`;
-  // Full lagbasert bakgrunn overtar flaten når den finnes; ellers den gamle
-  // enkle bakgrunnsfargen (default = temaets surface fra base.css).
+  // The layered background takes over the surface when present; otherwise the
+  // plain background color (default = the theme surface from base.css).
   const hasFooterBgLayers = mountFooterBg(footer, inner);
   if (!hasFooterBgLayers && footer.bg) inner.style.background = resolveColor(footer.bg);
 
@@ -296,7 +299,7 @@ export function renderFooter(site, host, pageId) {
   wrap.className = 'urd-footer-wrap';
 
   if (cta && cta.big) {
-    // Stor sentrert handlingsoppfordring, med valgfritt merke over.
+    // Big centered call to action, with an optional brand above.
     if (brand) {
       const bt = document.createElement('div');
       bt.className = 'urd-footer-brand-top';
@@ -312,7 +315,7 @@ export function renderFooter(site, host, pageId) {
   } else if (brand || columns.length || social.length || cta) {
     const top = document.createElement('div');
     top.className = 'urd-footer-top';
-    // Justering av en bred (todelt) kolonnes overskrift: venstre eller sentrert.
+    // Alignment of a wide (two-slot) column's heading: left or centered.
     if (footer.columnsAlign === 'center') top.classList.add('urd-footer-cols-center');
 
     if (brand || social.length || cta) {
@@ -332,8 +335,9 @@ export function renderFooter(site, host, pageId) {
       top.appendChild(brandCol);
     }
 
-    // Kolonnene i et rutenett: --n er antall spor (bred kolonne teller to), så
-    // kolonnene blir like brede og avstanden lik uansett antall lenker.
+    // The columns in a grid: --n is the number of slots (a wide column counts
+    // as two), so the columns come out equally wide and evenly spaced whatever
+    // the link count.
     let n = 0;
     for (const col of columns) {
       const c = document.createElement('div');
@@ -361,10 +365,10 @@ export function renderFooter(site, host, pageId) {
     wrap.appendChild(top);
   }
 
-  // Doormat-lenkeraden (Sentrert / Stor CTA): én sentrert rad.
+  // The doormat link row (Centered / Big CTA): one centered row.
   if (linkRow.length) wrap.appendChild(buildLinks(linkRow, 'urd-footer-linkrow'));
 
-  // Bunnlinja: copyright/tekst til venstre, valgfrie lenker til høyre.
+  // The baseline: copyright/text on the left, optional links on the right.
   if (baseline.length || baselineLinks.length) {
     const base = document.createElement('div');
     base.className = 'urd-footer-baseline';

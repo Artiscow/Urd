@@ -1,16 +1,18 @@
 /**
- * Felles fargevelger for lerretet (preview-laget; besøkende laster den aldri).
- * Brukes av tekstlinjen (tekstfarge/utheving) og fremtidige flater; admin-panelene
- * har sin Svelte-tvilling med samme utseende og delte «Nylige»/«Lagrede»-lagre.
+ * Shared color picker for the canvas (the preview layer; visitors never load it).
+ * Used by the text toolbar (text color/highlight) and future surfaces; the admin
+ * panels have their Svelte twin with the same look and shared «Recent»/«Saved»
+ * stores.
  *
- * openColorPicker(anchor, { value, onpick }) → flytende kort med HSV-flate,
- * kulørglider, gjennomsiktighetsglider, hex- og RGB-felt, temafargeprikker,
- * lagrede og nylige farger og pipette (EyeDropper-API der den finnes).
- * onpick(color) kalles live ved hvert valg; color er #rrggbb, eller #rrggbbaa
- * når gjennomsiktighet er valgt.
+ * openColorPicker(anchor, { value, onpick }) → a floating card with an HSV area,
+ * hue slider, alpha slider, hex and RGB fields, theme color dots, saved and
+ * recent colors and an eyedropper (the EyeDropper API where it exists).
+ * onpick(color) is called live on every pick; color is #rrggbb, or #rrggbbaa
+ * when transparency is selected.
  */
-// Lastes kun via preview-laget (statisk fra preview-edit.js), alltid etter
-// at admin-ordboka er lastet: ta() er trygg også på modulnivå her.
+// Loaded only through the preview layer (statically from preview-edit.js),
+// always after the admin dictionary is loaded: ta() is safe even at module
+// level here.
 import { ta } from './i18n.js';
 
 let panel = null;
@@ -107,7 +109,7 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
   hue.step = '1';
   hue.className = 'urd-cp-hue';
 
-  // Gjennomsiktighet: sjakkbrett-spor med gradient mot gjeldende farge.
+  // Transparency: checkerboard track with a gradient towards the current color.
   const alpha = document.createElement('input');
   alpha.type = 'range';
   alpha.min = '0';
@@ -196,7 +198,7 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
   fields.appendChild(hexInput);
   for (const input of rgbInputs) fields.appendChild(input);
 
-  // Pipette: plukk en farge fra hvor som helst på skjermen (der API-et finnes).
+  // Eyedropper: pick a color from anywhere on screen (where the API exists).
   if (window.EyeDropper) {
     const eye = el2('button', 'urd-cp-eye');
     eye.type = 'button';
@@ -206,7 +208,7 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
       try {
         const result = await new window.EyeDropper().open();
         if (setFromHex(result.sRGBHex)) commit();
-      } catch { /* avbrutt pipette er helt greit */ }
+      } catch { /* a cancelled eyedropper is perfectly fine */ }
     });
     fields.appendChild(eye);
   }
@@ -225,7 +227,7 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
     return dot;
   };
 
-  // Temafargene: leses live fra CSS-variablene, så de alltid følger gjeldende tema.
+  // The theme colors: read live from the CSS variables, so they always follow the current theme.
   const tokens = el2('div', 'urd-cp-tokens');
   const rootStyle = getComputedStyle(document.documentElement);
   for (const [token, name] of THEME_TOKENS) {
@@ -240,8 +242,8 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
     panel.appendChild(tokens);
   }
 
-  // Lagrede: eierens faste palett, delt lager med admin-fargevelgeren.
-  // Pluss-knappen lagrer gjeldende farge; × på prikken fjerner den.
+  // Saved: the owner's fixed palette, a store shared with the admin color picker.
+  // The plus button saves the current color; the × on a dot removes it.
   let saved = readStore(SAVED_KEY);
   const savedLabel = el2('div', 'urd-cp-label urd-cp-label-row');
   savedLabel.appendChild(el2('span', null, ta('cp.saved')));
@@ -277,7 +279,7 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
   renderSaved();
   panel.append(savedLabel, savedRow);
 
-  // Nylige: delt lager med admin-fargevelgeren.
+  // Recent: a store shared with the admin color picker.
   const recent = readStore(RECENT_KEY);
   if (recent.length) {
     panel.appendChild(el2('div', 'urd-cp-label', ta('common.recent')));
@@ -289,8 +291,9 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
   document.body.appendChild(panel);
   paint();
 
-  // Plassering: HELST over ankeret (tekstlinjen står over teksten, så velgeren
-  // skal ikke legge seg over det som redigeres), ellers under, klemt i viewporten.
+  // Placement: PREFERABLY above the anchor (the text toolbar sits above the text,
+  // so the picker must not cover what is being edited), otherwise below, clamped
+  // inside the viewport.
   const rect = anchor.getBoundingClientRect();
   const W = 236;
   const left = Math.max(8, Math.min(rect.left, window.innerWidth - W - 8));

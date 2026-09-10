@@ -1,12 +1,13 @@
 /**
- * Kjerneblokk: tekst. Rik tekst (HTML skrevet av sideeieren via editoren)
- * med justering. Innholdet er eierens eget og regnes som betrodd; det er
- * samme tillitsmodell som at eieren kan redigere filene i repoet direkte.
+ * Core block: text. Rich text (HTML written by the site owner through the editor)
+ * with alignment. The content is the owner's own and is treated as trusted; it is
+ * the same trust model as the owner being able to edit the files in the repo
+ * directly.
  */
 import { stripActiveContent } from '../sanitize.js';
 import { boxStyleCss } from '../box-style.js';
 
-// Seed-regelen (ADR-0012): ta() kalles kun i defaults() ved innsetting i preview, aldri på modulnivå.
+// The seed rule (ADR-0012): ta() is called only in defaults(), on insertion in preview, never at module level.
 import { ta } from '../i18n.js';
 
 export const textBlock = {
@@ -16,57 +17,57 @@ export const textBlock = {
   defaults: () => ({ html: ta('seed.text'), align: 'left', box: false }),
   migrations: {},
   /**
-   * @param {HTMLElement} el Blokk-elementet (posisjonert av render.js)
+   * @param {HTMLElement} el The block element (positioned by render.js)
    * @param {{html: string, align: string, box?: boolean, boxStyle?: object, font?: string, size?: number, lineHeight?: number, letterSpacing?: number}} props
-   * @param {object} ctx Render-kontekst
+   * @param {object} ctx Render context
    */
   render(el, props, ctx) {
-    // Teksten lever i et eget indre element: redigeringshåndtakene som
-    // preview-edit legger på blokken skal ALDRI havne i det redigerbare
-    // innholdet (eller i lagret props.html).
+    // The text lives in its own inner element: the editing handles that
+    // preview-edit puts on the block must NEVER end up inside the editable
+    // content (or in the stored props.html).
     const content = document.createElement('div');
-    // Tekstboks-varianten: samme blokk, men innholdet ligger i et kort
-    // (temaets flatefarge, kantlinje, radius). Valgfritt felt; eldre
-    // data mangler det og rendres som før.
+    // The text box variant: the same block, but the content sits in a card
+    // (the theme's surface color, border, radius). Optional field; older data
+    // lacks it and renders without the card.
     content.className = props.box ? 'urd-text urd-text-box' : 'urd-text';
     content.style.cssText = 'width:100%;min-height:100%;';
-    // Valgfri kortstil (additivt; tomt = basisstilen i .urd-text-box).
+    // Optional card style (additive; empty = the base style in .urd-text-box).
     if (props.box) Object.assign(content.style, boxStyleCss(props.boxStyle));
     content.style.textAlign = props.align;
-    // Valgfri font/størrelse per tekstblokk (additivt; tomt = arv fra tema).
+    // Optional font and size per text block (additive; empty = inherited from the theme).
     if (props.font) content.style.fontFamily = props.font;
     if (props.size) content.style.fontSize = `${props.size}px`;
-    // Valgfri linje- og bokstavavstand per felt (additivt; tomt = arv).
-    // Linjeavstanden er enhetsløs (skalerer med skriftstørrelsen);
-    // bokstavavstanden er px og kan være negativ (tettere enn normalt).
+    // Optional line and letter spacing per field (additive; empty = inherited).
+    // The line height is unitless (it scales with the font size); the letter
+    // spacing is px and can be negative (tighter than normal).
     if (props.lineHeight) content.style.lineHeight = String(props.lineHeight);
     if (typeof props.letterSpacing === 'number' && props.letterSpacing !== 0) {
       content.style.letterSpacing = `${props.letterSpacing}px`;
     }
     content.innerHTML = props.html;
-    // Selvhelbreder: innhold lagret av eldre Urd kan inneholde
-    // håndtak-markup, også foreldreløse knapper etter at nettleser-
-    // redigering splittet wrapperen. Tekstinnhold skal aldri inneholde
-    // knapper, så alle fjernes ved rendering (lagres rent ved neste edit).
+    // Self-healing: content stored by older Urd can contain handle markup,
+    // including orphaned buttons left when browser editing splits the wrapper.
+    // Text content must never contain buttons, so all of them are removed on
+    // render (and stored clean on the next edit).
     content.querySelectorAll('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button').forEach((n) => n.remove());
-    // Besøkende-vern (delt med samlingsinnslag): kjørbar kode strippes alltid ved rendering.
+    // Visitor protection (shared with collection entries): executable code is always stripped on render.
     stripActiveContent(content);
     el.appendChild(content);
 
-    // Klikk-og-skriv: i preview-modus (inne i editorens iframe) er teksten
-    // direkte redigerbar, og hver endring meldes til editoren, som eier
-    // utkastet. Blokk-id ligger på blokk-elementet (satt av render.js).
-    // Kun i desktopvisning: mobilvisningen er layoutjustering, og
-    // tekstvekst skriver desktop-framen.
+    // Click-and-type: in preview mode (inside the editor's iframe) the text is
+    // directly editable, and every change is posted to the editor, which owns
+    // the draft. The block id sits on the block element (set by render.js).
+    // Desktop view only: the mobile view is layout adjustment, and text growth
+    // writes the desktop frame.
     if (ctx.preview && ctx.viewport !== 'mobile') {
       content.contentEditable = 'true';
       content.addEventListener('input', () => {
         const post = (msg) => window.parent?.postMessage(msg, location.origin);
 
-        // Voks med innholdet: blir teksten høyere enn framen, utvides
-        // framen (og seksjonen om nødvendig) så ingenting klippes eller
-        // overlapper. Måles på innholdselementet, så håndtakene aldri
-        // teller med. Veksten hører til samme angre-steg som skrivingen.
+        // Grow with the content: when the text becomes taller than the frame,
+        // the frame (and the section when needed) is expanded so nothing is
+        // clipped or overlaps. Measured on the content element, so the handles
+        // never count. The growth belongs to the same undo step as the typing.
         if (content.scrollHeight > el.clientHeight) {
           const block = ctx.section.blocks.find((b) => b.id === el.dataset.blockId);
           if (block) {
@@ -74,8 +75,8 @@ export const textBlock = {
             const newH = Math.ceil(content.scrollHeight / step) * step;
             block.frames.desktop = { ...block.frames.desktop, h: newH };
             el.style.height = `${newH}px`;
-            // Seksjonen røres ikke: vokser teksten forbi kanten, henger
-            // den over (seksjoner klipper aldri, og høyden er brukerens).
+            // The section is left alone: if the text grows past the edge it
+            // hangs over (sections never clip, and the height is the user's).
             post({ type: 'urd-move', sectionId: ctx.section.id, blockId: block.id, frame: block.frames.desktop, coalesce: true });
           }
         }
@@ -89,16 +90,16 @@ export const textBlock = {
       });
     }
 
-    // Sikkerhetsnett ved RENDER, ikke bare ved skriving (ADR-0018). Lagret
-    // høyde er piksler, mens ombrytningen avhenger av bredden: endres
-    // innholdsbredden, skriftstørrelsen eller språket, blir en tekst som
-    // sto perfekt for høy for sin egen boks. Lytteren over fanger det bare
-    // mens noen faktisk skriver, så samme måling gjøres her, etter samme
-    // mønster som datablokkene (sitat, statistikk, faq ...).
+    // A safety net at RENDER, not only while typing (ADR-0018). The stored
+    // height is in pixels while the wrapping depends on the width: if the content
+    // width, the font size or the language changes, a text that fit perfectly
+    // becomes too tall for its own box. The listener above catches that only
+    // while someone is actually typing, so the same measurement is done here,
+    // following the same pattern as the data blocks (quote, stats, faq ...).
     //
-    // Veksten er ENVEIS: rammen krymper aldri av seg selv, siden en tom
-    // eller kort tekst skal beholde plassen eieren har gitt den. Toleransen
-    // hindrer at avrunding gir evige småjusteringer.
+    // The growth is ONE-WAY: the frame never shrinks by itself, since an empty
+    // or short text keeps the space the owner gave it. The tolerance keeps
+    // rounding from causing endless small adjustments.
     requestAnimationFrame(() => {
       if (!el.isConnected || ctx.viewport === 'mobile') return;
       const needed = content.scrollHeight;
@@ -106,8 +107,8 @@ export const textBlock = {
       const step = ctx.grid?.size ?? 8;
       const newH = Math.ceil(needed / step) * step;
       el.style.height = `${newH}px`;
-      // Hos besøkende retter vi kun visningen; i preview bokføres den nye
-      // høyden i utkastet, så neste publisering slipper å måle på nytt.
+      // For visitors only the display is corrected; in preview the new height is
+      // recorded in the draft, so the next publish does not have to measure again.
       if (!ctx.preview) return;
       const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
       if (!block || block.frames.desktop.h === newH) return;

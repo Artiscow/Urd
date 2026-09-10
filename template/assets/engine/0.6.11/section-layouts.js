@@ -1,25 +1,25 @@
 /**
- * Oppsetts-modellen (0.6.7, «bytt oppsett»/View Layouts): rene funksjoner
- * som beregner NYE rammer for en seksjons blokker uten å røre innholdet.
- * Resultatet er kun frames + minHeight: seksjonen forblir fullt redigerbar
- * etterpå (aldri en blindvei-generator). Dekor-blokker og former røres
- * ALDRI; de beholder rammene sine. Ingen DOM - node-testbart.
+ * The layout model («swap layout»/View Layouts): pure functions that compute
+ * NEW frames for a section's blocks without touching the content.
+ * The result is only frames + minHeight: the section stays fully editable
+ * afterwards (never a dead-end generator). Decor blocks and shapes are NEVER
+ * touched; they keep their frames. No DOM - node-testable.
  *
- * Enheter som ellers i Urd: x/w i prosent av seksjonsbredden, y/h i px.
+ * Units as elsewhere in Urd: x/w in percent of the section width, y/h in px.
  */
 
 const r2 = (v) => Math.round(v * 100) / 100;
 
-/** Tekstlige typer leses som tekstkolonnen i splitt-oppsettene; alt annet
- *  bevegelig (bilde, video, galleri, ikon, samling, plugin-blokker) er media. */
+/** Textual types are read as the text column in the split layouts; every other
+ *  movable type (image, video, gallery, icon, collection, plugin blocks) is media. */
 const TEXT_TYPES = new Set(['text', 'button', 'faq', 'timeline', 'quote', 'stats', 'table']);
 
-/** Blokkene et oppsett får flytte: aldri dekor, aldri former. */
+/** The blocks a layout may move: never decor, never shapes. */
 export function movableBlocks(blocks) {
   return (Array.isArray(blocks) ? blocks : []).filter((b) => !b.decor && b.type !== 'shape' && b.frames?.desktop);
 }
 
-/** Leseordre: øverst først, deretter venstre; stabil på id ved likhet. */
+/** Reading order: topmost first, then leftmost; stable on id when equal. */
 export function readingOrder(blocks) {
   return [...blocks].sort((a, b) => {
     const fa = a.frames.desktop;
@@ -31,8 +31,8 @@ export function readingOrder(blocks) {
 export const LAYOUT_IDS = ['stack-center', 'stack-left', 'split-media-right', 'split-media-left', 'two-columns', 'hero-top'];
 
 /**
- * Oppsettene som gir mening for seksjonen: minst to bevegelige blokker,
- * og splitt-/hero-oppsettene krever både tekst og media.
+ * The layouts that make sense for the section: at least two movable blocks,
+ * and the split/hero layouts require both text and media.
  */
 export function applicableLayouts(blocks) {
   const movable = movableBlocks(blocks);
@@ -45,7 +45,7 @@ export function applicableLayouts(blocks) {
   });
 }
 
-/** Stable en liste blokker nedover i en kolonne; muterer resultatkartet. */
+/** Stack a list of blocks downwards in a column; mutates the result list. */
 function stackColumn(ordered, frames, x, w, startY, gap) {
   let y = startY;
   for (const block of ordered) {
@@ -57,9 +57,9 @@ function stackColumn(ordered, frames, x, w, startY, gap) {
 }
 
 /**
- * Beregn rammer for et oppsett. Høyder og rotasjon beholdes alltid; kun
- * x/y/w settes. Returnerer null for ukjent id eller når oppsettet ikke
- * er anvendelig (applicableLayouts).
+ * Compute frames for a layout. Heights and rotation are always kept; only
+ * x/y/w are set. Returns null for an unknown id or when the layout is not
+ * applicable (applicableLayouts).
  * @returns {{frames: Array<{blockId: string, frame: object}>, minHeight: string}|null}
  */
 export function layoutFrames(id, blocks, grid) {
@@ -90,7 +90,7 @@ export function layoutFrames(id, blocks, grid) {
       stackColumn(media, frames, mediaX, 38, pad, gap),
     );
   } else if (id === 'two-columns') {
-    // Neste blokk i den korteste kolonnen, så kolonnene balanseres.
+    // The next block goes in the shortest column, so the columns balance out.
     const cols = [{ x: 8, y: pad }, { x: 52, y: pad }];
     for (const block of ordered) {
       const f = block.frames.desktop;
@@ -100,7 +100,7 @@ export function layoutFrames(id, blocks, grid) {
     }
     bottom = Math.max(cols[0].y, cols[1].y) - gap;
   } else if (id === 'hero-top') {
-    // Største media øverst i full bredde, resten midtstilt under.
+    // The largest media on top in full width, the rest centered below.
     const media = ordered.filter((b) => !TEXT_TYPES.has(b.type));
     const hero = media.reduce((a, b) => {
       const area = (f) => f.frames.desktop.w * f.frames.desktop.h;
@@ -121,7 +121,7 @@ export function layoutFrames(id, blocks, grid) {
     return null;
   }
 
-  // Samme høyderegel som «tilpass høyde»-knappen i seksjonsverktøylinjen.
+  // The same height rule as the «fit height» button in the section toolbar.
   const minHeight = `${Math.max(gap * 3, Math.round(bottom) + gap)}px`;
   return { frames, minHeight };
 }

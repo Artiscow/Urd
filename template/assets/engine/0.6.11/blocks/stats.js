@@ -1,21 +1,22 @@
 /**
- * Kjerneblokk: statistikk/nøkkeltall. Ett tall med valgfritt prefiks/suffiks
- * og etikett under; tre blokker side om side gir talltrioen fra statistikk-
- * presetet. Merverdien over rene tekstblokker er tell-opp-animasjonen ved
- * første entré (IntersectionObserver, engangs): tallet teller fra null til
- * sluttverdien med tallformatet bevart. ADR-0011-gating: uten støtte, med
- * prefers-reduced-motion, og i redigeringsmodus står tallet i SLUTTILSTAND -
- * animasjonen er ren pynt og aldri et krav.
+ * Core block: statistic / key figure. One number with an optional prefix and
+ * suffix and a label below; three blocks side by side give the number trio from
+ * the statistics preset. What it adds over plain text blocks is the count-up
+ * animation on first entrance (IntersectionObserver, one-shot): the number counts
+ * from zero to the final value with the number format preserved. ADR-0011 gating:
+ * without support, with prefers-reduced-motion, and in editing mode the number
+ * stands in its FINAL STATE - the animation is pure decoration and never a
+ * requirement.
  */
-// Kun kalt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
+// Only called in preview (after the admin dictionary is loaded): never at module level.
 import { ta, adminLocaleReady } from '../i18n.js';
 import { growSectionTo } from '../render.js';
 
 /**
- * Tolker visningsverdien som tall (ren, node-testbar): sifrene med valgfritt
- * desimalskille (komma eller punktum), gruppert med mellomrom eller tynne
- * mellomrom («4 800», «1 234,5»). Alt annet gir null (ingen animasjon).
- * @param {string} value Visningsverdien fra props
+ * Parses the display value as a number (pure, node-testable): the digits with an
+ * optional decimal separator (comma or period), grouped with spaces or thin
+ * spaces ("4 800", "1 234,5"). Anything else gives null (no animation).
+ * @param {string} value The display value from props
  * @returns {{num: number, decimals: number}|null}
  */
 export function parseStatValue(value) {
@@ -29,18 +30,18 @@ export function parseStatValue(value) {
 }
 
 /**
- * Formaterer et tall underveis i tellingen med SAMME form som målverdien:
- * like mange desimaler, samme desimalskille og samme gruppering.
- * @param {number} n Tallet som skal vises
- * @param {string} reference Målverdien slik den står i props
- * @param {number} decimals Antall desimaler fra parseStatValue
+ * Formats a number during the count in the SAME form as the target value: the
+ * same number of decimals, the same decimal separator and the same grouping.
+ * @param {number} n The number to show
+ * @param {string} reference The target value as it stands in props
+ * @param {number} decimals The number of decimals from parseStatValue
  * @returns {string}
  */
 export function formatStatValue(n, reference, decimals) {
   const ref = String(reference ?? '');
   const comma = ref.includes(',');
-  // Grupperingstegnet hentes fra målverdien selv (vanlig, hardt eller smalt
-  // mellomrom), så formen aldri endres underveis i tellingen.
+  // The grouping character is taken from the target value itself (normal, hard or
+  // narrow space), so the form never changes during the count.
   const group = ref.match(/\d([\s  ])\d/)?.[1] ?? null;
   let text = n.toFixed(decimals);
   if (comma) text = text.replace('.', ',');
@@ -58,7 +59,7 @@ export const statsBlock = {
   autoGrow: true,
   label: 'Statistic',
   labelKey: 'blocks.stats',
-  // Seed-regelen (ADR-0012): ta() kalles kun her ved innsetting i preview.
+  // The seed rule (ADR-0012): ta() is called only here, on insertion in preview.
   defaults: () => ({
     value: '4800',
     prefix: '',
@@ -70,7 +71,7 @@ export const statsBlock = {
   /**
    * @param {HTMLElement} el
    * @param {{value: string, prefix?: string, suffix?: string, label?: string, countUp?: boolean}} props
-   * @param {object} ctx Render-kontekst
+   * @param {object} ctx Render context
    */
   render(el, props, ctx) {
     const host = document.createElement('div');
@@ -95,7 +96,7 @@ export const statsBlock = {
     host.append(row, label);
 
     if (editable) {
-      // Klikk-og-skriv på verdien og etiketten; prefiks/suffiks bor i panelet.
+      // Click-and-type on the value and the label; prefix and suffix live in the panel.
       for (const [node, key] of [[value, 'value'], [label, 'label']]) {
         try {
           node.contentEditable = 'plaintext-only';
@@ -111,7 +112,7 @@ export const statsBlock = {
           });
         });
       }
-      // Hjelpechipen (ADR-0008): tell-opp er en spesialfunksjon.
+      // The help chip (ADR-0008): count-up is a special function.
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {
@@ -121,8 +122,8 @@ export const statsBlock = {
       });
     }
 
-    // Tell-opp ved første entré: kun hos besøkende, kun når verdien er et
-    // tall, og aldri ved redusert bevegelse - ellers står sluttilstanden.
+    // Count-up on first entrance: only for visitors, only when the value is a
+    // number, and never under reduced motion - otherwise the final state stands.
     const parsed = parseStatValue(props.value);
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
     if (props.countUp !== false && parsed && parsed.num > 0 && !editable && !reduce
@@ -144,7 +145,7 @@ export const statsBlock = {
       io.observe(host);
     }
 
-    // Autovekst: rammen følger innholdshøyden. KUN høyden meldes (urd-grow).
+    // Auto-grow: the frame follows the content height. ONLY the height is posted (urd-grow).
     requestAnimationFrame(() => {
       if (!el.isConnected) return;
       const needed = host.scrollHeight;

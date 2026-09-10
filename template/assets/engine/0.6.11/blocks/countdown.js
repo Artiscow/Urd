@@ -1,18 +1,18 @@
 /**
- * Kjerneblokk: nedteller mot et tidspunkt (typisk et arrangement). Fire
- * enhetsbokser (dager/timer/minutter/sekunder) som tikker med setInterval;
- * tikkingen er logikk, ikke animasjon (ADR-0011), så redusert bevegelse
- * krever ingen særbehandling. Passert mål viser ferdig-teksten. Enhets-
- * ordene er egne nøkler i stedet for Intl.RelativeTimeFormat (nordsamisk
- * mangler i ICU og ville falt til rått tall).
+ * Core block: a countdown towards a point in time (typically an event). Four
+ * unit boxes (days/hours/minutes/seconds) ticking with setInterval; the ticking
+ * is logic, not animation (ADR-0011), so reduced motion needs no special
+ * handling. A target in the past shows the done text. The unit words are their
+ * own keys instead of Intl.RelativeTimeFormat (Northern Sami is missing from ICU
+ * and would fall back to a bare number).
  */
-// Kun kalt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
+// Only called in preview (after the admin dictionary is loaded): never at module level.
 import { ta, adminLocaleReady, t } from '../i18n.js';
 
 /**
- * Deler tiden fram til målet i enheter (ren, node-testbar).
- * @param {number} targetMs Målet i epoch-ms
- * @param {number} nowMs Nå i epoch-ms
+ * Splits the time until the target into units (pure, node-testable).
+ * @param {number} targetMs The target in epoch ms
+ * @param {number} nowMs Now in epoch ms
  * @returns {{done: boolean, days: number, hours: number, minutes: number, seconds: number}}
  */
 export function countdownParts(targetMs, nowMs) {
@@ -29,7 +29,7 @@ export function countdownParts(targetMs, nowMs) {
   };
 }
 
-/** Måltidspunktet i epoch-ms, eller null når props.target ikke kan tolkes. */
+/** The target time in epoch ms, or null when props.target cannot be parsed. */
 export function parseTarget(target) {
   const text = String(target ?? '').trim();
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(text)) return null;
@@ -39,12 +39,12 @@ export function parseTarget(target) {
 
 export const countdownBlock = {
   version: 1,
-  // Naturlig høyde i mobil-radnettet (boksene radbryter på smale skjermer).
+  // Natural height in the mobile row grid (the boxes wrap on narrow screens).
   autoGrow: true,
   label: 'Countdown',
   labelKey: 'blocks.countdown',
-  // Seed-regelen (ADR-0012): ta() kalles kun her ved innsetting i preview.
-  // Målet seedes 30 dager fram, så blokken teller fra første stund.
+  // The seed rule (ADR-0012): ta() is called only here, on insertion in preview.
+  // The target is seeded 30 days ahead, so the block counts from the first moment.
   defaults: () => {
     const soon = new Date(Date.now() + 30 * 86400 * 1000);
     const pad = (n) => String(n).padStart(2, '0');
@@ -59,7 +59,7 @@ export const countdownBlock = {
   /**
    * @param {HTMLElement} el
    * @param {{target?: string, doneText?: string, variant?: string, showSeconds?: boolean}} props
-   * @param {object} ctx Render-kontekst
+   * @param {object} ctx Render context
    */
   render(el, props, ctx) {
     const host = document.createElement('div');
@@ -107,13 +107,13 @@ export const countdownBlock = {
 
     if (paint()) {
       const timer = setInterval(() => {
-        // Rerender bytter ut elementet: tikkeren følger elementets levetid.
+        // A re-render replaces the element: the ticker follows the element's lifetime.
         if (!el.isConnected || !paint()) clearInterval(timer);
       }, 1000);
     }
 
     if (editable) {
-      // Ferdig-teksten er klikk-og-skriv når den vises; målet settes i panelet.
+      // The done text is click-and-type while it is shown; the target is set in the panel.
       if (target === null || countdownParts(target, Date.now()).done) {
         try {
           doneEl.contentEditable = 'plaintext-only';
@@ -129,7 +129,7 @@ export const countdownBlock = {
           }, location.origin);
         });
       }
-      // Hjelpechipen (ADR-0008): målet og ferdig-tilstanden trenger forklaring.
+      // The help chip (ADR-0008): the target and the done state need explaining.
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {

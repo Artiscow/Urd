@@ -1,6 +1,6 @@
 /**
- * Oppstart for besøkersiden. Egen fil (ikke inline i index.html) slik at
- * Content-Security-Policy kan kreve script-src 'self' uten unntak.
+ * Startup for the visitor page. A separate file (not inline in index.html)
+ * so Content-Security-Policy can require script-src 'self' with no exceptions.
  */
 import { boot } from './urd.js';
 

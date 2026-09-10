@@ -1,7 +1,7 @@
 /**
- * Kjerneblokk: ikon. En glyf/emoji i valgfri størrelse og temafarge -
- * til punktlister, kontaktrader og små dekorelementer. Emoji har egne
- * farger; temafargen gjelder tekst-glyfer (★ ✓ → osv.).
+ * Core block: icon. A glyph/emoji in a chosen size and theme color, for
+ * bullet lists, contact rows and small decorative elements. Emoji carry
+ * their own colors; the theme color applies to text glyphs (★ ✓ → and so on).
  */
 import { resolveColor } from '../theme.js';
 import { isSafeImage } from '../nav-model.js';
@@ -18,15 +18,15 @@ export const iconBlock = {
    * @param {{glyph: string, color: string, size: number, image?: string|null, icon?: string|null}} props
    */
   render(el, props) {
-    // Eget opplastet ikon (additivt felt): bildet vises i tegnstørrelsen og vinner over glyfen til det fjernes.
-    // Utrygg kilde behandles som ingen kilde, altså samme vei som et bilde som feiler ved lasting.
+    // Custom uploaded icon (additive field): the image renders at the glyph size and wins over the glyph until it is removed.
+    // An unsafe source is treated as no source, the same path as an image that fails to load.
     if (isSafeImage(props.image)) {
       const img = document.createElement('img');
       img.src = props.image;
       img.alt = '';
       img.draggable = false;
       img.style.cssText = `height:${props.size || 48}px;width:auto;display:block;`;
-      // Samme lastevern som bildeblokken (ingen stripevis inntoning), og glyfen tar over om bildet feiler.
+      // Same load guard as the image block (no half-painted fade-in), and the glyph takes over if the image fails.
       if (!img.complete) {
         img.style.visibility = 'hidden';
         img.addEventListener('load', () => { img.style.visibility = ''; }, { once: true });
@@ -39,10 +39,10 @@ export const iconBlock = {
       el.appendChild(img);
       return;
     }
-    // Tegnet SVG-ikon fra biblioteket (additivt felt): skarpt i alle
-    // størrelser og følger temafargen. Ukjent id (data fra nyere Urd)
-    // faller stille tilbake til glyfen. Ytterelementet beholder
-    // .urd-icon-sentreringen i rammen; det indre elementet bærer størrelsen.
+    // Drawn SVG icon from the library (additive field): sharp at every
+    // size and follows the theme color. An unknown id (data from a newer
+    // Urd) falls back silently to the glyph. The outer element keeps the
+    // .urd-icon centering inside the frame; the inner element carries the size.
     if (typeof props.icon === 'string' && props.icon) {
       const svg = iconSvg(props.icon);
       if (svg) {

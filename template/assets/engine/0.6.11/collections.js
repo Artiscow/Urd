@@ -1,16 +1,17 @@
 /**
- * Samlinger (datablokk-mønsteret, ADR-0007): datahenting og rene hjelpere.
- * Hjelperne er uten DOM og testes i tests/samlinger.test.mjs; samling-blokken (blocks/collection.js) bruker dem.
+ * Collections (the data block pattern, ADR-0007): data fetching and pure helpers.
+ * The helpers are DOM-free and tested in tests/collections.test.mjs; the
+ * collection block (blocks/collection.js) uses them.
  */
 import { dates } from './i18n.js';
 
-/** Gjeldende versjon av samlingsfil-formatet (content/samlinger/<id>.json). */
+/** Current version of the collection file format (content/samlinger/<id>.json). */
 export const COLLECTION_SCHEMA_VERSION = 1;
 
 /**
- * Sorterer innslag: nyeste dato først (eller eldste når newestFirst er false).
- * Innslag uten dato beholder innbyrdes rekkefølge og havner sist.
- * Muterer aldri input.
+ * Sorts entries: newest date first (or oldest when newestFirst is false).
+ * Entries without a date keep their relative order and end up last.
+ * Never mutates the input.
  */
 export function sortEntries(entries, newestFirst = true) {
   const dated = entries.filter((e) => e.date);
@@ -20,8 +21,9 @@ export function sortEntries(entries, newestFirst = true) {
 }
 
 /**
- * Grupperer innslag per år (fra dato), nyeste år først; innslag uten dato havner
- * sist i gruppen med year null. Innslagene i hver gruppe er sortert nyeste først.
+ * Groups entries by year (from the date), newest year first; entries without a
+ * date end up last in the group with year null. The entries within each group
+ * are sorted newest first.
  * @returns {Array<{year: string|null, entries: object[]}>}
  */
 export function groupByYear(entries) {
@@ -35,9 +37,9 @@ export function groupByYear(entries) {
 }
 
 /**
- * Dato-badge-deler fra en ISO-dato: {day: '19', month: 'jul', year: '2026'}.
- * Månedsnavnet følger besøkende-språket (Intl via i18n.js, nb uten init).
- * Ugyldig/manglende dato gir null (visningen dropper badgen).
+ * Date badge parts from an ISO date: {day: '19', month: 'jul', year: '2026'}.
+ * The month name follows the visitor language (Intl via i18n.js, nb without init).
+ * An invalid or missing date gives null (the view drops the badge).
  */
 export function dateBadge(date) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date ?? '');
@@ -47,7 +49,7 @@ export function dateBadge(date) {
   return { day: String(Number(m[3])), month: dates().monthsShort[monthIndex], year: m[1] };
 }
 
-/** Utkast-overstyring fra editoren (urd-collections-meldingen): id → samlingsdata. */
+/** Draft override from the editor (the urd-collections message): id → collection data. */
 let draftCollections = null;
 
 export function setCollectionsDraft(collections) {
@@ -55,12 +57,13 @@ export function setCollectionsDraft(collections) {
   fetched.clear();
 }
 
-/** Hentede samlinger bufres per sidelast (id → Promise<data|null>). */
+/** Fetched collections are cached per page load (id → Promise<data|null>). */
 const fetched = new Map();
 
 /**
- * Henter en samling: utkastet fra editoren vinner (preview), ellers serverfilen.
- * null ved manglende/ugyldig fil - blokken viser tomtilstand, aldri krasj.
+ * Fetches a collection: the draft from the editor wins (preview), otherwise the
+ * server file. null for a missing or invalid file - the block shows its empty
+ * state, never a crash.
  */
 export function getCollection(id) {
   if (draftCollections && Object.hasOwn(draftCollections, id)) {

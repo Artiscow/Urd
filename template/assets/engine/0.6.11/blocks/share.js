@@ -1,15 +1,15 @@
 /**
- * Kjerneblokk: delingsknapper. Rene, statiske delingslenker uten sporing
- * (aldri leverandør-SDK-er): hver tjeneste er en vanlig `<a>` til tjenestens
- * delings-URL med sidens adresse som parameter, tegnet med ikonbibliotekets
- * SVG-er. «Kopier lenke» bruker Clipboard API og vises kun der API-et
- * finnes (ADR-0011: funksjonssjekk, aldri et halvdødt element).
+ * Core block: share buttons. Plain, static share links without tracking
+ * (never vendor SDKs): each service is an ordinary `<a>` to the service's
+ * share URL with the page address as a parameter, drawn with the icon
+ * library's SVGs. "Copy link" uses the Clipboard API and appears only where
+ * that API exists (ADR-0011: feature check, never a half-dead element).
  */
-// Kun kalt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
+// Only called in preview (after the admin dictionary has loaded): never at module level.
 import { ta, adminLocaleReady, t } from '../i18n.js';
 import { iconSvg } from '../icons.js';
 
-/** Tjeneste-id (datakontrakt) → ikon-id og merkenavn (oversettes aldri). */
+/** Service id (data contract) to icon id and brand name (never translated). */
 export const SHARE_SERVICES = [
   ['facebook', 'facebook', 'Facebook'],
   ['x', 'x', 'X'],
@@ -20,11 +20,11 @@ export const SHARE_SERVICES = [
 ];
 
 /**
- * Delings-URL for en tjeneste (ren, node-testbar). Alt URL-encodes; 'copy'
- * og ukjente tjenester gir null (kopiering er en knapp, ingen lenke).
- * @param {string} service Tjeneste-id fra SHARE_SERVICES
- * @param {string} pageUrl Sidens fulle adresse
- * @param {string} title Sidens tittel (med i tekstbaserte delinger)
+ * Share URL for a service (pure, node-testable). Everything is URL-encoded;
+ * 'copy' and unknown services give null (copying is a button, not a link).
+ * @param {string} service Service id from SHARE_SERVICES
+ * @param {string} pageUrl The page's full address
+ * @param {string} title The page title (included in text-based shares)
  * @returns {string|null}
  */
 export function shareUrl(service, pageUrl, title) {
@@ -40,7 +40,7 @@ export function shareUrl(service, pageUrl, title) {
 
 export const shareBlock = {
   version: 1,
-  // Naturlig høyde i mobil-radnettet (knappene radbryter på smale skjermer).
+  // Natural height in the mobile row grid (the buttons wrap on narrow screens).
   autoGrow: true,
   label: 'Share buttons',
   labelKey: 'blocks.share',
@@ -54,14 +54,14 @@ export const shareBlock = {
   /**
    * @param {HTMLElement} el
    * @param {{services?: string[], variant?: string, size?: number, color?: string}} props
-   * @param {object} ctx Render-kontekst
+   * @param {object} ctx Render context
    */
   render(el, props, ctx) {
     const host = document.createElement('div');
     host.className = `urd-share${props.variant === 'labels' ? ' urd-share-labels' : ''}`;
     const size = Math.min(64, Math.max(24, Number(props.size) || 38));
     host.style.setProperty('--urd-share-size', `${size}px`);
-    // Fargen valideres som hex eller tematoken; alt annet gir aksentfargen.
+    // The colour is validated as hex or theme token; anything else gives the accent colour.
     const color = String(props.color ?? '');
     if (/^#[0-9a-fA-F]{3,8}$/.test(color)) host.style.setProperty('--urd-share-color', color);
     else if (/^[a-z][a-z0-9-]*$/.test(color)) host.style.setProperty('--urd-share-color', `var(--urd-color-${color})`);
@@ -74,7 +74,7 @@ export const shareBlock = {
       const label = brand ?? t(service === 'copy' ? 'deling.copy' : 'deling.email');
       const inner = `<span class="urd-share-icon">${iconSvg(icon) ?? ''}</span><span class="urd-share-name"></span>`;
       if (service === 'copy') {
-        // Kopier lenke: kun med Clipboard API (funksjonssjekk, ADR-0011).
+        // Copy link: only with the Clipboard API (feature check, ADR-0011).
         if (!navigator.clipboard?.writeText) continue;
         const btn = document.createElement('button');
         btn.type = 'button';
@@ -93,7 +93,7 @@ export const shareBlock = {
               btn.classList.remove('urd-share-copied');
             }, 1600);
           } catch {
-            // Avslått tillatelse: knappen står urørt, ingen feiltilstand å vise.
+            // Permission denied: the button stays as it was, no error state to show.
           }
         });
         host.appendChild(btn);
@@ -101,13 +101,13 @@ export const shareBlock = {
       }
       const link = document.createElement('a');
       link.className = 'urd-share-button';
-      // Adressen og tittelen leses ved klikk, ikke ved render: klientside-
-      // navigasjon kan ha byttet side siden blokken ble tegnet.
+      // The address and title are read on click, not at render: client-side
+      // navigation may have swapped the page since the block was drawn.
       link.href = '#';
       link.addEventListener('click', (event) => {
         event.preventDefault();
-        // Aldri åpne delingsvinduer fra editoren, heller ikke i mobilvisningen
-        // (ctx.preview, aldri editable: den er falsk i mobil-viewporten).
+        // Never open share windows from the editor, not even in the mobile view
+        // (ctx.preview, never editable: that one is false in the mobile viewport).
         if (ctx.preview) return;
         const target = shareUrl(service, location.href, document.title);
         if (!target) return;
@@ -123,7 +123,7 @@ export const shareBlock = {
     }
 
     if (editable) {
-      // Hjelpechipen (ADR-0008): sporingsfriheten er blokkens særtrekk.
+      // The help chip (ADR-0008): the absence of tracking is the block's distinguishing trait.
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {

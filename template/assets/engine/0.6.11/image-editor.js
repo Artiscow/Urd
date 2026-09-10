@@ -1,16 +1,17 @@
 /**
- * Felles bildeeditor for lerretet (preview-laget; besøkende laster den aldri).
- * ETT flytende panel som alle redigerbare bilder bruker: bildeblokker, samlingsinnslag,
- * og fremtidige flater (nav-logo m.fl.) kobler seg på med en adapter.
+ * Shared image editor for the canvas (the preview layer; visitors never load it).
+ * ONE floating panel that every editable image uses: image blocks, collection
+ * entries, and future surfaces (the nav logo and others) hook in with an adapter.
  *
- * Adapteren beskriver hva målet støtter og hvordan verdier leses/skrives:
+ * The adapter describes what the target supports and how values are read/written:
  *   { fields: ['image','remove','alt','fit','radius','href','focus','filters'],
  *     get(field), set(field, value), onDone?() }
- * set() skal både oppdatere DOM-en live og melde endringen til editoren (som eier utkastet).
+ * set() both updates the DOM live and reports the change to the editor (which owns the draft).
  */
 import { compressToWebp } from './imageTools.js';
-// Lastes kun via preview-laget (statisk fra preview-edit.js, dynamisk fra
-// blokkene ved klikk), alltid etter at admin-ordboka er lastet: ta() er trygg.
+// Loaded only through the preview layer (statically from preview-edit.js,
+// dynamically from the blocks on click), always after the admin dictionary is
+// loaded: ta() is safe here.
 import { ta } from './i18n.js';
 
 let panel = null;
@@ -36,7 +37,7 @@ function row(labelText, control) {
   return label;
 }
 
-/** Segmentert valg (i stedet for native select, som ikke lar seg style). */
+/** Segmented choice (instead of a native select, which cannot be styled). */
 function segmented(options, current, onchange) {
   const wrap = el2('div', 'urd-imged-seg');
   const buttons = [];
@@ -89,7 +90,7 @@ export function openImageEditor(anchor, adapter) {
   head.appendChild(close);
   panel.appendChild(head);
 
-  // Miniatyr med draggbart fokuspunkt (styrer utsnittet ved beskjæring)
+  // Thumbnail with a draggable focus point (controls the crop framing)
   let dot = null;
   if (has('focus')) {
     const thumb = el2('div', 'urd-imged-thumb');
@@ -128,12 +129,12 @@ export function openImageEditor(anchor, adapter) {
       ta('imged.focusHint')));
   }
 
-  // Zoom: beskjærer inn mot fokuspunktet (rammen klipper resten).
+  // Zoom: crops in towards the focus point (the frame clips the rest).
   if (has('zoom')) {
     panel.appendChild(row(ta('lbl.zoom'), slider(adapter.get('zoom'), (v) => adapter.set('zoom', v), { min: '1', max: '3' })));
   }
 
-  // Bytt/fjern
+  // Change/remove
   const actions = el2('div', 'urd-imged-actions');
   const pick = el2('button', 'urd-imged-btn', adapter.get('image') ? ta('ui.changeImage') : ta('ui.chooseImage'));
   pick.type = 'button';
@@ -164,7 +165,7 @@ export function openImageEditor(anchor, adapter) {
   }
   panel.appendChild(actions);
 
-  // Justeringer (ikke-destruktive CSS-filtre) med verdivisning, gråtone-hurtigvalg og nullstilling.
+  // Adjustments (non-destructive CSS filters) with value readout, a grayscale shortcut and a reset.
   if (has('filters')) {
     const sliders = {
       brightness: slider(adapter.get('brightness'), (v) => applyFilter('brightness', v)),
@@ -249,8 +250,9 @@ export function openImageEditor(anchor, adapter) {
     panel.appendChild(row(ta('lbl.link'), input));
   }
 
-  // Tredelingsgitter over selve bildet mens editoren er åpen (som i kameraer):
-  // viser midten og tredjedelene mens man drar fokus, zoomer og velger form.
+  // Rule-of-thirds grid over the image itself while the editor is open (as in
+  // cameras): shows the center and the thirds while dragging focus, zooming and
+  // picking a shape.
   let grid = null;
   let gridObserver = null;
   if (adapter.get('image') && anchor instanceof Element) {
@@ -265,14 +267,14 @@ export function openImageEditor(anchor, adapter) {
       grid.style.borderRadius = getComputedStyle(anchor).borderRadius;
     };
     syncGrid();
-    // Form/zoom endrer bildets ramme live; gitteret følger etter.
+    // Shape/zoom change the image frame live; the grid follows along.
     gridObserver = new ResizeObserver(syncGrid);
     gridObserver.observe(anchor);
   }
 
   document.body.appendChild(panel);
 
-  // Plassering: ved siden av bildet, klemt innenfor viewporten
+  // Placement: beside the image, clamped inside the viewport
   const rect = anchor.getBoundingClientRect();
   const W = 260;
   const left = Math.max(8, Math.min(rect.right + 12, window.innerWidth - W - 8));
@@ -280,7 +282,7 @@ export function openImageEditor(anchor, adapter) {
   panel.style.left = `${left}px`;
   panel.style.top = `${top}px`;
 
-  // Lukking: klikk utenfor, Escape eller rulling utenfor panelet
+  // Closing: click outside, Escape or scrolling outside the panel
   const onDown = (event) => {
     if (!panel.contains(event.target)) closeImageEditor();
   };

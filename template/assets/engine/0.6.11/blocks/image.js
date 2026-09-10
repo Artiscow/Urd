@@ -1,19 +1,19 @@
 /**
- * Kjerneblokk: bilde. Viser en fil fra media/ (eller en data-URL for
- * upubliserte opplastinger i utkast). Med href blir bildet en lenke,
- * som også dekker logo-bruk.
+ * Core block: image. Shows a file from media/ (or a data URL for uploads
+ * that are still unpublished in the draft). With href the image becomes a
+ * link, which also covers logo use.
  *
- * Bildet ligger i en ramme (.urd-image-frame) som klipper: da vises
- * avrunding ALLTID (også med «Vis hele bildet»/contain), og zoom beskjærer
- * inn mot fokuspunktet. Én felles applyImageStyle brukes av render OG den
- * flytende bildeeditoren, så de aldri kan drifte fra hverandre.
+ * The image sits in a frame (.urd-image-frame) that clips: rounding is
+ * therefore ALWAYS visible (also with "show the whole image"/contain), and
+ * zoom crops in towards the focal point. One shared applyImageStyle serves
+ * both render AND the floating image editor, so the two can never drift apart.
  */
 
 import { isSafeHref } from '../nav-model.js';
 import { ta } from '../i18n.js';
 
-/** Anvender den ikke-destruktive bildestilen på rammen + bildet.
- *  @param {HTMLElement} frame Rammeelementet (.urd-image-frame) med <img> inni */
+/** Applies the non-destructive image style to the frame and the image.
+ *  @param {HTMLElement} frame The frame element (.urd-image-frame) with the <img> inside */
 export function applyImageStyle(frame, props) {
   const img = frame.querySelector('img');
   if (!img) return;
@@ -21,7 +21,7 @@ export function applyImageStyle(frame, props) {
   img.alt = props.alt ?? '';
   img.style.objectFit = props.fit ?? 'cover';
   img.style.objectPosition = focus;
-  // Zoom beskjærer inn mot fokuspunktet; rammen klipper resten.
+  // Zoom crops in towards the focal point; the frame clips the rest.
   const zoom = Number(props.zoom) || 1;
   img.style.transform = zoom !== 1 ? `scale(${zoom})` : '';
   img.style.transformOrigin = focus;
@@ -30,7 +30,7 @@ export function applyImageStyle(frame, props) {
   if (props.contrast != null && props.contrast !== 1) filters.push(`contrast(${props.contrast})`);
   if (props.saturate != null && props.saturate !== 1) filters.push(`saturate(${props.saturate})`);
   img.style.filter = filters.join(' ');
-  // Avrunding på RAMMEN (som klipper), så den vises uansett tilpasning.
+  // Rounding on the FRAME (which clips), so it shows whatever the fit is.
   frame.style.borderRadius = props.radius ? `var(--urd-radius-${props.radius})` : '';
 }
 
@@ -40,9 +40,9 @@ export const imageBlock = {
   labelKey: 'blocks.image',
   defaults: () => ({
     src: '', alt: '', fit: 'cover', radius: 'md', href: null,
-    // Additive felt: fokuspunkt (0..1), zoom (1 = ingen) og ikke-destruktive
-    // CSS-justeringer (1 = nøytral). lightbox åpner bildet i fullskjerm ved
-    // klikk hos besøkende (fravær = false, så gamle data trenger ingen migrering).
+    // Additive fields: focal point (0..1), zoom (1 = none) and non-destructive
+    // CSS adjustments (1 = neutral). lightbox opens the image full screen when a
+    // visitor clicks it (absent = false, so old data needs no migration).
     x: 0.5, y: 0.5, zoom: 1, brightness: 1, contrast: 1, saturate: 1,
     lightbox: false,
   }),
@@ -53,7 +53,7 @@ export const imageBlock = {
    * @param {object} ctx
    */
   render(el, props, ctx) {
-    // Uten bilde: rolig plassholder i editoren; besøkende ser ingenting.
+    // With no image: a quiet placeholder in the editor; visitors see nothing.
     if (!props.src) {
       if (ctx.preview) {
         const empty = document.createElement('div');
@@ -66,16 +66,16 @@ export const imageBlock = {
     const frame = document.createElement('span');
     frame.className = 'urd-image-frame';
     const img = document.createElement('img');
-    // Innholdsbilder hentes først når de nærmer seg viewporten: sparer bilder
-    // under folden på tunge sider. loading/decoding settes FØR src, ellers kan
-    // nettleseren ha startet hentingen allerede. (Samling/galleri/video gjør likt.)
+    // Content images are fetched only as they approach the viewport: that spares
+    // images below the fold on heavy pages. loading/decoding are set BEFORE src,
+    // or the browser may already have begun fetching. (Collection/gallery/video do the same.)
     img.loading = 'lazy';
     img.decoding = 'async';
     img.src = props.src;
     img.draggable = false;
-    // Store bilder dekodes stripevis mens de laster (ser ut som en
-    // gradvis «inntoning» ovenfra): hold bildet usynlig til det er
-    // FERDIG, og vis det komplett med en gang. Cachede bilder berøres ikke.
+    // Large images decode strip by strip while they load (which looks like a
+    // gradual wipe from the top): keep the image invisible until it is
+    // COMPLETE, then show it whole at once. Cached images are untouched.
     if (!img.complete) {
       img.style.visibility = 'hidden';
       img.addEventListener('load', () => { img.style.visibility = ''; }, { once: true });
@@ -84,7 +84,7 @@ export const imageBlock = {
     frame.appendChild(img);
     applyImageStyle(frame, props);
 
-    // Delt vokter (nav/footer + interne stier/anker): en utrygg href behandles som om lenken ikke fantes.
+    // Shared guard (nav/footer plus internal paths/anchors): an unsafe href is treated as if the link were not there.
     const safeHref = props.href && isSafeHref(props.href) ? props.href : null;
     if (safeHref && !ctx.preview) {
       const a = document.createElement('a');
@@ -95,8 +95,8 @@ export const imageBlock = {
       el.appendChild(frame);
     }
 
-    // Fullskjerm ved klikk: hos besøkende alltid når feltet er på; i preview
-    // kun i Ren visning (ellers eier redigeringen klikket). Lenke vinner.
+    // Full screen on click: always for visitors when the field is on; in preview
+    // only in clean view (otherwise editing owns the click). A link wins.
     if (props.lightbox && !safeHref) {
       frame.classList.add('urd-lightbox-able');
       frame.addEventListener('click', async () => {

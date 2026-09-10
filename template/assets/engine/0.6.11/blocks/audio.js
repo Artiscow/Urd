@@ -1,15 +1,15 @@
 /**
- * Kjerneblokk: lyd. Native `<audio controls>` med git-eid fil fra media/
- * (CSP-ens default-src 'self' dekker avspillingen; ingen tredjepart, ingen
- * sporing). Valgfri tittel over spilleren; preload="metadata" så bare
- * varigheten hentes før avspilling.
+ * Core block: audio. Native `<audio controls>` with a git-owned file from
+ * media/ (the CSP's default-src 'self' covers playback; no third party, no
+ * tracking). Optional title above the player; preload="metadata" so only the
+ * duration is fetched before playback.
  */
-// Kun kalt i preview (etter at admin-ordboka er lastet): aldri på modulnivå.
+// Called only in preview (after the admin dictionary has loaded): never at module level.
 import { ta, adminLocaleReady } from '../i18n.js';
 
 export const audioBlock = {
   version: 1,
-  // Naturlig høyde i mobil-radnettet (spillerens høyde er nettleserens).
+  // Natural height in the mobile row grid (the player's height is the browser's).
   autoGrow: true,
   label: 'Audio',
   labelKey: 'blocks.audio',
@@ -18,11 +18,11 @@ export const audioBlock = {
   /**
    * @param {HTMLElement} el
    * @param {{src?: string, title?: string, loop?: boolean}} props
-   * @param {object} ctx Render-kontekst
+   * @param {object} ctx Render context
    */
   render(el, props, ctx) {
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
-    // Uten fil: rolig plassholder i editoren; besøkende ser ingenting.
+    // With no file: a quiet placeholder in the editor; visitors see nothing.
     if (!props.src) {
       if (ctx.preview) {
         const empty = document.createElement('div');
@@ -69,7 +69,7 @@ export const audioBlock = {
     host.appendChild(audio);
 
     if (editable) {
-      // Hjelpechipen (ADR-0008): filvalg og størrelseshensyn trenger forklaring.
+      // Help chip (ADR-0008): file choice and size considerations need explaining.
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {

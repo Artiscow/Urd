@@ -1,21 +1,21 @@
 /**
- * Lightbox: fullskjermvisning av bilder hos besøkende (og i editorens Ren
- * visning). Lastes kun via dynamic import ved første klikk, så besøkende
- * som aldri klikker et bilde laster den aldri.
+ * Lightbox: full screen image viewing for visitors (and in the editor's Clean
+ * view). Loaded only via dynamic import on the first click, so a visitor who
+ * never clicks an image never loads it.
  *
- * Bygget på det native <dialog>-elementet (showModal): top-layer fjerner
- * z-index-krig, ::backdrop gir den mørke bakgrunnen, og fokusfelle, fokus-retur
- * og inert bakgrunn følger gratis. Esc lukker (native), piltastene stepper,
- * bakgrunnsklikk lukker. Body-scroll låses av body:has(dialog:modal) i
- * base.css, ingen JS-bokføring.
+ * Built on the native <dialog> element (showModal): the top layer removes the
+ * z-index war, ::backdrop gives the dark background, and focus trap, focus
+ * return and an inert background come along for free. Esc closes (native),
+ * the arrow keys step, a background click closes. Body scroll is locked by
+ * body:has(dialog:modal) in base.css, no JS bookkeeping.
  */
 import { stepIndex } from './gallery-model.js';
 import { t } from './i18n.js';
 
 let overlay = null;
 
-/** Synkron opprydning av gjeldende overlegg (brukes ved re-open, så et
- *  etterslepende close-event ikke river et nyåpnet overlegg). */
+/** Synchronous teardown of the current overlay (used on re-open, so a
+ *  trailing close event does not tear down a freshly opened overlay). */
 function hardTeardown() {
   if (!overlay) return;
   const d = overlay;
@@ -25,7 +25,7 @@ function hardTeardown() {
 }
 
 export function closeLightbox() {
-  if (overlay?.open) overlay.close(); // -> 'close'-hendelsen rydder opp (native fokus-retur)
+  if (overlay?.open) overlay.close(); // -> the 'close' event cleans up (native focus return)
   else hardTeardown();
 }
 
@@ -36,8 +36,8 @@ const el2 = (tag, className, textContent) => {
   return node;
 };
 
-/** De ikke-destruktive fargejusteringene følger med inn i fullvisningen;
- *  utsnitt (fit/fokus/zoom) gjør det ikke: lightboxen viser hele bildet. */
+/** The non-destructive colour adjustments follow into the full view; the
+ *  cropping (fit/focus/zoom) does not: the lightbox shows the whole image. */
 function filterCss(style) {
   const filters = [];
   if (style?.brightness != null && style.brightness !== 1) filters.push(`brightness(${Number(style.brightness) || 1})`);
@@ -74,7 +74,7 @@ export function openLightbox(images, startIndex = 0) {
     image.style.filter = filterCss(entry.style);
     caption.textContent = entry.alt ?? '';
     caption.style.display = entry.alt ? '' : 'none';
-    // Nabobildene forhåndslastes, så blaingen føles umiddelbar.
+    // The neighbouring images are preloaded, so paging feels immediate.
     for (const delta of [1, -1]) {
       const probe = new Image();
       probe.src = list[stepIndex(index, delta, list.length)].src;
@@ -107,19 +107,19 @@ export function openLightbox(images, startIndex = 0) {
   close.addEventListener('click', closeLightbox);
   dialog.appendChild(close);
 
-  // Rydding når dialogen lukkes (også ved native Esc): instans-vaktet så et
-  // etterslepende close fra et tidligere overlegg ikke nuller det nye.
+  // Cleanup when the dialog closes (native Esc included): instance guarded so
+  // a trailing close from an earlier overlay does not null out the new one.
   dialog.addEventListener('close', () => {
     if (overlay === dialog) overlay = null;
     dialog.remove();
   });
 
-  // Bakgrunnsklikk lukker; klikk på bildet og knappene gjør det ikke.
+  // A background click closes; clicks on the image and the buttons do not.
   dialog.addEventListener('click', (event) => {
     if (event.target === dialog || event.target === figure) closeLightbox();
   });
 
-  // Piltastene stepper; Esc lukker native via dialogens cancel-handling.
+  // The arrow keys step; Esc closes natively via the dialog's cancel handling.
   dialog.addEventListener('keydown', (event) => {
     if (event.key === 'ArrowRight') step(1);
     else if (event.key === 'ArrowLeft') step(-1);

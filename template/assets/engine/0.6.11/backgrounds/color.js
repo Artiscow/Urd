@@ -1,6 +1,6 @@
 /**
- * Bakgrunnslag: ensfarget. Verdien kan være en theme-token ('surface')
- * eller en rå farge ('#151a23').
+ * Background layer: solid color. The value can be a theme token ('surface')
+ * or a raw color ('#151a23').
  */
 import { resolveColor } from '../theme.js';
 
@@ -12,7 +12,7 @@ export const colorLayer = {
   migrations: {},
   /**
    * @param {HTMLElement} el
-   * @param {{value: string, opacity?: number}} props opacity er additiv (eldre data mangler den)
+   * @param {{value: string, opacity?: number}} props opacity is additive (older data lacks it)
    */
   render(el, props) {
     el.style.background = resolveColor(props.value);

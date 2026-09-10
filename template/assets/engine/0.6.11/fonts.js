@@ -1,13 +1,13 @@
 /**
- * Delte typografi-konstanter: fontvalgene som både admin-panelene og
- * teksteditor-linjens typografirad viser. Kun systemtrygge stacker
- * (Urd laster aldri eksterne fonter, se _headers/CSP).
+ * Shared typography constants: the font choices shown both by the admin
+ * panels and by the typography row of the text editor bar. System-safe
+ * stacks only (Urd never loads external fonts, see _headers/CSP).
  */
 
-/** @type {Array<[string, string]>} Visningsnavn-NØKKEL (ta-oppslag hos
- *  konsumenten; modulen ligger i besøkende-lukningen og kan aldri kalle
- *  ta() på modulnivå) + CSS-fontstack. Sammenligning og lagring bruker
- *  alltid stacken (element 1), aldri nøkkelen. */
+/** @type {Array<[string, string]>} Display-name KEY (looked up with ta() by
+ *  the consumer; the module sits in the visitor closure and can never call
+ *  ta() at module level) + CSS font stack. Comparison and storage always use
+ *  the stack (element 1), never the key. */
 export const FONT_STACKS = [
   ['font.system', 'system-ui, sans-serif'],
   ['font.arial', 'Arial, Helvetica, sans-serif'],
