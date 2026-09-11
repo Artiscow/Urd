@@ -20,8 +20,8 @@ const { registerPackLanguages, loadPackStrings, packLanguages } = await engineIm
 
 const ROOT = new URL('../template/', import.meta.url);
 const BASE = 'nb';
-/** The core languages are kept COMPLETE at every delivery (decided
- *  6 August 2026); nn/se fall back to Norwegian Bokmål at runtime and are
+/** The core languages are kept COMPLETE at every delivery; nn/se fall back
+ *  to Norwegian Bokmål at runtime and are
  *  filled in dedicated translation rounds. The test accepts gaps there,
  *  but never unknown keys (typos that would otherwise never surface). */
 const CORE_LANGS = ['nb', 'en-GB', 'tr'];
@@ -158,7 +158,7 @@ test('initSiteLocale: switches language with nb fallback for missing keys, and b
   assert.equal(t('nav.menu'), 'Meny');
 });
 
-/* ---------- Language packs (0.6.8.10) ---------- */
+/* ---------- Language packs ---------- */
 
 for (const [id, manifest] of languagePacks()) {
   test(`language pack '${id}': the manifest is valid, and the files exist with keys from the base`, async () => {

@@ -515,7 +515,7 @@ export default {
     'ph.nav.logoName': 'Namnet i menyen',
     'ph.newPageName': 'Namn på ny side',
     'ph.optionalImageLink': 'Valfri (gjer biletet klikkbart)',
-    'ph.plugins.folder': 'Mappenamn i plugins/ (t.d. kalender)',
+    'ph.plugins.folder': 'Mappenamn i plugins/ (t.d. calendar)',
     'ph.setup.name': 'T.d. namnet på foreininga',
     'ph.site.description': 'Kort om nettstaden',
     'ph.site.name': 'Namn på nettstaden',

@@ -25,19 +25,27 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.3-0.7.14.18p - Push-klargjøring: engelsk-renskingen og video-laget - 11. september 2026
+
+- Uavhengig gjennomgang av hele spennet (24 commits) fant en foreldet mediereferanse: om-oss.json pekte fortsatt på bytt-dette-bildet-0e227b0f.svg, som etappe .4 slettet da bare hjem.json ble pekt om. Funnet ved å gre diffens slettede filer mot innholdet; pekt om til plasseringsbildet hjem.json bruker.
+- Fallbacken `'Ja'` i form-pluginens form.js var norsk uten æøå og usynlig for auditlagene; kommentaren i samme fil hevdet at fallbackene var engelske. Rettet til `'Yes'`.
+- Versjonstagger og datoer hadde overlevd kommentarsveipen i oversatt form (animations/core.js, seks testfiler, plugin.schema.json), og én test-kommentar fortalte en rettelseshistorie. Strøket og omskrevet deskriptivt; «additive since»-markørene bruker fasenummer (v0.6), ikke commit-nummer.
+- Plassholderen ph.plugins.folder i alle fem ordbøker viste fortsatt mappeeksempelet «kalender» etter omdøpingen til calendar; postMessage-tabellen i previewBridge.js manglet fem meldinger fila selv sender (close-menus, place-block, attention, demo-anim, open-block-config). Begge komplettert.
+- Prosjekttekst: formuleringen «daterte eiervalg-parenteser» i 0.7.14.11-innslaget skrevet om upersonlig, og de seks lengste CHANGELOG-kulepunktene i spennet (over 500 tegn, ett med en hvorfor-klausul) kortet ned til symptom og grep.
+
 ### 0.7.14.18 - Engelsk-renskingen: siste ekstra sjekk - 11. september 2026
 
-- En tredje uavhengig runde leste hver definisjons defaults() og enum-literaler for persistert norsk kontrakt (mønsteret som ga fit-hullet) og fant kontrakten ren, men avdekket en funksjonsfeil fra etappe .6: share-blokken kalte fortsatt nøklene deling.copy/deling.email (renamet til share.*), så «Kopier lenke» og «E-post» viste nøkkelnavnet som tekst på publiserte sider. Rettet, og en ny vakttest sjekker at hver literal t()/ta()-nøkkel i motoren (415 ta, 72 t, også ternærformen som slapp unna grep) finnes i nb-ordbøkene.
+- En tredje uavhengig runde leste hver definisjons defaults() og enum-literaler for persistert norsk kontrakt og fant den ren, men avdekket at share-blokken fortsatt kalte nøklene deling.copy/deling.email (renamet i .6), så «Kopier lenke» og «E-post» viste nøkkelnavnet på publiserte sider. Rettet, med ny vakttest for at hver literal t()/ta()-nøkkel i motoren finnes i nb-ordbøkene.
 - Nettstedstemaenes preset-ider i editoren (bronn/stein/plomme/hav/natt, aldri persistert) renamet til well/stone/plum/ocean/night med themePreset.*-nøklene i alle fem ordbøker.
 - Norske seed-plassholdere utenom seed-nøkler (mailto:post@dinforening.no i kontaktpreseten og footer-presetene, telefonen +47 22 00 00 00) går nå via seed.email og ny seed.phone. Tekstverktøylinjas linjehøyde-etiketter var norske kommadesimaler i kode (og «Arv» som død etikett); etikettene formateres nå med Intl etter admin-språket. Tre tyrkiske plugin-ordbokheadere og to gallery-undo-nøkler engelske; valutastandarden 'kr' og eksempelstrengen «om 3 døgn» dokumentert som bevisste rester i ADR-0021.
 
 ### 0.7.14.17 - Engelsk-renskingen: sluttauditen - 11. september 2026
 
 - Sluttauditen kjørt i tre lag (æøå, norske stoppord uten æøå, ASCII-fisert norsk) pluss en uavhengig gjennomgang med egne metoder. Batch-inndelingen hadde hull: functions på tredje nivå, plugin-API-skallene, favicon-boot, vite.config, dependabot, _headers og blocks/shape.js (norsk uten et eneste æøå) var aldri sveipet. Alle oversatt; auditmetoden og de bevisste æøå-restene er dokumentert i ADR-0021.
-- Datakontrakt-hull: bakgrunnslaget image hadde fit-verdiene vanlig/flislegg/egen persistert i sidefiler, oversett i etappe .2 fordi skanningen kun dekket blokkdefinisjonene. imageLayer er versjon 2 med migrering til plain/tile/custom, test, løftede eksempeldata og SKJEMA.md; ADR-0021 sin uriktige «fant ingen flere»-påstand er rettet. Admin-temaenes ider (lilla, bronn, gull, graa, nordlys, skumring, glo) var ASCII-fisert norsk persistert i localStorage; renamet til purple/well/gold/grey/aurora/dusk/ember med migrate-on-read og nøklene i alle fem ordbøker.
-- Funksjonsfeil fra tidligere etapper funnet og rettet: BLOCK_LABELS i editoren var nøklet på de gamle norske blokk-idene (etappe .2), så Egenskaper-overskriften viste rå id for elleve blokktyper; motorens klikkvern siktet på pluginenes gamle config-klasser (etappe .4), så klikk i kalender- og skjemapanelene traff feil gren; kalenderpluginen brukte urd-samling-*-klassene som forsvant fra base.css (etappe .7) og var ustilt. Eksempeldata-løftet i denne etappen traff først bilde-blokker i om-oss.json i stedet for lag; fanget av gjennomgangen og tilbakestilt.
+- Datakontrakt-hull: bakgrunnslaget image hadde fit-verdiene vanlig/flislegg/egen persistert i sidefiler, oversett i etappe .2. imageLayer er versjon 2 med migrering til plain/tile/custom, test, løftede eksempeldata og SKJEMA.md; ADR-0021 er rettet. Admin-temaenes ider var ASCII-fisert norsk persistert i localStorage; renamet til purple/well/gold/grey/aurora/dusk/ember med migrate-on-read.
+- Funksjonsfeil fra tidligere etapper rettet: BLOCK_LABELS i editoren var nøklet på de gamle blokk-idene (etappe .2), motorens klikkvern siktet på pluginenes gamle config-klasser (etappe .4), og kalenderpluginen brukte urd-samling-*-klassene som forsvant fra base.css (etappe .7). Eksempeldata-løftet traff først bilde-blokker i om-oss.json i stedet for lag; fanget av gjennomgangen og tilbakestilt.
 - Rester fra rename-etappene: CSS-klassene valgt/feil/vis/--urd-kat/urd-preset-rail-alle/urd-cal-day-tom, kalenderens rotklasse, page-mal-*/samling-entry i editoren, ~25 identifikatorer i App.svelte, preview-edit.js, validate.mjs og pluginene, historikk- og snapshot-nøkler, rail-idene, medie-prefiksene, honeypot-navnet og analytics-manifestets provides.maler. Alle renamet.
-- Brukersynlige norske literaler flyttet til nøkler (nb/en-GB/tr): collection-blokkens tomtilstander, «Uten tittel», bildeeditorens tomtekst (CSS content erstattet med attr(data-empty) matet av ta()), og commit-meldingen editoren skriver til brukerens repo med sine ti deltitler. Plugin-manifestenes name-felt er engelsk fallback (names.nb bærer norsk), functions sine commit-meldinger er engelske, Vipps-returparameteret er ?ordered=1, og konsollmeldinger i render.js, i18n.js, button.js, App.svelte, validate.mjs og release.yml er engelske.
+- Brukersynlige norske literaler flyttet til nøkler (nb/en-GB/tr): collection-blokkens tomtilstander, «Uten tittel», bildeeditorens tomtekst (nå attr(data-empty) matet av ta()) og commit-meldingen til brukerens repo. Plugin-manifestenes name-felt er engelsk fallback, functions sine commit-meldinger engelske, Vipps-returparameteret ?ordered=1, og konsollmeldingene i render.js, i18n.js, button.js, App.svelte, validate.mjs og release.yml engelske.
 
 ### 0.7.14.16 - Engelsk-renskingen: kommentarsveipen, stilark, plugins og skript - 11. september 2026
 
@@ -60,7 +68,7 @@ entydig: alle commit-innslag over forrige p-innslag.
 
 ### 0.7.14.13 - Engelsk-renskingen: kommentarsveipen, motor-rot A - 10. september 2026
 
-- Alle norske kommentarer i de 12 tyngste motor-rot-filene (render, urd, nav, nav-model, sticky, sticky-model, i18n, theme, plugins, migrate, preset-thumb, imageTools; ~1 000 kommentarlinjer, tre parallelle agenter på disjunkte filsett) oversatt til engelsk med kommentarreglene anvendt: tre kommentarer slettet helt, versjonstagger og daterte attribusjoner strøket, siterte norske UI-etiketter i plugins.js omskrevet til stabile nøkkel-referanser. Migreringskommentarene beskriver fortsatt gamle skjemaversjoner (migreringens jobb), og «additive since»-markørene står som ADR-0005-kontraktsdokumentasjon. Bundel-diffen etter gjenbygg er tom.
+- Alle norske kommentarer i de 12 tyngste motor-rot-filene (render, urd, nav, nav-model, sticky, sticky-model, i18n, theme, plugins, migrate, preset-thumb, imageTools; ~1 000 linjer) oversatt med kommentarreglene anvendt: tre kommentarer slettet, versjonstagger og daterte attribusjoner strøket, siterte UI-etiketter i plugins.js omskrevet til nøkkel-referanser. Bundel-diffen etter gjenbygg er tom.
 - Funn under sveipen: en foreldet JSDoc i render.js omtalte lagtypen «bildegalleri» (heter slideshow); rettet. Fem norske/blandede konsollmeldinger i render.js og valideringsmeldingen i i18n.js (linje 85) notert til sluttauditen.
 
 ### 0.7.14.12 - Engelsk-renskingen: kommentarsveipen, App.svelte - 10. september 2026
@@ -71,7 +79,7 @@ entydig: alle commit-innslag over forrige p-innslag.
 
 ### 0.7.14.11 - Engelsk-renskingen: kommentarsveipen, preview-edit.js - 8. september 2026
 
-- Alle norske kommentarer i preview-edit.js (571 linjer, ~150 kommentarer/JSDoc-blokker) oversatt til engelsk med kommentarreglene anvendt: historikk- og attribusjonsfragmenter strøket (versjonsnummer-tagger, daterte eiervalg-parenteser, hendelsesfortellinger som «faq manglet her frem til 0.6.7.11»), flerlinje-kommentarer brutt om ved setningsgrense. Kun kommentartekst er endret; meldingsnavnene og ADR-referansene står ordrett, og bundelen er urørt (fila buntes ikke).
+- Alle norske kommentarer i preview-edit.js (571 linjer, ~150 kommentarer/JSDoc-blokker) oversatt til engelsk med kommentarreglene anvendt: historikk- og attribusjonsfragmenter strøket (versjonsnummer-tagger, daterte beslutningsparenteser, hendelsesfortellinger som «faq manglet her frem til 0.6.7.11»), flerlinje-kommentarer brutt om ved setningsgrense. Kun kommentartekst er endret; meldingsnavnene og ADR-referansene står ordrett, og bundelen er urørt (fila buntes ikke).
 
 ### 0.7.14.10 - Engelsk-renskingen: testene - 30. august 2026
 
@@ -92,7 +100,7 @@ entydig: alle commit-innslag over forrige p-innslag.
 
 ### 0.7.14.7 - Engelsk-renskingen: CSS-klassene - 30. august 2026
 
-- Alle ~120 norske klassenavn renamet i motor, base.css, editor og tester (ADR-0021): prefiksfamiliene (urd-cart, urd-product, urd-checkout, urd-collection, urd-gallery, urd-quote, urd-timeline, urd-table, urd-countdown, urd-share, urd-stats, urd-template, urd-category) OG de norske suffiksene (-count, -button, -body, -image, -buy, -glyph, -portrait, -unit m.fl.), pluss CSS-variablene, urd-anim-cardwise, urd-bg-video-poster, urd-footer-inner/-prefix og `.code` i 404.html. Nytt base.css-stempel i alle fem skall.
+- Alle ~120 norske klassenavn renamet i motor, base.css, editor og tester (ADR-0021): prefiksfamiliene (urd-cart, urd-product, urd-checkout, urd-collection, urd-gallery, urd-quote, urd-timeline, urd-table, urd-countdown, urd-share, urd-stats, urd-template, urd-category), de norske suffiksene, CSS-variablene, urd-anim-cardwise, urd-bg-video-poster, urd-footer-inner/-prefix og `.code` i 404.html. Nytt base.css-stempel i alle fem skall.
 - BREAKING for egendefinert CSS: klassene er runtime-genererte og aldri persistert (ingen migrering), men egne stilark som sikter på de gamle norske klassenavnene må oppdateres til de nye.
 
 ### 0.7.14.6 - Engelsk-renskingen: identifikatorene, nøkkelrommene og editor-internene - 30. august 2026

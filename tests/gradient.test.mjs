@@ -100,7 +100,7 @@ test('loopGeometry: the period is the line plus room for the largest color', () 
   // is the hidden part large enough that a half is never split.
   assert.deepEqual(loopGeometry(1000, 500, 90, 0.5), { period: 2000, dx: 2000, dy: 0 });
   // 7 equal colors: only 1/6 longer than the line (the colors keep roughly
-  // a static size, requirement set 24 July 2026).
+  // a static size).
   const g7 = loopGeometry(1200, 0, 90, 1 / 7);
   assert.ok(Math.abs(g7.period - 1400) < 0.05, `period ${g7.period}`);
   // 0 degrees (upwards): the gradient line is the height, the offset upwards.

@@ -1,5 +1,5 @@
 /**
- * Contract tests for the starter packs (built-in page templates, 0.6.7.12):
+ * Contract tests for the starter packs (built-in page templates):
  * the preset references must exist in the core registration, every built
  * page must have the right meta and globally unique ids, and two builds of
  * the same starter pack must never share ids (create() gives fresh ones).

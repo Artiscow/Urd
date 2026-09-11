@@ -7,7 +7,7 @@
   "required": ["id", "name", "version", "requiresEngine"],
   "allOf": [
     {
-      "$comment": "entry and provides are required for anything but a pure language pack, which has no code to run (0.6.8.10).",
+      "$comment": "entry and provides are required for anything but a pure language pack, which has no code to run.",
       "if": { "not": { "required": ["languages"], "properties": { "languages": { "type": "array", "minItems": 1 } } } },
       "then": { "required": ["entry", "provides"] }
     }
@@ -41,7 +41,7 @@
     },
     "languages": {
       "type": "array",
-      "description": "Optional (additive from 0.6.8.10): languages the plugin delivers as a LANGUAGE PACK (ADR-0012). Each entry promises locales/site/<code>.js and/or locales/admin/<code>.js. A pack cannot override Urd's built-in languages (nb, nn, en-GB, se, tr), and a pure language pack needs neither entry nor provides.",
+      "description": "Optional (additive from v0.6): languages the plugin delivers as a LANGUAGE PACK (ADR-0012). Each entry promises locales/site/<code>.js and/or locales/admin/<code>.js. A pack cannot override Urd's built-in languages (nb, nn, en-GB, se, tr), and a pure language pack needs neither entry nor provides.",
       "items": {
         "type": "object",
         "required": ["code", "name"],

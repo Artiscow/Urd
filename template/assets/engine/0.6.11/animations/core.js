@@ -28,7 +28,7 @@ export const coreAnimations = {
   // from ONE shared trigger. pattern: 'sequence' (one step per card), 'columns'/
   // 'rows' (cards on the same x/y arrive together, the wave moves sideways) or
   // 'center' (outwards from the middle of the row). delay is a shared base delay
-  // (additive since 0.6.6.4.6, older data lacks the field and reads as 0).
+  // (additive since v0.6; older data lacks the field and reads as 0).
   stagger: {
     version: 1, label: 'Stagger (card group)', labelKey: 'anim.stagger', entrance: true, group: true,
     defaults: () => ({ duration: 600, delay: 0, step: STAGGER_STEP, effect: 'slide-up', pattern: 'sequence' }),

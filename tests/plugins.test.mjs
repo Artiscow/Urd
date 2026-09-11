@@ -85,7 +85,7 @@ test('checkProvides: reports both broken promises and undeclared definitions', (
   assert.ok(diffs.some((d) => d.includes('udeklarert')));
 });
 
-test('staging: the templates registry (0.6.7) accepts plugin templates with a fromPlugin mark', () => {
+test('staging: the templates registry accepts plugin templates with a fromPlugin mark', () => {
   const Urd = { blocks: createRegistry('blocks'), sections: createRegistry('sections'), backgrounds: createRegistry('backgrounds'), animations: createRegistry('animations'), templates: createRegistry('templates') };
   const staging = createStagedUrd(Urd, 'Testplugin');
   staging.staged.templates.define('var-hero', { name: 'Vår hero', kind: 'section', section: { id: 'sec-opphav', version: 1, blocks: [] } });

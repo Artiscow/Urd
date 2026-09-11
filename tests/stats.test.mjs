@@ -1,5 +1,5 @@
 /**
- * Contract tests for the stats block's number logic (0.6.7.11): the parsing
+ * Contract tests for the stats block's number logic: the parsing
  * of the display value and the formatting during the count-up animation must
  * preserve the number format (decimal separator and grouping). The animation
  * itself is DOM behavior and covered by the headless checks. Also includes

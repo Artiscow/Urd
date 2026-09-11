@@ -51,6 +51,11 @@
  *                  { type: 'urd-insert-template', id }        (the Blocks panel's My templates: insert a block-group template into the active section)
  *                  { type: 'urd-zoom', scale }                (the canvas zoom; the handles counter-scale so they keep their admin size)
  *                  { type: 'urd-scroll-section', sectionId }  (scroll the preview to the section; the review marker in the top bar)
+ *                  { type: 'urd-close-menus' }                (a click in the admin panels closes open menus in the preview)
+ *                  { type: 'urd-place-block', block }         (the palette: the engine finds a placement mid-viewport and reports back)
+ *                  { type: 'urd-attention', sectionId, needed } (desktop drift in an overridden section: mark it live)
+ *                  { type: 'urd-demo-anim', sectionId, blockId } (play the changed animation once; blockId null = the section)
+ *                  { type: 'urd-open-block-config', blockId } (open a plugin block's settings from Properties)
  */
 
 /**

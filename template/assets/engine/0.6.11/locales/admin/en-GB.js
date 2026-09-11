@@ -687,7 +687,7 @@ export default {
     'ph.nav.logoName': 'The name in the menu',
     'ph.newPageName': 'Name of new page',
     'ph.optionalImageLink': 'Optional (makes the image clickable)',
-    'ph.plugins.folder': 'Folder name in plugins/ (e.g. kalender)',
+    'ph.plugins.folder': 'Folder name in plugins/ (e.g. calendar)',
     'ph.setup.name': 'E.g. the name of your club',
     'ph.site.description': 'Briefly about the site',
     'ph.site.name': 'Name of the site',

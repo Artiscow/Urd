@@ -83,7 +83,7 @@ export function validate(fields, values, messages = {}) {
  *  email body). A ticked box becomes the yes word (opts.yes); an empty box is
  *  left out like any other empty field. */
 function bodyLines(fields, values, opts = {}) {
-  const yes = opts.yes ?? 'Ja';
+  const yes = opts.yes ?? 'Yes';
   return fields
     .map((field) => {
       const raw = values[field.id];

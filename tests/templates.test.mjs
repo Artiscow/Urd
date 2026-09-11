@@ -1,5 +1,5 @@
 /**
- * The template model (0.6.7): contract tests for templates-model.js - the id regime, the re-id invariants at insertion and the anchor/clamp geometry for block groups.
+ * The template model: contract tests for templates-model.js - the id regime, the re-id invariants at insertion and the anchor/clamp geometry for block groups.
  * The schema contract (mal.schema.json) is validated in editor/scripts/validate.mjs; the pure functions are tested here.
  */
 import { test } from 'node:test';

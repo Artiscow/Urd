@@ -47,8 +47,8 @@ test('staggerColumnDelays: cards in the same column share a step, the wave follo
 });
 
 test('staggerColumnDelays: nearly aligned cards are clustered by the tolerance', () => {
-  // The 8px buckets from 0.6.6.5.4 split cards that were 9px apart; with the
-  // tolerance (24px) they count as the same column.
+  // Cards 9px apart must land in the same column: within the tolerance
+  // (24px) they count as one column.
   assert.deepEqual(staggerColumnDelays([0, 9, 300, 318], 100), [0, 0, 100, 100]);
   // Above the tolerance they are still separated.
   assert.deepEqual(staggerColumnDelays([0, 40, 300], 100, 24), [0, 100, 200]);
