@@ -2,6 +2,10 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.0.5): svelte 5.57.0
+
+- [ ] The deployed /admin starts with the rebuilt bundle (svelte 5.57.0): log in, open a page, edit a block, see the preview respond, and publish once
+
 ### Testrunde-batch (0.7.14.18): Siste ekstra sjekk
 
 - [ ] Delingsblokken hos besøkende viser «Kopier lenke» og «Del på e-post» (ikke nøkkelnavn) på nb og de andre sidespråkene

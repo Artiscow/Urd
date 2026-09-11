@@ -25,6 +25,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.5 - Dependencies: the fast-uri alerts and svelte 5.57.0 with a rebuilt bundle - 11 September 2026
+
+- Four high Dependabot alerts on fast-uri (a transitive dev dependency of ajv, used only by the schema validation) in editor/package-lock.json: the lockfile lifted to fast-uri 3.1.7, `npm audit` clean.
+- The Dependabot PR for svelte 5.56.10 to 5.57.0 failed the build-conformity check, since a bot cannot rebuild the bundle: svelte lifted to `^5.57.0` locally and the bundle rebuilt in the same commit. The editor starts and edits locally with the new runtime (checked 11 September 2026).
+
 ### 0.7.0.4 - Docs in English: the ADRs, AGENTS.md, SCHEMA.md, ARCHITECTURE.md and the language rule - 11 September 2026
 
 Entries from this one on are written in English (ADR-0022).
