@@ -1,6 +1,6 @@
 /**
  * Core animations. Registry types with the same version+migrate contract as
- * blocks and background layers (docs/SKJEMA.md): an Urd update can change an
+ * blocks and background layers (docs/SCHEMA.md): an Urd update can change an
  * animation's props safely via migrations.
  *
  * The entrance animations (fade-in, slide-up, zoom-in) play when the element

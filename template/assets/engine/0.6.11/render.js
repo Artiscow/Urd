@@ -360,7 +360,7 @@ export function renderSection(section, site, host, opts = {}) {
   renderAnimation(Urd, host, section.hover, ctx);
 
   // Mobile attention: editorial marking, preview only (visitors
-  // ignore the flag, see docs/SKJEMA.md#mobil-tilsyn).
+  // ignore the flag, see docs/SCHEMA.md#mobile-review).
   if (ctx.preview && section.responsive?.mobile?.attention?.needed) {
     host.classList.add('urd-attention');
   }

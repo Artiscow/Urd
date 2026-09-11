@@ -111,7 +111,7 @@ git push
 - OAuth belirteci sunucu tarafında değiştirilir ve httpOnly çerezde saklanır; tarayıcı JS'sine hiçbir zaman ulaşmaz.
 - `ALLOWED_LOGINS` yalnızca arayüzde değil, değişiklik yapan tüm uç noktalarda uygulanır.
 - Yayımlama yalnızca `content/**`, `media/**` ve `plugins/plugins.json` yazabilir. Kod (`functions/`, `admin/`, `assets/engine/`), iş akışları ve güvenlik dosyaları sunucu tarafında engellenir; böylece ele geçirilmiş bir editör oturumu hiçbir şey yerleştiremez.
-- Tüm gerekçe için [ADR-0003](../../adr/0003-publisering-via-github-oauth-og-pages-functions.md) belgesine bak (Norveççe).
+- Tüm gerekçe için [ADR-0003](../../adr/0003-publishing-via-github-oauth-and-pages-functions.md) belgesine bak (Norveççe).
 
 ## Yayımlama katmanının yerel testi (Urd geliştiricileri)
 

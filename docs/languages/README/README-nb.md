@@ -56,8 +56,8 @@ Editoren og motorens besøkende-tekster finnes på nordsamisk, britisk engelsk, 
 | Dokument | Innhold |
 |---|---|
 | [docs/VISJON.md](../../VISJON.md) | Hva Urd er, hvem det er for, og løftene som styrer alle valg |
-| [docs/ARKITEKTUR.md](../../ARKITEKTUR.md) | Systemoversikt: motoren, editoren, publiseringsflyten |
-| [docs/SKJEMA.md](../../SKJEMA.md) | Datamodellen - kontrakten alt bygger på |
+| [docs/ARCHITECTURE.md](../../ARCHITECTURE.md) | Systemoversikt: motoren, editoren, publiseringsflyten (på engelsk) |
+| [docs/SCHEMA.md](../../SCHEMA.md) | Datamodellen - kontrakten alt bygger på (på engelsk) |
 | [docs/VEIKART.md](../../VEIKART.md) | Faser fra skjelett til v1.0 |
 | [Brukerveiledning](../user-guide/GUIDE-nb.md) | For sideeiere: hvordan editoren brukes, uten kode |
 | [docs/UTVIKLING.md](../../UTVIKLING.md) | For oss som utvikler Urd: oppsett, regler, vanlige oppgaver |
@@ -70,7 +70,7 @@ Editoren og motorens besøkende-tekster finnes på nordsamisk, britisk engelsk, 
 | [docs/sammenligning/ELEMENTKART.md](../../sammenligning/ELEMENTKART.md) | Elementer og funksjoner: hvordan de tilbys brukeren og hvordan de bygges |
 | [docs/CHANGELOG.md](../../CHANGELOG.md) | Endringslogg per push |
 | [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Slik bidrar du: fork, gren, tester, pull request |
-| [docs/adr/](../../adr/) | Arkitekturbeslutninger med begrunnelse |
+| [docs/adr/](../../adr/) | Arkitekturbeslutninger med begrunnelse (på engelsk) |
 
 ## Lisens
 

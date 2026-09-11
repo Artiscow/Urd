@@ -111,7 +111,7 @@ git push
 - The OAuth token is exchanged server-side and stored in an httpOnly cookie; it never reaches browser JS.
 - `ALLOWED_LOGINS` is enforced in all mutating endpoints, not only in the UI.
 - Publishing can only write `content/**`, `media/**` and `plugins/plugins.json`. Code (`functions/`, `admin/`, `assets/engine/`), workflows and security files are blocked server-side, so a hijacked editor session cannot plant anything.
-- See [ADR-0003](../../adr/0003-publisering-via-github-oauth-og-pages-functions.md) for the full reasoning (in Norwegian).
+- See [ADR-0003](../../adr/0003-publishing-via-github-oauth-and-pages-functions.md) for the full reasoning (in Norwegian).
 
 ## Local testing of the publishing layer (Urd developers)
 

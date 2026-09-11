@@ -7,7 +7,7 @@
 /**
  * Centres a w×h frame on a click point, clamped inside the section and
  * snapped to the grid. x/w are percentages of the section width, y/h/grid
- * in px (the same physical units as frames elsewhere, see docs/SKJEMA.md).
+ * in px (the same physical units as frames elsewhere, see docs/SCHEMA.md).
  *
  * @param {{ x: number, y: number, w: number, h: number, grid: { size: number, snap?: boolean }, snap?: boolean }} p
  *   x/y is the click point (section-relative); p.snap === false gives free placement.

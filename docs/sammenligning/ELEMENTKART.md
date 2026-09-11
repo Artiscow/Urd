@@ -62,7 +62,7 @@ Den dominerende nye formen: prompt til generert flersidig start til fullt redige
 - **Kuratert vs åpen:** Squarespace Blueprint bruker faste merkevare-personligheter og designer-palettes (guardrails gir jevnere resultat for ikke-designere); Wix/Framer/Durable er åpne samtaler.
 - **Trend:** stive veivisere (Wix ADI, pensjonert nov. 2024) erstattes av samtale + fullt redigerbart lerret. Ikke bygg en blindvei-generator; alt skal være redigerbart etterpå.
 
-**Urd i dag:** ingen generator, og ingen er planlagt. Veien er valgt 10. august 2026 og festet i [ADR-0017](../adr/0017-ai-via-lokal-mcp-server.md): en lokal, avhengighetsfri MCP-server i det klonede repoet, som eierens EGEN agentklient (Claude Code, VS Code, Cursor) kobler seg til. Det er en annen form enn generatorene over: ingen prompt-til-side-veiviser, men full lese- og redigeringstilgang til innholdet gjennom motorens egne presets og fabrikker. Merk hvordan feltet flyttet seg i 2026: Sanity, Contentful, Storyblok, Strapi og Payload sendte alle MCP-servere, og det er nå den formen AI faktisk tar i et CMS, ikke veiviseren. Lesedelen bygges i v0.8, skrivedelen i v0.9.
+**Urd i dag:** ingen generator, og ingen er planlagt. Veien er valgt 10. august 2026 og festet i [ADR-0017](../adr/0017-ai-via-local-mcp-server.md): en lokal, avhengighetsfri MCP-server i det klonede repoet, som eierens EGEN agentklient (Claude Code, VS Code, Cursor) kobler seg til. Det er en annen form enn generatorene over: ingen prompt-til-side-veiviser, men full lese- og redigeringstilgang til innholdet gjennom motorens egne presets og fabrikker. Merk hvordan feltet flyttet seg i 2026: Sanity, Contentful, Storyblok, Strapi og Payload sendte alle MCP-servere, og det er nå den formen AI faktisk tar i et CMS, ikke veiviseren. Lesedelen bygges i v0.8, skrivedelen i v0.9.
 
 ### 1.10 Tomtilstander og oppdagbarhet
 Tomtilstand som innsettingsprompt («+» på tom linje, tom seksjon som sier «legg til / generer her»), søk i palett, tooltips og onboarding. AI-byggere erstatter det blanke lerretet med en generert start (anti-blank-page).
@@ -244,7 +244,7 @@ Rangert etter (passform x verdi / innsats). Rene funksjonshull (SEO, galleri, RS
 7. **Kuraterte designtokens som ett valg** (font-pakker + palett-temaer). Høy. Lav-middels.
 8. **Command palette (Cmd+K).** Middels-høy (kraftbrukere). Middels.
 9. **Rikere tomtilstander** (preset-forslag i tom seksjon/side). Høy. Lav.
-10. **AI-veiviser (opt-in, horisont).** Lav uten videre (krever ekstern tjeneste, mot avhengighetsfri). Høy. Kun som valgfritt tillegg via endepunkt. Oppdatert 10. august 2026: premisset gjelder fortsatt for en VEIVISER, men ikke for AI som helhet. En lokal MCP-server er avhengighetsfri og krever ingen ekstern tjeneste, og er valgt som veien i [ADR-0017](../adr/0017-ai-via-lokal-mcp-server.md).
+10. **AI-veiviser (opt-in, horisont).** Lav uten videre (krever ekstern tjeneste, mot avhengighetsfri). Høy. Kun som valgfritt tillegg via endepunkt. Oppdatert 10. august 2026: premisset gjelder fortsatt for en VEIVISER, men ikke for AI som helhet. En lokal MCP-server er avhengighetsfri og krever ingen ekstern tjeneste, og er valgt som veien i [ADR-0017](../adr/0017-ai-via-local-mcp-server.md).
 
 ### 5b. Byggemåte-grep (native/CSS som sletter skjør JS)
 1. **Native top-layer for overlegg:** `<dialog>`/`showModal()` for lightbox/modal, Popover API for menyer. Fjerner z-index-krig, fokusfeller og outside-click-lyttere. Svært høy passform (Urd er vanilla). Middels.
@@ -285,7 +285,7 @@ Flere av disse er allerede Urds motor-lekser (se AGENTS.md). De som er markert �
 
 - **Native masonry** (`grid-lanes`/`item-flow`) - i flyt, kun flagg/Tech Preview; ikke stole på.
 - **Anchor positioning, scroll-drevne animasjoner, `closedby`, `interpolate-size`** - gates alltid med `@supports`, aldri antatt.
-- **Ekstern AI-tjeneste som kjerneavhengighet** - mot avhengighetsfri/statisk. Avvisningen står, men den gjelder KJERNEAVHENGIGHETEN, ikke AI som sådan: [ADR-0017](../adr/0017-ai-via-lokal-mcp-server.md) (10. august 2026) velger en lokal MCP-server som verken ringer noe sted, lagrer nøkler eller er del av den bygde siden. Modellen er eierens egen, kjørt av eierens egen klient. En prompt-til-side-veiviser er fortsatt ikke planlagt.
+- **Ekstern AI-tjeneste som kjerneavhengighet** - mot avhengighetsfri/statisk. Avvisningen står, men den gjelder KJERNEAVHENGIGHETEN, ikke AI som sådan: [ADR-0017](../adr/0017-ai-via-local-mcp-server.md) (10. august 2026) velger en lokal MCP-server som verken ringer noe sted, lagrer nøkler eller er del av den bygde siden. Modellen er eierens egen, kjørt av eierens egen klient. En prompt-til-side-veiviser er fortsatt ikke planlagt.
 - **Absolutt fri posisjonering** (klassisk Wix) - responsivt skjørt.
 - **Klassebasert cascade-styling som kjerne** (Webflow/Bricks) - stylesheet-database-abstraksjon mot «rå filer, ingen bygging»; vurderes, ikke uten videre.
 - **Tunge marketplace-runtimes** (Framer/Elementor-økosystem) - Urds plugin-modell med CSP-opt-in er veien.

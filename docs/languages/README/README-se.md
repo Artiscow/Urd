@@ -60,8 +60,8 @@ Dokumeanttat leat čállojuvvon dárogillii; válddahusat vuolábealde leat jorg
 | Dokumeanta | Sisdoallu |
 |---|---|
 | [docs/VISJON.md](../../VISJON.md) | Mii Urd lea, geasa dat lea, ja lohpádusat mat stivrejit buot válljemiid (dárogillii) |
-| [docs/ARKITEKTUR.md](../../ARKITEKTUR.md) | Vuogádatgeahčastat: mohtor, doaimmaheaddji, almmuhanvuohki (dárogillii) |
-| [docs/SKJEMA.md](../../SKJEMA.md) | Dáhtamodealla - šiehtadus masa buot huksejuvvo (dárogillii) |
+| [docs/ARCHITECTURE.md](../../ARCHITECTURE.md) | Vuogádatgeahčastat: mohtor, doaimmaheaddji, almmuhanvuohki (eaŋgalasgillii) |
+| [docs/SCHEMA.md](../../SCHEMA.md) | Dáhtamodealla - šiehtadus masa buot huksejuvvo (eaŋgalasgillii) |
 | [docs/VEIKART.md](../../VEIKART.md) | Muttut skálžžus gitta v1.0 rádjai (dárogillii) |
 | [Geavaheaddjirávvagat](../user-guide/GUIDE-se.md) | Siidooamasteddjiide: movt doaimmaheaddji geavahuvvo, almmá koda haga |
 | [docs/UTVIKLING.md](../../UTVIKLING.md) | Midjiide geat ovddidit Urd: heiveheapmi, njuolggadusat, dábálaš barggut (dárogillii) |
@@ -73,7 +73,7 @@ Dokumeanttat leat čállojuvvon dárogillii; válddahusat vuolábealde leat jorg
 | [docs/sammenligning/ELEMENTKART.md](../../sammenligning/ELEMENTKART.md) | Elemeanttat ja doaimmat: movt dat fállojuvvojit geavaheaddjái ja movt dat huksejuvvojit (dárogillii) |
 | [docs/CHANGELOG.md](../../CHANGELOG.md) | Rievdadanlogga juohke pusha nammii (dárogillii) |
 | [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Ná don veahkehat: fork, ossodat, testtat, pull request (dárogillii) |
-| [docs/adr/](../../adr/) | Arkitektuvramearrádusat ákkastallamiiguin (dárogillii) |
+| [docs/adr/](../../adr/) | Arkitektuvramearrádusat ákkastallamiiguin (eaŋgalasgillii) |
 
 ## Liseansa
 

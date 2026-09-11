@@ -1,5 +1,5 @@
 /**
- * Plugin loading. The contract is described in docs/SKJEMA.md and schema/plugin.schema.json.
+ * Plugin loading. The contract is described in docs/SCHEMA.md and schema/plugin.schema.json.
  *
  * The promises here are the same as for everything else in Urd: a failing plugin never stops the site,
  * and a plugin written for a different engine version is rejected BEFORE it gets to define anything.

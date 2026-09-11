@@ -6,7 +6,7 @@ Rekkefølgen er bevisst: **motor → publiseringsløkke → editor-dybde.** Moto
 
 ## v0.1 - Skjelett *(levert 16. juli 2026)*
 
-Dokumenter (VISJON, ARKITEKTUR, SKJEMA, VEIKART, ADR-er), JSON Schema-kontrakt i `schema/`, repo-skjelett med motor-stubber, eksempelinnhold, editor-skall og functions-stubber. `migrate.js` implementeres for ekte - invarianten først.
+Dokumenter (VISJON, ARCHITECTURE, SCHEMA, VEIKART, ADR-er), JSON Schema-kontrakt i `schema/`, repo-skjelett med motor-stubber, eksempelinnhold, editor-skall og functions-stubber. `migrate.js` implementeres for ekte - invarianten først.
 
 **Port:** eksempeldataene validerer mot skjemaene; dokumentene er godkjente.
 
@@ -30,7 +30,7 @@ som kommer i v0.5. (Bakgrunnseditor og animasjoner er flyttet til v0.5:
 de ER panel-UI, og skal ikke bygges to ganger.)
 
 - Mobilvisning i editor, auto-avledet stabling, manuelle mobil-frames.
-- **Mobil-tilsyn-flagget ende-til-ende** (regler i [SKJEMA.md](SKJEMA.md#mobil-tilsyn)).
+- **Mobil-tilsyn-flagget ende-til-ende** (regler i [SCHEMA.md](SCHEMA.md#mobile-review)).
 - «Dekor»-flagg på blokker (streker/sirkler som stabler dårlig i auto-avledet layout).
 
 **Port:** en side bygget på desktop ser fornuftig ut på mobil uten manuell
@@ -142,7 +142,7 @@ Ingenting fra den opprinnelige idemyldringen skal gå tapt:
 | Maler for hero, bilder, kalender, footer | v0.3 (presets) + kalender som referanse-plugin (v0.6) |
 | Oppdatering knuser aldri bygget side (`version` + `migrate`) | v0.1 (migrate.js implementert) + testet i v1.0-porten |
 | Reell GitHub OAuth + Cloudflare-kobling | v0.2 (tynn skive) |
-| Statisk + git, publiser = commit, valgfri host | Hele arkitekturen ([ARKITEKTUR.md](ARKITEKTUR.md)) |
+| Statisk + git, publiser = commit, valgfri host | Hele arkitekturen ([ARCHITECTURE.md](ARCHITECTURE.md)) |
 
 ## Risikoer og åpne spørsmål
 

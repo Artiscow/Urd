@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://urd.dev/schema/mal.schema.json",
   "title": "Urd user template (content/maler/<id>.json)",
-  "description": "A user-made template: a serialized section, block group or page with a small meta header. The payload key equals mal.kind; the ids in the file are provenance and are reassigned on every insertion (see docs/SKJEMA.md, Maler).",
+  "description": "A user-made template: a serialized section, block group or page with a small meta header. The payload key equals mal.kind; the ids in the file are provenance and are reassigned on every insertion (see docs/SCHEMA.md, Maler).",
   "type": "object",
   "required": ["schemaVersion", "mal"],
   "additionalProperties": false,

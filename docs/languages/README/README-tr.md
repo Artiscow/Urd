@@ -60,8 +60,8 @@ Belgeler Norveççe yazılmıştır; aşağıdaki açıklamalar çevrilmiştir.
 | Belge | İçerik |
 |---|---|
 | [docs/VISJON.md](../../VISJON.md) | Urd'un ne olduğu, kimin için olduğu ve tüm kararları yöneten sözler (Norveççe) |
-| [docs/ARKITEKTUR.md](../../ARKITEKTUR.md) | Sistem genel bakışı: motor, düzenleyici, yayımlama akışı (Norveççe) |
-| [docs/SKJEMA.md](../../SKJEMA.md) | Veri modeli - her şeyin üzerine kurulduğu sözleşme (Norveççe) |
+| [docs/ARCHITECTURE.md](../../ARCHITECTURE.md) | Sistem genel bakışı: motor, düzenleyici, yayımlama akışı (İngilizce) |
+| [docs/SCHEMA.md](../../SCHEMA.md) | Veri modeli - her şeyin üzerine kurulduğu sözleşme (İngilizce) |
 | [docs/VEIKART.md](../../VEIKART.md) | İskeletten v1.0'a kadar aşamalar (Norveççe) |
 | [Kullanıcı kılavuzu](../user-guide/GUIDE-tr.md) | Site sahipleri için: düzenleyicinin kodsuz kullanımı |
 | [docs/UTVIKLING.md](../../UTVIKLING.md) | Urd'u geliştiren bizler için: kurulum, kurallar, sık yapılan işler (Norveççe) |
@@ -73,7 +73,7 @@ Belgeler Norveççe yazılmıştır; aşağıdaki açıklamalar çevrilmiştir.
 | [docs/sammenligning/ELEMENTKART.md](../../sammenligning/ELEMENTKART.md) | Öğeler ve işlevler: kullanıcıya nasıl sunulduğu ve nasıl kurulduğu (Norveççe) |
 | [docs/CHANGELOG.md](../../CHANGELOG.md) | Her push için değişiklik günlüğü (Norveççe) |
 | [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Nasıl katkı verilir: fork, dal, testler, pull request (Norveççe) |
-| [docs/adr/](../../adr/) | Gerekçeleriyle mimari kararlar (Norveççe) |
+| [docs/adr/](../../adr/) | Gerekçeleriyle mimari kararlar (İngilizce) |
 
 ## Lisans
 

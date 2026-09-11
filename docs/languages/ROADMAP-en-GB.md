@@ -8,7 +8,7 @@ The order is deliberate: **engine → publishing loop → editor depth.** The en
 
 ## v0.1 - Skeleton *(delivered 16 July 2026)*
 
-Documents (VISJON, ARKITEKTUR, SKJEMA, VEIKART, the ADRs), JSON Schema contract in `schema/`, repo skeleton with engine stubs, example content, editor shell and function stubs. `migrate.js` is implemented for real - the invariant first.
+Documents (VISJON, ARCHITECTURE, SCHEMA, VEIKART, the ADRs), JSON Schema contract in `schema/`, repo skeleton with engine stubs, example content, editor shell and function stubs. `migrate.js` is implemented for real - the invariant first.
 
 **Gate:** the example data validates against the schemas; the documents are approved by the owner.
 
@@ -32,7 +32,7 @@ that arrives in v0.5. (Background editor and animations have been moved to v0.5:
 they ARE panel UI, and shall not be built twice.)
 
 - Mobile view in the editor, auto-derived stacking, manual mobile frames.
-- **The mobile-supervision flag end to end** (rules in [SKJEMA.md](../SKJEMA.md#mobil-tilsyn)).
+- **The mobile-supervision flag end to end** (rules in [SCHEMA.md](../SCHEMA.md#mobile-review)).
 - «Decor» flag on blocks (lines/circles that stack badly in an auto-derived layout).
 
 **Gate:** a page built on desktop looks sensible on mobile without manual
@@ -140,7 +140,7 @@ Nothing from the original brainstorm shall be lost:
 | Templates for hero, images, calendar, footer | v0.3 (presets) + calendar as reference plugin (v0.6) |
 | An update never breaks a built site (`version` + `migrate`) | v0.1 (migrate.js implemented) + tested in the v1.0 gate |
 | Real GitHub OAuth + Cloudflare connection | v0.2 (thin slice) |
-| Static + git, publish = commit, optional host | The whole architecture ([ARKITEKTUR.md](../ARKITEKTUR.md)) |
+| Static + git, publish = commit, optional host | The whole architecture ([ARCHITECTURE.md](../ARCHITECTURE.md)) |
 
 ## Risks and open questions
 

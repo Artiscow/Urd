@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://urd.dev/schema/page.schema.json",
   "title": "Urd page file (content/pages/*.json)",
-  "description": "A page: metadata plus a vertical run of sections. Each section is a generic container with a background stack and a free block canvas. The contract is described in docs/SKJEMA.md.",
+  "description": "A page: metadata plus a vertical run of sections. Each section is a generic container with a background stack and a free block canvas. The contract is described in docs/SCHEMA.md.",
   "type": "object",
   "required": ["schemaVersion", "meta", "sections"],
   "additionalProperties": false,

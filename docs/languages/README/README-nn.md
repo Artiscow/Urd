@@ -58,8 +58,8 @@ Dokumenta er skrivne på bokmål; skildringane under er omsette.
 | Dokument | Innhald |
 |---|---|
 | [docs/VISJON.md](../../VISJON.md) | Kva Urd er, kven det er for, og lovnadene som styrer alle val (på bokmål) |
-| [docs/ARKITEKTUR.md](../../ARKITEKTUR.md) | Systemoversikt: motoren, editoren, publiseringsflyten (på bokmål) |
-| [docs/SKJEMA.md](../../SKJEMA.md) | Datamodellen - kontrakten alt byggjer på (på bokmål) |
+| [docs/ARCHITECTURE.md](../../ARCHITECTURE.md) | Systemoversikt: motoren, editoren, publiseringsflyten (på engelsk) |
+| [docs/SCHEMA.md](../../SCHEMA.md) | Datamodellen - kontrakten alt byggjer på (på engelsk) |
 | [docs/VEIKART.md](../../VEIKART.md) | Fasar frå skjelett til v1.0 (på bokmål) |
 | [Brukarrettleiing](../user-guide/GUIDE-nn.md) | For sideeigarar: korleis editoren blir brukt, utan kode |
 | [docs/UTVIKLING.md](../../UTVIKLING.md) | For oss som utviklar Urd: oppsett, reglar, vanlege oppgåver (på bokmål) |
@@ -71,7 +71,7 @@ Dokumenta er skrivne på bokmål; skildringane under er omsette.
 | [docs/sammenligning/ELEMENTKART.md](../../sammenligning/ELEMENTKART.md) | Element og funksjonar: korleis dei blir tilbydde brukaren og korleis dei blir bygde (på bokmål) |
 | [docs/CHANGELOG.md](../../CHANGELOG.md) | Endringslogg per push (på bokmål) |
 | [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Slik bidreg du: fork, grein, testar, pull request (på bokmål) |
-| [docs/adr/](../../adr/) | Arkitekturavgjerder med grunngjeving (på bokmål) |
+| [docs/adr/](../../adr/) | Arkitekturavgjerder med grunngjeving (på engelsk) |
 
 ## Lisens
 

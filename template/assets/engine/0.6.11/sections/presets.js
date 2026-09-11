@@ -1,7 +1,7 @@
 /**
  * The core section presets: data factories that produce a starting section.
  * A preset is NOT a code path - once created, every section is an equal,
- * generic container (see docs/SKJEMA.md). Plugins can define further presets
+ * generic container (see docs/SCHEMA.md). Plugins can define further presets
  * through the same API.
  *
  * The library is built against the patterns from the site survey (the inspiration sites plus ApeironLF, see docs/BACKLOG.md).

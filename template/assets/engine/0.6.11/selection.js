@@ -2,7 +2,7 @@
  * Pure logic for multi-selection: marquee hits, align/distribute computation
  * and group offset on paste. Everything works on frame values (x/w in percent
  * of the section width, y/h in px - the same physical units as
- * docs/SKJEMA.md) and is DOM free, so the maths is contract-tested in
+ * docs/SCHEMA.md) and is DOM free, so the maths is contract-tested in
  * tests/selection.test.mjs. The DOM part lives in preview-edit.js.
  */
 

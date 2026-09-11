@@ -18,10 +18,10 @@ Disse er kontrakter, ikke ambisjoner. Enhver designbeslutning i Urd må holde al
 Siden din er et git-repo med lesbare filer: innhold som JSON, motor som håndskrevet JavaScript, bilder som filer. Ingen database, ingen tjeneste som kan legges ned, ingen eksport-funksjon du må stole på - repoet *er* eksporten. Flytt det hvor du vil, når du vil.
 
 ### 2. En oppdatering knuser aldri en bygget side
-Alt innhold bærer et `version`-felt, og alle blokk-, seksjons- og bakgrunnstyper definerer stegvise migreringer som løfter gammel data fremover ved lasting. En side bygget på Urd v1 overlever en v2-blokk. Ukjent innhold (f.eks. en plugin som mangler) vises som nøytral plassholder - **data droppes aldri**. Se [SKJEMA.md](SKJEMA.md) og [ADR-0005](adr/0005-versjonering-og-migrering.md).
+Alt innhold bærer et `version`-felt, og alle blokk-, seksjons- og bakgrunnstyper definerer stegvise migreringer som løfter gammel data fremover ved lasting. En side bygget på Urd v1 overlever en v2-blokk. Ukjent innhold (f.eks. en plugin som mangler) vises som nøytral plassholder - **data droppes aldri**. Se [SCHEMA.md](SCHEMA.md) og [ADR-0005](adr/0005-versioning-and-migration.md).
 
 ### 3. Nettsiden trenger ingen byggeprosess
-Det som ligger i repoet er nøyaktig det nettleseren laster. Ingen npm, ingen CI-bygg, ingen «bygget feilet». Publisering er en commit; servering er filkopiering. (Urd-*utviklerne* bruker byggeverktøy for å lage editoren, men resultatet shippes ferdigbygd - se [ADR-0002](adr/0002-svelte-for-editor-lesbar-js-for-motor.md).)
+Det som ligger i repoet er nøyaktig det nettleseren laster. Ingen npm, ingen CI-bygg, ingen «bygget feilet». Publisering er en commit; servering er filkopiering. (Urd-*utviklerne* bruker byggeverktøy for å lage editoren, men resultatet shippes ferdigbygd - se [ADR-0002](adr/0002-svelte-for-editor-readable-js-for-engine.md).)
 
 ### 4. WYSIWYG uten kompromiss
 Admin viser den ekte siden - samme motor, samme filer som besøkende laster, i en iframe som mottar utkastene dine fortløpende. Forhåndsvisningen kan ikke drifte fra produksjon, fordi den *er* produksjon.
@@ -45,6 +45,6 @@ Erfaringen bak Urd kommer fra nettopp dette: en linjeforeningsside ([ApeironLF](
 
 En side er en vertikal rekke **seksjoner**. Seksjoner kan opprettes fra **presets** (hero, bildegalleri, footer, …) eller bygges fra tomt lerret, og kan skaleres og flyttes fritt. Inne i hver seksjon plasserer du **blokker** - tekst, bilder, knapper, streker, sirkler, logoer - fritt på et snap-grid du selv styrer, med full kontroll over størrelse, plassering og lag. Bakgrunner er lagstabler: farge/gradient (også animert), glød, bilde, korn.
 
-Fordi friheten er stor, tar Urd ansvar for det Wix-modellen sliter med: når du endrer desktop-layouten i en seksjon der du har håndjustert mobil-layout, flagger Urd seksjonen med «mobil trenger tilsyn» til du har sett over den. Se [SKJEMA.md](SKJEMA.md#mobil-tilsyn).
+Fordi friheten er stor, tar Urd ansvar for det Wix-modellen sliter med: når du endrer desktop-layouten i en seksjon der du har håndjustert mobil-layout, flagger Urd seksjonen med «mobil trenger tilsyn» til du har sett over den. Se [SCHEMA.md](SCHEMA.md#mobile-review).
 
 Egne seksjoner kan lagres som **maler** og deles som **plugins** - plugins kan levere blokker, seksjonspresets, bakgrunner, animasjoner og maler, og er underlagt samme migreringskontrakt som kjernen.

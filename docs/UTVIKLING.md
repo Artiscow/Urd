@@ -49,9 +49,9 @@ Første `npm install` lager `package-lock.json`; den skal committes, slik at all
 ## Repo-kart
 
 ```
-docs/       Dokumentasjon. VISJON (hvorfor), ARKITEKTUR (hvordan), SKJEMA (datakontrakten), VEIKART (faser), BACKLOG (oppgaver),
+docs/       Dokumentasjon. VISJON (hvorfor), ARCHITECTURE (hvordan), SCHEMA (datakontrakten), VEIKART (faser), BACKLOG (oppgaver),
             adr/ (beslutninger med begrunnelse)
-schema/     JSON Schema: maskinlesbar utgave av SKJEMA.md
+schema/     JSON Schema: maskinlesbar utgave av SCHEMA.md
 editor/     Svelte-kildekoden til editoren. Eneste sted med npm.
 template/   NETTSIDEN. Synkes til urd-template-repoet ved utgivelser («Use this template»):
               assets/engine/<versjon>/   håndskrevet lesbar motor-JS (ALDRI kompilert; versjonert mappe, ADR-0013)
@@ -67,19 +67,19 @@ tests/      node --test-tester (foreløpig migreringskontrakten)
 
 1. **De fire løftene i [VISJON.md](VISJON.md) brytes aldri.** Er du i tvil om en endring bryter et løfte, ta det opp før du bygger.
 2. **Motoren forblir håndskrevet, lesbar, avhengighetsfri ES-modul-JS.** Ingen rammeverk, ingen kompilering, ingen npm-avhengigheter i `template/assets/engine/`.
-3. **Endrer du formen på props for en blokk/seksjon/bakgrunn/animasjon, SKAL du bumpe `version` og skrive en migrering** (`migrations[n]` løfter v(n) til v(n+1), ren funksjon, med test i `tests/`). Se [ADR-0005](adr/0005-versjonering-og-migrering.md).
-4. **Skjemaendringer gjøres tre steder i samme commit:** `docs/SKJEMA.md`, `schema/*.schema.json` og eksempeldataene i `template/content/`. Eksemplene skal alltid validere.
+3. **Endrer du formen på props for en blokk/seksjon/bakgrunn/animasjon, SKAL du bumpe `version` og skrive en migrering** (`migrations[n]` løfter v(n) til v(n+1), ren funksjon, med test i `tests/`). Se [ADR-0005](adr/0005-versioning-and-migration.md).
+4. **Skjemaendringer gjøres tre steder i samme commit:** `docs/SCHEMA.md`, `schema/*.schema.json` og eksempeldataene i `template/content/`. Eksemplene skal alltid validere.
 5. **Editor-endringer bygges før merge:** `npm run build`, og den oppdaterte `template/admin/assets/` committes sammen med kilden.
 6. **Publisering får aldri skrive kode.** Sti-allowlisten i `template/functions/_lib/guard.js` (nekt `functions/`, `admin/`, `assets/engine/`, `assets/urd/`, med mer) endres kun med svært god grunn. Oppdatereren har det motsatte domenet (eierskapskartet, ADR-0014); kontraktstester holder guard.js og urd.json i synk.
-7. **Norsk (bokmål) er kanonisk i dokumenter og brukerflater; engelsk i kode/identifikatorer** (også i datakontrakter: JSON-feltnavn, meldingstyper og oversettelsesnøkler). Kanonisk betyr ikke enerådende: fra 0.6.8 finnes UI-tekstene på fem språk (ADR-0012) og deler av dokumentasjonen er oversatt under [languages/](languages/), men den norske teksten gjelder ved avvik. Ingen tankestreker i tekst.
+7. **Engelsk er Urds kanoniske språk, norsk (bokmål) sekundært** (besluttet 11. september 2026, ADR-0022): alt utviklerrettet skrives på engelsk: kode, AGENTS.md, ADR-ene, dokumentene under docs/, nye innslag i CHANGELOG, BACKLOG og TESTRUNDER, og commit-meldinger (eldre innslag står som de er). Dokumenter som ennå ikke er oversatt står på norsk til sin tur, og den engelske teksten gjelder ved avvik. Alt en sideeier eller besøkende kan lese finnes på både engelsk og norsk: README, brukerguiden og oppsettsguiden under docs/languages/, og UI-tekstene (fem språk, ADR-0012, med bokmålsordboken som base). Ingen tankestreker i tekst.
 
 ## Vanlige oppgaver
 
-- **Ny kjerneblokk:** lag `template/assets/engine/blocks/<navn>.js` etter mønsteret i `text.js` (version, label, defaults, migrations, render), registrer den i `urd.js` (fra v0.2), dokumenter props-formen i SKJEMA.md ved behov.
+- **Ny kjerneblokk:** lag `template/assets/engine/blocks/<navn>.js` etter mønsteret i `text.js` (version, label, defaults, migrations, render), registrer den i `urd.js` (fra v0.2), dokumenter props-formen i SCHEMA.md ved behov.
 - **Nytt bakgrunnslag:** samme mønster i `template/assets/engine/backgrounds/`.
 - **Ny seksjonspreset:** en datafabrikk (`create()` som returnerer en gyldig seksjon), ingen egen kodevei.
 - **Endre datamodellen:** se regel 3 og 4 over.
-- **Teste publiseringslaget lokalt (fra v0.2):** `npx wrangler pages dev template` og sett miljøvariablene fra [ADR-0003](adr/0003-publisering-via-github-oauth-og-pages-functions.md) i en `.dev.vars`-fil (gitignoreres).
+- **Teste publiseringslaget lokalt (fra v0.2):** `npx wrangler pages dev template` og sett miljøvariablene fra [ADR-0003](adr/0003-publishing-via-github-oauth-and-pages-functions.md) i en `.dev.vars`-fil (gitignoreres).
 
 ## Versjonering
 

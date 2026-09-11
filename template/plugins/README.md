@@ -156,7 +156,7 @@ Etikettnøklene løses av motoren før de sendes til admin, så bruk
 «Innstillinger …»-knapp som åpner pluginens eget config-panel i
 forhåndsvisningen (kalenderen og skjemaet viser det mønsteret - riktig
 for innstillinger som er mer enn en flat felt-liste, som kildelister).
-Kontrakten er beskrevet i [docs/SKJEMA.md](../../docs/SKJEMA.md#plugins).
+Kontrakten er beskrevet i [docs/SCHEMA.md](../../docs/SCHEMA.md#plugins).
 
 **Temastyrt UI-regelen (ADR-0009)**: aldri native `<select>` i
 redigerings-UI - popupen følger OS-temaet og blir uleselig. Bruk
@@ -167,7 +167,7 @@ Se [`calendar/`](calendar/) for referansen: den viser hele formen (manifest
 med provides, blokk med versjon og migrering, seksjonspreset, egen CSS via én
 style-tag, redigering i preview via urd-edit, og ren logikk i egen modul med
 kontraktstester i tests/calendar.test.mjs). Kontrakten er beskrevet i
-[docs/SKJEMA.md](../../docs/SKJEMA.md#plugins).
+[docs/SCHEMA.md](../../docs/SCHEMA.md#plugins).
 
 ## Kalender-pluginen (referansen)
 

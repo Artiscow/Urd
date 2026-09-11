@@ -4,7 +4,7 @@
  * Run by template/index.html. Creates the global Urd object with the
  * registries, registers the core types and plugins, finds the right page in
  * the page register, and renders. All data is version-lifted on load
- * (migrate.js) - see docs/SKJEMA.md.
+ * (migrate.js) - see docs/SCHEMA.md.
  *
  * In preview mode (?preview=1) the engine additionally listens for
  * postMessage drafts from the editor and rerenders incrementally.

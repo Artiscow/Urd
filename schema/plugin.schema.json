@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://urd.dev/schema/plugin.schema.json",
   "title": "Urd plugin manifest (plugins/<id>/plugin.json)",
-  "description": "Manifest for an Urd plugin. The plugin's entry is an ES module that exports register(Urd) and uses the same define APIs as the core - including the migration contract. See docs/SKJEMA.md.",
+  "description": "Manifest for an Urd plugin. The plugin's entry is an ES module that exports register(Urd) and uses the same define APIs as the core - including the migration contract. See docs/SCHEMA.md.",
   "type": "object",
   "required": ["id", "name", "version", "requiresEngine"],
   "allOf": [

@@ -59,13 +59,13 @@ The editor and the engine texts your visitors see are available in Northern Sám
 
 ## Documentation
 
-The project documents are written in Norwegian; the descriptions below are translated.
+Most project documents are written in Norwegian and are being translated to English; the descriptions below are in English, and entries still in Norwegian are marked.
 
 | Document | Contents |
 |---|---|
 | [Vision](docs/languages/VISION-en-GB.md) | What Urd is, who it is for, and the promises that govern every decision |
-| [docs/ARKITEKTUR.md](docs/ARKITEKTUR.md) | System overview: the engine, the editor, the publishing flow (in Norwegian) |
-| [docs/SKJEMA.md](docs/SKJEMA.md) | The data model - the contract everything builds on (in Norwegian) |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System overview: the engine, the editor, the publishing flow |
+| [docs/SCHEMA.md](docs/SCHEMA.md) | The data model - the contract everything builds on |
 | [Roadmap](docs/languages/ROADMAP-en-GB.md) | Phases from skeleton to v1.0 |
 | [User guide](docs/languages/user-guide/GUIDE-en-GB.md) | For site owners: how the editor is used, without code |
 | [Development](docs/languages/DEVELOPMENT-en-GB.md) | For those of us developing Urd: setup, rules, common tasks |
@@ -78,7 +78,7 @@ The project documents are written in Norwegian; the descriptions below are trans
 | [docs/sammenligning/ELEMENTKART.md](docs/sammenligning/ELEMENTKART.md) | Elements and features: how they are offered to the user and how they are built (in Norwegian) |
 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | Change log per push (in Norwegian) |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute: fork, branch, tests, pull request (in Norwegian) |
-| [docs/adr/](docs/adr/) | Architecture decisions with reasoning (in Norwegian) |
+| [docs/adr/](docs/adr/) | Architecture decisions with reasoning |
 
 ## Licence
 

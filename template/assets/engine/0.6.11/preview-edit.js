@@ -1034,7 +1034,7 @@ function makeSectionAdder(index, above = null) {
 
     // My templates: a grid with a large thumbnail, name and delete button.
     // Insertion goes via cloneSectionForInsert (the re-id rule in
-    // SKJEMA.md): new ids every time, so the same template can be inserted
+    // SCHEMA.md): new ids every time, so the same template can be inserted
     // multiple times.
     const renderTemplates = () => {
       const list = templates.filter((m) => m.kind === 'section' && m.section);
@@ -2874,7 +2874,7 @@ function pasteClipboard(source = clipboard) {
 }
 
 /** Insert a block-group template into a section: re-id + anchor/clamp via
- *  the template model (the re-id rule in SKJEMA.md), ONE undo step via
+ *  the template model (the re-id rule in SCHEMA.md), ONE undo step via
  *  urd-add-blocks, and the inserted content becomes the new set (the same
  *  tail as pasteClipboard). anchor = {x in %, y in px} or null. */
 function insertBlocksTemplate(tpl, sectionId, anchor) {

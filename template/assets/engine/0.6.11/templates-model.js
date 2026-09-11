@@ -1,7 +1,7 @@
 /**
  * The template model: pure helpers for user templates in content/maler/.
  *
- * The contract (docs/SKJEMA.md, Maler): the template file stores the source
+ * The contract (docs/SCHEMA.md, Templates): the template file stores the source
  * ids untouched; EVERY insertion deep-clones and assigns new ids BEFORE
  * posting, so the same template can be inserted several times without
  * collision. Block groups are stored with frames as they stand; normalisation

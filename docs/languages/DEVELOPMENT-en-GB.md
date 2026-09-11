@@ -51,9 +51,9 @@ The first `npm install` creates `package-lock.json`; it is to be committed, so t
 ## Repo map
 
 ```
-docs/       Documentation. VISJON (why), ARKITEKTUR (how), SKJEMA (the data contract), VEIKART (phases), BACKLOG (tasks),
+docs/       Documentation. VISJON (why), ARCHITECTURE (how), SCHEMA (the data contract), VEIKART (phases), BACKLOG (tasks),
             adr/ (decisions with rationale)
-schema/     JSON Schema: machine-readable edition of SKJEMA.md
+schema/     JSON Schema: machine-readable edition of SCHEMA.md
 editor/     The Svelte source code for the editor. The only place with npm.
 template/   THE WEBSITE. This is what associations clone:
               assets/engine/   handwritten readable engine JS (NEVER compiled)
@@ -68,19 +68,19 @@ tests/      node --test tests (for now the migration contract)
 
 1. **The four promises in [VISION-en-GB.md](VISION-en-GB.md) are never broken.** If you are in doubt whether a change breaks a promise, raise it before you build.
 2. **The engine stays handwritten, readable, dependency-free ES module JS.** No frameworks, no compilation, no npm dependencies in `template/assets/engine/`.
-3. **If you change the shape of the props for a block/section/background/animation, you SHALL bump `version` and write a migration** (`migrations[n]` lifts v(n) to v(n+1), pure function, with a test in `tests/`). See [ADR-0005](../adr/0005-versjonering-og-migrering.md).
-4. **Schema changes are made in three places in the same commit:** `docs/SKJEMA.md`, `schema/*.schema.json` and the example data in `template/content/`. The examples shall always validate.
+3. **If you change the shape of the props for a block/section/background/animation, you SHALL bump `version` and write a migration** (`migrations[n]` lifts v(n) to v(n+1), pure function, with a test in `tests/`). See [ADR-0005](../adr/0005-versioning-and-migration.md).
+4. **Schema changes are made in three places in the same commit:** `docs/SCHEMA.md`, `schema/*.schema.json` and the example data in `template/content/`. The examples shall always validate.
 5. **Editor changes are built before merge:** `npm run build`, and the updated `template/admin/assets/` is committed together with the source.
 6. **Publishing is never allowed to write code.** The path allowlist in `template/functions/_lib/guard.js` (denies `functions/`, `admin/`, `assets/engine/`, and more) is changed only with a very good reason.
-7. **Norwegian (bokmål) is canonical in documents and user surfaces; English in code/identifiers** (also in the data contracts: JSON field names, message types and translation keys). Canonical does not mean exclusive: from 0.6.8 the UI texts exist in five languages (ADR-0012) and parts of the documentation are translated under [languages/](.), but the Norwegian text prevails in case of discrepancies. No em dashes in text.
+7. **English is the canonical language of Urd, Norwegian (bokmål) the secondary** (decided 11 September 2026, ADR-0022): everything developer-facing is written in English: code, AGENTS.md, the ADRs, the documents under docs/, new entries in CHANGELOG, BACKLOG and TESTRUNDER, and commit messages (older entries stay as written). Documents not yet translated stay in Norwegian until their turn, and the English text applies on discrepancy. Everything a site owner or visitor may read is available in both English and Norwegian: the README, the user guide and the setup guide under docs/languages/, and the UI texts (five languages, ADR-0012, with the bokmål dictionary as the base). No em dashes in text.
 
 ## Common tasks
 
-- **New core block:** create `template/assets/engine/blocks/<name>.js` following the pattern in `text.js` (version, label, defaults, migrations, render), register it in `urd.js` (from v0.2), document the props shape in SKJEMA.md when needed.
+- **New core block:** create `template/assets/engine/blocks/<name>.js` following the pattern in `text.js` (version, label, defaults, migrations, render), register it in `urd.js` (from v0.2), document the props shape in SCHEMA.md when needed.
 - **New background layer:** the same pattern in `template/assets/engine/backgrounds/`.
 - **New section preset:** a data factory (`create()` that returns a valid section), no separate code path.
 - **Change the data model:** see rules 3 and 4 above.
-- **Test the publishing layer locally (from v0.2):** `npx wrangler pages dev template` and set the environment variables from [ADR-0003](../adr/0003-publisering-via-github-oauth-og-pages-functions.md) in a `.dev.vars` file (gitignored).
+- **Test the publishing layer locally (from v0.2):** `npx wrangler pages dev template` and set the environment variables from [ADR-0003](../adr/0003-publishing-via-github-oauth-and-pages-functions.md) in a `.dev.vars` file (gitignored).
 
 ## Versioning
 

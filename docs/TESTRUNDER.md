@@ -212,7 +212,7 @@ Alle femten punktene fra Bugs-lista. Det viktigste er nav-klaringen (endrer hvor
 
 ### Testrunde-batch (0.7.3): Synket mobilmodell per blokk (radnettet)
 
-Mobilmodellen er lagt om ([ADR-0019](adr/0019-synket-mobilmodell.md)): materialiseringen alt-eller-ingenting per seksjon er borte, mobil-overstyringer er per blokk, og mobil rendres i ett radnett for alle seksjoner. Punktene om materialisering i eldre batcher beskriver den gamle modellen.
+Mobilmodellen er lagt om ([ADR-0019](adr/0019-synced-mobile-model.md)): materialiseringen alt-eller-ingenting per seksjon er borte, mobil-overstyringer er per blokk, og mobil rendres i ett radnett for alle seksjoner. Punktene om materialisering i eldre batcher beskriver den gamle modellen.
 
 - [ ] MOBILVISNING SER UT SOM FØR på de fire demosidene: én kolonne i leserekkefølge, tekst med naturlig høyde, former/pynt skjult. Ingen av demosidene har overstyringer, så dette er ren regresjonssjekk
 - [ ] Ren visning i et smalt nettleservindu (under 640 px) viser det samme som editorens mobilvisning

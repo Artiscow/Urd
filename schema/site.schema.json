@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://urd.dev/schema/site.schema.json",
   "title": "Urd site.json",
-  "description": "The site root: identity, page registry, navigation, grid and theme. The contract is described in docs/SKJEMA.md.",
+  "description": "The site root: identity, page registry, navigation, grid and theme. The contract is described in docs/SCHEMA.md.",
   "type": "object",
   "required": ["schemaVersion", "site", "grid", "theme", "pages", "nav"],
   "additionalProperties": false,

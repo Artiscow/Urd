@@ -17,14 +17,14 @@ Takk for at du vil bidra! Dette dokumentet er for alle som vil sende endringer t
    ```
 3. **Gjør endringen.** Hold den liten og fokusert: én ting per gren/PR. Følg reglene i [docs/UTVIKLING.md](docs/UTVIKLING.md), spesielt:
    - Endrer du props-formen på en blokk/seksjon/bakgrunn/animasjon: bump `version`, skriv migrering, legg til test.
-   - Skjemaendringer gjøres tre steder i samme commit (SKJEMA.md, `schema/`, eksempeldata).
+   - Skjemaendringer gjøres tre steder i samme commit (SCHEMA.md, `schema/`, eksempeldata).
    - Motoren (`template/assets/engine/`) forblir avhengighetsfri, lesbar vanilla JS.
    - Editor-endringer: kjør `npm run build` og committ den oppdaterte `template/admin/assets/`.
 4. **Kjør testene** før du sender:
    ```bash
    node --test tests/
    ```
-5. **Committ** med en kort, beskrivende melding i imperativ («Legg til kalender-blokk», ikke «La til...»). Norsk eller engelsk er begge greit i commit-meldinger.
+5. **Committ** med en kort, beskrivende melding i imperativ («Legg til kalender-blokk», ikke «La til...»). Commit-meldinger skrives på engelsk (ADR-0022).
 6. **Push og åpne en pull request** mot `main` i hovedrepoet:
    ```bash
    git push -u origin fiks/mobil-stabling-dekor
@@ -39,12 +39,12 @@ Takk for at du vil bidra! Dette dokumentet er for alle som vil sende endringer t
 
 - Bryter endringen et av de fire løftene i [docs/VISJON.md](docs/VISJON.md)? Da må den endres, uansett hvor fin den er.
 - Er testene grønne, og har ny funksjonalitet tester der det gir mening?
-- Er koden i samme stil som resten (norsk i docs og brukerflater, engelsk i kode/identifikatorer, ingen tankestreker i tekst)?
+- Er koden i samme stil som resten (engelsk i kode og i alt utviklerrettet, brukerrettet tekst på både engelsk og norsk, ingen tankestreker i tekst)?
 - Store arkitekturendringer: åpne et issue og diskuter FØR du bygger, gjerne med forslag til en ny ADR i `docs/adr/`.
 
 ## Bidra med språk
 
-Urd er flerspråklig (se [ADR-0012](docs/adr/0012-flerspraak.md)). Oversettelsene er rene ES-moduler, så et språkbidrag krever **ingen bygging** og ingen kunnskap om Svelte:
+Urd er flerspråklig (se [ADR-0012](docs/adr/0012-multilingual.md)). Oversettelsene er rene ES-moduler, så et språkbidrag krever **ingen bygging** og ingen kunnskap om Svelte:
 
 - `template/assets/engine/locales/site/<kode>.js` er tekstene besøkende ser (knapper, datoer, skjemameldinger).
 - `template/assets/engine/locales/admin/<kode>.js` er redigeringsverktøyets tekster.
@@ -69,7 +69,7 @@ Norsk bokmål (`nb.js`) er basen i alle sett: en nøkkel som mangler i et annet 
 
 **Gjennomgang av eksisterende oversettelser er også et bidrag.** Den nordsamiske oversettelsen er et maskinskrevet førsteutkast som venter på gjennomgang av en morsmålsbruker; filene er merket med det. Retter du språkfeil der, er det like verdifullt som en ny oversettelse.
 
-Dokumentoversettelser (README og oppsettsguiden) bor i [docs/languages/](docs/languages/). Norsk er kanonisk: ved avvik gjelder den norske teksten, og oversettelser oppdateres i etterkant.
+Dokumentoversettelser (README og oppsettsguiden) bor i [docs/languages/](docs/languages/). Engelsk er kanonisk (ADR-0022): ved avvik gjelder den engelske teksten, og den norske utgaven oppdateres i etterkant; alt brukerrettet skal finnes på begge språk.
 
 ## Feilrapporter og forslag
 

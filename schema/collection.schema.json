@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://urd.dev/schema/collection.schema.json",
   "title": "Urd collection (content/samlinger/<id>.json)",
-  "description": "A collection of entries of the same kind (news, notices, publications) rendered by the collection block. The contract is described in docs/SKJEMA.md and ADR-0007.",
+  "description": "A collection of entries of the same kind (news, notices, publications) rendered by the collection block. The contract is described in docs/SCHEMA.md and ADR-0007.",
   "type": "object",
   "required": ["schemaVersion", "id", "name", "kind", "entries"],
   "additionalProperties": false,

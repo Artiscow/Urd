@@ -337,7 +337,7 @@
 
   /**
    * Desktop structure change in a manually mobile-adapted section:
-   * flag the section for mobile review (rules in docs/SKJEMA.md#mobil-tilsyn).
+   * flag the section for mobile review (rules in docs/SCHEMA.md#mobile-review).
    */
   /** "Switch layout": the variant's frames + minHeight are recorded as ONE
    *  undo step; mobile review is flagged as for other desktop changes. */
@@ -2513,7 +2513,7 @@
     // Starter packs are built fresh (create() yields new ids and
     // translated seeds); user templates store origin ids, so the clone
     // re-ids everything and sets meta to the new page (the re-id rule in
-    // SKJEMA.md). The liftPageFile wash makes templates stored under older
+    // SCHEMA.md). The liftPageFile wash makes templates stored under older
     // schema versions safe.
     const templatePage = newPageTemplate && !newPageTemplate.startsWith('preset:')
       ? templateStores[newPageTemplate]?.data?.page : null;

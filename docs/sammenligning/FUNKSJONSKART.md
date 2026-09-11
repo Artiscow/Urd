@@ -130,7 +130,7 @@ Kategorien fantes ikke i sammenligningen 22.-23. juli 2026, fordi feltet så ann
 
 **Urd i dag (C):** ingenting. Null AI-, LLM- eller MCP-kode i repoet.
 
-**Planlagt (B):** lokal, avhengighetsfri MCP-server i det klonede repoet ([ADR-0017](../adr/0017-ai-via-lokal-mcp-server.md), vedtatt 10. august 2026): lesedel i v0.8, skrivedel i v0.9. Eierens EGEN agentklient kobler seg til; Urd sender aldri noe selv og lagrer ingen nøkkel.
+**Planlagt (B):** lokal, avhengighetsfri MCP-server i det klonede repoet ([ADR-0017](../adr/0017-ai-via-local-mcp-server.md), vedtatt 10. august 2026): lesedel i v0.8, skrivedel i v0.9. Eierens EGEN agentklient kobler seg til; Urd sender aldri noe selv og lagrer ingen nøkkel.
 
 **Utenfor scope (D):** prompt-til-side-generator, og enhver ekstern AI-tjeneste som kjerneavhengighet.
 
