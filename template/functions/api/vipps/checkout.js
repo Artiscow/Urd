@@ -1,10 +1,10 @@
 /**
- * Valgfritt betalingslag (ADR-0020): oppretter en Vipps Checkout-sesjon for
- * kurven og svarer med sesjonens URL; klienten redirecter dit. Beløpet
- * regnes på nytt fra den git-eide katalogen (aldri klientens tall), og
- * hemmelighetene bor i Cloudflare-miljøet. Uten konfigurasjon svares 503,
- * og kasse-blokken viser en rolig utilgjengelig-tekst (skjema-kassen
- * fungerer uendret).
+ * Optional payment layer (ADR-0020): creates a Vipps Checkout session for the
+ * cart and answers with the session URL; the client redirects there. The
+ * amount is recomputed from the git-owned catalogue (never the client's
+ * numbers), and the secrets live in the Cloudflare environment. Without
+ * configuration the answer is 503, and the checkout block shows a calm
+ * unavailable message (the form checkout works unchanged).
  */
 import { vippsConfig, validOrderPayload, orderAmountOre, makeReference, buildSession } from '../../_lib/vipps.js';
 
@@ -27,7 +27,7 @@ export async function onRequestPost({ request, env }) {
   const clean = validOrderPayload(payload);
   if (!clean) return json({ error: 'Invalid order', code: 'orderInvalid' }, 400);
 
-  // Katalogene hentes fra egen deploy (samme origin): git er fasit for priser.
+  // The catalogues come from our own deploy (same origin): git is the source of truth for prices.
   const origin = new URL(request.url).origin;
   let catalogs = [];
   try {

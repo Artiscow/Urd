@@ -1366,7 +1366,7 @@ html {
   border-top: 1px solid rgb(255 255 255 / 14%);
 }
 
-.urd-tt-linkrow.vis {
+.urd-tt-linkrow.visible {
   display: flex;
 }
 
@@ -1380,7 +1380,7 @@ html {
   border-top: 1px solid rgb(255 255 255 / 14%);
 }
 
-.urd-tt-colorrow.vis {
+.urd-tt-colorrow.visible {
   display: flex;
 }
 
@@ -1395,7 +1395,7 @@ html {
   border-top: 1px solid rgb(255 255 255 / 14%);
 }
 
-.urd-tt-spacerow.vis {
+.urd-tt-spacerow.visible {
   display: flex;
 }
 
@@ -1429,7 +1429,7 @@ html {
   border-top: 1px solid rgb(255 255 255 / 14%);
 }
 
-.urd-tt-glyphrow.vis {
+.urd-tt-glyphrow.visible {
   display: block;
 }
 
@@ -1480,7 +1480,7 @@ html {
   border-radius: 5px;
 }
 
-.urd-text-toolbar.vis {
+.urd-text-toolbar.visible {
   display: flex;
 }
 
@@ -1918,7 +1918,7 @@ body.urd-chrome-off .urd-cp {
 }
 
 .urd-imged-thumb-empty::after {
-  content: 'Ingen bilde ennå';
+  content: attr(data-empty);
   position: absolute;
   inset: 0;
   display: flex;
@@ -2072,7 +2072,7 @@ body.urd-chrome-off .urd-imged-grid {
   background: rgb(255 255 255 / 10%);
 }
 
-.urd-imged-seg button.valgt {
+.urd-imged-seg button.selected {
   background: #7c5cff;
   color: #fff;
 }
@@ -3775,7 +3775,7 @@ body.urd-marqueeing {
   box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
 }
 
-.urd-multi-toolbar.vis {
+.urd-multi-toolbar.visible {
   display: flex;
 }
 
@@ -4164,7 +4164,7 @@ body.urd-marqueeing {
 .urd-footer-nl-status.ok {
   color: var(--urd-color-accent);
 }
-.urd-footer-nl-status.feil {
+.urd-footer-nl-status.error {
   color: #e5484d;
 }
 /* Honeypot: completely hidden from humans, visible to bots. */
@@ -4378,12 +4378,12 @@ body.urd-marqueeing {
   transition: opacity 0.2s;
 }
 
-.urd-totop.vis {
+.urd-totop.visible {
   opacity: 0.85;
   pointer-events: auto;
 }
 
-.urd-totop.vis:hover {
+.urd-totop.visible:hover {
   opacity: 1;
 }
 
@@ -4884,11 +4884,11 @@ body.urd-mobile .urd-section-resize-top {
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: var(--urd-kat, var(--urd-admin-accent, #5f6a75));
+  background: var(--urd-category-color, var(--urd-admin-accent, #5f6a75));
 }
 
 /* "All" points at the whole palette: the dot is a small gradient across the steps. */
-.urd-preview .urd-preset-rail-alle .urd-preset-dot {
+.urd-preview .urd-preset-rail-all .urd-preset-dot {
   background: linear-gradient(135deg, var(--urd-category-1), var(--urd-category-3));
 }
 
@@ -4932,12 +4932,12 @@ body.urd-mobile .urd-section-resize-top {
 }
 
 .urd-preview .urd-preset-menu .urd-preset-rail button:hover {
-  background: color-mix(in srgb, var(--urd-kat, var(--urd-admin-accent, #5f6a75)) 14%, transparent);
+  background: color-mix(in srgb, var(--urd-category-color, var(--urd-admin-accent, #5f6a75)) 14%, transparent);
 }
 
 /* The active category choice is filled with the category's OWN color (F2). */
 .urd-preview .urd-preset-menu .urd-preset-rail button.on {
-  background: color-mix(in srgb, var(--urd-kat, var(--urd-admin-accent, #5f6a75)) 26%, transparent);
+  background: color-mix(in srgb, var(--urd-category-color, var(--urd-admin-accent, #5f6a75)) 26%, transparent);
   color: var(--urd-color-text);
 }
 
@@ -5161,7 +5161,7 @@ body.urd-mobile .urd-section-resize-top {
   transform: none;
   opacity: 1;
   padding: 6px;
-  border: 1px solid color-mix(in srgb, var(--urd-kat, var(--urd-color-text)) 30%, transparent);
+  border: 1px solid color-mix(in srgb, var(--urd-category-color, var(--urd-color-text)) 30%, transparent);
   border-radius: 8px;
   background: transparent;
   color: inherit;
@@ -5171,8 +5171,8 @@ body.urd-mobile .urd-section-resize-top {
 }
 
 .urd-preview .urd-preset-menu .urd-template-pick:hover {
-  border-color: color-mix(in srgb, var(--urd-kat, var(--urd-admin-accent, #5f6a75)) 75%, transparent);
-  background: color-mix(in srgb, var(--urd-kat, var(--urd-admin-accent, #5f6a75)) 12%, transparent);
+  border-color: color-mix(in srgb, var(--urd-category-color, var(--urd-admin-accent, #5f6a75)) 75%, transparent);
+  background: color-mix(in srgb, var(--urd-category-color, var(--urd-admin-accent, #5f6a75)) 12%, transparent);
 }
 
 .urd-preview .urd-template-thumb {
@@ -5246,7 +5246,7 @@ body.urd-mobile .urd-section-resize-top {
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--urd-kat, var(--urd-color-text)) 70%, var(--urd-color-text));
+  color: color-mix(in srgb, var(--urd-category-color, var(--urd-color-text)) 70%, var(--urd-color-text));
 }
 
 /* The preset grid (G2): cards with a thumbnail above the name; the hint lives in
@@ -5264,7 +5264,7 @@ body.urd-mobile .urd-section-resize-top {
   min-width: 0;
   transform: none;
   opacity: 1;
-  border: 1px solid color-mix(in srgb, var(--urd-kat, var(--urd-color-text)) 30%, transparent);
+  border: 1px solid color-mix(in srgb, var(--urd-category-color, var(--urd-color-text)) 30%, transparent);
   border-radius: 8px;
   background: transparent;
   color: inherit;
@@ -5275,8 +5275,8 @@ body.urd-mobile .urd-section-resize-top {
 }
 
 .urd-preview .urd-preset-menu .urd-preset-card:hover {
-  background: color-mix(in srgb, var(--urd-kat, var(--urd-admin-accent, #5f6a75)) 12%, transparent);
-  border-color: color-mix(in srgb, var(--urd-kat, var(--urd-admin-accent, #5f6a75)) 75%, transparent);
+  background: color-mix(in srgb, var(--urd-category-color, var(--urd-admin-accent, #5f6a75)) 12%, transparent);
+  border-color: color-mix(in srgb, var(--urd-category-color, var(--urd-admin-accent, #5f6a75)) 75%, transparent);
 }
 
 /* Auto-generated thumbnail (preset-thumb.js): a schematic sketch of the section */

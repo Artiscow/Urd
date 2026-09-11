@@ -116,7 +116,7 @@ export function buildSession({ amountOre, reference, order, contact, origin, ret
   return {
     merchantInfo: {
       callbackUrl: `${origin}/api/vipps/callback`,
-      returnUrl: `${origin}${returnPath ?? '/'}?bestilt=1`,
+      returnUrl: `${origin}${returnPath ?? '/'}?ordered=1`,
       callbackAuthorizationToken: callbackToken,
     },
     transaction: {

@@ -86,7 +86,7 @@ export function validateLanguages(list) {
     }
     const code = String(entry.code ?? '');
     if (!LANG_CODE_RE.test(code)) errors.push(`languages: '${code}' is not a valid language code`);
-    else if (isBuiltinLang(code)) errors.push(`languages: '${code}' er innebygd i Urd og kan ikke overstyres`);
+    else if (isBuiltinLang(code)) errors.push(`languages: '${code}' is built into Urd and cannot be overridden`);
     if (typeof entry.name !== 'string' || !entry.name.trim()) errors.push(`languages/${code}: name is missing (the language's own name)`);
     for (const kind of ['site', 'admin']) {
       if (entry[kind] !== undefined && typeof entry[kind] !== 'boolean') errors.push(`languages/${code}: ${kind} must be a boolean`);

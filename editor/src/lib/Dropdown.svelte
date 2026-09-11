@@ -78,7 +78,7 @@
   {#if open}
     <div class="dd-pop" style="top: {pos.top}px; left: {pos.left}px; min-width: {pos.width}px">
       {#each options as [v, label] (`${v ?? ''}`)}
-        <button type="button" class="dd-opt" class:valgt={`${v ?? ''}` === `${value ?? ''}`}
+        <button type="button" class="dd-opt" class:selected={`${v ?? ''}` === `${value ?? ''}`}
           onclick={() => pick(v)}>{label}</button>
       {/each}
     </div>
@@ -158,7 +158,7 @@
     background: rgb(255 255 255 / 10%);
   }
 
-  .dd-opt.valgt {
+  .dd-opt.selected {
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 30%, transparent);
   }
 </style>

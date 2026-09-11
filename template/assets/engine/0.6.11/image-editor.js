@@ -44,10 +44,10 @@ function segmented(options, current, onchange) {
   for (const [value, name] of options) {
     const b = el2('button', null, name);
     b.type = 'button';
-    if ((current ?? options[0][0]) === value) b.classList.add('valgt');
+    if ((current ?? options[0][0]) === value) b.classList.add('selected');
     b.addEventListener('click', () => {
-      for (const other of buttons) other.classList.remove('valgt');
-      b.classList.add('valgt');
+      for (const other of buttons) other.classList.remove('selected');
+      b.classList.add('selected');
       onchange(value);
     });
     buttons.push(b);
@@ -96,7 +96,7 @@ export function openImageEditor(anchor, adapter) {
     const thumb = el2('div', 'urd-imged-thumb');
     const src = adapter.get('image');
     if (src) thumb.style.backgroundImage = `url("${src.replaceAll('"', '%22')}")`;
-    else thumb.classList.add('urd-imged-thumb-empty');
+    else { thumb.classList.add('urd-imged-thumb-empty'); thumb.dataset.empty = ta('canvas.imageEditorEmpty'); }
     thumb.appendChild(el2('div', 'urd-imged-thumbgrid'));
     dot = el2('div', 'urd-imged-dot');
     dot.style.left = `${(adapter.get('x') ?? 0.5) * 100}%`;

@@ -29,7 +29,7 @@ export const buttonBlock = {
     } else {
       // Shared guard (nav/footer plus internal paths/anchors): an unsafe href (javascript:/data:) must never become a live link for visitors.
       a.href = isSafeHref(props.href) ? props.href : '#';
-      if (props.href && !isSafeHref(props.href)) console.warn(`Urd: knappen har utrygg lenke '${props.href}'`);
+      if (props.href && !isSafeHref(props.href)) console.warn(`Urd: the button has an unsafe link '${props.href}'`);
     }
     el.appendChild(a);
   },

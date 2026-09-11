@@ -135,7 +135,7 @@ function mountToTop() {
     window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
   });
   document.body.appendChild(btn);
-  const toggle = () => btn.classList.toggle('vis', window.scrollY > 400);
+  const toggle = () => btn.classList.toggle('visible', window.scrollY > 400);
   window.addEventListener('scroll', toggle, { passive: true });
   toggle();
 }

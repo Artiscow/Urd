@@ -1,7 +1,7 @@
 /**
- * Kjerneblokk: form. Streker og piler (retning via framens rot-felt),
- * sirkler/ellipser, rektangler og trekanter. Dekorelementer for fri
- * komposisjon.
+ * Core block: shape. Lines and arrows (direction via the frame's rot field),
+ * circles/ellipses, rectangles and triangles. Decorative elements for free
+ * composition.
  */
 import { resolveColor } from '../theme.js';
 
@@ -20,7 +20,7 @@ export const shapeBlock = {
     const color = resolveColor(props.color);
 
     if (props.kind === 'line' || props.kind === 'arrow') {
-      // Horisontal strek sentrert i framen; retning styres med rot.
+      // A horizontal line centred in the frame; direction comes from rot.
       const line = document.createElement('div');
       line.style.cssText = `position:absolute;left:0;right:${props.kind === 'arrow' ? '10px' : '0'};top:50%;transform:translateY(-50%);height:${props.thickness}px;background:${color};`;
       el.appendChild(line);
@@ -34,14 +34,14 @@ export const shapeBlock = {
     }
 
     if (props.kind === 'triangle') {
-      // Trekant tegnes som fylt flate (clip-path kan ikke ha kantstrek).
+      // A triangle is drawn as a filled surface (clip-path cannot take a stroke).
       const tri = document.createElement('div');
       tri.style.cssText = `position:absolute;inset:0;background:${resolveColor(props.fill ?? props.color)};clip-path:polygon(50% 0, 100% 100%, 0 100%);`;
       el.appendChild(tri);
       return;
     }
 
-    // circle / rect: sirkel blir ellipse i ikke-kvadratiske frames.
+    // circle / rect: a circle becomes an ellipse in non-square frames.
     if (props.fill) {
       el.style.background = resolveColor(props.fill);
     } else {

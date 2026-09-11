@@ -84,14 +84,14 @@ const isMobile = () => document.body.classList.contains('urd-mobile');
 
 /** The template drafts from the editor (the urd-templates message): {id, name, kind, section?, blocks?}.
  *  The editor owns the list; here it feeds the My templates tab in "+ New section". */
-let maler = [];
+let templates = [];
 export function setTemplates(list) {
-  maler = Array.isArray(list) ? list : [];
+  templates = Array.isArray(list) ? list : [];
 }
 
 /** The category choice in the preset gallery is remembered per session
  *  (category sidebar). */
-let presetCategory = 'alle';
+let presetCategory = 'all';
 
 /** Display names for the layouts (keys in the core languages). */
 const LAYOUT_LABEL_KEYS = {
@@ -234,7 +234,7 @@ function openBlockMenuAt(host, clientX = null, clientY = null) {
   } else {
     menu._urdAt = null;
   }
-  menu._urdRefreshMaler?.();
+  menu._urdRefreshTemplates?.();
   menu._urdSearchReset?.();
   menu.classList.add('open');
   menu._urdSearchFocus?.();
@@ -590,7 +590,7 @@ function addBlockAdder(host, section, grid) {
     }
     menu.classList.add('urd-searching');
     hits.replaceChildren();
-    const all = searchables.concat(menu._urdMalerSearchables ?? []);
+    const all = searchables.concat(menu._urdTemplateSearchables ?? []);
     const found = searchItems(all, query, (item) => item.label);
     if (!found.length) {
       const empty = document.createElement('div');
@@ -718,28 +718,28 @@ function addBlockAdder(host, section, grid) {
   // re-rendering).
   const templatesWrap = document.createElement('div');
   menu.appendChild(templatesWrap);
-  menu._urdRefreshMaler = () => {
+  menu._urdRefreshTemplates = () => {
     templatesWrap.replaceChildren();
-    menu._urdMalerSearchables = [];
-    const groupMaler = maler.filter((m) => m.kind === 'blocks' && Array.isArray(m.blocks));
-    if (!groupMaler.length) return;
+    menu._urdTemplateSearchables = [];
+    const groupTemplates = templates.filter((m) => m.kind === 'blocks' && Array.isArray(m.blocks));
+    if (!groupTemplates.length) return;
     const divider = document.createElement('div');
     divider.className = 'urd-add-block-plugins';
     divider.textContent = ta('canvas.tabMyTemplates');
     templatesWrap.appendChild(divider);
-    for (const mal of groupMaler) {
+    for (const tpl of groupTemplates) {
       const b = document.createElement('button');
-      b.textContent = mal.name;
+      b.textContent = tpl.name;
       b.title = ta('canvas.insertGroup');
       b.addEventListener('click', () => {
         // Opened via double-click: the group lands with its top-left corner
         // on the click point; otherwise the stored positions are kept
         // (clamping only).
-        insertBlocksTemplate(mal, section.id, menu._urdAt);
+        insertBlocksTemplate(tpl, section.id, menu._urdAt);
         resetBlockAdder(wrap);
       });
       templatesWrap.appendChild(b);
-      menu._urdMalerSearchables.push({ label: mal.name, run: () => b.click() });
+      menu._urdTemplateSearchables.push({ label: tpl.name, run: () => b.click() });
     }
   };
   openBtn.addEventListener('click', () => {
@@ -748,7 +748,7 @@ function addBlockAdder(host, section, grid) {
     menu._urdAt = null;
     resetBlockAdder(wrap);
     if (!wasOpen) {
-      menu._urdRefreshMaler?.();
+      menu._urdRefreshTemplates?.();
       menu._urdSearchReset?.();
       menu.classList.add('open');
       menu._urdSearchFocus?.();
@@ -947,9 +947,9 @@ function makeSectionAdder(index, above = null) {
       groups.get(group).defs.push(def);
     }
     for (const id of window.Urd.templates?.ids?.() ?? []) {
-      const mal = window.Urd.templates.get(id);
-      if (mal?.kind !== 'section' || !mal.section) continue;
-      pluginDefs.push({ label: mal.name ?? id, fromPlugin: mal.fromPlugin, create: () => cloneSectionForInsert(mal.section, makeId) });
+      const tpl = window.Urd.templates.get(id);
+      if (tpl?.kind !== 'section' || !tpl.section) continue;
+      pluginDefs.push({ label: tpl.name ?? id, fromPlugin: tpl.fromPlugin, create: () => cloneSectionForInsert(tpl.section, makeId) });
     }
     if (pluginDefs.length) groups.set('__plugins', { labelKey: 'panel.plugins', defs: pluginDefs });
     const groupLabel = (name, labelKey) => (labelKey ? ta(labelKey) : (name || ta('canvas.groupOther')));
@@ -957,10 +957,10 @@ function makeSectionAdder(index, above = null) {
     // The category colors: each group gets a fixed color step derived from
     // the admin accent in base.css (--urd-category-1..5, cyclic with more
     // groups); My templates always has step 5. The color is set as
-    // --urd-kat on cards, headings and category buttons.
+    // --urd-category-color on cards, headings and category buttons.
     const TEMPLATE_CAT = 5;
-    const katFor = new Map([...groups.keys()].map((name, i) => [name, (i % 5) + 1]));
-    const setKat = (el, kat) => el.style.setProperty('--urd-kat', `var(--urd-category-${kat})`);
+    const categoryFor = new Map([...groups.keys()].map((name, i) => [name, (i % 5) + 1]));
+    const setCategory = (el, category) => el.style.setProperty('--urd-category-color', `var(--urd-category-${category})`);
     const makeDot = () => {
       const dot = document.createElement('span');
       dot.className = 'urd-preset-dot';
@@ -1001,11 +1001,11 @@ function makeSectionAdder(index, above = null) {
     /** Preset card in the grid: thumbnail + name, the hint as a tooltip.
      *  A throwing plugin preset must never topple the menu: a text card
      *  without a sketch instead. */
-    const buildCard = (def, kat) => {
+    const buildCard = (def, category) => {
       const choice = document.createElement('button');
       choice.type = 'button';
       choice.className = 'urd-preset-card';
-      setKat(choice, kat);
+      setCategory(choice, category);
       if (def.hintKey || def.hint) choice.title = def.hintKey ? ta(def.hintKey) : def.hint;
       try {
         const thumb = document.createElement('span');
@@ -1028,7 +1028,7 @@ function makeSectionAdder(index, above = null) {
     const buildGrid = (entries) => {
       const grid = document.createElement('div');
       grid.className = 'urd-preset-grid';
-      for (const { def, kat } of entries) grid.appendChild(buildCard(def, kat));
+      for (const { def, category } of entries) grid.appendChild(buildCard(def, category));
       return grid;
     };
 
@@ -1037,7 +1037,7 @@ function makeSectionAdder(index, above = null) {
     // SKJEMA.md): new ids every time, so the same template can be inserted
     // multiple times.
     const renderTemplates = () => {
-      const list = maler.filter((m) => m.kind === 'section' && m.section);
+      const list = templates.filter((m) => m.kind === 'section' && m.section);
       if (!list.length) {
         const empty = document.createElement('div');
         empty.className = 'urd-template-empty';
@@ -1047,7 +1047,7 @@ function makeSectionAdder(index, above = null) {
       }
       const grid = document.createElement('div');
       grid.className = 'urd-template-grid';
-      for (const mal of list) {
+      for (const tpl of list) {
         const card = document.createElement('div');
         card.className = 'urd-template-card';
         const pick = document.createElement('button');
@@ -1056,15 +1056,15 @@ function makeSectionAdder(index, above = null) {
         try {
           const thumb = document.createElement('span');
           thumb.className = 'urd-template-thumb';
-          thumb.insertAdjacentHTML('afterbegin', presetThumb(mal.section));
+          thumb.insertAdjacentHTML('afterbegin', presetThumb(tpl.section));
           pick.appendChild(thumb);
         } catch { /* text-only card without a thumbnail */ }
         const nameEl = document.createElement('span');
         nameEl.className = 'urd-template-name';
-        nameEl.textContent = mal.name;
+        nameEl.textContent = tpl.name;
         pick.appendChild(nameEl);
         pick.addEventListener('click', () => {
-          post({ type: 'urd-add-section', index, section: cloneSectionForInsert(mal.section, makeId) });
+          post({ type: 'urd-add-section', index, section: cloneSectionForInsert(tpl.section, makeId) });
           cleanupOutside();
         });
         const del = document.createElement('button');
@@ -1076,11 +1076,11 @@ function makeSectionAdder(index, above = null) {
           // The editor owns the confirmation and deletion; the menu closes
           // so the list is fresh the next time it opens.
           event.stopPropagation();
-          post({ type: 'urd-delete-template', id: mal.id });
+          post({ type: 'urd-delete-template', id: tpl.id });
           cleanupOutside();
           collapse();
         });
-        setKat(card, TEMPLATE_CAT);
+        setCategory(card, TEMPLATE_CAT);
         card.append(pick, del);
         grid.appendChild(card);
       }
@@ -1091,16 +1091,16 @@ function makeSectionAdder(index, above = null) {
     // the block menu's) and matches the visible labels.
     const searchables = [];
     for (const [name, { defs }] of groups) {
-      for (const def of defs) searchables.push({ label: def.labelKey ? ta(def.labelKey) : def.label, def, kat: katFor.get(name) });
+      for (const def of defs) searchables.push({ label: def.labelKey ? ta(def.labelKey) : def.label, def, category: categoryFor.get(name) });
     }
-    const templateDef = (mal) => ({ label: mal.name, create: () => cloneSectionForInsert(mal.section, makeId) });
+    const templateDef = (tpl) => ({ label: tpl.name, create: () => cloneSectionForInsert(tpl.section, makeId) });
 
     const renderContent = () => {
       content.replaceChildren();
       const query = search.value.trim();
       if (query) {
         const all = [...searchables,
-          ...maler.filter((m) => m.kind === 'section' && m.section).map((m) => ({ label: m.name, def: templateDef(m), kat: TEMPLATE_CAT }))];
+          ...templates.filter((m) => m.kind === 'section' && m.section).map((m) => ({ label: m.name, def: templateDef(m), category: TEMPLATE_CAT }))];
         const found = searchItems(all, query, (item) => item.label);
         if (!found.length) {
           const empty = document.createElement('div');
@@ -1112,34 +1112,34 @@ function makeSectionAdder(index, above = null) {
         content.appendChild(buildGrid(found));
         return;
       }
-      if (presetCategory === 'maler') {
+      if (presetCategory === 'templates') {
         renderTemplates();
         return;
       }
       for (const [name, { labelKey, defs }] of groups) {
-        if (presetCategory !== 'alle' && presetCategory !== name) continue;
-        const kat = katFor.get(name);
+        if (presetCategory !== 'all' && presetCategory !== name) continue;
+        const category = categoryFor.get(name);
         // A single chosen category needs no heading above itself.
-        if (presetCategory === 'alle') {
+        if (presetCategory === 'all') {
           const heading = document.createElement('div');
           heading.className = 'urd-preset-group';
-          setKat(heading, kat);
+          setCategory(heading, category);
           heading.append(makeDot(), document.createTextNode(groupLabel(name, labelKey)));
           content.appendChild(heading);
         }
-        content.appendChild(buildGrid(defs.map((def) => ({ def, kat }))));
+        content.appendChild(buildGrid(defs.map((def) => ({ def, category }))));
       }
     };
 
     // The category buttons; the choice is remembered per session. An
     // active search wins over the category until the field is cleared.
     const railButtons = new Map();
-    const addRailButton = (id, label, kat) => {
+    const addRailButton = (id, label, category) => {
       const btn = document.createElement('button');
       btn.type = 'button';
-      if (id === 'alle') btn.classList.add('urd-preset-rail-alle');
-      if (id === 'maler') btn.classList.add('urd-preset-rail-templates');
-      if (kat) setKat(btn, kat);
+      if (id === 'all') btn.classList.add('urd-preset-rail-all');
+      if (id === 'templates') btn.classList.add('urd-preset-rail-templates');
+      if (category) setCategory(btn, category);
       btn.append(makeDot(), document.createTextNode(label));
       btn.addEventListener('click', () => {
         presetCategory = id;
@@ -1149,10 +1149,10 @@ function makeSectionAdder(index, above = null) {
       railButtons.set(id, btn);
       rail.appendChild(btn);
     };
-    addRailButton('alle', ta('canvas.groupAll'), 1);
-    for (const [name, { labelKey }] of groups) addRailButton(name, groupLabel(name, labelKey), katFor.get(name));
-    addRailButton('maler', ta('canvas.tabMyTemplates'), TEMPLATE_CAT);
-    if (!railButtons.has(presetCategory)) presetCategory = 'alle';
+    addRailButton('all', ta('canvas.groupAll'), 1);
+    for (const [name, { labelKey }] of groups) addRailButton(name, groupLabel(name, labelKey), categoryFor.get(name));
+    addRailButton('templates', ta('canvas.tabMyTemplates'), TEMPLATE_CAT);
+    if (!railButtons.has(presetCategory)) presetCategory = 'all';
 
     const applyCategory = () => {
       for (const [id, btn] of railButtons) btn.classList.toggle('on', id === presetCategory);
@@ -1588,33 +1588,33 @@ function initTextToolbar() {
     restoreSelection();
     if (trimmed) exec('createLink', trimmed);
     else exec('unlink');
-    linkRow.classList.remove('vis');
+    linkRow.classList.remove('visible');
   };
   linkApply.addEventListener('click', applyLink);
   linkInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') applyLink();
-    if (event.key === 'Escape') linkRow.classList.remove('vis');
+    if (event.key === 'Escape') linkRow.classList.remove('visible');
   });
   linkRemove.addEventListener('click', () => {
     restoreSelection();
     exec('unlink');
-    linkRow.classList.remove('vis');
+    linkRow.classList.remove('visible');
   });
 
   function toggleLinkRow() {
-    if (linkRow.classList.contains('vis')) {
-      linkRow.classList.remove('vis');
+    if (linkRow.classList.contains('visible')) {
+      linkRow.classList.remove('visible');
       return;
     }
-    colorRow.classList.remove('vis');
-    glyphRow.classList.remove('vis');
-    spacingRow.classList.remove('vis');
+    colorRow.classList.remove('visible');
+    glyphRow.classList.remove('visible');
+    spacingRow.classList.remove('visible');
     saveSelection();
     // Prefill with the existing link when the caret sits in one.
     const sel = document.getSelection();
     const anchorEl = sel?.anchorNode instanceof HTMLElement ? sel.anchorNode : sel?.anchorNode?.parentElement;
     linkInput.value = anchorEl?.closest('a')?.getAttribute('href') ?? '';
-    linkRow.classList.add('vis');
+    linkRow.classList.add('visible');
     linkInput.focus();
   }
 
@@ -1716,10 +1716,10 @@ function initTextToolbar() {
   });
 
   function toggleColorRow() {
-    linkRow.classList.remove('vis');
-    glyphRow.classList.remove('vis');
-    spacingRow.classList.remove('vis');
-    colorRow.classList.toggle('vis');
+    linkRow.classList.remove('visible');
+    glyphRow.classList.remove('visible');
+    spacingRow.classList.remove('visible');
+    colorRow.classList.toggle('visible');
   }
 
   // The glyph row (behind the smiley button): "Recent" + the categories
@@ -1769,11 +1769,11 @@ function initTextToolbar() {
   };
 
   function toggleGlyphRow() {
-    linkRow.classList.remove('vis');
-    colorRow.classList.remove('vis');
-    spacingRow.classList.remove('vis');
-    if (glyphRow.classList.contains('vis')) {
-      glyphRow.classList.remove('vis');
+    linkRow.classList.remove('visible');
+    colorRow.classList.remove('visible');
+    spacingRow.classList.remove('visible');
+    if (glyphRow.classList.contains('visible')) {
+      glyphRow.classList.remove('visible');
       return;
     }
     if (!glyphRowBuilt) {
@@ -1787,7 +1787,7 @@ function initTextToolbar() {
       }
     }
     renderRecentGlyphs();
-    glyphRow.classList.add('vis');
+    glyphRow.classList.add('visible');
     reposition();
   }
 
@@ -1839,10 +1839,10 @@ function initTextToolbar() {
   spacingRow.appendChild(lsInput);
 
   function toggleSpacingRow() {
-    linkRow.classList.remove('vis');
-    colorRow.classList.remove('vis');
-    glyphRow.classList.remove('vis');
-    spacingRow.classList.toggle('vis');
+    linkRow.classList.remove('visible');
+    colorRow.classList.remove('visible');
+    glyphRow.classList.remove('visible');
+    spacingRow.classList.toggle('visible');
   }
 
   document.body.appendChild(bar);
@@ -1862,11 +1862,11 @@ function initTextToolbar() {
       activeText = document.querySelector(`.urd-block[data-block-id="${activeBlockId}"] .urd-text[contenteditable="true"]`);
     }
     if (!activeText || !activeText.isConnected) {
-      bar.classList.remove('vis');
-      linkRow.classList.remove('vis');
-      colorRow.classList.remove('vis');
-      glyphRow.classList.remove('vis');
-      spacingRow.classList.remove('vis');
+      bar.classList.remove('visible');
+      linkRow.classList.remove('visible');
+      colorRow.classList.remove('visible');
+      glyphRow.classList.remove('visible');
+      spacingRow.classList.remove('visible');
       return;
     }
     // The toolbar is always anchored at the TOP of the text field (the
@@ -1875,7 +1875,7 @@ function initTextToolbar() {
     const block = activeText.closest('.urd-block') ?? activeText;
     const anchor = block.getBoundingClientRect();
     if (!anchor || (!anchor.width && !anchor.height)) return;
-    bar.classList.add('vis');
+    bar.classList.add('visible');
     const navHeight = document.getElementById('urd-nav')?.offsetHeight ?? 0;
     const left = Math.max(8, Math.min(anchor.left, window.innerWidth - bar.offsetWidth - 8));
     let top = anchor.top - bar.offsetHeight - 10;
@@ -1959,10 +1959,10 @@ function initTextToolbar() {
     if (target && target !== activeText) {
       activeText = target;
       activeBlockId = target.closest('.urd-block')?.dataset.blockId ?? null;
-      linkRow.classList.remove('vis');
-      colorRow.classList.remove('vis');
-      glyphRow.classList.remove('vis');
-      spacingRow.classList.remove('vis');
+      linkRow.classList.remove('visible');
+      colorRow.classList.remove('visible');
+      glyphRow.classList.remove('visible');
+      spacingRow.classList.remove('visible');
     }
     if (target) reposition();
   });
@@ -2755,19 +2755,19 @@ function startSelectionDrag(event) {
 function updateMultiToolbar() {
   const active = multiIds.size >= 2 && !isMobile() && !document.body.classList.contains('urd-chrome-off');
   if (!active) {
-    multiBar?.classList.remove('vis');
+    multiBar?.classList.remove('visible');
     return;
   }
   if (!multiBar) buildMultiBar();
   const els = selectedEls();
   if (els.length < 2) {
-    multiBar.classList.remove('vis');
+    multiBar.classList.remove('visible');
     return;
   }
   multiBar._urdCount.textContent = ta('canvas.selectedCount', { n: els.length });
   // The distribute buttons require at least three blocks (settings only when relevant).
   for (const b of multiBar._urdDist) b.style.display = els.length >= 3 ? '' : 'none';
-  multiBar.classList.add('vis');
+  multiBar.classList.add('visible');
   const rects = els.map((el) => el.getBoundingClientRect());
   const left = Math.min(...rects.map((r) => r.left));
   const right = Math.max(...rects.map((r) => r.right));
@@ -2874,8 +2874,8 @@ function pasteClipboard(source = clipboard) {
  *  the template model (the re-id rule in SKJEMA.md), ONE undo step via
  *  urd-add-blocks, and the inserted content becomes the new set (the same
  *  tail as pasteClipboard). anchor = {x in %, y in px} or null. */
-function insertBlocksTemplate(mal, sectionId, anchor) {
-  const { blocks, minBottom } = cloneBlocksForInsert(mal.blocks, makeId, { anchor });
+function insertBlocksTemplate(tpl, sectionId, anchor) {
+  const { blocks, minBottom } = cloneBlocksForInsert(tpl.blocks, makeId, { anchor });
   post({ type: 'urd-add-blocks', sectionId, blocks, minBottom, moves: [] });
   document.querySelectorAll('.urd-block.urd-selected, .urd-block.urd-multi-selected')
     .forEach((b) => b.classList.remove('urd-selected', 'urd-multi-selected'));
@@ -2889,10 +2889,10 @@ function insertBlocksTemplate(mal, sectionId, anchor) {
  *  into the active section (otherwise the first) with stored positions,
  *  clamping only. */
 export function insertTemplate(id) {
-  const mal = maler.find((m) => m.id === id && m.kind === 'blocks' && Array.isArray(m.blocks));
+  const tpl = templates.find((m) => m.id === id && m.kind === 'blocks' && Array.isArray(m.blocks));
   const host = document.querySelector('.urd-section-active') ?? document.querySelector('.urd-section');
-  if (!mal || !host) return;
-  insertBlocksTemplate(mal, host.dataset.sectionId, null);
+  if (!tpl || !host) return;
+  insertBlocksTemplate(tpl, host.dataset.sectionId, null);
 }
 
 /** Ctrl+D with a multi-selection: duplicate the set (via the paste flow). */
@@ -3375,7 +3375,7 @@ function enhanceBlock(el, block, section, grid, host) {
         // block = native click (the drawer opens), unselected block =
         // surface drag and selection.
         if (target?.closest('.urd-cart-button') && selectedBlockId === block.id && multiIds.size <= 1) return;
-        if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button:not(.urd-cart-button), input, select, textarea, dialog, .urd-collection-editable, .urd-collection-image-edit, .urd-faq-q, .urd-kal-config, .urd-skjema-config, .urd-kart-config')) return;
+        if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button:not(.urd-cart-button), input, select, textarea, dialog, .urd-collection-editable, .urd-collection-image-edit, .urd-faq-q, .urd-cal-config, .urd-form-config')) return;
         // Flowing mobile block: the first pinning must be a deliberate
         // choice (dragging ⠿), not a click on the block. A screen-docked
         // block is exempt: there the drag moves the docking, not the row

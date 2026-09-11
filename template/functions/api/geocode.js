@@ -37,7 +37,7 @@ export async function onRequestGet({ request }) {
       signal: controller.signal,
       headers: {
         // Nominatim requires an identifying User-Agent.
-        'User-Agent': 'Urd-nettsidebygger kart-plugin (https://urd.dev)',
+        'User-Agent': 'Urd site builder map plugin (https://urd.dev)',
         'Accept-Language': 'nb,no,en',
       },
     });

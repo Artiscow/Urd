@@ -40,10 +40,10 @@
           },
           {
             "type": "image",
-            "version": 1,
+            "version": 2,
             "props": {
               "src": "/media/bakgrunn-a1730034.svg",
-              "fit": "vanlig",
+              "fit": "plain",
               "x": 0.5,
               "y": 0.5,
               "size": 1,

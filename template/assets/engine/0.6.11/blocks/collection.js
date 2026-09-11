@@ -94,7 +94,7 @@ function imageOrAdder(entry, className) {
     return img;
   }
   if (!editCtx) return null;
-  const adder = el2('button', 'urd-collection-image-adder', '+ Bilde');
+  const adder = el2('button', 'urd-collection-image-adder', ta('ui.addImages'));
   adder.type = 'button';
   wireImageEdit(adder, entry);
   return adder;
@@ -211,7 +211,7 @@ function renderList(host, entries) {
 function renderArchive(host, entries) {
   const wrap = el2('div', 'urd-collection-archive');
   for (const group of groupByYear(entries)) {
-    wrap.appendChild(el2('h3', 'urd-collection-year', group.year ?? 'Uten dato'));
+    wrap.appendChild(el2('h3', 'urd-collection-year', group.year ?? ta('ui.noDate')));
     const list = el2('div', 'urd-collection-list');
     for (const entry of group.entries) {
       const row = el2('article', 'urd-collection-row');
@@ -256,7 +256,7 @@ export const collectionBlock = {
     el.appendChild(host);
 
     if (!props.collection) {
-      emptyState(el, ctx, 'Velg samling i Egenskaper (samlinger opprettes i Samlinger-panelet)');
+      emptyState(el, ctx, ta('canvas.collectionEmpty'));
       return;
     }
 
@@ -264,13 +264,13 @@ export const collectionBlock = {
       // The block may have been re-rendered or removed while the data was fetched.
       if (!host.isConnected) return;
       if (!data) {
-        emptyState(el, ctx, `Fant ikke samlingen «${props.collection}» - sjekk Samlinger-panelet`);
+        emptyState(el, ctx, ta('canvas.collectionMissing', { name: props.collection }));
         return;
       }
       let entries = sortEntries(data.entries, props.newestFirst !== false);
       if (props.limit > 0) entries = entries.slice(0, props.limit);
       if (!entries.length) {
-        emptyState(el, ctx, `Samlingen «${data.name}» er tom - legg inn innslag i Samlinger-panelet`);
+        emptyState(el, ctx, ta('canvas.collectionNoEntries', { name: data.name }));
         return;
       }
       const view = VIEWS[props.view] ?? renderCards;

@@ -8,11 +8,11 @@
  * image gallery layer), NOT via transform. Transform is used only for parallax.
  *
  * Fields (all additive with safe defaults):
- * - fit: 'cover' (fill+crop), 'egen' (background-size %, width-relative - shrinks
+ * - fit: 'cover' (fill+crop), 'custom' (background-size %, width-relative - shrinks
  *   AND enlarges, is not cropped by the section height), 'contain' (show all), 'repeat'.
  * - x/y (0..1, 0.5 = centered): focal point via background-position percentages. The
  *   point stays visible whatever the section format, with no empty space.
- * - size (fraction, 1 = 100% of the width): only in 'egen' mode.
+ * - size (fraction, 1 = 100% of the width): only in 'custom' mode.
  * - blur (px): mood background behind text. opacity (0..1). parallax (0..1): the layer
  *   lags behind on scroll. bleed: let the parallax flow into the neighbouring sections.
  */
@@ -37,18 +37,18 @@ export function bgPosition(x, y) {
 }
 
 /**
- * The background-size value. The free-placement model (`vanlig`/`flislegg`) uses a
+ * The background-size value. The free-placement model (`plain`/`tile`) uses a
  * width-relative SCALE (`{size*100}%`, height = auto keeps the aspect ratio), so the
  * user sets the size themselves. `cover`/`contain` are kept as keywords (image
  * gallery layer and backwards compatibility). Pure function (node-tested).
- * @param {'vanlig'|'flislegg'|'cover'|'contain'|'egen'|'repeat'} fit
+ * @param {'plain'|'tile'|'cover'|'contain'|'custom'|'repeat'} fit
  * @param {number} [size] Scale as a fraction (1 = 100% of the section width)
  * @returns {string}
  */
 export function bgSize(fit, size) {
   if (fit === 'contain') return 'contain';
   if (fit === 'cover') return 'cover';
-  // vanlig / flislegg / egen / repeat / other -> width-relative scale
+  // plain / tile / custom / repeat / other -> width-relative scale
   return `${Math.max(0, size ?? 1) * 100}%`;
 }
 
@@ -127,18 +127,18 @@ function registerParallax(apply) {
  * the edges; it is at least `blurMargin` (the blur fringe) and grows to the
  * parallax travel. OFF on mobile and with prefers-reduced-motion (the layer then
  * stands still, only the blur fringe is kept).
- * Fill modes (cover/flislegg) MUST overscan (they fill the section, so a gap at the
+ * Fill modes (cover/tile) MUST overscan (they fill the section, so a gap at the
  * edge is unacceptable; overscan costs no zoom on a tile, a little on cover). The
- * free model (vanlig/egen/contain) shows the image with space around it, so there NO
+ * free model (plain/custom/contain) shows the image with space around it, so there NO
  * overscan is needed: the image shifts cleanly, without zoom, and the whole strength
  * range is noticeable.
  * @param {HTMLElement} img The image element
  * @param {number} speed Strength 0..1
  * @param {number} blurMargin The blur fringe in px (0 without blur)
- * @param {'vanlig'|'flislegg'|'cover'|'egen'|'contain'|'repeat'} fit
+ * @param {'plain'|'tile'|'cover'|'custom'|'contain'|'repeat'} fit
  */
 function mountParallax(img, speed, blurMargin, fit) {
-  const fills = fit === 'cover' || fit === 'flislegg' || fit === 'repeat';
+  const fills = fit === 'cover' || fit === 'tile' || fit === 'repeat';
   const section = img.closest('.urd-section') ?? img.parentElement?.closest('.urd-section') ?? img.parentElement;
   const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   img.style.willChange = 'transform';
@@ -214,10 +214,10 @@ function registerMeasure(measure) {
  * @param {HTMLElement} img The image element
  * @param {number} speed Strength 0..1
  * @param {number} blurMargin The blur fringe in px (0 without blur)
- * @param {'vanlig'|'flislegg'|'cover'|'egen'|'contain'|'repeat'} fit
+ * @param {'plain'|'tile'|'cover'|'custom'|'contain'|'repeat'} fit
  */
 function mountParallaxCss(img, speed, blurMargin, fit) {
-  const fills = fit === 'cover' || fit === 'flislegg' || fit === 'repeat';
+  const fills = fit === 'cover' || fit === 'tile' || fit === 'repeat';
   const section = img.closest('.urd-section') ?? img.parentElement?.closest('.urd-section') ?? img.parentElement;
   img.style.willChange = 'transform';
   img.classList.add('urd-parallax-css');
@@ -245,14 +245,20 @@ function mountParallaxCss(img, speed, blurMargin, fit) {
 }
 
 export const imageLayer = {
-  version: 1,
+  version: 2,
   label: 'Image',
   labelKey: 'bgLayer.image',
-  defaults: () => ({ src: '', fit: 'vanlig', x: 0.5, y: 0.5, size: 1, opacity: 1, blur: 0, parallax: 0, bleed: 'none' }),
-  migrations: {},
+  defaults: () => ({ src: '', fit: 'plain', x: 0.5, y: 0.5, size: 1, opacity: 1, blur: 0, parallax: 0, bleed: 'none' }),
+  migrations: {
+    // 1 -> 2 (ADR-0021): Norwegian fit values renamed to English.
+    1: (props) => ({
+      ...props,
+      fit: props.fit === 'vanlig' ? 'plain' : props.fit === 'flislegg' ? 'tile' : props.fit === 'egen' ? 'custom' : props.fit,
+    }),
+  },
   /**
    * @param {HTMLElement} el
-   * @param {{src: string, fit?: 'cover'|'egen'|'contain'|'repeat', x?: number, y?: number, size?: number, opacity?: number, blur?: number, parallax?: number, bleed?: 'none'|'up'|'down'|'both'}} props
+   * @param {{src: string, fit?: 'plain'|'tile'|'cover'|'custom'|'contain'|'repeat', x?: number, y?: number, size?: number, opacity?: number, blur?: number, parallax?: number, bleed?: 'none'|'up'|'down'|'both'}} props
    */
   render(el, props) {
     // An empty or unsafe source yields no layer: the source goes straight into
@@ -274,7 +280,7 @@ export const imageLayer = {
     img.style.right = '0';
     img.style.top = '0';
     img.style.bottom = '0';
-    const tile = props.fit === 'flislegg' || props.fit === 'repeat';
+    const tile = props.fit === 'tile' || props.fit === 'repeat';
     img.style.backgroundImage = `url("${props.src}")`;
     img.style.backgroundSize = bgSize(props.fit, props.size);
     img.style.backgroundRepeat = tile ? 'repeat' : 'no-repeat';
@@ -318,7 +324,7 @@ export const imageLayer = {
  * @param {HTMLElement} el The layer element
  * @param {number} speed Strength 0..1
  * @param {number} blurMargin The blur fringe in px (0 without blur)
- * @param {'vanlig'|'flislegg'|'cover'|'egen'|'contain'|'repeat'} fit
+ * @param {'plain'|'tile'|'cover'|'custom'|'contain'|'repeat'} fit
  */
 export function mountLayerParallax(el, speed, blurMargin, fit) {
   if (supportsScrollTimeline()) mountParallaxCss(el, speed, blurMargin, fit);

@@ -1,5 +1,5 @@
-# Dependabot: automatiske PR-er for utdaterte avhengigheter.
-# npm finnes kun i editor/ (Urd-nettsider har ingen avhengigheter).
+# Dependabot: automatic PRs for outdated dependencies.
+# npm only exists in editor/ (Urd sites have no dependencies).
 version: 2
 updates:
   - package-ecosystem: npm
@@ -8,19 +8,19 @@ updates:
       interval: weekly
       day: monday
     groups:
-      # Mindre oppdateringer samles i én PR for å redusere støy
-      utvikling-mindre:
+      # Minor updates are grouped into one PR to reduce noise
+      dev-minor:
         update-types: [minor, patch]
 
-  # Workflowene SHA-pinner alle actions (forsyningskjede-vern: tags kan
-  # flyttes, commit-SHA-er ikke); Dependabot leser versjonskommentaren
-  # bak SHA-en og holder pinningene oppdatert.
+  # The workflows SHA-pin every action (supply-chain protection: tags can
+  # move, commit SHAs cannot). Dependabot reads the version comment behind
+  # the SHA and keeps the pins up to date.
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
       day: monday
     groups:
-      # Alle actions-bumper samles i én ukentlig PR
-      actions-alle:
+      # All action bumps are grouped into one weekly PR
+      actions-all:
         patterns: ['*']

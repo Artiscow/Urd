@@ -2,7 +2,7 @@
   "name": "urd-editor",
   "private": true,
   "version": "0.6.11",
-  "description": "Urd-editorens kildekode. Bygges til ../template/admin/assets/ og shippes ferdigkompilert; klonede sider trenger aldri npm.",
+  "description": "Source of the Urd editor. Built to ../template/admin/assets/ and shipped precompiled; cloned sites never need npm.",
   "type": "module",
   "scripts": {
     "dev": "vite",

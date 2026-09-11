@@ -154,15 +154,15 @@ export const checkoutBlock = {
       buttons.appendChild(pay);
     }
 
-    // Return from payment (?bestilt=1): receipt plus empty the basket. The
+    // Return from payment (?ordered=1): receipt plus empty the basket. The
     // parameter is cleaned away so a refresh does not empty a new basket.
     // Only with the payment layer on: otherwise a shared link could empty
     // the basket.
-    if (props.vippsCheckout && !ctx.preview && new URLSearchParams(location.search).has('bestilt')) {
+    if (props.vippsCheckout && !ctx.preview && new URLSearchParams(location.search).has('ordered')) {
       writeCart([]);
       setStatus(t('shop.orderSent'), false);
       const url = new URL(location.href);
-      url.searchParams.delete('bestilt');
+      url.searchParams.delete('ordered');
       history.replaceState(null, '', url);
     }
 

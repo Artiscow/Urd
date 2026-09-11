@@ -2,6 +2,20 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.14.17): Sluttauditen
+
+- [ ] Egenskaper-overskriften viser oversatt blokknavn (ikke rå id) for galleri, samling, tidslinje, sitat, statistikk, tabell, deling, nedteller, produkt, handlekurv og kasse
+- [ ] Kalenderpluginens liste- og kortvisning er stilt igjen (badge, rader, kort), og klikk inne i kalender- og skjemapluginens tannhjulpanel holder panelet åpent uten å avmarkere blokken
+- [ ] Om oss-siden rendrer de tre bildene (ingen «newer-than-engine»-plassholdere); Kaker og Hjem sin bildebakgrunn vises som før (plain)
+- [ ] En side lagret før 0.7.14.17 med bakgrunnsbilde i flislegg-modus rendrer fortsatt som flis i forhåndsvisning og publisert; kjent: nedtrekket i Egenskaper viser «Vanlig» til laget lagres på nytt (samme mønster som timeline/quote)
+- [ ] Admin-temaet overlever oppdateringen: en nettleser som hadde f.eks. Nordlys valgt får samme tema etter innlasting (localStorage-verdien migreres), og alle sju temaer kan velges og har riktige navn i nb/en-GB/tr
+- [ ] Samlingsblokkens tomtilstander (ingen samling valgt, ukjent samling, tom samling), «+ Legg til bilder»-knappen og «Uten dato»-overskriften er på admin-språket; bildeeditorens «Ingen bilde ennå» vises for tom miniatyr
+- [ ] Publisering skriver commit-meldingen på admin-språket, f.eks. «Oppdater Hjem, menyen via Urd-admin» i nb og «Update Home, the menu via Urd admin» i en-GB; en publisering uten titler gir «nettstedet»/«the site»
+- [ ] Vipps (testavtale, deployet): returen fra betaling lander på ?ordered=1 og kvitteringen vises; en betaling startet før oppdateringen som returnerer med ?bestilt=1 gir ingen kvittering (kjent kant)
+- [ ] Tekstverktøylinja, multiutvalg-verktøylinja og til-toppen-knappen vises/skjules som før (vis-klassen heter visible); nedtrekk og bildeeditorens segmentknapper markerer valgt alternativ
+- [ ] Plugin-panelet viser norske plugin-navn i nb (Skjema, Kalender, Kart, Svensk språkpakke) og engelske i en-GB
+- [ ] Nye bakgrunnsbilder lagres som media/background-<hash>, menybilder som media/menu-<hash>; nye samlingsinnslag får id entry-...
+
 ### Testrunde-batch (0.7.14.9): Resterende strenger
 
 - [ ] Preset-galleriet og blokkmenyene viser riktige (norske) etiketter og hint i nb; plugin-presetene ligger i Kort og lister-gruppen i ALLE språk (ikke egen gruppe i en-GB/tr)

@@ -99,15 +99,21 @@
    * style block below.
    */
   const ADMIN_THEMES = [
-    ['lilla', ta('adminTheme.lilla')],
-    ['bronn', ta('adminTheme.bronn')],
-    ['gull', ta('adminTheme.gull')],
-    ['graa', ta('adminTheme.graa')],
-    ['nordlys', ta('adminTheme.nordlys')],
-    ['skumring', ta('adminTheme.skumring')],
-    ['glo', ta('adminTheme.glo')],
+    ['purple', ta('adminTheme.purple')],
+    ['well', ta('adminTheme.well')],
+    ['gold', ta('adminTheme.gold')],
+    ['grey', ta('adminTheme.grey')],
+    ['aurora', ta('adminTheme.aurora')],
+    ['dusk', ta('adminTheme.dusk')],
+    ['ember', ta('adminTheme.ember')],
   ];
-  let adminTheme = $state(localStorage.getItem('urd-admin-theme') ?? 'graa');
+  // The stored id may predate ADR-0021 (Norwegian theme ids); it is mapped on
+  // read and the effect below writes the current id back.
+  const LEGACY_ADMIN_THEMES = { lilla: 'purple', bronn: 'well', gull: 'gold', graa: 'grey', nordlys: 'aurora', skumring: 'dusk', glo: 'ember' };
+  let adminTheme = $state((() => {
+    const stored = localStorage.getItem('urd-admin-theme');
+    return LEGACY_ADMIN_THEMES[stored] ?? stored ?? 'grey';
+  })());
 
   $effect(() => {
     document.documentElement.dataset.adminTheme = adminTheme;
@@ -437,7 +443,7 @@
     // pageId is included: undo across page switches must put the page
     // content back on the PAGE it came from, not into the current page's draft.
     // Collections/plugins are null until their init flow has FINISHED (the
-    // samlingerReady flag, not merely the index store existing: the stores
+    // collectionsReady flag, not merely the index store existing: the stores
     // fill asynchronously afterwards, and a snapshot from that window would
     // miss collections that an undo would then delete); restore skips the
     // null parts.
@@ -445,12 +451,12 @@
       pageId,
       page: store.data,
       site: siteStore.data,
-      samlingerIndex: samlingerReady ? collectionsIndexStore.data : null,
-      samlinger: samlingerReady
+      collectionsIndex: collectionsReady ? collectionsIndexStore.data : null,
+      collections: collectionsReady
         ? Object.fromEntries(Object.entries(collectionStores).map(([id, st]) => [id, st.data]))
         : {},
-      malerIndex: templatesReady ? templatesIndexStore.data : null,
-      maler: templatesReady
+      templatesIndex: templatesReady ? templatesIndexStore.data : null,
+      templates: templatesReady
         ? Object.fromEntries(Object.entries(templateStores).map(([id, st]) => [id, st.data]))
         : {},
       plugins: pluginsStore?.data ?? null,
@@ -466,7 +472,7 @@
   }
 
   function restore(snap) {
-    const { pageId: snapPageId, page, site: siteSnap, samlingerIndex, samlinger, malerIndex, maler, plugins } = JSON.parse(snap);
+    const { pageId: snapPageId, page, site: siteSnap, collectionsIndex, collections, templatesIndex, templates, plugins } = JSON.parse(snap);
     siteStore.replace(siteSnap);
     linkSiteDraft();
     siteStore.save();
@@ -474,8 +480,8 @@
     pushSiteToPreview();
     // Collections/templates/plugins are restored BEFORE the page-switch
     // branch below, otherwise cross-page undo would lose those parts of the snapshot.
-    restoreCollections(samlingerIndex, samlinger ?? {});
-    restoreMaler(malerIndex, maler ?? {});
+    restoreCollections(collectionsIndex, collections ?? {});
+    restoreTemplates(templatesIndex, templates ?? {});
     restorePlugins(plugins);
 
     // The snapshot belongs to another page (undo across a page switch): put
@@ -506,23 +512,23 @@
 
   /** Restore the collection drafts from a snapshot (null = taken before init, skip).
    *  Missing stores are recreated against the published baseline; stores outside the snapshot are removed. */
-  function restoreCollections(indexSnap, samlingerSnap) {
+  function restoreCollections(indexSnap, collectionsSnap) {
     if (!collectionsIndexStore || !indexSnap) return;
     const current = JSON.stringify({
       index: collectionsIndexStore.data,
-      samlinger: Object.fromEntries(Object.entries(collectionStores).map(([id, st]) => [id, st.data])),
+      collections: Object.fromEntries(Object.entries(collectionStores).map(([id, st]) => [id, st.data])),
     });
-    if (current === JSON.stringify({ index: indexSnap, samlinger: samlingerSnap })) return;
+    if (current === JSON.stringify({ index: indexSnap, collections: collectionsSnap })) return;
     collectionsIndexStore.replace(indexSnap);
     collectionsIndexStore.save();
     for (const id of Object.keys(collectionStores)) {
-      if (!(id in samlingerSnap)) {
+      if (!(id in collectionsSnap)) {
         localStorage.removeItem(`urd-draft-collection-${id}`);
         localStorage.removeItem(`urd-draft-samling-${id}`);
         delete collectionStores[id];
       }
     }
-    for (const [id, data] of Object.entries(samlingerSnap)) {
+    for (const [id, data] of Object.entries(collectionsSnap)) {
       if (!collectionStores[id]) {
         // Undone deletion: the baseline is the published state, or "does
         // not exist" (null) for a collection that never got published
@@ -533,30 +539,30 @@
       collectionStores[id].replace(data);
       collectionStores[id].save();
     }
-    samlingerIds = [...(indexSnap.samlinger ?? [])];
-    if (activeCollection && !samlingerIds.includes(activeCollection)) activeCollection = null;
+    collectionIds = [...(indexSnap.samlinger ?? [])];
+    if (activeCollection && !collectionIds.includes(activeCollection)) activeCollection = null;
     syncCollectionsView();
   }
 
   /** Restore the template drafts from a snapshot (null = taken before init, skip).
    *  Mirrors restoreCollections, with a "does not exist" baseline for never-published templates. */
-  function restoreMaler(indexSnap, malerSnap) {
+  function restoreTemplates(indexSnap, templatesSnap) {
     if (!templatesIndexStore || !indexSnap) return;
     const current = JSON.stringify({
       index: templatesIndexStore.data,
-      maler: Object.fromEntries(Object.entries(templateStores).map(([id, st]) => [id, st.data])),
+      templates: Object.fromEntries(Object.entries(templateStores).map(([id, st]) => [id, st.data])),
     });
-    if (current === JSON.stringify({ index: indexSnap, maler: malerSnap })) return;
+    if (current === JSON.stringify({ index: indexSnap, templates: templatesSnap })) return;
     templatesIndexStore.replace(indexSnap);
     templatesIndexStore.save();
     for (const id of Object.keys(templateStores)) {
-      if (!(id in malerSnap)) {
+      if (!(id in templatesSnap)) {
         localStorage.removeItem(`urd-draft-template-${id}`);
         localStorage.removeItem(`urd-draft-mal-${id}`);
         delete templateStores[id];
       }
     }
-    for (const [id, data] of Object.entries(malerSnap)) {
+    for (const [id, data] of Object.entries(templatesSnap)) {
       if (!templateStores[id]) {
         templateStores[id] = createDraftStore(`urd-draft-template-${id}`, () => publishedTemplates[id] ?? null, draftSaveError, `urd-draft-mal-${id}`);
       }
@@ -646,7 +652,7 @@
     // discarded, the same guard as for page drafts (liftSiteFile would
     // otherwise let them through).
     if ((siteStore.data.schemaVersion ?? 1) > SITE_SCHEMA_VERSION) {
-      console.warn(`Urd: site-utkastet har schemaVersion ${siteStore.data.schemaVersion} (motoren har ${SITE_SCHEMA_VERSION}) og forkastes`);
+      console.warn(`Urd: the site draft has schemaVersion ${siteStore.data.schemaVersion} (the engine has ${SITE_SCHEMA_VERSION}) and is discarded`);
       // site is $state: structuredClone on the proxy throws (the snapshot lesson).
       siteStore.replace($state.snapshot(site));
     }
@@ -657,8 +663,8 @@
     grid = { snap: true, ...siteDraft.grid };
     await selectPage(new URLSearchParams(location.search).get('page') ?? siteDraft.pages[0].id);
     await initPlugins();
-    await initSamlinger();
-    await initMaler();
+    await initCollections();
+    await initTemplates();
     await checkAuth();
     // The publish baseline requires login: signed out, the call would just
     // produce 401 noise in the console. After login (OAuth redirect) the
@@ -1101,7 +1107,7 @@
   /** The table's shape: rows/columns are added and removed at the end;
    *  the row set is rectangularized first, so hand-edited data is tolerated. */
   function tableResize(dRows, dCols) {
-    mutateBlock(`edit:${selectedBlock.blockId}:tabell-form`, (b) => {
+    mutateBlock(`edit:${selectedBlock.blockId}:table-form`, (b) => {
       let rows = (Array.isArray(b.props.rows) && b.props.rows.length ? b.props.rows : [['']])
         .map((row) => (Array.isArray(row) ? row.map((cell) => String(cell ?? '')) : ['']));
       const cols = Math.max(1, ...rows.map((row) => row.length));
@@ -1116,7 +1122,7 @@
 
   /** The share buttons' services: the choices are stored in a fixed display order. */
   function toggleShareService(service, on) {
-    mutateBlock(`edit:${selectedBlock.blockId}:deling`, (b) => {
+    mutateBlock(`edit:${selectedBlock.blockId}:share`, (b) => {
       const order = ['facebook', 'x', 'linkedin', 'whatsapp', 'email', 'copy'];
       const set = new Set(b.props.services ?? []);
       if (on) set.add(service);
@@ -1189,7 +1195,7 @@
   // bar's typography row).
 
   /** Names of the block types in the panel. */
-  const BLOCK_LABELS = { text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), galleri: ta('blocks.gallery'), faq: ta('blocks.faq'), samling: ta('blocks.collection'), tidslinje: ta('blocks.timeline'), sitat: ta('blocks.quote'), statistikk: ta('blocks.stats'), tabell: ta('blocks.table'), deling: ta('blocks.share'), nedteller: ta('blocks.countdown'), audio: ta('blocks.audio'), produkt: ta('blocks.product'), handlekurv: ta('blocks.cart'), kasse: ta('blocks.checkout') };
+  const BLOCK_LABELS = { text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), gallery: ta('blocks.gallery'), faq: ta('blocks.faq'), collection: ta('blocks.collection'), timeline: ta('blocks.timeline'), quote: ta('blocks.quote'), stats: ta('blocks.stats'), table: ta('blocks.table'), share: ta('blocks.share'), countdown: ta('blocks.countdown'), audio: ta('blocks.audio'), product: ta('blocks.product'), cart: ta('blocks.cart'), checkout: ta('blocks.checkout') };
   const SHAPE_KINDS = [
     ['line', ta('shape.line')], ['arrow', ta('shape.arrow')], ['circle', ta('shape.circle')],
     ['rect', ta('shape.rect')], ['triangle', ta('shape.triangle')],
@@ -1405,7 +1411,7 @@
     if (!nat?.w || !nat?.h || !secBox?.w || !secBox?.h) return;
     const r = (secBox.h * nat.w) / (secBox.w * nat.h);
     const size = mode === 'cover' ? Math.max(1, r) : Math.min(1, r);
-    if (layer.props.fit === 'flislegg' || layer.props.fit === 'repeat') setBgProp(bg, i, 'fit', 'vanlig');
+    if (layer.props.fit === 'tile' || layer.props.fit === 'repeat') setBgProp(bg, i, 'fit', 'plain');
     setBgProp(bg, i, 'size', clampBgSize(Math.round(size * 100) / 100));
   }
 
@@ -2225,7 +2231,7 @@
       // publish would cement it. Discard the draft; the server is the
       // source of truth.
       if ((store.data.schemaVersion ?? 1) > PAGE_SCHEMA_VERSION) {
-        console.warn(`Urd: utkastet for '${id}' har schemaVersion ${store.data.schemaVersion} (motoren har ${PAGE_SCHEMA_VERSION}) og forkastes`);
+        console.warn(`Urd: the draft for '${id}' has schemaVersion ${store.data.schemaVersion} (the engine has ${PAGE_SCHEMA_VERSION}) and is discarded`);
         store.replace(structuredClone(published));
       }
       store.replace(liftPageFile(store.data, siteStore.data));
@@ -2451,7 +2457,7 @@
   /* The starter-pack thumbnails are built once (create() per section is
      cheap, but the grid rerenders on every keystroke in the name field). */
   const builtinPageThumbs = Object.fromEntries(PAGE_PRESETS.map((p) => [
-    p.id, pageThumb(buildPagePreset(p.id, { pageId: 'forhandsvisning', title: '' })),
+    p.id, pageThumb(buildPagePreset(p.id, { pageId: 'preview', title: '' })),
   ]));
 
   /** The site's color tokens as inline vars on the template thumbnail
@@ -2951,15 +2957,15 @@
   let collectionStores = {};
   /** Published baseline per collection id: used when undo recreates a deleted collection's store. */
   let publishedCollections = {};
-  /** True only once initSamlinger has filled ALL stores; snapshot() includes collections only then. */
-  let samlingerReady = false;
-  let samlingerIds = $state([]);
+  /** True only once initCollections has filled ALL stores; snapshot() includes collections only then. */
+  let collectionsReady = false;
+  let collectionIds = $state([]);
   let collectionsView = $state({});
   let activeCollection = $state(null);
   let newCollectionName = $state('');
   let newCollectionKind = $state('news');
 
-  const SAMLING_KINDS = [
+  const COLLECTION_KINDS = [
     ['news', ta('collectionKind.news')],
     ['notices', ta('collectionKind.notices')],
     ['publications', ta('collectionKind.publications')],
@@ -2974,11 +2980,11 @@
   let templateStores = {};
   /** Published baseline per template id (null = never published): used when undo recreates a deleted template's store. */
   let publishedTemplates = {};
-  /** True only once initMaler has filled ALL stores; snapshot() includes templates only then. */
+  /** True only once initTemplates has filled ALL stores; snapshot() includes templates only then. */
   let templatesReady = false;
   let templateIds = $state([]);
 
-  async function initMaler() {
+  async function initTemplates() {
     let index = { version: 1, maler: [] };
     try {
       index = await (await fetch('/content/maler.json')).json();
@@ -3070,7 +3076,7 @@
       setStatus(ta('status.templateExists'), 'error');
       return;
     }
-    pushHistory('maler');
+    pushHistory('templates');
     const fresh = { schemaVersion: TEMPLATE_SCHEMA_VERSION, mal: { name, kind }, [kind]: payload };
     templateStores[id] = createDraftStore(`urd-draft-template-${id}`, () => null, draftSaveError, `urd-draft-mal-${id}`);
     templateStores[id].replace(fresh);
@@ -3085,11 +3091,11 @@
 
   /** The delete button in the My templates tab: confirm, remove the file draft and the index entry. */
   async function handleDeleteTemplate(msg) {
-    const mal = templateStores[msg.id]?.data?.mal;
-    if (!mal) return;
-    const ok = await askConfirm({ title: ta('confirm.deleteTemplate', { name: mal.name }) });
+    const tpl = templateStores[msg.id]?.data?.mal;
+    if (!tpl) return;
+    const ok = await askConfirm({ title: ta('confirm.deleteTemplate', { name: tpl.name }) });
     if (!ok) return;
-    pushHistory('maler');
+    pushHistory('templates');
     if (newPageTemplate === msg.id) newPageTemplate = null;
     localStorage.removeItem(`urd-draft-template-${msg.id}`);
     localStorage.removeItem(`urd-draft-mal-${msg.id}`);
@@ -3101,14 +3107,14 @@
     pushTemplatesToPreview();
   }
 
-  async function initSamlinger() {
+  async function initCollections() {
     let index = { version: 1, samlinger: [] };
     try {
       index = await (await fetch('/content/collections.json')).json();
     } catch { /* no index is perfectly fine */ }
     collectionsIndexStore = createDraftStore('urd-draft-collections', () => index, draftSaveError, 'urd-draft-samlinger');
-    samlingerIds = [...(collectionsIndexStore.data.samlinger ?? [])];
-    for (const id of samlingerIds) {
+    collectionIds = [...(collectionsIndexStore.data.samlinger ?? [])];
+    for (const id of collectionIds) {
       let published = null;
       try {
         published = await (await fetch(`/content/samlinger/${id}.json`)).json();
@@ -3127,13 +3133,13 @@
         collectionStores[id].save();
       }
     }
-    samlingerReady = true;
+    collectionsReady = true;
     syncCollectionsView();
   }
 
   function syncCollectionsView(pushPreview = true) {
     const view = {};
-    for (const id of samlingerIds) {
+    for (const id of collectionIds) {
       if (collectionStores[id]) view[id] = JSON.parse(JSON.stringify(collectionStores[id].data));
     }
     collectionsView = view;
@@ -3184,7 +3190,7 @@
     // title remains until something is typed. The title is rich text, so
     // emptiness is judged without markup.
     if (field === 'title' && !plainTitle(value)) return;
-    mutateCollection(collection, `edit:samling:${collection}:${entryId}:${field}`, (data) => {
+    mutateCollection(collection, `edit:collection:${collection}:${entryId}:${field}`, (data) => {
       const entry = data.entries.find((e) => e.id === entryId);
       if (!entry) return;
       if (value === '' && field !== 'title') delete entry[field];
@@ -3193,7 +3199,7 @@
   }
 
   /** Creates and activates a collection (the caller owns the history step). */
-  function insertSamling(id, name, kind) {
+  function insertCollection(id, name, kind) {
     const fresh = { schemaVersion: 1, id, name, kind, entries: [] };
     // The baseline is "does not exist" (null) until the first publish: a
     // fresh collection must have hasDraft() true, otherwise the index is
@@ -3201,9 +3207,9 @@
     collectionStores[id] = createDraftStore(`urd-draft-collection-${id}`, () => null, draftSaveError, `urd-draft-samling-${id}`);
     collectionStores[id].replace(fresh);
     collectionStores[id].save();
-    collectionsIndexStore.data.samlinger = [...samlingerIds, id];
+    collectionsIndexStore.data.samlinger = [...collectionIds, id];
     collectionsIndexStore.save();
-    samlingerIds = [...samlingerIds, id];
+    collectionIds = [...collectionIds, id];
     activeCollection = id;
     updateDirty();
     syncCollectionsView();
@@ -3213,50 +3219,50 @@
     const name = newCollectionName.trim();
     if (!name) return;
     const id = slugify(name);
-    if (!id || samlingerIds.includes(id)) {
+    if (!id || collectionIds.includes(id)) {
       setStatus(id ? ta('status.collectionExists') : ta('status.invalidName'), 'error');
       return;
     }
-    pushHistory('samlinger');
-    insertSamling(id, name, newCollectionKind);
+    pushHistory('collections');
+    insertCollection(id, name, newCollectionKind);
     newCollectionName = '';
   }
 
   /** "+ Create product catalog" in the product block's Properties: collection + binding in ONE undo step. */
   function createCatalogForBlock() {
     const name = ta('seed.productCatalogName');
-    const base = slugify(name) || 'produkter';
+    const base = slugify(name) || 'collection';
     let id = base;
     // Slug dedup: a non-product collection can already own the base name.
-    for (let n = 2; samlingerIds.includes(id); n += 1) id = `${base}-${n}`;
-    pushHistory('samlinger');
-    insertSamling(id, name, 'products');
+    for (let n = 2; collectionIds.includes(id); n += 1) id = `${base}-${n}`;
+    pushHistory('collections');
+    insertCollection(id, name, 'products');
     mutateBlock(null, (b) => { b.props.collection = id; });
   }
 
-  function removeSamling(id) {
-    pushHistory('samlinger');
+  function removeCollection(id) {
+    pushHistory('collections');
     localStorage.removeItem(`urd-draft-collection-${id}`);
         localStorage.removeItem(`urd-draft-samling-${id}`);
     delete collectionStores[id];
-    collectionsIndexStore.data.samlinger = samlingerIds.filter((x) => x !== id);
+    collectionsIndexStore.data.samlinger = collectionIds.filter((x) => x !== id);
     collectionsIndexStore.save();
-    samlingerIds = samlingerIds.filter((x) => x !== id);
+    collectionIds = collectionIds.filter((x) => x !== id);
     if (activeCollection === id) activeCollection = null;
     updateDirty();
     syncCollectionsView();
   }
 
   function addCollectionEntry(id) {
-    mutateCollection(id, `samling:${id}:add-entry`, (data) => {
+    mutateCollection(id, `collection:${id}:add-entry`, (data) => {
       if (data.kind === 'products') {
         // Products: no date (irrelevant), the price is set in the panel;
         // added LAST so the adder card in the preview gets the new card
         // next to it.
-        data.entries.push({ id: makeId('innslag'), title: ta('seed.newProduct'), text: '' });
+        data.entries.push({ id: makeId('entry'), title: ta('seed.newProduct'), text: '' });
       } else {
         data.entries.unshift({
-          id: makeId('innslag'),
+          id: makeId('entry'),
           title: ta('seed.newEntry'),
           date: new Date().toISOString().slice(0, 10),
           text: '',
@@ -3266,7 +3272,7 @@
   }
 
   function setEntryField(id, entryId, field, value) {
-    mutateCollection(id, `edit:samling:${id}:${entryId}:${field}`, (data) => {
+    mutateCollection(id, `edit:collection:${id}:${entryId}:${field}`, (data) => {
       const entry = data.entries.find((e) => e.id === entryId);
       if (!entry) return;
       if (value === '' && field !== 'title') delete entry[field];
@@ -3275,7 +3281,7 @@
   }
 
   function moveEntry(id, index, dir) {
-    mutateCollection(id, `samling:${id}:move-entry`, (data) => {
+    mutateCollection(id, `collection:${id}:move-entry`, (data) => {
       const j = index + dir;
       if (j < 0 || j >= data.entries.length) return;
       [data.entries[index], data.entries[j]] = [data.entries[j], data.entries[index]];
@@ -3283,7 +3289,7 @@
   }
 
   function removeEntry(id, entryId) {
-    mutateCollection(id, `samling:${id}:remove-entry`, (data) => {
+    mutateCollection(id, `collection:${id}:remove-entry`, (data) => {
       data.entries = data.entries.filter((e) => e.id !== entryId);
     });
   }
@@ -3304,7 +3310,7 @@
   }
 
   function addEntryColor(id, entryId) {
-    mutateCollection(id, `samling:${id}:${entryId}:colors`, (data) => {
+    mutateCollection(id, `collection:${id}:${entryId}:colors`, (data) => {
       const entry = data.entries.find((e) => e.id === entryId);
       if (!entry) return;
       entry.colors = [...(entry.colors ?? []), { name: ta('ph.colorName') }];
@@ -3312,7 +3318,7 @@
   }
 
   function setEntryColor(id, entryId, index, field, value) {
-    mutateCollection(id, `edit:samling:${id}:${entryId}:color:${index}:${field}`, (data) => {
+    mutateCollection(id, `edit:collection:${id}:${entryId}:color:${index}:${field}`, (data) => {
       const color = data.entries.find((e) => e.id === entryId)?.colors?.[index];
       if (!color) return;
       // The name can never be emptied (the schema requires it); the image can be removed.
@@ -3330,7 +3336,7 @@
   }
 
   function removeEntryColor(id, entryId, index) {
-    mutateCollection(id, `samling:${id}:${entryId}:colors`, (data) => {
+    mutateCollection(id, `collection:${id}:${entryId}:colors`, (data) => {
       const entry = data.entries.find((e) => e.id === entryId);
       if (!entry?.colors) return;
       entry.colors = entry.colors.filter((_, i) => i !== index);
@@ -3364,10 +3370,10 @@
     }
     const used = new Set();
     for (const entry of parsed.entries) {
-      if (!/^[a-z0-9][a-z0-9-]*$/.test(entry.id) || used.has(entry.id)) entry.id = makeId('innslag');
+      if (!/^[a-z0-9][a-z0-9-]*$/.test(entry.id) || used.has(entry.id)) entry.id = makeId('entry');
       used.add(entry.id);
     }
-    mutateCollection(id, `samling:${id}:import`, (data) => { data.entries = parsed.entries; });
+    mutateCollection(id, `collection:${id}:import`, (data) => { data.entries = parsed.entries; });
     setStatus(ta('status.csvImported', { count: String(parsed.entries.length) }), 'ok');
   }
 
@@ -4609,8 +4615,8 @@
       { label: ta('shape.triangle'), act: 'block', kind: 'shape-triangle' },
     ];
     for (const id of templateIds) {
-      const mal = templateStores[id]?.data?.mal;
-      if (mal?.kind === 'blocks') items.push({ label: mal.name, act: 'mal', id });
+      const tpl = templateStores[id]?.data?.mal;
+      if (tpl?.kind === 'blocks') items.push({ label: tpl.name, act: 'template', id });
     }
     for (const entry of pluginBlocks) {
       if (entry.variants?.length) {
@@ -4627,7 +4633,7 @@
   function runPanelItem(item) {
     if (item.act === 'block') addBlock(item.kind);
     else if (item.act === 'plugin') addPluginBlock(item.entry, item.props ?? {});
-    else if (item.act === 'mal') bridge?.sendInsertTemplate(item.id);
+    else if (item.act === 'template') bridge?.sendInsertTemplate(item.id);
   }
 
   /** "+ Add block" in a section: build the block and put it there. With a
@@ -4729,7 +4735,7 @@
     if (!files.length) return;
     setStatus(ta('status.compressingImages'));
     const { images, failed, big } = await compressMany(files);
-    if (images.length) mutateBlock('galleri-add', (b) => { b.props.images.push(...images); });
+    if (images.length) mutateBlock('gallery-add', (b) => { b.props.images.push(...images); });
     reportUpload(images.length, failed, big);
   }
 
@@ -4792,9 +4798,9 @@
   /** The background layers' images (image + slideshow) - shared by section, nav and footer. */
   function materializeBackground(background, files) {
     for (const layer of background?.layers ?? []) {
-      if (layer.type === 'image') materializeField(layer.props, 'src', 'bakgrunn', files);
+      if (layer.type === 'image') materializeField(layer.props, 'src', 'background', files);
       if (layer.type === 'slideshow') {
-        for (const img of layer.props.images ?? []) materializeField(img, 'src', 'bakgrunn', files);
+        for (const img of layer.props.images ?? []) materializeField(img, 'src', 'background', files);
       }
       if (layer.type === 'video') {
         materializeField(layer.props, 'src', 'video', files);
@@ -4837,7 +4843,7 @@
     if (logo?.type === 'both') materializeField(logo, 'image', 'logo', files);
     // The legacy single nav background image (back compat) + the layered
     // backgrounds on nav and footer.
-    if (site.nav?.style) materializeField(site.nav.style, 'image', 'meny', files);
+    if (site.nav?.style) materializeField(site.nav.style, 'image', 'menu', files);
     materializeBackground(site.nav?.style?.background, files);
     materializeBackground(site.footer?.background, files);
     if (site.footer?.brand) materializeField(site.footer.brand, 'logo', 'footer-logo', files);
@@ -4900,9 +4906,9 @@
     }
     if (collectionsIndexStore) {
       collectionsIndexStore.reset();
-      samlingerIds = [...(collectionsIndexStore.data.samlinger ?? [])];
+      collectionIds = [...(collectionsIndexStore.data.samlinger ?? [])];
       for (const id of Object.keys(collectionStores)) {
-        if (samlingerIds.includes(id)) collectionStores[id].reset();
+        if (collectionIds.includes(id)) collectionStores[id].reset();
         else delete collectionStores[id];
       }
       syncCollectionsView();
@@ -4999,21 +5005,21 @@
       draftKeys.push('urd-draft-site');
       // Name WHAT in the site setup changed (for the history).
       const eq = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
-      if (!eq(site.theme, siteDraft.theme)) publishedTitles.push('tema');
-      if (!eq(site.nav, siteDraft.nav)) publishedTitles.push('menyen');
-      if (!eq(site.footer, siteDraft.footer)) publishedTitles.push('footeren');
-      if (!eq(site.pages, siteDraft.pages)) publishedTitles.push('sideregisteret');
-      if (!eq(site.grid, siteDraft.grid)) publishedTitles.push('gridet');
-      if ((site.site.icon ?? null) !== (siteDraft.site.icon ?? null)) publishedTitles.push('nettstedsikonet');
+      if (!eq(site.theme, siteDraft.theme)) publishedTitles.push(ta('publish.part.theme'));
+      if (!eq(site.nav, siteDraft.nav)) publishedTitles.push(ta('publish.part.nav'));
+      if (!eq(site.footer, siteDraft.footer)) publishedTitles.push(ta('publish.part.footer'));
+      if (!eq(site.pages, siteDraft.pages)) publishedTitles.push(ta('publish.part.pages'));
+      if (!eq(site.grid, siteDraft.grid)) publishedTitles.push(ta('publish.part.grid'));
+      if ((site.site.icon ?? null) !== (siteDraft.site.icon ?? null)) publishedTitles.push(ta('publish.part.icon'));
       const { icon: a, ...restA } = site.site;
       const { icon: b, ...restB } = siteDraft.site;
-      if (!eq(restA, restB)) publishedTitles.push('nettstedsinfo');
+      if (!eq(restA, restB)) publishedTitles.push(ta('publish.part.siteInfo'));
     }
 
     // Collections: changed files, the index file and deletions (diff against the published index).
-    const changedSamlinger = Object.entries(collectionStores).filter(([, st]) => st.hasDraft());
-    if (changedSamlinger.length || collectionsIndexStore?.hasDraft()) {
-      for (const [id, st] of changedSamlinger) {
+    const changedCollections = Object.entries(collectionStores).filter(([, st]) => st.hasDraft());
+    if (changedCollections.length || collectionsIndexStore?.hasDraft()) {
+      for (const [id, st] of changedCollections) {
         const out = JSON.parse(JSON.stringify(st.data));
         for (const entry of out.entries) materializeEntryImages(entry, files);
         files.push({ path: `content/samlinger/${id}.json`, content: JSON.stringify(out, null, 2) + '\n', encoding: 'utf-8' });
@@ -5048,18 +5054,18 @@
         const created = new Set(files.map((f) => f.path));
         for (const id of publishedIndex.samlinger ?? []) {
           const path = `content/samlinger/${id}.json`;
-          if (!samlingerIds.includes(id) && !created.has(path)) files.push({ path, delete: true });
+          if (!collectionIds.includes(id) && !created.has(path)) files.push({ path, delete: true });
         }
       }
-      publishedTitles.push('samlinger');
+      publishedTitles.push(ta('publish.part.collections'));
     }
 
     // Template changes are published as content/maler/ files + index, the
     // same pattern as collections; images in the template are materialized
     // to media/.
-    const changedMaler = Object.entries(templateStores).filter(([, st]) => st.hasDraft());
-    if (changedMaler.length || templatesIndexStore?.hasDraft()) {
-      for (const [id, st] of changedMaler) {
+    const changedTemplates = Object.entries(templateStores).filter(([, st]) => st.hasDraft());
+    if (changedTemplates.length || templatesIndexStore?.hasDraft()) {
+      for (const [id, st] of changedTemplates) {
         const out = JSON.parse(JSON.stringify(st.data));
         if (out.section) materializeSection(out.section, files);
         for (const block of out.blocks ?? []) materializeBlockImages(block, files);
@@ -5082,14 +5088,14 @@
           if (!templateIds.includes(id) && !created.has(path)) files.push({ path, delete: true });
         }
       }
-      publishedTitles.push('maler');
+      publishedTitles.push(ta('publish.part.templates'));
     }
 
     // Plugin changes (enabled/disabled/added) are published as plugins.json.
     if (pluginsStore?.hasDraft()) {
       files.push({ path: 'plugins/plugins.json', content: JSON.stringify(pluginsStore.data, null, 2) + '\n', encoding: 'utf-8' });
       draftKeys.push('urd-draft-plugins');
-      publishedTitles.push('plugins');
+      publishedTitles.push(ta('publish.part.plugins'));
     }
 
     // Page routing on all static hosts: every page except the front page
@@ -5138,7 +5144,7 @@
     }
 
     const body = {
-      message: `Oppdater ${publishedTitles.join(', ') || 'nettstedet'} via Urd-admin`,
+      message: ta('publish.commitMessage', { titles: publishedTitles.join(', ') || ta('publish.theSite') }),
       files,
       // The HEAD the conflict check saw: the server rejects with 409 if
       // someone manages to publish inside the commit window itself.
@@ -5185,11 +5191,11 @@
         const publishedIndex = JSON.parse(JSON.stringify(collectionsIndexStore.data));
         collectionsIndexStore = createDraftStore('urd-draft-collections', () => publishedIndex, draftSaveError, 'urd-draft-samlinger');
         publishedCollections = {};
-        for (const id of samlingerIds) {
+        for (const id of collectionIds) {
           if (!collectionStores[id]) continue;
-          const publishedSamling = JSON.parse(JSON.stringify(collectionStores[id].data));
-          publishedCollections[id] = publishedSamling;
-          collectionStores[id] = createDraftStore(`urd-draft-collection-${id}`, () => publishedSamling, draftSaveError, `urd-draft-samling-${id}`);
+          const publishedCollection = JSON.parse(JSON.stringify(collectionStores[id].data));
+          publishedCollections[id] = publishedCollection;
+          collectionStores[id] = createDraftStore(`urd-draft-collection-${id}`, () => publishedCollection, draftSaveError, `urd-draft-samling-${id}`);
         }
         syncCollectionsView();
       }
@@ -5205,9 +5211,9 @@
         publishedTemplates = {};
         for (const id of templateIds) {
           if (!templateStores[id]) continue;
-          const publishedMal = JSON.parse(JSON.stringify(templateStores[id].data));
-          publishedTemplates[id] = publishedMal;
-          templateStores[id] = createDraftStore(`urd-draft-template-${id}`, () => publishedMal, draftSaveError, `urd-draft-mal-${id}`);
+          const publishedTemplate = JSON.parse(JSON.stringify(templateStores[id].data));
+          publishedTemplates[id] = publishedTemplate;
+          templateStores[id] = createDraftStore(`urd-draft-template-${id}`, () => publishedTemplate, draftSaveError, `urd-draft-mal-${id}`);
         }
         pushTemplatesToPreview();
       }
@@ -5558,35 +5564,35 @@
                 <button class="ghost action" title={ta('hint.pages.autoMenu')}
                   onclick={addPage} disabled={!newPageTitle.trim()}>{ta('ui.createPage')}</button>
                 <span class="mini-label">{ta('canvas.tabPresets')}</span>
-                <div class="page-mal-grid" style={thumbThemeStyle}>
-                  <div class="page-mal-card" class:picked={newPageTemplate === null}>
-                    <button class="page-mal-pick" title={ta('tip.pages.blankPick')}
+                <div class="page-template-grid" style={thumbThemeStyle}>
+                  <div class="page-template-card" class:picked={newPageTemplate === null}>
+                    <button class="page-template-pick" title={ta('tip.pages.blankPick')}
                       onclick={() => (newPageTemplate = null)}>
-                      <span class="page-mal-thumb">{@html pageThumb({ sections: [] })}</span>
-                      <span class="page-mal-name">{ta('ui.blankPage')}</span>
+                      <span class="page-template-thumb">{@html pageThumb({ sections: [] })}</span>
+                      <span class="page-template-name">{ta('ui.blankPage')}</span>
                     </button>
                   </div>
                   {#each PAGE_PRESETS as p (p.id)}
-                    <div class="page-mal-card" class:picked={newPageTemplate === `preset:${p.id}`}>
-                      <button class="page-mal-pick" title={ta('tip.pages.templatePick', { name: ta(p.labelKey) })}
+                    <div class="page-template-card" class:picked={newPageTemplate === `preset:${p.id}`}>
+                      <button class="page-template-pick" title={ta('tip.pages.templatePick', { name: ta(p.labelKey) })}
                         onclick={() => (newPageTemplate = newPageTemplate === `preset:${p.id}` ? null : `preset:${p.id}`)}>
-                        <span class="page-mal-thumb">{@html builtinPageThumbs[p.id]}</span>
-                        <span class="page-mal-name">{ta(p.labelKey)}</span>
+                        <span class="page-template-thumb">{@html builtinPageThumbs[p.id]}</span>
+                        <span class="page-template-name">{ta(p.labelKey)}</span>
                       </button>
                     </div>
                   {/each}
                 </div>
                 {#if templateIds.some((id) => templateStores[id]?.data?.mal?.kind === 'page')}
                   <span class="mini-label">{ta('canvas.tabMyTemplates')}</span>
-                  <div class="page-mal-grid" style={thumbThemeStyle}>
+                  <div class="page-template-grid" style={thumbThemeStyle}>
                     {#each templateIds.filter((id) => templateStores[id]?.data?.mal?.kind === 'page') as id (id)}
-                      <div class="page-mal-card" class:picked={newPageTemplate === id}>
-                        <button class="page-mal-pick" title={ta('tip.pages.templatePick', { name: templateStores[id].data.mal.name })}
+                      <div class="page-template-card" class:picked={newPageTemplate === id}>
+                        <button class="page-template-pick" title={ta('tip.pages.templatePick', { name: templateStores[id].data.mal.name })}
                           onclick={() => (newPageTemplate = newPageTemplate === id ? null : id)}>
-                          <span class="page-mal-thumb">{@html pageThumb(templateStores[id].data.page)}</span>
-                          <span class="page-mal-name">{templateStores[id].data.mal.name}</span>
+                          <span class="page-template-thumb">{@html pageThumb(templateStores[id].data.page)}</span>
+                          <span class="page-template-name">{templateStores[id].data.mal.name}</span>
                         </button>
-                        <button class="page-mal-del" title={ta('canvas.deleteTemplate')}
+                        <button class="page-template-del" title={ta('canvas.deleteTemplate')}
                           onclick={() => handleDeleteTemplate({ id })}>{@html ICONS.cross}</button>
                       </div>
                     {/each}
@@ -6498,14 +6504,14 @@
               </div>
             {:else if activePanel === 'collections'}
               <div class="panel-body">
-                {#if samlingerIds.length}
+                {#if collectionIds.length}
                   <label>{ta('blocks.collection')}
                     <Dropdown value={activeCollection ?? ''}
-                      options={[['', ta('common.choose')], ...samlingerIds.map((id) => [id, collectionsView[id]?.name ?? id])]}
+                      options={[['', ta('common.choose')], ...collectionIds.map((id) => [id, collectionsView[id]?.name ?? id])]}
                       onchange={(v) => (activeCollection = v || null)} /></label>
                 {/if}
                 {#if activeCollection && collectionsView[activeCollection]}
-                  {@const samling = collectionsView[activeCollection]}
+                  {@const collectionView = collectionsView[activeCollection]}
                   <span class="toolbar-row">
                     <button class="ghost action" onclick={() => addCollectionEntry(activeCollection)}>{ta('ui.addEntry')}</button>
                     <button class="ghost action" title={ta('tip.collections.exportCsv')}
@@ -6515,27 +6521,27 @@
                       <input type="file" accept=".csv,text/csv" onchange={(e) => importCollectionCsv(activeCollection, e)} />
                     </label>
                     <button class="ghost row-tool" title={ta('tip.collections.deleteCollection')}
-                      onclick={() => removeSamling(activeCollection)}>{@html ICONS.cross}</button>
+                      onclick={() => removeCollection(activeCollection)}>{@html ICONS.cross}</button>
                   </span>
-                  {#each samling.entries as entry, i (entry.id)}
+                  {#each collectionView.entries as entry, i (entry.id)}
                     <!-- Collapsible entry: title + date in the summary, the fields inside (panel space) -->
-                    <details class="group samling-entry">
-                      <summary>{plainTitle(entry.title)}{samling.kind === 'products'
+                    <details class="group collection-entry">
+                      <summary>{plainTitle(entry.title)}{collectionView.kind === 'products'
                         ? (entry.price != null ? ` · ${entry.price}` : '')
                         : (entry.date ? ` · ${entry.date}` : '')}</summary>
                       <div class="group-items">
                         <span class="toolbar-row">
                           <input value={entry.title} title={ta('lbl.title')}
-                            onchange={(e) => setEntryField(activeCollection, entry.id, 'title', e.target.value || 'Uten tittel')} />
+                            onchange={(e) => setEntryField(activeCollection, entry.id, 'title', e.target.value || ta('ui.untitled'))} />
                           <span class="row-tools">
                             <button class="ghost row-tool" onclick={() => moveEntry(activeCollection, i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
                             <button class="ghost row-tool" onclick={() => moveEntry(activeCollection, i, 1)}
-                              disabled={i === samling.entries.length - 1}>{@html ICONS.down}</button>
+                              disabled={i === collectionView.entries.length - 1}>{@html ICONS.down}</button>
                             <button class="ghost row-tool" title={ta('tip.collections.deleteEntry')}
                               onclick={() => removeEntry(activeCollection, entry.id)}>{@html ICONS.cross}</button>
                           </span>
                         </span>
-                        {#if samling.kind !== 'products'}
+                        {#if collectionView.kind !== 'products'}
                           <label>{ta('lbl.date')}
                             <input type="date" value={entry.date ?? ''}
                               onchange={(e) => setEntryField(activeCollection, entry.id, 'date', e.target.value)} /></label>
@@ -6543,7 +6549,7 @@
                         <textarea rows="3" placeholder={ta('ph.collections.text')}
                           value={entry.text ?? ''}
                           onchange={(e) => setEntryField(activeCollection, entry.id, 'text', e.target.value)}></textarea>
-                        {#if samling.kind !== 'products'}
+                        {#if collectionView.kind !== 'products'}
                           <label>{ta('lbl.link')}
                             <input value={entry.href ?? ''} placeholder={ta('ph.collections.href')}
                               onchange={(e) => setEntryField(activeCollection, entry.id, 'href', e.target.value)} /></label>
@@ -6559,7 +6565,7 @@
                               onclick={() => setEntryField(activeCollection, entry.id, 'image', '')}>{@html ICONS.cross}</button>
                           {/if}
                         </span>
-                        {#if samling.kind === 'products'}
+                        {#if collectionView.kind === 'products'}
                           <!-- The product fields (the shop): price, member price, badge, sizes and colors. -->
                           <label>{ta('lbl.price')}
                             <input type="number" min="0" step="0.01" value={entry.price ?? ''}
@@ -6593,7 +6599,7 @@
                       </div>
                     </details>
                   {/each}
-                  {#if !samling.entries.length}
+                  {#if !collectionView.entries.length}
                     <p class="panel-hint">{ta('hint.collections.empty')}</p>
                   {/if}
                   <hr class="gridmenu-divider" />
@@ -6603,7 +6609,7 @@
                     onkeydown={(e) => e.key === 'Enter' && addCollection()} /></label>
                 <label>{ta('common.type')}
                   <Dropdown value={newCollectionKind}
-                    options={SAMLING_KINDS}
+                    options={COLLECTION_KINDS}
                     onchange={(v) => (newCollectionKind = v)} /></label>
                 <button class="ghost action" onclick={addCollection} disabled={!newCollectionName.trim()}>{ta('ui.createCollection')}</button>
               </div>
@@ -6980,10 +6986,10 @@
           {layer.props.src ? ta('ui.changeImage') : ta('ui.chooseImage')}
           <input type="file" accept="image/*" onchange={(e) => setBgImage(bg, i, e)} />
         </label>
-        {@const isTile = layer.props.fit === 'flislegg' || layer.props.fit === 'repeat'}
+        {@const isTile = layer.props.fit === 'tile' || layer.props.fit === 'repeat'}
         <label title={ta('tip.bg.fit')}>{ta('lbl.fit')}
-          <Dropdown value={isTile ? 'flislegg' : 'vanlig'}
-            options={[['vanlig', ta('opt.img.plain')], ['flislegg', ta('opt.img.tile')]]}
+          <Dropdown value={isTile ? 'tile' : 'plain'}
+            options={[['plain', ta('opt.img.plain')], ['tile', ta('opt.img.tile')]]}
             onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
         <label title={ta('tip.bg.size')}>{ta('lbl.size')}</label>
         <div class="sizestep">
@@ -7399,7 +7405,7 @@
     {:else if selectedBlock.type === 'collection'}
       <label title={ta('tip.collection.source')}>{ta('blocks.collection')}
         <Dropdown value={selectedBlock.props.collection ?? ''}
-          options={[['', ta('common.choose')], ...samlingerIds.map((id) => [id, collectionsView[id]?.name ?? id])]}
+          options={[['', ta('common.choose')], ...collectionIds.map((id) => [id, collectionsView[id]?.name ?? id])]}
           onchange={(v) => setBlockProp('collection', v || null)} /></label>
       <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
         <input type="number" min="0" max="100" value={selectedBlock.props.limit ?? 6}
@@ -7412,7 +7418,7 @@
     {:else if selectedBlock.type === 'product'}
       <label title={ta('tip.product.source')}>{ta('blocks.collection')}
         <Dropdown value={selectedBlock.props.collection ?? ''}
-          options={[['', ta('common.choose')], ...samlingerIds.filter((id) => collectionsView[id]?.kind === 'products').map((id) => [id, collectionsView[id]?.name ?? id])]}
+          options={[['', ta('common.choose')], ...collectionIds.filter((id) => collectionsView[id]?.kind === 'products').map((id) => [id, collectionsView[id]?.name ?? id])]}
           onchange={(v) => setBlockProp('collection', v || null)} /></label>
       {#if selectedBlock.props.collection && collectionsView[selectedBlock.props.collection]?.kind === 'products'}
         <span class="toolbar-row">
@@ -7421,7 +7427,7 @@
           <button class="ghost action" title={ta('tip.product.editCatalog')}
             onclick={() => { activeCollection = selectedBlock.props.collection; activePanel = 'collections'; }}>{ta('ui.editCatalog')}</button>
         </span>
-      {:else if !samlingerIds.some((id) => collectionsView[id]?.kind === 'products')}
+      {:else if !collectionIds.some((id) => collectionsView[id]?.kind === 'products')}
         <button class="ghost action" title={ta('tip.product.createCatalog')}
           onclick={createCatalogForBlock}>{ta('ui.createCatalog')}</button>
       {/if}
@@ -7864,28 +7870,28 @@
     --urd-brand-mono: #eaf1ed;    /* monochrome (off-white) */
   }
 
-  :global(:root[data-admin-theme='lilla']) {
+  :global(:root[data-admin-theme='purple']) {
     --urd-color-bg: #0b0e17;
     --urd-color-surface: #151a2b;
     --urd-color-accent: #7c5cff;
     --urd-color-text: #e8eaf0;
   }
 
-  :global(:root[data-admin-theme='bronn']) {
+  :global(:root[data-admin-theme='well']) {
     --urd-color-bg: #0b1418;
     --urd-color-surface: #13232a;
     --urd-color-accent: #2ec8b5;
     --urd-color-text: #e4eef0;
   }
 
-  :global(:root[data-admin-theme='gull']) {
+  :global(:root[data-admin-theme='gold']) {
     --urd-color-bg: #100e0a;
     --urd-color-surface: #1c1812;
     --urd-color-accent: #d9a441;
     --urd-color-text: #ede8dc;
   }
 
-  :global(:root[data-admin-theme='graa']) {
+  :global(:root[data-admin-theme='grey']) {
     --urd-color-bg: #0e0f11;
     --urd-color-surface: #191b1e;
     --urd-color-accent: #5f6a75;
@@ -7893,7 +7899,7 @@
   }
 
   /* Nordlys: the Nord palette (arctic, low saturation) */
-  :global(:root[data-admin-theme='nordlys']) {
+  :global(:root[data-admin-theme='aurora']) {
     --urd-color-bg: #232831;
     --urd-color-surface: #2e3440;
     --urd-color-accent: #5e81ac;
@@ -7901,7 +7907,7 @@
   }
 
   /* Skumring: Tokyo Night (neon night, blue) */
-  :global(:root[data-admin-theme='skumring']) {
+  :global(:root[data-admin-theme='dusk']) {
     --urd-color-bg: #16161e;
     --urd-color-surface: #1a1b26;
     --urd-color-accent: #3d59a1;
@@ -7909,7 +7915,7 @@
   }
 
   /* Glo: Gruvbox (warm, glowing orange) */
-  :global(:root[data-admin-theme='glo']) {
+  :global(:root[data-admin-theme='ember']) {
     --urd-color-bg: #1d2021;
     --urd-color-surface: #282828;
     --urd-color-accent: #d65d0e;
@@ -8436,7 +8442,7 @@
     color: #e2b84a;
   }
 
-  .samling-entry {
+  .collection-entry {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: 0.35rem;
@@ -8701,18 +8707,18 @@
 
   /* The "new page from template" grid: cards with a page thumbnail; the
      picked card decides what + Create page starts from. */
-  .page-mal-grid {
+  .page-template-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.45rem;
   }
 
-  .page-mal-card {
+  .page-template-card {
     position: relative;
     min-width: 0;
   }
 
-  .page-mal-pick {
+  .page-template-pick {
     width: 100%;
     display: grid;
     gap: 0.3rem;
@@ -8726,22 +8732,22 @@
     cursor: pointer;
   }
 
-  .page-mal-card.picked .page-mal-pick {
+  .page-template-card.picked .page-template-pick {
     border-color: var(--urd-color-accent, #7c5cff);
   }
 
-  .page-mal-thumb {
+  .page-template-thumb {
     width: 100%;
   }
 
-  .page-mal-thumb :global(svg) {
+  .page-template-thumb :global(svg) {
     display: block;
     width: 100%;
     height: auto;
     border-radius: 5px;
   }
 
-  .page-mal-name {
+  .page-template-name {
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -8750,7 +8756,7 @@
     opacity: 0.85;
   }
 
-  .page-mal-del {
+  .page-template-del {
     position: absolute;
     top: 0.3rem;
     right: 0.3rem;
@@ -8768,7 +8774,7 @@
     opacity: 0.75;
   }
 
-  .page-mal-del:hover {
+  .page-template-del:hover {
     opacity: 1;
   }
 

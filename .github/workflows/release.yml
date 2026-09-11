@@ -7,7 +7,7 @@
 # Requires the secret URD_TEMPLATE_PAT: a fine-grained PAT with contents
 # read/write ONLY on the template repo (GITHUB_TOKEN does not reach across
 # repos). Actions are SHA-pinned with a version comment; the dependabot group
-# actions-alle keeps the pins fresh.
+# actions-all keeps the pins fresh.
 name: Release
 
 on:
@@ -104,7 +104,7 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
           if git diff --cached --quiet; then
-            echo 'Ingen innholdsendringer siden forrige synk; tagger uendret innhold.'
+            echo 'No content changes since the last sync; tagging unchanged content.'
           else
             git commit -m "Urd $TAG"
           fi
@@ -113,9 +113,9 @@ jobs:
           # tags must never be moved silently).
           if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
             if [ "$(git rev-parse "refs/tags/$TAG^{commit}")" = "$(git rev-parse HEAD)" ]; then
-              echo "Taggen $TAG finnes allerede og peker riktig."
+              echo "Tag $TAG already exists and points correctly."
             else
-              echo "FEIL: taggen $TAG finnes med annet innhold." >&2
+              echo "ERROR: tag $TAG exists with different content." >&2
               exit 1
             fi
           else

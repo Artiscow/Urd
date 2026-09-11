@@ -36,14 +36,14 @@ export function renderBackgroundLayers(host, background) {
     el.className = 'urd-bg-layer';
     const lifted = lift(layer, Urd.backgrounds.get(layer.type));
     if (!lifted.ok) {
-      console.warn(`Urd: hopper over bakgrunnslag '${layer.type}' (${lifted.placeholder})`);
+      console.warn(`Urd: skipping background layer '${layer.type}' (${lifted.placeholder})`);
       continue;
     }
     try {
       Urd.backgrounds.get(layer.type).render(el, lifted.props);
       host.appendChild(el);
     } catch (err) {
-      console.warn(`Urd: bakgrunnslag '${layer.type}' failed to render`, err);
+      console.warn(`Urd: background layer '${layer.type}' failed to render`, err);
     }
   }
 }
@@ -313,7 +313,7 @@ export function renderSection(section, site, host, opts = {}) {
     for (const block of section.blocks) {
       // A block without a desktop frame (hand-edited/broken data) is skipped instead of toppling the whole section.
       if (!block.frames?.desktop) {
-        console.warn(`Urd: blokk '${block.id ?? block.type}' is missing frames.desktop - skipped`);
+        console.warn(`Urd: block '${block.id ?? block.type}' is missing frames.desktop - skipped`);
         continue;
       }
       const el = document.createElement('div');
@@ -392,7 +392,7 @@ function renderBlock(Urd, el, block, ctx) {
         el.classList.add('urd-anim-cardwise');
       }
     } catch (err) {
-      console.warn(`Urd: blokk '${block.type}' failed to render`, err);
+      console.warn(`Urd: block '${block.type}' failed to render`, err);
       renderPlaceholder(el, block.type);
     }
   } else {
@@ -431,7 +431,7 @@ function renderAnimation(Urd, el, animation, ctx, apply = applyAnimation) {
   try {
     apply(el, animation.type, lifted.props, def, ctx);
   } catch (err) {
-    console.warn(`Urd: animasjonen '${animation.type}' feilet`, err);
+    console.warn(`Urd: animation '${animation.type}' failed`, err);
   }
 }
 

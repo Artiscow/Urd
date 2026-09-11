@@ -3,16 +3,17 @@ import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 
-// Motoren bor i en versjonert mappe (ADR-0013); mappenavnet er alltid lik
-// engine-feltet i template/urd.json, så aliaset følger fase-slippets
-// omdøping automatisk. All editor-kode importerer motoren via $engine.
+// The engine lives in a versioned folder (ADR-0013); the folder name always
+// equals the engine field in template/urd.json, so the alias follows the
+// phase release's rename automatically. All editor code imports the engine
+// through $engine.
 const engineVersion = JSON.parse(
   readFileSync(new URL('../template/urd.json', import.meta.url), 'utf-8'),
 ).engine;
 const engineDir = fileURLToPath(new URL(`../template/assets/engine/${engineVersion}`, import.meta.url));
 
-// Bygger editoren til template/admin/assets/ - den ferdigbygde outputen
-// COMMITTES slik at klonede sider fungerer uten byggesteg (se ADR-0002).
+// Builds the editor into template/admin/assets/ - the built output is
+// COMMITTED so that cloned sites work without a build step (see ADR-0002).
 export default defineConfig({
   plugins: [svelte()],
   resolve: {

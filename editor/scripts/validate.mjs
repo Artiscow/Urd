@@ -18,7 +18,7 @@ const siteSchema = load('schema/site.schema.json');
 const pageSchema = load('schema/page.schema.json');
 const pluginSchema = load('schema/plugin.schema.json');
 const collectionSchema = load('schema/collection.schema.json');
-const malSchema = load('schema/mal.schema.json');
+const templateSchema = load('schema/mal.schema.json');
 ajv.addSchema(siteSchema); // page.schema.json references site.schema.json ($id)
 ajv.addSchema(pageSchema); // mal.schema.json references the page schema's $defs ($id)
 
@@ -53,7 +53,7 @@ for (const id of load('template/content/samlinger.json').samlinger ?? []) {
 // Every template in the index file is validated against the mal schema (same
 // pattern; the template repo ships an empty index, so the list is often empty here).
 for (const id of load('template/content/maler.json').maler ?? []) {
-  cases.push([`template/content/maler/${id}.json`, malSchema]);
+  cases.push([`template/content/maler/${id}.json`, templateSchema]);
 }
 
 let failed = false;
@@ -63,9 +63,9 @@ for (const [path, schema] of cases) {
     console.log(`OK    ${path}`);
   } else {
     failed = true;
-    console.error(`FEIL  ${path}`);
+    console.error(`ERROR ${path}`);
     for (const err of validate.errors ?? []) {
-      console.error(`      ${err.instancePath || '(rot)'}: ${err.message}`);
+      console.error(`      ${err.instancePath || '(root)'}: ${err.message}`);
     }
   }
 }
@@ -88,12 +88,12 @@ for (const def of defs.values()) {
 const presetPage = { schemaVersion: 1, meta: { id: 'presets', title: 'Presets' }, sections };
 const validatePresets = ajv.getSchema(pageSchema.$id);
 if (validatePresets(presetPage)) {
-  console.log(`OK    seksjonspresets (${defs.size} presets mot page-skjemaet)`);
+  console.log(`OK    section presets (${defs.size} presets against the page schema)`);
 } else {
   failed = true;
-  console.error('FEIL  seksjonspresets');
+  console.error('ERROR section presets');
   for (const err of validatePresets.errors ?? []) {
-    console.error(`      ${err.instancePath || '(rot)'}: ${err.message}`);
+    console.error(`      ${err.instancePath || '(root)'}: ${err.message}`);
   }
 }
 
@@ -103,40 +103,40 @@ if (validatePresets(presetPage)) {
 const { PAGE_PRESETS, buildPagePreset } = await import(new URL(`template/assets/engine/${engineVersion}/page-presets.js`, `file://${root}`));
 let pagePresetOk = true;
 for (const preset of PAGE_PRESETS) {
-  const built = buildPagePreset(preset.id, { pageId: 'startpakke', title: 'Startpakke' });
+  const built = buildPagePreset(preset.id, { pageId: 'starter-pack', title: 'Starter pack' });
   if (!validatePresets(built)) {
     failed = true;
     pagePresetOk = false;
-    console.error(`FEIL  startpakke (${preset.id})`);
+    console.error(`ERROR starter pack (${preset.id})`);
     for (const err of validatePresets.errors ?? []) {
-      console.error(`      ${err.instancePath || '(rot)'}: ${err.message}`);
+      console.error(`      ${err.instancePath || '(root)'}: ${err.message}`);
     }
   }
 }
-if (pagePresetOk) console.log(`OK    startpakker (${PAGE_PRESETS.length} mot page-skjemaet)`);
+if (pagePresetOk) console.log(`OK    starter packs (${PAGE_PRESETS.length} against the page schema)`);
 
 // Synthetic template cases: the index ships empty, so the contract is validated
 // with a section, a block-group and a page template built from real presets.
-// The re-id rule and the geometry are tested in tests/maler.test.mjs; here the
+// The re-id rule and the geometry are tested in tests/templates.test.mjs; here the
 // schema contract applies. A preset with blocks (the first one, "empty", has none).
-const malSection = [...defs.values()].map((d) => d.create()).find((s) => s.blocks.length > 0);
-const syntheticMaler = [
-  { schemaVersion: 1, mal: { name: 'Testmal seksjon', kind: 'section' }, section: malSection },
-  { schemaVersion: 1, mal: { name: 'Testmal gruppe', kind: 'blocks' }, blocks: malSection.blocks },
-  { schemaVersion: 1, mal: { name: 'Testmal side', kind: 'page' }, page: presetPage },
+const templateSection = [...defs.values()].map((d) => d.create()).find((s) => s.blocks.length > 0);
+const syntheticTemplates = [
+  { schemaVersion: 1, mal: { name: 'Test template section', kind: 'section' }, section: templateSection },
+  { schemaVersion: 1, mal: { name: 'Test template group', kind: 'blocks' }, blocks: templateSection.blocks },
+  { schemaVersion: 1, mal: { name: 'Test template page', kind: 'page' }, page: presetPage },
 ];
-const validateMal = ajv.compile(malSchema);
-let malOk = true;
-for (const sample of syntheticMaler) {
-  if (!validateMal(sample)) {
+const validateTemplate = ajv.compile(templateSchema);
+let templateOk = true;
+for (const sample of syntheticTemplates) {
+  if (!validateTemplate(sample)) {
     failed = true;
-    malOk = false;
-    console.error(`FEIL  syntetisk mal (${sample.mal.kind})`);
-    for (const err of validateMal.errors ?? []) {
-      console.error(`      ${err.instancePath || '(rot)'}: ${err.message}`);
+    templateOk = false;
+    console.error(`ERROR synthetic template (${sample.mal.kind})`);
+    for (const err of validateTemplate.errors ?? []) {
+      console.error(`      ${err.instancePath || '(root)'}: ${err.message}`);
     }
   }
 }
-if (malOk) console.log('OK    syntetiske maler (3 mot mal-skjemaet)');
+if (templateOk) console.log('OK    synthetic templates (3 against the template schema)');
 
 process.exit(failed ? 1 : 0);

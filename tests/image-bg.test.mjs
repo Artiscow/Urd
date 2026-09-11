@@ -12,9 +12,8 @@ const {
 } = await engineImport('backgrounds/image.js');
 
 test('imageLayer: default values', () => {
-  assert.equal(imageLayer.version, 1);
-  // 'vanlig' is the fit contract value ("plain"), deliberate legacy data.
-  assert.equal(imageLayer.defaults().fit, 'vanlig');
+  assert.equal(imageLayer.version, 2);
+  assert.equal(imageLayer.defaults().fit, 'plain');
   assert.equal(imageLayer.defaults().size, 1);
   assert.equal(imageLayer.defaults().parallax, 0);
   assert.equal(imageLayer.defaults().bleed, 'none');
@@ -78,4 +77,15 @@ test('parallaxOffset: the offset is clamped to the limit (never a gap/gigantic)'
   const pad = parallaxPad(200, vh, 1); // 36
   assert.equal(Math.abs(parallaxOffset(9000, 200, vh, 1, pad)), pad);
   assert.equal(Math.abs(parallaxOffset(-9000, 200, vh, 1, pad)), pad);
+});
+
+test('imageLayer 1 -> 2: the Norwegian fit values are lifted to English', () => {
+  const lift = imageLayer.migrations[1];
+  // The v1 values are deliberate legacy contract data (ADR-0021).
+  assert.equal(lift({ fit: 'vanlig' }).fit, 'plain');
+  assert.equal(lift({ fit: 'flislegg' }).fit, 'tile');
+  assert.equal(lift({ fit: 'egen' }).fit, 'custom');
+  assert.equal(lift({ fit: 'cover' }).fit, 'cover', 'values that were already English are untouched');
+  assert.equal(lift({ fit: 'repeat' }).fit, 'repeat');
+  assert.equal(lift({ fit: 'vanlig', size: 0.5 }).size, 0.5, 'the other props survive the lift');
 });

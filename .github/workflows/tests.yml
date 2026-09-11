@@ -33,7 +33,7 @@ jobs:
         run: npm run build
 
       - name: Committed editor build matches the source
-        # Bundelen i template/admin/assets er bygget artefakt som committes:
-        # avviker den fra det kilden faktisk produserer, er den enten glemt
-        # gjenbygget eller manipulert - begge skal stoppe CI.
+        # The bundle in template/admin/assets is a build artefact that is
+        # committed: if it differs from what the source actually produces, it
+        # was either left unrebuilt or tampered with. Both must stop CI.
         run: git diff --exit-code -- template/admin/assets

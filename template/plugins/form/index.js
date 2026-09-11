@@ -134,7 +134,7 @@ function renderForm(host, props, ctx) {
   // Honeypot: hidden from humans, filled in by bots. Never visible, never tabbable.
   const honeypot = el2('input', 'urd-form-hp');
   honeypot.type = 'text';
-  honeypot.name = 'nettside';
+  honeypot.name = 'website';
   honeypot.tabIndex = -1;
   honeypot.autocomplete = 'off';
   honeypot.setAttribute('aria-hidden', 'true');
@@ -207,7 +207,7 @@ function renderForm(host, props, ctx) {
         if (!res.ok) throw new Error(String(res.status));
         done();
       } catch {
-        status.classList.add('feil');
+        status.classList.add('error');
         status.textContent = t('form.sendFailed');
       } finally {
         submit.disabled = false;
@@ -215,7 +215,7 @@ function renderForm(host, props, ctx) {
     } else {
       const url = buildMailto(props.recipient, props.subject || t('form.subjectDefault'), fields, values, { yes: t('form.yes') });
       if (!url) {
-        status.classList.add('feil');
+        status.classList.add('error');
         status.textContent = t('form.noRecipient');
         return;
       }
@@ -363,12 +363,12 @@ function configPanel(el, props, ctx) {
     close();
   };
   function close() {
-    panel.classList.remove('vis');
+    panel.classList.remove('visible');
     document.removeEventListener('pointerdown', onOutside, true);
   }
   gear.addEventListener('click', (event) => {
     event.stopPropagation();
-    if (panel.classList.toggle('vis')) {
+    if (panel.classList.toggle('visible')) {
       setTimeout(() => document.addEventListener('pointerdown', onOutside, true), 0);
     } else {
       close();
@@ -408,7 +408,7 @@ function autoGrow(el, host, ctx) {
 
 /* ---------- CSS ---------- */
 
-const SKJEMA_CSS = `
+const FORM_CSS = `
 .urd-form { width: 100%; position: relative; display: grid; gap: 10px; }
 .urd-form-form { display: grid; gap: 12px; }
 .urd-form-row { display: grid; gap: 4px; }
@@ -435,7 +435,7 @@ textarea.urd-form-input { resize: vertical; min-height: 90px; }
 .urd-form-submit:disabled { opacity: 0.6; cursor: default; }
 .urd-form-status { font-size: 0.9em; margin: 0; }
 .urd-form-status.ok { color: color-mix(in srgb, #4ac26b 85%, var(--urd-color-text)); }
-.urd-form-status.feil { color: #e05252; }
+.urd-form-status.error { color: #e05252; }
 .urd-form-tools { position: absolute; top: -32px; right: -6px; z-index: 5;
   display: flex; gap: 4px; align-items: center;
   /* An invisible bridge down to the block edge, so hover survives the trip up */
@@ -444,12 +444,12 @@ textarea.urd-form-input { resize: vertical; min-height: 90px; }
 /* The config toggle is hidden: the settings open from the block's Properties panel. */
 .urd-form-gear { display: none; }
 .urd-block:hover .urd-form-gear, .urd-form-gear:focus-visible,
-.urd-form:has(.urd-form-config.vis) .urd-form-gear { opacity: 0.92; pointer-events: auto; }
+.urd-form:has(.urd-form-config.visible) .urd-form-gear { opacity: 0.92; pointer-events: auto; }
 .urd-form-config { position: absolute; top: -6px; right: 0; z-index: 6; width: min(360px, 92vw);
   max-height: 80vh; overflow-y: auto; display: none; gap: 6px; padding: 12px; border-radius: 10px;
   background: #151a23; color: #e8eaf0; border: 1px solid rgb(255 255 255 / 18%);
   box-shadow: 0 12px 36px rgb(0 0 0 / 55%); font: 12px/1.4 system-ui, sans-serif; }
-.urd-form-config.vis { display: grid; }
+.urd-form-config.visible { display: grid; }
 .urd-form-config-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.55; }
 .urd-form-config-box { display: grid; gap: 6px; }
 .urd-form-config-note { font-size: 11px; opacity: 0.6; margin: 0; }
@@ -471,13 +471,13 @@ function injectCss() {
   if (document.getElementById('urd-form-css')) return;
   const style = document.createElement('style');
   style.id = 'urd-form-css';
-  style.textContent = SKJEMA_CSS;
+  style.textContent = FORM_CSS;
   document.head.appendChild(style);
 }
 
 /* ---------- The block ---------- */
 
-function renderSkjema(el, props, ctx) {
+function renderFormBlock(el, props, ctx) {
   injectCss();
   const host = el2('div', 'urd-form');
   el.appendChild(host);
@@ -524,7 +524,7 @@ const defaultFields = () => [
   { id: 'melding', label: ta('form.edit.fieldMessage'), type: 'textarea', required: true },
 ];
 
-function kontaktSection() {
+function contactSection() {
   return {
     id: 'sec-' + blockId().slice(4),
     version: 1,
@@ -568,7 +568,7 @@ export function register(Urd) {
       submitLabel: ta('form.edit.sendDefault'), successText: ta('form.edit.thanksDefault'), fields: defaultFields(),
     }),
     migrations: {},
-    render: renderSkjema,
+    render: renderFormBlock,
   });
 
   Urd.sections.define('contact-form', {
@@ -578,6 +578,6 @@ export function register(Urd) {
     groupKey: 'presetGroup.cards',
     hint: 'Contact form that sends via email (or your own endpoint)',
     hintKey: 'form.edit.presetHint',
-    create: kontaktSection,
+    create: contactSection,
   });
 }

@@ -37,7 +37,7 @@ const DD_CSS = `
   border: 0; border-radius: 5px; padding: 5px 8px; cursor: pointer; white-space: nowrap;
 }
 .urd-dd-menu button:hover { background: rgb(255 255 255 / 10%); }
-.urd-dd-menu button.valgt { background: color-mix(in srgb, #7c5cff 30%, transparent); }
+.urd-dd-menu button.selected { background: color-mix(in srgb, #7c5cff 30%, transparent); }
 body.urd-chrome-off .urd-dd, body.urd-chrome-off .urd-dd-menu { display: none !important; }
 `;
 
@@ -98,7 +98,7 @@ export function createDropdown({ value = null, options = [], onchange, title = '
       const choice = document.createElement('button');
       choice.type = 'button';
       choice.textContent = label;
-      if (`${v ?? ''}` === `${current ?? ''}`) choice.classList.add('valgt');
+      if (`${v ?? ''}` === `${current ?? ''}`) choice.classList.add('selected');
       choice.addEventListener('click', () => {
         closeDropdowns();
         set(v);

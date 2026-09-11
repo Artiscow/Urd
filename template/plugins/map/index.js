@@ -73,7 +73,7 @@ function watchCspBlock(host, frame, ctx, largerUrl) {
 
 /* ---------- CSS ---------- */
 
-const KART_CSS = `
+const MAP_CSS = `
 .urd-map { width: 100%; position: relative; display: grid; gap: 6px; }
 .urd-map-frame { width: 100%; border: 1px solid color-mix(in srgb, var(--urd-color-text) 15%, transparent);
   border-radius: var(--urd-radius-md); display: block; }
@@ -96,7 +96,7 @@ function injectCss() {
   if (document.getElementById('urd-map-css')) return;
   const style = document.createElement('style');
   style.id = 'urd-map-css';
-  style.textContent = KART_CSS;
+  style.textContent = MAP_CSS;
   document.head.appendChild(style);
 }
 
@@ -131,7 +131,7 @@ function autoGrow(el, host, ctx) {
 
 /* ---------- The block ---------- */
 
-function renderKart(el, props, ctx) {
+function renderMap(el, props, ctx) {
   injectCss();
   const host = el2('div', 'urd-map');
   el.appendChild(host);
@@ -246,7 +246,7 @@ export function register(Urd) {
       { key: 'height', type: 'number', labelKey: 'map.edit.height', min: 120, max: 900, step: 10 },
     ],
     migrations: {},
-    render: renderKart,
+    render: renderMap,
   });
 
   Urd.sections.define('find-us', {

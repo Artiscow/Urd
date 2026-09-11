@@ -79,7 +79,7 @@ test('buildSession: return URL on own origin, amount in ore, description with li
     returnPath: '/kasse',
     callbackToken: 'urd-token',
   });
-  assert.equal(body.merchantInfo.returnUrl, 'https://forening.pages.dev/kasse?bestilt=1');
+  assert.equal(body.merchantInfo.returnUrl, 'https://forening.pages.dev/kasse?ordered=1');
   assert.equal(body.merchantInfo.callbackUrl, 'https://forening.pages.dev/api/vipps/callback');
   assert.equal(body.transaction.amount.value, 70000);
   assert.equal(body.transaction.amount.currency, 'NOK');

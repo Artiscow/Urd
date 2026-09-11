@@ -16,7 +16,7 @@
     "sectionPresets": [],
     "backgrounds": [],
     "animations": [],
-    "maler": []
+    "templates": []
   },
   "csp": {
     "scriptSrc": ["https://static.cloudflareinsights.com"],

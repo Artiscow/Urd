@@ -96,7 +96,7 @@ function buildNewsletterForm(cta) {
   // Honeypot: hidden field that only bots fill in (CSS keeps it out of sight).
   const honeypot = document.createElement('input');
   honeypot.type = 'text';
-  honeypot.name = 'nettside';
+  honeypot.name = 'website';
   honeypot.tabIndex = -1;
   honeypot.autocomplete = 'off';
   honeypot.className = 'urd-footer-hp';
@@ -129,7 +129,7 @@ function buildNewsletterForm(cta) {
     form.reset();
   };
   const fail = (msg) => {
-    status.className = 'urd-footer-nl-status feil';
+    status.className = 'urd-footer-nl-status error';
     status.textContent = msg;
   };
 

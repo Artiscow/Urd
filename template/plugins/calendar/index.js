@@ -105,7 +105,7 @@ function metaLine(occ) {
 
 function badgeNode(occ) {
   const start = new Date(occ.start);
-  const badge = el2('div', 'urd-samling-badge');
+  const badge = el2('div', 'urd-collection-badge');
   badge.append(el2('strong', null, String(start.getDate())), el2('span', null, dates().monthsShort[start.getMonth()]));
   return badge;
 }
@@ -127,13 +127,13 @@ function signupNode(occ) {
 /* ---------- Views ---------- */
 
 function renderList(host, occs) {
-  const list = el2('div', 'urd-samling-list');
+  const list = el2('div', 'urd-collection-list');
   for (const occ of occs) {
-    const row = el2('article', 'urd-samling-row');
+    const row = el2('article', 'urd-collection-row');
     row.appendChild(badgeNode(occ));
-    const body = el2('div', 'urd-samling-body');
+    const body = el2('div', 'urd-collection-body');
     const titleRow = el2('div', 'urd-cal-titlerow');
-    titleRow.appendChild(el2('strong', 'urd-samling-title', occ.title));
+    titleRow.appendChild(el2('strong', 'urd-collection-title', occ.title));
     const chip = chipNode(occ.category);
     if (chip) titleRow.appendChild(chip);
     body.appendChild(titleRow);
@@ -147,17 +147,17 @@ function renderList(host, occs) {
 }
 
 function renderCards(host, occs) {
-  const grid = el2('div', 'urd-samling-cards');
+  const grid = el2('div', 'urd-collection-cards');
   for (const occ of occs) {
-    const card = el2('article', 'urd-samling-card');
+    const card = el2('article', 'urd-collection-card');
     const top = el2('div', 'urd-cal-titlerow');
-    top.appendChild(el2('span', 'urd-samling-date', metaLine(occ)));
+    top.appendChild(el2('span', 'urd-collection-date', metaLine(occ)));
     const chip = chipNode(occ.category);
     if (chip) top.appendChild(chip);
     card.appendChild(top);
-    card.appendChild(el2('strong', 'urd-samling-title', occ.title));
+    card.appendChild(el2('strong', 'urd-collection-title', occ.title));
     const excerpt = String(occ.description ?? '').split('\n')[0].slice(0, 140);
-    if (excerpt) card.appendChild(el2('div', 'urd-samling-text', excerpt));
+    if (excerpt) card.appendChild(el2('div', 'urd-collection-text', excerpt));
     const signup = signupNode(occ);
     if (signup) card.appendChild(signup);
     grid.appendChild(card);
@@ -216,7 +216,7 @@ function renderMonth(host, occs) {
     const lead = (first.getDay() + 6) % 7;
     const dim = new Date(shown.y, shown.mo + 1, 0).getDate();
     const today = new Date();
-    for (let i = 0; i < lead; i++) grid.appendChild(el2('div', 'urd-cal-day urd-cal-day-tom'));
+    for (let i = 0; i < lead; i++) grid.appendChild(el2('div', 'urd-cal-day urd-cal-day-empty'));
     for (let d = 1; d <= dim; d++) {
       const cell = el2('div', 'urd-cal-day');
       if (d === today.getDate() && shown.mo === today.getMonth() && shown.y === today.getFullYear()) {
@@ -273,13 +273,13 @@ function categoryRow(occs, active, onpick) {
   const row = el2('div', 'urd-cal-chips');
   const all = el2('button', 'urd-cal-chipbtn', t('calendar.all'));
   all.type = 'button';
-  if (!active) all.classList.add('valgt');
+  if (!active) all.classList.add('selected');
   all.addEventListener('click', () => onpick(null));
   row.appendChild(all);
   for (const category of categories) {
     const btn = el2('button', 'urd-cal-chipbtn', category);
     btn.type = 'button';
-    if (active === category) btn.classList.add('valgt');
+    if (active === category) btn.classList.add('selected');
     btn.addEventListener('click', () => onpick(category));
     row.appendChild(btn);
   }
@@ -315,11 +315,11 @@ function configPanel(el, props, ctx) {
   for (const [value, nameKey] of VIEW_NAMES) {
     const b = el2('button', null, ta(nameKey));
     b.type = 'button';
-    if (value === chosenView) b.classList.add('valgt');
+    if (value === chosenView) b.classList.add('selected');
     b.addEventListener('click', () => {
       chosenView = value;
-      for (const other of viewButtons) other.classList.remove('valgt');
-      b.classList.add('valgt');
+      for (const other of viewButtons) other.classList.remove('selected');
+      b.classList.add('selected');
       syncLimitRow();
     });
     viewButtons.push(b);
@@ -379,12 +379,12 @@ function configPanel(el, props, ctx) {
     close();
   };
   function close() {
-    panel.classList.remove('vis');
+    panel.classList.remove('visible');
     document.removeEventListener('pointerdown', onOutside, true);
   }
   gear.addEventListener('click', (event) => {
     event.stopPropagation();
-    if (panel.classList.toggle('vis')) {
+    if (panel.classList.toggle('visible')) {
       setTimeout(() => document.addEventListener('pointerdown', onOutside, true), 0);
     } else {
       close();
@@ -424,8 +424,8 @@ function autoGrow(el, host, ctx) {
 
 /* ---------- Plugin CSS: one style tag, theme-following tokens ---------- */
 
-const KAL_CSS = `
-.urd-kal { width: 100%; display: grid; gap: 12px; position: relative; }
+const CAL_CSS = `
+.urd-cal { width: 100%; display: grid; gap: 12px; position: relative; }
 .urd-cal-titlerow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .urd-cal-meta { font-size: 0.85em; opacity: 0.7; }
 .urd-cal-chip { font-size: 0.72em; padding: 2px 8px; border-radius: 999px;
@@ -438,7 +438,7 @@ const KAL_CSS = `
 .urd-cal-chipbtn { font: inherit; font-size: 0.78em; padding: 3px 10px; border-radius: 999px; cursor: pointer;
   color: inherit; background: transparent;
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 25%, transparent); }
-.urd-cal-chipbtn.valgt { background: var(--urd-color-accent); border-color: var(--urd-color-accent); color: #fff; }
+.urd-cal-chipbtn.selected { background: var(--urd-color-accent); border-color: var(--urd-color-accent); color: #fff; }
 .urd-cal-subscribe { display: flex; gap: 8px; flex-wrap: wrap; }
 .urd-cal-sub-btn { font-size: 0.82em; padding: 5px 12px; border-radius: var(--urd-radius-sm);
   color: inherit; text-decoration: none;
@@ -463,7 +463,7 @@ const KAL_CSS = `
   background: color-mix(in srgb, var(--urd-color-surface) 70%, transparent);
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 8%, transparent);
   display: grid; gap: 2px; align-content: start; }
-.urd-cal-day-tom { background: transparent; border-color: transparent; }
+.urd-cal-day-empty { background: transparent; border-color: transparent; }
 .urd-cal-idag { border-color: var(--urd-color-accent); }
 .urd-cal-daynum { font-size: 0.72em; opacity: 0.6; }
 .urd-cal-pill { font-size: 0.68em; line-height: 1.25; padding: 2px 5px; border-radius: 4px;
@@ -481,12 +481,12 @@ const KAL_CSS = `
    panel (urd-cfg-toggle is clicked via urd-open-block-config). */
 .urd-cal-gear { display: none; }
 .urd-block:hover .urd-cal-gear, .urd-cal-gear:focus-visible,
-.urd-kal:has(.urd-cal-config.vis) .urd-cal-gear { opacity: 0.92; pointer-events: auto; }
+.urd-cal:has(.urd-cal-config.visible) .urd-cal-gear { opacity: 0.92; pointer-events: auto; }
 .urd-cal-config { position: absolute; top: 24px; right: 0; z-index: 6; width: min(340px, 90%);
   display: none; gap: 6px; padding: 12px; border-radius: 10px; background: #151a23; color: #e8eaf0;
   border: 1px solid rgb(255 255 255 / 18%); box-shadow: 0 12px 36px rgb(0 0 0 / 55%);
   font: 12px/1.4 system-ui, sans-serif; }
-.urd-cal-config.vis { display: grid; }
+.urd-cal-config.visible { display: grid; }
 .urd-cal-config-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.55; }
 .urd-cal-config textarea, .urd-cal-config select, .urd-cal-config input[type='number'] {
   font: 12px/1.4 system-ui, sans-serif; color: inherit; background: rgb(255 255 255 / 6%);
@@ -498,17 +498,17 @@ const KAL_CSS = `
 .urd-cal-seg button { font: 11px/1.2 system-ui, sans-serif; color: inherit; background: transparent;
   border: 0; border-radius: 4px; padding: 5px 4px; cursor: pointer; white-space: nowrap; }
 .urd-cal-seg button:hover { background: rgb(255 255 255 / 10%); }
-.urd-cal-seg button.valgt { background: #7c5cff; color: #fff; }
+.urd-cal-seg button.selected { background: #7c5cff; color: #fff; }
 .urd-cal-apply { font: 600 12px/1 system-ui, sans-serif; padding: 7px 0; border-radius: 6px; cursor: pointer;
   color: #fff; background: #7c5cff; border: 0; }
 body.urd-chrome-off .urd-cal-gear, body.urd-chrome-off .urd-cal-config { display: none !important; }
 `;
 
 function injectCss() {
-  if (document.getElementById('urd-kalender-css')) return;
+  if (document.getElementById('urd-calendar-css')) return;
   const style = document.createElement('style');
-  style.id = 'urd-kalender-css';
-  style.textContent = KAL_CSS;
+  style.id = 'urd-calendar-css';
+  style.textContent = CAL_CSS;
   document.head.appendChild(style);
 }
 
@@ -516,7 +516,7 @@ function injectCss() {
 
 function renderCalendar(el, props, ctx) {
   injectCss();
-  const host = el2('div', 'urd-kal');
+  const host = el2('div', 'urd-cal');
   el.appendChild(host);
 
   const sources = (props.sources ?? []).filter(Boolean);
