@@ -48,6 +48,7 @@ import { loadPlugins, loadPluginList, applyPluginSiteLocales } from './plugins.j
 import { setCollectionsDraft } from './collections.js';
 import { initSticky, refreshSticky } from './sticky.js';
 import { applyHeadMeta } from './seo.js';
+import { readPrefetched, revalidatePage, wirePrefetch, sessionStore } from './prefetch.js';
 import { t, ta, initSiteLocale, initAdminLocale, requestedLang, siteLang } from './i18n.js';
 
 export const Urd = {
@@ -473,6 +474,22 @@ export async function boot(opts) {
   applyTheme(site.theme);
   applySiteLayout(site);
   applyFavicon(site.site.icon);
+  // An empty page register (hand-edited site.json) gives an empty page, not a crash.
+  const entry = resolvePage(site) ?? { id: 'empty', title: '', file: 'content/pages/missing.json' };
+  // A page file parked by the previous page's intent prefetch (prefetch.js)
+  // is used as it is and revalidated after the first render; visitors only,
+  // the preview receives its pages via postMessage.
+  const parked = preview ? null : readPrefetched(entry.file, sessionStore());
+  // Otherwise the page file depends only on the register, so its fetch
+  // starts here and runs alongside the plugin loading instead of after it:
+  // with the engine cached, the serial round trips are what a page switch
+  // costs.
+  const pagePromise = parked
+    ? Promise.resolve(parked.page)
+    : fetch(`/${entry.file}`).then((res) => res.json());
+  // A page file that fails is handled where it is awaited; without this the
+  // early rejection would surface as an unhandled promise before then.
+  pagePromise.catch(() => {});
   const engine = await enginePromise;
   // In preview the EDITOR owns the plugin list (the draft in plugins.json): boot loads nothing,
   // and the urd-plugins message loads the draft's active plugins so they work before publishing.
@@ -489,8 +506,6 @@ export async function boot(opts) {
   // Inert in preview (page switches happen via postMessage, never navigation).
   wireViewTransitionNames();
 
-  // An empty page register (hand-edited site.json) gives an empty page, not a crash.
-  const entry = resolvePage(site) ?? { id: 'empty', title: '', file: 'content/pages/missing.json' };
   // Version lifting at file level: older page files are lifted to the
   // current format in memory (disk is written first at the next publish).
   // If the page file is missing (half-finished deploy, hand-edited
@@ -498,7 +513,7 @@ export async function boot(opts) {
   // dies from bad data.
   let page;
   try {
-    page = liftPageFile(await (await fetch(`/${entry.file}`)).json(), rawSite);
+    page = liftPageFile(await pagePromise, rawSite);
   } catch {
     console.warn(`Urd: could not load page file '${entry.file}' - rendering an empty page`);
     page = { schemaVersion: PAGE_SCHEMA_VERSION, meta: { id: entry.id, title: entry.title }, sections: [] };
@@ -540,6 +555,20 @@ export async function boot(opts) {
       document.body.classList.toggle('urd-mobile', state.viewport === 'mobile');
       renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport });
     });
+    // Intent prefetch of the next page (hover, press, focus on internal links).
+    wirePrefetch(site);
+    // A page rendered from the parked copy is checked against the server
+    // once; a newer file rerenders in place, the same copy leaves it be.
+    if (parked) {
+      revalidatePage(entry.file, parked.etag, { text: parked.text }).then((fresh) => {
+        if (!fresh) return;
+        state.page = liftPageFile(fresh, rawSite);
+        if (!Array.isArray(state.page.sections)) state.page.sections = [];
+        document.title = `${state.page.meta?.title ?? entry.title ?? ''} - ${site.site.title}`;
+        applyHeadMeta(site, state.page, location.origin, location.pathname, entry);
+        renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport });
+      }).catch(() => {});
+    }
   }
 
   if (preview) enablePreview(state, opts);

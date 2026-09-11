@@ -161,6 +161,21 @@ export function checkProvides(provides, defined) {
 /** Plugins already loaded in this page: an import cannot be undone, so each id is loaded at most once. */
 const loadedPlugins = new Set();
 
+/** Loads in flight per plugin id, so concurrent load requests (the preview
+ *  sends urd-plugins on every draft change) share one fetch instead of
+ *  importing the same module twice. */
+const inFlight = new Map();
+
+/**
+ * Network seam: everything the loader fetches or imports goes through here,
+ * so the loading contract (parallel fetch, ordered registration) is
+ * testable in node without a browser.
+ */
+export const io = {
+  fetchJson: async (url) => (await fetch(url)).json(),
+  importModule: (url) => import(/* @vite-ignore */ url),
+};
+
 /* ---------- Plugin-locales (ADR-0012) ---------- */
 
 /** Loaded plugin ids with locales: true - used on language switches in the preview. */
@@ -176,10 +191,12 @@ const isPreview = () => new URLSearchParams(location.search).get('preview') === 
  * @returns {Promise<Record<string, string>|null>} null when even the base is missing
  */
 async function loadPluginLocale(id, lang) {
-  const load = async (code) => (await import(/* @vite-ignore */ `/plugins/${id}/locales/${code}.js`)).default.strings;
+  const load = async (code) => (await io.importModule(`/plugins/${id}/locales/${code}.js`)).default.strings;
   try {
-    const base = await load('nb');
-    const extra = lang !== 'nb' ? await load(lang).catch(() => null) : null;
+    const [base, extra] = await Promise.all([
+      load('nb'),
+      lang !== 'nb' ? load(lang).catch(() => null) : null,
+    ]);
     return { ...base, ...(extra ?? {}) };
   } catch {
     console.warn(`Urd: plugin '${id}' promises locales, but locales/nb.js could not be loaded`);
@@ -215,67 +232,107 @@ export async function applyPluginSiteLocales() {
 }
 
 /**
- * Loads ONE plugin: manifest fetch → validation → requiresEngine check →
- * import → register(staging) → commit → provides check. A failure at any
- * step skips the plugin with a clear log line; the site always lives on.
+ * Fetches everything ONE plugin needs: manifest fetch → validation →
+ * requiresEngine check → dictionary and entry module in parallel. Nothing is
+ * registered here, so any number of plugins can be prepared concurrently.
+ * A failure at any step yields null with a clear log line; the site always
+ * lives on.
+ * @returns {Promise<{manifest: object, mod: object|null}|null>}
  */
-export async function loadPluginById(Urd, engineVersion, id) {
-  if (loadedPlugins.has(id)) return;
+async function preparePlugin(engineVersion, id) {
   try {
-    const manifest = await (await fetch(`/plugins/${id}/plugin.json`)).json();
+    const manifest = await io.fetchJson(`/plugins/${id}/plugin.json`);
     const errors = validateManifest(manifest);
     if (errors.length) {
       console.warn(`Urd: plugin '${id}' has an invalid manifest: ${errors.join('; ')}`);
-      return;
+      return null;
     }
     if (!satisfiesEngine(engineVersion, manifest.requiresEngine)) {
       console.warn(`Urd: plugin '${id}' requires engine '${manifest.requiresEngine}', this is ${engineVersion} - skipped`);
-      return;
+      return null;
     }
-    // The dictionary is loaded BEFORE register()/render, so the plugin's
-    // t()/ta() lookups hit from the first rendering. Visitors: loadPlugins
-    // runs after initSiteLocale in boot. Preview: the urd-plugins message
+    // The dictionary, the language-pack module and the entry module depend
+    // only on the manifest, so they are fetched in one wave. The dictionary
+    // is in place BEFORE register()/render, so the plugin's t()/ta()
+    // lookups hit from the first rendering. Visitors: loadPlugins runs
+    // after initSiteLocale in boot. Preview: the urd-plugins message
     // arrives after initAdminLocale, so both registries are ready.
-    if (manifest.locales === true) await applyPluginLocale(id);
-    // The language pack's languages are registered before anything renders,
-    // so the preview knows a draft-enabled pack language without re-reading
-    // the manifests. The pack module is fetched only here, never for a
-    // plugin without languages.
-    if (manifest.languages?.length) {
-      const { registerPackLanguages } = await import(/* @vite-ignore */ '/assets/urd/language-packs.js');
-      registerPackLanguages(id, manifest.languages);
-    }
-    // Pure language pack: no entry, nothing to run.
-    if (!manifest.entry) {
-      loadedPlugins.add(id);
-      return;
-    }
-    const mod = await import(/* @vite-ignore */ `/plugins/${id}/${manifest.entry}`);
-    if (typeof mod.register !== 'function') {
-      console.warn(`Urd: plugin '${id}' is missing a register() export`);
-      return;
-    }
-    // fromPlugin carries the DISPLAY NAME (manifest.names for the admin
-    // language when it exists): the field is used only in the editor
-    // chrome (tip.blocks.fromPlugin).
-    const displayName = manifest.names?.[adminLang()] ?? manifest.name ?? id;
-    const staging = createStagedUrd(Urd, displayName);
-    mod.register(staging.staged);
-    for (const warning of staging.commit()) {
-      console.warn(`Urd: plugin '${id}': ${warning}`);
-    }
-    for (const diff of checkProvides(manifest.provides, staging.defined())) {
-      console.warn(`Urd: plugin '${id}' breaks the provides contract: ${diff}`);
-    }
-    loadedPlugins.add(id);
+    const [, , mod] = await Promise.all([
+      manifest.locales === true ? applyPluginLocale(id) : null,
+      // The language pack's languages are registered before anything
+      // renders, so the preview knows a draft-enabled pack language without
+      // re-reading the manifests. The pack module is fetched only here,
+      // never for a plugin without languages.
+      manifest.languages?.length
+        ? io.importModule('/assets/urd/language-packs.js').then(({ registerPackLanguages }) => registerPackLanguages(id, manifest.languages))
+        : null,
+      // Pure language pack: no entry, nothing to run.
+      manifest.entry ? io.importModule(`/plugins/${id}/${manifest.entry}`) : null,
+    ]);
+    return { manifest, mod };
   } catch (err) {
     console.warn(`Urd: plugin '${id}' could not be loaded`, err);
+    return null;
   }
 }
 
-/** Loads an explicit list of plugin ids (the editor's draft in the preview). */
+/**
+ * Registers ONE prepared plugin: register(staging) → commit → provides
+ * check. Runs in list order, so id collisions between plugins resolve the
+ * same way regardless of which download finished first.
+ */
+function commitPlugin(Urd, id, prepared) {
+  const { manifest, mod } = prepared;
+  if (!mod) {
+    loadedPlugins.add(id);
+    return;
+  }
+  if (typeof mod.register !== 'function') {
+    console.warn(`Urd: plugin '${id}' is missing a register() export`);
+    return;
+  }
+  // fromPlugin carries the DISPLAY NAME (manifest.names for the admin
+  // language when it exists): the field is used only in the editor
+  // chrome (tip.blocks.fromPlugin).
+  const displayName = manifest.names?.[adminLang()] ?? manifest.name ?? id;
+  const staging = createStagedUrd(Urd, displayName);
+  try {
+    mod.register(staging.staged);
+  } catch (err) {
+    console.warn(`Urd: plugin '${id}' could not be loaded`, err);
+    return;
+  }
+  for (const warning of staging.commit()) {
+    console.warn(`Urd: plugin '${id}': ${warning}`);
+  }
+  for (const diff of checkProvides(manifest.provides, staging.defined())) {
+    console.warn(`Urd: plugin '${id}' breaks the provides contract: ${diff}`);
+  }
+  loadedPlugins.add(id);
+}
+
+/** Loads ONE plugin (fetch, then register). Shared with the list loader. */
+export async function loadPluginById(Urd, engineVersion, id) {
+  await loadPluginList(Urd, engineVersion, [id]);
+}
+
+/**
+ * Loads a list of plugin ids (the enabled list for visitors, the editor's
+ * draft in the preview): every plugin is fetched in parallel, then
+ * registered one by one in list order. An id already loaded, or in flight
+ * from an earlier call, is never fetched again.
+ */
 export async function loadPluginList(Urd, engineVersion, ids) {
-  for (const id of ids ?? []) await loadPluginById(Urd, engineVersion, id);
+  const wanted = [...new Set(ids ?? [])].filter((id) => !loadedPlugins.has(id));
+  const prepared = await Promise.all(wanted.map((id) => {
+    if (!inFlight.has(id)) {
+      inFlight.set(id, preparePlugin(engineVersion, id).finally(() => inFlight.delete(id)));
+    }
+    return inFlight.get(id);
+  }));
+  wanted.forEach((id, i) => {
+    if (prepared[i] && !loadedPlugins.has(id)) commitPlugin(Urd, id, prepared[i]);
+  });
 }
 
 /**
@@ -286,7 +343,7 @@ export async function loadPluginList(Urd, engineVersion, ids) {
 export async function loadPlugins(Urd, engineVersion) {
   let index;
   try {
-    index = await (await fetch('/plugins/plugins.json')).json();
+    index = await io.fetchJson('/plugins/plugins.json');
   } catch {
     return; // no plugin index is perfectly fine
   }

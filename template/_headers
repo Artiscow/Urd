@@ -12,7 +12,7 @@
 # an inline <script type="speculationrules"> would require
 # 'inline-speculation-rules' in script-src, the project's first script-src
 # exception, contrary to the very reason boot.js is a separate file. The rule
-# set (prerender of internal links, admin excluded) lives in
+# set (prefetch and prerender of internal links, admin excluded) lives in
 # speculation-rules.json and can be tuned there.
 
 /*

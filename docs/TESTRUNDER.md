@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.8): boot in one wave and intent prefetch
+
+- [ ] Visitor page in Firefox or Safari with the Network panel open: click an internal link; the request waterfall shows plugins.json, the three manifests and page.json starting together instead of one after the other, and the page renders as before (plugins, nav, footer, sticky)
+- [ ] Hover a nav link and wait a moment before clicking: page.json is fetched at the hover, and the boot after the click does not fetch it again until the background revalidation (a 304 on Cloudflare); the page shows the same content
+- [ ] Publish a change to a page, then on the published site hover its link on another page and click within a few seconds: the new content shows (either directly or after the background revalidation rerenders)
+- [ ] Touch device: press an internal link; the page switch works and the target page renders correctly
+- [ ] Editor preview (?preview=1): page switches in the editor behave as before and no page.json prefetch appears in the Network panel from the iframe
+- [ ] Private window or a browser with storage blocked: navigation works, no console errors from prefetch
+
 ### Testrunde-batch (0.7.0.5): svelte 5.57.0
 
 - [ ] The deployed /admin starts with the rebuilt bundle (svelte 5.57.0): log in, open a page, edit a block, see the preview respond, and publish once

@@ -25,6 +25,15 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.8 - Client-side navigation: the measurement, one fetch wave at boot, and intent prefetch - 11 September 2026
+
+- The milestone's gate (measure before building a router) is answered: measured against urdweb.pages.dev with curl over one warm HTTP/2 connection, a full page switch with the engine cached was 13 serial round trips (index.html, site.json, plugins.json, then manifest, dictionary and entry per plugin in turn, and page.json last), 400 to 580 ms of network floor, against 20 to 60 ms for one page.json. Every hop is a 304 revalidation, since content/ and plugins/ are served with max-age=0.
+- plugins.js: the loader fetches every enabled plugin in one wave (manifest, then dictionary and entry in parallel) and registers them in list order afterwards, so id collisions resolve the same way regardless of which download finished first; concurrent loads of the same id share one fetch. A new io seam (`fetchJson`/`importModule`) makes the contract testable in node; three loader tests added.
+- urd.js: page.json is fetched right after the page register, alongside the plugins instead of after them. The chain drops from 13 to 5 serial round trips.
+- New prefetch.js: hover, press or focus on an internal link fetches the target's page.json and parks it in sessionStorage; the next boot renders from the parked copy and revalidates with If-None-Match in the background, rerendering only when the file changed. Parked copies live five minutes, at most eight, consumed once; blocked storage degrades silently; inert in the preview. Tests in tests/prefetch.test.mjs. With the prefetch hit, a page switch is four round trips.
+- speculation-rules.json: a `prefetch` rule alongside `prerender` with the same filter, for browsers that ship prefetch before prerender.
+- Decision recorded in the backlog: no client-side router. The remaining gap after these steps is about 100 to 200 ms plus the re-boot, against a router that must own history, scroll, title, sticky, animations, plugins and the preview boundary for good, while Speculation Rules are an Interop 2026 focus. The router stays as a gated item in the watch list.
+
 ### 0.7.0.5 - Dependencies: the fast-uri alerts and svelte 5.57.0 with a rebuilt bundle - 11 September 2026
 
 - Four high Dependabot alerts on fast-uri (a transitive dev dependency of ajv, used only by the schema validation) in editor/package-lock.json: the lockfile lifted to fast-uri 3.1.7, `npm audit` clean.

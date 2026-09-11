@@ -1,6 +1,8 @@
 /**
  * Tests of the plugin loading building blocks (v0.6 M1): the semver range check for requiresEngine, the manifest validation, the staging/rollback layer and the provides check.
- * The fetch/import flow itself is browser code and is covered by the phase gate's manual port.
+ * The loading contract (one fetch wave, registration in list order, shared
+ * in-flight loads) is tested through the loader's io seam; the real
+ * fetch/import calls are browser code covered by the manual test rounds.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -128,4 +130,79 @@ test('staged urd exposes maler as a legacy alias for templates', () => {
   staging.commit();
   assert.ok(Urd.templates.get('festival'), 'a legacy maler define lands in the templates registry');
   assert.deepEqual(staging.defined().templates, ['festival']);
+});
+
+/* ---------- The loader: parallel fetch, ordered registration ---------- */
+
+const { io, loadPluginList } = await engineImport('plugins.js');
+
+/** Installs a fake network for the loader: manifests and entry modules by
+ *  url, with an optional delay per url so completion order can differ from
+ *  list order. Returns the log of requested urls. */
+function fakeNetwork(files, delays = {}) {
+  const log = [];
+  const wait = (url) => new Promise((resolve) => setTimeout(resolve, delays[url] ?? 0));
+  io.fetchJson = async (url) => {
+    log.push(url);
+    await wait(url);
+    if (!(url in files)) throw new Error(`404 ${url}`);
+    return files[url];
+  };
+  io.importModule = async (url) => {
+    log.push(url);
+    await wait(url);
+    if (!(url in files)) throw new Error(`404 ${url}`);
+    return files[url];
+  };
+  return log;
+}
+
+const manifest = (id, blocks) => ({
+  id, name: id, version: '1.0.0', requiresEngine: '>=0.6.0 <1.0.0', entry: 'index.js', provides: { blocks },
+});
+const entry = (blockId) => ({ register(urd) { urd.blocks.define(blockId, { version: 1 }); } });
+const freshUrd = () => ({ blocks: createRegistry('blocks'), sections: createRegistry('sections'), backgrounds: createRegistry('backgrounds'), animations: createRegistry('animations'), templates: createRegistry('templates') });
+
+test('loader: plugins are fetched in one wave and registered in list order', async () => {
+  const log = fakeNetwork({
+    '/plugins/ld-a/plugin.json': manifest('ld-a', ['ld-a-block']),
+    '/plugins/ld-a/index.js': entry('ld-a-block'),
+    '/plugins/ld-b/plugin.json': manifest('ld-b', ['ld-b-block']),
+    '/plugins/ld-b/index.js': entry('ld-b-block'),
+  }, { '/plugins/ld-a/plugin.json': 20, '/plugins/ld-a/index.js': 20 });
+  const Urd = freshUrd();
+  await loadPluginList(Urd, '0.6.11', ['ld-a', 'ld-b']);
+  // Both manifests were requested before any module arrived: one wave, not a queue.
+  assert.deepEqual(log.slice(0, 2), ['/plugins/ld-a/plugin.json', '/plugins/ld-b/plugin.json']);
+  // ld-b finished first, but ld-a is registered first because it is first in the list.
+  assert.deepEqual(Urd.blocks.ids(), ['ld-a-block', 'ld-b-block']);
+});
+
+test('loader: concurrent loads of the same id share one fetch, and a loaded id is never fetched again', async () => {
+  const log = fakeNetwork({
+    '/plugins/ld-c/plugin.json': manifest('ld-c', ['ld-c-block']),
+    '/plugins/ld-c/index.js': entry('ld-c-block'),
+  }, { '/plugins/ld-c/plugin.json': 10 });
+  const Urd = freshUrd();
+  await Promise.all([loadPluginList(Urd, '0.6.11', ['ld-c']), loadPluginList(Urd, '0.6.11', ['ld-c'])]);
+  await loadPluginList(Urd, '0.6.11', ['ld-c']);
+  assert.equal(log.filter((u) => u === '/plugins/ld-c/plugin.json').length, 1);
+  assert.deepEqual(Urd.blocks.ids(), ['ld-c-block']);
+});
+
+test('loader: a failing plugin never blocks the others', async () => {
+  fakeNetwork({
+    '/plugins/ld-e/plugin.json': manifest('ld-e', ['ld-e-block']),
+    '/plugins/ld-e/index.js': entry('ld-e-block'),
+    '/plugins/ld-old/plugin.json': { ...manifest('ld-old', []), requiresEngine: '>=9.0.0' },
+  });
+  const Urd = freshUrd();
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    await loadPluginList(Urd, '0.6.11', ['ld-missing', 'ld-old', 'ld-e']);
+  } finally {
+    console.warn = warn;
+  }
+  assert.deepEqual(Urd.blocks.ids(), ['ld-e-block']);
 });
