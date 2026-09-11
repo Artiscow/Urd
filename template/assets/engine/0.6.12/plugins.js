@@ -204,18 +204,26 @@ async function loadPluginLocale(id, lang) {
   }
 }
 
-/** Puts the plugin's strings into the registries: the visitor registry with
- *  the SITE language, and in the preview ALSO the admin registry with the
- *  ADMIN language (the canvas chrome). */
-async function applyPluginLocale(id) {
-  const strings = await loadPluginLocale(id, siteLang());
-  if (!strings) return;
-  addSiteDict(strings);
+/** Loads the plugin's strings for the registries: the SITE language for the
+ *  visitor registry, and in the preview ALSO the ADMIN language for the
+ *  admin registry (the canvas chrome). Loading and applying are separate
+ *  steps, so the dictionaries are applied in plugin list order even though
+ *  the files arrive in download order.
+ *  @returns {Promise<{site: object, admin: object|null}|null>} */
+async function loadPluginLocales(id) {
+  const site = await loadPluginLocale(id, siteLang());
+  if (!site) return null;
+  let admin = null;
+  if (isPreview()) admin = adminLang() === siteLang() ? site : await loadPluginLocale(id, adminLang());
+  return { site, admin };
+}
+
+/** Puts loaded plugin strings into the registries. */
+function applyPluginLocales(id, loaded) {
+  if (!loaded) return;
+  addSiteDict(loaded.site);
   localePlugins.add(id);
-  if (isPreview()) {
-    const adminStrings = adminLang() === siteLang() ? strings : await loadPluginLocale(id, adminLang());
-    if (adminStrings) addAdminDict(adminStrings);
-  }
+  if (loaded.admin) addAdminDict(loaded.admin);
 }
 
 /**
@@ -237,7 +245,7 @@ export async function applyPluginSiteLocales() {
  * registered here, so any number of plugins can be prepared concurrently.
  * A failure at any step yields null with a clear log line; the site always
  * lives on.
- * @returns {Promise<{manifest: object, mod: object|null}|null>}
+ * @returns {Promise<{manifest: object, mod: object|null, locales: object|null}|null>}
  */
 async function preparePlugin(engineVersion, id) {
   try {
@@ -253,12 +261,12 @@ async function preparePlugin(engineVersion, id) {
     }
     // The dictionary, the language-pack module and the entry module depend
     // only on the manifest, so they are fetched in one wave. The dictionary
-    // is in place BEFORE register()/render, so the plugin's t()/ta()
-    // lookups hit from the first rendering. Visitors: loadPlugins runs
-    // after initSiteLocale in boot. Preview: the urd-plugins message
+    // is applied at commit, BEFORE register()/render, so the plugin's
+    // t()/ta() lookups hit from the first rendering. Visitors: loadPlugins
+    // runs after initSiteLocale in boot. Preview: the urd-plugins message
     // arrives after initAdminLocale, so both registries are ready.
-    const [, , mod] = await Promise.all([
-      manifest.locales === true ? applyPluginLocale(id) : null,
+    const [locales, , mod] = await Promise.all([
+      manifest.locales === true ? loadPluginLocales(id) : null,
       // The language pack's languages are registered before anything
       // renders, so the preview knows a draft-enabled pack language without
       // re-reading the manifests. The pack module is fetched only here,
@@ -269,7 +277,7 @@ async function preparePlugin(engineVersion, id) {
       // Pure language pack: no entry, nothing to run.
       manifest.entry ? io.importModule(`/plugins/${id}/${manifest.entry}`) : null,
     ]);
-    return { manifest, mod };
+    return { manifest, mod, locales };
   } catch (err) {
     console.warn(`Urd: plugin '${id}' could not be loaded`, err);
     return null;
@@ -282,7 +290,8 @@ async function preparePlugin(engineVersion, id) {
  * same way regardless of which download finished first.
  */
 function commitPlugin(Urd, id, prepared) {
-  const { manifest, mod } = prepared;
+  const { manifest, mod, locales } = prepared;
+  applyPluginLocales(id, locales);
   if (!mod) {
     loadedPlugins.add(id);
     return;
@@ -316,23 +325,31 @@ export async function loadPluginById(Urd, engineVersion, id) {
   await loadPluginList(Urd, engineVersion, [id]);
 }
 
+/** List loads run one after another: two overlapping lists (a draft toggled
+ *  while a load is in flight) would otherwise commit in completion order. */
+let listQueue = Promise.resolve();
+
 /**
  * Loads a list of plugin ids (the enabled list for visitors, the editor's
  * draft in the preview): every plugin is fetched in parallel, then
  * registered one by one in list order. An id already loaded, or in flight
  * from an earlier call, is never fetched again.
  */
-export async function loadPluginList(Urd, engineVersion, ids) {
-  const wanted = [...new Set(ids ?? [])].filter((id) => !loadedPlugins.has(id));
-  const prepared = await Promise.all(wanted.map((id) => {
-    if (!inFlight.has(id)) {
-      inFlight.set(id, preparePlugin(engineVersion, id).finally(() => inFlight.delete(id)));
-    }
-    return inFlight.get(id);
-  }));
-  wanted.forEach((id, i) => {
-    if (prepared[i] && !loadedPlugins.has(id)) commitPlugin(Urd, id, prepared[i]);
+export function loadPluginList(Urd, engineVersion, ids) {
+  const run = listQueue.then(async () => {
+    const wanted = [...new Set(ids ?? [])].filter((id) => !loadedPlugins.has(id));
+    const prepared = await Promise.all(wanted.map((id) => {
+      if (!inFlight.has(id)) {
+        inFlight.set(id, preparePlugin(engineVersion, id).finally(() => inFlight.delete(id)));
+      }
+      return inFlight.get(id);
+    }));
+    wanted.forEach((id, i) => {
+      if (prepared[i] && !loadedPlugins.has(id)) commitPlugin(Urd, id, prepared[i]);
+    });
   });
+  listQueue = run.catch(() => {});
+  return run;
 }
 
 /**

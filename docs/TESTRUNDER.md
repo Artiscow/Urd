@@ -2,6 +2,12 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.6.12): the release
+
+- [ ] After tagging v0.6.12 and publishing the GitHub release: the release Action is green, urdweb.pages.dev serves engine 0.6.12 (/urd.json) and the pages render with the 0.6.12 engine path (no 404 on /assets/engine/0.6.12/)
+- [ ] The Updates panel on a deployed site on 0.6.11 offers 0.6.12, and the update runs with the engine atom group switched as a whole
+- [ ] Publish a page change, then hover its link from another page within a few seconds and click: the rerender after the background revalidation keeps the scroll position and pinned (sticky) blocks stay pinned
+
 ### Testrunde-batch (0.7.8): boot in one wave and intent prefetch
 
 - [ ] Visitor page in Firefox or Safari with the Network panel open: click an internal link; the request waterfall shows plugins.json, the three manifests and page.json starting together instead of one after the other, and the page renders as before (plugins, nav, footer, sticky)

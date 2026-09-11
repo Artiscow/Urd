@@ -25,6 +25,16 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+## [0.6.12] - 2026-09-11
+
+### 0.7.0.4-0.7.8p - Push preparation and release 0.6.12: docs in English, one fetch wave at boot, intent prefetch - 11 September 2026
+
+- RELEASE: the engine bumped 0.6.11 to 0.6.12 after the UTVIKLING ritual (the engine field in urd.json, git mv of the engine folder, the re-export targets in the assets/urd/ shells and dictionaries, the four HTML shells with byte-identical slug copies, editor/package.json and the lockfile, the bundle rebuilt with the new engine path), check-release green in full mode. 0.6.12 is the next free three-part number: a 0.7.x number reads as a milestone, and the v0.7 phase release will carry the gate milestone's number. Tag v0.6.12 and the GitHub release are done manually after the push (tag last, never first).
+- The `## [0.6.11] - 2026-08-09` release heading was missing from the log: the CHANGELOG tightening in 0.7.1.1 had removed it, so every entry since 0.6.10 sat under [Ulansert] and a new release heading would have claimed the whole 0.6.11 span. Found by listing the release headings while preparing the 0.6.12 heading; restored above the 0.6.11 push entry.
+- Independent review of the span (a fresh agent, the whole diff against AGENTS.md and the ADRs, with its own build, test, validation, slug-copy and em dash checks) found no defect and four risks, all fixed: the plugin dictionaries were applied in download order once the loader fetched in parallel, so loading and applying are now separate steps and the strings apply at commit in list order; two overlapping list loads with different lists could commit in completion order, so list loads now run on a queue; the rerender after a background revalidation left sticky blocks unpinned until the next scroll and did not keep the scroll position, so it now restores scrollY and calls refreshSticky (the breakpoint rerender got the same refreshSticky). A new loader test covers the queue and the dictionary order.
+- Smaller review findings fixed: a comment in urd.js narrated what would otherwise happen; the initial page path lacked the sections guard the revalidation path had; prefetch.js checked the in-page hash redundantly and prefetched links with a target other than _self, whose new tab never reads the parked store; the 0.7.8 log bullet on the router carried the rationale that lives in the backlog.
+- Reviewer notes left as they are: a page evicted from the eight-entry parked store is not re-prefetched within the five-minute window (the boot falls back to the fetch), and Chromium runs both the intent prefetch and the Speculation Rules prerender for the same link (harmless redundancy).
+
 ### 0.7.8 - Client-side navigation: the measurement, one fetch wave at boot, and intent prefetch - 11 September 2026
 
 - The milestone's gate (measure before building a router) is answered: measured against urdweb.pages.dev with curl over one warm HTTP/2 connection, a full page switch with the engine cached was 13 serial round trips (index.html, site.json, plugins.json, then manifest, dictionary and entry per plugin in turn, and page.json last), 400 to 580 ms of network floor, against 20 to 60 ms for one page.json. Every hop is a 304 revalidation, since content/ and plugins/ are served with max-age=0.
@@ -32,7 +42,7 @@ entydig: alle commit-innslag over forrige p-innslag.
 - urd.js: page.json is fetched right after the page register, alongside the plugins instead of after them. The chain drops from 13 to 5 serial round trips.
 - New prefetch.js: hover, press or focus on an internal link fetches the target's page.json and parks it in sessionStorage; the next boot renders from the parked copy and revalidates with If-None-Match in the background, rerendering only when the file changed. Parked copies live five minutes, at most eight, consumed once; blocked storage degrades silently; inert in the preview. Tests in tests/prefetch.test.mjs. With the prefetch hit, a page switch is four round trips.
 - speculation-rules.json: a `prefetch` rule alongside `prerender` with the same filter, for browsers that ship prefetch before prerender.
-- Decision recorded in the backlog: no client-side router. The remaining gap after these steps is about 100 to 200 ms plus the re-boot, against a router that must own history, scroll, title, sticky, animations, plugins and the preview boundary for good, while Speculation Rules are an Interop 2026 focus. The router stays as a gated item in the watch list.
+- Decision recorded in the backlog: no client-side router; it stays as a gated item in the watch list.
 
 ### 0.7.0.5 - Dependencies: the fast-uri alerts and svelte 5.57.0 with a rebuilt bundle - 11 September 2026
 
@@ -409,6 +419,8 @@ Første arbeidsrunde i v0.7. Hoveddelen er milepæl 0.7.1 (Lav-funnene fra kodeg
 - 58 kulepunkter som kun meldte at bygg, tester og validering var grønne er fjernet fra hele loggen, sammen med 17 innbakte setninger av samme type. Åtte punkter bar et reelt utfall midt i rutinen og er skrevet om så utfallet står igjen alene (avhengighets-driften som ble fanget, README-ene som manglet Språk-seksjonen, validateManifest-feilene som sto bevisst til neste runde, kanttilfellet der validering går grønt uten ordbok).
 - En maskinell sammenligning mot forrige committede logg fanget at ett funn ble sveipet ut sammen med rutineteksten det lå inne i: PLAN.md-lenkene med feil docs/-prefiks, som aldri var rettet. Det er lagt tilbake som eget punkt i 0.6.8.9.
 - Rundens egne innslag er skrevet etter den nye regelen, og de tre som var skrevet separat er slått sammen til dette ene, siden alt landet i én commit.
+
+## [0.6.11] - 2026-08-09
 
 ### 0.6.6.6.1-0.6.6.4.6p - Fase-slippet 0.6.11: 0.6.6 og 0.6.7 fullført, to reviewfunn rettet - 9. august 2026
 - FASE-SLIPPET (besluttet under klargjøringen: dette pushet er fase-slippet): motoren bumpet 0.6.10 → 0.6.11 etter UTVIKLING-ritualet (engine-feltet i urd.json, git mv av motormappa, re-export-målene i alle assets/urd/-skallene, referansene i de fire HTML-skallene med byte-like slug-kopier, editor/package.json + låsefil, gjenbygd bundel med ny motorsti), check-release grønn i full modus. Gate-nummeret 0.6.9 var alt brukt av splitt-utgivelsen, så slippet bærer neste ledige treparts-nummer; tagg v0.6.11 og GitHub-release gjøres manuelt etter push (tagg sist, aldri først).

@@ -32,8 +32,8 @@ const normalizePath = (pathname) => pathname.replace(/\/$/, '') || '/';
 
 /**
  * The page-register entry a link points to, or null when the link is not a
- * plain internal page link: another origin, a hash on the same page, a
- * query string, a path outside the register, or the current page itself.
+ * plain internal page link: another origin, a query string, a path outside
+ * the register, or the current page itself (an in-page hash included).
  * @param {string} href The link's href attribute
  * @param {{pages?: Array<{path?: string, file?: string}>}} site
  * @param {{origin: string, pathname: string}} current The current location
@@ -48,7 +48,6 @@ export function internalPageFor(href, site, current) {
   }
   if (url.origin !== current.origin || url.search) return null;
   const path = normalizePath(url.pathname);
-  if (url.hash && path === normalizePath(current.pathname)) return null;
   if (path === normalizePath(current.pathname)) return null;
   const entry = (site?.pages ?? []).find((p) => p.path === path);
   return entry?.file ? entry : null;
@@ -155,7 +154,8 @@ export function wirePrefetch(site, { doc = document, storage = sessionStore(), f
   const controller = new AbortController();
   const onIntent = (event) => {
     const link = event.target?.closest?.('a[href]');
-    if (!link) return;
+    // A link opening elsewhere never reads this tab's parked store.
+    if (!link || (link.target && link.target !== '_self')) return;
     const entry = internalPageFor(link.getAttribute('href'), site, { origin: location.origin, pathname: location.pathname });
     if (!entry) return;
     const now = Date.now();

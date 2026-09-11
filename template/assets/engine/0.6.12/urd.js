@@ -487,8 +487,8 @@ export async function boot(opts) {
   const pagePromise = parked
     ? Promise.resolve(parked.page)
     : fetch(`/${entry.file}`).then((res) => res.json());
-  // A page file that fails is handled where it is awaited; without this the
-  // early rejection would surface as an unhandled promise before then.
+  // The rejection is consumed here; the failure is handled where the
+  // promise is awaited.
   pagePromise.catch(() => {});
   const engine = await enginePromise;
   // In preview the EDITOR owns the plugin list (the draft in plugins.json): boot loads nothing,
@@ -518,6 +518,7 @@ export async function boot(opts) {
     console.warn(`Urd: could not load page file '${entry.file}' - rendering an empty page`);
     page = { schemaVersion: PAGE_SCHEMA_VERSION, meta: { id: entry.id, title: entry.title }, sections: [] };
   }
+  if (!Array.isArray(page.sections)) page.sections = [];
   document.title = `${page.meta?.title ?? entry.title ?? ''} - ${site.site.title}`;
   // SEO metadata (description, canonical, og: fields, JSON-LD) is set only
   // for visitors: the preview address (?preview=1) is never a canonical page.
@@ -554,11 +555,15 @@ export async function boot(opts) {
       state.viewport = event.matches ? 'mobile' : 'desktop';
       document.body.classList.toggle('urd-mobile', state.viewport === 'mobile');
       renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport });
+      refreshSticky();
     });
     // Intent prefetch of the next page (hover, press, focus on internal links).
     wirePrefetch(site);
     // A page rendered from the parked copy is checked against the server
     // once; a newer file rerenders in place, the same copy leaves it be.
+    // The scroll position survives the rerender (the document collapses
+    // transiently while the data blocks measure), and the sticky blocks
+    // are re-pinned right away.
     if (parked) {
       revalidatePage(entry.file, parked.etag, { text: parked.text }).then((fresh) => {
         if (!fresh) return;
@@ -566,7 +571,12 @@ export async function boot(opts) {
         if (!Array.isArray(state.page.sections)) state.page.sections = [];
         document.title = `${state.page.meta?.title ?? entry.title ?? ''} - ${site.site.title}`;
         applyHeadMeta(site, state.page, location.origin, location.pathname, entry);
+        const y = window.scrollY;
         renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport });
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          window.scrollTo(0, y);
+          refreshSticky();
+        }));
       }).catch(() => {});
     }
   }

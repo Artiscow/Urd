@@ -206,3 +206,18 @@ test('loader: a failing plugin never blocks the others', async () => {
   }
   assert.deepEqual(Urd.blocks.ids(), ['ld-e-block']);
 });
+
+test('loader: overlapping lists commit in call order, and dictionaries apply in list order', async () => {
+  const log = fakeNetwork({
+    '/plugins/ld-q1/plugin.json': manifest('ld-q1', ['ld-q1-block']),
+    '/plugins/ld-q1/index.js': entry('ld-q1-block'),
+    '/plugins/ld-q2/plugin.json': manifest('ld-q2', ['ld-q2-block']),
+    '/plugins/ld-q2/index.js': entry('ld-q2-block'),
+  }, { '/plugins/ld-q1/index.js': 20 });
+  const Urd = freshUrd();
+  const first = loadPluginList(Urd, '0.6.11', ['ld-q1']);
+  const second = loadPluginList(Urd, '0.6.11', ['ld-q2']);
+  await Promise.all([first, second]);
+  assert.deepEqual(Urd.blocks.ids(), ['ld-q1-block', 'ld-q2-block'], 'the second list waits for the first');
+  assert.ok(log.includes('/plugins/ld-q2/plugin.json'));
+});
