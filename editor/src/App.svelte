@@ -3700,7 +3700,7 @@
     if (name === 'contact') {
       return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline4') },
         columns: [
-          { title: ta('seed.footer.colVisit'), links: [ext(ta('seed.footer.address'), '#'), ext(ta('seed.email'), 'mailto:post@dinforening.no'), ext('+47 22 00 00 00', 'tel:+4722000000')] },
+          { title: ta('seed.footer.colVisit'), links: [ext(ta('seed.footer.address'), '#'), ext(ta('seed.email'), `mailto:${ta('seed.email')}`), ext(ta('seed.phone'), `tel:${ta('seed.phone').replace(/\s+/g, '')}`)] },
           { title: ta('seed.footer.colHours'), links: [ext(ta('seed.footer.hours1'), '#'), ext(ta('seed.footer.hours2'), '#')] },
           { title: ta('seed.footer.colPages'), links: pageLinks(4) },
         ],
@@ -3710,7 +3710,7 @@
     return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline5') },
       columns: [
         { title: ta('seed.footer.colExplore'), links: pageLinks(4) },
-        { title: ta('seed.footer.colFollow'), links: [ext(ta('seed.footer.newsletter'), '#'), ext(ta('seed.email'), 'mailto:post@dinforening.no')] },
+        { title: ta('seed.footer.colFollow'), links: [ext(ta('seed.footer.newsletter'), '#'), ext(ta('seed.email'), `mailto:${ta('seed.email')}`)] },
       ],
       social: soc(['facebook', 'instagram', 'linkedin', 'youtube']), copyright,
       baseline: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.madeWith'), '#')],
@@ -4112,22 +4112,22 @@
      (scheme dark); the rest are light with a dark alt. */
   const THEME_PRESET_KEYS = ['bg', 'surface', 'text', 'accent', 'accent-text'];
   const THEME_PRESETS = [
-    { id: 'bronn', name: ta('themePreset.bronn.name'), note: ta('themePreset.bronn.note'),
+    { id: 'well', name: ta('themePreset.well.name'), note: ta('themePreset.well.note'),
       light: { bg: '#f6faf8', surface: '#ffffff', text: '#16211d', accent: '#15b39a', 'accent-text': '#04241d' },
       dark: { bg: '#0e1512', surface: '#17211d', text: '#eaf1ed', accent: '#22c3a8', 'accent-text': '#04241d' } },
-    { id: 'stein', name: ta('themePreset.stein.name'), note: ta('themePreset.stein.note'),
+    { id: 'stone', name: ta('themePreset.stone.name'), note: ta('themePreset.stone.note'),
       light: { bg: '#f4f2ed', surface: '#ffffff', text: '#262019', accent: '#8a5a41', 'accent-text': '#ffffff' },
       dark: { bg: '#17130e', surface: '#221c15', text: '#efe8dd', accent: '#c0906f', 'accent-text': '#1a1109' } },
-    { id: 'plomme', name: ta('themePreset.plomme.name'), note: ta('themePreset.plomme.note'),
+    { id: 'plum', name: ta('themePreset.plum.name'), note: ta('themePreset.plum.note'),
       light: { bg: '#faf5ff', surface: '#ffffff', text: '#2a1546', accent: '#7c3aed', 'accent-text': '#ffffff' },
       dark: { bg: '#140f20', surface: '#1f1733', text: '#ece5f8', accent: '#a97cf6', 'accent-text': '#170a2c' } },
     { id: 'rose', name: ta('themePreset.rose.name'), note: ta('themePreset.rose.note'),
       light: { bg: '#faf5f6', surface: '#ffffff', text: '#241a1d', accent: '#b04a63', 'accent-text': '#ffffff' },
       dark: { bg: '#171015', surface: '#22181c', text: '#f1e6ea', accent: '#d98098', 'accent-text': '#2a0f18' } },
-    { id: 'hav', name: ta('themePreset.hav.name'), note: ta('themePreset.hav.note'),
+    { id: 'ocean', name: ta('themePreset.ocean.name'), note: ta('themePreset.ocean.note'),
       light: { bg: '#f1f6fb', surface: '#ffffff', text: '#13202b', accent: '#1a6fa8', 'accent-text': '#ffffff' },
       dark: { bg: '#0a1420', surface: '#12202f', text: '#e2edf5', accent: '#47a6df', 'accent-text': '#06131f' } },
-    { id: 'natt', name: ta('themePreset.natt.name'), note: ta('themePreset.natt.note'), scheme: 'dark',
+    { id: 'night', name: ta('themePreset.night.name'), note: ta('themePreset.night.note'), scheme: 'dark',
       light: { bg: '#f5f6fb', surface: '#ffffff', text: '#171a2b', accent: '#4f5ed6', 'accent-text': '#ffffff' },
       dark: { bg: '#0d0f1a', surface: '#171b2e', text: '#e7e9f5', accent: '#8091ff', 'accent-text': '#0a0c18' } },
   ];
@@ -4757,7 +4757,7 @@
   }
 
   function moveGalleryImage(i, dir) {
-    mutateBlock('galleri-move', (b) => {
+    mutateBlock('gallery-move', (b) => {
       const j = i + dir;
       if (j < 0 || j >= b.props.images.length) return;
       [b.props.images[i], b.props.images[j]] = [b.props.images[j], b.props.images[i]];
@@ -4765,7 +4765,7 @@
   }
 
   function removeGalleryImage(i) {
-    mutateBlock('galleri-remove', (b) => { b.props.images.splice(i, 1); });
+    mutateBlock('gallery-remove', (b) => { b.props.images.splice(i, 1); });
   }
 
   function setGalleryImageField(i, field, value) {

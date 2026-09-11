@@ -71,7 +71,7 @@ export const shareBlock = {
     const wanted = Array.isArray(props.services) ? props.services : [];
     for (const [service, icon, brand] of SHARE_SERVICES) {
       if (!wanted.includes(service)) continue;
-      const label = brand ?? t(service === 'copy' ? 'deling.copy' : 'deling.email');
+      const label = brand ?? t(service === 'copy' ? 'share.copy' : 'share.email');
       const inner = `<span class="urd-share-icon">${iconSvg(icon) ?? ''}</span><span class="urd-share-name"></span>`;
       if (service === 'copy') {
         // Copy link: only with the Clipboard API (feature check, ADR-0011).

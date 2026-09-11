@@ -25,6 +25,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.14.18 - Engelsk-renskingen: siste ekstra sjekk - 11. september 2026
+
+- En tredje uavhengig runde leste hver definisjons defaults() og enum-literaler for persistert norsk kontrakt (mønsteret som ga fit-hullet) og fant kontrakten ren, men avdekket en funksjonsfeil fra etappe .6: share-blokken kalte fortsatt nøklene deling.copy/deling.email (renamet til share.*), så «Kopier lenke» og «E-post» viste nøkkelnavnet som tekst på publiserte sider. Rettet, og en ny vakttest sjekker at hver literal t()/ta()-nøkkel i motoren (415 ta, 72 t, også ternærformen som slapp unna grep) finnes i nb-ordbøkene.
+- Nettstedstemaenes preset-ider i editoren (bronn/stein/plomme/hav/natt, aldri persistert) renamet til well/stone/plum/ocean/night med themePreset.*-nøklene i alle fem ordbøker.
+- Norske seed-plassholdere utenom seed-nøkler (mailto:post@dinforening.no i kontaktpreseten og footer-presetene, telefonen +47 22 00 00 00) går nå via seed.email og ny seed.phone. Tekstverktøylinjas linjehøyde-etiketter var norske kommadesimaler i kode (og «Arv» som død etikett); etikettene formateres nå med Intl etter admin-språket. Tre tyrkiske plugin-ordbokheadere og to gallery-undo-nøkler engelske; valutastandarden 'kr' og eksempelstrengen «om 3 døgn» dokumentert som bevisste rester i ADR-0021.
+
 ### 0.7.14.17 - Engelsk-renskingen: sluttauditen - 11. september 2026
 
 - Sluttauditen kjørt i tre lag (æøå, norske stoppord uten æøå, ASCII-fisert norsk) pluss en uavhengig gjennomgang med egne metoder. Batch-inndelingen hadde hull: functions på tredje nivå, plugin-API-skallene, favicon-boot, vite.config, dependabot, _headers og blocks/shape.js (norsk uten et eneste æøå) var aldri sveipet. Alle oversatt; auditmetoden og de bevisste æøå-restene er dokumentert i ADR-0021.

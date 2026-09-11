@@ -2,6 +2,13 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.14.18): Siste ekstra sjekk
+
+- [ ] Delingsblokken hos besøkende viser «Kopier lenke» og «Del på e-post» (ikke nøkkelnavn) på nb og de andre sidespråkene
+- [ ] Tema-presetene i Nettsted-panelet (Nordisk brønn, Stein, Plomme, Rose, Hav, Natt) har riktige navn og notat i nb/en-GB/tr, og den aktive preseten markeres fortsatt når tokens matcher
+- [ ] Ny kontaktseksjon og nye footer-presets får e-post- og telefonlenker fra seed.email/seed.phone på admin-språket (nb: post@dinforening.no, +47 22 00 00 00; en-GB: post@yourclub.org, +44 20 0000 0000), og tel:-lenken er uten mellomrom
+- [ ] Tekstverktøylinjas linjehøyde-knapper viser 1,0 / 1,15 / 1,5 / 2,0 i nb og 1.0 / 1.15 / 1.5 / 2.0 i en-GB, med «Arv» som første valg på nb
+
 ### Testrunde-batch (0.7.14.17): Sluttauditen
 
 - [ ] Egenskaper-overskriften viser oversatt blokknavn (ikke rå id) for galleri, samling, tidslinje, sitat, statistikk, tabell, deling, nedteller, produkt, handlekurv og kasse

@@ -293,3 +293,31 @@ test('taApiError: known code is translated with parameters, unknown falls back t
   assert.equal(taApiError({ error: 'kun tekst' }), 'kun tekst');
   assert.equal(taApiError(null), null);
 });
+
+test('literal t()/ta() keys in the engine exist in the nb base dictionaries', () => {
+  // Guards consumers against key renames: a missing key renders as the key
+  // name on the page. Only literal keys are checked (including the ternary
+  // form t(cond ? 'a' : 'b')); keys built at runtime are out of reach here.
+  const keysOf = (rel) => new Set([...readFileSync(new URL(rel, ENGINE_DIR), 'utf-8').matchAll(/'([A-Za-z0-9.]+)':/g)].map((m) => m[1]));
+  const site = keysOf('locales/site/nb.js');
+  const admin = keysOf('locales/admin/nb.js');
+  const missing = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === 'locales') continue;
+      const child = new URL(entry.name + (entry.isDirectory() ? '/' : ''), dir);
+      if (entry.isDirectory()) { walk(child); continue; }
+      if (!entry.name.endsWith('.js')) continue;
+      const src = readFileSync(child, 'utf-8');
+      const check = (fn, dict, key) => { if (!dict.has(key)) missing.push(`${entry.name}: ${fn}('${key}')`); };
+      for (const m of src.matchAll(/\bta\(\s*'([a-z][A-Za-z0-9]*\.[A-Za-z0-9.]+)'/g)) check('ta', admin, m[1]);
+      for (const m of src.matchAll(/(?<![A-Za-z])t\(\s*'([a-z][A-Za-z0-9]*\.[A-Za-z0-9.]+)'/g)) check('t', site, m[1]);
+      for (const m of src.matchAll(/(?<![A-Za-z])(ta?)\([^()]*\?\s*'([a-z][A-Za-z0-9]*\.[A-Za-z0-9.]+)'\s*:\s*'([a-z][A-Za-z0-9]*\.[A-Za-z0-9.]+)'/g)) {
+        const dict = m[1] === 'ta' ? admin : site;
+        check(m[1], dict, m[2]); check(m[1], dict, m[3]);
+      }
+    }
+  };
+  walk(ENGINE_DIR);
+  assert.deepEqual(missing, [], 'literal keys without a dictionary entry');
+});

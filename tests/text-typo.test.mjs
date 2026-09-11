@@ -67,10 +67,9 @@ test('matchFontStack: a known stack matches on the first font name, unknown give
 
 test('LINE_HEIGHTS: five choices where the first is inherit (the UI contract)', () => {
   assert.equal(LINE_HEIGHTS.length, 5);
-  // 'Arv' ("inherit") is the expected label value from the module.
-  assert.deepEqual(LINE_HEIGHTS[0], ['', 'Arv']);
+  assert.deepEqual(LINE_HEIGHTS[0], ['', 'Inherit']);
   for (const [value, label] of LINE_HEIGHTS.slice(1)) {
     assert.ok(Number(value) > 0);
-    assert.ok(label.includes(','));
+    assert.ok(label.includes('.'), 'the code label is an English decimal; the toolbar formats it per admin locale');
   }
 });

@@ -1806,10 +1806,13 @@ function initTextToolbar() {
     return s;
   };
   spacingRow.appendChild(spacingLabel(ta('tt.lineHeight')));
-  for (const [value, label] of LINE_HEIGHTS) {
+  // The numeric labels follow the admin locale's decimal separator.
+  const lhFormat = new Intl.NumberFormat(adminLang(), { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+  for (const [value] of LINE_HEIGHTS) {
     const b = document.createElement('button');
     b.className = 'urd-tt-lh';
-    b.textContent = value ? label : ta('common.inherit');
+    const label = value ? lhFormat.format(Number(value)) : ta('common.inherit');
+    b.textContent = label;
     b.title = value ? ta('tt.lineHeightN', { label }) : ta('tt.inheritLh');
     b.addEventListener('click', () => { setLineHeight(value); reposition(); });
     spacingRow.appendChild(b);

@@ -1,6 +1,6 @@
 /**
- * Harita eklentisinin metinleri, Türkçe. nb-tabanının üzerine bindirilir;
- * parite testi anahtar kümelerini eşit tutar.
+ * The Map plugin's texts, Turkish. Overlaid on the nb base; the parity test
+ * keeps the key sets equal.
  */
 export default {
   lang: 'tr',

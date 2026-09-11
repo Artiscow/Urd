@@ -43,15 +43,15 @@ export function ladderStep(px, dir) {
 
 /**
  * The line height presets in the spacing menu: [CSS value, display name].
- * An empty value = Arv (removes the override from the paragraph).
+ * An empty value = inherit (removes the override from the paragraph).
  * @type {Array<[string, string]>}
  */
 export const LINE_HEIGHTS = [
-  ['', 'Arv'],
-  ['1', '1,0'],
-  ['1.15', '1,15'],
-  ['1.5', '1,5'],
-  ['2', '2,0'],
+  ['', 'Inherit'],
+  ['1', '1.0'],
+  ['1.15', '1.15'],
+  ['1.5', '1.5'],
+  ['2', '2.0'],
 ];
 
 /** The indent step and the ceiling, in em (relative steps follow the font size). */
@@ -78,7 +78,7 @@ export function firstFamily(css) {
 
 /**
  * Find the FONT_STACKS value if the stack matches a computed font-family
- * (compared on the first font name), otherwise an empty string (shown as Arv).
+ * (compared on the first font name), otherwise an empty string (shown as inherit).
  */
 export function matchFontStack(css) {
   const wanted = firstFamily(css);

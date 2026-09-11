@@ -4448,7 +4448,7 @@ function Go(e) {
 		create: () => Wo("contact", "320px", Lo(Ro("surface"), zo(.2, .8, .2)), [
 			Q(Z(10, 32, 40, 36), Y("seed.contact.title")),
 			Q(Z(10, 84, 36, 130), Y("seed.contact.info"), { box: !0 }),
-			To(Z(60, 100, 22, 40), Y("seed.contact.button"), { href: "mailto:post@dinforening.no" })
+			To(Z(60, 100, 22, 40), Y("seed.contact.button"), { href: `mailto:${Y("seed.email")}` })
 		])
 	}), e.sections.define("feature-cards", {
 		label: "Feature cards",
@@ -10536,8 +10536,8 @@ function Cf(e, t) {
 					title: Y("seed.footer.colVisit"),
 					links: [
 						a(Y("seed.footer.address"), "#"),
-						a(Y("seed.email"), "mailto:post@dinforening.no"),
-						a("+47 22 00 00 00", "tel:+4722000000")
+						a(Y("seed.email"), `mailto:${Y("seed.email")}`),
+						a(Y("seed.phone"), `tel:${Y("seed.phone").replace(/\s+/g, "")}`)
 					]
 				},
 				{
@@ -10563,7 +10563,7 @@ function Cf(e, t) {
 				links: r(4)
 			}, {
 				title: Y("seed.footer.colFollow"),
-				links: [a(Y("seed.footer.newsletter"), "#"), a(Y("seed.email"), "mailto:post@dinforening.no")]
+				links: [a(Y("seed.footer.newsletter"), "#"), a(Y("seed.email"), `mailto:${Y("seed.email")}`)]
 			}],
 			social: i([
 				"facebook",
@@ -10939,9 +10939,9 @@ function Cf(e, t) {
 		"accent-text"
 	], Bf = [
 		{
-			id: "bronn",
-			name: Y("themePreset.bronn.name"),
-			note: Y("themePreset.bronn.note"),
+			id: "well",
+			name: Y("themePreset.well.name"),
+			note: Y("themePreset.well.note"),
 			light: {
 				bg: "#f6faf8",
 				surface: "#ffffff",
@@ -10958,9 +10958,9 @@ function Cf(e, t) {
 			}
 		},
 		{
-			id: "stein",
-			name: Y("themePreset.stein.name"),
-			note: Y("themePreset.stein.note"),
+			id: "stone",
+			name: Y("themePreset.stone.name"),
+			note: Y("themePreset.stone.note"),
 			light: {
 				bg: "#f4f2ed",
 				surface: "#ffffff",
@@ -10977,9 +10977,9 @@ function Cf(e, t) {
 			}
 		},
 		{
-			id: "plomme",
-			name: Y("themePreset.plomme.name"),
-			note: Y("themePreset.plomme.note"),
+			id: "plum",
+			name: Y("themePreset.plum.name"),
+			note: Y("themePreset.plum.note"),
 			light: {
 				bg: "#faf5ff",
 				surface: "#ffffff",
@@ -11015,9 +11015,9 @@ function Cf(e, t) {
 			}
 		},
 		{
-			id: "hav",
-			name: Y("themePreset.hav.name"),
-			note: Y("themePreset.hav.note"),
+			id: "ocean",
+			name: Y("themePreset.ocean.name"),
+			note: Y("themePreset.ocean.note"),
 			light: {
 				bg: "#f1f6fb",
 				surface: "#ffffff",
@@ -11034,9 +11034,9 @@ function Cf(e, t) {
 			}
 		},
 		{
-			id: "natt",
-			name: Y("themePreset.natt.name"),
-			note: Y("themePreset.natt.note"),
+			id: "night",
+			name: Y("themePreset.night.name"),
+			note: Y("themePreset.night.note"),
 			scheme: "dark",
 			light: {
 				bg: "#f5f6fb",
@@ -11814,13 +11814,13 @@ function Cf(e, t) {
 		a.props.images = n, ap(a), _p(n.length, r, i);
 	}
 	function bp(e, t) {
-		j("galleri-move", (n) => {
+		j("gallery-move", (n) => {
 			let r = e + t;
 			r < 0 || r >= n.props.images.length || ([n.props.images[e], n.props.images[r]] = [n.props.images[r], n.props.images[e]]);
 		});
 	}
 	function xp(e) {
-		j("galleri-remove", (t) => {
+		j("gallery-remove", (t) => {
 			t.props.images.splice(e, 1);
 		});
 	}

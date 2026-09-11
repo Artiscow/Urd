@@ -301,7 +301,7 @@ export function registerSectionPresets(Urd) {
       text(frame(10, 84, 36, 130),
         ta('seed.contact.info'),
         { box: true }),
-      button(frame(60, 100, 22, 40), ta('seed.contact.button'), { href: 'mailto:post@dinforening.no' }),
+      button(frame(60, 100, 22, 40), ta('seed.contact.button'), { href: `mailto:${ta('seed.email')}` }),
     ]),
   });
 
