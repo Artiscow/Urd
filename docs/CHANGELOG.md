@@ -27,6 +27,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.7 - Old plugin copies keep working: plain px min-height, clearance as padding, old config classes, and a site-owner updater message - 16 September 2026
+
+- On a site created from the 0.6.11 template (urd-web), clicking the calendar's buttons in the preview shrank the hero so the next section jumped up: plugins/** are user paths the updater never touches, so the old kalender copy still parses the section's inline min-height with parseFloat and writes px back, while the engine since 0.7.2 wrote `calc(<px> + var(--urd-section-clear))`, which parses as NaN. The nav clearance is now the section's padding (`.urd-section` is content-box, base.css) and the inline min-height a plain length again: render.js (`sectionMinHeight`, `growSectionTo`), preview-edit.js (`styleMinHeight`) and the three reference plugins write `${bottom}px`; base.css restamped in the five shells.
+- The preview click guard had dropped the old plugin config classes in 0.7.14 (`.urd-kal-config`, `.urd-skjema-config`, `.urd-kart-config`), so clicks inside an old plugin's settings panel started a block drag; the old names are guarded again next to the new ones.
+- The compatibility surface plugin copies rely on is written down in SCHEMA.md («The compatibility surface for plugin copies», with an ADR-0021 addendum) and pinned by tests/plugin-compat.test.mjs; the backlog gets a v0.8 item for the updater to OFFER refreshed reference plugins as optional files.
+- The updater message `api.updateNoBaseline` («Could not find the baseline tag ... in the template repository») was written for Urd developers; all five admin dictionaries now tell the site owner that updates are not available for this version yet and to try again later.
+
 ## [0.7.1] - 2026-09-16
 
 ### 0.7.0.6p - Release 0.7.1: the 0.6.12 number replaced, and the 0.7.14 test batches merged - 16 September 2026

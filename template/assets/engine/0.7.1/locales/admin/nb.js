@@ -380,7 +380,7 @@ export default {
     'api.geocodeUnexpected': 'Uventet svar fra adressesøket',
     'api.placeNotFound': 'Fant ikke stedet. Prøv en mer nøyaktig adresse.',
     'api.updateBadTarget': 'Ugyldig målversjon {target}',
-    'api.updateNoBaseline': 'Fant ikke basislinje-taggen {tag} i malrepoet, så oppdatereren vet ikke hvilken versjon siden kommer fra',
+    'api.updateNoBaseline': 'Oppdateringer er ikke tilgjengelige for denne siden ennå: versjonen den kjører ({tag}) er ikke publisert som oppdatering ennå. Prøv igjen senere.',
     'api.updateTemplateUnreachable': 'Fikk ikke lest malrepoet {repo}: {detail}',
     'api.updateRace': 'Repoet endret seg mens oppdateringen pågikk. Last inn på nytt og prøv igjen.',
     'api.updateBadSkip': 'Filen {path} kan ikke holdes tilbake fra oppdateringen',

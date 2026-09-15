@@ -377,7 +377,7 @@ export default {
     'api.geocodeUnexpected': 'Adres aramasından beklenmedik yanıt',
     'api.placeNotFound': 'Yer bulunamadı. Daha kesin bir adres deneyin.',
     'api.updateBadTarget': 'Geçersiz hedef sürüm {target}',
-    'api.updateNoBaseline': 'Şablon deposunda {tag} taban etiketi bulunamadı; güncelleyici sitenin hangi sürümden geldiğini bilemiyor',
+    'api.updateNoBaseline': 'Bu site için güncellemeler henüz kullanılamıyor: çalıştığı sürüm ({tag}) henüz güncelleme olarak yayımlanmadı. Daha sonra tekrar deneyin.',
     'api.updateTemplateUnreachable': 'Şablon deposu {repo} okunamadı: {detail}',
     'api.updateRace': 'Güncelleme sürerken depo değişti. Sayfayı yeniden yükleyip tekrar deneyin.',
     'api.updateBadSkip': '{path} dosyası güncellemenin dışında tutulamaz',

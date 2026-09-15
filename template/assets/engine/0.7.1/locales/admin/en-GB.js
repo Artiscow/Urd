@@ -377,7 +377,7 @@ export default {
     'api.geocodeUnexpected': 'Unexpected response from the address search',
     'api.placeNotFound': 'Could not find the place. Try a more precise address.',
     'api.updateBadTarget': 'Invalid target version {target}',
-    'api.updateNoBaseline': 'Could not find the baseline tag {tag} in the template repository, so the updater cannot tell which version this site came from',
+    'api.updateNoBaseline': 'Updates are not available for this site yet: the version it runs ({tag}) has not been published as an update yet. Try again later.',
     'api.updateTemplateUnreachable': 'Could not read the template repository {repo}: {detail}',
     'api.updateRace': 'The repository changed while the update was running. Reload and try again.',
     'api.updateBadSkip': 'The file {path} cannot be held back from the update',

@@ -300,6 +300,15 @@ export function register(Urd) {
 
 The provides key `templates` was called `maler` before ADR-0021; the old name is still read (dual-read in plugins.js), and old plugins that register via `Urd.maler` hit the same registry as `Urd.templates`. The engine aliases the old reference plugin ids (the blocks kalender/kart/skjema → calendar/map/form, the presets hva-skjer/finn-oss/kontaktskjema → whats-on/find-us/contact-form), so pages built before the rename work with both old and manually updated plugin folders.
 
+### The compatibility surface for plugin copies
+
+`plugins/**` are user paths (urd.json `userPaths`) that the updater never touches, so a site keeps running the plugin folders it was created with, also the reference plugins copied from the 0.6.11 template, against every later engine. The engine therefore keeps these points stable; `tests/plugin-compat.test.mjs` pins them:
+
+- **The section's inline `min-height` is a plain CSS length** (`size.minHeight`, or `<lowest block edge>px` when the section has none): plugin auto-grow reads it with `parseFloat` and writes `${bottom}px` back. The nav clearance is the section's padding (`.urd-section` is `content-box`, base.css), so an overwritten min-height never loses the clearance.
+- **Block geometry is content geometry:** a block's `offsetTop`/`offsetLeft` are relative to `.urd-canvas`, and `el.closest('.urd-section')` is the section the block grows.
+- **The config panel classes** `.urd-kal-config`, `.urd-skjema-config` and `.urd-kart-config` (the old reference names) are guarded in the preview alongside `.urd-cal-config` and `.urd-form-config`, so clicks inside a panel never start a block drag.
+- **The registry aliases:** `Urd.maler` for `Urd.templates`, `provides.maler` for `provides.templates`, and the block and preset id aliases listed above.
+
 Optional manifest fields (all additive):
 
 - **`csp`** (additive from v0.6): external origins the plugin needs CSP exceptions for, as `{ "connectSrc": ["https://…"], "frameSrc": ["https://…"] }`. `_headers` is never changed automatically (ADR-0006): the Plugins panel shows the site owner exactly which lines must go in, and the host is added manually to `_headers`.
