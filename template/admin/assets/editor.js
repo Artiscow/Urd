@@ -3001,7 +3001,7 @@ Er([
 	"change"
 ]);
 //#endregion
-//#region ../template/assets/engine/0.6.12/imageTools.js
+//#region ../template/assets/engine/0.7.1/imageTools.js
 var fa = 1600, pa = .82, ma = .6, ha = 15e6;
 async function ga(e, t = fa) {
 	if (va(e)) return ya(await e.text());
@@ -3081,7 +3081,7 @@ function wa(e) {
 	return t.toString(16).padStart(8, "0");
 }
 //#endregion
-//#region ../template/assets/engine/0.6.12/glyphs.js
+//#region ../template/assets/engine/0.7.1/glyphs.js
 var Ta = "urd-recent-glyphs", Ea = [
 	["glyphCat.symbols", "★ ☆ ✦ ✧ ✩ ✪ ✫ ✭ ✮ ✯ ✵ ✳ ✴ ❖ ❋ ✿ ❀ ❁ ✾ ❃ ☘ ◆ ◇ ● ○ ◎ ■ □ ▣ ▲ △ ▼ ▽ ⬡ ⬢ ♦ ♠ ♣ ♥ ♡ ✓ ✔ ✕ ✖ ✗ ✘ ✚ ✜ ☀ ☾ ♪ ♫ ♬ ☮ ☯ ⚜ ⚓ ⚡ ☂ ✂ ✏ ✒ ✉ ☎ ⌛ ⏳ ♻ ⚠ ☑ ⚙ § © ® ™ ° ± × ÷ ∞ ≈ ≠ ≤ ≥ € £ ¥ • ‣ ⁂"],
 	["glyphCat.arrows", "→ ← ↑ ↓ ↔ ↕ ↗ ↘ ↙ ↖ ⇒ ⇐ ⇑ ⇓ ⇔ ➜ ➤ ➔ ↩ ↪ ⤴ ⤵ ↺ ↻ ⟲ ⟳ « » ‹ ›"],
@@ -3112,7 +3112,7 @@ function ka(e) {
 	return t;
 }
 //#endregion
-//#region ../template/assets/engine/0.6.12/icons.js
+//#region ../template/assets/engine/0.7.1/icons.js
 var Aa = "fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"", ja = "fill=\"currentColor\" stroke=\"none\"", Ma = {
 	facebook: {
 		label: "Facebook",
@@ -4087,7 +4087,7 @@ function bo(e, t) {
 	return n;
 }
 //#endregion
-//#region ../template/assets/engine/0.6.12/plugins.js
+//#region ../template/assets/engine/0.7.1/plugins.js
 function xo(e) {
 	let t = /^(\d+)\.(\d+)\.(\d+)$/.exec(String(e).trim());
 	return t ? [
@@ -4118,7 +4118,7 @@ function To(e) {
 }
 Promise.resolve();
 //#endregion
-//#region ../template/assets/engine/0.6.12/sections/presets.js
+//#region ../template/assets/engine/0.7.1/sections/presets.js
 function Eo(e) {
 	return typeof crypto < "u" && crypto.randomUUID ? `${e}-${crypto.randomUUID().slice(0, 8)}` : `${e}-${[...crypto.getRandomValues(/* @__PURE__ */ new Uint8Array(4))].map((e) => e.toString(16).padStart(2, "0")).join("")}`;
 }
@@ -5044,7 +5044,7 @@ function Yo(e) {
 	});
 }
 //#endregion
-//#region ../template/assets/engine/0.6.12/templates-model.js
+//#region ../template/assets/engine/0.7.1/templates-model.js
 var Xo = [
 	"section",
 	"blocks",
@@ -5067,7 +5067,7 @@ function Qo(e, t, { id: n, title: r }) {
 	return i;
 }
 //#endregion
-//#region ../template/assets/engine/0.6.12/collections-csv.js
+//#region ../template/assets/engine/0.7.1/collections-csv.js
 var $o = [
 	"id",
 	"title",
@@ -5149,7 +5149,7 @@ function as(e) {
 	};
 }
 //#endregion
-//#region ../template/assets/engine/0.6.12/feeds.js
+//#region ../template/assets/engine/0.7.1/feeds.js
 function os(e) {
 	return String(e ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;").replaceAll("'", "&apos;");
 }
@@ -5176,7 +5176,7 @@ function us(e) {
     <title>${os(e.title)}</title>\n    <link>${os(t + "/")}</link>\n    <description>${os(e.description ?? e.title)}</description>\n${n}${n ? "\n" : ""}  </channel>\n</rss>\n`;
 }
 //#endregion
-//#region ../template/assets/engine/0.6.12/preset-thumb.js
+//#region ../template/assets/engine/0.7.1/preset-thumb.js
 var ds = /^#[0-9a-fA-F]{3,8}$/, fs = /^[a-z][a-z0-9-]*$/, ps = "#171c26", ms = "#232a38", hs = "#98a1b3", gs = "#7c5cff", _s = (e, t) => `var(--urd-color-${e}, ${t})`;
 function vs(e, t) {
 	return typeof e == "string" ? ds.test(e) ? e : fs.test(e) ? _s(e, t) : t : t;
@@ -5348,7 +5348,7 @@ function As(e, { w: t = 96, h: n = 116, max: r = 6 } = {}) {
 	return `<svg viewBox="0 0 ${t} ${n}" width="${t}" height="${n}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${c.join("")}</svg>`;
 }
 //#endregion
-//#region ../template/assets/engine/0.6.12/page-presets.js
+//#region ../template/assets/engine/0.7.1/page-presets.js
 var js = /* @__PURE__ */ new Map();
 Yo({ sections: { define: (e, t) => js.set(e, t) } });
 var Ms = [
@@ -5444,7 +5444,7 @@ function Ns(e, { pageId: t, title: n }) {
 	} : null;
 }
 //#endregion
-//#region ../template/assets/engine/0.6.12/palette-search.js
+//#region ../template/assets/engine/0.7.1/palette-search.js
 function Ps(e) {
 	return String(e ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
@@ -5460,7 +5460,7 @@ function Is(e, t, n) {
 	})).filter((e) => e.rank >= 0).sort((e, t) => e.rank - t.rank || e.i - t.i).map((e) => e.item);
 }
 //#endregion
-//#region ../template/assets/engine/0.6.12/theme.js
+//#region ../template/assets/engine/0.7.1/theme.js
 function Ls(e, t, n) {
 	return t === "light" || t === "dark" ? t : n ? "dark" : "light";
 }
@@ -5581,7 +5581,7 @@ function qs(e, t) {
 	return n == null || r == null ? null : (Math.max(n, r) + .05) / (Math.min(n, r) + .05);
 }
 //#endregion
-//#region ../template/assets/engine/0.6.12/backgrounds/color.js
+//#region ../template/assets/engine/0.7.1/backgrounds/color.js
 var Js = {
 	version: 1,
 	label: "Colour",
@@ -5781,7 +5781,7 @@ function dc(e) {
 	return typeof e == "string" && uc.test(e);
 }
 //#endregion
-//#region ../template/assets/engine/0.6.12/backgrounds/image.js
+//#region ../template/assets/engine/0.7.1/backgrounds/image.js
 var fc = .4;
 function pc(e, t) {
 	return `${(e ?? .5) * 100}% ${(t ?? .5) * 100}%`;
@@ -5894,7 +5894,7 @@ function Pc(e, t, n, r) {
 	Tc() ? Mc(e, t, n, r) : wc(e, t, n, r);
 }
 //#endregion
-//#region ../template/assets/engine/0.6.12/gallery-model.js
+//#region ../template/assets/engine/0.7.1/gallery-model.js
 function Fc(e, t, n) {
 	return !Number.isFinite(n) || n < 1 ? 0 : (((Number.isFinite(e) ? e : 0) + t) % n + n) % n;
 }
@@ -5906,7 +5906,7 @@ function Lc(e, { min: t = 2, fallback: n = 5 } = {}) {
 	return !Number.isFinite(r) || r <= 0 ? n : Math.max(t, r);
 }
 //#endregion
-//#region ../template/assets/engine/0.6.12/backgrounds/slideshow.js
+//#region ../template/assets/engine/0.7.1/backgrounds/slideshow.js
 var Rc = {
 	version: 1,
 	label: "Image gallery",
@@ -6008,7 +6008,7 @@ var Uc = (e, t, n, r) => {
 	}
 };
 //#endregion
-//#region ../template/assets/engine/0.6.12/footer-thumb.js
+//#region ../template/assets/engine/0.7.1/footer-thumb.js
 function Gc(e = {}) {
 	let t = "#2fd6b6", n = "#5c6b64", r = e.mega ? "#16221d" : "#0e1512", i = e.cols ?? 0, a = e.social ?? 0, o = `<svg viewBox="0 0 160 80" preserveAspectRatio="none" aria-hidden="true"><rect width="160" height="80" fill="${r}"/>`;
 	if (e.mega && (o += `<circle cx="20" cy="6" r="34" fill="${t}" opacity="0.18"/>`), e.bigcta) return o += `<rect x="45" y="18" width="70" height="8" rx="3" fill="${n}" opacity="0.85"/>`, o += `<rect x="56" y="32" width="48" height="4" rx="2" fill="${n}" opacity="0.5"/>`, o += `<rect x="62" y="43" width="36" height="10" rx="3" fill="${t}"/>`, o += Kc(n, e.baselineLinks), o + "</svg>";
@@ -6036,7 +6036,7 @@ function Kc(e, t = 0) {
 	return n += `<rect x="8" y="70" width="40" height="3" rx="1.5" fill="${e}" opacity="0.6"/>`, t && (n += `<g fill="${e}" opacity="0.6">` + Array.from({ length: t }, (e, t) => `<rect x="${120 - t * 16}" y="70" width="12" height="3" rx="1.5"/>`).join("") + "</g>"), n;
 }
 //#endregion
-//#region ../template/assets/engine/0.6.12/animations/core.js
+//#region ../template/assets/engine/0.7.1/animations/core.js
 var qc = () => ({
 	duration: 600,
 	delay: 0
@@ -6098,7 +6098,7 @@ var qc = () => ({
 	["font.courier", "'Courier New', monospace"]
 ];
 //#endregion
-//#region ../template/assets/engine/0.6.12/place.js
+//#region ../template/assets/engine/0.7.1/place.js
 function Zc(e) {
 	let t = (e) => Math.round(e * 100) / 100, n = Math.max(0, t(100 - e.w)), r = Math.min(n, Math.max(0, t(e.x - e.w / 2))), i = Math.max(0, e.y - e.h / 2), a = e.snap === !1 || e.grid?.snap === !1, o = e.grid?.size || 8;
 	return i = a ? Math.round(i) : Math.round(i / o) * o, {

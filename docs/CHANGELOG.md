@@ -18,14 +18,25 @@ under fasens stående «Løpende»-punkt i backloggen og nummereres 0.6.0.1,
 0.6.0.2 … (neste fase: 0.7.0.x), og er alltid firedelt siden punktet aldri
 lukkes. Flate fasenumre (0.6.34, 0.6.35) deles ikke
 lenger ut - de leses feilaktig som milepæl-plassering - men de historiske
-består, siden commit-titler i git ikke kan skrives om. Fase-slippet døpes til
-det siste nummeret ved gaten. Push-innslag arver commit-spennet siden forrige
+består, siden commit-titler i git ikke kan skrives om. Utgivelser bærer fasens
+minor med løpende patch-nummer (0.7.1, 0.7.2 ...), uavhengig av milepælsnumrene
+i backloggen; fase-slippet ved gaten er bare det siste av dem (besluttet 15.
+september 2026). Push-innslag arver commit-spennet siden forrige
 push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 0.6.7.5) gir 0.6.7.2-5p. Kortformen brukes kun når numrene deler prefiks; med
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
-## [0.6.12] - 2026-09-11
+## [0.7.1] - 2026-09-16
+
+### 0.7.0.6p - Release 0.7.1: the 0.6.12 number replaced, and the 0.7.14 test batches merged - 16 September 2026
+
+- The release number 0.6.12 chosen during the previous preparation was wrong for the phase: releases in v0.7 carry 0.7.x (decided 15 September 2026). The engine is bumped 0.6.12 to 0.7.1 after the same ritual (urd.json, git mv of the engine folder, the assets/urd/ shells and dictionaries, the four HTML shells with byte-identical copies, editor/package.json and the lockfile, the bundle rebuilt), the release heading renamed to `## [0.7.1] - 2026-09-16`, check-release green in full mode for v0.7.1.
+- A tag v0.7.1 already existed on origin, pointing at the Dependabot merge with engine 0.6.12: check-release fails on it (tag against engine), and the template repo has no v0.7.1, so the release never synced. Found with git ls-remote during the preparation. The tag must be deleted (with any GitHub release on it) before the push, and recreated on this commit afterwards: tag last, never first.
+- Dependabot merged vite 8.2.2 to 8.3.0 without a rebuilt bundle; a build with the locked 8.3.0 gives a byte-identical bundle, so the build-conformity check holds and nothing else was needed.
+- TESTRUNDER: the ten 0.7.14 batches merged into one (all 52 items kept, the stage labels kept as sub-headings), and the release batch renumbered from 0.6.12 to 0.7.1.
+- The release numbering rule is now written down: releases carry the phase's minor with a running patch number, independent of the milestone numbers, and the phase release at the gate is the last of them. Replaces the «phase release named after the milestone number» sentence in AGENTS.md, the CHANGELOG introduction, UTVIKLING.md and DEVELOPMENT-en-GB.md.
+- The independent review step was not repeated: the span since the last push is the two Dependabot merges and this renumbering, all mechanical; the mechanical checks ran instead (em dash, slug copies, check-release, the full suite).
 
 ### 0.7.0.4-0.7.8p - Push preparation and release 0.6.12: docs in English, one fetch wave at boot, intent prefetch - 11 September 2026
 

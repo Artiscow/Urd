@@ -86,7 +86,7 @@ tests/      node --test-tester (foreløpig migreringskontrakten)
 Urd følger [semantisk versjonering](https://semver.org/lang/no/): `MAJOR.MINOR.PATCH`, alltid tre tall (`0.1.0`, aldri `0.1`).
 
 - **PATCH** (`0.2.0 → 0.2.1`): kun feilrettinger, ingen ny funksjonalitet.
-- **MINOR** (`0.2.1 → 0.3.0`): ny funksjonalitet. Veikartfasene er minorversjoner (v0.3 «Lerretet» slippes som `0.3.0`).
+- **MINOR** (`0.2.1 → 0.3.0`): ny funksjonalitet. Veikartfasene er minorversjoner, og utgivelsene i en fase bærer fasens minor med løpende patch-nummer (0.7.1, 0.7.2 ...), uavhengig av milepælsnumrene i backloggen; fase-slippet ved gaten er det siste av dem (besluttet 15. september 2026).
 - **MAJOR** (`1.4.2 → 2.0.0`): endringer som kan kreve handling av de som oppgraderer. Merk: selv MAJOR knuser aldri en bygget side (løfte 2, migreringskontrakten gjelder alltid).
 - Før `1.0.0` er vi i utviklingsfase: `0.x`-minorer kan inneholde brytende endringer.
 

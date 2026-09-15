@@ -2,10 +2,10 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
-### Testrunde-batch (0.6.12): the release
+### Testrunde-batch (0.7.1): the release (renumbered from 0.6.12 on 16 September 2026)
 
-- [ ] After tagging v0.6.12 and publishing the GitHub release: the release Action is green, urdweb.pages.dev serves engine 0.6.12 (/urd.json) and the pages render with the 0.6.12 engine path (no 404 on /assets/engine/0.6.12/)
-- [ ] The Updates panel on a deployed site on 0.6.11 offers 0.6.12, and the update runs with the engine atom group switched as a whole
+- [ ] After tagging v0.7.1 and publishing the GitHub release: the release Action is green, urdweb.pages.dev serves engine 0.7.1 (/urd.json) and the pages render with the 0.7.1 engine path (no 404 on /assets/engine/0.7.1/)
+- [ ] The Updates panel on a deployed site on 0.6.11 offers 0.7.1, and the update runs with the engine atom group switched as a whole
 - [ ] Publish a page change, then hover its link from another page within a few seconds and click: the rerender after the background revalidation keeps the scroll position and pinned (sticky) blocks stay pinned
 
 ### Testrunde-batch (0.7.8): boot in one wave and intent prefetch
@@ -21,14 +21,16 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] The deployed /admin starts with the rebuilt bundle (svelte 5.57.0): log in, open a page, edit a block, see the preview respond, and publish once
 
-### Testrunde-batch (0.7.14.18): Siste ekstra sjekk
+### Testrunde-batch (0.7.14.2-18): the English clean-up, all stages merged 15 September 2026
+
+**0.7.14.18: Siste ekstra sjekk**
 
 - [ ] Delingsblokken hos besøkende viser «Kopier lenke» og «Del på e-post» (ikke nøkkelnavn) på nb og de andre sidespråkene
 - [ ] Tema-presetene i Nettsted-panelet (Nordisk brønn, Stein, Plomme, Rose, Hav, Natt) har riktige navn og notat i nb/en-GB/tr, og den aktive preseten markeres fortsatt når tokens matcher
 - [ ] Ny kontaktseksjon og nye footer-presets får e-post- og telefonlenker fra seed.email/seed.phone på admin-språket (nb: post@dinforening.no, +47 22 00 00 00; en-GB: post@yourclub.org, +44 20 0000 0000), og tel:-lenken er uten mellomrom
 - [ ] Tekstverktøylinjas linjehøyde-knapper viser 1,0 / 1,15 / 1,5 / 2,0 i nb og 1.0 / 1.15 / 1.5 / 2.0 i en-GB, med «Arv» som første valg på nb
 
-### Testrunde-batch (0.7.14.17): Sluttauditen
+**0.7.14.17: Sluttauditen**
 
 - [ ] Egenskaper-overskriften viser oversatt blokknavn (ikke rå id) for galleri, samling, tidslinje, sitat, statistikk, tabell, deling, nedteller, produkt, handlekurv og kasse
 - [ ] Kalenderpluginens liste- og kortvisning er stilt igjen (badge, rader, kort), og klikk inne i kalender- og skjemapluginens tannhjulpanel holder panelet åpent uten å avmarkere blokken
@@ -42,19 +44,19 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 - [ ] Plugin-panelet viser norske plugin-navn i nb (Skjema, Kalender, Kart, Svensk språkpakke) og engelske i en-GB
 - [ ] Nye bakgrunnsbilder lagres som media/background-<hash>, menybilder som media/menu-<hash>; nye samlingsinnslag får id entry-...
 
-### Testrunde-batch (0.7.14.9): Resterende strenger
+**0.7.14.9: Resterende strenger**
 
 - [ ] Preset-galleriet og blokkmenyene viser riktige (norske) etiketter og hint i nb; plugin-presetene ligger i Kort og lister-gruppen i ALLE språk (ikke egen gruppe i en-GB/tr)
 - [ ] Chrome-tekstene er oversatt: tom bilde-/galleriblokk på lerretet, «Skriv tekst»-placeholder, videoskjoldets tooltip, kolonnebredde-gripen i sidestilt nav (nb/en-GB/tr)
 - [ ] Kontaktskjemaets valideringsmeldinger hos besøkende er fortsatt på sidespråket
 - [ ] Lokal server starter med engelske meldinger; en ugyldig SVG-opplasting avvises fortsatt pent
 
-### Testrunde-batch (0.7.14.8): Ikonetikettene
+**0.7.14.8: Ikonetikettene**
 
 - [ ] Glyf-/ikonvelgeren viser norske tooltips på ikonene i nb (som før), engelske i en-GB og tyrkiske i tr
 - [ ] Footer-panelets sosial-ikon-nedtrekk viser oversatte navn; publisert footer har aria-labels på ikonlenkene
 
-### Testrunde-batch (0.7.14.7): CSS-klassene
+**0.7.14.7: CSS-klassene**
 
 - [ ] Visuell gjennomgang av alle blokktyper på lerret og publisert i BEGGE moduser: produktkort med hover-bildebytte, kurvskuff, kasse, galleri (grid/karusell/slides + lightbox), samlingsvisningene, sitat (stort/kort med portrett), tidslinje (venstre/vekslende), tabell, nedteller, deling, statistikk - alt ser ut som før klasse-renamet
 - [ ] Kortvis-animasjonen på produktblokken spiller fortsatt (urd-anim-cardwise-markøren)
@@ -62,7 +64,7 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 - [ ] 404-siden ser riktig ut (`.code`-klassen)
 - [ ] En side med egendefinert CSS mot gamle klassenavn dokumenteres som kjent brudd (CHANGELOG-notatet), ikke som bug
 
-### Testrunde-batch (0.7.14.6): Identifikatorene, nøkkelrommene og utkastnøklene
+**0.7.14.6: Identifikatorene, nøkkelrommene og utkastnøklene**
 
 - [ ] UTKAST-MIGRERING: med et upublisert samlings-/mal-utkast fra FØR denne versjonen i nettleseren: åpne admin - utkastet overlever (vises med endringsmerke), og gamle urd-draft-samling*/-mal*-nøkler er borte fra localStorage
 - [ ] Kurvskuff, kasse og nedteller viser riktige tekster hos besøkende i alle fem språk (site-gruppene shop./share./countdown.)
@@ -70,13 +72,13 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 - [ ] Footer-malvelgeren viser alle åtte oppsettene med riktige navn og bygger riktig footer
 - [ ] Mine maler-fanen i «+ Ny seksjon» viser mal-utkastene (urd-templates-meldingen) og innsetting virker
 
-### Testrunde-batch (0.7.14.5): Motorfil-renames
+**0.7.14.5: Motorfil-renames**
 
 - [ ] Lokal server (dev-server.py): forsiden og alle undersider laster uten 404 i nettverkspanelet (alle modulepreloads treffer); editoren åpner og alle blokktyper rendrer
 - [ ] Butikkflyten ende til ende etter filflyttingen: produktkort, kurvskuff, kasse og nav-kurv virker (shop.js/cart.js/checkout.js)
 - [ ] Galleri med lightbox, samlingsblokk, maler-innsetting og CSV-eksport/-import virker (gallery-model/collections/collections-csv/templates-model)
 
-### Testrunde-batch (0.7.14.4): Plugin-laget med aliaser
+**0.7.14.4: Plugin-laget med aliaser**
 
 - [ ] Fersk side: kalender-, kart- og skjemablokkene virker som før (blokkmeny, redigering, preview og publisert); Hva skjer-/Finn oss-/Kontaktskjema-presetene finnes i seksjonsgalleriet med riktige navn
 - [ ] GAMMEL SIDE + NY MOTOR + GAMMEL PLUGIN-MAPPE: en side bygget før renamet (blokktype kalender/kart/skjema, preset hva-skjer) rendrer riktig med de gamle plugin-mappene i repoet (direkte treff)
@@ -85,7 +87,7 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 - [ ] Svensk språkpakke (lang-sv) kan aktiveres og gir svensk besøkende-språk
 - [ ] i18n: plugin-tekstene (kalendervisninger, skjemafelt, kart) er uendret i nb/en-GB/tr
 
-### Testrunde-batch (0.7.14.3): Preset-idene til engelsk med migrering
+**0.7.14.3: Preset-idene til engelsk med migrering**
 
 - [ ] En side lagret før renamet (med f.eks. butikk-, steg- og hovedoppslag-seksjoner) beholder «+ kort/rad»-adderknappen i seksjonsverktøylinjen etter innlasting (preset-oppslaget virker via migreringen)
 - [ ] «+ Ny seksjon»-galleriet viser alle gruppene med riktige etiketter og miniatyrer; Butikk-gruppen heter fortsatt Butikk i nb (nøkkelen er presetGroup.shop)
@@ -93,7 +95,7 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 - [ ] En gammel lagret mal med norsk preset-id på seksjonen settes inn og beholder adder-knappen
 - [ ] Ukjent side-adresse viser fortsatt tom side uten konsollfeil (fallback-oppføringen)
 
-### Testrunde-batch (0.7.14.2): Kontrakt-tokens til engelsk med migrering
+**0.7.14.2: Kontrakt-tokens til engelsk med migrering**
 
 Kjernen i testen er invarianten: en side bygget FØR renamet skal se identisk ut etter.
 

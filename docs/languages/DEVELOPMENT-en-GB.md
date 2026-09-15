@@ -87,7 +87,7 @@ tests/      node --test tests (for now the migration contract)
 Urd follows [semantic versioning](https://semver.org/): `MAJOR.MINOR.PATCH`, always three numbers (`0.1.0`, never `0.1`).
 
 - **PATCH** (`0.2.0 → 0.2.1`): bug fixes only, no new functionality.
-- **MINOR** (`0.2.1 → 0.3.0`): new functionality. The roadmap phases are minor versions (v0.3 «The canvas» is released as `0.3.0`).
+- **MINOR** (`0.2.1 → 0.3.0`): new functionality. The roadmap phases are minor versions, and the releases in a phase carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is the last of them (decided 15 September 2026).
 - **MAJOR** (`1.4.2 → 2.0.0`): changes that may require action from those who upgrade. Note: even MAJOR never breaks a built site (promise 2, the migration contract always applies).
 - Before `1.0.0` we are in the development phase: `0.x` minors may contain breaking changes.
 
