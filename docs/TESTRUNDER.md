@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.8.2): fresh content after a publish
+
+- [ ] urdweb: publish a visible change; the status goes Publishing, then «Published! Waiting for the site to be built», then «Live» within a couple of minutes, and the published page shows the change when Live appears
+- [ ] Chromium: on the published site hover a nav link for a second (prerender), publish a change to that page from the admin in another tab, wait for Live, then click the link: the new content shows without a manual reload (Network panel: a 200 on the page file at activation)
+- [ ] Any browser: on the published site, navigate to an external site and press Back after a publish of that page: the page updates
+- [ ] Rename a menu item and publish, then activate a prerendered page or come back through Back: the page reloads with the new menu
+- [ ] The admin preview iframe makes no page-file recheck requests (Network panel filtered on content/)
+- [ ] Two publishes in a row: only the last one reports Live or the timeout
+
 ### Testrunde-batch (0.7.0.7): old plugin copies and the updater message
 
 - [ ] urd-web (old kalender/skjema/kart copies) after updating to the next release: in the admin preview, click the calendar's month buttons and views; the hero keeps its height and the section below stays put

@@ -113,3 +113,15 @@ test('revalidatePage: null on 304 or the same ETag, the fresh page on a newer fi
   assert.equal(await revalidatePage('content/pages/x.json', null, { fetchFn: noEtag, text: '{"v":1}' }), null, 'identical text without ETags is current');
   assert.equal(noEtag.calls[0].headers['If-None-Match'], undefined, 'no conditional header without an ETag');
 });
+
+test('revalidateFile: the fresh page comes with its text and ETag, so the next check can be conditional', async () => {
+  const { revalidateFile } = await engineImport('prefetch.js');
+  const newer = fakeFetch({ '/content/pages/x.json': { etag: '"v2"', text: '{"v":2}' } });
+  assert.deepEqual(await revalidateFile('content/pages/x.json', '"v1"', { fetchFn: newer }), { page: { v: 2 }, text: '{"v":2}', etag: '"v2"' });
+  const notModified = fakeFetch({ '/content/pages/x.json': { status: () => 304, etag: '"v1"', text: '{"v":1}' } });
+  assert.equal(await revalidateFile('content/pages/x.json', '"v1"', { fetchFn: notModified }), null);
+  const unconditional = fakeFetch({ '/content/site.json': { text: '{"s":1}' } });
+  assert.equal(await revalidateFile('content/site.json', null, { fetchFn: unconditional, text: '{"s":1}' }), null, 'identical text without an ETag is current');
+  assert.equal(unconditional.calls[0].headers['If-None-Match'], undefined);
+  assert.deepEqual(await revalidateFile('content/site.json', null, { fetchFn: unconditional, text: '{"s":0}' }), { page: { s: 1 }, text: '{"s":1}', etag: null });
+});

@@ -8,6 +8,7 @@
   import GlyphPicker from './lib/GlyphPicker.svelte';
   import { createPreviewBridge } from './lib/previewBridge.js';
   import { previewScale } from './lib/preview-scale.js';
+  import { deployTargets, awaitServed } from './lib/deploy-wait.js';
   import {
     WIDTH_MIN, WIDTH_MAX, WIDTH_STEP, GUTTER_MIN, GUTTER_MAX, GUTTER_STEP,
     WIDTH_PRESETS, GUTTER_PRESETS, REF_SCREENS,
@@ -2075,6 +2076,24 @@
       }
     }
     setStatus(ta('status.revertDeployTimeout'), 'error');
+  }
+
+  /** The publish whose deploy is being awaited: a newer publish makes an
+   *  older wait fall silent instead of reporting a stale result. */
+  let publishWave = 0;
+
+  /**
+   * After a publish: poll the committed content files until the site serves
+   * them (lib/deploy-wait.js), so the status can say «live» rather than just
+   * «committed». Nothing is reloaded and no draft changes: the drafts already
+   * are the published state.
+   */
+  async function awaitPublishDeploy(files) {
+    const wave = ++publishWave;
+    const live = await awaitServed(deployTargets(files));
+    if (wave !== publishWave) return;
+    if (live) setStatus(ta('status.publishLive'), 'ok');
+    else setStatus(ta('status.publishDeployTimeout'), 'error');
   }
 
   /* ---------- The updater (ADR-0014) ---------- */
@@ -5225,7 +5244,10 @@
         writeDraftKey(`urd-draft-${pageId}`, JSON.stringify(pageSnap));
       }
       updateDirty();
-      setStatus(ta('status.published'), 'ok');
+      // The wait keeps the message up (info never auto-clears) until the
+      // site serves the commit or the wait gives up.
+      setStatus(ta('status.published'), 'info');
+      awaitPublishDeploy(files);
     } else if (res?.status === 401) {
       const data = await res.json().catch(() => null);
       setStatus(data?.code === 'loginExpired'
