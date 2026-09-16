@@ -10,12 +10,6 @@ Replaces the «My screen» wording in the 0.7.2.6 batch below with «My window»
 - [ ] Resize the browser window: the preview follows the new width at once; the Screen tooltip shows the window width
 - [ ] Maximise the window: the preview equals the published page maximised
 
-### Testrunde-batch (0.7.2): the release
-
-- [ ] After tagging v0.7.2 and publishing the GitHub release: the release Action is green, urdweb.pages.dev serves engine 0.7.2 (/urd.json) and every page, checkout, shop and shop-fp included, loads base.css with the same stamp as the root (no 404 on /assets/engine/0.7.2/)
-- [ ] The Updates panel on urd-web (engine 0.7.1) offers 0.7.2, the update runs with the engine atom group switched as a whole, and its old plugin folders (kalender, skjema, kart) keep working afterwards
-- [ ] After the update on urd-web: the calendar's month buttons in the admin preview keep the hero height, and the section below stays put
-
 ### Testrunde-batch (0.7.2.6): the Screen device follows your own screen, or an editing size
 
 Supersedes the 0.7.2.2 items «"Skjerm"-lerretet er 1920 px» and «Skjerm-knappen følger designbredden», and the 1488 px figure in the 0.7.2 fold item (the binding width is 1637 px); nothing is removed.
@@ -33,27 +27,11 @@ Supersedes the 0.7.2.2 items «"Skjerm"-lerretet er 1920 px» and «Skjerm-knapp
 
 ### Testrunde-batch (0.7.8.2): fresh content after a publish
 
-- [ ] urdweb: publish a visible change; the status goes Publishing, then «Published! Waiting for the site to be built», then «Live» within a couple of minutes, and the published page shows the change when Live appears
 - [ ] Chromium: on the published site hover a nav link for a second (prerender), publish a change to that page from the admin in another tab, wait for Live, then click the link: the new content shows without a manual reload (Network panel: a 200 on the page file at activation)
 - [ ] Any browser: on the published site, navigate to an external site and press Back after a publish of that page: the page updates
 - [ ] Rename a menu item and publish, then activate a prerendered page or come back through Back: the page reloads with the new menu
 - [ ] The admin preview iframe makes no page-file recheck requests (Network panel filtered on content/)
 - [ ] Two publishes in a row: only the last one reports Live or the timeout
-
-### Testrunde-batch (0.7.0.7): old plugin copies and the updater message
-
-- [ ] urd-web (old kalender/skjema/kart copies) after updating to the next release: in the admin preview, click the calendar's month buttons and views; the hero keeps its height and the section below stays put
-- [ ] urd-web: open the old calendar's or form's gear panel in the preview and click inside it; no block drag or selection starts
-- [ ] Both sites: the first section under a floating or overlay menu fills its background up behind the menu and the content starts below it, on desktop and in the mobile view
-- [ ] Both sites: drag a section's top and bottom edges and use the fit-height button; the section lands where the pointer is, also on the first section under a floating menu
-- [ ] Both sites: a FAQ or collection block that grows past its section grows the section with it; a section with an `85vh` height keeps it after the growth
-- [ ] Updates panel on a site whose version has no template tag yet: the message says updates are not available for this version yet, in the admin language
-
-### Testrunde-batch (0.7.1): the release (renumbered from 0.6.12 on 16 September 2026)
-
-- [ ] After tagging v0.7.1 and publishing the GitHub release: the release Action is green, urdweb.pages.dev serves engine 0.7.1 (/urd.json) and the pages render with the 0.7.1 engine path (no 404 on /assets/engine/0.7.1/)
-- [ ] The Updates panel on a deployed site on 0.6.11 offers 0.7.1, and the update runs with the engine atom group switched as a whole
-- [ ] Publish a page change, then hover its link from another page within a few seconds and click: the rerender after the background revalidation keeps the scroll position and pinned (sticky) blocks stay pinned
 
 ### Testrunde-batch (0.7.8): boot in one wave and intent prefetch
 
