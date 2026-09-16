@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.2.7): the Screen device follows the browser window
+
+Replaces the «My screen» wording in the 0.7.2.6 batch below with «My window»; the items there still apply with the window as the reference.
+
+- [ ] Clean view on Screen (My window) in a browser window narrower than the monitor: the preview stands 1:1 with the published page opened in the same window (the content band and the text at the same size and position, apart from the page's scrollbar width)
+- [ ] Resize the browser window: the preview follows the new width at once; the Screen tooltip shows the window width
+- [ ] Maximise the window: the preview equals the published page maximised
+
 ### Testrunde-batch (0.7.2): the release
 
 - [ ] After tagging v0.7.2 and publishing the GitHub release: the release Action is green, urdweb.pages.dev serves engine 0.7.2 (/urd.json) and every page, checkout, shop and shop-fp included, loads base.css with the same stamp as the root (no 404 on /assets/engine/0.7.2/)

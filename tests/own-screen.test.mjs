@@ -1,25 +1,24 @@
 /**
  * The Screen device's viewport (editor/src/lib/own-screen.js): the owner's
- * own screen width, and the per-browser editing size with its clamping.
+ * own window width, and the per-browser editing size with its clamping.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  ownScreenWidth, ownScreenWidthOf, screenSetting, screenViewport,
+  ownWindowWidth, ownWindowWidthOf, screenSetting, screenViewport,
   SCREEN_WIDTH_MIN, SCREEN_WIDTH_MAX, SCREEN_HEIGHT_MIN, SCREEN_HEIGHT_MAX,
 } from '../editor/src/lib/own-screen.js';
 
-test('ownScreenWidth: a maximised window reports its viewport, otherwise screen.width, then the window', () => {
-  assert.equal(ownScreenWidth({ screenWidth: 1536, innerWidth: 1200 }), 1536, 'not maximised: the screen');
-  assert.equal(ownScreenWidth({ screenWidth: 1920, availWidth: 1920, outerWidth: 1920, innerWidth: 1536 }), 1536, 'maximised at 125 % zoom: the zoomed viewport');
-  assert.equal(ownScreenWidth({ screenWidth: 1920, availWidth: 1920, outerWidth: 1200, innerWidth: 1190 }), 1920, 'a smaller window: the screen');
-  assert.equal(ownScreenWidth({ innerWidth: 1280 }), 1280, 'no screen: the window');
-  assert.equal(ownScreenWidth({ screenWidth: 1512.5 }), 1513, 'whole pixels');
-  assert.equal(ownScreenWidth(), 1);
-  assert.equal(ownScreenWidthOf({ screen: { width: 1920, availWidth: 1920 }, outerWidth: 1920, innerWidth: 1500 }), 1500);
-  assert.equal(ownScreenWidthOf({ screen: { width: 1920 }, innerWidth: 1500 }), 1920);
-  assert.equal(ownScreenWidthOf(null), null);
-  assert.equal(ownScreenWidthOf({}), null);
+test('ownWindowWidth: the viewport width, the screen as the fallback, whole pixels, never below 1', () => {
+  assert.equal(ownWindowWidth({ innerWidth: 1918, screenWidth: 2560 }), 1918, 'the window, not the monitor');
+  assert.equal(ownWindowWidth({ innerWidth: 1536, screenWidth: 1920 }), 1536, 'a zoomed window reports zoomed CSS px');
+  assert.equal(ownWindowWidth({ screenWidth: 1920 }), 1920, 'no viewport: the screen');
+  assert.equal(ownWindowWidth({ innerWidth: 1512.5 }), 1513, 'whole pixels');
+  assert.equal(ownWindowWidth(), 1);
+  assert.equal(ownWindowWidthOf({ innerWidth: 1918, screen: { width: 2560 } }), 1918);
+  assert.equal(ownWindowWidthOf({ innerWidth: 0, screen: { width: 1920 } }), 1920);
+  assert.equal(ownWindowWidthOf(null), null);
+  assert.equal(ownWindowWidthOf({}), null);
 });
 
 test('screenSetting: defaults for anything that is not a stored preference', () => {
@@ -43,10 +42,10 @@ test('screenSetting: width and height are clamped, an empty height means fill', 
   assert.deepEqual(screenSetting({ mode: 'custom', width: 1280, height: 900.4 }, 1536), { mode: 'custom', width: 1280, height: 900 });
 });
 
-test('screenViewport: own mode follows the measured screen, custom mode the stored size', () => {
+test('screenViewport: own mode follows the measured window, custom mode the stored size', () => {
   const own = screenSetting({ width: 1280 }, 1536);
   assert.deepEqual(screenViewport(own, 1536), { width: 1536, height: 0 });
-  assert.deepEqual(screenViewport(own, 1920), { width: 1920, height: 0 }, 'a changed screen is followed');
+  assert.deepEqual(screenViewport(own, 1920), { width: 1920, height: 0 }, 'a resized window is followed');
   const custom = screenSetting({ mode: 'custom', width: 1280 }, 1536);
   assert.deepEqual(screenViewport(custom, 1920), { width: 1280, height: 0 }, 'height 0 fills the panel');
   const pinned = screenSetting({ mode: 'custom', width: 1280, height: 900 }, 1536);

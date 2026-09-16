@@ -1,9 +1,9 @@
 /**
  * The Screen device of the editing canvas (ADR-0018 addendum): its width is
- * the owner's own screen in CSS px (browser zoom included), or an editing
- * size chosen per browser, the Wix Studio model. Only an editing size can
- * carry a height; the own screen fills the panel like every other device.
- * Pure functions, node-tested.
+ * the owner's own browser window in CSS px, the same window the published
+ * page is compared in, or an editing size chosen per browser, the Wix
+ * Studio model. Only an editing size can carry a height; the own window
+ * fills the panel like every other device. Pure functions, node-tested.
  */
 
 export const SCREEN_WIDTH_MIN = 640;
@@ -14,37 +14,31 @@ export const SCREEN_HEIGHT_MAX = 2400;
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 
 /**
- * The own screen width in whole CSS px. A maximised window (its outer width
- * reaches the available screen width) reports the viewport width directly,
- * which every engine gives in zoomed CSS px; otherwise screen.width, which
- * some engines report unzoomed. The window width is the last fallback,
- * never below 1.
- * @param {{screenWidth?: number, availWidth?: number, outerWidth?: number, innerWidth?: number}} win
+ * The own window width in whole CSS px: the viewport width, which every
+ * engine reports in zoomed CSS px and which is exactly what the published
+ * page lays out in when opened in the same window (a maximised window is
+ * the screen). The screen width is the fallback where no viewport is
+ * measured, never below 1.
+ * @param {{innerWidth?: number, screenWidth?: number}} win
  * @returns {number}
  */
-export function ownScreenWidth({ screenWidth = 0, availWidth = 0, outerWidth = 0, innerWidth = 0 } = {}) {
-  const maximised = availWidth > 0 && outerWidth > 0 && outerWidth >= availWidth - 2 && innerWidth > 0;
-  const width = maximised ? innerWidth : (screenWidth > 0 ? screenWidth : innerWidth);
+export function ownWindowWidth({ innerWidth = 0, screenWidth = 0 } = {}) {
+  const width = innerWidth > 0 ? innerWidth : screenWidth;
   return Math.max(1, Math.round(width > 0 ? width : 1));
 }
 
 /** Reads the browser's own numbers; null outside a browser. */
-export function ownScreenWidthOf(win) {
-  if (!win || !win.screen) return null;
-  return ownScreenWidth({
-    screenWidth: win.screen.width,
-    availWidth: win.screen.availWidth,
-    outerWidth: win.outerWidth,
-    innerWidth: win.innerWidth,
-  });
+export function ownWindowWidthOf(win) {
+  if (!win || typeof win.innerWidth !== 'number') return null;
+  return ownWindowWidth({ innerWidth: win.innerWidth, screenWidth: win.screen?.width ?? 0 });
 }
 
 /**
  * Normalises a stored Screen preference. Unknown or missing parts fall to
- * the defaults: the own screen mode, a width equal to the own screen (so the
- * editing-size field starts at what the owner has), no height (fill).
+ * the defaults: the own window mode, a width equal to the own window (so
+ * the editing-size field starts at what the owner has), no height (fill).
  * @param {unknown} raw The stored object, or anything else
- * @param {number} ownWidth The own screen width
+ * @param {number} ownWidth The own window width
  * @returns {{mode: 'own'|'custom', width: number, height: number}}
  */
 export function screenSetting(raw, ownWidth) {

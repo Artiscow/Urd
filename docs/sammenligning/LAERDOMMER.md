@@ -90,7 +90,7 @@ Written in English (ADR-0022). A second pass over twelve builders, this time on 
 
 **Two rules from the survey:** a fixed canvas width always comes with a zoom control (Wix Studio, Webflow, Bricks, Framer, Figma; Wix classic is the exception and the oldest design), and nobody pins the viewport height to a device or letterboxes; Bricks' H field and Carrd's toggle are the only prior art, Webflow's wishlist the complaint.
 
-**What Urd takes (0.7.2.6):** the Screen device follows the owner's own screen width by default (the majority model, but measured on the screen rather than the panel remainder that trips Webflow users), an explicit editing size with the existing zoom as the opt-in Wix Studio model, and a height only as part of that editing size. Reference 1920 keeps the earlier fixed canvas. See the ADR-0018 addendum.
+**What Urd takes (0.7.2.6 and 0.7.2.7):** the Screen device follows the owner's own browser window width by default (the majority model, measured on the whole window rather than the panel remainder that trips Webflow users, and on the window rather than the monitor, since the published page is compared in that window), an explicit editing size with the existing zoom as the opt-in Wix Studio model, and a height only as part of that editing size. Reference 1920 keeps the earlier fixed canvas. See the ADR-0018 addendum.
 
 ---
 

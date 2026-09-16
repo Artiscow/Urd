@@ -27,6 +27,10 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.2.7 - The Screen device follows the browser window, not the monitor - 16 September 2026
+
+- Test finding on urd-web after 0.7.2: the preview in clean view stood at 75 % of the published page in the same browser window. «My screen» read `screen.width`, the monitor, while the published page is laid out in the browser window, so on a monitor wider than the window the canvas was too wide and the content band looked narrower than published. The Screen device now reads the window's viewport width (own-screen.js `ownWindowWidth`; a maximised window is the screen, browser zoom is honoured), and the mode is named «My window» in nb, en-GB and tr. ADR-0018 addendum and LAERDOMMER §2 adjusted.
+
 ## [0.7.2] - 2026-09-16
 
 ### 0.7.0.7-0.7.2.6p - Push preparation and release 0.7.2: old plugin copies, fresh content after publish, the Screen device setting - 16 September 2026

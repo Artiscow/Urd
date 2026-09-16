@@ -10,7 +10,7 @@
   import { previewScale } from './lib/preview-scale.js';
   import { deployTargets, awaitServed } from './lib/deploy-wait.js';
   import {
-    ownScreenWidthOf, screenSetting, screenViewport,
+    ownWindowWidthOf, screenSetting, screenViewport,
     SCREEN_WIDTH_MIN, SCREEN_WIDTH_MAX, SCREEN_HEIGHT_MIN, SCREEN_HEIGHT_MAX,
   } from './lib/own-screen.js';
   import {
@@ -199,14 +199,15 @@
 
   /** The canvas target device (ADR-0018, the Squarespace model): each button
    *  is a REAL screen size, not a view mode. Then there is no "wrong" mode
-   *  to be in. Screen is the owner's own screen width by default, or an
-   *  editing size chosen per browser (lib/own-screen.js, the Wix Studio
-   *  model) with an optional height; only a set height pins both axes.
+   *  to be in. Screen is the owner's own browser window width by default
+   *  (the window the published page is compared in), or an editing size
+   *  chosen per browser (lib/own-screen.js, the Wix Studio model) with an
+   *  optional height; only a set height pins both axes.
    *  Reference is the 1920 px screen the canvas used before the addendum.
    *  The fixed devices pin the width and fill the panel.
    *  `viewport` is what the ENGINE gets to know (it only knows
    *  desktop/mobile), so tablet and laptop are desktop view to the engine. */
-  let ownWidth = $state(ownScreenWidthOf(typeof window !== 'undefined' ? window : null) ?? 1920);
+  let ownWidth = $state(ownWindowWidthOf(typeof window !== 'undefined' ? window : null) ?? 1920);
   /** The Screen preference, per browser like the admin theme and language. */
   const SCREEN_PREF_KEY = 'urd-admin-screen';
   function readScreenPref() {
@@ -317,10 +318,10 @@
     bridge?.sendZoom(z);
   });
 
-  // The own screen width follows the browser: a zoom change or a move to
-  // another monitor changes the width the window reports.
+  // The own window width follows the browser: a resize or a zoom change
+  // changes the width the window reports.
   $effect(() => {
-    const onResize = () => { ownWidth = ownScreenWidthOf(window) ?? ownWidth; };
+    const onResize = () => { ownWidth = ownWindowWidthOf(window) ?? ownWidth; };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   });

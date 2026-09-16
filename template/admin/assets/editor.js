@@ -3769,16 +3769,14 @@ async function Xa(e, { fetchFn: t = fetch, delayMs: n = 1e4, attempts: r = 18, s
 	return !1;
 }
 var Za = 3840, Qa = 2400, $a = (e, t, n) => Math.min(n, Math.max(t, e));
-function eo({ screenWidth: e = 0, availWidth: t = 0, outerWidth: n = 0, innerWidth: r = 0 } = {}) {
-	let i = t > 0 && n > 0 && n >= t - 2 && r > 0 ? r : e > 0 ? e : r;
-	return Math.max(1, Math.round(i > 0 ? i : 1));
+function eo({ innerWidth: e = 0, screenWidth: t = 0 } = {}) {
+	let n = e > 0 ? e : t;
+	return Math.max(1, Math.round(n > 0 ? n : 1));
 }
 function to(e) {
-	return !e || !e.screen ? null : eo({
-		screenWidth: e.screen.width,
-		availWidth: e.screen.availWidth,
-		outerWidth: e.outerWidth,
-		innerWidth: e.innerWidth
+	return !e || typeof e.innerWidth != "number" ? null : eo({
+		innerWidth: e.innerWidth,
+		screenWidth: e.screen?.width ?? 0
 	});
 }
 function no(e, t) {
