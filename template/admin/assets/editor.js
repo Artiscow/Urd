@@ -3001,7 +3001,7 @@ Dr([
 	"change"
 ]);
 //#endregion
-//#region ../template/assets/engine/0.7.1/imageTools.js
+//#region ../template/assets/engine/0.7.2/imageTools.js
 var pa = 1600, ma = .82, ha = .6, ga = 15e6;
 async function _a(e, t = pa) {
 	if (ya(e)) return ba(await e.text());
@@ -3081,7 +3081,7 @@ function Ta(e) {
 	return t.toString(16).padStart(8, "0");
 }
 //#endregion
-//#region ../template/assets/engine/0.7.1/glyphs.js
+//#region ../template/assets/engine/0.7.2/glyphs.js
 var Ea = "urd-recent-glyphs", Da = [
 	["glyphCat.symbols", "★ ☆ ✦ ✧ ✩ ✪ ✫ ✭ ✮ ✯ ✵ ✳ ✴ ❖ ❋ ✿ ❀ ❁ ✾ ❃ ☘ ◆ ◇ ● ○ ◎ ■ □ ▣ ▲ △ ▼ ▽ ⬡ ⬢ ♦ ♠ ♣ ♥ ♡ ✓ ✔ ✕ ✖ ✗ ✘ ✚ ✜ ☀ ☾ ♪ ♫ ♬ ☮ ☯ ⚜ ⚓ ⚡ ☂ ✂ ✏ ✒ ✉ ☎ ⌛ ⏳ ♻ ⚠ ☑ ⚙ § © ® ™ ° ± × ÷ ∞ ≈ ≠ ≤ ≥ € £ ¥ • ‣ ⁂"],
 	["glyphCat.arrows", "→ ← ↑ ↓ ↔ ↕ ↗ ↘ ↙ ↖ ⇒ ⇐ ⇑ ⇓ ⇔ ➜ ➤ ➔ ↩ ↪ ⤴ ⤵ ↺ ↻ ⟲ ⟳ « » ‹ ›"],
@@ -3112,7 +3112,7 @@ function Aa(e) {
 	return t;
 }
 //#endregion
-//#region ../template/assets/engine/0.7.1/icons.js
+//#region ../template/assets/engine/0.7.2/icons.js
 var ja = "fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"", Ma = "fill=\"currentColor\" stroke=\"none\"", Na = {
 	facebook: {
 		label: "Facebook",
@@ -3769,13 +3769,15 @@ async function Xa(e, { fetchFn: t = fetch, delayMs: n = 1e4, attempts: r = 18, s
 	return !1;
 }
 var Za = 3840, Qa = 2400, $a = (e, t, n) => Math.min(n, Math.max(t, e));
-function eo({ screenWidth: e = 0, innerWidth: t = 0 } = {}) {
-	let n = e > 0 ? e : t;
-	return Math.max(1, Math.round(n > 0 ? n : 1));
+function eo({ screenWidth: e = 0, availWidth: t = 0, outerWidth: n = 0, innerWidth: r = 0 } = {}) {
+	let i = t > 0 && n > 0 && n >= t - 2 && r > 0 ? r : e > 0 ? e : r;
+	return Math.max(1, Math.round(i > 0 ? i : 1));
 }
 function to(e) {
 	return !e || !e.screen ? null : eo({
 		screenWidth: e.screen.width,
+		availWidth: e.screen.availWidth,
+		outerWidth: e.outerWidth,
 		innerWidth: e.innerWidth
 	});
 }
@@ -4141,7 +4143,7 @@ function Ao(e, t) {
 	return n;
 }
 //#endregion
-//#region ../template/assets/engine/0.7.1/plugins.js
+//#region ../template/assets/engine/0.7.2/plugins.js
 function jo(e) {
 	let t = /^(\d+)\.(\d+)\.(\d+)$/.exec(String(e).trim());
 	return t ? [
@@ -4172,7 +4174,7 @@ function Fo(e) {
 }
 Promise.resolve();
 //#endregion
-//#region ../template/assets/engine/0.7.1/sections/presets.js
+//#region ../template/assets/engine/0.7.2/sections/presets.js
 function Io(e) {
 	return typeof crypto < "u" && crypto.randomUUID ? `${e}-${crypto.randomUUID().slice(0, 8)}` : `${e}-${[...crypto.getRandomValues(/* @__PURE__ */ new Uint8Array(4))].map((e) => e.toString(16).padStart(2, "0")).join("")}`;
 }
@@ -5098,7 +5100,7 @@ function as(e) {
 	});
 }
 //#endregion
-//#region ../template/assets/engine/0.7.1/templates-model.js
+//#region ../template/assets/engine/0.7.2/templates-model.js
 var os = [
 	"section",
 	"blocks",
@@ -5121,7 +5123,7 @@ function cs(e, t, { id: n, title: r }) {
 	return i;
 }
 //#endregion
-//#region ../template/assets/engine/0.7.1/collections-csv.js
+//#region ../template/assets/engine/0.7.2/collections-csv.js
 var ls = [
 	"id",
 	"title",
@@ -5203,7 +5205,7 @@ function hs(e) {
 	};
 }
 //#endregion
-//#region ../template/assets/engine/0.7.1/feeds.js
+//#region ../template/assets/engine/0.7.2/feeds.js
 function gs(e) {
 	return String(e ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;").replaceAll("'", "&apos;");
 }
@@ -5230,7 +5232,7 @@ function bs(e) {
     <title>${gs(e.title)}</title>\n    <link>${gs(t + "/")}</link>\n    <description>${gs(e.description ?? e.title)}</description>\n${n}${n ? "\n" : ""}  </channel>\n</rss>\n`;
 }
 //#endregion
-//#region ../template/assets/engine/0.7.1/preset-thumb.js
+//#region ../template/assets/engine/0.7.2/preset-thumb.js
 var xs = /^#[0-9a-fA-F]{3,8}$/, Ss = /^[a-z][a-z0-9-]*$/, Cs = "#171c26", ws = "#232a38", Ts = "#98a1b3", Es = "#7c5cff", Q = (e, t) => `var(--urd-color-${e}, ${t})`;
 function Ds(e, t) {
 	return typeof e == "string" ? xs.test(e) ? e : Ss.test(e) ? Q(e, t) : t : t;
@@ -5402,7 +5404,7 @@ function zs(e, { w: t = 96, h: n = 116, max: r = 6 } = {}) {
 	return `<svg viewBox="0 0 ${t} ${n}" width="${t}" height="${n}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${c.join("")}</svg>`;
 }
 //#endregion
-//#region ../template/assets/engine/0.7.1/page-presets.js
+//#region ../template/assets/engine/0.7.2/page-presets.js
 var Bs = /* @__PURE__ */ new Map();
 as({ sections: { define: (e, t) => Bs.set(e, t) } });
 var Vs = [
@@ -5498,7 +5500,7 @@ function Hs(e, { pageId: t, title: n }) {
 	} : null;
 }
 //#endregion
-//#region ../template/assets/engine/0.7.1/palette-search.js
+//#region ../template/assets/engine/0.7.2/palette-search.js
 function Us(e) {
 	return String(e ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
@@ -5514,7 +5516,7 @@ function Gs(e, t, n) {
 	})).filter((e) => e.rank >= 0).sort((e, t) => e.rank - t.rank || e.i - t.i).map((e) => e.item);
 }
 //#endregion
-//#region ../template/assets/engine/0.7.1/theme.js
+//#region ../template/assets/engine/0.7.2/theme.js
 function Ks(e, t, n) {
 	return t === "light" || t === "dark" ? t : n ? "dark" : "light";
 }
@@ -5635,7 +5637,7 @@ function nc(e, t) {
 	return n == null || r == null ? null : (Math.max(n, r) + .05) / (Math.min(n, r) + .05);
 }
 //#endregion
-//#region ../template/assets/engine/0.7.1/backgrounds/color.js
+//#region ../template/assets/engine/0.7.2/backgrounds/color.js
 var rc = {
 	version: 1,
 	label: "Colour",
@@ -5835,7 +5837,7 @@ function bc(e) {
 	return typeof e == "string" && yc.test(e);
 }
 //#endregion
-//#region ../template/assets/engine/0.7.1/backgrounds/image.js
+//#region ../template/assets/engine/0.7.2/backgrounds/image.js
 var xc = .4;
 function Sc(e, t) {
 	return `${(e ?? .5) * 100}% ${(t ?? .5) * 100}%`;
@@ -5948,7 +5950,7 @@ function Uc(e, t, n, r) {
 	Pc() ? Vc(e, t, n, r) : Nc(e, t, n, r);
 }
 //#endregion
-//#region ../template/assets/engine/0.7.1/gallery-model.js
+//#region ../template/assets/engine/0.7.2/gallery-model.js
 function Wc(e, t, n) {
 	return !Number.isFinite(n) || n < 1 ? 0 : (((Number.isFinite(e) ? e : 0) + t) % n + n) % n;
 }
@@ -5960,7 +5962,7 @@ function Kc(e, { min: t = 2, fallback: n = 5 } = {}) {
 	return !Number.isFinite(r) || r <= 0 ? n : Math.max(t, r);
 }
 //#endregion
-//#region ../template/assets/engine/0.7.1/backgrounds/slideshow.js
+//#region ../template/assets/engine/0.7.2/backgrounds/slideshow.js
 var qc = {
 	version: 1,
 	label: "Image gallery",
@@ -6062,7 +6064,7 @@ var Qc = (e, t, n, r) => {
 	}
 };
 //#endregion
-//#region ../template/assets/engine/0.7.1/footer-thumb.js
+//#region ../template/assets/engine/0.7.2/footer-thumb.js
 function el(e = {}) {
 	let t = "#2fd6b6", n = "#5c6b64", r = e.mega ? "#16221d" : "#0e1512", i = e.cols ?? 0, a = e.social ?? 0, o = `<svg viewBox="0 0 160 80" preserveAspectRatio="none" aria-hidden="true"><rect width="160" height="80" fill="${r}"/>`;
 	if (e.mega && (o += `<circle cx="20" cy="6" r="34" fill="${t}" opacity="0.18"/>`), e.bigcta) return o += `<rect x="45" y="18" width="70" height="8" rx="3" fill="${n}" opacity="0.85"/>`, o += `<rect x="56" y="32" width="48" height="4" rx="2" fill="${n}" opacity="0.5"/>`, o += `<rect x="62" y="43" width="36" height="10" rx="3" fill="${t}"/>`, o += tl(n, e.baselineLinks), o + "</svg>";
@@ -6090,7 +6092,7 @@ function tl(e, t = 0) {
 	return n += `<rect x="8" y="70" width="40" height="3" rx="1.5" fill="${e}" opacity="0.6"/>`, t && (n += `<g fill="${e}" opacity="0.6">` + Array.from({ length: t }, (e, t) => `<rect x="${120 - t * 16}" y="70" width="12" height="3" rx="1.5"/>`).join("") + "</g>"), n;
 }
 //#endregion
-//#region ../template/assets/engine/0.7.1/animations/core.js
+//#region ../template/assets/engine/0.7.2/animations/core.js
 var nl = () => ({
 	duration: 600,
 	delay: 0
@@ -6152,7 +6154,7 @@ var nl = () => ({
 	["font.courier", "'Courier New', monospace"]
 ];
 //#endregion
-//#region ../template/assets/engine/0.7.1/place.js
+//#region ../template/assets/engine/0.7.2/place.js
 function ol(e) {
 	let t = (e) => Math.round(e * 100) / 100, n = Math.max(0, t(100 - e.w)), r = Math.min(n, Math.max(0, t(e.x - e.w / 2))), i = Math.max(0, e.y - e.h / 2), a = e.snap === !1 || e.grid?.snap === !1, o = e.grid?.size || 8;
 	return i = a ? Math.round(i) : Math.round(i / o) * o, {
@@ -9383,8 +9385,8 @@ function Bf(e, t) {
 	}
 	let oi = 0;
 	async function si(e) {
-		let t = ++oi, n = await Xa(Ya(e));
-		t === oi && (n ? S(J("status.publishLive"), "ok") : S(J("status.publishDeployTimeout"), "error"));
+		let t = ++oi, n = x, r = await Xa(Ya(e));
+		t === oi && n === x && (r ? S(J("status.publishLive"), "ok") : S(J("status.publishDeployTimeout"), "error"));
 	}
 	let ci = /* @__PURE__ */ j(null), li = /* @__PURE__ */ j(null), ui = /* @__PURE__ */ j(!1), fi = /* @__PURE__ */ j(nn(/* @__PURE__ */ new Set()));
 	async function pi() {
@@ -12239,7 +12241,11 @@ function Bf(e, t) {
 							min: 480,
 							max: Qa
 						})
-					]), z("change", i, (e) => le({ width: Number(e.target.value) })), z("change", s, (e) => le({ height: Number(e.target.value) })), V(e, t);
+					]), z("change", i, (e) => {
+						le({ width: Number(e.target.value) }), e.target.value = R(ce).width;
+					}), z("change", s, (e) => {
+						le({ height: Number(e.target.value) }), e.target.value = R(ce).height || "";
+					}), V(e, t);
 				};
 				U(l, (e) => {
 					R(ce).mode === "custom" && e(u);

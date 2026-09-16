@@ -9,11 +9,14 @@ import {
   SCREEN_WIDTH_MIN, SCREEN_WIDTH_MAX, SCREEN_HEIGHT_MIN, SCREEN_HEIGHT_MAX,
 } from '../editor/src/lib/own-screen.js';
 
-test('ownScreenWidth: screen.width wins, the window is the fallback, whole pixels, never below 1', () => {
-  assert.equal(ownScreenWidth({ screenWidth: 1536, innerWidth: 1200 }), 1536);
-  assert.equal(ownScreenWidth({ innerWidth: 1280 }), 1280);
-  assert.equal(ownScreenWidth({ screenWidth: 1512.5 }), 1513);
+test('ownScreenWidth: a maximised window reports its viewport, otherwise screen.width, then the window', () => {
+  assert.equal(ownScreenWidth({ screenWidth: 1536, innerWidth: 1200 }), 1536, 'not maximised: the screen');
+  assert.equal(ownScreenWidth({ screenWidth: 1920, availWidth: 1920, outerWidth: 1920, innerWidth: 1536 }), 1536, 'maximised at 125 % zoom: the zoomed viewport');
+  assert.equal(ownScreenWidth({ screenWidth: 1920, availWidth: 1920, outerWidth: 1200, innerWidth: 1190 }), 1920, 'a smaller window: the screen');
+  assert.equal(ownScreenWidth({ innerWidth: 1280 }), 1280, 'no screen: the window');
+  assert.equal(ownScreenWidth({ screenWidth: 1512.5 }), 1513, 'whole pixels');
   assert.equal(ownScreenWidth(), 1);
+  assert.equal(ownScreenWidthOf({ screen: { width: 1920, availWidth: 1920 }, outerWidth: 1920, innerWidth: 1500 }), 1500);
   assert.equal(ownScreenWidthOf({ screen: { width: 1920 }, innerWidth: 1500 }), 1920);
   assert.equal(ownScreenWidthOf(null), null);
   assert.equal(ownScreenWidthOf({}), null);

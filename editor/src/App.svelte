@@ -2113,8 +2113,12 @@
    */
   async function awaitPublishDeploy(files) {
     const wave = ++publishWave;
+    // The status sequence at the publish: any message shown since (a
+    // revert, a login prompt) makes the wait fall silent instead of
+    // overwriting it.
+    const seq = statusSeq;
     const live = await awaitServed(deployTargets(files));
-    if (wave !== publishWave) return;
+    if (wave !== publishWave || seq !== statusSeq) return;
     if (live) setStatus(ta('status.publishLive'), 'ok');
     else setStatus(ta('status.publishDeployTimeout'), 'error');
   }
@@ -5338,11 +5342,11 @@
                 <span class="mini-label">{ta('lbl.screen.w')}</span>
                 <input type="number" class="tb-num" min={SCREEN_WIDTH_MIN} max={SCREEN_WIDTH_MAX} step="10"
                   title={ta('tip.screen.width', { min: SCREEN_WIDTH_MIN, max: SCREEN_WIDTH_MAX })}
-                  value={screenPref.width} onchange={(e) => setScreenPref({ width: Number(e.target.value) })} />
+                  value={screenPref.width} onchange={(e) => { setScreenPref({ width: Number(e.target.value) }); e.target.value = screenPref.width; }} />
                 <span class="mini-label">{ta('lbl.screen.h')}</span>
                 <input type="number" class="tb-num" min="0" max={SCREEN_HEIGHT_MAX} step="10" placeholder="0"
                   title={ta('tip.screen.height', { min: SCREEN_HEIGHT_MIN, max: SCREEN_HEIGHT_MAX })}
-                  value={screenPref.height || ''} onchange={(e) => setScreenPref({ height: Number(e.target.value) })} />
+                  value={screenPref.height || ''} onchange={(e) => { setScreenPref({ height: Number(e.target.value) }); e.target.value = screenPref.height || ''; }} />
               </div>
             {/if}
           {/snippet}

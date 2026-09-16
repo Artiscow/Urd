@@ -2,12 +2,18 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.2): the release
+
+- [ ] After tagging v0.7.2 and publishing the GitHub release: the release Action is green, urdweb.pages.dev serves engine 0.7.2 (/urd.json) and every page, checkout, shop and shop-fp included, loads base.css with the same stamp as the root (no 404 on /assets/engine/0.7.2/)
+- [ ] The Updates panel on urd-web (engine 0.7.1) offers 0.7.2, the update runs with the engine atom group switched as a whole, and its old plugin folders (kalender, skjema, kart) keep working afterwards
+- [ ] After the update on urd-web: the calendar's month buttons in the admin preview keep the hero height, and the section below stays put
+
 ### Testrunde-batch (0.7.2.6): the Screen device follows your own screen, or an editing size
 
 Supersedes the 0.7.2.2 items «"Skjerm"-lerretet er 1920 px» and «Skjerm-knappen følger designbredden», and the 1488 px figure in the 0.7.2 fold item (the binding width is 1637 px); nothing is removed.
 
 - [ ] My screen (default): maximise the admin window, open the published site in a new tab of the same browser; the content band has the same width relative to the window in the preview and on the site
-- [ ] Zoom the browser to 125 % and repeat: the preview follows the new screen width, and the Screen tooltip shows the measured width
+- [ ] Zoom the browser to 125 % with the admin window maximised and repeat: the preview follows the zoomed width, and the Screen tooltip shows it (a non-maximised window reads the screen width instead, which some engines report unzoomed)
 - [ ] Narrow the window until the Device cluster folds: the My screen / Editing size segment sits directly under Screen in the menu; unfolded, a second click on the active Screen button opens the same popover, and an outside click or Escape closes it
 - [ ] Editing size without a height: the canvas stands at the typed width, the panel is filled, no bar below the stage
 - [ ] Editing size with height 900: the stage ends at the fold, the surface below it is dark, the page scrolls inside the iframe, no second scrollbar in fit mode; manual zoom past the surface still pans

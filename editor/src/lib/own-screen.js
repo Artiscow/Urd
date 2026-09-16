@@ -14,20 +14,29 @@ export const SCREEN_HEIGHT_MAX = 2400;
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 
 /**
- * The own screen width in whole CSS px: screen.width first, the window
- * width as the fallback, never below 1.
- * @param {{screenWidth?: number, innerWidth?: number}} win
+ * The own screen width in whole CSS px. A maximised window (its outer width
+ * reaches the available screen width) reports the viewport width directly,
+ * which every engine gives in zoomed CSS px; otherwise screen.width, which
+ * some engines report unzoomed. The window width is the last fallback,
+ * never below 1.
+ * @param {{screenWidth?: number, availWidth?: number, outerWidth?: number, innerWidth?: number}} win
  * @returns {number}
  */
-export function ownScreenWidth({ screenWidth = 0, innerWidth = 0 } = {}) {
-  const width = screenWidth > 0 ? screenWidth : innerWidth;
+export function ownScreenWidth({ screenWidth = 0, availWidth = 0, outerWidth = 0, innerWidth = 0 } = {}) {
+  const maximised = availWidth > 0 && outerWidth > 0 && outerWidth >= availWidth - 2 && innerWidth > 0;
+  const width = maximised ? innerWidth : (screenWidth > 0 ? screenWidth : innerWidth);
   return Math.max(1, Math.round(width > 0 ? width : 1));
 }
 
 /** Reads the browser's own numbers; null outside a browser. */
 export function ownScreenWidthOf(win) {
   if (!win || !win.screen) return null;
-  return ownScreenWidth({ screenWidth: win.screen.width, innerWidth: win.innerWidth });
+  return ownScreenWidth({
+    screenWidth: win.screen.width,
+    availWidth: win.screen.availWidth,
+    outerWidth: win.outerWidth,
+    innerWidth: win.innerWidth,
+  });
 }
 
 /**

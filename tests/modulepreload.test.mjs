@@ -26,8 +26,26 @@ import { ENGINE_VERSION, ENGINE_DIR } from './_engine.mjs';
 const ENTRY = 'boot.js';
 const TEMPLATE = new URL('../template/', import.meta.url);
 const INDEX = new URL('index.html', TEMPLATE);
-const SLUG_COPIES = ['om-oss', 'kaker', 'kontakt'];
 const URD_DIR = new URL('assets/urd/', TEMPLATE);
+
+/** The slug copies of index.html: one per page in the register except the
+ *  root, plus any other directory that carries a copy (a page removed from
+ *  the register keeps its copy until the next publish). Derived, never
+ *  listed, so a page added by a publish is covered at once. */
+function slugCopies() {
+  const site = JSON.parse(readFileSync(new URL('content/site.json', TEMPLATE), 'utf8'));
+  const fromRegister = (site.pages ?? [])
+    .map((p) => String(p.path ?? '').replace(/^\//, ''))
+    .filter((slug) => slug && !slug.includes('/'));
+  const fromTree = readdirSync(TEMPLATE, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && d.name !== 'admin')
+    .map((d) => d.name)
+    .filter((name) => {
+      try { return statSync(new URL(`${name}/index.html`, TEMPLATE)).isFile(); } catch { return false; }
+    });
+  return [...new Set([...fromRegister, ...fromTree])].sort();
+}
+const SLUG_COPIES = slugCopies();
 
 /** Strip block and line comments BEFORE matching, so a commented-out or
  *  dynamic import never counts. */
@@ -127,6 +145,7 @@ test('the slug copies of index.html are byte-identical to the root', () => {
   // The copies are written as raw copies of the served root at publish; if
   // they drift in the template, fresh clones inherit the deviation until the
   // first publish.
+  assert.ok(SLUG_COPIES.length >= 3, `expected slug copies for the register's pages, found ${SLUG_COPIES.join(', ')}`);
   const root = readFileSync(INDEX, 'utf8');
   for (const slug of SLUG_COPIES) {
     const copy = readFileSync(new URL(`${slug}/index.html`, TEMPLATE), 'utf8');
@@ -171,7 +190,7 @@ test('_headers has the version-neutral immutable rules', () => {
 
 test('the base.css stamp in the HTML shells matches the file content', () => {
   const stamp = contentHash(readFileSync(new URL('assets/styles/base.css', TEMPLATE), 'utf8'));
-  for (const file of ['index.html', 'admin/index.html']) {
+  for (const file of ['index.html', 'admin/index.html', ...SLUG_COPIES.map((slug) => `${slug}/index.html`)]) {
     const html = readFileSync(new URL(file, TEMPLATE), 'utf8');
     const m = html.match(/href="\/assets\/styles\/base\.css\?v=([0-9a-f]{8})"/);
     assert.ok(m, `${file} is missing the stamped base.css reference`);

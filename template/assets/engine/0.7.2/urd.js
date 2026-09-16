@@ -594,8 +594,11 @@ export async function boot(opts) {
     // file rerenders, a current copy leaves the page be. Errors are
     // swallowed: the page never dies from a failed check.
     let checking = null;
+    let queuedSite = false;
     const recheck = ({ site: checkSite }) => {
-      if (checking) return checking;
+      // A site check arriving mid-flight runs after the current one, so the
+      // stronger request is never dropped.
+      if (checking) { queuedSite ||= checkSite; return checking; }
       checking = (async () => {
         if (checkSite) {
           const freshSite = await revalidateFile('content/site.json', served.site.etag, { text: served.site.text });
@@ -603,7 +606,10 @@ export async function boot(opts) {
         }
         const fresh = await revalidateFile(entry.file, served.page?.etag ?? null, { text: served.page?.text ?? null });
         if (fresh) applyFreshPage(fresh);
-      })().catch(() => {}).finally(() => { checking = null; });
+      })().catch(() => {}).finally(() => {
+        checking = null;
+        if (queuedSite) { queuedSite = false; recheck({ site: true }); }
+      });
       return checking;
     };
     // A prerendered document checks at activation, everything else now.

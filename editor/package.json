@@ -1,7 +1,7 @@
 {
   "name": "urd-editor",
   "private": true,
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Source of the Urd editor. Built to ../template/admin/assets/ and shipped precompiled; cloned sites never need npm.",
   "type": "module",
   "scripts": {
