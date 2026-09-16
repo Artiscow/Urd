@@ -102,7 +102,7 @@
     "logo": {
       "type": "image",
       "value": "/media/logo-91963a12.svg",
-      "size": 40,
+      "size": 30,
       "order": "image-first",
       "bold": false,
       "italic": false,
@@ -169,7 +169,9 @@
       "textColor": "#ffffff",
       "hoverTextColor": "#00fff5",
       "blur": true,
-      "size": "sm"
+      "size": "sm",
+      "hover": "underline",
+      "hoverGlow": 1
     },
     "overlay": true,
     "variant": "floating-tab"
