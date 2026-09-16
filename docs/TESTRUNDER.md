@@ -2,6 +2,21 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.2.6): the Screen device follows your own screen, or an editing size
+
+Supersedes the 0.7.2.2 items «"Skjerm"-lerretet er 1920 px» and «Skjerm-knappen følger designbredden», and the 1488 px figure in the 0.7.2 fold item (the binding width is 1637 px); nothing is removed.
+
+- [ ] My screen (default): maximise the admin window, open the published site in a new tab of the same browser; the content band has the same width relative to the window in the preview and on the site
+- [ ] Zoom the browser to 125 % and repeat: the preview follows the new screen width, and the Screen tooltip shows the measured width
+- [ ] Narrow the window until the Device cluster folds: the My screen / Editing size segment sits directly under Screen in the menu; unfolded, a second click on the active Screen button opens the same popover, and an outside click or Escape closes it
+- [ ] Editing size without a height: the canvas stands at the typed width, the panel is filled, no bar below the stage
+- [ ] Editing size with height 900: the stage ends at the fold, the surface below it is dark, the page scrolls inside the iframe, no second scrollbar in fit mode; manual zoom past the surface still pans
+- [ ] Type 100 and 9999 in W, then 300 and 5000 in H: the fields snap to 640, 3840, 480 and 2400; an empty or 0 height fills the panel again
+- [ ] Reload: mode, W and H persist; another browser starts on My screen
+- [ ] Reference 1920, Laptop, Tablet and Phone are unchanged, with no bar below the stage
+- [ ] A site with content width Full previews at your own screen width
+- [ ] The W and H fields are hidden on My screen; the device labels, the segment and the tooltips read correctly in nb, en-GB and tr
+
 ### Testrunde-batch (0.7.8.2): fresh content after a publish
 
 - [ ] urdweb: publish a visible change; the status goes Publishing, then «Published! Waiting for the site to be built», then «Live» within a couple of minutes, and the published page shows the change when Live appears

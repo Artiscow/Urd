@@ -10,6 +10,10 @@
   import { previewScale } from './lib/preview-scale.js';
   import { deployTargets, awaitServed } from './lib/deploy-wait.js';
   import {
+    ownScreenWidthOf, screenSetting, screenViewport,
+    SCREEN_WIDTH_MIN, SCREEN_WIDTH_MAX, SCREEN_HEIGHT_MIN, SCREEN_HEIGHT_MAX,
+  } from './lib/own-screen.js';
+  import {
     WIDTH_MIN, WIDTH_MAX, WIDTH_STEP, GUTTER_MIN, GUTTER_MAX, GUTTER_STEP,
     WIDTH_PRESETS, GUTTER_PRESETS, REF_SCREENS,
     clampWidth, clampGutter, contentBand, presetOf, bindingWidth,
@@ -88,6 +92,7 @@
     external: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4l-8 8"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
     // The target devices in the canvas switcher: desktop, laptop, tablet, phone
     device_desktop: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="13" rx="2"/><path d="M8 21h8M12 16v5"/></svg>',
+    device_reference: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="13" rx="2"/><path d="M8 21h8M12 16v5M6 9.5h12"/></svg>',
     device_laptop: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></svg>',
     device_tablet: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M11 18.5h2"/></svg>',
     device_mobile: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18.5h2"/></svg>',
@@ -194,19 +199,48 @@
 
   /** The canvas target device (ADR-0018, the Squarespace model): each button
    *  is a REAL screen size, not a view mode. Then there is no "wrong" mode
-   *  to be in, and the fold is correct in all four. The desktop width is
-   *  not a constant: it follows the design width, since any width above it
-   *  renders identically.
+   *  to be in. Screen is the owner's own screen width by default, or an
+   *  editing size chosen per browser (lib/own-screen.js, the Wix Studio
+   *  model) with an optional height; only a set height pins both axes.
+   *  Reference is the 1920 px screen the canvas used before the addendum.
+   *  The fixed devices pin the width and fill the panel.
    *  `viewport` is what the ENGINE gets to know (it only knows
    *  desktop/mobile), so tablet and laptop are desktop view to the engine. */
-  const DEVICES = [
-    { id: 'desktop', width: null, viewport: 'desktop' },
-    { id: 'laptop', width: 1280, viewport: 'desktop' },
-    { id: 'tablet', width: 810, viewport: 'desktop' },
-    { id: 'mobile', width: 390, viewport: 'mobile' },
+  let ownWidth = $state(ownScreenWidthOf(typeof window !== 'undefined' ? window : null) ?? 1920);
+  /** The Screen preference, per browser like the admin theme and language. */
+  const SCREEN_PREF_KEY = 'urd-admin-screen';
+  function readScreenPref() {
+    let raw = null;
+    try { raw = JSON.parse(localStorage.getItem(SCREEN_PREF_KEY) ?? 'null'); } catch { raw = null; }
+    return screenSetting(raw, ownWidth);
+  }
+  let screenPref = $state(readScreenPref());
+  /** Writes through the normaliser, so the stored object is always valid. */
+  function setScreenPref(patch) {
+    screenPref = screenSetting({ ...$state.snapshot(screenPref), ...patch }, ownWidth);
+    try { localStorage.setItem(SCREEN_PREF_KEY, JSON.stringify(screenPref)); } catch { /* blocked storage: the choice lasts the session */ }
+  }
+  let screenTarget = $derived(screenViewport(screenPref, ownWidth));
+  const FIXED_DEVICES = [
+    { id: 'reference', width: 1920, height: null, viewport: 'desktop' },
+    { id: 'laptop', width: 1280, height: null, viewport: 'desktop' },
+    { id: 'tablet', width: 810, height: null, viewport: 'desktop' },
+    { id: 'mobile', width: 390, height: null, viewport: 'mobile' },
   ];
+  let devices = $derived([
+    { id: 'desktop', width: screenTarget.width, height: screenTarget.height || null, viewport: 'desktop' },
+    ...FIXED_DEVICES,
+  ]);
+  /** The device tooltip: Screen names its mode, the fixed devices their size. */
+  function deviceTip(d) {
+    const c = contentBand(layoutWidth, layoutGutter, d.width).width;
+    const key = d.id !== 'desktop' ? `tip.view.${d.id}`
+      : screenPref.mode === 'own' ? 'tip.view.desktop'
+      : d.height ? 'tip.view.desktopSizeH' : 'tip.view.desktopSize';
+    return ta(key, { w: d.width, h: d.height ?? 0, c });
+  }
   let deviceId = $state('desktop');
-  let device = $derived(DEVICES.find((d) => d.id === deviceId) ?? DEVICES[0]);
+  let device = $derived(devices.find((d) => d.id === deviceId) ?? devices[0]);
   /** The engine's viewport. Everything that asks "are we on mobile" reads this. */
   let viewMode = $derived(device.viewport);
 
@@ -218,32 +252,22 @@
   let frameWrapEl = $state(null);
   let frameW = $state(0);            // measured inner surface of .frame-wrap (px)
   let frameH = $state(0);
-  let winW = $state(typeof window !== 'undefined' ? window.innerWidth : 1280);
   /** Zoom for the editing canvas: 'fit' adapts to the window, 'full' = true 1:1. */
   let zoomMode = $state('fit'); // 'fit' | 'manual' (stepped with +/-)
   let manualZoom = $state(1);
-  /** The desktop canvas is a FIXED, representative screen: 1920x1080 is the
-   *  most common desktop resolution.
-   *
-   *  A fixed reference screen, not the binding width (the narrowest screen
-   *  where the content reaches the design width): with the binding width
-   *  the canvas width would depend on the side margin, so dragging the
-   *  margin would change the zoom and make everything look larger or
-   *  smaller, and a narrow canvas would letterbox the page. A fixed
-   *  reference screen avoids both, and the margin shows up where it
-   *  actually applies: on Laptop and Tablet. */
-  const DESKTOP_REF = 1920;
-  let desktopW = $derived(layoutWidth === 'full' ? winW : DESKTOP_REF);
   /** The window width from which the content actually reaches the design
    *  width. Shown under the sample, since it is not "width plus margins"
    *  when the margin is relative. */
   let bindsFrom = $derived(bindingWidth(layoutWidth, layoutGutter));
-  let targetW = $derived(device.width ?? desktopW);
-  // The scale is WIDTH-driven. See the comment at iframeH: the height is
-  // not pinned, because that would put bars around the canvas.
+  let targetW = $derived(device.width);
+  /** The pinned viewport height; 0 (fill the panel) for everything but an
+   *  editing size with a height set. */
+  let targetH = $derived(device.height ?? 0);
+  // A pinned height fits both axes; otherwise the scale is WIDTH-driven,
+  // see the comment at iframeH.
   let scale = $derived(zoomMode === 'manual'
     ? manualZoom
-    : previewScale(frameW, targetW, 'fit'));
+    : previewScale(frameW, targetW, 'fit', frameH, targetH));
 
   /** The zoom steppers: 10 percentage-point steps from the current view, clamped 10-400 %. */
   function stepZoom(dir) {
@@ -251,17 +275,15 @@
     manualZoom = next / 100;
     zoomMode = 'manual';
   }
-  // The canvas FILLS the panel: the iframe is made correspondingly taller,
-  // so the scaled height covers .frame-wrap and there are never black bars
-  // above and below the page. The width is still pinned to the device, and
-  // the width is what decides whether the layout is correct.
-  //
-  // Pinning the HEIGHT too would give a perfectly accurate fold, but at
-  // the price of visible bars around the canvas: an inaccurate fold is an
-  // invisible cost, bars are a visible one.
-  let iframeH = $derived(scale > 0 ? frameH / scale : frameH);
+  // An editing size with a height set: the iframe stands in that height,
+  // the stage's bottom edge is the fold, and the panel's surplus below it
+  // is the letterbox surface. Every other case FILLS the panel: the iframe
+  // is made correspondingly taller, so the scaled height covers .frame-wrap
+  // without bars, at the price of a fold that follows the panel's aspect
+  // ratio rather than a real screen's.
+  let iframeH = $derived(targetH > 0 ? targetH : (scale > 0 ? frameH / scale : frameH));
   let stageW = $derived(targetW * scale);
-  let stageH = $derived(frameH);
+  let stageH = $derived(targetH > 0 ? targetH * scale : frameH);
   /** Can the canvas be panned? Only after zooming MANUALLY past the surface.
    *
    *  In fit mode the surface must never scroll: the page already has its
@@ -295,9 +317,10 @@
     bridge?.sendZoom(z);
   });
 
-  // The target viewport follows the live window's inner dimensions.
+  // The own screen width follows the browser: a zoom change or a move to
+  // another monitor changes the width the window reports.
   $effect(() => {
-    const onResize = () => { winW = window.innerWidth; };
+    const onResize = () => { ownWidth = ownScreenWidthOf(window) ?? ownWidth; };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   });
@@ -2409,7 +2432,9 @@
 
   /* A cluster that has unfolded again has no menu; the choice is cleaned up with it. */
   $effect(() => {
-    if (toolMenu && !folded[toolMenu]) toolMenu = null;
+    // 'screen' is the Screen settings popover in the UNFOLDED device strip:
+    // it closes when the cluster folds, the fold menus when they unfold.
+    if (toolMenu && (toolMenu === 'screen' ? folded.device : !folded[toolMenu])) toolMenu = null;
   });
 
   /* One open tool menu at a time, same closing pattern as the settings. */
@@ -5298,6 +5323,29 @@
              outside-click test has ONE node to ask, and must not create
              its own box in the bar. -->
         <span class="toolset" bind:this={toolMenuEl}>
+          <!-- The Screen setting (ADR-0018 addendum): its own width, or an
+               editing size with an optional height. Sits directly under the
+               Screen choice, and the size fields only when that mode is on. -->
+          {#snippet screenSettings()}
+            <span class="seg" title={ta('tip.screen.mode')}>
+              <button type="button" class:on={screenPref.mode === 'own'}
+                onclick={() => setScreenPref({ mode: 'own' })}>{ta('lbl.screen.own')}</button>
+              <button type="button" class:on={screenPref.mode === 'custom'}
+                onclick={() => setScreenPref({ mode: 'custom' })}>{ta('lbl.screen.size')}</button>
+            </span>
+            {#if screenPref.mode === 'custom'}
+              <div class="tool-pop-row">
+                <span class="mini-label">{ta('lbl.screen.w')}</span>
+                <input type="number" class="tb-num" min={SCREEN_WIDTH_MIN} max={SCREEN_WIDTH_MAX} step="10"
+                  title={ta('tip.screen.width', { min: SCREEN_WIDTH_MIN, max: SCREEN_WIDTH_MAX })}
+                  value={screenPref.width} onchange={(e) => setScreenPref({ width: Number(e.target.value) })} />
+                <span class="mini-label">{ta('lbl.screen.h')}</span>
+                <input type="number" class="tb-num" min="0" max={SCREEN_HEIGHT_MAX} step="10" placeholder="0"
+                  title={ta('tip.screen.height', { min: SCREEN_HEIGHT_MIN, max: SCREEN_HEIGHT_MAX })}
+                  value={screenPref.height || ''} onchange={(e) => setScreenPref({ height: Number(e.target.value) })} />
+              </div>
+            {/if}
+          {/snippet}
           {#if folded.device}
             <span class="toolmenu">
               <button class="ghost" class:active={toolMenu === 'device'}
@@ -5306,11 +5354,12 @@
                 >{@html ICONS[`device_${deviceId}`]}{@html ICONS.caret}</button>
               {#if toolMenu === 'device'}
                 <div class="tool-pop">
-                  {#each DEVICES as d (d.id)}
+                  {#each devices as d (d.id)}
                     <button class="ghost" class:active={deviceId === d.id}
                       onclick={() => { deviceId = d.id; toolMenu = null; }}
-                      title={ta(`tip.view.${d.id}`, { w: d.width ?? desktopW, c: contentBand(layoutWidth, layoutGutter, d.width ?? desktopW).width })}
+                      title={deviceTip(d)}
                       >{@html ICONS[`device_${d.id}`]} {ta(`lbl.device.${d.id}`)}</button>
+                    {#if d.id === 'desktop' && deviceId === 'desktop'}{@render screenSettings()}{/if}
                   {/each}
                 </div>
               {/if}
@@ -5320,11 +5369,25 @@
                  strip. Three labeled clusters instead: Device, Zoom, View. -->
             <span class="tool-cap">{ta('lbl.group.device')}</span>
             <span class="viewswitch toolgrp">
-              {#each DEVICES as d (d.id)}
-                <button class="ghost" class:active={deviceId === d.id}
-                  onclick={() => (deviceId = d.id)}
-                  title={ta(`tip.view.${d.id}`, { w: d.width ?? desktopW, c: contentBand(layoutWidth, layoutGutter, d.width ?? desktopW).width })}
-                  >{@html ICONS[`device_${d.id}`]}</button>
+              {#each devices as d (d.id)}
+                {#if d.id === 'desktop'}
+                  <!-- A second click on the active Screen button opens its
+                       settings; no width is added to the strip. -->
+                  <span class="toolmenu">
+                    <button class="ghost" class:active={deviceId === d.id}
+                      onclick={() => { if (deviceId === 'desktop') toolMenu = toolMenu === 'screen' ? null : 'screen'; else deviceId = 'desktop'; }}
+                      title={deviceTip(d)}
+                      >{@html ICONS[`device_${d.id}`]}</button>
+                    {#if toolMenu === 'screen'}
+                      <div class="tool-pop">{@render screenSettings()}</div>
+                    {/if}
+                  </span>
+                {:else}
+                  <button class="ghost" class:active={deviceId === d.id}
+                    onclick={() => (deviceId = d.id)}
+                    title={deviceTip(d)}
+                    >{@html ICONS[`device_${d.id}`]}</button>
+                {/if}
               {/each}
             </span>
           {/if}
@@ -6821,7 +6884,7 @@
         {/if}
       {/if}
 
-      <div class="frame-wrap" class:mobile={viewMode === 'mobile'} class:pan={canPan} bind:this={frameWrapEl}>
+      <div class="frame-wrap" class:mobile={viewMode === 'mobile'} class:pan={canPan} class:fold={targetH > 0} bind:this={frameWrapEl}>
         <!-- .stage has the SCALED size, so scrolling/centering gets a real
              box (a transformed iframe alone does not expand its parent's scroll). -->
         <div class="stage" style="width:{stageW}px; height:{stageH}px">
@@ -9426,6 +9489,13 @@
     overflow: auto;
   }
 
+  /* A pinned viewport height (an editing size with a height set): the stage
+     sits at the top, its bottom edge is the fold, and the surface below it
+     is the letterbox that reads as "below the fold". */
+  .frame-wrap.fold {
+    align-items: safe flex-start;
+  }
+
   /* The stage box has the SCALED size; the iframe inside stands in the
      full target viewport and is scaled with transform (see markup), so
      the render is identical to the published page - only the display
@@ -9732,6 +9802,23 @@
   .tool-pop .ghost.active {
     border-color: var(--urd-color-accent, #7c5cff);
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 15%, transparent);
+  }
+
+  /* The Screen setting inside a tool menu: the mode segment and the size
+     fields on one compact row. */
+  .tool-pop .seg {
+    align-self: flex-start;
+    margin: 2px 4px 4px;
+  }
+
+  .tool-pop .tb-num {
+    width: 3.6rem;
+    padding: 0 0.3em;
+    text-align: center;
+  }
+
+  .tool-pop .mini-label {
+    margin: 0 2px 0 6px;
   }
 
   .tool-pop-row {
