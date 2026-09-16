@@ -99,7 +99,6 @@
   ],
   "nav": {
     "version": 1,
-    "scroll": "shrink",
     "logo": {
       "type": "image",
       "value": "/media/logo-91963a12.svg",
