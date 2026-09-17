@@ -103,6 +103,7 @@
       "type": "image",
       "value": "/media/logo-91963a12.svg",
       "size": 30,
+      "mobileSize": 26,
       "order": "image-first",
       "bold": false,
       "italic": false,

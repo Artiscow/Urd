@@ -2,6 +2,25 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.15): navigation bar sizing
+
+- [ ] Nav panel, variant bar: the Size row shows four segment buttons with the current step highlighted; the Thickness and Text size sliders start at the step's values (14 px and 16 px on Medium); dragging a slider un-highlights every step, and clicking a step resets both sliders
+- [ ] Thickness 0 with an image logo: the bar stops at the logo row (about 36 px) and never gets thinner; thickness 64 gives a tall bar with the logo centred
+- [ ] Thickness on the floating pill: the slider starts at the step's value scaled down (about 10 px on Medium); a typed 30 renders 30 px in the pill and the same 30 px after switching to the bar
+- [ ] Text size 24: the menu items grow, the logo text follows, a logo with its own text size does not
+- [ ] Side padding 0 and 80, item spacing 0 and 64: the bar, the open mobile panel and the side-to-bar fallback below 900 px all follow the side padding; the item spacing changes only the horizontal list
+- [ ] Align to content width on a site with content width 1200 in a wide window: the logo and the first item stand exactly on the content edge of a section below (compare with a text block at the left edge); in the Mobile device the bar keeps its normal padding
+- [ ] Floating menu width «Content width»: the pill is as wide as the content band at 1920, 1536 and 1366 px windows; «Custom» empty gives today's 1100 px, 600 gives a narrow pill; in the Mobile device the pill fills the width as before
+- [ ] Side variant: the Column width field shows 250, typing 300 widens the column and the drag handle agrees; dragging updates the field; 100 and 999 snap to 180 and 400; Thickness, side padding, item spacing, inset, menu width, border, shadow and the Mobile group are hidden
+- [ ] On scroll Shrink: «Shrink to» 30 % gives a much thinner bar after scrolling, 80 % almost none; with an image logo «Shrink the logo too» scales the image with the bar and back, with a transition; without an image the checkbox is hidden
+- [ ] Mobile group: thickness 4 and text size 14 apply in the Mobile device and on a phone, not on desktop; a narrow desktop window whose items fold into the burger keeps the desktop values; emptying both fields removes the group's data (localStorage draft shows no `mobile` key)
+- [ ] Logo height on mobile 20: the logo image is 20 px in the Mobile device and unchanged on desktop; empty = same as desktop
+- [ ] Border Bottom, width 3, colour accent: a 3 px accent line under the bar; Top and bottom, All sides and None behave; on the pill the border follows the rounding; width 0 and 99 snap to 1 and 8
+- [ ] Shadow Soft and Strong under the bar; the Shadow row is hidden on the floating variants (glow instead) and on the side variant
+- [ ] Publish with thickness 24, inset on and border bottom: the published page equals clean view in the same window, and the site.json in the repo carries only the fields that were set (no defaults written)
+- [ ] The example site (`mobileSize` 26) shows the logo at 30 px on desktop and 26 px in the Mobile device
+- [ ] Labels and tooltips for every new row read correctly in nb, en-GB and tr
+
 ### Testrunde-batch (0.7.2.7): the Screen device follows the browser window
 
 Replaces the «My screen» wording in the 0.7.2.6 batch below with «My window»; the items there still apply with the window as the reference.

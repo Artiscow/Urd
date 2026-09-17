@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, navScrollState, isSafeImage } = await engineImport('nav-model.js');
+const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, NAV_SIZE_BOUNDS, isSafeImage } = await engineImport('nav-model.js');
 
 // Deliberately Norwegian page titles and slugs: user data stays Norwegian (ADR-0021).
 const PAGES = [
@@ -384,4 +384,98 @@ test('navScrollState: hide is always visible in the top zone', () => {
 test('navScrollState: small movements below the jitter guard keep the state', () => {
   assert.equal(navScrollState('hide', 200, 202, true).hidden, true);
   assert.equal(navScrollState('hide', 200, 198, false).hidden, false);
+});
+
+test('navClasses: inset only for the top bar and only on boolean true', () => {
+  const site = (nav) => ({ nav: { items: [], ...nav } });
+  assert.ok(navClasses(site({ style: { inset: true } })).includes('urd-nav-inset'));
+  assert.ok(navClasses(site({ variant: 'bar', style: { inset: true } })).includes('urd-nav-inset'));
+  assert.ok(!navClasses(site({ variant: 'floating', style: { inset: true } })).includes('urd-nav-inset'));
+  assert.ok(!navClasses(site({ variant: 'side-left', style: { inset: true } })).includes('urd-nav-inset'));
+  assert.ok(!navClasses(site({ style: { inset: 'yes' } })).includes('urd-nav-inset'));
+  assert.ok(!navClasses(site({})).includes('urd-nav-inset'));
+});
+
+test('navClasses: the logo shrink class only on boolean true', () => {
+  const site = (style) => ({ nav: { items: [], style } });
+  assert.ok(navClasses(site({ shrinkLogo: true })).includes('urd-nav-shrink-logo'));
+  assert.ok(!navClasses(site({ shrinkLogo: 'true' })).includes('urd-nav-shrink-logo'));
+  assert.ok(!navClasses(site({})).includes('urd-nav-shrink-logo'));
+});
+
+test('navClasses: border side and shadow strength are allowlisted, the shadow is bar-only', () => {
+  const site = (nav) => ({ nav: { items: [], ...nav } });
+  assert.ok(navClasses(site({ style: { border: { side: 'bottom' } } })).includes('urd-nav-border-bottom'));
+  assert.ok(navClasses(site({ variant: 'floating', style: { border: { side: 'all', width: 2 } } })).includes('urd-nav-border-all'));
+  assert.ok(!navClasses(site({ style: { border: { side: 'left' } } })).includes('urd-nav-border-'));
+  assert.ok(!navClasses(site({ style: { border: 'bottom' } })).includes('urd-nav-border-'));
+  assert.ok(navClasses(site({ style: { shadow: 'soft' } })).includes('urd-nav-shadow-soft'));
+  assert.ok(navClasses(site({ variant: 'bar', style: { shadow: 'strong' } })).includes('urd-nav-shadow-strong'));
+  assert.ok(!navClasses(site({ variant: 'floating', style: { shadow: 'soft' } })).includes('urd-nav-shadow-'));
+  assert.ok(!navClasses(site({ style: { shadow: 'huge' } })).includes('urd-nav-shadow-'));
+  assert.equal(clampBorderWidth(3), 3);
+  assert.equal(clampBorderWidth(0), 1);
+  assert.equal(clampBorderWidth(99), 8);
+  assert.equal(clampBorderWidth('tull'), 1);
+});
+
+test('navSizeVars: an empty style gives empty vars, no font and the default logo size', () => {
+  assert.deepEqual(navSizeVars(), { vars: {}, font: undefined, logoSize: 32 });
+  assert.deepEqual(navSizeVars({}, {}, { mobile: true }), { vars: {}, font: undefined, logoSize: 32 });
+  assert.deepEqual(navSizeVars(null, null).vars, {});
+});
+
+test('navSizeVars: every field lands in its variable, clamped at both ends', () => {
+  const full = navSizeVars({ padY: 12, textSize: 18, padX: 40, gap: 8, pillWidth: 900, shrinkTo: 0.6 }, { size: 48 });
+  assert.deepEqual(full.vars, {
+    '--urd-nav-pad-y': '12px',
+    '--urd-nav-pad-x': '40px',
+    '--urd-nav-gap': '8px',
+    '--urd-nav-pill-w': '900px',
+    '--urd-nav-shrink-to': '0.6',
+  });
+  assert.equal(full.font, '18px');
+  assert.equal(full.logoSize, 48);
+  const high = navSizeVars({ padY: 999, textSize: 99, padX: 999, gap: 999, pillWidth: 99999, shrinkTo: 5 }, { size: 999 });
+  assert.equal(high.vars['--urd-nav-pad-y'], `${NAV_SIZE_BOUNDS.padY[1]}px`);
+  assert.equal(high.vars['--urd-nav-pad-x'], `${NAV_SIZE_BOUNDS.padX[1]}px`);
+  assert.equal(high.vars['--urd-nav-gap'], `${NAV_SIZE_BOUNDS.gap[1]}px`);
+  assert.equal(high.vars['--urd-nav-pill-w'], `${NAV_SIZE_BOUNDS.pillWidth[1]}px`);
+  assert.equal(high.vars['--urd-nav-shrink-to'], String(NAV_SIZE_BOUNDS.shrinkTo[1]));
+  assert.equal(high.font, `${NAV_SIZE_BOUNDS.textSize[1]}px`);
+  assert.equal(high.logoSize, NAV_SIZE_BOUNDS.logoSize[1]);
+  const low = navSizeVars({ padY: -3, textSize: 1, padX: -1, gap: -1, pillWidth: 10, shrinkTo: 0 }, { size: 1 });
+  assert.equal(low.vars['--urd-nav-pad-y'], '0px');
+  assert.equal(low.vars['--urd-nav-pill-w'], `${NAV_SIZE_BOUNDS.pillWidth[0]}px`);
+  assert.equal(low.vars['--urd-nav-shrink-to'], String(NAV_SIZE_BOUNDS.shrinkTo[0]));
+  assert.equal(low.font, `${NAV_SIZE_BOUNDS.textSize[0]}px`);
+  assert.equal(low.logoSize, NAV_SIZE_BOUNDS.logoSize[0]);
+  // Garbage (deliberately Norwegian) is ignored, never written as a variable.
+  assert.deepEqual(navSizeVars({ padY: 'tull', textSize: '', pillWidth: 'bred' }).vars, {});
+});
+
+test('navSizeVars: the pill width is a px value or the content width, never at the breakpoint', () => {
+  assert.equal(navSizeVars({ pillWidth: 'content' }).vars['--urd-nav-pill-w'], 'min(var(--urd-canvas-w, 100%), calc(100% - 2 * var(--urd-canvas-gutter-desktop, 0px)))');
+  assert.equal(navSizeVars({ pillWidth: 'content' }, {}, { mobile: true }).vars['--urd-nav-pill-w'], undefined);
+  assert.equal(navSizeVars({ pillWidth: 1200 }, {}, { mobile: true }).vars['--urd-nav-pill-w'], undefined);
+  assert.equal(navSizeVars({ pillWidth: 'wide' }).vars['--urd-nav-pill-w'], undefined);
+});
+
+test('navSizeVars: the mobile overrides are chosen at the breakpoint and fall back to desktop', () => {
+  const style = { padY: 20, textSize: 18, padX: 30, mobile: { padY: 6, textSize: 15 } };
+  const logo = { size: 48, mobileSize: 28 };
+  const desktop = navSizeVars(style, logo, { mobile: false });
+  assert.equal(desktop.vars['--urd-nav-pad-y'], '20px');
+  assert.equal(desktop.font, '18px');
+  assert.equal(desktop.logoSize, 48);
+  const mobile = navSizeVars(style, logo, { mobile: true });
+  assert.equal(mobile.vars['--urd-nav-pad-y'], '6px');
+  assert.equal(mobile.vars['--urd-nav-pad-x'], '30px', 'the side padding has no mobile override');
+  assert.equal(mobile.font, '15px');
+  assert.equal(mobile.logoSize, 28);
+  const partial = navSizeVars({ padY: 20, mobile: { textSize: 14 } }, { size: 40 }, { mobile: true });
+  assert.equal(partial.vars['--urd-nav-pad-y'], '20px', 'a missing mobile field falls back to desktop');
+  assert.equal(partial.font, '14px');
+  assert.equal(partial.logoSize, 40);
+  assert.equal(navSizeVars({ mobile: 'tull' }, {}, { mobile: true }).vars['--urd-nav-pad-y'], undefined);
 });

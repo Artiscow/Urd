@@ -18,6 +18,10 @@
     WIDTH_PRESETS, GUTTER_PRESETS, REF_SCREENS,
     clampWidth, clampGutter, contentBand, presetOf, bindingWidth,
   } from './lib/content-width.js';
+  import {
+    PAD_Y, TEXT_SIZE, PAD_X, GAP, PILL_WIDTH, SHRINK_TO, COL_WIDTH, LOGO_SIZE, SIZE_IDS,
+    clampRange, effectivePadY, effectiveTextSize, sizePresetOf,
+  } from './lib/nav-size.js';
   import Dropdown from './lib/Dropdown.svelte';
   import IconEditor from './lib/IconEditor.svelte';
   // The editor shares the migration code with the engine (same file, bundled in).
@@ -2953,6 +2957,58 @@
   const sideVariant = $derived(siteDraft?.nav?.variant === 'side-left' || siteDraft?.nav?.variant === 'side-right');
   const floatingVariant = $derived(['floating', 'floating-square', 'floating-tab'].includes(siteDraft?.nav?.variant));
 
+  /* ---------- Nav size (ADR-0023) ---------- */
+
+  /** The highlighted size preset (null while a free value overrides it) and
+      the values the sliders start at: what the bar actually renders. */
+  const navSizePreset = $derived(sizePresetOf(siteDraft?.nav?.style));
+  const navPadY = $derived(effectivePadY(siteDraft?.nav?.style, siteDraft?.nav?.variant));
+  const navTextSize = $derived(effectiveTextSize(siteDraft?.nav?.style));
+
+  /** A size preset: md is the default and is not stored; the free values it
+      replaces are removed in the same history step. */
+  function setNavSizePreset(id) {
+    siteMutate('nav', () => {
+      siteDraft.nav.style ??= {};
+      if (id === 'md') delete siteDraft.nav.style.size;
+      else siteDraft.nav.style.size = id;
+      delete siteDraft.nav.style.padY;
+      delete siteDraft.nav.style.textSize;
+    });
+  }
+
+  /** A number field for a nav size value: empty (or garbage) removes the
+      field, anything else is clamped; the field then shows what was stored. */
+  function onNavSizeInput(e, key, range) {
+    const raw = e.target.value;
+    setNavStyle(key, raw === '' ? undefined : clampRange(raw, range, undefined));
+    e.target.value = siteDraft.nav.style?.[key] ?? '';
+  }
+
+  /** The mobile overrides (nav.style.mobile): an emptied object is removed. */
+  function setNavMobile(key, value) {
+    siteMutate(`edit:nav-mobile-${key}`, () => {
+      siteDraft.nav.style ??= {};
+      const mobile = { ...(siteDraft.nav.style.mobile ?? {}) };
+      if (value === undefined) delete mobile[key];
+      else mobile[key] = value;
+      if (Object.keys(mobile).length) siteDraft.nav.style.mobile = mobile;
+      else delete siteDraft.nav.style.mobile;
+    });
+  }
+
+  function onNavMobileInput(e, key, range) {
+    const raw = e.target.value;
+    setNavMobile(key, raw === '' ? undefined : clampRange(raw, range, undefined));
+    e.target.value = siteDraft.nav.style?.mobile?.[key] ?? '';
+  }
+
+  /** The scroll shrink factor is stored as a fraction; 0.5 is the default and is not stored. */
+  function setNavShrinkTo(percent) {
+    const factor = clampRange(percent / 100, SHRINK_TO, 0.5);
+    setNavStyle('shrinkTo', factor === 0.5 ? undefined : factor);
+  }
+
   /** The effect color on hover: only where the style has an effect, with a
       label saying what the color actually controls in the chosen style. */
   const HOVER_COLOR_LABELS = {
@@ -5732,6 +5788,17 @@
                           value={siteDraft.nav.logo?.radius ?? 0}
                           onchange={(e) => setLogo({ radius: Number(e.target.value) })} />
                       </span>
+                      <!-- The logo height at the mobile breakpoint (empty = the same as desktop) -->
+                      <span class="toolbar-row" title={ta('tip.nav.logoHeightMobile')}>
+                        <span class="mini-label tb-grow">{ta('lbl.navLogoHeightMobile')}</span>
+                        <input type="number" class="tb-num" min={LOGO_SIZE.min} max={LOGO_SIZE.max} placeholder="px"
+                          value={siteDraft.nav.logo?.mobileSize ?? ''}
+                          onchange={(e) => {
+                            const raw = e.target.value;
+                            setLogo({ mobileSize: raw === '' ? undefined : clampRange(raw, LOGO_SIZE, undefined) });
+                            e.target.value = siteDraft.nav.logo?.mobileSize ?? '';
+                          }} />
+                      </span>
                     {/if}
                     {#if siteDraft.nav.logo?.type === 'both'}
                       <label>{ta('lbl.order')}
@@ -5760,6 +5827,19 @@
                           onchange={(e) => setNavTopGap(e.target.checked)} />
                         {ta('lbl.navTopGap')}
                       </label>
+                      <!-- The floating menu's maximum width: the content width, or a px value (empty = 1100) -->
+                      <label title={ta('tip.nav.pillWidth')}>{ta('lbl.navPillWidth')}
+                        <Dropdown value={siteDraft.nav.style?.pillWidth === 'content' ? 'content' : 'custom'}
+                          options={[['content', ta('opt.pillWidth.content')], ['custom', ta('opt.pillWidth.custom')]]}
+                          onchange={(v) => setNavStyle('pillWidth', v === 'content' ? 'content' : undefined)} /></label>
+                      {#if siteDraft.nav.style?.pillWidth !== 'content'}
+                        <span class="toolbar-row" title={ta('tip.nav.pillWidthPx')}>
+                          <span class="mini-label tb-grow">{ta('lbl.navPillWidthPx')}</span>
+                          <input type="number" class="tb-num" min={PILL_WIDTH.min} max={PILL_WIDTH.max} step={PILL_WIDTH.step} placeholder="1100"
+                            value={typeof siteDraft.nav.style?.pillWidth === 'number' ? siteDraft.nav.style.pillWidth : ''}
+                            onchange={(e) => onNavSizeInput(e, 'pillWidth', PILL_WIDTH)} />
+                        </span>
+                      {/if}
                     {/if}
                     {#if !floatingVariant && !sideVariant}
                       <label class="gridmenu-snap" title={ta('tip.nav.overlay')}>
@@ -5767,22 +5847,103 @@
                           onchange={(e) => siteMutate('nav', () => { if (e.target.checked) siteDraft.nav.overlay = true; else delete siteDraft.nav.overlay; })} />
                         {ta('lbl.navOverlay')}
                       </label>
+                      <label class="gridmenu-snap" title={ta('tip.nav.inset')}>
+                        <input type="checkbox" checked={siteDraft.nav.style?.inset === true}
+                          onchange={(e) => setNavStyle('inset', e.target.checked ? true : undefined)} />
+                        {ta('lbl.navInset')}
+                      </label>
                     {/if}
                     {#if sideVariant}
                       <label title={ta('tip.nav.sideAlign')}>{ta('lbl.textAlign')}
                         <Dropdown value={siteDraft.nav.style?.sideAlign ?? 'left'}
                           options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
                           onchange={(v) => setNavStyle('sideAlign', v === 'left' ? undefined : v)} /></label>
+                      <!-- The column width as a number, next to the drag at the column edge (250 = the default, not stored) -->
+                      <span class="toolbar-row" title={ta('tip.nav.colWidth')}>
+                        <span class="mini-label tb-grow">{ta('lbl.navColWidth')}</span>
+                        <input type="number" class="tb-num" min={COL_WIDTH.min} max={COL_WIDTH.max}
+                          value={siteDraft.nav.style?.width ?? 250}
+                          onchange={(e) => {
+                            const w = clampRange(e.target.value, COL_WIDTH, 250);
+                            setNavStyle('width', w === 250 ? undefined : w);
+                            e.target.value = siteDraft.nav.style?.width ?? 250;
+                          }} />
+                      </span>
                     {/if}
                     <label class="gridmenu-snap" title={ta('tip.nav.blur')}>
                       <input type="checkbox" checked={siteDraft.nav.style?.blur !== false}
                         onchange={(e) => setNavStyle('blur', e.target.checked)} />
                       {ta('lbl.navBlur')}
                     </label>
-                    <label>{ta('lbl.size')}
-                      <Dropdown value={siteDraft.nav.style?.size ?? 'md'}
-                        options={[['sm', ta('opt.size.sm')], ['md', ta('opt.size.md')], ['lg', ta('opt.size.lg')], ['xl', ta('opt.size.xl')]]}
-                        onchange={(v) => setNavStyle('size', v === 'md' ? undefined : v)} /></label>
+                    {#if !sideVariant}
+                      <!-- Border on the bar (0.7.15.7): the side, then width and colour only once a side is chosen -->
+                      <label title={ta('tip.nav.border')}>{ta('lbl.navBorder')}
+                        <Dropdown value={siteDraft.nav.style?.border?.side ?? ''}
+                          options={[['', ta('common.none')], ['bottom', ta('opt.navBorder.bottom')], ['top', ta('opt.navBorder.top')], ['both', ta('opt.navBorder.both')], ['all', ta('opt.navBorder.all')]]}
+                          onchange={(v) => setNavStyle('border', v ? { ...(siteDraft.nav.style?.border ?? {}), side: v } : undefined)} /></label>
+                      {#if siteDraft.nav.style?.border?.side}
+                        <span class="toolbar-row" title={ta('tip.nav.borderWidth')}>
+                          <span class="mini-label tb-grow">{ta('lbl.navBorderWidth')}</span>
+                          <input type="number" class="tb-num" min="1" max="8"
+                            value={siteDraft.nav.style.border.width ?? 1}
+                            onchange={(e) => {
+                              const w = clampRange(e.target.value, { min: 1, max: 8 }, 1);
+                              const border = { ...siteDraft.nav.style.border };
+                              if (w === 1) delete border.width; else border.width = w;
+                              setNavStyle('border', border);
+                              e.target.value = siteDraft.nav.style.border.width ?? 1;
+                            }} />
+                        </span>
+                        <label title={ta('tip.nav.borderColorPick')}>{ta('lbl.navBorderColor')}
+                          <ColorPicker value={siteDraft.nav.style.border.color ?? 'text'} tokens={themeSwatches()}
+                            label={ta('tip.nav.borderColorPick')}
+                            onchange={(hex) => setNavStyle('border', { ...siteDraft.nav.style.border, color: hex })} /></label>
+                      {/if}
+                    {/if}
+                    {#if !floatingVariant && !sideVariant}
+                      <label title={ta('tip.nav.shadow')}>{ta('lbl.navShadow')}
+                        <Dropdown value={siteDraft.nav.style?.shadow ?? ''}
+                          options={[['', ta('common.none')], ['soft', ta('opt.navShadow.soft')], ['strong', ta('opt.navShadow.strong')]]}
+                          onchange={(v) => setNavStyle('shadow', v || undefined)} /></label>
+                    {/if}
+                    <!-- Size: the four presets, and the free values that replace
+                         the preset's parts (the sliders start where the bar is).
+                         The column has its own padding, so it shows no thickness,
+                         side padding or item spacing. -->
+                    <p class="mini-label" title={ta('tip.nav.sizePreset')}>{ta('lbl.size')}</p>
+                    <div class="seg cw-seg" title={ta('tip.nav.sizePreset')}>
+                      {#each SIZE_IDS as id (id)}
+                        <button class:on={navSizePreset === id} onclick={() => setNavSizePreset(id)}>{ta(`opt.size.${id}`)}</button>
+                      {/each}
+                    </div>
+                    {#if !sideVariant}
+                      <div class="ctl-row" title={ta('tip.nav.thickness')}>
+                        <span class="mini-label">{ta('lbl.navThickness')}</span>
+                        <input type="range" min={PAD_Y.min} max={PAD_Y.max} step={PAD_Y.step} value={navPadY}
+                          oninput={(e) => setNavStyle('padY', e.target.valueAsNumber)} />
+                        <span class="gridmenu-value">{navPadY} px</span>
+                      </div>
+                    {/if}
+                    <div class="ctl-row" title={ta('tip.nav.menuTextSize')}>
+                      <span class="mini-label">{ta('lbl.navTextSize')}</span>
+                      <input type="range" min={TEXT_SIZE.min} max={TEXT_SIZE.max} step={TEXT_SIZE.step} value={navTextSize}
+                        oninput={(e) => setNavStyle('textSize', e.target.valueAsNumber)} />
+                      <span class="gridmenu-value">{navTextSize} px</span>
+                    </div>
+                    {#if !sideVariant}
+                      <span class="toolbar-row" title={ta('tip.nav.padX')}>
+                        <span class="mini-label tb-grow">{ta('lbl.navPadX')}</span>
+                        <input type="number" class="tb-num" min={PAD_X.min} max={PAD_X.max} placeholder="px"
+                          value={siteDraft.nav.style?.padX ?? ''}
+                          onchange={(e) => onNavSizeInput(e, 'padX', PAD_X)} />
+                      </span>
+                      <span class="toolbar-row" title={ta('tip.nav.gap')}>
+                        <span class="mini-label tb-grow">{ta('lbl.navGap')}</span>
+                        <input type="number" class="tb-num" min={GAP.min} max={GAP.max} placeholder="px"
+                          value={siteDraft.nav.style?.gap ?? ''}
+                          onchange={(e) => onNavSizeInput(e, 'gap', GAP)} />
+                      </span>
+                    {/if}
                     <label>{ta('lbl.navPlacement')}
                       {#if sideVariant}
                         <Dropdown value={siteDraft.nav.style?.sidePlacement ?? 'top'}
@@ -5806,6 +5967,23 @@
                             onchange={(v) => siteMutate('nav', () => {
                               if (v === 'none') delete siteDraft.nav.scroll; else siteDraft.nav.scroll = v;
                             })} /></label>
+                        {#if siteDraft.nav.scroll === 'shrink'}
+                          <!-- The compact state: how much of the thickness remains, and whether the logo image follows -->
+                          <div class="ctl-row" title={ta('tip.nav.shrinkTo')}>
+                            <span class="mini-label">{ta('lbl.navShrinkTo')}</span>
+                            <input type="range" min="30" max="80" step="5"
+                              value={Math.round((siteDraft.nav.style?.shrinkTo ?? 0.5) * 100)}
+                              oninput={(e) => setNavShrinkTo(e.target.valueAsNumber)} />
+                            <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.shrinkTo ?? 0.5) * 100)}%</span>
+                          </div>
+                          {#if (siteDraft.nav.logo?.type ?? 'text') !== 'text'}
+                            <label class="gridmenu-snap" title={ta('tip.nav.shrinkLogo')}>
+                              <input type="checkbox" checked={siteDraft.nav.style?.shrinkLogo === true}
+                                onchange={(e) => setNavStyle('shrinkLogo', e.target.checked ? true : undefined)} />
+                              {ta('lbl.navShrinkLogo')}
+                            </label>
+                          {/if}
+                        {/if}
                       {/if}
                     {/if}
                     <label class="gridmenu-snap" title={ta('tip.nav.cart')}>
@@ -5851,6 +6029,27 @@
                     {@render backgroundLayers(navBgCtx, siteDraft.nav?.style?.background?.layers ?? [])}
                   </div>
                 </details>
+                {#if !sideVariant}
+                  <!-- Overrides at the mobile breakpoint (empty = the same as desktop);
+                       the column falls back to a top bar there with the desktop values -->
+                  <details class="group">
+                    <summary title={ta('tip.nav.mobileSame')}>{ta('group.mobile')}</summary>
+                    <div class="group-items">
+                      <span class="toolbar-row" title={ta('tip.nav.mobileSame')}>
+                        <span class="mini-label tb-grow">{ta('lbl.navThicknessMobile')}</span>
+                        <input type="number" class="tb-num" min={PAD_Y.min} max={PAD_Y.max} placeholder="px"
+                          value={siteDraft.nav.style?.mobile?.padY ?? ''}
+                          onchange={(e) => onNavMobileInput(e, 'padY', PAD_Y)} />
+                      </span>
+                      <span class="toolbar-row" title={ta('tip.nav.mobileSame')}>
+                        <span class="mini-label tb-grow">{ta('lbl.navTextSizeMobile')}</span>
+                        <input type="number" class="tb-num" min={TEXT_SIZE.min} max={TEXT_SIZE.max} placeholder="px"
+                          value={siteDraft.nav.style?.mobile?.textSize ?? ''}
+                          onchange={(e) => onNavMobileInput(e, 'textSize', TEXT_SIZE)} />
+                      </span>
+                    </div>
+                  </details>
+                {/if}
                 <details class="group">
                   <summary>{ta('group.submenu')}</summary>
                   <div class="group-items">

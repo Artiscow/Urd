@@ -244,6 +244,41 @@
               "enum": ["sm", "md", "lg", "xl"],
               "default": "md",
               "description": "The menu's size (additive from v0.6): padding and font in four steps; md = the current look."
+            },
+            "padY": { "type": "number", "minimum": 0, "maximum": 64, "description": "Thickness: vertical padding in px (additive from v0.7, ADR-0023); overrides the size preset's padding and is drawn as set in every variant. Omitted = the preset. Bar and floating variants." },
+            "textSize": { "type": "number", "minimum": 12, "maximum": 28, "description": "Menu text size in px (additive from v0.7); overrides the size preset's font. Omitted = the preset." },
+            "padX": { "type": "number", "minimum": 0, "maximum": 80, "description": "Side padding in px (additive from v0.7); also the mobile panel and the side-to-bar fallback. Omitted = clamp(1rem, 4vw, 2.5rem)." },
+            "gap": { "type": "number", "minimum": 0, "maximum": 64, "description": "Space between the menu items in px (additive from v0.7). Omitted = 1.25rem." },
+            "inset": { "type": "boolean", "default": false, "description": "The bar's contents line up with the content edge (site.layout.contentWidth and the gutter) while the background keeps the full width (additive from v0.7); desktop only, variant bar only." },
+            "pillWidth": {
+              "anyOf": [
+                { "type": "number", "minimum": 480, "maximum": 1920 },
+                { "const": "content" }
+              ],
+              "description": "The floating menu's maximum width in px, or content = the site's content width (additive from v0.7). Omitted = 1100. Floating variants only; ignored at the mobile breakpoint."
+            },
+            "shrinkTo": { "type": "number", "minimum": 0.3, "maximum": 0.8, "default": 0.5, "description": "The padding factor in the compact state when nav.scroll is shrink (additive from v0.7)." },
+            "shrinkLogo": { "type": "boolean", "default": false, "description": "The logo image shrinks with the menu in the compact state (additive from v0.7)." },
+            "border": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["side"],
+              "description": "A border on the bar (additive from v0.7); omitted = none. Bar and floating variants.",
+              "properties": {
+                "side": { "enum": ["bottom", "top", "both", "all"], "description": "Which edges carry the border" },
+                "width": { "type": "number", "minimum": 1, "maximum": 8, "default": 1, "description": "Border width in px" },
+                "color": { "type": "string", "description": "Theme token or raw colour (omitted = a hairline in the text colour)" }
+              }
+            },
+            "shadow": { "enum": ["soft", "strong"], "description": "A drop shadow under the top bar (additive from v0.7); omitted = none. Variant bar only (the floating menu has glow)." },
+            "mobile": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Overrides at the mobile breakpoint (additive from v0.7); omitted fields = same as desktop. Chosen by nav.js at render time.",
+              "properties": {
+                "padY": { "type": "number", "minimum": 0, "maximum": 64, "description": "Thickness in px at the mobile breakpoint" },
+                "textSize": { "type": "number", "minimum": 12, "maximum": 28, "description": "Menu text size in px at the mobile breakpoint" }
+              }
             }
           }
         },
@@ -256,6 +291,7 @@
             "value": { "type": "string", "description": "Text (type text/both) or image URL (type image)" },
             "image": { "type": "string", "description": "Image URL when type is both" },
             "size": { "type": "number", "minimum": 12, "maximum": 128, "description": "Image height in px (default 32)" },
+            "mobileSize": { "type": "number", "minimum": 12, "maximum": 128, "description": "Image height in px at the mobile breakpoint (additive from v0.7; omitted = size)" },
             "order": { "enum": ["image-first", "text-first"], "default": "image-first", "description": "Order when type is both" },
             "font": { "type": "string", "description": "Font stack for the logo text (empty = the theme's heading font)" },
             "textSize": { "type": "number", "minimum": 8, "maximum": 96, "description": "Text size in px (empty = inherit)" },

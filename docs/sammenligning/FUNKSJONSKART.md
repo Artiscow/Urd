@@ -54,11 +54,11 @@ Helhetlig funksjonssammenligning gjort 22.-23. juli 2026 (midt i v0.6 «Økosyst
 
 **De andre byggerne:** megamenyer (flerkolonne-dropdown) hos Squarespace (premium) og Wix (generell kunnskap); scroll-adferd (krympende/skjulende header, transparent som blir solid ved scroll) er standard hos Squarespace/Webflow/Framer (generell kunnskap). Lys/mørk-bryter på publisert side er et ÅPENT ønske hos Wix Studio (kilde: dok) - Urd leverte det 22. juli 2026.
 
-**Urd i dag (A):** fire varianter (stripe, flytende pille med glød/luft-valg, sidestilt venstre/høyre), dropdown-undermenyer (ARIA disclosure), mobilmeny, lys/mørk-bryter (foran Wix Studio her), logo tekst/bilde/begge, bakgrunnsfarge/-bilde med styrke/utsnitt, fire hover-stiler, sticky, transparent over hero.
+**Urd i dag (A):** fire varianter (stripe, flytende pille med glød/luft-valg, sidestilt venstre/høyre), dropdown-undermenyer (ARIA disclosure), mobilmeny, lys/mørk-bryter (foran Wix Studio her), logo tekst/bilde/begge, bakgrunnsfarge/-bilde med styrke/utsnitt, fire hover-stiler, sticky, transparent over hero. Size controls delivered in 0.7.15 (ADR-0023): thickness and text size (four presets plus free px), side padding, item spacing, align to content width (bar), floating menu width (px or the content width), a column width field for the side variant, shrink factor and logo shrink for the compact state, and mobile thickness, text size and logo size.
 
 **Planlagt (B):** footer med kolonner og sosiale lenker (0.6.6, siden levert i 0.6.33 + 0.6.6.5.2).
 
-**Gap:** scroll-adferd for nav (**C7**, levert 0.6.6.5.12: `nav.scroll` med krymp/skjul); megameny (notat - vurderes først hvis reelle sider trenger det).
+**Gap:** scroll-adferd for nav (**C7**, levert 0.6.6.5.12: `nav.scroll` med krymp/skjul); megameny (notat - vurderes først hvis reelle sider trenger det); border and shadow presets for the bar (**C18**, Squarespace's border S/M/L/custom with position and drop shadow Soft/Strong; the last stage of 0.7.15).
 
 ## 6. SEO og metadata
 
@@ -161,6 +161,7 @@ Kategorien fantes ikke i sammenligningen 22.-23. juli 2026, fordi feltet så ann
 | C13 | **Redirects-håndtering** (generert hostfil) | Må avklares (0.6.9-gaten: hostspesifikk, grenser mot Urd-eide filer) | Standard hos alle store, men rører _headers/vertsmodellen |
 | C16 | **MCP-server** (lokal, avhengighetsfri; lar eierens egen agentklient lese og redigere innholdet) | v0.8 lesing, v0.9 skriving (ADR-0017) | Ble bordet-innsats for et CMS i 2026 (Sanity, Contentful, Storyblok, Strapi, Payload); git-eid JSON gjør det billigere for Urd enn for dem |
 | C17 | **Tilgjengelighet i editoren** (id/for-kobling, tilgjengelige navn på knapp-baserte kontroller, synlig fokus, tastaturvei) | 0.7.11 Tilgjengelighetsrunden | Utdata er alt sterkt, editoren er ikke; og forskrift om universell utforming av IKT treffer målgruppen direkte |
+| C18 | **Border and shadow presets for the nav bar** (border S/M/L or custom thickness with position, drop shadow soft/strong) | 0.7.15.7 (the last stage of navigation bar sizing) | The one Squarespace header control not covered by 0.7.15's size set; the transparent-to-solid colour on scroll stays under 0.7.13 |
 
 **Notater (ikke egne punkter):** komponent-/symbolgjenbruk vurderes under 0.6.7 «Lagre som mal»; megameny og scroll-scrub kun ved dokumentert behov; planlagt publisering begrenses av statisk vert (publiser-ved-dato-filter er nærmeste); nettbrett-breakpoint forblir bevisst utsatt.
 

@@ -11,7 +11,7 @@
  * styled by body.urd-mobile (the breakpoint is set in urd.js from site.json).
  */
 
-import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, navScrollState, isSafeImage } from './nav-model.js';
+import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, isSafeImage } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
 import { readCart, cartCount, onCartChange } from './shop.js';
@@ -207,6 +207,22 @@ export function renderNav(site, host) {
   // Submenu columns (n x n): the items are laid out in a grid with the chosen column count.
   const subCols = Math.round(Number(site.nav.style?.subColumns));
   if (subCols >= 2) nav.style.setProperty('--urd-nav-sub-cols', String(Math.min(4, subCols)));
+  // Size (additive since v0.7, ADR-0023): thickness, side padding, item
+  // gap, pill width and shrink factor as inline custom properties the CSS
+  // reads with today's look as the fallback; the menu font size inline. The
+  // mobile overrides are chosen from the breakpoint here (pure navSizeVars),
+  // and the breakpoint listener above re-renders on crossing.
+  const size = navSizeVars(site.nav.style, site.nav.logo, { mobile: mobileMq.matches });
+  for (const [name, value] of Object.entries(size.vars)) nav.style.setProperty(name, value);
+  if (size.font) nav.style.fontSize = size.font;
+  // Border (additive since v0.7): the side is a class from navClasses; the
+  // width and colour are variables with a hairline in the text colour as
+  // the default.
+  const border = site.nav.style?.border;
+  if (border && typeof border === 'object') {
+    nav.style.setProperty('--urd-nav-border-w', `${clampBorderWidth(border.width)}px`);
+    if (border.color) nav.style.setProperty('--urd-nav-border-c', resolveColor(border.color));
+  }
 
   const logoDef = site.nav.logo ?? { type: 'text', value: site.site.title };
   const logo = document.createElement('a');
@@ -218,11 +234,12 @@ export function renderNav(site, host) {
     const img = document.createElement('img');
     img.src = src;
     img.alt = site.site.title;
-    // The height is set via a variable, not inline height: the CSS
-    // calibration (a negative block margin scaling with the size) keeps the
-    // bar height constant regardless of image height - the image fills out,
-    // the bar never grows.
-    img.style.setProperty('--urd-logo-size', `${logoDef.size ?? 32}px`);
+    // The height is set via a base variable, not inline height: the CSS
+    // derives the drawn size from it (the scroll shrink can scale it) and
+    // its calibration (a negative block margin scaling with the size) keeps
+    // the bar height constant regardless of image height - the image fills
+    // out, the bar never grows. The mobile size is chosen by navSizeVars.
+    img.style.setProperty('--urd-logo-base', `${size.logoSize}px`);
     if (logoDef.radius) img.style.borderRadius = `${logoDef.radius}px`;
     return img;
   };
