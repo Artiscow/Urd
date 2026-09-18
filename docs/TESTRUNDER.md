@@ -2,6 +2,18 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.15.2): the Nav panel's Appearance folds
+
+Supersedes the panel placement described in the 0.7.15 items below (the controls are the same, now grouped); nothing is removed.
+
+- [ ] Nav panel, Appearance open: six folds Layout, Size, Frame, Behaviour, Colours, Background; the first four open, the last two closed; each fold opens and closes on its heading
+- [ ] Layout: switching the variant swaps only the rows under it (floating: menu width, glow, space above; bar: overlay, align to content width; side: text alignment, column width), and the placement row stays
+- [ ] Size on Screen: the number beside Thickness follows the slider and vice versa; typing 30 sets 30 px, emptying the field returns to the preset's value and the preset lights up again
+- [ ] Size on Phone: the sliders show the desktop values until a mobile value is set; dragging Thickness writes only the mobile override (the Screen view is unchanged); emptying the number (placeholder «Same») removes the override; side padding and item spacing are hidden on Phone
+- [ ] The side variant hides the Screen | Phone switch, Thickness and the pair, and keeps the presets and Text size
+- [ ] Frame: choosing a border side reveals width and colour on one row; None hides them again; Shadow shows for the bar only
+- [ ] The fold names, «Same» and «Auto» read correctly in nb, en-GB and tr, and no row shows a raw key
+
 ### Testrunde-batch (0.7.15): navigation bar sizing
 
 - [ ] Nav panel, variant bar: the Size row shows four segment buttons with the current step highlighted; the Thickness and Text size sliders start at the step's values (14 px and 16 px on Medium); dragging a slider un-highlights every step, and clicking a step resets both sliders

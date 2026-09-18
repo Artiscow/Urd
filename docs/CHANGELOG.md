@@ -27,6 +27,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.15.2 - The Nav panel's Appearance group in six section folds - 18 September 2026
+
+- Test finding after 0.7.15: the Appearance group had become one flat list of about thirty rows, with the size fields as lonely inputs and the mobile overrides in a separate group. Three layouts were drawn in the admin's own vocabulary and the section-fold direction was chosen: Appearance now holds the folds Layout, Size, Frame, Behaviour, Colours and Background (the frame-group pattern from the Properties panel; the last two closed by default), each variant's own rows directly under the variant choice.
+- Size: the presets, then a Screen | Phone switch that shows the desktop values or the mobile overrides in the same Thickness and Text size rows (an empty number = same as desktop); the sliders got an editable number beside them, and side padding and item spacing stand as one pair with «Auto» as the empty text. The separate Mobile group is gone (the mobile logo height stays in the Logo group). Frame puts the border's width and colour on one row. New keys for the fold names, «Same» and «Auto» in nb, en-GB and tr.
+
 ### 0.7.15 - Navigation bar sizing: presets plus free values, width binding, compact and mobile overrides, border and shadow - 17 September 2026
 
 - Test finding: the nav bar offered only the four-step size enum for its thickness and no width choice. A survey of ten builders' header controls (LAERDOMMER §2, sources inline) gave the model in ADR-0023: thickness is padding, width is full-bleed or bound to the content width, and the compact and mobile states carry their own overrides. New additive fields under `nav.style`: `padY`, `textSize`, `padX`, `gap`, `inset`, `pillWidth` (px or `content`), `shrinkTo`, `shrinkLogo`, `mobile` (`padY`, `textSize`), `border` (`side`, `width`, `color`) and `shadow`, plus `nav.logo.mobileSize`; omitted = today's look, no migration. Schema, SCHEMA.md and the example data (`mobileSize`) in the same commit.
