@@ -5,17 +5,28 @@
    * admin use this one. options is [[value, label], …]; values are
    * compared as strings, so '' and null can be used as "none".
    *
-   * The popover is position: fixed (the panels clip absolute content),
-   * and closes on a click outside or Escape. On a scroll outside it
-   * FOLLOWS the anchor instead of closing: clicking a button at the
-   * bottom of the panel triggers a focus scroll in the same instant,
-   * and a close-on-scroll rule would slam the popup shut before
+   * Two branches (ADR-0011 addendum, anchored.js decides): with the Popover
+   * API and anchor positioning the list opens in the top layer, placed
+   * under its button by CSS with the browser flipping it away from the
+   * viewport edge, and light dismiss handles the outside click and Escape.
+   * Otherwise the list is position: fixed (the panels clip absolute
+   * content), placed by measuring, and closes on a click outside or Escape;
+   * on a scroll outside it FOLLOWS the anchor instead of closing: clicking a
+   * button at the bottom of the panel triggers a focus scroll in the same
+   * instant, and a close-on-scroll rule would slam the popup shut before
    * anything could be picked.
    */
+  import { nativeAnchoring, anchorName } from '$engine/anchored.js';
+
   let { value = null, options = [], onchange, title = null, disabled = false } = $props();
+
+  const native = nativeAnchoring();
+  const anchor = anchorName('urd-dd');
+  const popId = anchor.slice(2);
 
   let open = $state(false);
   let rootEl = $state(null);
+  let popEl = $state(null);
   let pos = $state({ top: 0, left: 0, width: 160 });
 
   const currentLabel = () =>
@@ -44,12 +55,19 @@
   }
 
   function pick(v) {
+    if (native) popEl?.hidePopover();
     open = false;
     onchange?.(v);
   }
 
+  // A click in the preview iframe never reaches this document (light
+  // dismiss does not see it either); the focus moving there is a window
+  // blur, which closes the list in both branches.
   $effect(() => {
     if (!open) return;
+    const onBlur = () => { if (native) popEl?.hidePopover(); else open = false; };
+    window.addEventListener('blur', onBlur);
+    if (native) return () => window.removeEventListener('blur', onBlur);
     const onDown = (e) => {
       if (rootEl && !rootEl.contains(e.target)) open = false;
     };
@@ -63,6 +81,7 @@
     document.addEventListener('keydown', onKey, true);
     document.addEventListener('scroll', onScroll, true);
     return () => {
+      window.removeEventListener('blur', onBlur);
       document.removeEventListener('pointerdown', onDown, true);
       document.removeEventListener('keydown', onKey, true);
       document.removeEventListener('scroll', onScroll, true);
@@ -71,17 +90,33 @@
 </script>
 
 <span class="dd" bind:this={rootEl}>
-  <button type="button" class="dd-btn" {title} {disabled} onclick={toggle}>
-    <span class="dd-value">{currentLabel()}</span>
-    <span class="dd-caret">{open ? '▴' : '▾'}</span>
-  </button>
-  {#if open}
-    <div class="dd-pop" style="top: {pos.top}px; left: {pos.left}px; min-width: {pos.width}px">
-      {#each options as [v, label] (`${v ?? ''}`)}
-        <button type="button" class="dd-opt" class:selected={`${v ?? ''}` === `${value ?? ''}`}
-          onclick={() => pick(v)}>{label}</button>
-      {/each}
+  {#if native}
+    <button type="button" class="dd-btn" {title} {disabled} popovertarget={popId} style="anchor-name: {anchor}">
+      <span class="dd-value">{currentLabel()}</span>
+      <span class="dd-caret">{open ? '▴' : '▾'}</span>
+    </button>
+    <div class="dd-pop dd-anchored" id={popId} popover="auto" bind:this={popEl}
+      style="position-anchor: {anchor}" ontoggle={(e) => { open = e.newState === 'open'; }}>
+      {#if open}
+        {#each options as [v, label] (`${v ?? ''}`)}
+          <button type="button" class="dd-opt" class:selected={`${v ?? ''}` === `${value ?? ''}`}
+            onclick={() => pick(v)}>{label}</button>
+        {/each}
+      {/if}
     </div>
+  {:else}
+    <button type="button" class="dd-btn" {title} {disabled} onclick={toggle}>
+      <span class="dd-value">{currentLabel()}</span>
+      <span class="dd-caret">{open ? '▴' : '▾'}</span>
+    </button>
+    {#if open}
+      <div class="dd-pop" style="top: {pos.top}px; left: {pos.left}px; min-width: {pos.width}px">
+        {#each options as [v, label] (`${v ?? ''}`)}
+          <button type="button" class="dd-opt" class:selected={`${v ?? ''}` === `${value ?? ''}`}
+            onclick={() => pick(v)}>{label}</button>
+        {/each}
+      </div>
+    {/if}
   {/if}
 </span>
 
@@ -135,10 +170,32 @@
     display: grid;
     gap: 2px;
     padding: 5px;
+    color: inherit;
     background: var(--urd-color-surface, #151a23);
     border: 1px solid rgb(255 255 255 / 18%);
     border-radius: 8px;
     box-shadow: 0 12px 36px rgb(0 0 0 / 55%);
+  }
+
+  /* The anchored branch: the popover box is placed against the button by
+     CSS (top layer, no z-index), as wide as the button at least. */
+  @supports (anchor-name: --a) {
+    .dd-anchored {
+      inset: auto;
+      margin: 4px 0 0;
+      position-area: block-end span-inline-end;
+      min-width: max(160px, anchor-size(width));
+    }
+
+    .dd-anchored:not(:popover-open) {
+      display: none;
+    }
+
+    @supports (position-try-fallbacks: flip-block) {
+      .dd-anchored {
+        position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+      }
+    }
   }
 
   .dd-opt {

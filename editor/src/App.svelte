@@ -2,6 +2,7 @@
   // The editor shell: preview iframe with the real page, click-and-type
   // on text blocks, drafts in localStorage and a publish button against
   // /api/github/commit.
+  import { tick } from 'svelte';
   import { fly } from 'svelte/transition';
   import { createDraftStore } from './lib/draftStore.js';
   import ColorPicker from './lib/ColorPicker.svelte';
@@ -88,6 +89,10 @@
     // Discard draft: restore, i.e. an arrow with a clock face. NOT a plain
     // back arrow, which is the universal undo glyph; discard is not undo.
     restore: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 9"/><path d="M12 8v4.5l3 1.8"/></svg>',
+    // Expand or collapse every group fold at once: two chevrons that point
+    // outwards while the next click expands, and turn inwards (the .collapse
+    // state on the button, animated in CSS) while the next click collapses.
+    foldToggle: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path class="ft-top" d="M7 9l5-5 5 5"/><path class="ft-bot" d="M7 15l5 5 5-5"/></svg>',
     // The dropdown marker on the collapsed tool menus. Its own small chevron,
     // not `down`, which is the move-down arrow and reads as an action.
     caret: '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
@@ -1317,7 +1322,7 @@
       .replaceAll('var(--urd-base-surface)', pal.surface)
       .replaceAll('var(--urd-base-text)', pal.text)
       .replaceAll('var(--urd-base-accent)', pal.accent)
-      .replaceAll('var(--urd-base-accent-text)', pal['accent-text']);
+      .replaceAll('var(--urd-base-accent-text)', pal['accent-text'] ?? readableOn(themeHex(pal.accent ?? '#000000', pal)));
     const vars = sectionThemeVars(role);
     return {
       bg: vars['--urd-color-bg'] ? subst(vars['--urd-color-bg']) : pal.bg,
@@ -4120,6 +4125,95 @@
     });
   }
 
+  /** The value a palette cell shows when the token is absent: the text on
+      accent is what the browser chooses (black or white against the accent,
+      contrast-color() in theme.js), everything else the background. */
+  function paletteFallback(key, pal) {
+    if (key === 'accent-text') return readableOn(themeHex(pal.accent ?? '#000000', pal));
+    return pal.bg;
+  }
+
+  /** Auto = no accent-text token in either theme: the browser chooses the text colour. */
+  const accentTextAuto = $derived(!siteDraft?.theme?.tokens?.color?.['accent-text'] && !siteDraft?.theme?.alt?.tokens?.color?.['accent-text']);
+
+  // The panel's fold-all buttons act on the rendered details elements; the
+  // buttons are shown only for a panel that has group folds at all.
+  let panelEl = $state(null);
+  let panelHasGroups = $state(false);
+  let panelAllOpen = $state(false);
+  const allOpen = (list) => list.length > 0 && [...list].every((d) => d.open);
+  function syncPanelFolds() {
+    const groups = panelEl?.querySelectorAll('details.group') ?? [];
+    panelHasGroups = groups.length > 0;
+    panelAllOpen = allOpen(groups);
+  }
+  $effect(() => {
+    void activePanel;
+    tick().then(syncPanelFolds);
+  });
+  function togglePanelGroups() {
+    const open = !panelAllOpen;
+    panelEl?.querySelectorAll('details.group').forEach((d) => { d.open = open; });
+    syncPanelFolds();
+  }
+
+  // A group that holds sub-folds gets its own fold-all button in the
+  // summary row, for the sub-folds alone; it expands while any sub-fold is
+  // closed and collapses once all are open. Decorated from the DOM
+  // (idempotent) and kept up by an observer, since groups come and go with
+  // the draft.
+  function decorateSubFolds(root) {
+    for (const group of root.querySelectorAll('details.group')) {
+      const summary = group.querySelector(':scope > summary');
+      if (!summary || summary.querySelector('.fold-sub')) continue;
+      const subs = () => group.querySelectorAll(':scope > .group-items details.group');
+      if (!subs().length) continue;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'fold-sub fold-toggle';
+      button.innerHTML = ICONS.foldToggle;
+      const sync = () => {
+        const collapse = allOpen(subs());
+        button.classList.toggle('collapse', collapse);
+        button.title = ta(collapse ? 'ui.collapseSub' : 'ui.expandSub');
+        button.setAttribute('aria-label', button.title);
+      };
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const open = !button.classList.contains('collapse');
+        group.open = true;
+        subs().forEach((d) => { d.open = open; });
+        sync();
+      });
+      group.addEventListener('toggle', sync, true);
+      sync();
+      summary.appendChild(button);
+    }
+  }
+  $effect(() => {
+    if (!panelEl) return;
+    const observer = new MutationObserver(() => { decorateSubFolds(panelEl); syncPanelFolds(); });
+    observer.observe(panelEl, { childList: true, subtree: true });
+    // toggle does not bubble: captured at the panel, so the head button
+    // follows folds the user opens and closes by hand.
+    panelEl.addEventListener('toggle', syncPanelFolds, true);
+    decorateSubFolds(panelEl);
+    return () => { observer.disconnect(); panelEl?.removeEventListener('toggle', syncPanelFolds, true); };
+  });
+
+  function setAccentTextAuto(auto) {
+    siteMutate('edit:theme-color-accent-text', () => {
+      if (auto) {
+        delete siteDraft.theme.tokens.color['accent-text'];
+        if (siteDraft.theme.alt?.tokens?.color) delete siteDraft.theme.alt.tokens.color['accent-text'];
+      } else {
+        siteDraft.theme.tokens.color['accent-text'] = paletteFallback('accent-text', lightPal);
+        if (siteDraft.theme.alt?.auto) siteDraft.theme.alt.tokens.color = suggestAltColors();
+      }
+    });
+  }
+
   function setFontToken(name, value) {
     siteMutate('theme', () => { siteDraft.theme.tokens.font[name] = value; });
   }
@@ -5644,8 +5738,16 @@
         </nav>
 
         {#if activePanel}
-          <aside class="panel">
-            <h2 title={PANEL_INTROS[activePanel]?.map((k) => ta(k)).join('\n')}>{PANEL_LABELS[activePanel]}</h2>
+          <aside class="panel" bind:this={panelEl}>
+            <div class="panel-head">
+              <h2 title={PANEL_INTROS[activePanel]?.map((k) => ta(k)).join('\n')}>{PANEL_LABELS[activePanel]}</h2>
+              {#if panelHasGroups}
+                <button type="button" class="fold-all fold-toggle" class:collapse={panelAllOpen}
+                  title={ta(panelAllOpen ? 'ui.collapseAll' : 'ui.expandAll')}
+                  aria-label={ta(panelAllOpen ? 'ui.collapseAll' : 'ui.expandAll')}
+                  onclick={togglePanelGroups}>{@html ICONS.foldToggle}</button>
+              {/if}
+            </div>
 
             {#if activePanel === 'pages'}
               <div class="panel-body">
@@ -5833,7 +5935,7 @@
                          Behaviour, Colours and Background. Variant-bound rows sit
                          directly under the variant choice, and the mobile overrides
                          live inside Size behind a Screen | Phone switch. -->
-                    <details class="group frame-group sub-fold" open>
+                    <details class="group frame-group sub-fold">
                       <summary>{ta('group.navLayout')}</summary>
                       <div class="group-items">
                         <label title={ta('tip.nav.variant')}>{ta('lbl.navVariant')}
@@ -5910,7 +6012,7 @@
                       </div>
                     </details>
                     <hr class="gridmenu-divider" />
-                    <details class="group frame-group sub-fold" open>
+                    <details class="group frame-group sub-fold">
                       <summary title={ta('tip.nav.sizePreset')}>{ta('lbl.size')}</summary>
                       <div class="group-items">
                         <!-- The four presets, then the free values that replace the
@@ -5968,7 +6070,7 @@
                       </div>
                     </details>
                     <hr class="gridmenu-divider" />
-                    <details class="group frame-group sub-fold" open>
+                    <details class="group frame-group sub-fold">
                       <summary>{ta('group.navFrame')}</summary>
                       <div class="group-items">
                         {#if !sideVariant}
@@ -6010,7 +6112,7 @@
                       </div>
                     </details>
                     <hr class="gridmenu-divider" />
-                    <details class="group frame-group sub-fold" open>
+                    <details class="group frame-group sub-fold">
                       <summary>{ta('group.navBehaviour')}</summary>
                       <div class="group-items">
                         {#if !sideVariant}
@@ -6112,6 +6214,12 @@
                           ? [['card', ta('common.standard')], ['pills', ta('opt.sub.pills')], ['lines', ta('opt.sub.lines')]]
                           : [['card', ta('opt.sub.card')], ['flat', ta('opt.sub.flat')], ['pills', ta('opt.sub.pills')], ['lines', ta('opt.sub.lines')], ['flyout', ta('opt.sub.flyout')]]}
                         onchange={(v) => setNavStyle('subStyle', v === 'card' ? undefined : v)} /></label>
+                    {#if siteDraft.nav.items?.some((item) => item.children?.length)}
+                      <label title={ta('tip.nav.subOpen')}>{ta('lbl.subOpen')}
+                        <Dropdown value={siteDraft.nav.style?.subOpen ?? 'hover'}
+                          options={[['hover', ta('opt.subOpen.hover')], ['stay', ta('opt.subOpen.stay')], ['click', ta('opt.subOpen.click')]]}
+                          onchange={(v) => setNavStyle('subOpen', v === 'hover' ? undefined : v)} /></label>
+                    {/if}
                     {#if siteDraft.nav.style?.subStyle === 'pills'}
                       <label title={ta('tip.nav.subPillColor')}>{ta('lbl.subPillColor')}
                         <ColorPicker value={siteDraft.nav.style?.subPillColor ?? 'surface'} tokens={themeSwatches()}
@@ -6122,7 +6230,7 @@
                         onchange={(e) => setNavStyle('subColumns', Number(e.target.value) > 1 ? Number(e.target.value) : undefined)} /></label>
                   </div>
                 </details>
-                <details class="group" open>
+                <details class="group">
                   <summary title={ta('hint.nav.submenu')}>{ta('group.menuItems')}</summary>
                   <div class="group-items">
                 {#each siteDraft.nav.items as item, i}
@@ -6273,7 +6381,7 @@
                 {#snippet themePreview(pal, cap)}
                   <div class="theme-pvw">
                     {#if cap}<div class="mini-label tpv-cap">{cap}</div>{/if}
-                    <div class="tpv-demo" style="--tv-bg:{themeHex(pal.bg, pal)};--tv-surface:{themeHex(pal.surface, pal)};--tv-text:{themeHex(pal.text, pal)};--tv-accent:{themeHex(pal.accent, pal)};--tv-accent-ink:{themeHex(pal['accent-text'] ?? pal.bg, pal)}">
+                    <div class="tpv-demo" style="--tv-bg:{themeHex(pal.bg, pal)};--tv-surface:{themeHex(pal.surface, pal)};--tv-text:{themeHex(pal.text, pal)};--tv-accent:{themeHex(pal.accent, pal)};--tv-accent-ink:{themeHex(pal['accent-text'] ?? readableOn(themeHex(pal.accent ?? '#000000', pal)), pal)}">
                       <div class="tpv-h">{ta('preview.heading')}</div>
                       <div class="tpv-card">{ta('preview.cardBody')}</div>
                       <div class="tpv-row"><span class="tpv-btn">{ta('preview.button')}</span><span class="tpv-lnk">{ta('preview.link')}</span></div>
@@ -6317,10 +6425,10 @@
                 <div class="palcells">
                   {#each PALETTE_KEYS as [key, full, short] (key)}
                     <div class="palcol">
-                      <ColorPicker value={siteDraft.theme.tokens.color[key] ?? siteDraft.theme.tokens.color.bg}
+                      <ColorPicker value={siteDraft.theme.tokens.color[key] ?? paletteFallback(key, lightPal)}
                         tokens={themeSwatches()} label={full} onchange={(hex) => setColorToken(key, hex)} />
                       <span class="palcap">{short}</span>
-                      <b class="palhex">{themeHex(siteDraft.theme.tokens.color[key] ?? siteDraft.theme.tokens.color.bg, lightPal)}</b>
+                      <b class="palhex">{themeHex(siteDraft.theme.tokens.color[key] ?? paletteFallback(key, lightPal), lightPal)}</b>
                     </div>
                   {/each}
                 </div>
@@ -6334,14 +6442,23 @@
                   <div class="palcells" class:autopal={altAuto}>
                     {#each PALETTE_KEYS as [key, full, short] (key)}
                       <div class="palcol">
-                        <ColorPicker value={siteDraft.theme.alt.tokens.color[key] ?? darkPal[key] ?? siteDraft.theme.tokens.color.bg}
+                        <ColorPicker value={siteDraft.theme.alt.tokens.color[key] ?? darkPal[key] ?? paletteFallback(key, darkPal)}
                           tokens={themeSwatches()} label={ta('theme.darkColorLabel', { name: full })} onchange={(hex) => setAltColorToken(key, hex)} />
                         <span class="palcap">{short}</span>
-                        <b class="palhex">{themeHex(siteDraft.theme.alt.tokens.color[key] ?? darkPal[key], darkPal)}</b>
+                        <b class="palhex">{themeHex(siteDraft.theme.alt.tokens.color[key] ?? darkPal[key] ?? paletteFallback(key, darkPal), darkPal)}</b>
                       </div>
                     {/each}
                   </div>
                 {/if}
+
+                <!-- Auto for the text on accent: no token in either mode, the browser
+                     picks black or white against the accent (contrast-color()). Its own
+                     row below both palettes, since it applies to light and dark alike. -->
+                <div class="ctl-row palauto-row" title={ta('tip.theme.accentTextAuto')}>
+                  <span class="mini-label ctl-name">{ta('palette.accentText')}</span>
+                  <button type="button" class="chip palauto" class:accent={accentTextAuto}
+                    onclick={() => setAccentTextAuto(!accentTextAuto)}>{ta('opt.auto')}</button>
+                </div>
 
                 <div class="theme-previews">
                   {@render themePreview(lightPal, dualMode ? ta('lbl.light') : '')}
@@ -6645,7 +6762,7 @@
                   </div>
                 </details>
 
-                <details class="group" open>
+                <details class="group">
                   <summary>{ta('group.brand')}</summary>
                   <div class="group-items">
                     <label title={ta('tip.footer.brandTitle')}>{ta('lbl.title')}
@@ -8581,16 +8698,75 @@
   .panel {
     width: 300px;
     flex-shrink: 0;
-    padding: 0.9rem;
+    /* The scrollbar's gutter is always reserved (a thin one), so the
+       content keeps its width whether the panel scrolls or not; the gutter
+       itself gives the air at the right edge. */
+    padding: 0.9rem 0.6rem 0.9rem 0.9rem;
     background: var(--urd-color-surface, #151a23);
     border-right: 1px solid rgb(255 255 255 / 8%);
     overflow-y: auto;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
     font-size: 0.88rem;
   }
 
-  .panel h2 {
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
     margin: 0 0 0.8rem;
+  }
+
+  .panel h2 {
+    margin: 0;
     font-size: 0.95rem;
+  }
+
+  :global(.fold-sub) {
+    margin-left: auto;
+    margin-right: 0.6em;
+  }
+
+  /* The fold-all toggle: the chevrons point outwards (expand) and flip
+     inwards (collapse) around their own centres. */
+  :global(.fold-toggle .ft-top),
+  :global(.fold-toggle .ft-bot) {
+    transform-box: view-box;
+    transition: transform 0.2s ease;
+  }
+
+  :global(.fold-toggle .ft-top) { transform-origin: 12px 7px; }
+  :global(.fold-toggle .ft-bot) { transform-origin: 12px 17px; }
+
+  :global(.fold-toggle.collapse .ft-top),
+  :global(.fold-toggle.collapse .ft-bot) {
+    transform: scaleY(-1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.fold-toggle .ft-top),
+    :global(.fold-toggle .ft-bot) {
+      transition: none;
+    }
+  }
+
+  .fold-all,
+  :global(.fold-sub) {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 5px;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 15%);
+    border-radius: 5px;
+    color: inherit;
+    opacity: 0.7;
+    cursor: pointer;
+  }
+
+  .fold-all:hover,
+  :global(.fold-sub:hover) {
+    opacity: 1;
   }
 
   .panel-body {
@@ -9430,16 +9606,32 @@
     border-radius: 6px;
   }
 
+  /* The fold marker: a drawn chevron that points along the row while the
+     group is closed and turns down when it opens. Child combinators keep a
+     closed group inside an open one at its own state. */
   .group summary::after {
-    content: '▸';
+    content: '';
+    flex-shrink: 0;
+    width: 0.55em;
+    height: 0.55em;
+    background: currentColor;
     opacity: 0.6;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+    transition: transform 0.18s ease;
   }
 
-  .group[open] summary::after {
-    content: '▾';
+  .group[open] > summary::after {
+    transform: rotate(90deg);
   }
 
-  .group[open] summary {
+  @media (prefers-reduced-motion: reduce) {
+    .group summary::after {
+      transition: none;
+    }
+  }
+
+  .group[open] > summary {
     border-color: var(--urd-color-accent, #7c5cff);
   }
 
@@ -9453,7 +9645,7 @@
     opacity: 0.9;
   }
 
-  .frame-group[open] summary {
+  .frame-group[open] > summary {
     border-color: transparent;
   }
 
@@ -9559,6 +9751,8 @@
   .palcells :global(.cp-swatch) { width: 100%; height: 32px; }
   .palcells .palcap { text-align: center; font-size: 9px; opacity: 0.6; }
   .palcells .palhex { text-align: center; font: 400 9px ui-monospace, monospace; opacity: 0.7; letter-spacing: -0.02em; }
+  .palauto-row { margin-top: 8px; }
+  .palauto-row .palauto { font-size: 11px; padding: 2px 9px; }
   .palcells.autopal .palcol { opacity: 0.7; }
 
   /* Preview: how each color affects the page (light + dark with dual mode) */

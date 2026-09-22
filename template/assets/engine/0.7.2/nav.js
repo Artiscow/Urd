@@ -11,7 +11,7 @@
  * styled by body.urd-mobile (the breakpoint is set in urd.js from site.json).
  */
 
-import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, isSafeImage } from './nav-model.js';
+import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, subOpenMode, isSafeImage } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
 import { readCart, cartCount, onCartChange } from './shop.js';
@@ -358,13 +358,16 @@ export function renderNav(site, host) {
   };
 
   // Hover only opens on devices with a real pointer - touch must never get
-  // hover states that take an extra tap to dismiss.
+  // hover states that take an extra tap to dismiss. nav.style.subOpen
+  // decides whether hover opens at all and whether leaving closes
+  // (subOpenMode); click always works.
   // In the side column the submenus are accordions in the flow: there,
   // hover opens but never closes per item - closing would shorten the
   // column under the pointer and cause misclicks. The accordions close
   // only when the pointer leaves the whole menu.
   const isColumn = hc.host.includes('urd-nav-side-host');
-  const mouseHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const { hoverOpens, hoverCloses } = subOpenMode(site.nav.style);
+  const mouseHover = hoverOpens && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
   const items = navItems(site);
   items.forEach((item, index) => {
@@ -446,7 +449,7 @@ export function renderNav(site, host) {
         if (!isColumn) closeAll(entry);
         setOpen(entry, true);
       }, { signal });
-      if (!isColumn) {
+      if (!isColumn && hoverCloses) {
         li.addEventListener('pointerleave', (event) => {
           if (event.pointerType !== 'mouse') return;
           clearTimeout(closeTimer);
@@ -516,7 +519,7 @@ export function renderNav(site, host) {
   // The column's hover closing: all accordions close together when the
   // pointer leaves the whole menu; re-entering within the delay cancels
   // the closing.
-  if (isColumn && mouseHover) {
+  if (isColumn && mouseHover && hoverCloses) {
     let columnTimer = null;
     nav.addEventListener('pointerenter', (event) => {
       if (event.pointerType !== 'mouse') return;

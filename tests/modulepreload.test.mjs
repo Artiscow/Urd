@@ -110,7 +110,7 @@ const EDITOR_ONLY = [
   'preview-edit.js', 'preset-thumb.js', 'image-editor.js', 'imageTools.js',
   'color-picker.js', 'dropdown.js', 'glyphs.js', 'fonts.js', 'text-typo.js',
   'place.js', 'section-size.js', 'selection.js', 'lightbox.js', 'hint.js',
-  'page-presets.js',
+  'page-presets.js', 'anchored.js',
 ];
 
 test('the engine directory exists and is named what urd.json.engine says', () => {

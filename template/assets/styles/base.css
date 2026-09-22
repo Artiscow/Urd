@@ -618,7 +618,7 @@ html {
   border: 0;
   padding: 0;
   cursor: pointer;
-  color: var(--urd-color-bg);
+  color: var(--urd-color-accent-text, var(--urd-color-bg));
   background: var(--urd-share-color, var(--urd-color-accent));
   text-decoration: none;
   font: inherit;
@@ -792,7 +792,7 @@ html {
   align-self: flex-start;
   padding: 3px 9px;
   background: var(--urd-color-accent);
-  color: var(--urd-color-bg);
+  color: var(--urd-color-accent-text, var(--urd-color-bg));
   border-radius: 999px;
   font-size: 0.72em;
   font-weight: 650;
@@ -856,7 +856,7 @@ html {
   border: none;
   border-radius: var(--urd-radius-sm, 6px);
   background: var(--urd-color-accent);
-  color: var(--urd-color-bg);
+  color: var(--urd-color-accent-text, var(--urd-color-bg));
   font: inherit;
   font-weight: 600;
   font-size: 0.9em;
@@ -1016,7 +1016,7 @@ html {
   place-items: center;
   padding: 0 4px;
   background: var(--urd-color-accent);
-  color: var(--urd-color-bg);
+  color: var(--urd-color-accent-text, var(--urd-color-bg));
   border-radius: 999px;
   font-size: 0.68em;
   font-weight: 700;
@@ -1155,7 +1155,7 @@ html {
   display: block;
   padding: 11px 14px;
   background: var(--urd-color-accent);
-  color: var(--urd-color-bg);
+  color: var(--urd-color-accent-text, var(--urd-color-bg));
   border-radius: var(--urd-radius-sm, 6px);
   text-align: center;
   text-decoration: none;
@@ -1253,7 +1253,7 @@ html {
   border: none;
   border-radius: var(--urd-radius-sm, 6px);
   background: var(--urd-color-accent);
-  color: var(--urd-color-bg);
+  color: var(--urd-color-accent-text, var(--urd-color-bg));
   font: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -1658,6 +1658,26 @@ body.urd-chrome-off .urd-text-toolbar {
   border-radius: 10px;
   box-shadow: 0 12px 36px rgb(0 0 0 / 55%);
   font: 12px/1.4 system-ui, sans-serif;
+}
+
+/* The anchored branch (anchored.js, ADR-0011 addendum): above the toolbar
+   button, flipped below by the browser when it does not fit. */
+@supports (anchor-name: --a) {
+  .urd-cp[popover] {
+    inset: auto;
+    margin: 0 0 8px;
+    position-area: block-start span-inline-end;
+  }
+
+  .urd-cp[popover]:not(:popover-open) {
+    display: none;
+  }
+
+  @supports (position-try-fallbacks: flip-block) {
+    .urd-cp[popover] {
+      position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+    }
+  }
 }
 
 .urd-cp-head {
@@ -2870,12 +2890,35 @@ body:has(dialog:modal) {
      submenus and the mobile panel reuse the same surface as the menu itself.
      Blur has to go through a custom property because backdrop-filter does not inherit. */
   background: var(--urd-nav-bg, color-mix(in srgb, var(--urd-color-surface) 85%, transparent));
-  backdrop-filter: var(--urd-nav-blur, blur(8px));
   color: var(--urd-color-text);
   /* Anchor point for the mobile panel, and its own stacking context so dropdowns and
      the panel sit above following content even when the menu is not sticky */
   position: relative;
   z-index: 5000;
+}
+
+/* The blur is drawn by a pseudo-element behind the content, not by the nav
+   itself: an element with backdrop-filter is the backdrop root for its
+   descendants, so a submenu inside a blurred nav would only ever see the
+   bar, never the page behind it. The pseudo sits below the layer backdrop
+   (.urd-nav-bg) in paint order, so the layers are drawn over the blur. */
+.urd-nav::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  backdrop-filter: var(--urd-nav-blur, blur(8px));
+  pointer-events: none;
+}
+
+/* The column scrolls its own content, so the blur stays on the column itself. */
+.urd-nav-side-host .urd-nav::before {
+  display: none;
+}
+
+.urd-nav-side-host .urd-nav {
+  backdrop-filter: var(--urd-nav-blur, blur(8px));
 }
 
 .urd-preview .urd-nav {
@@ -3104,7 +3147,7 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
   place-items: center;
   padding: 0 3px;
   background: var(--urd-color-accent);
-  color: var(--urd-color-bg);
+  color: var(--urd-color-accent-text, var(--urd-color-bg));
   border-radius: 999px;
   font-size: 0.6rem;
   font-weight: 700;

@@ -204,6 +204,11 @@
               "default": "card",
               "description": "The submenu's design (additive from v0.6): card = card with shadow, flat = plain surface, pills = pill items, lines = list with dividers, flyout = flyout in full menu width."
             },
+            "subOpen": {
+              "enum": ["hover", "stay", "click"],
+              "default": "hover",
+              "description": "How the submenus open on a mouse device (additive from v0.7): hover = the pointer opens and closes them, stay = the pointer opens them and only a click, another item or a click outside closes them, click = only a click opens and closes them. Touch always uses click."
+            },
             "subPillColor": {
               "type": "string",
               "description": "The pill items' color when subStyle is pills: theme token or raw color (additive from v0.6; the default is the submenu's surface)."

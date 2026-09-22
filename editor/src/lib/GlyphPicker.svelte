@@ -3,23 +3,47 @@
    * Glyph/emoji picker: a button showing the current glyph that opens a broad, categorized menu with recent glyphs at the top.
    * The glyph set and the recent-glyph logic live in the engine's glyphs.js (shared with the text editor bar's glyph menu, same localStorage key).
    * With onicon set, the engine's icon library (drawn SVGs) is shown at the top as well; with onimage set, a custom icon image can be uploaded (webp-compressed).
-   * The popover is position: fixed (the panels clip absolute content) and closes on a click outside or Escape, the same pattern as ColorPicker.
+   * Two branches (ADR-0011 addendum, anchored.js decides): in the top layer, anchored under the button's right edge with the browser flipping it away from the viewport edge and light dismiss; otherwise position: fixed (the panels clip absolute content), placed by measuring, closing on a click outside, Escape or a scroll outside. The same pattern as ColorPicker.
    */
+  import { nativeAnchoring, anchorName, namePane } from '$engine/anchored.js';
   import { compressToWebp } from '$engine/imageTools.js';
-  import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph } from '$engine/glyphs.js';
+  import { GLYPH_CATEGORIES, readRecentGlyphs, saveRecentGlyph, readRecentIcons, saveRecentIcon } from '$engine/glyphs.js';
   import { ICON_CATEGORIES, ICON_LIBRARY, iconSvg } from '$engine/icons.js';
   import { ta } from '$engine/i18n.js';
 
   let { value = '★', icon = null, image = null, label = ta('gp.pickGlyph'), onpick, onicon, onimage } = $props();
 
+  const native = nativeAnchoring();
+  const anchor = anchorName('urd-gp');
+  const popId = anchor.slice(2);
+
   let recent = $state([]);
+  let recentIcons = $state([]);
   let rootEl = $state(null);
+  let popEl = $state(null);
   let fileEl = $state(null);
   let open = $state(false);
   let pos = $state({ top: 0, left: 0 });
 
-  function openPicker() {
+  /** The popover's toggle event drives the open state in the anchored branch. */
+  function readRecents() {
     recent = readRecentGlyphs();
+    recentIcons = onicon ? readRecentIcons().filter((id) => ICON_LIBRARY[id]) : [];
+  }
+
+  function onToggle(e) {
+    open = e.newState === 'open';
+    namePane(rootEl, open);
+    if (open) readRecents();
+  }
+
+  function closePicker() {
+    if (native) popEl?.hidePopover();
+    open = false;
+  }
+
+  function openPicker() {
+    readRecents();
     const r = rootEl.getBoundingClientRect();
     const W = 292;
     const H = 380;
@@ -32,12 +56,13 @@
   function pick(glyph) {
     saveRecentGlyph(glyph);
     onpick?.(glyph);
-    open = false;
+    closePicker();
   }
 
   function pickIcon(id) {
+    saveRecentIcon(id);
     onicon?.(id);
-    open = false;
+    closePicker();
   }
 
   async function uploadOwn(event) {
@@ -46,12 +71,17 @@
     if (!file) return;
     const img = await compressToWebp(file, 256);
     onimage?.(img.dataUrl);
-    open = false;
+    closePicker();
   }
 
-  // Close on a click outside or Escape (only while open)
+  // Close on a window blur in both branches (a click in the preview iframe
+  // never reaches this document); the JS branch also closes on a click
+  // outside or Escape.
   $effect(() => {
     if (!open) return;
+    const onBlur = () => closePicker();
+    window.addEventListener('blur', onBlur);
+    if (native) return () => window.removeEventListener('blur', onBlur);
     const onDown = (e) => {
       if (rootEl && !rootEl.contains(e.target)) open = false;
     };
@@ -65,6 +95,7 @@
     document.addEventListener('keydown', onKey, true);
     document.addEventListener('scroll', onScroll, true);
     return () => {
+      window.removeEventListener('blur', onBlur);
       document.removeEventListener('pointerdown', onDown, true);
       document.removeEventListener('keydown', onKey, true);
       document.removeEventListener('scroll', onScroll, true);
@@ -74,16 +105,35 @@
 
 <span class="gp" bind:this={rootEl}>
   <button type="button" class="gp-swatch" title={label} aria-label={label}
-    onclick={() => (open ? (open = false) : openPicker())}>
+    popovertarget={native ? popId : undefined} style={native ? `anchor-name: ${anchor}` : undefined}
+    onclick={native ? undefined : () => (open ? (open = false) : openPicker())}>
     {#if image}<img class="gp-own" src={image} alt={ta('gp.ownIcon')} />
     {:else if icon && ICON_LIBRARY[icon]}<span class="gp-svg">{@html iconSvg(icon)}</span>
     {:else}{value || '★'}{/if}
   </button>
-  {#if open}
+  {#if native}
+    <div class="gp-pop gp-anchored" id={popId} popover="auto" bind:this={popEl}
+      style="position-anchor: {anchor}" ontoggle={onToggle}>
+      {#if open}
+        {@render pickerBody()}
+      {/if}
+    </div>
+  {:else if open}
     <div class="gp-pop" style="top: {pos.top}px; left: {pos.left}px">
-      {#if recent.length}
+      {@render pickerBody()}
+    </div>
+  {/if}
+</span>
+
+{#snippet pickerBody()}
+      {#if recent.length || recentIcons.length}
         <div class="gp-group">{ta('common.recent')}</div>
         <div class="gp-grid">
+          {#each recentIcons as id (id)}
+            <button type="button" class="gp-cell gp-cell-icon" title={ta(ICON_LIBRARY[id].labelKey)}
+              class:active={id === icon}
+              onclick={() => pickIcon(id)}><span class="gp-svg">{@html iconSvg(id)}</span></button>
+          {/each}
           {#each recent as glyph (glyph)}
             <button type="button" class="gp-cell" onclick={() => pick(glyph)}>{glyph}</button>
           {/each}
@@ -116,9 +166,7 @@
         <input type="file" accept="image/*" hidden bind:this={fileEl} onchange={uploadOwn} />
         <p class="gp-hint">{ta('gp.uploadHint')}</p>
       {/if}
-    </div>
-  {/if}
-</span>
+{/snippet}
 
 <style>
   .gp {
@@ -147,11 +195,35 @@
     width: 292px;
     max-height: 380px;
     overflow-y: auto;
+    color: inherit;
     background: var(--urd-color-surface, #151a23);
     border: 1px solid rgb(255 255 255 / 18%);
     border-radius: 10px;
     box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
     padding: 8px;
+  }
+
+  /* The anchored branch: under the button, right edges aligned (the grid
+     extends left over the panel), flipped by the browser when it does not fit. */
+  @supports (anchor-name: --a) {
+    .gp-anchored {
+      inset: auto;
+      margin: 6px 0 0;
+      top: anchor(bottom);
+      /* Right edges aligned with the swatch, kept inside the pane the
+         swatch stands in (--urd-pane, named by namePane while open) */
+      left: clamp(calc(anchor(--urd-pane left, 0px) + 8px), calc(anchor(right) - 292px), calc(anchor(--urd-pane right, 100vw) - 300px));
+    }
+
+    .gp-anchored:not(:popover-open) {
+      display: none;
+    }
+
+    @supports (position-try-fallbacks: flip-block) {
+      .gp-anchored {
+        position-try-fallbacks: flip-block;
+      }
+    }
   }
 
   .gp-group {

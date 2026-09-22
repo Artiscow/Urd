@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
 const { ICON_LIBRARY, ICON_CATEGORIES, iconSvg } = await engineImport('icons.js');
-const { GLYPH_CATEGORIES, GLYPH_RECENT_MAX, pushRecentGlyph } = await engineImport('glyphs.js');
+const { GLYPH_CATEGORIES, GLYPH_RECENT_MAX, GLYPH_RECENT_KEY, ICON_RECENT_KEY, pushRecentGlyph, readRecentIcons } = await engineImport('glyphs.js');
 
 test('the icon library and the categories agree: every id exists, no duplicates, no orphans', () => {
   const seen = new Set();
@@ -85,4 +85,9 @@ test('pushRecentGlyph: newest first, without duplicates, with a cap', () => {
   assert.ok(!pushed.includes(`g${GLYPH_RECENT_MAX - 1}`), 'the oldest falls out at the cap');
   // Broken input (not a list) must never topple it: treated as an empty list.
   assert.deepEqual(pushRecentGlyph('rot', '★'), ['★']);
+});
+
+test('icon recents: own storage key, and an empty list without storage', () => {
+  assert.notEqual(ICON_RECENT_KEY, GLYPH_RECENT_KEY);
+  assert.deepEqual(readRecentIcons(), []);
 });

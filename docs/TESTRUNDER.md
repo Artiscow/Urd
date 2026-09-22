@@ -2,6 +2,22 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.12): the anchoring round and the local test round after it
+
+- [ ] A modern browser (Chrome 125+, Firefox 147+, Safari 26+): a Nav panel dropdown opens as a popover under its button, flips above near the bottom edge, closes on Escape, a click outside, a click in the preview and a scroll; the chosen value is applied
+- [ ] The same in an older browser (Safari 18-25, Firefox 132-146): the menus behave as before 0.7.12 (measured placement, same closing)
+- [ ] Colour picker in the Nav panel: the card opens under the swatch, stays inside the panel for the middle theme cells in the Theme panel, closes on a click in the preview; the picked colour is applied live
+- [ ] Glyph picker on an icon block: opens as a popover, a chosen character or icon is applied, and reopening shows the chosen icon and character first under Recent
+- [ ] Text toolbar with the Brønn theme: Text colour gives white, Accent gives the accent, both follow a light/dark switch; the custom colour card opens above the toolbar, and dragging the hue slider keeps both the toolbar and the card in place
+- [ ] Engine dropdown (form plugin field type) opens as a popover and applies the choice; Clean view hides an open editor dropdown
+- [ ] Theme panel: the Auto row under both palettes; Auto on gives black or white on accent buttons on the page in both modes, Auto off restores the cells' own colours; the accent-text cells show a hex code
+- [ ] Nav with blur: the submenu and the open mobile panel blur the page behind them, not the bar
+- [ ] Opening any panel opens no group by itself; the Site panel's Advanced gutter fold opens only with a custom gutter value
+- [ ] Group folds: the chevron points right while closed and turns down on open; the panel head's fold toggle expands all, flips, and collapses all; the toggle in Appearance acts on its six sub-folds only and follows folds opened by hand
+- [ ] The panel's fold toggle stays in place when a group opens and the scrollbar appears (thin gutter always reserved)
+- [ ] Nav panel, Submenu group: «Opens» is shown only when the menu has submenus; On hover opens and closes with the pointer, On hover closed by click keeps the submenu open until a click, another item or a click outside, On click only ignores the pointer; on a touch device all three open on tap
+- [ ] The new labels read correctly in nb, en-GB and tr, and no row shows a raw key
+
 ### Testrunde-batch (0.7.15.2): the Nav panel's Appearance folds
 
 Supersedes the panel placement described in the 0.7.15 items below (the controls are the same, now grouped); nothing is removed.

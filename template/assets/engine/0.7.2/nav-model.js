@@ -128,6 +128,22 @@ function isFloating(variant) {
   return variant === 'floating' || variant === 'floating-square' || variant === 'floating-tab';
 }
 
+/**
+ * How the submenus open on a mouse device: hover opens and closes them
+ * (`hover`, the default), hover opens them and only a click, another item
+ * or a click outside closes them (`stay`), or the pointer does nothing and
+ * only a click opens and closes them (`click`). Touch never gets hover in
+ * any mode. Pure function; an unknown value reads as the default.
+ * @param {object} style nav.style
+ * @returns {{hoverOpens: boolean, hoverCloses: boolean}}
+ */
+export function subOpenMode(style = {}) {
+  const mode = style?.subOpen;
+  if (mode === 'click') return { hoverOpens: false, hoverCloses: false };
+  if (mode === 'stay') return { hoverOpens: true, hoverCloses: false };
+  return { hoverOpens: true, hoverCloses: true };
+}
+
 export function navClasses(site) {
   let classes = `urd-nav urd-nav-${site.nav.layout ?? 'right'}`;
   const variant = site.nav.variant;

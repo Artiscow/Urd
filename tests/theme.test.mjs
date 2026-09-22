@@ -175,3 +175,25 @@ test('buildThemeCss: injected values are dropped, valid color-mix()/oklch() is k
   assert.match(css, /--urd-color-accent: light-dark\(#123456, #654321\);/);
   assert.match(css, /--urd-color-text: light-dark\(oklch\(0\.2 0\.1 200\), oklch\(0\.9 0\.05 200\)\);/);
 });
+
+test('buildThemeCss: without an accent-text token the browser chooses it with contrast-color(), bg as the fallback', () => {
+  const css = buildThemeCss({ tokens: { color: { bg: '#ffffff', accent: '#15b39a' } } });
+  assert.match(css, /--urd-color-accent-text: #ffffff;/);
+  assert.match(css, /--urd-base-accent-text: #ffffff;/);
+  assert.match(css, /@supports \(color: contrast-color\(#000\)\) \{\n  :root \{\n    --urd-color-accent-text: contrast-color\(var\(--urd-color-accent\)\);\n    --urd-base-accent-text: contrast-color\(var\(--urd-base-accent\)\);/);
+  // The fallback sits in :root before the @supports block.
+  assert.ok(css.indexOf(':root {') < css.indexOf('@supports (color: contrast-color'));
+  // With a dual theme the contrast block comes too, and the accent itself is light-dark().
+  const dual = buildThemeCss({ ...THEME, tokens: { ...THEME.tokens, color: { ...THEME.tokens.color, accent: '#15b39a' } } });
+  assert.match(dual, /contrast-color\(var\(--urd-color-accent\)\)/);
+  // Without an accent there is nothing to contrast against: no block.
+  assert.ok(!buildThemeCss({ tokens: { color: { bg: '#123456' } } }).includes('contrast-color('));
+});
+
+test('buildThemeCss: an owner-set accent-text token is kept and contrast-color() is not emitted', () => {
+  const css = buildThemeCss({ tokens: { color: { bg: '#ffffff', accent: '#15b39a', 'accent-text': '#04241d' } } });
+  assert.match(css, /--urd-color-accent-text: #04241d;/);
+  assert.ok(!css.includes('contrast-color('));
+  const alt = buildThemeCss({ tokens: { color: { bg: '#ffffff', accent: '#15b39a' } }, alt: { tokens: { color: { 'accent-text': '#000000' } } } });
+  assert.ok(!alt.includes('contrast-color('), 'a token set on one side only still counts as owner-set');
+});

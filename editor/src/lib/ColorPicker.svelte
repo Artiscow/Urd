@@ -8,15 +8,26 @@
    * the theme changes (the engine's resolveColor understands both). The
    * field/hex give a detached hex value.
    *
-   * The popover is position: fixed (the panels clip absolute content),
-   * and closes on a click outside or Escape.
+   * Two branches (ADR-0011 addendum, anchored.js decides): in the top
+   * layer, anchored under the swatch's right edge (the card extends left
+   * over the panel, never out over the preview) with the browser flipping
+   * it away from the viewport edge and light dismiss; otherwise position:
+   * fixed (the panels clip absolute content), placed by measuring, closing
+   * on a click outside or Escape. Both close on a window blur (a click in
+   * the preview iframe never reaches this document).
    */
+  import { nativeAnchoring, anchorName, namePane } from '$engine/anchored.js';
   import { ta } from '$engine/i18n.js';
 
   let { value = '#000000', tokens = [], label = ta('cp.pickColor'), onchange, allowClear = false } = $props();
 
   const RECENT_KEY = 'urd-recent-colors';
   const SAVED_KEY = 'urd-saved-colors';
+
+  const native = nativeAnchoring();
+  const anchor = anchorName('urd-cp');
+  const popId = anchor.slice(2);
+  let popEl = $state(null);
 
   /** The display color: a token name is looked up among the theme dots. */
   const displayHex = () => {
@@ -103,7 +114,8 @@
     return true;
   }
 
-  function openPicker() {
+  /** The state behind the card: the colour it opens on and the stored palettes. */
+  function prepare() {
     setFromHex(displayHex()) || setFromHex('#000000');
     openedWith = value;
     lastPickedHex = '';
@@ -119,6 +131,23 @@
     } catch {
       saved = [];
     }
+  }
+
+  /** The popover's toggle event drives the open state in the anchored branch. */
+  function onToggle(e) {
+    if (e.newState === 'open') {
+      prepare();
+      namePane(rootEl, true);
+      open = true;
+    } else if (open) {
+      namePane(rootEl, false);
+      open = false;
+      remember();
+    }
+  }
+
+  function openPicker() {
+    prepare();
     const r = rootEl.getBoundingClientRect();
     const W = 236;
     const H = 380;
@@ -134,13 +163,22 @@
     open = true;
   }
 
-  function close() {
-    open = false;
-    // Remember the color as recently used (detached hex picks only).
+  /** Remembers the color as recently used (detached hex picks only). */
+  function remember() {
     if (lastPickedHex && lastPickedHex !== openedWith) {
       const next = [lastPickedHex, ...recent.filter((c) => c !== lastPickedHex)].slice(0, 8);
       localStorage.setItem(RECENT_KEY, JSON.stringify(next));
     }
+  }
+
+  function close() {
+    if (native) {
+      // hidePopover fires toggle, which does the bookkeeping.
+      popEl?.hidePopover();
+      return;
+    }
+    open = false;
+    remember();
   }
 
   /** Theme dot: store the NAME, so the element follows the theme. */
@@ -222,16 +260,17 @@
   // it too.
   $effect(() => {
     if (!open) return;
+    const onBlur = () => close();
+    window.addEventListener('blur', onBlur);
+    if (native) return () => window.removeEventListener('blur', onBlur);
     const onDown = (e) => {
       if (rootEl && !rootEl.contains(e.target)) close();
     };
     const onKey = (e) => {
       if (e.key === 'Escape') close();
     };
-    const onBlur = () => close();
     document.addEventListener('pointerdown', onDown, true);
     document.addEventListener('keydown', onKey, true);
-    window.addEventListener('blur', onBlur);
     return () => {
       document.removeEventListener('pointerdown', onDown, true);
       document.removeEventListener('keydown', onKey, true);
@@ -242,20 +281,35 @@
 
 <span class="cp" bind:this={rootEl}>
   <button type="button" class="cp-swatch" class:linked={linkedToken()} class:cp-empty={allowClear && !value}
-    style="background: {value ? displayHex() : 'transparent'}" title={linkedToken() ? ta('cp.linkedTitle', { label, token: linkedToken() }) : label}
-    aria-label={label} onclick={() => (open ? close() : openPicker())}></button>
+    style="background: {value ? displayHex() : 'transparent'}{native ? `; anchor-name: ${anchor}` : ''}" title={linkedToken() ? ta('cp.linkedTitle', { label, token: linkedToken() }) : label}
+    popovertarget={native ? popId : undefined}
+    aria-label={label} onclick={native ? undefined : () => (open ? close() : openPicker())}></button>
   {#if allowClear && value}
     <button type="button" class="cp-clear" title={ta('cp.clearTitle')}
       aria-label={ta('cp.clear')} onclick={() => onchange?.('')}>×</button>
   {/if}
-  {#if open}
-    <!-- The picker often sits inside a <label>: without preventDefault the browser
-         forwards clicks on non-interactive surfaces (the color field, empty space)
-         as a click to the label's control = the swatch, which would toggle the
-         picker closed. -->
+  <!-- The picker often sits inside a <label>: without preventDefault the browser
+       forwards clicks on non-interactive surfaces (the color field, empty space)
+       as a click to the label's control = the swatch, which would toggle the
+       picker closed. -->
+  {#if native}
+    <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+    <div class="cp-pop cp-anchored" id={popId} popover="auto" bind:this={popEl}
+      style="position-anchor: {anchor}" ontoggle={onToggle} onclick={(e) => e.preventDefault()}>
+      {#if open}
+        {@render card()}
+      {/if}
+    </div>
+  {:else if open}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
     <div class="cp-pop" style="top: {pos.top}px; left: {pos.left}px"
       onclick={(e) => e.preventDefault()}>
+      {@render card()}
+    </div>
+  {/if}
+</span>
+
+{#snippet card()}
       <div class="cp-sv"
         style="background-image: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent); background-color: hsl({h}, 100%, 50%)"
         onpointerdown={svDown}>
@@ -316,9 +370,7 @@
           {/each}
         </span>
       {/if}
-    </div>
-  {/if}
-</span>
+{/snippet}
 
 <style>
   .cp {
@@ -383,6 +435,30 @@
     border: 1px solid rgb(255 255 255 / 18%);
     border-radius: 10px;
     box-shadow: 0 12px 36px rgb(0 0 0 / 55%);
+  }
+
+  /* The anchored branch: under the swatch, right edges aligned (the card
+     extends left over the panel), flipped by the browser when it does not fit. */
+  @supports (anchor-name: --a) {
+    .cp-anchored {
+      inset: auto;
+      margin: 6px 0 0;
+      top: anchor(bottom);
+      /* Right edges aligned with the swatch, kept inside the pane the
+         swatch stands in (--urd-pane, named by namePane while open), so
+         the card never hangs out over the preview or the tool rail */
+      left: clamp(calc(anchor(--urd-pane left, 0px) + 8px), calc(anchor(right) - 236px), calc(anchor(--urd-pane right, 100vw) - 244px));
+    }
+
+    .cp-anchored:not(:popover-open) {
+      display: none;
+    }
+
+    @supports (position-try-fallbacks: flip-block) {
+      .cp-anchored {
+        position-try-fallbacks: flip-block;
+      }
+    }
   }
 
   .cp-sv {

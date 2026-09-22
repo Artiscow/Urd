@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, NAV_SIZE_BOUNDS, isSafeImage } = await engineImport('nav-model.js');
+const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, isSafeImage } = await engineImport('nav-model.js');
 
 // Deliberately Norwegian page titles and slugs: user data stays Norwegian (ADR-0021).
 const PAGES = [
@@ -478,4 +478,13 @@ test('navSizeVars: the mobile overrides are chosen at the breakpoint and fall ba
   assert.equal(partial.font, '14px');
   assert.equal(partial.logoSize, 40);
   assert.equal(navSizeVars({ mobile: 'tull' }, {}, { mobile: true }).vars['--urd-nav-pad-y'], undefined);
+});
+
+test('subOpenMode: hover by default, stay keeps hover opening only, click disables hover', () => {
+  assert.deepEqual(subOpenMode(), { hoverOpens: true, hoverCloses: true });
+  assert.deepEqual(subOpenMode({}), { hoverOpens: true, hoverCloses: true });
+  assert.deepEqual(subOpenMode({ subOpen: 'hover' }), { hoverOpens: true, hoverCloses: true });
+  assert.deepEqual(subOpenMode({ subOpen: 'stay' }), { hoverOpens: true, hoverCloses: false });
+  assert.deepEqual(subOpenMode({ subOpen: 'click' }), { hoverOpens: false, hoverCloses: false });
+  assert.deepEqual(subOpenMode({ subOpen: 'nonsense' }), { hoverOpens: true, hoverCloses: true });
 });

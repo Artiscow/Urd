@@ -27,6 +27,21 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.12 - The anchoring round: five popovers on the Popover API and anchor positioning, contrast-color() for the text on accent - 22 September 2026
+
+- Five popovers (Dropdown, ColorPicker and GlyphPicker in the editor, dropdown.js and color-picker.js in the engine) each measured the viewport in JS and used `position: fixed` to escape the panels' clipping. New `anchored.js` (`nativeAnchoring()`, `anchorName()`, `namePane()`): where the Popover API, `anchor-name` and `position-try-fallbacks` all exist, the menus open as `popover="auto"` anchored to their button with the browser flipping and light-dismissing them; the measuring branch stays as the fallback. ADR-0011 got an addendum on the round.
+- The text on accent surfaces was a fixed token. `buildThemeCss` now emits `contrast-color(var(--urd-color-accent))` behind `@supports` with the main background as the fallback whenever no `accent-text` token is set; the Theme panel got an Auto chip that removes the token, and all accent surfaces in base.css read `--urd-color-accent-text`.
+- Test finding: with blur on the bar the submenu and the mobile panel showed the bar's stripe instead of the page behind them, since a blurred element is the backdrop root for its children. The bar's blur moved to a `::before` pseudo-element (the side column keeps it on the nav itself).
+- Test finding: six groups opened by themselves when a panel was opened. Every static `open` on the `details` groups was removed; only the Site panel's Advanced gutter fold opens itself, when the gutter holds a custom value.
+- Test finding: a click in the preview and then Escape left an editor dropdown or glyph picker open. Both now close on window blur in both branches, as the colour picker already did.
+- Test finding: the colour cards of the middle theme cells fell far into the panel's left edge. `namePane` names the open panel body as an anchor while a card is open, and the cards clamp between its edges.
+- Test finding: the text toolbar's Text colour and Accent buttons made the text red with a theme that has a dark variant, since the raw variable text is `light-dark(...)`, which execCommand cannot read. The token is now resolved through a rendered probe (also for the theme dots in the engine colour picker), and the toolbar stays open while the colour card's sliders have focus, which had unanchored the card into the top-left corner.
+- Test finding: the icon picker never showed «Recent», since only characters were remembered. Chosen icons are stored in their own list (`readRecentIcons`/`saveRecentIcon` in glyphs.js) and shown first under Recent.
+- New `nav.style.subOpen` (`hover`/`stay`/`click`, schema in three places): how the submenus open with a mouse; pure `subOpenMode` in nav-model.js, a dropdown in the Submenu group shown only when the menu has submenus.
+- The Auto chip sat under the light palette's accent-text cell and read as light-only. It is now its own row under both palettes, with the tooltip saying it applies to both modes.
+- Test finding: the group folds' arrows were text characters that always pointed down. They are drawn chevrons that point along the row while closed and turn down when open; the panel head and every group with sub-folds got one fold-all toggle whose chevrons flip between expand and collapse, following folds opened by hand.
+- Test finding: the fold-all button moved when the panel's scrollbar appeared. The panel reserves a thin scrollbar gutter (`scrollbar-gutter: stable`, `scrollbar-width: thin`) with a smaller right padding.
+
 ### 0.7.15.2 - The Nav panel's Appearance group in six section folds - 18 September 2026
 
 - Test finding after 0.7.15: the Appearance group had become one flat list of about thirty rows, with the size fields as lonely inputs and the mobile overrides in a separate group. Three layouts were drawn in the admin's own vocabulary and the section-fold direction was chosen: Appearance now holds the folds Layout, Size, Frame, Behaviour, Colours and Background (the frame-group pattern from the Properties panel; the last two closed by default), each variant's own rows directly under the variant choice.

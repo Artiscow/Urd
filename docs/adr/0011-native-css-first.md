@@ -25,6 +25,15 @@ Urd's engine is dependency-free vanilla JS served raw. Several components were o
 - New engine lessons are pinned in [AGENTS.md]. The rule about `@supports` gating and «fallback = end state» is a fixed checkpoint in the test rounds.
 - Where a primitive is not mature enough (native masonry, anchor positioning as core), we deliberately wait; see ELEMENTKART part 8.
 
+## Addendum: the anchoring round (22 September 2026, milestone 0.7.12)
+
+CSS Anchor Positioning is baseline (Chrome 125, Safari 18.2 and Firefox 147 for the core; `position-try-fallbacks` from Safari 26 and Firefox 147), and `contrast-color()` is Baseline Newly available since April 2026 (Chrome 147, Firefox 146, Safari 26). The gate from Decision 1 is therefore open, and the round was run on the editor's floating menus rather than on the nav (the submenus were already placed by CSS; ADR-0010 stands, disclosure and never `role="menu"`):
+
+1. **The editor's floating menus use the Popover API plus anchor positioning, behind a feature check.** `Dropdown.svelte`, `ColorPicker.svelte`, `GlyphPicker.svelte`, the engine's `dropdown.js` and `color-picker.js` open in the top layer (so a panel's overflow never clips them), are placed against their button by `position-anchor` and `position-area`, and are flipped away from the viewport edge by `position-try-fallbacks`; light dismiss owns the outside click and Escape. The measuring JS branch (`position: fixed`, `getBoundingClientRect`, flip and clamp, document listeners) stays as the fallback and is unchanged in behaviour.
+2. **The gate is the stricter feature.** `anchored.js` requires the Popover API, `anchor-name` AND `position-try-fallbacks` before the modern branch is taken: anchoring without flipping would let a menu near the bottom of the window run off the screen, so a browser with anchors but no fallbacks (Safari 18.2 to 25) stays on the JS branch. The CSS still nests the two `@supports` blocks as documented, so the declarations are inert where unsupported.
+3. **What stays in JS.** A window blur still closes the colour picker in both branches (a click in the preview iframe never reaches the admin document, and light dismiss does not see it). The engine dropdown keeps its focus guard (`mousedown` prevented) so a text selection survives the choice. The admin's top-bar menus (`.tool-pop`, the settings popover) were not touched: the top bar does not scroll, so `position: absolute` was never the problem there.
+4. **Text on accent surfaces is chosen by `contrast-color()`** when the theme has no `accent-text` token: `buildThemeCss` writes today's effective value (the background colour) as the fallback in `:root` and, behind `@supports (color: contrast-color(#000))`, lets the browser pick black or white against the accent. An owner-set token is kept as it is. The Theme panel offers «Auto» on that cell, which removes the token. This is the answer to FUNKSJONSKART C15 (the contrast warning that was built and removed in 0.6.6.5.4).
+
 [ADR-0010]: 0010-disclosure-navigation.md
 [ADR-0005]: 0005-versioning-and-migration.md
 [AGENTS.md]: ../../AGENTS.md
