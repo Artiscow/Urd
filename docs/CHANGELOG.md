@@ -27,6 +27,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.8 - The element review planned: ApeironLF read in full, 0.7.13 staged, and the new milestone 0.7.16 Archiving - 22 September 2026
+
+- ApeironLF read from its source, every page and every admin module, together with a search on what the builders offer as section backgrounds (Wix, Squarespace, Elementor, Divi, Webflow, Framer). The calendar plugin turned out to cover ApeironLF's three event views already, so the calendar stage builds the «Akkurat nå» card instead; the hero background takes all four ApeironLF hero-gallery styles plus a pattern layer and shape dividers from the survey, while WebGL art, Lottie and Spline are out of scope.
+- BACKLOG: the 0.7.13 sub-items turned into the stages 0.7.13.2 to 0.7.13.16 (docs, nav surface, full-screen mobile menu, announcement bar and tools, launcher, ribbons, background motion and photos layer, mosaic and polaroid views, pattern layer and dividers, styled variants and footers, animated images and file video, calendar card, back to top, nav in the hero, page index block), and events as a collection kind sorted to v0.8.
+- The inventory's remaining gaps sorted in: accordion view, auto tone and glow presets to 0.7.9, admin layout choices to 0.7.10, the programme view and an admin image editor to v0.8, site search left out of scope with a pointer to the catalogue search.
+- New milestone 0.7.16 Arkivering og personsamlinger: one-action archiving of entries, boards and sections with an archive view and filters, starting with a survey and ADR-0024 on entry states.
+
 ### 0.7.13.1 - The element review mapped: Bugs and Suggestions sorted into 0.7.13 - 22 September 2026
 
 - The Bugs and Suggestions lists in BACKLOG went through against 0.7.13's criterion (gaps and polish in the published page's elements). Nine items moved into the milestone: announcement bar, link launcher, nav tool placement, nav rounding as a value, nav in the hero, animated image and self-hosted video as content, the empty calendar state, back to top as an element with settings, and the nav underline hover.
