@@ -27,6 +27,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.13.1 - The element review mapped: Bugs and Suggestions sorted into 0.7.13 - 22 September 2026
+
+- The Bugs and Suggestions lists in BACKLOG went through against 0.7.13's criterion (gaps and polish in the published page's elements). Nine items moved into the milestone: announcement bar, link launcher, nav tool placement, nav rounding as a value, nav in the hero, animated image and self-hosted video as content, the empty calendar state, back to top as an element with settings, and the nav underline hover.
+- Two 0.7.13 sub-items were already covered: the count-up number block exists as the stats block (marked delivered), and the automatic gallery exists as the slideshow view, so the item now covers only the continuous marquee.
+- Items that were not element gaps went to the milestones that own them: eight editor UX findings to 0.7.10, the narrow-width text folding to 0.7.3, the Internet Archive style view to 0.7.9 and the browser cache note to the v0.9 updater hardening; the fold-all button and the mobile logo size were marked delivered (0.7.12 and 0.7.15).
+
 ### 0.7.12 - The anchoring round: five popovers on the Popover API and anchor positioning, contrast-color() for the text on accent - 22 September 2026
 
 - Five popovers (Dropdown, ColorPicker and GlyphPicker in the editor, dropdown.js and color-picker.js in the engine) each measured the viewport in JS and used `position: fixed` to escape the panels' clipping. New `anchored.js` (`nativeAnchoring()`, `anchorName()`, `namePane()`): where the Popover API, `anchor-name` and `position-try-fallbacks` all exist, the menus open as `popover="auto"` anchored to their button with the browser flipping and light-dismissing them; the measuring branch stays as the fallback. ADR-0011 got an addendum on the round.
