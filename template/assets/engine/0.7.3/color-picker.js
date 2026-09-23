@@ -243,7 +243,8 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
   document.body.appendChild(probe);
   for (const [token, name] of THEME_TOKENS) {
     probe.style.color = `var(--urd-color-${token})`;
-    const hex = computedHex(getComputedStyle(probe).color);
+    const color = getComputedStyle(probe).color;
+    const hex = computedHex(color) ?? color;
     if (!hex) continue;
     const dot = swatch(hex);
     dot.title = ta('cp.tokenTitleShort', { name });

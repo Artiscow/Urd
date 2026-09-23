@@ -183,10 +183,11 @@ export function navClasses(site) {
   if (site.nav.style?.shrinkLogo === true) classes += ' urd-nav-shrink-logo';
   // Border and shadow (additive since v0.7): the side the border sits on
   // and the shadow strength are allowlisted classes; the border's width and
-  // colour are variables set by nav.js. The pill has its glow instead of a
-  // shadow.
+  // colour are variables set by nav.js. The column draws no border, and the
+  // pill has its glow instead of a shadow.
+  const isSide = variant === 'side-left' || variant === 'side-right';
   const borderSide = site.nav.style?.border?.side;
-  if (['bottom', 'top', 'both', 'all'].includes(borderSide)) classes += ` urd-nav-border-${borderSide}`;
+  if (['bottom', 'top', 'both', 'all'].includes(borderSide) && !isSide) classes += ` urd-nav-border-${borderSide}`;
   const shadow = site.nav.style?.shadow;
   if (['soft', 'strong'].includes(shadow) && isBar) classes += ` urd-nav-shadow-${shadow}`;
   return classes;

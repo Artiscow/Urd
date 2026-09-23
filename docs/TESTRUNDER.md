@@ -2,7 +2,16 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.3): the release
+
+- [ ] Updates panel on a site created from the template (urd-web): 0.7.3 is offered, the update applies, and the site renders with engine 0.7.3 (all pages, the admin, the slug copies)
+- [ ] Nav panel: set a bottom border on the bar, switch to a side variant: the column shows no border; switch back: the border is there again
+- [ ] Nav panel, Size with Phone selected, then Variant to side-left: the Text size row shows and edits the desktop value; back to bar: the Phone view is where it was
+- [ ] Engine colour picker (a form plugin field or a block colour on the canvas) with the Brønn theme: all theme dots are shown and pick their colour
+
 ### Testrunde-batch (0.7.12): the anchoring round and the local test round after it
+
+Supersedes the fold state in the 0.7.15.2 item «six folds ... the first four open, the last two closed»: since 0.7.12 no group is open until the user opens it; nothing is removed.
 
 - [ ] A modern browser (Chrome 125+, Firefox 147+, Safari 26+): a Nav panel dropdown opens as a popover under its button, flips above near the bottom edge, closes on Escape, a click outside, a click in the preview and a scroll; the chosen value is applied
 - [ ] The same in an older browser (Safari 18-25, Firefox 132-146): the menus behave as before 0.7.12 (measured placement, same closing)

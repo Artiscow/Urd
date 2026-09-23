@@ -210,6 +210,7 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 ## Bugs, (dårlige) funksjoner og ting som ellers må gjøres
 
 - [ ] Fest ved scrolling på element- "Slipp taket ved seksjon xyz" fungerer ikke.  
+- [ ] Korn i bakgrunn skal gå fra 0% til 100%, ikke 0-30% som nå
 
 ## Suggestions, Ideas and Wishes
 

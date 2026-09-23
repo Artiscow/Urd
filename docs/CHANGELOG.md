@@ -27,6 +27,15 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+## [0.7.3] - 2026-09-23
+
+### 0.7.2.7-0.7.0.8p - Release 0.7.3: navigation bar sizing, the Appearance folds, the anchoring round, the element review planned - 23 September 2026
+
+- RELEASE: the engine bumped 0.7.2 to 0.7.3 after the ritual (urd.json, git mv of the engine folder, the assets/urd/ shells and dictionaries, the HTML shells with byte-identical slug copies, editor/package.json and the lockfile, the bundle rebuilt), check-release green in full mode for v0.7.3. Tag v0.7.3 and the GitHub release are done manually after the push, tag last.
+- Independent review of the span (a fresh agent in its own worktree, the whole diff against AGENTS.md and the ADRs with its own build, tests, validation, copy, stamp, i18n, three-places and em dash checks) found no defect and one risk: `navClasses` added the border class for every variant while the schema, SCHEMA.md and the panel say bar and floating only, so a border set on the bar and a switch to a side variant drew it on the column with no control to remove it. The border is now skipped for the side variants, with the test extended.
+- Review nits fixed: the fold effect in App.svelte read `panelEl` again at cleanup, when it was already null, so the toggle listener was never removed (the element is captured now); the Size fold's Phone view kept writing `nav.style.mobile.textSize` after a switch to the side variant, where the switch itself is hidden (the rows now read the desktop values for the column); the theme dots in the engine colour picker dropped a token whose computed colour is not `rgb()` (the value is handed on as it is); ADR-0023's decision 5 named variables the build does not have (it now names the classes and the bar-only shadow); the 0.7.12 test batch states that it supersedes the 0.7.15.2 fold-state item.
+- Left as noted by the review: the nav-size preset test compares literal factors rather than base.css, the popover components do not clear the pane name on unmount, and the example site.json exercises only `logo.mobileSize` of the new nav fields.
+
 ### 0.7.0.8 - The element review planned: ApeironLF read in full, 0.7.13 staged, and the new milestone 0.7.16 Archiving - 22 September 2026
 
 - ApeironLF read from its source, every page and every admin module, together with a search on what the builders offer as section backgrounds (Wix, Squarespace, Elementor, Divi, Webflow, Framer). The calendar plugin turned out to cover ApeironLF's three event views already, so the calendar stage builds the «Akkurat nå» card instead; the hero background takes all four ApeironLF hero-gallery styles plus a pattern layer and shape dividers from the survey, while WebGL art, Lottie and Spline are out of scope.

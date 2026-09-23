@@ -18,7 +18,7 @@ A survey of ten builders (LAERDOMMER §2, 16 September 2026: Squarespace, Wix cl
 
 4. **Everything is additive with today's look as the default.** Every new field is optional, and an omitted field renders exactly as before: the presets, the fluid side padding, the 1100 px pill, the desktop logo size and the 0.5 shrink are the fallbacks in the CSS. Defaults are never written to the file (`setNavStyle` deletes on undefined, and an emptied `mobile` object is removed), and `nav.version` is untouched. No migration, per the pre-v1 clause of [ADR-0005].
 
-5. **Border and shadow follow as the last stage with the same additive model:** `nav.style.border` (width, side, colour) and `nav.style.shadow` (none/soft/strong) as `--urd-nav-border` and `--urd-nav-shadow`, shown for bar and floating (milestone 0.7.15.7, FUNKSJONSKART C18). The transparent-to-solid colour while scrolling stays a separate item (0.7.13).
+5. **Border and shadow follow as the last stage with the same additive model:** `nav.style.border` (width, side, colour) and `nav.style.shadow` (none/soft/strong) as allowlisted classes (`urd-nav-border-<side>` with the width and colour as variables, `urd-nav-shadow-<strength>`), the border for bar and floating, the shadow for the bar only since the pill has its glow (milestone 0.7.15.7, FUNKSJONSKART C18). The transparent-to-solid colour while scrolling stays a separate item (0.7.13).
 
 ## Consequences
 

@@ -3004,11 +3004,12 @@
 
   /** Which values the Size fold shows: the desktop ones, or the mobile overrides. Panel state only. */
   let navSizeView = $state('desktop');
+  const sizeView = $derived(sideVariant ? 'desktop' : navSizeView);
   const navMobilePadY = $derived(siteDraft?.nav?.style?.mobile?.padY ?? navPadY);
   const navMobileTextSize = $derived(siteDraft?.nav?.style?.mobile?.textSize ?? navTextSize);
 
   function setNavSizeSlider(key, n) {
-    if (navSizeView === 'mobile') setNavMobile(key, n);
+    if (sizeView === 'mobile') setNavMobile(key, n);
     else setNavStyle(key, n);
   }
 
@@ -3017,7 +3018,7 @@
   function onNavSizeField(e, key, range) {
     const raw = e.target.value;
     const value = raw === '' ? undefined : clampRange(raw, range, undefined);
-    if (navSizeView === 'mobile') {
+    if (sizeView === 'mobile') {
       setNavMobile(key, value);
       e.target.value = siteDraft.nav.style?.mobile?.[key] ?? '';
     } else {
@@ -4192,14 +4193,15 @@
     }
   }
   $effect(() => {
-    if (!panelEl) return;
-    const observer = new MutationObserver(() => { decorateSubFolds(panelEl); syncPanelFolds(); });
-    observer.observe(panelEl, { childList: true, subtree: true });
+    const el = panelEl;
+    if (!el) return;
+    const observer = new MutationObserver(() => { decorateSubFolds(el); syncPanelFolds(); });
+    observer.observe(el, { childList: true, subtree: true });
     // toggle does not bubble: captured at the panel, so the head button
     // follows folds the user opens and closes by hand.
-    panelEl.addEventListener('toggle', syncPanelFolds, true);
-    decorateSubFolds(panelEl);
-    return () => { observer.disconnect(); panelEl?.removeEventListener('toggle', syncPanelFolds, true); };
+    el.addEventListener('toggle', syncPanelFolds, true);
+    decorateSubFolds(el);
+    return () => { observer.disconnect(); el.removeEventListener('toggle', syncPanelFolds, true); };
   });
 
   function setAccentTextAuto(auto) {
@@ -6027,31 +6029,31 @@
                         </div>
                         {#if !sideVariant}
                           <div class="seg nav-view-seg" title={ta('tip.nav.mobileSame')}>
-                            <button class:on={navSizeView === 'desktop'} onclick={() => { navSizeView = 'desktop'; }}>{ta('lbl.device.desktop')}</button>
-                            <button class:on={navSizeView === 'mobile'} onclick={() => { navSizeView = 'mobile'; }}>{ta('lbl.device.mobile')}</button>
+                            <button class:on={sizeView === 'desktop'} onclick={() => { navSizeView = 'desktop'; }}>{ta('lbl.device.desktop')}</button>
+                            <button class:on={sizeView === 'mobile'} onclick={() => { navSizeView = 'mobile'; }}>{ta('lbl.device.mobile')}</button>
                           </div>
                           <div class="ctl-row" title={ta('tip.nav.thickness')}>
                             <span class="mini-label ctl-name">{ta('lbl.navThickness')}</span>
                             <input type="range" min={PAD_Y.min} max={PAD_Y.max} step={PAD_Y.step}
-                              value={navSizeView === 'mobile' ? navMobilePadY : navPadY}
+                              value={sizeView === 'mobile' ? navMobilePadY : navPadY}
                               oninput={(e) => setNavSizeSlider('padY', e.target.valueAsNumber)} />
                             <input type="number" class="tb-num" min={PAD_Y.min} max={PAD_Y.max}
-                              placeholder={navSizeView === 'mobile' ? ta('lbl.navSameAsDesktop') : ''}
-                              value={navSizeView === 'mobile' ? (siteDraft.nav.style?.mobile?.padY ?? '') : navPadY}
+                              placeholder={sizeView === 'mobile' ? ta('lbl.navSameAsDesktop') : ''}
+                              value={sizeView === 'mobile' ? (siteDraft.nav.style?.mobile?.padY ?? '') : navPadY}
                               onchange={(e) => onNavSizeField(e, 'padY', PAD_Y)} />
                           </div>
                         {/if}
                         <div class="ctl-row" title={ta('tip.nav.menuTextSize')}>
                           <span class="mini-label ctl-name">{ta('lbl.navTextSize')}</span>
                           <input type="range" min={TEXT_SIZE.min} max={TEXT_SIZE.max} step={TEXT_SIZE.step}
-                            value={navSizeView === 'mobile' ? navMobileTextSize : navTextSize}
+                            value={sizeView === 'mobile' ? navMobileTextSize : navTextSize}
                             oninput={(e) => setNavSizeSlider('textSize', e.target.valueAsNumber)} />
                           <input type="number" class="tb-num" min={TEXT_SIZE.min} max={TEXT_SIZE.max}
-                            placeholder={navSizeView === 'mobile' ? ta('lbl.navSameAsDesktop') : ''}
-                            value={navSizeView === 'mobile' ? (siteDraft.nav.style?.mobile?.textSize ?? '') : navTextSize}
+                            placeholder={sizeView === 'mobile' ? ta('lbl.navSameAsDesktop') : ''}
+                            value={sizeView === 'mobile' ? (siteDraft.nav.style?.mobile?.textSize ?? '') : navTextSize}
                             onchange={(e) => onNavSizeField(e, 'textSize', TEXT_SIZE)} />
                         </div>
-                        {#if !sideVariant && navSizeView === 'desktop'}
+                        {#if !sideVariant && sizeView === 'desktop'}
                           <div class="ctl-pair">
                             <div class="ctl-field" title={ta('tip.nav.padX')}>
                               <span class="mini-label">{ta('lbl.navPadX')}</span>

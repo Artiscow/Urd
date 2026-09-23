@@ -409,6 +409,8 @@ test('navClasses: border side and shadow strength are allowlisted, the shadow is
   assert.ok(navClasses(site({ variant: 'floating', style: { border: { side: 'all', width: 2 } } })).includes('urd-nav-border-all'));
   assert.ok(!navClasses(site({ style: { border: { side: 'left' } } })).includes('urd-nav-border-'));
   assert.ok(!navClasses(site({ style: { border: 'bottom' } })).includes('urd-nav-border-'));
+  assert.ok(!navClasses(site({ variant: 'side-left', style: { border: { side: 'bottom' } } })).includes('urd-nav-border-'));
+  assert.ok(!navClasses(site({ variant: 'side-right', style: { border: { side: 'all' } } })).includes('urd-nav-border-'));
   assert.ok(navClasses(site({ style: { shadow: 'soft' } })).includes('urd-nav-shadow-soft'));
   assert.ok(navClasses(site({ variant: 'bar', style: { shadow: 'strong' } })).includes('urd-nav-shadow-strong'));
   assert.ok(!navClasses(site({ variant: 'floating', style: { shadow: 'soft' } })).includes('urd-nav-shadow-'));
