@@ -2,7 +2,6 @@
   "version": 1,
   "enabled": [
     "calendar",
-    "form",
     "lang-sv",
     "analytics"
   ],

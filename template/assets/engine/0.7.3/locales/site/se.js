@@ -40,5 +40,12 @@ export default {
     'map.larger': 'Čájet stuorit kártta',
     'map.mapTitle': 'Kárta',
     'map.openOsm': 'Raba kártta OpenStreetMap:as',
+    'form.invalidEmail': 'Čále gustojeaddji e-poastačujuhusa',
+    'form.noRecipient': 'Skovis váilu vuostáiváldičujuhus.',
+    'form.required': '{label} ferte devdojuvvot',
+    'form.send': 'Sádde',
+    'form.sendFailed': 'Ii sáhttán sáddet juste dál. Geahččal fas maŋŋel.',
+    'form.subjectDefault': 'Oktavuohta neahttasiiddus',
+    'form.thanks': 'Giitu! Diehtu lea sáddejuvvon.',
   },
 };

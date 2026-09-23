@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.18.3): the form block in the core
+
+- [ ] Blocks panel: «Skjema» sits among the core blocks (after Kart), the search finds it, and «+ Ny blokk» in the preview lists it; a new form block comes with Navn, E-post and Melding in the admin language
+- [ ] Properties on a form block shows «Innstillinger …», which opens the config panel on the block in the preview: send mode, recipient and subject or endpoint, the field list with types, required and options, button text and confirmation; «Bruk» writes the props and re-renders
+- [ ] In the preview a filled form validates without sending (the preview message); on the published page mailto opens the email client with the fields in the body, and endpoint mode posts JSON (and explains the connect-src line when blocked)
+- [ ] The help chip and the gear sit together at the top right of the block; Ren visning hides both
+- [ ] «+ Ny seksjon»: «Kontaktskjema» is in Kort og lister with the core presets; the Plugins panel lists calendar, lang-sv and analytics only
+
 ### Testrunde-batch (0.7.18.2): the map block in the core
 
 - [ ] Blocks panel: «Kart» sits among the core blocks (after Ikon), the search finds it, and «+ Ny blokk» in the preview lists it; no «Plugins» group appears for it; the Hjem page's existing map renders exactly as before the move

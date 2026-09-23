@@ -28,6 +28,7 @@ export function makeId(prefix) {
 // module level. The module is in the visitor closure and gets bundled; at a
 // visitor the factories never run.
 import { ta } from '../i18n.js';
+import { defaultFormFields } from '../blocks/form.js';
 
 const autoMobile = () => ({ mobile: { mode: 'auto', attention: null } });
 
@@ -79,6 +80,20 @@ const map = (fr, props = {}) => ({
   type: 'map',
   version: 1,
   props: { location: '', zoom: 15, height: 320, ...props },
+  animation: null,
+  frames: fr,
+});
+
+/* Form block: mailto by default, the seed fields translated at insertion. */
+const form = (fr, props = {}) => ({
+  id: makeId('blk'),
+  type: 'form',
+  version: 1,
+  props: {
+    recipient: '', subject: '', mode: 'mailto', endpoint: '',
+    submitLabel: ta('form.sendDefault'), successText: ta('form.thanksDefault'), fields: defaultFormFields(),
+    ...props,
+  },
   animation: null,
   frames: fr,
 });
@@ -309,6 +324,19 @@ export function registerSectionPresets(Urd) {
     create: () => section('find-us', '480px', bg(colorLayer('bg')), [
       text(frame(6, 40, 60, 70), ta('seed.findUs.title')),
       map(frame(6, 120, 88, 360, 2)),
+    ]),
+  });
+
+  Urd.sections.define('contact-form', {
+    label: 'Contact form',
+    labelKey: 'preset.contact-form.label',
+    group: 'Cards and lists',
+    groupKey: 'presetGroup.cards',
+    hint: 'Contact form that sends via email (or your own endpoint)',
+    hintKey: 'preset.contact-form.hint',
+    create: () => section('contact-form', '520px', bg(colorLayer('bg')), [
+      text(frame(6, 40, 60, 120), ta('seed.contactForm.intro')),
+      form(frame(6, 180, 60, 380, 2)),
     ]),
   });
 

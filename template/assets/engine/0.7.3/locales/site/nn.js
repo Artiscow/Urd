@@ -37,5 +37,12 @@ export default {
     'map.larger': 'Vis større kart',
     'map.mapTitle': 'Kart',
     'map.openOsm': 'Opne kartet på OpenStreetMap',
+    'form.invalidEmail': 'Skriv ei gyldig e-postadresse',
+    'form.noRecipient': 'Skjemaet manglar mottakaradresse.',
+    'form.required': '{label} må fyllast ut',
+    'form.send': 'Send',
+    'form.sendFailed': 'Kunne ikkje sende akkurat no. Prøv igjen seinare.',
+    'form.subjectDefault': 'Førespurnad frå nettsida',
+    'form.thanks': 'Takk! Meldinga er send.',
   },
 };

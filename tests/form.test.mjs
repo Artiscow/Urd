@@ -1,12 +1,14 @@
 /**
- * Contract tests for the form plugin's pure logic (validation, honeypot, mailto building, payload).
+ * Contract tests for the form block's pure logic (validation, honeypot, mailto building, payload).
  * DOM rendering and submission are tested manually.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {
+import { engineImport } from './_engine.mjs';
+
+const {
   isEmail, isSpam, isIsoDate, validate, buildMailto, buildPayload, endpointOrigin,
-} from '../template/plugins/form/form.js';
+} = await engineImport('form-model.js');
 
 // Deliberate Norwegian field ids, labels and values throughout: form fields are user data.
 const FIELDS = [

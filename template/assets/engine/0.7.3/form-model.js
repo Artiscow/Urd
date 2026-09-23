@@ -1,7 +1,7 @@
 /**
- * Pure form logic for the form plugin (no DOM, no fetch): validation,
+ * Pure form logic for the form block (no DOM, no fetch): validation,
  * honeypot, mailto building and payload shaping. Everything here is
- * unit-tested in node; index.js handles rendering and submission.
+ * unit-tested in node; blocks/form.js handles rendering and submission.
  *
  * Visitor input is NEVER treated as HTML: the values are URL-encoded for
  * mailto and sent as JSON to an optional endpoint. The honeypot is a hidden
@@ -44,9 +44,9 @@ export function isIsoDate(value) {
  * @returns {{ ok: boolean, errors: Record<string,string> }}
  */
 export function validate(fields, values, messages = {}) {
-  // The message templates can be overridden (index.js passes the visitor
-  // language's texts via t()); the defaults are English, so the node tests
-  // stand on their own.
+  // The message templates can be overridden (blocks/form.js passes the
+  // visitor language's texts via t()); the defaults are English, so the
+  // node tests stand on their own.
   const requiredMsg = messages.required ?? '{label} is required';
   const emailMsg = messages.email ?? 'Enter a valid email address';
   const choiceMsg = messages.choice ?? 'Choose one of the options';

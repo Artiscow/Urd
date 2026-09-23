@@ -27,6 +27,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.18.3 - Form into the core - 24 September 2026
+
+- The form block moved from `plugins/form/` into the engine: `blocks/form.js` with the pure `form-model.js` (the tests repointed through `engineImport`), registered like the other core blocks with the ids `form` and `contact-form` and the legacy aliases unchanged. The config panel behind the gear stays inside the preview and loads `dropdown.js` and `hint.js` dynamically, so the editor-only modules stay out of the visitor closure. The injected style tag became base.css rules, the dictionary was split into visitor keys (`form.*` in `locales/site/*`) and editing keys (`blocks.form`, the panel's `form.*` keys, `hintForm.*`, `preset.contact-form.*`, `seed.contactForm.intro` in `locales/admin/*`, nn and se carried over), and the «Kontaktskjema» preset lives in sections/presets.js with the seed fields from `defaultFormFields`.
+- Editor: «Skjema» in the block labels, defaults, palette, search and the preview's block menu; Properties keeps the «Innstillinger …» button that opens the gear. The plugin folder is gone, `plugins.json` lists calendar, lang-sv and analytics, and the validator's manifest list follows.
+- Docs: SCHEMA.md (the block list and the `form` props), TESTRUNDER batch (0.7.18.3).
+
 ### 0.7.18.2 - Map into the core - 24 September 2026
 
 - The map block moved from `plugins/map/` into the engine: `blocks/map.js` with the pure `osm.js` (the tests repointed through `engineImport`), registered like the other core blocks with the ids `map` and `find-us` and the legacy aliases unchanged, so existing pages render as before. The plugin's injected style tag became base.css rules, its dictionary was split into visitor keys (`map.*` in `locales/site/*`) and editing keys (`blocks.map`, `lbl.map*`, `canvas.map*`, `hintMap.*`, `preset.find-us.*`, `seed.findUs.title` in `locales/admin/*`, nn and se carried over), and the «Finn oss» preset lives in sections/presets.js.

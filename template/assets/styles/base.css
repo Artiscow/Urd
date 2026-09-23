@@ -778,6 +778,263 @@ html {
   opacity: 0.6;
 }
 
+/* The form block: the visitor form, and (in the preview) the config panel
+   behind the gear next to the help chip. */
+.urd-form {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+
+.urd-form-form {
+  display: grid;
+  gap: 12px;
+}
+
+.urd-form-row {
+  display: grid;
+  gap: 4px;
+}
+
+.urd-form-label {
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.urd-form-input {
+  width: 100%;
+  padding: 8px 10px;
+  font: inherit;
+  color: inherit;
+  background: var(--urd-color-surface);
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 22%, transparent);
+  border-radius: var(--urd-radius-sm);
+}
+
+.urd-form-input:focus {
+  outline: 2px solid var(--urd-color-accent);
+  outline-offset: 1px;
+}
+
+textarea.urd-form-input {
+  min-height: 90px;
+  resize: vertical;
+}
+
+/* Native select and date input for visitors (ADR-0009 covers editing UI only):
+   color-scheme lets the popup and the date picker follow the user's OS theme. */
+.urd-form-select,
+.urd-form-input[type="date"] {
+  color-scheme: light dark;
+}
+
+.urd-form-fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.urd-form-fieldset legend {
+  margin-bottom: 4px;
+  padding: 0;
+}
+
+.urd-form-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.urd-form-check input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--urd-color-accent);
+}
+
+.urd-form-checkrow .urd-form-label {
+  font-weight: 400;
+}
+
+.urd-form-error {
+  min-height: 0;
+  font-size: 0.8em;
+  color: #e05252;
+}
+
+.urd-form-error:empty {
+  display: none;
+}
+
+.urd-form-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.urd-form-submit {
+  justify-self: start;
+  padding: 10px 20px;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  background: var(--urd-color-accent);
+  border: 0;
+  border-radius: var(--urd-radius-sm);
+  cursor: pointer;
+}
+
+.urd-form-submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.urd-form-status {
+  margin: 0;
+  font-size: 0.9em;
+}
+
+.urd-form-status.ok {
+  color: color-mix(in srgb, #4ac26b 85%, var(--urd-color-text));
+}
+
+.urd-form-status.error {
+  color: #e05252;
+}
+
+.urd-form-tools {
+  position: absolute;
+  top: -32px;
+  right: -6px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  /* An invisible bridge down to the block edge, so hover survives the trip up */
+  padding-bottom: 8px;
+}
+
+.urd-form-tools .urd-hint-chip {
+  position: static;
+}
+
+/* The config toggle is hidden: the settings open from the block's Properties panel. */
+.urd-form-gear {
+  display: none;
+}
+
+.urd-form-config {
+  position: absolute;
+  top: -6px;
+  right: 0;
+  z-index: 6;
+  display: none;
+  gap: 6px;
+  width: min(360px, 92vw);
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 12px;
+  font: 12px/1.4 system-ui, sans-serif;
+  color: #e8eaf0;
+  background: #151a23;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 10px;
+  box-shadow: 0 12px 36px rgb(0 0 0 / 55%);
+}
+
+.urd-form-config.visible {
+  display: grid;
+}
+
+.urd-form-config-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.urd-form-config-box {
+  display: grid;
+  gap: 6px;
+}
+
+.urd-form-config-note {
+  margin: 0;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.urd-form-config-input {
+  width: 100%;
+  padding: 5px 7px;
+  font: 12px/1.4 system-ui, sans-serif;
+  color: inherit;
+  background: rgb(255 255 255 / 6%);
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 6px;
+}
+
+.urd-form-fieldlist {
+  display: grid;
+  gap: 6px;
+}
+
+.urd-form-fieldrow {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.urd-form-fieldopts {
+  margin: -2px 0 2px;
+}
+
+.urd-form-fieldreq {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.urd-form-fielddel {
+  padding: 2px 6px;
+  font: inherit;
+  color: #e05252;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.urd-form-addfield,
+.urd-form-apply {
+  padding: 7px 10px;
+  font: 600 12px/1 system-ui, sans-serif;
+  color: inherit;
+  background: rgb(255 255 255 / 8%);
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.urd-form-apply {
+  color: #fff;
+  background: #7c5cff;
+  border: 0;
+}
+
+body.urd-chrome-off .urd-form-gear,
+body.urd-chrome-off .urd-form-config {
+  display: none !important;
+}
+
 .urd-preview .urd-audio-empty {
   display: grid;
   place-items: center;

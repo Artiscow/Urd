@@ -1249,7 +1249,7 @@
   // bar's typography row).
 
   /** Names of the block types in the panel. */
-  const BLOCK_LABELS = { text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), gallery: ta('blocks.gallery'), faq: ta('blocks.faq'), collection: ta('blocks.collection'), timeline: ta('blocks.timeline'), quote: ta('blocks.quote'), stats: ta('blocks.stats'), table: ta('blocks.table'), share: ta('blocks.share'), countdown: ta('blocks.countdown'), audio: ta('blocks.audio'), product: ta('blocks.product'), cart: ta('blocks.cart'), checkout: ta('blocks.checkout'), map: ta('blocks.map') };
+  const BLOCK_LABELS = { text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), gallery: ta('blocks.gallery'), faq: ta('blocks.faq'), collection: ta('blocks.collection'), timeline: ta('blocks.timeline'), quote: ta('blocks.quote'), stats: ta('blocks.stats'), table: ta('blocks.table'), share: ta('blocks.share'), countdown: ta('blocks.countdown'), audio: ta('blocks.audio'), product: ta('blocks.product'), cart: ta('blocks.cart'), checkout: ta('blocks.checkout'), map: ta('blocks.map'), form: ta('blocks.form') };
   const SHAPE_KINDS = [
     ['line', ta('shape.line')], ['arrow', ta('shape.arrow')], ['circle', ta('shape.circle')],
     ['rect', ta('shape.rect')], ['triangle', ta('shape.triangle')],
@@ -4649,6 +4649,19 @@
     image: { type: 'image', props: { src: '', alt: '', fit: 'cover', radius: 'md', href: null }, w: 30, h: 220 },
     video: { type: 'video', props: { url: '', title: 'Video' }, w: 45, h: 300 },
     map: { type: 'map', props: { location: '', zoom: 15, height: 320 }, w: 60, h: 360 },
+    form: {
+      type: 'form',
+      props: {
+        recipient: '', subject: '', mode: 'mailto', endpoint: '',
+        submitLabel: ta('form.sendDefault'), successText: ta('form.thanksDefault'),
+        fields: [
+          { id: 'navn', label: ta('form.fieldName'), type: 'text', required: true },
+          { id: 'epost', label: ta('form.fieldEmail'), type: 'email', required: true },
+          { id: 'melding', label: ta('form.fieldMessage'), type: 'textarea', required: true },
+        ],
+      },
+      w: 50, h: 380,
+    },
     icon: { type: 'icon', decor: true, hideMobile: true, props: { glyph: '★', color: 'accent', size: 48 }, w: 8, h: 64 },
     collection: { type: 'collection', props: { collection: null, view: 'cards', limit: 6, newestFirst: true }, w: 90, h: 200 },
     gallery: { type: 'gallery', props: { images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5 }, w: 90, h: 320 },
@@ -4844,6 +4857,7 @@
       { label: ta('blocks.video'), act: 'block', kind: 'video' },
       { label: ta('blocks.icon'), act: 'block', kind: 'icon' },
       { label: ta('blocks.map'), act: 'block', kind: 'map' },
+      { label: ta('blocks.form'), act: 'block', kind: 'form' },
       { label: ta('blocks.collection'), act: 'block', kind: 'collection' },
       { label: ta('blocks.faq'), act: 'block', kind: 'faq' },
       { label: ta('blocks.timeline'), act: 'block', kind: 'timeline' },
@@ -6573,6 +6587,8 @@
                   onclick={() => addBlock('icon')}>{ta('blocks.icon')}</button>
                 <button class="ghost" title={ta('tip.blocks.map')}
                   onclick={() => addBlock('map')}>{ta('blocks.map')}</button>
+                <button class="ghost" title={ta('tip.blocks.form')}
+                  onclick={() => addBlock('form')}>{ta('blocks.form')}</button>
                 <button class="ghost" title={ta('tip.blocks.collection')}
                   onclick={() => addBlock('collection')}>{ta('blocks.collection')}</button>
                 <button class="ghost" title={ta('tip.blocks.faq')}
