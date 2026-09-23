@@ -17,27 +17,27 @@ Hvert mønster: hva det er, hvem som viser det godt, og hvor Urd står.
 ### 1.1 Innsetting (flere parallelle veier)
 En «+»-palett med kategorier og søk er universell. Oppå det: slash-kommandoer (Ghost, Gutenberg, Framer), command palette med Cmd+K/E som også konverterer og velger (Webflow Quick Find, Framer, Bricks), drag med to-farge drop-indikatorer (Webflow: oransje forelder + blå posisjon), drop rett i strukturtreet (Bricks, GrapesJS), lim-inn med auto-konvertering (Markdown/HTML til blokker), og AI-generering som en innsettingshandling (Framer W / Cmd+K). Flere veier tjener både nybegynnere og kraftbrukere.
 
-**Urd i dag:** «Blokker»-palett gruppert i kategorier + «+ Ny blokk»-meny ved pekeren + drag fra paletten. Ingen slash, ingen søk i paletten, ingen command palette.
+**Urd i dag (23. september 2026):** «Blokker»-palett gruppert i kategorier + «+ Ny blokk»-meny ved pekeren + drag fra paletten, søk i blokkvelgeren (levert 0.6.7.6, `palette-search.js`) og slash-kommando på lerretet (levert 0.6.7.7: «/» åpner blokkmenyen med søkefeltet fokusert; slash INNE i tekstblokker er fortsatt utsatt). Ingen command palette (backlog, milepæl 0.7.10).
 
 ### 1.2 Konfigurasjonsflater (tre sameksisterende lag)
 Høyrepanel-inspektør + kontekstuell flytende verktøylinje (skjult til noe er valgt) + inline på lerretet. Nesten alle deler panelet i Innhold vs Stil: Gutenberg (Settings/Styles), Elementor (Content/Style/Advanced), Bricks (Content/Style + en selector-rad for ID vs global klasse), Carrd (Main/Appearance/Settings), GrapesJS (Traits vs Style Manager).
 
-**Urd i dag:** Egenskaper-panel (kontekst) + Office-linjen (flytende, på markering) + inline klikk-og-skriv. Ikke en eksplisitt Innhold/Stil-deling.
+**Urd i dag (23. september 2026):** Egenskaper-panel (kontekst) + Office-linjen (flytende, på markering) + inline klikk-og-skriv. Egenskaper er delt i Innhold/Stil-segmentfaner (levert 0.6.6.6.2, panelspråket i [ADR-0016](../adr/0016-panel-language.md)).
 
 ### 1.3 Struktur/lag-tre
 List View (WP), Navigator (Webflow/Elementor), Structure Panel (Bricks), Layer Manager (GrapesJS) for valg, omrokkering og låsing. Forventet så snart sider blir ikke-trivielle.
 
-**Urd i dag:** ingen; «lagpanel» er en strekk-idé i backloggen.
+**Urd i dag (23. september 2026):** ingen; lagpanelet (blokkliste per seksjon for overlappende blokker) ligger i backloggens milepæl 0.7.9.
 
 ### 1.4 Globalt design (token-/tema-paneler)
 theme.json + Global Styles (WP), Site Settings + ett-klikks Kits (Elementor), Global Classes + Color Manager (Bricks), fargetema per seksjon + font-pakker (Squarespace), color/text styles (Framer), Element Styles (Carrd, enklest). Lys/mørk-moduser og per-breakpoint-verdier skiller de sterke.
 
-**Urd i dag:** Tema-panel med token-swatches, tema-forslag, lys/mørk-avledning; ingen font-pakke-som-ett-valg.
+**Urd i dag (23. september 2026):** Tema-panel med token-swatches, tema-forslag, lys/mørk-avledning og «Auto» for tekst på aksentflater via `contrast-color()` (0.7.12); ingen font-pakke-som-ett-valg (ligger i milepæl 0.7.9).
 
 ### 1.5 Gjenbruk med synk
 Synced vs un-synced patterns (WP), components/symbols med varianter (Framer/Bricks/Silex), Ghost snippets (lagre utvalg, dukker opp i samme innsettingspalett), Carrd Element Styles. Snippets-modellen er den letteste veien: lagre et utvalg, og det dukker opp i akkurat den samme innsettingsmenyen.
 
-**Urd i dag:** seksjonspresets; «Lagre som mal» er planlagt (0.6.7).
+**Urd i dag (23. september 2026):** seksjonspresets, «Lagre som mal» med Mine maler i seksjonsgalleriet (levert 0.6.7.3), side-maler (0.6.7.10) og blokkgrupper som gjenbrukbare etter snippets-modellen (levert 0.6.7.5: lagrede grupper dukker opp i de eksisterende innsettingsmenyene, alltid som uavhengige kopier, aldri synkede symboler).
 
 ### 1.6 Tilstander og interaksjoner
 To filosofier: CSS-pseudo-tilstander (Webflow: selector -> states, med arv) mot Framers variants (navngitte visuelle tilstander som dekker hover, scroll og responsiv med automatisk tweening). Framers variant-modell er den mest visuelle og enhetlige.
@@ -47,12 +47,12 @@ To filosofier: CSS-pseudo-tilstander (Webflow: selector -> states, med arv) mot 
 ### 1.7 Responsiv levering
 Breakpoint-switcher + desktop-ned-cascade + per-breakpoint-overrides overalt. Skillefunn: Wix Studios docking-kontroll (visuell anker mot foreldre-kanter), Squarespace' separat redigerbare mobil-layout i Fluid Engine, og Wix Responsive AI (fiks én seksjon om gangen, en avgrenset og tillitsbyggende AI-handling).
 
-**Urd i dag:** to breakpoints, auto-stabling + manuell overstyring + mobil-tilsyn (Urds svar på Wix Studios responsive-skanner).
+**Urd i dag (23. september 2026):** to breakpoints. Desktop: bundet innholdsbredde med full-bredde seksjonsbakgrunn ([ADR-0018](../adr/0018-bound-content-width.md)), proporsjonal `zoom`-skalering ned til et gulv under designbredden (ADR-0018-tillegget, 0.7.17) og innholdsdytt som flytter blokkene under en blokk som vokser ([ADR-0024](../adr/0024-content-push-on-the-desktop-canvas.md)). Mobil: radgriden med synket overstyring per blokk ([ADR-0019](../adr/0019-synced-mobile-model.md)) + mobil-tilsyn (Urds svar på Wix Studios responsive-skanner). Forhåndsvisningen er festet til reelle enheter, der Skjerm følger eierens eget vindu eller en redigeringsstørrelse.
 
 ### 1.8 Seksjon-/mønster-/mal-gallerier
 «Add section» åpner et miniatyr-galleri. Squarespace' «View Layouts» bytter hele seksjonens oppsett fra miniatyrer på hover uten å flytte blokker manuelt; Wix Studio har Wireframes og Design Kits; lagrede seksjoner er gjenbruk. Både blank og ferdigdesignet start senker blank-lerret-terskelen.
 
-**Urd i dag:** preset-miniatyrer i «+ Ny seksjon».
+**Urd i dag (23. september 2026):** preset-miniatyrer i «+ Ny seksjon» med kategori-sidefelt (0.6.7.13), Mine maler i samme galleri (0.6.7.3), «Bytt oppsett» i seksjonsverktøylinjen etter View Layouts-mønsteret (levert 0.6.7.9) og fem innebygde side-maler (0.6.7.12).
 
 ### 1.9 AI og veivisere som leveringsmåte
 Den dominerende nye formen: prompt til generert flersidig start til fullt redigerbart lerret (Wix, Framer, Hostinger, Durable, GoDaddy, B12, Squarespace Blueprint). Verdt å merke:
@@ -112,7 +112,7 @@ Erstatter: div + `aria-expanded` togglet av JS som animerer `max-height` mot et 
 <button onclick="lb.showModal()">Åpne</button>
 ```
 
-Erstatter: en `position: fixed` overlay-div, hjemmelaget fokusfelle, manuell `body{overflow:hidden}`, outside-click- og Esc-lyttere, og z-index-eskalering. Fjerner: fokus som rømmer til bakgrunnen, z-index/stacking-kriger, scroll-lekkasje, og lekkede globale lyttere. `closedby` mangler i Safari stabil -> en 4-linjers JS-fallback (lukk når klikkmålet er selve `<dialog>`).
+Erstatter: en `position: fixed` overlay-div, hjemmelaget fokusfelle, manuell `body{overflow:hidden}`, outside-click- og Esc-lyttere, og z-index-eskalering. Fjerner: fokus som rømmer til bakgrunnen, z-index/stacking-kriger, scroll-lekkasje, og lekkede globale lyttere. `closedby` mangler i Safari stabil -> en 4-linjers JS-fallback (lukk når klikkmålet er selve `<dialog>`). Urds lysboks bruker nettopp denne fallbacken (`lightbox.js`: et bakgrunnsklikk lukker) og setter ikke `closedby`.
 
 **Popover og meny.** Popover API: sett `popover` på et element og koble en trigger med `popovertarget`. Null JS for åpne/lukke, top-layer, og lett-lukk. `auto` (dropdowns/menyer), `manual` (vedvarende paneler), `hint` (tooltips over en åpen meny).
 
@@ -121,7 +121,7 @@ Erstatter: en `position: fixed` overlay-div, hjemmelaget fokusfelle, manuell `bo
 <div id="meny" popover><a href="/a">Profil</a><a href="/b">Innstillinger</a></div>
 ```
 
-Erstatter: JS dropdown-widgets med egen åpen-tilstand, outside-click-lytter, Esc-håndtering og z-index-styring. Fjerner den evige outside-click-fella («klikket som åpnet den lukker den straks») og at dropdowns klippes av `overflow: hidden`.
+Erstatter: JS dropdown-widgets med egen åpen-tilstand, outside-click-lytter, Esc-håndtering og z-index-styring. Fjerner den evige outside-click-fella («klikket som åpnet den lukker den straks») og at dropdowns klippes av `overflow: hidden`. I bruk i Urd fra 0.7.12, sammen med forankringen under.
 
 **Tooltip og forankret UI.** CSS Anchor Positioning fester et element til et anker og flipper det for å holde seg på skjermen, i ren CSS kombinert med en popover:
 
@@ -130,7 +130,7 @@ Erstatter: JS dropdown-widgets med egen åpen-tilstand, outside-click-lytter, Es
 .tooltip { position: fixed; position-anchor: --btn; position-area: block-start center; position-try-fallbacks: flip-block; }
 ```
 
-Erstatter: Popper.js / Floating UI, som leser `getBoundingClientRect()` på hver scroll/resize og skriver inline-transform hver frame. Fjerner scroll/resize-lytter-reflow-loopen og at popovers klippes. IKKE baseline (~82% tidlig 2026) -> gate med `@supports (anchor-name: --x)`, statisk fallback.
+Erstatter: Popper.js / Floating UI, som leser `getBoundingClientRect()` på hver scroll/resize og skriver inline-transform hver frame. Fjerner scroll/resize-lytter-reflow-loopen og at popovers klippes. Kjernen er Baseline 2026 (se innledningen), men `position-try-fallbacks` er nyere -> gate med `@supports (anchor-name: --x)` og nøstet `@supports (position-try-fallbacks: flip-block)`, fallback uten forankring. I bruk i Urd fra 0.7.12: editorens og motorens flytende menyer (`Dropdown.svelte`, `ColorPicker.svelte`, `GlyphPicker.svelte`, `dropdown.js`, `color-picker.js`) tar den native grenen bare når `anchored.js` finner Popover API, `anchor-name` OG `position-try-fallbacks`; ellers står den målende JS-grenen (ADR-0011-tillegget).
 
 **Sticky.** `position: sticky` med en terskel holder elementet i flyt og pinner det under scroll, uten JS. `scroll-state(stuck)` container queries kan restyle en header i det den fester seg. Feller å kode: sticky svikter stille hvis en forfar mellom elementet og scroll-roten har `overflow: hidden|auto|scroll` (bruk `overflow: clip` når du bare vil klippe); det sitter kun innenfor sin containing block. Bruk `position: fixed` for elementer som skal klistres til viewporten (cookie-banner, flytende hjelpeknapp), men merk at en forfar med `transform`/`filter`/`backdrop-filter`/`contain` bryter `fixed` til å bli container-relativ, en vanlig, subtil bug.
 
@@ -183,7 +183,7 @@ Native responsive bilder + eksplisitte mål + native lastehint:
 @keyframes fade-in { from { opacity:0; translate:0 2rem } to { opacity:1; translate:0 } }
 ```
 
-Firefox har dette bak flagg tidlig 2026 -> gate med `@supports (animation-timeline: view())`; fallback = elementet står i sluttilstand (aldri skjult). **`@starting-style` + `transition-behavior: allow-discrete`** animerer inn/ut av `display:none` og top-layer i ren CSS (Safari mangler `overlay allow-discrete`, så top-layer-lukk snapper der). **View Transitions API**, spesielt CROSS-DOCUMENT (`@view-transition { navigation: auto }`, null JS), er ideelt for et statisk flersides nettsted. **`scroll-behavior: smooth`** for ankerlenker. **`prefers-reduced-motion`** som vakt over alt dette.
+Firefox har dette bak flagg tidlig 2026 -> gate med `@supports (animation-timeline: view())`; fallback = elementet står i sluttilstand (aldri skjult). Urds parallaks kjører slik fra 0.6.6.5.7, med rAF-varianten som fallback. **`@starting-style` + `transition-behavior: allow-discrete`** animerer inn/ut av `display:none` og top-layer i ren CSS (Safari mangler `overlay allow-discrete`, så top-layer-lukk snapper der). **View Transitions API**, spesielt CROSS-DOCUMENT (`@view-transition { navigation: auto }`, null JS), er ideelt for et statisk flersides nettsted (i bruk i Urd fra 0.6.0.5). **`scroll-behavior: smooth`** for ankerlenker. **`prefers-reduced-motion`** som vakt over alt dette.
 
 **Observers er fortsatt riktig for LOGIKK, ikke animasjon:** `IntersectionObserver` for impresjoner, aktiv-seksjon-uthevning, lazy-instansiering, video play/pause; `ResizeObserver` for canvas-backing-størrelse og JS-diagrammer. Begge unngår scroll/resize-lytter-anti-mønsteret.
 
@@ -194,14 +194,14 @@ Firefox har dette bak flagg tidlig 2026 -> gate med `@supports (animation-timeli
 - **Framer Motion:** oppdager `ScrollTimeline` og gir animasjonen til kompositor, bruker pooled `IntersectionObserver`, og animerer kun `transform`/`opacity`.
 - **Rik tekst:** Ghost (Lexical), ProseMirror og Slate bruker en DOKUMENTMODELL som sannhet og behandler `contenteditable` kun som input/render-flate, fordi rå contenteditable gir inkonsistent DOM på tvers av nettlesere, ødelagt seleksjon/caret, paste-søppel og manglende undo.
 
-### Støtte-tier (tidlig 2026, alltid gated)
+### Støtte-tier (tidlig 2026, kontrollert på nytt 10. august og 23. september 2026, alltid gated)
 
 | Teknikk | Status | Strategi |
 |---|---|---|
-| scroll-snap, `<dialog>`/`showModal`/`::backdrop`, `position: sticky`, CSS Grid, flex `gap`, `clamp()`, `:has()`, `aspect-ratio`, `prefers-reduced-motion` | Universell baseline | Bruk direkte |
-| Popover API (`auto`/`manual`), `<details name>`, subgrid, container queries, `light-dark()`, `color-mix()`, `@property`, `@starting-style`+`allow-discrete` | Baseline (ny) ~90%+ | Bruk; liten fallback for halen |
-| `::details-content`, View Transitions (same-doc + cross-doc), scroll-drevne animasjoner | Bred, men ikke overalt (Firefox/Safari-hull) | Gate med `@supports`; degrader til sluttilstand |
-| `::scroll-button`/`::scroll-marker`, `scroll-state()`, anchor positioning, `closedby`, `appearance: base-select`, `interpolate-size` | Kun nyeste (ofte Chromium) | Ren progressiv forbedring |
+| scroll-snap, `<dialog>`/`showModal`/`::backdrop`, `position: sticky`, CSS Grid, flex `gap`, `clamp()`, `:has()`, `aspect-ratio`, `prefers-reduced-motion` | Universell baseline | Bruk direkte. I bruk i Urd: scroll-snap (galleri-karusellen), `<dialog>` (lysboks, handlekurv, produkt-hurtigvisning), `:has()` (scrollås via `body:has(dialog:modal)`, 0.6.0.5) |
+| Popover API (`auto`/`manual`), anchor positioning (kjernen: `anchor-name`/`position-anchor`/`position-area`), `<details name>`, subgrid, container queries, `light-dark()`, `color-mix()`, `@property`, `@starting-style`+`allow-discrete` | Baseline (ny) ~90%+ | Bruk; liten fallback for halen. I bruk i Urd: Popover API + anchor positioning i de fem flytende menyene bak feature-sjekk (0.7.12), `<details name>` i faq (0.6.6.5.7), `light-dark()` i temaet (0.6.6.5.11), `color-mix()` i theme.js |
+| `::details-content`, View Transitions (same-doc + cross-doc), scroll-drevne animasjoner | Bred, men ikke overalt (Firefox/Safari-hull) | Gate med `@supports`; degrader til sluttilstand. I bruk i Urd, alle bak sin gate: `::details-content` i faq (0.6.6.5.7), cross-document View Transitions (0.6.0.5), scroll-drevet parallaks (0.6.6.5.7) |
+| `::scroll-button`/`::scroll-marker`, `scroll-state()`, `position-try-fallbacks`, `closedby`, `appearance: base-select`, `interpolate-size` | Kun nyeste (ofte Chromium) | Ren progressiv forbedring. I bruk i Urd: `position-try-fallbacks` er selve gaten for menyenes native gren (0.7.12), `interpolate-size` bak `@supports` i faq; `::scroll-marker` og `base-select` står som vaktliste under 0.7.0 i backloggen |
 | Native masonry (`grid-lanes`/`item-flow`) | Flagg/Tech Preview, i flyt | Ikke stole på ennå |
 
 ---
@@ -224,9 +224,9 @@ Per kategori, med (a) hvordan det tilbys og (b) slik bygges det moderne. For par
 
 ## 4. Hva Urd gjør i dag, mot mønstrene og teknikkene
 
-**Leveranse-siden.** Urd treffer allerede flere leveringsmønstre: inline klikk-og-skriv + Office-linjen (1.2), preset-miniatyrer (1.8), token-swatches i Tema-panelet (1.4), tomtilstand + hjelpechip (1.10), temastyrt Dropdown (aldri native select). Tynt i dag: ingen slash/søk-innsetting eller command palette (1.1), ingen Innhold/Stil-splitt (1.2), ingen struktur/lag-tre (1.3), ingen gjenbrukbare grupper (1.5).
+**Leveranse-siden (status 23. september 2026).** Urd treffer de fleste leveringsmønstrene: inline klikk-og-skriv + Office-linjen og Innhold/Stil-fanene (1.2, ADR-0016), slash-kommando og søk i blokkvelgeren (1.1, 0.6.7.6 og 0.6.7.7), preset-miniatyrer med Mine maler og «Bytt oppsett» (1.8, 0.6.7.3 og 0.6.7.9), gjenbrukbare blokkgrupper etter snippets-modellen (1.5, 0.6.7.5), token-swatches i Tema-panelet (1.4), tomtilstand + hjelpechip (1.10), temastyrt Dropdown (aldri native select). Gjenstår: command palette (1.1, backlog 0.7.10) og struktur/lag-tre (1.3, backlog 0.7.9).
 
-**Bygge-siden.** Urd koder allerede flere av de moderne invariantene fra del 2 og 7: `crypto.getRandomValues` (ikke `randomUUID`), AbortController-skopede lyttere som kobles fra ved rerender, autovekst som melder KUN høyde (ingen teleport), ingen native select i temastyrt UI, hover vaktet med `pointerType === 'mouse'`, snapshot før `postMessage`, `IntersectionObserver` for entré, faq som disclosure, og målt runner for sømløs pan-loop-gradient. Mulige flytt til native/CSS (status 29. juli 2026: faq, lightbox/modal og parallaks er flyttet, levert 0.6.6.5.7; tema uten FOUC levert 0.6.6.5.11; menyer var utsatt til anchor positioning ble baseline, og den gaten åpnet 10. august 2026 - arbeidet er milepæl 0.7.12, som fant at det STØRSTE bruksstedet ikke er nav men fire håndrullede popovere i editor og motor: `Dropdown.svelte`, motorens `dropdown.js`, `ColorPicker.svelte` og `GlyphPicker.svelte`): faq -> `<details name>`; egen lightbox -> `<dialog>`; egne menyer -> Popover API; rAF-parallaks -> scroll-drevet CSS bak `@supports`; sticky-JS der `position: sticky` holder.
+**Bygge-siden (status 23. september 2026).** Urd koder allerede flere av de moderne invariantene fra del 2 og 7: `crypto.getRandomValues` (ikke `randomUUID`), AbortController-skopede lyttere som kobles fra ved rerender, autovekst som melder KUN høyde (ingen teleport; rammen røres aldri, ADR-0024), ingen native select i temastyrt UI, hover vaktet med `pointerType === 'mouse'`, snapshot før `postMessage`, `IntersectionObserver` for entré (bevisst beholdt, ADR-0011), og målt runner for sømløs pan-loop-gradient. Flyttene til native/CSS er levert: faq -> `<details name>`, egen lightbox -> `<dialog>` og rAF-parallaks -> scroll-drevet CSS bak `@supports` (0.6.6.5.7); tema uten FOUC via `light-dark()` + `color-scheme` (0.6.6.5.11); cross-document View Transitions, scrollås via `body:has(dialog:modal)` og myk ankerscroll (0.6.0.5); gradient pan/orbit på `transform` i stedet for `background-position` (0.6.0.6); og egne menyer -> Popover API + anchor positioning (0.7.12, gaten åpnet 10. august 2026; runden fant at det STØRSTE bruksstedet ikke var nav men fem håndrullede popovere i editor og motor: `Dropdown.svelte`, `ColorPicker.svelte`, `GlyphPicker.svelte`, motorens `dropdown.js` og `color-picker.js`). Gjenstår kun sticky-JS: festede blokker pinnes med `position: fixed` fra `sticky.js` med vilje, siden `position: sticky` aldri kan stikke ut av sin egen container og «slipp taket»-modellen (fest forbi egen seksjon) trenger fri hånd.
 
 ---
 
@@ -235,27 +235,27 @@ Per kategori, med (a) hvordan det tilbys og (b) slik bygges det moderne. For par
 Rangert etter (passform x verdi / innsats). Rene funksjonshull (SEO, galleri, RSS osv.) er prioritert i [FUNKSJONSKART.md](FUNKSJONSKART.md#anbefalingene-c-funnene-prioritert); dette er leverings- og byggemåte-grep. Løpende status for 5b-grepene bor i backloggens «Moderniser til native/CSS»-seksjon.
 
 ### 5a. Leverings-grep (grensesnitt/UX)
-1. **Innhold/Stil-splitt + panelspråk-utrulling** (backlog-punkt 0.6.6.6 F). Svært høy passform. Middels innsats.
-2. **Slash-kommando + søkbar innsettingspalett.** Høy passform med Office-linjen. Middels.
-3. **Gjenbrukbare grupper (snippets-modellen).** Høy. Middels. Bygger på 0.6.7 «Lagre som mal».
-4. **Seksjons-galleri med «bytt oppsett».** Høy. Middels.
-5. **Struktur/lag-tre.** Høy. Middels.
-6. **Tydeligere drop-target (to-farge-indikator).** Middels-høy. Lav-middels.
-7. **Kuraterte designtokens som ett valg** (font-pakker + palett-temaer). Høy. Lav-middels.
-8. **Command palette (Cmd+K).** Middels-høy (kraftbrukere). Middels.
-9. **Rikere tomtilstander** (preset-forslag i tom seksjon/side). Høy. Lav.
-10. **AI-veiviser (opt-in, horisont).** Lav uten videre (krever ekstern tjeneste, mot avhengighetsfri). Høy. Kun som valgfritt tillegg via endepunkt. Oppdatert 10. august 2026: premisset gjelder fortsatt for en VEIVISER, men ikke for AI som helhet. En lokal MCP-server er avhengighetsfri og krever ingen ekstern tjeneste, og er valgt som veien i [ADR-0017](../adr/0017-ai-via-local-mcp-server.md).
+1. **Innhold/Stil-splitt + panelspråk-utrulling** (backlog-punkt 0.6.6.6 F). Svært høy passform. Middels innsats. LEVERT 0.6.6.6.2 (ADR-0016).
+2. **Slash-kommando + søkbar innsettingspalett.** Høy passform med Office-linjen. Middels. LEVERT: søk i blokkvelgeren 0.6.7.6, slash på lerretet 0.6.7.7 (slash inne i tekstblokker er utsatt).
+3. **Gjenbrukbare grupper (snippets-modellen).** Høy. Middels. Bygger på 0.6.7 «Lagre som mal». LEVERT 0.6.7.5 (på 0.6.7.3 «Lagre som mal»).
+4. **Seksjons-galleri med «bytt oppsett».** Høy. Middels. LEVERT 0.6.7.9.
+5. **Struktur/lag-tre.** Høy. Middels. Backlog: milepæl 0.7.9 (lagpanel).
+6. **Tydeligere drop-target (to-farge-indikator).** Middels-høy. Lav-middels. Backlog: milepæl 0.7.10 (leverings-grep fra sammenligningen).
+7. **Kuraterte designtokens som ett valg** (font-pakker + palett-temaer). Høy. Lav-middels. Backlog: milepæl 0.7.9.
+8. **Command palette (Cmd+K).** Middels-høy (kraftbrukere). Middels. Backlog: milepæl 0.7.10.
+9. **Rikere tomtilstander** (preset-forslag i tom seksjon/side). Høy. Lav. Backlog: milepæl 0.7.10 (intuitivitets-gjennomgangen).
+10. **AI-veiviser (opt-in, horisont).** Lav uten videre (krever ekstern tjeneste, mot avhengighetsfri). Høy. Kun som valgfritt tillegg via endepunkt. Oppdatert 10. august 2026: premisset gjelder fortsatt for en VEIVISER, men ikke for AI som helhet. En lokal MCP-server er avhengighetsfri og krever ingen ekstern tjeneste, og er valgt som veien i [ADR-0017](../adr/0017-ai-via-local-mcp-server.md). Backlog: lesedelen (MCP-server v1) i v0.8, skrivedelen i v0.9.
 
 ### 5b. Byggemåte-grep (native/CSS som sletter skjør JS)
-1. **Native top-layer for overlegg:** `<dialog>`/`showModal()` for lightbox/modal, Popover API for menyer. Fjerner z-index-krig, fokusfeller og outside-click-lyttere. Svært høy passform (Urd er vanilla). Middels.
-2. **`<details name>` for accordion/faq** (eksklusiv, finn-på-siden, null JS). Høy. Lav-middels.
-3. **CSS scroll-snap** (+ CSS carousel-primitiver bak `@supports`) for galleri-karusell. Høy. Middels.
-4. **Scroll-drevne CSS-animasjoner** for entré/parallaks bak `@supports` (fallback = sluttilstand), i stedet for rAF/scroll-listener. Høy. Middels.
-5. **`light-dark()` + `color-scheme`** (+ inline `<head>`-tema-skript for manuell overstyring) for tema uten FOUC. Middels-høy. Lav-middels.
-6. **`aspect-ratio` + `srcset`/`<picture>`/AVIF/`content-visibility`** (kobler til planlagt v0.8 responsive bilder). Høy. Middels.
-7. **Minimal-wrapper markup + per-side betinget lasting** av komponent-CSS/JS (kun der komponenten er på siden). Høy. Middels.
-8. **Cross-document View Transitions** (ren CSS) for side-overganger på det statiske nettstedet. Middels. Lav-middels.
-9. **Container queries + subgrid + `:has()`** der Urd i dag ville trengt JS eller media queries. Middels-høy. Middels.
+1. **Native top-layer for overlegg:** `<dialog>`/`showModal()` for lightbox/modal, Popover API for menyer. Fjerner z-index-krig, fokusfeller og outside-click-lyttere. Svært høy passform (Urd er vanilla). Middels. LEVERT: lysboksen som `<dialog>` 0.6.6.5.7 (handlekurv-skuffen og produkt-hurtigvisningen bygger på samme element), menyene på Popover API + anchor positioning 0.7.12.
+2. **`<details name>` for accordion/faq** (eksklusiv, finn-på-siden, null JS). Høy. Lav-middels. LEVERT 0.6.6.5.7.
+3. **CSS scroll-snap** (+ CSS carousel-primitiver bak `@supports`) for galleri-karusell. Høy. Middels. LEVERT for scroll-snap: galleri-karusellen er `.urd-gallery-track` med `scroll-snap-type: x mandatory` i base.css. Carousel-primitivene (`::scroll-marker`/`::scroll-button`) er ikke tatt; de står som vaktliste under 0.7.0 i backloggen.
+4. **Scroll-drevne CSS-animasjoner** for entré/parallaks bak `@supports` (fallback = sluttilstand), i stedet for rAF/scroll-listener. Høy. Middels. LEVERT for parallaks 0.6.6.5.7 (`animation-timeline: view()` bak `@supports`, rAF-varianten beholdt som fallback). Entré/stagger beholdes bevisst på IntersectionObserver (ADR-0011: `view()` ville reversere ved scroll opp, og engangs-avdekking er riktig bruk av Observer).
+5. **`light-dark()` + `color-scheme`** (+ inline `<head>`-tema-skript for manuell overstyring) for tema uten FOUC. Middels-høy. Lav-middels. LEVERT 0.6.6.5.11 (`light-dark()` bak `@supports` i base.css; den manuelle overstyringen går via `theme-init.js`, siden CSP-en ikke har `unsafe-inline`).
+6. **`aspect-ratio` + `srcset`/`<picture>`/AVIF/`content-visibility`** (kobler til planlagt v0.8 responsive bilder). Høy. Middels. Backlog: v0.8-bildearbeidet (AVIF-halvdelen er praktisk gjennomførbar siden `imageTools.js` alt koder i nettleseren via canvas; `content-visibility` for seksjoner under folden er eget v0.8-punkt og skal måles, ikke antas). `aspect-ratio` brukes alt i base.css (galleri-fliser med flere); `srcset`/`<picture>` er ikke tatt i bruk.
+7. **Minimal-wrapper markup + per-side betinget lasting** av komponent-CSS/JS (kun der komponenten er på siden). Høy. Middels. UTSATT (beslutning 5. august 2026, [ADR-0013](../adr/0013-immutable-engine-versioning.md)): per-side-varierende skall står i direkte spenning med både modulepreload-lista (anti-drift-testen krever at alle skall preloader hele lukningen) og kopi-oppfriskningsplikten (slug-kopiene må være byte-like roten); tas det opp igjen, må det løse begge. Minimal-wrapper-halvdelen er «har (delvis)» i del 6.
+8. **Cross-document View Transitions** (ren CSS) for side-overganger på det statiske nettstedet. Middels. Lav-middels. LEVERT 0.6.0.5 (`@view-transition { navigation: auto }` i base.css; nav og footer får `view-transition-name` kun innenfor selve overgangen, rent klipp ved redusert bevegelse).
+9. **Container queries + subgrid + `:has()`** der Urd i dag ville trengt JS eller media queries. Middels-høy. Middels. `:has()` I BRUK (scrollås via `body:has(dialog:modal)`, 0.6.0.5, og preview-chromen i base.css). Container queries er LUKKET av [ADR-0018](../adr/0018-bound-content-width.md) med en begrensning i stedet for et ønske: `container-type` gir layout-containment og dermed containing block for `position: fixed`, så de hører hjemme i blokk-INTERNALS (en samling eller et galleri som velger kolonnetall fra egen bredde; bruksstedene hører til 0.7.4 og 0.7.9), aldri på `.urd-canvas` og aldri på en blokk med sticky. Subgrid er ikke anvendelig så lenge lerretet er absolutt posisjonering.
 
 ---
 
@@ -265,16 +265,16 @@ Rangert etter (passform x verdi / innsats). Rene funksjonshull (SEO, galleri, RS
 
 | Gammel måte | Bug den gir | Moderne fiks | Urd |
 |---|---|---|---|
-| scroll/resize-lyttere som gjør layout; ikke-passive touch/wheel | jank; blokkert scroll; hundrevis av reflows/sek | `{passive:true}`; IntersectionObserver/ResizeObserver; scroll-drevet CSS | delvis |
-| absolutt posisjonering + eskalerende z-index | z-index-krig; overlegg fanget i en stacking-context | grid/flex for layout; top-layer via `<dialog>`/Popover | kode |
+| scroll/resize-lyttere som gjør layout; ikke-passive touch/wheel | jank; blokkert scroll; hundrevis av reflows/sek | `{passive:true}`; IntersectionObserver/ResizeObserver; scroll-drevet CSS | har (delvis: passive lyttere, Observers og scroll-drevet parallaks; `sticky.js` beholder en passiv scroll-lytter med vilje, se del 4) |
+| absolutt posisjonering + eskalerende z-index | z-index-krig; overlegg fanget i en stacking-context | grid/flex for layout; top-layer via `<dialog>`/Popover | har (`<dialog>` 0.6.6.5.7, Popover 0.7.12) |
 | rerender som river innerHTML og re-fester lyttere | stablede lyttere; elementer teleporterer; tapt fokus/scroll | reconciliation med stabile id-er; AbortController; meld kun høyde | har (delvis) |
-| native `<select>` i temastyrt UI | uleselig OS-chrome; brutt mørkt tema | Popover/anchor eller `appearance: base-select` | har |
+| native `<select>` i temastyrt UI | uleselig OS-chrome; brutt mørkt tema | Popover/anchor eller `appearance: base-select` | har (Popover + anchor fra 0.7.12) |
 | `:hover`/`mouseover` for interaktiv UI | hengende hover på touch/hybrid | `@media (hover:hover)` + `pointerType==='mouse'` | har |
 | `crypto.randomUUID()` for id-er | undefined/kast på usikker opprinnelse | `crypto.getRandomValues()` | har |
-| tema/størrelse via JS etter last; bilder uten mål | FOUC/tema-flash; CLS-layout-hopp | inline `<head>`-skript; `color-scheme`; `aspect-ratio` | kode |
+| tema/størrelse via JS etter last; bilder uten mål | FOUC/tema-flash; CLS-layout-hopp | inline `<head>`-skript; `color-scheme`; `aspect-ratio` | har (delvis: tema 0.6.6.5.11 og `aspect-ratio` i base.css; `srcset`/`<picture>` er v0.8) |
 | `postMessage` av proxy/reaktivt state | DataCloneError | snapshot til rene data før sending | har |
 | div-suppe (mange wrappere/auto-klasser) | stor DOM; dårlig LCP/minne | minimal-wrapper markup + per-side betinget asset-lasting | har (delvis) |
-| animere `top/left/width/background-position` | repaint-jank | animer kun `transform`/`opacity` | kode |
+| animere `top/left/width/background-position` | repaint-jank | animer kun `transform`/`opacity` | har (0.6.0.6) |
 | rå contenteditable som sannhet | inkonsistent DOM, seleksjon, paste, undo | dokumentmodell som sannhet, DOM avledet | kode (framtidig rik-tekst) |
 
 Flere av disse er allerede Urds motor-lekser (se AGENTS.md). De som er markert «kode» er kandidater til å kodes inn som invarianter eller ADR senere.
@@ -284,9 +284,9 @@ Flere av disse er allerede Urds motor-lekser (se AGENTS.md). De som er markert �
 ## 7. Ikke klart, eller bevisst ikke tatt
 
 - **Native masonry** (`grid-lanes`/`item-flow`) - i flyt, kun flagg/Tech Preview; ikke stole på.
-- **Anchor positioning, scroll-drevne animasjoner, `closedby`, `interpolate-size`** - gates alltid med `@supports`, aldri antatt.
+- **`closedby`, `interpolate-size`, `position-try-fallbacks`** - gates alltid med `@supports`, aldri antatt (anchor positioning og scroll-drevne animasjoner er i bruk bak sine gater, 0.7.12 og 0.6.6.5.7; se del 4).
 - **Ekstern AI-tjeneste som kjerneavhengighet** - mot avhengighetsfri/statisk. Avvisningen står, men den gjelder KJERNEAVHENGIGHETEN, ikke AI som sådan: [ADR-0017](../adr/0017-ai-via-local-mcp-server.md) (10. august 2026) velger en lokal MCP-server som verken ringer noe sted, lagrer nøkler eller er del av den bygde siden. Modellen er eierens egen, kjørt av eierens egen klient. En prompt-til-side-veiviser er fortsatt ikke planlagt.
-- **Absolutt fri posisjonering** (klassisk Wix) - responsivt skjørt.
+- **Absolutt fri posisjonering** (klassisk Wix) - responsivt skjørt. Urds lerret er absolutt posisjonering, men BUNDET: full-bredde seksjonsbakgrunn med innholdet i en fast innholdsbredde ([ADR-0018](../adr/0018-bound-content-width.md)), proporsjonal `zoom`-skalering ned til et gulv under designbredden (ADR-0018-tillegget), innholdsdytt som flytter blokkene under en blokk som vokser ([ADR-0024](../adr/0024-content-push-on-the-desktop-canvas.md)) og radgriden på mobil ([ADR-0019](../adr/0019-synced-mobile-model.md)).
 - **Klassebasert cascade-styling som kjerne** (Webflow/Bricks) - stylesheet-database-abstraksjon mot «rå filer, ingen bygging»; vurderes, ikke uten videre.
 - **Tunge marketplace-runtimes** (Framer/Elementor-økosystem) - Urds plugin-modell med CSP-opt-in er veien.
 
