@@ -24,7 +24,6 @@ ajv.addSchema(pageSchema); // mal.schema.json references the page schema's $defs
 
 const cases = [
   ['template/content/site.json', siteSchema.$id],
-  ['template/plugins/calendar/plugin.json', pluginSchema],
   ['template/plugins/lang-sv/plugin.json', pluginSchema],
 ];
 

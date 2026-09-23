@@ -502,7 +502,7 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
  */
 const BLOCK_KINDS = [
   ['text', ta('blocks.text')], ['text-box', ta('ui.textBox')], ['button', ta('blocks.button')],
-  ['image', ta('blocks.image')], ['video', ta('blocks.video')], ['icon', ta('blocks.icon')], ['map', ta('blocks.map')], ['form', ta('blocks.form')],
+  ['image', ta('blocks.image')], ['video', ta('blocks.video')], ['icon', ta('blocks.icon')], ['map', ta('blocks.map')], ['form', ta('blocks.form')], ['calendar', ta('blocks.calendar')],
   ['collection', ta('blocks.collection')], ['gallery', ta('blocks.gallery')], ['faq', ta('blocks.faq')],
   ['timeline', ta('blocks.timeline')], ['quote', ta('blocks.quote')], ['stats', ta('blocks.stats')],
   ['table', ta('blocks.table')], ['share', ta('blocks.share')], ['countdown', ta('blocks.countdown')],

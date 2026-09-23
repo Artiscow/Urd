@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.18.4): the calendar block in the core
+
+- [ ] Blocks panel: a «Kalender» group with Liste, Kort, Måned and Neste among the core groups, the search finds «Kalender: Måned», and «+ Ny blokk» in the preview lists Kalender; the two calendars on Hjem (list with a Google source, empty month) render exactly as before the move, and the published page shows the same
+- [ ] Properties on a calendar block shows «Innstillinger …», which opens the sources panel on the block: sources, the view segment, max count (list and cards only), the two toggles; «Bruk» writes the props and re-renders; without sources the preview shows the three demo events with the note
+- [ ] The parser is not preloaded: the Network panel shows ics.js requested only on a page with a calendar block, after the page has rendered
+- [ ] The help chip lists the seven lines; Ren visning hides the chip and the gear
+- [ ] «+ Ny seksjon»: «Hva skjer» is in Kort og lister with the core presets; the Plugins panel lists lang-sv and analytics only
+
 ### Testrunde-batch (0.7.18.3): the form block in the core
 
 - [ ] Blocks panel: «Skjema» sits among the core blocks (after Kart), the search finds it, and «+ Ny blokk» in the preview lists it; a new form block comes with Navn, E-post and Melding in the admin language

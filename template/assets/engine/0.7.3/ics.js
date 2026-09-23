@@ -1,7 +1,9 @@
 /**
  * Dependency-free iCal parser and recurrence expander for the calendar
- * plugin. A PURE module (no DOM, no fetch): everything here is unit-testable
- * in node, and index.js handles fetching and rendering.
+ * block. A PURE module (no DOM, no fetch): everything here is unit-testable
+ * in node, and blocks/calendar.js handles fetching and rendering. Loaded
+ * dynamically by the block on the first render of a calendar, so it stays
+ * outside the visitor closure.
  *
  * The scope is the practical subset that club calendars use (Google
  * Calendar, Outlook, Nextcloud): VEVENT with DTSTART/DTEND (UTC, TZID or

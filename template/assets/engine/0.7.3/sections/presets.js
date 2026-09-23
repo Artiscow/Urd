@@ -98,6 +98,16 @@ const form = (fr, props = {}) => ({
   frames: fr,
 });
 
+/* Calendar block: no sources yet, the owner pastes them in the sources panel. */
+const calendar = (fr, props = {}) => ({
+  id: makeId('blk'),
+  type: 'calendar',
+  version: 1,
+  props: { sources: [], view: 'list', limit: 6, showCategories: true, showSubscribe: true, ...props },
+  animation: null,
+  frames: fr,
+});
+
 const hoverLift = () => ({ type: 'hover-lift', version: 1, props: {} });
 
 /* Collection block (ADR-0007): collection is set by the owner in Properties; null gives a guiding empty state. */
@@ -324,6 +334,19 @@ export function registerSectionPresets(Urd) {
     create: () => section('find-us', '480px', bg(colorLayer('bg')), [
       text(frame(6, 40, 60, 70), ta('seed.findUs.title')),
       map(frame(6, 120, 88, 360, 2)),
+    ]),
+  });
+
+  Urd.sections.define('whats-on', {
+    label: 'What is on',
+    labelKey: 'preset.whats-on.label',
+    group: 'Cards and lists',
+    groupKey: 'presetGroup.cards',
+    hint: 'Event list from a subscribable calendar (iCal/Google)',
+    hintKey: 'preset.whats-on.hint',
+    create: () => section('whats-on', '520px', bg(colorLayer('bg')), [
+      text(frame(6, 40, 60, 70), ta('seed.whatsOn.title')),
+      calendar(frame(6, 130, 88, 320, 2), { limit: 5 }),
     ]),
   });
 

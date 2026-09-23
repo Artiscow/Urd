@@ -1,13 +1,15 @@
 /**
- * Contract tests for the calendar plugin's pure ICS module (parser, recurrence expansion and the conventions).
+ * Contract tests for the calendar block's pure ICS module (parser, recurrence expansion and the conventions).
  * DOM rendering and fetching are tested manually.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {
+import { engineImport } from './_engine.mjs';
+
+const {
   parseIcs, expandEvents, partsToMs,
   splitCategory, findSignupLink, normalizeSourceUrl, subscribeLinks,
-} from '../template/plugins/calendar/ics.js';
+} = await engineImport('ics.js');
 
 // The ICS fixtures carry deliberate Norwegian event content (titles, locations, signup lines): calendar feeds are user data.
 const wrap = (body) => `BEGIN:VCALENDAR\r\nX-WR-CALNAME:Testkalender\r\n${body}\r\nEND:VCALENDAR\r\n`;

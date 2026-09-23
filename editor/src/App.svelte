@@ -1249,7 +1249,7 @@
   // bar's typography row).
 
   /** Names of the block types in the panel. */
-  const BLOCK_LABELS = { text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), gallery: ta('blocks.gallery'), faq: ta('blocks.faq'), collection: ta('blocks.collection'), timeline: ta('blocks.timeline'), quote: ta('blocks.quote'), stats: ta('blocks.stats'), table: ta('blocks.table'), share: ta('blocks.share'), countdown: ta('blocks.countdown'), audio: ta('blocks.audio'), product: ta('blocks.product'), cart: ta('blocks.cart'), checkout: ta('blocks.checkout'), map: ta('blocks.map'), form: ta('blocks.form') };
+  const BLOCK_LABELS = { text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), gallery: ta('blocks.gallery'), faq: ta('blocks.faq'), collection: ta('blocks.collection'), timeline: ta('blocks.timeline'), quote: ta('blocks.quote'), stats: ta('blocks.stats'), table: ta('blocks.table'), share: ta('blocks.share'), countdown: ta('blocks.countdown'), audio: ta('blocks.audio'), product: ta('blocks.product'), cart: ta('blocks.cart'), checkout: ta('blocks.checkout'), map: ta('blocks.map'), form: ta('blocks.form'), calendar: ta('blocks.calendar') };
   const SHAPE_KINDS = [
     ['line', ta('shape.line')], ['arrow', ta('shape.arrow')], ['circle', ta('shape.circle')],
     ['rect', ta('shape.rect')], ['triangle', ta('shape.triangle')],
@@ -4662,6 +4662,10 @@
       },
       w: 50, h: 380,
     },
+    calendar: { type: 'calendar', props: { sources: [], view: 'list', limit: 6, showCategories: true, showSubscribe: true }, w: 60, h: 320 },
+    'calendar-cards': { type: 'calendar', props: { sources: [], view: 'cards', limit: 6, showCategories: true, showSubscribe: true }, w: 88, h: 320 },
+    'calendar-month': { type: 'calendar', props: { sources: [], view: 'month', limit: 6, showCategories: true, showSubscribe: true }, w: 88, h: 480 },
+    'calendar-next': { type: 'calendar', props: { sources: [], view: 'next', limit: 6, showCategories: true, showSubscribe: true }, w: 40, h: 180 },
     icon: { type: 'icon', decor: true, hideMobile: true, props: { glyph: '★', color: 'accent', size: 48 }, w: 8, h: 64 },
     collection: { type: 'collection', props: { collection: null, view: 'cards', limit: 6, newestFirst: true }, w: 90, h: 200 },
     gallery: { type: 'gallery', props: { images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5 }, w: 90, h: 320 },
@@ -4858,6 +4862,10 @@
       { label: ta('blocks.icon'), act: 'block', kind: 'icon' },
       { label: ta('blocks.map'), act: 'block', kind: 'map' },
       { label: ta('blocks.form'), act: 'block', kind: 'form' },
+      { label: `${ta('blocks.calendar')}: ${ta('calendar.viewList')}`, act: 'block', kind: 'calendar' },
+      { label: `${ta('blocks.calendar')}: ${ta('calendar.viewCards')}`, act: 'block', kind: 'calendar-cards' },
+      { label: `${ta('blocks.calendar')}: ${ta('calendar.viewMonth')}`, act: 'block', kind: 'calendar-month' },
+      { label: `${ta('blocks.calendar')}: ${ta('calendar.viewNext')}`, act: 'block', kind: 'calendar-next' },
       { label: ta('blocks.collection'), act: 'block', kind: 'collection' },
       { label: ta('blocks.faq'), act: 'block', kind: 'faq' },
       { label: ta('blocks.timeline'), act: 'block', kind: 'timeline' },
@@ -6622,6 +6630,15 @@
                       {ta('ui.galleryWithImages')}
                       <input type="file" accept="image/*" multiple onchange={addGalleryBlock} />
                     </label>
+                  </div>
+                </details>
+                <details class="group">
+                  <summary>{ta('blocks.calendar')}</summary>
+                  <div class="group-items">
+                    <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar')}>{ta('calendar.viewList')}</button>
+                    <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-cards')}>{ta('calendar.viewCards')}</button>
+                    <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-month')}>{ta('calendar.viewMonth')}</button>
+                    <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-next')}>{ta('calendar.viewNext')}</button>
                   </div>
                 </details>
                 <details class="group">

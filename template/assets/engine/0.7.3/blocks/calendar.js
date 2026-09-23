@@ -1,30 +1,22 @@
 /**
- * The calendar reference plugin: a subscribable event calendar built from
- * iCal feeds (Google Calendar, Nextcloud, Outlook and others), following the
- * ApeironLF design requirements. It is also the REFERENCE for plugin
- * authors: a manifest with provides, a block with version and migrations, a
- * section preset, its own CSS in one style tag, and editing in the preview
- * via urd-edit.
- *
- * Fetching ALWAYS goes through the site's own feed proxy (/api/ics): feed
- * hosts send no CORS, and the site's CSP allows connect-src 'self' only, so
- * the plugin needs no CSP exception. Locally, without functions, the preview
- * shows demo data and visitors get a quiet empty state.
+ * Core block: calendar. A subscribable event calendar built from iCal feeds
+ * (Google Calendar, Nextcloud, Outlook and others), following the ApeironLF
+ * design requirements. Fetching ALWAYS goes through the site's own feed proxy
+ * (/api/ics): feed hosts send no CORS, and the site's CSP allows connect-src
+ * 'self' only. Locally, without functions, the preview shows demo data and
+ * visitors get a quiet empty state.
  *
  * Views: list (date-badge rows), cards, month and next (a panel for the next
  * event). Conventions: "Category: Title" gives category chips with a filter,
- * and a signup link in the description becomes a button.
+ * and a signup link in the description becomes a button. The parser
+ * (ics.js) is loaded on the first render, never in the visitor closure; the
+ * sources panel (the gear, opened from Properties) and the help chip are
+ * editor chrome.
  */
-import {
-  parseIcs, expandEvents, splitCategory, findSignupLink,
-  normalizeSourceUrl, subscribeLinks,
-} from './ics.js';
-// Multilingual (ADR-0012): t() for visitor texts (the site language), ta()
-// for the editor chrome (the admin language), dates() for month and weekday
-// names, and tp() for plurals. The dictionary (locales/) is loaded by the
-// plugin loader BEFORE register() - t/ta are called only inside render and
-// factory bodies, never at module level.
-import { t, ta, tp, taApiError, dates } from '/assets/urd/i18n.js';
+// t() for visitor texts (the site language), ta() for the editor chrome
+// (the admin language), dates() for month and weekday names, tp() for
+// plurals; never called at module level.
+import { t, ta, tp, taApiError, dates, adminLocaleReady } from '../i18n.js';
 
 const el2 = (tag, className, textContent) => {
   const node = document.createElement(tag);
@@ -46,7 +38,7 @@ async function fetchSource(url) {
   const res = await fetch(`/api/ics?url=${encodeURIComponent(url)}`);
   if (!res.ok) {
     const detail = taApiError(await res.json().catch(() => null));
-    throw new Error(detail ?? ta('calendar.edit.feedStatus', { status: res.status }));
+    throw new Error(detail ?? ta('calendar.feedStatus', { status: res.status }));
   }
   const text = await res.text();
   try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), text })); } catch { /* a full store is fine */ }
@@ -54,22 +46,22 @@ async function fetchSource(url) {
 }
 
 /** All sources → sorted occurrences with category and signup link. */
-async function loadOccurrences(sources, limit) {
+async function loadOccurrences(ics, sources, limit) {
   const errors = [];
   const events = [];
   await Promise.all(sources.map(async (source) => {
-    const url = normalizeSourceUrl(source);
-    if (!url) { errors.push(ta('calendar.edit.unknownSource', { source })); return; }
+    const url = ics.normalizeSourceUrl(source);
+    if (!url) { errors.push(ta('calendar.unknownSource', { source })); return; }
     try {
-      events.push(...parseIcs(await fetchSource(url)).events);
+      events.push(...ics.parseIcs(await fetchSource(url)).events);
     } catch (error) {
       errors.push(`${url}: ${error.message}`);
     }
   }));
-  const occurrences = expandEvents(events, { from: Date.now() - 6 * 3600 * 1000, max: Math.max(limit * 4, 120) })
+  const occurrences = ics.expandEvents(events, { from: Date.now() - 6 * 3600 * 1000, max: Math.max(limit * 4, 120) })
     .map((occ) => {
-      const { category, title } = splitCategory(occ.summary);
-      return { ...occ, category, title, signup: findSignupLink(occ.description) };
+      const { category, title } = ics.splitCategory(occ.summary);
+      return { ...occ, category, title, signup: ics.findSignupLink(occ.description) };
     });
   return { occurrences, errors };
 }
@@ -80,9 +72,9 @@ function demoOccurrences() {
   const day = 24 * 3600 * 1000;
   const base = Date.now();
   return [
-    { start: base + 3 * day, end: base + 3 * day + 2 * 3600 * 1000, allDay: false, title: ta('calendar.edit.demoTitle1'), category: ta('calendar.edit.demoCat1'), location: ta('calendar.edit.demoLoc1'), signup: null, description: '' },
-    { start: base + 10 * day, end: base + 10 * day + 3600 * 1000, allDay: false, title: ta('calendar.edit.demoTitle2'), category: ta('calendar.edit.demoCat2'), location: ta('calendar.edit.demoLoc1'), signup: null, description: '' },
-    { start: base + 17 * day, end: base + 17 * day, allDay: true, title: ta('calendar.edit.demoTitle3'), category: ta('calendar.edit.demoCat3'), location: ta('calendar.edit.demoLoc2'), signup: null, description: '' },
+    { start: base + 3 * day, end: base + 3 * day + 2 * 3600 * 1000, allDay: false, title: ta('calendar.demoTitle1'), category: ta('calendar.demoCat1'), location: ta('calendar.demoLoc1'), signup: null, description: '' },
+    { start: base + 10 * day, end: base + 10 * day + 3600 * 1000, allDay: false, title: ta('calendar.demoTitle2'), category: ta('calendar.demoCat2'), location: ta('calendar.demoLoc1'), signup: null, description: '' },
+    { start: base + 17 * day, end: base + 17 * day, allDay: true, title: ta('calendar.demoTitle3'), category: ta('calendar.demoCat3'), location: ta('calendar.demoLoc2'), signup: null, description: '' },
   ];
 }
 
@@ -246,10 +238,10 @@ const VIEWS = { list: renderList, cards: renderCards, month: renderMonth, next: 
 
 /* ---------- Subscribe and category filter ---------- */
 
-function subscribeRow(sources) {
+function subscribeRow(ics, sources) {
   const row = el2('div', 'urd-cal-subscribe');
   for (const source of sources) {
-    const links = subscribeLinks(source);
+    const links = ics.subscribeLinks(source);
     if (!links) continue;
     const webcal = el2('a', 'urd-cal-sub-btn', sources.length > 1 ? t('calendar.subscribeMulti') : t('calendar.subscribe'));
     webcal.href = links.webcal;
@@ -293,18 +285,18 @@ function post(msg) {
 }
 
 /** View id + label KEY (looked up with ta at use time; never at module level). */
-const VIEW_NAMES = [['list', 'calendar.edit.viewList'], ['cards', 'calendar.edit.viewCards'], ['month', 'calendar.edit.viewMonth'], ['next', 'calendar.edit.viewNext']];
+const VIEW_NAMES = [['list', 'calendar.viewList'], ['cards', 'calendar.viewCards'], ['month', 'calendar.viewMonth'], ['next', 'calendar.viewNext']];
 
 function configPanel(el, props, ctx) {
-  const gear = el2('button', 'urd-cal-gear urd-cfg-toggle', `⚙ ${ta('calendar.edit.sources')}`);
+  const gear = el2('button', 'urd-cal-gear urd-cfg-toggle', `⚙ ${ta('calendar.sources')}`);
   gear.type = 'button';
-  gear.title = ta('calendar.edit.gearTitle');
+  gear.title = ta('calendar.gearTitle');
   const panel = el2('div', 'urd-cal-config');
 
   const label = (text) => el2('label', 'urd-cal-config-label', text);
   const sources = document.createElement('textarea');
   sources.rows = 3;
-  sources.placeholder = ta('calendar.edit.sourcesPh');
+  sources.placeholder = ta('calendar.sourcesPh');
   sources.value = (props.sources ?? []).join('\n');
 
   // View: theme-driven segment buttons (native select popups follow the OS
@@ -348,8 +340,8 @@ function configPanel(el, props, ctx) {
     wrap.append(input, document.createTextNode(` ${text}`));
     return [wrap, input];
   };
-  const [categoriesLabel, categories] = check(ta('calendar.edit.showCategories'), props.showCategories !== false);
-  const [subscribeLabel, subscribe] = check(ta('calendar.edit.showSubscribe'), props.showSubscribe !== false);
+  const [categoriesLabel, categories] = check(ta('calendar.showCategories'), props.showCategories !== false);
+  const [subscribeLabel, subscribe] = check(ta('calendar.showSubscribe'), props.showSubscribe !== false);
 
   const apply = el2('button', 'urd-cal-apply', ta('common.apply'));
   apply.type = 'button';
@@ -366,7 +358,7 @@ function configPanel(el, props, ctx) {
   });
 
   panel.append(
-    label(ta('calendar.edit.sources')), sources,
+    label(ta('calendar.sources')), sources,
     label(ta('lbl.view')), viewSeg,
     limitLabel, limit,
     categoriesLabel, subscribeLabel, apply,
@@ -393,156 +385,38 @@ function configPanel(el, props, ctx) {
   return [gear, panel];
 }
 
-/* ---------- Auto-grow (the same pattern as the collection block) ---------- */
-
-function autoGrow(el, host, ctx) {
-  const needed = host.scrollHeight;
-  if (Math.abs(needed - el.clientHeight) > 8 && ctx.viewport !== 'mobile') {
-    el.style.height = `${needed}px`;
-    const sectionEl = el.closest('.urd-section');
-    if (sectionEl) {
-      const bottom = el.offsetTop + needed + 24;
-      // Both sides are content heights: the nav clearance is the section's
-      // padding, and the inline min-height is a plain length.
-      const current = Number.parseFloat(getComputedStyle(sectionEl).minHeight) || 0;
-      if (bottom > current) sectionEl.style.minHeight = `${bottom}px`;
-    }
-    if (ctx.preview) {
-      const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
-      if (block && block.frames.desktop.h !== needed) {
-        block.frames.desktop = { ...block.frames.desktop, h: needed };
-        // ONLY the height is posted (urd-grow), never the whole frame: a
-        // dragged block would otherwise teleport back to the snapshot's old x/y.
-        post({ type: 'urd-grow', sectionId: ctx.section.id, blockId: el.dataset.blockId, h: needed });
-      }
-    }
-  }
-}
-
-/* ---------- Plugin CSS: one style tag, theme-following tokens ---------- */
-
-const CAL_CSS = `
-.urd-cal { width: 100%; display: grid; gap: 12px; position: relative; }
-.urd-cal-titlerow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.urd-cal-meta { font-size: 0.85em; opacity: 0.7; }
-.urd-cal-chip { font-size: 0.72em; padding: 2px 8px; border-radius: 999px;
-  background: color-mix(in srgb, var(--urd-color-accent) 18%, transparent);
-  border: 1px solid color-mix(in srgb, var(--urd-color-accent) 45%, transparent); }
-.urd-cal-signup { display: inline-block; margin-top: 4px; font-size: 0.85em; font-weight: 600;
-  color: var(--urd-color-accent); text-decoration: none; }
-.urd-cal-signup:hover { text-decoration: underline; }
-.urd-cal-chips { display: flex; gap: 6px; flex-wrap: wrap; }
-.urd-cal-chipbtn { font: inherit; font-size: 0.78em; padding: 3px 10px; border-radius: 999px; cursor: pointer;
-  color: inherit; background: transparent;
-  border: 1px solid color-mix(in srgb, var(--urd-color-text) 25%, transparent); }
-.urd-cal-chipbtn.selected { background: var(--urd-color-accent); border-color: var(--urd-color-accent); color: #fff; }
-.urd-cal-subscribe { display: flex; gap: 8px; flex-wrap: wrap; }
-.urd-cal-sub-btn { font-size: 0.82em; padding: 5px 12px; border-radius: var(--urd-radius-sm);
-  color: inherit; text-decoration: none;
-  border: 1px solid color-mix(in srgb, var(--urd-color-text) 25%, transparent);
-  background: var(--urd-color-surface); }
-.urd-cal-sub-btn:hover { border-color: var(--urd-color-accent); }
-.urd-cal-next { padding: 16px; border-radius: var(--urd-radius-md); background: var(--urd-color-surface);
-  border: 1px solid color-mix(in srgb, var(--urd-color-text) 12%, transparent); }
-.urd-cal-next-label { font-size: 0.72em; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-  opacity: 0.6; margin-bottom: 10px; }
-.urd-cal-next-row { display: flex; gap: 14px; align-items: flex-start; }
-.urd-cal-next-title { font-size: 1.15em; font-family: var(--urd-font-heading); }
-.urd-cal-next-count { margin-top: 4px; font-size: 0.85em; font-weight: 600; color: var(--urd-color-accent); }
-.urd-cal-month { display: grid; gap: 8px; }
-.urd-cal-month-head { display: flex; align-items: center; justify-content: space-between; }
-.urd-cal-nav { font: inherit; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; color: inherit;
-  background: var(--urd-color-surface); border: 1px solid color-mix(in srgb, var(--urd-color-text) 20%, transparent); }
-.urd-cal-nav:hover { border-color: var(--urd-color-accent); }
-.urd-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
-.urd-cal-dow { font-size: 0.7em; text-transform: uppercase; opacity: 0.55; text-align: center; padding: 2px 0; }
-.urd-cal-day { min-height: 64px; padding: 4px; border-radius: var(--urd-radius-sm);
-  background: color-mix(in srgb, var(--urd-color-surface) 70%, transparent);
-  border: 1px solid color-mix(in srgb, var(--urd-color-text) 8%, transparent);
-  display: grid; gap: 2px; align-content: start; }
-.urd-cal-day-empty { background: transparent; border-color: transparent; }
-.urd-cal-idag { border-color: var(--urd-color-accent); }
-.urd-cal-daynum { font-size: 0.72em; opacity: 0.6; }
-.urd-cal-pill { font-size: 0.68em; line-height: 1.25; padding: 2px 5px; border-radius: 4px;
-  background: color-mix(in srgb, var(--urd-color-accent) 22%, transparent);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.urd-cal-more { font-size: 0.66em; opacity: 0.6; }
-.urd-cal-empty { opacity: 0.65; font-size: 0.9em; }
-.urd-cal-note { font-size: 0.75em; opacity: 0.55; }
-.urd-cal-tools { position: absolute; top: -32px; right: -6px; z-index: 5;
-  display: flex; gap: 4px; align-items: center;
-  /* An invisible bridge down to the block edge, so hover survives the trip up */
-  padding-bottom: 8px; }
-.urd-cal-tools .urd-hint-chip { position: static; }
-/* The config toggle is hidden: the settings open from the block's Properties
-   panel (urd-cfg-toggle is clicked via urd-open-block-config). */
-.urd-cal-gear { display: none; }
-.urd-block:hover .urd-cal-gear, .urd-cal-gear:focus-visible,
-.urd-cal:has(.urd-cal-config.visible) .urd-cal-gear { opacity: 0.92; pointer-events: auto; }
-.urd-cal-config { position: absolute; top: 24px; right: 0; z-index: 6; width: min(340px, 90%);
-  display: none; gap: 6px; padding: 12px; border-radius: 10px; background: #151a23; color: #e8eaf0;
-  border: 1px solid rgb(255 255 255 / 18%); box-shadow: 0 12px 36px rgb(0 0 0 / 55%);
-  font: 12px/1.4 system-ui, sans-serif; }
-.urd-cal-config.visible { display: grid; }
-.urd-cal-config-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.55; }
-.urd-cal-config textarea, .urd-cal-config select, .urd-cal-config input[type='number'] {
-  font: 12px/1.4 system-ui, sans-serif; color: inherit; background: rgb(255 255 255 / 6%);
-  border: 1px solid rgb(255 255 255 / 20%); border-radius: 6px; padding: 5px 7px; min-width: 0; color-scheme: dark; }
-.urd-cal-config-check { display: flex; align-items: center; gap: 6px; font-size: 12px; }
-.urd-cal-seg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px;
-  padding: 2px; background: rgb(255 255 255 / 6%);
-  border: 1px solid rgb(255 255 255 / 20%); border-radius: 6px; }
-.urd-cal-seg button { font: 11px/1.2 system-ui, sans-serif; color: inherit; background: transparent;
-  border: 0; border-radius: 4px; padding: 5px 4px; cursor: pointer; white-space: nowrap; }
-.urd-cal-seg button:hover { background: rgb(255 255 255 / 10%); }
-.urd-cal-seg button.selected { background: #7c5cff; color: #fff; }
-.urd-cal-apply { font: 600 12px/1 system-ui, sans-serif; padding: 7px 0; border-radius: 6px; cursor: pointer;
-  color: #fff; background: #7c5cff; border: 0; }
-body.urd-chrome-off .urd-cal-gear, body.urd-chrome-off .urd-cal-config { display: none !important; }
-`;
-
-function injectCss() {
-  if (document.getElementById('urd-calendar-css')) return;
-  const style = document.createElement('style');
-  style.id = 'urd-calendar-css';
-  style.textContent = CAL_CSS;
-  document.head.appendChild(style);
-}
-
 /* ---------- The block ---------- */
 
 function renderCalendar(el, props, ctx) {
-  injectCss();
   const host = el2('div', 'urd-cal');
   el.appendChild(host);
+  import('../ics.js').then((ics) => {
+    if (host.isConnected) drawCalendar(ics, el, host, props, ctx);
+  });
+}
 
+function drawCalendar(ics, el, host, props, ctx) {
   const sources = (props.sources ?? []).filter(Boolean);
   let activeCategory = null;
 
   const draw = (occurrences, note) => {
     host.replaceChildren();
     if (ctx.preview && ctx.viewport !== 'mobile') {
-      const [gear, panel] = configPanel(el, props, ctx);
-      // The help chip and the sources gear share one row at the top right, clear of the rotation handle.
-      const tools = el2('div', 'urd-cal-tools');
-      tools.appendChild(gear);
-      host.append(tools, panel);
-      // The help chip (ADR-0008): blocks with special functions explain themselves.
-      import('/assets/urd/hint.js').then(({ attachHint }) => {
+      // The sources gear and the help chip share one row at the top right,
+      // clear of the rotation handle (ADR-0008).
+      Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!host.isConnected || host.querySelector('.urd-hint-chip')) return;
+        const [gear, panel] = configPanel(el, props, ctx);
+        const tools = el2('div', 'urd-cal-tools');
+        tools.appendChild(gear);
+        host.append(tools, panel);
         const chip = attachHint(tools, {
-          title: ta('calendar.edit.hintTitle'),
+          title: ta('hintCalendar.title'),
           lines: [
-            ta('calendar.edit.hint1'),
-            ta('calendar.edit.hint2'),
-            ta('calendar.edit.hint3'),
-            ta('calendar.edit.hint4'),
-            ta('calendar.edit.hint5'),
-            ta('calendar.edit.hint6'),
-            ta('calendar.edit.hint7'),
+            ta('hintCalendar.l1'), ta('hintCalendar.l2'), ta('hintCalendar.l3'), ta('hintCalendar.l4'),
+            ta('hintCalendar.l5'), ta('hintCalendar.l6'), ta('hintCalendar.l7'),
           ],
         });
-        // The help chip first, then the gear.
         tools.insertBefore(chip, tools.firstChild);
       });
     }
@@ -564,94 +438,39 @@ function renderCalendar(el, props, ctx) {
       (VIEWS[props.view] ?? renderList)(host, limited);
     }
     if (props.showSubscribe !== false && sources.length) {
-      const row = subscribeRow(sources);
+      const row = subscribeRow(ics, sources);
       if (row) host.appendChild(row);
     }
     if (note) host.appendChild(el2('p', 'urd-cal-note', note));
-    autoGrow(el, host, ctx);
   };
 
   if (!sources.length) {
-    if (ctx.preview) {
-      draw(demoOccurrences(), ta('calendar.edit.demoNote'));
-    }
+    if (ctx.preview) adminLocaleReady.then(() => { if (host.isConnected) draw(demoOccurrences(), ta('calendar.demoNote')); });
     return;
   }
 
   if (ctx.preview) draw([], null);
-  loadOccurrences(sources, Math.max(1, props.limit ?? 6)).then(({ occurrences, errors }) => {
+  loadOccurrences(ics, sources, Math.max(1, props.limit ?? 6)).then(({ occurrences, errors }) => {
     if (!host.isConnected) return;
     if (!occurrences.length && errors.length) {
       // Visitors get a quiet empty state; the preview gets the error.
-      draw([], ctx.preview ? ta('calendar.edit.feedFailed', { error: errors[0] }) : null);
+      draw([], ctx.preview ? ta('calendar.feedFailed', { error: errors[0] }) : null);
       return;
     }
-    draw(occurrences, ctx.preview && errors.length ? ta('calendar.edit.sourceFailed', { error: errors[0] }) : null);
+    draw(occurrences, ctx.preview && errors.length ? ta('calendar.sourceFailed', { error: errors[0] }) : null);
   });
 }
 
-/* ---------- The whats-on preset ---------- */
-
-const presetId = () => {
-  const bytes = crypto.getRandomValues(new Uint8Array(4));
-  return 'blk-' + [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+export const calendarBlock = {
+  version: 1,
+  // Natural height in the mobile row grid; on the desktop the push pass owns the box.
+  autoGrow: true,
+  label: 'Calendar',
+  labelKey: 'blocks.calendar',
+  defaults: () => ({ sources: [], view: 'list', limit: 6, showCategories: true, showSubscribe: true }),
+  // One variant per view: the editor's palette and the preview's block menu
+  // list them as «Calendar: Month» and the like.
+  variants: VIEW_NAMES.map(([view, labelKey]) => ({ label: view, labelKey, props: { view } })),
+  migrations: {},
+  render: renderCalendar,
 };
-
-function hvaSkjerSection() {
-  return {
-    id: 'sec-' + presetId().slice(4),
-    version: 1,
-    preset: 'whats-on',
-    size: { minHeight: '520px' },
-    grid: null,
-    background: { version: 1, layers: [{ type: 'color', version: 1, props: { color: 'bg', opacity: 1 } }] },
-    blocks: [
-      {
-        id: presetId(),
-        type: 'text',
-        version: 1,
-        props: { html: ta('calendar.edit.seedTitle'), align: 'left', box: false },
-        animation: null,
-        frames: { desktop: { x: 6, y: 40, w: 60, h: 70, z: 1, rot: 0 }, mobile: null },
-      },
-      {
-        id: presetId(),
-        type: 'calendar',
-        version: 1,
-        props: { sources: [], view: 'list', limit: 5, showCategories: true, showSubscribe: true },
-        animation: null,
-        frames: { desktop: { x: 6, y: 130, w: 88, h: 320, z: 2, rot: 0 }, mobile: null },
-      },
-    ],
-    responsive: { mobile: { mode: 'auto', attention: null } },
-  };
-}
-
-/* ---------- Registration ---------- */
-
-/** @param {typeof window.Urd} Urd */
-export function register(Urd) {
-  Urd.blocks.define('calendar', {
-    version: 1,
-    autoGrow: true,
-    label: 'Calendar',
-    labelKey: 'calendar.edit.blockLabel',
-    defaults: () => ({ sources: [], view: 'list', limit: 6, showCategories: true, showSubscribe: true }),
-    // The fold-out menu in the block menus: one variant per view (the generic
-    // variants field). labelKey is resolved by the consumers (the iframe side
-    // has the plugin dictionary).
-    variants: VIEW_NAMES.map(([view, labelKey]) => ({ label: view, labelKey, props: { view } })),
-    migrations: {},
-    render: renderCalendar,
-  });
-
-  Urd.sections.define('whats-on', {
-    label: 'What is on',
-    labelKey: 'calendar.edit.presetLabel',
-    group: 'Cards and lists',
-    groupKey: 'presetGroup.cards',
-    hint: 'Event list from a subscribable calendar (iCal/Google)',
-    hintKey: 'calendar.edit.presetHint',
-    create: hvaSkjerSection,
-  });
-}
