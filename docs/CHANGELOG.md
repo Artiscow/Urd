@@ -27,9 +27,9 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
-### 0.7.18.1 - Kjerneflyttingen planned: ADR-0026, and the Swedish pack fixed for the admin - 23 September 2026
+### 0.7.18.1 - Kjerneflyttingen planned, and the Swedish pack fixed for the admin - 23 September 2026
 
-- New milestone 0.7.18: map, form, calendar and analytics move from reference plugins into the core (blocks, presets and aliases unchanged; analytics as `site.analytics` edited behind the gear), with the Swedish pack `lang-sv` staying as the one shipped example plugin. [ADR-0026](adr/0026-core-blocks-from-the-reference-plugins.md) records the decision and the plugin layer that stays; seven stages in BACKLOG.
+- New milestone 0.7.18: map, form, calendar and analytics move from reference plugins into the core (blocks, presets and aliases unchanged; analytics as `site.analytics` edited behind the gear), with the Swedish pack `lang-sv` staying as the one shipped example plugin; seven stages in BACKLOG. An ADR-0026 was written for it and withdrawn the same day: the decision is visible in the code once the blocks are core, and the lasting points (the plugin layer that stays, the status of ADR-0006 and ADR-0007, the `site.analytics` field) belong in AGENTS.md, those ADRs and SCHEMA.md.
 - The Swedish pack never appeared in the admin language picker behind the gear: it translated only the visitor texts (`admin: false`), and the picker offers only packs with admin texts. A complete Swedish admin dictionary (`plugins/lang-sv/locales/admin/sv.js`, all 1590 keys) and `admin: true`; the manifest examples in plugins/README.md and SCHEMA.md show both registers. Verified with headless Brave: the picker lists Svenska and the panels turn Swedish.
 
 ### 0.7.17.5 - The page zoom withdrawn: blocks shrink one by one, with a smallest scale on every block - 23 September 2026
