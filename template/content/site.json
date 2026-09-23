@@ -12,7 +12,11 @@
   },
   "layout": {
     "contentWidth": 1440,
-    "gutter": 6
+    "gutter": 6,
+    "scale": {
+      "mode": "scale",
+      "min": 0.75
+    }
   },
   "grid": {
     "size": 16,

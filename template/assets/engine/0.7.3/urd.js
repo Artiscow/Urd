@@ -13,6 +13,7 @@ import { createRegistry } from './registry.js';
 import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION } from './migrate.js';
 import { applyTheme } from './theme.js';
 import { applySiteLayout, renderPage, renderSection } from './render.js';
+import { pageScale } from './scale-model.js';
 import { renderNav } from './nav.js';
 import { isSafeImage } from './nav-model.js';
 import { renderFooter } from './footer.js';
@@ -397,7 +398,7 @@ function enablePreview(state, opts) {
       // rerender, and visitors never see it.
       const z = Number(msg.scale);
       document.documentElement.style.setProperty(
-        '--urd-chrome-scale',
+        '--urd-chrome-root',
         Number.isFinite(z) && z > 0 ? String(1 / z) : '1',
       );
     } else if (msg?.type === 'urd-viewport' && (msg.mode === 'desktop' || msg.mode === 'mobile')) {
@@ -419,6 +420,7 @@ function enablePreview(state, opts) {
       const rerender = () => keepScroll(() => {
         applyTheme(state.site.theme);
         applySiteLayout(state.site);
+        setScale();
         applyFavicon(state.site.site?.icon);
         if (opts.nav) renderNav(state.site, opts.nav);
         if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);
@@ -560,6 +562,20 @@ export async function boot(opts) {
   renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport });
   // Sticky blocks ("pin on scroll"): one scroll listener for the whole page.
   initSticky();
+  // Proportional scaling below the design width (ADR-0018 addendum): the
+  // factor is written on the root and read by the section zoom rule in
+  // base.css. The canvas width formula is the same as the CSS one, measured
+  // on the layout viewport (without the scrollbar).
+  const setScale = () => {
+    const w = document.documentElement.clientWidth;
+    document.documentElement.style.setProperty('--urd-scale', String(pageScale(w, state.site.layout)));
+  };
+  setScale();
+  let scaleRaf = 0;
+  window.addEventListener('resize', () => {
+    cancelAnimationFrame(scaleRaf);
+    scaleRaf = requestAnimationFrame(setScale);
+  }, { passive: true });
 
   if (!preview) {
     mq.addEventListener('change', (event) => {

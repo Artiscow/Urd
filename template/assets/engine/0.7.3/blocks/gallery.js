@@ -264,15 +264,6 @@ export const galleryBlock = {
         el.style.height = `${needed}px`;
         const sectionEl = el.closest('.urd-section');
         if (sectionEl) growSectionTo(sectionEl, el.offsetTop + needed + 24);
-        if (ctx.preview) {
-          const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
-          if (block && block.frames.desktop.h !== needed) {
-            block.frames.desktop = { ...block.frames.desktop, h: needed };
-            // ONLY the height is posted (urd-grow), never the whole frame: otherwise
-            // a dragged block would teleport back to the snapshot's old x/y.
-            post({ type: 'urd-grow', sectionId: ctx.section.id, blockId: el.dataset.blockId, h: needed });
-          }
-        }
       }
     });
   },

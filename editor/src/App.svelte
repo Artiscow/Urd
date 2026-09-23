@@ -19,6 +19,7 @@
     WIDTH_PRESETS, GUTTER_PRESETS, REF_SCREENS,
     clampWidth, clampGutter, contentBand, presetOf, bindingWidth,
   } from './lib/content-width.js';
+import { scaleSettings, scaleFloorWidth, SCALE_MIN, SCALE_MAX } from '$engine/scale-model.js';
   import {
     PAD_Y, TEXT_SIZE, PAD_X, GAP, PILL_WIDTH, SHRINK_TO, COL_WIDTH, LOGO_SIZE, SIZE_IDS,
     clampRange, effectivePadY, effectiveTextSize, sizePresetOf,
@@ -101,7 +102,6 @@
     external: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4l-8 8"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
     // The target devices in the canvas switcher: desktop, laptop, tablet, phone
     device_desktop: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="13" rx="2"/><path d="M8 21h8M12 16v5"/></svg>',
-    device_reference: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="13" rx="2"/><path d="M8 21h8M12 16v5M6 9.5h12"/></svg>',
     device_laptop: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></svg>',
     device_tablet: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M11 18.5h2"/></svg>',
     device_mobile: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18.5h2"/></svg>',
@@ -212,7 +212,6 @@
    *  (the window the published page is compared in), or an editing size
    *  chosen per browser (lib/own-screen.js, the Wix Studio model) with an
    *  optional height; only a set height pins both axes.
-   *  Reference is the 1920 px screen the canvas used before the addendum.
    *  The fixed devices pin the width and fill the panel.
    *  `viewport` is what the ENGINE gets to know (it only knows
    *  desktop/mobile), so tablet and laptop are desktop view to the engine. */
@@ -232,7 +231,6 @@
   }
   let screenTarget = $derived(screenViewport(screenPref, ownWidth));
   const FIXED_DEVICES = [
-    { id: 'reference', width: 1920, height: null, viewport: 'desktop' },
     { id: 'laptop', width: 1280, height: null, viewport: 'desktop' },
     { id: 'tablet', width: 810, height: null, viewport: 'desktop' },
     { id: 'mobile', width: 390, height: null, viewport: 'mobile' },
@@ -251,8 +249,10 @@
   }
   let deviceId = $state('desktop');
   let device = $derived(devices.find((d) => d.id === deviceId) ?? devices[0]);
-  /** The engine's viewport. Everything that asks "are we on mobile" reads this. */
-  let viewMode = $derived(device.viewport);
+  /** The engine's viewport. Everything that asks "are we on mobile" reads this.
+   *  A Screen narrower than the site's mobile breakpoint is mobile to the
+   *  engine, as the published page is in that window. */
+  let viewMode = $derived(device.viewport === 'mobile' || device.width <= (siteDraft?.breakpoints?.mobile ?? 640) ? 'mobile' : 'desktop');
 
   // Scaled canvas: the iframe renders the page in a full window viewport
   // (same as a visitor with a full window) and is scaled down to fit
@@ -1005,6 +1005,19 @@
   /** Multiple props in ONE undo step (the field contract's place field writes three). */
   function setBlockProps(name, patch) {
     mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b) => { Object.assign(b.props, patch); });
+  }
+
+  /** Shrink instead of wrap (text.js, ADR-0024): wrap is the absence of the fields. */
+  function setTextFit(mode) {
+    mutateBlock(`edit:${selectedBlock.blockId}:fit`, (b) => {
+      if (mode === 'shrink') {
+        b.props.fit = 'shrink';
+        b.props.fitMin ??= 0.6;
+      } else {
+        delete b.props.fit;
+        delete b.props.fitMin;
+      }
+    });
   }
 
   /* The field contract (plugin blocks, `fields` in urd-plugin-blocks):
@@ -2446,9 +2459,7 @@
 
   /* A cluster that has unfolded again has no menu; the choice is cleaned up with it. */
   $effect(() => {
-    // 'screen' is the Screen settings popover in the UNFOLDED device strip:
-    // it closes when the cluster folds, the fold menus when they unfold.
-    if (toolMenu && (toolMenu === 'screen' ? folded.device : !folded[toolMenu])) toolMenu = null;
+    if (toolMenu && !folded[toolMenu]) toolMenu = null;
   });
 
   /* One open tool menu at a time, same closing pattern as the settings. */
@@ -2898,9 +2909,18 @@
 
   function setLayout(patch, key) {
     siteMutate(key, () => {
-      siteDraft.layout = { contentWidth: layoutWidth, gutter: layoutGutter, ...patch };
+      const next = { ...(siteDraft.layout ?? {}), contentWidth: layoutWidth, gutter: layoutGutter, ...patch };
+      for (const k of Object.keys(next)) if (next[k] === undefined) delete next[k];
+      siteDraft.layout = next;
     });
   }
+  /** Scaling below the design width (ADR-0018 addendum): an omitted field
+   *  keeps today's sizes, so the mode is written only when it is scale. */
+  let scaleMode = $derived(scaleSettings(siteDraft?.layout).mode);
+  let scaleMin = $derived(scaleSettings(siteDraft?.layout).min);
+  let scaleFloor = $derived(scaleFloorWidth(siteDraft?.layout));
+  const setScaleMode = (mode) => setLayout({ scale: mode === 'scale' ? { mode: 'scale', min: scaleMin } : undefined }, 'edit:site-scale');
+  const setScaleMin = (min) => setLayout({ scale: { mode: 'scale', min: Math.min(SCALE_MAX, Math.max(SCALE_MIN, Math.round(min * 100) / 100)) } }, 'edit:site-scale');
   const setContentWidth = (w) => setLayout({ contentWidth: w === 'full' ? 'full' : clampWidth(w) }, 'edit:site-width');
   const setContentGutter = (g) => setLayout({ gutter: clampGutter(g) }, 'edit:site-gutter');
 
@@ -5498,29 +5518,6 @@
              outside-click test has ONE node to ask, and must not create
              its own box in the bar. -->
         <span class="toolset" bind:this={toolMenuEl}>
-          <!-- The Screen setting (ADR-0018 addendum): its own width, or an
-               editing size with an optional height. Sits directly under the
-               Screen choice, and the size fields only when that mode is on. -->
-          {#snippet screenSettings()}
-            <span class="seg" title={ta('tip.screen.mode')}>
-              <button type="button" class:on={screenPref.mode === 'own'}
-                onclick={() => setScreenPref({ mode: 'own' })}>{ta('lbl.screen.own')}</button>
-              <button type="button" class:on={screenPref.mode === 'custom'}
-                onclick={() => setScreenPref({ mode: 'custom' })}>{ta('lbl.screen.size')}</button>
-            </span>
-            {#if screenPref.mode === 'custom'}
-              <div class="tool-pop-row">
-                <span class="mini-label">{ta('lbl.screen.w')}</span>
-                <input type="number" class="tb-num" min={SCREEN_WIDTH_MIN} max={SCREEN_WIDTH_MAX} step="10"
-                  title={ta('tip.screen.width', { min: SCREEN_WIDTH_MIN, max: SCREEN_WIDTH_MAX })}
-                  value={screenPref.width} onchange={(e) => { setScreenPref({ width: Number(e.target.value) }); e.target.value = screenPref.width; }} />
-                <span class="mini-label">{ta('lbl.screen.h')}</span>
-                <input type="number" class="tb-num" min="0" max={SCREEN_HEIGHT_MAX} step="10" placeholder="0"
-                  title={ta('tip.screen.height', { min: SCREEN_HEIGHT_MIN, max: SCREEN_HEIGHT_MAX })}
-                  value={screenPref.height || ''} onchange={(e) => { setScreenPref({ height: Number(e.target.value) }); e.target.value = screenPref.height || ''; }} />
-              </div>
-            {/if}
-          {/snippet}
           {#if folded.device}
             <span class="toolmenu">
               <button class="ghost" class:active={toolMenu === 'device'}
@@ -5534,7 +5531,6 @@
                       onclick={() => { deviceId = d.id; toolMenu = null; }}
                       title={deviceTip(d)}
                       >{@html ICONS[`device_${d.id}`]} {ta(`lbl.device.${d.id}`)}</button>
-                    {#if d.id === 'desktop' && deviceId === 'desktop'}{@render screenSettings()}{/if}
                   {/each}
                 </div>
               {/if}
@@ -5545,24 +5541,10 @@
             <span class="tool-cap">{ta('lbl.group.device')}</span>
             <span class="viewswitch toolgrp">
               {#each devices as d (d.id)}
-                {#if d.id === 'desktop'}
-                  <!-- A second click on the active Screen button opens its
-                       settings; no width is added to the strip. -->
-                  <span class="toolmenu">
-                    <button class="ghost" class:active={deviceId === d.id}
-                      onclick={() => { if (deviceId === 'desktop') toolMenu = toolMenu === 'screen' ? null : 'screen'; else deviceId = 'desktop'; }}
-                      title={deviceTip(d)}
-                      >{@html ICONS[`device_${d.id}`]}</button>
-                    {#if toolMenu === 'screen'}
-                      <div class="tool-pop">{@render screenSettings()}</div>
-                    {/if}
-                  </span>
-                {:else}
-                  <button class="ghost" class:active={deviceId === d.id}
-                    onclick={() => (deviceId = d.id)}
-                    title={deviceTip(d)}
-                    >{@html ICONS[`device_${d.id}`]}</button>
-                {/if}
+                <button class="ghost" class:active={deviceId === d.id}
+                  onclick={() => (deviceId = d.id)}
+                  title={deviceTip(d)}
+                  >{@html ICONS[`device_${d.id}`]}</button>
               {/each}
             </span>
           {/if}
@@ -5734,6 +5716,29 @@
                   <Dropdown value={layoutPickerPref}
                     options={[['strip', ta('settings.layoutPickerStrip')], ['menu', ta('settings.layoutPickerMenu')]]}
                     onchange={setLayoutPicker} /></label>
+                <!-- The Screen device (ADR-0018 addendum): its own window
+                     width, or an editing size with an optional height. An
+                     admin preference like the theme and the language, so it
+                     lives here and not in the device strip. -->
+                <p class="mini-label" title={ta('tip.screen.mode')}>{ta('settings.screen')}</p>
+                <div class="seg" title={ta('tip.screen.mode')}>
+                  <button type="button" class:on={screenPref.mode === 'own'}
+                    onclick={() => setScreenPref({ mode: 'own' })}>{ta('lbl.screen.own')}</button>
+                  <button type="button" class:on={screenPref.mode === 'custom'}
+                    onclick={() => setScreenPref({ mode: 'custom' })}>{ta('lbl.screen.size')}</button>
+                </div>
+                {#if screenPref.mode === 'custom'}
+                  <div class="ctl-row">
+                    <span class="mini-label">{ta('lbl.screen.w')}</span>
+                    <input type="number" class="tb-num" min={SCREEN_WIDTH_MIN} max={SCREEN_WIDTH_MAX} step="10"
+                      title={ta('tip.screen.width', { min: SCREEN_WIDTH_MIN, max: SCREEN_WIDTH_MAX })}
+                      value={screenPref.width} onchange={(e) => { setScreenPref({ width: Number(e.target.value) }); e.target.value = screenPref.width; }} />
+                    <span class="mini-label">{ta('lbl.screen.h')}</span>
+                    <input type="number" class="tb-num" min="0" max={SCREEN_HEIGHT_MAX} step="10" placeholder="0"
+                      title={ta('tip.screen.height', { min: SCREEN_HEIGHT_MIN, max: SCREEN_HEIGHT_MAX })}
+                      value={screenPref.height || ''} onchange={(e) => { setScreenPref({ height: Number(e.target.value) }); e.target.value = screenPref.height || ''; }} />
+                  </div>
+                {/if}
               </div>
             {/if}
           </span>
@@ -6359,6 +6364,21 @@
                     </div>
                   </div>
                 </details>
+                <hr class="gridmenu-divider" />
+                <label title={ta('tip.site.scaleMode')}>{ta('lbl.scaleMode')}
+                  <Dropdown value={scaleMode}
+                    options={[['scale', ta('opt.scale.scale')], ['fixed', ta('opt.scale.fixed')]]}
+                    onchange={(v) => setScaleMode(v)} /></label>
+                {#if scaleMode === 'scale' && layoutWidth !== 'full'}
+                  <div class="ctl-row" title={ta('tip.site.scaleMin', { w: scaleFloor })}>
+                    <span class="mini-label">{ta('lbl.scaleMin')}</span>
+                    <input type="range" min={SCALE_MIN * 100} max={SCALE_MAX * 100} step="5"
+                      value={Math.round(scaleMin * 100)}
+                      oninput={(e) => setScaleMin(e.target.valueAsNumber / 100)} />
+                    <span class="gridmenu-value">{Math.round(scaleMin * 100)} %</span>
+                  </div>
+                  <div class="mini-label cw-binds">{ta('lbl.scaleFloor', { w: scaleFloor })}</div>
+                {/if}
                 <hr class="gridmenu-divider" />
                 <label>{ta('lbl.siteIcon')}
                   {#if siteDraft.site.icon}
@@ -8008,6 +8028,19 @@
       </label>
       {#if selectedBlock.props.box}
         {@render kortstilUI()}
+      {/if}
+      <label title={ta('tip.textFit')}>{ta('lbl.textFit')}
+        <Dropdown value={selectedBlock.props.fit === 'shrink' ? 'shrink' : 'wrap'}
+          options={[['wrap', ta('opt.textFit.wrap')], ['shrink', ta('opt.textFit.shrink')]]}
+          onchange={(v) => setTextFit(v)} /></label>
+      {#if selectedBlock.props.fit === 'shrink'}
+        <div class="ctl-row" title={ta('tip.textFitMin')}>
+          <span class="mini-label">{ta('lbl.textFitMin')}</span>
+          <input type="range" min="1" max="100" step="1"
+            value={Math.round((selectedBlock.props.fitMin ?? 0.6) * 100)}
+            oninput={(e) => setBlockProp('fitMin', e.target.valueAsNumber / 100)} />
+          <span class="gridmenu-value">{Math.round((selectedBlock.props.fitMin ?? 0.6) * 100)} %</span>
+        </div>
       {/if}
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'faq'}

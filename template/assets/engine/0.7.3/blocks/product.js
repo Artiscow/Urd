@@ -308,7 +308,7 @@ export const productBlock = {
     const host = el2('div', 'urd-product');
     el.appendChild(host);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
-    // The block's own data: shared by the auto-grow (urd-grow) and the animations.
+    // The block's own data: shared by the auto-grow and the animations.
     const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
 
     if (!props.collection) {
@@ -334,13 +334,6 @@ export const productBlock = {
           el.style.height = `${needed}px`;
           const sectionEl = el.closest('.urd-section');
           if (sectionEl) growSectionTo(sectionEl, el.offsetTop + needed + 24);
-          if (ctx.preview) {
-            if (block && block.frames.desktop.h !== needed) {
-              block.frames.desktop = { ...block.frames.desktop, h: needed };
-              // ONLY the height is posted (urd-grow), never the whole frame.
-              post({ type: 'urd-grow', sectionId: ctx.section.id, blockId: el.dataset.blockId, h: needed });
-            }
-          }
         }
       };
 

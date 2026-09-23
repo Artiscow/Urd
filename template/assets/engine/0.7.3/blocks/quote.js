@@ -7,7 +7,7 @@
  *
  * In the editor the quote, the name and the role are directly editable
  * (click and type); the portrait is chosen in the properties panel.
- * Auto-grow reports ONLY height (urd-grow), never the whole frame.
+ * Auto-grow adjusts the display only; the push pass moves the blocks below (ADR-0024).
  */
 // Called only in preview (after the admin dictionary has loaded): never at module level.
 import { ta } from '../i18n.js';
@@ -97,7 +97,7 @@ export const quoteBlock = {
       }
     }
 
-    // Auto-grow: the frame follows the content height. ONLY the height is reported (urd-grow).
+    // Auto-grow: the frame follows the content height. the display only; the blocks below are moved by the push pass (ADR-0024).
     requestAnimationFrame(() => {
       if (!el.isConnected) return;
       const needed = host.scrollHeight;
@@ -105,13 +105,6 @@ export const quoteBlock = {
         el.style.height = `${needed}px`;
         const sectionEl = el.closest('.urd-section');
         if (sectionEl) growSectionTo(sectionEl, el.offsetTop + needed + 24);
-        if (ctx.preview) {
-          const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
-          if (block && block.frames.desktop.h !== needed) {
-            block.frames.desktop = { ...block.frames.desktop, h: needed };
-            post({ type: 'urd-grow', sectionId: ctx.section.id, blockId: el.dataset.blockId, h: needed });
-          }
-        }
       }
     });
   },

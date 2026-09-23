@@ -17,7 +17,7 @@
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
  *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (open the block menu in the editor)
  */
-import { frameToCss, mobilePlacementToCss, reorderMobileKey } from './render.js';
+import { frameToCss, mobilePlacementToCss, reorderMobileKey, suspendPush, resumePush } from './render.js';
 import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
@@ -61,6 +61,14 @@ import { ta, adminLang } from './i18n.js';
 function canvasOf(host) {
   return host.querySelector(':scope > .urd-canvas') ?? host;
 }
+
+/**
+ * The effective zoom of a section (ADR-0018 addendum): below the design width
+ * the sections are zoomed, so pointer and rect distances are viewport px while
+ * the frames, offsets and inline lengths are section px. Every write of a px
+ * distance divides by it; percentages are ratios and need nothing.
+ */
+const zoomOf = (el) => el.currentCSSZoom ?? 1;
 
 /**
  * The nav clearance for the section (0 except for the first section under
@@ -221,13 +229,14 @@ function openBlockMenuAt(host, clientX = null, clientY = null) {
   // the menu itself is a child of the section and is positioned against it.
   // Two different frames.
   const canvasRect = canvasOf(host).getBoundingClientRect();
+  const z = zoomOf(host);
   if (clientX != null) {
     menu._urdAt = {
       x: Math.round(((clientX - canvasRect.left) / canvasRect.width) * 10000) / 100,
-      y: Math.round(clientY - canvasRect.top),
+      y: Math.round((clientY - canvasRect.top) / z),
     };
-    wrap.style.left = `${Math.round(clientX - rect.left)}px`;
-    wrap.style.top = `${Math.round(clientY - rect.top)}px`;
+    wrap.style.left = `${Math.round((clientX - rect.left) / z)}px`;
+    wrap.style.top = `${Math.round((clientY - rect.top) / z)}px`;
     wrap.style.right = 'auto';
     // At the pointer the menu appears alone: the chip button is hidden (the
     // CSS on .urd-at-pointer), so no "+ New block" sits above the menu.
@@ -464,7 +473,7 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
     const startY = event.clientY;
     // The clearance is kept out of the calculation: px is pure content
     // height, the same number stored in size.minHeight.
-    const startHeight = host.getBoundingClientRect().height - sectionClearance(host);
+    const startHeight = (host.getBoundingClientRect().height - sectionClearance(host)) / zoomOf(host);
     const cursor = dragCursor();
     let px = startHeight;
     let moved = false;
@@ -473,7 +482,7 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
       if (!moved && Math.abs(ev.clientY - startY) < 4) return;
       moved = true;
       cursor.move(ev.clientY);
-      px = Math.max(grid.size * 3, startHeight + (ev.clientY - startY));
+      px = Math.max(grid.size * 3, startHeight + (ev.clientY - startY) / zoomOf(host));
       // Pixel-precise when snapping is off or Shift is held.
       const free = grid.snap === false || ev.shiftKey;
       px = free ? Math.round(px) : Math.round(px / grid.size) * grid.size;
@@ -807,7 +816,7 @@ function addSectionTopHandle(host, section, grid) {
     handle.setPointerCapture(event.pointerId);
     const startY = event.clientY;
     // Pure content height (without the nav clearance), as in the bottom-edge drag.
-    const startHeight = host.getBoundingClientRect().height - sectionClearance(host);
+    const startHeight = (host.getBoundingClientRect().height - sectionClearance(host)) / zoomOf(host);
     const startScrollY = window.scrollY;
     // The block elements and starting y are collected ONCE: no re-render
     // happens during the drag (an element swap would drop the pointer
@@ -825,7 +834,7 @@ function addSectionTopHandle(host, section, grid) {
       moved = true;
       cursor.move(ev.clientY);
       result = topDrag({
-        dyPointer: ev.clientY - startY,
+        dyPointer: (ev.clientY - startY) / zoomOf(host),
         minHeightPx: startHeight,
         blockYs: parts.map((p) => p.y),
         grid,
@@ -2487,6 +2496,7 @@ window.addEventListener('keydown', (event) => {
     const parts = selectedEls().map((e) => ({ el: e, ctx: e._urdCtx })).filter((p) => p.ctx);
     const d = dir[0] ? groupDelta(parts.map((p) => p.ctx.block.frames.desktop), r1(dir[0] * stepPx * pctPerPx), 0) : { dx: 0 };
     suspendSticky();
+    suspendPush();
     for (const p of parts) {
       const frame = { ...p.ctx.block.frames.desktop };
       if (dir[0]) frame.x = r1(frame.x + d.dx);
@@ -2496,6 +2506,7 @@ window.addEventListener('keydown', (event) => {
       post({ type: 'urd-move', sectionId: p.ctx.section.id, blockId: p.ctx.block.id, frame, frameKey: 'desktop', coalesce: true, groupKey: 'multi-arrow' });
     }
     resumeSticky();
+    resumePush();
     updateMultiToolbar();
     return;
   }
@@ -2505,8 +2516,10 @@ window.addEventListener('keydown', (event) => {
   if (dir[1]) frame.y = frame.y + dir[1] * stepPx;
   ctx.block.frames.desktop = frame;
   suspendSticky();
+  suspendPush();
   Object.assign(el.style, frameToCss(frame));
   resumeSticky();
+  resumePush();
   // coalesce: a burst of arrow-key presses becomes one undo step.
   post({ type: 'urd-move', sectionId: ctx.section.id, blockId: selectedBlockId, frame, frameKey: 'desktop', coalesce: true });
 });
@@ -2570,12 +2583,13 @@ document.addEventListener('pointerdown', (event) => {
   // share the same frame.
   const canvas = canvasOf(host);
   const startRect = canvas.getBoundingClientRect();
-  const start = { x: event.clientX - startRect.left, y: event.clientY - startRect.top };
+  const z = zoomOf(canvas);
+  const start = { x: (event.clientX - startRect.left) / z, y: (event.clientY - startRect.top) / z };
   let rectEl = null;
 
   const onMove = (ev) => {
     const hostRect = canvas.getBoundingClientRect();
-    const cur = { x: ev.clientX - hostRect.left, y: ev.clientY - hostRect.top };
+    const cur = { x: (ev.clientX - hostRect.left) / z, y: (ev.clientY - hostRect.top) / z };
     if (!rectEl) {
       if (Math.abs(cur.x - start.x) + Math.abs(cur.y - start.y) < 6) return;
       rectEl = document.createElement('div');
@@ -2725,8 +2739,10 @@ function startSelectionDrag(event) {
   const handle = event.currentTarget;
   handle.setPointerCapture(event.pointerId);
   // As with the single drag: pinned blocks are released back to their real
-  // place before the drag writes geometry on them.
+  // place before the drag writes geometry on them, and the pushed blocks
+  // return to their design positions.
   suspendSticky();
+  suspendPush();
 
   const width = canvasOf(host).getBoundingClientRect().width;
   const startX = event.clientX;
@@ -2743,7 +2759,7 @@ function startSelectionDrag(event) {
     updateMultiToolbar();
   };
   const move = (e) => {
-    delta = groupDelta(items, ((e.clientX - startX) / width) * 100, e.clientY - startY);
+    delta = groupDelta(items, ((e.clientX - startX) / width) * 100, (e.clientY - startY) / zoomOf(host));
     apply((it) => ({ ...it, x: it.x + delta.dx, y: it.y + delta.dy }));
   };
   const finish = (commit) => {
@@ -2751,6 +2767,7 @@ function startSelectionDrag(event) {
     handle.removeEventListener('pointerup', up);
     handle.removeEventListener('pointercancel', cancel);
     resumeSticky();
+    resumePush();
     if (commit && (delta.dx || delta.dy)) {
       applySelectionMoves(items.map((it) => ({ id: it.id, x: r2(it.x + delta.dx), y: it.y + delta.dy })));
     } else {
@@ -2811,6 +2828,7 @@ function applySelectionMoves(moves) {
   // the pinning must let go first (otherwise the next pin is measured
   // against the old place).
   suspendSticky();
+  suspendPush();
   const key = makeId('malign');
   for (const move of moves) {
     const el = document.querySelector(`.urd-block[data-block-id="${CSS.escape(move.id)}"]`);
@@ -2824,6 +2842,7 @@ function applySelectionMoves(moves) {
     post({ type: 'urd-move', sectionId: ctx.section.id, blockId: move.id, frame, frameKey: 'desktop', coalesce: true, groupKey: key });
   }
   resumeSticky();
+  resumePush();
   updateMultiToolbar();
 }
 
@@ -3427,8 +3446,8 @@ function enhanceBlock(el, block, section, grid, host) {
             started = true;
             hold();
           }
-          el.style.left = `${orig.left + (ev.clientX - start.x)}px`;
-          el.style.top = `${orig.top + (ev.clientY - start.y)}px`;
+          el.style.left = `${orig.left + (ev.clientX - start.x) / zoomOf(el)}px`;
+          el.style.top = `${orig.top + (ev.clientY - start.y) / zoomOf(el)}px`;
         };
         const finishDock = (commit) => {
           handle.removeEventListener('pointermove', onDockMove);
@@ -3484,12 +3503,13 @@ function enhanceBlock(el, block, section, grid, host) {
       // suspends nothing. The pair must be exact: an unmatched resume
       // would cut short the suspension of another drag in progress.
       let holdsSticky = false;
-      const holdSticky = () => { if (!holdsSticky) { holdsSticky = true; suspendSticky(); } };
-      const dropSticky = () => { if (holdsSticky) { holdsSticky = false; resumeSticky(); } };
+      const holdSticky = () => { if (!holdsSticky) { holdsSticky = true; suspendSticky(); suspendPush(); } };
+      const dropSticky = () => { if (holdsSticky) { holdsSticky = false; resumeSticky(); resumePush(); } };
       if (started) holdSticky();
 
       const start = { x: event.clientX, y: event.clientY };
       const orig = { ...(block.frames[frameKey] ?? block.frames.desktop) };
+      const z = zoomOf(el);
       // Group drag: if the block is part of a multi-selection, the rest
       // follow (same delta, clamped so the whole group stays within the
       // width).
@@ -3581,8 +3601,8 @@ function enhanceBlock(el, block, section, grid, host) {
         const free = grid.snap === false || ev.shiftKey;
         const snapPct = free ? (v) => Math.round(v * 10) / 10 : (v) => r2(Math.round(v / colStep) * colStep);
         const snapPx = free ? Math.round : (v) => Math.round(v / grid.size) * grid.size;
-        const dx = (ev.clientX - start.x) * pctPerPx;
-        const dy = ev.clientY - start.y;
+        const dx = ((ev.clientX - start.x) / z) * pctPerPx;
+        const dy = (ev.clientY - start.y) / z;
         current = kind === 'move'
           ? {
               ...orig,

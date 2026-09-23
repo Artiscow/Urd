@@ -232,7 +232,7 @@ export const checkoutBlock = {
       });
     }
 
-    // Auto-grow: the summary varies with the basket. ONLY the height is reported (urd-grow).
+    // Auto-grow: the summary varies with the basket. the display only; the blocks below are moved by the push pass (ADR-0024).
     requestAnimationFrame(() => {
       if (!el.isConnected) return;
       const needed = host.scrollHeight;
@@ -240,13 +240,6 @@ export const checkoutBlock = {
         el.style.height = `${needed}px`;
         const sectionEl = el.closest('.urd-section');
         if (sectionEl) growSectionTo(sectionEl, el.offsetTop + needed + 24);
-        if (ctx.preview) {
-          const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
-          if (block && block.frames.desktop.h !== needed) {
-            block.frames.desktop = { ...block.frames.desktop, h: needed };
-            window.parent?.postMessage({ type: 'urd-grow', sectionId: ctx.section.id, blockId: el.dataset.blockId, h: needed }, location.origin);
-          }
-        }
       }
     });
   },

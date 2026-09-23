@@ -14,6 +14,7 @@
  *    natural height, and the section height follows from the grid.
  */
 import { lift, MOBILE_ROW, MOBILE_GAP } from './migrate.js';
+import { pushLayout } from './push-model.js';
 import { applyAnimation, applyCardAnimation } from './animations/core.js';
 import { applySectionTheme } from './theme.js';
 import { refreshSticky } from './sticky.js';
@@ -93,6 +94,182 @@ export function applySiteLayout(site, root = document.documentElement) {
 export function growSectionTo(sectionEl, bottom) {
   const current = Number.parseFloat(getComputedStyle(sectionEl).minHeight) || 0;
   if (bottom > current) sectionEl.style.minHeight = `${bottom}px`;
+}
+
+/* ---------- Content push on the desktop canvas (ADR-0024) ---------- */
+
+/** Sections with a push pass, so a suspension can reset them all. */
+const pushHosts = new Set();
+let pushSuspended = 0;
+
+/**
+ * Measures every block against its frame and moves the blocks below a block
+ * whose content grew (pure rules in push-model.js). The shifts live only on
+ * the elements (style.top and data-urd-shift), never in the frames; the
+ * section grows when the pushed content needs more than its design height,
+ * and returns to it when the growth is gone. A pinned block keeps its stash
+ * up to date instead of its inline top, so a release lands right.
+ * @param {HTMLElement} host The section element
+ */
+function applyPush(host) {
+  if (!host.isConnected) {
+    pushHosts.delete(host);
+    host._urdPushRo?.disconnect();
+    return;
+  }
+  const section = host._urdPushSection;
+  const canvas = host.querySelector(':scope > .urd-canvas');
+  if (!section || !canvas) return;
+  const items = [];
+  for (const el of canvas.querySelectorAll(':scope > .urd-block')) {
+    const frame = section.blocks.find((b) => b.id === el.dataset.blockId)?.frames?.desktop;
+    if (!frame) continue;
+    // The box follows its content down to the design height and never
+    // below it: taller content grows it, content that fits again (a wider
+    // window, a text set to shrink) gives the design height back.
+    // Measured with the box at the design height, since the content's
+    // min-height follows the box: a grown box would otherwise never shrink.
+    el.style.height = `${frame.h}px`;
+    if (!pushSuspended) fitContent(el, frame.h);
+    const needed = pushSuspended ? frame.h : Math.max(frame.h, Math.round(contentHeight(el)));
+    if (needed !== frame.h) el.style.height = `${needed}px`;
+    const grow = needed - frame.h;
+    items.push({ id: el.dataset.blockId, x: frame.x, y: frame.y, h: frame.h, grow, el });
+  }
+  const { shifts, bottom } = pushLayout(items);
+  let grew = false;
+  for (const it of items) {
+    const shift = shifts.get(it.id) ?? 0;
+    grew = grew || it.grow > 0;
+    const top = `${it.y + shift}px`;
+    if (shift) it.el.dataset.urdShift = String(shift);
+    else delete it.el.dataset.urdShift;
+    if (it.el._urdStickyBase) {
+      it.el._urdStickyBase.top = top;
+      it.el._urdStickyBase.y = it.y + shift;
+      continue;
+    }
+    if (it.el.style.top !== top) it.el.style.top = top;
+  }
+  host.style.minHeight = host.dataset.urdMinHeight ?? '';
+  if (grew) {
+    const basePx = Number.parseFloat(getComputedStyle(host).minHeight) || 0;
+    if (bottom + 24 > basePx) host.style.minHeight = `${Math.round(bottom + 24)}px`;
+  }
+}
+
+/**
+ * Shrink instead of wrap (ADR-0024): a content child with the class urd-fit
+ * is zoomed only as much as its frame needs. The largest zoom from 1 down to
+ * the child's floor (data-urd-fit-min, a share of the design size, so the
+ * block's own zoom is divided out of it) at which the content fits the
+ * design height is found by bisection; content that fits at full size is
+ * left alone, and content that does not fit at the floor keeps the floor,
+ * wraps, and is pushed like any other. The content never exceeds the
+ * block's own scale. Measured with the box at the design height and the
+ * child's min-height off, since the child otherwise fills the box.
+ * @param {HTMLElement} el The block element
+ * @param {number} designH The frame's design height in px
+ */
+function fitContent(el, designH) {
+  const child = el.querySelector(':scope > .urd-fit');
+  if (!child) return;
+  const floor = Math.min(1, (Number(child.dataset.urdFitMin) || 0.6) / (el.currentCSSZoom ?? 1));
+  const minHeight = child.style.minHeight;
+  child.style.minHeight = '0';
+  const fitsAt = (z) => {
+    child.style.zoom = z === 1 ? '' : String(z);
+    return child.scrollHeight * z <= designH + 1;
+  };
+  if (!fitsAt(1) && fitsAt(floor)) {
+    let lo = floor;
+    let hi = 1;
+    for (let i = 0; i < 8; i++) {
+      const mid = (lo + hi) / 2;
+      if (fitsAt(mid)) lo = mid;
+      else hi = mid;
+    }
+    fitsAt(Math.round(lo * 1000) / 1000);
+  }
+  child.style.minHeight = minHeight;
+}
+
+/** The editing chrome inside a block never counts as content. */
+const BLOCK_CHROME = '.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-hint-chip, .urd-hint-card';
+
+/**
+ * The height the block's content needs, in the block's own px. Measured on
+ * the content children, not on the block, so the editing handles that hang
+ * below the box never count; a zoomed child (a text set to shrink) is
+ * converted from its own zoom to the block's.
+ * @param {HTMLElement} el The block element
+ * @returns {number}
+ */
+function contentHeight(el) {
+  const z = el.currentCSSZoom ?? 1;
+  let needed = 0;
+  for (const child of el.children) {
+    if (child.matches(BLOCK_CHROME)) continue;
+    needed = Math.max(needed, child.scrollHeight * ((child.currentCSSZoom ?? 1) / z));
+  }
+  return needed;
+}
+
+/** One pass per frame per section, however many observations arrive. */
+function schedulePush(host) {
+  if (host._urdPushRaf) return;
+  host._urdPushRaf = requestAnimationFrame(() => {
+    host._urdPushRaf = 0;
+    applyPush(host);
+  });
+}
+
+/**
+ * Wires the push pass for a freshly rendered desktop section: a first pass
+ * after the blocks' own measurements (they queue their frames before this
+ * one), and a ResizeObserver on every block and its content for fonts,
+ * images, feeds and width changes. The observer runs the pass synchronously:
+ * its notifications are delivered after layout and before paint, so a text
+ * that wrapped at the new width is fitted and pushed before the frame is
+ * drawn; a queued pass would paint the wrapped state once per resize step.
+ * The pass is deterministic, so a second delivery in the same frame finds
+ * the same sizes and the loop ends.
+ * @param {HTMLElement} host The section element
+ * @param {object} section The section data
+ */
+function wirePush(host, section) {
+  host._urdPushRo?.disconnect();
+  host._urdPushSection = section;
+  pushHosts.add(host);
+  const ro = new ResizeObserver(() => {
+    if (host._urdPushRaf) {
+      cancelAnimationFrame(host._urdPushRaf);
+      host._urdPushRaf = 0;
+    }
+    applyPush(host);
+  });
+  for (const el of host.querySelectorAll(':scope > .urd-canvas > .urd-block')) {
+    ro.observe(el);
+    if (el.firstElementChild) ro.observe(el.firstElementChild);
+  }
+  host._urdPushRo = ro;
+  schedulePush(host);
+}
+
+/**
+ * Editing that writes geometry is starting: every block returns to its
+ * design position, so the drag happens on the layout the data describes
+ * (the Fluid Engine removes its row stretch at drag start for the same
+ * reason). Paired with resumePush, which pushes again from the new frames.
+ */
+export function suspendPush() {
+  if (pushSuspended++ === 0) for (const host of pushHosts) applyPush(host);
+}
+
+/** Editing done: measure and push again. */
+export function resumePush() {
+  if (pushSuspended > 0) pushSuspended -= 1;
+  if (pushSuspended === 0) for (const host of pushHosts) schedulePush(host);
 }
 
 /**
@@ -360,6 +537,8 @@ export function renderSection(section, site, host, opts = {}) {
     // blocks' extent is used. The nav clearance is the section's padding
     // (base.css), so the content surface keeps this height when pushed down.
     host.style.minHeight = sectionMinHeight(section, maxBottomPx);
+    host.dataset.urdMinHeight = host.style.minHeight;
+    wirePush(host, section);
   }
 
   // Optional section animation (additive field). The entrance animation

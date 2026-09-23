@@ -2,6 +2,26 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.17.2-3): scaling below the content width, and the content push
+
+- [ ] The Hjem page at about 1070 px window width: «Gjerne følg prosjektet på vår Github side!» wraps to two lines and the «Les mer» button sits below the text, not under it; widen the window and the button returns to its design place
+- [ ] The demo pages at 1440, 1280, 1024 and 820 px in Chromium and Firefox: no text over another block; between the binding width and about 1228 px the page is the design at a smaller size; below that it follows the window width at the smallest scale
+- [ ] A badge or a title deliberately placed over an image (its top above the image's middle) stays where it is when the image's neighbour text grows
+- [ ] Drag a block that was pushed down: at drag start every block in the section returns to its design position, and after release the push is back; arrow keys and align behave the same
+- [ ] A pinned block (scroll pinning) and a docked block after a push and under zoom at 1280 px: they pin and release where they stand
+- [ ] Site panel, Layout: «Below the content width» Scale the page / Keep the sizes, and «Smallest scale» with the floor width in the text; Keep the sizes restores the earlier behaviour, and the push still keeps the blocks apart
+- [ ] The nav: a wide window shows the items; narrowing the window folds them to the burger only when they reach the tools; 640 px gives the burger; nothing folds at 1228 px
+- [ ] Browser zoom to 200 % still enlarges the text, and a text made longer in the editor at the design width pushes the block below
+- [ ] The published page equals the preview at the Laptop and Tablet devices
+- [ ] The Screen choice (own window or an editing size with width and height) sits in the admin settings behind the gear, not under the Screen button in the toolbar; a click on Screen only selects the device, and the choice is remembered in the browser
+- [ ] The device strip has four devices (Screen, Laptop, Tablet, Phone); Reference 1920 is gone
+- [ ] Screen with a browser window narrower than 640 px shows the stacked mobile layout, as the published page does in that window
+- [ ] Type more text into a text block at the design width until the box grows: the blocks below move down with it, one undo step restores both; a feed block with more entries than its box moves the blocks below on the published page without changing the draft
+- [ ] Text block, Style tab, «Ved smalere skjerm: Krymp teksten» with «Minste skala» 60 %: at 700 px the heading shrinks with the width instead of wrapping and the button below stays in place; at «Minste skala» 100 % it wraps and pushes as before; the mobile view wraps regardless
+- [ ] The shrink starts only when needed: a text with room to spare in its frame keeps its size as the window narrows until the frame is too narrow for it at full size, then it gets smaller step by step so it still fits the design height, and never under «Minste skala» (a share of the DESIGN size: 40 % of a 16 px text is 6.4 px, whatever the page scale); typing into a shrunk text re-fits it
+- [ ] Narrowing the window slowly with a shrunk text never shows a flicker: the text is never drawn wrapped and then unwrapped at a step, it just gets smaller; widening it again brings the size back the same way, and the console shows no ResizeObserver loop message
+- [ ] Narrow the window so a paragraph wraps and pushes, then widen it again: the box and the blocks below return to the design; a FAQ answer opened on the published page pushes the blocks below and closing it brings them back
+
 ### Testrunde-batch (0.7.3): the release
 
 - [ ] Updates panel on a site created from the template (urd-web): 0.7.3 is offered, the update applies, and the site renders with engine 0.7.3 (all pages, the admin, the slug copies)

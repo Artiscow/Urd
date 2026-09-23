@@ -12,7 +12,7 @@
  * caret; only the arrow icon unfolds.
  *
  * Open and closed answers are view state, never content: the block's stored
- * height is always the collapsed one (auto-grow via urd-grow like the other data
+ * height is always the collapsed one (auto-grow of the display like the other data
  * blocks), and unfolding grows only visually.
  */
 import { stripActiveContent } from '../sanitize.js';
@@ -80,7 +80,7 @@ export const faqBlock = {
     };
 
     /** Visual height: the collapsed base plus the open answers. Display only,
-     *  never recorded in the draft (urd-grow always posts the collapsed height).
+     *  never part of the layout (the block always measures the collapsed height).
      *  Measures the answers' own height, independent of the unfold animation. */
     const adjustHeight = () => {
       const openHeights = [...host.querySelectorAll('.urd-faq-item[open] .urd-faq-a')]
@@ -178,7 +178,7 @@ export const faqBlock = {
 
     // Auto-grow (like the collection block): the frame follows the collapsed height.
     // All answers are closed at startup, so host.scrollHeight = collapsed.
-    // ONLY the height is posted (urd-grow), never the whole frame.
+    // The display only; the blocks below are moved by the push pass (ADR-0024).
     requestAnimationFrame(() => {
       if (!el.isConnected) return;
       el._urdFaqBase = host.scrollHeight;
@@ -187,13 +187,6 @@ export const faqBlock = {
         el.style.height = `${needed}px`;
         const sectionEl = el.closest('.urd-section');
         if (sectionEl) growSectionTo(sectionEl, el.offsetTop + needed + 24);
-        if (ctx.preview) {
-          const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
-          if (block && block.frames.desktop.h !== needed) {
-            block.frames.desktop = { ...block.frames.desktop, h: needed };
-            post({ type: 'urd-grow', sectionId: ctx.section.id, blockId: el.dataset.blockId, h: needed });
-          }
-        }
       }
     });
   },

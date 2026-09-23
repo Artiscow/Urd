@@ -9,6 +9,13 @@ import { boxStyleCss } from '../box-style.js';
 
 // The seed rule (ADR-0012): ta() is called only in defaults(), on insertion in preview, never at module level.
 import { ta } from '../i18n.js';
+import { pushLayout } from '../push-model.js';
+
+/** The floor of the shrink, a share of the design size: 0.01 to 1, default 0.6. */
+export function clampFitMin(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.min(1, Math.max(0.01, n)) : 0.6;
+}
 
 export const textBlock = {
   version: 1,
@@ -18,7 +25,7 @@ export const textBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el The block element (positioned by render.js)
-   * @param {{html: string, align: string, box?: boolean, boxStyle?: object, font?: string, size?: number, lineHeight?: number, letterSpacing?: number}} props
+   * @param {{html: string, align: string, box?: boolean, boxStyle?: object, font?: string, size?: number, lineHeight?: number, letterSpacing?: number, fit?: string, fitMin?: number}} props
    * @param {object} ctx Render context
    */
   render(el, props, ctx) {
@@ -37,6 +44,15 @@ export const textBlock = {
     // Optional font and size per text block (additive; empty = inherited from the theme).
     if (props.font) content.style.fontFamily = props.font;
     if (props.size) content.style.fontSize = `${props.size}px`;
+    // Shrink instead of wrap (additive, ADR-0024): when the frame gets too
+    // narrow for the text at full size, the push pass in render.js zooms the
+    // content only as much as the design height needs, down to the floor
+    // (a share of the design size), and it wraps only past that. The whole
+    // content is zoomed, so inline sizes from the toolbar follow too.
+    if (props.fit === 'shrink') {
+      content.classList.add('urd-fit');
+      content.dataset.urdFitMin = String(clampFitMin(props.fitMin));
+    }
     // Optional line and letter spacing per field (additive; empty = inherited).
     // The line height is unitless (it scales with the font size); the letter
     // spacing is px and can be negative (tighter than normal).
@@ -67,17 +83,34 @@ export const textBlock = {
         // Grow with the content: when the text becomes taller than the frame,
         // the frame (and the section when needed) is expanded so nothing is
         // clipped or overlaps. Measured on the content element, so the handles
-        // never count. The growth belongs to the same undo step as the typing.
-        if (content.scrollHeight > el.clientHeight) {
+        // never count, and converted from the content's zoom (a text set to
+        // shrink) to the block's. The growth belongs to the same undo step
+        // as the typing.
+        const zoom = (content.currentCSSZoom ?? 1) / (el.currentCSSZoom ?? 1);
+        if (content.scrollHeight * zoom > el.clientHeight) {
           const block = ctx.section.blocks.find((b) => b.id === el.dataset.blockId);
           if (block) {
             const step = ctx.grid?.size ?? 8;
-            const newH = Math.ceil(content.scrollHeight / step) * step;
+            const newH = Math.ceil((content.scrollHeight * zoom) / step) * step;
+            const grow = newH - block.frames.desktop.h;
             block.frames.desktop = { ...block.frames.desktop, h: newH };
             el.style.height = `${newH}px`;
             // The section is left alone: if the text grows past the edge it
             // hangs over (sections never clip, and the height is the user's).
-            post({ type: 'urd-move', sectionId: ctx.section.id, blockId: block.id, frame: block.frames.desktop, coalesce: true });
+            post({ type: 'urd-move', sectionId: ctx.section.id, blockId: block.id, frame: block.frames.desktop, coalesce: true, groupKey: block.id });
+            // Typing is an edit of the design: the blocks below move in the
+            // data by the push rules (ADR-0024), in the same undo step.
+            const items = ctx.section.blocks
+              .filter((b) => b.frames?.desktop)
+              .map((b) => ({ id: b.id, x: b.frames.desktop.x, y: b.frames.desktop.y, h: b.id === block.id ? block.frames.desktop.h - grow : b.frames.desktop.h, grow: b.id === block.id ? grow : 0 }));
+            for (const [id, shift] of pushLayout(items).shifts) {
+              const other = ctx.section.blocks.find((b) => b.id === id);
+              if (!other) continue;
+              other.frames.desktop = { ...other.frames.desktop, y: other.frames.desktop.y + shift };
+              const otherEl = el.parentElement?.querySelector(`:scope > .urd-block[data-block-id="${CSS.escape(id)}"]`);
+              if (otherEl) otherEl.style.top = `${other.frames.desktop.y}px`;
+              post({ type: 'urd-move', sectionId: ctx.section.id, blockId: id, frame: other.frames.desktop, coalesce: true, groupKey: block.id });
+            }
           }
         }
 
@@ -102,21 +135,14 @@ export const textBlock = {
     // rounding from causing endless small adjustments.
     requestAnimationFrame(() => {
       if (!el.isConnected || ctx.viewport === 'mobile') return;
-      const needed = content.scrollHeight;
+      const needed = content.scrollHeight * ((content.currentCSSZoom ?? 1) / (el.currentCSSZoom ?? 1));
       if (needed <= el.clientHeight + 4) return;
       const step = ctx.grid?.size ?? 8;
       const newH = Math.ceil(needed / step) * step;
+      // The display only: the frame keeps the design height, and the push
+      // pass in render.js moves the blocks below by the measured growth
+      // (ADR-0024), in the editor as on the published page.
       el.style.height = `${newH}px`;
-      // For visitors only the display is corrected; in preview the new height is
-      // recorded in the draft, so the next publish does not have to measure again.
-      if (!ctx.preview) return;
-      const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
-      if (!block || block.frames.desktop.h === newH) return;
-      block.frames.desktop = { ...block.frames.desktop, h: newH };
-      window.parent?.postMessage(
-        { type: 'urd-grow', sectionId: ctx.section.id, blockId: el.dataset.blockId, h: newH },
-        location.origin,
-      );
     });
   },
 };
