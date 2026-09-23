@@ -246,6 +246,17 @@ test('hostClasses: the variants control the host and body classes', () => {
     { host: ['urd-nav-side-host', 'urd-nav-side-host-right'], body: ['urd-side-right'] });
 });
 
+test('hostClasses: transparent at the top is a host class for bar and floating, never the column', () => {
+  const style = { atTop: 'clear' };
+  assert.deepEqual(hostClasses({ nav: { style } }), { host: ['urd-nav-clear'], body: [] });
+  assert.deepEqual(hostClasses({ nav: { overlay: true, style } }), { host: ['urd-nav-overlay', 'urd-nav-clear'], body: [] });
+  assert.deepEqual(hostClasses({ nav: { variant: 'floating-tab', style } }), { host: ['urd-nav-float', 'urd-nav-clear'], body: [] });
+  assert.deepEqual(hostClasses({ nav: { variant: 'side-left', style } }),
+    { host: ['urd-nav-side-host', 'urd-nav-side-host-left'], body: ['urd-side-left'] });
+  // Any other value, or none, leaves the surface always drawn.
+  assert.deepEqual(hostClasses({ nav: { style: { atTop: 'solid' } } }), { host: [], body: [] });
+});
+
 test('hostClasses: overlay applies only to bar, not floating/side', () => {
   // Bar (default) with overlay: the host is taken out of the flow.
   assert.deepEqual(hostClasses({ nav: { overlay: true } }), { host: ['urd-nav-overlay'], body: [] });
@@ -360,25 +371,32 @@ test('clampSideWidth: clamped to 180-400, garbage gives the default 250', () => 
 });
 
 test('navScrollState: without a mode the menu is always normal and visible', () => {
-  assert.deepEqual(navScrollState(undefined, 0, 500, true), { compact: false, hidden: false });
-  assert.deepEqual(navScrollState('tull', 0, 500, true), { compact: false, hidden: false });
+  assert.deepEqual(navScrollState(undefined, 0, 500, true), { compact: false, hidden: false, scrolled: true });
+  assert.deepEqual(navScrollState('tull', 0, 500, true), { compact: false, hidden: false, scrolled: true });
+});
+
+test('navScrollState: scrolled says whether the page has left the top zone, in every mode', () => {
+  assert.equal(navScrollState(undefined, 0, 80, false).scrolled, false);
+  assert.equal(navScrollState(undefined, 0, 81, false).scrolled, true);
+  assert.equal(navScrollState('hide', 200, 100, true).scrolled, true);
+  assert.equal(navScrollState('hide', 200, 10, true).scrolled, false);
 });
 
 test('navScrollState: shrink is compact only after the top zone', () => {
-  assert.deepEqual(navScrollState('shrink', 0, 40, false), { compact: false, hidden: false });
-  assert.deepEqual(navScrollState('shrink', 40, 200, false), { compact: true, hidden: false });
+  assert.deepEqual(navScrollState('shrink', 0, 40, false), { compact: false, hidden: false, scrolled: false });
+  assert.deepEqual(navScrollState('shrink', 40, 200, false), { compact: true, hidden: false, scrolled: true });
   // Shrink never hides, regardless of direction.
   assert.equal(navScrollState('shrink', 500, 300, false).hidden, false);
 });
 
 test('navScrollState: hide hides on scroll down and shows on scroll up', () => {
-  assert.deepEqual(navScrollState('hide', 100, 200, false), { compact: false, hidden: true });
-  assert.deepEqual(navScrollState('hide', 200, 100, true), { compact: false, hidden: false });
+  assert.deepEqual(navScrollState('hide', 100, 200, false), { compact: false, hidden: true, scrolled: true });
+  assert.deepEqual(navScrollState('hide', 200, 100, true), { compact: false, hidden: false, scrolled: true });
 });
 
 test('navScrollState: hide is always visible in the top zone', () => {
-  assert.deepEqual(navScrollState('hide', 200, 50, true), { compact: false, hidden: false });
-  assert.deepEqual(navScrollState('hide', 0, 0, true), { compact: false, hidden: false });
+  assert.deepEqual(navScrollState('hide', 200, 50, true), { compact: false, hidden: false, scrolled: false });
+  assert.deepEqual(navScrollState('hide', 0, 0, true), { compact: false, hidden: false, scrolled: false });
 });
 
 test('navScrollState: small movements below the jitter guard keep the state', () => {
@@ -456,6 +474,14 @@ test('navSizeVars: every field lands in its variable, clamped at both ends', () 
   assert.deepEqual(navSizeVars({ padY: 'tull', textSize: '', pillWidth: 'bred' }).vars, {});
 });
 
+test('navSizeVars: the rounding is a clamped px variable, omitted when empty', () => {
+  assert.equal(navSizeVars({ radius: 24 }).vars['--urd-nav-radius'], '24px');
+  assert.equal(navSizeVars({ radius: 200 }).vars['--urd-nav-radius'], '64px');
+  assert.equal(navSizeVars({ radius: -3 }).vars['--urd-nav-radius'], '0px');
+  assert.equal('--urd-nav-radius' in navSizeVars({}).vars, false);
+  assert.equal('--urd-nav-radius' in navSizeVars({ radius: '' }).vars, false);
+});
+
 test('navSizeVars: the pill width is a px value or the content width, never at the breakpoint', () => {
   assert.equal(navSizeVars({ pillWidth: 'content' }).vars['--urd-nav-pill-w'], 'min(var(--urd-canvas-w, 100%), calc(100% - 2 * var(--urd-canvas-gutter-desktop, 0px)))');
   assert.equal(navSizeVars({ pillWidth: 'content' }, {}, { mobile: true }).vars['--urd-nav-pill-w'], undefined);
@@ -489,4 +515,15 @@ test('subOpenMode: hover by default, stay keeps hover opening only, click disabl
   assert.deepEqual(subOpenMode({ subOpen: 'stay' }), { hoverOpens: true, hoverCloses: false });
   assert.deepEqual(subOpenMode({ subOpen: 'click' }), { hoverOpens: false, hoverCloses: false });
   assert.deepEqual(subOpenMode({ subOpen: 'nonsense' }), { hoverOpens: true, hoverCloses: true });
+});
+
+test('base.css: the underline hover is revealed with clip-path, and the clear surface hides the surface until scrolled', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const css = await readFile(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  const underline = css.slice(css.indexOf('.urd-nav-hover-underline .urd-nav-list a::after'), css.indexOf('.urd-nav-hover-pill'));
+  assert.match(underline, /clip-path: inset\(0 100% 0 0\)/);
+  assert.match(underline, /clip-path: inset\(0\)/);
+  assert.doesNotMatch(underline, /scaleX/);
+  assert.match(css, /\.urd-nav-clear:not\(\.urd-nav-scrolled\) \.urd-nav \{[^}]*background: transparent/);
+  assert.match(css, /\.urd-nav-var-floating \{[^}]*border-radius: var\(--urd-nav-radius, 999px\)/);
 });

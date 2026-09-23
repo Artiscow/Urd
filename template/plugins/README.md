@@ -80,7 +80,7 @@ kode. `lang-sv` er referansen (svensk for besøkende-siden):
   "name": "Svensk språkpakke",
   "version": "1.0.0",
   "requiresEngine": ">=0.6.8 <1.0.0",
-  "languages": [{ "code": "sv", "name": "Svenska", "site": true, "admin": false }]
+  "languages": [{ "code": "sv", "name": "Svenska", "site": true, "admin": true }]
 }
 ```
 

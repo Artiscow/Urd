@@ -57,13 +57,12 @@ test('.urd-canvas has no property that creates a containing block for fixed', ()
   }
 });
 
-test('the desktop section is zoomed by --urd-scale, and the canvas itself scales nothing', () => {
+test('neither the desktop section nor the canvas is zoomed: blocks shrink one by one (ADR-0024), never the page', () => {
   const section = ruleBody(CSS, 'body:not(.urd-mobile) .urd-section');
   assert.ok(section, 'rule body:not(.urd-mobile) .urd-section is missing');
-  assert.match(section, /zoom:\s*var\(--urd-scale,\s*1\)/, 'the section must zoom by --urd-scale (ADR-0018 addendum)');
-  assert.match(section, /--urd-unzoom:/, 'the section must expose the inverse for lengths measured outside it');
+  assert.ok(!/(^|;|\s)zoom\s*:/.test(section), 'the page zoom of the withdrawn ADR-0018 addendum must not return');
   const canvas = ruleBody(CSS, '.urd-canvas');
-  assert.ok(!/(^|;|\s)zoom\s*:/.test(canvas), 'the zoom sits on the section, never on the canvas');
+  assert.ok(!/(^|;|\s)zoom\s*:/.test(canvas), 'the canvas is never zoomed');
 });
 
 test('.urd-canvas binds the width and centers', () => {

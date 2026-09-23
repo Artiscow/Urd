@@ -88,24 +88,9 @@ img, video {
    backdrop-filter, contain, container-type or will-change. All seven
    create a containing block for position: fixed, and would break pinned and
    viewport-docked blocks (sticky.js). Enforced by tests/canvas.test.mjs. */
-/* The editing chrome's counter-scale (urd.js writes --urd-chrome-root from
-   the editor's canvas zoom); inside a zoomed section it is divided by the
-   section zoom below, so handles keep their on-screen size. */
-:root {
-  --urd-chrome-scale: var(--urd-chrome-root, 1);
-}
 
-/* Proportional scaling below the design width (ADR-0018 addendum): the
-   section is zoomed by --urd-scale (written on the root by urd.js from
-   scale-model.js), so frames, section heights, text and images follow the
-   canvas width together. zoom affects layout and creates no containing block
-   for fixed, unlike transform. Lengths measured outside the section (the menu
-   height) are multiplied by --urd-unzoom before they are used inside it. */
 body:not(.urd-mobile) .urd-section {
   --urd-canvas-gutter: var(--urd-canvas-gutter-desktop, 24px);
-  zoom: var(--urd-scale, 1);
-  --urd-unzoom: calc(1 / var(--urd-scale, 1));
-  --urd-chrome-scale: calc(var(--urd-chrome-root, 1) / var(--urd-scale, 1));
 }
 
 .urd-canvas {
@@ -139,7 +124,7 @@ body.urd-mobile .urd-canvas {
    the canvas rules above translate it. Menus in flow (sticky/column) need no clearance. */
 #urd-nav.urd-nav-float + #urd-root > .urd-section:first-of-type,
 #urd-nav.urd-nav-overlay + #urd-root > .urd-section:first-of-type {
-  --urd-section-clear: calc(var(--urd-nav-h, 0px) * var(--urd-unzoom, 1));
+  --urd-section-clear: var(--urd-nav-h, 0px);
 }
 
 /* Rotated and overhanging blocks must not cause horizontal scrolling */
@@ -3453,23 +3438,51 @@ body.urd-mobile .urd-nav-sub,
      negative margin trick is calibrated against --urd-nav-pad and has to
      follow it. The pill scales the size preset down, so the size choice
      composes; an explicit thickness is drawn as set.
-     The width is nav.style.pillWidth (inline from nav.js) or 1100px. */
+     The width is nav.style.pillWidth (inline from nav.js) or 1100px, the
+     rounding nav.style.radius (inline from nav.js) or the variant's preset. */
   --urd-nav-base-pad: var(--urd-nav-pad-y, calc(var(--urd-nav-size-pad, 0.9rem) * 0.67));
   margin: 0.75rem auto 0;
   width: min(var(--urd-nav-pill-w, 1100px), calc(100% - 2rem));
-  border-radius: 999px;
+  border-radius: var(--urd-nav-radius, 999px);
 }
 
 /* The square variant (nav.variant floating-square): the pill without rounding */
 .urd-nav-var-floating.urd-nav-square {
-  border-radius: 0;
+  border-radius: var(--urd-nav-radius, 0);
 }
 
 /* The tab variant (nav.variant floating-tab): a square top, only the two lower
    corners rounded - it hangs down from the top. Inherits the air above and the side
    margin from the base; with topGap: false (urd-nav-flush) it becomes a hanging header. */
 .urd-nav-var-floating.urd-nav-tab {
-  border-radius: 0 0 var(--urd-radius-md) var(--urd-radius-md);
+  border-radius: 0 0 var(--urd-nav-radius, var(--urd-radius-md)) var(--urd-nav-radius, var(--urd-radius-md));
+}
+
+/* Transparent at the top (nav.style.atTop 'clear'): until the page has left
+   the top zone the menu draws no surface, blur, border or shadow, and the
+   layer backdrop is hidden; they appear with urd-nav-scrolled (nav.js). The
+   rules set the properties themselves, not the variables, since nav.js
+   writes the surface variables inline. */
+.urd-nav-clear .urd-nav {
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.urd-nav-clear .urd-nav > .urd-nav-bg {
+  transition: opacity 0.3s ease;
+}
+
+.urd-nav-clear:not(.urd-nav-scrolled) .urd-nav {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.urd-nav-clear:not(.urd-nav-scrolled) .urd-nav::before {
+  backdrop-filter: none;
+}
+
+.urd-nav-clear:not(.urd-nav-scrolled) .urd-nav > .urd-nav-bg {
+  opacity: 0;
 }
 
 /* Glow around the pill: opt-in (off by default) */
@@ -3793,14 +3806,15 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open,
   height: 2px;
   border-radius: 1px;
   background: var(--urd-nav-hover, var(--urd-color-accent));
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.2s ease;
+  /* Revealed with clip-path rather than a scale transform: the line is laid
+     out at its final size, so the animation's end frame equals the resting line. */
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.2s ease;
 }
 
 .urd-nav-hover-underline .urd-nav-list a:hover::after,
 .urd-nav-hover-underline .urd-nav-list a:focus-visible::after {
-  transform: scaleX(1);
+  clip-path: inset(0);
 }
 
 .urd-nav-hover-pill .urd-nav-list a {
@@ -3837,6 +3851,8 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open,
 @media (prefers-reduced-motion: reduce) {
   .urd-nav-caret svg,
   .urd-nav-toggle svg,
+  .urd-nav-clear .urd-nav,
+  .urd-nav-clear .urd-nav > .urd-nav-bg,
   .urd-nav-hover-underline .urd-nav-list a::after,
   .urd-nav-hover-pill .urd-nav-list a,
   .urd-nav-hover-lift .urd-nav-list a,
@@ -5455,7 +5471,7 @@ body.urd-mobile .urd-section-resize-top {
      at the top. The sticky offset reads the measured menu height (--urd-nav-h from
      nav.js), so the bar parks right below the menu instead of at a guessed fixed offset. */
   position: sticky;
-  top: calc(var(--urd-nav-h, 56px) * var(--urd-unzoom, 1) + 8px * var(--urd-chrome-scale, 1));
+  top: calc(var(--urd-nav-h, 56px) + 8px * var(--urd-chrome-scale, 1));
   display: none;
   gap: 2px;
   width: fit-content;

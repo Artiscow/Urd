@@ -89,7 +89,7 @@ export function renderNav(site, host) {
   // are toggled on every render, so a variant switch in the editor never
   // leaves leftovers.
   const hc = hostClasses(effSite);
-  for (const cls of ['urd-nav-float', 'urd-nav-overlay', 'urd-nav-side-host', 'urd-nav-side-host-left', 'urd-nav-side-host-right']) {
+  for (const cls of ['urd-nav-float', 'urd-nav-overlay', 'urd-nav-side-host', 'urd-nav-side-host-left', 'urd-nav-side-host-right', 'urd-nav-clear']) {
     host.classList.toggle(cls, hc.host.includes(cls));
   }
   for (const cls of ['urd-side-left', 'urd-side-right']) {
@@ -116,9 +116,14 @@ export function renderNav(site, host) {
   const scrollMode = effSite.nav.scroll;
   const wantsScroll = (scrollMode === 'shrink' || scrollMode === 'hide')
     && !isSide && effSite.nav.sticky !== false;
+  // Transparent at the top (nav.style.atTop 'clear', additive since v0.7):
+  // the host class comes from hostClasses, the surface appears once the
+  // page has left the top zone (urd-nav-scrolled). Independent of sticky:
+  // a menu that scrolls away is only ever seen in the top zone.
+  const clearTop = host.classList.contains('urd-nav-clear');
   host.classList.toggle('urd-nav-scroll', wantsScroll);
-  if (!wantsScroll) {
-    host.classList.remove('urd-nav-compact', 'urd-nav-hidden');
+  if (!wantsScroll && !clearTop) {
+    host.classList.remove('urd-nav-compact', 'urd-nav-hidden', 'urd-nav-scrolled');
   } else {
     let prevY = window.scrollY;
     let hidden = false;
@@ -128,13 +133,16 @@ export function renderNav(site, host) {
       const editing = body.classList.contains('urd-preview') && !body.classList.contains('urd-chrome-off');
       const menuOpen = nav.classList.contains('urd-nav-open');
       const y = window.scrollY;
+      // While editing and while the mobile panel is open the menu is normal,
+      // visible and with its surface drawn.
       const state = editing || menuOpen
-        ? { compact: false, hidden: false }
-        : navScrollState(scrollMode, prevY, y, hidden);
+        ? { compact: false, hidden: false, scrolled: true }
+        : navScrollState(wantsScroll ? scrollMode : undefined, prevY, y, hidden);
       prevY = y;
       hidden = state.hidden;
       host.classList.toggle('urd-nav-compact', state.compact);
       host.classList.toggle('urd-nav-hidden', state.hidden);
+      host.classList.toggle('urd-nav-scrolled', state.scrolled);
     };
     window.addEventListener('scroll', () => {
       if (ticking) return;

@@ -63,14 +63,6 @@ function canvasOf(host) {
 }
 
 /**
- * The effective zoom of a section (ADR-0018 addendum): below the design width
- * the sections are zoomed, so pointer and rect distances are viewport px while
- * the frames, offsets and inline lengths are section px. Every write of a px
- * distance divides by it; percentages are ratios and need nothing.
- */
-const zoomOf = (el) => el.currentCSSZoom ?? 1;
-
-/**
  * The nav clearance for the section (0 except for the first section under
  * an out-of-flow menu, see base.css): how far the content surface is pushed
  * down. Measured as the canvas offset, so the height drags can work in pure
@@ -229,14 +221,13 @@ function openBlockMenuAt(host, clientX = null, clientY = null) {
   // the menu itself is a child of the section and is positioned against it.
   // Two different frames.
   const canvasRect = canvasOf(host).getBoundingClientRect();
-  const z = zoomOf(host);
   if (clientX != null) {
     menu._urdAt = {
       x: Math.round(((clientX - canvasRect.left) / canvasRect.width) * 10000) / 100,
-      y: Math.round((clientY - canvasRect.top) / z),
+      y: Math.round(clientY - canvasRect.top),
     };
-    wrap.style.left = `${Math.round((clientX - rect.left) / z)}px`;
-    wrap.style.top = `${Math.round((clientY - rect.top) / z)}px`;
+    wrap.style.left = `${Math.round(clientX - rect.left)}px`;
+    wrap.style.top = `${Math.round(clientY - rect.top)}px`;
     wrap.style.right = 'auto';
     // At the pointer the menu appears alone: the chip button is hidden (the
     // CSS on .urd-at-pointer), so no "+ New block" sits above the menu.
@@ -473,7 +464,7 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
     const startY = event.clientY;
     // The clearance is kept out of the calculation: px is pure content
     // height, the same number stored in size.minHeight.
-    const startHeight = (host.getBoundingClientRect().height - sectionClearance(host)) / zoomOf(host);
+    const startHeight = host.getBoundingClientRect().height - sectionClearance(host);
     const cursor = dragCursor();
     let px = startHeight;
     let moved = false;
@@ -482,7 +473,7 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
       if (!moved && Math.abs(ev.clientY - startY) < 4) return;
       moved = true;
       cursor.move(ev.clientY);
-      px = Math.max(grid.size * 3, startHeight + (ev.clientY - startY) / zoomOf(host));
+      px = Math.max(grid.size * 3, startHeight + (ev.clientY - startY));
       // Pixel-precise when snapping is off or Shift is held.
       const free = grid.snap === false || ev.shiftKey;
       px = free ? Math.round(px) : Math.round(px / grid.size) * grid.size;
@@ -816,7 +807,7 @@ function addSectionTopHandle(host, section, grid) {
     handle.setPointerCapture(event.pointerId);
     const startY = event.clientY;
     // Pure content height (without the nav clearance), as in the bottom-edge drag.
-    const startHeight = (host.getBoundingClientRect().height - sectionClearance(host)) / zoomOf(host);
+    const startHeight = host.getBoundingClientRect().height - sectionClearance(host);
     const startScrollY = window.scrollY;
     // The block elements and starting y are collected ONCE: no re-render
     // happens during the drag (an element swap would drop the pointer
@@ -834,7 +825,7 @@ function addSectionTopHandle(host, section, grid) {
       moved = true;
       cursor.move(ev.clientY);
       result = topDrag({
-        dyPointer: (ev.clientY - startY) / zoomOf(host),
+        dyPointer: ev.clientY - startY,
         minHeightPx: startHeight,
         blockYs: parts.map((p) => p.y),
         grid,
@@ -2583,13 +2574,12 @@ document.addEventListener('pointerdown', (event) => {
   // share the same frame.
   const canvas = canvasOf(host);
   const startRect = canvas.getBoundingClientRect();
-  const z = zoomOf(canvas);
-  const start = { x: (event.clientX - startRect.left) / z, y: (event.clientY - startRect.top) / z };
+  const start = { x: event.clientX - startRect.left, y: event.clientY - startRect.top };
   let rectEl = null;
 
   const onMove = (ev) => {
     const hostRect = canvas.getBoundingClientRect();
-    const cur = { x: (ev.clientX - hostRect.left) / z, y: (ev.clientY - hostRect.top) / z };
+    const cur = { x: ev.clientX - hostRect.left, y: ev.clientY - hostRect.top };
     if (!rectEl) {
       if (Math.abs(cur.x - start.x) + Math.abs(cur.y - start.y) < 6) return;
       rectEl = document.createElement('div');
@@ -2759,7 +2749,7 @@ function startSelectionDrag(event) {
     updateMultiToolbar();
   };
   const move = (e) => {
-    delta = groupDelta(items, ((e.clientX - startX) / width) * 100, (e.clientY - startY) / zoomOf(host));
+    delta = groupDelta(items, ((e.clientX - startX) / width) * 100, e.clientY - startY);
     apply((it) => ({ ...it, x: it.x + delta.dx, y: it.y + delta.dy }));
   };
   const finish = (commit) => {
@@ -3446,8 +3436,8 @@ function enhanceBlock(el, block, section, grid, host) {
             started = true;
             hold();
           }
-          el.style.left = `${orig.left + (ev.clientX - start.x) / zoomOf(el)}px`;
-          el.style.top = `${orig.top + (ev.clientY - start.y) / zoomOf(el)}px`;
+          el.style.left = `${orig.left + (ev.clientX - start.x)}px`;
+          el.style.top = `${orig.top + (ev.clientY - start.y)}px`;
         };
         const finishDock = (commit) => {
           handle.removeEventListener('pointermove', onDockMove);
@@ -3509,7 +3499,6 @@ function enhanceBlock(el, block, section, grid, host) {
 
       const start = { x: event.clientX, y: event.clientY };
       const orig = { ...(block.frames[frameKey] ?? block.frames.desktop) };
-      const z = zoomOf(el);
       // Group drag: if the block is part of a multi-selection, the rest
       // follow (same delta, clamped so the whole group stays within the
       // width).
@@ -3601,8 +3590,8 @@ function enhanceBlock(el, block, section, grid, host) {
         const free = grid.snap === false || ev.shiftKey;
         const snapPct = free ? (v) => Math.round(v * 10) / 10 : (v) => r2(Math.round(v / colStep) * colStep);
         const snapPx = free ? Math.round : (v) => Math.round(v / grid.size) * grid.size;
-        const dx = ((ev.clientX - start.x) / z) * pctPerPx;
-        const dy = (ev.clientY - start.y) / z;
+        const dx = (ev.clientX - start.x) * pctPerPx;
+        const dy = ev.clientY - start.y;
         current = kind === 'move'
           ? {
               ...orig,

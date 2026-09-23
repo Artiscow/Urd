@@ -15,6 +15,7 @@ export const PAD_X = { min: 0, max: 80, step: 1 };
 export const GAP = { min: 0, max: 64, step: 1 };
 export const PILL_WIDTH = { min: 480, max: 1920, step: 20 };
 export const SHRINK_TO = { min: 0.3, max: 0.8, step: 0.05 };
+export const RADIUS = { min: 0, max: 64, step: 1 };
 export const COL_WIDTH = { min: 180, max: 400, step: 1 };
 export const LOGO_SIZE = { min: 12, max: 128, step: 1 };
 

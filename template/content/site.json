@@ -12,11 +12,7 @@
   },
   "layout": {
     "contentWidth": 1440,
-    "gutter": 6,
-    "scale": {
-      "mode": "scale",
-      "min": 0.75
-    }
+    "gutter": 6
   },
   "grid": {
     "size": 16,
@@ -176,7 +172,8 @@
       "blur": true,
       "size": "sm",
       "hover": "underline",
-      "hoverGlow": 1
+      "hoverGlow": 1,
+      "radius": 12
     },
     "overlay": true,
     "variant": "floating-tab"

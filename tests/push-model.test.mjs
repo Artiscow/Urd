@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { pushLayout, PUSH_GAP_MAX, PUSH_GAP_MIN } = await engineImport('push-model.js');
+const { pushLayout, clampFitMin, fitFloorPx, FIT_BY_WIDTH, PUSH_GAP_MAX, PUSH_GAP_MIN } = await engineImport('push-model.js');
 
 const at = (id, y, h, extra = {}) => ({ id, y, h, ...extra });
 
@@ -58,4 +58,25 @@ test('negative frames and missing fields are tolerated', () => {
   const out = pushLayout([at('a', -20, 60, { grow: 10 }), { id: 'broken' }, at('b', 50, 20)]);
   assert.equal(out.shifts.get('b'), 10);
   assert.equal(out.bottom, 80);
+});
+
+test('clampFitMin: a share of the design size between 0.01 and 1, default 0.6', () => {
+  assert.equal(clampFitMin(0.4), 0.4);
+  assert.equal(clampFitMin(0), 0.01);
+  assert.equal(clampFitMin(3), 1);
+  assert.equal(clampFitMin(undefined), 0.6);
+  assert.equal(clampFitMin('x'), 0.6);
+});
+
+test('fitFloorPx: the width-floor types get their share of the design width times the floor, everything else 0', () => {
+  const image = { type: 'image', fit: 'shrink', fitMin: 0.6, frames: { desktop: { x: 10, w: 40 } } };
+  assert.deepEqual([...FIT_BY_WIDTH].sort(), ['icon', 'image', 'shape', 'video']);
+  assert.equal(fitFloorPx(image, { contentWidth: 1440 }), 346);
+  assert.equal(fitFloorPx(image, {}), 346);
+  assert.equal(fitFloorPx(image, { contentWidth: 1000 }), 240);
+  assert.equal(fitFloorPx({ ...image, fitMin: undefined }, {}), 346);
+  assert.equal(fitFloorPx({ ...image, fit: undefined }, {}), 0);
+  assert.equal(fitFloorPx({ ...image, type: 'text' }, {}), 0);
+  assert.equal(fitFloorPx(image, { contentWidth: 'full' }), 0);
+  assert.equal(fitFloorPx({ ...image, frames: {} }, {}), 0);
 });

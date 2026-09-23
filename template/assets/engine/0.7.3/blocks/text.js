@@ -11,12 +11,6 @@ import { boxStyleCss } from '../box-style.js';
 import { ta } from '../i18n.js';
 import { pushLayout } from '../push-model.js';
 
-/** The floor of the shrink, a share of the design size: 0.01 to 1, default 0.6. */
-export function clampFitMin(value) {
-  const n = Number(value);
-  return Number.isFinite(n) ? Math.min(1, Math.max(0.01, n)) : 0.6;
-}
-
 export const textBlock = {
   version: 1,
   label: 'Text',
@@ -25,7 +19,7 @@ export const textBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el The block element (positioned by render.js)
-   * @param {{html: string, align: string, box?: boolean, boxStyle?: object, font?: string, size?: number, lineHeight?: number, letterSpacing?: number, fit?: string, fitMin?: number}} props
+   * @param {{html: string, align: string, box?: boolean, boxStyle?: object, font?: string, size?: number, lineHeight?: number, letterSpacing?: number}} props
    * @param {object} ctx Render context
    */
   render(el, props, ctx) {
@@ -44,15 +38,6 @@ export const textBlock = {
     // Optional font and size per text block (additive; empty = inherited from the theme).
     if (props.font) content.style.fontFamily = props.font;
     if (props.size) content.style.fontSize = `${props.size}px`;
-    // Shrink instead of wrap (additive, ADR-0024): when the frame gets too
-    // narrow for the text at full size, the push pass in render.js zooms the
-    // content only as much as the design height needs, down to the floor
-    // (a share of the design size), and it wraps only past that. The whole
-    // content is zoomed, so inline sizes from the toolbar follow too.
-    if (props.fit === 'shrink') {
-      content.classList.add('urd-fit');
-      content.dataset.urdFitMin = String(clampFitMin(props.fitMin));
-    }
     // Optional line and letter spacing per field (additive; empty = inherited).
     // The line height is unitless (it scales with the font size); the letter
     // spacing is px and can be negative (tighter than normal).

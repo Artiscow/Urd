@@ -2,7 +2,27 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.18.1): the Swedish language pack in admin
+
+- [ ] Admin settings (the gear), Språk: «Svenska» is listed; choosing it turns the whole admin Swedish (panels, tooltips, the block palette, status messages, the seed texts of new blocks and sections), and the choice is remembered in the browser; a key without a Swedish text (none known) falls back to bokmål, never blank
+- [ ] Site panel, Språk på nettsiden: «Svenska» is still listed, and the published page and the preview show Swedish visitor texts when chosen
+
+### Testrunde-batch (0.7.13.3): the nav surface
+
+- [ ] Nav panel, Behaviour: «Gjennomsiktig øverst» (shown for bar and floating, never for the side column): in Clean view and on the published page the menu has no surface, blur, border or shadow while the page is at the top, and they fade in after about 80 px of scrolling and fade out again at the top; with a layer background on the nav the layers are hidden at the top too; while editing (chrome on) the surface is always drawn
+- [ ] «Gjennomsiktig øverst» together with «Legg menyen oppå toppseksjonen» and a hero with an image: the hero shows through the menu at the top, the menu gets its surface once scrolled; with sticky off the menu simply scrolls away transparent
+- [ ] «Gjennomsiktig øverst» with nav.scroll shrink and with hide: the compact state and the hide state still work, and the surface follows the same top zone as before
+- [ ] Nav panel, Layout, floating variants: «Avrunding (px)» empty shows the variant's preset (pill, square, tab), a value 0-64 rounds all three (the tab keeps its square top), the field clamps 200 to 64, and clearing it restores the preset; hidden for bar and side
+- [ ] Hover style Understrek: hovering a menu item draws the underline from the left with no visible jump between the end of the animation and the resting line (compare at 100 % and 200 % zoom); with reduced motion the line appears at once
+- [ ] Site panel, Theme panel and Nav panel changes update the preview at once (the site-draft rerender; a regression in 0.7.17.2 threw before the nav was rendered)
+- [ ] The three labels and tooltips in nb, en-GB and tr
+
 ### Testrunde-batch (0.7.17.2-3): scaling below the content width, and the content push
+
+- [ ] (23 September 2026) The site setting «Under innholdsbredden» is gone from the Site panel, and the items below about «Skaler siden», «Minste skala» on the site and the 1228 px floor no longer apply: below the content width the canvas is fluid and nothing is zoomed as a whole
+- [ ] «Ved smalere skjerm: Krymp innholdet» with «Minste skala» is now in the Style tab of every block except image, video, shape and icon (stats, quote, FAQ, table, collection, product, button, countdown, plugin blocks): at a narrow window the block's content keeps its size until it no longer fits the design height, then shrinks only as much as needed down to the floor, and wraps and pushes past it; «Bryt innholdet» restores the size at once
+- [ ] Image, video, shape and icon blocks: the Style tab row reads «Ved smalere skjerm: Følg bredden / Behold en minste størrelse» with «Minste skala»; with 60 % on an image at a narrow window the image stops shrinking at 60 % of its design width, is capped at the canvas's right edge (never overhangs into the gutter), and the blocks around it are unaffected; with «Full» content width the floor does nothing; the first image on Om oss ships with the floor in the example data
+- [ ] The Hjem page's paragraph «Urd er under oppbygging ...» ships with «Krymp innholdet» 60 % in the example data: at 700 px it shrinks and the «Les mer» button stays in place; a text block that had the old text-level setting in a local draft must be set again
 
 - [ ] The Hjem page at about 1070 px window width: «Gjerne følg prosjektet på vår Github side!» wraps to two lines and the «Les mer» button sits below the text, not under it; widen the window and the button returns to its design place
 - [ ] The demo pages at 1440, 1280, 1024 and 820 px in Chromium and Firefox: no text over another block; between the binding width and about 1228 px the page is the design at a smaller size; below that it follows the window width at the smallest scale

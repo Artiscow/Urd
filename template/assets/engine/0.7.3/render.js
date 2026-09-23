@@ -14,7 +14,7 @@
  *    natural height, and the section height follows from the grid.
  */
 import { lift, MOBILE_ROW, MOBILE_GAP } from './migrate.js';
-import { pushLayout } from './push-model.js';
+import { pushLayout, clampFitMin, fitFloorPx, FIT_BY_WIDTH } from './push-model.js';
 import { applyAnimation, applyCardAnimation } from './animations/core.js';
 import { applySectionTheme } from './theme.js';
 import { refreshSticky } from './sticky.js';
@@ -122,7 +122,8 @@ function applyPush(host) {
   if (!section || !canvas) return;
   const items = [];
   for (const el of canvas.querySelectorAll(':scope > .urd-block')) {
-    const frame = section.blocks.find((b) => b.id === el.dataset.blockId)?.frames?.desktop;
+    const block = section.blocks.find((b) => b.id === el.dataset.blockId);
+    const frame = block?.frames?.desktop;
     if (!frame) continue;
     // The box follows its content down to the design height and never
     // below it: taller content grows it, content that fits again (a wider
@@ -130,7 +131,7 @@ function applyPush(host) {
     // Measured with the box at the design height, since the content's
     // min-height follows the box: a grown box would otherwise never shrink.
     el.style.height = `${frame.h}px`;
-    if (!pushSuspended) fitContent(el, frame.h);
+    if (!pushSuspended) fitContent(el, frame.h, block);
     const needed = pushSuspended ? frame.h : Math.max(frame.h, Math.round(contentHeight(el)));
     if (needed !== frame.h) el.style.height = `${needed}px`;
     const grow = needed - frame.h;
@@ -159,22 +160,31 @@ function applyPush(host) {
 }
 
 /**
- * Shrink instead of wrap (ADR-0024): a content child with the class urd-fit
- * is zoomed only as much as its frame needs. The largest zoom from 1 down to
- * the child's floor (data-urd-fit-min, a share of the design size, so the
- * block's own zoom is divided out of it) at which the content fits the
- * design height is found by bisection; content that fits at full size is
- * left alone, and content that does not fit at the floor keeps the floor,
- * wraps, and is pushed like any other. The content never exceeds the
- * block's own scale. Measured with the box at the design height and the
- * child's min-height off, since the child otherwise fills the box.
+ * Shrink instead of wrap (ADR-0024, block.fit): the block's content is
+ * zoomed only as much as its frame needs, whatever the block type. The
+ * largest zoom from 1 down to the block's floor (block.fitMin, a share of
+ * the design size) at which the content fits the design height is found
+ * by bisection; content that fits at full size is left alone, and content
+ * that does not fit at the floor keeps the floor, wraps, and is pushed like
+ * any other. A block without the field, or of a type that shrinks by its
+ * frame instead, gets its zoom cleared, so a switch back needs no
+ * re-render. Measured with the box at the design
+ * height and the content's min-height off, since the content otherwise
+ * fills the box.
  * @param {HTMLElement} el The block element
  * @param {number} designH The frame's design height in px
+ * @param {object} block The block data
  */
-function fitContent(el, designH) {
-  const child = el.querySelector(':scope > .urd-fit');
+function fitContent(el, designH, block) {
+  const child = [...el.children].find((c) => !c.matches(BLOCK_CHROME));
   if (!child) return;
-  const floor = Math.min(1, (Number(child.dataset.urdFitMin) || 0.6) / (el.currentCSSZoom ?? 1));
+  // The width-floor types (image, video, shape, icon) shrink by their frame
+  // (fitFloorPx), never by a zoom of the content.
+  if (block.fit !== 'shrink' || FIT_BY_WIDTH.has(block.type)) {
+    if (child.style.zoom) child.style.zoom = '';
+    return;
+  }
+  const floor = clampFitMin(block.fitMin);
   const minHeight = child.style.minHeight;
   child.style.minHeight = '0';
   const fitsAt = (z) => {
@@ -284,11 +294,17 @@ export function sectionMinHeight(section, maxBottomPx) {
   return section.size?.minHeight ?? `${maxBottomPx}px`;
 }
 
-export function frameToCss(frame) {
+export function frameToCss(frame, floorPx = 0) {
+  // A width floor (a block set to shrink, fitFloorPx in push-model.js): the
+  // frame never gets narrower than the floor, and is capped at the canvas's
+  // right edge so it never overhangs into the gutter.
+  const width = floorPx > 0
+    ? `min(max(${frame.w}%, ${floorPx}px), calc(100% - ${frame.x}%))`
+    : `${frame.w}%`;
   return {
     left: `${frame.x}%`,
     top: `${frame.y}px`,
-    width: `${frame.w}%`,
+    width,
     height: `${frame.h}px`,
     zIndex: String(frame.z ?? 1),
     transform: frame.rot ? `rotate(${frame.rot}deg)` : '',
@@ -512,7 +528,7 @@ export function renderSection(section, site, host, opts = {}) {
       // the field itself.
       if (block.decor) el.dataset.decor = '1';
       const frame = block.frames.desktop;
-      Object.assign(el.style, frameToCss(frame));
+      Object.assign(el.style, frameToCss(frame, fitFloorPx(block, site.layout)));
       // Sticky ("pin on scroll", additive field): only marking here; the
       // pinning itself is done by sticky.js on scroll. The mobile branch
       // above marks screen docking only (scroll pinning belongs to

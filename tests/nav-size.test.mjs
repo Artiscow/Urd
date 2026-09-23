@@ -8,14 +8,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 import {
-  PAD_Y, TEXT_SIZE, PAD_X, GAP, PILL_WIDTH, SHRINK_TO, LOGO_SIZE, COL_WIDTH,
+  PAD_Y, TEXT_SIZE, PAD_X, GAP, PILL_WIDTH, SHRINK_TO, LOGO_SIZE, RADIUS, COL_WIDTH,
   SIZE_PRESETS, SIZE_IDS, PILL_FACTOR,
   clampRange, effectivePadY, effectiveTextSize, sizePresetOf, isFloatingVariant,
 } from '../editor/src/lib/nav-size.js';
 const { NAV_SIZE_BOUNDS } = await engineImport('nav-model.js');
 
 test('the bounds equal the engine bounds', () => {
-  const pairs = { padY: PAD_Y, textSize: TEXT_SIZE, padX: PAD_X, gap: GAP, pillWidth: PILL_WIDTH, shrinkTo: SHRINK_TO, logoSize: LOGO_SIZE };
+  const pairs = { padY: PAD_Y, textSize: TEXT_SIZE, padX: PAD_X, gap: GAP, pillWidth: PILL_WIDTH, shrinkTo: SHRINK_TO, logoSize: LOGO_SIZE, radius: RADIUS };
   for (const [key, range] of Object.entries(pairs)) {
     assert.deepEqual([range.min, range.max], NAV_SIZE_BOUNDS[key], key);
   }

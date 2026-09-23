@@ -99,21 +99,24 @@ export function navItems(site) {
  * after some scrolling; 'hide' = hidden on scroll down, shown on scroll up.
  * Near the top (below TOP_ZONE) the menu is always normal and visible.
  * Small movements below JITTER never flip the hidden state (jitter guard
- * against e.g. scroll rounding at momentum stop).
+ * against e.g. scroll rounding at momentum stop). `scrolled` says whether
+ * the page has left the top zone, whatever the mode: the transparent-at-top
+ * surface (nav.style.atTop) reads it.
  * @param {string|undefined} mode nav.scroll ('shrink' | 'hide' | undefined)
  * @param {number} prevY Previous scrollY
  * @param {number} y Current scrollY
  * @param {boolean} prevHidden Whether the menu was hidden
- * @returns {{compact: boolean, hidden: boolean}}
+ * @returns {{compact: boolean, hidden: boolean, scrolled: boolean}}
  */
 export function navScrollState(mode, prevY, y, prevHidden) {
   const TOP_ZONE = 80;
   const JITTER = 4;
-  if (mode === 'shrink') return { compact: y > TOP_ZONE, hidden: false };
-  if (mode !== 'hide') return { compact: false, hidden: false };
-  if (y <= TOP_ZONE) return { compact: false, hidden: false };
-  if (Math.abs(y - prevY) < JITTER) return { compact: false, hidden: prevHidden };
-  return { compact: false, hidden: y > prevY };
+  const scrolled = y > TOP_ZONE;
+  if (mode === 'shrink') return { compact: scrolled, hidden: false, scrolled };
+  if (mode !== 'hide') return { compact: false, hidden: false, scrolled };
+  if (!scrolled) return { compact: false, hidden: false, scrolled };
+  if (Math.abs(y - prevY) < JITTER) return { compact: false, hidden: prevHidden, scrolled };
+  return { compact: false, hidden: y > prevY, scrolled };
 }
 
 /**
@@ -215,6 +218,7 @@ export const NAV_SIZE_BOUNDS = {
   pillWidth: [480, 1920],
   shrinkTo: [0.3, 0.8],
   logoSize: [12, 128],
+  radius: [0, 64],
 };
 
 /** A number clamped to [min, max] with the given decimals; undefined when the value is not a number. */
@@ -261,6 +265,10 @@ export function navSizeVars(style = {}, logo = {}, { mobile = false } = {}) {
   }
   const shrinkTo = clampNum(s.shrinkTo, NAV_SIZE_BOUNDS.shrinkTo, 2);
   if (shrinkTo !== undefined) vars['--urd-nav-shrink-to'] = String(shrinkTo);
+  // The floating menu's corner rounding; the CSS reads it only on the
+  // floating variants, with each variant's preset as the fallback.
+  const radius = clampNum(s.radius, NAV_SIZE_BOUNDS.radius);
+  if (radius !== undefined) vars['--urd-nav-radius'] = `${radius}px`;
   const textSize = clampNum(m.textSize ?? s.textSize, NAV_SIZE_BOUNDS.textSize);
   const l = logo ?? {};
   const logoSize = clampNum(mobile ? (l.mobileSize ?? l.size) : l.size, NAV_SIZE_BOUNDS.logoSize) ?? 32;
@@ -271,19 +279,24 @@ export function navSizeVars(style = {}, logo = {}, { mobile = false } = {}) {
  * Classes for the HOST (the header element) and body, derived from the
  * variant: floating takes the host out of the flow; the side variant turns
  * it into a fixed column and gives body content padding on the same side.
- * @param {{nav: {variant?: string}}} site
+ * The transparent-at-top surface (nav.style.atTop 'clear', additive from
+ * v0.7) is a host class for the bar and the floating menu, never the
+ * column: the CSS hides the surface until the host also carries
+ * urd-nav-scrolled, which nav.js toggles from the scroll state.
+ * @param {{nav: {variant?: string, overlay?: boolean, style?: {atTop?: string}}}} site
  * @returns {{host: string[], body: string[]}}
  */
 export function hostClasses(site) {
   const v = site.nav.variant;
-  if (isFloating(v)) return { host: ['urd-nav-float'], body: [] };
+  const clear = site.nav.style?.atTop === 'clear' ? ['urd-nav-clear'] : [];
+  if (isFloating(v)) return { host: ['urd-nav-float', ...clear], body: [] };
   if (v === 'side-left') return { host: ['urd-nav-side-host', 'urd-nav-side-host-left'], body: ['urd-side-left'] };
   if (v === 'side-right') return { host: ['urd-nav-side-host', 'urd-nav-side-host-right'], body: ['urd-side-right'] };
   // Overlay only applies to the full-width bar: the host is taken out of the
   // flow so the top section slides up under the menu. Floating/side already
   // sit outside.
-  if (site.nav.overlay) return { host: ['urd-nav-overlay'], body: [] };
-  return { host: [], body: [] };
+  if (site.nav.overlay) return { host: ['urd-nav-overlay', ...clear], body: [] };
+  return { host: clear, body: [] };
 }
 
 /**

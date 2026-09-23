@@ -20,6 +20,12 @@ test('x/w become percent, y/h become px', () => {
   });
 });
 
+test('a width floor keeps the frame from getting narrower than the floor, capped at the canvas edge', () => {
+  assert.equal(frameToCss({ x: 10, y: 0, w: 40, h: 10 }, 240).width, 'min(max(40%, 240px), calc(100% - 10%))');
+  assert.equal(frameToCss({ x: 10, y: 0, w: 40, h: 10 }, 0).width, '40%');
+  assert.equal(frameToCss({ x: 10, y: 0, w: 40, h: 10 }).width, '40%');
+});
+
 test('rotation gives a transform, no rotation gives none', () => {
   assert.equal(frameToCss({ x: 0, y: 0, w: 10, h: 10, rot: -8 }).transform, 'rotate(-8deg)');
   assert.equal(frameToCss({ x: 0, y: 0, w: 10, h: 10 }).transform, '');

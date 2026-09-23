@@ -192,6 +192,8 @@
             { "$ref": "#/$defs/typedProps" }
           ]
         },
+        "fit": { "enum": ["shrink"], "description": "Shrink instead of wrap (additive from v0.7.3, ADR-0024): when the frame is too narrow for the content at full size, the content is zoomed only as much as the design height needs, down to fitMin, and wraps only past it. Omitted = the content wraps and the blocks below are pushed. Desktop only." },
+        "fitMin": { "type": "number", "minimum": 0.01, "maximum": 1, "description": "The floor of the shrink as a share of the design size (default 0.6)." },
         "frames": {
           "type": "object",
           "required": ["desktop"],

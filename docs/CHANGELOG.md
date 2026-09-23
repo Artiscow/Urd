@@ -27,6 +27,29 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.18.1 - Kjerneflyttingen planned: ADR-0026, and the Swedish pack fixed for the admin - 23 September 2026
+
+- New milestone 0.7.18: map, form, calendar and analytics move from reference plugins into the core (blocks, presets and aliases unchanged; analytics as `site.analytics` edited behind the gear), with the Swedish pack `lang-sv` staying as the one shipped example plugin. [ADR-0026](adr/0026-core-blocks-from-the-reference-plugins.md) records the decision and the plugin layer that stays; seven stages in BACKLOG.
+- The Swedish pack never appeared in the admin language picker behind the gear: it translated only the visitor texts (`admin: false`), and the picker offers only packs with admin texts. A complete Swedish admin dictionary (`plugins/lang-sv/locales/admin/sv.js`, all 1590 keys) and `admin: true`; the manifest examples in plugins/README.md and SCHEMA.md show both registers. Verified with headless Brave: the picker lists Svenska and the panels turn Swedish.
+
+### 0.7.17.5 - The page zoom withdrawn: blocks shrink one by one, with a smallest scale on every block - 23 September 2026
+
+- «Skaler siden» (the section `zoom` of the ADR-0018 addendum) made nothing adapt, everything only got smaller (test finding). Removed: `site.layout.scale` (schema, SCHEMA.md, site.json), scale-model.js with its test and preload link, `--urd-scale` and the section zoom in base.css, the root variable writer in urd.js and every `currentCSSZoom` conversion in sticky.js and preview-edit.js; the Site panel controls and their keys. The addendum stays in ADR-0018 marked withdrawn; ADR-0024 decisions 5 and 6.
+- The shrink choice moved from the text block's props to block-level `fit` and `fitMin` on every block (page.schema.json, SCHEMA.md, the Hjem paragraph and the first Om oss image in the example data), one shared row in the Style tab. Content blocks zoom their content to fit the design height; image, video, shape and icon keep a floor on the frame's width instead (`fitFloorPx` and `FIT_BY_WIDTH` in push-model.js, `frameToCss` with a floor capped at the canvas edge; tested). Keys `lbl.fit`, `opt.fit.*`, `tip.fit`, `lbl.fitMin`, `tip.fitMin` in nb, en-GB and tr.
+- Three test findings on the text shrink along the way: the floor was applied on top of the section zoom (40 % gave 30 % of the design size), the text shrank with the canvas before it needed to (now a bisection in the push pass that zooms only as much as the design height needs), and each resize step painted the wrapped text once before the fit (the ResizeObserver now runs the pass synchronously, before paint). The floor range opened to 1-100 %.
+
+### 0.7.13.3 - Nav surface: transparent at the top, rounding as a value, the underline seam - 23 September 2026
+
+- `nav.style.atTop: 'clear'`: no surface, blur, border or shadow while the page is in the top zone, fading in after 80 px (`scrolled` in `navScrollState`, `urd-nav-clear` from `hostClasses` for bar and floating, `urd-nav-scrolled` toggled by nav.js; the CSS sets the properties, not the variables, since nav.js writes the surface variables inline). Checkbox «Gjennomsiktig øverst» in Behaviour. The host class was first never written: nav.js toggles host classes from a fixed list, and the new class was missing there (found with headless Brave, fixed).
+- `nav.style.radius` 0-64 px for the floating variants (`--urd-nav-radius` from `navSizeVars`, the three variants as presets in the fallback), a number field under Menu width; the bound in `NAV_SIZE_BOUNDS` and nav-size.js with the parity test.
+- The underline hover is revealed with `clip-path` instead of `scaleX`, so the end frame equals the resting line.
+- Regression from 0.7.17.2 found by the same probe: `setScale` was defined in `boot` but called from the site-draft listener in `enablePreview`, so every Site, Theme and Nav panel change threw before the nav was rendered. Fixed by a module-level `applyScale` (since removed with the page zoom in 0.7.17.5).
+
+### 0.7.13.2 - The element review written up: ApeironLF and the builders' backgrounds in the comparison maps - 23 September 2026
+
+- LAERDOMMER §2: the subsection «The element review: ApeironLF and the builders' backgrounds against Urd's elements (survey 22 September 2026)» with the ApeironLF inventory (site-wide, the front page, the subpages, admin), the background types at Wix, Squarespace, Elementor, Divi, Webflow and Framer with sources, five rules, «What Urd had» and «What Urd takes (0.7.13 and 0.7.16)»; the Kilder bullet with the thirteen links.
+- FUNKSJONSKART: the rows C19 to C25 (ribbons, background motion and pattern layer and dividers, announcement bar and launcher, animated images and file video, full-screen mobile menu and the transparent nav, archiving and entry states, collection filters) with their stages; WebGL art, Lottie and Spline noted as D. ELEMENTKART §3: a sentence each under Navigasjon and Dekorativt.
+
 ### 0.7.0.9 - The comparison maps refreshed: counts, statuses and pointers as of 23 September 2026 - 23 September 2026
 
 - The three maps under docs/sammenligning/ still described Urd as of July 2026. Every count, status and milestone pointer was checked against CHANGELOG, BACKLOG, the ADRs and the engine (blocks, presets, backgrounds, plugins, nav variants, hover styles, languages, editor devices, the label count) and corrected; nothing was deleted, superseded passages became dated history, and the sources stayed.

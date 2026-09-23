@@ -39,16 +39,7 @@
             { "const": "full" }
           ]
         },
-        "gutter": { "type": "integer", "minimum": 0, "maximum": 20, "description": "Minimum side margin between the content surface and the viewport edge, in PERCENT OF THE VIEWPORT WIDTH (vw). Was px until schemaVersion 2. Applies only above the mobile breakpoint, and only has effect where contentWidth does not bind yet." },
-        "scale": {
-          "type": "object",
-          "description": "Scaling below the content width (additive from v0.7.3, ADR-0018 addendum). Omitted = fixed sizes, the behaviour before v0.7.3.",
-          "additionalProperties": false,
-          "properties": {
-            "mode": { "enum": ["scale", "fixed"], "description": "scale: the sections zoom proportionally below the content width down to min, and the mobile layout takes over below the hand-off width; fixed: blocks follow the width while text and heights keep their pixels." },
-            "min": { "type": "number", "minimum": 0.5, "maximum": 1, "description": "The smallest zoom factor (default 0.75). The hand-off width is min * contentWidth / (1 - 2 * gutter / 100)." }
-          }
-        }
+        "gutter": { "type": "integer", "minimum": 0, "maximum": 20, "description": "Minimum side margin between the content surface and the viewport edge, in PERCENT OF THE VIEWPORT WIDTH (vw). Was px until schemaVersion 2. Applies only above the mobile breakpoint, and only has effect where contentWidth does not bind yet." }
       }
     },
     "grid": { "$ref": "#/$defs/grid" },
@@ -285,6 +276,8 @@
               }
             },
             "shadow": { "enum": ["soft", "strong"], "description": "A drop shadow under the top bar (additive from v0.7); omitted = none. Variant bar only (the floating menu has glow)." },
+            "atTop": { "enum": ["clear"], "description": "Transparent at the top (additive from v0.7): the menu draws no surface, blur, border or shadow until the page has scrolled past the top zone; omitted = the surface is always drawn. Bar and floating variants only; ignored for the side column." },
+            "radius": { "type": "number", "minimum": 0, "maximum": 64, "description": "The floating menu's corner rounding in px (additive from v0.7); omitted = the variant's preset (pill 999, square 0, tab the theme's medium radius). Floating variants only." },
             "mobile": {
               "type": "object",
               "additionalProperties": false,

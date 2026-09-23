@@ -19,6 +19,37 @@ export const PUSH_GAP_MAX = 70;
 /** A larger gap absorbs the growth until this much is left. */
 export const PUSH_GAP_MIN = 10;
 
+/** The floor of a block's shrink (block.fitMin), a share of the design size: 0.01 to 1, default 0.6. */
+export function clampFitMin(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.min(1, Math.max(0.01, n)) : 0.6;
+}
+
+/**
+ * The block types whose content cannot wrap: their frame already follows
+ * the canvas in percent, so their shrink is a floor on the frame's width
+ * (fitFloorPx) instead of a zoom of the content. The editor keeps the same
+ * list for its option labels.
+ */
+export const FIT_BY_WIDTH = new Set(['image', 'video', 'shape', 'icon']);
+
+/**
+ * The smallest width in px a block set to shrink may take, for the types in
+ * FIT_BY_WIDTH: its share of the design width times the floor. 0 (no floor)
+ * for every other block, for a block without the field, and for a site
+ * without a design width ("full"), where nothing has a design size.
+ * @param {{type?: string, fit?: string, fitMin?: number, frames?: {desktop?: {w?: number}}}} block
+ * @param {{contentWidth?: number|string}} [layout] site.layout
+ * @returns {number}
+ */
+export function fitFloorPx(block, layout) {
+  if (!block || block.fit !== 'shrink' || !FIT_BY_WIDTH.has(block.type)) return 0;
+  const width = layout?.contentWidth ?? 1440;
+  const w = Number(block.frames?.desktop?.w);
+  if (typeof width !== 'number' || !(width > 0) || !Number.isFinite(w) || w <= 0) return 0;
+  return Math.round((w / 100) * width * clampFitMin(block.fitMin));
+}
+
 /**
  * The shift for each block below the blocks that grew.
  * @param {Array<{id: string, y: number, h: number, x?: number, grow?: number}>} items

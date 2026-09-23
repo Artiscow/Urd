@@ -19,9 +19,8 @@
     WIDTH_PRESETS, GUTTER_PRESETS, REF_SCREENS,
     clampWidth, clampGutter, contentBand, presetOf, bindingWidth,
   } from './lib/content-width.js';
-import { scaleSettings, scaleFloorWidth, SCALE_MIN, SCALE_MAX } from '$engine/scale-model.js';
   import {
-    PAD_Y, TEXT_SIZE, PAD_X, GAP, PILL_WIDTH, SHRINK_TO, COL_WIDTH, LOGO_SIZE, SIZE_IDS,
+    PAD_Y, TEXT_SIZE, PAD_X, GAP, PILL_WIDTH, SHRINK_TO, COL_WIDTH, LOGO_SIZE, RADIUS, SIZE_IDS,
     clampRange, effectivePadY, effectiveTextSize, sizePresetOf,
   } from './lib/nav-size.js';
   import Dropdown from './lib/Dropdown.svelte';
@@ -1007,17 +1006,25 @@ import { scaleSettings, scaleFloorWidth, SCALE_MIN, SCALE_MAX } from '$engine/sc
     mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b) => { Object.assign(b.props, patch); });
   }
 
-  /** Shrink instead of wrap (text.js, ADR-0024): wrap is the absence of the fields. */
-  function setTextFit(mode) {
+  /** Shrink on narrower screens (render.js, ADR-0024): block-level fields on
+   *  every block. Content blocks zoom their content to fit; the types below
+   *  (the engine's FIT_BY_WIDTH in push-model.js) keep a floor on their
+   *  frame's width instead, so the option labels differ. The absence of the
+   *  fields is wrap (content) or follow the width (frame). */
+  const FIT_BY_WIDTH = new Set(['image', 'video', 'shape', 'icon']);
+  function setBlockFit(mode) {
     mutateBlock(`edit:${selectedBlock.blockId}:fit`, (b) => {
       if (mode === 'shrink') {
-        b.props.fit = 'shrink';
-        b.props.fitMin ??= 0.6;
+        b.fit = 'shrink';
+        b.fitMin ??= 0.6;
       } else {
-        delete b.props.fit;
-        delete b.props.fitMin;
+        delete b.fit;
+        delete b.fitMin;
       }
     });
+  }
+  function setBlockFitMin(value) {
+    mutateBlock(`edit:${selectedBlock.blockId}:fitMin`, (b) => { b.fitMin = value; });
   }
 
   /* The field contract (plugin blocks, `fields` in urd-plugin-blocks):
@@ -2914,13 +2921,6 @@ import { scaleSettings, scaleFloorWidth, SCALE_MIN, SCALE_MAX } from '$engine/sc
       siteDraft.layout = next;
     });
   }
-  /** Scaling below the design width (ADR-0018 addendum): an omitted field
-   *  keeps today's sizes, so the mode is written only when it is scale. */
-  let scaleMode = $derived(scaleSettings(siteDraft?.layout).mode);
-  let scaleMin = $derived(scaleSettings(siteDraft?.layout).min);
-  let scaleFloor = $derived(scaleFloorWidth(siteDraft?.layout));
-  const setScaleMode = (mode) => setLayout({ scale: mode === 'scale' ? { mode: 'scale', min: scaleMin } : undefined }, 'edit:site-scale');
-  const setScaleMin = (min) => setLayout({ scale: { mode: 'scale', min: Math.min(SCALE_MAX, Math.max(SCALE_MIN, Math.round(min * 100) / 100)) } }, 'edit:site-scale');
   const setContentWidth = (w) => setLayout({ contentWidth: w === 'full' ? 'full' : clampWidth(w) }, 'edit:site-width');
   const setContentGutter = (g) => setLayout({ gutter: clampGutter(g) }, 'edit:site-gutter');
 
@@ -5964,6 +5964,14 @@ import { scaleSettings, scaleFloorWidth, SCALE_MIN, SCALE_MAX } from '$engine/sc
                                 onchange={(e) => onNavSizeInput(e, 'pillWidth', PILL_WIDTH)} />
                             </span>
                           {/if}
+                          <!-- The corner rounding as a value; empty = the variant's preset -->
+                          <span class="toolbar-row" title={ta('tip.nav.radius')}>
+                            <span class="mini-label tb-grow">{ta('lbl.navRadius')}</span>
+                            <input type="number" class="tb-num" min={RADIUS.min} max={RADIUS.max} step={RADIUS.step}
+                              placeholder={siteDraft.nav.variant === 'floating-square' ? '0' : siteDraft.nav.variant === 'floating-tab' ? '12' : '999'}
+                              value={typeof siteDraft.nav.style?.radius === 'number' ? siteDraft.nav.style.radius : ''}
+                              onchange={(e) => onNavSizeInput(e, 'radius', RADIUS)} />
+                          </span>
                         {/if}
                         <label>{ta('lbl.navPlacement')}
                           {#if sideVariant}
@@ -6153,6 +6161,12 @@ import { scaleSettings, scaleFloorWidth, SCALE_MIN, SCALE_MAX } from '$engine/sc
                               {/if}
                             {/if}
                           {/if}
+                          <!-- Transparent at the top: the surface appears once the page is scrolled -->
+                          <label class="gridmenu-snap" title={ta('tip.nav.atTop')}>
+                            <input type="checkbox" checked={siteDraft.nav.style?.atTop === 'clear'}
+                              onchange={(e) => setNavStyle('atTop', e.target.checked ? 'clear' : undefined)} />
+                            {ta('lbl.navAtTop')}
+                          </label>
                         {/if}
                         <label class="gridmenu-snap" title={ta('tip.nav.cart')}>
                           <input type="checkbox" checked={siteDraft.nav.cart?.show === true}
@@ -6364,21 +6378,6 @@ import { scaleSettings, scaleFloorWidth, SCALE_MIN, SCALE_MAX } from '$engine/sc
                     </div>
                   </div>
                 </details>
-                <hr class="gridmenu-divider" />
-                <label title={ta('tip.site.scaleMode')}>{ta('lbl.scaleMode')}
-                  <Dropdown value={scaleMode}
-                    options={[['scale', ta('opt.scale.scale')], ['fixed', ta('opt.scale.fixed')]]}
-                    onchange={(v) => setScaleMode(v)} /></label>
-                {#if scaleMode === 'scale' && layoutWidth !== 'full'}
-                  <div class="ctl-row" title={ta('tip.site.scaleMin', { w: scaleFloor })}>
-                    <span class="mini-label">{ta('lbl.scaleMin')}</span>
-                    <input type="range" min={SCALE_MIN * 100} max={SCALE_MAX * 100} step="5"
-                      value={Math.round(scaleMin * 100)}
-                      oninput={(e) => setScaleMin(e.target.valueAsNumber / 100)} />
-                    <span class="gridmenu-value">{Math.round(scaleMin * 100)} %</span>
-                  </div>
-                  <div class="mini-label cw-binds">{ta('lbl.scaleFloor', { w: scaleFloor })}</div>
-                {/if}
                 <hr class="gridmenu-divider" />
                 <label>{ta('lbl.siteIcon')}
                   {#if siteDraft.site.icon}
@@ -8029,19 +8028,6 @@ import { scaleSettings, scaleFloorWidth, SCALE_MIN, SCALE_MAX } from '$engine/sc
       {#if selectedBlock.props.box}
         {@render kortstilUI()}
       {/if}
-      <label title={ta('tip.textFit')}>{ta('lbl.textFit')}
-        <Dropdown value={selectedBlock.props.fit === 'shrink' ? 'shrink' : 'wrap'}
-          options={[['wrap', ta('opt.textFit.wrap')], ['shrink', ta('opt.textFit.shrink')]]}
-          onchange={(v) => setTextFit(v)} /></label>
-      {#if selectedBlock.props.fit === 'shrink'}
-        <div class="ctl-row" title={ta('tip.textFitMin')}>
-          <span class="mini-label">{ta('lbl.textFitMin')}</span>
-          <input type="range" min="1" max="100" step="1"
-            value={Math.round((selectedBlock.props.fitMin ?? 0.6) * 100)}
-            oninput={(e) => setBlockProp('fitMin', e.target.valueAsNumber / 100)} />
-          <span class="gridmenu-value">{Math.round((selectedBlock.props.fitMin ?? 0.6) * 100)} %</span>
-        </div>
-      {/if}
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'faq'}
       <p class="panel-strong">{ta('lbl.cardStyle')}</p>
@@ -8233,6 +8219,23 @@ import { scaleSettings, scaleFloorWidth, SCALE_MIN, SCALE_MAX } from '$engine/sc
       <hr class="gridmenu-divider" />
     {/if}
 
+    <!-- Shrink on narrower screens: block-level on every block (ADR-0024); the content zooms to fit, or the frame keeps a floor -->
+    <label title={ta('tip.fit')}>{ta('lbl.fit')}
+      <Dropdown value={selectedBlock.fit === 'shrink' ? 'shrink' : 'wrap'}
+        options={FIT_BY_WIDTH.has(selectedBlock.type)
+          ? [['wrap', ta('opt.fit.fluid')], ['shrink', ta('opt.fit.floor')]]
+          : [['wrap', ta('opt.fit.wrap')], ['shrink', ta('opt.fit.shrink')]]}
+        onchange={(v) => setBlockFit(v)} /></label>
+    {#if selectedBlock.fit === 'shrink'}
+      <div class="ctl-row" title={ta('tip.fitMin')}>
+        <span class="mini-label">{ta('lbl.fitMin')}</span>
+        <input type="range" min="1" max="100" step="1"
+          value={Math.round((selectedBlock.fitMin ?? 0.6) * 100)}
+          oninput={(e) => setBlockFitMin(e.target.valueAsNumber / 100)} />
+        <span class="gridmenu-value">{Math.round((selectedBlock.fitMin ?? 0.6) * 100)} %</span>
+      </div>
+    {/if}
+    <hr class="gridmenu-divider" />
     <label title={ta('tip.props.blockAnim')}>{ta('lbl.animIn')}
       <Dropdown value={isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : ''}
         options={BLOCK_ENTRANCE_OPTIONS}

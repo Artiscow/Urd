@@ -82,10 +82,6 @@ export function resumeSticky() {
   if (suspendDepth === 0 && wired) applySticky();
 }
 
-/** The effective zoom of the block's section (1 outside a zoomed section):
- *  rects are in viewport px, offset values and inline lengths in section px. */
-const zoomOf = (el) => el.currentCSSZoom ?? 1;
-
 /** The block's own inline values, as render.js set them from the frame. */
 function readGeom(el) {
   return {
@@ -201,16 +197,15 @@ function applySticky() {
     // Geometry is read from the stash while the block is pinned (the inline
     // values are then overwritten), otherwise fresh from the element.
     const geoms = new Map(members.map((el) => [el, el._urdStickyBase ?? readGeom(el)]));
-    const z = zoomOf(members[0]);
     // The members' measurements in px, shared by both modes. left/width are
     // computed from the canvas rect every time (survives resize); rotation
     // and height are never touched.
     const boxes = members.map((el) => ({
       el,
       x: canvasRect.left - sectionRect.left + canvasRect.width * ((parseFloat(geoms.get(el).left) || 0) / 100),
-      y: geoms.get(el).y * z,
+      y: geoms.get(el).y,
       w: canvasRect.width * ((parseFloat(geoms.get(el).width) || 0) / 100),
-      h: el.offsetHeight * z,
+      h: el.offsetHeight,
     }));
     const box = groupBox(boxes);
 
@@ -220,8 +215,8 @@ function applySticky() {
       el._urdStickyBase ??= geoms.get(el);
       el.classList.add('urd-sticky-fixed');
       el.style.position = 'fixed';
-      el.style.top = `${top / z}px`;
-      el.style.left = `${left / z}px`;
+      el.style.top = `${top}px`;
+      el.style.left = `${left}px`;
       // The group's internal stacking order must survive pinning, so the
       // block's own z is added on top of the floor instead of being replaced
       // by it.
@@ -234,7 +229,7 @@ function applySticky() {
       const view = { w: document.documentElement.clientWidth, h: window.innerHeight };
       const pos = dockPosition(lead.dataset.stickyDock, Number(lead.dataset.stickyOffset) || 0, box, view);
       for (const b of boxes) {
-        b.el.style.width = `${b.w / z}px`;
+        b.el.style.width = `${b.w}px`;
         place(b.el, pos.left + (b.x - box.x), pos.top + (b.y - box.y));
       }
       continue;
@@ -261,7 +256,7 @@ function applySticky() {
 
     for (const b of boxes) {
       if (state.mode === 'fixed') {
-        b.el.style.width = `${b.w / z}px`;
+        b.el.style.width = `${b.w}px`;
         place(b.el, sectionRect.left + b.x, state.top + (b.y - box.y));
       } else if (state.mode === 'parked') {
         // Parked overwrites top, so the stash must REMAIN: without it the
@@ -269,7 +264,7 @@ function applySticky() {
         // natural place. parkY is section-relative; style.top is canvas-relative.
         b.el._urdStickyBase ??= geoms.get(b.el);
         restore(b.el, b.el._urdStickyBase);
-        b.el.style.top = `${(state.y - canvasTop + (b.y - box.y)) / z}px`;
+        b.el.style.top = `${state.y - canvasTop + (b.y - box.y)}px`;
       } else {
         release(b.el);
       }
