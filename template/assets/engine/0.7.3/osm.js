@@ -1,10 +1,10 @@
 /**
- * Pure OSM logic for the map plugin (no DOM): reading a position the owner
+ * Pure OSM logic for the map block (no DOM): reading a position the owner
  * pastes in (coordinates or an OpenStreetMap link), building the embed URL
  * and the larger-map link. Everything here is unit-tested in node.
  *
  * Privacy: the map is embedded as a plain OSM iframe (no tracking, no
- * third-party tiles), so the owner only has to open frame-src for openstreetmap.org.
+ * third-party tiles); Urd's own _headers opens frame-src for openstreetmap.org.
  */
 
 const clampLat = (n) => Math.max(-85, Math.min(85, n));
@@ -77,5 +77,5 @@ export function buildLargerMapUrl({ lat, lon, zoom = 15 }) {
   return `https://www.openstreetmap.org/?mlat=${la}&mlon=${lo}#map=${clampZoom(zoom)}/${la}/${lo}`;
 }
 
-/** The host the map plugin needs in frame-src (for the CSP instruction). */
+/** The host the map block needs in frame-src (for the CSP note when a host blocks it). */
 export const OSM_HOST = 'https://www.openstreetmap.org';

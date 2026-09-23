@@ -71,6 +71,9 @@ export default {
     'countdown.minutes': 'minutter',
     'countdown.seconds': 'sekunder',
     'render.missingPlugin': "Blokktypen '{type}' er ikke tilgjengelig (mangler plugin eller nyere Urd?)",
+    'map.larger': 'Vis større kart',
+    'map.mapTitle': 'Kart',
+    'map.openOsm': 'Åpne kartet på OpenStreetMap',
   },
   dates: {
     months: ['januar', 'februar', 'mars', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'desember'],

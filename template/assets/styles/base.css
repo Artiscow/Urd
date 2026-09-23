@@ -724,6 +724,60 @@ html {
   font-size: 0.95em;
 }
 
+/* The map block: OpenStreetMap's own iframe with a "larger map" link; the
+   empty state and the CSP note share one dashed box. */
+.urd-map {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+
+.urd-map-frame {
+  display: block;
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 15%, transparent);
+  border-radius: var(--urd-radius-md);
+}
+
+.urd-map-link {
+  font-size: 0.82em;
+  opacity: 0.75;
+}
+
+.urd-map-link a {
+  color: var(--urd-color-accent);
+}
+
+.urd-map-empty {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  padding: 24px;
+  text-align: center;
+  border: 1px dashed color-mix(in srgb, var(--urd-color-text) 30%, transparent);
+  border-radius: var(--urd-radius-md);
+  opacity: 0.85;
+}
+
+.urd-map-code {
+  padding: 4px 8px;
+  border-radius: 5px;
+  font: 12px/1.4 ui-monospace, monospace;
+  background: color-mix(in srgb, var(--urd-color-text) 10%, transparent);
+}
+
+.urd-map-fallback {
+  color: var(--urd-color-accent);
+  font-weight: 600;
+}
+
+.urd-map-note {
+  margin: 0;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
 .urd-preview .urd-audio-empty {
   display: grid;
   place-items: center;

@@ -37,5 +37,8 @@ export default {
     'video.unknownUrl': 'Amas videoliŋka (YouTube ja Vimeo dorjojuvvojit)',
     'video.emptyHint': 'Liibme YouTube- dahje Vimeo-liŋkka Iešvuođaide',
     'render.missingPlugin': "Bloktatiipa '{type}' ii leat olámuttos (váilu plugin dahje ođđaset Urd?)",
+    'map.larger': 'Čájet stuorit kártta',
+    'map.mapTitle': 'Kárta',
+    'map.openOsm': 'Raba kártta OpenStreetMap:as',
   },
 };

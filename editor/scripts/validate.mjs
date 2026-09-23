@@ -26,7 +26,6 @@ const cases = [
   ['template/content/site.json', siteSchema.$id],
   ['template/plugins/calendar/plugin.json', pluginSchema],
   ['template/plugins/form/plugin.json', pluginSchema],
-  ['template/plugins/map/plugin.json', pluginSchema],
   ['template/plugins/lang-sv/plugin.json', pluginSchema],
 ];
 

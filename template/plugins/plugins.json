@@ -3,7 +3,6 @@
   "enabled": [
     "calendar",
     "form",
-    "map",
     "lang-sv",
     "analytics"
   ],

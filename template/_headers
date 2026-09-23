@@ -4,7 +4,7 @@
 # the admin editor show the page in an iframe but blocks foreign sites.
 # frame-src has DELIBERATE exceptions for the privacy-friendly embeds that
 # ship with Urd: the video block's two hosts (youtube-nocookie and Vimeo with
-# dnt=1) and the map plugin's OpenStreetMap. Other embeds require the owner
+# dnt=1) and the map block's OpenStreetMap. Other embeds require the owner
 # to add the host here (see ADR-0006; the plugin manifest declares the need
 # and admin shows the exact line).
 

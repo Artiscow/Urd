@@ -1249,7 +1249,7 @@
   // bar's typography row).
 
   /** Names of the block types in the panel. */
-  const BLOCK_LABELS = { text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), gallery: ta('blocks.gallery'), faq: ta('blocks.faq'), collection: ta('blocks.collection'), timeline: ta('blocks.timeline'), quote: ta('blocks.quote'), stats: ta('blocks.stats'), table: ta('blocks.table'), share: ta('blocks.share'), countdown: ta('blocks.countdown'), audio: ta('blocks.audio'), product: ta('blocks.product'), cart: ta('blocks.cart'), checkout: ta('blocks.checkout') };
+  const BLOCK_LABELS = { text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), gallery: ta('blocks.gallery'), faq: ta('blocks.faq'), collection: ta('blocks.collection'), timeline: ta('blocks.timeline'), quote: ta('blocks.quote'), stats: ta('blocks.stats'), table: ta('blocks.table'), share: ta('blocks.share'), countdown: ta('blocks.countdown'), audio: ta('blocks.audio'), product: ta('blocks.product'), cart: ta('blocks.cart'), checkout: ta('blocks.checkout'), map: ta('blocks.map') };
   const SHAPE_KINDS = [
     ['line', ta('shape.line')], ['arrow', ta('shape.arrow')], ['circle', ta('shape.circle')],
     ['rect', ta('shape.rect')], ['triangle', ta('shape.triangle')],
@@ -4648,6 +4648,7 @@
     'shape-triangle': { type: 'shape', decor: true, hideMobile: true, props: { kind: 'triangle', color: 'accent', thickness: 2, fill: null }, w: 10, h: 110 },
     image: { type: 'image', props: { src: '', alt: '', fit: 'cover', radius: 'md', href: null }, w: 30, h: 220 },
     video: { type: 'video', props: { url: '', title: 'Video' }, w: 45, h: 300 },
+    map: { type: 'map', props: { location: '', zoom: 15, height: 320 }, w: 60, h: 360 },
     icon: { type: 'icon', decor: true, hideMobile: true, props: { glyph: '★', color: 'accent', size: 48 }, w: 8, h: 64 },
     collection: { type: 'collection', props: { collection: null, view: 'cards', limit: 6, newestFirst: true }, w: 90, h: 200 },
     gallery: { type: 'gallery', props: { images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5 }, w: 90, h: 320 },
@@ -4803,6 +4804,15 @@
    *  type/label/defaults at plugin load (urd-plugin-blocks), so the block
    *  can be built here. */
   let pluginBlocks = $state([]);
+  /** Core blocks whose Content panel is the field contract (the same
+   *  renderer as plugin fields): place search, numbers, toggles, selects. */
+  const CORE_FIELDS = {
+    map: [
+      { key: 'location', type: 'place', label: ta('lbl.mapLocation'), placeholder: ta('ph.mapLocation') },
+      { key: 'zoom', type: 'number', label: ta('lbl.mapZoom'), min: 1, max: 19 },
+      { key: 'height', type: 'number', label: ta('lbl.mapHeight'), min: 120, max: 900, step: 10 },
+    ],
+  };
 
   function addPluginBlock(entry, extraProps = {}) {
     // pluginBlocks is $state: structuredClone on a reactive proxy throws
@@ -4833,6 +4843,7 @@
       { label: ta('blocks.image'), act: 'image' },
       { label: ta('blocks.video'), act: 'block', kind: 'video' },
       { label: ta('blocks.icon'), act: 'block', kind: 'icon' },
+      { label: ta('blocks.map'), act: 'block', kind: 'map' },
       { label: ta('blocks.collection'), act: 'block', kind: 'collection' },
       { label: ta('blocks.faq'), act: 'block', kind: 'faq' },
       { label: ta('blocks.timeline'), act: 'block', kind: 'timeline' },
@@ -6560,6 +6571,8 @@
                   onclick={() => addBlock('video')}>{ta('blocks.video')}</button>
                 <button class="ghost" title={ta('tip.blocks.icon')}
                   onclick={() => addBlock('icon')}>{ta('blocks.icon')}</button>
+                <button class="ghost" title={ta('tip.blocks.map')}
+                  onclick={() => addBlock('map')}>{ta('blocks.map')}</button>
                 <button class="ghost" title={ta('tip.blocks.collection')}
                   onclick={() => addBlock('collection')}>{ta('blocks.collection')}</button>
                 <button class="ghost" title={ta('tip.blocks.faq')}
@@ -7970,10 +7983,11 @@
           options={SHAPE_KINDS}
           onchange={(v) => setBlockProp('kind', v)} /></label>
     {:else}
-      <!-- Plugin blocks: a def with `fields` (the field contract) gets its
-           settings rendered here; otherwise the button opens the plugin's
-           own config panel in the preview (calendar/form). -->
-      {@const pluginFields = pluginBlocks.find((b) => b.type === selectedBlock.type)?.fields ?? []}
+      <!-- The field contract: core blocks listed in CORE_FIELDS and plugin
+           defs with `fields` get their settings rendered here; a plugin
+           block without fields gets the button that opens its own config
+           panel in the preview (calendar/form). -->
+      {@const pluginFields = CORE_FIELDS[selectedBlock.type] ?? pluginBlocks.find((b) => b.type === selectedBlock.type)?.fields ?? []}
       {#if pluginFields.length}
         {#each pluginFields as f (f.key)}
           {#if f.type === 'place'}

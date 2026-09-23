@@ -73,6 +73,16 @@ const icon = (fr, glyph, size = 40) => ({
   frames: fr,
 });
 
+/* Map block: an empty place, the owner types the address in Properties. */
+const map = (fr, props = {}) => ({
+  id: makeId('blk'),
+  type: 'map',
+  version: 1,
+  props: { location: '', zoom: 15, height: 320, ...props },
+  animation: null,
+  frames: fr,
+});
+
 const hoverLift = () => ({ type: 'hover-lift', version: 1, props: {} });
 
 /* Collection block (ADR-0007): collection is set by the owner in Properties; null gives a guiding empty state. */
@@ -286,6 +296,19 @@ export function registerSectionPresets(Urd) {
     create: () => section('gallery', '440px', bg(colorLayer('bg')), [
       text(frame(4, 24, 50, 32), ta('seed.gallery.title')),
       gallery(frame(4, 72, 92, 320)),
+    ]),
+  });
+
+  Urd.sections.define('find-us', {
+    label: 'Find us',
+    labelKey: 'preset.find-us.label',
+    group: 'Cards and lists',
+    groupKey: 'presetGroup.cards',
+    hint: 'Map with your address (privacy-friendly OpenStreetMap)',
+    hintKey: 'preset.find-us.hint',
+    create: () => section('find-us', '480px', bg(colorLayer('bg')), [
+      text(frame(6, 40, 60, 70), ta('seed.findUs.title')),
+      map(frame(6, 120, 88, 360, 2)),
     ]),
   });
 

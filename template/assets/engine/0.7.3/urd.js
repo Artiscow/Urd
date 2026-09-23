@@ -35,6 +35,7 @@ import { audioBlock } from './blocks/audio.js';
 import { productBlock } from './blocks/product.js';
 import { cartBlock } from './blocks/cart.js';
 import { checkoutBlock } from './blocks/checkout.js';
+import { mapBlock } from './blocks/map.js';
 import { colorLayer } from './backgrounds/color.js';
 import { gradientLayer } from './backgrounds/gradient.js';
 import { glowLayer } from './backgrounds/glow.js';
@@ -89,6 +90,7 @@ function registerCore() {
   Urd.blocks.define('product', productBlock);
   Urd.blocks.define('cart', cartBlock);
   Urd.blocks.define('checkout', checkoutBlock);
+  Urd.blocks.define('map', mapBlock);
   Urd.backgrounds.define('color', colorLayer);
   Urd.backgrounds.define('gradient', gradientLayer);
   Urd.backgrounds.define('glow', glowLayer);
@@ -98,10 +100,10 @@ function registerCore() {
   Urd.backgrounds.define('video', videoLayer);
   for (const [id, def] of Object.entries(coreAnimations)) Urd.animations.define(id, def);
   registerSectionPresets(Urd);
-  // Old plugin contract ids resolve to the renamed reference plugins
-  // (ADR-0021): a manually updated plugin folder defines the new ids, while
-  // pages built before the rename still carry the old ones. A plugin that
-  // still defines the old id wins directly (registry alias semantics).
+  // Old plugin contract ids resolve to the renamed ids (ADR-0021): pages
+  // built before the rename still carry the old ones. The map is a core
+  // block since 0.7.18.2; a plugin that still defines an old id wins
+  // directly (registry alias semantics).
   Urd.blocks.alias('kalender', 'calendar');
   Urd.blocks.alias('kart', 'map');
   Urd.blocks.alias('skjema', 'form');

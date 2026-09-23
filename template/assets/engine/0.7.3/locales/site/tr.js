@@ -67,5 +67,8 @@ export default {
     'countdown.minutes': 'dakika',
     'countdown.seconds': 'saniye',
     'render.missingPlugin': "'{type}' blok türü kullanılamıyor (eksik eklenti veya daha yeni Urd?)",
+    'map.larger': 'Daha büyük harita göster',
+    'map.mapTitle': 'Harita',
+    'map.openOsm': 'Haritayı OpenStreetMap üzerinde aç',
   },
 };

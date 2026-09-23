@@ -68,5 +68,8 @@ export default {
     'countdown.minutes': 'minutes',
     'countdown.seconds': 'seconds',
     'render.missingPlugin': "The block type '{type}' is unavailable (missing plugin or newer Urd?)",
+    'map.larger': 'Show larger map',
+    'map.mapTitle': 'Map',
+    'map.openOsm': 'Open the map on OpenStreetMap',
   },
 };

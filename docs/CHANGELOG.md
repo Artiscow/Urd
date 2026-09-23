@@ -27,6 +27,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.18.2 - Map into the core - 24 September 2026
+
+- The map block moved from `plugins/map/` into the engine: `blocks/map.js` with the pure `osm.js` (the tests repointed through `engineImport`), registered like the other core blocks with the ids `map` and `find-us` and the legacy aliases unchanged, so existing pages render as before. The plugin's injected style tag became base.css rules, its dictionary was split into visitor keys (`map.*` in `locales/site/*`) and editing keys (`blocks.map`, `lbl.map*`, `canvas.map*`, `hintMap.*`, `preset.find-us.*`, `seed.findUs.title` in `locales/admin/*`, nn and se carried over), and the «Finn oss» preset lives in sections/presets.js.
+- Editor: «Kart» in the block labels, defaults, palette, search and the preview's block menu; the Properties panel renders the place search, zoom and height through the field contract for core blocks (`CORE_FIELDS`, the same renderer as plugin fields). The plugin folder is gone, `plugins.json` lists calendar, form, lang-sv and analytics, and the validator's manifest list follows.
+- Docs: the `_headers` comment, SCHEMA.md (the block list and the `map` props), TESTRUNDER batch (0.7.18.2).
+
 ### 0.7.18.1 - Kjerneflyttingen planned, and the Swedish pack fixed for the admin - 23 September 2026
 
 - New milestone 0.7.18: map, form, calendar and analytics move from reference plugins into the core (blocks, presets and aliases unchanged; analytics as `site.analytics` edited behind the gear), with the Swedish pack `lang-sv` staying as the one shipped example plugin; seven stages in BACKLOG. An ADR-0026 was written for it and withdrawn the same day: the decision is visible in the code once the blocks are core, and the lasting points (the plugin layer that stays, the status of ADR-0006 and ADR-0007, the `site.analytics` field) belong in AGENTS.md, those ADRs and SCHEMA.md.

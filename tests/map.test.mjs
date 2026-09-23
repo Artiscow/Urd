@@ -1,10 +1,12 @@
 /**
- * Contract tests for the map plugin's pure OSM logic (location parsing,
+ * Contract tests for the map block's pure OSM logic (location parsing,
  * embed URL, larger-map link). DOM rendering is tested manually.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseLocation, buildEmbedUrl, buildLargerMapUrl, OSM_HOST } from '../template/plugins/map/osm.js';
+import { engineImport } from './_engine.mjs';
+
+const { parseLocation, buildEmbedUrl, buildLargerMapUrl, OSM_HOST } = await engineImport('osm.js');
 
 test('parseLocation: plain coordinates with comma or space', () => {
   assert.deepEqual(parseLocation('59.913, 10.739'), { lat: 59.913, lon: 10.739, zoom: null });

@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.18.2): the map block in the core
+
+- [ ] Blocks panel: «Kart» sits among the core blocks (after Ikon), the search finds it, and «+ Ny blokk» in the preview lists it; no «Plugins» group appears for it; the Hjem page's existing map renders exactly as before the move
+- [ ] Properties: Sted with «Søk» (an address on the published site, coordinates or an OSM link locally), Zoom 1-19 and Høyde 120-900 update the map at once; a block without a place shows the placeholder in the editor and nothing for visitors
+- [ ] The help chip on the map block lists the five lines; a host that blocks openstreetmap.org shows the frame-src line in the editor and a link for visitors
+- [ ] «+ Ny seksjon»: «Finn oss» is in Kort og lister with the core presets (not in a Plugins group); it inserts a title and a map
+- [ ] The Plugins panel lists only lang-sv (map is gone from plugins.json), and a site that still lists «map» in its own plugins.json just logs a warning and renders the core block
+
 ### Testrunde-batch (0.7.18.1): the Swedish language pack in admin
 
 - [ ] Admin settings (the gear), Språk: «Svenska» is listed; choosing it turns the whole admin Swedish (panels, tooltips, the block palette, status messages, the seed texts of new blocks and sections), and the choice is remembered in the browser; a key without a Swedish text (none known) falls back to bokmål, never blank
@@ -138,31 +146,20 @@ Supersedes the 0.7.2.2 items «"Skjerm"-lerretet er 1920 px» and «Skjerm-knapp
 - [ ] Editor preview (?preview=1): page switches in the editor behave as before and no page.json prefetch appears in the Network panel from the iframe
 - [ ] Private window or a browser with storage blocked: navigation works, no console errors from prefetch
 
-### Testrunde-batch (0.7.0.5): svelte 5.57.0
-
-- [ ] The deployed /admin starts with the rebuilt bundle (svelte 5.57.0): log in, open a page, edit a block, see the preview respond, and publish once
-
 ### Testrunde-batch (0.7.14.2-18): the English clean-up, all stages merged 15 September 2026
 
 **0.7.14.18: Siste ekstra sjekk**
 
 - [ ] Delingsblokken hos besøkende viser «Kopier lenke» og «Del på e-post» (ikke nøkkelnavn) på nb og de andre sidespråkene
-- [ ] Tema-presetene i Nettsted-panelet (Nordisk brønn, Stein, Plomme, Rose, Hav, Natt) har riktige navn og notat i nb/en-GB/tr, og den aktive preseten markeres fortsatt når tokens matcher
 - [ ] Ny kontaktseksjon og nye footer-presets får e-post- og telefonlenker fra seed.email/seed.phone på admin-språket (nb: post@dinforening.no, +47 22 00 00 00; en-GB: post@yourclub.org, +44 20 0000 0000), og tel:-lenken er uten mellomrom
 - [ ] Tekstverktøylinjas linjehøyde-knapper viser 1,0 / 1,15 / 1,5 / 2,0 i nb og 1.0 / 1.15 / 1.5 / 2.0 i en-GB, med «Arv» som første valg på nb
 
 **0.7.14.17: Sluttauditen**
 
 - [ ] Egenskaper-overskriften viser oversatt blokknavn (ikke rå id) for galleri, samling, tidslinje, sitat, statistikk, tabell, deling, nedteller, produkt, handlekurv og kasse
-- [ ] Kalenderpluginens liste- og kortvisning er stilt igjen (badge, rader, kort), og klikk inne i kalender- og skjemapluginens tannhjulpanel holder panelet åpent uten å avmarkere blokken
-- [ ] Om oss-siden rendrer de tre bildene (ingen «newer-than-engine»-plassholdere); Kaker og Hjem sin bildebakgrunn vises som før (plain)
-- [ ] En side lagret før 0.7.14.17 med bakgrunnsbilde i flislegg-modus rendrer fortsatt som flis i forhåndsvisning og publisert; kjent: nedtrekket i Egenskaper viser «Vanlig» til laget lagres på nytt (samme mønster som timeline/quote)
-- [ ] Admin-temaet overlever oppdateringen: en nettleser som hadde f.eks. Nordlys valgt får samme tema etter innlasting (localStorage-verdien migreres), og alle sju temaer kan velges og har riktige navn i nb/en-GB/tr
 - [ ] Samlingsblokkens tomtilstander (ingen samling valgt, ukjent samling, tom samling), «+ Legg til bilder»-knappen og «Uten dato»-overskriften er på admin-språket; bildeeditorens «Ingen bilde ennå» vises for tom miniatyr
 - [ ] Publisering skriver commit-meldingen på admin-språket, f.eks. «Oppdater Hjem, menyen via Urd-admin» i nb og «Update Home, the menu via Urd admin» i en-GB; en publisering uten titler gir «nettstedet»/«the site»
 - [ ] Vipps (testavtale, deployet): returen fra betaling lander på ?ordered=1 og kvitteringen vises; en betaling startet før oppdateringen som returnerer med ?bestilt=1 gir ingen kvittering (kjent kant)
-- [ ] Tekstverktøylinja, multiutvalg-verktøylinja og til-toppen-knappen vises/skjules som før (vis-klassen heter visible); nedtrekk og bildeeditorens segmentknapper markerer valgt alternativ
-- [ ] Plugin-panelet viser norske plugin-navn i nb (Skjema, Kalender, Kart, Svensk språkpakke) og engelske i en-GB
 - [ ] Nye bakgrunnsbilder lagres som media/background-<hash>, menybilder som media/menu-<hash>; nye samlingsinnslag får id entry-...
 
 **0.7.14.9: Resterende strenger**

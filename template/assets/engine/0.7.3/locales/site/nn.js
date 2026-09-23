@@ -34,5 +34,8 @@ export default {
     'video.unknownUrl': 'Ukjend videolenkje (YouTube og Vimeo er støtta)',
     'video.emptyHint': 'Lim inn ei YouTube- eller Vimeo-lenkje i Eigenskapar',
     'render.missingPlugin': "Blokktypen '{type}' er ikkje tilgjengeleg (manglar plugin eller nyare Urd?)",
+    'map.larger': 'Vis større kart',
+    'map.mapTitle': 'Kart',
+    'map.openOsm': 'Opne kartet på OpenStreetMap',
   },
 };
