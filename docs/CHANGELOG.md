@@ -27,6 +27,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.17.1 - Scaling below the content width: the survey and the decision - 23 September 2026
+
+- The narrow-width text folding became its own milestone 0.7.17 (moved out of 0.7.3: it is a desktop problem between the content width and the phone, not a mobile one), with a survey stage, a build stage and a test-round stage.
+- LAERDOMMER §2: a subsection on how twelve builders scale below the design width and what the owner controls (Tilda, Readymag, Wix Studio, Squarespace Fluid Engine, Duda, Webflow, Framer, Elementor, Figma Sites, Hostinger, Canva, Carrd, plus CSS `zoom` and WCAG), five rules and «What Urd takes»; the sources in Kilder. FUNKSJONSKART §3 and a C26 row.
+- ADR-0018 addendum: the canvas scales proportionally with CSS `zoom` between the binding width and a floor (`site.layout.scale = { mode, min }`, omitted = today's behaviour), and below the hand-off width the page uses the row grid of ADR-0019; `zoom` is allowed on the canvas because it creates no containing block for fixed descendants, `transform` stays forbidden.
+
 ## [0.7.3] - 2026-09-23
 
 ### 0.7.2.7-0.7.0.8p - Release 0.7.3: navigation bar sizing, the Appearance folds, the anchoring round, the element review planned - 23 September 2026
