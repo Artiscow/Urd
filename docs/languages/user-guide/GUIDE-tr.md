@@ -259,18 +259,17 @@ sırasıyla alır. Genelde bir şey yapman gerekmez.
   bak) ve eklenti gerektirmez.
 
   Takvim bloğu Bloklar panelindedir («Takvim: Liste», «Kartlar», «Ay» ve
-  «Sonraki», ya da «Neler oluyor» bölüm şablonu). Bloğu seç, Özellikler
-  panelinde «Ayarlar …» düğmesine tıkla ve blokta açılan panele takvimin
-  iCal adresini ya da Google takvim kimliğini yapıştır. Görünümü (Liste,
-  Kartlar, Ay ya da «Sonraki») ve sayıyı da orada seçersin.
+  «Sonraki», ya da «Neler oluyor» bölüm şablonu). Bloğu seç ve takvimin
+  iCal adresini ya da Google takvim kimliğini Özellikler panelinde Kaynaklar
+  altına yapıştır (her satıra bir tane). Görünümü (Liste, Kartlar, Ay ya da
+  «Sonraki») ve sayıyı da orada seçersin.
   «Kategori: Başlık» biçimindeki başlıklar filtrelenebilir kategori çipleri
   verir, açıklamadaki bir
   kayıt bağlantısı **Kaydol** düğmesine dönüşür ve **Abone ol**
   düğmesi ziyaretçilerin takvimi kendi uygulamalarında izlemesini sağlar.
 
-  Form bloğu (ve «İletişim formu» şablonu) Bloklar panelindedir: alıcıyı,
-  alanları ve gönderme biçimini ayarlamak için bloğu seç ve Özellikler
-  panelinde «Ayarlar …» düğmesine tıkla; panel blokta açılır. Varsayılan olarak
+  Form bloğu (ve «İletişim formu» şablonu) Bloklar panelindedir: bloğu seç,
+  alıcıyı, alanları ve gönderme biçimini Özellikler panelinde ayarla. Varsayılan olarak
   form, ziyaretçinin e-posta istemcisini hazır bir e-postayla açar (kurulum
   gerekmez). Bunun yerine kendi uç noktana göndermek istersen (Apps Script ya da
   kendi işlevin), «Harici uç nokta» seç ve adresi yapıştır; o zaman

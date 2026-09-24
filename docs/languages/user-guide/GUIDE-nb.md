@@ -258,18 +258,17 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   kjerneblokker (se under) og trenger ingen plugin.
 
   Kalender-blokken ligger i Blokker-panelet («Kalender: Liste», «Kort»,
-  «Måned» og «Neste», eller seksjonsmalen «Hva skjer»). Velg blokken, åpne
-  «Innstillinger …» i Egenskaper og lim inn kalenderens iCal-adresse eller
-  Google-kalender-id i panelet som åpnes på blokken. Der velger du også
-  visning (liste, kort, månedskalender eller «neste arrangement») og
-  antall. Titler på formen «Kategori: Tittel» gir filtrerbare
+  «Måned» og «Neste», eller seksjonsmalen «Hva skjer»). Velg blokken og
+  lim inn kalenderens iCal-adresse eller Google-kalender-id under Kilder i
+  Egenskaper (én per linje). Der velger du også visning (liste, kort,
+  månedskalender eller «neste arrangement») og antall. Titler på formen «Kategori: Tittel» gir filtrerbare
   kategori-chips, en
   påmeldingslenke i beskrivelsen blir en «Meld deg på»-knapp, og
   «Abonner»-knappen lar besøkende følge kalenderen i sin egen app.
 
   Skjema-blokken (og «Kontaktskjema»-malen) ligger i Blokker-panelet: velg
-  blokken og åpne «Innstillinger …» i Egenskaper for å stille inn
-  mottaker, felt og sendemåte i panelet på blokken. Standard er at
+  blokken, så stiller du inn mottaker, felt og sendemåte i Egenskaper.
+  Standard er at
   skjemaet åpner besøkendes e-postklient med en ferdig e-post (ingen
   oppsett). Vil du heller sende til et eget endepunkt (Apps Script eller
   en egen funksjon), velg «Eksternt endepunkt» og lim inn adressen; da må

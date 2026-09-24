@@ -27,6 +27,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.18.7 - Calendar and form settings in the Properties panel - 24 September 2026
+
+- The calendar and form blocks kept their settings in a panel behind a gear inside the preview, unlike every other core block. Both got Content panels in the editor: the form's send mode, recipient or endpoint, field list (name, type, required, order, options for select and radio), button text and confirmation; the calendar's sources, view, count (list and cards only) and the two toggles. The gears, their panels and their CSS are gone from `blocks/form.js`, `blocks/calendar.js` and base.css; the help chip sits on the block like elsewhere. The keys `form.gear`, `form.gearTitle` and `calendar.gearTitle` removed from the five dictionaries, the hints and the demo note point at Properties.
+- The `urd-open-block-config` path and the click guard for the old panel classes stay for plugin copies (the compatibility surface). SCHEMA.md, the plugin README and the user guide in five languages corrected; TESTRUNDER batch (0.7.18.7).
+
 ### 0.7.18.6 - The plugin folders gone and every mention corrected - 24 September 2026
 
 - The preview's «+ Ny blokk» menu decided plugin blocks by a fixed list of core types, so the three moved blocks would have appeared twice (once as core, once under Plugins); it now uses `fromPlugin` on the definition. The validator scans `plugins/*/plugin.json` instead of a hand-picked list; the Plugins panel's folder example reads lang-sv in five languages; code comments in footer-cta.js, footer.js, `/api/geocode` and `/api/ics` say block, not plugin.

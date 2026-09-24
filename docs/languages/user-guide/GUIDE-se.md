@@ -262,15 +262,15 @@ lohkanortnegis. It dábálaččat dárbbaš dahkat maidege.
   vuođđoblohkat Blohkat-panelas.
 
   Kaleandar-blohkka lea Blohkat-panelas: bija Kaleandar-blohka (dahje
-  sekšuvdnamálle «Mii dáhpáhuvvá»), coahkkal «Heivehusat …» Iešvuođat-panelas ja liibme
-  kaleandara iCal-čujuhusa dahje Google-kaleandar-id. Vállje čájeheami (Listu,
+  sekšuvdnamálle «Mii dáhpáhuvvá»), ja liibme kaleandara iCal-čujuhusa
+  dahje Google-kaleandar-id Iešvuođat-panelas. Vállje čájeheami (Listu,
   Koarttat, Mánnu dahje «Boahtte») ja logu. Bajilčállagat
   mat leat hámis «Kategoriija: Bajilčála» addet rátkejuvvon kategoriija-čippiid,
   dieđihanliŋka válddahusas šaddá **Dieđit iežat**-boallun, ja
   **Čuovo**-boallu diktá galledeaddjiid čuovvut kaleandara iežaset appas.
 
-  Skovvi-blohkka (ja «Oktavuohtaskovvi»-málle) lea Blohkat-panelas: coahkkal
-  «Heivehusat …» Iešvuođat-panelas vai heivehat vuostáiváldi, gittiid ja sáddenvuogi. Standárda lea ahte
+  Skovvi-blohkka (ja «Oktavuohtaskovvi»-málle) lea Blohkat-panelas: vuostáiváldi,
+  gietit ja sáddenvuohki heivehuvvojit Iešvuođat-panelas. Standárda lea ahte
   skovvi rahpá galledeaddji e-poastaprográmma gárvves e-poasttain (ii
   oppset). Jus háliidat baicce sáddet iežat čuoggái (Apps Script dahje
   iežas funkšuvdna), vállje «Olggobeale čuokkis» ja liibme čujuhusa; de fertet

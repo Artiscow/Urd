@@ -163,9 +163,9 @@ til `key`, koordinater til props `lat`/`lon`; kjernens kartblokk bruker
 samme felt). Etikettnøklene løses av motoren før de sendes til admin, så
 bruk `labelKey` fra pluginens egen ordbok. Uten `fields` viser Egenskaper
 en «Innstillinger …»-knapp som åpner pluginens eget config-panel i
-forhåndsvisningen (kjernens kalender- og skjemablokk viser det mønsteret,
-riktig for innstillinger som er mer enn en flat felt-liste, som
-kildelister). Kontrakten er beskrevet i
+forhåndsvisningen (referansepluginene kalender og skjema viste det
+mønsteret til og med v0.7.3, riktig for innstillinger som er mer enn en
+flat felt-liste, som kildelister). Kontrakten er beskrevet i
 [docs/SCHEMA.md](../../docs/SCHEMA.md#plugins).
 
 **Temastyrt UI-regelen (ADR-0009)**: aldri native `<select>` i
@@ -184,11 +184,12 @@ deres ligger i git-historikken (taggen v0.7.3, `template/plugins/`). Fra
 0.7.18 er de kjerneblokker, og motorens filer viser de samme mønstrene:
 
 - **Kalender** (`assets/engine/<versjon>/blocks/calendar.js` og `ics.js`):
-  et config-panel i forhåndsvisningen for innstillinger som er mer enn
-  en flat felt-liste (kildeliste, visning, antall), `variants` for
-  visningene, henting via sidens egen proxy `/api/ics` (så ingen
-  CSP-unntak), ren parser i egen modul med tester, og eksempeldata i
-  forhåndsvisningen når kilder mangler.
+  `variants` for visningene, henting via sidens egen proxy `/api/ics` (så
+  ingen CSP-unntak), ren parser i egen modul med tester, og eksempeldata i
+  forhåndsvisningen når kilder mangler. Innstillingene (kildeliste,
+  visning, antall) redigeres i Egenskaper-panelet; som plugin (til og med
+  v0.7.3) hadde den et eget config-panel i forhåndsvisningen, mønsteret
+  for innstillinger som er mer enn en flat felt-liste.
 - **Skjema** (`blocks/form.js` og `form-model.js`): ekte skjemarendering,
   besøkende-input som aldri blir HTML, `mailto` som nulloppsett med et
   valgfritt endepunkt via `fetch` (som krever `connect-src` i `_headers`),

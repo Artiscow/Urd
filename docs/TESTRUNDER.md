@@ -2,6 +2,12 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.18.7): calendar and form settings in Properties
+
+- [ ] Form block, Egenskaper, Innhold: Sendemåte (E-postklient / Eksternt endepunkt) shows Mottaker and Emne, or Endepunkt-URL with the connect-src tooltip; the field list with name, type dropdown, required, move up and down and remove; a select or radio field gets its options line; «+ Legg til felt»; Knappetekst and Kvittering; every change re-renders the form in the preview and is one undo step; no gear or panel on the block any more, only the help chip
+- [ ] Calendar block, Egenskaper, Innhold: Kilder as a textarea (one per line), Visning, Maks antall only for Liste and Kort, the two toggles; a pasted Google id renders the feed on the published site; the empty block shows the demo events with the note pointing at Egenskaper; no gear on the block, only the help chip
+- [ ] Ren visning and the published page show neither chip nor any editor chrome on either block; a plugin copy of the old calendar or form (from v0.7.3) still opens its own panel with «Innstillinger …»
+
 ### Testrunde-batch (0.7.18.6): the plugin folders gone, the docs corrected
 
 - [ ] «+ Ny blokk» in the preview lists Kart, Skjema and Kalender once each among the core blocks with no «Plugins» section (the section appears only when a third-party plugin provides blocks); the Blocks panel and the section gallery the same

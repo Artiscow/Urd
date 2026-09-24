@@ -259,17 +259,16 @@ reading order. You usually do not have to do anything.
   core blocks (see below) and need no plugin.
 
   The Calendar block is in the Blocks panel («Calendar: List», «Cards»,
-  «Month» and «Next», or the section template «What is on»). Select the block,
-  open «Settings …» in Properties and paste the calendar's iCal address or
-  Google calendar id in the panel that opens on the block. There you also
-  choose the view (List, Cards, Month or «Next») and the count. Titles of
+  «Month» and «Next», or the section template «What is on»). Select the block
+  and paste the calendar's iCal address or Google calendar id under Sources
+  in Properties (one per line). There you also choose the view (List, Cards,
+  Month or «Next») and the count. Titles of
   the form «Category: Title» give filterable category chips, a
   sign-up link in the description becomes a **Sign up** button, and
   the **Subscribe** button lets visitors follow the calendar in their own app.
 
   The Form block (and the «Contact form» template) is in the Blocks panel: select
-  the block and open «Settings …» in Properties to set the recipient, fields
-  and send mode in the panel on the block. By default
+  the block, and set the recipient, fields and send mode in Properties. By default
   the form opens the visitor's email client with a ready-made email (no
   setup). If you would rather send to your own endpoint (Apps Script or
   a function of your own), choose «External endpoint» and paste the address; then you must

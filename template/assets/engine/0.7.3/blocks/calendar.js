@@ -9,9 +9,9 @@
  * Views: list (date-badge rows), cards, month and next (a panel for the next
  * event). Conventions: "Category: Title" gives category chips with a filter,
  * and a signup link in the description becomes a button. The parser
- * (ics.js) is loaded on the first render, never in the visitor closure; the
- * sources panel (the gear, opened from Properties) and the help chip are
- * editor chrome.
+ * (ics.js) is loaded on the first render, never in the visitor closure. The
+ * sources, the view and the count are edited in the Properties panel; the
+ * help chip (ADR-0008) explains the conventions.
  */
 // t() for visitor texts (the site language), ta() for the editor chrome
 // (the admin language), dates() for month and weekday names, tp() for
@@ -278,112 +278,10 @@ function categoryRow(occs, active, onpick) {
   return row;
 }
 
-/* ---------- Source panel in the preview ---------- */
-
-function post(msg) {
-  window.parent?.postMessage(msg, location.origin);
-}
+/* ---------- The views' names (the variants in the block menus) ---------- */
 
 /** View id + label KEY (looked up with ta at use time; never at module level). */
 const VIEW_NAMES = [['list', 'calendar.viewList'], ['cards', 'calendar.viewCards'], ['month', 'calendar.viewMonth'], ['next', 'calendar.viewNext']];
-
-function configPanel(el, props, ctx) {
-  const gear = el2('button', 'urd-cal-gear urd-cfg-toggle', `⚙ ${ta('calendar.sources')}`);
-  gear.type = 'button';
-  gear.title = ta('calendar.gearTitle');
-  const panel = el2('div', 'urd-cal-config');
-
-  const label = (text) => el2('label', 'urd-cal-config-label', text);
-  const sources = document.createElement('textarea');
-  sources.rows = 3;
-  sources.placeholder = ta('calendar.sourcesPh');
-  sources.value = (props.sources ?? []).join('\n');
-
-  // View: theme-driven segment buttons (native select popups follow the OS
-  // theme and turn unreadable in dark panels).
-  let chosenView = props.view ?? 'list';
-  const viewSeg = el2('div', 'urd-cal-seg');
-  const viewButtons = [];
-  for (const [value, nameKey] of VIEW_NAMES) {
-    const b = el2('button', null, ta(nameKey));
-    b.type = 'button';
-    if (value === chosenView) b.classList.add('selected');
-    b.addEventListener('click', () => {
-      chosenView = value;
-      for (const other of viewButtons) other.classList.remove('selected');
-      b.classList.add('selected');
-      syncLimitRow();
-    });
-    viewButtons.push(b);
-    viewSeg.appendChild(b);
-  }
-
-  // The max count applies to list and cards only; month shows its month and next shows one.
-  const limitLabel = label(ta('lbl.maxCount'));
-  const limit = document.createElement('input');
-  limit.type = 'number';
-  limit.min = '1';
-  limit.max = '50';
-  limit.value = String(props.limit ?? 6);
-  const syncLimitRow = () => {
-    const relevant = chosenView === 'list' || chosenView === 'cards';
-    limitLabel.style.display = relevant ? '' : 'none';
-    limit.style.display = relevant ? '' : 'none';
-  };
-  syncLimitRow();
-
-  const check = (text, checked) => {
-    const input = document.createElement('input');
-    input.type = 'checkbox';
-    input.checked = checked;
-    const wrap = el2('label', 'urd-cal-config-check');
-    wrap.append(input, document.createTextNode(` ${text}`));
-    return [wrap, input];
-  };
-  const [categoriesLabel, categories] = check(ta('calendar.showCategories'), props.showCategories !== false);
-  const [subscribeLabel, subscribe] = check(ta('calendar.showSubscribe'), props.showSubscribe !== false);
-
-  const apply = el2('button', 'urd-cal-apply', ta('common.apply'));
-  apply.type = 'button';
-  apply.addEventListener('click', () => {
-    const nextProps = {
-      sources: sources.value.split('\n').map((s) => s.trim()).filter(Boolean),
-      view: chosenView,
-      limit: Math.max(1, Math.min(50, Number(limit.value) || 6)),
-      showCategories: categories.checked,
-      showSubscribe: subscribe.checked,
-    };
-    post({ type: 'urd-edit', sectionId: ctx.section.id, blockId: el.dataset.blockId, props: nextProps, rerender: true });
-    close();
-  });
-
-  panel.append(
-    label(ta('calendar.sources')), sources,
-    label(ta('lbl.view')), viewSeg,
-    limitLabel, limit,
-    categoriesLabel, subscribeLabel, apply,
-  );
-
-  // A click outside the panel closes it (a click inside the panel or on the button does not).
-  const onOutside = (event) => {
-    if (!panel.isConnected) { close(); return; }
-    if (panel.contains(event.target) || event.target === gear) return;
-    close();
-  };
-  function close() {
-    panel.classList.remove('visible');
-    document.removeEventListener('pointerdown', onOutside, true);
-  }
-  gear.addEventListener('click', (event) => {
-    event.stopPropagation();
-    if (panel.classList.toggle('visible')) {
-      setTimeout(() => document.addEventListener('pointerdown', onOutside, true), 0);
-    } else {
-      close();
-    }
-  });
-  return [gear, panel];
-}
 
 /* ---------- The block ---------- */
 
@@ -402,22 +300,16 @@ function drawCalendar(ics, el, host, props, ctx) {
   const draw = (occurrences, note) => {
     host.replaceChildren();
     if (ctx.preview && ctx.viewport !== 'mobile') {
-      // The sources gear and the help chip share one row at the top right,
-      // clear of the rotation handle (ADR-0008).
+      // Help chip (ADR-0008): the sources, the conventions and the subscribe buttons need explaining.
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
-        if (!host.isConnected || host.querySelector('.urd-hint-chip')) return;
-        const [gear, panel] = configPanel(el, props, ctx);
-        const tools = el2('div', 'urd-cal-tools');
-        tools.appendChild(gear);
-        host.append(tools, panel);
-        const chip = attachHint(tools, {
+        if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
+        attachHint(el, {
           title: ta('hintCalendar.title'),
           lines: [
             ta('hintCalendar.l1'), ta('hintCalendar.l2'), ta('hintCalendar.l3'), ta('hintCalendar.l4'),
             ta('hintCalendar.l5'), ta('hintCalendar.l6'), ta('hintCalendar.l7'),
           ],
         });
-        tools.insertBefore(chip, tools.firstChild);
       });
     }
     const filtered = activeCategory

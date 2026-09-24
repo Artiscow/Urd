@@ -1104,6 +1104,47 @@
 
   /* The FAQ block: the question list is edited here; the texts also directly in the preview. */
 
+  /* The form block (Content): send mode, recipient or endpoint, the field
+     list and the texts. The field ids follow the engine's shape (a short
+     random id, like the former config panel); the option list follows only
+     the types that use it. */
+  const FORM_FIELD_TYPES = ['text', 'email', 'tel', 'textarea', 'select', 'checkbox', 'radio', 'date'];
+  const FORM_OPTION_TYPES = new Set(['select', 'radio']);
+  const formFieldId = () => {
+    const bytes = crypto.getRandomValues(new Uint8Array(3));
+    return 'f' + [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+  };
+  function setFormField(i, patch) {
+    mutateBlock(`edit:${selectedBlock.blockId}:field${i}`, (b) => {
+      const next = { ...b.props.fields[i], ...patch };
+      if (!FORM_OPTION_TYPES.has(next.type)) delete next.options;
+      else next.options ??= [];
+      b.props.fields[i] = next;
+    });
+  }
+  function setFormFieldOptions(i, text) {
+    setFormField(i, { options: String(text).split(',').map((v) => v.trim()).filter(Boolean) });
+  }
+  function addFormField() {
+    mutateBlock('form-field', (b) => {
+      (b.props.fields ??= []).push({ id: formFieldId(), label: ta('form.newField'), type: 'text', required: false });
+    });
+  }
+  function removeFormField(i) {
+    mutateBlock('form-field', (b) => { b.props.fields.splice(i, 1); });
+  }
+  function moveFormField(i, dir) {
+    const j = i + dir;
+    mutateBlock('form-field', (b) => {
+      if (j < 0 || j >= b.props.fields.length) return;
+      [b.props.fields[i], b.props.fields[j]] = [b.props.fields[j], b.props.fields[i]];
+    });
+  }
+  /* The calendar block (Content): one source per line. */
+  function setCalendarSources(text) {
+    setBlockProp('sources', String(text).split('\n').map((s) => s.trim()).filter(Boolean));
+  }
+
   function setFaqItem(i, patch) {
     mutateBlock(`edit:${selectedBlock.blockId}:faq${i}`, (b) => {
       b.props.items[i] = { ...b.props.items[i], ...patch };
@@ -7760,6 +7801,79 @@
       <!-- Text, font and size are set inline with the text editor's
            toolbar; the block has no content fields in the panel. -->
       <p class="panel-hint">{ta('hint.textInline')}</p>
+    {:else if selectedBlock.type === 'form'}
+      <label title={ta('form.modeTitle')}>{ta('form.mode')}
+        <Dropdown value={selectedBlock.props.mode ?? 'mailto'}
+          options={[['mailto', ta('form.modeMailto')], ['endpoint', ta('form.modeEndpoint')]]}
+          onchange={(v) => setBlockProp('mode', v)} /></label>
+      {#if (selectedBlock.props.mode ?? 'mailto') === 'endpoint'}
+        <label title={ta('form.endpointNote')}>{ta('form.endpoint')}
+          <input value={selectedBlock.props.endpoint ?? ''} placeholder={ta('form.endpointPh')}
+            onchange={(e) => setBlockProp('endpoint', e.target.value.trim())} /></label>
+      {:else}
+        <label>{ta('form.recipient')}
+          <input value={selectedBlock.props.recipient ?? ''} placeholder={ta('form.recipientPh')}
+            onchange={(e) => setBlockProp('recipient', e.target.value.trim())} /></label>
+        <label>{ta('form.subject')}
+          <input value={selectedBlock.props.subject ?? ''} placeholder={ta('form.subjectPh')}
+            onchange={(e) => setBlockProp('subject', e.target.value.trim())} /></label>
+      {/if}
+      <p class="panel-strong">{ta('form.fields')}</p>
+      {#each selectedBlock.props.fields ?? [] as field, i (field.id ?? i)}
+        <span class="nav-line">
+          <input value={field.label} placeholder={ta('form.fieldNamePh')}
+            onchange={(e) => setFormField(i, { label: e.target.value.trim() || ta('form.fieldFallback') })} />
+          <Dropdown value={field.type ?? 'text'}
+            options={FORM_FIELD_TYPES.map((t) => [t, ta(`form.type${t[0].toUpperCase()}${t.slice(1)}`)])}
+            onchange={(v) => setFormField(i, { type: v })} />
+          <span class="row-tools">
+            <button class="ghost row-tool" onclick={() => moveFormField(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+            <button class="ghost row-tool" onclick={() => moveFormField(i, 1)}
+              disabled={i === (selectedBlock.props.fields?.length ?? 0) - 1}>{@html ICONS.down}</button>
+            <button class="ghost row-tool" title={ta('form.removeField')} onclick={() => removeFormField(i)}>{@html ICONS.cross}</button>
+          </span>
+        </span>
+        <label class="gridmenu-snap">
+          <input type="checkbox" checked={field.required !== false}
+            onchange={(e) => setFormField(i, { required: e.target.checked })} />
+          {ta('form.required')}
+        </label>
+        {#if FORM_OPTION_TYPES.has(field.type)}
+          <input value={(field.options ?? []).join(', ')} placeholder={ta('form.optionsPh')}
+            onchange={(e) => setFormFieldOptions(i, e.target.value)} />
+        {/if}
+      {/each}
+      <button class="ghost action" onclick={addFormField}>{ta('form.addField')}</button>
+      <label>{ta('lbl.buttonText')}
+        <input value={selectedBlock.props.submitLabel ?? ''} placeholder={ta('form.sendDefault')}
+          onchange={(e) => setBlockProp('submitLabel', e.target.value.trim() || ta('form.sendDefault'))} /></label>
+      <label>{ta('form.receipt')}
+        <input value={selectedBlock.props.successText ?? ''} placeholder={ta('form.thanksDefault')}
+          onchange={(e) => setBlockProp('successText', e.target.value.trim() || ta('form.thanksDefault'))} /></label>
+    {:else if selectedBlock.type === 'calendar'}
+      <label>{ta('calendar.sources')}
+        <textarea rows="3" placeholder={ta('calendar.sourcesPh')} spellcheck="false"
+          value={(selectedBlock.props.sources ?? []).join('\n')}
+          onchange={(e) => setCalendarSources(e.target.value)}></textarea></label>
+      <label>{ta('lbl.view')}
+        <Dropdown value={selectedBlock.props.view ?? 'list'}
+          options={[['list', ta('calendar.viewList')], ['cards', ta('calendar.viewCards')], ['month', ta('calendar.viewMonth')], ['next', ta('calendar.viewNext')]]}
+          onchange={(v) => setBlockProp('view', v)} /></label>
+      {#if (selectedBlock.props.view ?? 'list') === 'list' || selectedBlock.props.view === 'cards'}
+        <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
+          <input type="number" min="1" max="50" value={selectedBlock.props.limit ?? 6}
+            onchange={(e) => setBlockProp('limit', Math.max(1, Math.min(50, Number(e.target.value) || 6)))} /></label>
+      {/if}
+      <label class="gridmenu-snap">
+        <input type="checkbox" checked={selectedBlock.props.showCategories !== false}
+          onchange={(e) => setBlockProp('showCategories', e.target.checked)} />
+        {ta('calendar.showCategories')}
+      </label>
+      <label class="gridmenu-snap">
+        <input type="checkbox" checked={selectedBlock.props.showSubscribe !== false}
+          onchange={(e) => setBlockProp('showSubscribe', e.target.checked)} />
+        {ta('calendar.showSubscribe')}
+      </label>
     {:else if selectedBlock.type === 'faq'}
       <label class="gridmenu-snap" title={ta('tip.faq.multi')}>
         <input type="checkbox" checked={Boolean(selectedBlock.props.multi)}
