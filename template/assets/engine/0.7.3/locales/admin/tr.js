@@ -713,7 +713,7 @@ export default {
     'ph.nav.logoName': 'Menüdeki ad',
     'ph.newPageName': 'Yeni sayfanın adı',
     'ph.optionalImageLink': 'İsteğe bağlı (görseli tıklanabilir yapar)',
-    'ph.plugins.folder': 'plugins/ içindeki klasör adı (örn. calendar)',
+    'ph.plugins.folder': 'plugins/ içindeki klasör adı (örn. lang-sv)',
     'ph.setup.name': 'Örn. derneğin adı',
     'ph.site.description': 'Site hakkında kısaca',
     'ph.site.name': 'Sitenin adı',

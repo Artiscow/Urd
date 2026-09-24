@@ -253,30 +253,36 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   Panelet viser pluginene i repoets plugins/-mappe; skru av og på med
   bryteren, og publiser som vanlig. Aktive plugins virker umiddelbart i
   forhåndsvisningen (besøkende får dem etter publisering), og pluginens
-  blokker dukker opp i «+ Ny blokk»-menyen i seksjonene.
+  blokker dukker opp i «+ Ny blokk»-menyen i seksjonene. Den ene pluginen
+  som følger med er den svenske språkpakken; kalender, skjema og kart er
+  kjerneblokker (se under) og trenger ingen plugin.
 
-  Kalender-pluginen følger med: legg inn en Kalender-blokk (eller
-  seksjonsmalen «Hva skjer»), klikk «⚙ Kilder» på blokken og lim inn
-  kalenderens iCal-adresse eller Google-kalender-id. Velg visning (liste,
-  kort, månedskalender eller «neste arrangement») og antall. Titler på
-  formen «Kategori: Tittel» gir filtrerbare kategori-chips, en
+  Kalender-blokken ligger i Blokker-panelet («Kalender: Liste», «Kort»,
+  «Måned» og «Neste», eller seksjonsmalen «Hva skjer»). Velg blokken, åpne
+  «Innstillinger …» i Egenskaper og lim inn kalenderens iCal-adresse eller
+  Google-kalender-id i panelet som åpnes på blokken. Der velger du også
+  visning (liste, kort, månedskalender eller «neste arrangement») og
+  antall. Titler på formen «Kategori: Tittel» gir filtrerbare
+  kategori-chips, en
   påmeldingslenke i beskrivelsen blir en «Meld deg på»-knapp, og
   «Abonner»-knappen lar besøkende følge kalenderen i sin egen app.
 
-  Skjema-pluginen gir en Skjema-blokk (og «Kontaktskjema»-mal): klikk
-  «⚙ Skjema» for å stille inn mottaker, felt og sendemåte. Standard er at
+  Skjema-blokken (og «Kontaktskjema»-malen) ligger i Blokker-panelet: velg
+  blokken og åpne «Innstillinger …» i Egenskaper for å stille inn
+  mottaker, felt og sendemåte i panelet på blokken. Standard er at
   skjemaet åpner besøkendes e-postklient med en ferdig e-post (ingen
   oppsett). Vil du heller sende til et eget endepunkt (Apps Script eller
   en egen funksjon), velg «Eksternt endepunkt» og lim inn adressen; da må
   du åpne connect-src for den verten i _headers (blokken forklarer
   linjen). Feltene kan legges til, endres og fjernes.
 
-  Kart-pluginen gir en Kart-blokk (og «Finn oss»-mal): klikk «⚙ Sted» og
-  skriv en adresse (f.eks. «Storgata 1, Oslo»), koordinater (som
-  «59.913, 10.739») eller lim inn en OpenStreetMap-lenke, og still zoom og
-  høyde. Adressesøket slår opp stedet via OpenStreetMap når du klikker
-  «Bruk». Kartet er OpenStreetMaps egen innbygging uten sporing, og Urds
-  standard _headers tillater det, så det virker ut av boksen. (På en annen
+  Kart-blokken (og «Finn oss»-malen) ligger i Blokker-panelet: velg
+  blokken og skriv i feltet «Sted» i Egenskaper en adresse (f.eks.
+  «Storgata 1, Oslo»), koordinater (som «59.913, 10.739») eller lim inn en
+  OpenStreetMap-lenke, og still «Zoom» og «Høyde». Adressesøket slår opp
+  stedet via OpenStreetMap når du klikker «Søk». Kartet er OpenStreetMaps
+  egen innbygging uten sporing, og Urds standard _headers tillater det, så
+  det virker ut av boksen. (På en annen
   host må «frame-src https://www.openstreetmap.org» ligge i _headers;
   blokken sier fra hvis kartet er blokkert.)
 - **Footer**-panelet: bunnteksten som vises nederst på alle sider.

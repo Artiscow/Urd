@@ -55,7 +55,7 @@ the editing surfaces are built on the new layout:
 
 ## v0.6 - Ecosystem
 
-- Plugin loading in earnest: plugins deliver **their own blocks, section presets, backgrounds, animations and templates** via `register(Urd)`. The calendar plugin as the reference example; maps and forms as further reference plugins.
+- Plugin loading in earnest: plugins deliver **their own blocks, section presets, backgrounds, animations and templates** via `register(Urd)`. The calendar plugin as the reference example; maps and forms as further reference plugins (moved into the core 24 September 2026, milestone 0.7.18).
 - **The archive/data block pattern**: blocks that render collections of entries (news, notices, boards), designed together with the calendar plugin. Calendar-dependent presets: news, notice board, «What's on».
 - **«Save as template»**: your own sections/pages are saved in `content/maler/` and can be shared as plugins. GitHub topic convention (`urd-plugin`, `urd-template`) for discoverability.
 - `urd-template` repo split + release Action («Use this template»).
@@ -63,7 +63,7 @@ the editing surfaces are built on the new layout:
 
 The phase is steered as milestones 0.6.1-0.6.9 in [BACKLOG.md](../BACKLOG.md), and grew along the way with an editor and design lift (0.6.6), templates and reuse (0.6.7) and the multilingual framework (0.6.8).
 
-**Gate:** clone the template via «Use this template», build a page in admin, install the calendar plugin, and run the update button: everything survives.
+**Gate:** clone the template via «Use this template», build a page in admin, install the calendar plugin (moved into the core 24 September 2026, milestone 0.7.18), and run the update button: everything survives.
 
 ## v0.7 - Polish + shop
 - **Shop without a payment gateway as a core feature** (the ApeironLF model, chosen 18 July 2026): product card block with variants, shopping cart (localStorage + drawer), order form to email/optional endpoint, payment via Vipps number instructions. Dependency-free, git-owned catalogue; built on the v0.6 data block pattern. Details in [BACKLOG.md](../BACKLOG.md).
@@ -137,7 +137,7 @@ Nothing from the original brainstorm shall be lost:
 | Making your own sections | v0.3 (empty section + blocks) |
 | Making your own template | v0.6 («Save as template» → `content/maler/`) |
 | Plugins in /plugins: templates, animations, backgrounds, sections | v0.6 (plugin API `provides:{blocks, sectionPresets, backgrounds, animations, maler}`) - the contract was already defined in the v0.1 schema |
-| Templates for hero, images, calendar, footer | v0.3 (presets) + calendar as reference plugin (v0.6) |
+| Templates for hero, images, calendar, footer | v0.3 (presets) + calendar as reference plugin (v0.6; moved into the core 24 September 2026, milestone 0.7.18) |
 | An update never breaks a built site (`version` + `migrate`) | v0.1 (migrate.js implemented) + tested in the v1.0 gate |
 | Real GitHub OAuth + Cloudflare connection | v0.2 (thin slice) |
 | Static + git, publish = commit, optional host | The whole architecture ([ARCHITECTURE.md](../ARCHITECTURE.md)) |

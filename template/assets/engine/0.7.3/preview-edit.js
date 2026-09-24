@@ -517,8 +517,6 @@ const SHAPE_KINDS = [
 ];
 
 /** The core block types (the editor's palette owns building these). */
-const CORE_BLOCK_TYPES = new Set(['text', 'image', 'button', 'shape', 'video', 'icon', 'collection', 'gallery',
-  'faq', 'timeline', 'quote', 'stats', 'table', 'share', 'countdown', 'audio', 'product', 'cart', 'checkout']);
 
 /**
  * Closes a "+ New block" menu and resets the double-click state: the chip
@@ -649,7 +647,7 @@ function addBlockAdder(host, section, grid) {
   // Plugin blocks: their own section below the built-ins. The preview has
   // the registries (and thus defaults), so the block is built here and sent
   // complete.
-  const pluginTypes = window.Urd.blocks.ids().filter((type) => !CORE_BLOCK_TYPES.has(type));
+  const pluginTypes = window.Urd.blocks.ids().filter((type) => window.Urd.blocks.get(type)?.fromPlugin);
   if (pluginTypes.length) {
     const divider = document.createElement('div');
     divider.className = 'urd-add-block-plugins';

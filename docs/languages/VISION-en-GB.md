@@ -41,7 +41,7 @@ The experience behind Urd comes from exactly this: a student association site ([
 - **No server.** Urd has no backend to operate. (Publishing uses small serverless functions at the host - they are part of the repo and require zero operation.)
 - **No database.** All content is files in git. Your history is the git log.
 - **No subscription.** Free forever; the hosts used have generous free tiers.
-- **No app platform.** Urd builds content sites, not web applications. Dynamics (calendars, forms) come as plugins with external data sources - not as server code in Urd.
+- **No app platform.** Urd builds content sites, not web applications. Dynamics (calendars, forms) are core blocks that fetch from external data sources - not server code in Urd. The plugin layer is for third parties and language packs.
 
 ## The editing model in brief
 

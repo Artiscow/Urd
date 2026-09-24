@@ -40,7 +40,7 @@ Ii server. Ii diehtovuođđu. Ii diŋgojupmi. Ii huksenproseassa. Dušše git-re
 
 Maŋŋel vuosttaš heiveheami lea admin-siidu du neahttasiiddu stivrenguovddáš. Buot maid oainnát siiddus sáhttá doaimmahuvvot doppe.
 
-Urd sáhttá viiddiduvvot **pluginaiguin** mat orrot du repos ja mat jáddaduvvojit/rahppojuvvojit adminas. Golbma čuvvot mielde referánsan: kaleandar (čuovvunvejolaš feed njeljiin čájehemiin), oktavuohtaskovvi (mailto dahje iežas čuokkis) ja kárta (personsuodjaleaddji OpenStreetMap). Geahča [template/plugins/README.md](../../../template/plugins/README.md) jus háliidat ráhkadit iežat.
+Kaleandar (čuovvunvejolaš feed njeljiin čájehemiin), oktavuohtaskovvi (mailto dahje iežas čuokkis) ja kárta (personsuodjaleaddji OpenStreetMap) leat vuođđoblohkat Blohkat-panelas. Urd sáhttá maiddái viiddiduvvot **pluginaiguin** mat orrot du repos ja mat jáddaduvvojit/rahppojuvvojit adminas. Okta čuovvu mielde: ruoŧagiel giellapáhkka, mii lea maiddái ovdamearka sidjiide geat háliidit ráhkadit iežaset. Geahča [template/plugins/README.md](../../../template/plugins/README.md) jus háliidat ráhkadit iežat.
 
 ## Njeallje lohpádusa
 

@@ -518,7 +518,7 @@ export default {
     'ph.nav.logoName': 'Namma fálus',
     'ph.newPageName': 'Ođđa siiddu namma',
     'ph.optionalImageLink': 'Eaktodáhtolaš (dahká gova coahkkalahttin)',
-    'ph.plugins.folder': 'Máhpa namma plugins/ máhpas (omd. calendar)',
+    'ph.plugins.folder': 'Máhpa namma plugins/ máhpas (omd. lang-sv)',
     'ph.setup.name': 'Omd. searvvi namma',
     'ph.site.description': 'Oanehaččat neahttabáikki birra',
     'ph.site.name': 'Neahttabáikki namma',

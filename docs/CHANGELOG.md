@@ -27,6 +27,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.18.6 - The plugin folders gone and every mention corrected - 24 September 2026
+
+- The preview's «+ Ny blokk» menu decided plugin blocks by a fixed list of core types, so the three moved blocks would have appeared twice (once as core, once under Plugins); it now uses `fromPlugin` on the definition. The validator scans `plugins/*/plugin.json` instead of a hand-picked list; the Plugins panel's folder example reads lang-sv in five languages; code comments in footer-cta.js, footer.js, `/api/geocode` and `/api/ics` say block, not plugin.
+- `template/plugins/README.md`: the language pack is the shipped example, the three reference sections replaced by «Mønstrene, med kjernens kode som lesestoff» (the core files show the patterns; a plugin imports only `/assets/urd/`), the field contract's example is a hypothetical plugin. SCHEMA.md's Plugins section, AGENTS.md's Plugins section (rewritten, approved 24 September 2026), the root and template READMEs (five languages), the user guide (five languages), VISJON/VISION, VEIKART/ROADMAP (dated clauses), ADR-0006, 0007 and 0009 (status lines), BACKLOG (the v0.8 updater item rescoped to shipped plugins) and the comparison maps (22 core blocks, 33 presets, one plugin, C5 and C14) corrected. The Northern Sámi README and guide passages were composed from words already in the files and await a Sámi reader.
+- TESTRUNDER batch (0.7.18.6).
+
 ### 0.7.18.5 - Analytics as a site setting - 24 September 2026
 
 - The analytics plugin's token could not be published from admin (plugin files are never written by publishing). It is now `site.analytics.token` in site.json (schema in three places), edited as «Besøksmåling» behind the gear in admin and published with the site; `mountAnalytics` in seo.js appends Cloudflare's beacon once at boot on the published page when the token is set, never in the preview. The two Cloudflare hosts are fixed in `_headers`, so no paste instruction is needed.

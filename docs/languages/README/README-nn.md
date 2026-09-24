@@ -38,7 +38,7 @@ Ingen server. Ingen database. Ingen abonnement. Ingen byggjeprosess. Berre eit g
 
 Etter første oppsett er admin-sida kontrollsenteret for nettsida di. Alt du ser på sida kan redigerast derfrå.
 
-Urd kan utvidast med **plugins** som bur i repoet ditt og blir skrudde på i admin. Tre følgjer med som referanse: kalender (abonnerbar feed med fire visingar), kontaktskjema (mailto eller eige endepunkt) og kart (personvennleg OpenStreetMap). Sjå [template/plugins/README.md](../../../template/plugins/README.md) for å lage eigne.
+Kalender (abonnerbar feed med fire visingar), kontaktskjema (mailto eller eige endepunkt) og kart (personvennleg OpenStreetMap) er kjerneblokker i Blokker-panelet. Urd kan i tillegg utvidast med **plugins** som bur i repoet ditt og blir skrudde på i admin. Éin følgjer med: den svenske språkpakken, som òg er dømet for den som vil lage eigne. Sjå [template/plugins/README.md](../../../template/plugins/README.md) for å lage eigne.
 
 ## Dei fire lovnadene
 

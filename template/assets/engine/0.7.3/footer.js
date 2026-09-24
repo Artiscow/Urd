@@ -84,9 +84,9 @@ function buildLinks(links, className) {
 /**
  * The newsletter form: email field + hidden honeypot + button, submitted with
  * fetch to a configured endpoint (inline confirmation, no page load). Without
- * an endpoint it falls back to mailto. Mirrors the form plugin's submission,
- * but reuses the pure footer-cta.js (the engine must never depend on a
- * plugin). In preview nothing is sent, only the confirmation is shown.
+ * an endpoint it falls back to mailto. Mirrors the form block's submission
+ * on the pure footer-cta.js. In preview nothing is sent, only the
+ * confirmation is shown.
  */
 function buildNewsletterForm(cta) {
   const form = document.createElement('form');

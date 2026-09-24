@@ -1,6 +1,6 @@
 # Funksjonskart: Urd mot de andre nettsidebyggerne
 
-Helhetlig funksjonssammenligning gjort 22.-23. juli 2026 (midt i v0.6 «Økosystem»): hva har de andre byggerne, hva bor inni funksjonene deres, og hva bør Urd ha? Fakta om de andre byggerne er hentet via kildebelagt web-research (leverandørdokumentasjon der mulig, kryssverifisert med tre uavhengige kontrollører per påstand); Urd-siden er inventaret fra samme dato. Kartet er et øyeblikksbilde: leveringsstatus for anbefalingene eies av [BACKLOG.md](../BACKLOG.md), og «levert»-merkene er lagt til i ettertid (siste gjennomgang 23. september 2026, med milepæl-referansene oversatt til dagens backlog-numre og tallene i «Urd i dag»-avsnittene talt på nytt mot motoren). Kartet fikk et tillegg 10. august 2026: kategori 13 (AI og agentverktøy) fantes ikke i den opprinnelige sammenligningen, og tilgjengelighetsvurderingen i kategori 12 er korrigert.
+Helhetlig funksjonssammenligning gjort 22.-23. juli 2026 (midt i v0.6 «Økosystem»): hva har de andre byggerne, hva bor inni funksjonene deres, og hva bør Urd ha? Fakta om de andre byggerne er hentet via kildebelagt web-research (leverandørdokumentasjon der mulig, kryssverifisert med tre uavhengige kontrollører per påstand); Urd-siden er inventaret fra samme dato. Kartet er et øyeblikksbilde: leveringsstatus for anbefalingene eies av [BACKLOG.md](../BACKLOG.md), og «levert»-merkene er lagt til i ettertid (siste gjennomgang 24. september 2026, med milepæl-referansene oversatt til dagens backlog-numre og tallene i «Urd i dag»-avsnittene talt på nytt mot motoren etter kjerneflyttingen i 0.7.18). Kartet fikk et tillegg 10. august 2026: kategori 13 (AI og agentverktøy) fantes ikke i den opprinnelige sammenligningen, og tilgjengelighetsvurderingen i kategori 12 er korrigert.
 
 **Byggere i sammenligningen:** Squarespace, Wix (inkl. Wix Studio), Webflow, Framer, Carrd, Google Sites, Shopify (butikk-referanse), WordPress/Gutenberg (+ Elementor), Publii, Ghost, Blogger, GrapesJS/Silex.
 
@@ -26,7 +26,7 @@ Helhetlig funksjonssammenligning gjort 22.-23. juli 2026 (midt i v0.6 «Økosyst
 
 **De andre byggerne:** Squarespace har 35-45 blokktyper: tekst/markdown/sitat/linje, bilde/video/lyd/galleri, skjema/knapp/søk/kalender/diagram, produkt/donasjon/meny/reservasjon, Instagram/Flickr/SoundCloud/embed/delingslenker/RSS, kart/arkiv/sammendrag/emneord/nyhetsbrev/form (kilde: dok; eksakt antall ikke verifisert). Galleri- og sammendragsblokkene har fire visninger hver (karusell/rutenett/lysbilde/stabel hhv. karusell/rutenett/liste/vegg) - karusell er altså en VISNING, ikke eget element (kilde: dok). Kode-/embed-blokker er betalingsgatet hos Squarespace (kilde: dok). Wix/Elementor har tilsvarende brede biblioteker med accordion, tabs, nedtellere og sosiale feeds (generell kunnskap). Squarespace anbefaler maks 60 blokker per side (kilde: dok).
 
-**Urd i dag (A, talt 23. september 2026):** 19 kjerneblokker: tekst (med boks-stil), knapp, bilde, ikon, form (linje/pil/sirkel/rektangel/trekant), video (YouTube/Vimeo personvern), galleri (rutenett/karusell/lysbilder), samling (kort/liste/arkiv), FAQ, tidslinje, sitat, statistikk, tabell, deling, nedteller, lyd, produkt, handlekurv og kasse, pluss plugin-blokkene kalender/skjema/kart. 30 seksjonspresets i kjernen (33 i velgeren med de tre plugin-presetene) og fem referanse-plugins (kalender, skjema, kart, analyse og språkpakken lang-sv).
+**Urd i dag (A, talt 24. september 2026):** 22 kjerneblokker: tekst (med boks-stil), knapp, bilde, ikon, form (linje/pil/sirkel/rektangel/trekant), video (YouTube/Vimeo personvern), galleri (rutenett/karusell/lysbilder), samling (kort/liste/arkiv), FAQ, tidslinje, sitat, statistikk, tabell, deling, nedteller, lyd, produkt, handlekurv, kasse, kart, skjema og kalender (de tre siste flyttet inn fra referanse-pluginene i 0.7.18, 24. september 2026). 33 seksjonspresets i kjernen (Finn oss, Kontaktskjema og Hva skjer flyttet inn sammen med blokkene) og én medfølgende plugin, språkpakken lang-sv; plugin-laget står igjen for tredjeparter og språkpakker, og «Plugins»-gruppen i blokkpaletten og seksjonsgalleriet er tom til en tredjeparts-plugin fyller den.
 
 **Gap:** galleri med flere visninger (**C2**, levert 0.6.6.1), tabell (**C8**, levert 0.7.4), delingsknapper (**C9**, levert 0.7.4), nedteller (**C9**, levert 0.7.4), lyd/audio (**C10**, levert 0.7.4), FAQ-akkordeon (levert 0.6.6.4). Restene fra elementgjennomgangen (bånd/marquee, sideindeks, flere gallerivisninger, stiliserte varianter) eies av 0.7.13; radene C19-C25 ble skrevet 23. september 2026 (etappe 0.7.13.2, undersøkelsen i LAERDOMMER §2). Sosiale feeds og søk krever tredjepart/server (D). Embed/kodeblokk: sanitizeren stripper aktivt innhold med vilje; mønsteret er plugin + CSP-opt-in (D som kjerneblokk, A som plugin-mulighet).
 
@@ -74,7 +74,7 @@ Helhetlig funksjonssammenligning gjort 22.-23. juli 2026 (midt i v0.6 «Økosyst
 
 **De andre byggerne:** feltbiblioteker med nedtrekk, avkryssing, radio, dato og filopplasting; innsendinger lagres i byggerens dashbord med e-postvarsling (alle store; generell kunnskap).
 
-**Urd i dag (A):** skjema-plugin med redigerbare felt (tekst/e-post/telefon/flerlinjes/nedtrekk/avkryssing/radio/dato, påkrevd-flagg), validering, honeypot, mailto eller eksternt endepunkt.
+**Urd i dag (A):** skjema-blokk i kjernen (referanse-plugin fram til 0.7.18, 24. september 2026) med redigerbare felt (tekst/e-post/telefon/flerlinjes/nedtrekk/avkryssing/radio/dato, påkrevd-flagg), validering, honeypot, mailto eller eksternt endepunkt.
 
 **Gap:** flere felttyper: nedtrekk, avkryssing, radio, dato (**C5**, levert 0.7.4; kassen i 0.7.5 gjenbruker dem). Innsendingslagring og filopplasting krever server (**D**; eksternt endepunkt er broen).
 
@@ -106,7 +106,7 @@ Helhetlig funksjonssammenligning gjort 22.-23. juli 2026 (midt i v0.6 «Økosyst
 
 **De andre byggerne:** Squarespace ~200 maler (kilde: blogg), alle store har malbytte og galleri; Publii har innebygd temabibliotek (kilde: dok); GrapesJS/Silex leverer maler via plugin-økosystem (kilde: dok).
 
-**Urd i dag (A):** 30 seksjonspresets i kjernen (33 i velgeren med plugin-presetene) med miniatyrer, åtte innebygde side-startpakker, «Lagre som mal» for seksjoner, blokkgrupper og sider med publisering til content/maler/, og søk i blokkvelgeren (0.6.7); malen-repoet er utgangspunktet.
+**Urd i dag (A):** 33 seksjonspresets i kjernen (talt 24. september 2026; Finn oss, Kontaktskjema og Hva skjer flyttet inn fra pluginene i 0.7.18) med miniatyrer, åtte innebygde side-startpakker, «Lagre som mal» for seksjoner, blokkgrupper og sider med publisering til content/maler/, og søk i blokkvelgeren (0.6.7); malen-repoet er utgangspunktet.
 
 **Planlagt (B):** «Lagre som mal», maler som plugins og søk i blokkvelgeren (levert 0.6.7; topic-konvensjonen `urd-template`/`urd-plugin` festet 5. august 2026 i 0.6.9); preset-miniatyrer (levert 0.6.6.1); galleri-nettsted (etter v1.0). Dekket - ingen C.
 
@@ -120,7 +120,7 @@ Helhetlig funksjonssammenligning gjort 22.-23. juli 2026 (midt i v0.6 «Økosyst
 
 **Utenfor scope (D):** innlogging/medlemsområde, fulltekstsøk, sanntid (dokumentert); kodeinjisering i kjernen (sanitizer-vernet; plugins er veien).
 
-**Gap:** personvennlig analytics-oppskrift eller referanse-plugin (**C14**, levert 0.7.6 som referanse-pluginen `plugins/analytics/`: Cloudflare Web Analytics uten cookies, CSP-behov i manifestet, skipper deaktivert); kontrast-varsel i Tema-panelet (**C15**: varselet ble bygget og fjernet i 0.6.6.5.4, og behovet er løst i 0.7.12 med `contrast-color()` for teksten på aksentflatene og en Auto-chip i Tema-panelet). Passordvern: dokumenteres som verts-funksjon (Cloudflare Access), ikke bygges (D).
+**Gap:** personvennlig analytics-oppskrift eller referanse-plugin (**C14**, levert 0.7.6 som referanse-pluginen `plugins/analytics/`, og siden 0.7.18.5 den 24. september 2026 sideinnstillingen «Besøksmåling» bak tannhjulet: `site.analytics.token` i site.json, Cloudflare Web Analytics uten cookies, de to Cloudflare-vertene fast i `_headers`); kontrast-varsel i Tema-panelet (**C15**: varselet ble bygget og fjernet i 0.6.6.5.4, og behovet er løst i 0.7.12 med `contrast-color()` for teksten på aksentflatene og en Auto-chip i Tema-panelet). Passordvern: dokumenteres som verts-funksjon (Cloudflare Access), ikke bygges (D).
 
 ## 13. AI og agentverktøy (tillegg 10. august 2026)
 
@@ -145,7 +145,7 @@ Kategorien fantes ikke i sammenligningen 22.-23. juli 2026, fordi feltet så ann
 | C3 | **SEO-grunnpakke**: per-side beskrivelse/og-felter i Sider-panelet, sitemap.xml + robots.txt generert ved publisering, 404-side, canonical | Levert 0.7.6 (felt, `seo.js`, sitemap/robots/404, noindex per side; full crawler-effekt ved v0.8-bakingen) | Urds største hull; ALLE de andre byggerne har det, også statiske Publii. Foreninger vil finnes på Google |
 | C2 | **Galleri-blokk** med rutenett/karusell/lysbilde-visning + lightbox | Levert 0.6.6.1 (galleri-blokk + lightbox + hero-galleri) | Galleriet er standardelementet hos alle; Squarespace-modellen (visning per blokk) passer Urds variants-mønster |
 | C4 | **RSS-feed for samlinger** (statisk XML ved publisering) | Levert 0.7.6 (`content/samlinger/<id>.xml` for daterte samlinger) | Billig, statisk-vennlig, standard overalt; nyhetssamlingene fortjener abonnenter |
-| C5 | **Flere skjema-felttyper** (nedtrekk, avkryssing, radio, dato) | Levert 0.7.4 (kassen i 0.7.5 gjenbruker dem) | Feltbiblioteket er tynt mot alle; ren utvidelse av eksisterende plugin |
+| C5 | **Flere skjema-felttyper** (nedtrekk, avkryssing, radio, dato) | Levert 0.7.4 (kassen i 0.7.5 gjenbruker dem) | Feltbiblioteket er tynt mot alle; ren utvidelse av skjema-blokken (referanse-plugin da raden ble skrevet, kjerne siden 0.7.18) |
 | C1 | **Linjeavstand (+ evt. bokstavavstand)** per tekstfelt | Levert 0.6.6.2 | Eneste reelle hull i teksteditoren mot Squarespace/Gutenberg |
 | C7 | **Nav scroll-adferd** (krymp/skjul ved scroll ned, vis ved scroll opp) | Levert 0.6.6.5.12 (`nav.scroll`: shrink/hide, ren navScrollState) | Standard hos alle store; naturlig fortsettelse av M5 |
 | C7b | **Parallax-bakgrunnslag + stagger-animasjon** for kortgrupper | Levert 0.6.6.4 del 2 | Mest designverdi per innsats i animasjonskategorien |
@@ -154,7 +154,7 @@ Kategorien fantes ikke i sammenligningen 22.-23. juli 2026, fordi feltet så ann
 | C4b | **Innslagssider** (permalenke-side per samlingsinnslag, generert ved publisering) | v0.8 (sammen med bakingen) | Webflow/Wix-modellen; forutsetter bakt HTML for å gi mening |
 | C8 | **Tabell-blokk** | Levert 0.7.4 | Vanlig element (åpningstider, prislister); ren blokk |
 | C9 | **Delingsknapper + nedteller** (småblokker) | Levert 0.7.4 | Billige, statisk-vennlige, ofte etterspurt av foreninger (arrangementer) |
-| C14 | **Personvennlig analytics** (oppskrift eller referanse-plugin med CSP-opt-in) | Levert 0.7.6 (referanse-pluginen `plugins/analytics/`, Cloudflare Web Analytics) | Alle store har analytics; Urds svar bør være personvennlig og valgfritt |
+| C14 | **Personvennlig analytics** (oppskrift eller referanse-plugin med CSP-opt-in) | Levert 0.7.6 som referanse-pluginen `plugins/analytics/`; siden 0.7.18.5 (24. september 2026) sideinnstillingen «Besøksmåling» bak tannhjulet (`site.analytics.token`, Cloudflare Web Analytics, vertene fast i `_headers`) | Alle store har analytics; Urds svar bør være personvennlig og valgfritt |
 | C11 | **Mediebibliotek-panel** (oversikt over media/, ubrukte filer) | v0.8 (bildearbeidet) | Filhåndtering er usynlig i dag; hører til ytelsesfasen |
 | C15 | **Kontrast-varsel i Tema-panelet** | Løst annerledes: varselet ble bygget og fjernet i 0.6.6.5.4; `contrast-color()` på aksentflatene (0.7.12) gjør teksten lesbar uten varsel | Tilgjengelighet ved fargevalg; bygger rett på accent-text |
 | C10 | **Audio-blokk** (HTML5, git-eid fil) | Levert 0.7.4 | Nisje, men billig og statisk-vennlig |

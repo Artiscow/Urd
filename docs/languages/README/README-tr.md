@@ -40,7 +40,7 @@ Sunucu yok. Veritabanı yok. Abonelik yok. Derleme süreci yok. Yalnızca kendi 
 
 İlk kurulumdan sonra admin sayfası web sitenin kontrol merkezidir. Sayfada gördüğün her şey oradan düzenlenebilir.
 
-Urd, deponda yaşayan ve adminden açılan **eklentilerle** genişletilebilir. Referans olarak üç tanesi birlikte gelir: takvim (dört görünümlü, abone olunabilir akış), iletişim formu (mailto ya da kendi uç noktan) ve harita (gizlilik dostu OpenStreetMap). Kendi eklentini yapmak için [template/plugins/README.md](../../../template/plugins/README.md) dosyasına bak.
+Takvim (dört görünümlü, abone olunabilir akış), iletişim formu (mailto ya da kendi uç noktan) ve harita (gizlilik dostu OpenStreetMap), Bloklar panelindeki çekirdek bloklardır. Urd ayrıca deponda yaşayan ve adminden açılan **eklentilerle** genişletilebilir. Birlikte gelen tek eklenti İsveççe dil paketidir; o aynı zamanda eklenti yazanlar için örnektir. Kendi eklentini yapmak için [template/plugins/README.md](../../../template/plugins/README.md) dosyasına bak.
 
 ## Dört söz
 

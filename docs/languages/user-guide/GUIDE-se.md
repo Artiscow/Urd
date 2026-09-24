@@ -257,26 +257,28 @@ lohkanortnegis. It dábálaččat dárbbaš dahkat maidege.
   Panela čájeha pluginaid repo plugins/-máhpas; jáddat ja raba
   molssuin, ja almmut dábálaččat. Aktiivvalaš pluginat doibmet dakkaviđe
   ovdačájeheamis (galledeaddjit ožžot daid almmuheami maŋŋel), ja plugina
-  blohkat ihtet **+ Ođđa blohkka**-fállui sekšuvnnain.
+  blohkat ihtet **+ Ođđa blohkka**-fállui sekšuvnnain. Okta plugin čuovvu
+  mielde: ruoŧagiel giellapáhkka; kaleandar, skovvi ja kárta leat
+  vuođđoblohkat Blohkat-panelas.
 
-  Kaleandar-plugina čuovvu mielde: bija Kaleandar-blohka (dahje
-  sekšuvdnamálle «Mii dáhpáhuvvá»), coahkkal «⚙ Gáldut» blohkas ja liibme
+  Kaleandar-blohkka lea Blohkat-panelas: bija Kaleandar-blohka (dahje
+  sekšuvdnamálle «Mii dáhpáhuvvá»), coahkkal «Heivehusat …» Iešvuođat-panelas ja liibme
   kaleandara iCal-čujuhusa dahje Google-kaleandar-id. Vállje čájeheami (Listu,
   Koarttat, Mánnu dahje «Boahtte») ja logu. Bajilčállagat
   mat leat hámis «Kategoriija: Bajilčála» addet rátkejuvvon kategoriija-čippiid,
   dieđihanliŋka válddahusas šaddá **Dieđit iežat**-boallun, ja
   **Čuovo**-boallu diktá galledeaddjiid čuovvut kaleandara iežaset appas.
 
-  Skovvi-plugina addá Skovvi-blohka (ja «Oktavuohtaskovvi»-málle): coahkkal
-  «⚙ Skovvi» vai heivehat vuostáiváldi, gittiid ja sáddenvuogi. Standárda lea ahte
+  Skovvi-blohkka (ja «Oktavuohtaskovvi»-málle) lea Blohkat-panelas: coahkkal
+  «Heivehusat …» Iešvuođat-panelas vai heivehat vuostáiváldi, gittiid ja sáddenvuogi. Standárda lea ahte
   skovvi rahpá galledeaddji e-poastaprográmma gárvves e-poasttain (ii
   oppset). Jus háliidat baicce sáddet iežat čuoggái (Apps Script dahje
   iežas funkšuvdna), vállje «Olggobeale čuokkis» ja liibme čujuhusa; de fertet
   rahpat connect-src dan verdái _headers fiillas (blohkka čilge
   linnjá). Gietit sáhttet lasihuvvot, rievdaduvvot ja váldojuvvot eret.
 
-  Kárta-plugina addá Kárta-blohka (ja «Gávnna min»-málle): coahkkal «⚙ Báiki» ja
-  čále čujuhusa (omd. «Storgata 1, Oslo»), koordináhtaid (nugo
+  Kárta-blohkka (ja «Gávnna min»-málle) lea Blohkat-panelas: vállje blohka ja
+  čále «Báiki»-gieddái Iešvuođat-panelas čujuhusa (omd. «Storgata 1, Oslo»), koordináhtaid (nugo
   «59.913, 10.739») dahje liibme OpenStreetMap-liŋkka, ja heivet zooma ja
   allodaga. Čujuhusohcan gávdná báikki OpenStreetMap bokte go coahkkalat
   **Geavat**. Kárta lea OpenStreetMap iežas innbygging almmá sporrema haga, ja Urd

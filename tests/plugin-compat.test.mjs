@@ -40,7 +40,7 @@ test('the inline section min-height is a plain CSS length, never a calc()', () =
   assert.equal(sectionMinHeight({ size: { minHeight: '1152px' } }, 480), '1152px');
 });
 
-test('no engine or reference plugin source writes a calc() into style.minHeight', () => {
+test('no engine or plugin source writes a calc() into style.minHeight', () => {
   const pluginDir = new URL('plugins/', TEMPLATE);
   const plugins = readdirSync(pluginDir, { withFileTypes: true })
     .filter((d) => d.isDirectory())

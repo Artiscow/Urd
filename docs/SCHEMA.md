@@ -277,38 +277,38 @@ Static hosts cannot list folders, so an index file points out the enabled plugin
 
 ```json
 // plugins/plugins.json
-{ "version": 1, "enabled": ["calendar"] }
+{ "version": 1, "enabled": ["lang-sv"] }
 ```
 
-Each plugin is a folder with a manifest + ES module (the calendar reference plugin shows the whole form):
+Each plugin is a folder with a manifest + ES module. The template ships one plugin, the Swedish language pack `lang-sv` (below); calendar, form, map and analytics were reference plugins of this shape until 0.7.3 and are core blocks and a site setting since milestone 0.7.18 (24 September 2026). An example of a block plugin's manifest and entry:
 
 ```json
-// plugins/calendar/plugin.json
+// plugins/events/plugin.json
 {
-  "id": "calendar",
-  "name": "Kalender",
-  "names": { "nb": "Kalender", "nn": "Kalender", "en-GB": "Calendar", "se": "Kaleandar", "tr": "Takvim" },
+  "id": "events",
+  "name": "Events",
+  "names": { "nb": "Arrangementer", "nn": "Arrangement", "en-GB": "Events", "se": "Lágideamit", "tr": "Etkinlikler" },
   "locales": true,
   "version": "1.0.0",
   "requiresEngine": ">=0.6.8 <1.0.0",
   "entry": "index.js",
-  "provides": { "blocks": ["calendar"], "sectionPresets": ["whats-on"], "backgrounds": [], "animations": [], "templates": [] }
+  "provides": { "blocks": ["events"], "sectionPresets": ["events-list"], "backgrounds": [], "animations": [], "templates": [] }
 }
 ```
 
 ```js
-// plugins/calendar/index.js
+// plugins/events/index.js
 export function register(Urd) {
-  Urd.blocks.define('calendar', { version: 1, /* … */ });
-  Urd.sections.define('whats-on', { label: 'Hva skjer', /* … */ });
+  Urd.blocks.define('events', { version: 1, /* … */ });
+  Urd.sections.define('events-list', { label: 'Events', /* … */ });
 }
 ```
 
-The provides key `templates` was called `maler` before ADR-0021; the old name is still read (dual-read in plugins.js), and old plugins that register via `Urd.maler` hit the same registry as `Urd.templates`. The engine aliases the old reference plugin ids (the blocks kalender/kart/skjema → calendar/map/form, the presets hva-skjer/finn-oss/kontaktskjema → whats-on/find-us/contact-form), so pages built before the rename work with both old and manually updated plugin folders.
+The provides key `templates` was called `maler` before ADR-0021; the old name is still read (dual-read in plugins.js), and old plugins that register via `Urd.maler` hit the same registry as `Urd.templates`. The engine aliases the old reference plugin ids (the blocks kalender/kart/skjema → calendar/map/form, the presets hva-skjer/finn-oss/kontaktskjema → whats-on/find-us/contact-form) to the core blocks and presets, so pages built with the old plugin ids render with the core blocks; a plugin folder that still defines one of the ids wins directly (registry alias semantics).
 
 ### The compatibility surface for plugin copies
 
-`plugins/**` are user paths (urd.json `userPaths`) that the updater never touches, so a site keeps running the plugin folders it was created with, also the reference plugins copied from the 0.6.11 template, against every later engine. The engine therefore keeps these points stable; `tests/plugin-compat.test.mjs` pins them:
+`plugins/**` are user paths (urd.json `userPaths`) that the updater never touches, so a site keeps running the plugin folders it was created with, also the reference plugins copied from the 0.6.11 to 0.7.3 templates (calendar, form and map as plugins), against every later engine. The engine therefore keeps these points stable; `tests/plugin-compat.test.mjs` pins them:
 
 - **The section's inline `min-height` is a plain CSS length** (`size.minHeight`, or `<lowest block edge>px` when the section has none): plugin auto-grow reads it with `parseFloat` and writes `${bottom}px` back. The nav clearance is the section's padding (`.urd-section` is `content-box`, base.css), so an overwritten min-height never loses the clearance.
 - **Block geometry is content geometry:** a block's `offsetTop`/`offsetLeft` are relative to `.urd-canvas`, and `el.closest('.urd-section')` is the section the block grows.
@@ -343,4 +343,4 @@ Plugins use the **same** define APIs as the core and are subject to the same mig
 - `key` is the prop name the field writes, `type` is one of `text`, `number` (with `min`/`max`/`step`, the value is clamped), `toggle` (boolean), `select` (`options: [{ value, labelKey/label }]`, rendered themed) and `place`.
 - `place` is a place field: the text is written to `key`, and coordinates to the props `lat`/`lon` (convention). «lat, lon» pairs are interpreted locally, `https?://` links are written untouched (the plugin interprets them itself at rendering), everything else is geocoded via `/api/geocode` with the Search button.
 - The labels (`labelKey`/`placeholderKey`, with `label`/`placeholder` as fallback) are resolved on the iframe side where the plugin dictionary lives, and are sent ready-made in the `urd-plugin-blocks` message, as `label`/`variants`.
-- Without `fields`, Properties shows as before a «Settings …» button that opens the plugin's own config panel in the preview (`urd-open-block-config`). The map plugin is the reference for the field contract; calendar and form for the config panel pattern.
+- Without `fields`, Properties shows as before a «Settings …» button that opens the plugin's own config panel in the preview (`urd-open-block-config`). The core map block uses the same field types through the editor's `CORE_FIELDS` table, and the core calendar and form blocks show the config panel pattern.

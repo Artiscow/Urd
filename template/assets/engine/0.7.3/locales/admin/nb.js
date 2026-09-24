@@ -716,7 +716,7 @@ export default {
     'ph.nav.logoName': 'Navnet i menyen',
     'ph.newPageName': 'Navn på ny side',
     'ph.optionalImageLink': 'Valgfri (gjør bildet klikkbart)',
-    'ph.plugins.folder': 'Mappenavn i plugins/ (f.eks. calendar)',
+    'ph.plugins.folder': 'Mappenavn i plugins/ (f.eks. lang-sv)',
     'ph.setup.name': 'F.eks. foreningens navn',
     'ph.site.description': 'Kort om nettstedet',
     'ph.site.name': 'Navn på nettstedet',

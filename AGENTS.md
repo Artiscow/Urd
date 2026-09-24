@@ -93,7 +93,7 @@ CI runs the same three plus the build-conformity check (tests.yml), CodeQL scans
 
 ## Plugins
 
-The reference plugins in `template/plugins/` (calendar, form, map, and the language pack lang-sv) show the pattern: a manifest with `provides` (optional for pure language packs with the `languages` field), a block with `version`/`migrations`, a section preset (with `id`), own CSS via ONE style tag, editing in the preview via `urd-edit`, a help chip, themed dropdowns, imports only from `/assets/urd/`, multilingual via the `locales`/`names` fields, and pure logic in its own module with `node --test` tests. Shared in its own repo with the GitHub topic `urd-plugin`. See `template/plugins/README.md`.
+The plugin layer is for third-party blocks and language packs; the template ships one plugin, the Swedish language pack `template/plugins/lang-sv/` (visitor and admin texts), which is the example for language packs. A plugin declares what it provides in a manifest (`provides`, optional for pure language packs with the `languages` field; `csp` for hosts it needs), uses the same define APIs and migration contract as the core, and imports ONLY `/assets/urd/` paths. The block patterns (a block with `version`/`migrations`, a section preset with an `id`, editing in the preview via `urd-edit`, settings through the field contract or a config panel, a help chip, themed dropdowns, pure logic with `node --test` tests) are described in `template/plugins/README.md`. Shared in its own repo with the GitHub topic `urd-plugin`.
 
 ## ADRs
 

@@ -2,6 +2,13 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.18.6): the plugin folders gone, the docs corrected
+
+- [ ] «+ Ny blokk» in the preview lists Kart, Skjema and Kalender once each among the core blocks with no «Plugins» section (the section appears only when a third-party plugin provides blocks); the Blocks panel and the section gallery the same
+- [ ] The Plugins panel: only lang-sv listed, the folder field's example reads lang-sv, and the panel's texts still make sense with a single pack
+- [ ] `npm run validate` validates every `plugins/*/plugin.json` it finds (drop a copy of lang-sv as `plugins/lang-xx/` locally and see it listed), and `plugins/README.md` reads as the contract with the language pack as the example and the core blocks as the pattern
+- [ ] The user guide (nb, nn, en-GB), the template READMEs and the docs no longer call calendar, form, map or analytics plugins
+
 ### Testrunde-batch (0.7.18.5): analytics as a site setting
 
 - [ ] The gear: «Besøksmåling» with the token field sits under the Screen setting; a pasted token is in the unpublished changes, Publiser writes it to site.json, and on the published page the head has a `script[data-cf-beacon]` loading from static.cloudflareinsights.com with no CSP report; the editor's preview never has it

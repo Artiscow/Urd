@@ -19,5 +19,5 @@ Native select popups are drawn by the browser/OS, outside the page's rendering m
 ## Consequences
 
 - Nobody needs to consider select styling again; new choice controls start from the shared components.
-- Visitor surfaces are not affected (the site itself has no selects; the form plugin in M4 must take a position there: visitor forms follow the USER's OS theme and may use native select with color-scheme).
+- Visitor surfaces are not affected (the site itself has no selects; the form plugin in M4 (a core block since 0.7.18) must take a position there: visitor forms follow the USER's OS theme and may use native select with color-scheme).
 - Checkpoint in test rounds: no native select popup anywhere in the editor.

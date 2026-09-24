@@ -17,7 +17,7 @@ Association websites consist largely of LISTS of similar entries: news, notices,
 
 ## Consequences
 
-- The calendar plugin (M3) reuses the view forms, but fetches entries from a FEED instead of content/; the pattern is the same (entries → views).
+- The calendar plugin (M3; a core block since 24 September 2026) reuses the view forms, but fetches entries from a FEED instead of content/; the pattern is the same (entries → views).
 - The shop's product catalogue (v0.7) becomes a collection with more fields (price, variants); the schema is extended additively then.
 - «Save as template» (M8) and the template split are not affected: collections are user data under content/** which the publishing guard already allows.
 - Views are delivered by the core for now; plugin-provided views are a natural later extension of the registry pattern, but are kept out of M2.

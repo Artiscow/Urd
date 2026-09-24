@@ -39,7 +39,7 @@ Erfaringen bak Urd kommer fra nettopp dette: en linjeforeningsside ([ApeironLF](
 - **Ingen server.** Urd har ingen backend å drifte. (Publiseringen bruker små serverless-funksjoner hos hosten - de er en del av repoet og krever null drift.)
 - **Ingen database.** Alt innhold er filer i git. Historikken din er git-loggen.
 - **Ingen abonnement.** Gratis for alltid; hostene som brukes har rause gratisnivåer.
-- **Ingen app-plattform.** Urd bygger innholdssider, ikke webapplikasjoner. Dynamikk (kalendere, skjemaer) kommer som plugins med eksterne datakilder - ikke som serverkode i Urd.
+- **Ingen app-plattform.** Urd bygger innholdssider, ikke webapplikasjoner. Dynamikk (kalendere, skjemaer) er kjerneblokker som henter fra eksterne datakilder - ikke serverkode i Urd. Plugin-laget er for tredjeparter og språkpakker.
 
 ## Redigeringsmodellen i korte trekk
 

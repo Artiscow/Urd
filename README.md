@@ -44,7 +44,7 @@ No server. No database. No subscription. No build process. Just a git repo with 
 
 After the first setup, the admin page is the control centre for your website. Everything you see on the page can be edited from there.
 
-Urd can be extended with **plugins** that live in your repo and are switched on in admin. Three are included as references: calendar (subscribable feed with four views), contact form (mailto or your own endpoint) and map (privacy-friendly OpenStreetMap). See [template/plugins/README.md](template/plugins/README.md) to build your own.
+Calendar (subscribable feed with four views), contact form (mailto or your own endpoint) and map (privacy-friendly OpenStreetMap) are core blocks in the Blocks panel. Urd can also be extended with **plugins** that live in your repo and are switched on in admin. One ships with Urd: the Swedish language pack, which is also the example for plugin authors. See [template/plugins/README.md](template/plugins/README.md) to build your own.
 
 ## The four promises
 

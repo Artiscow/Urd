@@ -3,7 +3,7 @@
  * schema/. Run with `npm run validate` (and in CI). Exits with code 1 and a
  * clear printout if anything does not match the contract.
  */
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
@@ -24,8 +24,15 @@ ajv.addSchema(pageSchema); // mal.schema.json references the page schema's $defs
 
 const cases = [
   ['template/content/site.json', siteSchema.$id],
-  ['template/plugins/lang-sv/plugin.json', pluginSchema],
 ];
+
+// Every plugin folder with a manifest is validated, not a hand-picked list:
+// the shipped language pack today, and any plugin a developer adds here.
+for (const dir of readdirSync(new URL('../../template/plugins/', import.meta.url), { withFileTypes: true })) {
+  if (dir.isDirectory() && existsSync(new URL(`../../template/plugins/${dir.name}/plugin.json`, import.meta.url))) {
+    cases.push([`template/plugins/${dir.name}/plugin.json`, pluginSchema]);
+  }
+}
 
 // Every page in the page registry is validated, not a hand-picked list: that
 // catches both a new page nobody remembered to add here, and a registry entry

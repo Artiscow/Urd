@@ -53,7 +53,7 @@ redigeringsflatene bygges på den nye layouten:
 
 ## v0.6 - Økosystem *(levert 9. august 2026)*
 
-- Plugin-lasting for alvor: plugins leverer **egne blokker, seksjonspresets, bakgrunner, animasjoner og maler** via `register(Urd)`. Kalender-pluginen som referanseeksempel; kart og skjema som ytterligere referanse-plugins.
+- Plugin-lasting for alvor: plugins leverer **egne blokker, seksjonspresets, bakgrunner, animasjoner og maler** via `register(Urd)`. Kalender-pluginen som referanseeksempel; kart og skjema som ytterligere referanse-plugins (flyttet inn i kjernen 24. september 2026, milepæl 0.7.18).
 - **Arkiv/datablokk-mønsteret**: blokker som rendrer samlinger av innslag (nyheter, oppslag, styrer), designet sammen med kalender-pluginen. Kalender-avhengige presets: nyheter, oppslagstavle, «Hva skjer».
 - **«Lagre som mal»**: egne seksjoner/sider lagres i `content/maler/` og kan deles som plugins. GitHub-topic-konvensjon (`urd-plugin`, `urd-template`) for oppdagbarhet.
 - `urd-template`-repo-splitt + release-Action («Use this template»).
@@ -61,7 +61,7 @@ redigeringsflatene bygges på den nye layouten:
 
 Fasen styres som milepælene 0.6.1-0.6.9 i [BACKLOG.md](BACKLOG.md), og vokste underveis med et editor- og designløft (0.6.6), maler og gjenbruk (0.6.7) og flerspråk-rammeverket (0.6.8).
 
-**Port:** klon malen via «Use this template», bygg en side i admin, installer kalender-pluginen, og kjør oppdateringsknappen: alt overlever. *(Bestått 9. august 2026.)*
+**Port:** klon malen via «Use this template», bygg en side i admin, installer kalender-pluginen (flyttet inn i kjernen 24. september 2026, milepæl 0.7.18), og kjør oppdateringsknappen: alt overlever. *(Bestått 9. august 2026.)*
 
 ## v0.7 - Finpuss + butikk
 - **Butikk uten betalingsgateway som kjernefunksjon** (ApeironLF-modellen, valgt 18. juli 2026): produktkort-blokk med varianter, handlekurv (localStorage + skuff), bestillingsskjema til e-post/valgfritt endepunkt, betaling via Vipps-nummer-instruks. Avhengighetsfri, git-eid katalog; bygges på v0.6-datablokk-mønsteret. Ekte betalings-kasse er flyttet inn i fasen som valgfritt lag oppå skjema-kassen (9. august 2026); kjernen forblir gateway-fri. Detaljer i [BACKLOG.md](BACKLOG.md).
@@ -139,7 +139,7 @@ Ingenting fra den opprinnelige idemyldringen skal gå tapt:
 | Lage egne seksjoner | v0.3 (tom seksjon + blokker) |
 | Lage egen mal | v0.6 («Lagre som mal» → `content/maler/`) |
 | Plugins i /plugins: maler, animasjoner, bakgrunner, seksjoner | v0.6 (plugin-API `provides:{blocks, sectionPresets, backgrounds, animations, maler}`) - kontrakten er definert allerede i v0.1-skjemaet |
-| Maler for hero, bilder, kalender, footer | v0.3 (presets) + kalender som referanse-plugin (v0.6) |
+| Maler for hero, bilder, kalender, footer | v0.3 (presets) + kalender som referanse-plugin (v0.6; flyttet inn i kjernen 24. september 2026, milepæl 0.7.18) |
 | Oppdatering knuser aldri bygget side (`version` + `migrate`) | v0.1 (migrate.js implementert) + testet i v1.0-porten |
 | Reell GitHub OAuth + Cloudflare-kobling | v0.2 (tynn skive) |
 | Statisk + git, publiser = commit, valgfri host | Hele arkitekturen ([ARCHITECTURE.md](ARCHITECTURE.md)) |

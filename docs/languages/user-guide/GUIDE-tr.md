@@ -254,28 +254,34 @@ sırasıyla alır. Genelde bir şey yapman gerekmez.
   Panel deponun plugins/ klasöründeki eklentileri gösterir; anahtarla aç ve kapat,
   sonra her zamanki gibi yayımla. Etkin eklentiler önizlemede hemen çalışır
   (ziyaretçiler onları yayımlamadan sonra alır) ve eklentinin blokları
-  bölümlerdeki **+ Yeni blok** menüsünde belirir.
+  bölümlerdeki **+ Yeni blok** menüsünde belirir. Birlikte gelen tek eklenti
+  İsveççe dil paketidir; takvim, form ve harita çekirdek bloklardır (aşağıya
+  bak) ve eklenti gerektirmez.
 
-  Takvim eklentisi birlikte gelir: bir Takvim bloğu (ya da «Neler oluyor»
-  bölüm şablonu) ekle, blokta «⚙ Kaynaklar» düğmesine tıkla ve takvimin
+  Takvim bloğu Bloklar panelindedir («Takvim: Liste», «Kartlar», «Ay» ve
+  «Sonraki», ya da «Neler oluyor» bölüm şablonu). Bloğu seç, Özellikler
+  panelinde «Ayarlar …» düğmesine tıkla ve blokta açılan panele takvimin
   iCal adresini ya da Google takvim kimliğini yapıştır. Görünümü (Liste,
-  Kartlar, Ay ya da «Sonraki») ve sayıyı seç. «Kategori: Başlık»
-  biçimindeki başlıklar filtrelenebilir kategori çipleri verir, açıklamadaki bir
+  Kartlar, Ay ya da «Sonraki») ve sayıyı da orada seçersin.
+  «Kategori: Başlık» biçimindeki başlıklar filtrelenebilir kategori çipleri
+  verir, açıklamadaki bir
   kayıt bağlantısı **Kaydol** düğmesine dönüşür ve **Abone ol**
   düğmesi ziyaretçilerin takvimi kendi uygulamalarında izlemesini sağlar.
 
-  Form eklentisi bir Form bloğu (ve «İletişim formu» şablonu) verir: alıcıyı,
-  alanları ve gönderme biçimini ayarlamak için «⚙ Form» düğmesine tıkla. Varsayılan olarak
+  Form bloğu (ve «İletişim formu» şablonu) Bloklar panelindedir: alıcıyı,
+  alanları ve gönderme biçimini ayarlamak için bloğu seç ve Özellikler
+  panelinde «Ayarlar …» düğmesine tıkla; panel blokta açılır. Varsayılan olarak
   form, ziyaretçinin e-posta istemcisini hazır bir e-postayla açar (kurulum
   gerekmez). Bunun yerine kendi uç noktana göndermek istersen (Apps Script ya da
   kendi işlevin), «Harici uç nokta» seç ve adresi yapıştır; o zaman
   _headers dosyasında o sunucu için connect-src açmalısın (blok
   satırı açıklar). Alanlar eklenebilir, değiştirilebilir ve kaldırılabilir.
 
-  Harita eklentisi bir Harita bloğu (ve «Bizi bul» şablonu) verir: «⚙ Konum» düğmesine tıkla ve
-  bir adres (örn. «Örnek Cad. 1, İstanbul»), koordinat (örneğin
-  «59.913, 10.739») yaz ya da bir OpenStreetMap bağlantısı yapıştır; yakınlaştırmayı ve
-  yüksekliği ayarla. **Uygula** düğmesine tıkladığında adres araması yeri
+  Harita bloğu (ve «Bizi bul» şablonu) Bloklar panelindedir: bloğu seç ve
+  Özellikler panelindeki «Konum» alanına bir adres (örn. «Örnek Cad. 1,
+  İstanbul»), koordinat (örneğin «59.913, 10.739») yaz ya da bir
+  OpenStreetMap bağlantısı yapıştır; «Yakınlaştırma» ve «Yükseklik» alanlarını
+  ayarla. «Ara» düğmesine tıkladığında adres araması yeri
   OpenStreetMap üzerinden bulur. Harita, OpenStreetMap'in izleme içermeyen kendi gömmesidir ve
   Urd'un standart _headers dosyası buna izin verir, yani kutudan çıktığı gibi çalışır. (Başka bir
   sunucuda «frame-src https://www.openstreetmap.org» _headers içinde olmalıdır;

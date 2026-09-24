@@ -254,30 +254,35 @@ reading order. You usually do not have to do anything.
   The panel shows the plugins in the repo's plugins/ folder; switch them off and on with
   the toggle, and publish as usual. Active plugins work immediately in
   the preview (visitors get them after publishing), and the plugin's
-  blocks appear in the **+ New block** menu in the sections.
+  blocks appear in the **+ New block** menu in the sections. The one plugin
+  that ships is the Swedish language pack; calendar, form and map are
+  core blocks (see below) and need no plugin.
 
-  The Calendar plugin is included: add a Calendar block (or
-  the section template «What is on»), click «⚙ Sources» on the block and paste
-  the calendar's iCal address or Google calendar id. Choose the view (List,
-  Cards, Month or «Next») and the count. Titles of the
-  form «Category: Title» give filterable category chips, a
+  The Calendar block is in the Blocks panel («Calendar: List», «Cards»,
+  «Month» and «Next», or the section template «What is on»). Select the block,
+  open «Settings …» in Properties and paste the calendar's iCal address or
+  Google calendar id in the panel that opens on the block. There you also
+  choose the view (List, Cards, Month or «Next») and the count. Titles of
+  the form «Category: Title» give filterable category chips, a
   sign-up link in the description becomes a **Sign up** button, and
   the **Subscribe** button lets visitors follow the calendar in their own app.
 
-  The Form plugin gives a Form block (and a «Contact form» template): click
-  «⚙ Form» to set the recipient, fields and send mode. By default
+  The Form block (and the «Contact form» template) is in the Blocks panel: select
+  the block and open «Settings …» in Properties to set the recipient, fields
+  and send mode in the panel on the block. By default
   the form opens the visitor's email client with a ready-made email (no
   setup). If you would rather send to your own endpoint (Apps Script or
   a function of your own), choose «External endpoint» and paste the address; then you must
   open connect-src for that host in _headers (the block explains
   the line). The fields can be added, changed and removed.
 
-  The Map plugin gives a Map block (and a «Find us» template): click «⚙ Location» and
-  type an address (e.g. «1 High Street, Anytown»), coordinates (such as
-  «59.913, 10.739») or paste an OpenStreetMap link, and set the zoom and
-  height. The address search looks up the place via OpenStreetMap when you click
-  **Apply**. The map is OpenStreetMap's own embed without tracking, and Urd's
-  standard _headers allows it, so it works out of the box. (On another
+  The Map block (and the «Find us» template) is in the Blocks panel: select the
+  block and, in the «Location» field in Properties, type an address (e.g.
+  «1 High Street, Anytown»), coordinates (such as «59.913, 10.739») or paste
+  an OpenStreetMap link, and set «Zoom» and «Height». The address search looks
+  up the place via OpenStreetMap when you click «Search». The map is
+  OpenStreetMap's own embed without tracking, and Urd's standard _headers
+  allows it, so it works out of the box. (On another
   host «frame-src https://www.openstreetmap.org» must be in _headers;
   the block says so if the map is blocked.)
 - The **Footer** panel: the footer text shown at the bottom of all pages.
