@@ -27,6 +27,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.18.5 - Analytics as a site setting - 24 September 2026
+
+- The analytics plugin's token could not be published from admin (plugin files are never written by publishing). It is now `site.analytics.token` in site.json (schema in three places), edited as «Besøksmåling» behind the gear in admin and published with the site; `mountAnalytics` in seo.js appends Cloudflare's beacon once at boot on the published page when the token is set, never in the preview. The two Cloudflare hosts are fixed in `_headers`, so no paste instruction is needed.
+- `plugins/analytics/` removed; `plugins.json` lists lang-sv only. TESTRUNDER batch (0.7.18.5).
+
 ### 0.7.18.4 - Calendar into the core - 24 September 2026
 
 - The calendar block moved from `plugins/calendar/` into the engine: `blocks/calendar.js` with the pure `ics.js`, which the block loads dynamically on the first render so the parser stays outside the visitor closure (the tests repointed through `engineImport`); registered with the ids `calendar` and `whats-on` and the legacy aliases unchanged. The sources panel behind the gear stays inside the preview. The injected style tag became base.css rules, the dictionary was split into visitor keys (`calendar.*` in `locales/site/*`) and editing keys (`blocks.calendar`, the panel's `calendar.*` keys, `hintCalendar.*`, `preset.whats-on.*`, `seed.whatsOn.title` in `locales/admin/*`, all five languages carried over), and the «Hva skjer» preset lives in sections/presets.js.

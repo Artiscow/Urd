@@ -10,6 +10,9 @@
   "breakpoints": {
     "mobile": 640
   },
+  "analytics": {
+    "token": ""
+  },
   "layout": {
     "contentWidth": 1440,
     "gutter": 6

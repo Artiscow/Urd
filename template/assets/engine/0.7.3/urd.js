@@ -50,7 +50,7 @@ import { registerSectionPresets } from './sections/presets.js';
 import { loadPlugins, loadPluginList, applyPluginSiteLocales } from './plugins.js';
 import { setCollectionsDraft } from './collections.js';
 import { initSticky, refreshSticky } from './sticky.js';
-import { applyHeadMeta } from './seo.js';
+import { applyHeadMeta, mountAnalytics } from './seo.js';
 import { readPrefetched, revalidateFile, wirePrefetch, sessionStore } from './prefetch.js';
 import { t, ta, initSiteLocale, initAdminLocale, requestedLang, siteLang } from './i18n.js';
 
@@ -539,7 +539,10 @@ export async function boot(opts) {
   document.title = `${page.meta?.title ?? entry.title ?? ''} - ${site.site.title}`;
   // SEO metadata (description, canonical, og: fields, JSON-LD) is set only
   // for visitors: the preview address (?preview=1) is never a canonical page.
-  if (!preview) applyHeadMeta(site, page, location.origin, location.pathname, entry);
+  if (!preview) {
+    applyHeadMeta(site, page, location.origin, location.pathname, entry);
+    mountAnalytics(site);
+  }
   // The footer is rendered now that the page id is known (per-page hideOn visibility).
   renderFooter(site, opts.footer, page.meta?.id ?? entry.id);
 

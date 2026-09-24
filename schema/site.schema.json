@@ -27,6 +27,14 @@
         "mobile": { "type": "integer", "minimum": 200, "description": "Max width (px) counted as mobile" }
       }
     },
+    "analytics": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Visitor measurement (additive from v0.7.3, milestone 0.7.18): Cloudflare Web Analytics, no cookies and no fingerprinting. Omitted or an empty token = nothing is measured.",
+      "properties": {
+        "token": { "type": "string", "maxLength": 200, "description": "The token from the Cloudflare Web Analytics snippet; the engine injects the beacon on the published page only when it is set." }
+      }
+    },
     "layout": {
       "type": "object",
       "description": "Page layout (additive from v0.7, ADR-0018): the content is bound by a design width with full-width section backgrounds. Filled in by the site migration 1 -> 2.",

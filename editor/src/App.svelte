@@ -2892,6 +2892,15 @@
   function setSiteDescription(value) {
     siteMutate('edit:site-desc', () => { siteDraft.site.description = value; });
   }
+  /** Visitor measurement (site.analytics): a site value published with the
+   *  site, edited behind the gear; an empty token removes the field. */
+  function setAnalyticsToken(value) {
+    const token = String(value ?? '').trim();
+    siteMutate('edit:site-analytics', () => {
+      if (token) siteDraft.analytics = { token };
+      else delete siteDraft.analytics;
+    });
+  }
 
   /** The content width (site.layout.contentWidth, ADR-0018): the design
    *  width the blocks' percentages are measured against. The model
@@ -5771,6 +5780,15 @@
                       title={ta('tip.screen.height', { min: SCREEN_HEIGHT_MIN, max: SCREEN_HEIGHT_MAX })}
                       value={screenPref.height || ''} onchange={(e) => { setScreenPref({ height: Number(e.target.value) }); e.target.value = screenPref.height || ''; }} />
                   </div>
+                {/if}
+                <!-- Visitor measurement: the one SITE value in this pop (site.analytics,
+                     published with the site), placed where the owner looks for Urd's own settings. -->
+                {#if siteDraft}
+                  <p class="mini-label" title={ta('tip.analytics')}>{ta('settings.analytics')}</p>
+                  <label title={ta('tip.analytics')}>{ta('lbl.analyticsToken')}
+                    <input type="text" placeholder={ta('ph.analyticsToken')} spellcheck="false"
+                      value={siteDraft.analytics?.token ?? ''}
+                      onchange={(e) => setAnalyticsToken(e.target.value)} /></label>
                 {/if}
               </div>
             {/if}

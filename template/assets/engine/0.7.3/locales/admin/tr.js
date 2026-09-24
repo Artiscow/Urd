@@ -1698,5 +1698,9 @@ export default {
     'preset.whats-on.label': 'Neler oluyor',
     'preset.whats-on.hint': 'Abone olunabilir bir takvimden etkinlik listesi (iCal/Google)',
     'seed.whatsOn.title': '<h2>Neler oluyor</h2>',
+    'settings.analytics': 'Ziyaretçi ölçümü',
+    'lbl.analyticsToken': 'Cloudflare Web Analytics belirteci',
+    'ph.analyticsToken': 'Boş = ölçüm yok',
+    'tip.analytics': 'Cloudflare Web Analytics ile gizlilik dostu ziyaretçi ölçümü: çerez yok, parmak izi yok, onay bandı yok. Cloudflare panosunda Web Analytics altında siteyi oluştur ve parçacıktaki belirteci yapıştır. Siteyle birlikte yayımlanır; yalnızca yayımlanan sayfada ölçülür, burada düzenleyicide asla.',
   },
 };

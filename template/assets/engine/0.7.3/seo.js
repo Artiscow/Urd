@@ -77,6 +77,24 @@ export function siteJsonLd(site, origin) {
 }
 
 /**
+ * Visitor measurement (site.analytics): Cloudflare Web Analytics, a beacon
+ * script that sets no cookies and takes no fingerprint. Appended once per
+ * page load on the published page when a token is set; the preview never
+ * calls this (editing sessions are not visits). The hosts are open in Urd's
+ * own _headers.
+ * @param {object} site site.json (lifted)
+ */
+export function mountAnalytics(site) {
+  const token = site.analytics?.token;
+  if (typeof token !== 'string' || !token.trim() || document.head.querySelector('script[data-cf-beacon]')) return;
+  const beacon = document.createElement('script');
+  beacon.defer = true;
+  beacon.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+  beacon.dataset.cfBeacon = JSON.stringify({ token: token.trim() });
+  document.head.appendChild(beacon);
+}
+
+/**
  * Writes the meta tags and the JSON-LD into <head>. Called per page render for
  * visitors; its own earlier tags are replaced (client-side navigation can call
  * it again), marked with data-urd-seo.

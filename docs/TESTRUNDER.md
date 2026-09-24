@@ -2,6 +2,12 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.18.5): analytics as a site setting
+
+- [ ] The gear: «Besøksmåling» with the token field sits under the Screen setting; a pasted token is in the unpublished changes, Publiser writes it to site.json, and on the published page the head has a `script[data-cf-beacon]` loading from static.cloudflareinsights.com with no CSP report; the editor's preview never has it
+- [ ] Clearing the field removes `analytics` from site.json and the beacon from the published page after the next publish
+- [ ] The Plugins panel lists only lang-sv; a site whose own plugins.json still lists «analytics» logs one warning and measures nothing until the token is moved into the gear
+
 ### Testrunde-batch (0.7.18.4): the calendar block in the core
 
 - [ ] Blocks panel: a «Kalender» group with Liste, Kort, Måned and Neste among the core groups, the search finds «Kalender: Måned», and «+ Ny blokk» in the preview lists Kalender; the two calendars on Hjem (list with a Google source, empty month) render exactly as before the move, and the published page shows the same

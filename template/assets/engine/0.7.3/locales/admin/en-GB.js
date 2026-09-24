@@ -1698,5 +1698,9 @@ export default {
     'preset.whats-on.label': 'What is on',
     'preset.whats-on.hint': 'Event list from a subscribable calendar (iCal/Google)',
     'seed.whatsOn.title': '<h2>What is on</h2>',
+    'settings.analytics': 'Visitor measurement',
+    'lbl.analyticsToken': 'Cloudflare Web Analytics token',
+    'ph.analyticsToken': 'Empty = nothing is measured',
+    'tip.analytics': 'Privacy-friendly visitor measurement with Cloudflare Web Analytics: no cookies, no fingerprinting, no consent banner. Create the site under Web Analytics in the Cloudflare dashboard and paste the token from the snippet. Published with the site; measured on the published page only, never here in the editor.',
   },
 };

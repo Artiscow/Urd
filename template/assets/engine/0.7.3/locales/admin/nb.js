@@ -1701,5 +1701,9 @@ export default {
     'preset.whats-on.label': 'Hva skjer',
     'preset.whats-on.hint': 'Arrangementsliste fra en abonnerbar kalender (iCal/Google)',
     'seed.whatsOn.title': '<h2>Hva skjer</h2>',
+    'settings.analytics': 'Besøksmåling',
+    'lbl.analyticsToken': 'Cloudflare Web Analytics-token',
+    'ph.analyticsToken': 'Tom = ingen måling',
+    'tip.analytics': 'Personvennlig besøksmåling med Cloudflare Web Analytics: ingen cookies, ingen fingerprinting, ingen samtykkebanner. Opprett nettstedet under Web Analytics i Cloudflare-dashbordet og lim inn token-verdien fra målesnutten. Publiseres med nettstedet; måles bare på den publiserte siden, aldri her i editoren.',
   },
 };
