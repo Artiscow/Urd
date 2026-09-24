@@ -2368,8 +2368,11 @@ function selectBlock(el, opts = {}) {
 // and keeps the dropdown in sync); external links open in a new tab
 // instead of pulling the iframe out of editing mode. Links INSIDE blocks
 // (buttons, images, text links) never trigger while editing: the click
-// selects the block, and the link is tested via "View page".
+// selects the block, and the link is tested via "View page". A click the
+// link's own handler has cancelled (a mobile menu item that opens its
+// submenu) navigates nowhere, as on the published page.
 document.addEventListener('click', (event) => {
+  if (event.defaultPrevented) return;
   const a = event.target instanceof HTMLElement ? event.target.closest('a[href]') : null;
   if (!a) return;
   if (a.closest('.urd-block')) {

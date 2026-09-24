@@ -13,6 +13,7 @@ export default {
     'nav.toLightTheme': 'Molsso čuvges fáddái',
     'nav.toDarkTheme': 'Molsso sevdnjes fáddái',
     'nav.menu': 'Fállu',
+    'nav.closeMenu': 'Gidde fálu',
     'nav.submenuFor': '{label} vuollefállu',
     'nav.toTop': 'Bajás',
     'nav.toTopFull': 'Siiddu bajimussii',

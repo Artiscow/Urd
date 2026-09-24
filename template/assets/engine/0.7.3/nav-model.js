@@ -147,6 +147,45 @@ export function subOpenMode(style = {}) {
   return { hoverOpens: true, hoverCloses: true };
 }
 
+/**
+ * How the burger opens the menu (nav.style.mobileMenu, additive since v0.7):
+ * `dropdown` is the panel below the bar, `sheet` the full-screen dialog.
+ * Anything else falls back to the dropdown.
+ * @param {{mobileMenu?: string}} [style]
+ * @returns {'dropdown' | 'sheet'}
+ */
+export function mobileMenuMode(style = {}) {
+  return style?.mobileMenu === 'sheet' ? 'sheet' : 'dropdown';
+}
+
+/**
+ * How submenus start in the mobile menu (nav.style.mobileSubs, additive
+ * since v0.7): `collapsed` (a tap anywhere on the item opens it, the item
+ * never navigates, and its own page is listed first in the submenu) or
+ * `expanded` (every submenu open from the start, the item is a plain link).
+ * Anything else falls back to collapsed.
+ * @param {{mobileSubs?: string}} [style]
+ * @returns {'collapsed' | 'expanded'}
+ */
+export function mobileSubMode(style = {}) {
+  return style?.mobileSubs === 'expanded' ? 'expanded' : 'collapsed';
+}
+
+/** The sheet's entrances (nav.style.sheetMotion); the first is the default. */
+export const SHEET_MOTIONS = ['top', 'bottom', 'left', 'right', 'fade', 'none'];
+
+/**
+ * Where the full-screen sheet comes from when it opens: a slide from one of
+ * the four edges, a fade, or none (it simply appears). Anything else gives
+ * the slide from the top.
+ * @param {{sheetMotion?: string}} [style]
+ * @returns {'top' | 'bottom' | 'left' | 'right' | 'fade' | 'none'}
+ */
+export function sheetMotion(style = {}) {
+  const m = style?.sheetMotion;
+  return SHEET_MOTIONS.includes(m) ? m : 'top';
+}
+
 export function navClasses(site) {
   let classes = `urd-nav urd-nav-${site.nav.layout ?? 'right'}`;
   const variant = site.nav.variant;

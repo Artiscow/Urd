@@ -2,6 +2,17 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.13.4): the full-screen mobile menu
+
+- [ ] Nav panel, Mobil: «Mobilmeny» Helskjerm; on the phone and in the editor's mobile view the burger opens a menu covering the whole viewport, the page behind does not scroll, Escape, the cross, the backdrop and a link click close it, and focus returns to the burger; «Panel under menylinjen» gives the old dropdown unchanged
+- [ ] «Menyen kommer inn»: each of the six entrances plays as named, and with reduced motion (OS setting) the menu simply appears
+- [ ] «Logo øverst i menyen», «Temaknapp nederst i menyen» and «Handlekurv nederst i menyen» (the latter two shown only when the theme has a counterpart or the cart is on): the elements sit in the sheet while open and are back in the bar at their old places after closing; the theme button in the foot switches theme and updates its label; the cart in the foot opens the cart drawer on top
+- [ ] «Menyens bakgrunn», «Dekkevne», «Uskarphet bak menyen» and text colour: the sheet takes its own surface, and with no choices it follows the bar's veil, blur and text colour
+- [ ] «Undermenyer på mobil» Lukket: tapping «Butikk» in the mobile view opens its submenu and never leaves the page (also in the editor's mobile view), the item's own page is the first submenu entry on mobile and absent on desktop; Alltid åpne: every submenu open on opening the menu, the caret closes only its own, tapping the item navigates
+- [ ] Mouse over an item with a submenu in the open mobile menu (laptop window at 640 px or narrower, or content folding): nothing opens; on desktop hover opens and leaving closes as before
+- [ ] Mobil fold, thickness and text size: empty = as on desktop, a value overrides on the phone only; the Size fold no longer has the desktop/mobile switch
+- [ ] Side column variant: on mobile the sheet works the same, since the column renders as a bar with a burger there
+
 ### Testrunde-batch (0.7.18.7): calendar and form settings in Properties
 
 - [ ] Form block, Egenskaper, Innhold: Sendemåte (E-postklient / Eksternt endepunkt) shows Mottaker and Emne, or Endepunkt-URL with the connect-src tooltip; the field list with name, type dropdown, required, move up and down and remove; a select or radio field gets its options line; «+ Legg til felt»; Knappetekst and Kvittering; every change re-renders the form in the preview and is one undo step; no gear or panel on the block any more, only the help chip

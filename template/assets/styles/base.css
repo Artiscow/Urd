@@ -3768,6 +3768,13 @@ body.urd-mobile .urd-nav-has-sub > a,
   flex: 1;
 }
 
+/* With collapsed submenus an item opens its submenu on mobile instead of
+   navigating, so its own page sits first in the submenu there; on desktop the
+   item is the link, and the entry is hidden. */
+body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-sub-self {
+  display: none;
+}
+
 body.urd-mobile .urd-nav-sub,
 .urd-nav-mobile .urd-nav-sub {
   position: static;
@@ -3777,6 +3784,169 @@ body.urd-mobile .urd-nav-sub,
   background: none;
   backdrop-filter: none;
   box-shadow: none;
+}
+
+/* Full-screen mobile menu (nav.style.mobileMenu sheet): a native <dialog> in the
+   top layer that the menu list moves into while it is open (nav.js). It covers
+   the whole viewport, so the panel rules above never apply; the mobile row and
+   accordion rules still do, since the dialog sits inside the nav. The UA's
+   dialog colours are replaced by the sheet's own surface (nav.style.sheet, set
+   inline by nav.js) or else the nav's veil, blur and text colour, and display
+   is gated on [open] so the closed dialog stays hidden. */
+.urd-nav-sheet {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  background: var(--urd-nav-sheet-bg, var(--urd-nav-sub-bg, color-mix(in srgb, var(--urd-color-surface) 92%, transparent)));
+  backdrop-filter: var(--urd-nav-sheet-blur, var(--urd-nav-blur, blur(12px)));
+}
+
+.urd-nav-sheet[open] {
+  display: flex;
+  flex-direction: column;
+  animation: urd-nav-sheet-top 280ms ease-out;
+}
+
+/* The sheet itself covers the page, so the backdrop adds nothing. */
+.urd-nav-sheet::backdrop {
+  background: transparent;
+}
+
+/* The entrance (nav.style.sheetMotion): a slide from one of the four edges,
+   a fade, or none. */
+.urd-nav-sheet-from-bottom[open] { animation-name: urd-nav-sheet-bottom; }
+.urd-nav-sheet-from-left[open] { animation-name: urd-nav-sheet-left; }
+.urd-nav-sheet-from-right[open] { animation-name: urd-nav-sheet-right; }
+.urd-nav-sheet-from-fade[open] { animation-name: urd-nav-sheet-fade; animation-duration: 200ms; }
+.urd-nav-sheet-from-none[open] { animation: none; }
+
+@keyframes urd-nav-sheet-top {
+  from {
+    translate: 0 -100%;
+    opacity: 0;
+  }
+}
+
+@keyframes urd-nav-sheet-bottom {
+  from {
+    translate: 0 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes urd-nav-sheet-left {
+  from {
+    translate: -100% 0;
+    opacity: 0;
+  }
+}
+
+@keyframes urd-nav-sheet-right {
+  from {
+    translate: 100% 0;
+    opacity: 0;
+  }
+}
+
+@keyframes urd-nav-sheet-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .urd-nav-sheet[open] {
+    animation: none;
+  }
+}
+
+/* The head holds the logo (when it moves along) on the left and the cross on
+   the right; the foot holds the theme and cart buttons as labelled outlines. */
+.urd-nav-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 0.5rem var(--urd-nav-px);
+}
+
+.urd-nav-sheet-head .urd-nav-logo {
+  margin-right: auto;
+  min-width: 0;
+}
+
+.urd-nav-sheet-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.5rem var(--urd-nav-px) 1.5rem;
+}
+
+.urd-nav-sheet-foot .urd-nav-theme,
+.urd-nav-sheet-foot .urd-nav-cart {
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid currentColor;
+  border-radius: var(--urd-radius-sm);
+  opacity: 1;
+}
+
+/* The tool labels exist for the sheet's foot only; the bar shows the icons. */
+.urd-nav-tool-label {
+  display: none;
+}
+
+.urd-nav-sheet-foot .urd-nav-tool-label {
+  display: inline;
+}
+
+.urd-nav-sheet-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.urd-nav-sheet-close svg {
+  width: 28px;
+  height: 28px;
+}
+
+.urd-nav-sheet-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 0.5rem var(--urd-nav-px) 2rem;
+}
+
+/* [open] lifts the specificity above the twin rules that hide the list on
+   mobile. The list centres itself in the remaining height with auto margins,
+   so a long menu still scrolls from its top. */
+.urd-nav-sheet[open] .urd-nav-list {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  margin: auto 0;
+  padding: 0;
+}
+
+.urd-nav-sheet[open] .urd-nav-list a,
+.urd-nav-sheet[open] .urd-nav-toggle {
+  font-size: 1.5em;
 }
 
 /* Floating variant (nav.variant): a detached pill with

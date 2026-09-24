@@ -3073,30 +3073,36 @@
     });
   }
 
-  /** Which values the Size fold shows: the desktop ones, or the mobile overrides. Panel state only. */
-  let navSizeView = $state('desktop');
-  const sizeView = $derived(sideVariant ? 'desktop' : navSizeView);
   const navMobilePadY = $derived(siteDraft?.nav?.style?.mobile?.padY ?? navPadY);
   const navMobileTextSize = $derived(siteDraft?.nav?.style?.mobile?.textSize ?? navTextSize);
 
-  function setNavSizeSlider(key, n) {
-    if (sizeView === 'mobile') setNavMobile(key, n);
-    else setNavStyle(key, n);
+  /** The sheet's own surface (nav.style.sheet): an emptied object is removed. */
+  function setNavSheet(key, value) {
+    siteMutate(`edit:nav-sheet-${key}`, () => {
+      siteDraft.nav.style ??= {};
+      const sheet = { ...(siteDraft.nav.style.sheet ?? {}) };
+      if (value === undefined) delete sheet[key];
+      else sheet[key] = value;
+      if (Object.keys(sheet).length) siteDraft.nav.style.sheet = sheet;
+      else delete siteDraft.nav.style.sheet;
+    });
   }
 
-  /** The number beside a size slider: empty restores the preset (desktop) or
-      the desktop value (mobile); the field then shows what the bar renders. */
+  /** The number beside a desktop size slider: empty restores the preset; the
+      field then shows what the bar renders. */
   function onNavSizeField(e, key, range) {
     const raw = e.target.value;
-    const value = raw === '' ? undefined : clampRange(raw, range, undefined);
-    if (sizeView === 'mobile') {
-      setNavMobile(key, value);
-      e.target.value = siteDraft.nav.style?.mobile?.[key] ?? '';
-    } else {
-      setNavStyle(key, value);
-      e.target.value = key === 'padY' ? navPadY : navTextSize;
-    }
+    setNavStyle(key, raw === '' ? undefined : clampRange(raw, range, undefined));
+    e.target.value = key === 'padY' ? navPadY : navTextSize;
   }
+
+  /** The number beside a mobile size slider: empty restores the desktop value. */
+  function onNavMobileField(e, key, range) {
+    const raw = e.target.value;
+    setNavMobile(key, raw === '' ? undefined : clampRange(raw, range, undefined));
+    e.target.value = siteDraft.nav.style?.mobile?.[key] ?? '';
+  }
+
 
   /** The scroll shrink factor is stored as a fraction; 0.5 is the default and is not stored. */
   function setNavShrinkTo(percent) {
@@ -6122,40 +6128,34 @@
                         <!-- The four presets, then the free values that replace the
                              preset's parts: the sliders start where the bar renders,
                              and the number beside each is editable. The column has its
-                             own padding, so it shows no thickness, side padding, item
-                             spacing or phone view. -->
+                             own padding, so it shows no thickness, side padding or item
+                             spacing. The mobile overrides sit in the Mobile fold. -->
                         <div class="seg cw-seg" title={ta('tip.nav.sizePreset')}>
                           {#each SIZE_IDS as id (id)}
                             <button class:on={navSizePreset === id} onclick={() => setNavSizePreset(id)}>{ta(`opt.size.${id}`)}</button>
                           {/each}
                         </div>
                         {#if !sideVariant}
-                          <div class="seg nav-view-seg" title={ta('tip.nav.mobileSame')}>
-                            <button class:on={sizeView === 'desktop'} onclick={() => { navSizeView = 'desktop'; }}>{ta('lbl.device.desktop')}</button>
-                            <button class:on={sizeView === 'mobile'} onclick={() => { navSizeView = 'mobile'; }}>{ta('lbl.device.mobile')}</button>
-                          </div>
                           <div class="ctl-row" title={ta('tip.nav.thickness')}>
                             <span class="mini-label ctl-name">{ta('lbl.navThickness')}</span>
                             <input type="range" min={PAD_Y.min} max={PAD_Y.max} step={PAD_Y.step}
-                              value={sizeView === 'mobile' ? navMobilePadY : navPadY}
-                              oninput={(e) => setNavSizeSlider('padY', e.target.valueAsNumber)} />
+                              value={navPadY}
+                              oninput={(e) => setNavStyle('padY', e.target.valueAsNumber)} />
                             <input type="number" class="tb-num" min={PAD_Y.min} max={PAD_Y.max}
-                              placeholder={sizeView === 'mobile' ? ta('lbl.navSameAsDesktop') : ''}
-                              value={sizeView === 'mobile' ? (siteDraft.nav.style?.mobile?.padY ?? '') : navPadY}
+                              value={navPadY}
                               onchange={(e) => onNavSizeField(e, 'padY', PAD_Y)} />
                           </div>
                         {/if}
                         <div class="ctl-row" title={ta('tip.nav.menuTextSize')}>
                           <span class="mini-label ctl-name">{ta('lbl.navTextSize')}</span>
                           <input type="range" min={TEXT_SIZE.min} max={TEXT_SIZE.max} step={TEXT_SIZE.step}
-                            value={sizeView === 'mobile' ? navMobileTextSize : navTextSize}
-                            oninput={(e) => setNavSizeSlider('textSize', e.target.valueAsNumber)} />
+                            value={navTextSize}
+                            oninput={(e) => setNavStyle('textSize', e.target.valueAsNumber)} />
                           <input type="number" class="tb-num" min={TEXT_SIZE.min} max={TEXT_SIZE.max}
-                            placeholder={sizeView === 'mobile' ? ta('lbl.navSameAsDesktop') : ''}
-                            value={sizeView === 'mobile' ? (siteDraft.nav.style?.mobile?.textSize ?? '') : navTextSize}
+                            value={navTextSize}
                             onchange={(e) => onNavSizeField(e, 'textSize', TEXT_SIZE)} />
                         </div>
-                        {#if !sideVariant && sizeView === 'desktop'}
+                        {#if !sideVariant}
                           <div class="ctl-pair">
                             <div class="ctl-field" title={ta('tip.nav.padX')}>
                               <span class="mini-label">{ta('lbl.navPadX')}</span>
@@ -6272,6 +6272,90 @@
                               onchange={(v) => siteMutate('nav', () => {
                                 if (v) siteDraft.nav.cart.href = v; else delete siteDraft.nav.cart.href;
                               })} /></label>
+                        {/if}
+                      </div>
+                    </details>
+                    <hr class="gridmenu-divider" />
+                    <details class="group frame-group sub-fold">
+                      <summary title={ta('tip.nav.mobileSame')}>{ta('group.mobile')}</summary>
+                      <div class="group-items">
+                        <!-- The mobile overrides of the size (empty = as on desktop),
+                             then the burger's target and the submenu behaviour -->
+                        {#if !sideVariant}
+                          <div class="ctl-row" title={ta('tip.nav.thickness')}>
+                            <span class="mini-label ctl-name">{ta('lbl.navThickness')}</span>
+                            <input type="range" min={PAD_Y.min} max={PAD_Y.max} step={PAD_Y.step}
+                              value={navMobilePadY}
+                              oninput={(e) => setNavMobile('padY', e.target.valueAsNumber)} />
+                            <input type="number" class="tb-num" min={PAD_Y.min} max={PAD_Y.max}
+                              placeholder={ta('lbl.navSameAsDesktop')}
+                              value={siteDraft.nav.style?.mobile?.padY ?? ''}
+                              onchange={(e) => onNavMobileField(e, 'padY', PAD_Y)} />
+                          </div>
+                        {/if}
+                        <div class="ctl-row" title={ta('tip.nav.menuTextSize')}>
+                          <span class="mini-label ctl-name">{ta('lbl.navTextSize')}</span>
+                          <input type="range" min={TEXT_SIZE.min} max={TEXT_SIZE.max} step={TEXT_SIZE.step}
+                            value={navMobileTextSize}
+                            oninput={(e) => setNavMobile('textSize', e.target.valueAsNumber)} />
+                          <input type="number" class="tb-num" min={TEXT_SIZE.min} max={TEXT_SIZE.max}
+                            placeholder={ta('lbl.navSameAsDesktop')}
+                            value={siteDraft.nav.style?.mobile?.textSize ?? ''}
+                            onchange={(e) => onNavMobileField(e, 'textSize', TEXT_SIZE)} />
+                        </div>
+                        <!-- The burger's target on mobile: the panel below the bar or the full-screen sheet -->
+                        <label title={ta('tip.nav.mobileMenu')}>{ta('lbl.mobileMenu')}
+                          <Dropdown value={siteDraft.nav.style?.mobileMenu ?? 'dropdown'}
+                            options={[['dropdown', ta('opt.mobileMenu.dropdown')], ['sheet', ta('opt.mobileMenu.sheet')]]}
+                            onchange={(v) => setNavStyle('mobileMenu', v === 'dropdown' ? undefined : v)} /></label>
+                        {#if siteDraft.nav.style?.mobileMenu === 'sheet'}
+                          <label title={ta('tip.nav.sheetMotion')}>{ta('lbl.sheetMotion')}
+                            <Dropdown value={siteDraft.nav.style?.sheetMotion ?? 'top'}
+                              options={['top', 'bottom', 'left', 'right', 'fade', 'none'].map((m) => [m, ta(`opt.sheetMotion.${m}`)])}
+                              onchange={(v) => setNavStyle('sheetMotion', v === 'top' ? undefined : v)} /></label>
+                          <label class="gridmenu-snap" title={ta('tip.nav.sheetLogo')}>
+                            <input type="checkbox" checked={siteDraft.nav.style?.sheetLogo === true}
+                              onchange={(e) => setNavStyle('sheetLogo', e.target.checked ? true : undefined)} />
+                            {ta('lbl.sheetLogo')}
+                          </label>
+                          {#if siteDraft.theme?.alt?.tokens}
+                            <label class="gridmenu-snap" title={ta('tip.nav.sheetTheme')}>
+                              <input type="checkbox" checked={siteDraft.nav.style?.sheetTheme === true}
+                                onchange={(e) => setNavStyle('sheetTheme', e.target.checked ? true : undefined)} />
+                              {ta('lbl.sheetTheme')}
+                            </label>
+                          {/if}
+                          {#if siteDraft.nav.cart?.show}
+                            <label class="gridmenu-snap" title={ta('tip.nav.sheetCart')}>
+                              <input type="checkbox" checked={siteDraft.nav.style?.sheetCart === true}
+                                onchange={(e) => setNavStyle('sheetCart', e.target.checked ? true : undefined)} />
+                              {ta('lbl.sheetCart')}
+                            </label>
+                          {/if}
+                          <label title={ta('tip.nav.sheetBg')}>{ta('lbl.sheetBg')}
+                            <ColorPicker value={siteDraft.nav.style?.sheet?.bg ?? 'surface'} tokens={themeSwatches()}
+                              label={ta('tip.nav.sheetBg')} onchange={(hex) => setNavSheet('bg', hex)} /></label>
+                          <div class="ctl-row" title={ta('tip.nav.sheetOpacity')}>
+                            <span class="mini-label ctl-name">{ta('lbl.sheetOpacity')}</span>
+                            <input type="range" min="0" max="100" step="1"
+                              value={Math.round((siteDraft.nav.style?.sheet?.bgOpacity ?? 0.85) * 100)}
+                              oninput={(e) => setNavSheet('bgOpacity', e.target.valueAsNumber / 100)} />
+                            <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.sheet?.bgOpacity ?? 0.85) * 100)}%</span>
+                          </div>
+                          <label class="gridmenu-snap" title={ta('tip.nav.sheetBlur')}>
+                            <input type="checkbox" checked={siteDraft.nav.style?.sheet?.blur ?? siteDraft.nav.style?.blur !== false}
+                              onchange={(e) => setNavSheet('blur', e.target.checked)} />
+                            {ta('lbl.sheetBlur')}
+                          </label>
+                          <label>{ta('lbl.textColor')}
+                            <ColorPicker value={siteDraft.nav.style?.sheet?.textColor ?? siteDraft.nav.style?.textColor ?? 'text'} tokens={themeSwatches()}
+                              label={ta('tip.nav.sheetTextColorPick')} onchange={(hex) => setNavSheet('textColor', hex)} /></label>
+                        {/if}
+                        {#if siteDraft.nav.items?.some((item) => item.children?.length)}
+                          <label title={ta('tip.nav.mobileSubs')}>{ta('lbl.mobileSubs')}
+                            <Dropdown value={siteDraft.nav.style?.mobileSubs ?? 'collapsed'}
+                              options={[['collapsed', ta('opt.mobileSubs.collapsed')], ['expanded', ta('opt.mobileSubs.expanded')]]}
+                              onchange={(v) => setNavStyle('mobileSubs', v === 'collapsed' ? undefined : v)} /></label>
                         {/if}
                       </div>
                     </details>

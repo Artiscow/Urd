@@ -284,6 +284,23 @@
               }
             },
             "shadow": { "enum": ["soft", "strong"], "description": "A drop shadow under the top bar (additive from v0.7); omitted = none. Variant bar only (the floating menu has glow)." },
+            "mobileMenu": { "enum": ["dropdown", "sheet"], "default": "dropdown", "description": "How the burger opens the menu on mobile (additive from v0.7): dropdown = the panel below the bar; sheet = a full-screen native dialog the list moves into (top layer, focus trap, Escape and the scroll lock native). All variants." },
+            "mobileSubs": { "enum": ["collapsed", "expanded"], "default": "collapsed", "description": "Submenus in the mobile menu (additive from v0.7): collapsed = a tap on the item opens the submenu instead of navigating, with the item's own page listed first in it; expanded = every submenu is open from the start and the item is a plain link. Both mobile menus." },
+            "sheetMotion": { "enum": ["top", "bottom", "left", "right", "fade", "none"], "default": "top", "description": "The full-screen sheet's entrance (additive from v0.7): a slide from an edge, a fade, or none; cut under reduced motion. mobileMenu sheet only." },
+            "sheetLogo": { "type": "boolean", "default": false, "description": "The logo moves into the top of the full-screen sheet while it is open (additive from v0.7). mobileMenu sheet only." },
+            "sheetTheme": { "type": "boolean", "default": false, "description": "The theme button moves into the bottom of the full-screen menu as a labelled button while it is open (additive from v0.7). mobileMenu sheet only." },
+            "sheetCart": { "type": "boolean", "default": false, "description": "The cart moves into the bottom of the full-screen menu as a labelled button while it is open (additive from v0.7). mobileMenu sheet only." },
+            "sheet": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "The full-screen sheet's own surface (additive from v0.7); omitted fields = the bar's veil, blur and text colour. mobileMenu sheet only.",
+              "properties": {
+                "bg": { "type": "string", "description": "Background colour: theme token or raw colour (default surface)" },
+                "bgOpacity": { "type": "number", "minimum": 0, "maximum": 1, "description": "Opacity of the background colour (default 0.85)" },
+                "blur": { "type": "boolean", "description": "Blur the page behind the sheet; omitted = as the bar" },
+                "textColor": { "type": "string", "description": "Text colour: theme token or raw colour" }
+              }
+            },
             "atTop": { "enum": ["clear"], "description": "Transparent at the top (additive from v0.7): the menu draws no surface, blur, border or shadow until the page has scrolled past the top zone; omitted = the surface is always drawn. Bar and floating variants only; ignored for the side column." },
             "radius": { "type": "number", "minimum": 0, "maximum": 64, "description": "The floating menu's corner rounding in px (additive from v0.7); omitted = the variant's preset (pill 999, square 0, tab the theme's medium radius). Floating variants only." },
             "mobile": {

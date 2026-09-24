@@ -177,7 +177,18 @@
       "hover": "underline",
       "hoverGlow": 1,
       "radius": 12,
-      "atTop": "clear"
+      "atTop": "clear",
+      "mobileMenu": "sheet",
+      "sheetMotion": "right",
+      "mobileSubs": "expanded",
+      "sheetLogo": true,
+      "sheetTheme": true,
+      "sheetCart": true,
+      "sheet": {
+        "bg": "#0e1a27",
+        "bgOpacity": 0.95,
+        "blur": false
+      }
     },
     "overlay": true,
     "variant": "floating-tab"

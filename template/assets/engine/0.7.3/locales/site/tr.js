@@ -9,6 +9,7 @@ export default {
     'nav.toLightTheme': 'Açık temaya geç',
     'nav.toDarkTheme': 'Koyu temaya geç',
     'nav.menu': 'Menü',
+    'nav.closeMenu': 'Menüyü kapat',
     'nav.submenuFor': '{label} alt menüsü',
     'nav.toTop': 'Yukarı',
     'nav.toTopFull': 'Sayfanın başına dön',

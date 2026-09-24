@@ -8,10 +8,13 @@
  * order and no role="menu". An item with both its own target and a submenu
  * renders as a link plus its own arrow button, so the page stays reachable.
  * The mobile menu (the burger) is a non-modal disclosure of the same list,
- * styled by body.urd-mobile (the breakpoint is set in urd.js from site.json).
+ * styled by body.urd-mobile (the breakpoint is set in urd.js from site.json),
+ * or with nav.style.mobileMenu 'sheet' a full-screen native <dialog> the
+ * list moves into while it is open (ADR-0011: top layer, focus trap, Escape
+ * and the scroll lock come from the browser).
  */
 
-import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, subOpenMode, isSafeImage } from './nav-model.js';
+import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, isSafeImage } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
 import { readCart, cartCount, onCartChange } from './shop.js';
@@ -47,6 +50,7 @@ const CHEVRON = svg('<path d="M6 9l6 6 6-6"/>');
 const BURGER = svg('<path d="M4 6h16M4 12h16M4 18h16"/>');
 const SUN = svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>');
 const MOON = svg('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>');
+const CROSS = svg('<path d="M6 6l12 12M18 6L6 18"/>');
 
 /**
  * @param {object} site site.json, already parsed
@@ -293,7 +297,7 @@ export function renderNav(site, host) {
     cartBtn.className = 'urd-nav-cart';
     cartBtn.type = 'button';
     cartBtn.setAttribute('aria-label', t('shop.cart'));
-    cartBtn.innerHTML = iconSvg('cart') ?? '';
+    cartBtn.innerHTML = `${iconSvg('cart') ?? ''}<span class="urd-nav-tool-label">${t('shop.cart')}</span>`;
     const cartBadge = document.createElement('span');
     cartBadge.className = 'urd-nav-cart-badge';
     cartBadge.hidden = true;
@@ -321,8 +325,9 @@ export function renderNav(site, host) {
     const paintToggle = () => {
       const dark = themeMode() === 'dark';
       // The icon shows the mode you SWITCH TO (the convention people know).
-      themeBtn.innerHTML = dark ? SUN : MOON;
-      themeBtn.setAttribute('aria-label', dark ? t('nav.toLightTheme') : t('nav.toDarkTheme'));
+      const label = dark ? t('nav.toLightTheme') : t('nav.toDarkTheme');
+      themeBtn.innerHTML = `${dark ? SUN : MOON}<span class="urd-nav-tool-label">${label}</span>`;
+      themeBtn.setAttribute('aria-label', label);
     };
     paintToggle();
     themeBtn.addEventListener('click', () => {
@@ -332,8 +337,11 @@ export function renderNav(site, host) {
     tools.appendChild(themeBtn);
   }
 
-  // The burger (only visible in mobile view via CSS): a non-modal disclosure
-  // of the menu list - no focus trap or scroll lock, the panel scrolls itself.
+  // The burger (only visible in mobile view via CSS). With the dropdown it
+  // is a non-modal disclosure of the menu list - no focus trap or scroll
+  // lock, the panel scrolls itself. With the sheet it opens a modal dialog
+  // that the list moves into (and back out of on close), so the same list
+  // with its submenu accordions serves both.
   const burger = document.createElement('button');
   burger.className = 'urd-nav-burger';
   burger.type = 'button';
@@ -343,17 +351,34 @@ export function renderNav(site, host) {
   burger.innerHTML = BURGER;
   tools.appendChild(burger);
 
-  const setMobileOpen = (open) => {
-    nav.classList.toggle('urd-nav-open', open);
-    burger.setAttribute('aria-expanded', String(open));
-  };
-  burger.addEventListener('click', () => {
-    setMobileOpen(!nav.classList.contains('urd-nav-open'));
-  }, { signal });
-
   const list = document.createElement('ul');
   list.className = 'urd-nav-list';
   list.id = 'urd-nav-menu';
+
+  const sheet = mobileMenuMode(site.nav.style) === 'sheet'
+    ? buildSheet(nav, { list, tools, burger, logo: site.nav.style?.sheetLogo === true ? logo : null, withTheme: site.nav.style?.sheetTheme === true, withCart: site.nav.style?.sheetCart === true, motion: sheetMotion(site.nav.style), surface: navSurface(site.nav.style?.sheet ?? {}) }, signal)
+    : null;
+  const isMobileOpen = () => (sheet ? sheet.dialog.open : nav.classList.contains('urd-nav-open'));
+  // The mobile state as the CSS sees it: the breakpoint, content folding, or
+  // the editor's viewport choice in the preview (body.urd-mobile).
+  const isMobileState = () => mobileMq.matches || nav.classList.contains('urd-nav-mobile') || document.body.classList.contains('urd-mobile');
+  const subMode = mobileSubMode(site.nav.style);
+  const expandedSubs = () => subMode === 'expanded' && isMobileState();
+  const setMobileOpen = (open) => {
+    if (sheet) {
+      if (open && !sheet.dialog.open) sheet.show();
+      else if (!open && sheet.dialog.open) sheet.dialog.close();
+    } else {
+      nav.classList.toggle('urd-nav-open', open);
+    }
+    burger.setAttribute('aria-expanded', String(open));
+    // Every submenu starts open in the expanded mode.
+    if (open && expandedSubs()) for (const entry of subs) setOpen(entry, true);
+  };
+  if (sheet) sheet.dialog.addEventListener('close', () => burger.setAttribute('aria-expanded', 'false'), { signal });
+  burger.addEventListener('click', () => {
+    setMobileOpen(!isMobileOpen());
+  }, { signal });
 
   /** All li elements with a submenu, for closeAll. */
   const subs = [];
@@ -409,7 +434,20 @@ export function renderNav(site, host) {
     button.setAttribute('aria-controls', subId);
 
     if (item.kind === 'split') {
-      li.appendChild(makeLink(item));
+      const link = makeLink(item);
+      // Collapsed submenus on mobile: the whole item opens the submenu
+      // instead of navigating (the menu is for touch, and a tap that
+      // navigates never shows the submenu); the item's own page is the
+      // first submenu entry instead. Expanded submenus are already visible,
+      // so there the item stays a plain link.
+      if (subMode === 'collapsed') {
+        link.addEventListener('click', (event) => {
+          if (!isMobileState()) return;
+          event.preventDefault();
+          button.click();
+        }, { signal });
+      }
+      li.appendChild(link);
       button.className = 'urd-nav-caret';
       button.setAttribute('aria-label', t('nav.submenuFor', { label: item.label }));
       button.innerHTML = CHEVRON;
@@ -425,6 +463,12 @@ export function renderNav(site, host) {
     const sub = document.createElement('ul');
     sub.className = 'urd-nav-sub';
     sub.id = subId;
+    if (subMode === 'collapsed' && item.kind === 'split') {
+      const selfLi = document.createElement('li');
+      selfLi.className = 'urd-nav-sub-self';
+      selfLi.appendChild(makeLink(item));
+      sub.appendChild(selfLi);
+    }
     for (const child of item.children) {
       if (child.missing && !child.external) {
         console.warn(`Urd: nav item points to unknown page (${child.label})`);
@@ -440,17 +484,20 @@ export function renderNav(site, host) {
 
     button.addEventListener('click', () => {
       const open = !li.classList.contains('open');
-      closeAll(entry);
+      // The accordion closes the others, except in the expanded mobile mode
+      // where every submenu stands on its own.
+      if (!expandedSubs()) closeAll(entry);
       setOpen(entry, open);
     }, { signal });
 
     if (mouseHover) {
       // Real mouse only: on hybrid devices (laptop with touchscreen) a tap
       // fires both pointerenter and click, and without the guard the
-      // submenu would open on enter and close again on click.
+      // submenu would open on enter and close again on click. The mobile
+      // menu is built for touch: hover never opens or closes there.
       let closeTimer = null;
       li.addEventListener('pointerenter', (event) => {
-        if (event.pointerType !== 'mouse') return;
+        if (event.pointerType !== 'mouse' || isMobileState()) return;
         clearTimeout(closeTimer);
         // In the column, other accordions stay open: closing moves the items
         // under the pointer. Closing happens collectively when the menu is left.
@@ -459,7 +506,7 @@ export function renderNav(site, host) {
       }, { signal });
       if (!isColumn && hoverCloses) {
         li.addEventListener('pointerleave', (event) => {
-          if (event.pointerType !== 'mouse') return;
+          if (event.pointerType !== 'mouse' || isMobileState()) return;
           clearTimeout(closeTimer);
           closeTimer = setTimeout(() => setOpen(entry, false), HOVER_CLOSE_DELAY);
         }, { signal });
@@ -469,6 +516,7 @@ export function renderNav(site, host) {
     // Tabbing out of the item closes the submenu - focus must never leave
     // an open menu behind.
     li.addEventListener('focusout', (event) => {
+      if (expandedSubs()) return;
       if (!li.contains(event.relatedTarget)) setOpen(entry, false);
     }, { signal });
 
@@ -571,14 +619,17 @@ export function renderNav(site, host) {
   }
 
   // Escape closes the nearest open layer and returns focus to the button
-  // that opened it, so keyboard users land where they were.
+  // that opened it, so keyboard users land where they were. An open
+  // accordion inside the sheet closes alone: the cancelled keydown keeps
+  // the dialog's own Escape handling from closing the sheet as well.
   nav.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
-    const openSub = subs.find((entry) => entry.li.classList.contains('open'));
+    const openSub = expandedSubs() ? null : subs.find((entry) => entry.li.classList.contains('open'));
     if (openSub) {
+      event.preventDefault();
       setOpen(openSub, false);
       openSub.button.focus();
-    } else if (nav.classList.contains('urd-nav-open')) {
+    } else if (!sheet && nav.classList.contains('urd-nav-open')) {
       setMobileOpen(false);
       burger.focus();
     }
@@ -590,4 +641,67 @@ export function renderNav(site, host) {
     closeAll();
     setMobileOpen(false);
   }, { signal });
+}
+
+/**
+ * The full-screen mobile menu: a native <dialog> inside the nav with a close
+ * button, that the menu list moves into on open and back to its place before
+ * the tool cluster on close (the list keeps its id, so the burger's
+ * aria-controls stays valid). With `logo` the logo moves along into the
+ * head, with `withTheme` and `withCart` the theme button and the cart move
+ * into a foot; all return to the bar on close, in their original order. A link click and a
+ * backdrop click close it; Escape, the focus trap, the focus return to the
+ * burger and the scroll lock (body:has(dialog:modal) in base.css) are
+ * native. `motion` is the allowlisted entrance from sheetMotion, drawn by
+ * base.css. `surface` is the sheet's own surface (nav.style.sheet through
+ * navSurface); without choices the sheet follows the bar's veil and blur.
+ */
+function buildSheet(nav, { list, tools, burger, logo, withTheme, withCart, motion, surface }, signal) {
+  const dialog = document.createElement('dialog');
+  dialog.className = `urd-nav-sheet urd-nav-sheet-from-${motion}`;
+  if (surface.bg) dialog.style.setProperty('--urd-nav-sheet-bg', surface.bg);
+  if (surface.blur === false) dialog.style.setProperty('--urd-nav-sheet-blur', 'none');
+  else if (surface.blur === true) dialog.style.setProperty('--urd-nav-sheet-blur', 'blur(12px)');
+  if (surface.color) dialog.style.color = surface.color;
+  const head = document.createElement('div');
+  head.className = 'urd-nav-sheet-head';
+  const close = document.createElement('button');
+  close.className = 'urd-nav-sheet-close';
+  close.type = 'button';
+  close.setAttribute('aria-label', t('nav.closeMenu'));
+  close.innerHTML = CROSS;
+  close.addEventListener('click', () => dialog.close(), { signal });
+  head.appendChild(close);
+  dialog.appendChild(head);
+  const body = document.createElement('div');
+  body.className = 'urd-nav-sheet-body';
+  dialog.appendChild(body);
+  const foot = document.createElement('div');
+  foot.className = 'urd-nav-sheet-foot';
+  if (withTheme || withCart) dialog.appendChild(foot);
+  // Light dismiss: a click on the ::backdrop hits the dialog element itself.
+  // A link click closes too, unless the link's own handler cancelled it (an
+  // item with a submenu opens it instead of navigating).
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog || (event.target.closest('a[href]') && !event.defaultPrevented)) dialog.close();
+  }, { signal });
+  const toolSelector = [withCart && '.urd-nav-cart', withTheme && '.urd-nav-theme'].filter(Boolean).join(', ');
+  const toolButtons = () => (toolSelector ? [...tools.querySelectorAll(toolSelector)] : []);
+  let logoNext = null;
+  dialog.addEventListener('close', () => {
+    nav.insertBefore(list, tools);
+    if (logo) nav.insertBefore(logo, logoNext);
+    for (const btn of [...foot.children]) tools.insertBefore(btn, burger);
+  }, { signal });
+  nav.appendChild(dialog);
+  const show = () => {
+    if (logo) {
+      logoNext = logo.nextSibling;
+      head.insertBefore(logo, close);
+    }
+    body.appendChild(list);
+    for (const btn of toolButtons()) foot.appendChild(btn);
+    dialog.showModal();
+  };
+  return { dialog, show };
 }

@@ -10,6 +10,7 @@ export default {
     'nav.toLightTheme': 'Byt til lyst tema',
     'nav.toDarkTheme': 'Byt til mørkt tema',
     'nav.menu': 'Meny',
+    'nav.closeMenu': 'Lukk menyen',
     'nav.submenuFor': 'Undermeny for {label}',
     'nav.toTop': 'Til toppen',
     'nav.toTopFull': 'Til toppen av sida',

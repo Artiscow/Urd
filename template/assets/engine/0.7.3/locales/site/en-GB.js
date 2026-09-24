@@ -10,6 +10,7 @@ export default {
     'nav.toLightTheme': 'Switch to light theme',
     'nav.toDarkTheme': 'Switch to dark theme',
     'nav.menu': 'Menu',
+    'nav.closeMenu': 'Close the menu',
     'nav.submenuFor': 'Submenu for {label}',
     'nav.toTop': 'Back to top',
     'nav.toTopFull': 'Back to the top of the page',

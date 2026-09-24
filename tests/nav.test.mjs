@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, isSafeImage } = await engineImport('nav-model.js');
+const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, SHEET_MOTIONS, isSafeImage } = await engineImport('nav-model.js');
 
 // Deliberately Norwegian page titles and slugs: user data stays Norwegian (ADR-0021).
 const PAGES = [
@@ -526,4 +526,28 @@ test('base.css: the underline hover is revealed with clip-path, and the clear su
   assert.doesNotMatch(underline, /scaleX/);
   assert.match(css, /\.urd-nav-clear:not\(\.urd-nav-scrolled\) \.urd-nav \{[^}]*background: transparent/);
   assert.match(css, /\.urd-nav-var-floating \{[^}]*border-radius: var\(--urd-nav-radius, 999px\)/);
+});
+
+test('mobileMenuMode: sheet is the only alternative to the dropdown', () => {
+  assert.equal(mobileMenuMode(), 'dropdown');
+  assert.equal(mobileMenuMode({}), 'dropdown');
+  assert.equal(mobileMenuMode({ mobileMenu: 'dropdown' }), 'dropdown');
+  assert.equal(mobileMenuMode({ mobileMenu: 'sheet' }), 'sheet');
+  // Unknown values never reach the DOM as a mode.
+  assert.equal(mobileMenuMode({ mobileMenu: 'drawer' }), 'dropdown');
+  assert.equal(mobileMenuMode(undefined), 'dropdown');
+});
+
+test('mobileSubMode: collapsed is the default, expanded the alternative', () => {
+  assert.equal(mobileSubMode(), 'collapsed');
+  assert.equal(mobileSubMode({ mobileSubs: 'collapsed' }), 'collapsed');
+  assert.equal(mobileSubMode({ mobileSubs: 'expanded' }), 'expanded');
+  assert.equal(mobileSubMode({ mobileSubs: 'tap' }), 'collapsed');
+});
+
+test('sheetMotion: the six entrances are allowlisted, the slide from the top is the default', () => {
+  assert.equal(sheetMotion(), 'top');
+  for (const m of SHEET_MOTIONS) assert.equal(sheetMotion({ sheetMotion: m }), m);
+  assert.equal(sheetMotion({ sheetMotion: 'spin' }), 'top');
+  assert.equal(SHEET_MOTIONS[0], 'top');
 });
