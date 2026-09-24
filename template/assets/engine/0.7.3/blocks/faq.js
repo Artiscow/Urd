@@ -176,7 +176,7 @@ export const faqBlock = {
       });
     }
 
-    // Auto-grow (like the collection block): the frame follows the collapsed height.
+    // Auto-grow (like the collection block): the display follows the collapsed height; the blocks below are moved by the push pass (ADR-0024).
     // All answers are closed at startup, so host.scrollHeight = collapsed.
     // The display only; the blocks below are moved by the push pass (ADR-0024).
     requestAnimationFrame(() => {

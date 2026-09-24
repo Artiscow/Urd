@@ -56,7 +56,7 @@ the editing surfaces are built on the new layout:
 ## v0.6 - Ecosystem
 
 - Plugin loading in earnest: plugins deliver **their own blocks, section presets, backgrounds, animations and templates** via `register(Urd)`. The calendar plugin as the reference example; maps and forms as further reference plugins (moved into the core 24 September 2026, milestone 0.7.18).
-- **The archive/data block pattern**: blocks that render collections of entries (news, notices, boards), designed together with the calendar plugin. Calendar-dependent presets: news, notice board, «What's on».
+- **The archive/data block pattern**: blocks that render collections of entries (news, notices, boards), designed together with the calendar plugin (a core block since 24 September 2026, milestone 0.7.18). Calendar-dependent presets: news, notice board, «What's on».
 - **«Save as template»**: your own sections/pages are saved in `content/maler/` and can be shared as plugins. GitHub topic convention (`urd-plugin`, `urd-template`) for discoverability.
 - `urd-template` repo split + release Action («Use this template»).
 - Updater v1: one-click Urd update that only overwrites the manifest paths in `urd.json`.
@@ -108,7 +108,7 @@ Up to v0.6, `template/` is both workshop and demo (urdweb); that is fine as long
 
 An association can clone, set up, build and maintain a site without a developer.
 
-**Gate:** the migration contract has been tested with at least one real v1→v2 block change in the test suite; a pilot site (candidate: recreating ApeironLF with Urd) has been built and is being operated. The pilot presupposes the v0.7 shop (ApeironLF has merch with a cart) and the v0.6 calendar plugin (events from a Google Calendar/iCal feed).
+**Gate:** the migration contract has been tested with at least one real v1→v2 block change in the test suite; a pilot site (candidate: recreating ApeironLF with Urd) has been built and is being operated. The pilot presupposes the v0.7 shop (ApeironLF has merch with a cart) and the v0.6 calendar plugin (a core block since 24 September 2026, milestone 0.7.18) (events from a Google Calendar/iCal feed).
 
 ## After 1.0 (horizon)
 

@@ -98,7 +98,7 @@ const form = (fr, props = {}) => ({
   frames: fr,
 });
 
-/* Calendar block: no sources yet, the owner pastes them in the sources panel. */
+/* Calendar block: no sources yet, the owner pastes them in Properties. */
 const calendar = (fr, props = {}) => ({
   id: makeId('blk'),
   type: 'calendar',

@@ -128,7 +128,7 @@ function renderForm(host, props, ctx) {
 
   const showErrors = (errors) => {
     for (const field of fields) {
-      const cell = form.querySelector(`.urd-form-error[data-for="${field.id}"]`);
+      const cell = form.querySelector(`.urd-form-error[data-for="${CSS.escape(field.id)}"]`);
       if (cell) cell.textContent = errors[field.id] ?? '';
     }
   };

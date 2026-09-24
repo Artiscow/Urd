@@ -111,7 +111,7 @@ export const tableBlock = {
       });
     }
 
-    // Auto-grow: the frame follows the content height. the display only; the blocks below are moved by the push pass (ADR-0024).
+    // Auto-grow: the display follows the content height; the blocks below are moved by the push pass (ADR-0024).
     requestAnimationFrame(() => {
       if (!el.isConnected) return;
       const needed = host.scrollHeight;

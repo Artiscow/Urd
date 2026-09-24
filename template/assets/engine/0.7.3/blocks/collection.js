@@ -300,7 +300,7 @@ export const collectionBlock = {
         });
       }
 
-      // Auto-grow: collection content is dynamic, so the frame follows the content instead
+      // Auto-grow: collection content is dynamic, so the display follows the content instead
       // of the templates guessing a large fixed height. The section is raised when needed
       // (display only for visitors; in the editor the height is recorded in the draft, as
       // the text blocks do).

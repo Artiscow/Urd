@@ -127,14 +127,18 @@ function applyPush(host) {
     if (!frame) continue;
     // The box follows its content down to the design height and never
     // below it: taller content grows it, content that fits again (a wider
-    // window, a text set to shrink) gives the design height back.
-    // Measured with the box at the design height, since the content's
-    // min-height follows the box: a grown box would otherwise never shrink.
-    el.style.height = `${frame.h}px`;
-    if (!pushSuspended) fitContent(el, frame.h, block);
-    const needed = pushSuspended ? frame.h : Math.max(frame.h, Math.round(contentHeight(el)));
-    if (needed !== frame.h) el.style.height = `${needed}px`;
-    const grow = needed - frame.h;
+    // window, a text set to shrink) gives the design height back. Measured
+    // with the box at the design height, since the content's min-height
+    // follows the box. While editing suspends the push, the box is left as
+    // the drag draws it and nothing grows.
+    let grow = 0;
+    if (!pushSuspended) {
+      el.style.height = `${frame.h}px`;
+      fitContent(el, frame.h, block);
+      const needed = Math.max(frame.h, Math.round(contentHeight(el)));
+      if (needed !== frame.h) el.style.height = `${needed}px`;
+      grow = needed - frame.h;
+    }
     items.push({ id: el.dataset.blockId, x: frame.x, y: frame.y, h: frame.h, grow, el });
   }
   const { shifts, bottom } = pushLayout(items);
@@ -241,13 +245,19 @@ function schedulePush(host) {
  * images, feeds and width changes. The observer runs the pass synchronously:
  * its notifications are delivered after layout and before paint, so a text
  * that wrapped at the new width is fitted and pushed before the frame is
- * drawn; a queued pass would paint the wrapped state once per resize step.
- * The pass is deterministic, so a second delivery in the same frame finds
- * the same sizes and the loop ends.
+ * drawn. The pass is deterministic, so a second delivery in the same frame
+ * finds the same sizes and the loop ends. Hosts that left the document (a
+ * page switch in the preview) are dropped here with their observers.
  * @param {HTMLElement} host The section element
  * @param {object} section The section data
  */
 function wirePush(host, section) {
+  for (const old of pushHosts) {
+    if (!old.isConnected) {
+      old._urdPushRo?.disconnect();
+      pushHosts.delete(old);
+    }
+  }
   host._urdPushRo?.disconnect();
   host._urdPushSection = section;
   pushHosts.add(host);

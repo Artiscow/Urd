@@ -232,7 +232,7 @@ export const checkoutBlock = {
       });
     }
 
-    // Auto-grow: the summary varies with the basket. the display only; the blocks below are moved by the push pass (ADR-0024).
+    // Auto-grow: the summary varies with the basket; the display follows it and the blocks below are moved by the push pass (ADR-0024).
     requestAnimationFrame(() => {
       if (!el.isConnected) return;
       const needed = host.scrollHeight;

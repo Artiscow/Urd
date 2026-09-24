@@ -212,7 +212,7 @@ function renderMonth(host, occs) {
     for (let d = 1; d <= dim; d++) {
       const cell = el2('div', 'urd-cal-day');
       if (d === today.getDate() && shown.mo === today.getMonth() && shown.y === today.getFullYear()) {
-        cell.classList.add('urd-cal-idag');
+        cell.classList.add('urd-cal-today');
       }
       cell.appendChild(el2('span', 'urd-cal-daynum', String(d)));
       const todays = occs.filter((occ) => {

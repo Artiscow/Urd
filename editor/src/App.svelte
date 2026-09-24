@@ -26,6 +26,7 @@
   import Dropdown from './lib/Dropdown.svelte';
   import IconEditor from './lib/IconEditor.svelte';
   // The editor shares the migration code with the engine (same file, bundled in).
+  import { defaultFormFields } from '$engine/blocks/form.js';
   import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION, SITE_SCHEMA_VERSION } from '$engine/migrate.js';
   import { ta, taApiError, adminLang as currentAdminLang } from '$engine/i18n.js';
   import { validateManifest, satisfiesEngine } from '$engine/plugins.js';
@@ -4487,7 +4488,7 @@
     if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
   }
 
-  /** Automatic height growth for data blocks (collection/calendar/form/map):
+  /** Automatic height growth posted by plugin copies of the former data-block plugins (urd-grow):
    *  ONLY h changes, never x/y, so a dragged block is never teleported
    *  back. Coalesces with the block's edit (same undo step). */
   function handleGrow(msg) {
@@ -4704,11 +4705,7 @@
       props: {
         recipient: '', subject: '', mode: 'mailto', endpoint: '',
         submitLabel: ta('form.sendDefault'), successText: ta('form.thanksDefault'),
-        fields: [
-          { id: 'navn', label: ta('form.fieldName'), type: 'text', required: true },
-          { id: 'epost', label: ta('form.fieldEmail'), type: 'email', required: true },
-          { id: 'melding', label: ta('form.fieldMessage'), type: 'textarea', required: true },
-        ],
+        fields: defaultFormFields(),
       },
       w: 50, h: 380,
     },
@@ -7834,7 +7831,7 @@
           </span>
         </span>
         <label class="gridmenu-snap">
-          <input type="checkbox" checked={field.required !== false}
+          <input type="checkbox" checked={field.required === true}
             onchange={(e) => setFormField(i, { required: e.target.checked })} />
           {ta('form.required')}
         </label>
@@ -8151,7 +8148,7 @@
       <!-- The field contract: core blocks listed in CORE_FIELDS and plugin
            defs with `fields` get their settings rendered here; a plugin
            block without fields gets the button that opens its own config
-           panel in the preview (calendar/form). -->
+           panel in the preview (a plugin copy of the former calendar or form). -->
       {@const pluginFields = CORE_FIELDS[selectedBlock.type] ?? pluginBlocks.find((b) => b.type === selectedBlock.type)?.fields ?? []}
       {#if pluginFields.length}
         {#each pluginFields as f (f.key)}

@@ -325,7 +325,7 @@ export const productBlock = {
       // The block may have been re-rendered or removed while the data was fetched.
       if (!host.isConnected) return;
 
-      // Auto-grow: the cards are dynamic content, the frame follows them (as in
+      // Auto-grow: the cards are dynamic content, the display follows them (as in
       // the collection block). Called again when the adder card is added, so its
       // row is measured too.
       const fit = () => {

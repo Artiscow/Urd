@@ -176,7 +176,8 @@
       "size": "sm",
       "hover": "underline",
       "hoverGlow": 1,
-      "radius": 12
+      "radius": 12,
+      "atTop": "clear"
     },
     "overlay": true,
     "variant": "floating-tab"
