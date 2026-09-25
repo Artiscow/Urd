@@ -30,6 +30,15 @@ const HOVER_CLOSE_DELAY = 250;
 // there is never more than one active set.
 let navController = null;
 
+// The current render's scroll-state pass, so a switch between the editor's
+// views can apply the top-zone state at once instead of at the next scroll.
+let navScrollRefresh = null;
+
+/** Recomputes the scroll classes (compact, hidden, scrolled) for the current render. */
+export function refreshNavScroll() {
+  navScrollRefresh?.();
+}
+
 // Side column on narrow windows: below 900px the menu renders as a REGULAR
 // top bar (effective variant bar) with horizontal items; the burger only
 // appears at the mobile breakpoint, as for the bar variant. A separate
@@ -60,6 +69,7 @@ export function renderNav(site, host) {
   navController?.abort();
   navController = new AbortController();
   const signal = navController.signal;
+  navScrollRefresh = null;
   lastRender = { site, host };
 
   // Narrow windows: the side variant renders as a regular top bar
@@ -117,6 +127,22 @@ export function renderNav(site, host) {
       announceEl.appendChild(cross);
     }
     host.appendChild(announceEl);
+    // A document rendered ahead of its use (a prerender on link hover, or one
+    // kept in the back-forward cache) built the strip before the visitor
+    // could dismiss it elsewhere: the key is read again when it comes on
+    // screen, and the strip leaves with it.
+    if (announce.dismiss && !inPreview) {
+      const recheckDismiss = () => {
+        let gone = false;
+        try { gone = localStorage.getItem(dismissKey) === '1'; } catch { gone = false; }
+        if (!gone || !announceEl) return;
+        announceEl.remove();
+        announceEl = null;
+        setNavH();
+      };
+      if (document.prerendering) document.addEventListener('prerenderingchange', recheckDismiss, { once: true, signal });
+      window.addEventListener('pageshow', (event) => { if (event.persisted) recheckDismiss(); }, { signal });
+    }
   }
   // Whether the strip actually scrolls away: the host must be in the flow
   // and sticky (a fixed host, floating, overlaid or the side column, keeps
@@ -192,10 +218,12 @@ export function renderNav(site, host) {
       const editing = body.classList.contains('urd-preview') && !body.classList.contains('urd-chrome-off');
       const menuOpen = nav.classList.contains('urd-nav-open');
       const y = window.scrollY;
-      // While editing and while the mobile panel is open the menu is normal,
-      // visible and with its surface drawn.
+      // While editing the menu keeps its full size and stays visible, and
+      // while the mobile panel is open its surface is drawn as well; the
+      // top-zone state (the clear surface of atTop) follows the scroll
+      // position in every view, so the owner sees it while editing.
       const state = editing || menuOpen
-        ? { compact: false, hidden: false, scrolled: true }
+        ? { compact: false, hidden: false, scrolled: menuOpen || navScrollState(undefined, prevY, y, hidden).scrolled }
         : navScrollState(wantsScroll ? scrollMode : undefined, prevY, y, hidden);
       prevY = y;
       hidden = state.hidden;
@@ -211,6 +239,7 @@ export function renderNav(site, host) {
         applyScroll();
       });
     }, { passive: true, signal });
+    navScrollRefresh = applyScroll;
     applyScroll();
   }
 
@@ -581,6 +610,9 @@ export function renderNav(site, host) {
   nav.appendChild(list);
   nav.appendChild(tools);
   host.appendChild(nav);
+  // Measured at once, so the first paint already has the menu's clearance;
+  // the observer below keeps it current.
+  setNavH();
 
   // The measured menu height as a CSS var on the root element: the nav
   // clearance in base.css (menu out of the flow) and the chrome parking in

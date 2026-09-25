@@ -2,6 +2,16 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.0.11): the nav and the announcement
+
+- [ ] Nav panel, Oppførsel: «Gjennomsiktig øverst» on a bar over a hero: in normal admin view the bar is clear at the top of the page and gets its surface after about 80 px of scrolling; switching to Clean view and back changes nothing about that
+- [ ] Published site with an announcement: dismiss it on Hjem, hover «Om oss» for a second (the prerender) and click: no strip; go back and forward: no strip; a changed text brings it back
+- [ ] A new site from the template: no announcement strip until «Vis kunngjøring» is ticked
+- [ ] Side-left or side-right with an announcement on: the strip sits at the top of the column, the theme button and the cart at its foot are on screen
+- [ ] Bar and floating variants with an announcement and a 30 px or larger logo: the strip's bottom edge is straight, nothing from the bar paints over it
+- [ ] Page switch on the published site: the old page stays on screen until the new one is rendered, then a cut; the menu never disappears or moves; a prerendered page (link hovered first) cross-fades; the first section's top clearance is right from the first frame
+- [ ] Reduced motion (OS setting): the page switch is still a cut with no blank frame
+
 ### Testrunde-batch (0.7.13.4-0.7.0.10p): the review fixes
 
 - [ ] Menypunkter: drag an item that has a submenu onto another item's child rows; the clone appears after that parent at top level, never inside; drag it onto its own child rows and nothing is offered; the draft still saves and publishes afterwards

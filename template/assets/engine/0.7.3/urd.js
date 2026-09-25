@@ -13,7 +13,7 @@ import { createRegistry } from './registry.js';
 import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION } from './migrate.js';
 import { applyTheme } from './theme.js';
 import { applySiteLayout, renderPage, renderSection } from './render.js';
-import { renderNav } from './nav.js';
+import { renderNav, refreshNavScroll } from './nav.js';
 import { isSafeImage } from './nav-model.js';
 import { renderFooter } from './footer.js';
 import { textBlock } from './blocks/text.js';
@@ -148,33 +148,31 @@ function mountToTop() {
 }
 
 /**
- * Cross-document View Transitions (ADR-0011): nav and footer get a
- * view-transition-name ONLY within the transition window itself (pageswap on
- * departure, pagereveal on arrival), so the page chrome stays put while the
- * content fades. A static name in CSS would make the elements backdrop
- * roots, which disables the menu's backdrop-filter (the blur behind nav) in
- * all normal display. Without cross-document support the events never fire:
- * the names are not set, and the page navigates normally (end state).
+ * Cross-document View Transitions (ADR-0011): the arriving page is captured
+ * at its first rendering opportunity, before the engine has fetched its
+ * data and rendered anything. The hold keeps the old page's snapshot on
+ * screen and the empty shell out of sight (the html class, styled in
+ * base.css) until the first render, which ends the transition as a cut. A
+ * page already rendered at arrival (a prerendered document) takes the plain
+ * cross-fade. Without cross-document support the event never fires and the
+ * page navigates normally (end state).
  */
-function wireViewTransitionNames() {
-  const setNames = (on) => {
-    for (const id of ['urd-nav', 'urd-footer']) {
-      const el = document.getElementById(id);
-      if (on) el?.style.setProperty('view-transition-name', id);
-      else el?.style.removeProperty('view-transition-name');
-    }
-  };
-  window.addEventListener('pageswap', (event) => {
-    if (event.viewTransition) setNames(true);
-  });
+let arrival = null;
+let firstRenderDone = false;
+function wireArrivalHold() {
   window.addEventListener('pagereveal', (event) => {
-    // Without a transition (including bfcache revival after an aborted
-    // departure) the names must be gone, otherwise the backdrop root stays
-    // on and the blur remains off.
-    if (!event.viewTransition) { setNames(false); return; }
-    setNames(true);
-    event.viewTransition.finished.finally(() => setNames(false));
+    if (!event.viewTransition || firstRenderDone) return;
+    arrival = event.viewTransition;
+    document.documentElement.classList.add('urd-arriving');
+    arrival.finished.finally(() => {
+      document.documentElement.classList.remove('urd-arriving');
+      arrival = null;
+    });
   });
+}
+function endArrivalHold() {
+  firstRenderDone = true;
+  arrival?.skipTransition();
 }
 
 /**
@@ -276,9 +274,10 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-chrome') {
       // Clean view: hide/show the editing handles (CSS only, see base.css).
       document.body.classList.toggle('urd-chrome-off', !msg.visible);
-      // Sticky blocks are only active in Clean view in the editor: pin/release
-      // immediately on switch, not first at the next scroll.
+      // The pinning and the menu's scroll state follow the switch at once,
+      // not first at the next scroll.
       refreshSticky();
+      refreshNavScroll();
     } else if (msg?.type === 'urd-show-grid') {
       // The grid menu in the editor is open: show the grid in all sections.
       window.UrdPreviewEdit?.toggleGridOverlays(msg.visible, state.page, state.site);
@@ -455,6 +454,11 @@ function enablePreview(state, opts) {
  */
 export async function boot(opts) {
   registerCore();
+  // Before the first await: the shell loads this module render-blocking, so
+  // the listener is in place when the arriving document's pagereveal fires
+  // at its first rendering opportunity. Inert in preview (page switches
+  // happen via postMessage, never navigation).
+  wireArrivalHold();
 
   // Start the engine version fetch (urd.json) alongside site.json: they are
   // independent, so they should not sit in a serial queue. Only site.json
@@ -510,6 +514,18 @@ export async function boot(opts) {
   // and the urd-plugins message loads the draft's active plugins so they work before publishing.
   if (!preview) await loadPlugins(Urd, engine);
 
+  // Responsive: the viewport follows the screen width (also in the
+  // editor's preview, where the iframe is narrowed to mobile width). When
+  // the breakpoint is crossed, the page is rerendered in the right mode.
+  // In preview the editor owns the viewport (the urd-viewport message); for
+  // visitors it follows the screen width. Both body classes are set before
+  // the menu renders, so it is built for the right mode and the right
+  // audience from the first paint.
+  const mq = window.matchMedia(`(max-width: ${site.breakpoints?.mobile ?? 640}px)`);
+  const viewport = preview ? 'desktop' : (mq.matches ? 'mobile' : 'desktop');
+  document.body.classList.toggle('urd-mobile', viewport === 'mobile');
+  if (preview) document.body.classList.add('urd-preview');
+
   if (opts.nav) renderNav(site, opts.nav);
   // Shared footer: its own element right after the main content (index.html
   // is Urd-owned and cannot be changed by publishing, so the element is
@@ -518,8 +534,6 @@ export async function boot(opts) {
   opts.footer.id = 'urd-footer';
   opts.root.insertAdjacentElement('afterend', opts.footer);
   mountToTop();
-  // Inert in preview (page switches happen via postMessage, never navigation).
-  wireViewTransitionNames();
 
   // Version lifting at file level: older page files are lifted to the
   // current format in memory (disk is written first at the next publish).
@@ -555,18 +569,13 @@ export async function boot(opts) {
     // The editing layer is loaded dynamically ONLY in preview - visitors
     // never fetch this code. Must be in place before the first render.
     window.UrdPreviewEdit = await import('./preview-edit.js');
-    document.body.classList.add('urd-preview');
   }
 
-  // Responsive: the viewport follows the screen width (also in the
-  // editor's preview, where the iframe is narrowed to mobile width). When
-  // the breakpoint is crossed, the page is rerendered in the right mode.
-  const mq = window.matchMedia(`(max-width: ${site.breakpoints?.mobile ?? 640}px)`);
-  // In preview the editor owns the viewport (the urd-viewport message); for visitors it follows the screen width.
-  const state = { page, site, engine, viewport: preview ? 'desktop' : (mq.matches ? 'mobile' : 'desktop') };
-  document.body.classList.toggle('urd-mobile', state.viewport === 'mobile');
+  const state = { page, site, engine, viewport };
 
   renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport });
+  // The page stands: a held page transition ends here as a cut.
+  endArrivalHold();
   // Sticky blocks ("pin on scroll"): one scroll listener for the whole page.
   initSticky();
 

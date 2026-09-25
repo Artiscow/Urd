@@ -3357,6 +3357,9 @@ body:has(dialog:modal) {
    past: its sticky top is raised by the measured strip height. */
 .urd-nav-announce {
   position: relative;
+  /* Above the bar: the bar's top pixel and a logo that grows out of the bar
+     never paint over the strip. */
+  z-index: 5001;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -4236,6 +4239,10 @@ body:not(.urd-mobile) .urd-nav-inset {
   top: 0;
   bottom: 0;
   left: 0;
+  /* A column: the announcement strip takes its own height at the top and the
+     menu fills the rest, so the tools at the menu's foot stay on screen. */
+  display: flex;
+  flex-direction: column;
   /* The width is driven by nav.style.width through the variable (set by nav.js on
      body, so the content padding below reads the same value) */
   width: var(--urd-nav-side-width, 250px);
@@ -4262,7 +4269,8 @@ body.urd-side-right {
 .urd-nav-side-host .urd-nav {
   flex-direction: column;
   align-items: stretch;
-  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 1.2rem 1rem;
   overflow-y: auto;
 }
@@ -5153,29 +5161,33 @@ body.urd-marqueeing {
    cross-fade between the pages of the published site. The gate is
    the at-rule itself: engines without support ignore it and navigate plainly
    (end state). The editor's preview navigates the same way when it switches
-   page, so the transition runs there too. Nav and footer get a view-transition-name only
-   inside the transition window itself (wireViewTransitionNames in urd.js): a static
-   name here would make them backdrop roots, which turns off the menu's
-   backdrop-filter (the blur behind the nav) in all ordinary viewing. */
+   page, so the transition runs there too. The menu and the footer carry no
+   name of their own: a named element is a backdrop root, which turns off
+   the menu's backdrop-filter (the blur behind the nav), and the whole page
+   moving as one never lets the menu morph between two boxes. */
 @view-transition {
   navigation: auto;
 }
 
-/* The menu and the footer switch as a cut, never a morph: their groups and
-   snapshots get no animation, and the old snapshot is hidden, so two pages
-   whose boxes differ by a pixel never scale or cross-fade them. */
-::view-transition-group(urd-nav),
-::view-transition-group(urd-footer),
-::view-transition-old(urd-nav),
-::view-transition-old(urd-footer),
-::view-transition-new(urd-nav),
-::view-transition-new(urd-footer) {
-  animation: none;
+/* The arriving page is rendered by the engine once its data has loaded, so
+   at the transition's capture it is still the empty shell. Until the page
+   stands, the old page's snapshot stays on screen and the new one is kept
+   out of sight; the engine then ends the transition as a cut (the arrival
+   hold in urd.js). A page that is ready at arrival (prerendered) gets the
+   plain cross-fade. The five seconds are a ceiling for a page whose data
+   never arrives. */
+html.urd-arriving::view-transition-old(root) {
+  animation: urd-arrival-hold 5s step-end both;
 }
 
-::view-transition-old(urd-nav),
-::view-transition-old(urd-footer) {
+html.urd-arriving::view-transition-new(root) {
+  animation: none;
   opacity: 0;
+}
+
+@keyframes urd-arrival-hold {
+  from { opacity: 1; }
+  to { opacity: 1; }
 }
 
 /* Reduced motion: the transition is kept (navigation is just as fast),

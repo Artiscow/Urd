@@ -226,19 +226,26 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 
 ## Bugs, (dårlige) funksjoner og ting som ellers må gjøres
 
+Plan for the fourteen lines below (causes found 25 September 2026, four commits under Løpende):
+
+- 0.7.0.11, the nav and the announcement: `atTop: clear` is forced off while editing (nav.js `applyScroll` clamps `scrolled: true` with chrome on) and the Clean-view switch never recomputes it; the dismissed strip returns on the next page because the prerendered document (speculation-rules.json) built it before the cross was clicked; `urd-preview` is added after the first `renderNav`; the example site.json has the announcement on; the side column's tools sit below the fold because the strip pushes a `height: 100%` menu down; the bar's top pixels (a logo growing out of the bar) paint over the strip; the arriving page is captured by the view transition before the engine has rendered (the old page fades into the empty shell), and `--urd-nav-h` is first written by the ResizeObserver. Delivered: the engine module loads render-blocking and an arrival hold keeps the old page until the new one is rendered.
+- 0.7.0.12, the canvas: the section resize paths write only `style.minHeight` while the push pass restores `dataset.urdMinHeight` on every pass; the «+ New section» bar turns `pointer-events: auto` on hover and its 1 px line steals the hover back (a flicker with a 0.12 s fade); the text toolbar and the block toolbar both sit in the band above the block; pin-on-scroll releases on any section transform (an entrance or hover lift), lists every section when the block's section is not found, lets go one menu height early, and paints the parked block behind later sections.
+- 0.7.0.13, the blocks: the grain slider caps at 0.3 while the engine renders 0..1; the rotate handle covers the resize corner on a 4 to 8 px tall line at any zoom under about 73 %.
+- 0.7.0.14, schema: `nav.announcement.place` (`nav`, `page`, `content`) for the side column, three places plus a `Choice` shown for the side variants only.
+
 - [ ] Fest ved scrolling på element- "Slipp taket ved seksjon xyz" fungerer ikke.  
 - [ ] Korn i bakgrunn skal gå fra 0% til 100%, ikke 0-30% som nå
 - [ ] Kan ikke gjøre strek i Shapes/former større/lengre
 - [ ] Teksteditor går over elementknappene - la muligens elementknappene gå på oversiden av teksteditor
-- [ ] Nav: nav menyen går i ett med sidens hero kun om man blar ned, så opp igjen. Instillingen, om valgt, burde gjøre at nav ser ut som om den er en del av hero på siden helt frem til man scroller ned, så vises nav menyens bakgrunn+kanter/skygge etc. Dette er også, per nå, ikke en instilling som kan velges. Dette vises også kun i ren visning, og ikke når man er i vanlig admin visning. Altså, dette skal være en instilling for oppførselen til nav.
-- [ ] Kunngjøring: å krysse ut en kunngjøring varer kun frem til man går til en ny side. Om man krysser vekk kunngjøringen mens man er på Hjem, så kommer den tilbake om man går til Om Oss og må krysses vekk på nytt.
-- [ ] Kunngjøring: Default skal være at den er skrudd av når folk lager ny side ut fra /template
+- [x] (fixed 25 September 2026 in 0.7.0.11: the setting existed as «Gjennomsiktig øverst»; the scroll pass forced the surface on while editing and the Clean-view switch never recomputed it) Nav: nav menyen går i ett med sidens hero kun om man blar ned, så opp igjen. Instillingen, om valgt, burde gjøre at nav ser ut som om den er en del av hero på siden helt frem til man scroller ned, så vises nav menyens bakgrunn+kanter/skygge etc. Dette er også, per nå, ikke en instilling som kan velges. Dette vises også kun i ren visning, og ikke når man er i vanlig admin visning. Altså, dette skal være en instilling for oppførselen til nav.
+- [x] (fixed 25 September 2026 in 0.7.0.11: the prerendered next page had built its strip before the cross was clicked; the key is read again when it comes on screen) Kunngjøring: å krysse ut en kunngjøring varer kun frem til man går til en ny side. Om man krysser vekk kunngjøringen mens man er på Hjem, så kommer den tilbake om man går til Om Oss og må krysses vekk på nytt.
+- [x] (done 25 September 2026 in 0.7.0.11: `show: false` in the example site.json) Kunngjøring: Default skal være at den er skrudd av når folk lager ny side ut fra /template
 - [ ] Om man endrer størrelsen på en seksjon, så flytter på element i den seksjonen, så resetter seksjonsstørrelsen seg tilbake til slik den var før.
 - [ ] Streken for å markere forskjellen mellom seksjoner i admin blinker/vibrerer
-- [ ] Nav: sidestilte nav viser ikke mørk/lys modus og handlekurv
+- [x] (fixed 25 September 2026 in 0.7.0.11: the announcement strip pushed the full-height column menu below the fold, so the tools at its foot were off screen) Nav: sidestilte nav viser ikke mørk/lys modus og handlekurv
 - [ ] Nav: ved sidestilt meny burde det være valg i kunngjøring om kunngjøringen er på toppen av nav, på toppen av hele siden og nav, eller kun på toppen av siden (og ikke nav)
-- [ ]  Nav: ved ny lasting av side flytter nav seg i et lite øyeblikk mens siden lastes. Det er ikke plasseringen av nav som er forskjellig, ettersom den er identisk for hver eneste side.
-- [ ] Nav, både i admin preview og publiserte side, er plassert litt over kunngjøringslinjen
+- [x] (fixed 25 September 2026 in 0.7.0.11: the arriving page was captured by the view transition before the engine had rendered, so the old page faded into the empty shell; the old page is now held until the new one stands, then a cut) Nav: ved ny lasting av side flytter nav seg i et lite øyeblikk mens siden lastes. Det er ikke plasseringen av nav som er forskjellig, ettersom den er identisk for hver eneste side.
+- [x] (fixed 25 September 2026 in 0.7.0.11: the bar's top pixels and the logo's overflow painted over the strip; the strip sits above the bar) Nav, både i admin preview og publiserte side, er plassert litt over kunngjøringslinjen
 
 ## Suggestions, Ideas and Wishes
 

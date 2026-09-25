@@ -103,7 +103,7 @@
   "nav": {
     "version": 1,
     "announcement": {
-      "show": true,
+      "show": false,
       "text": "Nyhet: bestill kaker til høstferien",
       "page": "kaker"
     },

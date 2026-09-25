@@ -4,6 +4,9 @@
  */
 import { boot } from './urd.js';
 
+// The shell loads this module render-blocking, so the engine's page
+// transition listener is in place before the arriving document's first
+// rendering opportunity (the arrival hold in urd.js).
 boot({
   root: document.getElementById('urd-root'),
   nav: document.getElementById('urd-nav'),
