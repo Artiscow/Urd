@@ -4231,9 +4231,19 @@
     }
     return navDropOrNull(drop, moving, src);
   }
-  /** The drop unless the row would land exactly where it is. */
+  /** The drop unless the row would land exactly where it is. A submenu never nests: a row with
+      children dropped among another row's children lands after that row instead, and a row's
+      own children are no place for it. */
   function navDropOrNull(drop, moving, src) {
-    const dest = navRowAt(drop.key); const targetObj = dest.list[dest.index];
+    let dest = navRowAt(drop.key);
+    if (dest.parent) {
+      if (dest.parent === moving) return null;
+      if (moving.children?.length) {
+        drop = { key: drop.key.split('.')[0], pos: 'after' };
+        dest = navRowAt(drop.key);
+      }
+    }
+    const targetObj = dest.list[dest.index];
     if (drop.pos === 'into') {
       const kids = targetObj.children ?? [];
       if (kids.length && kids[kids.length - 1] === moving) return null;
@@ -4289,6 +4299,13 @@
     const from = navDrag; const drop = navDrop;
     navDrag = ''; navDrop = null;
     if (!from || !drop || drop.key !== targetKey || from === targetKey) return;
+    {
+      // The same guard as navDropOrNull, so a stale position can never nest a submenu.
+      const src = navRowAt(from); const tgt = navRowAt(targetKey);
+      const moving = src.list[src.index];
+      if (tgt.parent && (tgt.parent === moving || moving.children?.length)) return;
+      if (drop.pos === 'into' && moving.children?.length) return;
+    }
     siteMutate('nav', () => {
       const items = siteDraft.nav.items;
       const src = navRowAt(from); const tgt = navRowAt(targetKey);
@@ -6703,7 +6720,7 @@
                         </label>
                       {/if}
                       <!-- Only where the strip can scroll away: a sticky bar in the flow -->
-                      {#if siteDraft.nav.sticky !== false && !floatingVariant && !siteDraft.nav.overlay}
+                      {#if siteDraft.nav.sticky !== false && !floatingVariant && !sideVariant && !siteDraft.nav.overlay}
                         <label class="gridmenu-snap" title={ta('tip.nav.announceSticky')}>
                           <input type="checkbox" checked={siteDraft.nav.announcement?.sticky !== false}
                             onchange={(e) => setNavAnnouncement('sticky', e.target.checked ? undefined : false)} />
@@ -6783,11 +6800,12 @@
                   {#if navDrop?.key === key && navDrop.pos === 'before'}{@render navGhost(false)}{/if}
                   <div class="nav-item" class:selected={navSel === key} class:dragging={navDrag === key} data-key={key}
                     class:drop-target={navDrop?.key === key && navDrop.pos === 'into'}
-                    draggable="true"
-                    ondragstart={(e) => { navDrag = key; e.dataTransfer?.setData('text/plain', key); }}
-                    ondragend={endNavDrag}
                     onclick={() => { navSel = key; }}>
-                    <span class="nav-grip" title={ta('tip.nav.dragItem')}>{@html GRIP_ICON}</span>
+                    <!-- The grip alone is draggable: a draggable row would take the mouse
+                         from the name field's text selection. -->
+                    <span class="nav-grip" title={ta('tip.nav.dragItem')} draggable="true"
+                      ondragstart={(e) => { navDrag = key; e.dataTransfer?.setData('text/plain', key); }}
+                      ondragend={endNavDrag}>{@html GRIP_ICON}</span>
                     <div class="nav-item-main">
                       <input class="nav-item-name" value={item.label} title={ta('tip.nav.itemLabel')}
                         oninput={(e) => setNavLabel(i, e.target.value)} />
@@ -6820,11 +6838,10 @@
                     {@const ckey = `${i}.${j}`}
                     {#if navDrop?.key === ckey && navDrop.pos === 'before'}{@render navGhost(true)}{/if}
                     <div class="nav-item child" class:selected={navSel === ckey} class:dragging={navDrag === ckey} data-key={ckey}
-                      draggable="true"
-                      ondragstart={(e) => { e.stopPropagation(); navDrag = ckey; e.dataTransfer?.setData('text/plain', ckey); }}
-                      ondragend={endNavDrag}
                       onclick={(e) => { e.stopPropagation(); navSel = ckey; }}>
-                      <span class="nav-grip" title={ta('tip.nav.dragItem')}>{@html GRIP_ICON}</span>
+                      <span class="nav-grip" title={ta('tip.nav.dragItem')} draggable="true"
+                        ondragstart={(e) => { e.stopPropagation(); navDrag = ckey; e.dataTransfer?.setData('text/plain', ckey); }}
+                        ondragend={endNavDrag}>{@html GRIP_ICON}</span>
                       <div class="nav-item-main">
                         <input class="nav-item-name" value={child.label} title={ta('tip.nav.childLabel')}
                           oninput={(e) => setNavChildLabel(i, j, e.target.value)} />
@@ -9699,8 +9716,6 @@
     padding-left: 0.4rem;
   }
 
-  /* Two columns: field | tools. The target and link fields sit in the
-     same column as the name field, so they all end on the same right edge. */
   /* The list of menu items, with a strip under the last row to drop on. */
   .nav-list {
     display: flex;

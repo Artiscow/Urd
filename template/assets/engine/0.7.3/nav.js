@@ -119,10 +119,10 @@ export function renderNav(site, host) {
     host.appendChild(announceEl);
   }
   // Whether the strip actually scrolls away: the host must be in the flow
-  // and sticky (a fixed host keeps the strip, a host that is not sticky
-  // scrolls away as a whole).
+  // and sticky (a fixed host, floating, overlaid or the side column, keeps
+  // the strip; a host that is not sticky scrolls away as a whole).
   const announceScrolls = !!announce && !announce.sticky && site.nav.sticky !== false
-    && !hostClasses(effSite).host.some((cls) => cls === 'urd-nav-float' || cls === 'urd-nav-overlay');
+    && !hostClasses(effSite).host.some((cls) => cls === 'urd-nav-float' || cls === 'urd-nav-overlay' || cls === 'urd-nav-side-host');
   host.classList.toggle('urd-nav-announce-scroll', announceScrolls);
 
   const nav = document.createElement('nav');

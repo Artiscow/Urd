@@ -226,13 +226,13 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 
 ## Bugs, (dårlige) funksjoner og ting som ellers må gjøres
 
-- [x] (found and fixed 25 September 2026 in 0.7.0.10: the global `button:active` transform replaced the pill's centring transform while the button was held, so the pill jumped half its width to the right on press and a press on its left half was released over the preview; centred with the `translate` property instead, reproduced and verified headless at four positions across the pill) Forkast utkast: «Sikker?» sometimes answers with its animation only and discards nothing, until a panel is opened or closed or the page is switched; seen after a group move of three blocks on Hjem (25 September 2026)
 - [ ] Fest ved scrolling på element- "Slipp taket ved seksjon xyz" fungerer ikke.  
 - [ ] Korn i bakgrunn skal gå fra 0% til 100%, ikke 0-30% som nå
 - [ ] Kan ikke gjøre strek i Shapes/former større/lengre
 - [ ] Teksteditor går over elementknappene - la muligens elementknappene gå på oversiden av teksteditor
 - [ ] Nav: nav menyen går i ett med sidens hero kun om man blar ned, så opp igjen. Instillingen, om valgt, burde gjøre at nav ser ut som om den er en del av hero på siden helt frem til man scroller ned, så vises nav menyens bakgrunn+kanter/skygge etc. Dette er også, per nå, ikke en instilling som kan velges. Dette vises også kun i ren visning, og ikke når man er i vanlig admin visning. Altså, dette skal være en instilling for oppførselen til nav.
 - [ ] Kunngjøring: å krysse ut en kunngjøring varer kun frem til man går til en ny side. Om man krysser vekk kunngjøringen mens man er på Hjem, så kommer den tilbake om man går til Om Oss og må krysses vekk på nytt.
+- [ ] Kunngjøring: Default skal være at den er skrudd av når folk lager ny side ut fra /template
 - [ ] Om man endrer størrelsen på en seksjon, så flytter på element i den seksjonen, så resetter seksjonsstørrelsen seg tilbake til slik den var før.
 - [ ] Streken for å markere forskjellen mellom seksjoner i admin blinker/vibrerer
 - [ ] Nav: sidestilte nav viser ikke mørk/lys modus og handlekurv
@@ -255,6 +255,7 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 - [ ] Notifikasjonsikon om Urd har ny oppdatering slik at man kan se en ny oppdatering uten å måtte åpne opp "Oppdateringer"
 - [x] Nav: To forskjellige instillinger for bakgrunn i nav for topbar og mobil fullskjerm: forskjellig farge, egen instilling for om den er gjennomsiktig, frostet osv. (delivered 24 September 2026 as `nav.style.sheet` in 0.7.13.4)
 - [ ] Nav: Mulighet for å velge forskjellig logo/tekst for Darkmode og lightmode
+- [ ] Ny modus: Float mode for element, som gjør at man kan fritt flytte de på siden og at den flyter/sticky til det punktet på siden man drar/setter elementet - Når et element er i float mode kan man bla ned på siden i admin fritt, mens elementet flyter/sticky der man sist plasserte den. 
 
 
 ## Kjente begrensninger (dokumentert, ingen fiks planlagt)

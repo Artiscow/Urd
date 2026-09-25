@@ -2,6 +2,12 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.13.4-0.7.0.10p): the review fixes
+
+- [ ] Menypunkter: drag an item that has a submenu onto another item's child rows; the clone appears after that parent at top level, never inside; drag it onto its own child rows and nothing is offered; the draft still saves and publishes afterwards
+- [ ] Menypunkter: only the grip starts a drag; press and drag inside the name field selects text
+- [ ] Nav, side-left or side-right, with an announcement: the column starts at the top of the window with the strip above the items; the «Følger menyen ved rulling» checkbox is not shown for the side variants
+
 ### Testrunde-batch (0.7.0.10): the discard confirmation
 
 - [ ] Forkast utkast: after a group move of three blocks on Hjem, press «Sikker?» at its far left, in the middle and at its far right, several times each; the pill never moves while the button is held, every press discards, the page returns to the published state and the status field says «Utkastene er forkastet»

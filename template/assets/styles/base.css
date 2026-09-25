@@ -3414,9 +3414,9 @@ body:has(dialog:modal) {
   height: 16px;
 }
 
-/* Only a host in the flow: a fixed host (floating, overlay) never scrolls, so it
-   keeps the strip. */
-.urd-nav-sticky.urd-nav-announce-scroll:not(.urd-nav-float, .urd-nav-overlay) {
+/* Only a host in the flow: a fixed host (floating, overlay, the side column)
+   never scrolls, so it keeps the strip. */
+.urd-nav-sticky.urd-nav-announce-scroll:not(.urd-nav-float, .urd-nav-overlay, .urd-nav-side-host) {
   top: calc(-1 * var(--urd-announce-h, 0px));
 }
 
@@ -5161,10 +5161,9 @@ body.urd-marqueeing {
   navigation: auto;
 }
 
-/* The menu and the footer switch as a cut, never a morph: with their own
-   names they would otherwise be scaled and cross-faded from the old page's
-   box to the new one whenever the two differ by a pixel, which reads as the
-   menu shivering on every page load. */
+/* The menu and the footer switch as a cut, never a morph: their groups and
+   snapshots get no animation, and the old snapshot is hidden, so two pages
+   whose boxes differ by a pixel never scale or cross-fade them. */
 ::view-transition-group(urd-nav),
 ::view-transition-group(urd-footer),
 ::view-transition-old(urd-nav),
