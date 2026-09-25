@@ -2547,6 +2547,13 @@ body.urd-chrome-off .urd-imged {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* A section that holds a pinned block does not lift: a transformed section
+   is the containing block of its fixed children, so the pin would follow the
+   section instead of the window (sticky.js stands still under a transform). */
+.urd-section.urd-anim-hover-lift:has(.urd-sticky-able):hover {
+  transform: none;
+}
+
 /* Combination: a block with BOTH an entrance animation AND "Lift on hover".
    Without this the hover-lift rule (later in the CSS) overrides the entrance
    transition, so opacity and shape jump instead of fading or sliding in.
@@ -5594,10 +5601,10 @@ body.urd-mobile .urd-section-resize-top {
      and the gallery sit above anything. */
   z-index: 100001;
   /* Hidden until the mouse is over an adjacent section (or the bar itself):
-     less noise, and the topmost bar does not collide with the menu */
+     less noise, and the topmost bar does not collide with the menu. Shown
+     as a cut, not a fade: a fade restarts at every change of hover owner. */
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.12s ease;
 }
 
 .urd-preview .urd-add-section:hover,
@@ -5629,6 +5636,9 @@ body.urd-mobile .urd-section-resize-top {
   right: 0;
   top: 0;
   height: 1px;
+  /* The line is drawn only: a hit on it would take the hover from the
+     section that shows the bar, and the bar would blink. */
+  pointer-events: none;
   background: repeating-linear-gradient(
     90deg,
     color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 35%, transparent) 0 8px,

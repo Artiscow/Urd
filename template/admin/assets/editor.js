@@ -9115,7 +9115,7 @@ function em(e, t) {
 	];
 	function Wt() {
 		let e = O?.data.sections ?? [], t = e.findIndex((e) => e.id === B(j)?.sectionId);
-		return [["", Z("opt.sticky.ownSection")], ...e.slice(t + 1).map((e, n) => [e.id, Z("opt.sticky.atSection", { n: t + 2 + n })])];
+		return t < 0 ? [["", Z("opt.sticky.ownSection")]] : [["", Z("opt.sticky.ownSection")], ...e.slice(t + 1).map((e, n) => [e.id, Z("opt.sticky.atSection", { n: t + 2 + n })])];
 	}
 	function Gt(e) {
 		if (Bt(e), !B(j)) return;

@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.0.12): the canvas
+
+- [ ] Drag a section's bottom edge 100 px, then move a block in it: the section keeps the new height; the same after the top edge and after «Tilpass høyde»
+- [ ] Hover slowly across the boundary between two sections at 60 to 100 % preview zoom: the dashed line and the «+ Ny seksjon» chip appear and stay still, no blinking
+- [ ] Click into a text block: the text toolbar sits above the block's own toolbar with a small gap, at 50, 80 and 100 % zoom; near the top of the page both still fit below the menu
+- [ ] Pin on scroll with «Slipp taket» at a later section on a page with three or more sections: the block stays pinned through the sections between, rests at the chosen section's bottom edge in front of that section's blocks, and scrolls away with it; at the last section it stays pinned to the end of the page
+- [ ] A section with «Løft ved hover» holding a pinned block: hovering the section does not lift it and the block stays pinned
+
 ### Testrunde-batch (0.7.0.11): the nav and the announcement
 
 - [ ] Nav panel, Oppførsel: «Gjennomsiktig øverst» on a bar over a hero: in normal admin view the bar is clear at the top of the page and gets its surface after about 80 px of scrolling; switching to Clean view and back changes nothing about that

@@ -265,6 +265,12 @@ function applySticky() {
         b.el._urdStickyBase ??= geoms.get(b.el);
         restore(b.el, b.el._urdStickyBase);
         b.el.style.top = `${state.y - canvasTop + (b.y - box.y)}px`;
+        // Parked beyond its own section (a later release section): the block
+        // lies over the sections below and keeps the pinned stacking, so it
+        // is not painted behind their blocks.
+        if (state.y + box.h > sectionRect.height) {
+          b.el.style.zIndex = String(Number(FIXED_Z) + (Number(geoms.get(b.el).z) || 0));
+        }
       } else {
         release(b.el);
       }

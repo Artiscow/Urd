@@ -34,6 +34,13 @@ entydig: alle commit-innslag over forrige p-innslag.
 - Review risk left as a test item: the push pass changes the size of elements it observes inside the observer callback, which the specification reports as a ResizeObserver loop message when it happens at the wrong depth; the headless probe of 23 September saw none during a stepwise narrowing, and the TESTRUNDER item stands.
 - Review note, no change: nine TESTRUNDER lines (the 0.7.0.5 batch and seven 0.7.14 items) left in the commit 0.7.18.2 as struck by the test round, outside the agent's edits in that commit.
 
+### 0.7.0.12 - The canvas: the section height after a move, the boundary line, the text toolbar and the pinned block's release - 25 September 2026
+
+- A section's dragged height reset when a block was moved: the resize paths wrote only the inline min-height, and the push pass restored the copy in `data-urd-min-height` on its next measurement. The three resize paths write both (`setMinHeight` in preview-edit.js).
+- The dashed boundary line between sections blinked: the «+ New section» bar's 1 px line took pointer events while shown and stole the hover from the section that showed it, restarting the fade at every flip. The line takes no pointer events and the bar shows as a cut.
+- The text toolbar covered the block's own toolbar: both sat in the band above the block. The text toolbar now stacks above the block toolbar (and measures its drawn size, so the gap holds at every preview zoom).
+- Pin on scroll with a release at a later section: the block parked beyond its own section returned to its frame stacking and was painted behind the next section's blocks; it keeps the pinned stacking while parked there. A section with «Lift on hover» and a pinned block no longer lifts (a transformed section would take the pin with it). The release list offers only the block's own section when its section is not found (a slice from -1 listed every section under wrong numbers). Verified: the release comes at the chosen section's bottom edge, so a release at the last section keeps the block pinned to the end of the page.
+
 ### 0.7.0.11 - The nav and the announcement: the hero setting while editing, the dismissed strip, the side column and the page arrival - 25 September 2026
 
 - «Menu as part of the hero until scrolled» (`nav.style.atTop: clear`) looked broken: the scroll pass forced the scrolled surface on while editing, and the Clean-view switch never recomputed it, so the clear surface appeared only after scrolling down and up in Clean view. The top-zone state now follows the scroll position in both views (only the shrink and hide stay Clean-view only), and the switch recomputes it at once (`refreshNavScroll` in nav.js).

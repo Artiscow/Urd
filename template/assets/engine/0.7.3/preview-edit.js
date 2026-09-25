@@ -87,10 +87,13 @@ function sectionClearance(host) {
   return Math.max(0, Math.round(canvas.getBoundingClientRect().top - host.getBoundingClientRect().top));
 }
 
-/** Inline minHeight as render.js writes it: a plain length in content
- *  height, the nav clearance being the section's padding (base.css). */
-function styleMinHeight(px) {
-  return `${px}px`;
+/** The section's inline minHeight as render.js writes it: a plain length in
+ *  content height, the nav clearance being the section's padding (base.css).
+ *  Written to the element and to its dataset copy alike, since the push pass
+ *  (render.js) restores the dataset value on every measurement. */
+function setMinHeight(host, px) {
+  host.style.minHeight = `${px}px`;
+  host.dataset.urdMinHeight = host.style.minHeight;
 }
 
 /** Mobile view? The engine sets the body class from the breakpoint. */
@@ -490,7 +493,7 @@ function wireHeightDrag(target, host, section, grid, opts = {}) {
       // Pixel-precise when snapping is off or Shift is held.
       const free = grid.snap === false || ev.shiftKey;
       px = free ? Math.round(px) : Math.round(px / grid.size) * grid.size;
-      host.style.minHeight = styleMinHeight(px);
+      setMinHeight(host, px);
     };
     const onUp = () => {
       target.removeEventListener('pointermove', onMove);
@@ -842,7 +845,7 @@ function addSectionTopHandle(host, section, grid) {
         grid,
         free: ev.shiftKey,
       });
-      host.style.minHeight = styleMinHeight(result.minHeightPx);
+      setMinHeight(host, result.minHeightPx);
       for (const p of parts) p.el.style.top = `${p.y + result.dy}px`;
       // The content must stand visually still: the document below the
       // section top moves by result.dy, and the scroll follows. Absolute
@@ -1899,8 +1902,16 @@ function initTextToolbar() {
     if (!anchor || (!anchor.width && !anchor.height)) return;
     bar.classList.add('visible');
     const navHeight = document.getElementById('urd-nav')?.offsetHeight ?? 0;
-    const left = Math.max(8, Math.min(anchor.left, window.innerWidth - bar.offsetWidth - 8));
-    let top = anchor.top - bar.offsetHeight - 10;
+    // The bar's drawn size (it is counter-scaled with the preview zoom), so
+    // the gap is the same at every zoom.
+    const barRect = bar.getBoundingClientRect();
+    const left = Math.max(8, Math.min(anchor.left, window.innerWidth - barRect.width - 8));
+    // Above the block's own toolbar when that sits above the block, so the
+    // two bars stack instead of covering each other; a toolbar flipped
+    // under the block takes no room here.
+    const chrome = block.querySelector(':scope > .urd-edit-toolbar');
+    const chromeH = chrome && !chrome.classList.contains('urd-toolbar-under') ? chrome.getBoundingClientRect().height : 0;
+    let top = anchor.top - barRect.height - chromeH - 10;
     // Above the block; but never under the sticky menu (then it is clamped
     // right below the menu, still near the top of the field).
     if (top < navHeight + 8) top = navHeight + 8;
@@ -2107,7 +2118,7 @@ function addSectionToolbar(host, section, grid) {
       const px = Math.max(grid.size * 3, maxBottom + grid.size);
       const minHeight = `${px}px`;
       section.size = { ...section.size, minHeight };
-      host.style.minHeight = styleMinHeight(px);
+      setMinHeight(host, px);
       post({ type: 'urd-section-size', sectionId: section.id, minHeight });
     });
     // "Change layout": only when the section has something to change

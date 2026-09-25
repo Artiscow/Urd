@@ -990,6 +990,9 @@
   function stickyUntilOptions() {
     const sections = store?.data.sections ?? [];
     const idx = sections.findIndex((s) => s.id === selectedBlock?.sectionId);
+    // A block whose section is not found offers its own section only; a
+    // slice from -1 would list every section under the wrong numbers.
+    if (idx < 0) return [['', ta('opt.sticky.ownSection')]];
     return [
       ['', ta('opt.sticky.ownSection')],
       ...sections.slice(idx + 1).map((s, i) => [s.id, ta('opt.sticky.atSection', { n: idx + 2 + i })]),
