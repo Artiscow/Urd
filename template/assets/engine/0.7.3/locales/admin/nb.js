@@ -1081,6 +1081,7 @@ export default {
     'ui.deletePage': 'Slett siden',
     'ui.savePageTemplate': 'Lagre som mal',
     'ui.discard': 'Forkast utkast',
+    'ui.discarded': 'Utkastene er forkastet',
     'ui.discardConfirm': 'Sikker?',
     'ui.edit': 'Rediger',
     'ui.emptyGallery': 'Tomt galleri',

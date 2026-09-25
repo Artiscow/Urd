@@ -783,6 +783,7 @@ export default {
     'ui.createCollection': '+ Opprett samling',
     'ui.createPage': '+ Opprett side',
     'ui.discard': 'Forkast utkast',
+    'ui.discarded': 'Utkasta er forkasta',
     'ui.discardConfirm': 'Sikker?',
     'ui.edit': 'Rediger',
     'ui.emptyGallery': 'Tomt galleri',

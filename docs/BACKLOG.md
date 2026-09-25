@@ -226,7 +226,7 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 
 ## Bugs, (dårlige) funksjoner og ting som ellers må gjøres
 
-- [ ] Forkast utkast: «Sikker?» sometimes answers with its animation only and discards nothing, until a panel is opened or closed or the page is switched; seen after a group move of three blocks on Hjem (25 September 2026). Not reproduced headless with real clicks in any of the tried states. Hardened the same day (the confirmation is taken in the capture phase on window, and a failed discard is shown in the status field and logged as «Urd: discard failed»), but NOT fixed: the next report needs the status text or the console line
+- [x] (found and fixed 25 September 2026 in 0.7.0.10: the global `button:active` transform replaced the pill's centring transform while the button was held, so the pill jumped half its width to the right on press and a press on its left half was released over the preview; centred with the `translate` property instead, reproduced and verified headless at four positions across the pill) Forkast utkast: «Sikker?» sometimes answers with its animation only and discards nothing, until a panel is opened or closed or the page is switched; seen after a group move of three blocks on Hjem (25 September 2026)
 - [ ] Fest ved scrolling på element- "Slipp taket ved seksjon xyz" fungerer ikke.  
 - [ ] Korn i bakgrunn skal gå fra 0% til 100%, ikke 0-30% som nå
 - [ ] Kan ikke gjøre strek i Shapes/former større/lengre
@@ -237,8 +237,8 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 - [ ] Streken for å markere forskjellen mellom seksjoner i admin blinker/vibrerer
 - [ ] Nav: sidestilte nav viser ikke mørk/lys modus og handlekurv
 - [ ] Nav: ved sidestilt meny burde det være valg i kunngjøring om kunngjøringen er på toppen av nav, på toppen av hele siden og nav, eller kun på toppen av siden (og ikke nav)
-- [x] (addressed 25 September 2026 in 0.7.13.5: the cross-document view transition morphed the menu between two pages whose boxes differed; the menu and footer now switch as a cut, and `scrollbar-gutter: stable` gives every page the same width) Nav: ved ny lasting av side flytter nav seg i et lite øyeblikk mens siden lastes. Det er ikke plasseringen av nav som er forskjellig, ettersom den er identisk for hver eneste side.
-- [x] (delivered 25 September 2026 in 0.7.13.5: a faint clone at the landing place, drag into and out of submenus) Menypunkter panel: Når man drar et menypunkt opp eller ned, burde det visuelt vises hvor menypunktet lander. Det skal også være mulig å dra et menypunkt inn og ut av en undermeny
+- [ ]  Nav: ved ny lasting av side flytter nav seg i et lite øyeblikk mens siden lastes. Det er ikke plasseringen av nav som er forskjellig, ettersom den er identisk for hver eneste side.
+- [ ] Nav, både i admin preview og publiserte side, er plassert litt over kunngjøringslinjen
 
 ## Suggestions, Ideas and Wishes
 

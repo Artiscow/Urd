@@ -12909,7 +12909,7 @@ function em(e, t) {
 	function Gh() {
 		P(Hh, !1);
 		try {
-			Kh();
+			Kh(), E(Z("ui.discarded"), "info");
 		} catch (e) {
 			console.error("Urd: discard failed", e), E(String(e?.message ?? e), "error");
 		}
@@ -12924,9 +12924,15 @@ function em(e, t) {
 			e.target instanceof Element && e.target.closest(".discard-confirm") && (e.preventDefault(), e.stopPropagation(), Gh());
 		}, t = (e) => {
 			e.key === "Escape" && P(Hh, !1);
-		}, n = () => P(Hh, !1);
-		return window.addEventListener("click", e, !0), window.addEventListener("keydown", t, !0), window.addEventListener("blur", n), () => {
-			window.removeEventListener("click", e, !0), window.removeEventListener("keydown", t, !0), window.removeEventListener("blur", n);
+		}, n = !1, r = (e) => {
+			n = !!B(Uh)?.contains(e.target);
+		}, i = () => {
+			n = !1;
+		}, a = () => {
+			n || P(Hh, !1);
+		};
+		return window.addEventListener("pointerdown", r, !0), window.addEventListener("pointerup", i, !0), window.addEventListener("click", e, !0), window.addEventListener("keydown", t, !0), window.addEventListener("blur", a), () => {
+			window.removeEventListener("pointerdown", r, !0), window.removeEventListener("pointerup", i, !0), window.removeEventListener("click", e, !0), window.removeEventListener("keydown", t, !0), window.removeEventListener("blur", a);
 		};
 	});
 	function Kh() {

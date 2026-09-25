@@ -1078,6 +1078,7 @@ export default {
     'ui.deletePage': 'Delete the page',
     'ui.savePageTemplate': 'Save as template',
     'ui.discard': 'Discard drafts',
+    'ui.discarded': 'The drafts are discarded',
     'ui.discardConfirm': 'Sure?',
     'ui.edit': 'Edit',
     'ui.emptyGallery': 'Empty gallery',

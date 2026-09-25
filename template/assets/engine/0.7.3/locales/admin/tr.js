@@ -1078,6 +1078,7 @@ export default {
     'ui.deletePage': 'Sayfayı sil',
     'ui.savePageTemplate': 'Şablon olarak kaydet',
     'ui.discard': 'Taslakları at',
+    'ui.discarded': 'Taslaklar atıldı',
     'ui.discardConfirm': 'Emin misin?',
     'ui.edit': 'Düzenle',
     'ui.emptyGallery': 'Boş galeri',

@@ -5371,6 +5371,7 @@
     discardArmed = false;
     try {
       discard();
+      setStatus(ta('ui.discarded'), 'info');
     } catch (err) {
       // A failed discard must never pass silently: the drafts may be half
       // reset, and the owner needs to know that a reload is the way out.
@@ -5399,14 +5400,24 @@
       if (e.key === 'Escape') discardArmed = false;
     };
     // A click in the preview (the iframe) never reaches this document, but
-    // moves focus out of the window - window blur covers that.
-    const onBlur = () => (discardArmed = false);
+    // moves focus out of the window - window blur covers that. A blur that
+    // arrives while the pointer is held down on the button or the pill is
+    // not that click: it would unmount the pill under the pointer before
+    // its own click lands, so it is ignored until the pointer is released.
+    let held = false;
+    const onDown = (e) => { held = !!discardWrapEl?.contains(e.target); };
+    const onUp = () => { held = false; };
+    const onBlur = () => { if (!held) discardArmed = false; };
     // Outside clicks disarm on click: the confirmation pill is then
     // unmounted only after the click it may have targeted has landed.
+    window.addEventListener('pointerdown', onDown, true);
+    window.addEventListener('pointerup', onUp, true);
     window.addEventListener('click', disarm, true);
     window.addEventListener('keydown', onKey, true);
     window.addEventListener('blur', onBlur);
     return () => {
+      window.removeEventListener('pointerdown', onDown, true);
+      window.removeEventListener('pointerup', onUp, true);
       window.removeEventListener('click', disarm, true);
       window.removeEventListener('keydown', onKey, true);
       window.removeEventListener('blur', onBlur);
@@ -10995,7 +11006,11 @@
     position: absolute;
     top: calc(100% + 0.6rem);
     left: 50%;
-    transform: translateX(-50%);
+    /* Centred with the translate property, not transform: the global
+       button:active rule sets transform, and a transform here would be
+       replaced by it while the pointer is held down, moving the pill out
+       from under the pointer before the release. */
+    translate: -50% 0;
     z-index: 100002;
     display: inline-flex;
     align-items: center;

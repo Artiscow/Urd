@@ -2,6 +2,11 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.0.10): the discard confirmation
+
+- [ ] Forkast utkast: after a group move of three blocks on Hjem, press «Sikker?» at its far left, in the middle and at its far right, several times each; the pill never moves while the button is held, every press discards, the page returns to the published state and the status field says «Utkastene er forkastet»
+- [ ] Forkast utkast: press and hold «Sikker?», then release; and press «Forkast», click into the preview instead of the pill; the first discards, the second only disarms
+
 ### Testrunde-batch (0.7.13.5): the announcement bar, the Nav panel, the menu items and the live push
 
 - [ ] Nav panel, Kunngjøring: «Vis kunngjøring» on shows the strip above the menu on every page; text, a page from the list or «Egen lenke» with an address, background and text colour; with «Følger menyen ved rulling» off on a sticky bar the strip scrolls away and the menu sticks alone (the checkbox is hidden for floating, overlaid and non-sticky menus, where the strip always stays); the cross hides the strip and it stays hidden after a reload until the text changes; no seam between strip and bar at 60 to 90 % preview zoom

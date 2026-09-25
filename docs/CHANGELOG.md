@@ -34,6 +34,11 @@ entydig: alle commit-innslag over forrige p-innslag.
 - Review risk left as a test item: the push pass changes the size of elements it observes inside the observer callback, which the specification reports as a ResizeObserver loop message when it happens at the wrong depth; the headless probe of 23 September saw none during a stepwise narrowing, and the TESTRUNDER item stands.
 - Review note, no change: nine TESTRUNDER lines (the 0.7.0.5 batch and seven 0.7.14 items) left in the commit 0.7.18.2 as struck by the test round, outside the agent's edits in that commit.
 
+### 0.7.0.10 - The discard confirmation stays under the pointer - 25 September 2026
+
+- «Sikker?» sometimes answered with a jump and discarded nothing: the global `button:active` rule sets `transform`, which replaced the pill's own `translateX(-50%)` while the mouse button was held, so the pill moved half its width to the right on press and a press on its left half was released over the preview iframe (no click, the window lost focus, the pill was disarmed). Found from a console log of the owner's clicks, where the failing presses never produced a click on the pill, and reproduced headless at 15 and 35 % of the pill's width. The pill is now centred with the `translate` property, which the active rule leaves alone.
+- A window blur while the pointer is held down on the discard button or the pill no longer disarms, and a completed discard shows «Utkastene er forkastet» in the status field (`ui.discarded` in nb, en-GB, tr, nn).
+
 ### 0.7.13.5 - Announcement bar and tool placement, the Nav panel redesign, and the push drawn live - 25 September 2026
 
 - `nav.announcement` (`show`, `text`, `page` or `href`, `sticky`, `dismiss`, `color`, `textColor`): a strip above the menu inside the nav host (`announcementModel` in nav-model.js, rendered by nav.js); with `sticky` false the host's sticky top is raised by the strip's height so it scrolls away while the menu sticks (`--urd-announce-h`, hosts out of the flow keep it), `--urd-nav-h` counts the menu alone then, and the cross (on by default) hides the strip for the visitor until the text changes. The strip overlaps the bar by one pixel against a hairline seam at fractional preview zoom.
