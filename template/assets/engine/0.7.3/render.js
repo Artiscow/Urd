@@ -120,6 +120,10 @@ function applyPush(host) {
   const section = host._urdPushSection;
   const canvas = host.querySelector(':scope > .urd-canvas');
   if (!section || !canvas) return;
+  // While editing has the push suspended, every block stays where the
+  // last pass put it: the drag draws its block with the block's own shift
+  // (pushShiftOf), and the resume pushes again from the new frames.
+  if (pushSuspended) return;
   const items = [];
   for (const el of canvas.querySelectorAll(':scope > .urd-block')) {
     const block = section.blocks.find((b) => b.id === el.dataset.blockId);
@@ -129,18 +133,25 @@ function applyPush(host) {
     // below it: taller content grows it, content that fits again (a wider
     // window, a text set to shrink) gives the design height back. Measured
     // with the box at the design height, since the content's min-height
-    // follows the box. While editing suspends the push, the box is left as
-    // the drag draws it and nothing grows.
-    let grow = 0;
-    if (!pushSuspended) {
-      el.style.height = `${frame.h}px`;
-      fitContent(el, frame.h, block);
-      const needed = Math.max(frame.h, Math.round(contentHeight(el)));
-      if (needed !== frame.h) el.style.height = `${needed}px`;
-      grow = needed - frame.h;
-    }
+    // follows the box.
+    el.style.height = `${frame.h}px`;
+    fitContent(el, frame.h, block);
+    const needed = Math.max(frame.h, Math.round(contentHeight(el)));
+    if (needed !== frame.h) el.style.height = `${needed}px`;
+    const grow = needed - frame.h;
     items.push({ id: el.dataset.blockId, x: frame.x, y: frame.y, h: frame.h, grow, el });
   }
+  // The growth is kept for the drag's live pass (pushPreview).
+  host._urdPushGrow = new Map(items.map((it) => [it.id, it.grow]));
+  writePush(host, items);
+}
+
+/**
+ * Writes the shifts and the section height for a set of measured items.
+ * @param {HTMLElement} host The section element
+ * @param {Array<{id: string, x: number, y: number, h: number, grow: number, el: HTMLElement}>} items
+ */
+function writePush(host, items) {
   const { shifts, bottom } = pushLayout(items);
   let grew = false;
   for (const it of items) {
@@ -161,6 +172,30 @@ function applyPush(host) {
     const basePx = Number.parseFloat(getComputedStyle(host).minHeight) || 0;
     if (bottom + 24 > basePx) host.style.minHeight = `${Math.round(bottom + 24)}px`;
   }
+}
+
+/**
+ * The push as it will be after a drag ends, drawn live during the drag:
+ * the growth measured by the last pass is kept, the frames of the blocks
+ * being dragged come from `frames` (block id to frame), and every block's
+ * top is written as the pass would write it, so the release changes
+ * nothing the owner has not already seen.
+ * @param {HTMLElement} host The section element
+ * @param {Map<string, {x: number, y: number, w: number, h: number}>} frames
+ */
+export function pushPreview(host, frames) {
+  const section = host?._urdPushSection;
+  const canvas = host?.querySelector(':scope > .urd-canvas');
+  const grow = host?._urdPushGrow;
+  if (!section || !canvas || !grow) return;
+  const items = [];
+  for (const el of canvas.querySelectorAll(':scope > .urd-block')) {
+    const id = el.dataset.blockId;
+    const frame = frames.get(id) ?? section.blocks.find((b) => b.id === id)?.frames?.desktop;
+    if (!frame) continue;
+    items.push({ id, x: frame.x, y: frame.y, h: frame.h, grow: grow.get(id) ?? 0, el });
+  }
+  writePush(host, items);
 }
 
 /**
@@ -209,7 +244,7 @@ function fitContent(el, designH, block) {
 }
 
 /** The editing chrome inside a block never counts as content. */
-const BLOCK_CHROME = '.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-hint-chip, .urd-hint-card';
+const BLOCK_CHROME = '.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-hint-chip, .urd-hint-card, .urd-cal-note';
 
 /**
  * The height the block's content needs, in the block's own px. Measured on
@@ -220,6 +255,10 @@ const BLOCK_CHROME = '.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .ur
  * @returns {number}
  */
 function contentHeight(el) {
+  // Demo content (the preview's stand-in when a block has no source) is
+  // clipped to the frame and never counts as growth: the published page
+  // has no demo, so a push from it would exist in the preview alone.
+  if (el.dataset.urdDemo) return 0;
   const z = el.currentCSSZoom ?? 1;
   let needed = 0;
   for (const child of el.children) {
@@ -277,13 +316,25 @@ function wirePush(host, section) {
 }
 
 /**
- * Editing that writes geometry is starting: every block returns to its
- * design position, so the drag happens on the layout the data describes
- * (the Fluid Engine removes its row stretch at drag start for the same
- * reason). Paired with resumePush, which pushes again from the new frames.
+ * Editing that writes geometry is starting: the push pass stands still, so
+ * every block stays where the owner sees it, pushed or not, and nothing
+ * jumps when a drag begins. The drag draws its own block with the block's
+ * shift on top of the frame (pushShiftOf), and the frame it writes stays
+ * free of the shift. Paired with resumePush, which pushes again from the
+ * new frames.
  */
 export function suspendPush() {
-  if (pushSuspended++ === 0) for (const host of pushHosts) applyPush(host);
+  pushSuspended += 1;
+}
+
+/**
+ * The push shift a block is drawn with, in px (0 without a push): the
+ * distance between its frame's y and its drawn top.
+ * @param {HTMLElement} el The block element
+ * @returns {number}
+ */
+export function pushShiftOf(el) {
+  return Number.parseFloat(el?.dataset?.urdShift ?? '0') || 0;
 }
 
 /** Editing done: measure and push again. */

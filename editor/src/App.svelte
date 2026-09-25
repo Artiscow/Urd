@@ -24,6 +24,41 @@
     clampRange, effectivePadY, effectiveTextSize, sizePresetOf,
   } from './lib/nav-size.js';
   import Dropdown from './lib/Dropdown.svelte';
+  import Choice from './lib/Choice.svelte';
+  // Drawn tiles for the Nav panel's picture choices (ADR-0009: drawn SVG, never characters).
+  const navSvg = (body) => `<svg width="40" height="26" viewBox="0 0 40 26" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">${body}</svg>`;
+  const NAV_VARIANT_ICONS = {
+    'bar': navSvg('<rect x="1" y="1" width="38" height="7" rx="1"/><rect x="1" y="11" width="38" height="14" rx="1" stroke-opacity="0.35"/>'),
+    'floating': navSvg('<rect x="5" y="2" width="30" height="7" rx="3.5"/><rect x="1" y="11" width="38" height="14" rx="1" stroke-opacity="0.35"/>'),
+    'floating-square': navSvg('<rect x="5" y="2" width="30" height="7"/><rect x="1" y="11" width="38" height="14" rx="1" stroke-opacity="0.35"/>'),
+    'floating-tab': navSvg('<path d="M5 1h30v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><rect x="1" y="11" width="38" height="14" rx="1" stroke-opacity="0.35"/>'),
+    'side-left': navSvg('<rect x="1" y="1" width="9" height="24" rx="1"/><rect x="13" y="1" width="26" height="24" rx="1" stroke-opacity="0.35"/>'),
+    'side-right': navSvg('<rect x="30" y="1" width="9" height="24" rx="1"/><rect x="1" y="1" width="26" height="24" rx="1" stroke-opacity="0.35"/>'),
+  };
+  const NAV_BORDER_ICONS = {
+    '': navSvg('<rect x="1" y="4" width="38" height="18" rx="1" stroke-opacity="0.35"/>'),
+    'bottom': navSvg('<rect x="1" y="4" width="38" height="18" rx="1" stroke-opacity="0.35"/><path d="M1 22h38" stroke-width="2.5"/>'),
+    'top': navSvg('<rect x="1" y="4" width="38" height="18" rx="1" stroke-opacity="0.35"/><path d="M1 4h38" stroke-width="2.5"/>'),
+    'both': navSvg('<rect x="1" y="4" width="38" height="18" rx="1" stroke-opacity="0.35"/><path d="M1 4h38M1 22h38" stroke-width="2.5"/>'),
+    'all': navSvg('<rect x="1" y="4" width="38" height="18" rx="1" stroke-width="2.5"/>'),
+  };
+  const subSvg = (body) => `<svg width="48" height="34" viewBox="0 0 48 34" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">${body}</svg>`;
+  const SUB_STYLE_ICONS = {
+    'card': subSvg('<path d="M14 1h20" stroke-opacity="0.5"/><rect x="10" y="6" width="28" height="24" rx="3" fill="currentColor" fill-opacity="0.18"/><path d="M15 13h18M15 19h14M15 25h16" stroke-opacity="0.8"/>'),
+    'flat': subSvg('<path d="M14 1h20" stroke-opacity="0.5"/><rect x="1" y="6" width="46" height="24" fill="currentColor" fill-opacity="0.12" stroke="none"/><path d="M15 13h18M15 19h14M15 25h16" stroke-opacity="0.8"/>'),
+    'pills': subSvg('<path d="M14 1h20" stroke-opacity="0.5"/><rect x="10" y="7" width="28" height="6" rx="3" fill="currentColor" fill-opacity="0.35" stroke="none"/><rect x="10" y="16" width="28" height="6" rx="3" fill="currentColor" fill-opacity="0.2" stroke="none"/><rect x="10" y="25" width="28" height="6" rx="3" fill="currentColor" fill-opacity="0.2" stroke="none"/>'),
+    'lines': subSvg('<path d="M14 1h20" stroke-opacity="0.5"/><path d="M12 12h24M12 21h24M12 30h24" stroke-opacity="0.8"/>'),
+    'flyout': subSvg('<path d="M14 1h20" stroke-opacity="0.5"/><rect x="1" y="6" width="46" height="24" fill="currentColor" fill-opacity="0.12" stroke="none"/><path d="M6 13h10M6 19h8M22 13h10M22 19h8M38 13h6M38 19h4" stroke-opacity="0.8"/>'),
+  };
+  /** The title typed for «new page as menu item» in the Nav panel. */
+  let navNewPageTitle = $state('');
+  function addPageAsNavItem() {
+    if (!navNewPageTitle.trim()) return;
+    newPageTitle = navNewPageTitle;
+    newPageTemplate = null;
+    addPage();
+    navNewPageTitle = '';
+  }
   import IconEditor from './lib/IconEditor.svelte';
   // The editor shares the migration code with the engine (same file, bundled in).
   import { defaultFormFields } from '$engine/blocks/form.js';
@@ -3076,6 +3111,17 @@
   const navMobilePadY = $derived(siteDraft?.nav?.style?.mobile?.padY ?? navPadY);
   const navMobileTextSize = $derived(siteDraft?.nav?.style?.mobile?.textSize ?? navTextSize);
 
+  /** The announcement bar (nav.announcement): an emptied object is removed. */
+  function setNavAnnouncement(key, value) {
+    siteMutate(`edit:nav-announce-${key}`, () => {
+      const next = { ...(siteDraft.nav.announcement ?? {}) };
+      if (value === undefined) delete next[key];
+      else next[key] = value;
+      if (Object.keys(next).length) siteDraft.nav.announcement = next;
+      else delete siteDraft.nav.announcement;
+    });
+  }
+
   /** The sheet's own surface (nav.style.sheet): an emptied object is removed. */
   function setNavSheet(key, value) {
     siteMutate(`edit:nav-sheet-${key}`, () => {
@@ -3118,12 +3164,19 @@
     lift: [ta('hoverColor.lift.label'), ta('hoverColor.lift.title')],
   };
   const hoverColorLabel = $derived(HOVER_COLOR_LABELS[siteDraft?.nav?.style?.hover] ?? null);
+  /** The submenu designs on offer: the column has no card, flat surface or flyout. */
+  const subStyleOptions = $derived(sideVariant
+    ? [['card', ta('common.standard')], ['pills', ta('opt.sub.pills')], ['lines', ta('opt.sub.lines')]]
+    : [['card', ta('opt.sub.card')], ['flat', ta('opt.sub.flat')], ['pills', ta('opt.sub.pills')], ['lines', ta('opt.sub.lines')], ['flyout', ta('opt.sub.flyout')]]);
 
-  /** Variant (additive): the default (bar) is not stored in the file. */
+  /** Variant (additive): the default (bar) is not stored in the file. The
+      three floating forms are presets of the corner rounding, so a switch
+      clears a rounding value entered for the previous form. */
   function setNavVariant(value) {
     siteMutate('nav', () => {
       if (value === 'bar') delete siteDraft.nav.variant;
       else siteDraft.nav.variant = value;
+      if (siteDraft.nav.style) delete siteDraft.nav.style.radius;
     });
   }
 
@@ -4132,6 +4185,133 @@
   function removeNavItem(i) {
     siteMutate('nav', () => { siteDraft.nav.items.splice(i, 1); });
   }
+
+  /** The menu item whose actions are shown ('i' or 'i.j'); a click on a row selects it. */
+  let navSel = $state('');
+  /** Drag reorder: the row being dragged, as its key, and the reorder itself. */
+  let navDrag = $state('');
+  function moveNavItemTo(from, to) {
+    const items = siteDraft.nav.items;
+    if (from === to || from < 0 || to < 0 || from >= items.length || to >= items.length) return;
+    siteMutate('nav', () => { const [it] = items.splice(from, 1); items.splice(to, 0, it); });
+  }
+  function moveNavChildTo(i, from, to) {
+    const children = siteDraft.nav.items[i].children;
+    if (from === to || from < 0 || to < 0 || from >= children.length || to >= children.length) return;
+    siteMutate('nav', () => { const [it] = children.splice(from, 1); children.splice(to, 0, it); });
+  }
+  /** Where the dragged row would land: { key, pos } with pos before, after or into; null = nowhere. */
+  let navDrop = $state(null);
+  /** The row at a key: its list, index and parent (null at the top level). */
+  function navRowAt(key) {
+    const [a, b] = key.split('.').map(Number);
+    const items = siteDraft.nav.items;
+    return b === undefined ? { list: items, index: a, parent: null } : { list: items[a].children, index: b, parent: items[a] };
+  }
+  /** The drop position over a row from the pointer. On a top-level row the left quarter decides
+      before or after by the row's midline, and everything right of it is into: the dragged row
+      becomes the row's last child, so a drag a quarter of the way to the right, or a hover over
+      the row itself, nests it. A row with a submenu can not be nested, and nothing nests under a
+      child (one level). On a child row the grip column is the way out: there the drop lands at the
+      top level, after the whole submenu. A position that would change nothing gives no drop. */
+  function navDropAt(row, key, clientX, clientY) {
+    if (!navDrag || navDrag === key) return null;
+    const rect = row.getBoundingClientRect();
+    const y = (clientY - rect.top) / rect.height;
+    const x = clientX - rect.left;
+    const src = navRowAt(navDrag); const tgt = navRowAt(key);
+    const moving = src.list[src.index];
+    let drop;
+    if (tgt.parent) {
+      drop = x < 28 ? { key: key.split('.')[0], pos: 'after' } : { key, pos: y < 0.5 ? 'before' : 'after' };
+    } else if (!moving.children?.length && x > rect.width * 0.25) {
+      drop = { key, pos: 'into' };
+    } else {
+      drop = { key, pos: y < 0.5 ? 'before' : 'after' };
+    }
+    return navDropOrNull(drop, moving, src);
+  }
+  /** The drop unless the row would land exactly where it is. */
+  function navDropOrNull(drop, moving, src) {
+    const dest = navRowAt(drop.key); const targetObj = dest.list[dest.index];
+    if (drop.pos === 'into') {
+      const kids = targetObj.children ?? [];
+      if (kids.length && kids[kids.length - 1] === moving) return null;
+      return drop;
+    }
+    const list = dest.parent ? dest.parent.children : siteDraft.nav.items;
+    const after = list.filter((it) => it !== moving);
+    const idx = after.indexOf(targetObj) + (drop.pos === 'after' ? 1 : 0);
+    if (list === src.list && idx === src.index) return null;
+    return drop;
+  }
+  /** The dragged row's name and target, for the faint clone at the landing place. */
+  function navGhostText() {
+    if (!navDrag) return { label: '', target: '' };
+    const src = navRowAt(navDrag); const it = src.list[src.index];
+    const page = it.page ? siteDraft.pages.find((p) => p.id === it.page) : null;
+    return { label: it.label, target: page ? page.title : (it.href ?? ta('opt.noLink')) };
+  }
+  /** The end of a drag: a release outside the list still lands the row where the clone last
+      stood (a drop inside the list has already taken it and cleared the position). */
+  function endNavDrag() {
+    if (navDrop) dropNavRow(navDrop.key);
+    navDrag = ''; navDrop = null;
+  }
+  /** Drag over the whole list: over a row the row's zones decide; in a gap, on the clone or below
+      the last row the nearest row by its midpoint decides, so the clone never flips while it pushes
+      the rows. Below everything the drop is the end of the top level. */
+  function onNavListDragOver(e) {
+    if (!navDrag) return;
+    const rows = [...e.currentTarget.querySelectorAll('.nav-item:not(.ghost)')];
+    if (!rows.length) return;
+    const hit = rows.find((r) => { const b = r.getBoundingClientRect(); return e.clientY >= b.top && e.clientY <= b.bottom; });
+    let drop = null;
+    if (hit) {
+      drop = navDropAt(hit, hit.dataset.key, e.clientX, e.clientY);
+    } else {
+      const src = navRowAt(navDrag); const moving = src.list[src.index];
+      const next = rows.find((r) => { const b = r.getBoundingClientRect(); return b.top + b.height / 2 > e.clientY; });
+      if (next) {
+        drop = next.dataset.key === navDrag ? null : navDropOrNull({ key: next.dataset.key, pos: 'before' }, moving, src);
+      } else {
+        const lastTop = [...rows].reverse().find((r) => !r.classList.contains('child'));
+        drop = lastTop.dataset.key === navDrag ? null : navDropOrNull({ key: lastTop.dataset.key, pos: 'after' }, moving, src);
+      }
+    }
+    if (!drop) { navDrop = null; return; }
+    e.preventDefault();
+    if (navDrop?.key !== drop.key || navDrop?.pos !== drop.pos) navDrop = drop;
+  }
+  /** The drop: the dragged row leaves its list and lands before or after the target, or as the
+      target's last child. Moving between levels is allowed; an emptied submenu disappears. */
+  function dropNavRow(targetKey) {
+    const from = navDrag; const drop = navDrop;
+    navDrag = ''; navDrop = null;
+    if (!from || !drop || drop.key !== targetKey || from === targetKey) return;
+    siteMutate('nav', () => {
+      const items = siteDraft.nav.items;
+      const src = navRowAt(from); const tgt = navRowAt(targetKey);
+      const moving = src.list[src.index];
+      const targetObj = tgt.list[tgt.index];
+      if (moving === targetObj) return;
+      src.list.splice(src.index, 1);
+      if (src.parent && src.parent.children.length === 0) delete src.parent.children;
+      if (drop.pos === 'into') {
+        targetObj.children ??= [];
+        targetObj.children.push(moving);
+      } else {
+        const list = tgt.parent ? tgt.parent.children : items;
+        const idx = list.indexOf(targetObj) + (drop.pos === 'after' ? 1 : 0);
+        list.splice(idx, 0, moving);
+      }
+      // A row that becomes a child needs a target of its own (a pure opener has none).
+      if (!moving.page && moving.href == null && !moving.children?.length) moving.page = siteDraft.pages[0].id;
+    });
+    navSel = '';
+  }
+  const GRIP_ICON = '<svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" aria-hidden="true"><circle cx="3" cy="3" r="1.3"/><circle cx="7" cy="3" r="1.3"/><circle cx="3" cy="8" r="1.3"/><circle cx="7" cy="8" r="1.3"/><circle cx="3" cy="13" r="1.3"/><circle cx="7" cy="13" r="1.3"/></svg>';
+  const SUB_ICON = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
 
   function addNavItem() {
     siteMutate('nav', () => {
@@ -5189,7 +5369,14 @@
 
   function confirmDiscard() {
     discardArmed = false;
-    discard();
+    try {
+      discard();
+    } catch (err) {
+      // A failed discard must never pass silently: the drafts may be half
+      // reset, and the owner needs to know that a reload is the way out.
+      console.error('Urd: discard failed', err);
+      setStatus(String(err?.message ?? err), 'error');
+    }
   }
 
   $effect(() => {
@@ -5197,8 +5384,16 @@
     // `contains` against the bound shell covers both the button and the
     // pill, also when the hit lands on an SVG node inside them. Same
     // pattern as the settings and the tool menus.
+    // The confirmation is taken here, in the capture phase on window,
+    // and not left to the pill's own delegated handler: the click then
+    // counts whatever else runs on the way down to the pill.
     const disarm = (e) => {
-      if (!discardWrapEl?.contains(e.target)) discardArmed = false;
+      if (!discardWrapEl?.contains(e.target)) { discardArmed = false; return; }
+      if (e.target instanceof Element && e.target.closest('.discard-confirm')) {
+        e.preventDefault();
+        e.stopPropagation();
+        confirmDiscard();
+      }
     };
     const onKey = (e) => {
       if (e.key === 'Escape') discardArmed = false;
@@ -5972,11 +6167,9 @@
                 <details class="group">
                   <summary title={ta('hint.nav.logoHome')}>{ta('group.logo')}</summary>
                   <div class="group-items">
-                    <label>{ta('common.type')}
-                      <Dropdown value={siteDraft.nav.logo?.type ?? 'text'}
-                        options={[['text', ta('blocks.text')], ['image', ta('blocks.image')], ['both', ta('opt.logo.both')]]}
-                        onchange={(v) => setLogoType(v)} />
-                    </label>
+                    <Choice label={ta('common.type')} value={siteDraft.nav.logo?.type ?? 'text'}
+                      options={[['text', ta('blocks.text')], ['image', ta('blocks.image')], ['both', ta('opt.logo.both')]]}
+                      onchange={(v) => setLogoType(v)} />
                     {#if (siteDraft.nav.logo?.type ?? 'text') !== 'image'}
                       <input value={siteDraft.nav.logo?.value ?? ''} placeholder={ta('ph.nav.logoName')}
                         oninput={(e) => setLogo({ value: e.target.value })} />
@@ -5997,36 +6190,49 @@
                       </span>
                     {/if}
                     {#if (siteDraft.nav.logo?.type ?? 'text') !== 'text'}
-                      <span class="toolbar-row">
-                        <label class="ghost filepick tb-grow" title={ta('tip.webpAuto')}>
-                          {(siteDraft.nav.logo?.type === 'image' ? siteDraft.nav.logo?.value : siteDraft.nav.logo?.image)
-                            ? ta('ui.changeImage') : ta('ui.chooseImage')}
-                          <input type="file" accept="image/*" onchange={uploadLogoImage} />
-                        </label>
-                        <input type="number" class="tb-num" min="12" max="128" title={ta('tip.nav.logoHeight')}
-                          value={siteDraft.nav.logo?.size ?? 32}
-                          onchange={(e) => setLogo({ size: Number(e.target.value) })} />
-                        <input type="number" class="tb-num" min="0" max="64" title={ta('tip.nav.logoRadius')}
-                          value={siteDraft.nav.logo?.radius ?? 0}
-                          onchange={(e) => setLogo({ radius: Number(e.target.value) })} />
-                      </span>
-                      <!-- The logo height at the mobile breakpoint (empty = the same as desktop) -->
-                      <span class="toolbar-row" title={ta('tip.nav.logoHeightMobile')}>
-                        <span class="mini-label tb-grow">{ta('lbl.navLogoHeightMobile')}</span>
-                        <input type="number" class="tb-num" min={LOGO_SIZE.min} max={LOGO_SIZE.max} placeholder="px"
-                          value={siteDraft.nav.logo?.mobileSize ?? ''}
-                          onchange={(e) => {
-                            const raw = e.target.value;
-                            setLogo({ mobileSize: raw === '' ? undefined : clampRange(raw, LOGO_SIZE, undefined) });
-                            e.target.value = siteDraft.nav.logo?.mobileSize ?? '';
-                          }} />
-                      </span>
+                      {@const logoSrc = siteDraft.nav.logo?.type === 'image' ? siteDraft.nav.logo?.value : siteDraft.nav.logo?.image}
+                      <!-- The image as a thumbnail beside its picker, then the three sizes on one row -->
+                      <div class="logo-pick">
+                        <span class="logo-thumb">
+                          {#if logoSrc}<img src={logoSrc} alt="" />{/if}
+                        </span>
+                        <span class="logo-pick-col">
+                          <label class="ghost filepick" title={ta('tip.webpAuto')}>
+                            {logoSrc ? ta('ui.changeImage') : ta('ui.chooseImage')}
+                            <input type="file" accept="image/*" onchange={uploadLogoImage} />
+                          </label>
+                          {#if logoSrc}<span class="logo-file">{logoSrc.split('/').pop()}</span>{/if}
+                        </span>
+                      </div>
+                      <div class="ctl-triple">
+                        <div class="ctl-field" title={ta('tip.nav.logoHeight')}>
+                          <span class="mini-label">{ta('lbl.height')}</span>
+                          <input type="number" class="tb-num" min="12" max="128"
+                            value={siteDraft.nav.logo?.size ?? 32}
+                            onchange={(e) => setLogo({ size: Number(e.target.value) })} />
+                        </div>
+                        <div class="ctl-field" title={ta('tip.nav.logoHeightMobile')}>
+                          <span class="mini-label">{ta('lbl.onMobile')}</span>
+                          <input type="number" class="tb-num" min={LOGO_SIZE.min} max={LOGO_SIZE.max} placeholder={ta('lbl.navSameAsDesktop')}
+                            value={siteDraft.nav.logo?.mobileSize ?? ''}
+                            onchange={(e) => {
+                              const raw = e.target.value;
+                              setLogo({ mobileSize: raw === '' ? undefined : clampRange(raw, LOGO_SIZE, undefined) });
+                              e.target.value = siteDraft.nav.logo?.mobileSize ?? '';
+                            }} />
+                        </div>
+                        <div class="ctl-field" title={ta('tip.nav.logoRadius')}>
+                          <span class="mini-label">{ta('lbl.rounding')}</span>
+                          <input type="number" class="tb-num" min="0" max="64"
+                            value={siteDraft.nav.logo?.radius ?? 0}
+                            onchange={(e) => setLogo({ radius: Number(e.target.value) })} />
+                        </div>
+                      </div>
                     {/if}
                     {#if siteDraft.nav.logo?.type === 'both'}
-                      <label>{ta('lbl.order')}
-                        <Dropdown value={siteDraft.nav.logo?.order ?? 'image-first'}
-                          options={[['image-first', ta('opt.logo.imageFirst')], ['text-first', ta('opt.logo.textFirst')]]}
-                          onchange={(v) => setLogo({ order: v })} /></label>
+                      <Choice label={ta('lbl.order')} value={siteDraft.nav.logo?.order ?? 'image-first'}
+                        options={[['image-first', ta('opt.logo.imageFirst')], ['text-first', ta('opt.logo.textFirst')]]}
+                        onchange={(v) => setLogo({ order: v })} />
                     {/if}
                   </div>
                 </details>
@@ -6040,17 +6246,25 @@
                     <details class="group frame-group sub-fold">
                       <summary>{ta('group.navLayout')}</summary>
                       <div class="group-items">
-                        <label title={ta('tip.nav.variant')}>{ta('lbl.navVariant')}
-                          <Dropdown value={siteDraft.nav.variant ?? 'bar'}
-                            options={[['bar', ta('opt.navVariant.bar')], ['floating', ta('opt.navVariant.floating')], ['floating-square', ta('opt.navVariant.floatingSquare')],
-                              ['floating-tab', ta('opt.navVariant.floatingTab')], ['side-left', ta('opt.navVariant.sideLeft')], ['side-right', ta('opt.navVariant.sideRight')]]}
-                            onchange={(v) => setNavVariant(v)} /></label>
+                        <!-- The six menu forms as drawn tiles -->
+                        <div class="ctl-field" title={ta('tip.nav.variant')}>
+                          <span class="mini-label">{ta('lbl.navVariant')}</span>
+                          <div class="tile-grid cols-3" role="group" aria-label={ta('lbl.navVariant')}>
+                            {#each [['bar', ta('opt.navVariant.bar')], ['floating', ta('opt.navVariant.floating')], ['floating-square', ta('opt.navVariant.floatingSquare')], ['floating-tab', ta('opt.navVariant.floatingTab')], ['side-left', ta('opt.navVariant.sideLeft')], ['side-right', ta('opt.navVariant.sideRight')]] as [v, text] (v)}
+                              <button type="button" class="tile" class:on={(siteDraft.nav.variant ?? 'bar') === v} aria-pressed={(siteDraft.nav.variant ?? 'bar') === v}
+                                onclick={() => setNavVariant(v)}>{@html NAV_VARIANT_ICONS[v]}<span>{text}</span></button>
+                            {/each}
+                          </div>
+                        </div>
+                        <!-- The tool cluster (theme, cart, burger) at the end or the start of the bar -->
+                        <Choice label={ta('lbl.toolsSide')} title={ta('tip.nav.toolsSide')} value={siteDraft.nav.style?.tools?.side ?? 'end'}
+                          options={[['start', ta('opt.toolsSide.start')], ['end', ta('opt.toolsSide.end')]]}
+                          onchange={(v) => setNavStyle('tools', v === 'start' ? { side: 'start' } : undefined)} />
                         {#if floatingVariant}
                           <!-- The floating menu's maximum width: the content width, or a px value (empty = 1100) -->
-                          <label title={ta('tip.nav.pillWidth')}>{ta('lbl.navPillWidth')}
-                            <Dropdown value={siteDraft.nav.style?.pillWidth === 'content' ? 'content' : 'custom'}
-                              options={[['content', ta('opt.pillWidth.content')], ['custom', ta('opt.pillWidth.custom')]]}
-                              onchange={(v) => setNavStyle('pillWidth', v === 'content' ? 'content' : undefined)} /></label>
+                          <Choice label={ta('lbl.navPillWidth')} title={ta('tip.nav.pillWidth')} value={siteDraft.nav.style?.pillWidth === 'content' ? 'content' : 'custom'}
+                            options={[['content', ta('opt.pillWidth.content')], ['custom', ta('opt.pillWidth.custom')]]}
+                            onchange={(v) => setNavStyle('pillWidth', v === 'content' ? 'content' : undefined)} />
                           {#if siteDraft.nav.style?.pillWidth !== 'content'}
                             <span class="toolbar-row" title={ta('tip.nav.pillWidthPx')}>
                               <span class="mini-label tb-grow">{ta('lbl.navPillWidthPx')}</span>
@@ -6068,16 +6282,16 @@
                               onchange={(e) => onNavSizeInput(e, 'radius', RADIUS)} />
                           </span>
                         {/if}
-                        <label>{ta('lbl.navPlacement')}
-                          {#if sideVariant}
-                            <Dropdown value={siteDraft.nav.style?.sidePlacement ?? 'top'}
-                              options={[['top', ta('opt.place.top')], ['middle', ta('opt.place.middle')], ['bottom', ta('opt.place.bottom')]]}
-                              onchange={(v) => setNavStyle('sidePlacement', v === 'top' ? undefined : v)} />
-                          {:else}
-                            <Dropdown value={siteDraft.nav.layout ?? 'right'}
-                              options={[['right', ta('common.right')], ['center', ta('common.center')], ['left', ta('opt.layout.leftAfterLogo')]]}
-                              onchange={(v) => setNavLayout(v)} />
-                          {/if}</label>
+                        {#if sideVariant}
+                          <Choice label={ta('lbl.navPlacement')} value={siteDraft.nav.style?.sidePlacement ?? 'top'}
+                            options={[['top', ta('opt.place.top')], ['middle', ta('opt.place.middle')], ['bottom', ta('opt.place.bottom')]]}
+                            onchange={(v) => setNavStyle('sidePlacement', v === 'top' ? undefined : v)} />
+                        {:else}
+                          <!-- Left means after the logo (the tip says so); the short words keep the segment on one row -->
+                          <Choice label={ta('lbl.navPlacement')} title={ta('opt.layout.leftAfterLogo')} value={siteDraft.nav.layout ?? 'right'}
+                            options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
+                            onchange={(v) => setNavLayout(v)} />
+                        {/if}
                         {#if floatingVariant}
                           <label class="gridmenu-snap" title={ta('tip.nav.glow')}>
                             <input type="checkbox" checked={siteDraft.nav.style?.glow === true}
@@ -6103,10 +6317,9 @@
                           </label>
                         {/if}
                         {#if sideVariant}
-                          <label title={ta('tip.nav.sideAlign')}>{ta('lbl.textAlign')}
-                            <Dropdown value={siteDraft.nav.style?.sideAlign ?? 'left'}
-                              options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
-                              onchange={(v) => setNavStyle('sideAlign', v === 'left' ? undefined : v)} /></label>
+                          <Choice label={ta('lbl.textAlign')} title={ta('tip.nav.sideAlign')} value={siteDraft.nav.style?.sideAlign ?? 'left'}
+                            options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
+                            onchange={(v) => setNavStyle('sideAlign', v === 'left' ? undefined : v)} />
                           <!-- The column width as a number, next to the drag at the column edge (250 = the default, not stored) -->
                           <span class="toolbar-row" title={ta('tip.nav.colWidth')}>
                             <span class="mini-label tb-grow">{ta('lbl.navColWidth')}</span>
@@ -6135,6 +6348,10 @@
                             <button class:on={navSizePreset === id} onclick={() => setNavSizePreset(id)}>{ta(`opt.size.${id}`)}</button>
                           {/each}
                         </div>
+                        <!-- The free values behind an Adjust fold, so the presets carry the fold -->
+                        <details class="sub-inset">
+                          <summary>{ta('lbl.adjust')}</summary>
+                          <div class="sub-inset-body">
                         {#if !sideVariant}
                           <div class="ctl-row" title={ta('tip.nav.thickness')}>
                             <span class="mini-label ctl-name">{ta('lbl.navThickness')}</span>
@@ -6171,6 +6388,8 @@
                             </div>
                           </div>
                         {/if}
+                          </div>
+                        </details>
                       </div>
                     </details>
                     <hr class="gridmenu-divider" />
@@ -6178,11 +6397,16 @@
                       <summary>{ta('group.navFrame')}</summary>
                       <div class="group-items">
                         {#if !sideVariant}
-                          <!-- Border on the bar: the side, then width and colour on one row once a side is chosen -->
-                          <label title={ta('tip.nav.border')}>{ta('lbl.navBorder')}
-                            <Dropdown value={siteDraft.nav.style?.border?.side ?? ''}
-                              options={[['', ta('common.none')], ['bottom', ta('opt.navBorder.bottom')], ['top', ta('opt.navBorder.top')], ['both', ta('opt.navBorder.both')], ['all', ta('opt.navBorder.all')]]}
-                              onchange={(v) => setNavStyle('border', v ? { ...(siteDraft.nav.style?.border ?? {}), side: v } : undefined)} /></label>
+                          <!-- Border on the bar: the side as drawn tiles, then width and colour on one row once a side is chosen -->
+                          <div class="ctl-field" title={ta('tip.nav.border')}>
+                            <span class="mini-label">{ta('lbl.navBorder')}</span>
+                            <div class="tile-grid cols-5" role="group" aria-label={ta('lbl.navBorder')}>
+                              {#each [['', ta('common.none')], ['bottom', ta('opt.navBorder.bottom')], ['top', ta('opt.navBorder.top')], ['both', ta('opt.navBorder.both')], ['all', ta('opt.navBorder.all')]] as [v, text] (v)}
+                                <button type="button" class="tile" class:on={(siteDraft.nav.style?.border?.side ?? '') === v} aria-pressed={(siteDraft.nav.style?.border?.side ?? '') === v}
+                                  onclick={() => setNavStyle('border', v ? { ...(siteDraft.nav.style?.border ?? {}), side: v } : undefined)}>{@html NAV_BORDER_ICONS[v]}<span>{text}</span></button>
+                              {/each}
+                            </div>
+                          </div>
                           {#if siteDraft.nav.style?.border?.side}
                             <span class="toolbar-row ctl-end">
                               <span class="mini-label" title={ta('tip.nav.borderWidth')}>{ta('lbl.navBorderWidth')}</span>
@@ -6203,35 +6427,31 @@
                           {/if}
                         {/if}
                         {#if !floatingVariant && !sideVariant}
-                          <label title={ta('tip.nav.shadow')}>{ta('lbl.navShadow')}
-                            <Dropdown value={siteDraft.nav.style?.shadow ?? ''}
-                              options={[['', ta('common.none')], ['soft', ta('opt.navShadow.soft')], ['strong', ta('opt.navShadow.strong')]]}
-                              onchange={(v) => setNavStyle('shadow', v || undefined)} /></label>
+                          <Choice label={ta('lbl.navShadow')} title={ta('tip.nav.shadow')} value={siteDraft.nav.style?.shadow ?? ''}
+                            options={[['', ta('common.none')], ['soft', ta('opt.navShadow.soft')], ['strong', ta('opt.navShadow.strong')]]}
+                            onchange={(v) => setNavStyle('shadow', v || undefined)} />
                         {/if}
-                        <label class="gridmenu-snap" title={ta('tip.nav.blur')}>
-                          <input type="checkbox" checked={siteDraft.nav.style?.blur !== false}
-                            onchange={(e) => setNavStyle('blur', e.target.checked)} />
-                          {ta('lbl.navBlur')}
-                        </label>
                       </div>
                     </details>
                     <hr class="gridmenu-divider" />
                     <details class="group frame-group sub-fold">
                       <summary>{ta('group.navBehaviour')}</summary>
                       <div class="group-items">
+                        <!-- Two cards: what happens when the page scrolls, and the cart -->
                         {#if !sideVariant}
+                        <div class="mini-card">
+                          <span class="mini-label">{ta('group.navScrolling')}</span>
                           <label class="gridmenu-snap" title={ta('tip.nav.sticky')}>
                             <input type="checkbox" checked={siteDraft.nav.sticky !== false}
                               onchange={(e) => siteMutate('nav', () => { siteDraft.nav.sticky = e.target.checked; })} />
                             {ta('lbl.navSticky')}
                           </label>
                           {#if siteDraft.nav.sticky !== false}
-                            <label title={ta('tip.nav.scroll')}>{ta('lbl.navScroll')}
-                              <Dropdown value={siteDraft.nav.scroll ?? 'none'}
-                                options={[['none', ta('opt.scroll.none')], ['shrink', ta('opt.scroll.shrink')], ['hide', ta('opt.scroll.hide')]]}
-                                onchange={(v) => siteMutate('nav', () => {
-                                  if (v === 'none') delete siteDraft.nav.scroll; else siteDraft.nav.scroll = v;
-                                })} /></label>
+                            <Choice label={ta('lbl.navScroll')} title={ta('tip.nav.scroll')} value={siteDraft.nav.scroll ?? 'none'}
+                              options={[['none', ta('opt.scroll.none')], ['shrink', ta('opt.scroll.shrink')], ['hide', ta('opt.scroll.hide')]]}
+                              onchange={(v) => siteMutate('nav', () => {
+                                if (v === 'none') delete siteDraft.nav.scroll; else siteDraft.nav.scroll = v;
+                              })} />
                             {#if siteDraft.nav.scroll === 'shrink'}
                               <!-- The compact state: how much of the thickness remains, and whether the logo image follows -->
                               <div class="ctl-row" title={ta('tip.nav.shrinkTo')}>
@@ -6256,23 +6476,29 @@
                               onchange={(e) => setNavStyle('atTop', e.target.checked ? 'clear' : undefined)} />
                             {ta('lbl.navAtTop')}
                           </label>
+                        </div>
                         {/if}
-                        <label class="gridmenu-snap" title={ta('tip.nav.cart')}>
-                          <input type="checkbox" checked={siteDraft.nav.cart?.show === true}
-                            onchange={(e) => siteMutate('nav', () => {
-                              if (e.target.checked) siteDraft.nav.cart = { ...(siteDraft.nav.cart ?? {}), show: true };
-                              else delete siteDraft.nav.cart;
-                            })} />
-                          {ta('lbl.navCart')}
-                        </label>
-                        {#if siteDraft.nav.cart?.show}
-                          <label title={ta('tip.cart.checkout')}>{ta('lbl.checkoutPage')}
-                            <Dropdown value={siteDraft.nav.cart?.href ?? ''}
-                              options={[['', ta('common.none')], ...siteDraft.pages.map((p) => [p.path, p.title])]}
-                              onchange={(v) => siteMutate('nav', () => {
-                                if (v) siteDraft.nav.cart.href = v; else delete siteDraft.nav.cart.href;
-                              })} /></label>
-                        {/if}
+                        <div class="mini-card">
+                          <span class="mini-label">{ta('lbl.cart')}</span>
+                          <label class="gridmenu-snap" title={ta('tip.nav.cart')}>
+                            <input type="checkbox" checked={siteDraft.nav.cart?.show === true}
+                              onchange={(e) => siteMutate('nav', () => {
+                                if (e.target.checked) siteDraft.nav.cart = { ...(siteDraft.nav.cart ?? {}), show: true };
+                                else delete siteDraft.nav.cart;
+                              })} />
+                            {ta('lbl.showInMenu')}
+                          </label>
+                          {#if siteDraft.nav.cart?.show}
+                            <label class="field-stack" title={ta('tip.cart.checkout')}>
+                              <span class="mini-label">{ta('lbl.checkoutPage')}</span>
+                              <Dropdown filled value={siteDraft.nav.cart?.href ?? ''}
+                                options={[['', ta('common.none')], ...siteDraft.pages.map((p) => [p.path, p.title])]}
+                                onchange={(v) => siteMutate('nav', () => {
+                                  if (v) siteDraft.nav.cart.href = v; else delete siteDraft.nav.cart.href;
+                                })} />
+                            </label>
+                          {/if}
+                        </div>
                       </div>
                     </details>
                     <hr class="gridmenu-divider" />
@@ -6280,39 +6506,44 @@
                       <summary title={ta('tip.nav.mobileSame')}>{ta('group.mobile')}</summary>
                       <div class="group-items">
                         <!-- The mobile overrides of the size (empty = as on desktop),
-                             then the burger's target and the submenu behaviour -->
-                        {#if !sideVariant}
-                          <div class="ctl-row" title={ta('tip.nav.thickness')}>
-                            <span class="mini-label ctl-name">{ta('lbl.navThickness')}</span>
-                            <input type="range" min={PAD_Y.min} max={PAD_Y.max} step={PAD_Y.step}
-                              value={navMobilePadY}
-                              oninput={(e) => setNavMobile('padY', e.target.valueAsNumber)} />
-                            <input type="number" class="tb-num" min={PAD_Y.min} max={PAD_Y.max}
+                             then the burger's target, the full-screen menu's options
+                             and surface, and the submenu behaviour; every field with
+                             its label above, short ones two to a row -->
+                        <div class="ctl-pair">
+                          {#if !sideVariant}
+                            <div class="ctl-field" title={ta('tip.nav.thickness')}>
+                              <span class="mini-label">{ta('lbl.navThickness')}</span>
+                              <input type="number" class="tb-num" min={PAD_Y.min} max={PAD_Y.max}
+                                placeholder={ta('lbl.navSameAsDesktop')}
+                                value={siteDraft.nav.style?.mobile?.padY ?? ''}
+                                onchange={(e) => onNavMobileField(e, 'padY', PAD_Y)} />
+                            </div>
+                          {/if}
+                          <div class="ctl-field" title={ta('tip.nav.menuTextSize')}>
+                            <span class="mini-label">{ta('lbl.navTextSize')}</span>
+                            <input type="number" class="tb-num" min={TEXT_SIZE.min} max={TEXT_SIZE.max}
                               placeholder={ta('lbl.navSameAsDesktop')}
-                              value={siteDraft.nav.style?.mobile?.padY ?? ''}
-                              onchange={(e) => onNavMobileField(e, 'padY', PAD_Y)} />
+                              value={siteDraft.nav.style?.mobile?.textSize ?? ''}
+                              onchange={(e) => onNavMobileField(e, 'textSize', TEXT_SIZE)} />
                           </div>
-                        {/if}
-                        <div class="ctl-row" title={ta('tip.nav.menuTextSize')}>
-                          <span class="mini-label ctl-name">{ta('lbl.navTextSize')}</span>
-                          <input type="range" min={TEXT_SIZE.min} max={TEXT_SIZE.max} step={TEXT_SIZE.step}
-                            value={navMobileTextSize}
-                            oninput={(e) => setNavMobile('textSize', e.target.valueAsNumber)} />
-                          <input type="number" class="tb-num" min={TEXT_SIZE.min} max={TEXT_SIZE.max}
-                            placeholder={ta('lbl.navSameAsDesktop')}
-                            value={siteDraft.nav.style?.mobile?.textSize ?? ''}
-                            onchange={(e) => onNavMobileField(e, 'textSize', TEXT_SIZE)} />
                         </div>
-                        <!-- The burger's target on mobile: the panel below the bar or the full-screen sheet -->
-                        <label title={ta('tip.nav.mobileMenu')}>{ta('lbl.mobileMenu')}
-                          <Dropdown value={siteDraft.nav.style?.mobileMenu ?? 'dropdown'}
-                            options={[['dropdown', ta('opt.mobileMenu.dropdown')], ['sheet', ta('opt.mobileMenu.sheet')]]}
-                            onchange={(v) => setNavStyle('mobileMenu', v === 'dropdown' ? undefined : v)} /></label>
+                        <div class="ctl-pair">
+                          <label class="field-stack" title={ta('tip.nav.mobileMenu')}>
+                            <span class="mini-label">{ta('lbl.mobileMenu')}</span>
+                            <Dropdown filled value={siteDraft.nav.style?.mobileMenu ?? 'dropdown'}
+                              options={[['dropdown', ta('opt.mobileMenu.dropdown')], ['sheet', ta('opt.mobileMenu.sheet')]]}
+                              onchange={(v) => setNavStyle('mobileMenu', v === 'dropdown' ? undefined : v)} />
+                          </label>
+                          {#if siteDraft.nav.style?.mobileMenu === 'sheet'}
+                            <label class="field-stack" title={ta('tip.nav.sheetMotion')}>
+                              <span class="mini-label">{ta('lbl.sheetMotion')}</span>
+                              <Dropdown filled value={siteDraft.nav.style?.sheetMotion ?? 'top'}
+                                options={['top', 'bottom', 'left', 'right', 'fade', 'none'].map((m) => [m, ta(`opt.sheetMotion.${m}`)])}
+                                onchange={(v) => setNavStyle('sheetMotion', v === 'top' ? undefined : v)} />
+                            </label>
+                          {/if}
+                        </div>
                         {#if siteDraft.nav.style?.mobileMenu === 'sheet'}
-                          <label title={ta('tip.nav.sheetMotion')}>{ta('lbl.sheetMotion')}
-                            <Dropdown value={siteDraft.nav.style?.sheetMotion ?? 'top'}
-                              options={['top', 'bottom', 'left', 'right', 'fade', 'none'].map((m) => [m, ta(`opt.sheetMotion.${m}`)])}
-                              onchange={(v) => setNavStyle('sheetMotion', v === 'top' ? undefined : v)} /></label>
                           <label class="gridmenu-snap" title={ta('tip.nav.sheetLogo')}>
                             <input type="checkbox" checked={siteDraft.nav.style?.sheetLogo === true}
                               onchange={(e) => setNavStyle('sheetLogo', e.target.checked ? true : undefined)} />
@@ -6332,12 +6563,19 @@
                               {ta('lbl.sheetCart')}
                             </label>
                           {/if}
-                          <label title={ta('tip.nav.sheetBg')}>{ta('lbl.sheetBg')}
+                          {#if siteDraft.nav.style?.sheetTheme || siteDraft.nav.style?.sheetCart}
+                            <label class="gridmenu-snap" title={ta('tip.nav.sheetToolLabels')}>
+                              <input type="checkbox" checked={siteDraft.nav.style?.sheetToolLabels === true}
+                                onchange={(e) => setNavStyle('sheetToolLabels', e.target.checked ? true : undefined)} />
+                              {ta('lbl.sheetToolLabels')}
+                            </label>
+                          {/if}
+                          <!-- The menu's own surface: colour, opacity and text colour; the blur as a switch -->
+                          <div class="ctl-row" title={ta('tip.nav.sheetBg')}>
+                            <span class="mini-label ctl-name">{ta('lbl.background')}</span>
                             <ColorPicker value={siteDraft.nav.style?.sheet?.bg ?? 'surface'} tokens={themeSwatches()}
-                              label={ta('tip.nav.sheetBg')} onchange={(hex) => setNavSheet('bg', hex)} /></label>
-                          <div class="ctl-row" title={ta('tip.nav.sheetOpacity')}>
-                            <span class="mini-label ctl-name">{ta('lbl.sheetOpacity')}</span>
-                            <input type="range" min="0" max="100" step="1"
+                              label={ta('tip.nav.sheetBg')} onchange={(hex) => setNavSheet('bg', hex)} />
+                            <input type="range" min="0" max="100" step="1" title={ta('tip.nav.sheetOpacity')}
                               value={Math.round((siteDraft.nav.style?.sheet?.bgOpacity ?? 0.85) * 100)}
                               oninput={(e) => setNavSheet('bgOpacity', e.target.valueAsNumber / 100)} />
                             <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.sheet?.bgOpacity ?? 0.85) * 100)}%</span>
@@ -6352,10 +6590,12 @@
                               label={ta('tip.nav.sheetTextColorPick')} onchange={(hex) => setNavSheet('textColor', hex)} /></label>
                         {/if}
                         {#if siteDraft.nav.items?.some((item) => item.children?.length)}
-                          <label title={ta('tip.nav.mobileSubs')}>{ta('lbl.mobileSubs')}
-                            <Dropdown value={siteDraft.nav.style?.mobileSubs ?? 'collapsed'}
+                          <label class="field-stack" title={ta('tip.nav.mobileSubs')}>
+                            <span class="mini-label">{ta('lbl.mobileSubs')}</span>
+                            <Dropdown filled value={siteDraft.nav.style?.mobileSubs ?? 'collapsed'}
                               options={[['collapsed', ta('opt.mobileSubs.collapsed')], ['expanded', ta('opt.mobileSubs.expanded')]]}
-                              onchange={(v) => setNavStyle('mobileSubs', v === 'collapsed' ? undefined : v)} /></label>
+                              onchange={(v) => setNavStyle('mobileSubs', v === 'collapsed' ? undefined : v)} />
+                          </label>
                         {/if}
                       </div>
                     </details>
@@ -6363,28 +6603,50 @@
                     <details class="group frame-group sub-fold">
                       <summary>{ta('group.navColours')}</summary>
                       <div class="group-items">
-                        <label>{ta('lbl.navHover')}
-                          <Dropdown value={siteDraft.nav.style?.hover ?? 'standard'}
-                            options={[['standard', ta('opt.hover.standard')], ['underline', ta('opt.hover.underline')], ['pill', ta('opt.hover.pill')], ['lift-plain', ta('opt.hover.liftPlain')], ['lift', ta('opt.hover.lift')]]}
-                            onchange={(v) => setNavHover(v)} /></label>
+                        <!-- The hover styles as samples of a menu word drawn with each style -->
+                        <div class="ctl-field">
+                          <span class="mini-label">{ta('lbl.navHover')}</span>
+                          <div class="tile-grid cols-5" role="group" aria-label={ta('lbl.navHover')}>
+                            {#each [['standard', ta('opt.hover.standard')], ['underline', ta('opt.hover.underline')], ['pill', ta('opt.hover.pill')], ['lift-plain', ta('opt.hover.liftPlain')], ['lift', ta('opt.hover.lift')]] as [v, text] (v)}
+                              <button type="button" class="tile hover-tile" class:on={(siteDraft.nav.style?.hover ?? 'standard') === v} aria-pressed={(siteDraft.nav.style?.hover ?? 'standard') === v}
+                                onclick={() => setNavHover(v)}><span class="hover-sample hover-{v}">{ta('seed.home')}</span><span>{text}</span></button>
+                            {/each}
+                          </div>
+                        </div>
                         {#if siteDraft.nav.style?.hover === 'lift'}
-                          <label title={ta('tip.nav.hoverGlow')}>{ta('lbl.glowStrength')}
-                            <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.hoverGlow ?? 0.6) * 100)}%</span></label>
-                          <input type="range" min="0.1" max="1" step="0.01"
-                            value={siteDraft.nav.style?.hoverGlow ?? 0.6}
-                            oninput={(e) => setNavStyle('hoverGlow', Number(e.target.value))} />
+                          <div class="ctl-row" title={ta('tip.nav.hoverGlow')}>
+                            <span class="mini-label ctl-name">{ta('lbl.glowStrength')}</span>
+                            <input type="range" min="0.1" max="1" step="0.01"
+                              value={siteDraft.nav.style?.hoverGlow ?? 0.6}
+                              oninput={(e) => setNavStyle('hoverGlow', Number(e.target.value))} />
+                            <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.hoverGlow ?? 0.6) * 100)}%</span>
+                          </div>
                         {/if}
-                        {#if hoverColorLabel}
-                          <label title={hoverColorLabel[1]}>{hoverColorLabel[0]}
-                            <ColorPicker value={siteDraft.nav.style?.hoverColor ?? 'accent'} tokens={themeSwatches()}
-                              label={hoverColorLabel[1]} onchange={(hex) => setNavStyle('hoverColor', hex)} /></label>
-                        {/if}
-                        <label title={ta('tip.nav.hoverTextColor')}>{ta('lbl.hoverTextColor')}
-                          <ColorPicker value={siteDraft.nav.style?.hoverTextColor ?? 'accent'} tokens={themeSwatches()}
-                            label={ta('tip.nav.hoverTextColorPick')} onchange={(hex) => setNavStyle('hoverTextColor', hex)} /></label>
-                        <label>{ta('lbl.textColor')}
-                          <ColorPicker value={siteDraft.nav.style?.textColor ?? 'text'} tokens={themeSwatches()}
-                            label={ta('tip.nav.textColorPick')} onchange={(hex) => setNavStyle('textColor', hex)} /></label>
+                        <!-- The colours as a row of swatches with their names beneath -->
+                        <div class="swatch-row">
+                          {#if hoverColorLabel}
+                            <div class="swatch-cell" title={hoverColorLabel[1]}>
+                              <ColorPicker value={siteDraft.nav.style?.hoverColor ?? 'accent'} tokens={themeSwatches()}
+                                label={hoverColorLabel[1]} onchange={(hex) => setNavStyle('hoverColor', hex)} />
+                              <span class="mini-label">{hoverColorLabel[0]}</span>
+                            </div>
+                          {/if}
+                          <div class="swatch-cell" title={ta('tip.nav.hoverTextColor')}>
+                            <ColorPicker value={siteDraft.nav.style?.hoverTextColor ?? 'accent'} tokens={themeSwatches()}
+                              label={ta('tip.nav.hoverTextColorPick')} onchange={(hex) => setNavStyle('hoverTextColor', hex)} />
+                            <span class="mini-label">{ta('lbl.hoverTextColor')}</span>
+                          </div>
+                          <div class="swatch-cell" title={ta('tip.nav.textColorPick')}>
+                            <ColorPicker value={siteDraft.nav.style?.textColor ?? 'text'} tokens={themeSwatches()}
+                              label={ta('tip.nav.textColorPick')} onchange={(hex) => setNavStyle('textColor', hex)} />
+                            <span class="mini-label">{ta('lbl.textColor')}</span>
+                          </div>
+                        </div>
+                        <label class="gridmenu-snap" title={ta('tip.nav.blur')}>
+                          <input type="checkbox" checked={siteDraft.nav.style?.blur !== false}
+                            onchange={(e) => setNavStyle('blur', e.target.checked)} />
+                          {ta('lbl.navBlur')}
+                        </label>
                       </div>
                     </details>
                     <hr class="gridmenu-divider" />
@@ -6397,22 +6659,80 @@
                   </div>
                 </details>
                 <details class="group">
+                  <summary title={ta('tip.nav.announce')}>{ta('group.announcement')}</summary>
+                  <div class="group-items">
+                    <!-- The strip above the menu: off by default, the fields appear when on -->
+                    <label class="gridmenu-snap" title={ta('tip.nav.announce')}>
+                      <input type="checkbox" checked={siteDraft.nav.announcement?.show === true}
+                        onchange={(e) => setNavAnnouncement('show', e.target.checked ? true : undefined)} />
+                      {ta('lbl.announceShow')}
+                    </label>
+                    {#if siteDraft.nav.announcement?.show}
+                      <label class="field-stack" title={ta('tip.nav.announce')}>
+                        <span class="mini-label">{ta('lbl.text')}</span>
+                        <input type="text" class="field-filled" value={siteDraft.nav.announcement?.text ?? ''}
+                          onchange={(e) => setNavAnnouncement('text', e.target.value.trim() || undefined)} />
+                      </label>
+                      <!-- A page from the register, or a free link with its own field -->
+                      <label title={ta('tip.nav.announceLink')}>{ta('lbl.link')}
+                        <Dropdown value={siteDraft.nav.announcement?.page ?? (siteDraft.nav.announcement?.href !== undefined ? 'custom' : '')}
+                          options={[['', ta('common.none')], ...siteDraft.pages.map((p) => [p.id, p.title]), ['custom', ta('opt.announceLink.custom')]]}
+                          onchange={(v) => siteMutate('edit:nav-announce-link', () => {
+                            const next = { ...(siteDraft.nav.announcement ?? {}) };
+                            delete next.page; delete next.href;
+                            if (v === 'custom') next.href = '';
+                            else if (v) next.page = v;
+                            siteDraft.nav.announcement = next;
+                          })} /></label>
+                      {#if siteDraft.nav.announcement?.href !== undefined && !siteDraft.nav.announcement?.page}
+                        <label class="field-stack" title={ta('tip.nav.announceHref')}>
+                          <span class="mini-label">{ta('lbl.announceHref')}</span>
+                          <input type="text" class="field-filled" placeholder="https://" value={siteDraft.nav.announcement?.href ?? ''}
+                            onchange={(e) => setNavAnnouncement('href', e.target.value.trim())} />
+                        </label>
+                      {/if}
+                      <!-- Only where the strip can scroll away: a sticky bar in the flow -->
+                      {#if siteDraft.nav.sticky !== false && !floatingVariant && !siteDraft.nav.overlay}
+                        <label class="gridmenu-snap" title={ta('tip.nav.announceSticky')}>
+                          <input type="checkbox" checked={siteDraft.nav.announcement?.sticky !== false}
+                            onchange={(e) => setNavAnnouncement('sticky', e.target.checked ? undefined : false)} />
+                          {ta('lbl.announceSticky')}
+                        </label>
+                      {/if}
+                      <label class="gridmenu-snap" title={ta('tip.nav.announceDismiss')}>
+                        <input type="checkbox" checked={siteDraft.nav.announcement?.dismiss !== false}
+                          onchange={(e) => setNavAnnouncement('dismiss', e.target.checked ? undefined : false)} />
+                        {ta('lbl.announceDismiss')}
+                      </label>
+                      <label title={ta('tip.nav.announceColor')}>{ta('lbl.background')}
+                        <ColorPicker value={siteDraft.nav.announcement?.color ?? 'accent'} tokens={themeSwatches()}
+                          label={ta('tip.nav.announceColor')} onchange={(hex) => setNavAnnouncement('color', hex)} /></label>
+                      <label title={ta('tip.nav.announceTextColor')}>{ta('lbl.textColor')}
+                        <ColorPicker value={siteDraft.nav.announcement?.textColor ?? 'accent-text'} tokens={themeSwatches()}
+                          label={ta('tip.nav.announceTextColor')} onchange={(hex) => setNavAnnouncement('textColor', hex)} /></label>
+                    {/if}
+                  </div>
+                </details>
+                <details class="group">
                   <summary>{ta('group.submenu')}</summary>
                   <div class="group-items">
                     <!-- Side variant: the submenus are accordions in the
                          column, so the card frame, flat surface and flyout
                          make no sense there -->
-                    <label>{ta('lbl.design')}
-                      <Dropdown value={siteDraft.nav.style?.subStyle ?? 'card'}
-                        options={sideVariant
-                          ? [['card', ta('common.standard')], ['pills', ta('opt.sub.pills')], ['lines', ta('opt.sub.lines')]]
-                          : [['card', ta('opt.sub.card')], ['flat', ta('opt.sub.flat')], ['pills', ta('opt.sub.pills')], ['lines', ta('opt.sub.lines')], ['flyout', ta('opt.sub.flyout')]]}
-                        onchange={(v) => setNavStyle('subStyle', v === 'card' ? undefined : v)} /></label>
+                    <!-- The designs as small drawings of the submenu hanging under its item -->
+                    <div class="ctl-field">
+                      <span class="mini-label">{ta('lbl.design')}</span>
+                      <div class="tile-grid" class:cols-5={!sideVariant} class:cols-3={sideVariant} role="group" aria-label={ta('lbl.design')}>
+                        {#each subStyleOptions as [v, text] (v)}
+                          <button type="button" class="tile" class:on={(siteDraft.nav.style?.subStyle ?? 'card') === v} aria-pressed={(siteDraft.nav.style?.subStyle ?? 'card') === v}
+                            onclick={() => setNavStyle('subStyle', v === 'card' ? undefined : v)}>{@html SUB_STYLE_ICONS[v]}<span>{text}</span></button>
+                        {/each}
+                      </div>
+                    </div>
                     {#if siteDraft.nav.items?.some((item) => item.children?.length)}
-                      <label title={ta('tip.nav.subOpen')}>{ta('lbl.subOpen')}
-                        <Dropdown value={siteDraft.nav.style?.subOpen ?? 'hover'}
-                          options={[['hover', ta('opt.subOpen.hover')], ['stay', ta('opt.subOpen.stay')], ['click', ta('opt.subOpen.click')]]}
-                          onchange={(v) => setNavStyle('subOpen', v === 'hover' ? undefined : v)} /></label>
+                      <Choice label={ta('lbl.subOpen')} title={ta('tip.nav.subOpen')} value={siteDraft.nav.style?.subOpen ?? 'hover'}
+                        options={[['hover', ta('opt.subOpen.hover')], ['stay', ta('opt.subOpen.stay')], ['click', ta('opt.subOpen.click')]]}
+                        onchange={(v) => setNavStyle('subOpen', v === 'hover' ? undefined : v)} />
                     {/if}
                     {#if siteDraft.nav.style?.subStyle === 'pills'}
                       <label title={ta('tip.nav.subPillColor')}>{ta('lbl.subPillColor')}
@@ -6427,57 +6747,110 @@
                 <details class="group">
                   <summary title={ta('hint.nav.submenu')}>{ta('group.menuItems')}</summary>
                   <div class="group-items">
-                {#each siteDraft.nav.items as item, i}
-                  <div class="nav-row">
-                    <input value={item.label} title={ta('tip.nav.itemLabel')}
-                      oninput={(e) => setNavLabel(i, e.target.value)} />
-                    <span class="row-tools">
-                      <button class="ghost row-tool" title={ta('tip.nav.addChild')}
-                        onclick={() => addNavChild(i)}>{@html ICONS.plus}</button>
-                      <button class="ghost row-tool" onclick={() => moveNavItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-                      <button class="ghost row-tool" onclick={() => moveNavItem(i, 1)}
-                        disabled={i === siteDraft.nav.items.length - 1}>{@html ICONS.down}</button>
-                      <button class="ghost row-tool" title={ta('tip.nav.removeItem')}
-                        onclick={() => removeNavItem(i)}>{@html ICONS.cross}</button>
-                    </span>
-                    <!-- The wrapper span keeps the grid placement (.nav-row .nav-target) -->
-                    <span class="nav-target">
-                      <Dropdown value={item.page ?? (item.href != null ? '__href' : '__none')} title={ta('tip.linkTarget')}
-                        options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')],
-                          ...(item.children ? [['__none', ta('opt.noLink')]] : [])]}
-                        onchange={(v) => setNavTarget(i, v)} />
-                    </span>
-                    {#if !item.page && item.href != null}
-                      <input class="nav-target" value={item.href} placeholder={ta('ph.hrefAnchor')}
-                        title={ta('tip.hrefAnchor')}
-                        onchange={(e) => setNavHref(i, e.target.value)} />
-                    {/if}
-                  </div>
-                  {#each item.children ?? [] as child, j}
-                    <div class="nav-row nav-sub-row">
-                      <input value={child.label} title={ta('tip.nav.childLabel')}
-                        oninput={(e) => setNavChildLabel(i, j, e.target.value)} />
-                      <span class="row-tools">
-                        <button class="ghost row-tool" onclick={() => moveNavChild(i, j, -1)} disabled={j === 0}>{@html ICONS.up}</button>
-                        <button class="ghost row-tool" onclick={() => moveNavChild(i, j, 1)}
-                          disabled={j === item.children.length - 1}>{@html ICONS.down}</button>
-                        <button class="ghost row-tool" title={ta('tip.nav.removeChild')}
-                          onclick={() => removeNavChild(i, j)}>{@html ICONS.cross}</button>
-                      </span>
-                      <span class="nav-target">
-                        <Dropdown value={child.page ?? '__href'} title={ta('tip.linkTarget')}
-                          options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')]]}
-                          onchange={(v) => setNavChildTarget(i, j, v)} />
-                      </span>
-                      {#if !child.page}
-                        <input class="nav-target" value={child.href ?? ''} placeholder={ta('ph.hrefAnchor')}
-                          title={ta('tip.hrefAnchor')}
-                          onchange={(e) => setNavChildHref(i, j, e.target.value)} />
-                      {/if}
+                <!-- One compact row per item: grip, the name with its target beneath,
+                     a submenu marker, and the actions as a small grid on the row under
+                     the pointer or the selected one. Rows are reordered by dragging: a
+                     faint clone of the row shows where it lands, the middle of a
+                     top-level row takes it in as a child, and the grip column of a child
+                     row leads back out to the top level. -->
+                {#snippet navGhost(child)}
+                  {@const g = navGhostText()}
+                  <!-- The faint clone at the landing place -->
+                  <div class="nav-item ghost" class:child aria-hidden="true">
+                    <span class="nav-grip">{@html GRIP_ICON}</span>
+                    <div class="nav-item-main">
+                      <span class="nav-item-name ghost-name">{g.label}</span>
+                      <span class="ghost-target">{g.target}</span>
                     </div>
+                  </div>
+                {/snippet}
+                <div class="nav-list" role="list"
+                  ondragover={onNavListDragOver}
+                  ondrop={(e) => { e.preventDefault(); dropNavRow(navDrop?.key ?? ''); }}>
+                {#each siteDraft.nav.items as item, i (i)}
+                  {@const key = `${i}`}
+                  {#if navDrop?.key === key && navDrop.pos === 'before'}{@render navGhost(false)}{/if}
+                  <div class="nav-item" class:selected={navSel === key} class:dragging={navDrag === key} data-key={key}
+                    class:drop-target={navDrop?.key === key && navDrop.pos === 'into'}
+                    draggable="true"
+                    ondragstart={(e) => { navDrag = key; e.dataTransfer?.setData('text/plain', key); }}
+                    ondragend={endNavDrag}
+                    onclick={() => { navSel = key; }}>
+                    <span class="nav-grip" title={ta('tip.nav.dragItem')}>{@html GRIP_ICON}</span>
+                    <div class="nav-item-main">
+                      <input class="nav-item-name" value={item.label} title={ta('tip.nav.itemLabel')}
+                        oninput={(e) => setNavLabel(i, e.target.value)} />
+                      <div class="nav-item-target">
+                        <Dropdown compact value={item.page ?? (item.href != null ? '__href' : '__none')} title={ta('tip.linkTarget')}
+                          options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')],
+                            ...(item.children ? [['__none', ta('opt.noLink')]] : [])]}
+                          onchange={(v) => setNavTarget(i, v)} />
+                        {#if !item.page && item.href != null}
+                          <input class="nav-item-href" value={item.href} placeholder={ta('ph.hrefAnchor')}
+                            title={ta('tip.hrefAnchor')}
+                            onchange={(e) => setNavHref(i, e.target.value)} />
+                        {/if}
+                      </div>
+                    </div>
+                    {#if item.children?.length}<span class="nav-item-sub" title={ta('tip.nav.hasSubmenu')}>{@html SUB_ICON}</span>{/if}
+                    <span class="nav-actions">
+                      <button class="ghost nav-act" title={ta('tip.nav.addChild')}
+                        onclick={() => addNavChild(i)}>{@html ICONS.plus}</button>
+                      <button class="ghost nav-act" title={ta('tip.moveUp')} onclick={() => moveNavItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+                      <button class="ghost nav-act" title={ta('tip.nav.removeItem')}
+                        onclick={() => removeNavItem(i)}>{@html ICONS.cross}</button>
+                      <button class="ghost nav-act" title={ta('tip.moveDown')} onclick={() => moveNavItem(i, 1)}
+                        disabled={i === siteDraft.nav.items.length - 1}>{@html ICONS.down}</button>
+                    </span>
+                    <button class="ghost row-tool nav-more" title={ta('tip.nav.itemActions')} aria-label={ta('tip.nav.itemActions')}
+                      onclick={() => { navSel = key; }}>{@html ICONS.kebab}</button>
+                  </div>
+                  {#each item.children ?? [] as child, j (j)}
+                    {@const ckey = `${i}.${j}`}
+                    {#if navDrop?.key === ckey && navDrop.pos === 'before'}{@render navGhost(true)}{/if}
+                    <div class="nav-item child" class:selected={navSel === ckey} class:dragging={navDrag === ckey} data-key={ckey}
+                      draggable="true"
+                      ondragstart={(e) => { e.stopPropagation(); navDrag = ckey; e.dataTransfer?.setData('text/plain', ckey); }}
+                      ondragend={endNavDrag}
+                      onclick={(e) => { e.stopPropagation(); navSel = ckey; }}>
+                      <span class="nav-grip" title={ta('tip.nav.dragItem')}>{@html GRIP_ICON}</span>
+                      <div class="nav-item-main">
+                        <input class="nav-item-name" value={child.label} title={ta('tip.nav.childLabel')}
+                          oninput={(e) => setNavChildLabel(i, j, e.target.value)} />
+                        <div class="nav-item-target">
+                          <Dropdown compact value={child.page ?? '__href'} title={ta('tip.linkTarget')}
+                            options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')]]}
+                            onchange={(v) => setNavChildTarget(i, j, v)} />
+                          {#if !child.page}
+                            <input class="nav-item-href" value={child.href ?? ''} placeholder={ta('ph.hrefAnchor')}
+                              title={ta('tip.hrefAnchor')}
+                              onchange={(e) => setNavChildHref(i, j, e.target.value)} />
+                          {/if}
+                        </div>
+                      </div>
+                      <span class="nav-actions">
+                        <button class="ghost nav-act" title={ta('tip.moveUp')} onclick={() => moveNavChild(i, j, -1)} disabled={j === 0}>{@html ICONS.up}</button>
+                        <button class="ghost nav-act" title={ta('tip.nav.removeChild')}
+                          onclick={() => removeNavChild(i, j)}>{@html ICONS.cross}</button>
+                        <button class="ghost nav-act" title={ta('tip.moveDown')} onclick={() => moveNavChild(i, j, 1)}
+                          disabled={j === item.children.length - 1}>{@html ICONS.down}</button>
+                      </span>
+                      <button class="ghost row-tool nav-more" title={ta('tip.nav.itemActions')} aria-label={ta('tip.nav.itemActions')}
+                        onclick={(e) => { e.stopPropagation(); navSel = ckey; }}>{@html ICONS.kebab}</button>
+                    </div>
+                    {#if navDrop?.key === ckey && navDrop.pos === 'after'}{@render navGhost(true)}{/if}
                   {/each}
+                  {#if navDrop?.key === key && navDrop.pos === 'into'}{@render navGhost(true)}{/if}
+                  {#if navDrop?.key === key && navDrop.pos === 'after'}{@render navGhost(false)}{/if}
                 {/each}
+                </div>
                     <button class="ghost action" onclick={addNavItem}>{ta('ui.addMenuItem')}</button>
+                    <!-- A new blank page that goes straight into the menu -->
+                    <span class="toolbar-row" title={ta('tip.nav.newPageAsItem')}>
+                      <input class="tb-grow" placeholder={ta('ph.nav.newPageTitle')} bind:value={navNewPageTitle}
+                        onkeydown={(e) => { if (e.key === 'Enter') addPageAsNavItem(); }} />
+                      <button class="ghost action" disabled={!navNewPageTitle.trim()} onclick={addPageAsNavItem}>{ta('ui.newPageAsItem')}</button>
+                    </span>
                   </div>
                 </details>
               </div>
@@ -9191,6 +9564,7 @@
   /* Shared control height (2.2rem) and size in the panels: fields and
      buttons must line up wherever they stand */
   .panel-body input:not([type]),
+  .panel-body input[type='text'],
   .panel-body input[type='number'] {
     font: inherit;
     font-size: 0.85rem;
@@ -9316,22 +9690,173 @@
 
   /* Two columns: field | tools. The target and link fields sit in the
      same column as the name field, so they all end on the same right edge. */
-  .nav-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.3rem 0.35rem;
-    padding-bottom: 0.4rem;
-    border-bottom: 1px solid rgb(255 255 255 / 8%);
+  /* The list of menu items, with a strip under the last row to drop on. */
+  .nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-bottom: 14px;
   }
 
-  .nav-row input {
+  /* The menu items as compact rows: grip, name over target, marker, actions. */
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.4rem 0.3rem 0.3rem;
+    border-radius: 7px;
+    background: color-mix(in srgb, currentColor 3%, transparent);
+  }
+
+  .nav-item.selected {
+    background: color-mix(in srgb, var(--urd-color-accent) 12%, transparent);
+  }
+
+  .nav-item.child {
+    margin-left: 1.3rem;
+  }
+
+  .nav-grip {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.1rem;
+    opacity: 0.45;
+    cursor: grab;
+  }
+
+  .nav-item:hover .nav-grip,
+  .nav-item.selected .nav-grip {
+    opacity: 0.8;
+  }
+
+  .nav-item-main {
+    flex: 1 1 auto;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* The name is the row's text: no frame until it has focus (the selector
+     outranks the panel's shared field rule) */
+  .panel-body input.nav-item-name {
+    height: 1.5rem;
+    padding: 0 0.2rem;
+    border-color: transparent;
+    background: transparent;
+    font-size: 0.85rem;
+  }
+
+  .panel-body input.nav-item-name:focus {
+    border-color: var(--urd-color-accent);
+    outline: none;
+  }
+
+  /* Where a dragged row lands: a faint clone of it, dashed, in the gap or
+     indented as a child */
+  .nav-item.ghost {
+    opacity: 0.55;
+    border: 1px dashed var(--urd-color-accent);
+    background: color-mix(in srgb, var(--urd-color-accent) 10%, transparent);
+    min-height: 2.9rem;
+  }
+
+  .ghost-name {
+    display: block;
+    height: 1.5rem;
+    line-height: 1.5rem;
+    padding: 0 0.2rem;
+    font-size: 0.85rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ghost-target {
+    display: block;
+    padding: 0 0.2rem;
+    font-size: 0.72rem;
+    opacity: 0.75;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nav-item.dragging {
+    opacity: 0.3;
+  }
+
+  /* The row that takes the dragged row in as a child */
+  .nav-item.drop-target {
+    background: color-mix(in srgb, var(--urd-color-accent) 18%, transparent);
+    outline: 1px dashed var(--urd-color-accent);
+    outline-offset: -1px;
+  }
+
+  /* The actions: a two-by-two grid of small buttons at the right, shown on the
+     row under the pointer and on the selected row; the other rows show the dots */
+  .nav-actions {
+    flex: 0 0 auto;
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+  }
+
+  .nav-item:hover .nav-actions,
+  .nav-item.selected .nav-actions {
+    display: grid;
+  }
+
+  .nav-item:hover .nav-more,
+  .nav-item.selected .nav-more {
+    display: none;
+  }
+
+  .panel-body .nav-act {
+    width: 1.5rem;
+    height: 1.4rem;
+    min-height: 0;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-item-target {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+
+  .nav-item-target > :global(.dd) {
+    flex: 0 1 auto;
     max-width: 100%;
   }
 
-  .nav-row .nav-target {
-    grid-column: 1;
+  .panel-body input.nav-item-href {
+    flex: 1 1 4rem;
+    min-width: 3rem;
+    height: 1.5rem;
+    font-size: 0.72rem;
+    padding: 0 0.3rem;
+  }
+
+  .nav-item-sub {
+    flex: 0 0 auto;
+    display: inline-flex;
+    opacity: 0.55;
+  }
+
+  .panel-body .nav-more {
+    height: 1.8rem;
+    width: 1.8rem;
+    opacity: 0.55;
+  }
+
+  .nav-item:hover .nav-more {
+    opacity: 1;
   }
 
   /* The social icon's preview in the Footer panel */
@@ -9387,12 +9912,6 @@
   }
 
   /* Submenu rows: indented under the parent item, with a marked edge */
-  .nav-sub-row {
-    margin-left: 0.8rem;
-    padding-left: 0.5rem;
-    border-left: 2px solid rgb(255 255 255 / 12%);
-  }
-
   .nav-line {
     display: flex;
     align-items: center;
@@ -9704,7 +10223,7 @@
      number; two number fields side by side; the section folds inside
      Appearance keep the group indent once. */
   .ctl-row .ctl-name { flex: 0 0 4.4rem; }
-  .ctl-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+  .ctl-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; align-items: end; }
   .ctl-field { display: grid; gap: 4px; min-width: 0; }
   .panel-body .ctl-field .tb-num { width: 100%; padding: 0 0.3em; text-align: center; }
   .toolbar-row.ctl-end { justify-content: flex-end; gap: 0.4rem; }
@@ -9867,6 +10386,84 @@
   .panel-body label > input {
     min-width: 0;
     max-width: 100%;
+  }
+
+  /* Picture choices: a grid of drawn tiles, the chosen one on the accent. */
+  .tile-grid { display: grid; gap: 6px; }
+  .tile-grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tile-grid.cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .tile {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    padding: 8px 2px 6px; min-width: 0;
+    background: color-mix(in srgb, currentColor 5%, transparent);
+    border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+    border-radius: 8px; cursor: pointer; color: inherit; opacity: 0.75;
+    font: 600 10px system-ui, sans-serif; text-align: center;
+  }
+  .tile span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tile.on { opacity: 1; border-color: var(--urd-color-accent); background: color-mix(in srgb, var(--urd-color-accent) 22%, transparent); }
+  .tile:focus-visible { outline: 2px solid var(--urd-color-accent); outline-offset: -2px; }
+  /* The hover samples draw the menu word with the style itself. */
+  .hover-sample { display: inline-block; font: 13px Georgia, serif; color: var(--urd-color-accent); height: 22px; line-height: 22px; }
+  .hover-sample.hover-underline { text-decoration: underline; text-underline-offset: 3px; }
+  .hover-sample.hover-pill { color: var(--urd-color-bg); background: var(--urd-color-accent); padding: 0 8px; border-radius: 999px; }
+  .hover-sample.hover-lift-plain { translate: 0 -2px; }
+  .hover-sample.hover-lift { text-shadow: 0 3px 10px color-mix(in srgb, var(--urd-color-accent) 70%, transparent); }
+  /* Colours as a row of swatches with the name beneath each. */
+  .swatch-row { display: flex; justify-content: space-around; gap: 8px; }
+  .swatch-cell { display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; min-width: 0; }
+  /* The logo's thumbnail beside its picker, and three sizes on one row. */
+  .logo-pick { display: flex; align-items: center; gap: 12px; }
+  .logo-thumb {
+    width: 52px; height: 52px; flex: 0 0 auto; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, currentColor 8%, transparent); border: 1px solid color-mix(in srgb, currentColor 14%, transparent); overflow: hidden;
+  }
+  .logo-thumb img { max-width: 44px; max-height: 44px; }
+  .logo-pick-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+  .logo-file { font-size: 11px; opacity: 0.6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ctl-triple { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-items: end; }
+  /* A small titled card inside a fold (Behaviour). */
+  .mini-card {
+    display: flex; flex-direction: column; gap: 10px; padding: 10px 12px;
+    background: color-mix(in srgb, currentColor 4%, transparent); border: 1px solid color-mix(in srgb, currentColor 10%, transparent); border-radius: 9px;
+  }
+  /* The Adjust fold inside Size: the free values behind the presets. */
+  .sub-inset > summary { cursor: pointer; font-size: 0.85rem; list-style: none; display: flex; align-items: center; justify-content: space-between; }
+  .sub-inset > summary::after { content: ''; width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; rotate: 45deg; opacity: 0.6; margin-right: 4px; }
+  .sub-inset[open] > summary::after { rotate: -135deg; }
+  .sub-inset-body { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; padding: 10px 12px; background: color-mix(in srgb, currentColor 4%, transparent); border-radius: 8px; }
+
+  /* A text field with its label above in capitals (the announcement's text and
+     address): filled, without a frame, an accent underline while it has focus. */
+  .panel-body label.field-stack {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+  }
+
+  .panel-body .field-filled {
+    background: color-mix(in srgb, currentColor 7%, transparent);
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 6px 6px 2px 2px;
+  }
+
+  .panel-body .field-filled:focus {
+    outline: none;
+    border-bottom-color: var(--urd-color-accent);
+  }
+
+  /* A dropdown under a stacked label fills the row. */
+  .panel-body label.field-stack > :global(.dd) {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  /* A dropdown beside its label: bounded, never the whole remaining width, so
+     the row reads label then control; the label text wraps if it must. */
+  .panel-body label > :global(.dd) {
+    flex: 0 1 11rem;
+    min-width: 8rem;
   }
 
   .panel-body textarea {

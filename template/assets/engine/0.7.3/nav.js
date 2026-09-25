@@ -14,7 +14,7 @@
  * and the scroll lock come from the browser).
  */
 
-import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, isSafeImage } from './nav-model.js';
+import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, announcementModel, isSafeImage } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
 import { readCart, cartCount, onCartChange } from './shop.js';
@@ -70,6 +70,61 @@ export function renderNav(site, host) {
     : site;
 
   host.replaceChildren();
+
+  // The announcement bar (nav.announcement, additive since v0.7): a strip
+  // above the menu inside the host. It follows the menu by default; with
+  // sticky false the host's sticky top is raised by the strip's height
+  // (--urd-announce-h, measured below), so the strip scrolls away and the
+  // menu sticks alone. Hosts out of the flow (floating, overlay) are fixed
+  // and keep the strip with the menu regardless.
+  // A dismissed strip stays away for the visitor as long as the message is
+  // the same (localStorage keyed by the text); the preview always shows it.
+  const announce = announcementModel(site.nav.announcement, site.pages);
+  const dismissKey = announce ? `urd-announce-dismissed:${announce.text}` : '';
+  const inPreview = document.body.classList.contains('urd-preview');
+  let dismissed = false;
+  if (announce?.dismiss && !inPreview) {
+    try { dismissed = localStorage.getItem(dismissKey) === '1'; } catch { dismissed = false; }
+  }
+  let announceEl = null;
+  if (announce && !dismissed) {
+    announceEl = document.createElement('div');
+    announceEl.className = 'urd-nav-announce';
+    const inner = document.createElement(announce.href ? 'a' : 'span');
+    inner.className = 'urd-nav-announce-text';
+    inner.textContent = announce.text;
+    if (announce.href) {
+      inner.href = announce.href;
+      if (/^https?:/i.test(announce.href)) inner.rel = 'noopener';
+    }
+    if (announce.bg) announceEl.style.setProperty('--urd-announce-bg', announce.bg);
+    if (announce.color) announceEl.style.setProperty('--urd-announce-text', announce.color);
+    announceEl.appendChild(inner);
+    if (announce.dismiss) {
+      const cross = document.createElement('button');
+      cross.type = 'button';
+      cross.className = 'urd-nav-announce-close';
+      cross.setAttribute('aria-label', t('nav.dismissAnnouncement'));
+      cross.innerHTML = CROSS;
+      cross.addEventListener('click', () => {
+        if (!inPreview) {
+          try { localStorage.setItem(dismissKey, '1'); } catch { /* storage may be unavailable */ }
+        }
+        announceEl.remove();
+        announceEl = null;
+        setNavH();
+      }, { signal });
+      announceEl.appendChild(cross);
+    }
+    host.appendChild(announceEl);
+  }
+  // Whether the strip actually scrolls away: the host must be in the flow
+  // and sticky (a fixed host keeps the strip, a host that is not sticky
+  // scrolls away as a whole).
+  const announceScrolls = !!announce && !announce.sticky && site.nav.sticky !== false
+    && !hostClasses(effSite).host.some((cls) => cls === 'urd-nav-float' || cls === 'urd-nav-overlay');
+  host.classList.toggle('urd-nav-announce-scroll', announceScrolls);
+
   const nav = document.createElement('nav');
   // layout (additive since v0.5): where the menu items sit; the logo is
   // always first and doubles as the "Home" button.
@@ -356,7 +411,7 @@ export function renderNav(site, host) {
   list.id = 'urd-nav-menu';
 
   const sheet = mobileMenuMode(site.nav.style) === 'sheet'
-    ? buildSheet(nav, { list, tools, burger, logo: site.nav.style?.sheetLogo === true ? logo : null, withTheme: site.nav.style?.sheetTheme === true, withCart: site.nav.style?.sheetCart === true, motion: sheetMotion(site.nav.style), surface: navSurface(site.nav.style?.sheet ?? {}) }, signal)
+    ? buildSheet(nav, { list, tools, burger, logo: site.nav.style?.sheetLogo === true ? logo : null, withTheme: site.nav.style?.sheetTheme === true, withCart: site.nav.style?.sheetCart === true, labels: site.nav.style?.sheetToolLabels === true, motion: sheetMotion(site.nav.style), surface: navSurface(site.nav.style?.sheet ?? {}) }, signal)
     : null;
   const isMobileOpen = () => (sheet ? sheet.dialog.open : nav.classList.contains('urd-nav-open'));
   // The mobile state as the CSS sees it: the breakpoint, content folding, or
@@ -530,12 +585,16 @@ export function renderNav(site, host) {
   // The measured menu height as a CSS var on the root element: the nav
   // clearance in base.css (menu out of the flow) and the chrome parking in
   // preview read it. The distance is measured from the host's top to the
-  // nav's bottom edge (offsetTop includes the pill's top gap). The column
-  // variant takes no top height.
-  const setNavH = () => {
-    const h = isSide ? 0 : nav.offsetTop + nav.offsetHeight;
+  // nav's bottom edge (offsetTop includes the pill's top gap and a sticky
+  // announcement); an announcement that scrolls away is left out, since the
+  // menu alone is what stays. The column variant takes no top height.
+  function setNavH() {
+    const announceH = announceEl?.offsetHeight ?? 0;
+    const scrolledAway = announceScrolls ? announceH : 0;
+    const h = isSide ? 0 : nav.offsetTop + nav.offsetHeight - scrolledAway;
     document.documentElement.style.setProperty('--urd-nav-h', `${h}px`);
-  };
+    host.style.setProperty('--urd-announce-h', `${announceH}px`);
+  }
 
   // Content-aware folding: menu items never wrap (nowrap in base.css), so
   // when the items no longer fit in the width, the whole list folds to the
@@ -570,6 +629,7 @@ export function renderNav(site, host) {
     evalFold();
   });
   navRo.observe(nav);
+  if (announceEl) navRo.observe(announceEl);
   signal.addEventListener('abort', () => navRo.disconnect());
 
   // The column's hover closing: all accordions close together when the
@@ -655,10 +715,11 @@ export function renderNav(site, host) {
  * native. `motion` is the allowlisted entrance from sheetMotion, drawn by
  * base.css. `surface` is the sheet's own surface (nav.style.sheet through
  * navSurface); without choices the sheet follows the bar's veil and blur.
+ * `labels` shows the tool buttons' text beside the icons in the foot.
  */
-function buildSheet(nav, { list, tools, burger, logo, withTheme, withCart, motion, surface }, signal) {
+function buildSheet(nav, { list, tools, burger, logo, withTheme, withCart, labels, motion, surface }, signal) {
   const dialog = document.createElement('dialog');
-  dialog.className = `urd-nav-sheet urd-nav-sheet-from-${motion}`;
+  dialog.className = `urd-nav-sheet urd-nav-sheet-from-${motion}${labels ? ' urd-nav-sheet-labels' : ''}`;
   if (surface.bg) dialog.style.setProperty('--urd-nav-sheet-bg', surface.bg);
   if (surface.blur === false) dialog.style.setProperty('--urd-nav-sheet-blur', 'none');
   else if (surface.blur === true) dialog.style.setProperty('--urd-nav-sheet-blur', 'blur(12px)');
@@ -685,6 +746,14 @@ function buildSheet(nav, { list, tools, burger, logo, withTheme, withCart, motio
   dialog.addEventListener('click', (event) => {
     if (event.target === dialog || (event.target.closest('a[href]') && !event.defaultPrevented)) dialog.close();
   }, { signal });
+  // Touch scrolling stays inside the sheet: the page behind ignores the
+  // overflow lock on some touch browsers, so a touch move outside the
+  // sheet's own scroll area is cancelled while the sheet is open.
+  document.addEventListener('touchmove', (event) => {
+    if (!dialog.open) return;
+    if (event.target instanceof Element && event.target.closest('.urd-nav-sheet-body')) return;
+    event.preventDefault();
+  }, { passive: false, signal });
   const toolSelector = [withCart && '.urd-nav-cart', withTheme && '.urd-nav-theme'].filter(Boolean).join(', ');
   const toolButtons = () => (toolSelector ? [...tools.querySelectorAll(toolSelector)] : []);
   let logoNext = null;

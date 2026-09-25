@@ -333,13 +333,31 @@ function drawCalendar(ics, el, host, props, ctx) {
       const row = subscribeRow(ics, sources);
       if (row) host.appendChild(row);
     }
-    if (note) host.appendChild(el2('p', 'urd-cal-note', note));
+    // The note is editing chrome on the block, not content: it hangs below
+    // the block (base.css) and the push pass skips it, so it never makes the
+    // block taller in the preview than on the published page.
+    el.querySelector(':scope > .urd-cal-note')?.remove();
+    if (note) el.appendChild(el2('p', 'urd-cal-note', note));
   };
 
   if (!sources.length) {
-    if (ctx.preview) adminLocaleReady.then(() => { if (host.isConnected) draw(demoOccurrences(), ta('calendar.demoNote')); });
+    // Demo data exists only in the preview, so it must not change the
+    // block's height there: the published page shows the empty state at the
+    // frame's height, and a taller demo would push the neighbours in the
+    // preview alone. The block is marked so the push pass measures no
+    // growth (render.js contentHeight), and the demo is clipped to the frame.
+    if (ctx.preview) adminLocaleReady.then(() => {
+      if (!host.isConnected) return;
+      el.dataset.urdDemo = '1';
+      host.style.maxHeight = '100%';
+      host.style.overflow = 'hidden';
+      draw(demoOccurrences(), ta('calendar.demoNote'));
+    });
     return;
   }
+  delete el.dataset.urdDemo;
+  host.style.maxHeight = '';
+  host.style.overflow = '';
 
   if (ctx.preview) draw([], null);
   loadOccurrences(ics, sources, Math.max(1, props.limit ?? 6)).then(({ occurrences, errors }) => {

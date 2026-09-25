@@ -232,7 +232,43 @@ export function navClasses(site) {
   if (['bottom', 'top', 'both', 'all'].includes(borderSide) && !isSide) classes += ` urd-nav-border-${borderSide}`;
   const shadow = site.nav.style?.shadow;
   if (['soft', 'strong'].includes(shadow) && isBar) classes += ` urd-nav-shadow-${shadow}`;
+  // The tool cluster's side (additive since v0.7): end is the default and
+  // yields no class.
+  if (site.nav.style?.tools?.side === 'start') classes += ' urd-nav-tools-start';
   return classes;
+}
+
+/**
+ * The announcement bar above the menu (nav.announcement, additive since
+ * v0.7): null unless `show` is true and there is text, otherwise the
+ * finished values. The link is a page from the register (`page`) or a
+ * free `href` through the same guard as menu links; `sticky` defaults to
+ * true (the bar follows the menu), false lets it scroll away while the menu
+ * stays; `dismiss` (default true) adds a cross for the visitor. `bg` and `color` are
+ * resolved theme tokens or raw colours, empty when the CSS defaults (the
+ * accent and its text colour) apply.
+ * @param {{show?: boolean, text?: string, page?: string, href?: string, sticky?: boolean, dismiss?: boolean, color?: string, textColor?: string}} [announcement]
+ * @param {Array<{id: string, path: string}>} [pages] The page register (site.pages)
+ * @returns {{text: string, href: string | null, sticky: boolean, dismiss: boolean, bg: string, color: string} | null}
+ */
+export function announcementModel(announcement, pages = []) {
+  const text = typeof announcement?.text === 'string' ? announcement.text.trim() : '';
+  if (announcement?.show !== true || !text) return null;
+  let href = null;
+  if (announcement.page) {
+    const target = resolveItem({ label: text, page: announcement.page }, pages);
+    href = target.missing ? null : target.href;
+  } else if (isSafeHref(announcement.href)) {
+    href = announcement.href.trim();
+  }
+  return {
+    text,
+    href,
+    sticky: announcement.sticky !== false,
+    dismiss: announcement.dismiss !== false,
+    bg: announcement.color ? resolveColor(announcement.color) : '',
+    color: announcement.textColor ? resolveColor(announcement.textColor) : '',
+  };
 }
 
 /**

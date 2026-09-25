@@ -102,6 +102,11 @@
   ],
   "nav": {
     "version": 1,
+    "announcement": {
+      "show": true,
+      "text": "Nyhet: bestill kaker til høstferien",
+      "page": "kaker"
+    },
     "logo": {
       "type": "image",
       "value": "/media/logo-91963a12.svg",
@@ -176,8 +181,10 @@
       "size": "sm",
       "hover": "underline",
       "hoverGlow": 1,
-      "radius": 12,
       "atTop": "clear",
+      "tools": {
+        "side": "end"
+      },
       "mobileMenu": "sheet",
       "sheetMotion": "right",
       "mobileSubs": "expanded",

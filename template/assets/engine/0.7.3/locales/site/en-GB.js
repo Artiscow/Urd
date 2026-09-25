@@ -11,6 +11,7 @@ export default {
     'nav.toDarkTheme': 'Switch to dark theme',
     'nav.menu': 'Menu',
     'nav.closeMenu': 'Close the menu',
+    'nav.dismissAnnouncement': 'Dismiss the announcement',
     'nav.submenuFor': 'Submenu for {label}',
     'nav.toTop': 'Back to top',
     'nav.toTopFull': 'Back to the top of the page',

@@ -18,7 +18,7 @@
    */
   import { nativeAnchoring, anchorName } from '$engine/anchored.js';
 
-  let { value = null, options = [], onchange, title = null, disabled = false } = $props();
+  let { value = null, options = [], onchange, title = null, disabled = false, filled = false, compact = false } = $props();
 
   const native = nativeAnchoring();
   const anchor = anchorName('urd-dd');
@@ -91,7 +91,7 @@
 
 <span class="dd" bind:this={rootEl}>
   {#if native}
-    <button type="button" class="dd-btn" {title} {disabled} popovertarget={popId} style="anchor-name: {anchor}">
+    <button type="button" class="dd-btn" class:dd-filled={filled} class:dd-compact={compact} {title} {disabled} popovertarget={popId} style="anchor-name: {anchor}">
       <span class="dd-value">{currentLabel()}</span>
       <span class="dd-caret">{open ? '▴' : '▾'}</span>
     </button>
@@ -105,7 +105,7 @@
       {/if}
     </div>
   {:else}
-    <button type="button" class="dd-btn" {title} {disabled} onclick={toggle}>
+    <button type="button" class="dd-btn" class:dd-filled={filled} class:dd-compact={compact} {title} {disabled} onclick={toggle}>
       <span class="dd-value">{currentLabel()}</span>
       <span class="dd-caret">{open ? '▴' : '▾'}</span>
     </button>
@@ -143,6 +143,28 @@
     border-radius: 6px;
     padding: 0.45em 0.6em;
     cursor: pointer;
+  }
+
+  /* The filled look (under a stacked label): a tinted field without a frame. */
+  .dd-btn.dd-filled {
+    background: color-mix(in srgb, currentColor 7%, transparent);
+    border-color: transparent;
+    min-height: 2.2rem;
+  }
+
+  /* The compact look (a target line under a menu item's name): small, frameless text with the caret. */
+  .dd-btn.dd-compact {
+    background: transparent;
+    border-color: transparent;
+    padding: 0.1em 0.2em;
+    font-size: 0.72rem;
+    opacity: 0.75;
+    gap: 4px;
+  }
+
+  .dd-btn.dd-compact:hover,
+  .dd-btn.dd-compact:focus-visible {
+    opacity: 1;
   }
 
   .dd-btn:disabled {

@@ -14,6 +14,7 @@ export default {
     'nav.toDarkTheme': 'Molsso sevdnjes fáddái',
     'nav.menu': 'Fállu',
     'nav.closeMenu': 'Gidde fálu',
+    'nav.dismissAnnouncement': 'Gidde dieđáhusa',
     'nav.submenuFor': '{label} vuollefállu',
     'nav.toTop': 'Bajás',
     'nav.toTopFull': 'Siiddu bajimussii',

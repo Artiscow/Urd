@@ -138,6 +138,21 @@
           "default": false,
           "description": "Place the full-width bar on top of the first section instead of in its own band above it, so a transparent menu reveals the hero behind it (additive from v0.6). Applies only to variant bar; the first section should have enough clearance at the top. Floating/side variants already sit outside the flow."
         },
+        "announcement": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "A strip above the menu inside the nav host (additive from v0.7): a short message, optionally a link. Rendered only with show true and a text.",
+          "properties": {
+            "show": { "type": "boolean", "default": false, "description": "The strip is drawn" },
+            "text": { "type": "string" },
+            "page": { "type": "string", "description": "A page id from site.pages the strip links to (takes precedence over href)" },
+            "href": { "type": "string", "description": "A full address or a site path; unsafe values are dropped" },
+            "dismiss": { "type": "boolean", "default": true, "description": "A cross lets the visitor close the strip; it stays closed while the text is unchanged (localStorage)" },
+            "sticky": { "type": "boolean", "default": true, "description": "The strip follows the menu; false lets it scroll away while the menu sticks alone (fixed hosts keep it)" },
+            "color": { "type": "string", "description": "Background: theme token or raw colour (default accent)" },
+            "textColor": { "type": "string", "description": "Text colour: theme token or raw colour (default the accent's text colour)" }
+          }
+        },
         "cart": {
           "type": "object",
           "description": "Shopping cart in the tools cluster (the shop, additive from v0.7): button with a count badge that opens the cart drawer. Omitted = no cart in the menu.",
@@ -289,7 +304,16 @@
             "sheetMotion": { "enum": ["top", "bottom", "left", "right", "fade", "none"], "default": "top", "description": "The full-screen sheet's entrance (additive from v0.7): a slide from an edge, a fade, or none; cut under reduced motion. mobileMenu sheet only." },
             "sheetLogo": { "type": "boolean", "default": false, "description": "The logo moves into the top of the full-screen sheet while it is open (additive from v0.7). mobileMenu sheet only." },
             "sheetTheme": { "type": "boolean", "default": false, "description": "The theme button moves into the bottom of the full-screen menu as a labelled button while it is open (additive from v0.7). mobileMenu sheet only." },
+            "sheetToolLabels": { "type": "boolean", "default": false, "description": "The theme button and the cart in the full-screen menu's foot show their text beside the icon (additive from v0.7); omitted = icons only." },
             "sheetCart": { "type": "boolean", "default": false, "description": "The cart moves into the bottom of the full-screen menu as a labelled button while it is open (additive from v0.7). mobileMenu sheet only." },
+            "tools": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "The tool cluster (theme button, cart, burger) placement (additive from v0.7).",
+              "properties": {
+                "side": { "enum": ["end", "start"], "default": "end", "description": "end = after the menu items on the right; start = before the logo on the left" }
+              }
+            },
             "sheet": {
               "type": "object",
               "additionalProperties": false,

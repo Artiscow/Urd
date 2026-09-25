@@ -11,6 +11,7 @@ export default {
     'nav.toDarkTheme': 'Byt til mørkt tema',
     'nav.menu': 'Meny',
     'nav.closeMenu': 'Lukk menyen',
+    'nav.dismissAnnouncement': 'Lukk kunngjeringa',
     'nav.submenuFor': 'Undermeny for {label}',
     'nav.toTop': 'Til toppen',
     'nav.toTopFull': 'Til toppen av sida',

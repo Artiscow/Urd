@@ -17,7 +17,7 @@
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
  *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (open the block menu in the editor)
  */
-import { frameToCss, mobilePlacementToCss, reorderMobileKey, suspendPush, resumePush } from './render.js';
+import { frameToCss, mobilePlacementToCss, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushPreview } from './render.js';
 import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
@@ -39,6 +39,19 @@ import { nearestDock } from './sticky-model.js';
 // This module is loaded dynamically by urd.js AFTER the admin dictionary
 // is loaded (initAdminLocale), so ta() is safe even at module level here.
 import { ta, adminLang } from './i18n.js';
+
+/**
+ * Draws a desktop frame on its block with the push shift the block is
+ * shown with (ADR-0024): the frame is the data, the shift is display only,
+ * so a drag keeps the block where the owner grabbed it.
+ * @param {HTMLElement} el The block element
+ * @param {{x: number, y: number, w: number, h: number}} frame The desktop frame
+ */
+function drawFrame(el, frame) {
+  Object.assign(el.style, frameToCss(frame));
+  const shift = pushShiftOf(el);
+  if (shift) el.style.top = `${frame.y + shift}px`;
+}
 
 /**
  * The content surface of a section (ADR-0018). Block x/w are percentages OF
@@ -2494,7 +2507,7 @@ window.addEventListener('keydown', (event) => {
       if (dir[0]) frame.x = r1(frame.x + d.dx);
       if (dir[1]) frame.y = frame.y + dir[1] * stepPx;
       p.ctx.block.frames.desktop = frame;
-      Object.assign(p.el.style, frameToCss(frame));
+      drawFrame(p.el, frame);
       post({ type: 'urd-move', sectionId: p.ctx.section.id, blockId: p.ctx.block.id, frame, frameKey: 'desktop', coalesce: true, groupKey: 'multi-arrow' });
     }
     resumeSticky();
@@ -2509,7 +2522,7 @@ window.addEventListener('keydown', (event) => {
   ctx.block.frames.desktop = frame;
   suspendSticky();
   suspendPush();
-  Object.assign(el.style, frameToCss(frame));
+  drawFrame(el, frame);
   resumeSticky();
   resumePush();
   // coalesce: a burst of arrow-key presses becomes one undo step.
@@ -2730,8 +2743,8 @@ function startSelectionDrag(event) {
   const handle = event.currentTarget;
   handle.setPointerCapture(event.pointerId);
   // As with the single drag: pinned blocks are released back to their real
-  // place before the drag writes geometry on them, and the pushed blocks
-  // return to their design positions.
+  // place before the drag writes geometry on them, and the push stands
+  // still so the pushed blocks stay where they are seen.
   suspendSticky();
   suspendPush();
 
@@ -2742,10 +2755,15 @@ function startSelectionDrag(event) {
   let delta = { dx: 0, dy: 0 };
 
   const apply = (frameFor) => {
+    const frames = new Map();
     for (const it of items) {
       const el = document.querySelector(`.urd-block[data-block-id="${CSS.escape(it.id)}"]`);
-      if (el) Object.assign(el.style, frameToCss(frameFor(it)));
+      const frame = frameFor(it);
+      if (el) drawFrame(el, frame);
+      frames.set(it.id, frame);
     }
+    // The push as it will be after release, drawn live.
+    pushPreview(host, frames);
     // The toolbar follows the set, so the handle stays under the pointer the whole way.
     updateMultiToolbar();
   };
@@ -2829,7 +2847,7 @@ function applySelectionMoves(moves) {
     if (typeof move.x === 'number') frame.x = move.x;
     if (typeof move.y === 'number') frame.y = move.y;
     ctx.block.frames.desktop = frame;
-    Object.assign(el.style, frameToCss(frame));
+    drawFrame(el, frame);
     post({ type: 'urd-move', sectionId: ctx.section.id, blockId: move.id, frame, frameKey: 'desktop', coalesce: true, groupKey: key });
   }
   resumeSticky();
@@ -3570,7 +3588,9 @@ function enhanceBlock(el, block, section, grid, host) {
         best = null;
         for (const t of yTargets) {
           for (const edge of [0, current.h / 2, current.h]) {
-            const d = t - (current.y + edge);
+            // The block is drawn with its push shift (live, from the last
+            // move); the guides compare what is shown.
+            const d = t - (current.y + pushShiftOf(el) + edge);
             if (Math.abs(d) <= GUIDE_TOL && (!best || Math.abs(d) < Math.abs(best.d))) best = { d, line: t };
           }
         }
@@ -3609,6 +3629,7 @@ function enhanceBlock(el, block, section, grid, host) {
         // Shift = fully free: then smart guides are skipped too.
         if (!free) applyGuides();
         else clearGuides();
+        const frames = new Map([[block.id, current]]);
         if (groupParts.length) {
           // The delta is clamped against the group's combined width
           // limits; y is unbounded as in a single drag (blocks may hang
@@ -3616,12 +3637,18 @@ function enhanceBlock(el, block, section, grid, host) {
           const d = groupDelta([orig, ...groupParts.map((g) => g.orig)], current.x - orig.x, 0);
           const dyPx = current.y - orig.y;
           current = { ...current, x: r2(orig.x + d.dx) };
+          frames.set(block.id, current);
           for (const g of groupParts) {
-            Object.assign(g.el.style, frameToCss({ ...g.orig, x: r2(g.orig.x + d.dx), y: g.orig.y + dyPx }));
+            const frame = { ...g.orig, x: r2(g.orig.x + d.dx), y: g.orig.y + dyPx };
+            drawFrame(g.el, frame);
+            frames.set(g.block.id, frame);
           }
           updateMultiToolbar();
         }
-        Object.assign(el.style, frameToCss(current));
+        drawFrame(el, current);
+        // The push as it will be after release, drawn live: the block is
+        // shown where it lands, and the blocks it pushes move with it.
+        pushPreview(host, frames);
       };
 
       // Aborted drag (the browser takes over the pointer, or the element

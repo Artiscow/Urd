@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, SHEET_MOTIONS, isSafeImage } = await engineImport('nav-model.js');
+const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, SHEET_MOTIONS, announcementModel, isSafeImage } = await engineImport('nav-model.js');
 
 // Deliberately Norwegian page titles and slugs: user data stays Norwegian (ADR-0021).
 const PAGES = [
@@ -550,4 +550,31 @@ test('sheetMotion: the six entrances are allowlisted, the slide from the top is 
   for (const m of SHEET_MOTIONS) assert.equal(sheetMotion({ sheetMotion: m }), m);
   assert.equal(sheetMotion({ sheetMotion: 'spin' }), 'top');
   assert.equal(SHEET_MOTIONS[0], 'top');
+});
+
+test('navClasses: the tool cluster at the start is a class, end is the default', () => {
+  assert.ok(navClasses({ nav: { style: { tools: { side: 'start' } } } }).includes('urd-nav-tools-start'));
+  assert.ok(!navClasses({ nav: { style: { tools: { side: 'end' } } } }).includes('urd-nav-tools-start'));
+  assert.ok(!navClasses({ nav: {} }).includes('urd-nav-tools-start'));
+});
+
+test('announcementModel: null unless shown with text, defaults otherwise', () => {
+  assert.equal(announcementModel(undefined), null);
+  assert.equal(announcementModel({ show: true, text: '   ' }), null);
+  assert.equal(announcementModel({ text: 'Open late' }), null);
+  assert.deepEqual(announcementModel({ show: true, text: ' Open late ' }),
+    { text: 'Open late', href: null, sticky: true, dismiss: true, bg: '', color: '' });
+});
+
+test('announcementModel: a page resolves through the register, a free link passes the guard', () => {
+  const pages = [{ id: 'contact', path: '/kontakt' }];
+  assert.equal(announcementModel({ show: true, text: 'x', page: 'contact' }, pages).href, '/kontakt');
+  assert.equal(announcementModel({ show: true, text: 'x', page: 'gone' }, pages).href, null);
+  assert.equal(announcementModel({ show: true, text: 'x', href: 'https://example.com/a' }).href, 'https://example.com/a');
+  assert.equal(announcementModel({ show: true, text: 'x', href: 'javascript:alert(1)' }).href, null);
+  const m = announcementModel({ show: true, text: 'x', sticky: false, dismiss: false, color: 'accent', textColor: '#fff' });
+  assert.equal(m.sticky, false);
+  assert.equal(m.dismiss, false);
+  assert.equal(m.bg, 'var(--urd-color-accent)');
+  assert.equal(m.color, '#fff');
 });

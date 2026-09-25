@@ -10,6 +10,7 @@ export default {
     'nav.toDarkTheme': 'Koyu temaya geç',
     'nav.menu': 'Menü',
     'nav.closeMenu': 'Menüyü kapat',
+    'nav.dismissAnnouncement': 'Duyuruyu kapat',
     'nav.submenuFor': '{label} alt menüsü',
     'nav.toTop': 'Yukarı',
     'nav.toTopFull': 'Sayfanın başına dön',
