@@ -150,7 +150,8 @@
             "dismiss": { "type": "boolean", "default": true, "description": "A cross lets the visitor close the strip; it stays closed while the text is unchanged (localStorage)" },
             "sticky": { "type": "boolean", "default": true, "description": "The strip follows the menu; false lets it scroll away while the menu sticks alone (fixed hosts keep it)" },
             "color": { "type": "string", "description": "Background: theme token or raw colour (default accent)" },
-            "textColor": { "type": "string", "description": "Text colour: theme token or raw colour (default the accent's text colour)" }
+            "textColor": { "type": "string", "description": "Text colour: theme token or raw colour (default the accent's text colour)" },
+            "place": { "type": "string", "enum": ["nav", "page", "content"], "default": "nav", "description": "With a side column: in the column, fixed across the whole page above column and content, or above the content beside the column; the other variants keep the strip in the menu" }
           }
         },
         "cart": {

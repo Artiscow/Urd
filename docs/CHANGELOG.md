@@ -34,6 +34,10 @@ entydig: alle commit-innslag over forrige p-innslag.
 - Review risk left as a test item: the push pass changes the size of elements it observes inside the observer callback, which the specification reports as a ResizeObserver loop message when it happens at the wrong depth; the headless probe of 23 September saw none during a stepwise narrowing, and the TESTRUNDER item stands.
 - Review note, no change: nine TESTRUNDER lines (the 0.7.0.5 batch and seven 0.7.14 items) left in the commit 0.7.18.2 as struck by the test round, outside the agent's edits in that commit.
 
+### 0.7.0.14 - The announcement's place with a side column - 26 September 2026
+
+- `nav.announcement.place` (`nav`, `page`, `content`, default `nav`): with a side column the strip sits at the top of the column, fixed across the whole page above column and content (the column and the body start below it by `--urd-announce-page-h`), or in the flow above the content beside the column. Shown as a segment in the Kunngjøring fold for the side variants only; the bar and floating variants keep the strip in the menu. Schema, SCHEMA.md and the example data in the same commit.
+
 ### 0.7.0.13 - The blocks: grain to 100 % and a line that can be lengthened - 26 September 2026
 
 - The grain layer's strength stopped at 30 %: only the editor's slider capped it, the engine renders the value as plain opacity. The slider runs 0 to 100 %, and SCHEMA.md documents the layer.

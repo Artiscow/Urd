@@ -4243,7 +4243,8 @@ body:not(.urd-mobile) .urd-nav-inset {
    is irrelevant here - the column is always fixed. */
 .urd-nav-side-host {
   position: fixed;
-  top: 0;
+  /* Below an announcement fixed across the whole page (place 'page'). */
+  top: var(--urd-announce-page-h, 0px);
   bottom: 0;
   left: 0;
   /* A column: the announcement strip takes its own height at the top and the
@@ -4271,6 +4272,29 @@ body.urd-side-left {
 
 body.urd-side-right {
   padding-right: var(--urd-nav-side-width, 250px);
+}
+
+/* The announcement placed across the whole page (nav.announcement.place
+   'page', side variants): a fixed strip above column and content, both of
+   which start below it by its measured height. */
+.urd-announce-page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5002;
+  margin-bottom: 0;
+}
+
+body.urd-side-left,
+body.urd-side-right {
+  padding-top: var(--urd-announce-page-h, 0px);
+}
+
+/* Placed above the content beside the column ('content'): in the flow,
+   inside the body's side padding, scrolling with the page. */
+.urd-announce-content {
+  margin-bottom: 0;
 }
 
 .urd-nav-side-host .urd-nav {

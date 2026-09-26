@@ -6730,6 +6730,12 @@
                           {ta('lbl.announceSticky')}
                         </label>
                       {/if}
+                      {#if sideVariant}
+                        <Choice label={ta('lbl.announcePlace')} title={ta('tip.nav.announcePlace')}
+                          value={siteDraft.nav.announcement?.place ?? 'nav'}
+                          options={[['nav', ta('opt.announcePlace.nav')], ['page', ta('opt.announcePlace.page')], ['content', ta('opt.announcePlace.content')]]}
+                          onchange={(v) => setNavAnnouncement('place', v === 'nav' ? undefined : v)} />
+                      {/if}
                       <label class="gridmenu-snap" title={ta('tip.nav.announceDismiss')}>
                         <input type="checkbox" checked={siteDraft.nav.announcement?.dismiss !== false}
                           onchange={(e) => setNavAnnouncement('dismiss', e.target.checked ? undefined : false)} />

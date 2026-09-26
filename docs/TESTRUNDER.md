@@ -2,6 +2,11 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.0.14): the announcement's place
+
+- [ ] Side-left with an announcement: the Kunngjøring fold shows «Plassering» with I menyen, Øverst på siden and Over innholdet (not for the bar and floating variants); I menyen puts the strip at the top of the column; Øverst på siden fixes it across the full width with the column and the content starting below it, on the published page as in the preview; Over innholdet puts it above the content beside the column and it scrolls away with the page; the cross removes it in every placement and the column takes the freed height back
+- [ ] Narrow the window below 900 px with a side column and Øverst på siden: the menu becomes a bar and the strip sits in it as before
+
 ### Testrunde-batch (0.7.0.13): the blocks
 
 - [ ] Background, grain layer: the strength slider runs from 0 to 100 % in the section, nav and footer panels, and 100 % shows the texture at full strength on the published page

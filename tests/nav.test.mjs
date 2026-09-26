@@ -563,7 +563,14 @@ test('announcementModel: null unless shown with text, defaults otherwise', () =>
   assert.equal(announcementModel({ show: true, text: '   ' }), null);
   assert.equal(announcementModel({ text: 'Open late' }), null);
   assert.deepEqual(announcementModel({ show: true, text: ' Open late ' }),
-    { text: 'Open late', href: null, sticky: true, dismiss: true, bg: '', color: '' });
+    { text: 'Open late', href: null, sticky: true, dismiss: true, place: 'nav', bg: '', color: '' });
+});
+
+test('announcementModel: place is nav, page or content, anything else nav', () => {
+  assert.equal(announcementModel({ show: true, text: 'x' }).place, 'nav');
+  assert.equal(announcementModel({ show: true, text: 'x', place: 'page' }).place, 'page');
+  assert.equal(announcementModel({ show: true, text: 'x', place: 'content' }).place, 'content');
+  assert.equal(announcementModel({ show: true, text: 'x', place: 'sideways' }).place, 'nav');
 });
 
 test('announcementModel: a page resolves through the register, a free link passes the guard', () => {

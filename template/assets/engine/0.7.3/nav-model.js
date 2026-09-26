@@ -266,6 +266,10 @@ export function announcementModel(announcement, pages = []) {
     href,
     sticky: announcement.sticky !== false,
     dismiss: announcement.dismiss !== false,
+    // Where the strip sits with a side column (nav.js honours it for the
+    // side variants only): in the column, above the whole page, or above
+    // the content beside the column.
+    place: ['page', 'content'].includes(announcement.place) ? announcement.place : 'nav',
     bg: announcement.color ? resolveColor(announcement.color) : '',
     color: announcement.textColor ? resolveColor(announcement.textColor) : '',
   };

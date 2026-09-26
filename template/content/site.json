@@ -105,7 +105,8 @@
     "announcement": {
       "show": false,
       "text": "Nyhet: bestill kaker til høstferien",
-      "page": "kaker"
+      "page": "kaker",
+      "place": "nav"
     },
     "logo": {
       "type": "image",

@@ -80,6 +80,8 @@ export function renderNav(site, host) {
     : site;
 
   host.replaceChildren();
+  // A strip placed outside the nav host by the previous render leaves with it.
+  document.getElementById('urd-announce')?.remove();
 
   // The announcement bar (nav.announcement, additive since v0.7): a strip
   // above the menu inside the host. It follows the menu by default; with
@@ -126,7 +128,23 @@ export function renderNav(site, host) {
       }, { signal });
       announceEl.appendChild(cross);
     }
-    host.appendChild(announceEl);
+    // The side column honours the chosen place: the strip in the column
+    // (its top), fixed across the whole page above column and content, or
+    // in the flow above the content beside the column. The other variants
+    // always carry it inside the host.
+    const place = wantsSide && !narrowMq.matches ? announce.place : 'nav';
+    if (place === 'page') {
+      announceEl.id = 'urd-announce';
+      announceEl.classList.add('urd-announce-page');
+      document.body.prepend(announceEl);
+    } else if (place === 'content') {
+      announceEl.id = 'urd-announce';
+      announceEl.classList.add('urd-announce-content');
+      const root = document.getElementById('urd-root');
+      if (root) root.before(announceEl); else document.body.prepend(announceEl);
+    } else {
+      host.appendChild(announceEl);
+    }
     // A document rendered ahead of its use (a prerender on link hover, or one
     // kept in the back-forward cache) built the strip before the visitor
     // could dismiss it elsewhere: the key is read again when it comes on
@@ -626,6 +644,10 @@ export function renderNav(site, host) {
     const h = isSide ? 0 : nav.offsetTop + nav.offsetHeight - scrolledAway;
     document.documentElement.style.setProperty('--urd-nav-h', `${h}px`);
     host.style.setProperty('--urd-announce-h', `${announceH}px`);
+    // A strip fixed across the whole page: the column starts and the body
+    // is padded below it (base.css reads the variable on the root).
+    const pageH = announceEl?.classList.contains('urd-announce-page') ? announceH : 0;
+    document.documentElement.style.setProperty('--urd-announce-page-h', `${pageH}px`);
   }
 
   // Content-aware folding: menu items never wrap (nowrap in base.css), so
