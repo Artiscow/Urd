@@ -14,7 +14,7 @@
  * and the scroll lock come from the browser).
  */
 
-import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, announcementModel, isSafeImage } from './nav-model.js';
+import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, sheetMotion, announcementModel, isSafeImage } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
 import { readCart, cartCount, onCartChange } from './shop.js';
@@ -192,7 +192,8 @@ export function renderNav(site, host) {
   // are toggled on every render, so a variant switch in the editor never
   // leaves leftovers.
   const hc = hostClasses(effSite);
-  for (const cls of ['urd-nav-float', 'urd-nav-overlay', 'urd-nav-side-host', 'urd-nav-side-host-left', 'urd-nav-side-host-right', 'urd-nav-clear']) {
+  for (const cls of ['urd-nav-float', 'urd-nav-overlay', 'urd-nav-side-host', 'urd-nav-side-host-left', 'urd-nav-side-host-right', 'urd-nav-clear',
+    'urd-nav-side-subs-open', 'urd-nav-side-sub-arrow', 'urd-nav-tools-align-start', 'urd-nav-tools-align-center', 'urd-nav-tools-align-end', 'urd-nav-tools-align-spread']) {
     host.classList.toggle(cls, hc.host.includes(cls));
   }
   for (const cls of ['urd-side-left', 'urd-side-right']) {
@@ -465,7 +466,11 @@ export function renderNav(site, host) {
   // the editor's viewport choice in the preview (body.urd-mobile).
   const isMobileState = () => mobileMq.matches || nav.classList.contains('urd-nav-mobile') || document.body.classList.contains('urd-mobile');
   const subMode = mobileSubMode(site.nav.style);
-  const expandedSubs = () => subMode === 'expanded' && isMobileState();
+  // The column can keep every submenu open from the start (nav.style.sideSubs);
+  // without the arrow (nav.style.sideSubArrow) nothing closes them.
+  const columnExpanded = hc.host.includes('urd-nav-side-subs-open');
+  const columnFixedOpen = columnExpanded && !hc.host.includes('urd-nav-side-sub-arrow');
+  const expandedSubs = () => (subMode === 'expanded' && isMobileState()) || (columnExpanded && !isMobileState());
   const setMobileOpen = (open) => {
     if (sheet) {
       if (open && !sheet.dialog.open) sheet.show();
@@ -585,6 +590,7 @@ export function renderNav(site, host) {
     subs.push(entry);
 
     button.addEventListener('click', () => {
+      if (columnFixedOpen && !isMobileState()) return;
       const open = !li.classList.contains('open');
       // The accordion closes the others, except in the expanded mobile mode
       // where every submenu stands on its own.
@@ -624,6 +630,7 @@ export function renderNav(site, host) {
 
     list.appendChild(li);
   });
+  if (columnExpanded && !isMobileState()) for (const entry of subs) setOpen(entry, true);
 
   nav.appendChild(list);
   nav.appendChild(tools);
@@ -689,7 +696,7 @@ export function renderNav(site, host) {
   // The column's hover closing: all accordions close together when the
   // pointer leaves the whole menu; re-entering within the delay cancels
   // the closing.
-  if (isColumn && mouseHover && hoverCloses) {
+  if (isColumn && mouseHover && hoverCloses && !columnExpanded) {
     let columnTimer = null;
     nav.addEventListener('pointerenter', (event) => {
       if (event.pointerType !== 'mouse') return;

@@ -2,6 +2,13 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.13.5.2): the column's tools and submenus
+
+- [ ] Preview and published page, bar and floating variants with an announcement: the strip's bottom edge is straight, nothing from the bar paints over it (also at 87 % preview zoom)
+- [ ] Side-left or side-right, Oppsett: Verktøy Oppe puts the theme button and cart at the top of the column with the logo and items below them; Nede parks them at the foot; Justering Venstre, Midten, Høyre and Balansert move the cluster across the column; the bar variants still show Venstre/Høyre only
+- [ ] Side column, Undermeny: «Undermenyer i kolonnen» Alltid åpne opens every submenu from the start with no arrows, hovering in and out of the column closes nothing, and clicking Butikk's heading does nothing; «Pil for å åpne og lukke» brings the arrows back and they fold the submenus; Lukket gives the accordions as before, and the open-on choice returns
+- [ ] The same site narrowed below 900 px: the column becomes a bar and the submenus behave as the bar's
+
 ### Testrunde-batch (0.7.0.14): the announcement's place
 
 - [ ] Side-left with an announcement: the Kunngjøring fold shows «Plassering» with I menyen, Øverst på siden and Over innholdet (not for the bar and floating variants); I menyen puts the strip at the top of the column; Øverst på siden fixes it across the full width with the column and the content starting below it, on the published page as in the preview; Over innholdet puts it above the content beside the column and it scrolls away with the page; the cross removes it in every placement and the column takes the freed height back

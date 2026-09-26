@@ -312,9 +312,12 @@
               "additionalProperties": false,
               "description": "The tool cluster (theme button, cart, burger) placement (additive from v0.7).",
               "properties": {
-                "side": { "enum": ["end", "start"], "default": "end", "description": "end = after the menu items on the right; start = before the logo on the left" }
+                "side": { "enum": ["end", "start"], "default": "end", "description": "end = after the menu items on the right; start = before the logo on the left. In the side column: end = at the bottom, start = at the top" },
+                "align": { "enum": ["start", "center", "end", "spread"], "default": "center", "description": "The cluster's alignment across the side column (additive from v0.7): left, centred, right, or spread to both edges; the bar ignores it" }
               }
             },
+            "sideSubs": { "enum": ["collapsed", "expanded"], "default": "collapsed", "description": "Submenus in the side column (additive from v0.7): collapsed = accordions that open on click or hover; expanded = every submenu open from the start" },
+            "sideSubArrow": { "type": "boolean", "default": false, "description": "With sideSubs expanded: keep the open/close arrow on the items, so they can still be folded (additive from v0.7)" },
             "sheet": {
               "type": "object",
               "additionalProperties": false,

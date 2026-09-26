@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, SHEET_MOTIONS, announcementModel, isSafeImage } = await engineImport('nav-model.js');
+const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, TOOLS_ALIGNS, sheetMotion, SHEET_MOTIONS, announcementModel, isSafeImage } = await engineImport('nav-model.js');
 
 // Deliberately Norwegian page titles and slugs: user data stays Norwegian (ADR-0021).
 const PAGES = [
@@ -564,6 +564,19 @@ test('announcementModel: null unless shown with text, defaults otherwise', () =>
   assert.equal(announcementModel({ text: 'Open late' }), null);
   assert.deepEqual(announcementModel({ show: true, text: ' Open late ' }),
     { text: 'Open late', href: null, sticky: true, dismiss: true, place: 'nav', bg: '', color: '' });
+});
+
+test('hostClasses: the column carries its submenu mode, the arrow and the tools alignment', () => {
+  const side = (style) => hostClasses({ nav: { variant: 'side-left', style } }).host;
+  assert.deepEqual(side({}), ['urd-nav-side-host', 'urd-nav-side-host-left']);
+  assert.deepEqual(side({ sideSubs: 'expanded' }), ['urd-nav-side-host', 'urd-nav-side-host-left', 'urd-nav-side-subs-open']);
+  assert.deepEqual(side({ sideSubs: 'expanded', sideSubArrow: true, tools: { align: 'spread' } }),
+    ['urd-nav-side-host', 'urd-nav-side-host-left', 'urd-nav-side-subs-open', 'urd-nav-side-sub-arrow', 'urd-nav-tools-align-spread']);
+  assert.deepEqual(side({ sideSubArrow: true, tools: { align: 'sideways' } }), ['urd-nav-side-host', 'urd-nav-side-host-left', 'urd-nav-side-sub-arrow']);
+  assert.deepEqual(hostClasses({ nav: { variant: 'bar', style: { sideSubs: 'expanded', tools: { align: 'end' } } } }).host, []);
+  assert.equal(sideSubMode({ sideSubs: 'expanded' }), 'expanded');
+  assert.equal(sideSubMode({}), 'collapsed');
+  assert.deepEqual(TOOLS_ALIGNS, ['start', 'center', 'end', 'spread']);
 });
 
 test('announcementModel: place is nav, page or content, anything else nav', () => {

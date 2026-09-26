@@ -34,6 +34,12 @@ entydig: alle commit-innslag over forrige p-innslag.
 - Review risk left as a test item: the push pass changes the size of elements it observes inside the observer callback, which the specification reports as a ResizeObserver loop message when it happens at the wrong depth; the headless probe of 23 September saw none during a stepwise narrowing, and the TESTRUNDER item stands.
 - Review note, no change: nine TESTRUNDER lines (the 0.7.0.5 batch and seven 0.7.14 items) left in the commit 0.7.18.2 as struck by the test round, outside the agent's edits in that commit.
 
+### 0.7.13.5.2 - The column's tools and submenus, and the strip above the bar - 26 September 2026
+
+- The bar still painted over the announcement strip in the preview: the preview lifts the bar to z 100001, above the strip's 5001. The strip sits above the bar in every context.
+- Tools «Venstre» with a side column sent the whole menu to the bottom: the cluster moved first in the column while keeping the bottom-parking margin, which pushed everything after it down. In the column `tools.side` now means top (`start`) or bottom (`end`), and the new `tools.align` (`start`, `center`, `end`, `spread`) sets the cluster's alignment across the column; the Oppsett fold shows Oppe/Nede and Justering for the side variants (Venstre/Høyre for the bar as before).
+- `nav.style.sideSubs` (`collapsed` | `expanded`): the column's submenus open from the start, like the mobile mode; `nav.style.sideSubArrow` (default false) keeps the open/close arrow, without it the arrows are gone and nothing folds the submenus (no hover closing, no click). Shown in the Undermeny fold for the side variants; the open-on choice hides while every submenu is open. Schema, SCHEMA.md and the example data in the same commit.
+
 ### 0.7.0.14 - The announcement's place with a side column - 26 September 2026
 
 - `nav.announcement.place` (`nav`, `page`, `content`, default `nav`): with a side column the strip sits at the top of the column, fixed across the whole page above column and content (the column and the body start below it by `--urd-announce-page-h`), or in the flow above the content beside the column. Shown as a segment in the Kunngjøring fold for the side variants only; the bar and floating variants keep the strip in the menu. Schema, SCHEMA.md and the example data in the same commit.

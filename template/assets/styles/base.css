@@ -3364,9 +3364,10 @@ body:has(dialog:modal) {
    past: its sticky top is raised by the measured strip height. */
 .urd-nav-announce {
   position: relative;
-  /* Above the bar: the bar's top pixel and a logo that grows out of the bar
-     never paint over the strip. */
-  z-index: 5001;
+  /* Above the bar in every context (the preview lifts the bar to 100001):
+     the bar's top pixel and a logo that grows out of the bar never paint
+     over the strip. */
+  z-index: 100002;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -4326,10 +4327,30 @@ body.urd-side-right {
   border-radius: var(--urd-radius-sm);
 }
 
-/* The tool cluster (toggle) at the bottom of the column */
+/* The tool cluster (toggle) at the bottom of the column, or at its top with
+   tools.side start; tools.align sets the row's alignment. */
 .urd-nav-side-host .urd-nav-tools {
   margin: auto 0 0;
   justify-content: center;
+}
+
+.urd-nav-side-host .urd-nav-tools-start .urd-nav-tools {
+  margin: 0 0 1rem;
+}
+
+.urd-nav-side-host.urd-nav-tools-align-start .urd-nav-tools { justify-content: flex-start; }
+.urd-nav-side-host.urd-nav-tools-align-end .urd-nav-tools { justify-content: flex-end; }
+.urd-nav-side-host.urd-nav-tools-align-spread .urd-nav-tools { justify-content: space-between; }
+
+/* Submenus open from the start (sideSubs expanded): without the arrow the
+   caret and the opener's chevron are gone and the opener reads as a heading. */
+.urd-nav-side-host.urd-nav-side-subs-open:not(.urd-nav-side-sub-arrow) .urd-nav-has-sub > .urd-nav-caret,
+.urd-nav-side-host.urd-nav-side-subs-open:not(.urd-nav-side-sub-arrow) .urd-nav-has-sub > .urd-nav-toggle svg {
+  display: none;
+}
+
+.urd-nav-side-host.urd-nav-side-subs-open:not(.urd-nav-side-sub-arrow) .urd-nav-has-sub > .urd-nav-toggle {
+  cursor: default;
 }
 
 /* Submenus become accordions in the column (as in the mobile panel) */

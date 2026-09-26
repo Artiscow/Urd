@@ -3058,6 +3058,18 @@
     siteMutate('nav', () => { siteDraft.nav.layout = value; });
   }
 
+  /** The tool cluster's fields (nav.style.tools): an emptied object is removed. */
+  function setNavTools(key, value) {
+    siteMutate(`edit:nav-tools-${key}`, () => {
+      siteDraft.nav.style ??= {};
+      const next = { ...(siteDraft.nav.style.tools ?? {}) };
+      if (value === undefined) delete next[key];
+      else next[key] = value;
+      if (Object.keys(next).length) siteDraft.nav.style.tools = next;
+      else delete siteDraft.nav.style.tools;
+    });
+  }
+
   function setNavStyle(name, value) {
     siteMutate(`edit:nav-style-${name}`, () => {
       siteDraft.nav.style ??= {};
@@ -6287,10 +6299,20 @@
                             {/each}
                           </div>
                         </div>
-                        <!-- The tool cluster (theme, cart, burger) at the end or the start of the bar -->
-                        <Choice label={ta('lbl.toolsSide')} title={ta('tip.nav.toolsSide')} value={siteDraft.nav.style?.tools?.side ?? 'end'}
-                          options={[['start', ta('opt.toolsSide.start')], ['end', ta('opt.toolsSide.end')]]}
-                          onchange={(v) => setNavStyle('tools', v === 'start' ? { side: 'start' } : undefined)} />
+                        <!-- The tool cluster (theme, cart, burger) at the end or the start of the
+                             bar; in the column that is the bottom or the top, with its own alignment -->
+                        {#if sideVariant}
+                          <Choice label={ta('lbl.toolsSide')} title={ta('tip.nav.toolsSide')} value={siteDraft.nav.style?.tools?.side ?? 'end'}
+                            options={[['start', ta('opt.toolsSide.top')], ['end', ta('opt.toolsSide.bottom')]]}
+                            onchange={(v) => setNavTools('side', v === 'start' ? 'start' : undefined)} />
+                          <Choice label={ta('lbl.toolsAlign')} title={ta('tip.nav.toolsAlign')} value={siteDraft.nav.style?.tools?.align ?? 'center'}
+                            options={[['start', ta('opt.toolsAlign.start')], ['center', ta('opt.toolsAlign.center')], ['end', ta('opt.toolsAlign.end')], ['spread', ta('opt.toolsAlign.spread')]]}
+                            onchange={(v) => setNavTools('align', v === 'center' ? undefined : v)} />
+                        {:else}
+                          <Choice label={ta('lbl.toolsSide')} title={ta('tip.nav.toolsSide')} value={siteDraft.nav.style?.tools?.side ?? 'end'}
+                            options={[['start', ta('opt.toolsSide.start')], ['end', ta('opt.toolsSide.end')]]}
+                            onchange={(v) => setNavTools('side', v === 'start' ? 'start' : undefined)} />
+                        {/if}
                         {#if floatingVariant}
                           <!-- The floating menu's maximum width: the content width, or a px value (empty = 1100) -->
                           <Choice label={ta('lbl.navPillWidth')} title={ta('tip.nav.pillWidth')} value={siteDraft.nav.style?.pillWidth === 'content' ? 'content' : 'custom'}
@@ -6767,9 +6789,25 @@
                       </div>
                     </div>
                     {#if siteDraft.nav.items?.some((item) => item.children?.length)}
-                      <Choice label={ta('lbl.subOpen')} title={ta('tip.nav.subOpen')} value={siteDraft.nav.style?.subOpen ?? 'hover'}
-                        options={[['hover', ta('opt.subOpen.hover')], ['stay', ta('opt.subOpen.stay')], ['click', ta('opt.subOpen.click')]]}
-                        onchange={(v) => setNavStyle('subOpen', v === 'hover' ? undefined : v)} />
+                      {#if sideVariant}
+                        <!-- The column: accordions, or every submenu open from the start
+                             (then the arrow is a choice of its own, off by default) -->
+                        <Choice label={ta('lbl.sideSubs')} title={ta('tip.nav.sideSubs')} value={siteDraft.nav.style?.sideSubs ?? 'collapsed'}
+                          options={[['collapsed', ta('opt.mobileSubs.collapsed')], ['expanded', ta('opt.mobileSubs.expanded')]]}
+                          onchange={(v) => setNavStyle('sideSubs', v === 'collapsed' ? undefined : v)} />
+                        {#if siteDraft.nav.style?.sideSubs === 'expanded'}
+                          <label class="gridmenu-snap" title={ta('tip.nav.sideSubArrow')}>
+                            <input type="checkbox" checked={siteDraft.nav.style?.sideSubArrow === true}
+                              onchange={(e) => setNavStyle('sideSubArrow', e.target.checked ? true : undefined)} />
+                            {ta('lbl.sideSubArrow')}
+                          </label>
+                        {/if}
+                      {/if}
+                      {#if !sideVariant || siteDraft.nav.style?.sideSubs !== 'expanded'}
+                        <Choice label={ta('lbl.subOpen')} title={ta('tip.nav.subOpen')} value={siteDraft.nav.style?.subOpen ?? 'hover'}
+                          options={[['hover', ta('opt.subOpen.hover')], ['stay', ta('opt.subOpen.stay')], ['click', ta('opt.subOpen.click')]]}
+                          onchange={(v) => setNavStyle('subOpen', v === 'hover' ? undefined : v)} />
+                      {/if}
                     {/if}
                     {#if siteDraft.nav.style?.subStyle === 'pills'}
                       <label title={ta('tip.nav.subPillColor')}>{ta('lbl.subPillColor')}

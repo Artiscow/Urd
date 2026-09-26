@@ -171,6 +171,14 @@ export function mobileSubMode(style = {}) {
   return style?.mobileSubs === 'expanded' ? 'expanded' : 'collapsed';
 }
 
+/** The submenus in the side column (nav.style.sideSubs): accordions, or open from the start. */
+export function sideSubMode(style = {}) {
+  return style?.sideSubs === 'expanded' ? 'expanded' : 'collapsed';
+}
+
+/** The tool cluster's alignments in the side column (nav.style.tools.align); the default is center. */
+export const TOOLS_ALIGNS = ['start', 'center', 'end', 'spread'];
+
 /** The sheet's entrances (nav.style.sheetMotion); the first is the default. */
 export const SHEET_MOTIONS = ['top', 'bottom', 'left', 'right', 'fade', 'none'];
 
@@ -367,10 +375,20 @@ export function navSizeVars(style = {}, logo = {}, { mobile = false } = {}) {
  */
 export function hostClasses(site) {
   const v = site.nav.variant;
-  const clear = site.nav.style?.atTop === 'clear' ? ['urd-nav-clear'] : [];
+  const style = site.nav.style ?? {};
+  const clear = style.atTop === 'clear' ? ['urd-nav-clear'] : [];
   if (isFloating(v)) return { host: ['urd-nav-float', ...clear], body: [] };
-  if (v === 'side-left') return { host: ['urd-nav-side-host', 'urd-nav-side-host-left'], body: ['urd-side-left'] };
-  if (v === 'side-right') return { host: ['urd-nav-side-host', 'urd-nav-side-host-right'], body: ['urd-side-right'] };
+  if (v === 'side-left' || v === 'side-right') {
+    // The column's own choices (additive from v0.7): submenus open from the
+    // start, the arrow on them, and the tool cluster's alignment.
+    const column = [];
+    if (sideSubMode(style) === 'expanded') column.push('urd-nav-side-subs-open');
+    if (style.sideSubArrow === true) column.push('urd-nav-side-sub-arrow');
+    if (TOOLS_ALIGNS.includes(style.tools?.align)) column.push(`urd-nav-tools-align-${style.tools.align}`);
+    return v === 'side-left'
+      ? { host: ['urd-nav-side-host', 'urd-nav-side-host-left', ...column], body: ['urd-side-left'] }
+      : { host: ['urd-nav-side-host', 'urd-nav-side-host-right', ...column], body: ['urd-side-right'] };
+  }
   // Overlay only applies to the full-width bar: the host is taken out of the
   // flow so the top section slides up under the menu. Floating/side already
   // sit outside.
