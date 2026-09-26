@@ -2741,7 +2741,7 @@ function Zi(e, t, n, r) {
 	};
 }
 //#endregion
-//#region ../template/assets/engine/0.7.3/anchored.js
+//#region ../template/assets/engine/0.7.4/anchored.js
 function Qi(e = globalThis) {
 	let t = e?.HTMLElement?.prototype, n = e?.CSS;
 	return !!(t && "popover" in t && typeof t.showPopover == "function" && typeof n?.supports == "function" && n.supports("anchor-name: --urd") && n.supports("position-try-fallbacks: flip-block"));
@@ -3079,7 +3079,7 @@ Tr([
 	"click"
 ]);
 //#endregion
-//#region ../template/assets/engine/0.7.3/imageTools.js
+//#region ../template/assets/engine/0.7.4/imageTools.js
 var ga = 1600, _a = .82, va = .6, ya = 15e6;
 async function ba(e, t = ga) {
 	if (Sa(e)) return Ca(await e.text());
@@ -3159,7 +3159,7 @@ function Oa(e) {
 	return t.toString(16).padStart(8, "0");
 }
 //#endregion
-//#region ../template/assets/engine/0.7.3/glyphs.js
+//#region ../template/assets/engine/0.7.4/glyphs.js
 var ka = "urd-recent-glyphs", Aa = "urd-recent-icons", ja = [
 	["glyphCat.symbols", "★ ☆ ✦ ✧ ✩ ✪ ✫ ✭ ✮ ✯ ✵ ✳ ✴ ❖ ❋ ✿ ❀ ❁ ✾ ❃ ☘ ◆ ◇ ● ○ ◎ ■ □ ▣ ▲ △ ▼ ▽ ⬡ ⬢ ♦ ♠ ♣ ♥ ♡ ✓ ✔ ✕ ✖ ✗ ✘ ✚ ✜ ☀ ☾ ♪ ♫ ♬ ☮ ☯ ⚜ ⚓ ⚡ ☂ ✂ ✏ ✒ ✉ ☎ ⌛ ⏳ ♻ ⚠ ☑ ⚙ § © ® ™ ° ± × ÷ ∞ ≈ ≠ ≤ ≥ € £ ¥ • ‣ ⁂"],
 	["glyphCat.arrows", "→ ← ↑ ↓ ↔ ↕ ↗ ↘ ↙ ↖ ⇒ ⇐ ⇑ ⇓ ⇔ ➜ ➤ ➔ ↩ ↪ ⤴ ⤵ ↺ ↻ ⟲ ⟳ « » ‹ ›"],
@@ -3201,7 +3201,7 @@ function Ra(e) {
 	return Pa(Aa, La(), e);
 }
 //#endregion
-//#region ../template/assets/engine/0.7.3/icons.js
+//#region ../template/assets/engine/0.7.4/icons.js
 var za = "fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"", Ba = "fill=\"currentColor\" stroke=\"none\"", Va = {
 	facebook: {
 		label: "Facebook",
@@ -4282,7 +4282,7 @@ function Zo(e, t) {
 }
 Tr(["pointerdown", "click"]);
 //#endregion
-//#region ../template/assets/engine/0.7.3/blocks/form.js
+//#region ../template/assets/engine/0.7.4/blocks/form.js
 var Qo = () => [
 	{
 		id: "navn",
@@ -4431,7 +4431,7 @@ function us(e, t) {
 	return n;
 }
 //#endregion
-//#region ../template/assets/engine/0.7.3/plugins.js
+//#region ../template/assets/engine/0.7.4/plugins.js
 function ds(e) {
 	let t = /^(\d+)\.(\d+)\.(\d+)$/.exec(String(e).trim());
 	return t ? [
@@ -4462,7 +4462,7 @@ function hs(e) {
 }
 Promise.resolve();
 //#endregion
-//#region ../template/assets/engine/0.7.3/sections/presets.js
+//#region ../template/assets/engine/0.7.4/sections/presets.js
 function gs(e) {
 	return typeof crypto < "u" && crypto.randomUUID ? `${e}-${crypto.randomUUID().slice(0, 8)}` : `${e}-${[...crypto.getRandomValues(/* @__PURE__ */ new Uint8Array(4))].map((e) => e.toString(16).padStart(2, "0")).join("")}`;
 }
@@ -5454,7 +5454,7 @@ function Us(e) {
 	});
 }
 //#endregion
-//#region ../template/assets/engine/0.7.3/templates-model.js
+//#region ../template/assets/engine/0.7.4/templates-model.js
 var Ws = [
 	"section",
 	"blocks",
@@ -5477,7 +5477,7 @@ function Ks(e, t, { id: n, title: r }) {
 	return i;
 }
 //#endregion
-//#region ../template/assets/engine/0.7.3/collections-csv.js
+//#region ../template/assets/engine/0.7.4/collections-csv.js
 var qs = [
 	"id",
 	"title",
@@ -5559,7 +5559,7 @@ function $s(e) {
 	};
 }
 //#endregion
-//#region ../template/assets/engine/0.7.3/feeds.js
+//#region ../template/assets/engine/0.7.4/feeds.js
 function ec(e) {
 	return String(e ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll("\"", "&quot;").replaceAll("'", "&apos;");
 }
@@ -5586,7 +5586,7 @@ function ic(e) {
     <title>${ec(e.title)}</title>\n    <link>${ec(t + "/")}</link>\n    <description>${ec(e.description ?? e.title)}</description>\n${n}${n ? "\n" : ""}  </channel>\n</rss>\n`;
 }
 //#endregion
-//#region ../template/assets/engine/0.7.3/preset-thumb.js
+//#region ../template/assets/engine/0.7.4/preset-thumb.js
 var ac = /^#[0-9a-fA-F]{3,8}$/, oc = /^[a-z][a-z0-9-]*$/, sc = "#171c26", cc = "#232a38", lc = "#98a1b3", uc = "#7c5cff", dc = (e, t) => `var(--urd-color-${e}, ${t})`;
 function fc(e, t) {
 	return typeof e == "string" ? ac.test(e) ? e : oc.test(e) ? dc(e, t) : t : t;
@@ -5758,7 +5758,7 @@ function Tc(e, { w: t = 96, h: n = 116, max: r = 6 } = {}) {
 	return `<svg viewBox="0 0 ${t} ${n}" width="${t}" height="${n}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${c.join("")}</svg>`;
 }
 //#endregion
-//#region ../template/assets/engine/0.7.3/page-presets.js
+//#region ../template/assets/engine/0.7.4/page-presets.js
 var Ec = /* @__PURE__ */ new Map();
 Us({ sections: { define: (e, t) => Ec.set(e, t) } });
 var Dc = [
@@ -5854,7 +5854,7 @@ function Oc(e, { pageId: t, title: n }) {
 	} : null;
 }
 //#endregion
-//#region ../template/assets/engine/0.7.3/palette-search.js
+//#region ../template/assets/engine/0.7.4/palette-search.js
 function kc(e) {
 	return String(e ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
@@ -5870,7 +5870,7 @@ function jc(e, t, n) {
 	})).filter((e) => e.rank >= 0).sort((e, t) => e.rank - t.rank || e.i - t.i).map((e) => e.item);
 }
 //#endregion
-//#region ../template/assets/engine/0.7.3/theme.js
+//#region ../template/assets/engine/0.7.4/theme.js
 function Mc(e, t, n) {
 	return t === "light" || t === "dark" ? t : n ? "dark" : "light";
 }
@@ -5997,7 +5997,7 @@ function Hc(e, t) {
 	return n == null || r == null ? null : (Math.max(n, r) + .05) / (Math.min(n, r) + .05);
 }
 //#endregion
-//#region ../template/assets/engine/0.7.3/backgrounds/color.js
+//#region ../template/assets/engine/0.7.4/backgrounds/color.js
 var Uc = {
 	version: 1,
 	label: "Colour",
@@ -6197,7 +6197,7 @@ function ol(e) {
 	return typeof e == "string" && al.test(e);
 }
 //#endregion
-//#region ../template/assets/engine/0.7.3/backgrounds/image.js
+//#region ../template/assets/engine/0.7.4/backgrounds/image.js
 var sl = .4;
 function cl(e, t) {
 	return `${(e ?? .5) * 100}% ${(t ?? .5) * 100}%`;
@@ -6310,7 +6310,7 @@ function kl(e, t, n, r) {
 	bl() ? Dl(e, t, n, r) : yl(e, t, n, r);
 }
 //#endregion
-//#region ../template/assets/engine/0.7.3/gallery-model.js
+//#region ../template/assets/engine/0.7.4/gallery-model.js
 function Al(e, t, n) {
 	return !Number.isFinite(n) || n < 1 ? 0 : (((Number.isFinite(e) ? e : 0) + t) % n + n) % n;
 }
@@ -6322,7 +6322,7 @@ function Ml(e, { min: t = 2, fallback: n = 5 } = {}) {
 	return !Number.isFinite(r) || r <= 0 ? n : Math.max(t, r);
 }
 //#endregion
-//#region ../template/assets/engine/0.7.3/backgrounds/slideshow.js
+//#region ../template/assets/engine/0.7.4/backgrounds/slideshow.js
 var Nl = {
 	version: 1,
 	label: "Image gallery",
@@ -6424,7 +6424,7 @@ var Rl = (e, t, n, r) => {
 	}
 };
 //#endregion
-//#region ../template/assets/engine/0.7.3/footer-thumb.js
+//#region ../template/assets/engine/0.7.4/footer-thumb.js
 function Bl(e = {}) {
 	let t = "#2fd6b6", n = "#5c6b64", r = e.mega ? "#16221d" : "#0e1512", i = e.cols ?? 0, a = e.social ?? 0, o = `<svg viewBox="0 0 160 80" preserveAspectRatio="none" aria-hidden="true"><rect width="160" height="80" fill="${r}"/>`;
 	if (e.mega && (o += `<circle cx="20" cy="6" r="34" fill="${t}" opacity="0.18"/>`), e.bigcta) return o += `<rect x="45" y="18" width="70" height="8" rx="3" fill="${n}" opacity="0.85"/>`, o += `<rect x="56" y="32" width="48" height="4" rx="2" fill="${n}" opacity="0.5"/>`, o += `<rect x="62" y="43" width="36" height="10" rx="3" fill="${t}"/>`, o += Vl(n, e.baselineLinks), o + "</svg>";
@@ -6452,7 +6452,7 @@ function Vl(e, t = 0) {
 	return n += `<rect x="8" y="70" width="40" height="3" rx="1.5" fill="${e}" opacity="0.6"/>`, t && (n += `<g fill="${e}" opacity="0.6">` + Array.from({ length: t }, (e, t) => `<rect x="${120 - t * 16}" y="70" width="12" height="3" rx="1.5"/>`).join("") + "</g>"), n;
 }
 //#endregion
-//#region ../template/assets/engine/0.7.3/animations/core.js
+//#region ../template/assets/engine/0.7.4/animations/core.js
 var Hl = () => ({
 	duration: 600,
 	delay: 0
@@ -6514,7 +6514,7 @@ var Hl = () => ({
 	["font.courier", "'Courier New', monospace"]
 ];
 //#endregion
-//#region ../template/assets/engine/0.7.3/place.js
+//#region ../template/assets/engine/0.7.4/place.js
 function Kl(e) {
 	let t = (e) => Math.round(e * 100) / 100, n = Math.max(0, t(100 - e.w)), r = Math.min(n, Math.max(0, t(e.x - e.w / 2))), i = Math.max(0, e.y - e.h / 2), a = e.snap === !1 || e.grid?.snap === !1, o = e.grid?.size || 8;
 	return i = a ? Math.round(i) : Math.round(i / o) * o, {

@@ -2,6 +2,12 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.4): the release
+
+- [ ] Updates panel on a site created from the template: 0.7.4 is offered, the update applies, and the site renders with engine 0.7.4 (every page, the admin and the slug copies)
+- [ ] A site carrying the reference plugin folders calendar, form and map from a 0.6.11 to 0.7.3 template: after the update their blocks still render, beside the core blocks of the same kind
+- [ ] Published site after the update: a hard reload of a slug page loads the engine from /assets/engine/0.7.4/ with no request to the old folder
+
 ### Testrunde-batch (0.7.0.11-0.7.13.5.2p): the review fixes
 
 - [ ] Side column, submenus «Alltid åpne» with the arrow on: fold a submenu with its arrow, move the mouse out of and back onto the item; it stays folded

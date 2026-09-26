@@ -27,6 +27,14 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+## [0.7.4] - 2026-09-26
+
+### 0.7.0.15p - Release 0.7.4: the reference plugins into the core, the content push, the navigation round and the bug round - 26 September 2026
+
+- RELEASE: the engine bumped 0.7.3 to 0.7.4 after the ritual (urd.json, git mv of the engine folder, the assets/urd/ shells and dictionaries, the HTML shells with byte-identical slug copies, editor/package.json and the lockfile, the bundle rebuilt), check-release green in full mode for v0.7.4. Tag v0.7.4 and the GitHub release are done manually after the push, tag last.
+- Independent review of the release (a fresh agent in its own worktree with its own build, tests, validation, release check, copies, stamp and em dash checks over the whole diff). No defect and no nit: the 92 engine files are pure renames, the bundle differs only in its 21 engine path strings, and nothing points at the removed folder (`_headers`, the guard's path lists, urd.json's `ownedPaths`, the speculation rules, dev-server.py and the workflows are all version-neutral, and the remaining `0.7.3` mentions in the schemas, SCHEMA.md and the plugin README are history).
+- Review note, no change: the entries 0.7.17.1-0.7.18.7p (24 September) and 0.7.0.11-0.7.13.5.2p (26 September) stand in that order from before this release; both belong under the new heading.
+
 ### 0.7.17.1-0.7.18.7p - Push preparation: the push model, the width fixes, and the four reference plugins into the core - 24 September 2026
 
 - Independent review of the span (a fresh agent in its own worktree, the whole diff against AGENTS.md and the ADRs with its own build, tests, validation, copies, stamp, i18n, three-places and em dash checks). One defect: a block resized by its handle painted its original height throughout the drag, since the section's ResizeObserver ran the push pass on every height change and the suspended pass wrote the design height back from the frame the drag only updates on release (found by code reading). Fixed: a suspended pass leaves the box alone and only restores the position. A TESTRUNDER item covers the handle.
