@@ -723,6 +723,7 @@ export default {
     'lbl.textColor': 'Metin rengi',
     'lbl.themePresets': 'Tema önerileri',
     'lbl.thickness': 'Kalınlık',
+    'lbl.length': 'Uzunluk',
     'lbl.thicknessPx': 'Kalınlık (px)',
     'lbl.title': 'Başlık',
     'lbl.transition': 'Geçiş',

@@ -34,6 +34,11 @@ entydig: alle commit-innslag over forrige p-innslag.
 - Review risk left as a test item: the push pass changes the size of elements it observes inside the observer callback, which the specification reports as a ResizeObserver loop message when it happens at the wrong depth; the headless probe of 23 September saw none during a stepwise narrowing, and the TESTRUNDER item stands.
 - Review note, no change: nine TESTRUNDER lines (the 0.7.0.5 batch and seven 0.7.14 items) left in the commit 0.7.18.2 as struck by the test round, outside the agent's edits in that commit.
 
+### 0.7.0.13 - The blocks: grain to 100 % and a line that can be lengthened - 26 September 2026
+
+- The grain layer's strength stopped at 30 %: only the editor's slider capped it, the engine renders the value as plain opacity. The slider runs 0 to 100 %, and SCHEMA.md documents the layer.
+- A line could not be lengthened by its corner: on a 4 to 8 px tall block the rotate handle, drawn inside the frame's top-right corner and counter-scaled by the preview zoom, covered the resize corner at any zoom under about 73 %, so the grip rotated instead. The rotate handle sits above the block on the toolbar's row (below it when the toolbar is flipped under), and the line and arrow get a length field beside the thickness in the Properties panel (`lbl.length` in nb, en-GB, tr, nn).
+
 ### 0.7.0.12 - The canvas: the section height after a move, the boundary line, the text toolbar and the pinned block's release - 25 September 2026
 
 - A section's dragged height reset when a block was moved: the resize paths wrote only the inline min-height, and the push pass restored the copy in `data-urd-min-height` on its next measurement. The three resize paths write both (`setMinHeight` in preview-edit.js).

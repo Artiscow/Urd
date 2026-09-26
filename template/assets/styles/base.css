@@ -5491,11 +5491,13 @@ body.urd-mobile .urd-section-resize-top {
 /* Rotation handle: a small circle at the block's top right corner */
 .urd-preview .urd-edit-rotate {
   /* Counter-scaling: the handle should keep the same on-screen size as
-     the admin panels at any zoom level (urd-zoom). */
+     the admin panels at any zoom level (urd-zoom). Anchored above the
+     block, on the toolbar's row: inside the frame it would cover the
+     resize corner on a thin block (a line) at any zoom below 100 %. */
   transform: scale(var(--urd-chrome-scale, 1));
-  transform-origin: top right;
+  transform-origin: bottom right;
   position: absolute;
-  top: -8px;
+  bottom: 100%;
   right: -8px;
   width: 16px;
   height: 16px;
@@ -5509,6 +5511,14 @@ body.urd-mobile .urd-section-resize-top {
   cursor: grab;
   user-select: none;
   z-index: 1000;
+}
+
+/* The toolbar flipped under the block (the top of the page): the handle
+   follows it below. */
+.urd-preview .urd-edit-toolbar.urd-toolbar-under ~ .urd-edit-rotate {
+  bottom: auto;
+  top: 100%;
+  transform-origin: top right;
 }
 
 .urd-preview .urd-editable:hover .urd-edit-rotate,

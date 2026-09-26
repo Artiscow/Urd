@@ -2,6 +2,11 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.0.13): the blocks
+
+- [ ] Background, grain layer: the strength slider runs from 0 to 100 % in the section, nav and footer panels, and 100 % shows the texture at full strength on the published page
+- [ ] A line and an arrow at 50, 80 and 100 % preview zoom: the rotate handle sits above the block, the bottom-right corner lengthens the line without rotating it; near the top of the page (toolbar flipped under) the rotate handle sits below the block; the Properties panel shows «Lengde» beside the thickness for line and arrow only, and a typed length is applied and capped at the right edge
+
 ### Testrunde-batch (0.7.0.12): the canvas
 
 - [ ] Drag a section's bottom edge 100 px, then move a block in it: the section keeps the new height; the same after the top edge and after «Tilpass høyde»

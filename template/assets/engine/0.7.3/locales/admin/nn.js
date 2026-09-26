@@ -537,6 +537,7 @@ export default {
     'lbl.textColor': 'Tekstfarge',
     'lbl.themePresets': 'Tema-forslag',
     'lbl.thickness': 'Tjukkleik',
+    'lbl.length': 'Lengd',
     'lbl.thicknessPx': 'Tjukkleik (px)',
     'lbl.title': 'Tittel',
     'lbl.transition': 'Overgang',

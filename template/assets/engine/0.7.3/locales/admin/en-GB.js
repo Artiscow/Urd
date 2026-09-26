@@ -723,6 +723,7 @@ export default {
     'lbl.textColor': 'Text colour',
     'lbl.themePresets': 'Theme suggestions',
     'lbl.thickness': 'Thickness',
+    'lbl.length': 'Length',
     'lbl.thicknessPx': 'Thickness (px)',
     'lbl.title': 'Title',
     'lbl.transition': 'Transition',

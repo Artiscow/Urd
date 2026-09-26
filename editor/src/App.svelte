@@ -8046,7 +8046,7 @@
       {:else if layer.type === 'grain'}
         <label>{ta('lbl.strength')}
           <span class="gridmenu-value">{Math.round(layer.props.opacity * 100)}%</span></label>
-        <input type="range" min="0.01" max="0.3" step="0.01" value={layer.props.opacity}
+        <input type="range" min="0" max="1" step="0.01" value={layer.props.opacity}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
       {:else if layer.type === 'image'}
         <label class="ghost filepick" title={ta('tip.webpAuto')}>
@@ -8875,6 +8875,13 @@
       <label>{ta('lbl.thickness')}
         <input type="number" min="1" max="40" value={selectedBlock.props.thickness}
           onchange={(e) => setBlockProp('thickness', Number(e.target.value))} /></label>
+      {#if selectedBlock.props.kind === 'line' || selectedBlock.props.kind === 'arrow'}
+        <!-- A line's length is its frame width, in percent of the content
+             surface, so it can be set without reaching the resize corner. -->
+        <label>{ta('lbl.length')}
+          <input type="number" min="1" max={Math.max(1, Math.round(100 - selectedBlock.frame.x))} step="0.5" value={selectedBlock.frame.w}
+            onchange={(e) => setBlockFrame('w', Math.min(Number(e.target.value), 100 - selectedBlock.frame.x))} /></label>
+      {/if}
       <label class="gridmenu-snap" title={ta('tip.shape.fill')}>
         <input type="checkbox" checked={Boolean(selectedBlock.props.fill)}
           onchange={(e) => setBlockProp('fill', e.target.checked ? selectedBlock.props.color : null)} />
