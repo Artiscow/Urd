@@ -4283,7 +4283,6 @@ body.urd-side-right {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 5002;
   margin-bottom: 0;
 }
 
@@ -5537,8 +5536,8 @@ body.urd-mobile .urd-section-resize-top {
 .urd-preview .urd-edit-rotate {
   /* Counter-scaling: the handle should keep the same on-screen size as
      the admin panels at any zoom level (urd-zoom). Anchored above the
-     block, on the toolbar's row: inside the frame it would cover the
-     resize corner on a thin block (a line) at any zoom below 100 %. */
+     block on the toolbar's row, clear of the resize corner on a thin
+     block at every zoom. */
   transform: scale(var(--urd-chrome-scale, 1));
   transform-origin: bottom right;
   position: absolute;
@@ -5691,8 +5690,8 @@ body.urd-mobile .urd-section-resize-top {
   right: 0;
   top: 0;
   height: 1px;
-  /* The line is drawn only: a hit on it would take the hover from the
-     section that shows the bar, and the bar would blink. */
+  /* The line is drawn only; the hover stays with the section that shows
+     the bar. */
   pointer-events: none;
   background: repeating-linear-gradient(
     90deg,

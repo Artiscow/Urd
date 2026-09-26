@@ -312,6 +312,7 @@ export default {
     'tip.nav.announceColor': 'Şeridin arka plan rengi (varsayılan vurgu).',
     'tip.nav.announceTextColor': 'Şeridin metin rengi (varsayılan vurgunun metin rengi).',
     'tip.nav.toolsSide': 'Araç kümesinin (tema düğmesi, sepet, menü düğmesi) çubuğun hangi yanında durduğu; solda seçimi mobilde menü düğmesini sola koyar.',
+    'tip.nav.toolsSideColumn': 'Araç kümesinin (tema düğmesi, sepet) sütunun üstünde mi altında mı olduğu',
     'lbl.text': 'Metin',
     'lbl.announceShow': 'Duyuruyu göster',
     'opt.announceLink.custom': 'Özel bağlantı',

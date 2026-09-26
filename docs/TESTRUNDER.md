@@ -2,6 +2,12 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.0.11-0.7.13.5.2p): the review fixes
+
+- [ ] Side column, submenus «Alltid åpne» with the arrow on: fold a submenu with its arrow, move the mouse out of and back onto the item; it stays folded
+- [ ] Side column with the announcement «Øverst på siden» in the editor: scroll the page; the strip stays above the section handles and block toolbars
+- [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
+
 ### Testrunde-batch (0.7.13.5.2): the column's tools and submenus
 
 - [ ] Preview and published page, bar and floating variants with an announcement: the strip's bottom edge is straight, nothing from the bar paints over it (also at 87 % preview zoom)

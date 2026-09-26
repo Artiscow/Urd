@@ -170,7 +170,7 @@ function wireArrivalHold() {
     });
   });
 }
-function endArrivalHold() {
+export function endArrivalHold() {
   firstRenderDone = true;
   arrival?.skipTransition();
 }

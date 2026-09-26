@@ -990,8 +990,7 @@
   function stickyUntilOptions() {
     const sections = store?.data.sections ?? [];
     const idx = sections.findIndex((s) => s.id === selectedBlock?.sectionId);
-    // A block whose section is not found offers its own section only; a
-    // slice from -1 would list every section under the wrong numbers.
+    // A block whose section is not found offers its own section only.
     if (idx < 0) return [['', ta('opt.sticky.ownSection')]];
     return [
       ['', ta('opt.sticky.ownSection')],
@@ -6302,7 +6301,7 @@
                         <!-- The tool cluster (theme, cart, burger) at the end or the start of the
                              bar; in the column that is the bottom or the top, with its own alignment -->
                         {#if sideVariant}
-                          <Choice label={ta('lbl.toolsSide')} title={ta('tip.nav.toolsSide')} value={siteDraft.nav.style?.tools?.side ?? 'end'}
+                          <Choice label={ta('lbl.toolsSide')} title={ta('tip.nav.toolsSideColumn')} value={siteDraft.nav.style?.tools?.side ?? 'end'}
                             options={[['start', ta('opt.toolsSide.top')], ['end', ta('opt.toolsSide.bottom')]]}
                             onchange={(v) => setNavTools('side', v === 'start' ? 'start' : undefined)} />
                           <Choice label={ta('lbl.toolsAlign')} title={ta('tip.nav.toolsAlign')} value={siteDraft.nav.style?.tools?.align ?? 'center'}
@@ -8924,7 +8923,7 @@
              surface, so it can be set without reaching the resize corner. -->
         <label>{ta('lbl.length')}
           <input type="number" min="1" max={Math.max(1, Math.round(100 - selectedBlock.frame.x))} step="0.5" value={selectedBlock.frame.w}
-            onchange={(e) => setBlockFrame('w', Math.min(Number(e.target.value), 100 - selectedBlock.frame.x))} /></label>
+            onchange={(e) => setBlockFrame('w', Math.max(1, Math.min(Number(e.target.value), 100 - selectedBlock.frame.x)))} /></label>
       {/if}
       <label class="gridmenu-snap" title={ta('tip.shape.fill')}>
         <input type="checkbox" checked={Boolean(selectedBlock.props.fill)}

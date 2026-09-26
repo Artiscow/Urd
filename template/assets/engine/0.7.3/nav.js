@@ -14,7 +14,7 @@
  * and the scroll lock come from the browser).
  */
 
-import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, sheetMotion, announcementModel, isSafeImage } from './nav-model.js';
+import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, announcementModel, isSafeImage } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
 import { readCart, cartCount, onCartChange } from './shop.js';
@@ -598,7 +598,7 @@ export function renderNav(site, host) {
       setOpen(entry, open);
     }, { signal });
 
-    if (mouseHover) {
+    if (mouseHover && !columnExpanded) {
       // Real mouse only: on hybrid devices (laptop with touchscreen) a tap
       // fires both pointerenter and click, and without the guard the
       // submenu would open on enter and close again on click. The mobile

@@ -174,6 +174,7 @@ export default {
     'tip.nav.announceColor': 'Stripa sin bakgrunnsfarge (standard aksent).',
     'tip.nav.announceTextColor': 'Stripa sin tekstfarge (standard aksenten sin tekstfarge).',
     'tip.nav.toolsSide': 'Kva side av menylinja verktøyklynga (temaknapp, handlekorg, menyknapp) står på; til venstre gjev menyknappen på venstre side på mobil.',
+    'tip.nav.toolsSideColumn': 'Om verktøyklynga (temaknapp, handlekorg) står øvst eller nedst i kolonnen',
     'lbl.text': 'Tekst',
     'lbl.announceShow': 'Vis kunngjering',
     'opt.announceLink.custom': 'Eiga lenkje',

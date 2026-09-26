@@ -315,6 +315,7 @@ export default {
     'tip.nav.announceColor': 'Stripens bakgrunnsfarge (standard aksent).',
     'tip.nav.announceTextColor': 'Stripens tekstfarge (standard aksentens tekstfarge).',
     'tip.nav.toolsSide': 'Hvilken side av menylinjen verktøyklyngen (temaknapp, handlekurv, menyknapp) står på; til venstre gir menyknappen på venstre side på mobil.',
+    'tip.nav.toolsSideColumn': 'Om verktøyklyngen (temaknapp, handlekurv) står øverst eller nederst i kolonnen',
     'lbl.text': 'Tekst',
     'lbl.announceShow': 'Vis kunngjøring',
     'opt.announceLink.custom': 'Egen lenke',

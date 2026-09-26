@@ -312,6 +312,7 @@ export default {
     'tip.nav.announceColor': 'The strip\'s background colour (default accent).',
     'tip.nav.announceTextColor': 'The strip\'s text colour (default the accent\'s text colour).',
     'tip.nav.toolsSide': 'Which side of the bar the tool cluster (theme button, cart, burger) sits on; on the left puts the burger on the left on mobile.',
+    'tip.nav.toolsSideColumn': 'Whether the tool cluster (theme button, cart) sits at the top or the bottom of the column',
     'lbl.text': 'Text',
     'lbl.announceShow': 'Show announcement',
     'opt.announceLink.custom': 'Custom link',

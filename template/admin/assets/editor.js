@@ -8363,7 +8363,7 @@ function tm(e, t) {
 					var t = pd(), n = F(t), r = R(n);
 					J(r), D(t), z((e, t) => {
 						W(n, `${e ?? ""} `), X(r, "max", t), Y(r, B(j).frame.w);
-					}, [() => Z("lbl.length"), () => Math.max(1, Math.round(100 - B(j).frame.x))]), V("change", r, (e) => on("w", Math.min(Number(e.target.value), 100 - B(j).frame.x))), U(e, t);
+					}, [() => Z("lbl.length"), () => Math.max(1, Math.round(100 - B(j).frame.x))]), V("change", r, (e) => on("w", Math.max(1, Math.min(Number(e.target.value), 100 - B(j).frame.x)))), U(e, t);
 				};
 				G(s, (e) => {
 					(B(j).props.kind === "line" || B(j).props.kind === "arrow") && e(c);
@@ -13895,7 +13895,7 @@ function tm(e, t) {
 					var se = R(re, 2), ce = (e) => {
 						var t = df(), n = I(t);
 						{
-							let e = /* @__PURE__ */ A(() => Z("lbl.toolsSide")), t = /* @__PURE__ */ A(() => Z("tip.nav.toolsSide")), r = /* @__PURE__ */ A(() => B(k).nav.style?.tools?.side ?? "end"), i = /* @__PURE__ */ A(() => [["start", Z("opt.toolsSide.top")], ["end", Z("opt.toolsSide.bottom")]]);
+							let e = /* @__PURE__ */ A(() => Z("lbl.toolsSide")), t = /* @__PURE__ */ A(() => Z("tip.nav.toolsSideColumn")), r = /* @__PURE__ */ A(() => B(k).nav.style?.tools?.side ?? "end"), i = /* @__PURE__ */ A(() => [["start", Z("opt.toolsSide.top")], ["end", Z("opt.toolsSide.bottom")]]);
 							Yo(n, {
 								get label() {
 									return B(e);
