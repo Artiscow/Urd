@@ -2569,6 +2569,9 @@ function markActive(host) {
 }
 
 document.addEventListener('pointerdown', (event) => {
+  // Clean view has no editing: a click there is a visitor's click, and must
+  // not select anything behind the hidden panels.
+  if (document.body.classList.contains('urd-chrome-off')) return;
   const target = event.target instanceof HTMLElement ? event.target : null;
   // Clicks in the multi toolbar must never change the set it acts on.
   if (target?.closest('.urd-multi-toolbar')) return;

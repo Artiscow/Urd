@@ -258,31 +258,40 @@ export function openImageEditor(anchor, adapter) {
   if (adapter.get('image') && anchor instanceof Element) {
     grid = el2('div', 'urd-imged-grid');
     document.body.appendChild(grid);
-    const syncGrid = () => {
-      const r = anchor.getBoundingClientRect();
-      grid.style.left = `${r.left}px`;
-      grid.style.top = `${r.top}px`;
-      grid.style.width = `${r.width}px`;
-      grid.style.height = `${r.height}px`;
-      grid.style.borderRadius = getComputedStyle(anchor).borderRadius;
-    };
-    syncGrid();
-    // Shape/zoom change the image frame live; the grid follows along.
-    gridObserver = new ResizeObserver(syncGrid);
-    gridObserver.observe(anchor);
   }
 
   document.body.appendChild(panel);
 
-  // Placement: beside the image, clamped inside the viewport
-  const rect = anchor.getBoundingClientRect();
-  const W = 260;
-  const left = Math.max(8, Math.min(rect.right + 12, window.innerWidth - W - 8));
-  const top = Math.max(8, Math.min(rect.top, window.innerHeight - panel.offsetHeight - 8));
-  panel.style.left = `${left}px`;
-  panel.style.top = `${top}px`;
+  // Both the grid and the panel are fixed, so their viewport coordinates
+  // have to be taken again whenever the image moves, not only when it
+  // changes size: a wider window re-centres the content band and slides the
+  // image sideways without a resize.
+  const place = () => {
+    const rect = anchor instanceof Element ? anchor.getBoundingClientRect() : null;
+    if (!rect) return;
+    if (grid) {
+      grid.style.left = `${rect.left}px`;
+      grid.style.top = `${rect.top}px`;
+      grid.style.width = `${rect.width}px`;
+      grid.style.height = `${rect.height}px`;
+      grid.style.borderRadius = getComputedStyle(anchor).borderRadius;
+    }
+    // The panel's DRAWN box: it is counter-scaled with the preview zoom, so
+    // its layout size is not what the viewport sees.
+    const box = panel.getBoundingClientRect();
+    panel.style.left = `${Math.max(8, Math.min(rect.right + 12, window.innerWidth - box.width - 8))}px`;
+    panel.style.top = `${Math.max(8, Math.min(rect.top, window.innerHeight - box.height - 8))}px`;
+  };
+  place();
+  if (grid) {
+    // Shape/zoom change the image frame live; the grid follows along.
+    gridObserver = new ResizeObserver(place);
+    gridObserver.observe(anchor);
+  }
 
   // Closing: click outside, Escape or scrolling outside the panel
+  const ac = new AbortController();
+  const { signal } = ac;
   const onDown = (event) => {
     if (!panel.contains(event.target)) closeImageEditor();
   };
@@ -292,15 +301,14 @@ export function openImageEditor(anchor, adapter) {
   const onScroll = (event) => {
     if (event.target instanceof Node && !panel.contains(event.target)) closeImageEditor();
   };
+  window.addEventListener('resize', place, { signal });
   setTimeout(() => {
-    document.addEventListener('pointerdown', onDown, true);
-    document.addEventListener('keydown', onKey, true);
-    document.addEventListener('scroll', onScroll, true);
+    document.addEventListener('pointerdown', onDown, { capture: true, signal });
+    document.addEventListener('keydown', onKey, { capture: true, signal });
+    document.addEventListener('scroll', onScroll, { capture: true, signal });
   }, 0);
   teardown = () => {
-    document.removeEventListener('pointerdown', onDown, true);
-    document.removeEventListener('keydown', onKey, true);
-    document.removeEventListener('scroll', onScroll, true);
+    ac.abort();
     gridObserver?.disconnect();
     grid?.remove();
   };

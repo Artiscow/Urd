@@ -826,7 +826,20 @@
   }
 
   /** Active panel in the left panel picker (null = closed) */
-  let activePanel = $state(null);
+  /* Whether the panels come back as they were left when the admin is loaded
+     again: a personal workspace preference in localStorage (like theme and
+     language), with only the non-default stored. Clean view keeps the folds
+     on its own (the rail and the panel are hidden, not unmounted); this is
+     about a fresh load of the admin. */
+  const PANELS_PREF_KEY = 'urd-admin-panels';
+  const PANEL_OPEN_KEY = 'urd-admin-panel-open';
+  let panelsPref = $state(localStorage.getItem(PANELS_PREF_KEY) === 'reset' ? 'reset' : 'remember');
+  function setPanelsPref(v) {
+    panelsPref = v === 'reset' ? 'reset' : 'remember';
+    if (panelsPref === 'reset') localStorage.setItem(PANELS_PREF_KEY, 'reset');
+    else localStorage.removeItem(PANELS_PREF_KEY);
+  }
+  let activePanel = $state(panelsPref === 'reset' ? null : localStorage.getItem(PANEL_OPEN_KEY));
   /** The panels grouped by workflow: build the page, style the site,
    *  tools. Shown with dividers in the panel picker. The ids are stable
    *  English identifiers (never display text); PANEL_LABELS owns what the
@@ -839,6 +852,13 @@
   /** Uppercase label above each group in the rail, in the same order. */
   const PANEL_GROUP_KEYS = ['rail.thisPage', 'rail.site', 'rail.system'];
   const PANEL_LABELS = Object.fromEntries(PANEL_GROUPS.flat().map((id) => [id, ta(`panel.${id}`)]));
+  // A remembered id from an older version may name a panel that is gone.
+  if (activePanel && !PANEL_LABELS[activePanel]) activePanel = null;
+  $effect(() => {
+    if (panelsPref === 'reset') { localStorage.removeItem(PANEL_OPEN_KEY); return; }
+    if (activePanel) localStorage.setItem(PANEL_OPEN_KEY, activePanel);
+    else localStorage.removeItem(PANEL_OPEN_KEY);
+  });
 
   /* The panel intros (the prose rule, ADR-0016): the explanation lives as
      a tooltip on the panel title, never as a paragraph in the panel.
@@ -4664,9 +4684,19 @@
     })?.id ?? null;
   });
 
-  function toggleChrome() {
+  /** The panel's place in the list while Clean view has it hidden. */
+  let panelScroll = 0;
+  async function toggleChrome() {
+    // display: none keeps the folds' open state but drops the scroll
+    // position, so it is read on the way out and put back on the way in.
+    if (chromeVisible) panelScroll = panelEl?.scrollTop ?? 0;
     chromeVisible = !chromeVisible;
     bridge?.sendChrome(chromeVisible);
+    if (!chromeVisible) return;
+    await tick();
+    // The panel has no scroll range until the browser has laid it out
+    // again, so the restore waits for a frame.
+    requestAnimationFrame(() => { if (panelEl) panelEl.scrollTop = panelScroll; });
   }
 
   /** Click-and-type change from the iframe: update the draft. The iframe
@@ -6012,1922 +6042,1927 @@
 
   {#if site}
     <div class="workspace">
-      {#if chromeVisible}
-        <nav class="rail">
-          {#each PANEL_GROUPS as group, gi (gi)}
-            <!-- Uppercase label above each group: page tools, site settings
-                 and system read as three levels. -->
-            <span class="rail-group">{ta(PANEL_GROUP_KEYS[gi])}</span>
-            {#each group as name (name)}
-              <button class:active={activePanel === name} onclick={() => togglePanel(name)}>{PANEL_LABELS[name]}</button>
-            {/each}
+      <!-- Clean view hides the rail and the panel rather than unmounting them:
+           the folds keep their own open state in the DOM, and destroying the
+           subtree would bring every one of them back closed. -->
+      <nav class="rail" class:hidden={!chromeVisible}>
+        {#each PANEL_GROUPS as group, gi (gi)}
+          <!-- Uppercase label above each group: page tools, site settings
+               and system read as three levels. -->
+          <span class="rail-group">{ta(PANEL_GROUP_KEYS[gi])}</span>
+          {#each group as name (name)}
+            <button class:active={activePanel === name} onclick={() => togglePanel(name)}>{PANEL_LABELS[name]}</button>
           {/each}
-          <span class="rail-settings" bind:this={settingsEl}>
-            <!-- The mark lives at the bottom of the rail by the gear, not in
-                 the top bar: there it would take the space the discard
-                 confirmation needs to grow. -->
-            <span class="rail-brand" title="Urd">
-              <!-- The viewBox is cropped to the glyph's visual box (stroke
-                   included), so the svg bottom IS the rune's foot and the
-                   baseline alignment lands. -->
-              <svg class="brand-mark" viewBox="10.3 8.3 19.4 25.4" aria-hidden="true"><path d="M12 32V10l16 6.5V32" fill="none" stroke="var(--urd-brand)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
-              <span class="brand-word">Urd</span>
-            </span>
-            <button class="rail-gear" class:active={settingsOpen} title={ta('settings.title')}
-              onclick={() => (settingsOpen = !settingsOpen)}>{@html ICONS.gear}</button>
-            {#if settingsOpen}
-              <div class="settings-pop">
-                <p class="panel-strong">{ta('settings.title')}</p>
-                <label title={ta('topbar.adminTheme.title')}>{ta('settings.theme')}
-                  <Dropdown value={adminTheme} options={ADMIN_THEMES} onchange={(v) => (adminTheme = v)} /></label>
-                <label title={ta('topbar.language.title')}>{ta('settings.language')}
-                  <Dropdown value={adminLangChoice} options={[['auto', ta('lang.auto')], ...adminLangOptions()]} onchange={setAdminLang} /></label>
-                <label title={ta('tip.settings.layoutPicker')}>{ta('settings.layoutPicker')}
-                  <Dropdown value={layoutPickerPref}
-                    options={[['strip', ta('settings.layoutPickerStrip')], ['menu', ta('settings.layoutPickerMenu')]]}
-                    onchange={setLayoutPicker} /></label>
-                <!-- The Screen device (ADR-0018 addendum): its own window
-                     width, or an editing size with an optional height. An
-                     admin preference like the theme and the language, so it
-                     lives here and not in the device strip. -->
-                <p class="mini-label" title={ta('tip.screen.mode')}>{ta('settings.screen')}</p>
-                <div class="seg" title={ta('tip.screen.mode')}>
-                  <button type="button" class:on={screenPref.mode === 'own'}
-                    onclick={() => setScreenPref({ mode: 'own' })}>{ta('lbl.screen.own')}</button>
-                  <button type="button" class:on={screenPref.mode === 'custom'}
-                    onclick={() => setScreenPref({ mode: 'custom' })}>{ta('lbl.screen.size')}</button>
-                </div>
-                {#if screenPref.mode === 'custom'}
-                  <div class="ctl-row">
-                    <span class="mini-label">{ta('lbl.screen.w')}</span>
-                    <input type="number" class="tb-num" min={SCREEN_WIDTH_MIN} max={SCREEN_WIDTH_MAX} step="10"
-                      title={ta('tip.screen.width', { min: SCREEN_WIDTH_MIN, max: SCREEN_WIDTH_MAX })}
-                      value={screenPref.width} onchange={(e) => { setScreenPref({ width: Number(e.target.value) }); e.target.value = screenPref.width; }} />
-                    <span class="mini-label">{ta('lbl.screen.h')}</span>
-                    <input type="number" class="tb-num" min="0" max={SCREEN_HEIGHT_MAX} step="10" placeholder="0"
-                      title={ta('tip.screen.height', { min: SCREEN_HEIGHT_MIN, max: SCREEN_HEIGHT_MAX })}
-                      value={screenPref.height || ''} onchange={(e) => { setScreenPref({ height: Number(e.target.value) }); e.target.value = screenPref.height || ''; }} />
-                  </div>
-                {/if}
-                <!-- Visitor measurement: the one SITE value in this pop (site.analytics,
-                     published with the site), placed where the owner looks for Urd's own settings. -->
-                {#if siteDraft}
-                  <p class="mini-label" title={ta('tip.analytics')}>{ta('settings.analytics')}</p>
-                  <label title={ta('tip.analytics')}>{ta('lbl.analyticsToken')}
-                    <input type="text" placeholder={ta('ph.analyticsToken')} spellcheck="false"
-                      value={siteDraft.analytics?.token ?? ''}
-                      onchange={(e) => setAnalyticsToken(e.target.value)} /></label>
-                {/if}
-              </div>
-            {/if}
+        {/each}
+        <span class="rail-settings" bind:this={settingsEl}>
+          <!-- The mark lives at the bottom of the rail by the gear, not in
+               the top bar: there it would take the space the discard
+               confirmation needs to grow. -->
+          <span class="rail-brand" title="Urd">
+            <!-- The viewBox is cropped to the glyph's visual box (stroke
+                 included), so the svg bottom IS the rune's foot and the
+                 baseline alignment lands. -->
+            <svg class="brand-mark" viewBox="10.3 8.3 19.4 25.4" aria-hidden="true"><path d="M12 32V10l16 6.5V32" fill="none" stroke="var(--urd-brand)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            <span class="brand-word">Urd</span>
           </span>
-        </nav>
-
-        {#if activePanel}
-          <aside class="panel" bind:this={panelEl}>
-            <div class="panel-head">
-              <h2 title={PANEL_INTROS[activePanel]?.map((k) => ta(k)).join('\n')}>{PANEL_LABELS[activePanel]}</h2>
-              {#if panelHasGroups}
-                <button type="button" class="fold-all fold-toggle" class:collapse={panelAllOpen}
-                  title={ta(panelAllOpen ? 'ui.collapseAll' : 'ui.expandAll')}
-                  aria-label={ta(panelAllOpen ? 'ui.collapseAll' : 'ui.expandAll')}
-                  onclick={togglePanelGroups}>{@html ICONS.foldToggle}</button>
+          <button class="rail-gear" class:active={settingsOpen} title={ta('settings.title')}
+            onclick={() => (settingsOpen = !settingsOpen)}>{@html ICONS.gear}</button>
+          {#if settingsOpen}
+            <div class="settings-pop">
+              <p class="panel-strong">{ta('settings.title')}</p>
+              <label title={ta('topbar.adminTheme.title')}>{ta('settings.theme')}
+                <Dropdown value={adminTheme} options={ADMIN_THEMES} onchange={(v) => (adminTheme = v)} /></label>
+              <label title={ta('topbar.language.title')}>{ta('settings.language')}
+                <Dropdown value={adminLangChoice} options={[['auto', ta('lang.auto')], ...adminLangOptions()]} onchange={setAdminLang} /></label>
+              <label title={ta('tip.settings.layoutPicker')}>{ta('settings.layoutPicker')}
+                <Dropdown value={layoutPickerPref}
+                  options={[['strip', ta('settings.layoutPickerStrip')], ['menu', ta('settings.layoutPickerMenu')]]}
+                  onchange={setLayoutPicker} /></label>
+              <label title={ta('tip.settings.panels')}>{ta('settings.panels')}
+                <Dropdown value={panelsPref}
+                  options={[['remember', ta('settings.panelsRemember')], ['reset', ta('settings.panelsReset')]]}
+                  onchange={setPanelsPref} /></label>
+              <!-- The Screen device (ADR-0018 addendum): its own window
+                   width, or an editing size with an optional height. An
+                   admin preference like the theme and the language, so it
+                   lives here and not in the device strip. -->
+              <p class="mini-label" title={ta('tip.screen.mode')}>{ta('settings.screen')}</p>
+              <div class="seg" title={ta('tip.screen.mode')}>
+                <button type="button" class:on={screenPref.mode === 'own'}
+                  onclick={() => setScreenPref({ mode: 'own' })}>{ta('lbl.screen.own')}</button>
+                <button type="button" class:on={screenPref.mode === 'custom'}
+                  onclick={() => setScreenPref({ mode: 'custom' })}>{ta('lbl.screen.size')}</button>
+              </div>
+              {#if screenPref.mode === 'custom'}
+                <div class="ctl-row">
+                  <span class="mini-label">{ta('lbl.screen.w')}</span>
+                  <input type="number" class="tb-num" min={SCREEN_WIDTH_MIN} max={SCREEN_WIDTH_MAX} step="10"
+                    title={ta('tip.screen.width', { min: SCREEN_WIDTH_MIN, max: SCREEN_WIDTH_MAX })}
+                    value={screenPref.width} onchange={(e) => { setScreenPref({ width: Number(e.target.value) }); e.target.value = screenPref.width; }} />
+                  <span class="mini-label">{ta('lbl.screen.h')}</span>
+                  <input type="number" class="tb-num" min="0" max={SCREEN_HEIGHT_MAX} step="10" placeholder="0"
+                    title={ta('tip.screen.height', { min: SCREEN_HEIGHT_MIN, max: SCREEN_HEIGHT_MAX })}
+                    value={screenPref.height || ''} onchange={(e) => { setScreenPref({ height: Number(e.target.value) }); e.target.value = screenPref.height || ''; }} />
+                </div>
+              {/if}
+              <!-- Visitor measurement: the one SITE value in this pop (site.analytics,
+                   published with the site), placed where the owner looks for Urd's own settings. -->
+              {#if siteDraft}
+                <p class="mini-label" title={ta('tip.analytics')}>{ta('settings.analytics')}</p>
+                <label title={ta('tip.analytics')}>{ta('lbl.analyticsToken')}
+                  <input type="text" placeholder={ta('ph.analyticsToken')} spellcheck="false"
+                    value={siteDraft.analytics?.token ?? ''}
+                    onchange={(e) => setAnalyticsToken(e.target.value)} /></label>
               {/if}
             </div>
+          {/if}
+        </span>
+      </nav>
 
-            {#if activePanel === 'pages'}
-              <div class="panel-body">
-                {#each siteDraft.pages as p (p.id)}
-                  <div class="page-row" class:current={p.id === pageId}>
-                    <input class="page-title" value={p.title} title={ta('tip.pages.title')}
-                      onchange={(e) => renamePage(p, e.target.value)} />
-                    {#if p.path === '/'}
-                      <span class="page-path" title={ta('tip.pages.homeLocked')}>/</span>
-                    {:else}
-                      <input class="page-slug" value={p.path.slice(1)} title={ta('tip.pages.slug')}
-                        onchange={(e) => setPageSlug(p, e.target.value)} />
-                    {/if}
-                    {#if missingSeo[p.id]}
-                      <span class="seo-warn" title={ta('tip.pages.missingDescription')}>{@html ICONS.warn}</span>
-                    {/if}
-                    <span class="row-tools">
-                      <button class="ghost row-tool" title={ta('tip.pages.open')}
-                        disabled={p.id === pageId} onclick={() => selectPage(p.id)}>{@html ICONS.right}</button>
-                      <span class="page-menu-wrap">
-                        <button class="ghost row-tool" title={ta('tip.pages.menu')}
-                          onclick={() => (pageMenuFor = pageMenuFor === p.id ? null : p.id)}>{@html ICONS.kebab}</button>
-                        {#if pageMenuFor === p.id}
-                          <div class="page-menu">
-                            <button class="ghost" onclick={() => savePageAsTemplate(p)}>
-                              {@html ICONS.bookmark} {ta('ui.savePageTemplate')}</button>
-                            {#if p.path !== '/'}
-                              <button class="ghost danger" title={ta('tip.pages.delete')}
-                                onclick={() => { pageMenuFor = null; deletePage(p); }}>
-                                {@html ICONS.cross} {ta('ui.deletePage')}</button>
-                            {/if}
-                          </div>
-                        {/if}
-                      </span>
-                    </span>
-                  </div>
-                {/each}
-                <details class="group">
-                  <summary>{ta('ui.seoGroup', { page: siteDraft.pages.find((p) => p.id === pageId)?.title ?? '' })}</summary>
-                  <div class="group-items">
-                    <label title={ta('tip.seo.description')}>{ta('lbl.seoDescription')}
-                      <textarea rows="2" value={seoDraft.description}
-                        onchange={(e) => setPageSeo('description', e.target.value)}></textarea>
-                    </label>
-                    <label title={ta('tip.seo.ogTitle')}>{ta('lbl.ogTitle')}
-                      <input value={seoDraft.ogTitle}
-                        placeholder={siteDraft.pages.find((p) => p.id === pageId)?.title ?? ''}
-                        onchange={(e) => setPageSeo('ogTitle', e.target.value)} />
-                    </label>
-                    <label title={ta('tip.seo.ogDescription')}>{ta('lbl.ogDescription')}
-                      <textarea rows="2" value={seoDraft.ogDescription} placeholder={seoDraft.description}
-                        onchange={(e) => setPageSeo('ogDescription', e.target.value)}></textarea>
-                    </label>
-                    <label title={ta('tip.seo.ogImage')}>{ta('lbl.ogImage')}
-                      {#if seoDraft.ogImage}
-                        <img class="site-icon-preview" src={seoDraft.ogImage} alt={ta('lbl.ogImage')} />
-                      {/if}
-                    </label>
-                    <span class="toolbar-row">
-                      <label class="ghost filepick tb-grow" title={ta('tip.seo.ogImage')}>
-                        {seoDraft.ogImage ? ta('ui.changeImage') : ta('ui.chooseImage')}
-                        <input type="file" accept="image/*" onchange={uploadOgImage} />
-                      </label>
-                      {#if seoDraft.ogImage}
-                        <button class="ghost row-tool" title={ta('tip.seo.removeOgImage')}
-                          onclick={() => setPageSeo('ogImage', '')}>{@html ICONS.cross}</button>
+      {#if activePanel}
+        <aside class="panel" class:hidden={!chromeVisible} bind:this={panelEl}>
+          <div class="panel-head">
+            <h2 title={PANEL_INTROS[activePanel]?.map((k) => ta(k)).join('\n')}>{PANEL_LABELS[activePanel]}</h2>
+            {#if panelHasGroups}
+              <button type="button" class="fold-all fold-toggle" class:collapse={panelAllOpen}
+                title={ta(panelAllOpen ? 'ui.collapseAll' : 'ui.expandAll')}
+                aria-label={ta(panelAllOpen ? 'ui.collapseAll' : 'ui.expandAll')}
+                onclick={togglePanelGroups}>{@html ICONS.foldToggle}</button>
+            {/if}
+          </div>
+
+          {#if activePanel === 'pages'}
+            <div class="panel-body">
+              {#each siteDraft.pages as p (p.id)}
+                <div class="page-row" class:current={p.id === pageId}>
+                  <input class="page-title" value={p.title} title={ta('tip.pages.title')}
+                    onchange={(e) => renamePage(p, e.target.value)} />
+                  {#if p.path === '/'}
+                    <span class="page-path" title={ta('tip.pages.homeLocked')}>/</span>
+                  {:else}
+                    <input class="page-slug" value={p.path.slice(1)} title={ta('tip.pages.slug')}
+                      onchange={(e) => setPageSlug(p, e.target.value)} />
+                  {/if}
+                  {#if missingSeo[p.id]}
+                    <span class="seo-warn" title={ta('tip.pages.missingDescription')}>{@html ICONS.warn}</span>
+                  {/if}
+                  <span class="row-tools">
+                    <button class="ghost row-tool" title={ta('tip.pages.open')}
+                      disabled={p.id === pageId} onclick={() => selectPage(p.id)}>{@html ICONS.right}</button>
+                    <span class="page-menu-wrap">
+                      <button class="ghost row-tool" title={ta('tip.pages.menu')}
+                        onclick={() => (pageMenuFor = pageMenuFor === p.id ? null : p.id)}>{@html ICONS.kebab}</button>
+                      {#if pageMenuFor === p.id}
+                        <div class="page-menu">
+                          <button class="ghost" onclick={() => savePageAsTemplate(p)}>
+                            {@html ICONS.bookmark} {ta('ui.savePageTemplate')}</button>
+                          {#if p.path !== '/'}
+                            <button class="ghost danger" title={ta('tip.pages.delete')}
+                              onclick={() => { pageMenuFor = null; deletePage(p); }}>
+                              {@html ICONS.cross} {ta('ui.deletePage')}</button>
+                          {/if}
+                        </div>
                       {/if}
                     </span>
-                    <label class="gridmenu-snap" title={ta('tip.seo.hideFromSearch')}>
-                      <input type="checkbox"
-                        checked={siteDraft.pages.find((p) => p.id === pageId)?.noindex === true}
-                        onchange={(e) => setPageNoindex(e.target.checked)} />
-                      {ta('lbl.hideFromSearch')}
+                  </span>
+                </div>
+              {/each}
+              <details class="group">
+                <summary>{ta('ui.seoGroup', { page: siteDraft.pages.find((p) => p.id === pageId)?.title ?? '' })}</summary>
+                <div class="group-items">
+                  <label title={ta('tip.seo.description')}>{ta('lbl.seoDescription')}
+                    <textarea rows="2" value={seoDraft.description}
+                      onchange={(e) => setPageSeo('description', e.target.value)}></textarea>
+                  </label>
+                  <label title={ta('tip.seo.ogTitle')}>{ta('lbl.ogTitle')}
+                    <input value={seoDraft.ogTitle}
+                      placeholder={siteDraft.pages.find((p) => p.id === pageId)?.title ?? ''}
+                      onchange={(e) => setPageSeo('ogTitle', e.target.value)} />
+                  </label>
+                  <label title={ta('tip.seo.ogDescription')}>{ta('lbl.ogDescription')}
+                    <textarea rows="2" value={seoDraft.ogDescription} placeholder={seoDraft.description}
+                      onchange={(e) => setPageSeo('ogDescription', e.target.value)}></textarea>
+                  </label>
+                  <label title={ta('tip.seo.ogImage')}>{ta('lbl.ogImage')}
+                    {#if seoDraft.ogImage}
+                      <img class="site-icon-preview" src={seoDraft.ogImage} alt={ta('lbl.ogImage')} />
+                    {/if}
+                  </label>
+                  <span class="toolbar-row">
+                    <label class="ghost filepick tb-grow" title={ta('tip.seo.ogImage')}>
+                      {seoDraft.ogImage ? ta('ui.changeImage') : ta('ui.chooseImage')}
+                      <input type="file" accept="image/*" onchange={uploadOgImage} />
                     </label>
-                  </div>
-                </details>
-                <hr class="gridmenu-divider" />
-                <input placeholder={ta('ph.newPageName')} bind:value={newPageTitle}
-                  onkeydown={(e) => e.key === 'Enter' && addPage()} />
-                <button class="ghost action" title={ta('hint.pages.autoMenu')}
-                  onclick={addPage} disabled={!newPageTitle.trim()}>{ta('ui.createPage')}</button>
-                <span class="mini-label">{ta('canvas.tabPresets')}</span>
-                <div class="page-template-grid" style={thumbThemeStyle}>
-                  <div class="page-template-card" class:picked={newPageTemplate === null}>
-                    <button class="page-template-pick" title={ta('tip.pages.blankPick')}
-                      onclick={() => (newPageTemplate = null)}>
-                      <span class="page-template-thumb">{@html pageThumb({ sections: [] })}</span>
-                      <span class="page-template-name">{ta('ui.blankPage')}</span>
+                    {#if seoDraft.ogImage}
+                      <button class="ghost row-tool" title={ta('tip.seo.removeOgImage')}
+                        onclick={() => setPageSeo('ogImage', '')}>{@html ICONS.cross}</button>
+                    {/if}
+                  </span>
+                  <label class="gridmenu-snap" title={ta('tip.seo.hideFromSearch')}>
+                    <input type="checkbox"
+                      checked={siteDraft.pages.find((p) => p.id === pageId)?.noindex === true}
+                      onchange={(e) => setPageNoindex(e.target.checked)} />
+                    {ta('lbl.hideFromSearch')}
+                  </label>
+                </div>
+              </details>
+              <hr class="gridmenu-divider" />
+              <input placeholder={ta('ph.newPageName')} bind:value={newPageTitle}
+                onkeydown={(e) => e.key === 'Enter' && addPage()} />
+              <button class="ghost action" title={ta('hint.pages.autoMenu')}
+                onclick={addPage} disabled={!newPageTitle.trim()}>{ta('ui.createPage')}</button>
+              <span class="mini-label">{ta('canvas.tabPresets')}</span>
+              <div class="page-template-grid" style={thumbThemeStyle}>
+                <div class="page-template-card" class:picked={newPageTemplate === null}>
+                  <button class="page-template-pick" title={ta('tip.pages.blankPick')}
+                    onclick={() => (newPageTemplate = null)}>
+                    <span class="page-template-thumb">{@html pageThumb({ sections: [] })}</span>
+                    <span class="page-template-name">{ta('ui.blankPage')}</span>
+                  </button>
+                </div>
+                {#each PAGE_PRESETS as p (p.id)}
+                  <div class="page-template-card" class:picked={newPageTemplate === `preset:${p.id}`}>
+                    <button class="page-template-pick" title={ta('tip.pages.templatePick', { name: ta(p.labelKey) })}
+                      onclick={() => (newPageTemplate = newPageTemplate === `preset:${p.id}` ? null : `preset:${p.id}`)}>
+                      <span class="page-template-thumb">{@html builtinPageThumbs[p.id]}</span>
+                      <span class="page-template-name">{ta(p.labelKey)}</span>
                     </button>
                   </div>
-                  {#each PAGE_PRESETS as p (p.id)}
-                    <div class="page-template-card" class:picked={newPageTemplate === `preset:${p.id}`}>
-                      <button class="page-template-pick" title={ta('tip.pages.templatePick', { name: ta(p.labelKey) })}
-                        onclick={() => (newPageTemplate = newPageTemplate === `preset:${p.id}` ? null : `preset:${p.id}`)}>
-                        <span class="page-template-thumb">{@html builtinPageThumbs[p.id]}</span>
-                        <span class="page-template-name">{ta(p.labelKey)}</span>
+                {/each}
+              </div>
+              {#if templateIds.some((id) => templateStores[id]?.data?.mal?.kind === 'page')}
+                <span class="mini-label">{ta('canvas.tabMyTemplates')}</span>
+                <div class="page-template-grid" style={thumbThemeStyle}>
+                  {#each templateIds.filter((id) => templateStores[id]?.data?.mal?.kind === 'page') as id (id)}
+                    <div class="page-template-card" class:picked={newPageTemplate === id}>
+                      <button class="page-template-pick" title={ta('tip.pages.templatePick', { name: templateStores[id].data.mal.name })}
+                        onclick={() => (newPageTemplate = newPageTemplate === id ? null : id)}>
+                        <span class="page-template-thumb">{@html pageThumb(templateStores[id].data.page)}</span>
+                        <span class="page-template-name">{templateStores[id].data.mal.name}</span>
                       </button>
+                      <button class="page-template-del" title={ta('canvas.deleteTemplate')}
+                        onclick={() => handleDeleteTemplate({ id })}>{@html ICONS.cross}</button>
                     </div>
                   {/each}
                 </div>
-                {#if templateIds.some((id) => templateStores[id]?.data?.mal?.kind === 'page')}
-                  <span class="mini-label">{ta('canvas.tabMyTemplates')}</span>
-                  <div class="page-template-grid" style={thumbThemeStyle}>
-                    {#each templateIds.filter((id) => templateStores[id]?.data?.mal?.kind === 'page') as id (id)}
-                      <div class="page-template-card" class:picked={newPageTemplate === id}>
-                        <button class="page-template-pick" title={ta('tip.pages.templatePick', { name: templateStores[id].data.mal.name })}
-                          onclick={() => (newPageTemplate = newPageTemplate === id ? null : id)}>
-                          <span class="page-template-thumb">{@html pageThumb(templateStores[id].data.page)}</span>
-                          <span class="page-template-name">{templateStores[id].data.mal.name}</span>
-                        </button>
-                        <button class="page-template-del" title={ta('canvas.deleteTemplate')}
-                          onclick={() => handleDeleteTemplate({ id })}>{@html ICONS.cross}</button>
-                      </div>
-                    {/each}
-                  </div>
-                {/if}
-              </div>
-            {:else if activePanel === 'nav'}
-              <div class="panel-body">
-                <details class="group">
-                  <summary title={ta('hint.nav.logoHome')}>{ta('group.logo')}</summary>
-                  <div class="group-items">
-                    <Choice label={ta('common.type')} value={siteDraft.nav.logo?.type ?? 'text'}
-                      options={[['text', ta('blocks.text')], ['image', ta('blocks.image')], ['both', ta('opt.logo.both')]]}
-                      onchange={(v) => setLogoType(v)} />
-                    {#if (siteDraft.nav.logo?.type ?? 'text') !== 'image'}
-                      <input value={siteDraft.nav.logo?.value ?? ''} placeholder={ta('ph.nav.logoName')}
-                        oninput={(e) => setLogo({ value: e.target.value })} />
-                      <!-- Style row like a word processor: font | px | B I -->
-                      <span class="toolbar-row">
-                        <Dropdown title={ta('tip.nav.logoFont')}
-                          value={siteDraft.nav.logo?.font ?? ''}
-                          options={[['', ta('common.inherit')], ...FONT_STACKS.map(([name, value]) => [value, ta(name)])]}
-                          onchange={(v) => setLogo({ font: v || undefined })} />
-                        <input type="number" class="tb-num" min="8" max="96" placeholder="px"
-                          title={ta('tip.nav.textSize')}
-                          value={siteDraft.nav.logo?.textSize ?? ''}
-                          onchange={(e) => setLogo({ textSize: e.target.value ? Number(e.target.value) : undefined })} />
-                        <button class="tbtn" title={ta('format.bold')} class:active={siteDraft.nav.logo?.bold !== false}
-                          onclick={() => setLogo({ bold: siteDraft.nav.logo?.bold === false })}><b>{ta('format.boldLetter')}</b></button>
-                        <button class="tbtn" title={ta('format.italic')} class:active={Boolean(siteDraft.nav.logo?.italic)}
-                          onclick={() => setLogo({ italic: !siteDraft.nav.logo?.italic })}><i>{ta('format.italicLetter')}</i></button>
+              {/if}
+            </div>
+          {:else if activePanel === 'nav'}
+            <div class="panel-body">
+              <details class="group">
+                <summary title={ta('hint.nav.logoHome')}>{ta('group.logo')}</summary>
+                <div class="group-items">
+                  <Choice label={ta('common.type')} value={siteDraft.nav.logo?.type ?? 'text'}
+                    options={[['text', ta('blocks.text')], ['image', ta('blocks.image')], ['both', ta('opt.logo.both')]]}
+                    onchange={(v) => setLogoType(v)} />
+                  {#if (siteDraft.nav.logo?.type ?? 'text') !== 'image'}
+                    <input value={siteDraft.nav.logo?.value ?? ''} placeholder={ta('ph.nav.logoName')}
+                      oninput={(e) => setLogo({ value: e.target.value })} />
+                    <!-- Style row like a word processor: font | px | B I -->
+                    <span class="toolbar-row">
+                      <Dropdown title={ta('tip.nav.logoFont')}
+                        value={siteDraft.nav.logo?.font ?? ''}
+                        options={[['', ta('common.inherit')], ...FONT_STACKS.map(([name, value]) => [value, ta(name)])]}
+                        onchange={(v) => setLogo({ font: v || undefined })} />
+                      <input type="number" class="tb-num" min="8" max="96" placeholder="px"
+                        title={ta('tip.nav.textSize')}
+                        value={siteDraft.nav.logo?.textSize ?? ''}
+                        onchange={(e) => setLogo({ textSize: e.target.value ? Number(e.target.value) : undefined })} />
+                      <button class="tbtn" title={ta('format.bold')} class:active={siteDraft.nav.logo?.bold !== false}
+                        onclick={() => setLogo({ bold: siteDraft.nav.logo?.bold === false })}><b>{ta('format.boldLetter')}</b></button>
+                      <button class="tbtn" title={ta('format.italic')} class:active={Boolean(siteDraft.nav.logo?.italic)}
+                        onclick={() => setLogo({ italic: !siteDraft.nav.logo?.italic })}><i>{ta('format.italicLetter')}</i></button>
+                    </span>
+                  {/if}
+                  {#if (siteDraft.nav.logo?.type ?? 'text') !== 'text'}
+                    {@const logoSrc = siteDraft.nav.logo?.type === 'image' ? siteDraft.nav.logo?.value : siteDraft.nav.logo?.image}
+                    <!-- The image as a thumbnail beside its picker, then the three sizes on one row -->
+                    <div class="logo-pick">
+                      <span class="logo-thumb">
+                        {#if logoSrc}<img src={logoSrc} alt="" />{/if}
                       </span>
-                    {/if}
-                    {#if (siteDraft.nav.logo?.type ?? 'text') !== 'text'}
-                      {@const logoSrc = siteDraft.nav.logo?.type === 'image' ? siteDraft.nav.logo?.value : siteDraft.nav.logo?.image}
-                      <!-- The image as a thumbnail beside its picker, then the three sizes on one row -->
-                      <div class="logo-pick">
-                        <span class="logo-thumb">
-                          {#if logoSrc}<img src={logoSrc} alt="" />{/if}
-                        </span>
-                        <span class="logo-pick-col">
-                          <label class="ghost filepick" title={ta('tip.webpAuto')}>
-                            {logoSrc ? ta('ui.changeImage') : ta('ui.chooseImage')}
-                            <input type="file" accept="image/*" onchange={uploadLogoImage} />
-                          </label>
-                          {#if logoSrc}<span class="logo-file">{logoSrc.split('/').pop()}</span>{/if}
-                        </span>
+                      <span class="logo-pick-col">
+                        <label class="ghost filepick" title={ta('tip.webpAuto')}>
+                          {logoSrc ? ta('ui.changeImage') : ta('ui.chooseImage')}
+                          <input type="file" accept="image/*" onchange={uploadLogoImage} />
+                        </label>
+                        {#if logoSrc}<span class="logo-file">{logoSrc.split('/').pop()}</span>{/if}
+                      </span>
+                    </div>
+                    <div class="ctl-triple">
+                      <div class="ctl-field" title={ta('tip.nav.logoHeight')}>
+                        <span class="mini-label">{ta('lbl.height')}</span>
+                        <input type="number" class="tb-num" min="12" max="128"
+                          value={siteDraft.nav.logo?.size ?? 32}
+                          onchange={(e) => setLogo({ size: Number(e.target.value) })} />
                       </div>
-                      <div class="ctl-triple">
-                        <div class="ctl-field" title={ta('tip.nav.logoHeight')}>
-                          <span class="mini-label">{ta('lbl.height')}</span>
-                          <input type="number" class="tb-num" min="12" max="128"
-                            value={siteDraft.nav.logo?.size ?? 32}
-                            onchange={(e) => setLogo({ size: Number(e.target.value) })} />
-                        </div>
-                        <div class="ctl-field" title={ta('tip.nav.logoHeightMobile')}>
-                          <span class="mini-label">{ta('lbl.onMobile')}</span>
-                          <input type="number" class="tb-num" min={LOGO_SIZE.min} max={LOGO_SIZE.max} placeholder={ta('lbl.navSameAsDesktop')}
-                            value={siteDraft.nav.logo?.mobileSize ?? ''}
-                            onchange={(e) => {
-                              const raw = e.target.value;
-                              setLogo({ mobileSize: raw === '' ? undefined : clampRange(raw, LOGO_SIZE, undefined) });
-                              e.target.value = siteDraft.nav.logo?.mobileSize ?? '';
-                            }} />
-                        </div>
-                        <div class="ctl-field" title={ta('tip.nav.logoRadius')}>
-                          <span class="mini-label">{ta('lbl.rounding')}</span>
-                          <input type="number" class="tb-num" min="0" max="64"
-                            value={siteDraft.nav.logo?.radius ?? 0}
-                            onchange={(e) => setLogo({ radius: Number(e.target.value) })} />
-                        </div>
+                      <div class="ctl-field" title={ta('tip.nav.logoHeightMobile')}>
+                        <span class="mini-label">{ta('lbl.onMobile')}</span>
+                        <input type="number" class="tb-num" min={LOGO_SIZE.min} max={LOGO_SIZE.max} placeholder={ta('lbl.navSameAsDesktop')}
+                          value={siteDraft.nav.logo?.mobileSize ?? ''}
+                          onchange={(e) => {
+                            const raw = e.target.value;
+                            setLogo({ mobileSize: raw === '' ? undefined : clampRange(raw, LOGO_SIZE, undefined) });
+                            e.target.value = siteDraft.nav.logo?.mobileSize ?? '';
+                          }} />
                       </div>
-                    {/if}
-                    {#if siteDraft.nav.logo?.type === 'both'}
-                      <Choice label={ta('lbl.order')} value={siteDraft.nav.logo?.order ?? 'image-first'}
-                        options={[['image-first', ta('opt.logo.imageFirst')], ['text-first', ta('opt.logo.textFirst')]]}
-                        onchange={(v) => setLogo({ order: v })} />
-                    {/if}
-                  </div>
-                </details>
-                <details class="group">
-                  <summary>{ta('group.appearance')}</summary>
-                  <div class="group-items">
-                    <!-- Six section folds (the frame-group pattern): Layout, Size, Frame,
-                         Behaviour, Colours and Background. Variant-bound rows sit
-                         directly under the variant choice, and the mobile overrides
-                         live inside Size behind a Screen | Phone switch. -->
-                    <details class="group frame-group sub-fold">
-                      <summary>{ta('group.navLayout')}</summary>
-                      <div class="group-items">
-                        <!-- The six menu forms as drawn tiles -->
-                        <div class="ctl-field" title={ta('tip.nav.variant')}>
-                          <span class="mini-label">{ta('lbl.navVariant')}</span>
-                          <div class="tile-grid cols-3" role="group" aria-label={ta('lbl.navVariant')}>
-                            {#each [['bar', ta('opt.navVariant.bar')], ['floating', ta('opt.navVariant.floating')], ['floating-square', ta('opt.navVariant.floatingSquare')], ['floating-tab', ta('opt.navVariant.floatingTab')], ['side-left', ta('opt.navVariant.sideLeft')], ['side-right', ta('opt.navVariant.sideRight')]] as [v, text] (v)}
-                              <button type="button" class="tile" class:on={(siteDraft.nav.variant ?? 'bar') === v} aria-pressed={(siteDraft.nav.variant ?? 'bar') === v}
-                                onclick={() => setNavVariant(v)}>{@html NAV_VARIANT_ICONS[v]}<span>{text}</span></button>
-                            {/each}
-                          </div>
-                        </div>
-                        <!-- The tool cluster (theme, cart, burger) at the end or the start of the
-                             bar; in the column that is the bottom or the top, with its own alignment -->
-                        {#if sideVariant}
-                          <Choice label={ta('lbl.toolsSide')} title={ta('tip.nav.toolsSideColumn')} value={siteDraft.nav.style?.tools?.side ?? 'end'}
-                            options={[['start', ta('opt.toolsSide.top')], ['end', ta('opt.toolsSide.bottom')]]}
-                            onchange={(v) => setNavTools('side', v === 'start' ? 'start' : undefined)} />
-                          <Choice label={ta('lbl.toolsAlign')} title={ta('tip.nav.toolsAlign')} value={siteDraft.nav.style?.tools?.align ?? 'center'}
-                            options={[['start', ta('opt.toolsAlign.start')], ['center', ta('opt.toolsAlign.center')], ['end', ta('opt.toolsAlign.end')], ['spread', ta('opt.toolsAlign.spread')]]}
-                            onchange={(v) => setNavTools('align', v === 'center' ? undefined : v)} />
-                        {:else}
-                          <Choice label={ta('lbl.toolsSide')} title={ta('tip.nav.toolsSide')} value={siteDraft.nav.style?.tools?.side ?? 'end'}
-                            options={[['start', ta('opt.toolsSide.start')], ['end', ta('opt.toolsSide.end')]]}
-                            onchange={(v) => setNavTools('side', v === 'start' ? 'start' : undefined)} />
-                        {/if}
-                        {#if floatingVariant}
-                          <!-- The floating menu's maximum width: the content width, or a px value (empty = 1100) -->
-                          <Choice label={ta('lbl.navPillWidth')} title={ta('tip.nav.pillWidth')} value={siteDraft.nav.style?.pillWidth === 'content' ? 'content' : 'custom'}
-                            options={[['content', ta('opt.pillWidth.content')], ['custom', ta('opt.pillWidth.custom')]]}
-                            onchange={(v) => setNavStyle('pillWidth', v === 'content' ? 'content' : undefined)} />
-                          {#if siteDraft.nav.style?.pillWidth !== 'content'}
-                            <span class="toolbar-row" title={ta('tip.nav.pillWidthPx')}>
-                              <span class="mini-label tb-grow">{ta('lbl.navPillWidthPx')}</span>
-                              <input type="number" class="tb-num" min={PILL_WIDTH.min} max={PILL_WIDTH.max} step={PILL_WIDTH.step} placeholder="1100"
-                                value={typeof siteDraft.nav.style?.pillWidth === 'number' ? siteDraft.nav.style.pillWidth : ''}
-                                onchange={(e) => onNavSizeInput(e, 'pillWidth', PILL_WIDTH)} />
-                            </span>
-                          {/if}
-                          <!-- The corner rounding as a value; empty = the variant's preset -->
-                          <span class="toolbar-row" title={ta('tip.nav.radius')}>
-                            <span class="mini-label tb-grow">{ta('lbl.navRadius')}</span>
-                            <input type="number" class="tb-num" min={RADIUS.min} max={RADIUS.max} step={RADIUS.step}
-                              placeholder={siteDraft.nav.variant === 'floating-square' ? '0' : siteDraft.nav.variant === 'floating-tab' ? '12' : '999'}
-                              value={typeof siteDraft.nav.style?.radius === 'number' ? siteDraft.nav.style.radius : ''}
-                              onchange={(e) => onNavSizeInput(e, 'radius', RADIUS)} />
-                          </span>
-                        {/if}
-                        {#if sideVariant}
-                          <Choice label={ta('lbl.navPlacement')} value={siteDraft.nav.style?.sidePlacement ?? 'top'}
-                            options={[['top', ta('opt.place.top')], ['middle', ta('opt.place.middle')], ['bottom', ta('opt.place.bottom')]]}
-                            onchange={(v) => setNavStyle('sidePlacement', v === 'top' ? undefined : v)} />
-                        {:else}
-                          <!-- Left means after the logo (the tip says so); the short words keep the segment on one row -->
-                          <Choice label={ta('lbl.navPlacement')} title={ta('opt.layout.leftAfterLogo')} value={siteDraft.nav.layout ?? 'right'}
-                            options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
-                            onchange={(v) => setNavLayout(v)} />
-                        {/if}
-                        {#if floatingVariant}
-                          <label class="gridmenu-snap" title={ta('tip.nav.glow')}>
-                            <input type="checkbox" checked={siteDraft.nav.style?.glow === true}
-                              onchange={(e) => setNavGlow(e.target.checked)} />
-                            {ta('lbl.navGlow')}
-                          </label>
-                          <label class="gridmenu-snap" title={ta('tip.nav.topGap')}>
-                            <input type="checkbox" checked={siteDraft.nav.style?.topGap !== false}
-                              onchange={(e) => setNavTopGap(e.target.checked)} />
-                            {ta('lbl.navTopGap')}
-                          </label>
-                        {/if}
-                        {#if !floatingVariant && !sideVariant}
-                          <label class="gridmenu-snap" title={ta('tip.nav.overlay')}>
-                            <input type="checkbox" checked={siteDraft.nav.overlay === true}
-                              onchange={(e) => siteMutate('nav', () => { if (e.target.checked) siteDraft.nav.overlay = true; else delete siteDraft.nav.overlay; })} />
-                            {ta('lbl.navOverlay')}
-                          </label>
-                          <label class="gridmenu-snap" title={ta('tip.nav.inset')}>
-                            <input type="checkbox" checked={siteDraft.nav.style?.inset !== false}
-                              onchange={(e) => setNavStyle('inset', e.target.checked ? undefined : false)} />
-                            {ta('lbl.navInset')}
-                          </label>
-                        {/if}
-                        {#if sideVariant}
-                          <Choice label={ta('lbl.textAlign')} title={ta('tip.nav.sideAlign')} value={siteDraft.nav.style?.sideAlign ?? 'left'}
-                            options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
-                            onchange={(v) => setNavStyle('sideAlign', v === 'left' ? undefined : v)} />
-                          <!-- The column width as a number, next to the drag at the column edge (250 = the default, not stored) -->
-                          <span class="toolbar-row" title={ta('tip.nav.colWidth')}>
-                            <span class="mini-label tb-grow">{ta('lbl.navColWidth')}</span>
-                            <input type="number" class="tb-num" min={COL_WIDTH.min} max={COL_WIDTH.max}
-                              value={siteDraft.nav.style?.width ?? 250}
-                              onchange={(e) => {
-                                const w = clampRange(e.target.value, COL_WIDTH, 250);
-                                setNavStyle('width', w === 250 ? undefined : w);
-                                e.target.value = siteDraft.nav.style?.width ?? 250;
-                              }} />
-                          </span>
-                        {/if}
+                      <div class="ctl-field" title={ta('tip.nav.logoRadius')}>
+                        <span class="mini-label">{ta('lbl.rounding')}</span>
+                        <input type="number" class="tb-num" min="0" max="64"
+                          value={siteDraft.nav.logo?.radius ?? 0}
+                          onchange={(e) => setLogo({ radius: Number(e.target.value) })} />
                       </div>
-                    </details>
-                    <hr class="gridmenu-divider" />
-                    <details class="group frame-group sub-fold">
-                      <summary title={ta('tip.nav.sizePreset')}>{ta('lbl.size')}</summary>
-                      <div class="group-items">
-                        <!-- The four presets, then the free values that replace the
-                             preset's parts: the sliders start where the bar renders,
-                             and the number beside each is editable. The column has its
-                             own padding, so it shows no thickness, side padding or item
-                             spacing. The mobile overrides sit in the Mobile fold. -->
-                        <div class="seg cw-seg" title={ta('tip.nav.sizePreset')}>
-                          {#each SIZE_IDS as id (id)}
-                            <button class:on={navSizePreset === id} onclick={() => setNavSizePreset(id)}>{ta(`opt.size.${id}`)}</button>
+                    </div>
+                  {/if}
+                  {#if siteDraft.nav.logo?.type === 'both'}
+                    <Choice label={ta('lbl.order')} value={siteDraft.nav.logo?.order ?? 'image-first'}
+                      options={[['image-first', ta('opt.logo.imageFirst')], ['text-first', ta('opt.logo.textFirst')]]}
+                      onchange={(v) => setLogo({ order: v })} />
+                  {/if}
+                </div>
+              </details>
+              <details class="group">
+                <summary>{ta('group.appearance')}</summary>
+                <div class="group-items">
+                  <!-- Six section folds (the frame-group pattern): Layout, Size, Frame,
+                       Behaviour, Colours and Background. Variant-bound rows sit
+                       directly under the variant choice, and the mobile overrides
+                       live inside Size behind a Screen | Phone switch. -->
+                  <details class="group frame-group sub-fold">
+                    <summary>{ta('group.navLayout')}</summary>
+                    <div class="group-items">
+                      <!-- The six menu forms as drawn tiles -->
+                      <div class="ctl-field" title={ta('tip.nav.variant')}>
+                        <span class="mini-label">{ta('lbl.navVariant')}</span>
+                        <div class="tile-grid cols-3" role="group" aria-label={ta('lbl.navVariant')}>
+                          {#each [['bar', ta('opt.navVariant.bar')], ['floating', ta('opt.navVariant.floating')], ['floating-square', ta('opt.navVariant.floatingSquare')], ['floating-tab', ta('opt.navVariant.floatingTab')], ['side-left', ta('opt.navVariant.sideLeft')], ['side-right', ta('opt.navVariant.sideRight')]] as [v, text] (v)}
+                            <button type="button" class="tile" class:on={(siteDraft.nav.variant ?? 'bar') === v} aria-pressed={(siteDraft.nav.variant ?? 'bar') === v}
+                              onclick={() => setNavVariant(v)}>{@html NAV_VARIANT_ICONS[v]}<span>{text}</span></button>
                           {/each}
                         </div>
-                        <!-- The free values behind an Adjust fold, so the presets carry the fold -->
-                        <details class="sub-inset">
-                          <summary>{ta('lbl.adjust')}</summary>
-                          <div class="sub-inset-body">
-                        {#if !sideVariant}
-                          <div class="ctl-row" title={ta('tip.nav.thickness')}>
-                            <span class="mini-label ctl-name">{ta('lbl.navThickness')}</span>
-                            <input type="range" min={PAD_Y.min} max={PAD_Y.max} step={PAD_Y.step}
-                              value={navPadY}
-                              oninput={(e) => setNavStyle('padY', e.target.valueAsNumber)} />
-                            <input type="number" class="tb-num" min={PAD_Y.min} max={PAD_Y.max}
-                              value={navPadY}
-                              onchange={(e) => onNavSizeField(e, 'padY', PAD_Y)} />
-                          </div>
-                        {/if}
-                        <div class="ctl-row" title={ta('tip.nav.menuTextSize')}>
-                          <span class="mini-label ctl-name">{ta('lbl.navTextSize')}</span>
-                          <input type="range" min={TEXT_SIZE.min} max={TEXT_SIZE.max} step={TEXT_SIZE.step}
-                            value={navTextSize}
-                            oninput={(e) => setNavStyle('textSize', e.target.valueAsNumber)} />
-                          <input type="number" class="tb-num" min={TEXT_SIZE.min} max={TEXT_SIZE.max}
-                            value={navTextSize}
-                            onchange={(e) => onNavSizeField(e, 'textSize', TEXT_SIZE)} />
-                        </div>
-                        {#if !sideVariant}
-                          <div class="ctl-pair">
-                            <div class="ctl-field" title={ta('tip.nav.padX')}>
-                              <span class="mini-label">{ta('lbl.navPadX')}</span>
-                              <input type="number" class="tb-num" min={PAD_X.min} max={PAD_X.max} placeholder={ta('common.auto')}
-                                value={siteDraft.nav.style?.padX ?? ''}
-                                onchange={(e) => onNavSizeInput(e, 'padX', PAD_X)} />
-                            </div>
-                            <div class="ctl-field" title={ta('tip.nav.gap')}>
-                              <span class="mini-label">{ta('lbl.navGap')}</span>
-                              <input type="number" class="tb-num" min={GAP.min} max={GAP.max} placeholder={ta('common.auto')}
-                                value={siteDraft.nav.style?.gap ?? ''}
-                                onchange={(e) => onNavSizeInput(e, 'gap', GAP)} />
-                            </div>
-                          </div>
-                        {/if}
-                          </div>
-                        </details>
                       </div>
-                    </details>
-                    <hr class="gridmenu-divider" />
-                    <details class="group frame-group sub-fold">
-                      <summary>{ta('group.navFrame')}</summary>
-                      <div class="group-items">
-                        {#if !sideVariant}
-                          <!-- Border on the bar: the side as drawn tiles, then width and colour on one row once a side is chosen -->
-                          <div class="ctl-field" title={ta('tip.nav.border')}>
-                            <span class="mini-label">{ta('lbl.navBorder')}</span>
-                            <div class="tile-grid cols-5" role="group" aria-label={ta('lbl.navBorder')}>
-                              {#each [['', ta('common.none')], ['bottom', ta('opt.navBorder.bottom')], ['top', ta('opt.navBorder.top')], ['both', ta('opt.navBorder.both')], ['all', ta('opt.navBorder.all')]] as [v, text] (v)}
-                                <button type="button" class="tile" class:on={(siteDraft.nav.style?.border?.side ?? '') === v} aria-pressed={(siteDraft.nav.style?.border?.side ?? '') === v}
-                                  onclick={() => setNavStyle('border', v ? { ...(siteDraft.nav.style?.border ?? {}), side: v } : undefined)}>{@html NAV_BORDER_ICONS[v]}<span>{text}</span></button>
-                              {/each}
-                            </div>
-                          </div>
-                          {#if siteDraft.nav.style?.border?.side}
-                            <span class="toolbar-row ctl-end">
-                              <span class="mini-label" title={ta('tip.nav.borderWidth')}>{ta('lbl.navBorderWidth')}</span>
-                              <input type="number" class="tb-num" min="1" max="8" title={ta('tip.nav.borderWidth')}
-                                value={siteDraft.nav.style.border.width ?? 1}
-                                onchange={(e) => {
-                                  const w = clampRange(e.target.value, { min: 1, max: 8 }, 1);
-                                  const border = { ...siteDraft.nav.style.border };
-                                  if (w === 1) delete border.width; else border.width = w;
-                                  setNavStyle('border', border);
-                                  e.target.value = siteDraft.nav.style.border.width ?? 1;
-                                }} />
-                              <span class="mini-label" title={ta('tip.nav.borderColorPick')}>{ta('lbl.navBorderColor')}</span>
-                              <ColorPicker value={siteDraft.nav.style.border.color ?? 'text'} tokens={themeSwatches()}
-                                label={ta('tip.nav.borderColorPick')}
-                                onchange={(hex) => setNavStyle('border', { ...siteDraft.nav.style.border, color: hex })} />
-                            </span>
-                          {/if}
+                      <!-- The tool cluster (theme, cart, burger) at the end or the start of the
+                           bar; in the column that is the bottom or the top, with its own alignment -->
+                      {#if sideVariant}
+                        <Choice label={ta('lbl.toolsSide')} title={ta('tip.nav.toolsSideColumn')} value={siteDraft.nav.style?.tools?.side ?? 'end'}
+                          options={[['start', ta('opt.toolsSide.top')], ['end', ta('opt.toolsSide.bottom')]]}
+                          onchange={(v) => setNavTools('side', v === 'start' ? 'start' : undefined)} />
+                        <Choice label={ta('lbl.toolsAlign')} title={ta('tip.nav.toolsAlign')} value={siteDraft.nav.style?.tools?.align ?? 'center'}
+                          options={[['start', ta('opt.toolsAlign.start')], ['center', ta('opt.toolsAlign.center')], ['end', ta('opt.toolsAlign.end')], ['spread', ta('opt.toolsAlign.spread')]]}
+                          onchange={(v) => setNavTools('align', v === 'center' ? undefined : v)} />
+                      {:else}
+                        <Choice label={ta('lbl.toolsSide')} title={ta('tip.nav.toolsSide')} value={siteDraft.nav.style?.tools?.side ?? 'end'}
+                          options={[['start', ta('opt.toolsSide.start')], ['end', ta('opt.toolsSide.end')]]}
+                          onchange={(v) => setNavTools('side', v === 'start' ? 'start' : undefined)} />
+                      {/if}
+                      {#if floatingVariant}
+                        <!-- The floating menu's maximum width: the content width, or a px value (empty = 1100) -->
+                        <Choice label={ta('lbl.navPillWidth')} title={ta('tip.nav.pillWidth')} value={siteDraft.nav.style?.pillWidth === 'content' ? 'content' : 'custom'}
+                          options={[['content', ta('opt.pillWidth.content')], ['custom', ta('opt.pillWidth.custom')]]}
+                          onchange={(v) => setNavStyle('pillWidth', v === 'content' ? 'content' : undefined)} />
+                        {#if siteDraft.nav.style?.pillWidth !== 'content'}
+                          <span class="toolbar-row" title={ta('tip.nav.pillWidthPx')}>
+                            <span class="mini-label tb-grow">{ta('lbl.navPillWidthPx')}</span>
+                            <input type="number" class="tb-num" min={PILL_WIDTH.min} max={PILL_WIDTH.max} step={PILL_WIDTH.step} placeholder="1100"
+                              value={typeof siteDraft.nav.style?.pillWidth === 'number' ? siteDraft.nav.style.pillWidth : ''}
+                              onchange={(e) => onNavSizeInput(e, 'pillWidth', PILL_WIDTH)} />
+                          </span>
                         {/if}
-                        {#if !floatingVariant && !sideVariant}
-                          <Choice label={ta('lbl.navShadow')} title={ta('tip.nav.shadow')} value={siteDraft.nav.style?.shadow ?? ''}
-                            options={[['', ta('common.none')], ['soft', ta('opt.navShadow.soft')], ['strong', ta('opt.navShadow.strong')]]}
-                            onchange={(v) => setNavStyle('shadow', v || undefined)} />
-                        {/if}
+                        <!-- The corner rounding as a value; empty = the variant's preset -->
+                        <span class="toolbar-row" title={ta('tip.nav.radius')}>
+                          <span class="mini-label tb-grow">{ta('lbl.navRadius')}</span>
+                          <input type="number" class="tb-num" min={RADIUS.min} max={RADIUS.max} step={RADIUS.step}
+                            placeholder={siteDraft.nav.variant === 'floating-square' ? '0' : siteDraft.nav.variant === 'floating-tab' ? '12' : '999'}
+                            value={typeof siteDraft.nav.style?.radius === 'number' ? siteDraft.nav.style.radius : ''}
+                            onchange={(e) => onNavSizeInput(e, 'radius', RADIUS)} />
+                        </span>
+                      {/if}
+                      {#if sideVariant}
+                        <Choice label={ta('lbl.navPlacement')} value={siteDraft.nav.style?.sidePlacement ?? 'top'}
+                          options={[['top', ta('opt.place.top')], ['middle', ta('opt.place.middle')], ['bottom', ta('opt.place.bottom')]]}
+                          onchange={(v) => setNavStyle('sidePlacement', v === 'top' ? undefined : v)} />
+                      {:else}
+                        <!-- Left means after the logo (the tip says so); the short words keep the segment on one row -->
+                        <Choice label={ta('lbl.navPlacement')} title={ta('opt.layout.leftAfterLogo')} value={siteDraft.nav.layout ?? 'right'}
+                          options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
+                          onchange={(v) => setNavLayout(v)} />
+                      {/if}
+                      {#if floatingVariant}
+                        <label class="gridmenu-snap" title={ta('tip.nav.glow')}>
+                          <input type="checkbox" checked={siteDraft.nav.style?.glow === true}
+                            onchange={(e) => setNavGlow(e.target.checked)} />
+                          {ta('lbl.navGlow')}
+                        </label>
+                        <label class="gridmenu-snap" title={ta('tip.nav.topGap')}>
+                          <input type="checkbox" checked={siteDraft.nav.style?.topGap !== false}
+                            onchange={(e) => setNavTopGap(e.target.checked)} />
+                          {ta('lbl.navTopGap')}
+                        </label>
+                      {/if}
+                      {#if !floatingVariant && !sideVariant}
+                        <label class="gridmenu-snap" title={ta('tip.nav.overlay')}>
+                          <input type="checkbox" checked={siteDraft.nav.overlay === true}
+                            onchange={(e) => siteMutate('nav', () => { if (e.target.checked) siteDraft.nav.overlay = true; else delete siteDraft.nav.overlay; })} />
+                          {ta('lbl.navOverlay')}
+                        </label>
+                        <label class="gridmenu-snap" title={ta('tip.nav.inset')}>
+                          <input type="checkbox" checked={siteDraft.nav.style?.inset !== false}
+                            onchange={(e) => setNavStyle('inset', e.target.checked ? undefined : false)} />
+                          {ta('lbl.navInset')}
+                        </label>
+                      {/if}
+                      {#if sideVariant}
+                        <Choice label={ta('lbl.textAlign')} title={ta('tip.nav.sideAlign')} value={siteDraft.nav.style?.sideAlign ?? 'left'}
+                          options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
+                          onchange={(v) => setNavStyle('sideAlign', v === 'left' ? undefined : v)} />
+                        <!-- The column width as a number, next to the drag at the column edge (250 = the default, not stored) -->
+                        <span class="toolbar-row" title={ta('tip.nav.colWidth')}>
+                          <span class="mini-label tb-grow">{ta('lbl.navColWidth')}</span>
+                          <input type="number" class="tb-num" min={COL_WIDTH.min} max={COL_WIDTH.max}
+                            value={siteDraft.nav.style?.width ?? 250}
+                            onchange={(e) => {
+                              const w = clampRange(e.target.value, COL_WIDTH, 250);
+                              setNavStyle('width', w === 250 ? undefined : w);
+                              e.target.value = siteDraft.nav.style?.width ?? 250;
+                            }} />
+                        </span>
+                      {/if}
+                    </div>
+                  </details>
+                  <hr class="gridmenu-divider" />
+                  <details class="group frame-group sub-fold">
+                    <summary title={ta('tip.nav.sizePreset')}>{ta('lbl.size')}</summary>
+                    <div class="group-items">
+                      <!-- The four presets, then the free values that replace the
+                           preset's parts: the sliders start where the bar renders,
+                           and the number beside each is editable. The column has its
+                           own padding, so it shows no thickness, side padding or item
+                           spacing. The mobile overrides sit in the Mobile fold. -->
+                      <div class="seg cw-seg" title={ta('tip.nav.sizePreset')}>
+                        {#each SIZE_IDS as id (id)}
+                          <button class:on={navSizePreset === id} onclick={() => setNavSizePreset(id)}>{ta(`opt.size.${id}`)}</button>
+                        {/each}
                       </div>
-                    </details>
-                    <hr class="gridmenu-divider" />
-                    <details class="group frame-group sub-fold">
-                      <summary>{ta('group.navBehaviour')}</summary>
-                      <div class="group-items">
-                        <!-- Two cards: what happens when the page scrolls, and the cart -->
-                        {#if !sideVariant}
-                        <div class="mini-card">
-                          <span class="mini-label">{ta('group.navScrolling')}</span>
-                          <label class="gridmenu-snap" title={ta('tip.nav.sticky')}>
-                            <input type="checkbox" checked={siteDraft.nav.sticky !== false}
-                              onchange={(e) => siteMutate('nav', () => { siteDraft.nav.sticky = e.target.checked; })} />
-                            {ta('lbl.navSticky')}
-                          </label>
-                          {#if siteDraft.nav.sticky !== false}
-                            <Choice label={ta('lbl.navScroll')} title={ta('tip.nav.scroll')} value={siteDraft.nav.scroll ?? 'none'}
-                              options={[['none', ta('opt.scroll.none')], ['shrink', ta('opt.scroll.shrink')], ['hide', ta('opt.scroll.hide')]]}
-                              onchange={(v) => siteMutate('nav', () => {
-                                if (v === 'none') delete siteDraft.nav.scroll; else siteDraft.nav.scroll = v;
-                              })} />
-                            {#if siteDraft.nav.scroll === 'shrink'}
-                              <!-- The compact state: how much of the thickness remains, and whether the logo image follows -->
-                              <div class="ctl-row" title={ta('tip.nav.shrinkTo')}>
-                                <span class="mini-label ctl-name">{ta('lbl.navShrinkTo')}</span>
-                                <input type="range" min="30" max="80" step="5"
-                                  value={Math.round((siteDraft.nav.style?.shrinkTo ?? 0.5) * 100)}
-                                  oninput={(e) => setNavShrinkTo(e.target.valueAsNumber)} />
-                                <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.shrinkTo ?? 0.5) * 100)}%</span>
-                              </div>
-                              {#if (siteDraft.nav.logo?.type ?? 'text') !== 'text'}
-                                <label class="gridmenu-snap" title={ta('tip.nav.shrinkLogo')}>
-                                  <input type="checkbox" checked={siteDraft.nav.style?.shrinkLogo === true}
-                                    onchange={(e) => setNavStyle('shrinkLogo', e.target.checked ? true : undefined)} />
-                                  {ta('lbl.navShrinkLogo')}
-                                </label>
-                              {/if}
-                            {/if}
-                          {/if}
-                          <!-- Transparent at the top: the surface appears once the page is scrolled -->
-                          <label class="gridmenu-snap" title={ta('tip.nav.atTop')}>
-                            <input type="checkbox" checked={siteDraft.nav.style?.atTop === 'clear'}
-                              onchange={(e) => setNavStyle('atTop', e.target.checked ? 'clear' : undefined)} />
-                            {ta('lbl.navAtTop')}
-                          </label>
+                      <!-- The free values behind an Adjust fold, so the presets carry the fold -->
+                      <details class="sub-inset">
+                        <summary>{ta('lbl.adjust')}</summary>
+                        <div class="sub-inset-body">
+                      {#if !sideVariant}
+                        <div class="ctl-row" title={ta('tip.nav.thickness')}>
+                          <span class="mini-label ctl-name">{ta('lbl.navThickness')}</span>
+                          <input type="range" min={PAD_Y.min} max={PAD_Y.max} step={PAD_Y.step}
+                            value={navPadY}
+                            oninput={(e) => setNavStyle('padY', e.target.valueAsNumber)} />
+                          <input type="number" class="tb-num" min={PAD_Y.min} max={PAD_Y.max}
+                            value={navPadY}
+                            onchange={(e) => onNavSizeField(e, 'padY', PAD_Y)} />
                         </div>
-                        {/if}
-                        <div class="mini-card">
-                          <span class="mini-label">{ta('lbl.cart')}</span>
-                          <label class="gridmenu-snap" title={ta('tip.nav.cart')}>
-                            <input type="checkbox" checked={siteDraft.nav.cart?.show === true}
-                              onchange={(e) => siteMutate('nav', () => {
-                                if (e.target.checked) siteDraft.nav.cart = { ...(siteDraft.nav.cart ?? {}), show: true };
-                                else delete siteDraft.nav.cart;
-                              })} />
-                            {ta('lbl.showInMenu')}
-                          </label>
-                          {#if siteDraft.nav.cart?.show}
-                            <label class="field-stack" title={ta('tip.cart.checkout')}>
-                              <span class="mini-label">{ta('lbl.checkoutPage')}</span>
-                              <Dropdown filled value={siteDraft.nav.cart?.href ?? ''}
-                                options={[['', ta('common.none')], ...siteDraft.pages.map((p) => [p.path, p.title])]}
-                                onchange={(v) => siteMutate('nav', () => {
-                                  if (v) siteDraft.nav.cart.href = v; else delete siteDraft.nav.cart.href;
-                                })} />
-                            </label>
-                          {/if}
-                        </div>
+                      {/if}
+                      <div class="ctl-row" title={ta('tip.nav.menuTextSize')}>
+                        <span class="mini-label ctl-name">{ta('lbl.navTextSize')}</span>
+                        <input type="range" min={TEXT_SIZE.min} max={TEXT_SIZE.max} step={TEXT_SIZE.step}
+                          value={navTextSize}
+                          oninput={(e) => setNavStyle('textSize', e.target.valueAsNumber)} />
+                        <input type="number" class="tb-num" min={TEXT_SIZE.min} max={TEXT_SIZE.max}
+                          value={navTextSize}
+                          onchange={(e) => onNavSizeField(e, 'textSize', TEXT_SIZE)} />
                       </div>
-                    </details>
-                    <hr class="gridmenu-divider" />
-                    <details class="group frame-group sub-fold">
-                      <summary title={ta('tip.nav.mobileSame')}>{ta('group.mobile')}</summary>
-                      <div class="group-items">
-                        <!-- The mobile overrides of the size (empty = as on desktop),
-                             then the burger's target, the full-screen menu's options
-                             and surface, and the submenu behaviour; every field with
-                             its label above, short ones two to a row -->
+                      {#if !sideVariant}
                         <div class="ctl-pair">
-                          {#if !sideVariant}
-                            <div class="ctl-field" title={ta('tip.nav.thickness')}>
-                              <span class="mini-label">{ta('lbl.navThickness')}</span>
-                              <input type="number" class="tb-num" min={PAD_Y.min} max={PAD_Y.max}
-                                placeholder={ta('lbl.navSameAsDesktop')}
-                                value={siteDraft.nav.style?.mobile?.padY ?? ''}
-                                onchange={(e) => onNavMobileField(e, 'padY', PAD_Y)} />
-                            </div>
-                          {/if}
-                          <div class="ctl-field" title={ta('tip.nav.menuTextSize')}>
-                            <span class="mini-label">{ta('lbl.navTextSize')}</span>
-                            <input type="number" class="tb-num" min={TEXT_SIZE.min} max={TEXT_SIZE.max}
-                              placeholder={ta('lbl.navSameAsDesktop')}
-                              value={siteDraft.nav.style?.mobile?.textSize ?? ''}
-                              onchange={(e) => onNavMobileField(e, 'textSize', TEXT_SIZE)} />
+                          <div class="ctl-field" title={ta('tip.nav.padX')}>
+                            <span class="mini-label">{ta('lbl.navPadX')}</span>
+                            <input type="number" class="tb-num" min={PAD_X.min} max={PAD_X.max} placeholder={ta('common.auto')}
+                              value={siteDraft.nav.style?.padX ?? ''}
+                              onchange={(e) => onNavSizeInput(e, 'padX', PAD_X)} />
+                          </div>
+                          <div class="ctl-field" title={ta('tip.nav.gap')}>
+                            <span class="mini-label">{ta('lbl.navGap')}</span>
+                            <input type="number" class="tb-num" min={GAP.min} max={GAP.max} placeholder={ta('common.auto')}
+                              value={siteDraft.nav.style?.gap ?? ''}
+                              onchange={(e) => onNavSizeInput(e, 'gap', GAP)} />
                           </div>
                         </div>
-                        <div class="ctl-pair">
-                          <label class="field-stack" title={ta('tip.nav.mobileMenu')}>
-                            <span class="mini-label">{ta('lbl.mobileMenu')}</span>
-                            <Dropdown filled value={siteDraft.nav.style?.mobileMenu ?? 'dropdown'}
-                              options={[['dropdown', ta('opt.mobileMenu.dropdown')], ['sheet', ta('opt.mobileMenu.sheet')]]}
-                              onchange={(v) => setNavStyle('mobileMenu', v === 'dropdown' ? undefined : v)} />
-                          </label>
-                          {#if siteDraft.nav.style?.mobileMenu === 'sheet'}
-                            <label class="field-stack" title={ta('tip.nav.sheetMotion')}>
-                              <span class="mini-label">{ta('lbl.sheetMotion')}</span>
-                              <Dropdown filled value={siteDraft.nav.style?.sheetMotion ?? 'top'}
-                                options={['top', 'bottom', 'left', 'right', 'fade', 'none'].map((m) => [m, ta(`opt.sheetMotion.${m}`)])}
-                                onchange={(v) => setNavStyle('sheetMotion', v === 'top' ? undefined : v)} />
-                            </label>
-                          {/if}
+                      {/if}
                         </div>
-                        {#if siteDraft.nav.style?.mobileMenu === 'sheet'}
-                          <label class="gridmenu-snap" title={ta('tip.nav.sheetLogo')}>
-                            <input type="checkbox" checked={siteDraft.nav.style?.sheetLogo === true}
-                              onchange={(e) => setNavStyle('sheetLogo', e.target.checked ? true : undefined)} />
-                            {ta('lbl.sheetLogo')}
-                          </label>
-                          {#if siteDraft.theme?.alt?.tokens}
-                            <label class="gridmenu-snap" title={ta('tip.nav.sheetTheme')}>
-                              <input type="checkbox" checked={siteDraft.nav.style?.sheetTheme === true}
-                                onchange={(e) => setNavStyle('sheetTheme', e.target.checked ? true : undefined)} />
-                              {ta('lbl.sheetTheme')}
-                            </label>
-                          {/if}
-                          {#if siteDraft.nav.cart?.show}
-                            <label class="gridmenu-snap" title={ta('tip.nav.sheetCart')}>
-                              <input type="checkbox" checked={siteDraft.nav.style?.sheetCart === true}
-                                onchange={(e) => setNavStyle('sheetCart', e.target.checked ? true : undefined)} />
-                              {ta('lbl.sheetCart')}
-                            </label>
-                          {/if}
-                          {#if siteDraft.nav.style?.sheetTheme || siteDraft.nav.style?.sheetCart}
-                            <label class="gridmenu-snap" title={ta('tip.nav.sheetToolLabels')}>
-                              <input type="checkbox" checked={siteDraft.nav.style?.sheetToolLabels === true}
-                                onchange={(e) => setNavStyle('sheetToolLabels', e.target.checked ? true : undefined)} />
-                              {ta('lbl.sheetToolLabels')}
-                            </label>
-                          {/if}
-                          <!-- The menu's own surface: colour, opacity and text colour; the blur as a switch -->
-                          <div class="ctl-row" title={ta('tip.nav.sheetBg')}>
-                            <span class="mini-label ctl-name">{ta('lbl.background')}</span>
-                            <ColorPicker value={siteDraft.nav.style?.sheet?.bg ?? 'surface'} tokens={themeSwatches()}
-                              label={ta('tip.nav.sheetBg')} onchange={(hex) => setNavSheet('bg', hex)} />
-                            <input type="range" min="0" max="100" step="1" title={ta('tip.nav.sheetOpacity')}
-                              value={Math.round((siteDraft.nav.style?.sheet?.bgOpacity ?? 0.85) * 100)}
-                              oninput={(e) => setNavSheet('bgOpacity', e.target.valueAsNumber / 100)} />
-                            <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.sheet?.bgOpacity ?? 0.85) * 100)}%</span>
-                          </div>
-                          <label class="gridmenu-snap" title={ta('tip.nav.sheetBlur')}>
-                            <input type="checkbox" checked={siteDraft.nav.style?.sheet?.blur ?? siteDraft.nav.style?.blur !== false}
-                              onchange={(e) => setNavSheet('blur', e.target.checked)} />
-                            {ta('lbl.sheetBlur')}
-                          </label>
-                          <label>{ta('lbl.textColor')}
-                            <ColorPicker value={siteDraft.nav.style?.sheet?.textColor ?? siteDraft.nav.style?.textColor ?? 'text'} tokens={themeSwatches()}
-                              label={ta('tip.nav.sheetTextColorPick')} onchange={(hex) => setNavSheet('textColor', hex)} /></label>
-                        {/if}
-                        {#if siteDraft.nav.items?.some((item) => item.children?.length)}
-                          <label class="field-stack" title={ta('tip.nav.mobileSubs')}>
-                            <span class="mini-label">{ta('lbl.mobileSubs')}</span>
-                            <Dropdown filled value={siteDraft.nav.style?.mobileSubs ?? 'collapsed'}
-                              options={[['collapsed', ta('opt.mobileSubs.collapsed')], ['expanded', ta('opt.mobileSubs.expanded')]]}
-                              onchange={(v) => setNavStyle('mobileSubs', v === 'collapsed' ? undefined : v)} />
-                          </label>
-                        {/if}
-                      </div>
-                    </details>
-                    <hr class="gridmenu-divider" />
-                    <details class="group frame-group sub-fold">
-                      <summary>{ta('group.navColours')}</summary>
-                      <div class="group-items">
-                        <!-- The hover styles as samples of a menu word drawn with each style -->
-                        <div class="ctl-field">
-                          <span class="mini-label">{ta('lbl.navHover')}</span>
-                          <div class="tile-grid cols-5" role="group" aria-label={ta('lbl.navHover')}>
-                            {#each [['standard', ta('opt.hover.standard')], ['underline', ta('opt.hover.underline')], ['pill', ta('opt.hover.pill')], ['lift-plain', ta('opt.hover.liftPlain')], ['lift', ta('opt.hover.lift')]] as [v, text] (v)}
-                              <button type="button" class="tile hover-tile" class:on={(siteDraft.nav.style?.hover ?? 'standard') === v} aria-pressed={(siteDraft.nav.style?.hover ?? 'standard') === v}
-                                onclick={() => setNavHover(v)}><span class="hover-sample hover-{v}">{ta('seed.home')}</span><span>{text}</span></button>
+                      </details>
+                    </div>
+                  </details>
+                  <hr class="gridmenu-divider" />
+                  <details class="group frame-group sub-fold">
+                    <summary>{ta('group.navFrame')}</summary>
+                    <div class="group-items">
+                      {#if !sideVariant}
+                        <!-- Border on the bar: the side as drawn tiles, then width and colour on one row once a side is chosen -->
+                        <div class="ctl-field" title={ta('tip.nav.border')}>
+                          <span class="mini-label">{ta('lbl.navBorder')}</span>
+                          <div class="tile-grid cols-5" role="group" aria-label={ta('lbl.navBorder')}>
+                            {#each [['', ta('common.none')], ['bottom', ta('opt.navBorder.bottom')], ['top', ta('opt.navBorder.top')], ['both', ta('opt.navBorder.both')], ['all', ta('opt.navBorder.all')]] as [v, text] (v)}
+                              <button type="button" class="tile" class:on={(siteDraft.nav.style?.border?.side ?? '') === v} aria-pressed={(siteDraft.nav.style?.border?.side ?? '') === v}
+                                onclick={() => setNavStyle('border', v ? { ...(siteDraft.nav.style?.border ?? {}), side: v } : undefined)}>{@html NAV_BORDER_ICONS[v]}<span>{text}</span></button>
                             {/each}
                           </div>
                         </div>
-                        {#if siteDraft.nav.style?.hover === 'lift'}
-                          <div class="ctl-row" title={ta('tip.nav.hoverGlow')}>
-                            <span class="mini-label ctl-name">{ta('lbl.glowStrength')}</span>
-                            <input type="range" min="0.1" max="1" step="0.01"
-                              value={siteDraft.nav.style?.hoverGlow ?? 0.6}
-                              oninput={(e) => setNavStyle('hoverGlow', Number(e.target.value))} />
-                            <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.hoverGlow ?? 0.6) * 100)}%</span>
-                          </div>
+                        {#if siteDraft.nav.style?.border?.side}
+                          <span class="toolbar-row ctl-end">
+                            <span class="mini-label" title={ta('tip.nav.borderWidth')}>{ta('lbl.navBorderWidth')}</span>
+                            <input type="number" class="tb-num" min="1" max="8" title={ta('tip.nav.borderWidth')}
+                              value={siteDraft.nav.style.border.width ?? 1}
+                              onchange={(e) => {
+                                const w = clampRange(e.target.value, { min: 1, max: 8 }, 1);
+                                const border = { ...siteDraft.nav.style.border };
+                                if (w === 1) delete border.width; else border.width = w;
+                                setNavStyle('border', border);
+                                e.target.value = siteDraft.nav.style.border.width ?? 1;
+                              }} />
+                            <span class="mini-label" title={ta('tip.nav.borderColorPick')}>{ta('lbl.navBorderColor')}</span>
+                            <ColorPicker value={siteDraft.nav.style.border.color ?? 'text'} tokens={themeSwatches()}
+                              label={ta('tip.nav.borderColorPick')}
+                              onchange={(hex) => setNavStyle('border', { ...siteDraft.nav.style.border, color: hex })} />
+                          </span>
                         {/if}
-                        <!-- The colours as a row of swatches with their names beneath -->
-                        <div class="swatch-row">
-                          {#if hoverColorLabel}
-                            <div class="swatch-cell" title={hoverColorLabel[1]}>
-                              <ColorPicker value={siteDraft.nav.style?.hoverColor ?? 'accent'} tokens={themeSwatches()}
-                                label={hoverColorLabel[1]} onchange={(hex) => setNavStyle('hoverColor', hex)} />
-                              <span class="mini-label">{hoverColorLabel[0]}</span>
-                            </div>
-                          {/if}
-                          <div class="swatch-cell" title={ta('tip.nav.hoverTextColor')}>
-                            <ColorPicker value={siteDraft.nav.style?.hoverTextColor ?? 'accent'} tokens={themeSwatches()}
-                              label={ta('tip.nav.hoverTextColorPick')} onchange={(hex) => setNavStyle('hoverTextColor', hex)} />
-                            <span class="mini-label">{ta('lbl.hoverTextColor')}</span>
-                          </div>
-                          <div class="swatch-cell" title={ta('tip.nav.textColorPick')}>
-                            <ColorPicker value={siteDraft.nav.style?.textColor ?? 'text'} tokens={themeSwatches()}
-                              label={ta('tip.nav.textColorPick')} onchange={(hex) => setNavStyle('textColor', hex)} />
-                            <span class="mini-label">{ta('lbl.textColor')}</span>
-                          </div>
-                        </div>
-                        <label class="gridmenu-snap" title={ta('tip.nav.blur')}>
-                          <input type="checkbox" checked={siteDraft.nav.style?.blur !== false}
-                            onchange={(e) => setNavStyle('blur', e.target.checked)} />
-                          {ta('lbl.navBlur')}
-                        </label>
-                      </div>
-                    </details>
-                    <hr class="gridmenu-divider" />
-                    <details class="group frame-group sub-fold">
-                      <summary>{ta('lbl.background')}</summary>
-                      <div class="group-items">
-                        {@render backgroundLayers(navBgCtx, siteDraft.nav?.style?.background?.layers ?? [])}
-                      </div>
-                    </details>
-                  </div>
-                </details>
-                <details class="group">
-                  <summary title={ta('tip.nav.announce')}>{ta('group.announcement')}</summary>
-                  <div class="group-items">
-                    <!-- The strip above the menu: off by default, the fields appear when on -->
-                    <label class="gridmenu-snap" title={ta('tip.nav.announce')}>
-                      <input type="checkbox" checked={siteDraft.nav.announcement?.show === true}
-                        onchange={(e) => setNavAnnouncement('show', e.target.checked ? true : undefined)} />
-                      {ta('lbl.announceShow')}
-                    </label>
-                    {#if siteDraft.nav.announcement?.show}
-                      <label class="field-stack" title={ta('tip.nav.announce')}>
-                        <span class="mini-label">{ta('lbl.text')}</span>
-                        <input type="text" class="field-filled" value={siteDraft.nav.announcement?.text ?? ''}
-                          onchange={(e) => setNavAnnouncement('text', e.target.value.trim() || undefined)} />
-                      </label>
-                      <!-- A page from the register, or a free link with its own field -->
-                      <label title={ta('tip.nav.announceLink')}>{ta('lbl.link')}
-                        <Dropdown value={siteDraft.nav.announcement?.page ?? (siteDraft.nav.announcement?.href !== undefined ? 'custom' : '')}
-                          options={[['', ta('common.none')], ...siteDraft.pages.map((p) => [p.id, p.title]), ['custom', ta('opt.announceLink.custom')]]}
-                          onchange={(v) => siteMutate('edit:nav-announce-link', () => {
-                            const next = { ...(siteDraft.nav.announcement ?? {}) };
-                            delete next.page; delete next.href;
-                            if (v === 'custom') next.href = '';
-                            else if (v) next.page = v;
-                            siteDraft.nav.announcement = next;
-                          })} /></label>
-                      {#if siteDraft.nav.announcement?.href !== undefined && !siteDraft.nav.announcement?.page}
-                        <label class="field-stack" title={ta('tip.nav.announceHref')}>
-                          <span class="mini-label">{ta('lbl.announceHref')}</span>
-                          <input type="text" class="field-filled" placeholder="https://" value={siteDraft.nav.announcement?.href ?? ''}
-                            onchange={(e) => setNavAnnouncement('href', e.target.value.trim())} />
-                        </label>
                       {/if}
-                      <!-- Only where the strip can scroll away: a sticky bar in the flow -->
-                      {#if siteDraft.nav.sticky !== false && !floatingVariant && !sideVariant && !siteDraft.nav.overlay}
-                        <label class="gridmenu-snap" title={ta('tip.nav.announceSticky')}>
-                          <input type="checkbox" checked={siteDraft.nav.announcement?.sticky !== false}
-                            onchange={(e) => setNavAnnouncement('sticky', e.target.checked ? undefined : false)} />
-                          {ta('lbl.announceSticky')}
-                        </label>
+                      {#if !floatingVariant && !sideVariant}
+                        <Choice label={ta('lbl.navShadow')} title={ta('tip.nav.shadow')} value={siteDraft.nav.style?.shadow ?? ''}
+                          options={[['', ta('common.none')], ['soft', ta('opt.navShadow.soft')], ['strong', ta('opt.navShadow.strong')]]}
+                          onchange={(v) => setNavStyle('shadow', v || undefined)} />
                       {/if}
-                      <!-- Only where the menu slides out from under the strip -->
-                      {#if siteDraft.nav.scroll === 'hide' && siteDraft.nav.sticky !== false && !sideVariant && siteDraft.nav.announcement?.sticky !== false}
-                        <label class="gridmenu-snap" title={ta('tip.nav.announceFollowNav')}>
-                          <input type="checkbox" checked={siteDraft.nav.announcement?.followNav === true}
-                            onchange={(e) => setNavAnnouncement('followNav', e.target.checked ? true : undefined)} />
-                          {ta('lbl.announceFollowNav')}
-                        </label>
-                      {/if}
-                      {#if sideVariant}
-                        <Choice label={ta('lbl.announcePlace')} title={ta('tip.nav.announcePlace')}
-                          value={siteDraft.nav.announcement?.place ?? 'nav'}
-                          options={[['nav', ta('opt.announcePlace.nav')], ['page', ta('opt.announcePlace.page')], ['content', ta('opt.announcePlace.content')]]}
-                          onchange={(v) => setNavAnnouncement('place', v === 'nav' ? undefined : v)} />
-                      {/if}
-                      <label class="gridmenu-snap" title={ta('tip.nav.announceDismiss')}>
-                        <input type="checkbox" checked={siteDraft.nav.announcement?.dismiss !== false}
-                          onchange={(e) => setNavAnnouncement('dismiss', e.target.checked ? undefined : false)} />
-                        {ta('lbl.announceDismiss')}
-                      </label>
-                      <!-- The dismissal is remembered per browser, in the preview as on the
-                           published page, so the strip needs a way back while editing. -->
-                      {#if siteDraft.nav.announcement?.dismiss !== false}
-                        <button class="ghost" title={ta('tip.nav.announceShowAgain')}
-                          onclick={() => bridge?.sendAnnounceReset()}>{ta('lbl.announceShowAgain')}</button>
-                      {/if}
-                      <label title={ta('tip.nav.announceColor')}>{ta('lbl.background')}
-                        <ColorPicker value={siteDraft.nav.announcement?.color ?? 'accent'} tokens={themeSwatches()}
-                          label={ta('tip.nav.announceColor')} onchange={(hex) => setNavAnnouncement('color', hex)} /></label>
-                      <label title={ta('tip.nav.announceTextColor')}>{ta('lbl.textColor')}
-                        <ColorPicker value={siteDraft.nav.announcement?.textColor ?? 'accent-text'} tokens={themeSwatches()}
-                          label={ta('tip.nav.announceTextColor')} onchange={(hex) => setNavAnnouncement('textColor', hex)} /></label>
-                    {/if}
-                  </div>
-                </details>
-                <details class="group">
-                  <summary>{ta('group.submenu')}</summary>
-                  <div class="group-items">
-                    <!-- Side variant: the submenus are accordions in the
-                         column, so the card frame, flat surface and flyout
-                         make no sense there -->
-                    <!-- The designs as small drawings of the submenu hanging under its item -->
-                    <div class="ctl-field">
-                      <span class="mini-label">{ta('lbl.design')}</span>
-                      <div class="tile-grid" class:cols-5={!sideVariant} class:cols-3={sideVariant} role="group" aria-label={ta('lbl.design')}>
-                        {#each subStyleOptions as [v, text] (v)}
-                          <button type="button" class="tile" class:on={(siteDraft.nav.style?.subStyle ?? 'card') === v} aria-pressed={(siteDraft.nav.style?.subStyle ?? 'card') === v}
-                            onclick={() => setNavStyle('subStyle', v === 'card' ? undefined : v)}>{@html SUB_STYLE_ICONS[v]}<span>{text}</span></button>
-                        {/each}
-                      </div>
                     </div>
-                    {#if siteDraft.nav.items?.some((item) => item.children?.length)}
-                      {#if sideVariant}
-                        <!-- The column: accordions, or every submenu open from the start
-                             (then the arrow is a choice of its own, off by default) -->
-                        <Choice label={ta('lbl.sideSubs')} title={ta('tip.nav.sideSubs')} value={siteDraft.nav.style?.sideSubs ?? 'collapsed'}
-                          options={[['collapsed', ta('opt.mobileSubs.collapsed')], ['expanded', ta('opt.mobileSubs.expanded')]]}
-                          onchange={(v) => setNavStyle('sideSubs', v === 'collapsed' ? undefined : v)} />
-                        {#if siteDraft.nav.style?.sideSubs === 'expanded'}
-                          <label class="gridmenu-snap" title={ta('tip.nav.sideSubArrow')}>
-                            <input type="checkbox" checked={siteDraft.nav.style?.sideSubArrow === true}
-                              onchange={(e) => setNavStyle('sideSubArrow', e.target.checked ? true : undefined)} />
-                            {ta('lbl.sideSubArrow')}
+                  </details>
+                  <hr class="gridmenu-divider" />
+                  <details class="group frame-group sub-fold">
+                    <summary>{ta('group.navBehaviour')}</summary>
+                    <div class="group-items">
+                      <!-- Two cards: what happens when the page scrolls, and the cart -->
+                      {#if !sideVariant}
+                      <div class="mini-card">
+                        <span class="mini-label">{ta('group.navScrolling')}</span>
+                        <label class="gridmenu-snap" title={ta('tip.nav.sticky')}>
+                          <input type="checkbox" checked={siteDraft.nav.sticky !== false}
+                            onchange={(e) => siteMutate('nav', () => { siteDraft.nav.sticky = e.target.checked; })} />
+                          {ta('lbl.navSticky')}
+                        </label>
+                        {#if siteDraft.nav.sticky !== false}
+                          <Choice label={ta('lbl.navScroll')} title={ta('tip.nav.scroll')} value={siteDraft.nav.scroll ?? 'none'}
+                            options={[['none', ta('opt.scroll.none')], ['shrink', ta('opt.scroll.shrink')], ['hide', ta('opt.scroll.hide')]]}
+                            onchange={(v) => siteMutate('nav', () => {
+                              if (v === 'none') delete siteDraft.nav.scroll; else siteDraft.nav.scroll = v;
+                            })} />
+                          {#if siteDraft.nav.scroll === 'shrink'}
+                            <!-- The compact state: how much of the thickness remains, and whether the logo image follows -->
+                            <div class="ctl-row" title={ta('tip.nav.shrinkTo')}>
+                              <span class="mini-label ctl-name">{ta('lbl.navShrinkTo')}</span>
+                              <input type="range" min="30" max="80" step="5"
+                                value={Math.round((siteDraft.nav.style?.shrinkTo ?? 0.5) * 100)}
+                                oninput={(e) => setNavShrinkTo(e.target.valueAsNumber)} />
+                              <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.shrinkTo ?? 0.5) * 100)}%</span>
+                            </div>
+                            {#if (siteDraft.nav.logo?.type ?? 'text') !== 'text'}
+                              <label class="gridmenu-snap" title={ta('tip.nav.shrinkLogo')}>
+                                <input type="checkbox" checked={siteDraft.nav.style?.shrinkLogo === true}
+                                  onchange={(e) => setNavStyle('shrinkLogo', e.target.checked ? true : undefined)} />
+                                {ta('lbl.navShrinkLogo')}
+                              </label>
+                            {/if}
+                          {/if}
+                        {/if}
+                        <!-- Transparent at the top: the surface appears once the page is scrolled -->
+                        <label class="gridmenu-snap" title={ta('tip.nav.atTop')}>
+                          <input type="checkbox" checked={siteDraft.nav.style?.atTop === 'clear'}
+                            onchange={(e) => setNavStyle('atTop', e.target.checked ? 'clear' : undefined)} />
+                          {ta('lbl.navAtTop')}
+                        </label>
+                      </div>
+                      {/if}
+                      <div class="mini-card">
+                        <span class="mini-label">{ta('lbl.cart')}</span>
+                        <label class="gridmenu-snap" title={ta('tip.nav.cart')}>
+                          <input type="checkbox" checked={siteDraft.nav.cart?.show === true}
+                            onchange={(e) => siteMutate('nav', () => {
+                              if (e.target.checked) siteDraft.nav.cart = { ...(siteDraft.nav.cart ?? {}), show: true };
+                              else delete siteDraft.nav.cart;
+                            })} />
+                          {ta('lbl.showInMenu')}
+                        </label>
+                        {#if siteDraft.nav.cart?.show}
+                          <label class="field-stack" title={ta('tip.cart.checkout')}>
+                            <span class="mini-label">{ta('lbl.checkoutPage')}</span>
+                            <Dropdown filled value={siteDraft.nav.cart?.href ?? ''}
+                              options={[['', ta('common.none')], ...siteDraft.pages.map((p) => [p.path, p.title])]}
+                              onchange={(v) => siteMutate('nav', () => {
+                                if (v) siteDraft.nav.cart.href = v; else delete siteDraft.nav.cart.href;
+                              })} />
                           </label>
                         {/if}
+                      </div>
+                    </div>
+                  </details>
+                  <hr class="gridmenu-divider" />
+                  <details class="group frame-group sub-fold">
+                    <summary title={ta('tip.nav.mobileSame')}>{ta('group.mobile')}</summary>
+                    <div class="group-items">
+                      <!-- The mobile overrides of the size (empty = as on desktop),
+                           then the burger's target, the full-screen menu's options
+                           and surface, and the submenu behaviour; every field with
+                           its label above, short ones two to a row -->
+                      <div class="ctl-pair">
+                        {#if !sideVariant}
+                          <div class="ctl-field" title={ta('tip.nav.thickness')}>
+                            <span class="mini-label">{ta('lbl.navThickness')}</span>
+                            <input type="number" class="tb-num" min={PAD_Y.min} max={PAD_Y.max}
+                              placeholder={ta('lbl.navSameAsDesktop')}
+                              value={siteDraft.nav.style?.mobile?.padY ?? ''}
+                              onchange={(e) => onNavMobileField(e, 'padY', PAD_Y)} />
+                          </div>
+                        {/if}
+                        <div class="ctl-field" title={ta('tip.nav.menuTextSize')}>
+                          <span class="mini-label">{ta('lbl.navTextSize')}</span>
+                          <input type="number" class="tb-num" min={TEXT_SIZE.min} max={TEXT_SIZE.max}
+                            placeholder={ta('lbl.navSameAsDesktop')}
+                            value={siteDraft.nav.style?.mobile?.textSize ?? ''}
+                            onchange={(e) => onNavMobileField(e, 'textSize', TEXT_SIZE)} />
+                        </div>
+                      </div>
+                      <div class="ctl-pair">
+                        <label class="field-stack" title={ta('tip.nav.mobileMenu')}>
+                          <span class="mini-label">{ta('lbl.mobileMenu')}</span>
+                          <Dropdown filled value={siteDraft.nav.style?.mobileMenu ?? 'dropdown'}
+                            options={[['dropdown', ta('opt.mobileMenu.dropdown')], ['sheet', ta('opt.mobileMenu.sheet')]]}
+                            onchange={(v) => setNavStyle('mobileMenu', v === 'dropdown' ? undefined : v)} />
+                        </label>
+                        {#if siteDraft.nav.style?.mobileMenu === 'sheet'}
+                          <label class="field-stack" title={ta('tip.nav.sheetMotion')}>
+                            <span class="mini-label">{ta('lbl.sheetMotion')}</span>
+                            <Dropdown filled value={siteDraft.nav.style?.sheetMotion ?? 'top'}
+                              options={['top', 'bottom', 'left', 'right', 'fade', 'none'].map((m) => [m, ta(`opt.sheetMotion.${m}`)])}
+                              onchange={(v) => setNavStyle('sheetMotion', v === 'top' ? undefined : v)} />
+                          </label>
+                        {/if}
+                      </div>
+                      {#if siteDraft.nav.style?.mobileMenu === 'sheet'}
+                        <label class="gridmenu-snap" title={ta('tip.nav.sheetLogo')}>
+                          <input type="checkbox" checked={siteDraft.nav.style?.sheetLogo === true}
+                            onchange={(e) => setNavStyle('sheetLogo', e.target.checked ? true : undefined)} />
+                          {ta('lbl.sheetLogo')}
+                        </label>
+                        {#if siteDraft.theme?.alt?.tokens}
+                          <label class="gridmenu-snap" title={ta('tip.nav.sheetTheme')}>
+                            <input type="checkbox" checked={siteDraft.nav.style?.sheetTheme === true}
+                              onchange={(e) => setNavStyle('sheetTheme', e.target.checked ? true : undefined)} />
+                            {ta('lbl.sheetTheme')}
+                          </label>
+                        {/if}
+                        {#if siteDraft.nav.cart?.show}
+                          <label class="gridmenu-snap" title={ta('tip.nav.sheetCart')}>
+                            <input type="checkbox" checked={siteDraft.nav.style?.sheetCart === true}
+                              onchange={(e) => setNavStyle('sheetCart', e.target.checked ? true : undefined)} />
+                            {ta('lbl.sheetCart')}
+                          </label>
+                        {/if}
+                        {#if siteDraft.nav.style?.sheetTheme || siteDraft.nav.style?.sheetCart}
+                          <label class="gridmenu-snap" title={ta('tip.nav.sheetToolLabels')}>
+                            <input type="checkbox" checked={siteDraft.nav.style?.sheetToolLabels === true}
+                              onchange={(e) => setNavStyle('sheetToolLabels', e.target.checked ? true : undefined)} />
+                            {ta('lbl.sheetToolLabels')}
+                          </label>
+                        {/if}
+                        <!-- The menu's own surface: colour, opacity and text colour; the blur as a switch -->
+                        <div class="ctl-row" title={ta('tip.nav.sheetBg')}>
+                          <span class="mini-label ctl-name">{ta('lbl.background')}</span>
+                          <ColorPicker value={siteDraft.nav.style?.sheet?.bg ?? 'surface'} tokens={themeSwatches()}
+                            label={ta('tip.nav.sheetBg')} onchange={(hex) => setNavSheet('bg', hex)} />
+                          <input type="range" min="0" max="100" step="1" title={ta('tip.nav.sheetOpacity')}
+                            value={Math.round((siteDraft.nav.style?.sheet?.bgOpacity ?? 0.85) * 100)}
+                            oninput={(e) => setNavSheet('bgOpacity', e.target.valueAsNumber / 100)} />
+                          <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.sheet?.bgOpacity ?? 0.85) * 100)}%</span>
+                        </div>
+                        <label class="gridmenu-snap" title={ta('tip.nav.sheetBlur')}>
+                          <input type="checkbox" checked={siteDraft.nav.style?.sheet?.blur ?? siteDraft.nav.style?.blur !== false}
+                            onchange={(e) => setNavSheet('blur', e.target.checked)} />
+                          {ta('lbl.sheetBlur')}
+                        </label>
+                        <label>{ta('lbl.textColor')}
+                          <ColorPicker value={siteDraft.nav.style?.sheet?.textColor ?? siteDraft.nav.style?.textColor ?? 'text'} tokens={themeSwatches()}
+                            label={ta('tip.nav.sheetTextColorPick')} onchange={(hex) => setNavSheet('textColor', hex)} /></label>
                       {/if}
-                      {#if !sideVariant || siteDraft.nav.style?.sideSubs !== 'expanded'}
-                        <Choice label={ta('lbl.subOpen')} title={ta('tip.nav.subOpen')} value={siteDraft.nav.style?.subOpen ?? 'hover'}
-                          options={[['hover', ta('opt.subOpen.hover')], ['stay', ta('opt.subOpen.stay')], ['click', ta('opt.subOpen.click')]]}
-                          onchange={(v) => setNavStyle('subOpen', v === 'hover' ? undefined : v)} />
+                      {#if siteDraft.nav.items?.some((item) => item.children?.length)}
+                        <label class="field-stack" title={ta('tip.nav.mobileSubs')}>
+                          <span class="mini-label">{ta('lbl.mobileSubs')}</span>
+                          <Dropdown filled value={siteDraft.nav.style?.mobileSubs ?? 'collapsed'}
+                            options={[['collapsed', ta('opt.mobileSubs.collapsed')], ['expanded', ta('opt.mobileSubs.expanded')]]}
+                            onchange={(v) => setNavStyle('mobileSubs', v === 'collapsed' ? undefined : v)} />
+                        </label>
                       {/if}
+                    </div>
+                  </details>
+                  <hr class="gridmenu-divider" />
+                  <details class="group frame-group sub-fold">
+                    <summary>{ta('group.navColours')}</summary>
+                    <div class="group-items">
+                      <!-- The hover styles as samples of a menu word drawn with each style -->
+                      <div class="ctl-field">
+                        <span class="mini-label">{ta('lbl.navHover')}</span>
+                        <div class="tile-grid cols-5" role="group" aria-label={ta('lbl.navHover')}>
+                          {#each [['standard', ta('opt.hover.standard')], ['underline', ta('opt.hover.underline')], ['pill', ta('opt.hover.pill')], ['lift-plain', ta('opt.hover.liftPlain')], ['lift', ta('opt.hover.lift')]] as [v, text] (v)}
+                            <button type="button" class="tile hover-tile" class:on={(siteDraft.nav.style?.hover ?? 'standard') === v} aria-pressed={(siteDraft.nav.style?.hover ?? 'standard') === v}
+                              onclick={() => setNavHover(v)}><span class="hover-sample hover-{v}">{ta('seed.home')}</span><span>{text}</span></button>
+                          {/each}
+                        </div>
+                      </div>
+                      {#if siteDraft.nav.style?.hover === 'lift'}
+                        <div class="ctl-row" title={ta('tip.nav.hoverGlow')}>
+                          <span class="mini-label ctl-name">{ta('lbl.glowStrength')}</span>
+                          <input type="range" min="0.1" max="1" step="0.01"
+                            value={siteDraft.nav.style?.hoverGlow ?? 0.6}
+                            oninput={(e) => setNavStyle('hoverGlow', Number(e.target.value))} />
+                          <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.hoverGlow ?? 0.6) * 100)}%</span>
+                        </div>
+                      {/if}
+                      <!-- The colours as a row of swatches with their names beneath -->
+                      <div class="swatch-row">
+                        {#if hoverColorLabel}
+                          <div class="swatch-cell" title={hoverColorLabel[1]}>
+                            <ColorPicker value={siteDraft.nav.style?.hoverColor ?? 'accent'} tokens={themeSwatches()}
+                              label={hoverColorLabel[1]} onchange={(hex) => setNavStyle('hoverColor', hex)} />
+                            <span class="mini-label">{hoverColorLabel[0]}</span>
+                          </div>
+                        {/if}
+                        <div class="swatch-cell" title={ta('tip.nav.hoverTextColor')}>
+                          <ColorPicker value={siteDraft.nav.style?.hoverTextColor ?? 'accent'} tokens={themeSwatches()}
+                            label={ta('tip.nav.hoverTextColorPick')} onchange={(hex) => setNavStyle('hoverTextColor', hex)} />
+                          <span class="mini-label">{ta('lbl.hoverTextColor')}</span>
+                        </div>
+                        <div class="swatch-cell" title={ta('tip.nav.textColorPick')}>
+                          <ColorPicker value={siteDraft.nav.style?.textColor ?? 'text'} tokens={themeSwatches()}
+                            label={ta('tip.nav.textColorPick')} onchange={(hex) => setNavStyle('textColor', hex)} />
+                          <span class="mini-label">{ta('lbl.textColor')}</span>
+                        </div>
+                      </div>
+                      <label class="gridmenu-snap" title={ta('tip.nav.blur')}>
+                        <input type="checkbox" checked={siteDraft.nav.style?.blur !== false}
+                          onchange={(e) => setNavStyle('blur', e.target.checked)} />
+                        {ta('lbl.navBlur')}
+                      </label>
+                    </div>
+                  </details>
+                  <hr class="gridmenu-divider" />
+                  <details class="group frame-group sub-fold">
+                    <summary>{ta('lbl.background')}</summary>
+                    <div class="group-items">
+                      {@render backgroundLayers(navBgCtx, siteDraft.nav?.style?.background?.layers ?? [])}
+                    </div>
+                  </details>
+                </div>
+              </details>
+              <details class="group">
+                <summary title={ta('tip.nav.announce')}>{ta('group.announcement')}</summary>
+                <div class="group-items">
+                  <!-- The strip above the menu: off by default, the fields appear when on -->
+                  <label class="gridmenu-snap" title={ta('tip.nav.announce')}>
+                    <input type="checkbox" checked={siteDraft.nav.announcement?.show === true}
+                      onchange={(e) => setNavAnnouncement('show', e.target.checked ? true : undefined)} />
+                    {ta('lbl.announceShow')}
+                  </label>
+                  {#if siteDraft.nav.announcement?.show}
+                    <label class="field-stack" title={ta('tip.nav.announce')}>
+                      <span class="mini-label">{ta('lbl.text')}</span>
+                      <input type="text" class="field-filled" value={siteDraft.nav.announcement?.text ?? ''}
+                        onchange={(e) => setNavAnnouncement('text', e.target.value.trim() || undefined)} />
+                    </label>
+                    <!-- A page from the register, or a free link with its own field -->
+                    <label title={ta('tip.nav.announceLink')}>{ta('lbl.link')}
+                      <Dropdown value={siteDraft.nav.announcement?.page ?? (siteDraft.nav.announcement?.href !== undefined ? 'custom' : '')}
+                        options={[['', ta('common.none')], ...siteDraft.pages.map((p) => [p.id, p.title]), ['custom', ta('opt.announceLink.custom')]]}
+                        onchange={(v) => siteMutate('edit:nav-announce-link', () => {
+                          const next = { ...(siteDraft.nav.announcement ?? {}) };
+                          delete next.page; delete next.href;
+                          if (v === 'custom') next.href = '';
+                          else if (v) next.page = v;
+                          siteDraft.nav.announcement = next;
+                        })} /></label>
+                    {#if siteDraft.nav.announcement?.href !== undefined && !siteDraft.nav.announcement?.page}
+                      <label class="field-stack" title={ta('tip.nav.announceHref')}>
+                        <span class="mini-label">{ta('lbl.announceHref')}</span>
+                        <input type="text" class="field-filled" placeholder="https://" value={siteDraft.nav.announcement?.href ?? ''}
+                          onchange={(e) => setNavAnnouncement('href', e.target.value.trim())} />
+                      </label>
                     {/if}
-                    {#if siteDraft.nav.style?.subStyle === 'pills'}
-                      <label title={ta('tip.nav.subPillColor')}>{ta('lbl.subPillColor')}
-                        <ColorPicker value={siteDraft.nav.style?.subPillColor ?? 'surface'} tokens={themeSwatches()}
-                          label={ta('tip.nav.subPillColorPick')} onchange={(hex) => setNavStyle('subPillColor', hex)} /></label>
+                    <!-- Only where the strip can scroll away: a sticky bar in the flow -->
+                    {#if siteDraft.nav.sticky !== false && !floatingVariant && !sideVariant && !siteDraft.nav.overlay}
+                      <label class="gridmenu-snap" title={ta('tip.nav.announceSticky')}>
+                        <input type="checkbox" checked={siteDraft.nav.announcement?.sticky !== false}
+                          onchange={(e) => setNavAnnouncement('sticky', e.target.checked ? undefined : false)} />
+                        {ta('lbl.announceSticky')}
+                      </label>
                     {/if}
-                    <label title={ta('tip.nav.subColumns')}>{ta('lbl.columns')}
-                      <input type="number" min="1" max="4" value={siteDraft.nav.style?.subColumns ?? 1}
-                        onchange={(e) => setNavStyle('subColumns', Number(e.target.value) > 1 ? Number(e.target.value) : undefined)} /></label>
-                  </div>
-                </details>
-                <details class="group">
-                  <summary title={ta('hint.nav.submenu')}>{ta('group.menuItems')}</summary>
-                  <div class="group-items">
-                <!-- One compact row per item: grip, the name with its target beneath,
-                     a submenu marker, and the actions as a small grid on the row under
-                     the pointer or the selected one. Rows are reordered by dragging: a
-                     faint clone of the row shows where it lands, the middle of a
-                     top-level row takes it in as a child, and the grip column of a child
-                     row leads back out to the top level. -->
-                {#snippet navGhost(child)}
-                  {@const g = navGhostText()}
-                  <!-- The faint clone at the landing place -->
-                  <div class="nav-item ghost" class:child aria-hidden="true">
-                    <span class="nav-grip">{@html GRIP_ICON}</span>
-                    <div class="nav-item-main">
-                      <span class="nav-item-name ghost-name">{g.label}</span>
-                      <span class="ghost-target">{g.target}</span>
+                    <!-- Only where the menu slides out from under the strip -->
+                    {#if siteDraft.nav.scroll === 'hide' && siteDraft.nav.sticky !== false && !sideVariant && siteDraft.nav.announcement?.sticky !== false}
+                      <label class="gridmenu-snap" title={ta('tip.nav.announceFollowNav')}>
+                        <input type="checkbox" checked={siteDraft.nav.announcement?.followNav === true}
+                          onchange={(e) => setNavAnnouncement('followNav', e.target.checked ? true : undefined)} />
+                        {ta('lbl.announceFollowNav')}
+                      </label>
+                    {/if}
+                    {#if sideVariant}
+                      <Choice label={ta('lbl.announcePlace')} title={ta('tip.nav.announcePlace')}
+                        value={siteDraft.nav.announcement?.place ?? 'nav'}
+                        options={[['nav', ta('opt.announcePlace.nav')], ['page', ta('opt.announcePlace.page')], ['content', ta('opt.announcePlace.content')]]}
+                        onchange={(v) => setNavAnnouncement('place', v === 'nav' ? undefined : v)} />
+                    {/if}
+                    <label class="gridmenu-snap" title={ta('tip.nav.announceDismiss')}>
+                      <input type="checkbox" checked={siteDraft.nav.announcement?.dismiss !== false}
+                        onchange={(e) => setNavAnnouncement('dismiss', e.target.checked ? undefined : false)} />
+                      {ta('lbl.announceDismiss')}
+                    </label>
+                    <!-- The dismissal is remembered per browser, in the preview as on the
+                         published page, so the strip needs a way back while editing. -->
+                    {#if siteDraft.nav.announcement?.dismiss !== false}
+                      <button class="ghost" title={ta('tip.nav.announceShowAgain')}
+                        onclick={() => bridge?.sendAnnounceReset()}>{ta('lbl.announceShowAgain')}</button>
+                    {/if}
+                    <label title={ta('tip.nav.announceColor')}>{ta('lbl.background')}
+                      <ColorPicker value={siteDraft.nav.announcement?.color ?? 'accent'} tokens={themeSwatches()}
+                        label={ta('tip.nav.announceColor')} onchange={(hex) => setNavAnnouncement('color', hex)} /></label>
+                    <label title={ta('tip.nav.announceTextColor')}>{ta('lbl.textColor')}
+                      <ColorPicker value={siteDraft.nav.announcement?.textColor ?? 'accent-text'} tokens={themeSwatches()}
+                        label={ta('tip.nav.announceTextColor')} onchange={(hex) => setNavAnnouncement('textColor', hex)} /></label>
+                  {/if}
+                </div>
+              </details>
+              <details class="group">
+                <summary>{ta('group.submenu')}</summary>
+                <div class="group-items">
+                  <!-- Side variant: the submenus are accordions in the
+                       column, so the card frame, flat surface and flyout
+                       make no sense there -->
+                  <!-- The designs as small drawings of the submenu hanging under its item -->
+                  <div class="ctl-field">
+                    <span class="mini-label">{ta('lbl.design')}</span>
+                    <div class="tile-grid" class:cols-5={!sideVariant} class:cols-3={sideVariant} role="group" aria-label={ta('lbl.design')}>
+                      {#each subStyleOptions as [v, text] (v)}
+                        <button type="button" class="tile" class:on={(siteDraft.nav.style?.subStyle ?? 'card') === v} aria-pressed={(siteDraft.nav.style?.subStyle ?? 'card') === v}
+                          onclick={() => setNavStyle('subStyle', v === 'card' ? undefined : v)}>{@html SUB_STYLE_ICONS[v]}<span>{text}</span></button>
+                      {/each}
                     </div>
                   </div>
-                {/snippet}
-                <div class="nav-list" role="list"
-                  ondragover={onNavListDragOver}
-                  ondrop={(e) => { e.preventDefault(); dropNavRow(navDrop?.key ?? ''); }}>
-                {#each siteDraft.nav.items as item, i (i)}
-                  {@const key = `${i}`}
-                  {#if navDrop?.key === key && navDrop.pos === 'before'}{@render navGhost(false)}{/if}
-                  <div class="nav-item" class:selected={navSel === key} class:dragging={navDrag === key} data-key={key}
-                    class:drop-target={navDrop?.key === key && navDrop.pos === 'into'}
-                    onclick={() => { navSel = key; }}>
-                    <!-- The grip alone is draggable: a draggable row would take the mouse
-                         from the name field's text selection. -->
+                  {#if siteDraft.nav.items?.some((item) => item.children?.length)}
+                    {#if sideVariant}
+                      <!-- The column: accordions, or every submenu open from the start
+                           (then the arrow is a choice of its own, off by default) -->
+                      <Choice label={ta('lbl.sideSubs')} title={ta('tip.nav.sideSubs')} value={siteDraft.nav.style?.sideSubs ?? 'collapsed'}
+                        options={[['collapsed', ta('opt.mobileSubs.collapsed')], ['expanded', ta('opt.mobileSubs.expanded')]]}
+                        onchange={(v) => setNavStyle('sideSubs', v === 'collapsed' ? undefined : v)} />
+                      {#if siteDraft.nav.style?.sideSubs === 'expanded'}
+                        <label class="gridmenu-snap" title={ta('tip.nav.sideSubArrow')}>
+                          <input type="checkbox" checked={siteDraft.nav.style?.sideSubArrow === true}
+                            onchange={(e) => setNavStyle('sideSubArrow', e.target.checked ? true : undefined)} />
+                          {ta('lbl.sideSubArrow')}
+                        </label>
+                      {/if}
+                    {/if}
+                    {#if !sideVariant || siteDraft.nav.style?.sideSubs !== 'expanded'}
+                      <Choice label={ta('lbl.subOpen')} title={ta('tip.nav.subOpen')} value={siteDraft.nav.style?.subOpen ?? 'hover'}
+                        options={[['hover', ta('opt.subOpen.hover')], ['stay', ta('opt.subOpen.stay')], ['click', ta('opt.subOpen.click')]]}
+                        onchange={(v) => setNavStyle('subOpen', v === 'hover' ? undefined : v)} />
+                    {/if}
+                  {/if}
+                  {#if siteDraft.nav.style?.subStyle === 'pills'}
+                    <label title={ta('tip.nav.subPillColor')}>{ta('lbl.subPillColor')}
+                      <ColorPicker value={siteDraft.nav.style?.subPillColor ?? 'surface'} tokens={themeSwatches()}
+                        label={ta('tip.nav.subPillColorPick')} onchange={(hex) => setNavStyle('subPillColor', hex)} /></label>
+                  {/if}
+                  <label title={ta('tip.nav.subColumns')}>{ta('lbl.columns')}
+                    <input type="number" min="1" max="4" value={siteDraft.nav.style?.subColumns ?? 1}
+                      onchange={(e) => setNavStyle('subColumns', Number(e.target.value) > 1 ? Number(e.target.value) : undefined)} /></label>
+                </div>
+              </details>
+              <details class="group">
+                <summary title={ta('hint.nav.submenu')}>{ta('group.menuItems')}</summary>
+                <div class="group-items">
+              <!-- One compact row per item: grip, the name with its target beneath,
+                   a submenu marker, and the actions as a small grid on the row under
+                   the pointer or the selected one. Rows are reordered by dragging: a
+                   faint clone of the row shows where it lands, the middle of a
+                   top-level row takes it in as a child, and the grip column of a child
+                   row leads back out to the top level. -->
+              {#snippet navGhost(child)}
+                {@const g = navGhostText()}
+                <!-- The faint clone at the landing place -->
+                <div class="nav-item ghost" class:child aria-hidden="true">
+                  <span class="nav-grip">{@html GRIP_ICON}</span>
+                  <div class="nav-item-main">
+                    <span class="nav-item-name ghost-name">{g.label}</span>
+                    <span class="ghost-target">{g.target}</span>
+                  </div>
+                </div>
+              {/snippet}
+              <div class="nav-list" role="list"
+                ondragover={onNavListDragOver}
+                ondrop={(e) => { e.preventDefault(); dropNavRow(navDrop?.key ?? ''); }}>
+              {#each siteDraft.nav.items as item, i (i)}
+                {@const key = `${i}`}
+                {#if navDrop?.key === key && navDrop.pos === 'before'}{@render navGhost(false)}{/if}
+                <div class="nav-item" class:selected={navSel === key} class:dragging={navDrag === key} data-key={key}
+                  class:drop-target={navDrop?.key === key && navDrop.pos === 'into'}
+                  onclick={() => { navSel = key; }}>
+                  <!-- The grip alone is draggable: a draggable row would take the mouse
+                       from the name field's text selection. -->
+                  <span class="nav-grip" title={ta('tip.nav.dragItem')} draggable="true"
+                    ondragstart={(e) => { navDrag = key; e.dataTransfer?.setData('text/plain', key); }}
+                    ondragend={endNavDrag}>{@html GRIP_ICON}</span>
+                  <div class="nav-item-main">
+                    <input class="nav-item-name" value={item.label} title={ta('tip.nav.itemLabel')}
+                      oninput={(e) => setNavLabel(i, e.target.value)} />
+                    <div class="nav-item-target">
+                      <Dropdown compact value={item.page ?? (item.href != null ? '__href' : '__none')} title={ta('tip.linkTarget')}
+                        options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')],
+                          ...(item.children ? [['__none', ta('opt.noLink')]] : [])]}
+                        onchange={(v) => setNavTarget(i, v)} />
+                      {#if !item.page && item.href != null}
+                        <input class="nav-item-href" value={item.href} placeholder={ta('ph.hrefAnchor')}
+                          title={ta('tip.hrefAnchor')}
+                          onchange={(e) => setNavHref(i, e.target.value)} />
+                      {/if}
+                    </div>
+                  </div>
+                  {#if item.children?.length}<span class="nav-item-sub" title={ta('tip.nav.hasSubmenu')}>{@html SUB_ICON}</span>{/if}
+                  <span class="nav-actions">
+                    <button class="ghost nav-act" title={ta('tip.nav.addChild')}
+                      onclick={() => addNavChild(i)}>{@html ICONS.plus}</button>
+                    <button class="ghost nav-act" title={ta('tip.moveUp')} onclick={() => moveNavItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+                    <button class="ghost nav-act" title={ta('tip.nav.removeItem')}
+                      onclick={() => removeNavItem(i)}>{@html ICONS.cross}</button>
+                    <button class="ghost nav-act" title={ta('tip.moveDown')} onclick={() => moveNavItem(i, 1)}
+                      disabled={i === siteDraft.nav.items.length - 1}>{@html ICONS.down}</button>
+                  </span>
+                  <button class="ghost row-tool nav-more" title={ta('tip.nav.itemActions')} aria-label={ta('tip.nav.itemActions')}
+                    onclick={() => { navSel = key; }}>{@html ICONS.kebab}</button>
+                </div>
+                {#each item.children ?? [] as child, j (j)}
+                  {@const ckey = `${i}.${j}`}
+                  {#if navDrop?.key === ckey && navDrop.pos === 'before'}{@render navGhost(true)}{/if}
+                  <div class="nav-item child" class:selected={navSel === ckey} class:dragging={navDrag === ckey} data-key={ckey}
+                    onclick={(e) => { e.stopPropagation(); navSel = ckey; }}>
                     <span class="nav-grip" title={ta('tip.nav.dragItem')} draggable="true"
-                      ondragstart={(e) => { navDrag = key; e.dataTransfer?.setData('text/plain', key); }}
+                      ondragstart={(e) => { e.stopPropagation(); navDrag = ckey; e.dataTransfer?.setData('text/plain', ckey); }}
                       ondragend={endNavDrag}>{@html GRIP_ICON}</span>
                     <div class="nav-item-main">
-                      <input class="nav-item-name" value={item.label} title={ta('tip.nav.itemLabel')}
-                        oninput={(e) => setNavLabel(i, e.target.value)} />
+                      <input class="nav-item-name" value={child.label} title={ta('tip.nav.childLabel')}
+                        oninput={(e) => setNavChildLabel(i, j, e.target.value)} />
                       <div class="nav-item-target">
-                        <Dropdown compact value={item.page ?? (item.href != null ? '__href' : '__none')} title={ta('tip.linkTarget')}
-                          options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')],
-                            ...(item.children ? [['__none', ta('opt.noLink')]] : [])]}
-                          onchange={(v) => setNavTarget(i, v)} />
-                        {#if !item.page && item.href != null}
-                          <input class="nav-item-href" value={item.href} placeholder={ta('ph.hrefAnchor')}
+                        <Dropdown compact value={child.page ?? '__href'} title={ta('tip.linkTarget')}
+                          options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')]]}
+                          onchange={(v) => setNavChildTarget(i, j, v)} />
+                        {#if !child.page}
+                          <input class="nav-item-href" value={child.href ?? ''} placeholder={ta('ph.hrefAnchor')}
                             title={ta('tip.hrefAnchor')}
-                            onchange={(e) => setNavHref(i, e.target.value)} />
+                            onchange={(e) => setNavChildHref(i, j, e.target.value)} />
                         {/if}
                       </div>
                     </div>
-                    {#if item.children?.length}<span class="nav-item-sub" title={ta('tip.nav.hasSubmenu')}>{@html SUB_ICON}</span>{/if}
                     <span class="nav-actions">
-                      <button class="ghost nav-act" title={ta('tip.nav.addChild')}
-                        onclick={() => addNavChild(i)}>{@html ICONS.plus}</button>
-                      <button class="ghost nav-act" title={ta('tip.moveUp')} onclick={() => moveNavItem(i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-                      <button class="ghost nav-act" title={ta('tip.nav.removeItem')}
-                        onclick={() => removeNavItem(i)}>{@html ICONS.cross}</button>
-                      <button class="ghost nav-act" title={ta('tip.moveDown')} onclick={() => moveNavItem(i, 1)}
-                        disabled={i === siteDraft.nav.items.length - 1}>{@html ICONS.down}</button>
+                      <button class="ghost nav-act" title={ta('tip.moveUp')} onclick={() => moveNavChild(i, j, -1)} disabled={j === 0}>{@html ICONS.up}</button>
+                      <button class="ghost nav-act" title={ta('tip.nav.removeChild')}
+                        onclick={() => removeNavChild(i, j)}>{@html ICONS.cross}</button>
+                      <button class="ghost nav-act" title={ta('tip.moveDown')} onclick={() => moveNavChild(i, j, 1)}
+                        disabled={j === item.children.length - 1}>{@html ICONS.down}</button>
                     </span>
                     <button class="ghost row-tool nav-more" title={ta('tip.nav.itemActions')} aria-label={ta('tip.nav.itemActions')}
-                      onclick={() => { navSel = key; }}>{@html ICONS.kebab}</button>
+                      onclick={(e) => { e.stopPropagation(); navSel = ckey; }}>{@html ICONS.kebab}</button>
                   </div>
-                  {#each item.children ?? [] as child, j (j)}
-                    {@const ckey = `${i}.${j}`}
-                    {#if navDrop?.key === ckey && navDrop.pos === 'before'}{@render navGhost(true)}{/if}
-                    <div class="nav-item child" class:selected={navSel === ckey} class:dragging={navDrag === ckey} data-key={ckey}
-                      onclick={(e) => { e.stopPropagation(); navSel = ckey; }}>
-                      <span class="nav-grip" title={ta('tip.nav.dragItem')} draggable="true"
-                        ondragstart={(e) => { e.stopPropagation(); navDrag = ckey; e.dataTransfer?.setData('text/plain', ckey); }}
-                        ondragend={endNavDrag}>{@html GRIP_ICON}</span>
-                      <div class="nav-item-main">
-                        <input class="nav-item-name" value={child.label} title={ta('tip.nav.childLabel')}
-                          oninput={(e) => setNavChildLabel(i, j, e.target.value)} />
-                        <div class="nav-item-target">
-                          <Dropdown compact value={child.page ?? '__href'} title={ta('tip.linkTarget')}
-                            options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')]]}
-                            onchange={(v) => setNavChildTarget(i, j, v)} />
-                          {#if !child.page}
-                            <input class="nav-item-href" value={child.href ?? ''} placeholder={ta('ph.hrefAnchor')}
-                              title={ta('tip.hrefAnchor')}
-                              onchange={(e) => setNavChildHref(i, j, e.target.value)} />
-                          {/if}
-                        </div>
-                      </div>
-                      <span class="nav-actions">
-                        <button class="ghost nav-act" title={ta('tip.moveUp')} onclick={() => moveNavChild(i, j, -1)} disabled={j === 0}>{@html ICONS.up}</button>
-                        <button class="ghost nav-act" title={ta('tip.nav.removeChild')}
-                          onclick={() => removeNavChild(i, j)}>{@html ICONS.cross}</button>
-                        <button class="ghost nav-act" title={ta('tip.moveDown')} onclick={() => moveNavChild(i, j, 1)}
-                          disabled={j === item.children.length - 1}>{@html ICONS.down}</button>
-                      </span>
-                      <button class="ghost row-tool nav-more" title={ta('tip.nav.itemActions')} aria-label={ta('tip.nav.itemActions')}
-                        onclick={(e) => { e.stopPropagation(); navSel = ckey; }}>{@html ICONS.kebab}</button>
-                    </div>
-                    {#if navDrop?.key === ckey && navDrop.pos === 'after'}{@render navGhost(true)}{/if}
-                  {/each}
-                  {#if navDrop?.key === key && navDrop.pos === 'into'}{@render navGhost(true)}{/if}
-                  {#if navDrop?.key === key && navDrop.pos === 'after'}{@render navGhost(false)}{/if}
+                  {#if navDrop?.key === ckey && navDrop.pos === 'after'}{@render navGhost(true)}{/if}
                 {/each}
-                </div>
-                    <button class="ghost action" onclick={addNavItem}>{ta('ui.addMenuItem')}</button>
-                    <!-- A new blank page that goes straight into the menu -->
-                    <span class="toolbar-row" title={ta('tip.nav.newPageAsItem')}>
-                      <input class="tb-grow" placeholder={ta('ph.nav.newPageTitle')} bind:value={navNewPageTitle}
-                        onkeydown={(e) => { if (e.key === 'Enter') addPageAsNavItem(); }} />
-                      <button class="ghost action" disabled={!navNewPageTitle.trim()} onclick={addPageAsNavItem}>{ta('ui.newPageAsItem')}</button>
-                    </span>
-                  </div>
-                </details>
+                {#if navDrop?.key === key && navDrop.pos === 'into'}{@render navGhost(true)}{/if}
+                {#if navDrop?.key === key && navDrop.pos === 'after'}{@render navGhost(false)}{/if}
+              {/each}
               </div>
-            {:else if activePanel === 'site'}
-              <div class="panel-body">
-                <label title={ta('tip.site.name')}>{ta('lbl.name')}
-                  <input value={siteDraft.site.title ?? ''} placeholder={ta('ph.site.name')}
-                    oninput={(e) => setSiteName(e.target.value)} />
-                </label>
-                <label title={ta('tip.site.description')}>{ta('lbl.description')}
-                  <input value={siteDraft.site.description ?? ''} placeholder={ta('ph.site.description')}
-                    oninput={(e) => setSiteDescription(e.target.value)} />
-                </label>
-                <label title={ta('site.langTitle')}>{ta('site.langLabel')}
-                  <Dropdown value={siteLangValue()} options={siteLangOptions()}
-                    onchange={(v) => setSiteLang(v)} /></label>
-                <hr class="gridmenu-divider" />
-                <p class="panel-strong" title={ta('tip.site.contentWidth')}>{ta('lbl.contentWidth')}</p>
-                <!-- Live sample: one strip per common screen width, so it is
-                     visible WHERE the width binds and where it goes fluid. -->
-                <div class="sample cw-sample">
-                  {#each widthBands as band (band.screen)}
-                    <div class="cw-row">
-                      <span class="mini-label cw-screen">{band.screen}</span>
-                      <span class="cw-bar" class:fluid={!band.bound}>
-                        <span class="cw-fill" style="width:{band.pct}%"></span>
-                      </span>
-                      <span class="gridmenu-value cw-margin">{band.bound ? `${band.margin}` : '-'}</span>
-                    </div>
-                  {/each}
-                  <div class="cw-legend">
-                    <span class="mini-label">{ta('lbl.screenPx')}</span>
-                    <span class="mini-label">{ta('lbl.marginPx')}</span>
-                  </div>
-                  {#if layoutWidth !== 'full'}
-                    <div class="mini-label cw-binds">{ta('lbl.bindsFrom', { n: bindsFrom })}</div>
-                  {/if}
+                  <button class="ghost action" onclick={addNavItem}>{ta('ui.addMenuItem')}</button>
+                  <!-- A new blank page that goes straight into the menu -->
+                  <span class="toolbar-row" title={ta('tip.nav.newPageAsItem')}>
+                    <input class="tb-grow" placeholder={ta('ph.nav.newPageTitle')} bind:value={navNewPageTitle}
+                      onkeydown={(e) => { if (e.key === 'Enter') addPageAsNavItem(); }} />
+                    <button class="ghost action" disabled={!navNewPageTitle.trim()} onclick={addPageAsNavItem}>{ta('ui.newPageAsItem')}</button>
+                  </span>
                 </div>
-                <div class="seg cw-seg">
-                  {#each WIDTH_PRESETS as p (p.id)}
-                    <button class:on={widthPreset === p.id}
-                      onclick={() => setContentWidth(p.width)}>{ta(`lbl.width.${p.id}`)}</button>
-                  {/each}
+              </details>
+            </div>
+          {:else if activePanel === 'site'}
+            <div class="panel-body">
+              <label title={ta('tip.site.name')}>{ta('lbl.name')}
+                <input value={siteDraft.site.title ?? ''} placeholder={ta('ph.site.name')}
+                  oninput={(e) => setSiteName(e.target.value)} />
+              </label>
+              <label title={ta('tip.site.description')}>{ta('lbl.description')}
+                <input value={siteDraft.site.description ?? ''} placeholder={ta('ph.site.description')}
+                  oninput={(e) => setSiteDescription(e.target.value)} />
+              </label>
+              <label title={ta('site.langTitle')}>{ta('site.langLabel')}
+                <Dropdown value={siteLangValue()} options={siteLangOptions()}
+                  onchange={(v) => setSiteLang(v)} /></label>
+              <hr class="gridmenu-divider" />
+              <p class="panel-strong" title={ta('tip.site.contentWidth')}>{ta('lbl.contentWidth')}</p>
+              <!-- Live sample: one strip per common screen width, so it is
+                   visible WHERE the width binds and where it goes fluid. -->
+              <div class="sample cw-sample">
+                {#each widthBands as band (band.screen)}
+                  <div class="cw-row">
+                    <span class="mini-label cw-screen">{band.screen}</span>
+                    <span class="cw-bar" class:fluid={!band.bound}>
+                      <span class="cw-fill" style="width:{band.pct}%"></span>
+                    </span>
+                    <span class="gridmenu-value cw-margin">{band.bound ? `${band.margin}` : '-'}</span>
+                  </div>
+                {/each}
+                <div class="cw-legend">
+                  <span class="mini-label">{ta('lbl.screenPx')}</span>
+                  <span class="mini-label">{ta('lbl.marginPx')}</span>
                 </div>
                 {#if layoutWidth !== 'full'}
-                  <div class="ctl-row" title={ta('tip.site.contentWidthFree')}>
-                    <span class="mini-label">{ta('lbl.widthFree')}</span>
-                    <input type="range" min={WIDTH_MIN} max={WIDTH_MAX} step={WIDTH_STEP}
-                      value={widthSlider}
-                      oninput={(e) => setContentWidth(e.target.valueAsNumber)} />
-                    <span class="gridmenu-value">{widthSlider} px</span>
-                  </div>
+                  <div class="mini-label cw-binds">{ta('lbl.bindsFrom', { n: bindsFrom })}</div>
                 {/if}
-                <p class="mini-label" title={ta('tip.site.gutter')}>{ta('lbl.gutter')}</p>
-                <div class="seg cw-seg">
-                  {#each GUTTER_PRESETS as p (p.id)}
-                    <button class:on={gutterPreset === p.id}
-                      onclick={() => setContentGutter(p.gutter)}>{ta(`lbl.gutter.${p.id}`)}</button>
+              </div>
+              <div class="seg cw-seg">
+                {#each WIDTH_PRESETS as p (p.id)}
+                  <button class:on={widthPreset === p.id}
+                    onclick={() => setContentWidth(p.width)}>{ta(`lbl.width.${p.id}`)}</button>
+                {/each}
+              </div>
+              {#if layoutWidth !== 'full'}
+                <div class="ctl-row" title={ta('tip.site.contentWidthFree')}>
+                  <span class="mini-label">{ta('lbl.widthFree')}</span>
+                  <input type="range" min={WIDTH_MIN} max={WIDTH_MAX} step={WIDTH_STEP}
+                    value={widthSlider}
+                    oninput={(e) => setContentWidth(e.target.valueAsNumber)} />
+                  <span class="gridmenu-value">{widthSlider} px</span>
+                </div>
+              {/if}
+              <p class="mini-label" title={ta('tip.site.gutter')}>{ta('lbl.gutter')}</p>
+              <div class="seg cw-seg">
+                {#each GUTTER_PRESETS as p (p.id)}
+                  <button class:on={gutterPreset === p.id}
+                    onclick={() => setContentGutter(p.gutter)}>{ta(`lbl.gutter.${p.id}`)}</button>
+                {/each}
+              </div>
+              <details class="group" open={gutterPreset === null || gutterAdvanced}
+                ontoggle={(e) => (gutterAdvanced = e.currentTarget.open)}>
+                <summary>{ta('group.advanced')}</summary>
+                <div class="group-items">
+                  <div class="ctl-row" title={ta('tip.site.gutterVw')}>
+                    <span class="mini-label">{ta('lbl.gutterVw')}</span>
+                    <input type="range" min={GUTTER_MIN} max={GUTTER_MAX} step={GUTTER_STEP}
+                      value={layoutGutter}
+                      oninput={(e) => setContentGutter(e.target.valueAsNumber)} />
+                    <span class="gridmenu-value">{layoutGutter} vw</span>
+                  </div>
+                </div>
+              </details>
+              <hr class="gridmenu-divider" />
+              <label>{ta('lbl.siteIcon')}
+                {#if siteDraft.site.icon}
+                  <img class="site-icon-preview" src={siteDraft.site.icon} alt={ta('lbl.siteIcon')} />
+                {/if}
+              </label>
+              <span class="toolbar-row">
+                <label class="ghost filepick tb-grow" title={ta('tip.site.icon')}>
+                  {siteDraft.site.icon ? ta('ui.changeIcon') : ta('ui.chooseIcon')}
+                  <input type="file" accept="image/*" onchange={uploadSiteIcon} />
+                </label>
+                {#if siteDraft.site.icon}
+                  <button class="ghost row-tool" title={ta('tip.site.editIcon')}
+                    onclick={() => (iconEditorImage = siteDraft.site.icon)}>{@html ICONS.pencil ?? '✎'}</button>
+                  <button class="ghost row-tool" title={ta('tip.site.removeIcon')}
+                    onclick={removeSiteIcon}>{@html ICONS.cross}</button>
+                {/if}
+              </span>
+            </div>
+          {:else if activePanel === 'theme'}
+            <div class="panel-body">
+              {#snippet themePreview(pal, cap)}
+                <div class="theme-pvw">
+                  {#if cap}<div class="mini-label tpv-cap">{cap}</div>{/if}
+                  <div class="tpv-demo" style="--tv-bg:{themeHex(pal.bg, pal)};--tv-surface:{themeHex(pal.surface, pal)};--tv-text:{themeHex(pal.text, pal)};--tv-accent:{themeHex(pal.accent, pal)};--tv-accent-ink:{themeHex(pal['accent-text'] ?? readableOn(themeHex(pal.accent ?? '#000000', pal)), pal)}">
+                    <div class="tpv-h">{ta('preview.heading')}</div>
+                    <div class="tpv-card">{ta('preview.cardBody')}</div>
+                    <div class="tpv-row"><span class="tpv-btn">{ta('preview.button')}</span><span class="tpv-lnk">{ta('preview.link')}</span></div>
+                  </div>
+                </div>
+              {/snippet}
+              <p class="panel-strong">{ta('lbl.themePresets')}</p>
+              <div class="theme-presets">
+                {#each THEME_PRESETS as pr (pr.id)}
+                  <button type="button" class="theme-preset" class:sel={activeThemePreset === pr.id}
+                    title={`${pr.name} - ${pr.note}`} onclick={() => applyThemePreset(pr)}>
+                    <span class="tp-band">
+                      <i style="background:{pr.light.bg}"></i><i style="background:{pr.light.surface}"></i><i style="background:{pr.light.accent}"></i><i style="background:{pr.light.text}"></i>
+                    </span>
+                    <small>{pr.name}</small>
+                  </button>
+                {/each}
+              </div>
+              <p class="panel-strong">{ta('lbl.colors')}</p>
+              <label class="gridmenu-snap" title={ta('tip.theme.dualMode')}>
+                <input type="checkbox" checked={dualMode}
+                  onchange={(e) => setDualMode(e.target.checked)} />
+                {ta('lbl.dualMode')}
+              </label>
+              {#if dualMode}
+                <div class="ctl-row autorow">
+                  <span class="autolbl">{ta('lbl.darkColors')}</span>
+                  <span class="seg">
+                    <button type="button" class:on={altAuto} title={ta('hint.theme.autoDark')}
+                      onclick={() => setAltAuto(true)}>{ta('opt.auto')}</button>
+                    <button type="button" class:on={!altAuto} onclick={() => setAltAuto(false)}>{ta('opt.custom')}</button>
+                  </span>
+                </div>
+              {/if}
+
+              <div class="ctl-row palhead">
+                {#if dualMode}<span class="mini-label">{ta('lbl.light')}</span>{/if}
+                <button type="button" class="chip" class:accent={stdMode === 'light'}
+                  title={ta('tip.theme.defaultScheme')} onclick={() => setThemeScheme('light')}>{ta('common.standard')}</button>
+              </div>
+              <div class="palcells">
+                {#each PALETTE_KEYS as [key, full, short] (key)}
+                  <div class="palcol">
+                    <ColorPicker value={siteDraft.theme.tokens.color[key] ?? paletteFallback(key, lightPal)}
+                      tokens={themeSwatches()} label={full} onchange={(hex) => setColorToken(key, hex)} />
+                    <span class="palcap">{short}</span>
+                    <b class="palhex">{themeHex(siteDraft.theme.tokens.color[key] ?? paletteFallback(key, lightPal), lightPal)}</b>
+                  </div>
+                {/each}
+              </div>
+
+              {#if dualMode}
+                <div class="ctl-row palhead">
+                  <span class="mini-label">{ta('lbl.dark')}</span>
+                  <button type="button" class="chip" class:accent={stdMode === 'dark'}
+                    title={ta('tip.theme.darkDefault')} onclick={() => setThemeScheme('dark')}>{ta('common.standard')}</button>
+                </div>
+                <div class="palcells" class:autopal={altAuto}>
+                  {#each PALETTE_KEYS as [key, full, short] (key)}
+                    <div class="palcol">
+                      <ColorPicker value={siteDraft.theme.alt.tokens.color[key] ?? darkPal[key] ?? paletteFallback(key, darkPal)}
+                        tokens={themeSwatches()} label={ta('theme.darkColorLabel', { name: full })} onchange={(hex) => setAltColorToken(key, hex)} />
+                      <span class="palcap">{short}</span>
+                      <b class="palhex">{themeHex(siteDraft.theme.alt.tokens.color[key] ?? darkPal[key] ?? paletteFallback(key, darkPal), darkPal)}</b>
+                    </div>
                   {/each}
                 </div>
-                <details class="group" open={gutterPreset === null || gutterAdvanced}
-                  ontoggle={(e) => (gutterAdvanced = e.currentTarget.open)}>
-                  <summary>{ta('group.advanced')}</summary>
+              {/if}
+
+              <!-- Auto for the text on accent: no token in either mode, the browser
+                   picks black or white against the accent (contrast-color()). Its own
+                   row below both palettes, since it applies to light and dark alike. -->
+              <div class="ctl-row palauto-row" title={ta('tip.theme.accentTextAuto')}>
+                <span class="mini-label ctl-name">{ta('palette.accentText')}</span>
+                <button type="button" class="chip palauto" class:accent={accentTextAuto}
+                  onclick={() => setAccentTextAuto(!accentTextAuto)}>{ta('opt.auto')}</button>
+              </div>
+
+              <div class="theme-previews">
+                {@render themePreview(lightPal, dualMode ? ta('lbl.light') : '')}
+                {#if dualMode}{@render themePreview(darkPal, ta('lbl.dark'))}{/if}
+              </div>
+
+              <details class="group">
+                <summary>{ta('group.typography')}</summary>
+                <div class="group-items">
+                  <label>{ta('lbl.headings')}
+                    <Dropdown value={siteDraft.theme.tokens.font.heading} options={fontOptions('heading')}
+                      onchange={(v) => setFontToken('heading', v)} /></label>
+                  <label>{ta('lbl.bodyText')}
+                    <Dropdown value={siteDraft.theme.tokens.font.body} options={fontOptions('body')}
+                      onchange={(v) => setFontToken('body', v)} /></label>
+                  <div class="sample typo-sample">
+                    <div class="ts-h" style="font-family:{siteDraft.theme.tokens.font.heading}">{ta('preview.heading')}</div>
+                    <div class="ts-b" style="font-family:{siteDraft.theme.tokens.font.body}">{ta('preview.bodySample')}</div>
+                  </div>
+                </div>
+              </details>
+
+              <details class="group">
+                <summary>{ta('group.shape')}</summary>
+                <div class="group-items">
+                  <div class="sample form-prev" style="--r-sm:{siteDraft.theme.tokens.radius.sm};--r-md:{siteDraft.theme.tokens.radius.md}">
+                    <span class="fp-btn">{ta('preview.button')}</span>
+                    <span class="fp-card">{ta('preview.card')}</span>
+                  </div>
+                  <label class="ctl-row">{ta('lbl.smallCorners')}<span class="gridmenu-value">{siteDraft.theme.tokens.radius.sm}</span></label>
+                  <input type="range" min="0" max="24" step="1" value={radiusNum(siteDraft.theme.tokens.radius.sm)}
+                    oninput={(e) => setRadiusPx('sm', Number(e.target.value))} />
+                  <label class="ctl-row">{ta('lbl.largeCorners')}<span class="gridmenu-value">{siteDraft.theme.tokens.radius.md}</span></label>
+                  <input type="range" min="0" max="40" step="1" value={radiusNum(siteDraft.theme.tokens.radius.md)}
+                    oninput={(e) => setRadiusPx('md', Number(e.target.value))} /></div>
+              </details>
+            </div>
+          {:else if activePanel === 'blocks'}
+            <div class="panel-body" class:locked={viewMode === 'mobile'}
+              title={viewMode === 'mobile' ? ta('tip.blocks.mobileLocked') : undefined}>
+              <input type="text" bind:value={blockSearch}
+                placeholder={ta('canvas.searchBlocks')} title={ta('canvas.searchBlocks')} />
+              {#if blockSearch.trim()}
+                <!-- An active search shows a flat, ranked hit list instead
+                     of the groups. -->
+                {#each searchBlockItems(panelBlockItems(), blockSearch, (item) => item.label) as item (item.label)}
+                  {#if item.act === 'image'}
+                    <label class="ghost filepick" title={ta('tip.webpAuto')}>
+                      {item.label}
+                      <input type="file" accept="image/*" onchange={addImage} />
+                    </label>
+                  {:else if item.act === 'galleryImages'}
+                    <label class="ghost filepick" title={ta('tip.blocks.galleryImages')}>
+                      {item.label}
+                      <input type="file" accept="image/*" multiple onchange={addGalleryBlock} />
+                    </label>
+                  {:else}
+                    <button class="ghost" onclick={() => runPanelItem(item)}>{item.label}</button>
+                  {/if}
+                {:else}
+                  <p class="panel-hint">{ta('canvas.searchEmpty')}</p>
+                {/each}
+              {:else}
+              <details class="group">
+                <summary>{ta('blocks.text')}</summary>
+                <div class="group-items">
+                  <button class="ghost" onclick={() => addBlock('text')}>{ta('blocks.text')}</button>
+                  <button class="ghost" onclick={() => addBlock('text-box')}
+                    title={ta('tip.blocks.textBox')}>{ta('ui.textBox')}</button>
+                </div>
+              </details>
+              <button class="ghost" onclick={() => addBlock('button')}>{ta('blocks.button')}</button>
+              <label class="ghost filepick" title={ta('tip.webpAuto')}>
+                {ta('blocks.image')}
+                <input type="file" accept="image/*" onchange={addImage} />
+              </label>
+              <button class="ghost" title={ta('tip.blocks.video')}
+                onclick={() => addBlock('video')}>{ta('blocks.video')}</button>
+              <button class="ghost" title={ta('tip.blocks.icon')}
+                onclick={() => addBlock('icon')}>{ta('blocks.icon')}</button>
+              <button class="ghost" title={ta('tip.blocks.map')}
+                onclick={() => addBlock('map')}>{ta('blocks.map')}</button>
+              <button class="ghost" title={ta('tip.blocks.form')}
+                onclick={() => addBlock('form')}>{ta('blocks.form')}</button>
+              <button class="ghost" title={ta('tip.blocks.collection')}
+                onclick={() => addBlock('collection')}>{ta('blocks.collection')}</button>
+              <button class="ghost" title={ta('tip.blocks.faq')}
+                onclick={() => addBlock('faq')}>{ta('blocks.faq')}</button>
+              <button class="ghost" title={ta('tip.blocks.timeline')}
+                onclick={() => addBlock('timeline')}>{ta('blocks.timeline')}</button>
+              <button class="ghost" title={ta('tip.blocks.quote')}
+                onclick={() => addBlock('quote')}>{ta('blocks.quote')}</button>
+              <button class="ghost" title={ta('tip.blocks.stats')}
+                onclick={() => addBlock('stats')}>{ta('blocks.stats')}</button>
+              <button class="ghost" title={ta('tip.blocks.table')}
+                onclick={() => addBlock('table')}>{ta('blocks.table')}</button>
+              <button class="ghost" title={ta('tip.blocks.share')}
+                onclick={() => addBlock('share')}>{ta('blocks.share')}</button>
+              <button class="ghost" title={ta('tip.blocks.countdown')}
+                onclick={() => addBlock('countdown')}>{ta('blocks.countdown')}</button>
+              <button class="ghost" title={ta('tip.blocks.audio')}
+                onclick={() => addBlock('audio')}>{ta('blocks.audio')}</button>
+              <button class="ghost" title={ta('tip.blocks.product')}
+                onclick={() => addBlock('product')}>{ta('blocks.product')}</button>
+              <button class="ghost" title={ta('tip.blocks.cart')}
+                onclick={() => addBlock('cart')}>{ta('blocks.cart')}</button>
+              <button class="ghost" title={ta('tip.blocks.checkout')}
+                onclick={() => addBlock('checkout')}>{ta('blocks.checkout')}</button>
+              <details class="group">
+                <summary>{ta('blocks.gallery')}</summary>
+                <div class="group-items">
+                  <button class="ghost" title={ta('tip.blocks.gallery')}
+                    onclick={() => addBlock('gallery')}>{ta('ui.emptyGallery')}</button>
+                  <label class="ghost filepick" title={ta('tip.blocks.galleryImages')}>
+                    {ta('ui.galleryWithImages')}
+                    <input type="file" accept="image/*" multiple onchange={addGalleryBlock} />
+                  </label>
+                </div>
+              </details>
+              <details class="group">
+                <summary>{ta('blocks.calendar')}</summary>
+                <div class="group-items">
+                  <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar')}>{ta('calendar.viewList')}</button>
+                  <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-cards')}>{ta('calendar.viewCards')}</button>
+                  <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-month')}>{ta('calendar.viewMonth')}</button>
+                  <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-next')}>{ta('calendar.viewNext')}</button>
+                </div>
+              </details>
+              <details class="group">
+                <summary>{ta('group.shapes')}</summary>
+                <div class="group-items">
+                  <button class="ghost" onclick={() => addBlock('shape-line')}>{ta('shape.line')}</button>
+                  <button class="ghost" onclick={() => addBlock('shape-arrow')}>{ta('shape.arrow')}</button>
+                  <button class="ghost" onclick={() => addBlock('shape-circle')}>{ta('shape.circle')}</button>
+                  <button class="ghost" onclick={() => addBlock('shape-rect')}>{ta('shape.rect')}</button>
+                  <button class="ghost" onclick={() => addBlock('shape-triangle')}>{ta('shape.triangle')}</button>
+                </div>
+              </details>
+              {#if templateIds.some((id) => templateStores[id]?.data?.mal?.kind === 'blocks')}
+                {@const blockGroupTemplates = templateIds.filter((id) => templateStores[id]?.data?.mal?.kind === 'blocks')}
+                <details class="group">
+                  <summary>{ta('canvas.tabMyTemplates')}</summary>
                   <div class="group-items">
-                    <div class="ctl-row" title={ta('tip.site.gutterVw')}>
-                      <span class="mini-label">{ta('lbl.gutterVw')}</span>
-                      <input type="range" min={GUTTER_MIN} max={GUTTER_MAX} step={GUTTER_STEP}
-                        value={layoutGutter}
-                        oninput={(e) => setContentGutter(e.target.valueAsNumber)} />
-                      <span class="gridmenu-value">{layoutGutter} vw</span>
-                    </div>
+                    {#each blockGroupTemplates as id (id)}
+                      <button class="ghost" title={ta('canvas.insertGroup')}
+                        onclick={() => bridge?.sendInsertTemplate(id)}>{templateStores[id].data.mal.name}</button>
+                    {/each}
                   </div>
                 </details>
-                <hr class="gridmenu-divider" />
-                <label>{ta('lbl.siteIcon')}
-                  {#if siteDraft.site.icon}
-                    <img class="site-icon-preview" src={siteDraft.site.icon} alt={ta('lbl.siteIcon')} />
-                  {/if}
-                </label>
-                <span class="toolbar-row">
-                  <label class="ghost filepick tb-grow" title={ta('tip.site.icon')}>
-                    {siteDraft.site.icon ? ta('ui.changeIcon') : ta('ui.chooseIcon')}
-                    <input type="file" accept="image/*" onchange={uploadSiteIcon} />
-                  </label>
-                  {#if siteDraft.site.icon}
-                    <button class="ghost row-tool" title={ta('tip.site.editIcon')}
-                      onclick={() => (iconEditorImage = siteDraft.site.icon)}>{@html ICONS.pencil ?? '✎'}</button>
-                    <button class="ghost row-tool" title={ta('tip.site.removeIcon')}
-                      onclick={removeSiteIcon}>{@html ICONS.cross}</button>
-                  {/if}
-                </span>
-              </div>
-            {:else if activePanel === 'theme'}
-              <div class="panel-body">
-                {#snippet themePreview(pal, cap)}
-                  <div class="theme-pvw">
-                    {#if cap}<div class="mini-label tpv-cap">{cap}</div>{/if}
-                    <div class="tpv-demo" style="--tv-bg:{themeHex(pal.bg, pal)};--tv-surface:{themeHex(pal.surface, pal)};--tv-text:{themeHex(pal.text, pal)};--tv-accent:{themeHex(pal.accent, pal)};--tv-accent-ink:{themeHex(pal['accent-text'] ?? readableOn(themeHex(pal.accent ?? '#000000', pal)), pal)}">
-                      <div class="tpv-h">{ta('preview.heading')}</div>
-                      <div class="tpv-card">{ta('preview.cardBody')}</div>
-                      <div class="tpv-row"><span class="tpv-btn">{ta('preview.button')}</span><span class="tpv-lnk">{ta('preview.link')}</span></div>
-                    </div>
+              {/if}
+              {#if pluginBlocks.length}
+                <details class="group">
+                  <summary>{ta('panel.plugins')}</summary>
+                  <div class="group-items">
+                    {#each pluginBlocks as entry (entry.type)}
+                      {#if entry.variants?.length}
+                        <details class="group">
+                          <summary>{entry.label}</summary>
+                          <div class="group-items">
+                            {#each entry.variants as variant (variant.label)}
+                              <button class="ghost" title={ta('tip.blocks.fromPlugin', { plugin: entry.plugin })}
+                                onclick={() => addPluginBlock(entry, variant.props)}>{variant.label}</button>
+                            {/each}
+                          </div>
+                        </details>
+                      {:else}
+                        <button class="ghost" title={ta('tip.blocks.fromPlugin', { plugin: entry.plugin })}
+                          onclick={() => addPluginBlock(entry)}>{entry.label}</button>
+                      {/if}
+                    {/each}
                   </div>
-                {/snippet}
-                <p class="panel-strong">{ta('lbl.themePresets')}</p>
-                <div class="theme-presets">
-                  {#each THEME_PRESETS as pr (pr.id)}
-                    <button type="button" class="theme-preset" class:sel={activeThemePreset === pr.id}
-                      title={`${pr.name} - ${pr.note}`} onclick={() => applyThemePreset(pr)}>
-                      <span class="tp-band">
-                        <i style="background:{pr.light.bg}"></i><i style="background:{pr.light.surface}"></i><i style="background:{pr.light.accent}"></i><i style="background:{pr.light.text}"></i>
+                </details>
+              {/if}
+              {/if}
+            </div>
+          {:else if activePanel === 'grid'}
+            <div class="panel-body">
+              <label>
+                {ta('lbl.gridSize')}
+                <span class="gridmenu-value">{grid.size} px</span>
+              </label>
+              <input type="range" min="4" max="96" step="2" value={grid.size}
+                oninput={(e) => setGrid('size', Number(e.target.value))} />
+              <label class="gridmenu-snap">
+                <input type="checkbox" checked={grid.snap !== false}
+                  onchange={(e) => setGrid('snap', e.target.checked)} />
+                {ta('lbl.gridSnap')}
+              </label>
+
+            </div>
+          {:else if activePanel === 'properties'}
+            <div class="panel-body">
+              {#if selectedBlock}
+                <p class="panel-strong">{ta('blocks.suffix', { label: BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type })}</p>
+                {@render blockPropsUI()}
+              {:else if activeSectionId}
+                <p class="panel-strong">{ta('lbl.section')}</p>
+                <label title={ta('hint.props.minHeight')}>{ta('lbl.minHeight')}
+                  <input class="token-input" value={sectionMinHeight} placeholder={ta('ph.minHeight')}
+                    onchange={(e) => setSectionHeight(e.target.value)} /></label>
+                <hr class="gridmenu-divider" />
+                <label class="gridmenu-snap">
+                  <input type="checkbox" checked={sectionGrid !== null}
+                    onchange={(e) => toggleSectionGrid(e.target.checked)} />
+                  {ta('lbl.sectionGrid')}
+                </label>
+                {#if sectionGrid}
+                  <label>
+                    {ta('lbl.gridSize')}
+                    <span class="gridmenu-value">{sectionGrid.size} px</span>
+                  </label>
+                  <input type="range" min="4" max="96" step="2" value={sectionGrid.size}
+                    oninput={(e) => setSectionGrid('size', Number(e.target.value))} />
+                {/if}
+
+                <hr class="gridmenu-divider" />
+                <p class="panel-strong" title={ta('tip.props.sectionTheme')}>{ta('lbl.sectionTheme')}</p>
+                <div class="rs-grid">
+                  {#each [['', 'common.standard'], ...Object.entries(SECTION_THEME_LABELS)] as [id, key] (id)}
+                    {@const c = sectionThemeSample(id)}
+                    <button class="rs-card" class:on={sectionTheme === id}
+                      title={ta('tip.props.sectionTheme')} onclick={() => setSectionTheme(id)}>
+                      <span class="rs-sample" style="background: {c.bg}">
+                        <i class="rs-line" style="background: {c.text}"></i>
+                        <i class="rs-chip" style="background: {c.surface}"></i>
+                        <i class="rs-dot" style="background: {c.accent}"></i>
                       </span>
-                      <small>{pr.name}</small>
+                      <span class="rs-name">{ta(key)}</span>
                     </button>
                   {/each}
                 </div>
-                <p class="panel-strong">{ta('lbl.colors')}</p>
-                <label class="gridmenu-snap" title={ta('tip.theme.dualMode')}>
-                  <input type="checkbox" checked={dualMode}
-                    onchange={(e) => setDualMode(e.target.checked)} />
-                  {ta('lbl.dualMode')}
-                </label>
-                {#if dualMode}
-                  <div class="ctl-row autorow">
-                    <span class="autolbl">{ta('lbl.darkColors')}</span>
-                    <span class="seg">
-                      <button type="button" class:on={altAuto} title={ta('hint.theme.autoDark')}
-                        onclick={() => setAltAuto(true)}>{ta('opt.auto')}</button>
-                      <button type="button" class:on={!altAuto} onclick={() => setAltAuto(false)}>{ta('opt.custom')}</button>
-                    </span>
-                  </div>
+                <label title={ta('tip.props.anchor')}>{ta('lbl.anchor')}
+                  <span class="row-tools">
+                    <span class="gridmenu-value">#{activeSectionId}</span>
+                    <button class="ghost row-tool" title={ta('tip.props.copyAnchor')}
+                      onclick={() => navigator.clipboard?.writeText(`#${activeSectionId}`)}>{@html ICONS.copy}</button>
+                  </span></label>
+
+                <hr class="gridmenu-divider" />
+                <p class="panel-strong">{ta('lbl.background')}</p>
+                {@render backgroundLayers(sectionBgCtx, sectionBg)}
+
+                <hr class="gridmenu-divider" />
+                <label title={ta('tip.props.sectionAnim')}>{ta('lbl.animIn')}
+                  <Dropdown value={isEntrance(sectionAnim) ? sectionAnim.type : ''}
+                    options={ENTRANCE_OPTIONS}
+                    onchange={(v) => setSectionAnimation(v || null)} /></label>
+                {#if isEntrance(sectionAnim)}
+                  <label>{ta('lbl.durationMs')}
+                    <input type="number" min="100" max="4000" step="100" value={sectionAnim.props.duration}
+                      onchange={(e) => setSectionAnimProp('duration', Number(e.target.value))} /></label>
+                  <label>{ta('lbl.delayMs')}
+                    <input type="number" min="0" max="4000" step="100" value={sectionAnim.props.delay ?? 0}
+                      onchange={(e) => setSectionAnimProp('delay', Number(e.target.value))} /></label>
+                  {#if sectionAnim.type === 'stagger'}
+                    <label title={ta('tip.props.staggerEffect')}>{ta('lbl.staggerEffect')}
+                      <Dropdown value={sectionAnim.props.effect ?? 'slide-up'}
+                        options={[['fade-in', ta('anim.fadeIn')], ['slide-up', ta('anim.slideUp')], ['zoom-in', ta('anim.zoomIn')]]}
+                        onchange={(v) => setSectionAnimStr('effect', v)} /></label>
+                    <label title={ta('tip.props.staggerStep')}>{ta('lbl.stepMs')}
+                      <input type="number" min="0" max="1000" step="10" value={sectionAnim.props.step ?? 90}
+                        onchange={(e) => setSectionAnimProp('step', Number(e.target.value))} /></label>
+                    <label title={ta('tip.props.staggerPattern')}>{ta('lbl.pattern')}
+                      <Dropdown value={sectionAnim.props.pattern ?? 'sequence'}
+                        options={[['sequence', ta('opt.stagger.sequence')], ['columns', ta('opt.stagger.columns')],
+                          ['rows', ta('opt.stagger.rows')], ['center', ta('opt.stagger.center')]]}
+                        onchange={(v) => setSectionAnimStr('pattern', v)} /></label>
+                  {/if}
                 {/if}
+                <label title={ta('tip.props.sectionHover')}>{ta('lbl.onHover')}
+                  <Dropdown value={sectionHover?.type ?? (sectionAnim && !isEntrance(sectionAnim) ? sectionAnim.type : '')}
+                    options={HOVER_OPTIONS}
+                    onchange={(v) => setSectionHover(v || null)} /></label>
+              {:else}
+                <p class="panel-hint">{ta('hint.props.empty')}</p>
+              {/if}
+            </div>
+          {:else if activePanel === 'footer'}
+            <div class="panel-body">
+              <label class="gridmenu-snap" title={ta('tip.footer.show')}>
+                <input type="checkbox" checked={Boolean(siteDraft.footer?.show)}
+                  onchange={(e) => footerMutate('footer', (f) => { f.show = e.target.checked; })} />
+                {ta('lbl.showFooter')}
+              </label>
 
-                <div class="ctl-row palhead">
-                  {#if dualMode}<span class="mini-label">{ta('lbl.light')}</span>{/if}
-                  <button type="button" class="chip" class:accent={stdMode === 'light'}
-                    title={ta('tip.theme.defaultScheme')} onclick={() => setThemeScheme('light')}>{ta('common.standard')}</button>
-                </div>
-                <div class="palcells">
-                  {#each PALETTE_KEYS as [key, full, short] (key)}
-                    <div class="palcol">
-                      <ColorPicker value={siteDraft.theme.tokens.color[key] ?? paletteFallback(key, lightPal)}
-                        tokens={themeSwatches()} label={full} onchange={(hex) => setColorToken(key, hex)} />
-                      <span class="palcap">{short}</span>
-                      <b class="palhex">{themeHex(siteDraft.theme.tokens.color[key] ?? paletteFallback(key, lightPal), lightPal)}</b>
-                    </div>
-                  {/each}
-                </div>
-
-                {#if dualMode}
-                  <div class="ctl-row palhead">
-                    <span class="mini-label">{ta('lbl.dark')}</span>
-                    <button type="button" class="chip" class:accent={stdMode === 'dark'}
-                      title={ta('tip.theme.darkDefault')} onclick={() => setThemeScheme('dark')}>{ta('common.standard')}</button>
-                  </div>
-                  <div class="palcells" class:autopal={altAuto}>
-                    {#each PALETTE_KEYS as [key, full, short] (key)}
-                      <div class="palcol">
-                        <ColorPicker value={siteDraft.theme.alt.tokens.color[key] ?? darkPal[key] ?? paletteFallback(key, darkPal)}
-                          tokens={themeSwatches()} label={ta('theme.darkColorLabel', { name: full })} onchange={(hex) => setAltColorToken(key, hex)} />
-                        <span class="palcap">{short}</span>
-                        <b class="palhex">{themeHex(siteDraft.theme.alt.tokens.color[key] ?? darkPal[key] ?? paletteFallback(key, darkPal), darkPal)}</b>
-                      </div>
+              {#if siteDraft.footer?.show}
+                <details class="group">
+                  <summary>{ta('group.showOnPages')}</summary>
+                  <div class="group-items">
+                    {#each siteDraft.pages ?? [] as pg (pg.id)}
+                      <label class="gridmenu-snap" title={ta('tip.footer.hideOnPage')}>
+                        <input type="checkbox"
+                          checked={!(siteDraft.footer?.hideOn ?? []).includes(pg.id)}
+                          onchange={(e) => toggleFooterOnPage(pg.id, e.target.checked)} />
+                        {pg.title || pg.id}
+                      </label>
                     {/each}
                   </div>
-                {/if}
-
-                <!-- Auto for the text on accent: no token in either mode, the browser
-                     picks black or white against the accent (contrast-color()). Its own
-                     row below both palettes, since it applies to light and dark alike. -->
-                <div class="ctl-row palauto-row" title={ta('tip.theme.accentTextAuto')}>
-                  <span class="mini-label ctl-name">{ta('palette.accentText')}</span>
-                  <button type="button" class="chip palauto" class:accent={accentTextAuto}
-                    onclick={() => setAccentTextAuto(!accentTextAuto)}>{ta('opt.auto')}</button>
-                </div>
-
-                <div class="theme-previews">
-                  {@render themePreview(lightPal, dualMode ? ta('lbl.light') : '')}
-                  {#if dualMode}{@render themePreview(darkPal, ta('lbl.dark'))}{/if}
-                </div>
-
-                <details class="group">
-                  <summary>{ta('group.typography')}</summary>
-                  <div class="group-items">
-                    <label>{ta('lbl.headings')}
-                      <Dropdown value={siteDraft.theme.tokens.font.heading} options={fontOptions('heading')}
-                        onchange={(v) => setFontToken('heading', v)} /></label>
-                    <label>{ta('lbl.bodyText')}
-                      <Dropdown value={siteDraft.theme.tokens.font.body} options={fontOptions('body')}
-                        onchange={(v) => setFontToken('body', v)} /></label>
-                    <div class="sample typo-sample">
-                      <div class="ts-h" style="font-family:{siteDraft.theme.tokens.font.heading}">{ta('preview.heading')}</div>
-                      <div class="ts-b" style="font-family:{siteDraft.theme.tokens.font.body}">{ta('preview.bodySample')}</div>
-                    </div>
-                  </div>
                 </details>
+              {/if}
 
-                <details class="group">
-                  <summary>{ta('group.shape')}</summary>
-                  <div class="group-items">
-                    <div class="sample form-prev" style="--r-sm:{siteDraft.theme.tokens.radius.sm};--r-md:{siteDraft.theme.tokens.radius.md}">
-                      <span class="fp-btn">{ta('preview.button')}</span>
-                      <span class="fp-card">{ta('preview.card')}</span>
-                    </div>
-                    <label class="ctl-row">{ta('lbl.smallCorners')}<span class="gridmenu-value">{siteDraft.theme.tokens.radius.sm}</span></label>
-                    <input type="range" min="0" max="24" step="1" value={radiusNum(siteDraft.theme.tokens.radius.sm)}
-                      oninput={(e) => setRadiusPx('sm', Number(e.target.value))} />
-                    <label class="ctl-row">{ta('lbl.largeCorners')}<span class="gridmenu-value">{siteDraft.theme.tokens.radius.md}</span></label>
-                    <input type="range" min="0" max="40" step="1" value={radiusNum(siteDraft.theme.tokens.radius.md)}
-                      oninput={(e) => setRadiusPx('md', Number(e.target.value))} /></div>
-                </details>
-              </div>
-            {:else if activePanel === 'blocks'}
-              <div class="panel-body" class:locked={viewMode === 'mobile'}
-                title={viewMode === 'mobile' ? ta('tip.blocks.mobileLocked') : undefined}>
-                <input type="text" bind:value={blockSearch}
-                  placeholder={ta('canvas.searchBlocks')} title={ta('canvas.searchBlocks')} />
-                {#if blockSearch.trim()}
-                  <!-- An active search shows a flat, ranked hit list instead
-                       of the groups. -->
-                  {#each searchBlockItems(panelBlockItems(), blockSearch, (item) => item.label) as item (item.label)}
-                    {#if item.act === 'image'}
-                      <label class="ghost filepick" title={ta('tip.webpAuto')}>
-                        {item.label}
-                        <input type="file" accept="image/*" onchange={addImage} />
-                      </label>
-                    {:else if item.act === 'galleryImages'}
-                      <label class="ghost filepick" title={ta('tip.blocks.galleryImages')}>
-                        {item.label}
-                        <input type="file" accept="image/*" multiple onchange={addGalleryBlock} />
-                      </label>
-                    {:else}
-                      <button class="ghost" onclick={() => runPanelItem(item)}>{item.label}</button>
-                    {/if}
-                  {:else}
-                    <p class="panel-hint">{ta('canvas.searchEmpty')}</p>
-                  {/each}
-                {:else}
-                <details class="group">
-                  <summary>{ta('blocks.text')}</summary>
-                  <div class="group-items">
-                    <button class="ghost" onclick={() => addBlock('text')}>{ta('blocks.text')}</button>
-                    <button class="ghost" onclick={() => addBlock('text-box')}
-                      title={ta('tip.blocks.textBox')}>{ta('ui.textBox')}</button>
-                  </div>
-                </details>
-                <button class="ghost" onclick={() => addBlock('button')}>{ta('blocks.button')}</button>
-                <label class="ghost filepick" title={ta('tip.webpAuto')}>
-                  {ta('blocks.image')}
-                  <input type="file" accept="image/*" onchange={addImage} />
-                </label>
-                <button class="ghost" title={ta('tip.blocks.video')}
-                  onclick={() => addBlock('video')}>{ta('blocks.video')}</button>
-                <button class="ghost" title={ta('tip.blocks.icon')}
-                  onclick={() => addBlock('icon')}>{ta('blocks.icon')}</button>
-                <button class="ghost" title={ta('tip.blocks.map')}
-                  onclick={() => addBlock('map')}>{ta('blocks.map')}</button>
-                <button class="ghost" title={ta('tip.blocks.form')}
-                  onclick={() => addBlock('form')}>{ta('blocks.form')}</button>
-                <button class="ghost" title={ta('tip.blocks.collection')}
-                  onclick={() => addBlock('collection')}>{ta('blocks.collection')}</button>
-                <button class="ghost" title={ta('tip.blocks.faq')}
-                  onclick={() => addBlock('faq')}>{ta('blocks.faq')}</button>
-                <button class="ghost" title={ta('tip.blocks.timeline')}
-                  onclick={() => addBlock('timeline')}>{ta('blocks.timeline')}</button>
-                <button class="ghost" title={ta('tip.blocks.quote')}
-                  onclick={() => addBlock('quote')}>{ta('blocks.quote')}</button>
-                <button class="ghost" title={ta('tip.blocks.stats')}
-                  onclick={() => addBlock('stats')}>{ta('blocks.stats')}</button>
-                <button class="ghost" title={ta('tip.blocks.table')}
-                  onclick={() => addBlock('table')}>{ta('blocks.table')}</button>
-                <button class="ghost" title={ta('tip.blocks.share')}
-                  onclick={() => addBlock('share')}>{ta('blocks.share')}</button>
-                <button class="ghost" title={ta('tip.blocks.countdown')}
-                  onclick={() => addBlock('countdown')}>{ta('blocks.countdown')}</button>
-                <button class="ghost" title={ta('tip.blocks.audio')}
-                  onclick={() => addBlock('audio')}>{ta('blocks.audio')}</button>
-                <button class="ghost" title={ta('tip.blocks.product')}
-                  onclick={() => addBlock('product')}>{ta('blocks.product')}</button>
-                <button class="ghost" title={ta('tip.blocks.cart')}
-                  onclick={() => addBlock('cart')}>{ta('blocks.cart')}</button>
-                <button class="ghost" title={ta('tip.blocks.checkout')}
-                  onclick={() => addBlock('checkout')}>{ta('blocks.checkout')}</button>
-                <details class="group">
-                  <summary>{ta('blocks.gallery')}</summary>
-                  <div class="group-items">
-                    <button class="ghost" title={ta('tip.blocks.gallery')}
-                      onclick={() => addBlock('gallery')}>{ta('ui.emptyGallery')}</button>
-                    <label class="ghost filepick" title={ta('tip.blocks.galleryImages')}>
-                      {ta('ui.galleryWithImages')}
-                      <input type="file" accept="image/*" multiple onchange={addGalleryBlock} />
-                    </label>
-                  </div>
-                </details>
-                <details class="group">
-                  <summary>{ta('blocks.calendar')}</summary>
-                  <div class="group-items">
-                    <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar')}>{ta('calendar.viewList')}</button>
-                    <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-cards')}>{ta('calendar.viewCards')}</button>
-                    <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-month')}>{ta('calendar.viewMonth')}</button>
-                    <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-next')}>{ta('calendar.viewNext')}</button>
-                  </div>
-                </details>
-                <details class="group">
-                  <summary>{ta('group.shapes')}</summary>
-                  <div class="group-items">
-                    <button class="ghost" onclick={() => addBlock('shape-line')}>{ta('shape.line')}</button>
-                    <button class="ghost" onclick={() => addBlock('shape-arrow')}>{ta('shape.arrow')}</button>
-                    <button class="ghost" onclick={() => addBlock('shape-circle')}>{ta('shape.circle')}</button>
-                    <button class="ghost" onclick={() => addBlock('shape-rect')}>{ta('shape.rect')}</button>
-                    <button class="ghost" onclick={() => addBlock('shape-triangle')}>{ta('shape.triangle')}</button>
-                  </div>
-                </details>
-                {#if templateIds.some((id) => templateStores[id]?.data?.mal?.kind === 'blocks')}
-                  {@const blockGroupTemplates = templateIds.filter((id) => templateStores[id]?.data?.mal?.kind === 'blocks')}
-                  <details class="group">
-                    <summary>{ta('canvas.tabMyTemplates')}</summary>
-                    <div class="group-items">
-                      {#each blockGroupTemplates as id (id)}
-                        <button class="ghost" title={ta('canvas.insertGroup')}
-                          onclick={() => bridge?.sendInsertTemplate(id)}>{templateStores[id].data.mal.name}</button>
-                      {/each}
-                    </div>
-                  </details>
-                {/if}
-                {#if pluginBlocks.length}
-                  <details class="group">
-                    <summary>{ta('panel.plugins')}</summary>
-                    <div class="group-items">
-                      {#each pluginBlocks as entry (entry.type)}
-                        {#if entry.variants?.length}
-                          <details class="group">
-                            <summary>{entry.label}</summary>
-                            <div class="group-items">
-                              {#each entry.variants as variant (variant.label)}
-                                <button class="ghost" title={ta('tip.blocks.fromPlugin', { plugin: entry.plugin })}
-                                  onclick={() => addPluginBlock(entry, variant.props)}>{variant.label}</button>
-                              {/each}
-                            </div>
-                          </details>
-                        {:else}
-                          <button class="ghost" title={ta('tip.blocks.fromPlugin', { plugin: entry.plugin })}
-                            onclick={() => addPluginBlock(entry)}>{entry.label}</button>
-                        {/if}
-                      {/each}
-                    </div>
-                  </details>
-                {/if}
-                {/if}
-              </div>
-            {:else if activePanel === 'grid'}
-              <div class="panel-body">
-                <label>
-                  {ta('lbl.gridSize')}
-                  <span class="gridmenu-value">{grid.size} px</span>
-                </label>
-                <input type="range" min="4" max="96" step="2" value={grid.size}
-                  oninput={(e) => setGrid('size', Number(e.target.value))} />
-                <label class="gridmenu-snap">
-                  <input type="checkbox" checked={grid.snap !== false}
-                    onchange={(e) => setGrid('snap', e.target.checked)} />
-                  {ta('lbl.gridSnap')}
-                </label>
-
-              </div>
-            {:else if activePanel === 'properties'}
-              <div class="panel-body">
-                {#if selectedBlock}
-                  <p class="panel-strong">{ta('blocks.suffix', { label: BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type })}</p>
-                  {@render blockPropsUI()}
-                {:else if activeSectionId}
-                  <p class="panel-strong">{ta('lbl.section')}</p>
-                  <label title={ta('hint.props.minHeight')}>{ta('lbl.minHeight')}
-                    <input class="token-input" value={sectionMinHeight} placeholder={ta('ph.minHeight')}
-                      onchange={(e) => setSectionHeight(e.target.value)} /></label>
-                  <hr class="gridmenu-divider" />
-                  <label class="gridmenu-snap">
-                    <input type="checkbox" checked={sectionGrid !== null}
-                      onchange={(e) => toggleSectionGrid(e.target.checked)} />
-                    {ta('lbl.sectionGrid')}
-                  </label>
-                  {#if sectionGrid}
-                    <label>
-                      {ta('lbl.gridSize')}
-                      <span class="gridmenu-value">{sectionGrid.size} px</span>
-                    </label>
-                    <input type="range" min="4" max="96" step="2" value={sectionGrid.size}
-                      oninput={(e) => setSectionGrid('size', Number(e.target.value))} />
-                  {/if}
-
-                  <hr class="gridmenu-divider" />
-                  <p class="panel-strong" title={ta('tip.props.sectionTheme')}>{ta('lbl.sectionTheme')}</p>
-                  <div class="rs-grid">
-                    {#each [['', 'common.standard'], ...Object.entries(SECTION_THEME_LABELS)] as [id, key] (id)}
-                      {@const c = sectionThemeSample(id)}
-                      <button class="rs-card" class:on={sectionTheme === id}
-                        title={ta('tip.props.sectionTheme')} onclick={() => setSectionTheme(id)}>
-                        <span class="rs-sample" style="background: {c.bg}">
-                          <i class="rs-line" style="background: {c.text}"></i>
-                          <i class="rs-chip" style="background: {c.surface}"></i>
-                          <i class="rs-dot" style="background: {c.accent}"></i>
-                        </span>
-                        <span class="rs-name">{ta(key)}</span>
+              <details class="group">
+                <summary>{ta('group.startpoint')}</summary>
+                <div class="group-items">
+                  <div class="footer-tpick">
+                    {#each FOOTER_TEMPLATES as t (t.id)}
+                      <button class="footer-tp" title={ta('tip.footer.template', { label: t.label })}
+                        onclick={() => applyFooterTemplate(t.id)}>
+                        <span class="footer-tp-thumb">{@html footerThumb(t.thumb)}</span>
+                        <span class="footer-tp-name">{t.label}</span>
                       </button>
                     {/each}
                   </div>
-                  <label title={ta('tip.props.anchor')}>{ta('lbl.anchor')}
-                    <span class="row-tools">
-                      <span class="gridmenu-value">#{activeSectionId}</span>
-                      <button class="ghost row-tool" title={ta('tip.props.copyAnchor')}
-                        onclick={() => navigator.clipboard?.writeText(`#${activeSectionId}`)}>{@html ICONS.copy}</button>
-                    </span></label>
+                </div>
+              </details>
 
-                  <hr class="gridmenu-divider" />
-                  <p class="panel-strong">{ta('lbl.background')}</p>
-                  {@render backgroundLayers(sectionBgCtx, sectionBg)}
-
-                  <hr class="gridmenu-divider" />
-                  <label title={ta('tip.props.sectionAnim')}>{ta('lbl.animIn')}
-                    <Dropdown value={isEntrance(sectionAnim) ? sectionAnim.type : ''}
-                      options={ENTRANCE_OPTIONS}
-                      onchange={(v) => setSectionAnimation(v || null)} /></label>
-                  {#if isEntrance(sectionAnim)}
-                    <label>{ta('lbl.durationMs')}
-                      <input type="number" min="100" max="4000" step="100" value={sectionAnim.props.duration}
-                        onchange={(e) => setSectionAnimProp('duration', Number(e.target.value))} /></label>
-                    <label>{ta('lbl.delayMs')}
-                      <input type="number" min="0" max="4000" step="100" value={sectionAnim.props.delay ?? 0}
-                        onchange={(e) => setSectionAnimProp('delay', Number(e.target.value))} /></label>
-                    {#if sectionAnim.type === 'stagger'}
-                      <label title={ta('tip.props.staggerEffect')}>{ta('lbl.staggerEffect')}
-                        <Dropdown value={sectionAnim.props.effect ?? 'slide-up'}
-                          options={[['fade-in', ta('anim.fadeIn')], ['slide-up', ta('anim.slideUp')], ['zoom-in', ta('anim.zoomIn')]]}
-                          onchange={(v) => setSectionAnimStr('effect', v)} /></label>
-                      <label title={ta('tip.props.staggerStep')}>{ta('lbl.stepMs')}
-                        <input type="number" min="0" max="1000" step="10" value={sectionAnim.props.step ?? 90}
-                          onchange={(e) => setSectionAnimProp('step', Number(e.target.value))} /></label>
-                      <label title={ta('tip.props.staggerPattern')}>{ta('lbl.pattern')}
-                        <Dropdown value={sectionAnim.props.pattern ?? 'sequence'}
-                          options={[['sequence', ta('opt.stagger.sequence')], ['columns', ta('opt.stagger.columns')],
-                            ['rows', ta('opt.stagger.rows')], ['center', ta('opt.stagger.center')]]}
-                          onchange={(v) => setSectionAnimStr('pattern', v)} /></label>
+              <details class="group">
+                <summary>{ta('group.brand')}</summary>
+                <div class="group-items">
+                  <label title={ta('tip.footer.brandTitle')}>{ta('lbl.title')}
+                    <input value={siteDraft.footer?.brand?.title ?? ''} placeholder={ta('ph.footer.brandTitle')}
+                      oninput={(e) => setFooterBrand('title', e.target.value)} /></label>
+                  <label title={ta('tip.footer.tagline')}>{ta('lbl.tagline')}
+                    <input value={siteDraft.footer?.brand?.tagline ?? ''}
+                      oninput={(e) => setFooterBrand('tagline', e.target.value)} /></label>
+                  <label title={ta('tip.footer.brandMode')}>{ta('lbl.brandMode')}
+                    <Dropdown value={siteDraft.footer?.brand?.mode ?? 'text'}
+                      options={[['text', ta('blocks.text')], ['image', ta('opt.brand.image')], ['both', ta('opt.brand.both')]]}
+                      onchange={(v) => setFooterBrandMode(v)} /></label>
+                  {#if (siteDraft.footer?.brand?.mode ?? 'text') !== 'text'}
+                    <span class="toolbar-row">
+                      <label class="ghost filepick tb-grow" title={ta('tip.webpAutoPublish')}>
+                        {siteDraft.footer?.brand?.logo ? ta('ui.changeLogo') : ta('ui.uploadLogo')}
+                        <input type="file" accept="image/*" onchange={uploadFooterLogo} />
+                      </label>
+                      {#if siteDraft.footer?.brand?.logo}
+                        <button class="ghost row-tool" title={ta('tip.footer.removeLogo')}
+                          onclick={removeFooterLogo}>{@html ICONS.cross}</button>
+                      {/if}
+                    </span>
+                    {#if siteDraft.footer?.brand?.logo}
+                      <label>{ta('lbl.logoHeight')}
+                        <span class="gridmenu-value">{siteDraft.footer?.brand?.logoHeight ?? 40} px</span></label>
+                      <input type="range" min="16" max="160" step="2" value={siteDraft.footer?.brand?.logoHeight ?? 40}
+                        oninput={(e) => setFooterLogoHeight(e.target.value)} />
                     {/if}
                   {/if}
-                  <label title={ta('tip.props.sectionHover')}>{ta('lbl.onHover')}
-                    <Dropdown value={sectionHover?.type ?? (sectionAnim && !isEntrance(sectionAnim) ? sectionAnim.type : '')}
-                      options={HOVER_OPTIONS}
-                      onchange={(v) => setSectionHover(v || null)} /></label>
-                {:else}
-                  <p class="panel-hint">{ta('hint.props.empty')}</p>
-                {/if}
-              </div>
-            {:else if activePanel === 'footer'}
-              <div class="panel-body">
-                <label class="gridmenu-snap" title={ta('tip.footer.show')}>
-                  <input type="checkbox" checked={Boolean(siteDraft.footer?.show)}
-                    onchange={(e) => footerMutate('footer', (f) => { f.show = e.target.checked; })} />
-                  {ta('lbl.showFooter')}
-                </label>
+                </div>
+              </details>
 
-                {#if siteDraft.footer?.show}
-                  <details class="group">
-                    <summary>{ta('group.showOnPages')}</summary>
+              <details class="group">
+                <summary>{ta('group.columns')}</summary>
+                <div class="group-items">
+                  {#each siteDraft.footer?.columns ?? [] as col, ci}
+                    <div class="nav-row">
+                      <input value={col.title} title={ta('tip.footer.columnTitle')}
+                        oninput={(e) => setFooterColumnTitle(ci, e.target.value)} />
+                      <span class="row-tools">
+                        <button class="ghost row-tool" title={ta('tip.footer.addLink')}
+                          onclick={() => addFooterLink(ci)}>{@html ICONS.plus}</button>
+                        <button class="ghost row-tool" onclick={() => moveFooterColumn(ci, -1)} disabled={ci === 0}>{@html ICONS.up}</button>
+                        <button class="ghost row-tool" onclick={() => moveFooterColumn(ci, 1)}
+                          disabled={ci === siteDraft.footer.columns.length - 1}>{@html ICONS.down}</button>
+                        <button class="ghost row-tool" title={ta('tip.footer.removeColumn')}
+                          onclick={() => removeFooterColumn(ci)}>{@html ICONS.cross}</button>
+                      </span>
+                    </div>
+                    {#each col.links ?? [] as link, li}
+                      <div class="nav-row nav-sub-row">
+                        <input value={link.label} title={ta('tip.linkLabel')}
+                          oninput={(e) => setFooterLinkLabel(ci, li, e.target.value)} />
+                        <span class="row-tools">
+                          <button class="ghost row-tool" onclick={() => moveFooterLink(ci, li, -1)} disabled={li === 0}>{@html ICONS.up}</button>
+                          <button class="ghost row-tool" onclick={() => moveFooterLink(ci, li, 1)}
+                            disabled={li === col.links.length - 1}>{@html ICONS.down}</button>
+                          <button class="ghost row-tool" title={ta('tip.removeLink')}
+                            onclick={() => removeFooterLink(ci, li)}>{@html ICONS.cross}</button>
+                        </span>
+                        <span class="nav-target">
+                          <Dropdown value={link.page ?? '__href'} title={ta('tip.linkTarget')}
+                            options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')]]}
+                            onchange={(v) => setFooterLinkTarget(ci, li, v)} />
+                        </span>
+                        {#if !link.page}
+                          <input class="nav-target" value={link.href ?? ''} placeholder={ta('ph.hrefAnchor')}
+                            title={ta('tip.hrefAnchor')}
+                            onchange={(e) => setFooterLinkHref(ci, li, e.target.value)} />
+                        {/if}
+                      </div>
+                    {/each}
+                  {/each}
+                  <button class="ghost action" onclick={addFooterColumn}>{ta('ui.addColumn')}</button>
+                  <label title={ta('tip.footer.columnsAlign')}>{ta('lbl.splitColumnAlign')}
+                    <Dropdown value={siteDraft.footer?.columnsAlign ?? 'left'}
+                      options={[['left', ta('common.left')], ['center', ta('common.center')]]}
+                      onchange={(v) => setFooterColumnsAlign(v)} /></label>
+                </div>
+              </details>
+
+              <details class="group">
+                <summary>{ta('group.social')}</summary>
+                <div class="group-items">
+                  {#each siteDraft.footer?.social ?? [] as soc, si}
+                    <div class="nav-row">
+                      <span class="nav-line">
+                        <span class="footer-soc-preview" aria-hidden="true">{@html iconSvg(soc.icon) || ''}</span>
+                        <Dropdown value={soc.icon} title={ta('blocks.icon')} options={SOCIAL_ICON_OPTIONS}
+                          onchange={(v) => setFooterSocialIcon(si, v)} />
+                      </span>
+                      <span class="row-tools">
+                        <button class="ghost row-tool" onclick={() => moveFooterSocial(si, -1)} disabled={si === 0}>{@html ICONS.up}</button>
+                        <button class="ghost row-tool" onclick={() => moveFooterSocial(si, 1)}
+                          disabled={si === siteDraft.footer.social.length - 1}>{@html ICONS.down}</button>
+                        <button class="ghost row-tool" title={ta('tip.removeLink')}
+                          onclick={() => removeFooterSocial(si)}>{@html ICONS.cross}</button>
+                      </span>
+                      <input class="nav-target" value={soc.url} placeholder={ta('ph.hrefMailto')}
+                        onchange={(e) => setFooterSocialUrl(si, e.target.value)} />
+                    </div>
+                  {/each}
+                  <button class="ghost action" onclick={addFooterSocial}>{ta('ui.addSocial')}</button>
+                </div>
+              </details>
+
+              <details class="group">
+                <summary>{ta('group.cta')}</summary>
+                <div class="group-items">
+                  <label class="gridmenu-snap" title={ta('tip.footer.cta')}>
+                    <input type="checkbox" checked={Boolean(siteDraft.footer?.cta)}
+                      onchange={(e) => enableFooterCta(e.target.checked)} />
+                    {ta('lbl.showCta')}
+                  </label>
+                  {#if siteDraft.footer?.cta}
+                    {@const cta = siteDraft.footer.cta}
+                    <label title={ta('tip.footer.ctaKind')}>{ta('common.type')}
+                      <Dropdown value={cta.kind ?? 'button'}
+                        options={[['button', ta('opt.cta.button')], ['newsletter', ta('opt.cta.newsletter')]]}
+                        onchange={(v) => setFooterCtaField('kind', v)} /></label>
+                    <label class="gridmenu-snap" title={ta('tip.footer.ctaBig')}>
+                      <input type="checkbox" checked={cta.big === true}
+                        onchange={(e) => setFooterCtaField('big', e.target.checked)} />
+                      {ta('lbl.bigCentered')}
+                    </label>
+                    <label title={ta('tip.footer.ctaHeading')}>{ta('lbl.heading')}
+                      <input value={cta.heading ?? ''} placeholder={ta('ph.footer.ctaHeading')}
+                        oninput={(e) => setFooterCtaField('heading', e.target.value)} /></label>
+                    <label title={ta('tip.footer.ctaSub')}>{ta('lbl.subText')}
+                      <input value={cta.sub ?? ''}
+                        oninput={(e) => setFooterCtaField('sub', e.target.value)} /></label>
+                    <label title={ta('tip.footer.ctaLabel')}>{ta('lbl.buttonText')}
+                      <input value={cta.label ?? ''} placeholder={ta('ph.footer.ctaLabel')}
+                        oninput={(e) => setFooterCtaField('label', e.target.value)} /></label>
+                    {#if (cta.kind ?? 'button') === 'button'}
+                      <label title={ta('tip.footer.ctaTarget')}>{ta('lbl.buttonTarget')}
+                        <Dropdown value={cta.page ?? '__href'}
+                          options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHrefMailto')]]}
+                          onchange={(v) => setFooterCtaTarget(v)} /></label>
+                      {#if !cta.page}
+                        <input value={cta.href ?? ''} placeholder={ta('ph.hrefMailtoAnchor')}
+                          title={ta('tip.hrefAnchor')}
+                          onchange={(e) => setFooterCtaField('href', e.target.value)} />
+                      {/if}
+                    {:else}
+                      <label title={ta('tip.footer.ctaEndpoint')}>{ta('lbl.newsletterEndpoint')}
+                        <input value={cta.endpoint ?? ''} placeholder={ta('ph.endpoint')}
+                          onchange={(e) => setFooterCtaField('endpoint', e.target.value)} /></label>
+                      <label title={ta('tip.footer.ctaRecipient')}>{ta('lbl.recipientFallback')}
+                        <input value={cta.recipient ?? ''} placeholder={ta('ph.email')}
+                          onchange={(e) => setFooterCtaField('recipient', e.target.value)} /></label>
+                      <label title={ta('tip.footer.ctaSuccess')}>{ta('lbl.confirmation')}
+                        <input value={cta.success ?? ''} placeholder={ta('ph.footer.ctaSuccess')}
+                          oninput={(e) => setFooterCtaField('success', e.target.value)} /></label>
+                    {/if}
+                  {/if}
+                </div>
+              </details>
+
+              <details class="group">
+                <summary>{ta('group.linkRow')}</summary>
+                <div class="group-items">
+                  {@render footerLinkList('linkRow', siteDraft.footer?.linkRow ?? [])}
+                  <button class="ghost action" onclick={() => addFooterListLink('linkRow')}>{ta('ui.addRowLink')}</button>
+                </div>
+              </details>
+
+              <details class="group">
+                <summary>{ta('group.appearance')}</summary>
+                <div class="group-items">
+                  {#if siteDraft.footer?.cta?.big !== true}
+                    <label title={ta('tip.footer.align')}>{ta('lbl.align')}
+                      <Dropdown value={siteDraft.footer?.align ?? 'left'}
+                        options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
+                        onchange={(v) => footerMutate('footer', (f) => { f.align = v; })} /></label>
+                    <hr class="gridmenu-divider" />
+                  {/if}
+                  <p class="panel-strong">{ta('lbl.background')}</p>
+                  {@render backgroundLayers(footerBgCtx, siteDraft.footer?.background?.layers ?? [])}
+                </div>
+              </details>
+
+              <details class="group">
+                <summary>{ta('group.baseline')}</summary>
+                <div class="group-items">
+                  <label title={ta('tip.footer.copyright')}>{ta('lbl.copyright')}
+                    <input value={siteDraft.footer?.copyright ?? ''} placeholder={ta('ph.footer.copyright')}
+                      oninput={(e) => setFooterCopyright(e.target.value)} /></label>
+                  <p class="panel-strong">{ta('lbl.baselineLinks')}</p>
+                  {@render footerLinkList('baseline', siteDraft.footer?.baseline ?? [])}
+                  <button class="ghost action" onclick={() => addFooterListLink('baseline')}>{ta('ui.addBaselineLink')}</button>
+                </div>
+              </details>
+            </div>
+          {:else if activePanel === 'collections'}
+            <div class="panel-body">
+              {#if collectionIds.length}
+                <label>{ta('blocks.collection')}
+                  <Dropdown value={activeCollection ?? ''}
+                    options={[['', ta('common.choose')], ...collectionIds.map((id) => [id, collectionsView[id]?.name ?? id])]}
+                    onchange={(v) => (activeCollection = v || null)} /></label>
+              {/if}
+              {#if activeCollection && collectionsView[activeCollection]}
+                {@const collectionView = collectionsView[activeCollection]}
+                <span class="toolbar-row">
+                  <button class="ghost action" onclick={() => addCollectionEntry(activeCollection)}>{ta('ui.addEntry')}</button>
+                  <button class="ghost action" title={ta('tip.collections.exportCsv')}
+                    onclick={() => exportCollectionCsv(activeCollection)}>{ta('ui.exportCsv')}</button>
+                  <label class="ghost filepick" title={ta('tip.collections.importCsv')}>
+                    {ta('ui.importCsv')}
+                    <input type="file" accept=".csv,text/csv" onchange={(e) => importCollectionCsv(activeCollection, e)} />
+                  </label>
+                  <button class="ghost row-tool" title={ta('tip.collections.deleteCollection')}
+                    onclick={() => removeCollection(activeCollection)}>{@html ICONS.cross}</button>
+                </span>
+                {#each collectionView.entries as entry, i (entry.id)}
+                  <!-- Collapsible entry: title + date in the summary, the fields inside (panel space) -->
+                  <details class="group collection-entry">
+                    <summary>{plainTitle(entry.title)}{collectionView.kind === 'products'
+                      ? (entry.price != null ? ` · ${entry.price}` : '')
+                      : (entry.date ? ` · ${entry.date}` : '')}</summary>
                     <div class="group-items">
-                      {#each siteDraft.pages ?? [] as pg (pg.id)}
-                        <label class="gridmenu-snap" title={ta('tip.footer.hideOnPage')}>
-                          <input type="checkbox"
-                            checked={!(siteDraft.footer?.hideOn ?? []).includes(pg.id)}
-                            onchange={(e) => toggleFooterOnPage(pg.id, e.target.checked)} />
-                          {pg.title || pg.id}
+                      <span class="toolbar-row">
+                        <input value={entry.title} title={ta('lbl.title')}
+                          onchange={(e) => setEntryField(activeCollection, entry.id, 'title', e.target.value || ta('ui.untitled'))} />
+                        <span class="row-tools">
+                          <button class="ghost row-tool" onclick={() => moveEntry(activeCollection, i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
+                          <button class="ghost row-tool" onclick={() => moveEntry(activeCollection, i, 1)}
+                            disabled={i === collectionView.entries.length - 1}>{@html ICONS.down}</button>
+                          <button class="ghost row-tool" title={ta('tip.collections.deleteEntry')}
+                            onclick={() => removeEntry(activeCollection, entry.id)}>{@html ICONS.cross}</button>
+                        </span>
+                      </span>
+                      {#if collectionView.kind !== 'products'}
+                        <label>{ta('lbl.date')}
+                          <input type="date" value={entry.date ?? ''}
+                            onchange={(e) => setEntryField(activeCollection, entry.id, 'date', e.target.value)} /></label>
+                      {/if}
+                      <textarea rows="3" placeholder={ta('ph.collections.text')}
+                        value={entry.text ?? ''}
+                        onchange={(e) => setEntryField(activeCollection, entry.id, 'text', e.target.value)}></textarea>
+                      {#if collectionView.kind !== 'products'}
+                        <label>{ta('lbl.link')}
+                          <input value={entry.href ?? ''} placeholder={ta('ph.collections.href')}
+                            onchange={(e) => setEntryField(activeCollection, entry.id, 'href', e.target.value)} /></label>
+                      {/if}
+                      <span class="toolbar-row">
+                        <label class="ghost filepick">
+                          {entry.image ? ta('ui.changeImage') : ta('ui.addImage')}
+                          <input type="file" accept="image/*" onchange={(e) => setEntryImage(activeCollection, entry.id, e)} />
                         </label>
+                        {#if entry.image}
+                          <img class="site-icon-preview" src={entry.image} alt="" />
+                          <button class="ghost row-tool" title={ta('tip.removeImage')}
+                            onclick={() => setEntryField(activeCollection, entry.id, 'image', '')}>{@html ICONS.cross}</button>
+                        {/if}
+                      </span>
+                      {#if collectionView.kind === 'products'}
+                        <!-- The product fields (the shop): price, member price, badge, sizes and colors. -->
+                        <label>{ta('lbl.price')}
+                          <input type="number" min="0" step="0.01" value={entry.price ?? ''}
+                            onchange={(e) => setEntryField(activeCollection, entry.id, 'price', e.target.value === '' ? '' : Number(e.target.value))} /></label>
+                        <label title={ta('tip.entry.memberPrice')}>{ta('lbl.memberPrice')}
+                          <input type="number" min="0" step="0.01" value={entry.memberPrice ?? ''}
+                            onchange={(e) => setEntryField(activeCollection, entry.id, 'memberPrice', e.target.value === '' ? '' : Number(e.target.value))} /></label>
+                        <label title={ta('tip.entry.badge')}>{ta('lbl.productBadge')}
+                          <input value={entry.badge ?? ''}
+                            onchange={(e) => setEntryField(activeCollection, entry.id, 'badge', e.target.value)} /></label>
+                        <label title={ta('tip.entry.sizes')}>{ta('lbl.sizes')}
+                          <input value={(entry.sizes ?? []).join(', ')} placeholder={ta('ph.sizes')}
+                            onchange={(e) => setEntrySizes(activeCollection, entry.id, e.target.value)} /></label>
+                        {#each entry.colors ?? [] as color, ci (ci)}
+                          <span class="toolbar-row">
+                            <input value={color.name} placeholder={ta('ph.colorName')}
+                              onchange={(e) => setEntryColor(activeCollection, entry.id, ci, 'name', e.target.value)} />
+                            <label class="ghost filepick">
+                              {color.image ? ta('ui.changeImage') : ta('ui.addImage')}
+                              <input type="file" accept="image/*" onchange={(e) => setEntryColorImage(activeCollection, entry.id, ci, e)} />
+                            </label>
+                            {#if color.image}
+                              <img class="site-icon-preview" src={color.image} alt="" />
+                            {/if}
+                            <button class="ghost row-tool" onclick={() => removeEntryColor(activeCollection, entry.id, ci)}>{@html ICONS.cross}</button>
+                          </span>
+                        {/each}
+                        <button class="ghost action" title={ta('tip.entry.colors')}
+                          onclick={() => addEntryColor(activeCollection, entry.id)}>{ta('ui.addColor')}</button>
+                      {/if}
+                    </div>
+                  </details>
+                {/each}
+                {#if !collectionView.entries.length}
+                  <p class="panel-hint">{ta('hint.collections.empty')}</p>
+                {/if}
+                <hr class="gridmenu-divider" />
+              {/if}
+              <label>{ta('lbl.newCollectionName')}
+                <input bind:value={newCollectionName} placeholder={ta('ph.collections.name')}
+                  onkeydown={(e) => e.key === 'Enter' && addCollection()} /></label>
+              <label>{ta('common.type')}
+                <Dropdown value={newCollectionKind}
+                  options={COLLECTION_KINDS}
+                  onchange={(v) => (newCollectionKind = v)} /></label>
+              <button class="ghost action" onclick={addCollection} disabled={!newCollectionName.trim()}>{ta('ui.createCollection')}</button>
+            </div>
+          {:else if activePanel === 'plugins'}
+            <div class="panel-body">
+              {#if !knownPlugins().length}
+                <p class="panel-hint">{ta('hint.plugins.empty')}</p>
+              {/if}
+              {#each knownPlugins() as id (id)}
+                {@const info = pluginInfo[id]}
+                {@const enabled = (pluginsView?.enabled ?? []).includes(id)}
+                <div class="plugin-row" class:plugin-broken={info?.errors?.length}>
+                  <span class="plugin-head">
+                    <span class="plugin-name">{info?.names?.[currentAdminLang()] ?? info?.name ?? id}</span>
+                    {#if info?.version}<span class="plugin-meta">v{info.version}</span>{/if}
+                    <span class="row-tools">
+                      <label class="gridmenu-snap plugin-toggle" title={enabled ? ta('tip.plugins.on') : ta('tip.plugins.off')}>
+                        <input type="checkbox" checked={enabled} disabled={Boolean(info?.errors?.length)}
+                          onchange={(e) => setPluginEnabled(id, e.target.checked)} />
+                        {enabled ? ta('ui.on') : ta('ui.off')}
+                      </label>
+                      <button class="ghost row-tool" title={ta('tip.plugins.remove')}
+                        onclick={() => removePlugin(id)}>{@html ICONS.cross}</button>
+                    </span>
+                  </span>
+                  {#if info?.errors?.length}
+                    <p class="panel-hint plugin-warn">{info.errors.join('; ')}</p>
+                  {:else if info && !info.satisfied}
+                    <p class="panel-hint plugin-warn">{ta('plugin.engineMismatch', { required: info.requiresEngine, current: pluginEngine })}</p>
+                  {:else if info?.csp && cspMissing(info.csp).length}
+                    <p class="panel-hint plugin-warn">{ta('plugin.cspNeeded', { list: cspMissing(info.csp).join(', ') })}</p>
+                  {/if}
+                  {#if info?.languages?.length}
+                    <p class="panel-hint">{ta('plugin.languages', { list: info.languages.map((l) => l.name).join(', ') })}</p>
+                  {/if}
+                </div>
+              {/each}
+              {#if pluginsFound.length}
+                <hr class="gridmenu-divider" />
+                <p class="panel-strong">{ta('hint.plugins.found')}</p>
+                {#each pluginsFound as id (id)}
+                  <div class="plugin-row">
+                    <span class="plugin-head">
+                      <span class="plugin-name">{pluginInfo[id]?.names?.[currentAdminLang()] ?? pluginInfo[id]?.name ?? id}</span>
+                      {#if pluginInfo[id]?.version}<span class="plugin-meta">v{pluginInfo[id].version}</span>{/if}
+                      <span class="row-tools">
+                        <button class="ghost row-tool" title={ta('tip.plugins.addFound')}
+                          onclick={() => addFoundPlugin(id)}>{@html ICONS.right}</button>
+                      </span>
+                    </span>
+                  </div>
+                {/each}
+              {/if}
+              {#if pluginDiscovery === 'ok'}
+                {#if !pluginsFound.length}
+                  <p class="panel-hint">{ta('hint.plugins.autoDiscover')}</p>
+                {/if}
+              {:else}
+                <!-- Fallback when repo discovery is unavailable (local server / not logged in) -->
+                <hr class="gridmenu-divider" />
+                <input placeholder={ta('ph.plugins.folder')} bind:value={newPluginId}
+                  onkeydown={(e) => e.key === 'Enter' && addPlugin()} />
+                <button class="ghost action" onclick={addPlugin} disabled={!newPluginId.trim()}>{ta('ui.addPlugin')}</button>
+                {#if pluginError}
+                  <p class="panel-hint plugin-warn">{pluginError}</p>
+                {/if}
+              {/if}
+            </div>
+          {:else if activePanel === 'history'}
+            <div class="panel-body">
+              {#if historyList === null}
+                <p class="panel-hint">{ta('hint.history.loading')}</p>
+              {:else}
+                {#if historyError}
+                  <p class="panel-hint">{historyError}</p>
+                {/if}
+                {#if historyList.length > 0}
+                  <button class="ghost" onclick={revertLast}
+                    disabled={historyBusy || !auth?.allowed}
+                    title={auth?.allowed ? ta('tip.history.revert') : ta('tip.history.needsAccess')}>
+                    {ta('ui.revertLast')}
+                  </button>
+                  {#each historyList as c, i (c.sha)}
+                    <div class="history-row" class:head={i === 0}>
+                      <span class="history-msg" title={c.sha}>{c.message}</span>
+                      <span class="history-meta">
+                        {c.author}{c.date ? ` · ${historyDate.format(new Date(c.date))}` : ''}
+                      </span>
+                    </div>
+                  {/each}
+                {/if}
+              {/if}
+            </div>
+          {:else if activePanel === 'update'}
+            <div class="panel-body">
+              {#if updateBusy && !updateInfo}
+                <p class="panel-hint">{ta('update.checking')}</p>
+              {:else if updateError}
+                <p class="panel-hint">{updateError}</p>
+                <button class="ghost" onclick={loadUpdateCheck}>{ta('update.retry')}</button>
+              {:else if updateInfo}
+                <div class="update-versions">
+                  <span class="update-from">{ta('update.current', { version: updateInfo.current })}</span>
+                  {#if !updateInfo.upToDate}
+                    <span class="update-arrow">{@html ICONS.right}</span>
+                    <span class="badge">{updateInfo.target}</span>
+                  {/if}
+                </div>
+                {#if updateInfo.upToDate}
+                  <p class="panel-hint">{ta('update.upToDate')}</p>
+                {:else}
+                  <p class="update-summary">{ta('update.summary', {
+                    writes: updateInfo.changes.filter((c) => c.action === 'write').length,
+                    deletes: updateInfo.changes.filter((c) => c.action === 'delete').length,
+                  })}</p>
+                  {#if updateInfo.notes}
+                    <details class="group">
+                      <summary>{ta('update.aboutVersion', { target: updateInfo.target })}</summary>
+                      <div class="group-items">
+                        <p class="update-notes">{updateInfo.notes}</p>
+                      </div>
+                    </details>
+                  {/if}
+                  {#if updateInfo.headers?.upstream}
+                    <details class="group">
+                      <summary title={ta('update.headersManual')}>
+                        <span class="update-warn">{@html ICONS.warn}</span> {ta('update.headersTitle')}
+                      </summary>
+                      <div class="group-items">
+                        <pre class="update-headers">{updateInfo.headers.upstream}</pre>
+                      </div>
+                    </details>
+                  {/if}
+                  <!-- Hand-edited engine files must be seen without a click;
+                       the rest of the atom group is one combined swap and
+                       is folded away. -->
+                  {#each updateInfo.changes.filter((c) => c.atom && c.conflict) as c (c.path)}
+                    <div class="update-row">
+                      <span class="update-path" title={c.path}>{c.path}</span>
+                      <span class="update-flags">
+                        {#if c.action === 'delete'}<span class="chip">{ta('update.actionDelete')}</span>{/if}
+                        <span class="update-warn" title={ta(`update.conflict.${c.conflict}`)}>{@html ICONS.warn}</span>
+                      </span>
+                    </div>
+                  {/each}
+                  <details class="group">
+                    <summary title={ta('update.atomGroup.title')}>
+                      {ta('update.atomTitle')} · {updateInfo.changes.filter((c) => c.atom).length}
+                    </summary>
+                    <div class="group-items">
+                      {#each updateInfo.changes.filter((c) => c.atom && !c.conflict) as c (c.path)}
+                        <div class="update-row">
+                          <span class="update-path" title={c.path}>{c.path}</span>
+                          {#if c.action === 'delete'}<span class="chip">{ta('update.actionDelete')}</span>{/if}
+                        </div>
                       {/each}
                     </div>
                   </details>
-                {/if}
-
-                <details class="group">
-                  <summary>{ta('group.startpoint')}</summary>
-                  <div class="group-items">
-                    <div class="footer-tpick">
-                      {#each FOOTER_TEMPLATES as t (t.id)}
-                        <button class="footer-tp" title={ta('tip.footer.template', { label: t.label })}
-                          onclick={() => applyFooterTemplate(t.id)}>
-                          <span class="footer-tp-thumb">{@html footerThumb(t.thumb)}</span>
-                          <span class="footer-tp-name">{t.label}</span>
-                        </button>
-                      {/each}
+                  {#if updateInfo.changes.some((c) => !c.atom)}
+                    <div class="ctl-row update-opt-head">
+                      <p class="panel-strong">{ta('update.optionalTitle')}</p>
+                      <span class="mini-label">{ta('update.keepMine')}</span>
                     </div>
-                  </div>
-                </details>
-
-                <details class="group">
-                  <summary>{ta('group.brand')}</summary>
-                  <div class="group-items">
-                    <label title={ta('tip.footer.brandTitle')}>{ta('lbl.title')}
-                      <input value={siteDraft.footer?.brand?.title ?? ''} placeholder={ta('ph.footer.brandTitle')}
-                        oninput={(e) => setFooterBrand('title', e.target.value)} /></label>
-                    <label title={ta('tip.footer.tagline')}>{ta('lbl.tagline')}
-                      <input value={siteDraft.footer?.brand?.tagline ?? ''}
-                        oninput={(e) => setFooterBrand('tagline', e.target.value)} /></label>
-                    <label title={ta('tip.footer.brandMode')}>{ta('lbl.brandMode')}
-                      <Dropdown value={siteDraft.footer?.brand?.mode ?? 'text'}
-                        options={[['text', ta('blocks.text')], ['image', ta('opt.brand.image')], ['both', ta('opt.brand.both')]]}
-                        onchange={(v) => setFooterBrandMode(v)} /></label>
-                    {#if (siteDraft.footer?.brand?.mode ?? 'text') !== 'text'}
-                      <span class="toolbar-row">
-                        <label class="ghost filepick tb-grow" title={ta('tip.webpAutoPublish')}>
-                          {siteDraft.footer?.brand?.logo ? ta('ui.changeLogo') : ta('ui.uploadLogo')}
-                          <input type="file" accept="image/*" onchange={uploadFooterLogo} />
-                        </label>
-                        {#if siteDraft.footer?.brand?.logo}
-                          <button class="ghost row-tool" title={ta('tip.footer.removeLogo')}
-                            onclick={removeFooterLogo}>{@html ICONS.cross}</button>
-                        {/if}
-                      </span>
-                      {#if siteDraft.footer?.brand?.logo}
-                        <label>{ta('lbl.logoHeight')}
-                          <span class="gridmenu-value">{siteDraft.footer?.brand?.logoHeight ?? 40} px</span></label>
-                        <input type="range" min="16" max="160" step="2" value={siteDraft.footer?.brand?.logoHeight ?? 40}
-                          oninput={(e) => setFooterLogoHeight(e.target.value)} />
-                      {/if}
-                    {/if}
-                  </div>
-                </details>
-
-                <details class="group">
-                  <summary>{ta('group.columns')}</summary>
-                  <div class="group-items">
-                    {#each siteDraft.footer?.columns ?? [] as col, ci}
-                      <div class="nav-row">
-                        <input value={col.title} title={ta('tip.footer.columnTitle')}
-                          oninput={(e) => setFooterColumnTitle(ci, e.target.value)} />
-                        <span class="row-tools">
-                          <button class="ghost row-tool" title={ta('tip.footer.addLink')}
-                            onclick={() => addFooterLink(ci)}>{@html ICONS.plus}</button>
-                          <button class="ghost row-tool" onclick={() => moveFooterColumn(ci, -1)} disabled={ci === 0}>{@html ICONS.up}</button>
-                          <button class="ghost row-tool" onclick={() => moveFooterColumn(ci, 1)}
-                            disabled={ci === siteDraft.footer.columns.length - 1}>{@html ICONS.down}</button>
-                          <button class="ghost row-tool" title={ta('tip.footer.removeColumn')}
-                            onclick={() => removeFooterColumn(ci)}>{@html ICONS.cross}</button>
-                        </span>
-                      </div>
-                      {#each col.links ?? [] as link, li}
-                        <div class="nav-row nav-sub-row">
-                          <input value={link.label} title={ta('tip.linkLabel')}
-                            oninput={(e) => setFooterLinkLabel(ci, li, e.target.value)} />
-                          <span class="row-tools">
-                            <button class="ghost row-tool" onclick={() => moveFooterLink(ci, li, -1)} disabled={li === 0}>{@html ICONS.up}</button>
-                            <button class="ghost row-tool" onclick={() => moveFooterLink(ci, li, 1)}
-                              disabled={li === col.links.length - 1}>{@html ICONS.down}</button>
-                            <button class="ghost row-tool" title={ta('tip.removeLink')}
-                              onclick={() => removeFooterLink(ci, li)}>{@html ICONS.cross}</button>
-                          </span>
-                          <span class="nav-target">
-                            <Dropdown value={link.page ?? '__href'} title={ta('tip.linkTarget')}
-                              options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHref')]]}
-                              onchange={(v) => setFooterLinkTarget(ci, li, v)} />
-                          </span>
-                          {#if !link.page}
-                            <input class="nav-target" value={link.href ?? ''} placeholder={ta('ph.hrefAnchor')}
-                              title={ta('tip.hrefAnchor')}
-                              onchange={(e) => setFooterLinkHref(ci, li, e.target.value)} />
-                          {/if}
-                        </div>
-                      {/each}
-                    {/each}
-                    <button class="ghost action" onclick={addFooterColumn}>{ta('ui.addColumn')}</button>
-                    <label title={ta('tip.footer.columnsAlign')}>{ta('lbl.splitColumnAlign')}
-                      <Dropdown value={siteDraft.footer?.columnsAlign ?? 'left'}
-                        options={[['left', ta('common.left')], ['center', ta('common.center')]]}
-                        onchange={(v) => setFooterColumnsAlign(v)} /></label>
-                  </div>
-                </details>
-
-                <details class="group">
-                  <summary>{ta('group.social')}</summary>
-                  <div class="group-items">
-                    {#each siteDraft.footer?.social ?? [] as soc, si}
-                      <div class="nav-row">
-                        <span class="nav-line">
-                          <span class="footer-soc-preview" aria-hidden="true">{@html iconSvg(soc.icon) || ''}</span>
-                          <Dropdown value={soc.icon} title={ta('blocks.icon')} options={SOCIAL_ICON_OPTIONS}
-                            onchange={(v) => setFooterSocialIcon(si, v)} />
-                        </span>
-                        <span class="row-tools">
-                          <button class="ghost row-tool" onclick={() => moveFooterSocial(si, -1)} disabled={si === 0}>{@html ICONS.up}</button>
-                          <button class="ghost row-tool" onclick={() => moveFooterSocial(si, 1)}
-                            disabled={si === siteDraft.footer.social.length - 1}>{@html ICONS.down}</button>
-                          <button class="ghost row-tool" title={ta('tip.removeLink')}
-                            onclick={() => removeFooterSocial(si)}>{@html ICONS.cross}</button>
-                        </span>
-                        <input class="nav-target" value={soc.url} placeholder={ta('ph.hrefMailto')}
-                          onchange={(e) => setFooterSocialUrl(si, e.target.value)} />
-                      </div>
-                    {/each}
-                    <button class="ghost action" onclick={addFooterSocial}>{ta('ui.addSocial')}</button>
-                  </div>
-                </details>
-
-                <details class="group">
-                  <summary>{ta('group.cta')}</summary>
-                  <div class="group-items">
-                    <label class="gridmenu-snap" title={ta('tip.footer.cta')}>
-                      <input type="checkbox" checked={Boolean(siteDraft.footer?.cta)}
-                        onchange={(e) => enableFooterCta(e.target.checked)} />
-                      {ta('lbl.showCta')}
-                    </label>
-                    {#if siteDraft.footer?.cta}
-                      {@const cta = siteDraft.footer.cta}
-                      <label title={ta('tip.footer.ctaKind')}>{ta('common.type')}
-                        <Dropdown value={cta.kind ?? 'button'}
-                          options={[['button', ta('opt.cta.button')], ['newsletter', ta('opt.cta.newsletter')]]}
-                          onchange={(v) => setFooterCtaField('kind', v)} /></label>
-                      <label class="gridmenu-snap" title={ta('tip.footer.ctaBig')}>
-                        <input type="checkbox" checked={cta.big === true}
-                          onchange={(e) => setFooterCtaField('big', e.target.checked)} />
-                        {ta('lbl.bigCentered')}
-                      </label>
-                      <label title={ta('tip.footer.ctaHeading')}>{ta('lbl.heading')}
-                        <input value={cta.heading ?? ''} placeholder={ta('ph.footer.ctaHeading')}
-                          oninput={(e) => setFooterCtaField('heading', e.target.value)} /></label>
-                      <label title={ta('tip.footer.ctaSub')}>{ta('lbl.subText')}
-                        <input value={cta.sub ?? ''}
-                          oninput={(e) => setFooterCtaField('sub', e.target.value)} /></label>
-                      <label title={ta('tip.footer.ctaLabel')}>{ta('lbl.buttonText')}
-                        <input value={cta.label ?? ''} placeholder={ta('ph.footer.ctaLabel')}
-                          oninput={(e) => setFooterCtaField('label', e.target.value)} /></label>
-                      {#if (cta.kind ?? 'button') === 'button'}
-                        <label title={ta('tip.footer.ctaTarget')}>{ta('lbl.buttonTarget')}
-                          <Dropdown value={cta.page ?? '__href'}
-                            options={[...siteDraft.pages.map((p) => [p.id, p.title]), ['__href', ta('opt.linkHrefMailto')]]}
-                            onchange={(v) => setFooterCtaTarget(v)} /></label>
-                        {#if !cta.page}
-                          <input value={cta.href ?? ''} placeholder={ta('ph.hrefMailtoAnchor')}
-                            title={ta('tip.hrefAnchor')}
-                            onchange={(e) => setFooterCtaField('href', e.target.value)} />
-                        {/if}
-                      {:else}
-                        <label title={ta('tip.footer.ctaEndpoint')}>{ta('lbl.newsletterEndpoint')}
-                          <input value={cta.endpoint ?? ''} placeholder={ta('ph.endpoint')}
-                            onchange={(e) => setFooterCtaField('endpoint', e.target.value)} /></label>
-                        <label title={ta('tip.footer.ctaRecipient')}>{ta('lbl.recipientFallback')}
-                          <input value={cta.recipient ?? ''} placeholder={ta('ph.email')}
-                            onchange={(e) => setFooterCtaField('recipient', e.target.value)} /></label>
-                        <label title={ta('tip.footer.ctaSuccess')}>{ta('lbl.confirmation')}
-                          <input value={cta.success ?? ''} placeholder={ta('ph.footer.ctaSuccess')}
-                            oninput={(e) => setFooterCtaField('success', e.target.value)} /></label>
-                      {/if}
-                    {/if}
-                  </div>
-                </details>
-
-                <details class="group">
-                  <summary>{ta('group.linkRow')}</summary>
-                  <div class="group-items">
-                    {@render footerLinkList('linkRow', siteDraft.footer?.linkRow ?? [])}
-                    <button class="ghost action" onclick={() => addFooterListLink('linkRow')}>{ta('ui.addRowLink')}</button>
-                  </div>
-                </details>
-
-                <details class="group">
-                  <summary>{ta('group.appearance')}</summary>
-                  <div class="group-items">
-                    {#if siteDraft.footer?.cta?.big !== true}
-                      <label title={ta('tip.footer.align')}>{ta('lbl.align')}
-                        <Dropdown value={siteDraft.footer?.align ?? 'left'}
-                          options={[['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
-                          onchange={(v) => footerMutate('footer', (f) => { f.align = v; })} /></label>
-                      <hr class="gridmenu-divider" />
-                    {/if}
-                    <p class="panel-strong">{ta('lbl.background')}</p>
-                    {@render backgroundLayers(footerBgCtx, siteDraft.footer?.background?.layers ?? [])}
-                  </div>
-                </details>
-
-                <details class="group">
-                  <summary>{ta('group.baseline')}</summary>
-                  <div class="group-items">
-                    <label title={ta('tip.footer.copyright')}>{ta('lbl.copyright')}
-                      <input value={siteDraft.footer?.copyright ?? ''} placeholder={ta('ph.footer.copyright')}
-                        oninput={(e) => setFooterCopyright(e.target.value)} /></label>
-                    <p class="panel-strong">{ta('lbl.baselineLinks')}</p>
-                    {@render footerLinkList('baseline', siteDraft.footer?.baseline ?? [])}
-                    <button class="ghost action" onclick={() => addFooterListLink('baseline')}>{ta('ui.addBaselineLink')}</button>
-                  </div>
-                </details>
-              </div>
-            {:else if activePanel === 'collections'}
-              <div class="panel-body">
-                {#if collectionIds.length}
-                  <label>{ta('blocks.collection')}
-                    <Dropdown value={activeCollection ?? ''}
-                      options={[['', ta('common.choose')], ...collectionIds.map((id) => [id, collectionsView[id]?.name ?? id])]}
-                      onchange={(v) => (activeCollection = v || null)} /></label>
-                {/if}
-                {#if activeCollection && collectionsView[activeCollection]}
-                  {@const collectionView = collectionsView[activeCollection]}
-                  <span class="toolbar-row">
-                    <button class="ghost action" onclick={() => addCollectionEntry(activeCollection)}>{ta('ui.addEntry')}</button>
-                    <button class="ghost action" title={ta('tip.collections.exportCsv')}
-                      onclick={() => exportCollectionCsv(activeCollection)}>{ta('ui.exportCsv')}</button>
-                    <label class="ghost filepick" title={ta('tip.collections.importCsv')}>
-                      {ta('ui.importCsv')}
-                      <input type="file" accept=".csv,text/csv" onchange={(e) => importCollectionCsv(activeCollection, e)} />
-                    </label>
-                    <button class="ghost row-tool" title={ta('tip.collections.deleteCollection')}
-                      onclick={() => removeCollection(activeCollection)}>{@html ICONS.cross}</button>
-                  </span>
-                  {#each collectionView.entries as entry, i (entry.id)}
-                    <!-- Collapsible entry: title + date in the summary, the fields inside (panel space) -->
-                    <details class="group collection-entry">
-                      <summary>{plainTitle(entry.title)}{collectionView.kind === 'products'
-                        ? (entry.price != null ? ` · ${entry.price}` : '')
-                        : (entry.date ? ` · ${entry.date}` : '')}</summary>
-                      <div class="group-items">
-                        <span class="toolbar-row">
-                          <input value={entry.title} title={ta('lbl.title')}
-                            onchange={(e) => setEntryField(activeCollection, entry.id, 'title', e.target.value || ta('ui.untitled'))} />
-                          <span class="row-tools">
-                            <button class="ghost row-tool" onclick={() => moveEntry(activeCollection, i, -1)} disabled={i === 0}>{@html ICONS.up}</button>
-                            <button class="ghost row-tool" onclick={() => moveEntry(activeCollection, i, 1)}
-                              disabled={i === collectionView.entries.length - 1}>{@html ICONS.down}</button>
-                            <button class="ghost row-tool" title={ta('tip.collections.deleteEntry')}
-                              onclick={() => removeEntry(activeCollection, entry.id)}>{@html ICONS.cross}</button>
-                          </span>
-                        </span>
-                        {#if collectionView.kind !== 'products'}
-                          <label>{ta('lbl.date')}
-                            <input type="date" value={entry.date ?? ''}
-                              onchange={(e) => setEntryField(activeCollection, entry.id, 'date', e.target.value)} /></label>
-                        {/if}
-                        <textarea rows="3" placeholder={ta('ph.collections.text')}
-                          value={entry.text ?? ''}
-                          onchange={(e) => setEntryField(activeCollection, entry.id, 'text', e.target.value)}></textarea>
-                        {#if collectionView.kind !== 'products'}
-                          <label>{ta('lbl.link')}
-                            <input value={entry.href ?? ''} placeholder={ta('ph.collections.href')}
-                              onchange={(e) => setEntryField(activeCollection, entry.id, 'href', e.target.value)} /></label>
-                        {/if}
-                        <span class="toolbar-row">
-                          <label class="ghost filepick">
-                            {entry.image ? ta('ui.changeImage') : ta('ui.addImage')}
-                            <input type="file" accept="image/*" onchange={(e) => setEntryImage(activeCollection, entry.id, e)} />
-                          </label>
-                          {#if entry.image}
-                            <img class="site-icon-preview" src={entry.image} alt="" />
-                            <button class="ghost row-tool" title={ta('tip.removeImage')}
-                              onclick={() => setEntryField(activeCollection, entry.id, 'image', '')}>{@html ICONS.cross}</button>
-                          {/if}
-                        </span>
-                        {#if collectionView.kind === 'products'}
-                          <!-- The product fields (the shop): price, member price, badge, sizes and colors. -->
-                          <label>{ta('lbl.price')}
-                            <input type="number" min="0" step="0.01" value={entry.price ?? ''}
-                              onchange={(e) => setEntryField(activeCollection, entry.id, 'price', e.target.value === '' ? '' : Number(e.target.value))} /></label>
-                          <label title={ta('tip.entry.memberPrice')}>{ta('lbl.memberPrice')}
-                            <input type="number" min="0" step="0.01" value={entry.memberPrice ?? ''}
-                              onchange={(e) => setEntryField(activeCollection, entry.id, 'memberPrice', e.target.value === '' ? '' : Number(e.target.value))} /></label>
-                          <label title={ta('tip.entry.badge')}>{ta('lbl.productBadge')}
-                            <input value={entry.badge ?? ''}
-                              onchange={(e) => setEntryField(activeCollection, entry.id, 'badge', e.target.value)} /></label>
-                          <label title={ta('tip.entry.sizes')}>{ta('lbl.sizes')}
-                            <input value={(entry.sizes ?? []).join(', ')} placeholder={ta('ph.sizes')}
-                              onchange={(e) => setEntrySizes(activeCollection, entry.id, e.target.value)} /></label>
-                          {#each entry.colors ?? [] as color, ci (ci)}
-                            <span class="toolbar-row">
-                              <input value={color.name} placeholder={ta('ph.colorName')}
-                                onchange={(e) => setEntryColor(activeCollection, entry.id, ci, 'name', e.target.value)} />
-                              <label class="ghost filepick">
-                                {color.image ? ta('ui.changeImage') : ta('ui.addImage')}
-                                <input type="file" accept="image/*" onchange={(e) => setEntryColorImage(activeCollection, entry.id, ci, e)} />
-                              </label>
-                              {#if color.image}
-                                <img class="site-icon-preview" src={color.image} alt="" />
-                              {/if}
-                              <button class="ghost row-tool" onclick={() => removeEntryColor(activeCollection, entry.id, ci)}>{@html ICONS.cross}</button>
-                            </span>
-                          {/each}
-                          <button class="ghost action" title={ta('tip.entry.colors')}
-                            onclick={() => addEntryColor(activeCollection, entry.id)}>{ta('ui.addColor')}</button>
-                        {/if}
-                      </div>
-                    </details>
-                  {/each}
-                  {#if !collectionView.entries.length}
-                    <p class="panel-hint">{ta('hint.collections.empty')}</p>
-                  {/if}
-                  <hr class="gridmenu-divider" />
-                {/if}
-                <label>{ta('lbl.newCollectionName')}
-                  <input bind:value={newCollectionName} placeholder={ta('ph.collections.name')}
-                    onkeydown={(e) => e.key === 'Enter' && addCollection()} /></label>
-                <label>{ta('common.type')}
-                  <Dropdown value={newCollectionKind}
-                    options={COLLECTION_KINDS}
-                    onchange={(v) => (newCollectionKind = v)} /></label>
-                <button class="ghost action" onclick={addCollection} disabled={!newCollectionName.trim()}>{ta('ui.createCollection')}</button>
-              </div>
-            {:else if activePanel === 'plugins'}
-              <div class="panel-body">
-                {#if !knownPlugins().length}
-                  <p class="panel-hint">{ta('hint.plugins.empty')}</p>
-                {/if}
-                {#each knownPlugins() as id (id)}
-                  {@const info = pluginInfo[id]}
-                  {@const enabled = (pluginsView?.enabled ?? []).includes(id)}
-                  <div class="plugin-row" class:plugin-broken={info?.errors?.length}>
-                    <span class="plugin-head">
-                      <span class="plugin-name">{info?.names?.[currentAdminLang()] ?? info?.name ?? id}</span>
-                      {#if info?.version}<span class="plugin-meta">v{info.version}</span>{/if}
-                      <span class="row-tools">
-                        <label class="gridmenu-snap plugin-toggle" title={enabled ? ta('tip.plugins.on') : ta('tip.plugins.off')}>
-                          <input type="checkbox" checked={enabled} disabled={Boolean(info?.errors?.length)}
-                            onchange={(e) => setPluginEnabled(id, e.target.checked)} />
-                          {enabled ? ta('ui.on') : ta('ui.off')}
-                        </label>
-                        <button class="ghost row-tool" title={ta('tip.plugins.remove')}
-                          onclick={() => removePlugin(id)}>{@html ICONS.cross}</button>
-                      </span>
-                    </span>
-                    {#if info?.errors?.length}
-                      <p class="panel-hint plugin-warn">{info.errors.join('; ')}</p>
-                    {:else if info && !info.satisfied}
-                      <p class="panel-hint plugin-warn">{ta('plugin.engineMismatch', { required: info.requiresEngine, current: pluginEngine })}</p>
-                    {:else if info?.csp && cspMissing(info.csp).length}
-                      <p class="panel-hint plugin-warn">{ta('plugin.cspNeeded', { list: cspMissing(info.csp).join(', ') })}</p>
-                    {/if}
-                    {#if info?.languages?.length}
-                      <p class="panel-hint">{ta('plugin.languages', { list: info.languages.map((l) => l.name).join(', ') })}</p>
-                    {/if}
-                  </div>
-                {/each}
-                {#if pluginsFound.length}
-                  <hr class="gridmenu-divider" />
-                  <p class="panel-strong">{ta('hint.plugins.found')}</p>
-                  {#each pluginsFound as id (id)}
-                    <div class="plugin-row">
-                      <span class="plugin-head">
-                        <span class="plugin-name">{pluginInfo[id]?.names?.[currentAdminLang()] ?? pluginInfo[id]?.name ?? id}</span>
-                        {#if pluginInfo[id]?.version}<span class="plugin-meta">v{pluginInfo[id].version}</span>{/if}
-                        <span class="row-tools">
-                          <button class="ghost row-tool" title={ta('tip.plugins.addFound')}
-                            onclick={() => addFoundPlugin(id)}>{@html ICONS.right}</button>
-                        </span>
-                      </span>
-                    </div>
-                  {/each}
-                {/if}
-                {#if pluginDiscovery === 'ok'}
-                  {#if !pluginsFound.length}
-                    <p class="panel-hint">{ta('hint.plugins.autoDiscover')}</p>
-                  {/if}
-                {:else}
-                  <!-- Fallback when repo discovery is unavailable (local server / not logged in) -->
-                  <hr class="gridmenu-divider" />
-                  <input placeholder={ta('ph.plugins.folder')} bind:value={newPluginId}
-                    onkeydown={(e) => e.key === 'Enter' && addPlugin()} />
-                  <button class="ghost action" onclick={addPlugin} disabled={!newPluginId.trim()}>{ta('ui.addPlugin')}</button>
-                  {#if pluginError}
-                    <p class="panel-hint plugin-warn">{pluginError}</p>
-                  {/if}
-                {/if}
-              </div>
-            {:else if activePanel === 'history'}
-              <div class="panel-body">
-                {#if historyList === null}
-                  <p class="panel-hint">{ta('hint.history.loading')}</p>
-                {:else}
-                  {#if historyError}
-                    <p class="panel-hint">{historyError}</p>
-                  {/if}
-                  {#if historyList.length > 0}
-                    <button class="ghost" onclick={revertLast}
-                      disabled={historyBusy || !auth?.allowed}
-                      title={auth?.allowed ? ta('tip.history.revert') : ta('tip.history.needsAccess')}>
-                      {ta('ui.revertLast')}
-                    </button>
-                    {#each historyList as c, i (c.sha)}
-                      <div class="history-row" class:head={i === 0}>
-                        <span class="history-msg" title={c.sha}>{c.message}</span>
-                        <span class="history-meta">
-                          {c.author}{c.date ? ` · ${historyDate.format(new Date(c.date))}` : ''}
-                        </span>
-                      </div>
-                    {/each}
-                  {/if}
-                {/if}
-              </div>
-            {:else if activePanel === 'update'}
-              <div class="panel-body">
-                {#if updateBusy && !updateInfo}
-                  <p class="panel-hint">{ta('update.checking')}</p>
-                {:else if updateError}
-                  <p class="panel-hint">{updateError}</p>
-                  <button class="ghost" onclick={loadUpdateCheck}>{ta('update.retry')}</button>
-                {:else if updateInfo}
-                  <div class="update-versions">
-                    <span class="update-from">{ta('update.current', { version: updateInfo.current })}</span>
-                    {#if !updateInfo.upToDate}
-                      <span class="update-arrow">{@html ICONS.right}</span>
-                      <span class="badge">{updateInfo.target}</span>
-                    {/if}
-                  </div>
-                  {#if updateInfo.upToDate}
-                    <p class="panel-hint">{ta('update.upToDate')}</p>
-                  {:else}
-                    <p class="update-summary">{ta('update.summary', {
-                      writes: updateInfo.changes.filter((c) => c.action === 'write').length,
-                      deletes: updateInfo.changes.filter((c) => c.action === 'delete').length,
-                    })}</p>
-                    {#if updateInfo.notes}
-                      <details class="group">
-                        <summary>{ta('update.aboutVersion', { target: updateInfo.target })}</summary>
-                        <div class="group-items">
-                          <p class="update-notes">{updateInfo.notes}</p>
-                        </div>
-                      </details>
-                    {/if}
-                    {#if updateInfo.headers?.upstream}
-                      <details class="group">
-                        <summary title={ta('update.headersManual')}>
-                          <span class="update-warn">{@html ICONS.warn}</span> {ta('update.headersTitle')}
-                        </summary>
-                        <div class="group-items">
-                          <pre class="update-headers">{updateInfo.headers.upstream}</pre>
-                        </div>
-                      </details>
-                    {/if}
-                    <!-- Hand-edited engine files must be seen without a click;
-                         the rest of the atom group is one combined swap and
-                         is folded away. -->
-                    {#each updateInfo.changes.filter((c) => c.atom && c.conflict) as c (c.path)}
+                    {#each updateInfo.changes.filter((c) => !c.atom) as c (c.path)}
                       <div class="update-row">
-                        <span class="update-path" title={c.path}>{c.path}</span>
+                        <span class="update-path" class:skipped={updateSkip.has(c.path)} title={c.path}>{c.path}</span>
                         <span class="update-flags">
                           {#if c.action === 'delete'}<span class="chip">{ta('update.actionDelete')}</span>{/if}
-                          <span class="update-warn" title={ta(`update.conflict.${c.conflict}`)}>{@html ICONS.warn}</span>
+                          {#if c.conflict}<span class="update-warn" title={ta(`update.conflict.${c.conflict}`)}>{@html ICONS.warn}</span>{/if}
+                          <input type="checkbox" checked={updateSkip.has(c.path)}
+                            onchange={() => toggleUpdateSkip(c.path)}
+                            title={ta('update.keepMine.title')} aria-label={ta('update.keepMine')} />
                         </span>
                       </div>
                     {/each}
-                    <details class="group">
-                      <summary title={ta('update.atomGroup.title')}>
-                        {ta('update.atomTitle')} · {updateInfo.changes.filter((c) => c.atom).length}
-                      </summary>
-                      <div class="group-items">
-                        {#each updateInfo.changes.filter((c) => c.atom && !c.conflict) as c (c.path)}
-                          <div class="update-row">
-                            <span class="update-path" title={c.path}>{c.path}</span>
-                            {#if c.action === 'delete'}<span class="chip">{ta('update.actionDelete')}</span>{/if}
-                          </div>
-                        {/each}
-                      </div>
-                    </details>
-                    {#if updateInfo.changes.some((c) => !c.atom)}
-                      <div class="ctl-row update-opt-head">
-                        <p class="panel-strong">{ta('update.optionalTitle')}</p>
-                        <span class="mini-label">{ta('update.keepMine')}</span>
-                      </div>
-                      {#each updateInfo.changes.filter((c) => !c.atom) as c (c.path)}
-                        <div class="update-row">
-                          <span class="update-path" class:skipped={updateSkip.has(c.path)} title={c.path}>{c.path}</span>
-                          <span class="update-flags">
-                            {#if c.action === 'delete'}<span class="chip">{ta('update.actionDelete')}</span>{/if}
-                            {#if c.conflict}<span class="update-warn" title={ta(`update.conflict.${c.conflict}`)}>{@html ICONS.warn}</span>{/if}
-                            <input type="checkbox" checked={updateSkip.has(c.path)}
-                              onchange={() => toggleUpdateSkip(c.path)}
-                              title={ta('update.keepMine.title')} aria-label={ta('update.keepMine')} />
-                          </span>
-                        </div>
-                      {/each}
-                    {/if}
-                    <button class="primary update-run" onclick={runUpdate}
-                      disabled={updateBusy || !auth?.allowed}
-                      title={auth?.allowed ? ta('update.run.title') : ta('tip.history.needsAccess')}>
-                      {ta('update.run', { target: updateInfo.target })}
-                    </button>
                   {/if}
+                  <button class="primary update-run" onclick={runUpdate}
+                    disabled={updateBusy || !auth?.allowed}
+                    title={auth?.allowed ? ta('update.run.title') : ta('tip.history.needsAccess')}>
+                    {ta('update.run', { target: updateInfo.target })}
+                  </button>
                 {/if}
-              </div>
-            {/if}
-          </aside>
-        {/if}
+              {/if}
+            </div>
+          {/if}
+        </aside>
       {/if}
 
       <div class="frame-wrap" class:mobile={viewMode === 'mobile'} class:pan={canPan} class:fold={targetH > 0} bind:this={frameWrapEl}>
@@ -9177,7 +9212,9 @@
     height: 100vh;
   }
 
-  .topbar.hidden {
+  .topbar.hidden,
+  .rail.hidden,
+  .panel.hidden {
     display: none;
   }
 

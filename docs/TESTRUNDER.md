@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.0.21): the image editor and the admin panels
+
+- [ ] Open the image editor at a strong preview zoom out and again zoomed in: the panel reads at the same size as the admin panels both times, and a tall panel scrolls instead of running off the page
+- [ ] With the image editor open, make the admin window wider: the crop grid stays on the image, and the panel stays beside it
+- [ ] Open a panel, open some folds, scroll down in it, go into Clean view and back: the same panel, the same folds and the same place in the list
+- [ ] Click in the page while in Clean view: nothing is selected, and the Properties panel is unchanged when you come back
+- [ ] Gear pop, «Paneler ved ny lasting» on «Husk det siste»: reload the admin and the last panel is open again; on «Start uten panel» it opens with none
+- [ ] The setting survives a reload, and switching to «Start uten panel» does not reopen the old panel later
+
 ### Testrunde-batch (0.7.0.20): the blocks, the guides and the drawn chrome
 
 - [ ] Insert a collection block on a page at the full content width, drag it towards the centre: it snaps exactly to the middle, with the centre guide showing; the same for a gallery and a product block

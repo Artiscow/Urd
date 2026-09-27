@@ -2306,9 +2306,17 @@ body.urd-chrome-off .urd-cp {
 
 /* The shared image editor (image-editor.js): a floating panel in preview mode */
 .urd-imged {
+  /* Counter-scaling (urd-zoom), as for the multi toolbar: the panel is
+     admin chrome and keeps the admin's size at any preview zoom. The
+     anchor is set by JS in viewport coordinates, so the origin is that
+     corner. */
+  transform: scale(var(--urd-chrome-scale, 1));
+  transform-origin: top left;
   position: fixed;
   z-index: 100002;
   width: 260px;
+  max-height: calc((100vh - 16px) / var(--urd-chrome-scale, 1));
+  overflow-y: auto;
   display: grid;
   gap: 8px;
   padding: 10px;

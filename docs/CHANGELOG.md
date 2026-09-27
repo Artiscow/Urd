@@ -27,6 +27,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.21 - The image editor and the admin panels - 27 September 2026
+
+- The image editor's panel shrank with the preview zoom: it is the only floating chrome in the preview without the counter-scale its twin `.urd-multi-toolbar` carries. It keeps the admin's size now (measured: 260 px of layout drawn at 330 px at zoom 1.27), with a max height and scrolling so a tall panel cannot run off a zoomed-out page, and the placement clamp measures the drawn box.
+- The crop grid stayed behind when the page got wider: it was re-measured only by a ResizeObserver on the image, which does not fire when the image merely moves. Widening the preview from 1700 to 2300 px slides the image 300 px sideways at an unchanged width; grid and panel are placed by one `place()` that a window resize also runs, and the editor's listeners hang off one AbortController.
+- Clean view closed the admin panels: the rail and the panel were unmounted, so all their folds came back closed. They are hidden instead, the way the top bar already is, and the panel's scroll position is carried across the round trip. A click in the preview while in Clean view also selected the block behind the hidden panels; the selection handler has the same `urd-chrome-off` guard as the marquee.
+- New setting in the gear pop, «Paneler ved ny lasting»: the admin reopens the panel you last had in front, or starts with none (`urd-admin-panels` and `urd-admin-panel-open` in localStorage, only the non-default stored).
+
 ### 0.7.0.20 - The blocks, the guides and the drawn chrome - 27 September 2026
 
 - A collection block could not be centred: at 90 % it is 81 of the content surface's 90 grid cells, an odd number, so snapping left it 8 px off centre either way, outside the guides' 5 px tolerance. The wide defaults are 88.89 % (80 cells), which puts the centred position exactly on a cell boundary; the gallery and product blocks carried the same width and the same defect.
