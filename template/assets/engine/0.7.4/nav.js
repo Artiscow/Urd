@@ -39,6 +39,16 @@ export function refreshNavScroll() {
   navScrollRefresh?.();
 }
 
+/** The storage key a dismissed strip is remembered under, keyed by the message. */
+const dismissKeyFor = (text) => `urd-announce-dismissed:${text}`;
+
+/** Forgets the dismissal of the site's announcement, so the strip returns at the next render. */
+export function clearAnnounceDismissal(site) {
+  const announce = announcementModel(site?.nav?.announcement, site?.pages);
+  if (!announce) return;
+  try { localStorage.removeItem(dismissKeyFor(announce.text)); } catch { /* storage may be unavailable */ }
+}
+
 // Side column on narrow windows: below 900px the menu renders as a REGULAR
 // top bar (effective variant bar) with horizontal items; the burger only
 // appears at the mobile breakpoint, as for the bar variant. A separate
@@ -89,13 +99,14 @@ export function renderNav(site, host) {
   // (--urd-announce-h, measured below), so the strip scrolls away and the
   // menu sticks alone. Hosts out of the flow (floating, overlay) are fixed
   // and keep the strip with the menu regardless.
-  // A dismissed strip stays away for the visitor as long as the message is
-  // the same (localStorage keyed by the text); the preview always shows it.
+  // A dismissed strip stays away as long as the message is the same
+  // (localStorage keyed by the text). The preview reads and writes the same
+  // key as the published page, so the editor shows what the visitor gets;
+  // the Kunngjøring panel has a control that clears it again.
   const announce = announcementModel(site.nav.announcement, site.pages);
-  const dismissKey = announce ? `urd-announce-dismissed:${announce.text}` : '';
-  const inPreview = document.body.classList.contains('urd-preview');
+  const dismissKey = announce ? dismissKeyFor(announce.text) : '';
   let dismissed = false;
-  if (announce?.dismiss && !inPreview) {
+  if (announce?.dismiss) {
     try { dismissed = localStorage.getItem(dismissKey) === '1'; } catch { dismissed = false; }
   }
   let announceEl = null;
@@ -119,9 +130,7 @@ export function renderNav(site, host) {
       cross.setAttribute('aria-label', t('nav.dismissAnnouncement'));
       cross.innerHTML = CROSS;
       cross.addEventListener('click', () => {
-        if (!inPreview) {
-          try { localStorage.setItem(dismissKey, '1'); } catch { /* storage may be unavailable */ }
-        }
+        try { localStorage.setItem(dismissKey, '1'); } catch { /* storage may be unavailable */ }
         announceEl.remove();
         announceEl = null;
         setNavH();
@@ -149,7 +158,7 @@ export function renderNav(site, host) {
     // kept in the back-forward cache) built the strip before the visitor
     // could dismiss it elsewhere: the key is read again when it comes on
     // screen, and the strip leaves with it.
-    if (announce.dismiss && !inPreview) {
+    if (announce.dismiss) {
       const recheckDismiss = () => {
         let gone = false;
         try { gone = localStorage.getItem(dismissKey) === '1'; } catch { gone = false; }
@@ -212,11 +221,11 @@ export function renderNav(site, host) {
   // menu after some scrolling, 'hide' hides it on scroll down and shows it
   // on scroll up. The state is computed by pure navScrollState; only
   // meaningful for a sticky top bar (not the side variant, not sticky off).
-  // As with sticky blocks the behavior is inactive while editing (preview
-  // with chrome on) - a menu that runs off during drag/scroll would fight
-  // the editing - and always off while the mobile panel is open. The
-  // listener is rAF-throttled, passive and aborted with the rest of the
-  // render's listeners.
+  // The behavior runs in every view, the editor's preview included, so the
+  // owner sees what the visitor gets; it is off only while the mobile panel
+  // is open. The editing chrome parks against --urd-nav-h-base rather than
+  // the shrinking height (setNavH below). The listener is rAF-throttled,
+  // passive and aborted with the rest of the render's listeners.
   const scrollMode = effSite.nav.scroll;
   const wantsScroll = (scrollMode === 'shrink' || scrollMode === 'hide')
     && !isSide && effSite.nav.sticky !== false;
@@ -233,16 +242,13 @@ export function renderNav(site, host) {
     let hidden = false;
     let ticking = false;
     const applyScroll = () => {
-      const body = document.body;
-      const editing = body.classList.contains('urd-preview') && !body.classList.contains('urd-chrome-off');
       const menuOpen = nav.classList.contains('urd-nav-open');
       const y = window.scrollY;
-      // While editing the menu keeps its full size and stays visible, and
-      // while the mobile panel is open its surface is drawn as well; the
-      // top-zone state (the clear surface of atTop) follows the scroll
-      // position in every view, so the owner sees it while editing.
-      const state = editing || menuOpen
-        ? { compact: false, hidden: false, scrolled: menuOpen || navScrollState(undefined, prevY, y, hidden).scrolled }
+      // With the mobile panel open the menu keeps its full size, stays
+      // visible and draws its surface, so the panel has something to hang
+      // from.
+      const state = menuOpen
+        ? { compact: false, hidden: false, scrolled: true }
         : navScrollState(wantsScroll ? scrollMode : undefined, prevY, y, hidden);
       prevY = y;
       hidden = state.hidden;
@@ -635,6 +641,8 @@ export function renderNav(site, host) {
   nav.appendChild(list);
   nav.appendChild(tools);
   host.appendChild(nav);
+  // The menu height while it is not shrunk, kept across the scroll shrink.
+  let navHBase = 0;
   // Measured at once, so the first paint already has the menu's clearance;
   // the observer below keeps it current.
   setNavH();
@@ -645,11 +653,18 @@ export function renderNav(site, host) {
   // nav's bottom edge (offsetTop includes the pill's top gap and a sticky
   // announcement); an announcement that scrolls away is left out, since the
   // menu alone is what stays. The column variant takes no top height.
+  // --urd-nav-h-base holds the unshrunk height: the editing chrome parks
+  // against that one, so the section handles stand still while the scroll
+  // shrink runs under them.
   function setNavH() {
     const announceH = announceEl?.offsetHeight ?? 0;
     const scrolledAway = announceScrolls ? announceH : 0;
     const h = isSide ? 0 : nav.offsetTop + nav.offsetHeight - scrolledAway;
     document.documentElement.style.setProperty('--urd-nav-h', `${h}px`);
+    // A render that starts mid-page measures the menu already shrunk; that
+    // first measurement stands until an unshrunk one arrives.
+    if (!navHBase || !host.classList.contains('urd-nav-compact')) navHBase = h;
+    document.documentElement.style.setProperty('--urd-nav-h-base', `${navHBase}px`);
     host.style.setProperty('--urd-announce-h', `${announceH}px`);
     // A strip fixed across the whole page: the column starts and the body
     // is padded below it (base.css reads the variable on the root).

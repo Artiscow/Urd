@@ -247,6 +247,27 @@ Plan for the thirteen lines below (causes found 25 September 2026, four commits 
 - [x] (delivered 26 September 2026 in 0.7.0.14 as `nav.announcement.place`: I menyen, Øverst på siden, Over innholdet) Nav: ved sidestilt meny burde det være valg i kunngjøring om kunngjøringen er på toppen av nav, på toppen av hele siden og nav, eller kun på toppen av siden (og ikke nav)
 - [x] (fixed 25 September 2026 in 0.7.0.11: the arriving page was captured by the view transition before the engine had rendered, so the old page faded into the empty shell; the old page is now held until the new one stands, then a cut) Nav: ved ny lasting av side flytter nav seg i et lite øyeblikk mens siden lastes. Det er ikke plasseringen av nav som er forskjellig, ettersom den er identisk for hver eneste side.
 - [x] (fixed 25 September 2026 in 0.7.0.11 for the published page and 26 September in 0.7.13.5.2 for the preview, where the bar is lifted above the page chrome: the strip sits above the bar in every context) Nav, både i admin preview og publiserte side, er plassert litt over kunngjøringslinjen
+Plan for the thirteen open lines below (causes found 27 September 2026, six commits under Løpende, 0.7.0.16 to 0.7.0.21):
+
+- 0.7.0.16, the nav in the preview and the dismissed announcement: `applyScroll` clamps `compact` and `hidden` off while the editing chrome is on, so the scroll behaviour is only visible in Clean view; three `!inPreview` gates in nav.js switch the dismissal off in the preview; «Gjennomsiktig øverst» names the surface rather than what happens. The editing chrome parks against a new `--urd-nav-h-base` so the handles stand still while the menu shrinks, the preview reads and writes the same dismissal key as the published page, and the Kunngjøring fold gets a control that clears it.
+- 0.7.0.17 (schema), the announcement and hide-on-scroll: the strip is a child of the host that `urd-nav-hidden` translates, so it leaves with the bar. New `nav.announcement.followNav` (default false: the strip stays).
+- 0.7.0.18 (schema), the bar's content width: `nav.style.inset` defaults to off. The read default flips, with a site-schema migration (3 to 4) writing `inset: false` into existing sites so no built site moves.
+- 0.7.0.19, the canvas: a cross-section drop answers with a full page send, whose `renderPage` collapses the document and loses the scroll position; `writePush` grows a section whenever any block in it grew, so the hero follows a dragged block down and never hands it over; the dropped frame's y is measured against the section instead of the canvas and carries the push shift.
+- 0.7.0.20, the blocks and the guides: the collection, gallery and product defaults are 81 grid cells wide, an odd number that cannot be centred by snapping; the drag guides have no quarter positions and the always-on guides measure the window instead of the content surface; the rotate handle and four other chrome controls draw text characters.
+- 0.7.0.21, the image editor and the admin panels: `.urd-imged` lacks the counter-scale every other floating chrome element has; the crop grid is re-measured only by a ResizeObserver, which does not fire when the image merely moves; `{#if chromeVisible}` destroys the rail and the panel, so every fold returns closed.
+
+- [ ] Bildeeditor menyen er ikke lik størrelse som resten av admin panelet - den følger størrelsen på preview siden.
+- [ ] Bildeeditor: Strekene/rutene som vises over bildet følger ikke med bildet om man gjør bredden på siden større - da forblir rutene der bildet var før bredden ble endret.
+- [ ] Når man drar et element, burde man se hjelpestrekene for sentert, sidestilt, 1/4, 2/4 osv.  
+- [ ] Samling blokkene er en rute for bred for  å være sentrert på siden - default burde være en rute smalere.
+- [ ] Å dra et element fra hjem hero ned til en annen seksjon fungerer ikke - hero seksjonen blir bare større.
+- [ ] Å dra et element fra en seksjon til en annen får siden til å teleportere litt opp
+- [x] (fixed 27 September 2026 in 0.7.0.16: the dismissal was read and written only outside the preview; the preview uses the same key, and the Kunngjøring fold got «Vis stripen igjen») Kunngjøring vises ikke igjen etter å ha krysset den ut på publisert side (som er korrekt), men det skjer ikke i admin. Å krysse ut kunngjøring i Admin preview fungerer kun frem til man går inn på en ny side på nettsiden i admin - det burde være likt som i publisert side (eventuelt med en knapp i kunngjøring panelet om å vise kunngjøringen igjen)
+- [ ] admin panel lukkes om man går inn i ren visning og ut igjen - panelene burde være åpne slik som de ble forlatt. - ny instilling i urd admin instillinger om admin panelene skal huske hvor du var eller om de skal lukke seg når du laster inn urd admin på nytt.
+- [x] (fixed 27 September 2026 in 0.7.0.16: `applyScroll` clamped shrink and hide off whenever the editing chrome was on; the editor chrome now parks against the unshrunk menu height instead) nav: oppførsel ved scrolling vises kun i ren visning - må vises i admin preview i tillegg.
+- [ ] nav oppsett: "følg innholdsbredden" skal være standard, og på ved default.
+- [ ] nav oppførsel ved scrolling "skjul vis ved scroll opp" tar også med seg kunngjøringer, så kunngjøringer blir skjult om man scoller ned - kunngjøring burde ikke følge nav sin oppførsel - dette kan være egne instillinge for og under kunngjøringer panelet.
+- [x] (done 27 September 2026 in 0.7.0.16: renamed «Flaten kommer når man blar» / «Surface appears on scroll»; the data field `nav.style.atTop` is unchanged) Nav oppførsel "gjennomsiktig øverst" trenger nytt navn - det er ikke klart hva den gjør fra navnet
 
 ## Suggestions, Ideas and Wishes
 
@@ -264,6 +285,12 @@ Plan for the thirteen lines below (causes found 25 September 2026, four commits 
 - [x] Nav: To forskjellige instillinger for bakgrunn i nav for topbar og mobil fullskjerm: forskjellig farge, egen instilling for om den er gjennomsiktig, frostet osv. (delivered 24 September 2026 as `nav.style.sheet` in 0.7.13.4)
 - [ ] Nav: Mulighet for å velge forskjellig logo/tekst for Darkmode og lightmode
 - [ ] Ny modus: Float mode for element, som gjør at man kan fritt flytte de på siden og at den flyter/sticky til det punktet på siden man drar/setter elementet - Når et element er i float mode kan man bla ned på siden i admin fritt, mens elementet flyter/sticky der man sist plasserte den. 
+- [ ] Kunne bruke piltastene til å velge element i dobbeltklikk menyen - både uten å ha skrever og etter å ha skrevet
+- [ ] Kunngjøring trenger alternativ for å legge til ikoner, tekstur, former/bilde og tekststørrelse (eventuelt full teksteditor)
+- [ ] Mobil nav meny visning i preview: går ut av den åpne nav menyen hver gang en instilling er endret - menyen burde stå åpen slik at man ser hva man redigerer
+- [ ] Mobil nav meny trenger egen instilling for om teksten skal være midtstilt
+- [ ] Mobilpreview/visning burde vise skjermstørrelsen som på mobiler- ikke kun en tynn høy preview - alternativ mellom forskjellige vanlige mobilskjermbredder og høyder
+- [ ] nav panel desktop og mobil trenger instillinger for egne farger ved lys og mørk modus (med automatisk forslag første gang man setter en av fargene selv)
 
 
 ## Kjente begrensninger (dokumentert, ingen fiks planlagt)

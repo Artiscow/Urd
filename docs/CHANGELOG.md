@@ -27,6 +27,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.16 - The nav's scroll behaviour in the preview, and the dismissed announcement - 27 September 2026
+
+- The nav's scroll behaviour was only visible in Clean view: `applyScroll` clamped shrink and hide off whenever the editing chrome was on. It runs in every view now, and the editor chrome (the section toolbar, the boundary chip, the block toolbar's flip) parks against the new `--urd-nav-h-base`, the menu's unshrunk height, so the handles stand still while the menu shrinks.
+- A dismissed announcement came back in the preview: the read, the write and the recheck were all switched off there. The preview uses the same key as the published page, and the Kunngjøring fold has «Vis stripen igjen», which clears it (`clearAnnounceDismissal` in nav.js, the message `urd-announce-reset`).
+- The nav behaviour «Gjennomsiktig øverst» named the surface rather than what happens: renamed «Flaten kommer når man blar» in nb, «Surface appears on scroll» in en-GB, with tr and nn to match. The data field `nav.style.atTop` is unchanged.
+
 ## [0.7.4] - 2026-09-26
 
 ### 0.7.0.15p - Release 0.7.4: the reference plugins into the core, the content push, the navigation round and the bug round - 26 September 2026

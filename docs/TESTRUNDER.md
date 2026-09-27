@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.0.16): the nav in the preview and the dismissed announcement
+
+- [ ] Admin preview (not Clean view), a sticky top bar with «Skjul ved rulling»: the menu hides on scroll down and comes back on scroll up, and the section toolbars and the boundary chip keep their place
+- [ ] The same with «Krymp ved rulling»: the menu shrinks while the section handles stand still
+- [ ] Cross out the announcement in the preview, then switch page in the editor: the strip stays away; the same after a reload of the admin
+- [ ] Kunngjøring fold with «Kryss for å fjerne» on: «Vis stripen igjen» brings the strip back in the preview; the button is hidden when the cross is off
+- [ ] Published page after crossing the strip out in the editor on the same browser: the strip is away there too
+- [ ] Nav behaviour: the setting formerly «Gjennomsiktig øverst» reads «Flaten kommer når man blar» and still draws the bar without surface until the page is scrolled
+
 ### Testrunde-batch (0.7.4): the release
 
 - [ ] Updates panel on a site created from the template: 0.7.4 is offered, the update applies, and the site renders with engine 0.7.4 (every page, the admin and the slug copies)

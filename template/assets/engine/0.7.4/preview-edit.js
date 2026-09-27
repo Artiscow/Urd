@@ -3024,7 +3024,8 @@ function enhanceBlock(el, block, section, grid, host) {
   // re-render.
   const updateToolbarSide = () => {
     const cs = getComputedStyle(document.documentElement);
-    const navH = Number.parseFloat(cs.getPropertyValue('--urd-nav-h')) || 0;
+    const navH = Number.parseFloat(cs.getPropertyValue('--urd-nav-h-base'))
+      || Number.parseFloat(cs.getPropertyValue('--urd-nav-h')) || 0;
     const scale = Number.parseFloat(cs.getPropertyValue('--urd-chrome-scale')) || 1;
     toolbar.classList.toggle('urd-toolbar-under', el.getBoundingClientRect().top < navH + 34 * scale);
   };

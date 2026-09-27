@@ -6762,6 +6762,12 @@
                           onchange={(e) => setNavAnnouncement('dismiss', e.target.checked ? undefined : false)} />
                         {ta('lbl.announceDismiss')}
                       </label>
+                      <!-- The dismissal is remembered per browser, in the preview as on the
+                           published page, so the strip needs a way back while editing. -->
+                      {#if siteDraft.nav.announcement?.dismiss !== false}
+                        <button class="ghost" title={ta('tip.nav.announceShowAgain')}
+                          onclick={() => bridge?.sendAnnounceReset()}>{ta('lbl.announceShowAgain')}</button>
+                      {/if}
                       <label title={ta('tip.nav.announceColor')}>{ta('lbl.background')}
                         <ColorPicker value={siteDraft.nav.announcement?.color ?? 'accent'} tokens={themeSwatches()}
                           label={ta('tip.nav.announceColor')} onchange={(hex) => setNavAnnouncement('color', hex)} /></label>

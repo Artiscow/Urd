@@ -5729,11 +5729,12 @@ body.urd-mobile .urd-section-resize-top {
 }
 
 /* With the menu outside the flow (floating pill or overlay) the boundary line sits in
-   the menu band: the chip is placed below the measured menu height (--urd-nav-h from
-   nav.js), so it can be seen and clicked instead of sitting behind the menu. */
+   the menu band: the chip is placed below the unshrunk menu height (--urd-nav-h-base
+   from nav.js), so it can be seen and clicked instead of sitting behind the menu, and
+   keeps its place while the scroll shrink runs. */
 #urd-nav.urd-nav-float + #urd-root > .urd-add-section:first-child > button,
 #urd-nav.urd-nav-overlay + #urd-root > .urd-add-section:first-child > button {
-  transform: translateY(calc(var(--urd-nav-h, 0px) + 6px)) scale(var(--urd-chrome-scale, 1));
+  transform: translateY(calc(var(--urd-nav-h-base, var(--urd-nav-h, 0px)) + 6px)) scale(var(--urd-chrome-scale, 1));
 }
 
 /* The preset gallery (an open "+ New section"): a grouped panel with scrolling.
@@ -6229,10 +6230,11 @@ body.urd-mobile .urd-section-resize-top {
   /* Sticky inside the section (not absolute): in sections taller than the viewport the
      toolbar follows along, so the "+ card" button can always be reached when adding
      repeatedly. The toolbar is the section's only in-flow element, so it always starts
-     at the top. The sticky offset reads the measured menu height (--urd-nav-h from
-     nav.js), so the bar parks right below the menu instead of at a guessed fixed offset. */
+     at the top. The sticky offset reads the unshrunk menu height (--urd-nav-h-base from
+     nav.js), so the bar parks right below the menu instead of at a guessed fixed offset,
+     and stands still while the scroll shrink runs. */
   position: sticky;
-  top: calc(var(--urd-nav-h, 56px) + 8px * var(--urd-chrome-scale, 1));
+  top: calc(var(--urd-nav-h-base, var(--urd-nav-h, 56px)) + 8px * var(--urd-chrome-scale, 1));
   display: none;
   gap: 2px;
   width: fit-content;

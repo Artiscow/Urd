@@ -13,7 +13,7 @@ import { createRegistry } from './registry.js';
 import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION } from './migrate.js';
 import { applyTheme } from './theme.js';
 import { applySiteLayout, renderPage, renderSection } from './render.js';
-import { renderNav, refreshNavScroll } from './nav.js';
+import { renderNav, refreshNavScroll, clearAnnounceDismissal } from './nav.js';
 import { isSafeImage } from './nav-model.js';
 import { renderFooter } from './footer.js';
 import { textBlock } from './blocks/text.js';
@@ -278,6 +278,11 @@ function enablePreview(state, opts) {
       // not first at the next scroll.
       refreshSticky();
       refreshNavScroll();
+    } else if (msg?.type === 'urd-announce-reset') {
+      // The Kunngjøring panel: forget the dismissal, so the strip returns
+      // in the preview and for this browser on the published page.
+      clearAnnounceDismissal(state.site);
+      if (opts.nav) renderNav(state.site, opts.nav);
     } else if (msg?.type === 'urd-show-grid') {
       // The grid menu in the editor is open: show the grid in all sections.
       window.UrdPreviewEdit?.toggleGridOverlays(msg.visible, state.page, state.site);

@@ -45,6 +45,7 @@
  *   editor → page: { type: 'urd-chrome', visible }            (show/hide the editing handles)
  *                  { type: 'urd-show-grid', visible }         (show the grid in every section)
  *                  { type: 'urd-show-guides', visible }       (guides: center/content width in every section)
+ *                  { type: 'urd-announce-reset' }             (the Kunngjøring panel: forget the dismissal, so the strip returns)
  *                  { type: 'urd-select', blockId }            (select a block the editor just built, e.g. + New block)
  *                  { type: 'urd-admin-theme', colors }        (the admin color theme {bg, surface, accent, text}: the editor menus in the preview follow admin, not the site)
  *                  { type: 'urd-templates', templates }               (the template drafts: a list of {id, name, kind, section?, blocks?, page?}; the My templates tab reads them)
@@ -115,6 +116,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     },
     sendChrome(visible) {
       post({ type: 'urd-chrome', visible });
+    },
+    /** The Kunngjøring panel: forget the dismissal, so the strip is shown again. */
+    sendAnnounceReset() {
+      post({ type: 'urd-announce-reset' });
     },
     sendPlugins(enabled) {
       post({ type: 'urd-plugins', enabled });
