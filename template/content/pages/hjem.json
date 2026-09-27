@@ -14,7 +14,7 @@
       "version": 1,
       "preset": "hero",
       "size": {
-        "minHeight": "1040px"
+        "minHeight": "1328px"
       },
       "grid": null,
       "background": {
@@ -103,29 +103,6 @@
           }
         },
         {
-          "id": "blk-1f8cc2e3",
-          "type": "button",
-          "version": 1,
-          "props": {
-            "label": "Les mer",
-            "page": null,
-            "href": "https://github.com/Artiscow/Urd",
-            "style": "secondary"
-          },
-          "animation": null,
-          "frames": {
-            "desktop": {
-              "x": 19.38,
-              "y": 400,
-              "w": 20,
-              "h": 32,
-              "z": 1,
-              "rot": 0
-            },
-            "mobile": null
-          }
-        },
-        {
           "id": "blk-205e5f2a",
           "type": "calendar",
           "version": 1,
@@ -141,11 +118,59 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 50,
+              "x": 51.11,
               "y": 256,
               "w": 40,
               "h": 485,
               "z": 3,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-1f8cc2e3",
+          "type": "button",
+          "version": 1,
+          "props": {
+            "label": "Les mer",
+            "page": null,
+            "href": "https://github.com/Artiscow/Urd",
+            "style": "secondary"
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 21.11,
+              "y": 482.5,
+              "w": 20,
+              "h": 32,
+              "z": 1,
+              "rot": 0
+            },
+            "mobile": null
+          }
+        },
+        {
+          "id": "blk-7388e8a4",
+          "type": "collection",
+          "version": 1,
+          "decor": false,
+          "hideMobile": false,
+          "props": {
+            "collection": "f",
+            "view": "cards",
+            "limit": 6,
+            "newestFirst": true
+          },
+          "animation": null,
+          "frames": {
+            "desktop": {
+              "x": 20.37,
+              "y": 960,
+              "w": 41.48,
+              "h": 240,
+              "z": 4,
               "rot": 0
             },
             "mobile": null
@@ -164,7 +189,7 @@
       "version": 1,
       "preset": "whats-on",
       "size": {
-        "minHeight": "1280px"
+        "minHeight": "1264px"
       },
       "grid": null,
       "background": {
@@ -235,8 +260,8 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 13.19,
-              "y": 288,
+              "x": 10.87,
+              "y": 272,
               "w": 28.26,
               "h": 272,
               "z": 1,
@@ -259,8 +284,8 @@
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 55.09,
-              "y": 160,
+              "x": 56.72,
+              "y": 144,
               "w": 36.57,
               "h": 608,
               "z": 3,
