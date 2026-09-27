@@ -117,8 +117,8 @@ test('navItems: grandchildren are ignored defensively (one level)', () => {
 });
 
 test('navClasses: default layout is right', () => {
-  assert.equal(navClasses({ nav: {} }), 'urd-nav urd-nav-right');
-  assert.equal(navClasses({ nav: { layout: 'center' } }), 'urd-nav urd-nav-center');
+  assert.equal(navClasses({ nav: {} }), 'urd-nav urd-nav-right urd-nav-inset');
+  assert.equal(navClasses({ nav: { layout: 'center' } }), 'urd-nav urd-nav-center urd-nav-inset');
 });
 
 test('navClasses: floating variant and hover style give their own classes', () => {
@@ -129,11 +129,11 @@ test('navClasses: floating variant and hover style give their own classes', () =
 });
 
 test('navClasses: the defaults bar and standard give no extra classes', () => {
-  assert.equal(navClasses({ nav: { variant: 'bar', style: { hover: 'standard' } } }), 'urd-nav urd-nav-right');
+  assert.equal(navClasses({ nav: { variant: 'bar', style: { hover: 'standard' } } }), 'urd-nav urd-nav-right urd-nav-inset');
 });
 
 test('navClasses: lift without glow is its own hover style', () => {
-  assert.equal(navClasses({ nav: { style: { hover: 'lift-plain' } } }), 'urd-nav urd-nav-right urd-nav-hover-lift-plain');
+  assert.equal(navClasses({ nav: { style: { hover: 'lift-plain' } } }), 'urd-nav urd-nav-right urd-nav-hover-lift-plain urd-nav-inset');
 });
 
 test('navClasses: glow only as an option on the floating pill', () => {
@@ -146,7 +146,7 @@ test('navClasses: glow only as an option on the floating pill', () => {
     navClasses({ nav: { variant: 'floating' } }),
     'urd-nav urd-nav-right urd-nav-var-floating',
   );
-  assert.equal(navClasses({ nav: { style: { glow: true } } }), 'urd-nav urd-nav-right');
+  assert.equal(navClasses({ nav: { style: { glow: true } } }), 'urd-nav urd-nav-right urd-nav-inset');
 });
 
 test('navSurface: without style the CSS defaults apply', () => {
@@ -234,7 +234,7 @@ test('navClasses: pill without top gap gets the flush class', () => {
     'urd-nav urd-nav-right urd-nav-var-floating urd-nav-flush',
   );
   // topGap outside floating has no effect
-  assert.equal(navClasses({ nav: { style: { topGap: false } } }), 'urd-nav urd-nav-right');
+  assert.equal(navClasses({ nav: { style: { topGap: false } } }), 'urd-nav urd-nav-right urd-nav-inset');
 });
 
 test('hostClasses: the variants control the host and body classes', () => {
@@ -290,29 +290,29 @@ test('navClasses/hostClasses: the tab variant is floating with only the lower co
 });
 
 test('navClasses: size gives a class only outside the default (md)', () => {
-  assert.equal(navClasses({ nav: { style: { size: 'sm' } } }), 'urd-nav urd-nav-right urd-nav-size-sm');
-  assert.equal(navClasses({ nav: { style: { size: 'xl' } } }), 'urd-nav urd-nav-right urd-nav-size-xl');
-  assert.equal(navClasses({ nav: { style: { size: 'md' } } }), 'urd-nav urd-nav-right');
+  assert.equal(navClasses({ nav: { style: { size: 'sm' } } }), 'urd-nav urd-nav-right urd-nav-size-sm urd-nav-inset');
+  assert.equal(navClasses({ nav: { style: { size: 'xl' } } }), 'urd-nav urd-nav-right urd-nav-size-xl urd-nav-inset');
+  assert.equal(navClasses({ nav: { style: { size: 'md' } } }), 'urd-nav urd-nav-right urd-nav-inset');
   // Free-form strings are allowlisted away - class names are never built from raw data
-  assert.equal(navClasses({ nav: { style: { size: 'evil injection' } } }), 'urd-nav urd-nav-right');
+  assert.equal(navClasses({ nav: { style: { size: 'evil injection' } } }), 'urd-nav urd-nav-right urd-nav-inset');
 });
 
 test('navClasses: text alignment and submenu design give allowlisted classes', () => {
-  assert.equal(navClasses({ nav: { style: { sideAlign: 'center' } } }), 'urd-nav urd-nav-right urd-nav-salign-center');
-  assert.equal(navClasses({ nav: { style: { sideAlign: 'left' } } }), 'urd-nav urd-nav-right');
-  assert.equal(navClasses({ nav: { style: { subStyle: 'flyout' } } }), 'urd-nav urd-nav-right urd-nav-sub-flyout');
-  assert.equal(navClasses({ nav: { style: { subStyle: 'card' } } }), 'urd-nav urd-nav-right');
-  assert.equal(navClasses({ nav: { style: { subStyle: 'x"y' } } }), 'urd-nav urd-nav-right');
+  assert.equal(navClasses({ nav: { style: { sideAlign: 'center' } } }), 'urd-nav urd-nav-right urd-nav-salign-center urd-nav-inset');
+  assert.equal(navClasses({ nav: { style: { sideAlign: 'left' } } }), 'urd-nav urd-nav-right urd-nav-inset');
+  assert.equal(navClasses({ nav: { style: { subStyle: 'flyout' } } }), 'urd-nav urd-nav-right urd-nav-sub-flyout urd-nav-inset');
+  assert.equal(navClasses({ nav: { style: { subStyle: 'card' } } }), 'urd-nav urd-nav-right urd-nav-inset');
+  assert.equal(navClasses({ nav: { style: { subStyle: 'x"y' } } }), 'urd-nav urd-nav-right urd-nav-inset');
 });
 
 test('navClasses: column placement is its own field with top as the default', () => {
-  assert.equal(navClasses({ nav: { style: { sidePlacement: 'middle' } } }), 'urd-nav urd-nav-right urd-nav-splace-middle');
-  assert.equal(navClasses({ nav: { style: { sidePlacement: 'bottom' } } }), 'urd-nav urd-nav-right urd-nav-splace-bottom');
-  assert.equal(navClasses({ nav: { style: { sidePlacement: 'top' } } }), 'urd-nav urd-nav-right');
+  assert.equal(navClasses({ nav: { style: { sidePlacement: 'middle' } } }), 'urd-nav urd-nav-right urd-nav-splace-middle urd-nav-inset');
+  assert.equal(navClasses({ nav: { style: { sidePlacement: 'bottom' } } }), 'urd-nav urd-nav-right urd-nav-splace-bottom urd-nav-inset');
+  assert.equal(navClasses({ nav: { style: { sidePlacement: 'top' } } }), 'urd-nav urd-nav-right urd-nav-inset');
   // layout does not affect the column's vertical placement; older sites
   // with layout: left therefore get top as the default, not bottom
-  assert.equal(navClasses({ nav: { layout: 'left', style: {} } }), 'urd-nav urd-nav-left');
-  assert.equal(navClasses({ nav: { style: { sidePlacement: 'evil injection' } } }), 'urd-nav urd-nav-right');
+  assert.equal(navClasses({ nav: { layout: 'left', style: {} } }), 'urd-nav urd-nav-left urd-nav-inset');
+  assert.equal(navClasses({ nav: { style: { sidePlacement: 'evil injection' } } }), 'urd-nav urd-nav-right urd-nav-inset');
 });
 
 test('navSurface: horizontal image crop is clamped to 0-100', () => {
@@ -404,14 +404,18 @@ test('navScrollState: small movements below the jitter guard keep the state', ()
   assert.equal(navScrollState('hide', 200, 198, false).hidden, false);
 });
 
-test('navClasses: inset only for the top bar and only on boolean true', () => {
+test('navClasses: inset only for the top bar, and on unless boolean false', () => {
   const site = (nav) => ({ nav: { items: [], ...nav } });
   assert.ok(navClasses(site({ style: { inset: true } })).includes('urd-nav-inset'));
   assert.ok(navClasses(site({ variant: 'bar', style: { inset: true } })).includes('urd-nav-inset'));
   assert.ok(!navClasses(site({ variant: 'floating', style: { inset: true } })).includes('urd-nav-inset'));
   assert.ok(!navClasses(site({ variant: 'side-left', style: { inset: true } })).includes('urd-nav-inset'));
-  assert.ok(!navClasses(site({ style: { inset: 'yes' } })).includes('urd-nav-inset'));
-  assert.ok(!navClasses(site({})).includes('urd-nav-inset'));
+  // The default since schemaVersion 4: an omitted field, and anything that
+  // is not the boolean false, insets the bar.
+  assert.ok(navClasses(site({ style: { inset: 'yes' } })).includes('urd-nav-inset'));
+  assert.ok(navClasses(site({})).includes('urd-nav-inset'));
+  assert.ok(!navClasses(site({ style: { inset: false } })).includes('urd-nav-inset'));
+  assert.ok(!navClasses(site({ variant: 'floating' })).includes('urd-nav-inset'));
 });
 
 test('navClasses: the logo shrink class only on boolean true', () => {

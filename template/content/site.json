@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "site": {
     "title": "Urd",
     "lang": "no",
@@ -177,6 +177,7 @@
         ]
       },
       "topGap": false,
+      "inset": true,
       "textColor": "#ffffff",
       "hoverTextColor": "#00fff5",
       "blur": true,

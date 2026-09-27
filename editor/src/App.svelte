@@ -6363,8 +6363,8 @@
                             {ta('lbl.navOverlay')}
                           </label>
                           <label class="gridmenu-snap" title={ta('tip.nav.inset')}>
-                            <input type="checkbox" checked={siteDraft.nav.style?.inset === true}
-                              onchange={(e) => setNavStyle('inset', e.target.checked ? true : undefined)} />
+                            <input type="checkbox" checked={siteDraft.nav.style?.inset !== false}
+                              onchange={(e) => setNavStyle('inset', e.target.checked ? undefined : false)} />
                             {ta('lbl.navInset')}
                           </label>
                         {/if}

@@ -2,6 +2,13 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.0.18): the bar's content width by default
+
+- [ ] A brand new site from the template with the bar variant: the logo and the menu items line up with the content in the first section, while the bar's background reaches the window edge
+- [ ] Nav oppsett: unticking «Følg innholdsbredden» pushes the contents out to the window padding again, and ticking it back removes the field from the data
+- [ ] An existing site opened in the admin after the update: the menu looks exactly as before, and site.json now carries `"schemaVersion": 4` with `nav.style.inset` written in
+- [ ] Publish that site and load the published page: the menu is unchanged there too
+
 ### Testrunde-batch (0.7.0.17): the announcement and hide on scroll
 
 - [ ] Sticky bar with an announcement and «Skjul ved rulling»: scroll down, the strip stays at the top while the menu slides out behind it, and scrolling up brings the menu back under it

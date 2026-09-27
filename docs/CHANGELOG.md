@@ -27,6 +27,10 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.18 - The bar follows the content width by default - 27 September 2026
+
+- «Følg innholdsbredden» (`nav.style.inset`) was off unless set: the read is now `!== false`, so a new site gets the bar's contents lined up with the content edge. Site schemaVersion 3 to 4 writes `inset: false` into sites that omitted the field, so a site built before the change keeps the menu it was built with (the ADR-0018 precedent: the old default is written in rather than derived at read time). Schema, SCHEMA.md and the example data in the same commit, with migration and navClasses tests.
+
 ### 0.7.0.17 - The announcement stays while the bar hides - 27 September 2026
 
 - «Skjul ved rulling» took the announcement with it: the strip is a child of the host that `urd-nav-hidden` slides out. New `nav.announcement.followNav` (default false) keeps the strip in place: the slide moves from the host to the menu, which travels its own height plus the strip's, and the band the host still occupies takes no pointer events so the page under it stays reachable (`urd-nav-announce-keep`). Shown as a checkbox in the Kunngjøring fold only with hide on scroll on a sticky bar. Schema, SCHEMA.md and the example data in the same commit.

@@ -4413,11 +4413,21 @@ var ss = {
 			...e.layout ?? { contentWidth: 1440 },
 			gutter: 6
 		}
-	})
+	}),
+	3: (e) => e.nav && e.nav.style?.inset === void 0 ? {
+		...e,
+		nav: {
+			...e.nav,
+			style: {
+				...e.nav.style ?? {},
+				inset: !1
+			}
+		}
+	} : e
 };
 function ls(e) {
 	let t = structuredClone(e), n = t.schemaVersion ?? 1;
-	for (; n < 3;) {
+	for (; n < 4;) {
 		let r = cs[n];
 		if (typeof r != "function") return e;
 		t = r(t) ?? t, n++, t.schemaVersion = n;
@@ -8971,7 +8981,7 @@ function tm(e, t) {
 		].includes(n.type)) || (e.preventDefault(), t === "y" || e.shiftKey ? ct() : st());
 	}
 	async function pt() {
-		P(C, ls(await (await fetch("/content/site.json")).json()), !0), He = Zi("urd-draft-site", () => B(C), re), (He.data.schemaVersion ?? 1) > 3 && (console.warn(`Urd: the site draft has schemaVersion ${He.data.schemaVersion} (the engine has 3) and is discarded`), He.replace(We(B(C)))), He.replace(ls(He.data)), He.save(), Ge(), P(se, {
+		P(C, ls(await (await fetch("/content/site.json")).json()), !0), He = Zi("urd-draft-site", () => B(C), re), (He.data.schemaVersion ?? 1) > 4 && (console.warn(`Urd: the site draft has schemaVersion ${He.data.schemaVersion} (the engine has 4) and is discarded`), He.replace(We(B(C)))), He.replace(ls(He.data)), He.save(), Ge(), P(se, {
 			snap: !0,
 			...B(k).grid
 		}, !0), await Vi(new URLSearchParams(location.search).get("page") ?? B(k).pages[0].id), await Xc(), await Us(), await Is(), await pi(), B(oe) && hi(), B(k).site.setup === !0 && !localStorage.getItem("urd-setup-done") && (P(bt, B(k).site.title, !0), P(xt, B(k).theme.tokens.color.accent, !0), P(St, B(k).theme.tokens.color.bg, !0), P(yt, !0));
@@ -14076,7 +14086,7 @@ function tm(e, t) {
 						J(o);
 						var s = R(o);
 						D(a), z((e, t, c, l) => {
-							X(n, "title", e), Si(r, B(k).nav.overlay === !0), W(i, ` ${t ?? ""}`), X(a, "title", c), Si(o, B(k).nav.style?.inset === !0), W(s, ` ${l ?? ""}`);
+							X(n, "title", e), Si(r, B(k).nav.overlay === !0), W(i, ` ${t ?? ""}`), X(a, "title", c), Si(o, B(k).nav.style?.inset !== !1), W(s, ` ${l ?? ""}`);
 						}, [
 							() => Z("tip.nav.overlay"),
 							() => Z("lbl.navOverlay"),
@@ -14084,7 +14094,7 @@ function tm(e, t) {
 							() => Z("lbl.navInset")
 						]), V("change", r, (e) => sa("nav", () => {
 							e.target.checked ? B(k).nav.overlay = !0 : delete B(k).nav.overlay;
-						})), V("change", o, (e) => qo("inset", e.target.checked ? !0 : void 0)), U(e, t);
+						})), V("change", o, (e) => qo("inset", e.target.checked ? void 0 : !1)), U(e, t);
 					};
 					G(_e, (e) => {
 						!B(Xo) && !B(Jo) && e(ve);

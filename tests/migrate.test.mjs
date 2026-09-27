@@ -108,6 +108,29 @@ test('site v2 with a px gutter gets the default gutter in vw', () => {
   assert.equal(lifted.layout.contentWidth, 1200, 'the width must survive the gutter switch');
 });
 
+// 3 -> 4: nav.style.inset became the default. The old default is written in
+// explicitly, so a site built before the change keeps the menu it was built
+// with instead of moving its contents inward at the next engine update.
+
+test('site v3 without nav.style.inset gets the old default written in', () => {
+  const lifted = liftSiteFile({ schemaVersion: 3, nav: { version: 1, items: [] } });
+  assert.equal(lifted.schemaVersion, SITE_SCHEMA_VERSION);
+  assert.equal(lifted.nav.style.inset, false);
+});
+
+test('site v3 that set nav.style.inset keeps its own value', () => {
+  const lifted = liftSiteFile({ schemaVersion: 3, nav: { version: 1, items: [], style: { inset: true, size: 'lg' } } });
+  assert.equal(lifted.nav.style.inset, true);
+  assert.equal(lifted.nav.style.size, 'lg', 'the other style fields must survive the step');
+});
+
+test('site v1 reaches version 4 with both the layout and the inset default written in', () => {
+  const lifted = liftSiteFile({ schemaVersion: 1, nav: { version: 1, items: [] } });
+  assert.equal(lifted.schemaVersion, SITE_SCHEMA_VERSION);
+  assert.deepEqual(lifted.layout, { contentWidth: 1440, gutter: 6 });
+  assert.equal(lifted.nav.style.inset, false);
+});
+
 test('site on the current version is untouched by the lift', () => {
   const site = { schemaVersion: SITE_SCHEMA_VERSION, layout: { contentWidth: 980, gutter: 9 } };
   assert.deepEqual(liftSiteFile(site).layout, { contentWidth: 980, gutter: 9 });

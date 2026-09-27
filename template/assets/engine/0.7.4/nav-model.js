@@ -224,11 +224,12 @@ export function navClasses(site) {
   // Submenu design (default is the card style).
   const sub = site.nav.style?.subStyle;
   if (['flat', 'pills', 'lines', 'flyout'].includes(sub)) classes += ` urd-nav-sub-${sub}`;
-  // Inset (additive since v0.7, ADR-0023): the bar's contents line up with
-  // the content edge while the background keeps the full width. Only the
-  // top bar can be inset; the pill has its own width and the column none.
+  // Inset (additive since v0.7, ADR-0023, the default since schemaVersion 4):
+  // the bar's contents line up with the content edge while the background
+  // keeps the full width. Only the top bar can be inset; the pill has its
+  // own width and the column none.
   const isBar = !isFloating(variant) && variant !== 'side-left' && variant !== 'side-right';
-  if (site.nav.style?.inset === true && isBar) classes += ' urd-nav-inset';
+  if (site.nav.style?.inset !== false && isBar) classes += ' urd-nav-inset';
   // The logo image follows the scroll shrink (additive since v0.7).
   if (site.nav.style?.shrinkLogo === true) classes += ' urd-nav-shrink-logo';
   // Border and shadow (additive since v0.7): the side the border sits on

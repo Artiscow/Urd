@@ -64,7 +64,7 @@ export const MOBILE_ROW = 8;
 export const MOBILE_GAP = 16;
 
 /** Current version of the site.json format. */
-export const SITE_SCHEMA_VERSION = 3;
+export const SITE_SCHEMA_VERSION = 4;
 
 /**
  * File-level migrations. Each function lifts exactly one version and
@@ -252,6 +252,13 @@ const siteMigrations = {
   // not a fixed share of anything), so all are set to the default. Pre-v1
   // the small visual change is accepted (ADR-0005).
   2: (site) => ({ ...site, layout: { ...(site.layout ?? { contentWidth: 1440 }), gutter: 6 } }),
+  // 3 -> 4: nav.style.inset (the bar's contents line up with the content
+  // edge) became the default. As with the bound content width the old
+  // default is written in explicitly, so a site built before the change
+  // keeps the menu it was built with. Sites that set the field keep it.
+  3: (site) => (site.nav && site.nav.style?.inset === undefined
+    ? { ...site, nav: { ...site.nav, style: { ...(site.nav.style ?? {}), inset: false } } }
+    : site),
 };
 
 /**

@@ -279,7 +279,7 @@
             "textSize": { "type": "number", "minimum": 12, "maximum": 28, "description": "Menu text size in px (additive from v0.7); overrides the size preset's font. Omitted = the preset." },
             "padX": { "type": "number", "minimum": 0, "maximum": 80, "description": "Side padding in px (additive from v0.7); also the mobile panel and the side-to-bar fallback. Omitted = clamp(1rem, 4vw, 2.5rem)." },
             "gap": { "type": "number", "minimum": 0, "maximum": 64, "description": "Space between the menu items in px (additive from v0.7). Omitted = 1.25rem." },
-            "inset": { "type": "boolean", "default": false, "description": "The bar's contents line up with the content edge (site.layout.contentWidth and the gutter) while the background keeps the full width (additive from v0.7); desktop only, variant bar only." },
+            "inset": { "type": "boolean", "default": true, "description": "The bar's contents line up with the content edge (site.layout.contentWidth and the gutter) while the background keeps the full width (additive from v0.7, the default from schemaVersion 4); desktop only, variant bar only. False draws the contents out to the window edge." },
             "pillWidth": {
               "anyOf": [
                 { "type": "number", "minimum": 480, "maximum": 1920 },
