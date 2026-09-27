@@ -3711,8 +3711,12 @@ function enhanceBlock(el, block, section, grid, host) {
             .elementsFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)
             .find((n) => n instanceof HTMLElement && n.classList.contains('urd-section'));
           if (target && target.dataset.sectionId !== section.id) {
-            const tRect = target.getBoundingClientRect();
-            const frame = { ...current, y: Math.round(rect.top - tRect.top) };
+            // Against the target's content surface, not its outer box: block
+            // y is relative to the canvas, which a menu out of the flow
+            // pushes down. The drawn top carries the block's push shift, so
+            // the shift is taken back out before the frame is stored.
+            const tTop = canvasOf(target).getBoundingClientRect().top;
+            const frame = { ...current, y: Math.max(0, Math.round(rect.top - tTop - pushShiftOf(el))) };
             post({
               type: 'urd-move-block-section',
               fromSectionId: section.id,

@@ -150,13 +150,21 @@ function applyPush(host) {
  * Writes the shifts and the section height for a set of measured items.
  * @param {HTMLElement} host The section element
  * @param {Array<{id: string, x: number, y: number, h: number, grow: number, el: HTMLElement}>} items
+ * @param {Set<string>} [skipBox] Ids left out of the section height (blocks under the pointer)
  */
-function writePush(host, items) {
-  const { shifts, bottom } = pushLayout(items);
+function writePush(host, items, skipBox) {
+  const { shifts } = pushLayout(items);
   let grew = false;
+  let bottom = 0;
   for (const it of items) {
     const shift = shifts.get(it.id) ?? 0;
-    grew = grew || it.grow > 0;
+    // A block being dragged is drawn where the pointer holds it, but it does
+    // not decide how tall the section is: otherwise the section it is leaving
+    // stretches after it, and the drop target is never uncovered.
+    if (!skipBox?.has(it.id)) {
+      grew = grew || it.grow > 0;
+      bottom = Math.max(bottom, it.y + shift + it.h + it.grow);
+    }
     const top = `${it.y + shift}px`;
     if (shift) it.el.dataset.urdShift = String(shift);
     else delete it.el.dataset.urdShift;
@@ -195,7 +203,7 @@ export function pushPreview(host, frames) {
     if (!frame) continue;
     items.push({ id, x: frame.x, y: frame.y, h: frame.h, grow: grow.get(id) ?? 0, el });
   }
-  writePush(host, items);
+  writePush(host, items, new Set(frames.keys()));
 }
 
 /**

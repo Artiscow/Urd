@@ -12095,7 +12095,7 @@ function tm(e, t) {
 	}
 	function mh(e) {
 		let t = O.data.sections.find((t) => t.id === e.fromSectionId), n = O.data.sections.find((t) => t.id === e.toSectionId), r = t?.blocks.find((t) => t.id === e.blockId);
-		!t || !n || !r || (nt("move-block"), t.blocks = t.blocks.filter((t) => t.id !== e.blockId), r.frames.desktop = e.frame, r.frames.mobile = null, n.blocks.push(r), Ve(t, "block-moved"), Ve(n, "block-moved"), O.save(), Ze(), Le(), Ue?.sendPage(B(w), O.data), B(j)?.blockId === e.blockId && (P(j, {
+		!t || !n || !r || (nt("move-block"), t.blocks = t.blocks.filter((t) => t.id !== e.blockId), r.frames.desktop = e.frame, r.frames.mobile = null, n.blocks.push(r), Ve(t, "block-moved"), Ve(n, "block-moved"), O.save(), Ze(), Le(), Ue?.sendSection(B(w), t), Ue?.sendSection(B(w), n), B(j)?.blockId === e.blockId && (P(j, {
 			...B(j),
 			sectionId: e.toSectionId
 		}, !0), zt()));

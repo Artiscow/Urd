@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.0.19): the drag between sections
+
+- [ ] A section holding a block whose content is taller than its frame: drag another block from it down into the section below; the source section keeps its height and the block lands in the section below
+- [ ] The same drag with the page scrolled well down: the page does not move under the pointer, before, during or after the drop
+- [ ] Drag a block into the first section on a page with a floating or overlaid menu: it lands where it was dropped, not a menu height too low
+- [ ] Drag a block that has been pushed down by a growing block above it into another section: it lands where it was dropped
+- [ ] A block whose content grows, left alone: its section still makes room for it as before
+
 ### Testrunde-batch (0.7.0.18): the bar's content width by default
 
 - [ ] A brand new site from the template with the bar variant: the logo and the menu items line up with the content in the first section, while the bar's background reaches the window edge

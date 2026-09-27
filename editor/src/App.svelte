@@ -4881,7 +4881,11 @@
     store.save();
     updateDirty();
     updateAttention();
-    bridge?.sendPage(pageId, store.data);
+    // Only the two sections, never the whole page: a full send rebuilds the
+    // document from scratch, and the browser clamps the scroll position
+    // while it is collapsed. No section is added, removed or reordered here.
+    bridge?.sendSection(pageId, from);
+    bridge?.sendSection(pageId, to);
     if (selectedBlock?.blockId === msg.blockId) {
       selectedBlock = { ...selectedBlock, sectionId: msg.toSectionId };
       syncSelectedBlock();

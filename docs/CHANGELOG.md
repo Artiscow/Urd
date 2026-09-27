@@ -27,6 +27,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.19 - The canvas: the drag between sections - 27 September 2026
+
+- A block could not be dragged out of a section that had a growing block in it: the live pass fed the dragged block's own position into the section height, so the section stretched after the block and the section below was never uncovered (measured on shop-fp: the source grew from 400 to 525 px during the drag). A block under the pointer is drawn where the pointer holds it but is left out of the section height (`skipBox` in `writePush`).
+- A block dropped in another section answered with a full page send, which rebuilds the whole document from `renderPage`; only the two sections are sent now, the same way the collections branch in urd.js already does it.
+- The dropped frame's y was measured against the section's outer box and carried the block's push shift, so a drop into the first section under a menu out of the flow landed a menu height too low. Measured against the target's content surface with the shift taken back out.
+
 ### 0.7.0.18 - The bar follows the content width by default - 27 September 2026
 
 - «Følg innholdsbredden» (`nav.style.inset`) was off unless set: the read is now `!== false`, so a new site gets the bar's contents lined up with the content edge. Site schemaVersion 3 to 4 writes `inset: false` into sites that omitted the field, so a site built before the change keeps the menu it was built with (the ADR-0018 precedent: the old default is written in rather than derived at read time). Schema, SCHEMA.md and the example data in the same commit, with migration and navClasses tests.
