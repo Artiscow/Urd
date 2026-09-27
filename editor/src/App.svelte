@@ -6751,6 +6751,14 @@
                           {ta('lbl.announceSticky')}
                         </label>
                       {/if}
+                      <!-- Only where the menu slides out from under the strip -->
+                      {#if siteDraft.nav.scroll === 'hide' && siteDraft.nav.sticky !== false && !sideVariant && siteDraft.nav.announcement?.sticky !== false}
+                        <label class="gridmenu-snap" title={ta('tip.nav.announceFollowNav')}>
+                          <input type="checkbox" checked={siteDraft.nav.announcement?.followNav === true}
+                            onchange={(e) => setNavAnnouncement('followNav', e.target.checked ? true : undefined)} />
+                          {ta('lbl.announceFollowNav')}
+                        </label>
+                      {/if}
                       {#if sideVariant}
                         <Choice label={ta('lbl.announcePlace')} title={ta('tip.nav.announcePlace')}
                           value={siteDraft.nav.announcement?.place ?? 'nav'}

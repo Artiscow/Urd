@@ -27,6 +27,10 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.17 - The announcement stays while the bar hides - 27 September 2026
+
+- «Skjul ved rulling» took the announcement with it: the strip is a child of the host that `urd-nav-hidden` slides out. New `nav.announcement.followNav` (default false) keeps the strip in place: the slide moves from the host to the menu, which travels its own height plus the strip's, and the band the host still occupies takes no pointer events so the page under it stays reachable (`urd-nav-announce-keep`). Shown as a checkbox in the Kunngjøring fold only with hide on scroll on a sticky bar. Schema, SCHEMA.md and the example data in the same commit.
+
 ### 0.7.0.16 - The nav's scroll behaviour in the preview, and the dismissed announcement - 27 September 2026
 
 - The nav's scroll behaviour was only visible in Clean view: `applyScroll` clamped shrink and hide off whenever the editing chrome was on. It runs in every view now, and the editor chrome (the section toolbar, the boundary chip, the block toolbar's flip) parks against the new `--urd-nav-h-base`, the menu's unshrunk height, so the handles stand still while the menu shrinks.

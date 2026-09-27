@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.0.17): the announcement and hide on scroll
+
+- [ ] Sticky bar with an announcement and «Skjul ved rulling»: scroll down, the strip stays at the top while the menu slides out behind it, and scrolling up brings the menu back under it
+- [ ] The same with «Følg menyen ut ved rulling» on: the strip leaves with the menu, as before
+- [ ] With the menu hidden, click something in the page right under the strip: the click reaches the page, not an invisible band
+- [ ] Floating pill with an announcement and hide on scroll: the same, and the first section's top edge does not move
+- [ ] Kunngjøring fold: the new checkbox shows only with hide on scroll on a sticky bar, and is gone for the side variants and for «Stripen ruller bort»
+
 ### Testrunde-batch (0.7.0.16): the nav in the preview and the dismissed announcement
 
 - [ ] Admin preview (not Clean view), a sticky top bar with «Skjul ved rulling»: the menu hides on scroll down and comes back on scroll up, and the section toolbars and the boundary chip keep their place

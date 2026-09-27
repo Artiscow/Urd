@@ -3456,6 +3456,28 @@ body:has(dialog:modal) {
   translate: 0 calc(-100% - 24px);
 }
 
+/* nav.announcement.followNav false (the default): the strip stays put while
+   the menu slides out. The slide moves to the menu, which travels its own
+   height plus the strip's, so it clears the strip it passes behind. The band
+   the host still occupies takes no pointer events, so the page under it stays
+   reachable; the strip itself takes them back. */
+.urd-nav-announce-keep.urd-nav-hidden {
+  translate: none;
+  pointer-events: none;
+}
+
+.urd-nav-announce-keep.urd-nav-hidden > .urd-nav {
+  translate: 0 calc(-100% - var(--urd-announce-h, 0px) - 24px);
+}
+
+.urd-nav-announce-keep.urd-nav-hidden > .urd-nav-announce {
+  pointer-events: auto;
+}
+
+.urd-nav-announce-keep.urd-nav-scroll .urd-nav {
+  transition: padding 0.22s ease, translate 0.28s ease;
+}
+
 /* The compact factor lives on the nav (the host carries the state class):
    nav.style.shrinkTo sets --urd-nav-shrink-to inline on the nav, and the
    logo image reads --urd-nav-shrink from there. */

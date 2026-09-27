@@ -229,6 +229,11 @@ export function renderNav(site, host) {
   const scrollMode = effSite.nav.scroll;
   const wantsScroll = (scrollMode === 'shrink' || scrollMode === 'hide')
     && !isSide && effSite.nav.sticky !== false;
+  // A strip that does not follow the menu out (announcement.followNav false,
+  // the default): the slide moves from the host to the menu, so the strip
+  // keeps its place while the bar passes behind it.
+  host.classList.toggle('urd-nav-announce-keep',
+    !!announceEl && host.contains(announceEl) && wantsScroll && scrollMode === 'hide' && !announce.followNav);
   // Transparent at the top (nav.style.atTop 'clear', additive since v0.7):
   // the host class comes from hostClasses, the surface appears once the
   // page has left the top zone (urd-nav-scrolled). Independent of sticky:

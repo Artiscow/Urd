@@ -563,7 +563,14 @@ test('announcementModel: null unless shown with text, defaults otherwise', () =>
   assert.equal(announcementModel({ show: true, text: '   ' }), null);
   assert.equal(announcementModel({ text: 'Open late' }), null);
   assert.deepEqual(announcementModel({ show: true, text: ' Open late ' }),
-    { text: 'Open late', href: null, sticky: true, dismiss: true, place: 'nav', bg: '', color: '' });
+    { text: 'Open late', href: null, sticky: true, dismiss: true, followNav: false, place: 'nav', bg: '', color: '' });
+});
+
+test('announcementModel: followNav is off unless set true, so the strip stays while the menu hides', () => {
+  assert.equal(announcementModel({ show: true, text: 'x' }).followNav, false);
+  assert.equal(announcementModel({ show: true, text: 'x', followNav: false }).followNav, false);
+  assert.equal(announcementModel({ show: true, text: 'x', followNav: 'yes' }).followNav, false);
+  assert.equal(announcementModel({ show: true, text: 'x', followNav: true }).followNav, true);
 });
 
 test('hostClasses: the column carries its submenu mode, the arrow and the tools alignment', () => {

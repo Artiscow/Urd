@@ -274,6 +274,9 @@ export function announcementModel(announcement, pages = []) {
     href,
     sticky: announcement.sticky !== false,
     dismiss: announcement.dismiss !== false,
+    // Whether the strip slides out with the menu under «hide on scroll».
+    // Off by default: the message stays while the bar gets out of the way.
+    followNav: announcement.followNav === true,
     // Where the strip sits with a side column (nav.js honours it for the
     // side variants only): in the column, above the whole page, or above
     // the content beside the column.

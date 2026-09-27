@@ -266,7 +266,7 @@ Plan for the thirteen open lines below (causes found 27 September 2026, six comm
 - [ ] admin panel lukkes om man går inn i ren visning og ut igjen - panelene burde være åpne slik som de ble forlatt. - ny instilling i urd admin instillinger om admin panelene skal huske hvor du var eller om de skal lukke seg når du laster inn urd admin på nytt.
 - [x] (fixed 27 September 2026 in 0.7.0.16: `applyScroll` clamped shrink and hide off whenever the editing chrome was on; the editor chrome now parks against the unshrunk menu height instead) nav: oppførsel ved scrolling vises kun i ren visning - må vises i admin preview i tillegg.
 - [ ] nav oppsett: "følg innholdsbredden" skal være standard, og på ved default.
-- [ ] nav oppførsel ved scrolling "skjul vis ved scroll opp" tar også med seg kunngjøringer, så kunngjøringer blir skjult om man scoller ned - kunngjøring burde ikke følge nav sin oppførsel - dette kan være egne instillinge for og under kunngjøringer panelet.
+- [x] (fixed 27 September 2026 in 0.7.0.17 as `nav.announcement.followNav`, default off: the strip was a child of the host the hide slides out) nav oppførsel ved scrolling "skjul vis ved scroll opp" tar også med seg kunngjøringer, så kunngjøringer blir skjult om man scoller ned - kunngjøring burde ikke følge nav sin oppførsel - dette kan være egne instillinge for og under kunngjøringer panelet.
 - [x] (done 27 September 2026 in 0.7.0.16: renamed «Flaten kommer når man blar» / «Surface appears on scroll»; the data field `nav.style.atTop` is unchanged) Nav oppførsel "gjennomsiktig øverst" trenger nytt navn - det er ikke klart hva den gjør fra navnet
 
 ## Suggestions, Ideas and Wishes
