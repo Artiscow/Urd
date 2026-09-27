@@ -2,6 +2,14 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Testrunde-batch (0.7.0.20): the blocks, the guides and the drawn chrome
+
+- [ ] Insert a collection block on a page at the full content width, drag it towards the centre: it snaps exactly to the middle, with the centre guide showing; the same for a gallery and a product block
+- [ ] Drag any block towards a quarter of the content surface: a guide appears at 1/4 and 3/4 as it does at the centre, and Shift still bypasses the snapping
+- [ ] The guide button in the top bar: the dashed lines sit at the quarters of the content surface, lining up with the lines the drag snaps to
+- [ ] The block chrome: the rotate handle, the drag grip and the delete button are drawn icons, and so are the section toolbar's up, down, fit-height and delete buttons
+- [ ] The rotate handle still rotates, and still flips below the block when the toolbar is flipped under
+
 ### Testrunde-batch (0.7.0.19): the drag between sections
 
 - [ ] A section holding a block whose content is taller than its frame: drag another block from it down into the section below; the source section keeps its height and the block lands in the section below

@@ -27,6 +27,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.20 - The blocks, the guides and the drawn chrome - 27 September 2026
+
+- A collection block could not be centred: at 90 % it is 81 of the content surface's 90 grid cells, an odd number, so snapping left it 8 px off centre either way, outside the guides' 5 px tolerance. The wide defaults are 88.89 % (80 cells), which puts the centred position exactly on a cell boundary; the gallery and product blocks carried the same width and the same defect.
+- The drag guides had no quarter positions: the content surface's 25 % and 75 % join the midline. The always-on guides were drawn in the section, so their lines measured the window rather than the content surface the snapping uses; they sit in the surface now, on the same quarters.
+- The rotate handle, the drag grip, the deletes and the section toolbar's arrows and fit-height button drew text characters. All are drawn SVG (`CROSS_SVG`, `GRIP_SVG`, `ROTATE_SVG`, `FIT_HEIGHT_SVG` beside the existing icons).
+
 ### 0.7.0.19 - The canvas: the drag between sections - 27 September 2026
 
 - A block could not be dragged out of a section that had a growing block in it: the live pass fed the dragged block's own position into the section height, so the section stretched after the block and the section below was never uncovered (measured on shop-fp: the source grew from 400 to 525 px during the drag). A block under the pointer is drawn where the pointer holds it but is left out of the section height (`skipBox` in `writePush`).

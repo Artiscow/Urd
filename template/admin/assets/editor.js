@@ -12315,7 +12315,7 @@ function tm(e, t) {
 				limit: 6,
 				newestFirst: !0
 			},
-			w: 90,
+			w: 88.89,
 			h: 200
 		},
 		gallery: {
@@ -12329,7 +12329,7 @@ function tm(e, t) {
 				lightbox: !0,
 				interval: 5
 			},
-			w: 90,
+			w: 88.89,
 			h: 320
 		},
 		faq: {
@@ -12483,7 +12483,7 @@ function tm(e, t) {
 				columns: 0,
 				currency: "kr"
 			},
-			w: 90,
+			w: 88.89,
 			h: 300
 		},
 		cart: {

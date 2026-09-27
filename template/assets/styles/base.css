@@ -5569,8 +5569,6 @@ body.urd-mobile .urd-section-resize-top {
   height: 16px;
   display: none;
   place-items: center;
-  font-size: 11px;
-  line-height: 1;
   color: var(--urd-admin-accent-text, #fff);
   border-radius: 50%;
   background: var(--urd-admin-accent, #5f6a75);

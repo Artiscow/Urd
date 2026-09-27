@@ -4908,7 +4908,10 @@
   }
 
   /** The block palette: a new block ready to be dragged where it belongs. */
-  /** w in percent of the section width, h in px (physical units). */
+  /** w in percent of the section width, h in px (physical units). The wide
+   *  blocks are 88.89 %, which is 80 of the content surface's 90 grid cells
+   *  at the default width: an even cell count leaves five cells on each side,
+   *  so snapping can reach the centred position. */
   const BLOCK_DEFAULTS = {
     text: { type: 'text', props: { html: ta('seed.text'), align: 'left' }, w: 33, h: 28 },
     'text-box': { type: 'text', props: { html: ta('seed.textBox'), align: 'left', box: true }, w: 30, h: 150 },
@@ -4935,8 +4938,8 @@
     'calendar-month': { type: 'calendar', props: { sources: [], view: 'month', limit: 6, showCategories: true, showSubscribe: true }, w: 88, h: 480 },
     'calendar-next': { type: 'calendar', props: { sources: [], view: 'next', limit: 6, showCategories: true, showSubscribe: true }, w: 40, h: 180 },
     icon: { type: 'icon', decor: true, hideMobile: true, props: { glyph: '★', color: 'accent', size: 48 }, w: 8, h: 64 },
-    collection: { type: 'collection', props: { collection: null, view: 'cards', limit: 6, newestFirst: true }, w: 90, h: 200 },
-    gallery: { type: 'gallery', props: { images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5 }, w: 90, h: 320 },
+    collection: { type: 'collection', props: { collection: null, view: 'cards', limit: 6, newestFirst: true }, w: 88.89, h: 200 },
+    gallery: { type: 'gallery', props: { images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5 }, w: 88.89, h: 320 },
     faq: {
       type: 'faq',
       props: {
@@ -5008,7 +5011,7 @@
       w: 40, h: 110,
     },
     audio: { type: 'audio', props: { src: '', title: '', loop: false }, w: 34, h: 80 },
-    product: { type: 'product', props: { collection: null, limit: 0, columns: 0, currency: 'kr' }, w: 90, h: 300 },
+    product: { type: 'product', props: { collection: null, limit: 0, columns: 0, currency: 'kr' }, w: 88.89, h: 300 },
     cart: { type: 'cart', props: { variant: 'button', href: '', currency: 'kr' }, w: 16, h: 48 },
     checkout: { type: 'checkout', props: { recipient: '', endpoint: '', vipps: '', currency: 'kr', vippsCheckout: false }, w: 44, h: 430 },
   };

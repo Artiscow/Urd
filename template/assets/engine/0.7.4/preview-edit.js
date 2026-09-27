@@ -197,7 +197,7 @@ function toggleLayoutPicker(host, section, grid) {
     const close = document.createElement('button');
     close.type = 'button';
     close.className = 'urd-layout-close';
-    close.textContent = '×';
+    close.innerHTML = CROSS_SVG;
     close.title = ta('confirm.cancel');
     close.addEventListener('click', cleanup);
     head.append(title, close);
@@ -408,11 +408,11 @@ export function toggleGridOverlays(visible, page, site) {
 let guideOverlaysOn = false;
 
 /**
- * Always-visible guide lines for the whole page: the page's vertical
- * center, each section's horizontal center, and the content-width lines at
- * 4%/96% (the default margin of the palette and presets). Dashed, in
- * contrast to the solid smart lines shown only during drag. Editor chrome
- * only: hidden in Clean view and never present for visitors.
+ * Always-visible guide lines for the whole page: the content surface's
+ * quarters (25 %, the midline, 75 %) and each section's horizontal center.
+ * Dashed, in contrast to the solid smart lines shown only during drag, and
+ * drawn in the content surface, the same lines the drag snaps to. Editor
+ * chrome only: hidden in Clean view and never present for visitors.
  */
 export function toggleGuideOverlays(visible) {
   guideOverlaysOn = visible;
@@ -422,15 +422,16 @@ export function toggleGuideOverlays(visible) {
 }
 
 function addGuideOverlays(host) {
+  const surface = canvasOf(host);
   const line = (cls, style) => {
     const el = document.createElement('div');
     el.className = `urd-page-guide ${cls}`;
     el.style.cssText = style;
-    host.appendChild(el);
+    surface.appendChild(el);
   };
+  line('urd-page-guide-v', 'left:25%;');
   line('urd-page-guide-v', 'left:50%;');
-  line('urd-page-guide-v', 'left:4%;');
-  line('urd-page-guide-v', 'left:96%;');
+  line('urd-page-guide-v', 'left:75%;');
   line('urd-page-guide-h', 'top:50%;');
 }
 
@@ -1004,7 +1005,7 @@ function makeSectionAdder(index, above = null) {
     const cancel = document.createElement('button');
     cancel.type = 'button';
     cancel.className = 'urd-preset-close';
-    cancel.textContent = '×';
+    cancel.innerHTML = CROSS_SVG;
     cancel.title = ta('confirm.cancel');
     cancel.addEventListener('click', collapse);
     top.append(search, cancel);
@@ -1085,7 +1086,7 @@ function makeSectionAdder(index, above = null) {
         const del = document.createElement('button');
         del.type = 'button';
         del.className = 'urd-template-delete';
-        del.textContent = '×';
+        del.innerHTML = CROSS_SVG;
         del.title = ta('canvas.deleteTemplate');
         del.addEventListener('click', (event) => {
           // The editor owns the confirmation and deletion; the menu closes
@@ -2049,9 +2050,9 @@ function addSectionToolbar(host, section, grid) {
   const bar = document.createElement('div');
   bar.className = 'urd-section-toolbar';
 
-  const mk = (text, title, onClick) => {
+  const mk = (label, title, onClick) => {
     const btn = document.createElement('button');
-    btn.textContent = text;
+    if (label.startsWith('<svg')) btn.innerHTML = label; else btn.textContent = label;
     btn.title = title;
     btn.addEventListener('click', onClick);
     bar.appendChild(btn);
@@ -2111,9 +2112,9 @@ function addSectionToolbar(host, section, grid) {
         }, 150);
       });
     }
-    mk('↑', ta('canvas.sectionUp'), () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
-    mk('↓', ta('canvas.sectionDown'), () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
-    mk('⤓', ta('canvas.fitHeight'), () => {
+    mk(ORDER_UP_SVG, ta('canvas.sectionUp'), () => post({ type: 'urd-move-section', sectionId: section.id, dir: -1 }));
+    mk(ORDER_DOWN_SVG, ta('canvas.sectionDown'), () => post({ type: 'urd-move-section', sectionId: section.id, dir: 1 }));
+    mk(FIT_HEIGHT_SVG, ta('canvas.fitHeight'), () => {
       const maxBottom = Math.max(0, ...section.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
       const px = Math.max(grid.size * 3, maxBottom + grid.size);
       const minHeight = `${px}px`;
@@ -2141,7 +2142,7 @@ function addSectionToolbar(host, section, grid) {
       post({ type: 'urd-save-template', kind: 'section', section: JSON.parse(JSON.stringify(section)) });
     });
     bar.appendChild(save);
-    mk('×', ta('canvas.deleteSection'), () => {
+    mk(CROSS_SVG, ta('canvas.deleteSection'), () => {
       post({ type: 'urd-delete-section', sectionId: section.id });
     });
   }
@@ -2265,6 +2266,13 @@ function buildHiddenList(section, hidden) {
   }
   return list;
 }
+
+// The same rule for the rest of the editing chrome: a cross, the drag grip,
+// the rotate handle and the fit-height button are drawn, never characters.
+const CROSS_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+const GRIP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>';
+const ROTATE_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4v6h-6"/><path d="M20.5 13a8.5 8.5 0 1 1-2-5.5L21 10"/></svg>';
+const FIT_HEIGHT_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M6 10l6 6 6-6"/><path d="M4 21h16"/></svg>';
 
 // Drawn icons for the mobile buttons (ADR-0009: never glyphs/emoji in
 // chrome): reset (counterclockwise arrow), arrow up/down (order) and a
@@ -3062,7 +3070,7 @@ function enhanceBlock(el, block, section, grid, host) {
 
   const moveHandle = document.createElement('button');
   moveHandle.className = 'urd-edit-move';
-  moveHandle.textContent = '⠿';
+  moveHandle.innerHTML = GRIP_SVG;
   moveHandle.title = ta('canvas.dragMove');
   toolbar.appendChild(moveHandle);
 
@@ -3209,7 +3217,7 @@ function enhanceBlock(el, block, section, grid, host) {
 
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'urd-edit-delete';
-    deleteBtn.textContent = '×';
+    deleteBtn.innerHTML = CROSS_SVG;
     deleteBtn.title = ta('canvas.deleteBlock');
     deleteBtn.addEventListener('click', () => {
       post({ type: 'urd-delete', sectionId: section.id, blockId: block.id });
@@ -3252,7 +3260,7 @@ function enhanceBlock(el, block, section, grid, host) {
   if (!mobile) {
     const rotHandle = document.createElement('div');
     rotHandle.className = 'urd-edit-rotate';
-    rotHandle.textContent = '⟳';
+    rotHandle.innerHTML = ROTATE_SVG;
     rotHandle.title = ta('canvas.dragRotate');
     el.appendChild(rotHandle);
 
@@ -3554,10 +3562,10 @@ function enhanceBlock(el, block, section, grid, host) {
       let current = orig;
 
       // Smart guides (Wix-style): neighboring blocks' edges/centers + the
-      // content surface's midline as snap lines. The targets are
-      // collected at drag start.
+      // content surface's quarters, midline included, as snap lines. The
+      // targets are collected at drag start.
       const GUIDE_TOL = 5;
-      const xTargets = [canvas.clientWidth / 2];
+      const xTargets = [0.25, 0.5, 0.75].map((share) => canvas.clientWidth * share);
       const yTargets = [];
       for (const other of canvas.querySelectorAll(':scope > .urd-block')) {
         if (other === el) continue;

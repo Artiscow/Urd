@@ -233,7 +233,7 @@ Plan for the thirteen lines below (causes found 25 September 2026, four commits 
 - 0.7.0.13, the blocks: the grain slider caps at 0.3 while the engine renders 0..1; the rotate handle covers the resize corner on a 4 to 8 px tall line at any zoom under about 73 %.
 - 0.7.0.14, schema: `nav.announcement.place` (`nav`, `page`, `content`) for the side column, three places plus a `Choice` shown for the side variants only.
 
-- [ ] The rotate handle in the preview draws its glyph as a text character (preview-edit.js, `⟳`); editor chrome is drawn SVG only (noted by the review of 26 September 2026)
+- [x] (done 27 September 2026 in 0.7.0.20, together with the five other character glyphs in the same chrome) The rotate handle in the preview draws its glyph as a text character (preview-edit.js, `⟳`); editor chrome is drawn SVG only (noted by the review of 26 September 2026)
 - [x] (addressed 25 September 2026 in 0.7.0.12: the parked block was painted behind the next section, a lifting section took the pin with it, and the list could show wrong sections; the release itself comes at the chosen section's bottom edge, so the last section keeps the block pinned to the end of the page) Fest ved scrolling på element- "Slipp taket ved seksjon xyz" fungerer ikke.  
 - [x] (done 26 September 2026 in 0.7.0.13: only the slider capped it) Korn i bakgrunn skal gå fra 0% til 100%, ikke 0-30% som nå
 - [x] (fixed 26 September 2026 in 0.7.0.13: the rotate handle covered the resize corner on a thin block; it sits above the block now, and a length field was added) Kan ikke gjøre strek i Shapes/former større/lengre
@@ -258,8 +258,8 @@ Plan for the thirteen open lines below (causes found 27 September 2026, six comm
 
 - [ ] Bildeeditor menyen er ikke lik størrelse som resten av admin panelet - den følger størrelsen på preview siden.
 - [ ] Bildeeditor: Strekene/rutene som vises over bildet følger ikke med bildet om man gjør bredden på siden større - da forblir rutene der bildet var før bredden ble endret.
-- [ ] Når man drar et element, burde man se hjelpestrekene for sentert, sidestilt, 1/4, 2/4 osv.  
-- [ ] Samling blokkene er en rute for bred for  å være sentrert på siden - default burde være en rute smalere.
+- [x] (done 27 September 2026 in 0.7.0.20: centre and block-edge guides existed; the quarters were added and the always-on guides moved into the content surface) Når man drar et element, burde man se hjelpestrekene for sentert, sidestilt, 1/4, 2/4 osv.  
+- [x] (fixed 27 September 2026 in 0.7.0.20: 90 % is 81 cells, an odd number, so snapping could not reach the centre; the wide defaults are 88.89 %, that is 80 cells) Samling blokkene er en rute for bred for  å være sentrert på siden - default burde være en rute smalere.
 - [x] (fixed 27 September 2026 in 0.7.0.19: the live push pass let the dragged block decide the section height, so the section grew after it and the drop target stayed covered) Å dra et element fra hjem hero ned til en annen seksjon fungerer ikke - hero seksjonen blir bare større.
 - [x] (addressed 27 September 2026 in 0.7.0.19: the hand-over answered with a full page send, which rebuilds the document from scratch; only the two sections are sent now. The jump itself did not reproduce headlessly, so the test round decides) Å dra et element fra en seksjon til en annen får siden til å teleportere litt opp
 - [x] (fixed 27 September 2026 in 0.7.0.16: the dismissal was read and written only outside the preview; the preview uses the same key, and the Kunngjøring fold got «Vis stripen igjen») Kunngjøring vises ikke igjen etter å ha krysset den ut på publisert side (som er korrekt), men det skjer ikke i admin. Å krysse ut kunngjøring i Admin preview fungerer kun frem til man går inn på en ny side på nettsiden i admin - det burde være likt som i publisert side (eventuelt med en knapp i kunngjøring panelet om å vise kunngjøringen igjen)
