@@ -136,6 +136,39 @@ export function navScrollState(mode, anchor, y, prevHidden, { shrinkAt } = {}) {
   return { compact: false, hidden: false, scrolled, anchor };
 }
 
+/** The nav fields the mobile breakpoint may override (nav.style.mobile). */
+const MOBILE_STYLE_KEYS = ['size', 'inset', 'tools', 'border'];
+
+/**
+ * The nav as it applies at the current breakpoint (additive since v0.7):
+ * the keys present in nav.style.mobile replace the desktop values they
+ * name, and nothing else changes. Everything downstream (navClasses,
+ * hostClasses, navSizeVars) then reads one resolved nav, so the pure
+ * functions never need to know about breakpoints.
+ *
+ * The choice is made here rather than with a CSS class for the reason
+ * ADR-0023 gives: urd-nav-mobile is also set by desktop content folding, so
+ * a class can never be the source of truth for what applies. `layout` and
+ * `overlay` sit in the same bag although they are not style fields, since
+ * nav.style.mobile is where the mobile overrides live.
+ *
+ * @param {object} nav site.nav
+ * @param {{mobile?: boolean}} [state] Whether the mobile breakpoint matches
+ * @returns {object} The nav to render from
+ */
+export function effectiveNav(nav, { mobile = false } = {}) {
+  const m = nav?.style?.mobile;
+  if (!mobile || !m || typeof m !== 'object') return nav;
+  const style = { ...nav.style };
+  for (const key of MOBILE_STYLE_KEYS) {
+    if (m[key] !== undefined) style[key] = m[key];
+  }
+  const out = { ...nav, style };
+  if (m.layout !== undefined) out.layout = m.layout;
+  if (m.overlay !== undefined) out.overlay = m.overlay;
+  return out;
+}
+
 /**
  * The CSS classes on the nav element. Variant (floating pill) and hover
  * style (additive since v0.6) yield extra classes only when they deviate

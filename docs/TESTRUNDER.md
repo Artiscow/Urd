@@ -4,6 +4,13 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.0.28): the mobile menu's own setup
+
+- [ ] The demo site in the Phone view: the menu uses the small size and draws no border, while the desktop view keeps the large size and its bottom border
+- [ ] A site with no mobile overrides at all: the phone looks exactly as it did before this change
+- [ ] Cross the breakpoint back and forth in the editor: the menu switches between the two sets with no leftovers
+- [ ] A desktop window narrow enough for the items to fold to the burger: the DESKTOP settings still apply there, since that is not the mobile breakpoint
+
 ### Testrunde-batch (0.7.0.27): the announcement in the full-screen menu
 
 - [ ] Mobile with the full-screen menu and an announcement, «Kunngjøring i menyen» on: open the menu and the strip is at the top of it, full width, above the cross

@@ -191,6 +191,10 @@
       },
       "sideSubs": "collapsed",
       "sideSubArrow": false,
+      "mobile": {
+        "size": "sm",
+        "border": { "side": "none" }
+      },
       "mobileMenu": "sheet",
       "sheetMotion": "right",
       "mobileSubs": "expanded",

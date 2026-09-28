@@ -341,7 +341,31 @@
               "description": "Overrides at the mobile breakpoint (additive from v0.7); omitted fields = same as desktop. Chosen by nav.js at render time.",
               "properties": {
                 "padY": { "type": "number", "minimum": 0, "maximum": 64, "description": "Thickness in px at the mobile breakpoint" },
-                "textSize": { "type": "number", "minimum": 12, "maximum": 28, "description": "Menu text size in px at the mobile breakpoint" }
+                "textSize": { "type": "number", "minimum": 12, "maximum": 28, "description": "Menu text size in px at the mobile breakpoint" },
+                "size": { "type": "string", "enum": ["sm", "md", "lg", "xl"], "description": "The size preset at the mobile breakpoint" },
+                "layout": { "type": "string", "enum": ["left", "center", "right"], "description": "Where the items sit at the mobile breakpoint" },
+                "inset": { "type": "boolean", "description": "Whether the bar's contents follow the content width at the mobile breakpoint" },
+                "overlay": { "type": "boolean", "description": "Whether the bar lies over the top section at the mobile breakpoint" },
+                "tools": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "description": "The tool cluster's placement at the mobile breakpoint",
+                  "properties": {
+                    "side": { "type": "string", "enum": ["start", "end"] },
+                    "align": { "type": "string", "enum": ["start", "center", "end", "spread"] }
+                  }
+                },
+                "border": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["side"],
+                  "description": "The border at the mobile breakpoint; side none removes the desktop border there",
+                  "properties": {
+                    "side": { "type": "string", "enum": ["none", "bottom", "top", "both", "all"] },
+                    "width": { "type": "integer", "minimum": 1, "maximum": 8 },
+                    "color": { "type": "string" }
+                  }
+                }
               }
             }
           }

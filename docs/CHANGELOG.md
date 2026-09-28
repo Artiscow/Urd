@@ -27,6 +27,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.28 - The mobile menu's own setup, the engine model - 28 September 2026
+
+- `nav.style.mobile` held only the thickness and the text size, and the appearance functions had no breakpoint knowledge at all, so a mobile-only layout could not be expressed. It now also takes `size`, `layout`, `inset`, `overlay`, `tools` and `border` (with `side: "none"` to drop the desktop border on the phone alone). `effectiveNav` in nav-model.js merges the overrides into one resolved nav before `navClasses`, `hostClasses` and `navSizeVars` read it, so the pure functions stay free of breakpoints and the choice is made at render time, which is what ADR-0023 requires: the burger class is also set by desktop content folding.
+- The floating-only fields and the column's own fields get no mobile override: the phone renders as a bar with a burger, where they do nothing. Schema, SCHEMA.md and the example data in the same commit, with three tests on the resolution. The panel controls follow in the next commit.
+
 ### 0.7.0.27 - The announcement inside the full-screen menu - 28 September 2026
 
 - The announcement sat behind the full-screen mobile menu and could not even be dismissed there: the strip lives in the nav host, while the menu is a modal dialog in the top layer. New `nav.style.sheetAnnounce` (default false) moves the strip into the top of the menu while it is open and back to the bar on close, the same move-in and move-out the logo already uses. The menu's clearance is left alone while the strip is away and measured again on close, and a strip dismissed from inside the menu stays gone. Schema, SCHEMA.md and the example data in the same commit, with a checkbox in the Mobil fold shown only when there is an announcement.

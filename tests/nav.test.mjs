@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, TOOLS_ALIGNS, sheetMotion, SHEET_MOTIONS, announcementModel, isSafeImage } = await engineImport('nav-model.js');
+const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, effectiveNav, TOOLS_ALIGNS, sheetMotion, SHEET_MOTIONS, announcementModel, isSafeImage } = await engineImport('nav-model.js');
 
 // Deliberately Norwegian page titles and slugs: user data stays Norwegian (ADR-0021).
 const PAGES = [
@@ -536,6 +536,43 @@ test('navSizeVars: the pill width is a px value or the content width, never at t
   assert.equal(navSizeVars({ pillWidth: 'content' }, {}, { mobile: true }).vars['--urd-nav-pill-w'], undefined);
   assert.equal(navSizeVars({ pillWidth: 1200 }, {}, { mobile: true }).vars['--urd-nav-pill-w'], undefined);
   assert.equal(navSizeVars({ pillWidth: 'wide' }).vars['--urd-nav-pill-w'], undefined);
+});
+
+test('effectiveNav: the mobile overrides replace only the keys they name', () => {
+  const nav = {
+    layout: 'left', overlay: false, items: [],
+    style: { size: 'lg', inset: true, hover: 'underline', tools: { side: 'end' }, border: { side: 'bottom', width: 3 },
+      mobile: { size: 'sm', layout: 'center', border: { side: 'none' } } },
+  };
+  // Above the breakpoint nothing is merged, and the object is the one given.
+  assert.equal(effectiveNav(nav, { mobile: false }), nav);
+  assert.equal(effectiveNav(nav), nav);
+  const m = effectiveNav(nav, { mobile: true });
+  assert.equal(m.style.size, 'sm');
+  assert.equal(m.layout, 'center');
+  assert.deepEqual(m.style.border, { side: 'none' });
+  assert.equal(m.style.inset, true, 'a key the override does not name keeps the desktop value');
+  assert.equal(m.style.hover, 'underline');
+  assert.deepEqual(m.style.tools, { side: 'end' });
+  assert.equal(m.overlay, false, 'overlay is only replaced when the override names it');
+  assert.notEqual(m, nav, 'the original is never mutated');
+  assert.equal(nav.style.size, 'lg');
+});
+
+test('effectiveNav: a missing or malformed override leaves the nav alone', () => {
+  const nav = { items: [], style: { size: 'lg' } };
+  assert.equal(effectiveNav(nav, { mobile: true }), nav);
+  assert.equal(effectiveNav({ items: [], style: { size: 'lg', mobile: 'tull' } }, { mobile: true }).style.size, 'lg');
+  assert.equal(effectiveNav({ items: [] }, { mobile: true }).style, undefined);
+});
+
+test('effectiveNav: the resolved nav is what navClasses reads at the breakpoint', () => {
+  const nav = { items: [], layout: 'left', style: { size: 'lg', border: { side: 'bottom' }, mobile: { size: 'sm', border: { side: 'none' } } } };
+  const desktop = navClasses({ nav: effectiveNav(nav, { mobile: false }) });
+  const mobile = navClasses({ nav: effectiveNav(nav, { mobile: true }) });
+  assert.ok(desktop.includes('urd-nav-size-lg') && desktop.includes('urd-nav-border-bottom'));
+  assert.ok(mobile.includes('urd-nav-size-sm'), mobile);
+  assert.ok(!mobile.includes('urd-nav-border'), 'side none removes the border on mobile only');
 });
 
 test('navSizeVars: the mobile overrides are chosen at the breakpoint and fall back to desktop', () => {

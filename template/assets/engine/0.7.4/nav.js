@@ -14,7 +14,7 @@
  * and the scroll lock come from the browser).
  */
 
-import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, announcementModel, isSafeImage } from './nav-model.js';
+import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, effectiveNav, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, announcementModel, isSafeImage } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
 import { readCart, cartCount, onCartChange } from './shop.js';
@@ -83,11 +83,16 @@ export function renderNav(site, host) {
   lastRender = { site, host };
 
   // Narrow windows: the side variant renders as a regular top bar
-  // (effective variant bar); the breakpoint listener above re-renders on crossing.
+  // (effective variant bar); the breakpoint listener above re-renders on
+  // crossing. At the mobile breakpoint the overrides in nav.style.mobile
+  // replace the desktop values they name (effectiveNav), so the appearance
+  // is computed from one resolved nav.
   const wantsSide = site.nav.variant === 'side-left' || site.nav.variant === 'side-right';
-  const effSite = wantsSide && narrowMq.matches
-    ? { ...site, nav: { ...site.nav, variant: 'bar' } }
-    : site;
+  // The site's own breakpoint; the listener and the burger class are wired
+  // further down, where the nav element exists.
+  const mobileMq = window.matchMedia(`(max-width: ${site.breakpoints?.mobile ?? 640}px)`);
+  const baseNav = wantsSide && narrowMq.matches ? { ...site.nav, variant: 'bar' } : site.nav;
+  const effSite = { ...site, nav: effectiveNav(baseNav, { mobile: mobileMq.matches }) };
 
   host.replaceChildren();
   // A strip placed outside the nav host by the previous render leaves with it.
@@ -188,7 +193,6 @@ export function renderNav(site, host) {
   // window is narrower than the mobile breakpoint. For visitors,
   // body.urd-mobile is set at the same threshold; the double coverage in
   // the CSS is harmless.
-  const mobileMq = window.matchMedia(`(max-width: ${site.breakpoints?.mobile ?? 640}px)`);
   mobileMq.addEventListener('change', () => renderNav(lastRender.site, lastRender.host), { signal });
   if (mobileMq.matches) nav.classList.add('urd-nav-mobile');
   // Sticky menu (the default): sticky must sit on the HOST (the header
@@ -342,7 +346,7 @@ export function renderNav(site, host) {
   // fallback. The mobile overrides are chosen from the breakpoint here
   // (pure navSizeVars), and the breakpoint listener above re-renders on
   // crossing.
-  const size = navSizeVars(site.nav.style, site.nav.logo, { mobile: mobileMq.matches });
+  const size = navSizeVars(effSite.nav.style, site.nav.logo, { mobile: mobileMq.matches });
   for (const [name, value] of Object.entries(size.vars)) nav.style.setProperty(name, value);
   // Border (additive since v0.7): the side is a class from navClasses; the
   // width and colour are variables with a hairline in the text colour as
