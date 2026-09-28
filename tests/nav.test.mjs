@@ -538,6 +538,25 @@ test('navSizeVars: the pill width is a px value or the content width, never at t
   assert.equal(navSizeVars({ pillWidth: 'wide' }).vars['--urd-nav-pill-w'], undefined);
 });
 
+// The schema is what the panel writes against and effectiveNav is what the
+// engine reads; a key in one and not the other is a setting that silently
+// does nothing.
+test('effectiveNav: the schema and the engine agree on which keys the phone may override', async () => {
+  const { readFileSync } = await import('node:fs');
+  const schema = JSON.parse(readFileSync(new URL('../schema/site.schema.json', import.meta.url), 'utf-8'));
+  const inSchema = Object.keys(schema.properties.nav.properties.style.properties.mobile.properties).sort();
+  // padY and textSize are resolved by navSizeVars, the rest by effectiveNav.
+  const handled = ['padY', 'textSize', 'size', 'layout', 'inset', 'overlay', 'tools', 'border'].sort();
+  assert.deepEqual(inSchema, handled);
+  const nav = { items: [], style: { mobile: Object.fromEntries(inSchema.map((k) => [k, k === 'border' ? { side: 'none' } : k === 'tools' ? { side: 'start' } : 'x'])) } };
+  const m = effectiveNav(nav, { mobile: true });
+  for (const key of ['size', 'inset', 'overlay', 'tools', 'border']) {
+    const where = key === 'overlay' ? m : m.style;
+    assert.notEqual(where[key], undefined, `${key} is not read by effectiveNav`);
+  }
+  assert.notEqual(m.layout, undefined);
+});
+
 test('effectiveNav: the mobile overrides replace only the keys they name', () => {
   const nav = {
     layout: 'left', overlay: false, items: [],

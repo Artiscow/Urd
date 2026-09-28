@@ -27,6 +27,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.29 - The mobile menu's own setup, the panel - 29 September 2026
+
+- The Mobil fold got the rest of the setup for the phone alone: size, item placement, the tool cluster's side, the content width, the overlay and the border, each starting on «Som PC» and only then writing a value of its own. A border set there takes its own width and colour, and «Ingen» removes the desktop border on the phone without touching it elsewhere.
+- The tool cluster's alignment was in the schema from the previous commit but can never apply on a phone (it is the column's), and is removed rather than left inert. A contract test now ties the schema's mobile keys to the keys the engine reads, so a setting can no longer be added in one place and do nothing in the other.
+
 ### 0.7.0.28 - The mobile menu's own setup, the engine model - 28 September 2026
 
 - `nav.style.mobile` held only the thickness and the text size, and the appearance functions had no breakpoint knowledge at all, so a mobile-only layout could not be expressed. It now also takes `size`, `layout`, `inset`, `overlay`, `tools` and `border` (with `side: "none"` to drop the desktop border on the phone alone). `effectiveNav` in nav-model.js merges the overrides into one resolved nav before `navClasses`, `hostClasses` and `navSizeVars` read it, so the pure functions stay free of breakpoints and the choice is made at render time, which is what ADR-0023 requires: the burger class is also set by desktop content folding.

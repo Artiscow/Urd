@@ -4,6 +4,15 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.0.29): the mobile setup in the panel
+
+- [ ] Nav panel, Mobil fold: size, placement, tools, content width, overlay and border all read «Som PC» on a site that has never set them
+- [ ] Set each one in turn and switch to the Phone view: only that one changes, and the desktop view is untouched
+- [ ] Set the border to «Nederst» on mobile: the width and colour row appears, and both apply on the phone only
+- [ ] Set the border to «Ingen» on a site with a desktop border: the phone has none, the desktop keeps its
+- [ ] Set a value and then put it back to «Som PC»: the field disappears from the data, and the phone follows the desktop again
+- [ ] A floating or side variant: the fold offers no pill width, rounding, glow or column settings, since the phone is a bar with a burger
+
 ### Testrunde-batch (0.7.0.28): the mobile menu's own setup
 
 - [ ] The demo site in the Phone view: the menu uses the small size and draws no border, while the desktop view keeps the large size and its bottom border

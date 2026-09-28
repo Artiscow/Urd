@@ -230,9 +230,9 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 
 - [x] (fixed 28 September 2026 in 0.7.0.25: the state flipped on one frame's direction, so no travelled distance existed; the menu leaves after 96 px down and returns after 16 px up) "skjul, vis ved scroll opp" må bruke lenger tid før den skjules- man burde kunne scrolle litt mer. Nå blir den borte med en gang man scroller.
 
-- [ ] "krymp menyen" trenger også en instilling om hvor lang tid det tar før den krymper, og hvor lang tid det tar for at den krymper ned til "krymp til" prosenten.
+- [x] (done 28 September 2026 in 0.7.0.26 as `nav.style.shrinkAt` and `nav.style.shrinkMs`; the shrink used to share the top zone with the clear surface and the hide) "krymp menyen" trenger også en instilling om hvor lang tid det tar før den krymper, og hvor lang tid det tar for at den krymper ned til "krymp til" prosenten.
 
-- [ ] "Kyrmp menyen" fungerer kun på logo og bredden høyden på nav baren.
+- [x] (fixed 28 September 2026 in 0.7.0.26: the text size was an inline font-size no rule could scale; text and item spacing now follow at half the padding's rate) "Kyrmp menyen" fungerer kun på logo og bredden høyden på nav baren.
 
 - [x] (fixed 28 September 2026 in 0.7.0.24: the close stood in for following, since the panel is placed from the image's viewport rect; it follows now and closes when the image leaves the screen) Bildeeditoren forsvinner om man scroller - den burde bli på siden i minst i løpet av en del scrolls før den blir borte (eventuelt til bildet som man editer er ute av skjermen).
 
@@ -247,7 +247,7 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 - [x] (half done 28 September 2026 in 0.7.0.23: the help chip was under the rotate handle and is now clear of it, with the zoom counter-scale. The colour half is the native `title` tooltip and is its own line below) Elementer som har tooltip øverst til høyre har en tooltip meny som ikke følger urd admin sin farge eller størrelse. Tooltip er også gjemt back rotasjon merket.
 
 - [x] (done 28 September 2026 in 0.7.0.25: «Gjennomsiktig på toppen av siden», chosen from four alternatives; the trigger is the page's scroll position, so the label names the page and not the menu) "Flaten kommer når man blar" kan døpes om til "nav baren blir til toppen av siden ved toppen av siden" eller noe lignende "blir til toppen av siden" noe slikt. "Gjennomsiktig når nav er øverst" Foreslå noen alternativ for meg.
-- [ ] Mobilmeny trenger egen instilling for "oppsett" for nav - burde inkludere oppsett som for desktop, men kun for mobil, tilpass, (alternativ for ramme som kan bli skrudd på med en "egen ramme" knapp - det samme for størrelse )
+- [x] (done 28 and 29 September 2026 in 0.7.0.28 and 0.7.0.29: `nav.style.mobile` took the whole setup and `effectiveNav` resolves it at render time, with the controls in the Mobil fold) Mobilmeny trenger egen instilling for "oppsett" for nav - burde inkludere oppsett som for desktop, men kun for mobil, tilpass, (alternativ for ramme som kan bli skrudd på med en "egen ramme" knapp - det samme for størrelse )
 - [x] (done 28 September 2026 in 0.7.0.27 as `nav.style.sheetAnnounce`: the strip was behind the modal menu and could not be dismissed there) Kunngjøringer trenger en instilling i mobil/for mobilvisning hvor kunngjøring vises også i mobil nav fullskjerm visning
 - [ ] Foldene i «+ Nytt element»-menyen (Former og plugin-variantene) tegner pilen sin som tegnene ▾ og ▴; editor-chrome skal være tegnet SVG (noted 28 September 2026, the same rule as the handles fixed in 0.7.0.20)
 - [ ] Tooltips i lerretet er nettleserens egne (`title`), så de følger verken admin-temaet eller admin-størrelsen. Urd har ingen tooltip-komponent: `hint.js` er et hjelpekort som åpnes med klikk og `dropdown.js` en meny, så dette krever en ny delt modul i samme selvstylede mønster, og omlegging av rundt 400 kallsteder i motoren og editoren. AGENTS.md foreskriver i dag `title` for panelenes «?»-tekster, så regelen må endres i samme slengen (en utvidelse av ADR-0009) (noted 28 September 2026)

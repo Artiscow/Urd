@@ -3142,8 +3142,15 @@
     });
   }
 
-  const navMobilePadY = $derived(siteDraft?.nav?.style?.mobile?.padY ?? navPadY);
-  const navMobileTextSize = $derived(siteDraft?.nav?.style?.mobile?.textSize ?? navTextSize);
+  /** The three-state mobile switches: '' is «same as desktop», the other
+   *  two write the boolean the phone should use. */
+  const navMobileFlag = (key) => {
+    const v = siteDraft?.nav?.style?.mobile?.[key];
+    return v === undefined ? '' : (v ? 'on' : 'off');
+  };
+  const setNavMobileFlag = (key, v) => setNavMobile(key, v === '' ? undefined : v === 'on');
+  /** The phone's border: '' is «same as desktop», none removes it there. */
+  const setNavMobileBorder = (side) => setNavMobile('border', side ? { ...(siteDraft.nav.style?.mobile?.border ?? {}), side } : undefined);
 
   /** The announcement bar (nav.announcement): an emptied object is removed. */
   function setNavAnnouncement(key, value) {
@@ -6647,6 +6654,72 @@
                             onchange={(e) => onNavMobileField(e, 'textSize', TEXT_SIZE)} />
                         </div>
                       </div>
+                      <!-- The rest of the setup, for the phone alone: every
+                           choice starts on «Som PC» and only then writes a
+                           value of its own. The floating and column fields
+                           have no counterpart here: the phone is a bar with
+                           a burger, where they do nothing. -->
+                      <div class="ctl-pair">
+                        <label class="field-stack" title={ta('tip.nav.mobileSize')}>
+                          <span class="mini-label">{ta('lbl.size')}</span>
+                          <Dropdown filled value={siteDraft.nav.style?.mobile?.size ?? ''}
+                            options={[['', ta('lbl.navSameAsDesktop')], ...SIZE_IDS.map((id) => [id, ta(`opt.size.${id}`)])]}
+                            onchange={(v) => setNavMobile('size', v || undefined)} />
+                        </label>
+                        <label class="field-stack" title={ta('tip.nav.mobileLayout')}>
+                          <span class="mini-label">{ta('lbl.navPlacement')}</span>
+                          <Dropdown filled value={siteDraft.nav.style?.mobile?.layout ?? ''}
+                            options={[['', ta('lbl.navSameAsDesktop')], ['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
+                            onchange={(v) => setNavMobile('layout', v || undefined)} />
+                        </label>
+                      </div>
+                      <div class="ctl-pair">
+                        <label class="field-stack" title={ta('tip.nav.mobileTools')}>
+                          <span class="mini-label">{ta('lbl.toolsSide')}</span>
+                          <Dropdown filled value={siteDraft.nav.style?.mobile?.tools?.side ?? ''}
+                            options={[['', ta('lbl.navSameAsDesktop')], ['start', ta('common.left')], ['end', ta('common.right')]]}
+                            onchange={(v) => setNavMobile('tools', v ? { side: v } : undefined)} />
+                        </label>
+                        <label class="field-stack" title={ta('tip.nav.mobileInset')}>
+                          <span class="mini-label">{ta('lbl.navInset')}</span>
+                          <Dropdown filled value={navMobileFlag('inset')}
+                            options={[['', ta('lbl.navSameAsDesktop')], ['on', ta('common.on')], ['off', ta('common.off')]]}
+                            onchange={(v) => setNavMobileFlag('inset', v)} />
+                        </label>
+                      </div>
+                      <div class="ctl-pair">
+                        <label class="field-stack" title={ta('tip.nav.mobileOverlay')}>
+                          <span class="mini-label">{ta('lbl.navOverlay')}</span>
+                          <Dropdown filled value={navMobileFlag('overlay')}
+                            options={[['', ta('lbl.navSameAsDesktop')], ['on', ta('common.on')], ['off', ta('common.off')]]}
+                            onchange={(v) => setNavMobileFlag('overlay', v)} />
+                        </label>
+                        <label class="field-stack" title={ta('tip.nav.mobileBorder')}>
+                          <span class="mini-label">{ta('lbl.navBorder')}</span>
+                          <Dropdown filled value={siteDraft.nav.style?.mobile?.border?.side ?? ''}
+                            options={[['', ta('lbl.navSameAsDesktop')], ['none', ta('common.none')], ['bottom', ta('opt.navBorder.bottom')], ['top', ta('opt.navBorder.top')], ['both', ta('opt.navBorder.both')], ['all', ta('opt.navBorder.all')]]}
+                            onchange={(v) => setNavMobileBorder(v)} />
+                        </label>
+                      </div>
+                      <!-- Width and colour only where the phone draws a border of its own -->
+                      {#if siteDraft.nav.style?.mobile?.border?.side && siteDraft.nav.style.mobile.border.side !== 'none'}
+                        <span class="toolbar-row ctl-end">
+                          <span class="mini-label" title={ta('tip.nav.borderWidth')}>{ta('lbl.navBorderWidth')}</span>
+                          <input type="number" class="tb-num" min="1" max="8" title={ta('tip.nav.borderWidth')}
+                            value={siteDraft.nav.style.mobile.border.width ?? 1}
+                            onchange={(e) => {
+                              const w = clampRange(e.target.value, { min: 1, max: 8 }, 1);
+                              const border = { ...siteDraft.nav.style.mobile.border };
+                              if (w === 1) delete border.width; else border.width = w;
+                              setNavMobile('border', border);
+                              e.target.value = siteDraft.nav.style.mobile.border.width ?? 1;
+                            }} />
+                          <span class="mini-label" title={ta('tip.nav.borderColorPick')}>{ta('lbl.navBorderColor')}</span>
+                          <ColorPicker value={siteDraft.nav.style.mobile.border.color ?? 'text'} tokens={themeSwatches()}
+                            label={ta('tip.nav.borderColorPick')}
+                            onchange={(hex) => setNavMobile('border', { ...siteDraft.nav.style.mobile.border, color: hex })} />
+                        </span>
+                      {/if}
                       <div class="ctl-pair">
                         <label class="field-stack" title={ta('tip.nav.mobileMenu')}>
                           <span class="mini-label">{ta('lbl.mobileMenu')}</span>

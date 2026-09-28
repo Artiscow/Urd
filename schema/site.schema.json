@@ -349,10 +349,9 @@
                 "tools": {
                   "type": "object",
                   "additionalProperties": false,
-                  "description": "The tool cluster's placement at the mobile breakpoint",
+                  "description": "The tool cluster's side at the mobile breakpoint; align is column-only and has no mobile counterpart",
                   "properties": {
-                    "side": { "type": "string", "enum": ["start", "end"] },
-                    "align": { "type": "string", "enum": ["start", "center", "end", "spread"] }
+                    "side": { "type": "string", "enum": ["start", "end"] }
                   }
                 },
                 "border": {

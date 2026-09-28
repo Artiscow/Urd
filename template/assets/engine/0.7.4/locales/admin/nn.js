@@ -52,6 +52,8 @@ export default {
     'common.left': 'Venstre',
     'common.center': 'Midtstilt',
     'common.right': 'Høgre',
+    'common.on': 'På',
+    'common.off': 'Av',
     'common.standard': 'Standard',
     'confirm.ok': 'OK',
     'confirm.cancel': 'Avbryt',
