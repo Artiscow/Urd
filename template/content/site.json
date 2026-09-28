@@ -103,7 +103,7 @@
   "nav": {
     "version": 1,
     "announcement": {
-      "show": false,
+      "show": true,
       "text": "Nyhet: bestill kaker til høstferien",
       "page": "kaker",
       "place": "nav",
@@ -177,11 +177,9 @@
         ]
       },
       "topGap": false,
-      "inset": true,
       "textColor": "#ffffff",
       "hoverTextColor": "#00fff5",
       "blur": true,
-      "size": "sm",
       "hover": "underline",
       "shrinkAt": 80,
       "shrinkMs": 220,
@@ -203,10 +201,16 @@
         "bg": "#0e1a27",
         "bgOpacity": 0.95,
         "blur": false
-      }
+      },
+      "border": {
+        "side": "bottom",
+        "color": "#ffca57",
+        "width": 5
+      },
+      "shadow": "soft",
+      "shrinkTo": 0.6
     },
-    "overlay": true,
-    "variant": "floating-tab"
+    "overlay": true
   },
   "footer": {
     "version": 1,
