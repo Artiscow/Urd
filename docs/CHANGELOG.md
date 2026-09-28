@@ -27,6 +27,10 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.31 - The block toolbar's buttons take their clicks again - 29 September 2026
+
+- The buttons in a block's toolbar (delete, duplicate, show on mobile, z-order) did nothing when clicked: the icons have been drawn as inline SVG since 0.7.0.20, and the preview's guards read `event.target` as an HTMLElement, which an SVGElement is not, so a click inside an icon slipped past them and into the block's surface drag, whose pointer capture moved the release off the button. The target is read as an `Element` now, through one `eventTarget` helper used by the surface drag, the selection, the marquee and the link interception.
+
 ### 0.7.0.30 - The pill highlight stops widening the menu - 29 September 2026
 
 - Choosing the pill hover style pushed the menu items apart: the pill's side padding was added between them, so the row grew by twice the padding at every gap. A horizontal menu now draws the pill around the item instead, giving the padding back as a negative margin, and caps it at half the item spacing so two pills can at most meet. Measured: the distance from one item to the next is 56 px with the pill and without it at the default spacing, and 76 px with both at a spacing of 40. The column and the two mobile menus stack the items and keep the pill as it was.

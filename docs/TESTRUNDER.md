@@ -4,6 +4,15 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.0.31): the block toolbar's buttons
+
+- [ ] Hover a block and press the cross: the block is deleted, and Ctrl+Z brings it back
+- [ ] The duplicate button, the two z-order buttons and the mobile button on the same toolbar: each one does what it says on a single click
+- [ ] Click a button in a section's toolbar: Properties switches to that section, as it does when you click its surface
+- [ ] A link in the content whose label is an icon alone: clicking it in the preview selects the block and does not navigate the preview away
+- [ ] Press and hold on a button and drag a little before releasing: the block does not follow the pointer
+- [ ] Drag a block by its surface as before: the move still starts after a short drag, and a plain click still just selects
+
 ### Testrunde-batch (0.7.0.30): the pill highlight
 
 - [ ] Switch the hover style between «Understrek» and «Pille» on a top bar: the menu items stay exactly where they are, only the highlight changes

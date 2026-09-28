@@ -41,6 +41,17 @@ import { nearestDock } from './sticky-model.js';
 import { ta, adminLang } from './i18n.js';
 
 /**
+ * The event's target as an Element. The editing chrome draws its icons as
+ * inline SVG, and an SVGElement is not an HTMLElement, so the guards that
+ * ask which piece of chrome was hit are reached from inside an icon too.
+ * @param {Event} event
+ * @returns {Element | null}
+ */
+function eventTarget(event) {
+  return event.target instanceof Element ? event.target : null;
+}
+
+/**
  * Draws a desktop frame on its block with the push shift the block is
  * shown with (ADR-0024): the frame is the data, the shift is display only,
  * so a drag keeps the block where the owner grabbed it.
@@ -2427,7 +2438,7 @@ function selectBlock(el, opts = {}) {
 // submenu) navigates nowhere, as on the published page.
 document.addEventListener('click', (event) => {
   if (event.defaultPrevented) return;
-  const a = event.target instanceof HTMLElement ? event.target.closest('a[href]') : null;
+  const a = eventTarget(event)?.closest('a[href]') ?? null;
   if (!a) return;
   if (a.closest('.urd-block')) {
     event.preventDefault();
@@ -2594,7 +2605,7 @@ document.addEventListener('pointerdown', (event) => {
   // Clean view has no editing: a click there is a visitor's click, and must
   // not select anything behind the hidden panels.
   if (document.body.classList.contains('urd-chrome-off')) return;
-  const target = event.target instanceof HTMLElement ? event.target : null;
+  const target = eventTarget(event);
   // Clicks in the multi toolbar must never change the set it acts on.
   if (target?.closest('.urd-multi-toolbar')) return;
   const blockEl = target?.closest('.urd-block') ?? null;
@@ -2621,7 +2632,7 @@ document.addEventListener('pointerdown', (event) => {
 document.addEventListener('pointerdown', (event) => {
   if (event.button !== 0 || event.shiftKey || isMobile()) return;
   if (document.body.classList.contains('urd-chrome-off')) return;
-  const target = event.target instanceof HTMLElement ? event.target : null;
+  const target = eventTarget(event);
   const host = target?.closest('.urd-section');
   if (!host) return;
   if (target.closest('.urd-block, .urd-add-block, .urd-add-section, .urd-section-toolbar, .urd-section-resize, .urd-section-resize-top, .urd-hint-chip, .urd-hint-card, .urd-multi-toolbar, .urd-text-toolbar')) return;
@@ -3451,7 +3462,7 @@ function enhanceBlock(el, block, section, grid, host) {
   function wireDrag(handle, kind, opts = {}) {
     handle.addEventListener('pointerdown', (event) => {
       if (opts.surface) {
-        const target = event.target instanceof HTMLElement ? event.target : null;
+        const target = eventTarget(event);
         // Editable text is only exempt when the block is ALREADY selected
         // (then the text is being edited). An unselected block drags
         // freely from the text too - a click without a drag selects it,
