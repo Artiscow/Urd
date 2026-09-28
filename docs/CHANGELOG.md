@@ -27,6 +27,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.23 - The block chrome stays upright, and the guides can be seen - 28 September 2026
+
+- Rotating a block rotated its buttons with it: the chrome are children of the rotated element. The rotation is written as `--urd-block-rot` beside the transform, and the toolbar, the resize corner, the rotate handle, the sticky badge and the mobile pin turn themselves back upright against it.
+- The help chip sat under the rotate handle, which took the pointer in that corner, so the block's own help card could not be opened there. The chip moved left of the handle, above it in the stack, and got the preview-zoom counter-scale it was the only block chrome to lack.
+- The always-on guides were hard to see: they were the only editing chrome without the counter-scale, so at a strong zoom out the line rendered thinner than a pixel, and they were drawn at half opacity. Line and dash follow the zoom now, at 0.9 opacity; the drag guides keep their magenta and got a thicker line and a stronger halo.
+
 ### 0.7.0.22 - The section height and the rotated block - 28 September 2026
 
 - A block dragged towards the bottom of a section stretched the section instead of lying over the boundary: the push pass raised the section to the lowest edge of every block as soon as any block in it had content growth. A block counts towards its section's height only while its design bottom is inside that height; content growing within the height still pushes and still raises the section (ADR-0024 addendum).

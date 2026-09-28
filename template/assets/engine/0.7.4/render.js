@@ -376,6 +376,14 @@ export function sectionMinHeight(section, maxBottomPx) {
   return section.size?.minHeight ?? `${maxBottomPx}px`;
 }
 
+export function applyFrameCss(el, frame, floorPx = 0) {
+  Object.assign(el.style, frameToCss(frame, floorPx));
+  // The rotation as a custom property too, so the editing chrome can turn
+  // itself back upright. A custom property cannot go through the style map
+  // frameToCss returns, since Object.assign does not reach them.
+  el.style.setProperty('--urd-block-rot', `${frame.rot || 0}deg`);
+}
+
 export function frameToCss(frame, floorPx = 0) {
   // A width floor (a block set to shrink, fitFloorPx in push-model.js): the
   // frame never gets narrower than the floor, and is capped at the canvas's
@@ -610,7 +618,7 @@ export function renderSection(section, site, host, opts = {}) {
       // the field itself.
       if (block.decor) el.dataset.decor = '1';
       const frame = block.frames.desktop;
-      Object.assign(el.style, frameToCss(frame, fitFloorPx(block, site.layout)));
+      applyFrameCss(el, frame, fitFloorPx(block, site.layout));
       // Sticky ("pin on scroll", additive field): only marking here; the
       // pinning itself is done by sticky.js on scroll. The mobile branch
       // above marks screen docking only (scroll pinning belongs to

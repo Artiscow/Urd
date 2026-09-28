@@ -20,10 +20,16 @@ let openCard = null;
 let teardown = null;
 
 /* Self-contained styling (the same pattern as plugin CSS): the chip is a small
-   circle shown ONLY while the pointer is over the block, like the source button. */
+   circle shown ONLY while the pointer is over the block, like the source button.
+   It sits left of the rotate handle and above it in the stack, so the handle
+   neither covers the chip nor takes the pointer from it, and it counter-scales
+   and counter-rotates like the rest of the block chrome. */
 const HINT_CSS = `
 .urd-hint-chip {
-  position: absolute; top: -32px; right: -6px; z-index: 5;
+  position: absolute; top: -32px; z-index: 1001;
+  right: calc(18px * var(--urd-chrome-scale, 1));
+  transform: rotate(calc(-1 * var(--urd-block-rot, 0deg))) scale(var(--urd-chrome-scale, 1));
+  transform-origin: bottom right;
   width: 32px; height: 32px;
   display: inline-flex; align-items: center; justify-content: center;
   padding: 0; border-radius: 50%;

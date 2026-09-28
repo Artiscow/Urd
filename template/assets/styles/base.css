@@ -4635,20 +4635,20 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open,
      the accent) and the page's own colors, whatever the admin theme. The same
      convention as Figma and Wix. The shadow gives contrast against light surfaces. */
   background: #ff2d87;
-  box-shadow: 0 0 0 calc(1px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 55%, transparent);
+  box-shadow: 0 0 0 calc(1px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 70%, transparent);
   pointer-events: none;
 }
 
 .urd-preview .urd-smart-guide-v {
   top: 0;
   bottom: 0;
-  width: calc(2px * var(--urd-chrome-scale, 1));
+  width: calc(3px * var(--urd-chrome-scale, 1));
 }
 
 .urd-preview .urd-smart-guide-h {
   left: 0;
   right: 0;
-  height: calc(2px * var(--urd-chrome-scale, 1));
+  height: calc(3px * var(--urd-chrome-scale, 1));
 }
 
 /* Multi-selection: the selection frame (marquee), member highlighting and the
@@ -4734,33 +4734,36 @@ body.urd-marqueeing {
 
 /* Page-wide guides (the on/off button next to the view choices):
    a dashed accent, in contrast to the solid smart drag lines.
-   Below the smart guides in z, never clickable, never shown to visitors. */
+   Below the smart guides in z, never clickable, never shown to visitors.
+   Line and dash are counter-scaled like the rest of the editing chrome, so
+   the guide stays readable at a strong zoom out instead of thinning to
+   nothing. */
 .urd-preview .urd-page-guide {
   position: absolute;
   z-index: 1000;
   pointer-events: none;
-  opacity: 0.5;
+  opacity: 0.9;
 }
 
 .urd-preview .urd-page-guide-v {
   top: 0;
   bottom: 0;
-  width: 1px;
+  width: calc(2px * var(--urd-chrome-scale, 1));
   background: repeating-linear-gradient(
     to bottom,
-    var(--urd-admin-accent, #5f6a75) 0 6px,
-    transparent 6px 12px
+    var(--urd-admin-accent, #5f6a75) 0 calc(6px * var(--urd-chrome-scale, 1)),
+    transparent calc(6px * var(--urd-chrome-scale, 1)) calc(12px * var(--urd-chrome-scale, 1))
   );
 }
 
 .urd-preview .urd-page-guide-h {
   left: 0;
   right: 0;
-  height: 1px;
+  height: calc(2px * var(--urd-chrome-scale, 1));
   background: repeating-linear-gradient(
     to right,
-    var(--urd-admin-accent, #5f6a75) 0 6px,
-    transparent 6px 12px
+    var(--urd-admin-accent, #5f6a75) 0 calc(6px * var(--urd-chrome-scale, 1)),
+    transparent calc(6px * var(--urd-chrome-scale, 1)) calc(12px * var(--urd-chrome-scale, 1))
   );
 }
 
@@ -5396,6 +5399,9 @@ body.urd-mobile .urd-section-resize-top {
 /* The pin marker on an overridden mobile block: shows that the block is detached
    from the desktop layout. The same shape as the sticky pin, yellow like the review flag. */
 .urd-preview .urd-mobile-pin {
+  /* Upright on a rotated block, like the handles above. */
+  transform: rotate(calc(-1 * var(--urd-block-rot, 0deg)));
+  transform-origin: top left;
   position: absolute;
   top: 2px;
   left: 2px;
@@ -5488,8 +5494,11 @@ body.urd-mobile .urd-section-resize-top {
 
 .urd-preview .urd-edit-toolbar {
   /* Counter-scaling: the handle should keep the same on-screen size as
-     the admin panels at any zoom level (urd-zoom). */
-  transform: scale(var(--urd-chrome-scale, 1));
+     the admin panels at any zoom level (urd-zoom). The counter-rotation
+     keeps it upright on a rotated block (--urd-block-rot, written with the
+     frame in render.js); a uniform scale commutes with a rotation, so the
+     order of the two is free. */
+  transform: rotate(calc(-1 * var(--urd-block-rot, 0deg))) scale(var(--urd-chrome-scale, 1));
   transform-origin: bottom left;
   position: absolute;
   bottom: 100%;
@@ -5542,9 +5551,8 @@ body.urd-mobile .urd-section-resize-top {
 }
 
 .urd-preview .urd-edit-resize {
-  /* Counter-scaling: the handle should keep the same on-screen size as
-     the admin panels at any zoom level (urd-zoom). */
-  transform: scale(var(--urd-chrome-scale, 1));
+  /* Counter-scaling and counter-rotation, as for the toolbar above. */
+  transform: rotate(calc(-1 * var(--urd-block-rot, 0deg))) scale(var(--urd-chrome-scale, 1));
   transform-origin: bottom right;
   position: absolute;
   right: -6px;
@@ -5564,11 +5572,10 @@ body.urd-mobile .urd-section-resize-top {
 
 /* Rotation handle: a small circle at the block's top right corner */
 .urd-preview .urd-edit-rotate {
-  /* Counter-scaling: the handle should keep the same on-screen size as
-     the admin panels at any zoom level (urd-zoom). Anchored above the
-     block on the toolbar's row, clear of the resize corner on a thin
-     block at every zoom. */
-  transform: scale(var(--urd-chrome-scale, 1));
+  /* Counter-scaling and counter-rotation, as for the toolbar above.
+     Anchored above the block on the toolbar's row, clear of the resize
+     corner on a thin block at every zoom. */
+  transform: rotate(calc(-1 * var(--urd-block-rot, 0deg))) scale(var(--urd-chrome-scale, 1));
   transform-origin: bottom right;
   position: absolute;
   bottom: 100%;
@@ -5641,6 +5648,9 @@ body.urd-mobile .urd-section-resize-top {
    scroll, so the marker shows that it is on. Always visible with chrome
    on (not only on hover), and gone in Clean view like the rest of the chrome. */
 .urd-preview .urd-sticky-badge {
+  /* Upright on a rotated block, like the handles above. */
+  transform: rotate(calc(-1 * var(--urd-block-rot, 0deg)));
+  transform-origin: top left;
   position: absolute;
   /* Counter-scaling (urd-zoom): the marker keeps admin size like the mobile pin
      marker (.urd-mobile-pin), and lets clicks through to the block. */

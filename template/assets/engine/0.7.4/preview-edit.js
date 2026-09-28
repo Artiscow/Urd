@@ -17,7 +17,7 @@
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
  *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (open the block menu in the editor)
  */
-import { frameToCss, mobilePlacementToCss, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushGrowOf, pushPreview } from './render.js';
+import { applyFrameCss, mobilePlacementToCss, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushGrowOf, pushPreview } from './render.js';
 import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
@@ -48,7 +48,7 @@ import { ta, adminLang } from './i18n.js';
  * @param {{x: number, y: number, w: number, h: number}} frame The desktop frame
  */
 function drawFrame(el, frame) {
-  Object.assign(el.style, frameToCss(frame));
+  applyFrameCss(el, frame);
   const shift = pushShiftOf(el);
   if (shift) el.style.top = `${frame.y + shift}px`;
   // frameToCss writes the design height, while the box the owner sees is the
@@ -3292,6 +3292,7 @@ function enhanceBlock(el, block, section, grid, host) {
         if (rot > 180) rot -= 360;
         if (rot < -180) rot += 360;
         el.style.transform = rot ? `rotate(${rot}deg)` : '';
+        el.style.setProperty('--urd-block-rot', `${rot}deg`);
       };
       const onUp = () => {
         rotHandle.removeEventListener('pointermove', onMove);

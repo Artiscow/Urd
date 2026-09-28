@@ -238,17 +238,18 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 
 - [x] (fixed 28 September 2026 in 0.7.0.22: the push pass raised the section to the lowest edge of every block whenever any of them had content growth; a block past the section's own height is now left out of it, ADR-0024 addendum) Å sette et element på to seksjoner utvider den seksjonen elementet først tilhørte. Element skal kunne stå over/være på flere element uten å øke størrelsen på de. (skjer også med nederste seksjon over footer).
 
-- [ ] Hjelpelinjer trenger kraftigere farger for å synes (ikke rutenett, rutenett kan være slik det er).
+- [x] (done 28 September 2026 in 0.7.0.23: the guides were the only chrome without the zoom counter-scale, so the line thinned below a pixel; they follow the zoom now and are drawn stronger) Hjelpelinjer trenger kraftigere farger for å synes (ikke rutenett, rutenett kan være slik det er).
 
 - [x] (fixed 28 September 2026 in 0.7.0.22: the redraw threw away the push growth, and on a rotated element a height change reads as a sideways jump) Å rotere et element, og så dra den får den visuelle blokken til å teleportere mot siden, men lande der man drar den til.
 
-- [ ] Å rotere et element roterer også knappene/instillingene til elementet.
+- [x] (fixed 28 September 2026 in 0.7.0.23: the chrome are children of the rotated block and now counter-rotate against `--urd-block-rot`) Å rotere et element roterer også knappene/instillingene til elementet.
 
-- [ ] Elementer som har tooltip øverst til høyre har en tooltip meny som ikke følger urd admin sin farge eller størrelse. Tooltip er også gjemt back rotasjon merket.
+- [x] (half done 28 September 2026 in 0.7.0.23: the help chip was under the rotate handle and is now clear of it, with the zoom counter-scale. The colour half is the native `title` tooltip and is its own line below) Elementer som har tooltip øverst til høyre har en tooltip meny som ikke følger urd admin sin farge eller størrelse. Tooltip er også gjemt back rotasjon merket.
 
 - [ ] "Flaten kommer når man blar" kan døpes om til "nav baren blir til toppen av siden ved toppen av siden" eller noe lignende "blir til toppen av siden" noe slikt. "Gjennomsiktig når nav er øverst" Foreslå noen alternativ for meg.
 - [ ] Mobilmeny trenger egen instilling for "oppsett" for nav - burde inkludere oppsett som for desktop, men kun for mobil, tilpass, (alternativ for ramme som kan bli skrudd på med en "egen ramme" knapp - det samme for størrelse )
 - [ ] Kunngjøringer trenger en instilling i mobil/for mobilvisning hvor kunngjøring vises også i mobil nav fullskjerm visning
+- [ ] Tooltips i lerretet er nettleserens egne (`title`), så de følger verken admin-temaet eller admin-størrelsen. Urd har ingen tooltip-komponent: `hint.js` er et hjelpekort som åpnes med klikk og `dropdown.js` en meny, så dette krever en ny delt modul i samme selvstylede mønster, og omlegging av rundt 400 kallsteder i motoren og editoren. AGENTS.md foreskriver i dag `title` for panelenes «?»-tekster, så regelen må endres i samme slengen (en utvidelse av ADR-0009) (noted 28 September 2026)
 - [ ] Om man åpner dobbeltklikk menyen nærme bunnen av sidevisningen eller bunnen av siden, folder den seg nedover og ut av både skjermen og siden. Den burde folde seg oppover om den går ut av bunnen av skjermen.
 - [ ] Nav meny highlight: pille øker mellomrommet mellom nav punktene uten å faktisk trenge å gjøre det. Mellomrom burde forbli det samme som det er uten pille highlight.
 

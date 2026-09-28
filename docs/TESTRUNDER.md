@@ -4,6 +4,14 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.0.23): the upright chrome and the guides
+
+- [ ] Rotate a block: the toolbar, the drag grip, the resize corner, the rotate handle and the pin badges all stay upright while the block turns
+- [ ] Rotate a block with a help chip (a gallery, a collection): the chip is left of the rotate handle, opens its card on a click, and neither covers the handle nor is covered by it
+- [ ] The same at a strong preview zoom out: the chip keeps the same size as the other handles
+- [ ] The guide button: the dashed lines are clearly visible at both a zoomed-in and a zoomed-out preview
+- [ ] Drag a block near another: the magenta snap lines read clearly against both a light and a dark section
+
 ### Testrunde-batch (0.7.0.22): the section height and the rotated block
 
 - [ ] Drag a block down past the bottom edge of its section: it lies across the boundary and the section keeps its height, also for the last section above the footer
