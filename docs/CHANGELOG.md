@@ -27,6 +27,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.24 - The preview's floating panels follow and flip - 28 September 2026
+
+- The image editor closed at the first scroll: the close stood in for following, since panel and grid are placed from the image's viewport rect and nothing re-placed them. It follows the scroll the way the text and multi toolbars do, and closes when the image itself has left the screen (an IntersectionObserver beside the existing ResizeObserver).
+- The double-click block menu ran off the bottom of the screen: it measured its width and flipped sideways, but never read the viewport height. It flips upwards when it would pass the bottom edge and the pointer is in the lower half, re-fits when the Shapes or a plugin fold changes its height, and a menu taller than the screen scrolls instead of running off it.
+
 ### 0.7.0.23 - The block chrome stays upright, and the guides can be seen - 28 September 2026
 
 - Rotating a block rotated its buttons with it: the chrome are children of the rotated element. The rotation is written as `--urd-block-rot` beside the transform, and the toolbar, the resize corner, the rotate handle, the sticky badge and the mobile pin turn themselves back upright against it.

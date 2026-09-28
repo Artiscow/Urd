@@ -289,7 +289,20 @@ export function openImageEditor(anchor, adapter) {
     gridObserver.observe(anchor);
   }
 
-  // Closing: click outside, Escape or scrolling outside the panel
+  // Scrolling moves the image, so the editor follows it rather than giving
+  // up, the way the text and multi toolbars in preview-edit.js do. It closes
+  // when the image itself has left the screen and there is nothing left to
+  // edit against. The observer delivers a first entry on observe, which is
+  // the image the owner just opened, so the close waits until it has been
+  // seen on screen once.
+  let seen = false;
+  const awayObserver = new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting) { seen = true; return; }
+    if (seen) closeImageEditor();
+  });
+  if (anchor instanceof Element) awayObserver.observe(anchor);
+
+  // Closing: a click outside, or Escape
   const ac = new AbortController();
   const { signal } = ac;
   const onDown = (event) => {
@@ -298,18 +311,16 @@ export function openImageEditor(anchor, adapter) {
   const onKey = (event) => {
     if (event.key === 'Escape') closeImageEditor();
   };
-  const onScroll = (event) => {
-    if (event.target instanceof Node && !panel.contains(event.target)) closeImageEditor();
-  };
   window.addEventListener('resize', place, { signal });
+  document.addEventListener('scroll', place, { capture: true, passive: true, signal });
   setTimeout(() => {
     document.addEventListener('pointerdown', onDown, { capture: true, signal });
     document.addEventListener('keydown', onKey, { capture: true, signal });
-    document.addEventListener('scroll', onScroll, { capture: true, signal });
   }, 0);
   teardown = () => {
     ac.abort();
     gridObserver?.disconnect();
+    awayObserver.disconnect();
     grid?.remove();
   };
 }

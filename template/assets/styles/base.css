@@ -3222,10 +3222,22 @@ body:has(dialog:modal) {
   grid-template-columns: repeat(2, minmax(6.5rem, 1fr));
   gap: 4px;
   padding: 6px;
+  /* A menu taller than the screen scrolls rather than running off it, as the
+     image editor's panel does. */
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
   background: var(--urd-color-surface);
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 15%, transparent);
   border-radius: 10px;
   box-shadow: 0 10px 30px rgb(0 0 0 / 45%);
+}
+
+/* Opened in the lower half of the screen: the menu hangs upwards from the
+   pointer instead of down past the bottom edge (the class flip the block
+   toolbar uses, urd-toolbar-under). */
+.urd-preview .urd-add-block-menu.urd-menu-up {
+  top: auto;
+  bottom: calc(100% + 6px);
 }
 
 /* Shapes: an expandable submenu spanning both columns */

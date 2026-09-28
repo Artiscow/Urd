@@ -234,7 +234,7 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 
 - [ ] "Kyrmp menyen" fungerer kun på logo og bredden høyden på nav baren.
 
-- [ ] Bildeeditoren forsvinner om man scroller - den burde bli på siden i minst i løpet av en del scrolls før den blir borte (eventuelt til bildet som man editer er ute av skjermen).
+- [x] (fixed 28 September 2026 in 0.7.0.24: the close stood in for following, since the panel is placed from the image's viewport rect; it follows now and closes when the image leaves the screen) Bildeeditoren forsvinner om man scroller - den burde bli på siden i minst i løpet av en del scrolls før den blir borte (eventuelt til bildet som man editer er ute av skjermen).
 
 - [x] (fixed 28 September 2026 in 0.7.0.22: the push pass raised the section to the lowest edge of every block whenever any of them had content growth; a block past the section's own height is now left out of it, ADR-0024 addendum) Å sette et element på to seksjoner utvider den seksjonen elementet først tilhørte. Element skal kunne stå over/være på flere element uten å øke størrelsen på de. (skjer også med nederste seksjon over footer).
 
@@ -249,8 +249,9 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 - [ ] "Flaten kommer når man blar" kan døpes om til "nav baren blir til toppen av siden ved toppen av siden" eller noe lignende "blir til toppen av siden" noe slikt. "Gjennomsiktig når nav er øverst" Foreslå noen alternativ for meg.
 - [ ] Mobilmeny trenger egen instilling for "oppsett" for nav - burde inkludere oppsett som for desktop, men kun for mobil, tilpass, (alternativ for ramme som kan bli skrudd på med en "egen ramme" knapp - det samme for størrelse )
 - [ ] Kunngjøringer trenger en instilling i mobil/for mobilvisning hvor kunngjøring vises også i mobil nav fullskjerm visning
+- [ ] Foldene i «+ Nytt element»-menyen (Former og plugin-variantene) tegner pilen sin som tegnene ▾ og ▴; editor-chrome skal være tegnet SVG (noted 28 September 2026, the same rule as the handles fixed in 0.7.0.20)
 - [ ] Tooltips i lerretet er nettleserens egne (`title`), så de følger verken admin-temaet eller admin-størrelsen. Urd har ingen tooltip-komponent: `hint.js` er et hjelpekort som åpnes med klikk og `dropdown.js` en meny, så dette krever en ny delt modul i samme selvstylede mønster, og omlegging av rundt 400 kallsteder i motoren og editoren. AGENTS.md foreskriver i dag `title` for panelenes «?»-tekster, så regelen må endres i samme slengen (en utvidelse av ADR-0009) (noted 28 September 2026)
-- [ ] Om man åpner dobbeltklikk menyen nærme bunnen av sidevisningen eller bunnen av siden, folder den seg nedover og ut av både skjermen og siden. Den burde folde seg oppover om den går ut av bunnen av skjermen.
+- [x] (fixed 28 September 2026 in 0.7.0.24: the menu measured its width but never the viewport height; it flips upwards and scrolls when taller than the screen) Om man åpner dobbeltklikk menyen nærme bunnen av sidevisningen eller bunnen av siden, folder den seg nedover og ut av både skjermen og siden. Den burde folde seg oppover om den går ut av bunnen av skjermen.
 - [ ] Nav meny highlight: pille øker mellomrommet mellom nav punktene uten å faktisk trenge å gjøre det. Mellomrom burde forbli det samme som det er uten pille highlight.
 
 

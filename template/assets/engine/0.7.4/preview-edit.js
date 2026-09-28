@@ -272,6 +272,20 @@ function openBlockMenuAt(host, clientX = null, clientY = null) {
       menu.style.right = 'auto';
     }
   }
+  fitBlockMenu(menu);
+}
+
+/**
+ * Keeps an open block menu inside the screen: it hangs down from the pointer
+ * and flips upwards when it would pass the bottom edge and there is more room
+ * above. Run again whenever a fold inside the menu changes its height.
+ * @param {HTMLElement} menu The .urd-add-block-menu element
+ */
+function fitBlockMenu(menu) {
+  menu.classList.remove('urd-menu-up');
+  const box = menu.getBoundingClientRect();
+  if (box.bottom <= window.innerHeight - 8) return;
+  if (box.top > window.innerHeight / 2) menu.classList.add('urd-menu-up');
 }
 
 /** Closes open menus (preset gallery, block menu). Also called via urd-close-menus when the owner clicks in the admin panels, which the iframe's own click listeners never see. */
@@ -551,7 +565,7 @@ function resetBlockAdder(wrap) {
   wrap.style.right = '';
   const menu = wrap.querySelector('.urd-add-block-menu');
   if (menu) {
-    menu.classList.remove('open');
+    menu.classList.remove('open', 'urd-menu-up');
     menu.style.left = '';
     menu.style.right = '';
   }
@@ -664,6 +678,8 @@ function addBlockAdder(host, section, grid) {
   shapesToggle.addEventListener('click', () => {
     const open = shapes.classList.toggle('open');
     shapesToggle.textContent = `${ta('group.shapes')} ${open ? '▴' : '▾'}`;
+    // The fold changes the menu's height, so the fit is decided again.
+    fitBlockMenu(menu);
   });
   menu.append(shapesToggle, shapes);
   // Plugin blocks: their own section below the built-ins. The preview has
@@ -722,6 +738,7 @@ function addBlockAdder(host, section, grid) {
       toggle.addEventListener('click', () => {
         const open = sub.classList.toggle('open');
         toggle.textContent = `${defLabel} ${open ? '▴' : '▾'}`;
+        fitBlockMenu(menu);
       });
       menu.append(toggle, sub);
       continue;

@@ -4,6 +4,14 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.0.24): the floating panels
+
+- [ ] Open the image editor and scroll a little: it stays open and keeps its place beside the image, with the crop grid on the image
+- [ ] Keep scrolling until the image leaves the screen: the editor closes
+- [ ] Double-click near the bottom of the preview: the menu opens upwards and stays inside the screen; near the top it still opens downwards
+- [ ] Open the Shapes fold in a menu that opened upwards: it still fits, and the menu scrolls if it cannot
+- [ ] A click outside and Escape still close both the image editor and the block menu
+
 ### Testrunde-batch (0.7.0.23): the upright chrome and the guides
 
 - [ ] Rotate a block: the toolbar, the drag grip, the resize corner, the rotate handle and the pin badges all stay upright while the block turns
