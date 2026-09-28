@@ -27,6 +27,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.25 - The menu hides on a real scroll, and the clear surface is renamed - 28 September 2026
+
+- «Skjul ved rulling» took the menu away at the first notch: the state flipped on the direction of a single frame, since the caller moved the reference point on every frame and no travelled distance existed anywhere. `navScrollState` now owns a turning point that follows the page up while the menu is visible and down while it is hidden, and returns the next one; the menu leaves after 96 px down and comes back after 16 px up, measured from the furthest point in that direction.
+- The nav behaviour «Flaten kommer når man blar» named the event rather than the state: renamed «Gjennomsiktig på toppen av siden» and "Transparent at the top of the page", with tr to match. The Swedish pack still carried the label from before the rename of 0.7.0.16 and is corrected. The data field `nav.style.atTop` is unchanged.
+
 ### 0.7.0.24 - The preview's floating panels follow and flip - 28 September 2026
 
 - The image editor closed at the first scroll: the close stood in for following, since panel and grid are placed from the image's viewport rect and nothing re-placed them. It follows the scroll the way the text and multi toolbars do, and closes when the image itself has left the screen (an IntersectionObserver beside the existing ResizeObserver).

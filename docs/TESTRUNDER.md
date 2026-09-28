@@ -4,6 +4,14 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.0.25): the hide travel and the rename
+
+- [ ] A sticky bar with «Skjul ved rulling»: a short scroll down leaves the menu in place, and it goes away once you have scrolled a screenful of a few lines
+- [ ] With the menu gone, far down the page: a short scroll up brings it straight back, without having to go up to the top
+- [ ] Scroll down and up in small movements around one point: the menu does not flicker
+- [ ] The setting in Oppførsel reads «Gjennomsiktig på toppen av siden», and still draws the bar without surface until the page is scrolled
+- [ ] The same in English and Turkish, and in a site using the Swedish pack
+
 ### Testrunde-batch (0.7.0.24): the floating panels
 
 - [ ] Open the image editor and scroll a little: it stays open and keeps its place beside the image, with the crop grid on the image

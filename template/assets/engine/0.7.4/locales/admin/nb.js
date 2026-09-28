@@ -953,7 +953,7 @@ export default {
     'tip.nav.shrinkTo': 'Hvor mye av tykkelsen som er igjen etter scrolling',
     'lbl.navShrinkLogo': 'Krymp logoen også',
     'tip.nav.shrinkLogo': 'Logobildet krymper sammen med menyen',
-    'lbl.navAtTop': 'Flaten kommer når man blar',
+    'lbl.navAtTop': 'Gjennomsiktig på toppen av siden',
     'tip.nav.atTop': 'Menyen tegnes uten flate, uskarphet, kant og skygge så lenge siden står øverst; de kommer til syne når man blar. Passer sammen med «Legg menyen oppå toppseksjonen».',
     'lbl.navRadius': 'Avrunding (px)',
     'tip.nav.radius': 'Hjørneavrundingen på den flytende menyen; tom = variantens forvalg',

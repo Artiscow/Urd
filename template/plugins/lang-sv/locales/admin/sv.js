@@ -873,7 +873,7 @@ export default {
     'tip.nav.shrinkTo': 'Hur mycket av tjockleken som är kvar efter skrollning',
     'lbl.navShrinkLogo': 'Krymp logotypen också',
     'tip.nav.shrinkLogo': 'Logotypbilden krymper tillsammans med menyn',
-    'lbl.navAtTop': 'Genomskinlig överst',
+    'lbl.navAtTop': 'Genomskinlig högst upp på sidan',
     'tip.nav.atTop': 'Menyn ritas utan yta, oskärpa, kant och skugga så länge sidan står överst; de kommer fram när man skrollar. Passar ihop med «Lägg menyn ovanpå toppsektionen».',
     'lbl.navRadius': 'Rundning (px)',
     'tip.nav.radius': 'Hörnrundningen på den flytande menyn; tom = variantens förval',

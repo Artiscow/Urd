@@ -950,7 +950,7 @@ export default {
     'tip.nav.shrinkTo': 'How much of the thickness remains after scrolling',
     'lbl.navShrinkLogo': 'Shrink the logo too',
     'tip.nav.shrinkLogo': 'The logo image shrinks with the menu',
-    'lbl.navAtTop': 'Surface appears on scroll',
+    'lbl.navAtTop': 'Transparent at the top of the page',
     'tip.nav.atTop': 'The menu is drawn without surface, blur, border and shadow while the page is at the top; they appear once you scroll. Pairs well with «Lay the menu over the top section».',
     'lbl.navRadius': 'Rounding (px)',
     'tip.nav.radius': 'The corner rounding of the floating menu; empty = the variant\'s preset',

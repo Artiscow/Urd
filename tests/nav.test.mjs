@@ -371,8 +371,8 @@ test('clampSideWidth: clamped to 180-400, garbage gives the default 250', () => 
 });
 
 test('navScrollState: without a mode the menu is always normal and visible', () => {
-  assert.deepEqual(navScrollState(undefined, 0, 500, true), { compact: false, hidden: false, scrolled: true });
-  assert.deepEqual(navScrollState('tull', 0, 500, true), { compact: false, hidden: false, scrolled: true });
+  assert.deepEqual(navScrollState(undefined, 0, 500, true), { compact: false, hidden: false, scrolled: true, anchor: 500 });
+  assert.deepEqual(navScrollState('tull', 0, 500, true), { compact: false, hidden: false, scrolled: true, anchor: 500 });
 });
 
 test('navScrollState: scrolled says whether the page has left the top zone, in every mode', () => {
@@ -383,25 +383,49 @@ test('navScrollState: scrolled says whether the page has left the top zone, in e
 });
 
 test('navScrollState: shrink is compact only after the top zone', () => {
-  assert.deepEqual(navScrollState('shrink', 0, 40, false), { compact: false, hidden: false, scrolled: false });
-  assert.deepEqual(navScrollState('shrink', 40, 200, false), { compact: true, hidden: false, scrolled: true });
+  assert.deepEqual(navScrollState('shrink', 0, 40, false), { compact: false, hidden: false, scrolled: false, anchor: 40 });
+  assert.deepEqual(navScrollState('shrink', 40, 200, false), { compact: true, hidden: false, scrolled: true, anchor: 200 });
   // Shrink never hides, regardless of direction.
   assert.equal(navScrollState('shrink', 500, 300, false).hidden, false);
 });
 
 test('navScrollState: hide hides on scroll down and shows on scroll up', () => {
-  assert.deepEqual(navScrollState('hide', 100, 200, false), { compact: false, hidden: true, scrolled: true });
-  assert.deepEqual(navScrollState('hide', 200, 100, true), { compact: false, hidden: false, scrolled: true });
+  assert.deepEqual(navScrollState('hide', 100, 200, false), { compact: false, hidden: true, scrolled: true, anchor: 200 });
+  assert.deepEqual(navScrollState('hide', 200, 100, true), { compact: false, hidden: false, scrolled: true, anchor: 100 });
 });
 
 test('navScrollState: hide is always visible in the top zone', () => {
-  assert.deepEqual(navScrollState('hide', 200, 50, true), { compact: false, hidden: false, scrolled: false });
-  assert.deepEqual(navScrollState('hide', 0, 0, true), { compact: false, hidden: false, scrolled: false });
+  assert.deepEqual(navScrollState('hide', 200, 50, true), { compact: false, hidden: false, scrolled: false, anchor: 50 });
+  assert.deepEqual(navScrollState('hide', 0, 0, true), { compact: false, hidden: false, scrolled: false, anchor: 0 });
 });
 
 test('navScrollState: small movements below the jitter guard keep the state', () => {
   assert.equal(navScrollState('hide', 200, 202, true).hidden, true);
   assert.equal(navScrollState('hide', 200, 198, false).hidden, false);
+});
+
+test('navScrollState: hiding asks for a real travel down, showing for a short one up', () => {
+  // Measured from the anchor: 95 px down keeps the menu, 96 takes it away.
+  assert.equal(navScrollState('hide', 200, 295, false).hidden, false);
+  assert.equal(navScrollState('hide', 200, 296, false).hidden, true);
+  // Back up again: 15 px is not enough, 16 is.
+  assert.equal(navScrollState('hide', 300, 285, true).hidden, true);
+  assert.equal(navScrollState('hide', 300, 284, true).hidden, false);
+});
+
+test('navScrollState: the anchor follows the furthest point in the current direction', () => {
+  // Hidden and going deeper: the anchor follows, so the way back is always
+  // measured from where the page turned.
+  assert.deepEqual(navScrollState('hide', 300, 900, true), { compact: false, hidden: true, scrolled: true, anchor: 900 });
+  // A short scroll up from there brings it back, however far down the page is.
+  assert.equal(navScrollState('hide', 900, 884, true).hidden, false);
+  // Visible and going up: the anchor follows the page up, so the next
+  // hide is measured from the highest point reached.
+  assert.deepEqual(navScrollState('hide', 500, 300, false), { compact: false, hidden: false, scrolled: true, anchor: 300 });
+  assert.equal(navScrollState('hide', 300, 395, false).hidden, false);
+  assert.equal(navScrollState('hide', 300, 396, false).hidden, true);
+  // Between the two thresholds nothing moves, and the anchor stays put.
+  assert.deepEqual(navScrollState('hide', 300, 350, false), { compact: false, hidden: false, scrolled: true, anchor: 300 });
 });
 
 test('navClasses: inset only for the top bar, and on unless boolean false', () => {

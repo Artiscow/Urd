@@ -243,7 +243,7 @@ export function renderNav(site, host) {
   if (!wantsScroll && !clearTop) {
     host.classList.remove('urd-nav-compact', 'urd-nav-hidden', 'urd-nav-scrolled');
   } else {
-    let prevY = window.scrollY;
+    let anchor = window.scrollY;
     let hidden = false;
     let ticking = false;
     const applyScroll = () => {
@@ -253,9 +253,11 @@ export function renderNav(site, host) {
       // visible and draws its surface, so the panel has something to hang
       // from.
       const state = menuOpen
-        ? { compact: false, hidden: false, scrolled: true }
-        : navScrollState(wantsScroll ? scrollMode : undefined, prevY, y, hidden);
-      prevY = y;
+        ? { compact: false, hidden: false, scrolled: true, anchor: y }
+        : navScrollState(wantsScroll ? scrollMode : undefined, anchor, y, hidden);
+      // The turning point the travel is measured from; navScrollState owns
+      // where it goes, the render only carries it between frames.
+      anchor = state.anchor;
       hidden = state.hidden;
       host.classList.toggle('urd-nav-compact', state.compact);
       host.classList.toggle('urd-nav-hidden', state.hidden);

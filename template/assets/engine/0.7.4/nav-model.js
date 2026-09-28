@@ -98,25 +98,39 @@ export function navItems(site) {
  * state computation, the DOM part lives in nav.js. 'shrink' = compact
  * after some scrolling; 'hide' = hidden on scroll down, shown on scroll up.
  * Near the top (below TOP_ZONE) the menu is always normal and visible.
- * Small movements below JITTER never flip the hidden state (jitter guard
- * against e.g. scroll rounding at momentum stop). `scrolled` says whether
- * the page has left the top zone, whatever the mode: the transparent-at-top
+ * The state flips on the distance travelled, not on the direction of a
+ * single frame: `anchor` is the turning point the travel is measured from,
+ * and the function returns the next one, so the caller only carries it.
+ * While the menu is visible the anchor follows the page up, and while it is
+ * hidden it follows the page down, so the distance is always measured from
+ * the furthest point in the current direction. `scrolled` says whether the
+ * page has left the top zone, whatever the mode: the transparent-at-top
  * surface (nav.style.atTop) reads it.
  * @param {string|undefined} mode nav.scroll ('shrink' | 'hide' | undefined)
- * @param {number} prevY Previous scrollY
+ * @param {number} anchor The scrollY the travel is measured from
  * @param {number} y Current scrollY
  * @param {boolean} prevHidden Whether the menu was hidden
- * @returns {{compact: boolean, hidden: boolean, scrolled: boolean}}
+ * @returns {{compact: boolean, hidden: boolean, scrolled: boolean, anchor: number}}
  */
-export function navScrollState(mode, prevY, y, prevHidden) {
+export function navScrollState(mode, anchor, y, prevHidden) {
   const TOP_ZONE = 80;
-  const JITTER = 4;
+  // Asymmetric on purpose. Hiding asks for a deliberate scroll down, so the
+  // menu does not leave at the first notch; showing it again answers a short
+  // scroll up, so it is there the moment it is wanted.
+  const HIDE_TRAVEL = 96;
+  const SHOW_TRAVEL = 16;
   const scrolled = y > TOP_ZONE;
-  if (mode === 'shrink') return { compact: scrolled, hidden: false, scrolled };
-  if (mode !== 'hide') return { compact: false, hidden: false, scrolled };
-  if (!scrolled) return { compact: false, hidden: false, scrolled };
-  if (Math.abs(y - prevY) < JITTER) return { compact: false, hidden: prevHidden, scrolled };
-  return { compact: false, hidden: y > prevY, scrolled };
+  if (mode === 'shrink') return { compact: scrolled, hidden: false, scrolled, anchor: y };
+  if (mode !== 'hide') return { compact: false, hidden: false, scrolled, anchor: y };
+  if (!scrolled) return { compact: false, hidden: false, scrolled, anchor: y };
+  if (prevHidden) {
+    if (y >= anchor) return { compact: false, hidden: true, scrolled, anchor: y };
+    if (anchor - y >= SHOW_TRAVEL) return { compact: false, hidden: false, scrolled, anchor: y };
+    return { compact: false, hidden: true, scrolled, anchor };
+  }
+  if (y <= anchor) return { compact: false, hidden: false, scrolled, anchor: y };
+  if (y - anchor >= HIDE_TRAVEL) return { compact: false, hidden: true, scrolled, anchor: y };
+  return { compact: false, hidden: false, scrolled, anchor };
 }
 
 /**

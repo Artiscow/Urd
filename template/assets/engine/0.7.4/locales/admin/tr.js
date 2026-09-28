@@ -950,7 +950,7 @@ export default {
     'tip.nav.shrinkTo': 'Kaydırmadan sonra kalınlığın ne kadarının kalacağı',
     'lbl.navShrinkLogo': 'Logoyu da küçült',
     'tip.nav.shrinkLogo': 'Logo görseli menüyle birlikte küçülür',
-    'lbl.navAtTop': 'Yüzey kaydırınca gelir',
+    'lbl.navAtTop': 'Sayfanın en üstünde saydam',
     'tip.nav.atTop': 'Sayfa en üstteyken menü yüzey, bulanıklık, kenarlık ve gölge olmadan çizilir; kaydırınca görünürler. «Menüyü üst bölümün üzerine koy» ile iyi gider.',
     'lbl.navRadius': 'Yuvarlatma (px)',
     'tip.nav.radius': 'Yüzen menünün köşe yuvarlatması; boş = varyantın ön ayarı',
