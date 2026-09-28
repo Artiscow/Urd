@@ -279,6 +279,7 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 - [ ] mobil nav bar med helskjerm på trenger instilling om å skjule eller vise verktøy i topp nav baren
 - [ ] mobil nav helskjerm trenger instilling om å fjerne pilen som viser at et punkt er en nav undermeny
 - [ ] Mulighet til å legge til luft i mobilvisning - nå er alt kompakt uten noe mellomrom
+- [ ] Legge til et bilde som egen nav meny pil + animasjonsalternativ for bildet/pilen - roter høyre/venstre/opp/ned når meny åpnes 
 
 
 ## Kjente begrensninger (dokumentert, ingen fiks planlagt)

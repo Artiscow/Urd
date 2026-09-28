@@ -254,7 +254,8 @@ export function renderNav(site, host) {
       // from.
       const state = menuOpen
         ? { compact: false, hidden: false, scrolled: true, anchor: y }
-        : navScrollState(wantsScroll ? scrollMode : undefined, anchor, y, hidden);
+        : navScrollState(wantsScroll ? scrollMode : undefined, anchor, y, hidden,
+          { shrinkAt: effSite.nav.style?.shrinkAt });
       // The turning point the travel is measured from; navScrollState owns
       // where it goes, the render only carries it between frames.
       anchor = state.anchor;
@@ -336,13 +337,13 @@ export function renderNav(site, host) {
   const subCols = Math.round(Number(site.nav.style?.subColumns));
   if (subCols >= 2) nav.style.setProperty('--urd-nav-sub-cols', String(Math.min(4, subCols)));
   // Size (additive since v0.7, ADR-0023): thickness, side padding, item
-  // gap, pill width and shrink factor as inline custom properties the CSS
-  // reads with today's look as the fallback; the menu font size inline. The
-  // mobile overrides are chosen from the breakpoint here (pure navSizeVars),
-  // and the breakpoint listener above re-renders on crossing.
+  // gap, text size, pill width and the shrink factor and its duration as
+  // inline custom properties the CSS reads with today's look as the
+  // fallback. The mobile overrides are chosen from the breakpoint here
+  // (pure navSizeVars), and the breakpoint listener above re-renders on
+  // crossing.
   const size = navSizeVars(site.nav.style, site.nav.logo, { mobile: mobileMq.matches });
   for (const [name, value] of Object.entries(size.vars)) nav.style.setProperty(name, value);
-  if (size.font) nav.style.fontSize = size.font;
   // Border (additive since v0.7): the side is a class from navClasses; the
   // width and colour are variables with a hairline in the text colour as
   // the default.

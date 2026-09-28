@@ -20,7 +20,7 @@
     clampWidth, clampGutter, contentBand, presetOf, bindingWidth,
   } from './lib/content-width.js';
   import {
-    PAD_Y, TEXT_SIZE, PAD_X, GAP, PILL_WIDTH, SHRINK_TO, COL_WIDTH, LOGO_SIZE, RADIUS, SIZE_IDS,
+    PAD_Y, TEXT_SIZE, PAD_X, GAP, PILL_WIDTH, SHRINK_TO, SHRINK_AT, SHRINK_MS, COL_WIDTH, LOGO_SIZE, RADIUS, SIZE_IDS,
     clampRange, effectivePadY, effectiveTextSize, sizePresetOf,
   } from './lib/nav-size.js';
   import Dropdown from './lib/Dropdown.svelte';
@@ -3188,6 +3188,17 @@
   function setNavShrinkTo(percent) {
     const factor = clampRange(percent / 100, SHRINK_TO, 0.5);
     setNavStyle('shrinkTo', factor === 0.5 ? undefined : factor);
+  }
+
+  /** How far down the shrink starts, and how long it takes; the defaults are
+   *  never stored, like the other size fields. */
+  function setNavShrinkAt(px) {
+    const v = clampRange(px, SHRINK_AT, 80);
+    setNavStyle('shrinkAt', v === 80 ? undefined : v);
+  }
+  function setNavShrinkMs(ms) {
+    const v = clampRange(ms, SHRINK_MS, 220);
+    setNavStyle('shrinkMs', v === 220 ? undefined : v);
   }
 
   /** The effect color on hover: only where the style has an effect, with a
@@ -6555,6 +6566,20 @@
                                 value={Math.round((siteDraft.nav.style?.shrinkTo ?? 0.5) * 100)}
                                 oninput={(e) => setNavShrinkTo(e.target.valueAsNumber)} />
                               <span class="gridmenu-value">{Math.round((siteDraft.nav.style?.shrinkTo ?? 0.5) * 100)}%</span>
+                            </div>
+                            <div class="ctl-row" title={ta('tip.nav.shrinkAt')}>
+                              <span class="mini-label ctl-name">{ta('lbl.navShrinkAt')}</span>
+                              <input type="range" min="0" max="400" step="10"
+                                value={siteDraft.nav.style?.shrinkAt ?? 80}
+                                oninput={(e) => setNavShrinkAt(e.target.valueAsNumber)} />
+                              <span class="gridmenu-value">{siteDraft.nav.style?.shrinkAt ?? 80} px</span>
+                            </div>
+                            <div class="ctl-row" title={ta('tip.nav.shrinkMs')}>
+                              <span class="mini-label ctl-name">{ta('lbl.navShrinkMs')}</span>
+                              <input type="range" min="0" max="1200" step="20"
+                                value={siteDraft.nav.style?.shrinkMs ?? 220}
+                                oninput={(e) => setNavShrinkMs(e.target.valueAsNumber)} />
+                              <span class="gridmenu-value">{siteDraft.nav.style?.shrinkMs ?? 220} ms</span>
                             </div>
                             {#if (siteDraft.nav.logo?.type ?? 'text') !== 'text'}
                               <label class="gridmenu-snap" title={ta('tip.nav.shrinkLogo')}>

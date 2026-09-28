@@ -3319,11 +3319,19 @@ body:has(dialog:modal) {
      fluid clamp. The mobile panel and the side-to-bar fallback read the
      same variable, and the inset rule below raises it to the content edge. */
   --urd-nav-px: var(--urd-nav-pad-x, clamp(1rem, 4vw, 2.5rem));
+  /* The text size the same way: an explicit value (--urd-nav-text-size,
+     inline from nav.js) wins over the size preset, and the scroll shrink
+     scales whichever applies. Text and item spacing tighten at half the
+     padding's rate: the padding can halve without harm, while the same
+     factor on the text would leave it unreadable. */
+  --urd-nav-font: var(--urd-nav-text-size, var(--urd-nav-size-font, 1rem));
+  --urd-nav-shrink-soft: calc(1 - (1 - var(--urd-nav-shrink, 1)) / 2);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   padding: var(--urd-nav-pad) var(--urd-nav-px);
+  font-size: calc(var(--urd-nav-font) * var(--urd-nav-shrink-soft, 1));
   /* Background and blur live in variables (set by nav.js from nav.style):
      submenus and the mobile panel reuse the same surface as the menu itself.
      Blur has to go through a custom property because backdrop-filter does not inherit. */
@@ -3468,7 +3476,11 @@ body:has(dialog:modal) {
 }
 
 .urd-nav-scroll .urd-nav {
-  transition: padding 0.22s ease;
+  transition: padding var(--urd-nav-shrink-ms, 0.22s) ease, font-size var(--urd-nav-shrink-ms, 0.22s) ease;
+}
+
+.urd-nav-scroll .urd-nav-list {
+  transition: gap var(--urd-nav-shrink-ms, 0.22s) ease;
 }
 
 .urd-nav-hidden {
@@ -3495,7 +3507,7 @@ body:has(dialog:modal) {
 }
 
 .urd-nav-announce-keep.urd-nav-scroll .urd-nav {
-  transition: padding 0.22s ease, translate 0.28s ease;
+  transition: padding var(--urd-nav-shrink-ms, 0.22s) ease, font-size var(--urd-nav-shrink-ms, 0.22s) ease, translate 0.28s ease;
 }
 
 /* The compact factor lives on the nav (the host carries the state class):
@@ -3508,6 +3520,7 @@ body:has(dialog:modal) {
 @media (prefers-reduced-motion: reduce) {
   .urd-nav-scroll,
   .urd-nav-scroll .urd-nav,
+  .urd-nav-scroll .urd-nav-list,
   .urd-nav-scroll .urd-nav-shrink-logo .urd-nav-logo img {
     transition: none;
   }
@@ -3543,7 +3556,7 @@ body:has(dialog:modal) {
 }
 
 .urd-nav-scroll .urd-nav-shrink-logo .urd-nav-logo img {
-  transition: height 0.22s ease, margin 0.22s ease;
+  transition: height var(--urd-nav-shrink-ms, 0.22s) ease, margin var(--urd-nav-shrink-ms, 0.22s) ease;
 }
 
 .urd-nav-list {
@@ -3556,7 +3569,7 @@ body:has(dialog:modal) {
   align-items: center;
   /* The item spacing (nav.style.gap, inline from nav.js); the mobile panel
      and the column list keep their own gap. */
-  gap: var(--urd-nav-gap, 1.25rem);
+  gap: calc(var(--urd-nav-gap, 1.25rem) * var(--urd-nav-shrink-soft, 1));
   list-style: none;
 }
 
@@ -4222,17 +4235,17 @@ body.urd-mobile .urd-nav-sub,
    text size (inline from nav.js) overrides the preset. */
 .urd-nav-size-sm {
   --urd-nav-size-pad: 0.55rem;
-  font-size: 0.85rem;
+  --urd-nav-size-font: 0.85rem;
 }
 
 .urd-nav-size-lg {
   --urd-nav-size-pad: 1.25rem;
-  font-size: 1.05rem;
+  --urd-nav-size-font: 1.05rem;
 }
 
 .urd-nav-size-xl {
   --urd-nav-size-pad: 1.7rem;
-  font-size: 1.15rem;
+  --urd-nav-size-font: 1.15rem;
 }
 
 /* Border (nav.style.border): the side is the class, the width and colour

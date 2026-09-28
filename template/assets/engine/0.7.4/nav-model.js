@@ -112,7 +112,7 @@ export function navItems(site) {
  * @param {boolean} prevHidden Whether the menu was hidden
  * @returns {{compact: boolean, hidden: boolean, scrolled: boolean, anchor: number}}
  */
-export function navScrollState(mode, anchor, y, prevHidden) {
+export function navScrollState(mode, anchor, y, prevHidden, { shrinkAt } = {}) {
   const TOP_ZONE = 80;
   // Asymmetric on purpose. Hiding asks for a deliberate scroll down, so the
   // menu does not leave at the first notch; showing it again answers a short
@@ -120,7 +120,10 @@ export function navScrollState(mode, anchor, y, prevHidden) {
   const HIDE_TRAVEL = 96;
   const SHOW_TRAVEL = 16;
   const scrolled = y > TOP_ZONE;
-  if (mode === 'shrink') return { compact: scrolled, hidden: false, scrolled, anchor: y };
+  // How far down the shrink starts is its own distance (nav.style.shrinkAt);
+  // the top zone is what the clear surface and the hide read.
+  const shrinkZone = clampNum(shrinkAt, NAV_SIZE_BOUNDS.shrinkAt) ?? TOP_ZONE;
+  if (mode === 'shrink') return { compact: y > shrinkZone, hidden: false, scrolled, anchor: y };
   if (mode !== 'hide') return { compact: false, hidden: false, scrolled, anchor: y };
   if (!scrolled) return { compact: false, hidden: false, scrolled, anchor: y };
   if (prevHidden) {
@@ -322,6 +325,8 @@ export const NAV_SIZE_BOUNDS = {
   gap: [0, 64],
   pillWidth: [480, 1920],
   shrinkTo: [0.3, 0.8],
+  shrinkAt: [0, 400],
+  shrinkMs: [0, 1200],
   logoSize: [12, 128],
   radius: [0, 64],
 };
@@ -346,7 +351,7 @@ function clampNum(value, [min, max], decimals = 0) {
  * @param {object} [style] nav.style
  * @param {object} [logo] nav.logo
  * @param {{mobile?: boolean}} [state] Whether the mobile breakpoint matches
- * @returns {{vars: Record<string, string>, font: string|undefined, logoSize: number}}
+ * @returns {{vars: Record<string, string>, logoSize: number}}
  */
 export function navSizeVars(style = {}, logo = {}, { mobile = false } = {}) {
   const s = style ?? {};
@@ -370,14 +375,19 @@ export function navSizeVars(style = {}, logo = {}, { mobile = false } = {}) {
   }
   const shrinkTo = clampNum(s.shrinkTo, NAV_SIZE_BOUNDS.shrinkTo, 2);
   if (shrinkTo !== undefined) vars['--urd-nav-shrink-to'] = String(shrinkTo);
+  const shrinkMs = clampNum(s.shrinkMs, NAV_SIZE_BOUNDS.shrinkMs);
+  if (shrinkMs !== undefined) vars['--urd-nav-shrink-ms'] = `${shrinkMs}ms`;
   // The floating menu's corner rounding; the CSS reads it only on the
   // floating variants, with each variant's preset as the fallback.
   const radius = clampNum(s.radius, NAV_SIZE_BOUNDS.radius);
   if (radius !== undefined) vars['--urd-nav-radius'] = `${radius}px`;
+  // The text size is a variable rather than an inline font-size, so the
+  // scroll shrink can scale it the way it scales the padding.
   const textSize = clampNum(m.textSize ?? s.textSize, NAV_SIZE_BOUNDS.textSize);
+  if (textSize !== undefined) vars['--urd-nav-text-size'] = `${textSize}px`;
   const l = logo ?? {};
   const logoSize = clampNum(mobile ? (l.mobileSize ?? l.size) : l.size, NAV_SIZE_BOUNDS.logoSize) ?? 32;
-  return { vars, font: textSize !== undefined ? `${textSize}px` : undefined, logoSize };
+  return { vars, logoSize };
 }
 
 /**

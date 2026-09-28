@@ -27,6 +27,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.26 - What the scroll shrink reaches, and how fast - 28 September 2026
+
+- «Krymp menyen» only reached the padding and the logo: the menu's text size was written as an inline `font-size`, which no CSS rule can scale. It is a variable now (`--urd-nav-text-size`, with the size presets handing theirs over the same way), and the text and the item spacing follow the shrink at half the padding's rate (`--urd-nav-shrink-soft`): with the default factor the padding halves while the text goes from 13.6 to 10.2 px, where the full factor would have left it at 6.8.
+- New `nav.style.shrinkAt` (0-400 px, default 80): how far down the page the shrink starts. It used to share the 80 px top zone with the transparent-at-top surface and the hide, so it could not be moved on its own.
+- New `nav.style.shrinkMs` (0-1200 ms, default 220): how long the shrink takes, through `--urd-nav-shrink-ms` to the four transitions that carried the duration as a literal. Schema, SCHEMA.md and the example data in the same commit, with two sliders in Oppførsel under «Krymp ved rulling».
+
 ### 0.7.0.25 - The menu hides on a real scroll, and the clear surface is renamed - 28 September 2026
 
 - «Skjul ved rulling» took the menu away at the first notch: the state flipped on the direction of a single frame, since the caller moved the reference point on every frame and no travelled distance existed anywhere. `navScrollState` now owns a turning point that follows the page up while the menu is visible and down while it is hidden, and returns the next one; the menu leaves after 96 px down and comes back after 16 px up, measured from the furthest point in that direction.

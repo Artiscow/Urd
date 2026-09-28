@@ -4,6 +4,15 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.0.26): the scroll shrink
+
+- [ ] A sticky bar with «Krymp ved rulling»: scrolling down tightens the padding, the menu text and the spacing between the items, and the logo when its own switch is on
+- [ ] Judge the text: it tightens at half the padding's rate, so «Krymp til 50 %» halves the thickness while the text loses a quarter. Say if it should follow the full factor instead
+- [ ] «Krymper etter»: set it to 300 px and check that the menu keeps its full size until you are that far down
+- [ ] «Krympetid»: 0 gives an instant change, 1200 a slow one; the system setting for reduced motion switches the animation off regardless
+- [ ] A menu at each of the four sizes, unshrunk: it looks exactly as before this change
+- [ ] A menu with an explicit text size: it still wins over the size preset, and shrinks from there
+
 ### Testrunde-batch (0.7.0.25): the hide travel and the rename
 
 - [ ] A sticky bar with «Skjul ved rulling»: a short scroll down leaves the menu in place, and it goes away once you have scrolled a screenful of a few lines

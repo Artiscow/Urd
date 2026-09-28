@@ -183,6 +183,8 @@
       "blur": true,
       "size": "sm",
       "hover": "underline",
+      "shrinkAt": 80,
+      "shrinkMs": 220,
       "hoverGlow": 1,
       "atTop": "clear",
       "tools": {

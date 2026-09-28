@@ -287,7 +287,9 @@
               ],
               "description": "The floating menu's maximum width in px, or content = the site's content width (additive from v0.7). Omitted = 1100. Floating variants only; ignored at the mobile breakpoint."
             },
-            "shrinkTo": { "type": "number", "minimum": 0.3, "maximum": 0.8, "default": 0.5, "description": "The padding factor in the compact state when nav.scroll is shrink (additive from v0.7)." },
+            "shrinkTo": { "type": "number", "minimum": 0.3, "maximum": 0.8, "default": 0.5, "description": "The factor the padding, the text size and the item spacing are scaled by in the compact state when nav.scroll is shrink (additive from v0.7)." },
+            "shrinkAt": { "type": "integer", "minimum": 0, "maximum": 400, "default": 80, "description": "How far down the page the menu shrinks, in px (additive from v0.7). Omitted = the top zone of 80 px, the same line the transparent-at-top surface uses." },
+            "shrinkMs": { "type": "integer", "minimum": 0, "maximum": 1200, "default": 220, "description": "How long the shrink takes, in ms (additive from v0.7). 0 = no animation." },
             "shrinkLogo": { "type": "boolean", "default": false, "description": "The logo image shrinks with the menu in the compact state (additive from v0.7)." },
             "border": {
               "type": "object",
