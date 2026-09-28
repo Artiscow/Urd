@@ -4607,9 +4607,21 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open,
 }
 
 .urd-nav-hover-pill .urd-nav-list a {
-  padding: 0.35rem 0.8rem;
+  --urd-nav-pill-pad: 0.8rem;
+  padding: 0.35rem var(--urd-nav-pill-pad);
   border-radius: 999px;
   transition: background-color 0.15s ease;
+}
+
+/* A horizontal menu draws the pill AROUND the item instead of adding it
+   between them: the negative margin gives back what the padding takes, so
+   the items sit exactly where they do in every other hover style. The
+   padding is capped at half the item spacing, so a pill reaches at most the
+   midpoint between two items and two of them can never overlap. The column
+   and the two mobile menus stack the items, where neither applies. */
+body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-hover-pill:not(.urd-nav-mobile) .urd-nav-list a {
+  --urd-nav-pill-pad: min(0.8rem, calc(var(--urd-nav-gap, 1.25rem) * var(--urd-nav-shrink-soft, 1) / 2));
+  margin-inline: calc(-1 * var(--urd-nav-pill-pad));
 }
 
 .urd-nav-hover-pill .urd-nav-list a:hover,

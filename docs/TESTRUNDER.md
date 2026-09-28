@@ -4,6 +4,14 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.0.30): the pill highlight
+
+- [ ] Switch the hover style between «Understrek» and «Pille» on a top bar: the menu items stay exactly where they are, only the highlight changes
+- [ ] Hover an item with the pill style at the default spacing: the pill reaches halfway to its neighbours and never touches the neighbouring text
+- [ ] Set a large item spacing and hover again: the pill keeps its own size and does not grow with the spacing
+- [ ] Set a very small item spacing: two pills meet but never overlap
+- [ ] The pill style in the side column and in the mobile menu: unchanged from before
+
 ### Testrunde-batch (0.7.0.29): the mobile setup in the panel
 
 - [ ] Nav panel, Mobil fold: size, placement, tools, content width, overlay and border all read «Som PC» on a site that has never set them

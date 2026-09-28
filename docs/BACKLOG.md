@@ -252,7 +252,7 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 - [ ] Foldene i «+ Nytt element»-menyen (Former og plugin-variantene) tegner pilen sin som tegnene ▾ og ▴; editor-chrome skal være tegnet SVG (noted 28 September 2026, the same rule as the handles fixed in 0.7.0.20)
 - [ ] Tooltips i lerretet er nettleserens egne (`title`), så de følger verken admin-temaet eller admin-størrelsen. Urd har ingen tooltip-komponent: `hint.js` er et hjelpekort som åpnes med klikk og `dropdown.js` en meny, så dette krever en ny delt modul i samme selvstylede mønster, og omlegging av rundt 400 kallsteder i motoren og editoren. AGENTS.md foreskriver i dag `title` for panelenes «?»-tekster, så regelen må endres i samme slengen (en utvidelse av ADR-0009) (noted 28 September 2026)
 - [x] (fixed 28 September 2026 in 0.7.0.24: the menu measured its width but never the viewport height; it flips upwards and scrolls when taller than the screen) Om man åpner dobbeltklikk menyen nærme bunnen av sidevisningen eller bunnen av siden, folder den seg nedover og ut av både skjermen og siden. Den burde folde seg oppover om den går ut av bunnen av skjermen.
-- [ ] Nav meny highlight: pille øker mellomrommet mellom nav punktene uten å faktisk trenge å gjøre det. Mellomrom burde forbli det samme som det er uten pille highlight.
+- [x] (fixed 29 September 2026 in 0.7.0.30: the pill's side padding was added between the items; it is drawn around them now and capped at half the spacing) Nav meny highlight: pille øker mellomrommet mellom nav punktene uten å faktisk trenge å gjøre det. Mellomrom burde forbli det samme som det er uten pille highlight.
 
 
 ## Suggestions, Ideas and Wishes

@@ -27,6 +27,10 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.30 - The pill highlight stops widening the menu - 29 September 2026
+
+- Choosing the pill hover style pushed the menu items apart: the pill's side padding was added between them, so the row grew by twice the padding at every gap. A horizontal menu now draws the pill around the item instead, giving the padding back as a negative margin, and caps it at half the item spacing so two pills can at most meet. Measured: the distance from one item to the next is 56 px with the pill and without it at the default spacing, and 76 px with both at a spacing of 40. The column and the two mobile menus stack the items and keep the pill as it was.
+
 ### 0.7.0.29 - The mobile menu's own setup, the panel - 29 September 2026
 
 - The Mobil fold got the rest of the setup for the phone alone: size, item placement, the tool cluster's side, the content width, the overlay and the border, each starting on «Som PC» and only then writing a value of its own. A border set there takes its own width and colour, and «Ingen» removes the desktop border on the phone without touching it elsewhere.
