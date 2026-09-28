@@ -197,6 +197,7 @@
       "sheetLogo": true,
       "sheetTheme": true,
       "sheetCart": true,
+      "sheetAnnounce": true,
       "sheet": {
         "bg": "#0e1a27",
         "bgOpacity": 0.95,

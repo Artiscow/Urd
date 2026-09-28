@@ -27,6 +27,10 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.27 - The announcement inside the full-screen menu - 28 September 2026
+
+- The announcement sat behind the full-screen mobile menu and could not even be dismissed there: the strip lives in the nav host, while the menu is a modal dialog in the top layer. New `nav.style.sheetAnnounce` (default false) moves the strip into the top of the menu while it is open and back to the bar on close, the same move-in and move-out the logo already uses. The menu's clearance is left alone while the strip is away and measured again on close, and a strip dismissed from inside the menu stays gone. Schema, SCHEMA.md and the example data in the same commit, with a checkbox in the Mobil fold shown only when there is an announcement.
+
 ### 0.7.0.26 - What the scroll shrink reaches, and how fast - 28 September 2026
 
 - «Krymp menyen» only reached the padding and the logo: the menu's text size was written as an inline `font-size`, which no CSS rule can scale. It is a variable now (`--urd-nav-text-size`, with the size presets handing theirs over the same way), and the text and the item spacing follow the shrink at half the padding's rate (`--urd-nav-shrink-soft`): with the default factor the padding halves while the text goes from 13.6 to 10.2 px, where the full factor would have left it at 6.8.

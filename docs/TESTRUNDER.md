@@ -4,6 +4,14 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.0.27): the announcement in the full-screen menu
+
+- [ ] Mobile with the full-screen menu and an announcement, «Kunngjøring i menyen» on: open the menu and the strip is at the top of it, full width, above the cross
+- [ ] Cross the strip out from inside the menu: it goes, and it is still gone when the menu closes
+- [ ] Close the menu without dismissing: the strip is back above the bar, and the first section starts in the same place as before
+- [ ] With the setting off: the strip stays behind the menu, as before
+- [ ] The checkbox is hidden when the announcement is off
+
 ### Testrunde-batch (0.7.0.26): the scroll shrink
 
 - [ ] A sticky bar with «Krymp ved rulling»: scrolling down tightens the padding, the menu text and the spacing between the items, and the logo when its own switch is on

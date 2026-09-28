@@ -473,8 +473,12 @@ export function renderNav(site, host) {
   list.id = 'urd-nav-menu';
 
   const sheet = mobileMenuMode(site.nav.style) === 'sheet'
-    ? buildSheet(nav, { list, tools, burger, logo: site.nav.style?.sheetLogo === true ? logo : null, withTheme: site.nav.style?.sheetTheme === true, withCart: site.nav.style?.sheetCart === true, labels: site.nav.style?.sheetToolLabels === true, motion: sheetMotion(site.nav.style), surface: navSurface(site.nav.style?.sheet ?? {}) }, signal)
+    ? buildSheet(nav, { list, tools, burger, logo: site.nav.style?.sheetLogo === true ? logo : null, announce: () => (site.nav.style?.sheetAnnounce === true ? announceEl : null), withTheme: site.nav.style?.sheetTheme === true, withCart: site.nav.style?.sheetCart === true, labels: site.nav.style?.sheetToolLabels === true, motion: sheetMotion(site.nav.style), surface: navSurface(site.nav.style?.sheet ?? {}) }, signal)
     : null;
+  // The announcement comes back to the host on close, so the clearance the
+  // guard in setNavH held is measured again. Registered after buildSheet's
+  // own close listener, which is what puts the strip back.
+  if (sheet) sheet.dialog.addEventListener('close', () => setNavH(), { signal });
   const isMobileOpen = () => (sheet ? sheet.dialog.open : nav.classList.contains('urd-nav-open'));
   // The mobile state as the CSS sees it: the breakpoint, content folding, or
   // the editor's viewport choice in the preview (body.urd-mobile).
@@ -665,6 +669,10 @@ export function renderNav(site, host) {
   // against that one, so the section handles stand still while the scroll
   // shrink runs under them.
   function setNavH() {
+    // While the full-screen menu is open the strip has moved into it and the
+    // host is short; the page behind keeps the clearance it had before the
+    // menu opened, and the close puts it back.
+    if (sheet?.dialog.open) return;
     const announceH = announceEl?.offsetHeight ?? 0;
     const scrolledAway = announceScrolls ? announceH : 0;
     const h = isSide ? 0 : nav.offsetTop + nav.offsetHeight - scrolledAway;
@@ -801,7 +809,7 @@ export function renderNav(site, host) {
  * navSurface); without choices the sheet follows the bar's veil and blur.
  * `labels` shows the tool buttons' text beside the icons in the foot.
  */
-function buildSheet(nav, { list, tools, burger, logo, withTheme, withCart, labels, motion, surface }, signal) {
+function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withCart, labels, motion, surface }, signal) {
   const dialog = document.createElement('dialog');
   dialog.className = `urd-nav-sheet urd-nav-sheet-from-${motion}${labels ? ' urd-nav-sheet-labels' : ''}`;
   if (surface.bg) dialog.style.setProperty('--urd-nav-sheet-bg', surface.bg);
@@ -841,9 +849,16 @@ function buildSheet(nav, { list, tools, burger, logo, withTheme, withCart, label
   const toolSelector = [withCart && '.urd-nav-cart', withTheme && '.urd-nav-theme'].filter(Boolean).join(', ');
   const toolButtons = () => (toolSelector ? [...tools.querySelectorAll(toolSelector)] : []);
   let logoNext = null;
+  // Where the announcement came from, so it goes back there on close. The
+  // strip is read through a getter: the cross inside the sheet removes it,
+  // and a removed strip must not be put back.
+  let announceHome = null;
   dialog.addEventListener('close', () => {
     nav.insertBefore(list, tools);
     if (logo) nav.insertBefore(logo, logoNext);
+    const strip = announce?.();
+    if (strip && announceHome) announceHome.parent.insertBefore(strip, announceHome.next);
+    announceHome = null;
     for (const btn of [...foot.children]) tools.insertBefore(btn, burger);
   }, { signal });
   nav.appendChild(dialog);
@@ -851,6 +866,13 @@ function buildSheet(nav, { list, tools, burger, logo, withTheme, withCart, label
     if (logo) {
       logoNext = logo.nextSibling;
       head.insertBefore(logo, close);
+    }
+    // Above the head rather than in it: the head is a right-aligned row for
+    // the cross, while the strip is a full-width band.
+    const strip = announce?.();
+    if (strip?.parentNode) {
+      announceHome = { parent: strip.parentNode, next: strip.nextSibling };
+      dialog.prepend(strip);
     }
     body.appendChild(list);
     for (const btn of toolButtons()) foot.appendChild(btn);

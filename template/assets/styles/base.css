@@ -3983,6 +3983,13 @@ body.urd-mobile .urd-nav-sub,
   animation: urd-nav-sheet-top 280ms ease-out;
 }
 
+/* The announcement moved into the full-screen menu (nav.style.sheetAnnounce):
+   a full-width band above the head, as it is above the bar. */
+.urd-nav-sheet > .urd-nav-announce {
+  flex: 0 0 auto;
+  margin-bottom: 0;
+}
+
 /* The sheet itself covers the page, so the backdrop adds nothing. */
 .urd-nav-sheet::backdrop {
   background: transparent;

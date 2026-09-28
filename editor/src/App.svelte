@@ -6683,6 +6683,14 @@
                             {ta('lbl.sheetCart')}
                           </label>
                         {/if}
+                        <!-- Only with a strip to move: without it the setting does nothing -->
+                        {#if siteDraft.nav.announcement?.show}
+                          <label class="gridmenu-snap" title={ta('tip.nav.sheetAnnounce')}>
+                            <input type="checkbox" checked={siteDraft.nav.style?.sheetAnnounce === true}
+                              onchange={(e) => setNavStyle('sheetAnnounce', e.target.checked ? true : undefined)} />
+                            {ta('lbl.sheetAnnounce')}
+                          </label>
+                        {/if}
                         {#if siteDraft.nav.style?.sheetTheme || siteDraft.nav.style?.sheetCart}
                           <label class="gridmenu-snap" title={ta('tip.nav.sheetToolLabels')}>
                             <input type="checkbox" checked={siteDraft.nav.style?.sheetToolLabels === true}

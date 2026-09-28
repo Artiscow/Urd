@@ -310,6 +310,7 @@
             "sheetTheme": { "type": "boolean", "default": false, "description": "The theme button moves into the bottom of the full-screen menu as a labelled button while it is open (additive from v0.7). mobileMenu sheet only." },
             "sheetToolLabels": { "type": "boolean", "default": false, "description": "The theme button and the cart in the full-screen menu's foot show their text beside the icon (additive from v0.7); omitted = icons only." },
             "sheetCart": { "type": "boolean", "default": false, "description": "The cart moves into the bottom of the full-screen menu as a labelled button while it is open (additive from v0.7). mobileMenu sheet only." },
+            "sheetAnnounce": { "type": "boolean", "default": false, "description": "The announcement strip moves into the top of the full-screen menu while it is open, and back to the bar on close (additive from v0.7). Without it the strip is behind the menu and cannot even be dismissed." },
             "tools": {
               "type": "object",
               "additionalProperties": false,
