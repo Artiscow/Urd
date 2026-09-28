@@ -27,6 +27,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.22 - The section height and the rotated block - 28 September 2026
+
+- A block dragged towards the bottom of a section stretched the section instead of lying over the boundary: the push pass raised the section to the lowest edge of every block as soon as any block in it had content growth. A block counts towards its section's height only while its design bottom is inside that height; content growing within the height still pushes and still raises the section (ADR-0024 addendum).
+- A rotated block jumped sideways at the first pointer move and landed correctly on release: the redraw wrote the design height while the push pass owns the grown one, and on a rotated element a height change is mostly a sideways shift. The grown box is kept beside the shift (`data-urd-grow`, `pushGrowOf`) and put back by `drawFrame`.
+- A rotated block dropped in another section landed too high: the stored y was measured off the element's box, which for a rotated block starts above the frame. It is carried across from the source content surface instead.
+
 ### 0.7.0.21 - The image editor and the admin panels - 27 September 2026
 
 - The image editor's panel shrank with the preview zoom: it is the only floating chrome in the preview without the counter-scale its twin `.urd-multi-toolbar` carries. It keeps the admin's size now (measured: 260 px of layout drawn at 330 px at zoom 1.27), with a max height and scrolling so a tall panel cannot run off a zoomed-out page, and the placement clamp measures the drawn box.

@@ -33,6 +33,10 @@ Urd already uses the Fluid Engine model on mobile (ADR-0019). Porting it to the 
 - Deliberate overlaps survive through the middle rule (a badge on an image, a title over a shape), but a block deliberately placed just below a text block within 70 px moves with the text; that is the intended reading and matches Wix.
 - The desktop row grid remains the alternative that would also delete the measurement code; the inventory above is the price, and the decision is reopened only if the push model proves insufficient in the test rounds. A per-block «keep in place» flag (Wix's Fixed) stays deferred until a real page needs it.
 
+## Addendum, 28 September 2026: a block past the section's height has no say in it
+
+Decision 2 raised the section to `bottom + 24` whenever anything in it grew, with `bottom` measured over every block. A block deliberately placed across the boundary was therefore dragged into that maximum, and the section stretched to keep it inside instead of letting it lie over the section below. The rule is narrowed: a block counts towards the section's height only while its design bottom (`y + h`) is inside the section's own height. Content that grows within that height still pushes the blocks under it and still raises the section; a block hung past the edge is left out of the calculation, and its section keeps the height the owner set. A section with no height of its own still follows every block, since there is nothing to measure against.
+
 [ADR-0012]: 0012-multilingual.md
 [ADR-0018]: 0018-bound-content-width.md
 [ADR-0019]: 0019-synced-mobile-model.md

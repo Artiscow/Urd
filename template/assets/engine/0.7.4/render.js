@@ -139,6 +139,11 @@ function applyPush(host) {
     const needed = Math.max(frame.h, Math.round(contentHeight(el)));
     if (needed !== frame.h) el.style.height = `${needed}px`;
     const grow = needed - frame.h;
+    // The grown box is the drawn box, so a redraw between passes (a drag,
+    // the arrow keys, align) can put it back instead of collapsing to the
+    // design height. The shift is kept the same way, below.
+    if (grow) el.dataset.urdGrow = String(grow);
+    else delete el.dataset.urdGrow;
     items.push({ id: el.dataset.blockId, x: frame.x, y: frame.y, h: frame.h, grow, el });
   }
   // The growth is kept for the drag's live pass (pushPreview).
@@ -154,6 +159,13 @@ function applyPush(host) {
  */
 function writePush(host, items, skipBox) {
   const { shifts } = pushLayout(items);
+  // The section's own height, the line a block has to stay inside to have a
+  // say in it. A block placed past it lies across the sections below instead
+  // of stretching the one it belongs to; a section with no height of its own
+  // still follows every block.
+  host.style.minHeight = host.dataset.urdMinHeight ?? '';
+  const designPx = Number.parseFloat(getComputedStyle(host).minHeight) || 0;
+  const inside = (it) => designPx <= 0 || it.y + it.h <= designPx;
   let grew = false;
   let bottom = 0;
   for (const it of items) {
@@ -161,7 +173,7 @@ function writePush(host, items, skipBox) {
     // A block being dragged is drawn where the pointer holds it, but it does
     // not decide how tall the section is: otherwise the section it is leaving
     // stretches after it, and the drop target is never uncovered.
-    if (!skipBox?.has(it.id)) {
+    if (!skipBox?.has(it.id) && inside(it)) {
       grew = grew || it.grow > 0;
       bottom = Math.max(bottom, it.y + shift + it.h + it.grow);
     }
@@ -175,11 +187,7 @@ function writePush(host, items, skipBox) {
     }
     if (it.el.style.top !== top) it.el.style.top = top;
   }
-  host.style.minHeight = host.dataset.urdMinHeight ?? '';
-  if (grew) {
-    const basePx = Number.parseFloat(getComputedStyle(host).minHeight) || 0;
-    if (bottom + 24 > basePx) host.style.minHeight = `${Math.round(bottom + 24)}px`;
-  }
+  if (grew && bottom + 24 > designPx) host.style.minHeight = `${Math.round(bottom + 24)}px`;
 }
 
 /**
@@ -343,6 +351,11 @@ export function suspendPush() {
  */
 export function pushShiftOf(el) {
   return Number.parseFloat(el?.dataset?.urdShift ?? '0') || 0;
+}
+
+/** The px the last push pass added to the block's box for taller content. */
+export function pushGrowOf(el) {
+  return Number.parseFloat(el?.dataset?.urdGrow ?? '0') || 0;
 }
 
 /** Editing done: measure and push again. */

@@ -2,83 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
-### Testrunde-batch (0.7.0.21): the image editor and the admin panels
-
-- [ ] Open the image editor at a strong preview zoom out and again zoomed in: the panel reads at the same size as the admin panels both times, and a tall panel scrolls instead of running off the page
-- [ ] With the image editor open, make the admin window wider: the crop grid stays on the image, and the panel stays beside it
-- [ ] Open a panel, open some folds, scroll down in it, go into Clean view and back: the same panel, the same folds and the same place in the list
-- [ ] Click in the page while in Clean view: nothing is selected, and the Properties panel is unchanged when you come back
-- [ ] Gear pop, «Paneler ved ny lasting» on «Husk det siste»: reload the admin and the last panel is open again; on «Start uten panel» it opens with none
-- [ ] The setting survives a reload, and switching to «Start uten panel» does not reopen the old panel later
-
-### Testrunde-batch (0.7.0.20): the blocks, the guides and the drawn chrome
-
-- [ ] Insert a collection block on a page at the full content width, drag it towards the centre: it snaps exactly to the middle, with the centre guide showing; the same for a gallery and a product block
-- [ ] Drag any block towards a quarter of the content surface: a guide appears at 1/4 and 3/4 as it does at the centre, and Shift still bypasses the snapping
-- [ ] The guide button in the top bar: the dashed lines sit at the quarters of the content surface, lining up with the lines the drag snaps to
-- [ ] The block chrome: the rotate handle, the drag grip and the delete button are drawn icons, and so are the section toolbar's up, down, fit-height and delete buttons
-- [ ] The rotate handle still rotates, and still flips below the block when the toolbar is flipped under
-
-### Testrunde-batch (0.7.0.19): the drag between sections
-
-- [ ] A section holding a block whose content is taller than its frame: drag another block from it down into the section below; the source section keeps its height and the block lands in the section below
-- [ ] The same drag with the page scrolled well down: the page does not move under the pointer, before, during or after the drop
-- [ ] Drag a block into the first section on a page with a floating or overlaid menu: it lands where it was dropped, not a menu height too low
-- [ ] Drag a block that has been pushed down by a growing block above it into another section: it lands where it was dropped
-- [ ] A block whose content grows, left alone: its section still makes room for it as before
-
-### Testrunde-batch (0.7.0.18): the bar's content width by default
-
-- [ ] A brand new site from the template with the bar variant: the logo and the menu items line up with the content in the first section, while the bar's background reaches the window edge
-- [ ] Nav oppsett: unticking «Følg innholdsbredden» pushes the contents out to the window padding again, and ticking it back removes the field from the data
-- [ ] An existing site opened in the admin after the update: the menu looks exactly as before, and site.json now carries `"schemaVersion": 4` with `nav.style.inset` written in
-- [ ] Publish that site and load the published page: the menu is unchanged there too
-
-### Testrunde-batch (0.7.0.17): the announcement and hide on scroll
-
-- [ ] Sticky bar with an announcement and «Skjul ved rulling»: scroll down, the strip stays at the top while the menu slides out behind it, and scrolling up brings the menu back under it
-- [ ] The same with «Følg menyen ut ved rulling» on: the strip leaves with the menu, as before
-- [ ] With the menu hidden, click something in the page right under the strip: the click reaches the page, not an invisible band
-- [ ] Floating pill with an announcement and hide on scroll: the same, and the first section's top edge does not move
-- [ ] Kunngjøring fold: the new checkbox shows only with hide on scroll on a sticky bar, and is gone for the side variants and for «Stripen ruller bort»
-
-### Testrunde-batch (0.7.0.16): the nav in the preview and the dismissed announcement
-
-- [ ] Admin preview (not Clean view), a sticky top bar with «Skjul ved rulling»: the menu hides on scroll down and comes back on scroll up, and the section toolbars and the boundary chip keep their place
-- [ ] The same with «Krymp ved rulling»: the menu shrinks while the section handles stand still
-- [ ] Cross out the announcement in the preview, then switch page in the editor: the strip stays away; the same after a reload of the admin
-- [ ] Kunngjøring fold with «Kryss for å fjerne» on: «Vis stripen igjen» brings the strip back in the preview; the button is hidden when the cross is off
-- [ ] Published page after crossing the strip out in the editor on the same browser: the strip is away there too
-- [ ] Nav behaviour: the setting formerly «Gjennomsiktig øverst» reads «Flaten kommer når man blar» and still draws the bar without surface until the page is scrolled
-
-### Testrunde-batch (0.7.4): the release
-
-- [ ] Updates panel on a site created from the template: 0.7.4 is offered, the update applies, and the site renders with engine 0.7.4 (every page, the admin and the slug copies)
-- [ ] A site carrying the reference plugin folders calendar, form and map from a 0.6.11 to 0.7.3 template: after the update their blocks still render, beside the core blocks of the same kind
-- [ ] Published site after the update: a hard reload of a slug page loads the engine from /assets/engine/0.7.4/ with no request to the old folder
-
-### Testrunde-batch (0.7.0.11-0.7.13.5.2p): the review fixes
-
-- [ ] Side column, submenus «Alltid åpne» with the arrow on: fold a submenu with its arrow, move the mouse out of and back onto the item; it stays folded
-- [ ] Side column with the announcement «Øverst på siden» in the editor: scroll the page; the strip stays above the section handles and block toolbars
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
-### Testrunde-batch (0.7.13.5.2): the column's tools and submenus
+### Testrunde-batch (0.7.0.22): the section height and the rotated block
 
-- [ ] Preview and published page, bar and floating variants with an announcement: the strip's bottom edge is straight, nothing from the bar paints over it (also at 87 % preview zoom)
-- [ ] Side-left or side-right, Oppsett: Verktøy Oppe puts the theme button and cart at the top of the column with the logo and items below them; Nede parks them at the foot; Justering Venstre, Midten, Høyre and Balansert move the cluster across the column; the bar variants still show Venstre/Høyre only
-- [ ] Side column, Undermeny: «Undermenyer i kolonnen» Alltid åpne opens every submenu from the start with no arrows, hovering in and out of the column closes nothing, and clicking Butikk's heading does nothing; «Pil for å åpne og lukke» brings the arrows back and they fold the submenus; Lukket gives the accordions as before, and the open-on choice returns
-- [ ] The same site narrowed below 900 px: the column becomes a bar and the submenus behave as the bar's
-
-### Testrunde-batch (0.7.0.14): the announcement's place
-
-- [ ] Side-left with an announcement: the Kunngjøring fold shows «Plassering» with I menyen, Øverst på siden and Over innholdet (not for the bar and floating variants); I menyen puts the strip at the top of the column; Øverst på siden fixes it across the full width with the column and the content starting below it, on the published page as in the preview; Over innholdet puts it above the content beside the column and it scrolls away with the page; the cross removes it in every placement and the column takes the freed height back
-- [ ] Narrow the window below 900 px with a side column and Øverst på siden: the menu becomes a bar and the strip sits in it as before
-
-### Testrunde-batch (0.7.0.13): the blocks
-
-- [ ] Background, grain layer: the strength slider runs from 0 to 100 % in the section, nav and footer panels, and 100 % shows the texture at full strength on the published page
-- [ ] A line and an arrow at 50, 80 and 100 % preview zoom: the rotate handle sits above the block, the bottom-right corner lengthens the line without rotating it; near the top of the page (toolbar flipped under) the rotate handle sits below the block; the Properties panel shows «Lengde» beside the thickness for line and arrow only, and a typed length is applied and capped at the right edge
+- [ ] Drag a block down past the bottom edge of its section: it lies across the boundary and the section keeps its height, also for the last section above the footer
+- [ ] A block whose content is taller than its frame, left inside the section: the section still makes room for it and the blocks below still move
+- [ ] Rotate a block, then drag it: it follows the pointer from the first movement with no sideways jump, and lands where it is dropped
+- [ ] Rotate a block and drop it in another section: it lands at the height it was dropped at, not higher up
+- [ ] A block with taller content, moved with the arrow keys and with align: its box keeps its size throughout
 
 ### Testrunde-batch (0.7.0.12): the canvas
 
@@ -90,58 +22,10 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 ### Testrunde-batch (0.7.0.11): the nav and the announcement
 
-- [ ] Nav panel, Oppførsel: «Gjennomsiktig øverst» on a bar over a hero: in normal admin view the bar is clear at the top of the page and gets its surface after about 80 px of scrolling; switching to Clean view and back changes nothing about that
-- [ ] Published site with an announcement: dismiss it on Hjem, hover «Om oss» for a second (the prerender) and click: no strip; go back and forward: no strip; a changed text brings it back
-- [ ] A new site from the template: no announcement strip until «Vis kunngjøring» is ticked
-- [ ] Side-left or side-right with an announcement on: the strip sits at the top of the column, the theme button and the cart at its foot are on screen
-- [ ] Bar and floating variants with an announcement and a 30 px or larger logo: the strip's bottom edge is straight, nothing from the bar paints over it
 - [ ] Page switch on the published site: the old page stays on screen until the new one is rendered, then a cut; the menu never disappears or moves; a prerendered page (link hovered first) cross-fades; the first section's top clearance is right from the first frame
-- [ ] Reduced motion (OS setting): the page switch is still a cut with no blank frame
-
-### Testrunde-batch (0.7.13.4-0.7.0.10p): the review fixes
-
-- [ ] Menypunkter: drag an item that has a submenu onto another item's child rows; the clone appears after that parent at top level, never inside; drag it onto its own child rows and nothing is offered; the draft still saves and publishes afterwards
-- [ ] Menypunkter: only the grip starts a drag; press and drag inside the name field selects text
-- [ ] Nav, side-left or side-right, with an announcement: the column starts at the top of the window with the strip above the items; the «Følger menyen ved rulling» checkbox is not shown for the side variants
-
-### Testrunde-batch (0.7.0.10): the discard confirmation
-
-- [ ] Forkast utkast: after a group move of three blocks on Hjem, press «Sikker?» at its far left, in the middle and at its far right, several times each; the pill never moves while the button is held, every press discards, the page returns to the published state and the status field says «Utkastene er forkastet»
-- [ ] Forkast utkast: press and hold «Sikker?», then release; and press «Forkast», click into the preview instead of the pill; the first discards, the second only disarms
-
-### Testrunde-batch (0.7.13.5): the announcement bar, the Nav panel, the menu items and the live push
-
-- [ ] Nav panel, Kunngjøring: «Vis kunngjøring» on shows the strip above the menu on every page; text, a page from the list or «Egen lenke» with an address, background and text colour; with «Følger menyen ved rulling» off on a sticky bar the strip scrolls away and the menu sticks alone (the checkbox is hidden for floating, overlaid and non-sticky menus, where the strip always stays); the cross hides the strip and it stays hidden after a reload until the text changes; no seam between strip and bar at 60 to 90 % preview zoom
-- [ ] Nav panel, Oppsett: «Verktøy» Venstre puts theme, cart and burger before the logo, and the burger on the left on mobile; the six form tiles switch the variant and clear a typed rounding (pill, square and tab differ again); Menyplassering and column alignment as segments
-- [ ] Nav panel folds: Logo (type segment, thumbnail, height, on mobile and rounding on one row), Størrelse (presets, «Tilpass» fold with the sliders), Ramme (border tiles, width and colour on one row, shadow segment; the blur switch now under Farger), Oppførsel (two cards), Mobil (stacked fields, sheet surface as swatch plus slider, blur switch), Farger (hover samples, swatch row), Undermeny (design drawings); nothing wider than the panel in nb and en-GB
-- [ ] Menypunkter: rows with grip, name in place, target beneath; the actions appear on hover and on the selected row; drag with the grip shows a faint clone where the item lands, the middle of a top-level item (right of its first quarter) nests the dragged item and the grip column of a child pulls it out after the submenu; nothing nests under a child or takes a parent with children; a release outside the list lands where the clone stood; a drag that shows no clone changes nothing; «Lag side og legg til» with a title creates the page, adds the item and opens the page
-- [ ] Full-screen menu: theme button and cart as separate options, icons only unless «Tekst på knappene»; hover over an item with a submenu in the open mobile menu (laptop at 640 px or narrower) opens nothing; with «Lukket, åpnes ved trykk» a tap on Butikk opens its submenu and never leaves the page, also in the editor's mobile view; the page behind does not scroll on a touch screen while the menu is open
-- [ ] The push while editing: drag any block in a section where a text has grown; the other blocks stay where they are, the dragged block starts under the pointer without a jump, the blocks it pushes move with it, and the release changes nothing; Clean view and the published page show every block where the preview showed it at the same content width (tablet, laptop, desktop)
-- [ ] Calendar block without a source: the demo events are clipped to the frame in the preview and the note hangs below the block; the blocks under it sit at the same place in the preview and on the published page
-- [ ] Page navigation on the published site: the menu no longer shivers or morphs while the page cross-fades; a short page and a long page keep the menu and the centred content at the same place (the scrollbar gutter is always reserved)
-- [ ] Forkast utkast (open bug): after a group move of three blocks on Hjem, «Sikker?» must discard; if it only animates, note the status field's text and the console line «Urd: discard failed» and report both
-
-### Testrunde-batch (0.7.13.4): the full-screen mobile menu
-
-- [ ] Nav panel, Mobil: «Mobilmeny» Helskjerm; on the phone and in the editor's mobile view the burger opens a menu covering the whole viewport, the page behind does not scroll, Escape, the cross, the backdrop and a link click close it, and focus returns to the burger; «Panel under menylinjen» gives the old dropdown unchanged
-- [ ] «Menyen kommer inn»: each of the six entrances plays as named, and with reduced motion (OS setting) the menu simply appears
-- [ ] «Logo øverst i menyen», «Temaknapp nederst i menyen» and «Handlekurv nederst i menyen» (the latter two shown only when the theme has a counterpart or the cart is on): the elements sit in the sheet while open and are back in the bar at their old places after closing; the theme button in the foot switches theme and updates its label; the cart in the foot opens the cart drawer on top
-- [ ] «Menyens bakgrunn», «Dekkevne», «Uskarphet bak menyen» and text colour: the sheet takes its own surface, and with no choices it follows the bar's veil, blur and text colour
-- [ ] «Undermenyer på mobil» Lukket: tapping «Butikk» in the mobile view opens its submenu and never leaves the page (also in the editor's mobile view), the item's own page is the first submenu entry on mobile and absent on desktop; Alltid åpne: every submenu open on opening the menu, the caret closes only its own, tapping the item navigates
-- [ ] Mouse over an item with a submenu in the open mobile menu (laptop window at 640 px or narrower, or content folding): nothing opens; on desktop hover opens and leaving closes as before
-- [ ] Mobil fold, thickness and text size: empty = as on desktop, a value overrides on the phone only; the Size fold no longer has the desktop/mobile switch
-- [ ] Side column variant: on mobile the sheet works the same, since the column renders as a bar with a burger there
-
-### Testrunde-batch (0.7.18.7): calendar and form settings in Properties
-
-- [ ] Form block, Egenskaper, Innhold: Sendemåte (E-postklient / Eksternt endepunkt) shows Mottaker and Emne, or Endepunkt-URL with the connect-src tooltip; the field list with name, type dropdown, required, move up and down and remove; a select or radio field gets its options line; «+ Legg til felt»; Knappetekst and Kvittering; every change re-renders the form in the preview and is one undo step; no gear or panel on the block any more, only the help chip
-- [ ] Calendar block, Egenskaper, Innhold: Kilder as a textarea (one per line), Visning, Maks antall only for Liste and Kort, the two toggles; a pasted Google id renders the feed on the published site; the empty block shows the demo events with the note pointing at Egenskaper; no gear on the block, only the help chip
-- [ ] Ren visning and the published page show neither chip nor any editor chrome on either block; a plugin copy of the old calendar or form (from v0.7.3) still opens its own panel with «Innstillinger …»
 
 ### Testrunde-batch (0.7.18.6): the plugin folders gone, the docs corrected
 
-- [ ] «+ Ny blokk» in the preview lists Kart, Skjema and Kalender once each among the core blocks with no «Plugins» section (the section appears only when a third-party plugin provides blocks); the Blocks panel and the section gallery the same
-- [ ] The Plugins panel: only lang-sv listed, the folder field's example reads lang-sv, and the panel's texts still make sense with a single pack
 - [ ] `npm run validate` validates every `plugins/*/plugin.json` it finds (drop a copy of lang-sv as `plugins/lang-xx/` locally and see it listed), and `plugins/README.md` reads as the contract with the language pack as the example and the core blocks as the pattern
 - [ ] The user guide (nb, nn, en-GB), the template READMEs and the docs no longer call calendar, form, map or analytics plugins
 
@@ -757,29 +641,6 @@ Standarden ble korrigert fra 1200 til 1440 etter ny research, sidemargen byttet 
 - [ ] Sideoverganger på publisert side (Chromium-familien): fortsatt myk krysstoning med nav og footer i ro, nå som navnene settes i pageswap/pagereveal i stedet for statisk CSS
 - [ ] Etter neste oppdatering av urd-web: uskarpheten virker også der (fiksen ligger i base.css + urd.js, begge i motor-atomgruppen)
 
-### Testrunde-batch (0.6.6.6.1-2): panel-språkets fundament og Innhold/Stil-fanene
-
-- [ ] Tema-panelet ser uendret ut etter klasse-konsolideringen: Standard-chipene (aksent når valgt, dempet ellers, klikk bytter standard-skjema), LYS/MØRK-etikettene, palett-radene, typografi- og hjørneprøvene på sample-flatene
-- [ ] Oppdatering-panelet ser uendret ut: «slettes»-chipene og «Behold min»-kolonneetiketten (nå delte klasser) står som før
-- [ ] Egenskaper: Innhold/Stil-fanene vises øverst for alle blokktyper; hver innstilling ligger på riktig fane (innhold vs. utseende), og fanevalget huskes når du bytter blokk
-- [ ] Blokkmenyen (tannhjulet på blokkens verktøylinje) viser de samme fanene og oppfører seg likt som panelet
-- [ ] Tekstblokkens Innhold-fane viser tomtilstanden som peker til tekstlinjen; Stil-fanen har justering/tekstboks/kortstil
-- [ ] Bildeblokk: lightbox står under Innhold og forsvinner når lenke fylles inn; galleriets lightbox står under Stil
-- [ ] Tooltips i stedet for prosa: min-høyde (seksjon), videolenke, ikonfarge, eget ikonbilde, samlingsvelger og maks antall (to ulike tips), galleri-miniatyrene, «Plassering, lag og rotasjon»-summaryen og plugin-«Innstillinger …»-knappen viser forklaringen ved hover; ingen prosaavsnitt igjen i Egenskaper utenom tomtilstander og place-søkestatus
-- [ ] Kjernespråk: admin på nynorsk/nordsamisk viser fanene og tomtilstanden på bokmål; samling-tooltipene er oversatt i alle fem språk
-
-### Testrunde-batch (0.6.0.13): panel-design, kjernespråk og bug-runden
-
-- [ ] Oppdatering-panelets nye design (mot urd-web med ny versjon tilgjengelig): versjonskort med installert versjon, pil og mål-badge pluss oppsummeringslinjen; motorgruppen som fold med antall (og atomforklaring i tooltip); valgfrie filer med «Behold min» som kolonneoverskrift, slettes-chip og switcher; «Sikkerhetsheadere»-folden viser _headers-instruksen ved avvik
-- [ ] Utgivelsesnotatene: neste release med notater i monorepoet gir en release med samme notater på malrepoet (Action-steget), og panelet viser dem i «Om {target}»-folden; en eldre målversjon uten notater viser ingen fold
-- [ ] Plugin-blokker kan settes inn igjen: kalender (alle fire visningene via foldemenyen), skjema og kart fra «+ Ny blokk» og Blokker-panelet lander på lerretet
-- [ ] Slett utvalget: dra-marker flere blokker; slett-knappen i multiverktøylinjen og Delete/Backspace fjerner alle markerte, og ETT Ctrl+Z bringer alle tilbake
-- [ ] CSP-varselet: på deployet side vises INGEN advarsel for kart (OSM-verten står i _headers); fjernes verten fra _headers midlertidig, vises advarselen for nøyaktig den verten; lokalt (uten CSP-header) vises aldri advarsel
-- [ ] Kart-innstillingene i Egenskaper: sted, zoom og høyde rendres direkte når kartblokken er markert (ingen «Innstillinger …»-knapp, tannhjulet på blokken er borte); adressesøk med Søk-knappen virker på publisert side, koordinater («59.913, 10.739») og OSM-lenker virker også lokalt; zoom/høyde klemmes til gyldige verdier
-- [ ] Kalender og skjema beholder «Innstillinger …»-knappen i Egenskaper, og den åpner fortsatt config-panelet i forhåndsvisningen
-- [ ] Feiltekster utenfor admin er engelske (f.eks. logg ut og kall /api/github/latest direkte: «Not signed in»), mens admin fortsatt viser feil oversatt på admin-språket via api-kodene
-- [ ] Kjernespråk-modellen: bytt admin-språk til nynorsk eller nordsamisk; de nye tekstene (place-søket, slett utvalget, oppdateringspanelet) vises på bokmål uten hull eller feil
-
 ### Testrunde-batch (0.6.9.x): splitt, oppdaterer og fase-slipp (samlet og slått sammen 5. august 2026)
 
 **README-ene, docs-strukturen og designrunden (0.6.9.10)**
@@ -887,29 +748,6 @@ Standarden ble korrigert fra 1200 til 1440 etter ny research, sidemargen byttet 
 - [ ] Håndredigert lang-verdi utenfor lista (f.eks. «de» i site.json): panelet viser den som eget alternativ øverst og ødelegger ingenting
 - [ ] Historikk-datoene formateres etter admin-språket
 
-### Testrunde-batch (0.6.8.1): flerspråk-kjernen og besøkende-tekstene
-
-- [ ] Standard uendret: en side med `"lang": "no"` (demoen) skal se HELT ut som før på bokmål - nav-tooltips, til-toppen, footer, galleri, datobadger
-- [ ] Språkbytte: sett `site.lang` til `nn`, `en-GB`, `se` og `tr` (håndredigert site.json, publiser eller lokal server) - motor-chromen bytter språk (temabryterens skjermleser-tekst, burger, til-toppen, lysboksens knapper, galleri-pilene, video-tomtilstander), og `<html lang>` følger med (sjekk i devtools)
-- [ ] Datoer: samlings-datobadgen viser månedsnavn på sidens språk (f.eks. «njukčamánnu» for mars på nordsamisk, «Mar» på tyrkisk)
-- [ ] Nyhetsbrev-CTA: med TOM knappetekst vises språkets standard («Meld på»/«Sign up»/…); egen tekst overstyrer som før; valideringsmelding og bekreftelse følger språket; mailto-fallbackens emne/kropp likeså
-- [ ] Skjermleser/a11y: footer-sosiallenkene annonserer «Facebook»/«Instagram» (ikke rå id), galleri-prikkene «Bilde 1/2/3» på sidens språk
-- [ ] Lokal utvikling: `python3 dev-server.py` + site.lang satt til `en-GB` - språkfilen dynamisk-lastes uten feil i konsollen
-- [ ] Ukjent språk: `"lang": "de"` gir bokmål (fallback), ingen feil
-- [ ] Samisk innhold: be gjerne en med nordsamisk som morsmål se over `locales/site/se.js` (flagget i filen)
-
-### Testrunde-batch (0.6.6.5.12): lenker til seksjon/anker og nav scroll-adferd
-
-- [ ] Anker på tvers av sider: demo-footerens «Kakevideoen» (Utforsk-kolonnen) skal fra en annen side gå til Kaker og rulle mykt ned til videoseksjonen
-- [ ] Anker på samme side: lag en knapp/footer-lenke med `#seksjons-id` fra samme side - siden ruller mykt dit uten omlasting; med redusert bevegelse hopper den direkte
-- [ ] Kopier-knappen: seksjonens Egenskaper viser «Anker #id» - kopier, lim inn i et lenkefelt, og lenken virker
-- [ ] Vokteren står: `javascript:alert(1)` og `//ond.no` i lenkefeltet gir fortsatt død lenke (`#`); eksterne https-lenker åpner som før med noopener
-- [ ] Nav krymp: sett Meny > «Ved scrolling» til Krymp - i Ren visning og publisert blir menyen kompakt etter et stykke scrolling og normal igjen øverst; prøv også med flytende pille og størrelse Stor (skaleringene skal komponere)
-- [ ] Nav skjul: «Skjul, vis ved scroll opp» - menyen glir ut ved scrolling ned, inn igjen ved scrolling opp, alltid synlig øverst; småbevegelser får den ikke til å flimre
-- [ ] Mobil: med mobilmenyen åpen skal menyen aldri forsvinne; lukket oppfører den seg som på desktop
-- [ ] Gating: valget «Ved scrolling» vises ikke for sidestilt variant eller når «Klistrete meny» er av; i redigeringsmodus (chrome på) står menyen alltid i ro
-- [ ] Redusert bevegelse: krymp/skjul skjer som klipp uten overgang
-
 ### Testrunde-batch (0.6.0.6): gradient pan/orbit på kompositoren (transform-løpere)
 
 - [ ] Pan (lineær gradient, «Panorer»): sett animasjonen på et gradientlag - glidningen skal se identisk ut som før (diagonal drift frem og tilbake over 18 s), uten hakking, og gradienten skal fylle seksjonen uten synlige kanter eller hvite striper i noen vindusstørrelse
@@ -935,96 +773,13 @@ Standarden ble korrigert fra 1200 til 1440 etter ny research, sidemargen byttet 
 - [ ] Kvotevarsel: fyll utkastet med store bilder til localStorage sprenges (eller senk kvoten midlertidig i devtools) - rød feilmelding i statuslinja i stedet for stille tap; publisering frigjør plassen
 - [ ] Publisering etter vokter-tilstrammingen: vanlig publisering (sider, samlinger, plugins, bilder/SVG-logo, sletting av side/samling) går gjennom uten avvisning
 
-### Testrunde-batch (0.6.6.5.11): tema uten FOUC (light-dark()), SVG auto-trim, nav-variant «Flytende (tab)»
-
-Bygg om på en ekte side og sjekk hos besøkende/publisert der det står:
-
-- [ ] Ingen tema-flimmer: last (og hard-reload) den publiserte siden i lys og i mørk OS-modus - siden skal males med riktig tema fra første frame, ingen mørk-til-lys (eller omvendt) blink. Prøv også med treg tilkobling (DevTools «Slow 3G»)
-- [ ] Lys/mørk-bryteren: klikk bryteren i menyen - farger OG nettleser-chrome (scrollbar/formfelt) bytter umiddelbart; reload beholder valget uten flimmer (manuelt valg skal vinne over OS)
-- [ ] Følg system: uten et manuelt valg skal siden følge OS-temaet og bytte når du bytter OS-tema
-- [ ] Preview i admin: endre temafarger i Tema-panelet - previewen oppdaterer live til utkastets farger, og tema-bryteren i previewen virker
-- [ ] SVG auto-trim: last opp en SVG med luft rundt motivet som nav-logo, bilde-blokk og bakgrunn - logoen/bildet skal fylle plassen tett (ingen død marg rundt). Favicon: last opp en SVG - fanen skal vise et tett beskåret ikon
-- [ ] Nav-variant «Flytende (tab)»: velg den i Meny > Utseende - menyen henger ned fra toppen med firkant topp og avrundet bunn. Med «Luft over menyen» av blir den en nedhengende header. Glød/luft-tilvalgene skal virke som for de andre flytende
-
-### Testrunde-batch (0.6.6.5.9): redigerings-lerretet skalert til fullvindus-preview (identisk med publisert)
-
-Sammenlign redigerings-visningen mot den publiserte siden («Se siden» / egen fane):
-
-- [ ] Identisk render: det du ser i admin-lerretet skal se likt ut som den publiserte siden (samme plassering, brytning, avstand) - kun visningsstørrelsen (zoom) kan skille. Prøv på flere sider, også en uten parallaks
-- [ ] Ingen topp/bunn-barer: lerretet skal fylle flaten uten svarte striper over/under, både på vanlig og svært bred skjerm
-- [ ] Zoom: «Tilpass» skalerer siden til å passe vinduet (%-avlesningen viser gjeldende); «100%» viser ekte 1:1 (kan gi scroll); «Ren visning» er også 1:1 fullvindu
-- [ ] Zoom følger panelene: åpne/lukk et panel (f.eks. Tema) - siden skal ombryte IDENTISK (samme render-bredde), kun zoom-prosenten endrer seg
-- [ ] Redigering under skalering: blokkmeny (klikk en blokk), dra/endre størrelse, tekst-skriving og markering skal treffe riktig sted også når lerretet er skalert ned
-- [ ] Mobilvisning: bytt til mobil (390px) - telefonen står sentrert på mørk flate og skaleres til å passe høyden
-
-### Testrunde-batch (0.6.6.5.8): Nettsted-panel - navngi siden, beskrivelse, favicon
-
-- [-] Beskrivelse: skriv en kort beskrivelse; den skal overleve publisering (brukes av søkemotorer/deling)
-- [ ] Angre: etter å ha endret navn/beskrivelse skal Ctrl+Z reversere endringen
-
-### Testrunde-batch (0.6.6.5.7): moderniser til native/CSS - parallaks scroll-drevet, faq som `<details>`, lightbox som `<dialog>`
-
-Bygg om på en ekte side og sjekk hos besøkende/publisert der det står:
-
-- [ ] Parallaks (scroll-drevet): legg et Bilde-bakgrunnslag med «Parallakse» på. På publisert/ren visning skal bildet henge etter ved scroll som før (samme retning og styrke), uten zoom. På mobil og ved redusert bevegelse står det stille. Skal se likt ut som før omleggingen
-- [ ] FAQ (native `<details>`): sett inn en FAQ-blokk. Besøkende: klikk hvor som helst på spørsmålsraden folder ut; kun ett svar åpent av gangen (åpne et nytt lukker forrige). Ctrl/Cmd+F og søk etter tekst inne i et lukket svar skal åpne svaret automatisk. Tastatur: Tab til et spørsmål, Enter/Mellomrom folder ut
-- [ ] FAQ i editor: klikk rett i et spørsmål eller svar for å skrive (skal IKKE folde ut ved skriving, mellomrom skrives normalt); pil-ikonet folder ut og inn; «flere åpne samtidig» i Egenskaper lar flere stå åpne. Blokken skal ikke hoppe/teleportere ved utfolding
-- [ ] Lightbox (native `<dialog>`): klikk et bilde med lightbox på (bildeblokk eller galleri). Fullvisning åpner over ALT innhold; Esc lukker; piltastene blar; klikk på den mørke bakgrunnen lukker; fokus går tilbake til bildet du klikket fra. Tab skal holde seg inne i lightboxen (ikke havne bak den)
-
-### Testrunde-batch (0.6.6.5.5): bakgrunnsbilde omdesignet - fri plassering, kraftig parallaks, Flislegg, SVG auto-trim, bleed
-
-Legg et Bilde-bakgrunnslag på en seksjon (Egenskaper → Bakgrunn → Nytt lag = Bilde), og last opp en logo/et bilde:
-
-- [ ] Størrelse: stepperen (10-400 %) og +/- krymper/forstørrer bildet. «Dekk» fyller seksjonen (beskjærer), «Vis hele» viser hele bildet - begge regner seg fram fra bilde- og seksjonsmål
-
-### Testrunde-batch (0.6.6.5.4): seksjonstemaer, parallax, stagger, admin-kontrast, ferdige temaer + oppusset Tema-panel
-
-- [-] Stagger: sett «Animasjon inn» = Stagger på en seksjon med flere kort; kortene skal slippes inn forskjøvet fra én trigger. Prøv begge mønstre («En etter en» og «Kolonnevis») og trinn-tiden
-- [-] Ferdige temaer: Tema-panelet har seks forslag (Brønn/Stein/Plomme/Rose/Hav/Natt); klikk ett og hele temaet + lys/mørk fylles, så kan du finjustere fritt
-
 ### Testrunde-batch (0.6.6.5.2): footer-overhaling, delt bakgrunnslag for nav, Urd-logo
 
 Footer-overhalingen (26. juli). Bygg footeren i admin (Footer-panelet) og sjekk på siden:
 - [ ] Handlingsoppfordring (CTA): knapp-varianten lenker til side/URL/mailto og virker uten server; nyhetsbrev-varianten validerer e-post og viser inline bekreftelse (mot et ekte endepunkt) eller åpner mailto som fallback uten endepunkt; en stor sentrert CTA-variant finnes. NB: nyhetsbrev mot ekstern vert krever `connect-src` i `_headers`
-
-### Testrunde-batch (0.6.31): teksteditoren «Office-linjen» (to faste rader, størrelse på markering)
-
-Bugfikser (del 5, 24. juli):
-- [ ] «Temaets (tynn)» kantlinje kan nå farges: Kantfarge-velgeren vises også for den (før kun for «Egen farge»); velger du en farge blir den en egen fargbar kantlinje
-
-### Testrunde-batch (0.6.26): sticky blokker, klikkplassering, hjelpelinjer, toppkant-høyde (M6 batch C del 1)
-
-- [-] Sticky: «Fest ved scrolling» på en blokk (Egenskaper/blokkmenyen, kun desktop-visning); i Ren visning fester blokken seg ved vindustoppen med valgt avstand og slipper når egen seksjon er forbi; publiser og sjekk samme adferd som besøkende (demoen: «Møt gjengen»-knappen på Om oss-siden har festing på)
-- [-] Sticky med «Slipp taket» satt til en senere seksjon: blokken følger med forbi egen seksjon og slipper først der; nedtrekket viser kun seksjoner LENGER NED enn blokkens egen
-- [-] Sticky i vanlig redigering (chrome på): blokken står helt stille og kan dras/redigeres som før; mobilvisningen og auto-mobil hos besøkende påvirkes aldri
-
-### Testrunde-batch (0.6.22): sidestilt-oppfølging
-
-- [-] Menyplassering i sidestilt (Øverst/Midt på/Nederst) virker og påvirker IKKE topplinje-plasseringen (bytt tilbake til stripe og sjekk at punktene står der de sto)
-
-### Testrunde-batch (0.6.21): nav-testrundens fikser og nav-utseende
-
-- [ ] Bildeutsnitt (bredde) på nav-bakgrunnsbildet: virker i sidestilt kolonne (der høyde-slideren naturlig ikke monner); begge sliderne vises for alle varianter
-
-### Testrunde-batch (0.6.17): flytende over hero, glød-tilvalg, lys/mørk-bryter
-
-- [ ] Bryteren på mobil: vises ved siden av burgeren; menylisten står fortsatt riktig plassert på desktop (høyre/midtstilt/venstre) med og uten bryter
-
-### Testrunde-batch (0.6.15): dropdown-menyer og mobilmeny
-
-
-- [ ] Mobilmeny: bytt preview til mobil (og test på den publiserte siden i smalt vindu/telefon) - burger vises, panelet åpner under menyen, undermenyer er trekkspill, Escape/klikk utenfor lukker
-- [ ] Slett en side som ligger i en undermeny og bekreft at undermenypunktet forsvinner (en åpner som mister alle barna fjernes helt). Slett en side som et punkt MED undermeny peker på: punktet består som ren åpner og barna beholdes (buggjakt-fiks 22. juli 2026)
 
 ### Testrunde-batch (0.6.14): kart-forbedringer
 
 - [ ] Kart adressesøk: skriv en vanlig adresse (f.eks. «Storgata 1, Oslo») i «⚙ Sted» og klikk «Bruk» - stedet slås opp og vises (krever den PUBLISERTE siden; koordinater og OSM-lenker virker også lokalt)
 - [ ] Kartet vises nå ut av boksen på den publiserte siden (OSM er lagt i Urds _headers frame-src); ingen manuell CSP-jobb lenger. Bekreft at kartet faktisk viser etter publisering + deploy
 - [ ] CSP-vokter-fiks: hvis kartet likevel blokkeres (annen host) får besøkende en «Åpne kartet på OpenStreetMap»-lenke i stedet for et brukket bilde; editoren får instruksen. (Rettet også en variabel-skygging fra 0.6.12 som ville kastet feil her)
-
-## Eldre punkter uten batch
-
-- [ ] Fargevelger-fiksen (0.6.10): klikk inne i fargevelgeren (fargeruten, feltene, prikkene) lukker den IKKE lenger; den lukkes kun ved klikk utenfor, Escape eller ved å klikke fargeruten igjen. Gjelder Tema, Nav, bakgrunnslag og oppsett
-- [ ] M4 Skjema: «Kontaktskjema»-mal, sett mottaker i «⚙ Skjema», test mailto-innsending på den PUBLISERTE siden (preview validerer bare); test feltredigering (legg til/fjern/type/påkrevd), e-postvalidering og honeypot; test eksternt endepunkt om du har et
-- [ ] M4 Kart: «Finn oss»-mal, lim inn koordinater i «⚙ Sted»; bekreft CSP-blokkert-melding FØR du legger `frame-src https://www.openstreetmap.org` i `template/_headers`, og at kartet vises ETTER at linjen er lagt inn og publisert
-- [ ] M3 Kalender: feed-henting i produksjon med en ekte Google-kalender-id (fungerte i preview med eksempeldata; produksjon krever functions, og andre verter enn Google krever ICS_HOSTS)

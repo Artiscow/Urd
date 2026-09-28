@@ -17,7 +17,7 @@
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
  *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (open the block menu in the editor)
  */
-import { frameToCss, mobilePlacementToCss, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushPreview } from './render.js';
+import { frameToCss, mobilePlacementToCss, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushGrowOf, pushPreview } from './render.js';
 import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
@@ -51,6 +51,11 @@ function drawFrame(el, frame) {
   Object.assign(el.style, frameToCss(frame));
   const shift = pushShiftOf(el);
   if (shift) el.style.top = `${frame.y + shift}px`;
+  // frameToCss writes the design height, while the box the owner sees is the
+  // grown one; without this a block with taller content collapses at the
+  // first pointer move, and on a rotated block that reads as a sideways jump.
+  const grow = pushGrowOf(el);
+  if (grow) el.style.height = `${frame.h + grow}px`;
 }
 
 /**
@@ -3724,10 +3729,12 @@ function enhanceBlock(el, block, section, grid, host) {
           if (target && target.dataset.sectionId !== section.id) {
             // Against the target's content surface, not its outer box: block
             // y is relative to the canvas, which a menu out of the flow
-            // pushes down. The drawn top carries the block's push shift, so
-            // the shift is taken back out before the frame is stored.
+            // pushes down. Carried across from the source canvas rather than
+            // measured off the element, whose box is the rotated block's
+            // bounding box and starts above the frame.
             const tTop = canvasOf(target).getBoundingClientRect().top;
-            const frame = { ...current, y: Math.max(0, Math.round(rect.top - tTop - pushShiftOf(el))) };
+            const sTop = canvas.getBoundingClientRect().top;
+            const frame = { ...current, y: Math.max(0, Math.round(sTop + current.y - tTop)) };
             post({
               type: 'urd-move-block-section',
               fromSectionId: section.id,
