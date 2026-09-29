@@ -46,9 +46,17 @@ const HINT_CSS = `
 }
 .urd-hint-card {
   position: fixed; z-index: 100003; width: 300px;
+  /* The card is admin chrome, not part of the page being built: it keeps the
+     admin's size at any preview zoom (the text toolbar's and the image
+     editor's counter-scale) and takes the admin's colours, which the editor
+     reports as --urd-admin-* (urd-admin-theme in urd.js). The anchor is set by
+     JS in viewport coordinates, so the origin is that corner. */
+  transform: scale(var(--urd-chrome-scale, 1));
+  transform-origin: top left;
   padding: 12px 14px; border-radius: 10px;
-  background: #151a23; color: #e8eaf0;
-  border: 1px solid rgb(255 255 255 / 18%);
+  background: var(--urd-admin-surface, #151a23);
+  color: var(--urd-admin-text, #e8eaf0);
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
   box-shadow: 0 12px 36px rgb(0 0 0 / 55%);
   font: 12px/1.5 system-ui, sans-serif;
 }
@@ -107,12 +115,18 @@ export function attachHint(host, { title, lines = [] }) {
     openCard = card;
 
     const rect = chip.getBoundingClientRect();
-    const W = 300;
-    card.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - W - 8))}px`;
+    // The DRAWN size, which the counter-scale decides: offsetWidth and
+    // offsetHeight never see a transform.
+    const scale = Number.parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue('--urd-chrome-scale'),
+    ) || 1;
+    const w = 300 * scale;
+    const h = card.offsetHeight * scale;
+    card.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - w - 8))}px`;
     // Preferably below the chip; otherwise above, always inside the viewport.
     let top = rect.bottom + 8;
-    if (top + card.offsetHeight > window.innerHeight - 8) {
-      top = Math.max(8, rect.top - card.offsetHeight - 8);
+    if (top + h > window.innerHeight - 8) {
+      top = Math.max(8, rect.top - h - 8);
     }
     card.style.top = `${top}px`;
 

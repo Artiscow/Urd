@@ -4,6 +4,14 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.0.33): the help card
+
+- [ ] Open a «?» card at 100 percent zoom, then at 50 and 25: the card and its text keep the same size on screen, the same as the admin panels
+- [ ] At 25 percent zoom: the card still lies inside the preview and is not cut off at the right edge
+- [ ] Switch the admin theme in the top bar: the card takes the new surface and text colour, like the rail beside it
+- [ ] A chip near the bottom of the screen: the card opens above the chip and stays inside the view
+- [ ] Open the preview address directly, outside admin (`?preview=1`): the card looks as it did before
+
 ### Testrunde-batch (0.7.0.32): the drawn carets and the block menu's keyboard
 
 - [ ] Open «+ Nytt element»: the Former fold shows a drawn arrow, and it turns over when the fold opens and back when it closes
