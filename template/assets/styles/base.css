@@ -3245,6 +3245,27 @@ body:has(dialog:modal) {
   grid-column: 1 / -1;
 }
 
+/* The fold's caret is drawn, never a character, and turns over while the
+   fold is open (the FAQ block's chevron pattern). */
+.urd-preview .urd-fold-caret {
+  display: inline-flex;
+  vertical-align: -1px;
+}
+
+.urd-preview .urd-fold-caret svg {
+  transition: transform 0.2s ease;
+}
+
+.urd-preview .urd-add-block-shapes-toggle.open .urd-fold-caret svg {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .urd-preview .urd-fold-caret svg {
+    transition: none;
+  }
+}
+
 /* Plugin blocks: their own labelled section below the built-in ones */
 .urd-preview .urd-add-block-plugins {
   grid-column: 1 / -1;
@@ -3294,6 +3315,13 @@ body:has(dialog:modal) {
 .urd-preview .urd-add-block-menu button:hover {
   border-color: var(--urd-color-accent);
   background: color-mix(in srgb, var(--urd-color-accent) 12%, transparent);
+}
+
+/* The row the arrow keys have walked to, marked a shade stronger than hover
+   so the keyboard and the pointer can be told apart. */
+.urd-preview .urd-add-block-menu button.urd-pick-active {
+  border-color: var(--urd-color-accent);
+  background: color-mix(in srgb, var(--urd-color-accent) 22%, transparent);
 }
 
 /* Placeholder for unknown types: neutral, never destructive */

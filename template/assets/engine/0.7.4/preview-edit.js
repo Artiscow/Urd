@@ -582,6 +582,24 @@ function resetBlockAdder(wrap) {
   }
 }
 
+/**
+ * A fold's own button in the block menu: the label followed by a drawn
+ * caret that turns over while the fold is open (the FAQ block's chevron
+ * pattern). The open state is a class, so the label survives the toggle.
+ * @param {string} label The fold's name
+ * @returns {HTMLButtonElement}
+ */
+function foldToggle(label) {
+  const button = document.createElement('button');
+  button.className = 'urd-add-block-shapes-toggle';
+  button.textContent = `${label} `;
+  const caret = document.createElement('span');
+  caret.className = 'urd-fold-caret';
+  caret.innerHTML = CARET_SVG;
+  button.appendChild(caret);
+  return button;
+}
+
 /** A click anywhere outside an open block menu closes it. One document
  *  listener for the whole page, wired the first time a menu is built. */
 let blockMenuOutsideWired = false;
@@ -627,7 +645,57 @@ function addBlockAdder(host, section, grid) {
   const hits = document.createElement('div');
   hits.className = 'urd-block-hits';
   menu.append(searchWrap, hits);
+
+  // The arrow keys walk a marked row through the menu: the hits while a
+  // search is running, the menu's own rows before that (a closed fold hides
+  // its own). The step is geometric rather than DOM order, since the menu is
+  // a two-column grid with rows that span both columns.
+  let pickEl = null;
+  const pickables = () => [...menu.querySelectorAll('button')].filter((b) => b.offsetParent !== null);
+  const clearPick = () => {
+    pickEl?.classList.remove('urd-pick-active');
+    pickEl = null;
+  };
+  const setPick = (el) => {
+    clearPick();
+    pickEl = el;
+    el.classList.add('urd-pick-active');
+    el.scrollIntoView({ block: 'nearest' });
+  };
+  const movePick = (dx, dy) => {
+    const list = pickables();
+    if (!list.length) return;
+    if (!pickEl || !list.includes(pickEl)) {
+      setPick(dx + dy < 0 ? list[list.length - 1] : list[0]);
+      return;
+    }
+    const from = pickEl.getBoundingClientRect();
+    const fx = from.left + from.width / 2;
+    const fy = from.top + from.height / 2;
+    let best = null;
+    let bestScore = Infinity;
+    for (const b of list) {
+      if (b === pickEl) continue;
+      const r = b.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      // Only rows lying in the direction of travel, and of those the nearest,
+      // counting the sideways distance double so the walk keeps to its column.
+      const along = dy ? (cy - fy) * dy : (cx - fx) * dx;
+      if (along <= 1) continue;
+      const across = dy ? Math.abs(cx - fx) : Math.abs(cy - fy);
+      const score = along + across * 2;
+      if (score < bestScore) {
+        bestScore = score;
+        best = b;
+      }
+    }
+    if (best) setPick(best);
+  };
+  const ARROW_STEPS = { ArrowDown: [0, 1], ArrowUp: [0, -1], ArrowRight: [1, 0], ArrowLeft: [-1, 0] };
+
   const renderHits = () => {
+    clearPick();
     const query = searchInput.value;
     if (!query.trim()) {
       menu.classList.remove('urd-searching');
@@ -637,7 +705,9 @@ function addBlockAdder(host, section, grid) {
     menu.classList.add('urd-searching');
     hits.replaceChildren();
     const all = searchables.concat(menu._urdTemplateSearchables ?? []);
-    const found = searchItems(all, query, (item) => item.label);
+    // A fold's own name searches with its rows: "Former" finds the shapes,
+    // which otherwise sit behind a fold that is no row in the hit list.
+    const found = searchItems(all, query, (item) => (item.group ? `${item.label} ${item.group}` : item.label));
     if (!found.length) {
       const empty = document.createElement('div');
       empty.className = 'urd-search-empty';
@@ -654,11 +724,19 @@ function addBlockAdder(host, section, grid) {
   };
   searchInput.addEventListener('input', renderHits);
   searchInput.addEventListener('keydown', (event) => {
-    // Enter inserts the first hit (the slash flow: "/", type, Enter);
-    // Escape closes the menu. Stopped so the canvas shortcuts never see
-    // them.
-    if (event.key === 'Enter') hits.querySelector('button')?.click();
-    else if (event.key === 'Escape') resetBlockAdder(wrap);
+    // The arrows walk the menu, Enter takes the walked row and otherwise the
+    // first hit (the slash flow: "/", type, Enter), Escape closes. Stopped so
+    // the canvas shortcuts never see them. Left and right move the caret in
+    // the field until the walk has started with up or down.
+    const step = ARROW_STEPS[event.key];
+    if (step && (step[1] !== 0 || pickEl)) {
+      event.preventDefault();
+      movePick(step[0], step[1]);
+    } else if (event.key === 'Enter') {
+      (pickEl ?? hits.querySelector('button'))?.click();
+    } else if (event.key === 'Escape') {
+      resetBlockAdder(wrap);
+    }
     event.stopPropagation();
   });
   menu._urdSearchReset = () => {
@@ -667,7 +745,7 @@ function addBlockAdder(host, section, grid) {
   };
   menu._urdSearchFocus = () => searchInput.focus();
 
-  const kindButton = (parent, kind, label) => {
+  const kindButton = (parent, kind, label, group = null) => {
     const b = document.createElement('button');
     b.textContent = label;
     b.addEventListener('click', () => {
@@ -675,20 +753,18 @@ function addBlockAdder(host, section, grid) {
       resetBlockAdder(wrap);
     });
     parent.appendChild(b);
-    searchables.push({ label, run: () => b.click() });
+    searchables.push({ label, group, run: () => b.click() });
   };
   for (const [kind, label] of BLOCK_KINDS) kindButton(menu, kind, label);
 
   // The shapes go in their own expandable submenu, keeping the main menu short.
-  const shapesToggle = document.createElement('button');
-  shapesToggle.className = 'urd-add-block-shapes-toggle';
-  shapesToggle.textContent = `${ta('group.shapes')} ▾`;
+  const shapesToggle = foldToggle(ta('group.shapes'));
   const shapes = document.createElement('div');
   shapes.className = 'urd-add-block-shapes';
-  for (const [kind, label] of SHAPE_KINDS) kindButton(shapes, kind, label);
+  for (const [kind, label] of SHAPE_KINDS) kindButton(shapes, kind, label, ta('group.shapes'));
   shapesToggle.addEventListener('click', () => {
     const open = shapes.classList.toggle('open');
-    shapesToggle.textContent = `${ta('group.shapes')} ${open ? '▴' : '▾'}`;
+    shapesToggle.classList.toggle('open', open);
     // The fold changes the menu's height, so the fit is decided again.
     fitBlockMenu(menu);
   });
@@ -731,9 +807,7 @@ function addBlockAdder(host, section, grid) {
     // Blocks with variants (e.g. the calendar's views) get a fold-out menu like Shapes.
     const defLabel = def.labelKey ? ta(def.labelKey) : (def.label ?? type);
     if (Array.isArray(def.variants) && def.variants.length) {
-      const toggle = document.createElement('button');
-      toggle.className = 'urd-add-block-shapes-toggle';
-      toggle.textContent = `${defLabel} ▾`;
+      const toggle = foldToggle(defLabel);
       toggle.title = title;
       const sub = document.createElement('div');
       sub.className = 'urd-add-block-shapes';
@@ -748,7 +822,7 @@ function addBlockAdder(host, section, grid) {
       }
       toggle.addEventListener('click', () => {
         const open = sub.classList.toggle('open');
-        toggle.textContent = `${defLabel} ${open ? '▴' : '▾'}`;
+        toggle.classList.toggle('open', open);
         fitBlockMenu(menu);
       });
       menu.append(toggle, sub);
@@ -2301,11 +2375,13 @@ function buildHiddenList(section, hidden) {
 }
 
 // The same rule for the rest of the editing chrome: a cross, the drag grip,
-// the rotate handle and the fit-height button are drawn, never characters.
+// the rotate handle, the fit-height button and the folds' caret are drawn,
+// never characters.
 const CROSS_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 const GRIP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>';
 const ROTATE_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4v6h-6"/><path d="M20.5 13a8.5 8.5 0 1 1-2-5.5L21 10"/></svg>';
 const FIT_HEIGHT_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M6 10l6 6 6-6"/><path d="M4 21h16"/></svg>';
+const CARET_SVG = '<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg>';
 
 // Drawn icons for the mobile buttons (ADR-0009: never glyphs/emoji in
 // chrome): reset (counterclockwise arrow), arrow up/down (order) and a

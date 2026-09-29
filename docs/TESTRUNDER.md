@@ -4,6 +4,18 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.0.32): the drawn carets and the block menu's keyboard
+
+- [ ] Open «+ Nytt element»: the Former fold shows a drawn arrow, and it turns over when the fold opens and back when it closes
+- [ ] A plugin block with variants: its fold behaves the same way
+- [ ] A dropdown on the canvas (the text toolbar) and one in an admin panel: both show a drawn arrow, and the admin one turns over while the menu is open
+- [ ] Search «former» in the block menu: all five shapes come up. Search «strek»: «Strek» is the first hit
+- [ ] Open the menu and press the down arrow without typing: a row is marked, and up, down, left and right move it through both columns
+- [ ] Walk to the Former fold and press Enter: the fold opens, and the next step down lands inside it
+- [ ] Type in the field and use the arrows: the marking moves through the hits, and Enter inserts the marked one
+- [ ] Type and press Enter without using the arrows: the first hit is inserted, as before
+- [ ] Left and right while typing, before any arrow walk has started: the cursor moves in the text, so a typing mistake can be corrected
+
 ### Testrunde-batch (0.7.0.31): the block toolbar's buttons
 
 - [ ] Hover a block and press the cross: the block is deleted, and Ctrl+Z brings it back

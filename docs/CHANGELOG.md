@@ -27,6 +27,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.32 - Drawn carets, and the block menu takes the keyboard - 29 September 2026
+
+- The folds in the «+ New element» menu drew their arrow as the characters ▾ and ▴, which is content and not chrome. A shared `foldToggle` builds the button with the label and a drawn caret that turns over while the fold is open (the FAQ block's chevron pattern), and the open state is a class, so the label survives the click.
+- The same two characters stood in the canvas dropdown and in the admin's own. Both draw the caret now, sized in em so it keeps following the button's text, and the admin one turns over while the menu is open.
+- A search for «Former» in the block menu found nothing: every row is registered with its visible label, so the shapes are registered as «Strek», «Pil» and the rest, while the fold's own name was registered nowhere. Each row now carries the name of the fold it belongs to and the search reads both, so a group name finds its rows.
+- The block menu had no keyboard choice: the search field took only Enter and Escape. The arrow keys now walk a marked row through the menu, the hits while a search is running and the menu's own rows before that, with Enter taking the walked row and otherwise the first hit as before. The step is geometric rather than by document order, since the menu is a two-column grid with rows that span both columns.
+
 ### 0.7.0.31 - The block toolbar's buttons take their clicks again - 29 September 2026
 
 - The buttons in a block's toolbar (delete, duplicate, show on mobile, z-order) did nothing when clicked: the icons have been drawn as inline SVG since 0.7.0.20, and the preview's guards read `event.target` as an HTMLElement, which an SVGElement is not, so a click inside an icon slipped past them and into the block's surface drag, whose pointer capture moved the release off the button. The target is read as an `Element` now, through one `eventTarget` helper used by the surface drag, the selection, the marquee and the link interception.

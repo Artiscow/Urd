@@ -89,11 +89,20 @@
   });
 </script>
 
+<!-- The caret is drawn, never a character (chrome is icons only), and turns
+     over while the menu is open. Sized in em so it follows the button's text. -->
+{#snippet caret()}
+  <span class="dd-caret" class:dd-caret-open={open} aria-hidden="true">
+    <svg viewBox="0 0 16 16" width="1em" height="1em" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 6l4.5 4.5L12.5 6" /></svg>
+  </span>
+{/snippet}
+
 <span class="dd" bind:this={rootEl}>
   {#if native}
     <button type="button" class="dd-btn" class:dd-filled={filled} class:dd-compact={compact} {title} {disabled} popovertarget={popId} style="anchor-name: {anchor}">
       <span class="dd-value">{currentLabel()}</span>
-      <span class="dd-caret">{open ? '▴' : '▾'}</span>
+      {@render caret()}
     </button>
     <div class="dd-pop dd-anchored" id={popId} popover="auto" bind:this={popEl}
       style="position-anchor: {anchor}" ontoggle={(e) => { open = e.newState === 'open'; }}>
@@ -107,7 +116,7 @@
   {:else}
     <button type="button" class="dd-btn" class:dd-filled={filled} class:dd-compact={compact} {title} {disabled} onclick={toggle}>
       <span class="dd-value">{currentLabel()}</span>
-      <span class="dd-caret">{open ? '▴' : '▾'}</span>
+      {@render caret()}
     </button>
     {#if open}
       <div class="dd-pop" style="top: {pos.top}px; left: {pos.left}px; min-width: {pos.width}px">
@@ -180,8 +189,23 @@
 
   .dd-caret {
     flex: 0 0 auto;
+    display: inline-flex;
     font-size: 0.75em;
     opacity: 0.65;
+  }
+
+  .dd-caret svg {
+    transition: transform 0.15s ease;
+  }
+
+  .dd-caret-open svg {
+    transform: rotate(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dd-caret svg {
+      transition: none;
+    }
   }
 
   .dd-pop {

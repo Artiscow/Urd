@@ -18,6 +18,10 @@
  */
 import { nativeAnchoring, anchorName } from './anchored.js';
 
+// The caret is drawn, never a character (chrome is icons only). It is sized
+// in em so it keeps following the button's text size.
+const CARET_SVG = '<svg viewBox="0 0 16 16" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg>';
+
 let openMenu = null;
 let teardown = null;
 
@@ -30,7 +34,7 @@ const DD_CSS = `
   border-radius: 5px; padding: 4px 8px; cursor: pointer; white-space: nowrap;
 }
 .urd-dd-btn:hover { background: rgb(255 255 255 / 12%); }
-.urd-dd-caret { font-size: 9px; opacity: 0.65; }
+.urd-dd-caret { display: inline-flex; font-size: 9px; opacity: 0.65; }
 .urd-dd-menu {
   position: fixed; z-index: 100004; min-width: 120px; max-height: 300px; overflow-y: auto;
   display: grid; gap: 2px; padding: 5px;
@@ -88,7 +92,7 @@ export function createDropdown({ value = null, options = [], onchange, title = '
   const labelEl = document.createElement('span');
   const caret = document.createElement('span');
   caret.className = 'urd-dd-caret';
-  caret.textContent = '▾';
+  caret.innerHTML = CARET_SVG;
   btn.append(labelEl, caret);
   root.appendChild(btn);
 
