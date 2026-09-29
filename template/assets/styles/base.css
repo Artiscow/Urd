@@ -3682,6 +3682,253 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
   margin-left: 0;
 }
 
+/* The link launcher (nav.launcher): a grid button first in the cluster with the
+   links as a grid of tiles under it. The wrapper is the positioning context for
+   the disclosure branch; the popover branch is placed against the button's
+   anchor name and lives in the top layer, so it needs no positioned ancestor. */
+.urd-nav-launcher-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.urd-nav-launcher-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.35rem;
+  opacity: 0.85;
+}
+
+.urd-nav-launcher-btn:hover,
+.urd-nav-launcher-btn:focus-visible {
+  opacity: 1;
+  color: var(--urd-color-accent);
+}
+
+/* The icons from the library are drawn at 100 % of their parent (icons.js),
+   so the button sets the size the same way the cart does. */
+.urd-nav-launcher-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* The panel takes the submenu's surface, so the launcher reads as part of the
+   menu rather than as a page element. Any number of shortcuts is allowed, so
+   the panel scrolls rather than growing past the viewport. */
+.urd-nav-launcher {
+  display: none;
+  min-width: 15rem;
+  max-height: min(60vh, 26rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.6rem;
+  background: var(--urd-nav-sub-bg, color-mix(in srgb, var(--urd-color-surface) 92%, transparent));
+  backdrop-filter: var(--urd-nav-blur, blur(8px));
+  border-radius: var(--urd-radius-md);
+  box-shadow: 0 12px 24px rgb(0 0 0 / 18%);
+}
+
+/* The owner's own mark on the button, in place of the nine dots. */
+.urd-nav-launcher-btn-img {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--urd-radius-sm);
+  object-fit: cover;
+}
+
+/* The disclosure branch: a box under the button, inside the nav. */
+.urd-nav-launcher-wrap.open .urd-nav-launcher {
+  display: block;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 2;
+}
+
+/* A cluster at the start, and the left column: the grid opens to the right. */
+.urd-nav-tools-start .urd-nav-launcher-wrap.open .urd-nav-launcher,
+.urd-nav-side-host-left .urd-nav-launcher-wrap.open .urd-nav-launcher {
+  right: auto;
+  left: 0;
+}
+
+/* The popover branch: the top layer, placed under the button by the anchor and
+   flipped away from the viewport edge by the browser. */
+@supports (anchor-name: --a) {
+  .urd-nav-launcher[popover] {
+    display: block;
+    position: fixed;
+    inset: auto;
+    margin: 6px 0 0;
+    position-area: block-end span-inline-start;
+  }
+
+  .urd-nav-tools-start .urd-nav-launcher[popover],
+  .urd-nav-side-host-left .urd-nav-launcher[popover] {
+    position-area: block-end span-inline-end;
+  }
+
+  .urd-nav-launcher[popover]:not(:popover-open) {
+    display: none;
+  }
+
+  @supports (position-try-fallbacks: flip-block) {
+    .urd-nav-launcher[popover] {
+      position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+    }
+  }
+}
+
+/* The three designs (nav.launcher.view, and mobileView in the mobile menu)
+   share one markup: the class on the list decides the shape, so the desktop
+   panel and the mobile section can stand in different designs at once. */
+.urd-nav-launcher-grid {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.urd-nav-launcher-link {
+  display: flex;
+  align-items: center;
+  border-radius: var(--urd-radius-sm);
+  color: inherit;
+  text-decoration: none;
+  line-height: 1.25;
+}
+
+/* A shortcut whose target is not a usable link: the tile stands, dimmed, so
+   the owner sees the row is unfinished rather than losing it. */
+.urd-nav-launcher-missing {
+  opacity: 0.55;
+}
+
+.urd-nav-launcher-link:hover,
+.urd-nav-launcher-link:focus-visible {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  color: var(--urd-color-accent);
+}
+
+.urd-nav-launcher-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  overflow: hidden;
+  color: var(--urd-color-accent);
+  background: color-mix(in srgb, var(--urd-color-accent) 14%, transparent);
+}
+
+.urd-nav-launcher-icon svg {
+  width: 60%;
+  height: 60%;
+}
+
+.urd-nav-launcher-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Grid: three columns of tiles, the mark on a soft plate over the label. */
+.urd-nav-launcher-view-grid {
+  grid-template-columns: repeat(3, minmax(4.5rem, 1fr));
+}
+
+.urd-nav-launcher-view-grid .urd-nav-launcher-link {
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.7rem 0.4rem 0.6rem;
+  text-align: center;
+  font-size: 0.78rem;
+}
+
+.urd-nav-launcher-view-grid .urd-nav-launcher-icon {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: var(--urd-radius-md);
+}
+
+/* List: one row per shortcut, the full name beside a small mark. */
+.urd-nav-launcher-view-list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.1rem;
+}
+
+.urd-nav-launcher-view-list .urd-nav-launcher-link {
+  gap: 0.65rem;
+  padding: 0.5rem 0.55rem;
+  font-size: 0.9rem;
+}
+
+.urd-nav-launcher-view-list .urd-nav-launcher-icon {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: var(--urd-radius-sm);
+}
+
+/* Cover: two columns of cards where the image fills the tile and the name
+   lies on a scrim along the bottom. A shortcut without an image keeps its
+   drawn mark in the middle of the card. */
+.urd-nav-launcher-view-cover {
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+
+.urd-nav-launcher-view-cover .urd-nav-launcher-link {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  align-items: flex-end;
+  overflow: hidden;
+  border-radius: var(--urd-radius-md);
+  background: color-mix(in srgb, var(--urd-color-accent) 12%, transparent);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.urd-nav-launcher-view-cover .urd-nav-launcher-icon {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  background: none;
+}
+
+.urd-nav-launcher-view-cover .urd-nav-launcher-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.urd-nav-launcher-view-cover .urd-nav-launcher-name {
+  position: relative;
+  width: 100%;
+  padding: 1.1rem 0.55rem 0.45rem;
+  color: #fff;
+  background: linear-gradient(to top, rgb(0 0 0 / 72%), transparent);
+}
+
+/* Without an image there is no photo for white text to sit on. */
+.urd-nav-launcher-view-cover .urd-nav-launcher-link:not(.urd-nav-launcher-photo) .urd-nav-launcher-name {
+  color: inherit;
+  background: linear-gradient(to top, color-mix(in srgb, var(--urd-color-surface) 80%, transparent), transparent);
+}
+
+/* The title above the grid in the mobile menu; the button's own label is its
+   accessible name instead. */
+.urd-nav-launcher-title {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
 /* The light/dark toggle (shown only when the theme has an alternate counterpart) */
 .urd-nav-theme {
   display: inline-flex;
@@ -3713,6 +3960,7 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
 /* The clearance towards the next tool sits on the neighbor: the badge hangs outside
    the button, and a cart last in the cluster should sit flush. */
 .urd-nav-cart + .urd-nav-theme,
+.urd-nav-cart + .urd-nav-launcher-wrap,
 .urd-nav-cart + .urd-nav-burger {
   margin-inline-start: 0.5rem;
 }
@@ -3980,6 +4228,79 @@ body.urd-mobile .urd-nav-sub,
   background: none;
   backdrop-filter: none;
   box-shadow: none;
+}
+
+/* The link launcher in the mobile menu: the grid is a section at the foot of
+   the list, since the mobile view hides the cluster's button along with the
+   rest of the desktop menu. The section travels into the full-screen sheet
+   with the list. */
+.urd-nav-launcher-row {
+  display: none;
+}
+
+body.urd-mobile .urd-nav-launcher-wrap,
+.urd-nav-mobile .urd-nav-launcher-wrap {
+  display: none;
+}
+
+body.urd-mobile .urd-nav-launcher-row,
+.urd-nav-mobile .urd-nav-launcher-row {
+  display: block;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+
+/* The tiles keep their own shape: the mobile rows turn every menu link into a
+   full-width block, which would flatten the designs. */
+body.urd-mobile .urd-nav-list .urd-nav-launcher-link,
+.urd-nav-mobile .urd-nav-list .urd-nav-launcher-link {
+  display: flex;
+  padding: 0.7rem 0.4rem 0.6rem;
+}
+
+body.urd-mobile .urd-nav-list .urd-nav-launcher-view-list .urd-nav-launcher-link,
+.urd-nav-mobile .urd-nav-list .urd-nav-launcher-view-list .urd-nav-launcher-link {
+  padding: 0.5rem 0.55rem;
+}
+
+/* Any number of shortcuts is allowed, and the mobile menu is the page's own
+   list: the first mobileMax stand open and the rest are a native fold that
+   opens in place, so the menu never runs away in length. */
+.urd-nav-launcher-more {
+  margin-top: 0.25rem;
+}
+
+.urd-nav-launcher-more > summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  border-radius: var(--urd-radius-sm);
+  cursor: pointer;
+  font-size: 0.82rem;
+  opacity: 0.8;
+  list-style: none;
+}
+
+.urd-nav-launcher-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.urd-nav-launcher-more > summary:hover,
+.urd-nav-launcher-more > summary:focus-visible {
+  opacity: 1;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.urd-nav-launcher-more-shut,
+.urd-nav-launcher-more[open] .urd-nav-launcher-more-open {
+  display: none;
+}
+
+.urd-nav-launcher-more[open] .urd-nav-launcher-more-shut {
+  display: inline;
 }
 
 /* Full-screen mobile menu (nav.style.mobileMenu sheet): a native <dialog> in the

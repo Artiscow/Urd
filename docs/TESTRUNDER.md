@@ -4,6 +4,24 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.13.6): the link launcher
+
+- [ ] Nav panel, Tools: switch Shortcuts on and add a shortcut with a name and an address. The button stands in the menu beside the cart, and the panel opens under it with the tile in it
+- [ ] Switch it off again: both the button and the section in the mobile menu are gone, and the shortcuts are still there when it is switched back on
+- [ ] A shortcut with a target that is not an address, a path or an anchor: the field is marked red in the panel, and the tile is drawn dimmed in the menu without going anywhere
+- [ ] The three designs on the desktop: Grid gives three columns, List one row per shortcut, Image cards two columns
+- [ ] Design on mobile set to something else than the desktop: the phone shows that design and the desktop keeps its own
+- [ ] Twelve shortcuts on a phone: the first six stand open and the rest are behind «Vis flere», which opens them in place and closes again
+- [ ] The heading: switch it off and it is gone in both the panel and the mobile menu; write your own text and it stands there instead of «Snarveier»
+- [ ] The mark picker from the tile in an open row and from «Bytt merke»: both open the same menu, choosing an icon keeps it open, and Escape or a click outside closes it
+- [ ] Upload an image as a mark: it shows in the tile and in the menu, and the same image can be chosen again from the Images tab on another shortcut
+- [ ] Publish with an uploaded mark: the image lands in media/ and the published menu shows it
+- [ ] The launcher button's own mark: nine dots by default, a chosen icon at the same size as the cart's, and an own image in its place
+- [ ] Tools order: move a tool with the arrows in its header, and the menu's buttons follow the panel
+- [ ] The light/dark button: switch it off in Tools and it leaves the menu; a site whose theme has no alt counterpart shows no such card at all
+- [ ] The full-screen mobile menu with the launcher on: the shortcuts follow the list into the sheet and back out again on close
+- [ ] The side column variant: the launcher button sits in the cluster and the panel opens without running off the screen
+
 ### Testrunde-batch (0.7.0.33): the help card
 
 - [ ] Open a «?» card at 100 percent zoom, then at 50 and 25: the card and its text keep the same size on screen, the same as the admin panels

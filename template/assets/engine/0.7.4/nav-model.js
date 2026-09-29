@@ -93,6 +93,93 @@ export function navItems(site) {
   });
 }
 
+/** The launcher's three designs; grid is the default. */
+export const LAUNCHER_VIEWS = ['grid', 'list', 'cover'];
+
+/**
+ * The tools in the cluster, in the order they stand unless the owner says
+ * otherwise. The burger is not among them: it is the mobile menu's opener
+ * and always ends the cluster.
+ */
+export const TOOL_IDS = ['launcher', 'cart', 'theme'];
+
+/**
+ * The cluster's order (nav.style.tools.order, additive since v0.7): the
+ * owner's own order first, then whatever is left in the default order, so a
+ * list that names one tool or an unknown one still yields every tool once.
+ * @param {{tools?: {order?: Array<string>}}} [style] nav.style
+ * @returns {Array<string>} Every id in TOOL_IDS, in drawing order
+ */
+export function toolOrder(style = {}) {
+  const wanted = Array.isArray(style.tools?.order) ? style.tools.order : [];
+  const out = [];
+  for (const id of wanted) if (TOOL_IDS.includes(id) && !out.includes(id)) out.push(id);
+  for (const id of TOOL_IDS) if (!out.includes(id)) out.push(id);
+  return out;
+}
+
+/** Shortcuts in the mobile menu before «show more» takes the rest. */
+export const LAUNCHER_MAX_BOUNDS = { min: 1, max: 24, dflt: 6 };
+
+/**
+ * @param {unknown} value
+ * @returns {number} The value inside the bounds, or the default
+ */
+export function clampLauncherMax(value) {
+  const { min, max, dflt } = LAUNCHER_MAX_BOUNDS;
+  if (typeof value !== 'number' || !Number.isFinite(value)) return dflt;
+  return Math.min(max, Math.max(min, Math.round(value)));
+}
+
+/**
+ * The link launcher (nav.launcher, additive since v0.7): the shortcuts behind
+ * the launcher button in the tool cluster, and the same shortcuts as a
+ * section inside the mobile menu. null unless the button is shown and at
+ * least one row is usable: a row counts with a label and a target that
+ * passes the menu links' guard, so a half-filled row in the editor never
+ * reaches the panel. A row's mark is an uploaded image or an id from the
+ * icon library; nav.js draws it, and neither leaves the tile with its label
+ * alone. `view` is the design on the desktop and `mobileView` the one in
+ * the mobile menu (omitted = the same design as the desktop). `title` is
+ * empty when the heading is off, and the custom heading otherwise; the
+ * translated default word is nav.js's business, not this module's.
+ * @param {object} [launcher] site.nav.launcher
+ * @returns {{links: Array<object>, view: string, mobileView: string, title: string, titleShow: boolean, icon: string, image: string} | null}
+ */
+export function launcherModel(launcher) {
+  if (launcher?.show !== true) return null;
+  const rows = Array.isArray(launcher.links) ? launcher.links : [];
+  // Every row the owner has added is drawn: the launcher stands as soon as it
+  // is switched on, and a row whose target is not a usable link gets '#' with
+  // the missing flag, exactly as a menu item pointing at an unknown page does.
+  const links = rows.map((row) => {
+    const href = typeof row?.href === 'string' ? row.href.trim() : '';
+    const safe = isSafeHref(href);
+    return {
+      label: typeof row?.label === 'string' ? row.label.trim() : '',
+      href: safe ? href : '#',
+      missing: !safe,
+      external: safe && isSafeUrl(href),
+      icon: typeof row?.icon === 'string' ? row.icon : '',
+      image: isSafeImage(row?.image) ? row.image : '',
+    };
+  });
+  const view = LAUNCHER_VIEWS.includes(launcher.view) ? launcher.view : 'grid';
+  return {
+    links,
+    view,
+    mobileView: LAUNCHER_VIEWS.includes(launcher.mobileView) ? launcher.mobileView : view,
+    // How many shortcuts the mobile menu shows before the rest fold into
+    // «show more»: the panel on the desktop simply scrolls, but the mobile
+    // menu is the page's own list and must not grow without end.
+    mobileMax: clampLauncherMax(launcher.mobileMax),
+    titleShow: launcher.showTitle !== false,
+    title: typeof launcher.title === 'string' ? launcher.title.trim() : '',
+    icon: typeof launcher.icon === 'string' ? launcher.icon : '',
+    image: isSafeImage(launcher.image) ? launcher.image : '',
+  };
+}
+
 /**
  * Scroll behavior for the menu (nav.scroll, additive since v0.6): pure
  * state computation, the DOM part lives in nav.js. 'shrink' = compact

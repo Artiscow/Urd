@@ -162,6 +162,29 @@
       "show": true,
       "href": "/checkout"
     },
+    "launcher": {
+      "show": true,
+      "view": "grid",
+      "mobileView": "list",
+      "mobileMax": 6,
+      "links": [
+        {
+          "label": "Kaker",
+          "href": "/kaker",
+          "icon": "gift"
+        },
+        {
+          "label": "Kontakt",
+          "href": "/kontakt",
+          "icon": "mail"
+        },
+        {
+          "label": "Instagram",
+          "href": "https://instagram.com",
+          "icon": "instagram"
+        }
+      ]
+    },
     "style": {
       "background": {
         "version": 1,

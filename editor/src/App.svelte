@@ -7,6 +7,7 @@
   import { createDraftStore } from './lib/draftStore.js';
   import ColorPicker from './lib/ColorPicker.svelte';
   import GlyphPicker from './lib/GlyphPicker.svelte';
+  import MarkPicker from './lib/MarkPicker.svelte';
   import { createPreviewBridge } from './lib/previewBridge.js';
   import { previewScale } from './lib/preview-scale.js';
   import { deployTargets, awaitServed } from './lib/deploy-wait.js';
@@ -50,6 +51,13 @@
     'lines': subSvg('<path d="M14 1h20" stroke-opacity="0.5"/><path d="M12 12h24M12 21h24M12 30h24" stroke-opacity="0.8"/>'),
     'flyout': subSvg('<path d="M14 1h20" stroke-opacity="0.5"/><rect x="1" y="6" width="46" height="24" fill="currentColor" fill-opacity="0.12" stroke="none"/><path d="M6 13h10M6 19h8M22 13h10M22 19h8M38 13h6M38 19h4" stroke-opacity="0.8"/>'),
   };
+  // The launcher's three designs, drawn as the panel they give: tiles in
+  // three columns, rows with a small mark, or image cards in two columns.
+  const LAUNCHER_VIEW_ICONS = {
+    'grid': subSvg('<rect x="1" y="1" width="46" height="32" rx="3" stroke-opacity="0.35"/><rect x="6" y="6" width="10" height="10" rx="2.5" fill="currentColor" fill-opacity="0.3" stroke="none"/><rect x="19" y="6" width="10" height="10" rx="2.5" fill="currentColor" fill-opacity="0.3" stroke="none"/><rect x="32" y="6" width="10" height="10" rx="2.5" fill="currentColor" fill-opacity="0.3" stroke="none"/><path d="M7 20h8M20 20h8M33 20h8" stroke-opacity="0.7"/><path d="M6 26h10M19 26h10M32 26h10" stroke-opacity="0.35"/>'),
+    'list': subSvg('<rect x="1" y="1" width="46" height="32" rx="3" stroke-opacity="0.35"/><rect x="6" y="6" width="7" height="7" rx="2" fill="currentColor" fill-opacity="0.3" stroke="none"/><rect x="6" y="17" width="7" height="7" rx="2" fill="currentColor" fill-opacity="0.3" stroke="none"/><path d="M17 9.5h24M17 20.5h18" stroke-opacity="0.7"/>'),
+    'cover': subSvg('<rect x="1" y="1" width="46" height="32" rx="3" stroke-opacity="0.35"/><rect x="6" y="6" width="16" height="12" rx="2.5" fill="currentColor" fill-opacity="0.3" stroke="none"/><rect x="26" y="6" width="16" height="12" rx="2.5" fill="currentColor" fill-opacity="0.3" stroke="none"/><path d="M6 14h16M26 14h16" stroke-opacity="0.55" stroke-width="3"/><path d="M6 23h12M26 23h12" stroke-opacity="0.35"/>'),
+  };
   /** The title typed for «new page as menu item» in the Nav panel. */
   let navNewPageTitle = $state('');
   function addPageAsNavItem() {
@@ -86,6 +94,7 @@
   import { SECTION_THEME_LABELS, sectionThemeVars, contrastRatio, relativeLuminance, buildThemeCss, safeCssValue, resolveThemeMode, activeTokens } from '$engine/theme.js';
   import { compressToWebp, svgToDataUrl, tightSvgViewBox, svgViewBox, slugify, contentHash, mediaExtension, WARN_BYTES, VIDEO_WARN_BYTES, VIDEO_MAX_BYTES } from '$engine/imageTools.js';
   import { FONT_STACKS } from '$engine/fonts.js';
+  import { isSafeHref, toolOrder } from '$engine/nav-model.js';
   import { frameAtPoint } from '$engine/place.js';
   import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '$engine/icons.js';
 
@@ -118,6 +127,7 @@
     // Guides: a box with crossed alignment lines, distinguishable from the
     // grid button next to it.
     guides: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20" stroke-dasharray="3 3"/><rect x="7.5" y="7.5" width="9" height="9" rx="1.5"/></svg>',
+    image: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M4 17l5-5 4 4 3-2 4 4"/></svg>',
     kebab: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>',
     bookmark: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/></svg>',
     fit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/></svg>',
@@ -3078,6 +3088,16 @@
   }
 
   /** The tool cluster's fields (nav.style.tools): an emptied object is removed. */
+  /** The tool cluster's order (nav.style.tools.order): the list is stored whole. */
+  function moveTool(id, dir) {
+    const order = toolOrder(siteDraft.nav.style ?? {});
+    const from = order.indexOf(id);
+    const to = from + dir;
+    if (from < 0 || to < 0 || to >= order.length) return;
+    [order[from], order[to]] = [order[to], order[from]];
+    setNavTools('order', order);
+  }
+
   function setNavTools(key, value) {
     siteMutate(`edit:nav-tools-${key}`, () => {
       siteDraft.nav.style ??= {};
@@ -3163,6 +3183,102 @@
     });
   }
 
+  /* The link launcher (nav.launcher): the shortcuts behind the launcher
+   * button. The last removed shortcut takes the object with it, so a site
+   * without a launcher carries no field. */
+
+  /** The launcher button's default mark, drawn as the menu draws it. */
+  const LAUNCHER_DOTS = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">'
+    + [6, 12, 18].flatMap((y) => [6, 12, 18].map((x) => `<circle cx="${x}" cy="${y}" r="1.6"/>`)).join('')
+    + '</svg>';
+
+  /** Which shortcut row is open in the Tools group; one at a time. */
+  let launcherOpen = $state(null);
+
+  /**
+   * The marks already uploaded for this launcher, the button's included:
+   * the picker offers them again, so one image can serve several shortcuts.
+   */
+  function launcherImages() {
+    const launcher = siteDraft.nav?.launcher;
+    return [launcher?.image, ...(launcher?.links ?? []).map((link) => link.image)].filter(Boolean);
+  }
+
+  /** The picker hands over both fields at once: an image wins, an icon clears it. */
+  function setLauncherMark(i, mark) {
+    siteMutate('nav', () => {
+      const row = i === null ? siteDraft.nav.launcher : siteDraft.nav.launcher.links[i];
+      if (mark.image) row.image = mark.image;
+      else delete row.image;
+      if (mark.icon) row.icon = mark.icon;
+      else delete row.icon;
+    });
+  }
+
+  /** A field on the launcher itself; undefined removes it. */
+  function setLauncher(key, value) {
+    siteMutate(`edit:nav-launcher-${key}`, () => {
+      siteDraft.nav.launcher ??= { show: true, links: [] };
+      if (value === undefined) delete siteDraft.nav.launcher[key];
+      else siteDraft.nav.launcher[key] = value;
+    });
+  }
+
+  function addLauncherLink() {
+    siteMutate('nav', () => {
+      // The first shortcut turns the button on: an owner who fills the list
+      // and sees nothing in the menu has no way to guess why.
+      siteDraft.nav.launcher ??= { show: true, links: [] };
+      siteDraft.nav.launcher.links ??= [];
+      siteDraft.nav.launcher.links.push({ label: ta('seed.link'), href: '', icon: 'globe' });
+    });
+  }
+
+  function removeLauncherLink(i) {
+    siteMutate('nav', () => {
+      siteDraft.nav.launcher.links.splice(i, 1);
+      if (!siteDraft.nav.launcher.links.length) delete siteDraft.nav.launcher;
+    });
+  }
+
+  function moveLauncherLink(i, dir) {
+    siteMutate('nav', () => {
+      const links = siteDraft.nav.launcher.links;
+      const j = i + dir;
+      if (j < 0 || j >= links.length) return;
+      [links[i], links[j]] = [links[j], links[i]];
+    });
+  }
+
+  function setLauncherLink(i, key, value) {
+    siteMutate(`edit:nav-launcher-${key}-${i}`, () => { siteDraft.nav.launcher.links[i][key] = value; });
+  }
+
+  /**
+   * An own image for the button or for one shortcut (i = null is the
+   * button): the same webp flow as the logo, materialized into media/ on
+   * publish.
+   */
+  async function uploadLauncherImage(file, i) {
+    if (!file) return;
+    try {
+      const img = await compressOrTrim(file);
+      siteMutate('nav', () => {
+        if (i === null) siteDraft.nav.launcher.image = img.dataUrl;
+        else siteDraft.nav.launcher.links[i].image = img.dataUrl;
+      });
+    } catch {
+      setStatus(ta('status.imageReadErrorSvg'), 'error');
+    }
+  }
+
+  function clearLauncherImage(i) {
+    siteMutate('nav', () => {
+      if (i === null) delete siteDraft.nav.launcher.image;
+      else delete siteDraft.nav.launcher.links[i].image;
+    });
+  }
+
   /** The sheet's own surface (nav.style.sheet): an emptied object is removed. */
   function setNavSheet(key, value) {
     siteMutate(`edit:nav-sheet-${key}`, () => {
@@ -3217,6 +3333,12 @@
   };
   const hoverColorLabel = $derived(HOVER_COLOR_LABELS[siteDraft?.nav?.style?.hover] ?? null);
   /** The submenu designs on offer: the column has no card, flat surface or flyout. */
+  const launcherViewOptions = $derived([
+    ['grid', ta('opt.launcherView.grid')],
+    ['list', ta('opt.launcherView.list')],
+    ['cover', ta('opt.launcherView.cover')],
+  ]);
+
   const subStyleOptions = $derived(sideVariant
     ? [['card', ta('common.standard')], ['pills', ta('opt.sub.pills')], ['lines', ta('opt.sub.lines')]]
     : [['card', ta('opt.sub.card')], ['flat', ta('opt.sub.flat')], ['pills', ta('opt.sub.pills')], ['lines', ta('opt.sub.lines')], ['flyout', ta('opt.sub.flyout')]]);
@@ -5438,6 +5560,11 @@
     materializeBackground(site.nav?.style?.background, files);
     materializeBackground(site.footer?.background, files);
     if (site.footer?.brand) materializeField(site.footer.brand, 'logo', 'footer-logo', files);
+    // The launcher's own mark on the button, and one per shortcut.
+    if (site.nav?.launcher) {
+      materializeField(site.nav.launcher, 'image', 'snarvei', files);
+      for (const link of site.nav.launcher.links ?? []) materializeField(link, 'image', 'snarvei', files);
+    }
     materializeField(site.site, 'icon', 'ikon', files);
     return files;
   }
@@ -6359,20 +6486,6 @@
                           {/each}
                         </div>
                       </div>
-                      <!-- The tool cluster (theme, cart, burger) at the end or the start of the
-                           bar; in the column that is the bottom or the top, with its own alignment -->
-                      {#if sideVariant}
-                        <Choice label={ta('lbl.toolsSide')} title={ta('tip.nav.toolsSideColumn')} value={siteDraft.nav.style?.tools?.side ?? 'end'}
-                          options={[['start', ta('opt.toolsSide.top')], ['end', ta('opt.toolsSide.bottom')]]}
-                          onchange={(v) => setNavTools('side', v === 'start' ? 'start' : undefined)} />
-                        <Choice label={ta('lbl.toolsAlign')} title={ta('tip.nav.toolsAlign')} value={siteDraft.nav.style?.tools?.align ?? 'center'}
-                          options={[['start', ta('opt.toolsAlign.start')], ['center', ta('opt.toolsAlign.center')], ['end', ta('opt.toolsAlign.end')], ['spread', ta('opt.toolsAlign.spread')]]}
-                          onchange={(v) => setNavTools('align', v === 'center' ? undefined : v)} />
-                      {:else}
-                        <Choice label={ta('lbl.toolsSide')} title={ta('tip.nav.toolsSide')} value={siteDraft.nav.style?.tools?.side ?? 'end'}
-                          options={[['start', ta('opt.toolsSide.start')], ['end', ta('opt.toolsSide.end')]]}
-                          onchange={(v) => setNavTools('side', v === 'start' ? 'start' : undefined)} />
-                      {/if}
                       {#if floatingVariant}
                         <!-- The floating menu's maximum width: the content width, or a px value (empty = 1100) -->
                         <Choice label={ta('lbl.navPillWidth')} title={ta('tip.nav.pillWidth')} value={siteDraft.nav.style?.pillWidth === 'content' ? 'content' : 'custom'}
@@ -6605,27 +6718,6 @@
                         </label>
                       </div>
                       {/if}
-                      <div class="mini-card">
-                        <span class="mini-label">{ta('lbl.cart')}</span>
-                        <label class="gridmenu-snap" title={ta('tip.nav.cart')}>
-                          <input type="checkbox" checked={siteDraft.nav.cart?.show === true}
-                            onchange={(e) => siteMutate('nav', () => {
-                              if (e.target.checked) siteDraft.nav.cart = { ...(siteDraft.nav.cart ?? {}), show: true };
-                              else delete siteDraft.nav.cart;
-                            })} />
-                          {ta('lbl.showInMenu')}
-                        </label>
-                        {#if siteDraft.nav.cart?.show}
-                          <label class="field-stack" title={ta('tip.cart.checkout')}>
-                            <span class="mini-label">{ta('lbl.checkoutPage')}</span>
-                            <Dropdown filled value={siteDraft.nav.cart?.href ?? ''}
-                              options={[['', ta('common.none')], ...siteDraft.pages.map((p) => [p.path, p.title])]}
-                              onchange={(v) => siteMutate('nav', () => {
-                                if (v) siteDraft.nav.cart.href = v; else delete siteDraft.nav.cart.href;
-                              })} />
-                          </label>
-                        {/if}
-                      </div>
                     </div>
                   </details>
                   <hr class="gridmenu-divider" />
@@ -6932,6 +7024,207 @@
                       <ColorPicker value={siteDraft.nav.announcement?.textColor ?? 'accent-text'} tokens={themeSwatches()}
                         label={ta('tip.nav.announceTextColor')} onchange={(hex) => setNavAnnouncement('textColor', hex)} /></label>
                   {/if}
+                </div>
+              </details>
+              <!-- The tool cluster: the buttons that stand beside the burger. Each
+                   tool is switched on here, beside its own settings -->
+              <details class="group">
+                <summary title={ta('tip.nav.tools')}>{ta('group.tools')}</summary>
+                <div class="group-items">
+                  <!-- The tool cluster (theme, cart, burger) at the end or the start of the
+                       bar; in the column that is the bottom or the top, with its own alignment -->
+                  {#if sideVariant}
+                    <Choice label={ta('lbl.toolsSide')} title={ta('tip.nav.toolsSideColumn')} value={siteDraft.nav.style?.tools?.side ?? 'end'}
+                      options={[['start', ta('opt.toolsSide.top')], ['end', ta('opt.toolsSide.bottom')]]}
+                      onchange={(v) => setNavTools('side', v === 'start' ? 'start' : undefined)} />
+                    <Choice label={ta('lbl.toolsAlign')} title={ta('tip.nav.toolsAlign')} value={siteDraft.nav.style?.tools?.align ?? 'center'}
+                      options={[['start', ta('opt.toolsAlign.start')], ['center', ta('opt.toolsAlign.center')], ['end', ta('opt.toolsAlign.end')], ['spread', ta('opt.toolsAlign.spread')]]}
+                      onchange={(v) => setNavTools('align', v === 'center' ? undefined : v)} />
+                  {:else}
+                    <Choice label={ta('lbl.toolsSide')} title={ta('tip.nav.toolsSide')} value={siteDraft.nav.style?.tools?.side ?? 'end'}
+                      options={[['start', ta('opt.toolsSide.start')], ['end', ta('opt.toolsSide.end')]]}
+                      onchange={(v) => setNavTools('side', v === 'start' ? 'start' : undefined)} />
+                  {/if}
+                  <!-- The cluster's order is the panel's order: each tool is moved
+                       with its own arrows, and the menu follows -->
+                  {#snippet toolMove(id, n)}
+                    <span class="tool-move">
+                      <button class="ghost row-tool" title={ta('tip.moveUp')} disabled={n === 0}
+                        onclick={(e) => { e.preventDefault(); e.stopPropagation(); moveTool(id, -1); }}>{@html ICONS.up}</button>
+                      <button class="ghost row-tool" title={ta('tip.moveDown')} disabled={n === 2}
+                        onclick={(e) => { e.preventDefault(); e.stopPropagation(); moveTool(id, 1); }}>{@html ICONS.down}</button>
+                    </span>
+                  {/snippet}
+                  {#each toolOrder(siteDraft.nav.style ?? {}) as id, n (id)}
+                    {#if id === 'theme'}
+                      {#if siteDraft.theme?.alt?.tokens}
+                      <div class="mini-card">
+                        <span class="tool-head"><span class="mini-label">{ta('lbl.themeToggle')}</span>{@render toolMove(id, n)}</span>
+                        <label class="gridmenu-snap" title={ta('tip.nav.themeToggle')}>
+                          <input type="checkbox" checked={siteDraft.nav.style?.tools?.theme !== false}
+                            onchange={(e) => setNavTools('theme', e.target.checked ? undefined : false)} />
+                          {ta('lbl.showInMenu')}
+                        </label>
+                      </div>
+                      {/if}
+                    {:else if id === 'cart'}
+                    <div class="mini-card">
+                      <span class="tool-head"><span class="mini-label">{ta('lbl.cart')}</span>{@render toolMove(id, n)}</span>
+                      <label class="gridmenu-snap" title={ta('tip.nav.cart')}>
+                        <input type="checkbox" checked={siteDraft.nav.cart?.show === true}
+                          onchange={(e) => siteMutate('nav', () => {
+                            if (e.target.checked) siteDraft.nav.cart = { ...(siteDraft.nav.cart ?? {}), show: true };
+                            else delete siteDraft.nav.cart;
+                          })} />
+                        {ta('lbl.showInMenu')}
+                      </label>
+                      {#if siteDraft.nav.cart?.show}
+                        <label class="field-stack" title={ta('tip.cart.checkout')}>
+                          <span class="mini-label">{ta('lbl.checkoutPage')}</span>
+                          <Dropdown filled value={siteDraft.nav.cart?.href ?? ''}
+                            options={[['', ta('common.none')], ...siteDraft.pages.map((p) => [p.path, p.title])]}
+                            onchange={(v) => siteMutate('nav', () => {
+                              if (v) siteDraft.nav.cart.href = v; else delete siteDraft.nav.cart.href;
+                            })} />
+                        </label>
+                      {/if}
+                    </div>
+                    {:else}
+                    <details class="group sub-fold">
+                      <summary title={ta('tip.nav.launcher')}><span class="tool-head">{ta('group.launcher')}{@render toolMove(id, n)}</span></summary>
+                      <div class="group-items">
+                        <label class="gridmenu-snap" title={ta('tip.nav.launcher')}>
+                        <input type="checkbox" checked={siteDraft.nav.launcher?.show === true}
+                          onchange={(e) => setLauncher('show', e.target.checked ? true : undefined)} />
+                        {ta('lbl.showInMenu')}
+                      </label>
+                      <!-- The design as small drawings of the panel each one gives -->
+                        <div class="ctl-field">
+                          <span class="mini-label">{ta('lbl.design')}</span>
+                          <div class="tile-grid cols-3" role="group" aria-label={ta('lbl.design')}>
+                            {#each launcherViewOptions as [v, text] (v)}
+                              <button type="button" class="tile" class:on={(siteDraft.nav.launcher?.view ?? 'grid') === v}
+                                aria-pressed={(siteDraft.nav.launcher?.view ?? 'grid') === v}
+                                onclick={() => setLauncher('view', v === 'grid' ? undefined : v)}>{@html LAUNCHER_VIEW_ICONS[v]}<span>{text}</span></button>
+                            {/each}
+                          </div>
+                        </div>
+                        <!-- The mobile menu can carry another design than the desktop panel -->
+                        <Choice label={ta('lbl.launcherMobileView')} title={ta('tip.nav.launcherMobileView')}
+                          value={siteDraft.nav.launcher?.mobileView ?? ''}
+                          options={[['', ta('lbl.navSameAsDesktop')], ...launcherViewOptions]}
+                          onchange={(v) => setLauncher('mobileView', v || undefined)} />
+                        <div class="ctl-row" title={ta('tip.nav.launcherMobileMax')}>
+                          <span class="mini-label ctl-name">{ta('lbl.launcherMobileMax')}</span>
+                          <input type="range" min="1" max="24" step="1"
+                            value={siteDraft.nav.launcher?.mobileMax ?? 6}
+                            oninput={(e) => setLauncher('mobileMax', e.target.valueAsNumber === 6 ? undefined : e.target.valueAsNumber)} />
+                          <span class="gridmenu-value">{siteDraft.nav.launcher?.mobileMax ?? 6}</span>
+                        </div>
+                        <label class="gridmenu-snap" title={ta('tip.nav.launcherTitle')}>
+                          <input type="checkbox" checked={siteDraft.nav.launcher?.showTitle !== false}
+                            onchange={(e) => setLauncher('showTitle', e.target.checked ? undefined : false)} />
+                          {ta('lbl.launcherShowTitle')}
+                        </label>
+                        {#if siteDraft.nav.launcher?.showTitle !== false}
+                          <label class="field-stack" title={ta('tip.nav.launcherTitleText')}>
+                            <span class="mini-label">{ta('lbl.launcherTitle')}</span>
+                            <input type="text" class="field-filled" placeholder={ta('ph.launcherTitle')}
+                              value={siteDraft.nav.launcher?.title ?? ''}
+                              onchange={(e) => setLauncher('title', e.target.value.trim() || undefined)} />
+                          </label>
+                        {/if}
+                        <!-- The button itself: the same picker as the shortcuts, where
+                             no mark at all means the nine drawn dots -->
+                        <div class="mini-card">
+                          <span class="mini-label">{ta('lbl.launcherButton')}</span>
+                          <span class="lbtn-pick">
+                            <MarkPicker icon={siteDraft.nav.launcher?.icon ?? ''} image={siteDraft.nav.launcher?.image ?? ''}
+                              images={launcherImages()} klass="lbtn-mark" noneLabel={ta('opt.launcherDots')}
+                              label={ta('tip.nav.launcherIcon')}
+                              onpick={(mark) => setLauncherMark(null, mark)} onfile={(file) => uploadLauncherImage(file, null)}>
+                              {#if siteDraft.nav.launcher?.image}
+                                <img src={siteDraft.nav.launcher.image} alt="" />
+                              {:else if siteDraft.nav.launcher?.icon}
+                                {@html iconSvg(siteDraft.nav.launcher.icon) || ''}
+                              {:else}
+                                {@html LAUNCHER_DOTS}
+                              {/if}
+                            </MarkPicker>
+                            <span class="lbtn-name">
+                              {#if siteDraft.nav.launcher?.image}{ta('mp.ownImage')}
+                              {:else if siteDraft.nav.launcher?.icon}{ta(ICON_LIBRARY[siteDraft.nav.launcher.icon]?.labelKey ?? 'common.none')}
+                              {:else}{ta('opt.launcherDots')}{/if}
+                            </span>
+                          </span>
+                        </div>
+                        <!-- One row per shortcut. Closed it is a line: mark, name and the
+                         arrows; a target that goes nowhere shows its warning there too.
+                         Open, the row is a card with a live tile: the preview is drawn as
+                         the menu will draw it, and it is itself the mark picker. -->
+                    {#each siteDraft.nav.launcher?.links ?? [] as link, i (i)}
+                      {@const broken = link.href && !isSafeHref(link.href)}
+                      <div class="lrow" class:open={launcherOpen === i}>
+                        <div class="lrow-head" role="button" tabindex="0"
+                          onclick={() => (launcherOpen = launcherOpen === i ? null : i)}
+                          onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); launcherOpen = launcherOpen === i ? null : i; } }}>
+                          <span class="lrow-mark" aria-hidden="true">
+                            {#if link.image}<img src={link.image} alt="" />{:else}{@html iconSvg(link.icon) || ''}{/if}
+                          </span>
+                          <span class="lrow-name">{link.label || ta('seed.link')}</span>
+                          {#if broken}
+                            <span class="lrow-warn" title={ta('tip.badTarget')}>{@html ICONS.warn}</span>
+                          {/if}
+                          <span class="row-tools" role="none"
+                            onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
+                            <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveLauncherLink(i, -1)}
+                              disabled={i === 0}>{@html ICONS.up}</button>
+                            <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveLauncherLink(i, 1)}
+                              disabled={i === siteDraft.nav.launcher.links.length - 1}>{@html ICONS.down}</button>
+                          </span>
+                          <span class="lrow-chev" aria-hidden="true">{@html ICONS.caret}</span>
+                        </div>
+                        {#if launcherOpen === i}
+                          <div class="lrow-body">
+                            <!-- The tile as the menu draws it, and the way to change the mark -->
+                            <MarkPicker icon={link.icon ?? ''} image={link.image ?? ''} images={launcherImages()}
+                              klass="lrow-tile" label={ta('mp.pickMark')}
+                              onpick={(mark) => setLauncherMark(i, mark)} onfile={(file) => uploadLauncherImage(file, i)}>
+                              <span class="lrow-tile-mark">
+                                {#if link.image}<img src={link.image} alt="" />{:else if link.icon}{@html iconSvg(link.icon) || ''}{/if}
+                              </span>
+                              <span class="lrow-tile-name">{link.label || ta('seed.link')}</span>
+                            </MarkPicker>
+                            <div class="lrow-fields">
+                              <input class="field-filled" value={link.label} title={ta('tip.nav.launcherLabel')}
+                                placeholder={ta('lbl.text')}
+                                onchange={(e) => setLauncherLink(i, 'label', e.target.value)} />
+                              <input class="field-filled" class:bad-target={broken}
+                                value={link.href ?? ''} placeholder={ta('ph.hrefAnchor')}
+                                title={broken ? ta('tip.badTarget') : ta('tip.hrefAnchor')}
+                                onchange={(e) => setLauncherLink(i, 'href', e.target.value)} />
+                              {#if broken}
+                                <span class="bad-target-note">{ta('ui.badTarget')}</span>
+                              {/if}
+                              <span class="lrow-actions">
+                                <MarkPicker icon={link.icon ?? ''} image={link.image ?? ''} images={launcherImages()}
+                                  klass="linkish" label={ta('mp.pickMark')}
+                                  onpick={(mark) => setLauncherMark(i, mark)} onfile={(file) => uploadLauncherImage(file, i)}>
+                                  {ta('mp.changeMark')}
+                                </MarkPicker>
+                                <button class="linkish danger" title={ta('tip.removeLink')}
+                                  onclick={() => removeLauncherLink(i)}>{ta('ui.remove')}</button>
+                              </span>
+                            </div>
+                          </div>
+                        {/if}
+                      </div>
+                    {/each}
+                    <button class="ghost action" onclick={addLauncherLink}>{ta('ui.addLauncherLink')}</button>
+                      </div>
+                    </details>
+                    {/if}
+                  {/each}
                 </div>
               </details>
               <details class="group">
@@ -10103,6 +10396,228 @@
   }
 
   /* The social icon's preview in the Footer panel */
+  /* A shortcut row (B3): closed it is one line, open it is a card with the
+     tile drawn as the menu draws it. The preview is the mark picker's own
+     trigger, so a click on the tile changes the mark. */
+  .lrow {
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: 9px;
+    background: rgb(255 255 255 / 4%);
+  }
+
+  .lrow + .lrow {
+    margin-top: 5px;
+  }
+
+  .lrow.open {
+    border-color: var(--urd-admin-accent, #6c5ce7);
+    box-shadow: 0 8px 22px rgb(0 0 0 / 30%);
+  }
+
+  .lrow-head {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 7px;
+    cursor: pointer;
+  }
+
+  .lrow-mark {
+    flex: 0 0 auto;
+    width: 1.7rem;
+    height: 1.7rem;
+    display: grid;
+    place-items: center;
+    border-radius: 7px;
+    background: rgb(255 255 255 / 7%);
+    overflow: hidden;
+    opacity: 0.9;
+  }
+
+  .lrow-mark :global(svg) {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .lrow-mark img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .lrow-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.85rem;
+  }
+
+  .lrow-warn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    color: #f5a09a;
+  }
+
+  .lrow-chev {
+    flex: 0 0 auto;
+    display: inline-flex;
+    opacity: 0.6;
+    transition: transform 0.15s ease;
+  }
+
+  .lrow.open .lrow-chev {
+    transform: rotate(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lrow-chev { transition: none; }
+  }
+
+  .lrow-body {
+    display: grid;
+    grid-template-columns: 5.2rem minmax(0, 1fr);
+    gap: 9px;
+    padding: 2px 8px 9px;
+  }
+
+  /* The live tile: the mark above the name, as in the menu's grid. */
+  :global(.lrow-tile) {
+    display: grid !important;
+    align-self: start;
+    justify-items: center;
+    gap: 5px;
+    padding: 9px 5px;
+    border: 1px solid rgb(255 255 255 / 12%) !important;
+    border-radius: 9px;
+    background: rgb(255 255 255 / 4%) !important;
+  }
+
+  :global(.lrow-tile:hover) {
+    border-color: var(--urd-admin-accent, #6c5ce7) !important;
+  }
+
+  .lrow-tile-mark {
+    width: 2.6rem;
+    height: 2.6rem;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    overflow: hidden;
+    color: var(--urd-admin-accent, #6c5ce7);
+    background: color-mix(in srgb, var(--urd-admin-accent, #6c5ce7) 18%, transparent);
+  }
+
+  .lrow-tile-mark :global(svg) {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  .lrow-tile-mark img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .lrow-tile-name {
+    font-size: 0.68rem;
+    line-height: 1.2;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    opacity: 0.85;
+  }
+
+  .lrow-fields {
+    display: grid;
+    gap: 5px;
+    align-content: start;
+  }
+
+  .lrow-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  /* The text buttons on the open row and in the picker's trigger. */
+  :global(.linkish) {
+    background: none;
+    border: 0;
+    padding: 2px 0;
+    color: inherit;
+    font: inherit;
+    font-size: 0.78rem;
+    opacity: 0.7;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  :global(.linkish:hover) { opacity: 1; }
+  :global(.linkish.danger:hover) { color: #f5a09a; opacity: 1; }
+
+  /* The launcher button's own mark beside its name. */
+  .lbtn-pick {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  :global(.lbtn-mark) {
+    width: 2.2rem;
+    height: 2.2rem;
+    border: 1px solid rgb(255 255 255 / 18%) !important;
+    border-radius: 8px;
+    background: rgb(255 255 255 / 6%) !important;
+    overflow: hidden;
+  }
+
+  :global(.lbtn-mark:hover) {
+    border-color: var(--urd-admin-accent, #6c5ce7) !important;
+  }
+
+  :global(.lbtn-mark svg) { width: 1.05rem; height: 1.05rem; }
+  :global(.lbtn-mark img) { width: 100%; height: 100%; object-fit: cover; }
+
+  .lbtn-name {
+    font-size: 0.82rem;
+    opacity: 0.8;
+  }
+
+  /* Each tool's header in the Tools group: its name, and the arrows that move
+     it in the cluster. The panel's order is the menu's order. */
+  .tool-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    width: 100%;
+  }
+
+  .tool-move {
+    display: flex;
+    gap: 0.15rem;
+    flex-shrink: 0;
+  }
+
+  /* A target that can never become a link: the row is kept, but it is drawn
+     as unusable, since the shortcut is silently left out of the menu. */
+  .bad-target {
+    border-color: #e05252;
+  }
+
+  .bad-target-note {
+    display: block;
+    padding: 0.1rem 0.2rem 0;
+    font-size: 0.72rem;
+    color: #f5a09a;
+  }
+
   .footer-soc-preview {
     flex: 0 0 1.15rem;
     width: 1.15rem;

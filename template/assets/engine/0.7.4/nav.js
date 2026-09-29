@@ -14,7 +14,7 @@
  * and the scroll lock come from the browser).
  */
 
-import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, effectiveNav, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, announcementModel, isSafeImage } from './nav-model.js';
+import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, effectiveNav, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, announcementModel, launcherModel, toolOrder, isSafeImage } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
 import { readCart, cartCount, onCartChange } from './shop.js';
@@ -70,6 +70,10 @@ const BURGER = svg('<path d="M4 6h16M4 12h16M4 18h16"/>');
 const SUN = svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>');
 const MOON = svg('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>');
 const CROSS = svg('<path d="M6 6l12 12M18 6L6 18"/>');
+const GRID = svg('<g fill="currentColor" stroke="none"><circle cx="6" cy="6" r="1.6"/><circle cx="12" cy="6" r="1.6"/><circle cx="18" cy="6" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/><circle cx="6" cy="18" r="1.6"/><circle cx="12" cy="18" r="1.6"/><circle cx="18" cy="18" r="1.6"/></g>');
+
+/** The launcher button's anchor name; one launcher per page, so one name. */
+const LAUNCHER_ANCHOR = '--urd-nav-launcher';
 
 /**
  * @param {object} site site.json, already parsed
@@ -404,11 +408,26 @@ export function renderNav(site, host) {
   }
   nav.appendChild(logo);
 
-  // The tool cluster at the far right: the light/dark toggle (when the
-  // theme has an alt counterpart) and the burger. An empty cluster is
-  // hidden in CSS (:empty).
+  // The tool cluster at the far right: the launcher, the cart and the
+  // light/dark toggle in the owner's own order (nav.style.tools.order), then
+  // the burger, which is the mobile menu's opener and always ends the row.
+  // An empty cluster is hidden in CSS (:empty).
   const tools = document.createElement('span');
   tools.className = 'urd-nav-tools';
+  /** @type {Record<string, HTMLElement|null>} The built tools, by id */
+  const toolEls = { launcher: null, cart: null, theme: null };
+
+  // The link launcher (nav.launcher): the shortcuts behind a launcher button.
+  // The button is the desktop opener; on mobile the same shortcuts are a
+  // section at the foot of the menu list, which travels into the full-screen
+  // sheet with the list.
+  const launcher = launcherModel(site.nav?.launcher);
+  const launcherWrap = launcher ? buildLauncher(launcher, signal) : null;
+  if (launcherWrap) toolEls.launcher = launcherWrap.el;
+  // A shortcut whose target is not a usable link still gets its tile, but the
+  // tile goes nowhere: say so, the way an unknown page in the menu is reported.
+  const broken = launcher?.links.filter((link) => link.missing).length ?? 0;
+  if (broken) console.warn(`Urd: ${broken} launcher shortcut(s) have no usable target`);
 
   // The cart in the menu (the shop, additive nav.cart): a button with a
   // count badge that opens the same cart drawer as the cart block.
@@ -436,10 +455,12 @@ export function renderNav(site, host) {
       drawer.refresh();
     });
     cartBtn.addEventListener('click', () => drawer.open(), { signal });
-    tools.appendChild(cartBtn);
+    toolEls.cart = cartBtn;
   }
 
-  if (site.theme?.alt?.tokens) {
+  // The light/dark button: there when the theme has an alt counterpart to
+  // switch to, unless the owner has taken it out of the cluster.
+  if (site.theme?.alt?.tokens && site.nav.style?.tools?.theme !== false) {
     const themeBtn = document.createElement('button');
     themeBtn.className = 'urd-nav-theme';
     themeBtn.type = 'button';
@@ -455,7 +476,11 @@ export function renderNav(site, host) {
       toggleThemeMode(site.theme);
       paintToggle();
     }, { signal });
-    tools.appendChild(themeBtn);
+    toolEls.theme = themeBtn;
+  }
+
+  for (const id of toolOrder(site.nav.style)) {
+    if (toolEls[id]) tools.appendChild(toolEls[id]);
   }
 
   // The burger (only visible in mobile view via CSS). With the dropdown it
@@ -654,6 +679,30 @@ export function renderNav(site, host) {
   });
   if (columnExpanded && !isMobileState()) for (const entry of subs) setOpen(entry, true);
 
+  // The launcher's shortcuts inside the mobile menu: a section at the foot
+  // of the list (hidden on desktop, where the button carries them), so it
+  // travels into the full-screen sheet with the list. The menu must not grow
+  // without end, so only the first mobileMax stand there; the rest sit in a
+  // native <details> that opens in place (ADR-0011).
+  if (launcher) {
+    const row = document.createElement('li');
+    row.className = 'urd-nav-launcher-row';
+    const title = launcherTitle(launcher);
+    if (title) row.appendChild(title);
+    const max = launcher.mobileMax;
+    row.appendChild(launcherTiles(launcher.links.slice(0, max), launcher.mobileView));
+    if (launcher.links.length > max) {
+      const more = document.createElement('details');
+      more.className = 'urd-nav-launcher-more';
+      const summary = document.createElement('summary');
+      summary.innerHTML = `<span class="urd-nav-launcher-more-open">${t('nav.launcherMore')}</span>`
+        + `<span class="urd-nav-launcher-more-shut">${t('nav.launcherLess')}</span>`;
+      more.append(summary, launcherTiles(launcher.links.slice(max), launcher.mobileView));
+      row.appendChild(more);
+    }
+    list.appendChild(row);
+  }
+
   nav.appendChild(list);
   nav.appendChild(tools);
   host.appendChild(nav);
@@ -781,7 +830,11 @@ export function renderNav(site, host) {
   nav.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
     const openSub = expandedSubs() ? null : subs.find((entry) => entry.li.classList.contains('open'));
-    if (openSub) {
+    if (launcherWrap?.isOpen()) {
+      event.preventDefault();
+      launcherWrap.close();
+      launcherWrap.btn.focus();
+    } else if (openSub) {
       event.preventDefault();
       setOpen(openSub, false);
       openSub.button.focus();
@@ -791,10 +844,12 @@ export function renderNav(site, host) {
     }
   }, { signal });
 
-  // A click outside the nav closes both submenus and the mobile panel.
+  // A click outside the nav closes the submenus, the launcher and the
+  // mobile panel.
   document.addEventListener('pointerdown', (event) => {
     if (nav.contains(event.target)) return;
     closeAll();
+    launcherWrap?.close();
     setMobileOpen(false);
   }, { signal });
 }
@@ -883,4 +938,149 @@ function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withC
     dialog.showModal();
   };
   return { dialog, show };
+}
+
+/**
+ * The launcher's shortcuts as one list of tiles. The markup is the same for
+ * all three designs (`view`: grid, list or cover) - the class on the list
+ * decides the shape, so the desktop panel and the mobile section can carry
+ * different designs from the same builder. A tile's mark is the uploaded
+ * image when there is one, otherwise the drawn icon, and a tile with
+ * neither stands with its label alone.
+ * @param {Array<{label: string, href: string, external: boolean, icon: string, image: string}>} links
+ * @param {string} view One of LAUNCHER_VIEWS
+ * @returns {HTMLUListElement}
+ */
+function launcherTiles(links, view) {
+  const ul = document.createElement('ul');
+  ul.className = `urd-nav-launcher-grid urd-nav-launcher-view-${view}`;
+  for (const link of links) {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.className = 'urd-nav-launcher-link';
+    a.href = link.href;
+    // A target that is not a usable link points at '#': the tile is there,
+    // drawn as the unfinished row it is.
+    if (link.missing) a.classList.add('urd-nav-launcher-missing');
+    if (link.external) a.rel = 'noopener';
+    const drawn = link.image ? '' : iconSvg(link.icon);
+    if (link.image || drawn) {
+      const mark = document.createElement('span');
+      mark.className = 'urd-nav-launcher-icon';
+      if (link.image) {
+        a.classList.add('urd-nav-launcher-photo');
+        const img = document.createElement('img');
+        img.src = link.image;
+        img.alt = '';
+        mark.appendChild(img);
+      } else {
+        mark.innerHTML = drawn;
+      }
+      a.appendChild(mark);
+    } else {
+      a.classList.add('urd-nav-launcher-bare');
+    }
+    const label = document.createElement('span');
+    label.className = 'urd-nav-launcher-name';
+    label.textContent = link.label;
+    a.appendChild(label);
+    li.appendChild(a);
+    ul.appendChild(li);
+  }
+  return ul;
+}
+
+/**
+ * The heading above the tiles: the owner's own words, or the translated
+ * default. Off with showTitle false.
+ * @param {{titleShow: boolean, title: string}} model
+ * @returns {HTMLSpanElement|null}
+ */
+function launcherTitle(model) {
+  if (!model.titleShow) return null;
+  const title = document.createElement('span');
+  title.className = 'urd-nav-launcher-title';
+  title.textContent = model.title || t('nav.launcher');
+  return title;
+}
+
+/**
+ * The link launcher's opener (nav.launcher): a drawn grid button in the tool
+ * cluster with the link grid under it. With the Popover API and anchor
+ * positioning the grid opens in the top layer, placed by CSS under the
+ * button with the browser flipping it away from the viewport edge;
+ * otherwise it is the submenu's disclosure pattern, a box positioned
+ * against the wrapper inside the nav (ADR-0011). The gate is the stricter
+ * feature, the same one the editor's floating menus use (anchored.js): a
+ * popover's containing block is the viewport, so without anchoring there is
+ * nothing to place the grid against, and anchoring without fallbacks would
+ * let it run off a narrow screen. That module belongs to the editor layer
+ * and stays out of the visitor's import closure, so the check stands here.
+ * @param {Array<object>} links The model from launcherLinks
+ * @param {AbortSignal} signal
+ * @returns {{el: HTMLElement, btn: HTMLButtonElement, isOpen: () => boolean, close: () => void}}
+ */
+function buildLauncher(model, signal) {
+  const wrap = document.createElement('span');
+  wrap.className = 'urd-nav-launcher-wrap';
+  const btn = document.createElement('button');
+  btn.className = 'urd-nav-launcher-btn';
+  btn.type = 'button';
+  const name = model.title || t('nav.launcher');
+  btn.setAttribute('aria-label', name);
+  // The owner's own mark comes first, then a chosen icon, and the nine dots
+  // are what stands there until one of them is set.
+  const drawn = model.image ? '' : (iconSvg(model.icon) || GRID);
+  btn.innerHTML = `${drawn}<span class="urd-nav-tool-label">${name}</span>`;
+  if (model.image) {
+    const img = document.createElement('img');
+    img.className = 'urd-nav-launcher-btn-img';
+    img.src = model.image;
+    img.alt = '';
+    btn.prepend(img);
+  }
+  const grid = document.createElement('div');
+  grid.className = 'urd-nav-launcher';
+  grid.id = 'urd-nav-launcher';
+  const title = launcherTitle(model);
+  if (title) grid.appendChild(title);
+  grid.appendChild(launcherTiles(model.links, model.view));
+  btn.setAttribute('aria-controls', grid.id);
+  btn.setAttribute('aria-expanded', 'false');
+  wrap.append(btn, grid);
+
+  const native = 'popover' in HTMLElement.prototype
+    && CSS.supports('anchor-name: --urd')
+    && CSS.supports('position-try-fallbacks: flip-block');
+  if (native) {
+    btn.style.setProperty('anchor-name', LAUNCHER_ANCHOR);
+    btn.setAttribute('popovertarget', grid.id);
+    grid.popover = 'auto';
+    grid.style.setProperty('position-anchor', LAUNCHER_ANCHOR);
+    // Light dismiss, Escape and the focus return are the browser's; the
+    // expanded state is the one thing the popover does not tell assistive
+    // technology by itself.
+    grid.addEventListener('toggle', (event) => {
+      btn.setAttribute('aria-expanded', String(event.newState === 'open'));
+    }, { signal });
+    // Escape belongs to the browser here, so the grid reports itself closed
+    // to the nav's own Escape handling.
+    return { el: wrap, btn, isOpen: () => false, close: () => { if (grid.matches(':popover-open')) grid.hidePopover(); } };
+  }
+
+  const close = () => {
+    wrap.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+  };
+  btn.addEventListener('click', () => {
+    const open = !wrap.classList.contains('open');
+    wrap.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', String(open));
+  }, { signal });
+  // Tabbing out of the grid closes it - focus must never leave an open
+  // layer behind.
+  wrap.addEventListener('focusout', (event) => {
+    if (!wrap.contains(event.relatedTarget)) close();
+  }, { signal });
+  return { el: wrap, btn, isOpen: () => wrap.classList.contains('open'), close };
 }

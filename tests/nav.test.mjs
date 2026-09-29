@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, effectiveNav, TOOLS_ALIGNS, sheetMotion, SHEET_MOTIONS, announcementModel, isSafeImage } = await engineImport('nav-model.js');
+const { resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, effectiveNav, TOOLS_ALIGNS, sheetMotion, SHEET_MOTIONS, announcementModel, launcherModel, LAUNCHER_VIEWS, clampLauncherMax, toolOrder, TOOL_IDS, isSafeImage } = await engineImport('nav-model.js');
 
 // Deliberately Norwegian page titles and slugs: user data stays Norwegian (ADR-0021).
 const PAGES = [
@@ -709,4 +709,91 @@ test('announcementModel: a page resolves through the register, a free link passe
   assert.equal(m.dismiss, false);
   assert.equal(m.bg, 'var(--urd-color-accent)');
   assert.equal(m.color, '#fff');
+});
+
+const LAUNCHER = {
+  show: true,
+  links: [
+    { label: 'Kaker', href: '/kaker', icon: 'gift' },
+    { label: '  ', href: '/tom' },
+    { label: 'Uten mal' },
+    { label: 'Farlig', href: 'javascript:alert(1)' },
+    { label: 'Instagram', href: ' https://instagram.com ', image: '/media/insta-1a2b3c4d.webp' },
+  ],
+};
+
+test('launcherModel: every row is drawn, an unusable target points at # and is flagged', () => {
+  const { links } = launcherModel(LAUNCHER);
+  assert.deepEqual(links.map((l) => l.label), ['Kaker', '', 'Uten mal', 'Farlig', 'Instagram']);
+  assert.equal(links[0].external, false);
+  assert.equal(links[0].icon, 'gift');
+  assert.equal(links[0].image, '');
+  assert.equal(links[0].missing, false);
+  // No target, and a target the link guard rejects: the tile stands, going nowhere.
+  assert.deepEqual(links.filter((l) => l.missing).map((l) => l.label), ['Uten mal', 'Farlig']);
+  assert.deepEqual(links.filter((l) => l.missing).map((l) => l.href), ['#', '#']);
+  const insta = links.at(-1);
+  assert.equal(insta.external, true);
+  assert.equal(insta.href, 'https://instagram.com');
+  assert.equal(insta.image, '/media/insta-1a2b3c4d.webp');
+});
+
+test('launcherModel: the switch alone decides, and an empty list is a launcher too', () => {
+  assert.equal(launcherModel(undefined), null);
+  assert.equal(launcherModel({}), null);
+  assert.equal(launcherModel({ ...LAUNCHER, show: false }), null);
+  // Switched on before the first shortcut exists: the button is still there.
+  assert.deepEqual(launcherModel({ show: true }).links, []);
+  assert.deepEqual(launcherModel({ show: true, links: 'nope' }).links, []);
+  assert.equal(launcherModel({ show: true, links: [null, 7] }).links.length, 2);
+});
+
+test('toolOrder: the owner\'s order first, the rest in the default order, each tool once', () => {
+  assert.deepEqual(TOOL_IDS, ['launcher', 'cart', 'theme']);
+  assert.deepEqual(toolOrder(), ['launcher', 'cart', 'theme']);
+  assert.deepEqual(toolOrder({}), ['launcher', 'cart', 'theme']);
+  assert.deepEqual(toolOrder({ tools: { order: ['theme', 'cart', 'launcher'] } }), ['theme', 'cart', 'launcher']);
+  // One named tool pulls ahead; the others keep their order behind it.
+  assert.deepEqual(toolOrder({ tools: { order: ['theme'] } }), ['theme', 'launcher', 'cart']);
+  // Unknown ids and repeats never add or drop a tool.
+  assert.deepEqual(toolOrder({ tools: { order: ['cart', 'cart', 'burger', 42] } }), ['cart', 'launcher', 'theme']);
+  assert.deepEqual(toolOrder({ tools: { order: 'theme' } }), ['launcher', 'cart', 'theme']);
+});
+
+test('launcherModel: the mobile design falls back to the desktop one, both allowlisted', () => {
+  assert.deepEqual(LAUNCHER_VIEWS, ['grid', 'list', 'cover']);
+  const dflt = launcherModel(LAUNCHER);
+  assert.equal(dflt.view, 'grid');
+  assert.equal(dflt.mobileView, 'grid');
+  const own = launcherModel({ ...LAUNCHER, view: 'cover', mobileView: 'list' });
+  assert.equal(own.view, 'cover');
+  assert.equal(own.mobileView, 'list');
+  const follows = launcherModel({ ...LAUNCHER, view: 'list' });
+  assert.equal(follows.mobileView, 'list');
+  const junk = launcherModel({ ...LAUNCHER, view: 'carousel', mobileView: 'carousel' });
+  assert.equal(junk.view, 'grid');
+  assert.equal(junk.mobileView, 'grid');
+});
+
+test('launcherModel: the heading is on with the default word, off or the owner\'s own', () => {
+  assert.equal(launcherModel(LAUNCHER).titleShow, true);
+  assert.equal(launcherModel(LAUNCHER).title, '');
+  assert.equal(launcherModel({ ...LAUNCHER, showTitle: false }).titleShow, false);
+  assert.equal(launcherModel({ ...LAUNCHER, title: '  Mine sider  ' }).title, 'Mine sider');
+});
+
+test('launcherModel: the button mark is an own image, else an icon, and unsafe images are dropped', () => {
+  assert.equal(launcherModel({ ...LAUNCHER, image: '/media/m-1a2b3c4d.webp' }).image, '/media/m-1a2b3c4d.webp');
+  assert.equal(launcherModel({ ...LAUNCHER, image: 'https://evil.example/x.png' }).image, '');
+  assert.equal(launcherModel({ ...LAUNCHER, icon: 'globe' }).icon, 'globe');
+});
+
+test('clampLauncherMax: the mobile count stays inside its bounds, six by default', () => {
+  assert.equal(clampLauncherMax(undefined), 6);
+  assert.equal(clampLauncherMax('nine'), 6);
+  assert.equal(clampLauncherMax(0), 1);
+  assert.equal(clampLauncherMax(99), 24);
+  assert.equal(clampLauncherMax(4.6), 5);
+  assert.equal(launcherModel(LAUNCHER).mobileMax, 6);
+  assert.equal(launcherModel({ ...LAUNCHER, mobileMax: 3 }).mobileMax, 3);
 });
