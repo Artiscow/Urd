@@ -27,6 +27,10 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.34 - The suggestions sorted into the backlog - 29 September 2026
+
+- The Suggestions section had grown to 23 unsorted lines, so work that belongs to a milestone was invisible from that milestone. Twenty-one moved to the milestone or phase that owns them, each keeping its own wording with a dated note, one was ticked as delivered in 0.7.0.32, and three new stages under 0.7.13 take the nine nav and mobile-menu lines; the section keeps the single line that has no milestone yet.
+
 ### 0.7.0.33 - The help card follows the admin - 29 September 2026
 
 - The help card the «?» chip opens behaved as though it belonged to the page being built: it had no counter-scale, so at 79 percent preview zoom its text drew at 9.45 px against the admin rail's 11.84, and its surface was one hardcoded colour whatever admin theme was chosen. It counter-scales now, like the text toolbar and the image editor, with the placement measuring the drawn size instead of the laid-out one, and takes `--urd-admin-surface` and `--urd-admin-text`, which the editor already reports to the preview: measured at 12 px text and 300 px wide on screen at 25, 50, 100 and 150 percent zoom, and the rail's own colour in two themes.
