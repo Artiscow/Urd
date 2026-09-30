@@ -17,6 +17,7 @@
 import { applyImageStyle } from './image.js';
 import { growSectionTo } from '../render.js';
 import { stepIndex, canAutoplay, normalizeInterval, gridColumns } from '../gallery-model.js';
+import { ribbonDuration, ribbonRows, canRoll } from '../ribbon-model.js';
 import { isSafeHref } from '../nav-model.js';
 // ta/adminLocaleReady: only called in preview (after the admin dictionary is loaded), never at module level.
 import { t, ta, adminLocaleReady } from '../i18n.js';
@@ -209,7 +210,61 @@ function renderSlides(host, props, ctx, blockEl) {
   startTimer();
 }
 
-const VIEWS = { grid: renderGrid, carousel: renderCarousel, slides: renderSlides };
+/**
+ * The ribbon view: the tiles roll past in a band, one row or two running
+ * against each other. The motion is the ribbon block's (ribbon-model.js and
+ * the .urd-ribbon rules in base.css): each row's track holds the tiles twice
+ * and is translated by half its width, so the loop has no seam. Still under
+ * reduced motion and while the editing chrome is on, and the pointer or the
+ * keyboard holds it, so a tile can be clicked into the lightbox.
+ */
+function renderRibbon(host, props, ctx, blockEl) {
+  host.classList.add('urd-gallery-ribbon');
+  host.style.setProperty('--urd-gallery-gap', `${Number(props.gap) || 0}px`);
+  host.style.setProperty('--urd-ribbon-h', `${Math.min(400, Math.max(80, Number(props.bandHeight) || 160))}px`);
+  const rows = ribbonRows(props.rows);
+  // The editing chrome's hold is a CSS rule on the body (base.css), so Clean
+  // view takes effect without a re-render.
+  const still = !canRoll({ count: props.images.length, reducedMotion: reducedMotion() });
+
+  for (let row = 0; row < rows; row += 1) {
+    const band = el2('div', 'urd-ribbon-stripe urd-ribbon-motion-roll');
+    if (props.fade !== false) band.classList.add('urd-ribbon-fade');
+    if (props.pauseOnHover !== false) band.classList.add('urd-ribbon-pausable');
+    if (still) band.classList.add('urd-ribbon-still');
+    const track = el2('div', 'urd-ribbon-track');
+    // The second row runs against the first, whichever way the first goes.
+    const rightwards = (props.direction === 'right') !== (row === 1);
+    if (rightwards) track.classList.add('urd-ribbon-right');
+    const run = el2('div', 'urd-ribbon-run');
+    props.images.forEach((_, i) => run.appendChild(makeTile(props, i, ctx, blockEl)));
+    const copy = el2('div', 'urd-ribbon-run');
+    copy.setAttribute('aria-hidden', 'true');
+    props.images.forEach((_, i) => copy.appendChild(makeTile(props, i, ctx, blockEl)));
+    track.append(run, copy);
+    band.appendChild(track);
+    host.appendChild(band);
+
+    const measure = () => {
+      const width = run.scrollWidth;
+      if (!width) return;
+      track.style.setProperty('--urd-ribbon-ms', `${ribbonDuration(width, props.speed) * 1000}ms`);
+    };
+    measure();
+    if (typeof ResizeObserver === 'function') {
+      const ro = new ResizeObserver(() => {
+        if (!run.isConnected) {
+          ro.disconnect();
+          return;
+        }
+        measure();
+      });
+      ro.observe(run);
+    }
+  }
+}
+
+const VIEWS = { grid: renderGrid, carousel: renderCarousel, slides: renderSlides, ribbon: renderRibbon };
 
 export const galleryBlock = {
   version: 1,
@@ -223,7 +278,9 @@ export const galleryBlock = {
   /**
    * @param {HTMLElement} el
    * @param {{images: Array<{src: string, alt?: string, href?: string|null, style?: object}>,
-   *          view: 'grid'|'carousel'|'slides', columns: number, gap: number,
+   *          view: 'grid'|'carousel'|'slides'|'ribbon', columns: number, gap: number,
+   *          speed?: number, direction?: 'left'|'right', pauseOnHover?: boolean,
+   *          rows?: number, bandHeight?: number, fade?: boolean,
    *          radius: string|null, lightbox: boolean, interval: number}} props
    * @param {object} ctx
    */

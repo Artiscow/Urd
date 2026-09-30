@@ -3011,6 +3011,278 @@ a.urd-gallery-tile {
 }
 
 /* Empty state: editor preview only, the same pattern as the image block */
+/* RIBBON (the ribbon block and the gallery's ribbon view). The band is a
+   column of stripes: a thin one above, the main one, a thin one below. Each
+   stripe clips, and its track holds the content twice, so translating by -50 %
+   of the track lands one period on where the previous one started: a loop
+   without a seam. The duration is measured (ribbon-model.js: the width of one
+   copy divided by the speed, or the item count times the dwell for the
+   ticker) and arrives as --urd-ribbon-ms. Everything that moves stands still
+   under reduced motion (the shared switch further down) and while the editing
+   chrome is on (.urd-ribbon-still from the block). */
+.urd-ribbon {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+  rotate: var(--urd-ribbon-tilt, 0deg);
+}
+
+.urd-ribbon-band {
+  padding: 0.25em 0;
+}
+
+.urd-ribbon-plain {
+  background: none;
+}
+
+.urd-ribbon-stripe {
+  display: flex;
+  align-items: center;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* The main stripe takes what is left; the thin ones keep their thickness. */
+.urd-ribbon-main {
+  flex: 1 1 auto;
+}
+
+.urd-ribbon-thin {
+  flex: 0 0 var(--urd-ribbon-thin, 8px);
+}
+
+/* A stripe of colour alone: the rule above or below the words. The colour is
+   the stripe's own (the block sets it), so currentColor paints it. */
+.urd-ribbon-solid {
+  background: currentColor;
+}
+
+/* On the edges: the thin stripes lie on the band's own top and bottom instead
+   of taking a share of its height, and the main stripe keeps clear of them. */
+.urd-ribbon-edges {
+  position: relative;
+  padding-block: 0;
+}
+
+.urd-ribbon-edges .urd-ribbon-thin {
+  position: absolute;
+  inset-inline: 0;
+  height: var(--urd-ribbon-thin, 8px);
+  z-index: 1;
+}
+
+.urd-ribbon-edges .urd-ribbon-above {
+  top: 0;
+}
+
+.urd-ribbon-edges .urd-ribbon-below {
+  bottom: 0;
+}
+
+.urd-ribbon-edges .urd-ribbon-main {
+  padding-block: var(--urd-ribbon-thin, 8px);
+}
+
+.urd-ribbon-main.urd-ribbon-solid {
+  background: none;
+}
+
+/* The soft edges: the words are not cut off with a hard line. The mask is
+   gated, since without it the band simply keeps its straight edges. */
+@supports (mask-image: linear-gradient(90deg, transparent, black)) {
+  .urd-ribbon-fade {
+    mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+  }
+}
+
+.urd-ribbon-track {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  width: max-content;
+  animation: urd-ribbon-roll var(--urd-ribbon-ms, 20000ms) linear infinite;
+}
+
+.urd-ribbon-right {
+  animation-direction: reverse;
+}
+
+@keyframes urd-ribbon-roll {
+  to { transform: translateX(-50%); }
+}
+
+/* Sway: the band drifts out and back instead of rolling on, for a few words
+   that should move without ever leaving. */
+.urd-ribbon-motion-sway .urd-ribbon-track {
+  animation-name: urd-ribbon-sway;
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+
+.urd-ribbon-motion-sway .urd-ribbon-right {
+  animation-direction: alternate-reverse;
+}
+
+@keyframes urd-ribbon-sway {
+  to { transform: translateX(-12%); }
+}
+
+/* Step: the same period, but in as many jumps as there are items (the timing
+   function is set by the block, and the duration is the dwell per item), so
+   each word stands still long enough to be read. */
+.urd-ribbon-motion-step .urd-ribbon-track {
+  animation-name: urd-ribbon-roll;
+}
+
+/* Still: the words stand as one centred row, and there is no copy to hide. */
+.urd-ribbon-motion-none .urd-ribbon-track {
+  animation: none;
+  width: 100%;
+  justify-content: center;
+}
+
+.urd-ribbon-motion-none .urd-ribbon-run {
+  padding-right: 0;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* The pointer and the keyboard both hold the band, so a word can be read. */
+.urd-ribbon-pausable:hover .urd-ribbon-track,
+.urd-ribbon-pausable:focus-within .urd-ribbon-track {
+  animation-play-state: paused;
+}
+
+/* Still: nothing to move, or reduced motion. The words then stand as a row
+   that is clipped at the edge, never hidden. */
+.urd-ribbon-still .urd-ribbon-track {
+  animation: none;
+}
+
+/* The editing chrome holds the band, so the words can be read and typed. The
+   rule sits on the body rather than on a class from the render: Clean view is
+   a class toggle with no re-render, and a decision made at render would stick.
+   Clean view, the published page and «Play the motion» (urd-motion-demo, six
+   seconds from the panel) all show the real motion. */
+body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-track {
+  animation: none;
+}
+
+/* The full page width (the content surface is left behind): the block measures
+   the section and sets the width and the offset, since vw would count the
+   scrollbar as well. */
+.urd-ribbon-wide {
+  max-width: none;
+}
+
+.urd-ribbon-run {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--urd-ribbon-gap, 40px);
+  padding-right: var(--urd-ribbon-gap, 40px);
+  white-space: nowrap;
+}
+
+.urd-ribbon-item {
+  flex: 0 0 auto;
+  line-height: 1.2;
+}
+
+.urd-ribbon-item:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+.urd-ribbon-sep {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  opacity: 0.55;
+}
+
+/* A thin stripe sets its own scale from its thickness, so the marks and any
+   words in it fit the rule they live in. */
+.urd-ribbon-thin {
+  font-size: calc(var(--urd-ribbon-thin, 8px) * 0.8);
+}
+
+.urd-ribbon-thin .urd-ribbon-run {
+  gap: calc(var(--urd-ribbon-thin, 8px) * 1.6);
+  padding-right: calc(var(--urd-ribbon-thin, 8px) * 1.6);
+}
+
+.urd-ribbon-thin .urd-ribbon-sep {
+  opacity: 0.85;
+}
+
+.urd-ribbon-caps .urd-ribbon-item {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.urd-ribbon-bold .urd-ribbon-item {
+  font-weight: 700;
+}
+
+/* Outlined words: the classic frieze look. The stroke takes the resolved text
+   colour from the block (--urd-ribbon-ink), never currentColor, which the
+   empty fill would have made transparent. Gated: without the stroke the words
+   would be invisible rather than outlined. */
+@supports (-webkit-text-stroke: 1px red) {
+  .urd-ribbon-outline .urd-ribbon-item {
+    -webkit-text-stroke: 1px var(--urd-ribbon-ink, currentColor);
+    color: transparent;
+  }
+}
+
+.urd-ribbon-size-sm { font-size: clamp(0.85rem, 1.4vw, 1rem); }
+.urd-ribbon-size-md { font-size: clamp(1.05rem, 2.2vw, 1.5rem); }
+.urd-ribbon-size-lg { font-size: clamp(1.4rem, 3.4vw, 2.4rem); }
+.urd-ribbon-size-xl { font-size: clamp(1.9rem, 5vw, 3.6rem); }
+
+.urd-ribbon-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 0.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+/* The gallery's ribbon view: the same motion with the tiles as the items. The
+   band's height is the tile height, and the images keep their aspect. */
+.urd-gallery-ribbon {
+  display: grid;
+  gap: var(--urd-gallery-gap, 12px);
+  width: 100%;
+}
+
+.urd-gallery-ribbon .urd-ribbon-stripe {
+  height: var(--urd-ribbon-h, 160px);
+}
+
+.urd-gallery-ribbon .urd-ribbon-run {
+  gap: var(--urd-gallery-gap, 12px);
+  padding-right: var(--urd-gallery-gap, 12px);
+}
+
+.urd-gallery-ribbon .urd-gallery-tile {
+  flex: 0 0 auto;
+  height: var(--urd-ribbon-h, 160px);
+  width: auto;
+}
+
+.urd-gallery-ribbon .urd-gallery-tile img {
+  height: 100%;
+  width: auto;
+  max-width: none;
+}
+
 .urd-gallery-empty {
   display: grid;
   place-items: center;
@@ -5595,7 +5867,8 @@ body.urd-marqueeing {
   .urd-bg-orbit-runner,
   .urd-bg-loop-runner,
   .urd-bg-rotate,
-  .urd-bg-pulse {
+  .urd-bg-pulse,
+  .urd-ribbon-track {
     animation: none;
   }
 }

@@ -28,6 +28,7 @@ import { faqBlock } from './blocks/faq.js';
 import { timelineBlock } from './blocks/timeline.js';
 import { quoteBlock } from './blocks/quote.js';
 import { statsBlock } from './blocks/stats.js';
+import { ribbonBlock } from './blocks/ribbon.js';
 import { tableBlock } from './blocks/table.js';
 import { shareBlock } from './blocks/share.js';
 import { countdownBlock } from './blocks/countdown.js';
@@ -95,6 +96,7 @@ function registerCore() {
   Urd.blocks.define('map', mapBlock);
   Urd.blocks.define('form', formBlock);
   Urd.blocks.define('calendar', calendarBlock);
+  Urd.blocks.define('ribbon', ribbonBlock);
   Urd.backgrounds.define('color', colorLayer);
   Urd.backgrounds.define('gradient', gradientLayer);
   Urd.backgrounds.define('glow', glowLayer);
@@ -251,6 +253,9 @@ function enablePreview(state, opts) {
     fn();
     requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, y)));
   };
+  /** The ribbon motion demo's timer: a new press restarts the six seconds. */
+  let motionDemoTimer = 0;
+
   window.addEventListener('message', (event) => {
     if (event.origin !== location.origin) return; // only the editor on the same site
     const msg = event.data;
@@ -283,6 +288,16 @@ function enablePreview(state, opts) {
       // in the preview and for this browser on the published page.
       clearAnnounceDismissal(state.site);
       if (opts.nav) renderNav(state.site, opts.nav);
+    } else if (msg?.type === 'urd-demo-motion') {
+      // The ribbons stand still while the editing chrome is on, so the words
+      // can be read and typed. This lets them roll for a few seconds, the way
+      // the entrance animations are played as a demo. Reduced motion is left
+      // alone: there the band never moves.
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.body.classList.add('urd-motion-demo');
+        clearTimeout(motionDemoTimer);
+        motionDemoTimer = setTimeout(() => document.body.classList.remove('urd-motion-demo'), 6000);
+      }
     } else if (msg?.type === 'urd-show-grid') {
       // The grid menu in the editor is open: show the grid in all sections.
       window.UrdPreviewEdit?.toggleGridOverlays(msg.visible, state.page, state.site);

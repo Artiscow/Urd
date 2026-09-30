@@ -209,6 +209,15 @@ function blockShapes(type, x, y, w, h, props) {
       rect(x + w * 0.35, y + h * 0.82, w * 0.3, 1.6, token('text', FALLBACK_TEXT), ' opacity="0.35" rx="0.8"'),
     ].join('');
   }
+  if (type === 'ribbon') {
+    // A band with words rolling in it: the strip, then three short bars.
+    return [
+      rect(x, y + h * 0.3, w, h * 0.4, token('accent', FALLBACK_ACCENT), ' opacity="0.85" rx="1"'),
+      rect(x + w * 0.08, y + h * 0.46, w * 0.18, 1.8, token('bg', FALLBACK_BG), ' opacity="0.9" rx="0.9"'),
+      rect(x + w * 0.34, y + h * 0.46, w * 0.24, 1.8, token('bg', FALLBACK_BG), ' opacity="0.9" rx="0.9"'),
+      rect(x + w * 0.66, y + h * 0.46, w * 0.2, 1.8, token('bg', FALLBACK_BG), ' opacity="0.9" rx="0.9"'),
+    ].join('');
+  }
   if (type === 'stats') {
     return [
       rect(x + w * 0.28, y + h * 0.15, w * 0.44, h * 0.42, token('accent', FALLBACK_ACCENT), ' opacity="0.85" rx="1"'),

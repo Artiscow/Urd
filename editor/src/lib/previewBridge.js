@@ -56,6 +56,7 @@
  *                  { type: 'urd-place-block', block }         (the palette: the engine finds a placement mid-viewport and reports back)
  *                  { type: 'urd-attention', sectionId, needed } (desktop drift in an overridden section: mark it live)
  *                  { type: 'urd-demo-anim', sectionId, blockId } (play the changed animation once; blockId null = the section)
+ *                  { type: 'urd-demo-motion' } (let the ribbons roll for a few seconds while editing)
  *                  { type: 'urd-open-block-config', blockId } (open a plugin block's settings from Properties)
  */
 
@@ -177,6 +178,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     /** Play an entrance animation as a demo (blockId null = the section). */
     sendDemoAnim(sectionId, blockId = null) {
       post({ type: 'urd-demo-anim', sectionId, blockId });
+    },
+    /** Play the ribbons' motion for a few seconds, which stands still while editing. */
+    sendDemoMotion() {
+      post({ type: 'urd-demo-motion' });
     },
     /** Open a plugin block's settings (the config panel) in the preview. */
     sendOpenConfig(blockId) {

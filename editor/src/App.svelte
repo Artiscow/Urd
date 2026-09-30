@@ -58,6 +58,27 @@
     'list': subSvg('<rect x="1" y="1" width="46" height="32" rx="3" stroke-opacity="0.35"/><rect x="6" y="6" width="7" height="7" rx="2" fill="currentColor" fill-opacity="0.3" stroke="none"/><rect x="6" y="17" width="7" height="7" rx="2" fill="currentColor" fill-opacity="0.3" stroke="none"/><path d="M17 9.5h24M17 20.5h18" stroke-opacity="0.7"/>'),
     'cover': subSvg('<rect x="1" y="1" width="46" height="32" rx="3" stroke-opacity="0.35"/><rect x="6" y="6" width="16" height="12" rx="2.5" fill="currentColor" fill-opacity="0.3" stroke="none"/><rect x="26" y="6" width="16" height="12" rx="2.5" fill="currentColor" fill-opacity="0.3" stroke="none"/><path d="M6 14h16M26 14h16" stroke-opacity="0.55" stroke-width="3"/><path d="M6 23h12M26 23h12" stroke-opacity="0.35"/>'),
   };
+  // The ribbon's separators, drawn the way the band draws them.
+  const sepSvg = (body) => `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">${body}</svg>`;
+  const RIBBON_SEP_ICONS = {
+    dot: sepSvg('<circle cx="12" cy="12" r="3"/>'),
+    dash: sepSvg('<rect x="3" y="10.6" width="18" height="2.8" rx="1.4"/>'),
+    slash: sepSvg('<path d="M15.5 3.5L8.5 20.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/>'),
+    star: sepSvg('<path d="M12 2.8l2.3 6.1 6.5.4-5 4.1 1.6 6.3-5.4-3.5-5.4 3.5 1.6-6.3-5-4.1 6.5-.4z"/>'),
+    none: sepSvg('<path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.35"/><path d="M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>'),
+    custom: sepSvg('<path d="M5 8h14M5 12h9M5 16h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>'),
+  };
+  const ribbonMainOptions = $derived([
+    ['text', ta('opt.ribbonStripe.text')], ['marks', ta('opt.ribbonStripe.marks')],
+    ['plain', ta('opt.ribbonStripe.plain')],
+  ]);
+  const ribbonStripeOptions = $derived([['none', ta('common.none')], ...ribbonMainOptions]);
+
+  const RIBBON_SEP_OPTIONS = $derived([
+    ['dot', ta('opt.ribbonSep.dot')], ['dash', ta('opt.ribbonSep.dash')], ['slash', ta('opt.ribbonSep.slash')],
+    ['star', ta('opt.ribbonSep.star')], ['none', ta('common.none')], ['custom', ta('opt.ribbonSep.custom')],
+  ]);
+
   /** The title typed for «new page as menu item» in the Nav panel. */
   let navNewPageTitle = $state('');
   function addPageAsNavItem() {
@@ -1237,6 +1258,29 @@
     });
   }
 
+  /* The ribbon block: the words are edited both here and directly in the band,
+   * which stands still while the editing chrome is on. */
+
+  function setRibbonItem(i, value) {
+    mutateBlock(`edit:${selectedBlock.blockId}:ribbon${i}`, (b) => { b.props.items[i] = value; });
+  }
+
+  function addRibbonItem() {
+    mutateBlock('ribbon-item', (b) => { (b.props.items ??= []).push(ta('seed.ribbonBlock.new')); });
+  }
+
+  function removeRibbonItem(i) {
+    mutateBlock('ribbon-item', (b) => { b.props.items.splice(i, 1); });
+  }
+
+  function moveRibbonItem(i, dir) {
+    const j = i + dir;
+    mutateBlock('ribbon-item', (b) => {
+      if (j < 0 || j >= b.props.items.length) return;
+      [b.props.items[i], b.props.items[j]] = [b.props.items[j], b.props.items[i]];
+    });
+  }
+
   /* The timeline block: the event list is edited here; the texts also directly in the preview. */
 
   function setTlItem(i, patch) {
@@ -1358,7 +1402,7 @@
   // bar's typography row).
 
   /** Names of the block types in the panel. */
-  const BLOCK_LABELS = { text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), gallery: ta('blocks.gallery'), faq: ta('blocks.faq'), collection: ta('blocks.collection'), timeline: ta('blocks.timeline'), quote: ta('blocks.quote'), stats: ta('blocks.stats'), table: ta('blocks.table'), share: ta('blocks.share'), countdown: ta('blocks.countdown'), audio: ta('blocks.audio'), product: ta('blocks.product'), cart: ta('blocks.cart'), checkout: ta('blocks.checkout'), map: ta('blocks.map'), form: ta('blocks.form'), calendar: ta('blocks.calendar') };
+  const BLOCK_LABELS = { text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), video: ta('blocks.video'), icon: ta('blocks.icon'), gallery: ta('blocks.gallery'), faq: ta('blocks.faq'), collection: ta('blocks.collection'), timeline: ta('blocks.timeline'), quote: ta('blocks.quote'), stats: ta('blocks.stats'), ribbon: ta('blocks.ribbon'), table: ta('blocks.table'), share: ta('blocks.share'), countdown: ta('blocks.countdown'), audio: ta('blocks.audio'), product: ta('blocks.product'), cart: ta('blocks.cart'), checkout: ta('blocks.checkout'), map: ta('blocks.map'), form: ta('blocks.form'), calendar: ta('blocks.calendar') };
   const SHAPE_KINDS = [
     ['line', ta('shape.line')], ['arrow', ta('shape.arrow')], ['circle', ta('shape.circle')],
     ['rect', ta('shape.rect')], ['triangle', ta('shape.triangle')],
@@ -5146,6 +5190,15 @@
       props: { value: '4800', prefix: '', suffix: '+', label: ta('seed.statsBlock.label'), countUp: true },
       w: 20, h: 90,
     },
+    ribbon: {
+      type: 'ribbon',
+      props: {
+        items: [ta('seed.ribbonBlock.a'), ta('seed.ribbonBlock.b'), ta('seed.ribbonBlock.c')],
+        sep: 'dot', speed: 60, direction: 'left', pauseOnHover: true,
+        variant: 'band', size: 'md', caps: false, tilt: 0, fade: true, gap: 40,
+      },
+      w: 88.89, h: 70,
+    },
     table: {
       type: 'table',
       props: {
@@ -5312,6 +5365,7 @@
       { label: ta('blocks.timeline'), act: 'block', kind: 'timeline' },
       { label: ta('blocks.quote'), act: 'block', kind: 'quote' },
       { label: ta('blocks.stats'), act: 'block', kind: 'stats' },
+    { label: ta('blocks.ribbon'), act: 'block', kind: 'ribbon' },
       { label: ta('blocks.table'), act: 'block', kind: 'table' },
       { label: ta('blocks.share'), act: 'block', kind: 'share' },
       { label: ta('blocks.countdown'), act: 'block', kind: 'countdown' },
@@ -7650,6 +7704,8 @@
                 onclick={() => addBlock('quote')}>{ta('blocks.quote')}</button>
               <button class="ghost" title={ta('tip.blocks.stats')}
                 onclick={() => addBlock('stats')}>{ta('blocks.stats')}</button>
+              <button class="ghost" title={ta('tip.blocks.ribbon')}
+                onclick={() => addBlock('ribbon')}>{ta('blocks.ribbon')}</button>
               <button class="ghost" title={ta('tip.blocks.table')}
                 onclick={() => addBlock('table')}>{ta('blocks.table')}</button>
               <button class="ghost" title={ta('tip.blocks.share')}
@@ -8919,6 +8975,42 @@
       <label>{ta('lbl.statLabel')}
         <input value={selectedBlock.props.label ?? ''}
           onchange={(e) => setBlockProp('label', e.target.value)} /></label>
+    {:else if selectedBlock.type === 'ribbon'}
+      <!-- The words are typed in the band as well; the list owns order and count -->
+      <p class="panel-strong">{ta('lbl.ribbonItems')}</p>
+      {#each selectedBlock.props.items ?? [] as item, i (i)}
+        <span class="nav-line">
+          <input value={item} title={ta('tip.ribbon.item')}
+            onchange={(e) => setRibbonItem(i, e.target.value)} />
+          <span class="row-tools">
+            <button class="ghost row-tool" title={ta('tip.moveUp')} onclick={() => moveRibbonItem(i, -1)}
+              disabled={i === 0}>{@html ICONS.up}</button>
+            <button class="ghost row-tool" title={ta('tip.moveDown')} onclick={() => moveRibbonItem(i, 1)}
+              disabled={i === (selectedBlock.props.items?.length ?? 0) - 1}>{@html ICONS.down}</button>
+            <button class="ghost row-tool" title={ta('tip.ribbon.remove')}
+              onclick={() => removeRibbonItem(i)}>{@html ICONS.cross}</button>
+          </span>
+        </span>
+      {/each}
+      <button class="ghost action" onclick={addRibbonItem}>{ta('ui.addRibbonItem')}</button>
+      <!-- The separator: a drawn mark, nothing, or the owner's own text -->
+      <div class="ctl-field">
+        <span class="mini-label">{ta('lbl.ribbonSep')}</span>
+        <div class="tile-grid cols-6" role="group" aria-label={ta('lbl.ribbonSep')}>
+          {#each RIBBON_SEP_OPTIONS as [v, text] (v)}
+            <button type="button" class="tile" class:on={(selectedBlock.props.sep ?? 'dot') === v}
+              aria-pressed={(selectedBlock.props.sep ?? 'dot') === v} title={text}
+              onclick={() => setBlockProp('sep', v)}>{@html RIBBON_SEP_ICONS[v]}</button>
+          {/each}
+        </div>
+      </div>
+      {#if selectedBlock.props.sep === 'custom'}
+        <label class="field-stack" title={ta('tip.ribbon.sepText')}>
+          <span class="mini-label">{ta('lbl.ribbonSepText')}</span>
+          <input class="field-filled" value={selectedBlock.props.sepText ?? ''}
+            onchange={(e) => setBlockProp('sepText', e.target.value)} />
+        </label>
+      {/if}
     {:else if selectedBlock.type === 'table'}
       <!-- The cells are typed directly on the canvas; the panel owns the grid's shape. -->
       <span class="toolbar-row">
@@ -9233,6 +9325,157 @@
         {ta('lbl.statCountUp')}
       </label>
       <hr class="gridmenu-divider" />
+    {:else if selectedBlock.type === 'ribbon'}
+      {@const motion = selectedBlock.props.motion ?? 'roll'}
+      <!-- Sorted by what the setting is about: the motion, the stripes, the
+           text, and the colours. Each group is its own card -->
+      <div class="mini-card">
+        <span class="mini-label">{ta('lbl.ribbonMotion')}</span>
+        <Dropdown filled value={motion}
+          options={[['roll', ta('opt.ribbonMotion.roll')], ['sway', ta('opt.ribbonMotion.sway')],
+            ['step', ta('opt.ribbonMotion.step')], ['none', ta('opt.ribbonMotion.none')]]}
+          onchange={(v) => setBlockProp('motion', v)} />
+        {#if motion !== 'none'}
+          <!-- The band stands still while editing, so the words can be read and typed -->
+          <button class="ghost action" title={ta('tip.ribbon.play')}
+            onclick={() => bridge?.sendDemoMotion()}>{ta('ui.ribbonPlay')}</button>
+          <Choice label={ta('lbl.ribbonDirection')} value={selectedBlock.props.direction ?? 'left'}
+            options={[['left', ta('opt.ribbonDir.left')], ['right', ta('opt.ribbonDir.right')]]}
+            onchange={(v) => setBlockProp('direction', v)} />
+          {#if motion === 'step'}
+            <!-- A ticker is timed per word, not per pixel -->
+            <div class="ctl-row" title={ta('tip.ribbon.dwell')}>
+              <span class="mini-label ctl-name">{ta('lbl.ribbonDwell')}</span>
+              <input type="range" min="0.5" max="10" step="0.5" value={selectedBlock.props.dwell ?? 2.5}
+                oninput={(e) => setBlockProp('dwell', e.target.valueAsNumber)} />
+              <span class="gridmenu-value">{selectedBlock.props.dwell ?? 2.5} s</span>
+            </div>
+          {:else}
+            <div class="ctl-row" title={ta('tip.ribbon.speed')}>
+              <span class="mini-label ctl-name">{ta('lbl.ribbonSpeed')}</span>
+              <input type="range" min="10" max="300" step="5" value={selectedBlock.props.speed ?? 60}
+                oninput={(e) => setBlockProp('speed', e.target.valueAsNumber)} />
+              <span class="gridmenu-value">{selectedBlock.props.speed ?? 60}</span>
+            </div>
+          {/if}
+          <label class="gridmenu-snap" title={ta('tip.ribbon.pause')}>
+            <input type="checkbox" checked={selectedBlock.props.pauseOnHover !== false}
+              onchange={(e) => setBlockProp('pauseOnHover', e.target.checked)} />
+            {ta('lbl.ribbonPause')}
+          </label>
+          <label class="gridmenu-snap" title={ta('tip.ribbon.fade')}>
+            <input type="checkbox" checked={selectedBlock.props.fade !== false}
+              onchange={(e) => setBlockProp('fade', e.target.checked)} />
+            {ta('lbl.ribbonFade')}
+          </label>
+        {/if}
+      </div>
+      <div class="mini-card">
+        <span class="mini-label">{ta('lbl.ribbonStripes')}</span>
+        <label class="field-stack" title={ta('tip.ribbon.above')}>
+          <span class="mini-label">{ta('lbl.ribbonAbove')}</span>
+          <Dropdown filled value={selectedBlock.props.above ?? 'none'} options={ribbonStripeOptions}
+            onchange={(v) => setBlockProp('above', v)} />
+        </label>
+        {#if (selectedBlock.props.above ?? 'none') !== 'none'}
+          <label title={ta('tip.ribbon.stripeColor')}>{ta('lbl.colour')}
+            <ColorPicker value={selectedBlock.props.aboveColor ?? 'accent-text'} tokens={themeSwatches()}
+              label={ta('tip.ribbon.stripeColor')}
+              onchange={(hex) => setBlockProp('aboveColor', hex)} /></label>
+        {/if}
+        <label class="field-stack" title={ta('tip.ribbon.main')}>
+          <span class="mini-label">{ta('lbl.ribbonMain')}</span>
+          <Dropdown filled value={selectedBlock.props.main ?? 'text'} options={ribbonMainOptions}
+            onchange={(v) => setBlockProp('main', v)} />
+        </label>
+        <label class="field-stack" title={ta('tip.ribbon.below')}>
+          <span class="mini-label">{ta('lbl.ribbonBelow')}</span>
+          <Dropdown filled value={selectedBlock.props.below ?? 'none'} options={ribbonStripeOptions}
+            onchange={(v) => setBlockProp('below', v)} />
+        </label>
+        {#if (selectedBlock.props.below ?? 'none') !== 'none'}
+          <label title={ta('tip.ribbon.stripeColor')}>{ta('lbl.colour')}
+            <ColorPicker value={selectedBlock.props.belowColor ?? 'accent-text'} tokens={themeSwatches()}
+              label={ta('tip.ribbon.stripeColor')}
+              onchange={(hex) => setBlockProp('belowColor', hex)} /></label>
+        {/if}
+        {#if (selectedBlock.props.above ?? 'none') !== 'none' || (selectedBlock.props.below ?? 'none') !== 'none'}
+          <Choice label={ta('lbl.ribbonStripePlace')} title={ta('tip.ribbon.stripePlace')}
+            value={selectedBlock.props.stripePlace ?? 'stack'}
+            options={[['stack', ta('opt.ribbonPlace.stack')], ['edge', ta('opt.ribbonPlace.edge')]]}
+            onchange={(v) => setBlockProp('stripePlace', v)} />
+          <div class="ctl-row" title={ta('tip.ribbon.thickness')}>
+            <span class="mini-label ctl-name">{ta('lbl.ribbonThickness')}</span>
+            <input type="range" min="2" max="40" step="1" value={selectedBlock.props.thickness ?? 8}
+              oninput={(e) => setBlockProp('thickness', e.target.valueAsNumber)} />
+            <span class="gridmenu-value">{selectedBlock.props.thickness ?? 8} px</span>
+          </div>
+        {/if}
+      </div>
+      <div class="mini-card">
+        <span class="mini-label">{ta('lbl.ribbonShape')}</span>
+        <Choice label={ta('lbl.ribbonWidth')} value={selectedBlock.props.width ?? 'content'}
+          options={[['content', ta('opt.ribbonWidth.content')], ['page', ta('opt.ribbonWidth.page')]]}
+          onchange={(v) => setBlockProp('width', v)} />
+        <Choice label={ta('lbl.ribbonVariant')} value={selectedBlock.props.variant ?? 'band'}
+          options={[['band', ta('opt.ribbonVariant.band')], ['plain', ta('opt.ribbonVariant.plain')]]}
+          onchange={(v) => setBlockProp('variant', v)} />
+        <div class="ctl-row" title={ta('tip.ribbon.tilt')}>
+          <span class="mini-label ctl-name">{ta('lbl.ribbonTilt')}</span>
+          <input type="range" min="-10" max="10" step="1" value={selectedBlock.props.tilt ?? 0}
+            oninput={(e) => setBlockProp('tilt', e.target.valueAsNumber)} />
+          <span class="gridmenu-value">{selectedBlock.props.tilt ?? 0}&deg;</span>
+        </div>
+      </div>
+      <div class="mini-card">
+        <span class="mini-label">{ta('lbl.ribbonText')}</span>
+        <label class="field-stack">
+          <span class="mini-label">{ta('lbl.size')}</span>
+          <Dropdown filled value={selectedBlock.props.size ?? 'md'}
+            options={[['sm', ta('opt.size.sm')], ['md', ta('opt.size.md')], ['lg', ta('opt.size.lg')], ['xl', ta('opt.size.xl')]]}
+            onchange={(v) => setBlockProp('size', v)} />
+        </label>
+        <label class="gridmenu-snap" title={ta('tip.ribbon.caps')}>
+          <input type="checkbox" checked={selectedBlock.props.caps === true}
+            onchange={(e) => setBlockProp('caps', e.target.checked)} />
+          {ta('lbl.ribbonCaps')}
+        </label>
+        <label class="gridmenu-snap" title={ta('tip.ribbon.bold')}>
+          <input type="checkbox" checked={selectedBlock.props.weight === 'bold'}
+            onchange={(e) => setBlockProp('weight', e.target.checked ? 'bold' : 'normal')} />
+          {ta('lbl.ribbonBold')}
+        </label>
+        <label class="gridmenu-snap" title={ta('tip.ribbon.outline')}>
+          <input type="checkbox" checked={selectedBlock.props.outline === true}
+            onchange={(e) => setBlockProp('outline', e.target.checked)} />
+          {ta('lbl.ribbonOutline')}
+        </label>
+        <div class="ctl-row" title={ta('tip.ribbon.gap')}>
+          <span class="mini-label ctl-name">{ta('lbl.ribbonGap')}</span>
+          <input type="range" min="8" max="120" step="2" value={selectedBlock.props.gap ?? 40}
+            oninput={(e) => setBlockProp('gap', e.target.valueAsNumber)} />
+          <span class="gridmenu-value">{selectedBlock.props.gap ?? 40} px</span>
+        </div>
+      </div>
+      <div class="mini-card">
+        <span class="mini-label">{ta('group.navColours')}</span>
+        <div class="swatch-row">
+          {#if (selectedBlock.props.variant ?? 'band') !== 'plain'}
+            <div class="swatch-cell" title={ta('tip.ribbon.bg')}>
+              <ColorPicker value={selectedBlock.props.bg ?? 'accent'} tokens={themeSwatches()}
+                label={ta('tip.ribbon.bg')} onchange={(hex) => setBlockProp('bg', hex)} />
+              <span class="mini-label">{ta('lbl.background')}</span>
+            </div>
+          {/if}
+          <div class="swatch-cell" title={ta('tip.ribbon.color')}>
+            <ColorPicker value={selectedBlock.props.color ?? ((selectedBlock.props.variant ?? 'band') === 'plain' ? 'text' : 'accent-text')}
+              tokens={themeSwatches()} label={ta('tip.ribbon.color')}
+              onchange={(hex) => setBlockProp('color', hex)} />
+            <span class="mini-label">{ta('lbl.textColor')}</span>
+          </div>
+        </div>
+      </div>
+      <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'table'}
       <label>{ta('lbl.tableLines')}
         <Dropdown value={selectedBlock.props.lines ?? 'rows'}
@@ -9339,7 +9582,7 @@
     {:else if selectedBlock.type === 'gallery'}
       <label>{ta('lbl.view')}
         <Dropdown value={selectedBlock.props.view ?? 'grid'}
-          options={[['grid', ta('opt.galleryView.grid')], ['carousel', ta('opt.galleryView.carousel')], ['slides', ta('opt.galleryView.slides')]]}
+          options={[['grid', ta('opt.galleryView.grid')], ['carousel', ta('opt.galleryView.carousel')], ['slides', ta('opt.galleryView.slides')], ['ribbon', ta('opt.galleryView.ribbon')]]}
           onchange={(v) => setBlockProp('view', v)} /></label>
       {#if (selectedBlock.props.view ?? 'grid') === 'grid'}
         <label>{ta('lbl.columns')}
@@ -9349,6 +9592,41 @@
           <span class="gridmenu-value">{selectedBlock.props.gap ?? 12} px</span></label>
         <input type="range" min="0" max="32" step="2" value={selectedBlock.props.gap ?? 12}
           oninput={(e) => setBlockProp('gap', Number(e.target.value))} />
+      {/if}
+      {#if selectedBlock.props.view === 'ribbon'}
+        <!-- The band: one row, or a second one running the other way -->
+        <Choice label={ta('lbl.ribbonRows')} value={String(selectedBlock.props.rows ?? 1)}
+          options={[['1', ta('opt.ribbonRows.one')], ['2', ta('opt.ribbonRows.two')]]}
+          onchange={(v) => setBlockProp('rows', Number(v))} />
+        <Choice label={ta('lbl.ribbonDirection')} value={selectedBlock.props.direction ?? 'left'}
+          options={[['left', ta('opt.ribbonDir.left')], ['right', ta('opt.ribbonDir.right')]]}
+          onchange={(v) => setBlockProp('direction', v)} />
+        <div class="ctl-row" title={ta('tip.ribbon.speed')}>
+          <span class="mini-label ctl-name">{ta('lbl.ribbonSpeed')}</span>
+          <input type="range" min="10" max="300" step="5" value={selectedBlock.props.speed ?? 60}
+            oninput={(e) => setBlockProp('speed', e.target.valueAsNumber)} />
+          <span class="gridmenu-value">{selectedBlock.props.speed ?? 60}</span>
+        </div>
+        <div class="ctl-row" title={ta('tip.ribbon.bandHeight')}>
+          <span class="mini-label ctl-name">{ta('lbl.ribbonHeight')}</span>
+          <input type="range" min="80" max="400" step="10" value={selectedBlock.props.bandHeight ?? 160}
+            oninput={(e) => setBlockProp('bandHeight', e.target.valueAsNumber)} />
+          <span class="gridmenu-value">{selectedBlock.props.bandHeight ?? 160} px</span>
+        </div>
+        <label>{ta('lbl.imageGap')}
+          <span class="gridmenu-value">{selectedBlock.props.gap ?? 12} px</span></label>
+        <input type="range" min="0" max="32" step="2" value={selectedBlock.props.gap ?? 12}
+          oninput={(e) => setBlockProp('gap', Number(e.target.value))} />
+        <label class="gridmenu-snap" title={ta('tip.ribbon.pause')}>
+          <input type="checkbox" checked={selectedBlock.props.pauseOnHover !== false}
+            onchange={(e) => setBlockProp('pauseOnHover', e.target.checked)} />
+          {ta('lbl.ribbonPause')}
+        </label>
+        <label class="gridmenu-snap" title={ta('tip.ribbon.fade')}>
+          <input type="checkbox" checked={selectedBlock.props.fade !== false}
+            onchange={(e) => setBlockProp('fade', e.target.checked)} />
+          {ta('lbl.ribbonFade')}
+        </label>
       {/if}
       {#if selectedBlock.props.view === 'slides'}
         <label>{ta('lbl.secondsPerImage')}
@@ -11150,6 +11428,7 @@
   .tile-grid { display: grid; gap: 6px; }
   .tile-grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .tile-grid.cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .tile-grid.cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .tile {
     display: flex; flex-direction: column; align-items: center; gap: 5px;
     padding: 8px 2px 6px; min-width: 0;

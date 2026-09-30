@@ -551,7 +551,7 @@ const BLOCK_KINDS = [
   ['text', ta('blocks.text')], ['text-box', ta('ui.textBox')], ['button', ta('blocks.button')],
   ['image', ta('blocks.image')], ['video', ta('blocks.video')], ['icon', ta('blocks.icon')], ['map', ta('blocks.map')], ['form', ta('blocks.form')], ['calendar', ta('blocks.calendar')],
   ['collection', ta('blocks.collection')], ['gallery', ta('blocks.gallery')], ['faq', ta('blocks.faq')],
-  ['timeline', ta('blocks.timeline')], ['quote', ta('blocks.quote')], ['stats', ta('blocks.stats')],
+  ['timeline', ta('blocks.timeline')], ['quote', ta('blocks.quote')], ['stats', ta('blocks.stats')], ['ribbon', ta('blocks.ribbon')],
   ['table', ta('blocks.table')], ['share', ta('blocks.share')], ['countdown', ta('blocks.countdown')],
   ['audio', ta('blocks.audio')], ['product', ta('blocks.product')], ['cart', ta('blocks.cart')],
   ['checkout', ta('blocks.checkout')],

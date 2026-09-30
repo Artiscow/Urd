@@ -4,6 +4,29 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.13.7): the ribbon
+
+- [ ] Insert Bånd from Blocks: the words stand still on the canvas and can be typed straight in the band; the list in Properties follows
+- [ ] Press «Spill av bevegelsen»: the band rolls for six seconds and stops again
+- [ ] Clean view: the band rolls at once, without the block being touched, and stands still again on the way back
+- [ ] The published page: the band rolls from the first paint
+- [ ] The four motions: Ruller goes on without a visible seam, Vugger drifts out and back, Hopper moves one word at a time with a readable pause, Står stille centres the words with no copy
+- [ ] Tid per ord with the ticker: the jump follows the seconds set
+- [ ] Hold the pointer over a rolling band: it stops, and it starts again when the pointer leaves. Tab into it: the same
+- [ ] Hele sidebredden: the band reaches both window edges, also after the window is resized, and no horizontal scrollbar appears
+- [ ] Innholdsbredde: the band lines up with the rest of the content
+- [ ] Stripe over and Stripe under, each of them as Ordene, Bare skilletegn and Bare farge, with their own colours
+- [ ] Kantstriper against Over og under: on the edges the main stripe keeps the full height and the words stay clear of the rules
+- [ ] Tjukkelse: the thin stripes and the text in them follow the value
+- [ ] Hovedstripe as Bare farge with stripes above and below: an empty band with two rules, no words
+- [ ] Konturskrift: the words are drawn as an outline in the text colour, not invisible, and Halvfet and Store bokstaver work with it
+- [ ] Helling, avstand and the four sizes on a band that is rolling
+- [ ] A system with reduced motion on: the band stands still with every word readable, in Clean view too
+- [ ] Gallery with view Bånd: the images roll, a tile opens the lightbox, and hovering stops the band
+- [ ] The gallery band with two rows: the second runs the other way, and the band height applies to both
+- [ ] Mobile: the band and the gallery band behave, and Skjul på mobil takes them away
+- [ ] The block on a published page in a light and a dark theme
+
 ### Testrunde-batch (0.7.13.6): the link launcher
 
 - [ ] Nav panel, Tools: switch Shortcuts on and add a shortcut with a name and an address. The button stands in the menu beside the cart, and the panel opens under it with the tile in it
