@@ -495,7 +495,12 @@ export function renderNav(site, host) {
   burger.setAttribute('aria-controls', 'urd-nav-menu');
   burger.setAttribute('aria-label', t('nav.menu'));
   burger.innerHTML = BURGER;
-  tools.appendChild(burger);
+  // The burger ends the row, except when the cluster stands at the start,
+  // where it takes the outer edge so it sits leftmost on mobile.
+  if (site.nav.style?.tools?.side === 'start' && !isSide) tools.prepend(burger);
+  else tools.appendChild(burger);
+  // A cluster with nothing but the burger takes no room on desktop.
+  tools.classList.toggle('urd-nav-tools-none', !Object.values(toolEls).some(Boolean));
 
   const list = document.createElement('ul');
   list.className = 'urd-nav-list';
@@ -528,6 +533,9 @@ export function renderNav(site, host) {
     burger.setAttribute('aria-expanded', String(open));
     // Every submenu starts open in the expanded mode.
     if (open && expandedSubs()) for (const entry of subs) setOpen(entry, true);
+    // The top-zone surface follows the panel: a bar that is clear at the top
+    // draws its surface while the panel hangs from it.
+    navScrollRefresh?.();
   };
   if (sheet) sheet.dialog.addEventListener('close', () => burger.setAttribute('aria-expanded', 'false'), { signal });
   burger.addEventListener('click', () => {
@@ -636,6 +644,13 @@ export function renderNav(site, host) {
     const entry = { li, button };
     subs.push(entry);
 
+    // In the column with every submenu open and no arrow the opener does
+    // nothing: it leaves the tab order and reads as a heading, not as an
+    // expanded button that cannot collapse.
+    if (columnFixedOpen && !isMobileState()) {
+      button.tabIndex = -1;
+      button.setAttribute('aria-disabled', 'true');
+    }
     button.addEventListener('click', () => {
       if (columnFixedOpen && !isMobileState()) return;
       const open = !li.classList.contains('open');
@@ -728,7 +743,11 @@ export function renderNav(site, host) {
     if (sheet?.dialog.open) return;
     const announceH = announceEl?.offsetHeight ?? 0;
     const scrolledAway = announceScrolls ? announceH : 0;
-    const h = isSide ? 0 : nav.offsetTop + nav.offsetHeight - scrolledAway;
+    // A strip fixed across the whole page: the column starts and the body
+    // is padded below it (base.css reads the variable on the root), and it
+    // is the column's only top clearance.
+    const pageH = announceEl?.classList.contains('urd-announce-page') ? announceH : 0;
+    const h = isSide ? pageH : nav.offsetTop + nav.offsetHeight - scrolledAway;
     document.documentElement.style.setProperty('--urd-nav-h', `${h}px`);
     // A render that starts mid-page measures the menu already shrunk; that
     // first measurement stands until an unshrunk one arrives.
@@ -737,12 +756,10 @@ export function renderNav(site, host) {
     host.style.setProperty('--urd-announce-h', `${announceH}px`);
     // The two heights on the root as well, for a background that keeps its
     // pictures out from under the strip or the menu: the strip's own, and
-    // the menu's own below it.
-    document.documentElement.style.setProperty('--urd-announce-h', `${announceH}px`);
+    // the menu's own below it. A strip inside the column or beside the
+    // content stands over no section, so the root reads it as nothing.
+    document.documentElement.style.setProperty('--urd-announce-h', `${isSide ? pageH : announceH}px`);
     document.documentElement.style.setProperty('--urd-nav-own-h', `${isSide ? 0 : Math.max(0, nav.offsetTop + nav.offsetHeight - announceH)}px`);
-    // A strip fixed across the whole page: the column starts and the body
-    // is padded below it (base.css reads the variable on the root).
-    const pageH = announceEl?.classList.contains('urd-announce-page') ? announceH : 0;
     document.documentElement.style.setProperty('--urd-announce-page-h', `${pageH}px`);
   }
 
@@ -766,7 +783,10 @@ export function renderNav(site, host) {
         foldNeeds = nav.scrollWidth;
         nav.classList.add('urd-nav-mobile');
       } else {
+        // The bar is back: the submenus the expanded mobile mode opened
+        // close with the panel.
         setMobileOpen(false);
+        closeAll();
       }
     }
   };
@@ -850,10 +870,11 @@ export function renderNav(site, host) {
   }, { signal });
 
   // A click outside the nav closes the submenus, the launcher and the
-  // mobile panel.
+  // mobile panel. Submenus that stand open by choice (the expanded column)
+  // keep standing.
   document.addEventListener('pointerdown', (event) => {
     if (nav.contains(event.target)) return;
-    closeAll();
+    if (!expandedSubs()) closeAll();
     launcherWrap?.close();
     setMobileOpen(false);
   }, { signal });
@@ -904,12 +925,19 @@ function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withC
   }, { signal });
   // Touch scrolling stays inside the sheet: the page behind ignores the
   // overflow lock on some touch browsers, so a touch move outside the
-  // sheet's own scroll area is cancelled while the sheet is open.
-  document.addEventListener('touchmove', (event) => {
-    if (!dialog.open) return;
-    if (event.target instanceof Element && event.target.closest('.urd-nav-sheet-body')) return;
-    event.preventDefault();
-  }, { passive: false, signal });
+  // sheet's own scroll area is cancelled while the sheet is open. The
+  // listener lives only while the sheet is open (it must be non-passive,
+  // which costs every scroll it is attached for), and a dialog opened on
+  // top of the sheet, the cart drawer, scrolls on its own.
+  let touchLock = null;
+  const lockTouch = () => {
+    touchLock = new AbortController();
+    document.addEventListener('touchmove', (event) => {
+      if (event.target instanceof Element && event.target.closest('.urd-nav-sheet-body, dialog:not(.urd-nav-sheet)')) return;
+      event.preventDefault();
+    }, { passive: false, signal: touchLock.signal });
+  };
+  signal.addEventListener('abort', () => touchLock?.abort());
   const toolSelector = [withCart && '.urd-nav-cart', withTheme && '.urd-nav-theme'].filter(Boolean).join(', ');
   const toolButtons = () => (toolSelector ? [...tools.querySelectorAll(toolSelector)] : []);
   let logoNext = null;
@@ -917,13 +945,20 @@ function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withC
   // strip is read through a getter: the cross inside the sheet removes it,
   // and a removed strip must not be put back.
   let announceHome = null;
+  // Each tool's place in the cluster, so it returns to it. Restored last
+  // to first: a tool's next sibling may be another moved tool, which is
+  // back in place by then.
+  let toolHomes = [];
   dialog.addEventListener('close', () => {
+    touchLock?.abort();
+    touchLock = null;
     nav.insertBefore(list, tools);
     if (logo) nav.insertBefore(logo, logoNext);
     const strip = announce?.();
     if (strip && announceHome) announceHome.parent.insertBefore(strip, announceHome.next);
     announceHome = null;
-    for (const btn of [...foot.children]) tools.insertBefore(btn, burger);
+    for (const { btn, next } of toolHomes.reverse()) tools.insertBefore(btn, next?.parentNode === tools ? next : burger);
+    toolHomes = [];
   }, { signal });
   nav.appendChild(dialog);
   const show = () => {
@@ -939,7 +974,11 @@ function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withC
       dialog.prepend(strip);
     }
     body.appendChild(list);
-    for (const btn of toolButtons()) foot.appendChild(btn);
+    for (const btn of toolButtons()) {
+      toolHomes.push({ btn, next: btn.nextSibling });
+      foot.appendChild(btn);
+    }
+    lockTouch();
     dialog.showModal();
   };
   return { dialog, show };
@@ -1035,8 +1074,11 @@ function buildLauncher(model, signal) {
   btn.setAttribute('aria-label', name);
   // The owner's own mark comes first, then a chosen icon, and the nine dots
   // are what stands there until one of them is set.
-  const drawn = model.image ? '' : (iconSvg(model.icon) || GRID);
-  btn.innerHTML = `${drawn}<span class="urd-nav-tool-label">${name}</span>`;
+  btn.innerHTML = model.image ? '' : (iconSvg(model.icon) || GRID);
+  const label = document.createElement('span');
+  label.className = 'urd-nav-tool-label';
+  label.textContent = name;
+  btn.appendChild(label);
   if (model.image) {
     const img = document.createElement('img');
     img.className = 'urd-nav-launcher-btn-img';
@@ -1083,8 +1125,13 @@ function buildLauncher(model, signal) {
     btn.setAttribute('aria-expanded', String(open));
   }, { signal });
   // Tabbing out of the grid closes it - focus must never leave an open
-  // layer behind.
+  // layer behind. A press on the grid's own padding or heading moves focus
+  // to the body without leaving the grid, so a press inside is let through.
+  let pressing = false;
+  wrap.addEventListener('pointerdown', () => { pressing = true; }, { signal });
+  document.addEventListener('pointerup', () => { pressing = false; }, { signal });
   wrap.addEventListener('focusout', (event) => {
+    if (pressing) return;
     if (!wrap.contains(event.relatedTarget)) close();
   }, { signal });
   return { el: wrap, btn, isOpen: () => wrap.classList.contains('open'), close };

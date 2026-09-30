@@ -95,18 +95,27 @@
     onpick?.({ icon: '', image: '' });
   }
 
+  // The OS file chooser takes the window's focus while it is open, and the
+  // picker must outlive it: the input lives outside the menu, and the blur
+  // that the chooser causes is not the one that closes the picker.
+  let choosing = $state(false);
   function chooseFile(event) {
+    choosing = false;
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
     onfile?.(file);
+  }
+  function openChooser() {
+    choosing = true;
+    fileEl.click();
   }
 
   // A click in the preview iframe never reaches this document, so a window
   // blur closes the picker in both branches.
   $effect(() => {
     if (!open) return;
-    const onBlur = () => closePicker();
+    const onBlur = () => { if (!choosing) closePicker(); };
     window.addEventListener('blur', onBlur);
     if (native) return () => window.removeEventListener('blur', onBlur);
     const onDown = (e) => {
@@ -149,6 +158,7 @@
       {@render body()}
     </div>
   {/if}
+  <input type="file" accept="image/*" hidden bind:this={fileEl} onchange={chooseFile} oncancel={() => (choosing = false)} />
 </span>
 
 {#snippet body()}
@@ -177,7 +187,7 @@
   {:else}
     <div class="mp-scroll">
       <div class="mp-grid mp-grid-img">
-        <button type="button" class="mp-cell mp-upload" onclick={() => fileEl.click()}>
+        <button type="button" class="mp-cell mp-upload" onclick={openChooser}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
           <span>{ta('mp.upload')}</span>
         </button>
@@ -188,7 +198,6 @@
       </div>
       <p class="mp-hint">{ta('mp.imagesHint')}</p>
     </div>
-    <input type="file" accept="image/*" hidden bind:this={fileEl} onchange={chooseFile} />
   {/if}
 {/snippet}
 

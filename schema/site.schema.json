@@ -168,7 +168,7 @@
         "launcher": {
           "type": "object",
           "additionalProperties": false,
-          "description": "Link launcher in the tools cluster (additive from v0.7): a button that opens the shortcuts as a panel, and the same shortcuts as a section inside the mobile menu. Drawn without show, or without a usable link.",
+          "description": "Link launcher in the tools cluster (additive from v0.7): a button that opens the shortcuts as a panel, and the same shortcuts as a section inside the mobile menu. Drawn as soon as show is true; a shortcut whose target is not a usable link is drawn dimmed and goes nowhere.",
           "properties": {
             "show": { "type": "boolean", "default": false, "description": "The launcher button stands in the tool cluster, like the cart's own choice" },
             "view": { "enum": ["grid", "list", "cover"], "default": "grid", "description": "The design on the desktop: grid = tiles in three columns, list = one row per shortcut, cover = image cards in two columns" },
@@ -180,14 +180,14 @@
             "image": { "type": "string", "description": "The owner's own mark on the button as a path in media/ (data URL in the draft); wins over icon" },
             "links": {
               "type": "array",
-              "description": "The shortcuts. One needs a label and a target; unsafe values are dropped.",
+              "description": "The shortcuts. Every row is drawn; a row whose target is unsafe or empty is dimmed and goes nowhere.",
               "items": {
                 "type": "object",
                 "additionalProperties": false,
                 "required": ["label"],
                 "properties": {
-                  "label": { "type": "string", "minLength": 1, "description": "The text on the tile" },
-                  "href": { "type": "string", "description": "A full address or a site path; unsafe values are dropped" },
+                  "label": { "type": "string", "description": "The text on the tile; empty shows the mark alone" },
+                  "href": { "type": "string", "description": "A full address or a site path; an unsafe or empty value leaves the tile dimmed" },
                   "icon": { "type": "string", "description": "An id from the icon library (icons.js); an unknown id leaves the tile with its label" },
                   "image": { "type": "string", "description": "Own image or logo as a path in media/ (data URL in the draft); wins over icon" }
                 }

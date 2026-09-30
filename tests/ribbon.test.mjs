@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
 const {
-  ribbonItems, normalizeSpeed, ribbonDuration, separatorMark, ribbonRows,
+  ribbonItems, normalizeSpeed, ribbonDuration, ribbonPeriods, separatorMark, ribbonRows,
   clampTilt, ribbonSize, canRoll, ribbonMotion, ribbonWidth, ribbonMoves,
   mainMode, stripeMode, stripePlace, clampThickness, normalizeDwell, ribbonStepDuration,
   RIBBON_MARKS, RIBBON_SEPARATORS, RIBBON_SIZES, RIBBON_SPEED, RIBBON_MOTIONS, RIBBON_WIDTHS,
@@ -40,7 +40,7 @@ test('ribbonDuration: the width divided by the speed, with a floor', () => {
   // 1200 px at 60 px per second is twenty seconds for one period.
   assert.equal(ribbonDuration(1200, 60), 20);
   assert.equal(ribbonDuration(600, 300), 4);
-  // A short band would otherwise loop several times a second.
+  // The floor keeps a short band from looping several times a second.
   assert.equal(ribbonDuration(60, 300), 4);
   assert.equal(ribbonDuration(0, 60), 4);
   assert.equal(ribbonDuration(-100, 60), 4);
@@ -153,6 +153,18 @@ test('the ticker is timed per word, not per pixel', () => {
   assert.equal(ribbonStepDuration(0, 2), 2);
   assert.equal(ribbonStepDuration('tre', 2), 2);
   assert.equal(ribbonStepDuration(4, undefined), 4 * RIBBON_DWELL.dflt);
+});
+
+test('ribbonPeriods: one period reaches across the band', () => {
+  // A copy wider than the band is one period; a narrower one is repeated.
+  assert.equal(ribbonPeriods(1400, 1280), 1);
+  assert.equal(ribbonPeriods(307, 1280), 5);
+  assert.equal(ribbonPeriods(640, 1280), 2);
+  // Nothing measured yet, or junk: one copy, never zero or infinity.
+  assert.equal(ribbonPeriods(0, 1280), 1);
+  assert.equal(ribbonPeriods(300, 0), 1);
+  assert.equal(ribbonPeriods('bred', 1280), 1);
+  assert.equal(ribbonPeriods(1, 100000), 64);
 });
 
 test('stripePlace: stacked unless the edges are asked for', () => {

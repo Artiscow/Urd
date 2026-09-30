@@ -17,7 +17,8 @@
 import { applyImageStyle } from './image.js';
 import { growSectionTo } from '../render.js';
 import { stepIndex, canAutoplay, normalizeInterval, gridColumns } from '../gallery-model.js';
-import { ribbonDuration, ribbonRows, canRoll } from '../ribbon-model.js';
+import { ribbonDuration, ribbonRows, ribbonPeriods, canRoll } from '../ribbon-model.js';
+import { syncTrackCopies } from './ribbon.js';
 import { isSafeHref } from '../nav-model.js';
 // ta/adminLocaleReady: only called in preview (after the admin dictionary is loaded), never at module level.
 import { t, ta, adminLocaleReady } from '../i18n.js';
@@ -213,10 +214,11 @@ function renderSlides(host, props, ctx, blockEl) {
 /**
  * The ribbon view: the tiles roll past in a band, one row or two running
  * against each other. The motion is the ribbon block's (ribbon-model.js and
- * the .urd-ribbon rules in base.css): each row's track holds the tiles twice
- * and is translated by half its width, so the loop has no seam. Still under
- * reduced motion and while the editing chrome is on, and the pointer or the
- * keyboard holds it, so a tile can be clicked into the lightbox.
+ * the .urd-ribbon rules in base.css): each row's track holds the tiles in two
+ * periods, each as wide as the band needs (syncTrackCopies), and is
+ * translated by half its width, so the loop has no seam. Still under reduced
+ * motion and while the editing chrome is on, and the pointer or the keyboard
+ * holds it, so a tile can be clicked into the lightbox.
  */
 function renderRibbon(host, props, ctx, blockEl) {
   host.classList.add('urd-gallery-ribbon');
@@ -238,17 +240,16 @@ function renderRibbon(host, props, ctx, blockEl) {
     if (rightwards) track.classList.add('urd-ribbon-right');
     const run = el2('div', 'urd-ribbon-run');
     props.images.forEach((_, i) => run.appendChild(makeTile(props, i, ctx, blockEl)));
-    const copy = el2('div', 'urd-ribbon-run');
-    copy.setAttribute('aria-hidden', 'true');
-    props.images.forEach((_, i) => copy.appendChild(makeTile(props, i, ctx, blockEl)));
-    track.append(run, copy);
+    track.appendChild(run);
     band.appendChild(track);
     host.appendChild(band);
 
     const measure = () => {
       const width = run.scrollWidth;
       if (!width) return;
-      track.style.setProperty('--urd-ribbon-ms', `${ribbonDuration(width, props.speed) * 1000}ms`);
+      const periods = ribbonPeriods(width, band.clientWidth);
+      syncTrackCopies(track, run, periods);
+      track.style.setProperty('--urd-ribbon-ms', `${ribbonDuration(width * periods, props.speed) * 1000}ms`);
     };
     measure();
     if (typeof ResizeObserver === 'function') {
@@ -260,6 +261,7 @@ function renderRibbon(host, props, ctx, blockEl) {
         measure();
       });
       ro.observe(run);
+      ro.observe(band);
     }
   }
 }

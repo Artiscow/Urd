@@ -136,17 +136,17 @@ export function clampLauncherMax(value) {
 /**
  * The link launcher (nav.launcher, additive since v0.7): the shortcuts behind
  * the launcher button in the tool cluster, and the same shortcuts as a
- * section inside the mobile menu. null unless the button is shown and at
- * least one row is usable: a row counts with a label and a target that
- * passes the menu links' guard, so a half-filled row in the editor never
- * reaches the panel. A row's mark is an uploaded image or an id from the
+ * section inside the mobile menu. null unless the button is shown; every
+ * row is drawn, and a row whose target fails the menu links' guard gets '#'
+ * and the missing flag, so the tile stands and goes nowhere, the way an
+ * unknown page does in the menu. A row's mark is an uploaded image or an id from the
  * icon library; nav.js draws it, and neither leaves the tile with its label
  * alone. `view` is the design on the desktop and `mobileView` the one in
  * the mobile menu (omitted = the same design as the desktop). `title` is
  * empty when the heading is off, and the custom heading otherwise; the
  * translated default word is nav.js's business, not this module's.
  * @param {object} [launcher] site.nav.launcher
- * @returns {{links: Array<object>, view: string, mobileView: string, title: string, titleShow: boolean, icon: string, image: string} | null}
+ * @returns {{links: Array<object>, view: string, mobileView: string, mobileMax: number, title: string, titleShow: boolean, icon: string, image: string} | null}
  */
 export function launcherModel(launcher) {
   if (launcher?.show !== true) return null;
@@ -585,6 +585,7 @@ export function navSurface(style = {}) {
     out.bg = veil(style);
   }
   if (style.blur === false) out.blur = false;
+  else if (style.blur === true) out.blur = true;
   if (style.textColor) out.color = resolveColor(style.textColor);
   return out;
 }

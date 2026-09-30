@@ -3010,21 +3010,22 @@ a.urd-gallery-tile {
   background: var(--urd-color-accent);
 }
 
-/* Empty state: editor preview only, the same pattern as the image block */
 /* RIBBON (the ribbon block and the gallery's ribbon view). The band is a
    column of stripes: a thin one above, the main one, a thin one below. Each
-   stripe clips, and its track holds the content twice, so translating by -50 %
-   of the track lands one period on where the previous one started: a loop
-   without a seam. The duration is measured (ribbon-model.js: the width of one
-   copy divided by the speed, or the item count times the dwell for the
-   ticker) and arrives as --urd-ribbon-ms. Everything that moves stands still
-   under reduced motion (the shared switch further down) and while the editing
-   chrome is on (.urd-ribbon-still from the block). */
+   stripe clips, and its track holds the content in two equal periods, so
+   translating by -50 % of the track lands one period on where the previous
+   one started: a loop without a seam. The duration is measured
+   (ribbon-model.js: the width of one period divided by the speed, or the item
+   count times the dwell for the ticker) and arrives as --urd-ribbon-ms.
+   Everything that moves stands still under reduced motion (the shared switch
+   further down) and while the editing chrome is on (.urd-ribbon-still from
+   the block). The band fills the frame and grows past it with the words, so
+   the block's auto-grow sees the height the text needs. */
 .urd-ribbon {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   overflow: hidden;
   border-radius: inherit;
   rotate: var(--urd-ribbon-tilt, 0deg);
@@ -3041,8 +3042,9 @@ a.urd-gallery-tile {
 .urd-ribbon-stripe {
   display: flex;
   align-items: center;
-  min-height: 0;
-  overflow: hidden;
+  /* clip rather than hidden: a clipped flex item keeps its content as its
+     smallest height, so the words are never squeezed to nothing */
+  overflow: clip;
 }
 
 /* The main stripe takes what is left; the thin ones keep their thickness. */
@@ -3052,6 +3054,7 @@ a.urd-gallery-tile {
 
 .urd-ribbon-thin {
   flex: 0 0 var(--urd-ribbon-thin, 8px);
+  min-height: 0;
 }
 
 /* A stripe of colour alone: the rule above or below the words. The colour is
@@ -3130,9 +3133,10 @@ a.urd-gallery-tile {
   to { transform: translateX(-12%); }
 }
 
-/* Step: the same period, but in as many jumps as there are items (the timing
-   function is set by the block, and the duration is the dwell per item), so
-   each word stands still long enough to be read. */
+/* Step: the same period in as many jumps as there are items, each landing on
+   a word (the block measures the stops into keyframes of its own and sets a
+   step-end timing; the duration is the dwell per item). The roll stands in
+   until the first measurement. */
 .urd-ribbon-motion-step .urd-ribbon-track {
   animation-name: urd-ribbon-roll;
 }
@@ -3229,9 +3233,9 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
 }
 
 /* Outlined words: the classic frieze look. The stroke takes the resolved text
-   colour from the block (--urd-ribbon-ink), never currentColor, which the
-   empty fill would have made transparent. Gated: without the stroke the words
-   would be invisible rather than outlined. */
+   colour from the block (--urd-ribbon-ink), never currentColor, since the
+   fill is transparent and currentColor follows it. Gated: without the stroke
+   the words are invisible rather than outlined. */
 @supports (-webkit-text-stroke: 1px red) {
   .urd-ribbon-outline .urd-ribbon-item {
     -webkit-text-stroke: 1px var(--urd-ribbon-ink, currentColor);
@@ -3283,6 +3287,7 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   max-width: none;
 }
 
+/* Empty state: editor preview only, the same pattern as the image block */
 .urd-gallery-empty {
   display: grid;
   place-items: center;
@@ -3703,8 +3708,8 @@ body:has(dialog:modal) {
   justify-content: center;
   align-items: center;
   gap: 0.5rem;
-  /* One pixel under the bar's top edge: a fractional zoom in the editor's
-     preview otherwise leaves a hairline seam between the two surfaces. */
+  /* One pixel under the bar's top edge, so a fractional zoom in the editor's
+     preview leaves no hairline seam between the two surfaces. */
   padding: 0.4rem var(--urd-nav-px, clamp(1rem, 4vw, 2.5rem)) calc(0.4rem + 1px);
   margin-bottom: -1px;
   background: var(--urd-announce-bg, var(--urd-color-accent));
@@ -3932,7 +3937,10 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
   gap: 0.25rem;
 }
 
-.urd-nav-tools:empty {
+/* A cluster with nothing but the burger takes no room on desktop, where the
+   burger is hidden (the class comes from nav.js: the burger is always there,
+   so :empty never matches) */
+.urd-nav:not(.urd-nav-mobile) .urd-nav-tools-none {
   display: none;
 }
 
@@ -4832,6 +4840,18 @@ body.urd-mobile .urd-nav-list .urd-nav-launcher-view-list .urd-nav-launcher-link
   transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* With the scroll shrink the surface fade joins the shrink's own transition
+   (the two rules have the same specificity, and the later one wins whole) */
+.urd-nav-clear.urd-nav-scroll .urd-nav {
+  transition: padding var(--urd-nav-shrink-ms, 0.22s) ease, font-size var(--urd-nav-shrink-ms, 0.22s) ease,
+    background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.urd-nav-clear.urd-nav-announce-keep.urd-nav-scroll .urd-nav {
+  transition: padding var(--urd-nav-shrink-ms, 0.22s) ease, font-size var(--urd-nav-shrink-ms, 0.22s) ease, translate 0.28s ease,
+    background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
 .urd-nav-clear .urd-nav > .urd-nav-bg {
   transition: opacity 0.3s ease;
 }
@@ -5026,6 +5046,9 @@ body.urd-side-right {
 .urd-nav-side-host.urd-nav-tools-align-start .urd-nav-tools { justify-content: flex-start; }
 .urd-nav-side-host.urd-nav-tools-align-end .urd-nav-tools { justify-content: flex-end; }
 .urd-nav-side-host.urd-nav-tools-align-spread .urd-nav-tools { justify-content: space-between; }
+
+/* Spread with a single tool: centred, since there is nothing to spread */
+.urd-nav-side-host.urd-nav-tools-align-spread .urd-nav-tools:has(> :nth-child(2):last-child) { justify-content: center; }
 
 /* Submenus open from the start (sideSubs expanded): without the arrow the
    caret and the opener's chevron are gone and the opener reads as a heading. */

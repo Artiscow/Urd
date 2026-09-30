@@ -4,6 +4,28 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.0.35): the pre-push check of the 0.7.13 stages
+
+- [ ] Side column with Undermenyer Åpne fra start and no arrow: a click in the page content leaves every submenu open, and Tab skips the item headings
+- [ ] Full-screen menu with Tema and Handlekurv in the menu: the cart drawer opened from inside the menu scrolls on a phone, and after closing the menu the tools stand in the same order as before
+- [ ] Full-screen menu, Uskarp bakgrunn on while the bar's blur is off: the menu is blurred
+- [ ] Gjennomsiktig øverst together with Krymp ved rulling: the padding animates on scroll, and on a phone the bar draws its surface as soon as the menu opens at the top
+- [ ] Menu items: drag the only child out of a parent that has no page of its own: the parent gets the front page and the file publishes; press Escape during a drag: nothing moves
+- [ ] Announcement that scrolls away (Fest to menu off) with a pinned block: the block pins right under the menu, without a gap
+- [ ] Side column with the announcement over the whole page: the section toolbar and a pinned block sit below the strip
+- [ ] Tools at the start: the burger stands leftmost on a phone; with every tool off, the logo sits flush at the edge on desktop
+- [ ] Launcher: a heading with «<» or «&» in it reads as typed; the settings appear only when the launcher is on, and changing a design with it off does not switch it on
+- [ ] Launcher, Images tab, Upload: pick a file through the system dialog and the mark shows on the tile and the button
+- [ ] Launcher in a browser without anchor positioning: a click on the panel's heading or padding leaves it open
+- [ ] A shortcut with an empty target is marked red in the panel and dimmed in the menu
+- [ ] Ribbon with size Ekstra stor in a low frame, and with thick stripes above and below: the block grows so the words show whole
+- [ ] Ribbon with two short words in a wide band: the words repeat across the whole band with no empty stretch, in Clean view and on the published page; the gallery's ribbon view the same with two pictures
+- [ ] Ribbon motion Ticker: every jump lands at the start of a word, Retning Høyre too
+- [ ] Ribbon with Hovedstripe Merker and an empty word list: the marks roll
+- [ ] Ribbon motion Sving: the words appear once
+- [ ] Gallery ribbon: Tab reaches each picture once
+- [ ] Nynorsk site: «Snarvegar», «Vis fleire», «Vis færre» in the mobile menu
+
 ### Testrunde-batch (0.7.13.8): background motion, the image gallery layer and shared folders
 
 - [ ] An existing section with an image background: the page still draws it after the update, and the console holds no «missing-migration»

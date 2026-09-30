@@ -85,8 +85,9 @@
     if (!navNewPageTitle.trim()) return;
     newPageTitle = navNewPageTitle;
     newPageTemplate = null;
-    addPage();
-    navNewPageTitle = '';
+    // The title stays in the field when the slug is rejected, so it can be
+    // corrected rather than typed again.
+    if (addPage() !== false) navNewPageTitle = '';
   }
   import IconEditor from './lib/IconEditor.svelte';
   // The editor shares the migration code with the engine (same file, bundled in).
@@ -2767,7 +2768,7 @@
     const err = pageSlugError(slug);
     if (err) {
       setStatus(err, 'error');
-      return;
+      return false;
     }
     // Starter packs are built fresh (create() yields new ids and
     // translated seeds); user templates store origin ids, so the clone
@@ -3161,12 +3162,17 @@
     siteMutate('nav', () => { siteDraft.nav.layout = value; });
   }
 
-  /** The tool cluster's fields (nav.style.tools): an emptied object is removed. */
-  /** The tool cluster's order (nav.style.tools.order): the list is stored whole. */
+  /** Whether a tool has a card in the panel: the theme button only with an alt theme to switch to. */
+  const toolShown = (id) => id !== 'theme' || !!siteDraft.theme?.alt?.tokens;
+  /** The tools with a card, in the cluster's order. */
+  const shownTools = $derived(toolOrder(siteDraft?.nav?.style ?? {}).filter(toolShown));
+  /** The tool cluster's order (nav.style.tools.order): the list is stored whole. A tool
+      without a card is stepped over, so every press moves something visible. */
   function moveTool(id, dir) {
     const order = toolOrder(siteDraft.nav.style ?? {});
     const from = order.indexOf(id);
-    const to = from + dir;
+    let to = from + dir;
+    while (to >= 0 && to < order.length && !toolShown(order[to])) to += dir;
     if (from < 0 || to < 0 || to >= order.length) return;
     [order[from], order[to]] = [order[to], order[from]];
     setNavTools('order', order);
@@ -3281,6 +3287,7 @@
   /** The picker hands over both fields at once: an image wins, an icon clears it. */
   function setLauncherMark(i, mark) {
     siteMutate('nav', () => {
+      siteDraft.nav.launcher ??= { links: [] };
       const row = i === null ? siteDraft.nav.launcher : siteDraft.nav.launcher.links[i];
       if (mark.image) row.image = mark.image;
       else delete row.image;
@@ -3292,7 +3299,7 @@
   /** A field on the launcher itself; undefined removes it. */
   function setLauncher(key, value) {
     siteMutate(`edit:nav-launcher-${key}`, () => {
-      siteDraft.nav.launcher ??= { show: true, links: [] };
+      siteDraft.nav.launcher ??= { links: [] };
       if (value === undefined) delete siteDraft.nav.launcher[key];
       else siteDraft.nav.launcher[key] = value;
     });
@@ -3300,19 +3307,14 @@
 
   function addLauncherLink() {
     siteMutate('nav', () => {
-      // The first shortcut turns the button on: an owner who fills the list
-      // and sees nothing in the menu has no way to guess why.
-      siteDraft.nav.launcher ??= { show: true, links: [] };
+      siteDraft.nav.launcher ??= { links: [] };
       siteDraft.nav.launcher.links ??= [];
       siteDraft.nav.launcher.links.push({ label: ta('seed.link'), href: '', icon: 'globe' });
     });
   }
 
   function removeLauncherLink(i) {
-    siteMutate('nav', () => {
-      siteDraft.nav.launcher.links.splice(i, 1);
-      if (!siteDraft.nav.launcher.links.length) delete siteDraft.nav.launcher;
-    });
+    siteMutate('nav', () => { siteDraft.nav.launcher.links.splice(i, 1); });
   }
 
   function moveLauncherLink(i, dir) {
@@ -3338,6 +3340,7 @@
     try {
       const img = await compressOrTrim(file);
       siteMutate('nav', () => {
+        siteDraft.nav.launcher ??= { links: [] };
         if (i === null) siteDraft.nav.launcher.image = img.dataUrl;
         else siteDraft.nav.launcher.links[i].image = img.dataUrl;
       });
@@ -3406,13 +3409,16 @@
     lift: [ta('hoverColor.lift.label'), ta('hoverColor.lift.title')],
   };
   const hoverColorLabel = $derived(HOVER_COLOR_LABELS[siteDraft?.nav?.style?.hover] ?? null);
-  /** The submenu designs on offer: the column has no card, flat surface or flyout. */
+  /** The ink a thin stripe inherits when it has no colour of its own (the block's own rule). */
+  const ribbonInk = (props) => props.color || (props.variant === 'plain' ? 'text' : 'accent-text');
+  /** The launcher's three designs, for the desktop panel and the mobile menu alike. */
   const launcherViewOptions = $derived([
     ['grid', ta('opt.launcherView.grid')],
     ['list', ta('opt.launcherView.list')],
     ['cover', ta('opt.launcherView.cover')],
   ]);
 
+  /** The submenu designs on offer: the column has no card, flat surface or flyout. */
   const subStyleOptions = $derived(sideVariant
     ? [['card', ta('common.standard')], ['pills', ta('opt.sub.pills')], ['lines', ta('opt.sub.lines')]]
     : [['card', ta('opt.sub.card')], ['flat', ta('opt.sub.flat')], ['pills', ta('opt.sub.pills')], ['lines', ta('opt.sub.lines')], ['flyout', ta('opt.sub.flyout')]]);
@@ -3421,6 +3427,7 @@
       three floating forms are presets of the corner rounding, so a switch
       clears a rounding value entered for the previous form. */
   function setNavVariant(value) {
+    if ((siteDraft.nav.variant ?? 'bar') === value) return;
     siteMutate('nav', () => {
       if (value === 'bar') delete siteDraft.nav.variant;
       else siteDraft.nav.variant = value;
@@ -4511,11 +4518,14 @@
     return { label: it.label, target: page ? page.title : (it.href ?? ta('opt.noLink')) };
   }
   /** The end of a drag: a release outside the list still lands the row where the clone last
-      stood (a drop inside the list has already taken it and cleared the position). */
-  function endNavDrag() {
-    if (navDrop) dropNavRow(navDrop.key);
+      stood (a drop inside the list has already taken it and cleared the position). A drag
+      cancelled with Escape reports no drop effect and moves nothing. */
+  function endNavDrag(e) {
+    if (navDrop && e?.dataTransfer?.dropEffect !== 'none') dropNavRow(navDrop.key);
     navDrag = ''; navDrop = null;
   }
+  /** The drag's own data type: a row key that no text field can take as text. */
+  const NAV_DRAG_TYPE = 'application/x-urd-nav-row';
   /** Drag over the whole list: over a row the row's zones decide; in a gap, on the clone or below
       the last row the nearest row by its midpoint decides, so the clone never flips while it pushes
       the rows. Below everything the drop is the end of the top level. */
@@ -4561,7 +4571,13 @@
       const targetObj = tgt.list[tgt.index];
       if (moving === targetObj) return;
       src.list.splice(src.index, 1);
-      if (src.parent && src.parent.children.length === 0) delete src.parent.children;
+      if (src.parent && src.parent.children.length === 0) {
+        // An empty submenu is removed from the file; a pure opener left
+        // without children has no target and gets the front page, so the
+        // item stays valid (the same rule as removeNavChild).
+        delete src.parent.children;
+        if (!src.parent.page && !src.parent.href) src.parent.page = siteDraft.pages[0].id;
+      }
       if (drop.pos === 'into') {
         targetObj.children ??= [];
         targetObj.children.push(moving);
@@ -6587,7 +6603,7 @@
                         <span class="toolbar-row" title={ta('tip.nav.radius')}>
                           <span class="mini-label tb-grow">{ta('lbl.navRadius')}</span>
                           <input type="number" class="tb-num" min={RADIUS.min} max={RADIUS.max} step={RADIUS.step}
-                            placeholder={siteDraft.nav.variant === 'floating-square' ? '0' : siteDraft.nav.variant === 'floating-tab' ? '12' : '999'}
+                            placeholder={siteDraft.nav.variant === 'floating-square' ? '0' : ''}
                             value={typeof siteDraft.nav.style?.radius === 'number' ? siteDraft.nav.style.radius : ''}
                             onchange={(e) => onNavSizeInput(e, 'radius', RADIUS)} />
                         </span>
@@ -6831,8 +6847,8 @@
                         </div>
                       </div>
                       <!-- The rest of the setup, for the phone alone: every
-                           choice starts on «Som PC» and only then writes a
-                           value of its own. The floating and column fields
+                           choice starts on «same as desktop» and only then
+                           writes a value of its own. The floating and column fields
                            have no counterpart here: the phone is a bar with
                            a burger, where they do nothing. -->
                       <div class="ctl-pair">
@@ -6918,7 +6934,7 @@
                             onchange={(e) => setNavStyle('sheetLogo', e.target.checked ? true : undefined)} />
                           {ta('lbl.sheetLogo')}
                         </label>
-                        {#if siteDraft.theme?.alt?.tokens}
+                        {#if siteDraft.theme?.alt?.tokens && siteDraft.nav.style?.tools?.theme !== false}
                           <label class="gridmenu-snap" title={ta('tip.nav.sheetTheme')}>
                             <input type="checkbox" checked={siteDraft.nav.style?.sheetTheme === true}
                               onchange={(e) => setNavStyle('sheetTheme', e.target.checked ? true : undefined)} />
@@ -7135,11 +7151,11 @@
                     <span class="tool-move">
                       <button class="ghost row-tool" title={ta('tip.moveUp')} disabled={n === 0}
                         onclick={(e) => { e.preventDefault(); e.stopPropagation(); moveTool(id, -1); }}>{@html ICONS.up}</button>
-                      <button class="ghost row-tool" title={ta('tip.moveDown')} disabled={n === 2}
+                      <button class="ghost row-tool" title={ta('tip.moveDown')} disabled={n === shownTools.length - 1}
                         onclick={(e) => { e.preventDefault(); e.stopPropagation(); moveTool(id, 1); }}>{@html ICONS.down}</button>
                     </span>
                   {/snippet}
-                  {#each toolOrder(siteDraft.nav.style ?? {}) as id, n (id)}
+                  {#each shownTools as id, n (id)}
                     {#if id === 'theme'}
                       {#if siteDraft.theme?.alt?.tokens}
                       <div class="mini-card">
@@ -7182,6 +7198,7 @@
                           onchange={(e) => setLauncher('show', e.target.checked ? true : undefined)} />
                         {ta('lbl.showInMenu')}
                       </label>
+                      {#if siteDraft.nav.launcher?.show === true}
                       <!-- The design as small drawings of the panel each one gives -->
                         <div class="ctl-field">
                           <span class="mini-label">{ta('lbl.design')}</span>
@@ -7247,7 +7264,7 @@
                          Open, the row is a card with a live tile: the preview is drawn as
                          the menu will draw it, and it is itself the mark picker. -->
                     {#each siteDraft.nav.launcher?.links ?? [] as link, i (i)}
-                      {@const broken = link.href && !isSafeHref(link.href)}
+                      {@const broken = !isSafeHref(link.href ?? '')}
                       <div class="lrow" class:open={launcherOpen === i}>
                         <div class="lrow-head" role="button" tabindex="0"
                           onclick={() => (launcherOpen = launcherOpen === i ? null : i)}
@@ -7305,6 +7322,7 @@
                       </div>
                     {/each}
                     <button class="ghost action" onclick={addLauncherLink}>{ta('ui.addLauncherLink')}</button>
+                      {/if}
                       </div>
                     </details>
                     {/if}
@@ -7390,7 +7408,7 @@
                   <!-- The grip alone is draggable: a draggable row would take the mouse
                        from the name field's text selection. -->
                   <span class="nav-grip" title={ta('tip.nav.dragItem')} draggable="true"
-                    ondragstart={(e) => { navDrag = key; e.dataTransfer?.setData('text/plain', key); }}
+                    ondragstart={(e) => { navDrag = key; e.dataTransfer?.setData(NAV_DRAG_TYPE, key); }}
                     ondragend={endNavDrag}>{@html GRIP_ICON}</span>
                   <div class="nav-item-main">
                     <input class="nav-item-name" value={item.label} title={ta('tip.nav.itemLabel')}
@@ -7426,7 +7444,7 @@
                   <div class="nav-item child" class:selected={navSel === ckey} class:dragging={navDrag === ckey} data-key={ckey}
                     onclick={(e) => { e.stopPropagation(); navSel = ckey; }}>
                     <span class="nav-grip" title={ta('tip.nav.dragItem')} draggable="true"
-                      ondragstart={(e) => { e.stopPropagation(); navDrag = ckey; e.dataTransfer?.setData('text/plain', ckey); }}
+                      ondragstart={(e) => { e.stopPropagation(); navDrag = ckey; e.dataTransfer?.setData(NAV_DRAG_TYPE, ckey); }}
                       ondragend={endNavDrag}>{@html GRIP_ICON}</span>
                     <div class="nav-item-main">
                       <input class="nav-item-name" value={child.label} title={ta('tip.nav.childLabel')}
@@ -9566,7 +9584,7 @@
         </label>
         {#if (selectedBlock.props.above ?? 'none') !== 'none'}
           <label title={ta('tip.ribbon.stripeColor')}>{ta('lbl.colour')}
-            <ColorPicker value={selectedBlock.props.aboveColor ?? 'accent-text'} tokens={themeSwatches()}
+            <ColorPicker value={selectedBlock.props.aboveColor ?? ribbonInk(selectedBlock.props)} tokens={themeSwatches()}
               label={ta('tip.ribbon.stripeColor')}
               onchange={(hex) => setBlockProp('aboveColor', hex)} /></label>
         {/if}
@@ -9582,7 +9600,7 @@
         </label>
         {#if (selectedBlock.props.below ?? 'none') !== 'none'}
           <label title={ta('tip.ribbon.stripeColor')}>{ta('lbl.colour')}
-            <ColorPicker value={selectedBlock.props.belowColor ?? 'accent-text'} tokens={themeSwatches()}
+            <ColorPicker value={selectedBlock.props.belowColor ?? ribbonInk(selectedBlock.props)} tokens={themeSwatches()}
               label={ta('tip.ribbon.stripeColor')}
               onchange={(hex) => setBlockProp('belowColor', hex)} /></label>
         {/if}

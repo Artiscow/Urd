@@ -137,9 +137,13 @@ function applySticky() {
   // added to the chosen offset. Only the top bar takes space at the top; a
   // side menu is a column. If the menu has slid away (scroll behavior
   // 'hide'), the offset is kept anyway: a block hopping up and down in step
-  // with the menu would flicker.
+  // with the menu would flicker. The height is the menu's own clearance as
+  // nav.js measures it (--urd-nav-h): an announcement strip that scrolls
+  // away is not part of what stays on screen.
   const stickyNav = document.querySelector('header#urd-nav.urd-nav-sticky:not(.urd-nav-side-host)');
-  const navH = stickyNav ? stickyNav.offsetHeight : 0;
+  const navH = stickyNav
+    ? (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--urd-nav-h')) || stickyNav.offsetHeight)
+    : 0;
 
   // Blocks with the same sticky-group are pinned as ONE unit; the rest are
   // groups of one member each, so the whole loop below has the same shape.

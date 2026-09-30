@@ -6,13 +6,17 @@
  * colour, so a plain rule above a rolling line is one block rather than three.
  *
  * The motion is the background loop layer's idiom (.urd-bg-loop-runner in
- * base.css): a stripe's track is built TWICE inside a clipping row and
- * translated by half its width, so one period lands exactly where the previous
- * one started and the loop has no seam. The copy is aria-hidden, so the words
- * are read once. For `roll` and `sway` the duration is the measured width of
- * one copy divided by the speed (ribbonDuration); for `step` it is the item
- * count times the dwell (ribbonStepDuration), since a ticker is timed per word
- * and not per pixel. A ResizeObserver measures again when the width changes.
+ * base.css): a stripe's track holds its content in two equal periods inside a
+ * clipping row and is translated by half its width, so one period lands
+ * exactly where the previous one started and the loop has no seam. A period
+ * is as many copies as it takes to reach across the band (ribbonPeriods and
+ * syncTrackCopies), and every copy but the first is aria-hidden, so the words
+ * are read once. For `roll` the duration is the measured width of one period
+ * divided by the speed (ribbonDuration), for `sway` the width of the one copy
+ * that drifts out and back, and for `step` the item count times the dwell
+ * (ribbonStepDuration), since a ticker is timed per word and not per pixel,
+ * with keyframes measured per word (stepFrames). A ResizeObserver measures
+ * again when the width changes.
  *
  * ADR-0011 gating: under prefers-reduced-motion the words stand as a static
  * row, and while the editing chrome is on the band stands still so the words
@@ -21,7 +25,7 @@
  */
 import { growSectionTo } from '../render.js';
 import {
-  ribbonItems, ribbonDuration, ribbonStepDuration, separatorMark, clampTilt, ribbonSize,
+  ribbonItems, ribbonDuration, ribbonStepDuration, ribbonPeriods, separatorMark, clampTilt, ribbonSize,
   ribbonMotion, ribbonWidth, ribbonMoves, mainMode, stripeMode, stripePlace, clampThickness,
 } from '../ribbon-model.js';
 import { resolveColor } from '../theme.js';
@@ -85,8 +89,72 @@ function buildRun(mode, items, sep, editable) {
 }
 
 /**
- * One stripe: a clipping row with a track that holds its content twice. A
- * `plain` stripe is colour alone and has no track to measure or move.
+ * The copies of a run that fill a track: two periods of `periods` copies each,
+ * the first copy being the run itself. The copies are clones the reader never
+ * meets (aria-hidden and inert, and stripped of the editing hooks), so the
+ * words are read once and a tile is reached once. Shared with the gallery's
+ * ribbon view.
+ * @param {HTMLElement} track
+ * @param {HTMLElement} run The first copy, built by the caller
+ * @param {number} periods From ribbonPeriods
+ */
+export function syncTrackCopies(track, run, periods) {
+  const wanted = periods * 2 - 1;
+  if (track.children.length - 1 === wanted) return;
+  while (track.children.length > 1) track.lastElementChild.remove();
+  for (let i = 0; i < wanted; i += 1) {
+    const copy = run.cloneNode(true);
+    copy.setAttribute('aria-hidden', 'true');
+    copy.inert = true;
+    for (const node of copy.querySelectorAll('[contenteditable], [data-ribbon-index], [tabindex]')) {
+      node.removeAttribute('contenteditable');
+      node.removeAttribute('tabindex');
+      delete node.dataset.ribbonIndex;
+    }
+    track.appendChild(copy);
+  }
+}
+
+let stepSeq = 0;
+
+/**
+ * The ticker's own keyframes: one stop per item at the item's measured left
+ * edge, held with a step-end timing, so every jump lands on a word and not on
+ * a fraction of the width. The frames cover one period of `periods` copies
+ * and end a whole period in, where the next copy stands exactly as the first.
+ * @param {HTMLElement} stripe Where the style element lives
+ * @param {HTMLElement} run The first copy
+ * @param {number} periods From ribbonPeriods
+ * @param {number} runWidth The width of one copy, in px
+ * @returns {string} The animation name
+ */
+function stepFrames(stripe, run, periods, runWidth) {
+  const stops = [...run.querySelectorAll(':scope > .urd-ribbon-item')];
+  const nodes = stops.length ? stops : [...run.children];
+  if (!nodes.length) return 'urd-ribbon-roll';
+  const offsets = nodes.map((node) => node.offsetLeft - run.offsetLeft);
+  const total = nodes.length * periods;
+  const frames = [];
+  for (let j = 0; j < total; j += 1) {
+    const x = offsets[j % nodes.length] + Math.floor(j / nodes.length) * runWidth;
+    frames.push(`${((j / total) * 100).toFixed(3)}% { transform: translateX(${-x}px); }`);
+  }
+  frames.push(`100% { transform: translateX(${-runWidth * periods}px); }`);
+  const name = `urd-ribbon-step-${(stepSeq += 1)}`;
+  let style = stripe.querySelector(':scope > style');
+  if (!style) {
+    style = document.createElement('style');
+    stripe.appendChild(style);
+  }
+  style.textContent = `@keyframes ${name} { ${frames.join(' ')} }`;
+  return name;
+}
+
+/**
+ * One stripe: a clipping row with a track that holds its content as many
+ * times as the band needs (syncTrackCopies). A `plain` stripe is colour alone
+ * and has no track to measure or move, and a swaying stripe drifts out and
+ * back with its one copy.
  * @returns {{el: HTMLElement, measure: () => void, run: HTMLElement|null}}
  */
 function buildStripe({ mode, items, sep, motion, still, props, editable, count, colour }) {
@@ -108,21 +176,28 @@ function buildStripe({ mode, items, sep, motion, still, props, editable, count, 
   if (props.direction === 'right') track.classList.add('urd-ribbon-right');
   const run = buildRun(mode, items, sep, editable);
   track.appendChild(run);
-  if (motion !== 'none') {
-    const copy = buildRun(mode, items, sep, false);
-    copy.setAttribute('aria-hidden', 'true');
-    track.appendChild(copy);
-  }
-  // The ticker jumps once per item, so each one stands still to be read.
-  if (motion === 'step') track.style.animationTimingFunction = `steps(${Math.max(1, count)})`;
+  const loops = motion === 'roll' || motion === 'step';
+  // The ticker holds each stop until the next jump (stepFrames).
+  if (motion === 'step') track.style.animationTimingFunction = 'step-end';
   el.appendChild(track);
 
   const measure = () => {
     if (motion === 'none') return;
-    if (motion !== 'step' && !run.scrollWidth) return;
-    const seconds = motion === 'step'
-      ? ribbonStepDuration(count, props.dwell)
-      : ribbonDuration(run.scrollWidth, props.speed);
+    const runWidth = run.scrollWidth;
+    if (!runWidth) return;
+    let seconds;
+    if (!loops) {
+      seconds = ribbonDuration(runWidth, props.speed);
+    } else {
+      const periods = ribbonPeriods(runWidth, el.clientWidth);
+      syncTrackCopies(track, run, periods);
+      if (motion === 'step') {
+        track.style.animationName = stepFrames(el, run, periods, runWidth);
+        seconds = ribbonStepDuration(count * periods, props.dwell);
+      } else {
+        seconds = ribbonDuration(runWidth * periods, props.speed);
+      }
+    }
     track.style.setProperty('--urd-ribbon-ms', `${seconds * 1000}ms`);
   };
   return { el, measure, run };
@@ -201,7 +276,7 @@ export const ribbonBlock = {
     // The chrome's hold is a CSS rule on the body (base.css): Clean view never
     // re-renders, so a class decided here would stick. What is decided here is
     // only what cannot change without a new render.
-    const still = !ribbonMoves({ count: items.length, motion, reducedMotion: reducedMotion() });
+    const reduced = reducedMotion();
     const stripes = [];
     // The thin stripes run against the main one, the way the gallery's second
     // row does: two bands going the same way read as one wide band.
@@ -210,8 +285,11 @@ export const ribbonBlock = {
     const countFor = (mode) => (mode === 'marks' ? MARK_RUN : Math.max(1, items.length));
     const add = (mode, own, classes, canEdit, colour) => {
       if (mode === 'none') return;
+      // Each stripe decides for itself whether it has something to move: a
+      // stripe of marks rolls with no words at all.
+      const count = countFor(mode);
       const stripe = buildStripe({
-        mode, items, sep, motion, still, props: own, editable: canEdit, count: countFor(mode), colour,
+        mode, items, sep, motion, still: !ribbonMoves({ count, motion, reducedMotion: reduced }), props: own, editable: canEdit, count, colour,
       });
       stripe.el.classList.add(...classes);
       host.appendChild(stripe.el);
@@ -219,7 +297,7 @@ export const ribbonBlock = {
     };
     // On the edges the thin stripes lie on the band's own border instead of
     // taking a share of its height.
-    if (stripePlace(props.stripePlace) === 'edge') host.classList.add('urd-ribbon-edges');
+    if (stripePlace(props.stripePlace) === 'edge' && (above !== 'none' || below !== 'none')) host.classList.add('urd-ribbon-edges');
     add(above, opposed, ['urd-ribbon-thin', 'urd-ribbon-above'], false, props.aboveColor);
     add(main, props, ['urd-ribbon-main'], editable && main === 'text', null);
     add(below, opposed, ['urd-ribbon-thin', 'urd-ribbon-below'], false, props.belowColor);
@@ -290,7 +368,11 @@ export const ribbonBlock = {
           for (const stripe of stripes) stripe.measure();
           fitWide();
         });
-        for (const stripe of stripes) if (stripe.run) ro.observe(stripe.run);
+        for (const stripe of stripes) {
+          if (!stripe.run) continue;
+          ro.observe(stripe.run);
+          ro.observe(stripe.el);
+        }
         const sectionEl = wide ? el.closest('.urd-section') : null;
         if (sectionEl) ro.observe(sectionEl);
       }

@@ -81,9 +81,26 @@ export function normalizeSpeed(value, { min = RIBBON_SPEED.min, max = RIBBON_SPE
 }
 
 /**
+ * How many copies of the content one period holds. One period must reach
+ * across the band, or the empty rest of the track rolls past; the track holds
+ * two periods, so its half-way point is a whole number of copies and the loop
+ * has no seam. Capped, so a hairline of content in a wide band never builds
+ * hundreds of copies.
+ * @param {unknown} runWidth The width of ONE copy, in px
+ * @param {unknown} bandWidth The visible width of the stripe, in px
+ * @returns {number} Copies per period, at least 1
+ */
+export function ribbonPeriods(runWidth, bandWidth) {
+  const run = Number(runWidth);
+  const band = Number(bandWidth);
+  if (!(run > 0) || !(band > 0)) return 1;
+  return Math.min(64, Math.max(1, Math.ceil(band / run)));
+}
+
+/**
  * Seconds for one period, from the measured width of one copy of the track.
  * The floor keeps a short band from spinning: three short words at full speed
- * would otherwise loop several times a second.
+ * loop several times a second without it.
  * @param {unknown} trackWidth The width of ONE copy, in px
  * @param {unknown} speed Pixels per second
  * @param {{min?: number}} [opts]

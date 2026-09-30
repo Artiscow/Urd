@@ -161,6 +161,12 @@ test('navSurface: theme token with opacity gives color-mix over the CSS variable
   );
 });
 
+test('navSurface: the blur switch is carried both ways', () => {
+  assert.equal(navSurface({ blur: true }).blur, true);
+  assert.equal(navSurface({ blur: false }).blur, false);
+  assert.equal(navSurface({ bg: 'accent' }).blur, undefined);
+});
+
 test('navSurface: raw color is used unchanged in the mix', () => {
   assert.equal(
     navSurface({ bg: '#102030' }).bg,
