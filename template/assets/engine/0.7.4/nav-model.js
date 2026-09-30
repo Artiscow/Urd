@@ -7,12 +7,14 @@
 import { resolveColor } from './theme.js';
 
 // Safe image source: only known image shapes (a base64 data URL for
-// unpublished uploads, or a site-relative path to media/) are let into
-// img.src and CSS url(); everything else (external hosts, characters that
-// break url("…")) is ignored. Anchored regex on purpose - CodeQL recognizes
-// it as a barrier. Shared guard for the favicon, nav logo and background,
-// footer logo, icon block and the image layer.
-const SAFE_IMAGE_RE = /^(?:data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+|\/(?!\/)[\w%./-]*)$/;
+// unpublished uploads, a site-relative path to media/, or the site's own
+// picture route for a shared folder, which is the one place a query string is
+// allowed and which never serves anything but an image from a checked host)
+// are let into img.src and CSS url(); everything else (external hosts,
+// characters that break url("…")) is ignored. Anchored regex on purpose -
+// CodeQL recognizes it as a barrier. Shared guard for the favicon, nav logo
+// and background, footer logo, icon block and the image layer.
+const SAFE_IMAGE_RE = /^(?:data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+|\/api\/photo\?[^\s"'<>\\]{1,2048}|\/(?!\/)[\w%./-]*)$/;
 
 /** @param {unknown} src @returns {boolean} */
 export function isSafeImage(src) {

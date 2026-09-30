@@ -90,6 +90,19 @@ Fill them in exactly as below. Save, and repeat for all six:
    with this set, publishing triggers the deploy itself. Turn it on only if you
    experience publishes not appearing.
 
+10. Type: **Secret** (optional - only for pictures from a Google Drive folder)
+    Name: `DRIVE_API_KEY`
+    Value: an API key from Google Cloud with the Drive API enabled. The image
+    gallery background layer can take its pictures from a shared Drive folder; the folder is read by the site's own function on the
+    server, so the key never reaches the browser or the site's files. Google
+    Photos albums need no key.
+
+11. Type: Text (optional - only for pictures from Nextcloud or another list)
+    Name: `PHOTO_HOSTS`
+    Value: the hosts the site may fetch pictures from, separated by commas.
+    E.g. `sky.example.org`. Needed for a Nextcloud or ownCloud share and for
+    a picture list at another address; Google's own hosts are built in.
+
 Finally a new deploy is needed (the variables only take effect from the next deploy).
 The simplest way is an empty commit:
 

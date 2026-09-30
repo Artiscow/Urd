@@ -88,6 +88,19 @@ Fyll inn nøyaktig som under. Lagre, og gjenta for alle seks:
    med denne satt trigger publiseringen deployen selv. Skru den på først hvis du
    opplever at publiseringer uteblir.
 
+10. Type: **Secret** (valgfri - bare for bilder fra en Google Drive-mappe)
+    Navn: `DRIVE_API_KEY`
+    Verdi: en API-nøkkel fra Google Cloud med Drive API skrudd på. Bakgrunnslaget
+    bildegalleri kan hente bildene sine fra en delt Drive-mappe; mappa leses av nettstedets egen funksjon på tjeneren, så
+    nøkkelen når aldri nettleseren eller nettstedets filer. Google Foto-album
+    trenger ingen nøkkel.
+
+11. Type: Text (valgfri - bare for bilder fra Nextcloud eller en annen liste)
+    Navn: `PHOTO_HOSTS`
+    Verdi: vertene nettstedet får hente bilder fra, adskilt med komma.
+    F.eks. `sky.example.org`. Trengs for en Nextcloud- eller ownCloud-deling og
+    for en bildeliste på en annen adresse; Googles egne verter er innebygd.
+
 Til slutt må det deployes på nytt (variablene gjelder først fra neste deploy).
 Enkleste måte er en tom commit:
 

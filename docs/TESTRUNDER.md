@@ -4,6 +4,36 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.13.8): background motion, the image gallery layer and shared folders
+
+- [ ] An existing section with an image background: the page still draws it after the update, and the console holds no «missing-migration»
+- [ ] Image layer, Bevegelse Sakte innzooming and Sakte forskyvning: the picture moves, together with Parallakse when that is on, and stands still with reduced motion on
+- [ ] Set a motion on an image layer, reload admin: the choice is still there and still runs
+- [ ] Add Bildegalleri with nothing in it: example pictures are drawn in every Stil, hidden in Ren visning and absent on the published page
+- [ ] Stil Svevende bilder: the frames are small (about 110-170 px), scattered over the whole section, and differently scattered on the next visit; Plassering Fast with Stokk om keeps one scatter
+- [ ] Stil Fyller bakgrunnen: the cross-fade as before, with Sekunder per bilde and Overgang
+- [ ] Stil Rullende bånd: two rows rolling against each other, in admin too; Rader 1, Retning and Tid per runde
+- [ ] Stil Mosaikk: a wall of four columns with wide and tall tiles, two columns on a phone
+- [ ] Form: circle, star, heart, arch and the rest cut the picture, and the frame follows the shape; Avrunding shows only for rectangle and square
+- [ ] Ramme: polaroid, thin and wide and dark and double borders, glow, tape, pin, stamp, film strip, soft edge; Rammefarge with a theme colour and an own one, and the clear button back to the frame's own
+- [ ] Tone: black and white, sepia, vintage, duotone in the accent colour and the rest, on the fill style too
+- [ ] Bevegelse on floating frames: Diagonal drift and Rett opp travel across without a visible jump, Sakte zoom breathes the whole polaroid, Sprett mellom kantene bounces off all four edges
+- [ ] Krysstoning: a frame fades out and comes back in a new place with a new picture, never the one it left with, and never one another frame shows; the whole folder goes round
+- [ ] Tid per runde at 0,5 s and at 90 s, and Sekunder per bilde the same
+- [ ] Antall bilder 20 with a folder of six: six frames with Vis bare dem som finnes, twenty with Gjenta bildene
+- [ ] Bilder bak menylinja off: no frame touches the menu band, in any motion; on: the frames use the whole section
+- [ ] Bilder bak kunngjøringen: greyed while the menu switch is off, and switching it on switches the menu on with it; off (the default) keeps every frame below the strip
+- [ ] A system with reduced motion on: no frame moves, no picture swaps
+- [ ] Bilder fra Delt mappe with a Google Drive folder on the deployed site with DRIVE_API_KEY set: Sjekk mappa reports the count, the pictures appear, a picture added to the folder appears within ten minutes
+- [ ] The same without DRIVE_API_KEY: the readout names the variable, the layer keeps its example pictures
+- [ ] A Google Photos shared album, long link and short: the pictures appear without any key
+- [ ] A Nextcloud share with the host in PHOTO_HOSTS, and one without: pictures, and the readout naming the variable
+- [ ] Rekkefølge: Etter navn gives the first by file name, Nyeste først the last changed, Tilfeldig a different set on the next visit and the same set on a re-render
+- [ ] Junk in Mappeadresse: the field turns red and Sjekk mappa is disabled; a pasted folder link clears both
+- [ ] A folder picture in a small frame is a small download, in a full-width background a large one (the network panel)
+- [ ] Presets Hero over bilde and Hero med flytende bilder: they insert, their cards show the layout, and the text reads over the veil in a light and a dark theme
+- [ ] The guide «Pictures from a shared folder» from the README, in English and Norwegian: every step can be followed
+
 ### Testrunde-batch (0.7.13.7): the ribbon
 
 - [ ] Insert Bånd from Blocks: the words stand still on the canvas and can be typed straight in the band; the list in Properties follows

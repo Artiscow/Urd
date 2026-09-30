@@ -290,6 +290,82 @@ export function registerSectionPresets(Urd) {
     ]),
   });
 
+  Urd.sections.define('hero-image', {
+    label: 'Hero over a photo',
+    labelKey: 'preset.hero-image.label',
+    group: 'Basics',
+    groupKey: 'presetGroup.basic',
+    hint: 'Opening over a photo that creeps slowly, with a veil under the text',
+    hintKey: 'preset.hero-image.hint',
+    create: () => {
+      const sec = section('hero-image', '70vh', {
+        version: 1,
+        layers: [
+          colorLayer('bg'),
+          {
+            type: 'image',
+            version: 3,
+            props: {
+              src: '', fit: 'cover', x: 0.5, y: 0.5, size: 1, opacity: 1, blur: 0,
+              parallax: 0, bleed: 'none', motion: 'kenburns', motionSpeed: 24,
+            },
+          },
+          // The veil: the photo is the owner's own, so the text needs a floor to
+          // stand on whatever they pick.
+          {
+            type: 'gradient',
+            version: 1,
+            props: {
+              kind: 'linear',
+              angle: 180,
+              stops: [{ color: '#00000000', share: 45 }, { color: '#000000b3', share: 55 }],
+            },
+          },
+        ],
+      }, [
+        text(frame(8.33, 40, 50, 38), ta('seed.hero.title')),
+        text(frame(8.33, 84, 41.67, 26), ta('seed.hero.intro')),
+        button(frame(8.33, 118, 20, 32), ta('seed.readMore')),
+      ]);
+      sec.theme = 'inverse';
+      return sec;
+    },
+  });
+
+  Urd.sections.define('hero-photos', {
+    label: 'Hero with floating photos',
+    labelKey: 'preset.hero-photos.label',
+    group: 'Basics',
+    groupKey: 'presetGroup.basic',
+    hint: 'Centred opening with scattered photos drifting behind the text',
+    hintKey: 'preset.hero-photos.hint',
+    create: () => {
+      const sec = section('hero-photos', '70vh', {
+        version: 1,
+        layers: [
+          colorLayer('bg'),
+          {
+            type: 'slideshow',
+            version: 2,
+            props: {
+              images: [], source: 'upload', folder: '', order: 'random', folderMax: 24,
+              style: 'floating', motion: 'drift', motionSpeed: 30, interval: 12, fade: 1.5,
+              count: 8, seed: 0, size: null, spread: 0.85, tilt: 5, radius: 5, rows: 2,
+              direction: 'left', navClip: false, fit: 'cover', blur: 0, opacity: 0.85,
+            },
+          },
+          { type: 'grain', version: 1, props: { opacity: 0.06 } },
+        ],
+      }, [
+        text(frame(15, 64, 70, 44), ta('seed.heroCenter.title'), { align: 'center' }),
+        text(frame(25, 116, 50, 26), ta('seed.heroCenter.intro'), { align: 'center' }),
+        button(frame(41.5, 160, 17, 40), ta('seed.readMore')),
+      ]);
+      sec.theme = 'inverse';
+      return sec;
+    },
+  });
+
   Urd.sections.define('images', {
     label: 'Images',
     labelKey: 'preset.images.label',

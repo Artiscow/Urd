@@ -107,7 +107,7 @@ test('the gallery block: the def contract', () => {
 });
 
 test('the slideshow layer: the def contract', () => {
-  assert.equal(slideshowLayer.version, 1);
+  assert.equal(slideshowLayer.version, 2);
   assert.equal(typeof slideshowLayer.render, 'function');
   assert.ok(slideshowLayer.migrations);
   const a = slideshowLayer.defaults();

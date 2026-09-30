@@ -92,7 +92,7 @@
   // The editor shares the migration code with the engine (same file, bundled in).
   import { defaultFormFields } from '$engine/blocks/form.js';
   import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION, SITE_SCHEMA_VERSION } from '$engine/migrate.js';
-  import { ta, taApiError, adminLang as currentAdminLang } from '$engine/i18n.js';
+  import { ta, tp, taApiError, adminLang as currentAdminLang } from '$engine/i18n.js';
   import { validateManifest, satisfiesEngine } from '$engine/plugins.js';
   import { makeId } from '$engine/sections/presets.js';
   import { templateId, TEMPLATE_SCHEMA_VERSION, TEMPLATE_KINDS, clonePageForInsert } from '$engine/templates-model.js';
@@ -109,6 +109,8 @@
   import { grainLayer } from '$engine/backgrounds/grain.js';
   import { imageLayer } from '$engine/backgrounds/image.js';
   import { slideshowLayer } from '$engine/backgrounds/slideshow.js';
+  import { GALLERY_STYLES, GALLERY_SHAPES, GALLERY_LOOKS, GALLERY_TONES, styleMotion, motionsFor, frameSize, roundable, colouredLook, frameColor } from '$engine/gallery-layout.js';
+  import { loadFolderPhotos, parsePhotoSource } from '$engine/photo-source.js';
   import { videoLayer } from '$engine/backgrounds/video.js';
   import { footerThumb } from '$engine/footer-thumb.js';
   import { coreAnimations } from '$engine/animations/core.js';
@@ -135,6 +137,7 @@
   const ICONS = {
     copy: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
     phone: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="8" y="3" width="8" height="18" rx="2"/><path d="M11 17.5h2"/></svg>',
+    shuffle: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>',
     pencil: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"/></svg>',
     eye: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/></svg>',
     warn: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L2 20h20L12 3z"/><path d="M12 10v4"/><path d="M12 17.2h.01"/></svg>',
@@ -1560,6 +1563,13 @@
     });
   }
 
+  /** Several props of one layer in one undo step: for switches that imply each other. */
+  function setBgProps(bg, i, patch) {
+    bg.mutate(`edit:${bg.keyPrefix}-${bg.keyId}-${i}-${Object.keys(patch).join('+')}`, (t) => {
+      Object.assign(t.background.layers[i].props, patch);
+    });
+  }
+
   function setBgProp(bg, i, name, value) {
     bg.mutate(`edit:${bg.keyPrefix}-${bg.keyId}-${i}-${name}`, (t) => {
       t.background.layers[i].props[name] = value;
@@ -1845,6 +1855,26 @@
     } catch {
       setStatus(ta('status.imageReadError'), 'error');
     }
+  }
+
+  /* The shared folder: the panel reads the folder through the site's own
+     proxy, the same call the layer in the preview makes for itself. The
+     button always goes out again, so a share the owner has just opened is
+     seen at once. One readout per layer, keyed like the history entries. */
+  let folderStatus = $state({});
+
+  const folderKey = (bg, i) => `${bg.keyPrefix}-${bg.keyId}-${i}`;
+
+  /** A fresh seed for a scatter the owner wants to keep: never 0, which means the visit's. */
+  const newSeed = () => 1 + (crypto.getRandomValues(new Uint32Array(1))[0] % 1000000);
+
+  async function checkBgFolder(bg, i, layer) {
+    const key = folderKey(bg, i);
+    folderStatus[key] = { text: ta('status.folderChecking'), err: false };
+    const answer = await loadFolderPhotos(layer.props.folder, layer.props.order, { force: true });
+    folderStatus[key] = answer.photos.length
+      ? { text: tp('status.folderFound', answer.photos.length, { count: answer.photos.length }), err: false }
+      : { text: taApiError(answer) ?? ta('status.folderNone'), err: true };
   }
 
   /* The slideshow layer: the image list is edited like the other
@@ -5562,7 +5592,7 @@
     for (const color of entry.colors ?? []) materializeField(color, 'image', `${entry.title}-${color.name}`, files);
   }
 
-  /** The background layers' images (image + slideshow) - shared by section, nav and footer. */
+  /** The background layers' images (image and slideshow) - shared by section, nav and footer. */
   function materializeBackground(background, files) {
     for (const layer of background?.layers ?? []) {
       if (layer.type === 'image') materializeField(layer.props, 'src', 'background', files);
@@ -8500,6 +8530,75 @@
   {/if}
 </div>
 
+{#snippet bgImageRows(bg, i, layer)}
+  {#if (layer.props.source ?? 'upload') !== 'folder'}
+    <label class="ghost filepick" title={ta('tip.bg.addImages')}>
+      {ta('ui.addImages')}
+      <input type="file" accept="image/*" multiple onchange={(e) => addBgGalleryImages(bg, i, e)} />
+    </label>
+    {#each layer.props.images ?? [] as img, j (j)}
+      <span class="toolbar-row">
+        <img class="site-icon-preview" src={img.src} alt="" />
+        <span class="row-tools">
+          <button class="ghost row-tool" onclick={() => moveBgGalleryImage(bg, i, j, -1)} disabled={j === 0}>{@html ICONS.up}</button>
+          <button class="ghost row-tool" onclick={() => moveBgGalleryImage(bg, i, j, 1)}
+            disabled={j === layer.props.images.length - 1}>{@html ICONS.down}</button>
+          <button class="ghost row-tool" title={ta('tip.removeImage')}
+            onclick={() => removeBgGalleryImage(bg, i, j)}>{@html ICONS.cross}</button>
+        </span>
+      </span>
+      <label>{ta('lbl.focusX')}
+        <span class="gridmenu-value">{Math.round((img.x ?? 0.5) * 100)}%</span></label>
+      <input type="range" min="0" max="1" step="0.01" value={img.x ?? 0.5}
+        oninput={(e) => setBgGalleryImageProp(bg, i, j, 'x', Number(e.target.value))} />
+      <label>{ta('lbl.focusY')}
+        <span class="gridmenu-value">{Math.round((img.y ?? 0.5) * 100)}%</span></label>
+      <input type="range" min="0" max="1" step="0.01" value={img.y ?? 0.5}
+        oninput={(e) => setBgGalleryImageProp(bg, i, j, 'y', Number(e.target.value))} />
+    {/each}
+  {/if}
+{/snippet}
+
+{#snippet bgFolderRows(bg, i, layer)}
+  <label title={ta('tip.bg.photoSource')}>{ta('lbl.photoSource')}
+    <Dropdown value={layer.props.source ?? 'upload'}
+      options={[['upload', ta('opt.photoSource.upload')], ['folder', ta('opt.photoSource.folder')]]}
+      onchange={(v) => setBgProp(bg, i, 'source', v)} /></label>
+  {#if (layer.props.source ?? 'upload') === 'folder'}
+    {@const parsed = parsePhotoSource(layer.props.folder ?? '')}
+    <label title={ta('tip.bg.photoFolder')}>{ta('lbl.photoFolder')}
+      <input type="text" class:bad-target={(layer.props.folder ?? '').trim() && !parsed}
+        value={layer.props.folder ?? ''} placeholder="https://drive.google.com/drive/folders/..."
+        onchange={(e) => setBgProp(bg, i, 'folder', e.target.value.trim())} /></label>
+    <label title={ta('tip.bg.folderOrder')}>{ta('lbl.folderOrder')}
+      <Dropdown value={layer.props.order ?? 'name'}
+        options={[['name', ta('opt.folderOrder.name')], ['newest', ta('opt.folderOrder.newest')], ['random', ta('opt.folderOrder.random')]]}
+        onchange={(v) => setBgProp(bg, i, 'order', v)} /></label>
+    <label title={ta('tip.bg.folderMax')}>{ta('lbl.folderMax')}
+      <input type="number" min="1" max="60" value={layer.props.folderMax ?? 24}
+        onchange={(e) => setBgProp(bg, i, 'folderMax', Number(e.target.value))} /></label>
+    <button type="button" class="ghost action" disabled={!parsed} onclick={() => checkBgFolder(bg, i, layer)}>
+      {@html ICONS.eye} {ta('ui.checkFolder')}
+    </button>
+    {#if folderStatus[folderKey(bg, i)]}
+      <p class="folder-status" class:err={folderStatus[folderKey(bg, i)].err}>{folderStatus[folderKey(bg, i)].text}</p>
+    {/if}
+  {/if}
+{/snippet}
+
+{#snippet bgMotionRows(bg, i, layer)}
+  <label title={ta('tip.bg.imageMotion')}>{ta('lbl.motion')}
+    <Dropdown value={layer.props.motion ?? 'none'}
+      options={[['none', ta('common.none')], ['kenburns', ta('opt.bgMotion.kenburns')], ['drift', ta('opt.bgMotion.drift')]]}
+      onchange={(v) => setBgProp(bg, i, 'motion', v)} /></label>
+  {#if (layer.props.motion ?? 'none') !== 'none'}
+    <label>{ta('lbl.motionSpeed')}
+      <span class="gridmenu-value">{layer.props.motionSpeed ?? 20} s</span></label>
+    <input type="range" min="6" max="60" step="1" value={layer.props.motionSpeed ?? 20}
+      oninput={(e) => setBgProp(bg, i, 'motionSpeed', Number(e.target.value))} />
+  {/if}
+{/snippet}
+
 {#snippet backgroundLayers(bg, layers)}
   {#each layers as layer, i (i)}
     <div class="bg-layer">
@@ -8647,6 +8746,7 @@
           <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
         <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity ?? 1}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
+        {@render bgMotionRows(bg, i, layer)}
         <label class="gridmenu-snap" title={ta('tip.bg.parallax')}>
           <input type="checkbox" checked={(layer.props.parallax ?? 0) > 0}
             onchange={(e) => setBgProp(bg, i, 'parallax', e.target.checked ? 0.3 : 0)} />
@@ -8663,50 +8763,137 @@
               onchange={(v) => setBgProp(bg, i, 'bleed', v)} /></label>
         {/if}
       {:else if layer.type === 'slideshow'}
-        <label class="ghost filepick" title={ta('tip.bg.addImages')}>
-          {ta('ui.addImages')}
-          <input type="file" accept="image/*" multiple onchange={(e) => addBgGalleryImages(bg, i, e)} />
+        {@const gstyle = layer.props.style ?? 'floating'}
+        {@const gmotion = styleMotion(gstyle, layer.props.motion)}
+        {@const fixedSeed = (layer.props.seed ?? 0) > 0}
+        {@render bgFolderRows(bg, i, layer)}
+        {@render bgImageRows(bg, i, layer)}
+        <label title={ta('tip.bg.galleryStyle')}>{ta('lbl.galleryStyle')}
+          <Dropdown value={gstyle}
+            options={GALLERY_STYLES.map((st) => [st, ta(`opt.galleryStyle.${st}`)])}
+            onchange={(v) => setBgProp(bg, i, 'style', v)} /></label>
+        {#if gstyle === 'fill'}
+          <label>{ta('lbl.fit')}
+            <Dropdown value={layer.props.fit ?? 'cover'}
+              options={[['cover', ta('opt.fit.cover')], ['contain', ta('opt.fit.contain')]]}
+              onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
+          <label>{ta('lbl.secondsPerImage')}
+            <span class="gridmenu-value">{layer.props.interval ?? 12} s</span></label>
+          <input type="range" min="0.5" max="90" step="0.5" value={layer.props.interval ?? 12}
+            oninput={(e) => setBgProp(bg, i, 'interval', Number(e.target.value))} />
+          <label>{ta('lbl.transition')}
+            <span class="gridmenu-value">{(layer.props.fade ?? 1.5).toFixed(1)} s</span></label>
+          <input type="range" min="0" max="5" step="0.1" value={layer.props.fade ?? 1.5}
+            oninput={(e) => setBgProp(bg, i, 'fade', Number(e.target.value))} />
+          <label>{ta('lbl.blur')}
+            <span class="gridmenu-value">{layer.props.blur ?? 0} px</span></label>
+          <input type="range" min="0" max="20" step="1" value={layer.props.blur ?? 0}
+            oninput={(e) => setBgProp(bg, i, 'blur', Number(e.target.value))} />
+        {:else}
+          {#if gstyle === 'band'}
+            <label>{ta('lbl.galleryRows')}
+              <Dropdown value={String(layer.props.rows ?? 2)} options={[['1', '1'], ['2', '2']]}
+                onchange={(v) => setBgProp(bg, i, 'rows', Number(v))} /></label>
+            <label>{ta('lbl.photoDirection')}
+              <Dropdown value={layer.props.direction ?? 'left'}
+                options={[['left', ta('opt.ribbonDir.left')], ['right', ta('opt.ribbonDir.right')]]}
+                onchange={(v) => setBgProp(bg, i, 'direction', v)} /></label>
+          {:else}
+            <label title={ta('tip.bg.photoCount')}>{ta('lbl.photoCount')}
+              <input type="number" min={gstyle === 'mosaic' ? 4 : 1} max="20"
+                value={layer.props.count ?? (gstyle === 'mosaic' ? 12 : 8)}
+                onchange={(e) => setBgProp(bg, i, 'count', Number(e.target.value))} /></label>
+            <label title={ta('tip.bg.galleryRepeat')}>{ta('lbl.galleryRepeat')}
+              <Dropdown value={layer.props.repeat === true ? 'repeat' : 'once'}
+                options={[['once', ta('opt.galleryRepeat.once')], ['repeat', ta('opt.galleryRepeat.repeat')]]}
+                onchange={(v) => setBgProp(bg, i, 'repeat', v === 'repeat')} /></label>
+            <label title={ta('tip.bg.galleryPlace')}>{ta('lbl.galleryPlace')}
+              <Dropdown value={fixedSeed ? 'fixed' : 'random'}
+                options={[['random', ta('opt.galleryPlace.random')], ['fixed', ta('opt.galleryPlace.fixed')]]}
+                onchange={(v) => setBgProp(bg, i, 'seed', v === 'fixed' ? newSeed() : 0)} /></label>
+            {#if fixedSeed}
+              <button type="button" class="ghost action" title={ta('tip.bg.photoSeed')}
+                onclick={() => setBgProp(bg, i, 'seed', newSeed())}>
+                {@html ICONS.shuffle} {ta('ui.shufflePhotos')}
+              </button>
+            {/if}
+          {/if}
+          <label>{ta('lbl.size')}
+            <span class="gridmenu-value">{frameSize(layer.props.size, gstyle)} px</span></label>
+          <input type="range" min="60" max="400" step="2" value={frameSize(layer.props.size, gstyle)}
+            oninput={(e) => setBgProp(bg, i, 'size', Number(e.target.value))} />
+          {#if gstyle === 'floating'}
+            <label title={ta('tip.bg.photoSpread')}>{ta('lbl.photoSpread')}
+              <span class="gridmenu-value">{Math.round((layer.props.spread ?? 0.85) * 100)}%</span></label>
+            <input type="range" min="0" max="1" step="0.01" value={layer.props.spread ?? 0.85}
+              oninput={(e) => setBgProp(bg, i, 'spread', Number(e.target.value))} />
+            <label>{ta('lbl.photoTilt')}
+              <span class="gridmenu-value">{layer.props.tilt ?? 5}°</span></label>
+            <input type="range" min="0" max="15" step="1" value={layer.props.tilt ?? 5}
+              oninput={(e) => setBgProp(bg, i, 'tilt', Number(e.target.value))} />
+          {/if}
+          <label title={ta('tip.bg.galleryShape')}>{ta('lbl.galleryShape')}
+            <Dropdown value={layer.props.shape ?? 'rect'}
+              options={GALLERY_SHAPES.map((sh) => [sh, ta(`opt.galleryShape.${sh}`)])}
+              onchange={(v) => setBgProp(bg, i, 'shape', v)} /></label>
+          <label title={ta('tip.bg.galleryLook')}>{ta('lbl.galleryLook')}
+            <Dropdown value={layer.props.look ?? 'shadow'}
+              options={GALLERY_LOOKS.map((lk) => [lk, ta(`opt.galleryLook.${lk}`)])}
+              onchange={(v) => setBgProp(bg, i, 'look', v)} /></label>
+          {#if colouredLook(layer.props.look)}
+            <label>{ta('lbl.frameColor')}
+              <ColorPicker value={frameColor(layer.props.look, layer.props.frameColor)} tokens={themeSwatches()} allowClear
+                label={ta('tip.bg.frameColor')} onchange={(hex) => setBgProp(bg, i, 'frameColor', hex ?? '')} /></label>
+          {/if}
+          {#if roundable(layer.props.shape) && (layer.props.look ?? 'shadow') !== 'polaroid'}
+            <label>{ta('lbl.rounding')}
+              <span class="gridmenu-value">{layer.props.radius ?? 5} px</span></label>
+            <input type="range" min="0" max="48" step="1" value={layer.props.radius ?? 5}
+              oninput={(e) => setBgProp(bg, i, 'radius', Number(e.target.value))} />
+          {/if}
+        {/if}
+        <label title={ta('tip.bg.galleryTone')}>{ta('lbl.galleryTone')}
+          <Dropdown value={layer.props.tone ?? 'natural'}
+            options={GALLERY_TONES.map((tn) => [tn, ta(`opt.galleryTone.${tn}`)])}
+            onchange={(v) => setBgProp(bg, i, 'tone', v)} /></label>
+        {#if motionsFor(gstyle).length > 1}
+          <label title={ta('tip.bg.photoMotion')}>{ta('lbl.motion')}
+            <Dropdown value={gmotion}
+              options={motionsFor(gstyle).map((m) => [m, m === 'none' ? ta('common.none') : ta(`opt.galleryMotion.${m}`)])}
+              onchange={(v) => setBgProp(bg, i, 'motion', v)} /></label>
+        {/if}
+        {#if gmotion === 'crossfade' && gstyle !== 'fill'}
+          <label>{ta('lbl.secondsPerImage')}
+            <span class="gridmenu-value">{layer.props.interval ?? 12} s</span></label>
+          <input type="range" min="0.5" max="90" step="0.5" value={layer.props.interval ?? 12}
+            oninput={(e) => setBgProp(bg, i, 'interval', Number(e.target.value))} />
+        {:else if gmotion !== 'none' || gstyle === 'band'}
+          <label>{ta('lbl.motionSpeed')}
+            <span class="gridmenu-value">{layer.props.motionSpeed ?? 30} s</span></label>
+          <input type="range" min="0.5" max="90" step="0.5" value={layer.props.motionSpeed ?? 30}
+            oninput={(e) => setBgProp(bg, i, 'motionSpeed', Number(e.target.value))} />
+        {/if}
+        <label class="gridmenu-snap" title={ta('tip.bg.underNav')}>
+          <input type="checkbox" checked={layer.props.underNav !== false}
+            onchange={(e) => (e.target.checked
+              ? setBgProp(bg, i, 'underNav', true)
+              : setBgProps(bg, i, { underNav: false, underAnnounce: false }))} />
+          {ta('lbl.underNav')}
         </label>
-        {#each layer.props.images ?? [] as img, j (j)}
-          <span class="toolbar-row">
-            <img class="site-icon-preview" src={img.src} alt="" />
-            <span class="row-tools">
-              <button class="ghost row-tool" onclick={() => moveBgGalleryImage(bg, i, j, -1)} disabled={j === 0}>{@html ICONS.up}</button>
-              <button class="ghost row-tool" onclick={() => moveBgGalleryImage(bg, i, j, 1)}
-                disabled={j === layer.props.images.length - 1}>{@html ICONS.down}</button>
-              <button class="ghost row-tool" title={ta('tip.removeImage')}
-                onclick={() => removeBgGalleryImage(bg, i, j)}>{@html ICONS.cross}</button>
-            </span>
-          </span>
-          <label>{ta('lbl.focusX')}
-            <span class="gridmenu-value">{Math.round((img.x ?? 0.5) * 100)}%</span></label>
-          <input type="range" min="0" max="1" step="0.01" value={img.x ?? 0.5}
-            oninput={(e) => setBgGalleryImageProp(bg, i, j, 'x', Number(e.target.value))} />
-          <label>{ta('lbl.focusY')}
-            <span class="gridmenu-value">{Math.round((img.y ?? 0.5) * 100)}%</span></label>
-          <input type="range" min="0" max="1" step="0.01" value={img.y ?? 0.5}
-            oninput={(e) => setBgGalleryImageProp(bg, i, j, 'y', Number(e.target.value))} />
-        {/each}
-        <label>{ta('lbl.fit')}
-          <Dropdown value={layer.props.fit ?? 'cover'}
-            options={[['cover', ta('opt.fit.cover')], ['contain', ta('opt.fit.contain')]]}
-            onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
-        <label title={ta('hint.bg.gallery')}>{ta('lbl.secondsPerImage')}
-          <input type="number" min="2" max="120" value={layer.props.interval ?? 6}
-            onchange={(e) => setBgProp(bg, i, 'interval', Number(e.target.value))} /></label>
-        <label>{ta('lbl.transition')}
-          <span class="gridmenu-value">{(layer.props.fade ?? 1.5).toFixed(1)} s</span></label>
-        <input type="range" min="0" max="5" step="0.1" value={layer.props.fade ?? 1.5}
-          oninput={(e) => setBgProp(bg, i, 'fade', Number(e.target.value))} />
-        <label>{ta('lbl.blur')}
-          <span class="gridmenu-value">{layer.props.blur ?? 0} px</span></label>
-        <input type="range" min="0" max="20" step="1" value={layer.props.blur ?? 0}
-          oninput={(e) => setBgProp(bg, i, 'blur', Number(e.target.value))} />
+        {#if siteDraft.nav?.announcement?.text}
+          <!-- The strip sits above the menu: behind the strip means behind the menu too. -->
+          <label class="gridmenu-snap" class:muted={layer.props.underNav === false} title={ta('tip.bg.underAnnounce')}>
+            <input type="checkbox" checked={layer.props.underAnnounce === true} disabled={layer.props.underNav === false}
+              onchange={(e) => (e.target.checked
+                ? setBgProps(bg, i, { underAnnounce: true, underNav: true })
+                : setBgProp(bg, i, 'underAnnounce', false))} />
+            {ta('lbl.underAnnounce')}
+          </label>
+        {/if}
         <label>{ta('lbl.strength')}
-          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 1) * 100)}%</span></label>
-        <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity ?? 1}
+          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 0.85) * 100)}%</span></label>
+        <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity ?? 0.85}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
-        <p class="panel-hint">{ta('hint.bg.gallery')}</p>
       {:else if layer.type === 'video'}
         <label class="ghost filepick" title={ta('tip.bg.videoFile')}>
           {layer.props.src ? ta('ui.changeVideo') : ta('ui.chooseVideo')}
@@ -10894,6 +11081,24 @@
     padding: 0.1rem 0.2rem 0;
     font-size: 0.72rem;
     color: #f5a09a;
+  }
+
+  /* The answer from a shared folder: how many pictures it holds, or why it
+     could not be read. */
+  .folder-status {
+    margin: 0.2rem 0 0;
+    padding: 0 0.2rem;
+    font-size: 0.74rem;
+    opacity: 0.75;
+  }
+
+  .folder-status.err {
+    color: #f5a09a;
+  }
+
+  /* A switch that cannot be used until another is on. */
+  .gridmenu-snap.muted {
+    opacity: 0.45;
   }
 
   .footer-soc-preview {

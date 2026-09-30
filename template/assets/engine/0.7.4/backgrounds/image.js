@@ -15,15 +15,47 @@
  * - size (fraction, 1 = 100% of the width): only in 'custom' mode.
  * - blur (px): mood background behind text. opacity (0..1). parallax (0..1): the layer
  *   lags behind on scroll. bleed: let the parallax flow into the neighbouring sections.
+ * - motion ('none' | 'kenburns' | 'drift') with motionSpeed (seconds per cycle): the
+ *   layer moves on its own. It paints on an element inside the parallax carrier, since
+ *   the two would otherwise fight over `transform`.
  */
 
 import { isSafeImage } from '../nav-model.js';
+import { placeholderPhoto } from '../gallery-layout.js';
 
 /** Maximum vertical travel (fraction of the viewport height) a parallax layer gets at
  *  full strength. Generous, since the free-placement image (scale + position) does not
  *  HAVE to fill the section: it shifts cleanly with no overscan/zoom, so the movement
  *  can be large. */
 const MAX_SHIFT = 0.4;
+
+/** How the layer moves on its own, beside the parallax. */
+export const BG_MOTIONS = ['none', 'kenburns', 'drift'];
+
+/** Seconds for one cycle of that motion. */
+export const BG_MOTION_TIME = { min: 6, max: 60, dflt: 20 };
+
+/**
+ * The motion, with stillness for anything unknown, so an unusable value can
+ * never become a class name. Pure function (node-tested).
+ * @param {unknown} motion
+ * @returns {'none'|'kenburns'|'drift'}
+ */
+export function bgMotion(motion) {
+  return BG_MOTIONS.includes(motion) ? motion : 'none';
+}
+
+/**
+ * Seconds for one cycle, inside the bounds. Pure function (node-tested).
+ * @param {unknown} seconds
+ * @returns {number}
+ */
+export function normalizeMotionSpeed(seconds) {
+  const { min, max, dflt } = BG_MOTION_TIME;
+  const n = Number(seconds);
+  if (!Number.isFinite(n) || n <= 0) return dflt;
+  return Math.min(max, Math.max(min, n));
+}
 
 /**
  * The background-position string for a focal point (0.5/0.5 = centered). Pure
@@ -245,25 +277,37 @@ function mountParallaxCss(img, speed, blurMargin, fit) {
 }
 
 export const imageLayer = {
-  version: 2,
+  version: 3,
   label: 'Image',
   labelKey: 'bgLayer.image',
-  defaults: () => ({ src: '', fit: 'plain', x: 0.5, y: 0.5, size: 1, opacity: 1, blur: 0, parallax: 0, bleed: 'none' }),
+  defaults: () => ({
+    src: '', fit: 'plain', x: 0.5, y: 0.5, size: 1, opacity: 1, blur: 0,
+    parallax: 0, bleed: 'none', motion: 'none', motionSpeed: BG_MOTION_TIME.dflt,
+  }),
   migrations: {
     // 1 -> 2 (ADR-0021): Norwegian fit values renamed to English.
     1: (props) => ({
       ...props,
       fit: props.fit === 'vanlig' ? 'plain' : props.fit === 'flislegg' ? 'tile' : props.fit === 'egen' ? 'custom' : props.fit,
     }),
+    // 2 -> 3: motion of its own beside the parallax. The defaults stand FIRST
+    // and the stored props last, because the editor writes into layer props
+    // without lifting them: a layer still stored as version 2 can already
+    // carry a chosen motion, and the lift must not overwrite it.
+    2: (props) => ({ motion: 'none', motionSpeed: BG_MOTION_TIME.dflt, ...props }),
   },
   /**
    * @param {HTMLElement} el
-   * @param {{src: string, fit?: 'plain'|'tile'|'cover'|'custom'|'contain'|'repeat', x?: number, y?: number, size?: number, opacity?: number, blur?: number, parallax?: number, bleed?: 'none'|'up'|'down'|'both'}} props
+   * @param {{src: string, fit?: 'plain'|'tile'|'cover'|'custom'|'contain'|'repeat', x?: number, y?: number, size?: number, opacity?: number, blur?: number, parallax?: number, bleed?: 'none'|'up'|'down'|'both', motion?: 'none'|'kenburns'|'drift', motionSpeed?: number}} props
    */
   render(el, props) {
-    // An empty or unsafe source yields no layer: the source goes straight into
-    // CSS url(), so it must pass the same guard as the nav background (shared isSafeImage).
-    if (!isSafeImage(props.src)) return;
+    // The source goes straight into CSS url(), so it must pass the same guard as
+    // the nav background (shared isSafeImage). No picture yet means a drawn
+    // example that base.css shows only inside the editor, so the owner can set
+    // size, position and motion before choosing the photo.
+    const demo = !isSafeImage(props.src);
+    if (demo) el.classList.add('urd-bg-demo');
+    const src = demo ? placeholderPhoto(0) : props.src;
     el.style.opacity = String(props.opacity ?? 1);
     // Clipping: a directional clip-path driven by bleed (inset(0) = clip to the section).
     el.style.clipPath = bleedClip(props.bleed);
@@ -280,30 +324,45 @@ export const imageLayer = {
     img.style.right = '0';
     img.style.top = '0';
     img.style.bottom = '0';
+    // Motion and parallax both drive `transform`, so a moving layer paints on
+    // an element of its own inside the parallax carrier. A still layer paints
+    // on the carrier itself.
+    const motion = bgMotion(props.motion);
+    const paint = motion === 'none' ? img : document.createElement('div');
+    if (paint !== img) {
+      paint.className = `urd-bg-motion urd-bg-motion-${motion}`;
+      paint.style.position = 'absolute';
+      paint.style.left = '0';
+      paint.style.right = '0';
+      paint.style.top = '0';
+      paint.style.bottom = '0';
+      paint.style.animationDuration = `${normalizeMotionSpeed(props.motionSpeed)}s`;
+      img.appendChild(paint);
+    }
     const tile = props.fit === 'tile' || props.fit === 'repeat';
-    img.style.backgroundImage = `url("${props.src}")`;
-    img.style.backgroundSize = bgSize(props.fit, props.size);
-    img.style.backgroundRepeat = tile ? 'repeat' : 'no-repeat';
+    paint.style.backgroundImage = `url("${src}")`;
+    paint.style.backgroundSize = bgSize(props.fit, props.size);
+    paint.style.backgroundRepeat = tile ? 'repeat' : 'no-repeat';
     // Placement via background-position. The image is (usually) SMALLER than the
     // section, so 0/100 % = flush left/right (intuitive), and x/y can go BELOW 0 /
     // ABOVE 1 to put the subject partly or entirely outside the edge.
-    img.style.backgroundPosition = bgPosition(props.x, props.y);
+    paint.style.backgroundPosition = bgPosition(props.x, props.y);
     // Blur: stretch the image a touch past the edge (clipped by the layer) so the
     // transparent fringe blur() creates ends up outside. No deliberate zoom.
     let blurMargin = 0;
     if (props.blur > 0) {
-      img.style.filter = `blur(${props.blur}px)`;
+      paint.style.filter = `blur(${props.blur}px)`;
       blurMargin = Math.ceil(props.blur);
-      img.style.left = `-${blurMargin}px`;
-      img.style.right = `-${blurMargin}px`;
-      img.style.top = `-${blurMargin}px`;
-      img.style.bottom = `-${blurMargin}px`;
+      paint.style.left = `-${blurMargin}px`;
+      paint.style.right = `-${blurMargin}px`;
+      paint.style.top = `-${blurMargin}px`;
+      paint.style.bottom = `-${blurMargin}px`;
     }
 
     // Same load guard as the image block: the layer is kept invisible until the image
     // has finished loading, so it never appears in stripes.
     const probe = new Image();
-    probe.src = props.src;
+    probe.src = src;
     if (!probe.complete) {
       el.style.visibility = 'hidden';
       const show = () => { el.style.visibility = ''; };
@@ -313,7 +372,7 @@ export const imageLayer = {
 
     el.appendChild(img);
     // Parallax (additive since v0.6): the layer lags behind on scroll.
-    if (props.parallax > 0) mountLayerParallax(img, props.parallax, blurMargin, props.fit ?? 'cover');
+    if (props.parallax > 0) mountLayerParallax(img, props.parallax, paint === img ? blurMargin : 0, props.fit ?? 'cover');
   },
 };
 

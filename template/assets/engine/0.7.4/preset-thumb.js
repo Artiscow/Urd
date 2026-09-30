@@ -10,6 +10,8 @@
  * numbers we computed ourselves. Safe for insertAdjacentHTML.
  */
 
+import { photoLayout, mosaicSpans, MOSAIC_COLS } from './gallery-layout.js';
+
 const HEX_RE = /^#[0-9a-fA-F]{3,8}$/;
 const TOKEN_RE = /^[a-z][a-z0-9-]*$/;
 
@@ -322,6 +324,50 @@ function sectionShapes(section, w, h) {
     if (layer.type !== 'glow') continue;
     const p = layer.props ?? {};
     parts.push(`<circle cx="${r1(clamp(p.x ?? 0.5, 0, 1) * w)}" cy="${r1(clamp(p.y ?? 0.3, 0, 1) * h)}" r="${r1(w * clamp(p.radius ?? 0.5, 0.1, 1) * 0.5)}" fill="${safeColor(p.color, FALLBACK_ACCENT)}" opacity="${r1(clamp(p.opacity ?? 0.3, 0, 0.5))}"/>`);
+  }
+
+  // Image gallery layers as the frames their style draws, on the same layout
+  // the layer itself uses, so a card shows the pattern before any picture has
+  // been picked. The fill style is the background itself and needs no sketch.
+  for (const layer of section?.background?.layers ?? []) {
+    if (layer.type !== 'slideshow') continue;
+    const props = layer.props ?? {};
+    const style = props.style ?? 'floating';
+    const fill = token('surface', FALLBACK_SURFACE);
+    if (style === 'floating') {
+      // The frames are sized in px on the page; on the card they are a share of its width.
+      const polaroid = props.look === 'polaroid';
+      const pw = w * (polaroid ? 0.17 : 0.13);
+      const ph = pw / (polaroid ? 0.84 : 1.35);
+      for (const place of photoLayout(props.images, { ...props, seed: props.seed || 1, style })) {
+        const px = (place.x / 100) * w - pw / 2;
+        const py = (place.y / 100) * h - ph / 2;
+        const spin = ` rx="1" opacity="0.75" transform="rotate(${r1(place.rot)} ${r1(px + pw / 2)} ${r1(py + ph / 2)})"`;
+        parts.push(rect(px, py, pw, ph, fill, spin));
+      }
+    } else if (style === 'band') {
+      const rows = Number(props.rows) === 1 ? 1 : 2;
+      const th = h * (rows === 1 ? 0.4 : 0.3);
+      const tw = th * 1.33;
+      for (let row = 0; row < rows; row += 1) {
+        const y = rows === 1 ? (h - th) / 2 : h * 0.1 + row * (th + h * 0.1);
+        for (let x = -tw * (row * 0.5); x < w; x += tw + 3) parts.push(rect(x, y, tw, th, fill, ' rx="1" opacity="0.75"'));
+      }
+    } else if (style === 'mosaic') {
+      const gap = 2;
+      const cw = (w - gap * (MOSAIC_COLS + 1)) / MOSAIC_COLS;
+      const rh = h / 3.4;
+      let col = 0;
+      let row = 0;
+      for (const span of mosaicSpans(props.count, props.seed || 1)) {
+        if (col + span.cols > MOSAIC_COLS) { col = 0; row += 1; }
+        const y = gap + row * (rh + gap);
+        if (y > h) break;
+        parts.push(rect(gap + col * (cw + gap), y, cw * span.cols + gap * (span.cols - 1), rh * span.rows + gap * (span.rows - 1), fill, ' rx="1" opacity="0.75"'));
+        col += span.cols;
+        if (col >= MOSAIC_COLS) { col = 0; row += 1; }
+      }
+    }
   }
 
   // The content surface (ADR-0018): the blocks' x/w are percentages of the

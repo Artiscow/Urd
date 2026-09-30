@@ -84,3 +84,23 @@ test('role sets tint the background in the sketch (deep = text token, soft = sur
   const soft = presetThumb({ ...section([textBlock('<h2>x</h2>')]), theme: 'soft' });
   assert.match(soft, /^<svg[^>]*>\s*<rect[^>]*fill="var\(--urd-color-surface/, 'a soft band must have a surface-tinted background');
 });
+
+test('an image gallery layer is sketched in its style, so the card is not blank', () => {
+  const card = (style, extra = {}) => presetThumb({
+    size: { minHeight: '400px' },
+    background: { layers: [{ type: 'slideshow', version: 2, props: { images: [], count: 5, seed: 1, style, ...extra } }] },
+    blocks: [],
+  });
+  // The background fill plus one frame per picture, each leaning on its own.
+  const floating = card('floating');
+  assert.equal([...floating.matchAll(/<rect /g)].length, 6);
+  assert.equal([...floating.matchAll(/transform="rotate\(/g)].length, 5);
+  // The same seed must give the same sketch as the layer's own scatter.
+  assert.equal(floating, card('floating'));
+  assert.notEqual(floating, card('floating', { seed: 2 }));
+  // A wall of tiles, and two rows of a band, both with more than the fill alone.
+  assert.ok([...card('mosaic', { count: 8 }).matchAll(/<rect /g)].length >= 6);
+  assert.ok([...card('band').matchAll(/<rect /g)].length >= 6);
+  // The fill style is the background itself.
+  assert.equal([...card('fill').matchAll(/<rect /g)].length, 1);
+});

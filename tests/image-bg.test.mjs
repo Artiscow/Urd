@@ -9,14 +9,30 @@ import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 const {
   imageLayer, bgPosition, bgSize, bleedClip, parallaxPad, parallaxOffset,
+  bgMotion, normalizeMotionSpeed, BG_MOTIONS, BG_MOTION_TIME,
 } = await engineImport('backgrounds/image.js');
 
 test('imageLayer: default values', () => {
-  assert.equal(imageLayer.version, 2);
+  assert.equal(imageLayer.version, 3);
   assert.equal(imageLayer.defaults().fit, 'plain');
   assert.equal(imageLayer.defaults().size, 1);
   assert.equal(imageLayer.defaults().parallax, 0);
   assert.equal(imageLayer.defaults().bleed, 'none');
+  assert.equal(imageLayer.defaults().motion, 'none');
+  assert.equal(imageLayer.defaults().motionSpeed, BG_MOTION_TIME.dflt);
+});
+
+test('bgMotion and normalizeMotionSpeed: allowlisted, and still by default', () => {
+  assert.deepEqual(BG_MOTIONS, ['none', 'kenburns', 'drift']);
+  assert.equal(bgMotion('kenburns'), 'kenburns');
+  assert.equal(bgMotion('drift'), 'drift');
+  assert.equal(bgMotion('zoom'), 'none', 'an unknown value can never become a class name');
+  assert.equal(bgMotion(undefined), 'none');
+  assert.equal(normalizeMotionSpeed(30), 30);
+  assert.equal(normalizeMotionSpeed(1), BG_MOTION_TIME.min);
+  assert.equal(normalizeMotionSpeed(900), BG_MOTION_TIME.max);
+  assert.equal(normalizeMotionSpeed(0), BG_MOTION_TIME.dflt);
+  assert.equal(normalizeMotionSpeed('sakte'), BG_MOTION_TIME.dflt);
 });
 
 test('bgPosition: position to background-position percent (may go outside 0-100)', () => {
@@ -88,4 +104,16 @@ test('imageLayer 1 -> 2: the Norwegian fit values are lifted to English', () => 
   assert.equal(lift({ fit: 'cover' }).fit, 'cover', 'values that were already English are untouched');
   assert.equal(lift({ fit: 'repeat' }).fit, 'repeat');
   assert.equal(lift({ fit: 'vanlig', size: 0.5 }).size, 0.5, 'the other props survive the lift');
+});
+
+test('imageLayer 2 -> 3: the motion fields are added without overwriting a choice', () => {
+  const lift = imageLayer.migrations[2];
+  assert.equal(lift({ src: '/media/a.webp' }).motion, 'none');
+  assert.equal(lift({ src: '/media/a.webp' }).motionSpeed, BG_MOTION_TIME.dflt);
+  assert.equal(lift({ src: '/media/a.webp' }).src, '/media/a.webp', 'the other props survive the lift');
+  // The editor writes into layer props WITHOUT lifting them first, so a layer
+  // still stored as version 2 can already carry a chosen motion. The lift must
+  // leave it alone, or the setting would be undone on every render.
+  assert.equal(lift({ motion: 'drift' }).motion, 'drift');
+  assert.equal(lift({ motion: 'kenburns', motionSpeed: 40 }).motionSpeed, 40);
 });

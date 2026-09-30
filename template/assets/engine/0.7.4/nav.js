@@ -735,6 +735,11 @@ export function renderNav(site, host) {
     if (!navHBase || !host.classList.contains('urd-nav-compact')) navHBase = h;
     document.documentElement.style.setProperty('--urd-nav-h-base', `${navHBase}px`);
     host.style.setProperty('--urd-announce-h', `${announceH}px`);
+    // The two heights on the root as well, for a background that keeps its
+    // pictures out from under the strip or the menu: the strip's own, and
+    // the menu's own below it.
+    document.documentElement.style.setProperty('--urd-announce-h', `${announceH}px`);
+    document.documentElement.style.setProperty('--urd-nav-own-h', `${isSide ? 0 : Math.max(0, nav.offsetTop + nav.offsetHeight - announceH)}px`);
     // A strip fixed across the whole page: the column starts and the body
     // is padded below it (base.css reads the variable on the root).
     const pageH = announceEl?.classList.contains('urd-announce-page') ? announceH : 0;
