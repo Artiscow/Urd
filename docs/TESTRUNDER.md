@@ -4,6 +4,19 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.13.9): gallery views mosaic and polaroid
+
+- [ ] Gallery block, Visning Mosaikk with nine or so pictures: a wall of tiles in mixed sizes with no hole in it, for 2, 3, 4 and 6 columns alike
+- [ ] Mosaikk, Radhøyde from 80 to 400: the rows follow, and the block grows with the wall
+- [ ] Mosaikk, Stokk om: another wall from the same pictures; reload admin and the wall is the one that was left
+- [ ] Mosaikk on a phone: two columns, still without a hole
+- [ ] Visning Polaroid: every picture in a white card with a wider foot, each leaning its own way; Helning 0 stands them straight and hides Stokk om
+- [ ] Polaroid, Stokk om: new leans; Rammefarge with a theme colour and an own one, and the clear button back to white
+- [ ] Polaroid, Bildetekst på kortet: the image's description stands in the foot, and a picture without one keeps the bare foot
+- [ ] Polaroid in Clean view and on the published page: a card straightens and lifts under the mouse, a click opens the lightbox, and a picture with a link follows the link
+- [ ] Both views: a click on a tile with the chrome on opens the image editor; Avrunding and Mellomrom apply
+- [ ] An image gallery background layer with Stil Mosaikk on the same page as a gallery block in Mosaikk: each keeps its own row height and gap
+
 ### Testrunde-batch (0.7.0.16-35p): the picture routes and the review fixes
 
 - [ ] Deployed site, a Nextcloud share or a picture list holding an SVG file: the gallery skips it, and opening its `/api/photo?...` address answers «did not answer with a picture»

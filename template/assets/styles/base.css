@@ -2910,6 +2910,92 @@ a.urd-gallery-tile {
   aspect-ratio: 1 / 1;
 }
 
+/* Mosaic (the gallery block's view; the background layer's mosaic has its
+   own rules under .urd-gallery-mosaic): the grid's wall with rows of one
+   height and tiles in varied spans. Every tile's place is set by the block
+   (mosaicWall in gallery-model.js), so the wall is a full rectangle. */
+.urd-gallery-wall {
+  display: grid;
+  grid-template-columns: repeat(var(--urd-gallery-cols, 3), 1fr);
+  grid-auto-rows: var(--urd-gallery-row, 140px);
+  gap: var(--urd-gallery-gap, 12px);
+  height: auto;
+}
+
+.urd-gallery-wall .urd-gallery-tile {
+  width: 100%;
+  height: 100%;
+}
+
+/* Polaroid: each picture set in a card with a wider foot, leaning by its own
+   throw of the seed (--urd-card-tilt from the block). The card is white with
+   dark ink until the owner picks a colour (--urd-polaroid-color); then the
+   words take the section's text colour. The grid's own padding gives the
+   leaning corners room inside the block. */
+.urd-gallery-cards {
+  display: grid;
+  grid-template-columns: repeat(var(--urd-gallery-cols, 3), 1fr);
+  gap: calc(var(--urd-gallery-gap, 12px) + 10px);
+  align-items: start;
+  height: auto;
+  padding: 10px;
+}
+
+.urd-gallery-card {
+  position: relative;
+  margin: 0;
+  padding: 6% 6% 0;
+  background: var(--urd-polaroid-color, #fff);
+  border-radius: 2px;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 22%);
+  rotate: var(--urd-card-tilt, 0deg);
+  color: #222;
+}
+
+.urd-gallery-cards-own .urd-gallery-card {
+  color: inherit;
+}
+
+.urd-gallery-card .urd-gallery-tile {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+/* The foot: bare on a card without words, otherwise the image text */
+.urd-gallery-card-plain {
+  padding-bottom: 18%;
+}
+
+.urd-gallery-caption {
+  padding: 0.55em 0 0.7em;
+  font-size: 0.85rem;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* Under a real pointer the card straightens and lifts, so the picture can be
+   looked at; a touch never gets a hover state that sticks. */
+@media (hover: hover) and (pointer: fine) {
+  .urd-gallery-card {
+    transition: rotate 0.25s ease, translate 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .urd-gallery-card:hover,
+  .urd-gallery-card:focus-within {
+    z-index: 1;
+    rotate: 0deg;
+    translate: 0 -4px;
+    box-shadow: 0 12px 26px rgb(0 0 0 / 28%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .urd-gallery-card {
+    transition: none;
+  }
+}
+
 /* Carousel: horizontal scroll with snap; the arrows scroll one viewport-width step. */
 .urd-gallery-track {
   display: flex;

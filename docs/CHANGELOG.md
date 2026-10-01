@@ -27,6 +27,14 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.13.9 - Gallery views mosaic and polaroid - 1 October 2026
+
+- The gallery block had no wall of mixed tiles and no framed cards, ApeironLF's hero styles B and C. Two new views of the same block: `mosaic`, the grid's wall with rows of one height (`rowHeight`) and tiles one cell, two wide, two high or both, dealt per picture from `seed`; and `polaroid`, every picture in a card with a wider foot, leaning by its own throw of the seed inside `tilt` degrees, with `frameColor` for the card and `captions` writing the image text in the foot. Both share the grid's columns and gap, grow with their content, and keep the tiles' lightbox, links and image editor.
+- The spans and the leans are the background layer's die: `mosaicSpan` and `frameTilt` are exported from gallery-layout.js (the layer's `mosaicSpans` and `photoLayout` now call them, their throws unchanged), and gallery-model.js builds `tileSpans`, `mosaicWall` and `polaroidTilts` on them.
+- A mosaic left to the browser's own packing ended with a hole where the pictures ran out. The pure `mosaicWall` places every tile itself, first-fit row by row, and gives the empty cells to a neighbouring tile; a hole no neighbour can take makes the last large tile a single cell and packs again. Tested over the columns, counts and seeds: no overlap and no hole.
+- Found in the testing: the block's host class `urd-gallery-mosaic` was already the background layer's, whose rules set the row height and the gap over the block's own. The block's two views carry `urd-gallery-wall` and `urd-gallery-cards`.
+- The Style tab: the view list comes from `GALLERY_VIEWS`, the columns and gap show for the three grid views, the mosaic gets its row height and Shuffle, the polaroids their lean, Shuffle (hidden when the lean is 0), frame colour and caption switch. Keys in nb, en-GB and tr; SCHEMA.md documents the views.
+
 ### 0.7.0.36 - The dev-minor bump with its rebuilt bundle - 1 October 2026
 
 - Dependabot PR #23 (the dev-minor group) failed the build-conformity check, since a bot cannot rebuild the bundle and the svelte runtime is part of it. Taken locally instead of merged, so the lockfile and the rebuilt bundle land in one commit: svelte 5.57.0 to 5.57.1, vite 8.3.0 to 8.3.1, @sveltejs/vite-plugin-svelte 7.3.0 to 7.3.1. The PR closes itself when the versions reach main. The editor starts and edits locally with the new runtime (checked 1 October 2026).

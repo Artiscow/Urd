@@ -111,6 +111,7 @@
   import { imageLayer } from '$engine/backgrounds/image.js';
   import { slideshowLayer } from '$engine/backgrounds/slideshow.js';
   import { GALLERY_STYLES, GALLERY_SHAPES, GALLERY_LOOKS, GALLERY_TONES, styleMotion, motionsFor, frameSize, roundable, colouredLook, frameColor } from '$engine/gallery-layout.js';
+  import { GALLERY_VIEWS, GRID_VIEWS, MOSAIC_ROW, POLAROID_TILT, galleryView as blockGalleryView } from '$engine/gallery-model.js';
   import { loadFolderPhotos, parsePhotoSource } from '$engine/photo-source.js';
   import { videoLayer } from '$engine/backgrounds/video.js';
   import { footerThumb } from '$engine/footer-thumb.js';
@@ -9810,11 +9811,13 @@
           onchange={(v) => setBlockProp('variant', v)} /></label>
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'gallery'}
+      {@const gview = blockGalleryView(selectedBlock.props.view)}
       <label>{ta('lbl.view')}
-        <Dropdown value={selectedBlock.props.view ?? 'grid'}
-          options={[['grid', ta('opt.galleryView.grid')], ['carousel', ta('opt.galleryView.carousel')], ['slides', ta('opt.galleryView.slides')], ['ribbon', ta('opt.galleryView.ribbon')]]}
+        <Dropdown value={gview}
+          options={GALLERY_VIEWS.map((v) => [v, ta(`opt.galleryView.${v}`)])}
           onchange={(v) => setBlockProp('view', v)} /></label>
-      {#if (selectedBlock.props.view ?? 'grid') === 'grid'}
+      <!-- The three views that are grids of tiles share the columns and the gap -->
+      {#if GRID_VIEWS.includes(gview)}
         <label>{ta('lbl.columns')}
           <input type="number" min="1" max="6" value={selectedBlock.props.columns ?? 3}
             onchange={(e) => setBlockProp('columns', Number(e.target.value))} /></label>
@@ -9823,7 +9826,42 @@
         <input type="range" min="0" max="32" step="2" value={selectedBlock.props.gap ?? 12}
           oninput={(e) => setBlockProp('gap', Number(e.target.value))} />
       {/if}
-      {#if selectedBlock.props.view === 'ribbon'}
+      {#if gview === 'mosaic'}
+        <div class="ctl-row" title={ta('tip.gallery.rowHeight')}>
+          <span class="mini-label ctl-name">{ta('lbl.galleryRowHeight')}</span>
+          <input type="range" min={MOSAIC_ROW.min} max={MOSAIC_ROW.max} step="10" value={selectedBlock.props.rowHeight ?? MOSAIC_ROW.dflt}
+            oninput={(e) => setBlockProp('rowHeight', e.target.valueAsNumber)} />
+          <span class="gridmenu-value">{selectedBlock.props.rowHeight ?? MOSAIC_ROW.dflt} px</span>
+        </div>
+        <button type="button" class="ghost action" title={ta('tip.gallery.shuffleMosaic')}
+          onclick={() => setBlockProp('seed', newSeed())}>
+          {@html ICONS.shuffle} {ta('ui.shufflePhotos')}
+        </button>
+      {/if}
+      {#if gview === 'polaroid'}
+        <div class="ctl-row" title={ta('tip.gallery.tilt')}>
+          <span class="mini-label ctl-name">{ta('lbl.polaroidTilt')}</span>
+          <input type="range" min={POLAROID_TILT.min} max={POLAROID_TILT.max} step="1" value={selectedBlock.props.tilt ?? POLAROID_TILT.dflt}
+            oninput={(e) => setBlockProp('tilt', e.target.valueAsNumber)} />
+          <span class="gridmenu-value">{selectedBlock.props.tilt ?? POLAROID_TILT.dflt}&deg;</span>
+        </div>
+        <!-- A new lean only where the cards lean at all -->
+        {#if (selectedBlock.props.tilt ?? POLAROID_TILT.dflt) > 0}
+          <button type="button" class="ghost action" title={ta('tip.gallery.shuffleTilt')}
+            onclick={() => setBlockProp('seed', newSeed())}>
+            {@html ICONS.shuffle} {ta('ui.shufflePhotos')}
+          </button>
+        {/if}
+        <label title={ta('tip.gallery.frameColor')}>{ta('lbl.frameColor')}
+          <ColorPicker value={selectedBlock.props.frameColor || '#ffffff'} tokens={themeSwatches()} allowClear
+            label={ta('tip.gallery.frameColor')} onchange={(hex) => setBlockProp('frameColor', hex ?? '')} /></label>
+        <label class="gridmenu-snap" title={ta('tip.gallery.captions')}>
+          <input type="checkbox" checked={selectedBlock.props.captions === true}
+            onchange={(e) => setBlockProp('captions', e.target.checked)} />
+          {ta('lbl.galleryCaptions')}
+        </label>
+      {/if}
+      {#if gview === 'ribbon'}
         <!-- The band: one row, or a second one running the other way -->
         <Choice label={ta('lbl.ribbonRows')} value={String(selectedBlock.props.rows ?? 1)}
           options={[['1', ta('opt.ribbonRows.one')], ['2', ta('opt.ribbonRows.two')]]}
@@ -9858,7 +9896,7 @@
           {ta('lbl.ribbonFade')}
         </label>
       {/if}
-      {#if selectedBlock.props.view === 'slides'}
+      {#if gview === 'slides'}
         <label>{ta('lbl.secondsPerImage')}
           <input type="number" min="2" max="60" value={selectedBlock.props.interval ?? 5}
             onchange={(e) => setBlockProp('interval', Number(e.target.value))} /></label>

@@ -1,7 +1,9 @@
 /**
- * Core block: gallery. One block with three views (the Squarespace model: the
+ * Core block: gallery. One block with six views (the Squarespace model: the
  * view is a prop, not separate block types): grid, carousel (side scrolling with
- * snap) and slides (one image at a time with automatic advance).
+ * snap), slides (one image at a time with automatic advance), ribbon (a rolling
+ * band), mosaic (a wall of tiles in varied spans) and polaroid (framed cards
+ * with a lean).
  *
  * The images live in props.images with the same non-destructive style vocabulary
  * as the image block (style: fit/x/y/zoom/filters); the tiles render with the
@@ -16,7 +18,10 @@
  */
 import { applyImageStyle } from './image.js';
 import { growSectionTo } from '../render.js';
-import { stepIndex, canAutoplay, normalizeInterval, gridColumns } from '../gallery-model.js';
+import {
+  stepIndex, canAutoplay, normalizeInterval, gridColumns, galleryView, GRID_VIEWS, mosaicRowHeight, mosaicWall, polaroidTilts,
+} from '../gallery-model.js';
+import { resolveColor } from '../theme.js';
 import { ribbonDuration, ribbonRows, ribbonPeriods, canRoll } from '../ribbon-model.js';
 import { syncTrackCopies } from './ribbon.js';
 import { isSafeHref } from '../nav-model.js';
@@ -272,7 +277,60 @@ function renderRibbon(host, props, ctx, blockEl) {
   }
 }
 
-const VIEWS = { grid: renderGrid, carousel: renderCarousel, slides: renderSlides, ribbon: renderRibbon };
+/**
+ * The mosaic view: the grid's wall with tiles in varied spans, dealt by the
+ * seed and placed by the pure mosaicWall, so the same pictures always build
+ * the same wall and the panel's Shuffle builds another. The rows have one
+ * height, and the wall is a full rectangle whatever the number of pictures.
+ */
+function renderMosaic(host, props, ctx, blockEl) {
+  host.classList.add('urd-gallery-wall');
+  const cols = gridColumns(props.columns, props.images.length, ctx.viewport);
+  host.style.setProperty('--urd-gallery-cols', String(cols));
+  host.style.setProperty('--urd-gallery-gap', `${Number(props.gap) || 0}px`);
+  host.style.setProperty('--urd-gallery-row', `${mosaicRowHeight(props.rowHeight)}px`);
+  const wall = mosaicWall(props.images.length, props.seed, cols);
+  props.images.forEach((_, i) => {
+    const tile = makeTile(props, i, ctx, blockEl);
+    const place = wall.tiles[i];
+    tile.style.gridColumn = `${place.col + 1} / span ${place.cols}`;
+    tile.style.gridRow = `${place.row + 1} / span ${place.rows}`;
+    host.appendChild(tile);
+  });
+}
+
+/**
+ * The polaroid view: every picture set in a card with a wider foot, leaning
+ * by its own throw of the seed (polaroidTilts). With `captions` the image
+ * text is written in the foot. The card straightens under a real pointer
+ * (base.css), and the tile inside keeps its click.
+ */
+function renderPolaroid(host, props, ctx, blockEl) {
+  host.classList.add('urd-gallery-cards');
+  host.style.setProperty('--urd-gallery-cols', String(gridColumns(props.columns, props.images.length, ctx.viewport)));
+  host.style.setProperty('--urd-gallery-gap', `${Number(props.gap) || 0}px`);
+  // The card is white with dark ink until the owner picks a colour; then the
+  // words take the section's own text colour, which is chosen against it.
+  if (props.frameColor) {
+    host.classList.add('urd-gallery-cards-own');
+    host.style.setProperty('--urd-polaroid-color', resolveColor(props.frameColor));
+  }
+  const tilts = polaroidTilts(props.images.length, props.seed, props.tilt);
+  props.images.forEach((img, i) => {
+    const card = el2('figure', 'urd-gallery-card');
+    card.style.setProperty('--urd-card-tilt', `${tilts[i]}deg`);
+    card.appendChild(makeTile(props, i, ctx, blockEl));
+    const words = props.captions === true && typeof img.alt === 'string' ? img.alt.trim() : '';
+    if (words) card.appendChild(el2('figcaption', 'urd-gallery-caption', words));
+    else card.classList.add('urd-gallery-card-plain');
+    host.appendChild(card);
+  });
+}
+
+const VIEWS = {
+  grid: renderGrid, carousel: renderCarousel, slides: renderSlides, ribbon: renderRibbon,
+  mosaic: renderMosaic, polaroid: renderPolaroid,
+};
 
 export const galleryBlock = {
   version: 1,
@@ -286,9 +344,10 @@ export const galleryBlock = {
   /**
    * @param {HTMLElement} el
    * @param {{images: Array<{src: string, alt?: string, href?: string|null, style?: object}>,
-   *          view: 'grid'|'carousel'|'slides'|'ribbon', columns: number, gap: number,
+   *          view: 'grid'|'carousel'|'slides'|'ribbon'|'mosaic'|'polaroid', columns: number, gap: number,
    *          speed?: number, direction?: 'left'|'right', pauseOnHover?: boolean,
    *          rows?: number, bandHeight?: number, fade?: boolean,
+   *          rowHeight?: number, seed?: number, tilt?: number, frameColor?: string, captions?: boolean,
    *          radius: string|null, lightbox: boolean, interval: number}} props
    * @param {object} ctx
    */
@@ -299,7 +358,8 @@ export const galleryBlock = {
     }
     const host = el2('div', 'urd-gallery');
     el.appendChild(host);
-    (VIEWS[props.view] ?? renderGrid)(host, props, ctx, el);
+    const view = galleryView(props.view);
+    VIEWS[view](host, props, ctx, el);
 
     // The help chip (ADR-0008): the block has special functions and explains itself.
     if (ctx.preview && ctx.viewport !== 'mobile') {
@@ -318,11 +378,11 @@ export const galleryBlock = {
       });
     }
 
-    // Auto-grow for the grid: the row height follows the number of images, so the
-    // frame follows the content (the same pattern as the collection block). The
-    // measurement has to wait until the block is in the DOM: render is called
-    // before appendChild.
-    if (props.view === 'grid' && ctx.viewport !== 'mobile') requestAnimationFrame(() => {
+    // Auto-grow for the views that are grids of tiles: the height follows the
+    // number of images, so the frame follows the content (the same pattern as
+    // the collection block). The measurement has to wait until the block is in
+    // the DOM: render is called before appendChild.
+    if (GRID_VIEWS.includes(view) && ctx.viewport !== 'mobile') requestAnimationFrame(() => {
       if (!el.isConnected) return;
       const needed = host.scrollHeight;
       if (Math.abs(needed - el.clientHeight) > 8) {

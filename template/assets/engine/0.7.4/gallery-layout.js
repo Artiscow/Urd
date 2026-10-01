@@ -395,12 +395,41 @@ export function photoLayout(images, { count, seed, size, spread, tilt, style = '
       x: round2(50 + (cx - 0.5) * 100 * reach),
       y: round2(50 + (cy - 0.5) * 100 * reach),
       w: Math.round(width * (0.8 + roll(die, `w${i}`) * 0.4)),
-      rot: round2((roll(die, `r${i}`) - 0.5) * 2 * lean),
+      rot: frameTilt(die, i, lean),
       phase: round2(roll(die, `p${i}`)),
       heading: round2(roll(die, `h${i}`)),
     });
   }
   return out;
+}
+
+/**
+ * One frame's lean in degrees, inside plus or minus `tilt`: the same throw
+ * for the same seed and index, so a frame keeps its lean across renders. The
+ * scatter and the gallery block's polaroid view share it. Pure.
+ * @param {unknown} seed
+ * @param {number} index
+ * @param {unknown} tilt The largest lean, clamped by clampTilt
+ * @returns {number}
+ */
+export function frameTilt(seed, index, tilt) {
+  const die = seed === undefined || seed === null || seed === '' ? 1 : seed;
+  return round2((roll(die, `r${index}`) - 0.5) * 2 * clampTilt(tilt));
+}
+
+/**
+ * One tile's span on the mosaic wall: most tiles one cell, some two wide,
+ * some two high, a few both. Pure; mosaicSpans deals a whole wall from it and
+ * the gallery block one span per picture.
+ * @param {unknown} seed
+ * @param {number} index
+ * @returns {{cols: number, rows: number, phase: number}}
+ */
+export function mosaicSpan(seed, index) {
+  const die = seed === undefined || seed === null || seed === '' ? 1 : seed;
+  const t = roll(die, `m${index}`);
+  // Roughly a fifth of the tiles are wide, a fifth tall, one in ten both.
+  return { cols: t < 0.3 ? 2 : 1, rows: t > 0.7 || t < 0.1 ? 2 : 1, phase: round2(roll(die, `mp${index}`)) };
 }
 
 /**
@@ -413,14 +442,7 @@ export function photoLayout(images, { count, seed, size, spread, tilt, style = '
  */
 export function mosaicSpans(count, seed, available, repeat = false) {
   const tiles = frameCount(count, 'mosaic', available, repeat);
-  const die = seed === undefined || seed === null || seed === '' ? 1 : seed;
-  return Array.from({ length: tiles }, (_, i) => {
-    const t = roll(die, `m${i}`);
-    // Roughly a fifth of the tiles are wide, a fifth tall, one in ten both.
-    const cols = t < 0.3 ? 2 : 1;
-    const rows = t > 0.7 || t < 0.1 ? 2 : 1;
-    return { cols, rows, phase: round2(roll(die, `mp${i}`)) };
-  });
+  return Array.from({ length: tiles }, (_, i) => mosaicSpan(seed, i));
 }
 
 /**
