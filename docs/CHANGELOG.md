@@ -27,6 +27,11 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.36 - The dev-minor bump with its rebuilt bundle - 1 October 2026
+
+- Dependabot PR #23 (the dev-minor group) failed the build-conformity check, since a bot cannot rebuild the bundle and the svelte runtime is part of it. Taken locally instead of merged, so the lockfile and the rebuilt bundle land in one commit: svelte 5.57.0 to 5.57.1, vite 8.3.0 to 8.3.1, @sveltejs/vite-plugin-svelte 7.3.0 to 7.3.1. The PR closes itself when the versions reach main. The editor starts and edits locally with the new runtime (checked 1 October 2026).
+- `npm audit` reported one moderate advisory on fast-uri (a transitive dev dependency of ajv, used only by the schema validation): the lockfile lifted to fast-uri 3.1.8, audit clean.
+
 ### 0.7.0.16-35p - Push preparation: the picture routes hardened, and the fix round's own regressions - 1 October 2026
 
 - Independent review of the span by three fresh agents, each with its own field (the commits 0.7.0.16 to 0.7.0.34, the security and contracts of 0.7.13.8, and a regression hunt in the fixes of 0.7.0.35). Deviation from the ritual: the first single review agent stopped on a session limit before reporting, and the review was started again in three scoped parts.
