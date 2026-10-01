@@ -1,10 +1,41 @@
 /**
- * Core block: video/embed. Paste a YouTube or Vimeo link and a
- * privacy-friendly embed is rendered (youtube-nocookie / dnt=1).
- * The CSP in _headers has a deliberate frame-src exception for exactly
- * these two hosts; other embeds need a plugin and the owner's own CSP choice.
+ * Core block: video. Two sources. `embed` (the default): paste a YouTube or
+ * Vimeo link and a privacy-friendly embed is rendered (youtube-nocookie /
+ * dnt=1); the CSP in _headers has a deliberate frame-src exception for
+ * exactly these two hosts, and other embeds need a plugin and the owner's own
+ * CSP choice. `file`: a self-hosted mp4 or webm from media/ in a native
+ * <video> with the browser's own controls, an optional poster, loop and
+ * muted. It starts by itself only when it is muted, which is the one case
+ * browsers allow, and never under reduced motion.
  */
 import { t, ta } from '../i18n.js';
+import { isSafeImage } from '../nav-model.js';
+import { isSafeVideo } from '../backgrounds/video.js';
+
+/** Where the film comes from; an embed for anything unknown. */
+export const VIDEO_SOURCES = ['embed', 'file'];
+
+/** The source, with the embed (what the block began as) for anything unknown. */
+export function videoSource(source) {
+  return source === 'file' ? 'file' : 'embed';
+}
+
+/**
+ * How a file video plays, from the props: looping and muted as chosen, and
+ * starting by itself only when it is muted and the visitor has not asked for
+ * reduced motion. Pure.
+ * @param {{loop?: boolean, muted?: boolean, autoplay?: boolean}} props
+ * @param {boolean} [reducedMotion]
+ * @returns {{loop: boolean, muted: boolean, autoplay: boolean}}
+ */
+export function videoPlayback(props, reducedMotion = false) {
+  const muted = props?.muted === true;
+  return {
+    loop: props?.loop === true,
+    muted,
+    autoplay: props?.autoplay === true && muted && !reducedMotion,
+  };
+}
 
 /** Returns the embed URL for a known video service, otherwise null. */
 export function embedUrl(raw) {
@@ -57,10 +88,49 @@ export const videoBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el
-   * @param {{url: string, title?: string}} props
+   * @param {{url: string, title?: string, source?: 'embed'|'file', src?: string, poster?: string,
+   *          loop?: boolean, muted?: boolean, autoplay?: boolean}} props
    * @param {object} ctx
    */
   render(el, props, ctx) {
+    const editing = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
+    if (videoSource(props.source) === 'file') {
+      if (!isSafeVideo(props.src)) {
+        // No film yet: a hint in the editor, nothing at all for visitors.
+        if (ctx.preview) {
+          const hint = document.createElement('div');
+          hint.className = 'urd-video-empty';
+          hint.textContent = ta('canvas.videoFileEmpty');
+          el.appendChild(hint);
+        }
+        return;
+      }
+      const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+      // While editing nothing starts by itself: the block is being placed, not watched.
+      const play = videoPlayback(props, reduced || editing);
+      const video = document.createElement('video');
+      video.className = 'urd-video-file';
+      video.controls = true;
+      video.playsInline = true;
+      video.setAttribute('playsinline', '');
+      // Only the metadata until the visitor (or the autoplay) asks for the film.
+      video.preload = 'metadata';
+      video.loop = play.loop;
+      video.muted = play.muted;
+      if (play.muted) video.setAttribute('muted', '');
+      video.autoplay = play.autoplay;
+      if (props.title) video.setAttribute('aria-label', props.title);
+      if (isSafeImage(props.poster)) video.poster = props.poster;
+      video.src = props.src;
+      el.appendChild(video);
+      if (editing) {
+        const shield = document.createElement('div');
+        shield.className = 'urd-video-shield';
+        shield.title = ta('canvas.videoOnPublished');
+        el.appendChild(shield);
+      }
+      return;
+    }
     const src = embedUrl(props.url);
     if (!src) {
       // Without a valid URL: a quiet placeholder, never a crash.
@@ -79,7 +149,7 @@ export const videoBlock = {
     frame.style.cssText = 'width:100%;height:100%;border:0;display:block;';
     el.appendChild(frame);
     // In edit mode a click selects the block instead of starting the player.
-    if (ctx.preview && ctx.viewport !== 'mobile') {
+    if (editing) {
       const shield = document.createElement('div');
       shield.className = 'urd-video-shield';
       shield.title = ta('canvas.videoOnPublished');

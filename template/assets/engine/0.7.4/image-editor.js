@@ -8,7 +8,7 @@
  *     get(field), set(field, value), onDone?() }
  * set() both updates the DOM live and reports the change to the editor (which owns the draft).
  */
-import { compressToWebp } from './imageTools.js';
+import { compressToWebp, ANIMATED_MAX_BYTES } from './imageTools.js';
 // Loaded only through the preview layer (statically from preview-edit.js,
 // dynamically from the blocks on click), always after the admin dictionary is
 // loaded: ta() is safe here.
@@ -145,7 +145,16 @@ export function openImageEditor(anchor, adapter) {
     input.addEventListener('change', async () => {
       const file = input.files?.[0];
       if (!file) return;
-      const img = await compressToWebp(file);
+      let img;
+      try {
+        img = await compressToWebp(file);
+      } catch (err) {
+        // The one failure with something to say: an animation above the cap.
+        pick.textContent = err?.code === 'animatedTooLarge'
+          ? ta('status.animatedTooLarge', { mb: (err.bytes / 1_000_000).toFixed(1), max: Math.round(ANIMATED_MAX_BYTES / 1_000_000) })
+          : ta('status.imageReadError');
+        return;
+      }
       adapter.set('image', img.dataUrl);
       adapter.onDone?.();
       closeImageEditor();

@@ -119,7 +119,7 @@
   import { footerThumb } from '$engine/footer-thumb.js';
   import { coreAnimations } from '$engine/animations/core.js';
   import { SECTION_THEME_LABELS, sectionThemeVars, contrastRatio, relativeLuminance, buildThemeCss, safeCssValue, resolveThemeMode, activeTokens } from '$engine/theme.js';
-  import { compressToWebp, svgToDataUrl, tightSvgViewBox, svgViewBox, slugify, contentHash, mediaExtension, WARN_BYTES, VIDEO_WARN_BYTES, VIDEO_MAX_BYTES } from '$engine/imageTools.js';
+  import { compressToWebp, svgToDataUrl, tightSvgViewBox, svgViewBox, slugify, contentHash, mediaExtension, WARN_BYTES, VIDEO_WARN_BYTES, VIDEO_MAX_BYTES, ANIMATED_WARN_BYTES, ANIMATED_MAX_BYTES } from '$engine/imageTools.js';
   import { FONT_STACKS } from '$engine/fonts.js';
   import { isSafeHref, toolOrder } from '$engine/nav-model.js';
   import { frameAtPoint } from '$engine/place.js';
@@ -1392,8 +1392,8 @@
         b.props.src = img.dataUrl;
         b.props.alt = b.props.alt || slugify(file.name).replaceAll('-', ' ');
       });
-    } catch {
-      setStatus(ta('status.imageReadError'), 'error');
+    } catch (err) {
+      setStatus(imageErrorText(err), 'error');
     }
   }
 
@@ -1405,8 +1405,8 @@
     try {
       const img = await compressOrTrim(file);
       mutateBlock(`edit:${selectedBlock.blockId}`, (b) => { b.props.image = img.dataUrl; });
-    } catch {
-      setStatus(ta('status.imageReadError'), 'error');
+    } catch (err) {
+      setStatus(imageErrorText(err), 'error');
     }
   }
 
@@ -1815,7 +1815,63 @@
      logo/icon fills its space. */
   async function compressOrTrim(file) {
     const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name || '');
-    return isSvg ? svgAutoTrim(file) : compressToWebp(file);
+    if (isSvg) return svgAutoTrim(file);
+    const img = await compressToWebp(file);
+    // An animation is kept as the file it is, so its size is the owner's to know about.
+    if (img.animated && img.bytes > ANIMATED_WARN_BYTES) {
+      setStatus(ta('status.animatedLarge', { mb: (img.bytes / 1_000_000).toFixed(1) }), 'error');
+    }
+    return img;
+  }
+
+  /** What to say when an image could not be taken: a too-large animation names its size and the limit. */
+  function imageErrorText(err) {
+    if (err?.code === 'animatedTooLarge') {
+      return ta('status.animatedTooLarge', { mb: (err.bytes / 1_000_000).toFixed(1), max: Math.round(ANIMATED_MAX_BYTES / 1_000_000) });
+    }
+    return ta('status.imageReadError');
+  }
+
+  /** A video file as a data URL for the draft, inside the media limits from imageTools (the
+      hard cap and the warning); publishing writes it to media/ like the images. */
+  function readVideoFile(file, formatKey, done) {
+    if (!['video/mp4', 'video/webm'].includes(file.type)) {
+      setStatus(ta(formatKey), 'error');
+      return;
+    }
+    if (file.size > VIDEO_MAX_BYTES) {
+      setStatus(ta('status.videoTooLarge', { mb: (file.size / 1_000_000).toFixed(1), max: Math.round(VIDEO_MAX_BYTES / 1_000_000) }), 'error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      done(String(reader.result ?? ''));
+      if (file.size > VIDEO_WARN_BYTES) {
+        setStatus(ta('status.videoLarge', { mb: (file.size / 1_000_000).toFixed(1) }), 'error');
+      }
+    };
+    reader.onerror = () => setStatus(ta('status.imageReadError'), 'error');
+    reader.readAsDataURL(file);
+  }
+
+  /** The video block's own film (source 'file'). */
+  function setBlockVideoFile(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (file) readVideoFile(file, 'status.videoFileFormat', (dataUrl) => setBlockProp('src', dataUrl));
+  }
+
+  /** The video block's poster: the still shown before the film plays. */
+  async function setBlockVideoPoster(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      const img = await compressOrTrim(file);
+      setBlockProp('poster', img.dataUrl);
+    } catch (err) {
+      setStatus(imageErrorText(err), 'error');
+    }
   }
 
   async function setBgImage(bg, i, event) {
@@ -1825,35 +1881,16 @@
     try {
       const img = await compressOrTrim(file);
       setBgProp(bg, i, 'src', img.dataUrl);
-    } catch {
-      setStatus(ta('status.imageReadError'), 'error');
+    } catch (err) {
+      setStatus(imageErrorText(err), 'error');
     }
   }
 
-  /** Video file to data URL in the draft (the media limits from
-   *  imageTools: hard cap and warning); publishing writes it to media/
-   *  like the images. */
+  /** The video layer's film (readVideoFile holds the limits). */
   function setBgVideo(bg, i, event) {
     const file = event.target.files?.[0];
     event.target.value = '';
-    if (!file) return;
-    if (!['video/mp4', 'video/webm'].includes(file.type)) {
-      setStatus(ta('status.videoFormat'), 'error');
-      return;
-    }
-    if (file.size > VIDEO_MAX_BYTES) {
-      setStatus(ta('status.videoTooLarge', { mb: (file.size / 1_000_000).toFixed(1), max: Math.round(VIDEO_MAX_BYTES / 1_000_000) }), 'error');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      setBgProp(bg, i, 'src', String(reader.result ?? ''));
-      if (file.size > VIDEO_WARN_BYTES) {
-        setStatus(ta('status.videoLarge', { mb: (file.size / 1_000_000).toFixed(1) }), 'error');
-      }
-    };
-    reader.onerror = () => setStatus(ta('status.imageReadError'), 'error');
-    reader.readAsDataURL(file);
+    if (file) readVideoFile(file, 'status.videoFormat', (dataUrl) => setBgProp(bg, i, 'src', dataUrl));
   }
 
   /** The poster image for the video layer (the still shown with reduced motion). */
@@ -1864,8 +1901,8 @@
     try {
       const img = await compressOrTrim(file);
       setBgProp(bg, i, 'poster', img.dataUrl);
-    } catch {
-      setStatus(ta('status.imageReadError'), 'error');
+    } catch (err) {
+      setStatus(imageErrorText(err), 'error');
     }
   }
 
@@ -2936,8 +2973,8 @@
     try {
       const img = await compressOrTrim(file);
       setPageSeo('ogImage', img.dataUrl);
-    } catch {
-      setStatus(ta('status.imageReadError'), 'error');
+    } catch (err) {
+      setStatus(imageErrorText(err), 'error');
     }
   }
 
@@ -5566,8 +5603,8 @@
     let img;
     try {
       img = await compressOrTrim(file);
-    } catch {
-      setStatus(ta('status.imageReadError'), 'error');
+    } catch (err) {
+      setStatus(imageErrorText(err), 'error');
       return;
     }
 
@@ -5703,6 +5740,11 @@
       for (const img of block.props.images ?? []) materializeField(img, 'src', img.alt || 'gallery', files);
     }
     if (block.type === 'audio') materializeField(block.props, 'src', block.props.title || 'lyd', files);
+    // The video block's own film and its poster (source 'file').
+    if (block.type === 'video') {
+      materializeField(block.props, 'src', block.props.title || 'video', files);
+      materializeField(block.props, 'poster', 'poster', files);
+    }
   }
 
   /** One section's images (background + blocks) - shared by page publishing and section templates. */
@@ -9433,9 +9475,42 @@
         </label>
       {/if}
     {:else if selectedBlock.type === 'video'}
-      <label title={ta('hint.video')}>{ta('lbl.videoUrl')}</label>
-      <input value={selectedBlock.props.url ?? ''} placeholder={ta('ph.videoUrl')}
-        onchange={(e) => setBlockProp('url', e.target.value)} />
+      {@const vsource = selectedBlock.props.source === 'file' ? 'file' : 'embed'}
+      <Choice label={ta('lbl.videoSource')} value={vsource}
+        options={[['embed', ta('opt.videoSource.embed')], ['file', ta('opt.videoSource.file')]]}
+        onchange={(v) => setBlockProp('source', v)} />
+      {#if vsource === 'embed'}
+        <label title={ta('hint.video')}>{ta('lbl.videoUrl')}</label>
+        <input value={selectedBlock.props.url ?? ''} placeholder={ta('ph.videoUrl')}
+          onchange={(e) => setBlockProp('url', e.target.value)} />
+      {:else}
+        <label class="ghost filepick" title={ta('tip.video.file')}>
+          {selectedBlock.props.src ? ta('ui.changeVideo') : ta('ui.chooseVideo')}
+          <input type="file" accept="video/mp4,video/webm" onchange={setBlockVideoFile} />
+        </label>
+        <label class="ghost filepick" title={ta('tip.bg.poster')}>
+          {selectedBlock.props.poster ? ta('ui.changeImage') : ta('ui.choosePoster')}
+          <input type="file" accept="image/*" onchange={setBlockVideoPoster} />
+        </label>
+        <label class="gridmenu-snap">
+          <input type="checkbox" checked={selectedBlock.props.loop === true}
+            onchange={(e) => setBlockProp('loop', e.target.checked)} />
+          {ta('lbl.videoLoop')}
+        </label>
+        <!-- Unmuting takes the self-start with it: only a muted film may start by itself -->
+        <label class="gridmenu-snap">
+          <input type="checkbox" checked={selectedBlock.props.muted === true}
+            onchange={(e) => setBlockProps('muted', e.target.checked ? { muted: true } : { muted: false, autoplay: false })} />
+          {ta('lbl.videoMuted')}
+        </label>
+        {#if selectedBlock.props.muted === true}
+          <label class="gridmenu-snap" title={ta('tip.video.autoplay')}>
+            <input type="checkbox" checked={selectedBlock.props.autoplay === true}
+              onchange={(e) => setBlockProp('autoplay', e.target.checked)} />
+            {ta('lbl.videoAutoplay')}
+          </label>
+        {/if}
+      {/if}
       <label>{ta('lbl.videoTitle')}
         <input value={selectedBlock.props.title ?? ''}
           onchange={(e) => setBlockProp('title', e.target.value)} /></label>

@@ -4,6 +4,22 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.13.12): animated images and the video block's file source
+
+- [ ] Upload an animated GIF as an image block: it moves in the preview and on the published page, and the file in media/ ends in .gif
+- [ ] The same with an animated WebP and an APNG (.webp and .png in media/)
+- [ ] A still PNG, JPG and WebP: compressed to webp as before
+- [ ] An animated GIF in a gallery, as a background image and as a quote portrait: it moves in each
+- [ ] An animation between 1 and 4 MB: kept, with a status line about its size; above 4 MB: refused with the size and the limit, in the panel and in the preview's image editor
+- [ ] Video block, Kilde Fil, choose an mp4: the film shows with the browser's controls; in the editor a click selects the block, in Clean view it plays
+- [ ] Video file with a poster: the poster stands until play; Gjenta loops it
+- [ ] Uten lyd on, then Start av seg selv: on the published page the film starts by itself, silent; with reduced motion on it waits for play
+- [ ] Uten lyd off: Start av seg selv disappears and the film does not start by itself
+- [ ] A video file above 15 MB is refused, one above 4 MB warns; a .mov or .avi is refused with the format message
+- [ ] Publish a page with a video file and a poster: both land in media/, and the page plays the file from there
+- [ ] A video block made before this stage (a YouTube or Vimeo link) still embeds, and Kilde shows Lenke
+- [ ] Deployed site: an unpublished video file in the preview (the known `media-src` gap in BACKLOG: expected blocked until published)
+
 ### Testrunde-batch (0.7.13.11): styled variants and two footers
 
 - [ ] Statistikk, Variant Ren, Kort and Bånd: bare as before, in a card, and on a band in the accent colour with readable text; three in a row with the same variant stand as one strip

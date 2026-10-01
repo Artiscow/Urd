@@ -18,17 +18,156 @@ export const WARN_BYTES = 400_000;
    until it is published, and the editor warns). */
 export const VIDEO_WARN_BYTES = 4_000_000;
 export const VIDEO_MAX_BYTES = 15_000_000;
+/* An animated image (GIF, animated WebP, APNG) is kept as the file it is: a
+   canvas holds one frame, so compressing it would freeze it. It is warned
+   about above ANIMATED_WARN_BYTES and rejected above ANIMATED_MAX_BYTES,
+   where a video does the same job at a fraction of the size. */
+export const ANIMATED_WARN_BYTES = 1_000_000;
+export const ANIMATED_MAX_BYTES = 4_000_000;
+
+/** Thrown when an animated image is larger than ANIMATED_MAX_BYTES. */
+export class AnimatedTooLargeError extends Error {
+  /** @param {number} bytes The file's size */
+  constructor(bytes) {
+    super('The animated image is too large');
+    this.code = 'animatedTooLarge';
+    this.bytes = bytes;
+  }
+}
+
+const ascii = (bytes, at, text) => {
+  if (at + text.length > bytes.length) return false;
+  for (let i = 0; i < text.length; i += 1) if (bytes[at + i] !== text.charCodeAt(i)) return false;
+  return true;
+};
+
+/** Whether a GIF holds more than one frame: the blocks are walked, never guessed at. */
+function gifAnimated(bytes) {
+  if (!ascii(bytes, 0, 'GIF87a') && !ascii(bytes, 0, 'GIF89a')) return false;
+  if (bytes.length < 13) return false;
+  let at = 13;
+  // The global colour table, when the screen descriptor says there is one.
+  if (bytes[10] & 0x80) at += 3 * (2 ** ((bytes[10] & 0x07) + 1));
+  const skipSubBlocks = () => {
+    while (at < bytes.length) {
+      const size = bytes[at];
+      at += 1;
+      if (size === 0) return;
+      at += size;
+    }
+  };
+  let frames = 0;
+  while (at < bytes.length) {
+    const block = bytes[at];
+    at += 1;
+    if (block === 0x2c) {
+      // An image descriptor: one frame, with an optional colour table of its own.
+      frames += 1;
+      if (frames > 1) return true;
+      if (at + 9 > bytes.length) return false;
+      const packed = bytes[at + 8];
+      at += 9;
+      if (packed & 0x80) at += 3 * (2 ** ((packed & 0x07) + 1));
+      at += 1;
+      skipSubBlocks();
+    } else if (block === 0x21) {
+      at += 1;
+      skipSubBlocks();
+    } else {
+      // The trailer, or bytes that are not a GIF block: the walk ends here.
+      return false;
+    }
+  }
+  return false;
+}
+
+/** Whether a WebP is the animated kind: the extended header's animation flag. */
+function webpAnimated(bytes) {
+  if (!ascii(bytes, 0, 'RIFF') || !ascii(bytes, 8, 'WEBP')) return false;
+  return ascii(bytes, 12, 'VP8X') && bytes.length > 20 && (bytes[20] & 0x02) !== 0;
+}
+
+/** Whether a PNG is an APNG: an animation control chunk before the first image data. */
+function pngAnimated(bytes) {
+  const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  if (bytes.length < 16 || signature.some((byte, i) => bytes[i] !== byte)) return false;
+  let at = 8;
+  while (at + 8 <= bytes.length) {
+    const length = ((bytes[at] << 24) | (bytes[at + 1] << 16) | (bytes[at + 2] << 8) | bytes[at + 3]) >>> 0;
+    if (ascii(bytes, at + 4, 'acTL')) return true;
+    if (ascii(bytes, at + 4, 'IDAT') || ascii(bytes, at + 4, 'IEND')) return false;
+    at += 12 + length;
+  }
+  return false;
+}
+
+/**
+ * The kind of animated image a file is, from its own bytes: `gif`, `webp` or
+ * `png` (an APNG), or null for a still image and for anything else. Pure.
+ * @param {Uint8Array} bytes The file's content
+ * @returns {'gif'|'webp'|'png'|null}
+ */
+export function animatedImageKind(bytes) {
+  if (!(bytes instanceof Uint8Array)) return null;
+  if (gifAnimated(bytes)) return 'gif';
+  if (webpAnimated(bytes)) return 'webp';
+  if (pngAnimated(bytes)) return 'png';
+  return null;
+}
+
+/**
+ * Whether a file is an animated image (GIF, animated WebP or APNG). Pure.
+ * @param {Uint8Array} bytes The file's content
+ * @returns {boolean}
+ */
+export function isAnimatedImage(bytes) {
+  return animatedImageKind(bytes) !== null;
+}
+
+/**
+ * An animated image as it is: the original bytes as a data URL, with the
+ * first frame's size. null for a file that is not an animation; throws
+ * AnimatedTooLargeError above the cap. Only the three formats that can
+ * animate are read into memory.
+ * @param {File} file
+ * @returns {Promise<{dataUrl: string, bytes: number, width: number, height: number, animated: true}|null>}
+ */
+async function keepAnimated(file) {
+  if (!/^image\/(?:gif|webp|png|apng)$/i.test(file.type || '') && !/\.(?:gif|webp|a?png)$/i.test(file.name || '')) return null;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const kind = animatedImageKind(bytes);
+  if (!kind) return null;
+  if (bytes.length > ANIMATED_MAX_BYTES) throw new AnimatedTooLargeError(bytes.length);
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(new Blob([bytes], { type: `image/${kind}` }));
+  });
+  let width = 0;
+  let height = 0;
+  try {
+    const bitmap = await createImageBitmap(file);
+    width = bitmap.width;
+    height = bitmap.height;
+    bitmap.close();
+  } catch { /* the size is a hint for the caller; the file itself is what is kept */ }
+  return { dataUrl, bytes: bytes.length, width, height, animated: true };
+}
 
 /**
  * Compresses an image file to webp, max 1600px on the longest side.
  * SVG is not rasterized: the vector is kept (after sanitizing), because a
- * logo must be sharp at every size. The file name at publish time gets the
- * right extension via mediaExtension.
+ * logo must be sharp at every size. An animated image is kept as the file
+ * it is (keepAnimated), marked `animated`. The file name at publish time
+ * gets the right extension via mediaExtension.
  * @param {File} file
- * @returns {Promise<{dataUrl: string, bytes: number, width: number, height: number}>}
+ * @returns {Promise<{dataUrl: string, bytes: number, width: number, height: number, animated?: boolean}>}
  */
 export async function compressToWebp(file, maxDim = MAX_DIMENSION) {
   if (isSvgFile(file)) return svgToDataUrl(await file.text());
+  const kept = await keepAnimated(file);
+  if (kept) return kept;
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
   const width = Math.round(bitmap.width * scale);
@@ -132,10 +271,14 @@ export function svgViewBox(svgText) {
   return w > 0 && h > 0 ? [0, 0, w, h] : null;
 }
 
-/** Media file extension from a data URL: SVG keeps the vector, the rest is webp. */
+/** Media file extension from a data URL: SVG keeps the vector, a GIF and a
+ *  PNG keep their own (the animations that were kept as they are), the rest
+ *  is webp. */
 export function mediaExtension(dataUrl) {
   const url = dataUrl || '';
   if (/^data:image\/svg\+xml[;,]/.test(url)) return 'svg';
+  if (/^data:image\/gif[;,]/.test(url)) return 'gif';
+  if (/^data:image\/(?:png|apng)[;,]/.test(url)) return 'png';
   // Audio files are published unchanged (no canvas path to compress
   // through), so the extension is derived from the MIME type.
   const audio = url.match(/^data:audio\/([a-z0-9.+-]+)[;,]/i)?.[1]?.toLowerCase();

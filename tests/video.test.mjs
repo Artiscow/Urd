@@ -8,7 +8,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { embedUrl } = await engineImport('blocks/video.js');
+const { embedUrl, videoSource, videoPlayback, VIDEO_SOURCES, videoBlock } = await engineImport('blocks/video.js');
 
 test('known video links give a privacy-friendly embed URL', () => {
   assert.equal(embedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ'),
@@ -43,4 +43,25 @@ test('unknown hosts and invalid links are rejected', () => {
   ]) {
     assert.equal(embedUrl(raw), null, raw);
   }
+});
+
+test('videoSource: an embed unless a file is asked for', () => {
+  assert.deepEqual(VIDEO_SOURCES, ['embed', 'file']);
+  assert.equal(videoSource('file'), 'file');
+  assert.equal(videoSource('embed'), 'embed');
+  assert.equal(videoSource(undefined), 'embed');
+  assert.equal(videoSource('stream'), 'embed');
+  // The file source is additive: a stored block is still an embed at the same version.
+  assert.equal(videoBlock.version, 1);
+  assert.equal(videoBlock.defaults().source, undefined);
+});
+
+test('videoPlayback: a film starts by itself only when it is muted, and never under reduced motion', () => {
+  assert.deepEqual(videoPlayback({}), { loop: false, muted: false, autoplay: false });
+  assert.deepEqual(videoPlayback({ autoplay: true }), { loop: false, muted: false, autoplay: false });
+  assert.deepEqual(videoPlayback({ autoplay: true, muted: true, loop: true }), { loop: true, muted: true, autoplay: true });
+  assert.deepEqual(videoPlayback({ autoplay: true, muted: true }, true), { loop: false, muted: true, autoplay: false });
+  // Only a real true counts.
+  assert.deepEqual(videoPlayback({ autoplay: 'yes', muted: 'yes', loop: 1 }), { loop: false, muted: false, autoplay: false });
+  assert.deepEqual(videoPlayback(undefined), { loop: false, muted: false, autoplay: false });
 });

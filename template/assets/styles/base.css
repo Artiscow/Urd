@@ -2929,6 +2929,15 @@ a.urd-collection-title:hover {
   border-radius: var(--urd-radius-md);
 }
 
+/* The self-hosted film: it fills the block's frame and keeps its own format inside it. */
+.urd-video-file {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
 .urd-video-shield {
   position: absolute;
   inset: 0;
