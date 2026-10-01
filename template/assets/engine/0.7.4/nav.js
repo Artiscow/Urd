@@ -111,7 +111,7 @@ export function renderNav(site, host) {
   // A dismissed strip stays away as long as the message is the same
   // (localStorage keyed by the text). The preview reads and writes the same
   // key as the published page, so the editor shows what the visitor gets;
-  // the Kunngjøring panel has a control that clears it again.
+  // the Announcement panel has a control that clears it again.
   const announce = announcementModel(site.nav.announcement, site.pages);
   const dismissKey = announce ? dismissKeyFor(announce.text) : '';
   let dismissed = false;
@@ -355,7 +355,7 @@ export function renderNav(site, host) {
   // Border (additive since v0.7): the side is a class from navClasses; the
   // width and colour are variables with a hairline in the text colour as
   // the default.
-  const border = site.nav.style?.border;
+  const border = effSite.nav.style?.border;
   if (border && typeof border === 'object') {
     nav.style.setProperty('--urd-nav-border-w', `${clampBorderWidth(border.width)}px`);
     if (border.color) nav.style.setProperty('--urd-nav-border-c', resolveColor(border.color));
@@ -497,7 +497,7 @@ export function renderNav(site, host) {
   burger.innerHTML = BURGER;
   // The burger ends the row, except when the cluster stands at the start,
   // where it takes the outer edge so it sits leftmost on mobile.
-  if (site.nav.style?.tools?.side === 'start' && !isSide) tools.prepend(burger);
+  if (effSite.nav.style?.tools?.side === 'start' && !isSide) tools.prepend(burger);
   else tools.appendChild(burger);
   // A cluster with nothing but the burger takes no room on desktop.
   tools.classList.toggle('urd-nav-tools-none', !Object.values(toolEls).some(Boolean));
@@ -957,7 +957,11 @@ function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withC
     const strip = announce?.();
     if (strip && announceHome) announceHome.parent.insertBefore(strip, announceHome.next);
     announceHome = null;
-    for (const { btn, next } of toolHomes.reverse()) tools.insertBefore(btn, next?.parentNode === tools ? next : burger);
+    for (const { btn, next } of toolHomes.reverse()) {
+      // No next sibling: the tool ended the cluster, and does again.
+      if (!next) tools.appendChild(btn);
+      else tools.insertBefore(btn, next.parentNode === tools ? next : null);
+    }
     toolHomes = [];
   }, { signal });
   nav.appendChild(dialog);
@@ -1129,7 +1133,9 @@ function buildLauncher(model, signal) {
   // to the body without leaving the grid, so a press inside is let through.
   let pressing = false;
   wrap.addEventListener('pointerdown', () => { pressing = true; }, { signal });
-  document.addEventListener('pointerup', () => { pressing = false; }, { signal });
+  for (const type of ['pointerup', 'pointercancel']) {
+    document.addEventListener(type, () => { pressing = false; }, { signal });
+  }
   wrap.addEventListener('focusout', (event) => {
     if (pressing) return;
     if (!wrap.contains(event.relatedTarget)) close();

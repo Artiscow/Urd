@@ -284,7 +284,7 @@ function enablePreview(state, opts) {
       refreshSticky();
       refreshNavScroll();
     } else if (msg?.type === 'urd-announce-reset') {
-      // The Kunngjøring panel: forget the dismissal, so the strip returns
+      // The Announcement panel: forget the dismissal, so the strip returns
       // in the preview and for this browser on the published page.
       clearAnnounceDismissal(state.site);
       if (opts.nav) renderNav(state.site, opts.nav);

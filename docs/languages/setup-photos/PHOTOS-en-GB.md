@@ -143,7 +143,13 @@ what it found.
   why the site's security rules need no change.
 - **The size follows the use.** A small floating frame asks for a small
   picture, a full-width background for a large one, so a phone never downloads
-  more than it shows.
+  more than it shows. This holds for Google Drive and Google Photos, which
+  resize on request. A Nextcloud share and a picture list are passed on as the
+  files are stored, so put pictures of a sensible size there (each at most
+  12 MB).
+- **Photographs, not drawings.** JPEG, PNG, WebP, GIF and AVIF are shown. An
+  SVG file is skipped: it is a document rather than a picture, and the site
+  does not serve other people's documents from its own address.
 - **New pictures show within about ten minutes.** The list is kept for a
   short while so a busy page does not read the folder on every visit. A
   picture that is replaced under the same name can take up to a day to change.

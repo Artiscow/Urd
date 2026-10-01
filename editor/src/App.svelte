@@ -774,6 +774,8 @@
     // produce 401 noise in the console. After login (OAuth redirect) the
     // page reloads, so the baseline is fetched here then.
     if (auth) refreshBaseSha();
+    // A panel remembered from the last visit opens with its data.
+    loadPanelData();
     // The setup wizard: first visit on a fresh clone and not dismissed
     // before. Triggered ONLY by the template's explicit signal (site.setup);
     // the wizard removes the field on completion, so it never shows again.
@@ -964,8 +966,10 @@
 
   function togglePanel(name) {
     activePanel = activePanel === name ? null : name;
-    // The grid is shown in the preview while the Grid panel is open.
-    // The grid overlay is controlled by its own toggle, not by the panel being open.
+    loadPanelData();
+  }
+  /** The panels that show fetched data ask for it when they open, a remembered one at startup too. */
+  function loadPanelData() {
     if (activePanel === 'history') loadHistory();
     if (activePanel === 'update' && !updateBusy) loadUpdateCheck();
   }
@@ -3411,6 +3415,10 @@
   const hoverColorLabel = $derived(HOVER_COLOR_LABELS[siteDraft?.nav?.style?.hover] ?? null);
   /** The ink a thin stripe inherits when it has no colour of its own (the block's own rule). */
   const ribbonInk = (props) => props.color || (props.variant === 'plain' ? 'text' : 'accent-text');
+  /** A gallery layer's props as the engine draws them: the editor keeps a layer at the version
+      it was stored with, so one from before the styles is read through the layer's own lift. */
+  const galleryView = (layer) => ((layer.version ?? 1) < slideshowLayer.version
+    ? slideshowLayer.migrations[1](layer.props ?? {}) : (layer.props ?? {}));
   /** The launcher's three designs, for the desktop panel and the mobile menu alike. */
   const launcherViewOptions = $derived([
     ['grid', ta('opt.launcherView.grid')],
@@ -4519,11 +4527,24 @@
   }
   /** The end of a drag: a release outside the list still lands the row where the clone last
       stood (a drop inside the list has already taken it and cleared the position). A drag
-      cancelled with Escape reports no drop effect and moves nothing. */
+      cancelled with Escape reports no drop effect and moves nothing; so does a release
+      outside the admin's own document, which the effect below cannot accept. */
   function endNavDrag(e) {
     if (navDrop && e?.dataTransfer?.dropEffect !== 'none') dropNavRow(navDrop.key);
     navDrag = ''; navDrop = null;
   }
+  // While a menu row is dragged the whole admin document accepts the drop, so a release
+  // beside the list is a drop (with an effect) and Escape is the only cancel.
+  $effect(() => {
+    if (!navDrag) return;
+    const accept = (e) => e.preventDefault();
+    window.addEventListener('dragover', accept);
+    window.addEventListener('drop', accept);
+    return () => {
+      window.removeEventListener('dragover', accept);
+      window.removeEventListener('drop', accept);
+    };
+  });
   /** The drag's own data type: a row key that no text field can take as text. */
   const NAV_DRAG_TYPE = 'application/x-urd-nav-row';
   /** Drag over the whole list: over a row the row's zones decide; in a gap, on the clone or below
@@ -6288,8 +6309,8 @@
   {#if site}
     <div class="workspace">
       <!-- Clean view hides the rail and the panel rather than unmounting them:
-           the folds keep their own open state in the DOM, and destroying the
-           subtree would bring every one of them back closed. -->
+           the folds keep their own open state in the DOM, which lives only
+           as long as the subtree does. -->
       <nav class="rail" class:hidden={!chromeVisible}>
         {#each PANEL_GROUPS as group, gi (gi)}
           <!-- Uppercase label above each group: page tools, site settings
@@ -6872,20 +6893,18 @@
                             options={[['', ta('lbl.navSameAsDesktop')], ['start', ta('common.left')], ['end', ta('common.right')]]}
                             onchange={(v) => setNavMobile('tools', v ? { side: v } : undefined)} />
                         </label>
-                        <label class="field-stack" title={ta('tip.nav.mobileInset')}>
-                          <span class="mini-label">{ta('lbl.navInset')}</span>
-                          <Dropdown filled value={navMobileFlag('inset')}
-                            options={[['', ta('lbl.navSameAsDesktop')], ['on', ta('common.on')], ['off', ta('common.off')]]}
-                            onchange={(v) => setNavMobileFlag('inset', v)} />
-                        </label>
-                      </div>
-                      <div class="ctl-pair">
+                        <!-- Over the top section: the bar only, the floating
+                             forms and the column are out of the flow already -->
+                        {#if !floatingVariant && !sideVariant}
                         <label class="field-stack" title={ta('tip.nav.mobileOverlay')}>
                           <span class="mini-label">{ta('lbl.navOverlay')}</span>
                           <Dropdown filled value={navMobileFlag('overlay')}
                             options={[['', ta('lbl.navSameAsDesktop')], ['on', ta('common.on')], ['off', ta('common.off')]]}
                             onchange={(v) => setNavMobileFlag('overlay', v)} />
                         </label>
+                        {/if}
+                      </div>
+                      <div class="ctl-pair">
                         <label class="field-stack" title={ta('tip.nav.mobileBorder')}>
                           <span class="mini-label">{ta('lbl.navBorder')}</span>
                           <Dropdown filled value={siteDraft.nav.style?.mobile?.border?.side ?? ''}
@@ -8578,22 +8597,27 @@
 {/snippet}
 
 {#snippet bgFolderRows(bg, i, layer)}
+  {@const fp = galleryView(layer)}
   <label title={ta('tip.bg.photoSource')}>{ta('lbl.photoSource')}
-    <Dropdown value={layer.props.source ?? 'upload'}
+    <Dropdown value={fp.source ?? 'upload'}
       options={[['upload', ta('opt.photoSource.upload')], ['folder', ta('opt.photoSource.folder')]]}
       onchange={(v) => setBgProp(bg, i, 'source', v)} /></label>
-  {#if (layer.props.source ?? 'upload') === 'folder'}
-    {@const parsed = parsePhotoSource(layer.props.folder ?? '')}
+  {#if (fp.source ?? 'upload') === 'folder'}
+    {@const parsed = parsePhotoSource(fp.folder ?? '')}
+    <!-- A Google Photos album and a picture list come in their own order: there is no name or date to sort by -->
+    {@const sortable = !parsed || parsed.provider === 'drive' || parsed.provider === 'nextcloud'}
     <label title={ta('tip.bg.photoFolder')}>{ta('lbl.photoFolder')}
-      <input type="text" class:bad-target={(layer.props.folder ?? '').trim() && !parsed}
-        value={layer.props.folder ?? ''} placeholder="https://drive.google.com/drive/folders/..."
+      <input type="text" class:bad-target={(fp.folder ?? '').trim() && !parsed}
+        value={fp.folder ?? ''} placeholder="https://drive.google.com/drive/folders/..."
         onchange={(e) => setBgProp(bg, i, 'folder', e.target.value.trim())} /></label>
     <label title={ta('tip.bg.folderOrder')}>{ta('lbl.folderOrder')}
-      <Dropdown value={layer.props.order ?? 'name'}
-        options={[['name', ta('opt.folderOrder.name')], ['newest', ta('opt.folderOrder.newest')], ['random', ta('opt.folderOrder.random')]]}
+      <Dropdown value={sortable || fp.order === 'random' ? (fp.order ?? 'name') : 'name'}
+        options={sortable
+          ? [['name', ta('opt.folderOrder.name')], ['newest', ta('opt.folderOrder.newest')], ['random', ta('opt.folderOrder.random')]]
+          : [['name', ta('opt.folderOrder.listed')], ['random', ta('opt.folderOrder.random')]]}
         onchange={(v) => setBgProp(bg, i, 'order', v)} /></label>
     <label title={ta('tip.bg.folderMax')}>{ta('lbl.folderMax')}
-      <input type="number" min="1" max="60" value={layer.props.folderMax ?? 24}
+      <input type="number" min="1" max="60" value={fp.folderMax ?? 24}
         onchange={(e) => setBgProp(bg, i, 'folderMax', Number(e.target.value))} /></label>
     <button type="button" class="ghost action" disabled={!parsed} onclick={() => checkBgFolder(bg, i, layer)}>
       {@html ICONS.eye} {ta('ui.checkFolder')}
@@ -8781,9 +8805,10 @@
               onchange={(v) => setBgProp(bg, i, 'bleed', v)} /></label>
         {/if}
       {:else if layer.type === 'slideshow'}
-        {@const gstyle = layer.props.style ?? 'floating'}
-        {@const gmotion = styleMotion(gstyle, layer.props.motion)}
-        {@const fixedSeed = (layer.props.seed ?? 0) > 0}
+        {@const gp = galleryView(layer)}
+        {@const gstyle = gp.style ?? 'floating'}
+        {@const gmotion = styleMotion(gstyle, gp.motion)}
+        {@const fixedSeed = (gp.seed ?? 0) > 0}
         {@render bgFolderRows(bg, i, layer)}
         {@render bgImageRows(bg, i, layer)}
         <label title={ta('tip.bg.galleryStyle')}>{ta('lbl.galleryStyle')}
@@ -8792,37 +8817,37 @@
             onchange={(v) => setBgProp(bg, i, 'style', v)} /></label>
         {#if gstyle === 'fill'}
           <label>{ta('lbl.fit')}
-            <Dropdown value={layer.props.fit ?? 'cover'}
+            <Dropdown value={gp.fit ?? 'cover'}
               options={[['cover', ta('opt.fit.cover')], ['contain', ta('opt.fit.contain')]]}
               onchange={(v) => setBgProp(bg, i, 'fit', v)} /></label>
           <label>{ta('lbl.secondsPerImage')}
-            <span class="gridmenu-value">{layer.props.interval ?? 12} s</span></label>
-          <input type="range" min="0.5" max="90" step="0.5" value={layer.props.interval ?? 12}
+            <span class="gridmenu-value">{gp.interval ?? 12} s</span></label>
+          <input type="range" min="0.5" max="90" step="0.5" value={gp.interval ?? 12}
             oninput={(e) => setBgProp(bg, i, 'interval', Number(e.target.value))} />
           <label>{ta('lbl.transition')}
-            <span class="gridmenu-value">{(layer.props.fade ?? 1.5).toFixed(1)} s</span></label>
-          <input type="range" min="0" max="5" step="0.1" value={layer.props.fade ?? 1.5}
+            <span class="gridmenu-value">{(gp.fade ?? 1.5).toFixed(1)} s</span></label>
+          <input type="range" min="0" max="5" step="0.1" value={gp.fade ?? 1.5}
             oninput={(e) => setBgProp(bg, i, 'fade', Number(e.target.value))} />
           <label>{ta('lbl.blur')}
-            <span class="gridmenu-value">{layer.props.blur ?? 0} px</span></label>
-          <input type="range" min="0" max="20" step="1" value={layer.props.blur ?? 0}
+            <span class="gridmenu-value">{gp.blur ?? 0} px</span></label>
+          <input type="range" min="0" max="20" step="1" value={gp.blur ?? 0}
             oninput={(e) => setBgProp(bg, i, 'blur', Number(e.target.value))} />
         {:else}
           {#if gstyle === 'band'}
             <label>{ta('lbl.galleryRows')}
-              <Dropdown value={String(layer.props.rows ?? 2)} options={[['1', '1'], ['2', '2']]}
+              <Dropdown value={String(gp.rows ?? 2)} options={[['1', '1'], ['2', '2']]}
                 onchange={(v) => setBgProp(bg, i, 'rows', Number(v))} /></label>
             <label>{ta('lbl.photoDirection')}
-              <Dropdown value={layer.props.direction ?? 'left'}
+              <Dropdown value={gp.direction ?? 'left'}
                 options={[['left', ta('opt.ribbonDir.left')], ['right', ta('opt.ribbonDir.right')]]}
                 onchange={(v) => setBgProp(bg, i, 'direction', v)} /></label>
           {:else}
             <label title={ta('tip.bg.photoCount')}>{ta('lbl.photoCount')}
               <input type="number" min={gstyle === 'mosaic' ? 4 : 1} max="20"
-                value={layer.props.count ?? (gstyle === 'mosaic' ? 12 : 8)}
+                value={gp.count ?? (gstyle === 'mosaic' ? 12 : 8)}
                 onchange={(e) => setBgProp(bg, i, 'count', Number(e.target.value))} /></label>
             <label title={ta('tip.bg.galleryRepeat')}>{ta('lbl.galleryRepeat')}
-              <Dropdown value={layer.props.repeat === true ? 'repeat' : 'once'}
+              <Dropdown value={gp.repeat === true ? 'repeat' : 'once'}
                 options={[['once', ta('opt.galleryRepeat.once')], ['repeat', ta('opt.galleryRepeat.repeat')]]}
                 onchange={(v) => setBgProp(bg, i, 'repeat', v === 'repeat')} /></label>
             <label title={ta('tip.bg.galleryPlace')}>{ta('lbl.galleryPlace')}
@@ -8837,41 +8862,41 @@
             {/if}
           {/if}
           <label>{ta('lbl.size')}
-            <span class="gridmenu-value">{frameSize(layer.props.size, gstyle)} px</span></label>
-          <input type="range" min="60" max="400" step="2" value={frameSize(layer.props.size, gstyle)}
+            <span class="gridmenu-value">{frameSize(gp.size, gstyle)} px</span></label>
+          <input type="range" min="60" max="400" step="2" value={frameSize(gp.size, gstyle)}
             oninput={(e) => setBgProp(bg, i, 'size', Number(e.target.value))} />
           {#if gstyle === 'floating'}
             <label title={ta('tip.bg.photoSpread')}>{ta('lbl.photoSpread')}
-              <span class="gridmenu-value">{Math.round((layer.props.spread ?? 0.85) * 100)}%</span></label>
-            <input type="range" min="0" max="1" step="0.01" value={layer.props.spread ?? 0.85}
+              <span class="gridmenu-value">{Math.round((gp.spread ?? 0.85) * 100)}%</span></label>
+            <input type="range" min="0" max="1" step="0.01" value={gp.spread ?? 0.85}
               oninput={(e) => setBgProp(bg, i, 'spread', Number(e.target.value))} />
             <label>{ta('lbl.photoTilt')}
-              <span class="gridmenu-value">{layer.props.tilt ?? 5}°</span></label>
-            <input type="range" min="0" max="15" step="1" value={layer.props.tilt ?? 5}
+              <span class="gridmenu-value">{gp.tilt ?? 5}°</span></label>
+            <input type="range" min="0" max="15" step="1" value={gp.tilt ?? 5}
               oninput={(e) => setBgProp(bg, i, 'tilt', Number(e.target.value))} />
           {/if}
           <label title={ta('tip.bg.galleryShape')}>{ta('lbl.galleryShape')}
-            <Dropdown value={layer.props.shape ?? 'rect'}
+            <Dropdown value={gp.shape ?? 'rect'}
               options={GALLERY_SHAPES.map((sh) => [sh, ta(`opt.galleryShape.${sh}`)])}
               onchange={(v) => setBgProp(bg, i, 'shape', v)} /></label>
           <label title={ta('tip.bg.galleryLook')}>{ta('lbl.galleryLook')}
-            <Dropdown value={layer.props.look ?? 'shadow'}
+            <Dropdown value={gp.look ?? 'shadow'}
               options={GALLERY_LOOKS.map((lk) => [lk, ta(`opt.galleryLook.${lk}`)])}
               onchange={(v) => setBgProp(bg, i, 'look', v)} /></label>
-          {#if colouredLook(layer.props.look)}
+          {#if colouredLook(gp.look)}
             <label>{ta('lbl.frameColor')}
-              <ColorPicker value={frameColor(layer.props.look, layer.props.frameColor)} tokens={themeSwatches()} allowClear
+              <ColorPicker value={frameColor(gp.look, gp.frameColor)} tokens={themeSwatches()} allowClear
                 label={ta('tip.bg.frameColor')} onchange={(hex) => setBgProp(bg, i, 'frameColor', hex ?? '')} /></label>
           {/if}
-          {#if roundable(layer.props.shape) && (layer.props.look ?? 'shadow') !== 'polaroid'}
+          {#if roundable(gp.shape) && (gp.look ?? 'shadow') !== 'polaroid'}
             <label>{ta('lbl.rounding')}
-              <span class="gridmenu-value">{layer.props.radius ?? 5} px</span></label>
-            <input type="range" min="0" max="48" step="1" value={layer.props.radius ?? 5}
+              <span class="gridmenu-value">{gp.radius ?? 5} px</span></label>
+            <input type="range" min="0" max="48" step="1" value={gp.radius ?? 5}
               oninput={(e) => setBgProp(bg, i, 'radius', Number(e.target.value))} />
           {/if}
         {/if}
         <label title={ta('tip.bg.galleryTone')}>{ta('lbl.galleryTone')}
-          <Dropdown value={layer.props.tone ?? 'natural'}
+          <Dropdown value={gp.tone ?? 'natural'}
             options={GALLERY_TONES.map((tn) => [tn, ta(`opt.galleryTone.${tn}`)])}
             onchange={(v) => setBgProp(bg, i, 'tone', v)} /></label>
         {#if motionsFor(gstyle).length > 1}
@@ -8882,17 +8907,17 @@
         {/if}
         {#if gmotion === 'crossfade' && gstyle !== 'fill'}
           <label>{ta('lbl.secondsPerImage')}
-            <span class="gridmenu-value">{layer.props.interval ?? 12} s</span></label>
-          <input type="range" min="0.5" max="90" step="0.5" value={layer.props.interval ?? 12}
+            <span class="gridmenu-value">{gp.interval ?? 12} s</span></label>
+          <input type="range" min="0.5" max="90" step="0.5" value={gp.interval ?? 12}
             oninput={(e) => setBgProp(bg, i, 'interval', Number(e.target.value))} />
         {:else if gmotion !== 'none' || gstyle === 'band'}
           <label>{ta('lbl.motionSpeed')}
-            <span class="gridmenu-value">{layer.props.motionSpeed ?? 30} s</span></label>
-          <input type="range" min="0.5" max="90" step="0.5" value={layer.props.motionSpeed ?? 30}
+            <span class="gridmenu-value">{gp.motionSpeed ?? 30} s</span></label>
+          <input type="range" min="0.5" max="90" step="0.5" value={gp.motionSpeed ?? 30}
             oninput={(e) => setBgProp(bg, i, 'motionSpeed', Number(e.target.value))} />
         {/if}
         <label class="gridmenu-snap" title={ta('tip.bg.underNav')}>
-          <input type="checkbox" checked={layer.props.underNav !== false}
+          <input type="checkbox" checked={gp.underNav !== false}
             onchange={(e) => (e.target.checked
               ? setBgProp(bg, i, 'underNav', true)
               : setBgProps(bg, i, { underNav: false, underAnnounce: false }))} />
@@ -8900,8 +8925,8 @@
         </label>
         {#if siteDraft.nav?.announcement?.text}
           <!-- The strip sits above the menu: behind the strip means behind the menu too. -->
-          <label class="gridmenu-snap" class:muted={layer.props.underNav === false} title={ta('tip.bg.underAnnounce')}>
-            <input type="checkbox" checked={layer.props.underAnnounce === true} disabled={layer.props.underNav === false}
+          <label class="gridmenu-snap" class:muted={gp.underNav === false} title={ta('tip.bg.underAnnounce')}>
+            <input type="checkbox" checked={gp.underAnnounce === true} disabled={gp.underNav === false}
               onchange={(e) => (e.target.checked
                 ? setBgProps(bg, i, { underAnnounce: true, underNav: true })
                 : setBgProp(bg, i, 'underAnnounce', false))} />
@@ -8909,8 +8934,8 @@
           </label>
         {/if}
         <label>{ta('lbl.strength')}
-          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? 0.85) * 100)}%</span></label>
-        <input type="range" min="0.05" max="1" step="0.01" value={layer.props.opacity ?? 0.85}
+          <span class="gridmenu-value">{Math.round((gp.opacity ?? 0.85) * 100)}%</span></label>
+        <input type="range" min="0.05" max="1" step="0.01" value={gp.opacity ?? 0.85}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
       {:else if layer.type === 'video'}
         <label class="ghost filepick" title={ta('tip.bg.videoFile')}>

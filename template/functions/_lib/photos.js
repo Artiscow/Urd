@@ -54,8 +54,14 @@ export const SHARE_TOKEN = /^[A-Za-z0-9]{8,64}$/;
 /** A public hostname: dotted, never an address literal. */
 export const PUBLIC_HOST = /^(?!\d+(?:\.\d+)*$)[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/;
 
-/** A file name inside a public share: one segment, no traversal. */
-export const SHARE_FILE = /^[^/\\?#]{1,200}$/;
+/** A file name inside a public share: one segment, never a dot segment. */
+export const SHARE_FILE = /^(?!\.{1,2}$)[^/\\?#]{1,200}$/;
+
+/**
+ * The picture types the byte route passes on: raster only. SVG is a document
+ * that can carry script, and it would run on this site's own origin.
+ */
+export const RASTER_TYPE = /^image\/(jpeg|png|webp|gif|avif)\s*(?:;|$)/i;
 
 /** Google's own picture host, which needs no allowlist entry. */
 export const GOOGLE_PHOTO_HOST = 'lh3.googleusercontent.com';
@@ -164,12 +170,83 @@ export async function readCapped(res, max) {
   return text + decoder.decode();
 }
 
-/** One fetch with a timeout, so a slow folder host never holds the route. */
-export async function fetchWithTimeout(target, init = {}, ms = 8000) {
+/**
+ * The answer from the platform's edge cache when it holds one, otherwise
+ * built and kept there. A Function's answer is not cached on its headers
+ * alone: the cache has to be asked and told. Only a good answer that names a
+ * shared lifetime is kept, under the address alone, and the caller has done
+ * its own-site check before coming here. Without an edge cache (local
+ * development, tests) the answer is simply built.
+ * @param {{request: Request, waitUntil?: (p: Promise<unknown>) => void}} context
+ * @param {() => Promise<Response>} build
+ * @returns {Promise<Response>}
+ */
+export async function edgeCached(context, build) {
+  const cache = globalThis.caches?.default;
+  if (!cache) return build();
+  const key = new Request(context.request.url, { method: 'GET' });
+  try {
+    const hit = await cache.match(key);
+    if (hit) return hit;
+  } catch { /* a cache that cannot be read is no cache */ }
+  const res = await build();
+  if (res.status === 200 && /s-maxage=/.test(res.headers.get('cache-control') ?? '')) {
+    try {
+      context.waitUntil?.(cache.put(key, res.clone()).catch(() => {}));
+    } catch { /* the answer goes out whether or not it could be kept */ }
+  }
+  return res;
+}
+
+/** Thrown when a redirect leads somewhere the route may not follow. */
+export class RedirectRefused extends Error {}
+
+/** How many redirects one call follows. */
+const MAX_REDIRECTS = 4;
+
+/** How long a body may take once the headers are in. */
+const BODY_MS = 20000;
+
+/**
+ * One fetch with a timeout, so a slow folder host never holds the route. The
+ * redirects are followed by hand: each hop has to be a plain https address on
+ * a host `allow` accepts (the host it came from, when no `allow` is given)
+ * BEFORE the request goes out, and the credentials stay with the host they
+ * were meant for. After the headers the same abort covers the body, with its
+ * own deadline.
+ * @param {string|URL} target
+ * @param {RequestInit} [init]
+ * @param {number} [ms] The deadline for the headers
+ * @param {(host: string) => boolean} [allow] Hosts a redirect may lead to, besides its own
+ * @returns {Promise<Response>}
+ */
+export async function fetchWithTimeout(target, init = {}, ms = 8000, allow) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ms);
+  let url = new URL(String(target));
+  let headers = init.headers ?? {};
   try {
-    return await fetch(target, { ...init, signal: controller.signal, redirect: 'follow' });
+    for (let hop = 0; ; hop += 1) {
+      const res = await fetch(url, { ...init, headers, signal: controller.signal, redirect: 'manual' });
+      if (res.status < 300 || res.status >= 400 || res.status === 304) {
+        const bodyTimer = setTimeout(() => controller.abort(), BODY_MS);
+        bodyTimer.unref?.();
+        return res;
+      }
+      const location = res.headers.get('location');
+      if (!location || hop >= MAX_REDIRECTS) throw new RedirectRefused('redirect');
+      const next = new URL(location, url);
+      const host = next.hostname.toLowerCase();
+      const same = host === url.hostname.toLowerCase();
+      if (next.protocol !== 'https:' || next.username || next.password || next.port
+        || !PUBLIC_HOST.test(host) || !(same || allow?.(host))) {
+        throw new RedirectRefused('redirect');
+      }
+      if (!same) {
+        headers = Object.fromEntries(Object.entries(headers).filter(([name]) => name.toLowerCase() !== 'authorization'));
+      }
+      url = next;
+    }
   } finally {
     clearTimeout(timer);
   }

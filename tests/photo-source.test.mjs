@@ -225,6 +225,9 @@ test('the routes: the id, token and file shapes', () => {
   assert.equal(SHARE_TOKEN.test('abc/def'), false);
   assert.equal(SHARE_FILE.test('sommer 2026.jpg'), true);
   assert.equal(SHARE_FILE.test('../secret.jpg'), false);
+  assert.equal(SHARE_FILE.test('..'), false);
+  assert.equal(SHARE_FILE.test('.'), false);
+  assert.equal(SHARE_FILE.test('..bilde.jpg'), true);
   assert.equal(SHARE_FILE.test('a/b.jpg'), false);
   assert.equal(PUBLIC_HOST.test('sky.example.org'), true);
   assert.equal(PUBLIC_HOST.test('localhost'), false);
@@ -360,6 +363,86 @@ test('the byte route: what it refuses', async () => {
   assert.equal((await tooBig.json()).code, 'photoTooLarge');
 });
 
+test('the byte route: raster pictures only, served as nothing but a picture', async () => {
+  // An SVG is a document that can carry script, and it would run on this site's origin.
+  const svg = new Response('<svg xmlns="http://www.w3.org/2000/svg"><script>1</script></svg>',
+    { status: 200, headers: { 'content-type': 'image/svg+xml' } });
+  const { result: refused } = await withUpstream(svg, () =>
+    call(byteRoute, 'https://site.test/api/photo?p=u&u=https%3A%2F%2Fbilder.example.org%2Fa.svg', { PHOTO_HOSTS: 'bilder.example.org' }));
+  assert.equal(refused.status, 502);
+  assert.equal((await refused.json()).code, 'photoNotImage');
+
+  // The type is written from the allowlist, never echoed with its parameters.
+  const jpeg = new Response(new Uint8Array([1, 2]), { status: 200, headers: { 'content-type': 'IMAGE/JPEG; charset=x' } });
+  const { result } = await withUpstream(jpeg, () =>
+    call(byteRoute, 'https://site.test/api/photo?p=drive&id=AAA111bbb222ccc'));
+  assert.equal(result.headers.get('content-type'), 'image/jpeg');
+  assert.match(result.headers.get('content-security-policy'), /sandbox/);
+  assert.equal(result.headers.get('cross-origin-resource-policy'), 'same-origin');
+});
+
+test('the routes: a redirect is checked before it is followed, and the token stays home', async () => {
+  const hop = (to) => new Response(null, { status: 302, headers: { location: to } });
+  // Off the allowlist: refused, and the second host never sees a request.
+  const { result: blocked, seen } = await withUpstream(() => hop('https://internal.example.net/x.png'), () =>
+    call(byteRoute, 'https://site.test/api/photo?p=u&u=https%3A%2F%2Fbilder.example.org%2Fa.png', { PHOTO_HOSTS: 'bilder.example.org' }));
+  assert.equal((await blocked.json()).code, 'photoRedirectBlocked');
+  assert.deepEqual(seen.map((call) => new URL(call.url).hostname), ['bilder.example.org']);
+
+  // Plain http, an address literal and a port are refused wherever they point.
+  for (const to of ['http://bilder.example.org/a.png', 'https://10.0.0.1/a.png', 'https://bilder.example.org:8443/a.png']) {
+    const { result } = await withUpstream(() => hop(to), () =>
+      call(byteRoute, 'https://site.test/api/photo?p=u&u=https%3A%2F%2Fbilder.example.org%2Fa.png', { PHOTO_HOSTS: 'bilder.example.org' }));
+    assert.equal((await result.json()).code, 'photoRedirectBlocked', to);
+  }
+
+  // To another allowed host: followed, without the share's credentials.
+  const png = () => new Response(new Uint8Array([1]), { status: 200, headers: { 'content-type': 'image/png' } });
+  const { result: followed, seen: hops } = await withUpstream(
+    (url) => (url.includes('sky.example.org') ? hop('https://cdn.example.org/a.png') : png()), () =>
+      call(byteRoute, 'https://site.test/api/photo?p=nextcloud&host=sky.example.org&id=abcdefgh1234&file=a.png',
+        { PHOTO_HOSTS: 'sky.example.org, cdn.example.org' }));
+  assert.equal(followed.status, 200);
+  assert.ok(hops[0].headers.authorization);
+  assert.equal(hops[1].headers.authorization, undefined);
+
+  // The folder listing follows the same rule.
+  const { result: list } = await withUpstream(() => hop('https://elsewhere.example.net/list.json'), () =>
+    call(listRoute, 'https://site.test/api/photos?p=json&url=https%3A%2F%2Fbilder.example.org%2Fl.json', { PHOTO_HOSTS: 'bilder.example.org' }));
+  assert.equal((await list.json()).code, 'photoRedirectBlocked');
+});
+
+test('the routes: a good answer is kept at the edge, and a kept one is not built again', async () => {
+  const store = new Map();
+  const waits = [];
+  globalThis.caches = { default: {
+    match: async (key) => store.get(key.url)?.clone(),
+    put: async (key, res) => { store.set(key.url, res); },
+  } };
+  try {
+    const url = 'https://site.test/api/photo?p=drive&id=AAA111bbb222ccc&w=800';
+    const ctx = () => ({ request: new Request(url), env: {}, waitUntil: (p) => waits.push(p) });
+    const png = () => new Response(new Uint8Array([1, 2, 3]), { status: 200, headers: { 'content-type': 'image/png' } });
+    const first = await withUpstream(png, () => byteRoute(ctx()));
+    await Promise.all(waits);
+    assert.equal(first.seen.length, 1);
+    assert.equal(store.size, 1);
+    const second = await withUpstream(png, () => byteRoute(ctx()));
+    assert.equal(second.seen.length, 0);
+    assert.equal(second.result.headers.get('content-type'), 'image/png');
+    // A refusal is never kept, and another site is refused before the cache is asked.
+    const bad = await withUpstream(() => new Response('<html>', { status: 200, headers: { 'content-type': 'text/html' } }), () =>
+      byteRoute({ request: new Request('https://site.test/api/photo?p=drive&id=BBB111bbb222ccc'), env: {}, waitUntil: (p) => waits.push(p) }));
+    await Promise.all(waits);
+    assert.equal(bad.result.status, 502);
+    assert.equal(store.size, 1);
+    const cross = await byteRoute({ request: new Request(url, { headers: { 'sec-fetch-site': 'cross-site' } }), env: {} });
+    assert.equal(cross.status, 403);
+  } finally {
+    delete globalThis.caches;
+  }
+});
+
 test('the routes: another site cannot serve its pictures through this one', async () => {
   const url = 'https://site.test/api/photo?p=drive&id=AAA111bbb222ccc';
   const cross = await call(byteRoute, url, {}, { 'sec-fetch-site': 'cross-site' });
@@ -430,6 +513,17 @@ test('loadFolderPhotos: renders while a call is out join it, and a failure is no
   } finally {
     globalThis.fetch = real;
   }
+});
+
+test('the slideshow layer 1 -> 2: a layer that stored neither keeps the interval and opacity it was drawn with', () => {
+  const lifted = slideshowLayer.migrations[1]({ images: [] });
+  assert.equal(lifted.style, 'fill');
+  assert.equal(lifted.interval, 6);
+  assert.equal(lifted.opacity, 1);
+  const own = slideshowLayer.migrations[1]({ images: [], interval: 9, opacity: 0.5, style: 'band' });
+  assert.equal(own.interval, 9);
+  assert.equal(own.opacity, 0.5);
+  assert.equal(own.style, 'band');
 });
 
 test('the slideshow layer 1 -> 2: the motion and folder fields are added without overwriting a choice', () => {

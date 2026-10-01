@@ -142,8 +142,8 @@ function applyPush(host) {
     // The grown box is the drawn box, so a redraw between passes (a drag,
     // the arrow keys, align) can put it back instead of collapsing to the
     // design height. The shift is kept the same way, below.
-    if (grow) el.dataset.urdGrow = String(grow);
-    else delete el.dataset.urdGrow;
+    if (grow) el.dataset.urdGrown = String(needed);
+    else delete el.dataset.urdGrown;
     items.push({ id: el.dataset.blockId, x: frame.x, y: frame.y, h: frame.h, grow, el });
   }
   // The growth is kept for the drag's live pass (pushPreview).
@@ -171,8 +171,8 @@ function writePush(host, items, skipBox) {
   for (const it of items) {
     const shift = shifts.get(it.id) ?? 0;
     // A block being dragged is drawn where the pointer holds it, but it does
-    // not decide how tall the section is: otherwise the section it is leaving
-    // stretches after it, and the drop target is never uncovered.
+    // not decide how tall the section is, so the section it is leaving keeps
+    // its height and the drop target stays uncovered.
     if (!skipBox?.has(it.id) && inside(it)) {
       grew = grew || it.grow > 0;
       bottom = Math.max(bottom, it.y + shift + it.h + it.grow);
@@ -353,9 +353,15 @@ export function pushShiftOf(el) {
   return Number.parseFloat(el?.dataset?.urdShift ?? '0') || 0;
 }
 
-/** The px the last push pass added to the block's box for taller content. */
-export function pushGrowOf(el) {
-  return Number.parseFloat(el?.dataset?.urdGrow ?? '0') || 0;
+/**
+ * The height a block's content needed at the last push pass, or 0 when the
+ * block fits its frame. A redraw between passes draws the taller of this
+ * and the frame.
+ * @param {HTMLElement} el
+ * @returns {number}
+ */
+export function pushGrownOf(el) {
+  return Number.parseFloat(el?.dataset?.urdGrown ?? '0') || 0;
 }
 
 /** Editing done: measure and push again. */

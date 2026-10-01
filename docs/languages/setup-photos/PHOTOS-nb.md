@@ -140,7 +140,13 @@ og bildenes, må stå i `PHOTO_HOSTS`, ellers blir bildene utelatt.
   trenger ikke nettstedets sikkerhetsregler noen endring.
 - **Størrelsen følger bruken.** En liten flytende ramme ber om et lite bilde,
   en bakgrunn i full bredde om et stort, så en mobil laster aldri mer enn den
-  viser.
+  viser. Dette gjelder Google Drive og Google Foto, som skalerer på
+  forespørsel. En Nextcloud-deling og en bildeliste sendes videre slik filene
+  er lagret, så legg bilder i en fornuftig størrelse der (hvert på høyst
+  12 MB).
+- **Fotografier, ikke tegninger.** JPEG, PNG, WebP, GIF og AVIF vises. En
+  SVG-fil hoppes over: den er et dokument og ikke et bilde, og nettstedet
+  serverer ikke andres dokumenter fra sin egen adresse.
 - **Nye bilder vises innen omtrent ti minutter.** Lista holdes en liten stund,
   så en travel side ikke leser mappa ved hvert besøk. Et bilde som byttes ut
   under samme navn kan ta opptil et døgn før det endrer seg.

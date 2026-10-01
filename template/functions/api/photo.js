@@ -12,8 +12,8 @@
  * this route at something new.
  */
 import {
-  json, imageWidth, hostAllowed, safeTarget, fetchWithTimeout, refuseCrossSite,
-  MAX_IMAGE_BYTES, GOOGLE_ID, SHARE_TOKEN, SHARE_FILE, PUBLIC_HOST, GOOGLE_PHOTO_HOST,
+  json, imageWidth, hostAllowed, safeTarget, fetchWithTimeout, refuseCrossSite, edgeCached, RedirectRefused,
+  MAX_IMAGE_BYTES, GOOGLE_ID, SHARE_TOKEN, SHARE_FILE, PUBLIC_HOST, GOOGLE_PHOTO_HOST, RASTER_TYPE,
 } from '../_lib/photos.js';
 
 /** Where the bytes are fetched from, or a Response saying why not. */
@@ -24,7 +24,9 @@ function upstreamFor(q, env) {
   if (provider === 'drive') {
     const id = q.get('id') ?? '';
     if (!GOOGLE_ID.test(id)) return json({ error: 'Invalid picture address', code: 'photoBadAddress' }, 400);
-    // The sized variant, so an original of many megabytes is never proxied raw.
+    // The sized variant, so an original of many megabytes is never proxied
+    // raw. Google's picture host is the one that resizes: a Nextcloud share
+    // and a listed address answer with the file as it is stored.
     return { url: `https://${GOOGLE_PHOTO_HOST}/d/${id}=w${width}` };
   }
 
@@ -71,31 +73,37 @@ function capped(body, max) {
   }));
 }
 
-export async function onRequestGet({ request, env }) {
+export async function onRequestGet(context) {
+  const { request, env } = context;
   const refused = refuseCrossSite(request);
   if (refused) return refused;
-  const q = new URL(request.url).searchParams;
+  return edgeCached(context, () => picture(new URL(request.url).searchParams, env));
+}
+
+/** The picture itself, or the reason it could not be had. */
+async function picture(q, env) {
   const plan = upstreamFor(q, env);
   if (plan instanceof Response) return plan;
-  const planned = new URL(plan.url).hostname;
 
   let res;
   try {
-    res = await fetchWithTimeout(plan.url, { ...(plan.init ?? {}), headers: { accept: 'image/*', ...(plan.init?.headers ?? {}) } }, 12000);
-  } catch {
-    return json({ error: 'Could not reach the picture', code: 'photoUnreachable' }, 502);
-  }
-  // A redirect may stay on the host that was asked, or on Google's picture
-  // host, or land on the allowlist; anywhere else is refused.
-  try {
-    if (res.url && !hostAllowed(env, new URL(res.url).hostname, [planned, GOOGLE_PHOTO_HOST])) {
+    // A redirect may stay on the host that was asked, or go to Google's
+    // picture host or the allowlist; anywhere else is refused before the
+    // request goes out.
+    res = await fetchWithTimeout(plan.url, { ...(plan.init ?? {}), headers: { accept: 'image/*', ...(plan.init?.headers ?? {}) } }, 12000,
+      (host) => hostAllowed(env, host, [GOOGLE_PHOTO_HOST]));
+  } catch (err) {
+    if (err instanceof RedirectRefused) {
       return json({ error: 'The picture source redirected to a host that is not allowed', code: 'photoRedirectBlocked' }, 502);
     }
-  } catch { /* an unreadable final address is judged by the type below */ }
+    return json({ error: 'Could not reach the picture', code: 'photoUnreachable' }, 502);
+  }
   if (!res.ok) return json({ error: `The picture source answered ${res.status}`, code: 'photoUpstreamStatus', status: res.status }, 502);
 
-  const type = res.headers.get('content-type') ?? '';
-  if (!/^image\//i.test(type)) return json({ error: 'The address did not answer with a picture', code: 'photoNotImage' }, 502);
+  // Raster pictures only, and the type is written out from the allowlist
+  // rather than echoed.
+  const raster = RASTER_TYPE.exec(res.headers.get('content-type') ?? '');
+  if (!raster) return json({ error: 'The address did not answer with a picture', code: 'photoNotImage' }, 502);
 
   const declared = Number(res.headers.get('content-length'));
   if (Number.isFinite(declared) && declared > MAX_IMAGE_BYTES) {
@@ -105,11 +113,15 @@ export async function onRequestGet({ request, env }) {
   return new Response(res.body ? capped(res.body, MAX_IMAGE_BYTES) : null, {
     status: 200,
     headers: {
-      'content-type': type,
-      // A day in the shared cache, an hour in the visitor's: a changed folder
-      // shows within the day, and the folder host is left alone meanwhile.
+      'content-type': `image/${raster[1].toLowerCase()}`,
+      // An hour in the visitor's cache and a day at the edge (edgeCached), so
+      // the folder host is left alone meanwhile.
       'cache-control': 'public, max-age=3600, s-maxage=86400',
       'x-content-type-options': 'nosniff',
+      // The answer is a picture and nothing else: opened as a document it
+      // runs nothing, and no other site may embed it.
+      'content-security-policy': "default-src 'none'; sandbox",
+      'cross-origin-resource-policy': 'same-origin',
     },
   });
 }

@@ -351,7 +351,7 @@ export function registerSectionPresets(Urd) {
               images: [], source: 'upload', folder: '', order: 'random', folderMax: 24,
               style: 'floating', motion: 'drift', motionSpeed: 30, interval: 12, fade: 1.5,
               count: 8, seed: 0, size: null, spread: 0.85, tilt: 5, radius: 5, rows: 2,
-              direction: 'left', navClip: false, fit: 'cover', blur: 0, opacity: 0.85,
+              direction: 'left', underNav: true, underAnnounce: false, fit: 'cover', blur: 0, opacity: 0.85,
             },
           },
           { type: 'grain', version: 1, props: { opacity: 0.06 } },

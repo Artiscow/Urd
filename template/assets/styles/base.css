@@ -3043,8 +3043,10 @@ a.urd-gallery-tile {
   display: flex;
   align-items: center;
   /* clip rather than hidden: a clipped flex item keeps its content as its
-     smallest height, so the words are never squeezed to nothing */
+     smallest height, so the words are never squeezed to nothing. The width
+     is the band's, never the track's. */
   overflow: clip;
+  min-width: 0;
 }
 
 /* The main stripe takes what is left; the thin ones keep their thickness. */
@@ -3119,6 +3121,12 @@ a.urd-gallery-tile {
 
 /* Sway: the band drifts out and back instead of rolling on, for a few words
    that should move without ever leaving. */
+/* The swaying track is one copy, centred in the band and drifting as far to
+   one side as to the other. */
+.urd-ribbon-motion-sway {
+  justify-content: center;
+}
+
 .urd-ribbon-motion-sway .urd-ribbon-track {
   animation-name: urd-ribbon-sway;
   animation-direction: alternate;
@@ -3130,7 +3138,8 @@ a.urd-gallery-tile {
 }
 
 @keyframes urd-ribbon-sway {
-  to { transform: translateX(-12%); }
+  from { transform: translateX(6%); }
+  to { transform: translateX(-6%); }
 }
 
 /* Step: the same period in as many jumps as there are items, each landing on
@@ -3828,6 +3837,8 @@ body:has(dialog:modal) {
 @media (prefers-reduced-motion: reduce) {
   .urd-nav-scroll,
   .urd-nav-scroll .urd-nav,
+  .urd-nav-clear.urd-nav-scroll .urd-nav,
+  .urd-nav-clear.urd-nav-announce-keep.urd-nav-scroll .urd-nav,
   .urd-nav-scroll .urd-nav-list,
   .urd-nav-scroll .urd-nav-shrink-logo .urd-nav-logo img {
     transition: none;
@@ -3940,7 +3951,7 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
 /* A cluster with nothing but the burger takes no room on desktop, where the
    burger is hidden (the class comes from nav.js: the burger is always there,
    so :empty never matches) */
-.urd-nav:not(.urd-nav-mobile) .urd-nav-tools-none {
+body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-tools-none {
   display: none;
 }
 
@@ -5264,9 +5275,10 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open,
    between them: the negative margin gives back what the padding takes, so
    the items sit exactly where they do in every other hover style. The
    padding is capped at half the item spacing, so a pill reaches at most the
-   midpoint between two items and two of them can never overlap. The column
+   midpoint between two items and two of them can never overlap. Top-level
+   items only: a submenu's links are stacked inside their own card. The column
    and the two mobile menus stack the items, where neither applies. */
-body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-hover-pill:not(.urd-nav-mobile) .urd-nav-list a {
+body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-hover-pill:not(.urd-nav-mobile) .urd-nav-list > li > a {
   --urd-nav-pill-pad: min(0.8rem, calc(var(--urd-nav-gap, 1.25rem) * var(--urd-nav-shrink-soft, 1) / 2));
   margin-inline: calc(-1 * var(--urd-nav-pill-pad));
 }

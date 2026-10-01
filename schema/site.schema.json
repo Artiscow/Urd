@@ -581,7 +581,7 @@
     },
     "background": {
       "type": "object",
-      "description": "Layer-based background (color/gradient/glow/grain/image/slideshow/video/photos) - the same model as the section background. Additive from v0.6; shared by nav and footer.",
+      "description": "Layer-based background (color/gradient/glow/grain/image/slideshow/video) - the same model as the section background. Additive from v0.6; shared by nav and footer.",
       "required": ["version", "layers"],
       "additionalProperties": false,
       "properties": {

@@ -17,7 +17,7 @@
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
  *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (open the block menu in the editor)
  */
-import { applyFrameCss, mobilePlacementToCss, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushGrowOf, pushPreview } from './render.js';
+import { applyFrameCss, mobilePlacementToCss, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushGrownOf, pushPreview } from './render.js';
 import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
@@ -63,10 +63,10 @@ function drawFrame(el, frame) {
   const shift = pushShiftOf(el);
   if (shift) el.style.top = `${frame.y + shift}px`;
   // frameToCss writes the design height, while the box the owner sees is the
-  // grown one; without this a block with taller content collapses at the
-  // first pointer move, and on a rotated block that reads as a sideways jump.
-  const grow = pushGrowOf(el);
-  if (grow) el.style.height = `${frame.h + grow}px`;
+  // grown one: the height its content needed at the last push pass, or the
+  // frame's own when a resize has made that the taller of the two.
+  const grown = pushGrownOf(el);
+  if (grown > frame.h) el.style.height = `${grown}px`;
 }
 
 /**
@@ -294,9 +294,15 @@ function openBlockMenuAt(host, clientX = null, clientY = null) {
  */
 function fitBlockMenu(menu) {
   menu.classList.remove('urd-menu-up');
+  menu.style.maxHeight = '';
   const box = menu.getBoundingClientRect();
   if (box.bottom <= window.innerHeight - 8) return;
-  if (box.top > window.innerHeight / 2) menu.classList.add('urd-menu-up');
+  if (box.top <= window.innerHeight / 2) return;
+  menu.classList.add('urd-menu-up');
+  // A menu taller than the room above the pointer scrolls inside that room,
+  // so its top (the search field) stays on screen.
+  const over = 8 - menu.getBoundingClientRect().top;
+  if (over > 0) menu.style.maxHeight = `${Math.max(120, box.height - over)}px`;
 }
 
 /** Closes open menus (preset gallery, block menu). Also called via urd-close-menus when the owner clicks in the admin panels, which the iframe's own click listeners never see. */

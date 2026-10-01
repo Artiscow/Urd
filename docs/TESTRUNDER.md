@@ -4,6 +4,24 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.0.16-35p): the picture routes and the review fixes
+
+- [ ] Deployed site, a Nextcloud share or a picture list holding an SVG file: the gallery skips it, and opening its `/api/photo?...` address answers «did not answer with a picture»
+- [ ] Deployed site, a picture from a folder opened directly in a tab: it shows as a picture, with `content-security-policy` and `cross-origin-resource-policy` on the answer (the network tab)
+- [ ] Deployed site, the same folder picture loaded twice a minute apart: the second answer comes from the edge cache (`cf-cache-status: HIT`)
+- [ ] A folder address on a host missing from PHOTO_HOSTS: the readout names the host, not «{host}»
+- [ ] A gallery layer made before 0.7.13.8: the panel shows Fyller bakgrunnen with fit, interval and fade, as the preview draws it
+- [ ] Bilder fra Delt mappe with a Google Photos album: Rekkefølge offers Som i albumet and Tilfeldig only
+- [ ] Gallery block, view Rullende bånd, in a narrow block with two pictures: the band stays inside the block, every copy shows its pictures, a click on any tile opens the lightbox, and Tab reaches each picture once
+- [ ] Reload admin with Historikk or Oppdatering as the last open panel: the panel shows its list, not a loading line
+- [ ] Nav panel, Mobil fold: no «content width» choice; «over the top section» only for the bar; a mobile border with its own width and colour draws with those on a phone; verktøy Venstre on mobile alone puts the burger leftmost there
+- [ ] Hover style Pille with a submenu: the highlight in the submenu stays inside the card
+- [ ] A block whose content is taller than its frame, resized by the corner: the box follows the pointer and does not snap back on release
+- [ ] Block menu opened low on a short screen: the search field stays on screen and the menu scrolls
+- [ ] Menu items: drag a row and release beside the list (inside admin): it lands where the clone stood; Escape cancels
+- [ ] Gjennomsiktig øverst with Krymp, reduced motion on: nothing animates
+- [ ] Ribbon motion Sving with two short words: the words sit centred and sway both ways
+
 ### Testrunde-batch (0.7.0.35): the pre-push check of the 0.7.13 stages
 
 - [ ] Side column with Undermenyer Åpne fra start and no arrow: a click in the page content leaves every submenu open, and Tab skips the item headings

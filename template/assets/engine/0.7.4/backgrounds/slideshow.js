@@ -59,8 +59,9 @@ export const slideshowLayer = {
     // layer's 2 -> 3 step gives: the editor writes into layer props without
     // lifting them, so a layer still stored as version 1 can already carry a
     // choice that the lift must not overwrite. A version 1 layer was the
-    // filling cross-fade, so that is the style it keeps.
-    1: (props) => ({ ...V2_FIELDS, style: 'fill', motion: 'none', ...props }),
+    // filling cross-fade, so that is the style it keeps, with the interval
+    // and the opacity a version 1 layer had when it stored none.
+    1: (props) => ({ ...V2_FIELDS, style: 'fill', motion: 'none', interval: 6, opacity: 1, ...props }),
   },
   /**
    * @param {HTMLElement} el
@@ -180,7 +181,7 @@ function renderFill({ el, props, images, motion, reduced, dpr, dwell }) {
   // Same load guard as the image layer: keep the layer invisible until the first
   // image has finished loading, so it never appears in stripes.
   const probe = new Image();
-  probe.src = list[0].src;
+  probe.src = demo ? list[0].src : photoSrcAt(list[0].src, width);
   if (!probe.complete) {
     el.style.visibility = 'hidden';
     const show = () => { el.style.visibility = ''; };

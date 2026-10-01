@@ -140,10 +140,11 @@ function applySticky() {
   // with the menu would flicker. The height is the menu's own clearance as
   // nav.js measures it (--urd-nav-h): an announcement strip that scrolls
   // away is not part of what stays on screen.
+  // A side column takes no top height itself, but an announcement fixed
+  // across the whole page above it does (--urd-announce-page-h).
   const stickyNav = document.querySelector('header#urd-nav.urd-nav-sticky:not(.urd-nav-side-host)');
-  const navH = stickyNav
-    ? (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--urd-nav-h')) || stickyNav.offsetHeight)
-    : 0;
+  const rootVar = (name) => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
+  const navH = stickyNav ? (rootVar('--urd-nav-h') || stickyNav.offsetHeight) : rootVar('--urd-announce-page-h');
 
   // Blocks with the same sticky-group are pinned as ONE unit; the rest are
   // groups of one member each, so the whole loop below has the same shape.

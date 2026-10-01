@@ -1302,6 +1302,7 @@ export default {
     'tip.bg.folderMax': 'Hvor mange bilder som hentes fra mappa',
     'lbl.folderOrder': 'Rekkefølge',
     'opt.folderOrder.name': 'Etter navn',
+    'opt.folderOrder.listed': 'Som i albumet',
     'opt.folderOrder.newest': 'Nyeste først',
     'opt.folderOrder.random': 'Tilfeldig',
     'tip.bg.folderOrder': 'Hvilke bilder som tas fra mappa. Tilfeldig trekker et nytt utvalg ved hver sidevisning, fra inntil 200 bilder',

@@ -238,8 +238,14 @@ function renderRibbon(host, props, ctx, blockEl) {
     // The second row runs against the first, whichever way the first goes.
     const rightwards = (props.direction === 'right') !== (row === 1);
     if (rightwards) track.classList.add('urd-ribbon-right');
-    const run = el2('div', 'urd-ribbon-run');
-    props.images.forEach((_, i) => run.appendChild(makeTile(props, i, ctx, blockEl)));
+    // Every copy is built from the tiles' own factory, so each one carries
+    // its load guard and its click into the lightbox.
+    const buildRun = () => {
+      const row = el2('div', 'urd-ribbon-run');
+      props.images.forEach((_, i) => row.appendChild(makeTile(props, i, ctx, blockEl)));
+      return row;
+    };
+    const run = buildRun();
     track.appendChild(run);
     band.appendChild(track);
     host.appendChild(band);
@@ -248,7 +254,7 @@ function renderRibbon(host, props, ctx, blockEl) {
       const width = run.scrollWidth;
       if (!width) return;
       const periods = ribbonPeriods(width, band.clientWidth);
-      syncTrackCopies(track, run, periods);
+      syncTrackCopies(track, run, periods, buildRun);
       track.style.setProperty('--urd-ribbon-ms', `${ribbonDuration(width * periods, props.speed) * 1000}ms`);
     };
     measure();

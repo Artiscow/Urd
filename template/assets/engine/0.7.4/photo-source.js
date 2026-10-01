@@ -308,7 +308,8 @@ export function loadFolderPhotos(address, order, { force = false } = {}) {
       const data = await res.json().catch(() => null);
       value = res.ok
         ? { photos: folderPhotos(data), error: null, code: null }
-        : { photos: [], error: data?.error ?? `status ${res.status}`, code: data?.code ?? 'photoFolderFailed' };
+        // The host and the status ride along: the translated messages name them.
+        : { photos: [], error: data?.error ?? `status ${res.status}`, code: data?.code ?? 'photoFolderFailed', host: data?.host ?? '', status: data?.status ?? res.status };
     } catch {
       value = { photos: [], error: 'unreachable', code: 'photoFolderFailed' };
     }
@@ -332,7 +333,9 @@ export function loadFolderPhotos(address, order, { force = false } = {}) {
 export function picturesFor(props) {
   const address = folderAddress(props);
   const folder = address ? peekFolderPhotos(address, props.order) : null;
-  if (!folder) return props.images ?? [];
+  // A folder that has not answered, or answered with nothing, leaves the
+  // layer with its own uploads.
+  if (!folder?.photos.length) return props.images ?? [];
   return orderPhotos(folder.photos, props.order, seedForVisit()).slice(0, clampFolderMax(props.folderMax));
 }
 

@@ -19,7 +19,7 @@
  * the PHOTO_HOSTS environment variable (the calendar's ICS_HOSTS model).
  */
 import {
-  json, photoLimit, photoSort, byName, hostAllowed, safeTarget, readCapped, fetchWithTimeout, refuseCrossSite,
+  json, photoLimit, photoSort, byName, hostAllowed, safeTarget, readCapped, fetchWithTimeout, refuseCrossSite, edgeCached, RedirectRefused,
   MAX_LIST_BYTES, GOOGLE_ID, SHORT_CODE, SHARE_TOKEN, PUBLIC_HOST,
 } from '../_lib/photos.js';
 
@@ -31,6 +31,10 @@ const googlePhoto = (url) => `/api/photo?p=g&u=${encodeURIComponent(url)}`;
 const sharePhoto = (host, token, file) =>
   `/api/photo?p=nextcloud&host=${encodeURIComponent(host)}&id=${encodeURIComponent(token)}&file=${encodeURIComponent(file)}`;
 const plainPhoto = (url) => `/api/photo?p=u&u=${encodeURIComponent(url)}`;
+
+/** The answer when a folder host redirects somewhere it may not. */
+const redirectRefused = () =>
+  json({ error: 'The folder host redirected to a host that is not allowed', code: 'photoRedirectBlocked' }, 502);
 
 /**
  * A publicly shared Drive folder. Drive sorts for us: by natural name, or by
@@ -84,8 +88,11 @@ async function fromGooglePhotos(id, key, limit) {
     : `https://photos.google.com/share/${id}${key ? `?key=${encodeURIComponent(key)}` : ''}`;
   let res;
   try {
-    res = await fetchWithTimeout(target, { headers: { accept: 'text/html' } });
-  } catch {
+    res = await fetchWithTimeout(target, { headers: { accept: 'text/html' } }, 8000, (host) => host === 'photos.google.com');
+  } catch (err) {
+    if (err instanceof RedirectRefused) {
+      return json({ error: 'The album link does not lead to a shared album', code: 'photoFolderBadAnswer' }, 502);
+    }
     return json({ error: 'Could not reach the shared album', code: 'photoFolderUnreachable' }, 502);
   }
   // A short link lands on the album page; anywhere else and the album is gone.
@@ -129,8 +136,9 @@ async function fromNextcloud(host, token, limit, sort, env) {
         'content-type': 'application/xml',
       },
       body: '<?xml version="1.0"?><d:propfind xmlns:d="DAV:"><d:prop><d:getlastmodified/></d:prop></d:propfind>',
-    });
-  } catch {
+    }, 8000, (next) => hostAllowed(env, next));
+  } catch (err) {
+    if (err instanceof RedirectRefused) return redirectRefused();
     return json({ error: 'Could not reach the shared folder', code: 'photoFolderUnreachable' }, 502);
   }
   if (!res.ok && res.status !== 207) {
@@ -140,8 +148,9 @@ async function fromNextcloud(host, token, limit, sort, env) {
   if (xml === null) return json({ error: 'The folder listing is too large', code: 'photoFolderTooLarge' }, 502);
   const found = [];
   // One <response> per file, each with its href and its last-modified time.
-  for (const block of xml.matchAll(/<[a-z0-9]*:?response>([\s\S]*?)<\/[a-z0-9]*:?response>/gi)) {
-    const href = /<[a-z0-9]*:?href>([^<]+)<\/[a-z0-9]*:?href>/i.exec(block[1]);
+  // Split on the opening tag, so the cost stays linear whatever the listing holds.
+  for (const block of xml.split(/<(?:[a-z0-9]+:)?response>/i).slice(1)) {
+    const href = /<(?:[a-z0-9]+:)?href>([^<]+)</i.exec(block);
     if (!href) continue;
     let name;
     try {
@@ -150,7 +159,7 @@ async function fromNextcloud(host, token, limit, sort, env) {
       continue;
     }
     if (!IMAGE_NAME.test(name)) continue;
-    const modified = /<[a-z0-9]*:?getlastmodified>([^<]+)<\/[a-z0-9]*:?getlastmodified>/i.exec(block[1]);
+    const modified = /<(?:[a-z0-9]+:)?getlastmodified>([^<]+)</i.exec(block);
     const time = modified ? Date.parse(modified[1]) : NaN;
     found.push({ src: sharePhoto(host, token, name), name, time: Number.isFinite(time) ? time : 0 });
   }
@@ -162,12 +171,16 @@ async function fromNextcloud(host, token, limit, sort, env) {
 async function fromJson(raw, limit, env) {
   const target = safeTarget(raw, env);
   if (!target) {
-    return json({ error: 'The picture list address is not allowed. Add its host to the PHOTO_HOSTS environment variable (comma-separated) in the hosting setup.', code: 'photoHostNotAllowed' }, 403);
+    // The host is named when the address has one, so the message can say what to add.
+    let host = '';
+    try { host = new URL(String(raw)).hostname.toLowerCase(); } catch { host = ''; }
+    return json({ error: `The picture list address is not allowed. Add its host${host ? ` «${host}»` : ''} to the PHOTO_HOSTS environment variable (comma-separated) in the hosting setup.`, code: 'photoHostNotAllowed', host }, 403);
   }
   let res;
   try {
-    res = await fetchWithTimeout(target, { headers: { accept: 'application/json' } });
-  } catch {
+    res = await fetchWithTimeout(target, { headers: { accept: 'application/json' } }, 8000, (next) => hostAllowed(env, next));
+  } catch (err) {
+    if (err instanceof RedirectRefused) return redirectRefused();
     return json({ error: 'Could not reach the picture list', code: 'photoFolderUnreachable' }, 502);
   }
   const text = await readCapped(res, MAX_LIST_BYTES);
@@ -193,10 +206,15 @@ async function fromJson(raw, limit, env) {
   return photos;
 }
 
-export async function onRequestGet({ request, env }) {
+export async function onRequestGet(context) {
+  const { request, env } = context;
   const refused = refuseCrossSite(request);
   if (refused) return refused;
-  const q = new URL(request.url).searchParams;
+  return edgeCached(context, () => listing(new URL(request.url).searchParams, env));
+}
+
+/** The folder's pictures as paths on this site, or the reason they could not be listed. */
+async function listing(q, env) {
   const provider = q.get('p') ?? '';
   const id = q.get('id') ?? '';
   // `host` is the share host for Nextcloud and the album key for Google Photos.
@@ -232,7 +250,7 @@ export async function onRequestGet({ request, env }) {
     status: 200,
     headers: {
       'content-type': 'application/json',
-      // Shared cache for five minutes: a busy page never hammers the folder host.
+      // Five minutes at the edge (edgeCached): a busy page never hammers the folder host.
       'cache-control': 'public, max-age=60, s-maxage=300',
     },
   });

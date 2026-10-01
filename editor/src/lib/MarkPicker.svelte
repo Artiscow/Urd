@@ -53,6 +53,7 @@
 
   function onOpen() {
     query = '';
+    choosing = false;
     // An image mark opens where it lives; everything else starts in the icons.
     tab = image ? 'images' : 'icons';
   }

@@ -90,26 +90,33 @@ function buildRun(mode, items, sep, editable) {
 
 /**
  * The copies of a run that fill a track: two periods of `periods` copies each,
- * the first copy being the run itself. The copies are clones the reader never
- * meets (aria-hidden and inert, and stripped of the editing hooks), so the
- * words are read once and a tile is reached once. Shared with the gallery's
- * ribbon view.
+ * the first copy being the run itself. Without `build` a copy is a clone the
+ * reader never meets (aria-hidden and inert, and stripped of the editing
+ * hooks), so the words are read once. With `build` the caller makes each copy
+ * itself, for content that carries listeners a clone would lose (the
+ * gallery's tiles: their load guard and their click); such a copy answers the
+ * pointer, and is kept out of the reading and tab order instead of inert.
  * @param {HTMLElement} track
  * @param {HTMLElement} run The first copy, built by the caller
  * @param {number} periods From ribbonPeriods
+ * @param {() => HTMLElement} [build] Makes one more copy of the run
  */
-export function syncTrackCopies(track, run, periods) {
+export function syncTrackCopies(track, run, periods, build) {
   const wanted = periods * 2 - 1;
   if (track.children.length - 1 === wanted) return;
   while (track.children.length > 1) track.lastElementChild.remove();
   for (let i = 0; i < wanted; i += 1) {
-    const copy = run.cloneNode(true);
+    const copy = build ? build() : run.cloneNode(true);
     copy.setAttribute('aria-hidden', 'true');
-    copy.inert = true;
-    for (const node of copy.querySelectorAll('[contenteditable], [data-ribbon-index], [tabindex]')) {
-      node.removeAttribute('contenteditable');
-      node.removeAttribute('tabindex');
-      delete node.dataset.ribbonIndex;
+    if (build) {
+      for (const node of copy.querySelectorAll('a, button')) node.tabIndex = -1;
+    } else {
+      copy.inert = true;
+      for (const node of copy.querySelectorAll('[contenteditable], [data-ribbon-index], [tabindex]')) {
+        node.removeAttribute('contenteditable');
+        node.removeAttribute('tabindex');
+        delete node.dataset.ribbonIndex;
+      }
     }
     track.appendChild(copy);
   }
