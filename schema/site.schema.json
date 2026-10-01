@@ -526,6 +526,7 @@
         "baseline": { "type": "array", "description": "The bottom line's optional right-side links (additive from v0.6): privacy/terms/\"Made with Urd\".", "items": { "$ref": "#/$defs/footerLink" } },
         "linkRow": { "type": "array", "description": "Doormat link row: one centered row of links (additive from v0.6; the Centered and Big CTA templates).", "items": { "$ref": "#/$defs/footerLink" } },
         "columnsAlign": { "enum": ["left", "center"], "default": "left", "description": "Alignment of a wide (two-column) column's heading (additive from v0.6)." },
+        "design": { "enum": ["chapters", "split"], "description": "A design over the brand-and-columns footer (additive from v0.7): chapters numbers the link columns under a rule each, with the brand on a row of its own; split gives the brand half the width on a panel tinted with the accent. Omitted = the standard footer; a big call to action ignores it." },
         "cta": {
           "type": "object",
           "description": "Call to action (additive from v0.6): button (link) or newsletter (email field + modern endpoint submission).",

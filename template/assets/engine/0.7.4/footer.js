@@ -19,6 +19,7 @@ import {
   footerBaselineLinks,
   footerLinkRow,
   footerCta,
+  footerDesign,
   hasRichFooter,
 } from './footer-model.js';
 import {
@@ -290,6 +291,10 @@ export function renderFooter(site, host, pageId) {
   // A big CTA always centers; otherwise the alignment choice applies.
   const alignClass = cta && cta.big ? 'center' : footer.align ?? 'left';
   inner.className = `urd-footer urd-footer-rich urd-footer-${alignClass}`;
+  // The design dresses the brand-and-columns footer; a big call to action
+  // has its own centred build.
+  const design = cta && cta.big ? '' : footerDesign(site);
+  if (design) inner.classList.add(`urd-footer-design-${design}`);
   // The layered background takes over the surface when present; otherwise the
   // plain background color (default = the theme surface from base.css).
   const hasFooterBgLayers = mountFooterBg(footer, inner);

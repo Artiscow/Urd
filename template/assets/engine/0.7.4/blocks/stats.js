@@ -54,6 +54,14 @@ export function formatStatValue(n, reference, decimals) {
   return text;
 }
 
+/** How the figure is dressed: bare, in a card, or on a band of the accent colour. */
+export const STAT_VARIANTS = ['plain', 'cards', 'band'];
+
+/** The variant, bare for anything unknown. */
+export function statVariant(variant) {
+  return STAT_VARIANTS.includes(variant) ? variant : 'plain';
+}
+
 export const statsBlock = {
   version: 1,
   autoGrow: true,
@@ -70,12 +78,13 @@ export const statsBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el
-   * @param {{value: string, prefix?: string, suffix?: string, label?: string, countUp?: boolean}} props
+   * @param {{value: string, prefix?: string, suffix?: string, label?: string, countUp?: boolean,
+   *          variant?: 'plain'|'cards'|'band'}} props
    * @param {object} ctx Render context
    */
   render(el, props, ctx) {
     const host = document.createElement('div');
-    host.className = 'urd-stats';
+    host.className = `urd-stats urd-stats-${statVariant(props.variant)}`;
     el.appendChild(host);
     const post = (msg) => window.parent?.postMessage(msg, location.origin);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';

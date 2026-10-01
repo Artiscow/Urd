@@ -4,6 +4,21 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.13.11): styled variants and two footers
+
+- [ ] Statistikk, Variant Ren, Kort and Bånd: bare as before, in a card, and on a band in the accent colour with readable text; three in a row with the same variant stand as one strip
+- [ ] A statistic made before this stage looks as it did, and still counts up for visitors
+- [ ] Sitat, variant Stort, Som kort: the quote stands in a card with an accent line at the top; the switch is not shown for the short variant
+- [ ] FAQ, Variant Liste: bare rows with a rule between them, opening and closing as before; Kort is the look an existing FAQ keeps
+- [ ] FAQ Liste: the Kortstil settings are hidden; back on Kort they return with their values
+- [ ] Linje with Tekst på linjen: the word stands in the middle with the line on both sides, in the line's colour and thickness; emptied, the plain line returns; the field is not shown for an arrow
+- [ ] A labelled line rotated, and on a phone
+- [ ] Footer panel, the template picker: ten cards, Kapitler and Delt with their own drawings
+- [ ] Footer Kapitler: the brand on its own row, the columns numbered 01, 02, 03 under a rule each; on a phone two columns
+- [ ] Footer Delt: the brand with its button on a tinted half, the columns in the other half; on a phone the brand panel on top
+- [ ] Pick Kapitler, then Kolonner: the numbering is gone (the design is cleared)
+- [ ] Both designs in a dark theme and with a footer background layer
+
 ### Testrunde-batch (0.7.13.10): the pattern layer and section edge shapes
 
 - [ ] Section background, add layer Mønster: dots over the section; each of the eight patterns draws, and tiles meet without a seam

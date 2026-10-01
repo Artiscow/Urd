@@ -3439,6 +3439,11 @@
   const hoverColorLabel = $derived(HOVER_COLOR_LABELS[siteDraft?.nav?.style?.hover] ?? null);
   /** The ink a thin stripe inherits when it has no colour of its own (the block's own rule). */
   const ribbonInk = (props) => props.color || (props.variant === 'plain' ? 'text' : 'accent-text');
+  /** The variants of the statistic and the FAQ block, as the blocks' own STAT_VARIANTS and
+      FAQ_VARIANTS list them. Written out here because the block modules import the renderer,
+      which the editor does not bundle; tests/styled-blocks.test.mjs holds the lists equal. */
+  const STAT_VARIANT_IDS = ['plain', 'cards', 'band'];
+  const FAQ_VARIANT_IDS = ['cards', 'list'];
   /** A gallery layer's props as the engine draws them: the editor keeps a layer at the version
       it was stored with, so one from before the styles is read through the layer's own lift. */
   const galleryView = (layer) => ((layer.version ?? 1) < slideshowLayer.version
@@ -4173,7 +4178,7 @@
     });
   }
 
-  /* Footer templates: eight research-based starting layouts, built from
+  /* Footer templates: ten research-based starting layouts, built from
      the site's own pages and title. They fill the footer; everything can
      be edited further. Each has a small thumb description for the visual
      template picker (footerThumb). */
@@ -4186,6 +4191,8 @@
     { id: 'bigcta', label: ta('footerTemplate.bigcta'), thumb: { center: true, bigcta: true, baselineLinks: 2 } },
     { id: 'contact', label: ta('footerTemplate.contact'), thumb: { tag: true, cols: 3, social: 2, baselineLinks: 1 } },
     { id: 'mega', label: ta('footerTemplate.mega'), thumb: { tag: true, mega: true, cols: 2, social: 4, baselineLinks: 2 } },
+    { id: 'chapters', label: ta('footerTemplate.chapters'), thumb: { chapters: true, cols: 3, baselineLinks: 2 } },
+    { id: 'split', label: ta('footerTemplate.split'), thumb: { split: true, cols: 2, baselineLinks: 1 } },
   ];
 
   function footerTemplateConfig(name) {
@@ -4252,6 +4259,26 @@
         ],
         social: soc(['facebook', 'instagram']), copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
     }
+    if (name === 'chapters') {
+      // The link columns as numbered chapters under a rule each (footer.design).
+      return { align: 'left', design: 'chapters', brand: { title, tagline: ta('seed.footer.tagline2') },
+        columns: [
+          { title: ta('seed.footer.colExplore'), links: pageLinks(4) },
+          { title: ta('seed.footer.colCompany'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.footer.history'), '#'), ext(ta('seed.footer.contact'), '#')] },
+          { title: ta('seed.footer.colSupport'), links: [ext(ta('seed.join'), '#'), ext(ta('seed.footer.faq'), '#'), ext(ta('seed.footer.help'), '#')] },
+        ],
+        copyright, baseline: [ext(ta('seed.footer.privacy'), '#'), ext(ta('seed.footer.terms'), '#')] };
+    }
+    if (name === 'split') {
+      // The brand with a call to action on a tinted half, the columns in the other half (footer.design).
+      return { align: 'left', design: 'split', brand: { title, tagline: ta('seed.footer.tagline1') },
+        cta: { kind: 'button', heading: ta('seed.footer.ctaHeading'), label: ta('seed.join'), href: '#' },
+        columns: [
+          { title: ta('seed.footer.colPages'), links: pageLinks(4) },
+          { title: ta('seed.footer.colMore'), links: [ext(ta('seed.footer.about'), '#'), ext(ta('seed.footer.contact'), '#'), ext(ta('seed.footer.privacy'), '#')] },
+        ],
+        social: soc(['facebook', 'instagram']), copyright, baseline: [ext(ta('seed.footer.privacy'), '#')] };
+    }
     // mega: columns + background layers (glow + grain).
     return { align: 'left', brand: { title, tagline: ta('seed.footer.tagline5') },
       columns: [
@@ -4272,7 +4299,7 @@
       const t = footerTemplateConfig(name);
       f.show = true;
       delete f.text; // "Simple text" is the legacy form; the templates use the rich footer.
-      for (const k of ['align', 'brand', 'columns', 'social', 'copyright', 'baseline', 'linkRow', 'cta', 'columnsAlign', 'background']) {
+      for (const k of ['align', 'brand', 'columns', 'social', 'copyright', 'baseline', 'linkRow', 'cta', 'columnsAlign', 'background', 'design']) {
         if (t[k] !== undefined) f[k] = t[k]; else delete f[k];
       }
     });
@@ -9595,8 +9622,14 @@
       {/if}
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'faq'}
-      <p class="panel-strong">{ta('lbl.cardStyle')}</p>
-      {@render kortstilUI()}
+      <Choice label={ta('lbl.variant')} value={selectedBlock.props.variant === 'list' ? 'list' : 'cards'}
+        options={FAQ_VARIANT_IDS.map((v) => [v, ta(`opt.faqVariant.${v}`)])}
+        onchange={(v) => setBlockProp('variant', v)} />
+      <!-- The card style belongs to the cards; the list's rows are bare -->
+      {#if selectedBlock.props.variant !== 'list'}
+        <p class="panel-strong">{ta('lbl.cardStyle')}</p>
+        {@render kortstilUI()}
+      {/if}
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'timeline'}
       <label>{ta('lbl.variant')}
@@ -9624,12 +9657,22 @@
         {#if selectedBlock.props.image}
           <button class="ghost" onclick={() => setBlockProp('image', '')}>{ta('ui.quotePortraitRemove')}</button>
         {/if}
+      {:else}
+        <!-- The large spread can stand in a card; the short one already is one -->
+        <label class="gridmenu-snap" title={ta('tip.quote.card')}>
+          <input type="checkbox" checked={selectedBlock.props.card === true}
+            onchange={(e) => setBlockProp('card', e.target.checked)} />
+          {ta('lbl.quoteCard')}
+        </label>
       {/if}
       <label>{ta('lbl.color')}
         <ColorPicker value={selectedBlock.props.accent ?? 'accent'} tokens={themeSwatches()}
           onchange={(v) => setBlockProp('accent', v === 'accent' ? null : v)} /></label>
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'stats'}
+      <Choice label={ta('lbl.variant')} value={STAT_VARIANT_IDS.includes(selectedBlock.props.variant) ? selectedBlock.props.variant : 'plain'}
+        options={STAT_VARIANT_IDS.map((v) => [v, ta(`opt.statVariant.${v}`)])}
+        onchange={(v) => setBlockProp('variant', v)} />
       <label class="gridmenu-snap" title={ta('tip.stat.countUp')}>
         <input type="checkbox" checked={selectedBlock.props.countUp !== false}
           onchange={(e) => setBlockProp('countUp', e.target.checked)} />
@@ -10005,6 +10048,11 @@
         <label>{ta('lbl.length')}
           <input type="number" min="1" max={Math.max(1, Math.round(100 - selectedBlock.frame.x))} step="0.5" value={selectedBlock.frame.w}
             onchange={(e) => setBlockFrame('w', Math.max(1, Math.min(Number(e.target.value), 100 - selectedBlock.frame.x)))} /></label>
+      {/if}
+      {#if selectedBlock.props.kind === 'line'}
+        <label title={ta('tip.shape.label')}>{ta('lbl.shapeLabel')}
+          <input value={selectedBlock.props.label ?? ''}
+            onchange={(e) => setBlockProp('label', e.target.value.trim() || undefined)} /></label>
       {/if}
       <label class="gridmenu-snap" title={ta('tip.shape.fill')}>
         <input type="checkbox" checked={Boolean(selectedBlock.props.fill)}

@@ -36,6 +36,14 @@ export function groupName(blockId, multi) {
   return multi ? '' : `urd-faq-${blockId || 'x'}`;
 }
 
+/** How the questions are dressed: each in its own card, or as rows with a rule between them. */
+export const FAQ_VARIANTS = ['cards', 'list'];
+
+/** The variant, cards (the look the block began with) for anything unknown. */
+export function faqVariant(variant) {
+  return FAQ_VARIANTS.includes(variant) ? variant : 'cards';
+}
+
 const CHEVRON = '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg>';
 
 export const faqBlock = {
@@ -55,12 +63,13 @@ export const faqBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el
-   * @param {{items: Array<{q: string, a: string}>, multi?: boolean, boxStyle?: object}} props
+   * @param {{items: Array<{q: string, a: string}>, multi?: boolean, boxStyle?: object, variant?: 'cards'|'list'}} props
    * @param {object} ctx Render context
    */
   render(el, props, ctx) {
     const host = document.createElement('div');
-    host.className = 'urd-faq';
+    const variant = faqVariant(props.variant);
+    host.className = `urd-faq urd-faq-${variant}`;
     el.appendChild(host);
     const post = (msg) => window.parent?.postMessage(msg, location.origin);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
@@ -95,9 +104,10 @@ export const faqBlock = {
 
     (props.items ?? []).forEach((entry) => {
       const item = document.createElement('details');
-      item.className = 'urd-faq-item urd-text-box';
+      // A card wears the shared box style; a row in the list is bare, with a rule under it (base.css).
+      item.className = variant === 'list' ? 'urd-faq-item' : 'urd-faq-item urd-text-box';
       if (name) item.name = name;
-      Object.assign(item.style, boxStyleCss(props.boxStyle));
+      if (variant !== 'list') Object.assign(item.style, boxStyleCss(props.boxStyle));
 
       const head = document.createElement('summary');
       head.className = 'urd-faq-head';

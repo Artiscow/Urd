@@ -340,6 +340,48 @@ html {
   padding-top: 0.5rem;
 }
 
+/* The list variant (faq.variant): bare rows with a rule between them, not cards. */
+.urd-faq-list {
+  gap: 0;
+}
+
+.urd-faq-list .urd-faq-item {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--urd-color-text) 16%, transparent);
+}
+
+.urd-faq-list .urd-faq-item:first-child {
+  border-top: 1px solid color-mix(in srgb, var(--urd-color-text) 16%, transparent);
+}
+
+/* The chapter divider (a line shape with a label): the word in the middle
+   and the line on both sides of it, at the line's own thickness. */
+.urd-shape-chapter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.9em;
+}
+
+.urd-shape-chapter::before,
+.urd-shape-chapter::after {
+  content: '';
+  flex: 1;
+  height: var(--urd-shape-t, 2px);
+  background: currentColor;
+}
+
+.urd-shape-chapter-label {
+  flex: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 /* Soft unfolding where the browser supports ::details-content + interpolate-size
    (Chromium early 2026): the answer slides open and closed in height. Without support
    native <details> reveals the answer instantly. The content-visibility transition
@@ -562,6 +604,18 @@ html {
   font-style: normal;
 }
 
+/* The large quote in a card (quote.card): the spread set on the surface
+   colour under a rule in the accent. */
+.urd-quote-card {
+  box-sizing: border-box;
+  padding: 1.7rem 1.5rem 1.3rem;
+  background: color-mix(in srgb, var(--urd-color-surface) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 12%, transparent);
+  border-top: 3px solid var(--urd-quote-glyph);
+  border-radius: var(--urd-radius-md);
+  box-shadow: 0 8px 22px rgb(0 0 0 / 8%);
+}
+
 /* The stat: one key figure with a label. Tabular nums so
    the count-up animation does not jump in width along the way. */
 .urd-stats {
@@ -597,6 +651,34 @@ html {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.7;
+}
+
+/* The figure's two dressed variants (stats.variant): a card on the surface
+   colour, and a band of the accent colour with the accent's own text colour.
+   Both fill the block's frame, so three in a row line up as one strip. */
+.urd-stats-cards,
+.urd-stats-band {
+  box-sizing: border-box;
+  min-height: 100%;
+  justify-content: center;
+  padding: 1.1rem 1rem;
+}
+
+.urd-stats-cards {
+  background: var(--urd-color-surface);
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 12%, transparent);
+  border-radius: var(--urd-radius-md);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 8%);
+}
+
+.urd-stats-band {
+  background: var(--urd-color-accent);
+  color: var(--urd-color-accent-text, #fff);
+}
+
+.urd-stats-band .urd-stat-value,
+.urd-stats-band .urd-stat-number > span {
+  color: inherit;
 }
 
 /* The table: a semantic table in an overflow wrapper, so wide
@@ -5661,6 +5743,66 @@ body.urd-marqueeing {
   break-inside: avoid;
   margin-bottom: 0.55rem;
 }
+/* The chapters design (footer.design): the brand on a row of its own, then
+   the link columns as numbered chapters, each under a rule. */
+.urd-footer-design-chapters .urd-footer-top {
+  grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr));
+  counter-reset: urd-chapter;
+}
+
+.urd-footer-design-chapters .urd-footer-top > .urd-footer-brand {
+  grid-column: 1 / -1;
+}
+
+.urd-footer-design-chapters .urd-footer-col {
+  padding-top: 0.9rem;
+  border-top: 1px solid color-mix(in srgb, var(--urd-color-text) 22%, transparent);
+  counter-increment: urd-chapter;
+}
+
+.urd-footer-design-chapters .urd-footer-col::before {
+  content: counter(urd-chapter, decimal-leading-zero);
+  display: block;
+  margin-bottom: 0.45rem;
+  font-family: var(--urd-font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--urd-color-accent);
+}
+
+/* The split design: the brand takes half the width on a panel tinted with
+   the accent, the link columns share the other half. */
+.urd-footer-design-split .urd-footer-top {
+  grid-template-columns: calc(50% - 1.25rem) repeat(var(--n, 2), minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.urd-footer-design-split .urd-footer-brand {
+  padding: 1.5rem 1.6rem;
+  background: color-mix(in srgb, var(--urd-color-accent) 14%, transparent);
+  border-radius: var(--urd-radius-md);
+}
+
+.urd-footer-design-split .urd-footer-col {
+  padding-top: 1.5rem;
+}
+
+@media (max-width: 780px) {
+  .urd-footer-design-chapters .urd-footer-top,
+  .urd-footer-design-split .urd-footer-top {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .urd-footer-design-split .urd-footer-top > .urd-footer-brand {
+    grid-column: 1 / -1;
+  }
+
+  .urd-footer-design-split .urd-footer-col {
+    padding-top: 0;
+  }
+}
+
 /* "Centered" column alignment: the wide column's heading is centered. */
 .urd-footer-cols-center .urd-footer-col-wide h4 {
   text-align: center;

@@ -27,6 +27,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.13.11 - Styled variants of four blocks, and two footer designs - 1 October 2026
+
+- The statistic, the quote, the FAQ and the line had one look each. Additive props on the existing blocks, no new block: `stats.variant` (`plain`, `cards` on the surface colour, `band` on the accent, the last two filling the frame so figures side by side stand as one strip), `quote.card` (the large spread in a card under a rule in the accent), `faq.variant` (`cards`, the look the block began with and the default, or `list` with bare rows and a rule between them) and a `label` on the line shape, a word in the middle with the line on both sides, the chapter divider.
+- Two footer designs through the new `footer.design`: `chapters` puts the brand on a row of its own and numbers the link columns under a rule each, `split` gives the brand and a call to action half the width on a panel tinted with the accent. Both are templates in the picker, which now holds ten, with their own thumbnail cards; another template clears the design.
+- Editor: the variants as segments in the Style tab, the quote's card switch only for the large variant, the FAQ's card style only for cards, the line's label field only for a line. The statistic's and the FAQ's variant lists are written out in the editor, since those block modules import the renderer the editor does not bundle; `tests/styled-blocks.test.mjs` holds them equal to the blocks' own.
+- Schema: `footer.design` in site.schema.json and SCHEMA.md, the block props in SCHEMA.md. The example footer keeps the standard design, so the field is not in the example data. Keys in nb, en-GB and tr; FUNKSJONSKART counts ten footers.
+
 ### 0.7.13.10 - The pattern layer and section shape dividers - 1 October 2026
 
 - A section had no texture but grain and no edge but a straight line. New background layer `pattern` (`backgrounds/pattern.js`): eight drawn tiles (dots, grid, diagonal stripes, checks, waves, zigzag, crosses, triangles) with `color`, `size`, `opacity`, `rotation` and `invert`. The layer paints its box with the colour and uses the pattern as a CSS mask, one SVG as large as the layer with the tile as an SVG `<pattern>`, so a theme token follows the theme, which a colour written into an SVG image could not; without mask support it draws nothing.

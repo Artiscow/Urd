@@ -1,7 +1,8 @@
 /**
  * Core block: shape. Lines and arrows (direction via the frame's rot field),
  * circles/ellipses, rectangles and triangles. Decorative elements for free
- * composition.
+ * composition. A line can carry a `label`: a word set in the middle of it,
+ * the chapter divider.
  */
 import { resolveColor } from '../theme.js';
 
@@ -13,11 +14,29 @@ export const shapeBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el
-   * @param {{kind: 'line'|'arrow'|'circle'|'rect'|'triangle', color: string, thickness: number, fill: string|null}} props
+   * @param {{kind: 'line'|'arrow'|'circle'|'rect'|'triangle', color: string, thickness: number, fill: string|null,
+   *          label?: string}} props
    * @param {object} ctx
    */
   render(el, props, ctx) {
     const color = resolveColor(props.color);
+
+    // The chapter divider: the line drawn on both sides of a word. The two
+    // strokes are the element's ::before and ::after (base.css), so the word
+    // sits in the flow between them and the line keeps its thickness.
+    const label = props.kind === 'line' && typeof props.label === 'string' ? props.label.trim() : '';
+    if (label) {
+      const row = document.createElement('div');
+      row.className = 'urd-shape-chapter';
+      row.style.color = color;
+      row.style.setProperty('--urd-shape-t', `${props.thickness}px`);
+      const word = document.createElement('span');
+      word.className = 'urd-shape-chapter-label';
+      word.textContent = label;
+      row.appendChild(word);
+      el.appendChild(row);
+      return;
+    }
 
     if (props.kind === 'line' || props.kind === 'arrow') {
       // A horizontal line centred in the frame; direction comes from rot.

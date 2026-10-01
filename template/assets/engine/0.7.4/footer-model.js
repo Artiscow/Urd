@@ -143,6 +143,21 @@ export function footerBaseline(site) {
   return str(footer.text).split('\n').map((l) => l.trim()).filter(Boolean);
 }
 
+/** The footer designs that dress the rich footer differently; anything else is the standard one. */
+export const FOOTER_DESIGNS = ['chapters', 'split'];
+
+/**
+ * The design (footer.design, additive from v0.7): `chapters` numbers the
+ * link columns under a rule each, `split` gives the brand half the width on
+ * a tinted panel. '' for the standard footer and for anything unknown.
+ * @param {object} site
+ * @returns {string}
+ */
+export function footerDesign(site) {
+  const design = site.footer?.design;
+  return FOOTER_DESIGNS.includes(design) ? design : '';
+}
+
 /**
  * Does the footer have any rich content (brand/columns/social/copyright)?
  * No → footer.js keeps the byte-identical plain text rendering.

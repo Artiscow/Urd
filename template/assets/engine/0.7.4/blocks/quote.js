@@ -2,8 +2,9 @@
  * Core block: quote/testimonial. Semantic <figure>/<blockquote> with the
  * attribution in <figcaption>, which the quote preset (two text boxes)
  * cannot give. Two variants: "large" (a centered spread with a quotation
- * glyph) and "short" (a testimonial card with an optional portrait). The
- * quotation glyph is drawn in CSS (::before), never as content.
+ * glyph, bare or set in a card with `card`) and "short" (a testimonial card
+ * with an optional portrait). The quotation glyph is drawn in CSS (::before),
+ * never as content.
  *
  * In the editor the quote, the name and the role are directly editable
  * (click and type); the portrait is chosen in the properties panel.
@@ -37,13 +38,16 @@ export const quoteBlock = {
   },
   /**
    * @param {HTMLElement} el
-   * @param {{text: string, attribution: string, role: string, variant?: string, image?: string, accent?: string|null}} props
+   * @param {{text: string, attribution: string, role: string, variant?: string, image?: string, accent?: string|null,
+   *          card?: boolean}} props
    * @param {object} ctx Render context
    */
   render(el, props, ctx) {
     const kort = props.variant === 'short';
     const host = document.createElement('figure');
     host.className = `urd-quote urd-quote-${kort ? 'short' : 'large'}`;
+    // The large spread can stand in a card; the short one already is one.
+    if (!kort && props.card === true) host.classList.add('urd-quote-card');
     // The accent (glyph and portrait ring) only as a validated hex value or theme token.
     const accent = accentCss(props.accent);
     if (accent) host.style.setProperty('--urd-quote-accent', accent);
