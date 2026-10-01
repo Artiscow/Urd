@@ -43,6 +43,7 @@ import { colorLayer } from './backgrounds/color.js';
 import { gradientLayer } from './backgrounds/gradient.js';
 import { glowLayer } from './backgrounds/glow.js';
 import { grainLayer } from './backgrounds/grain.js';
+import { patternLayer } from './backgrounds/pattern.js';
 import { imageLayer } from './backgrounds/image.js';
 import { slideshowLayer } from './backgrounds/slideshow.js';
 import { videoLayer } from './backgrounds/video.js';
@@ -101,6 +102,7 @@ function registerCore() {
   Urd.backgrounds.define('gradient', gradientLayer);
   Urd.backgrounds.define('glow', glowLayer);
   Urd.backgrounds.define('grain', grainLayer);
+  Urd.backgrounds.define('pattern', patternLayer);
   Urd.backgrounds.define('image', imageLayer);
   Urd.backgrounds.define('slideshow', slideshowLayer);
   Urd.backgrounds.define('video', videoLayer);

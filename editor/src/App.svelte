@@ -108,6 +108,8 @@
   import { gradientLayer } from '$engine/backgrounds/gradient.js';
   import { glowLayer } from '$engine/backgrounds/glow.js';
   import { grainLayer } from '$engine/backgrounds/grain.js';
+  import { patternLayer, BG_PATTERNS, PATTERN_SIZE, PATTERN_OPACITY, bgPattern } from '$engine/backgrounds/pattern.js';
+  import { DIVIDER_SHAPES, DIVIDER_HEIGHT } from '$engine/divider-model.js';
   import { imageLayer } from '$engine/backgrounds/image.js';
   import { slideshowLayer } from '$engine/backgrounds/slideshow.js';
   import { GALLERY_STYLES, GALLERY_SHAPES, GALLERY_LOOKS, GALLERY_TONES, styleMotion, motionsFor, frameSize, roundable, colouredLook, frameColor } from '$engine/gallery-layout.js';
@@ -131,6 +133,7 @@
     ['image', imageLayer],
     ['slideshow', slideshowLayer],
     ['video', videoLayer],
+    ['pattern', patternLayer],
     ['grain', grainLayer],
   ];
   const BG_DEFS = Object.fromEntries(BG_TYPES);
@@ -1433,6 +1436,8 @@
   let sectionHover = $state(null);
   /** Mirror of the active section's role set (section theme), '' = Default */
   let sectionTheme = $state('');
+  /** The section's shape dividers, { top?, bottom? } (a copy for the panel, like the mirrors above). */
+  let sectionDivider = $state({});
 
   function syncSectionMirrors(section) {
     sectionGrid = section?.grid ? { ...section.grid } : null;
@@ -1441,6 +1446,7 @@
     sectionAnim = section?.animation ? JSON.parse(JSON.stringify(section.animation)) : null;
     sectionHover = section?.hover ? JSON.parse(JSON.stringify(section.hover)) : null;
     sectionTheme = section?.theme ?? '';
+    sectionDivider = section?.divider ? JSON.parse(JSON.stringify(section.divider)) : {};
   }
 
   /* Measurements for the "Cover"/"Show all" buttons on image background
@@ -2028,6 +2034,23 @@
       s.animation = type ? animObj(type) : null;
     });
     bridge?.sendDemoAnim(activeSectionId);
+  }
+
+  /** One field of one edge's divider. A shape of '' removes the edge, and an emptied object the field. */
+  function setSectionDivider(edge, key, value) {
+    mutateSection(`section-divider-${edge}-${key}`, (s) => {
+      const divider = { ...(s.divider ?? {}) };
+      if (key === 'shape' && !value) {
+        delete divider[edge];
+      } else {
+        const own = { ...(divider[edge] ?? { shape: 'wave' }) };
+        if (value === undefined || value === false || value === '') delete own[key];
+        else own[key] = value;
+        divider[edge] = own;
+      }
+      if (Object.keys(divider).length) s.divider = divider;
+      else delete s.divider;
+    });
   }
 
   function setSectionHover(type) {
@@ -7923,6 +7946,38 @@
                 {@render backgroundLayers(sectionBgCtx, sectionBg)}
 
                 <hr class="gridmenu-divider" />
+                <p class="panel-strong" title={ta('tip.props.dividers')}>{ta('lbl.sectionDividers')}</p>
+                {#each [['top', 'lbl.dividerTop'], ['bottom', 'lbl.dividerBottom']] as [edge, key] (edge)}
+                  {@const own = sectionDivider[edge]}
+                  <label title={ta('tip.props.dividers')}>{ta(key)}
+                    <Dropdown value={own?.shape ?? ''}
+                      options={[['', ta('common.none')], ...DIVIDER_SHAPES.map((id) => [id, ta(`opt.divider.${id}`)])]}
+                      onchange={(v) => setSectionDivider(edge, 'shape', v)} /></label>
+                  <!-- The edge's own settings, only while it has a shape -->
+                  {#if own?.shape}
+                    <div class="ctl-row">
+                      <span class="mini-label ctl-name">{ta('lbl.height')}</span>
+                      <input type="range" min={DIVIDER_HEIGHT.min} max={DIVIDER_HEIGHT.max} step="4" value={own.height ?? DIVIDER_HEIGHT.dflt}
+                        oninput={(e) => setSectionDivider(edge, 'height', e.target.valueAsNumber)} />
+                      <span class="gridmenu-value">{own.height ?? DIVIDER_HEIGHT.dflt} px</span>
+                    </div>
+                    <label title={ta('tip.divider.color')}>{ta('lbl.color')}
+                      <ColorPicker value={own.color ?? 'bg'} tokens={themeSwatches()}
+                        label={ta('tip.divider.color')} onchange={(hex) => setSectionDivider(edge, 'color', hex)} /></label>
+                    <label class="gridmenu-snap" title={ta('tip.divider.flip')}>
+                      <input type="checkbox" checked={own.flip === true}
+                        onchange={(e) => setSectionDivider(edge, 'flip', e.target.checked)} />
+                      {ta('lbl.dividerFlip')}
+                    </label>
+                    <label class="gridmenu-snap" title={ta('tip.divider.invert')}>
+                      <input type="checkbox" checked={own.invert === true}
+                        onchange={(e) => setSectionDivider(edge, 'invert', e.target.checked)} />
+                      {ta('lbl.patternInvert')}
+                    </label>
+                  {/if}
+                {/each}
+
+                <hr class="gridmenu-divider" />
                 <label title={ta('tip.props.sectionAnim')}>{ta('lbl.animIn')}
                   <Dropdown value={isEntrance(sectionAnim) ? sectionAnim.type : ''}
                     options={ENTRANCE_OPTIONS}
@@ -8744,6 +8799,31 @@
           <span class="gridmenu-value">{Math.round(layer.props.opacity * 100)}%</span></label>
         <input type="range" min="0" max="1" step="0.01" value={layer.props.opacity}
           oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
+      {:else if layer.type === 'pattern'}
+        <label>{ta('lbl.bgPattern')}
+          <Dropdown value={bgPattern(layer.props.pattern)}
+            options={BG_PATTERNS.map((id) => [id, ta(`opt.bgPattern.${id}`)])}
+            onchange={(v) => setBgProp(bg, i, 'pattern', v)} /></label>
+        <label>{ta('lbl.color')}
+          <ColorPicker value={layer.props.color ?? 'text'} tokens={themeSwatches()}
+            label={ta('lbl.color')} onchange={(hex) => setBgProp(bg, i, 'color', hex)} /></label>
+        <label>{ta('lbl.size')}
+          <span class="gridmenu-value">{layer.props.size ?? PATTERN_SIZE.dflt} px</span></label>
+        <input type="range" min={PATTERN_SIZE.min} max={PATTERN_SIZE.max} step="2" value={layer.props.size ?? PATTERN_SIZE.dflt}
+          oninput={(e) => setBgProp(bg, i, 'size', Number(e.target.value))} />
+        <label>{ta('lbl.strength')}
+          <span class="gridmenu-value">{Math.round((layer.props.opacity ?? PATTERN_OPACITY) * 100)}%</span></label>
+        <input type="range" min="0" max="1" step="0.01" value={layer.props.opacity ?? PATTERN_OPACITY}
+          oninput={(e) => setBgProp(bg, i, 'opacity', Number(e.target.value))} />
+        <label>{ta('lbl.patternRotation')}
+          <span class="gridmenu-value">{layer.props.rotation ?? 0}&deg;</span></label>
+        <input type="range" min="0" max="180" step="5" value={layer.props.rotation ?? 0}
+          oninput={(e) => setBgProp(bg, i, 'rotation', Number(e.target.value))} />
+        <label class="gridmenu-snap" title={ta('tip.bg.patternInvert')}>
+          <input type="checkbox" checked={layer.props.invert === true}
+            onchange={(e) => setBgProp(bg, i, 'invert', e.target.checked)} />
+          {ta('lbl.patternInvert')}
+        </label>
       {:else if layer.type === 'image'}
         <label class="ghost filepick" title={ta('tip.webpAuto')}>
           {layer.props.src ? ta('ui.changeImage') : ta('ui.chooseImage')}

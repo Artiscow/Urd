@@ -526,7 +526,14 @@
           "pattern": "sequence"
         }
       },
-      "hover": null
+      "hover": null,
+      "divider": {
+        "bottom": {
+          "shape": "wave",
+          "height": 64,
+          "color": "bg"
+        }
+      }
     },
     {
       "id": "sec-4c908354",

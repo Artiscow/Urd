@@ -36,6 +36,18 @@
   "$defs": {
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
     "version": { "type": "integer", "minimum": 1 },
+    "dividerEdge": {
+      "type": "object",
+      "required": ["shape"],
+      "additionalProperties": false,
+      "properties": {
+        "shape": { "enum": ["wave", "tilt", "curve", "triangle", "zigzag"], "description": "The outline; an unknown value draws nothing" },
+        "height": { "type": "number", "minimum": 16, "maximum": 240, "default": 64, "description": "The divider's height in px on desktop; a phone draws it at three fifths" },
+        "color": { "type": "string", "description": "Theme token or raw colour, usually the background of what the section meets at that edge; omitted = the page background (bg)" },
+        "flip": { "type": "boolean", "default": false, "description": "Mirror the outline left to right" },
+        "invert": { "type": "boolean", "default": false, "description": "Fill what the outline leaves open instead: a peak becomes a notch, a hollow curve a bulging one" }
+      }
+    },
     "section": {
       "type": "object",
       "required": ["id", "version", "blocks"],
@@ -91,6 +103,15 @@
             { "type": "null" },
             { "$ref": "#/$defs/typedProps" }
           ]
+        },
+        "divider": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Shape dividers (additive from v0.7): a drawn edge at the top and/or the bottom of the section, over its background and under its content. Omitted = straight edges.",
+          "properties": {
+            "top": { "$ref": "#/$defs/dividerEdge" },
+            "bottom": { "$ref": "#/$defs/dividerEdge" }
+          }
         },
         "blocks": {
           "type": "array",

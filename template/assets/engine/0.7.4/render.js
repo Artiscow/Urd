@@ -16,7 +16,8 @@
 import { lift, MOBILE_ROW, MOBILE_GAP } from './migrate.js';
 import { pushLayout, clampFitMin, fitFloorPx, FIT_BY_WIDTH } from './push-model.js';
 import { applyAnimation, applyCardAnimation } from './animations/core.js';
-import { applySectionTheme } from './theme.js';
+import { applySectionTheme, resolveColor } from './theme.js';
+import { sectionDivider, dividerSvg } from './divider-model.js';
 import { refreshSticky } from './sticky.js';
 import { t } from './i18n.js';
 
@@ -558,6 +559,18 @@ export function renderSection(section, site, host, opts = {}) {
   host.replaceChildren();
 
   renderBackgroundLayers(host, section.background);
+
+  // The shape dividers: over the background, under the content.
+  for (const edge of ['top', 'bottom']) {
+    const divider = sectionDivider(section.divider?.[edge]);
+    if (!divider) continue;
+    const el = document.createElement('div');
+    el.className = `urd-divider urd-divider-${edge}${divider.flip ? ' urd-divider-flip' : ''}`;
+    el.style.setProperty('--urd-divider-h', `${divider.height}px`);
+    el.style.color = resolveColor(divider.color);
+    el.innerHTML = dividerSvg(divider);
+    host.appendChild(el);
+  }
 
   // The content surface (ADR-0018): the section is full window width and owns
   // the background, the canvas binds the content to the design width and

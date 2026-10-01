@@ -27,6 +27,14 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.13.10 - The pattern layer and section shape dividers - 1 October 2026
+
+- A section had no texture but grain and no edge but a straight line. New background layer `pattern` (`backgrounds/pattern.js`): eight drawn tiles (dots, grid, diagonal stripes, checks, waves, zigzag, crosses, triangles) with `color`, `size`, `opacity`, `rotation` and `invert`. The layer paints its box with the colour and uses the pattern as a CSS mask, one SVG as large as the layer with the tile as an SVG `<pattern>`, so a theme token follows the theme, which a colour written into an SVG image could not; without mask support it draws nothing.
+- New section field `divider { top?, bottom? }`: a drawn edge over the background and under the content, each with `shape` (wave, tilt, curve, triangle, zigzag), `height` (16-240 px, three fifths on a phone), `color`, `flip` and `invert`. The pure parts live in `divider-model.js`, which the renderer draws from and the editor's panel reads its lists from.
+- The comparison maps were checked against the stage: the survey names Elementor's dividers with invert, which the first build lacked; `invert` fills what the outline leaves open, so a peak becomes a notch. The maps themselves were stale after the 0.7.13 deliveries: C19, C20, C21 and C23 in FUNKSJONSKART carry their delivered marks, and the «Urd i dag» counts were taken again (23 core blocks, six gallery views, 35 section presets, eight background layers); ELEMENTKART and LAERDOMMER say what is delivered.
+- Editor: Pattern in the layer picker for sections, the menu and the footer, with its own rows; «Edge shapes» under the section's background, where an edge's settings show only while it has a shape. Keys in nb, en-GB and tr.
+- Schema in three places: `divider` and `dividerEdge` in page.schema.json, SCHEMA.md (the layer and the field), and the example data (a wave at the foot of the first Kaker section, a dot pattern on the Kontakt section). Two new modulepreload links in the shells.
+
 ### 0.7.13.9 - Gallery views mosaic and polaroid - 1 October 2026
 
 - The gallery block had no wall of mixed tiles and no framed cards, ApeironLF's hero styles B and C. Two new views of the same block: `mosaic`, the grid's wall with rows of one height (`rowHeight`) and tiles one cell, two wide, two high or both, dealt per picture from `seed`; and `polaroid`, every picture in a card with a wider foot, leaning by its own throw of the seed inside `tilt` degrees, with `frameColor` for the card and `captions` writing the image text in the foot. Both share the grid's columns and gap, grow with their content, and keep the tiles' lightbox, links and image editor.

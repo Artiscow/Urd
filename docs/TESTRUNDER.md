@@ -4,6 +4,22 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.13.10): the pattern layer and section edge shapes
+
+- [ ] Section background, add layer Mønster: dots over the section; each of the eight patterns draws, and tiles meet without a seam
+- [ ] Mønster with a theme colour: it follows a palette change and the light/dark button without a reload; an own colour stays
+- [ ] Mønster Størrelse, Styrke and Vinkel: the tile grows, fades and turns; at 45 degrees the pattern still covers the whole section
+- [ ] Mønster Inverter: the colour fills the surface and the pattern is cut out of it
+- [ ] Mønster as a layer on the menu and on the footer
+- [ ] Section, Kantformer, Nedre kant with each of the five shapes: a drawn edge at the section's foot, in the chosen colour, over the background and under the blocks
+- [ ] Øvre kant: the same shapes turned upside down at the top; both edges on one section
+- [ ] Kantformer Høyde, Speilvend and Inverter: the edge follows; the settings appear only when the edge has a shape, and Ingen removes it
+- [ ] A divider in the colour of the next section: no hairline of the first section's background at the seam, at 100 % zoom and at a fractional zoom in the preview
+- [ ] A divider on a phone: lower than on desktop, across the full width
+- [ ] Blocks at the foot of a section with a divider can still be clicked and dragged
+- [ ] The Kaker page: a wave at the foot of the first section; the Kontakt page: a faint dot pattern
+- [ ] A section preset's thumbnail card with a pattern layer in it draws without the pattern and without an error
+
 ### Testrunde-batch (0.7.13.9): gallery views mosaic and polaroid
 
 - [ ] Gallery block, Visning Mosaikk with nine or so pictures: a wall of tiles in mixed sizes with no hole in it, for 2, 3, 4 and 6 columns alike

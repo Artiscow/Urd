@@ -144,6 +144,42 @@ html {
   pointer-events: none;
 }
 
+/* Section shape dividers (section.divider): a drawn edge at the top or the
+   bottom of a section, over its background and under its content. The
+   outline is drawn for the bottom edge and turned upside down for the top;
+   it reaches one pixel past the section, so no hairline of the background
+   shows at the seam. On a phone it stands at three fifths of its height. */
+.urd-divider {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: var(--urd-divider-h, 64px);
+  pointer-events: none;
+}
+
+.urd-divider svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.urd-divider-bottom {
+  bottom: -1px;
+}
+
+.urd-divider-top {
+  top: -1px;
+  scale: 1 -1;
+}
+
+.urd-divider-flip svg {
+  scale: -1 1;
+}
+
+body.urd-mobile .urd-divider {
+  height: calc(var(--urd-divider-h, 64px) * 0.6);
+}
+
 /* Layered background for nav and footer (shared with sections): a backdrop
    container behind the content. z-index -1 puts the layers behind the nav/footer content
    but in front of the element's own surface; overflow clips image layers to the
