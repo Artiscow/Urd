@@ -221,7 +221,9 @@ function makeUi(cd, el, props, ctx) {
     a.rel = 'noopener';
     return a;
   };
-  return { field, meta, tx, link, signup };
+  const chip = (occ) => chipNode(occ.category, occ.color, ui);
+  const ui = { el: el2, tint: tintNode, field, meta, tx, link, signup, chip };
+  return ui;
 }
 
 /* ---------- Views ---------- */
@@ -481,13 +483,18 @@ const VIEW_NAMES = [['list', 'calendar.viewList'], ['cards', 'calendar.viewCards
 function renderCalendar(el, props, ctx) {
   const host = el2('div', 'urd-cal');
   el.appendChild(host);
-  // The parser and the design model are loaded together, on the first render.
-  Promise.all([import('../ics.js'), import('../calendar-designs.js')]).then(([ics, cd]) => {
-    if (host.isConnected) drawCalendar(ics, cd, el, host, props, ctx);
+  // The parser and the design model are loaded together, on the first
+  // render, and a design's renderer module with them (literal paths, so the
+  // modules stay out of the visitor closure and the preload list).
+  const DESIGN_MODULES = { list: () => import('./calendar-list.js') };
+  Promise.all([import('../ics.js'), import('../calendar-designs.js')]).then(async ([ics, cd]) => {
+    const design = cd.calDesign(props.design);
+    const mod = design.module ? await DESIGN_MODULES[design.module]?.() : null;
+    if (host.isConnected) drawCalendar(ics, cd, mod, el, host, props, ctx);
   });
 }
 
-function drawCalendar(ics, cd, el, host, props, ctx) {
+function drawCalendar(ics, cd, mod, el, host, props, ctx) {
   const sources = (props.sources ?? []).filter((source) => ics.sourceEntry(source).url);
   let activeCategory = null;
   // The design: its class, the owner's colour slots and the edge stripe on the host.
@@ -530,7 +537,7 @@ function drawCalendar(ics, cd, el, host, props, ctx) {
     if (!limited.length) {
       host.appendChild(emptyNode(props));
     } else {
-      (VIEWS[view] ?? renderList)(host, limited, props, ics, ui);
+      (mod?.[design.id] ?? VIEWS[view] ?? renderList)(host, limited, props, ics, ui);
     }
     if (props.showSubscribe !== false && sources.length) {
       const row = subscribeRow(ics, sources, ui);

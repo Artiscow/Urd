@@ -27,6 +27,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.19.2 - Six list designs on the calendar block - 3 October 2026
+
+- The calendar block had one look per view. Six designs on the list view, each a renderer in the new `blocks/calendar-list.js` over the foundation's helpers and a CSS block in base.css: Tidslinje (a rail with a dot per event and the date to the left), Tabell (a real table with date, time, event, place and sign-up), Programhefte (paper with a «Program» heading, the events under their month in columns with a large day number), Nummerert program (01, 02, 03 with the count at the top), Liste på marine (ApeironLF's rows with the day in gold) and Glass (frosted cards over three colour blobs). The module is loaded only by a block that uses one of them.
+- Every design declares its colour slots (dots, header row, every other row, rule, numerals, row, text, gold, ground, glass, glass edge, three blobs) with the design's own colour as the fallback, its static texts (the table's column headings and «Program» are new text keys) and the renderer module; the edge stripe reaches every design's boxes. The Style tab groups the slots by section when a design has more than one.
+- Keys for the six designs, the slots and the sections in nb, en-GB and tr; the column headings, «Program», «all day» and the count's plural as site texts in nb, en-GB, tr and nn. The design contract test checks that every renderer module exports a function per design and that a module and a fixed view go together.
+- Found in the headless check and fixed: the timeline's date column broke «13. okt» over two lines in a narrow block; the column now follows its content and the date stays on one line.
+
 ### 0.7.19.1 - The calendar card, named sources, and the foundation for the calendar designs - 3 October 2026
 
 Stage 0.7.13.13 and the foundation stage of the new milestone 0.7.19 in one commit (the two share the block, the panel and the bundle).

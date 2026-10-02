@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
 const {
-  CAL_DESIGNS, CAL_VIEWS, CAL_FIELDS, CAL_TEXTS, CAL_SIZE,
+  CAL_DESIGNS, CAL_VIEWS, CAL_FIELDS, CAL_TEXTS, CAL_SIZE, CAL_MODULES,
   calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calTextHtml, calHasTextOverrides,
 } = await engineImport('calendar-designs.js');
 
@@ -29,6 +29,19 @@ test('every design has a label key, slots with label keys, known texts and a vie
     assert.equal(typeof design.stripe, 'boolean');
     for (const slot of design.slots) assert.equal(slot.labelKey, `calendar.slot.${slot.key}`);
     for (const key of design.texts) assert.ok(key in CAL_TEXTS, `${design.id}: text ${key}`);
+    if (design.module) assert.ok(CAL_MODULES.includes(design.module), `${design.id}: module ${design.module}`);
+    // A design with a renderer module fixes its view; the plain one, drawn by the block, follows the block's view.
+    assert.equal(Boolean(design.module), design.view !== null, `${design.id}: module and view go together`);
+  }
+  assert.ok(CAL_DESIGNS.length > 1);
+});
+
+test('every renderer module exports a function per design that names it', async () => {
+  for (const module of CAL_MODULES) {
+    const mod = await engineImport(`blocks/calendar-${module}.js`);
+    for (const design of CAL_DESIGNS.filter((d) => d.module === module)) {
+      assert.equal(typeof mod[design.id], 'function', `${design.id} in calendar-${module}.js`);
+    }
   }
 });
 
@@ -101,7 +114,11 @@ test('the dictionaries hold every key the designs point at', async () => {
   for (const key of Object.values(CAL_TEXTS)) assert.ok(key in site, `site key ${key}`);
   for (const design of CAL_DESIGNS) {
     assert.ok(design.labelKey in admin, `admin key ${design.labelKey}`);
-    for (const slot of design.slots) assert.ok(slot.labelKey in admin, `admin key ${slot.labelKey}`);
+    for (const slot of design.slots) {
+      assert.ok(slot.labelKey in admin, `admin key ${slot.labelKey}`);
+      // The first section is the plain «Colours» list; every other section is headed by its own key.
+      if (slot.section !== design.slots[0].section) assert.ok(`calendar.section.${slot.section}` in admin, `admin key calendar.section.${slot.section}`);
+    }
   }
   for (const field of CAL_FIELDS) assert.ok(`calendar.field.${field}` in admin, `admin key calendar.field.${field}`);
 });

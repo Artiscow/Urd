@@ -4,6 +4,19 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.19.2): six list designs on the calendar
+
+- [ ] Stil tab, Design: the dropdown lists Enkel, Tidslinje, Tabell, Programhefte, Nummerert program, Liste på marine and Glass; each draws the demo data in the preview and a real feed on the published page, and Innhold's Visning disappears while a design other than Enkel is chosen
+- [ ] Tidslinje: the date on one line to the left, a rail with a dot per event (the first in the accent, the rest in Prikker), the sign-up as a filled button, the chip under the title
+- [ ] Tabell: the header row in Topprad and Topptekst colours, every other row in Annenhver rad, «hele dagen» for an all-day event, the sign-up at the right end; a narrow block scrolls the table sideways instead of breaking it
+- [ ] Programhefte: the paper in Flate with a shadow, «Program» and the month span in the heading, one column per month that wraps to one column in a narrow block, the day in the accent, the description's first line under the title
+- [ ] Nummerert program: 01, 02, 03 in the Tall colour, «3 arrangementer» at the top right, the sign-up or the chip in the right column, a rule between the rows
+- [ ] Liste på marine: navy rows with the day in gold and the month in capitals, the category outlined, the place underlined in gold, the title in the heading font; the filter chips and the subscribe buttons follow the row colour
+- [ ] Glass: three blobs behind frosted cards, Fargeflekk 1 to 3 recolour them, Glasset and Glasskant change the cards, the filter chips and the subscribe button take the glass too
+- [ ] Every design: the colour slots in Stil follow the design's own colours when empty and the theme's dark mode stays readable; Kantstripe på boksene adds the stripe to the rows, cards or table cells; Tekstfelt Tittel, Dato, Klokkeslett, Sted, Kategori and Store tall change the right pieces
+- [ ] Every design: click «Dato», «Program», «Alle» or «Meld deg på» in the preview and rewrite it; the words survive a reload and «Tilbakestill tekstene» puts them back
+- [ ] A block saved with a design renders the plain list on an older engine (the view is written along with the design)
+
 ### Testrunde-batch (0.7.19.1): the calendar card, named sources and the design foundation
 
 - [ ] Calendar with two sources holding the same event: it shows once in every view; a signup link or a location present in only one copy is kept

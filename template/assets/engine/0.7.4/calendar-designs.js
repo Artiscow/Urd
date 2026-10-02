@@ -32,7 +32,15 @@ export const CAL_TEXTS = {
   subscribe: 'calendar.subscribe',
   subscribeMulti: 'calendar.subscribeMulti',
   addGoogle: 'calendar.addGoogle',
+  colDate: 'calendar.colDate',
+  colTime: 'calendar.colTime',
+  colEvent: 'calendar.colEvent',
+  colPlace: 'calendar.colPlace',
+  program: 'calendar.program',
 };
+
+/** The texts every design with chips, sign-up and subscribe buttons shows. */
+const COMMON_TEXTS = ['all', 'signup', 'subscribe', 'subscribeMulti', 'addGoogle'];
 
 /** A colour slot: the label key is `calendar.slot.<key>`, the section groups the pickers in the panel. */
 const slot = (key, section = 'colors') => ({ key, labelKey: `calendar.slot.${key}`, section });
@@ -41,8 +49,11 @@ const slot = (key, section = 'colors') => ({ key, labelKey: `calendar.slot.${key
  * The designs, in the order the picker lists them. `view: null` follows the
  * block's own view (the plain design draws every view); a design with a
  * view of its own fixes it, and the editor writes that view into the block
- * so an engine without the design still draws the right data.
- * @type {Array<{id: string, labelKey: string, view: string|null, stripe: boolean,
+ * so an engine without the design still draws the right data. `module`
+ * names the renderer file the block loads for the design (blocks/calendar-<module>.js,
+ * exporting a function under the design's id); the plain design's views
+ * live in the block itself.
+ * @type {Array<{id: string, labelKey: string, view: string|null, module?: string, stripe: boolean,
  *   slots: Array<{key: string, labelKey: string, section: string}>, texts: string[]}>}
  */
 export const CAL_DESIGNS = [
@@ -52,9 +63,66 @@ export const CAL_DESIGNS = [
     view: null,
     stripe: false,
     slots: [slot('accent'), slot('surface'), slot('line'), slot('chip')],
-    texts: ['next', 'now', 'later', 'all', 'signup', 'subscribe', 'subscribeMulti', 'addGoogle'],
+    texts: ['next', 'now', 'later', ...COMMON_TEXTS],
+  },
+  {
+    id: 'timeline',
+    labelKey: 'calendar.design.timeline',
+    view: 'list',
+    module: 'list',
+    stripe: false,
+    slots: [slot('accent'), slot('dot'), slot('line'), slot('chip')],
+    texts: COMMON_TEXTS,
+  },
+  {
+    id: 'table',
+    labelKey: 'calendar.design.table',
+    view: 'list',
+    module: 'list',
+    stripe: false,
+    slots: [slot('accent'), slot('head'), slot('headText'), slot('zebra'), slot('line'), slot('chip')],
+    texts: ['colDate', 'colTime', 'colEvent', 'colPlace', ...COMMON_TEXTS],
+  },
+  {
+    id: 'booklet',
+    labelKey: 'calendar.design.booklet',
+    view: 'list',
+    module: 'list',
+    stripe: false,
+    slots: [slot('accent'), slot('surface'), slot('rule'), slot('chip')],
+    texts: ['program', ...COMMON_TEXTS],
+  },
+  {
+    id: 'numbered',
+    labelKey: 'calendar.design.numbered',
+    view: 'list',
+    module: 'list',
+    stripe: false,
+    slots: [slot('accent'), slot('number'), slot('line'), slot('chip')],
+    texts: COMMON_TEXTS,
+  },
+  {
+    id: 'apList',
+    labelKey: 'calendar.design.apList',
+    view: 'list',
+    module: 'list',
+    stripe: false,
+    slots: [slot('row'), slot('text'), slot('gold'), slot('line')],
+    texts: COMMON_TEXTS,
+  },
+  {
+    id: 'glass',
+    labelKey: 'calendar.design.glass',
+    view: 'list',
+    module: 'list',
+    stripe: false,
+    slots: [slot('ground'), slot('text'), slot('glass', 'glass'), slot('glassLine', 'glass'), slot('chip', 'glass'), slot('blobA', 'blobs'), slot('blobB', 'blobs'), slot('blobC', 'blobs')],
+    texts: COMMON_TEXTS,
   },
 ];
+
+/** The renderer modules a design can name (the block maps each to a literal import). */
+export const CAL_MODULES = ['list'];
 
 /** The design for an id; the plain one for anything unknown. */
 export function calDesign(id) {

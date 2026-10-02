@@ -1112,6 +1112,16 @@
      colour slots, the edge stripe and a style per event field. Every setting
      is additive, and an emptied object is removed from the props. */
   let calField = $state('title');
+  /** The design's colour slots by section, in order; the first section is the plain «Colours» list and gets no heading of its own. */
+  function calSlotGroups(def) {
+    const groups = [];
+    for (const slot of def.slots) {
+      const group = groups.find((g) => g.section === slot.section);
+      if (group) group.slots.push(slot);
+      else groups.push({ section: slot.section, slots: [slot] });
+    }
+    return groups;
+  }
   function calFieldStyleOf() {
     return selectedBlock?.props.fieldStyle?.[calField] ?? {};
   }
@@ -9854,12 +9864,17 @@
       {/if}
       <!-- The design's colour slots: empty follows the theme -->
       <p class="panel-strong" title={ta('tip.calendar.slot')}>{ta('calendar.colors')}</p>
-      {#each calDef.slots as slot (slot.key)}
-        <div class="ctl-row" title={ta('tip.calendar.slot')}>
-          <span class="mini-label ctl-name">{ta(slot.labelKey)}</span>
-          <ColorPicker value={selectedBlock.props.colors?.[slot.key] ?? ''} tokens={themeSwatches()} allowClear
-            label={ta(slot.labelKey)} onchange={(v) => setCalColor(slot.key, v || '')} />
-        </div>
+      {#each calSlotGroups(calDef) as group, gi (group.section)}
+        {#if gi > 0}
+          <span class="mini-label">{ta(`calendar.section.${group.section}`)}</span>
+        {/if}
+        {#each group.slots as slot (slot.key)}
+          <div class="ctl-row" title={ta('tip.calendar.slot')}>
+            <span class="mini-label ctl-name">{ta(slot.labelKey)}</span>
+            <ColorPicker value={selectedBlock.props.colors?.[slot.key] ?? ''} tokens={themeSwatches()} allowClear
+              label={ta(slot.labelKey)} onchange={(v) => setCalColor(slot.key, v || '')} />
+          </div>
+        {/each}
       {/each}
       <label class="gridmenu-snap" title={ta('tip.calendar.stripe')}>
         <input type="checkbox" checked={calStripe(calDef, selectedBlock.props.stripe).show}
