@@ -158,6 +158,8 @@ export function parseIcs(text) {
       case 'DESCRIPTION': current.description = unescapeText(prop.value).trim(); break;
       case 'LOCATION': current.location = unescapeText(prop.value).trim(); break;
       case 'URL': current.url = prop.value.trim(); break;
+      // The first picture attached by address; a file attached inline is skipped.
+      case 'ATTACH': if (!current.image && /^https?:\/\//i.test(prop.value.trim())) current.image = prop.value.trim(); break;
       case 'STATUS': current.status = prop.value.trim().toUpperCase(); break;
       case 'DTSTART': current.start = parseDateParts(prop.value, prop.params); break;
       case 'DTEND': current.end = parseDateParts(prop.value, prop.params); break;
@@ -362,6 +364,12 @@ export function findSignupLink(description) {
   }
   const m = urlPattern.exec(text);
   return m ? clean(m[0]) : null;
+}
+
+/** The first picture address in the description (a link ending in an image file), or null. */
+export function findImageLink(description) {
+  const m = /https?:\/\/[^\s<>"')\]]+\.(?:jpe?g|png|webp|gif|avif)(?:\?[^\s<>"')\]]*)?/i.exec(String(description ?? ''));
+  return m ? m[0] : null;
 }
 
 /**

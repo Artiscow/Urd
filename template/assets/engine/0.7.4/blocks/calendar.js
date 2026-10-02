@@ -81,7 +81,7 @@ async function loadOccurrences(ics, sources, limit) {
     .map((occ) => {
       // A named calendar is the category; otherwise «Category: Title» in the event itself.
       const split = occ.calendar ? { category: occ.calendar, title: occ.summary } : ics.splitCategory(occ.summary);
-      return { ...occ, ...split, color: occ.calendarColor || '', signup: ics.findSignupLink(occ.description) };
+      return { ...occ, ...split, color: occ.calendarColor || '', signup: ics.findSignupLink(occ.description), image: occ.image || ics.findImageLink(occ.description) };
     });
   // The sources are one calendar to the visitor: an event that stands in two of them is shown once.
   return { occurrences: ics.dedupeOccurrences(expanded), errors };
@@ -137,6 +137,25 @@ function chipNode(category, color, ui) {
   return chip;
 }
 
+/** «Today!», «Tomorrow» or «In N days» for an event. */
+function countdownText(occ) {
+  const days = Math.max(0, Math.round((occ.start - Date.now()) / (24 * 3600 * 1000)));
+  // Dedicated keys instead of Intl.RelativeTimeFormat: the exclaiming
+  // today wording is kept, and ICU has no North Sami (it would fall back to
+  // a bare number).
+  return days === 0 ? t('calendar.today') : days === 1 ? t('calendar.tomorrow') : tp('calendar.inDays', days);
+}
+
+/**
+ * The event's picture through the site's own picture route (the CSP allows
+ * pictures from the site itself only, and the route checks the host against
+ * the picture allowlist); null when the event has none.
+ */
+function imageUrl(occ, width = 800) {
+  if (!occ.image) return null;
+  return `/api/photo?p=u&u=${encodeURIComponent(occ.image)}&w=${width}`;
+}
+
 /* ---------- The design's helpers (fields, static texts, buttons) ---------- */
 
 /**
@@ -149,7 +168,7 @@ function chipNode(category, color, ui) {
  * block shows them. Every edit posts the whole props with the text under
  * its key in `texts`, so the editor's draft stays the owner of the words.
  */
-function makeUi(cd, el, props, ctx) {
+function makeUi(cd, ics, el, host, props, ctx, sources) {
   const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
   const post = (msg) => window.parent?.postMessage(msg, location.origin);
   const field = (tag, key, text, className) => {
@@ -222,7 +241,9 @@ function makeUi(cd, el, props, ctx) {
     return a;
   };
   const chip = (occ) => chipNode(occ.category, occ.color, ui);
-  const ui = { el: el2, tint: tintNode, field, meta, tx, link, signup, chip };
+  /** The subscribe buttons, for a design that places them itself; null when they are off or there is no source. */
+  const subscribe = () => (props.showSubscribe !== false && sources.length ? subscribeRow(ics, sources, ui) : null);
+  const ui = { el: el2, tint: tintNode, field, meta, tx, link, signup, chip, subscribe, countdown: countdownText, image: imageUrl, all: [] };
   return ui;
 }
 
@@ -284,11 +305,7 @@ function nextRow(occ, ui) {
   body.appendChild(titleRow);
   const meta = ui.meta(occ);
   if (meta) body.appendChild(meta);
-  const days = Math.max(0, Math.round((occ.start - Date.now()) / (24 * 3600 * 1000)));
-  // Dedicated keys instead of Intl.RelativeTimeFormat: the exclaiming
-  // today wording is kept, and ICU has no North Sami (it would fall back to
-  // a bare number).
-  body.appendChild(el2('div', 'urd-cal-next-count', days === 0 ? t('calendar.today') : days === 1 ? t('calendar.tomorrow') : tp('calendar.inDays', days)));
+  body.appendChild(el2('div', 'urd-cal-next-count', countdownText(occ)));
   const signup = ui.signup(occ);
   if (signup) body.appendChild(signup);
   row.appendChild(body);
@@ -486,7 +503,7 @@ function renderCalendar(el, props, ctx) {
   // The parser and the design model are loaded together, on the first
   // render, and a design's renderer module with them (literal paths, so the
   // modules stay out of the visitor closure and the preload list).
-  const DESIGN_MODULES = { list: () => import('./calendar-list.js') };
+  const DESIGN_MODULES = { list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js') };
   Promise.all([import('../ics.js'), import('../calendar-designs.js')]).then(async ([ics, cd]) => {
     const design = cd.calDesign(props.design);
     const mod = design.module ? await DESIGN_MODULES[design.module]?.() : null;
@@ -505,7 +522,7 @@ function drawCalendar(ics, cd, mod, el, host, props, ctx) {
   const stripe = cd.calStripe(design, props.stripe);
   host.classList.toggle('urd-cal-stripes', stripe.show);
   if (stripe.color) host.style.setProperty('--urd-cal-stripe', stripe.color);
-  const ui = makeUi(cd, el, props, ctx);
+  const ui = makeUi(cd, ics, el, host, props, ctx, sources);
 
   const draw = (occurrences, note) => {
     host.replaceChildren();
@@ -534,13 +551,16 @@ function drawCalendar(ics, cd, mod, el, host, props, ctx) {
       draw(occurrences, note);
     }, ui);
     if (chips) host.appendChild(chips);
+    // The whole filtered list, for a design that draws more than the rows (the bento's month dots).
+    ui.all = filtered;
     if (!limited.length) {
       host.appendChild(emptyNode(props));
     } else {
       (mod?.[design.id] ?? VIEWS[view] ?? renderList)(host, limited, props, ics, ui);
     }
-    if (props.showSubscribe !== false && sources.length) {
-      const row = subscribeRow(ics, sources, ui);
+    // A design that places the subscribe buttons itself (ownSubscribe) gets no row under it.
+    if (!design.ownSubscribe || !limited.length) {
+      const row = ui.subscribe();
       if (row) host.appendChild(row);
     }
     // The note is editing chrome on the block, not content: it hangs below

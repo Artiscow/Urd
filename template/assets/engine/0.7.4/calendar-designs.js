@@ -37,6 +37,8 @@ export const CAL_TEXTS = {
   colEvent: 'calendar.colEvent',
   colPlace: 'calendar.colPlace',
   program: 'calendar.program',
+  nextShort: 'calendar.nextShort',
+  thisMonth: 'calendar.thisMonth',
 };
 
 /** The texts every design with chips, sign-up and subscribe buttons shows. */
@@ -52,7 +54,8 @@ const slot = (key, section = 'colors') => ({ key, labelKey: `calendar.slot.${key
  * so an engine without the design still draws the right data. `module`
  * names the renderer file the block loads for the design (blocks/calendar-<module>.js,
  * exporting a function under the design's id); the plain design's views
- * live in the block itself.
+ * live in the block itself. `ownSubscribe` marks a design that places the
+ * subscribe buttons inside its own layout, so the block draws no row under it.
  * @type {Array<{id: string, labelKey: string, view: string|null, module?: string, stripe: boolean,
  *   slots: Array<{key: string, labelKey: string, section: string}>, texts: string[]}>}
  */
@@ -119,10 +122,65 @@ export const CAL_DESIGNS = [
     slots: [slot('ground'), slot('text'), slot('glass', 'glass'), slot('glassLine', 'glass'), slot('chip', 'glass'), slot('blobA', 'blobs'), slot('blobB', 'blobs'), slot('blobC', 'blobs')],
     texts: COMMON_TEXTS,
   },
+  {
+    id: 'posters',
+    labelKey: 'calendar.design.posters',
+    view: 'cards',
+    module: 'cards',
+    stripe: false,
+    slots: [slot('accent'), slot('surface'), slot('line'), slot('posterA', 'posters'), slot('posterAText', 'posters'), slot('posterB', 'posters'), slot('posterBText', 'posters'), slot('posterC', 'posters'), slot('posterCText', 'posters')],
+    texts: COMMON_TEXTS,
+  },
+  {
+    id: 'tickets',
+    labelKey: 'calendar.design.tickets',
+    view: 'cards',
+    module: 'cards',
+    stripe: false,
+    slots: [slot('accent'), slot('surface'), slot('line'), slot('stub', 'stub'), slot('stubText', 'stub')],
+    texts: COMMON_TEXTS,
+  },
+  {
+    id: 'carousel',
+    labelKey: 'calendar.design.carousel',
+    view: 'cards',
+    module: 'cards',
+    stripe: false,
+    slots: [slot('accent'), slot('surface'), slot('line'), slot('chip'), slot('card', 'first'), slot('cardText', 'first')],
+    texts: COMMON_TEXTS,
+  },
+  {
+    id: 'photo',
+    labelKey: 'calendar.design.photo',
+    view: 'cards',
+    module: 'cards',
+    stripe: false,
+    slots: [slot('accent'), slot('surface'), slot('line'), slot('placeholder'), slot('badge', 'onPicture'), slot('badgeText', 'onPicture'), slot('chip', 'onPicture')],
+    texts: COMMON_TEXTS,
+  },
+  {
+    id: 'apGrid',
+    labelKey: 'calendar.design.apGrid',
+    view: 'cards',
+    module: 'cards',
+    stripe: false,
+    slots: [slot('head'), slot('card'), slot('text'), slot('gold')],
+    texts: COMMON_TEXTS,
+  },
+  {
+    id: 'bento',
+    labelKey: 'calendar.design.bento',
+    view: 'cards',
+    module: 'cards',
+    stripe: false,
+    ownSubscribe: true,
+    slots: [slot('accent'), slot('soft'), slot('tile'), slot('line'), slot('hero', 'hero'), slot('heroText', 'hero')],
+    texts: ['nextShort', 'thisMonth', ...COMMON_TEXTS],
+  },
 ];
 
 /** The renderer modules a design can name (the block maps each to a literal import). */
-export const CAL_MODULES = ['list'];
+export const CAL_MODULES = ['list', 'cards'];
 
 /** The design for an id; the plain one for anything unknown. */
 export function calDesign(id) {

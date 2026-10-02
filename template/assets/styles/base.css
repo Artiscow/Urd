@@ -1062,7 +1062,13 @@ textarea.urd-form-input {
 .urd-cal-stripes .urd-cal-booklet-row,
 .urd-cal-stripes .urd-cal-numbered-row,
 .urd-cal-stripes .urd-cal-ap-row,
-.urd-cal-stripes .urd-cal-glass-card {
+.urd-cal-stripes .urd-cal-glass-card,
+.urd-cal-stripes .urd-cal-poster,
+.urd-cal-stripes .urd-cal-ticket,
+.urd-cal-stripes .urd-cal-daycard,
+.urd-cal-stripes .urd-cal-photo,
+.urd-cal-stripes .urd-cal-apcard,
+.urd-cal-stripes .urd-cal-bento-tile {
   padding-left: 10px;
   border-left: 3px solid var(--urd-cal-stripe, var(--urd-cal-color, var(--urd-cal-accent)));
 }
@@ -1893,6 +1899,654 @@ textarea.urd-form-input {
   color: var(--urd-color-bg);
   background: var(--urd-color-text);
   border-color: var(--urd-color-text);
+}
+
+/* ---- The card designs (blocks/calendar-cards.js) ---- */
+
+/* 02 Plakatvegg */
+.urd-cal-posters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-auto-flow: dense;
+  grid-auto-rows: minmax(150px, auto);
+  gap: 14px;
+}
+
+.urd-cal-poster {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.6em;
+  padding: 1.1em;
+  background: var(--urd-cal-surface);
+  border: 1px solid var(--urd-cal-line);
+  border-radius: var(--urd-radius-md);
+}
+
+.urd-cal-poster-big {
+  grid-row: span 2;
+  grid-column: span 2;
+}
+
+.urd-cal-poster-a {
+  color: var(--urd-cal-s-posterAText, var(--urd-color-accent-text));
+  background: var(--urd-cal-s-posterA, var(--urd-cal-accent));
+  border-color: transparent;
+}
+
+.urd-cal-poster-b {
+  color: var(--urd-cal-s-posterBText, var(--urd-color-bg));
+  background: var(--urd-cal-s-posterB, var(--urd-color-text));
+  border-color: transparent;
+}
+
+.urd-cal-poster-c {
+  color: var(--urd-cal-s-posterCText, var(--urd-color-text));
+  background: var(--urd-cal-s-posterC, color-mix(in srgb, var(--urd-cal-accent) 22%, var(--urd-color-surface)));
+  border-color: transparent;
+}
+
+.urd-cal-poster-top {
+  font-size: 0.7em;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.urd-cal-poster-when strong {
+  display: block;
+  font-family: var(--urd-font-heading);
+  font-size: 3.4em;
+  font-weight: 800;
+  line-height: 0.95;
+}
+
+.urd-cal-poster-big .urd-cal-poster-when strong {
+  font-size: 5.5em;
+  line-height: 0.9;
+}
+
+.urd-cal-poster-plain .urd-cal-poster-when strong {
+  color: var(--urd-cal-accent);
+}
+
+.urd-cal-poster-when span {
+  font-size: 0.75em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.urd-cal-poster-title {
+  display: block;
+  line-height: 1.2;
+}
+
+.urd-cal-poster-big .urd-cal-poster-title {
+  font-size: 1.3em;
+}
+
+.urd-cal-poster-body .urd-cal-f-time {
+  display: block;
+  font-size: 0.85em;
+  opacity: 0.85;
+}
+
+.urd-cal-poster .urd-cal-signup {
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* 03 Billetter */
+.urd-cal-tickets {
+  display: grid;
+  gap: 14px;
+}
+
+.urd-cal-ticket {
+  display: flex;
+  overflow: hidden;
+  background: var(--urd-cal-surface);
+  border: 1px solid var(--urd-cal-line);
+  border-radius: var(--urd-radius-md);
+}
+
+.urd-cal-ticket-stub {
+  display: flex;
+  flex: 0 0 7.5em;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1em;
+  text-align: center;
+  color: var(--urd-cal-s-stubText, var(--urd-color-accent-text));
+  background: var(--urd-cal-color, var(--urd-cal-s-stub, var(--urd-cal-accent)));
+  border-right: 2px dashed var(--urd-color-bg);
+}
+
+.urd-cal-ticket-stub strong {
+  font-family: var(--urd-font-heading);
+  font-size: 2.4em;
+  line-height: 1;
+}
+
+.urd-cal-ticket-stub .urd-cal-f-date {
+  font-size: 0.75em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.urd-cal-ticket-stub .urd-cal-f-time {
+  margin-top: 6px;
+  font-size: 0.78em;
+  opacity: 0.85;
+}
+
+.urd-cal-ticket-body {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6em 1em;
+  min-width: 0;
+  padding: 1em 1.3em;
+}
+
+.urd-cal-ticket-title {
+  display: block;
+  font-size: 1.1em;
+}
+
+.urd-cal-ticket .urd-cal-signup {
+  flex: none;
+  margin: 0;
+  padding: 9px 16px;
+  color: var(--urd-color-accent-text);
+  background: var(--urd-cal-accent);
+  border-radius: var(--urd-radius-sm);
+}
+
+/* 06 Dagkarusell */
+.urd-cal-carousel {
+  display: grid;
+  gap: 12px;
+}
+
+.urd-cal-carousel-nav {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.urd-cal-carousel-nav .urd-cal-nav {
+  width: 40px;
+  height: 40px;
+  font-size: 1.1em;
+}
+
+.urd-cal-carousel-track {
+  display: flex;
+  gap: 14px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+
+.urd-cal-daycard {
+  display: flex;
+  flex: 0 0 220px;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 280px;
+  padding: 1.2em;
+  scroll-snap-align: start;
+  background: var(--urd-cal-surface);
+  border: 1px solid var(--urd-cal-line);
+  border-radius: var(--urd-radius-md);
+}
+
+.urd-cal-daycard-first {
+  color: var(--urd-cal-s-cardText, var(--urd-color-accent-text));
+  background: var(--urd-cal-s-card, var(--urd-cal-accent));
+  border-color: transparent;
+}
+
+.urd-cal-daycard-wd,
+.urd-cal-daycard-month {
+  font-size: 0.75em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.urd-cal-daycard-day {
+  font-family: var(--urd-font-heading);
+  font-size: 3.6em;
+  line-height: 0.9;
+  color: var(--urd-cal-color, var(--urd-cal-accent));
+}
+
+.urd-cal-daycard-first .urd-cal-daycard-day {
+  color: inherit;
+}
+
+.urd-cal-daycard-body {
+  margin-top: auto;
+}
+
+.urd-cal-daycard-title {
+  display: block;
+  line-height: 1.2;
+}
+
+.urd-cal-daycard .urd-cal-signup,
+.urd-cal-daycard .urd-cal-chip {
+  align-self: flex-start;
+}
+
+.urd-cal-daycard-first .urd-cal-signup {
+  margin: 0;
+  padding: 8px 14px;
+  color: var(--urd-cal-s-card, var(--urd-cal-accent));
+  background: var(--urd-cal-s-cardText, var(--urd-color-accent-text));
+  border-radius: var(--urd-radius-sm);
+}
+
+/* 09 Bildekort */
+.urd-cal-photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.urd-cal-photo {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--urd-cal-surface);
+  border: 1px solid var(--urd-cal-line);
+  border-radius: var(--urd-radius-md);
+}
+
+.urd-cal-photo-band {
+  position: relative;
+  height: 150px;
+  background: var(--urd-cal-color, var(--urd-cal-s-placeholder, color-mix(in srgb, var(--urd-cal-accent) 25%, var(--urd-color-surface))));
+}
+
+.urd-cal-photo-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.urd-cal-photo-date {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 6px 10px;
+  font-size: 0.75em;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--urd-cal-s-badgeText, var(--urd-color-text));
+  background: var(--urd-cal-s-badge, var(--urd-color-bg));
+  border-radius: var(--urd-radius-sm);
+}
+
+.urd-cal-photo-band .urd-cal-chip {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: var(--urd-cal-s-chip, var(--urd-color-bg));
+  border-color: transparent;
+}
+
+.urd-cal-photo-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0.9em 1em 1em;
+}
+
+.urd-cal-photo-title {
+  line-height: 1.2;
+}
+
+.urd-cal-photo .urd-cal-signup {
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 7px 12px;
+  color: var(--urd-color-accent-text);
+  background: var(--urd-cal-accent);
+  border-radius: var(--urd-radius-sm);
+}
+
+/* A6 Rutenett (ApeironLF): cream cards with a navy head */
+.urd-cal-d-apGrid {
+  --urd-cal-ap-gold: var(--urd-cal-s-gold, #d0a74a);
+  --urd-cal-ap-head: var(--urd-cal-s-head, #1c2340);
+}
+
+.urd-cal-apgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.urd-cal-apcard {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--urd-cal-s-text, #17201d);
+  background: var(--urd-cal-s-card, #f3ecd8);
+  border: 1px solid var(--urd-cal-ap-gold);
+  border-radius: var(--urd-radius-sm);
+}
+
+.urd-cal-apcard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6em;
+  padding: 0.8em 1.1em;
+  color: var(--urd-cal-ap-gold);
+  background: var(--urd-cal-ap-head);
+  border-bottom: 2px solid var(--urd-cal-ap-gold);
+}
+
+.urd-cal-apcard-when strong {
+  font-family: var(--urd-font-heading);
+  font-size: 1.6em;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.urd-cal-apcard-when .urd-cal-f-date {
+  font-size: 0.7em;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--urd-cal-s-card, #f3ecd8);
+}
+
+.urd-cal-apcard-head .urd-cal-chip {
+  font-size: 0.62em;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--urd-cal-ap-head);
+  background: var(--urd-cal-color, var(--urd-cal-ap-gold));
+  border-color: transparent;
+}
+
+.urd-cal-apcard-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  padding: 1em 1.1em 1.1em;
+}
+
+.urd-cal-apcard-title {
+  font-family: var(--urd-font-heading);
+  font-size: 1.3em;
+  font-weight: 500;
+}
+
+.urd-cal-apcard-time {
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+.urd-cal-apcard-place {
+  align-self: flex-start;
+  padding-bottom: 2px;
+  font-size: 0.85em;
+  line-height: 1.4;
+  opacity: 0.75;
+  border-bottom: 1px solid var(--urd-cal-ap-gold);
+}
+
+.urd-cal-d-apGrid .urd-cal-signup {
+  margin: 0;
+  color: var(--urd-cal-ap-head);
+}
+
+/* M1 Bento */
+.urd-cal-bento {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-flow: dense;
+  grid-auto-rows: minmax(130px, auto);
+  gap: 12px;
+}
+
+.urd-cal-bento-tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.5em;
+  min-width: 0;
+  padding: 1.1em;
+  background: var(--urd-cal-s-tile, var(--urd-cal-surface));
+  border: 1px solid var(--urd-cal-line);
+  border-radius: 22px;
+}
+
+.urd-cal-bento-hero {
+  position: relative;
+  grid-row: span 2;
+  grid-column: span 2;
+  justify-content: flex-end;
+  padding-top: 3.2em;
+  overflow: hidden;
+  color: var(--urd-cal-s-heroText, var(--urd-color-bg));
+  background: var(--urd-cal-s-hero, var(--urd-color-text));
+  border-color: transparent;
+}
+
+.urd-cal-bento-pill {
+  position: absolute;
+  top: 1.1em;
+  left: 1.3em;
+  padding: 6px 12px;
+  font-size: 0.7em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--urd-color-accent-text);
+  background: var(--urd-cal-accent);
+  border-radius: 999px;
+}
+
+.urd-cal-bento-count {
+  position: absolute;
+  top: 1.3em;
+  right: 1.3em;
+  font-size: 0.82em;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.urd-cal-bento-when strong {
+  font-family: var(--urd-font-heading);
+  font-size: 3.8em;
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+}
+
+.urd-cal-bento-when span {
+  margin-left: 8px;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.urd-cal-bento-hero-title {
+  font-family: var(--urd-font-heading);
+  font-size: 1.35em;
+  line-height: 1.15;
+}
+
+.urd-cal-bento-hero .urd-cal-meta {
+  opacity: 0.8;
+}
+
+.urd-cal-bento-hero .urd-cal-signup {
+  align-self: flex-start;
+  margin: 0;
+  padding: 8px 14px;
+  color: var(--urd-cal-s-hero, var(--urd-color-text));
+  background: var(--urd-cal-s-heroText, var(--urd-color-bg));
+  border-radius: 999px;
+}
+
+.urd-cal-bento-label {
+  font-size: 0.7em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.urd-cal-bento-title {
+  display: block;
+  font-family: var(--urd-font-heading);
+  line-height: 1.2;
+}
+
+.urd-cal-bento-sub {
+  display: block;
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+
+.urd-cal-bento-month {
+  grid-column: span 2;
+  justify-content: flex-start;
+}
+
+.urd-cal-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+  font-size: 0.68em;
+  font-weight: 600;
+  text-align: center;
+}
+
+.urd-cal-bento-day {
+  display: grid;
+  place-items: center;
+}
+
+.urd-cal-bento-day i {
+  display: grid;
+  place-items: center;
+  width: 1.9em;
+  height: 1.9em;
+  font-style: normal;
+  border-radius: 50%;
+}
+
+.urd-cal-bento-today {
+  color: var(--urd-color-bg);
+  background: var(--urd-color-text);
+}
+
+.urd-cal-bento-first {
+  color: var(--urd-color-accent-text);
+  background: var(--urd-cal-accent);
+}
+
+.urd-cal-bento-event {
+  background: var(--urd-cal-s-soft, color-mix(in srgb, var(--urd-cal-accent) 25%, var(--urd-color-surface)));
+}
+
+.urd-cal-bento-counter {
+  color: var(--urd-color-bg);
+  background: var(--urd-color-text);
+  border-color: transparent;
+}
+
+.urd-cal-bento-big {
+  font-family: var(--urd-font-heading);
+  font-size: 2.6em;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.urd-cal-bento-subscribe {
+  justify-content: center;
+  background: var(--urd-cal-s-soft, color-mix(in srgb, var(--urd-cal-accent) 25%, var(--urd-color-surface)));
+  border-color: transparent;
+}
+
+.urd-cal-bento-subscribe .urd-cal-subscribe {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.urd-cal-bento-subscribe .urd-cal-sub-btn {
+  padding: 0;
+  font-family: var(--urd-font-heading);
+  font-size: 0.9em;
+  font-weight: 600;
+  background: transparent;
+  border: 0;
+}
+
+.urd-cal-bento-row {
+  grid-column: span 2;
+  flex-direction: row;
+  align-items: center;
+  gap: 1em;
+}
+
+.urd-cal-bento-row-when {
+  flex: none;
+  font-family: var(--urd-font-heading);
+}
+
+.urd-cal-bento-row-when strong {
+  font-size: 1.6em;
+  line-height: 1;
+}
+
+.urd-cal-bento-row-when span {
+  margin-left: 4px;
+  font-size: 0.75em;
+  font-weight: 600;
+}
+
+.urd-cal-bento-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.urd-cal-bento-row .urd-cal-signup {
+  flex: none;
+  margin: 0;
+  padding: 9px 14px;
+  color: var(--urd-color-bg);
+  background: var(--urd-color-text);
+  border-radius: 999px;
+}
+
+@media (max-width: 600px) {
+  .urd-cal-bento {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .urd-cal-poster-big {
+    grid-column: span 2;
+  }
 }
 
 /* The preview's notes under the calendar (demo data, a failed feed) hang

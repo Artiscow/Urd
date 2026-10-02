@@ -2533,6 +2533,10 @@ var Ni = {
 		"calendar.allDay": "hele dagen",
 		"calendar.count.one": "{n} arrangement",
 		"calendar.count.other": "{n} arrangementer",
+		"calendar.nextShort": "Neste",
+		"calendar.thisMonth": "Denne måneden",
+		"calendar.scrollPrev": "Forrige kort",
+		"calendar.scrollNext": "Neste kort",
 		"calendar.nextMonth": "Neste måned",
 		"calendar.prevMonth": "Forrige måned",
 		"calendar.signup": "Meld deg på",
@@ -7961,6 +7965,108 @@ var Ff = [
 			Lf("blobC", "blobs")
 		],
 		texts: If
+	},
+	{
+		id: "posters",
+		labelKey: "calendar.design.posters",
+		view: "cards",
+		module: "cards",
+		stripe: !1,
+		slots: [
+			Lf("accent"),
+			Lf("surface"),
+			Lf("line"),
+			Lf("posterA", "posters"),
+			Lf("posterAText", "posters"),
+			Lf("posterB", "posters"),
+			Lf("posterBText", "posters"),
+			Lf("posterC", "posters"),
+			Lf("posterCText", "posters")
+		],
+		texts: If
+	},
+	{
+		id: "tickets",
+		labelKey: "calendar.design.tickets",
+		view: "cards",
+		module: "cards",
+		stripe: !1,
+		slots: [
+			Lf("accent"),
+			Lf("surface"),
+			Lf("line"),
+			Lf("stub", "stub"),
+			Lf("stubText", "stub")
+		],
+		texts: If
+	},
+	{
+		id: "carousel",
+		labelKey: "calendar.design.carousel",
+		view: "cards",
+		module: "cards",
+		stripe: !1,
+		slots: [
+			Lf("accent"),
+			Lf("surface"),
+			Lf("line"),
+			Lf("chip"),
+			Lf("card", "first"),
+			Lf("cardText", "first")
+		],
+		texts: If
+	},
+	{
+		id: "photo",
+		labelKey: "calendar.design.photo",
+		view: "cards",
+		module: "cards",
+		stripe: !1,
+		slots: [
+			Lf("accent"),
+			Lf("surface"),
+			Lf("line"),
+			Lf("placeholder"),
+			Lf("badge", "onPicture"),
+			Lf("badgeText", "onPicture"),
+			Lf("chip", "onPicture")
+		],
+		texts: If
+	},
+	{
+		id: "apGrid",
+		labelKey: "calendar.design.apGrid",
+		view: "cards",
+		module: "cards",
+		stripe: !1,
+		slots: [
+			Lf("head"),
+			Lf("card"),
+			Lf("text"),
+			Lf("gold")
+		],
+		texts: If
+	},
+	{
+		id: "bento",
+		labelKey: "calendar.design.bento",
+		view: "cards",
+		module: "cards",
+		stripe: !1,
+		ownSubscribe: !0,
+		slots: [
+			Lf("accent"),
+			Lf("soft"),
+			Lf("tile"),
+			Lf("line"),
+			Lf("hero", "hero"),
+			Lf("heroText", "hero")
+		],
+		texts: [
+			"nextShort",
+			"thisMonth",
+			...If
+		]
 	}
 ];
 function zf(e) {

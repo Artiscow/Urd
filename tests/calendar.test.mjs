@@ -8,7 +8,7 @@ import { engineImport } from './_engine.mjs';
 
 const {
   parseIcs, expandEvents, partsToMs,
-  splitCategory, findSignupLink, normalizeSourceUrl, subscribeLinks,
+  splitCategory, findSignupLink, findImageLink, normalizeSourceUrl, subscribeLinks,
   nextCount, laterCount, NEXT_COUNT, LATER_COUNT, dedupeOccurrences, groupByMonth, sourceEntry,
 } = await engineImport('ics.js');
 
@@ -198,4 +198,21 @@ test('sourceEntry: a bare address, or an address with a name and a colour', () =
   assert.deepEqual(sourceEntry({ url: 'https://x.test/a.ics' }), { url: 'https://x.test/a.ics', name: '', color: '' });
   assert.deepEqual(sourceEntry({ name: 7, color: null }), { url: '', name: '', color: '' });
   assert.deepEqual(sourceEntry(undefined), { url: '', name: '', color: '' });
+});
+
+test('the picture: the first ATTACH by address is kept, an inline attachment is skipped', () => {
+  const { events } = parseIcs(event([
+    'UID:p1', 'SUMMARY:Bilde', 'DTSTART:20260910T180000Z',
+    'ATTACH;ENCODING=BASE64;VALUE=BINARY:AAAA',
+    'ATTACH:https://example.org/plakat.jpg',
+    'ATTACH:https://example.org/andre.png',
+  ]));
+  assert.equal(events[0].image, 'https://example.org/plakat.jpg');
+});
+
+test('findImageLink: a picture link in the description, with a query string, otherwise null', () => {
+  assert.equal(findImageLink('Se plakaten: https://example.org/bilder/plakat.webp?v=2 og meld deg på'), 'https://example.org/bilder/plakat.webp?v=2');
+  assert.equal(findImageLink('Påmelding: https://forening.no/pameld'), null);
+  assert.equal(findImageLink(''), null);
+  assert.equal(findImageLink(undefined), null);
 });

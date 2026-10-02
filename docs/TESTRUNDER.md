@@ -4,6 +4,17 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.19.3): six card designs on the calendar
+
+- [ ] Stil tab, Design: Plakatvegg, Billetter, Dagkarusell, Bildekort, Rutenett på krem and Bento draw the demo data in the preview and a real feed on the published page
+- [ ] Plakatvegg: the first poster twice as large in Plakat 1, the next two in Plakat 2 and 3, the fourth plain, then the three colours again; category and place in capitals at the top, the day huge, the title and time at the foot; two columns on a phone
+- [ ] Billetter: the stub in the Stubb colour (the calendar's colour when the source has one) with the day, the month and the time, a dashed tear between stub and body, place · category under the title, the sign-up as a button at the right end
+- [ ] Dagkarusell: the cards scroll sideways and snap, the two arrows move one card, the first card in the Første kort colours, the sign-up as a button on it and the chip on the others
+- [ ] Bildekort: an event with a picture attached in the calendar, or a picture link in its description, shows it in the band when the picture host stands in PHOTO_HOSTS; without, the band is the Uten bilde colour; the date badge and the chip sit on the band; locally the band stays plain
+- [ ] Rutenett på krem: cream cards with a navy head, the day in gold, the category as a gold pill, the place underlined in gold; Topprad, Kort, Tekst and Gull recolour them
+- [ ] Bento: the hero tile for the next event with the «Neste» pill and «Om N dager», two small tiles, the current month with today ringed, the next event's day in the accent and the other event days in Lys aksent, «Denne måneden» counting this month's events, the subscribe tile when the block has a source, wide rows for the rest; no subscribe row under the block; two columns on a phone
+- [ ] Every card design: the colour slots follow the design when empty, Kantstripe på boksene adds the stripe to every card and tile, the field styles change the right pieces, and the texts («Neste», «Denne måneden», «Alle», the buttons) are rewritten by clicking them
+
 ### Testrunde-batch (0.7.19.2): six list designs on the calendar
 
 - [ ] Stil tab, Design: the dropdown lists Enkel, Tidslinje, Tabell, Programhefte, Nummerert program, Liste på marine and Glass; each draws the demo data in the preview and a real feed on the published page, and Innhold's Visning disappears while a design other than Enkel is chosen
