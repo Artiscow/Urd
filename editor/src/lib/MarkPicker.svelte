@@ -22,7 +22,8 @@
   import { ICON_CATEGORIES, ICON_LIBRARY, iconSvg } from '$engine/icons.js';
   import { ta } from '$engine/i18n.js';
 
-  let { icon = '', image = '', images = [], label = ta('mp.pickMark'), noneLabel = ta('common.none'), klass = '', onpick, onfile, children } = $props();
+  // `iconsOnly` is the picker for a mark that can only be a drawn icon: the Images tab is left out.
+  let { icon = '', image = '', images = [], label = ta('mp.pickMark'), noneLabel = ta('common.none'), klass = '', iconsOnly = false, onpick, onfile, children } = $props();
 
   const native = nativeAnchoring();
   const anchor = anchorName('urd-mp');
@@ -55,7 +56,7 @@
     query = '';
     choosing = false;
     // An image mark opens where it lives; everything else starts in the icons.
-    tab = image ? 'images' : 'icons';
+    tab = image && !iconsOnly ? 'images' : 'icons';
   }
 
   function onToggle(e) {
@@ -163,12 +164,14 @@
 </span>
 
 {#snippet body()}
+  {#if !iconsOnly}
   <div class="mp-tabs" role="group" aria-label={label}>
     <button type="button" class="mp-tab" class:on={tab === 'icons'} aria-pressed={tab === 'icons'}
       onclick={() => (tab = 'icons')}>{ta('mp.icons')}</button>
     <button type="button" class="mp-tab" class:on={tab === 'images'} aria-pressed={tab === 'images'}
       onclick={() => (tab = 'images')}>{ta('mp.images')}{#if ownImages.length}<span class="mp-count">{ownImages.length}</span>{/if}</button>
   </div>
+  {/if}
   {#if tab === 'icons'}
     <input class="mp-search" type="search" placeholder={ta('mp.search')} aria-label={ta('mp.search')} bind:value={query} />
     <div class="mp-scroll">

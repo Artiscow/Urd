@@ -382,6 +382,25 @@ export function normalizeSourceUrl(input) {
   return null;
 }
 
+/**
+ * A source as the block reads it: the address alone, or an object with an
+ * address, a name and a colour. A named calendar is a category of its own
+ * (its events wear the name as their chip, whatever their titles say), and a
+ * colour tints that calendar's chips and date badges. Pure.
+ * @param {unknown} source A string, or `{ url, name?, color? }`
+ * @returns {{url: string, name: string, color: string}}
+ */
+export function sourceEntry(source) {
+  if (source && typeof source === 'object') {
+    return {
+      url: String(source.url ?? '').trim(),
+      name: typeof source.name === 'string' ? source.name.trim() : '',
+      color: typeof source.color === 'string' ? source.color.trim() : '',
+    };
+  }
+  return { url: String(source ?? '').trim(), name: '', color: '' };
+}
+
 /** Subscribe links for a source: webcal always; Google calendars also get "add to Google". */
 export function subscribeLinks(url) {
   const normalized = normalizeSourceUrl(url);
@@ -390,4 +409,71 @@ export function subscribeLinks(url) {
   const m = /^https:\/\/calendar\.google\.com\/calendar\/ical\/([^/]+)\//.exec(normalized);
   if (m) links.google = `https://calendar.google.com/calendar/r?cid=${m[1]}`;
   return links;
+}
+
+/* ---------- The calendar block's view logic (pure) ---------- */
+
+/** How many events the «next» card holds: 1 to 3, one for anything else. */
+export const NEXT_COUNT = { min: 1, max: 3, dflt: 1 };
+
+/** How many more the card lists under «Later»: 0 to 10, none for anything else. */
+export const LATER_COUNT = { min: 0, max: 10, dflt: 0 };
+
+/** The events in the «next» card, inside the bounds. */
+export function nextCount(count) {
+  const n = Number(count);
+  if (!Number.isFinite(n)) return NEXT_COUNT.dflt;
+  return Math.min(NEXT_COUNT.max, Math.max(NEXT_COUNT.min, Math.round(n)));
+}
+
+/** The events under «Later», inside the bounds. */
+export function laterCount(count) {
+  const n = Number(count);
+  if (!Number.isFinite(n)) return LATER_COUNT.dflt;
+  return Math.min(LATER_COUNT.max, Math.max(LATER_COUNT.min, Math.round(n)));
+}
+
+/**
+ * The same event from two calendars is one event: occurrences that start at
+ * the same time under the same title (case and outer spaces aside) are merged
+ * into the first of them, which takes over a signup link or a location the
+ * later copy has and it lacks. The order is kept.
+ * @param {Array<object>} occurrences With `start` and `title` (or `summary`)
+ * @returns {Array<object>}
+ */
+export function dedupeOccurrences(occurrences) {
+  const seen = new Map();
+  const out = [];
+  for (const occ of Array.isArray(occurrences) ? occurrences : []) {
+    const key = `${occ.start}|${String(occ.title ?? occ.summary ?? '').trim().toLowerCase()}`;
+    const first = seen.get(key);
+    if (!first) {
+      const copy = { ...occ };
+      seen.set(key, copy);
+      out.push(copy);
+      continue;
+    }
+    if (!first.signup && occ.signup) first.signup = occ.signup;
+    if (!first.location && occ.location) first.location = occ.location;
+    if (!first.category && occ.category) first.category = occ.category;
+  }
+  return out;
+}
+
+/**
+ * Occurrences under their month, in the order given, for the agenda view.
+ * @param {Array<{start: number}>} occurrences Sorted by start
+ * @returns {Array<{year: number, month: number, items: Array<object>}>} month is 0 to 11
+ */
+export function groupByMonth(occurrences) {
+  const groups = [];
+  for (const occ of Array.isArray(occurrences) ? occurrences : []) {
+    const start = new Date(occ.start);
+    const year = start.getFullYear();
+    const month = start.getMonth();
+    const last = groups[groups.length - 1];
+    if (last && last.year === year && last.month === month) last.items.push(occ);
+    else groups.push({ year, month, items: [occ] });
+  }
+  return groups;
 }

@@ -4,6 +4,22 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.19.1): the calendar card, named sources and the design foundation
+
+- [ ] Calendar with two sources holding the same event: it shows once in every view; a signup link or a location present in only one copy is kept
+- [ ] Neste view, Arrangementer i kortet 1, 2 and 3: the card holds that many in full, the heading reads «Neste arrangement» for one and «Akkurat nå» for more; Under «Senere» 0 to 10 lists that many one-line rows below
+- [ ] A source with a name: its events wear the name as their chip and the filter shows the name; the title stays whole even when it reads «Møte: Årsmøte»
+- [ ] A source with a colour: its chips, date badges and filter button take the colour; cleared, they follow the accent again
+- [ ] «Kalendere på nettsiden»: lists the sources of the other calendar blocks (this page and the others), adds one with a click, and says so when there are none
+- [ ] Agenda view: rows under their month with the day number and weekday, the limit counts like the list
+- [ ] Empty state: a block without sources on the published page, and a feed with nothing coming up, show the icon and the line; own words and another icon in Innhold change it; Ingen removes the icon
+- [ ] Stil tab, Farger: Aksent, Flate, Linjer and Merker set each surface; emptied, the theme's colours return; a dark theme follows along
+- [ ] Stil tab, Kantstripe på boksene: a stripe along the left edge of every row, card, next row and agenda row in the event's calendar colour (else the accent); Stripefarge overrides it; off, no stripe
+- [ ] Stil tab, Tekstfelt: pick Tittel and set font, size, Fet or Normal, kursiv, understrek and colour: every title in the view changes, nothing else; the same for Dato, Klokkeslett, Sted, Beskrivelse (cards), Kategori (chips) and Store tall (the badge's day number)
+- [ ] Click «Neste arrangement», «Senere», «Alle», «Meld deg på» or «Abonner» in the preview: the text toolbar appears, bold or a colour applies, the words survive a reload and a publish; «Tilbakestill tekstene» appears in Innhold and puts the defaults back
+- [ ] Innhold, Vis «Meld deg på»-knapper off: the buttons disappear in every view
+- [ ] A calendar block saved before this round renders as before, and its view can still be changed in Innhold
+
 ### Testrunde-batch (0.7.13.12): animated images and the video block's file source
 
 - [ ] Upload an animated GIF as an image block: it moves in the preview and on the published page, and the file in media/ ends in .gif

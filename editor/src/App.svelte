@@ -124,6 +124,7 @@
   import { isSafeHref, toolOrder } from '$engine/nav-model.js';
   import { frameAtPoint } from '$engine/place.js';
   import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '$engine/icons.js';
+  import { CAL_DESIGNS, CAL_FIELDS, CAL_SIZE, calDesign, calStripe, calHasTextOverrides } from '$engine/calendar-designs.js';
 
   /** The background layer types in the order they are offered in the panel. */
   const BG_TYPES = [
@@ -1107,6 +1108,38 @@
     mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b) => { Object.assign(b.props, patch); });
   }
 
+  /* The calendar block's Style tab (calendar-designs.js): the design, its
+     colour slots, the edge stripe and a style per event field. Every setting
+     is additive, and an emptied object is removed from the props. */
+  let calField = $state('title');
+  function calFieldStyleOf() {
+    return selectedBlock?.props.fieldStyle?.[calField] ?? {};
+  }
+  /** A design with a view of its own writes that view too, so an engine without the design still draws the right data. */
+  function setCalendarDesign(id) {
+    const def = calDesign(id);
+    setBlockProps('design', { design: def.id === 'plain' ? undefined : def.id, ...(def.view ? { view: def.view } : {}) });
+  }
+  function setCalColor(key, value) {
+    const colors = { ...(selectedBlock.props.colors ?? {}) };
+    if (value) colors[key] = value;
+    else delete colors[key];
+    setBlockProp('colors', Object.keys(colors).length ? colors : undefined);
+  }
+  function setCalStripe(patch) {
+    const stripe = { ...(selectedBlock.props.stripe ?? {}), ...patch };
+    for (const key of Object.keys(stripe)) if (stripe[key] === undefined) delete stripe[key];
+    setBlockProp('stripe', Object.keys(stripe).length ? stripe : undefined);
+  }
+  function setCalField(patch) {
+    const all = { ...(selectedBlock.props.fieldStyle ?? {}) };
+    const one = { ...(all[calField] ?? {}), ...patch };
+    for (const key of Object.keys(one)) if (one[key] === undefined) delete one[key];
+    if (Object.keys(one).length) all[calField] = one;
+    else delete all[calField];
+    setBlockProp('fieldStyle', Object.keys(all).length ? all : undefined);
+  }
+
   /** Shrink on narrower screens (render.js, ADR-0024): block-level fields on
    *  every block. Content blocks zoom their content to fit; the types below
    *  (the engine's FIT_BY_WIDTH in push-model.js) keep a floor on their
@@ -1242,8 +1275,57 @@
     });
   }
   /* The calendar block (Content): one source per line. */
-  function setCalendarSources(text) {
-    setBlockProp('sources', String(text).split('\n').map((s) => s.trim()).filter(Boolean));
+  /** A calendar source as the panel edits it: a bare address stays a string in the file, one
+      with a name or a colour is an object (the engine's sourceEntry reads both). */
+  const calSource = (src) => (src && typeof src === 'object'
+    ? { url: src.url ?? '', name: src.name ?? '', color: src.color ?? '' }
+    : { url: typeof src === 'string' ? src : '', name: '', color: '' });
+  const packCalSource = ({ url, name, color }) => (name || color ? { url, ...(name ? { name } : {}), ...(color ? { color } : {}) } : url);
+  function setCalendarSource(i, patch) {
+    mutateBlock(`edit:${selectedBlock.blockId}:source${i}`, (b) => {
+      const list = [...(b.props.sources ?? [])];
+      list[i] = packCalSource({ ...calSource(list[i]), ...patch });
+      b.props.sources = list;
+    });
+  }
+  function addCalendarRow() {
+    setBlockProp('sources', [...(selectedBlock.props.sources ?? []), '']);
+  }
+  function removeCalendarSource(i) {
+    setBlockProp('sources', (selectedBlock.props.sources ?? []).filter((_, j) => j !== i));
+  }
+
+  /** The calendar sources found in the site's other calendar blocks: null until asked for. */
+  let siteCalSources = $state(null);
+  /** Collects the sources of every calendar block on the site, this page's draft and the other
+      pages' drafts or published files, so a calendar set once can be added to another block
+      with a click instead of being pasted again. */
+  async function loadSiteCalSources() {
+    const found = new Set();
+    const take = (page) => {
+      for (const section of page?.sections ?? []) {
+        for (const block of section.blocks ?? []) {
+          if (block.type !== 'calendar') continue;
+          for (const source of block.props?.sources ?? []) {
+            const { url } = calSource(source);
+            if (url.trim()) found.add(url.trim());
+          }
+        }
+      }
+    };
+    take(store?.data);
+    await Promise.all((siteDraft.pages ?? []).filter((p) => p.id !== pageId).map(async (p) => {
+      try {
+        // An unpublished draft is what the owner is working on; otherwise the published file.
+        const draft = localStorage.getItem(`urd-draft-${p.id}`);
+        take(draft ? JSON.parse(draft) : await (await fetch(`/${p.file}`)).json());
+      } catch { /* a page that cannot be read has no calendars to offer */ }
+    }));
+    siteCalSources = [...found];
+  }
+  function addCalendarSource(source) {
+    const own = selectedBlock.props.sources ?? [];
+    if (!own.some((src) => calSource(src).url === source)) setBlockProp('sources', [...own, source]);
   }
 
   function setFaqItem(i, patch) {
@@ -5306,6 +5388,7 @@
     'calendar-cards': { type: 'calendar', props: { sources: [], view: 'cards', limit: 6, showCategories: true, showSubscribe: true }, w: 88, h: 320 },
     'calendar-month': { type: 'calendar', props: { sources: [], view: 'month', limit: 6, showCategories: true, showSubscribe: true }, w: 88, h: 480 },
     'calendar-next': { type: 'calendar', props: { sources: [], view: 'next', limit: 6, showCategories: true, showSubscribe: true }, w: 40, h: 180 },
+    'calendar-agenda': { type: 'calendar', props: { sources: [], view: 'agenda', limit: 8, showCategories: true, showSubscribe: true }, w: 60, h: 360 },
     icon: { type: 'icon', decor: true, hideMobile: true, props: { glyph: '★', color: 'accent', size: 48 }, w: 8, h: 64 },
     collection: { type: 'collection', props: { collection: null, view: 'cards', limit: 6, newestFirst: true }, w: 88.89, h: 200 },
     gallery: { type: 'gallery', props: { images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5 }, w: 88.89, h: 320 },
@@ -5515,6 +5598,7 @@
       { label: `${ta('blocks.calendar')}: ${ta('calendar.viewCards')}`, act: 'block', kind: 'calendar-cards' },
       { label: `${ta('blocks.calendar')}: ${ta('calendar.viewMonth')}`, act: 'block', kind: 'calendar-month' },
       { label: `${ta('blocks.calendar')}: ${ta('calendar.viewNext')}`, act: 'block', kind: 'calendar-next' },
+      { label: `${ta('blocks.calendar')}: ${ta('calendar.viewAgenda')}`, act: 'block', kind: 'calendar-agenda' },
       { label: ta('blocks.collection'), act: 'block', kind: 'collection' },
       { label: ta('blocks.faq'), act: 'block', kind: 'faq' },
       { label: ta('blocks.timeline'), act: 'block', kind: 'timeline' },
@@ -7898,6 +7982,7 @@
                   <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-cards')}>{ta('calendar.viewCards')}</button>
                   <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-month')}>{ta('calendar.viewMonth')}</button>
                   <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-next')}>{ta('calendar.viewNext')}</button>
+                  <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-agenda')}>{ta('calendar.viewAgenda')}</button>
                 </div>
               </details>
               <details class="group">
@@ -9270,19 +9355,73 @@
         <input value={selectedBlock.props.successText ?? ''} placeholder={ta('form.thanksDefault')}
           onchange={(e) => setBlockProp('successText', e.target.value.trim() || ta('form.thanksDefault'))} /></label>
     {:else if selectedBlock.type === 'calendar'}
-      <label>{ta('calendar.sources')}
-        <textarea rows="3" placeholder={ta('calendar.sourcesPh')} spellcheck="false"
-          value={(selectedBlock.props.sources ?? []).join('\n')}
-          onchange={(e) => setCalendarSources(e.target.value)}></textarea></label>
-      <label>{ta('lbl.view')}
-        <Dropdown value={selectedBlock.props.view ?? 'list'}
-          options={[['list', ta('calendar.viewList')], ['cards', ta('calendar.viewCards')], ['month', ta('calendar.viewMonth')], ['next', ta('calendar.viewNext')]]}
-          onchange={(v) => setBlockProp('view', v)} /></label>
-      {#if (selectedBlock.props.view ?? 'list') === 'list' || selectedBlock.props.view === 'cards'}
+      <p class="panel-strong" title={ta('calendar.sourcesPh')}>{ta('calendar.sources')}</p>
+      <!-- One row per calendar: the address, and a name and a colour of its own. A named
+           calendar is a category in the filter, whatever its events' titles say -->
+      {#each selectedBlock.props.sources ?? [] as src, i (i)}
+        {@const cal = calSource(src)}
+        <div class="bg-layer">
+          <span class="toolbar-row">
+            <input class="tb-grow" value={cal.url} placeholder={ta('calendar.sourcesPh')} spellcheck="false"
+              title={ta('calendar.sourceUrl')} onchange={(e) => setCalendarSource(i, { url: e.target.value.trim() })} />
+            <button class="ghost row-tool" title={ta('ui.remove')} onclick={() => removeCalendarSource(i)}>{@html ICONS.cross}</button>
+          </span>
+          <span class="toolbar-row">
+            <input class="tb-grow" value={cal.name} placeholder={ta('calendar.sourceName')} title={ta('tip.calendar.sourceName')}
+              onchange={(e) => setCalendarSource(i, { name: e.target.value.trim() })} />
+            <ColorPicker value={cal.color || 'accent'} tokens={themeSwatches()} allowClear
+              label={ta('tip.calendar.sourceColor')} onchange={(hex) => setCalendarSource(i, { color: hex ?? '' })} />
+          </span>
+        </div>
+      {/each}
+      <button type="button" class="ghost action" onclick={addCalendarRow}>{@html ICONS.plus} {ta('ui.addCalendar')}</button>
+      <!-- The calendars that already stand in other calendar blocks on the site, to add with a click -->
+      <button type="button" class="ghost action" title={ta('tip.calendar.siteSources')} onclick={loadSiteCalSources}>
+        {@html ICONS.plus} {ta('calendar.siteSources')}
+      </button>
+      {#if siteCalSources}
+        {@const others = siteCalSources.filter((src) => !(selectedBlock.props.sources ?? []).some((own) => calSource(own).url === src))}
+        {#each others as src (src)}
+          <button type="button" class="linkish cal-source" title={src} onclick={() => addCalendarSource(src)}>{src}</button>
+        {/each}
+        {#if !others.length}
+          <span class="gridmenu-value">{ta('calendar.siteSourcesNone')}</span>
+        {/if}
+      {/if}
+      <!-- A design with a view of its own (Style) fixes the view -->
+      {#if !calDesign(selectedBlock.props.design).view}
+        <label>{ta('lbl.view')}
+          <Dropdown value={selectedBlock.props.view ?? 'list'}
+            options={[['list', ta('calendar.viewList')], ['cards', ta('calendar.viewCards')], ['month', ta('calendar.viewMonth')], ['agenda', ta('calendar.viewAgenda')], ['next', ta('calendar.viewNext')]]}
+            onchange={(v) => setBlockProp('view', v)} /></label>
+      {/if}
+      {#if ['list', 'cards', 'agenda'].includes(selectedBlock.props.view ?? 'list')}
         <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
           <input type="number" min="1" max="50" value={selectedBlock.props.limit ?? 6}
             onchange={(e) => setBlockProp('limit', Math.max(1, Math.min(50, Number(e.target.value) || 6)))} /></label>
       {/if}
+      {#if selectedBlock.props.view === 'next'}
+        <!-- The card: how many events in full, and how many more as lines under «Later» -->
+        <Choice label={ta('calendar.nextCount')} title={ta('tip.calendar.nextCount')} value={String(Math.min(3, Math.max(1, Number(selectedBlock.props.nextCount) || 1)))}
+          options={[['1', '1'], ['2', '2'], ['3', '3']]}
+          onchange={(v) => setBlockProp('nextCount', Number(v))} />
+        <div class="ctl-row" title={ta('tip.calendar.laterCount')}>
+          <span class="mini-label ctl-name">{ta('calendar.laterCount')}</span>
+          <input type="range" min="0" max="10" step="1" value={selectedBlock.props.laterCount ?? 0}
+            oninput={(e) => setBlockProp('laterCount', e.target.valueAsNumber)} />
+          <span class="gridmenu-value">{selectedBlock.props.laterCount ?? 0}</span>
+        </div>
+      {/if}
+      <!-- The empty state: the owner's own words and icon; empty and unset give the defaults -->
+      <label title={ta('tip.calendar.emptyText')}>{ta('calendar.emptyText')}
+        <input value={selectedBlock.props.emptyText ?? ''} placeholder={ta('calendar.emptyPh')}
+          onchange={(e) => setBlockProp('emptyText', e.target.value.trim() || undefined)} /></label>
+      <label title={ta('tip.calendar.emptyIcon')}>{ta('calendar.emptyIcon')}
+        <MarkPicker iconsOnly icon={selectedBlock.props.emptyIcon === 'none' ? '' : (selectedBlock.props.emptyIcon ?? 'calendar')}
+          klass="lbtn-mark" label={ta('tip.calendar.emptyIcon')}
+          onpick={(mark) => setBlockProp('emptyIcon', mark.icon || 'none')}>
+          {#if selectedBlock.props.emptyIcon !== 'none'}{@html iconSvg(selectedBlock.props.emptyIcon ?? 'calendar') || iconSvg('calendar')}{/if}
+        </MarkPicker></label>
       <label class="gridmenu-snap">
         <input type="checkbox" checked={selectedBlock.props.showCategories !== false}
           onchange={(e) => setBlockProp('showCategories', e.target.checked)} />
@@ -9293,6 +9432,15 @@
           onchange={(e) => setBlockProp('showSubscribe', e.target.checked)} />
         {ta('calendar.showSubscribe')}
       </label>
+      <label class="gridmenu-snap">
+        <input type="checkbox" checked={selectedBlock.props.showSignup !== false}
+          onchange={(e) => setBlockProp('showSignup', e.target.checked)} />
+        {ta('calendar.showSignup')}
+      </label>
+      <!-- The labels and the buttons' words are rewritten by clicking them in the preview; this puts the defaults back -->
+      {#if calHasTextOverrides(calDesign(selectedBlock.props.design), selectedBlock.props.texts)}
+        <button type="button" class="ghost action" title={ta('tip.calendar.resetTexts')} onclick={() => setBlockProp('texts', undefined)}>{ta('calendar.resetTexts')}</button>
+      {/if}
     {:else if selectedBlock.type === 'faq'}
       <label class="gridmenu-snap" title={ta('tip.faq.multi')}>
         <input type="checkbox" checked={Boolean(selectedBlock.props.multi)}
@@ -9695,6 +9843,57 @@
       {#if selectedBlock.props.box}
         {@render kortstilUI()}
       {/if}
+      <hr class="gridmenu-divider" />
+    {:else if selectedBlock.type === 'calendar'}
+      {@const calDef = calDesign(selectedBlock.props.design)}
+      <!-- The design, when there is more than the plain one to choose from -->
+      {#if CAL_DESIGNS.length > 1}
+        <label title={ta('tip.calendar.design')}>{ta('calendar.design')}
+          <Dropdown value={calDef.id} options={CAL_DESIGNS.map((d) => [d.id, ta(d.labelKey)])}
+            onchange={setCalendarDesign} /></label>
+      {/if}
+      <!-- The design's colour slots: empty follows the theme -->
+      <p class="panel-strong" title={ta('tip.calendar.slot')}>{ta('calendar.colors')}</p>
+      {#each calDef.slots as slot (slot.key)}
+        <div class="ctl-row" title={ta('tip.calendar.slot')}>
+          <span class="mini-label ctl-name">{ta(slot.labelKey)}</span>
+          <ColorPicker value={selectedBlock.props.colors?.[slot.key] ?? ''} tokens={themeSwatches()} allowClear
+            label={ta(slot.labelKey)} onchange={(v) => setCalColor(slot.key, v || '')} />
+        </div>
+      {/each}
+      <label class="gridmenu-snap" title={ta('tip.calendar.stripe')}>
+        <input type="checkbox" checked={calStripe(calDef, selectedBlock.props.stripe).show}
+          onchange={(e) => setCalStripe({ show: e.target.checked })} />
+        {ta('calendar.stripe')}
+      </label>
+      {#if calStripe(calDef, selectedBlock.props.stripe).show}
+        <div class="ctl-row" title={ta('tip.calendar.stripeColor')}>
+          <span class="mini-label ctl-name">{ta('calendar.stripeColor')}</span>
+          <ColorPicker value={selectedBlock.props.stripe?.color ?? ''} tokens={themeSwatches()} allowClear
+            label={ta('calendar.stripeColor')} onchange={(v) => setCalStripe({ color: v || undefined })} />
+        </div>
+      {/if}
+      <!-- A style per event field: pick the field, then its font, size, weight, italic, underline and colour -->
+      <p class="panel-strong" title={ta('tip.calendar.fieldStyle')}>{ta('calendar.fieldStyle')}</p>
+      <Dropdown value={calField} options={CAL_FIELDS.map((f) => [f, ta(`calendar.field.${f}`)])} onchange={(v) => (calField = v)} />
+      <label>{ta('calendar.fieldFont')}
+        <Dropdown value={calFieldStyleOf().font ?? ''}
+          options={[['', ta('common.inherit')], ...FONT_STACKS.map(([name, value]) => [value, ta(name)])]}
+          onchange={(v) => setCalField({ font: v || undefined })} /></label>
+      <label title={ta('tip.calendar.fieldSize')}>{ta('calendar.fieldSize')}
+        <input type="number" min={CAL_SIZE.min} max={CAL_SIZE.max} value={calFieldStyleOf().size ?? ''} placeholder={ta('common.inherit')}
+          onchange={(e) => setCalField({ size: e.target.value === '' ? undefined : Math.max(CAL_SIZE.min, Math.min(CAL_SIZE.max, Number(e.target.value) || CAL_SIZE.min)) })} /></label>
+      <Choice label={ta('calendar.fieldWeight')} value={calFieldStyleOf().bold === true ? 'bold' : calFieldStyleOf().bold === false ? 'normal' : ''}
+        options={[['', ta('common.inherit')], ['bold', ta('format.bold')], ['normal', ta('calendar.fieldNormal')]]}
+        onchange={(v) => setCalField({ bold: v === 'bold' ? true : v === 'normal' ? false : undefined })} />
+      <span class="toolbar-row">
+        <button type="button" class="tbtn" title={ta('format.italic')} class:active={calFieldStyleOf().italic === true}
+          onclick={() => setCalField({ italic: calFieldStyleOf().italic ? undefined : true })}><i>{ta('format.italicLetter')}</i></button>
+        <button type="button" class="tbtn" title={ta('calendar.fieldUnderline')} class:active={calFieldStyleOf().underline === true}
+          onclick={() => setCalField({ underline: calFieldStyleOf().underline ? undefined : true })}><u>{ta('format.underlineLetter')}</u></button>
+        <ColorPicker value={calFieldStyleOf().color ?? ''} tokens={themeSwatches()} allowClear
+          label={ta('calendar.fieldColor')} onchange={(v) => setCalField({ color: v || undefined })} />
+      </span>
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'faq'}
       <Choice label={ta('lbl.variant')} value={selectedBlock.props.variant === 'list' ? 'list' : 'cards'}
@@ -11317,6 +11516,15 @@
     gap: 8px;
   }
 
+  /* A calendar address offered from another block: one line, cut at the panel's width */
+  .cal-source {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   :global(.lbtn-mark) {
     width: 2.2rem;
     height: 2.2rem;

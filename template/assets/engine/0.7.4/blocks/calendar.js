@@ -6,17 +6,34 @@
  * 'self' only. Locally, without functions, the preview shows demo data and
  * visitors get a quiet empty state.
  *
- * Views: list (date-badge rows), cards, month and next (a panel for the next
- * event). Conventions: "Category: Title" gives category chips with a filter,
- * and a signup link in the description becomes a button. The parser
- * (ics.js) is loaded on the first render, never in the visitor closure. The
- * sources, the view and the count are edited in the Properties panel; the
- * help chip (ADR-0008) explains the conventions.
+ * Views: list (date-badge rows), cards, month, agenda (compact rows under
+ * their month) and next (a card for the next one to three events, with more
+ * listed under «Later»). The sources are merged, and the same event from two
+ * calendars is shown once. A source can carry a name and a colour: the name
+ * is then the category of everything in that calendar (the chip, and the
+ * filter), and the colour tints its chips and date badges. A view with
+ * nothing to show draws a visible empty state, with the owner's own words and
+ * icon when set. Conventions: "Category: Title" gives category chips with a filter,
+ * and a signup link in the description becomes a button.
+ *
+ * The look is a design (calendar-designs.js): the plain one draws every
+ * view on the theme's colours, and every design exposes its colour slots,
+ * an optional edge stripe on its boxes, the sign-up and subscribe buttons as
+ * switches, and a style per event field, all set in the Style tab. The
+ * static texts (the labels and the buttons' words) are rewritten by clicking
+ * them in the preview, with the text toolbar, and stored as HTML under
+ * `texts`. The parser (ics.js) and the design model are loaded on the first
+ * render, never in the visitor closure. The sources, the view and the count
+ * are edited in the Properties panel; the help chip (ADR-0008) explains the
+ * conventions.
  */
 // t() for visitor texts (the site language), ta() for the editor chrome
 // (the admin language), dates() for month and weekday names, tp() for
 // plurals; never called at module level.
 import { t, ta, tp, taApiError, dates, adminLocaleReady } from '../i18n.js';
+import { iconSvg } from '../icons.js';
+import { resolveColor } from '../theme.js';
+import { stripActiveContent } from '../sanitize.js';
 
 const el2 = (tag, className, textContent) => {
   const node = document.createElement(tag);
@@ -50,20 +67,24 @@ async function loadOccurrences(ics, sources, limit) {
   const errors = [];
   const events = [];
   await Promise.all(sources.map(async (source) => {
-    const url = ics.normalizeSourceUrl(source);
-    if (!url) { errors.push(ta('calendar.unknownSource', { source })); return; }
+    const entry = ics.sourceEntry(source);
+    const url = ics.normalizeSourceUrl(entry.url);
+    if (!url) { errors.push(ta('calendar.unknownSource', { source: entry.url })); return; }
     try {
-      events.push(...ics.parseIcs(await fetchSource(url)).events);
+      // Every event remembers the calendar it came from: its name and colour.
+      for (const event of ics.parseIcs(await fetchSource(url)).events) events.push({ ...event, calendar: entry.name, calendarColor: entry.color });
     } catch (error) {
       errors.push(`${url}: ${error.message}`);
     }
   }));
-  const occurrences = ics.expandEvents(events, { from: Date.now() - 6 * 3600 * 1000, max: Math.max(limit * 4, 120) })
+  const expanded = ics.expandEvents(events, { from: Date.now() - 6 * 3600 * 1000, max: Math.max(limit * 4, 120) })
     .map((occ) => {
-      const { category, title } = ics.splitCategory(occ.summary);
-      return { ...occ, category, title, signup: ics.findSignupLink(occ.description) };
+      // A named calendar is the category; otherwise «Category: Title» in the event itself.
+      const split = occ.calendar ? { category: occ.calendar, title: occ.summary } : ics.splitCategory(occ.summary);
+      return { ...occ, ...split, color: occ.calendarColor || '', signup: ics.findSignupLink(occ.description) };
     });
-  return { occurrences, errors };
+  // The sources are one calendar to the visitor: an event that stands in two of them is shown once.
+  return { occurrences: ics.dedupeOccurrences(expanded), errors };
 }
 
 /* ---------- Demo data (preview only, when no sources or feed) ---------- */
@@ -82,6 +103,7 @@ function demoOccurrences() {
 
 const two = (n) => String(n).padStart(2, '0');
 
+/** The date, time and place as one string: the month view's tooltip. The views draw it as fields (makeUi). */
 function metaLine(occ) {
   const start = new Date(occ.start);
   const d = dates();
@@ -95,42 +117,129 @@ function metaLine(occ) {
   return parts.join(' · ');
 }
 
-function badgeNode(occ) {
+/** The event's calendar colour on a box, so its chip, badge and stripe follow the calendar. */
+function tintNode(node, occ) {
+  if (occ.color) node.style.setProperty('--urd-cal-color', resolveColor(occ.color));
+  return node;
+}
+
+function badgeNode(occ, ui) {
   const start = new Date(occ.start);
-  const badge = el2('div', 'urd-collection-badge');
-  badge.append(el2('strong', null, String(start.getDate())), el2('span', null, dates().monthsShort[start.getMonth()]));
+  const badge = tintNode(el2('div', 'urd-collection-badge'), occ);
+  badge.append(ui.field('strong', 'number', String(start.getDate())), ui.field('span', 'date', dates().monthsShort[start.getMonth()]));
   return badge;
 }
 
-function chipNode(category) {
-  return category ? el2('span', 'urd-cal-chip', category) : null;
+function chipNode(category, color, ui) {
+  if (!category) return null;
+  const chip = ui.field('span', 'category', category, 'urd-cal-chip');
+  if (color) chip.style.setProperty('--urd-cal-color', resolveColor(color));
+  return chip;
 }
 
-function signupNode(occ) {
-  if (!occ.signup) return null;
-  const a = el2('a', 'urd-cal-signup', t('calendar.signup'));
-  a.href = occ.signup;
-  a.target = '_blank';
-  a.rel = 'noopener';
-  a.title = t('calendar.signupTitle');
-  return a;
+/* ---------- The design's helpers (fields, static texts, buttons) ---------- */
+
+/**
+ * The helpers a draw hands its view. `field` builds an element for an event
+ * field (title, date, time, place, description, category, number) carrying
+ * the owner's style for that field; `meta` is the date, time and place line
+ * as such fields; `tx` is a static text (a label or a button's words) that
+ * the owner rewrites by clicking it in the preview, where the text toolbar
+ * attaches to it as to a text block; `signup` is the sign-up button when the
+ * block shows them. Every edit posts the whole props with the text under
+ * its key in `texts`, so the editor's draft stays the owner of the words.
+ */
+function makeUi(cd, el, props, ctx) {
+  const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
+  const post = (msg) => window.parent?.postMessage(msg, location.origin);
+  const field = (tag, key, text, className) => {
+    const node = el2(tag, className ? `${className} urd-cal-f-${key}` : `urd-cal-f-${key}`, text);
+    Object.assign(node.style, cd.calFieldCss(props.fieldStyle?.[key]));
+    return node;
+  };
+  const meta = (occ, { date = true, place = true } = {}) => {
+    const start = new Date(occ.start);
+    const d = dates();
+    const parts = [];
+    if (date) {
+      parts.push(field('span', 'date', t('calendar.dateLine', {
+        wd: d.weekdaysShort[(start.getDay() + 6) % 7],
+        d: start.getDate(),
+        m: d.monthsShort[start.getMonth()],
+      })));
+    }
+    if (!occ.allDay) parts.push(field('span', 'time', t('calendar.timeAt', { time: `${two(start.getHours())}:${two(start.getMinutes())}` })));
+    if (place && occ.location) parts.push(field('span', 'place', occ.location));
+    if (!parts.length) return null;
+    const line = el2('div', 'urd-cal-meta');
+    parts.forEach((part, i) => {
+      if (i) line.appendChild(document.createTextNode(' · '));
+      line.appendChild(part);
+    });
+    return line;
+  };
+  const tx = (key, className) => {
+    const node = el2('span', className ? `urd-cal-tx ${className}` : 'urd-cal-tx');
+    const html = cd.calTextHtml(props.texts, key);
+    if (html) {
+      node.innerHTML = html;
+      // Visitor protection: executable code is always stripped on render.
+      stripActiveContent(node);
+    } else {
+      node.textContent = t(cd.CAL_TEXTS[key]);
+    }
+    if (editable) {
+      // The text toolbar attaches to .urd-text fields; a click in the words
+      // edits them and never reaches the button or link around them.
+      node.classList.add('urd-text');
+      node.contentEditable = 'true';
+      node.addEventListener('click', (event) => event.stopPropagation());
+      node.addEventListener('input', () => {
+        post({
+          type: 'urd-edit',
+          sectionId: ctx.section.id,
+          blockId: el.dataset.blockId,
+          props: { ...props, texts: { ...(props.texts ?? {}), [key]: node.innerHTML } },
+        });
+      });
+    }
+    return node;
+  };
+  /** A link whose words are a static text: in the preview the words are edited, never followed. */
+  const link = (className, key, href, title) => {
+    const a = el2('a', className);
+    a.href = href;
+    a.title = title;
+    a.appendChild(tx(key));
+    if (editable) a.addEventListener('click', (event) => event.preventDefault());
+    return a;
+  };
+  const signup = (occ) => {
+    if (!occ.signup || props.showSignup === false) return null;
+    const a = link('urd-cal-signup', 'signup', occ.signup, t('calendar.signupTitle'));
+    a.target = '_blank';
+    a.rel = 'noopener';
+    return a;
+  };
+  return { field, meta, tx, link, signup };
 }
 
 /* ---------- Views ---------- */
 
-function renderList(host, occs) {
+function renderList(host, occs, props, ics, ui) {
   const list = el2('div', 'urd-collection-list');
   for (const occ of occs) {
-    const row = el2('article', 'urd-collection-row');
-    row.appendChild(badgeNode(occ));
+    const row = tintNode(el2('article', 'urd-collection-row'), occ);
+    row.appendChild(badgeNode(occ, ui));
     const body = el2('div', 'urd-collection-body');
     const titleRow = el2('div', 'urd-cal-titlerow');
-    titleRow.appendChild(el2('strong', 'urd-collection-title', occ.title));
-    const chip = chipNode(occ.category);
+    titleRow.appendChild(ui.field('strong', 'title', occ.title, 'urd-collection-title'));
+    const chip = chipNode(occ.category, occ.color, ui);
     if (chip) titleRow.appendChild(chip);
     body.appendChild(titleRow);
-    body.appendChild(el2('div', 'urd-cal-meta', metaLine(occ)));
-    const signup = signupNode(occ);
+    const meta = ui.meta(occ);
+    if (meta) body.appendChild(meta);
+    const signup = ui.signup(occ);
     if (signup) body.appendChild(signup);
     row.appendChild(body);
     list.appendChild(row);
@@ -138,52 +247,136 @@ function renderList(host, occs) {
   host.appendChild(list);
 }
 
-function renderCards(host, occs) {
+function renderCards(host, occs, props, ics, ui) {
   const grid = el2('div', 'urd-collection-cards');
   for (const occ of occs) {
-    const card = el2('article', 'urd-collection-card');
+    const card = tintNode(el2('article', 'urd-collection-card'), occ);
     const top = el2('div', 'urd-cal-titlerow');
-    top.appendChild(el2('span', 'urd-collection-date', metaLine(occ)));
-    const chip = chipNode(occ.category);
+    const when = ui.meta(occ);
+    if (when) {
+      when.className = 'urd-collection-date';
+      top.appendChild(when);
+    }
+    const chip = chipNode(occ.category, occ.color, ui);
     if (chip) top.appendChild(chip);
     card.appendChild(top);
-    card.appendChild(el2('strong', 'urd-collection-title', occ.title));
+    card.appendChild(ui.field('strong', 'title', occ.title, 'urd-collection-title'));
     const excerpt = String(occ.description ?? '').split('\n')[0].slice(0, 140);
-    if (excerpt) card.appendChild(el2('div', 'urd-collection-text', excerpt));
-    const signup = signupNode(occ);
+    if (excerpt) card.appendChild(ui.field('div', 'description', excerpt, 'urd-collection-text'));
+    const signup = ui.signup(occ);
     if (signup) card.appendChild(signup);
     grid.appendChild(card);
   }
   host.appendChild(grid);
 }
 
-function renderNext(host, occs) {
-  const occ = occs[0];
-  if (!occ) return;
-  const panel = el2('div', 'urd-cal-next');
-  panel.appendChild(el2('div', 'urd-cal-next-label', t('calendar.next')));
-  const row = el2('div', 'urd-cal-next-row');
-  row.appendChild(badgeNode(occ));
+/** One featured event in the «next» card: badge, title, when and where, the countdown and the signup. */
+function nextRow(occ, ui) {
+  const row = tintNode(el2('div', 'urd-cal-next-row'), occ);
+  row.appendChild(badgeNode(occ, ui));
   const body = el2('div', null);
   const titleRow = el2('div', 'urd-cal-titlerow');
-  titleRow.appendChild(el2('strong', 'urd-cal-next-title', occ.title));
-  const chip = chipNode(occ.category);
+  titleRow.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-next-title'));
+  const chip = chipNode(occ.category, occ.color, ui);
   if (chip) titleRow.appendChild(chip);
   body.appendChild(titleRow);
-  body.appendChild(el2('div', 'urd-cal-meta', metaLine(occ)));
+  const meta = ui.meta(occ);
+  if (meta) body.appendChild(meta);
   const days = Math.max(0, Math.round((occ.start - Date.now()) / (24 * 3600 * 1000)));
   // Dedicated keys instead of Intl.RelativeTimeFormat: the exclaiming
   // today wording is kept, and ICU has no North Sami (it would fall back to
   // a bare number).
   body.appendChild(el2('div', 'urd-cal-next-count', days === 0 ? t('calendar.today') : days === 1 ? t('calendar.tomorrow') : tp('calendar.inDays', days)));
-  const signup = signupNode(occ);
+  const signup = ui.signup(occ);
   if (signup) body.appendChild(signup);
   row.appendChild(body);
-  panel.appendChild(row);
+  return row;
+}
+
+/**
+ * The «next» card: the next one to three events in full (props.nextCount),
+ * and as many more as props.laterCount says as one-line rows under «Later».
+ */
+function renderNext(host, occs, props, ics, ui) {
+  if (!occs.length) return;
+  const count = ics.nextCount(props.nextCount);
+  const panel = el2('div', 'urd-cal-next');
+  // One event is «the next event»; several are what is on right now.
+  const label = el2('div', 'urd-cal-next-label');
+  label.appendChild(ui.tx(count > 1 ? 'now' : 'next'));
+  panel.appendChild(label);
+  for (const occ of occs.slice(0, count)) panel.appendChild(nextRow(occ, ui));
+  const later = occs.slice(count, count + ics.laterCount(props.laterCount));
+  if (later.length) {
+    const laterLabel = el2('div', 'urd-cal-next-label urd-cal-later-label');
+    laterLabel.appendChild(ui.tx('later'));
+    panel.appendChild(laterLabel);
+    const list = el2('ul', 'urd-cal-later');
+    for (const occ of later) {
+      const item = tintNode(el2('li', null), occ);
+      const when = ui.meta(occ, { place: false });
+      if (when) {
+        when.className = 'urd-cal-later-when';
+        item.appendChild(when);
+      }
+      item.appendChild(ui.field('span', 'title', occ.title, 'urd-cal-later-title'));
+      list.appendChild(item);
+    }
+    panel.appendChild(list);
+  }
   host.appendChild(panel);
 }
 
-function renderMonth(host, occs) {
+/** The agenda: compact rows under their month, for a programme that is read rather than browsed. */
+function renderAgenda(host, occs, props, ics, ui) {
+  const wrap = el2('div', 'urd-cal-agenda');
+  for (const group of ics.groupByMonth(occs)) {
+    wrap.appendChild(el2('h4', 'urd-cal-agenda-month', `${dates().months[group.month]} ${group.year}`));
+    const list = el2('ul', 'urd-cal-agenda-list');
+    for (const occ of group.items) {
+      const start = new Date(occ.start);
+      const item = tintNode(el2('li', 'urd-cal-agenda-row'), occ);
+      const day = el2('span', 'urd-cal-agenda-day');
+      day.append(ui.field('strong', 'number', String(start.getDate())), ui.field('span', 'date', dates().weekdaysShort[(start.getDay() + 6) % 7]));
+      const body = el2('span', 'urd-cal-agenda-body');
+      const titleRow = el2('span', 'urd-cal-titlerow');
+      titleRow.appendChild(ui.field('strong', 'title', occ.title));
+      const chip = chipNode(occ.category, occ.color, ui);
+      if (chip) titleRow.appendChild(chip);
+      body.appendChild(titleRow);
+      const where = ui.meta(occ, { date: false });
+      if (where) body.appendChild(where);
+      const signup = ui.signup(occ);
+      if (signup) body.appendChild(signup);
+      item.append(day, body);
+      list.appendChild(item);
+    }
+    wrap.appendChild(list);
+  }
+  host.appendChild(wrap);
+}
+
+/**
+ * The empty state: an icon and a line of text, in every view. The words are
+ * the owner's (props.emptyText) or the translated default; the icon is an id
+ * from the icon library (props.emptyIcon), the calendar when none is set and
+ * nothing at all for 'none'.
+ */
+function emptyNode(props) {
+  const box = el2('div', 'urd-cal-empty');
+  const icon = props.emptyIcon === 'none' ? null : (iconSvg(props.emptyIcon) || iconSvg('calendar'));
+  if (icon) {
+    const mark = el2('span', 'urd-cal-empty-icon');
+    mark.setAttribute('aria-hidden', 'true');
+    mark.innerHTML = icon;
+    box.appendChild(mark);
+  }
+  const words = typeof props.emptyText === 'string' ? props.emptyText.trim() : '';
+  box.appendChild(el2('p', 'urd-cal-empty-text', words || t('calendar.empty')));
+  return box;
+}
+
+function renderMonth(host, occs, props, ics, ui) {
   const now = new Date();
   let shown = { y: now.getFullYear(), mo: now.getMonth() };
 
@@ -220,7 +413,7 @@ function renderMonth(host, occs) {
         return s.getFullYear() === shown.y && s.getMonth() === shown.mo && s.getDate() === d;
       });
       for (const occ of todays.slice(0, 3)) {
-        const pill = el2('div', 'urd-cal-pill', occ.title);
+        const pill = tintNode(ui.field('div', 'title', occ.title, 'urd-cal-pill'), occ);
         pill.title = `${occ.title}\n${metaLine(occ)}`;
         cell.appendChild(pill);
       }
@@ -234,43 +427,43 @@ function renderMonth(host, occs) {
   host.appendChild(wrap);
 }
 
-const VIEWS = { list: renderList, cards: renderCards, month: renderMonth, next: renderNext };
+const VIEWS = { list: renderList, cards: renderCards, month: renderMonth, next: renderNext, agenda: renderAgenda };
 
 /* ---------- Subscribe and category filter ---------- */
 
-function subscribeRow(ics, sources) {
+function subscribeRow(ics, sources, ui) {
   const row = el2('div', 'urd-cal-subscribe');
   for (const source of sources) {
-    const links = ics.subscribeLinks(source);
+    const links = ics.subscribeLinks(ics.sourceEntry(source).url);
     if (!links) continue;
-    const webcal = el2('a', 'urd-cal-sub-btn', sources.length > 1 ? t('calendar.subscribeMulti') : t('calendar.subscribe'));
-    webcal.href = links.webcal;
-    webcal.title = t('calendar.subscribeTitle');
-    row.appendChild(webcal);
+    row.appendChild(ui.link('urd-cal-sub-btn', sources.length > 1 ? 'subscribeMulti' : 'subscribe', links.webcal, t('calendar.subscribeTitle')));
     if (links.google) {
-      const google = el2('a', 'urd-cal-sub-btn', t('calendar.addGoogle'));
-      google.href = links.google;
+      const google = ui.link('urd-cal-sub-btn', 'addGoogle', links.google, t('calendar.addGoogleTitle'));
       google.target = '_blank';
       google.rel = 'noopener';
-      google.title = t('calendar.addGoogleTitle');
       row.appendChild(google);
     }
   }
   return row.children.length ? row : null;
 }
 
-function categoryRow(occs, active, onpick) {
+function categoryRow(occs, active, onpick, ui) {
   const categories = [...new Set(occs.map((occ) => occ.category).filter(Boolean))];
   if (categories.length < 2) return null;
+  const colourOf = (category) => occs.find((occ) => occ.category === category && occ.color)?.color ?? '';
   const row = el2('div', 'urd-cal-chips');
-  const all = el2('button', 'urd-cal-chipbtn', t('calendar.all'));
+  const all = el2('button', 'urd-cal-chipbtn');
   all.type = 'button';
+  all.appendChild(ui.tx('all'));
   if (!active) all.classList.add('selected');
   all.addEventListener('click', () => onpick(null));
   row.appendChild(all);
   for (const category of categories) {
-    const btn = el2('button', 'urd-cal-chipbtn', category);
+    const btn = el2('button', 'urd-cal-chipbtn');
     btn.type = 'button';
+    btn.appendChild(ui.field('span', 'category', category));
+    const colour = colourOf(category);
+    if (colour) btn.style.setProperty('--urd-cal-color', resolveColor(colour));
     if (active === category) btn.classList.add('selected');
     btn.addEventListener('click', () => onpick(category));
     row.appendChild(btn);
@@ -281,21 +474,31 @@ function categoryRow(occs, active, onpick) {
 /* ---------- The views' names (the variants in the block menus) ---------- */
 
 /** View id + label KEY (looked up with ta at use time; never at module level). */
-const VIEW_NAMES = [['list', 'calendar.viewList'], ['cards', 'calendar.viewCards'], ['month', 'calendar.viewMonth'], ['next', 'calendar.viewNext']];
+const VIEW_NAMES = [['list', 'calendar.viewList'], ['cards', 'calendar.viewCards'], ['month', 'calendar.viewMonth'], ['next', 'calendar.viewNext'], ['agenda', 'calendar.viewAgenda']];
 
 /* ---------- The block ---------- */
 
 function renderCalendar(el, props, ctx) {
   const host = el2('div', 'urd-cal');
   el.appendChild(host);
-  import('../ics.js').then((ics) => {
-    if (host.isConnected) drawCalendar(ics, el, host, props, ctx);
+  // The parser and the design model are loaded together, on the first render.
+  Promise.all([import('../ics.js'), import('../calendar-designs.js')]).then(([ics, cd]) => {
+    if (host.isConnected) drawCalendar(ics, cd, el, host, props, ctx);
   });
 }
 
-function drawCalendar(ics, el, host, props, ctx) {
-  const sources = (props.sources ?? []).filter(Boolean);
+function drawCalendar(ics, cd, el, host, props, ctx) {
+  const sources = (props.sources ?? []).filter((source) => ics.sourceEntry(source).url);
   let activeCategory = null;
+  // The design: its class, the owner's colour slots and the edge stripe on the host.
+  const design = cd.calDesign(props.design);
+  const view = cd.calView(props);
+  host.className = `urd-cal urd-cal-d-${design.id}`;
+  for (const [name, value] of Object.entries(cd.calSlotVars(design, props.colors))) host.style.setProperty(name, value);
+  const stripe = cd.calStripe(design, props.stripe);
+  host.classList.toggle('urd-cal-stripes', stripe.show);
+  if (stripe.color) host.style.setProperty('--urd-cal-stripe', stripe.color);
+  const ui = makeUi(cd, el, props, ctx);
 
   const draw = (occurrences, note) => {
     host.replaceChildren();
@@ -315,22 +518,22 @@ function drawCalendar(ics, el, host, props, ctx) {
     const filtered = activeCategory
       ? occurrences.filter((occ) => occ.category === activeCategory)
       : occurrences;
-    // The max count applies to list and cards; month shows its month and next shows one.
-    const limited = (props.view === 'month' || props.view === 'next')
+    // The max count applies to list, cards and agenda; month shows its month and next has its own two counts.
+    const limited = (view === 'month' || view === 'next')
       ? filtered
       : filtered.slice(0, Math.max(1, props.limit ?? 6));
     const chips = props.showCategories === false ? null : categoryRow(occurrences, activeCategory, (category) => {
       activeCategory = category;
       draw(occurrences, note);
-    });
+    }, ui);
     if (chips) host.appendChild(chips);
     if (!limited.length) {
-      host.appendChild(el2('div', 'urd-cal-empty', t('calendar.empty')));
+      host.appendChild(emptyNode(props));
     } else {
-      (VIEWS[props.view] ?? renderList)(host, limited);
+      (VIEWS[view] ?? renderList)(host, limited, props, ics, ui);
     }
     if (props.showSubscribe !== false && sources.length) {
-      const row = subscribeRow(ics, sources);
+      const row = subscribeRow(ics, sources, ui);
       if (row) host.appendChild(row);
     }
     // The note is editing chrome on the block, not content: it hangs below
@@ -353,6 +556,8 @@ function drawCalendar(ics, el, host, props, ctx) {
       host.style.overflow = 'hidden';
       draw(demoOccurrences(), ta('calendar.demoNote'));
     });
+    // Visitors see the empty state, as for a calendar with nothing coming up.
+    else draw([], null);
     return;
   }
   delete el.dataset.urdDemo;

@@ -95,6 +95,8 @@ export default {
     'calendar.inDays.other': '{n} gün sonra',
     'calendar.more': '+{n}',
     'calendar.next': 'Sonraki etkinlik',
+    'calendar.now': 'Sırada',
+    'calendar.later': 'Daha sonra',
     'calendar.nextMonth': 'Sonraki ay',
     'calendar.prevMonth': 'Önceki ay',
     'calendar.signup': 'Kaydol',

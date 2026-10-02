@@ -99,6 +99,8 @@ export default {
     'calendar.inDays.other': 'Om {n} dager',
     'calendar.more': '+{n}',
     'calendar.next': 'Neste arrangement',
+    'calendar.now': 'Akkurat nå',
+    'calendar.later': 'Senere',
     'calendar.nextMonth': 'Neste måned',
     'calendar.prevMonth': 'Forrige måned',
     'calendar.signup': 'Meld deg på',

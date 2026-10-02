@@ -96,6 +96,8 @@ export default {
     'calendar.inDays.other': 'In {n} days',
     'calendar.more': '+{n}',
     'calendar.next': 'Next event',
+    'calendar.now': 'Coming up',
+    'calendar.later': 'Later',
     'calendar.nextMonth': 'Next month',
     'calendar.prevMonth': 'Previous month',
     'calendar.signup': 'Sign up',

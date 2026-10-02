@@ -1031,11 +1031,50 @@ textarea.urd-form-input {
 
 /* The calendar block: the four views share the collection block's rows and
    cards; the chips, the next panel and the month grid are its own. */
+/* The calendar block. Its colours are slots the owner can override in the
+   Style tab (calendar-designs.js writes --urd-cal-s-<slot> on the host);
+   every slot falls back to the theme, so a block without overrides follows
+   the theme as before. --urd-cal-color is the event's own calendar colour,
+   set per box by the block. */
 .urd-cal {
+  --urd-cal-accent: var(--urd-cal-s-accent, var(--urd-color-accent));
+  --urd-cal-surface: var(--urd-cal-s-surface, var(--urd-color-surface));
+  --urd-cal-line: var(--urd-cal-s-line, color-mix(in srgb, var(--urd-color-text) 12%, transparent));
   position: relative;
   display: grid;
   gap: 12px;
   width: 100%;
+}
+
+.urd-cal .urd-collection-card {
+  background: var(--urd-cal-surface);
+  border-color: var(--urd-cal-line);
+}
+
+/* The edge stripe on the design's boxes: the owner's colour, else the
+   event's calendar colour, else the accent. */
+.urd-cal-stripes .urd-collection-row,
+.urd-cal-stripes .urd-collection-card,
+.urd-cal-stripes .urd-cal-next-row,
+.urd-cal-stripes .urd-cal-agenda-row {
+  padding-left: 10px;
+  border-left: 3px solid var(--urd-cal-stripe, var(--urd-cal-color, var(--urd-cal-accent)));
+}
+
+.urd-cal-stripes .urd-collection-card {
+  padding-left: 1rem;
+}
+
+/* A static text (a label, a button's words) is edited in place in the
+   preview, where the text toolbar attaches to it. */
+.urd-cal-tx[contenteditable] {
+  min-width: 1ch;
+  cursor: text;
+}
+
+.urd-cal-tx[contenteditable]:focus {
+  outline: 1px dashed var(--urd-cal-accent);
+  outline-offset: 2px;
 }
 
 .urd-cal-titlerow {
@@ -1053,8 +1092,8 @@ textarea.urd-form-input {
 .urd-cal-chip {
   padding: 2px 8px;
   font-size: 0.72em;
-  background: color-mix(in srgb, var(--urd-color-accent) 18%, transparent);
-  border: 1px solid color-mix(in srgb, var(--urd-color-accent) 45%, transparent);
+  background: var(--urd-cal-s-chip, color-mix(in srgb, var(--urd-cal-color, var(--urd-cal-accent)) 18%, transparent));
+  border: 1px solid color-mix(in srgb, var(--urd-cal-color, var(--urd-cal-accent)) 45%, transparent);
   border-radius: 999px;
 }
 
@@ -1063,7 +1102,7 @@ textarea.urd-form-input {
   margin-top: 4px;
   font-size: 0.85em;
   font-weight: 600;
-  color: var(--urd-color-accent);
+  color: var(--urd-cal-accent);
   text-decoration: none;
 }
 
@@ -1090,8 +1129,17 @@ textarea.urd-form-input {
 
 .urd-cal-chipbtn.selected {
   color: #fff;
-  background: var(--urd-color-accent);
-  border-color: var(--urd-color-accent);
+  background: var(--urd-cal-color, var(--urd-cal-accent));
+  border-color: var(--urd-cal-color, var(--urd-cal-accent));
+}
+
+/* A named calendar with a colour of its own tints its chips and date badges. */
+.urd-cal .urd-collection-badge {
+  border-color: color-mix(in srgb, var(--urd-cal-color, var(--urd-color-text)) 35%, transparent);
+}
+
+.urd-cal .urd-collection-badge strong {
+  color: var(--urd-cal-color, inherit);
 }
 
 .urd-cal-subscribe {
@@ -1105,19 +1153,19 @@ textarea.urd-form-input {
   font-size: 0.82em;
   color: inherit;
   text-decoration: none;
-  background: var(--urd-color-surface);
+  background: var(--urd-cal-surface);
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 25%, transparent);
   border-radius: var(--urd-radius-sm);
 }
 
 .urd-cal-sub-btn:hover {
-  border-color: var(--urd-color-accent);
+  border-color: var(--urd-cal-accent);
 }
 
 .urd-cal-next {
   padding: 16px;
-  background: var(--urd-color-surface);
-  border: 1px solid color-mix(in srgb, var(--urd-color-text) 12%, transparent);
+  background: var(--urd-cal-surface);
+  border: 1px solid var(--urd-cal-line);
   border-radius: var(--urd-radius-md);
 }
 
@@ -1145,7 +1193,7 @@ textarea.urd-form-input {
   margin-top: 4px;
   font-size: 0.85em;
   font-weight: 600;
-  color: var(--urd-color-accent);
+  color: var(--urd-cal-accent);
 }
 
 .urd-cal-month {
@@ -1164,14 +1212,14 @@ textarea.urd-form-input {
   height: 30px;
   font: inherit;
   color: inherit;
-  background: var(--urd-color-surface);
+  background: var(--urd-cal-surface);
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 20%, transparent);
   border-radius: 50%;
   cursor: pointer;
 }
 
 .urd-cal-nav:hover {
-  border-color: var(--urd-color-accent);
+  border-color: var(--urd-cal-accent);
 }
 
 .urd-cal-grid {
@@ -1194,7 +1242,7 @@ textarea.urd-form-input {
   gap: 2px;
   min-height: 64px;
   padding: 4px;
-  background: color-mix(in srgb, var(--urd-color-surface) 70%, transparent);
+  background: color-mix(in srgb, var(--urd-cal-surface) 70%, transparent);
   border: 1px solid color-mix(in srgb, var(--urd-color-text) 8%, transparent);
   border-radius: var(--urd-radius-sm);
 }
@@ -1205,7 +1253,7 @@ textarea.urd-form-input {
 }
 
 .urd-cal-today {
-  border-color: var(--urd-color-accent);
+  border-color: var(--urd-cal-accent);
 }
 
 .urd-cal-daynum {
@@ -1220,7 +1268,7 @@ textarea.urd-form-input {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  background: color-mix(in srgb, var(--urd-color-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--urd-cal-accent) 22%, transparent);
   border-radius: 4px;
 }
 
@@ -1229,9 +1277,124 @@ textarea.urd-form-input {
   opacity: 0.6;
 }
 
+/* The empty state: an icon over a line of text, centred in the block, so a
+   calendar with nothing coming up reads as empty rather than as broken. */
 .urd-cal-empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 1.4rem 1rem;
+  text-align: center;
+  color: color-mix(in srgb, var(--urd-color-text) 70%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--urd-color-text) 22%, transparent);
+  border-radius: var(--urd-radius-md);
+}
+
+.urd-cal-empty-icon {
+  display: block;
+  width: 2.2rem;
+  height: 2.2rem;
+  color: var(--urd-cal-accent);
+}
+
+.urd-cal-empty-text {
+  margin: 0;
   font-size: 0.9em;
-  opacity: 0.65;
+}
+
+/* Several events in the «next» card stand under each other with a rule between. */
+.urd-cal-next-row + .urd-cal-next-row {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--urd-cal-line);
+}
+
+/* «Later»: one line per event under the featured ones. */
+.urd-cal-later-label {
+  margin: 16px 0 6px;
+}
+
+.urd-cal-later {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9em;
+}
+
+.urd-cal-later li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+}
+
+.urd-cal-later-when {
+  flex: none;
+  opacity: 0.7;
+}
+
+.urd-cal-later-title {
+  font-weight: 600;
+}
+
+/* The agenda: compact rows under their month. */
+.urd-cal-agenda {
+  display: grid;
+  gap: 4px;
+}
+
+.urd-cal-agenda-month {
+  margin: 10px 0 2px;
+  font-family: var(--urd-font-heading);
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--urd-cal-accent);
+}
+
+.urd-cal-agenda-month:first-child {
+  margin-top: 0;
+}
+
+.urd-cal-agenda-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.urd-cal-agenda-row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 8px 0;
+  border-top: 1px solid var(--urd-cal-line);
+}
+
+.urd-cal-agenda-day {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  width: 4.2em;
+  font-variant-numeric: tabular-nums;
+}
+
+.urd-cal-agenda-day strong {
+  font-size: 1.15em;
+}
+
+.urd-cal-agenda-day span {
+  font-size: 0.78em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.urd-cal-agenda-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
 }
 
 /* The preview's notes under the calendar (demo data, a failed feed) hang

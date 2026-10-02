@@ -9,6 +9,7 @@ import { engineImport } from './_engine.mjs';
 const {
   parseIcs, expandEvents, partsToMs,
   splitCategory, findSignupLink, normalizeSourceUrl, subscribeLinks,
+  nextCount, laterCount, NEXT_COUNT, LATER_COUNT, dedupeOccurrences, groupByMonth, sourceEntry,
 } = await engineImport('ics.js');
 
 // The ICS fixtures carry deliberate Norwegian event content (titles, locations, signup lines): calendar feeds are user data.
@@ -141,4 +142,60 @@ test('subscribeLinks: webcal always, Google link for Google sources', () => {
   const plain = subscribeLinks('https://forening.no/kal.ics');
   assert.equal(plain.webcal, 'webcal://forening.no/kal.ics');
   assert.equal(plain.google, null);
+});
+
+/* ---------- The view logic of 0.7.13.13 ---------- */
+
+test('nextCount and laterCount: inside their bounds, with the look a stored block keeps as the default', () => {
+  assert.equal(nextCount(undefined), NEXT_COUNT.dflt);
+  assert.equal(NEXT_COUNT.dflt, 1);
+  assert.equal(nextCount(2), 2);
+  assert.equal(nextCount(9), 3);
+  assert.equal(nextCount(0), 1);
+  assert.equal(nextCount('tre'), 1);
+  assert.equal(laterCount(undefined), 0);
+  assert.equal(LATER_COUNT.dflt, 0);
+  assert.equal(laterCount(4), 4);
+  assert.equal(laterCount(99), 10);
+  assert.equal(laterCount(-2), 0);
+});
+
+test('dedupeOccurrences: the same event from two calendars is shown once', () => {
+  const t0 = Date.UTC(2026, 9, 10, 17, 0);
+  const merged = dedupeOccurrences([
+    { start: t0, title: 'Årsmøte', location: '', signup: null, category: null },
+    { start: t0 + 3600000, title: 'Quiz', location: 'Kjelleren', signup: null },
+    { start: t0, title: '  årsmøte ', location: 'Aulaen', signup: 'https://example.org/meld-pa', category: 'Møte' },
+    { start: t0, title: 'Styremøte', location: '', signup: null },
+  ]);
+  assert.deepEqual(merged.map((occ) => occ.title), ['Årsmøte', 'Quiz', 'Styremøte']);
+  // The first copy takes over what the later copy has and it lacks.
+  assert.equal(merged[0].location, 'Aulaen');
+  assert.equal(merged[0].signup, 'https://example.org/meld-pa');
+  assert.equal(merged[0].category, 'Møte');
+  // The same title at another time is another event, and the input is left alone.
+  const input = [{ start: t0, title: 'Quiz' }, { start: t0 + 7 * 86400000, title: 'Quiz' }];
+  assert.equal(dedupeOccurrences(input).length, 2);
+  assert.notEqual(dedupeOccurrences(input)[0], input[0]);
+  assert.deepEqual(dedupeOccurrences(undefined), []);
+});
+
+test('groupByMonth: the occurrences under their month, in the order given', () => {
+  const at = (y, m, d) => new Date(y, m, d, 12).getTime();
+  const groups = groupByMonth([
+    { start: at(2026, 9, 3), title: 'a' }, { start: at(2026, 9, 28), title: 'b' },
+    { start: at(2026, 10, 1), title: 'c' }, { start: at(2027, 0, 5), title: 'd' },
+  ]);
+  assert.deepEqual(groups.map((g) => [g.year, g.month, g.items.map((o) => o.title).join('')]),
+    [[2026, 9, 'ab'], [2026, 10, 'c'], [2027, 0, 'd']]);
+  assert.deepEqual(groupByMonth([]), []);
+  assert.deepEqual(groupByMonth(null), []);
+});
+
+test('sourceEntry: a bare address, or an address with a name and a colour', () => {
+  assert.deepEqual(sourceEntry('  abc@group.calendar.google.com '), { url: 'abc@group.calendar.google.com', name: '', color: '' });
+  assert.deepEqual(sourceEntry({ url: 'https://x.test/a.ics', name: ' Styret ', color: 'accent' }), { url: 'https://x.test/a.ics', name: 'Styret', color: 'accent' });
+  assert.deepEqual(sourceEntry({ url: 'https://x.test/a.ics' }), { url: 'https://x.test/a.ics', name: '', color: '' });
+  assert.deepEqual(sourceEntry({ name: 7, color: null }), { url: '', name: '', color: '' });
+  assert.deepEqual(sourceEntry(undefined), { url: '', name: '', color: '' });
 });
