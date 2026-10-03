@@ -3,6 +3,7 @@
   // on text blocks, drafts in localStorage and a publish button against
   // /api/github/commit.
   import { tick } from 'svelte';
+  import { SvelteSet } from 'svelte/reactivity';
   import { fly } from 'svelte/transition';
   import { createDraftStore } from './lib/draftStore.js';
   import ColorPicker from './lib/ColorPicker.svelte';
@@ -124,7 +125,7 @@
   import { isSafeHref, toolOrder } from '$engine/nav-model.js';
   import { frameAtPoint } from '$engine/place.js';
   import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '$engine/icons.js';
-  import { CAL_FIELDS, CAL_SIZE, CAL_SWITCH_VIEWS, calDesign, calView, calStripe, calHasTextOverrides, calDesignGroups, calOptionDefs, calOptions } from '$engine/calendar-designs.js';
+  import { CAL_FIELDS, CAL_SIZE, CAL_SWITCH_VIEWS, calDesign, calView, calStripe, calHasTextOverrides, calDesignGroups, calOptionDefs, calOptions, calScale, CAL_SCALE } from '$engine/calendar-designs.js';
   import { calendarThumb } from '$engine/calendar-thumb.js';
 
   /** The background layer types in the order they are offered in the panel. */
@@ -1007,6 +1008,8 @@
       type: block.type,
       decor: Boolean(block.decor),
       hideMobile: Boolean(block.hideMobile),
+      fit: block.fit === 'shrink' ? 'shrink' : undefined,
+      fitMin: typeof block.fitMin === 'number' ? block.fitMin : undefined,
       props: JSON.parse(JSON.stringify(block.props)),
       frame: { ...block.frames.desktop },
       animation: block.animation ? JSON.parse(JSON.stringify(block.animation)) : null,
@@ -1038,6 +1041,83 @@
    *  Properties panel. */
   let blockMenu = $state(null);
 
+  /** The element menu's width: wide (the three areas as columns) or narrow
+   *  (as tabs). The admin setting is the width a menu opens in, kept in the
+   *  browser; the button in the menu's head switches for the session. */
+  const MENU_WIDTH_KEY = 'urd-admin-menu-width';
+  let menuWidthPref = $state(localStorage.getItem(MENU_WIDTH_KEY) === 'narrow' ? 'narrow' : 'wide');
+  let menuWide = $state(localStorage.getItem(MENU_WIDTH_KEY) !== 'narrow');
+  function setMenuWidthPref(v) {
+    menuWidthPref = v === 'narrow' ? 'narrow' : 'wide';
+    menuWide = menuWidthPref === 'wide';
+    if (menuWidthPref === 'narrow') localStorage.setItem(MENU_WIDTH_KEY, 'narrow');
+    else localStorage.removeItem(MENU_WIDTH_KEY);
+  }
+  const MENU_WIDE_ICON = '<svg viewBox="0 0 18 18" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4L2 9l4 5M12 4l4 5-4 5"/></svg>';
+  const MENU_NARROW_ICON = '<svg viewBox="0 0 18 18" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4l4 5-4 5M16 4l-4 5 4 5"/></svg>';
+
+  /** The groups of the element menu that stand open, by id; a group stays as it was left when another block is selected. */
+  const menuOpen = new SvelteSet();
+
+  /** The room for the floating menu: from the right edge of the admin's own
+   *  panels to the window's edge. The menu never lies over the panels, and
+   *  where the wide menu does not fit, the menu is narrow whatever is chosen. */
+  const MENU_WIDE_W = 740;
+  let menuMin = $state(8);
+  let menuRoom = $state(Infinity);
+  function measureMenuRoom() {
+    const left = frameWrapEl?.getBoundingClientRect().left ?? 0;
+    menuMin = Math.round(left) + 8;
+    menuRoom = window.innerWidth - menuMin - 8;
+  }
+  const menuIsWide = $derived(menuWide && menuRoom >= MENU_WIDE_W);
+  $effect(() => {
+    if (!blockMenu) return;
+    measureMenuRoom();
+    window.addEventListener('resize', measureMenuRoom);
+    return () => window.removeEventListener('resize', measureMenuRoom);
+  });
+
+  /**
+   * The quick row of the element menu: the settings used most, above the
+   * areas. A block type's own come first (the calendar: design, max count,
+   * subscribe button), then the two every block has (how it fits a narrower
+   * screen, and whether it shows on a phone).
+   */
+  function menuQuickItems() {
+    const b = selectedBlock;
+    const items = [];
+    if (b.type === 'calendar') {
+      items.push({ id: 'design', label: ta('calendar.design'), kind: 'open', value: ta(calDesign(b.props.design).labelKey), run: () => (menuPickerFor = b.blockId) });
+      if (['list', 'cards', 'agenda'].includes(calView(b.props))) {
+        items.push({ id: 'limit', label: ta('lbl.maxCount'), kind: 'number', min: 1, max: 50, value: b.props.limit ?? 6, set: (v) => setBlockProp('limit', Math.max(1, Math.min(50, Number(v) || 6))) });
+      }
+      items.push({ id: 'subscribe', label: ta('quick.subscribe'), kind: 'choice', value: b.props.showSubscribe !== false ? 'on' : 'off', options: [['on', ta('common.on')], ['off', ta('common.off')]], set: (v) => setBlockProp('showSubscribe', v === 'on') });
+    }
+    const byWidth = FIT_BY_WIDTH.has(b.type);
+    items.push({ id: 'fit', label: ta('quick.fit'), kind: 'choice', value: b.fit === 'shrink' ? 'shrink' : 'wrap',
+      options: byWidth ? [['wrap', ta('quick.fit.fluid')], ['shrink', ta('quick.fit.floor')]] : [['wrap', ta('quick.fit.wrap')], ['shrink', ta('quick.fit.shrink')]],
+      set: (v) => setBlockFit(v) });
+    items.push({ id: 'phone', label: ta('quick.phone'), kind: 'choice', value: b.hideMobile ? 'off' : 'on', options: [['on', ta('quick.phone.show')], ['off', ta('quick.phone.hide')]], set: (v) => setBlockHideMobile(v === 'off') });
+    return items;
+  }
+
+  /** The block whose design picker stands open over the menu; null when the menu shows its areas. */
+  let menuPickerFor = $state(null);
+  const menuPicking = () => selectedBlock?.type === 'calendar' && menuPickerFor === selectedBlock.blockId;
+
+  /** What a closed group shows: how the block fits a narrower screen, and its motion. */
+  function menuFitValue() {
+    const byWidth = FIT_BY_WIDTH.has(selectedBlock.type);
+    if (selectedBlock.fit === 'shrink') return byWidth ? ta('opt.fit.floor') : ta('opt.fit.shrink');
+    return byWidth ? ta('opt.fit.fluid') : ta('opt.fit.wrap');
+  }
+  function menuMotionValue() {
+    const id = isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : selectedBlock.hover?.type;
+    const hit = id ? [...BLOCK_ENTRANCE_OPTIONS, ...HOVER_OPTIONS].find(([v]) => v === id) : null;
+    return hit ? hit[1] : ta('common.none');
+  }
+
   /** Reduced motion: exit transitions (the draft cluster) become a plain cut. */
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -1066,7 +1146,8 @@
   function onBlockMenu(msg) {
     onSelectBlock(msg);
     if (!selectedBlock) return;
-    const MENU_W = 300;
+    measureMenuRoom();
+    const MENU_W = Math.min(menuWide && menuRoom >= MENU_WIDE_W ? MENU_WIDE_W : 400, window.innerWidth - 16);
     const ir = iframeEl?.getBoundingClientRect();
     if (!ir) return;
     // Beside the block: to the right if there is room, otherwise to the
@@ -1102,11 +1183,23 @@
     // The key includes the property name: changing the label and then the
     // style must be TWO undo steps, while a burst in the same field coalesces.
     mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b) => { b.props[name] = value; });
+    if (selectedBlock.type === 'calendar') fitCalendarSoon(selectedBlock.sectionId, selectedBlock.blockId);
   }
 
   /** Multiple props in ONE undo step (the field contract's place field writes three). */
   function setBlockProps(name, patch) {
     mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b) => { Object.assign(b.props, patch); });
+    if (selectedBlock.type === 'calendar') fitCalendarSoon(selectedBlock.sectionId, selectedBlock.blockId);
+  }
+
+  /** A calendar's frame follows what it shows: after a change of its settings
+   *  or of its width, the preview is asked for the height the content needs
+   *  and answers with it (urd-fit-block, urd-grow). Desktop frame only. */
+  let fitTimer = 0;
+  function fitCalendarSoon(sectionId, blockId, growOnly = false) {
+    if (viewMode !== 'desktop') return;
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(() => bridge?.sendFitBlock(sectionId, blockId, growOnly), 60);
   }
 
   /* The calendar block's Style tab (calendar-designs.js): the design, its
@@ -1145,7 +1238,13 @@
   /** A design with a view of its own writes that view too, so an engine without the design still draws the right data. */
   function setCalendarDesign(id) {
     const def = calDesign(id);
-    setBlockProps('design', { design: def.id === 'plain' ? undefined : def.id, ...(def.view ? { view: def.view } : {}) });
+    // A «Coming up» design starts with three events in the card and three under «Later», unless the counts are already set.
+    const counts = def.view === 'next'
+      ? { nextCount: selectedBlock.props.nextCount ?? 3, laterCount: selectedBlock.props.laterCount ?? 3 }
+      : {};
+    setBlockProps('design', { design: def.id === 'plain' ? undefined : def.id, ...(def.view ? { view: def.view } : {}), ...counts });
+    // The frame follows the new design: the preview measures what it needs and answers with the height.
+    fitCalendarSoon(selectedBlock.sectionId, selectedBlock.blockId);
   }
   function setCalColor(key, value) {
     const colors = { ...(selectedBlock.props.colors ?? {}) };
@@ -5181,6 +5280,10 @@
     store.save();
     updateDirty();
     if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
+    // A calendar dragged to a new size keeps the box it was given: the
+    // content flows in the new width, and the frame only grows when the
+    // content needs more height than the drag left it.
+    if (key === 'desktop' && block.type === 'calendar' && !msg.coalesce) fitCalendarSoon(msg.sectionId, msg.blockId, true);
   }
 
   /** Automatic height growth posted by plugin copies of the former data-block plugins (urd-grow):
@@ -5190,6 +5293,8 @@
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     const block = section?.blocks.find((b) => b.id === msg.blockId);
     if (!block?.frames?.desktop || block.frames.desktop.h === msg.h) return;
+    // After a drag the frame is the owner's: it only grows to hold the content.
+    if (msg.growOnly && msg.h < block.frames.desktop.h) return;
     // Autogrowth is a MEASUREMENT, not an edit: data blocks report their
     // height on EVERY render, and the measurement varies with content,
     // feed responses and window. The measurement is therefore recorded in
@@ -5205,7 +5310,8 @@
     // save() cleans the draft key when the measurement was the only difference.
     store.save();
     updateDirty();
-    if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
+    if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();    // The preview draws the block at its new height, so the outline follows the content.
+    bridge?.sendSection(pageId, section);
   }
 
   /** ↺ in mobile view: reset mobile overrides, the whole section or one
@@ -5411,11 +5517,11 @@
       },
       w: 50, h: 380,
     },
-    calendar: { type: 'calendar', props: { sources: [], view: 'list', limit: 6, showCategories: true, showSubscribe: true }, w: 60, h: 320 },
-    'calendar-cards': { type: 'calendar', props: { sources: [], view: 'cards', limit: 6, showCategories: true, showSubscribe: true }, w: 88, h: 320 },
-    'calendar-month': { type: 'calendar', props: { sources: [], view: 'month', limit: 6, showCategories: true, showSubscribe: true }, w: 88, h: 480 },
-    'calendar-next': { type: 'calendar', props: { sources: [], view: 'next', limit: 6, showCategories: true, showSubscribe: true }, w: 40, h: 180 },
-    'calendar-agenda': { type: 'calendar', props: { sources: [], view: 'agenda', limit: 8, showCategories: true, showSubscribe: true }, w: 60, h: 360 },
+    calendar: { type: 'calendar', props: { sources: [], view: 'list', limit: 6, showCategories: false, showSubscribe: false, showSignup: false }, w: 60, h: 320 },
+    'calendar-cards': { type: 'calendar', props: { sources: [], view: 'cards', limit: 6, showCategories: false, showSubscribe: false, showSignup: false }, w: 88, h: 320 },
+    'calendar-month': { type: 'calendar', props: { sources: [], view: 'month', limit: 6, showCategories: false, showSubscribe: false, showSignup: false }, w: 88, h: 480 },
+    'calendar-next': { type: 'calendar', props: { sources: [], view: 'next', limit: 6, showCategories: false, showSubscribe: false, showSignup: false }, w: 40, h: 180 },
+    'calendar-agenda': { type: 'calendar', props: { sources: [], view: 'agenda', limit: 8, showCategories: false, showSubscribe: false, showSignup: false }, w: 60, h: 360 },
     icon: { type: 'icon', decor: true, hideMobile: true, props: { glyph: '★', color: 'accent', size: 48 }, w: 8, h: 64 },
     collection: { type: 'collection', props: { collection: null, view: 'cards', limit: 6, newestFirst: true }, w: 88.89, h: 200 },
     gallery: { type: 'gallery', props: { images: [], view: 'grid', columns: 3, gap: 12, radius: 'md', lightbox: true, interval: 5 }, w: 88.89, h: 320 },
@@ -6548,6 +6654,10 @@
                 <Dropdown value={layoutPickerPref}
                   options={[['strip', ta('settings.layoutPickerStrip')], ['menu', ta('settings.layoutPickerMenu')]]}
                   onchange={setLayoutPicker} /></label>
+              <label title={ta('tip.settings.menuWidth')}>{ta('settings.menuWidth')}
+                <Dropdown value={menuWidthPref}
+                  options={[['wide', ta('settings.menuWide')], ['narrow', ta('settings.menuNarrow')]]}
+                  onchange={setMenuWidthPref} /></label>
               <label title={ta('tip.settings.panels')}>{ta('settings.panels')}
                 <Dropdown value={panelsPref}
                   options={[['remember', ta('settings.panelsRemember')], ['reset', ta('settings.panelsReset')]]}
@@ -8078,7 +8188,7 @@
             <div class="panel-body">
               {#if selectedBlock}
                 <p class="panel-strong">{ta('blocks.suffix', { label: BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type })}</p>
-                {@render blockPropsUI()}
+                {@render blockPropsUI(false)}
               {:else if activeSectionId}
                 <p class="panel-strong">{ta('lbl.section')}</p>
                 <label title={ta('hint.props.minHeight')}>{ta('lbl.minHeight')}
@@ -9315,19 +9425,21 @@
   </label>
 {/snippet}
 
-{#snippet blockPropsUI()}
-  <!-- The Content/Style model (ADR-0016): Content is what the block says
-       and shows, Style is appearance, motion and placement. -->
-  <div class="props-tabs">
-    <span class="seg">
-      <button type="button" class:on={propsTab === 'content'}
-        onclick={() => (propsTab = 'content')}>{ta('props.tabContent')}</button>
-      <button type="button" class:on={propsTab === 'style'}
-        onclick={() => (propsTab = 'style')}>{ta('props.tabStyle')}</button>
-    </span>
-  </div>
+{#snippet menuGroup(id, title, value, body)}
+  <!-- A collapsible group of the element menu: the title, the current value while closed, the controls inside -->
+  <details class="group menu-group" open={menuOpen.has(id)}
+    ontoggle={(e) => { if (e.currentTarget.open) menuOpen.add(id); else menuOpen.delete(id); }}>
+    <summary><span class="menu-group-title">{title}</span><span class="menu-group-value">{value}</span></summary>
+    <div class="group-items">{@render body()}</div>
+  </details>
+{/snippet}
 
-  {#if propsTab === 'content'}
+{#snippet blockPropsUI(wide)}
+  <!-- The element menu (ADR-0016 with its addendum): Content is what the
+       block says and shows, Style is how it looks, Placement is where it
+       sits and how it behaves there. Wide, the three stand as columns;
+       narrow, they are tabs. -->
+  {#snippet menuContent()}
     {#if selectedBlock.type === 'text'}
       <!-- Text, font and size are set inline with the text editor's
            toolbar; the block has no content fields in the panel. -->
@@ -9479,7 +9591,7 @@
         {ta('calendar.showSubscribe')}
       </label>
       <label class="gridmenu-snap">
-        <input type="checkbox" checked={selectedBlock.props.showSignup !== false}
+        <input type="checkbox" checked={selectedBlock.props.showSignup === true}
           onchange={(e) => setBlockProp('showSignup', e.target.checked)} />
         {ta('calendar.showSignup')}
       </label>
@@ -9906,7 +10018,8 @@
           onclick={() => bridge?.sendOpenConfig(selectedBlock.blockId)}>{ta('ui.settings')}</button>
       {/if}
     {/if}
-  {:else}
+  {/snippet}
+  {#snippet menuStyle()}
     {#if selectedBlock.type === 'text'}
       <label>{ta('lbl.align')}
         <Dropdown value={selectedBlock.props.align ?? 'left'}
@@ -9923,26 +10036,17 @@
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'calendar'}
       {@const calDef = calDesign(selectedBlock.props.design)}
-      <!-- The design, as drawn thumbnails grouped by the view each one stands on -->
-      <details class="group cal-designs" title={ta('tip.calendar.design')}>
-        <summary>{ta('calendar.design')}: {ta(calDef.labelKey)}</summary>
-        <div class="group-items">
-          {#each calDesignGroups() as group (group.view ?? 'plain')}
-            {#if group.view}
-              <span class="mini-label">{ta(CAL_VIEW_KEYS[group.view])}</span>
-            {/if}
-            <div class="footer-tpick">
-              {#each group.designs as d (d.id)}
-                <button type="button" class="footer-tp" class:on={d.id === calDef.id} aria-pressed={d.id === calDef.id}
-                  title={ta(d.labelKey)} onclick={() => setCalendarDesign(d.id)}>
-                  <span class="footer-tp-thumb">{@html calendarThumb(d.id)}</span>
-                  <span class="footer-tp-name">{ta(d.labelKey)}</span>
-                </button>
-              {/each}
-            </div>
-          {/each}
-        </div>
-      </details>
+      <!-- The design: a row naming it, opening the picker over the whole menu -->
+      <button type="button" class="menu-row cal-design-row" title={ta('tip.calendar.design')} onclick={() => (menuPickerFor = selectedBlock.blockId)}>
+        <span class="menu-group-title">{ta('calendar.design')}</span><span class="menu-group-value">{ta(calDef.labelKey)}</span>
+      </button>
+      <!-- The calendar's size: the whole design, text included, drawn smaller or larger -->
+      <div class="ctl-row" title={ta('tip.calendar.scale')}>
+        <span class="mini-label">{ta('calendar.scale')}</span>
+        <input type="range" min={CAL_SCALE.min * 100} max={CAL_SCALE.max * 100} step="5" value={Math.round(calScale(selectedBlock.props) * 100)}
+          aria-label={ta('calendar.scale')} onchange={(e) => setBlockProp('scale', e.target.valueAsNumber === 100 ? undefined : e.target.valueAsNumber / 100)} />
+        <span class="gridmenu-value">{Math.round(calScale(selectedBlock.props) * 100)} %</span>
+      </div>
       <!-- The design's own settings, directly under the design they belong to -->
       {#if calOptionDefs(selectedBlock.props.design).length}
         {@const calOpt = calOptions(selectedBlock.props)}
@@ -9973,13 +10077,16 @@
         {#if gi > 0}
           <span class="mini-label">{ta(`calendar.section.${group.section}`)}</span>
         {/if}
-        {#each group.slots as slot (slot.key)}
-          <div class="ctl-row" title={ta('tip.calendar.slot')}>
-            <span class="mini-label ctl-name">{ta(slot.labelKey)}</span>
-            <ColorPicker value={selectedBlock.props.colors?.[slot.key] ?? ''} tokens={themeSwatches()} allowClear
-              label={ta(slot.labelKey)} onchange={(v) => setCalColor(slot.key, v || '')} />
-          </div>
-        {/each}
+        <!-- The swatches in rows, each with its name under it -->
+        <div class="cal-slots">
+          {#each group.slots as slot (slot.key)}
+            <div class="cal-slot" title={ta('tip.calendar.slot')}>
+              <ColorPicker value={selectedBlock.props.colors?.[slot.key] ?? ''} tokens={themeSwatches()} allowClear
+                label={ta(slot.labelKey)} onchange={(v) => setCalColor(slot.key, v || '')} />
+              <span class="mini-label">{ta(slot.labelKey)}</span>
+            </div>
+          {/each}
+        </div>
       {/each}
       <label class="gridmenu-snap" title={ta('tip.calendar.stripe')}>
         <input type="checkbox" checked={calStripe(calDef, selectedBlock.props.stripe).show}
@@ -10456,6 +10563,10 @@
       <hr class="gridmenu-divider" />
     {/if}
 
+  {/snippet}
+
+  <!-- Placement: how the block sits on the page and behaves there, each part a group that shows its value while closed -->
+  {#snippet menuFit()}
     <!-- Shrink on narrower screens: block-level on every block (ADR-0024); the content zooms to fit, or the frame keeps a floor -->
     <label title={ta('tip.fit')}>{ta('lbl.fit')}
       <Dropdown value={selectedBlock.fit === 'shrink' ? 'shrink' : 'wrap'}
@@ -10472,7 +10583,8 @@
         <span class="gridmenu-value">{Math.round((selectedBlock.fitMin ?? 0.6) * 100)} %</span>
       </div>
     {/if}
-    <hr class="gridmenu-divider" />
+  {/snippet}
+  {#snippet menuMotion()}
     <label title={ta('tip.props.blockAnim')}>{ta('lbl.animIn')}
       <Dropdown value={isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : ''}
         options={BLOCK_ENTRANCE_OPTIONS}
@@ -10491,9 +10603,9 @@
       <Dropdown value={selectedBlock.hover?.type ?? (selectedBlock.animation && !isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : '')}
         options={HOVER_OPTIONS}
         onchange={(v) => setBlockHover(v || null)} /></label>
-
+  {/snippet}
+  {#snippet menuSticky()}
     {#if viewMode === 'desktop'}
-      <hr class="gridmenu-divider" />
       <label class="gridmenu-snap" title={ta('tip.sticky')}>
         <input type="checkbox" checked={Boolean(selectedBlock.sticky)}
           onchange={(e) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
@@ -10535,11 +10647,8 @@
         {/if}
       {/if}
     {/if}
-
-    <hr class="gridmenu-divider" />
-    <details class="group frame-group">
-      <summary title={ta('hint.placement')}>{ta('group.placement')}</summary>
-      <div class="group-items">
+  {/snippet}
+  {#snippet menuFrame()}
         {#if viewMode === 'desktop'}
           <div class="frame-grid">
             <label>{ta('frame.x')}<input type="number" step="0.5" value={selectedBlock.frame.x}
@@ -10557,18 +10666,97 @@
               onchange={(e) => setBlockFrame('rot', Number(e.target.value))} /></label>
           </div>
         {/if}
-        <label class="gridmenu-snap" title={ta('tip.hideMobile')}>
-          <input type="checkbox" checked={selectedBlock.hideMobile}
-            onchange={(e) => setBlockHideMobile(e.target.checked)} />
-          {ta('lbl.hideMobile')}
-        </label>
         <label class="gridmenu-snap" title={ta('tip.decor')}>
           <input type="checkbox" checked={selectedBlock.decor}
             onchange={(e) => setBlockDecor(e.target.checked)} />
           {ta('lbl.decor')}
         </label>
+  {/snippet}
+  {#snippet menuPlacement()}
+    <!-- The narrow-screen fit, the phone switch and the pinning stand open; motion and the frame are groups -->
+    {@render menuFit()}
+    <label class="gridmenu-snap" title={ta('tip.hideMobile')}>
+      <input type="checkbox" checked={selectedBlock.hideMobile}
+        onchange={(e) => setBlockHideMobile(e.target.checked)} />
+      {ta('lbl.hideMobile')}
+    </label>
+    {@render menuSticky()}
+    {@render menuGroup('motion', ta('group.motion'), menuMotionValue(), menuMotion)}
+    {@render menuGroup('frame', ta('group.placement'), viewMode === 'desktop' ? `${selectedBlock.frame.w} % × ${selectedBlock.frame.h}` : '', menuFrame)}
+  {/snippet}
+
+  <!-- The design picker takes the whole menu while it is open: every design as a drawn thumbnail, grouped by the view it stands on -->
+  {#snippet menuDesignPicker()}
+    {@const calDef = calDesign(selectedBlock.props.design)}
+    <div class="menu-picker cal-designs">
+      <div class="menu-picker-head">
+        <button type="button" class="ghost action" onclick={() => (menuPickerFor = null)}>{ta('menu.back')}</button>
+        <span class="panel-strong">{ta('calendar.design')}: {ta(calDef.labelKey)}</span>
       </div>
-    </details>
+      {#each calDesignGroups() as group (group.view ?? 'plain')}
+        {#if group.view}
+          <span class="mini-label">{ta(CAL_VIEW_KEYS[group.view])}</span>
+        {/if}
+        <div class="footer-tpick">
+          {#each group.designs as d (d.id)}
+            <button type="button" class="footer-tp" class:on={d.id === calDef.id} aria-pressed={d.id === calDef.id}
+              title={ta(d.labelKey)} onclick={() => setCalendarDesign(d.id)}>
+              <span class="footer-tp-thumb">{@html calendarThumb(d.id)}</span>
+              <span class="footer-tp-name">{ta(d.labelKey)}</span>
+            </button>
+          {/each}
+        </div>
+      {/each}
+    </div>
+  {/snippet}
+
+  {#if menuPicking()}
+    {@render menuDesignPicker()}
+  {:else}
+    <!-- The quick row: the settings used most, changed without opening anything -->
+    <div class="menu-quick">
+      {#each menuQuickItems() as item (item.id)}
+        <div class="menu-quick-item">
+          <span class="mini-label">{item.label}</span>
+          {#if item.kind === 'open'}
+            <button type="button" class="menu-quick-open" onclick={item.run}>{item.value}</button>
+          {:else if item.kind === 'number'}
+            <input type="number" min={item.min} max={item.max} value={item.value} aria-label={item.label} onchange={(e) => item.set(e.target.value)} />
+          {:else}
+            <span class="seg" role="group" aria-label={item.label}>
+              {#each item.options as [v, text] (v)}
+                <button type="button" class:on={item.value === v} aria-pressed={item.value === v} onclick={() => item.set(v)}>{text}</button>
+              {/each}
+            </span>
+          {/if}
+        </div>
+      {/each}
+    </div>
+  {/if}
+  {#if !menuPicking() && wide}
+    <div class="emenu-cols">
+      <section class="emenu-col"><p class="panel-strong">{ta('props.tabContent')}</p>{@render menuContent()}</section>
+      <section class="emenu-col"><p class="panel-strong">{ta('props.tabStyle')}</p>{@render menuStyle()}</section>
+      <section class="emenu-col"><p class="panel-strong">{ta('props.tabPlacement')}</p>{@render menuPlacement()}</section>
+    </div>
+  {:else if !menuPicking()}
+    <div class="props-tabs">
+      <span class="seg">
+        <button type="button" class:on={propsTab === 'content'}
+          onclick={() => (propsTab = 'content')}>{ta('props.tabContent')}</button>
+        <button type="button" class:on={propsTab === 'style'}
+          onclick={() => (propsTab = 'style')}>{ta('props.tabStyle')}</button>
+        <button type="button" class:on={propsTab === 'placement'}
+          onclick={() => (propsTab = 'placement')}>{ta('props.tabPlacement')}</button>
+      </span>
+    </div>
+    {#if propsTab === 'content'}
+      {@render menuContent()}
+    {:else if propsTab === 'style'}
+      {@render menuStyle()}
+    {:else}
+      {@render menuPlacement()}
+    {/if}
   {/if}
 {/snippet}
 
@@ -10577,13 +10765,16 @@
      toolbar). The same snippet as the Properties panel, so the two never
      diverge. -->
 {#if blockMenu && selectedBlock}
-  <div class="block-menu" style="left: {blockMenu.left}px; top: {blockMenu.top}px">
+  <div class="block-menu" class:wide={menuIsWide} style="--menu-left: {blockMenu.left}px; --menu-top: {blockMenu.top}px; --menu-min: {menuMin}px">
     <header class="block-menu-head">
       <span>{ta('blocks.suffix', { label: BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type })}</span>
+      <!-- Wide shows the three areas as columns, narrow as tabs; the admin setting chooses which a menu opens in -->
+      <button class="ghost row-tool menu-width" title={menuWide ? ta('menu.toNarrow') : ta('menu.toWide')} aria-label={menuWide ? ta('menu.toNarrow') : ta('menu.toWide')}
+        onclick={() => (menuWide = !menuWide)}>{@html menuWide ? MENU_NARROW_ICON : MENU_WIDE_ICON}</button>
       <button class="ghost row-tool" title={ta('tip.closeEsc')} onclick={() => (blockMenu = null)}>{@html ICONS.cross}</button>
     </header>
     <div class="panel-body block-menu-body">
-      {@render blockPropsUI()}
+      {@render blockPropsUI(menuIsWide)}
     </div>
   </div>
 {/if}
@@ -11056,10 +11247,14 @@
 
   /* The block menu: a floating version of the Properties content next to the block */
   .block-menu {
+    --menu-w: min(400px, 100vw - var(--menu-min, 8px) - 8px);
     position: fixed;
     z-index: 320;
-    width: 300px;
-    max-height: min(70vh, 560px);
+    left: clamp(var(--menu-min, 8px), var(--menu-left), 100vw - var(--menu-w) - 8px);
+    top: clamp(8px, var(--menu-top), 100vh - min(72vh, 620px) - 8px);
+    width: var(--menu-w);
+    max-height: min(72vh, 620px);
+    font-size: 0.85rem;
     display: flex;
     flex-direction: column;
     background: var(--urd-color-surface, #151a23);
@@ -11077,6 +11272,185 @@
     font-weight: 600;
     font-size: 0.85rem;
     border-bottom: 1px solid rgb(255 255 255 / 12%);
+  }
+
+  /* Wide: as wide as its columns, an area without settings taking none */
+  .block-menu.wide {
+    --menu-w: min(740px, 100vw - var(--menu-min, 8px) - 8px);
+    width: fit-content;
+    max-width: var(--menu-w);
+  }
+
+  .block-menu-head .menu-width {
+    margin-left: auto;
+  }
+
+  /* Wide: Content, Style and Placement side by side, each column scrolling with the menu */
+  .emenu-cols {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 224px);
+    grid-template-columns: none;
+    gap: 0.6rem;
+    align-items: start;
+  }
+
+  .emenu-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+    padding: 0.6rem;
+    background: rgb(0 0 0 / 18%);
+    border-radius: 10px;
+  }
+
+  .emenu-col:not(:has(> :not(.panel-strong))) {
+    display: none;
+  }
+
+  /* The colour slots of a design: swatches in rows, the name under each, the clear button on the swatch's corner */
+  .cal-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+    gap: 0.6rem 0.4rem;
+  }
+
+  .cal-slot {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: center;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .cal-slot .mini-label {
+    overflow-wrap: anywhere;
+  }
+
+  .cal-slot :global(.cp) {
+    position: relative;
+  }
+
+  .cal-slot :global(.cp-clear) {
+    position: absolute;
+    top: -7px;
+    right: -9px;
+    background: var(--urd-color-surface, #151a23);
+    border-radius: 50%;
+  }
+
+  /* The quick row: a tile per setting, the label over its control */
+  .menu-quick {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+    gap: 0.5rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid rgb(255 255 255 / 12%);
+  }
+
+  .menu-quick-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+    padding: 0.45rem 0.5rem;
+    background: rgb(0 0 0 / 18%);
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: 8px;
+  }
+
+  .menu-quick-item .seg {
+    display: flex;
+  }
+
+  .menu-quick-item .seg button {
+    flex: 1;
+    padding: 4px 2px;
+    font-size: 0.75rem;
+  }
+
+  .menu-quick-item input,
+  .menu-quick-open {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 4px 8px;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    background: rgb(255 255 255 / 6%);
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+  }
+
+  .menu-quick-open {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  /* A row that opens something over the menu: looks like a closed group */
+  .menu-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.45rem 0.7rem;
+    font: inherit;
+    font-weight: 600;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+  }
+
+  .menu-row:hover {
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  /* The design picker over the whole menu: the thumbnails as many across as the menu is wide */
+  .menu-picker {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .block-menu.wide .menu-picker {
+    width: min(700px, 100vw - 50px);
+  }
+
+  .menu-picker-head {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .menu-picker .footer-tpick {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    gap: 0.5rem;
+  }
+
+  /* A group of the element menu: the title to the left, the current value muted to the right */
+  .menu-group summary {
+    gap: 0.6rem;
+  }
+
+  .menu-group-title {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .menu-group-value {
+    font-size: 0.75rem;
+    font-weight: 400;
+    opacity: 0.65;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .block-menu-body {

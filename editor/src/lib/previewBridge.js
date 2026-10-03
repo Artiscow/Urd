@@ -165,6 +165,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     sendSelect(blockId) {
       post({ type: 'urd-select', blockId });
     },
+    /** Ask the preview for the height a block's content needs; it answers with urd-grow. */
+    sendFitBlock(sectionId, blockId, growOnly = false) {
+      post({ type: 'urd-fit-block', sectionId, blockId, growOnly });
+    },
     sendPlaceBlock(block) {
       post({ type: 'urd-place-block', block });
     },

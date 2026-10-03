@@ -244,7 +244,7 @@ function makeUi(cd, ics, el, host, props, ctx, sources) {
     return a;
   };
   const signup = (occ) => {
-    if (!occ.signup || props.showSignup === false) return null;
+    if (!occ.signup || props.showSignup !== true) return null;
     const a = link('urd-cal-signup', 'signup', occ.signup, t('calendar.signupTitle'));
     a.target = '_blank';
     a.rel = 'noopener';
@@ -605,6 +605,9 @@ function drawCalendar(ics, cd, mod, weekMod, el, host, props, ctx) {
   const view = cd.calView(props);
   host.className = `urd-cal urd-cal-d-${design.id}`;
   for (const [name, value] of Object.entries(cd.calSlotVars(design, props.colors))) host.style.setProperty(name, value);
+  // The calendar's size: the whole design, text included, drawn smaller or larger (the Style tab's size).
+  const scale = cd.calScale(props);
+  if (scale !== 1) host.style.setProperty('--urd-cal-zoom', String(scale));
   const stripe = cd.calStripe(design, props.stripe);
   host.classList.toggle('urd-cal-stripes', stripe.show);
   if (stripe.color) host.style.setProperty('--urd-cal-stripe', stripe.color);
@@ -733,7 +736,8 @@ export const calendarBlock = {
   autoGrow: true,
   label: 'Calendar',
   labelKey: 'blocks.calendar',
-  defaults: () => ({ sources: [], view: 'list', limit: 6, showCategories: true, showSubscribe: true }),
+  // A new calendar starts quiet: the category filter and the subscribe and sign-up buttons are switched on by the owner.
+  defaults: () => ({ sources: [], view: 'list', limit: 6, showCategories: false, showSubscribe: false, showSignup: false }),
   // One variant per view: the editor's palette and the preview's block menu
   // list them as «Calendar: Month» and the like.
   variants: VIEW_NAMES.map(([view, labelKey]) => ({ label: view, labelKey, props: { view } })),

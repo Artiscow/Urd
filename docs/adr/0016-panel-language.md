@@ -30,6 +30,19 @@ At the same time the field study ([ELEMENTKART.md](../sammenligning/ELEMENTKART.
 - The Properties tabs require new UI keys in the core languages (nb, en-GB, tr) when they are built (ADR-0012).
 - The markup changes live in `editor/src/App.svelte`; each rollout round rebuilds and commits the bundle as usual.
 
+## Addendum: the element menu (3 October 2026, milestone 0.7.20)
+
+The Content/Style split of point 3 held two tabs and put placement, motion and the narrow-screen behaviour at the foot of Style. With the calendar designs the Style tab grew past what one column carries, so the element menu (the floating menu from the gear on a block, and the Properties panel, both drawn by the same snippet) is rebuilt on these decisions:
+
+1. **Three areas.** Content (what the block says and shows), Style (how it looks) and Placement (where it sits and how it behaves there: the narrow-screen fit, motion, pinning, the frame, layer and rotation, visibility). Placement is not an «Advanced» drawer: it holds the same settings for every block, in the same order.
+2. **One menu in two widths.** Wide, the three areas stand side by side as columns; narrow, they are three tabs. The admin setting «Element menu» chooses the width a menu opens in (wide unless set otherwise, kept in the browser), and a button in the menu's head switches for the session. The Properties panel in the rail is always narrow. The floating menu never lies over the admin's own panels; where the wide menu does not fit beside them it is narrow whatever is chosen.
+3. **Collapsible groups that show their value.** Inside an area the settings stand in `<details class="group">` groups (point 1's building block) whose summary carries the group's current value while closed, so the menu can be read without opening anything. A group stays open or closed as it was left when another block is selected.
+4. **A quick row.** The settings used most stand above the areas as a row of their own, with a default set per block type and the owner's own pins on top.
+5. **A picker takes the whole menu.** A choice among many drawn options (the calendar's designs) opens over the areas at the menu's full width and returns to them with one button, instead of unfolding inside a column.
+6. **Every element menu is built from the same parts.** A block type contributes its Content and Style groups; the frame, the Placement area, the quick row and the search are shared.
+
+The stages are in BACKLOG under 0.7.20.
+
 [AGENTS.md]: ../../AGENTS.md
 [ADR-0009]: 0009-themed-ui-rule.md
 [ADR-0012]: 0012-multilingual.md

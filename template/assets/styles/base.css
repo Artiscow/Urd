@@ -1042,6 +1042,7 @@ textarea.urd-form-input {
   --urd-cal-line: var(--urd-cal-s-line, color-mix(in srgb, var(--urd-color-text) 12%, transparent));
   position: relative;
   display: grid;
+  zoom: var(--urd-cal-zoom, 1);
   gap: 12px;
   width: 100%;
 }
@@ -1902,7 +1903,7 @@ textarea.urd-form-input {
   padding: 1.4em;
   overflow: hidden;
   color: var(--urd-cal-s-text, inherit);
-  background: var(--urd-cal-s-ground, var(--urd-color-surface));
+  background: var(--urd-cal-s-ground, transparent);
   border-radius: 26px;
 }
 
@@ -4673,9 +4674,10 @@ textarea.urd-form-input {
   isolation: isolate;
   overflow: hidden;
   color: var(--urd-cal-s-text, #f5f5f7);
-  background: var(--urd-cal-s-ground, #121216);
+  background: var(--urd-cal-s-ground, rgb(18 18 22 / 55%));
   border: 1px solid var(--urd-cal-s-edge, rgb(255 255 255 / 14%));
   border-radius: 24px;
+  backdrop-filter: blur(18px);
 }
 
 .urd-cal-dg-blob {
@@ -5187,6 +5189,7 @@ textarea.urd-form-input {
   display: grid;
   gap: 0.6em;
   padding: 1em 1.5em 1.2em;
+  color: var(--urd-cal-s-panelText, inherit);
   background: var(--urd-cal-s-panel, #eae1c7);
 }
 

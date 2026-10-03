@@ -6,7 +6,7 @@
  * the owner can rewrite in the preview, and whether its boxes carry an edge
  * stripe. The owner's choices are additive props on the block (`design`,
  * `colors`, `stripe`, `texts`, `fieldStyle`, `showSignup`, `showMore`,
- * `programHref`, `showOpen`, `options`); a block without
+ * `programHref`, `showOpen`, `options`, `scale`); a block without
  * them renders the plain design on the theme's colours. The module is
  * bundled by the editor and loaded by the block on its first render (with
  * ics.js, outside the visitor closure), so it never touches the DOM and never
@@ -409,7 +409,7 @@ export const CAL_DESIGNS = [
     notice: true,
     noticeBand: true,
     empty: 'ap',
-    slots: [slot('head'), slot('card'), slot('panel'), slot('text'), slot('gold'), slot('goldDark'), slot('alert', 'alert'), slot('alertText', 'alert')],
+    slots: [slot('head'), slot('card'), slot('text'), slot('panel'), slot('panelText'), slot('gold'), slot('goldDark'), slot('alert', 'alert'), slot('alertText', 'alert')],
     texts: ['now', 'next', 'later', ...NOTICE_TEXTS, ...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
   },
   {
@@ -493,6 +493,16 @@ export function calOptions(props) {
     else out[def.key] = Number.isInteger(value) && value >= 0 && value <= 24 ? value : null;
   }
   return out;
+}
+
+/** The bounds of a calendar's size: the whole design, text included, drawn smaller or larger than it is. */
+export const CAL_SCALE = { min: 0.4, max: 2 };
+
+/** The calendar's size as a factor: the owner's `scale` inside the bounds, else 1. */
+export function calScale(props) {
+  const scale = Number(props?.scale);
+  if (!Number.isFinite(scale) || scale <= 0) return 1;
+  return Math.round(Math.min(CAL_SCALE.max, Math.max(CAL_SCALE.min, scale)) * 100) / 100;
 }
 
 /** The renderer modules a design can name (the block maps each to a literal import). */

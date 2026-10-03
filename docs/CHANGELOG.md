@@ -27,6 +27,24 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.20.1 - The element menu's frame, and the calendar's size and defaults - 3 October 2026
+
+- The element menu held every setting in one narrow column under two tabs. It now has three areas, Content, Style and Placement, as columns in a wide menu and as tabs in a narrow one, with a button in its head that switches and the admin setting «Element menu» for the width it opens in (ADR-0016 addendum). An area without settings takes no column.
+- Placement holds what stood at the foot of Style: the narrow-screen fit, «Hide on mobile» and the pinning stand open, motion and the frame are groups that show their value while closed.
+- A quick row above the areas carries the settings used most: the calendar's design, max count and subscribe button, and for every block the narrow-screen fit and whether it shows on a phone.
+- The calendar's design picker unfolded inside one column. The «Design» row opens it over the whole menu, six thumbnails across, with a button back.
+- The floating menu lay over the admin's own panels. It now stays to the right of them, and is narrow whatever is chosen where the wide one does not fit there.
+- The narrow-screen choice could not be switched back: the selected block's snapshot left out `fit` and `fitMin`, so the menu always read «wrap». Both are in the snapshot.
+- The calendar's colour slots stood one per row. They stand in rows of swatches with the name under each.
+- A new calendar wrote the category filter and the subscribe button as on from three places (the block's defaults, the block palette's entries and the section presets). All three write them off, with the sign-up buttons; the sign-up buttons show only with `showSignup: true`; the example page's calendar is switched off too.
+- Glass and Dark glass drew a solid ground. Glass is transparent by default and Dark glass a blurred, half transparent dark, so the section shows through; the «Ground» slot sets a solid one.
+- The outline did not follow a change of design. The editor asks the preview for the height the content needs after a change of design or settings (`urd-fit-block`, answered with `urd-grow`) and redraws the section at it; the measure is the design's drawn box, so Glass's colour blobs no longer count. After a drag the frame is kept and only grows when the content needs more.
+- A «Coming up» design starts with three events in the card and three under «Later» when it is chosen and the counts are unset.
+- One «Text» slot coloured the words on both the card and the panel of Coming up on cream. The panel has `panelText`; the same walk through every design is 0.7.19.27.
+- The calendar has a «Size» in the Style tab (`scale`, 0.4 to 2, pure `calScale`): the whole design, text included, drawn smaller or larger. A drag of the outline changes the box only.
+- The calendar's announcement switch reads «Show the calendar's announcement», and its tooltip says it is separate from the strip above the menu.
+- BACKLOG: milestone 0.7.20 with its six stages, milestone 0.7.21 (the sizing model for every element, from the look at how other builders resize), stage 0.7.19.27 and the agreed order of work under «Liten huskeliste».
+
 ### 0.7.19.9 - Settings per calendar design - 3 October 2026
 
 - The designs had no settings of their own. `options` on the block holds them (`CAL_OPTIONS`, pure `calOptions` and `calOptionDefs` in calendar-designs.js), and the Style tab shows the section «Settings for the design» under the design picker, only with the options of the chosen design.

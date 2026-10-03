@@ -2,6 +2,26 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Test batch (0.7.20.1): the element menu's frame, and the calendar's size and defaults
+
+- [ ] The gear on a block opens the element menu wide: Content, Style and Placement as columns, an area without settings (Style on the map block) taking no column; the button in the menu's head switches to three tabs and back
+- [ ] Admin settings, «Element menu»: Narrow makes the menu open with tabs after a reload, Wide with columns; the Properties panel in the rail is always tabs
+- [ ] With the Properties panel open, the floating menu never lies over the admin's panels; with the editor window narrowed until the wide menu does not fit beside them, the menu opens narrow
+- [ ] Placement on any block: «On narrower screens», «Hide on mobile» and «Pin while scrolling» stand open at the top, «Motion» and «Placement, layer and rotation» are groups showing their value, and a group left open stays open on the next block
+- [ ] The quick row at the top of the menu: «Narrow screen» and «On a phone» on every block, and on a calendar «Design», «Max count» (list, cards and agenda) and «Subscribe button»; each changes the preview at once
+- [ ] «Narrow screen»: Shrink, close the menu, open it again: Shrink is still marked, in the quick row and under «On narrower screens»; Wrap switches back
+- [ ] Calendar, the «Design» row in Style or the quick row: the picker fills the menu with six thumbnails across under the view headings, a click changes the design and the picker stays open, «Back to the menu» returns
+- [ ] Calendar, the colours in Style: swatches in rows with the name under each, three across in the wide menu and five in the narrow one; the clear button sits on the swatch's corner
+- [ ] A new calendar from the block palette, from the block menu and from a section preset: no category filter, no subscribe buttons and no «Sign up» buttons until they are switched on
+- [ ] Glass and Dark glass on a section with a picture or a gradient: the section shows through the design; a colour in «Ground» makes it solid
+- [ ] Every calendar design, picked one after the other with sample data and with a real feed: the outline ends where the calendar ends, neither clipping it nor leaving air under it
+- [ ] Changing a calendar's count, view switcher, design settings or «Size»: the outline follows the new height
+- [ ] Dragging a calendar's outline: narrower and wider reflow it while dragging with the text at the same size; shorter than the content, the outline comes back to the content on release; taller, it stays as dragged
+- [ ] Style, «Size» on a calendar: 60 % draws the whole calendar smaller, text included, 150 % larger, and the outline follows; a drag afterwards leaves the percentage where it was
+- [ ] A «Coming up» design chosen on a new calendar shows three events in the card and three under «Later»; a calendar whose counts were already set keeps them
+- [ ] Coming up on cream: «Panel text» colours the words under «Later» without touching the titles on the card, and «Text» the other way round
+- [ ] Content on a design with an announcement: the switch reads «Show the calendar's announcement»; turning it on or off leaves the strip above the menu as it was, and the strip's own switch leaves the calendar's note as it was
+
 ### Test batch (0.7.19.9): settings per calendar design
 
 - [ ] Style tab on a calendar: «Settings for the design» stands under the design picker only on Month with side panel, Week plan, Day plan, Table, Poster wall, Picture cards, Year wheel, Numbered programme, Programme booklet, Split card and Band, and holds only that design's settings; every change shows in the preview at once and survives a reload and a publish

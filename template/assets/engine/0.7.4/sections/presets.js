@@ -103,7 +103,7 @@ const calendar = (fr, props = {}) => ({
   id: makeId('blk'),
   type: 'calendar',
   version: 1,
-  props: { sources: [], view: 'list', limit: 6, showCategories: true, showSubscribe: true, ...props },
+  props: { sources: [], view: 'list', limit: 6, showCategories: false, showSubscribe: false, showSignup: false, ...props },
   animation: null,
   frames: fr,
 });

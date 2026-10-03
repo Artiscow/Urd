@@ -112,8 +112,8 @@
             ],
             "view": "month",
             "limit": 6,
-            "showCategories": true,
-            "showSubscribe": true
+            "showCategories": false,
+            "showSubscribe": false
           },
           "animation": null,
           "frames": {
