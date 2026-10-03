@@ -258,16 +258,19 @@ reading order. You usually do not have to do anything.
   that ships is the Swedish language pack; calendar, form and map are
   core blocks (see below) and need no plugin.
 
-  The Calendar block is in the Blocks panel («Calendar: List», «Cards»,
-  «Month» and «Next», or the section template «What is on»). Select the block
-  and paste the calendar's iCal address or Google calendar id under Sources
-  in Properties (one per line). There you also choose the view (List, Cards,
-  Month or «Next») and the count. Titles of
-  the form «Category: Title» give filterable category chips, a
-  sign-up link in the description becomes a **Sign up** button, and
-  the **Subscribe** button lets visitors follow the calendar in their own app.
+  The Calendar block shows a calendar you keep in your own calendar app. It is
+  in the Blocks panel under **Calendar**: five plain views (List, Cards, Month,
+  Next and Agenda) and **Designs** with a picture of each of the 34 designs,
+  or the section template «What is on». Select the block and paste the
+  calendar's iCal address or Google calendar id under **Sources** in its menu
+  (one per line); a source can be given a name and a colour, and the name
+  becomes the events' category. In the same menu you choose the design, the
+  count, and what visitors get: a category and a place filter, a search field,
+  earlier events, a view switcher, and the **Subscribe** and **Sign up**
+  buttons. A press on an event opens its card with the whole description, a
+  map link, and **Join** for a video meeting.
   The calendar has a guide of its own: [The calendar](../calendar-guide/CALENDAR-en-GB.md)
-  (calendar services, meeting links, sign-up, maps and more).
+  (calendar services, designs, meeting links, sign-up, maps and more).
 
   The Form block (and the «Contact form» template) is in the Blocks panel: select
   the block, and set the recipient, fields and send mode in Properties. By default

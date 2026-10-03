@@ -27,6 +27,15 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.19.17 - The calendar's designs in the palette and the block menu, a template per view, and its texts in three more languages - 4 October 2026
+
+- The palette and the block menu offered five calendar views and none of the designs. The Blocks panel shows «Designs» under Calendar with a thumbnail of each of the 34, the block search finds a design by its name, and the «+ New block» menu lists the designs beside the views (`variants` in blocks/calendar.js). A new calendar's frame is fitted to its design when it is placed.
+- «What is on» existed as a list only. Four more section templates: cards, month, week and next.
+- The calendar's texts were missing outside the three core languages: 276 admin texts in Nynorsk, 276 admin and 79 visitor texts in the Swedish pack, and 224 admin and 79 visitor texts in Northern Sami, where 52 admin texts are left to fall back to bokmål. None of them is reviewed by a native speaker.
+- The calendar guide gets a «Designs» section, and the user guide's calendar paragraph is rewritten, in English and Norwegian.
+- Test finding 4 October 2026: a press on an event scrolled the page to its top. The card took its first place at the top of the page before it opened; it takes it in the part of the page that is in view.
+- Test finding: in a week strip the time and the title ran out of the event's box. The two had no space between them to break at, and a narrow strip kept seven columns. A space stands between them, a long word breaks, and a strip narrower than 540 px lays its days under each other (a container query in base.css).
+
 ### 0.7.19.16 - The calendar reads more of a feed, tells a meeting and a sign-up apart from a link, and gets a guide of its own - 4 October 2026
 
 - The parser missed rules and fields real feeds use. It reads `BYSETPOS` («the last Thursday of the month»), `BYMONTH` and `RDATE`, the meeting link from `CONFERENCE` and the fields Google and Microsoft write it in, `GEO` and the HTML description of `X-ALT-DESC`, each with a fixture in tests/calendar.test.mjs.

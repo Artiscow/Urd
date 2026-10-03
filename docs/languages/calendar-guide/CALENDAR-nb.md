@@ -8,7 +8,7 @@ For deg som eier eller redigerer et nettsted bygget med Urd og vil vise arrangem
 
 Veiledningen dekker det kalenderen kan i dag. Den vanlige bruken av editoren står i [brukerveiledningen](../user-guide/GUIDE-nb.md).
 
-**Innhold:** [Slik virker det](#slik-virker-det) · [Kalendertjenester](#kalendertjenester) · [Legge til kalenderen](#legge-til-kalenderen) · [Hva som leses fra et arrangement](#hva-som-leses-fra-et-arrangement) · [Møtelenker](#møtelenker) · [Påmelding](#påmelding) · [Steder og kart](#steder-og-kart) · [Finne arrangementer](#finne-arrangementer) · [Tider](#tider) · [Arrangementskortet](#arrangementskortet) · [Søkemotorer](#søkemotorer) · [Telefon, tastatur og utskrift](#telefon-tastatur-og-utskrift) · [Personvern](#personvern) · [Hva kalenderen ikke kan](#hva-kalenderen-ikke-kan)
+**Innhold:** [Slik virker det](#slik-virker-det) · [Kalendertjenester](#kalendertjenester) · [Legge til kalenderen](#legge-til-kalenderen) · [Design](#design) · [Hva som leses fra et arrangement](#hva-som-leses-fra-et-arrangement) · [Møtelenker](#møtelenker) · [Påmelding](#påmelding) · [Steder og kart](#steder-og-kart) · [Finne arrangementer](#finne-arrangementer) · [Tider](#tider) · [Arrangementskortet](#arrangementskortet) · [Søkemotorer](#søkemotorer) · [Telefon, tastatur og utskrift](#telefon-tastatur-og-utskrift) · [Personvern](#personvern) · [Hva kalenderen ikke kan](#hva-kalenderen-ikke-kan)
 
 ## Slik virker det
 
@@ -56,6 +56,34 @@ Hvor du finner adressen:
 Før en kilde er limt inn, viser blokken eksempelarrangementer i editoren, så du kan se designet. Besøkende ser aldri eksempelarrangementene.
 
 **Flere kalendere** kan stå i én blokk. De vises som én kalender, og et arrangement som står i to av dem vises én gang. Gi hver et **Navn** og en farge: navnet blir arrangementenes kategori, og fargen merker dem.
+
+## Design
+
+Kalenderen har 34 design, gruppert etter hva de viser. Et design velges når blokken legges til, og byttes senere under **Design** i blokkens meny. Arrangementene er de samme i alle design.
+
+| Viser | Design |
+|---|---|
+| En liste over det som kommer | Enkel, Tidslinje, Tabell, Programhefte, Nummerert program, Liste på marine, Glass, Fast arrangement |
+| Kort | Plakatvegg, Billetter, Dagkarusell, Bildekort, Rutenett på krem, Bento |
+| Det neste arrangementet, med de som følger | Reklametavle, Stablede kort, Oppslagstavle, Delt kort, Bånd, Én linje, Nedtellingsring, Mørkt glass, Bento for akkurat nå, Akkurat nå på krem, Akkurat nå på marine |
+| En agenda dag for dag | Agenda, mørk |
+| En uke | Ukestripe, Ukeplan, Kalenderlag |
+| En måned | den enkle måneden, Måned med sidepanel, Oversikt på krem |
+| En dag | Dagsplan |
+| Et år | Årshjul, Varmekart |
+
+Hvor du finner dem:
+
+- **Panelet Blokker,** under **Kalender**: de fem enkle visningene som knapper, og **Design** med et lite bilde av hvert design. Et trykk legger til en kalender i det designet.
+- **Blokksøket** i panelet Blokker: skriv navnet på et design («Ukestripe»).
+- **Menyen + Ny blokk** i en seksjon: Kalender folder seg ut i visningene og designene.
+- **Seksjonsmaler:** «Hva skjer» som liste, kort, måned, uke eller neste arrangement.
+
+Omrisset til en ny kalender tilpasses designet, og på nytt når du bytter design eller innstillinger. Dra i sidene på omrisset for å gjøre kalenderen smalere eller bredere; **Størrelse** i menyen gjør hele kalenderen, teksten medregnet, mindre eller større.
+
+Hvert design har egne farger, og noen har egne innstillinger, i blokkens meny. Ordene et design skriver («Neste arrangement», «Senere») endres ved å klikke på dem i forhåndsvisningen.
+
+**Kalenderens kunngjøring.** Noen av designene for «Akkurat nå» kan vise en lapp ved siden av neste arrangement, slått på med **Vis kunngjøring i kalenderen**. Du skriver den ved å klikke på lappen i forhåndsvisningen. Den er uavhengig av kunngjøringsstripen over menyen.
 
 ## Hva som leses fra et arrangement
 

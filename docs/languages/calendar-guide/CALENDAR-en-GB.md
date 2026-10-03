@@ -8,7 +8,7 @@ For you who own or edit a site built with Urd and want to show events on it. The
 
 This guide covers what the calendar can do today. The general use of the editor is in the [user guide](../user-guide/GUIDE-en-GB.md).
 
-**Contents:** [How it works](#how-it-works) · [Calendar services](#calendar-services) · [Adding your calendar](#adding-your-calendar) · [What is read from an event](#what-is-read-from-an-event) · [Meeting links](#meeting-links) · [Sign-up](#sign-up) · [Places and maps](#places-and-maps) · [Finding events](#finding-events) · [Times](#times) · [The event card](#the-event-card) · [Search engines](#search-engines) · [Phone, keyboard and print](#phone-keyboard-and-print) · [Privacy](#privacy) · [What the calendar cannot do](#what-the-calendar-cannot-do)
+**Contents:** [How it works](#how-it-works) · [Calendar services](#calendar-services) · [Adding your calendar](#adding-your-calendar) · [Designs](#designs) · [What is read from an event](#what-is-read-from-an-event) · [Meeting links](#meeting-links) · [Sign-up](#sign-up) · [Places and maps](#places-and-maps) · [Finding events](#finding-events) · [Times](#times) · [The event card](#the-event-card) · [Search engines](#search-engines) · [Phone, keyboard and print](#phone-keyboard-and-print) · [Privacy](#privacy) · [What the calendar cannot do](#what-the-calendar-cannot-do)
 
 ## How it works
 
@@ -56,6 +56,34 @@ Where to find the address:
 Until a source is pasted, the block shows sample events in the editor, so you can see the design. Visitors never see the sample events.
 
 **Several calendars** can stand in one block. They are shown as one calendar, and an event that stands in two of them is shown once. Give each a **Name** and a colour: the name becomes the events' category, and the colour marks them.
+
+## Designs
+
+The calendar has 34 designs, grouped by what they show. A design is chosen when the block is added, and changed later under **Design** in the block's menu. The events are the same in every design.
+
+| Shows | Designs |
+|---|---|
+| A list of what is coming | Plain, Timeline, Table, Programme booklet, Numbered programme, List on navy, Glass, Regular event |
+| Cards | Poster wall, Tickets, Day carousel, Picture cards, Grid on cream, Bento |
+| The next event, with the ones after it | Billboard, Stacked cards, Noticeboard, Split card, Band, One line, Countdown ring, Dark glass, Coming up bento, Coming up on cream, Coming up on navy |
+| An agenda day by day | Agenda, dark |
+| A week | Week strip, Week plan, Calendar layers |
+| A month | the plain month, Month with side panel, Overview on cream |
+| A day | Day plan |
+| A year | Year wheel, Heat map |
+
+Where to find them:
+
+- **The Blocks panel,** under **Calendar**: the five plain views as buttons, and **Designs** with a small picture of every design. A press adds a calendar in that design.
+- **The block search** in the Blocks panel: type a design's name («Week strip»).
+- **The + New block menu** in a section: Calendar unfolds into the views and the designs.
+- **Section templates:** «What is on» as a list, cards, a month, a week or the next event.
+
+A new calendar's outline is fitted to its design, and again when you change the design or its settings. Drag the outline's sides to make the calendar narrower or wider; **Size** in the menu makes the whole calendar, text included, smaller or larger.
+
+Each design has its own colours, and some have settings of their own, in the block's menu. The words a design writes («Next event», «Later») are changed by clicking them in the preview.
+
+**The calendar's announcement.** Some of the «Coming up» designs can show a note beside the next event, switched on with **Show the calendar's announcement**. You write it by clicking the note in the preview. It is separate from the announcement strip above the menu.
 
 ## What is read from an event
 

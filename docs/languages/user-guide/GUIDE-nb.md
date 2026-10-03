@@ -257,16 +257,19 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   som følger med er den svenske språkpakken; kalender, skjema og kart er
   kjerneblokker (se under) og trenger ingen plugin.
 
-  Kalender-blokken ligger i Blokker-panelet («Kalender: Liste», «Kort»,
-  «Måned» og «Neste», eller seksjonsmalen «Hva skjer»). Velg blokken og
-  lim inn kalenderens iCal-adresse eller Google-kalender-id under Kilder i
-  Egenskaper (én per linje). Der velger du også visning (liste, kort,
-  månedskalender eller «neste arrangement») og antall. Titler på formen «Kategori: Tittel» gir filtrerbare
-  kategori-chips, en
-  påmeldingslenke i beskrivelsen blir en «Meld deg på»-knapp, og
-  «Abonner»-knappen lar besøkende følge kalenderen i sin egen app.
+  Kalender-blokken viser en kalender du har i din egen kalenderapp. Den ligger
+  i Blokker-panelet under **Kalender**: fem enkle visninger (Liste, Kort,
+  Måned, Neste og Agenda) og **Design** med et bilde av hvert av de 34
+  designene, eller seksjonsmalen «Hva skjer». Velg blokken og lim inn
+  kalenderens iCal-adresse eller Google-kalender-id under **Kilder** i menyen
+  dens (én per linje); en kilde kan få navn og farge, og navnet blir
+  arrangementenes kategori. I samme meny velger du design, antall, og hva
+  besøkende får: kategori- og stedsfilter, søkefelt, tidligere arrangementer,
+  visningsvelger, og knappene **Abonner** og **Meld deg på**. Et trykk på et
+  arrangement åpner kortet med hele beskrivelsen, kartlenke, og **Bli med**
+  for et videomøte.
   Kalenderen har en egen veiledning: [Kalenderen](../calendar-guide/CALENDAR-nb.md)
-  (kalendertjenester, møtelenker, påmelding, kart og mer).
+  (kalendertjenester, design, møtelenker, påmelding, kart og mer).
 
   Skjema-blokken (og «Kontaktskjema»-malen) ligger i Blokker-panelet: velg
   blokken, så stiller du inn mottaker, felt og sendemåte i Egenskaper.

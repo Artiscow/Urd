@@ -426,6 +426,24 @@ export function registerSectionPresets(Urd) {
     ]),
   });
 
+  // «What is on» in the other view families: cards, a month, a week and what is coming next.
+  const whatsOn = (id, height, block) => Urd.sections.define(id, {
+    label: `What is on: ${id.slice('whats-on-'.length)}`,
+    labelKey: `preset.${id}.label`,
+    group: 'Cards and lists',
+    groupKey: 'presetGroup.cards',
+    hint: 'Events from a subscribable calendar (iCal/Google)',
+    hintKey: `preset.${id}.hint`,
+    create: () => section(id, height, bg(colorLayer('bg')), [
+      text(frame(6, 40, 60, 70), ta('seed.whatsOn.title')),
+      block(),
+    ]),
+  });
+  whatsOn('whats-on-cards', '560px', () => calendar(frame(6, 130, 88, 360, 2), { view: 'cards', limit: 6 }));
+  whatsOn('whats-on-month', '720px', () => calendar(frame(6, 130, 88, 520, 2), { view: 'month' }));
+  whatsOn('whats-on-week', '560px', () => calendar(frame(6, 130, 88, 360, 2), { view: 'week', design: 'weekStrip' }));
+  whatsOn('whats-on-next', '460px', () => calendar(frame(6, 130, 48, 260, 2), { view: 'next', nextCount: 1, laterCount: 3 }));
+
   Urd.sections.define('contact-form', {
     label: 'Contact form',
     labelKey: 'preset.contact-form.label',

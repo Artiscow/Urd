@@ -2,6 +2,21 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Test batch (0.7.19.17): the calendar's designs in the palette, the templates and the translations
+
+- [ ] Blocks panel, Calendar, «Designs» unfolded: 34 thumbnails grouped by view, none running out of the panel
+- [ ] A press on a thumbnail (for example «Week strip») and a place in a section: the calendar comes in that design, and its outline fits it
+- [ ] The block search: «Week strip» gives «Calendar: Week strip», and it adds the same
+- [ ] «+ New block» in a section, Calendar: the list unfolds with the views and the designs, can be scrolled and used though it is long, and a press adds that design with an outline that fits
+- [ ] The four new section templates («What is on: cards», «month», «week» and «next»): each gives a heading and a calendar in that view, inside its section
+- [ ] Admin in Nynorsk, a calendar's menu: the labels are in Nynorsk and none runs out of its control
+- [ ] The site in Swedish (the language pack on): a calendar's buttons, date phrases and plural forms are in Swedish
+- [ ] The site in Northern Sami: the calendar's visitor texts are in Sami; read by someone who knows the language, with the wrong ones noted
+- [ ] A press on an event with the page scrolled far down: the page stays where it is, and the card opens over its calendar
+- [ ] The week of the view switcher, and Week strip, in a calendar about 650 px wide: the time and the title stay inside each event's box
+- [ ] Week strip in a calendar narrower than 540 px on a wide screen: the days stand under each other; dragged wider again, the seven columns come back
+- [ ] The calendar guide's «Designs» section and the user guide's calendar paragraph read through, in English and Norwegian
+
 ### Test batch (0.7.19.16): what the calendar reads from a feed, meeting and sign-up links, and the calendar guide
 
 - [ ] A real feed with an event on «the last Thursday of every month» (made in Outlook or Google Calendar): the occurrences land on the right dates for the coming months

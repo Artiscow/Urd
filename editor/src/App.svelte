@@ -5718,6 +5718,8 @@
     store.save();
     updateDirty();
     bridge?.sendSection(pageId, section);
+    // A calendar follows its content (ADR-0025): the frame of a new one is fitted to its design.
+    if (block.type === 'calendar') fitCalendarSoon(section.id, block.id);
   }
 
   /** The "+ card/row" button on a section: the preset item arrives as a
@@ -5748,6 +5750,18 @@
 
   function addBlock(kind) {
     requestPlacement(buildBlock(kind));
+  }
+
+  /** The size a new calendar starts at, by the view its design shows; the frame is fitted to the design once it is placed. */
+  const CAL_KIND_BY_VIEW = { list: 'calendar', cards: 'calendar-cards', month: 'calendar-month', next: 'calendar-next', agenda: 'calendar-agenda', week: 'calendar-month', day: 'calendar', year: 'calendar-month' };
+
+  /** A new calendar in one of the designs (the palette's thumbnails and the palette search). */
+  function addCalendarDesign(id) {
+    const design = calDesign(id);
+    const block = buildBlock(CAL_KIND_BY_VIEW[design.view] ?? 'calendar');
+    if (!block) return;
+    block.props = { ...block.props, view: design.view, ...(design.id === 'plain' ? {} : { design: design.id }) };
+    requestPlacement(block);
   }
 
   /** The plugin blocks in the Blocks panel: the preview reported
@@ -5800,6 +5814,8 @@
       { label: `${ta('blocks.calendar')}: ${ta('calendar.viewMonth')}`, act: 'block', kind: 'calendar-month' },
       { label: `${ta('blocks.calendar')}: ${ta('calendar.viewNext')}`, act: 'block', kind: 'calendar-next' },
       { label: `${ta('blocks.calendar')}: ${ta('calendar.viewAgenda')}`, act: 'block', kind: 'calendar-agenda' },
+      ...calDesignGroups().flatMap((group) => group.designs).filter((d) => d.id !== 'plain')
+        .map((d) => ({ label: `${ta('blocks.calendar')}: ${ta(d.labelKey)}`, act: 'calendarDesign', design: d.id })),
       { label: ta('blocks.collection'), act: 'block', kind: 'collection' },
       { label: ta('blocks.faq'), act: 'block', kind: 'faq' },
       { label: ta('blocks.timeline'), act: 'block', kind: 'timeline' },
@@ -5839,6 +5855,7 @@
 
   function runPanelItem(item) {
     if (item.act === 'block') addBlock(item.kind);
+    else if (item.act === 'calendarDesign') addCalendarDesign(item.design);
     else if (item.act === 'plugin') addPluginBlock(item.entry, item.props ?? {});
     else if (item.act === 'template') bridge?.sendInsertTemplate(item.id);
   }
@@ -8204,6 +8221,23 @@
                   <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-next')}>{ta('calendar.viewNext')}</button>
                   <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-agenda')}>{ta('calendar.viewAgenda')}</button>
                 </div>
+                <!-- Every design as a thumbnail, grouped by the view it shows: a press adds a calendar in that design -->
+                <details class="group cal-palette">
+                  <summary>{ta('calendar.designs')}</summary>
+                  {#each calDesignGroups() as group (group.view ?? 'plain')}
+                    {#if group.view}
+                      <span class="mini-label">{ta(CAL_VIEW_KEYS[group.view])}</span>
+                    {/if}
+                    <div class="footer-tpick">
+                      {#each group.designs as d (d.id)}
+                        <button type="button" class="footer-tp" title={ta(d.labelKey)} onclick={() => addCalendarDesign(d.id)}>
+                          <span class="footer-tp-thumb">{@html calendarThumb(d.id)}</span>
+                          <span class="footer-tp-name">{ta(d.labelKey)}</span>
+                        </button>
+                      {/each}
+                    </div>
+                  {/each}
+                </details>
               </details>
               <details class="group">
                 <summary>{ta('group.shapes')}</summary>

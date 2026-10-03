@@ -3091,7 +3091,6 @@ textarea.urd-form-input {
 
 /* Shared: a pill with the time and the title, tinted with the calendar colour */
 .urd-cal-pill-time {
-  margin-right: 4px;
   opacity: 0.75;
 }
 
@@ -3116,6 +3115,7 @@ textarea.urd-form-input {
 .urd-cal-wstrip {
   display: grid;
   gap: 1em;
+  container-type: inline-size;
 }
 
 .urd-cal-wstrip-head {
@@ -3184,13 +3184,36 @@ textarea.urd-form-input {
 }
 
 .urd-cal-wstrip-pill {
+  min-width: 0;
   padding: 5px 7px;
+  overflow-wrap: anywhere;
   font-size: 0.72em;
   font-weight: 700;
   line-height: 1.25;
   color: var(--urd-cal-s-pillText, var(--urd-color-accent-text));
   background: var(--urd-cal-color, var(--urd-cal-s-pill, var(--urd-cal-accent)));
   border-radius: 6px;
+}
+
+/* A week strip too narrow for seven readable columns (a narrow frame on a
+   wide screen) lays its days under each other, as on the phone. */
+@container (max-width: 540px) {
+  .urd-cal-wstrip-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .urd-cal-wstrip-day {
+    flex-flow: row wrap;
+    gap: 6px 8px;
+    align-items: baseline;
+    min-height: 0;
+  }
+
+  .urd-cal-wstrip-pill {
+    flex: 1 1 100%;
+    font-size: 0.85em;
+  }
 }
 
 /* M3 Week plan and F2 Day plan share the hour grid */
@@ -3311,7 +3334,9 @@ textarea.urd-form-input {
 
 .urd-cal-wplan-pill,
 .urd-cal-dplan-pill {
+  min-width: 0;
   padding: 4px 6px;
+  overflow-wrap: anywhere;
   font-size: 0.7em;
   font-weight: 700;
   line-height: 1.2;
@@ -6437,7 +6462,6 @@ textarea.urd-form-input {
   pointer-events: none;
 }
 
-
 .urd-preview .urd-audio-empty {
   display: grid;
   place-items: center;
@@ -7075,7 +7099,6 @@ textarea.urd-form-input {
   padding: 0 6px;
   font: 12px/1 system-ui, sans-serif;
 }
-
 
 /* Inline link field (its own sub-row in the bar while the link button is active) */
 .urd-tt-linkrow {
@@ -9316,7 +9339,6 @@ body:not(.urd-mobile) .urd-nav:not(.urd-nav-mobile) .urd-nav-toggle span {
 .urd-nav-left {
   gap: 2rem;
 }
-
 
 .urd-nav-list a {
   color: inherit;

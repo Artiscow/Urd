@@ -46,7 +46,8 @@ function rangeText(from, to) {
 /** The pill for an event in a week or month cell: the time and the title, tinted with the calendar colour. */
 function pillNode(occ, ui, className) {
   const pill = ui.tint(ui.el('div', className), occ);
-  if (ui.hasTime(occ)) pill.appendChild(ui.field('span', 'time', ui.time(occ), 'urd-cal-pill-time', occ));
+  // A space between the time and the title, so a narrow pill can break the line there.
+  if (ui.hasTime(occ)) pill.append(ui.field('span', 'time', ui.time(occ), 'urd-cal-pill-time', occ), ' ');
   pill.appendChild(ui.field('span', 'title', occ.title));
   pill.title = `${occ.title}${occ.location ? ` · ${occ.location}` : ''}`;
   return pill;

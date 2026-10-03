@@ -684,10 +684,10 @@ function showEventDialog(occ, from, ics, ui, props) {
     dialog.remove();
     if (back && from?.isConnected) from.focus({ preventScroll: true });
   });
-  // The card is given a place in the window before it opens, so opening it
-  // (which moves the focus into it) never scrolls the page.
-  dialog.style.left = '0px';
-  dialog.style.top = '0px';
+  // The card is given a place in the part of the page that is in view before
+  // it opens, so opening it (which moves the focus into it) never scrolls the page.
+  dialog.style.left = `${window.scrollX + 8}px`;
+  dialog.style.top = `${window.scrollY + 8}px`;
   document.body.appendChild(dialog);
   dialog.show();
   placeOverCalendar(dialog, from);
@@ -1322,6 +1322,21 @@ function loadingNode(el, ctx) {
 /** View id + label KEY (looked up with ta at use time; never at module level). */
 const VIEW_NAMES = [['list', 'calendar.viewList'], ['cards', 'calendar.viewCards'], ['month', 'calendar.viewMonth'], ['next', 'calendar.viewNext'], ['agenda', 'calendar.viewAgenda']];
 
+/* ---------- The designs in the block menu ---------- */
+
+/** A variant per design beside the plain views: filled when the design model is loaded. */
+let designVariants = [];
+
+function keepDesignVariants(cd) {
+  designVariants = cd.CAL_DESIGNS.filter((d) => d.id !== 'plain').map((d) => ({ label: d.id, labelKey: d.labelKey, props: { design: d.id, view: d.view } }));
+}
+
+// The editor's block menu lists the designs, so the preview loads the design
+// model up front; a visitor loads it with the first calendar on a page.
+if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('preview')) {
+  import('../calendar-designs.js').then(keepDesignVariants, () => {});
+}
+
 /* ---------- The block ---------- */
 
 function renderCalendar(el, props, ctx) {
@@ -1539,9 +1554,11 @@ export const calendarBlock = {
   labelKey: 'blocks.calendar',
   // A new calendar starts quiet: the category filter and the subscribe and sign-up buttons are switched on by the owner.
   defaults: () => ({ sources: [], view: 'list', limit: 6, showCategories: false, showSubscribe: false, showSignup: false }),
-  // One variant per view: the editor's palette and the preview's block menu
-  // list them as «Calendar: Month» and the like.
-  variants: VIEW_NAMES.map(([view, labelKey]) => ({ label: view, labelKey, props: { view } })),
+  // One variant per view and one per design: the preview's block menu lists
+  // them as «Calendar: Month», «Calendar: Week strip» and the like.
+  get variants() {
+    return [...VIEW_NAMES.map(([view, labelKey]) => ({ label: view, labelKey, props: { view } })), ...designVariants];
+  },
   migrations: {},
   render: renderCalendar,
 };
