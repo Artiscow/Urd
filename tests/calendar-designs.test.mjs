@@ -10,7 +10,7 @@ import { engineImport } from './_engine.mjs';
 
 const {
   CAL_DESIGNS, CAL_VIEWS, CAL_FIELDS, CAL_TEXTS, CAL_SIZE, CAL_MODULES,
-  CAL_SWITCH_VIEWS, calSwitcher, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calTextHtml, calHasTextOverrides,
+  CAL_SWITCH_VIEWS, calSwitcher, calFolds, calProgramHref, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calTextHtml, calHasTextOverrides,
 } = await engineImport('calendar-designs.js');
 
 const plain = CAL_DESIGNS[0];
@@ -152,4 +152,26 @@ test('every design has a thumbnail of its own, and an unknown id takes the plain
     assert.ok(!/NaN|undefined/.test(svg), `${design.id}: a broken number in the drawing`);
   }
   assert.equal(calendarThumb('no-such-design'), calendarThumb('plain'));
+});
+
+test('calFolds: a list view folds the rest unless switched off, the regular-event design never', () => {
+  assert.equal(calFolds({ view: 'list' }), true);
+  assert.equal(calFolds({}), true);
+  assert.equal(calFolds({ design: 'glass', view: 'list' }), true);
+  assert.equal(calFolds({ design: 'glass', view: 'list', showMore: false }), false);
+  assert.equal(calFolds({ view: 'cards' }), false);
+  assert.equal(calFolds({ design: 'tickets', view: 'cards' }), false);
+  assert.equal(calFolds({ design: 'apSeries', view: 'list' }), false);
+});
+
+test('calProgramHref: an address only on a design that links to the programme, and only a safe one', () => {
+  assert.equal(calProgramHref({ design: 'tickets', programHref: ' /program ' }), '/program');
+  assert.equal(calProgramHref({ design: 'posters', programHref: 'https://example.org/p' }), 'https://example.org/p');
+  assert.equal(calProgramHref({ design: 'billboard', programHref: '#program' }), '#program');
+  assert.equal(calProgramHref({ design: 'tickets' }), null);
+  assert.equal(calProgramHref({ design: 'tickets', programHref: 'javascript:alert(1)' }), null);
+  assert.equal(calProgramHref({ design: 'tickets', programHref: '//evil.example' }), null);
+  assert.equal(calProgramHref({ design: 'glass', programHref: '/program' }), null);
+  for (const design of CAL_DESIGNS.filter((d) => d.program)) assert.ok(design.texts.includes('wholeProgram'), design.id);
+  for (const design of CAL_DESIGNS.filter((d) => d.open)) assert.ok(design.texts.includes('openToAll'), design.id);
 });

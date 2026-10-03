@@ -5,7 +5,8 @@
  * next): it names the colour slots the owner can override, the static texts
  * the owner can rewrite in the preview, and whether its boxes carry an edge
  * stripe. The owner's choices are additive props on the block (`design`,
- * `colors`, `stripe`, `texts`, `fieldStyle`, `showSignup`); a block without
+ * `colors`, `stripe`, `texts`, `fieldStyle`, `showSignup`, `showMore`,
+ * `programHref`, `showOpen`); a block without
  * them renders the plain design on the theme's colours. The module is
  * bundled by the editor and loaded by the block on its first render (with
  * ics.js, outside the visitor closure), so it never touches the DOM and never
@@ -77,6 +78,8 @@ export const CAL_TEXTS = {
   swUpcoming: 'calendar.swUpcoming',
   swWeek: 'calendar.swWeek',
   swMonth: 'calendar.swMonth',
+  recurring: 'calendar.recurring',
+  openToAll: 'calendar.openToAll',
 };
 
 /** The texts of the ApeironLF empty state (the designs with `empty: 'ap'`). */
@@ -106,7 +109,10 @@ const slot = (key, section = 'colors') => ({ key, labelKey: `calendar.slot.${key
  * and noticeText; `noticeBand` marks a design that can draw it as an alert
  * band instead, `as: 'band'`). `empty: 'ap'` gives the design ApeironLF's
  * empty state (a pill, a dashed box and the subscribe button) in place of
- * the plain one.
+ * the plain one. `program` marks a design that draws a link to the whole
+ * programme when the block has an address for it (`props.programHref`), and
+ * `open` one that writes «Open to everyone» on an event without a sign-up
+ * (`props.showOpen`).
  * @type {Array<{id: string, labelKey: string, view: string|null, module?: string, stripe: boolean,
  *   slots: Array<{key: string, labelKey: string, section: string}>, texts: string[]}>}
  */
@@ -162,8 +168,8 @@ export const CAL_DESIGNS = [
     view: 'list',
     module: 'list',
     stripe: false,
-    slots: [slot('row'), slot('text'), slot('gold'), slot('line')],
-    texts: [...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
+    slots: [slot('row'), slot('text'), slot('gold'), slot('line'), slot('rec')],
+    texts: ['recurring', ...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
   },
   {
     id: 'glass',
@@ -180,8 +186,9 @@ export const CAL_DESIGNS = [
     view: 'cards',
     module: 'cards',
     stripe: false,
+    program: true,
     slots: [slot('accent'), slot('surface'), slot('line'), slot('posterA', 'posters'), slot('posterAText', 'posters'), slot('posterB', 'posters'), slot('posterBText', 'posters'), slot('posterC', 'posters'), slot('posterCText', 'posters')],
-    texts: COMMON_TEXTS,
+    texts: ['wholeProgram', ...COMMON_TEXTS],
   },
   {
     id: 'tickets',
@@ -189,8 +196,10 @@ export const CAL_DESIGNS = [
     view: 'cards',
     module: 'cards',
     stripe: false,
+    program: true,
+    open: true,
     slots: [slot('accent'), slot('surface'), slot('line'), slot('stub', 'stub'), slot('stubText', 'stub')],
-    texts: COMMON_TEXTS,
+    texts: ['wholeProgram', 'openToAll', ...COMMON_TEXTS],
   },
   {
     id: 'carousel',
@@ -217,8 +226,8 @@ export const CAL_DESIGNS = [
     view: 'cards',
     module: 'cards',
     stripe: false,
-    slots: [slot('head'), slot('card'), slot('text'), slot('gold')],
-    texts: [...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
+    slots: [slot('head'), slot('card'), slot('text'), slot('gold'), slot('rec')],
+    texts: ['recurring', ...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
   },
   {
     id: 'bento',
@@ -311,8 +320,9 @@ export const CAL_DESIGNS = [
     module: 'next',
     stripe: false,
     ownSubscribe: true,
+    program: true,
     slots: [slot('bg'), slot('text'), slot('label'), slot('pulse'), slot('tile', 'countdown'), slot('tileText', 'countdown'), slot('button', 'buttons'), slot('buttonText', 'buttons')],
-    texts: ['now', 'then', 'unitDays', 'unitHours', 'unitMin', ...COMMON_TEXTS],
+    texts: ['now', 'then', 'unitDays', 'unitHours', 'unitMin', 'wholeProgram', ...COMMON_TEXTS],
   },
   {
     id: 'stacked',
@@ -386,6 +396,7 @@ export const CAL_DESIGNS = [
     module: 'next',
     stripe: false,
     ownSubscribe: true,
+    program: true,
     slots: [slot('accent'), slot('accentText'), slot('soft'), slot('tile'), slot('line')],
     texts: ['now', 'wholeProgram', ...COMMON_TEXTS],
   },
@@ -428,6 +439,7 @@ export const CAL_DESIGNS = [
     view: 'agenda',
     module: 'more',
     stripe: true,
+    ownFilter: true,
     slots: [slot('ground'), slot('text'), slot('card'), slot('edge'), slot('accent'), slot('chip')],
     texts: ['todayBtn', ...COMMON_TEXTS],
   },
@@ -459,6 +471,29 @@ export const CAL_SWITCH_VIEWS = ['list', 'cards', 'agenda', 'next'];
  */
 export function calSwitcher(props) {
   return props?.switcher === true && CAL_SWITCH_VIEWS.includes(calView(props));
+}
+
+/**
+ * True when the block folds the events beyond its max count under «Show all»:
+ * a list view (the plain list and the list designs) with the fold left on
+ * (`showMore`, on unless switched off). The regular-event design lists one
+ * event's dates and folds them itself.
+ */
+export function calFolds(props) {
+  return props?.showMore !== false && calView(props) === 'list' && calDesign(props?.design).module !== 'more';
+}
+
+const SAFE_HREF = /^(?:https?:\/\/|\/(?!\/)|#|mailto:)/i;
+
+/**
+ * The address of the whole programme, for a design that links to it
+ * (`program`): a page of the site, an anchor or a full address. Null when the
+ * block has none, the design draws no such link, or the value is not an address.
+ */
+export function calProgramHref(props) {
+  if (!calDesign(props?.design).program) return null;
+  const href = typeof props?.programHref === 'string' ? props.programHref.trim() : '';
+  return SAFE_HREF.test(href) ? href : null;
 }
 
 /** The picker's groups: the designs by the view they stand on, the plain one first and alone. */

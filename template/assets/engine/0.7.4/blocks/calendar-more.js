@@ -268,12 +268,69 @@ export function apSeries(host, occs, props, ics, ui) {
   host.appendChild(card);
 }
 
-/** F5 Agenda, dark: a dark ground with the month, this week's days with a dot under those with events, and a card per event under its day. */
+let menuSeq = 0;
+
+/**
+ * The calendar chip of the dark agenda: a button naming the calendar shown,
+ * opening a menu of the named calendars (the Popover API, ADR-0011). Without
+ * popovers the calendars stand as a row of chips. Null with fewer than two
+ * calendars.
+ */
+function filterMenu(ui) {
+  const { names, active, pick } = ui.filter ?? {};
+  if (!names || names.length < 2) return null;
+  const colourOf = (name) => ui.all.find((occ) => occ.category === name && occ.color) ?? null;
+  const choice = (name, className) => {
+    const btn = ui.el('button', className);
+    btn.type = 'button';
+    if (name) {
+      const hit = colourOf(name);
+      btn.appendChild(hit ? ui.tint(ui.el('i', 'urd-cal-magenda-dot'), hit) : ui.el('i', 'urd-cal-magenda-dot'));
+      btn.appendChild(ui.field('span', 'category', name));
+    } else {
+      btn.appendChild(ui.tx('all'));
+    }
+    if ((active ?? null) === name) btn.setAttribute('aria-current', 'true');
+    btn.addEventListener('click', () => pick(name));
+    return btn;
+  };
+  const wrap = ui.el('div', 'urd-cal-magenda-filter');
+  if (!('popover' in HTMLElement.prototype)) {
+    wrap.classList.add('urd-cal-magenda-filter-row');
+    for (const name of [null, ...names]) wrap.appendChild(choice(name, 'urd-cal-magenda-pick'));
+    return wrap;
+  }
+  const list = ui.el('div', 'urd-cal-magenda-menu');
+  list.id = `urd-cal-menu-${++menuSeq}`;
+  list.popover = 'auto';
+  for (const name of [null, ...names]) list.appendChild(choice(name, 'urd-cal-magenda-pick'));
+  const open = ui.el('button', 'urd-cal-magenda-chip');
+  open.type = 'button';
+  open.popoverTargetElement = list;
+  if (active) open.appendChild(ui.field('span', 'category', active));
+  else open.appendChild(ui.tx('all'));
+  open.appendChild(ui.el('i', 'urd-cal-magenda-caret'));
+  // The menu opens under its chip: its place is measured when it opens.
+  list.addEventListener('toggle', (event) => {
+    if (event.newState !== 'open') return;
+    const box = open.getBoundingClientRect();
+    list.style.top = `${box.bottom + 6}px`;
+    list.style.left = `${Math.max(8, Math.min(box.left, window.innerWidth - list.offsetWidth - 8))}px`;
+  });
+  wrap.append(open, list);
+  return wrap;
+}
+
+/** F5 Agenda, dark: a dark ground with the month and the calendar chip, this week's days with a dot under those with events, and a card per event under its day. */
 export function mobileAgenda(host, occs, props, ics, ui) {
   const today = ui.today();
   const monday = new Date(ics.startOfWeek(today.getTime()));
   const card = ui.el('div', 'urd-cal-magenda');
-  card.appendChild(ui.el('strong', 'urd-cal-magenda-month', monthLong(occs.length ? dayOf(occs[0]) : today)));
+  const head = ui.el('div', 'urd-cal-magenda-head');
+  head.appendChild(ui.el('strong', 'urd-cal-magenda-month', monthLong(occs.length ? dayOf(occs[0]) : today)));
+  const menu = filterMenu(ui);
+  if (menu) head.appendChild(menu);
+  card.appendChild(head);
   const strip = ui.el('div', 'urd-cal-magenda-strip');
   for (let i = 0; i < 7; i++) {
     const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);

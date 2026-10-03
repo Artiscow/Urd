@@ -2,6 +2,17 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Test batch (0.7.19.8): the parts of the calendar artboards left out
+
+- [ ] A list calendar (the plain list, Timeline, Table, Programme booklet, Numbered programme, List on navy, Glass) with more events than the max count: «Show all N (M more)» under the rows opens the rest in the same design without a reload; Numbered programme counts on (03, 04 ...) and its count is of the whole list; Table's folded rows may stand slightly off the columns above
+- [ ] Content, «Fold the rest under «Show all»» stands under the max count on list designs only; off removes the fold, and a block saved before the change shows the fold
+- [ ] With a real feed: a weekly event wears «Repeats» in List on navy and Grid on cream and a single event does not; the word is rewritten by clicking it, and «Repeats mark» in the Style tab's colours changes its colour
+- [ ] Content, «Address of the whole programme» is offered on Poster wall, Tickets, Billboard and Coming up bento only; with /program filled in Poster wall has a last dashed tile, Tickets and Billboard a foot link and Coming up bento a link in its tile, all leading there on the published page; emptied, they are gone
+- [ ] Tickets: an event without a sign-up shows «Open to everyone» at the right end, one with a sign-up shows the button; «Show «Open to everyone»» off removes the words; the words are rewritten by clicking them
+- [ ] Day carousel: a dot per card under the cards, the long dot follows the scroll (arrows, touch, wheel) and a click on a dot scrolls to its card; with one card there are no dots
+- [ ] Agenda, dark with two or more named calendars: a chip beside the month opens a menu under it with «All» and the calendars, a choice filters the cards and the chip names it, a click outside or Escape closes the menu; with one calendar there is no chip; the menu is also there in the Clean view and on the published page
+- [ ] Bento with a real feed whose next event has a picture (an attachment or a picture link on an allowed host): the picture fills the hero tile and the words stay readable; without a picture the tile is as before
+
 ### Testrunde-batch (0.7.19.7): the view switcher and the design picker
 
 - [ ] Content, «Show view switcher» on a list, cards, agenda or next calendar (any design): three buttons at the top of the block, «Upcoming» pressed; «Week» shows the week strip with its arrows, «Month» the month with its arrows, «Upcoming» the block's own design again; the published page starts on «Upcoming» every time

@@ -96,7 +96,7 @@ function demoOccurrences() {
   const base = Date.now();
   return [
     { start: base + 3 * day, end: base + 3 * day + 2 * 3600 * 1000, allDay: false, title: ta('calendar.demoTitle1'), category: ta('calendar.demoCat1'), location: ta('calendar.demoLoc1'), signup: null, description: '' },
-    { start: base + 10 * day, end: base + 10 * day + 3600 * 1000, allDay: false, title: ta('calendar.demoTitle2'), category: ta('calendar.demoCat2'), location: ta('calendar.demoLoc1'), signup: null, description: '' },
+    { start: base + 10 * day, end: base + 10 * day + 3600 * 1000, allDay: false, title: ta('calendar.demoTitle2'), category: ta('calendar.demoCat2'), location: ta('calendar.demoLoc1'), signup: null, description: '', recurring: true },
     { start: base + 17 * day, end: base + 17 * day, allDay: true, title: ta('calendar.demoTitle3'), category: ta('calendar.demoCat3'), location: ta('calendar.demoLoc2'), signup: null, description: '' },
     { start: base + day, end: base + day + 90 * 60 * 1000, allDay: false, title: ta('calendar.demoTitle4'), category: ta('calendar.demoCat1'), location: ta('calendar.demoLoc1'), signup: null, description: '' },
     { start: base + 5 * day, end: base + 5 * day, allDay: true, title: ta('calendar.demoTitle5'), category: ta('calendar.demoCat2'), location: ta('calendar.demoLoc2'), signup: null, description: '' },
@@ -169,7 +169,12 @@ function imageUrl(occ, width = 800) {
  * as such fields; `tx` is a static text (a label or a button's words) that
  * the owner rewrites by clicking it in the preview, where the text toolbar
  * attaches to it as to a text block; `signup` is the sign-up button when the
- * block shows them. Every edit posts the whole props with the text under
+ * block shows them; `recurring` is the mark on an event that repeats,
+ * `program` the link to the whole programme when the block has an address
+ * for it, and `openToAll` the words on an event without a sign-up. `filter`
+ * is the category filter for a design that draws its own, and `offset`,
+ * `total` and `rest` tell a list design where in the whole list its rows
+ * stand when the block folds the rest. Every edit posts the whole props with the text under
  * its key in `texts`, so the editor's draft stays the owner of the words.
  */
 function makeUi(cd, ics, el, host, props, ctx, sources) {
@@ -245,11 +250,28 @@ function makeUi(cd, ics, el, host, props, ctx, sources) {
     return a;
   };
   const chip = (occ) => chipNode(occ.category, occ.color, ui);
+  /** The mark on an event that repeats, with words the owner can rewrite; null on a single event. */
+  const recurring = (occ) => {
+    if (!occ.recurring) return null;
+    const mark = el2('span', 'urd-cal-rec');
+    mark.appendChild(tx('recurring'));
+    return mark;
+  };
+  /** The link to the whole programme; null when the block has no address or the design draws none. */
+  const program = (className) => {
+    const to = cd.calProgramHref(props);
+    return to ? link(className ? `urd-cal-program ${className}` : 'urd-cal-program', 'wholeProgram', to, '') : null;
+  };
+  /** «Open to everyone» on an event without a sign-up, for a design that writes it; null when switched off. */
+  const openToAll = (occ) => {
+    if (occ.signup || props.showOpen === false || !cd.calDesign(props.design).open) return null;
+    return tx('openToAll', 'urd-cal-open');
+  };
   /** The subscribe buttons, for a design that places them itself; null when they are off or there is no source. */
   const subscribe = () => (props.showSubscribe !== false && sources.length ? subscribeRow(ics, sources, ui) : null);
   /** The event's own page: the address the feed gives it, else its sign-up link; null without either. */
   const href = (occ) => (typeof occ.url === 'string' && /^https?:\/\//i.test(occ.url) ? occ.url : occ.signup || null);
-  const ui = { el: el2, tint: tintNode, field, meta, tx, link, signup, chip, subscribe, href, countdown: countdownText, image: imageUrl, all: [], today: () => new Date() };
+  const ui = { el: el2, tint: tintNode, field, meta, tx, link, signup, chip, recurring, program, openToAll, subscribe, href, countdown: countdownText, image: imageUrl, all: [], offset: 0, total: 0, rest: false, filter: null, today: () => new Date() };
   return ui;
 }
 
@@ -513,6 +535,24 @@ function categoryRow(occs, active, onpick, ui) {
   return row;
 }
 
+/**
+ * The fold for the events beyond the max count: a native details element
+ * whose summary counts them, with the same design drawing the rest inside
+ * it, so the whole list is in the page.
+ */
+function foldNode(render, rest, total, props, ics, ui) {
+  const fold = el2('details', 'urd-cal-fold');
+  fold.appendChild(el2('summary', 'urd-cal-fold-summary', t('calendar.showAll', { n: total, m: rest.length })));
+  const body = el2('div', 'urd-cal-fold-body');
+  ui.offset = total - rest.length;
+  ui.rest = true;
+  render(body, rest, props, ics, ui);
+  ui.offset = 0;
+  ui.rest = false;
+  fold.appendChild(body);
+  return fold;
+}
+
 /** The view switcher: the block's own design, the week and the month, as a row of pressed buttons. */
 const SWITCH_MODES = [['own', 'swUpcoming'], ['week', 'swWeek'], ['month', 'swMonth']];
 
@@ -593,9 +633,12 @@ function drawCalendar(ics, cd, mod, weekMod, el, host, props, ctx) {
       ? base.filter((occ) => occ.category === activeCategory)
       : base;
     // The max count applies to list, cards and agenda; the month, week, day and year views show their span and next has its own two counts.
+    const limit = Math.max(1, props.limit ?? 6);
     const limited = !own || ['month', 'next', 'week', 'day', 'year'].includes(view)
       ? filtered
-      : filtered.slice(0, Math.max(1, props.limit ?? 6));
+      : filtered.slice(0, limit);
+    // A list folds the events beyond the max count instead of dropping them.
+    const folds = own && cd.calFolds(props) && filtered.length > limit;
     if (switcher) {
       host.appendChild(switchRow(mode, (picked) => {
         mode = picked;
@@ -610,6 +653,16 @@ function drawCalendar(ics, cd, mod, weekMod, el, host, props, ctx) {
     if (chips) host.appendChild(chips);
     // The whole filtered list, for a design that draws more than the rows (the bento's month dots).
     ui.all = filtered;
+    ui.total = folds ? filtered.length : limited.length;
+    // The category filter, for a design that draws it itself (ownFilter).
+    ui.filter = {
+      names: [...new Set(occurrences.map((occ) => occ.category).filter(Boolean))],
+      active: activeCategory,
+      pick: (category) => {
+        activeCategory = category;
+        draw(occurrences, note);
+      },
+    };
     if (mode === 'week') {
       weekMod.weekStrip(host, limited, props, ics, ui);
     } else if (mode === 'month') {
@@ -617,7 +670,9 @@ function drawCalendar(ics, cd, mod, weekMod, el, host, props, ctx) {
     } else if (!limited.length) {
       host.appendChild(design.empty === 'ap' ? emptyApNode(props, ui) : emptyNode(props));
     } else {
-      (mod?.[design.id] ?? VIEWS[view] ?? renderList)(host, limited, props, ics, ui);
+      const render = mod?.[design.id] ?? VIEWS[view] ?? renderList;
+      render(host, limited, props, ics, ui);
+      if (folds) host.appendChild(foldNode(render, filtered.slice(limit), filtered.length, props, ics, ui));
     }
     // A design that places the subscribe buttons itself (ownSubscribe) gets no row under it.
     if (!design.ownSubscribe || !limited.length || !own) {

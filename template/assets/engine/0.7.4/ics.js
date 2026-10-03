@@ -268,11 +268,12 @@ function* ruleStarts(startParts, rule) {
 /**
  * Expands raw events into concrete occurrences inside a window.
  * A RECURRENCE-ID event overrides its base occurrence, EXDATE removes one,
- * and STATUS:CANCELLED removes one. The result is sorted by start.
+ * and STATUS:CANCELLED removes one. An occurrence of an event with a
+ * recurrence rule carries `recurring: true`. The result is sorted by start.
  *
  * @param {object[]} events from parseIcs
  * @param {{ from?: Date|number, to?: Date|number, max?: number }} window
- * @returns {Array<{ summary, description, location, url, start: number, end: number, allDay: boolean, uid }>}
+ * @returns {Array<{ summary, description, location, url, start: number, end: number, allDay: boolean, recurring: boolean, uid }>}
  */
 export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) {
   const fromMs = Number(from);
@@ -287,7 +288,7 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
   }
 
   const out = [];
-  const push = (event, startMs, endMs) => {
+  const push = (event, startMs, endMs, recurring = false) => {
     if (event.status === 'CANCELLED') return;
     out.push({
       uid: event.uid ?? null,
@@ -299,6 +300,7 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
       start: startMs,
       end: endMs,
       allDay: !!event.start.allDay,
+      recurring,
     });
   };
 
@@ -329,11 +331,11 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
       if (override) {
         const oStart = partsToMs(override.start);
         const oEnd = override.end ? partsToMs(override.end) : oStart + durationMs;
-        if (oEnd >= fromMs && oStart <= toMs) push({ ...event, ...override }, oStart, oEnd);
+        if (oEnd >= fromMs && oStart <= toMs) push({ ...event, ...override }, oStart, oEnd, true);
         continue;
       }
       if (occurrenceMs + durationMs < fromMs) continue;
-      push(event, occurrenceMs, occurrenceMs + durationMs);
+      push(event, occurrenceMs, occurrenceMs + durationMs, true);
       if (out.length >= max * 2) break;
     }
   }

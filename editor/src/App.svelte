@@ -9420,6 +9420,14 @@
         <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
           <input type="number" min="1" max="50" value={selectedBlock.props.limit ?? 6}
             onchange={(e) => setBlockProp('limit', Math.max(1, Math.min(50, Number(e.target.value) || 6)))} /></label>
+        <!-- A list folds the events beyond the max count; the regular-event design folds its own dates -->
+        {#if calView(selectedBlock.props) === 'list' && calDesign(selectedBlock.props.design).module !== 'more'}
+          <label class="gridmenu-snap" title={ta('tip.calendar.showMore')}>
+            <input type="checkbox" checked={selectedBlock.props.showMore !== false}
+              onchange={(e) => setBlockProp('showMore', e.target.checked ? undefined : false)} />
+            {ta('calendar.showMore')}
+          </label>
+        {/if}
       {/if}
       {#if selectedBlock.props.view === 'next'}
         <!-- The card: how many events in full, and how many more as lines under «Later» -->
@@ -9461,6 +9469,18 @@
           onchange={(e) => setBlockProp('showSignup', e.target.checked)} />
         {ta('calendar.showSignup')}
       </label>
+      {#if calDesign(selectedBlock.props.design).open}
+        <label class="gridmenu-snap" title={ta('tip.calendar.showOpen')}>
+          <input type="checkbox" checked={selectedBlock.props.showOpen !== false}
+            onchange={(e) => setBlockProp('showOpen', e.target.checked ? undefined : false)} />
+          {ta('calendar.showOpen')}
+        </label>
+      {/if}
+      {#if calDesign(selectedBlock.props.design).program}
+        <label title={ta('tip.calendar.programHref')}>{ta('calendar.programHref')}
+          <input value={selectedBlock.props.programHref ?? ''} placeholder="/program" spellcheck="false"
+            onchange={(e) => setBlockProp('programHref', e.target.value.trim() || undefined)} /></label>
+      {/if}
       <!-- The announcement note, on the designs that have one: a switch and the link it leads to -->
       {#if calDesign(selectedBlock.props.design).notice}
         <label class="gridmenu-snap" title={ta('tip.calendar.showNotice')}>

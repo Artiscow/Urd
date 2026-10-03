@@ -44,6 +44,12 @@ export function posters(host, occs, props, ics, ui) {
     card.append(top, when, body);
     wall.appendChild(card);
   });
+  // The last tile leads to the whole programme, when the block has an address for it.
+  const program = ui.program('urd-cal-poster urd-cal-poster-link');
+  if (program) {
+    program.appendChild(ui.el('span', 'urd-cal-poster-arrow', '→'));
+    wall.appendChild(program);
+  }
   host.appendChild(wall);
 }
 
@@ -67,10 +73,14 @@ export function tickets(host, occs, props, ics, ui) {
     if (meta.childNodes.length) text.appendChild(meta);
     body.appendChild(text);
     const signup = ui.signup(occ);
+    const open = signup ? null : ui.openToAll(occ);
     if (signup) body.appendChild(signup);
+    else if (open) body.appendChild(open);
     ticket.append(stub, body);
     list.appendChild(ticket);
   }
+  const program = ui.program('urd-cal-tickets-foot');
+  if (program) list.appendChild(program);
   host.appendChild(list);
 }
 
@@ -110,7 +120,27 @@ export function carousel(host, occs, props, ics, ui) {
   const step = () => (track.firstElementChild?.getBoundingClientRect().width ?? 220) + 14;
   prev.addEventListener('click', () => track.scrollBy({ left: -step(), behavior: 'smooth' }));
   next.addEventListener('click', () => track.scrollBy({ left: step(), behavior: 'smooth' }));
+  // A dot per card under the track: the one nearest the track's left edge is marked, and a dot scrolls to its card.
+  const dots = ui.el('div', 'urd-cal-carousel-dots');
+  const cards = [...track.children];
+  cards.forEach((card, i) => {
+    const dot = ui.el('button', 'urd-cal-carousel-dot');
+    dot.type = 'button';
+    dot.setAttribute('aria-label', occs[i].title);
+    dot.addEventListener('click', () => track.scrollTo({ left: card.offsetLeft - track.offsetLeft, behavior: 'smooth' }));
+    dots.appendChild(dot);
+  });
+  const mark = () => {
+    const at = Math.round(track.scrollLeft / step());
+    [...dots.children].forEach((dot, i) => {
+      if (i === Math.min(at, cards.length - 1)) dot.setAttribute('aria-current', 'true');
+      else dot.removeAttribute('aria-current');
+    });
+  };
+  track.addEventListener('scroll', mark, { passive: true });
+  mark();
   wrap.append(nav, track);
+  if (cards.length > 1) wrap.appendChild(dots);
   host.appendChild(wrap);
 }
 
@@ -160,6 +190,8 @@ export function apGrid(host, occs, props, ics, ui) {
     head.appendChild(when);
     const chip = ui.chip(occ);
     if (chip) head.appendChild(chip);
+    const rec = ui.recurring(occ);
+    if (rec) head.appendChild(rec);
     const body = ui.el('div', 'urd-cal-apcard-body');
     body.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-apcard-title'));
     const when2 = ui.el('span', 'urd-cal-apcard-time');
@@ -224,6 +256,22 @@ export function bento(host, occs, props, ics, ui) {
   const [hero, ...rest] = occs;
   const d = dayOf(hero);
   const heroTile = ui.tint(ui.el('article', 'urd-cal-bento-tile urd-cal-bento-hero'), hero);
+  // The event's picture fills the hero tile, under a shade that keeps the words readable.
+  const src = ui.image(hero, 1200);
+  if (src) {
+    const img = document.createElement('img');
+    img.className = 'urd-cal-bento-hero-img';
+    img.alt = '';
+    img.decoding = 'async';
+    // A picture the route refuses (a host not on the allowlist) leaves the plain tile.
+    img.addEventListener('error', () => {
+      img.remove();
+      heroTile.classList.remove('urd-cal-bento-hero-pic');
+    });
+    img.src = src;
+    heroTile.classList.add('urd-cal-bento-hero-pic');
+    heroTile.appendChild(img);
+  }
   const pill = ui.el('span', 'urd-cal-bento-pill');
   pill.appendChild(ui.tx('nextShort'));
   heroTile.append(pill, ui.el('span', 'urd-cal-bento-count', ui.countdown(hero)));

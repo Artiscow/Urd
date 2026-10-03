@@ -27,6 +27,17 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.19.8 - The parts of the calendar artboards left out - 3 October 2026
+
+- A list view dropped the events beyond the max count. They now stand under «Show all N (M more)» in a native `<details>` drawn by the same design (pure `calFolds`, the switch `showMore` under the max count); the Numbered programme counts on through the fold and shows the count of the whole list.
+- A repeating event looked like a single one. `expandEvents` marks its occurrences `recurring`, and List on navy and Grid on cream draw the mark with the static text `recurring` and the colour slot `rec`.
+- The block had no address for the whole programme. `programHref` (pure `calProgramHref`, a field shown on the designs that use it) gives Poster wall a last link tile, Tickets and Billboard a foot link and Coming up bento a link in its tile; without an address nothing is drawn.
+- A ticket without a sign-up had an empty right end. Tickets writes the static text «Open to everyone» there, with the switch `showOpen`.
+- Day carousel gets a dot per card under the track; the dot of the card at the left edge is marked while scrolling, and a dot scrolls to its card.
+- Agenda, dark showed the block's chip row over its dark card. It draws a calendar chip of its own that opens a menu of the named calendars (the Popover API, a row of chips without it; `ui.filter`).
+- Bento's hero tile takes the event's picture as its background under a shade, and stays plain without one or when the picture route refuses it.
+- New keys: `calendar.recurring`, `calendar.openToAll` and `calendar.showAll` in the site dictionaries (nb, en-GB, tr, nn), and the slot, switch and field labels in the admin dictionaries (nb, en-GB, tr). SCHEMA.md lists the three props.
+
 ### 0.7.0.37 - AGENTS.md checked against the repo, and the English documents made canonical - 3 October 2026
 
 - AGENTS.md was read against the repo and four statements no longer held. The list of engine modules the editor bundles lacked seven (`calendar-designs`, `calendar-thumb`, `nav-model`, `divider-model`, `gallery-layout`, `gallery-model`, `photo-source`); the test round's heading example was from the previous phase and carried the Norwegian word, and is now «Test batch (<commit number>)»; the stable plugin shells did not mention `language-packs.js`, which is the engine's own loader path; and the vision, the roadmap and the development document stood as not yet translated although their English versions exist.

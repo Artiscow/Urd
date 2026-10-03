@@ -109,7 +109,8 @@ export function booklet(host, occs, props, ics, ui) {
   const last = groups[groups.length - 1];
   const span = !first ? '' : first === last ? `${months[first.month]} ${first.year}` : `${months[first.month]} · ${months[last.month]} ${last.year}`;
   head.append(title, ui.field('span', 'date', span, 'urd-cal-booklet-span'));
-  paper.appendChild(head);
+  // The heading stands once, over the first rows; the fold continues the same paper.
+  if (!ui.rest) paper.appendChild(head);
   const cols = ui.el('div', 'urd-cal-booklet-cols');
   for (const group of groups) {
     const col = ui.el('section', 'urd-cal-booklet-month');
@@ -135,10 +136,11 @@ export function booklet(host, occs, props, ics, ui) {
 /** 10 Numbered programme: the events counted 01, 02, 03 with a rule between the rows and the count at the top. */
 export function numbered(host, occs, props, ics, ui) {
   const wrap = ui.el('div', 'urd-cal-numbered');
-  wrap.appendChild(ui.el('span', 'urd-cal-numbered-count', tp('calendar.count', occs.length)));
+  // The count is of the whole list, and the numbers run on through the fold.
+  if (!ui.rest) wrap.appendChild(ui.el('span', 'urd-cal-numbered-count', tp('calendar.count', ui.total || occs.length)));
   occs.forEach((occ, i) => {
     const row = ui.tint(ui.el('div', 'urd-cal-numbered-row'), occ);
-    row.appendChild(ui.field('span', 'number', two(i + 1), 'urd-cal-numbered-n'));
+    row.appendChild(ui.field('span', 'number', two(ui.offset + i + 1), 'urd-cal-numbered-n'));
     const body = ui.el('div', 'urd-cal-numbered-body');
     body.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-numbered-title'));
     const meta = ui.meta(occ);
@@ -168,6 +170,8 @@ export function apList(host, occs, props, ics, ui) {
     const chip = ui.chip(occ);
     if (chip) top.appendChild(chip);
     top.appendChild(weekdayMeta(occ, ui));
+    const rec = ui.recurring(occ);
+    if (rec) top.appendChild(rec);
     body.append(top, ui.field('strong', 'title', occ.title, 'urd-cal-ap-title'));
     row.append(when, body);
     const signup = ui.signup(occ);
@@ -179,7 +183,7 @@ export function apList(host, occs, props, ics, ui) {
 
 /** M2 Glass: frosted cards over three soft colour blobs, the day large in each card. */
 export function glass(host, occs, props, ics, ui) {
-  for (const n of ['a', 'b', 'c']) host.appendChild(ui.el('i', `urd-cal-glass-blob urd-cal-glass-blob-${n}`));
+  if (!ui.rest) for (const n of ['a', 'b', 'c']) host.appendChild(ui.el('i', `urd-cal-glass-blob urd-cal-glass-blob-${n}`));
   const list = ui.el('div', 'urd-cal-glass-list');
   for (const occ of occs) {
     const d = dayOf(occ);

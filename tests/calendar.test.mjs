@@ -245,3 +245,16 @@ test('an occurrence carries the event\'s picture and address', () => {
   assert.equal(occs[0].image, 'https://example.org/plakat.jpg');
   assert.equal(occs[0].url, 'https://forening.no/arrangement/1');
 });
+
+test('recurring: an occurrence of a repeating event carries the mark, a single event does not', () => {
+  const window = { from: Date.UTC(2026, 8, 1), to: Date.UTC(2026, 9, 1) };
+  const weekly = expandEvents(parseIcs(event([
+    'UID:w', 'SUMMARY:Trening', 'DTSTART:20260902T180000Z', 'DTEND:20260902T190000Z', 'RRULE:FREQ=WEEKLY;COUNT=3',
+  ])).events, window);
+  assert.equal(weekly.length, 3);
+  assert.ok(weekly.every((occ) => occ.recurring === true));
+  const single = expandEvents(parseIcs(event([
+    'UID:s', 'SUMMARY:Møte', 'DTSTART:20260910T180000Z', 'DTEND:20260910T193000Z',
+  ])).events, window);
+  assert.equal(single[0].recurring, false);
+});

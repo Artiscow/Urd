@@ -1177,6 +1177,62 @@ textarea.urd-form-input {
   text-decoration: underline;
 }
 
+/* The fold for the events beyond the max count, in every list design. */
+.urd-cal-fold {
+  margin-top: 12px;
+}
+
+.urd-cal-fold-summary {
+  width: fit-content;
+  padding: 6px 2px;
+  font-size: 0.9em;
+  font-weight: 600;
+  color: var(--urd-cal-accent);
+  cursor: pointer;
+}
+
+.urd-cal-fold-body {
+  margin-top: 12px;
+}
+
+.urd-cal-fold .urd-cal-table thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+/* The mark on an event that repeats (List on navy, Grid on cream). */
+.urd-cal-rec {
+  padding: 2px 8px;
+  font-size: 0.65em;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--urd-cal-s-rec, var(--urd-cal-accent));
+  border: 1px dashed var(--urd-cal-s-rec, var(--urd-cal-accent));
+  border-radius: 999px;
+}
+
+/* The link to the whole programme, and the words on an event without a sign-up. */
+.urd-cal-program {
+  font-weight: 600;
+  color: var(--urd-cal-accent);
+  text-decoration: none;
+}
+
+.urd-cal-program:hover {
+  text-decoration: underline;
+}
+
+.urd-cal-open {
+  flex: none;
+  font-size: 0.85em;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
 .urd-cal-chips {
   display: flex;
   flex-wrap: wrap;
@@ -1795,6 +1851,11 @@ textarea.urd-form-input {
   border-bottom: 1px solid var(--urd-cal-ap-gold);
 }
 
+.urd-cal-d-apList .urd-cal-rec {
+  color: var(--urd-cal-s-rec, var(--urd-cal-ap-gold));
+  border-color: var(--urd-cal-s-rec, var(--urd-cal-ap-gold));
+}
+
 .urd-cal-d-apList .urd-cal-chip {
   font-size: 0.65em;
   font-weight: 600;
@@ -1983,6 +2044,20 @@ textarea.urd-form-input {
   grid-column: span 2;
 }
 
+.urd-cal-poster-link {
+  align-items: flex-start;
+  justify-content: flex-end;
+  font-size: 1.1em;
+  border-style: dashed;
+}
+
+.urd-cal-poster-arrow {
+  order: -1;
+  margin-bottom: auto;
+  font-size: 1.6em;
+  line-height: 1;
+}
+
 .urd-cal-poster-a {
   color: var(--urd-cal-s-posterAText, var(--urd-color-accent-text));
   background: var(--urd-cal-s-posterA, var(--urd-cal-accent));
@@ -2057,6 +2132,11 @@ textarea.urd-form-input {
 .urd-cal-tickets {
   display: grid;
   gap: 14px;
+}
+
+.urd-cal-tickets-foot {
+  justify-self: center;
+  font-size: 0.9em;
 }
 
 .urd-cal-ticket {
@@ -2149,6 +2229,37 @@ textarea.urd-form-input {
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: thin;
+}
+
+.urd-cal-carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+}
+
+.urd-cal-carousel-dot {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.urd-cal-carousel-dot::before {
+  width: 8px;
+  height: 8px;
+  content: "";
+  background: var(--urd-cal-line);
+  border-radius: 50%;
+}
+
+.urd-cal-carousel-dot[aria-current]::before {
+  width: 20px;
+  background: var(--urd-cal-accent);
+  border-radius: 999px;
 }
 
 .urd-cal-daycard {
@@ -2341,6 +2452,12 @@ textarea.urd-form-input {
   border-color: transparent;
 }
 
+.urd-cal-apcard-head .urd-cal-rec {
+  margin-left: auto;
+  color: var(--urd-cal-s-rec, var(--urd-cal-s-card, #f3ecd8));
+  border-color: var(--urd-cal-s-rec, var(--urd-cal-s-card, #f3ecd8));
+}
+
 .urd-cal-apcard-body {
   display: flex;
   flex-direction: column;
@@ -2404,6 +2521,33 @@ textarea.urd-form-input {
   color: var(--urd-cal-s-heroText, var(--urd-color-bg));
   background: var(--urd-cal-s-hero, var(--urd-color-text));
   border-color: transparent;
+}
+
+.urd-cal-bento-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.urd-cal-bento-hero-pic {
+  color: #fff;
+}
+
+.urd-cal-bento-hero-pic::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(rgb(0 0 0 / 25%), rgb(0 0 0 / 70%));
+}
+
+.urd-cal-bento-hero-pic > :not(.urd-cal-bento-hero-img) {
+  z-index: 1;
+}
+
+.urd-cal-bento-hero-pic > :not(.urd-cal-bento-hero-img, .urd-cal-bento-pill, .urd-cal-bento-count) {
+  position: relative;
 }
 
 .urd-cal-bento-pill {
@@ -3811,6 +3955,10 @@ textarea.urd-form-input {
   gap: 0.5em 1em;
   font-size: 0.78em;
   opacity: 0.85;
+}
+
+.urd-cal-bb-program {
+  color: var(--urd-cal-s-label, var(--urd-cal-accent));
 }
 
 .urd-cal-bb .urd-cal-sub-btn {
@@ -5404,6 +5552,81 @@ textarea.urd-form-input {
   font-family: var(--urd-font-heading);
   font-size: 1.15em;
   text-transform: capitalize;
+}
+
+.urd-cal-magenda-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.urd-cal-magenda-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.urd-cal-magenda-chip,
+.urd-cal-magenda-pick {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 0.8em;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+  background: var(--urd-cal-s-chip, #26262d);
+  border: 1px solid var(--urd-cal-s-edge, #2a2a32);
+  border-radius: 999px;
+}
+
+.urd-cal-magenda-caret {
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-right: 2px solid currentcolor;
+  border-bottom: 2px solid currentcolor;
+  transform: rotate(45deg);
+}
+
+.urd-cal-magenda-menu {
+  position: fixed;
+  inset: auto;
+  gap: 2px;
+  min-width: 160px;
+  padding: 6px;
+  margin: 0;
+  color: var(--urd-cal-s-text, #f5f5f7);
+  background: var(--urd-cal-s-card, #1c1c22);
+  border: 1px solid var(--urd-cal-s-edge, #2a2a32);
+  border-radius: 14px;
+  box-shadow: 0 14px 34px rgb(0 0 0 / 45%);
+}
+
+.urd-cal-magenda-menu:popover-open {
+  display: grid;
+}
+
+.urd-cal-magenda-menu .urd-cal-magenda-pick {
+  justify-content: flex-start;
+  font-size: 0.9em;
+  background: transparent;
+  border-color: transparent;
+  border-radius: 9px;
+}
+
+.urd-cal-magenda-menu .urd-cal-magenda-pick:hover,
+.urd-cal-magenda-pick[aria-current] {
+  background: var(--urd-cal-s-chip, #26262d);
+}
+
+.urd-cal-magenda-pick .urd-cal-magenda-dot {
+  width: 8px;
+  height: 8px;
 }
 
 .urd-cal-magenda-strip {

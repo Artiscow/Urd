@@ -128,6 +128,8 @@ export function billboard(host, occs, props, ics, ui) {
     });
     foot.appendChild(then);
   }
+  const program = ui.program('urd-cal-bb-program');
+  if (program) foot.appendChild(program);
   const sub = ui.subscribe();
   if (sub) foot.appendChild(sub);
   if (foot.children.length) board.appendChild(foot);
@@ -475,7 +477,8 @@ export function nextBento(host, occs, props, ics, ui) {
   const linkTile = ui.el('div', 'urd-cal-nbento-tile urd-cal-nbento-link');
   linkTile.appendChild(ui.el('span', 'urd-cal-nbento-arrow', '→'));
   const count = ui.el('strong', 'urd-cal-nbento-small');
-  count.appendChild(ui.tx('wholeProgram'));
+  // The tile's words lead to the whole programme when the block has an address for it.
+  count.appendChild(ui.program() ?? ui.tx('wholeProgram'));
   count.appendChild(ui.el('span', 'urd-cal-nbento-sub', tp('calendar.count', occs.length)));
   linkTile.appendChild(count);
   if (sub) linkTile.appendChild(sub);
