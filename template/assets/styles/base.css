@@ -1178,6 +1178,226 @@ textarea.urd-form-input {
   text-decoration: underline;
 }
 
+/* A place leads to the map and a description keeps its links, both in the colour of the words around them. */
+.urd-cal-place-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.urd-cal-place-link:hover {
+  text-decoration: underline;
+}
+
+.urd-cal .urd-cal-f-description a {
+  color: inherit;
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+
+/* An event's box opens the event in full. */
+.urd-cal-event {
+  cursor: pointer;
+}
+
+.urd-cal-event:focus-visible {
+  outline: 2px solid var(--urd-cal-accent, var(--urd-color-accent));
+  outline-offset: 2px;
+}
+
+/* The event in full: a native dialog over the page, dressed as the card it was opened from
+   (the variables are set by the block from that card), with the theme as the fallback. */
+.urd-cal-dialog {
+  --dlg-text: var(--urd-cal-dlg-text, var(--urd-color-text));
+  --dlg-accent: var(--urd-cal-dlg-accent, var(--urd-color-accent));
+  position: fixed;
+  inset: auto;
+  box-sizing: border-box;
+  width: min(28rem, calc(100vw - 1rem));
+  max-height: calc(100dvh - 1rem);
+  padding: 1.2rem 1.3rem 1.1rem;
+  margin: 0;
+  font-size: 0.92rem;
+  overflow-y: auto;
+  font-family: var(--urd-cal-dlg-font, var(--urd-font-body));
+  line-height: 1.5;
+  color: var(--dlg-text);
+  background-color: var(--urd-cal-dlg-bg, var(--urd-color-surface));
+  background-image: var(--urd-cal-dlg-image, none);
+  border: var(--urd-cal-dlg-border, 1px solid color-mix(in srgb, var(--dlg-text) 14%, transparent));
+  border-radius: var(--urd-cal-dlg-radius, var(--urd-radius-md));
+  box-shadow: 0 24px 60px rgb(0 0 0 / 35%);
+  backdrop-filter: var(--urd-cal-dlg-blur, none);
+}
+
+/* The card lies over its calendar: the calendar is shaded, the page behind is left alone. */
+.urd-cal-dialog::backdrop {
+  background: transparent;
+}
+
+.urd-cal-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: rgb(0 0 0 / 45%);
+  border-radius: inherit;
+}
+
+.urd-cal-dialog-close {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0;
+  font-size: 1.05rem;
+  color: inherit;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--dlg-text) 30%, transparent);
+  border-radius: 50%;
+}
+
+.urd-cal-dialog-close svg {
+  width: 1em;
+  height: 1em;
+}
+
+.urd-cal-dialog-date {
+  display: block;
+  padding-right: 3rem;
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--dlg-accent);
+}
+
+.urd-cal-dialog-date::first-letter {
+  text-transform: uppercase;
+}
+
+.urd-cal-dialog-title {
+  margin: 0.2rem 3rem 0.9rem 0;
+  font-family: var(--urd-cal-dlg-title-font, var(--urd-font-heading));
+  font-size: 1.35em;
+  font-style: var(--urd-cal-dlg-title-style, normal);
+  font-weight: var(--urd-cal-dlg-title-weight, 700);
+  line-height: 1.15;
+  color: var(--urd-cal-dlg-title-color, inherit);
+  text-transform: var(--urd-cal-dlg-title-case, none);
+}
+
+.urd-cal-dialog-title.urd-cal-cancelled {
+  text-decoration: line-through;
+}
+
+.urd-cal-dialog-facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.25rem 1rem;
+  margin: 0 0 0.9rem;
+}
+
+.urd-cal-dialog-facts dt {
+  opacity: 0.65;
+}
+
+.urd-cal-dialog-facts dd {
+  margin: 0;
+}
+
+.urd-cal-dialog a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.urd-cal-dialog-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+}
+
+.urd-cal-dialog-meta .urd-cal-chip,
+.urd-cal-dialog-meta .urd-cal-rec {
+  color: inherit;
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--dlg-text) 45%, transparent);
+}
+
+.urd-cal-dialog-img {
+  display: block;
+  width: 100%;
+  height: 8.5rem;
+  margin-bottom: 0.9rem;
+  object-fit: cover;
+  border-radius: var(--urd-radius-sm);
+}
+
+.urd-cal-dialog-text {
+  margin-bottom: 1.1rem;
+  overflow-wrap: anywhere;
+}
+
+.urd-cal-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  align-items: center;
+}
+
+/* «Add to calendar»: the ways to do it, folded under the words. */
+.urd-cal-dialog-add {
+  flex: 1 1 100%;
+}
+
+.urd-cal-dialog-add summary {
+  width: fit-content;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.urd-cal-dialog-choices {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: start;
+  padding: 0.6rem 0 0 0.2rem;
+}
+
+.urd-cal-dialog-choice-label {
+  margin-top: 0.3rem;
+  font-size: 0.8em;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.urd-cal-dialog-address {
+  display: grid;
+  gap: 0.2rem;
+  width: 100%;
+  font-size: 0.85em;
+}
+
+.urd-cal-dialog-address input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--dlg-text) 30%, transparent);
+  border-radius: var(--urd-radius-sm);
+}
+
+.urd-cal-dialog a.urd-cal-dialog-primary {
+  padding: 0.55rem 1rem;
+  font-weight: 600;
+  color: var(--urd-cal-dlg-on-accent, var(--urd-color-accent-text));
+  text-decoration: none;
+  background: var(--dlg-accent);
+  border-radius: var(--urd-radius-sm);
+}
+
 /* A cancelled event: its title struck and the box dimmed, in every design. */
 .urd-cal-cancelled .urd-cal-f-title,
 .urd-cal-cancelled.urd-cal-f-title {

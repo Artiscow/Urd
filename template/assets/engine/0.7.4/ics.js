@@ -404,6 +404,76 @@ export function windowStart(view, now = Date.now()) {
   return now - 6 * 3600 * 1000;
 }
 
+const MEETING_HOSTS = /^(?:[a-z0-9-]+\.)*(?:zoom\.us|teams\.microsoft\.com|teams\.live\.com|meet\.google\.com|whereby\.com|meet\.jit\.si|webex\.com)$/i;
+
+/**
+ * The first address in the texts that leads to a video meeting (Zoom, Teams,
+ * Google Meet, Whereby, Jitsi, Webex), or null. The host is compared exactly,
+ * never by a substring.
+ * @param {...string} texts The event's address, place and description
+ */
+export function findMeetingLink(...texts) {
+  for (const text of texts) {
+    for (const m of String(text ?? '').matchAll(/https?:\/\/[^\s<>"')\]]+/gi)) {
+      try {
+        const url = new URL(m[0].replace(/[.,;:!?]+$/, ''));
+        if (MEETING_HOSTS.test(url.hostname)) return url.href;
+      } catch { /* not an address */ }
+    }
+  }
+  return null;
+}
+
+const pad = (n) => String(n).padStart(2, '0');
+const utcStamp = (ms) => {
+  const d = new Date(ms);
+  return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
+};
+const dayStamp = (ms) => {
+  const d = new Date(ms);
+  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+};
+const escapeText = (text) => String(text ?? '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/([,;])/g, '\\$1');
+
+/** The start and the end of one occurrence as iCal stamps: dates for an all-day event (the end exclusive), UTC times otherwise. */
+function stamps(occ) {
+  const start = occ.start;
+  const end = Number.isFinite(occ.end) && occ.end >= occ.start ? occ.end : occ.start;
+  if (occ.allDay) return { start: dayStamp(start), end: dayStamp(end + 24 * 3600 * 1000), date: true };
+  return { start: utcStamp(start), end: utcStamp(end > start ? end : start + 3600 * 1000), date: false };
+}
+
+/**
+ * One occurrence as an iCal file, for «Add to calendar»: a calendar with
+ * the one event, its title, place, description and address.
+ * @param {{start: number, end?: number, allDay?: boolean, title?: string, summary?: string, location?: string, description?: string, url?: string, uid?: string}} occ
+ */
+export function eventIcs(occ) {
+  const at = stamps(occ);
+  const lines = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Urd//Calendar//EN', 'BEGIN:VEVENT',
+    `UID:${escapeText(occ.uid || `${at.start}-${occ.title ?? occ.summary ?? ''}`)}@urd`,
+    `DTSTAMP:${utcStamp(occ.start)}`,
+    at.date ? `DTSTART;VALUE=DATE:${at.start}` : `DTSTART:${at.start}`,
+    at.date ? `DTEND;VALUE=DATE:${at.end}` : `DTEND:${at.end}`,
+    `SUMMARY:${escapeText(occ.title ?? occ.summary)}`,
+  ];
+  if (occ.location) lines.push(`LOCATION:${escapeText(occ.location)}`);
+  if (occ.description) lines.push(`DESCRIPTION:${escapeText(occ.description)}`);
+  if (occ.url) lines.push(`URL:${occ.url}`);
+  lines.push('END:VEVENT', 'END:VCALENDAR');
+  return `${lines.join('\r\n')}\r\n`;
+}
+
+/** The address that opens one occurrence as a new event in Google Calendar. */
+export function googleEventUrl(occ) {
+  const at = stamps(occ);
+  const params = new URLSearchParams({ action: 'TEMPLATE', text: occ.title ?? occ.summary ?? '', dates: `${at.start}/${at.end}` });
+  if (occ.location) params.set('location', occ.location);
+  if (occ.description) params.set('details', occ.description);
+  return `https://calendar.google.com/calendar/render?${params}`;
+}
+
 /** The first picture address in the description (a link ending in an image file), or null. */
 export function findImageLink(description) {
   const m = /https?:\/\/[^\s<>"')\]]+\.(?:jpe?g|png|webp|gif|avif)(?:\?[^\s<>"')\]]*)?/i.exec(String(description ?? ''));

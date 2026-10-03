@@ -27,6 +27,16 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.19.11 - A click on a calendar event opens a card with its details, links and add-to-calendar choices - 3 October 2026
+
+- An event could not be opened. A click or Enter on an event opens it in a native dialog laid inside its calendar: the date and time, the place, the calendar it belongs to, the picture, the whole description with its links, the sign-up and «Join» for a meeting link (`findMeetingLink`). The calendar is shaded behind it, the card stays under the navigation bar and inside the calendar's width and height, and opening and closing it never scrolls the page.
+- «Add to calendar» opens the ways to do it: this event to Google or as a file (`eventIcs`, `googleEventUrl`), and the whole calendar as a subscription with its iCal address to copy.
+- The card takes its ground, type and accent from the event it was opened from, with a contrast check on the words and the button; a card drawn per design is 0.7.19.28.
+- A description was drawn as plain text and a place could not be followed. Descriptions keep their addresses as links, cut at a word and never inside an address, and a place leads to the map, in every design.
+- In the Clean view the editing layer took the pointer on every block and stopped every link, so an event could not be opened and a calendar's links did nothing. There a click on an event and the calendar's own links are let through, the rewritable words are plain text, and the element menu closes with the handles.
+- The sample data carries a description, a picture, a sign-up and a meeting link. The view switcher's «Uka» reads «Uke».
+- BACKLOG: stage 0.7.19.28, the design round for the event card and the switcher's week and month per design.
+
 ### 0.7.19.10 - Times and status on the calendar - 3 October 2026
 
 - Only an event's start was written. A timed event with an end reads «18:00-21:00» and an event over several days «until 6 Oct», in every design, through the shared `time`, `timeText` and `hasTime` in the block's ui (the pure rules are in the new calendar-format.js, with tests).

@@ -214,7 +214,7 @@ export function apSeries(host, occs, props, ics, ui) {
   kicker.append(ui.el('i'), ui.tx('series'));
   main.append(kicker, ui.field('strong', 'title', first.title, 'urd-cal-aps-title'));
   const text = String(first.description ?? '').split('\n').find((line) => line.trim() && !/^https?:\/\//i.test(line.trim()));
-  if (text) main.appendChild(ui.field('p', 'description', text.slice(0, 400), 'urd-cal-aps-text'));
+  if (text) main.appendChild(ui.field('p', 'description', ui.excerpt(text, 400), 'urd-cal-aps-text'));
   const facts = ui.el('div', 'urd-cal-aps-facts');
   const fact = (key, value) => {
     if (!value) return;

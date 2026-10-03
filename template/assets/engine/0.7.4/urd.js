@@ -281,6 +281,8 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-chrome') {
       // Clean view: hide/show the editing handles (CSS only, see base.css).
       document.body.classList.toggle('urd-chrome-off', !msg.visible);
+      // The calendar's rewritable words are plain text in the Clean view, so the links and buttons around them work.
+      for (const node of document.querySelectorAll('.urd-cal-tx.urd-text')) node.contentEditable = msg.visible ? 'true' : 'false';
       // The pinning and the menu's scroll state follow the switch at once,
       // not first at the next scroll.
       refreshSticky();

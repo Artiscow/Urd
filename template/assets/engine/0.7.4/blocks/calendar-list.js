@@ -24,7 +24,7 @@ function weekdayMeta(occ, ui) {
 
 /** The first line of the description, cut short, as the description field; null when there is none. */
 function excerptNode(occ, ui, className) {
-  const excerpt = String(occ.description ?? '').split('\n')[0].slice(0, 140);
+  const excerpt = ui.excerpt(occ.description);
   return excerpt ? ui.field('p', 'description', excerpt, className) : null;
 }
 

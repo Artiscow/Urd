@@ -80,6 +80,12 @@ export const CAL_TEXTS = {
   swMonth: 'calendar.swMonth',
   recurring: 'calendar.recurring',
   openToAll: 'calendar.openToAll',
+  join: 'calendar.join',
+  addEvent: 'calendar.addEvent',
+  addOne: 'calendar.addOne',
+  addFile: 'calendar.addFile',
+  addWhole: 'calendar.addWhole',
+  icalAddress: 'calendar.icalAddress',
 };
 
 /** The texts of the ApeironLF empty state (the designs with `empty: 'ap'`). */
@@ -89,7 +95,10 @@ const AP_EMPTY_TEXTS = ['emptyKicker', 'emptyTitle'];
 const NOTICE_TEXTS = ['noticeLabel', 'noticeTitle', 'noticeText', 'moreInfo'];
 
 /** The texts every design with chips, sign-up and subscribe buttons shows. */
-const COMMON_TEXTS = ['all', 'signup', 'subscribe', 'subscribeMulti', 'addGoogle', 'swUpcoming', 'swWeek', 'swMonth'];
+/** The texts of the event in full (the dialog a click on an event opens), in every design. */
+const EVENT_TEXTS = ['when', 'where', 'join', 'addEvent', 'addOne', 'addFile', 'addWhole', 'icalAddress'];
+
+const COMMON_TEXTS = ['all', 'signup', 'subscribe', 'subscribeMulti', 'addGoogle', 'swUpcoming', 'swWeek', 'swMonth', ...EVENT_TEXTS];
 
 /** A colour slot: the label key is `calendar.slot.<key>`, the section groups the pickers in the panel. */
 const slot = (key, section = 'colors') => ({ key, labelKey: `calendar.slot.${key}`, section });
@@ -265,7 +274,7 @@ export const CAL_DESIGNS = [
     stripe: false,
     ownFilter: true,
     slots: [slot('accent'), slot('surface'), slot('line'), slot('todayBg')],
-    texts: ['subscribe', 'subscribeMulti', 'addGoogle', 'signup'],
+    texts: ['subscribe', 'subscribeMulti', 'addGoogle', 'signup', ...EVENT_TEXTS],
   },
   {
     id: 'sidepanel',
@@ -431,7 +440,7 @@ export const CAL_DESIGNS = [
     notice: true,
     empty: 'ap',
     slots: [slot('card'), slot('row'), slot('text'), slot('title'), slot('gold'), slot('goldDark'), slot('line')],
-    texts: ['series', 'when', 'where', 'forWhom', 'openAll', 'allDates', ...NOTICE_TEXTS, ...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
+    texts: ['series', 'forWhom', 'openAll', 'allDates', ...NOTICE_TEXTS, ...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
   },
   {
     id: 'mobileAgenda',

@@ -238,7 +238,7 @@ export function split(host, occs, props, ics, ui) {
   body.appendChild(ui.field('strong', 'title', hero.title, 'urd-cal-split-title'));
   const meta = ui.meta(hero, { date: false });
   if (meta) body.appendChild(meta);
-  const excerpt = String(hero.description ?? '').split('\n')[0].slice(0, 220);
+  const excerpt = ui.excerpt(hero.description, 220);
   if (excerpt && ui.opt.description !== false) body.appendChild(ui.field('p', 'description', excerpt, 'urd-cal-split-text'));
   const signup = ui.signup(hero);
   if (signup) body.appendChild(signup);

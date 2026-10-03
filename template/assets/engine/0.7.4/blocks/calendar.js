@@ -96,15 +96,19 @@ async function loadOccurrences(ics, cf, sources, limit, view, from, zone) {
 
 /* ---------- Demo data (preview only, when no sources or feed) ---------- */
 
+/** A drawn picture for the sample data: hills under a sun, as an inline SVG the preview may load from itself. */
+const DEMO_IMAGE = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450"><rect width="800" height="450" fill="#bfe3dd"/><circle cx="610" cy="130" r="64" fill="#f6d77a"/><path d="M0 330 L170 200 L300 300 L450 150 L640 310 L800 220 L800 450 L0 450Z" fill="#3f8f80"/><path d="M0 380 L220 290 L420 370 L620 300 L800 360 L800 450 L0 450Z" fill="#256b5f"/></svg>')}`;
+
 function demoOccurrences() {
   const day = 24 * 3600 * 1000;
   const base = Date.now();
+  // The sample events carry what a real feed can: an end, a description with a link, a picture, a sign-up, a meeting link, a repeat and a cancellation.
   return [
-    { start: base + 3 * day, end: base + 3 * day + 2 * 3600 * 1000, allDay: false, title: ta('calendar.demoTitle1'), category: ta('calendar.demoCat1'), location: ta('calendar.demoLoc1'), signup: null, description: '', hasEnd: true },
-    { start: base + 10 * day, end: base + 10 * day + 3600 * 1000, allDay: false, title: ta('calendar.demoTitle2'), category: ta('calendar.demoCat2'), location: ta('calendar.demoLoc1'), signup: null, description: '', recurring: true },
-    { start: base + 17 * day, end: base + 18 * day, allDay: true, title: ta('calendar.demoTitle3'), category: ta('calendar.demoCat3'), location: ta('calendar.demoLoc2'), signup: null, description: '' },
-    { start: base + day, end: base + day + 90 * 60 * 1000, allDay: false, title: ta('calendar.demoTitle4'), category: ta('calendar.demoCat1'), location: ta('calendar.demoLoc1'), signup: null, description: '', hasEnd: true },
-    { start: base + 5 * day, end: base + 5 * day, allDay: true, title: ta('calendar.demoTitle5'), category: ta('calendar.demoCat2'), location: ta('calendar.demoLoc2'), signup: null, description: '', cancelled: true },
+    { start: base + 3 * day, end: base + 3 * day + 2 * 3600 * 1000, allDay: false, title: ta('calendar.demoTitle1'), category: ta('calendar.demoCat1'), location: ta('calendar.demoLoc1'), signup: null, description: `${ta('calendar.demoDesc2')} https://meet.jit.si/urd-example`, hasEnd: true, demo: true },
+    { start: base + 10 * day, end: base + 10 * day + 3600 * 1000, allDay: false, title: ta('calendar.demoTitle2'), category: ta('calendar.demoCat2'), location: ta('calendar.demoLoc1'), signup: null, description: ta('calendar.demoDesc3'), recurring: true, demo: true },
+    { start: base + 17 * day, end: base + 18 * day, allDay: true, title: ta('calendar.demoTitle3'), category: ta('calendar.demoCat3'), location: ta('calendar.demoLoc2'), signup: 'https://example.org/signup', description: `${ta('calendar.demoDesc4')} https://example.org/signup`, demo: true },
+    { start: base + day, end: base + day + 90 * 60 * 1000, allDay: false, title: ta('calendar.demoTitle4'), category: ta('calendar.demoCat1'), location: ta('calendar.demoLoc1'), signup: 'https://example.org/signup', description: `${ta('calendar.demoDesc1')} https://example.org/training`, image: DEMO_IMAGE, hasEnd: true, demo: true },
+    { start: base + 5 * day, end: base + 5 * day, allDay: true, title: ta('calendar.demoTitle5'), category: ta('calendar.demoCat2'), location: ta('calendar.demoLoc2'), signup: null, description: '', cancelled: true, demo: true },
   ].sort((a, b) => a.start - b.start);
 }
 
@@ -164,6 +168,8 @@ function countdownText(occ) {
  */
 function imageUrl(occ, width = 800) {
   if (!occ.image) return null;
+  // The sample data's own drawing is loaded as it is; a feed's picture always goes through the route.
+  if (occ.demo && occ.image.startsWith('data:image/svg+xml,')) return occ.image;
   return `/api/photo?p=u&u=${encodeURIComponent(occ.image)}&w=${width}`;
 }
 
@@ -192,10 +198,16 @@ function makeUi(cd, cf, ics, el, host, props, ctx, sources, zone) {
   const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
   const post = (msg) => window.parent?.postMessage(msg, location.origin);
   const field = (tag, key, text, className) => {
-    const node = el2(tag, className ? `${className} urd-cal-f-${key}` : `urd-cal-f-${key}`, text);
+    const node = el2(tag, className ? `${className} urd-cal-f-${key}` : `urd-cal-f-${key}`);
+    // A description keeps its addresses as links, and a place leads to the map (or to itself, when it is an address).
+    if (key === 'description' && text) linkedText(node, text);
+    else if (key === 'place' && text) node.appendChild(placeLink(text));
+    else if (text != null) node.textContent = text;
     Object.assign(node.style, cd.calFieldCss(props.fieldStyle?.[key]));
     return node;
   };
+  /** The first line of a description cut to a length, never inside a word or an address. */
+  const excerpt = (description, max = 140) => excerptOf(description, max);
   /** The event's last day as «6. okt», for an event that ends on a later day than it starts. */
   const endDate = (occ) => {
     const end = new Date(occ.end);
@@ -252,9 +264,11 @@ function makeUi(cd, cf, ics, el, host, props, ctx, sources, zone) {
     if (editable) {
       // The text toolbar attaches to .urd-text fields; a click in the words
       // edits them and never reaches the button or link around them.
+      // In the Clean view the words are plain text and the link around them works (urd.js switches this with the handles).
+      const clean = () => document.body.classList.contains('urd-chrome-off');
       node.classList.add('urd-text');
-      node.contentEditable = 'true';
-      node.addEventListener('click', (event) => event.stopPropagation());
+      node.contentEditable = clean() ? 'false' : 'true';
+      node.addEventListener('click', (event) => { if (!clean()) event.stopPropagation(); });
       node.addEventListener('input', () => {
         post({
           type: 'urd-edit',
@@ -266,13 +280,14 @@ function makeUi(cd, cf, ics, el, host, props, ctx, sources, zone) {
     }
     return node;
   };
-  /** A link whose words are a static text: in the preview the words are edited, never followed. */
+  /** A link whose words are a static text. */
   const link = (className, key, href, title) => {
     const a = el2('a', className);
     a.href = href;
     a.title = title;
     a.appendChild(tx(key));
-    if (editable) a.addEventListener('click', (event) => event.preventDefault());
+    // With the editing handles on, the words are edited and the link is never followed; in the Clean view it works as published.
+    if (editable) a.addEventListener('click', (event) => { if (!document.body.classList.contains('urd-chrome-off')) event.preventDefault(); });
     return a;
   };
   const signup = (occ) => {
@@ -283,6 +298,34 @@ function makeUi(cd, cf, ics, el, host, props, ctx, sources, zone) {
     return a;
   };
   const chip = (occ) => chipNode(occ.category, occ.color, ui);
+  /**
+   * The event's box: tinted by its calendar, and opening the event in full
+   * at a click or Enter. A click on a link, a button or a text being edited
+   * is left to that element, and with the editing handles on in the preview
+   * a click selects the block as before.
+   */
+  const tint = (node, occ) => {
+    tintNode(node, occ);
+    if (node.closest?.('a, button') || /^(A|BUTTON)$/.test(node.tagName)) return node;
+    node.classList.add('urd-cal-event');
+    node.tabIndex = 0;
+    node.setAttribute('aria-haspopup', 'dialog');
+    const open = (event) => {
+      if (event.target.closest('a, button, input, [contenteditable="true"]')) return;
+      if (ctx.preview && !document.body.classList.contains('urd-chrome-off')) return;
+      event.stopPropagation();
+      openEvent(occ, node);
+    };
+    node.addEventListener('click', open);
+    node.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' || event.target !== node) return;
+      event.preventDefault();
+      open(event);
+    });
+    return node;
+  };
+  /** The event in full, in a native dialog over the page (ADR-0011). */
+  const openEvent = (occ, from) => showEventDialog(occ, from, ics, ui, props);
   /** The mark on an event that repeats, with words the owner can rewrite; null on a single event. */
   const recurring = (occ) => {
     if (!occ.recurring) return null;
@@ -304,7 +347,7 @@ function makeUi(cd, cf, ics, el, host, props, ctx, sources, zone) {
   const subscribe = () => (props.showSubscribe !== false && sources.length ? subscribeRow(ics, sources, ui) : null);
   /** The event's own page: the address the feed gives it, else its sign-up link; null without either. */
   const href = (occ) => (typeof occ.url === 'string' && /^https?:\/\//i.test(occ.url) ? occ.url : occ.signup || null);
-  const ui = { el: el2, tint: tintNode, field, meta, tx, link, signup, chip, recurring, program, openToAll, subscribe, href, countdown: countdownText, image: imageUrl, all: [], offset: 0, total: 0, rest: false, filter: null, opt: cd.calOptions(props), time, timeText, hasTime,
+  const ui = { el: el2, tint, field, meta, tx, link, signup, chip, recurring, program, openToAll, subscribe, href, countdown: countdownText, image: imageUrl, all: [], offset: 0, total: 0, rest: false, filter: null, opt: cd.calOptions(props), time, timeText, hasTime, excerpt, sources,
     /** The week as the site's language lays it out: the empty cells before the first of a month, the weekday names in order, and the first day of a week. */
     lead: (first) => cf.leadDays(first, weekStart),
     dows: () => cf.orderWeekdays(dates().weekdaysShort, weekStart),
@@ -314,12 +357,333 @@ function makeUi(cd, cf, ics, el, host, props, ctx, sources, zone) {
   return ui;
 }
 
+/* ---------- The event in full ---------- */
+
+/** A place as a link: to the map as a search for its words, or to itself when the place is an address. */
+function placeLink(place) {
+  const a = el2('a', 'urd-cal-place-link', place);
+  a.href = /^https?:\/\/\S+$/i.test(place.trim()) ? place.trim() : `https://www.openstreetmap.org/search?query=${encodeURIComponent(place)}`;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  return a;
+}
+
+/** The first line of a description, cut at a word boundary near `max` and never inside an address. */
+function excerptOf(description, max) {
+  const line = String(description ?? '').split('\n')[0].trim();
+  if (line.length <= max) return line;
+  let cut = line.lastIndexOf(' ', max);
+  if (cut < max * 0.5) cut = max;
+  // An address that straddles the cut is kept whole.
+  for (const m of line.matchAll(/https?:\/\/[^\s<>"')\]]+/gi)) {
+    if (m.index < cut && m.index + m[0].length > cut) cut = m.index + m[0].length;
+  }
+  return cut >= line.length ? line : `${line.slice(0, cut).trimEnd()} …`;
+}
+
+/** Plain text with its addresses as links and its line breaks kept. */
+function linkedText(node, text) {
+  const parts = String(text).split(/(https?:\/\/[^\s<>"')\]]+)/gi);
+  parts.forEach((part, i) => {
+    if (i % 2) {
+      const address = part.replace(/[.,;:!?]+$/, '');
+      const a = el2('a', null, address);
+      a.href = address;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      node.append(a, part.slice(address.length));
+      return;
+    }
+    part.split('\n').forEach((line, n) => {
+      if (n) node.appendChild(document.createElement('br'));
+      if (line) node.appendChild(document.createTextNode(line));
+    });
+  });
+}
+
+/** The feed's description: markup from the feed with everything active stripped, or plain text with its links. */
+function descriptionNode(description, ui) {
+  const box = ui.field('div', 'description', '', 'urd-cal-dialog-text');
+  if (/<[a-z][^>]*>/i.test(description)) {
+    box.innerHTML = description;
+    stripActiveContent(box);
+    for (const a of box.querySelectorAll('a[href]')) {
+      a.target = '_blank';
+      a.rel = 'noopener';
+    }
+  } else {
+    linkedText(box, description);
+  }
+  return box;
+}
+
+const CLEAR = /^(?:transparent|rgba\(0, 0, 0, 0\))$/;
+
+/** A computed colour as [r, g, b, a]; null for anything else than rgb() and rgba(). */
+function rgba(colour) {
+  const m = /^rgba?\(([^)]+)\)$/.exec(String(colour).trim());
+  if (!m) return null;
+  const parts = m[1].split(/[,\s/]+/).filter(Boolean).map(Number);
+  if (parts.length < 3 || parts.some((n) => !Number.isFinite(n))) return null;
+  return [parts[0], parts[1], parts[2], parts[3] ?? 1];
+}
+
+/** One colour laid over another. */
+const over = (top, under) => top.slice(0, 3).map((c, i) => c * top[3] + under[i] * (1 - top[3]));
+
+/** The relative luminance of a colour (WCAG). */
+function luminance([r, g, b]) {
+  const lin = (c) => { const v = c / 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
+/** The contrast between two colours, 1 to 21. */
+function contrast(a, b) {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/** Black or white, whichever reads better on a colour. */
+const readableOn = (colour) => (luminance(colour) > 0.4 ? [17, 17, 17] : [255, 255, 255]);
+const css = (colour) => `rgb(${colour.slice(0, 3).map(Math.round).join(' ')})`;
+
+/**
+ * Dresses the dialog as the card it was opened from, so every design gets
+ * its own: the ground (colour, gradient and blur) of the event's box or of
+ * the nearest box around it that has one, its text colour, corners and
+ * border, the face and weight of its title, and the design's accent. What
+ * the design does not set falls back to the theme in base.css.
+ */
+function dressDialog(dialog, from) {
+  const host = from?.closest?.('.urd-cal');
+  if (!host) return;
+  let ground = from;
+  while (ground && ground !== host.parentElement) {
+    const cs = getComputedStyle(ground);
+    if (!CLEAR.test(cs.backgroundColor) || cs.backgroundImage !== 'none') break;
+    ground = ground.parentElement;
+  }
+  const set = (name, value) => { if (value) dialog.style.setProperty(name, value); };
+  const own = getComputedStyle(from);
+  if (ground && ground !== host.parentElement) {
+    const cs = getComputedStyle(ground);
+    set('--urd-cal-dlg-bg', cs.backgroundColor);
+    if (cs.backgroundImage !== 'none' && !cs.backgroundImage.includes('url(')) set('--urd-cal-dlg-image', cs.backgroundImage);
+    if (cs.backdropFilter && cs.backdropFilter !== 'none') set('--urd-cal-dlg-blur', cs.backdropFilter);
+    set('--urd-cal-dlg-radius', `min(${cs.borderTopLeftRadius}, 28px)`);
+    if (parseFloat(cs.borderTopWidth) > 0) set('--urd-cal-dlg-border', `${cs.borderTopWidth} ${cs.borderTopStyle} ${cs.borderTopColor}`);
+  }
+  set('--urd-cal-dlg-font', own.fontFamily);
+  // The colours are checked before they are used: a see-through ground is
+  // laid on the theme's surface, and words that would not read on the
+  // ground become black or white.
+  const surface = rgba(getComputedStyle(document.body).backgroundColor) ?? [255, 255, 255, 1];
+  const raw = rgba(dialog.style.getPropertyValue('--urd-cal-dlg-bg')) ?? surface;
+  const blurred = Boolean(dialog.style.getPropertyValue('--urd-cal-dlg-blur'));
+  const solid = raw[3] < 1 ? over(raw, surface) : raw.slice(0, 3);
+  if (raw[3] < 1 && !blurred) dialog.style.setProperty('--urd-cal-dlg-bg', css(solid));
+  const words = rgba(own.color);
+  const text = words && contrast(words, solid) >= 4.5 ? words : readableOn(solid);
+  set('--urd-cal-dlg-text', css(text));
+  dialog.dataset.ground = css(solid);
+  const title = from.matches('.urd-cal-f-title') ? from : from.querySelector('.urd-cal-f-title');
+  if (title) {
+    const cs = getComputedStyle(title);
+    set('--urd-cal-dlg-title-font', cs.fontFamily);
+    set('--urd-cal-dlg-title-weight', cs.fontWeight);
+    const titleColour = rgba(cs.color);
+    if (titleColour && contrast(titleColour, solid) >= 3) set('--urd-cal-dlg-title-color', cs.color);
+    set('--urd-cal-dlg-title-case', cs.textTransform);
+    set('--urd-cal-dlg-title-style', cs.fontStyle);
+  }
+  // The accent: the colour the design gives its own small words (the date, a number), else the calendar's accent.
+  const mark = from.querySelector('.urd-cal-f-number, .urd-cal-f-date');
+  const probe = el2('i');
+  probe.style.color = 'var(--urd-cal-accent)';
+  host.appendChild(probe);
+  const hostAccent = getComputedStyle(probe).color;
+  probe.remove();
+  const marked = mark ? getComputedStyle(mark).color : '';
+  const accent = [marked !== own.color ? marked : '', hostAccent].map(rgba).find((c) => c && contrast(c, solid) >= 3) ?? text;
+  set('--urd-cal-dlg-accent', css(accent));
+  set('--urd-cal-dlg-on-accent', css(readableOn(accent)));
+}
+
+/**
+ * Opens one event in a native dialog: the date and the time, the title, the
+ * place as a link to the map, the calendar it belongs to, the picture, the
+ * whole description with its links, and the sign-up, the meeting link and
+ * «Add to calendar» (a file with the one event, and the Google link). The
+ * dialog is built per opening and removed when it closes; the focus returns
+ * to the event it was opened from.
+ */
+function showEventDialog(occ, from, ics, ui, props) {
+  const dialog = el2('dialog', 'urd-cal-dialog');
+  dressDialog(dialog, from);
+  const close = el2('button', 'urd-cal-dialog-close');
+  close.type = 'button';
+  close.setAttribute('aria-label', t('calendar.close'));
+  close.innerHTML = iconSvg('cross') || '';
+  if (!close.firstChild) close.textContent = '×';
+  close.addEventListener('click', () => dialog.close());
+  const start = new Date(occ.start);
+  const d = dates();
+  const when = ui.field('span', 'date', `${d.weekdays[(start.getDay() + 6) % 7]} ${t('calendar.dayMonth', { d: start.getDate(), m: d.months[start.getMonth()] })}`, 'urd-cal-dialog-date');
+  const title = ui.field('h3', 'title', occ.title, 'urd-cal-dialog-title');
+  if (occ.cancelled) title.classList.add('urd-cal-cancelled');
+  dialog.append(close, when, title);
+  const facts = el2('dl', 'urd-cal-dialog-facts');
+  const fact = (key, value) => {
+    const term = el2('dt');
+    term.appendChild(ui.tx(key));
+    const def = el2('dd');
+    def.appendChild(value);
+    facts.append(term, def);
+  };
+  fact('when', ui.field('span', 'time', ui.timeText(occ)));
+  if (occ.location) {
+    fact('where', ui.field('span', 'place', occ.location));
+  }
+  dialog.appendChild(facts);
+  const meta = el2('div', 'urd-cal-dialog-meta');
+  const chip = ui.chip(occ);
+  if (chip) meta.appendChild(chip);
+  const rec = occ.recurring ? el2('span', 'urd-cal-rec', t('calendar.recurring')) : null;
+  if (rec) meta.appendChild(rec);
+  if (meta.children.length) dialog.appendChild(meta);
+  const src = ui.image(occ, 1000);
+  if (src) {
+    const img = document.createElement('img');
+    img.className = 'urd-cal-dialog-img';
+    img.alt = '';
+    img.addEventListener('error', () => img.remove());
+    img.src = src;
+    dialog.appendChild(img);
+  }
+  if (occ.description) dialog.appendChild(descriptionNode(occ.description, ui));
+  const actions = el2('div', 'urd-cal-dialog-actions');
+  if (occ.signup && !occ.cancelled) {
+    const signup = ui.link('urd-cal-dialog-primary', 'signup', occ.signup, t('calendar.signupTitle'));
+    signup.target = '_blank';
+    signup.rel = 'noopener';
+    actions.appendChild(signup);
+  }
+  const meeting = occ.cancelled ? null : ics.findMeetingLink(occ.url, occ.location, occ.description);
+  if (meeting && meeting !== occ.signup) {
+    const join = ui.link('urd-cal-dialog-primary', 'join', meeting, '');
+    join.target = '_blank';
+    join.rel = 'noopener';
+    actions.appendChild(join);
+  }
+  if (!occ.cancelled) {
+    // The moment itself, when the times are shown on the site's own clock.
+    const shift = occ.real != null ? occ.start - occ.real : 0;
+    const real = { ...occ, start: occ.start - shift, end: Number.isFinite(occ.end) ? occ.end - shift : occ.end };
+    // «Add to calendar» opens the ways to do it: this one event (to Google,
+    // or as a file for the other calendar apps), or the whole calendar (a
+    // subscription, and its iCal address to copy).
+    const add = el2('details', 'urd-cal-dialog-add');
+    const summary = el2('summary', 'urd-cal-dialog-link');
+    summary.appendChild(ui.tx('addEvent'));
+    const choices = el2('div', 'urd-cal-dialog-choices');
+    const one = el2('span', 'urd-cal-dialog-choice-label');
+    one.appendChild(ui.tx('addOne'));
+    const google = ui.link('urd-cal-dialog-link', 'addGoogle', ics.googleEventUrl(real), '');
+    google.target = '_blank';
+    google.rel = 'noopener';
+    const file = ui.link('urd-cal-dialog-link', 'addFile', URL.createObjectURL(new Blob([ics.eventIcs(real)], { type: 'text/calendar' })), '');
+    file.download = `${String(occ.title || 'event').replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '').slice(0, 60) || 'event'}.ics`;
+    choices.append(one, google, file);
+    const feeds = ui.sources.map((source) => ics.subscribeLinks(ics.sourceEntry(source).url)).filter(Boolean);
+    if (feeds.length) {
+      const whole = el2('span', 'urd-cal-dialog-choice-label');
+      whole.appendChild(ui.tx('addWhole'));
+      choices.appendChild(whole);
+      for (const links of feeds) {
+        choices.appendChild(ui.link('urd-cal-dialog-link', 'subscribe', links.webcal, t('calendar.subscribeTitle')));
+        // The calendar's own address, to paste into a calendar app by hand.
+        const row = el2('label', 'urd-cal-dialog-address');
+        row.appendChild(ui.tx('icalAddress'));
+        const field = el2('input');
+        field.type = 'text';
+        field.readOnly = true;
+        field.value = links.webcal.replace(/^webcal:/, 'https:');
+        field.addEventListener('focus', () => field.select());
+        row.appendChild(field);
+        choices.appendChild(row);
+      }
+    }
+    add.append(summary, choices);
+    actions.appendChild(add);
+    dialog.addEventListener('close', () => URL.revokeObjectURL(file.href));
+  }
+  dialog.appendChild(actions);
+  // A click on the backdrop closes; Escape is the dialog's own.
+  dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+  dialog.addEventListener('close', () => {
+    dialog.remove();
+    if (from?.isConnected) from.focus({ preventScroll: true });
+  });
+  // The card is given a place in the window before it opens, so opening it
+  // (which moves the focus into it) never scrolls the page.
+  dialog.style.left = '0px';
+  dialog.style.top = '0px';
+  document.body.appendChild(dialog);
+  dialog.showModal();
+  placeOverCalendar(dialog, from);
+}
+
+/**
+ * Lays the card inside the calendar it belongs to, not over the page: no
+ * wider and no taller than the calendar allows (its own content scrolls when
+ * there is more), centred on the part of the calendar that is in view, never
+ * over the navigation bar, and kept there while the page scrolls or the
+ * window changes. A calendar too low to hold a card lets it reach below
+ * itself. The calendar is shaded behind it; the rest of the page is left as
+ * it is.
+ */
+const CARD_MAX_W = 460;
+const CARD_MIN_H = 300;
+
+function placeOverCalendar(dialog, from) {
+  const host = from?.closest?.('.urd-cal');
+  if (!host) return;
+  const shade = el2('i', 'urd-cal-shade');
+  host.appendChild(shade);
+  const place = () => {
+    const box = host.getBoundingClientRect();
+    // The navigation bar's height, when it stays at the top of the window.
+    const nav = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--urd-nav-h')) || 0;
+    const roof = nav + 8;
+    const floor = window.innerHeight - 8;
+    const width = Math.max(240, Math.min(CARD_MAX_W, box.width - 24, window.innerWidth - 16));
+    dialog.style.width = `${width}px`;
+    // As tall as the calendar holds, but never so low that the card cannot be read, and never taller than the window under the bar.
+    dialog.style.maxHeight = `${Math.max(Math.min(CARD_MIN_H, floor - roof), Math.min(box.height - 24, floor - roof))}px`;
+    const top = Math.max(roof, box.top);
+    const bottom = Math.min(floor, box.bottom);
+    const height = dialog.offsetHeight;
+    const centre = top + Math.max(0, bottom - top) / 2;
+    dialog.style.left = `${Math.max(8, Math.min(window.innerWidth - width - 8, box.left + (box.width - width) / 2))}px`;
+    dialog.style.top = `${Math.max(roof, Math.min(floor - height, Math.max(box.top + 12, centre - height / 2)))}px`;
+  };
+  const watch = new AbortController();
+  window.addEventListener('scroll', place, { passive: true, capture: true, signal: watch.signal });
+  window.addEventListener('resize', place, { signal: watch.signal });
+  dialog.addEventListener('toggle', place, { capture: true, signal: watch.signal });
+  dialog.addEventListener('close', () => {
+    watch.abort();
+    shade.remove();
+  });
+  place();
+}
+
 /* ---------- Views ---------- */
 
 function renderList(host, occs, props, ics, ui) {
   const list = el2('div', 'urd-collection-list');
   for (const occ of occs) {
-    const row = tintNode(el2('article', 'urd-collection-row'), occ);
+    const row = ui.tint(el2('article', 'urd-collection-row'), occ);
     row.appendChild(badgeNode(occ, ui));
     const body = el2('div', 'urd-collection-body');
     const titleRow = el2('div', 'urd-cal-titlerow');
@@ -340,7 +704,7 @@ function renderList(host, occs, props, ics, ui) {
 function renderCards(host, occs, props, ics, ui) {
   const grid = el2('div', 'urd-collection-cards');
   for (const occ of occs) {
-    const card = tintNode(el2('article', 'urd-collection-card'), occ);
+    const card = ui.tint(el2('article', 'urd-collection-card'), occ);
     const top = el2('div', 'urd-cal-titlerow');
     const when = ui.meta(occ);
     if (when) {
@@ -351,7 +715,7 @@ function renderCards(host, occs, props, ics, ui) {
     if (chip) top.appendChild(chip);
     card.appendChild(top);
     card.appendChild(ui.field('strong', 'title', occ.title, 'urd-collection-title'));
-    const excerpt = String(occ.description ?? '').split('\n')[0].slice(0, 140);
+    const excerpt = ui.excerpt(occ.description);
     if (excerpt) card.appendChild(ui.field('div', 'description', excerpt, 'urd-collection-text'));
     const signup = ui.signup(occ);
     if (signup) card.appendChild(signup);
@@ -362,7 +726,7 @@ function renderCards(host, occs, props, ics, ui) {
 
 /** One featured event in the «next» card: badge, title, when and where, the countdown and the signup. */
 function nextRow(occ, ui) {
-  const row = tintNode(el2('div', 'urd-cal-next-row'), occ);
+  const row = ui.tint(el2('div', 'urd-cal-next-row'), occ);
   row.appendChild(badgeNode(occ, ui));
   const body = el2('div', null);
   const titleRow = el2('div', 'urd-cal-titlerow');
@@ -399,7 +763,7 @@ function renderNext(host, occs, props, ics, ui) {
     panel.appendChild(laterLabel);
     const list = el2('ul', 'urd-cal-later');
     for (const occ of later) {
-      const item = tintNode(el2('li', null), occ);
+      const item = ui.tint(el2('li', null), occ);
       const when = ui.meta(occ, { place: false });
       if (when) {
         when.className = 'urd-cal-later-when';
@@ -421,7 +785,7 @@ function renderAgenda(host, occs, props, ics, ui) {
     const list = el2('ul', 'urd-cal-agenda-list');
     for (const occ of group.items) {
       const start = new Date(occ.start);
-      const item = tintNode(el2('li', 'urd-cal-agenda-row'), occ);
+      const item = ui.tint(el2('li', 'urd-cal-agenda-row'), occ);
       const day = el2('span', 'urd-cal-agenda-day');
       day.append(ui.field('strong', 'number', String(start.getDate())), ui.field('span', 'date', dates().weekdaysShort[(start.getDay() + 6) % 7]));
       const body = el2('span', 'urd-cal-agenda-body');
@@ -516,7 +880,7 @@ function renderMonth(host, occs, props, ics, ui) {
         return s.getFullYear() === shown.y && s.getMonth() === shown.mo && s.getDate() === d;
       });
       for (const occ of todays.slice(0, 3)) {
-        const pill = tintNode(ui.field('div', 'title', occ.title, 'urd-cal-pill'), occ);
+        const pill = ui.tint(ui.field('div', 'title', occ.title, 'urd-cal-pill'), occ);
         pill.title = `${occ.title}\n${metaLine(occ)}`;
         cell.appendChild(pill);
       }

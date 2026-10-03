@@ -5288,6 +5288,8 @@
     if (chromeVisible) panelScroll = panelEl?.scrollTop ?? 0;
     chromeVisible = !chromeVisible;
     bridge?.sendChrome(chromeVisible);
+    // The Clean view shows the page as a visitor sees it: the element menu closes with the handles.
+    if (!chromeVisible) blockMenu = null;
     if (!chromeVisible) return;
     await tick();
     // The panel has no scroll range until the browser has laid it out

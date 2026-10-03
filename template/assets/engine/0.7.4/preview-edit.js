@@ -2515,19 +2515,30 @@ function selectBlock(el, opts = {}) {
 // and keeps the dropdown in sync); external links open in a new tab
 // instead of pulling the iframe out of editing mode. Links INSIDE blocks
 // (buttons, images, text links) never trigger while editing: the click
-// selects the block, and the link is tested via "View page". A click the
+// selects the block, and the link is tested via "View page" (a calendar's
+// links also in the Clean view). A click the
 // link's own handler has cancelled (a mobile menu item that opens its
 // submenu) navigates nowhere, as on the published page.
 document.addEventListener('click', (event) => {
   if (event.defaultPrevented) return;
   const a = eventTarget(event)?.closest('a[href]') ?? null;
   if (!a) return;
-  if (a.closest('.urd-block')) {
+  // The event in full is a dialog over the page: its links work as on the
+  // published page (a new tab, a file to save).
+  if (a.closest('.urd-cal-dialog')) return;
+  // In the Clean view a calendar's own links (a place, an address in a
+  // description, a sign-up) are followed too; every other link in a block
+  // waits for «View page».
+  const cleanCalendar = document.body.classList.contains('urd-chrome-off') && a.closest('.urd-cal');
+  if (a.closest('.urd-block') && !cleanCalendar) {
     event.preventDefault();
     return;
   }
   const href = a.getAttribute('href');
   if (!href || href.startsWith('#')) return;
+  // A calendar link to another site is left to the browser (it opens in a
+  // new tab by itself); only a link to a page of this site goes through the editor.
+  if (cleanCalendar && new URL(href, location.href).origin !== location.origin) return;
   event.preventDefault();
   const url = new URL(href, location.href);
   if (url.origin === location.origin) {
@@ -3554,6 +3565,9 @@ function enhanceBlock(el, block, section, grid, host) {
         // block = native click (the drawer opens), unselected block =
         // surface drag and selection.
         if (target?.closest('.urd-cart-button') && selectedBlockId === block.id && multiIds.size <= 1) return;
+        // In the Clean view a calendar event keeps its click: it opens the
+        // event in full, as on the published page.
+        if (document.body.classList.contains('urd-chrome-off') && target?.closest('.urd-cal-event')) return;
         // The plugin config panels are guarded by class name, the old
         // reference plugin names included: plugin copies in user repos
         // keep them forever (see the compatibility surface in SCHEMA.md).

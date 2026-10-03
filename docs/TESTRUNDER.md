@@ -2,6 +2,19 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Test batch (0.7.19.11): the card that opens at a click on a calendar event
+
+- [ ] Published page and Clean view, every design: a click on an event opens its card inside the calendar, the calendar shaded behind it and the rest of the page untouched; the page does not scroll when the card opens or closes; Escape, the close button and a click outside close it, and the focus is back on the event; Tab to an event and Enter opens it too
+- [ ] The card is never wider or taller than its calendar (a calendar lower than 300 px lets it reach below itself) and never lies over the navigation bar; more content than fits scrolls inside the card; scrolling the page keeps the card on its calendar
+- [ ] With the editing handles on, a click on an event selects the block and opens nothing
+- [ ] The card with a real feed: the whole description with clickable links, the picture, «Sign up» when the event has a sign-up link, «Join» when it has a Zoom, Teams, Meet, Whereby, Jitsi or Webex link, and no sign-up or «Add to calendar» on a cancelled event
+- [ ] «Add to calendar» unfolds: «This event only» with «Add to Google» (opens Google Calendar with the title, time, place and description filled in) and «Download as a file (.ics)» (opens in Apple Calendar and Outlook with the right time); «The whole calendar» with «Subscribe» and the iCal address, which is selected at a click
+- [ ] The card reads in every design: the words, the date line and the button have contrast against the ground, also on Glass, Dark glass, the dark designs and the plain month
+- [ ] In the calendar itself, in the Clean view and on the published page: a place opens the map in a new tab (or the address, when the place is one), and an address in a description is a link; with the handles on, a click selects the block
+- [ ] An excerpt of a long description ends at a word with «…», and an address near the cut is whole
+- [ ] Switching to the Clean view closes the element menu
+- [ ] The view switcher's second button reads «Uke»
+
 ### Test batch (0.7.19.10): times and status on the calendar
 
 - [ ] With a real feed, an event from 18:00 to 21:00 reads «18:00-21:00» in every design that shows a time, and an event with no end in the feed reads its start only

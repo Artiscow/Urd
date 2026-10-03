@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
 const {
-  parseIcs, expandEvents, partsToMs,
+  parseIcs, expandEvents, partsToMs, findMeetingLink, eventIcs, googleEventUrl,
   splitCategory, findSignupLink, findImageLink, normalizeSourceUrl, subscribeLinks, startOfWeek, isoWeek, windowStart,
   nextCount, laterCount, NEXT_COUNT, LATER_COUNT, dedupeOccurrences, groupByMonth, sourceEntry,
 } = await engineImport('ics.js');
@@ -264,4 +264,31 @@ test('recurring: an occurrence of a repeating event carries the mark, a single e
     'UID:s', 'SUMMARY:Møte', 'DTSTART:20260910T180000Z', 'DTEND:20260910T193000Z',
   ])).events, window);
   assert.equal(single[0].recurring, false);
+});
+
+test('findMeetingLink: a video meeting address by its exact host, from the address, the place or the description', () => {
+  assert.equal(findMeetingLink(null, 'Rom 2', 'Bli med: https://us02web.zoom.us/j/123?pwd=x.'), 'https://us02web.zoom.us/j/123?pwd=x');
+  assert.equal(findMeetingLink('https://teams.microsoft.com/l/meetup-join/abc'), 'https://teams.microsoft.com/l/meetup-join/abc');
+  assert.equal(findMeetingLink('', 'https://meet.google.com/abc-defg-hij'), 'https://meet.google.com/abc-defg-hij');
+  assert.equal(findMeetingLink('https://example.org/zoom.us/j/1', 'https://notzoom.us.example.com/x'), null);
+  assert.equal(findMeetingLink(undefined, undefined, 'Ingen lenke her'), null);
+});
+
+test('eventIcs and googleEventUrl: one occurrence as a file and as a Google link', () => {
+  const timed = { start: Date.UTC(2026, 9, 4, 16, 0), end: Date.UTC(2026, 9, 4, 19, 0), title: 'Kick-off, høst; 2026', location: 'Klubbhuset', description: 'Linje 1\nLinje 2', uid: 'abc' };
+  const file = eventIcs(timed);
+  assert.match(file, /^BEGIN:VCALENDAR\r\n/);
+  assert.match(file, /DTSTART:20261004T160000Z\r\n/);
+  assert.match(file, /DTEND:20261004T190000Z\r\n/);
+  assert.match(file, /SUMMARY:Kick-off\\, høst\\; 2026\r\n/);
+  assert.match(file, /DESCRIPTION:Linje 1\\nLinje 2\r\n/);
+  assert.ok(file.endsWith('END:VCALENDAR\r\n'));
+  const day = new Date(2026, 9, 17).getTime();
+  const allDay = eventIcs({ start: day, end: new Date(2026, 9, 18).getTime(), allDay: true, title: 'Tur' });
+  assert.match(allDay, /DTSTART;VALUE=DATE:20261017\r\n/);
+  assert.match(allDay, /DTEND;VALUE=DATE:20261019\r\n/);
+  const url = new URL(googleEventUrl(timed));
+  assert.equal(url.host, 'calendar.google.com');
+  assert.equal(url.searchParams.get('dates'), '20261004T160000Z/20261004T190000Z');
+  assert.equal(url.searchParams.get('text'), 'Kick-off, høst; 2026');
 });
