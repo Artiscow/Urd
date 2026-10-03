@@ -3,7 +3,6 @@
   "site": {
     "title": "Urd",
     "lang": "no",
-    "timeZone": "Europe/Oslo",
     "description": "Urd sin testside",
     "icon": "/media/ikon-9740643c.webp",
     "setup": true
@@ -163,29 +162,6 @@
       "show": true,
       "href": "/checkout"
     },
-    "launcher": {
-      "show": true,
-      "view": "grid",
-      "mobileView": "list",
-      "mobileMax": 6,
-      "links": [
-        {
-          "label": "Kaker",
-          "href": "/kaker",
-          "icon": "gift"
-        },
-        {
-          "label": "Kontakt",
-          "href": "/kontakt",
-          "icon": "mail"
-        },
-        {
-          "label": "Instagram",
-          "href": "https://instagram.com",
-          "icon": "instagram"
-        }
-      ]
-    },
     "style": {
       "background": {
         "version": 1,
@@ -201,12 +177,12 @@
         ]
       },
       "topGap": false,
+      "inset": true,
       "textColor": "#ffffff",
       "hoverTextColor": "#00fff5",
       "blur": true,
+      "size": "sm",
       "hover": "underline",
-      "shrinkAt": 80,
-      "shrinkMs": 220,
       "hoverGlow": 1,
       "atTop": "clear",
       "tools": {
@@ -215,31 +191,20 @@
       },
       "sideSubs": "collapsed",
       "sideSubArrow": false,
-      "mobile": {
-        "size": "sm",
-        "border": { "side": "none" }
-      },
       "mobileMenu": "sheet",
       "sheetMotion": "right",
       "mobileSubs": "expanded",
       "sheetLogo": true,
       "sheetTheme": true,
       "sheetCart": true,
-      "sheetAnnounce": true,
       "sheet": {
         "bg": "#0e1a27",
         "bgOpacity": 0.95,
         "blur": false
-      },
-      "border": {
-        "side": "bottom",
-        "color": "#ffca57",
-        "width": 5
-      },
-      "shadow": "soft",
-      "shrinkTo": 0.6
+      }
     },
-    "overlay": true
+    "overlay": true,
+    "variant": "floating-tab"
   },
   "footer": {
     "version": 1,
