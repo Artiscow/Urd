@@ -46,7 +46,21 @@ export const CAL_TEXTS = {
   fewer: 'calendar.fewer',
   more: 'calendar.moreLegend',
   pickDay: 'calendar.pickDay',
+  then: 'calendar.then',
+  unitDays: 'calendar.unitDays',
+  unitHours: 'calendar.unitHours',
+  unitMin: 'calendar.unitMin',
+  browse: 'calendar.browse',
+  untilStart: 'calendar.untilStart',
+  wholeProgram: 'calendar.wholeProgram',
+  noticeLabel: 'calendar.noticeLabel',
+  noticeTitle: 'calendar.noticeTitle',
+  noticeText: 'calendar.noticeText',
+  moreInfo: 'calendar.moreInfo',
 };
+
+/** The texts of the announcement note, for the designs that declare `notice`. */
+const NOTICE_TEXTS = ['noticeLabel', 'noticeTitle', 'noticeText', 'moreInfo'];
 
 /** The texts every design with chips, sign-up and subscribe buttons shows. */
 const COMMON_TEXTS = ['all', 'signup', 'subscribe', 'subscribeMulti', 'addGoogle'];
@@ -63,8 +77,10 @@ const slot = (key, section = 'colors') => ({ key, labelKey: `calendar.slot.${key
  * exporting a function under the design's id); the plain design's views
  * live in the block itself. `ownSubscribe` marks a design that places the
  * subscribe buttons inside its own layout, so the block draws no row under
- * it, and `ownFilter` one that draws its own calendar switches instead of
- * the chip row.
+ * it, `ownFilter` one that draws its own calendar switches instead of the
+ * chip row, and `notice` one that can show the announcement note
+ * (`props.notice { show, href }` with the texts noticeLabel, noticeTitle and
+ * noticeText).
  * @type {Array<{id: string, labelKey: string, view: string|null, module?: string, stripe: boolean,
  *   slots: Array<{key: string, labelKey: string, section: string}>, texts: string[]}>}
  */
@@ -259,10 +275,95 @@ export const CAL_DESIGNS = [
     slots: [slot('surface'), slot('panel'), slot('line'), slot('cell0', 'scale'), slot('cell1', 'scale'), slot('cell2', 'scale'), slot('cell3', 'scale'), slot('today', 'scale')],
     texts: ['wholeYear', 'fewer', 'more', 'pickDay', ...COMMON_TEXTS],
   },
+  {
+    id: 'billboard',
+    labelKey: 'calendar.design.billboard',
+    view: 'next',
+    module: 'next',
+    stripe: false,
+    ownSubscribe: true,
+    slots: [slot('bg'), slot('text'), slot('label'), slot('pulse'), slot('tile', 'countdown'), slot('tileText', 'countdown'), slot('button', 'buttons'), slot('buttonText', 'buttons')],
+    texts: ['now', 'then', 'unitDays', 'unitHours', 'unitMin', ...COMMON_TEXTS],
+  },
+  {
+    id: 'stacked',
+    labelKey: 'calendar.design.stacked',
+    view: 'next',
+    module: 'next',
+    stripe: false,
+    slots: [slot('accent'), slot('surface'), slot('line'), slot('card', 'cards'), slot('cardText', 'cards'), slot('cardMid', 'cards'), slot('cardBack', 'cards'), slot('badge', 'cards'), slot('badgeText', 'cards')],
+    texts: ['now', 'browse', ...COMMON_TEXTS],
+  },
+  {
+    id: 'noticeboard',
+    labelKey: 'calendar.design.noticeboard',
+    view: 'next',
+    module: 'next',
+    stripe: false,
+    notice: true,
+    slots: [slot('board'), slot('boardText'), slot('note', 'notes'), slot('noteText', 'notes'), slot('noteLabel', 'notes'), slot('noteAlt', 'notes'), slot('noteAltText', 'notes'), slot('pin', 'notes'), slot('pinAlt', 'notes'), slot('button', 'buttons'), slot('buttonText', 'buttons'), slot('strip', 'later'), slot('stripText', 'later')],
+    texts: ['now', 'next', 'later', ...NOTICE_TEXTS, ...COMMON_TEXTS],
+  },
+  {
+    id: 'split',
+    labelKey: 'calendar.design.split',
+    view: 'next',
+    module: 'next',
+    stripe: false,
+    slots: [slot('accent'), slot('surface'), slot('line'), slot('chip'), slot('panel', 'panel'), slot('panelText', 'panel'), slot('button', 'buttons'), slot('buttonText', 'buttons'), slot('laterBg', 'later')],
+    texts: ['now', 'later', ...COMMON_TEXTS],
+  },
+  {
+    id: 'band',
+    labelKey: 'calendar.design.band',
+    view: 'next',
+    module: 'next',
+    stripe: false,
+    slots: [slot('band', 'band'), slot('bandText', 'band'), slot('dot', 'band'), slot('tag', 'band'), slot('tagText', 'band')],
+    texts: ['now', ...COMMON_TEXTS],
+  },
+  {
+    id: 'oneLine',
+    labelKey: 'calendar.design.oneLine',
+    view: 'next',
+    module: 'next',
+    stripe: true,
+    slots: [slot('accent'), slot('surface'), slot('line'), slot('ring'), slot('button', 'buttons'), slot('buttonText', 'buttons')],
+    texts: ['now', 'later', ...COMMON_TEXTS],
+  },
+  {
+    id: 'ring',
+    labelKey: 'calendar.design.ring',
+    view: 'next',
+    module: 'next',
+    stripe: false,
+    slots: [slot('surface'), slot('line'), slot('chip'), slot('accent', 'ring'), slot('track', 'ring')],
+    texts: ['now', 'unitDays', 'unitHours', ...COMMON_TEXTS],
+  },
+  {
+    id: 'darkGlass',
+    labelKey: 'calendar.design.darkGlass',
+    view: 'next',
+    module: 'next',
+    stripe: false,
+    ownSubscribe: true,
+    slots: [slot('ground'), slot('text'), slot('label'), slot('edge', 'glass'), slot('glass', 'glass'), slot('track', 'glass'), slot('blobA', 'blobs'), slot('blobB', 'blobs'), slot('button', 'buttons'), slot('buttonText', 'buttons')],
+    texts: ['now', 'then', 'untilStart', ...COMMON_TEXTS],
+  },
+  {
+    id: 'nextBento',
+    labelKey: 'calendar.design.nextBento',
+    view: 'next',
+    module: 'next',
+    stripe: false,
+    ownSubscribe: true,
+    slots: [slot('accent'), slot('accentText'), slot('soft'), slot('tile'), slot('line')],
+    texts: ['now', 'wholeProgram', ...COMMON_TEXTS],
+  },
 ];
 
 /** The renderer modules a design can name (the block maps each to a literal import). */
-export const CAL_MODULES = ['list', 'cards', 'time'];
+export const CAL_MODULES = ['list', 'cards', 'time', 'next'];
 
 /** The design for an id; the plain one for anything unknown. */
 export function calDesign(id) {

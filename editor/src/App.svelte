@@ -9450,6 +9450,19 @@
           onchange={(e) => setBlockProp('showSignup', e.target.checked)} />
         {ta('calendar.showSignup')}
       </label>
+      <!-- The announcement note, on the designs that have one: a switch and the link it leads to -->
+      {#if calDesign(selectedBlock.props.design).notice}
+        <label class="gridmenu-snap" title={ta('tip.calendar.showNotice')}>
+          <input type="checkbox" checked={selectedBlock.props.notice?.show === true}
+            onchange={(e) => setBlockProp('notice', { ...(selectedBlock.props.notice ?? {}), show: e.target.checked })} />
+          {ta('calendar.showNotice')}
+        </label>
+        {#if selectedBlock.props.notice?.show === true}
+          <label title={ta('tip.calendar.noticeHref')}>{ta('calendar.noticeHref')}
+            <input value={selectedBlock.props.notice?.href ?? ''} placeholder="https://" spellcheck="false"
+              onchange={(e) => setBlockProp('notice', { ...(selectedBlock.props.notice ?? {}), href: e.target.value.trim() || undefined })} /></label>
+        {/if}
+      {/if}
       <!-- The labels and the buttons' words are rewritten by clicking them in the preview; this puts the defaults back -->
       {#if calHasTextOverrides(calDesign(selectedBlock.props.design), selectedBlock.props.texts)}
         <button type="button" class="ghost action" title={ta('tip.calendar.resetTexts')} onclick={() => setBlockProp('texts', undefined)}>{ta('calendar.resetTexts')}</button>

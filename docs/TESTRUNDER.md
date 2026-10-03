@@ -4,6 +4,20 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.19.5): «Akkurat nå» designs on the calendar
+
+- [ ] Stil tab, Design: Reklametavle, Stablede kort, Oppslagstavle, Delt kort, Bånd, Én linje, Nedtellingsring, Mørkt glass and Bento for akkurat nå draw the demo data in the preview and a real feed on the published page; Innhold shows Arrangementer i kortet and Under «Senere» for them
+- [ ] Reklametavle: the pulse beside «Akkurat nå», the three tiles count days, hours and minutes and move on after a minute, the sign-up as a full-width bar, «Deretter:» listing the later events, the subscribe link at the foot; Bakgrunn, Tekst, Etikett, Puls and the tile and button colours recolour it
+- [ ] Stablede kort: with Arrangementer i kortet 3, three cards stacked with the front one readable; «Bla gjennom kortene» turns the next card to the front; «3 neste» at the top right; the later rows under
+- [ ] Oppslagstavle: the next event on a pinned yellow note, «Vis kunngjøring» adds a blue note whose label, heading and text are rewritten by clicking them in the preview, Lenke fra kunngjøringen gives «Les mer» its address, «Senere» on the strip
+- [ ] Delt kort: the weekday, the huge day and the month on the panel in the calendar's colour (Datopanelet otherwise), the chip, the title, the first line of the description and the sign-up to the right, «Senere» under; the panel stacks above the words on a phone
+- [ ] Bånd: the tag at the left, the next events in one line with dots between; with more than fit the band rolls, pauses under the pointer and stands still with reduced motion
+- [ ] Én linje: the first rows (Arrangementer i kortet) marked «Akkurat nå» with the accent dot and stripe, the rest «Senere», «Om N dager» at the right and the sign-up as a button
+- [ ] Nedtellingsring: the ring fills over the last two weeks before the event, the middle counts days and on the last day hours, the two later rows with dots under a rule
+- [ ] Mørkt glass: the countdown in monospace, «Fram til start» with the percentage and the bar, the sign-up and the subscribe button side by side, «Deretter» in a glass box; Fargeflekk 1 and 2 recolour the blobs
+- [ ] Bento for akkurat nå: the hero tile in the calendar's colour with «Akkurat nå» and «Om N dager», a date tile per later event (the third dark), the link tile with the count and the subscribe link; no subscribe row under the block
+- [ ] Every next design: the texts («Akkurat nå», «Senere», «Deretter», the units, the buttons) are rewritten by clicking them, the colour slots follow the design when empty, Kantstripe adds the stripe, and Vis «Meld deg på»-knapper off removes the buttons
+
 ### Testrunde-batch (0.7.19.4): month, week, day and year designs on the calendar
 
 - [ ] Stil tab, Design: Ukestripe, Ukeplan, Kalenderlag, Måned med sidepanel, Oversikt på krem, Dagsplan, Årshjul and Varmekart draw the demo data in the preview and a real feed on the published page; Innhold shows no Visning for them

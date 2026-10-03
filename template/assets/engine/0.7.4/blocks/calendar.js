@@ -507,7 +507,7 @@ function renderCalendar(el, props, ctx) {
   // The parser and the design model are loaded together, on the first
   // render, and a design's renderer module with them (literal paths, so the
   // modules stay out of the visitor closure and the preload list).
-  const DESIGN_MODULES = { list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js') };
+  const DESIGN_MODULES = { list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js'), next: () => import('./calendar-next.js') };
   Promise.all([import('../ics.js'), import('../calendar-designs.js')]).then(async ([ics, cd]) => {
     const design = cd.calDesign(props.design);
     const mod = design.module ? await DESIGN_MODULES[design.module]?.() : null;
