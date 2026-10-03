@@ -27,6 +27,14 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.37 - AGENTS.md checked against the repo, and the English documents made canonical - 3 October 2026
+
+- AGENTS.md was read against the repo and four statements no longer held. The list of engine modules the editor bundles lacked seven (`calendar-designs`, `calendar-thumb`, `nav-model`, `divider-model`, `gallery-layout`, `gallery-model`, `photo-source`); the test round's heading example was from the previous phase and carried the Norwegian word, and is now «Test batch (<commit number>)»; the stable plugin shells did not mention `language-packs.js`, which is the engine's own loader path; and the vision, the roadmap and the development document stood as not yet translated although their English versions exist.
+- Two rules that lived in practice only are written in: a change to `base.css` restamps the eight HTML shells (Engine lessons), and a fix is never aimed at one browser (Non-negotiable rules). What a calendar design consists of stands in the header of `calendar-designs.js` rather than in AGENTS.md.
+- The English documents under docs/languages/ said that Norwegian was canonical, against ADR-0022. The opening line is turned in VISION-en-GB, ROADMAP-en-GB, DEVELOPMENT-en-GB, GUIDE-en-GB and SETUP-en-GB, in the Nynorsk and Turkish guides and in README-nb; AGENTS.md points to the English development and roadmap documents and says a change is made in both languages in the same commit. The Sami guides still name bokmål, awaiting a native speaker.
+- DEVELOPMENT-en-GB.md had fallen behind UTVIKLING.md: its release section was the five-step form from before the versioned engine directory. The repo map, rule 6 and the whole release section (the engine bump, the one-time setup of the template repo and the prerelease sync) were translated from the Norwegian, so the text the release rule points to is the current ritual.
+- The 0.7.19 milestone's done line in BACKLOG reads «Done when:», following the changed rule.
+
 ### 0.7.19.7 - The view switcher in the calendar block, and thumbnails in the design picker - 3 October 2026
 
 - A calendar block showed one view until the owner changed it. `switcher: true` puts a row of three buttons at the top of the block («Upcoming», «Week», «Month»), where a visitor turns it to the week strip or the plain month and back; nothing is stored. It applies to the views that list what is coming (pure `calSwitcher`), the block then loads from the start of the week or the month, whichever is the earlier, while its own design still shows what is coming, and Content shows the switch only for those views.

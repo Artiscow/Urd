@@ -2,7 +2,7 @@
 
 [Sámegiella](GUIDE-se.md) · [🇬🇧 English](GUIDE-en-GB.md) · [🇳🇴 Bokmål](GUIDE-nb.md) · **🇳🇴 Nynorsk** · [🇹🇷 Türkçe](GUIDE-tr.md)
 
-Omsetjing av GUIDE-nb.md. Norsk (bokmål) er kanonisk og gjeld ved avvik. Knappe- og panelnamna under er dei nynorske admin-tekstane; står adminen på eit anna språk, følgjer namna det språket.
+Omsetjing av GUIDE-nb.md. Den engelske teksten (GUIDE-en-GB.md) er kanonisk og gjeld ved avvik. Knappe- og panelnamna under er dei nynorske admin-tekstane; står adminen på eit anna språk, følgjer namna det språket.
 
 For deg som eig eller redigerer ei side bygd med Urd. Ingen kode, ingen
 git-kunnskap nødvendig: alt skjer i nettlesaren på di eiga side.

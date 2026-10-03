@@ -2,7 +2,7 @@
 
 [Sámegiella](SETUP-se.md) · **🇬🇧 English** · [🇳🇴 Bokmål](SETUP-nb.md) · [🇳🇴 Nynorsk](SETUP-nn.md) · [🇹🇷 Türkçe](SETUP-tr.md)
 
-Translation of SETUP-nb.md. Norwegian (bokmål) is canonical and prevails in case of discrepancies.
+The canonical text (ADR-0022): on a discrepancy this English text applies. The Norwegian (bokmål) version is [SETUP-nb.md](SETUP-nb.md).
 
 This guide sets up the «Publish» button: letting admin commit changes to the GitHub repo, which Cloudflare Pages then deploys. This is a one-time job per website and takes about ten minutes. (The pattern is validated in production in ApeironLF.)
 

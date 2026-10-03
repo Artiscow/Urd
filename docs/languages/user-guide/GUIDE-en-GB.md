@@ -2,7 +2,7 @@
 
 [Sámegiella](GUIDE-se.md) · **🇬🇧 English** · [🇳🇴 Bokmål](GUIDE-nb.md) · [🇳🇴 Nynorsk](GUIDE-nn.md) · [🇹🇷 Türkçe](GUIDE-tr.md)
 
-Translation of GUIDE-nb.md. Norwegian (bokmål) is canonical and prevails in case of discrepancies. The button and panel names below are the English admin texts; if your admin is set to another language, the names follow that language.
+The canonical text (ADR-0022): on a discrepancy this English text applies. The Norwegian (bokmål) version is [GUIDE-nb.md](GUIDE-nb.md). The button and panel names below are the English admin texts; if your admin is set to another language, the names follow that language.
 
 For you who own or edit a site built with Urd. No code, no git knowledge needed: everything happens in the browser on your own site.
 

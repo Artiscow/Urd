@@ -2,7 +2,7 @@
 
 **🇬🇧 English** · [🇳🇴 Bokmål](../UTVIKLING.md)
 
-Translation of UTVIKLING.md. Norwegian (bokmål) is canonical and prevails in case of discrepancies.
+The canonical text (ADR-0022): on a discrepancy this English text applies. The Norwegian (bokmål) version is [UTVIKLING.md](../UTVIKLING.md), and a change is made in both.
 
 This document is for those of us who develop Urd itself. (Associations that *use* Urd never need any of this; they clone the template and edit via /admin.)
 
@@ -55,8 +55,9 @@ docs/       Documentation. VISJON (why), ARCHITECTURE (how), SCHEMA (the data co
             adr/ (decisions with rationale)
 schema/     JSON Schema: machine-readable edition of SCHEMA.md
 editor/     The Svelte source code for the editor. The only place with npm.
-template/   THE WEBSITE. This is what associations clone:
-              assets/engine/   handwritten readable engine JS (NEVER compiled)
+template/   THE WEBSITE. Synced to the urd-template repo at releases («Use this template»):
+              assets/engine/<version>/   handwritten readable engine JS (NEVER compiled; versioned directory, ADR-0013)
+              assets/urd/      stable plugin API shells (re-exports against the current engine version)
               admin/assets/    prebuilt editor (committed, from editor/)
               content/         example content (user-owned on cloning)
               functions/       the publishing layer (Cloudflare Pages Functions)
@@ -71,7 +72,7 @@ tests/      node --test tests (for now the migration contract)
 3. **If you change the shape of the props for a block/section/background/animation, you SHALL bump `version` and write a migration** (`migrations[n]` lifts v(n) to v(n+1), pure function, with a test in `tests/`). See [ADR-0005](../adr/0005-versioning-and-migration.md).
 4. **Schema changes are made in three places in the same commit:** `docs/SCHEMA.md`, `schema/*.schema.json` and the example data in `template/content/`. The examples shall always validate.
 5. **Editor changes are built before merge:** `npm run build`, and the updated `template/admin/assets/` is committed together with the source.
-6. **Publishing is never allowed to write code.** The path allowlist in `template/functions/_lib/guard.js` (denies `functions/`, `admin/`, `assets/engine/`, and more) is changed only with a very good reason.
+6. **Publishing is never allowed to write code.** The path allowlist in `template/functions/_lib/guard.js` (denies `functions/`, `admin/`, `assets/engine/`, `assets/urd/`, and more) is changed only with a very good reason. The updater has the opposite domain (the ownership map, ADR-0014); contract tests keep guard.js and urd.json in sync.
 7. **English is the canonical language of Urd, Norwegian (bokmål) the secondary** (decided 11 September 2026, ADR-0022): everything developer-facing is written in English: code, AGENTS.md, the ADRs, the documents under docs/, new entries in CHANGELOG, BACKLOG and TESTRUNDER, and commit messages (older entries stay as written). Documents not yet translated stay in Norwegian until their turn, and the English text applies on discrepancy. Everything a site owner or visitor may read is available in both English and Norwegian: the README, the user guide and the setup guide under docs/languages/, and the UI texts (five languages, ADR-0012, with the bokmål dictionary as the base). No em dashes in text.
 
 ## Common tasks
@@ -93,10 +94,23 @@ Urd follows [semantic versioning](https://semver.org/): `MAJOR.MINOR.PATCH`, alw
 
 The source of truth is the `engine` field in `template/urd.json`. The git tag (`v0.2.0`) and the CHANGELOG heading shall always agree with it. `editor/package.json` and plugin manifests are versioned by the same rules (plugins declare engine compatibility via `requiresEngine`).
 
-## Releases (form from v0.2, automated in v0.6)
+## Releases (automated from 0.6.9)
 
 1. All tests green, example data validates against the schemas.
-2. `npm run build` in `editor/`, commit the output.
-3. Bump the engine version in `template/urd.json` and update `docs/CHANGELOG.md`.
-4. Tag the release (`v0.x.y`).
-5. From v0.6: a release Action syncs `template/` to the `urd-template` repo.
+2. Bump the engine version: set `engine` in `template/urd.json`, `git mv` the engine directory to `template/assets/engine/<new version>/`, and update the re-export targets in the `template/assets/urd/` shells plus the references in the HTML shells (the root and the slug copies). The tests, the editor build and the validation read the directory name from urd.json and follow by themselves (ADR-0013); the modulepreload test fails on anything left behind.
+3. `npm run build` in `editor/`, commit the output (the bundle carries the engine path).
+4. Update `docs/CHANGELOG.md` (the release heading `## [x.y.z] - date`) and `editor/package.json` to the same version.
+5. Tag the release (`v0.x.y`) and publish a GitHub release on the tag.
+6. The release Action (`.github/workflows/release.yml`) then runs by itself: it validates the version consistency (`scripts/check-release.mjs`: engine == tag == CHANGELOG heading == package.json), runs the tests, and syncs the content of `template/` to the `urd-template` repo as ONE squashed commit («Urd v0.x.y») with the same tag. The tag in the template repo is the updater's checksum baseline and is never moved.
+
+Prerequisites (a one-time setup, done BEFORE the first release; until then neither the template repo nor the «Use this template» button exists, and the links to `urd-template` in the documentation give 404):
+
+1. Create the public repo `urd-template` on GitHub (**New repository**). Tick «Add a README file» so the main branch exists from the start (the release Action pushes to an existing branch; the first sync replaces all the content anyway).
+2. Create the token: your GitHub profile → **Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**, with Repository access = «Only select repositories» → `urd-template`, and Permissions → Contents = Read and write. Copy the token string (it is shown once only).
+3. Add the token as a secret IN THE MONOREPO (the repo `Urd`, where the release workflow runs, NOT in the template repo, which needs no secrets): `Urd` → **Settings → Secrets and variables → Actions → New repository secret**, Name `URD_TEMPLATE_PAT`, Secret = the token string. The name stands in the workflow and the documentation; the string itself must never go into any file.
+4. Run the first sync (publish a release, or a manual prerelease dispatch of the Release workflow).
+5. Mark the repo as a template: **Settings → General → tick «Template repository»**. Only THEN does the «Use this template» button show on the repo's front page (the button is a property of a repo marked as a template, never of a folder). Set the GitHub topic `urd-template` at the same time (decided 5 August 2026: English is the standard for topics).
+
+Plugins are shared with the topic `urd-plugin`.
+
+**Prerelease sync (rc):** to test the updater end to end before a release, the Action can be run by hand (`workflow_dispatch`) against an rc tag with the prerelease flag set; the CHANGELOG and package.json checks are then skipped. Use a three-part version number of its own for the rc (the semver parser in `satisfiesEngine` is strictly three-part, so suffixes like `-rc.1` cannot stand in the engine field).

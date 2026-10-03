@@ -65,7 +65,7 @@ Editoren og motorens besøkende-tekster finnes på nordsamisk, britisk engelsk, 
 | [Bilder fra en delt mappe](../setup-photos/PHOTOS-nb.md) | Bakgrunnsbilder fra en Google Drive-mappe, et Google Foto-album eller en Nextcloud-deling, og Cloudflare-variablene de trenger |
 | [docs/BACKLOG.md](../../BACKLOG.md) | Løpende oppgaveliste: gjøremål, bugs og forslag |
 | [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Sjekkliste for manuell testing: levert arbeid som venter på testing |
-| [docs/languages/](../) | Alle oversatte dokumenter (guide og oppsett på fem språk; norsk tekst er kanonisk ved avvik) |
+| [docs/languages/](../) | Alle oversatte dokumenter (guide og oppsett på fem språk; engelsk tekst er kanonisk ved avvik) |
 | [docs/sammenligning/FUNKSJONSKART.md](../../sammenligning/FUNKSJONSKART.md) | Funksjonssammenligning mot andre nettsidebyggere med gap-analyse |
 | [docs/sammenligning/LAERDOMMER.md](../../sammenligning/LAERDOMMER.md) | Hvordan andre nettsidebyggere bygger, og hva vi kan hente (arkitektur og mønstre) |
 | [docs/sammenligning/ELEMENTKART.md](../../sammenligning/ELEMENTKART.md) | Elementer og funksjoner: hvordan de tilbys brukeren og hvordan de bygges |

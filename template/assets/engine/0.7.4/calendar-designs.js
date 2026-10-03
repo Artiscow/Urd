@@ -10,6 +10,15 @@
  * bundled by the editor and loaded by the block on its first render (with
  * ics.js, outside the visitor closure), so it never touches the DOM and never
  * calls ta().
+ *
+ * A design is five things, added together: an entry in CAL_DESIGNS below
+ * (its view, the colour slots by section with the plain colours first, the
+ * static texts, the stripe and the flags); a renderer exported under the
+ * design's id from its blocks/calendar-<module>.js; a CSS block in base.css
+ * under `.urd-cal-d-<id>` that reads every slot as `--urd-cal-s-<slot>` with
+ * the design's own default; a drawing in calendar-thumb.js; and the label,
+ * slot and section keys in the nb, en-GB and tr admin dictionaries.
+ * tests/calendar-designs.test.mjs holds the five against each other.
  */
 
 /** The data views a design can stand on; `null` on a design means the block's own `view`. */

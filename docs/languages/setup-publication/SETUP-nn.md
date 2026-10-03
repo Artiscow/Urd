@@ -2,7 +2,7 @@
 
 [Sámegiella](SETUP-se.md) · [🇬🇧 English](SETUP-en-GB.md) · [🇳🇴 Bokmål](SETUP-nb.md) · **🇳🇴 Nynorsk** · [🇹🇷 Türkçe](SETUP-tr.md)
 
-Omsetjing av SETUP-nb.md. Norsk (bokmål) er kanonisk og gjeld ved avvik.
+Omsetjing av SETUP-nb.md. Den engelske teksten (SETUP-en-GB.md) er kanonisk og gjeld ved avvik.
 
 Denne guiden set opp «Publiser»-knappen: at admin kan committe endringar til GitHub-repoet, som Cloudflare Pages så deployar. Dette er ein eingongsjobb per nettside og tek rundt ti minutt. (Mønsteret er validert i produksjon i ApeironLF.)
 

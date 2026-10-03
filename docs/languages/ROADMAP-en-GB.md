@@ -2,7 +2,7 @@
 
 **🇬🇧 English** · [🇳🇴 Bokmål](../VEIKART.md)
 
-Translation of VEIKART.md. Norwegian (bokmål) is canonical and prevails in case of discrepancies.
+The canonical text (ADR-0022): on a discrepancy this English text applies. The Norwegian (bokmål) version is [VEIKART.md](../VEIKART.md), and a change is made in both.
 
 The order is deliberate: **engine → publishing loop → editor depth.** The engine makes the schema real (schema errors are cheapest to fix before the editor depends on them). The publishing loop is the riskiest *integration*, but the most *proven* pattern - landing it early gives a real deploy target for everything that follows. Editor refinement is the long tail and is built against a working pipeline.
 

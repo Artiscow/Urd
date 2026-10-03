@@ -2,7 +2,7 @@
 
 **🇬🇧 English** · [🇳🇴 Bokmål](../VISJON.md)
 
-Translation of VISJON.md. Norwegian (bokmål) is canonical and prevails in case of discrepancies.
+The canonical text (ADR-0022): on a discrepancy this English text applies. The Norwegian (bokmål) version is [VISJON.md](../VISJON.md), and a change is made in both.
 
 ## What is Urd?
 

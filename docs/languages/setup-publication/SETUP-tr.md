@@ -2,7 +2,7 @@
 
 [Sámegiella](SETUP-se.md) · [🇬🇧 English](SETUP-en-GB.md) · [🇳🇴 Bokmål](SETUP-nb.md) · [🇳🇴 Nynorsk](SETUP-nn.md) · **🇹🇷 Türkçe**
 
-SETUP-nb.md dosyasının çevirisi. Norveççe (bokmål) kanoniktir ve farklılık durumunda geçerlidir.
+SETUP-nb.md dosyasının çevirisi. İngilizce metin (SETUP-en-GB.md) kanoniktir ve farklılık durumunda geçerlidir.
 
 Bu kılavuz «Yayımla» düğmesini kurar: adminin değişiklikleri GitHub deposuna commit edebilmesini ve Cloudflare Pages'in bunu dağıtmasını sağlar. Bu, her web sitesi için tek seferlik bir iştir ve yaklaşık on dakika sürer. (Desen, ApeironLF'de üretimde doğrulanmıştır.)
 

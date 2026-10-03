@@ -2,7 +2,7 @@
 
 [Sámegiella](GUIDE-se.md) · [🇬🇧 English](GUIDE-en-GB.md) · [🇳🇴 Bokmål](GUIDE-nb.md) · [🇳🇴 Nynorsk](GUIDE-nn.md) · **🇹🇷 Türkçe**
 
-GUIDE-nb.md dosyasının çevirisi. Norveççe (bokmål) kanoniktir ve farklılık durumunda geçerlidir. Aşağıdaki düğme ve panel adları Türkçe admin metinleridir; adminin başka bir dile ayarlıysa adlar o dili izler.
+GUIDE-nb.md dosyasının çevirisi. İngilizce metin (GUIDE-en-GB.md) kanoniktir ve farklılık durumunda geçerlidir. Aşağıdaki düğme ve panel adları Türkçe admin metinleridir; adminin başka bir dile ayarlıysa adlar o dili izler.
 
 Urd ile kurulmuş bir siteye sahip olan ya da onu düzenleyen senin için. Kod yok, git
 bilgisi gerekmez: her şey kendi sitende, tarayıcıda olur.
