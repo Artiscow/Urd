@@ -57,7 +57,18 @@ export const CAL_TEXTS = {
   noticeTitle: 'calendar.noticeTitle',
   noticeText: 'calendar.noticeText',
   moreInfo: 'calendar.moreInfo',
+  series: 'calendar.series',
+  when: 'calendar.when',
+  where: 'calendar.where',
+  forWhom: 'calendar.forWhom',
+  openAll: 'calendar.openAll',
+  allDates: 'calendar.allDates',
+  emptyKicker: 'calendar.emptyKicker',
+  emptyTitle: 'calendar.emptyTitle',
 };
+
+/** The texts of the ApeironLF empty state (the designs with `empty: 'ap'`). */
+const AP_EMPTY_TEXTS = ['emptyKicker', 'emptyTitle'];
 
 /** The texts of the announcement note, for the designs that declare `notice`. */
 const NOTICE_TEXTS = ['noticeLabel', 'noticeTitle', 'noticeText', 'moreInfo'];
@@ -79,8 +90,11 @@ const slot = (key, section = 'colors') => ({ key, labelKey: `calendar.slot.${key
  * subscribe buttons inside its own layout, so the block draws no row under
  * it, `ownFilter` one that draws its own calendar switches instead of the
  * chip row, and `notice` one that can show the announcement note
- * (`props.notice { show, href }` with the texts noticeLabel, noticeTitle and
- * noticeText).
+ * (`props.notice { show, href, as }` with the texts noticeLabel, noticeTitle
+ * and noticeText; `noticeBand` marks a design that can draw it as an alert
+ * band instead, `as: 'band'`). `empty: 'ap'` gives the design ApeironLF's
+ * empty state (a pill, a dashed box and the subscribe button) in place of
+ * the plain one.
  * @type {Array<{id: string, labelKey: string, view: string|null, module?: string, stripe: boolean,
  *   slots: Array<{key: string, labelKey: string, section: string}>, texts: string[]}>}
  */
@@ -132,11 +146,12 @@ export const CAL_DESIGNS = [
   {
     id: 'apList',
     labelKey: 'calendar.design.apList',
+    empty: 'ap',
     view: 'list',
     module: 'list',
     stripe: false,
     slots: [slot('row'), slot('text'), slot('gold'), slot('line')],
-    texts: COMMON_TEXTS,
+    texts: [...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
   },
   {
     id: 'glass',
@@ -186,11 +201,12 @@ export const CAL_DESIGNS = [
   {
     id: 'apGrid',
     labelKey: 'calendar.design.apGrid',
+    empty: 'ap',
     view: 'cards',
     module: 'cards',
     stripe: false,
     slots: [slot('head'), slot('card'), slot('text'), slot('gold')],
-    texts: COMMON_TEXTS,
+    texts: [...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
   },
   {
     id: 'bento',
@@ -242,11 +258,12 @@ export const CAL_DESIGNS = [
   {
     id: 'apMonth',
     labelKey: 'calendar.design.apMonth',
+    empty: 'ap',
     view: 'month',
     module: 'time',
     stripe: false,
     slots: [slot('card'), slot('text'), slot('gold'), slot('goldDark'), slot('grid'), slot('pill')],
-    texts: COMMON_TEXTS,
+    texts: [...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
   },
   {
     id: 'dayPlan',
@@ -360,10 +377,52 @@ export const CAL_DESIGNS = [
     slots: [slot('accent'), slot('accentText'), slot('soft'), slot('tile'), slot('line')],
     texts: ['now', 'wholeProgram', ...COMMON_TEXTS],
   },
+  {
+    id: 'apNow',
+    labelKey: 'calendar.design.apNow',
+    view: 'next',
+    module: 'more',
+    stripe: false,
+    notice: true,
+    noticeBand: true,
+    empty: 'ap',
+    slots: [slot('head'), slot('card'), slot('panel'), slot('text'), slot('gold'), slot('goldDark'), slot('alert', 'alert'), slot('alertText', 'alert')],
+    texts: ['now', 'next', 'later', ...NOTICE_TEXTS, ...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
+  },
+  {
+    id: 'apNavy',
+    labelKey: 'calendar.design.apNavy',
+    view: 'next',
+    module: 'more',
+    stripe: false,
+    empty: 'ap',
+    slots: [slot('ground'), slot('text'), slot('tile'), slot('line'), slot('gold'), slot('goldDark'), slot('card', 'first'), slot('cardText', 'first')],
+    texts: ['now', 'later', 'moreInfo', ...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
+  },
+  {
+    id: 'apSeries',
+    labelKey: 'calendar.design.apSeries',
+    view: 'list',
+    module: 'more',
+    stripe: false,
+    notice: true,
+    empty: 'ap',
+    slots: [slot('card'), slot('row'), slot('text'), slot('title'), slot('gold'), slot('goldDark'), slot('line')],
+    texts: ['series', 'when', 'where', 'forWhom', 'openAll', 'allDates', ...NOTICE_TEXTS, ...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
+  },
+  {
+    id: 'mobileAgenda',
+    labelKey: 'calendar.design.mobileAgenda',
+    view: 'agenda',
+    module: 'more',
+    stripe: true,
+    slots: [slot('ground'), slot('text'), slot('card'), slot('edge'), slot('accent'), slot('chip')],
+    texts: ['todayBtn', ...COMMON_TEXTS],
+  },
 ];
 
 /** The renderer modules a design can name (the block maps each to a literal import). */
-export const CAL_MODULES = ['list', 'cards', 'time', 'next'];
+export const CAL_MODULES = ['list', 'cards', 'time', 'next', 'more'];
 
 /** The design for an id; the plain one for anything unknown. */
 export function calDesign(id) {

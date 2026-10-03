@@ -40,7 +40,7 @@ function navButton(ui, dir, label) {
   return btn;
 }
 
-/** «5. okt til 11. okt» for a span of days. */
+/** «5 Oct to 11 Oct» for a span of days. */
 function rangeText(from, to) {
   const f = `${from.getDate()}. ${monthShort(from)}`;
   const l = `${to.getDate()}. ${monthShort(to)}`;
@@ -61,7 +61,7 @@ function weekDays(monday) {
   return Array.from({ length: 7 }, (_, i) => new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i));
 }
 
-/** 04 Ukestripe: seven day columns with a pill per event, the week number above and arrows to move through the weeks. */
+/** 04 Week strip: seven day columns with a pill per event, the week number above and arrows to move through the weeks. */
 export function weekStrip(host, occs, props, ics, ui) {
   const today = ui.today();
   let monday = new Date(ics.startOfWeek(today.getTime()));
@@ -127,7 +127,7 @@ function planBlock(occ, ui) {
   return block;
 }
 
-/** M3 Ukeplan: an hour grid over seven days, timed events as blocks in their hour, all-day ones in a row above. */
+/** M3 Week plan: an hour grid over seven days, timed events as blocks in their hour, all-day ones in a row above. */
 export function weekPlan(host, occs, props, ics, ui) {
   const today = ui.today();
   let monday = new Date(ics.startOfWeek(today.getTime()));
@@ -189,7 +189,7 @@ export function weekPlan(host, occs, props, ics, ui) {
   host.appendChild(wrap);
 }
 
-/** F4 Kalenderlag: one row per calendar with a switch in the head, the events as bars over the week's days. */
+/** F4 Calendar layers: one row per calendar with a switch in the head, the events as bars over the week's days. */
 export function layers(host, occs, props, ics, ui) {
   const today = ui.today();
   let monday = new Date(ics.startOfWeek(today.getTime()));
@@ -280,7 +280,7 @@ function monthHead(ui, onmove) {
   return { head, prev, next, label };
 }
 
-/** F1 Måned med sidepanel: the month's days with chips, a chosen day, and a panel with that day's events and the calendars. */
+/** F1 Month with side panel: the month's days with chips, a chosen day, and a panel with that day's events and the calendars. */
 export function sidepanel(host, occs, props, ics, ui) {
   const today = ui.today();
   let shown = { y: today.getFullYear(), m: today.getMonth() };
@@ -376,7 +376,7 @@ export function sidepanel(host, occs, props, ics, ui) {
   host.appendChild(wrap);
 }
 
-/** A7 Oversikt: ApeironLF's month on cream with a gold top rule, the pills with a gold line and the time in dark gold. */
+/** A7 Overview on cream: ApeironLF's month on cream with a gold top rule, the pills with a gold line and the time in dark gold. */
 export function apMonth(host, occs, props, ics, ui) {
   const today = ui.today();
   let shown = { y: today.getFullYear(), m: today.getMonth() };
@@ -413,7 +413,7 @@ export function apMonth(host, occs, props, ics, ui) {
   host.appendChild(wrap);
 }
 
-/** F2 Dagsplan: one day's hours with the events as blocks, a week strip to pick the day, the now line and the past shaded. */
+/** F2 Day plan: one day's hours with the events as blocks, a week strip to pick the day, the now line and the past shaded. */
 export function dayPlan(host, occs, props, ics, ui) {
   const today = ui.today();
   let day = startOfDay(today);
@@ -493,7 +493,7 @@ function arcPath(cx, cy, r, a0, a1) {
   return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
 }
 
-/** 08 Årshjul: twelve months on a ring, a dot per event, the past months dimmed and the current one in the accent; a list for the picked month. */
+/** 08 Year wheel: twelve months on a ring, a dot per event, the past months dimmed and the current one in the accent; a list for the picked month. */
 export function yearWheel(host, occs, props, ics, ui) {
   const today = ui.today();
   const year = today.getFullYear();
@@ -565,7 +565,7 @@ export function yearWheel(host, occs, props, ics, ui) {
   host.appendChild(wrap);
 }
 
-/** F3 Varmekart: the year as twelve small months, every day a cell shaded by its count, with a readout for the day under the pointer. */
+/** F3 Heat map: the year as twelve small months, every day a cell shaded by its count, with a readout for the day under the pointer. */
 export function heatmap(host, occs, props, ics, ui) {
   const today = ui.today();
   const year = today.getFullYear();

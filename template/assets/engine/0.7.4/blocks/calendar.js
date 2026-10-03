@@ -247,7 +247,9 @@ function makeUi(cd, ics, el, host, props, ctx, sources) {
   const chip = (occ) => chipNode(occ.category, occ.color, ui);
   /** The subscribe buttons, for a design that places them itself; null when they are off or there is no source. */
   const subscribe = () => (props.showSubscribe !== false && sources.length ? subscribeRow(ics, sources, ui) : null);
-  const ui = { el: el2, tint: tintNode, field, meta, tx, link, signup, chip, subscribe, countdown: countdownText, image: imageUrl, all: [], today: () => new Date() };
+  /** The event's own page: the address the feed gives it, else its sign-up link; null without either. */
+  const href = (occ) => (typeof occ.url === 'string' && /^https?:\/\//i.test(occ.url) ? occ.url : occ.signup || null);
+  const ui = { el: el2, tint: tintNode, field, meta, tx, link, signup, chip, subscribe, href, countdown: countdownText, image: imageUrl, all: [], today: () => new Date() };
   return ui;
 }
 
@@ -399,6 +401,23 @@ function emptyNode(props) {
   return box;
 }
 
+/**
+ * ApeironLF's empty state, for the designs that declare it: a pill with a
+ * kicker and a heading, the owner's line and icon in a dashed box, and the
+ * subscribe buttons under it.
+ */
+function emptyApNode(props, ui) {
+  const wrap = el2('div', 'urd-cal-apempty');
+  const pill = el2('div', 'urd-cal-apempty-pill');
+  const kicker = el2('span', 'urd-cal-apempty-kicker');
+  kicker.appendChild(ui.tx('emptyKicker'));
+  const title = el2('span', 'urd-cal-apempty-title');
+  title.appendChild(ui.tx('emptyTitle'));
+  pill.append(kicker, title);
+  wrap.append(pill, emptyNode(props));
+  return wrap;
+}
+
 function renderMonth(host, occs, props, ics, ui) {
   const now = new Date();
   let shown = { y: now.getFullYear(), mo: now.getMonth() };
@@ -507,7 +526,7 @@ function renderCalendar(el, props, ctx) {
   // The parser and the design model are loaded together, on the first
   // render, and a design's renderer module with them (literal paths, so the
   // modules stay out of the visitor closure and the preload list).
-  const DESIGN_MODULES = { list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js'), next: () => import('./calendar-next.js') };
+  const DESIGN_MODULES = { list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js'), next: () => import('./calendar-next.js'), more: () => import('./calendar-more.js') };
   Promise.all([import('../ics.js'), import('../calendar-designs.js')]).then(async ([ics, cd]) => {
     const design = cd.calDesign(props.design);
     const mod = design.module ? await DESIGN_MODULES[design.module]?.() : null;
@@ -559,7 +578,7 @@ function drawCalendar(ics, cd, mod, el, host, props, ctx) {
     // The whole filtered list, for a design that draws more than the rows (the bento's month dots).
     ui.all = filtered;
     if (!limited.length) {
-      host.appendChild(emptyNode(props));
+      host.appendChild(design.empty === 'ap' ? emptyApNode(props, ui) : emptyNode(props));
     } else {
       (mod?.[design.id] ?? VIEWS[view] ?? renderList)(host, limited, props, ics, ui);
     }

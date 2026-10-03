@@ -295,6 +295,7 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
       description: event.description ?? '',
       location: event.location ?? '',
       url: event.url ?? null,
+      image: event.image ?? null,
       start: startMs,
       end: endMs,
       allDay: !!event.start.allDay,

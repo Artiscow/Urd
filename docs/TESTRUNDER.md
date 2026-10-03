@@ -4,73 +4,84 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
-### Testrunde-batch (0.7.19.5): «Akkurat nå» designs on the calendar
+### Testrunde-batch (0.7.19.6): the ApeironLF set and the dark agenda
 
-- [ ] Stil tab, Design: Reklametavle, Stablede kort, Oppslagstavle, Delt kort, Bånd, Én linje, Nedtellingsring, Mørkt glass and Bento for akkurat nå draw the demo data in the preview and a real feed on the published page; Innhold shows Arrangementer i kortet and Under «Senere» for them
-- [ ] Reklametavle: the pulse beside «Akkurat nå», the three tiles count days, hours and minutes and move on after a minute, the sign-up as a full-width bar, «Deretter:» listing the later events, the subscribe link at the foot; Bakgrunn, Tekst, Etikett, Puls and the tile and button colours recolour it
-- [ ] Stablede kort: with Arrangementer i kortet 3, three cards stacked with the front one readable; «Bla gjennom kortene» turns the next card to the front; «3 neste» at the top right; the later rows under
-- [ ] Oppslagstavle: the next event on a pinned yellow note, «Vis kunngjøring» adds a blue note whose label, heading and text are rewritten by clicking them in the preview, Lenke fra kunngjøringen gives «Les mer» its address, «Senere» on the strip
-- [ ] Delt kort: the weekday, the huge day and the month on the panel in the calendar's colour (Datopanelet otherwise), the chip, the title, the first line of the description and the sign-up to the right, «Senere» under; the panel stacks above the words on a phone
-- [ ] Bånd: the tag at the left, the next events in one line with dots between; with more than fit the band rolls, pauses under the pointer and stands still with reduced motion
-- [ ] Én linje: the first rows (Arrangementer i kortet) marked «Akkurat nå» with the accent dot and stripe, the rest «Senere», «Om N dager» at the right and the sign-up as a button
-- [ ] Nedtellingsring: the ring fills over the last two weeks before the event, the middle counts days and on the last day hours, the two later rows with dots under a rule
-- [ ] Mørkt glass: the countdown in monospace, «Fram til start» with the percentage and the bar, the sign-up and the subscribe button side by side, «Deretter» in a glass box; Fargeflekk 1 and 2 recolour the blobs
-- [ ] Bento for akkurat nå: the hero tile in the calendar's colour with «Akkurat nå» and «Om N dager», a date tile per later event (the third dark), the link tile with the count and the subscribe link; no subscribe row under the block
-- [ ] Every next design: the texts («Akkurat nå», «Senere», «Deretter», the units, the buttons) are rewritten by clicking them, the colour slots follow the design when empty, Kantstripe adds the stripe, and Vis «Meld deg på»-knapper off removes the buttons
+- [ ] Style tab, Design: Coming up on cream, Coming up on navy, Regular event and Agenda, dark draw the demo data in the preview and a real feed on the published page
+- [ ] Coming up on cream: the navy head with the gold dot, the next event with the navy date badge and the «In N days» pill, «Later» on a gold rail; an event with a URL in the calendar (or a sign-up link) gets an arrow that opens it, one without gets none
+- [ ] Coming up on cream, Show announcement: «The announcement as» Section puts it as a section at the foot with label, heading and text; Alert band puts a red band under the head with the heading alone and a warning icon; with a link the band and the arrow follow it; Alert band and Alert text recolour the band
+- [ ] Coming up on navy: with Events in the card 2 or 3, the first on a cream card with the chip outlined, the place underlined and «Read more» when the event has an address, the others as navy cards with a gold edge, «2 next» at the top right, «Later» as lines
+- [ ] Regular event: the next event's title large in red, the first paragraph of its description, When, Where and For whom («Open to everyone» is rewritten by clicking it), «All dates» folds out every coming date with the same title (Max count caps them); with one date there is no fold; Show announcement adds the aside to the right, under the card on a phone
+- [ ] Agenda, dark: the month, this week's days with today in the accent and a dot under days with events, a card per event with the time to the left and a stripe in the calendar's colour, «Today» before today's date; Edge stripe off removes the stripes
+- [ ] An ApeironLF design (the six of them) on a calendar with nothing coming up: the pill «Dates · Dates to come», the dashed box with the own line and icon from Content, the subscribe button in gold; the pill's two texts are rewritten by clicking them; the text is readable on a light and a dark page
+- [ ] Picture cards with an event that has a picture ATTACHED in the calendar (not only a link in the description): the picture shows when its host stands in PHOTO_HOSTS
+
+### Testrunde-batch (0.7.19.5): «Coming up» designs on the calendar
+
+- [ ] Style tab, Design: Billboard, Stacked cards, Noticeboard, Split card, Band, One line, Countdown ring, Dark glass and Coming up bento draw the demo data in the preview and a real feed on the published page; Content shows Events in the card and Under «Later» for them
+- [ ] Billboard: the pulse beside «Coming up», the three tiles count days, hours and minutes and move on after a minute, the sign-up as a full-width bar, «Then:» listing the later events, the subscribe link at the foot; Background, Text, Label, Pulse and the tile and button colours recolour it
+- [ ] Stacked cards: with Events in the card 3, three cards stacked with the front one readable; «Browse the cards» turns the next card to the front; «3 next» at the top right; the later rows under
+- [ ] Noticeboard: the next event on a pinned yellow note, «Show announcement» adds a blue note whose label, heading and text are rewritten by clicking them in the preview, Link from the announcement gives «Read more» its address, «Later» on the strip
+- [ ] Split card: the weekday, the huge day and the month on the panel in the calendar's colour (The date panel otherwise), the chip, the title, the first line of the description and the sign-up to the right, «Later» under; the panel stacks above the words on a phone
+- [ ] Band: the tag at the left, the next events in one line with dots between; with more than fit the band rolls, pauses under the pointer and stands still with reduced motion
+- [ ] One line: the first rows (Events in the card) marked «Coming up» with the accent dot and stripe, the rest «Later», «In N days» at the right and the sign-up as a button
+- [ ] Countdown ring: the ring fills over the last two weeks before the event, the middle counts days and on the last day hours, the two later rows with dots under a rule
+- [ ] Dark glass: the countdown in monospace, «Until the start» with the percentage and the bar, the sign-up and the subscribe button side by side, «Then» in a glass box; Colour blob 1 and 2 recolour the blobs
+- [ ] Coming up bento: the hero tile in the calendar's colour with «Coming up» and «In N days», a date tile per later event (the third dark), the link tile with the count and the subscribe link; no subscribe row under the block
+- [ ] Every next design: the texts («Coming up», «Later», «Then», the units, the buttons) are rewritten by clicking them, the colour slots follow the design when empty, Edge stripe adds the stripe, and Show «Sign up» buttons off removes the buttons
 
 ### Testrunde-batch (0.7.19.4): month, week, day and year designs on the calendar
 
-- [ ] Stil tab, Design: Ukestripe, Ukeplan, Kalenderlag, Måned med sidepanel, Oversikt på krem, Dagsplan, Årshjul and Varmekart draw the demo data in the preview and a real feed on the published page; Innhold shows no Visning for them
-- [ ] Ukestripe: the current week with today framed in the accent, «Uke N» and the span above, the arrows move a week at a time, a pill per event in the calendar's colour (Pille and Pilletekst otherwise)
-- [ ] Ukeplan: the hours from the earliest event (at most 08) to past the latest (at least 18), today's column tinted and its number ringed, an all-day event in the row above, a timed one as a block in its hour with its length; «I dag» returns to this week
-- [ ] Kalenderlag: one row per named calendar (or «Arrangementer»), a switch per calendar in the head that hides and shows its row, a bar per event spanning its days, today's column tinted; the chip row is not drawn and Innhold hides «Vis kategori-filter»
-- [ ] Måned med sidepanel: the month with at most two chips per day and «+N til», today ringed, a click on a day shows its events in the panel, a click on a grey day from the next month moves the month, the panel's legend lists the calendars with their colours; the panel moves under the month on a phone
-- [ ] Oversikt på krem: the month on cream with a gold rule at the top, the arrows outlined in gold, today in a gold circle, the pills with a gold line and the time in dark gold
-- [ ] Dagsplan: today with «I dag» above the date and «N i dag» at the right, the week strip picks another day, the now line in the current hour and the past hours shaded on today only
-- [ ] Årshjul: twelve arcs, the months before this one in Passert, this month in the accent, a dot per event (Prikker senere for those gone), the year and the count in the middle, a click or Enter on an arc lists that month's events to the right
-- [ ] Varmekart: twelve small months, every day shaded by its count (Ingen, Få, Flere, Mange), today ringed, pointing at or focusing a day reads its events out under the grid
+- [ ] Style tab, Design: Week strip, Week plan, Calendar layers, Month with side panel, Overview on cream, Day plan, Year wheel and Heat map draw the demo data in the preview and a real feed on the published page; Content shows no View for them
+- [ ] Week strip: the current week with today framed in the accent, «Week N» and the span above, the arrows move a week at a time, a pill per event in the calendar's colour (Pill and Pill text otherwise)
+- [ ] Week plan: the hours from the earliest event (at most 08) to past the latest (at least 18), today's column tinted and its number ringed, an all-day event in the row above, a timed one as a block in its hour with its length; «Today» returns to this week
+- [ ] Calendar layers: one row per named calendar (or «Arrangementer»), a switch per calendar in the head that hides and shows its row, a bar per event spanning its days, today's column tinted; the chip row is not drawn and Content hides «Show category filter»
+- [ ] Month with side panel: the month with at most two chips per day and «+N», today ringed, a click on a day shows its events in the panel, a click on a grey day from the next month moves the month, the panel's legend lists the calendars with their colours; the panel moves under the month on a phone
+- [ ] Overview on cream: the month on cream with a gold rule at the top, the arrows outlined in gold, today in a gold circle, the pills with a gold line and the time in dark gold
+- [ ] Day plan: today with «Today» above the date and «N today» at the right, the week strip picks another day, the now line in the current hour and the past hours shaded on today only
+- [ ] Year wheel: twelve arcs, the months before this one in Past, this month in the accent, a dot per event (Later dots for those gone), the year and the count in the middle, a click or Enter on an arc lists that month's events to the right
+- [ ] Heat map: twelve small months, every day shaded by its count (None, Few, More, Many), today ringed, pointing at or focusing a day reads its events out under the grid
 - [ ] A calendar with sources: the month, week, day and year designs show events earlier in their span than now (this month's past events in the month designs, this year's in the year designs)
-- [ ] Every time design: the colour slots follow the design when empty, Kantstripe adds the stripe to the day columns, plan blocks and cards, the field styles change the right pieces, and the texts («I dag», «Årshjul», «Hele året», the legend) are rewritten by clicking them
+- [ ] Every time design: the colour slots follow the design when empty, Edge stripe adds the stripe to the day columns, plan blocks and cards, the field styles change the right pieces, and the texts («Today», «Year wheel», «The whole year», the legend) are rewritten by clicking them
 
 ### Testrunde-batch (0.7.19.3): six card designs on the calendar
 
-- [ ] Stil tab, Design: Plakatvegg, Billetter, Dagkarusell, Bildekort, Rutenett på krem and Bento draw the demo data in the preview and a real feed on the published page
-- [ ] Plakatvegg: the first poster twice as large in Plakat 1, the next two in Plakat 2 and 3, the fourth plain, then the three colours again; category and place in capitals at the top, the day huge, the title and time at the foot; two columns on a phone
-- [ ] Billetter: the stub in the Stubb colour (the calendar's colour when the source has one) with the day, the month and the time, a dashed tear between stub and body, place · category under the title, the sign-up as a button at the right end
-- [ ] Dagkarusell: the cards scroll sideways and snap, the two arrows move one card, the first card in the Første kort colours, the sign-up as a button on it and the chip on the others
-- [ ] Bildekort: an event with a picture attached in the calendar, or a picture link in its description, shows it in the band when the picture host stands in PHOTO_HOSTS; without, the band is the Uten bilde colour; the date badge and the chip sit on the band; locally the band stays plain
-- [ ] Rutenett på krem: cream cards with a navy head, the day in gold, the category as a gold pill, the place underlined in gold; Topprad, Kort, Tekst and Gull recolour them
-- [ ] Bento: the hero tile for the next event with the «Neste» pill and «Om N dager», two small tiles, the current month with today ringed, the next event's day in the accent and the other event days in Lys aksent, «Denne måneden» counting this month's events, the subscribe tile when the block has a source, wide rows for the rest; no subscribe row under the block; two columns on a phone
-- [ ] Every card design: the colour slots follow the design when empty, Kantstripe på boksene adds the stripe to every card and tile, the field styles change the right pieces, and the texts («Neste», «Denne måneden», «Alle», the buttons) are rewritten by clicking them
+- [ ] Style tab, Design: Poster wall, Tickets, Day carousel, Picture cards, Grid on cream and Bento draw the demo data in the preview and a real feed on the published page
+- [ ] Poster wall: the first poster twice as large in Poster 1, the next two in Poster 2 and 3, the fourth plain, then the three colours again; category and place in capitals at the top, the day huge, the title and time at the foot; two columns on a phone
+- [ ] Tickets: the stub in the Stub colour (the calendar's colour when the source has one) with the day, the month and the time, a dashed tear between stub and body, place · category under the title, the sign-up as a button at the right end
+- [ ] Day carousel: the cards scroll sideways and snap, the two arrows move one card, the first card in the The first card colours, the sign-up as a button on it and the chip on the others
+- [ ] Picture cards: an event with a picture attached in the calendar, or a picture link in its description, shows it in the band when the picture host stands in PHOTO_HOSTS; without, the band is the Without a picture colour; the date badge and the chip sit on the band; locally the band stays plain
+- [ ] Grid on cream: cream cards with a navy head, the day in gold, the category as a gold pill, the place underlined in gold; Header row, Card, Text and Gold recolour them
+- [ ] Bento: the hero tile for the next event with the «Next» pill and «In N days», two small tiles, the current month with today ringed, the next event's day in the accent and the other event days in Soft accent, «This month» counting this month's events, the subscribe tile when the block has a source, wide rows for the rest; no subscribe row under the block; two columns on a phone
+- [ ] Every card design: the colour slots follow the design when empty, Edge stripe on the boxes adds the stripe to every card and tile, the field styles change the right pieces, and the texts («Next», «This month», «All», the buttons) are rewritten by clicking them
 
 ### Testrunde-batch (0.7.19.2): six list designs on the calendar
 
-- [ ] Stil tab, Design: the dropdown lists Enkel, Tidslinje, Tabell, Programhefte, Nummerert program, Liste på marine and Glass; each draws the demo data in the preview and a real feed on the published page, and Innhold's Visning disappears while a design other than Enkel is chosen
-- [ ] Tidslinje: the date on one line to the left, a rail with a dot per event (the first in the accent, the rest in Prikker), the sign-up as a filled button, the chip under the title
-- [ ] Tabell: the header row in Topprad and Topptekst colours, every other row in Annenhver rad, «hele dagen» for an all-day event, the sign-up at the right end; a narrow block scrolls the table sideways instead of breaking it
-- [ ] Programhefte: the paper in Flate with a shadow, «Program» and the month span in the heading, one column per month that wraps to one column in a narrow block, the day in the accent, the description's first line under the title
-- [ ] Nummerert program: 01, 02, 03 in the Tall colour, «3 arrangementer» at the top right, the sign-up or the chip in the right column, a rule between the rows
-- [ ] Liste på marine: navy rows with the day in gold and the month in capitals, the category outlined, the place underlined in gold, the title in the heading font; the filter chips and the subscribe buttons follow the row colour
-- [ ] Glass: three blobs behind frosted cards, Fargeflekk 1 to 3 recolour them, Glasset and Glasskant change the cards, the filter chips and the subscribe button take the glass too
-- [ ] Every design: the colour slots in Stil follow the design's own colours when empty and the theme's dark mode stays readable; Kantstripe på boksene adds the stripe to the rows, cards or table cells; Tekstfelt Tittel, Dato, Klokkeslett, Sted, Kategori and Store tall change the right pieces
-- [ ] Every design: click «Dato», «Program», «Alle» or «Meld deg på» in the preview and rewrite it; the words survive a reload and «Tilbakestill tekstene» puts them back
+- [ ] Style tab, Design: the dropdown lists Plain, Timeline, Table, Programme booklet, Numbered programme, List on navy and Glass; each draws the demo data in the preview and a real feed on the published page, and Content's View disappears while a design other than Plain is chosen
+- [ ] Timeline: the date on one line to the left, a rail with a dot per event (the first in the accent, the rest in Dots), the sign-up as a filled button, the chip under the title
+- [ ] Table: the header row in Header row and Header text colours, every other row in Every other row, «all day» for an all-day event, the sign-up at the right end; a narrow block scrolls the table sideways instead of breaking it
+- [ ] Programme booklet: the paper in Surface with a shadow, «Programme» and the month span in the heading, one column per month that wraps to one column in a narrow block, the day in the accent, the description's first line under the title
+- [ ] Numbered programme: 01, 02, 03 in the Numerals colour, «3 events» at the top right, the sign-up or the chip in the right column, a rule between the rows
+- [ ] List on navy: navy rows with the day in gold and the month in capitals, the category outlined, the place underlined in gold, the title in the heading font; the filter chips and the subscribe buttons follow the row colour
+- [ ] Glass: three blobs behind frosted cards, Colour blob 1 to 3 recolour them, The glass and Glass edge change the cards, the filter chips and the subscribe button take the glass too
+- [ ] Every design: the colour slots in Style follow the design's own colours when empty and the theme's dark mode stays readable; Edge stripe on the boxes adds the stripe to the rows, cards or table cells; Text fields Title, Date, Time, Place, Category and Large numerals change the right pieces
+- [ ] Every design: click «Date», «Programme», «All» or «Sign up» in the preview and rewrite it; the words survive a reload and «Reset the texts» puts them back
 - [ ] A block saved with a design renders the plain list on an older engine (the view is written along with the design)
 
 ### Testrunde-batch (0.7.19.1): the calendar card, named sources and the design foundation
 
 - [ ] Calendar with two sources holding the same event: it shows once in every view; a signup link or a location present in only one copy is kept
-- [ ] Neste view, Arrangementer i kortet 1, 2 and 3: the card holds that many in full, the heading reads «Neste arrangement» for one and «Akkurat nå» for more; Under «Senere» 0 to 10 lists that many one-line rows below
+- [ ] Next view, Events in the card 1, 2 and 3: the card holds that many in full, the heading reads «Next event» for one and «Coming up» for more; Under «Later» 0 to 10 lists that many one-line rows below
 - [ ] A source with a name: its events wear the name as their chip and the filter shows the name; the title stays whole even when it reads «Møte: Årsmøte»
 - [ ] A source with a colour: its chips, date badges and filter button take the colour; cleared, they follow the accent again
-- [ ] «Kalendere på nettsiden»: lists the sources of the other calendar blocks (this page and the others), adds one with a click, and says so when there are none
+- [ ] «Calendars on the site»: lists the sources of the other calendar blocks (this page and the others), adds one with a click, and says so when there are none
 - [ ] Agenda view: rows under their month with the day number and weekday, the limit counts like the list
-- [ ] Empty state: a block without sources on the published page, and a feed with nothing coming up, show the icon and the line; own words and another icon in Innhold change it; Ingen removes the icon
-- [ ] Stil tab, Farger: Aksent, Flate, Linjer and Merker set each surface; emptied, the theme's colours return; a dark theme follows along
-- [ ] Stil tab, Kantstripe på boksene: a stripe along the left edge of every row, card, next row and agenda row in the event's calendar colour (else the accent); Stripefarge overrides it; off, no stripe
-- [ ] Stil tab, Tekstfelt: pick Tittel and set font, size, Fet or Normal, kursiv, understrek and colour: every title in the view changes, nothing else; the same for Dato, Klokkeslett, Sted, Beskrivelse (cards), Kategori (chips) and Store tall (the badge's day number)
-- [ ] Click «Neste arrangement», «Senere», «Alle», «Meld deg på» or «Abonner» in the preview: the text toolbar appears, bold or a colour applies, the words survive a reload and a publish; «Tilbakestill tekstene» appears in Innhold and puts the defaults back
-- [ ] Innhold, Vis «Meld deg på»-knapper off: the buttons disappear in every view
-- [ ] A calendar block saved before this round renders as before, and its view can still be changed in Innhold
+- [ ] Empty state: a block without sources on the published page, and a feed with nothing coming up, show the icon and the line; own words and another icon in Content change it; None removes the icon
+- [ ] Style tab, Colours: Accent, Surface, Lines and Chips set each surface; emptied, the theme's colours return; a dark theme follows along
+- [ ] Style tab, Edge stripe on the boxes: a stripe along the left edge of every row, card, next row and agenda row in the event's calendar colour (else the accent); Stripe colour overrides it; off, no stripe
+- [ ] Style tab, Text fields: pick Title and set font, size, Bold or Normal, italic, underline and colour: every title in the view changes, nothing else; the same for Date, Time, Place, Description (cards), Category (chips) and Large numerals (the badge's day number)
+- [ ] Click «Next event», «Later», «All», «Sign up» or «Subscribe» in the preview: the text toolbar appears, bold or a colour applies, the words survive a reload and a publish; «Reset the texts» appears in Content and puts the defaults back
+- [ ] Content, Show «Sign up» buttons off: the buttons disappear in every view
+- [ ] A calendar block saved before this round renders as before, and its view can still be changed in Content
 
 ### Testrunde-batch (0.7.13.12): animated images and the video block's file source
 

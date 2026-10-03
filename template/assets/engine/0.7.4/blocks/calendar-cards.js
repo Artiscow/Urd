@@ -19,7 +19,7 @@ const timeOf = (occ) => {
 };
 const timeText = (occ) => (occ.allDay ? t('calendar.allDay') : t('calendar.timeAt', { time: timeOf(occ) }));
 
-/** 02 Plakatvegg: a wall of posters, the first one large, three poster colours in turn and a plain card as the fourth. */
+/** 02 Poster wall: a wall of posters, the first one large, three poster colours in turn and a plain card as the fourth. */
 export function posters(host, occs, props, ics, ui) {
   const wall = ui.el('div', 'urd-cal-posters');
   const tones = ['a', 'b', 'c', 'plain'];
@@ -47,7 +47,7 @@ export function posters(host, occs, props, ics, ui) {
   host.appendChild(wall);
 }
 
-/** 03 Billetter: one ticket per event, the date and time on a torn-off stub, the sign-up at the right end. */
+/** 03 Tickets: one ticket per event, the date and time on a torn-off stub, the sign-up at the right end. */
 export function tickets(host, occs, props, ics, ui) {
   const list = ui.el('div', 'urd-cal-tickets');
   for (const occ of occs) {
@@ -74,7 +74,7 @@ export function tickets(host, occs, props, ics, ui) {
   host.appendChild(list);
 }
 
-/** 06 Dagkarusell: tall day cards in a row that scrolls sideways with snap points and two arrow buttons. */
+/** 06 Day carousel: tall day cards in a row that scrolls sideways with snap points and two arrow buttons. */
 export function carousel(host, occs, props, ics, ui) {
   const wrap = ui.el('div', 'urd-cal-carousel');
   const nav = ui.el('div', 'urd-cal-carousel-nav');
@@ -114,7 +114,7 @@ export function carousel(host, occs, props, ics, ui) {
   host.appendChild(wrap);
 }
 
-/** 09 Bildekort: a picture from the event (an attachment or a picture link) with the date on it, the words under. */
+/** 09 Picture cards: a picture from the event (an attachment or a picture link) with the date on it, the words under. */
 export function photo(host, occs, props, ics, ui) {
   const grid = ui.el('div', 'urd-cal-photos');
   for (const occ of occs) {
@@ -148,7 +148,7 @@ export function photo(host, occs, props, ics, ui) {
   host.appendChild(grid);
 }
 
-/** A6 Rutenett: ApeironLF's cards on cream with a navy head, the day in gold and the category as a gold pill. */
+/** A6 Grid on cream: ApeironLF's cards on cream with a navy head, the day in gold and the category as a gold pill. */
 export function apGrid(host, occs, props, ics, ui) {
   const grid = ui.el('div', 'urd-cal-apgrid');
   for (const occ of occs) {

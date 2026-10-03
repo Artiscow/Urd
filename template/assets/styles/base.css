@@ -1080,7 +1080,12 @@ textarea.urd-form-input {
 .urd-cal-stripes .urd-cal-line-row,
 .urd-cal-stripes .urd-cal-ring,
 .urd-cal-stripes .urd-cal-dg-inner,
-.urd-cal-stripes .urd-cal-nbento-tile {
+.urd-cal-stripes .urd-cal-nbento-tile,
+.urd-cal-stripes .urd-cal-apn-next,
+.urd-cal-stripes .urd-cal-apv-first,
+.urd-cal-stripes .urd-cal-apv-tile,
+.urd-cal-stripes .urd-cal-aps-row,
+.urd-cal-stripes .urd-cal-magenda-body {
   padding-left: 10px;
   border-left: 3px solid var(--urd-cal-stripe, var(--urd-cal-color, var(--urd-cal-accent)));
 }
@@ -1091,6 +1096,10 @@ textarea.urd-form-input {
 
 /* A static text (a label, a button's words) is edited in place in the
    preview, where the text toolbar attaches to it. */
+.urd-cal .urd-cal-tx {
+  overflow-wrap: anywhere;
+}
+
 .urd-cal-tx[contenteditable] {
   min-width: 1ch;
   cursor: text;
@@ -1424,7 +1433,7 @@ textarea.urd-form-input {
 /* ---- The list designs (blocks/calendar-list.js). Each design's slots are
    read as --urd-cal-s-<slot> with the design's own default. ---- */
 
-/* 01 Tidslinje */
+/* 01 Timeline */
 .urd-cal-tl {
   display: grid;
   grid-template-columns: max-content 2px minmax(0, 1fr);
@@ -1496,7 +1505,7 @@ textarea.urd-form-input {
   border-radius: var(--urd-radius-sm);
 }
 
-/* 05 Tabell */
+/* 05 Table */
 .urd-cal-table-wrap {
   overflow-x: auto;
 }
@@ -1558,7 +1567,7 @@ textarea.urd-form-input {
   margin: 0;
 }
 
-/* 07 Programhefte */
+/* 07 Programme booklet */
 .urd-cal-booklet {
   padding: 1.6em 2em 1.8em;
   background: var(--urd-cal-surface);
@@ -1639,7 +1648,7 @@ textarea.urd-form-input {
   line-height: 1.45;
 }
 
-/* 10 Nummerert program */
+/* 10 Numbered programme */
 .urd-cal-numbered {
   display: grid;
 }
@@ -1685,7 +1694,7 @@ textarea.urd-form-input {
   margin: 0;
 }
 
-/* A5 Liste (ApeironLF): rows on navy, the day in gold */
+/* A5 List on navy (ApeironLF): rows on navy, the day in gold */
 .urd-cal-d-apList {
   --urd-cal-ap-gold: var(--urd-cal-s-gold, #d0a74a);
   --urd-cal-ap-line: var(--urd-cal-s-line, color-mix(in srgb, var(--urd-cal-s-gold, #d0a74a) 35%, transparent));
@@ -1915,7 +1924,7 @@ textarea.urd-form-input {
 
 /* ---- The card designs (blocks/calendar-cards.js) ---- */
 
-/* 02 Plakatvegg */
+/* 02 Poster wall */
 .urd-cal-posters {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -2010,7 +2019,7 @@ textarea.urd-form-input {
   text-decoration: underline;
 }
 
-/* 03 Billetter */
+/* 03 Tickets */
 .urd-cal-tickets {
   display: grid;
   gap: 14px;
@@ -2081,7 +2090,7 @@ textarea.urd-form-input {
   border-radius: var(--urd-radius-sm);
 }
 
-/* 06 Dagkarusell */
+/* 06 Day carousel */
 .urd-cal-carousel {
   display: grid;
   gap: 12px;
@@ -2169,7 +2178,7 @@ textarea.urd-form-input {
   border-radius: var(--urd-radius-sm);
 }
 
-/* 09 Bildekort */
+/* 09 Picture cards */
 .urd-cal-photos {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -2241,7 +2250,7 @@ textarea.urd-form-input {
   border-radius: var(--urd-radius-sm);
 }
 
-/* A6 Rutenett (ApeironLF): cream cards with a navy head */
+/* A6 Grid on cream (ApeironLF): cream cards with a navy head */
 .urd-cal-d-apGrid {
   --urd-cal-ap-gold: var(--urd-cal-s-gold, #d0a74a);
   --urd-cal-ap-head: var(--urd-cal-s-head, #1c2340);
@@ -2586,7 +2595,7 @@ textarea.urd-form-input {
   gap: 6px;
 }
 
-/* 04 Ukestripe */
+/* 04 Week strip */
 .urd-cal-wstrip {
   display: grid;
   gap: 1em;
@@ -2667,7 +2676,7 @@ textarea.urd-form-input {
   border-radius: 6px;
 }
 
-/* M3 Ukeplan and F2 Dagsplan share the hour grid */
+/* M3 Week plan and F2 Day plan share the hour grid */
 .urd-cal-wplan,
 .urd-cal-dplan {
   display: grid;
@@ -2822,7 +2831,7 @@ textarea.urd-form-input {
   font-size: 1em;
 }
 
-/* F4 Kalenderlag */
+/* F4 Calendar layers */
 .urd-cal-layers {
   display: grid;
   overflow: hidden;
@@ -2994,7 +3003,7 @@ textarea.urd-form-input {
   opacity: 0.85;
 }
 
-/* F1 Måned med sidepanel */
+/* F1 Month with side panel */
 .urd-cal-side {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(12em, 15em);
@@ -3156,7 +3165,7 @@ textarea.urd-form-input {
   border-radius: 3px;
 }
 
-/* A7 Oversikt (ApeironLF): the month on cream */
+/* A7 Overview on cream (ApeironLF): the month on cream */
 .urd-cal-d-apMonth {
   --urd-cal-ap-gold: var(--urd-cal-s-gold, #d0a74a);
   --urd-cal-ap-grid: var(--urd-cal-s-grid, color-mix(in srgb, var(--urd-cal-s-gold, #d0a74a) 30%, transparent));
@@ -3260,7 +3269,7 @@ textarea.urd-form-input {
   opacity: 1;
 }
 
-/* F2 Dagsplan */
+/* F2 Day plan */
 .urd-cal-dplan-head {
   display: flex;
   align-items: flex-end;
@@ -3363,7 +3372,7 @@ textarea.urd-form-input {
   border-radius: 50%;
 }
 
-/* 08 Årshjul */
+/* 08 Year wheel */
 .urd-cal-wheel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(12em, 1fr);
@@ -3492,7 +3501,7 @@ textarea.urd-form-input {
   opacity: 0.7;
 }
 
-/* F3 Varmekart */
+/* F3 Heat map */
 .urd-cal-heat {
   display: grid;
   gap: 1em;
@@ -3618,7 +3627,7 @@ textarea.urd-form-input {
   }
 }
 
-/* ---- The «Akkurat nå» designs (blocks/calendar-next.js) ---- */
+/* ---- The «Coming up» designs (blocks/calendar-next.js) ---- */
 
 /* Shared: a one-line later row */
 .urd-cal-nx-later-title {
@@ -3672,7 +3681,7 @@ textarea.urd-form-input {
   50% { box-shadow: 0 0 0 7px transparent; }
 }
 
-/* N1 Reklametavle */
+/* N1 Billboard */
 .urd-cal-bb {
   display: grid;
   gap: 1em;
@@ -3778,7 +3787,7 @@ textarea.urd-form-input {
   border: 0;
 }
 
-/* N2 Stablede kort */
+/* N2 Stacked cards */
 .urd-cal-stack {
   display: grid;
   gap: 0.9em;
@@ -3941,7 +3950,7 @@ textarea.urd-form-input {
   opacity: 0.7;
 }
 
-/* N3 Oppslagstavle */
+/* N3 Noticeboard */
 .urd-cal-nb {
   display: grid;
   gap: 1.1em;
@@ -4060,7 +4069,7 @@ textarea.urd-form-input {
   flex: none;
 }
 
-/* N4 Delt kort */
+/* N4 Split card */
 .urd-cal-split {
   display: grid;
   overflow: hidden;
@@ -4161,7 +4170,7 @@ textarea.urd-form-input {
   border-top: 0;
 }
 
-/* N5 Bånd */
+/* N5 Band */
 .urd-cal-band {
   display: flex;
   align-items: stretch;
@@ -4236,7 +4245,7 @@ textarea.urd-form-input {
   }
 }
 
-/* N6 Én linje */
+/* N6 One line */
 .urd-cal-line {
   display: grid;
   gap: 10px;
@@ -4305,7 +4314,7 @@ textarea.urd-form-input {
   opacity: 0.7;
 }
 
-/* M4 Nedtellingsring */
+/* M4 Countdown ring */
 .urd-cal-ring {
   display: grid;
   gap: 1.1em;
@@ -4428,7 +4437,7 @@ textarea.urd-form-input {
   border-radius: 50%;
 }
 
-/* M5 Mørkt glass */
+/* M5 Dark glass */
 .urd-cal-dg {
   position: relative;
   isolation: isolate;
@@ -4594,7 +4603,7 @@ textarea.urd-form-input {
   flex: none;
 }
 
-/* M6 Bento for akkurat nå */
+/* M6 Coming up bento */
 .urd-cal-nbento {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4734,6 +4743,745 @@ textarea.urd-form-input {
 @media (max-width: 600px) {
   .urd-cal-split-top {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---- The ApeironLF set and the dark agenda (blocks/calendar-more.js) ---- */
+
+/* The ApeironLF colours, shared by every design of the set */
+.urd-cal-d-apNow,
+.urd-cal-d-apNavy,
+.urd-cal-d-apSeries,
+.urd-cal-d-apList,
+.urd-cal-d-apGrid,
+.urd-cal-d-apMonth {
+  --urd-cal-ap-gold: var(--urd-cal-s-gold, #d0a74a);
+  --urd-cal-ap-golddark: var(--urd-cal-s-goldDark, #8f6a1e);
+}
+
+/* The ApeironLF empty state: a pill, the dashed box and the subscribe button in gold */
+.urd-cal-apempty {
+  display: grid;
+  justify-items: center;
+  gap: 1.1em;
+  text-align: center;
+  color: var(--urd-color-text);
+}
+
+.urd-cal-apempty-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.9em;
+  padding: 0.7em 1.4em;
+  border: 1px solid var(--urd-cal-ap-gold, #d0a74a);
+  border-radius: 999px;
+}
+
+.urd-cal-apempty-kicker {
+  font-size: 0.65em;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--urd-cal-ap-gold, #d0a74a);
+}
+
+.urd-cal-apempty-title {
+  font-family: var(--urd-font-heading);
+  font-size: 1.15em;
+}
+
+.urd-cal-apempty .urd-cal-empty {
+  max-width: 26em;
+  font-style: italic;
+}
+
+.urd-cal-apempty .urd-cal-empty-icon {
+  color: var(--urd-cal-ap-gold, #d0a74a);
+}
+
+.urd-cal-apempty ~ .urd-cal-subscribe {
+  justify-content: center;
+}
+
+.urd-cal-apempty ~ .urd-cal-subscribe .urd-cal-sub-btn {
+  padding: 0.8em 1.5em;
+  font-weight: 600;
+  color: var(--urd-cal-s-head, #1c2340);
+  background: var(--urd-cal-ap-gold, #d0a74a);
+  border-color: transparent;
+}
+
+/* A1 to A3 Coming up on cream */
+.urd-cal-apn {
+  display: grid;
+  overflow: hidden;
+  color: var(--urd-cal-s-text, #1c2340);
+  background: var(--urd-cal-s-card, #f3ecd8);
+  border: 1px solid var(--urd-cal-ap-gold);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgb(0 0 0 / 25%);
+}
+
+.urd-cal-apn-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 1em 1.5em;
+  font-size: 0.8em;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--urd-cal-ap-gold);
+  background: var(--urd-cal-s-head, #1c2340);
+}
+
+.urd-cal-apn-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--urd-cal-ap-gold);
+  border-radius: 50%;
+}
+
+.urd-cal-apn-alert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.8em 1.5em;
+  font-size: 1.05em;
+  font-weight: 600;
+  color: var(--urd-cal-s-alertText, #f3ecd8);
+  text-decoration: none;
+  background: var(--urd-cal-s-alert, #7a1a1a);
+}
+
+.urd-cal-apn-alert-icon {
+  display: block;
+  flex: none;
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.urd-cal-apn-alert-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.urd-cal-apn-next {
+  display: flex;
+  gap: 1.1em;
+  padding: 1.4em 1.5em;
+}
+
+.urd-cal-apn-next + .urd-cal-apn-next {
+  padding-top: 0;
+}
+
+.urd-cal-apn-badge {
+  display: flex;
+  flex: 0 0 3.8em;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 3.8em;
+  color: var(--urd-cal-ap-gold);
+  background: var(--urd-cal-s-head, #1c2340);
+  border-radius: 6px;
+}
+
+.urd-cal-apn-badge strong {
+  font-family: var(--urd-font-heading);
+  font-size: 1.6em;
+  line-height: 1;
+}
+
+.urd-cal-apn-badge span {
+  font-size: 0.62em;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--urd-cal-s-card, #f3ecd8);
+}
+
+.urd-cal-apn-body {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.urd-cal-apn-kicker,
+.urd-cal-apv-kicker {
+  font-size: 0.68em;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--urd-cal-ap-golddark);
+}
+
+.urd-cal-apn-title {
+  font-family: var(--urd-font-heading);
+  font-size: 1.5em;
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.urd-cal-ap-line {
+  font-size: 0.9em;
+  line-height: 1.4;
+  opacity: 0.8;
+}
+
+.urd-cal-apn-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6em 1em;
+  margin-top: 6px;
+}
+
+.urd-cal-apn-in {
+  padding: 4px 12px;
+  font-size: 0.75em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--urd-cal-ap-golddark);
+  border: 1px solid var(--urd-cal-ap-gold);
+  border-radius: 999px;
+}
+
+.urd-cal-apn .urd-cal-signup {
+  margin: 0;
+  color: var(--urd-cal-ap-golddark);
+}
+
+.urd-cal-apn-later {
+  display: grid;
+  gap: 0.6em;
+  padding: 1em 1.5em 1.2em;
+  background: var(--urd-cal-s-panel, #eae1c7);
+}
+
+.urd-cal-apn-rail {
+  display: grid;
+}
+
+.urd-cal-apn-rail-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 14px 4.4em minmax(0, 1fr) auto;
+  column-gap: 12px;
+  align-items: center;
+  min-height: 2.7em;
+}
+
+.urd-cal-apn-rail-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--urd-cal-color, var(--urd-cal-ap-gold));
+  border-radius: 50%;
+}
+
+.urd-cal-apn-rail-row:not(:last-child)::before {
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 2px;
+  height: 100%;
+  content: '';
+  background: var(--urd-cal-ap-gold);
+  opacity: 0.6;
+}
+
+.urd-cal-apn-rail-row .urd-cal-f-date {
+  font-size: 0.8em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--urd-cal-ap-golddark);
+}
+
+.urd-cal-apn-rail-row .urd-cal-f-title {
+  font-size: 1.1em;
+}
+
+.urd-cal-apn-arrow,
+.urd-cal-aps-arrow {
+  font-size: 1.1em;
+  color: var(--urd-cal-ap-golddark);
+  text-decoration: none;
+}
+
+.urd-cal-apn-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 1.1em 1.5em 1.3em;
+  border-top: 1px solid color-mix(in srgb, var(--urd-cal-ap-gold) 45%, transparent);
+}
+
+.urd-cal-apn-notice-body {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+}
+
+.urd-cal-apn-notice-title {
+  font-family: var(--urd-font-heading);
+  font-size: 1.2em;
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.urd-cal-apn-notice-text {
+  font-size: 0.9em;
+  line-height: 1.4;
+  opacity: 0.8;
+}
+
+.urd-cal-apn-notice .urd-cal-apn-arrow {
+  margin-top: 1.6em;
+}
+
+/* A4 Coming up on navy */
+.urd-cal-apv {
+  display: grid;
+  gap: 0.9em;
+  padding: 1.5em;
+  color: var(--urd-cal-s-text, #f3ecd8);
+  background: var(--urd-cal-s-ground, #1c2340);
+  border: 1px solid var(--urd-cal-ap-gold);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgb(0 0 0 / 35%);
+}
+
+.urd-cal-apv-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+.urd-cal-apv-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8em;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--urd-cal-ap-gold);
+}
+
+.urd-cal-apv-count {
+  font-size: 0.75em;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.urd-cal-apv-first,
+.urd-cal-apv-tile {
+  display: flex;
+  gap: 1.1em;
+  padding: 1.1em;
+  border-radius: 10px;
+}
+
+.urd-cal-apv-first {
+  color: var(--urd-cal-s-cardText, #1c2340);
+  background: var(--urd-cal-s-card, #f3ecd8);
+}
+
+.urd-cal-apv-tile {
+  align-items: center;
+  background: var(--urd-cal-s-tile, #262e4f);
+  border: 1px solid var(--urd-cal-ap-gold);
+}
+
+.urd-cal-apv-when {
+  flex: none;
+  min-width: 3.4em;
+  text-align: center;
+}
+
+.urd-cal-apv-when strong {
+  display: block;
+  font-family: var(--urd-font-heading);
+  font-size: 2.4em;
+  line-height: 0.95;
+  color: var(--urd-cal-ap-golddark);
+}
+
+.urd-cal-apv-tile .urd-cal-apv-when strong {
+  font-size: 2em;
+  color: var(--urd-cal-ap-gold);
+}
+
+.urd-cal-apv-when span {
+  font-size: 0.68em;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.urd-cal-apv-body {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+  justify-items: start;
+  min-width: 0;
+}
+
+.urd-cal-apv-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.urd-cal-d-apNavy .urd-cal-chip {
+  font-size: 0.62em;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--urd-cal-ap-golddark);
+  background: transparent;
+  border-color: var(--urd-cal-color, var(--urd-cal-ap-gold));
+}
+
+.urd-cal-apv-title {
+  font-family: var(--urd-font-heading);
+  font-size: 1.45em;
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.urd-cal-apv-tile .urd-cal-apv-title {
+  font-size: 1.2em;
+}
+
+.urd-cal-apv-place {
+  font-size: 0.9em;
+  opacity: 0.8;
+  border-bottom: 1px solid var(--urd-cal-ap-gold);
+}
+
+.urd-cal-apv-more {
+  margin-top: 6px;
+  padding: 8px 14px;
+  font-size: 0.9em;
+  font-weight: 600;
+  color: var(--urd-cal-s-ground, #1c2340);
+  text-decoration: none;
+  background: var(--urd-cal-ap-gold);
+  border-radius: 4px;
+}
+
+.urd-cal-apv-arrow {
+  font-size: 1.2em;
+  color: var(--urd-cal-ap-gold);
+  text-decoration: none;
+}
+
+.urd-cal-apv-later {
+  display: grid;
+  gap: 8px;
+  padding-top: 0.9em;
+  border-top: 1px solid var(--urd-cal-s-line, #3a4366);
+}
+
+.urd-cal-apv-kicker {
+  color: var(--urd-cal-ap-gold);
+}
+
+.urd-cal-apv-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+.urd-cal-apv-row .urd-cal-f-date {
+  margin-right: 10px;
+  font-size: 0.75em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--urd-cal-ap-gold);
+}
+
+/* A8 Regular event */
+.urd-cal-aps {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr);
+  gap: 2em;
+  padding: 2em 2.2em;
+  color: var(--urd-cal-s-text, #1c2340);
+  background: var(--urd-cal-s-card, #f5efdd);
+  border: 1px solid var(--urd-cal-s-line, #d9cfae);
+  border-radius: 4px;
+}
+
+.urd-cal-aps:has(.urd-cal-aps-aside) {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+}
+
+.urd-cal-aps-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.9em;
+  justify-items: start;
+  min-width: 0;
+}
+
+.urd-cal-aps-kicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.68em;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--urd-cal-ap-golddark);
+}
+
+.urd-cal-aps-kicker i {
+  width: 28px;
+  height: 1px;
+  background: var(--urd-cal-ap-gold);
+}
+
+.urd-cal-aps-title {
+  font-family: var(--urd-font-heading);
+  font-size: 2.5em;
+  font-weight: 500;
+  line-height: 1.05;
+  color: var(--urd-cal-s-title, #7a1a1a);
+}
+
+.urd-cal-aps-text {
+  margin: 0;
+  font-size: 1.05em;
+  line-height: 1.5;
+}
+
+.urd-cal-aps-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8em 1.8em;
+}
+
+.urd-cal-aps-fact {
+  display: block;
+  font-size: 0.62em;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--urd-cal-ap-golddark);
+}
+
+.urd-cal-aps-place {
+  border-bottom: 1px solid var(--urd-cal-ap-gold);
+}
+
+.urd-cal-aps .urd-cal-signup {
+  margin: 0;
+  color: var(--urd-cal-s-title, #7a1a1a);
+}
+
+.urd-cal-aps-fold {
+  justify-self: stretch;
+}
+
+.urd-cal-aps-fold summary {
+  width: fit-content;
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--urd-cal-s-title, #7a1a1a);
+  cursor: pointer;
+}
+
+.urd-cal-aps-dates {
+  display: grid;
+  gap: 6px;
+  margin-top: 0.6em;
+}
+
+.urd-cal-aps-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3em 12px;
+  padding: 0.5em 0.8em;
+  font-size: 0.85em;
+  background: var(--urd-cal-s-row, #f9f5e8);
+  border: 1px solid var(--urd-cal-s-line, #d9cfae);
+  border-radius: 3px;
+}
+
+.urd-cal-aps-row > span:first-child {
+  font-weight: 600;
+  color: var(--urd-cal-s-title, #7a1a1a);
+}
+
+.urd-cal-aps-arrow {
+  margin-left: auto;
+}
+
+.urd-cal-aps-aside {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.6em;
+  align-content: start;
+  align-self: start;
+  min-width: 0;
+  padding-left: 2em;
+  overflow-wrap: anywhere;
+  border-left: 1px solid var(--urd-cal-s-line, #d9cfae);
+}
+
+.urd-cal-aps-aside-title {
+  font-family: var(--urd-font-heading);
+  font-size: 2.4em;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--urd-cal-s-title, #7a1a1a);
+}
+
+.urd-cal-aps-aside-text {
+  margin: 0;
+  font-size: 0.95em;
+  font-style: italic;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+/* F5 Agenda, dark */
+.urd-cal-d-mobileAgenda {
+  padding: 1.1em 1em 1.2em;
+  color: var(--urd-cal-s-text, #f5f5f7);
+  background: var(--urd-cal-s-ground, #121216);
+  border-radius: 26px;
+}
+
+.urd-cal-magenda {
+  display: grid;
+  gap: 0.9em;
+}
+
+.urd-cal-magenda-month {
+  font-family: var(--urd-font-heading);
+  font-size: 1.15em;
+  text-transform: capitalize;
+}
+
+.urd-cal-magenda-strip {
+  display: flex;
+  gap: 4px;
+}
+
+.urd-cal-magenda-day {
+  display: grid;
+  flex: 1;
+  gap: 3px;
+  justify-items: center;
+  padding: 8px 0 7px;
+  font-size: 0.62em;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: 12px;
+}
+
+.urd-cal-magenda-day .urd-cal-f-date {
+  opacity: 0.6;
+}
+
+.urd-cal-magenda-day strong {
+  font-family: var(--urd-font-heading);
+  font-size: 1.5em;
+}
+
+.urd-cal-magenda-today {
+  color: var(--urd-color-accent-text);
+  background: var(--urd-cal-accent);
+}
+
+.urd-cal-magenda-today .urd-cal-f-date {
+  opacity: 1;
+}
+
+.urd-cal-magenda-dot {
+  width: 4px;
+  height: 4px;
+  background: var(--urd-cal-color, var(--urd-cal-accent));
+  border-radius: 50%;
+}
+
+.urd-cal-magenda-today .urd-cal-magenda-dot {
+  background: currentcolor;
+}
+
+.urd-cal-magenda-list {
+  display: grid;
+  gap: 8px;
+}
+
+.urd-cal-magenda-label {
+  margin-top: 6px;
+  font-size: 0.65em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.urd-cal-magenda-card {
+  display: flex;
+  gap: 12px;
+  padding: 0.8em 0.9em;
+  background: var(--urd-cal-s-card, #1c1c22);
+  border: 1px solid var(--urd-cal-s-edge, #2a2a32);
+  border-radius: 16px;
+}
+
+.urd-cal-magenda-time {
+  flex: 0 0 3.6em;
+  font-family: var(--urd-font-heading);
+  font-size: 0.78em;
+  font-weight: 600;
+  opacity: 0.6;
+}
+
+.urd-cal-magenda-body {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.urd-cal-stripes .urd-cal-magenda-body {
+  padding-left: 10px;
+}
+
+.urd-cal-magenda-place {
+  font-size: 0.85em;
+  opacity: 0.6;
+}
+
+.urd-cal-d-mobileAgenda .urd-cal-chipbtn,
+.urd-cal-d-mobileAgenda .urd-cal-sub-btn {
+  color: inherit;
+  background: var(--urd-cal-s-chip, #26262d);
+  border-color: var(--urd-cal-s-edge, #2a2a32);
+}
+
+@media (max-width: 600px) {
+  .urd-cal-aps:has(.urd-cal-aps-aside) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .urd-cal-aps-aside {
+    padding-top: 1.2em;
+    padding-left: 0;
+    border-top: 1px solid var(--urd-cal-s-line, #d9cfae);
+    border-left: 0;
   }
 }
 

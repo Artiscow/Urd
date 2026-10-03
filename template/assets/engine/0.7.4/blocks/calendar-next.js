@@ -1,5 +1,5 @@
 /**
- * The calendar block's «Akkurat nå» designs (milestone 0.7.19): nine looks
+ * The calendar block's «Coming up» designs (milestone 0.7.19): nine looks
  * on the next view, each built around the next event (and the ones after it
  * as the block's `nextCount` and `laterCount` say), every one a renderer over
  * the block's ui helpers (fields, static texts, buttons; see makeUi in
@@ -39,7 +39,7 @@ function everyMinute(node, fn) {
   }, 60000);
 }
 
-/** «Søndag 4. oktober kl. 18:00 · Klubbhuset» as fields. */
+/** «Sunday 4 October at 18:00 · The clubhouse» as fields. */
 function longWhen(occ, ui, { place = true } = {}) {
   const d = dayOf(occ);
   const line = ui.el('span', 'urd-cal-nx-when');
@@ -85,7 +85,7 @@ function noticeNode(props, ui, className) {
   return note;
 }
 
-/** N1 Reklametavle: a dark board with the pulse label, the title large, a countdown in three tiles and the sign-up as a bar. */
+/** N1 Billboard: a dark board with the pulse label, the title large, a countdown in three tiles and the sign-up as a bar. */
 export function billboard(host, occs, props, ics, ui) {
   const [hero] = occs;
   const board = ui.tint(ui.el('div', 'urd-cal-bb'), hero);
@@ -134,7 +134,7 @@ export function billboard(host, occs, props, ics, ui) {
   host.appendChild(board);
 }
 
-/** N2 Stablede kort: the next events as a stack of cards, the front one in full, a click brings the next to the front. */
+/** N2 Stacked cards: the next events as a stack of cards, the front one in full, a click brings the next to the front. */
 export function stacked(host, occs, props, ics, ui) {
   const count = Math.min(occs.length, ics.nextCount(props.nextCount));
   const featured = occs.slice(0, count);
@@ -186,7 +186,7 @@ export function stacked(host, occs, props, ics, ui) {
   host.appendChild(wrap);
 }
 
-/** N3 Oppslagstavle: a cork board with the next event as a pinned note, the announcement as a second note, and «Senere» on a strip. */
+/** N3 Noticeboard: a cork board with the next event as a pinned note, the announcement as a second note, and «Later» on a strip. */
 export function noticeboard(host, occs, props, ics, ui) {
   const [hero] = occs;
   const board = ui.el('div', 'urd-cal-nb');
@@ -223,7 +223,7 @@ export function noticeboard(host, occs, props, ics, ui) {
   host.appendChild(board);
 }
 
-/** N4 Delt kort: the date huge on a coloured panel to the left, the words and the description to the right, «Senere» under. */
+/** N4 Split card: the date huge on a coloured panel to the left, the words and the description to the right, «Later» under. */
 export function split(host, occs, props, ics, ui) {
   const [hero] = occs;
   const d = dayOf(hero);
@@ -259,7 +259,7 @@ export function split(host, occs, props, ics, ui) {
   host.appendChild(card);
 }
 
-/** N5 Bånd: one band with the tag at the left and the next events rolling past, a dot between them. */
+/** N5 Band: one band with the tag at the left and the next events rolling past, a dot between them. */
 export function band(host, occs, props, ics, ui) {
   const shown = occs.slice(0, ics.nextCount(props.nextCount) + ics.laterCount(props.laterCount));
   const wrap = ui.el('div', 'urd-cal-band');
@@ -295,7 +295,7 @@ export function band(host, occs, props, ics, ui) {
   host.appendChild(wrap);
 }
 
-/** N6 Én linje: one row per event, the first marked «Akkurat nå» with a pulse, the rest «Senere». */
+/** N6 One line: one row per event, the first marked «Coming up» with a pulse, the rest «Later». */
 export function oneLine(host, occs, props, ics, ui) {
   const count = ics.nextCount(props.nextCount);
   const shown = occs.slice(0, count + ics.laterCount(props.laterCount));
@@ -323,7 +323,7 @@ export function oneLine(host, occs, props, ics, ui) {
   host.appendChild(list);
 }
 
-/** M4 Nedtellingsring: a ring that fills towards the start with the days left in the middle, the words beside it, the next two under. */
+/** M4 Countdown ring: a ring that fills towards the start with the days left in the middle, the words beside it, the next two under. */
 export function ring(host, occs, props, ics, ui) {
   const [hero] = occs;
   const card = ui.tint(ui.el('div', 'urd-cal-ring'), hero);
@@ -380,7 +380,7 @@ export function ring(host, occs, props, ics, ui) {
   host.appendChild(card);
 }
 
-/** M5 Mørkt glass: a dark card over two colour blobs, a live countdown, a progress bar, two buttons and «Deretter». */
+/** M5 Dark glass: a dark card over two colour blobs, a live countdown, a progress bar, two buttons and «Then». */
 export function darkGlass(host, occs, props, ics, ui) {
   const [hero] = occs;
   const card = ui.tint(ui.el('div', 'urd-cal-dg'), hero);
@@ -430,7 +430,7 @@ export function darkGlass(host, occs, props, ics, ui) {
   host.appendChild(card);
 }
 
-/** M6 Bento for akkurat nå: a coloured hero tile for the next event, a date tile per later event, and a link tile with the count. */
+/** M6 Coming up bento: a coloured hero tile for the next event, a date tile per later event, and a link tile with the count. */
 export function nextBento(host, occs, props, ics, ui) {
   const [hero] = occs;
   const d = dayOf(hero);

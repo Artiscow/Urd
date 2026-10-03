@@ -32,7 +32,7 @@ function excerptNode(occ, ui, className) {
   return excerpt ? ui.field('p', 'description', excerpt, className) : null;
 }
 
-/** 01 Tidslinje: a vertical rail with a dot per event, the date to the left and the event to the right. */
+/** 01 Timeline: a vertical rail with a dot per event, the date to the left and the event to the right. */
 export function timeline(host, occs, props, ics, ui) {
   const grid = ui.el('div', 'urd-cal-tl');
   occs.forEach((occ, i) => {
@@ -58,7 +58,7 @@ export function timeline(host, occs, props, ics, ui) {
   host.appendChild(grid);
 }
 
-/** 05 Tabell: one row per event with the date, the time, the event, the place and the sign-up in columns. */
+/** 05 Table: one row per event with the date, the time, the event, the place and the sign-up in columns. */
 export function table(host, occs, props, ics, ui) {
   const tbl = ui.el('table', 'urd-cal-table');
   const head = ui.el('thead');
@@ -97,7 +97,7 @@ export function table(host, occs, props, ics, ui) {
   host.appendChild(wrap);
 }
 
-/** 07 Programhefte: a printed programme on paper, the events under their month in columns with a large day number. */
+/** 07 Programme booklet: a printed programme on paper, the events under their month in columns with a large day number. */
 export function booklet(host, occs, props, ics, ui) {
   const groups = ics.groupByMonth(occs);
   const months = dates().months;
@@ -132,7 +132,7 @@ export function booklet(host, occs, props, ics, ui) {
   host.appendChild(paper);
 }
 
-/** 10 Nummerert program: the events counted 01, 02, 03 with a rule between the rows and the count at the top. */
+/** 10 Numbered programme: the events counted 01, 02, 03 with a rule between the rows and the count at the top. */
 export function numbered(host, occs, props, ics, ui) {
   const wrap = ui.el('div', 'urd-cal-numbered');
   wrap.appendChild(ui.el('span', 'urd-cal-numbered-count', tp('calendar.count', occs.length)));
@@ -155,7 +155,7 @@ export function numbered(host, occs, props, ics, ui) {
   host.appendChild(wrap);
 }
 
-/** A5 Liste: ApeironLF's rows on navy with the day in gold, the category outlined and the title in the heading face. */
+/** A5 List on navy: ApeironLF's rows on navy with the day in gold, the category outlined and the title in the heading face. */
 export function apList(host, occs, props, ics, ui) {
   const list = ui.el('div', 'urd-cal-ap');
   for (const occ of occs) {

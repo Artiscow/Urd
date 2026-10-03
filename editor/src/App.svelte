@@ -9458,6 +9458,12 @@
           {ta('calendar.showNotice')}
         </label>
         {#if selectedBlock.props.notice?.show === true}
+          <!-- A design that can draw the announcement as an alert band offers the choice -->
+          {#if calDesign(selectedBlock.props.design).noticeBand}
+            <Choice label={ta('calendar.noticeAs')} title={ta('tip.calendar.noticeAs')} value={selectedBlock.props.notice?.as === 'band' ? 'band' : 'note'}
+              options={[['note', ta('calendar.noticeAsNote')], ['band', ta('calendar.noticeAsBand')]]}
+              onchange={(v) => setBlockProp('notice', { ...(selectedBlock.props.notice ?? {}), as: v === 'band' ? 'band' : undefined })} />
+          {/if}
           <label title={ta('tip.calendar.noticeHref')}>{ta('calendar.noticeHref')}
             <input value={selectedBlock.props.notice?.href ?? ''} placeholder="https://" spellcheck="false"
               onchange={(e) => setBlockProp('notice', { ...(selectedBlock.props.notice ?? {}), href: e.target.value.trim() || undefined })} /></label>

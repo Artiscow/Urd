@@ -237,3 +237,11 @@ test('windowStart: the year, the month, the week or the day for those views, six
   assert.equal(windowStart('list', now), now - 6 * 3600 * 1000);
   assert.equal(windowStart('next', now), now - 6 * 3600 * 1000);
 });
+
+test('an occurrence carries the event\'s picture and address', () => {
+  const occs = expandEvents(parseIcs(event([
+    'UID:p2', 'SUMMARY:Bilde', 'DTSTART:20260910T180000Z', 'URL:https://forening.no/arrangement/1', 'ATTACH:https://example.org/plakat.jpg',
+  ])).events, { from: Date.UTC(2026, 8, 1), to: Date.UTC(2026, 9, 1) });
+  assert.equal(occs[0].image, 'https://example.org/plakat.jpg');
+  assert.equal(occs[0].url, 'https://forening.no/arrangement/1');
+});
