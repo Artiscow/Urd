@@ -84,8 +84,9 @@ async function loadOccurrences(ics, cf, sources, limit, view, from, zone) {
   const wide = ['year', 'month', 'week', 'day'].includes(view) || from < ics.windowStart('list');
   const expanded = ics.expandEvents(events, { from, max: wide ? 600 : Math.max(limit * 4, 120) })
     .map((occ) => {
-      // A named calendar is the category; otherwise «Category: Title» in the event itself.
-      const split = occ.calendar ? { category: occ.calendar, title: occ.summary } : ics.splitCategory(occ.summary);
+      // A named calendar is the category; otherwise the feed's own first category, and last «Category: Title» in the event itself.
+      const named = occ.calendar || occ.categories?.[0];
+      const split = named ? { category: named, title: occ.summary } : ics.splitCategory(occ.summary);
       return { ...occ, ...split, color: occ.calendarColor || '', signup: ics.findSignupLink(occ.description), image: occ.image || ics.findImageLink(occ.description) };
     });
   // The sources are one calendar to the visitor: an event that stands in two of them is shown once.
@@ -108,6 +109,7 @@ function demoOccurrences() {
     { start: base + 10 * day, end: base + 10 * day + 3600 * 1000, allDay: false, title: ta('calendar.demoTitle2'), category: ta('calendar.demoCat2'), location: ta('calendar.demoLoc1'), signup: null, description: ta('calendar.demoDesc3'), recurring: true, demo: true },
     { start: base + 17 * day, end: base + 18 * day, allDay: true, title: ta('calendar.demoTitle3'), category: ta('calendar.demoCat3'), location: ta('calendar.demoLoc2'), signup: 'https://example.org/signup', description: `${ta('calendar.demoDesc4')} https://example.org/signup`, demo: true },
     { start: base + day, end: base + day + 90 * 60 * 1000, allDay: false, title: ta('calendar.demoTitle4'), category: ta('calendar.demoCat1'), location: ta('calendar.demoLoc1'), signup: 'https://example.org/signup', description: `${ta('calendar.demoDesc1')} https://example.org/training`, image: DEMO_IMAGE, hasEnd: true, demo: true },
+    { start: base - 9 * day, end: base - 9 * day + 3600 * 1000, allDay: false, title: ta('calendar.demoTitle2'), category: ta('calendar.demoCat2'), location: ta('calendar.demoLoc1'), signup: null, description: ta('calendar.demoDesc3'), recurring: true, hasEnd: true, demo: true },
     { start: base + 5 * day, end: base + 5 * day, allDay: true, title: ta('calendar.demoTitle5'), category: ta('calendar.demoCat2'), location: ta('calendar.demoLoc2'), signup: null, description: '', cancelled: true, demo: true },
   ].sort((a, b) => a.start - b.start);
 }
@@ -1017,6 +1019,66 @@ function foldNode(render, rest, total, props, ics, ui) {
   return fold;
 }
 
+/** The place filter: a chip per venue (the place up to its first comma), drawn when the events have two or more. */
+function placeRow(occs, active, onpick, ics) {
+  const places = [...new Set(occs.map((occ) => ics.placeName(occ.location)).filter(Boolean))];
+  if (places.length < 2) return null;
+  const row = el2('div', 'urd-cal-chips urd-cal-places');
+  row.setAttribute('role', 'group');
+  row.setAttribute('aria-label', t('calendar.places'));
+  for (const place of [null, ...places]) {
+    const btn = el2('button', 'urd-cal-chipbtn', place ?? t('calendar.allPlaces'));
+    btn.type = 'button';
+    btn.dataset.calKey = place ? `place-${place}` : 'place';
+    btn.setAttribute('aria-pressed', active === place ? 'true' : 'false');
+    if (active === place) btn.classList.add('selected');
+    btn.addEventListener('click', () => onpick(place));
+    row.appendChild(btn);
+  }
+  return row;
+}
+
+const SEARCH_WAIT = 200;
+
+/** The search field: one node for the life of the block, so the words and the caret stay while the calendar is redrawn under it. */
+function searchField(onsearch) {
+  const row = el2('div', 'urd-cal-searchrow');
+  const input = el2('input', 'urd-cal-search');
+  input.type = 'search';
+  input.placeholder = t('calendar.search');
+  input.setAttribute('aria-label', t('calendar.search'));
+  let timer = 0;
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      onsearch(input.value.trim());
+      input.focus({ preventScroll: true });
+    }, SEARCH_WAIT);
+  });
+  row.appendChild(input);
+  return row;
+}
+
+const EARLIER_MAX = 50;
+
+/** The events that are over, the latest first, folded under «Earlier» with their count; a row opens the event in full. */
+function earlierNode(past, ui) {
+  const fold = el2('details', 'urd-cal-fold urd-cal-earlier');
+  fold.appendChild(el2('summary', 'urd-cal-fold-summary', t('calendar.earlier', { n: past.length })));
+  const body = el2('div', 'urd-cal-earlier-rows');
+  const names = dates();
+  for (const occ of past.slice(0, EARLIER_MAX)) {
+    const start = new Date(occ.start);
+    const row = ui.tint(el2('div', 'urd-cal-earlier-row'), occ);
+    row.appendChild(ui.field('span', 'date', t('calendar.dayMonth', { d: start.getDate(), m: names.monthsShort[start.getMonth()] }), 'urd-cal-earlier-date', start));
+    row.appendChild(ui.field('strong', 'title', occ.title));
+    if (occ.location) row.appendChild(ui.field('span', 'place', occ.location, 'urd-cal-earlier-place'));
+    body.appendChild(row);
+  }
+  fold.appendChild(body);
+  return fold;
+}
+
 /** The view switcher: the block's own design, the week and the month, as a row of pressed buttons. */
 const SWITCH_MODES = [['own', 'swUpcoming'], ['week', 'swWeek'], ['month', 'swMonth']];
 
@@ -1138,6 +1200,10 @@ function writeEventData(el, occs, ics, ctx) {
 /* ---------- The printed list ---------- */
 
 const PRINT_MAX = 40;
+/** The views that show a span of time, not a count of what is coming. */
+const SPAN_VIEWS = ['month', 'week', 'day', 'year'];
+/** How far back «Earlier» reaches. */
+const EARLIER_DAYS = 90;
 
 /** The events as a plain list, drawn for the printed page only (base.css shows it in print and hides the design). */
 function printList(occs, ui) {
@@ -1268,6 +1334,13 @@ function drawCalendar(ics, cd, cf, maps, mod, weekMod, el, host, props, ctx) {
   const zone = cf.zoneValid(siteZone) ? siteZone.trim() : null;
   const sources = (props.sources ?? []).filter((source) => ics.sourceEntry(source).url);
   let activeCategory = null;
+  let activePlace = null;
+  let query = '';
+  let shown = null;
+  const search = props.showSearch === true ? searchField((words) => {
+    query = words;
+    if (shown) draw(shown.occurrences, shown.note);
+  }) : null;
   // The view switcher's mode: the block's own design until the visitor picks the week or the month.
   const switcher = Boolean(weekMod);
   let mode = 'own';
@@ -1292,6 +1365,7 @@ function drawCalendar(ics, cd, cf, maps, mod, weekMod, el, host, props, ctx) {
   }
 
   const draw = (occurrences, note) => {
+    shown = { occurrences, note };
     host.removeAttribute('aria-busy');
     // A press on the view switcher or a category redraws the calendar: the focus goes back to the button that was pressed.
     const focused = host.contains(document.activeElement) ? document.activeElement.dataset.calKey : null;
@@ -1315,13 +1389,17 @@ function drawCalendar(ics, cd, cf, maps, mod, weekMod, el, host, props, ctx) {
     const soon = ui.today().getTime() - 6 * 3600 * 1000;
     // Cancelled events are shown as cancelled unless the owner has hidden them.
     const kept = props.showCancelled === false ? occurrences.filter((occ) => !occ.cancelled) : occurrences;
-    const base = switcher && own ? kept.filter((occ) => (occ.end ?? occ.start) >= soon) : kept;
-    const filtered = activeCategory
-      ? base.filter((occ) => occ.category === activeCategory)
-      : base;
+    // The visitor's own narrowing: the words searched for, the place and the category.
+    const narrowed = kept.filter((occ) => ics.matchesSearch(occ, query)
+      && (!activePlace || ics.placeName(occ.location) === activePlace)
+      && (!activeCategory || occ.category === activeCategory));
+    // A design that counts out what is coming shows nothing that is over; a week, month, day or year shows its whole span.
+    const comingOnly = own && !SPAN_VIEWS.includes(view);
+    const filtered = comingOnly ? narrowed.filter((occ) => (occ.end ?? occ.start) >= soon) : narrowed;
+    const past = comingOnly && props.showEarlier === true ? narrowed.filter((occ) => (occ.end ?? occ.start) < soon).reverse() : [];
     // The max count applies to list, cards and agenda; the month, week, day and year views show their span and next has its own two counts.
     const limit = Math.max(1, props.limit ?? 6);
-    const limited = !own || ['month', 'next', 'week', 'day', 'year'].includes(view)
+    const limited = !own || ['next', ...SPAN_VIEWS].includes(view)
       ? filtered
       : filtered.slice(0, limit);
     // A list folds the events beyond the max count instead of dropping them.
@@ -1337,7 +1415,13 @@ function drawCalendar(ics, cd, cf, maps, mod, weekMod, el, host, props, ctx) {
       activeCategory = category;
       draw(occurrences, note);
     }, ui);
+    if (search) host.appendChild(search);
     if (chips) host.appendChild(chips);
+    const places = props.showPlaces === true ? placeRow(kept, activePlace, (place) => {
+      activePlace = place;
+      draw(occurrences, note);
+    }, ics) : null;
+    if (places) host.appendChild(places);
     // The whole filtered list, for a design that draws more than the rows (the bento's month dots).
     ui.all = filtered;
     ui.total = folds ? filtered.length : limited.length;
@@ -1354,6 +1438,9 @@ function drawCalendar(ics, cd, cf, maps, mod, weekMod, el, host, props, ctx) {
       weekMod.weekStrip(host, limited, props, ics, ui);
     } else if (mode === 'month') {
       renderMonth(host, limited, props, ics, ui);
+    } else if (!limited.length && (query || activePlace || activeCategory) && kept.length) {
+      // Events there are, but none the visitor's search or filter leaves.
+      host.appendChild(el2('p', 'urd-cal-nomatch', t('calendar.noMatch')));
     } else if (!limited.length) {
       host.appendChild(design.empty === 'ap' ? emptyApNode(props, ui) : emptyNode(props));
     } else {
@@ -1361,6 +1448,7 @@ function drawCalendar(ics, cd, cf, maps, mod, weekMod, el, host, props, ctx) {
       render(host, limited, props, ics, ui);
       if (folds) host.appendChild(foldNode(render, filtered.slice(limit), filtered.length, props, ics, ui));
     }
+    if (past.length) host.appendChild(earlierNode(past, ui));
     // A design that places the subscribe buttons itself (ownSubscribe) gets no row under it.
     if (!design.ownSubscribe || !limited.length || !own) {
       const row = ui.subscribe();
@@ -1374,7 +1462,7 @@ function drawCalendar(ics, cd, cf, maps, mod, weekMod, el, host, props, ctx) {
     else if (!zone && cf.zoneValid(feedZone) && cf.zoneDiffers(feedZone, nowMs)) zoneText = t('calendar.zoneYours', { zone: cf.zoneName(null, nowMs, ctx.site?.site?.lang) });
     if (zoneText && limited.length) host.appendChild(el2('p', 'urd-cal-zone', zoneText));
     // The printed page gets the events as a plain list: the ones the design counts out, else what is coming.
-    const listed = own && !['month', 'next', 'week', 'day', 'year'].includes(view) ? limited : filtered.filter((occ) => (occ.end ?? occ.start) >= soon);
+    const listed = own && !['next', ...SPAN_VIEWS].includes(view) ? limited : filtered.filter((occ) => (occ.end ?? occ.start) >= soon);
     if (listed.length) host.appendChild(printList(listed, ui));
     // Search engines get the same events as structured data, on the published page and from a real feed only.
     if (!ctx.preview && sources.length) writeEventData(el, props.structuredData === false ? [] : listed, ics, ctx);
@@ -1410,7 +1498,8 @@ function drawCalendar(ics, cd, cf, maps, mod, weekMod, el, host, props, ctx) {
   // The switcher needs the week and the month from their start, whichever is the earlier.
   // The week begins on the day the site's language starts it on, which can be the day before Monday.
   const weekFrom = Math.min(ics.windowStart('week'), ui.weekStartOf(Date.now()));
-  const from = switcher ? Math.min(weekFrom, ics.windowStart('month')) : view === 'week' ? weekFrom : ics.windowStart(view);
+  const viewFrom = switcher ? Math.min(weekFrom, ics.windowStart('month')) : view === 'week' ? weekFrom : ics.windowStart(view);
+  const from = props.showEarlier === true ? Math.min(viewFrom, Date.now() - EARLIER_DAYS * 24 * 3600 * 1000) : viewFrom;
   loadOccurrences(ics, cf, sources, Math.max(1, props.limit ?? 6), view, from, zone).then(({ occurrences, errors, feedZone: fz }) => {
     if (!host.isConnected) return;
     feedZone = fz;

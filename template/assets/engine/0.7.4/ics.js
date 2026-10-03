@@ -159,6 +159,10 @@ export function parseIcs(text) {
       case 'SUMMARY': current.summary = unescapeText(prop.value).trim(); break;
       case 'DESCRIPTION': current.description = unescapeText(prop.value).trim(); break;
       case 'LOCATION': current.location = unescapeText(prop.value).trim(); break;
+      // The feed's own categories: a list divided by commas, and the property may stand several times.
+      case 'CATEGORIES':
+        current.categories = [...(current.categories ?? []), ...prop.value.split(/(?<!\\),/).map((name) => unescapeText(name).trim()).filter(Boolean)];
+        break;
       case 'URL': current.url = prop.value.trim(); break;
       // The first picture attached by address; a file attached inline is skipped.
       case 'ATTACH': if (!current.image && /^https?:\/\//i.test(prop.value.trim())) current.image = prop.value.trim(); break;
@@ -297,6 +301,7 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
       summary: event.summary ?? '',
       description: event.description ?? '',
       location: event.location ?? '',
+      categories: event.categories ?? [],
       url: event.url ?? null,
       image: event.image ?? null,
       start: startMs,
@@ -355,6 +360,22 @@ export function splitCategory(summary) {
   const m = /^([^:]{1,24}):\s+(.+)$/.exec(String(summary ?? '').trim());
   if (!m || /https?$/i.test(m[1])) return { category: null, title: String(summary ?? '').trim() };
   return { category: m[1].trim(), title: m[2].trim() };
+}
+
+/** A venue's name: the place up to its first comma («The hall, Storgata 1» is «The hall»); '' without a place. */
+export function placeName(location) {
+  return String(location ?? '').split(',')[0].trim();
+}
+
+/**
+ * True when every word of a search stands in the event's title, place or
+ * description, whatever the case; an empty search matches every event.
+ */
+export function matchesSearch(occ, query) {
+  const words = String(query ?? '').toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return true;
+  const text = `${occ?.title ?? occ?.summary ?? ''}\n${occ?.location ?? ''}\n${occ?.description ?? ''}`.toLowerCase();
+  return words.every((word) => text.includes(word));
 }
 
 /** Signup link from the description: a line naming a signup wins, otherwise the first URL. */

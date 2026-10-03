@@ -1113,7 +1113,7 @@
     const def = calDesign(p.design);
     const reset = (name, patch) => () => setBlockProps(name, patch);
     const viewChanged = p.switcher === true || p.showMore === false || (p.limit ?? 6) !== 6 || p.nextCount != null || p.laterCount != null || p.showCancelled === false || p.structuredData === false || p.clock != null || p.weekStart != null;
-    const on = [!def.ownFilter && p.showCategories !== false, p.showSubscribe !== false, p.showSignup === true].filter(Boolean).length;
+    const on = [!def.ownFilter && p.showCategories !== false, p.showSubscribe !== false, p.showSignup === true, p.showPlaces === true, p.showSearch === true, p.showEarlier === true].filter(Boolean).length;
     const buttonsChanged = on > 0 || p.showOpen === false || Boolean(p.programHref);
     const emptyChanged = Boolean(p.emptyText) || (p.emptyIcon != null && p.emptyIcon !== 'calendar');
     const optCount = calOptionDefs(p.design).filter((d) => p.options?.[d.key] != null).length + (calScale(p) !== 1 ? 1 : 0);
@@ -1124,7 +1124,7 @@
       view: ta(CAL_VIEW_KEYS[calView(p)]),
       viewReset: viewChanged ? reset('cal-view', { switcher: undefined, showMore: undefined, limit: 6, nextCount: undefined, laterCount: undefined, showCancelled: undefined, structuredData: undefined, clock: undefined, weekStart: undefined }) : null,
       buttons: on ? ta('menu.onCount', { n: on }) : ta('common.off'),
-      buttonsReset: buttonsChanged ? reset('cal-buttons', { showCategories: false, showSubscribe: false, showSignup: false, showOpen: undefined, programHref: undefined }) : null,
+      buttonsReset: buttonsChanged ? reset('cal-buttons', { showCategories: false, showSubscribe: false, showSignup: false, showPlaces: undefined, showSearch: undefined, showEarlier: undefined, showOpen: undefined, programHref: undefined }) : null,
       empty: p.emptyText || ta('menu.standard'),
       emptyReset: emptyChanged ? reset('cal-empty', { emptyText: undefined, emptyIcon: undefined }) : null,
       notice: p.notice?.show === true ? ta('common.on') : ta('common.off'),
@@ -9674,6 +9674,24 @@
           <input type="checkbox" checked={selectedBlock.props.showCategories !== false}
             onchange={(e) => setBlockProp('showCategories', e.target.checked)} />
           {ta('calendar.showCategories')}
+        </label>
+      {/if}
+      <!-- What a visitor finds events with: a place filter, a search field, and the events that are over -->
+      <label class="gridmenu-snap" title={ta('tip.calendar.showPlaces')}>
+        <input type="checkbox" checked={selectedBlock.props.showPlaces === true}
+          onchange={(e) => setBlockProp('showPlaces', e.target.checked ? true : undefined)} />
+        {ta('calendar.showPlaces')}
+      </label>
+      <label class="gridmenu-snap" title={ta('tip.calendar.showSearch')}>
+        <input type="checkbox" checked={selectedBlock.props.showSearch === true}
+          onchange={(e) => setBlockProp('showSearch', e.target.checked ? true : undefined)} />
+        {ta('calendar.showSearch')}
+      </label>
+      {#if !['month', 'week', 'day', 'year'].includes(calView(selectedBlock.props))}
+        <label class="gridmenu-snap" title={ta('tip.calendar.showEarlier')}>
+          <input type="checkbox" checked={selectedBlock.props.showEarlier === true}
+            onchange={(e) => setBlockProp('showEarlier', e.target.checked ? true : undefined)} />
+          {ta('calendar.showEarlier')}
         </label>
       {/if}
       <label class="gridmenu-snap">

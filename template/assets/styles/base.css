@@ -1494,6 +1494,51 @@ textarea.urd-form-input {
   border-color: var(--urd-cal-color, var(--urd-cal-accent));
 }
 
+/* The visitor's search, the «nothing matches» line and the «Earlier» fold of events that are over. */
+.urd-cal-search {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 22em;
+  padding: 0.45em 0.9em;
+  font: inherit;
+  font-size: 0.9em;
+  color: inherit;
+  background: var(--urd-cal-surface);
+  border: 1px solid color-mix(in srgb, var(--urd-color-text) 25%, transparent);
+  border-radius: 999px;
+}
+
+.urd-cal-nomatch {
+  padding: 1em 0;
+  margin: 0;
+  opacity: 0.7;
+}
+
+.urd-cal-earlier-rows {
+  display: grid;
+  gap: 4px;
+  padding-top: 8px;
+}
+
+.urd-cal-earlier-row {
+  display: grid;
+  grid-template-columns: 4.5em minmax(0, 1fr);
+  gap: 2px 10px;
+  padding: 6px 8px;
+  border-radius: var(--urd-radius-sm);
+  opacity: 0.8;
+}
+
+.urd-cal-earlier-date,
+.urd-cal-earlier-place {
+  font-size: 0.85em;
+}
+
+.urd-cal-earlier-place {
+  grid-column: 2;
+  opacity: 0.8;
+}
+
 /* A named calendar with a colour of its own tints its chips and date badges. */
 .urd-cal .urd-collection-badge {
   border-color: color-mix(in srgb, var(--urd-cal-color, var(--urd-color-text)) 35%, transparent);

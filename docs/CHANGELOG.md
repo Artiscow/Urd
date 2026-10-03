@@ -27,6 +27,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.19.15 - Finding events in the calendar: a search, a place filter, earlier events, and the feed's categories - 4 October 2026
+
+- A visitor could narrow a calendar by category only. Three switches on the block, each off until set: «Show search field» (the words are looked for in titles, places and descriptions, `matchesSearch` in ics.js), «Show place filter» (a button per venue, the place up to its first comma) and «Show earlier events» (the last 90 days' events that are over, folded under «Earlier» with their count, in the views that count out what is coming). The three narrow together with the category, and a search or filter that leaves nothing says so.
+- A feed's own `CATEGORIES` were ignored. They are read, and the first is the event's category when its calendar has no name, before the «Category: Title» convention.
+- The filters and the «Earlier» fold have one neutral look in every design; drawing them per design is added to the design round, 0.7.19.19.
+
 ### 0.7.0.39 - The event card leaves the page alone, and places link to a map service the site chooses - 4 October 2026
 
 - Test finding 3 October 2026: with an event's card open the page could not be scrolled, and the background moved as the scrollbar went. The card opens as a dialog that is not modal: the page scrolls under it, Escape, the close button and a press outside close it, and one card is open at a time.

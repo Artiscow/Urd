@@ -2,6 +2,17 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Test batch (0.7.19.15): finding events in the calendar
+
+- [ ] Element menu, a calendar: «Show place filter», «Show search field» and «Show earlier events» stand under the category filter and are off on a new calendar; «Show earlier events» is hidden for a month, week, day or year design; the group's reset switches all three off
+- [ ] «Show search field» on, published: typing a word leaves only the events with it in the title, place or description, whatever the case; two words must both be found; the field keeps its text and the caret while the list changes; a search without matches shows «No events match»; emptying the field brings every event back
+- [ ] «Show place filter» on, a feed with two or more venues: a button per venue («All places» first), named by the place up to its first comma; a press narrows the list and the pressed button keeps the focus; with one venue no row is drawn
+- [ ] «Show earlier events» on, a feed with events in the last 90 days: «Earlier (n)» under the calendar with the right count, the latest first; a press on a row opens the event's card; nothing that is over stands among the coming events
+- [ ] Search, place and category together: each narrows what the others leave, and the «Earlier» fold follows them
+- [ ] A feed whose events carry `CATEGORIES` (and whose calendar has no name in Properties): the category chips and the category filter show the feed's categories, and a title with a colon is left whole
+- [ ] The three in a list design, a card design and a «Coming up» design, on a phone: the field and the button rows fit the width
+- [ ] The sample data in the preview shows one event under «Earlier» when the switch is on
+
 ### Test batch (0.7.0.39): the event card leaves the page alone, and the map service
 
 - [ ] Published page: with an event's card open the page scrolls as usual, the scrollbar stays and the background does not move when the card opens or closes

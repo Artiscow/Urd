@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
 const {
-  parseIcs, expandEvents, partsToMs, findMeetingLink, eventIcs, googleEventUrl, eventJsonLd,
+  parseIcs, expandEvents, partsToMs, findMeetingLink, eventIcs, googleEventUrl, eventJsonLd, placeName, matchesSearch,
   splitCategory, findSignupLink, findImageLink, normalizeSourceUrl, subscribeLinks, startOfWeek, isoWeek, windowStart,
   nextCount, laterCount, NEXT_COUNT, LATER_COUNT, dedupeOccurrences, groupByMonth, sourceEntry,
 } = await engineImport('ics.js');
@@ -331,4 +331,27 @@ test('eventJsonLd: an occurrence as a schema.org Event', () => {
   assert.equal(eventJsonLd({ ...timed, url: 'https://example.org/e/1' }, { pageUrl: 'https://example.org/program' }).url, 'https://example.org/e/1');
   assert.equal(eventJsonLd({ start }), null);
   assert.equal(eventJsonLd({ title: 'X' }), null);
+});
+
+test('CATEGORIES: the feed own categories are read, across lines and with escaped commas', () => {
+  const feed = ['BEGIN:VCALENDAR', 'BEGIN:VEVENT', 'UID:c1', 'DTSTART:20261005T160000Z', 'SUMMARY:Board', 'CATEGORIES:Meeting,Members\\, all', 'CATEGORIES:Autumn', 'END:VEVENT',
+    'BEGIN:VEVENT', 'UID:c2', 'DTSTART:20261006T160000Z', 'SUMMARY:Plain', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+  const { events } = parseIcs(feed);
+  assert.deepEqual(events[0].categories, ['Meeting', 'Members, all', 'Autumn']);
+  const occs = expandEvents(events, { from: Date.UTC(2026, 9, 1) });
+  assert.deepEqual(occs[0].categories, ['Meeting', 'Members, all', 'Autumn']);
+  assert.deepEqual(occs[1].categories, []);
+});
+
+test('placeName and matchesSearch: the venue of a place, and a search over title, place and description', () => {
+  assert.equal(placeName('The hall, Storgata 1, 7011 Trondheim'), 'The hall');
+  assert.equal(placeName('The clubhouse'), 'The clubhouse');
+  assert.equal(placeName(''), '');
+  const occ = { title: 'Autumn trip', location: 'The car park', description: 'Bring warm clothes' };
+  assert.ok(matchesSearch(occ, ''));
+  assert.ok(matchesSearch(occ, 'AUTUMN'));
+  assert.ok(matchesSearch(occ, 'car'));
+  assert.ok(matchesSearch(occ, 'warm trip'));
+  assert.ok(!matchesSearch(occ, 'trip summer'));
+  assert.ok(matchesSearch({ summary: 'Board' }, 'board'));
 });
