@@ -46,7 +46,7 @@ function rangeText(from, to) {
 /** The pill for an event in a week or month cell: the time and the title, tinted with the calendar colour. */
 function pillNode(occ, ui, className) {
   const pill = ui.tint(ui.el('div', className), occ);
-  if (ui.hasTime(occ)) pill.appendChild(ui.field('span', 'time', ui.time(occ), 'urd-cal-pill-time'));
+  if (ui.hasTime(occ)) pill.appendChild(ui.field('span', 'time', ui.time(occ), 'urd-cal-pill-time', occ));
   pill.appendChild(ui.field('span', 'title', occ.title));
   pill.title = `${occ.title}${occ.location ? ` · ${occ.location}` : ''}`;
   return pill;
@@ -65,7 +65,7 @@ export function weekStrip(host, occs, props, ics, ui) {
   const head = ui.el('div', 'urd-cal-wstrip-head');
   const prev = navButton(ui, -1, t('calendar.prevWeek'));
   const next = navButton(ui, 1, t('calendar.nextWeek'));
-  const label = ui.el('div', 'urd-cal-wstrip-label');
+  const label = ui.live(ui.el('div', 'urd-cal-wstrip-label'));
   const weekNo = ui.el('strong', null);
   const range = ui.el('span', null);
   label.append(weekNo, range);
@@ -80,13 +80,17 @@ export function weekStrip(host, occs, props, ics, ui) {
     for (const day of days) {
       const col = ui.el('div', 'urd-cal-wstrip-day');
       if (sameDay(day, today)) col.classList.add('urd-cal-wstrip-today');
-      col.append(ui.field('span', 'date', weekdayShort(day), 'urd-cal-wstrip-wd'), ui.field('strong', 'number', String(day.getDate()), 'urd-cal-wstrip-num'));
-      for (const occ of onDay(ui.all, day)) col.appendChild(pillNode(occ, ui, 'urd-cal-wstrip-pill'));
+      col.append(ui.field('span', 'date', weekdayShort(day), 'urd-cal-wstrip-wd', day), ui.field('strong', 'number', String(day.getDate()), 'urd-cal-wstrip-num', day));
+      const todays = onDay(ui.all, day);
+      for (const occ of todays) col.appendChild(pillNode(occ, ui, 'urd-cal-wstrip-pill'));
+      ui.dayLabel(col, day, todays.length);
       grid.appendChild(col);
     }
+    ui.dayGrid(grid, '.urd-cal-wstrip-day', { page: move, current: '.urd-cal-wstrip-today' });
   };
-  prev.addEventListener('click', () => { monday = new Date(monday.getTime() - 7 * DAY); paint(); });
-  next.addEventListener('click', () => { monday = new Date(monday.getTime() + 7 * DAY); paint(); });
+  const move = (dir) => { monday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 7 * dir); paint(); };
+  prev.addEventListener('click', () => move(-1));
+  next.addEventListener('click', () => move(1));
   paint();
   host.appendChild(wrap);
 }
@@ -114,7 +118,7 @@ function planBlock(occ, ui) {
   const block = ui.tint(ui.el('div', 'urd-cal-plan-event'), occ);
   block.appendChild(ui.field('strong', 'title', occ.title));
   const when = ui.el('span', 'urd-cal-plan-when');
-  when.appendChild(ui.field('span', 'time', ui.time(occ)));
+  when.appendChild(ui.field('span', 'time', ui.time(occ), null, occ));
   if (occ.location) {
     when.appendChild(document.createTextNode(' · '));
     when.appendChild(ui.field('span', 'place', occ.location));
@@ -135,7 +139,7 @@ export function weekPlan(host, occs, props, ics, ui) {
   const head = ui.el('div', 'urd-cal-wplan-head');
   const prev = navButton(ui, -1, t('calendar.prevWeek'));
   const next = navButton(ui, 1, t('calendar.nextWeek'));
-  const range = ui.el('strong', 'urd-cal-wplan-range');
+  const range = ui.live(ui.el('strong', 'urd-cal-wplan-range'));
   const todayBtn = ui.el('button', 'urd-cal-wplan-today');
   todayBtn.type = 'button';
   todayBtn.appendChild(ui.tx('todayBtn'));
@@ -152,7 +156,7 @@ export function weekPlan(host, occs, props, ics, ui) {
     for (const day of week) {
       const cell = ui.el('div', 'urd-cal-wplan-day');
       if (sameDay(day, today)) cell.classList.add('urd-cal-wplan-istoday');
-      cell.append(ui.field('span', 'date', weekdayShort(day)), ui.field('strong', 'number', String(day.getDate())));
+      cell.append(ui.field('span', 'date', weekdayShort(day), null, day), ui.field('strong', 'number', String(day.getDate()), null, day));
       days.appendChild(cell);
     }
     const inWeek = ui.all.filter((occ) => occ.start < week[6].getTime() + DAY && (occ.end ?? occ.start) >= week[0].getTime());
@@ -165,7 +169,7 @@ export function weekPlan(host, occs, props, ics, ui) {
         const row = ui.el('div', 'urd-cal-wplan-prow');
         const name = ui.el('div', 'urd-cal-wplan-pday');
         if (sameDay(day, today)) row.classList.add('urd-cal-wplan-istoday');
-        name.append(ui.field('span', 'date', weekdayShort(day)), ui.field('strong', 'number', String(day.getDate())));
+        name.append(ui.field('span', 'date', weekdayShort(day), null, day), ui.field('strong', 'number', String(day.getDate()), null, day));
         const list = ui.el('div', 'urd-cal-wplan-plist');
         for (const occ of onDay(inWeek, day)) list.appendChild(occ.allDay ? pillNode(occ, ui, 'urd-cal-wplan-pill') : planBlock(occ, ui));
         row.append(name, list);
@@ -219,7 +223,7 @@ export function layers(host, occs, props, ics, ui) {
   const nav = ui.el('div', 'urd-cal-layers-nav');
   const prev = navButton(ui, -1, t('calendar.prevWeek'));
   const next = navButton(ui, 1, t('calendar.nextWeek'));
-  const label = ui.el('strong', 'urd-cal-layers-label');
+  const label = ui.live(ui.el('strong', 'urd-cal-layers-label'));
   nav.append(prev, next, label);
   const switches = ui.el('div', 'urd-cal-layers-switches');
   head.append(nav, switches);
@@ -232,7 +236,7 @@ export function layers(host, occs, props, ics, ui) {
     for (const day of week) {
       const cell = ui.el('span', 'urd-cal-layers-dow');
       if (sameDay(day, today)) cell.classList.add('urd-cal-layers-istoday');
-      cell.append(ui.field('span', 'date', `${weekdayShort(day)} ${day.getDate()}`));
+      cell.append(ui.field('span', 'date', `${weekdayShort(day)} ${day.getDate()}`, null, day));
       grid.appendChild(cell);
     }
     const weekStart = week[0].getTime();
@@ -259,9 +263,9 @@ export function layers(host, occs, props, ics, ui) {
         // The bar's day in words, shown where the day columns are not (the phone).
         const dayName = (i) => `${weekdayShort(week[i])} ${week[i].getDate()}`;
         const from = Math.max(0, first);
-        bar.appendChild(ui.field('span', 'date', last > from ? t('calendar.range', { from: dayName(from), to: dayName(last) }) : dayName(from), 'urd-cal-layers-day'));
+        bar.appendChild(ui.field('span', 'date', last > from ? t('calendar.range', { from: dayName(from), to: dayName(last) }) : dayName(from), 'urd-cal-layers-day', week[from]));
         bar.appendChild(ui.field('span', 'title', occ.title));
-        if (ui.hasTime(occ)) bar.appendChild(ui.field('span', 'time', ` ${ui.time(occ)}`));
+        if (ui.hasTime(occ)) bar.appendChild(ui.field('span', 'time', ` ${ui.time(occ)}`, null, occ));
         bar.title = `${occ.title}${occ.location ? ` · ${occ.location}` : ''}`;
         lane.appendChild(bar);
       }
@@ -296,7 +300,7 @@ function monthHead(ui, onmove) {
   const head = ui.el('div', 'urd-cal-mhead');
   const prev = navButton(ui, -1, t('calendar.prevMonth'));
   const next = navButton(ui, 1, t('calendar.nextMonth'));
-  const label = ui.el('strong', 'urd-cal-mhead-label');
+  const label = ui.live(ui.el('strong', 'urd-cal-mhead-label'));
   prev.addEventListener('click', () => onmove(-1));
   next.addEventListener('click', () => onmove(1));
   return { head, prev, next, label };
@@ -309,12 +313,13 @@ export function sidepanel(host, occs, props, ics, ui) {
   let chosen = startOfDay(today);
   const wrap = ui.el('div', 'urd-cal-side');
   const main = ui.el('div', 'urd-cal-side-main');
-  const { head, prev, next, label } = monthHead(ui, (dir) => {
+  const move = (dir) => {
     shown = shown.m + dir < 0 ? { y: shown.y - 1, m: 11 } : shown.m + dir > 11 ? { y: shown.y + 1, m: 0 } : { ...shown, m: shown.m + dir };
     const first = ui.all.map(dayOf).find((d) => d.getFullYear() === shown.y && d.getMonth() === shown.m);
     chosen = first ? startOfDay(first) : new Date(shown.y, shown.m, 1);
     paint();
-  });
+  };
+  const { head, prev, next, label } = monthHead(ui, move);
   head.append(label, ui.el('span', 'urd-cal-mhead-nav'));
   head.lastChild.append(prev, next);
   const dows = ui.el('div', 'urd-cal-side-dows');
@@ -325,8 +330,8 @@ export function sidepanel(host, occs, props, ics, ui) {
   wrap.append(main, panel);
   const paintPanel = () => {
     panel.replaceChildren();
-    const headP = ui.el('div', 'urd-cal-side-chosen');
-    headP.append(ui.field('span', 'date', weekday(chosen)), ui.field('strong', 'number', `${chosen.getDate()}. ${monthLong(chosen)}`));
+    const headP = ui.live(ui.el('div', 'urd-cal-side-chosen'));
+    headP.append(ui.field('span', 'date', weekday(chosen), null, chosen), ui.field('strong', 'number', `${chosen.getDate()}. ${monthLong(chosen)}`, null, chosen));
     panel.appendChild(headP);
     const list = ui.el('div', 'urd-cal-side-list');
     for (const occ of onDay(ui.all, chosen)) {
@@ -383,15 +388,22 @@ export function sidepanel(host, occs, props, ics, ui) {
         chosen = startOfDay(date);
         if (out) {
           shown = { y: date.getFullYear(), m: date.getMonth() };
+          ui.keepFocus(grid);
           paint();
         } else {
-          grid.querySelector('.urd-cal-side-picked')?.classList.remove('urd-cal-side-picked');
+          const was = grid.querySelector('.urd-cal-side-picked');
+          was?.classList.remove('urd-cal-side-picked');
+          was?.setAttribute('aria-pressed', 'false');
           cell.classList.add('urd-cal-side-picked');
+          cell.setAttribute('aria-pressed', 'true');
           paintPanel();
         }
       });
+      ui.dayLabel(cell, date, todays.length);
+      cell.setAttribute('aria-pressed', sameDay(date, chosen) ? 'true' : 'false');
       grid.appendChild(cell);
     }
+    ui.dayGrid(grid, '.urd-cal-side-day', { page: move, current: '.urd-cal-side-picked' });
     paintPanel();
   };
   paint();
@@ -403,10 +415,11 @@ export function apMonth(host, occs, props, ics, ui) {
   const today = ui.today();
   let shown = { y: today.getFullYear(), m: today.getMonth() };
   const wrap = ui.el('div', 'urd-cal-apm');
-  const { head, prev, next, label } = monthHead(ui, (dir) => {
+  const move = (dir) => {
     shown = shown.m + dir < 0 ? { y: shown.y - 1, m: 11 } : shown.m + dir > 11 ? { y: shown.y + 1, m: 0 } : { ...shown, m: shown.m + dir };
     paint();
-  });
+  };
+  const { head, prev, next, label } = monthHead(ui, move);
   head.append(prev, label, next);
   const dows = ui.el('div', 'urd-cal-apm-dows');
   for (const day of ui.dows()) dows.appendChild(ui.el('span', null, day));
@@ -429,9 +442,13 @@ export function apMonth(host, occs, props, ics, ui) {
       const num = ui.el('i', 'urd-cal-apm-num', String(d));
       if (sameDay(date, today)) num.classList.add('urd-cal-apm-today');
       cell.appendChild(num);
-      for (const occ of onDay(ui.all, date).slice(0, 3)) cell.appendChild(pillNode(occ, ui, 'urd-cal-apm-pill'));
+      const todays = onDay(ui.all, date);
+      for (const occ of todays.slice(0, 3)) cell.appendChild(pillNode(occ, ui, 'urd-cal-apm-pill'));
+      ui.dayLabel(cell, date, todays.length);
+      if (sameDay(date, today)) cell.classList.add('urd-cal-apm-istoday');
       grid.appendChild(cell);
     }
+    ui.dayGrid(grid, panel ? '.urd-cal-pday' : '.urd-cal-apm-day:not(.urd-cal-apm-out)', { page: move, current: panel ? '[aria-pressed="true"]' : '.urd-cal-apm-istoday' });
     const total = lead + dim;
     for (let i = total; i % 7; i++) grid.appendChild(ui.el('span', 'urd-cal-apm-day urd-cal-apm-out'));
   };
@@ -447,7 +464,7 @@ export function dayPlan(host, occs, props, ics, ui) {
   const head = ui.el('div', 'urd-cal-dplan-head');
   const headText = ui.el('div');
   const kicker = ui.el('span', 'urd-cal-dplan-kicker');
-  const title = ui.el('strong', 'urd-cal-dplan-title');
+  const title = ui.live(ui.el('strong', 'urd-cal-dplan-title'));
   headText.append(kicker, title);
   const count = ui.el('span', 'urd-cal-dplan-count');
   head.append(headText, count);
@@ -458,8 +475,8 @@ export function dayPlan(host, occs, props, ics, ui) {
     const isToday = sameDay(day, today);
     kicker.replaceChildren();
     if (isToday) kicker.appendChild(ui.tx('todayBtn'));
-    else kicker.appendChild(ui.field('span', 'date', weekdayShort(day)));
-    title.replaceChildren(ui.field('span', 'date', `${weekday(day)} ${day.getDate()}. ${monthLong(day)}`));
+    else kicker.appendChild(ui.field('span', 'date', weekdayShort(day), null, day));
+    title.replaceChildren(ui.field('span', 'date', `${weekday(day)} ${day.getDate()}. ${monthLong(day)}`, null, day));
     const todays = onDay(ui.all, day);
     count.textContent = tp('calendar.todayCount', todays.length);
     strip.replaceChildren();
@@ -469,11 +486,13 @@ export function dayPlan(host, occs, props, ics, ui) {
       btn.type = 'button';
       if (i === 0) btn.classList.add('urd-cal-dplan-picked');
       if (sameDay(d, today)) btn.classList.add('urd-cal-dplan-istoday');
-      btn.append(ui.field('span', 'date', weekdayShort(d)), ui.field('strong', 'number', String(d.getDate())));
+      btn.append(ui.field('span', 'date', weekdayShort(d), null, d), ui.field('strong', 'number', String(d.getDate()), null, d));
       btn.setAttribute('aria-label', `${weekday(d)} ${d.getDate()}. ${monthLong(d)}`);
-      btn.addEventListener('click', () => { day = startOfDay(d); paint(); });
+      btn.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
+      btn.addEventListener('click', () => { day = startOfDay(d); ui.keepFocus(strip); paint(); });
       strip.appendChild(btn);
     }
+    ui.dayGrid(strip, '.urd-cal-dplan-pick', { current: '.urd-cal-dplan-picked' });
     const { from, to } = hourSpan(todays, ui.opt);
     grid.replaceChildren();
     grid.classList.toggle('urd-cal-dplan-istoday', isToday);
@@ -581,7 +600,7 @@ export function yearWheel(host, occs, props, ics, ui) {
       const d = dayOf(occ);
       const card = ui.tint(ui.el('div', 'urd-cal-wheel-card'), occ);
       const line = ui.el('strong');
-      line.append(ui.field('span', 'date', `${d.getDate()}. ${monthShort(d)}`), document.createTextNode(' · '), ui.field('span', 'title', occ.title));
+      line.append(ui.field('span', 'date', `${d.getDate()}. ${monthShort(d)}`, null, d), document.createTextNode(' · '), ui.field('span', 'title', occ.title));
       card.appendChild(line);
       const meta = ui.meta(occ, { date: false });
       if (meta) card.appendChild(meta);
@@ -618,7 +637,7 @@ export function heatmap(host, occs, props, ics, ui) {
   legend.appendChild(ui.tx('more'));
   head.append(left, legend);
   const months = ui.el('div', 'urd-cal-heat-months');
-  const readout = ui.el('div', 'urd-cal-heat-readout');
+  const readout = ui.live(ui.el('div', 'urd-cal-heat-readout'));
   const readDate = ui.el('strong');
   const readText = ui.el('span');
   readout.append(readDate, readText);
@@ -650,11 +669,8 @@ export function heatmap(host, occs, props, ics, ui) {
       const cell = ui.el('i', `urd-cal-heat-cell urd-cal-heat-l${level}`);
       const date = new Date(year, m, d);
       if (sameDay(date, today)) cell.classList.add('urd-cal-heat-today');
-      if (n) {
-        cell.tabIndex = 0;
-        cell.setAttribute('role', 'img');
-        cell.setAttribute('aria-label', `${d}. ${monthShort(date)}: ${tp('calendar.count', n)}`);
-      }
+      cell.setAttribute('role', 'img');
+      cell.setAttribute('aria-label', `${d}. ${monthShort(date)}: ${tp('calendar.count', n)}`);
       cell.addEventListener('pointerenter', () => show(date));
       cell.addEventListener('focus', () => show(date));
       grid.appendChild(cell);
@@ -662,6 +678,7 @@ export function heatmap(host, occs, props, ics, ui) {
     box.appendChild(grid);
     months.appendChild(box);
   }
+  ui.dayGrid(months, '.urd-cal-heat-cell:not(.urd-cal-heat-blank)', { current: '.urd-cal-heat-today' });
   months.addEventListener('pointerleave', () => show(null));
   show(null);
   wrap.append(head, months, readout);

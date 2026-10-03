@@ -18,7 +18,7 @@ const weekday = (d) => dates().weekdays[(d.getDay() + 6) % 7];
 function weekdayMeta(occ, ui) {
   const line = ui.meta(occ, { date: false }) ?? ui.el('div', 'urd-cal-meta');
   if (line.childNodes.length) line.prepend(document.createTextNode(' · '));
-  line.prepend(ui.field('span', 'date', weekdayShort(dayOf(occ))));
+  line.prepend(ui.field('span', 'date', weekdayShort(dayOf(occ)), null, occ));
   return line;
 }
 
@@ -34,7 +34,7 @@ export function timeline(host, occs, props, ics, ui) {
   occs.forEach((occ, i) => {
     const d = dayOf(occ);
     const when = ui.el('div', 'urd-cal-tl-when');
-    when.append(ui.field('strong', 'number', `${d.getDate()}. ${monthShort(d)}`), ui.field('span', 'date', weekday(d)));
+    when.append(ui.field('strong', 'number', `${d.getDate()}. ${monthShort(d)}`, null, d), ui.field('span', 'date', weekday(d), null, d));
     const rail = ui.el('div', 'urd-cal-tl-rail');
     const dot = ui.tint(ui.el('span', 'urd-cal-tl-dot'), occ);
     if (i === 0) dot.classList.add('urd-cal-tl-dot-first');
@@ -75,9 +75,9 @@ export function table(host, occs, props, ics, ui) {
     const d = dayOf(occ);
     const row = ui.tint(ui.el('tr'), occ);
     const date = ui.el('td', 'urd-cal-table-date');
-    date.appendChild(ui.field('strong', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: dd.monthsShort[d.getMonth()] })));
+    date.appendChild(ui.field('strong', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: dd.monthsShort[d.getMonth()] }), null, d));
     const time = ui.el('td');
-    time.appendChild(ui.field('span', 'time', ui.time(occ)));
+    time.appendChild(ui.field('span', 'time', ui.time(occ), null, occ));
     const event = ui.el('td');
     event.appendChild(ui.field('strong', 'title', occ.title));
     const chip = ui.chip(occ);
@@ -116,7 +116,7 @@ export function booklet(host, occs, props, ics, ui) {
     col.appendChild(ui.el('h4', 'urd-cal-booklet-mname', months[group.month]));
     for (const occ of group.items) {
       const row = ui.tint(ui.el('div', 'urd-cal-booklet-row'), occ);
-      row.appendChild(ui.field('strong', 'number', String(dayOf(occ).getDate()), 'urd-cal-booklet-day'));
+      row.appendChild(ui.field('strong', 'number', String(dayOf(occ).getDate()), 'urd-cal-booklet-day', occ));
       const body = ui.el('div', 'urd-cal-booklet-body');
       body.append(ui.field('strong', 'title', occ.title, 'urd-cal-booklet-name'), weekdayMeta(occ, ui));
       const text = ui.opt.description === false ? null : excerptNode(occ, ui, 'urd-cal-booklet-text');
@@ -163,7 +163,7 @@ export function apList(host, occs, props, ics, ui) {
     const d = dayOf(occ);
     const row = ui.tint(ui.el('article', 'urd-cal-ap-row'), occ);
     const when = ui.el('div', 'urd-cal-ap-when');
-    when.append(ui.field('strong', 'number', two(d.getDate())), ui.field('span', 'date', monthShort(d)));
+    when.append(ui.field('strong', 'number', two(d.getDate()), null, d), ui.field('span', 'date', monthShort(d), null, d));
     const body = ui.el('div', 'urd-cal-ap-body');
     const top = ui.el('div', 'urd-cal-ap-top');
     const chip = ui.chip(occ);
@@ -188,7 +188,7 @@ export function glass(host, occs, props, ics, ui) {
     const d = dayOf(occ);
     const card = ui.tint(ui.el('article', 'urd-cal-glass-card'), occ);
     const when = ui.el('div', 'urd-cal-glass-when');
-    when.append(ui.field('strong', 'number', String(d.getDate())), ui.field('span', 'date', monthShort(d)));
+    when.append(ui.field('strong', 'number', String(d.getDate()), null, d), ui.field('span', 'date', monthShort(d), null, d));
     const body = ui.el('div', 'urd-cal-glass-body');
     body.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-glass-title'));
     const meta = ui.meta(occ, { date: false });

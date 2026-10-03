@@ -94,6 +94,25 @@ export function timeRange(occ, clock12) {
   return { from, to: formatClock(end.getHours(), end.getMinutes(), clock12) };
 }
 
+const isoDay = (d) => `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`;
+
+/**
+ * The `datetime` of a `<time>`: the day («2026-10-05») for a Date, a time in
+ * ms or an event, and the moment itself («2026-10-05T16:00:00.000Z») for a
+ * timed event when its clock is what is written (`withClock`). A cancelled
+ * event's time is the word «Cancelled», which is no time: null.
+ */
+export function dateTimeAttr(when, withClock = false) {
+  if (when instanceof Date || typeof when === 'number') {
+    const d = new Date(when);
+    return Number.isNaN(d.getTime()) ? null : isoDay(d);
+  }
+  if (!Number.isFinite(when?.start)) return null;
+  if (!withClock) return isoDay(new Date(when.start));
+  if (when.cancelled) return null;
+  return when.allDay ? isoDay(new Date(when.start)) : new Date(when.real ?? when.start).toISOString();
+}
+
 /** True for a time zone name Intl knows («Europe/Oslo»). */
 export function zoneValid(zone) {
   if (typeof zone !== 'string' || !zone.trim()) return false;

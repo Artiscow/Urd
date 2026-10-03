@@ -2,6 +2,17 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Test batch (0.7.19.13): the calendar's dates as time elements, day grids on the keyboard, and a printed list
+
+- [ ] Published page, «Month»: Tab reaches the grid once (today, else the first day); the arrow keys move between the days, Home and End go to the ends of the week, PageUp and PageDown change the month and keep the day, and an arrow past the first or last day changes the month; Tab from a day goes through that day's events and then out of the grid; Enter on an event opens its card
+- [ ] The same keys in Overview on cream, Month with side panel (Enter picks the day and the panel follows), Week strip (PageUp and PageDown change the week), the day picker of Day plan (Enter picks the day and the focus stays on it) and Heat map (one tab stop for the whole year, the readout follows the focused day)
+- [ ] The months on a phone with a keyboard: the same keys between the day buttons
+- [ ] With the editing handles on in the preview the arrow keys do nothing in a day grid; in the Clean view they work
+- [ ] A screen reader: a day is read with its date and number of events («Sunday 4 October, 1 event»); a press on an arrow reads the new month, week or day; a press on «Week» or «Month» in the view switcher, or on a category, keeps the focus on the pressed button and reads it as pressed
+- [ ] The page source of a published calendar with a real feed: dates and times are `<time datetime>`, with the day for a date and the true moment for a clock time, also with a time zone set for the site; «Cancelled» is not a time
+- [ ] Print (or the print preview) of a page with a calendar, in a list design and in a month design: no buttons and no design, the events as a plain list of date, time, title and place; the list does not run over the block below it
+- [ ] Every design looks as it did before on screen: no date, time or day number has changed its size, weight, colour or place
+
 ### Test batch (0.7.19.12): the calendar's loading state and the seven-column designs on the phone
 
 - [ ] Published page with a real feed, desktop: while the calendar is fetched the block shows quiet bars at the frame's height, and nothing below it moves when the events arrive; with reduced motion set in the system the bars stand still

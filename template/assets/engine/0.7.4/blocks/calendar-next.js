@@ -38,10 +38,10 @@ function everyMinute(node, fn) {
 function longWhen(occ, ui, { place = true } = {}) {
   const d = dayOf(occ);
   const line = ui.el('span', 'urd-cal-nx-when');
-  line.appendChild(ui.field('span', 'date', `${weekday(d)} ${d.getDate()}. ${monthLong(d)}`));
+  line.appendChild(ui.field('span', 'date', `${weekday(d)} ${d.getDate()}. ${monthLong(d)}`, null, d));
   if (ui.hasTime(occ)) {
     line.appendChild(document.createTextNode(' '));
-    line.appendChild(ui.field('span', 'time', ui.timeText(occ)));
+    line.appendChild(ui.field('span', 'time', ui.timeText(occ), null, occ));
   }
   if (place && occ.location) {
     line.appendChild(document.createTextNode(' · '));
@@ -57,7 +57,7 @@ const laterOf = (occs, props, ics) => occs.slice(ics.nextCount(props.nextCount),
 function laterRow(occ, ui, className) {
   const d = dayOf(occ);
   const row = ui.tint(ui.el('div', className), occ);
-  row.append(ui.field('strong', 'date', `${d.getDate()}. ${monthShort(d)}`), ui.field('span', 'title', occ.title, 'urd-cal-nx-later-title'), ui.field('span', 'time', ui.timeText(occ), 'urd-cal-nx-later-time'));
+  row.append(ui.field('strong', 'date', `${d.getDate()}. ${monthShort(d)}`, null, d), ui.field('span', 'title', occ.title, 'urd-cal-nx-later-title'), ui.field('span', 'time', ui.timeText(occ), 'urd-cal-nx-later-time', occ));
   return row;
 }
 
@@ -119,7 +119,7 @@ export function billboard(host, occs, props, ics, ui) {
     later.forEach((occ, i) => {
       if (i) then.appendChild(document.createTextNode(', '));
       const d = dayOf(occ);
-      then.append(ui.field('span', 'title', occ.title), document.createTextNode(' '), ui.field('span', 'date', `${d.getDate()}. ${monthShort(d)}`));
+      then.append(ui.field('span', 'title', occ.title), document.createTextNode(' '), ui.field('span', 'date', `${d.getDate()}. ${monthShort(d)}`, null, d));
     });
     foot.appendChild(then);
   }
@@ -147,7 +147,7 @@ export function stacked(host, occs, props, ics, ui) {
     const d = dayOf(occ);
     const card = ui.tint(ui.el('article', 'urd-cal-stack-card'), occ);
     const top = ui.el('div', 'urd-cal-stack-top');
-    top.append(ui.field('span', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: monthShort(d) }), 'urd-cal-stack-badge'), ui.el('span', 'urd-cal-stack-in', ui.countdown(occ)));
+    top.append(ui.field('span', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: monthShort(d) }), 'urd-cal-stack-badge', d), ui.el('span', 'urd-cal-stack-in', ui.countdown(occ)));
     card.append(top, ui.field('strong', 'title', occ.title, 'urd-cal-stack-title'));
     const meta = ui.meta(occ, { date: false });
     if (meta) card.appendChild(meta);
@@ -230,7 +230,7 @@ export function split(host, occs, props, ics, ui) {
   const label = ui.el('span', 'urd-cal-split-label');
   label.appendChild(ui.tx('now'));
   const when = ui.el('div', 'urd-cal-split-when');
-  when.append(ui.field('span', 'date', weekday(d), 'urd-cal-split-wd'), ui.field('strong', 'number', String(d.getDate())), ui.field('span', 'date', monthLong(d), 'urd-cal-split-month'));
+  when.append(ui.field('span', 'date', weekday(d), 'urd-cal-split-wd', d), ui.field('strong', 'number', String(d.getDate()), null, d), ui.field('span', 'date', monthLong(d), 'urd-cal-split-month', d));
   panel.append(label, when, ui.el('span', 'urd-cal-split-in', ui.countdown(hero)));
   const body = ui.el('div', 'urd-cal-split-body');
   const chip = ui.chip(hero);
@@ -268,7 +268,7 @@ export function band(host, occs, props, ics, ui) {
     if (i) run.appendChild(ui.el('i', 'urd-cal-band-sep'));
     const d = dayOf(occ);
     const item = ui.tint(ui.el('span', 'urd-cal-band-item'), occ);
-    item.append(ui.field('span', 'date', `${d.getDate()}. ${monthShort(d)}`), document.createTextNode(' · '), ui.field('strong', 'title', occ.title), document.createTextNode(' · '), ui.field('span', 'time', ui.timeText(occ)));
+    item.append(ui.field('span', 'date', `${d.getDate()}. ${monthShort(d)}`, null, d), document.createTextNode(' · '), ui.field('strong', 'title', occ.title), document.createTextNode(' · '), ui.field('span', 'time', ui.timeText(occ), null, occ));
     if (occ.location) {
       item.appendChild(document.createTextNode(' · '));
       item.appendChild(ui.field('span', 'place', occ.location));
@@ -305,10 +305,10 @@ export function oneLine(host, occs, props, ics, ui) {
     const label = ui.el('span', 'urd-cal-line-label');
     label.appendChild(ui.tx(i < count ? 'now' : 'later'));
     const text = ui.el('span', 'urd-cal-line-text');
-    text.append(ui.field('strong', 'title', occ.title), document.createTextNode(' · '), ui.field('span', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: monthShort(d) })));
+    text.append(ui.field('strong', 'title', occ.title), document.createTextNode(' · '), ui.field('span', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: monthShort(d) }), null, d));
     if (ui.hasTime(occ)) {
       text.appendChild(document.createTextNode(' '));
-      text.appendChild(ui.field('span', 'time', ui.timeText(occ)));
+      text.appendChild(ui.field('span', 'time', ui.timeText(occ), null, occ));
     }
     if (occ.location) {
       text.appendChild(document.createTextNode(' · '));
@@ -443,10 +443,10 @@ export function nextBento(host, occs, props, ics, ui) {
   const words = ui.el('div', 'urd-cal-nbento-words');
   words.appendChild(ui.field('strong', 'title', hero.title, 'urd-cal-nbento-title'));
   const meta = ui.el('div', 'urd-cal-meta');
-  meta.appendChild(ui.field('span', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: monthShort(d) })));
+  meta.appendChild(ui.field('span', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: monthShort(d) }), null, d));
   if (ui.hasTime(hero)) {
     meta.appendChild(document.createTextNode(' · '));
-    meta.appendChild(ui.field('span', 'time', ui.timeText(hero)));
+    meta.appendChild(ui.field('span', 'time', ui.timeText(hero), null, hero));
   }
   if (hero.location) {
     meta.appendChild(document.createTextNode(' · '));
@@ -465,9 +465,9 @@ export function nextBento(host, occs, props, ics, ui) {
     const tile = ui.tint(ui.el('article', 'urd-cal-nbento-tile urd-cal-nbento-day'), occ);
     if (i === 2) tile.classList.add('urd-cal-nbento-dark');
     const when = ui.el('span', 'urd-cal-nbento-when');
-    when.append(ui.field('strong', 'number', String(od.getDate())), ui.field('span', 'date', monthShort(od)));
+    when.append(ui.field('strong', 'number', String(od.getDate()), null, od), ui.field('span', 'date', monthShort(od), null, od));
     const body = ui.el('div');
-    body.append(ui.field('strong', 'title', occ.title, 'urd-cal-nbento-small'), ui.field('span', 'time', ui.timeText(occ), 'urd-cal-nbento-sub'));
+    body.append(ui.field('strong', 'title', occ.title, 'urd-cal-nbento-small'), ui.field('span', 'time', ui.timeText(occ), 'urd-cal-nbento-sub', occ));
     tile.append(when, body);
     grid.appendChild(tile);
   });

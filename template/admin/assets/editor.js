@@ -2597,6 +2597,8 @@ var Ii = {
 		"calendar.dayMonth": "{d}. {m}",
 		"calendar.zoneOf": "Tidene vises i {zone}",
 		"calendar.zoneYours": "Tidene vises i din tidssone ({zone})",
+		"calendar.loading": "Laster kalenderen",
+		"calendar.dayNone": "Ingenting denne dagen",
 		"calendar.nextMonth": "Neste måned",
 		"calendar.prevMonth": "Forrige måned",
 		"calendar.signup": "Meld deg på",

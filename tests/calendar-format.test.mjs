@@ -9,6 +9,7 @@ import { engineImport } from './_engine.mjs';
 const {
   calClock12, calWeekStart, formatClock, leadDays, orderWeekdays, startOfWeek, isMultiDay, timeRange,
   zoneValid, zoneOffsetMs, shiftToZone, zoneDiffers, localOffsetMs,
+  dateTimeAttr,
 } = await engineImport('calendar-format.js');
 
 test('calClock12: 24 hours unless the block asks for 12', () => {
@@ -69,4 +70,21 @@ test('time zones: a known name, its offset, and a time moved to its clock', () =
   const shifted = new Date(shiftToZone(summer, 'Asia/Tokyo'));
   assert.equal(shifted.getHours(), 21);
   assert.equal(zoneDiffers('UTC', summer), localOffsetMs(summer) !== 0);
+});
+
+test('dateTimeAttr: a day for a date, the moment for a timed event with its clock', () => {
+  const day = new Date(2026, 9, 5, 18, 30);
+  assert.equal(dateTimeAttr(day), '2026-10-05');
+  assert.equal(dateTimeAttr(day.getTime()), '2026-10-05');
+  const occ = { start: day.getTime(), end: day.getTime() + 3600000, allDay: false };
+  assert.equal(dateTimeAttr(occ), '2026-10-05');
+  assert.equal(dateTimeAttr(occ, true), day.toISOString());
+  // A time moved to the site's zone keeps the true moment in `real`.
+  assert.equal(dateTimeAttr({ ...occ, real: Date.UTC(2026, 9, 5, 12, 0) }, true), '2026-10-05T12:00:00.000Z');
+  assert.equal(dateTimeAttr({ ...occ, allDay: true }, true), '2026-10-05');
+  assert.equal(dateTimeAttr({ ...occ, cancelled: true }, true), null);
+  assert.equal(dateTimeAttr({ ...occ, cancelled: true }), '2026-10-05');
+  assert.equal(dateTimeAttr(null), null);
+  assert.equal(dateTimeAttr({}), null);
+  assert.equal(dateTimeAttr(new Date(NaN)), null);
 });

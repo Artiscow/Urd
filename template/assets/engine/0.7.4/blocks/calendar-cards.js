@@ -30,10 +30,10 @@ export function posters(host, occs, props, ics, ui) {
       top.appendChild(ui.field('span', 'place', occ.location));
     }
     const when = ui.el('div', 'urd-cal-poster-when');
-    when.append(ui.field('strong', 'number', String(d.getDate())), ui.field('span', 'date', monthLong(d)));
+    when.append(ui.field('strong', 'number', String(d.getDate()), null, d), ui.field('span', 'date', monthLong(d), null, d));
     const body = ui.el('div', 'urd-cal-poster-body');
     body.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-poster-title'));
-    if (ui.hasTime(occ)) body.appendChild(ui.field('span', 'time', ui.timeText(occ)));
+    if (ui.hasTime(occ)) body.appendChild(ui.field('span', 'time', ui.timeText(occ), null, occ));
     const signup = ui.signup(occ);
     if (signup) body.appendChild(signup);
     card.append(top, when, body);
@@ -55,7 +55,7 @@ export function tickets(host, occs, props, ics, ui) {
     const d = dayOf(occ);
     const ticket = ui.tint(ui.el('article', 'urd-cal-ticket'), occ);
     const stub = ui.el('div', 'urd-cal-ticket-stub');
-    stub.append(ui.field('strong', 'number', String(d.getDate())), ui.field('span', 'date', monthShort(d)), ui.field('span', 'time', ui.timeText(occ)));
+    stub.append(ui.field('strong', 'number', String(d.getDate()), null, d), ui.field('span', 'date', monthShort(d), null, d), ui.field('span', 'time', ui.timeText(occ), null, occ));
     const body = ui.el('div', 'urd-cal-ticket-body');
     const text = ui.el('div', 'urd-cal-ticket-text');
     text.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-ticket-title'));
@@ -96,9 +96,9 @@ export function carousel(host, occs, props, ics, ui) {
     const card = ui.tint(ui.el('article', 'urd-cal-daycard'), occ);
     if (i === 0) card.classList.add('urd-cal-daycard-first');
     card.append(
-      ui.field('span', 'date', weekday(d), 'urd-cal-daycard-wd'),
-      ui.field('strong', 'number', String(d.getDate()), 'urd-cal-daycard-day'),
-      ui.field('span', 'date', monthLong(d), 'urd-cal-daycard-month'),
+      ui.field('span', 'date', weekday(d), 'urd-cal-daycard-wd', d),
+      ui.field('strong', 'number', String(d.getDate()), 'urd-cal-daycard-day', d),
+      ui.field('span', 'date', monthLong(d), 'urd-cal-daycard-month', d),
     );
     const body = ui.el('div', 'urd-cal-daycard-body');
     body.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-daycard-title'));
@@ -158,7 +158,7 @@ export function photo(host, occs, props, ics, ui) {
       img.src = src;
       band.appendChild(img);
     }
-    band.appendChild(ui.field('span', 'date', `${d.getDate()}. ${monthShort(d)}`, 'urd-cal-photo-date'));
+    band.appendChild(ui.field('span', 'date', `${d.getDate()}. ${monthShort(d)}`, 'urd-cal-photo-date', d));
     const chip = ui.chip(occ);
     if (chip) band.appendChild(chip);
     const body = ui.el('div', 'urd-cal-photo-body');
@@ -181,7 +181,7 @@ export function apGrid(host, occs, props, ics, ui) {
     const card = ui.tint(ui.el('article', 'urd-cal-apcard'), occ);
     const head = ui.el('div', 'urd-cal-apcard-head');
     const when = ui.el('span', 'urd-cal-apcard-when');
-    when.append(ui.field('strong', 'number', two(d.getDate())), document.createTextNode(' '), ui.field('span', 'date', monthShort(d)));
+    when.append(ui.field('strong', 'number', two(d.getDate()), null, d), document.createTextNode(' '), ui.field('span', 'date', monthShort(d), null, d));
     head.appendChild(when);
     const chip = ui.chip(occ);
     if (chip) head.appendChild(chip);
@@ -190,10 +190,10 @@ export function apGrid(host, occs, props, ics, ui) {
     const body = ui.el('div', 'urd-cal-apcard-body');
     body.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-apcard-title'));
     const when2 = ui.el('span', 'urd-cal-apcard-time');
-    when2.appendChild(ui.field('span', 'date', weekdayShort(d)));
+    when2.appendChild(ui.field('span', 'date', weekdayShort(d), null, d));
     if (ui.hasTime(occ)) {
       when2.appendChild(document.createTextNode(' · '));
-      when2.appendChild(ui.field('span', 'time', ui.time(occ)));
+      when2.appendChild(ui.field('span', 'time', ui.time(occ), null, occ));
     }
     body.appendChild(when2);
     if (occ.location) body.appendChild(ui.field('span', 'place', occ.location, 'urd-cal-apcard-place'));
@@ -237,10 +237,10 @@ function miniMonth(ui) {
 function smallTile(occ, ui) {
   const d = dayOf(occ);
   const tile = ui.tint(ui.el('article', 'urd-cal-bento-tile urd-cal-bento-small'), occ);
-  tile.appendChild(ui.field('span', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: monthShort(d) }), 'urd-cal-bento-label'));
+  tile.appendChild(ui.field('span', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: monthShort(d) }), 'urd-cal-bento-label', d));
   const body = ui.el('div');
   body.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-bento-title'));
-  body.appendChild(ui.field('span', 'time', ui.timeText(occ), 'urd-cal-bento-sub'));
+  body.appendChild(ui.field('span', 'time', ui.timeText(occ), 'urd-cal-bento-sub', occ));
   tile.appendChild(body);
   return tile;
 }
@@ -271,7 +271,7 @@ export function bento(host, occs, props, ics, ui) {
   pill.appendChild(ui.tx('nextShort'));
   heroTile.append(pill, ui.el('span', 'urd-cal-bento-count', ui.countdown(hero)));
   const when = ui.el('div', 'urd-cal-bento-when');
-  when.append(ui.field('strong', 'number', String(d.getDate())), ui.field('span', 'date', monthShort(d)));
+  when.append(ui.field('strong', 'number', String(d.getDate()), null, d), ui.field('span', 'date', monthShort(d), null, d));
   heroTile.append(when, ui.field('strong', 'title', hero.title, 'urd-cal-bento-hero-title'));
   const meta = ui.meta(hero, { date: false });
   if (meta) heroTile.appendChild(meta);
@@ -303,7 +303,7 @@ export function bento(host, occs, props, ics, ui) {
     const od = dayOf(occ);
     const row = ui.tint(ui.el('article', 'urd-cal-bento-tile urd-cal-bento-row'), occ);
     const rw = ui.el('span', 'urd-cal-bento-row-when');
-    rw.append(ui.field('strong', 'number', String(od.getDate())), ui.field('span', 'date', monthShort(od)));
+    rw.append(ui.field('strong', 'number', String(od.getDate()), null, od), ui.field('span', 'date', monthShort(od), null, od));
     const body = ui.el('div', 'urd-cal-bento-row-body');
     body.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-bento-title'));
     const rm = ui.meta(occ, { date: false });

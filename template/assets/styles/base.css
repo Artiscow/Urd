@@ -4147,6 +4147,45 @@ textarea.urd-form-input {
   scrollbar-width: thin;
 }
 
+/* ---- Print: the events as a plain list, without the design and its buttons ---- */
+
+.urd-cal-print {
+  display: none;
+}
+
+@media print {
+  .urd-cal {
+    zoom: 1;
+    color: #000;
+    background: none;
+  }
+
+  .urd-cal > :not(.urd-cal-print),
+  .urd-cal-note,
+  .urd-cal-shade,
+  .urd-cal-dialog {
+    display: none !important;
+  }
+
+  .urd-cal-print {
+    display: grid;
+    gap: 4pt;
+    padding: 0;
+    margin: 0;
+    font-size: 11pt;
+    line-height: 1.35;
+    list-style: none;
+  }
+
+  .urd-cal-print li {
+    break-inside: avoid;
+  }
+
+  .urd-cal-print .urd-cal-f-date {
+    font-weight: 700;
+  }
+}
+
 /* ---- The phone: the seven-column designs with their days under each other,
    and the months as dots that open the day ---- */
 

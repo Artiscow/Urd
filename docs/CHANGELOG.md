@@ -27,6 +27,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.19.13 - The calendar's dates as time elements, day grids on the keyboard, and a printed list - 3 October 2026
+
+- Dates and times were plain text. Every date and time that belongs to an event or a day is a `<time datetime>` in all 34 designs: the day for a date, the moment itself for a clock time (`dateTimeAttr` in calendar-format.js, through the field helper's `when`).
+- A month had a tab stop per event and its days could not be reached, and the heat map had one per day with an event. A day grid is one tab stop: the arrow keys move between the days, Home and End to the ends of the row, PageUp and PageDown to the month or week before and after, and Tab goes through the day's own events (`dayGrid` in blocks/calendar.js). It covers the plain month, Overview on cream, Month with side panel, Week strip, the day picker of Day plan, Heat map and the months on the phone.
+- A new week, month or day was not announced. The label that names it is a live region, the category buttons carry `aria-pressed`, and a press on the view switcher or a category puts the focus back on the pressed button after the redraw.
+- A printed page showed the design with its buttons. In print the design is hidden and the events are written as a plain list of date, time, title and place.
+
 ### 0.7.19.12 - The calendar's loading state and the seven-column designs on the phone - 3 October 2026
 
 - A calendar with a feed was empty until the events arrived, and showed the empty state for a moment in the preview. It now stands in a loading state (`aria-busy`, quiet bars, «Loading the calendar» for a screen reader): at the frame's height on the desktop, and on the phone at the height the calendar last had in the session.

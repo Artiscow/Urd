@@ -24,10 +24,10 @@ const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() ==
 function shortWhen(occ, ui, { place = true } = {}) {
   const d = dayOf(occ);
   const line = ui.el('span', 'urd-cal-ap-line');
-  line.appendChild(ui.field('span', 'date', weekdayShort(d)));
+  line.appendChild(ui.field('span', 'date', weekdayShort(d), null, d));
   if (ui.hasTime(occ)) {
     line.appendChild(document.createTextNode(' · '));
-    line.appendChild(ui.field('span', 'time', ui.time(occ)));
+    line.appendChild(ui.field('span', 'time', ui.time(occ), null, occ));
   }
   if (place && occ.location) {
     line.appendChild(document.createTextNode(' · '));
@@ -54,7 +54,7 @@ function laterRail(later, ui) {
   for (const occ of later) {
     const d = dayOf(occ);
     const row = ui.tint(ui.el('div', 'urd-cal-apn-rail-row'), occ);
-    row.append(ui.el('i', 'urd-cal-apn-rail-dot'), ui.field('strong', 'date', `${d.getDate()}. ${monthShort(d)}`), ui.field('span', 'title', occ.title));
+    row.append(ui.el('i', 'urd-cal-apn-rail-dot'), ui.field('strong', 'date', `${d.getDate()}. ${monthShort(d)}`, null, d), ui.field('span', 'title', occ.title));
     const arrow = arrowLink(occ, ui, 'urd-cal-apn-arrow');
     if (arrow) row.appendChild(arrow);
     list.appendChild(row);
@@ -87,7 +87,7 @@ export function apNow(host, occs, props, ics, ui) {
     const d = dayOf(occ);
     const row = ui.tint(ui.el('div', 'urd-cal-apn-next'), occ);
     const badge = ui.el('div', 'urd-cal-apn-badge');
-    badge.append(ui.field('strong', 'number', String(d.getDate())), ui.field('span', 'date', monthShort(d)));
+    badge.append(ui.field('strong', 'number', String(d.getDate()), null, d), ui.field('span', 'date', monthShort(d), null, d));
     const body = ui.el('div', 'urd-cal-apn-body');
     const kicker = ui.el('span', 'urd-cal-apn-kicker');
     kicker.appendChild(ui.tx('next'));
@@ -144,7 +144,7 @@ export function apNavy(host, occs, props, ics, ui) {
     const d = dayOf(occ);
     const tile = ui.tint(ui.el('article', i === 0 ? 'urd-cal-apv-first' : 'urd-cal-apv-tile'), occ);
     const when = ui.el('div', 'urd-cal-apv-when');
-    when.append(ui.field('strong', 'number', String(d.getDate())), ui.field('span', 'date', monthShort(d)));
+    when.append(ui.field('strong', 'number', String(d.getDate()), null, d), ui.field('span', 'date', monthShort(d), null, d));
     const body = ui.el('div', 'urd-cal-apv-body');
     if (i === 0) {
       const top = ui.el('div', 'urd-cal-apv-top');
@@ -180,7 +180,7 @@ export function apNavy(host, occs, props, ics, ui) {
       const d = dayOf(occ);
       const row = ui.tint(ui.el('div', 'urd-cal-apv-row'), occ);
       const words = ui.el('span');
-      words.append(ui.field('strong', 'date', `${d.getDate()}. ${monthShort(d)}`), ui.field('span', 'title', occ.title));
+      words.append(ui.field('strong', 'date', `${d.getDate()}. ${monthShort(d)}`, null, d), ui.field('span', 'title', occ.title));
       row.appendChild(words);
       const arrow = arrowLink(occ, ui, 'urd-cal-apv-arrow');
       if (arrow) row.appendChild(arrow);
@@ -195,10 +195,10 @@ export function apNavy(host, occs, props, ics, ui) {
 function longDate(occ, ui) {
   const d = dayOf(occ);
   const line = ui.el('span');
-  line.appendChild(ui.field('span', 'date', `${d.getDate()}. ${monthLong(d)}`));
+  line.appendChild(ui.field('span', 'date', `${d.getDate()}. ${monthLong(d)}`, null, d));
   if (ui.hasTime(occ)) {
     line.appendChild(document.createTextNode(' '));
-    line.appendChild(ui.field('span', 'time', ui.timeText(occ)));
+    line.appendChild(ui.field('span', 'time', ui.timeText(occ), null, occ));
   }
   return line;
 }
@@ -332,7 +332,7 @@ export function mobileAgenda(host, occs, props, ics, ui) {
     const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
     const cell = ui.el('span', 'urd-cal-magenda-day');
     if (sameDay(d, today)) cell.classList.add('urd-cal-magenda-today');
-    cell.append(ui.field('span', 'date', weekdayShort(d)), ui.field('strong', 'number', String(d.getDate())));
+    cell.append(ui.field('span', 'date', weekdayShort(d), null, d), ui.field('strong', 'number', String(d.getDate()), null, d));
     const hit = ui.all.find((occ) => sameDay(dayOf(occ), d));
     if (hit) cell.appendChild(ui.tint(ui.el('i', 'urd-cal-magenda-dot'), hit));
     strip.appendChild(cell);
@@ -348,12 +348,12 @@ export function mobileAgenda(host, occs, props, ics, ui) {
         label.appendChild(ui.tx('todayBtn'));
         label.appendChild(document.createTextNode(', '));
       }
-      label.appendChild(ui.field('span', 'date', `${weekday(d)} ${d.getDate()}.`));
+      label.appendChild(ui.field('span', 'date', `${weekday(d)} ${d.getDate()}.`, null, d));
       list.appendChild(label);
       last = d;
     }
     const row = ui.tint(ui.el('article', 'urd-cal-magenda-card'), occ);
-    row.appendChild(ui.field('span', 'time', ui.time(occ), 'urd-cal-magenda-time'));
+    row.appendChild(ui.field('span', 'time', ui.time(occ), 'urd-cal-magenda-time', occ));
     const body = ui.el('span', 'urd-cal-magenda-body');
     body.appendChild(ui.field('strong', 'title', occ.title));
     if (occ.location) body.appendChild(ui.field('span', 'place', occ.location, 'urd-cal-magenda-place'));

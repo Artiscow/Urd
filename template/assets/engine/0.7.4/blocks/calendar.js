@@ -141,7 +141,7 @@ function tintNode(node, occ) {
 function badgeNode(occ, ui) {
   const start = new Date(occ.start);
   const badge = tintNode(el2('div', 'urd-collection-badge'), occ);
-  badge.append(ui.field('strong', 'number', String(start.getDate())), ui.field('span', 'date', dates().monthsShort[start.getMonth()]));
+  badge.append(ui.field('strong', 'number', String(start.getDate()), null, start), ui.field('span', 'date', dates().monthsShort[start.getMonth()], null, start));
   return badge;
 }
 
@@ -196,13 +196,22 @@ function makeUi(cd, cf, ics, el, host, props, ctx, sources, zone) {
   const clock12 = cf.calClock12(props);
   const weekStart = cf.calWeekStart(props, lang);
   const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
+  // The keys of a day grid belong to the visitor: with the editing handles on in the preview they are left alone.
+  const keysOn = () => !ctx.preview || document.body.classList.contains('urd-chrome-off');
   const post = (msg) => window.parent?.postMessage(msg, location.origin);
-  const field = (tag, key, text, className) => {
+  const field = (tag, key, text, className, when) => {
     const node = el2(tag, className ? `${className} urd-cal-f-${key}` : `urd-cal-f-${key}`);
     // A description keeps its addresses as links, and a place leads to the map (or to itself, when it is an address).
     if (key === 'description' && text) linkedText(node, text);
     else if (key === 'place' && text) node.appendChild(placeLink(text));
     else if (text != null) node.textContent = text;
+    // A date or a time with the day or the event behind it (`when`) is written as a `<time>` a machine can read.
+    const stamp = when != null && text ? cf.dateTimeAttr(when, key === 'time') : null;
+    if (stamp) {
+      const time = el2('time', null, text);
+      time.dateTime = stamp;
+      node.replaceChildren(time);
+    }
     Object.assign(node.style, cd.calFieldCss(props.fieldStyle?.[key]));
     return node;
   };
@@ -239,9 +248,9 @@ function makeUi(cd, cf, ics, el, host, props, ctx, sources, zone) {
         wd: d.weekdaysShort[(start.getDay() + 6) % 7],
         d: start.getDate(),
         m: d.monthsShort[start.getMonth()],
-      })));
+      }), null, start));
     }
-    if (hasTime(occ)) parts.push(field('span', 'time', timeText(occ)));
+    if (hasTime(occ)) parts.push(field('span', 'time', timeText(occ), null, occ));
     if (place && occ.location) parts.push(field('span', 'place', occ.location));
     if (!parts.length) return null;
     const line = el2('div', 'urd-cal-meta');
@@ -356,6 +365,21 @@ function makeUi(cd, cf, ics, el, host, props, ctx, sources, zone) {
     today: () => new Date(zone ? cf.shiftToZone(Date.now(), zone) : Date.now()),
     /** True on the phone, where a design with seven columns draws its phone layout. */
     phone: ctx.viewport === 'mobile',
+    /** A label that names the week, month or day shown: a change of it is read out by a screen reader. */
+    live: (node) => {
+      node.setAttribute('aria-live', 'polite');
+      node.setAttribute('aria-atomic', 'true');
+      return node;
+    },
+    /** A day cell's name for a screen reader: the date and the number of events on it. */
+    dayLabel: (node, date, count) => {
+      const names = dates();
+      if (node.tagName !== 'BUTTON') node.setAttribute('role', 'group');
+      node.setAttribute('aria-label', `${names.weekdays[(date.getDay() + 6) % 7]} ${t('calendar.dayMonth', { d: date.getDate(), m: names.months[date.getMonth()] })}, ${tp('calendar.count', count)}`);
+      return node;
+    },
+    dayGrid: (grid, selector, opts) => dayGrid(grid, selector, opts, keysOn),
+    keepFocus: (grid) => { const state = GRIDS.get(grid); if (state) Object.assign(state, { want: 'current', focus: true }); },
     phoneDays: (grid, panel, year, month, occs, cellClass) => phoneDays(ui, grid, panel, year, month, occs, cellClass) };
   return ui;
 }
@@ -531,7 +555,7 @@ function showEventDialog(occ, from, ics, ui, props) {
   close.addEventListener('click', () => dialog.close());
   const start = new Date(occ.start);
   const d = dates();
-  const when = ui.field('span', 'date', `${d.weekdays[(start.getDay() + 6) % 7]} ${t('calendar.dayMonth', { d: start.getDate(), m: d.months[start.getMonth()] })}`, 'urd-cal-dialog-date');
+  const when = ui.field('span', 'date', `${d.weekdays[(start.getDay() + 6) % 7]} ${t('calendar.dayMonth', { d: start.getDate(), m: d.months[start.getMonth()] })}`, 'urd-cal-dialog-date', start);
   const title = ui.field('h3', 'title', occ.title, 'urd-cal-dialog-title');
   if (occ.cancelled) title.classList.add('urd-cal-cancelled');
   dialog.append(close, when, title);
@@ -790,7 +814,7 @@ function renderAgenda(host, occs, props, ics, ui) {
       const start = new Date(occ.start);
       const item = ui.tint(el2('li', 'urd-cal-agenda-row'), occ);
       const day = el2('span', 'urd-cal-agenda-day');
-      day.append(ui.field('strong', 'number', String(start.getDate())), ui.field('span', 'date', dates().weekdaysShort[(start.getDay() + 6) % 7]));
+      day.append(ui.field('strong', 'number', String(start.getDate()), null, start), ui.field('span', 'date', dates().weekdaysShort[(start.getDay() + 6) % 7], null, start));
       const body = el2('span', 'urd-cal-agenda-body');
       const titleRow = el2('span', 'urd-cal-titlerow');
       titleRow.appendChild(ui.field('strong', 'title', occ.title));
@@ -855,7 +879,7 @@ function renderMonth(host, occs, props, ics, ui) {
   const prev = el2('button', 'urd-cal-nav', '‹');
   prev.type = 'button';
   prev.setAttribute('aria-label', t('calendar.prevMonth'));
-  const label = el2('strong', null, '');
+  const label = ui.live(el2('strong', null, ''));
   const next = el2('button', 'urd-cal-nav', '›');
   next.type = 'button';
   next.setAttribute('aria-label', t('calendar.nextMonth'));
@@ -866,6 +890,10 @@ function renderMonth(host, occs, props, ics, ui) {
   const panel = ui.phone ? el2('div', 'urd-cal-daylist') : null;
   if (panel) wrap.appendChild(panel);
 
+  const move = (dir) => {
+    shown = shown.mo + dir < 0 ? { y: shown.y - 1, mo: 11 } : shown.mo + dir > 11 ? { y: shown.y + 1, mo: 0 } : { ...shown, mo: shown.mo + dir };
+    paint();
+  };
   const paint = () => {
     label.textContent = `${dates().months[shown.mo]} ${shown.y}`;
     grid.replaceChildren();
@@ -877,6 +905,7 @@ function renderMonth(host, occs, props, ics, ui) {
     for (let i = 0; i < lead; i++) grid.appendChild(el2('div', 'urd-cal-day urd-cal-day-empty'));
     if (panel) {
       ui.phoneDays(grid, panel, shown.y, shown.mo, occs, 'urd-cal-day');
+      ui.dayGrid(grid, '.urd-cal-pday', { page: move, current: '[aria-pressed="true"]' });
       return;
     }
     for (let d = 1; d <= dim; d++) {
@@ -895,11 +924,13 @@ function renderMonth(host, occs, props, ics, ui) {
         cell.appendChild(pill);
       }
       if (todays.length > 3) cell.appendChild(el2('div', 'urd-cal-more', t('calendar.more', { n: todays.length - 3 })));
+      ui.dayLabel(cell, new Date(shown.y, shown.mo, d), todays.length);
       grid.appendChild(cell);
     }
+    ui.dayGrid(grid, '.urd-cal-day:not(.urd-cal-day-empty)', { page: move, current: '.urd-cal-today' });
   };
-  prev.addEventListener('click', () => { shown = shown.mo ? { ...shown, mo: shown.mo - 1 } : { y: shown.y - 1, mo: 11 }; paint(); });
-  next.addEventListener('click', () => { shown = shown.mo < 11 ? { ...shown, mo: shown.mo + 1 } : { y: shown.y + 1, mo: 0 }; paint(); });
+  prev.addEventListener('click', () => move(-1));
+  next.addEventListener('click', () => move(1));
   paint();
   host.appendChild(wrap);
 }
@@ -932,6 +963,8 @@ function categoryRow(occs, active, onpick, ui) {
   const all = el2('button', 'urd-cal-chipbtn');
   all.type = 'button';
   all.appendChild(ui.tx('all'));
+  all.dataset.calKey = 'category';
+  all.setAttribute('aria-pressed', active ? 'false' : 'true');
   if (!active) all.classList.add('selected');
   all.addEventListener('click', () => onpick(null));
   row.appendChild(all);
@@ -941,6 +974,8 @@ function categoryRow(occs, active, onpick, ui) {
     btn.appendChild(ui.field('span', 'category', category));
     const colour = colourOf(category);
     if (colour) btn.style.setProperty('--urd-cal-color', resolveColor(colour));
+    btn.dataset.calKey = `category-${category}`;
+    btn.setAttribute('aria-pressed', active === category ? 'true' : 'false');
     if (active === category) btn.classList.add('selected');
     btn.addEventListener('click', () => onpick(category));
     row.appendChild(btn);
@@ -976,11 +1011,109 @@ function switchRow(mode, onpick, ui) {
     const btn = el2('button', 'urd-cal-switch-btn');
     btn.type = 'button';
     btn.setAttribute('aria-pressed', mode === id ? 'true' : 'false');
+    btn.dataset.calKey = `view-${id}`;
     btn.appendChild(ui.tx(key));
     btn.addEventListener('click', () => onpick(id));
     row.appendChild(btn);
   }
   return row;
+}
+
+/* ---------- A day grid on the keyboard ---------- */
+
+const GRIDS = new WeakMap();
+
+/** One day holds the grid's tab stop, and the events inside it with it. */
+function setStop(days, target) {
+  for (const day of days) {
+    const on = day === target;
+    day.tabIndex = on ? 0 : -1;
+    for (const event of day.querySelectorAll('.urd-cal-event')) event.tabIndex = on ? 0 : -1;
+  }
+}
+
+/**
+ * A day grid as one tab stop, called after every paint of the grid. The
+ * arrow keys move between the days (up and down to the day above and below
+ * on the screen), Home and End to the ends of the row, and PageUp and
+ * PageDown to the span before and after (`page`, the design's own move
+ * through its weeks or months); an arrow past the first or the last day
+ * pages too. Tab from a day goes through that day's events and out of the
+ * grid. The tab stop starts on the day `current` matches, else the first.
+ */
+function dayGrid(grid, selector, { page = null, current = null } = {}, keysOn = () => true) {
+  let state = GRIDS.get(grid);
+  if (!state) {
+    state = { want: null, focus: false };
+    GRIDS.set(grid, state);
+    const daysOf = () => [...grid.querySelectorAll(state.selector)];
+    grid.addEventListener('focusin', (event) => {
+      const day = event.target.closest?.(state.selector);
+      if (day && grid.contains(day)) setStop(daysOf(), day);
+    });
+    grid.addEventListener('keydown', (event) => {
+      if (!keysOn() || !event.target.matches?.(state.selector)) return;
+      const days = daysOf();
+      const i = days.indexOf(event.target);
+      const box = event.target.getBoundingClientRect();
+      const boxes = days.map((day) => day.getBoundingClientRect());
+      const sameRow = days.filter((_, n) => Math.abs(boxes[n].top - box.top) < 2);
+      // The day straight above or below: the nearest row in that direction, and in it the day nearest sideways.
+      const vertical = (dir) => {
+        const rows = boxes.map((b, n) => ({ b, n })).filter(({ b }) => (dir < 0 ? b.top < box.top - 2 : b.top > box.top + 2));
+        if (!rows.length) return null;
+        const near = rows.reduce((best, row) => (Math.abs(row.b.top - box.top) < Math.abs(best.b.top - box.top) ? row : best));
+        const inRow = rows.filter((row) => Math.abs(row.b.top - near.b.top) < 2);
+        return days[inRow.reduce((best, row) => (Math.abs(row.b.left - box.left) < Math.abs(best.b.left - box.left) ? row : best)).n];
+      };
+      const turn = (dir, want) => {
+        if (!state.page) return;
+        Object.assign(state, { want, focus: true });
+        state.page(dir);
+      };
+      let to = null;
+      if (event.key === 'ArrowLeft') to = days[i - 1] ?? (() => turn(-1, 'last'));
+      else if (event.key === 'ArrowRight') to = days[i + 1] ?? (() => turn(1, 0));
+      else if (event.key === 'ArrowUp') to = vertical(-1) ?? (() => turn(-1, 'last'));
+      else if (event.key === 'ArrowDown') to = vertical(1) ?? (() => turn(1, 0));
+      else if (event.key === 'Home') to = sameRow[0];
+      else if (event.key === 'End') to = sameRow[sameRow.length - 1];
+      else if (event.key === 'PageUp') to = () => turn(-1, i);
+      else if (event.key === 'PageDown') to = () => turn(1, i);
+      else return;
+      event.preventDefault();
+      if (typeof to === 'function') to();
+      else to.focus();
+    });
+  }
+  Object.assign(state, { selector, page });
+  const days = [...grid.querySelectorAll(selector)];
+  if (!days.length) return;
+  let at = state.want === 'last' ? days.length - 1 : Number.isInteger(state.want) ? Math.min(state.want, days.length - 1) : current ? days.findIndex((day) => day.matches(current)) : 0;
+  if (at < 0) at = 0;
+  setStop(days, days[at]);
+  if (state.focus) days[at].focus();
+  Object.assign(state, { want: null, focus: false });
+}
+
+/* ---------- The printed list ---------- */
+
+const PRINT_MAX = 40;
+
+/** The events as a plain list, drawn for the printed page only (base.css shows it in print and hides the design). */
+function printList(occs, ui) {
+  const list = el2('ul', 'urd-cal-print');
+  const names = dates();
+  for (const occ of occs.slice(0, PRINT_MAX)) {
+    const start = new Date(occ.start);
+    const item = el2('li');
+    item.appendChild(ui.field('span', 'date', `${names.weekdays[(start.getDay() + 6) % 7]} ${t('calendar.dayMonth', { d: start.getDate(), m: names.months[start.getMonth()] })}`, null, start));
+    if (ui.hasTime(occ)) item.append(' ', ui.field('span', 'time', ui.timeText(occ), null, occ));
+    item.append(' ', el2('strong', null, occ.title));
+    if (occ.location) item.append(' · ', el2('span', null, occ.location));
+    list.appendChild(item);
+  }
+  return list;
 }
 
 /* ---------- The month on the phone ---------- */
@@ -1009,14 +1142,14 @@ function phoneDays(ui, grid, panel, year, month, occs, cellClass) {
     const list = el2('div', 'urd-cal-daylist-rows');
     for (const occ of eventsOf(d)) {
       const row = ui.tint(el2('div', 'urd-cal-daylist-row'), occ);
-      if (ui.hasTime(occ)) row.appendChild(ui.field('span', 'time', ui.time(occ), 'urd-cal-daylist-time'));
+      if (ui.hasTime(occ)) row.appendChild(ui.field('span', 'time', ui.time(occ), 'urd-cal-daylist-time', occ));
       row.appendChild(ui.field('strong', 'title', occ.title));
       if (occ.location) row.appendChild(ui.field('span', 'place', occ.location, 'urd-cal-daylist-place'));
       list.appendChild(row);
     }
     if (!list.children.length) list.appendChild(el2('p', 'urd-cal-daylist-none', t('calendar.dayNone')));
     panel.replaceChildren(
-      ui.field('strong', 'date', `${names.weekdays[(date.getDay() + 6) % 7]} ${t('calendar.dayMonth', { d, m: names.months[month] })}`, 'urd-cal-daylist-head'),
+      ui.field('strong', 'date', `${names.weekdays[(date.getDay() + 6) % 7]} ${t('calendar.dayMonth', { d, m: names.months[month] })}`, 'urd-cal-daylist-head', date),
       list,
     );
   };
@@ -1121,6 +1254,8 @@ function drawCalendar(ics, cd, cf, mod, weekMod, el, host, props, ctx) {
 
   const draw = (occurrences, note) => {
     host.removeAttribute('aria-busy');
+    // A press on the view switcher or a category redraws the calendar: the focus goes back to the button that was pressed.
+    const focused = host.contains(document.activeElement) ? document.activeElement.dataset.calKey : null;
     host.replaceChildren();
     if (ctx.preview && ctx.viewport !== 'mobile') {
       // Help chip (ADR-0008): the sources, the conventions and the subscribe buttons need explaining.
@@ -1199,6 +1334,10 @@ function drawCalendar(ics, cd, cf, mod, weekMod, el, host, props, ctx) {
     if (zone && cf.zoneDiffers(zone, nowMs)) zoneText = t('calendar.zoneOf', { zone: cf.zoneName(zone, nowMs, ctx.site?.site?.lang) });
     else if (!zone && cf.zoneValid(feedZone) && cf.zoneDiffers(feedZone, nowMs)) zoneText = t('calendar.zoneYours', { zone: cf.zoneName(null, nowMs, ctx.site?.site?.lang) });
     if (zoneText && limited.length) host.appendChild(el2('p', 'urd-cal-zone', zoneText));
+    // The printed page gets the events as a plain list: the ones the design counts out, else what is coming.
+    const listed = own && !['month', 'next', 'week', 'day', 'year'].includes(view) ? limited : filtered.filter((occ) => (occ.end ?? occ.start) >= soon);
+    if (listed.length) host.appendChild(printList(listed, ui));
+    if (focused) [...host.querySelectorAll('[data-cal-key]')].find((node) => node.dataset.calKey === focused)?.focus({ preventScroll: true });
     // The note is editing chrome on the block, not content: it hangs below
     // the block (base.css) and the push pass skips it, so it never makes the
     // block taller in the preview than on the published page.
