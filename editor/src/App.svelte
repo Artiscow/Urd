@@ -1111,7 +1111,7 @@
     const p = selectedBlock.props;
     const def = calDesign(p.design);
     const reset = (name, patch) => () => setBlockProps(name, patch);
-    const viewChanged = p.switcher === true || p.showMore === false || (p.limit ?? 6) !== 6 || p.nextCount != null || p.laterCount != null || p.showCancelled === false || p.clock != null || p.weekStart != null;
+    const viewChanged = p.switcher === true || p.showMore === false || (p.limit ?? 6) !== 6 || p.nextCount != null || p.laterCount != null || p.showCancelled === false || p.structuredData === false || p.clock != null || p.weekStart != null;
     const on = [!def.ownFilter && p.showCategories !== false, p.showSubscribe !== false, p.showSignup === true].filter(Boolean).length;
     const buttonsChanged = on > 0 || p.showOpen === false || Boolean(p.programHref);
     const emptyChanged = Boolean(p.emptyText) || (p.emptyIcon != null && p.emptyIcon !== 'calendar');
@@ -1121,7 +1121,7 @@
     return {
       sources: String((p.sources ?? []).length),
       view: ta(CAL_VIEW_KEYS[calView(p)]),
-      viewReset: viewChanged ? reset('cal-view', { switcher: undefined, showMore: undefined, limit: 6, nextCount: undefined, laterCount: undefined, showCancelled: undefined, clock: undefined, weekStart: undefined }) : null,
+      viewReset: viewChanged ? reset('cal-view', { switcher: undefined, showMore: undefined, limit: 6, nextCount: undefined, laterCount: undefined, showCancelled: undefined, structuredData: undefined, clock: undefined, weekStart: undefined }) : null,
       buttons: on ? ta('menu.onCount', { n: on }) : ta('common.off'),
       buttonsReset: buttonsChanged ? reset('cal-buttons', { showCategories: false, showSubscribe: false, showSignup: false, showOpen: undefined, programHref: undefined }) : null,
       empty: p.emptyText || ta('menu.standard'),
@@ -9628,6 +9628,11 @@
         <input type="checkbox" checked={selectedBlock.props.showCancelled !== false}
           onchange={(e) => setBlockProp('showCancelled', e.target.checked ? undefined : false)} />
         {ta('calendar.showCancelled')}
+      </label>
+      <label class="gridmenu-snap" title={ta('tip.calendar.structuredData')}>
+        <input type="checkbox" checked={selectedBlock.props.structuredData !== false}
+          onchange={(e) => setBlockProp('structuredData', e.target.checked ? undefined : false)} />
+        {ta('calendar.structuredData')}
       </label>
       <Choice label={ta('calendar.clock')} title={ta('tip.calendar.clock')} value={selectedBlock.props.clock === '12' ? '12' : '24'}
         options={[['24', ta('calendar.clock.24')], ['12', ta('calendar.clock.12')]]}

@@ -1096,6 +1096,29 @@ function dayGrid(grid, selector, { page = null, current = null } = {}, keysOn = 
   Object.assign(state, { want: null, focus: false });
 }
 
+/* ---------- Structured data ---------- */
+
+/**
+ * The events a published calendar shows, written into <head> as JSON-LD
+ * (schema.org `Event`), one script per block. It carries the mark seo.js
+ * clears at every page render, so a page left takes its events with it.
+ */
+function writeEventData(el, occs, ics, ctx) {
+  const id = el.dataset.blockId ?? '';
+  for (const old of document.head.querySelectorAll('script[data-urd-cal]')) {
+    if (old.dataset.urdCal === id) old.remove();
+  }
+  const site = { pageUrl: location.origin + location.pathname, organizer: ctx.site?.site?.title ?? '' };
+  const events = occs.slice(0, PRINT_MAX).map((occ) => ics.eventJsonLd(occ, site)).filter(Boolean);
+  if (!events.length) return;
+  const script = document.createElement('script');
+  script.type = 'application/ld+json';
+  script.dataset.urdSeo = '1';
+  script.dataset.urdCal = id;
+  script.textContent = JSON.stringify(events);
+  document.head.appendChild(script);
+}
+
 /* ---------- The printed list ---------- */
 
 const PRINT_MAX = 40;
@@ -1337,6 +1360,8 @@ function drawCalendar(ics, cd, cf, mod, weekMod, el, host, props, ctx) {
     // The printed page gets the events as a plain list: the ones the design counts out, else what is coming.
     const listed = own && !['month', 'next', 'week', 'day', 'year'].includes(view) ? limited : filtered.filter((occ) => (occ.end ?? occ.start) >= soon);
     if (listed.length) host.appendChild(printList(listed, ui));
+    // Search engines get the same events as structured data, on the published page and from a real feed only.
+    if (!ctx.preview && sources.length) writeEventData(el, props.structuredData === false ? [] : listed, ics, ctx);
     if (focused) [...host.querySelectorAll('[data-cal-key]')].find((node) => node.dataset.calKey === focused)?.focus({ preventScroll: true });
     // The note is editing chrome on the block, not content: it hangs below
     // the block (base.css) and the push pass skips it, so it never makes the

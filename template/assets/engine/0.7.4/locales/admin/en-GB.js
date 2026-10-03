@@ -720,6 +720,8 @@ export default {
     'tip.calendar.weekStart': 'Auto follows the language of the site',
     'calendar.showCancelled': 'Show cancelled events',
     'tip.calendar.showCancelled': 'Cancelled events show with a struck title and «Cancelled» where the time stands. Off hides them',
+    'calendar.structuredData': 'Tell search engines about the events',
+    'tip.calendar.structuredData': 'The events the calendar shows are also written as structured data (schema.org Event) on the published page, so search engines can show them with their date and place. Off writes nothing',
     'settings.timeZone': 'Time zone',
     'tip.settings.timeZone': 'A time zone such as Europe/Oslo. Every visitor then sees the calendar times on this clock. An empty field shows the times in the time zone of each visitor',
     'settings.timeZoneBad': 'Unknown time zone',

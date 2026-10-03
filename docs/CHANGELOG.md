@@ -27,6 +27,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.19.14 - The calendar's events as structured data - 3 October 2026
+
+- Search engines got no machine-readable events from a calendar. On the published page a calendar with a feed writes the events it shows into `<head>` as schema.org `Event` JSON-LD, one script per block: name, start and end, status, attendance mode, the place or the meeting link, description, picture, address and organiser (`eventJsonLd` in ics.js). Never in the preview and never from the sample data.
+- «Tell search engines about the events» on the block switches it off (`structuredData`, SCHEMA.md).
+- The stage's criterion rests on the Schema Markup Validator, with Google's Rich Results Test as a second check.
+
 ### 0.7.19.13 - The calendar's dates as time elements, day grids on the keyboard, and a printed list - 3 October 2026
 
 - Dates and times were plain text. Every date and time that belongs to an event or a day is a `<time datetime>` in all 34 designs: the day for a date, the moment itself for a clock time (`dateTimeAttr` in calendar-format.js, through the field helper's `when`).

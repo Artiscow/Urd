@@ -723,6 +723,8 @@ export default {
     'tip.calendar.weekStart': 'Auto følger nettstedets språk',
     'calendar.showCancelled': 'Vis avlyste arrangementer',
     'tip.calendar.showCancelled': 'Avlyste arrangementer vises med strøket tittel og «Avlyst» der tiden står. Av skjuler dem',
+    'calendar.structuredData': 'Fortell søkemotorer om arrangementene',
+    'tip.calendar.structuredData': 'Arrangementene kalenderen viser skrives også som strukturerte data (schema.org Event) på den publiserte siden, så søkemotorer kan vise dem med dato og sted. Av skriver ingenting',
     'settings.timeZone': 'Tidssone',
     'tip.settings.timeZone': 'En tidssone som Europe/Oslo. Da ser alle besøkende kalendertidene på denne klokka. Tomt felt viser tidene i hver besøkendes egen tidssone',
     'settings.timeZoneBad': 'Ukjent tidssone',

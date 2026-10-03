@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
 const {
-  parseIcs, expandEvents, partsToMs, findMeetingLink, eventIcs, googleEventUrl,
+  parseIcs, expandEvents, partsToMs, findMeetingLink, eventIcs, googleEventUrl, eventJsonLd,
   splitCategory, findSignupLink, findImageLink, normalizeSourceUrl, subscribeLinks, startOfWeek, isoWeek, windowStart,
   nextCount, laterCount, NEXT_COUNT, LATER_COUNT, dedupeOccurrences, groupByMonth, sourceEntry,
 } = await engineImport('ics.js');
@@ -291,4 +291,44 @@ test('eventIcs and googleEventUrl: one occurrence as a file and as a Google link
   assert.equal(url.host, 'calendar.google.com');
   assert.equal(url.searchParams.get('dates'), '20261004T160000Z/20261004T190000Z');
   assert.equal(url.searchParams.get('text'), 'Kick-off, høst; 2026');
+});
+
+test('eventJsonLd: an occurrence as a schema.org Event', () => {
+  const start = new Date(2026, 9, 5, 18, 0).getTime();
+  const timed = { start, end: start + 2 * 3600000, hasEnd: true, allDay: false, title: 'Training', location: 'The hall, Storgata 1', description: 'Bring shoes' };
+  const data = eventJsonLd(timed, { pageUrl: 'https://example.org/program', organizer: 'The club' });
+  assert.equal(data['@type'], 'Event');
+  assert.equal(data.name, 'Training');
+  assert.equal(data.startDate, new Date(start).toISOString());
+  assert.equal(data.endDate, new Date(start + 2 * 3600000).toISOString());
+  assert.equal(data.eventStatus, 'https://schema.org/EventScheduled');
+  assert.equal(data.eventAttendanceMode, 'https://schema.org/OfflineEventAttendanceMode');
+  assert.deepEqual(data.location, { '@type': 'Place', name: 'The hall, Storgata 1', address: 'The hall, Storgata 1' });
+  assert.equal(data.url, 'https://example.org/program');
+  assert.deepEqual(data.organizer, { '@type': 'Organization', name: 'The club', url: 'https://example.org/' });
+
+  // Without an end from the feed there is no endDate, and the true moment is used when the start is shown on another clock.
+  const moved = eventJsonLd({ ...timed, hasEnd: false, real: start - 3600000 });
+  assert.equal(moved.endDate, undefined);
+  assert.equal(moved.startDate, new Date(start - 3600000).toISOString());
+
+  // An all-day event gives days, and its last day is the one before the feed's end.
+  const day = eventJsonLd({ start: new Date(2026, 9, 17).getTime(), end: new Date(2026, 9, 19).getTime(), allDay: true, title: 'Trip' });
+  assert.equal(day.startDate, '2026-10-17');
+  assert.equal(day.endDate, '2026-10-18');
+  assert.equal(day.location, undefined);
+
+  // A meeting link makes the event online, with a place beside it mixed; a cancelled event says so.
+  const online = eventJsonLd({ ...timed, location: '', description: 'Join at https://meet.jit.si/club', cancelled: true });
+  assert.equal(online.eventAttendanceMode, 'https://schema.org/OnlineEventAttendanceMode');
+  assert.deepEqual(online.location, { '@type': 'VirtualLocation', url: 'https://meet.jit.si/club' });
+  assert.equal(online.eventStatus, 'https://schema.org/EventCancelled');
+  const mixed = eventJsonLd({ ...timed, description: 'Or https://meet.jit.si/club' });
+  assert.equal(mixed.eventAttendanceMode, 'https://schema.org/MixedEventAttendanceMode');
+  assert.equal(mixed.location.length, 2);
+
+  // The event's own page wins over the page it is shown on; no name or no start gives nothing.
+  assert.equal(eventJsonLd({ ...timed, url: 'https://example.org/e/1' }, { pageUrl: 'https://example.org/program' }).url, 'https://example.org/e/1');
+  assert.equal(eventJsonLd({ start }), null);
+  assert.equal(eventJsonLd({ title: 'X' }), null);
 });

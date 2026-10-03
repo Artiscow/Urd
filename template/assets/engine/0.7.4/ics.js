@@ -474,6 +474,51 @@ export function googleEventUrl(occ) {
   return `https://calendar.google.com/calendar/render?${params}`;
 }
 
+const isoDate = (ms) => {
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
+/**
+ * One occurrence as a schema.org `Event` for the page's JSON-LD: the name,
+ * the start and the end (the day alone for an all-day event, whose last day
+ * is the one before the feed's end), the place with its address or the
+ * meeting link, and whether it is cancelled and held online. `real` is the
+ * true moment of an occurrence whose start is shown on another zone's clock.
+ * @param {object} occ An occurrence from expandEvents, with its title
+ * @param {{pageUrl?: string, organizer?: string}} [site] The page the event is shown on and the site's name
+ * @returns {object|null} null without a name or a start
+ */
+export function eventJsonLd(occ, { pageUrl = '', organizer = '' } = {}) {
+  const name = String(occ?.title ?? occ?.summary ?? '').trim();
+  if (!name || !Number.isFinite(occ?.start)) return null;
+  const shift = occ.start - (occ.real ?? occ.start);
+  const data = { '@context': 'https://schema.org', '@type': 'Event', name };
+  if (occ.allDay) {
+    data.startDate = isoDate(occ.start);
+    if (occ.end > occ.start) data.endDate = isoDate(Math.max(occ.start, occ.end - 1));
+  } else {
+    data.startDate = new Date(occ.start - shift).toISOString();
+    if (occ.hasEnd && occ.end > occ.start) data.endDate = new Date(occ.end - shift).toISOString();
+  }
+  data.eventStatus = `https://schema.org/${occ.cancelled ? 'EventCancelled' : 'EventScheduled'}`;
+  const meeting = findMeetingLink(occ.url, occ.location, occ.description);
+  // A place that is only an address on the web is no place to go to.
+  const place = String(occ.location ?? '').trim();
+  const physical = place && !/^https?:\/\//i.test(place) ? { '@type': 'Place', name: place, address: place } : null;
+  const online = meeting ? { '@type': 'VirtualLocation', url: meeting } : null;
+  data.eventAttendanceMode = `https://schema.org/${physical && online ? 'MixedEventAttendanceMode' : online ? 'OnlineEventAttendanceMode' : 'OfflineEventAttendanceMode'}`;
+  if (physical && online) data.location = [physical, online];
+  else if (physical || online) data.location = physical ?? online;
+  const text = String(occ.description ?? '').trim();
+  if (text) data.description = text.length > 500 ? `${text.slice(0, 499)}…` : text;
+  if (typeof occ.image === 'string' && /^https?:\/\//i.test(occ.image)) data.image = occ.image;
+  const own = typeof occ.url === 'string' && /^https?:\/\//i.test(occ.url) ? occ.url : pageUrl;
+  if (own) data.url = own;
+  if (organizer) data.organizer = { '@type': 'Organization', name: organizer, ...(pageUrl ? { url: new URL('/', pageUrl).href } : {}) };
+  return data;
+}
+
 /** The first picture address in the description (a link ending in an image file), or null. */
 export function findImageLink(description) {
   const m = /https?:\/\/[^\s<>"')\]]+\.(?:jpe?g|png|webp|gif|avif)(?:\?[^\s<>"')\]]*)?/i.exec(String(description ?? ''));

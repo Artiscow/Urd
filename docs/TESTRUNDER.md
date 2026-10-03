@@ -2,6 +2,16 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Test batch (0.7.19.14): the calendar's events as structured data
+
+- [ ] A published page with a calendar that has a real feed: the page source's `<head>` (the live DOM, in the browser's inspector) holds a `script type="application/ld+json"` with the calendar's events beside the site's `Organization`
+- [ ] That script pasted into the Schema Markup Validator (validator.schema.org): the events are read without errors, each with a name, a start and a place
+- [ ] An event with an end has `endDate`; an all-day event has days without a clock; a cancelled event has `EventCancelled`; an event with a meeting link has a `VirtualLocation`, and with a place beside it `MixedEventAttendanceMode`
+- [ ] «Tell search engines about the events» off in the element menu, published: the events script is gone and the `Organization` script stands
+- [ ] Moving to another page of the site removes the events script of the page that was left
+- [ ] The preview and a calendar with sample data write no events script
+- [ ] Second check: Google's Rich Results Test on the published page's address finds the events; warnings for price, ticket link and performer are expected
+
 ### Test batch (0.7.19.13): the calendar's dates as time elements, day grids on the keyboard, and a printed list
 
 - [ ] Published page, «Month»: Tab reaches the grid once (today, else the first day); the arrow keys move between the days, Home and End go to the ends of the week, PageUp and PageDown change the month and keep the day, and an arrow past the first or last day changes the month; Tab from a day goes through that day's events and then out of the grid; Enter on an event opens its card

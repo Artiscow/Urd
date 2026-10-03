@@ -720,6 +720,8 @@ export default {
     'tip.calendar.weekStart': 'Otomatik, sitenin dilini izler',
     'calendar.showCancelled': 'İptal edilen etkinlikleri göster',
     'tip.calendar.showCancelled': 'İptal edilen etkinlikler üstü çizili başlıkla ve saatin yerinde «İptal edildi» yazısıyla gösterilir. Kapalıyken gizlenir',
+    'calendar.structuredData': 'Etkinlikleri arama motorlarına bildir',
+    'tip.calendar.structuredData': 'Takvimin gösterdiği etkinlikler yayımlanan sayfaya yapılandırılmış veri (schema.org Event) olarak da yazılır; böylece arama motorları bunları tarih ve yerle gösterebilir. Kapalıyken hiçbir şey yazılmaz',
     'settings.timeZone': 'Saat dilimi',
     'tip.settings.timeZone': 'Europe/Oslo gibi bir saat dilimi. Tüm ziyaretçiler takvim saatlerini bu saate göre görür. Boş alan, saatleri her ziyaretçinin kendi saat diliminde gösterir',
     'settings.timeZoneBad': 'Bilinmeyen saat dilimi',
