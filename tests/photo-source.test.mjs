@@ -399,7 +399,7 @@ test('the routes: a redirect is checked before it is followed, and the token sta
   // To another allowed host: followed, without the share's credentials.
   const png = () => new Response(new Uint8Array([1]), { status: 200, headers: { 'content-type': 'image/png' } });
   const { result: followed, seen: hops } = await withUpstream(
-    (url) => (url.includes('sky.example.org') ? hop('https://cdn.example.org/a.png') : png()), () =>
+    (url) => (new URL(url).hostname === 'sky.example.org' ? hop('https://cdn.example.org/a.png') : png()), () =>
       call(byteRoute, 'https://site.test/api/photo?p=nextcloud&host=sky.example.org&id=abcdefgh1234&file=a.png',
         { PHOTO_HOSTS: 'sky.example.org, cdn.example.org' }));
   assert.equal(followed.status, 200);

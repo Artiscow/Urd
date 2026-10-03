@@ -27,6 +27,10 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.38 - A host compared exactly in the photo source test - 3 October 2026
+
+- CodeQL alert 15 (incomplete URL substring sanitization): the upstream stub in tests/photo-source.test.mjs picked its answer by looking for the host's name anywhere in the address. It parses the address and compares the host exactly.
+
 ### 0.7.19.14 - The calendar's events as structured data - 3 October 2026
 
 - Search engines got no machine-readable events from a calendar. On the published page a calendar with a feed writes the events it shows into `<head>` as schema.org `Event` JSON-LD, one script per block: name, start and end, status, attendance mode, the place or the meeting link, description, picture, address and organiser (`eventJsonLd` in ics.js). Never in the preview and never from the sample data.
