@@ -31,11 +31,11 @@ entydig: alle commit-innslag over forrige p-innslag.
 
 - An event could not be opened. A click or Enter on an event opens it in a native dialog laid inside its calendar: the date and time, the place, the calendar it belongs to, the picture, the whole description with its links, the sign-up and «Join» for a meeting link (`findMeetingLink`). The calendar is shaded behind it, the card stays under the navigation bar and inside the calendar's width and height, and opening and closing it never scrolls the page.
 - «Add to calendar» opens the ways to do it: this event to Google or as a file (`eventIcs`, `googleEventUrl`), and the whole calendar as a subscription with its iCal address to copy.
-- The card takes its ground, type and accent from the event it was opened from, with a contrast check on the words and the button; a card drawn per design is 0.7.19.28.
+- The card takes its ground, type and accent from the event it was opened from, with a contrast check on the words and the button; a card drawn per design is 0.7.19.19.
 - A description was drawn as plain text and a place could not be followed. Descriptions keep their addresses as links, cut at a word and never inside an address, and a place leads to the map, in every design.
 - In the Clean view the editing layer took the pointer on every block and stopped every link, so an event could not be opened and a calendar's links did nothing. There a click on an event and the calendar's own links are let through, the rewritable words are plain text, and the element menu closes with the handles.
 - The sample data carries a description, a picture, a sign-up and a meeting link. The view switcher's «Uka» reads «Uke».
-- BACKLOG: stage 0.7.19.28, the design round for the event card and the switcher's week and month per design.
+- BACKLOG: stage 0.7.19.19, the design round for the event card and the switcher's week and month per design.
 
 ### 0.7.19.10 - Times and status on the calendar - 3 October 2026
 
@@ -73,10 +73,10 @@ entydig: alle commit-innslag over forrige p-innslag.
 - Glass and Dark glass drew a solid ground. Glass is transparent by default and Dark glass a blurred, half transparent dark, so the section shows through; the «Ground» slot sets a solid one.
 - The outline did not follow a change of design. The editor asks the preview for the height the content needs after a change of design or settings (`urd-fit-block`, answered with `urd-grow`) and redraws the section at it; the measure is the design's drawn box, so Glass's colour blobs no longer count. After a drag the frame is kept and only grows when the content needs more.
 - A «Coming up» design starts with three events in the card and three under «Later» when it is chosen and the counts are unset.
-- One «Text» slot coloured the words on both the card and the panel of Coming up on cream. The panel has `panelText`; the same walk through every design is 0.7.19.27.
+- One «Text» slot coloured the words on both the card and the panel of Coming up on cream. The panel has `panelText`; the same walk through every design is 0.7.19.28.
 - The calendar has a «Size» in the Style tab (`scale`, 0.4 to 2, pure `calScale`): the whole design, text included, drawn smaller or larger. A drag of the outline changes the box only.
 - The calendar's announcement switch reads «Show the calendar's announcement», and its tooltip says it is separate from the strip above the menu.
-- BACKLOG: milestone 0.7.20 with its six stages, milestone 0.7.21 (the sizing model for every element, from the look at how other builders resize), stage 0.7.19.27 and the agreed order of work under «Liten huskeliste».
+- BACKLOG: milestone 0.7.20 with its six stages, milestone 0.7.21 (the sizing model for every element, from the look at how other builders resize), stage 0.7.19.28 and the agreed order of work under «Liten huskeliste».
 
 ### 0.7.19.9 - Settings per calendar design - 3 October 2026
 
