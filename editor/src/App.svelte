@@ -125,6 +125,7 @@
   import { isSafeHref, toolOrder } from '$engine/nav-model.js';
   import { frameAtPoint } from '$engine/place.js';
   import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '$engine/icons.js';
+  import { zoneValid } from '$engine/calendar-format.js';
   import { CAL_FIELDS, CAL_SIZE, CAL_SWITCH_VIEWS, calDesign, calView, calStripe, calHasTextOverrides, calDesignGroups, calOptionDefs, calOptions, calScale, CAL_SCALE } from '$engine/calendar-designs.js';
   import { calendarThumb } from '$engine/calendar-thumb.js';
 
@@ -1110,7 +1111,7 @@
     const p = selectedBlock.props;
     const def = calDesign(p.design);
     const reset = (name, patch) => () => setBlockProps(name, patch);
-    const viewChanged = p.switcher === true || p.showMore === false || (p.limit ?? 6) !== 6 || p.nextCount != null || p.laterCount != null;
+    const viewChanged = p.switcher === true || p.showMore === false || (p.limit ?? 6) !== 6 || p.nextCount != null || p.laterCount != null || p.showCancelled === false || p.clock != null || p.weekStart != null;
     const on = [!def.ownFilter && p.showCategories !== false, p.showSubscribe !== false, p.showSignup === true].filter(Boolean).length;
     const buttonsChanged = on > 0 || p.showOpen === false || Boolean(p.programHref);
     const emptyChanged = Boolean(p.emptyText) || (p.emptyIcon != null && p.emptyIcon !== 'calendar');
@@ -1120,7 +1121,7 @@
     return {
       sources: String((p.sources ?? []).length),
       view: ta(CAL_VIEW_KEYS[calView(p)]),
-      viewReset: viewChanged ? reset('cal-view', { switcher: undefined, showMore: undefined, limit: 6, nextCount: undefined, laterCount: undefined }) : null,
+      viewReset: viewChanged ? reset('cal-view', { switcher: undefined, showMore: undefined, limit: 6, nextCount: undefined, laterCount: undefined, showCancelled: undefined, clock: undefined, weekStart: undefined }) : null,
       buttons: on ? ta('menu.onCount', { n: on }) : ta('common.off'),
       buttonsReset: buttonsChanged ? reset('cal-buttons', { showCategories: false, showSubscribe: false, showSignup: false, showOpen: undefined, programHref: undefined }) : null,
       empty: p.emptyText || ta('menu.standard'),
@@ -1255,6 +1256,7 @@
 
   /** The words of a choice option's value: a month name for the year wheel, else the value's own key. */
   function calOptionLabel(def, value) {
+    if (def.key === 'firstMonth' && value === 'now') return ta('calendar.opt.firstMonth.now');
     if (def.key === 'firstMonth') return new Intl.DateTimeFormat(currentAdminLang(), { month: 'long' }).format(new Date(2024, Number(value), 1));
     return ta(`${def.labelKey}.${value}`);
   }
@@ -3441,6 +3443,17 @@
   }
   function setSiteLang(v) {
     siteMutate('site', () => { siteDraft.site.lang = v; });
+  }
+  /** The site's time zone (site.timeZone): stored only when Intl knows the name; an empty field removes it. */
+  let siteZoneBad = $state(false);
+  function setSiteTimeZone(value) {
+    const zone = value.trim();
+    siteZoneBad = zone !== '' && !zoneValid(zone);
+    if (siteZoneBad) return;
+    siteMutate('site', () => {
+      if (zone) siteDraft.site.timeZone = zone;
+      else delete siteDraft.site.timeZone;
+    });
   }
 
   // The admin tab shows the site icon when it exists, otherwise the Urd
@@ -7868,6 +7881,13 @@
               <label title={ta('site.langTitle')}>{ta('site.langLabel')}
                 <Dropdown value={siteLangValue()} options={siteLangOptions()}
                   onchange={(v) => setSiteLang(v)} /></label>
+              <!-- The site's time zone: the clock the calendar's times are shown on, for every visitor -->
+              <label title={ta('tip.settings.timeZone')}>{ta('settings.timeZone')}
+                <input value={siteDraft.site.timeZone ?? ''} placeholder="Europe/Oslo" spellcheck="false" class:place-error={siteZoneBad}
+                  onchange={(e) => setSiteTimeZone(e.target.value)} /></label>
+              {#if siteZoneBad}
+                <p class="panel-hint place-error">{ta('settings.timeZoneBad')}</p>
+              {/if}
               <hr class="gridmenu-divider" />
               <p class="panel-strong" title={ta('tip.site.contentWidth')}>{ta('lbl.contentWidth')}</p>
               <!-- Live sample: one strip per common screen width, so it is
@@ -9600,6 +9620,20 @@
             {ta('calendar.showMore')}
           </label>
         {/if}
+      {/if}
+      <!-- Cancelled events, the clock (24 hours unless set to 12) and the week (the site language's unless set here) -->
+      <label class="gridmenu-snap" title={ta('tip.calendar.showCancelled')}>
+        <input type="checkbox" checked={selectedBlock.props.showCancelled !== false}
+          onchange={(e) => setBlockProp('showCancelled', e.target.checked ? undefined : false)} />
+        {ta('calendar.showCancelled')}
+      </label>
+      <Choice label={ta('calendar.clock')} title={ta('tip.calendar.clock')} value={selectedBlock.props.clock === '12' ? '12' : '24'}
+        options={[['24', ta('calendar.clock.24')], ['12', ta('calendar.clock.12')]]}
+        onchange={(v) => setBlockProp('clock', v === '12' ? '12' : undefined)} />
+      {#if ['month', 'week', 'year', 'agenda'].includes(calView(selectedBlock.props)) || selectedBlock.props.design === 'bento' || selectedBlock.props.switcher === true}
+        <Choice label={ta('calendar.weekStart')} title={ta('tip.calendar.weekStart')} value={['mon', 'sun'].includes(selectedBlock.props.weekStart) ? selectedBlock.props.weekStart : 'auto'}
+          options={[['auto', ta('calendar.weekStart.auto')], ['mon', ta('calendar.weekStart.mon')], ['sun', ta('calendar.weekStart.sun')]]}
+          onchange={(v) => setBlockProp('weekStart', v === 'auto' ? undefined : v)} />
       {/if}
       {#if selectedBlock.props.view === 'next'}
         <!-- The card: how many events in full, and how many more as lines under «Later» -->

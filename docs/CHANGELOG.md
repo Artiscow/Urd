@@ -27,6 +27,16 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.19.10 - Times and status on the calendar - 3 October 2026
+
+- Only an event's start was written. A timed event with an end reads «18:00-21:00» and an event over several days «until 6 Oct», in every design, through the shared `time`, `timeText` and `hasTime` in the block's ui (the pure rules are in the new calendar-format.js, with tests).
+- The parser dropped cancelled events. `expandEvents` keeps them as `cancelled`, and the block draws them with a struck title and «Cancelled» where the time stands, without a sign-up; `showCancelled: false` hides them. Occurrences also carry `hasEnd`.
+- The clock is 24 hours in every language; `clock: "12"` on the block writes «6:00 pm».
+- The week started on Monday everywhere. It follows the site language (`calWeekStart`), with `weekStart` on the block, in the month grids, the week designs and the weekday rows.
+- The site has a time zone (`site.timeZone`, in the Site panel, stored only when Intl knows the name): every visitor then sees the calendar's times on that clock, and a visitor in another zone gets a line under the calendar naming it. Without it, the visitor's own zone is named when the feed is kept in another (`X-WR-TIMEZONE`). The example site is set to Europe/Oslo.
+- The Year wheel's «The month at the top of the wheel» takes «The current month».
+- AGENTS.md lists `calendar-format` among the engine modules the editor bundles.
+
 ### 0.7.20.2 - The calendar's settings in groups - 3 October 2026
 
 - The calendar's Content and Style were two long lists. They are collapsible groups that show their value while closed: Sources, View and count, Buttons and filter, When it is empty and Announcement in Content; Settings for the design (with Size), Colours, Edge stripe and Text fields in Style.

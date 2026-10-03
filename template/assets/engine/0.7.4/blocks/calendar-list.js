@@ -13,10 +13,6 @@ const dayOf = (occ) => new Date(occ.start);
 const monthShort = (d) => dates().monthsShort[d.getMonth()];
 const weekdayShort = (d) => dates().weekdaysShort[(d.getDay() + 6) % 7];
 const weekday = (d) => dates().weekdays[(d.getDay() + 6) % 7];
-const timeOf = (occ) => {
-  const d = dayOf(occ);
-  return `${two(d.getHours())}:${two(d.getMinutes())}`;
-};
 
 /** The meta line with the weekday in front of the time and the place (the date number stands elsewhere). */
 function weekdayMeta(occ, ui) {
@@ -81,7 +77,7 @@ export function table(host, occs, props, ics, ui) {
     const date = ui.el('td', 'urd-cal-table-date');
     date.appendChild(ui.field('strong', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: dd.monthsShort[d.getMonth()] })));
     const time = ui.el('td');
-    time.appendChild(ui.field('span', 'time', occ.allDay ? t('calendar.allDay') : timeOf(occ)));
+    time.appendChild(ui.field('span', 'time', ui.time(occ)));
     const event = ui.el('td');
     event.appendChild(ui.field('strong', 'title', occ.title));
     const chip = ui.chip(occ);

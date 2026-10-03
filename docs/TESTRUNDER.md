@@ -2,6 +2,18 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Test batch (0.7.19.10): times and status on the calendar
+
+- [ ] With a real feed, an event from 18:00 to 21:00 reads «18:00-21:00» in every design that shows a time, and an event with no end in the feed reads its start only
+- [ ] An all-day event over three days reads «until» its last day where the time stands, in the list, card, next and month designs; a timed event that ends on a later day reads its start, the last day and the end time
+- [ ] An event cancelled in the calendar app (STATUS:CANCELLED) shows with a struck title, dimmed, «Cancelled» where the time stands and no sign-up button, in every design including the week, day and heat map designs
+- [ ] Content, View and count, «Show cancelled events» off removes them from every view; on brings them back
+- [ ] «Clock»: 24 h is marked on every calendar whatever the site language; 12 h writes «6:00 pm-9:00 pm»; the hour column of Week plan and Day plan stays 08, 09
+- [ ] «The week starts» is offered on month, week, year and agenda designs, Bento and with the view switcher on: Sunday puts Sunday first in the weekday row and moves the grids; Auto follows the site language (Monday for Norwegian and British English)
+- [ ] Site panel, «Time zone»: Europe/Oslo is accepted, «Mars/Olympus» is refused with «Unknown time zone» and leaves the stored value; an empty field removes it
+- [ ] With the site's zone set and the computer's clock moved to another zone: the calendar's times stay on the site's clock, a line under the calendar names the zone, «today» and the countdowns still follow the real moment; with the field empty and a feed kept in another zone than the computer's, the line says the times are in your own zone
+- [ ] Year wheel, «The month at the top of the wheel»: «The current month» puts this month at the top, and next month it has moved by itself
+
 ### Test batch (0.7.20.2): the calendar's settings in groups
 
 - [ ] The element menu on a calendar with everything closed shows only group rows in Content and Style, each with its value: the number of sources, the view, «Off» or «N on» for the buttons, «Standard» or the owner's words for the empty state, «Standard» or «N of M changed» for the colours

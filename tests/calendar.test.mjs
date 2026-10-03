@@ -104,11 +104,18 @@ test('RECURRENCE-ID: the override replaces the base occurrence', () => {
   assert.ok(!occs.some((o) => o.start === Date.UTC(2026, 8, 8, 17)));
 });
 
-test('STATUS:CANCELLED gives no occurrence', () => {
+test('STATUS:CANCELLED gives an occurrence marked cancelled, and DTEND one marked hasEnd', () => {
   const occs = expandEvents(parseIcs(event([
     'UID:c', 'SUMMARY:Avlyst', 'STATUS:CANCELLED', 'DTSTART:20260910T180000Z',
   ])).events, { from: Date.UTC(2026, 8, 1), to: Date.UTC(2026, 9, 1) });
-  assert.equal(occs.length, 0);
+  assert.equal(occs.length, 1);
+  assert.equal(occs[0].cancelled, true);
+  assert.equal(occs[0].hasEnd, false);
+  const kept = expandEvents(parseIcs(event([
+    'UID:k', 'SUMMARY:Møte', 'DTSTART:20260910T180000Z', 'DTEND:20260910T193000Z',
+  ])).events, { from: Date.UTC(2026, 8, 1), to: Date.UTC(2026, 9, 1) });
+  assert.equal(kept[0].cancelled, false);
+  assert.equal(kept[0].hasEnd, true);
 });
 
 test('splitCategory: the "Category: Title" convention', () => {

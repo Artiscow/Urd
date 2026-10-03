@@ -18,15 +18,10 @@ const monthShort = (d) => dates().monthsShort[d.getMonth()];
 const monthLong = (d) => dates().months[d.getMonth()];
 const weekdayShort = (d) => dates().weekdaysShort[(d.getDay() + 6) % 7];
 const weekday = (d) => dates().weekdays[(d.getDay() + 6) % 7];
-const timeOf = (occ) => {
-  const d = dayOf(occ);
-  return `${two(d.getHours())}:${two(d.getMinutes())}`;
-};
-const timeText = (occ) => (occ.allDay ? t('calendar.allDay') : t('calendar.timeAt', { time: timeOf(occ) }));
 
 /** Days, hours and minutes left until an event (zero once it has begun). */
 function countdownParts(occ, now = Date.now()) {
-  const left = Math.max(0, occ.start - now);
+  const left = Math.max(0, (occ.real ?? occ.start) - now);
   return { days: Math.floor(left / DAY), hours: Math.floor((left % DAY) / 3600000), minutes: Math.floor((left % 3600000) / 60000) };
 }
 
@@ -44,9 +39,9 @@ function longWhen(occ, ui, { place = true } = {}) {
   const d = dayOf(occ);
   const line = ui.el('span', 'urd-cal-nx-when');
   line.appendChild(ui.field('span', 'date', `${weekday(d)} ${d.getDate()}. ${monthLong(d)}`));
-  if (!occ.allDay) {
+  if (ui.hasTime(occ)) {
     line.appendChild(document.createTextNode(' '));
-    line.appendChild(ui.field('span', 'time', timeText(occ)));
+    line.appendChild(ui.field('span', 'time', ui.timeText(occ)));
   }
   if (place && occ.location) {
     line.appendChild(document.createTextNode(' · '));
@@ -62,7 +57,7 @@ const laterOf = (occs, props, ics) => occs.slice(ics.nextCount(props.nextCount),
 function laterRow(occ, ui, className) {
   const d = dayOf(occ);
   const row = ui.tint(ui.el('div', className), occ);
-  row.append(ui.field('strong', 'date', `${d.getDate()}. ${monthShort(d)}`), ui.field('span', 'title', occ.title, 'urd-cal-nx-later-title'), ui.field('span', 'time', timeText(occ), 'urd-cal-nx-later-time'));
+  row.append(ui.field('strong', 'date', `${d.getDate()}. ${monthShort(d)}`), ui.field('span', 'title', occ.title, 'urd-cal-nx-later-title'), ui.field('span', 'time', ui.timeText(occ), 'urd-cal-nx-later-time'));
   return row;
 }
 
@@ -273,7 +268,7 @@ export function band(host, occs, props, ics, ui) {
     if (i) run.appendChild(ui.el('i', 'urd-cal-band-sep'));
     const d = dayOf(occ);
     const item = ui.tint(ui.el('span', 'urd-cal-band-item'), occ);
-    item.append(ui.field('span', 'date', `${d.getDate()}. ${monthShort(d)}`), document.createTextNode(' · '), ui.field('strong', 'title', occ.title), document.createTextNode(' · '), ui.field('span', 'time', timeText(occ)));
+    item.append(ui.field('span', 'date', `${d.getDate()}. ${monthShort(d)}`), document.createTextNode(' · '), ui.field('strong', 'title', occ.title), document.createTextNode(' · '), ui.field('span', 'time', ui.timeText(occ)));
     if (occ.location) {
       item.appendChild(document.createTextNode(' · '));
       item.appendChild(ui.field('span', 'place', occ.location));
@@ -311,9 +306,9 @@ export function oneLine(host, occs, props, ics, ui) {
     label.appendChild(ui.tx(i < count ? 'now' : 'later'));
     const text = ui.el('span', 'urd-cal-line-text');
     text.append(ui.field('strong', 'title', occ.title), document.createTextNode(' · '), ui.field('span', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: monthShort(d) })));
-    if (!occ.allDay) {
+    if (ui.hasTime(occ)) {
       text.appendChild(document.createTextNode(' '));
-      text.appendChild(ui.field('span', 'time', timeText(occ)));
+      text.appendChild(ui.field('span', 'time', ui.timeText(occ)));
     }
     if (occ.location) {
       text.appendChild(document.createTextNode(' · '));
@@ -356,7 +351,7 @@ export function ring(host, occs, props, ics, ui) {
   // The ring fills over the last two weeks before the start; the middle counts days, then hours on the last day.
   everyMinute(card, () => {
     const { days, hours } = countdownParts(hero);
-    const left = Math.max(0, hero.start - Date.now());
+    const left = Math.max(0, (hero.real ?? hero.start) - Date.now());
     const filled = Math.max(0, Math.min(1, 1 - left / (14 * DAY)));
     const circ = 2 * Math.PI * 56;
     arc.setAttribute('stroke-dasharray', `${(filled * circ).toFixed(1)} ${circ.toFixed(1)}`);
@@ -410,7 +405,7 @@ export function darkGlass(host, occs, props, ics, ui) {
   everyMinute(card, () => {
     const { days, hours, minutes } = countdownParts(hero);
     clock.textContent = `${two(days)}d ${two(hours)}t ${two(minutes)}m`;
-    const left = Math.max(0, hero.start - Date.now());
+    const left = Math.max(0, (hero.real ?? hero.start) - Date.now());
     const filled = Math.max(0, Math.min(1, 1 - left / (14 * DAY)));
     pct.textContent = `${Math.round(filled * 100)} %`;
     fill.style.width = `${Math.round(filled * 100)}%`;
@@ -449,9 +444,9 @@ export function nextBento(host, occs, props, ics, ui) {
   words.appendChild(ui.field('strong', 'title', hero.title, 'urd-cal-nbento-title'));
   const meta = ui.el('div', 'urd-cal-meta');
   meta.appendChild(ui.field('span', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: monthShort(d) })));
-  if (!hero.allDay) {
+  if (ui.hasTime(hero)) {
     meta.appendChild(document.createTextNode(' · '));
-    meta.appendChild(ui.field('span', 'time', timeText(hero)));
+    meta.appendChild(ui.field('span', 'time', ui.timeText(hero)));
   }
   if (hero.location) {
     meta.appendChild(document.createTextNode(' · '));
@@ -472,7 +467,7 @@ export function nextBento(host, occs, props, ics, ui) {
     const when = ui.el('span', 'urd-cal-nbento-when');
     when.append(ui.field('strong', 'number', String(od.getDate())), ui.field('span', 'date', monthShort(od)));
     const body = ui.el('div');
-    body.append(ui.field('strong', 'title', occ.title, 'urd-cal-nbento-small'), ui.field('span', 'time', timeText(occ), 'urd-cal-nbento-sub'));
+    body.append(ui.field('strong', 'title', occ.title, 'urd-cal-nbento-small'), ui.field('span', 'time', ui.timeText(occ), 'urd-cal-nbento-sub'));
     tile.append(when, body);
     grid.appendChild(tile);
   });

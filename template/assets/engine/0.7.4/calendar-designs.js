@@ -465,7 +465,8 @@ export const CAL_OPTIONS = {
   table: [toggle('colTime', true), toggle('colPlace', true), toggle('zebra', true)],
   posters: [choice('columns', ['auto', '2', '3', '4'], 'auto')],
   photo: [choice('columns', ['auto', '2', '3', '4'], 'auto')],
-  yearWheel: [choice('firstMonth', MONTHS, '0')],
+  // The month at the top of the wheel: one of the twelve, or `now` for the month the visitor is in.
+  yearWheel: [choice('firstMonth', [...MONTHS, 'now'], '0')],
   numbered: [toggle('pad', true)],
   booklet: [toggle('description', true)],
   split: [toggle('description', true)],

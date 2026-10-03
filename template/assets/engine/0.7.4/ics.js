@@ -125,13 +125,14 @@ const BYDAY_CODES = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 };
 
 /**
  * Parses a whole iCal text.
- * @returns {{ name: string|null, events: object[] }} events are RAW events
+ * @returns {{ name: string|null, timezone: string|null, events: object[] }} events are RAW events; timezone is the feed's own (X-WR-TIMEZONE)
  *   (one per VEVENT, recurrences NOT expanded); see expandEvents.
  */
 export function parseIcs(text) {
   const lines = unfold(text).split('\n');
   const events = [];
   let calendarName = null;
+  let calendarZone = null;
   let current = null;
 
   for (const rawLine of lines) {
@@ -150,6 +151,7 @@ export function parseIcs(text) {
     if (!prop) continue;
     if (!current) {
       if (prop.name === 'X-WR-CALNAME') calendarName = unescapeText(prop.value).trim();
+      if (prop.name === 'X-WR-TIMEZONE') calendarZone = prop.value.trim();
       continue;
     }
     switch (prop.name) {
@@ -174,7 +176,7 @@ export function parseIcs(text) {
       default: break;
     }
   }
-  return { name: calendarName, events };
+  return { name: calendarName, timezone: calendarZone, events };
 }
 
 function parseRrule(value) {
@@ -268,8 +270,9 @@ function* ruleStarts(startParts, rule) {
 /**
  * Expands raw events into concrete occurrences inside a window.
  * A RECURRENCE-ID event overrides its base occurrence, EXDATE removes one,
- * and STATUS:CANCELLED removes one. An occurrence of an event with a
- * recurrence rule carries `recurring: true`. The result is sorted by start.
+ * and STATUS:CANCELLED marks one `cancelled: true` (the block shows it as
+ * cancelled or hides it). An occurrence of an event with a recurrence rule
+ * carries `recurring: true`, and one whose event has a DTEND `hasEnd: true`. The result is sorted by start.
  *
  * @param {object[]} events from parseIcs
  * @param {{ from?: Date|number, to?: Date|number, max?: number }} window
@@ -289,7 +292,6 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
 
   const out = [];
   const push = (event, startMs, endMs, recurring = false) => {
-    if (event.status === 'CANCELLED') return;
     out.push({
       uid: event.uid ?? null,
       summary: event.summary ?? '',
@@ -301,6 +303,8 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
       end: endMs,
       allDay: !!event.start.allDay,
       recurring,
+      cancelled: event.status === 'CANCELLED',
+      hasEnd: Boolean(event.end),
     });
   };
 

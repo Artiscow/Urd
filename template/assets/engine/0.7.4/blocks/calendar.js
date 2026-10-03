@@ -63,16 +63,19 @@ async function fetchSource(url) {
 }
 
 /** All sources → sorted occurrences with category and signup link. */
-async function loadOccurrences(ics, sources, limit, view, from = ics.windowStart(view)) {
+async function loadOccurrences(ics, cf, sources, limit, view, from, zone) {
   const errors = [];
   const events = [];
+  let feedZone = null;
   await Promise.all(sources.map(async (source) => {
     const entry = ics.sourceEntry(source);
     const url = ics.normalizeSourceUrl(entry.url);
     if (!url) { errors.push(ta('calendar.unknownSource', { source: entry.url })); return; }
     try {
       // Every event remembers the calendar it came from: its name and colour.
-      for (const event of ics.parseIcs(await fetchSource(url)).events) events.push({ ...event, calendar: entry.name, calendarColor: entry.color });
+      const feed = ics.parseIcs(await fetchSource(url));
+      feedZone ??= feed.timezone;
+      for (const event of feed.events) events.push({ ...event, calendar: entry.name, calendarColor: entry.color });
     } catch (error) {
       errors.push(`${url}: ${error.message}`);
     }
@@ -86,7 +89,9 @@ async function loadOccurrences(ics, sources, limit, view, from = ics.windowStart
       return { ...occ, ...split, color: occ.calendarColor || '', signup: ics.findSignupLink(occ.description), image: occ.image || ics.findImageLink(occ.description) };
     });
   // The sources are one calendar to the visitor: an event that stands in two of them is shown once.
-  return { occurrences: ics.dedupeOccurrences(expanded), errors };
+  // With a zone set for the site, every time is moved to that zone's clock; `real` keeps the moment itself for the countdowns.
+  const placed = zone ? expanded.map((occ) => ({ ...occ, real: occ.start, start: cf.shiftToZone(occ.start, zone), end: cf.shiftToZone(occ.end, zone) })) : expanded;
+  return { occurrences: ics.dedupeOccurrences(placed), errors, feedZone };
 }
 
 /* ---------- Demo data (preview only, when no sources or feed) ---------- */
@@ -95,11 +100,11 @@ function demoOccurrences() {
   const day = 24 * 3600 * 1000;
   const base = Date.now();
   return [
-    { start: base + 3 * day, end: base + 3 * day + 2 * 3600 * 1000, allDay: false, title: ta('calendar.demoTitle1'), category: ta('calendar.demoCat1'), location: ta('calendar.demoLoc1'), signup: null, description: '' },
+    { start: base + 3 * day, end: base + 3 * day + 2 * 3600 * 1000, allDay: false, title: ta('calendar.demoTitle1'), category: ta('calendar.demoCat1'), location: ta('calendar.demoLoc1'), signup: null, description: '', hasEnd: true },
     { start: base + 10 * day, end: base + 10 * day + 3600 * 1000, allDay: false, title: ta('calendar.demoTitle2'), category: ta('calendar.demoCat2'), location: ta('calendar.demoLoc1'), signup: null, description: '', recurring: true },
-    { start: base + 17 * day, end: base + 17 * day, allDay: true, title: ta('calendar.demoTitle3'), category: ta('calendar.demoCat3'), location: ta('calendar.demoLoc2'), signup: null, description: '' },
-    { start: base + day, end: base + day + 90 * 60 * 1000, allDay: false, title: ta('calendar.demoTitle4'), category: ta('calendar.demoCat1'), location: ta('calendar.demoLoc1'), signup: null, description: '' },
-    { start: base + 5 * day, end: base + 5 * day, allDay: true, title: ta('calendar.demoTitle5'), category: ta('calendar.demoCat2'), location: ta('calendar.demoLoc2'), signup: null, description: '' },
+    { start: base + 17 * day, end: base + 18 * day, allDay: true, title: ta('calendar.demoTitle3'), category: ta('calendar.demoCat3'), location: ta('calendar.demoLoc2'), signup: null, description: '' },
+    { start: base + day, end: base + day + 90 * 60 * 1000, allDay: false, title: ta('calendar.demoTitle4'), category: ta('calendar.demoCat1'), location: ta('calendar.demoLoc1'), signup: null, description: '', hasEnd: true },
+    { start: base + 5 * day, end: base + 5 * day, allDay: true, title: ta('calendar.demoTitle5'), category: ta('calendar.demoCat2'), location: ta('calendar.demoLoc2'), signup: null, description: '', cancelled: true },
   ].sort((a, b) => a.start - b.start);
 }
 
@@ -124,6 +129,8 @@ function metaLine(occ) {
 /** The event's calendar colour on a box, so its chip, badge and stripe follow the calendar. */
 function tintNode(node, occ) {
   if (occ.color) node.style.setProperty('--urd-cal-color', resolveColor(occ.color));
+  // A cancelled event's box is marked, so its title is struck in every design.
+  if (occ.cancelled) node.classList.add('urd-cal-cancelled');
   return node;
 }
 
@@ -143,7 +150,7 @@ function chipNode(category, color, ui) {
 
 /** «Today!», «Tomorrow» or «In N days» for an event. */
 function countdownText(occ) {
-  const days = Math.max(0, Math.round((occ.start - Date.now()) / (24 * 3600 * 1000)));
+  const days = Math.max(0, Math.round(((occ.real ?? occ.start) - Date.now()) / (24 * 3600 * 1000)));
   // Dedicated keys instead of Intl.RelativeTimeFormat: the exclaiming
   // today wording is kept, and ICU has no North Sami (it would fall back to
   // a bare number).
@@ -178,7 +185,10 @@ function imageUrl(occ, width = 800) {
  * settings (calOptions). Every edit posts the whole props with the text under
  * its key in `texts`, so the editor's draft stays the owner of the words.
  */
-function makeUi(cd, ics, el, host, props, ctx, sources) {
+function makeUi(cd, cf, ics, el, host, props, ctx, sources, zone) {
+  const lang = ctx.site?.site?.lang;
+  const clock12 = cf.calClock12(props);
+  const weekStart = cf.calWeekStart(props, lang);
   const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
   const post = (msg) => window.parent?.postMessage(msg, location.origin);
   const field = (tag, key, text, className) => {
@@ -186,6 +196,28 @@ function makeUi(cd, ics, el, host, props, ctx, sources) {
     Object.assign(node.style, cd.calFieldCss(props.fieldStyle?.[key]));
     return node;
   };
+  /** The event's last day as «6. okt», for an event that ends on a later day than it starts. */
+  const endDate = (occ) => {
+    const end = new Date(occ.end);
+    return t('calendar.dayMonth', { d: end.getDate(), m: dates().monthsShort[end.getMonth()] });
+  };
+  /**
+   * The event's time as it is written: «18:00-21:00» with its end, «all day»,
+   * «until 6 Oct» for a span of days, and «Cancelled» for a cancelled event.
+   * The clock is 24 hours unless the block is set to 12.
+   */
+  const time = (occ) => {
+    if (occ.cancelled) return t('calendar.cancelled');
+    const multi = cf.isMultiDay(occ);
+    if (occ.allDay) return multi ? t('calendar.until', { date: endDate(occ) }) : t('calendar.allDay');
+    const { from, to } = cf.timeRange(occ, clock12);
+    if (multi) return t('calendar.timeRange', { from, to: `${endDate(occ)} ${to ?? ''}`.trim() });
+    return to ? t('calendar.timeRange', { from, to }) : from;
+  };
+  /** The time with the language's word before a clock time («kl. 18:00»). */
+  const timeText = (occ) => (occ.cancelled || occ.allDay ? time(occ) : t('calendar.timeAt', { time: time(occ) }));
+  /** True when the event has something to write where the time stands: a clock time, a later last day, or its cancellation. */
+  const hasTime = (occ) => !occ.allDay || occ.cancelled || cf.isMultiDay(occ);
   const meta = (occ, { date = true, place = true } = {}) => {
     const start = new Date(occ.start);
     const d = dates();
@@ -197,7 +229,7 @@ function makeUi(cd, ics, el, host, props, ctx, sources) {
         m: d.monthsShort[start.getMonth()],
       })));
     }
-    if (!occ.allDay) parts.push(field('span', 'time', t('calendar.timeAt', { time: `${two(start.getHours())}:${two(start.getMinutes())}` })));
+    if (hasTime(occ)) parts.push(field('span', 'time', timeText(occ)));
     if (place && occ.location) parts.push(field('span', 'place', occ.location));
     if (!parts.length) return null;
     const line = el2('div', 'urd-cal-meta');
@@ -244,7 +276,7 @@ function makeUi(cd, ics, el, host, props, ctx, sources) {
     return a;
   };
   const signup = (occ) => {
-    if (!occ.signup || props.showSignup !== true) return null;
+    if (!occ.signup || occ.cancelled || props.showSignup !== true) return null;
     const a = link('urd-cal-signup', 'signup', occ.signup, t('calendar.signupTitle'));
     a.target = '_blank';
     a.rel = 'noopener';
@@ -272,7 +304,13 @@ function makeUi(cd, ics, el, host, props, ctx, sources) {
   const subscribe = () => (props.showSubscribe !== false && sources.length ? subscribeRow(ics, sources, ui) : null);
   /** The event's own page: the address the feed gives it, else its sign-up link; null without either. */
   const href = (occ) => (typeof occ.url === 'string' && /^https?:\/\//i.test(occ.url) ? occ.url : occ.signup || null);
-  const ui = { el: el2, tint: tintNode, field, meta, tx, link, signup, chip, recurring, program, openToAll, subscribe, href, countdown: countdownText, image: imageUrl, all: [], offset: 0, total: 0, rest: false, filter: null, opt: cd.calOptions(props), today: () => new Date() };
+  const ui = { el: el2, tint: tintNode, field, meta, tx, link, signup, chip, recurring, program, openToAll, subscribe, href, countdown: countdownText, image: imageUrl, all: [], offset: 0, total: 0, rest: false, filter: null, opt: cd.calOptions(props), time, timeText, hasTime,
+    /** The week as the site's language lays it out: the empty cells before the first of a month, the weekday names in order, and the first day of a week. */
+    lead: (first) => cf.leadDays(first, weekStart),
+    dows: () => cf.orderWeekdays(dates().weekdaysShort, weekStart),
+    weekStartOf: (ms) => cf.startOfWeek(ms, weekStart),
+    /** Now, on the clock the times are shown in. */
+    today: () => new Date(zone ? cf.shiftToZone(Date.now(), zone) : Date.now()) };
   return ui;
 }
 
@@ -461,9 +499,9 @@ function renderMonth(host, occs, props, ics, ui) {
   const paint = () => {
     label.textContent = `${dates().months[shown.mo]} ${shown.y}`;
     grid.replaceChildren();
-    for (const day of dates().weekdaysShort) grid.appendChild(el2('div', 'urd-cal-dow', day));
+    for (const day of ui.dows()) grid.appendChild(el2('div', 'urd-cal-dow', day));
     const first = new Date(shown.y, shown.mo, 1);
-    const lead = (first.getDay() + 6) % 7;
+    const lead = ui.lead(first);
     const dim = new Date(shown.y, shown.mo + 1, 0).getDate();
     const today = new Date();
     for (let i = 0; i < lead; i++) grid.appendChild(el2('div', 'urd-cal-day urd-cal-day-empty'));
@@ -585,16 +623,19 @@ function renderCalendar(el, props, ctx) {
   // render, and a design's renderer module with them (literal paths, so the
   // modules stay out of the visitor closure and the preload list).
   const DESIGN_MODULES = { list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js'), next: () => import('./calendar-next.js'), more: () => import('./calendar-more.js') };
-  Promise.all([import('../ics.js'), import('../calendar-designs.js')]).then(async ([ics, cd]) => {
+  Promise.all([import('../ics.js'), import('../calendar-designs.js'), import('../calendar-format.js')]).then(async ([ics, cd, cf]) => {
     const design = cd.calDesign(props.design);
     const mod = design.module ? await DESIGN_MODULES[design.module]?.() : null;
     // The view switcher draws the week with the week strip, so its module comes along.
     const weekMod = cd.calSwitcher(props) ? await DESIGN_MODULES.time() : null;
-    if (host.isConnected) drawCalendar(ics, cd, mod, weekMod, el, host, props, ctx);
+    if (host.isConnected) drawCalendar(ics, cd, cf, mod, weekMod, el, host, props, ctx);
   });
 }
 
-function drawCalendar(ics, cd, mod, weekMod, el, host, props, ctx) {
+function drawCalendar(ics, cd, cf, mod, weekMod, el, host, props, ctx) {
+  // The site's own time zone, when set: every visitor sees the times on that zone's clock.
+  const siteZone = ctx.site?.site?.timeZone;
+  const zone = cf.zoneValid(siteZone) ? siteZone.trim() : null;
   const sources = (props.sources ?? []).filter((source) => ics.sourceEntry(source).url);
   let activeCategory = null;
   // The view switcher's mode: the block's own design until the visitor picks the week or the month.
@@ -611,7 +652,8 @@ function drawCalendar(ics, cd, mod, weekMod, el, host, props, ctx) {
   const stripe = cd.calStripe(design, props.stripe);
   host.classList.toggle('urd-cal-stripes', stripe.show);
   if (stripe.color) host.style.setProperty('--urd-cal-stripe', stripe.color);
-  const ui = makeUi(cd, ics, el, host, props, ctx, sources);
+  const ui = makeUi(cd, cf, ics, el, host, props, ctx, sources, zone);
+  let feedZone = null;
   // The design's own settings as classes, for the ones the style sheet draws.
   for (const [key, value] of Object.entries(ui.opt)) {
     if (typeof value === 'boolean') host.classList.add(`urd-cal-o-${key}-${value ? 'on' : 'off'}`);
@@ -636,8 +678,10 @@ function drawCalendar(ics, cd, mod, weekMod, el, host, props, ctx) {
     // With the switcher on, the window reaches back to the start of the
     // week and the month; the block's own design still shows what is coming.
     const own = mode === 'own';
-    const soon = Date.now() - 6 * 3600 * 1000;
-    const base = switcher && own ? occurrences.filter((occ) => (occ.end ?? occ.start) >= soon) : occurrences;
+    const soon = ui.today().getTime() - 6 * 3600 * 1000;
+    // Cancelled events are shown as cancelled unless the owner has hidden them.
+    const kept = props.showCancelled === false ? occurrences.filter((occ) => !occ.cancelled) : occurrences;
+    const base = switcher && own ? kept.filter((occ) => (occ.end ?? occ.start) >= soon) : kept;
     const filtered = activeCategory
       ? base.filter((occ) => occ.category === activeCategory)
       : base;
@@ -688,6 +732,13 @@ function drawCalendar(ics, cd, mod, weekMod, el, host, props, ctx) {
       const row = ui.subscribe();
       if (row) host.appendChild(row);
     }
+    // The zone the times are shown in, named when it is not the visitor's own:
+    // the site's zone when one is set, else the visitor's when the feed is kept in another.
+    const nowMs = Date.now();
+    let zoneText = '';
+    if (zone && cf.zoneDiffers(zone, nowMs)) zoneText = t('calendar.zoneOf', { zone: cf.zoneName(zone, nowMs, ctx.site?.site?.lang) });
+    else if (!zone && cf.zoneValid(feedZone) && cf.zoneDiffers(feedZone, nowMs)) zoneText = t('calendar.zoneYours', { zone: cf.zoneName(null, nowMs, ctx.site?.site?.lang) });
+    if (zoneText && limited.length) host.appendChild(el2('p', 'urd-cal-zone', zoneText));
     // The note is editing chrome on the block, not content: it hangs below
     // the block (base.css) and the push pass skips it, so it never makes the
     // block taller in the preview than on the published page.
@@ -718,9 +769,12 @@ function drawCalendar(ics, cd, mod, weekMod, el, host, props, ctx) {
 
   if (ctx.preview) draw([], null);
   // The switcher needs the week and the month from their start, whichever is the earlier.
-  const from = switcher ? Math.min(ics.windowStart('week'), ics.windowStart('month')) : ics.windowStart(view);
-  loadOccurrences(ics, sources, Math.max(1, props.limit ?? 6), view, from).then(({ occurrences, errors }) => {
+  // The week begins on the day the site's language starts it on, which can be the day before Monday.
+  const weekFrom = Math.min(ics.windowStart('week'), ui.weekStartOf(Date.now()));
+  const from = switcher ? Math.min(weekFrom, ics.windowStart('month')) : view === 'week' ? weekFrom : ics.windowStart(view);
+  loadOccurrences(ics, cf, sources, Math.max(1, props.limit ?? 6), view, from, zone).then(({ occurrences, errors, feedZone: fz }) => {
     if (!host.isConnected) return;
+    feedZone = fz;
     if (!occurrences.length && errors.length) {
       // Visitors get a quiet empty state; the preview gets the error.
       draw([], ctx.preview ? ta('calendar.feedFailed', { error: errors[0] }) : null);

@@ -18,10 +18,6 @@ const monthShort = (d) => dates().monthsShort[d.getMonth()];
 const monthLong = (d) => dates().months[d.getMonth()];
 const weekdayShort = (d) => dates().weekdaysShort[(d.getDay() + 6) % 7];
 const weekday = (d) => dates().weekdays[(d.getDay() + 6) % 7];
-const timeOf = (occ) => {
-  const d = dayOf(occ);
-  return `${two(d.getHours())}:${two(d.getMinutes())}`;
-};
 const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
@@ -50,7 +46,7 @@ function rangeText(from, to) {
 /** The pill for an event in a week or month cell: the time and the title, tinted with the calendar colour. */
 function pillNode(occ, ui, className) {
   const pill = ui.tint(ui.el('div', className), occ);
-  if (!occ.allDay) pill.appendChild(ui.field('span', 'time', timeOf(occ), 'urd-cal-pill-time'));
+  if (ui.hasTime(occ)) pill.appendChild(ui.field('span', 'time', ui.time(occ), 'urd-cal-pill-time'));
   pill.appendChild(ui.field('span', 'title', occ.title));
   pill.title = `${occ.title}${occ.location ? ` · ${occ.location}` : ''}`;
   return pill;
@@ -64,7 +60,7 @@ function weekDays(monday) {
 /** 04 Week strip: seven day columns with a pill per event, the week number above and arrows to move through the weeks. */
 export function weekStrip(host, occs, props, ics, ui) {
   const today = ui.today();
-  let monday = new Date(ics.startOfWeek(today.getTime()));
+  let monday = new Date(ui.weekStartOf(today.getTime()));
   const wrap = ui.el('div', 'urd-cal-wstrip');
   const head = ui.el('div', 'urd-cal-wstrip-head');
   const prev = navButton(ui, -1, t('calendar.prevWeek'));
@@ -118,7 +114,7 @@ function planBlock(occ, ui) {
   const block = ui.tint(ui.el('div', 'urd-cal-plan-event'), occ);
   block.appendChild(ui.field('strong', 'title', occ.title));
   const when = ui.el('span', 'urd-cal-plan-when');
-  when.appendChild(ui.field('span', 'time', timeOf(occ)));
+  when.appendChild(ui.field('span', 'time', ui.time(occ)));
   if (occ.location) {
     when.appendChild(document.createTextNode(' · '));
     when.appendChild(ui.field('span', 'place', occ.location));
@@ -134,7 +130,7 @@ function planBlock(occ, ui) {
 /** M3 Week plan: an hour grid over seven days, timed events as blocks in their hour, all-day ones in a row above. */
 export function weekPlan(host, occs, props, ics, ui) {
   const today = ui.today();
-  let monday = new Date(ics.startOfWeek(today.getTime()));
+  let monday = new Date(ui.weekStartOf(today.getTime()));
   const wrap = ui.el('div', 'urd-cal-wplan');
   const head = ui.el('div', 'urd-cal-wplan-head');
   const prev = navButton(ui, -1, t('calendar.prevWeek'));
@@ -189,7 +185,7 @@ export function weekPlan(host, occs, props, ics, ui) {
   };
   prev.addEventListener('click', () => { monday = new Date(monday.getTime() - 7 * DAY); paint(); });
   next.addEventListener('click', () => { monday = new Date(monday.getTime() + 7 * DAY); paint(); });
-  todayBtn.addEventListener('click', () => { monday = new Date(ics.startOfWeek(today.getTime())); paint(); });
+  todayBtn.addEventListener('click', () => { monday = new Date(ui.weekStartOf(today.getTime())); paint(); });
   paint();
   host.appendChild(wrap);
 }
@@ -197,7 +193,7 @@ export function weekPlan(host, occs, props, ics, ui) {
 /** F4 Calendar layers: one row per calendar with a switch in the head, the events as bars over the week's days. */
 export function layers(host, occs, props, ics, ui) {
   const today = ui.today();
-  let monday = new Date(ics.startOfWeek(today.getTime()));
+  let monday = new Date(ui.weekStartOf(today.getTime()));
   const names = [...new Set(ui.all.map((occ) => occ.category || ''))];
   const colourOf = (name) => ui.all.find((occ) => (occ.category || '') === name && occ.color)?.color ?? '';
   const hidden = new Set();
@@ -244,7 +240,7 @@ export function layers(host, occs, props, ics, ui) {
         bar.style.setProperty('--urd-cal-bar-from', String(Math.max(0, first)));
         bar.style.setProperty('--urd-cal-bar-span', String(Math.max(1, last - Math.max(0, first) + 1)));
         bar.appendChild(ui.field('span', 'title', occ.title));
-        if (!occ.allDay) bar.appendChild(ui.field('span', 'time', ` ${timeOf(occ)}`));
+        if (ui.hasTime(occ)) bar.appendChild(ui.field('span', 'time', ` ${ui.time(occ)}`));
         bar.title = `${occ.title}${occ.location ? ` · ${occ.location}` : ''}`;
         lane.appendChild(bar);
       }
@@ -301,7 +297,7 @@ export function sidepanel(host, occs, props, ics, ui) {
   head.append(label, ui.el('span', 'urd-cal-mhead-nav'));
   head.lastChild.append(prev, next);
   const dows = ui.el('div', 'urd-cal-side-dows');
-  for (const day of dates().weekdaysShort) dows.appendChild(ui.el('span', null, day));
+  for (const day of ui.dows()) dows.appendChild(ui.el('span', null, day));
   const grid = ui.el('div', 'urd-cal-side-grid');
   main.append(head, dows, grid);
   const panel = ui.el('aside', 'urd-cal-side-panel');
@@ -341,7 +337,7 @@ export function sidepanel(host, occs, props, ics, ui) {
     label.textContent = `${monthLong(new Date(shown.y, shown.m, 1))} ${shown.y}`;
     grid.replaceChildren();
     const first = new Date(shown.y, shown.m, 1);
-    const lead = (first.getDay() + 6) % 7;
+    const lead = ui.lead(first);
     const dim = new Date(shown.y, shown.m + 1, 0).getDate();
     const prevDim = new Date(shown.y, shown.m, 0).getDate();
     const cells = [];
@@ -392,14 +388,14 @@ export function apMonth(host, occs, props, ics, ui) {
   });
   head.append(prev, label, next);
   const dows = ui.el('div', 'urd-cal-apm-dows');
-  for (const day of dates().weekdaysShort) dows.appendChild(ui.el('span', null, day));
+  for (const day of ui.dows()) dows.appendChild(ui.el('span', null, day));
   const grid = ui.el('div', 'urd-cal-apm-grid');
   wrap.append(head, dows, grid);
   const paint = () => {
     const first = new Date(shown.y, shown.m, 1);
     label.textContent = `${monthLong(first)} ${shown.y}`;
     grid.replaceChildren();
-    const lead = (first.getDay() + 6) % 7;
+    const lead = ui.lead(first);
     const dim = new Date(shown.y, shown.m + 1, 0).getDate();
     for (let i = 0; i < lead; i++) grid.appendChild(ui.el('span', 'urd-cal-apm-day urd-cal-apm-out'));
     for (let d = 1; d <= dim; d++) {
@@ -513,7 +509,7 @@ export function yearWheel(host, occs, props, ics, ui) {
   const months = dates().monthsShort;
   const inYear = ui.all.filter((occ) => dayOf(occ).getFullYear() === year);
   // The month at the top of the wheel is the owner's choice; a month's place is counted from it.
-  const firstMonth = Number(ui.opt.firstMonth) || 0;
+  const firstMonth = ui.opt.firstMonth === 'now' ? today.getMonth() : Number(ui.opt.firstMonth) || 0;
   const place = (m) => (m - firstMonth + 12) % 12;
   const segments = [];
   for (let m = 0; m < 12; m++) {
@@ -620,7 +616,7 @@ export function heatmap(host, occs, props, ics, ui) {
     box.appendChild(ui.el('span', 'urd-cal-heat-mname', dates().months[m]));
     const grid = ui.el('div', 'urd-cal-heat-grid');
     const first = new Date(year, m, 1);
-    const lead = (first.getDay() + 6) % 7;
+    const lead = ui.lead(first);
     const dim = new Date(year, m + 1, 0).getDate();
     for (let i = 0; i < lead; i++) grid.appendChild(ui.el('i', 'urd-cal-heat-cell urd-cal-heat-blank'));
     for (let d = 1; d <= dim; d++) {

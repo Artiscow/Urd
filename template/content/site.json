@@ -3,6 +3,7 @@
   "site": {
     "title": "Urd",
     "lang": "no",
+    "timeZone": "Europe/Oslo",
     "description": "Urd sin testside",
     "icon": "/media/ikon-9740643c.webp",
     "setup": true

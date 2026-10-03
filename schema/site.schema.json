@@ -15,6 +15,7 @@
       "properties": {
         "title": { "type": "string", "minLength": 1 },
         "lang": { "type": "string", "minLength": 2 },
+        "timeZone": { "type": "string", "description": "Additive from 0.7.19.10: an IANA time zone (Europe/Oslo). When set, the calendar block shows every time on this zone's clock to every visitor; omitted, each visitor sees the times in their own zone." },
         "description": { "type": "string" },
         "icon": { "type": "string", "description": "Site icon (favicon): path in media/ (data URL in draft). Additive field from v0.5." },
         "setup": { "type": "boolean", "description": "Additive from v0.6: true in the template's default content triggers the setup wizard in admin; the wizard removes the field on completion. Replaces the old string matching on the template's default name." }

@@ -13,11 +13,6 @@ const monthShort = (d) => dates().monthsShort[d.getMonth()];
 const monthLong = (d) => dates().months[d.getMonth()];
 const weekdayShort = (d) => dates().weekdaysShort[(d.getDay() + 6) % 7];
 const weekday = (d) => dates().weekdays[(d.getDay() + 6) % 7];
-const timeOf = (occ) => {
-  const d = dayOf(occ);
-  return `${two(d.getHours())}:${two(d.getMinutes())}`;
-};
-const timeText = (occ) => (occ.allDay ? t('calendar.allDay') : t('calendar.timeAt', { time: timeOf(occ) }));
 
 /** 02 Poster wall: a wall of posters, the first one large, three poster colours in turn and a plain card as the fourth. */
 export function posters(host, occs, props, ics, ui) {
@@ -38,7 +33,7 @@ export function posters(host, occs, props, ics, ui) {
     when.append(ui.field('strong', 'number', String(d.getDate())), ui.field('span', 'date', monthLong(d)));
     const body = ui.el('div', 'urd-cal-poster-body');
     body.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-poster-title'));
-    if (!occ.allDay) body.appendChild(ui.field('span', 'time', timeText(occ)));
+    if (ui.hasTime(occ)) body.appendChild(ui.field('span', 'time', ui.timeText(occ)));
     const signup = ui.signup(occ);
     if (signup) body.appendChild(signup);
     card.append(top, when, body);
@@ -60,7 +55,7 @@ export function tickets(host, occs, props, ics, ui) {
     const d = dayOf(occ);
     const ticket = ui.tint(ui.el('article', 'urd-cal-ticket'), occ);
     const stub = ui.el('div', 'urd-cal-ticket-stub');
-    stub.append(ui.field('strong', 'number', String(d.getDate())), ui.field('span', 'date', monthShort(d)), ui.field('span', 'time', timeText(occ)));
+    stub.append(ui.field('strong', 'number', String(d.getDate())), ui.field('span', 'date', monthShort(d)), ui.field('span', 'time', ui.timeText(occ)));
     const body = ui.el('div', 'urd-cal-ticket-body');
     const text = ui.el('div', 'urd-cal-ticket-text');
     text.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-ticket-title'));
@@ -196,9 +191,9 @@ export function apGrid(host, occs, props, ics, ui) {
     body.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-apcard-title'));
     const when2 = ui.el('span', 'urd-cal-apcard-time');
     when2.appendChild(ui.field('span', 'date', weekdayShort(d)));
-    if (!occ.allDay) {
+    if (ui.hasTime(occ)) {
       when2.appendChild(document.createTextNode(' · '));
-      when2.appendChild(ui.field('span', 'time', timeOf(occ)));
+      when2.appendChild(ui.field('span', 'time', ui.time(occ)));
     }
     body.appendChild(when2);
     if (occ.location) body.appendChild(ui.field('span', 'place', occ.location, 'urd-cal-apcard-place'));
@@ -217,7 +212,7 @@ function miniMonth(ui) {
   tile.appendChild(ui.el('span', 'urd-cal-bento-label', monthLong(now)));
   const grid = ui.el('div', 'urd-cal-bento-grid');
   const first = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lead = (first.getDay() + 6) % 7;
+  const lead = ui.lead(first);
   const dim = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const eventDays = new Set(ui.all
     .map((occ) => dayOf(occ))
@@ -245,7 +240,7 @@ function smallTile(occ, ui) {
   tile.appendChild(ui.field('span', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: monthShort(d) }), 'urd-cal-bento-label'));
   const body = ui.el('div');
   body.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-bento-title'));
-  body.appendChild(ui.field('span', 'time', timeText(occ), 'urd-cal-bento-sub'));
+  body.appendChild(ui.field('span', 'time', ui.timeText(occ), 'urd-cal-bento-sub'));
   tile.appendChild(body);
   return tile;
 }

@@ -1178,6 +1178,23 @@ textarea.urd-form-input {
   text-decoration: underline;
 }
 
+/* A cancelled event: its title struck and the box dimmed, in every design. */
+.urd-cal-cancelled .urd-cal-f-title,
+.urd-cal-cancelled.urd-cal-f-title {
+  text-decoration: line-through;
+}
+
+.urd-cal-cancelled {
+  opacity: 0.6;
+}
+
+/* The line that names the time zone the times are shown in. */
+.urd-cal-zone {
+  margin: 0;
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+
 /* The fold for the events beyond the max count, in every list design. */
 .urd-cal-fold {
   margin-top: 12px;

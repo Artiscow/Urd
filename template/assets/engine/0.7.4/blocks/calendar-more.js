@@ -18,10 +18,6 @@ const monthShort = (d) => dates().monthsShort[d.getMonth()];
 const monthLong = (d) => dates().months[d.getMonth()];
 const weekdayShort = (d) => dates().weekdaysShort[(d.getDay() + 6) % 7];
 const weekday = (d) => dates().weekdays[(d.getDay() + 6) % 7];
-const timeOf = (occ) => {
-  const d = dayOf(occ);
-  return `${two(d.getHours())}:${two(d.getMinutes())}`;
-};
 const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
 /** «Wed · 19:00 · the place» as fields: the weekday, the time and the place. */
@@ -29,9 +25,9 @@ function shortWhen(occ, ui, { place = true } = {}) {
   const d = dayOf(occ);
   const line = ui.el('span', 'urd-cal-ap-line');
   line.appendChild(ui.field('span', 'date', weekdayShort(d)));
-  if (!occ.allDay) {
+  if (ui.hasTime(occ)) {
     line.appendChild(document.createTextNode(' · '));
-    line.appendChild(ui.field('span', 'time', timeOf(occ)));
+    line.appendChild(ui.field('span', 'time', ui.time(occ)));
   }
   if (place && occ.location) {
     line.appendChild(document.createTextNode(' · '));
@@ -200,9 +196,9 @@ function longDate(occ, ui) {
   const d = dayOf(occ);
   const line = ui.el('span');
   line.appendChild(ui.field('span', 'date', `${d.getDate()}. ${monthLong(d)}`));
-  if (!occ.allDay) {
+  if (ui.hasTime(occ)) {
     line.appendChild(document.createTextNode(' '));
-    line.appendChild(ui.field('span', 'time', t('calendar.timeAt', { time: timeOf(occ) })));
+    line.appendChild(ui.field('span', 'time', ui.timeText(occ)));
   }
   return line;
 }
@@ -324,7 +320,7 @@ function filterMenu(ui) {
 /** F5 Agenda, dark: a dark ground with the month and the calendar chip, this week's days with a dot under those with events, and a card per event under its day. */
 export function mobileAgenda(host, occs, props, ics, ui) {
   const today = ui.today();
-  const monday = new Date(ics.startOfWeek(today.getTime()));
+  const monday = new Date(ui.weekStartOf(today.getTime()));
   const card = ui.el('div', 'urd-cal-magenda');
   const head = ui.el('div', 'urd-cal-magenda-head');
   head.appendChild(ui.el('strong', 'urd-cal-magenda-month', monthLong(occs.length ? dayOf(occs[0]) : today)));
@@ -357,7 +353,7 @@ export function mobileAgenda(host, occs, props, ics, ui) {
       last = d;
     }
     const row = ui.tint(ui.el('article', 'urd-cal-magenda-card'), occ);
-    row.appendChild(ui.field('span', 'time', occ.allDay ? t('calendar.allDay') : timeOf(occ), 'urd-cal-magenda-time'));
+    row.appendChild(ui.field('span', 'time', ui.time(occ), 'urd-cal-magenda-time'));
     const body = ui.el('span', 'urd-cal-magenda-body');
     body.appendChild(ui.field('strong', 'title', occ.title));
     if (occ.location) body.appendChild(ui.field('span', 'place', occ.location, 'urd-cal-magenda-place'));
