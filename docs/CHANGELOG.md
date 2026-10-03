@@ -27,6 +27,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.21.1 - The sizing model decided - 3 October 2026
+
+- What a drag of a block's outline means was never decided: thirteen block types stood at the top of a frame with air under them, the map ignored its frame, and the audio block stretched its player. Every block type was measured in the preview in a frame too short, too tall and narrow, and the builders' models read again; the table and the sources are in LAERDOMMER §2 («What a drag means»).
+- The model is in ADR-0025: the dragged width for every block, a height that follows the content or is the block's own with a default per block type and a choice per block, a drag that stops at the content, the frame set by the editor after an edit, and «Size» as the explicit scale. ADR-0024 has an addendum for the one point it amends.
+- BACKLOG: stages 0.7.21.2 to 0.7.21.6 rewritten to the model. AGENTS.md lists ADR-0025.
+
 ### 0.7.20.1 - The element menu's frame, and the calendar's size and defaults - 3 October 2026
 
 - The element menu held every setting in one narrow column under two tabs. It now has three areas, Content, Style and Placement, as columns in a wide menu and as tabs in a narrow one, with a button in its head that switches and the admin setting «Element menu» for the width it opens in (ADR-0016 addendum). An area without settings takes no column.

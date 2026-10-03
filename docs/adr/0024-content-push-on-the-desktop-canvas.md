@@ -37,6 +37,10 @@ Urd already uses the Fluid Engine model on mobile (ADR-0019). Porting it to the 
 
 Decision 2 raised the section to `bottom + 24` whenever anything in it grew, with `bottom` measured over every block. A block deliberately placed across the boundary was therefore dragged into that maximum, and the section stretched to keep it inside instead of letting it lie over the section below. The rule is narrowed: a block counts towards the section's height only while its design bottom (`y + h`) is inside the section's own height. Content that grows within that height still pushes the blocks under it and still raises the section; a block hung past the edge is left out of the calculation, and its section keeps the height the owner set. A section with no height of its own still follows every block, since there is nothing to measure against.
 
+## Addendum, 3 October 2026: the editor may fit a frame after an edit
+
+Decision 2 keeps measured heights out of `frames.desktop`. ADR-0025 amends it in one respect: when the owner edits a block whose height follows its content (a design, a variant, a setting, its width), the editor asks the preview for the height the content needs at the design width and writes it into the frame, since an edit of the block is an edit of the design. A measurement taken on the published page is still never written anywhere, and the push pass covers the difference as before.
+
 [ADR-0012]: 0012-multilingual.md
 [ADR-0018]: 0018-bound-content-width.md
 [ADR-0019]: 0019-synced-mobile-model.md

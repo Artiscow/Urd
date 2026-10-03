@@ -149,6 +149,32 @@ Written in English (ADR-0022). The same day's second pass, on the actual symptom
 
 **What Urd takes (0.7.17.3):** the Wix push rules on the existing absolute frames, applied to every block below (ADR-0024). The row grid, which Urd already uses on mobile (ADR-0019), was inventoried for the desktop and not taken: about twenty files, sticky.js reading `style.top`, negative `y` for overhanging blocks, the presets' unaligned frames and `mobileOrder` on the `y` scale; the inventory stands in ADR-0024 so the decision can be reopened with its price known. A text block can also shrink instead of wrap (`fit: "shrink"` with a floor), the Framer Fit Text model: the text keeps its size until its frame is too narrow for it, then is zoomed only as much as its design height needs, down to the floor.
 
+### What a drag means: how the builders size an element (survey 3 October 2026)
+Written in English (ADR-0022). From the test of the calendar designs: an outline that did not follow a change of design, a drag that scaled the text with everything else, and thirteen block types that stand at the top of a frame with air under them.
+
+- **Squarespace Fluid Engine:** every block type is sized either intrinsically (the content decides: text) or extrinsically (the owner decides: image). A text block cannot be dragged smaller than its content; a red bar stops the drag. Image and button have «Fit» (the content keeps its size, with an alignment inside the block) or «Fill» (the content covers the block); image defaults to Fit, button to Fill ([the tablet spacing problem](https://www.will-myers.com/articles/fixing-the-tablet-spacing-problem-in-squarespace-fluid-engine), [Fluid Engine and Classic Editor](https://www.bigcatcreative.com/blog/squarespace-fluid-engine-classic-editor), [editing with Fluid Engine](https://support.squarespace.com/hc/articles/6421525446541)).
+- **Figma auto layout and Framer:** three behaviours per axis: fixed, hug or fit content (the content decides) and fill (the content takes the space it is given). Framer recommends fit content for content that varies, such as a CMS list, and warns against a parent that fits its content with a child that fills on the same axis: neither has a size ([Figma auto layout](https://help.figma.com/hc/articles/360040451373), [Framer sizing modes](https://www.framer.com/academy/lessons/sizing-modes), [sizing to fill and fit content](https://www.framer.com/academy/lessons/framer-fundamentals-sizing-to-fill-and-fit-content)).
+- **Webflow:** the default height is the content's (`auto`); a minimum height is the safe way to ask for more, a fixed height clips ([height auto](https://webflow.com/glossary/height-auto), [width and height](https://help.webflow.com/article/width-and-height-units)).
+- **Wix Studio:** «Scale proportionally» is the default responsive behaviour, with fluid and fixed beside it, and scaled text has a smallest and a largest size. Content that grows pushes what is below. The documented source of unexplained white space is a stored minimum height that the content no longer reaches; a hug height for containers is an open request ([setting the size of your elements](https://support.wix.com/en/article/studio-editor-setting-the-size-of-your-elements), [element size changes and page layout](https://dev.wix.com/docs/develop-websites-sdk/code-your-site/build-a-custom-frontend/page-elements/about-element-size-changes-and-page-layout), [the hug height request](https://support.wix.com/en/article/studio-editor-request-hug-height-responsive-behavior-for-containers-to-fit-child-elements)).
+- **Elementor:** a container has a minimum height, and its items an alignment and a stretch, which is how equal cards are made ([container size and behavior](https://elementor.com/help/set-flexbox-container-size-behavior)).
+- **CSS:** container queries and container units (`cqw`, with `clamp()`) let a component size itself by the box it stands in, not by the window ([container query units and fluid typography](https://moderncss.dev/container-query-units-and-fluid-typography/), [container queries in action](https://web.dev/articles/baseline-in-action-container-queries)).
+
+**Urd's blocks as measured (preview, default content, a frame of 30 px, of 900 px, and 12 % wide):**
+
+| Block types | Frame too short | Frame too tall |
+|---|---|---|
+| image, video, icon, shape, button, gallery, ribbon | as short as the frame (video and icon stop near 40 px) | the content fills the frame |
+| calendar, collection, product, cart, checkout, countdown, FAQ, form, quote, share, stats, table, timeline | grows to the content | the content stands at the top, air under it |
+| text | grows to the words | stays as tall as dragged, the words at the top |
+| audio | grows to the player | the player is stretched to the frame |
+| map | its own height setting | its own height setting; the frame is ignored |
+
+The width is the same for all: the dragged width in percent of the content surface, the content flowing in it.
+
+**Five rules from the survey:** (1) a drag changes the box, never the content's own size; text size is a setting of the text. (2) Each axis is fixed, follows the content, or is filled by it, and each block type has a default. (3) A block that follows its content cannot be dragged smaller than it, and the drag says so. (4) A stored height the content does not reach is white space nobody can explain, so a taller box is an explicit choice. (5) Scaling everything, text included, is a setting of its own with text bounds.
+
+**What Urd takes (0.7.21):** the dragged width for every block; a height that either follows the content or is the block's own, with a default per block type and a choice per block; the frame of a block that follows its content set by the editor after an edit; and «Size» as the explicit scale (ADR-0025).
+
 ### The element review: ApeironLF and the builders' backgrounds against Urd's elements (survey 22 September 2026)
 Written in English (ADR-0022). The review behind milestone 0.7.13: ApeironLF read from its source, every page and every admin module ([github.com/Apeiron-Linjeforening/ApeironLF](https://github.com/Apeiron-Linjeforening/ApeironLF)), and a search on what the builders offer as section backgrounds, both held against Urd's element list.
 
