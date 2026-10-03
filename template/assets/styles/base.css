@@ -1557,6 +1557,62 @@ textarea.urd-form-input {
   color: var(--urd-cal-accent);
 }
 
+/* The loading state: quiet bars at the block's height while the feed is
+   fetched, and the word for a screen reader. */
+.urd-cal[aria-busy="true"] {
+  height: 100%;
+}
+
+.urd-cal-loading {
+  display: grid;
+  grid-template-rows: 1.4em repeat(3, minmax(2.6em, 5em));
+  gap: 12px;
+  align-content: start;
+  height: 100%;
+  min-height: 9rem;
+  overflow: hidden;
+}
+
+.urd-cal-loading i {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  border-radius: var(--urd-radius-sm);
+}
+
+.urd-cal-loading i:first-of-type {
+  width: 40%;
+}
+
+.urd-cal-loading-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .urd-cal-loading i {
+    animation: urd-cal-loading 1.4s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes urd-cal-loading {
+  to {
+    opacity: 0.45;
+  }
+}
+
+/* A day of a month on the phone is a button: its own look comes from the
+   design's day cell, which stands after this in the sheet. */
+.urd-cal-pday {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
 .urd-cal-month {
   display: grid;
   gap: 8px;
@@ -4089,6 +4145,258 @@ textarea.urd-form-input {
 .urd-cal-band-still {
   overflow-x: auto;
   scrollbar-width: thin;
+}
+
+/* ---- The phone: the seven-column designs with their days under each other,
+   and the months as dots that open the day ---- */
+
+.urd-cal-phone .urd-cal-wstrip-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+
+.urd-cal-phone .urd-cal-wstrip-day {
+  flex-flow: row wrap;
+  gap: 6px 8px;
+  align-items: baseline;
+  min-height: 0;
+}
+
+.urd-cal-phone .urd-cal-wstrip-pill {
+  flex: 1 1 100%;
+  font-size: 0.85em;
+}
+
+.urd-cal-phone .urd-cal-wplan-today {
+  white-space: nowrap;
+}
+
+.urd-cal-wplan-days[hidden] {
+  display: none;
+}
+
+.urd-cal-wplan-stack {
+  display: grid;
+}
+
+.urd-cal-wplan-prow {
+  display: grid;
+  grid-template-columns: 3.2em minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 10px 12px 10px 0;
+  border-bottom: 1px solid var(--urd-cal-line);
+}
+
+.urd-cal-wplan-prow:last-child {
+  border-bottom: 0;
+}
+
+.urd-cal-wplan-prow.urd-cal-wplan-istoday {
+  background: var(--urd-cal-s-todayBg, color-mix(in srgb, var(--urd-cal-accent) 8%, transparent));
+}
+
+.urd-cal-wplan-pday {
+  display: grid;
+  justify-items: center;
+  font-size: 0.7em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.urd-cal-wplan-pday strong {
+  font-family: var(--urd-font-heading);
+  font-size: 1.6em;
+}
+
+.urd-cal-wplan-istoday .urd-cal-wplan-pday {
+  color: var(--urd-cal-accent);
+}
+
+.urd-cal-wplan-plist {
+  display: grid;
+  gap: 6px;
+  align-content: center;
+  min-height: 2.4em;
+}
+
+.urd-cal-wplan-stack .urd-cal-plan-event,
+.urd-cal-wplan-stack .urd-cal-wplan-pill {
+  min-height: 0;
+  font-size: 0.85em;
+}
+
+.urd-cal-layers-day {
+  display: none;
+}
+
+.urd-cal-phone .urd-cal-layers {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.urd-cal-phone .urd-cal-layers-nav {
+  flex-wrap: wrap;
+}
+
+.urd-cal-phone .urd-cal-layers-label {
+  flex: 1 1 100%;
+  margin-left: 0;
+  white-space: normal;
+}
+
+.urd-cal-phone .urd-cal-layers-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.urd-cal-phone .urd-cal-layers-corner,
+.urd-cal-phone .urd-cal-layers-dow,
+.urd-cal-phone .urd-cal-layers-lane::before {
+  display: none;
+}
+
+.urd-cal-phone .urd-cal-layers-name {
+  padding-bottom: 0.5em;
+  border-bottom: 0;
+}
+
+.urd-cal-phone .urd-cal-layers-lane {
+  grid-column: auto;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  min-height: 0;
+  padding: 0 12px 12px;
+  border-left: 0;
+}
+
+.urd-cal-phone .urd-cal-layers-bar {
+  grid-column: auto;
+  margin: 0;
+  font-size: 0.85em;
+  white-space: normal;
+}
+
+.urd-cal-phone .urd-cal-layers-day {
+  display: block;
+  font-size: 0.85em;
+  font-weight: 500;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.urd-cal-phone .urd-cal-day {
+  justify-items: center;
+  min-height: 44px;
+  padding: 4px 0;
+}
+
+.urd-cal-phone .urd-cal-apm-grid {
+  grid-auto-rows: minmax(44px, auto);
+}
+
+.urd-cal-phone .urd-cal-apm-day {
+  align-items: center;
+  padding: 6px 0;
+}
+
+.urd-cal-pday-num {
+  font-size: 0.9em;
+  font-style: normal;
+}
+
+.urd-cal-pday-today .urd-cal-pday-num {
+  font-weight: 700;
+  color: var(--urd-cal-accent);
+}
+
+.urd-cal-day.urd-cal-pday-today,
+.urd-cal-day.urd-cal-pday[aria-pressed="true"] {
+  border-color: var(--urd-cal-accent);
+}
+
+.urd-cal-pday[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--urd-cal-accent) 18%, transparent);
+}
+
+.urd-cal-apm .urd-cal-pday-today .urd-cal-pday-num {
+  display: inline-grid;
+  place-items: center;
+  width: 1.8em;
+  height: 1.8em;
+  color: var(--urd-cal-s-card, #f3ecd8);
+  background: var(--urd-cal-ap-gold);
+  border-radius: 50%;
+}
+
+.urd-cal-apm .urd-cal-pday[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--urd-cal-ap-gold) 24%, transparent);
+}
+
+.urd-cal-dots {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+  min-height: 6px;
+}
+
+.urd-cal-dots i {
+  width: 6px;
+  height: 6px;
+  background: var(--urd-cal-color, var(--urd-cal-accent));
+  border-radius: 50%;
+}
+
+.urd-cal-apm .urd-cal-dots i {
+  background: var(--urd-cal-color, var(--urd-cal-ap-gold));
+}
+
+.urd-cal-daylist {
+  display: grid;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.urd-cal-daylist:empty {
+  display: none;
+}
+
+.urd-cal-daylist-head {
+  font-family: var(--urd-font-heading);
+}
+
+.urd-cal-daylist-rows {
+  display: grid;
+  gap: 6px;
+}
+
+.urd-cal-daylist-row {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--urd-cal-color, var(--urd-cal-accent)) 14%, transparent);
+  border-left: 3px solid var(--urd-cal-color, var(--urd-cal-accent));
+  border-radius: var(--urd-radius-sm);
+}
+
+.urd-cal-daylist-time,
+.urd-cal-daylist-place {
+  font-size: 0.85em;
+  opacity: 0.8;
+}
+
+.urd-cal-daylist-none {
+  margin: 0;
+  font-size: 0.9em;
+  opacity: 0.7;
+}
+
+.urd-cal-apm .urd-cal-daylist {
+  padding: 12px;
+  border-top: 1px solid var(--urd-cal-ap-grid);
+}
+
+.urd-cal-apm .urd-cal-daylist-row {
+  background: var(--urd-cal-s-pill, color-mix(in srgb, var(--urd-cal-s-gold, #d0a74a) 18%, transparent));
+  border-left-color: var(--urd-cal-color, var(--urd-cal-ap-gold));
 }
 
 /* ---- The «Coming up» designs (blocks/calendar-next.js) ---- */

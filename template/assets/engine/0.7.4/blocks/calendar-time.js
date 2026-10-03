@@ -156,6 +156,23 @@ export function weekPlan(host, occs, props, ics, ui) {
       days.appendChild(cell);
     }
     const inWeek = ui.all.filter((occ) => occ.start < week[6].getTime() + DAY && (occ.end ?? occ.start) >= week[0].getTime());
+    if (ui.phone) {
+      // The phone's week: the days under each other, each with its events in the order of the clock.
+      days.hidden = true;
+      grid.className = 'urd-cal-wplan-stack';
+      grid.replaceChildren();
+      for (const day of week) {
+        const row = ui.el('div', 'urd-cal-wplan-prow');
+        const name = ui.el('div', 'urd-cal-wplan-pday');
+        if (sameDay(day, today)) row.classList.add('urd-cal-wplan-istoday');
+        name.append(ui.field('span', 'date', weekdayShort(day)), ui.field('strong', 'number', String(day.getDate())));
+        const list = ui.el('div', 'urd-cal-wplan-plist');
+        for (const occ of onDay(inWeek, day)) list.appendChild(occ.allDay ? pillNode(occ, ui, 'urd-cal-wplan-pill') : planBlock(occ, ui));
+        row.append(name, list);
+        grid.appendChild(row);
+      }
+      return;
+    }
     const { from, to } = hourSpan(inWeek, ui.opt);
     grid.replaceChildren();
     grid.style.setProperty('--urd-cal-plan-rows', String(to - from));
@@ -239,6 +256,10 @@ export function layers(host, occs, props, ics, ui) {
         const bar = ui.tint(ui.el('div', 'urd-cal-layers-bar'), occ);
         bar.style.setProperty('--urd-cal-bar-from', String(Math.max(0, first)));
         bar.style.setProperty('--urd-cal-bar-span', String(Math.max(1, last - Math.max(0, first) + 1)));
+        // The bar's day in words, shown where the day columns are not (the phone).
+        const dayName = (i) => `${weekdayShort(week[i])} ${week[i].getDate()}`;
+        const from = Math.max(0, first);
+        bar.appendChild(ui.field('span', 'date', last > from ? t('calendar.range', { from: dayName(from), to: dayName(last) }) : dayName(from), 'urd-cal-layers-day'));
         bar.appendChild(ui.field('span', 'title', occ.title));
         if (ui.hasTime(occ)) bar.appendChild(ui.field('span', 'time', ` ${ui.time(occ)}`));
         bar.title = `${occ.title}${occ.location ? ` · ${occ.location}` : ''}`;
@@ -391,6 +412,9 @@ export function apMonth(host, occs, props, ics, ui) {
   for (const day of ui.dows()) dows.appendChild(ui.el('span', null, day));
   const grid = ui.el('div', 'urd-cal-apm-grid');
   wrap.append(head, dows, grid);
+  // On the phone a day is a button with dots, and its events are listed under the grid.
+  const panel = ui.phone ? ui.el('div', 'urd-cal-daylist') : null;
+  if (panel) wrap.appendChild(panel);
   const paint = () => {
     const first = new Date(shown.y, shown.m, 1);
     label.textContent = `${monthLong(first)} ${shown.y}`;
@@ -398,7 +422,8 @@ export function apMonth(host, occs, props, ics, ui) {
     const lead = ui.lead(first);
     const dim = new Date(shown.y, shown.m + 1, 0).getDate();
     for (let i = 0; i < lead; i++) grid.appendChild(ui.el('span', 'urd-cal-apm-day urd-cal-apm-out'));
-    for (let d = 1; d <= dim; d++) {
+    if (panel) ui.phoneDays(grid, panel, shown.y, shown.m, ui.all, 'urd-cal-apm-day');
+    for (let d = 1; !panel && d <= dim; d++) {
       const date = new Date(shown.y, shown.m, d);
       const cell = ui.el('div', 'urd-cal-apm-day');
       const num = ui.el('i', 'urd-cal-apm-num', String(d));

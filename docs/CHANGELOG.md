@@ -27,6 +27,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.19.12 - The calendar's loading state and the seven-column designs on the phone - 3 October 2026
+
+- A calendar with a feed was empty until the events arrived, and showed the empty state for a moment in the preview. It now stands in a loading state (`aria-busy`, quiet bars, «Loading the calendar» for a screen reader): at the frame's height on the desktop, and on the phone at the height the calendar last had in the session.
+- Week strip, Week plan and Calendar layers drew seven narrow columns on the phone. There the days stand under each other: the strip's days as rows, the plan's days with their events in the order of the clock, and each calendar layer with its events under it and the day written on each.
+- The plain month and Overview on cream cut every title in a phone-wide cell. On the phone a day is a button with a dot per event, and a press lists the day's events under the grid (`phoneDays` in blocks/calendar.js); the week and the month of the view switcher get the same layouts.
+- The first load of a session on a phone still jumps, since the height is not known until the calendar is drawn; a stored phone height is added to the backlog as 0.7.21.7.
+
 ### 0.7.19.11 - A click on a calendar event opens a card with its details, links and add-to-calendar choices - 3 October 2026
 
 - An event could not be opened. A click or Enter on an event opens it in a native dialog laid inside its calendar: the date and time, the place, the calendar it belongs to, the picture, the whole description with its links, the sign-up and «Join» for a meeting link (`findMeetingLink`). The calendar is shaded behind it, the card stays under the navigation bar and inside the calendar's width and height, and opening and closing it never scrolls the page.

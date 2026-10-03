@@ -353,7 +353,10 @@ function makeUi(cd, cf, ics, el, host, props, ctx, sources, zone) {
     dows: () => cf.orderWeekdays(dates().weekdaysShort, weekStart),
     weekStartOf: (ms) => cf.startOfWeek(ms, weekStart),
     /** Now, on the clock the times are shown in. */
-    today: () => new Date(zone ? cf.shiftToZone(Date.now(), zone) : Date.now()) };
+    today: () => new Date(zone ? cf.shiftToZone(Date.now(), zone) : Date.now()),
+    /** True on the phone, where a design with seven columns draws its phone layout. */
+    phone: ctx.viewport === 'mobile',
+    phoneDays: (grid, panel, year, month, occs, cellClass) => phoneDays(ui, grid, panel, year, month, occs, cellClass) };
   return ui;
 }
 
@@ -859,6 +862,9 @@ function renderMonth(host, occs, props, ics, ui) {
   head.append(prev, label, next);
   const grid = el2('div', 'urd-cal-grid');
   wrap.append(head, grid);
+  // On the phone a day is a button with dots, and its events are listed under the grid.
+  const panel = ui.phone ? el2('div', 'urd-cal-daylist') : null;
+  if (panel) wrap.appendChild(panel);
 
   const paint = () => {
     label.textContent = `${dates().months[shown.mo]} ${shown.y}`;
@@ -869,6 +875,10 @@ function renderMonth(host, occs, props, ics, ui) {
     const dim = new Date(shown.y, shown.mo + 1, 0).getDate();
     const today = new Date();
     for (let i = 0; i < lead; i++) grid.appendChild(el2('div', 'urd-cal-day urd-cal-day-empty'));
+    if (panel) {
+      ui.phoneDays(grid, panel, shown.y, shown.mo, occs, 'urd-cal-day');
+      return;
+    }
     for (let d = 1; d <= dim; d++) {
       const cell = el2('div', 'urd-cal-day');
       if (d === today.getDate() && shown.mo === today.getMonth() && shown.y === today.getFullYear()) {
@@ -973,6 +983,85 @@ function switchRow(mode, onpick, ui) {
   return row;
 }
 
+/* ---------- The month on the phone ---------- */
+
+const DAY_MS = 24 * 3600 * 1000;
+const DOTS_MAX = 4;
+
+/**
+ * The days of a month as the phone draws them: every day a button with its
+ * number and a dot per event, and the picked day's events listed in the
+ * panel under the grid. Today is picked first, else the month's first day
+ * with an event. The day buttons are appended to the grid after its lead cells.
+ */
+function phoneDays(ui, grid, panel, year, month, occs, cellClass) {
+  const today = ui.today();
+  const dim = new Date(year, month + 1, 0).getDate();
+  const eventsOf = (d) => {
+    const from = new Date(year, month, d).getTime();
+    return occs.filter((occ) => occ.start < from + DAY_MS && Math.max(occ.end ?? occ.start, occ.start + 1) > from);
+  };
+  const buttons = [];
+  const pick = (d) => {
+    buttons.forEach((btn, i) => btn.setAttribute('aria-pressed', i + 1 === d ? 'true' : 'false'));
+    const date = new Date(year, month, d);
+    const names = dates();
+    const list = el2('div', 'urd-cal-daylist-rows');
+    for (const occ of eventsOf(d)) {
+      const row = ui.tint(el2('div', 'urd-cal-daylist-row'), occ);
+      if (ui.hasTime(occ)) row.appendChild(ui.field('span', 'time', ui.time(occ), 'urd-cal-daylist-time'));
+      row.appendChild(ui.field('strong', 'title', occ.title));
+      if (occ.location) row.appendChild(ui.field('span', 'place', occ.location, 'urd-cal-daylist-place'));
+      list.appendChild(row);
+    }
+    if (!list.children.length) list.appendChild(el2('p', 'urd-cal-daylist-none', t('calendar.dayNone')));
+    panel.replaceChildren(
+      ui.field('strong', 'date', `${names.weekdays[(date.getDay() + 6) % 7]} ${t('calendar.dayMonth', { d, m: names.months[month] })}`, 'urd-cal-daylist-head'),
+      list,
+    );
+  };
+  let first = 0;
+  for (let d = 1; d <= dim; d++) {
+    const events = eventsOf(d);
+    const btn = el2('button', `${cellClass} urd-cal-pday`);
+    btn.type = 'button';
+    btn.setAttribute('aria-pressed', 'false');
+    btn.setAttribute('aria-label', `${t('calendar.dayMonth', { d, m: dates().months[month] })}, ${tp('calendar.count', events.length)}`);
+    if (d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+      btn.classList.add('urd-cal-pday-today');
+      first = d;
+    }
+    btn.appendChild(el2('i', 'urd-cal-pday-num', String(d)));
+    const dots = el2('span', 'urd-cal-dots');
+    for (const occ of events.slice(0, DOTS_MAX)) dots.appendChild(tintNode(el2('i'), occ));
+    btn.appendChild(dots);
+    if (events.length && !first) first = d;
+    btn.addEventListener('click', () => pick(d));
+    buttons.push(btn);
+    grid.appendChild(btn);
+  }
+  if (first) pick(first);
+  else panel.replaceChildren();
+}
+
+/* ---------- Loading ---------- */
+
+/** The height the calendar last had in this viewport, kept for the session so the loading state can stand at it. */
+const heightKey = (el, ctx) => `urd-cal-h:${el.dataset.blockId ?? ''}:${ctx.viewport === 'mobile' ? 'm' : 'd'}`;
+
+/** The loading state: quiet bars at the height the calendar will have, with the word for a screen reader. */
+function loadingNode(el, ctx) {
+  const box = el2('div', 'urd-cal-loading');
+  box.setAttribute('role', 'status');
+  box.appendChild(el2('span', 'urd-cal-loading-text', t('calendar.loading')));
+  for (let i = 0; i < 4; i++) box.appendChild(el2('i'));
+  try {
+    const known = Number(sessionStorage.getItem(heightKey(el, ctx)));
+    if (known > 0) box.style.minHeight = `${known}px`;
+  } catch { /* without the store the loading state stands at its own height */ }
+  return box;
+}
+
 /* ---------- The views' names (the variants in the block menus) ---------- */
 
 /** View id + label KEY (looked up with ta at use time; never at module level). */
@@ -983,6 +1072,11 @@ const VIEW_NAMES = [['list', 'calendar.viewList'], ['cards', 'calendar.viewCards
 function renderCalendar(el, props, ctx) {
   const host = el2('div', 'urd-cal');
   el.appendChild(host);
+  // A calendar with a feed stands in its loading state until the events are drawn.
+  if ((props.sources ?? []).length) {
+    host.setAttribute('aria-busy', 'true');
+    host.appendChild(loadingNode(el, ctx));
+  }
   // The parser and the design model are loaded together, on the first
   // render, and a design's renderer module with them (literal paths, so the
   // modules stay out of the visitor closure and the preload list).
@@ -1009,6 +1103,7 @@ function drawCalendar(ics, cd, cf, mod, weekMod, el, host, props, ctx) {
   const design = cd.calDesign(props.design);
   const view = cd.calView(props);
   host.className = `urd-cal urd-cal-d-${design.id}`;
+  host.classList.toggle('urd-cal-phone', ctx.viewport === 'mobile');
   for (const [name, value] of Object.entries(cd.calSlotVars(design, props.colors))) host.style.setProperty(name, value);
   // The calendar's size: the whole design, text included, drawn smaller or larger (the Style tab's size).
   const scale = cd.calScale(props);
@@ -1025,6 +1120,7 @@ function drawCalendar(ics, cd, cf, mod, weekMod, el, host, props, ctx) {
   }
 
   const draw = (occurrences, note) => {
+    host.removeAttribute('aria-busy');
     host.replaceChildren();
     if (ctx.preview && ctx.viewport !== 'mobile') {
       // Help chip (ADR-0008): the sources, the conventions and the subscribe buttons need explaining.
@@ -1131,7 +1227,6 @@ function drawCalendar(ics, cd, cf, mod, weekMod, el, host, props, ctx) {
   host.style.maxHeight = '';
   host.style.overflow = '';
 
-  if (ctx.preview) draw([], null);
   // The switcher needs the week and the month from their start, whichever is the earlier.
   // The week begins on the day the site's language starts it on, which can be the day before Monday.
   const weekFrom = Math.min(ics.windowStart('week'), ui.weekStartOf(Date.now()));
@@ -1145,6 +1240,7 @@ function drawCalendar(ics, cd, cf, mod, weekMod, el, host, props, ctx) {
       return;
     }
     draw(occurrences, ctx.preview && errors.length ? ta('calendar.sourceFailed', { error: errors[0] }) : null);
+    try { sessionStorage.setItem(heightKey(el, ctx), String(Math.round(host.offsetHeight))); } catch { /* a full store is fine */ }
   });
 }
 

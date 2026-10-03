@@ -129,6 +129,8 @@ export default {
     'calendar.dayMonth': '{d}. {m}',
     'calendar.zoneOf': 'Tidene blir viste i {zone}',
     'calendar.zoneYours': 'Tidene blir viste i tidssona di ({zone})',
+    'calendar.loading': 'Lastar kalenderen',
+    'calendar.dayNone': 'Ingenting denne dagen',
     'calendar.nextMonth': 'Neste månad',
     'calendar.prevMonth': 'Førre månad',
     'calendar.signup': 'Meld deg på',

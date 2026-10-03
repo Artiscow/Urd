@@ -167,6 +167,8 @@ export default {
     'calendar.dayMonth': '{d} {m}',
     'calendar.zoneOf': 'Times are shown in {zone}',
     'calendar.zoneYours': 'Times are shown in your time zone ({zone})',
+    'calendar.loading': 'Loading the calendar',
+    'calendar.dayNone': 'Nothing on this day',
     'calendar.nextMonth': 'Next month',
     'calendar.prevMonth': 'Previous month',
     'calendar.signup': 'Sign up',

@@ -2,6 +2,19 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Test batch (0.7.19.12): the calendar's loading state and the seven-column designs on the phone
+
+- [ ] Published page with a real feed, desktop: while the calendar is fetched the block shows quiet bars at the frame's height, and nothing below it moves when the events arrive; with reduced motion set in the system the bars stand still
+- [ ] Published page with a real feed, phone: the bars show while the calendar is fetched; on the second load in the same session (another page and back) the block has the same height before and after the events arrive
+- [ ] A screen reader announces «Loading the calendar» while the feed is fetched
+- [ ] The preview with a feed shows the bars while it loads, never «No upcoming events» for a moment
+- [ ] Week strip on a phone (360 px): the seven days under each other, each event in the full width under its day, today marked, the arrows move through the weeks
+- [ ] Week plan on a phone: the days under each other with their events in the order of the clock and all-day events first, no hour grid, «Today» on one line
+- [ ] Calendar layers on a phone: each calendar with its events under its name and the day written on each event («Sun 4», a span as «Mon 5 to Wed 7»); the switches hide and show a calendar; the week label wraps instead of running out of the box
+- [ ] «Month» and Overview on cream on a phone: every day a button with up to four dots in the calendars' colours; today is picked first; a press on a day lists its events under the grid, a day without events says «Nothing on this day», and a press on a row opens the event's card; the arrows change the month
+- [ ] The view switcher on a phone: «Week» and «Month» show the same phone layouts
+- [ ] Nothing in the five designs runs out of the block's width at 360 px, with a real feed with long titles
+
 ### Test batch (0.7.19.11): the card that opens at a click on a calendar event
 
 - [ ] Published page and Clean view, every design: a click on an event opens its card inside the calendar, the calendar shaded behind it and the rest of the page untouched; the page does not scroll when the card opens or closes; Escape, the close button and a click outside close it, and the focus is back on the event; Tab to an event and Enter opens it too

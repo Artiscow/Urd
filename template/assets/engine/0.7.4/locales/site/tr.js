@@ -166,6 +166,8 @@ export default {
     'calendar.dayMonth': '{d} {m}',
     'calendar.zoneOf': 'Saatler {zone} saatine göre gösterilir',
     'calendar.zoneYours': 'Saatler sizin saat diliminize göre gösterilir ({zone})',
+    'calendar.loading': 'Takvim yükleniyor',
+    'calendar.dayNone': 'Bu gün etkinlik yok',
     'calendar.nextMonth': 'Sonraki ay',
     'calendar.prevMonth': 'Önceki ay',
     'calendar.signup': 'Kaydol',
