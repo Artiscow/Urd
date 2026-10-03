@@ -110,18 +110,22 @@
             "sources": [
               "https://calendar.google.com/calendar/ical/apeironlinjeforening%40gmail.com/public/basic.ics"
             ],
-            "view": "month",
+            "view": "next",
             "limit": 6,
             "showCategories": false,
-            "showSubscribe": false
+            "showSubscribe": false,
+            "design": "apNow",
+            "nextCount": 3,
+            "laterCount": 3,
+            "scale": 0.7
           },
           "animation": null,
           "frames": {
             "desktop": {
-              "x": 51.11,
-              "y": 256,
-              "w": 40,
-              "h": 485,
+              "x": 55.62,
+              "y": 176,
+              "w": 35.5,
+              "h": 435,
               "z": 3,
               "rot": 0
             },
