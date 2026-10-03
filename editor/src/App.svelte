@@ -1102,6 +1102,42 @@
     return items;
   }
 
+  /**
+   * The calendar's groups in the element menu: what each shows while closed,
+   * and its reset when it differs from the defaults (null when it does not).
+   */
+  function calMenu() {
+    const p = selectedBlock.props;
+    const def = calDesign(p.design);
+    const reset = (name, patch) => () => setBlockProps(name, patch);
+    const viewChanged = p.switcher === true || p.showMore === false || (p.limit ?? 6) !== 6 || p.nextCount != null || p.laterCount != null;
+    const on = [!def.ownFilter && p.showCategories !== false, p.showSubscribe !== false, p.showSignup === true].filter(Boolean).length;
+    const buttonsChanged = on > 0 || p.showOpen === false || Boolean(p.programHref);
+    const emptyChanged = Boolean(p.emptyText) || (p.emptyIcon != null && p.emptyIcon !== 'calendar');
+    const optCount = calOptionDefs(p.design).filter((d) => p.options?.[d.key] != null).length + (calScale(p) !== 1 ? 1 : 0);
+    const colorCount = def.slots.filter((slot) => p.colors?.[slot.key]).length;
+    const fieldCount = Object.keys(p.fieldStyle ?? {}).length;
+    return {
+      sources: String((p.sources ?? []).length),
+      view: ta(CAL_VIEW_KEYS[calView(p)]),
+      viewReset: viewChanged ? reset('cal-view', { switcher: undefined, showMore: undefined, limit: 6, nextCount: undefined, laterCount: undefined }) : null,
+      buttons: on ? ta('menu.onCount', { n: on }) : ta('common.off'),
+      buttonsReset: buttonsChanged ? reset('cal-buttons', { showCategories: false, showSubscribe: false, showSignup: false, showOpen: undefined, programHref: undefined }) : null,
+      empty: p.emptyText || ta('menu.standard'),
+      emptyReset: emptyChanged ? reset('cal-empty', { emptyText: undefined, emptyIcon: undefined }) : null,
+      notice: p.notice?.show === true ? ta('common.on') : ta('common.off'),
+      noticeReset: p.notice ? reset('cal-notice', { notice: undefined }) : null,
+      opts: optCount ? ta('menu.changed', { n: optCount }) : ta('menu.standard'),
+      optsReset: optCount ? reset('cal-opts', { options: undefined, scale: undefined }) : null,
+      colors: colorCount ? ta('menu.changedOf', { n: colorCount, m: def.slots.length }) : ta('menu.standard'),
+      colorsReset: colorCount ? reset('cal-colors', { colors: undefined }) : null,
+      stripe: calStripe(def, p.stripe).show ? ta('common.on') : ta('common.off'),
+      stripeReset: p.stripe ? reset('cal-stripe', { stripe: undefined }) : null,
+      fields: fieldCount ? ta('menu.changed', { n: fieldCount }) : ta('menu.standard'),
+      fieldsReset: fieldCount ? reset('cal-fields', { fieldStyle: undefined }) : null,
+    };
+  }
+
   /** The block whose design picker stands open over the menu; null when the menu shows its areas. */
   let menuPickerFor = $state(null);
   const menuPicking = () => selectedBlock?.type === 'calendar' && menuPickerFor === selectedBlock.blockId;
@@ -9425,12 +9461,18 @@
   </label>
 {/snippet}
 
-{#snippet menuGroup(id, title, value, body)}
-  <!-- A collapsible group of the element menu: the title, the current value while closed, the controls inside -->
+{#snippet menuGroup(id, title, value, body, reset = null)}
+  <!-- A collapsible group of the element menu: the title, the current value while closed, the controls inside.
+       A group that differs from the defaults is handed its reset: it carries a mark, and the reset stands under its controls. -->
   <details class="group menu-group" open={menuOpen.has(id)}
     ontoggle={(e) => { if (e.currentTarget.open) menuOpen.add(id); else menuOpen.delete(id); }}>
-    <summary><span class="menu-group-title">{title}</span><span class="menu-group-value">{value}</span></summary>
-    <div class="group-items">{@render body()}</div>
+    <summary>{#if reset}<i class="menu-group-dot" aria-hidden="true"></i>{/if}<span class="menu-group-title">{title}</span><span class="menu-group-value">{value}</span></summary>
+    <div class="group-items">
+      {@render body()}
+      {#if reset}
+        <button type="button" class="linkish menu-group-reset" onclick={reset}>{ta('menu.reset')}</button>
+      {/if}
+    </div>
   </details>
 {/snippet}
 
@@ -9494,7 +9536,9 @@
         <input value={selectedBlock.props.successText ?? ''} placeholder={ta('form.thanksDefault')}
           onchange={(e) => setBlockProp('successText', e.target.value.trim() || ta('form.thanksDefault'))} /></label>
     {:else if selectedBlock.type === 'calendar'}
-      <p class="panel-strong" title={ta('calendar.sourcesPh')}>{ta('calendar.sources')}</p>
+      <!-- The calendar's content as groups, each showing its value while closed and a reset when it differs from the defaults -->
+      {@const cm = calMenu()}
+      {#snippet calSources()}
       <!-- One row per calendar: the address, and a name and a colour of its own. A named
            calendar is a category in the filter, whatever its events' titles say -->
       {#each selectedBlock.props.sources ?? [] as src, i (i)}
@@ -9527,6 +9571,8 @@
           <span class="gridmenu-value">{ta('calendar.siteSourcesNone')}</span>
         {/if}
       {/if}
+      {/snippet}
+      {#snippet calViewGroup()}
       <!-- A design with a view of its own (Style) fixes the view -->
       {#if !calDesign(selectedBlock.props.design).view}
         <label>{ta('lbl.view')}
@@ -9567,16 +9613,8 @@
           <span class="gridmenu-value">{selectedBlock.props.laterCount ?? 0}</span>
         </div>
       {/if}
-      <!-- The empty state: the owner's own words and icon; empty and unset give the defaults -->
-      <label title={ta('tip.calendar.emptyText')}>{ta('calendar.emptyText')}
-        <input value={selectedBlock.props.emptyText ?? ''} placeholder={ta('calendar.emptyPh')}
-          onchange={(e) => setBlockProp('emptyText', e.target.value.trim() || undefined)} /></label>
-      <label title={ta('tip.calendar.emptyIcon')}>{ta('calendar.emptyIcon')}
-        <MarkPicker iconsOnly icon={selectedBlock.props.emptyIcon === 'none' ? '' : (selectedBlock.props.emptyIcon ?? 'calendar')}
-          klass="lbtn-mark" label={ta('tip.calendar.emptyIcon')}
-          onpick={(mark) => setBlockProp('emptyIcon', mark.icon || 'none')}>
-          {#if selectedBlock.props.emptyIcon !== 'none'}{@html iconSvg(selectedBlock.props.emptyIcon ?? 'calendar') || iconSvg('calendar')}{/if}
-        </MarkPicker></label>
+      {/snippet}
+      {#snippet calButtons()}
       <!-- A design with calendar switches of its own has no chip row to switch -->
       {#if !calDesign(selectedBlock.props.design).ownFilter}
         <label class="gridmenu-snap">
@@ -9607,6 +9645,20 @@
           <input value={selectedBlock.props.programHref ?? ''} placeholder="/program" spellcheck="false"
             onchange={(e) => setBlockProp('programHref', e.target.value.trim() || undefined)} /></label>
       {/if}
+      {/snippet}
+      {#snippet calEmpty()}
+      <!-- The empty state: the owner's own words and icon; empty and unset give the defaults -->
+      <label title={ta('tip.calendar.emptyText')}>{ta('calendar.emptyText')}
+        <input value={selectedBlock.props.emptyText ?? ''} placeholder={ta('calendar.emptyPh')}
+          onchange={(e) => setBlockProp('emptyText', e.target.value.trim() || undefined)} /></label>
+      <label title={ta('tip.calendar.emptyIcon')}>{ta('calendar.emptyIcon')}
+        <MarkPicker iconsOnly icon={selectedBlock.props.emptyIcon === 'none' ? '' : (selectedBlock.props.emptyIcon ?? 'calendar')}
+          klass="lbtn-mark" label={ta('tip.calendar.emptyIcon')}
+          onpick={(mark) => setBlockProp('emptyIcon', mark.icon || 'none')}>
+          {#if selectedBlock.props.emptyIcon !== 'none'}{@html iconSvg(selectedBlock.props.emptyIcon ?? 'calendar') || iconSvg('calendar')}{/if}
+        </MarkPicker></label>
+      {/snippet}
+      {#snippet calNotice()}
       <!-- The announcement note, on the designs that have one: a switch and the link it leads to -->
       {#if calDesign(selectedBlock.props.design).notice}
         <label class="gridmenu-snap" title={ta('tip.calendar.showNotice')}>
@@ -9625,6 +9677,14 @@
             <input value={selectedBlock.props.notice?.href ?? ''} placeholder="https://" spellcheck="false"
               onchange={(e) => setBlockProp('notice', { ...(selectedBlock.props.notice ?? {}), href: e.target.value.trim() || undefined })} /></label>
         {/if}
+      {/if}
+      {/snippet}
+      {@render menuGroup('cal-sources', ta('calendar.sources'), cm.sources, calSources)}
+      {@render menuGroup('cal-view', ta('calendar.group.view'), cm.view, calViewGroup, cm.viewReset)}
+      {@render menuGroup('cal-buttons', ta('calendar.group.buttons'), cm.buttons, calButtons, cm.buttonsReset)}
+      {@render menuGroup('cal-empty', ta('calendar.group.empty'), cm.empty, calEmpty, cm.emptyReset)}
+      {#if calDesign(selectedBlock.props.design).notice}
+        {@render menuGroup('cal-notice', ta('calendar.group.notice'), cm.notice, calNotice, cm.noticeReset)}
       {/if}
       <!-- The labels and the buttons' words are rewritten by clicking them in the preview; this puts the defaults back -->
       {#if calHasTextOverrides(calDesign(selectedBlock.props.design), selectedBlock.props.texts)}
@@ -10040,6 +10100,8 @@
       <button type="button" class="menu-row cal-design-row" title={ta('tip.calendar.design')} onclick={() => (menuPickerFor = selectedBlock.blockId)}>
         <span class="menu-group-title">{ta('calendar.design')}</span><span class="menu-group-value">{ta(calDef.labelKey)}</span>
       </button>
+      {@const cm = calMenu()}
+      {#snippet calOpts()}
       <!-- The calendar's size: the whole design, text included, drawn smaller or larger -->
       <div class="ctl-row" title={ta('tip.calendar.scale')}>
         <span class="mini-label">{ta('calendar.scale')}</span>
@@ -10050,7 +10112,6 @@
       <!-- The design's own settings, directly under the design they belong to -->
       {#if calOptionDefs(selectedBlock.props.design).length}
         {@const calOpt = calOptions(selectedBlock.props)}
-        <p class="panel-strong">{ta('calendar.section.options')}</p>
         {#each calOptionDefs(selectedBlock.props.design) as def (def.key)}
           {#if def.kind === 'switch'}
             <label class="gridmenu-snap">
@@ -10071,8 +10132,9 @@
           {/if}
         {/each}
       {/if}
+      {/snippet}
+      {#snippet calColours()}
       <!-- The design's colour slots: empty follows the theme -->
-      <p class="panel-strong" title={ta('tip.calendar.slot')}>{ta('calendar.colors')}</p>
       {#each calSlotGroups(calDef) as group, gi (group.section)}
         {#if gi > 0}
           <span class="mini-label">{ta(`calendar.section.${group.section}`)}</span>
@@ -10088,6 +10150,8 @@
           {/each}
         </div>
       {/each}
+      {/snippet}
+      {#snippet calStripeGroup()}
       <label class="gridmenu-snap" title={ta('tip.calendar.stripe')}>
         <input type="checkbox" checked={calStripe(calDef, selectedBlock.props.stripe).show}
           onchange={(e) => setCalStripe({ show: e.target.checked })} />
@@ -10100,8 +10164,9 @@
             label={ta('calendar.stripeColor')} onchange={(v) => setCalStripe({ color: v || undefined })} />
         </div>
       {/if}
+      {/snippet}
+      {#snippet calFields()}
       <!-- A style per event field: pick the field, then its font, size, weight, italic, underline and colour -->
-      <p class="panel-strong" title={ta('tip.calendar.fieldStyle')}>{ta('calendar.fieldStyle')}</p>
       <Dropdown value={calField} options={CAL_FIELDS.map((f) => [f, ta(`calendar.field.${f}`)])} onchange={(v) => (calField = v)} />
       <label>{ta('calendar.fieldFont')}
         <Dropdown value={calFieldStyleOf().font ?? ''}
@@ -10121,7 +10186,11 @@
         <ColorPicker value={calFieldStyleOf().color ?? ''} tokens={themeSwatches()} allowClear
           label={ta('calendar.fieldColor')} onchange={(v) => setCalField({ color: v || undefined })} />
       </span>
-      <hr class="gridmenu-divider" />
+      {/snippet}
+      {@render menuGroup('cal-opts', ta('calendar.section.options'), cm.opts, calOpts, cm.optsReset)}
+      {@render menuGroup('cal-colors', ta('calendar.colors'), cm.colors, calColours, cm.colorsReset)}
+      {@render menuGroup('cal-stripe', ta('calendar.stripe'), cm.stripe, calStripeGroup, cm.stripeReset)}
+      {@render menuGroup('cal-fields', ta('calendar.fieldStyle'), cm.fields, calFields, cm.fieldsReset)}
     {:else if selectedBlock.type === 'faq'}
       <Choice label={ta('lbl.variant')} value={selectedBlock.props.variant === 'list' ? 'list' : 'cards'}
         options={FAQ_VARIANT_IDS.map((v) => [v, ta(`opt.faqVariant.${v}`)])}
@@ -11442,6 +11511,31 @@
   .menu-group-title {
     flex: 1;
     min-width: 0;
+  }
+
+  /* The mark on a group that differs from the defaults, and the reset under its controls */
+  .menu-group-dot {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    background: #f2b84b;
+    border-radius: 50%;
+  }
+
+  .menu-group-reset {
+    align-self: flex-start;
+    font-size: 0.78rem;
+  }
+
+  /* In a column a label stands over its control: the row is too narrow for both */
+  .emenu-col label:not(.gridmenu-snap) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+  }
+
+  .panel-body .emenu-col label:not(.gridmenu-snap) > :global(*) {
+    flex: none;
   }
 
   .menu-group-value {

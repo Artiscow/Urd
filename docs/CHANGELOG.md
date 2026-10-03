@@ -27,6 +27,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.20.2 - The calendar's settings in groups - 3 October 2026
+
+- The calendar's Content and Style were two long lists. They are collapsible groups that show their value while closed: Sources, View and count, Buttons and filter, When it is empty and Announcement in Content; Settings for the design (with Size), Colours, Edge stripe and Text fields in Style.
+- A group that differs from the defaults carries a mark and «Reset this group» under its controls (`calMenu` in App.svelte; `menuGroup` takes the reset).
+- In the wide menu's columns a label stood beside its control and wrapped; there it stands over the control.
+- «Reset the texts» stays a button of its own, shown when a text is rewritten, and Sources has no reset.
+
 ### 0.7.21.1 - The sizing model decided - 3 October 2026
 
 - What a drag of a block's outline means was never decided: thirteen block types stood at the top of a frame with air under them, the map ignored its frame, and the audio block stretched its player. Every block type was measured in the preview in a frame too short, too tall and narrow, and the builders' models read again; the table and the sources are in LAERDOMMER §2 («What a drag means»).

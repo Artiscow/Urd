@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Test batch (0.7.20.2): the calendar's settings in groups
+
+- [ ] The element menu on a calendar with everything closed shows only group rows in Content and Style, each with its value: the number of sources, the view, «Off» or «N on» for the buttons, «Standard» or the owner's words for the empty state, «Standard» or «N of M changed» for the colours
+- [ ] A group left open stays open when another calendar is selected, in the wide menu, the narrow menu and the Properties panel
+- [ ] A change inside a group (a colour, a button switched on, a max count other than 6, a size other than 100 %) puts a yellow mark on the group's row and «Reset this group» under its controls; the reset puts the group's settings back, the mark goes, and one undo brings them back
+- [ ] «Announcement» appears as a group only on the designs that have an announcement
+- [ ] Wide menu: every label with a field or a dropdown stands over its control and none wraps beside it; narrow menu and Properties panel: label and control on one row as before
+- [ ] «Reset the texts» appears under the Content groups only after a text in the block has been rewritten
+
 ### Test batch (0.7.20.1): the element menu's frame, and the calendar's size and defaults
 
 - [ ] The gear on a block opens the element menu wide: Content, Style and Placement as columns, an area without settings (Style on the map block) taking no column; the button in the menu's head switches to three tabs and back
