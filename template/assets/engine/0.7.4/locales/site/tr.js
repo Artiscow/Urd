@@ -173,6 +173,7 @@ export default {
     'calendar.places': 'Yerler',
     'calendar.allPlaces': 'Tüm yerler',
     'calendar.noMatch': 'Eşleşen etkinlik yok',
+    'calendar.onMap': 'Haritada göster',
     'calendar.nextMonth': 'Sonraki ay',
     'calendar.prevMonth': 'Önceki ay',
     'calendar.signup': 'Kaydol',

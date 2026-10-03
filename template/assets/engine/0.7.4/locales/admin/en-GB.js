@@ -732,6 +732,8 @@ export default {
     'tip.settings.timeZone': 'A time zone such as Europe/Oslo. Every visitor then sees the calendar times on this clock. An empty field shows the times in the time zone of each visitor',
     'settings.mapService': 'Map service',
     'tip.settings.mapService': 'The map a place opens in when a visitor presses it, for example the place of a calendar event. It is a link only: nothing is loaded from the service until the visitor presses it',
+    'settings.meetingHosts': 'Own meeting addresses',
+    'tip.settings.meetingHosts': 'The addresses of your own video meeting servers, divided by commas, such as meet.example.org for a Jitsi, Nextcloud Talk or BigBlueButton server. A link to one of them in a calendar event gives the event its «Join» button. Zoom, Teams, Google Meet, Whereby, Webex, Proton Meet, kMeet, Element Call and meet.jit.si are known already',
     'mapService.osm': 'OpenStreetMap',
     'mapService.osm.note': 'A free map drawn by volunteers all over the world, run by the non-profit OpenStreetMap Foundation in the United Kingdom. No adverts and no profile of the visitor. Finds addresses well, but seldom a venue by its name.',
     'mapService.google': 'Google Maps',

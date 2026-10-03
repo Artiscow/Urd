@@ -127,6 +127,7 @@
   import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '$engine/icons.js';
   import { zoneValid } from '$engine/calendar-format.js';
   import { MAP_SERVICES, mapService } from '$engine/map-links.js';
+  import { meetingHostList } from '$engine/meeting-links.js';
   import { CAL_FIELDS, CAL_SIZE, CAL_SWITCH_VIEWS, calDesign, calView, calStripe, calHasTextOverrides, calDesignGroups, calOptionDefs, calOptions, calScale, CAL_SCALE } from '$engine/calendar-designs.js';
   import { calendarThumb } from '$engine/calendar-thumb.js';
 
@@ -3444,6 +3445,14 @@
   }
   function setSiteLang(v) {
     siteMutate('site', () => { siteDraft.site.lang = v; });
+  }
+  /** The site's own meeting hosts (site.meetingHosts): stored as clean host names, and as no field when the list is empty. */
+  function setSiteMeetingHosts(value) {
+    const hosts = meetingHostList(value);
+    siteMutate('site', () => {
+      if (hosts.length) siteDraft.site.meetingHosts = hosts;
+      else delete siteDraft.site.meetingHosts;
+    });
   }
   /** The map service places link to (site.mapService): OpenStreetMap is the default and is stored as no field. */
   function setSiteMapService(id) {
@@ -7902,6 +7911,10 @@
               <label title={ta('tip.settings.mapService')}>{ta('settings.mapService')}
                 <Dropdown value={mapService(siteDraft)} options={MAP_SERVICES.map((id) => [id, ta(`mapService.${id}`), ta(`mapService.${id}.note`)])}
                   onchange={(v) => setSiteMapService(v)} /></label>
+              <!-- The site's own video meeting servers: a link to one of them in a calendar event is a meeting link -->
+              <label title={ta('tip.settings.meetingHosts')}>{ta('settings.meetingHosts')}
+                <input value={(siteDraft.site.meetingHosts ?? []).join(', ')} placeholder="meet.example.org" spellcheck="false"
+                  onchange={(e) => setSiteMeetingHosts(e.target.value)} /></label>
               <hr class="gridmenu-divider" />
               <p class="panel-strong" title={ta('tip.site.contentWidth')}>{ta('lbl.contentWidth')}</p>
               <!-- Live sample: one strip per common screen width, so it is

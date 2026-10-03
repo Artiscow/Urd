@@ -7,12 +7,14 @@
  *
  * The scope is the practical subset that club calendars use (Google
  * Calendar, Outlook, Nextcloud): VEVENT with DTSTART/DTEND (UTC, TZID or
- * all-day), RRULE with FREQ/INTERVAL/COUNT/UNTIL/BYDAY/BYMONTHDAY, EXDATE
- * and RECURRENCE-ID overrides. Unknown properties are ignored quietly.
+ * all-day), RRULE with FREQ/INTERVAL/COUNT/UNTIL/BYDAY/BYMONTHDAY/BYMONTH/
+ * BYSETPOS, RDATE, EXDATE and RECURRENCE-ID overrides. Unknown properties are ignored quietly.
  *
  * Time zones are resolved with the Intl API (no tables): wall time in the
  * zone is converted to UTC by estimating the offset, which is DST-correct.
  */
+
+import { meetingLinkIn, isMeetingLink } from './meeting-links.js';
 
 /* ---------- Line and property parsing ---------- */
 
@@ -139,7 +141,7 @@ export function parseIcs(text) {
     const line = rawLine.trim();
     if (!line) continue;
     if (line === 'BEGIN:VEVENT') {
-      current = { exdates: [] };
+      current = { exdates: [], rdates: [] };
       continue;
     }
     if (line === 'END:VEVENT') {
@@ -170,6 +172,27 @@ export function parseIcs(text) {
       case 'DTSTART': current.start = parseDateParts(prop.value, prop.params); break;
       case 'DTEND': current.end = parseDateParts(prop.value, prop.params); break;
       case 'RRULE': current.rrule = parseRrule(prop.value); break;
+      // Extra dates beside the rule; of a period («start/end») the start is the date.
+      case 'RDATE':
+        for (const part of prop.value.split(',')) {
+          const parsed = parseDateParts(part.split('/')[0], prop.params);
+          if (parsed) current.rdates.push(parsed);
+        }
+        break;
+      // The meeting's own address: the standard property, else the field the large calendars write it in.
+      case 'CONFERENCE':
+      case 'X-GOOGLE-CONFERENCE':
+      case 'X-MICROSOFT-SKYPETEAMSMEETINGURL':
+      case 'X-MICROSOFT-ONLINEMEETINGEXTERNALLINK':
+        if (!current.meeting && /^https:\/\/\S+$/i.test(prop.value.trim())) current.meeting = prop.value.trim();
+        break;
+      case 'GEO': {
+        const [lat, lon] = prop.value.split(';').map(Number);
+        if (Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180 && (lat || lon)) current.geo = { lat, lon };
+        break;
+      }
+      // The description as HTML, beside the plain one.
+      case 'X-ALT-DESC': if (/html/i.test(prop.params.FMTTYPE ?? '')) current.html = unescapeText(prop.value).trim(); break;
       case 'RECURRENCE-ID': current.recurrenceId = parseDateParts(prop.value, prop.params); break;
       case 'EXDATE':
         for (const part of prop.value.split(',')) {
@@ -181,6 +204,12 @@ export function parseIcs(text) {
     }
   }
   return { name: calendarName, timezone: calendarZone, events };
+}
+
+/** A comma list of whole numbers that pass the test, or null when none does. */
+function intList(value, ok) {
+  const list = String(value ?? '').split(',').map(Number).filter((n) => Number.isInteger(n) && ok(n));
+  return list.length ? list : null;
 }
 
 function parseRrule(value) {
@@ -207,6 +236,8 @@ function parseRrule(value) {
     bymonthday: rule.BYMONTHDAY
       ? rule.BYMONTHDAY.split(',').map(Number).filter((n) => Number.isInteger(n) && n >= 1 && n <= 31)
       : null,
+    bymonth: intList(rule.BYMONTH, (n) => n >= 1 && n <= 12),
+    bysetpos: intList(rule.BYSETPOS, (n) => n !== 0 && Math.abs(n) <= 366),
   };
 }
 
@@ -216,59 +247,87 @@ function parseRrule(value) {
 function* ruleStarts(startParts, rule) {
   const guard = 3000;
   let produced = 0;
+  // BYMONTH keeps the rule to the named months.
+  const inMonths = (parts) => !rule.bymonth || rule.bymonth.includes(parts.mo);
   if (rule.freq === 'DAILY') {
-    for (let i = 0; produced < guard; i += rule.interval) {
-      yield addDays(startParts, i);
+    for (let i = 0, turns = 0; produced < guard && turns < guard * 12; i += rule.interval, turns++) {
+      const candidate = addDays(startParts, i);
+      if (!inMonths(candidate)) continue;
+      yield candidate;
       produced++;
     }
   } else if (rule.freq === 'WEEKLY') {
     const days = (rule.byday?.length ? rule.byday.map((b) => b.day) : [weekday(startParts)]).sort();
     // The week is anchored in the week of the DTSTART day (weeks start on Sunday, like getUTCDay).
     const weekAnchor = addDays(startParts, -weekday(startParts));
-    for (let week = 0; produced < guard; week += rule.interval) {
+    for (let week = 0, turns = 0; produced < guard && turns < guard * 2; week += rule.interval, turns++) {
       for (const day of days) {
         const candidate = addDays(weekAnchor, week * 7 + day);
-        if (partsToMs(candidate) < partsToMs(startParts)) continue;
+        if (partsToMs(candidate) < partsToMs(startParts) || !inMonths(candidate)) continue;
         yield candidate;
         produced++;
       }
     }
   } else if (rule.freq === 'MONTHLY') {
-    for (let i = 0; produced < guard; i += rule.interval) {
+    for (let i = 0, turns = 0; produced < guard && turns < guard; i += rule.interval, turns++) {
       const month = addMonths(startParts, i);
-      const dim = daysInMonth(month.y, month.mo);
-      let candidates = [];
-      if (rule.byday?.length) {
-        for (const { ord, day } of rule.byday) {
-          // The nth (or nth from last) weekday of the month; ord 0 means all of them.
-          const matches = [];
-          for (let d = 1; d <= dim; d++) {
-            if (weekday({ ...month, d }) === day) matches.push(d);
-          }
-          if (ord > 0 && matches[ord - 1]) candidates.push(matches[ord - 1]);
-          else if (ord < 0 && matches[matches.length + ord] != null) candidates.push(matches[matches.length + ord]);
-          else if (ord === 0) candidates.push(...matches);
-        }
-      } else if (rule.bymonthday?.length) {
-        candidates = rule.bymonthday.filter((d) => d <= dim);
-      } else if (startParts.d <= dim) {
-        candidates = [startParts.d];
-      }
-      for (const d of [...new Set(candidates)].sort((a, b) => a - b)) {
-        const candidate = { ...month, d };
+      if (!inMonths(month)) continue;
+      for (const candidate of setPositions(monthDays(month, startParts, rule).map((d) => ({ ...month, d })), rule.bysetpos)) {
         if (partsToMs(candidate) < partsToMs(startParts)) continue;
         yield candidate;
         produced++;
       }
     }
   } else if (rule.freq === 'YEARLY') {
-    for (let i = 0; produced < guard; i += rule.interval) {
-      const candidate = { ...startParts, y: startParts.y + i };
-      if (candidate.mo === 2 && candidate.d === 29 && daysInMonth(candidate.y, 2) < 29) continue;
-      yield candidate;
-      produced++;
+    for (let i = 0, turns = 0; produced < guard && turns < guard; i += rule.interval, turns++) {
+      // The year's days: in each of the rule's months (else the start's own), the days the rule names.
+      const year = [];
+      for (const mo of rule.bymonth ?? [startParts.mo]) {
+        const month = { ...startParts, y: startParts.y + i, mo };
+        for (const d of monthDays(month, startParts, rule)) year.push({ ...month, d });
+      }
+      for (const candidate of setPositions(year, rule.bysetpos)) {
+        if (partsToMs(candidate) < partsToMs(startParts)) continue;
+        yield candidate;
+        produced++;
+      }
     }
   }
+}
+
+/**
+ * The days of a month a rule names, in order: the nth (or nth from last)
+ * weekday of BYDAY, the days of BYMONTHDAY, else the day of the start. A day
+ * the month does not have (the 31st, 29 February) is left out.
+ */
+function monthDays(month, startParts, rule) {
+  const dim = daysInMonth(month.y, month.mo);
+  let candidates = [];
+  if (rule.byday?.length) {
+    for (const { ord, day } of rule.byday) {
+      // ord 0 means every such weekday of the month.
+      const matches = [];
+      for (let d = 1; d <= dim; d++) {
+        if (weekday({ ...month, d }) === day) matches.push(d);
+      }
+      if (ord > 0 && matches[ord - 1]) candidates.push(matches[ord - 1]);
+      else if (ord < 0 && matches[matches.length + ord] != null) candidates.push(matches[matches.length + ord]);
+      else if (ord === 0) candidates.push(...matches);
+    }
+    if (rule.bymonthday?.length) candidates = candidates.filter((d) => rule.bymonthday.includes(d));
+  } else if (rule.bymonthday?.length) {
+    candidates = rule.bymonthday.filter((d) => d <= dim);
+  } else if (startParts.d <= dim) {
+    candidates = [startParts.d];
+  }
+  return [...new Set(candidates)].sort((a, b) => a - b);
+}
+
+/** BYSETPOS: of a period's days in order, the ones at the named positions (1 the first, -1 the last); without it, all of them. */
+function setPositions(days, positions) {
+  if (!positions) return days;
+  const picked = positions.map((pos) => (pos > 0 ? days[pos - 1] : days[days.length + pos])).filter(Boolean);
+  return [...new Set(picked)].sort((x, y) => partsToMs(x) - partsToMs(y));
 }
 
 /**
@@ -304,6 +363,9 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
       categories: event.categories ?? [],
       url: event.url ?? null,
       image: event.image ?? null,
+      meeting: event.meeting ?? null,
+      geo: event.geo ?? null,
+      descriptionHtml: event.html ?? '',
       start: startMs,
       end: endMs,
       allDay: !!event.start.allDay,
@@ -322,12 +384,21 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
       ? Math.max(0, partsToMs(event.end) - startMs - (event.start.allDay ? 24 * 3600 * 1000 : 0))
       : (event.start.allDay ? 0 : 3600 * 1000);
 
+    const exdateMs = new Set(event.exdates.map(partsToMs));
+    // RDATE: dates of their own, beside the start and the rule's dates.
+    const extra = [...new Set((event.rdates ?? []).map(partsToMs))].filter((ms) => Number.isFinite(ms) && ms !== startMs && !exdateMs.has(ms));
+    const seen = new Set();
+    const pushExtra = () => {
+      for (const ms of extra) {
+        if (!seen.has(ms) && ms + durationMs >= fromMs && ms <= toMs) push(event, ms, ms + durationMs, true);
+      }
+    };
     if (!event.rrule) {
-      if (startMs + durationMs >= fromMs && startMs <= toMs) push(event, startMs, startMs + durationMs);
+      if (startMs + durationMs >= fromMs && startMs <= toMs) push(event, startMs, startMs + durationMs, extra.length > 0);
+      pushExtra();
       continue;
     }
 
-    const exdateMs = new Set(event.exdates.map(partsToMs));
     let produced = 0;
     for (const parts of ruleStarts(event.start, event.rrule)) {
       const occurrenceMs = partsToMs(parts);
@@ -335,6 +406,7 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
       produced++;
       if (event.rrule.count != null && produced > event.rrule.count) break;
       if (occurrenceMs > toMs) break;
+      seen.add(occurrenceMs);
       if (exdateMs.has(occurrenceMs)) continue;
       const override = event.uid ? overrides.get(`${event.uid}@${occurrenceMs}`) : null;
       if (override) {
@@ -347,6 +419,7 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
       push(event, occurrenceMs, occurrenceMs + durationMs, true);
       if (out.length >= max * 2) break;
     }
+    pushExtra();
   }
 
   out.sort((a, b) => a.start - b.start);
@@ -378,20 +451,35 @@ export function matchesSearch(occ, query) {
   return words.every((word) => text.includes(word));
 }
 
-/** Signup link from the description: a line naming a signup wins, otherwise the first URL. */
+const SIGNUP_WORDS = /påmeld|pamel|tilmeld|anmäl|sign\s?-?up|registr|register|rsvp|billett|biljett|ticket/i;
+const IMAGE_LINK = /\.(?:jpe?g|png|webp|gif|avif)(?:\?[^\s]*)?$/i;
+
+/** The sign-up link a description names: the address on a line that speaks of signing up, registering or tickets; null without such a line. */
 export function findSignupLink(description) {
-  const text = String(description ?? '');
   const urlPattern = /https?:\/\/[^\s<>"')\]]+/i;
-  // Trailing punctuation belongs to the sentence, not to the link.
-  const clean = (url) => url.replace(/[.,;:!?]+$/, '');
-  for (const line of text.split('\n')) {
-    if (/påmeld|pamel|sign\s?up|registrer/i.test(line)) {
-      const m = urlPattern.exec(line);
-      if (m) return clean(m[0]);
-    }
+  for (const line of String(description ?? '').split('\n')) {
+    if (!SIGNUP_WORDS.test(line)) continue;
+    const m = urlPattern.exec(line);
+    // Trailing punctuation belongs to the sentence, not to the link.
+    if (m) return m[0].replace(/[.,;:!?]+$/, '');
   }
-  const m = urlPattern.exec(text);
-  return m ? clean(m[0]) : null;
+  return null;
+}
+
+/**
+ * Where an event is signed up for: the link a line of the description names,
+ * else the event's own address (what an event service gives as its page). A
+ * link to a picture or to a video meeting is never the sign-up, and a link
+ * that merely stands in the description is not one either.
+ * @param {object} occ An occurrence with its description, address and meeting link
+ * @param {string[]} [own] The site's own meeting hosts
+ */
+export function signupLinkOf(occ, own = []) {
+  const page = typeof occ?.url === 'string' && /^https?:\/\//i.test(occ.url) ? occ.url : null;
+  for (const address of [findSignupLink(occ?.description), page]) {
+    if (address && !IMAGE_LINK.test(address) && address !== occ?.meeting && !isMeetingLink(address, own)) return address;
+  }
+  return null;
 }
 
 /** The Monday 00:00 (local time) of the week a time falls in. */
@@ -425,24 +513,23 @@ export function windowStart(view, now = Date.now()) {
   return now - 6 * 3600 * 1000;
 }
 
-const MEETING_HOSTS = /^(?:[a-z0-9-]+\.)*(?:zoom\.us|teams\.microsoft\.com|teams\.live\.com|meet\.google\.com|whereby\.com|meet\.jit\.si|webex\.com)$/i;
-
 /**
- * The first address in the texts that leads to a video meeting (Zoom, Teams,
- * Google Meet, Whereby, Jitsi, Webex), or null. The host is compared exactly,
- * never by a substring.
+ * The first address in the texts that leads to a video meeting (the known
+ * services of meeting-links.js), or null.
  * @param {...string} texts The event's address, place and description
  */
 export function findMeetingLink(...texts) {
-  for (const text of texts) {
-    for (const m of String(text ?? '').matchAll(/https?:\/\/[^\s<>"')\]]+/gi)) {
-      try {
-        const url = new URL(m[0].replace(/[.,;:!?]+$/, ''));
-        if (MEETING_HOSTS.test(url.hostname)) return url.href;
-      } catch { /* not an address */ }
-    }
-  }
-  return null;
+  return meetingLinkIn(texts);
+}
+
+/**
+ * The event's meeting link: the one the feed names in a field of its own,
+ * else the first found in its address, place and description.
+ * @param {object} occ
+ * @param {string[]} [own] The site's own meeting hosts
+ */
+export function meetingLinkOf(occ, own = []) {
+  return occ?.meeting || meetingLinkIn([occ?.url, occ?.location, occ?.description], own);
 }
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -507,10 +594,10 @@ const isoDate = (ms) => {
  * meeting link, and whether it is cancelled and held online. `real` is the
  * true moment of an occurrence whose start is shown on another zone's clock.
  * @param {object} occ An occurrence from expandEvents, with its title
- * @param {{pageUrl?: string, organizer?: string}} [site] The page the event is shown on and the site's name
+ * @param {{pageUrl?: string, organizer?: string, meetingHosts?: string[]}} [site] The page the event is shown on, the site's name and its own meeting hosts
  * @returns {object|null} null without a name or a start
  */
-export function eventJsonLd(occ, { pageUrl = '', organizer = '' } = {}) {
+export function eventJsonLd(occ, { pageUrl = '', organizer = '', meetingHosts = [] } = {}) {
   const name = String(occ?.title ?? occ?.summary ?? '').trim();
   if (!name || !Number.isFinite(occ?.start)) return null;
   const shift = occ.start - (occ.real ?? occ.start);
@@ -523,7 +610,7 @@ export function eventJsonLd(occ, { pageUrl = '', organizer = '' } = {}) {
     if (occ.hasEnd && occ.end > occ.start) data.endDate = new Date(occ.end - shift).toISOString();
   }
   data.eventStatus = `https://schema.org/${occ.cancelled ? 'EventCancelled' : 'EventScheduled'}`;
-  const meeting = findMeetingLink(occ.url, occ.location, occ.description);
+  const meeting = meetingLinkOf(occ, meetingHosts);
   // A place that is only an address on the web is no place to go to.
   const place = String(occ.location ?? '').trim();
   const physical = place && !/^https?:\/\//i.test(place) ? { '@type': 'Place', name: place, address: place } : null;
@@ -547,6 +634,24 @@ export function findImageLink(description) {
 }
 
 /**
+ * A Nextcloud calendar's share link as the address of its iCal file. The
+ * link the share dialog gives opens a web page (`/apps/calendar/p/<token>`),
+ * and the calendar's public address answers with the file only with
+ * `?export` behind it; both become
+ * `/remote.php/dav/public-calendars/<token>?export`, on a server at the
+ * root of its host or in a folder. Any other address is returned as it is.
+ */
+function nextcloudExport(address) {
+  let url;
+  try { url = new URL(address); } catch { return address; }
+  const page = /^(.*?)(?:\/index\.php)?\/apps\/calendar\/p\/([A-Za-z0-9]+)(?:\/.*)?$/.exec(url.pathname);
+  if (page) return `${url.origin}${page[1]}/remote.php/dav/public-calendars/${page[2]}?export`;
+  const dav = /^(.*\/remote\.php\/dav\/public-calendars\/[A-Za-z0-9]+)\/?$/.exec(url.pathname);
+  if (dav && !url.searchParams.has('export')) return `${url.origin}${dav[1]}?export`;
+  return address;
+}
+
+/**
  * Normalizes a source the way the owner writes it:
  * webcal:// → https://, https is kept, http is lifted to https, and a bare
  * Google calendar id (someone@gmail.com / ...@group.calendar.google.com)
@@ -555,9 +660,9 @@ export function findImageLink(description) {
 export function normalizeSourceUrl(input) {
   const raw = String(input ?? '').trim();
   if (!raw) return null;
-  if (/^webcal:\/\//i.test(raw)) return 'https://' + raw.slice('webcal://'.length);
-  if (/^https:\/\//i.test(raw)) return raw;
-  if (/^http:\/\//i.test(raw)) return 'https://' + raw.slice('http://'.length);
+  if (/^webcal:\/\//i.test(raw)) return nextcloudExport('https://' + raw.slice('webcal://'.length));
+  if (/^https:\/\//i.test(raw)) return nextcloudExport(raw);
+  if (/^http:\/\//i.test(raw)) return nextcloudExport('https://' + raw.slice('http://'.length));
   if (/^[^\s/]+@[^\s/]+$/.test(raw)) {
     return `https://calendar.google.com/calendar/ical/${encodeURIComponent(raw)}/public/basic.ics`;
   }

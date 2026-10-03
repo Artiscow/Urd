@@ -732,6 +732,8 @@ export default {
     'tip.settings.timeZone': 'Europe/Oslo gibi bir saat dilimi. Tüm ziyaretçiler takvim saatlerini bu saate göre görür. Boş alan, saatleri her ziyaretçinin kendi saat diliminde gösterir',
     'settings.mapService': 'Harita hizmeti',
     'tip.settings.mapService': 'Bir ziyaretçi bir yere bastığında yerin açıldığı harita, örneğin bir takvim etkinliğinin yeri. Yalnızca bir bağlantıdır: ziyaretçi basana kadar hizmetten hiçbir şey yüklenmez',
+    'settings.meetingHosts': 'Kendi toplantı adresleri',
+    'tip.settings.meetingHosts': 'Kendi görüntülü toplantı sunucularınızın adresleri, virgülle ayrılmış olarak; örneğin bir Jitsi, Nextcloud Talk veya BigBlueButton sunucusu için meet.example.org. Bir takvim etkinliğinde bunlardan birine giden bağlantı etkinliğe «Katıl» düğmesini verir. Zoom, Teams, Google Meet, Whereby, Webex, Proton Meet, kMeet, Element Call ve meet.jit.si zaten bilinir',
     'mapService.osm': 'OpenStreetMap',
     'mapService.osm.note': 'Dünyanın her yerinden gönüllülerin çizdiği özgür bir harita; Birleşik Krallık merkezli, kâr amacı gütmeyen OpenStreetMap Vakfı tarafından işletilir. Reklam yok, ziyaretçi profili yok. Adresleri iyi bulur, ancak bir mekânı adıyla nadiren bulur.',
     'mapService.google': 'Google Haritalar',

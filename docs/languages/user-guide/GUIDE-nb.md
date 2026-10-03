@@ -265,6 +265,8 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   kategori-chips, en
   påmeldingslenke i beskrivelsen blir en «Meld deg på»-knapp, og
   «Abonner»-knappen lar besøkende følge kalenderen i sin egen app.
+  Kalenderen har en egen veiledning: [Kalenderen](../calendar-guide/CALENDAR-nb.md)
+  (kalendertjenester, møtelenker, påmelding, kart og mer).
 
   Skjema-blokken (og «Kontaktskjema»-malen) ligger i Blokker-panelet: velg
   blokken, så stiller du inn mottaker, felt og sendemåte i Egenskaper.

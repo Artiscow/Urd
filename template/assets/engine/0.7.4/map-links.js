@@ -46,8 +46,29 @@ export function mapQuery(place, service = 'osm') {
   return parts.join(', ');
 }
 
-/** The address that opens a place in a map service; an unknown service is OpenStreetMap. */
-export function mapSearchUrl(place, service = 'osm') {
+/** A point on the map, for the services with a documented address for one. Apple Maps keeps the place's words as the label. */
+const POINTS = {
+  osm: ({ lat, lon }) => `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`,
+  google: ({ lat, lon }) => `https://www.google.com/maps/search/?api=1&query=${lat}%2C${lon}`,
+  apple: ({ lat, lon }, place) => `https://maps.apple.com/?ll=${lat},${lon}&q=${encodeURIComponent(place || `${lat},${lon}`)}`,
+};
+
+const validPoint = (geo) => Number.isFinite(geo?.lat) && Number.isFinite(geo?.lon) && Math.abs(geo.lat) <= 90 && Math.abs(geo.lon) <= 180;
+
+/**
+ * The address that opens a place in a map service; an unknown service is
+ * OpenStreetMap. With coordinates (`geo`, a feed's own point for the place)
+ * OpenStreetMap and Apple Maps open the point itself, which no search can
+ * miss; Google Maps keeps the search by words, where it knows the venue, and
+ * takes the point for a place without words. A service without an address
+ * for a point searches by the words, and without words the point opens in OpenStreetMap.
+ */
+export function mapSearchUrl(place, service = 'osm', geo = null) {
   const id = Object.hasOwn(SERVICES, service) ? service : 'osm';
-  return SERVICES[id].url + encodeURIComponent(mapQuery(place, id));
+  const words = mapQuery(place, id);
+  if (validPoint(geo)) {
+    if (id === 'osm' || id === 'apple' || (id === 'google' && !words)) return POINTS[id](geo, words);
+    if (!words) return POINTS.osm(geo);
+  }
+  return SERVICES[id].url + encodeURIComponent(words);
 }

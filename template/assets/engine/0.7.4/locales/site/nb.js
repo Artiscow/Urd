@@ -177,6 +177,7 @@ export default {
     'calendar.places': 'Steder',
     'calendar.allPlaces': 'Alle steder',
     'calendar.noMatch': 'Ingen arrangementer passer',
+    'calendar.onMap': 'Vis i kart',
     'calendar.nextMonth': 'Neste måned',
     'calendar.prevMonth': 'Forrige måned',
     'calendar.signup': 'Meld deg på',

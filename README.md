@@ -71,6 +71,7 @@ Most project documents are written in Norwegian and are being translated to Engl
 | [Development](docs/languages/DEVELOPMENT-en-GB.md) | For those of us developing Urd: setup, rules, common tasks |
 | [Publishing setup](docs/languages/setup-publication/SETUP-en-GB.md) | One-time publishing setup: GitHub OAuth app + Cloudflare |
 | [Pictures from a shared folder](docs/languages/setup-photos/PHOTOS-en-GB.md) | Background pictures from a Google Drive folder, a Google Photos album or a Nextcloud share, and the Cloudflare variables they need |
+| [The calendar](docs/languages/calendar-guide/CALENDAR-en-GB.md) | For site owners: calendar services, meeting links, sign-up, maps and what the Calendar block reads from an event |
 | [docs/BACKLOG.md](docs/BACKLOG.md) | Running task list: to-dos, bugs and suggestions (in Norwegian) |
 | [docs/TESTRUNDER.md](docs/TESTRUNDER.md) | Checklist for manual testing: delivered work waiting to be tested (in Norwegian) |
 | [docs/languages/](docs/languages/) | All translated documents (the user guide in five languages; the rest in English) |

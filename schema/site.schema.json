@@ -17,6 +17,7 @@
         "lang": { "type": "string", "minLength": 2 },
         "timeZone": { "type": "string", "description": "Additive from 0.7.19.10: an IANA time zone (Europe/Oslo). When set, the calendar block shows every time on this zone's clock to every visitor; omitted, each visitor sees the times in their own zone." },
         "mapService": { "type": "string", "enum": ["osm", "duckduckgo", "brave", "here", "google", "apple", "norgeskart", "finn"], "description": "Additive from 0.7.0.39: the map service a place written as text links to (the calendar's places). Omitted is OpenStreetMap." },
+        "meetingHosts": { "type": "array", "items": { "type": "string", "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$" }, "description": "Additive from 0.7.19.16: the hosts of the site's own video meeting servers (meet.example.org). A link to one of them in a calendar event is a meeting link, beside the services known by their host." },
         "description": { "type": "string" },
         "icon": { "type": "string", "description": "Site icon (favicon): path in media/ (data URL in draft). Additive field from v0.5." },
         "setup": { "type": "boolean", "description": "Additive from v0.6: true in the template's default content triggers the setup wizard in admin; the wizard removes the field on completion. Replaces the old string matching on the template's default name." }

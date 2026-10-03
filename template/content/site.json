@@ -5,6 +5,7 @@
     "lang": "no",
     "description": "Urd sin testside",
     "mapService": "osm",
+    "meetingHosts": [],
     "icon": "/media/ikon-9740643c.webp",
     "setup": true
   },

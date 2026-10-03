@@ -735,6 +735,8 @@ export default {
     'tip.settings.timeZone': 'En tidssone som Europe/Oslo. Da ser alle besøkende kalendertidene på denne klokka. Tomt felt viser tidene i hver besøkendes egen tidssone',
     'settings.mapService': 'Karttjeneste',
     'tip.settings.mapService': 'Kartet et sted åpnes i når en besøkende trykker på det, for eksempel stedet for et arrangement i kalenderen. Det er bare en lenke: ingenting lastes fra tjenesten før den besøkende trykker',
+    'settings.meetingHosts': 'Egne møteadresser',
+    'tip.settings.meetingHosts': 'Adressene til egne videomøteservere, skilt med komma, for eksempel meet.example.org for en Jitsi-, Nextcloud Talk- eller BigBlueButton-server. En lenke til en av dem i et kalenderarrangement gir arrangementet «Bli med»-knappen. Zoom, Teams, Google Meet, Whereby, Webex, Proton Meet, kMeet, Element Call og meet.jit.si er kjent fra før',
     'mapService.osm': 'OpenStreetMap',
     'mapService.osm.note': 'Et fritt kart tegnet av frivillige over hele verden, drevet av den ideelle OpenStreetMap Foundation i Storbritannia. Ingen reklame og ingen profil av den besøkende. Finner adresser godt, men sjelden et lokale ved navn.',
     'mapService.google': 'Google Maps',

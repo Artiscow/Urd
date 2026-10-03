@@ -27,6 +27,16 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.19.16 - The calendar reads more of a feed, tells a meeting and a sign-up apart from a link, and gets a guide of its own - 4 October 2026
+
+- The parser missed rules and fields real feeds use. It reads `BYSETPOS` («the last Thursday of the month»), `BYMONTH` and `RDATE`, the meeting link from `CONFERENCE` and the fields Google and Microsoft write it in, `GEO` and the HTML description of `X-ALT-DESC`, each with a fixture in tests/calendar.test.mjs.
+- A place with coordinates opens the point itself in OpenStreetMap and Apple Maps (`mapSearchUrl` in map-links.js), and an event with coordinates and no place in words gets «Show on the map» in its card.
+- A feed's HTML description was set into the page and cleaned afterwards. It is built from an allowlist of harmless tags with no attribute carried over (`safeHtmlFragment` in sanitize.js), so a picture, a style, a form or embedded content in a feed is left out.
+- The first link of a description became «Sign up» whatever it led to, also a picture or a meeting, and the card showed the button with the switch off. The sign-up is the link on a line that names signing up, registering or tickets, else the event's own address (`signupLinkOf` in ics.js), never a picture or a meeting, and the card follows «Show «Sign up» buttons».
+- Meeting links were known for six services. Proton Meet, kMeet and Element Call are added, and a site lists the hosts of its own servers under «Own meeting addresses» in the Site panel (`site.meetingHosts`, SCHEMA.md; the new meeting-links.js). «Join» and «Sign up» show the host they lead to as their tooltip.
+- A Nextcloud calendar's share link opens a web page, not the calendar file. Pasted as a source, the link from the share dialog and the public address without `?export` are turned into the address of the iCal file (`normalizeSourceUrl` in ics.js).
+- New guide for site owners, docs/languages/calendar-guide/ in English and Norwegian: the calendar services that give a public iCal address and where to find it, what is read from an event, meeting links, sign-up, places and maps, finding events, times, privacy and what the block cannot do. It is linked from the user guide and the README tables.
+
 ### 0.7.19.15 - Finding events in the calendar: a search, a place filter, earlier events, and the feed's categories - 4 October 2026
 
 - A visitor could narrow a calendar by category only. Three switches on the block, each off until set: «Show search field» (the words are looked for in titles, places and descriptions, `matchesSearch` in ics.js), «Show place filter» (a button per venue, the place up to its first comma) and «Show earlier events» (the last 90 days' events that are over, folded under «Earlier» with their count, in the views that count out what is coming). The three narrow together with the category, and a search or filter that leaves nothing says so.

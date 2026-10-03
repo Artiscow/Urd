@@ -7,8 +7,8 @@ import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
 const {
-  parseIcs, expandEvents, partsToMs, findMeetingLink, eventIcs, googleEventUrl, eventJsonLd, placeName, matchesSearch,
-  splitCategory, findSignupLink, findImageLink, normalizeSourceUrl, subscribeLinks, startOfWeek, isoWeek, windowStart,
+  parseIcs, expandEvents, partsToMs, findMeetingLink, eventIcs, googleEventUrl, eventJsonLd, placeName, matchesSearch, meetingLinkOf,
+  splitCategory, findSignupLink, signupLinkOf, findImageLink, normalizeSourceUrl, subscribeLinks, startOfWeek, isoWeek, windowStart,
   nextCount, laterCount, NEXT_COUNT, LATER_COUNT, dedupeOccurrences, groupByMonth, sourceEntry,
 } = await engineImport('ics.js');
 
@@ -125,11 +125,23 @@ test('splitCategory: the "Category: Title" convention', () => {
   assert.equal(splitCategory('https://x.no').category, null);
 });
 
-test('findSignupLink: a signup line is preferred, otherwise the first URL', () => {
+test('findSignupLink and signupLinkOf: a line that names the sign-up, else the event own address, never a link that merely stands there', () => {
   const desc = 'Les mer: https://forening.no/om\nPåmelding: https://forening.no/pameld';
   assert.equal(findSignupLink(desc), 'https://forening.no/pameld');
-  assert.equal(findSignupLink('Se https://a.no/info.'), 'https://a.no/info');
+  assert.equal(findSignupLink('Tickets at https://billett.example.org/e/1.'), 'https://billett.example.org/e/1');
+  assert.equal(findSignupLink('Se https://a.no/info.'), null);
   assert.equal(findSignupLink('Ingen lenke her'), null);
+  // The event's own address is the sign-up when no line names one.
+  assert.equal(signupLinkOf({ description: 'Se https://a.no/info', url: 'https://events.example.org/e/7' }), 'https://events.example.org/e/7');
+  assert.equal(signupLinkOf({ description: desc, url: 'https://events.example.org/e/7' }), 'https://forening.no/pameld');
+  assert.equal(signupLinkOf({ description: 'Se https://a.no/info' }), null);
+  // A picture and a video meeting are never the sign-up, by a known host, by the site's own, or by the feed's own field.
+  assert.equal(signupLinkOf({ description: 'Sign up: https://a.no/poster.jpg' }), null);
+  assert.equal(signupLinkOf({ description: 'Register: https://us02web.zoom.us/j/1', url: 'https://a.no/e' }), 'https://a.no/e');
+  assert.equal(signupLinkOf({ url: 'https://meet.proton.me/join/id-abc' }), null);
+  assert.equal(signupLinkOf({ url: 'https://talk.example.org/call/1' }, ['talk.example.org']), null);
+  assert.equal(signupLinkOf({ url: 'https://video.example.org/r/1', meeting: 'https://video.example.org/r/1' }), null);
+  assert.equal(signupLinkOf({ url: 'ftp://a.no/e' }), null);
 });
 
 test('normalizeSourceUrl: webcal, http upgrade and Google id', () => {
@@ -354,4 +366,84 @@ test('placeName and matchesSearch: the venue of a place, and a search over title
   assert.ok(matchesSearch(occ, 'warm trip'));
   assert.ok(!matchesSearch(occ, 'trip summer'));
   assert.ok(matchesSearch({ summary: 'Board' }, 'board'));
+});
+
+const feedOf = (...lines) => ['BEGIN:VCALENDAR', 'BEGIN:VEVENT', ...lines, 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+const daysOf = (occs) => occs.map((occ) => { const d = new Date(occ.start); return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`; });
+
+test('BYSETPOS: the last Thursday of every month, and the last weekday', () => {
+  const window = { from: Date.UTC(2026, 9, 1), to: Date.UTC(2027, 0, 31) };
+  const thursdays = expandEvents(parseIcs(feedOf('UID:s1', 'DTSTART:20261001T170000Z', 'RRULE:FREQ=MONTHLY;BYDAY=TH;BYSETPOS=-1', 'SUMMARY:Board')).events, window);
+  assert.deepEqual(daysOf(thursdays), ['2026-10-29', '2026-11-26', '2026-12-31', '2027-1-28']);
+  const weekdays = expandEvents(parseIcs(feedOf('UID:s2', 'DTSTART:20261001T170000Z', 'RRULE:FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-1', 'SUMMARY:Pay day')).events, window);
+  assert.deepEqual(daysOf(weekdays), ['2026-10-30', '2026-11-30', '2026-12-31', '2027-1-29']);
+  // The second position of a month's Tuesdays is the same as BYDAY=2TU.
+  const second = expandEvents(parseIcs(feedOf('UID:s3', 'DTSTART:20261001T170000Z', 'RRULE:FREQ=MONTHLY;BYDAY=TU;BYSETPOS=2', 'SUMMARY:Club')).events, window);
+  assert.deepEqual(daysOf(second), ['2026-10-13', '2026-11-10', '2026-12-8', '2027-1-12']);
+});
+
+test('BYMONTH: a rule kept to its months, monthly, yearly and weekly', () => {
+  const monthly = expandEvents(parseIcs(feedOf('UID:m1', 'DTSTART:20260915T170000Z', 'RRULE:FREQ=MONTHLY;BYMONTH=9,10,3', 'SUMMARY:Season')).events, { from: Date.UTC(2026, 8, 1), to: Date.UTC(2027, 3, 30) });
+  assert.deepEqual(daysOf(monthly), ['2026-9-15', '2026-10-15', '2027-3-15']);
+  // The second Sunday of May every year.
+  const yearly = expandEvents(parseIcs(feedOf('UID:m2', 'DTSTART:20260510T100000Z', 'RRULE:FREQ=YEARLY;BYMONTH=5;BYDAY=2SU', 'SUMMARY:Spring day')).events, { from: Date.UTC(2026, 0, 1), to: Date.UTC(2028, 11, 31) });
+  assert.deepEqual(daysOf(yearly), ['2026-5-10', '2027-5-9', '2028-5-14']);
+  // A yearly rule over two months, on the day of the start.
+  const twice = expandEvents(parseIcs(feedOf('UID:m3', 'DTSTART:20260301T100000Z', 'RRULE:FREQ=YEARLY;BYMONTH=3,9', 'SUMMARY:Clean-up')).events, { from: Date.UTC(2026, 0, 1), to: Date.UTC(2027, 11, 31) });
+  assert.deepEqual(daysOf(twice), ['2026-3-1', '2026-9-1', '2027-3-1', '2027-9-1']);
+  const weekly = expandEvents(parseIcs(feedOf('UID:m4', 'DTSTART:20261026T170000Z', 'RRULE:FREQ=WEEKLY;BYMONTH=10,12', 'SUMMARY:Choir')).events, { from: Date.UTC(2026, 9, 1), to: Date.UTC(2026, 11, 15) });
+  assert.deepEqual(daysOf(weekly), ['2026-10-26', '2026-12-7', '2026-12-14']);
+  // A rule that names a day no month has ends without a result.
+  assert.deepEqual(expandEvents(parseIcs(feedOf('UID:m5', 'DTSTART:20260101T100000Z', 'RRULE:FREQ=MONTHLY;BYMONTH=2;BYMONTHDAY=30', 'SUMMARY:Never')).events, { from: Date.UTC(2026, 0, 2), to: Date.UTC(2030, 0, 1) }), []);
+});
+
+test('RDATE: dates of their own beside the start and the rule', () => {
+  const window = { from: Date.UTC(2026, 9, 1), to: Date.UTC(2026, 11, 31) };
+  const alone = expandEvents(parseIcs(feedOf('UID:r1', 'DTSTART:20261005T170000Z', 'RDATE:20261019T170000Z,20261102T170000Z/20261102T190000Z', 'RDATE:20261005T170000Z', 'SUMMARY:Course')).events, window);
+  assert.deepEqual(daysOf(alone), ['2026-10-5', '2026-10-19', '2026-11-2']);
+  assert.ok(alone.every((occ) => occ.recurring));
+  // Beside a rule, without a date the rule already gives and without one EXDATE takes away.
+  const beside = expandEvents(parseIcs(feedOf('UID:r2', 'DTSTART:20261005T170000Z', 'RRULE:FREQ=WEEKLY;COUNT=3', 'RDATE:20261012T170000Z,20261120T170000Z,20261125T170000Z', 'EXDATE:20261125T170000Z', 'SUMMARY:Course')).events, window);
+  assert.deepEqual(daysOf(beside), ['2026-10-5', '2026-10-12', '2026-10-19', '2026-11-20']);
+  const days = expandEvents(parseIcs(feedOf('UID:r3', 'DTSTART;VALUE=DATE:20261010', 'RDATE;VALUE=DATE:20261017', 'SUMMARY:Market')).events, window);
+  assert.equal(days.length, 2);
+  assert.ok(days[1].allDay);
+});
+
+test('CONFERENCE, GEO and X-ALT-DESC: the meeting link, the point and the HTML description', () => {
+  const [occ] = expandEvents(parseIcs(feedOf('UID:x1', 'DTSTART:20261005T170000Z', 'SUMMARY:Board', 'LOCATION:The hall', 'DESCRIPTION:Plain words',
+    'CONFERENCE;VALUE=URI;FEATURE=AUDIO,VIDEO;LABEL=Join:https://video.example.org/room/7', 'GEO:63.4327;10.3950',
+    'X-ALT-DESC;FMTTYPE=text/html:<p>Rich <b>words</b></p>')).events, { from: Date.UTC(2026, 9, 1) });
+  assert.equal(occ.meeting, 'https://video.example.org/room/7');
+  assert.equal(meetingLinkOf(occ), 'https://video.example.org/room/7');
+  assert.deepEqual(occ.geo, { lat: 63.4327, lon: 10.395 });
+  assert.equal(occ.descriptionHtml, '<p>Rich <b>words</b></p>');
+  assert.equal(occ.description, 'Plain words');
+  assert.equal(eventJsonLd({ ...occ, title: occ.summary }).location[1].url, 'https://video.example.org/room/7');
+  // The fields the large calendars write the link in; an address that is not https is no link, and a point outside the globe no point.
+  const google = parseIcs(feedOf('UID:x2', 'DTSTART:20261005T170000Z', 'SUMMARY:A', 'X-GOOGLE-CONFERENCE:https://meet.google.com/abc-defg-hij')).events[0];
+  assert.equal(google.meeting, 'https://meet.google.com/abc-defg-hij');
+  const teams = parseIcs(feedOf('UID:x3', 'DTSTART:20261005T170000Z', 'SUMMARY:A', 'X-MICROSOFT-SKYPETEAMSMEETINGURL:https://teams.microsoft.com/l/meetup-join/1')).events[0];
+  assert.equal(teams.meeting, 'https://teams.microsoft.com/l/meetup-join/1');
+  const bad = parseIcs(feedOf('UID:x4', 'DTSTART:20261005T170000Z', 'SUMMARY:A', 'CONFERENCE:javascript:alert(1)', 'GEO:120;10', 'X-ALT-DESC;FMTTYPE=text/plain:not html')).events[0];
+  assert.equal(bad.meeting, undefined);
+  assert.equal(bad.geo, undefined);
+  assert.equal(bad.html, undefined);
+  // Without a field of its own the link is found in the words, as before.
+  assert.equal(meetingLinkOf({ description: 'Join at https://meet.jit.si/club' }), 'https://meet.jit.si/club');
+});
+
+test('normalizeSourceUrl: a Nextcloud share link becomes the address of its iCal file', () => {
+  const file = 'https://sky.example.org/remote.php/dav/public-calendars/AbCdEf123?export';
+  assert.equal(normalizeSourceUrl('https://sky.example.org/apps/calendar/p/AbCdEf123'), file);
+  assert.equal(normalizeSourceUrl('https://sky.example.org/index.php/apps/calendar/p/AbCdEf123/dayGridMonth/now'), file);
+  assert.equal(normalizeSourceUrl('https://sky.example.org/remote.php/dav/public-calendars/AbCdEf123'), file);
+  assert.equal(normalizeSourceUrl('https://sky.example.org/remote.php/dav/public-calendars/AbCdEf123/'), file);
+  assert.equal(normalizeSourceUrl('webcal://sky.example.org/remote.php/dav/public-calendars/AbCdEf123?export'), file);
+  assert.equal(normalizeSourceUrl(file), file);
+  // A server in a folder of its host keeps the folder.
+  assert.equal(normalizeSourceUrl('https://example.org/cloud/apps/calendar/p/AbCdEf123'), 'https://example.org/cloud/remote.php/dav/public-calendars/AbCdEf123?export');
+  // Any other address is left as it is.
+  assert.equal(normalizeSourceUrl('https://x.no/apps/calendar/kal.ics'), 'https://x.no/apps/calendar/kal.ics');
+  assert.equal(normalizeSourceUrl('https://calendar.google.com/calendar/ical/a%40b.com/public/basic.ics'), 'https://calendar.google.com/calendar/ical/a%40b.com/public/basic.ics');
 });

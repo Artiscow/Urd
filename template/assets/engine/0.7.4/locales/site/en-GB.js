@@ -174,6 +174,7 @@ export default {
     'calendar.places': 'Places',
     'calendar.allPlaces': 'All places',
     'calendar.noMatch': 'No events match',
+    'calendar.onMap': 'Show on the map',
     'calendar.nextMonth': 'Next month',
     'calendar.prevMonth': 'Previous month',
     'calendar.signup': 'Sign up',

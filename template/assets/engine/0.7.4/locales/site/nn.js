@@ -136,6 +136,7 @@ export default {
     'calendar.places': 'Stader',
     'calendar.allPlaces': 'Alle stader',
     'calendar.noMatch': 'Ingen arrangement passar',
+    'calendar.onMap': 'Vis i kart',
     'calendar.nextMonth': 'Neste månad',
     'calendar.prevMonth': 'Førre månad',
     'calendar.signup': 'Meld deg på',

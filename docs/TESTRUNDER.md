@@ -2,6 +2,22 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Test batch (0.7.19.16): what the calendar reads from a feed, meeting and sign-up links, and the calendar guide
+
+- [ ] A real feed with an event on «the last Thursday of every month» (made in Outlook or Google Calendar): the occurrences land on the right dates for the coming months
+- [ ] A real feed with a yearly event in a given month («the second Sunday of May») and an event with single extra dates: both show on the right dates
+- [ ] An event with a Google Meet or Teams meeting added in the calendar app, and no link in its description: the card shows «Join», and the tooltip names the host
+- [ ] An event with a Proton Meet, kMeet or Element Call link in its description: the card shows «Join»
+- [ ] Site panel, «Own meeting addresses»: a host or a whole pasted address is stored as the host alone, several divided by commas; an event with a link to that host then shows «Join»; emptying the field removes it again
+- [ ] «Show «Sign up» buttons» on: a description with «Sign up: https://…» or «Tickets: https://…» gives the button to that address; an event from an event service with its own address gives the button to that page; a description with only a plain link gives no button and the link stays in the text; a picture link or a meeting link never becomes the button
+- [ ] «Show «Sign up» buttons» off: no «Sign up» button in the lists or in the card
+- [ ] «Sign up» and «Join» show the host they lead to when the pointer rests on them
+- [ ] An event whose calendar app stores a point for the place: with OpenStreetMap or Apple Maps as the map service the place opens that point; with the others it opens the search as before
+- [ ] An event with a formatted description (from Outlook): the card shows paragraphs, lists, bold and links, and no pictures, colours or forms from the feed
+- [ ] A Nextcloud calendar's share link, copied from the share dialog and pasted under Sources as it is: the events show, and «Subscribe» gives an address a calendar app can follow
+- [ ] The calendar guide (docs/languages/calendar-guide/, English and Norwegian) read through: the steps for finding the iCal address match Google Calendar, and for each other service that is tried the «Tested» column and the steps are corrected to what was found
+- [ ] The links to the calendar guide from the user guide and from the README tables open it
+
 ### Test batch (0.7.19.15): finding events in the calendar
 
 - [ ] Element menu, a calendar: «Show place filter», «Show search field» and «Show earlier events» stand under the category filter and are off on a new calendar; «Show earlier events» is hidden for a month, week, day or year design; the group's reset switches all three off

@@ -33,7 +33,7 @@
 import { t, ta, tp, taApiError, dates, adminLocaleReady } from '../i18n.js';
 import { iconSvg } from '../icons.js';
 import { resolveColor } from '../theme.js';
-import { stripActiveContent } from '../sanitize.js';
+import { stripActiveContent, safeHtmlFragment } from '../sanitize.js';
 
 const el2 = (tag, className, textContent) => {
   const node = document.createElement(tag);
@@ -63,7 +63,7 @@ async function fetchSource(url) {
 }
 
 /** All sources → sorted occurrences with category and signup link. */
-async function loadOccurrences(ics, cf, sources, limit, view, from, zone) {
+async function loadOccurrences(ics, cf, sources, limit, view, from, zone, meetingHosts) {
   const errors = [];
   const events = [];
   let feedZone = null;
@@ -87,7 +87,7 @@ async function loadOccurrences(ics, cf, sources, limit, view, from, zone) {
       // A named calendar is the category; otherwise the feed's own first category, and last «Category: Title» in the event itself.
       const named = occ.calendar || occ.categories?.[0];
       const split = named ? { category: named, title: occ.summary } : ics.splitCategory(occ.summary);
-      return { ...occ, ...split, color: occ.calendarColor || '', signup: ics.findSignupLink(occ.description), image: occ.image || ics.findImageLink(occ.description) };
+      return { ...occ, ...split, color: occ.calendarColor || '', signup: ics.signupLinkOf(occ, meetingHosts), image: occ.image || ics.findImageLink(occ.description) };
     });
   // The sources are one calendar to the visitor: an event that stands in two of them is shown once.
   // With a zone set for the site, every time is moved to that zone's clock; `real` keeps the moment itself for the countdowns.
@@ -193,19 +193,21 @@ function imageUrl(occ, width = 800) {
  * settings (calOptions). Every edit posts the whole props with the text under
  * its key in `texts`, so the editor's draft stays the owner of the words.
  */
-function makeUi(cd, cf, ics, maps, el, host, props, ctx, sources, zone) {
+function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
   const lang = ctx.site?.site?.lang;
   const clock12 = cf.calClock12(props);
   const weekStart = cf.calWeekStart(props, lang);
   const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
   // The keys of a day grid belong to the visitor: with the editing handles on in the preview they are left alone.
   const keysOn = () => !ctx.preview || document.body.classList.contains('urd-chrome-off');
+  // The coordinates a feed gives a place (GEO), by the place's text, so every link to that place leads to the same point.
+  const places = new Map();
   const post = (msg) => window.parent?.postMessage(msg, location.origin);
   const field = (tag, key, text, className, when) => {
     const node = el2(tag, className ? `${className} urd-cal-f-${key}` : `urd-cal-f-${key}`);
     // A description keeps its addresses as links, and a place leads to the map (or to itself, when it is an address).
     if (key === 'description' && text) linkedText(node, text);
-    else if (key === 'place' && text) node.appendChild(placeLink(text, maps, maps.mapService(ctx.site)));
+    else if (key === 'place' && text) node.appendChild(placeLink(text, maps, maps.mapService(ctx.site), places.get(text)));
     else if (text != null) node.textContent = text;
     // A date or a time with the day or the event behind it (`when`) is written as a `<time>` a machine can read.
     const stamp = when != null && text ? cf.dateTimeAttr(when, key === 'time') : null;
@@ -303,7 +305,7 @@ function makeUi(cd, cf, ics, maps, el, host, props, ctx, sources, zone) {
   };
   const signup = (occ) => {
     if (!occ.signup || occ.cancelled || props.showSignup !== true) return null;
-    const a = link('urd-cal-signup', 'signup', occ.signup, t('calendar.signupTitle'));
+    const a = link('urd-cal-signup', 'signup', occ.signup, ui.hosted(t('calendar.signupTitle'), occ.signup));
     a.target = '_blank';
     a.rel = 'noopener';
     return a;
@@ -382,16 +384,25 @@ function makeUi(cd, cf, ics, maps, el, host, props, ctx, sources, zone) {
     },
     dayGrid: (grid, selector, opts) => dayGrid(grid, selector, opts, keysOn),
     keepFocus: (grid) => { const state = GRIDS.get(grid); if (state) Object.assign(state, { want: 'current', focus: true }); },
-    phoneDays: (grid, panel, year, month, occs, cellClass) => phoneDays(ui, grid, panel, year, month, occs, cellClass) };
+    phoneDays: (grid, panel, year, month, occs, cellClass) => phoneDays(ui, grid, panel, year, month, occs, cellClass),
+    places,
+    /** The site's own meeting hosts (site.meetingHosts), beside the services known by their host. */
+    meetingHosts: links.meetingHostList(ctx.site?.site?.meetingHosts),
+    /** A button's tooltip with the host it leads to, so a visitor sees where a press goes. */
+    hosted: (words, address) => {
+      const host = links.linkHost(address);
+      return host ? (words ? `${words} (${host})` : host) : words;
+    },
+    mapUrl: (place, geo) => maps.mapSearchUrl(place, maps.mapService(ctx.site), geo) };
   return ui;
 }
 
 /* ---------- The event in full ---------- */
 
 /** A place as a link: to the map as a search for its words, or to itself when the place is an address. */
-function placeLink(place, maps, service) {
+function placeLink(place, maps, service, geo) {
   const a = el2('a', 'urd-cal-place-link', place);
-  a.href = /^https?:\/\/\S+$/i.test(place.trim()) ? place.trim() : maps.mapSearchUrl(place, service);
+  a.href = /^https?:\/\/\S+$/i.test(place.trim()) ? place.trim() : maps.mapSearchUrl(place, service, geo);
   a.target = '_blank';
   a.rel = 'noopener';
   return a;
@@ -434,12 +445,8 @@ function linkedText(node, text) {
 function descriptionNode(description, ui) {
   const box = ui.field('div', 'description', '', 'urd-cal-dialog-text');
   if (/<[a-z][^>]*>/i.test(description)) {
-    box.innerHTML = description;
-    stripActiveContent(box);
-    for (const a of box.querySelectorAll('a[href]')) {
-      a.target = '_blank';
-      a.rel = 'noopener';
-    }
+    // A feed's HTML is somebody else's markup: only what the allowlist keeps is drawn.
+    box.appendChild(safeHtmlFragment(description));
   } else {
     linkedText(box, description);
   }
@@ -570,6 +577,14 @@ function showEventDialog(occ, from, ics, ui, props) {
     facts.append(term, def);
   };
   fact('when', ui.field('span', 'time', ui.timeText(occ)));
+  if (!occ.location && occ.geo) {
+    // Coordinates without a place in words: the map itself is the place.
+    const onMap = el2('a', 'urd-cal-place-link', t('calendar.onMap'));
+    onMap.href = ui.mapUrl('', occ.geo);
+    onMap.target = '_blank';
+    onMap.rel = 'noopener';
+    fact('where', onMap);
+  }
   if (occ.location) {
     fact('where', ui.field('span', 'place', occ.location));
   }
@@ -589,17 +604,19 @@ function showEventDialog(occ, from, ics, ui, props) {
     img.src = src;
     dialog.appendChild(img);
   }
-  if (occ.description) dialog.appendChild(descriptionNode(occ.description, ui));
+  // The feed's HTML description when it has one, else the plain one.
+  if (occ.descriptionHtml || occ.description) dialog.appendChild(descriptionNode(occ.descriptionHtml || occ.description, ui));
   const actions = el2('div', 'urd-cal-dialog-actions');
-  if (occ.signup && !occ.cancelled) {
-    const signup = ui.link('urd-cal-dialog-primary', 'signup', occ.signup, t('calendar.signupTitle'));
+  // The card shows the sign-up when the block does («Show sign-up button»).
+  if (occ.signup && !occ.cancelled && props.showSignup === true) {
+    const signup = ui.link('urd-cal-dialog-primary', 'signup', occ.signup, ui.hosted(t('calendar.signupTitle'), occ.signup));
     signup.target = '_blank';
     signup.rel = 'noopener';
     actions.appendChild(signup);
   }
-  const meeting = occ.cancelled ? null : ics.findMeetingLink(occ.url, occ.location, occ.description);
-  if (meeting && meeting !== occ.signup) {
-    const join = ui.link('urd-cal-dialog-primary', 'join', meeting, '');
+  const meeting = occ.cancelled ? null : ics.meetingLinkOf(occ, ui.meetingHosts);
+  if (meeting) {
+    const join = ui.link('urd-cal-dialog-primary', 'join', meeting, ui.hosted('', meeting));
     join.target = '_blank';
     join.rel = 'noopener';
     actions.appendChild(join);
@@ -1181,12 +1198,12 @@ function dayGrid(grid, selector, { page = null, current = null } = {}, keysOn = 
  * (schema.org `Event`), one script per block. It carries the mark seo.js
  * clears at every page render, so a page left takes its events with it.
  */
-function writeEventData(el, occs, ics, ctx) {
+function writeEventData(el, occs, ics, ctx, meetingHosts) {
   const id = el.dataset.blockId ?? '';
   for (const old of document.head.querySelectorAll('script[data-urd-cal]')) {
     if (old.dataset.urdCal === id) old.remove();
   }
-  const site = { pageUrl: location.origin + location.pathname, organizer: ctx.site?.site?.title ?? '' };
+  const site = { pageUrl: location.origin + location.pathname, organizer: ctx.site?.site?.title ?? '', meetingHosts };
   const events = occs.slice(0, PRINT_MAX).map((occ) => ics.eventJsonLd(occ, site)).filter(Boolean);
   if (!events.length) return;
   const script = document.createElement('script');
@@ -1319,16 +1336,16 @@ function renderCalendar(el, props, ctx) {
   // render, and a design's renderer module with them (literal paths, so the
   // modules stay out of the visitor closure and the preload list).
   const DESIGN_MODULES = { list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js'), next: () => import('./calendar-next.js'), more: () => import('./calendar-more.js') };
-  Promise.all([import('../ics.js'), import('../calendar-designs.js'), import('../calendar-format.js'), import('../map-links.js')]).then(async ([ics, cd, cf, maps]) => {
+  Promise.all([import('../ics.js'), import('../calendar-designs.js'), import('../calendar-format.js'), import('../map-links.js'), import('../meeting-links.js')]).then(async ([ics, cd, cf, maps, links]) => {
     const design = cd.calDesign(props.design);
     const mod = design.module ? await DESIGN_MODULES[design.module]?.() : null;
     // The view switcher draws the week with the week strip, so its module comes along.
     const weekMod = cd.calSwitcher(props) ? await DESIGN_MODULES.time() : null;
-    if (host.isConnected) drawCalendar(ics, cd, cf, maps, mod, weekMod, el, host, props, ctx);
+    if (host.isConnected) drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, ctx);
   });
 }
 
-function drawCalendar(ics, cd, cf, maps, mod, weekMod, el, host, props, ctx) {
+function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, ctx) {
   // The site's own time zone, when set: every visitor sees the times on that zone's clock.
   const siteZone = ctx.site?.site?.timeZone;
   const zone = cf.zoneValid(siteZone) ? siteZone.trim() : null;
@@ -1356,7 +1373,7 @@ function drawCalendar(ics, cd, cf, maps, mod, weekMod, el, host, props, ctx) {
   const stripe = cd.calStripe(design, props.stripe);
   host.classList.toggle('urd-cal-stripes', stripe.show);
   if (stripe.color) host.style.setProperty('--urd-cal-stripe', stripe.color);
-  const ui = makeUi(cd, cf, ics, maps, el, host, props, ctx, sources, zone);
+  const ui = makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone);
   let feedZone = null;
   // The design's own settings as classes, for the ones the style sheet draws.
   for (const [key, value] of Object.entries(ui.opt)) {
@@ -1366,6 +1383,7 @@ function drawCalendar(ics, cd, cf, maps, mod, weekMod, el, host, props, ctx) {
 
   const draw = (occurrences, note) => {
     shown = { occurrences, note };
+    for (const occ of occurrences) if (occ.geo && occ.location) ui.places.set(occ.location, occ.geo);
     host.removeAttribute('aria-busy');
     // A press on the view switcher or a category redraws the calendar: the focus goes back to the button that was pressed.
     const focused = host.contains(document.activeElement) ? document.activeElement.dataset.calKey : null;
@@ -1465,7 +1483,7 @@ function drawCalendar(ics, cd, cf, maps, mod, weekMod, el, host, props, ctx) {
     const listed = own && !['next', ...SPAN_VIEWS].includes(view) ? limited : filtered.filter((occ) => (occ.end ?? occ.start) >= soon);
     if (listed.length) host.appendChild(printList(listed, ui));
     // Search engines get the same events as structured data, on the published page and from a real feed only.
-    if (!ctx.preview && sources.length) writeEventData(el, props.structuredData === false ? [] : listed, ics, ctx);
+    if (!ctx.preview && sources.length) writeEventData(el, props.structuredData === false ? [] : listed, ics, ctx, ui.meetingHosts);
     if (focused) [...host.querySelectorAll('[data-cal-key]')].find((node) => node.dataset.calKey === focused)?.focus({ preventScroll: true });
     // The note is editing chrome on the block, not content: it hangs below
     // the block (base.css) and the push pass skips it, so it never makes the
@@ -1500,7 +1518,7 @@ function drawCalendar(ics, cd, cf, maps, mod, weekMod, el, host, props, ctx) {
   const weekFrom = Math.min(ics.windowStart('week'), ui.weekStartOf(Date.now()));
   const viewFrom = switcher ? Math.min(weekFrom, ics.windowStart('month')) : view === 'week' ? weekFrom : ics.windowStart(view);
   const from = props.showEarlier === true ? Math.min(viewFrom, Date.now() - EARLIER_DAYS * 24 * 3600 * 1000) : viewFrom;
-  loadOccurrences(ics, cf, sources, Math.max(1, props.limit ?? 6), view, from, zone).then(({ occurrences, errors, feedZone: fz }) => {
+  loadOccurrences(ics, cf, sources, Math.max(1, props.limit ?? 6), view, from, zone, ui.meetingHosts).then(({ occurrences, errors, feedZone: fz }) => {
     if (!host.isConnected) return;
     feedZone = fz;
     if (!occurrences.length && errors.length) {

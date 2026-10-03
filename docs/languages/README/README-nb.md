@@ -63,6 +63,7 @@ Editoren og motorens besøkende-tekster finnes på nordsamisk, britisk engelsk, 
 | [docs/UTVIKLING.md](../../UTVIKLING.md) | For oss som utvikler Urd: oppsett, regler, vanlige oppgaver |
 | [Oppsett av publisering](../setup-publication/SETUP-nb.md) | Engangsoppsett av publisering: GitHub OAuth-app + Cloudflare |
 | [Bilder fra en delt mappe](../setup-photos/PHOTOS-nb.md) | Bakgrunnsbilder fra en Google Drive-mappe, et Google Foto-album eller en Nextcloud-deling, og Cloudflare-variablene de trenger |
+| [Kalenderen](../calendar-guide/CALENDAR-nb.md) | For nettstedeiere: kalendertjenester, møtelenker, påmelding, kart og hva kalenderblokken leser fra et arrangement |
 | [docs/BACKLOG.md](../../BACKLOG.md) | Løpende oppgaveliste: gjøremål, bugs og forslag |
 | [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Sjekkliste for manuell testing: levert arbeid som venter på testing |
 | [docs/languages/](../) | Alle oversatte dokumenter (guide og oppsett på fem språk; engelsk tekst er kanonisk ved avvik) |

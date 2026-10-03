@@ -266,6 +266,8 @@ reading order. You usually do not have to do anything.
   the form «Category: Title» give filterable category chips, a
   sign-up link in the description becomes a **Sign up** button, and
   the **Subscribe** button lets visitors follow the calendar in their own app.
+  The calendar has a guide of its own: [The calendar](../calendar-guide/CALENDAR-en-GB.md)
+  (calendar services, meeting links, sign-up, maps and more).
 
   The Form block (and the «Contact form» template) is in the Blocks panel: select
   the block, and set the recipient, fields and send mode in Properties. By default
