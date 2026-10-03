@@ -10,7 +10,7 @@ import { engineImport } from './_engine.mjs';
 
 const {
   CAL_DESIGNS, CAL_VIEWS, CAL_FIELDS, CAL_TEXTS, CAL_SIZE, CAL_MODULES,
-  CAL_SWITCH_VIEWS, calSwitcher, calFolds, calProgramHref, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calTextHtml, calHasTextOverrides,
+  CAL_SWITCH_VIEWS, calSwitcher, calFolds, calProgramHref, CAL_OPTIONS, calOptionDefs, calOptions, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calTextHtml, calHasTextOverrides,
 } = await engineImport('calendar-designs.js');
 
 const plain = CAL_DESIGNS[0];
@@ -174,4 +174,41 @@ test('calProgramHref: an address only on a design that links to the programme, a
   assert.equal(calProgramHref({ design: 'glass', programHref: '/program' }), null);
   for (const design of CAL_DESIGNS.filter((d) => d.program)) assert.ok(design.texts.includes('wholeProgram'), design.id);
   for (const design of CAL_DESIGNS.filter((d) => d.open)) assert.ok(design.texts.includes('openToAll'), design.id);
+});
+
+test('calOptions: every option of the design with its default, the valid stored value over it', () => {
+  assert.deepEqual(calOptions({ design: 'glass' }), {});
+  assert.deepEqual(calOptions({ design: 'sidepanel' }), { panelSide: 'right' });
+  assert.deepEqual(calOptions({ design: 'sidepanel', options: { panelSide: 'under', zebra: false } }), { panelSide: 'under' });
+  assert.deepEqual(calOptions({ design: 'sidepanel', options: { panelSide: 'top' } }), { panelSide: 'right' });
+  assert.deepEqual(calOptions({ design: 'weekPlan', options: { hourFrom: 6, hourTo: 30, weekend: true } }), { hourFrom: 6, hourTo: null, weekend: true });
+  assert.deepEqual(calOptions({ design: 'table', options: { zebra: 'no', colPlace: false } }), { colTime: true, colPlace: false, zebra: true });
+  assert.deepEqual(calOptions({ design: 'yearWheel', options: { firstMonth: '8' } }), { firstMonth: '8' });
+  assert.deepEqual(calOptionDefs('no-such-design'), []);
+});
+
+test('CAL_OPTIONS: every key names a design, and every default is a value the option can hold', () => {
+  const ids = CAL_DESIGNS.map((d) => d.id);
+  for (const [id, defs] of Object.entries(CAL_OPTIONS)) {
+    assert.ok(ids.includes(id), id);
+    for (const def of defs) {
+      assert.equal(def.labelKey, `calendar.opt.${def.key}`);
+      if (def.kind === 'choice') assert.ok(def.values.includes(def.def), `${id}.${def.key}`);
+      else if (def.kind === 'switch') assert.equal(typeof def.def, 'boolean');
+      else assert.equal(def.def, null);
+    }
+  }
+});
+
+test('the option labels are in the three core admin dictionaries', async () => {
+  for (const lang of ['nb', 'en-GB', 'tr']) {
+    const { strings } = (await engineImport(`locales/admin/${lang}.js`)).default;
+    assert.ok('calendar.section.options' in strings, lang);
+    for (const defs of Object.values(CAL_OPTIONS)) {
+      for (const def of defs) {
+        assert.ok(def.labelKey in strings, `${lang}: ${def.labelKey}`);
+        if (def.kind === 'choice' && def.key !== 'firstMonth') for (const v of def.values) assert.ok(`${def.labelKey}.${v}` in strings, `${lang}: ${def.labelKey}.${v}`);
+      }
+    }
+  }
 });

@@ -27,6 +27,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.19.9 - Settings per calendar design - 3 October 2026
+
+- The designs had no settings of their own. `options` on the block holds them (`CAL_OPTIONS`, pure `calOptions` and `calOptionDefs` in calendar-designs.js), and the Style tab shows the section «Settings for the design» under the design picker, only with the options of the chosen design.
+- Month with side panel: the panel to the right, to the left or under the month. Week plan and Day plan: a first and a last hour in place of 8 and 18, and a tinted weekend. Table: the Time and Place columns and the striped rows as switches. Poster wall and Picture cards: two, three or four columns. Year wheel: the month at the top. Numbered programme: 1 or 01. Programme booklet and Split card: the description on or off. Band: rolling on or off.
+- Coming up bento drew one featured event whatever `nextCount` said; its day tiles now follow `nextCount` and `laterCount` together.
+- The «Done when» lines of milestone 0.7.19 in BACKLOG stood collected at the foot of the milestone; each now stands under the stage it belongs to.
+
 ### 0.7.19.8 - The parts of the calendar artboards left out - 3 October 2026
 
 - A list view dropped the events beyond the max count. They now stand under «Show all N (M more)» in a native `<details>` drawn by the same design (pure `calFolds`, the switch `showMore` under the max count); the Numbered programme counts on through the fold and shows the count of the whole list.

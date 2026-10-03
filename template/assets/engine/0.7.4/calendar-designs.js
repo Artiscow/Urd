@@ -6,7 +6,7 @@
  * the owner can rewrite in the preview, and whether its boxes carry an edge
  * stripe. The owner's choices are additive props on the block (`design`,
  * `colors`, `stripe`, `texts`, `fieldStyle`, `showSignup`, `showMore`,
- * `programHref`, `showOpen`); a block without
+ * `programHref`, `showOpen`, `options`); a block without
  * them renders the plain design on the theme's colours. The module is
  * bundled by the editor and loaded by the block on its first render (with
  * ics.js, outside the visitor closure), so it never touches the DOM and never
@@ -444,6 +444,56 @@ export const CAL_DESIGNS = [
     texts: ['todayBtn', ...COMMON_TEXTS],
   },
 ];
+
+/**
+ * The settings that belong to one design each, stored together under the
+ * block's `options`. A `choice` holds one of its values, a `switch` true or
+ * false, an `hour` a whole hour from 0 to 24 or nothing (the design then
+ * finds the span itself). `def` is what a block without the option draws,
+ * which is what the design drew before the option existed. The label key is
+ * `calendar.opt.<key>`, a choice's values `calendar.opt.<key>.<value>`.
+ */
+const choice = (key, values, def) => ({ key, kind: 'choice', values, def, labelKey: `calendar.opt.${key}` });
+const toggle = (key, def) => ({ key, kind: 'switch', def, labelKey: `calendar.opt.${key}` });
+const hour = (key) => ({ key, kind: 'hour', def: null, labelKey: `calendar.opt.${key}` });
+const MONTHS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
+
+export const CAL_OPTIONS = {
+  sidepanel: [choice('panelSide', ['right', 'left', 'under'], 'right')],
+  weekPlan: [hour('hourFrom'), hour('hourTo'), toggle('weekend', false)],
+  dayPlan: [hour('hourFrom'), hour('hourTo'), toggle('weekend', false)],
+  table: [toggle('colTime', true), toggle('colPlace', true), toggle('zebra', true)],
+  posters: [choice('columns', ['auto', '2', '3', '4'], 'auto')],
+  photo: [choice('columns', ['auto', '2', '3', '4'], 'auto')],
+  yearWheel: [choice('firstMonth', MONTHS, '0')],
+  numbered: [toggle('pad', true)],
+  booklet: [toggle('description', true)],
+  split: [toggle('description', true)],
+  band: [toggle('roll', true)],
+};
+
+/** The option definitions of a design; an empty list for a design without settings of its own. */
+export function calOptionDefs(designId) {
+  return CAL_OPTIONS[calDesign(designId).id] ?? [];
+}
+
+/**
+ * The design's options as the block draws them: every option of the design
+ * with the owner's value when it is valid, else the default. Options that
+ * belong to another design are left out.
+ * @returns {Record<string, string|boolean|number|null>}
+ */
+export function calOptions(props) {
+  const stored = props?.options ?? {};
+  const out = {};
+  for (const def of calOptionDefs(props?.design)) {
+    const value = stored[def.key];
+    if (def.kind === 'choice') out[def.key] = def.values.includes(value) ? value : def.def;
+    else if (def.kind === 'switch') out[def.key] = typeof value === 'boolean' ? value : def.def;
+    else out[def.key] = Number.isInteger(value) && value >= 0 && value <= 24 ? value : null;
+  }
+  return out;
+}
 
 /** The renderer modules a design can name (the block maps each to a literal import). */
 export const CAL_MODULES = ['list', 'cards', 'time', 'next', 'more'];

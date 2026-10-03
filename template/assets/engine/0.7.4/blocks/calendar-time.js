@@ -95,10 +95,14 @@ export function weekStrip(host, occs, props, ics, ui) {
   host.appendChild(wrap);
 }
 
-/** The hours a plan shows: from the earliest event (at most 8) to past the latest (at least 18). */
-function hourSpan(occs) {
-  let from = 8;
-  let to = 18;
+/**
+ * The hours a plan shows: from the earliest event (at most 8) to past the
+ * latest (at least 18). The owner's own first and last hour replace the 8 and
+ * the 18; an event outside them still widens the span.
+ */
+function hourSpan(occs, opt = {}) {
+  let from = Number.isInteger(opt.hourFrom) ? Math.min(opt.hourFrom, 23) : 8;
+  let to = Number.isInteger(opt.hourTo) ? opt.hourTo : 18;
   for (const occ of occs) {
     if (occ.allDay) continue;
     const d = dayOf(occ);
@@ -156,7 +160,7 @@ export function weekPlan(host, occs, props, ics, ui) {
       days.appendChild(cell);
     }
     const inWeek = ui.all.filter((occ) => occ.start < week[6].getTime() + DAY && (occ.end ?? occ.start) >= week[0].getTime());
-    const { from, to } = hourSpan(inWeek);
+    const { from, to } = hourSpan(inWeek, ui.opt);
     grid.replaceChildren();
     grid.style.setProperty('--urd-cal-plan-rows', String(to - from));
     const allDay = inWeek.filter((occ) => occ.allDay);
@@ -174,6 +178,7 @@ export function weekPlan(host, occs, props, ics, ui) {
       for (const day of week) {
         const cell = ui.el('div', 'urd-cal-wplan-cell');
         if (sameDay(day, today)) cell.classList.add('urd-cal-wplan-istoday');
+        if (day.getDay() === 0 || day.getDay() === 6) cell.classList.add('urd-cal-plan-weekend');
         for (const occ of inWeek) {
           const d = dayOf(occ);
           if (!occ.allDay && sameDay(d, day) && d.getHours() === hour) cell.appendChild(planBlock(occ, ui));
@@ -448,9 +453,10 @@ export function dayPlan(host, occs, props, ics, ui) {
       btn.addEventListener('click', () => { day = startOfDay(d); paint(); });
       strip.appendChild(btn);
     }
-    const { from, to } = hourSpan(todays);
+    const { from, to } = hourSpan(todays, ui.opt);
     grid.replaceChildren();
     grid.classList.toggle('urd-cal-dplan-istoday', isToday);
+    grid.classList.toggle('urd-cal-plan-weekend', day.getDay() === 0 || day.getDay() === 6);
     const allDay = todays.filter((occ) => occ.allDay);
     if (allDay.length) {
       grid.appendChild(ui.el('span', 'urd-cal-dplan-hour'));
@@ -506,10 +512,13 @@ export function yearWheel(host, occs, props, ics, ui) {
   const svg = svgEl('svg', { viewBox: `0 0 ${size} ${size}`, 'aria-hidden': 'true', class: 'urd-cal-wheel-svg' });
   const months = dates().monthsShort;
   const inYear = ui.all.filter((occ) => dayOf(occ).getFullYear() === year);
+  // The month at the top of the wheel is the owner's choice; a month's place is counted from it.
+  const firstMonth = Number(ui.opt.firstMonth) || 0;
+  const place = (m) => (m - firstMonth + 12) % 12;
   const segments = [];
   for (let m = 0; m < 12; m++) {
-    const a0 = (m / 12) * 2 * Math.PI + 0.012;
-    const a1 = ((m + 1) / 12) * 2 * Math.PI - 0.012;
+    const a0 = (place(m) / 12) * 2 * Math.PI + 0.012;
+    const a1 = ((place(m) + 1) / 12) * 2 * Math.PI - 0.012;
     const seg = svgEl('path', { d: arcPath(c, c, r, a0, a1), class: 'urd-cal-wheel-seg', fill: 'none', 'stroke-width': 40, role: 'button', tabindex: 0 });
     if (m < today.getMonth()) seg.classList.add('urd-cal-wheel-past');
     if (m === today.getMonth()) seg.classList.add('urd-cal-wheel-now');
@@ -519,7 +528,7 @@ export function yearWheel(host, occs, props, ics, ui) {
     seg.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); pick(); } });
     svg.appendChild(seg);
     segments.push(seg);
-    const [lx, ly] = polar(c, c, r + 42, (m + 0.5) / 12 * 2 * Math.PI);
+    const [lx, ly] = polar(c, c, r + 42, (place(m) + 0.5) / 12 * 2 * Math.PI);
     const text = svgEl('text', { x: lx.toFixed(1), y: (ly + 4).toFixed(1), class: 'urd-cal-wheel-month', 'text-anchor': 'middle' });
     text.textContent = months[m].toUpperCase();
     svg.appendChild(text);
@@ -527,7 +536,7 @@ export function yearWheel(host, occs, props, ics, ui) {
   for (const occ of inYear) {
     const d = dayOf(occ);
     const dim = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-    const angle = ((d.getMonth() + (d.getDate() - 0.5) / dim) / 12) * 2 * Math.PI;
+    const angle = ((place(d.getMonth()) + (d.getDate() - 0.5) / dim) / 12) * 2 * Math.PI;
     const [x, y] = polar(c, c, r, angle);
     const dot = svgEl('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 7, class: occ.start < today.getTime() ? 'urd-cal-wheel-dot urd-cal-wheel-dot-off' : 'urd-cal-wheel-dot' });
     if (occ.color) dot.style.setProperty('--urd-cal-color', resolveColor(occ.color));

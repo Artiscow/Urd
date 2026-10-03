@@ -174,7 +174,8 @@ function imageUrl(occ, width = 800) {
  * for it, and `openToAll` the words on an event without a sign-up. `filter`
  * is the category filter for a design that draws its own, and `offset`,
  * `total` and `rest` tell a list design where in the whole list its rows
- * stand when the block folds the rest. Every edit posts the whole props with the text under
+ * stand when the block folds the rest. `opt` holds the design's own
+ * settings (calOptions). Every edit posts the whole props with the text under
  * its key in `texts`, so the editor's draft stays the owner of the words.
  */
 function makeUi(cd, ics, el, host, props, ctx, sources) {
@@ -271,7 +272,7 @@ function makeUi(cd, ics, el, host, props, ctx, sources) {
   const subscribe = () => (props.showSubscribe !== false && sources.length ? subscribeRow(ics, sources, ui) : null);
   /** The event's own page: the address the feed gives it, else its sign-up link; null without either. */
   const href = (occ) => (typeof occ.url === 'string' && /^https?:\/\//i.test(occ.url) ? occ.url : occ.signup || null);
-  const ui = { el: el2, tint: tintNode, field, meta, tx, link, signup, chip, recurring, program, openToAll, subscribe, href, countdown: countdownText, image: imageUrl, all: [], offset: 0, total: 0, rest: false, filter: null, today: () => new Date() };
+  const ui = { el: el2, tint: tintNode, field, meta, tx, link, signup, chip, recurring, program, openToAll, subscribe, href, countdown: countdownText, image: imageUrl, all: [], offset: 0, total: 0, rest: false, filter: null, opt: cd.calOptions(props), today: () => new Date() };
   return ui;
 }
 
@@ -608,6 +609,11 @@ function drawCalendar(ics, cd, mod, weekMod, el, host, props, ctx) {
   host.classList.toggle('urd-cal-stripes', stripe.show);
   if (stripe.color) host.style.setProperty('--urd-cal-stripe', stripe.color);
   const ui = makeUi(cd, ics, el, host, props, ctx, sources);
+  // The design's own settings as classes, for the ones the style sheet draws.
+  for (const [key, value] of Object.entries(ui.opt)) {
+    if (typeof value === 'boolean') host.classList.add(`urd-cal-o-${key}-${value ? 'on' : 'off'}`);
+    else if (typeof value === 'string') host.classList.add(`urd-cal-o-${key}-${value}`);
+  }
 
   const draw = (occurrences, note) => {
     host.replaceChildren();

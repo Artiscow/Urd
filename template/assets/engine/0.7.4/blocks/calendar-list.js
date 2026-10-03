@@ -63,7 +63,10 @@ export function table(host, occs, props, ics, ui) {
   const tbl = ui.el('table', 'urd-cal-table');
   const head = ui.el('thead');
   const headRow = ui.el('tr');
-  for (const key of ['colDate', 'colTime', 'colEvent', 'colPlace']) {
+  // The time and the place are columns the owner can leave out.
+  const showTime = ui.opt.colTime !== false;
+  const showPlace = ui.opt.colPlace !== false;
+  for (const key of ['colDate', showTime && 'colTime', 'colEvent', showPlace && 'colPlace'].filter(Boolean)) {
     const th = ui.el('th');
     th.appendChild(ui.tx(key));
     headRow.appendChild(th);
@@ -88,7 +91,7 @@ export function table(host, occs, props, ics, ui) {
     const act = ui.el('td', 'urd-cal-table-act');
     const signup = ui.signup(occ);
     if (signup) act.appendChild(signup);
-    row.append(date, time, event, place, act);
+    row.append(...[date, showTime && time, event, showPlace && place, act].filter(Boolean));
     body.appendChild(row);
   }
   tbl.append(head, body);
@@ -120,7 +123,7 @@ export function booklet(host, occs, props, ics, ui) {
       row.appendChild(ui.field('strong', 'number', String(dayOf(occ).getDate()), 'urd-cal-booklet-day'));
       const body = ui.el('div', 'urd-cal-booklet-body');
       body.append(ui.field('strong', 'title', occ.title, 'urd-cal-booklet-name'), weekdayMeta(occ, ui));
-      const text = excerptNode(occ, ui, 'urd-cal-booklet-text');
+      const text = ui.opt.description === false ? null : excerptNode(occ, ui, 'urd-cal-booklet-text');
       if (text) body.appendChild(text);
       const signup = ui.signup(occ);
       if (signup) body.appendChild(signup);
@@ -140,7 +143,7 @@ export function numbered(host, occs, props, ics, ui) {
   if (!ui.rest) wrap.appendChild(ui.el('span', 'urd-cal-numbered-count', tp('calendar.count', ui.total || occs.length)));
   occs.forEach((occ, i) => {
     const row = ui.tint(ui.el('div', 'urd-cal-numbered-row'), occ);
-    row.appendChild(ui.field('span', 'number', two(ui.offset + i + 1), 'urd-cal-numbered-n'));
+    row.appendChild(ui.field('span', 'number', ui.opt.pad === false ? String(ui.offset + i + 1) : two(ui.offset + i + 1), 'urd-cal-numbered-n'));
     const body = ui.el('div', 'urd-cal-numbered-body');
     body.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-numbered-title'));
     const meta = ui.meta(occ);

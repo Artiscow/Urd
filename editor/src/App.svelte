@@ -124,7 +124,7 @@
   import { isSafeHref, toolOrder } from '$engine/nav-model.js';
   import { frameAtPoint } from '$engine/place.js';
   import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '$engine/icons.js';
-  import { CAL_FIELDS, CAL_SIZE, CAL_SWITCH_VIEWS, calDesign, calView, calStripe, calHasTextOverrides, calDesignGroups } from '$engine/calendar-designs.js';
+  import { CAL_FIELDS, CAL_SIZE, CAL_SWITCH_VIEWS, calDesign, calView, calStripe, calHasTextOverrides, calDesignGroups, calOptionDefs, calOptions } from '$engine/calendar-designs.js';
   import { calendarThumb } from '$engine/calendar-thumb.js';
 
   /** The background layer types in the order they are offered in the panel. */
@@ -1116,6 +1116,20 @@
   /** The heading over each group of designs in the picker: the view the group stands on. */
   const CAL_VIEW_KEYS = { list: 'calendar.viewList', cards: 'calendar.viewCards', month: 'calendar.viewMonth', agenda: 'calendar.viewAgenda', next: 'calendar.viewNext', week: 'calendar.viewWeek', day: 'calendar.viewDay', year: 'calendar.viewYear' };
   /** The design's colour slots by section, in order; the first section is the plain «Colours» list and gets no heading of its own. */
+  /** Writes one of the design's own settings under `options`; the default is stored as nothing. */
+  function setCalOption(def, value) {
+    const all = { ...(selectedBlock.props.options ?? {}) };
+    if (value === def.def || value == null) delete all[def.key];
+    else all[def.key] = value;
+    setBlockProp('options', Object.keys(all).length ? all : undefined);
+  }
+
+  /** The words of a choice option's value: a month name for the year wheel, else the value's own key. */
+  function calOptionLabel(def, value) {
+    if (def.key === 'firstMonth') return new Intl.DateTimeFormat(currentAdminLang(), { month: 'long' }).format(new Date(2024, Number(value), 1));
+    return ta(`${def.labelKey}.${value}`);
+  }
+
   function calSlotGroups(def) {
     const groups = [];
     for (const slot of def.slots) {
@@ -9929,6 +9943,30 @@
           {/each}
         </div>
       </details>
+      <!-- The design's own settings, directly under the design they belong to -->
+      {#if calOptionDefs(selectedBlock.props.design).length}
+        {@const calOpt = calOptions(selectedBlock.props)}
+        <p class="panel-strong">{ta('calendar.section.options')}</p>
+        {#each calOptionDefs(selectedBlock.props.design) as def (def.key)}
+          {#if def.kind === 'switch'}
+            <label class="gridmenu-snap">
+              <input type="checkbox" checked={calOpt[def.key]} onchange={(e) => setCalOption(def, e.target.checked)} />
+              {ta(def.labelKey)}
+            </label>
+          {:else if def.kind === 'hour'}
+            <label title={ta('tip.calendar.opt.hours')}>{ta(def.labelKey)}
+              <input type="number" min="0" max="24" value={calOpt[def.key] ?? ''} placeholder={ta('calendar.opt.columns.auto')}
+                onchange={(e) => setCalOption(def, e.target.value === '' ? null : Math.max(0, Math.min(24, Math.round(Number(e.target.value)) || 0)))} /></label>
+          {:else if def.values.length > 4}
+            <div class="ctl-row">
+              <span class="mini-label ctl-name">{ta(def.labelKey)}</span>
+              <Dropdown value={calOpt[def.key]} options={def.values.map((v) => [v, calOptionLabel(def, v)])} onchange={(v) => setCalOption(def, v)} />
+            </div>
+          {:else}
+            <Choice label={ta(def.labelKey)} value={calOpt[def.key]} options={def.values.map((v) => [v, calOptionLabel(def, v)])} onchange={(v) => setCalOption(def, v)} />
+          {/if}
+        {/each}
+      {/if}
       <!-- The design's colour slots: empty follows the theme -->
       <p class="panel-strong" title={ta('tip.calendar.slot')}>{ta('calendar.colors')}</p>
       {#each calSlotGroups(calDef) as group, gi (group.section)}

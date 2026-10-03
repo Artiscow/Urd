@@ -3805,6 +3805,54 @@ textarea.urd-form-input {
   }
 }
 
+/* ---- The designs' own settings (calOptions): the ones the style sheet draws ---- */
+
+.urd-cal-o-panelSide-under .urd-cal-side {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.urd-cal-o-panelSide-under .urd-cal-side-panel {
+  border-top: 1px solid var(--urd-cal-line);
+  border-left: 0;
+}
+
+@media (min-width: 601px) {
+  .urd-cal-o-panelSide-left .urd-cal-side {
+    grid-template-columns: minmax(12em, 15em) minmax(0, 1fr);
+  }
+
+  .urd-cal-o-panelSide-left .urd-cal-side-panel {
+    order: -1;
+    border-right: 1px solid var(--urd-cal-line);
+    border-left: 0;
+  }
+
+  .urd-cal-o-columns-2 :is(.urd-cal-posters, .urd-cal-photos) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .urd-cal-o-columns-3 :is(.urd-cal-posters, .urd-cal-photos) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .urd-cal-o-columns-4 :is(.urd-cal-posters, .urd-cal-photos) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.urd-cal-o-zebra-off .urd-cal-table tbody tr:nth-child(even) {
+  background: transparent;
+}
+
+.urd-cal-o-weekend-on .urd-cal-plan-weekend:not(.urd-cal-wplan-istoday, .urd-cal-dplan-istoday) {
+  background: color-mix(in srgb, var(--urd-color-text) 5%, transparent);
+}
+
+.urd-cal-band-still {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
 /* ---- The «Coming up» designs (blocks/calendar-next.js) ---- */
 
 /* Shared: a one-line later row */

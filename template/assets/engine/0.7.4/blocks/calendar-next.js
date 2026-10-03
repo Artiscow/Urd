@@ -244,7 +244,7 @@ export function split(host, occs, props, ics, ui) {
   const meta = ui.meta(hero, { date: false });
   if (meta) body.appendChild(meta);
   const excerpt = String(hero.description ?? '').split('\n')[0].slice(0, 220);
-  if (excerpt) body.appendChild(ui.field('p', 'description', excerpt, 'urd-cal-split-text'));
+  if (excerpt && ui.opt.description !== false) body.appendChild(ui.field('p', 'description', excerpt, 'urd-cal-split-text'));
   const signup = ui.signup(hero);
   if (signup) body.appendChild(signup);
   top.append(panel, body);
@@ -282,7 +282,9 @@ export function band(host, occs, props, ics, ui) {
   });
   track.appendChild(run);
   // The run rolls when it is wider than the band: a copy follows it so the loop has no seam.
-  requestAnimationFrame(() => {
+  // With rolling switched off the band stands still and scrolls sideways by hand.
+  if (ui.opt.roll === false) track.classList.add('urd-cal-band-still');
+  else requestAnimationFrame(() => {
     if (!track.isConnected) return;
     if (run.scrollWidth > track.clientWidth) {
       const copy = run.cloneNode(true);
@@ -461,7 +463,8 @@ export function nextBento(host, occs, props, ics, ui) {
   if (signup) foot.appendChild(signup);
   heroTile.append(top, foot);
   grid.appendChild(heroTile);
-  const later = laterOf(occs, props, ics);
+  // The day tiles: the featured events after the first, then the later ones.
+  const later = occs.slice(1, ics.nextCount(props.nextCount) + ics.laterCount(props.laterCount));
   later.forEach((occ, i) => {
     const od = dayOf(occ);
     const tile = ui.tint(ui.el('article', 'urd-cal-nbento-tile urd-cal-nbento-day'), occ);

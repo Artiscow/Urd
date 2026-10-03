@@ -2,6 +2,20 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Test batch (0.7.19.9): settings per calendar design
+
+- [ ] Style tab on a calendar: «Settings for the design» stands under the design picker only on Month with side panel, Week plan, Day plan, Table, Poster wall, Picture cards, Year wheel, Numbered programme, Programme booklet, Split card and Band, and holds only that design's settings; every change shows in the preview at once and survives a reload and a publish
+- [ ] Month with side panel, «Side of the panel»: Right, Left and Under move the panel; on a phone the panel stands under the month whatever is chosen
+- [ ] Week plan and Day plan: «First hour» 6 and «Last hour» 22 give a plan from 06 to 21, empty fields give 08 to 17 again, and an event at 23:00 still shows with the last hour set to 20; «Tint the weekend» shades Saturday and Sunday
+- [ ] Table: «Show the Time column» and «Show the Place column» off remove the column with its heading; «Striped rows» off leaves every row plain
+- [ ] Poster wall and Picture cards, «Columns»: 2, 3 and 4 fix the count on a desktop, Auto fills the width as before, and a phone keeps its own layout
+- [ ] Year wheel, «The month at the top of the wheel»: with August chosen, August stands at the top, the dots follow their months and a click on a month still lists that month
+- [ ] Numbered programme, «Count 01, 02, 03» off counts 1, 2, 3, also through the fold
+- [ ] Programme booklet and Split card with a real feed with descriptions: «Show the description» off removes it
+- [ ] Band, «Roll when the band is too narrow» off: the band stands still and scrolls sideways by hand when the events are wider than it
+- [ ] Coming up bento with «Events in the card» at 3 and one later event: three day tiles beside the first event; with 1 and 0 the block is as before
+- [ ] A calendar block saved before this change renders unchanged in every design
+
 ### Test batch (0.7.19.8): the parts of the calendar artboards left out
 
 - [ ] A list calendar (the plain list, Timeline, Table, Programme booklet, Numbered programme, List on navy, Glass) with more events than the max count: «Show all N (M more)» under the rows opens the rest in the same design without a reload; Numbered programme counts on (03, 04 ...) and its count is of the whole list; Table's folded rows may stand slightly off the columns above
