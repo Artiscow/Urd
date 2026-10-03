@@ -126,6 +126,7 @@
   import { frameAtPoint } from '$engine/place.js';
   import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '$engine/icons.js';
   import { zoneValid } from '$engine/calendar-format.js';
+  import { MAP_SERVICES, mapService } from '$engine/map-links.js';
   import { CAL_FIELDS, CAL_SIZE, CAL_SWITCH_VIEWS, calDesign, calView, calStripe, calHasTextOverrides, calDesignGroups, calOptionDefs, calOptions, calScale, CAL_SCALE } from '$engine/calendar-designs.js';
   import { calendarThumb } from '$engine/calendar-thumb.js';
 
@@ -3443,6 +3444,13 @@
   }
   function setSiteLang(v) {
     siteMutate('site', () => { siteDraft.site.lang = v; });
+  }
+  /** The map service places link to (site.mapService): OpenStreetMap is the default and is stored as no field. */
+  function setSiteMapService(id) {
+    siteMutate('site', () => {
+      if (id && id !== 'osm') siteDraft.site.mapService = id;
+      else delete siteDraft.site.mapService;
+    });
   }
   /** The site's time zone (site.timeZone): stored only when Intl knows the name; an empty field removes it. */
   let siteZoneBad = $state(false);
@@ -7890,6 +7898,10 @@
               {#if siteZoneBad}
                 <p class="panel-hint place-error">{ta('settings.timeZoneBad')}</p>
               {/if}
+              <!-- The map service a place links to: each choice says who makes it, where they are from and what it does with a search -->
+              <label title={ta('tip.settings.mapService')}>{ta('settings.mapService')}
+                <Dropdown value={mapService(siteDraft)} options={MAP_SERVICES.map((id) => [id, ta(`mapService.${id}`), ta(`mapService.${id}.note`)])}
+                  onchange={(v) => setSiteMapService(v)} /></label>
               <hr class="gridmenu-divider" />
               <p class="panel-strong" title={ta('tip.site.contentWidth')}>{ta('lbl.contentWidth')}</p>
               <!-- Live sample: one strip per common screen width, so it is

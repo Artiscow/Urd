@@ -3,7 +3,9 @@
    * Theme-driven dropdown (ADR-0009): native select popups are drawn by the
    * browser/OS and become unreadable in dark panels, so ALL dropdowns in
    * admin use this one. options is [[value, label], …]; values are
-   * compared as strings, so '' and null can be used as "none".
+   * compared as strings, so '' and null can be used as "none". An option
+   * may carry a third entry, a note drawn as a smaller line under its label
+   * in the list.
    *
    * Two branches (ADR-0011 addendum, anchored.js decides): with the Popover
    * API and anchor positioning the list opens in the top layer, placed
@@ -34,7 +36,7 @@
 
   function place() {
     const r = rootEl.getBoundingClientRect();
-    const height = Math.min(320, options.length * 32 + 12);
+    const height = Math.min(320, options.reduce((sum, option) => sum + (option[2] ? 76 : 32), 12));
     const width = Math.max(r.width, 160);
     const below = r.bottom + height + 8 <= window.innerHeight;
     pos = {
@@ -107,9 +109,9 @@
     <div class="dd-pop dd-anchored" id={popId} popover="auto" bind:this={popEl}
       style="position-anchor: {anchor}" ontoggle={(e) => { open = e.newState === 'open'; }}>
       {#if open}
-        {#each options as [v, label] (`${v ?? ''}`)}
+        {#each options as [v, label, note] (`${v ?? ''}`)}
           <button type="button" class="dd-opt" class:selected={`${v ?? ''}` === `${value ?? ''}`}
-            onclick={() => pick(v)}>{label}</button>
+            onclick={() => pick(v)}>{label}{#if note}<span class="dd-note">{note}</span>{/if}</button>
         {/each}
       {/if}
     </div>
@@ -120,9 +122,9 @@
     </button>
     {#if open}
       <div class="dd-pop" style="top: {pos.top}px; left: {pos.left}px; min-width: {pos.width}px">
-        {#each options as [v, label] (`${v ?? ''}`)}
+        {#each options as [v, label, note] (`${v ?? ''}`)}
           <button type="button" class="dd-opt" class:selected={`${v ?? ''}` === `${value ?? ''}`}
-            onclick={() => pick(v)}>{label}</button>
+            onclick={() => pick(v)}>{label}{#if note}<span class="dd-note">{note}</span>{/if}</button>
         {/each}
       </div>
     {/if}
@@ -255,6 +257,17 @@
     min-height: 0;
     cursor: pointer;
     white-space: nowrap;
+  }
+
+  /* An option's note: a smaller line under the label that wraps inside a list no wider than a panel. */
+  .dd-note {
+    display: block;
+    max-width: 21rem;
+    margin-top: 2px;
+    font-size: 0.8em;
+    line-height: 1.35;
+    white-space: normal;
+    opacity: 0.7;
   }
 
   .dd-opt:hover {

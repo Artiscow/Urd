@@ -191,7 +191,7 @@ function imageUrl(occ, width = 800) {
  * settings (calOptions). Every edit posts the whole props with the text under
  * its key in `texts`, so the editor's draft stays the owner of the words.
  */
-function makeUi(cd, cf, ics, el, host, props, ctx, sources, zone) {
+function makeUi(cd, cf, ics, maps, el, host, props, ctx, sources, zone) {
   const lang = ctx.site?.site?.lang;
   const clock12 = cf.calClock12(props);
   const weekStart = cf.calWeekStart(props, lang);
@@ -203,7 +203,7 @@ function makeUi(cd, cf, ics, el, host, props, ctx, sources, zone) {
     const node = el2(tag, className ? `${className} urd-cal-f-${key}` : `urd-cal-f-${key}`);
     // A description keeps its addresses as links, and a place leads to the map (or to itself, when it is an address).
     if (key === 'description' && text) linkedText(node, text);
-    else if (key === 'place' && text) node.appendChild(placeLink(text));
+    else if (key === 'place' && text) node.appendChild(placeLink(text, maps, maps.mapService(ctx.site)));
     else if (text != null) node.textContent = text;
     // A date or a time with the day or the event behind it (`when`) is written as a `<time>` a machine can read.
     const stamp = when != null && text ? cf.dateTimeAttr(when, key === 'time') : null;
@@ -387,9 +387,9 @@ function makeUi(cd, cf, ics, el, host, props, ctx, sources, zone) {
 /* ---------- The event in full ---------- */
 
 /** A place as a link: to the map as a search for its words, or to itself when the place is an address. */
-function placeLink(place) {
+function placeLink(place, maps, service) {
   const a = el2('a', 'urd-cal-place-link', place);
-  a.href = /^https?:\/\/\S+$/i.test(place.trim()) ? place.trim() : `https://www.openstreetmap.org/search?query=${encodeURIComponent(place)}`;
+  a.href = /^https?:\/\/\S+$/i.test(place.trim()) ? place.trim() : maps.mapSearchUrl(place, service);
   a.target = '_blank';
   a.rel = 'noopener';
   return a;
@@ -552,7 +552,7 @@ function showEventDialog(occ, from, ics, ui, props) {
   close.setAttribute('aria-label', t('calendar.close'));
   close.innerHTML = iconSvg('cross') || '';
   if (!close.firstChild) close.textContent = '×';
-  close.addEventListener('click', () => dialog.close());
+  close.addEventListener('click', () => dialog.close('escape'));
   const start = new Date(occ.start);
   const d = dates();
   const when = ui.field('span', 'date', `${d.weekdays[(start.getDay() + 6) % 7]} ${t('calendar.dayMonth', { d: start.getDate(), m: d.months[start.getMonth()] })}`, 'urd-cal-dialog-date', start);
@@ -645,18 +645,32 @@ function showEventDialog(occ, from, ics, ui, props) {
     dialog.addEventListener('close', () => URL.revokeObjectURL(file.href));
   }
   dialog.appendChild(actions);
-  // A click on the backdrop closes; Escape is the dialog's own.
-  dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+  // The card lies over its calendar and leaves the page alone (a dialog that
+  // is not modal): the page scrolls under it, and Escape or a press anywhere
+  // outside it closes it. One card is open at a time.
+  for (const other of document.querySelectorAll('dialog.urd-cal-dialog[open]')) other.close();
+  const watch = new AbortController();
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    dialog.close('escape');
+  }, { signal: watch.signal });
+  document.addEventListener('pointerdown', (event) => {
+    if (!dialog.contains(event.target)) dialog.close();
+  }, { capture: true, signal: watch.signal });
   dialog.addEventListener('close', () => {
+    watch.abort();
+    // The focus goes back to the event when the card held it or Escape closed it; a press elsewhere keeps what it pressed.
+    const back = dialog.returnValue === 'escape' || dialog.contains(document.activeElement);
     dialog.remove();
-    if (from?.isConnected) from.focus({ preventScroll: true });
+    if (back && from?.isConnected) from.focus({ preventScroll: true });
   });
   // The card is given a place in the window before it opens, so opening it
   // (which moves the focus into it) never scrolls the page.
   dialog.style.left = '0px';
   dialog.style.top = '0px';
   document.body.appendChild(dialog);
-  dialog.showModal();
+  dialog.show();
   placeOverCalendar(dialog, from);
 }
 
@@ -664,8 +678,9 @@ function showEventDialog(occ, from, ics, ui, props) {
  * Lays the card inside the calendar it belongs to, not over the page: no
  * wider and no taller than the calendar allows (its own content scrolls when
  * there is more), centred on the part of the calendar that is in view, never
- * over the navigation bar, and kept there while the page scrolls or the
- * window changes. A calendar too low to hold a card lets it reach below
+ * over the navigation bar when it opens. It is placed on the page, so it
+ * scrolls away with its calendar, and placed again when the window changes
+ * or its own content unfolds. A calendar too low to hold a card lets it reach below
  * itself. The calendar is shaded behind it; the rest of the page is left as
  * it is.
  */
@@ -691,11 +706,12 @@ function placeOverCalendar(dialog, from) {
     const bottom = Math.min(floor, box.bottom);
     const height = dialog.offsetHeight;
     const centre = top + Math.max(0, bottom - top) / 2;
-    dialog.style.left = `${Math.max(8, Math.min(window.innerWidth - width - 8, box.left + (box.width - width) / 2))}px`;
-    dialog.style.top = `${Math.max(roof, Math.min(floor - height, Math.max(box.top + 12, centre - height / 2)))}px`;
+    // The place is on the page, not in the window: the card scrolls away with its calendar.
+    const page = (dialog.offsetParent ?? document.documentElement).getBoundingClientRect();
+    dialog.style.left = `${Math.max(8, Math.min(window.innerWidth - width - 8, box.left + (box.width - width) / 2)) - page.left}px`;
+    dialog.style.top = `${Math.max(roof, Math.min(floor - height, Math.max(box.top + 12, centre - height / 2))) - page.top}px`;
   };
   const watch = new AbortController();
-  window.addEventListener('scroll', place, { passive: true, capture: true, signal: watch.signal });
   window.addEventListener('resize', place, { signal: watch.signal });
   dialog.addEventListener('toggle', place, { capture: true, signal: watch.signal });
   dialog.addEventListener('close', () => {
@@ -1237,16 +1253,16 @@ function renderCalendar(el, props, ctx) {
   // render, and a design's renderer module with them (literal paths, so the
   // modules stay out of the visitor closure and the preload list).
   const DESIGN_MODULES = { list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js'), next: () => import('./calendar-next.js'), more: () => import('./calendar-more.js') };
-  Promise.all([import('../ics.js'), import('../calendar-designs.js'), import('../calendar-format.js')]).then(async ([ics, cd, cf]) => {
+  Promise.all([import('../ics.js'), import('../calendar-designs.js'), import('../calendar-format.js'), import('../map-links.js')]).then(async ([ics, cd, cf, maps]) => {
     const design = cd.calDesign(props.design);
     const mod = design.module ? await DESIGN_MODULES[design.module]?.() : null;
     // The view switcher draws the week with the week strip, so its module comes along.
     const weekMod = cd.calSwitcher(props) ? await DESIGN_MODULES.time() : null;
-    if (host.isConnected) drawCalendar(ics, cd, cf, mod, weekMod, el, host, props, ctx);
+    if (host.isConnected) drawCalendar(ics, cd, cf, maps, mod, weekMod, el, host, props, ctx);
   });
 }
 
-function drawCalendar(ics, cd, cf, mod, weekMod, el, host, props, ctx) {
+function drawCalendar(ics, cd, cf, maps, mod, weekMod, el, host, props, ctx) {
   // The site's own time zone, when set: every visitor sees the times on that zone's clock.
   const siteZone = ctx.site?.site?.timeZone;
   const zone = cf.zoneValid(siteZone) ? siteZone.trim() : null;
@@ -1267,7 +1283,7 @@ function drawCalendar(ics, cd, cf, mod, weekMod, el, host, props, ctx) {
   const stripe = cd.calStripe(design, props.stripe);
   host.classList.toggle('urd-cal-stripes', stripe.show);
   if (stripe.color) host.style.setProperty('--urd-cal-stripe', stripe.color);
-  const ui = makeUi(cd, cf, ics, el, host, props, ctx, sources, zone);
+  const ui = makeUi(cd, cf, ics, maps, el, host, props, ctx, sources, zone);
   let feedZone = null;
   // The design's own settings as classes, for the ones the style sheet draws.
   for (const [key, value] of Object.entries(ui.opt)) {

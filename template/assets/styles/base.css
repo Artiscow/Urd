@@ -1209,7 +1209,7 @@ textarea.urd-form-input {
 .urd-cal-dialog {
   --dlg-text: var(--urd-cal-dlg-text, var(--urd-color-text));
   --dlg-accent: var(--urd-cal-dlg-accent, var(--urd-color-accent));
-  position: fixed;
+  position: absolute;
   inset: auto;
   box-sizing: border-box;
   width: min(28rem, calc(100vw - 1rem));
@@ -1229,9 +1229,9 @@ textarea.urd-form-input {
   backdrop-filter: var(--urd-cal-dlg-blur, none);
 }
 
-/* The card lies over its calendar: the calendar is shaded, the page behind is left alone. */
-.urd-cal-dialog::backdrop {
-  background: transparent;
+/* The card lies over its calendar, under the navigation bar: the calendar is shaded, the page behind is left alone. */
+.urd-cal-dialog {
+  z-index: 4000;
 }
 
 .urd-cal-shade {

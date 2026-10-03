@@ -2,6 +2,17 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Test batch (0.7.0.39): the event card leaves the page alone, and the map service
+
+- [ ] Published page: with an event's card open the page scrolls as usual, the scrollbar stays and the background does not move when the card opens or closes
+- [ ] The card lies over its calendar and scrolls away with it; scrolled up, it goes under the navigation bar, never over it
+- [ ] Escape and the close button close the card and put the focus back on the event; a press anywhere outside the card closes it; a press on another event closes the open card and opens the new one
+- [ ] «Add to calendar» unfolded makes the card taller without moving it off its calendar
+- [ ] Site panel, «Map service»: the list shows OpenStreetMap, DuckDuckGo Maps, Brave Maps, HERE WeGo, Google Maps, Apple Maps, Norgeskart and FINN kart in that order, each with a note under its name that reads in the list's width; OpenStreetMap is chosen on a site that has never set it
+- [ ] With each service chosen and published, the place of an event with a venue's name before its address («Mormors Stue, Nedre Enkeltskillingsveita 2, 7011 Trondheim, Norge») opens that service at the right spot
+- [ ] A place that is only a name («The clubhouse») and a place that is an address alone open the service with that text; a place that is a web address still opens that address
+- [ ] The notes read in Norwegian, English and Turkish admin
+
 ### Test batch (0.7.19.14): the calendar's events as structured data
 
 - [ ] A published page with a calendar that has a real feed: the page source's `<head>` (the live DOM, in the browser's inspector) holds a `script type="application/ld+json"` with the calendar's events beside the site's `Organization`

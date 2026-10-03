@@ -27,6 +27,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.39 - The event card leaves the page alone, and places link to a map service the site chooses - 4 October 2026
+
+- Test finding 3 October 2026: with an event's card open the page could not be scrolled, and the background moved as the scrollbar went. The card opens as a dialog that is not modal: the page scrolls under it, Escape, the close button and a press outside close it, and one card is open at a time.
+- Test finding: the card followed the window while the page scrolled. It is placed on the page, over its calendar and under the navigation bar, and scrolls away with it.
+- Test finding: OpenStreetMap found nothing for a place written as a venue's name before its address. Each map service is given the search it finds (`mapQuery` in the new map-links.js): the venue's name is left out for the services that know addresses only, and the country for Norgeskart.
+- The map a place opens in is a choice in the Site panel, «Map service» (`site.mapService`, SCHEMA.md): OpenStreetMap as before, DuckDuckGo Maps, Brave Maps, HERE WeGo, Google Maps, Apple Maps, Norgeskart and FINN kart. Each choice carries a note in the list on who makes it, where they are from and what it does with a search; the admin dropdown takes a note per option for it.
+
 ### 0.7.0.38 - A host compared exactly in the photo source test - 3 October 2026
 
 - CodeQL alert 15 (incomplete URL substring sanitization): the upstream stub in tests/photo-source.test.mjs picked its answer by looking for the host's name anywhere in the address. It parses the address and compares the host exactly.
