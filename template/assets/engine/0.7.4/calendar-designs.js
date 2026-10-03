@@ -65,6 +65,9 @@ export const CAL_TEXTS = {
   allDates: 'calendar.allDates',
   emptyKicker: 'calendar.emptyKicker',
   emptyTitle: 'calendar.emptyTitle',
+  swUpcoming: 'calendar.swUpcoming',
+  swWeek: 'calendar.swWeek',
+  swMonth: 'calendar.swMonth',
 };
 
 /** The texts of the ApeironLF empty state (the designs with `empty: 'ap'`). */
@@ -74,7 +77,7 @@ const AP_EMPTY_TEXTS = ['emptyKicker', 'emptyTitle'];
 const NOTICE_TEXTS = ['noticeLabel', 'noticeTitle', 'noticeText', 'moreInfo'];
 
 /** The texts every design with chips, sign-up and subscribe buttons shows. */
-const COMMON_TEXTS = ['all', 'signup', 'subscribe', 'subscribeMulti', 'addGoogle'];
+const COMMON_TEXTS = ['all', 'signup', 'subscribe', 'subscribeMulti', 'addGoogle', 'swUpcoming', 'swWeek', 'swMonth'];
 
 /** A colour slot: the label key is `calendar.slot.<key>`, the section groups the pickers in the panel. */
 const slot = (key, section = 'colors') => ({ key, labelKey: `calendar.slot.${key}`, section });
@@ -434,6 +437,29 @@ export function calView(props) {
   const own = calDesign(props?.design).view;
   if (own) return own;
   return CAL_VIEWS.includes(props?.view) ? props.view : 'list';
+}
+
+/** The views that can carry the in-block view switcher: the ones that list what is coming. */
+export const CAL_SWITCH_VIEWS = ['list', 'cards', 'agenda', 'next'];
+
+/**
+ * True when the block shows the view switcher: the owner has switched it on
+ * (`switcher: true`) and the block's view is one that lists what is coming.
+ * The switcher lets a visitor turn the block to the week or the month and
+ * back, without changing what is stored.
+ */
+export function calSwitcher(props) {
+  return props?.switcher === true && CAL_SWITCH_VIEWS.includes(calView(props));
+}
+
+/** The picker's groups: the designs by the view they stand on, the plain one first and alone. */
+export function calDesignGroups() {
+  const groups = [{ view: null, designs: CAL_DESIGNS.filter((d) => d.view === null) }];
+  for (const view of CAL_VIEWS) {
+    const designs = CAL_DESIGNS.filter((d) => d.view === view);
+    if (designs.length) groups.push({ view, designs });
+  }
+  return groups;
 }
 
 const SAFE_HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;

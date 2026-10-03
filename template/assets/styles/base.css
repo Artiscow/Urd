@@ -1051,6 +1051,40 @@ textarea.urd-form-input {
   border-color: var(--urd-cal-line);
 }
 
+/* The view switcher: the design, the week and the month as one pill of pressed buttons */
+.urd-cal-switch {
+  display: inline-flex;
+  justify-self: start;
+  gap: 2px;
+  padding: 4px;
+  background: var(--urd-cal-surface);
+  border: 1px solid var(--urd-cal-line);
+  border-radius: 999px;
+}
+
+.urd-cal-switch-btn {
+  padding: 6px 14px;
+  font: inherit;
+  font-size: 0.78em;
+  font-weight: 700;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.urd-cal-switch-btn[aria-pressed="true"] {
+  color: var(--urd-color-bg);
+  background: var(--urd-color-text);
+}
+
+.urd-cal-d-glass .urd-cal-switch {
+  background: var(--urd-cal-glass);
+  border-color: var(--urd-cal-glass-line);
+  backdrop-filter: blur(16px);
+}
+
 /* The edge stripe on the design's boxes: the owner's colour, else the
    event's calendar colour, else the accent. */
 .urd-cal-stripes .urd-collection-row,

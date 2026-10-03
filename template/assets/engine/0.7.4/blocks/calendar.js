@@ -63,7 +63,7 @@ async function fetchSource(url) {
 }
 
 /** All sources → sorted occurrences with category and signup link. */
-async function loadOccurrences(ics, sources, limit, view) {
+async function loadOccurrences(ics, sources, limit, view, from = ics.windowStart(view)) {
   const errors = [];
   const events = [];
   await Promise.all(sources.map(async (source) => {
@@ -78,8 +78,8 @@ async function loadOccurrences(ics, sources, limit, view) {
     }
   }));
   // The window follows the view: a year design wants the whole year, a month, week or day design its own span.
-  const wide = ['year', 'month', 'week', 'day'].includes(view);
-  const expanded = ics.expandEvents(events, { from: ics.windowStart(view), max: wide ? 600 : Math.max(limit * 4, 120) })
+  const wide = ['year', 'month', 'week', 'day'].includes(view) || from < ics.windowStart('list');
+  const expanded = ics.expandEvents(events, { from, max: wide ? 600 : Math.max(limit * 4, 120) })
     .map((occ) => {
       // A named calendar is the category; otherwise «Category: Title» in the event itself.
       const split = occ.calendar ? { category: occ.calendar, title: occ.summary } : ics.splitCategory(occ.summary);
@@ -513,6 +513,23 @@ function categoryRow(occs, active, onpick, ui) {
   return row;
 }
 
+/** The view switcher: the block's own design, the week and the month, as a row of pressed buttons. */
+const SWITCH_MODES = [['own', 'swUpcoming'], ['week', 'swWeek'], ['month', 'swMonth']];
+
+function switchRow(mode, onpick, ui) {
+  const row = el2('div', 'urd-cal-switch');
+  row.setAttribute('role', 'group');
+  for (const [id, key] of SWITCH_MODES) {
+    const btn = el2('button', 'urd-cal-switch-btn');
+    btn.type = 'button';
+    btn.setAttribute('aria-pressed', mode === id ? 'true' : 'false');
+    btn.appendChild(ui.tx(key));
+    btn.addEventListener('click', () => onpick(id));
+    row.appendChild(btn);
+  }
+  return row;
+}
+
 /* ---------- The views' names (the variants in the block menus) ---------- */
 
 /** View id + label KEY (looked up with ta at use time; never at module level). */
@@ -530,13 +547,18 @@ function renderCalendar(el, props, ctx) {
   Promise.all([import('../ics.js'), import('../calendar-designs.js')]).then(async ([ics, cd]) => {
     const design = cd.calDesign(props.design);
     const mod = design.module ? await DESIGN_MODULES[design.module]?.() : null;
-    if (host.isConnected) drawCalendar(ics, cd, mod, el, host, props, ctx);
+    // The view switcher draws the week with the week strip, so its module comes along.
+    const weekMod = cd.calSwitcher(props) ? await DESIGN_MODULES.time() : null;
+    if (host.isConnected) drawCalendar(ics, cd, mod, weekMod, el, host, props, ctx);
   });
 }
 
-function drawCalendar(ics, cd, mod, el, host, props, ctx) {
+function drawCalendar(ics, cd, mod, weekMod, el, host, props, ctx) {
   const sources = (props.sources ?? []).filter((source) => ics.sourceEntry(source).url);
   let activeCategory = null;
+  // The view switcher's mode: the block's own design until the visitor picks the week or the month.
+  const switcher = Boolean(weekMod);
+  let mode = 'own';
   // The design: its class, the owner's colour slots and the edge stripe on the host.
   const design = cd.calDesign(props.design);
   const view = cd.calView(props);
@@ -557,18 +579,29 @@ function drawCalendar(ics, cd, mod, el, host, props, ctx) {
           title: ta('hintCalendar.title'),
           lines: [
             ta('hintCalendar.l1'), ta('hintCalendar.l2'), ta('hintCalendar.l3'), ta('hintCalendar.l4'),
-            ta('hintCalendar.l5'), ta('hintCalendar.l6'), ta('hintCalendar.l7'),
+            ta('hintCalendar.l5'), ta('hintCalendar.l6'), ta('hintCalendar.l7'), ta('hintCalendar.l8'),
           ],
         });
       });
     }
+    // With the switcher on, the window reaches back to the start of the
+    // week and the month; the block's own design still shows what is coming.
+    const own = mode === 'own';
+    const soon = Date.now() - 6 * 3600 * 1000;
+    const base = switcher && own ? occurrences.filter((occ) => (occ.end ?? occ.start) >= soon) : occurrences;
     const filtered = activeCategory
-      ? occurrences.filter((occ) => occ.category === activeCategory)
-      : occurrences;
+      ? base.filter((occ) => occ.category === activeCategory)
+      : base;
     // The max count applies to list, cards and agenda; the month, week, day and year views show their span and next has its own two counts.
-    const limited = ['month', 'next', 'week', 'day', 'year'].includes(view)
+    const limited = !own || ['month', 'next', 'week', 'day', 'year'].includes(view)
       ? filtered
       : filtered.slice(0, Math.max(1, props.limit ?? 6));
+    if (switcher) {
+      host.appendChild(switchRow(mode, (picked) => {
+        mode = picked;
+        draw(occurrences, note);
+      }, ui));
+    }
     // A design with switches of its own (ownFilter) draws no chip row.
     const chips = props.showCategories === false || design.ownFilter ? null : categoryRow(occurrences, activeCategory, (category) => {
       activeCategory = category;
@@ -577,13 +610,17 @@ function drawCalendar(ics, cd, mod, el, host, props, ctx) {
     if (chips) host.appendChild(chips);
     // The whole filtered list, for a design that draws more than the rows (the bento's month dots).
     ui.all = filtered;
-    if (!limited.length) {
+    if (mode === 'week') {
+      weekMod.weekStrip(host, limited, props, ics, ui);
+    } else if (mode === 'month') {
+      renderMonth(host, limited, props, ics, ui);
+    } else if (!limited.length) {
       host.appendChild(design.empty === 'ap' ? emptyApNode(props, ui) : emptyNode(props));
     } else {
       (mod?.[design.id] ?? VIEWS[view] ?? renderList)(host, limited, props, ics, ui);
     }
     // A design that places the subscribe buttons itself (ownSubscribe) gets no row under it.
-    if (!design.ownSubscribe || !limited.length) {
+    if (!design.ownSubscribe || !limited.length || !own) {
       const row = ui.subscribe();
       if (row) host.appendChild(row);
     }
@@ -616,7 +653,9 @@ function drawCalendar(ics, cd, mod, el, host, props, ctx) {
   host.style.overflow = '';
 
   if (ctx.preview) draw([], null);
-  loadOccurrences(ics, sources, Math.max(1, props.limit ?? 6), view).then(({ occurrences, errors }) => {
+  // The switcher needs the week and the month from their start, whichever is the earlier.
+  const from = switcher ? Math.min(ics.windowStart('week'), ics.windowStart('month')) : ics.windowStart(view);
+  loadOccurrences(ics, sources, Math.max(1, props.limit ?? 6), view, from).then(({ occurrences, errors }) => {
     if (!host.isConnected) return;
     if (!occurrences.length && errors.length) {
       // Visitors get a quiet empty state; the preview gets the error.

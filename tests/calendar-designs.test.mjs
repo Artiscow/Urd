@@ -10,10 +10,11 @@ import { engineImport } from './_engine.mjs';
 
 const {
   CAL_DESIGNS, CAL_VIEWS, CAL_FIELDS, CAL_TEXTS, CAL_SIZE, CAL_MODULES,
-  calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calTextHtml, calHasTextOverrides,
+  CAL_SWITCH_VIEWS, calSwitcher, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calTextHtml, calHasTextOverrides,
 } = await engineImport('calendar-designs.js');
 
 const plain = CAL_DESIGNS[0];
+const { calendarThumb, CAL_THUMB_IDS } = await engineImport('calendar-thumb.js');
 
 test('calDesign: the plain design first, and for an unknown or missing id', () => {
   assert.equal(plain.id, 'plain');
@@ -121,4 +122,34 @@ test('the dictionaries hold every key the designs point at', async () => {
     }
   }
   for (const field of CAL_FIELDS) assert.ok(`calendar.field.${field}` in admin, `admin key calendar.field.${field}`);
+});
+
+test('calSwitcher: on only when switched on and the view lists what is coming', () => {
+  assert.equal(calSwitcher({ view: 'list' }), false);
+  assert.equal(calSwitcher({ view: 'list', switcher: true }), true);
+  assert.equal(calSwitcher({ view: 'next', switcher: true }), true);
+  assert.equal(calSwitcher({ view: 'month', switcher: true }), false);
+  assert.equal(calSwitcher({ design: 'weekStrip', view: 'week', switcher: true }), false);
+  assert.equal(calSwitcher({ design: 'glass', view: 'list', switcher: 'yes' }), false);
+  for (const view of CAL_SWITCH_VIEWS) assert.ok(CAL_VIEWS.includes(view));
+});
+
+test('calDesignGroups: the plain design alone first, then every other design once under its view', () => {
+  const groups = calDesignGroups();
+  assert.equal(groups[0].view, null);
+  assert.deepEqual(groups[0].designs.map((d) => d.id), ['plain']);
+  const ids = groups.flatMap((g) => g.designs.map((d) => d.id));
+  assert.deepEqual([...ids].sort(), CAL_DESIGNS.map((d) => d.id).sort());
+  for (const group of groups.slice(1)) for (const design of group.designs) assert.equal(design.view, group.view);
+});
+
+test('every design has a thumbnail of its own, and an unknown id takes the plain one', () => {
+  assert.deepEqual([...CAL_THUMB_IDS].sort(), CAL_DESIGNS.map((d) => d.id).sort());
+  for (const design of CAL_DESIGNS) {
+    const svg = calendarThumb(design.id);
+    assert.match(svg, /^<svg viewBox="0 0 160 80"/);
+    assert.ok(svg.endsWith('</svg>'));
+    assert.ok(!/NaN|undefined/.test(svg), `${design.id}: a broken number in the drawing`);
+  }
+  assert.equal(calendarThumb('no-such-design'), calendarThumb('plain'));
 });

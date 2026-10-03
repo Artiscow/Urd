@@ -4,6 +4,15 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.19.7): the view switcher and the design picker
+
+- [ ] Content, «Show view switcher» on a list, cards, agenda or next calendar (any design): three buttons at the top of the block, «Upcoming» pressed; «Week» shows the week strip with its arrows, «Month» the month with its arrows, «Upcoming» the block's own design again; the published page starts on «Upcoming» every time
+- [ ] The switcher with a real feed: the week and the month show this week's and this month's earlier events too, while the block's own design shows only what is coming
+- [ ] «Show view switcher» is not offered for a month, week, day or year design, and a block that had it on and is given such a design shows no buttons
+- [ ] The three button words are rewritten by clicking them in the preview (a click on the word edits, a click on the button's edge switches), and «Reset the texts» puts them back; on the Glass design the buttons stand in glass
+- [ ] Style tab, the fold «Design: <name>»: opens to a thumbnail per design in two columns under the headings List, Cards, Month, Agenda, Next, Week, Day and Year, with Plain alone at the top; the chosen design has the accent frame; a click changes the design in the preview at once and the fold's name with it
+- [ ] The help chip on a calendar block: the card's last line says the texts are rewritten by clicking them and that the Style tab sets colours, the stripe and the font per field
+
 ### Testrunde-batch (0.7.19.6): the ApeironLF set and the dark agenda
 
 - [ ] Style tab, Design: Coming up on cream, Coming up on navy, Regular event and Agenda, dark draw the demo data in the preview and a real feed on the published page

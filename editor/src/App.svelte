@@ -124,7 +124,8 @@
   import { isSafeHref, toolOrder } from '$engine/nav-model.js';
   import { frameAtPoint } from '$engine/place.js';
   import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '$engine/icons.js';
-  import { CAL_DESIGNS, CAL_FIELDS, CAL_SIZE, calDesign, calStripe, calHasTextOverrides } from '$engine/calendar-designs.js';
+  import { CAL_FIELDS, CAL_SIZE, CAL_SWITCH_VIEWS, calDesign, calView, calStripe, calHasTextOverrides, calDesignGroups } from '$engine/calendar-designs.js';
+  import { calendarThumb } from '$engine/calendar-thumb.js';
 
   /** The background layer types in the order they are offered in the panel. */
   const BG_TYPES = [
@@ -1112,6 +1113,8 @@
      colour slots, the edge stripe and a style per event field. Every setting
      is additive, and an emptied object is removed from the props. */
   let calField = $state('title');
+  /** The heading over each group of designs in the picker: the view the group stands on. */
+  const CAL_VIEW_KEYS = { list: 'calendar.viewList', cards: 'calendar.viewCards', month: 'calendar.viewMonth', agenda: 'calendar.viewAgenda', next: 'calendar.viewNext', week: 'calendar.viewWeek', day: 'calendar.viewDay', year: 'calendar.viewYear' };
   /** The design's colour slots by section, in order; the first section is the plain «Colours» list and gets no heading of its own. */
   function calSlotGroups(def) {
     const groups = [];
@@ -9405,6 +9408,14 @@
             options={[['list', ta('calendar.viewList')], ['cards', ta('calendar.viewCards')], ['month', ta('calendar.viewMonth')], ['agenda', ta('calendar.viewAgenda')], ['next', ta('calendar.viewNext')]]}
             onchange={(v) => setBlockProp('view', v)} /></label>
       {/if}
+      <!-- The view switcher, for the views that list what is coming: the visitor can turn the block to the week or the month -->
+      {#if CAL_SWITCH_VIEWS.includes(calView(selectedBlock.props))}
+        <label class="gridmenu-snap" title={ta('tip.calendar.switcher')}>
+          <input type="checkbox" checked={selectedBlock.props.switcher === true}
+            onchange={(e) => setBlockProp('switcher', e.target.checked || undefined)} />
+          {ta('calendar.switcher')}
+        </label>
+      {/if}
       {#if ['list', 'cards', 'agenda'].includes(selectedBlock.props.view ?? 'list')}
         <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
           <input type="number" min="1" max="50" value={selectedBlock.props.limit ?? 6}
@@ -9878,12 +9889,26 @@
       <hr class="gridmenu-divider" />
     {:else if selectedBlock.type === 'calendar'}
       {@const calDef = calDesign(selectedBlock.props.design)}
-      <!-- The design, when there is more than the plain one to choose from -->
-      {#if CAL_DESIGNS.length > 1}
-        <label title={ta('tip.calendar.design')}>{ta('calendar.design')}
-          <Dropdown value={calDef.id} options={CAL_DESIGNS.map((d) => [d.id, ta(d.labelKey)])}
-            onchange={setCalendarDesign} /></label>
-      {/if}
+      <!-- The design, as drawn thumbnails grouped by the view each one stands on -->
+      <details class="group cal-designs" title={ta('tip.calendar.design')}>
+        <summary>{ta('calendar.design')}: {ta(calDef.labelKey)}</summary>
+        <div class="group-items">
+          {#each calDesignGroups() as group (group.view ?? 'plain')}
+            {#if group.view}
+              <span class="mini-label">{ta(CAL_VIEW_KEYS[group.view])}</span>
+            {/if}
+            <div class="footer-tpick">
+              {#each group.designs as d (d.id)}
+                <button type="button" class="footer-tp" class:on={d.id === calDef.id} aria-pressed={d.id === calDef.id}
+                  title={ta(d.labelKey)} onclick={() => setCalendarDesign(d.id)}>
+                  <span class="footer-tp-thumb">{@html calendarThumb(d.id)}</span>
+                  <span class="footer-tp-name">{ta(d.labelKey)}</span>
+                </button>
+              {/each}
+            </div>
+          {/each}
+        </div>
+      </details>
       <!-- The design's colour slots: empty follows the theme -->
       <p class="panel-strong" title={ta('tip.calendar.slot')}>{ta('calendar.colors')}</p>
       {#each calSlotGroups(calDef) as group, gi (group.section)}
@@ -11660,7 +11685,8 @@
     font: inherit;
     cursor: pointer;
   }
-  .footer-tp:hover {
+  .footer-tp:hover,
+  .footer-tp.on {
     border-color: var(--urd-color-accent, #7c5cff);
   }
   .footer-tp-thumb {
