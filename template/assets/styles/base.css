@@ -1068,7 +1068,11 @@ textarea.urd-form-input {
 .urd-cal-stripes .urd-cal-daycard,
 .urd-cal-stripes .urd-cal-photo,
 .urd-cal-stripes .urd-cal-apcard,
-.urd-cal-stripes .urd-cal-bento-tile {
+.urd-cal-stripes .urd-cal-bento-tile,
+.urd-cal-stripes .urd-cal-wstrip-day,
+.urd-cal-stripes .urd-cal-plan-event,
+.urd-cal-stripes .urd-cal-side-card,
+.urd-cal-stripes .urd-cal-wheel-card {
   padding-left: 10px;
   border-left: 3px solid var(--urd-cal-stripe, var(--urd-cal-color, var(--urd-cal-accent)));
 }
@@ -2546,6 +2550,1063 @@ textarea.urd-form-input {
 
   .urd-cal-poster-big {
     grid-column: span 2;
+  }
+}
+
+/* ---- The month, week, day and year designs (blocks/calendar-time.js) ---- */
+
+/* Shared: a pill with the time and the title, tinted with the calendar colour */
+.urd-cal-pill-time {
+  margin-right: 4px;
+  opacity: 0.75;
+}
+
+.urd-cal-mhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+.urd-cal-mhead-label {
+  font-family: var(--urd-font-heading);
+  font-size: 1.15em;
+}
+
+.urd-cal-mhead-nav {
+  display: flex;
+  gap: 6px;
+}
+
+/* 04 Ukestripe */
+.urd-cal-wstrip {
+  display: grid;
+  gap: 1em;
+}
+
+.urd-cal-wstrip-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.urd-cal-wstrip-head .urd-cal-nav {
+  width: 40px;
+  height: 40px;
+}
+
+.urd-cal-wstrip-label {
+  text-align: center;
+}
+
+.urd-cal-wstrip-label strong {
+  display: block;
+  font-family: var(--urd-font-heading);
+  font-size: 1.15em;
+}
+
+.urd-cal-wstrip-label span {
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+
+.urd-cal-wstrip-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.urd-cal-wstrip-day {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 9em;
+  padding: 0.6em 0.5em;
+  background: var(--urd-cal-surface);
+  border: 1px solid var(--urd-cal-line);
+  border-radius: var(--urd-radius-sm);
+}
+
+.urd-cal-wstrip-today {
+  background: var(--urd-cal-s-todayBg, color-mix(in srgb, var(--urd-cal-accent) 10%, var(--urd-cal-surface)));
+  border: 2px solid var(--urd-cal-accent);
+}
+
+.urd-cal-wstrip-wd {
+  font-size: 0.7em;
+  font-weight: 700;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.urd-cal-wstrip-today .urd-cal-wstrip-wd {
+  color: var(--urd-cal-accent);
+  opacity: 1;
+}
+
+.urd-cal-wstrip-num {
+  font-family: var(--urd-font-heading);
+  font-size: 1.3em;
+}
+
+.urd-cal-wstrip-pill {
+  padding: 5px 7px;
+  font-size: 0.72em;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--urd-cal-s-pillText, var(--urd-color-accent-text));
+  background: var(--urd-cal-color, var(--urd-cal-s-pill, var(--urd-cal-accent)));
+  border-radius: 6px;
+}
+
+/* M3 Ukeplan and F2 Dagsplan share the hour grid */
+.urd-cal-wplan,
+.urd-cal-dplan {
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+  background: var(--urd-cal-surface);
+  border: 1px solid var(--urd-cal-line);
+  border-radius: var(--urd-radius-md);
+}
+
+.urd-cal-wplan-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 0.8em 1em;
+  border-bottom: 1px solid var(--urd-cal-line);
+}
+
+.urd-cal-wplan-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.urd-cal-wplan-nav .urd-cal-nav {
+  border-radius: var(--urd-radius-sm);
+}
+
+.urd-cal-wplan-range {
+  margin-left: 4px;
+  font-family: var(--urd-font-heading);
+}
+
+.urd-cal-wplan-today {
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 0.8em;
+  font-weight: 700;
+  color: var(--urd-cal-accent);
+  background: var(--urd-cal-s-todayBg, color-mix(in srgb, var(--urd-cal-accent) 12%, var(--urd-cal-surface)));
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.urd-cal-wplan-days {
+  display: grid;
+  grid-template-columns: 3.2em repeat(7, minmax(0, 1fr));
+  border-bottom: 1px solid var(--urd-cal-line);
+}
+
+.urd-cal-wplan-day {
+  padding: 0.6em 0;
+  font-size: 0.7em;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.urd-cal-wplan-day strong {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--urd-font-heading);
+  font-size: 1.6em;
+  letter-spacing: 0;
+}
+
+.urd-cal-wplan-day.urd-cal-wplan-istoday {
+  color: var(--urd-cal-accent);
+  opacity: 1;
+}
+
+.urd-cal-wplan-day.urd-cal-wplan-istoday strong {
+  display: inline-grid;
+  place-items: center;
+  width: 1.9em;
+  height: 1.9em;
+  color: var(--urd-color-accent-text);
+  background: var(--urd-cal-accent);
+  border-radius: 50%;
+}
+
+.urd-cal-wplan-grid {
+  display: grid;
+  grid-template-columns: 3.2em repeat(7, minmax(0, 1fr));
+  grid-auto-rows: minmax(3.4em, auto);
+}
+
+.urd-cal-wplan-hour,
+.urd-cal-dplan-hour {
+  padding: 4px 8px 0 0;
+  font-size: 0.68em;
+  font-weight: 700;
+  text-align: right;
+  opacity: 0.6;
+  border-bottom: 1px solid var(--urd-cal-line);
+}
+
+.urd-cal-wplan-cell,
+.urd-cal-dplan-cell {
+  position: relative;
+  display: grid;
+  gap: 3px;
+  align-content: start;
+  padding: 3px;
+  border-bottom: 1px solid var(--urd-cal-line);
+  border-left: 1px solid var(--urd-cal-line);
+}
+
+.urd-cal-wplan-cell.urd-cal-wplan-istoday {
+  background: var(--urd-cal-s-todayBg, color-mix(in srgb, var(--urd-cal-accent) 8%, transparent));
+}
+
+.urd-cal-wplan-pill,
+.urd-cal-dplan-pill {
+  padding: 4px 6px;
+  font-size: 0.7em;
+  font-weight: 700;
+  line-height: 1.2;
+  background: color-mix(in srgb, var(--urd-cal-color, var(--urd-cal-accent)) 18%, transparent);
+  border-left: 3px solid var(--urd-cal-color, var(--urd-cal-accent));
+  border-radius: 6px;
+}
+
+.urd-cal-plan-event {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1px;
+  min-height: calc(var(--urd-cal-plan-span, 1) * 3.2em);
+  padding: 5px 7px;
+  font-size: 0.72em;
+  line-height: 1.2;
+  background: var(--urd-cal-s-event, color-mix(in srgb, var(--urd-cal-color, var(--urd-cal-accent)) 18%, var(--urd-cal-surface)));
+  border-left: 3px solid var(--urd-cal-color, var(--urd-cal-accent));
+  border-radius: 8px;
+}
+
+.urd-cal-plan-event strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.urd-cal-plan-when {
+  opacity: 0.75;
+}
+
+.urd-cal-plan-event .urd-cal-signup {
+  margin: 0;
+  font-size: 1em;
+}
+
+/* F4 Kalenderlag */
+.urd-cal-layers {
+  display: grid;
+  overflow: hidden;
+  background: var(--urd-cal-surface);
+  border: 1px solid var(--urd-cal-line);
+  border-radius: var(--urd-radius-md);
+}
+
+.urd-cal-layers-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6em 1em;
+  padding: 0.8em 1em;
+  border-bottom: 1px solid var(--urd-cal-line);
+}
+
+.urd-cal-layers-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.urd-cal-layers-nav .urd-cal-nav {
+  border-radius: var(--urd-radius-sm);
+}
+
+.urd-cal-layers-label {
+  margin-left: 4px;
+  font-family: var(--urd-font-heading);
+  white-space: nowrap;
+}
+
+.urd-cal-layers-switches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.urd-cal-layers-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px 5px 7px;
+  font: inherit;
+  font-size: 0.78em;
+  font-weight: 700;
+  color: inherit;
+  background: var(--urd-cal-surface);
+  border: 1px solid var(--urd-cal-line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.urd-cal-layers-knob {
+  position: relative;
+  width: 22px;
+  height: 13px;
+  background: var(--urd-cal-color, var(--urd-cal-accent));
+  border-radius: 999px;
+}
+
+.urd-cal-layers-knob::after {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 9px;
+  height: 9px;
+  content: '';
+  background: var(--urd-cal-surface);
+  border-radius: 50%;
+}
+
+.urd-cal-layers-switch[aria-pressed="false"] {
+  opacity: 0.55;
+}
+
+.urd-cal-layers-switch[aria-pressed="false"] .urd-cal-layers-knob {
+  background: var(--urd-cal-line);
+}
+
+.urd-cal-layers-switch[aria-pressed="false"] .urd-cal-layers-knob::after {
+  right: auto;
+  left: 2px;
+}
+
+.urd-cal-layers-grid {
+  display: grid;
+  grid-template-columns: minmax(6em, max-content) repeat(7, minmax(0, 1fr));
+}
+
+.urd-cal-layers-corner,
+.urd-cal-layers-dow {
+  padding: 0.7em 0;
+  font-size: 0.68em;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  opacity: 0.7;
+  border-bottom: 1px solid var(--urd-cal-line);
+}
+
+.urd-cal-layers-dow.urd-cal-layers-istoday {
+  color: var(--urd-cal-accent);
+  opacity: 1;
+}
+
+.urd-cal-layers-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.9em 1em;
+  font-size: 0.8em;
+  font-weight: 700;
+  border-bottom: 1px solid var(--urd-cal-line);
+}
+
+.urd-cal-layers-swatch {
+  width: 10px;
+  height: 10px;
+  background: var(--urd-cal-color, var(--urd-cal-accent));
+  border-radius: 3px;
+}
+
+.urd-cal-layers-lane {
+  position: relative;
+  display: grid;
+  grid-column: span 7;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px 0;
+  min-height: 3.6em;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--urd-cal-line);
+  border-left: 1px solid var(--urd-cal-line);
+}
+
+.urd-cal-layers-lane::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--urd-cal-layers-today, -1) * 100% / 7);
+  width: calc(100% / 7);
+  content: '';
+  background: var(--urd-cal-s-todayBg, color-mix(in srgb, var(--urd-cal-accent) 8%, transparent));
+  pointer-events: none;
+}
+
+.urd-cal-layers-lane:not([style*="--urd-cal-layers-today"])::before {
+  display: none;
+}
+
+.urd-cal-layers-bar {
+  grid-column: calc(var(--urd-cal-bar-from) + 1) / span var(--urd-cal-bar-span);
+  margin: 0 4px;
+  padding: 6px 8px;
+  font-size: 0.72em;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--urd-color-accent-text);
+  background: var(--urd-cal-color, var(--urd-cal-accent));
+  border-radius: 8px;
+}
+
+.urd-cal-layers-bar .urd-cal-f-time {
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+/* F1 Måned med sidepanel */
+.urd-cal-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(12em, 15em);
+  overflow: hidden;
+  background: var(--urd-cal-surface);
+  border: 1px solid var(--urd-cal-line);
+  border-radius: var(--urd-radius-md);
+}
+
+.urd-cal-side-main {
+  display: grid;
+  align-content: start;
+  gap: 0.4em;
+  padding: 1em 0.8em 0.8em;
+}
+
+.urd-cal-side-main .urd-cal-mhead {
+  padding: 0 0.3em;
+}
+
+.urd-cal-side-dows {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  font-size: 0.62em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.urd-cal-side-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-auto-rows: minmax(3.6em, auto);
+  gap: 3px;
+}
+
+.urd-cal-side-day {
+  display: grid;
+  gap: 3px;
+  align-content: start;
+  min-width: 0;
+  padding: 4px 5px;
+  font: inherit;
+  font-size: 0.7em;
+  font-weight: 600;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+}
+
+.urd-cal-side-out {
+  opacity: 0.45;
+}
+
+.urd-cal-side-today {
+  background: var(--urd-cal-s-todayBg, color-mix(in srgb, var(--urd-cal-accent) 10%, var(--urd-cal-surface)));
+}
+
+.urd-cal-side-today .urd-cal-side-num {
+  display: inline-grid;
+  place-items: center;
+  width: 1.7em;
+  height: 1.7em;
+  color: var(--urd-color-accent-text);
+  background: var(--urd-cal-accent);
+  border-radius: 50%;
+}
+
+.urd-cal-side-picked {
+  background: var(--urd-cal-s-selected, color-mix(in srgb, var(--urd-cal-accent) 6%, var(--urd-cal-surface)));
+  outline: 2px solid var(--urd-cal-accent);
+  outline-offset: -2px;
+}
+
+.urd-cal-side-chip {
+  padding: 2px 5px;
+  font-size: 0.92em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--urd-cal-s-chip, color-mix(in srgb, var(--urd-cal-color, var(--urd-cal-accent)) 22%, transparent));
+  border-radius: 5px;
+}
+
+.urd-cal-side-more {
+  padding-left: 5px;
+  opacity: 0.6;
+}
+
+.urd-cal-side-panel {
+  display: grid;
+  align-content: start;
+  gap: 0.8em;
+  padding: 1em;
+  background: var(--urd-cal-s-panel, color-mix(in srgb, var(--urd-color-text) 4%, var(--urd-cal-surface)));
+  border-left: 1px solid var(--urd-cal-line);
+}
+
+.urd-cal-side-chosen .urd-cal-f-date {
+  display: block;
+  font-size: 0.65em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.urd-cal-side-chosen strong {
+  font-family: var(--urd-font-heading);
+  font-size: 1.4em;
+  line-height: 1.1;
+}
+
+.urd-cal-side-list {
+  display: grid;
+  gap: 8px;
+}
+
+.urd-cal-side-card {
+  display: grid;
+  gap: 2px;
+  padding: 0.7em 0.8em;
+  font-size: 0.9em;
+  background: var(--urd-cal-surface);
+  border: 1px solid var(--urd-cal-line);
+  border-left: 4px solid var(--urd-cal-color, var(--urd-cal-accent));
+  border-radius: var(--urd-radius-sm);
+}
+
+.urd-cal-side-none {
+  margin: 0;
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.urd-cal-side-legend {
+  display: grid;
+  gap: 5px;
+  margin-top: auto;
+  font-size: 0.75em;
+  font-weight: 600;
+}
+
+.urd-cal-side-key {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.urd-cal-side-key i {
+  width: 10px;
+  height: 10px;
+  background: var(--urd-cal-color, var(--urd-cal-accent));
+  border-radius: 3px;
+}
+
+/* A7 Oversikt (ApeironLF): the month on cream */
+.urd-cal-d-apMonth {
+  --urd-cal-ap-gold: var(--urd-cal-s-gold, #d0a74a);
+  --urd-cal-ap-grid: var(--urd-cal-s-grid, color-mix(in srgb, var(--urd-cal-s-gold, #d0a74a) 30%, transparent));
+}
+
+.urd-cal-apm {
+  display: grid;
+  overflow: hidden;
+  color: var(--urd-cal-s-text, #17201d);
+  background: var(--urd-cal-s-card, #f3ecd8);
+  border-top: 3px solid var(--urd-cal-ap-gold);
+  border-radius: var(--urd-radius-sm);
+}
+
+.urd-cal-apm .urd-cal-mhead {
+  padding: 0.8em 1.1em;
+  border-bottom: 1px solid var(--urd-cal-ap-grid);
+}
+
+.urd-cal-apm .urd-cal-mhead-label {
+  font-size: 1.4em;
+  font-weight: 500;
+}
+
+.urd-cal-apm .urd-cal-nav {
+  color: var(--urd-cal-s-goldDark, #8f6a1e);
+  background: transparent;
+  border-color: var(--urd-cal-ap-gold);
+}
+
+.urd-cal-apm-dows {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  font-size: 0.62em;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-align: center;
+  text-transform: uppercase;
+  opacity: 0.7;
+  border-bottom: 1px solid var(--urd-cal-ap-grid);
+}
+
+.urd-cal-apm-dows span {
+  padding: 0.6em 0;
+}
+
+.urd-cal-apm-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-auto-rows: minmax(4.4em, auto);
+  font-size: 0.85em;
+}
+
+.urd-cal-apm-day {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  padding: 6px;
+  border-right: 1px solid var(--urd-cal-ap-grid);
+  border-bottom: 1px solid var(--urd-cal-ap-grid);
+}
+
+.urd-cal-apm-day:nth-child(7n) {
+  border-right: 0;
+}
+
+.urd-cal-apm-out {
+  background: color-mix(in srgb, var(--urd-color-text) 5%, transparent);
+}
+
+.urd-cal-apm-num {
+  font-style: normal;
+}
+
+.urd-cal-apm-today {
+  display: inline-grid;
+  place-items: center;
+  width: 1.8em;
+  height: 1.8em;
+  margin: -3px 0 0 -4px;
+  font-weight: 600;
+  color: var(--urd-cal-s-card, #f3ecd8);
+  background: var(--urd-cal-ap-gold);
+  border-radius: 50%;
+}
+
+.urd-cal-apm-pill {
+  padding: 3px 6px;
+  font-size: 0.78em;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--urd-cal-s-pill, color-mix(in srgb, var(--urd-cal-s-gold, #d0a74a) 18%, transparent));
+  border-left: 3px solid var(--urd-cal-color, var(--urd-cal-ap-gold));
+}
+
+.urd-cal-apm-pill .urd-cal-pill-time {
+  color: var(--urd-cal-s-goldDark, #8f6a1e);
+  opacity: 1;
+}
+
+/* F2 Dagsplan */
+.urd-cal-dplan-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 1em 1.1em 0.6em;
+}
+
+.urd-cal-dplan-kicker {
+  display: block;
+  font-size: 0.65em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--urd-cal-accent);
+}
+
+.urd-cal-dplan-title {
+  font-family: var(--urd-font-heading);
+  font-size: 1.4em;
+  line-height: 1.1;
+}
+
+.urd-cal-dplan-count {
+  font-size: 0.78em;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.urd-cal-dplan-strip {
+  display: flex;
+  gap: 6px;
+  padding: 0 1.1em 0.8em;
+}
+
+.urd-cal-dplan-pick {
+  flex: 1;
+  padding: 7px 0;
+  font: inherit;
+  font-size: 0.65em;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.urd-cal-dplan-pick strong {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--urd-font-heading);
+  font-size: 1.5em;
+  letter-spacing: 0;
+}
+
+.urd-cal-dplan-picked {
+  color: var(--urd-color-accent-text);
+  background: var(--urd-cal-accent);
+  opacity: 1;
+}
+
+.urd-cal-dplan-istoday:not(.urd-cal-dplan-picked) {
+  color: var(--urd-cal-accent);
+  opacity: 1;
+}
+
+.urd-cal-dplan-grid {
+  display: grid;
+  grid-template-columns: 3.2em minmax(0, 1fr);
+  grid-auto-rows: minmax(3.6em, auto);
+  border-top: 1px solid var(--urd-cal-line);
+}
+
+.urd-cal-dplan-past {
+  background: var(--urd-cal-s-past, color-mix(in srgb, var(--urd-color-text) 5%, transparent));
+}
+
+.urd-cal-dplan-now {
+  position: absolute;
+  right: 0;
+  left: -5px;
+  z-index: 2;
+  height: 2px;
+  background: var(--urd-cal-accent);
+  pointer-events: none;
+}
+
+.urd-cal-dplan-now::before {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 10px;
+  height: 10px;
+  content: '';
+  background: var(--urd-cal-accent);
+  border-radius: 50%;
+}
+
+/* 08 Årshjul */
+.urd-cal-wheel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(12em, 1fr);
+  gap: 1.6em;
+  align-items: center;
+}
+
+.urd-cal-wheel-figure {
+  position: relative;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.urd-cal-wheel-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.urd-cal-wheel-seg {
+  stroke: var(--urd-cal-s-ring, color-mix(in srgb, var(--urd-color-text) 10%, transparent));
+  cursor: pointer;
+  transition: stroke 0.2s;
+}
+
+.urd-cal-wheel-past {
+  stroke: var(--urd-cal-s-past, color-mix(in srgb, var(--urd-color-text) 22%, transparent));
+}
+
+.urd-cal-wheel-now,
+.urd-cal-wheel-picked {
+  stroke: var(--urd-cal-accent);
+}
+
+.urd-cal-wheel-seg:hover,
+.urd-cal-wheel-seg:focus-visible {
+  stroke: color-mix(in srgb, var(--urd-cal-accent) 70%, var(--urd-color-text));
+  outline: none;
+}
+
+.urd-cal-wheel-month {
+  font-size: 11px;
+  font-weight: 700;
+  fill: currentcolor;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.urd-cal-wheel-dot {
+  fill: var(--urd-cal-color, var(--urd-cal-s-dot, var(--urd-color-text)));
+  pointer-events: none;
+}
+
+.urd-cal-wheel-dot-off {
+  fill: var(--urd-cal-s-dotOff, color-mix(in srgb, var(--urd-color-text) 35%, transparent));
+}
+
+.urd-cal-wheel-centre {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.urd-cal-wheel-kicker {
+  font-size: 0.68em;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.urd-cal-wheel-centre .urd-cal-tx {
+  pointer-events: auto;
+}
+
+.urd-cal-wheel-year {
+  font-family: var(--urd-font-heading);
+  font-size: 2.6em;
+  line-height: 1;
+}
+
+.urd-cal-wheel-total {
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+
+.urd-cal-wheel-side {
+  display: grid;
+  gap: 0.8em;
+  align-content: start;
+}
+
+.urd-cal-wheel-label {
+  font-size: 0.7em;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--urd-cal-accent);
+}
+
+.urd-cal-wheel-list {
+  display: grid;
+  gap: 8px;
+}
+
+.urd-cal-wheel-card {
+  display: grid;
+  gap: 2px;
+  padding: 0.7em 0.9em;
+  font-size: 0.9em;
+  background: var(--urd-cal-surface);
+  border: 1px solid var(--urd-cal-line);
+  border-radius: var(--urd-radius-sm);
+}
+
+.urd-cal-wheel-none,
+.urd-cal-wheel-hint {
+  margin: 0;
+  font-size: 0.78em;
+  opacity: 0.7;
+}
+
+/* F3 Varmekart */
+.urd-cal-heat {
+  display: grid;
+  gap: 1em;
+  padding: 1.2em 1.4em;
+  background: var(--urd-cal-surface);
+  border: 1px solid var(--urd-cal-line);
+  border-radius: var(--urd-radius-md);
+}
+
+.urd-cal-heat-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5em 1em;
+}
+
+.urd-cal-heat-kicker {
+  display: block;
+  font-size: 0.65em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.urd-cal-heat-title {
+  font-family: var(--urd-font-heading);
+  font-size: 1.2em;
+}
+
+.urd-cal-heat-legend {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  font-size: 0.68em;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.urd-cal-heat-months {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.9em 1.2em;
+}
+
+.urd-cal-heat-mname {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.65em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.urd-cal-heat-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.urd-cal-heat-cell {
+  display: block;
+  aspect-ratio: 1;
+  background: var(--urd-cal-s-cell0, color-mix(in srgb, var(--urd-color-text) 6%, transparent));
+  border-radius: 3px;
+}
+
+.urd-cal-heat-legend .urd-cal-heat-cell {
+  width: 11px;
+  height: 11px;
+}
+
+.urd-cal-heat-blank {
+  background: transparent;
+}
+
+.urd-cal-heat-l1 {
+  background: var(--urd-cal-s-cell1, color-mix(in srgb, var(--urd-cal-accent) 30%, var(--urd-cal-surface)));
+}
+
+.urd-cal-heat-l2 {
+  background: var(--urd-cal-s-cell2, color-mix(in srgb, var(--urd-cal-accent) 60%, var(--urd-cal-surface)));
+}
+
+.urd-cal-heat-l3 {
+  background: var(--urd-cal-s-cell3, var(--urd-cal-accent));
+}
+
+.urd-cal-heat-today {
+  outline: 2px solid var(--urd-cal-s-today, var(--urd-color-text));
+  outline-offset: -2px;
+}
+
+.urd-cal-heat-cell[tabindex]:focus-visible {
+  outline: 2px solid var(--urd-cal-accent);
+}
+
+.urd-cal-heat-readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3em 1em;
+  padding: 0.7em 0.9em;
+  font-size: 0.82em;
+  background: var(--urd-cal-s-panel, color-mix(in srgb, var(--urd-color-text) 4%, transparent));
+  border-radius: var(--urd-radius-sm);
+}
+
+.urd-cal-heat-readout span {
+  opacity: 0.75;
+}
+
+@media (max-width: 600px) {
+  .urd-cal-side,
+  .urd-cal-wheel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .urd-cal-side-panel {
+    border-top: 1px solid var(--urd-cal-line);
+    border-left: 0;
   }
 }
 

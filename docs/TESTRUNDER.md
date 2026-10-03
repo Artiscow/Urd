@@ -4,6 +4,20 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 - [ ] Published site with the server stopped mid-navigation (or a broken content/site.json): the page switch shows the empty shell at once with «Urd: boot failed» in the console, not after five seconds
 
+### Testrunde-batch (0.7.19.4): month, week, day and year designs on the calendar
+
+- [ ] Stil tab, Design: Ukestripe, Ukeplan, Kalenderlag, Måned med sidepanel, Oversikt på krem, Dagsplan, Årshjul and Varmekart draw the demo data in the preview and a real feed on the published page; Innhold shows no Visning for them
+- [ ] Ukestripe: the current week with today framed in the accent, «Uke N» and the span above, the arrows move a week at a time, a pill per event in the calendar's colour (Pille and Pilletekst otherwise)
+- [ ] Ukeplan: the hours from the earliest event (at most 08) to past the latest (at least 18), today's column tinted and its number ringed, an all-day event in the row above, a timed one as a block in its hour with its length; «I dag» returns to this week
+- [ ] Kalenderlag: one row per named calendar (or «Arrangementer»), a switch per calendar in the head that hides and shows its row, a bar per event spanning its days, today's column tinted; the chip row is not drawn and Innhold hides «Vis kategori-filter»
+- [ ] Måned med sidepanel: the month with at most two chips per day and «+N til», today ringed, a click on a day shows its events in the panel, a click on a grey day from the next month moves the month, the panel's legend lists the calendars with their colours; the panel moves under the month on a phone
+- [ ] Oversikt på krem: the month on cream with a gold rule at the top, the arrows outlined in gold, today in a gold circle, the pills with a gold line and the time in dark gold
+- [ ] Dagsplan: today with «I dag» above the date and «N i dag» at the right, the week strip picks another day, the now line in the current hour and the past hours shaded on today only
+- [ ] Årshjul: twelve arcs, the months before this one in Passert, this month in the accent, a dot per event (Prikker senere for those gone), the year and the count in the middle, a click or Enter on an arc lists that month's events to the right
+- [ ] Varmekart: twelve small months, every day shaded by its count (Ingen, Få, Flere, Mange), today ringed, pointing at or focusing a day reads its events out under the grid
+- [ ] A calendar with sources: the month, week, day and year designs show events earlier in their span than now (this month's past events in the month designs, this year's in the year designs)
+- [ ] Every time design: the colour slots follow the design when empty, Kantstripe adds the stripe to the day columns, plan blocks and cards, the field styles change the right pieces, and the texts («I dag», «Årshjul», «Hele året», the legend) are rewritten by clicking them
+
 ### Testrunde-batch (0.7.19.3): six card designs on the calendar
 
 - [ ] Stil tab, Design: Plakatvegg, Billetter, Dagkarusell, Bildekort, Rutenett på krem and Bento draw the demo data in the preview and a real feed on the published page

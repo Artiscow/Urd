@@ -13,7 +13,7 @@
  */
 
 /** The data views a design can stand on; `null` on a design means the block's own `view`. */
-export const CAL_VIEWS = ['list', 'cards', 'month', 'agenda', 'next'];
+export const CAL_VIEWS = ['list', 'cards', 'month', 'agenda', 'next', 'week', 'day', 'year'];
 
 /** The event fields whose look the owner can set per block (the Style tab's field styles). */
 export const CAL_FIELDS = ['title', 'date', 'time', 'place', 'description', 'category', 'number'];
@@ -39,6 +39,13 @@ export const CAL_TEXTS = {
   program: 'calendar.program',
   nextShort: 'calendar.nextShort',
   thisMonth: 'calendar.thisMonth',
+  todayBtn: 'calendar.todayBtn',
+  wheel: 'calendar.wheel',
+  pickMonth: 'calendar.pickMonth',
+  wholeYear: 'calendar.wholeYear',
+  fewer: 'calendar.fewer',
+  more: 'calendar.moreLegend',
+  pickDay: 'calendar.pickDay',
 };
 
 /** The texts every design with chips, sign-up and subscribe buttons shows. */
@@ -55,7 +62,9 @@ const slot = (key, section = 'colors') => ({ key, labelKey: `calendar.slot.${key
  * names the renderer file the block loads for the design (blocks/calendar-<module>.js,
  * exporting a function under the design's id); the plain design's views
  * live in the block itself. `ownSubscribe` marks a design that places the
- * subscribe buttons inside its own layout, so the block draws no row under it.
+ * subscribe buttons inside its own layout, so the block draws no row under
+ * it, and `ownFilter` one that draws its own calendar switches instead of
+ * the chip row.
  * @type {Array<{id: string, labelKey: string, view: string|null, module?: string, stripe: boolean,
  *   slots: Array<{key: string, labelKey: string, section: string}>, texts: string[]}>}
  */
@@ -177,10 +186,83 @@ export const CAL_DESIGNS = [
     slots: [slot('accent'), slot('soft'), slot('tile'), slot('line'), slot('hero', 'hero'), slot('heroText', 'hero')],
     texts: ['nextShort', 'thisMonth', ...COMMON_TEXTS],
   },
+  {
+    id: 'weekStrip',
+    labelKey: 'calendar.design.weekStrip',
+    view: 'week',
+    module: 'time',
+    stripe: false,
+    slots: [slot('accent'), slot('surface'), slot('line'), slot('todayBg'), slot('pill'), slot('pillText')],
+    texts: COMMON_TEXTS,
+  },
+  {
+    id: 'weekPlan',
+    labelKey: 'calendar.design.weekPlan',
+    view: 'week',
+    module: 'time',
+    stripe: false,
+    slots: [slot('accent'), slot('surface'), slot('line'), slot('todayBg'), slot('event')],
+    texts: ['todayBtn', ...COMMON_TEXTS],
+  },
+  {
+    id: 'layers',
+    labelKey: 'calendar.design.layers',
+    view: 'week',
+    module: 'time',
+    stripe: false,
+    ownFilter: true,
+    slots: [slot('accent'), slot('surface'), slot('line'), slot('todayBg')],
+    texts: ['subscribe', 'subscribeMulti', 'addGoogle', 'signup'],
+  },
+  {
+    id: 'sidepanel',
+    labelKey: 'calendar.design.sidepanel',
+    view: 'month',
+    module: 'time',
+    stripe: false,
+    slots: [slot('accent'), slot('surface'), slot('panel'), slot('line'), slot('todayBg'), slot('selected'), slot('chip')],
+    texts: COMMON_TEXTS,
+  },
+  {
+    id: 'apMonth',
+    labelKey: 'calendar.design.apMonth',
+    view: 'month',
+    module: 'time',
+    stripe: false,
+    slots: [slot('card'), slot('text'), slot('gold'), slot('goldDark'), slot('grid'), slot('pill')],
+    texts: COMMON_TEXTS,
+  },
+  {
+    id: 'dayPlan',
+    labelKey: 'calendar.design.dayPlan',
+    view: 'day',
+    module: 'time',
+    stripe: false,
+    slots: [slot('accent'), slot('surface'), slot('line'), slot('past'), slot('event')],
+    texts: ['todayBtn', ...COMMON_TEXTS],
+  },
+  {
+    id: 'yearWheel',
+    labelKey: 'calendar.design.yearWheel',
+    view: 'year',
+    module: 'time',
+    stripe: false,
+    slots: [slot('accent'), slot('surface'), slot('line'), slot('ring', 'wheel'), slot('past', 'wheel'), slot('dot', 'wheel'), slot('dotOff', 'wheel')],
+    texts: ['wheel', 'pickMonth', ...COMMON_TEXTS],
+  },
+  {
+    id: 'heatmap',
+    labelKey: 'calendar.design.heatmap',
+    view: 'year',
+    module: 'time',
+    stripe: false,
+    slots: [slot('surface'), slot('panel'), slot('line'), slot('cell0', 'scale'), slot('cell1', 'scale'), slot('cell2', 'scale'), slot('cell3', 'scale'), slot('today', 'scale')],
+    texts: ['wholeYear', 'fewer', 'more', 'pickDay', ...COMMON_TEXTS],
+  },
 ];
 
 /** The renderer modules a design can name (the block maps each to a literal import). */
-export const CAL_MODULES = ['list', 'cards'];
+export const CAL_MODULES = ['list', 'cards', 'time'];
 
 /** The design for an id; the plain one for anything unknown. */
 export function calDesign(id) {

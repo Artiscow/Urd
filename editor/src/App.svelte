@@ -9432,11 +9432,14 @@
           onpick={(mark) => setBlockProp('emptyIcon', mark.icon || 'none')}>
           {#if selectedBlock.props.emptyIcon !== 'none'}{@html iconSvg(selectedBlock.props.emptyIcon ?? 'calendar') || iconSvg('calendar')}{/if}
         </MarkPicker></label>
-      <label class="gridmenu-snap">
-        <input type="checkbox" checked={selectedBlock.props.showCategories !== false}
-          onchange={(e) => setBlockProp('showCategories', e.target.checked)} />
-        {ta('calendar.showCategories')}
-      </label>
+      <!-- A design with calendar switches of its own has no chip row to switch -->
+      {#if !calDesign(selectedBlock.props.design).ownFilter}
+        <label class="gridmenu-snap">
+          <input type="checkbox" checked={selectedBlock.props.showCategories !== false}
+            onchange={(e) => setBlockProp('showCategories', e.target.checked)} />
+          {ta('calendar.showCategories')}
+        </label>
+      {/if}
       <label class="gridmenu-snap">
         <input type="checkbox" checked={selectedBlock.props.showSubscribe !== false}
           onchange={(e) => setBlockProp('showSubscribe', e.target.checked)} />

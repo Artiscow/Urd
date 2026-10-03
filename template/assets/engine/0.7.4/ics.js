@@ -366,6 +366,37 @@ export function findSignupLink(description) {
   return m ? clean(m[0]) : null;
 }
 
+/** The Monday 00:00 (local time) of the week a time falls in. */
+export function startOfWeek(ms) {
+  const d = new Date(ms);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return d.getTime();
+}
+
+/** The ISO 8601 week number of a time (local date): the week with the year's first Thursday is week 1. */
+export function isoWeek(ms) {
+  const d = new Date(ms);
+  const thursday = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 3 - ((d.getDay() + 6) % 7));
+  const firstThursday = new Date(thursday.getFullYear(), 0, 4);
+  const firstWeekStart = new Date(firstThursday.getFullYear(), 0, firstThursday.getDate() + 3 - ((firstThursday.getDay() + 6) % 7));
+  return 1 + Math.round((thursday - firstWeekStart) / (7 * 24 * 3600 * 1000));
+}
+
+/**
+ * Where the occurrence window starts for a view: the whole year for a year
+ * view, the current month, week or day for those views, and six hours back
+ * for the lists and the card, so an event under way still shows.
+ */
+export function windowStart(view, now = Date.now()) {
+  const d = new Date(now);
+  if (view === 'year') return new Date(d.getFullYear(), 0, 1).getTime();
+  if (view === 'month') return new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+  if (view === 'week') return startOfWeek(now);
+  if (view === 'day') return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  return now - 6 * 3600 * 1000;
+}
+
 /** The first picture address in the description (a link ending in an image file), or null. */
 export function findImageLink(description) {
   const m = /https?:\/\/[^\s<>"')\]]+\.(?:jpe?g|png|webp|gif|avif)(?:\?[^\s<>"')\]]*)?/i.exec(String(description ?? ''));

@@ -63,7 +63,7 @@ async function fetchSource(url) {
 }
 
 /** All sources → sorted occurrences with category and signup link. */
-async function loadOccurrences(ics, sources, limit) {
+async function loadOccurrences(ics, sources, limit, view) {
   const errors = [];
   const events = [];
   await Promise.all(sources.map(async (source) => {
@@ -77,7 +77,9 @@ async function loadOccurrences(ics, sources, limit) {
       errors.push(`${url}: ${error.message}`);
     }
   }));
-  const expanded = ics.expandEvents(events, { from: Date.now() - 6 * 3600 * 1000, max: Math.max(limit * 4, 120) })
+  // The window follows the view: a year design wants the whole year, a month, week or day design its own span.
+  const wide = ['year', 'month', 'week', 'day'].includes(view);
+  const expanded = ics.expandEvents(events, { from: ics.windowStart(view), max: wide ? 600 : Math.max(limit * 4, 120) })
     .map((occ) => {
       // A named calendar is the category; otherwise «Category: Title» in the event itself.
       const split = occ.calendar ? { category: occ.calendar, title: occ.summary } : ics.splitCategory(occ.summary);
@@ -96,7 +98,9 @@ function demoOccurrences() {
     { start: base + 3 * day, end: base + 3 * day + 2 * 3600 * 1000, allDay: false, title: ta('calendar.demoTitle1'), category: ta('calendar.demoCat1'), location: ta('calendar.demoLoc1'), signup: null, description: '' },
     { start: base + 10 * day, end: base + 10 * day + 3600 * 1000, allDay: false, title: ta('calendar.demoTitle2'), category: ta('calendar.demoCat2'), location: ta('calendar.demoLoc1'), signup: null, description: '' },
     { start: base + 17 * day, end: base + 17 * day, allDay: true, title: ta('calendar.demoTitle3'), category: ta('calendar.demoCat3'), location: ta('calendar.demoLoc2'), signup: null, description: '' },
-  ];
+    { start: base + day, end: base + day + 90 * 60 * 1000, allDay: false, title: ta('calendar.demoTitle4'), category: ta('calendar.demoCat1'), location: ta('calendar.demoLoc1'), signup: null, description: '' },
+    { start: base + 5 * day, end: base + 5 * day, allDay: true, title: ta('calendar.demoTitle5'), category: ta('calendar.demoCat2'), location: ta('calendar.demoLoc2'), signup: null, description: '' },
+  ].sort((a, b) => a.start - b.start);
 }
 
 /* ---------- Formatting ---------- */
@@ -243,7 +247,7 @@ function makeUi(cd, ics, el, host, props, ctx, sources) {
   const chip = (occ) => chipNode(occ.category, occ.color, ui);
   /** The subscribe buttons, for a design that places them itself; null when they are off or there is no source. */
   const subscribe = () => (props.showSubscribe !== false && sources.length ? subscribeRow(ics, sources, ui) : null);
-  const ui = { el: el2, tint: tintNode, field, meta, tx, link, signup, chip, subscribe, countdown: countdownText, image: imageUrl, all: [] };
+  const ui = { el: el2, tint: tintNode, field, meta, tx, link, signup, chip, subscribe, countdown: countdownText, image: imageUrl, all: [], today: () => new Date() };
   return ui;
 }
 
@@ -503,7 +507,7 @@ function renderCalendar(el, props, ctx) {
   // The parser and the design model are loaded together, on the first
   // render, and a design's renderer module with them (literal paths, so the
   // modules stay out of the visitor closure and the preload list).
-  const DESIGN_MODULES = { list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js') };
+  const DESIGN_MODULES = { list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js') };
   Promise.all([import('../ics.js'), import('../calendar-designs.js')]).then(async ([ics, cd]) => {
     const design = cd.calDesign(props.design);
     const mod = design.module ? await DESIGN_MODULES[design.module]?.() : null;
@@ -542,11 +546,12 @@ function drawCalendar(ics, cd, mod, el, host, props, ctx) {
     const filtered = activeCategory
       ? occurrences.filter((occ) => occ.category === activeCategory)
       : occurrences;
-    // The max count applies to list, cards and agenda; month shows its month and next has its own two counts.
-    const limited = (view === 'month' || view === 'next')
+    // The max count applies to list, cards and agenda; the month, week, day and year views show their span and next has its own two counts.
+    const limited = ['month', 'next', 'week', 'day', 'year'].includes(view)
       ? filtered
       : filtered.slice(0, Math.max(1, props.limit ?? 6));
-    const chips = props.showCategories === false ? null : categoryRow(occurrences, activeCategory, (category) => {
+    // A design with switches of its own (ownFilter) draws no chip row.
+    const chips = props.showCategories === false || design.ownFilter ? null : categoryRow(occurrences, activeCategory, (category) => {
       activeCategory = category;
       draw(occurrences, note);
     }, ui);
@@ -592,7 +597,7 @@ function drawCalendar(ics, cd, mod, el, host, props, ctx) {
   host.style.overflow = '';
 
   if (ctx.preview) draw([], null);
-  loadOccurrences(ics, sources, Math.max(1, props.limit ?? 6)).then(({ occurrences, errors }) => {
+  loadOccurrences(ics, sources, Math.max(1, props.limit ?? 6), view).then(({ occurrences, errors }) => {
     if (!host.isConnected) return;
     if (!occurrences.length && errors.length) {
       // Visitors get a quiet empty state; the preview gets the error.

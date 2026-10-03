@@ -8,7 +8,7 @@ import { engineImport } from './_engine.mjs';
 
 const {
   parseIcs, expandEvents, partsToMs,
-  splitCategory, findSignupLink, findImageLink, normalizeSourceUrl, subscribeLinks,
+  splitCategory, findSignupLink, findImageLink, normalizeSourceUrl, subscribeLinks, startOfWeek, isoWeek, windowStart,
   nextCount, laterCount, NEXT_COUNT, LATER_COUNT, dedupeOccurrences, groupByMonth, sourceEntry,
 } = await engineImport('ics.js');
 
@@ -215,4 +215,25 @@ test('findImageLink: a picture link in the description, with a query string, oth
   assert.equal(findImageLink('Påmelding: https://forening.no/pameld'), null);
   assert.equal(findImageLink(''), null);
   assert.equal(findImageLink(undefined), null);
+});
+
+test('startOfWeek and isoWeek: Monday 00:00, and the ISO week around a year change', () => {
+  const thu = new Date(2026, 9, 8, 15, 30).getTime();
+  assert.equal(startOfWeek(thu), new Date(2026, 9, 5).getTime());
+  assert.equal(startOfWeek(new Date(2026, 9, 4, 23).getTime()), new Date(2026, 8, 28).getTime());
+  assert.equal(isoWeek(thu), 41);
+  // 1 January 2027 is a Friday and belongs to week 53 of 2026; 4 January 2027 opens week 1.
+  assert.equal(isoWeek(new Date(2027, 0, 1).getTime()), 53);
+  assert.equal(isoWeek(new Date(2027, 0, 4).getTime()), 1);
+  assert.equal(isoWeek(new Date(2026, 0, 1).getTime()), 1);
+});
+
+test('windowStart: the year, the month, the week or the day for those views, six hours back otherwise', () => {
+  const now = new Date(2026, 9, 8, 15, 30).getTime();
+  assert.equal(windowStart('year', now), new Date(2026, 0, 1).getTime());
+  assert.equal(windowStart('month', now), new Date(2026, 9, 1).getTime());
+  assert.equal(windowStart('week', now), new Date(2026, 9, 5).getTime());
+  assert.equal(windowStart('day', now), new Date(2026, 9, 8).getTime());
+  assert.equal(windowStart('list', now), now - 6 * 3600 * 1000);
+  assert.equal(windowStart('next', now), now - 6 * 3600 * 1000);
 });
