@@ -5,7 +5,8 @@
  * Loaded ONLY in preview mode (dynamic import in urd.js) - visitors never
  * load this file. Changes are reported to the editor, which owns the
  * draft:
- *   page → editor: { type: 'urd-move',   sectionId, blockId, frame, frameKey }  (frameKey 'mobile': frame is a row-grid placement, ADR-0019)
+ *   page → editor: { type: 'urd-move',   sectionId, blockId, frame, frameKey, coalesce?, groupKey?, minHeight? }  (frameKey 'mobile': frame is a row-grid placement, ADR-0019; minHeight: the section's own height a settle wrote, settleFrames)
+ *                  { type: 'urd-move-block-section', fromSectionId, toSectionId, blockId, frame, groupKey?, fromMinHeight? }  (a block dropped in another section; groupKey joins the settle's moves in the source)
  *                  { type: 'urd-delete', sectionId, blockId | blockIds }  (blockIds: multi-selection in one undo step)
  *                  { type: 'urd-add-section', index, section }
  *                  { type: 'urd-move-section', sectionId, dir }
@@ -17,8 +18,8 @@
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
  *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (open the block menu in the editor)
  */
-import { applyFrameCss, mobilePlacementToCss, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushPreview, hugHeight } from './render.js';
-import { followsContent } from './push-model.js';
+import { applyFrameCss, mobilePlacementToCss, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, drawsAtContent, visitorHeights, syncSectionHeight } from './render.js';
+import { followsContent, fitMovesAll, ownHeightPx } from './push-model.js';
 import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
@@ -69,6 +70,103 @@ function drawFrame(el, frame) {
   // height for a block that follows its content (ADR-0025).
   const drawn = pushDrawnOf(el);
   if (drawn > frame.h || (drawn && el.dataset.urdHeight === 'content')) el.style.height = `${drawn}px`;
+}
+
+/**
+ * Settles the frames of the blocks under a gesture to the boxes the push
+ * pass draws for them (ADR-0025): a block that follows its content takes its
+ * content's height at rest as a visitor sees it, and any other block whose
+ * content grew past its frame takes that growth. The data then says what the
+ * pass drew: the blocks below move, and a section with a height of its own
+ * grows, exactly as far as they are already drawn (fitMovesAll), so nothing
+ * changes on screen, and the gesture places a block whose frame is its box,
+ * which never stretches the section it is dragged in. Only growth is
+ * settled; a block drawn shorter than its frame keeps it until an edit fits
+ * it. Written into the section the push pass and this layer hold: the
+ * gesture sends the settled frames with its own (postSettled), or calls
+ * `undo` when it changes nothing.
+ * @param {HTMLElement} host The section element
+ * @param {object} section The section data
+ * @param {Iterable<string>} ids The blocks under the gesture
+ * @returns {{ids: string[], minHeight: string|undefined, grown: Map<string, number>, undo: () => void} | null}
+ *   The blocks whose frames changed, the section's new height of its own,
+ *   the growth the settled blocks still show (an unfolded FAQ answer), and
+ *   the way back
+ */
+function settleFrames(host, section, ids) {
+  const canvas = canvasOf(host);
+  const fits = new Map();
+  const grown = new Map();
+  for (const id of ids) {
+    const block = section.blocks.find((b) => b.id === id);
+    const frame = block?.frames?.desktop;
+    const el = canvas.querySelector(`:scope > .urd-block[data-block-id="${CSS.escape(id)}"]`);
+    // A block set to shrink keeps the frame its zoom is measured against.
+    if (!frame || !el || block.fit === 'shrink') continue;
+    if (followsContent(block)) {
+      if (!drawsAtContent(el)) continue;
+      const { natural, resting } = visitorHeights(el);
+      if (resting > frame.h) {
+        fits.set(id, resting);
+        grown.set(id, Math.max(0, natural - resting));
+      }
+    } else {
+      const grow = pushGrowthOf(host, id);
+      if (grow > 0) {
+        fits.set(id, frame.h + grow);
+        grown.set(id, 0);
+      }
+    }
+  }
+  if (!fits.size) return null;
+  const { moves, minHeight } = fitMovesAll(section.blocks, fits, ownHeightPx(section));
+  const before = new Map();
+  const written = new Map();
+  for (const block of section.blocks) {
+    const h = fits.get(block.id);
+    const y = moves.get(block.id);
+    if (h === undefined && y === undefined) continue;
+    before.set(block.id, block.frames.desktop);
+    block.frames.desktop = { ...block.frames.desktop, ...(h === undefined ? {} : { h }), ...(y === undefined ? {} : { y }) };
+    written.set(block.id, block.frames.desktop);
+  }
+  const height = minHeight ? `${minHeight}px` : undefined;
+  const sizeBefore = section.size;
+  if (height) section.size = { ...section.size, minHeight: height };
+  syncSectionHeight(host);
+  return {
+    ids: [...written.keys()],
+    minHeight: height,
+    grown,
+    undo() {
+      for (const [id, frame] of before) {
+        const block = section.blocks.find((b) => b.id === id);
+        // A fit that landed during the gesture (urd-frames) wins over the settle.
+        if (block && block.frames.desktop === written.get(id)) block.frames.desktop = frame;
+      }
+      if (height && section.size?.minHeight === height) {
+        if (sizeBefore === undefined) delete section.size;
+        else section.size = sizeBefore;
+      }
+      syncSectionHeight(host);
+    },
+  };
+}
+
+/**
+ * Sends the frames a settle wrote (settleFrames) to the editor, beside the
+ * ones the gesture sends itself, in the gesture's undo step.
+ * @param {object} section The section data
+ * @param {ReturnType<typeof settleFrames>} settle
+ * @param {string[]} own The ids the gesture sends itself
+ * @param {string} groupKey The gesture's undo step
+ */
+function postSettled(section, settle, own, groupKey) {
+  for (const id of settle?.ids ?? []) {
+    if (own.includes(id)) continue;
+    const frame = section.blocks.find((b) => b.id === id)?.frames?.desktop;
+    if (frame) post({ type: 'urd-move', sectionId: section.id, blockId: id, frame, frameKey: 'desktop', coalesce: true, groupKey });
+  }
 }
 
 /**
@@ -2656,16 +2754,20 @@ window.addEventListener('keydown', (event) => {
     // The axis NOT being moved is never touched (rounding an untouched
     // x/y would leave an invisible change keeping the draft dirty).
     const parts = selectedEls().map((e) => ({ el: e, ctx: e._urdCtx })).filter((p) => p.ctx);
-    const d = dir[0] ? groupDelta(parts.map((p) => p.ctx.block.frames.desktop), r1(dir[0] * stepPx * pctPerPx), 0) : { dx: 0 };
     suspendSticky();
     suspendPush();
-    for (const p of parts) {
+    // The frames are settled to their boxes first (settleFrames), so the
+    // keys place what the owner sees.
+    const settle = settleFrames(ctx.host, ctx.section, parts.map((p) => p.ctx.block.id));
+    const d = dir[0] ? groupDelta(parts.map((p) => p.ctx.block.frames.desktop), r1(dir[0] * stepPx * pctPerPx), 0) : { dx: 0 };
+    postSettled(ctx.section, settle, parts.map((p) => p.ctx.block.id), 'multi-arrow');
+    for (const [i, p] of parts.entries()) {
       const frame = { ...p.ctx.block.frames.desktop };
       if (dir[0]) frame.x = r1(frame.x + d.dx);
       if (dir[1]) frame.y = frame.y + dir[1] * stepPx;
       p.ctx.block.frames.desktop = frame;
       drawFrame(p.el, frame);
-      post({ type: 'urd-move', sectionId: p.ctx.section.id, blockId: p.ctx.block.id, frame, frameKey: 'desktop', coalesce: true, groupKey: 'multi-arrow' });
+      post({ type: 'urd-move', sectionId: p.ctx.section.id, blockId: p.ctx.block.id, frame, frameKey: 'desktop', coalesce: true, groupKey: 'multi-arrow', ...(i === 0 && settle?.minHeight ? { minHeight: settle.minHeight } : {}) });
     }
     resumeSticky();
     resumePush();
@@ -2673,17 +2775,20 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
+  suspendSticky();
+  suspendPush();
+  const settle = settleFrames(ctx.host, ctx.section, [ctx.block.id]);
   const frame = { ...ctx.block.frames.desktop };
   if (dir[0]) frame.x = clamp(r1(frame.x + dir[0] * stepPx * pctPerPx), 0, r1(100 - frame.w));
   if (dir[1]) frame.y = frame.y + dir[1] * stepPx;
   ctx.block.frames.desktop = frame;
-  suspendSticky();
-  suspendPush();
   drawFrame(el, frame);
   resumeSticky();
   resumePush();
-  // coalesce: a burst of arrow-key presses becomes one undo step.
-  post({ type: 'urd-move', sectionId: ctx.section.id, blockId: selectedBlockId, frame, frameKey: 'desktop', coalesce: true });
+  // coalesce: a burst of arrow-key presses becomes one undo step, the
+  // settled frames included (their groupKey is the block's own key).
+  postSettled(ctx.section, settle, [ctx.block.id], ctx.block.id);
+  post({ type: 'urd-move', sectionId: ctx.section.id, blockId: selectedBlockId, frame, frameKey: 'desktop', coalesce: true, ...(settle?.minHeight ? { minHeight: settle.minHeight } : {}) });
 });
 
 // Active section: the editor's palette puts new blocks in the last
@@ -2895,9 +3000,10 @@ function startSelectionDrag(event) {
   // The isPrimary guard: a second finger on the handle must not start a
   // competing drag with its own listeners fighting over the delta.
   if (event.button !== 0 || !event.isPrimary) return;
-  const items = selectionItems();
+  let items = selectionItems();
   const host = selectedEls()[0]?.closest('.urd-section');
-  if (!host || items.length < 2) return;
+  const section = selectedEls()[0]?._urdCtx?.section;
+  if (!host || !section || items.length < 2) return;
   event.preventDefault();
   event.stopPropagation();
   const handle = event.currentTarget;
@@ -2913,6 +3019,10 @@ function startSelectionDrag(event) {
   const startY = event.clientY;
   const r2 = (v) => Math.round(v * 100) / 100;
   let delta = { dx: 0, dy: 0 };
+  // The set's frames are settled to their boxes at the first move
+  // (settleFrames), as for a single drag.
+  let settle = null;
+  let settled = false;
 
   const apply = (frameFor) => {
     const frames = new Map();
@@ -2923,11 +3033,16 @@ function startSelectionDrag(event) {
       frames.set(it.id, frame);
     }
     // The push as it will be after release, drawn live.
-    pushPreview(host, frames);
+    pushPreview(host, frames, settle?.grown);
     // The toolbar follows the set, so the handle stays under the pointer the whole way.
     updateMultiToolbar();
   };
   const move = (e) => {
+    if (!settled) {
+      settled = true;
+      settle = settleFrames(host, section, items.map((it) => it.id));
+      if (settle) items = selectionItems();
+    }
     delta = groupDelta(items, ((e.clientX - startX) / width) * 100, e.clientY - startY);
     apply((it) => ({ ...it, x: it.x + delta.dx, y: it.y + delta.dy }));
   };
@@ -2935,10 +3050,15 @@ function startSelectionDrag(event) {
     handle.removeEventListener('pointermove', move);
     handle.removeEventListener('pointerup', up);
     handle.removeEventListener('pointercancel', cancel);
+    const moved = commit && (delta.dx || delta.dy);
+    if (!moved && settle) {
+      settle.undo();
+      items = selectionItems();
+    }
     resumeSticky();
     resumePush();
-    if (commit && (delta.dx || delta.dy)) {
-      applySelectionMoves(items.map((it) => ({ id: it.id, x: r2(it.x + delta.dx), y: it.y + delta.dy })));
+    if (moved) {
+      applySelectionMoves(items.map((it) => ({ id: it.id, x: r2(it.x + delta.dx), y: it.y + delta.dy })), settle);
     } else {
       apply((it) => it);
     }
@@ -2990,15 +3110,23 @@ function selectionItems() {
     .filter(Boolean);
 }
 
-/** Record a list of moves as ONE undo step (shared groupKey). */
-function applySelectionMoves(moves) {
-  if (!moves.length) return;
+/** Record a list of moves as ONE undo step (shared groupKey), with the
+ *  frames a settle wrote before them (settleFrames). */
+function applySelectionMoves(moves, settle = null) {
+  if (!moves.length) {
+    settle?.undo();
+    return;
+  }
   // Writes geometry straight onto the elements without a re-render, so
   // the pinning must let go first (otherwise the next pin is measured
   // against the old place).
   suspendSticky();
   suspendPush();
   const key = makeId('malign');
+  const section = selectedEls()[0]?._urdCtx?.section;
+  if (section) postSettled(section, settle, moves.map((m) => m.id), key);
+  // The section height a settle wrote rides on the first message.
+  let minHeight = settle?.minHeight;
   for (const move of moves) {
     const el = document.querySelector(`.urd-block[data-block-id="${CSS.escape(move.id)}"]`);
     const ctx = el?._urdCtx;
@@ -3008,19 +3136,30 @@ function applySelectionMoves(moves) {
     if (typeof move.y === 'number') frame.y = move.y;
     ctx.block.frames.desktop = frame;
     drawFrame(el, frame);
-    post({ type: 'urd-move', sectionId: ctx.section.id, blockId: move.id, frame, frameKey: 'desktop', coalesce: true, groupKey: key });
+    post({ type: 'urd-move', sectionId: ctx.section.id, blockId: move.id, frame, frameKey: 'desktop', coalesce: true, groupKey: key, ...(minHeight ? { minHeight } : {}) });
+    minHeight = undefined;
   }
   resumeSticky();
   resumePush();
   updateMultiToolbar();
 }
 
+/** Settles the set's frames to their boxes (settleFrames), so align and
+ *  distribute work on the bottoms and middles the owner sees. */
+function settleSelection() {
+  const ctx = selectedEls()[0]?._urdCtx;
+  if (!ctx) return null;
+  return settleFrames(ctx.host, ctx.section, selectedEls().map((el) => el._urdCtx?.block?.id).filter(Boolean));
+}
+
 function applyAlign(mode) {
-  applySelectionMoves(alignMoves(selectionItems(), mode));
+  const settle = settleSelection();
+  applySelectionMoves(alignMoves(selectionItems(), mode), settle);
 }
 
 function applyDistribute(axis) {
-  applySelectionMoves(distributeMoves(selectionItems(), axis));
+  const settle = settleSelection();
+  applySelectionMoves(distributeMoves(selectionItems(), axis), settle);
 }
 
 /** Ctrl+C: the set (or the single selected block) to the clipboard. */
@@ -3684,7 +3823,7 @@ function enhanceBlock(el, block, section, grid, host) {
       if (started) holdSticky();
 
       const start = { x: event.clientX, y: event.clientY };
-      const orig = { ...(block.frames[frameKey] ?? block.frames.desktop) };
+      let orig = { ...(block.frames[frameKey] ?? block.frames.desktop) };
       // A block that follows its content keeps its height under the resize
       // handle (ADR-0025): the box follows the content at the width being
       // dragged, and a pull up or down is stopped at the content's edge,
@@ -3714,6 +3853,18 @@ function enhanceBlock(el, block, section, grid, host) {
             .filter(Boolean)
         : [];
       const groupKey = groupParts.length ? makeId('mdrag') : null;
+      // The frames under the drag are settled to the boxes the push pass
+      // draws when the drag begins (settleFrames), so the block is placed by
+      // the box the owner sees and the section line holds still.
+      let settle = null;
+      let settled = false;
+      const settleOnce = () => {
+        settled = true;
+        settle = settleFrames(host, section, [block.id, ...groupParts.map((g) => g.block.id)]);
+        if (!settle) return;
+        orig = { ...block.frames.desktop };
+        for (const g of groupParts) g.orig = { ...g.block.frames.desktop };
+      };
       // Frames are physical (x/w in %, y/h in px); the grid controls ONLY
       // what we snap against: square cells of grid.size px. Snapping off
       // gives free placement (0.1% / 1 px precision).
@@ -3788,6 +3939,7 @@ function enhanceBlock(el, block, section, grid, host) {
           started = true;
           holdSticky();
         }
+        if (!settled) settleOnce();
         // Shift held = temporary free placement (0.1% / 1 px); otherwise
         // grid.snap decides.
         const free = grid.snap === false || ev.shiftKey;
@@ -3830,16 +3982,21 @@ function enhanceBlock(el, block, section, grid, host) {
           updateMultiToolbar();
         }
         drawFrame(el, current);
-        let grown;
+        let grown = settle?.grown;
         if (hug) {
+          // Drawn with the editor's own parts, pushing as a visitor sees it.
           const live = hugHeight(el);
           if (live) el.style.height = `${live}px`;
-          grown = new Map([[block.id, Math.max(0, (live || current.h) - current.h)]]);
+          const seen = live ? visitorHeights(el).natural : 0;
+          grown = new Map([...(settle?.grown ?? []), [block.id, Math.max(0, (seen || current.h) - current.h)]]);
           stop.hidden = Math.abs(dy) < STOP_MARK_PX;
         }
         // The push as it will be after release, drawn live: the block is
-        // shown where it lands, and the blocks it pushes move with it.
-        pushPreview(host, frames, grown);
+        // shown where it lands, and the blocks it pushes move with it. A
+        // moved block is left out of the section height; a resized one is
+        // not, so content that grows under the drag raises the section now
+        // as it will on release.
+        pushPreview(host, frames, grown, kind === 'move' ? undefined : new Set());
       };
 
       // Aborted drag (the browser takes over the pointer, or the element
@@ -3852,6 +4009,7 @@ function enhanceBlock(el, block, section, grid, host) {
         overlay.remove();
         clearGuides();
         stop?.remove();
+        settle?.undo();
         dropSticky();
       };
 
@@ -3862,26 +4020,37 @@ function enhanceBlock(el, block, section, grid, host) {
         overlay.remove();
         clearGuides();
         stop?.remove();
-        // Re-pins from the block's NEW base values.
+        // A fit can land while a block that follows its content is dragged
+        // (urd-frames writes into the same block): its height is the fit's,
+        // never the one the drag began with.
+        if (followsContent(block)) current = { ...current, h: block.frames.desktop.h };
+        // A gesture that changes nothing leaves the frames as they were,
+        // settled or not. Re-pins from the block's NEW base values.
+        const unchanged = !started || (current.x === orig.x && current.y === orig.y && current.w === orig.w && current.h === orig.h);
+        if (unchanged) settle?.undo();
         dropSticky();
-        if (!started) return;
+        if (unchanged) return;
 
         // Group drag: record the whole set as ONE undo step (shared
         // groupKey) and skip section transfer (the set lives in one
-        // section).
+        // section). Each member's frame is its own as it stands now, so a
+        // fit that landed during the drag is kept.
         if (groupParts.length) {
-          if (current.x === orig.x && current.y === orig.y) return;
           const dx = r2(current.x - orig.x);
           const dyPx = current.y - orig.y;
+          const own = [block.id, ...groupParts.map((g) => g.block.id)];
+          postSettled(section, settle, own, groupKey);
           block.frames.desktop = current;
-          post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: current, frameKey: 'desktop', coalesce: true, groupKey });
+          post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: current, frameKey: 'desktop', coalesce: true, groupKey, minHeight: settle?.minHeight });
           for (const g of groupParts) {
-            const frame = { ...g.orig, x: r2(g.orig.x + dx), y: g.orig.y + dyPx };
+            const frame = { ...g.block.frames.desktop, x: r2(g.orig.x + dx), y: g.orig.y + dyPx };
             g.block.frames.desktop = frame;
             post({ type: 'urd-move', sectionId: section.id, blockId: g.block.id, frame, frameKey: 'desktop', coalesce: true, groupKey });
           }
           return;
         }
+        // A settled drag is one undo step with the frames it settled.
+        const placeKey = settle ? makeId('place') : null;
 
         // If the block's CENTER is released over another section, the
         // block moves there - grid and ownership must follow the section
@@ -3900,23 +4069,24 @@ function enhanceBlock(el, block, section, grid, host) {
             const tTop = canvasOf(target).getBoundingClientRect().top;
             const sTop = canvas.getBoundingClientRect().top;
             const frame = { ...current, y: Math.max(0, Math.round(sTop + current.y - tTop)) };
+            postSettled(section, settle, [block.id], placeKey);
             post({
               type: 'urd-move-block-section',
               fromSectionId: section.id,
               toSectionId: target.dataset.sectionId,
               blockId: block.id,
               frame,
+              ...(placeKey ? { groupKey: placeKey, fromMinHeight: settle.minHeight } : {}),
             });
             return;
           }
         }
 
-        // A fit can land while a block that follows its content is dragged
-        // (urd-frames writes into the same block): its height is the fit's,
-        // never the one the drag began with.
-        if (followsContent(block)) current = { ...current, h: block.frames.desktop.h };
-        if (current.x !== orig.x || current.y !== orig.y || current.w !== orig.w || current.h !== orig.h) {
-          block.frames[frameKey] = current;
+        block.frames[frameKey] = current;
+        if (placeKey) {
+          postSettled(section, settle, [block.id], placeKey);
+          post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: current, frameKey, coalesce: true, groupKey: placeKey, minHeight: settle.minHeight });
+        } else {
           post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: current, frameKey });
         }
       };

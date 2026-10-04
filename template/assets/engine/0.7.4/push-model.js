@@ -123,11 +123,26 @@ export function pushLayout(items, opts = {}) {
  *   moves, and the section's new height in px (0 when it keeps the one it has)
  */
 export function fitMoves(blocks, id, h, designPx = 0) {
+  return fitMovesAll(blocks, new Map([[id, h]]), designPx);
+}
+
+/**
+ * The same for several frames at once (the blocks under one gesture, settled
+ * to the boxes the push pass draws for them): each block's growth counts as
+ * the pass counted it, so the moves and the section's height are the ones
+ * the pass drew with all of them grown.
+ * @param {Array<{id: string, frames?: {desktop?: {x?: number, y: number, h: number}}}>} blocks The section's blocks
+ * @param {Map<string, number>} fits Block id to its fitted height in px
+ * @param {number} [designPx] The section's own height in px, 0 when it follows its blocks
+ * @returns {{moves: Map<string, number>, minHeight: number}}
+ */
+export function fitMovesAll(blocks, fits, designPx = 0) {
   const items = [];
   for (const block of blocks ?? []) {
     const frame = block?.frames?.desktop;
     if (!frame || !Number.isFinite(frame.y) || !Number.isFinite(frame.h)) continue;
-    const grow = block.id === id ? Math.max(0, h - frame.h) : 0;
+    const h = fits?.get(block.id);
+    const grow = Number.isFinite(h) ? Math.max(0, h - frame.h) : 0;
     items.push({ id: block.id, x: frame.x ?? 0, y: frame.y, h: frame.h, grow });
   }
   const moves = new Map();
@@ -148,4 +163,17 @@ export function fitMoves(blocks, id, h, designPx = 0) {
   }
   const minHeight = grew && designPx > 0 && bottom + PUSH_SECTION_PAD > designPx ? Math.round(bottom + PUSH_SECTION_PAD) : 0;
   return { moves, minHeight };
+}
+
+/**
+ * A section's own height in px (`size.minHeight` written in px), or 0 when it
+ * has none or one in another unit: the height the fits raise, and the line a
+ * block must stay inside to have a say in it.
+ * @param {{size?: {minHeight?: string}}} section
+ * @returns {number}
+ */
+export function ownHeightPx(section) {
+  const size = String(section?.size?.minHeight ?? '').trim();
+  if (!/^\d+(?:\.\d+)?px$/.test(size)) return 0;
+  return Number.parseFloat(size);
 }

@@ -12,7 +12,7 @@
 import { createRegistry } from './registry.js';
 import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION } from './migrate.js';
 import { applyTheme } from './theme.js';
-import { applySiteLayout, renderPage, renderSection, restingHeight, updateFrames } from './render.js';
+import { applySiteLayout, renderPage, renderSection, visitorHeights, updateFrames } from './render.js';
 import { renderNav, refreshNavScroll, clearAnnounceDismissal } from './nav.js';
 import { isSafeImage } from './nav-model.js';
 import { renderFooter } from './footer.js';
@@ -300,13 +300,10 @@ function enablePreview(state, opts) {
       const measure = () => {
         const el = root.querySelector(`.urd-block[data-block-id="${CSS.escape(msg.blockId)}"]`);
         if (!el || el.querySelector('[aria-busy="true"]')) return;
-        // Measured as the Clean view shows the block (base.css): the adders
-        // and the placeholders of empty fields are the editor's own and never
-        // part of the design's height. The class is gone again before
-        // anything is drawn.
-        el.classList.add('urd-fit-measure');
-        const h = restingHeight(el);
-        el.classList.remove('urd-fit-measure');
+        // Measured as a visitor sees the block at rest: the adders and the
+        // placeholders of empty fields are the editor's own and never part of
+        // the design's height.
+        const h = visitorHeights(el).resting;
         if (h > 0) window.parent?.postMessage({ type: 'urd-grow', sectionId: msg.sectionId, blockId: msg.blockId, h, fit: true, seq: msg.seq ?? 0 }, location.origin);
       };
       fitTimers.set(msg.blockId, [500, 1800, 5000].map((wait) => setTimeout(measure, wait)));

@@ -124,7 +124,7 @@
   import { FONT_STACKS } from '$engine/fonts.js';
   import { isSafeHref, toolOrder } from '$engine/nav-model.js';
   import { frameAtPoint } from '$engine/place.js';
-  import { FOLLOWS_CONTENT, fitMoves } from '$engine/push-model.js';
+  import { FOLLOWS_CONTENT, fitMoves, ownHeightPx } from '$engine/push-model.js';
   import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '$engine/icons.js';
   import { zoneValid } from '$engine/calendar-format.js';
   import { MAP_SERVICES, mapService } from '$engine/map-links.js';
@@ -5377,6 +5377,9 @@
     const key = msg.frameKey === 'mobile' ? 'mobile' : 'desktop';
     const width = block.frames.desktop?.w;
     block.frames[key] = msg.frame;
+    // A gesture that settled the frames under it (settleFrames in the
+    // preview) brings the section's own height as the push pass drew it.
+    if (key === 'desktop' && typeof msg.minHeight === 'string' && msg.minHeight) section.size = { ...section.size, minHeight: msg.minHeight };
     if (key === 'desktop') markDesktopChange(section, 'desktop-changed-after-mobile');
     store.save();
     updateDirty();
@@ -5425,9 +5428,7 @@
    *  (fitMoves), so the page does not move; the preview gets the frames
    *  without drawing the section again. */
   function applyFit(section, block, h) {
-    const size = String(section.size?.minHeight ?? '');
-    const designPx = size.endsWith('px') ? Number.parseFloat(size) || 0 : 0;
-    const { moves, minHeight } = fitMoves(section.blocks, block.id, h, designPx);
+    const { moves, minHeight } = fitMoves(section.blocks, block.id, h, ownHeightPx(section));
     const frames = {};
     block.frames.desktop = { ...block.frames.desktop, h };
     frames[block.id] = block.frames.desktop;
@@ -5585,7 +5586,10 @@
     const to = store.data.sections.find((s) => s.id === msg.toSectionId);
     const block = from?.blocks.find((b) => b.id === msg.blockId);
     if (!from || !to || !block) return;
-    pushHistory('move-block');
+    // groupKey: the drop belongs to the undo step of the frames its drag
+    // settled in the source section.
+    pushHistory(msg.groupKey ? `edit:${msg.groupKey}` : 'move-block');
+    if (typeof msg.fromMinHeight === 'string' && msg.fromMinHeight) from.size = { ...from.size, minHeight: msg.fromMinHeight };
     from.blocks = from.blocks.filter((b) => b.id !== msg.blockId);
     block.frames.desktop = msg.frame;
     // The mobile layout is re-derived in the new section.

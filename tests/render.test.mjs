@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { frameToCss, stackOrder, mobilePlacementToCss, reorderMobileKey } = await engineImport('render.js');
+const { frameToCss, stackOrder, mobilePlacementToCss, reorderMobileKey, EDITOR_ONLY } = await engineImport('render.js');
 const { MOBILE_ROW, MOBILE_GAP } = await engineImport('migrate.js');
 
 test('x/w become percent, y/h become px', () => {
@@ -151,4 +151,14 @@ test('reorderMobileKey: equal neighbour keys give a notch past, never standstill
 test('reorderMobileKey: an existing mobileOrder is used as the key', () => {
   const blocks = [blk('a', 100, 0, { mobileOrder: 8 }), blk('b', 10, 0, { mobileOrder: 20 }), blk('c', 90, 0, { mobileOrder: 30 })];
   assert.equal(reorderMobileKey(blocks, 'a', 1), 25);
+});
+
+test('the editor-only parts the push and the fit leave out are the ones base.css hides under .urd-fit-measure', async () => {
+  const { readFileSync } = await import('node:fs');
+  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf-8');
+  const rule = css.match(/((?:\.urd-preview \.urd-fit-measure [^,{]+,\s*)*\.urd-preview \.urd-fit-measure [^,{]+)\{/);
+  assert.ok(rule, 'the .urd-fit-measure rule is in base.css');
+  const hidden = rule[1].split(',').map((sel) => sel.trim().replace('.urd-preview .urd-fit-measure ', '')).sort();
+  const listed = EDITOR_ONLY.split(',').map((sel) => sel.trim()).sort();
+  assert.deepEqual(hidden, listed);
 });

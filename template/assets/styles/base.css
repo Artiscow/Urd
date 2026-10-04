@@ -12871,17 +12871,17 @@ body.urd-mobile .urd-section-resize-top {
 .urd-preview.urd-chrome-off .urd-multi-toolbar,
 .urd-preview.urd-chrome-off .urd-collection-image-adder,
 .urd-preview.urd-chrome-off .urd-product-adder,
-.urd-preview.urd-chrome-off .urd-collection-placeholder,
+.urd-preview.urd-chrome-off .urd-collection-placeholder:empty,
 .urd-preview.urd-chrome-off .urd-grid-overlay {
   display: none !important;
 }
 
-/* The editor's fit of a frame to its content (ADR-0025) measures the block as
-   the Clean view shows it, without the editor's own adders and the
-   placeholders of empty fields. */
+/* A block measured as a visitor sees it (ADR-0025): the push pass and the
+   editor's fit leave out the editor's own adders and the placeholders of empty
+   fields. The list is EDITOR_ONLY in render.js; a test holds the two equal. */
 .urd-preview .urd-fit-measure .urd-collection-image-adder,
 .urd-preview .urd-fit-measure .urd-product-adder,
-.urd-preview .urd-fit-measure .urd-collection-placeholder {
+.urd-preview .urd-fit-measure .urd-collection-placeholder:empty {
   display: none !important;
 }
 

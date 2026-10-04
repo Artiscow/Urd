@@ -140,10 +140,14 @@ function applyPush(host) {
     // down only.
     el.style.height = `${frame.h}px`;
     fitContent(el, frame.h, block);
-    const own = followsContent(block) ? hugHeight(el) : 0;
-    const needed = own || Math.max(frame.h, Math.round(contentHeight(el)));
+    const measure = () => (followsContent(block) ? hugHeight(el) : 0) || Math.max(frame.h, Math.round(contentHeight(el)));
+    const needed = measure();
+    // The editor's own parts (the adders, the placeholders of empty fields)
+    // are drawn but never push: the growth is the content a visitor sees, so
+    // the editor's section heights are the published page's.
+    const seen = el.querySelector(EDITOR_ONLY) ? asVisitor(el, measure) : needed;
     if (needed !== frame.h) el.style.height = `${needed}px`;
-    const grow = Math.max(0, needed - frame.h);
+    const grow = Math.max(0, seen - frame.h);
     // The drawn box is kept, so a redraw between passes (a drag, the arrow
     // keys, align) can put it back instead of the design height. The shift
     // is kept the same way, below.
@@ -202,12 +206,15 @@ function writePush(host, items, skipBox) {
  * top is written as the pass would write it, so the release changes
  * nothing the owner has not already seen. A block whose content changes
  * height under the drag (one that follows its content, dragged narrower)
- * brings its growth as it is now in `grown`.
+ * brings its growth as it is now in `grown`. The blocks being moved are left
+ * out of the section height by default; a resize keeps its block in it, so
+ * content that grows under the drag raises the section as it will on release.
  * @param {HTMLElement} host The section element
  * @param {Map<string, {x: number, y: number, w: number, h: number}>} frames
  * @param {Map<string, number>} [grown] Block id to its growth past its frame, in px
+ * @param {Set<string>} [skip] Ids left out of the section height
  */
-export function pushPreview(host, frames, grown) {
+export function pushPreview(host, frames, grown, skip = new Set(frames.keys())) {
   const section = host?._urdPushSection;
   const canvas = host?.querySelector(':scope > .urd-canvas');
   const grow = host?._urdPushGrow;
@@ -219,7 +226,7 @@ export function pushPreview(host, frames, grown) {
     if (!frame) continue;
     items.push({ id, x: frame.x, y: frame.y, h: frame.h, grow: grown?.get(id) ?? grow.get(id) ?? 0, el });
   }
-  writePush(host, items, new Set(frames.keys()));
+  writePush(host, items, skip);
 }
 
 /**
@@ -239,10 +246,8 @@ export function updateFrames(host, frames, minHeight) {
     const frame = frames[block.id];
     if (frame && block.frames) block.frames.desktop = frame;
   }
-  if (typeof minHeight === 'string' && minHeight) {
-    section.size = { ...section.size, minHeight };
-    host.dataset.urdMinHeight = minHeight;
-  }
+  if (typeof minHeight === 'string' && minHeight) section.size = { ...section.size, minHeight };
+  syncSectionHeight(host);
   schedulePush(host);
 }
 
@@ -342,15 +347,13 @@ export function naturalHeight(el) {
 }
 
 /**
- * The height a block's content takes at rest, for the editor's fit of its
- * frame (ADR-0025): its natural height without what a visitor has unfolded.
- * An open `<details>` (an FAQ answer, a calendar's fold) is view state and
- * never the design, so its unfolded part, its height beyond its summary, is
- * left out.
+ * The height the open `<details>` of a block add beyond their summaries, in
+ * the block's px: an FAQ answer or a calendar's fold that a visitor has
+ * unfolded is view state, never the design.
  * @param {HTMLElement} el The block element
- * @returns {number} 0 when there is nothing to measure
+ * @returns {number}
  */
-export function restingHeight(el) {
+function unfoldedHeight(el) {
   const z = el.currentCSSZoom ?? 1;
   let unfolded = 0;
   for (const details of el.querySelectorAll('details[open]')) {
@@ -361,23 +364,86 @@ export function restingHeight(el) {
     const closed = (details.querySelector(':scope > summary')?.offsetHeight ?? 0) + edges;
     unfolded += Math.max(0, details.offsetHeight - closed) * ((details.currentCSSZoom ?? 1) / z);
   }
-  const natural = naturalHeight(el);
-  const rest = Math.round(natural - unfolded);
-  return rest > 0 ? rest : natural;
+  return unfolded;
+}
+
+/**
+ * The editor's own parts inside a block: the image adders, the «+ Product»
+ * card and the placeholders of empty fields. They are drawn in the preview
+ * but are never part of the page, so the push and the fit measure a block
+ * without them; base.css hides the same list under `.urd-fit-measure`, and a
+ * test holds the two equal.
+ */
+export const EDITOR_ONLY = '.urd-collection-image-adder, .urd-product-adder, .urd-collection-placeholder:empty';
+
+/**
+ * Runs a measure of a block as a visitor sees it: with the editor's own
+ * parts hidden for the length of the call, when the block holds any.
+ * @template T
+ * @param {HTMLElement} el The block element
+ * @param {() => T} measure
+ * @returns {T}
+ */
+function asVisitor(el, measure) {
+  if (el.classList.contains('urd-fit-measure') || !el.querySelector(EDITOR_ONLY)) return measure();
+  el.classList.add('urd-fit-measure');
+  try {
+    return measure();
+  } finally {
+    el.classList.remove('urd-fit-measure');
+  }
+}
+
+/**
+ * A block's heights as a visitor sees it, without the editor's own parts
+ * (ADR-0025): `natural` with what a visitor has unfolded, the growth the
+ * push answers; and `resting` without it, the height the editor's fit and a
+ * settled gesture write into the frame.
+ * @param {HTMLElement} el The block element
+ * @returns {{natural: number, resting: number}} 0 when there is nothing to measure
+ */
+export function visitorHeights(el) {
+  return asVisitor(el, () => {
+    const natural = naturalHeight(el);
+    const rest = Math.round(natural - unfoldedHeight(el));
+    return { natural, resting: rest > 0 ? rest : natural };
+  });
+}
+
+/**
+ * Whether a block that follows its content is drawn at it: demo content
+ * stands clipped to the frame (it exists in the preview alone), and a block
+ * still loading its content (`aria-busy`) holds the frame's height so the
+ * page does not jump when the content arrives.
+ * @param {HTMLElement} el The block element
+ * @returns {boolean}
+ */
+export function drawsAtContent(el) {
+  return !el.dataset.urdDemo && !el.querySelector('[aria-busy="true"]');
 }
 
 /**
  * The height a block that follows its content is drawn at, or 0 to keep its
- * frame's: demo content stands clipped to the frame (it exists in the
- * preview alone), a block still loading its content (`aria-busy`) holds the
- * frame's height so the page does not jump when the content arrives, and a
- * block with nothing to show keeps a box that can be found and selected.
+ * frame's: while it is not drawn at its content (drawsAtContent), and when
+ * it has nothing to show, so the box can still be found and selected.
  * @param {HTMLElement} el The block element
  * @returns {number}
  */
 export function hugHeight(el) {
-  if (el.dataset.urdDemo || el.querySelector('[aria-busy="true"]')) return 0;
-  return naturalHeight(el);
+  return drawsAtContent(el) ? naturalHeight(el) : 0;
+}
+
+/**
+ * Writes a section's design height for the push pass from the section data:
+ * its own height, or the blocks' extent when it has none, the way
+ * renderSection writes it. Called after frames change without a redraw.
+ * @param {HTMLElement} host The section element
+ */
+export function syncSectionHeight(host) {
+  const section = host?._urdPushSection;
+  if (!section) return;
+  const bottom = Math.max(0, ...section.blocks.map((b) => b.frames?.desktop).filter(Boolean).map((f) => f.y + f.h));
+  host.dataset.urdMinHeight = sectionMinHeight(section, bottom);
 }
 
 /** One pass per frame per section, however many observations arrive. */
@@ -467,6 +533,17 @@ export function pushShiftOf(el) {
  */
 export function pushDrawnOf(el) {
   return Number.parseFloat(el?.dataset?.urdDrawn ?? '0') || 0;
+}
+
+/**
+ * The growth past its frame the last push pass measured for a block, in px,
+ * as a visitor sees it; 0 when its content fits.
+ * @param {HTMLElement} host The section element
+ * @param {string} id The block id
+ * @returns {number}
+ */
+export function pushGrowthOf(host, id) {
+  return host?._urdPushGrow?.get(id) ?? 0;
 }
 
 /** Editing done: measure and push again. */

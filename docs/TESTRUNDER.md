@@ -2,6 +2,22 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Test batch (0.7.21.2.2): a drag never stretches a section
+
+- [ ] The front page's top section: its height is the same with the editing chrome on and in Clean view (the collection's «+ Add images» buttons and «Write text …» lines no longer make it taller in the editor)
+- [ ] The collection in the top section dragged a little down or sideways: the section's bottom edge stays where it was during the drag and after the release; one Ctrl+Z puts everything back
+- [ ] The same collection dragged down until its lower part passes the section's bottom edge: the section keeps its height and the collection lies over the next section, in the editor, in Clean view and on the published page
+- [ ] After that first drag, the section's bottom handle can make the section shorter again, and the collection then lies over the edge
+- [ ] A click on a block, and a straight pull up or down on the corner of a calendar, collection or FAQ: nothing changes, and Ctrl+Z has nothing new to undo
+- [ ] A block with a text right under it that is drawn pushed down (an FAQ or a collection whose content outgrew its frame), dragged sideways: the text stays where it was shown; one Ctrl+Z restores both
+- [ ] The same with a set (Shift-click two blocks), dragged by one of its blocks and by the grip on the set's toolbar
+- [ ] A block like that dragged into another section: one Ctrl+Z puts it back, with both sections as they were
+- [ ] The arrow keys, «Align bottom» and «Distribute» on blocks like these: they line up by the boxes you see, and one Ctrl+Z restores
+- [ ] An FAQ near the bottom of a section dragged narrower by its corner: the section grows while you drag, and stays so after the release
+- [ ] A collection with image buttons right above a text block, in the editor: the buttons may overlap the text while editing; Clean view shows the page without the overlap
+- [ ] Type into an empty «Write text …» field of a collection card, then switch to Clean view: the typed words show
+- [ ] An FAQ with an answer open, dragged sideways: the open answer still pushes the blocks below; closed, the FAQ stands at its closed height
+
 ### Test batch (0.7.21.2): the height that follows the content
 
 - [ ] A page saved before this version, in the editor and on the published page: every calendar, collection, product card, basket, checkout, countdown, FAQ, form, quote, share, statistic, table, timeline and audio block stands at its content's height with no air under it; the blocks below stay where they were, and nothing is cut off

@@ -27,6 +27,16 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.21.2.2 - A drag never stretches a section - 4 October 2026
+
+- Test finding 4 October 2026: a block dragged towards the bottom of its section stretched the section instead of lying over the edge, the symptom of 0.7.0.22 back with a new cause: the box the owner sees was taller than the frame the section line reads, by a frame never fitted to its content (a page saved before 0.7.21.2, a collection's entries, a feed) or by the editor's own parts. When a gesture begins, the frames under it are settled to the boxes the push pass draws, the blocks below and a section's own height taking what the pass drew, so the section line holds still and a block dragged past the edge lies over it (`settleFrames` in preview-edit.js, `fitMovesAll` in push-model.js; ADR-0025 addendum).
+- The settle covers a drag, a set dragged by a member or by the selection toolbar's grip, a drop in another section, the arrow keys, align and distribute; it is one undo step with the placement, and a gesture that changes nothing puts it back.
+- The editor's own parts (the image adders, «+ Product», the placeholders of empty fields) counted as growth in the editor alone, so the front page's collection stood 174 px taller than on the published page and raised its section there. They are drawn but never push (`EDITOR_ONLY` and `visitorHeights` in render.js, held equal to base.css by a test).
+- A resize left its block out of the section's height while it was dragged, so content that grew under the drag raised the section only on release; a group drag posted each member's frame as it was when the drag began, which reverted a fit that landed during it (both found by the review of the plan). The resized block counts while it is dragged, and each member is posted as it stands.
+- A field just typed into in a collection card kept the placeholder's class until a redraw, so Clean view hid the typed words (found by reading). Only an empty placeholder is hidden.
+- A fit in a section without a height of its own left the section at the extent it was drawn with, so a taller frame hung below it until the next redraw (found by reading). The design height is written again from the frames (`syncSectionHeight` in render.js).
+- ADR-0025 gets a second addendum, and SCHEMA.md's `frames` paragraph describes the settle.
+
 ### 0.7.21.2 - The height that follows the content, for fourteen block types - 4 October 2026
 
 - Fourteen block types stood at the top of a frame taller than their content, an outline with air under it. Calendar, Collection, Product cards, Basket, Checkout, Countdown, FAQ, Form, Quote, Share buttons, Statistic, Table, Timeline and Audio are drawn at their content's height, also below the frame, and the blocks below keep their places (`FOLLOWS_CONTENT` in push-model.js, the push pass in render.js).

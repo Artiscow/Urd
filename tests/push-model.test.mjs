@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { pushLayout, clampFitMin, fitFloorPx, fitMoves, followsContent, FIT_BY_WIDTH, FOLLOWS_CONTENT, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD } = await engineImport('push-model.js');
+const { pushLayout, clampFitMin, fitFloorPx, fitMoves, fitMovesAll, ownHeightPx, followsContent, FIT_BY_WIDTH, FOLLOWS_CONTENT, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD } = await engineImport('push-model.js');
 
 const at = (id, y, h, extra = {}) => ({ id, y, h, ...extra });
 /** A block with a desktop frame, the way a section stores it. */
@@ -142,4 +142,44 @@ test('fitMoves: broken frames are skipped', () => {
   const blocks = [blk('faq', 0, 100), { id: 'broken' }, { id: 'half', frames: { desktop: { y: 'x', h: 10 } } }, blk('below', 110, 20)];
   assert.equal(fitMoves(blocks, 'faq', 150).moves.get('below'), 160);
   assert.equal(fitMoves(null, 'faq', 150).moves.size, 0);
+});
+
+test('fitMovesAll: two stale blocks settled at once move and raise as the push pass draws them with both grown', () => {
+  const blocks = [blk('a', 0, 100), blk('b', 120, 100), blk('c', 240, 40), blk('d', 600, 40)];
+  const { moves, minHeight } = fitMovesAll(blocks, new Map([['a', 140], ['b', 150]]), 400);
+  const drawn = pushLayout([at('a', 0, 100, { grow: 40 }), at('b', 120, 100, { grow: 50 }), at('c', 240, 40), at('d', 600, 40)]);
+  for (const id of ['b', 'c', 'd']) assert.equal(moves.get(id) ?? null, drawn.shifts.has(id) ? blocks.find((x) => x.id === id).frames.desktop.y + drawn.shifts.get(id) : null, id);
+  assert.equal(moves.get('c'), 240 + 90);
+  assert.equal(minHeight, 0);
+});
+
+test('fitMoves is fitMovesAll with one fit', () => {
+  const cases = [
+    [[blk('faq', 0, 100), blk('near', 120, 40), blk('far', 400, 40), blk('badge', 20, 30)], 'faq', 130, 0],
+    [[blk('faq', 100, 300), blk('below', 420, 60)], 'faq', 400, 500],
+    [[blk('faq', 100, 300), blk('hung', 560, 200)], 'faq', 340, 500],
+  ];
+  for (const [blocks, id, h, px] of cases) {
+    assert.deepEqual(fitMoves(blocks, id, h, px), fitMovesAll(blocks, new Map([[id, h]]), px));
+  }
+});
+
+test('ownHeightPx: a section\'s own height written in px, else 0', () => {
+  assert.equal(ownHeightPx({ size: { minHeight: '1328px' } }), 1328);
+  assert.equal(ownHeightPx({ size: { minHeight: '12.5px' } }), 12.5);
+  assert.equal(ownHeightPx({ size: { minHeight: '100vh' } }), 0);
+  assert.equal(ownHeightPx({ size: { minHeight: 'xpx' } }), 0);
+  assert.equal(ownHeightPx({ size: {} }), 0);
+  assert.equal(ownHeightPx({}), 0);
+  assert.equal(ownHeightPx(null), 0);
+});
+
+test('a stale block settled where it stands keeps the section line the push pass drew', () => {
+  // The front page's hero: its own height 1328 px, a collection at y 960 with
+  // a frame of 240 px and 590 px of content. The push pass draws the section
+  // at 960 + 590 + 24; settling the frame writes that height, and moves nothing.
+  const blocks = [blk('text', 256, 80), blk('calendar', 176, 435, 55), blk('collection', 960, 240, 20)];
+  const { moves, minHeight } = fitMoves(blocks, 'collection', 590, 1328);
+  assert.equal(moves.size, 0);
+  assert.equal(minHeight, 960 + 590 + PUSH_SECTION_PAD);
 });
