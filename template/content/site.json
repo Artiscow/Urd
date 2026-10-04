@@ -4,7 +4,7 @@
     "title": "Urd",
     "lang": "no",
     "description": "Urd sin testside",
-    "mapService": "brave",
+    "mapService": "duckduckgo",
     "meetingHosts": [],
     "icon": "/media/ikon-9740643c.webp",
     "setup": true
