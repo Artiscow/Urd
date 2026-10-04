@@ -324,8 +324,9 @@ test('eventJsonLd: an occurrence as a schema.org Event', () => {
   assert.equal(moved.endDate, undefined);
   assert.equal(moved.startDate, new Date(start - 3600000).toISOString());
 
-  // An all-day event gives days, and its last day is the one before the feed's end.
-  const day = eventJsonLd({ start: new Date(2026, 9, 17).getTime(), end: new Date(2026, 9, 19).getTime(), allDay: true, title: 'Trip' });
+  // An all-day event gives days, its last day as the end: the occurrence expandEvents makes for 17 and 18 October.
+  const [trip] = expandEvents(parseIcs(wrap('BEGIN:VEVENT\r\nUID:t\r\nDTSTART;VALUE=DATE:20261017\r\nDTEND;VALUE=DATE:20261019\r\nSUMMARY:Trip\r\nEND:VEVENT')).events, { from: new Date(2026, 9, 1).getTime() });
+  const day = eventJsonLd({ ...trip, title: 'Trip' });
   assert.equal(day.startDate, '2026-10-17');
   assert.equal(day.endDate, '2026-10-18');
   assert.equal(day.location, undefined);
@@ -446,4 +447,106 @@ test('normalizeSourceUrl: a Nextcloud share link becomes the address of its iCal
   // Any other address is left as it is.
   assert.equal(normalizeSourceUrl('https://x.no/apps/calendar/kal.ics'), 'https://x.no/apps/calendar/kal.ics');
   assert.equal(normalizeSourceUrl('https://calendar.google.com/calendar/ical/a%40b.com/public/basic.ics'), 'https://calendar.google.com/calendar/ical/a%40b.com/public/basic.ics');
+});
+
+/** Runs a check with the process on another zone's clock, so a change of clock can be met on a known day. */
+function inZone(zone, check) {
+  const before = process.env.TZ;
+  process.env.TZ = zone;
+  try {
+    check();
+  } finally {
+    if (before == null) delete process.env.TZ;
+    else process.env.TZ = before;
+  }
+}
+
+const one = (lines, window) => expandEvents(parseIcs(feedOf(...lines)).events, window);
+const dayOfMs = (ms) => { const d = new Date(ms); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+
+test('findImageLink: a picture address in linear time, also in a description made to be slow', () => {
+  assert.equal(findImageLink('See https://example.org/a/poster.jpg?w=800, then come.'), 'https://example.org/a/poster.jpg?w=800');
+  assert.equal(findImageLink('A page https://example.org/a.jpg/more and https://example.org/b.png.'), 'https://example.org/b.png');
+  const started = Date.now();
+  assert.equal(findImageLink('http://'.repeat(30000)), null);
+  assert.ok(Date.now() - started < 500, 'a long run of addresses is read in linear time');
+});
+
+test('BYMONTH in any order: the months are walked in the year order', () => {
+  const late = one(['UID:y1', 'DTSTART:20260115T100000Z', 'RRULE:FREQ=YEARLY;BYMONTH=6,1', 'SUMMARY:Twice'], { from: Date.UTC(2026, 9, 1), to: Date.UTC(2027, 2, 1) });
+  assert.deepEqual(daysOf(late), ['2027-1-15']);
+  const counted = one(['UID:y2', 'DTSTART:20260115T100000Z', 'RRULE:FREQ=YEARLY;BYMONTH=6,1;COUNT=3', 'SUMMARY:Twice'], { from: Date.UTC(2026, 0, 1), to: Date.UTC(2028, 0, 1) });
+  assert.deepEqual(daysOf(counted), ['2026-1-15', '2026-6-15', '2027-1-15']);
+});
+
+test('all-day events across a change of clock keep their days, in the export too', () => {
+  inZone('Europe/Oslo', () => {
+    // 28 and 29 March 2026; the clock changes in the night to the 29th.
+    const [spring] = one(['UID:d1', 'DTSTART;VALUE=DATE:20260328', 'DTEND;VALUE=DATE:20260330', 'SUMMARY:Camp'], { from: new Date(2026, 2, 1).getTime() });
+    assert.equal(dayOfMs(spring.end), '2026-3-29');
+    assert.equal(new Date(spring.end).getHours(), 0);
+    assert.match(eventIcs(spring), /DTEND;VALUE=DATE:20260330/);
+    assert.equal(eventJsonLd({ ...spring, title: 'Camp' }).endDate, '2026-03-29');
+    // A weekly all-day event on the day the clock goes back.
+    const weekly = one(['UID:d2', 'DTSTART;VALUE=DATE:20261018', 'DTEND;VALUE=DATE:20261019', 'RRULE:FREQ=WEEKLY;COUNT=3', 'SUMMARY:Market'], { from: new Date(2026, 9, 1).getTime() });
+    const october25 = weekly.find((occ) => dayOfMs(occ.start) === '2026-10-25');
+    assert.ok(eventIcs(october25).includes('DTSTART;VALUE=DATE:20261025') && eventIcs(october25).includes('DTEND;VALUE=DATE:20261026'));
+    assert.match(googleEventUrl(october25), /dates=20261025%2F20261026/);
+  });
+});
+
+test('RDATE with an override: the moved or cancelled date is the override', () => {
+  const feed = ['BEGIN:VCALENDAR',
+    'BEGIN:VEVENT', 'UID:r9', 'DTSTART:20261005T100000Z', 'RDATE:20261010T100000Z,20261017T100000Z', 'SUMMARY:Base', 'END:VEVENT',
+    'BEGIN:VEVENT', 'UID:r9', 'RECURRENCE-ID:20261010T100000Z', 'DTSTART:20261010T120000Z', 'SUMMARY:Moved', 'END:VEVENT',
+    'BEGIN:VEVENT', 'UID:r9', 'RECURRENCE-ID:20261017T100000Z', 'DTSTART:20261017T100000Z', 'STATUS:CANCELLED', 'SUMMARY:Base', 'END:VEVENT',
+    'END:VCALENDAR'].join('\r\n');
+  const occs = expandEvents(parseIcs(feed).events, { from: Date.UTC(2026, 9, 1) });
+  assert.deepEqual(occs.map((occ) => [new Date(occ.start).toISOString(), occ.summary, occ.cancelled]), [
+    ['2026-10-05T10:00:00.000Z', 'Base', false],
+    ['2026-10-10T12:00:00.000Z', 'Moved', false],
+    ['2026-10-17T10:00:00.000Z', 'Base', true],
+  ]);
+});
+
+test('a rule that began years ago still reaches the window', () => {
+  const daily = one(['UID:l1', 'DTSTART:20150101T100000Z', 'RRULE:FREQ=DAILY', 'SUMMARY:Daily'], { from: Date.UTC(2026, 9, 1), to: Date.UTC(2026, 9, 4) });
+  assert.deepEqual(daysOf(daily), ['2026-10-1', '2026-10-2', '2026-10-3']);
+  const weekdays = one(['UID:l2', 'DTSTART:20150105T100000Z', 'RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR', 'SUMMARY:Office'], { from: Date.UTC(2026, 9, 5), to: Date.UTC(2026, 9, 11) });
+  assert.deepEqual(daysOf(weekdays), ['2026-10-5', '2026-10-6', '2026-10-7', '2026-10-8', '2026-10-9']);
+  const monthly = one(['UID:l3', 'DTSTART:19900110T100000Z', 'RRULE:FREQ=MONTHLY;INTERVAL=2', 'SUMMARY:Board'], { from: Date.UTC(2026, 8, 1), to: Date.UTC(2027, 0, 31) });
+  assert.deepEqual(daysOf(monthly), ['2026-9-10', '2026-11-10', '2027-1-10']);
+  // With COUNT the rule is counted from its start, so it ends where it ends.
+  assert.deepEqual(one(['UID:l4', 'DTSTART:20150101T100000Z', 'RRULE:FREQ=DAILY;COUNT=5', 'SUMMARY:Short'], { from: Date.UTC(2026, 9, 1) }), []);
+});
+
+test('rule parts: a broken interval is one, a day from the month end, a signed weekday, and a daily rule on weekdays', () => {
+  const every = one(['UID:n1', 'DTSTART:20261001T100000Z', 'RRULE:FREQ=DAILY;INTERVAL=Infinity;COUNT=3', 'SUMMARY:A'], { from: Date.UTC(2026, 9, 1) });
+  assert.deepEqual(daysOf(every), ['2026-10-1', '2026-10-2', '2026-10-3']);
+  assert.ok(every.every((occ) => Number.isFinite(occ.start)));
+  assert.equal(daysOf(one(['UID:n2', 'DTSTART:20261001T100000Z', 'RRULE:FREQ=DAILY;INTERVAL=1.5;COUNT=2', 'SUMMARY:A'], { from: Date.UTC(2026, 9, 1) }))[1], '2026-10-2');
+  assert.deepEqual(daysOf(one(['UID:n3', 'DTSTART:20261001T100000Z', 'RRULE:FREQ=MONTHLY;BYMONTHDAY=-1;COUNT=3', 'SUMMARY:A'], { from: Date.UTC(2026, 9, 1) })), ['2026-10-31', '2026-11-30', '2026-12-31']);
+  assert.deepEqual(daysOf(one(['UID:n4', 'DTSTART:20261001T100000Z', 'RRULE:FREQ=MONTHLY;BYDAY=+1MO;COUNT=2', 'SUMMARY:A'], { from: Date.UTC(2026, 9, 1) })), ['2026-10-5', '2026-11-2']);
+  assert.deepEqual(daysOf(one(['UID:n5', 'DTSTART:20261002T100000Z', 'RRULE:FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR;COUNT=3', 'SUMMARY:A'], { from: Date.UTC(2026, 9, 1) })), ['2026-10-2', '2026-10-5', '2026-10-6']);
+});
+
+test('ATTACH is a picture only when its type or its address says so, and GEO needs both numbers', () => {
+  const picture = (line) => parseIcs(feedOf('UID:p1', 'DTSTART:20261005T100000Z', 'SUMMARY:A', line)).events[0];
+  assert.equal(picture('ATTACH;FMTTYPE=application/pdf:https://drive.google.com/file/d/x/view').image, undefined);
+  assert.equal(picture('ATTACH;FMTTYPE=image/jpeg:https://example.org/p').image, 'https://example.org/p');
+  assert.equal(picture('ATTACH:https://example.org/poster.png').image, 'https://example.org/poster.png');
+  assert.equal(picture('ATTACH:https://example.org/agenda').image, undefined);
+  assert.equal(picture('GEO:;10').geo, undefined);
+  assert.equal(picture('GEO:63.4;').geo, undefined);
+});
+
+test('signupLinkOf: every line that names a sign-up is tried, and a name is no sign-up word', () => {
+  assert.equal(signupLinkOf({ description: 'Register for the call: https://zoom.us/j/1\nTickets: https://tix.example.org/e' }), 'https://tix.example.org/e');
+  assert.equal(signupLinkOf({ description: 'Ask Pamela: https://example.org/pam' }), null);
+  assert.equal(signupLinkOf({ description: 'Pamelding: https://example.org/form' }), 'https://example.org/form');
+});
+
+test('normalizeSourceUrl: the Nextcloud embedding link, and a token with - and _', () => {
+  assert.equal(normalizeSourceUrl('https://sky.example.org/apps/calendar/embed/AbC-d_E1'), 'https://sky.example.org/remote.php/dav/public-calendars/AbC-d_E1?export');
+  assert.equal(normalizeSourceUrl('https://sky.example.org/remote.php/dav/public-calendars/AbC-d_E1'), 'https://sky.example.org/remote.php/dav/public-calendars/AbC-d_E1?export');
 });

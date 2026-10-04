@@ -1,13 +1,7 @@
 /**
- * The calendar block's ApeironLF set and the dark mobile agenda (milestone
- * 0.7.19): the «Coming up» card on cream (with the announcement as a
- * section or as an alert band), the same on navy with the next events as
- * cards, the recurring event with its facts and the fold of all its dates,
- * and an agenda on a dark ground with a week strip. Each is a renderer over
- * the block's ui helpers (fields, static texts, buttons; see makeUi in
- * calendar.js) with its own CSS block in base.css under `.urd-cal-d-<id>`.
- * Loaded by the block on the first render of a block that uses one of them,
- * never in the visitor closure.
+ * The calendar block's ApeironLF set and the dark mobile agenda (milestone 0.7.19): the «Coming up» card on cream (with the announcement as a section or as an alert band), the same on navy with the next events as cards, the recurring event with its facts and the fold of all its dates, and an agenda on a dark ground with a week strip.
+ * Each is a renderer over the block's ui helpers (fields, static texts, buttons; see makeUi in calendar.js) with its own rules in base.css under its own class names.
+ * Loaded by the block on the first render of a block that uses one of them, never in the visitor closure.
  */
 import { t, tp, dates } from '../i18n.js';
 import { iconSvg } from '../icons.js';
@@ -18,6 +12,8 @@ const monthShort = (d) => dates().monthsShort[d.getMonth()];
 const monthLong = (d) => dates().months[d.getMonth()];
 const weekdayShort = (d) => dates().weekdaysShort[(d.getDay() + 6) % 7];
 const weekday = (d) => dates().weekdays[(d.getDay() + 6) % 7];
+/** «5. okt» in the site language (calendar.dayMonth), with the month short or written out. */
+const dayMonth = (d, long = false) => t('calendar.dayMonth', { d: d.getDate(), m: long ? monthLong(d) : monthShort(d) });
 const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
 /** «Wed · 19:00 · the place» as fields: the weekday, the time and the place. */
@@ -54,7 +50,7 @@ function laterRail(later, ui) {
   for (const occ of later) {
     const d = dayOf(occ);
     const row = ui.tint(ui.el('div', 'urd-cal-apn-rail-row'), occ);
-    row.append(ui.el('i', 'urd-cal-apn-rail-dot'), ui.field('strong', 'date', `${d.getDate()}. ${monthShort(d)}`, null, d), ui.field('span', 'title', occ.title));
+    row.append(ui.el('i', 'urd-cal-apn-rail-dot'), ui.field('strong', 'date', dayMonth(d), null, d), ui.field('span', 'title', occ.title));
     const arrow = arrowLink(occ, ui, 'urd-cal-apn-arrow');
     if (arrow) row.appendChild(arrow);
     list.appendChild(row);
@@ -70,7 +66,7 @@ export function apNow(host, occs, props, ics, ui) {
   head.append(ui.el('i', 'urd-cal-apn-dot'), ui.tx('now'));
   card.appendChild(head);
   const notice = props.notice?.show === true;
-  const href = typeof props.notice?.href === 'string' && /^(https?:\/\/|\/|#|mailto:)/i.test(props.notice.href.trim()) ? props.notice.href.trim() : '';
+  const href = typeof props.notice?.href === 'string' && /^(https?:\/\/|\/(?!\/)|#|mailto:)/i.test(props.notice.href.trim()) ? props.notice.href.trim() : '';
   if (notice && props.notice.as === 'band') {
     const band = ui.el(href ? 'a' : 'div', 'urd-cal-apn-alert');
     if (href) band.href = href;
@@ -180,7 +176,7 @@ export function apNavy(host, occs, props, ics, ui) {
       const d = dayOf(occ);
       const row = ui.tint(ui.el('div', 'urd-cal-apv-row'), occ);
       const words = ui.el('span');
-      words.append(ui.field('strong', 'date', `${d.getDate()}. ${monthShort(d)}`, null, d), ui.field('span', 'title', occ.title));
+      words.append(ui.field('strong', 'date', dayMonth(d), null, d), ui.field('span', 'title', occ.title));
       row.appendChild(words);
       const arrow = arrowLink(occ, ui, 'urd-cal-apv-arrow');
       if (arrow) row.appendChild(arrow);
@@ -195,7 +191,7 @@ export function apNavy(host, occs, props, ics, ui) {
 function longDate(occ, ui) {
   const d = dayOf(occ);
   const line = ui.el('span');
-  line.appendChild(ui.field('span', 'date', `${d.getDate()}. ${monthLong(d)}`, null, d));
+  line.appendChild(ui.field('span', 'date', dayMonth(d, true), null, d));
   if (ui.hasTime(occ)) {
     line.appendChild(document.createTextNode(' '));
     line.appendChild(ui.field('span', 'time', ui.timeText(occ), null, occ));
@@ -259,6 +255,8 @@ export function apSeries(host, occs, props, ics, ui) {
     const words = ui.el('p', 'urd-cal-aps-aside-text');
     words.appendChild(ui.tx('noticeText'));
     aside.append(title, label, words);
+    const href = typeof props.notice.href === 'string' ? props.notice.href.trim() : '';
+    if (/^(https?:\/\/|\/(?!\/)|#|mailto:)/i.test(href)) aside.appendChild(ui.link('urd-cal-aps-aside-link', 'moreInfo', href, ''));
     card.appendChild(aside);
   }
   host.appendChild(card);
@@ -267,10 +265,9 @@ export function apSeries(host, occs, props, ics, ui) {
 let menuSeq = 0;
 
 /**
- * The calendar chip of the dark agenda: a button naming the calendar shown,
- * opening a menu of the named calendars (the Popover API, ADR-0011). Without
- * popovers the calendars stand as a row of chips. Null with fewer than two
- * calendars.
+ * The calendar chip of the dark agenda: a button naming the calendar shown, opening a menu of the named calendars (the Popover API, ADR-0011).
+ * Without popovers the calendars stand as a row of chips.
+ * Null with fewer than two calendars.
  */
 function filterMenu(ui) {
   const { names, active, pick } = ui.filter ?? {};
@@ -281,7 +278,7 @@ function filterMenu(ui) {
     btn.type = 'button';
     if (name) {
       const hit = colourOf(name);
-      btn.appendChild(hit ? ui.tint(ui.el('i', 'urd-cal-magenda-dot'), hit) : ui.el('i', 'urd-cal-magenda-dot'));
+      btn.appendChild(hit ? ui.color(ui.el('i', 'urd-cal-magenda-dot'), hit) : ui.el('i', 'urd-cal-magenda-dot'));
       btn.appendChild(ui.field('span', 'category', name));
     } else {
       btn.appendChild(ui.tx('all'));
@@ -309,9 +306,11 @@ function filterMenu(ui) {
   // The menu opens under its chip: its place is measured when it opens.
   list.addEventListener('toggle', (event) => {
     if (event.newState !== 'open') return;
+    // The calendar's size zooms the menu with it, so its place is written in the zoomed pixels.
+    const zoom = list.currentCSSZoom || 1;
     const box = open.getBoundingClientRect();
-    list.style.top = `${box.bottom + 6}px`;
-    list.style.left = `${Math.max(8, Math.min(box.left, window.innerWidth - list.offsetWidth - 8))}px`;
+    list.style.top = `${(box.bottom + 6) / zoom}px`;
+    list.style.left = `${Math.max(8, Math.min(box.left, window.innerWidth - list.offsetWidth * zoom - 8)) / zoom}px`;
   });
   wrap.append(open, list);
   return wrap;
@@ -334,7 +333,7 @@ export function mobileAgenda(host, occs, props, ics, ui) {
     if (sameDay(d, today)) cell.classList.add('urd-cal-magenda-today');
     cell.append(ui.field('span', 'date', weekdayShort(d), null, d), ui.field('strong', 'number', String(d.getDate()), null, d));
     const hit = ui.all.find((occ) => sameDay(dayOf(occ), d));
-    if (hit) cell.appendChild(ui.tint(ui.el('i', 'urd-cal-magenda-dot'), hit));
+    if (hit) cell.appendChild(ui.color(ui.el('i', 'urd-cal-magenda-dot'), hit));
     strip.appendChild(cell);
   }
   card.appendChild(strip);
@@ -348,7 +347,7 @@ export function mobileAgenda(host, occs, props, ics, ui) {
         label.appendChild(ui.tx('todayBtn'));
         label.appendChild(document.createTextNode(', '));
       }
-      label.appendChild(ui.field('span', 'date', `${weekday(d)} ${d.getDate()}.`, null, d));
+      label.appendChild(ui.field('span', 'date', t('calendar.weekdayDay', { wd: weekday(d), d: d.getDate() }), null, d));
       list.appendChild(label);
       last = d;
     }

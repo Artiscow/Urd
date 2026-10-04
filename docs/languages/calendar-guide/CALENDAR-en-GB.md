@@ -8,7 +8,7 @@ For you who own or edit a site built with Urd and want to show events on it. The
 
 This guide covers what the calendar can do today. The general use of the editor is in the [user guide](../user-guide/GUIDE-en-GB.md).
 
-**Contents:** [How it works](#how-it-works) · [Calendar services](#calendar-services) · [Adding your calendar](#adding-your-calendar) · [Designs](#designs) · [What is read from an event](#what-is-read-from-an-event) · [Meeting links](#meeting-links) · [Sign-up](#sign-up) · [Places and maps](#places-and-maps) · [Finding events](#finding-events) · [Times](#times) · [The event card](#the-event-card) · [Search engines](#search-engines) · [Phone, keyboard and print](#phone-keyboard-and-print) · [Privacy](#privacy) · [What the calendar cannot do](#what-the-calendar-cannot-do)
+**Contents:** [How it works](#how-it-works) · [Calendar services](#calendar-services) · [Allowing the calendar's host](#allowing-the-calendars-host) · [Adding your calendar](#adding-your-calendar) · [Designs](#designs) · [What is read from an event](#what-is-read-from-an-event) · [Meeting links](#meeting-links) · [Sign-up](#sign-up) · [Places and maps](#places-and-maps) · [Finding events](#finding-events) · [Times](#times) · [The event card](#the-event-card) · [Search engines](#search-engines) · [Phone, keyboard and print](#phone-keyboard-and-print) · [Privacy](#privacy) · [What the calendar cannot do](#what-the-calendar-cannot-do)
 
 ## How it works
 
@@ -21,7 +21,7 @@ Two things follow from this:
 
 ## Calendar services
 
-The calendar needs a service that can give a public iCal address. «Tested» means the service has been used with Urd; the others give a standard iCal address and are expected to work the same way.
+The calendar needs a service that can give a public iCal address. «Tested» means the service has been used with Urd; the others give a standard iCal address and are expected to work the same way. Every service but Google Calendar needs its host allowed first, see [Allowing the calendar's host](#allowing-the-calendars-host).
 
 | Service | Who makes it | Price | Public iCal address | Tested |
 |---|---|---|---|---|
@@ -47,10 +47,25 @@ Where to find the address:
 - **Outlook:** Settings, Calendar, Shared calendars, «Publish a calendar»; copy the ICS link.
 - **Teamup:** the calendar's iCalendar feeds.
 
+## Allowing the calendar's host
+
+The site fetches a calendar only from hosts it is set up to allow, so nobody can use it to fetch anything else on the web.
+Google Calendar (`calendar.google.com`) is allowed from the start.
+Every other service needs its host added once, in Cloudflare, before its calendar shows:
+
+1. In Cloudflare, go to the site's project → **Settings** → **Variables and Secrets** → **Add**.
+2. Add the variable `ICS_HOSTS` (type Text), with the host of the calendar's address as its value: the part between `https://` and the next `/`.
+   For example `calendar.proton.me` for Proton Calendar, or `sky.example.org` for your own Nextcloud.
+   Several hosts are divided by commas.
+3. Deploy the site again; the variable takes effect from the next deploy.
+
+Until the host is allowed, the editor shows «The calendar host … is not allowed» under the calendar, and visitors see the calendar as empty.
+The setup guide lists the variable with the others: [Publishing setup](../setup-publication/SETUP-en-GB.md).
+
 ## Adding your calendar
 
 1. Open the **Blocks** panel and add a **Calendar** block (or the section template «What is on»).
-2. Select the block. In its menu, under **Sources**, paste the iCal address, one per line.
+2. Select the block. In its menu, under **Sources**, paste the iCal address in the row; **Add calendar** gives a row for one more.
 3. Choose the design under **Design**, and how many events are shown.
 
 Until a source is pasted, the block shows sample events in the editor, so you can see the design. Visitors never see the sample events.

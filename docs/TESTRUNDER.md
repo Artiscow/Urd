@@ -2,6 +2,29 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Test batch (0.7.0.36-0.7.19.17p): what the push review fixed
+
+- [ ] A calendar in the preview: rewrite two of its texts (for example «Upcoming» and «Week» in the view switcher), reload the editor: both rewrites stand
+- [ ] An all-day event over two days (for example a Saturday and a Sunday): it shows on both days in Week strip, the month on a phone and the day plan; «Add to calendar» gives the right last day in Google Calendar and in the file
+- [ ] With a time zone set for the site and the computer on another zone: an all-day event stands on its own day, and a timed event at the zone's clock
+- [ ] Billboard, Split card, Countdown ring and Dark glass with a cancelled next event: only its title is struck; the «Later» rows look as usual
+- [ ] Week plan with an event from 22:00 to past midnight: the hours run to 23 and the event is drawn; Day plan the day after shows it in the row above the hours
+- [ ] Week plan and Calendar layers: the arrows through the weeks around the end of October keep to whole weeks from the first day
+- [ ] The 12-hour clock on Week plan and Day plan: the hour axis reads «1 pm»
+- [ ] The site in English: dates read «5 Oct», never «5. Oct»; Dark glass's clock reads «01d 15h 22m»
+- [ ] Agenda, dark: pick a calendar in its menu that has nothing coming; the menu stands and another calendar can be picked
+- [ ] Timeline: a click on an event's words opens its card; a cancelled event's title is struck
+- [ ] Year wheel with a screen reader: the months are buttons that read their name and pressed state
+- [ ] A card open in the Clean view while the calendar is drawn again (a setting changed in another tab of the editor, or the window crosses the phone width on the published page): the card closes
+- [ ] A calendar whose feed answers with junk on the published page: the quiet empty state, never standing loading bars
+- [ ] Clean view, a design with «Address of the whole programme» set to another site: the link opens in a new tab, and the editor's preview stays
+- [ ] Editor: change a calendar setting and press Undo once: the setting and the calendar's height go back together; drag a calendar taller right after a change of setting: the height you dragged stays
+- [ ] Editor: open the design picker, close the menu with the cross, open the menu again: it shows its areas; choose Week strip, then Plain: the view is List
+- [ ] Editor: a new Agenda calendar and a new «Coming up» calendar show no «changed» dot on their view group
+- [ ] An own icon from an animated GIF: it becomes a small still icon; a GIF above 4 MB says it is too large
+- [ ] A section with the inverse theme and a wave divider at the bottom with the default colour: the divider shows in the page's background colour
+- [ ] The calendar guide and the setup guide: with a Proton, Outlook or Nextcloud calendar, adding its host to `ICS_HOSTS` as described makes the calendar show
+
 ### Test batch (0.7.19.17): the calendar's designs in the palette, the templates and the translations
 
 - [ ] Blocks panel, Calendar, «Designs» unfolded: 34 thumbnails grouped by view, none running out of the panel

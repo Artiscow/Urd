@@ -21,7 +21,7 @@ import { growSectionTo } from '../render.js';
 import {
   stepIndex, canAutoplay, normalizeInterval, gridColumns, galleryView, GRID_VIEWS, mosaicRowHeight, mosaicWall, polaroidTilts,
 } from '../gallery-model.js';
-import { resolveColor } from '../theme.js';
+import { resolveColor, inkOn } from '../theme.js';
 import { ribbonDuration, ribbonRows, ribbonPeriods, canRoll } from '../ribbon-model.js';
 import { syncTrackCopies } from './ribbon.js';
 import { isSafeHref } from '../nav-model.js';
@@ -309,11 +309,12 @@ function renderPolaroid(host, props, ctx, blockEl) {
   host.classList.add('urd-gallery-cards');
   host.style.setProperty('--urd-gallery-cols', String(gridColumns(props.columns, props.images.length, ctx.viewport)));
   host.style.setProperty('--urd-gallery-gap', `${Number(props.gap) || 0}px`);
-  // The card is white with dark ink until the owner picks a colour; then the
-  // words take the section's own text colour, which is chosen against it.
+  // The card is white with dark ink until the owner picks a colour; then the words take the colour that reads on that card.
   if (props.frameColor) {
     host.classList.add('urd-gallery-cards-own');
     host.style.setProperty('--urd-polaroid-color', resolveColor(props.frameColor));
+    const ink = inkOn(props.frameColor);
+    if (ink) host.style.setProperty('--urd-polaroid-ink', ink);
   }
   const tilts = polaroidTilts(props.images.length, props.seed, props.tilt);
   props.images.forEach((img, i) => {

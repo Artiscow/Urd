@@ -1,7 +1,5 @@
 /**
- * Shared visitor-side protection for rich text (text blocks and collection
- * entries): pasted or stored HTML can carry event attributes or active
- * elements, and legitimate formatting never needs either.
+ * Shared visitor-side protection for rich text (text blocks and collection entries): pasted or stored HTML can carry event attributes or active elements, and legitimate formatting never needs either.
  * The owner is trusted for MARKUP; executable code is always stripped at render.
  */
 export function stripActiveContent(root) {
@@ -18,13 +16,9 @@ const KEPT_TAGS = new Set(['P', 'BR', 'UL', 'OL', 'LI', 'B', 'STRONG', 'I', 'EM'
 const DROPPED_TAGS = new Set(['SCRIPT', 'STYLE', 'HEAD', 'TITLE', 'IFRAME', 'OBJECT', 'EMBED', 'FORM', 'INPUT', 'BUTTON', 'SELECT', 'TEXTAREA', 'SVG', 'MATH', 'IMG', 'PICTURE', 'VIDEO', 'AUDIO', 'CANVAS', 'LINK', 'META', 'BASE', 'TEMPLATE', 'NOSCRIPT']);
 
 /**
- * HTML from a source nobody on the site wrote (a calendar feed), as a
- * fragment built from an allowlist: paragraphs, line breaks, lists, bold,
- * italic, underline, quotes and links to http, https and mailto addresses,
- * with no attribute carried over. A heading becomes a bold paragraph, any
- * other wrapper gives way to its content, and scripts, styles, forms,
- * pictures and embedded content are left out with everything in them. The
- * markup is parsed in an inert document, so nothing in it loads or runs.
+ * HTML from a source nobody on the site wrote (a calendar feed), as a fragment built from an allowlist: paragraphs, line breaks, lists, bold, italic, underline, quotes and links to http, https and mailto addresses, with no attribute carried over.
+ * A heading becomes a bold paragraph, any other wrapper gives way to its content, and scripts, styles, forms, pictures and embedded content are left out with everything in them.
+ * The markup is parsed in an inert document, so nothing in it loads or runs.
  */
 export function safeHtmlFragment(html) {
   const doc = new DOMParser().parseFromString(String(html ?? ''), 'text/html');
@@ -67,9 +61,7 @@ export function safeHtmlFragment(html) {
 }
 
 /**
- * Plain text from rich text (cart lines, emptiness checks, panel summaries):
- * the markup is parsed in an inert document and the text content read out,
- * so no tag remnants can survive the way they can with a regex pass.
+ * Plain text from rich text (cart lines, emptiness checks, panel summaries): the markup is parsed in an inert document and the text content read out, so no tag remnants can survive the way they can with a regex pass.
  */
 export function plainText(html) {
   const doc = new DOMParser().parseFromString(String(html ?? ''), 'text/html');

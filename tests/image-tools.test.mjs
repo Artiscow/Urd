@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 const {
   svgViewBox, tightSvgViewBox, mediaExtension, slugify, isAnimatedImage, animatedImageKind,
-  AnimatedTooLargeError, ANIMATED_WARN_BYTES, ANIMATED_MAX_BYTES, VIDEO_WARN_BYTES,
+  AnimatedTooLargeError, ANIMATED_WARN_BYTES, ANIMATED_MAX_BYTES, VIDEO_WARN_BYTES, compressToWebp,
 } = await engineImport('imageTools.js');
 
 test('svgViewBox: reads viewBox, falls back to width/height, otherwise null', () => {
@@ -105,4 +105,13 @@ test('the kept animations publish under their own extension, and the caps are in
   const err = new AnimatedTooLargeError(5_000_000);
   assert.equal(err.code, 'animatedTooLarge');
   assert.equal(err.bytes, 5_000_000);
+});
+
+test('compressToWebp: a large animated GIF is refused from its beginning, without reading the whole file', async () => {
+  // The loop block an animated GIF carries before its first frame, then a frame and more than the cap of padding.
+  const loop = [0x21, 0xff, 11, ...text('NETSCAPE2.0'), 3, 1, 0, 0, 0];
+  const head = gif(loop, gifControl(), gifFrame());
+  const big = new Uint8Array(ANIMATED_MAX_BYTES + 100_000);
+  big.set(head.subarray(0, head.length - 1));
+  await assert.rejects(compressToWebp(new File([big], 'big.gif', { type: 'image/gif' })), AnimatedTooLargeError);
 });

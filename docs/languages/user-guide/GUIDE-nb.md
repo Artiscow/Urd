@@ -262,7 +262,7 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   Måned, Neste og Agenda) og **Design** med et bilde av hvert av de 34
   designene, eller seksjonsmalen «Hva skjer». Velg blokken og lim inn
   kalenderens iCal-adresse eller Google-kalender-id under **Kilder** i menyen
-  dens (én per linje); en kilde kan få navn og farge, og navnet blir
+  dens (en rad per kalender); en kilde kan få navn og farge, og navnet blir
   arrangementenes kategori. I samme meny velger du design, antall, og hva
   besøkende får: kategori- og stedsfilter, søkefelt, tidligere arrangementer,
   visningsvelger, og knappene **Abonner** og **Meld deg på**. Et trykk på et

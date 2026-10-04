@@ -2516,9 +2516,9 @@ function selectBlock(el, opts = {}) {
 // instead of pulling the iframe out of editing mode. Links INSIDE blocks
 // (buttons, images, text links) never trigger while editing: the click
 // selects the block, and the link is tested via "View page" (a calendar's
-// links also in the Clean view). A click the
-// link's own handler has cancelled (a mobile menu item that opens its
-// submenu) navigates nowhere, as on the published page.
+// links also in the Clean view).
+// A click the link's own handler has cancelled (a mobile menu item that
+// opens its submenu) navigates nowhere, as on the published page.
 document.addEventListener('click', (event) => {
   if (event.defaultPrevented) return;
   const a = eventTarget(event)?.closest('a[href]') ?? null;
@@ -2536,11 +2536,18 @@ document.addEventListener('click', (event) => {
   }
   const href = a.getAttribute('href');
   if (!href || href.startsWith('#')) return;
-  // A calendar link to another site is left to the browser (it opens in a
-  // new tab by itself); only a link to a page of this site goes through the editor.
-  if (cleanCalendar && new URL(href, location.href).origin !== location.origin) return;
+  let url;
+  try {
+    url = new URL(href, location.href);
+  } catch {
+    // An address the browser cannot read leads nowhere.
+    event.preventDefault();
+    return;
+  }
+  // A calendar link to another site that opens in a tab of its own is left
+  // to the browser; only a link to a page of this site goes through the editor.
+  if (cleanCalendar && url.origin !== location.origin && a.target === '_blank') return;
   event.preventDefault();
-  const url = new URL(href, location.href);
   if (url.origin === location.origin) {
     post({ type: 'urd-navigate', path: url.pathname });
   } else {

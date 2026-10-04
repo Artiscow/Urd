@@ -1,12 +1,7 @@
 /**
- * How the calendar block writes times and lays out weeks: the pure rules
- * behind the clock (24 or 12 hours), the first day of the week, an event's
- * end, a span over several days, and the time zone the times are shown in.
- * The clock is 24 hours unless the block asks for 12 (`clock`), and the site
- * language decides the week unless the block says otherwise (`weekStart`); the site's own time zone, when set, is the
- * zone every visitor sees the times in. Loaded by the block on its first
- * render, with ics.js and the design model, never in the visitor closure; it
- * never touches the DOM.
+ * How the calendar block writes times and lays out weeks: the pure rules behind the clock (24 or 12 hours), the first day of the week, an event's end, a span over several days, and the time zone the times are shown in.
+ * The clock is 24 hours unless the block asks for 12 (`clock`), and the site language decides the week unless the block says otherwise (`weekStart`); the site's own time zone, when set, is the zone every visitor sees the times in.
+ * Loaded by the block on its first render, with ics.js and the design model, never in the visitor closure; it never touches the DOM.
  */
 
 /** The block's own choices: the clock is 24 hours unless set to 12; the week's `auto` (or nothing) follows the site language. */
@@ -81,9 +76,8 @@ export function isMultiDay(occ) {
 }
 
 /**
- * The start and the end of a timed event as clock texts. `to` is null when
- * the feed gave no end, when the end is the start, or when the event ends on
- * another day (the date then tells the end).
+ * The start and the end of a timed event as clock texts.
+ * `to` is null when the feed gave no end or when the end is the start; for an event that ends on a later day it is the end's clock, and the caller writes the day before it.
  * @returns {{from: string, to: string|null}}
  */
 export function timeRange(occ, clock12) {
@@ -97,10 +91,8 @@ export function timeRange(occ, clock12) {
 const isoDay = (d) => `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`;
 
 /**
- * The `datetime` of a `<time>`: the day («2026-10-05») for a Date, a time in
- * ms or an event, and the moment itself («2026-10-05T16:00:00.000Z») for a
- * timed event when its clock is what is written (`withClock`). A cancelled
- * event's time is the word «Cancelled», which is no time: null.
+ * The `datetime` of a `<time>`: the day («2026-10-05») for a Date, a time in ms or an event, and the moment itself («2026-10-05T16:00:00.000Z») for a timed event when its clock is what is written (`withClock`).
+ * A cancelled event's time is the word «Cancelled», which is no time: null.
  */
 export function dateTimeAttr(when, withClock = false) {
   if (when instanceof Date || typeof when === 'number') {
@@ -138,12 +130,19 @@ export function zoneOffsetMs(zone, ms) {
 export const localOffsetMs = (ms) => -new Date(ms).getTimezoneOffset() * 60000;
 
 /**
- * A time moved so the browser's local clock reads what the zone's clock
- * shows at that time. The views read local hours and dates, so an event
- * shifted this way is drawn in the zone's time whatever zone the visitor is in.
+ * A time moved so the browser's local clock reads what the zone's clock shows at that time.
+ * The views read local hours and dates, so an event shifted this way is drawn in the zone's time whatever zone the visitor is in.
  */
 export function shiftToZone(ms, zone) {
-  return ms + zoneOffsetMs(zone, ms) - localOffsetMs(ms);
+  const wall = ms + zoneOffsetMs(zone, ms);
+  // The visitor's offset is the one at the shifted moment, which near the visitor's own change of clock is not the one at the original moment.
+  const first = wall - localOffsetMs(ms);
+  const second = wall - localOffsetMs(first);
+  const reads = (local) => local + localOffsetMs(local) === wall;
+  if (reads(first)) return first;
+  if (reads(second)) return second;
+  // A time the visitor's clock skips is drawn an hour on, as a date made for that time is: the later of the two.
+  return Math.max(first, second);
 }
 
 /** True when a zone's clock differs from the visitor's at a time. */

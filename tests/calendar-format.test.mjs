@@ -88,3 +88,34 @@ test('dateTimeAttr: a day for a date, the moment for a timed event with its cloc
   assert.equal(dateTimeAttr({}), null);
   assert.equal(dateTimeAttr(new Date(NaN)), null);
 });
+
+test('shiftToZone: the zone clock is read at the shifted moment, also near the visitor own change of clock', () => {
+  const before = process.env.TZ;
+  try {
+    for (const visitor of ['America/New_York', 'Europe/Oslo', 'Asia/Tokyo']) {
+      process.env.TZ = visitor;
+      // 1 November 2026, 05:00 UTC: 06:00 in Oslo, an hour before New York changes its clock.
+      assert.equal(new Date(shiftToZone(Date.UTC(2026, 10, 1, 5), 'Europe/Oslo')).getHours(), 6, visitor);
+      // Every half hour of the weeks around both changes: the visitor's clock reads what the zone's clock reads, except at a time the visitor's clock skips.
+      const zone = visitor === 'Europe/Oslo' ? 'America/New_York' : 'Europe/Oslo';
+      let wrong = 0;
+      for (const [y, m, d] of [[2026, 2, 6], [2026, 2, 26], [2026, 9, 22], [2026, 9, 29]]) {
+        for (let step = 0; step < 6 * 48; step++) {
+          const ms = Date.UTC(y, m, d) + step * 1800000;
+          const want = new Date(ms + zoneOffsetMs(zone, ms));
+          const got = new Date(shiftToZone(ms, zone));
+          const same = got.getHours() === want.getUTCHours() && got.getMinutes() === want.getUTCMinutes() && got.getDate() === want.getUTCDate();
+          // A wall time the visitor's clock skips cannot be read on it: a date made for it lands an hour on, and so does the shift.
+          const made = new Date(want.getUTCFullYear(), want.getUTCMonth(), want.getUTCDate(), want.getUTCHours(), want.getUTCMinutes());
+          const skipped = made.getHours() !== want.getUTCHours();
+          if (skipped) assert.equal(got.getTime(), made.getTime(), `${visitor} ${new Date(ms).toISOString()}`);
+          else if (!same) wrong++;
+        }
+      }
+      assert.equal(wrong, 0, visitor);
+    }
+  } finally {
+    if (before == null) delete process.env.TZ;
+    else process.env.TZ = before;
+  }
+});

@@ -25,7 +25,7 @@ test('sectionDivider: the defaults, and the bounds on the height', () => {
   assert.deepEqual(sectionDivider({ shape: 'wave' }), { shape: 'wave', height: DIVIDER_HEIGHT.dflt, color: 'bg', flip: false, invert: false });
   assert.equal(sectionDivider({ shape: 'tilt', height: 4 }).height, DIVIDER_HEIGHT.min);
   assert.equal(sectionDivider({ shape: 'tilt', height: 9000 }).height, DIVIDER_HEIGHT.max);
-  assert.equal(sectionDivider({ shape: 'tilt', height: 'hoy' }).height, DIVIDER_HEIGHT.dflt);
+  assert.equal(sectionDivider({ shape: 'tilt', height: 'tall' }).height, DIVIDER_HEIGHT.dflt);
   assert.equal(sectionDivider({ shape: 'tilt', height: 100.4 }).height, 100);
   const own = sectionDivider({ shape: 'zigzag', height: 80, color: 'surface', flip: true });
   assert.deepEqual(own, { shape: 'zigzag', height: 80, color: 'surface', flip: true, invert: false });
@@ -85,16 +85,16 @@ test('the pattern layer: allowlist and clamps', () => {
   assert.equal(patternSize(40), 40);
   assert.equal(patternSize(1), PATTERN_SIZE.min);
   assert.equal(patternSize(9000), PATTERN_SIZE.max);
-  assert.equal(patternSize('stor'), PATTERN_SIZE.dflt);
+  assert.equal(patternSize('large'), PATTERN_SIZE.dflt);
   assert.equal(patternRotation(45), 45);
   assert.equal(patternRotation(405), 45);
   assert.equal(patternRotation(-90), 270);
-  assert.equal(patternRotation('skra'), 0);
+  assert.equal(patternRotation('aslant'), 0);
   assert.equal(patternOpacity(0.5), 0.5);
   assert.equal(patternOpacity(0), 0);
   assert.equal(patternOpacity(7), 1);
   assert.equal(patternOpacity(undefined), PATTERN_OPACITY);
-  assert.equal(patternOpacity('sterk'), PATTERN_OPACITY);
+  assert.equal(patternOpacity('strong'), PATTERN_OPACITY);
 });
 
 test('patternSvg: the tile as a pattern, sized and turned, and nothing from the props as written', () => {

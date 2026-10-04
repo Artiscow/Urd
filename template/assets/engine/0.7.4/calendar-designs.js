@@ -1,25 +1,10 @@
 /**
- * The calendar block's designs: the pure model behind the Design picker and
- * the Style tab in the Properties panel, and the renderer's look-up. A
- * design is a look on top of a data view (list, cards, month, agenda or
- * next): it names the colour slots the owner can override, the static texts
- * the owner can rewrite in the preview, and whether its boxes carry an edge
- * stripe. The owner's choices are additive props on the block (`design`,
- * `colors`, `stripe`, `texts`, `fieldStyle`, `showSignup`, `showMore`,
- * `programHref`, `showOpen`, `options`, `scale`); a block without
- * them renders the plain design on the theme's colours. The module is
- * bundled by the editor and loaded by the block on its first render (with
- * ics.js, outside the visitor closure), so it never touches the DOM and never
- * calls ta().
+ * The calendar block's designs: the pure model behind the Design picker and the Style tab in the Properties panel, and the renderer's look-up.
+ * A design is a look on top of a data view (list, cards, month, agenda or next): it names the colour slots the owner can override, the static texts the owner can rewrite in the preview, and whether its boxes carry an edge stripe.
+ * The owner's choices are additive props on the block (`design`, `colors`, `stripe`, `texts`, `fieldStyle`, `showSignup`, `showMore`, `programHref`, `showOpen`, `options`, `scale`); a block without them renders the plain design on the theme's colours.
+ * The module is bundled by the editor and loaded by the block on its first render (with ics.js, outside the visitor closure), so it never touches the DOM and never calls ta().
  *
- * A design is five things, added together: an entry in CAL_DESIGNS below
- * (its view, the colour slots by section with the plain colours first, the
- * static texts, the stripe and the flags); a renderer exported under the
- * design's id from its blocks/calendar-<module>.js; a CSS block in base.css
- * under `.urd-cal-d-<id>` that reads every slot as `--urd-cal-s-<slot>` with
- * the design's own default; a drawing in calendar-thumb.js; and the label,
- * slot and section keys in the nb, en-GB and tr admin dictionaries.
- * tests/calendar-designs.test.mjs holds the five against each other.
+ * A design is five things, added together: an entry in CAL_DESIGNS below (its view, the colour slots by section with the plain colours first, the static texts, the stripe and the flags); a renderer exported under the design's id from its blocks/calendar-<module>.js; its rules in base.css, under its own class names, that read every slot as `--urd-cal-s-<slot>` with the design's own default; a drawing in calendar-thumb.js; and the label, slot and section keys in the nb, en-GB and tr admin dictionaries. tests/calendar-designs.test.mjs holds the entries, the renderers, the drawings and the keys against each other; the style sheet is checked by eye.
  */
 
 /** The data views a design can stand on; `null` on a design means the block's own `view`. */
@@ -29,9 +14,8 @@ export const CAL_VIEWS = ['list', 'cards', 'month', 'agenda', 'next', 'week', 'd
 export const CAL_FIELDS = ['title', 'date', 'time', 'place', 'description', 'category', 'number'];
 
 /**
- * The static texts a design can show, with the site dictionary key each one
- * falls back to. The owner rewrites them by clicking them in the preview;
- * the block stores the HTML under the text's key in `props.texts`.
+ * The static texts a design can show, with the site dictionary key each one falls back to.
+ * The owner rewrites them by clicking them in the preview; the block stores the HTML under the text's key in `props.texts`.
  */
 export const CAL_TEXTS = {
   next: 'calendar.next',
@@ -94,36 +78,23 @@ const AP_EMPTY_TEXTS = ['emptyKicker', 'emptyTitle'];
 /** The texts of the announcement note, for the designs that declare `notice`. */
 const NOTICE_TEXTS = ['noticeLabel', 'noticeTitle', 'noticeText', 'moreInfo'];
 
-/** The texts every design with chips, sign-up and subscribe buttons shows. */
 /** The texts of the event in full (the dialog a click on an event opens), in every design. */
 const EVENT_TEXTS = ['when', 'where', 'join', 'addEvent', 'addOne', 'addFile', 'addWhole', 'icalAddress'];
 
+/** The texts every design with chips, sign-up and subscribe buttons shows. */
 const COMMON_TEXTS = ['all', 'signup', 'subscribe', 'subscribeMulti', 'addGoogle', 'swUpcoming', 'swWeek', 'swMonth', ...EVENT_TEXTS];
 
 /** A colour slot: the label key is `calendar.slot.<key>`, the section groups the pickers in the panel. */
 const slot = (key, section = 'colors') => ({ key, labelKey: `calendar.slot.${key}`, section });
 
 /**
- * The designs, in the order the picker lists them. `view: null` follows the
- * block's own view (the plain design draws every view); a design with a
- * view of its own fixes it, and the editor writes that view into the block
- * so an engine without the design still draws the right data. `module`
- * names the renderer file the block loads for the design (blocks/calendar-<module>.js,
- * exporting a function under the design's id); the plain design's views
- * live in the block itself. `ownSubscribe` marks a design that places the
- * subscribe buttons inside its own layout, so the block draws no row under
- * it, `ownFilter` one that draws its own calendar switches instead of the
- * chip row, and `notice` one that can show the announcement note
- * (`props.notice { show, href, as }` with the texts noticeLabel, noticeTitle
- * and noticeText; `noticeBand` marks a design that can draw it as an alert
- * band instead, `as: 'band'`). `empty: 'ap'` gives the design ApeironLF's
- * empty state (a pill, a dashed box and the subscribe button) in place of
- * the plain one. `program` marks a design that draws a link to the whole
- * programme when the block has an address for it (`props.programHref`), and
- * `open` one that writes «Open to everyone» on an event without a sign-up
- * (`props.showOpen`).
- * @type {Array<{id: string, labelKey: string, view: string|null, module?: string, stripe: boolean,
- *   slots: Array<{key: string, labelKey: string, section: string}>, texts: string[]}>}
+ * The designs, in the order the picker lists them.
+ * `view: null` follows the block's own view (the plain design draws every view); a design with a view of its own fixes it, and the editor writes that view into the block so an engine without the design still draws the right data.
+ * `module` names the renderer file the block loads for the design (blocks/calendar-<module>.js, exporting a function under the design's id); the plain design's views live in the block itself.
+ * `ownSubscribe` marks a design that places the subscribe buttons inside its own layout, so the block draws no row under it, `ownFilter` one that draws its own calendar switches instead of the chip row, and `notice` one that can show the announcement note (`props.notice { show, href, as }` with the texts noticeLabel, noticeTitle and noticeText; `noticeBand` marks a design that can draw it as an alert band instead, `as: 'band'`).
+ * `empty: 'ap'` gives the design ApeironLF's empty state (a pill, a dashed box and the subscribe button) in place of the plain one.
+ * `program` marks a design that draws a link to the whole programme when the block has an address for it (`props.programHref`), and `open` one that writes «Open to everyone» on an event without a sign-up (`props.showOpen`).
+ * @type {Array<{id: string, labelKey: string, view: string|null, module?: string, stripe: boolean, slots: Array<{key: string, labelKey: string, section: string}>, texts: string[]}>}
  */
 export const CAL_DESIGNS = [
   {
@@ -455,12 +426,10 @@ export const CAL_DESIGNS = [
 ];
 
 /**
- * The settings that belong to one design each, stored together under the
- * block's `options`. A `choice` holds one of its values, a `switch` true or
- * false, an `hour` a whole hour from 0 to 24 or nothing (the design then
- * finds the span itself). `def` is what a block without the option draws,
- * which is what the design drew before the option existed. The label key is
- * `calendar.opt.<key>`, a choice's values `calendar.opt.<key>.<value>`.
+ * The settings that belong to one design each, stored together under the block's `options`.
+ * A `choice` holds one of its values, a `switch` true or false, an `hour` a whole hour from 0 to 24 or nothing (the design then finds the span itself).
+ * `def` is what a block without the option draws.
+ * The label key is `calendar.opt.<key>`, a choice's values `calendar.opt.<key>.<value>`.
  */
 const choice = (key, values, def) => ({ key, kind: 'choice', values, def, labelKey: `calendar.opt.${key}` });
 const toggle = (key, def) => ({ key, kind: 'switch', def, labelKey: `calendar.opt.${key}` });
@@ -488,9 +457,8 @@ export function calOptionDefs(designId) {
 }
 
 /**
- * The design's options as the block draws them: every option of the design
- * with the owner's value when it is valid, else the default. Options that
- * belong to another design are left out.
+ * The design's options as the block draws them: every option of the design with the owner's value when it is valid, else the default.
+ * Options that belong to another design are left out.
  * @returns {Record<string, string|boolean|number|null>}
  */
 export function calOptions(props) {
@@ -534,20 +502,16 @@ export function calView(props) {
 export const CAL_SWITCH_VIEWS = ['list', 'cards', 'agenda', 'next'];
 
 /**
- * True when the block shows the view switcher: the owner has switched it on
- * (`switcher: true`) and the block's view is one that lists what is coming.
- * The switcher lets a visitor turn the block to the week or the month and
- * back, without changing what is stored.
+ * True when the block shows the view switcher: the owner has switched it on (`switcher: true`) and the block's view is one that lists what is coming.
+ * The switcher lets a visitor turn the block to the week or the month and back, without changing what is stored.
  */
 export function calSwitcher(props) {
   return props?.switcher === true && CAL_SWITCH_VIEWS.includes(calView(props));
 }
 
 /**
- * True when the block folds the events beyond its max count under «Show all»:
- * a list view (the plain list and the list designs) with the fold left on
- * (`showMore`, on unless switched off). The regular-event design lists one
- * event's dates and folds them itself.
+ * True when the block folds the events beyond its max count under «Show all»: a list view (the plain list and the list designs) with the fold left on (`showMore`, on unless switched off).
+ * The regular-event design lists one event's dates and folds them itself.
  */
 export function calFolds(props) {
   return props?.showMore !== false && calView(props) === 'list' && calDesign(props?.design).module !== 'more';
@@ -556,9 +520,8 @@ export function calFolds(props) {
 const SAFE_HREF = /^(?:https?:\/\/|\/(?!\/)|#|mailto:)/i;
 
 /**
- * The address of the whole programme, for a design that links to it
- * (`program`): a page of the site, an anchor or a full address. Null when the
- * block has none, the design draws no such link, or the value is not an address.
+ * The address of the whole programme, for a design that links to it (`program`): a page of the site, an anchor or a full address.
+ * Null when the block has none, the design draws no such link, or the value is not an address.
  */
 export function calProgramHref(props) {
   if (!calDesign(props?.design).program) return null;
@@ -588,10 +551,8 @@ export function calColorCss(value) {
 }
 
 /**
- * The CSS variables for the owner's colour overrides: `--urd-cal-s-<slot>`
- * for every slot of the design that holds a valid colour. The base style
- * reads each slot with the theme's colour as the fallback, so an unset slot
- * follows the theme.
+ * The CSS variables for the owner's colour overrides: `--urd-cal-s-<slot>` for every slot of the design that holds a valid colour.
+ * The base style reads each slot with the theme's colour as the fallback, so an unset slot follows the theme.
  * @returns {Record<string, string>}
  */
 export function calSlotVars(design, colors) {
@@ -604,8 +565,7 @@ export function calSlotVars(design, colors) {
 }
 
 /**
- * The edge stripe on the design's boxes: on or off (the owner's choice, else
- * the design's own), and the stripe's colour as CSS when the owner set one.
+ * The edge stripe on the design's boxes: on or off (the owner's choice, else the design's own), and the stripe's colour as CSS when the owner set one.
  * Without a colour the stripe takes the event's calendar colour, else the accent.
  * @returns {{show: boolean, color: string|null}}
  */
@@ -619,10 +579,8 @@ export const CAL_SIZE = { min: 8, max: 120 };
 const SAFE_FAMILY = /^[\w\s,'"-]{1,80}$/;
 
 /**
- * Inline style for one event field from the owner's settings: font (a stack
- * from the font list or a plain family name), size in px, bold, italic,
- * underline and colour. Only the set and valid parts are written, so the
- * design's own styling stays for the rest.
+ * Inline style for one event field from the owner's settings: font (a stack from the font list or a plain family name), size in px, bold, italic, underline and colour.
+ * Only the set and valid parts are written, so the design's own styling stays for the rest.
  * @param {{font?: string, size?: number, bold?: boolean, italic?: boolean, underline?: boolean, color?: string}|undefined} style
  * @returns {Record<string, string>} camelCase style properties
  */

@@ -133,13 +133,13 @@ test('gallerySeed and mosaicRowHeight: junk never reaches the layout', () => {
   assert.equal(gallerySeed(7.9), 7);
   assert.equal(gallerySeed(0), 1);
   assert.equal(gallerySeed(-3), 1);
-  assert.equal(gallerySeed('sju'), 1);
+  assert.equal(gallerySeed('seven'), 1);
   assert.equal(gallerySeed(undefined), 1);
   assert.equal(mosaicRowHeight(200), 200);
   assert.equal(mosaicRowHeight(undefined), MOSAIC_ROW.dflt);
   assert.equal(mosaicRowHeight(10), MOSAIC_ROW.min);
   assert.equal(mosaicRowHeight(9000), MOSAIC_ROW.max);
-  assert.equal(mosaicRowHeight('hoy'), MOSAIC_ROW.dflt);
+  assert.equal(mosaicRowHeight('tall'), MOSAIC_ROW.dflt);
 });
 
 test('tileSpans: one span per picture, the same wall for the same seed, never wider than the wall', () => {

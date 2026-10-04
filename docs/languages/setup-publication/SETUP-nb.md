@@ -101,6 +101,12 @@ Fyll inn nøyaktig som under. Lagre, og gjenta for alle seks:
     F.eks. `sky.example.org`. Trengs for en Nextcloud- eller ownCloud-deling og
     for en bildeliste på en annen adresse; Googles egne verter er innebygd.
 
+12. Type: Text (valgfri - bare for en kalender fra en annen tjeneste enn Google)
+    Navn: `ICS_HOSTS`
+    Verdi: vertene kalenderblokken får hente kalendere fra, adskilt med komma.
+    F.eks. `calendar.proton.me` eller `sky.example.org`. Google Kalender er
+    innebygd. Se [Kalenderen](../calendar-guide/CALENDAR-nb.md).
+
 Til slutt må det deployes på nytt (variablene gjelder først fra neste deploy).
 Enkleste måte er en tom commit:
 

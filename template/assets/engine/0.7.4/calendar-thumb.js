@@ -1,9 +1,7 @@
 /**
- * Schematic SVG thumbnails of the calendar designs, for the design picker in
- * the Properties panel. Pure string building (no DOM), analogous to
- * footer-thumb.js: every design in calendar-designs.js has a drawing here
- * under its id, and an id without one takes the plain drawing. The colours
- * are fixed, so the picker reads the same in every theme.
+ * Schematic SVG thumbnails of the calendar designs, for the design picker in the Properties panel.
+ * Pure string building (no DOM), analogous to footer-thumb.js: every design in calendar-designs.js has a drawing here under its id, and an id without one takes the plain drawing.
+ * The colours are fixed, so the picker reads the same in every theme.
  */
 const BG = '#0e1512';
 const ACC = '#2fd6b6';

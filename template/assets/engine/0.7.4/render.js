@@ -567,7 +567,10 @@ export function renderSection(section, site, host, opts = {}) {
     const el = document.createElement('div');
     el.className = `urd-divider urd-divider-${edge}${divider.flip ? ' urd-divider-flip' : ''}`;
     el.style.setProperty('--urd-divider-h', `${divider.height}px`);
-    el.style.color = resolveColor(divider.color);
+    // A token is the page's own colour (the base copy), so a divider in a themed section still shows against it.
+    el.style.color = section.theme && /^[a-z][a-z0-9-]*$/.test(divider.color)
+      ? `var(--urd-base-${divider.color}, var(--urd-color-${divider.color}))`
+      : resolveColor(divider.color);
     el.innerHTML = dividerSvg(divider);
     host.appendChild(el);
   }

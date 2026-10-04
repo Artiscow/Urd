@@ -290,23 +290,23 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-fit-block' && msg.blockId) {
       // The editor has changed a calendar's settings or its size and asks for
       // the height the content needs, so the block's frame can follow it
-      // (growOnly: only when the content needs more than the frame gives). The design
-      // draws after its module has loaded, so the measure waits for it, and
-      // is taken once more for a feed that answers late.
+      // (growOnly: only when the content needs more than the frame gives).
+      // The design draws after its module has loaded, so the measure waits
+      // for it, and is taken once more for a feed that answers late.
+      // A calendar still in its loading state is not measured.
       const measure = () => {
         const el = root.querySelector(`[data-block-id="${CSS.escape(msg.blockId)}"]`);
         const host = el?.querySelector(':scope > .urd-cal');
-        if (!host) return;
+        if (!host || host.getAttribute('aria-busy') === 'true') return;
         // The box the design draws, without the clip the sample data stands
         // under and in the block's own pixels whatever the calendar's size.
         const clip = host.style.maxHeight;
         host.style.maxHeight = 'none';
         const h = Math.round(host.getBoundingClientRect().height / (el.currentCSSZoom ?? 1));
         host.style.maxHeight = clip;
-        if (h > 0) window.parent?.postMessage({ type: 'urd-grow', sectionId: msg.sectionId, blockId: msg.blockId, h, growOnly: msg.growOnly === true }, location.origin);
+        if (h > 0) window.parent?.postMessage({ type: 'urd-grow', sectionId: msg.sectionId, blockId: msg.blockId, h, growOnly: msg.growOnly === true, fit: true, seq: msg.seq ?? 0 }, location.origin);
       };
-      setTimeout(measure, 500);
-      setTimeout(measure, 1800);
+      for (const wait of [500, 1800, 5000]) setTimeout(measure, wait);
     } else if (msg?.type === 'urd-announce-reset') {
       // The Announcement panel: forget the dismissal, so the strip returns
       // in the preview and for this browser on the published page.

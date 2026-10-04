@@ -351,6 +351,27 @@ export function relativeLuminance(hex) {
   return 0.2126 * chan(h.slice(0, 2)) + 0.7152 * chan(h.slice(2, 4)) + 0.0722 * chan(h.slice(4, 6));
 }
 
+/** The theme colour a text on each theme colour is drawn in. */
+const INK_ON_TOKEN = { accent: 'var(--urd-color-accent-text)', text: 'var(--urd-color-bg)', bg: 'var(--urd-color-text)', surface: 'var(--urd-color-text)' };
+/** The dark ink, the default theme's text colour. */
+const INK_DARK = '#14161c';
+
+/**
+ * A text colour that reads on a colour the owner picked: dark or light by the colour's brightness, or the theme's own pair for a theme colour.
+ * Null when the colour cannot be measured (a colour-mix, a name), and the caller keeps its own.
+ * @param {string} value A hex colour or a theme colour name
+ * @returns {string|null}
+ */
+export function inkOn(value) {
+  const colour = String(value ?? '').trim();
+  if (Object.hasOwn(INK_ON_TOKEN, colour)) return INK_ON_TOKEN[colour];
+  const lum = relativeLuminance(colour);
+  if (lum == null) return null;
+  // The dark ink or white, whichever stands out more against the colour.
+  const ratio = (ink) => (Math.max(lum, ink) + 0.05) / (Math.min(lum, ink) + 0.05);
+  return ratio(relativeLuminance(INK_DARK)) >= ratio(1) ? INK_DARK : '#ffffff';
+}
+
 /**
  * WCAG contrast ratio (1..21) between two hex colors, or null when one of
  * them is not a measurable hex (token names/color-mix). Pure function,

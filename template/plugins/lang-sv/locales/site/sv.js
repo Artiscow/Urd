@@ -182,5 +182,9 @@ export default {
     'calendar.allPlaces': 'Alla platser',
     'calendar.noMatch': 'Inga evenemang matchar',
     'calendar.onMap': 'Visa på kartan',
+    'calendar.viewsLabel': 'Vy',
+    'calendar.categoriesLabel': 'Kategorier',
+    'calendar.countdownClock': '{d}d {h}t {m}m',
+    'calendar.weekdayDay': '{wd} {d}',
   },
 };

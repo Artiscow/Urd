@@ -1,10 +1,7 @@
 /**
- * The calendar block's list designs (milestone 0.7.19): six looks on the
- * list view, each a renderer over the block's ui helpers (fields, static
- * texts, buttons; see makeUi in calendar.js) with its own CSS block in
- * base.css under `.urd-cal-d-<id>`. The data is the limited, filtered list
- * the block hands every view. Loaded by the block on the first render of a
- * block that uses one of them, never in the visitor closure.
+ * The calendar block's list designs (milestone 0.7.19): six looks on the list view, each a renderer over the block's ui helpers (fields, static texts, buttons; see makeUi in calendar.js) with its own rules in base.css under its own class names.
+ * The data is the limited, filtered list the block hands every view.
+ * Loaded by the block on the first render of a block that uses one of them, never in the visitor closure.
  */
 import { t, tp, dates } from '../i18n.js';
 
@@ -13,6 +10,8 @@ const dayOf = (occ) => new Date(occ.start);
 const monthShort = (d) => dates().monthsShort[d.getMonth()];
 const weekdayShort = (d) => dates().weekdaysShort[(d.getDay() + 6) % 7];
 const weekday = (d) => dates().weekdays[(d.getDay() + 6) % 7];
+/** «5. okt» in the site language (calendar.dayMonth). */
+const dayMonth = (d) => t('calendar.dayMonth', { d: d.getDate(), m: monthShort(d) });
 
 /** The meta line with the weekday in front of the time and the place (the date number stands elsewhere). */
 function weekdayMeta(occ, ui) {
@@ -34,12 +33,12 @@ export function timeline(host, occs, props, ics, ui) {
   occs.forEach((occ, i) => {
     const d = dayOf(occ);
     const when = ui.el('div', 'urd-cal-tl-when');
-    when.append(ui.field('strong', 'number', `${d.getDate()}. ${monthShort(d)}`, null, d), ui.field('span', 'date', weekday(d), null, d));
+    when.append(ui.field('strong', 'number', dayMonth(d), null, d), ui.field('span', 'date', weekday(d), null, d));
     const rail = ui.el('div', 'urd-cal-tl-rail');
-    const dot = ui.tint(ui.el('span', 'urd-cal-tl-dot'), occ);
+    const dot = ui.color(ui.el('span', 'urd-cal-tl-dot'), occ);
     if (i === 0) dot.classList.add('urd-cal-tl-dot-first');
     rail.appendChild(dot);
-    const body = ui.el('div', 'urd-cal-tl-body');
+    const body = ui.tint(ui.el('div', 'urd-cal-tl-body'), occ);
     body.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-tl-title'));
     const meta = ui.meta(occ, { date: false });
     if (meta) body.appendChild(meta);

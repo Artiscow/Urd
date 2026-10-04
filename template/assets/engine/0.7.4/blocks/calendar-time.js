@@ -1,18 +1,11 @@
 /**
- * The calendar block's month, week, day and year designs (milestone 0.7.19):
- * eight looks that each show a span of time rather than a count of events,
- * every one a renderer over the block's ui helpers (fields, static texts,
- * buttons; see makeUi in calendar.js) with its own CSS block in base.css
- * under `.urd-cal-d-<id>`. The data is `ui.all`, the whole filtered window
- * the block loaded for the view (ics.js windowStart), so a design can move
- * through its weeks or months on its own. Loaded by the block on the first
- * render of a block that uses one of them, never in the visitor closure.
+ * The calendar block's month, week, day and year designs (milestone 0.7.19): eight looks that each show a span of time rather than a count of events, every one a renderer over the block's ui helpers (fields, static texts, buttons; see makeUi in calendar.js) with its own rules in base.css under its own class names.
+ * The data is `ui.all`, the whole filtered window the block loaded for the view (ics.js windowStart), so a design can move through its weeks or months on its own.
+ * Loaded by the block on the first render of a block that uses one of them, never in the visitor closure.
  */
 import { t, tp, dates } from '../i18n.js';
 import { resolveColor } from '../theme.js';
 
-const DAY = 24 * 3600 * 1000;
-const two = (n) => String(n).padStart(2, '0');
 const dayOf = (occ) => new Date(occ.start);
 const monthShort = (d) => dates().monthsShort[d.getMonth()];
 const monthLong = (d) => dates().months[d.getMonth()];
@@ -21,12 +14,30 @@ const weekday = (d) => dates().weekdays[(d.getDay() + 6) % 7];
 const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
+/** 00:00 of the day after the day a time falls on: a calendar day, whatever its length in hours. */
+const nextDayStart = (ms) => {
+  const d = new Date(ms);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime();
+};
+
+/** Where an event stops covering days: the day after its last day for an all-day event (its end is the start of the last day), else its end, a moment at least. */
+const coverEnd = (occ) => (occ.allDay ? nextDayStart(occ.end ?? occ.start) : Math.max(occ.end ?? occ.start, occ.start + 1));
+
 /** The events that touch a day: a start on it, or a span over it. */
 function onDay(occs, day) {
   const from = startOfDay(day).getTime();
-  const to = from + DAY;
-  return occs.filter((occ) => occ.start < to && (occ.end ?? occ.start) > from || sameDay(dayOf(occ), day));
+  const to = nextDayStart(from);
+  return occs.filter((occ) => occ.start < to && coverEnd(occ) > from);
 }
+
+/** «5. okt» in the site language (calendar.dayMonth), with the month short or written out. */
+const dayMonth = (d, long = false) => t('calendar.dayMonth', { d: d.getDate(), m: long ? monthLong(d) : monthShort(d) });
+
+/** «mandag 5. oktober» in the site language (calendar.dateLine). */
+const dateLong = (d) => t('calendar.dateLine', { wd: weekday(d), d: d.getDate(), m: monthLong(d) });
+
+/** The ISO week a week shown falls in, read from its fourth day, so a week that starts on a Sunday is named by the Monday to Saturday it holds. */
+const weekNumber = (ics, week) => ics.isoWeek(week[3].getTime());
 
 /** A round navigation button with an arrow glyph and its label for the screen reader. */
 function navButton(ui, dir, label) {
@@ -38,9 +49,7 @@ function navButton(ui, dir, label) {
 
 /** «5 Oct to 11 Oct» for a span of days. */
 function rangeText(from, to) {
-  const f = `${from.getDate()}. ${monthShort(from)}`;
-  const l = `${to.getDate()}. ${monthShort(to)}`;
-  return t('calendar.range', { from: f, to: l });
+  return t('calendar.range', { from: dayMonth(from), to: dayMonth(to) });
 }
 
 /** The pill for an event in a week or month cell: the time and the title, tinted with the calendar colour. */
@@ -53,15 +62,15 @@ function pillNode(occ, ui, className) {
   return pill;
 }
 
-/** The seven days of a week from its Monday. */
-function weekDays(monday) {
-  return Array.from({ length: 7 }, (_, i) => new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i));
+/** The seven days of a week from its first day. */
+function weekDays(weekFirst) {
+  return Array.from({ length: 7 }, (_, i) => new Date(weekFirst.getFullYear(), weekFirst.getMonth(), weekFirst.getDate() + i));
 }
 
 /** 04 Week strip: seven day columns with a pill per event, the week number above and arrows to move through the weeks. */
 export function weekStrip(host, occs, props, ics, ui) {
   const today = ui.today();
-  let monday = new Date(ui.weekStartOf(today.getTime()));
+  let weekFirst = new Date(ui.weekStartOf(today.getTime()));
   const wrap = ui.el('div', 'urd-cal-wstrip');
   const head = ui.el('div', 'urd-cal-wstrip-head');
   const prev = navButton(ui, -1, t('calendar.prevWeek'));
@@ -74,8 +83,8 @@ export function weekStrip(host, occs, props, ics, ui) {
   const grid = ui.el('div', 'urd-cal-wstrip-grid');
   wrap.append(head, grid);
   const paint = () => {
-    const days = weekDays(monday);
-    weekNo.textContent = t('calendar.weekN', { n: ics.isoWeek(monday.getTime()) });
+    const days = weekDays(weekFirst);
+    weekNo.textContent = t('calendar.weekN', { n: weekNumber(ics, days) });
     range.textContent = rangeText(days[0], days[6]);
     grid.replaceChildren();
     for (const day of days) {
@@ -89,7 +98,7 @@ export function weekStrip(host, occs, props, ics, ui) {
     }
     ui.dayGrid(grid, '.urd-cal-wstrip-day', { page: move, current: '.urd-cal-wstrip-today' });
   };
-  const move = (dir) => { monday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 7 * dir); paint(); };
+  const move = (dir) => { weekFirst = new Date(weekFirst.getFullYear(), weekFirst.getMonth(), weekFirst.getDate() + 7 * dir); paint(); };
   prev.addEventListener('click', () => move(-1));
   next.addEventListener('click', () => move(1));
   paint();
@@ -97,9 +106,8 @@ export function weekStrip(host, occs, props, ics, ui) {
 }
 
 /**
- * The hours a plan shows: from the earliest event (at most 8) to past the
- * latest (at least 18). The owner's own first and last hour replace the 8 and
- * the 18; an event outside them still widens the span.
+ * The hours a plan shows: from the earliest event (at most 8) to past the latest (at least 18).
+ * The owner's own first and last hour replace the 8 and the 18; an event outside them still widens the span.
  */
 function hourSpan(occs, opt = {}) {
   let from = Number.isInteger(opt.hourFrom) ? Math.min(opt.hourFrom, 23) : 8;
@@ -108,8 +116,10 @@ function hourSpan(occs, opt = {}) {
     if (occ.allDay) continue;
     const d = dayOf(occ);
     from = Math.min(from, d.getHours());
-    const end = occ.end ? new Date(occ.end) : null;
-    to = Math.max(to, (end ? end.getHours() + (end.getMinutes() ? 1 : 0) : d.getHours() + 1));
+    // An event that ends on a later day runs the plan to midnight.
+    const end = occ.end > occ.start ? new Date(occ.end) : null;
+    const endHour = !end ? d.getHours() + 1 : sameDay(end, d) ? end.getHours() + (end.getMinutes() ? 1 : 0) : 24;
+    to = Math.max(to, endHour);
   }
   return { from, to: Math.min(24, Math.max(to, from + 4)) };
 }
@@ -135,7 +145,7 @@ function planBlock(occ, ui) {
 /** M3 Week plan: an hour grid over seven days, timed events as blocks in their hour, all-day ones in a row above. */
 export function weekPlan(host, occs, props, ics, ui) {
   const today = ui.today();
-  let monday = new Date(ui.weekStartOf(today.getTime()));
+  let weekFirst = new Date(ui.weekStartOf(today.getTime()));
   const wrap = ui.el('div', 'urd-cal-wplan');
   const head = ui.el('div', 'urd-cal-wplan-head');
   const prev = navButton(ui, -1, t('calendar.prevWeek'));
@@ -151,7 +161,7 @@ export function weekPlan(host, occs, props, ics, ui) {
   const grid = ui.el('div', 'urd-cal-wplan-grid');
   wrap.append(head, days, grid);
   const paint = () => {
-    const week = weekDays(monday);
+    const week = weekDays(weekFirst);
     range.textContent = rangeText(week[0], week[6]);
     days.replaceChildren(ui.el('span'));
     for (const day of week) {
@@ -160,7 +170,7 @@ export function weekPlan(host, occs, props, ics, ui) {
       cell.append(ui.field('span', 'date', weekdayShort(day), null, day), ui.field('strong', 'number', String(day.getDate()), null, day));
       days.appendChild(cell);
     }
-    const inWeek = ui.all.filter((occ) => occ.start < week[6].getTime() + DAY && (occ.end ?? occ.start) >= week[0].getTime());
+    const inWeek = ui.all.filter((occ) => occ.start < nextDayStart(week[6].getTime()) && coverEnd(occ) > week[0].getTime());
     if (ui.phone) {
       // The phone's week: the days under each other, each with its events in the order of the clock.
       days.hidden = true;
@@ -192,7 +202,7 @@ export function weekPlan(host, occs, props, ics, ui) {
       }
     }
     for (let hour = from; hour < to; hour++) {
-      grid.appendChild(ui.el('span', 'urd-cal-wplan-hour', two(hour)));
+      grid.appendChild(ui.el('span', 'urd-cal-wplan-hour', ui.hourLabel(hour)));
       for (const day of week) {
         const cell = ui.el('div', 'urd-cal-wplan-cell');
         if (sameDay(day, today)) cell.classList.add('urd-cal-wplan-istoday');
@@ -205,9 +215,10 @@ export function weekPlan(host, occs, props, ics, ui) {
       }
     }
   };
-  prev.addEventListener('click', () => { monday = new Date(monday.getTime() - 7 * DAY); paint(); });
-  next.addEventListener('click', () => { monday = new Date(monday.getTime() + 7 * DAY); paint(); });
-  todayBtn.addEventListener('click', () => { monday = new Date(ui.weekStartOf(today.getTime())); paint(); });
+  const move = (dir) => { weekFirst = new Date(weekFirst.getFullYear(), weekFirst.getMonth(), weekFirst.getDate() + 7 * dir); paint(); };
+  prev.addEventListener('click', () => move(-1));
+  next.addEventListener('click', () => move(1));
+  todayBtn.addEventListener('click', () => { weekFirst = new Date(ui.weekStartOf(today.getTime())); paint(); });
   paint();
   host.appendChild(wrap);
 }
@@ -215,7 +226,7 @@ export function weekPlan(host, occs, props, ics, ui) {
 /** F4 Calendar layers: one row per calendar with a switch in the head, the events as bars over the week's days. */
 export function layers(host, occs, props, ics, ui) {
   const today = ui.today();
-  let monday = new Date(ui.weekStartOf(today.getTime()));
+  let weekFirst = new Date(ui.weekStartOf(today.getTime()));
   const names = [...new Set(ui.all.map((occ) => occ.category || ''))];
   const colourOf = (name) => ui.all.find((occ) => (occ.category || '') === name && occ.color)?.color ?? '';
   const hidden = new Set();
@@ -231,8 +242,8 @@ export function layers(host, occs, props, ics, ui) {
   const grid = ui.el('div', 'urd-cal-layers-grid');
   wrap.append(head, grid);
   const paint = () => {
-    const week = weekDays(monday);
-    label.textContent = `${t('calendar.weekN', { n: ics.isoWeek(monday.getTime()) })} · ${rangeText(week[0], week[6])}`;
+    const week = weekDays(weekFirst);
+    label.textContent = `${t('calendar.weekN', { n: weekNumber(ics, week) })} · ${rangeText(week[0], week[6])}`;
     grid.replaceChildren(ui.el('span', 'urd-cal-layers-corner'));
     for (const day of week) {
       const cell = ui.el('span', 'urd-cal-layers-dow');
@@ -241,6 +252,9 @@ export function layers(host, occs, props, ics, ui) {
       grid.appendChild(cell);
     }
     const weekStart = week[0].getTime();
+    const weekEnd = nextDayStart(week[6].getTime());
+    // The column a time falls in: the day of the week it is on, counted in calendar days.
+    const column = (ms) => week.findIndex((day, n) => ms < (n < 6 ? week[n + 1].getTime() : weekEnd));
     for (const name of names) {
       if (hidden.has(name)) continue;
       const colour = colourOf(name);
@@ -253,11 +267,10 @@ export function layers(host, occs, props, ics, ui) {
       if (todayIndex >= 0) lane.style.setProperty('--urd-cal-layers-today', String(todayIndex));
       for (const occ of ui.all) {
         if ((occ.category || '') !== name) continue;
-        const start = Math.max(occ.start, weekStart);
-        const end = Math.min(occ.end ?? occ.start + 1, weekStart + 7 * DAY);
-        if (end <= weekStart || start >= weekStart + 7 * DAY) continue;
-        const first = Math.floor((startOfDay(new Date(start)).getTime() - weekStart) / DAY);
-        const last = Math.min(6, Math.floor((end - 1 - weekStart) / DAY));
+        const end = Math.min(coverEnd(occ), weekEnd);
+        if (end <= weekStart || occ.start >= weekEnd) continue;
+        const first = occ.start < weekStart ? 0 : column(occ.start);
+        const last = column(end - 1);
         const bar = ui.tint(ui.el('div', 'urd-cal-layers-bar'), occ);
         bar.style.setProperty('--urd-cal-bar-from', String(Math.max(0, first)));
         bar.style.setProperty('--urd-cal-bar-span', String(Math.max(1, last - Math.max(0, first) + 1)));
@@ -290,8 +303,9 @@ export function layers(host, occs, props, ics, ui) {
     });
     switches.appendChild(sw);
   }
-  prev.addEventListener('click', () => { monday = new Date(monday.getTime() - 7 * DAY); paint(); });
-  next.addEventListener('click', () => { monday = new Date(monday.getTime() + 7 * DAY); paint(); });
+  const move = (dir) => { weekFirst = new Date(weekFirst.getFullYear(), weekFirst.getMonth(), weekFirst.getDate() + 7 * dir); paint(); };
+  prev.addEventListener('click', () => move(-1));
+  next.addEventListener('click', () => move(1));
   paint();
   host.appendChild(wrap);
 }
@@ -332,7 +346,7 @@ export function sidepanel(host, occs, props, ics, ui) {
   const paintPanel = () => {
     panel.replaceChildren();
     const headP = ui.live(ui.el('div', 'urd-cal-side-chosen'));
-    headP.append(ui.field('span', 'date', weekday(chosen), null, chosen), ui.field('strong', 'number', `${chosen.getDate()}. ${monthLong(chosen)}`, null, chosen));
+    headP.append(ui.field('span', 'date', weekday(chosen), null, chosen), ui.field('strong', 'number', dayMonth(chosen, true), null, chosen));
     panel.appendChild(headP);
     const list = ui.el('div', 'urd-cal-side-list');
     for (const occ of onDay(ui.all, chosen)) {
@@ -477,7 +491,7 @@ export function dayPlan(host, occs, props, ics, ui) {
     kicker.replaceChildren();
     if (isToday) kicker.appendChild(ui.tx('todayBtn'));
     else kicker.appendChild(ui.field('span', 'date', weekdayShort(day), null, day));
-    title.replaceChildren(ui.field('span', 'date', `${weekday(day)} ${day.getDate()}. ${monthLong(day)}`, null, day));
+    title.replaceChildren(ui.field('span', 'date', dateLong(day), null, day));
     const todays = onDay(ui.all, day);
     count.textContent = tp('calendar.todayCount', todays.length);
     strip.replaceChildren();
@@ -488,17 +502,19 @@ export function dayPlan(host, occs, props, ics, ui) {
       if (i === 0) btn.classList.add('urd-cal-dplan-picked');
       if (sameDay(d, today)) btn.classList.add('urd-cal-dplan-istoday');
       btn.append(ui.field('span', 'date', weekdayShort(d), null, d), ui.field('strong', 'number', String(d.getDate()), null, d));
-      btn.setAttribute('aria-label', `${weekday(d)} ${d.getDate()}. ${monthLong(d)}`);
+      btn.setAttribute('aria-label', dateLong(d));
       btn.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
       btn.addEventListener('click', () => { day = startOfDay(d); ui.keepFocus(strip); paint(); });
       strip.appendChild(btn);
     }
     ui.dayGrid(strip, '.urd-cal-dplan-pick', { current: '.urd-cal-dplan-picked' });
-    const { from, to } = hourSpan(todays, ui.opt);
+    // An event that began on an earlier day is under way when the day starts: it stands in the row above the hours.
+    const begun = (occ) => !occ.allDay && sameDay(dayOf(occ), day);
+    const { from, to } = hourSpan(todays.filter(begun), ui.opt);
     grid.replaceChildren();
     grid.classList.toggle('urd-cal-dplan-istoday', isToday);
     grid.classList.toggle('urd-cal-plan-weekend', day.getDay() === 0 || day.getDay() === 6);
-    const allDay = todays.filter((occ) => occ.allDay);
+    const allDay = todays.filter((occ) => !begun(occ));
     if (allDay.length) {
       grid.appendChild(ui.el('span', 'urd-cal-dplan-hour'));
       const cell = ui.el('div', 'urd-cal-dplan-cell urd-cal-dplan-allday');
@@ -507,7 +523,7 @@ export function dayPlan(host, occs, props, ics, ui) {
     }
     const nowHour = today.getHours() + today.getMinutes() / 60;
     for (let hour = from; hour < to; hour++) {
-      grid.appendChild(ui.el('span', 'urd-cal-dplan-hour', two(hour)));
+      grid.appendChild(ui.el('span', 'urd-cal-dplan-hour', ui.hourLabel(hour)));
       const cell = ui.el('div', 'urd-cal-dplan-cell');
       if (isToday && hour + 1 <= nowHour) cell.classList.add('urd-cal-dplan-past');
       if (isToday && nowHour >= hour && nowHour < hour + 1) {
@@ -516,7 +532,7 @@ export function dayPlan(host, occs, props, ics, ui) {
         cell.appendChild(line);
       }
       for (const occ of todays) {
-        if (!occ.allDay && dayOf(occ).getHours() === hour) cell.appendChild(planBlock(occ, ui));
+        if (begun(occ) && dayOf(occ).getHours() === hour) cell.appendChild(planBlock(occ, ui));
       }
       grid.appendChild(cell);
     }
@@ -550,7 +566,7 @@ export function yearWheel(host, occs, props, ics, ui) {
   const size = 440;
   const c = size / 2;
   const r = 178;
-  const svg = svgEl('svg', { viewBox: `0 0 ${size} ${size}`, 'aria-hidden': 'true', class: 'urd-cal-wheel-svg' });
+  const svg = svgEl('svg', { viewBox: `0 0 ${size} ${size}`, role: 'group', 'aria-label': String(year), class: 'urd-cal-wheel-svg' });
   const months = dates().monthsShort;
   const inYear = ui.all.filter((occ) => dayOf(occ).getFullYear() === year);
   // The month at the top of the wheel is the owner's choice; a month's place is counted from it.
@@ -564,13 +580,21 @@ export function yearWheel(host, occs, props, ics, ui) {
     if (m < today.getMonth()) seg.classList.add('urd-cal-wheel-past');
     if (m === today.getMonth()) seg.classList.add('urd-cal-wheel-now');
     seg.setAttribute('aria-label', dates().months[m]);
-    const pick = () => { picked = m; paintList(); for (const [i, s] of segments.entries()) s.classList.toggle('urd-cal-wheel-picked', i === picked); };
+    seg.setAttribute('aria-pressed', m === picked ? 'true' : 'false');
+    const pick = () => {
+      picked = m;
+      paintList();
+      for (const [i, s] of segments.entries()) {
+        s.classList.toggle('urd-cal-wheel-picked', i === picked);
+        s.setAttribute('aria-pressed', i === picked ? 'true' : 'false');
+      }
+    };
     seg.addEventListener('click', pick);
     seg.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); pick(); } });
     svg.appendChild(seg);
     segments.push(seg);
     const [lx, ly] = polar(c, c, r + 42, (place(m) + 0.5) / 12 * 2 * Math.PI);
-    const text = svgEl('text', { x: lx.toFixed(1), y: (ly + 4).toFixed(1), class: 'urd-cal-wheel-month', 'text-anchor': 'middle' });
+    const text = svgEl('text', { x: lx.toFixed(1), y: (ly + 4).toFixed(1), class: 'urd-cal-wheel-month', 'text-anchor': 'middle', 'aria-hidden': 'true' });
     text.textContent = months[m].toUpperCase();
     svg.appendChild(text);
   }
@@ -579,7 +603,7 @@ export function yearWheel(host, occs, props, ics, ui) {
     const dim = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
     const angle = ((place(d.getMonth()) + (d.getDate() - 0.5) / dim) / 12) * 2 * Math.PI;
     const [x, y] = polar(c, c, r, angle);
-    const dot = svgEl('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 7, class: occ.start < today.getTime() ? 'urd-cal-wheel-dot urd-cal-wheel-dot-off' : 'urd-cal-wheel-dot' });
+    const dot = svgEl('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 7, class: occ.start < today.getTime() ? 'urd-cal-wheel-dot urd-cal-wheel-dot-off' : 'urd-cal-wheel-dot', 'aria-hidden': 'true' });
     if (occ.color) dot.style.setProperty('--urd-cal-color', resolveColor(occ.color));
     svg.appendChild(dot);
   }
@@ -601,7 +625,7 @@ export function yearWheel(host, occs, props, ics, ui) {
       const d = dayOf(occ);
       const card = ui.tint(ui.el('div', 'urd-cal-wheel-card'), occ);
       const line = ui.el('strong');
-      line.append(ui.field('span', 'date', `${d.getDate()}. ${monthShort(d)}`, null, d), document.createTextNode(' · '), ui.field('span', 'title', occ.title));
+      line.append(ui.field('span', 'date', dayMonth(d), null, d), document.createTextNode(' · '), ui.field('span', 'title', occ.title));
       card.appendChild(line);
       const meta = ui.meta(occ, { date: false });
       if (meta) card.appendChild(meta);
@@ -644,7 +668,7 @@ export function heatmap(host, occs, props, ics, ui) {
   readout.append(readDate, readText);
   const show = (date) => {
     const todays = date ? onDay(inYear, date) : [];
-    readDate.textContent = date ? `${weekday(date)} ${date.getDate()}. ${monthLong(date)}` : '';
+    readDate.textContent = date ? dateLong(date) : '';
     readText.replaceChildren();
     if (!date) readText.appendChild(ui.tx('pickDay'));
     else if (!todays.length) readText.textContent = t('calendar.empty');
@@ -671,7 +695,7 @@ export function heatmap(host, occs, props, ics, ui) {
       const date = new Date(year, m, d);
       if (sameDay(date, today)) cell.classList.add('urd-cal-heat-today');
       cell.setAttribute('role', 'img');
-      cell.setAttribute('aria-label', `${d}. ${monthShort(date)}: ${tp('calendar.count', n)}`);
+      cell.setAttribute('aria-label', `${dayMonth(date)}: ${tp('calendar.count', n)}`);
       cell.addEventListener('pointerenter', () => show(date));
       cell.addEventListener('focus', () => show(date));
       grid.appendChild(cell);

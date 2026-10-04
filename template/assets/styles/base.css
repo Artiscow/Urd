@@ -144,11 +144,9 @@ html {
   pointer-events: none;
 }
 
-/* Section shape dividers (section.divider): a drawn edge at the top or the
-   bottom of a section, over its background and under its content. The
-   outline is drawn for the bottom edge and turned upside down for the top;
-   it reaches one pixel past the section, so no hairline of the background
-   shows at the seam. On a phone it stands at three fifths of its height. */
+/* Section shape dividers (section.divider): a drawn edge at the top or the bottom of a section, over its background and under its content.
+   The outline is drawn for the bottom edge and turned upside down for the top; it reaches one pixel past the section, so no hairline of the background shows at the seam.
+   On a phone it stands at three fifths of its height. */
 .urd-divider {
   position: absolute;
   right: 0;
@@ -354,8 +352,7 @@ html {
   border-top: 1px solid color-mix(in srgb, var(--urd-color-text) 16%, transparent);
 }
 
-/* The chapter divider (a line shape with a label): the word in the middle
-   and the line on both sides of it, at the line's own thickness. */
+/* The chapter divider (a line shape with a label): the word in the middle and the line on both sides of it, at the line's own thickness. */
 .urd-shape-chapter {
   position: absolute;
   inset: 0;
@@ -604,8 +601,7 @@ html {
   font-style: normal;
 }
 
-/* The large quote in a card (quote.card): the spread set on the surface
-   colour under a rule in the accent. */
+/* The large quote in a card (quote.card): the spread set on the surface colour under a rule in the accent. */
 .urd-quote-card {
   box-sizing: border-box;
   padding: 1.7rem 1.5rem 1.3rem;
@@ -653,8 +649,7 @@ html {
   opacity: 0.7;
 }
 
-/* The figure's two dressed variants (stats.variant): a card on the surface
-   colour, and a band of the accent colour with the accent's own text colour.
+/* The figure's two dressed variants (stats.variant): a card on the surface colour, and a band of the accent colour with the accent's own text colour.
    Both fill the block's frame, so three in a row line up as one strip. */
 .urd-stats-cards,
 .urd-stats-band {
@@ -1031,13 +1026,11 @@ textarea.urd-form-input {
 
 /* The calendar block: the four views share the collection block's rows and
    cards; the chips, the next panel and the month grid are its own. */
-/* The calendar block. Its colours are slots the owner can override in the
-   Style tab (calendar-designs.js writes --urd-cal-s-<slot> on the host);
-   every slot falls back to the theme, so a block without overrides follows
-   the theme as before. --urd-cal-color is the event's own calendar colour,
-   set per box by the block. */
+/* The calendar block.
+   Its colours are slots the owner can override in the Style tab (calendar-designs.js writes --urd-cal-s-<slot> on the host); every slot falls back to the theme, so a block without overrides follows the theme. --urd-cal-color is the event's own calendar colour, set per box by the block. */
 .urd-cal {
   --urd-cal-accent: var(--urd-cal-s-accent, var(--urd-color-accent));
+  --urd-cal-accent-text: var(--urd-color-accent-text);
   --urd-cal-surface: var(--urd-cal-s-surface, var(--urd-color-surface));
   --urd-cal-line: var(--urd-cal-s-line, color-mix(in srgb, var(--urd-color-text) 12%, transparent));
   position: relative;
@@ -1086,8 +1079,7 @@ textarea.urd-form-input {
   backdrop-filter: blur(16px);
 }
 
-/* The edge stripe on the design's boxes: the owner's colour, else the
-   event's calendar colour, else the accent. */
+/* The edge stripe on the design's boxes: the owner's colour, else the event's calendar colour, else the accent. */
 .urd-cal-stripes .urd-collection-row,
 .urd-cal-stripes .urd-collection-card,
 .urd-cal-stripes .urd-cal-next-row,
@@ -1129,8 +1121,7 @@ textarea.urd-form-input {
   padding-left: 1rem;
 }
 
-/* A static text (a label, a button's words) is edited in place in the
-   preview, where the text toolbar attaches to it. */
+/* A static text (a label, a button's words) is edited in place in the preview, where the text toolbar attaches to it. */
 .urd-cal .urd-cal-tx {
   overflow-wrap: anywhere;
 }
@@ -1204,8 +1195,7 @@ textarea.urd-form-input {
   outline-offset: 2px;
 }
 
-/* The event in full: a native dialog over the page, dressed as the card it was opened from
-   (the variables are set by the block from that card), with the theme as the fallback. */
+/* The event in full: a native dialog over the page, dressed as the card it was opened from (the variables are set by the block from that card), with the theme as the fallback. */
 .urd-cal-dialog {
   --dlg-text: var(--urd-cal-dlg-text, var(--urd-color-text));
   --dlg-accent: var(--urd-cal-dlg-accent, var(--urd-color-accent));
@@ -1489,7 +1479,7 @@ textarea.urd-form-input {
 }
 
 .urd-cal-chipbtn.selected {
-  color: #fff;
+  color: var(--urd-cal-color-text, var(--urd-cal-accent-text));
   background: var(--urd-cal-color, var(--urd-cal-accent));
   border-color: var(--urd-cal-color, var(--urd-cal-accent));
 }
@@ -1602,8 +1592,7 @@ textarea.urd-form-input {
   color: var(--urd-cal-accent);
 }
 
-/* The loading state: quiet bars at the block's height while the feed is
-   fetched, and the word for a screen reader. */
+/* The loading state: quiet bars at the block's height while the feed is fetched, and the word for a screen reader. */
 .urd-cal[aria-busy="true"] {
   height: 100%;
 }
@@ -1648,8 +1637,7 @@ textarea.urd-form-input {
   }
 }
 
-/* A day of a month on the phone is a button: its own look comes from the
-   design's day cell, which stands after this in the sheet. */
+/* A day of a month on the phone is a button: its own look comes from the design's day cell, which stands after this in the sheet. */
 .urd-cal-pday {
   font: inherit;
   color: inherit;
@@ -1739,8 +1727,7 @@ textarea.urd-form-input {
   opacity: 0.6;
 }
 
-/* The empty state: an icon over a line of text, centred in the block, so a
-   calendar with nothing coming up reads as empty rather than as broken. */
+/* The empty state: an icon over a line of text, centred in the block, so a calendar with nothing coming up reads as empty rather than as broken. */
 .urd-cal-empty {
   display: grid;
   justify-items: center;
@@ -1859,8 +1846,8 @@ textarea.urd-form-input {
   min-width: 0;
 }
 
-/* ---- The list designs (blocks/calendar-list.js). Each design's slots are
-   read as --urd-cal-s-<slot> with the design's own default. ---- */
+/* ---- The list designs (blocks/calendar-list.js).
+   Each design's slots are read as --urd-cal-s-<slot> with the design's own default. ---- */
 
 /* 01 Timeline */
 .urd-cal-tl {
@@ -1929,7 +1916,7 @@ textarea.urd-form-input {
 .urd-cal-d-timeline .urd-cal-signup {
   margin: 0;
   padding: 5px 12px;
-  color: var(--urd-color-accent-text);
+  color: var(--urd-cal-accent-text);
   background: var(--urd-cal-accent);
   border-radius: var(--urd-radius-sm);
 }
@@ -1952,7 +1939,7 @@ textarea.urd-form-input {
   letter-spacing: 0.1em;
   text-align: left;
   text-transform: uppercase;
-  color: var(--urd-cal-s-headText, var(--urd-color-accent-text));
+  color: var(--urd-cal-s-headText, var(--urd-cal-accent-text));
   background: var(--urd-cal-s-head, var(--urd-cal-accent));
 }
 
@@ -2031,7 +2018,7 @@ textarea.urd-form-input {
 
 .urd-cal-booklet-cols {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
   gap: 1.2em 2.4em;
 }
 
@@ -2116,7 +2103,8 @@ textarea.urd-form-input {
 }
 
 .urd-cal-numbered-side {
-  white-space: nowrap;
+  max-width: 45%;
+  overflow-wrap: anywhere;
 }
 
 .urd-cal-numbered .urd-cal-signup {
@@ -2124,9 +2112,13 @@ textarea.urd-form-input {
 }
 
 /* A5 List on navy (ApeironLF): rows on navy, the day in gold */
+/* The cream words belong on the navy rows and buttons; the shared parts around them (the view switcher, the zone line, «Earlier») stand on the page in its own text colour. */
 .urd-cal-d-apList {
   --urd-cal-ap-gold: var(--urd-cal-s-gold, #d0a74a);
   --urd-cal-ap-line: var(--urd-cal-s-line, color-mix(in srgb, var(--urd-cal-s-gold, #d0a74a) 35%, transparent));
+}
+
+.urd-cal-d-apList .urd-cal-ap-row {
   color: var(--urd-cal-s-text, #f3ecd8);
 }
 
@@ -2221,13 +2213,13 @@ textarea.urd-form-input {
 
 .urd-cal-d-apList .urd-cal-chipbtn,
 .urd-cal-d-apList .urd-cal-sub-btn {
-  color: inherit;
+  color: var(--urd-cal-s-text, #f3ecd8);
   background: var(--urd-cal-s-row, #1c2340);
   border-color: var(--urd-cal-ap-line);
 }
 
 .urd-cal-d-apList .urd-cal-chipbtn.selected {
-  color: var(--urd-cal-s-row, #1c2340);
+  color: var(--urd-cal-color-text, var(--urd-cal-s-row, #1c2340));
   background: var(--urd-cal-color, var(--urd-cal-ap-gold));
   border-color: var(--urd-cal-color, var(--urd-cal-ap-gold));
 }
@@ -2398,7 +2390,7 @@ textarea.urd-form-input {
 }
 
 .urd-cal-poster-a {
-  color: var(--urd-cal-s-posterAText, var(--urd-color-accent-text));
+  color: var(--urd-cal-s-posterAText, var(--urd-cal-accent-text));
   background: var(--urd-cal-s-posterA, var(--urd-cal-accent));
   border-color: transparent;
 }
@@ -2494,7 +2486,7 @@ textarea.urd-form-input {
   justify-content: center;
   padding: 1em;
   text-align: center;
-  color: var(--urd-cal-s-stubText, var(--urd-color-accent-text));
+  color: var(--urd-cal-color-text, var(--urd-cal-s-stubText, var(--urd-cal-accent-text)));
   background: var(--urd-cal-color, var(--urd-cal-s-stub, var(--urd-cal-accent)));
   border-right: 2px dashed var(--urd-color-bg);
 }
@@ -2538,7 +2530,7 @@ textarea.urd-form-input {
   flex: none;
   margin: 0;
   padding: 9px 16px;
-  color: var(--urd-color-accent-text);
+  color: var(--urd-cal-accent-text);
   background: var(--urd-cal-accent);
   border-radius: var(--urd-radius-sm);
 }
@@ -2615,7 +2607,7 @@ textarea.urd-form-input {
 }
 
 .urd-cal-daycard-first {
-  color: var(--urd-cal-s-cardText, var(--urd-color-accent-text));
+  color: var(--urd-cal-s-cardText, var(--urd-cal-accent-text));
   background: var(--urd-cal-s-card, var(--urd-cal-accent));
   border-color: transparent;
 }
@@ -2665,7 +2657,7 @@ textarea.urd-form-input {
 /* 09 Picture cards */
 .urd-cal-photos {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
   gap: 14px;
 }
 
@@ -2679,6 +2671,7 @@ textarea.urd-form-input {
 }
 
 .urd-cal-photo-band {
+  color: var(--urd-cal-color-text, currentColor);
   position: relative;
   height: 150px;
   background: var(--urd-cal-color, var(--urd-cal-s-placeholder, color-mix(in srgb, var(--urd-cal-accent) 25%, var(--urd-color-surface))));
@@ -2729,7 +2722,7 @@ textarea.urd-form-input {
   align-self: flex-start;
   margin-top: auto;
   padding: 7px 12px;
-  color: var(--urd-color-accent-text);
+  color: var(--urd-cal-accent-text);
   background: var(--urd-cal-accent);
   border-radius: var(--urd-radius-sm);
 }
@@ -2742,7 +2735,7 @@ textarea.urd-form-input {
 
 .urd-cal-apgrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
   gap: 16px;
 }
 
@@ -2786,7 +2779,7 @@ textarea.urd-form-input {
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--urd-cal-ap-head);
+  color: var(--urd-cal-color-text, var(--urd-cal-ap-head));
   background: var(--urd-cal-color, var(--urd-cal-ap-gold));
   border-color: transparent;
 }
@@ -2898,7 +2891,7 @@ textarea.urd-form-input {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--urd-color-accent-text);
+  color: var(--urd-cal-accent-text);
   background: var(--urd-cal-accent);
   border-radius: 999px;
 }
@@ -2999,7 +2992,7 @@ textarea.urd-form-input {
 }
 
 .urd-cal-bento-first {
-  color: var(--urd-color-accent-text);
+  color: var(--urd-cal-accent-text);
   background: var(--urd-cal-accent);
 }
 
@@ -3190,13 +3183,12 @@ textarea.urd-form-input {
   font-size: 0.72em;
   font-weight: 700;
   line-height: 1.25;
-  color: var(--urd-cal-s-pillText, var(--urd-color-accent-text));
+  color: var(--urd-cal-color-text, var(--urd-cal-s-pillText, var(--urd-cal-accent-text)));
   background: var(--urd-cal-color, var(--urd-cal-s-pill, var(--urd-cal-accent)));
   border-radius: 6px;
 }
 
-/* A week strip too narrow for seven readable columns (a narrow frame on a
-   wide screen) lays its days under each other, as on the phone. */
+/* A week strip too narrow for seven readable columns (a narrow frame on a wide screen) lays its days under each other, as on the phone. */
 @container (max-width: 540px) {
   .urd-cal-wstrip-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -3296,7 +3288,7 @@ textarea.urd-form-input {
   place-items: center;
   width: 1.9em;
   height: 1.9em;
-  color: var(--urd-color-accent-text);
+  color: var(--urd-cal-accent-text);
   background: var(--urd-cal-accent);
   border-radius: 50%;
 }
@@ -3535,7 +3527,7 @@ textarea.urd-form-input {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--urd-color-accent-text);
+  color: var(--urd-cal-color-text, var(--urd-cal-accent-text));
   background: var(--urd-cal-color, var(--urd-cal-accent));
   border-radius: 8px;
 }
@@ -3614,7 +3606,7 @@ textarea.urd-form-input {
   place-items: center;
   width: 1.7em;
   height: 1.7em;
-  color: var(--urd-color-accent-text);
+  color: var(--urd-cal-accent-text);
   background: var(--urd-cal-accent);
   border-radius: 50%;
 }
@@ -3872,7 +3864,7 @@ textarea.urd-form-input {
 }
 
 .urd-cal-dplan-picked {
-  color: var(--urd-color-accent-text);
+  color: var(--urd-cal-accent-text);
   background: var(--urd-cal-accent);
   opacity: 1;
 }
@@ -4212,7 +4204,7 @@ textarea.urd-form-input {
   background: color-mix(in srgb, var(--urd-color-text) 5%, transparent);
 }
 
-.urd-cal-band-still {
+.urd-cal-band-track.urd-cal-band-still {
   overflow-x: auto;
   scrollbar-width: thin;
 }
@@ -4224,7 +4216,7 @@ textarea.urd-form-input {
 }
 
 @media print {
-  .urd-cal {
+  html .urd-cal {
     zoom: 1;
     color: #000;
     background: none;
@@ -4256,8 +4248,7 @@ textarea.urd-form-input {
   }
 }
 
-/* ---- The phone: the seven-column designs with their days under each other,
-   and the months as dots that open the day ---- */
+/* ---- The phone: the seven-column designs with their days under each other, and the months as dots that open the day ---- */
 
 .urd-cal-phone .urd-cal-wstrip-grid {
   grid-template-columns: minmax(0, 1fr);
@@ -4645,7 +4636,7 @@ textarea.urd-form-input {
   padding: 0.85em;
   font-size: 0.95em;
   text-align: center;
-  color: var(--urd-cal-s-buttonText, var(--urd-color-accent-text));
+  color: var(--urd-cal-s-buttonText, var(--urd-cal-accent-text));
   background: var(--urd-cal-s-button, var(--urd-cal-accent));
   border-radius: 12px;
 }
@@ -4759,7 +4750,7 @@ textarea.urd-form-input {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--urd-cal-s-badgeText, var(--urd-color-accent-text));
+  color: var(--urd-cal-color-text, var(--urd-cal-s-badgeText, var(--urd-cal-accent-text)));
   background: var(--urd-cal-color, var(--urd-cal-s-badge, var(--urd-cal-accent)));
   border-radius: 999px;
 }
@@ -4789,7 +4780,7 @@ textarea.urd-form-input {
   align-self: flex-start;
   margin: 0;
   padding: 8px 14px;
-  color: var(--urd-cal-s-buttonText, var(--urd-color-accent-text));
+  color: var(--urd-cal-s-buttonText, var(--urd-cal-accent-text));
   background: var(--urd-cal-s-button, var(--urd-cal-accent));
   border-radius: var(--urd-radius-sm);
 }
@@ -4974,7 +4965,7 @@ textarea.urd-form-input {
   justify-content: space-between;
   gap: 1.5em;
   padding: 1.5em 1.3em;
-  color: var(--urd-cal-s-panelText, var(--urd-color-accent-text));
+  color: var(--urd-cal-color-text, var(--urd-cal-s-panelText, var(--urd-cal-accent-text)));
   background: var(--urd-cal-color, var(--urd-cal-s-panel, var(--urd-cal-accent)));
 }
 
@@ -5060,7 +5051,7 @@ textarea.urd-form-input {
   display: flex;
   align-items: stretch;
   overflow: hidden;
-  color: var(--urd-cal-s-bandText, var(--urd-color-accent-text));
+  color: var(--urd-cal-s-bandText, var(--urd-cal-accent-text));
   background: var(--urd-cal-s-band, var(--urd-cal-accent));
 }
 
@@ -5120,7 +5111,8 @@ textarea.urd-form-input {
   animation: urd-cal-band-roll var(--urd-cal-band-s, 24s) linear infinite;
 }
 
-.urd-cal-band-rolling:hover .urd-cal-band-run {
+.urd-cal-band-rolling:hover .urd-cal-band-run,
+.urd-cal-band-rolling:focus-within .urd-cal-band-run {
   animation-play-state: paused;
 }
 
@@ -5149,9 +5141,17 @@ textarea.urd-form-input {
   opacity: 0.85;
 }
 
-.urd-cal-line-now {
+.urd-cal-line-now,
+.urd-cal-stripes .urd-cal-line-now {
   border-left-color: var(--urd-cal-color, var(--urd-cal-accent));
+  border-left-width: 5px;
   opacity: 1;
+}
+
+/* A cancelled row is dimmed like a cancelled event in the other designs. */
+.urd-cal-line-row.urd-cal-cancelled,
+.urd-cal-earlier-row.urd-cal-cancelled {
+  opacity: 0.6;
 }
 
 .urd-cal-line-dot {
@@ -5511,7 +5511,7 @@ textarea.urd-form-input {
 
 .urd-cal-nbento-hero {
   grid-column: span 2;
-  color: var(--urd-cal-s-accentText, var(--urd-color-accent-text));
+  color: var(--urd-cal-color-text, var(--urd-cal-s-accentText, var(--urd-cal-accent-text)));
   background: var(--urd-cal-color, var(--urd-cal-accent));
   border-color: transparent;
 }
@@ -6241,7 +6241,13 @@ textarea.urd-form-input {
 }
 
 /* F5 Agenda, dark */
+/* The dark card is the calendar's own theme: the shared parts drawn in it (the view switcher, the search field, the week and the month of the switcher, the empty state) take its colours. */
 .urd-cal-d-mobileAgenda {
+  --urd-color-text: var(--urd-cal-s-text, #f5f5f7);
+  --urd-color-bg: var(--urd-cal-s-ground, #121216);
+  --urd-color-surface: var(--urd-cal-s-card, #1c1c22);
+  --urd-cal-surface: var(--urd-cal-s-card, #1c1c22);
+  --urd-cal-line: var(--urd-cal-s-edge, #2a2a32);
   padding: 1.1em 1em 1.2em;
   color: var(--urd-cal-s-text, #f5f5f7);
   background: var(--urd-cal-s-ground, #121216);
@@ -6361,7 +6367,7 @@ textarea.urd-form-input {
 }
 
 .urd-cal-magenda-today {
-  color: var(--urd-color-accent-text);
+  color: var(--urd-cal-accent-text);
   background: var(--urd-cal-accent);
 }
 
@@ -8248,10 +8254,8 @@ a.urd-gallery-tile {
   aspect-ratio: 1 / 1;
 }
 
-/* Mosaic (the gallery block's view; the background layer's mosaic has its
-   own rules under .urd-gallery-mosaic): the grid's wall with rows of one
-   height and tiles in varied spans. Every tile's place is set by the block
-   (mosaicWall in gallery-model.js), so the wall is a full rectangle. */
+/* Mosaic (the gallery block's view; the background layer's mosaic has its own rules under .urd-gallery-mosaic): the grid's wall with rows of one height and tiles in varied spans.
+   Every tile's place is set by the block (mosaicWall in gallery-model.js), so the wall is a full rectangle. */
 .urd-gallery-wall {
   display: grid;
   grid-template-columns: repeat(var(--urd-gallery-cols, 3), 1fr);
@@ -8265,11 +8269,9 @@ a.urd-gallery-tile {
   height: 100%;
 }
 
-/* Polaroid: each picture set in a card with a wider foot, leaning by its own
-   throw of the seed (--urd-card-tilt from the block). The card is white with
-   dark ink until the owner picks a colour (--urd-polaroid-color); then the
-   words take the section's text colour. The grid's own padding gives the
-   leaning corners room inside the block. */
+/* Polaroid: each picture set in a card with a wider foot, leaning by its own throw of the seed (--urd-card-tilt from the block).
+   The card is white with dark ink until the owner picks a colour (--urd-polaroid-color); then the words take the section's text colour.
+   The grid's own padding gives the leaning corners room inside the block. */
 .urd-gallery-cards {
   display: grid;
   grid-template-columns: repeat(var(--urd-gallery-cols, 3), 1fr);
@@ -8291,7 +8293,7 @@ a.urd-gallery-tile {
 }
 
 .urd-gallery-cards-own .urd-gallery-card {
-  color: inherit;
+  color: var(--urd-polaroid-ink, currentColor);
 }
 
 .urd-gallery-card .urd-gallery-tile {
@@ -8312,8 +8314,7 @@ a.urd-gallery-tile {
   overflow-wrap: anywhere;
 }
 
-/* Under a real pointer the card straightens and lifts, so the picture can be
-   looked at; a touch never gets a hover state that sticks. */
+/* Under a real pointer the card straightens and lifts, so the picture can be looked at; a touch never gets a hover state that sticks. */
 @media (hover: hover) and (pointer: fine) {
   .urd-gallery-card {
     transition: rotate 0.25s ease, translate 0.25s ease, box-shadow 0.25s ease;
@@ -10962,8 +10963,7 @@ body.urd-marqueeing {
   break-inside: avoid;
   margin-bottom: 0.55rem;
 }
-/* The chapters design (footer.design): the brand on a row of its own, then
-   the link columns as numbered chapters, each under a rule. */
+/* The chapters design (footer.design): the brand on a row of its own, then the link columns as numbered chapters, each under a rule. */
 .urd-footer-design-chapters .urd-footer-top {
   grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr));
   counter-reset: urd-chapter;
@@ -10990,8 +10990,7 @@ body.urd-marqueeing {
   color: var(--urd-color-accent);
 }
 
-/* The split design: the brand takes half the width on a panel tinted with
-   the accent, the link columns share the other half. */
+/* The split design: the brand takes half the width on a panel tinted with the accent, the link columns share the other half. */
 .urd-footer-design-split .urd-footer-top {
   grid-template-columns: calc(50% - 1.25rem) repeat(var(--n, 2), minmax(0, 1fr));
   align-items: stretch;
@@ -11050,7 +11049,9 @@ body.urd-marqueeing {
   }
 }
 @media (max-width: 480px) {
-  .urd-footer-top {
+  .urd-footer-top,
+  .urd-footer-design-chapters .urd-footer-top,
+  .urd-footer-design-split .urd-footer-top {
     grid-template-columns: 1fr;
   }
 }
@@ -12921,4 +12922,13 @@ html.urd-drag-down * {
 html.urd-drag-up,
 html.urd-drag-up * {
   cursor: n-resize !important;
+}
+
+/* The calendar's moving parts move only for those who allow motion. */
+@media (prefers-reduced-motion: reduce) {
+  .urd-cal-stack-card,
+  .urd-cal-ring-arc,
+  .urd-cal-dg-bar i {
+    transition: none;
+  }
 }

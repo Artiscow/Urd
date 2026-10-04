@@ -24,6 +24,17 @@ export const VIDEO_MAX_BYTES = 15_000_000;
    where a video does the same job at a fraction of the size. */
 export const ANIMATED_WARN_BYTES = 1_000_000;
 export const ANIMATED_MAX_BYTES = 4_000_000;
+/** How much of a larger file is read to tell whether it moves: the flag of a WebP, the chunk of a PNG and the loop block of a GIF come before the first frame's picture. */
+const ANIMATED_HEAD_BYTES = 256_000;
+
+/** True when the bytes hold a GIF's loop block (NETSCAPE2.0 or ANIMEXTS1.0), which an animated GIF carries before its first frame. */
+function gifLoops(bytes) {
+  if (!ascii(bytes, 0, 'GIF8')) return false;
+  for (let at = 13; at < bytes.length - 11; at++) {
+    if (bytes[at] === 0x21 && bytes[at + 1] === 0xff && bytes[at + 2] === 11 && (ascii(bytes, at + 3, 'NETSCAPE2.0') || ascii(bytes, at + 3, 'ANIMEXTS1.0'))) return true;
+  }
+  return false;
+}
 
 /** Thrown when an animated image is larger than ANIMATED_MAX_BYTES. */
 export class AnimatedTooLargeError extends Error {
@@ -134,10 +145,15 @@ export function isAnimatedImage(bytes) {
  */
 async function keepAnimated(file) {
   if (!/^image\/(?:gif|webp|png|apng)$/i.test(file.type || '') && !/\.(?:gif|webp|a?png)$/i.test(file.name || '')) return null;
+  // A file larger than an animated image may be is read only as far as its beginning, which tells whether it moves.
+  if (file.size > ANIMATED_MAX_BYTES) {
+    const head = new Uint8Array(await file.slice(0, ANIMATED_HEAD_BYTES).arrayBuffer());
+    if (animatedImageKind(head) || gifLoops(head)) throw new AnimatedTooLargeError(file.size);
+    return null;
+  }
   const bytes = new Uint8Array(await file.arrayBuffer());
   const kind = animatedImageKind(bytes);
   if (!kind) return null;
-  if (bytes.length > ANIMATED_MAX_BYTES) throw new AnimatedTooLargeError(bytes.length);
   const dataUrl = await new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
@@ -159,14 +175,17 @@ async function keepAnimated(file) {
  * Compresses an image file to webp, max 1600px on the longest side.
  * SVG is not rasterized: the vector is kept (after sanitizing), because a
  * logo must be sharp at every size. An animated image is kept as the file
- * it is (keepAnimated), marked `animated`. The file name at publish time
- * gets the right extension via mediaExtension.
+ * it is (keepAnimated), marked `animated`, unless `still` asks for a still
+ * picture at the size given (an icon). The file name at publish time gets
+ * the right extension via mediaExtension.
  * @param {File} file
+ * @param {number} [maxDim]
+ * @param {{still?: boolean}} [opts]
  * @returns {Promise<{dataUrl: string, bytes: number, width: number, height: number, animated?: boolean}>}
  */
-export async function compressToWebp(file, maxDim = MAX_DIMENSION) {
+export async function compressToWebp(file, maxDim = MAX_DIMENSION, { still = false } = {}) {
   if (isSvgFile(file)) return svgToDataUrl(await file.text());
-  const kept = await keepAnimated(file);
+  const kept = still ? null : await keepAnimated(file);
   if (kept) return kept;
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));

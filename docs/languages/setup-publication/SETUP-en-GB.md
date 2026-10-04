@@ -103,6 +103,12 @@ Fill them in exactly as below. Save, and repeat for all six:
     E.g. `sky.example.org`. Needed for a Nextcloud or ownCloud share and for
     a picture list at another address; Google's own hosts are built in.
 
+12. Type: Text (optional - only for a calendar from another service than Google)
+    Name: `ICS_HOSTS`
+    Value: the hosts the calendar block may fetch calendars from, separated by
+    commas. E.g. `calendar.proton.me` or `sky.example.org`. Google Calendar is
+    built in. See [The calendar](../calendar-guide/CALENDAR-en-GB.md).
+
 Finally a new deploy is needed (the variables only take effect from the next deploy).
 The simplest way is an empty commit:
 

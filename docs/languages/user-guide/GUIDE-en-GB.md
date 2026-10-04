@@ -263,7 +263,7 @@ reading order. You usually do not have to do anything.
   Next and Agenda) and **Designs** with a picture of each of the 34 designs,
   or the section template «What is on». Select the block and paste the
   calendar's iCal address or Google calendar id under **Sources** in its menu
-  (one per line); a source can be given a name and a colour, and the name
+  (a row per calendar); a source can be given a name and a colour, and the name
   becomes the events' category. In the same menu you choose the design, the
   count, and what visitors get: a category and a place filter, a search field,
   earlier events, a view switcher, and the **Subscribe** and **Sign up**

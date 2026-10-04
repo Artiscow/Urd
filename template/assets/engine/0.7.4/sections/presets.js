@@ -442,7 +442,7 @@ export function registerSectionPresets(Urd) {
   whatsOn('whats-on-cards', '560px', () => calendar(frame(6, 130, 88, 360, 2), { view: 'cards', limit: 6 }));
   whatsOn('whats-on-month', '720px', () => calendar(frame(6, 130, 88, 520, 2), { view: 'month' }));
   whatsOn('whats-on-week', '560px', () => calendar(frame(6, 130, 88, 360, 2), { view: 'week', design: 'weekStrip' }));
-  whatsOn('whats-on-next', '460px', () => calendar(frame(6, 130, 48, 260, 2), { view: 'next', nextCount: 1, laterCount: 3 }));
+  whatsOn('whats-on-next', '460px', () => calendar(frame(6, 130, 48, 260, 2), { view: 'next', nextCount: 3, laterCount: 3 }));
 
   Urd.sections.define('contact-form', {
     label: 'Contact form',

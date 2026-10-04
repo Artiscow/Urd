@@ -1113,7 +1113,11 @@
     const p = selectedBlock.props;
     const def = calDesign(p.design);
     const reset = (name, patch) => () => setBlockProps(name, patch);
-    const viewChanged = p.switcher === true || p.showMore === false || (p.limit ?? 6) !== 6 || p.nextCount != null || p.laterCount != null || p.showCancelled === false || p.structuredData === false || p.clock != null || p.weekStart != null;
+    // The counts a new calendar starts with: eight in the agenda, and three and three in a «Coming up» design.
+    const view = calView(p);
+    const limit0 = view === 'agenda' ? 8 : 6;
+    const count0 = view === 'next' ? 3 : undefined;
+    const viewChanged = p.switcher === true || p.showMore === false || (p.limit ?? 6) !== limit0 || p.nextCount !== count0 || p.laterCount !== count0 || p.showCancelled === false || p.structuredData === false || p.clock != null || p.weekStart != null;
     const on = [!def.ownFilter && p.showCategories !== false, p.showSubscribe !== false, p.showSignup === true, p.showPlaces === true, p.showSearch === true, p.showEarlier === true].filter(Boolean).length;
     const buttonsChanged = on > 0 || p.showOpen === false || Boolean(p.programHref);
     const emptyChanged = Boolean(p.emptyText) || (p.emptyIcon != null && p.emptyIcon !== 'calendar');
@@ -1123,7 +1127,7 @@
     return {
       sources: String((p.sources ?? []).length),
       view: ta(CAL_VIEW_KEYS[calView(p)]),
-      viewReset: viewChanged ? reset('cal-view', { switcher: undefined, showMore: undefined, limit: 6, nextCount: undefined, laterCount: undefined, showCancelled: undefined, structuredData: undefined, clock: undefined, weekStart: undefined }) : null,
+      viewReset: viewChanged ? reset('cal-view', { switcher: undefined, showMore: undefined, limit: limit0, nextCount: count0, laterCount: count0, showCancelled: undefined, structuredData: undefined, clock: undefined, weekStart: undefined }) : null,
       buttons: on ? ta('menu.onCount', { n: on }) : ta('common.off'),
       buttonsReset: buttonsChanged ? reset('cal-buttons', { showCategories: false, showSubscribe: false, showSignup: false, showPlaces: undefined, showSearch: undefined, showEarlier: undefined, showOpen: undefined, programHref: undefined }) : null,
       empty: p.emptyText || ta('menu.standard'),
@@ -1143,6 +1147,14 @@
 
   /** The block whose design picker stands open over the menu; null when the menu shows its areas. */
   let menuPickerFor = $state(null);
+  // The design picker belongs to one opening of one block's menu: another block, or the floating menu closing, puts the menu back on its areas.
+  let menuWasOpen = false;
+  $effect(() => {
+    if (menuPickerFor && selectedBlock?.blockId !== menuPickerFor) menuPickerFor = null;
+    const open = Boolean(blockMenu);
+    if (menuWasOpen && !open) menuPickerFor = null;
+    menuWasOpen = open;
+  });
   const menuPicking = () => selectedBlock?.type === 'calendar' && menuPickerFor === selectedBlock.blockId;
 
   /** What a closed group shows: how the block fits a narrower screen, and its motion. */
@@ -1234,11 +1246,15 @@
   /** A calendar's frame follows what it shows: after a change of its settings
    *  or of its width, the preview is asked for the height the content needs
    *  and answers with it (urd-fit-block, urd-grow). Desktop frame only. */
-  let fitTimer = 0;
+  const fitTimers = new Map();
+  /** The latest fit asked for per block: an answer to an earlier one is dropped. */
+  const fitSeq = new Map();
   function fitCalendarSoon(sectionId, blockId, growOnly = false) {
     if (viewMode !== 'desktop') return;
-    clearTimeout(fitTimer);
-    fitTimer = setTimeout(() => bridge?.sendFitBlock(sectionId, blockId, growOnly), 60);
+    clearTimeout(fitTimers.get(blockId));
+    const seq = (fitSeq.get(blockId) ?? 0) + 1;
+    fitSeq.set(blockId, seq);
+    fitTimers.set(blockId, setTimeout(() => bridge?.sendFitBlock(sectionId, blockId, growOnly, seq), 60));
   }
 
   /* The calendar block's Style tab (calendar-designs.js): the design, its
@@ -1247,7 +1263,6 @@
   let calField = $state('title');
   /** The heading over each group of designs in the picker: the view the group stands on. */
   const CAL_VIEW_KEYS = { list: 'calendar.viewList', cards: 'calendar.viewCards', month: 'calendar.viewMonth', agenda: 'calendar.viewAgenda', next: 'calendar.viewNext', week: 'calendar.viewWeek', day: 'calendar.viewDay', year: 'calendar.viewYear' };
-  /** The design's colour slots by section, in order; the first section is the plain «Colours» list and gets no heading of its own. */
   /** Writes one of the design's own settings under `options`; the default is stored as nothing. */
   function setCalOption(def, value) {
     const all = { ...(selectedBlock.props.options ?? {}) };
@@ -1263,6 +1278,7 @@
     return ta(`${def.labelKey}.${value}`);
   }
 
+  /** The design's colour slots by section, in order; the first section is the plain «Colours» list and gets no heading of its own. */
   function calSlotGroups(def) {
     const groups = [];
     for (const slot of def.slots) {
@@ -1282,9 +1298,11 @@
     const counts = def.view === 'next'
       ? { nextCount: selectedBlock.props.nextCount ?? 3, laterCount: selectedBlock.props.laterCount ?? 3 }
       : {};
-    setBlockProps('design', { design: def.id === 'plain' ? undefined : def.id, ...(def.view ? { view: def.view } : {}), ...counts });
-    // The frame follows the new design: the preview measures what it needs and answers with the height.
-    fitCalendarSoon(selectedBlock.sectionId, selectedBlock.blockId);
+    // The plain design shows the five plain views: a week, day or year left by a design goes back to the list.
+    const plainView = def.id === 'plain' && !['list', 'cards', 'month', 'agenda', 'next'].includes(calView(selectedBlock.props)) ? { view: 'list' } : {};
+    // setBlockProps fits the frame to the new design.
+    setBlockProps('design', { design: def.id === 'plain' ? undefined : def.id, ...(def.view ? { view: def.view } : {}), ...plainView, ...counts });
+    menuPickerFor = null;
   }
   function setCalColor(key, value) {
     const colors = { ...(selectedBlock.props.colors ?? {}) };
@@ -1453,6 +1471,7 @@
       list[i] = packCalSource({ ...calSource(list[i]), ...patch });
       b.props.sources = list;
     });
+    fitCalendarSoon(selectedBlock.sectionId, selectedBlock.blockId);
   }
   function addCalendarRow() {
     setBlockProp('sources', [...(selectedBlock.props.sources ?? []), '']);
@@ -5354,13 +5373,17 @@
     if (key === 'desktop' && block.type === 'calendar' && !msg.coalesce) fitCalendarSoon(msg.sectionId, msg.blockId, true);
   }
 
-  /** Automatic height growth posted by plugin copies of the former data-block plugins (urd-grow):
-   *  ONLY h changes, never x/y, so a dragged block is never teleported
-   *  back. Coalesces with the block's edit (same undo step). */
+  /** A height the preview reports for a block (urd-grow): from a plugin copy
+   *  of the former data-block plugins on its own render, or as the answer to
+   *  a calendar's fit (`fit`, urd-fit-block). ONLY h changes, never x/y, so a
+   *  dragged block is never teleported back. A fit belongs to the edit that
+   *  asked for it and adds no undo step of its own. */
   function handleGrow(msg) {
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     const block = section?.blocks.find((b) => b.id === msg.blockId);
     if (!block?.frames?.desktop || block.frames.desktop.h === msg.h) return;
+    // A fit is for the desktop frame, and only the latest one asked for counts.
+    if (msg.fit && (viewMode !== 'desktop' || msg.seq !== (fitSeq.get(msg.blockId) ?? 0))) return;
     // After a drag the frame is the owner's: it only grows to hold the content.
     if (msg.growOnly && msg.h < block.frames.desktop.h) return;
     // Autogrowth is a MEASUREMENT, not an edit: data blocks report their
@@ -5373,13 +5396,14 @@
       const b = s?.blocks.find((x) => x.id === msg.blockId);
       if (b?.frames?.desktop) b.frames.desktop.h = msg.h;
     });
-    if (store.hasDraft()) pushHistory(`edit:${msg.blockId}`);
+    if (!msg.fit && store.hasDraft()) pushHistory(`edit:${msg.blockId}`);
     block.frames.desktop.h = msg.h;
     // save() cleans the draft key when the measurement was the only difference.
     store.save();
     updateDirty();
-    if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();    // The preview draws the block at its new height, so the outline follows the content.
-    bridge?.sendSection(pageId, section);
+    if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
+    // After a fit the preview draws the block at its new height, so the outline follows the content.
+    if (msg.fit) bridge?.sendSection(pageId, section);
   }
 
   /** ↺ in mobile view: reset mobile overrides, the whole section or one
@@ -5588,7 +5612,7 @@
     calendar: { type: 'calendar', props: { sources: [], view: 'list', limit: 6, showCategories: false, showSubscribe: false, showSignup: false }, w: 60, h: 320 },
     'calendar-cards': { type: 'calendar', props: { sources: [], view: 'cards', limit: 6, showCategories: false, showSubscribe: false, showSignup: false }, w: 88, h: 320 },
     'calendar-month': { type: 'calendar', props: { sources: [], view: 'month', limit: 6, showCategories: false, showSubscribe: false, showSignup: false }, w: 88, h: 480 },
-    'calendar-next': { type: 'calendar', props: { sources: [], view: 'next', limit: 6, showCategories: false, showSubscribe: false, showSignup: false }, w: 40, h: 180 },
+    'calendar-next': { type: 'calendar', props: { sources: [], view: 'next', limit: 6, nextCount: 3, laterCount: 3, showCategories: false, showSubscribe: false, showSignup: false }, w: 40, h: 180 },
     'calendar-agenda': { type: 'calendar', props: { sources: [], view: 'agenda', limit: 8, showCategories: false, showSubscribe: false, showSignup: false }, w: 60, h: 360 },
     icon: { type: 'icon', decor: true, hideMobile: true, props: { glyph: '★', color: 'accent', size: 48 }, w: 8, h: 64 },
     collection: { type: 'collection', props: { collection: null, view: 'cards', limit: 6, newestFirst: true }, w: 88.89, h: 200 },
@@ -5760,7 +5784,12 @@
     const design = calDesign(id);
     const block = buildBlock(CAL_KIND_BY_VIEW[design.view] ?? 'calendar');
     if (!block) return;
-    block.props = { ...block.props, view: design.view, ...(design.id === 'plain' ? {} : { design: design.id }) };
+    block.props = {
+      ...block.props,
+      ...(design.view ? { view: design.view } : {}),
+      ...(design.id === 'plain' ? {} : { design: design.id }),
+      ...(design.view === 'next' ? { nextCount: 3, laterCount: 3 } : {}),
+    };
     requestPlacement(block);
   }
 

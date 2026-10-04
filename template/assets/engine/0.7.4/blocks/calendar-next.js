@@ -1,13 +1,7 @@
 /**
- * The calendar block's «Coming up» designs (milestone 0.7.19): nine looks
- * on the next view, each built around the next event (and the ones after it
- * as the block's `nextCount` and `laterCount` say), every one a renderer over
- * the block's ui helpers (fields, static texts, buttons; see makeUi in
- * calendar.js) with its own CSS block in base.css under `.urd-cal-d-<id>`.
- * The announcement (`props.notice` with the texts `noticeLabel`,
- * `noticeTitle` and `noticeText`) is an optional part of the designs that
- * declare `notice`. Loaded by the block on the first render of a block that
- * uses one of them, never in the visitor closure.
+ * The calendar block's «Coming up» designs (milestone 0.7.19): nine looks on the next view, each built around the next event (and the ones after it as the block's `nextCount` and `laterCount` say), every one a renderer over the block's ui helpers (fields, static texts, buttons; see makeUi in calendar.js) with its own rules in base.css under its own class names.
+ * The announcement (`props.notice` with the texts `noticeLabel`, `noticeTitle` and `noticeText`) is an optional part of the designs that declare `notice`.
+ * Loaded by the block on the first render of a block that uses one of them, never in the visitor closure.
  */
 import { t, tp, dates } from '../i18n.js';
 
@@ -18,6 +12,8 @@ const monthShort = (d) => dates().monthsShort[d.getMonth()];
 const monthLong = (d) => dates().months[d.getMonth()];
 const weekdayShort = (d) => dates().weekdaysShort[(d.getDay() + 6) % 7];
 const weekday = (d) => dates().weekdays[(d.getDay() + 6) % 7];
+/** «5. okt» in the site language (calendar.dayMonth). */
+const dayMonth = (d) => t('calendar.dayMonth', { d: d.getDate(), m: monthShort(d) });
 
 /** Days, hours and minutes left until an event (zero once it has begun). */
 function countdownParts(occ, now = Date.now()) {
@@ -38,7 +34,7 @@ function everyMinute(node, fn) {
 function longWhen(occ, ui, { place = true } = {}) {
   const d = dayOf(occ);
   const line = ui.el('span', 'urd-cal-nx-when');
-  line.appendChild(ui.field('span', 'date', `${weekday(d)} ${d.getDate()}. ${monthLong(d)}`, null, d));
+  line.appendChild(ui.field('span', 'date', t('calendar.dateLine', { wd: weekday(d), d: d.getDate(), m: monthLong(d) }), null, d));
   if (ui.hasTime(occ)) {
     line.appendChild(document.createTextNode(' '));
     line.appendChild(ui.field('span', 'time', ui.timeText(occ), null, occ));
@@ -57,7 +53,7 @@ const laterOf = (occs, props, ics) => occs.slice(ics.nextCount(props.nextCount),
 function laterRow(occ, ui, className) {
   const d = dayOf(occ);
   const row = ui.tint(ui.el('div', className), occ);
-  row.append(ui.field('strong', 'date', `${d.getDate()}. ${monthShort(d)}`, null, d), ui.field('span', 'title', occ.title, 'urd-cal-nx-later-title'), ui.field('span', 'time', ui.timeText(occ), 'urd-cal-nx-later-time', occ));
+  row.append(ui.field('strong', 'date', dayMonth(d), null, d), ui.field('span', 'title', occ.title, 'urd-cal-nx-later-title'), ui.field('span', 'time', ui.timeText(occ), 'urd-cal-nx-later-time', occ));
   return row;
 }
 
@@ -73,7 +69,7 @@ function noticeNode(props, ui, className) {
   text.appendChild(ui.tx('noticeText'));
   note.append(label, title, text);
   const href = typeof props.notice.href === 'string' ? props.notice.href.trim() : '';
-  if (/^(https?:\/\/|\/|#|mailto:)/i.test(href)) {
+  if (/^(https?:\/\/|\/(?!\/)|#|mailto:)/i.test(href)) {
     const a = ui.link('urd-cal-nx-notice-link', 'moreInfo', href, '');
     note.appendChild(a);
   }
@@ -83,10 +79,11 @@ function noticeNode(props, ui, className) {
 /** N1 Billboard: a dark board with the pulse label, the title large, a countdown in three tiles and the sign-up as a bar. */
 export function billboard(host, occs, props, ics, ui) {
   const [hero] = occs;
-  const board = ui.tint(ui.el('div', 'urd-cal-bb'), hero);
+  const heroTitle = ui.field('strong', 'title', hero.title, 'urd-cal-bb-title');
+  const board = ui.tint(ui.el('div', 'urd-cal-bb'), hero, heroTitle);
   const label = ui.el('div', 'urd-cal-bb-label');
   label.append(ui.el('i', 'urd-cal-bb-pulse'), ui.tx('now'));
-  board.append(label, ui.field('strong', 'title', hero.title, 'urd-cal-bb-title'), longWhen(hero, ui));
+  board.append(label, heroTitle, longWhen(hero, ui));
   const tiles = ui.el('div', 'urd-cal-bb-tiles');
   const parts = [];
   for (const key of ['unitDays', 'unitHours', 'unitMin']) {
@@ -119,7 +116,7 @@ export function billboard(host, occs, props, ics, ui) {
     later.forEach((occ, i) => {
       if (i) then.appendChild(document.createTextNode(', '));
       const d = dayOf(occ);
-      then.append(ui.field('span', 'title', occ.title), document.createTextNode(' '), ui.field('span', 'date', `${d.getDate()}. ${monthShort(d)}`, null, d));
+      then.append(ui.field('span', 'title', occ.title), document.createTextNode(' '), ui.field('span', 'date', dayMonth(d), null, d));
     });
     foot.appendChild(then);
   }
@@ -161,6 +158,7 @@ export function stacked(host, occs, props, ics, ui) {
       card.style.setProperty('--urd-cal-stack-depth', String(depth));
       card.classList.toggle('urd-cal-stack-front', depth === 0);
       card.setAttribute('aria-hidden', depth === 0 ? 'false' : 'true');
+      card.inert = depth !== 0;
     });
   };
   for (const card of cards) pile.appendChild(card);
@@ -224,7 +222,8 @@ export function noticeboard(host, occs, props, ics, ui) {
 export function split(host, occs, props, ics, ui) {
   const [hero] = occs;
   const d = dayOf(hero);
-  const card = ui.tint(ui.el('div', 'urd-cal-split'), hero);
+  const heroTitle = ui.field('strong', 'title', hero.title, 'urd-cal-split-title');
+  const card = ui.tint(ui.el('div', 'urd-cal-split'), hero, heroTitle);
   const top = ui.el('div', 'urd-cal-split-top');
   const panel = ui.el('div', 'urd-cal-split-panel');
   const label = ui.el('span', 'urd-cal-split-label');
@@ -235,7 +234,7 @@ export function split(host, occs, props, ics, ui) {
   const body = ui.el('div', 'urd-cal-split-body');
   const chip = ui.chip(hero);
   if (chip) body.appendChild(chip);
-  body.appendChild(ui.field('strong', 'title', hero.title, 'urd-cal-split-title'));
+  body.appendChild(heroTitle);
   const meta = ui.meta(hero, { date: false });
   if (meta) body.appendChild(meta);
   const excerpt = ui.excerpt(hero.description, 220);
@@ -268,7 +267,7 @@ export function band(host, occs, props, ics, ui) {
     if (i) run.appendChild(ui.el('i', 'urd-cal-band-sep'));
     const d = dayOf(occ);
     const item = ui.tint(ui.el('span', 'urd-cal-band-item'), occ);
-    item.append(ui.field('span', 'date', `${d.getDate()}. ${monthShort(d)}`, null, d), document.createTextNode(' · '), ui.field('strong', 'title', occ.title), document.createTextNode(' · '), ui.field('span', 'time', ui.timeText(occ), null, occ));
+    item.append(ui.field('span', 'date', dayMonth(d), null, d), document.createTextNode(' · '), ui.field('strong', 'title', occ.title), document.createTextNode(' · '), ui.field('span', 'time', ui.timeText(occ), null, occ));
     if (occ.location) {
       item.appendChild(document.createTextNode(' · '));
       item.appendChild(ui.field('span', 'place', occ.location));
@@ -325,7 +324,8 @@ export function oneLine(host, occs, props, ics, ui) {
 /** M4 Countdown ring: a ring that fills towards the start with the days left in the middle, the words beside it, the next two under. */
 export function ring(host, occs, props, ics, ui) {
   const [hero] = occs;
-  const card = ui.tint(ui.el('div', 'urd-cal-ring'), hero);
+  const heroTitle = ui.field('strong', 'title', hero.title, 'urd-cal-ring-title');
+  const card = ui.tint(ui.el('div', 'urd-cal-ring'), hero, heroTitle);
   const head = ui.el('div', 'urd-cal-ring-head');
   const label = ui.el('span', 'urd-cal-ring-label');
   label.appendChild(ui.tx('now'));
@@ -356,10 +356,14 @@ export function ring(host, occs, props, ics, ui) {
     const circ = 2 * Math.PI * 56;
     arc.setAttribute('stroke-dasharray', `${(filled * circ).toFixed(1)} ${circ.toFixed(1)}`);
     num.textContent = String(days > 0 ? days : hours);
-    unit.replaceChildren(ui.tx(days > 0 ? 'unitDays' : 'unitHours'));
+    const key = days > 0 ? 'unitDays' : 'unitHours';
+    if (unit.dataset.unit !== key) {
+      unit.dataset.unit = key;
+      unit.replaceChildren(ui.tx(key));
+    }
   });
   const body = ui.el('div', 'urd-cal-ring-body');
-  body.append(ui.field('strong', 'title', hero.title, 'urd-cal-ring-title'), longWhen(hero, ui, { place: false }));
+  body.append(heroTitle, longWhen(hero, ui, { place: false }));
   if (hero.location) body.appendChild(ui.field('span', 'place', hero.location, 'urd-cal-ring-place'));
   const signup = ui.signup(hero);
   if (signup) body.appendChild(signup);
@@ -382,7 +386,8 @@ export function ring(host, occs, props, ics, ui) {
 /** M5 Dark glass: a dark card over two colour blobs, a live countdown, a progress bar, two buttons and «Then». */
 export function darkGlass(host, occs, props, ics, ui) {
   const [hero] = occs;
-  const card = ui.tint(ui.el('div', 'urd-cal-dg'), hero);
+  const heroTitle = ui.field('strong', 'title', hero.title, 'urd-cal-dg-title');
+  const card = ui.tint(ui.el('div', 'urd-cal-dg'), hero, heroTitle);
   card.append(ui.el('i', 'urd-cal-dg-blob urd-cal-dg-blob-a'), ui.el('i', 'urd-cal-dg-blob urd-cal-dg-blob-b'));
   const inner = ui.el('div', 'urd-cal-dg-inner');
   const head = ui.el('div', 'urd-cal-dg-head');
@@ -390,7 +395,7 @@ export function darkGlass(host, occs, props, ics, ui) {
   label.append(ui.el('i', 'urd-cal-dg-pulse'), ui.tx('now'));
   const clock = ui.field('span', 'number', '', 'urd-cal-dg-clock');
   head.append(label, clock);
-  inner.append(head, ui.field('strong', 'title', hero.title, 'urd-cal-dg-title'), longWhen(hero, ui));
+  inner.append(head, heroTitle, longWhen(hero, ui));
   const progress = ui.el('div', 'urd-cal-dg-progress');
   const pl = ui.el('div', 'urd-cal-dg-progress-label');
   const until = ui.el('span');
@@ -404,7 +409,7 @@ export function darkGlass(host, occs, props, ics, ui) {
   inner.appendChild(progress);
   everyMinute(card, () => {
     const { days, hours, minutes } = countdownParts(hero);
-    clock.textContent = `${two(days)}d ${two(hours)}t ${two(minutes)}m`;
+    clock.textContent = t('calendar.countdownClock', { d: two(days), h: two(hours), m: two(minutes) });
     const left = Math.max(0, (hero.real ?? hero.start) - Date.now());
     const filled = Math.max(0, Math.min(1, 1 - left / (14 * DAY)));
     pct.textContent = `${Math.round(filled * 100)} %`;

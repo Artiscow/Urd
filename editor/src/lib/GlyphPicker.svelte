@@ -69,8 +69,13 @@
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    const img = await compressToWebp(file, 256);
-    onimage?.(img.dataUrl);
+    try {
+      // An icon is a still picture at icon size, also from an animated file.
+      const img = await compressToWebp(file, 256, { still: true });
+      onimage?.(img.dataUrl);
+    } catch (error) {
+      console.warn('Urd: the icon could not be read', error);
+    }
     closePicker();
   }
 

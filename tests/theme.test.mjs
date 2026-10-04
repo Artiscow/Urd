@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 const {
   resolveThemeMode, activeTokens,
-  sectionThemeVars, SECTION_THEMES, relativeLuminance, contrastRatio,
+  sectionThemeVars, SECTION_THEMES, relativeLuminance, contrastRatio, inkOn,
   buildThemeCss, safeCssValue,
 } = await engineImport('theme.js');
 
@@ -196,4 +196,21 @@ test('buildThemeCss: an owner-set accent-text token is kept and contrast-color()
   assert.ok(!css.includes('contrast-color('));
   const alt = buildThemeCss({ tokens: { color: { bg: '#ffffff', accent: '#15b39a' } }, alt: { tokens: { color: { 'accent-text': '#000000' } } } });
   assert.ok(!alt.includes('contrast-color('), 'a token set on one side only still counts as owner-set');
+});
+
+test('inkOn: dark text on a light colour, light on a dark one, the theme pair on a theme colour', () => {
+  assert.equal(inkOn('#ffd36b'), '#14161c');
+  assert.equal(inkOn('#1c2340'), '#ffffff');
+  assert.equal(inkOn('#fff'), '#14161c');
+  assert.equal(inkOn('accent'), 'var(--urd-color-accent-text)');
+  assert.equal(inkOn('text'), 'var(--urd-color-bg)');
+  assert.equal(inkOn('rgb(0 0 0)'), null);
+  assert.equal(inkOn(''), null);
+  assert.equal(inkOn('toString'), null);
+  // The ink chosen is the one of the two that stands out more.
+  for (const colour of ['#ffd36b', '#1c2340', '#7c5cff', '#18b39b', '#d0a74a', '#808080']) {
+    const ink = inkOn(colour);
+    const other = ink === '#ffffff' ? '#14161c' : '#ffffff';
+    assert.ok(contrastRatio(ink, colour) >= contrastRatio(other, colour), colour);
+  }
 });

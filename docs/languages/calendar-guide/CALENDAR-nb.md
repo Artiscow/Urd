@@ -8,7 +8,7 @@ For deg som eier eller redigerer et nettsted bygget med Urd og vil vise arrangem
 
 Veiledningen dekker det kalenderen kan i dag. Den vanlige bruken av editoren står i [brukerveiledningen](../user-guide/GUIDE-nb.md).
 
-**Innhold:** [Slik virker det](#slik-virker-det) · [Kalendertjenester](#kalendertjenester) · [Legge til kalenderen](#legge-til-kalenderen) · [Design](#design) · [Hva som leses fra et arrangement](#hva-som-leses-fra-et-arrangement) · [Møtelenker](#møtelenker) · [Påmelding](#påmelding) · [Steder og kart](#steder-og-kart) · [Finne arrangementer](#finne-arrangementer) · [Tider](#tider) · [Arrangementskortet](#arrangementskortet) · [Søkemotorer](#søkemotorer) · [Telefon, tastatur og utskrift](#telefon-tastatur-og-utskrift) · [Personvern](#personvern) · [Hva kalenderen ikke kan](#hva-kalenderen-ikke-kan)
+**Innhold:** [Slik virker det](#slik-virker-det) · [Kalendertjenester](#kalendertjenester) · [Tillate kalenderens vert](#tillate-kalenderens-vert) · [Legge til kalenderen](#legge-til-kalenderen) · [Design](#design) · [Hva som leses fra et arrangement](#hva-som-leses-fra-et-arrangement) · [Møtelenker](#møtelenker) · [Påmelding](#påmelding) · [Steder og kart](#steder-og-kart) · [Finne arrangementer](#finne-arrangementer) · [Tider](#tider) · [Arrangementskortet](#arrangementskortet) · [Søkemotorer](#søkemotorer) · [Telefon, tastatur og utskrift](#telefon-tastatur-og-utskrift) · [Personvern](#personvern) · [Hva kalenderen ikke kan](#hva-kalenderen-ikke-kan)
 
 ## Slik virker det
 
@@ -21,7 +21,7 @@ To ting følger av det:
 
 ## Kalendertjenester
 
-Kalenderen trenger en tjeneste som kan gi en offentlig iCal-adresse. «Prøvd» betyr at tjenesten er brukt med Urd. De andre gir en vanlig iCal-adresse og ventes å virke på samme måte.
+Kalenderen trenger en tjeneste som kan gi en offentlig iCal-adresse. «Prøvd» betyr at tjenesten er brukt med Urd. De andre gir en vanlig iCal-adresse og ventes å virke på samme måte. Alle tjenester unntatt Google Kalender trenger at verten tillates først, se [Tillate kalenderens vert](#tillate-kalenderens-vert).
 
 | Tjeneste | Hvem som lager den | Pris | Offentlig iCal-adresse | Prøvd |
 |---|---|---|---|---|
@@ -47,10 +47,25 @@ Hvor du finner adressen:
 - **Outlook:** Innstillinger, Kalender, Delte kalendere, «Publiser en kalender»; kopier ICS-lenken.
 - **Teamup:** kalenderens iCalendar-strømmer.
 
+## Tillate kalenderens vert
+
+Nettstedet henter en kalender bare fra verter det er satt opp til å tillate, så ingen kan bruke det til å hente noe annet fra nettet.
+Google Kalender (`calendar.google.com`) er tillatt fra start.
+Alle andre tjenester trenger at verten legges til én gang, i Cloudflare, før kalenderen vises:
+
+1. I Cloudflare går du til nettstedets prosjekt → **Settings** → **Variables and Secrets** → **Add**.
+2. Legg til variabelen `ICS_HOSTS` (type Text), med verten i kalenderens adresse som verdi: delen mellom `https://` og neste `/`.
+   For eksempel `calendar.proton.me` for Proton Calendar, eller `sky.example.org` for din egen Nextcloud.
+   Flere verter skilles med komma.
+3. Deploy nettstedet på nytt; variabelen gjelder fra neste deploy.
+
+Til verten er tillatt, viser editoren «The calendar host … is not allowed» under kalenderen, og besøkende ser kalenderen som tom.
+Oppsettsveiledningen har variabelen sammen med de andre: [Oppsett av publisering](../setup-publication/SETUP-nb.md).
+
 ## Legge til kalenderen
 
 1. Åpne panelet **Blokker** og legg til en **Kalender**-blokk (eller seksjonsmalen «Hva skjer»).
-2. Velg blokken. I menyen dens, under **Kilder**, limer du inn iCal-adressen, én per linje.
+2. Velg blokken. I menyen dens, under **Kilder**, limer du inn iCal-adressen i raden; **Legg til kalender** gir en rad til.
 3. Velg design under **Design**, og hvor mange arrangementer som vises.
 
 Før en kilde er limt inn, viser blokken eksempelarrangementer i editoren, så du kan se designet. Besøkende ser aldri eksempelarrangementene.
