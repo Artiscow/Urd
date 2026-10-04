@@ -2,6 +2,19 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Test batch (0.7.21.4): the block follows its own width
+
+- [ ] Month with side panel dragged narrower by its corner: the panel goes under the month as the block passes 600 px, while it is dragged
+- [ ] A plain month or Week plan dragged below 540 px: the month turns to dots with a day list and Week plan stacks its days; dragged wider, they come back
+- [ ] A narrow calendar on a wide page and the same calendar in the mobile view: both show the narrow layout
+- [ ] A gallery with four columns (grid, mosaic and polaroid): two columns in a narrow block, four in a wide one, the mosaic a whole wall
+- [ ] Product cards with a fixed column count: two columns in a narrow block, one below 320 px
+- [ ] An alternating timeline below 480 px: the line along the left edge, the cards under each other
+- [ ] A table and a statistic in narrow blocks: tighter cells and a smaller figure, nothing outside the box
+- [ ] Bento, Split card, Year wheel and Regular event change by the block's width, also in a wide window
+- [ ] The pages on a real phone: calendars, galleries and products look as before
+- [ ] No errors in the console while blocks are dragged back and forth
+
 ### Test batch (0.7.21.2.2): a drag never stretches a section
 
 - [ ] The front page's top section: its height is the same with the editing chrome on and in Clean view (the collection's «+ Add images» buttons and «Write text …» lines no longer make it taller in the editor)

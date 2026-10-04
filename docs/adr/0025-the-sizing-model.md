@@ -67,3 +67,14 @@ Test finding the same day: a block dragged towards the bottom of its section str
 - **One undo step.** The settle and the placement are one step, and a gesture that changes nothing puts the settle back.
 - **Only growth is settled.** A block drawn shorter than its frame keeps it until an edit fits it.
 - **A drag can write a section's own height.** It is only ever the height already displayed, and a block dragged out of a section leaves that height behind.
+
+## Addendum, 4 October 2026: the block's own width, as built
+
+Built in 0.7.21.4 for decision 7.
+
+- **The container is the box of the block types that need it.** Calendar, collection, gallery, product, stats, table and timeline (`FOLLOWS_WIDTH` in push-model.js) are size containers named `urd-block`, marked by render.js with `data-urd-width="own"`. Other blocks are not: like the canvas, a container box would hold a fixed-position descendant, which a plugin block may have.
+- **Every width rule keeps the window as its fallback.** A rule that asks the block's width is a container query on `urd-block`, and the window's media query that it replaces stays beside it behind `@supports not (container-type: inline-size)`, with the same declarations. A test holds the two equal.
+- **The calendar's narrow layouts are chosen in script.** They are a different DOM, not a style: the plain month and Overview on cream draw dots that open the day, and Week plan stacks its days. They are chosen by the block's width (narrower than 540 px, the week strip's own threshold) where container queries exist, and by the window without them. A zero-height ruler beside the calendar is observed for the width alone, and the calendar is drawn again in the next frame, so the push pass's changes to the block's height never come back to the observer.
+- **Galleries and product cards write wide and narrow column counts.** A narrow block takes at most two columns, and the mosaic gets a wall per count from the same seed; the container query picks between them. Collection cards already filled their box (`auto-fill`).
+- **The blocks with no narrow layout got one.** The alternating timeline lays its line along the left edge below 480 px, a table tightens its cells below 420 px, and a figure shrinks below 220 px.
+

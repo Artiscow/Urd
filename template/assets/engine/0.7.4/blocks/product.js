@@ -338,8 +338,13 @@ export const productBlock = {
         return;
       }
       const grid = el2('div', 'urd-product-cardlist');
+      // The owner's column count, which a narrow block holds to two and then one (base.css).
       const columns = Math.min(6, Math.max(0, Number(props.columns) || 0));
-      if (columns) grid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+      if (columns) {
+        grid.classList.add('urd-product-cols');
+        grid.style.setProperty('--urd-product-cols', String(columns));
+        grid.style.setProperty('--urd-product-cols-narrow', String(Math.min(columns, 2)));
+      }
       const cards = entries.map((entry) => renderCard(entry, props, editable, Boolean(ctx.preview)));
       grid.append(...cards);
       host.appendChild(grid);

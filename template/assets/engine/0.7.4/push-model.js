@@ -39,6 +39,24 @@ export function followsContent(block) {
   return FOLLOWS_CONTENT.has(block?.type);
 }
 
+/**
+ * The block types that lay themselves out by their own width (ADR-0025
+ * decision 7): the ones with columns, cards or a layout that changes when the
+ * box is narrow. Their box is a size container (`urd-block` in base.css), so
+ * a drag narrower shows the narrow layout while it is dragged, and a block in
+ * a narrow column of a wide page uses its narrow layout as on a phone.
+ */
+export const FOLLOWS_WIDTH = new Set(['calendar', 'collection', 'gallery', 'product', 'stats', 'table', 'timeline']);
+
+/**
+ * Whether a block lays itself out by its own width (ADR-0025).
+ * @param {{type?: string}} block
+ * @returns {boolean}
+ */
+export function followsWidth(block) {
+  return FOLLOWS_WIDTH.has(block?.type);
+}
+
 /** The floor of a block's shrink (block.fitMin), a share of the design size: 0.01 to 1, default 0.6. */
 export function clampFitMin(value) {
   const n = Number(value);

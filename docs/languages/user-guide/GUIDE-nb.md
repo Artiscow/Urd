@@ -45,7 +45,10 @@ helt uten editor-rammer. Klikk «Rediger»-knappen for å komme tilbake.
   Tidslinje og Lyd) er alltid like høy som det den viser: håndtaket endrer
   bare bredden, et drag opp eller ned stopper ved kanten av innholdet med
   et merke som sier det, og omrisset følger selv med når du endrer
-  innstillingene.
+  innstillingene. En blokk med kolonner eller kort (Kalender, Samling, Galleri,
+  Produktkort, Statistikk, Tidslinje og Tabell) legger seg ut etter sin egen
+  bredde: dratt smalere viser den det smale oppsettet med en gang, og i en
+  smal kolonne på en bred side ser den ut som på telefon.
 - **Verktøylinjen over valgt blokk**:
   - ⠿ flytt (dra)
   - lag-pilene (pil mot strek, opp/ned) legger blokken helt foran eller bakerst (når blokker overlapper).

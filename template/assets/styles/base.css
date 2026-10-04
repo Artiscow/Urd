@@ -218,6 +218,28 @@ html {
   position: absolute;
 }
 
+/* A block with columns or cards lays itself out by its own width (ADR-0025
+   decision 7; FOLLOWS_WIDTH in push-model.js): its box is the size container
+   urd-block, so a rule for its columns, spacing or pictures asks the block and
+   not the window, a drag narrower shows the narrow layout while it is dragged,
+   and a narrow column of a wide page gets the layout a phone gets. A rule that
+   asks it keeps the window's media query as its twin for a browser without
+   container queries, behind @supports not. Only these block types are
+   containers: like the canvas (see .urd-canvas), a container box would hold a
+   fixed-position descendant, which a plugin block may have. */
+.urd-block[data-urd-width="own"] {
+  container: urd-block / inline-size;
+}
+
+/* A block's ruler (blocks/calendar.js): no height and the block's full width,
+   so a ResizeObserver on it hears the width alone and a layout chosen in
+   script by the block's width follows a drag, while the push pass changes the
+   block's height freely. */
+.urd-block-ruler {
+  height: 0;
+  pointer-events: none;
+}
+
 /* The mobile row grid (ADR-0019): one column of 8 px rows that grow with
    the content (minmax). Untouched blocks are auto-placed in reading order
    (sparse: they always jump BELOW pinned bands, never into gaps above),
@@ -507,6 +529,34 @@ html {
   left: calc(-4.35% - 0.31rem);
 }
 
+/* A narrow block (its own width, see urd-block) has no room for two columns
+   of cards: the alternating variant lays its line along the left edge, with
+   every card under the one before it. */
+@container urd-block (max-width: 480px) {
+  .urd-timeline-alternating {
+    padding-left: 1.6rem;
+  }
+
+  .urd-timeline-alternating::before {
+    left: 0.45rem;
+    transform: none;
+  }
+
+  .urd-timeline-alternating .urd-timeline-item {
+    width: auto;
+  }
+
+  .urd-timeline-alternating .urd-timeline-item:nth-child(even) {
+    align-self: auto;
+  }
+
+  .urd-timeline-alternating .urd-timeline-item::before,
+  .urd-timeline-alternating .urd-timeline-item:nth-child(even)::before {
+    right: auto;
+    left: calc(-1.47rem - 1px);
+  }
+}
+
 .urd-timeline-year {
   font-size: 0.78em;
   font-weight: 700;
@@ -676,6 +726,19 @@ html {
   color: inherit;
 }
 
+/* A very narrow block (its own width, see urd-block): a smaller figure and
+   less padding, so a long number stays inside the box. */
+@container urd-block (max-width: 220px) {
+  .urd-stat-number {
+    font-size: 1.7em;
+  }
+
+  .urd-stats-cards,
+  .urd-stats-band {
+    padding: 0.8rem 0.6rem;
+  }
+}
+
 /* The table: a semantic table in an overflow wrapper, so wide
    tables scroll in their own surface instead of breaking the page layout. */
 .urd-table {
@@ -694,6 +757,15 @@ html {
   padding: 8px 12px;
   text-align: left;
   vertical-align: top;
+}
+
+/* A narrow block (its own width, see urd-block): tighter cells, so more of
+   the table is seen before it scrolls sideways. */
+@container urd-block (max-width: 420px) {
+  .urd-table-table th,
+  .urd-table-table td {
+    padding: 6px 8px;
+  }
 }
 
 .urd-table-table th {
@@ -3070,13 +3142,17 @@ textarea.urd-form-input {
   border-radius: 999px;
 }
 
-@media (max-width: 600px) {
+@supports not (container-type: inline-size) {
+  @media (max-width: 600px) {
+    .urd-cal-bento {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+@container urd-block (max-width: 600px) {
   .urd-cal-bento {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .urd-cal-poster-big {
-    grid-column: span 2;
   }
 }
 
@@ -4149,7 +4225,21 @@ textarea.urd-form-input {
   opacity: 0.75;
 }
 
-@media (max-width: 600px) {
+@supports not (container-type: inline-size) {
+  @media (max-width: 600px) {
+    .urd-cal-side,
+    .urd-cal-wheel {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .urd-cal-side-panel {
+      border-top: 1px solid var(--urd-cal-line);
+      border-left: 0;
+    }
+  }
+}
+
+@container urd-block (max-width: 600px) {
   .urd-cal-side,
   .urd-cal-wheel {
     grid-template-columns: minmax(0, 1fr);
@@ -4172,7 +4262,33 @@ textarea.urd-form-input {
   border-left: 0;
 }
 
-@media (min-width: 601px) {
+@supports not (container-type: inline-size) {
+  @media (min-width: 601px) {
+    .urd-cal-o-panelSide-left .urd-cal-side {
+      grid-template-columns: minmax(12em, 15em) minmax(0, 1fr);
+    }
+
+    .urd-cal-o-panelSide-left .urd-cal-side-panel {
+      order: -1;
+      border-right: 1px solid var(--urd-cal-line);
+      border-left: 0;
+    }
+
+    .urd-cal-o-columns-2 :is(.urd-cal-posters, .urd-cal-photos) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .urd-cal-o-columns-3 :is(.urd-cal-posters, .urd-cal-photos) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .urd-cal-o-columns-4 :is(.urd-cal-posters, .urd-cal-photos) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+}
+
+@container urd-block (min-width: 601px) {
   .urd-cal-o-panelSide-left .urd-cal-side {
     grid-template-columns: minmax(12em, 15em) minmax(0, 1fr);
   }
@@ -5626,7 +5742,15 @@ textarea.urd-form-input {
   border: 0;
 }
 
-@media (max-width: 600px) {
+@supports not (container-type: inline-size) {
+  @media (max-width: 600px) {
+    .urd-cal-split-top {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}
+
+@container urd-block (max-width: 600px) {
   .urd-cal-split-top {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -6440,7 +6564,22 @@ textarea.urd-form-input {
   border-color: var(--urd-cal-s-edge, #2a2a32);
 }
 
-@media (max-width: 600px) {
+@supports not (container-type: inline-size) {
+  @media (max-width: 600px) {
+    .urd-cal-aps:has(.urd-cal-aps-aside) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .urd-cal-aps-aside {
+      padding-top: 1.2em;
+      padding-left: 0;
+      border-top: 1px solid var(--urd-cal-s-line, #d9cfae);
+      border-left: 0;
+    }
+  }
+}
+
+@container urd-block (max-width: 600px) {
   .urd-cal-aps:has(.urd-cal-aps-aside) {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -6486,6 +6625,24 @@ textarea.urd-form-input {
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 18px;
   width: 100%;
+}
+
+/* The owner's own column count (product.columns), which a narrow block (its
+   own width, see urd-block) holds to two and then one. */
+.urd-product-cardlist.urd-product-cols {
+  grid-template-columns: repeat(var(--urd-product-cols, 3), 1fr);
+}
+
+@container urd-block (max-width: 540px) {
+  .urd-product-cardlist.urd-product-cols {
+    grid-template-columns: repeat(var(--urd-product-cols-narrow, 2), 1fr);
+  }
+}
+
+@container urd-block (max-width: 320px) {
+  .urd-product-cardlist.urd-product-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .urd-product-card {
@@ -8267,6 +8424,8 @@ a.urd-gallery-tile {
 .urd-gallery-wall .urd-gallery-tile {
   width: 100%;
   height: 100%;
+  grid-column: var(--urd-tile-col, auto);
+  grid-row: var(--urd-tile-row, auto);
 }
 
 /* Polaroid: each picture set in a card with a wider foot, leaning by its own throw of the seed (--urd-card-tilt from the block).
@@ -8279,6 +8438,21 @@ a.urd-gallery-tile {
   align-items: start;
   height: auto;
   padding: 10px;
+}
+
+/* A narrow gallery (the block's own width, see urd-block): the grid, the
+   mosaic and the polaroids take the narrow column count the block writes
+   (--urd-gallery-cols-narrow, at most two), and the mosaic its narrow wall.
+   Without container queries the block writes the window's count instead. */
+@container urd-block (max-width: 540px) {
+  :is(.urd-gallery-grid, .urd-gallery-wall, .urd-gallery-cards) {
+    grid-template-columns: repeat(var(--urd-gallery-cols-narrow, var(--urd-gallery-cols, 3)), 1fr);
+  }
+
+  .urd-gallery-wall .urd-gallery-tile {
+    grid-column: var(--urd-tile-col-narrow, var(--urd-tile-col, auto));
+    grid-row: var(--urd-tile-row-narrow, var(--urd-tile-row, auto));
+  }
 }
 
 .urd-gallery-card {

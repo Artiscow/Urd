@@ -20,6 +20,7 @@ import { t, ta, tp, taApiError, dates, adminLocaleReady } from '../i18n.js';
 import { iconSvg } from '../icons.js';
 import { resolveColor, inkOn } from '../theme.js';
 import { stripActiveContent, safeHtmlFragment } from '../sanitize.js';
+import { WIDTH_QUERIES } from '../render.js';
 
 const el2 = (tag, className, textContent) => {
   const node = document.createElement(tag);
@@ -357,8 +358,8 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     weekStartOf: (ms) => cf.startOfWeek(ms, weekStart),
     /** Now, on the clock the times are shown in. */
     today: () => new Date(zone ? cf.shiftToZone(Date.now(), zone) : Date.now()),
-    /** True on the phone, where a design with seven columns draws its phone layout. */
-    phone: ctx.viewport === 'mobile',
+    /** True when the calendar is narrow (drawCalendar), and a design with seven columns draws its phone layout. */
+    phone: false,
     /** A label that names the week, month or day shown: a change of it is read out by a screen reader. */
     live: (node) => {
       node.setAttribute('aria-live', 'polite');
@@ -1329,10 +1330,17 @@ if (typeof location !== 'undefined' && new URLSearchParams(location.search).has(
 
 /* ---------- The block ---------- */
 
+/** The width in px below which a calendar draws its narrow layouts (drawCalendar): the width at which seven columns stop being readable, the same as the week strip's own container query in base.css. */
+const NARROW_PX = 540;
+
 function renderCalendar(el, props, ctx) {
   closeOrphanCards();
   const host = el2('div', 'urd-cal');
   el.appendChild(host);
+  // The ruler the calendar reads its own width from (drawCalendar).
+  const ruler = el2('div', 'urd-block-ruler');
+  ruler.setAttribute('aria-hidden', 'true');
+  el.appendChild(ruler);
   // A calendar with a feed stands in its loading state until the events are drawn.
   if ((props.sources ?? []).length) {
     host.setAttribute('aria-busy', 'true');
@@ -1376,7 +1384,6 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
   const design = cd.calDesign(props.design);
   const view = cd.calView(props);
   host.className = `urd-cal urd-cal-d-${design.id}`;
-  host.classList.toggle('urd-cal-phone', ctx.viewport === 'mobile');
   for (const [name, value] of Object.entries(cd.calSlotVars(design, props.colors))) host.style.setProperty(name, value);
   // The text on the calendar's accent follows the accent the owner picked.
   const accentInk = props.colors?.accent ? inkOn(props.colors.accent) : null;
@@ -1388,6 +1395,40 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
   host.classList.toggle('urd-cal-stripes', stripe.show);
   if (stripe.color) host.style.setProperty('--urd-cal-stripe', stripe.color);
   const ui = makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone);
+  // A calendar narrower than NARROW_PX draws its narrow layouts: the designs
+  // with seven columns lay their days under each other, and the months show
+  // dots that open the day. Where container queries exist the calendar asks
+  // its own width (ADR-0025), so a calendar in a narrow column of a wide page
+  // is narrow too and a drag passes through both layouts; else the window
+  // decides, as the page's phone view.
+  const ruler = el.querySelector(':scope > .urd-block-ruler');
+  const isNarrow = () => (WIDTH_QUERIES && ruler ? ruler.clientWidth < NARROW_PX : ctx.viewport === 'mobile');
+  const setNarrow = (narrow) => {
+    ui.phone = narrow;
+    host.classList.toggle('urd-cal-phone', narrow);
+  };
+  setNarrow(isNarrow());
+  if (WIDTH_QUERIES && ruler) {
+    // The ruler hears the width alone, and the calendar is drawn again in the
+    // next frame rather than inside the observer, where a change of its height
+    // would come back to the push pass as a notification it cannot deliver.
+    let frame = 0;
+    const watch = new ResizeObserver(() => {
+      if (!host.isConnected) {
+        watch.disconnect();
+        return;
+      }
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const narrow = isNarrow();
+        if (!host.isConnected || narrow === ui.phone) return;
+        setNarrow(narrow);
+        if (shown) draw(shown.occurrences, shown.note);
+      });
+    });
+    watch.observe(ruler);
+  }
   let feedZone = null;
   // The design's own settings as classes, for the ones the style sheet draws.
   for (const [key, value] of Object.entries(ui.opt)) {

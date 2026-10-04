@@ -46,6 +46,10 @@ completely without editor frames. Click the **Edit** button to come back.
   Timeline and Audio) is always as tall as what it shows: its handle changes the width
   only, a pull up or down stops at the edge of the content with a mark that
   says so, and its outline follows by itself when you change its settings.
+  A block with columns or cards (Calendar, Collection, Gallery, Product cards,
+  Statistic, Timeline and Table) lays itself out by its own width: dragged
+  narrower it shows its narrow layout at once, and in a narrow column of a wide
+  page it looks as it does on a phone.
 - **The toolbar above the selected block**:
   - ⠿ move (drag)
   - the layer arrows (arrow towards a line, up/down) put the block right in front or at the very back (when blocks overlap).

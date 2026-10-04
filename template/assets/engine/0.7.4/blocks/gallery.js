@@ -17,7 +17,7 @@
  * motion, in hidden tabs, and in preview with the editing chrome on.
  */
 import { applyImageStyle } from './image.js';
-import { growSectionTo } from '../render.js';
+import { growSectionTo, WIDTH_QUERIES } from '../render.js';
 import {
   stepIndex, canAutoplay, normalizeInterval, gridColumns, galleryView, GRID_VIEWS, mosaicRowHeight, mosaicWall, polaroidTilts,
 } from '../gallery-model.js';
@@ -117,9 +117,24 @@ function makeTile(props, index, ctx, blockEl) {
   return tile;
 }
 
+/**
+ * The column counts of the grid views, wide and narrow: a narrow block (its
+ * own width, ADR-0025) takes the narrow count through a container query in
+ * base.css. Without container queries the wide count is the window's, as the
+ * page's phone view.
+ * @returns {{wide: number, narrow: number}}
+ */
+function columnCounts(host, props, ctx) {
+  const wide = gridColumns(props.columns, props.images.length, WIDTH_QUERIES ? 'desktop' : ctx.viewport);
+  const narrow = gridColumns(props.columns, props.images.length, 'mobile');
+  host.style.setProperty('--urd-gallery-cols', String(wide));
+  host.style.setProperty('--urd-gallery-cols-narrow', String(narrow));
+  return { wide, narrow };
+}
+
 function renderGrid(host, props, ctx, blockEl) {
   host.classList.add('urd-gallery-grid');
-  host.style.setProperty('--urd-gallery-cols', String(gridColumns(props.columns, props.images.length, ctx.viewport)));
+  columnCounts(host, props, ctx);
   host.style.setProperty('--urd-gallery-gap', `${Number(props.gap) || 0}px`);
   props.images.forEach((_, i) => host.appendChild(makeTile(props, i, ctx, blockEl)));
 }
@@ -285,16 +300,19 @@ function renderRibbon(host, props, ctx, blockEl) {
  */
 function renderMosaic(host, props, ctx, blockEl) {
   host.classList.add('urd-gallery-wall');
-  const cols = gridColumns(props.columns, props.images.length, ctx.viewport);
-  host.style.setProperty('--urd-gallery-cols', String(cols));
+  const { wide, narrow } = columnCounts(host, props, ctx);
   host.style.setProperty('--urd-gallery-gap', `${Number(props.gap) || 0}px`);
   host.style.setProperty('--urd-gallery-row', `${mosaicRowHeight(props.rowHeight)}px`);
-  const wall = mosaicWall(props.images.length, props.seed, cols);
+  // Two walls from the same seed, one per column count: base.css places each
+  // tile by the one that fits the block's width.
+  const walls = { '': mosaicWall(props.images.length, props.seed, wide), '-narrow': mosaicWall(props.images.length, props.seed, narrow) };
   props.images.forEach((_, i) => {
     const tile = makeTile(props, i, ctx, blockEl);
-    const place = wall.tiles[i];
-    tile.style.gridColumn = `${place.col + 1} / span ${place.cols}`;
-    tile.style.gridRow = `${place.row + 1} / span ${place.rows}`;
+    for (const [suffix, wall] of Object.entries(walls)) {
+      const place = wall.tiles[i];
+      tile.style.setProperty(`--urd-tile-col${suffix}`, `${place.col + 1} / span ${place.cols}`);
+      tile.style.setProperty(`--urd-tile-row${suffix}`, `${place.row + 1} / span ${place.rows}`);
+    }
     host.appendChild(tile);
   });
 }
@@ -307,7 +325,7 @@ function renderMosaic(host, props, ctx, blockEl) {
  */
 function renderPolaroid(host, props, ctx, blockEl) {
   host.classList.add('urd-gallery-cards');
-  host.style.setProperty('--urd-gallery-cols', String(gridColumns(props.columns, props.images.length, ctx.viewport)));
+  columnCounts(host, props, ctx);
   host.style.setProperty('--urd-gallery-gap', `${Number(props.gap) || 0}px`);
   // The card is white with dark ink until the owner picks a colour; then the words take the colour that reads on that card.
   if (props.frameColor) {

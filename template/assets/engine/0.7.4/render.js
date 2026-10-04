@@ -14,7 +14,7 @@
  *    natural height, and the section height follows from the grid.
  */
 import { lift, MOBILE_ROW, MOBILE_GAP } from './migrate.js';
-import { pushLayout, clampFitMin, fitFloorPx, followsContent, FIT_BY_WIDTH, PUSH_SECTION_PAD } from './push-model.js';
+import { pushLayout, clampFitMin, fitFloorPx, followsContent, followsWidth, FIT_BY_WIDTH, PUSH_SECTION_PAD } from './push-model.js';
 import { applyAnimation, applyCardAnimation } from './animations/core.js';
 import { applySectionTheme, resolveColor } from './theme.js';
 import { sectionDivider, dividerSvg } from './divider-model.js';
@@ -96,6 +96,13 @@ export function growSectionTo(sectionEl, bottom) {
   const current = Number.parseFloat(getComputedStyle(sectionEl).minHeight) || 0;
   if (bottom > current) sectionEl.style.minHeight = `${bottom}px`;
 }
+
+/**
+ * Whether the browser answers container queries: a block that follows its own
+ * width (followsWidth) then lays itself out by its box (ADR-0025 decision 7),
+ * and without them by the window, as the page's phone view.
+ */
+export const WIDTH_QUERIES = typeof CSS !== 'undefined' && typeof CSS.supports === 'function' && CSS.supports('container-type', 'inline-size');
 
 /* ---------- Content push on the desktop canvas (ADR-0024) ---------- */
 
@@ -298,7 +305,7 @@ function fitContent(el, designH, block) {
 
 /** The editing chrome inside a block never counts as content, and neither
  *  does a dialog, which is drawn over the page and never in the block. */
-const BLOCK_CHROME = '.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-sticky-badge, .urd-mobile-pin, .urd-hint-chip, .urd-hint-card, .urd-cal-note, dialog';
+const BLOCK_CHROME = '.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-sticky-badge, .urd-mobile-pin, .urd-hint-chip, .urd-hint-card, .urd-cal-note, .urd-block-ruler, dialog';
 
 /**
  * The height the block's content needs, in the block's own px. Measured on
@@ -789,6 +796,8 @@ export function renderSection(section, site, host, opts = {}) {
       const def = Urd.blocks.get(block.type);
       const autoGrow = block.type === 'text' || Boolean(def?.autoGrow);
       Object.assign(el.style, mobilePlacementToCss(block.frames.mobile, block.frames.desktop, { autoGrow }));
+      // A block with columns or cards lays itself out by its own width (base.css).
+      if (followsWidth(block)) el.dataset.urdWidth = 'own';
       // Screen docking applies on mobile too: sticky.js docks the block
       // against its own measured size. Scroll pinning is desktop-only
       // (the row grid is document flow), so that mode is not marked here.
@@ -823,8 +832,10 @@ export function renderSection(section, site, host, opts = {}) {
       const frame = block.frames.desktop;
       applyFrameCss(el, frame, fitFloorPx(block, site.layout));
       // The push pass draws this block at its content's height (ADR-0025),
-      // and the editing layer stops a drag of its height at the content.
+      // and the editing layer stops a drag of its height at the content. A
+      // block with columns or cards lays itself out by its own width (base.css).
       if (followsContent(block)) el.dataset.urdHeight = 'content';
+      if (followsWidth(block)) el.dataset.urdWidth = 'own';
       // Sticky ("pin on scroll", additive field): only marking here; the
       // pinning itself is done by sticky.js on scroll. The mobile branch
       // above marks screen docking only (scroll pinning belongs to

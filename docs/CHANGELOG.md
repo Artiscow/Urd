@@ -27,6 +27,14 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.21.4 - The block follows its own width - 4 October 2026
+
+- A block with columns or cards laid itself out by the window: a narrow calendar on a wide page kept its wide layout, and the five calendar designs that change at 600 px (Bento, Month with side panel, Year wheel, Split card, Regular event) changed by the window only. Calendar, collection, gallery, product cards, statistic, timeline and table are now size containers (`FOLLOWS_WIDTH` in push-model.js, `urd-block` in base.css), and the calendar's width rules ask the block, with the window's media query kept beside them for a browser without container queries (a test holds the two equal).
+- The calendar's narrow layouts (the month's dots, Overview on cream, the stacked Week plan) were chosen by the page's phone view. They are chosen by the calendar's own width, below 540 px, and change while the block is dragged (a zero-height ruler observed for the width, drawn again in the next frame; the window decides without container queries).
+- Galleries and product cards with a fixed column count kept it in a narrow block. They take at most two columns below 540 px, product cards one below 320 px, and the mosaic gets a wall of its own for the narrow count.
+- The alternating timeline lays its line along the left edge below 480 px, a table tightens its cells below 420 px, and a figure shrinks below 220 px. Collection cards already filled their box.
+- ADR-0025 gets an addendum on how the block's own width is built, and the user guide and the calendar guide say that these blocks follow their own width, in English and Norwegian.
+
 ### 0.7.21.2.2 - A drag never stretches a section - 4 October 2026
 
 - Test finding 4 October 2026: a block dragged towards the bottom of its section stretched the section instead of lying over the edge, the symptom of 0.7.0.22 back with a new cause: the box the owner sees was taller than the frame the section line reads, by a frame never fitted to its content (a page saved before 0.7.21.2, a collection's entries, a feed) or by the editor's own parts. When a gesture begins, the frames under it are settled to the boxes the push pass draws, the blocks below and a section's own height taking what the pass drew, so the section line holds still and a block dragged past the edge lies over it (`settleFrames` in preview-edit.js, `fitMovesAll` in push-model.js; ADR-0025 addendum).

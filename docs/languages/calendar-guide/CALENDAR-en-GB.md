@@ -212,7 +212,7 @@ Give every event a place with an address. An event without one is the kind searc
 
 ## Phone, keyboard and print
 
-- **On a phone** the designs with seven columns change: the days of a week stand under each other, and in a month every day is a button with a dot per event; a press lists that day's events.
+- **On a phone, and wherever a calendar is narrower than 540 px** (a narrow column of a wide page), the designs with seven columns change: the days of a week stand under each other, and in a month every day is a button with a dot per event; a press lists that day's events. A design with a panel or an aside beside it lays them under each other when the calendar is narrower than 600 px. The calendar decides by its own width, so dragging it narrower in the editor shows the change at once.
 - **With a keyboard** a month or a week is one stop for the Tab key. The arrow keys move between the days, Home and End go to the ends of the week, and PageUp and PageDown change the month or the week. Enter opens an event.
 - **On paper** the design and the buttons are left out, and the events are printed as a plain list.
 

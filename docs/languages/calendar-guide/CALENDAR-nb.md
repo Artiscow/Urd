@@ -212,7 +212,7 @@ Gi hvert arrangement et sted med adresse. Et arrangement uten er den typen søke
 
 ## Telefon, tastatur og utskrift
 
-- **På telefon** endres designene med sju kolonner: dagene i en uke står under hverandre, og i en måned er hver dag en knapp med en prikk per arrangement; et trykk lister dagens arrangementer.
+- **På telefon, og overalt der en kalender er smalere enn 540 px** (en smal kolonne på en bred side), endres designene med sju kolonner: dagene i en uke står under hverandre, og i en måned er hver dag en knapp med en prikk per arrangement; et trykk lister dagens arrangementer. Et design med et panel eller en sidekolonne ved siden av legger dem under hverandre når kalenderen er smalere enn 600 px. Kalenderen bestemmer ut fra sin egen bredde, så når du drar den smalere i redigereren, ser du endringen med en gang.
 - **Med tastatur** er en måned eller en uke ett stopp for Tab-tasten. Piltastene går mellom dagene, Home og End går til endene av uken, og PageUp og PageDown bytter måned eller uke. Enter åpner et arrangement.
 - **På papir** utelates designet og knappene, og arrangementene skrives ut som en enkel liste.
 
