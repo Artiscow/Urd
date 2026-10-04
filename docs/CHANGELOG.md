@@ -27,6 +27,14 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.20.4 - The search in the element menu - 4 October 2026
+
+- A setting deep in a closed group could only be found by opening groups, and the calendar's menu had grown by eleven settings since they were built. A search field in the floating menu's head and over the menu in Properties narrows the menu to the settings whose label or tooltip holds every word, with their groups open (`menu-search.js`, `matchWords` in palette-search.js, tests/menu-search.test.mjs).
+- The search reads the menu as it is drawn, so every block type has it, and draws its own copy of the areas, so emptying the field brings back the groups and the tab as they were left. The wide menu keeps its columns, each saying when nothing in it matches, and the narrow one shows its areas under each other.
+- Esc empties the field, another block or a closed menu empties the search, and a word typed closes the design picker.
+- The field picker in «Text fields» has no words of its own and would have been hidden from the size and colour it sets. A control without words shows whenever its group does.
+- The user guide in English and Norwegian describes the element menu and its search.
+
 ### 0.7.21.4 - The block follows its own width - 4 October 2026
 
 - A block with columns or cards laid itself out by the window: a narrow calendar on a wide page kept its wide layout, and the five calendar designs that change at 600 px (Bento, Month with side panel, Year wheel, Split card, Regular event) changed by the window only. Calendar, collection, gallery, product cards, statistic, timeline and table are now size containers (`FOLLOWS_WIDTH` in push-model.js, `urd-block` in base.css), and the calendar's width rules ask the block, with the window's media query kept beside them for a browser without container queries (a test holds the two equal).

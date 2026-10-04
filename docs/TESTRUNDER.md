@@ -2,6 +2,19 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Test batch (0.7.20.4): the search in the element menu
+
+- [ ] The calendar's menu from the gear, «clock» in the search field: only «Clock» shows, with «View and count» open; Style and Placement say that nothing matches
+- [ ] «colour»: the Colours, Edge stripe and Text fields groups open with what matches; «size»: «Text fields» shows the field picker over «Size (px)»
+- [ ] Two words in any order («text colour», «colour text») find the same settings, and a group's name shows the whole group
+- [ ] A group opened by hand before the search: after emptying the field it is the only group open, and the narrow menu is on the same tab
+- [ ] Esc in the field with words empties it; Esc again closes the menu
+- [ ] The narrow menu while searching: the three areas under each other, the quick row gone until the field is empty
+- [ ] The search field over the menu in Properties: it narrows that menu only, and selecting another block empties it
+- [ ] «switcher», then «Show view switcher» turned on: «The week starts» stays hidden until a word finds it
+- [ ] The design picker open, a word typed: the picker closes and the hits show
+- [ ] Another block type (a gallery, a form): a word from one of its labels or tooltips finds it
+
 ### Test batch (0.7.21.4): the block follows its own width
 
 - [ ] Month with side panel dragged narrower by its corner: the panel goes under the month as the block passes 600 px, while it is dragged

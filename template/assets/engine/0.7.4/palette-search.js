@@ -1,7 +1,8 @@
 /**
- * The block search: plain text matching for the insertion menus. Matches
- * against the VISIBLE (ta-translated) labels the menus already show, never
- * against keys or re-translations. Diacritics and letter case do not matter
+ * The block search and the element menu's search: plain text matching for
+ * the insertion menus and the settings. Matches against the VISIBLE
+ * (ta-translated) labels the menus already show, never against keys or
+ * re-translations. Diacritics and letter case do not matter
  * (NFD stripping). No DOM - node-testable.
  */
 
@@ -31,6 +32,16 @@ export function rankLabel(label, query) {
 /** True when the label matches the query (an empty query matches everything). */
 export function matchLabel(label, query) {
   return rankLabel(label, query) >= 0;
+}
+
+/**
+ * True when every word of the query occurs in the text, in any order: the
+ * element menu's search, where «colour text» finds «Text colour». An empty
+ * query matches everything.
+ */
+export function matchWords(text, query) {
+  const t = normalize(text);
+  return normalize(query).split(/\s+/).filter(Boolean).every((word) => t.includes(word));
 }
 
 /**

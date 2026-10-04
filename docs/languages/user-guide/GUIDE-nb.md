@@ -120,6 +120,14 @@ valg i stedet for dra-og-slipp:
 - Klikker du i en seksjon (uten blokk valgt) viser panelet seksjonens
   minstehøyde, eget grid, bakgrunn og animasjon.
 
+**Elementmenyen**: tannhjulet på blokkens verktøylinje åpner de samme innstillingene
+ved siden av blokken. De står i tre områder, Innhold, Stil og Plassering, som
+kolonner i den brede menyen og som faner i den smale, med de mest brukte
+innstillingene i en rad over dem. Søkefeltet øverst finner en innstilling på et ord
+fra navnet eller hjelpeteksten: menyen viser da bare det som passer, med gruppene
+det står i åpne, og Esc eller et tomt felt gir deg menyen tilbake slik den var.
+Egenskaper har det samme søket over sin meny.
+
 **Farger**: fargevelgerne viser temafargene dine som prikker - velger du
 en av dem, KOBLES feltet til temaet og følger med når du endrer paletten
 i Tema-panelet (koblede felt vises med ring). Velger du fritt i flaten

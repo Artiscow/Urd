@@ -12,6 +12,7 @@
   import { createPreviewBridge } from './lib/previewBridge.js';
   import { previewScale } from './lib/preview-scale.js';
   import { deployTargets, awaitServed } from './lib/deploy-wait.js';
+  import { menuSearch } from './lib/menu-search.js';
   import {
     ownWindowWidthOf, screenSetting, screenViewport,
     SCREEN_WIDTH_MIN, SCREEN_WIDTH_MAX, SCREEN_HEIGHT_MIN, SCREEN_HEIGHT_MAX,
@@ -102,7 +103,7 @@
   import { buildSitemapXml, buildRobotsTxt, buildRssXml, FEED_KINDS } from '$engine/feeds.js';
   import { pageThumb } from '$engine/preset-thumb.js';
   import { PAGE_PRESETS, buildPagePreset } from '$engine/page-presets.js';
-  import { searchItems as searchBlockItems } from '$engine/palette-search.js';
+  import { searchItems as searchBlockItems, matchWords } from '$engine/palette-search.js';
   // The background and animation definitions are reused for labels and
   // defaults, so the editor and the engine never drift apart.
   import { colorLayer } from '$engine/backgrounds/color.js';
@@ -1159,6 +1160,34 @@
     menuWasOpen = open;
   });
   const menuPicking = () => selectedBlock?.type === 'calendar' && menuPickerFor === selectedBlock.blockId;
+
+  /** The element menu's search, one for each place the menu is drawn: the
+   *  floating menu's head and the Properties panel. A search belongs to one
+   *  block's menu, so another block, or the floating menu closing, empties it. */
+  let menuQuery = $state('');
+  let propsQuery = $state('');
+  let searchBlockId = null;
+  $effect(() => {
+    const id = selectedBlock?.blockId ?? null;
+    if (id === searchBlockId) return;
+    searchBlockId = id;
+    menuQuery = '';
+    propsQuery = '';
+  });
+  $effect(() => {
+    if (!blockMenu) menuQuery = '';
+  });
+  const getMenuQuery = () => menuQuery;
+  const getPropsQuery = () => propsQuery;
+  // A word in the search closes the design picker over the menu, so the hits are seen.
+  function setMenuQuery(value) {
+    menuQuery = value;
+    if (value.trim()) menuPickerFor = null;
+  }
+  function setPropsQuery(value) {
+    propsQuery = value;
+    if (value.trim()) menuPickerFor = null;
+  }
 
   /** What a closed group shows: how the block fits a narrower screen, and its motion. */
   function menuFitValue() {
@@ -8377,7 +8406,8 @@
             <div class="panel-body">
               {#if selectedBlock}
                 <p class="panel-strong">{ta('blocks.suffix', { label: BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type })}</p>
-                {@render blockPropsUI(false)}
+                {@render menuSearchField(getPropsQuery, setPropsQuery)}
+                {@render blockPropsUI(false, propsQuery)}
               {:else if activeSectionId}
                 <p class="panel-strong">{ta('lbl.section')}</p>
                 <label title={ta('hint.props.minHeight')}>{ta('lbl.minHeight')}
@@ -9616,9 +9646,13 @@
 
 {#snippet menuGroup(id, title, value, body, reset = null)}
   <!-- A collapsible group of the element menu: the title, the current value while closed, the controls inside.
-       A group that differs from the defaults is handed its reset: it carries a mark, and the reset stands under its controls. -->
+       A group that differs from the defaults is handed its reset: it carries a mark, and the reset stands under its controls.
+       In the search's copy of the menu a group opens where it holds a match, and what is kept open stays as it was left. -->
   <details class="group menu-group" open={menuOpen.has(id)}
-    ontoggle={(e) => { if (e.currentTarget.open) menuOpen.add(id); else menuOpen.delete(id); }}>
+    ontoggle={(e) => {
+      if (e.currentTarget.closest('.emenu-search')) return;
+      if (e.currentTarget.open) menuOpen.add(id); else menuOpen.delete(id);
+    }}>
     <summary>{#if reset}<i class="menu-group-dot" aria-hidden="true"></i>{/if}<span class="menu-group-title">{title}</span><span class="menu-group-value">{value}</span></summary>
     <div class="group-items">
       {@render body()}
@@ -9629,7 +9663,15 @@
   </details>
 {/snippet}
 
-{#snippet blockPropsUI(wide)}
+{#snippet menuSearchField(get, set)}
+  <!-- The element menu's search: narrows the menu to the settings whose label or tooltip holds the words.
+       Escape empties a field with words in it; in an empty field it goes on and closes the menu. -->
+  <input type="search" class="menu-search" placeholder={ta('menu.search')} aria-label={ta('menu.search')} title={ta('tip.menu.search')}
+    bind:value={get, set}
+    onkeydown={(e) => { if (e.key === 'Escape' && get()) { e.stopPropagation(); set(''); } }} />
+{/snippet}
+
+{#snippet blockPropsUI(wide, query = '')}
   <!-- The element menu (ADR-0016 with its addendum): Content is what the
        block says and shows, Style is how it looks, Placement is where it
        sits and how it behaves there. Wide, the three stand as columns;
@@ -10971,7 +11013,7 @@
 
   {#if menuPicking()}
     {@render menuDesignPicker()}
-  {:else}
+  {:else if !query.trim()}
     <!-- The quick row: the settings used most, changed without opening anything -->
     <div class="menu-quick">
       {#each menuQuickItems() as item (item.id)}
@@ -10992,7 +11034,15 @@
       {/each}
     </div>
   {/if}
-  {#if !menuPicking() && wide}
+  {#if !menuPicking() && query.trim()}
+    <!-- The search: a copy of the three areas of its own, narrowed to what matches (menu-search.js),
+         as columns when wide and under each other when narrow, each area saying when nothing in it matches -->
+    <div class="emenu-cols emenu-search" class:stacked={!wide} {@attach menuSearch(query, matchWords)}>
+      <section class="emenu-col"><p class="panel-strong emenu-title">{ta('props.tabContent')}</p>{@render menuContent()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>
+      <section class="emenu-col"><p class="panel-strong emenu-title">{ta('props.tabStyle')}</p>{@render menuStyle()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>
+      <section class="emenu-col"><p class="panel-strong emenu-title">{ta('props.tabPlacement')}</p>{@render menuPlacement()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>
+    </div>
+  {:else if !menuPicking() && wide}
     <div class="emenu-cols">
       <section class="emenu-col"><p class="panel-strong">{ta('props.tabContent')}</p>{@render menuContent()}</section>
       <section class="emenu-col"><p class="panel-strong">{ta('props.tabStyle')}</p>{@render menuStyle()}</section>
@@ -11026,14 +11076,15 @@
 {#if blockMenu && selectedBlock}
   <div class="block-menu" class:wide={menuIsWide} style="--menu-left: {blockMenu.left}px; --menu-top: {blockMenu.top}px; --menu-min: {menuMin}px">
     <header class="block-menu-head">
-      <span>{ta('blocks.suffix', { label: BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type })}</span>
+      <span class="block-menu-title">{ta('blocks.suffix', { label: BLOCK_LABELS[selectedBlock.type] ?? selectedBlock.type })}</span>
+      {@render menuSearchField(getMenuQuery, setMenuQuery)}
       <!-- Wide shows the three areas as columns, narrow as tabs; the admin setting chooses which a menu opens in -->
       <button class="ghost row-tool menu-width" title={menuWide ? ta('menu.toNarrow') : ta('menu.toWide')} aria-label={menuWide ? ta('menu.toNarrow') : ta('menu.toWide')}
         onclick={() => (menuWide = !menuWide)}>{@html menuWide ? MENU_NARROW_ICON : MENU_WIDE_ICON}</button>
       <button class="ghost row-tool" title={ta('tip.closeEsc')} onclick={() => (blockMenu = null)}>{@html ICONS.cross}</button>
     </header>
     <div class="panel-body block-menu-body">
-      {@render blockPropsUI(menuIsWide)}
+      {@render blockPropsUI(menuIsWide, menuQuery)}
     </div>
   </div>
 {/if}
@@ -11544,6 +11595,58 @@
     margin-left: auto;
   }
 
+  /* The title gives way to the search field where the head is narrow */
+  .block-menu-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The element menu's search field, in the menu's head and over the menu in the Properties panel */
+  .menu-search {
+    flex: 1 1 9rem;
+    min-width: 6rem;
+    max-width: 16rem;
+    box-sizing: border-box;
+    height: 1.9rem;
+    padding: 0 0.6em;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 400;
+    color: inherit;
+    background: rgb(255 255 255 / 6%);
+    border: 1px solid rgb(255 255 255 / 16%);
+    border-radius: 7px;
+  }
+
+  .panel-body > .menu-search {
+    max-width: none;
+    height: 2.2rem;
+  }
+
+  /* The search's copy of the areas: what does not match is left out, an area
+     with nothing left says so, and in the narrow menu the areas stand under each other */
+  .emenu-search :global(.menu-miss) {
+    display: none !important;
+  }
+
+  .emenu-none {
+    display: none;
+    margin: 0;
+    font-size: 0.78rem;
+    opacity: 0.6;
+  }
+
+  .emenu-search .emenu-col:global(.menu-empty) > .emenu-none {
+    display: block;
+  }
+
+  .emenu-cols.stacked {
+    grid-auto-flow: row;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   /* Wide: Content, Style and Placement side by side, each column scrolling with the menu */
   .emenu-cols {
     display: grid;
@@ -11564,7 +11667,7 @@
     border-radius: 10px;
   }
 
-  .emenu-col:not(:has(> :not(.panel-strong))) {
+  .emenu-col:not(:has(> :not(.panel-strong, .emenu-none))) {
     display: none;
   }
 
@@ -11718,13 +11821,13 @@
   }
 
   /* In a column a label stands over its control: the row is too narrow for both */
-  .emenu-col label:not(.gridmenu-snap) {
+  .emenu-cols:not(.stacked) .emenu-col label:not(.gridmenu-snap) {
     flex-direction: column;
     align-items: stretch;
     gap: 0.25rem;
   }
 
-  .panel-body .emenu-col label:not(.gridmenu-snap) > :global(*) {
+  .panel-body .emenu-cols:not(.stacked) .emenu-col label:not(.gridmenu-snap) > :global(*) {
     flex: none;
   }
 

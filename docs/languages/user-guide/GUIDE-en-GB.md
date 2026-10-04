@@ -121,6 +121,14 @@ choices instead of drag and drop:
 - If you click in a section (with no block selected) the panel shows the section's
   minimum height, own grid, background and animation.
 
+**The element menu**: the gear on a block's toolbar opens the same settings beside
+the block. They stand in three areas, Content, Style and Placement, as columns in
+the wide menu and as tabs in the narrow one, with the settings used most in a row
+above them. The search field at the top finds a setting by a word from its name or
+its help text: the menu then shows only what matches, with the groups that hold it
+open, and Esc or an empty field brings the menu back as it was. Properties has the
+same search over its menu.
+
 **Colours**: the colour pickers show your theme colours as dots - if you choose
 one of them, the field is LINKED to the theme and follows along when you change the palette
 in the Theme panel (linked fields are shown with a ring). If you choose freely in the area

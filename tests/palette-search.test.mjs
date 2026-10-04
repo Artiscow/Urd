@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { normalize, rankLabel, matchLabel, searchItems } = await engineImport('palette-search.js');
+const { normalize, rankLabel, matchLabel, searchItems, matchWords } = await engineImport('palette-search.js');
 
 // The Norwegian labels below are deliberate fixtures: they exercise the text
 // normalization (diacritics, word starts) on realistic UI labels.
@@ -47,4 +47,15 @@ test('searchItems: best rank first, stable order within equal rank', () => {
   );
   // Empty query: everything, in the original order.
   assert.equal(searchItems(items, '', (x) => x.label).length, 5);
+});
+
+test('matchWords: every word of the query, in any order, in any form; an empty query matches everything', () => {
+  assert.equal(matchWords('Text colour', 'colour text'), true, 'the order of the words does not matter');
+  assert.equal(matchWords('Text colour', 'COL'), true, 'a word may be the start or a piece of one');
+  assert.equal(matchWords('Tekstfarge', 'farge'), true);
+  assert.equal(matchWords('Første måned', 'MANED første'), true, 'letter case and diacritics do not matter');
+  assert.equal(matchWords('Text colour', 'colour size'), false, 'a word missing is a miss');
+  assert.equal(matchWords('Text colour', ''), true);
+  assert.equal(matchWords('Text colour', '   '), true);
+  assert.equal(matchWords('', 'colour'), false);
 });
