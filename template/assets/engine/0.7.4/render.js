@@ -14,7 +14,7 @@
  *    natural height, and the section height follows from the grid.
  */
 import { lift, MOBILE_ROW, MOBILE_GAP } from './migrate.js';
-import { pushLayout, clampFitMin, fitFloorPx, FIT_BY_WIDTH } from './push-model.js';
+import { pushLayout, clampFitMin, fitFloorPx, followsContent, FIT_BY_WIDTH, PUSH_SECTION_PAD } from './push-model.js';
 import { applyAnimation, applyCardAnimation } from './animations/core.js';
 import { applySectionTheme, resolveColor } from './theme.js';
 import { sectionDivider, dividerSvg } from './divider-model.js';
@@ -134,17 +134,21 @@ function applyPush(host) {
     // below it: taller content grows it, content that fits again (a wider
     // window, a text set to shrink) gives the design height back. Measured
     // with the box at the design height, since the content's min-height
-    // follows the box.
+    // follows the box. A block whose height follows its content (ADR-0025)
+    // is drawn at the content's own height, also below the design height,
+    // while the blocks below keep their places, since the push moves blocks
+    // down only.
     el.style.height = `${frame.h}px`;
     fitContent(el, frame.h, block);
-    const needed = Math.max(frame.h, Math.round(contentHeight(el)));
+    const own = followsContent(block) ? hugHeight(el) : 0;
+    const needed = own || Math.max(frame.h, Math.round(contentHeight(el)));
     if (needed !== frame.h) el.style.height = `${needed}px`;
-    const grow = needed - frame.h;
-    // The grown box is the drawn box, so a redraw between passes (a drag,
-    // the arrow keys, align) can put it back instead of collapsing to the
-    // design height. The shift is kept the same way, below.
-    if (grow) el.dataset.urdGrown = String(needed);
-    else delete el.dataset.urdGrown;
+    const grow = Math.max(0, needed - frame.h);
+    // The drawn box is kept, so a redraw between passes (a drag, the arrow
+    // keys, align) can put it back instead of the design height. The shift
+    // is kept the same way, below.
+    if (needed !== frame.h) el.dataset.urdDrawn = String(needed);
+    else delete el.dataset.urdDrawn;
     items.push({ id: el.dataset.blockId, x: frame.x, y: frame.y, h: frame.h, grow, el });
   }
   // The growth is kept for the drag's live pass (pushPreview).
@@ -188,7 +192,7 @@ function writePush(host, items, skipBox) {
     }
     if (it.el.style.top !== top) it.el.style.top = top;
   }
-  if (grew && bottom + 24 > designPx) host.style.minHeight = `${Math.round(bottom + 24)}px`;
+  if (grew && bottom + PUSH_SECTION_PAD > designPx) host.style.minHeight = `${Math.round(bottom + PUSH_SECTION_PAD)}px`;
 }
 
 /**
@@ -196,11 +200,14 @@ function writePush(host, items, skipBox) {
  * the growth measured by the last pass is kept, the frames of the blocks
  * being dragged come from `frames` (block id to frame), and every block's
  * top is written as the pass would write it, so the release changes
- * nothing the owner has not already seen.
+ * nothing the owner has not already seen. A block whose content changes
+ * height under the drag (one that follows its content, dragged narrower)
+ * brings its growth as it is now in `grown`.
  * @param {HTMLElement} host The section element
  * @param {Map<string, {x: number, y: number, w: number, h: number}>} frames
+ * @param {Map<string, number>} [grown] Block id to its growth past its frame, in px
  */
-export function pushPreview(host, frames) {
+export function pushPreview(host, frames, grown) {
   const section = host?._urdPushSection;
   const canvas = host?.querySelector(':scope > .urd-canvas');
   const grow = host?._urdPushGrow;
@@ -210,9 +217,33 @@ export function pushPreview(host, frames) {
     const id = el.dataset.blockId;
     const frame = frames.get(id) ?? section.blocks.find((b) => b.id === id)?.frames?.desktop;
     if (!frame) continue;
-    items.push({ id, x: frame.x, y: frame.y, h: frame.h, grow: grow.get(id) ?? 0, el });
+    items.push({ id, x: frame.x, y: frame.y, h: frame.h, grow: grown?.get(id) ?? grow.get(id) ?? 0, el });
   }
   writePush(host, items, new Set(frames.keys()));
+}
+
+/**
+ * New frames for blocks that are already drawn, put in place without
+ * drawing the section again, so a caret in the block's text stays where it
+ * is (the editor's fit of a frame to its content, ADR-0025). The frames go
+ * into the section the push pass holds, the one the editing layer reads too,
+ * and the pass draws the heights and the places from them.
+ * @param {HTMLElement} host The section element
+ * @param {Object<string, {x: number, y: number, w: number, h: number}>} frames Block id to desktop frame
+ * @param {string} [minHeight] The section's new height of its own, a CSS length
+ */
+export function updateFrames(host, frames, minHeight) {
+  const section = host?._urdPushSection;
+  if (!section || !frames) return;
+  for (const block of section.blocks) {
+    const frame = frames[block.id];
+    if (frame && block.frames) block.frames.desktop = frame;
+  }
+  if (typeof minHeight === 'string' && minHeight) {
+    section.size = { ...section.size, minHeight };
+    host.dataset.urdMinHeight = minHeight;
+  }
+  schedulePush(host);
 }
 
 /**
@@ -260,8 +291,9 @@ function fitContent(el, designH, block) {
   child.style.minHeight = minHeight;
 }
 
-/** The editing chrome inside a block never counts as content. */
-const BLOCK_CHROME = '.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-hint-chip, .urd-hint-card, .urd-cal-note';
+/** The editing chrome inside a block never counts as content, and neither
+ *  does a dialog, which is drawn over the page and never in the block. */
+const BLOCK_CHROME = '.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-sticky-badge, .urd-mobile-pin, .urd-hint-chip, .urd-hint-card, .urd-cal-note, dialog';
 
 /**
  * The height the block's content needs, in the block's own px. Measured on
@@ -276,6 +308,11 @@ function contentHeight(el) {
   // clipped to the frame and never counts as growth: the published page
   // has no demo, so a push from it would exist in the preview alone.
   if (el.dataset.urdDemo) return 0;
+  return childrenHeight(el);
+}
+
+/** The tallest content child's scroll height, in the block's own px. */
+function childrenHeight(el) {
   const z = el.currentCSSZoom ?? 1;
   let needed = 0;
   for (const child of el.children) {
@@ -283,6 +320,64 @@ function contentHeight(el) {
     needed = Math.max(needed, child.scrollHeight * ((child.currentCSSZoom ?? 1) / z));
   }
   return needed;
+}
+
+/**
+ * The height a block's content takes when the box leaves it its own, in the
+ * block's px (ADR-0025). The box is set to auto for the measure, so content
+ * that fills its box (a height or a min-height of 100 %) comes back to the
+ * height it needs, and the box gets its height back after. The box's own
+ * height covers content stacked in several children, and each child's scroll
+ * height covers content that overflows it. Demo content is measured too: the
+ * editor fits a frame to what the preview shows.
+ * @param {HTMLElement} el The block element
+ * @returns {number} 0 when there is nothing to measure
+ */
+export function naturalHeight(el) {
+  const height = el.style.height;
+  el.style.height = 'auto';
+  const needed = Math.max(el.offsetHeight, childrenHeight(el));
+  el.style.height = height;
+  return Math.round(needed);
+}
+
+/**
+ * The height a block's content takes at rest, for the editor's fit of its
+ * frame (ADR-0025): its natural height without what a visitor has unfolded.
+ * An open `<details>` (an FAQ answer, a calendar's fold) is view state and
+ * never the design, so its unfolded part, its height beyond its summary, is
+ * left out.
+ * @param {HTMLElement} el The block element
+ * @returns {number} 0 when there is nothing to measure
+ */
+export function restingHeight(el) {
+  const z = el.currentCSSZoom ?? 1;
+  let unfolded = 0;
+  for (const details of el.querySelectorAll('details[open]')) {
+    // A fold inside an open fold is part of the outer one's height.
+    if (details.parentElement?.closest('details[open]')) continue;
+    const box = getComputedStyle(details);
+    const edges = ['paddingTop', 'paddingBottom', 'borderTopWidth', 'borderBottomWidth'].reduce((sum, key) => sum + (Number.parseFloat(box[key]) || 0), 0);
+    const closed = (details.querySelector(':scope > summary')?.offsetHeight ?? 0) + edges;
+    unfolded += Math.max(0, details.offsetHeight - closed) * ((details.currentCSSZoom ?? 1) / z);
+  }
+  const natural = naturalHeight(el);
+  const rest = Math.round(natural - unfolded);
+  return rest > 0 ? rest : natural;
+}
+
+/**
+ * The height a block that follows its content is drawn at, or 0 to keep its
+ * frame's: demo content stands clipped to the frame (it exists in the
+ * preview alone), a block still loading its content (`aria-busy`) holds the
+ * frame's height so the page does not jump when the content arrives, and a
+ * block with nothing to show keeps a box that can be found and selected.
+ * @param {HTMLElement} el The block element
+ * @returns {number}
+ */
+export function hugHeight(el) {
+  if (el.dataset.urdDemo || el.querySelector('[aria-busy="true"]')) return 0;
+  return naturalHeight(el);
 }
 
 /** One pass per frame per section, however many observations arrive. */
@@ -325,6 +420,14 @@ function wirePush(host, section) {
     applyPush(host);
   });
   for (const el of host.querySelectorAll(':scope > .urd-canvas > .urd-block')) {
+    // A block that follows its content is watched through its content alone:
+    // the pass writes its box at every change of the content, and a box the
+    // observer watches, resized inside its own callback, would come back as
+    // a notification it cannot deliver in the same frame.
+    if (el.dataset.urdHeight === 'content') {
+      for (const child of el.children) if (!child.matches(BLOCK_CHROME)) ro.observe(child);
+      continue;
+    }
     ro.observe(el);
     if (el.firstElementChild) ro.observe(el.firstElementChild);
   }
@@ -355,14 +458,15 @@ export function pushShiftOf(el) {
 }
 
 /**
- * The height a block's content needed at the last push pass, or 0 when the
- * block fits its frame. A redraw between passes draws the taller of this
- * and the frame.
+ * The height the last push pass drew a block at, or 0 when that was its
+ * frame's: taller when the content grew past the frame, and shorter for a
+ * block that follows its content (ADR-0025). A redraw between passes draws
+ * this instead of the frame's height.
  * @param {HTMLElement} el
  * @returns {number}
  */
-export function pushGrownOf(el) {
-  return Number.parseFloat(el?.dataset?.urdGrown ?? '0') || 0;
+export function pushDrawnOf(el) {
+  return Number.parseFloat(el?.dataset?.urdDrawn ?? '0') || 0;
 }
 
 /** Editing done: measure and push again. */
@@ -641,6 +745,9 @@ export function renderSection(section, site, host, opts = {}) {
       if (block.decor) el.dataset.decor = '1';
       const frame = block.frames.desktop;
       applyFrameCss(el, frame, fitFloorPx(block, site.layout));
+      // The push pass draws this block at its content's height (ADR-0025),
+      // and the editing layer stops a drag of its height at the content.
+      if (followsContent(block)) el.dataset.urdHeight = 'content';
       // Sticky ("pin on scroll", additive field): only marking here; the
       // pinning itself is done by sticky.js on scroll. The mobile branch
       // above marks screen docking only (scroll pinning belongs to

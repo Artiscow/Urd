@@ -9,7 +9,6 @@
  * state, never a crash.
  */
 import { getCollection, sortEntries, groupByYear, dateBadge } from '../collections.js';
-import { growSectionTo } from '../render.js';
 import { stripActiveContent } from '../sanitize.js';
 import { isSafeHref } from '../nav-model.js';
 // Only called in preview (after the admin dictionary is loaded): never at module level.
@@ -298,17 +297,6 @@ export const collectionBlock = {
             ],
           });
         });
-      }
-
-      // Auto-grow: collection content is dynamic, so the display follows the content instead
-      // of the templates guessing a large fixed height. The section is raised when needed
-      // (display only for visitors; in the editor the height is recorded in the draft, as
-      // the text blocks do).
-      const needed = host.scrollHeight;
-      if (Math.abs(needed - el.clientHeight) > 8 && ctx.viewport !== 'mobile') {
-        el.style.height = `${needed}px`;
-        const sectionEl = el.closest('.urd-section');
-        if (sectionEl) growSectionTo(sectionEl, el.offsetTop + needed + 24);
       }
     });
   },

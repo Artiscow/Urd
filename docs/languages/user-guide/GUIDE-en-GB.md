@@ -40,7 +40,12 @@ completely without editor frames. Click the **Edit** button to come back.
 - **Writing text**: click in a text block and type straight into the page.
 - **Moving a block**: grab it and drag. The block snaps to
   the guide lines (see Grid below).
-- **Resizing**: drag the handle in the corner of the block.
+- **Resizing**: drag the handle in the corner of the block. A block whose
+  content decides its height (Calendar, Collection, Product cards, Basket,
+  Checkout, Countdown, FAQ, Form, Quote, Share buttons, Statistic, Table,
+  Timeline and Audio) is always as tall as what it shows: its handle changes the width
+  only, a pull up or down stops at the edge of the content with a mark that
+  says so, and its outline follows by itself when you change its settings.
 - **The toolbar above the selected block**:
   - ⠿ move (drag)
   - the layer arrows (arrow towards a line, up/down) put the block right in front or at the very back (when blocks overlap).

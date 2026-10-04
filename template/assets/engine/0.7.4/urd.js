@@ -12,7 +12,7 @@
 import { createRegistry } from './registry.js';
 import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION } from './migrate.js';
 import { applyTheme } from './theme.js';
-import { applySiteLayout, renderPage, renderSection } from './render.js';
+import { applySiteLayout, renderPage, renderSection, restingHeight, updateFrames } from './render.js';
 import { renderNav, refreshNavScroll, clearAnnounceDismissal } from './nav.js';
 import { isSafeImage } from './nav-model.js';
 import { renderFooter } from './footer.js';
@@ -257,6 +257,8 @@ function enablePreview(state, opts) {
   };
   /** The ribbon motion demo's timer: a new press restarts the six seconds. */
   let motionDemoTimer = 0;
+  /** The measures waiting per block for the editor's fit of its frame (urd-fit-block). */
+  const fitTimers = new Map();
 
   window.addEventListener('message', (event) => {
     if (event.origin !== location.origin) return; // only the editor on the same site
@@ -288,25 +290,32 @@ function enablePreview(state, opts) {
       refreshSticky();
       refreshNavScroll();
     } else if (msg?.type === 'urd-fit-block' && msg.blockId) {
-      // The editor has changed a calendar's settings or its size and asks for
-      // the height the content needs, so the block's frame can follow it
-      // (growOnly: only when the content needs more than the frame gives).
-      // The design draws after its module has loaded, so the measure waits
-      // for it, and is taken once more for a feed that answers late.
-      // A calendar still in its loading state is not measured.
+      // The editor has edited a block whose height follows its content
+      // (ADR-0025) and asks for the height the content needs, so the block's
+      // frame can follow it. A design drawn by a module loaded on demand
+      // draws late and a feed can answer late, so the measure is taken three
+      // times; a block still loading its content is not measured, and a
+      // newer request for the same block replaces the measures still waiting.
+      for (const timer of fitTimers.get(msg.blockId) ?? []) clearTimeout(timer);
       const measure = () => {
-        const el = root.querySelector(`[data-block-id="${CSS.escape(msg.blockId)}"]`);
-        const host = el?.querySelector(':scope > .urd-cal');
-        if (!host || host.getAttribute('aria-busy') === 'true') return;
-        // The box the design draws, without the clip the sample data stands
-        // under and in the block's own pixels whatever the calendar's size.
-        const clip = host.style.maxHeight;
-        host.style.maxHeight = 'none';
-        const h = Math.round(host.getBoundingClientRect().height / (el.currentCSSZoom ?? 1));
-        host.style.maxHeight = clip;
-        if (h > 0) window.parent?.postMessage({ type: 'urd-grow', sectionId: msg.sectionId, blockId: msg.blockId, h, growOnly: msg.growOnly === true, fit: true, seq: msg.seq ?? 0 }, location.origin);
+        const el = root.querySelector(`.urd-block[data-block-id="${CSS.escape(msg.blockId)}"]`);
+        if (!el || el.querySelector('[aria-busy="true"]')) return;
+        // Measured as the Clean view shows the block (base.css): the adders
+        // and the placeholders of empty fields are the editor's own and never
+        // part of the design's height. The class is gone again before
+        // anything is drawn.
+        el.classList.add('urd-fit-measure');
+        const h = restingHeight(el);
+        el.classList.remove('urd-fit-measure');
+        if (h > 0) window.parent?.postMessage({ type: 'urd-grow', sectionId: msg.sectionId, blockId: msg.blockId, h, fit: true, seq: msg.seq ?? 0 }, location.origin);
       };
-      for (const wait of [500, 1800, 5000]) setTimeout(measure, wait);
+      fitTimers.set(msg.blockId, [500, 1800, 5000].map((wait) => setTimeout(measure, wait)));
+    } else if (msg?.type === 'urd-frames' && msg.sectionId && msg.frames) {
+      // The editor has fitted a frame to its content and moved the blocks
+      // below: the new frames are put in place without drawing the section
+      // again, so a caret in the block stays where it is.
+      const host = root.querySelector(`[data-section-id="${CSS.escape(msg.sectionId)}"]`);
+      if (host) updateFrames(host, msg.frames, msg.minHeight);
     } else if (msg?.type === 'urd-announce-reset') {
       // The Announcement panel: forget the dismissal, so the strip returns
       // in the preview and for this browser on the published page.

@@ -17,7 +17,8 @@
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile? }
  *                  { type: 'urd-block-menu', sectionId, blockId, rect }  (open the block menu in the editor)
  */
-import { applyFrameCss, mobilePlacementToCss, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushGrownOf, pushPreview } from './render.js';
+import { applyFrameCss, mobilePlacementToCss, reorderMobileKey, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushPreview, hugHeight } from './render.js';
+import { followsContent } from './push-model.js';
 import { MOBILE_ROW } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
@@ -63,10 +64,11 @@ function drawFrame(el, frame) {
   const shift = pushShiftOf(el);
   if (shift) el.style.top = `${frame.y + shift}px`;
   // frameToCss writes the design height, while the box the owner sees is the
-  // grown one: the height its content needed at the last push pass, or the
-  // frame's own when a resize has made that the taller of the two.
-  const grown = pushGrownOf(el);
-  if (grown > frame.h) el.style.height = `${grown}px`;
+  // one the last push pass drew: grown past the frame by its content, unless
+  // a resize has made the frame the taller of the two, or at its content's
+  // height for a block that follows its content (ADR-0025).
+  const drawn = pushDrawnOf(el);
+  if (drawn > frame.h || (drawn && el.dataset.urdHeight === 'content')) el.style.height = `${drawn}px`;
 }
 
 /**
@@ -114,6 +116,9 @@ function setMinHeight(host, px) {
 
 /** Mobile view? The engine sets the body class from the breakpoint. */
 const isMobile = () => document.body.classList.contains('urd-mobile');
+
+/** How far the pointer pulls a block that follows its content up or down before the mark at its edge shows (ADR-0025). */
+const STOP_MARK_PX = 6;
 
 /** The template drafts from the editor (the urd-templates message): {id, name, kind, section?, blocks?}.
  *  The editor owns the list; here it feeds the My templates tab in "+ New section". */
@@ -3366,7 +3371,9 @@ function enhanceBlock(el, block, section, grid, host) {
 
   const resizeHandle = document.createElement('div');
   resizeHandle.className = 'urd-edit-resize';
-  resizeHandle.title = ta('canvas.dragResize');
+  // On the desktop the handle of a block that follows its content changes
+  // its width only (ADR-0025), and says so.
+  resizeHandle.title = !mobile && followsContent(block) ? ta('canvas.dragResizeWidth') : ta('canvas.dragResize');
   el.appendChild(resizeHandle);
 
   // Pinning is otherwise invisible until you scroll: a pin in the corner
@@ -3678,6 +3685,21 @@ function enhanceBlock(el, block, section, grid, host) {
 
       const start = { x: event.clientX, y: event.clientY };
       const orig = { ...(block.frames[frameKey] ?? block.frames.desktop) };
+      // A block that follows its content keeps its height under the resize
+      // handle (ADR-0025): the box follows the content at the width being
+      // dragged, and a pull up or down is stopped at the content's edge,
+      // with a mark there for as long as the pointer is held.
+      const hug = kind === 'resize' && followsContent(block);
+      let stop = null;
+      if (hug) {
+        stop = document.createElement('div');
+        stop.className = 'urd-edit-stop';
+        stop.hidden = true;
+        const label = document.createElement('span');
+        label.textContent = ta('canvas.followsContent');
+        stop.appendChild(label);
+        el.appendChild(stop);
+      }
       // Group drag: if the block is part of a multi-selection, the rest
       // follow (same delta, clamped so the whole group stays within the
       // width).
@@ -3783,8 +3805,10 @@ function enhanceBlock(el, block, section, grid, host) {
             }
           : {
               ...orig,
-              w: clamp(snapPct(orig.w + dx), r2(colStep), r2(100 - orig.x)),
-              h: Math.max(4, snapPx(orig.h + dy)),
+              // A pull straight up or down on a block that follows its content
+              // leaves its width as it is, unsnapped, so the release changes nothing.
+              w: hug && Math.abs(ev.clientX - start.x) < STOP_MARK_PX ? orig.w : clamp(snapPct(orig.w + dx), r2(colStep), r2(100 - orig.x)),
+              h: hug ? orig.h : Math.max(4, snapPx(orig.h + dy)),
             };
         // Shift = fully free: then smart guides are skipped too.
         if (!free) applyGuides();
@@ -3806,9 +3830,16 @@ function enhanceBlock(el, block, section, grid, host) {
           updateMultiToolbar();
         }
         drawFrame(el, current);
+        let grown;
+        if (hug) {
+          const live = hugHeight(el);
+          if (live) el.style.height = `${live}px`;
+          grown = new Map([[block.id, Math.max(0, (live || current.h) - current.h)]]);
+          stop.hidden = Math.abs(dy) < STOP_MARK_PX;
+        }
         // The push as it will be after release, drawn live: the block is
         // shown where it lands, and the blocks it pushes move with it.
-        pushPreview(host, frames);
+        pushPreview(host, frames, grown);
       };
 
       // Aborted drag (the browser takes over the pointer, or the element
@@ -3820,6 +3851,7 @@ function enhanceBlock(el, block, section, grid, host) {
         handle.removeEventListener('pointercancel', onCancel);
         overlay.remove();
         clearGuides();
+        stop?.remove();
         dropSticky();
       };
 
@@ -3829,6 +3861,7 @@ function enhanceBlock(el, block, section, grid, host) {
         handle.removeEventListener('pointercancel', onCancel);
         overlay.remove();
         clearGuides();
+        stop?.remove();
         // Re-pins from the block's NEW base values.
         dropSticky();
         if (!started) return;
@@ -3878,6 +3911,10 @@ function enhanceBlock(el, block, section, grid, host) {
           }
         }
 
+        // A fit can land while a block that follows its content is dragged
+        // (urd-frames writes into the same block): its height is the fit's,
+        // never the one the drag began with.
+        if (followsContent(block)) current = { ...current, h: block.frames.desktop.h };
         if (current.x !== orig.x || current.y !== orig.y || current.w !== orig.w || current.h !== orig.h) {
           block.frames[frameKey] = current;
           post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: current, frameKey });

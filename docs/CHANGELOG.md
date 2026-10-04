@@ -27,6 +27,18 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.21.2 - The height that follows the content, for fourteen block types - 4 October 2026
+
+- Fourteen block types stood at the top of a frame taller than their content, an outline with air under it. Calendar, Collection, Product cards, Basket, Checkout, Countdown, FAQ, Form, Quote, Share buttons, Statistic, Table, Timeline and Audio are drawn at their content's height, also below the frame, and the blocks below keep their places (`FOLLOWS_CONTENT` in push-model.js, the push pass in render.js).
+- Only the calendar had its frame fitted, after a change of its settings. Every block that follows its content is fitted after an edit of its settings, of its words in the preview or of its width, and when it is placed; the calendar's `growOnly` is gone.
+- The calendar's fit wrote the taller height alone, so the blocks the push had moved below it jumped back up over it (found by reading the fit against the push pass). A taller fit moves them, and a section's own height in px, as far as the push pass drew them, in the undo step of the edit (`fitMoves`, held by tests/push-model.test.mjs; ADR-0025 addendum).
+- The fit comes back without drawing the section again (`urd-frames`), so a caret in the block's text stays where it is, and it measures the block at rest as the Clean view shows it: an open FAQ answer or calendar fold, the image adders and the placeholders of empty fields are left out (`restingHeight` in render.js).
+- A drag of the lower corner changed the height of any block. On a block that follows its content the corner changes the width only: a pull up or down stops at the content's edge with a mark, «The height follows the content», and a pull straight up or down changes nothing; the handle's tooltip and cursor say so.
+- The audio block's box stood at the frame's height with the player at its top; it follows the player. No rule stretched the player itself.
+- Eight blocks kept a height net of their own that the push pass overwrote, and the FAQ's fixed the block's height on a phone when an answer opened (found by reading). The nets are gone from Quote, Timeline, Table, Statistic, Checkout, Collection, Product cards and FAQ.
+- An open basket drawer counted as the Basket block's content and pushed the blocks below down by a window's height (found by reading). A dialog never counts towards a block's height.
+- SCHEMA.md, the user guide and the calendar guide in English and Norwegian describe the height that follows the content; AGENTS.md lists push-model among the modules the editor bundles; BACKLOG links the Design canvas «Urd calendar designs» and counts its stylised designs in six families, not five.
+
 ### 0.7.0.36-0.7.19.17p - Push preparation: the calendar hardened against real feeds, clocks and colours - 4 October 2026
 
 - Independent review of the span by seven fresh agents, each with its own field: the parser and the pure calendar modules, the calendar block, the 34 designs, the style sheet, the editor, the contracts and documents, and the commits outside the calendar. Deviation from the ritual: all seven stopped on a usage limit before reporting and were resumed; the style sheet review stopped a second time and was started anew on another model.

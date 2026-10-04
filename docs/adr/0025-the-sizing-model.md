@@ -48,3 +48,11 @@ The builders agree on the model, under different names. Squarespace Fluid Engine
 - A per-axis choice for the width (a block as wide as its content) stays outside: no block needs it today.
 
 The stages are in BACKLOG under 0.7.21.
+
+## Addendum, 4 October 2026: the fit moves the blocks below, and comes back in place
+
+Built in 0.7.21.2, which settled three points the decision left open:
+
+- **A taller fit moves the blocks below in the data.** Before the fit, the push pass draws the blocks under a block whose content outgrew its frame lower down. A fit that only wrote the new height would leave the pass no growth to see, and the blocks below would jump back up over the block. The fit therefore moves them by the same push rules, exactly as far as the pass had shifted them, and raises a section's own height in px the way the pass raised it (`fitMoves` in push-model.js), in the undo step of the edit that asked for it. It is the rule ADR-0024 decision 4 gives typing: an edit of the design pushes in the data. A shorter fit moves nothing, since the push moves blocks down only.
+- **The fit comes back without drawing the section again.** The editor sends the new frames (`urd-frames`) and the preview puts them into the section the push pass draws, so a caret in the block's text survives a fit that follows typing. The editor no longer redraws the section after a fit.
+- **The fit measures the block at rest, as a visitor sees it.** An open `<details>` (an FAQ answer, a calendar's fold) is view state, and the editor's own adders and placeholders are not on the published page, so the measure leaves out the unfolded part of open details and takes the block as the Clean view shows it.

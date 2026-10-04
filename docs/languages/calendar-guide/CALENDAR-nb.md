@@ -94,7 +94,7 @@ Hvor du finner dem:
 - **Menyen + Ny blokk** i en seksjon: Kalender folder seg ut i visningene og designene.
 - **Seksjonsmaler:** «Hva skjer» som liste, kort, måned, uke eller neste arrangement.
 
-Omrisset til en ny kalender tilpasses designet, og på nytt når du bytter design eller innstillinger. Dra i sidene på omrisset for å gjøre kalenderen smalere eller bredere; **Størrelse** i menyen gjør hele kalenderen, teksten medregnet, mindre eller større.
+En kalender er like høy som det den viser: omrisset tilpasses designet, og på nytt når du bytter design, innstillinger eller bredde. Dra i håndtaket i hjørnet av omrisset for å gjøre kalenderen smalere eller bredere; et drag opp eller ned stopper ved kanten av kalenderen. **Størrelse** i menyen gjør hele kalenderen, teksten medregnet, mindre eller større.
 
 Hvert design har egne farger, og noen har egne innstillinger, i blokkens meny. Ordene et design skriver («Neste arrangement», «Senere») endres ved å klikke på dem i forhåndsvisningen.
 

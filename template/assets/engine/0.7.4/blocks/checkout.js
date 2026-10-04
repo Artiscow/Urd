@@ -11,7 +11,6 @@ import {
   readCart, writeCart, cartTotal, formatPrice, orderLines,
   buildOrderBody, buildOrderMailto, buildOrderPayload, isEmail, onCartChange,
 } from '../shop.js';
-import { growSectionTo } from '../render.js';
 // Only called in preview (after the admin dictionary has loaded): never at module level.
 import { ta, adminLocaleReady, t } from '../i18n.js';
 
@@ -231,16 +230,5 @@ export const checkoutBlock = {
         });
       });
     }
-
-    // Auto-grow: the summary varies with the basket; the display follows it and the blocks below are moved by the push pass (ADR-0024).
-    requestAnimationFrame(() => {
-      if (!el.isConnected) return;
-      const needed = host.scrollHeight;
-      if (Math.abs(needed - el.clientHeight) > 8 && ctx.viewport !== 'mobile') {
-        el.style.height = `${needed}px`;
-        const sectionEl = el.closest('.urd-section');
-        if (sectionEl) growSectionTo(sectionEl, el.offsetTop + needed + 24);
-      }
-    });
   },
 };

@@ -17,7 +17,7 @@
  */
 import { getCollection } from '../collections.js';
 import { applyEntryImageStyle } from './collection.js';
-import { growSectionTo, renderCardAnimations } from '../render.js';
+import { renderCardAnimations } from '../render.js';
 import { stripActiveContent, plainText } from '../sanitize.js';
 import { iconSvg } from '../icons.js';
 import { readCart, writeCart, cartAdd, itemKey, variantLabel, formatPrice, altCardImage } from '../shop.js';
@@ -325,18 +325,6 @@ export const productBlock = {
       // The block may have been re-rendered or removed while the data was fetched.
       if (!host.isConnected) return;
 
-      // Auto-grow: the cards are dynamic content, the display follows them (as in
-      // the collection block). Called again when the adder card is added, so its
-      // row is measured too.
-      const fit = () => {
-        const needed = host.scrollHeight;
-        if (Math.abs(needed - el.clientHeight) > 8 && ctx.viewport !== 'mobile') {
-          el.style.height = `${needed}px`;
-          const sectionEl = el.closest('.urd-section');
-          if (sectionEl) growSectionTo(sectionEl, el.offsetTop + needed + 24);
-        }
-      };
-
       const all = Array.isArray(data?.entries) ? data.entries : [];
       let entries = all;
       if (props.limit > 0) entries = entries.slice(0, props.limit);
@@ -355,7 +343,6 @@ export const productBlock = {
       const cards = entries.map((entry) => renderCard(entry, props, editable, Boolean(ctx.preview)));
       grid.append(...cards);
       host.appendChild(grid);
-      fit();
 
       // Per-card animation (animPerCard): the block's entrance animation plays
       // per card with a staggered start, and the pointer effect lifts card by card.
@@ -368,7 +355,6 @@ export const productBlock = {
           // would otherwise fall outside the view and the click would look dead.
           if (!(props.limit > 0 && all.length >= props.limit)) {
             grid.appendChild(adderCard(props.collection));
-            fit();
           }
           // The help chip (ADR-0008): the catalog lives in the Collections panel.
           if (el.querySelector('.urd-hint-chip')) return;

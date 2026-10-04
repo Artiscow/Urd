@@ -13,7 +13,7 @@
  *                  { type: 'urd-duplicate' }                   (Ctrl+D in admin: duplicate the selected block)
  *   page → editor: { type: 'urd-edit', sectionId, blockId, props, rerender? }  (click-to-type/image editor)
  *                  { type: 'urd-move', sectionId, blockId, frame, frameKey }  (drag/resize)
- *                  { type: 'urd-grow', sectionId, blockId, h }  (auto height for data blocks: ONLY h, never x/y)
+ *                  { type: 'urd-grow', sectionId, blockId, h, fit?, seq? }  (a plugin copy's own height, or the answer to urd-fit-block: ONLY h, never x/y)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? } (reset the mobile overrides; without blockId the whole section, ADR-0019)
  *                  { type: 'urd-mobile-order', sectionId, blockId, mobileOrder } (arrow moves in the mobile reading order)
  *                  { type: 'urd-review-done', sectionId }           (mobile reviewed)
@@ -58,6 +58,8 @@
  *                  { type: 'urd-demo-anim', sectionId, blockId } (play the changed animation once; blockId null = the section)
  *                  { type: 'urd-demo-motion' } (let the ribbons roll for a few seconds while editing)
  *                  { type: 'urd-open-block-config', blockId } (open a plugin block's settings from Properties)
+ *                  { type: 'urd-fit-block', sectionId, blockId, seq } (ask for the height of a block that follows its content, ADR-0025; answered with urd-grow)
+ *                  { type: 'urd-frames', sectionId, frames, minHeight? } (frames fitted to their content, block id to desktop frame: put in place without drawing the section again)
  */
 
 /**
@@ -166,8 +168,12 @@ export function createPreviewBridge(iframe, handlers = {}) {
       post({ type: 'urd-select', blockId });
     },
     /** Ask the preview for the height a block's content needs; it answers with urd-grow. */
-    sendFitBlock(sectionId, blockId, growOnly = false, seq = 0) {
-      post({ type: 'urd-fit-block', sectionId, blockId, growOnly, seq });
+    sendFitBlock(sectionId, blockId, seq = 0) {
+      post({ type: 'urd-fit-block', sectionId, blockId, seq });
+    },
+    /** Frames fitted to their content (block id to desktop frame) and the section's new height, put in place without drawing the section again. */
+    sendFrames(sectionId, frames, minHeight) {
+      post({ type: 'urd-frames', sectionId, frames, minHeight });
     },
     sendPlaceBlock(block) {
       post({ type: 'urd-place-block', block });

@@ -650,7 +650,7 @@ html {
 }
 
 /* The figure's two dressed variants (stats.variant): a card on the surface colour, and a band of the accent colour with the accent's own text colour.
-   Both fill the block's frame, so three in a row line up as one strip. */
+   Both fill the block's box, which follows the content (ADR-0025), so three in a row line up as one strip when their figures and labels take the same height. */
 .urd-stats-cards,
 .urd-stats-band {
   box-sizing: border-box;
@@ -12087,6 +12087,41 @@ body.urd-mobile .urd-section-resize-top {
   display: block;
 }
 
+/* A block whose height follows its content (ADR-0025): its handle changes the
+   width only on the desktop, and a pull up or down stops at the content's edge,
+   where a bar says why for as long as the pointer is held. The bar takes the
+   smart guides' fixed magenta, for the same reason: it is drag feedback and
+   must stand apart from the page's colours and the grid. */
+.urd-preview .urd-block[data-urd-height="content"] > .urd-edit-resize {
+  cursor: ew-resize;
+}
+
+.urd-preview .urd-edit-stop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: calc(3px * var(--urd-chrome-scale, 1));
+  background: #ff2d87;
+  box-shadow: 0 0 0 calc(1px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 70%, transparent);
+  pointer-events: none;
+  z-index: 1001;
+}
+
+.urd-preview .urd-edit-stop span {
+  position: absolute;
+  top: calc(8px * var(--urd-chrome-scale, 1));
+  right: 0;
+  transform: rotate(calc(-1 * var(--urd-block-rot, 0deg))) scale(var(--urd-chrome-scale, 1));
+  transform-origin: top right;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #ff2d87;
+  color: #fff;
+  font: 600 11px/1.5 system-ui, sans-serif;
+  white-space: nowrap;
+}
+
 /* Rotation handle: a small circle at the block's top right corner */
 .urd-preview .urd-edit-rotate {
   /* Counter-scaling and counter-rotation, as for the toolbar above.
@@ -12825,6 +12860,7 @@ body.urd-mobile .urd-section-resize-top {
 .urd-preview.urd-chrome-off .urd-edit-toolbar,
 .urd-preview.urd-chrome-off .urd-edit-resize,
 .urd-preview.urd-chrome-off .urd-edit-rotate,
+.urd-preview.urd-chrome-off .urd-edit-stop,
 .urd-preview.urd-chrome-off .urd-video-shield,
 .urd-preview.urd-chrome-off .urd-section-toolbar,
 .urd-preview.urd-chrome-off .urd-section-resize,
@@ -12837,6 +12873,15 @@ body.urd-mobile .urd-section-resize-top {
 .urd-preview.urd-chrome-off .urd-product-adder,
 .urd-preview.urd-chrome-off .urd-collection-placeholder,
 .urd-preview.urd-chrome-off .urd-grid-overlay {
+  display: none !important;
+}
+
+/* The editor's fit of a frame to its content (ADR-0025) measures the block as
+   the Clean view shows it, without the editor's own adders and the
+   placeholders of empty fields. */
+.urd-preview .urd-fit-measure .urd-collection-image-adder,
+.urd-preview .urd-fit-measure .urd-product-adder,
+.urd-preview .urd-fit-measure .urd-collection-placeholder {
   display: none !important;
 }
 

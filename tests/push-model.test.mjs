@@ -6,9 +6,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { pushLayout, clampFitMin, fitFloorPx, FIT_BY_WIDTH, PUSH_GAP_MAX, PUSH_GAP_MIN } = await engineImport('push-model.js');
+const { pushLayout, clampFitMin, fitFloorPx, fitMoves, followsContent, FIT_BY_WIDTH, FOLLOWS_CONTENT, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD } = await engineImport('push-model.js');
 
 const at = (id, y, h, extra = {}) => ({ id, y, h, ...extra });
+/** A block with a desktop frame, the way a section stores it. */
+const blk = (id, y, h, x = 0) => ({ id, frames: { desktop: { x, y, w: 40, h } } });
 
 test('no growth moves nothing, and the bottom is the lowest frame edge', () => {
   const out = pushLayout([at('a', 0, 100), at('b', 150, 40)]);
@@ -79,4 +81,65 @@ test('fitFloorPx: the width-floor types get their share of the design width time
   assert.equal(fitFloorPx({ ...image, type: 'text' }, {}), 0);
   assert.equal(fitFloorPx(image, { contentWidth: 'full' }), 0);
   assert.equal(fitFloorPx({ ...image, frames: {} }, {}), 0);
+});
+
+test('the fourteen block types ADR-0025 names follow their content, and no other', () => {
+  assert.deepEqual([...FOLLOWS_CONTENT].sort(), ['audio', 'calendar', 'cart', 'checkout', 'collection', 'countdown', 'faq', 'form', 'product', 'quote', 'share', 'stats', 'table', 'timeline']);
+  assert.equal(followsContent({ type: 'faq' }), true);
+  for (const type of ['text', 'image', 'video', 'icon', 'shape', 'button', 'gallery', 'ribbon', 'map']) {
+    assert.equal(followsContent({ type }), false, type);
+  }
+  assert.equal(followsContent(null), false);
+});
+
+test('every type that follows its content is a core block', async () => {
+  const { readdirSync } = await import('node:fs');
+  const { ENGINE_DIR } = await import('./_engine.mjs');
+  const files = new Set(readdirSync(new URL('blocks/', ENGINE_DIR)).map((name) => name.replace(/\.js$/, '')));
+  for (const type of FOLLOWS_CONTENT) assert.ok(files.has(type), type);
+});
+
+test('fitMoves: a taller frame moves the blocks below as far as the push pass shifted them', () => {
+  const blocks = [blk('faq', 0, 100), blk('near', 120, 40), blk('far', 400, 40), blk('badge', 20, 30)];
+  const { moves, minHeight } = fitMoves(blocks, 'faq', 130);
+  const drawn = pushLayout([at('faq', 0, 100, { grow: 30 }), at('near', 120, 40), at('far', 400, 40), at('badge', 20, 30)]).shifts;
+  assert.equal(moves.get('near'), 120 + drawn.get('near'));
+  assert.equal(moves.get('near'), 150);
+  assert.equal(moves.has('far'), false);
+  assert.equal(moves.has('badge'), false);
+  assert.equal(moves.has('faq'), false);
+  assert.equal(minHeight, 0);
+});
+
+test('fitMoves: a shorter frame, or one that stays, moves nothing', () => {
+  const blocks = [blk('faq', 0, 300), blk('below', 310, 40)];
+  assert.equal(fitMoves(blocks, 'faq', 200).moves.size, 0);
+  assert.equal(fitMoves(blocks, 'faq', 300).moves.size, 0);
+  assert.equal(fitMoves(blocks, 'missing', 500).moves.size, 0);
+});
+
+test('fitMoves: a section with a height of its own grows the way the push pass raised it', () => {
+  const blocks = [blk('faq', 100, 300), blk('below', 420, 60)];
+  const { moves, minHeight } = fitMoves(blocks, 'faq', 400, 500);
+  assert.equal(moves.get('below'), 520);
+  assert.equal(minHeight, 520 + 60 + PUSH_SECTION_PAD);
+  // Growth that still fits inside the section leaves its height alone.
+  assert.equal(fitMoves(blocks, 'faq', 320, 600).minHeight, 0);
+  // A section that follows its blocks gets no height written.
+  assert.equal(fitMoves(blocks, 'faq', 400, 0).minHeight, 0);
+});
+
+test('fitMoves: a block past the section\'s height has no say in it', () => {
+  const blocks = [blk('faq', 100, 300), blk('hung', 560, 200)];
+  const { moves, minHeight } = fitMoves(blocks, 'faq', 340, 500);
+  assert.equal(moves.has('hung'), false);
+  assert.equal(minHeight, 0);
+  // A fitted block that itself hangs past the edge raises nothing.
+  assert.equal(fitMoves([blk('cal', 450, 100)], 'cal', 300, 500).minHeight, 0);
+});
+
+test('fitMoves: broken frames are skipped', () => {
+  const blocks = [blk('faq', 0, 100), { id: 'broken' }, { id: 'half', frames: { desktop: { y: 'x', h: 10 } } }, blk('below', 110, 20)];
+  assert.equal(fitMoves(blocks, 'faq', 150).moves.get('below'), 160);
+  assert.equal(fitMoves(null, 'faq', 150).moves.size, 0);
 });

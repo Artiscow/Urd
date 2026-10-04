@@ -10,7 +10,6 @@
  */
 // Only called in preview (after the admin dictionary is loaded): never at module level.
 import { ta, adminLocaleReady } from '../i18n.js';
-import { growSectionTo } from '../render.js';
 
 /**
  * Parses the display value as a number (pure, node-testable): the digits with an
@@ -153,16 +152,5 @@ export const statsBlock = {
       }, { threshold: 0.4 });
       io.observe(host);
     }
-
-    // Auto-grow: the display follows the content height; the blocks below are moved by the push pass (ADR-0024).
-    requestAnimationFrame(() => {
-      if (!el.isConnected) return;
-      const needed = host.scrollHeight;
-      if (Math.abs(needed - el.clientHeight) > 8 && ctx.viewport !== 'mobile') {
-        el.style.height = `${needed}px`;
-        const sectionEl = el.closest('.urd-section');
-        if (sectionEl) growSectionTo(sectionEl, el.offsetTop + needed + 24);
-      }
-    });
   },
 };

@@ -11,7 +11,6 @@
  */
 // Only called in preview (after the admin dictionary has loaded): never at module level.
 import { ta } from '../i18n.js';
-import { growSectionTo } from '../render.js';
 
 const SAFE_HEX = /^#[0-9a-fA-F]{3,8}$/;
 const SAFE_TOKEN = /^[a-z][a-z0-9-]*$/;
@@ -104,16 +103,5 @@ export const timelineBlock = {
       }
       host.appendChild(item);
     }
-
-    // Auto-grow: the display follows the content height; the blocks below are moved by the push pass (ADR-0024).
-    requestAnimationFrame(() => {
-      if (!el.isConnected) return;
-      const needed = host.scrollHeight;
-      if (Math.abs(needed - el.clientHeight) > 8 && ctx.viewport !== 'mobile') {
-        el.style.height = `${needed}px`;
-        const sectionEl = el.closest('.urd-section');
-        if (sectionEl) growSectionTo(sectionEl, el.offsetTop + needed + 24);
-      }
-    });
   },
 };

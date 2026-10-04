@@ -2,6 +2,26 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
 
+### Test batch (0.7.21.2): the height that follows the content
+
+- [ ] A page saved before this version, in the editor and on the published page: every calendar, collection, product card, basket, checkout, countdown, FAQ, form, quote, share, statistic, table, timeline and audio block stands at its content's height with no air under it; the blocks below stay where they were, and nothing is cut off
+- [ ] An FAQ switched between cards and list in its menu: the outline follows the content at once, growing and shrinking
+- [ ] A calendar changed from a list design to a month design and back: the outline follows each design; the blocks under it move down with the taller design and stay where they are with the shorter one
+- [ ] One of these blocks dragged by its lower corner straight down, then straight up: the height stays, a magenta mark with «The height follows the content» shows at its lower edge while the button is held, and nothing changes when it is released
+- [ ] The same corner dragged sideways: the block narrows or widens as you drag with its height following the content, and after the release the outline matches the content
+- [ ] The pointer over the corner of such a block: a sideways arrow, and the tooltip «Drag to change the width; the height follows the content»; on a text or an image block the diagonal arrow as before
+- [ ] A long line typed into an FAQ question or a quote in the preview: the block grows with the words, the caret stays where you type, and the blocks below move down
+- [ ] An FAQ answer opened, typed in and closed again: the FAQ goes back to its closed height with no air under it
+- [ ] An FAQ on the published page: an opened answer pushes the blocks below down and closing it brings them back; on a phone the FAQ grows with the open answer
+- [ ] A collection or product cards in the editor, then in Clean view: in Clean view the outline matches the cards (the editor shows the image buttons and the empty-field placeholders on top)
+- [ ] A section with a height of its own and a calendar near its bottom changed to a taller design: the section grows to hold the calendar and the blocks below it
+- [ ] Undo right after a change that made a block taller: the setting, the height and the blocks below go back together
+- [ ] The audio block with a sound file: the outline is as tall as the player
+- [ ] Three statistics in a row as cards: they line up when their figures and labels take the same height (a label on two lines makes its card taller until «stretch» in 0.7.21.3)
+- [ ] The basket on a shop page: an open drawer leaves the blocks below where they are
+- [ ] A calendar with a real feed: on the published page it holds the frame's height while it loads and stands at the events' height after; in the editor its outline follows the events once the fit has come back
+- [ ] The push batch's «drag a calendar taller right after a change of setting» no longer applies: a calendar's height follows its content, and the drag items above replace it
+
 ### Test batch (0.7.0.36-0.7.19.17p): what the push review fixed
 
 - [ ] A calendar in the preview: rewrite two of its texts (for example «Upcoming» and «Week» in the view switcher), reload the editor: both rewrites stand

@@ -94,7 +94,7 @@ Where to find them:
 - **The + New block menu** in a section: Calendar unfolds into the views and the designs.
 - **Section templates:** «What is on» as a list, cards, a month, a week or the next event.
 
-A new calendar's outline is fitted to its design, and again when you change the design or its settings. Drag the outline's sides to make the calendar narrower or wider; **Size** in the menu makes the whole calendar, text included, smaller or larger.
+A calendar is as tall as what it shows: its outline is fitted to its design, and again when you change the design, its settings or its width. Drag the handle in the outline's corner to make the calendar narrower or wider; a pull up or down stops at the edge of the calendar. **Size** in the menu makes the whole calendar, text included, smaller or larger.
 
 Each design has its own colours, and some have settings of their own, in the block's menu. The words a design writes («Next event», «Later») are changed by clicking them in the preview.
 

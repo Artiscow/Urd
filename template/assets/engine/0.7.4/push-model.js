@@ -18,6 +18,26 @@
 export const PUSH_GAP_MAX = 70;
 /** A larger gap absorbs the growth until this much is left. */
 export const PUSH_GAP_MIN = 10;
+/** The air left under the lowest block when the push raises a section's height. */
+export const PUSH_SECTION_PAD = 24;
+
+/**
+ * The block types whose height follows their content (ADR-0025): the box is
+ * drawn at the content's height, also when that is less than the frame, and
+ * the editor fits the frame to the content after an edit of the block. Every
+ * other type keeps the height of its frame, and text is at least as tall as
+ * its words.
+ */
+export const FOLLOWS_CONTENT = new Set(['audio', 'calendar', 'cart', 'checkout', 'collection', 'countdown', 'faq', 'form', 'product', 'quote', 'share', 'stats', 'table', 'timeline']);
+
+/**
+ * Whether a block's height follows its content (ADR-0025).
+ * @param {{type?: string}} block
+ * @returns {boolean}
+ */
+export function followsContent(block) {
+  return FOLLOWS_CONTENT.has(block?.type);
+}
 
 /** The floor of a block's shrink (block.fitMin), a share of the design size: 0.01 to 1, default 0.6. */
 export function clampFitMin(value) {
@@ -86,4 +106,46 @@ export function pushLayout(items, opts = {}) {
   const shifts = new Map();
   for (const [id, value] of shift) if (value > 0) shifts.set(id, value);
   return { shifts, bottom: Number.isFinite(bottom) ? bottom : 0 };
+}
+
+/**
+ * A frame fitted to its content is an edit of the design (ADR-0025 decision
+ * 5), so the data takes over what the push pass drew before the fit: a
+ * taller frame moves the blocks below by the push rules, exactly as far as
+ * the pass had shifted them, and a section with a height of its own grows
+ * the way the pass raised it. A shorter frame moves nothing, since the push
+ * moves blocks down only.
+ * @param {Array<{id: string, frames?: {desktop?: {x?: number, y: number, h: number}}}>} blocks The section's blocks
+ * @param {string} id The block whose frame is fitted
+ * @param {number} h The fitted height in px
+ * @param {number} [designPx] The section's own height in px, 0 when it follows its blocks
+ * @returns {{moves: Map<string, number>, minHeight: number}} The new y of each block that
+ *   moves, and the section's new height in px (0 when it keeps the one it has)
+ */
+export function fitMoves(blocks, id, h, designPx = 0) {
+  const items = [];
+  for (const block of blocks ?? []) {
+    const frame = block?.frames?.desktop;
+    if (!frame || !Number.isFinite(frame.y) || !Number.isFinite(frame.h)) continue;
+    const grow = block.id === id ? Math.max(0, h - frame.h) : 0;
+    items.push({ id: block.id, x: frame.x ?? 0, y: frame.y, h: frame.h, grow });
+  }
+  const moves = new Map();
+  if (!items.some((it) => it.grow > 0)) return { moves, minHeight: 0 };
+  const { shifts } = pushLayout(items);
+  // The section line as the push pass draws it: a block counts towards the
+  // section's height only while its design bottom is inside it.
+  const inside = (it) => designPx <= 0 || it.y + it.h <= designPx;
+  let grew = false;
+  let bottom = 0;
+  for (const it of items) {
+    const shift = shifts.get(it.id) ?? 0;
+    if (shift) moves.set(it.id, it.y + shift);
+    if (inside(it)) {
+      grew = grew || it.grow > 0;
+      bottom = Math.max(bottom, it.y + shift + it.h + it.grow);
+    }
+  }
+  const minHeight = grew && designPx > 0 && bottom + PUSH_SECTION_PAD > designPx ? Math.round(bottom + PUSH_SECTION_PAD) : 0;
+  return { moves, minHeight };
 }

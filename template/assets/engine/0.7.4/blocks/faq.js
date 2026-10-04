@@ -11,12 +11,12 @@
  * texts are directly editable, so there a click on the question text places the
  * caret; only the arrow icon unfolds.
  *
- * Open and closed answers are view state, never content: the block's stored
- * height is always the collapsed one (auto-grow of the display like the other data
- * blocks), and unfolding grows only visually.
+ * Open and closed answers are view state, never content: the editor fits the
+ * block's frame to the collapsed height (the fit leaves open details out,
+ * render.js), and an unfolded answer grows the display only, the push pass
+ * moving the blocks below (ADR-0024, ADR-0025).
  */
 import { stripActiveContent } from '../sanitize.js';
-import { growSectionTo } from '../render.js';
 import { boxStyleCss } from '../box-style.js';
 // Only called in preview (after the admin dictionary is loaded): never at module level.
 import { ta, adminLocaleReady } from '../i18n.js';
@@ -88,18 +88,6 @@ export const faqBlock = {
       });
     };
 
-    /** Visual height: the collapsed base plus the open answers. Display only,
-     *  never part of the layout (the block always measures the collapsed height).
-     *  Measures the answers' own height, independent of the unfold animation. */
-    const adjustHeight = () => {
-      const openHeights = [...host.querySelectorAll('.urd-faq-item[open] .urd-faq-a')]
-        .reduce((sum, a) => sum + a.scrollHeight, 0);
-      const needed = (el._urdFaqBase ?? host.scrollHeight) + openHeights;
-      el.style.height = `${needed}px`;
-      const sectionEl = el.closest('.urd-section');
-      if (sectionEl) growSectionTo(sectionEl, el.offsetTop + needed + 24);
-    };
-
     const name = groupName(el.dataset.blockId, Boolean(props.multi));
 
     (props.items ?? []).forEach((entry) => {
@@ -137,11 +125,6 @@ export const faqBlock = {
       item.append(head, region);
       host.appendChild(item);
 
-      // Native <details> grows and shrinks on its own; we adjust only the block
-      // frame's VISUAL height (and the section's minHeight) so the unfolding is
-      // not clipped.
-      item.addEventListener('toggle', adjustHeight);
-
       if (editable) {
         // Click-and-type like the text block: the question is plain text, the
         // answer rich text (.urd-text[contenteditable] gives the formatting bar).
@@ -152,10 +135,7 @@ export const faqBlock = {
         }
         answer.contentEditable = 'true';
         q.addEventListener('input', postItems);
-        answer.addEventListener('input', () => {
-          postItems();
-          adjustHeight();
-        });
+        answer.addEventListener('input', postItems);
         // A click on the question text places the caret rather than unfolding;
         // only the arrow icon toggles (native toggle on summary via the chevron
         // click).
@@ -185,19 +165,5 @@ export const faqBlock = {
         });
       });
     }
-
-    // Auto-grow (like the collection block): the display follows the collapsed height; the blocks below are moved by the push pass (ADR-0024).
-    // All answers are closed at startup, so host.scrollHeight = collapsed.
-    // The display only; the blocks below are moved by the push pass (ADR-0024).
-    requestAnimationFrame(() => {
-      if (!el.isConnected) return;
-      el._urdFaqBase = host.scrollHeight;
-      const needed = host.scrollHeight;
-      if (Math.abs(needed - el.clientHeight) > 8 && ctx.viewport !== 'mobile') {
-        el.style.height = `${needed}px`;
-        const sectionEl = el.closest('.urd-section');
-        if (sectionEl) growSectionTo(sectionEl, el.offsetTop + needed + 24);
-      }
-    });
   },
 };

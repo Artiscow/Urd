@@ -124,6 +124,7 @@
   import { FONT_STACKS } from '$engine/fonts.js';
   import { isSafeHref, toolOrder } from '$engine/nav-model.js';
   import { frameAtPoint } from '$engine/place.js';
+  import { FOLLOWS_CONTENT, fitMoves } from '$engine/push-model.js';
   import { iconSvg, ICON_CATEGORIES, ICON_LIBRARY } from '$engine/icons.js';
   import { zoneValid } from '$engine/calendar-format.js';
   import { MAP_SERVICES, mapService } from '$engine/map-links.js';
@@ -701,6 +702,7 @@
 
   function undo() {
     if (!history.length) return;
+    dropFits();
     redoStack.push(snapshot());
     restore(history.pop());
     lastHistoryKey = null;
@@ -709,6 +711,7 @@
 
   function redo() {
     if (!redoStack.length) return;
+    dropFits();
     history.push(snapshot());
     restore(redoStack.pop());
     lastHistoryKey = null;
@@ -1228,33 +1231,41 @@
     updateDirty();
     bridge?.sendSection(pageId, section);
     syncSelectedBlock();
+    fitBlockSoon(section.id, block);
   }
 
   function setBlockProp(name, value) {
     // The key includes the property name: changing the label and then the
     // style must be TWO undo steps, while a burst in the same field coalesces.
     mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b) => { b.props[name] = value; });
-    if (selectedBlock.type === 'calendar') fitCalendarSoon(selectedBlock.sectionId, selectedBlock.blockId);
   }
 
   /** Multiple props in ONE undo step (the field contract's place field writes three). */
   function setBlockProps(name, patch) {
     mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b) => { Object.assign(b.props, patch); });
-    if (selectedBlock.type === 'calendar') fitCalendarSoon(selectedBlock.sectionId, selectedBlock.blockId);
   }
 
-  /** A calendar's frame follows what it shows: after a change of its settings
-   *  or of its width, the preview is asked for the height the content needs
-   *  and answers with it (urd-fit-block, urd-grow). Desktop frame only. */
+  /** A block whose height follows its content (ADR-0025) has its frame fitted
+   *  after every edit that can change the height (its settings, its text, its
+   *  width): the preview is asked for the height the content needs and
+   *  answers with it (urd-fit-block, urd-grow). Desktop frame only. */
   const fitTimers = new Map();
-  /** The latest fit asked for per block: an answer to an earlier one is dropped. */
+  /** The latest fit asked for per block: an answer to an earlier one, or to
+   *  one asked for before an undo, is dropped. */
   const fitSeq = new Map();
-  function fitCalendarSoon(sectionId, blockId, growOnly = false) {
-    if (viewMode !== 'desktop') return;
-    clearTimeout(fitTimers.get(blockId));
-    const seq = (fitSeq.get(blockId) ?? 0) + 1;
-    fitSeq.set(blockId, seq);
-    fitTimers.set(blockId, setTimeout(() => bridge?.sendFitBlock(sectionId, blockId, growOnly, seq), 60));
+  let fitCount = 0;
+  function fitBlockSoon(sectionId, block) {
+    if (viewMode !== 'desktop' || !FOLLOWS_CONTENT.has(block?.type)) return;
+    clearTimeout(fitTimers.get(block.id));
+    const seq = ++fitCount;
+    fitSeq.set(block.id, seq);
+    fitTimers.set(block.id, setTimeout(() => bridge?.sendFitBlock(sectionId, block.id, seq), 60));
+  }
+  /** Forgets the fits still waiting: their answers would measure a draft that is gone. */
+  function dropFits() {
+    for (const timer of fitTimers.values()) clearTimeout(timer);
+    fitTimers.clear();
+    fitSeq.clear();
   }
 
   /* The calendar block's Style tab (calendar-designs.js): the design, its
@@ -1471,7 +1482,6 @@
       list[i] = packCalSource({ ...calSource(list[i]), ...patch });
       b.props.sources = list;
     });
-    fitCalendarSoon(selectedBlock.sectionId, selectedBlock.blockId);
   }
   function addCalendarRow() {
     setBlockProp('sources', [...(selectedBlock.props.sources ?? []), '']);
@@ -5349,6 +5359,9 @@
     // mid-typing would lose the caret).
     if (msg.rerender) bridge?.sendSection(pageId, section);
     status = '';
+    // Typing in a block that follows its content changes its height too; the
+    // fit comes back without drawing the section again, so the caret stays.
+    fitBlockSoon(section.id, block);
   }
 
   /** Drag/resize from the iframe: the iframe already shows the snapped
@@ -5362,30 +5375,30 @@
     // moves of SEVERAL blocks into one step.
     pushHistory(msg.coalesce ? `edit:${msg.groupKey ?? msg.blockId}` : 'move-block');
     const key = msg.frameKey === 'mobile' ? 'mobile' : 'desktop';
+    const width = block.frames.desktop?.w;
     block.frames[key] = msg.frame;
     if (key === 'desktop') markDesktopChange(section, 'desktop-changed-after-mobile');
     store.save();
     updateDirty();
     if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
-    // A calendar dragged to a new size keeps the box it was given: the
-    // content flows in the new width, and the frame only grows when the
-    // content needs more height than the drag left it.
-    if (key === 'desktop' && block.type === 'calendar' && !msg.coalesce) fitCalendarSoon(msg.sectionId, msg.blockId, true);
+    // A block that follows its content flows in its new width, and its frame
+    // is fitted to the height the content takes there (ADR-0025).
+    if (key === 'desktop' && msg.frame?.w !== width) fitBlockSoon(section.id, block);
   }
 
   /** A height the preview reports for a block (urd-grow): from a plugin copy
    *  of the former data-block plugins on its own render, or as the answer to
-   *  a calendar's fit (`fit`, urd-fit-block). ONLY h changes, never x/y, so a
-   *  dragged block is never teleported back. A fit belongs to the edit that
-   *  asked for it and adds no undo step of its own. */
+   *  the fit of a block that follows its content (`fit`, urd-fit-block). ONLY
+   *  h changes, never x/y, so a dragged block is never teleported back. */
   function handleGrow(msg) {
     const section = store.data.sections.find((s) => s.id === msg.sectionId);
     const block = section?.blocks.find((b) => b.id === msg.blockId);
     if (!block?.frames?.desktop || block.frames.desktop.h === msg.h) return;
-    // A fit is for the desktop frame, and only the latest one asked for counts.
-    if (msg.fit && (viewMode !== 'desktop' || msg.seq !== (fitSeq.get(msg.blockId) ?? 0))) return;
-    // After a drag the frame is the owner's: it only grows to hold the content.
-    if (msg.growOnly && msg.h < block.frames.desktop.h) return;
+    if (msg.fit) {
+      // A fit is for the desktop frame, and only the latest one asked for counts.
+      if (viewMode === 'desktop' && msg.seq === fitSeq.get(msg.blockId)) applyFit(section, block, msg.h);
+      return;
+    }
     // Autogrowth is a MEASUREMENT, not an edit: data blocks report their
     // height on EVERY render, and the measurement varies with content,
     // feed responses and window. The measurement is therefore recorded in
@@ -5396,14 +5409,40 @@
       const b = s?.blocks.find((x) => x.id === msg.blockId);
       if (b?.frames?.desktop) b.frames.desktop.h = msg.h;
     });
-    if (!msg.fit && store.hasDraft()) pushHistory(`edit:${msg.blockId}`);
+    if (store.hasDraft()) pushHistory(`edit:${msg.blockId}`);
     block.frames.desktop.h = msg.h;
     // save() cleans the draft key when the measurement was the only difference.
     store.save();
     updateDirty();
     if (selectedBlock?.blockId === msg.blockId) syncSelectedBlock();
-    // After a fit the preview draws the block at its new height, so the outline follows the content.
-    if (msg.fit) bridge?.sendSection(pageId, section);
+  }
+
+  /** The frame of a block that follows its content, fitted to the height the
+   *  content takes (ADR-0025 decision 5). The fit is part of the edit that
+   *  asked for it: no undo step of its own, and it is a change to publish
+   *  like the edit. A taller frame moves the blocks below and a section with
+   *  a height of its own in px as far as the push pass already showed them
+   *  (fitMoves), so the page does not move; the preview gets the frames
+   *  without drawing the section again. */
+  function applyFit(section, block, h) {
+    const size = String(section.size?.minHeight ?? '');
+    const designPx = size.endsWith('px') ? Number.parseFloat(size) || 0 : 0;
+    const { moves, minHeight } = fitMoves(section.blocks, block.id, h, designPx);
+    const frames = {};
+    block.frames.desktop = { ...block.frames.desktop, h };
+    frames[block.id] = block.frames.desktop;
+    for (const [id, y] of moves) {
+      const other = section.blocks.find((b) => b.id === id);
+      if (!other?.frames?.desktop) continue;
+      other.frames.desktop = { ...other.frames.desktop, y };
+      frames[id] = other.frames.desktop;
+    }
+    if (minHeight) section.size = { ...section.size, minHeight: `${minHeight}px` };
+    markDesktopChange(section, 'block-edited');
+    store.save();
+    updateDirty();
+    if (selectedBlock?.blockId === block.id) syncSelectedBlock();
+    bridge?.sendFrames(section.id, $state.snapshot(frames), minHeight ? `${minHeight}px` : undefined);
   }
 
   /** ↺ in mobile view: reset mobile overrides, the whole section or one
@@ -5742,8 +5781,8 @@
     store.save();
     updateDirty();
     bridge?.sendSection(pageId, section);
-    // A calendar follows its content (ADR-0025): the frame of a new one is fitted to its design.
-    if (block.type === 'calendar') fitCalendarSoon(section.id, block.id);
+    // A block that follows its content (ADR-0025) gets its frame fitted to what it shows.
+    fitBlockSoon(section.id, block);
   }
 
   /** The "+ card/row" button on a section: the preset item arrives as a

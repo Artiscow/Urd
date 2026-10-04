@@ -7,7 +7,6 @@
  */
 // Only called in preview (after the admin dictionary has loaded): never at module level.
 import { ta, adminLocaleReady } from '../i18n.js';
-import { growSectionTo } from '../render.js';
 
 /**
  * Rectangularises the rows (pure, node-testable): all rows the same length
@@ -110,16 +109,5 @@ export const tableBlock = {
         });
       });
     }
-
-    // Auto-grow: the display follows the content height; the blocks below are moved by the push pass (ADR-0024).
-    requestAnimationFrame(() => {
-      if (!el.isConnected) return;
-      const needed = host.scrollHeight;
-      if (Math.abs(needed - el.clientHeight) > 8 && ctx.viewport !== 'mobile') {
-        el.style.height = `${needed}px`;
-        const sectionEl = el.closest('.urd-section');
-        if (sectionEl) growSectionTo(sectionEl, el.offsetTop + needed + 24);
-      }
-    });
   },
 };
