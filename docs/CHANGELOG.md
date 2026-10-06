@@ -27,6 +27,10 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.41 - The later phases back in BACKLOG - 6 October 2026
+
+- BACKLOG had no v0.8, v0.9, v1.0 or after-1.0 items: the commit 0.7.21.1 (3 October 2026) removed the sections «Til v0.8 og senere faser», «Moderniser til native/CSS» and «Etter v1.0 (horisont)», 59 lines, along with the stages it rewrote, and its entry did not say so (found 6 October 2026). The three sections are restored word for word from the version before that commit, between the v0.7 milestone and «Liten huskeliste»; none of their items has been built since.
+
 ### 0.7.0.40 - The test rounds reviewed and merged - 6 October 2026
 
 - TESTRUNDER held 996 open items, many repeated across batches or describing features since replaced. The calendar batches from 0.7.18.4 to 0.7.19.17p are one batch with one item per design and the shared checks once, the element menu and the sizing model are one batch each, and items replaced by later changes are removed or rewritten (the old settings panels, the design dropdown, the site-level scaling, «My screen», the plugins that became core blocks, among others). The file's introduction says an item may also go when a later change replaced it.
