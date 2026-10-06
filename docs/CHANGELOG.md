@@ -27,6 +27,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.40 - The test rounds reviewed and merged - 6 October 2026
+
+- TESTRUNDER held 996 open items, many repeated across batches or describing features since replaced. The calendar batches from 0.7.18.4 to 0.7.19.17p are one batch with one item per design and the shared checks once, the element menu and the sizing model are one batch each, and items replaced by later changes are removed or rewritten (the old settings panels, the design dropdown, the site-level scaling, «My screen», the plugins that became core blocks, among others). The file's introduction says an item may also go when a later change replaced it.
+- Items confirmed by everyday use (publishing, the top bar and the rail, the panels and the block toolbar) are removed, and three were checked in the browser: the calendar's print list in six designs and every page and admin panel in three languages without a raw key or a missing file pass, so they are removed. 818 items remain.
+- The third check failed: at 360 px five calendar designs run out of the phone's width with long titles, and one word wider than the block does the same in 19. The item stays, and the finding is a bug in BACKLOG.
+
 ### 0.7.20.4 - The search in the element menu - 4 October 2026
 
 - A setting deep in a closed group could only be found by opening groups, and the calendar's menu had grown by eleven settings since they were built. A search field in the floating menu's head and over the menu in Properties narrows the menu to the settings whose label or tooltip holds every word, with their groups open (`menu-search.js`, `matchWords` in palette-search.js, tests/menu-search.test.mjs).

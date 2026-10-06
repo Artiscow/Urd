@@ -1,8 +1,66 @@
 # Testrunder (sjekkliste for manuell testing)
 
-Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst eller oppført som en kjent bug.
+Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
-### Test batch (0.7.20.4): the search in the element menu
+### Test batch (0.7.21.2-0.7.21.4): the height that follows the content, drags and the block's own width (merged 6 October 2026)
+
+**The height that follows the content**
+
+- [ ] A page saved before 0.7.21.2, in the editor and on the published page: every calendar, collection, product card, basket, checkout, countdown, FAQ, form, quote, share, statistic, table, timeline and audio block stands at its content's height with no air under it; the blocks below stay where they were, and nothing is cut off
+- [ ] A change of variant or settings (an FAQ between cards and list; a calendar from a list design to a month design and back, its count, view switcher, design settings or «Size»): the outline follows at once, growing and shrinking; the blocks below move down with a taller block and stay with a shorter one; one undo puts the setting, the height and the blocks back together
+- [ ] Every calendar design picked one after the other, with sample data and with a real feed: the outline ends where the calendar ends, neither clipping it nor leaving air under it
+- [ ] A section with a height of its own and a calendar near its bottom changed to a taller design: the section grows to hold the calendar and the blocks below it
+- [ ] A long line typed into an FAQ question or a quote in the preview: the block grows with the words, the caret stays where you type, and the blocks below move down; an FAQ answer opened, typed in and closed again goes back to its closed height with no air under it
+- [ ] An FAQ on the published page: an opened answer pushes the blocks below down and closing it brings them back; on a phone the FAQ grows with the open answer
+- [ ] A collection or product cards in the editor, then in Clean view: in Clean view the outline matches the cards; in the editor the image buttons and the empty-field placeholders are drawn on top and may overlap the block below
+- [ ] The audio block with a sound file: the outline is as tall as the player; the basket on a shop page: an open drawer leaves the blocks below where they are
+- [ ] Three statistics in a row as cards: they line up when their figures and labels take the same height (a label on two lines makes its card taller until «stretch» in 0.7.21.3)
+- [ ] A calendar with a real feed: on the published page it holds the frame's height while it loads and stands at the events' height after; in the editor its outline follows the events once the fit has come back
+
+**Drags**
+
+- [ ] The lower corner of one of these blocks: a sideways arrow and the tooltip «Drag to change the width; the height follows the content» (a text or an image block keeps the diagonal arrow); a pull straight down or up keeps the height, shows a magenta «The height follows the content» mark while held and changes nothing on release, with nothing new for Ctrl+Z; a pull sideways narrows or widens the block with its height following the content
+- [ ] A text or image block resized by the corner: the box follows the pointer in width and height and lands where released
+- [ ] The front page's top section: its height is the same with the editing chrome on and in Clean view
+- [ ] The collection in the top section dragged a little down or sideways: the section's bottom edge stays where it was during the drag and after the release; one Ctrl+Z puts everything back
+- [ ] The same collection dragged until its lower part passes the section's bottom edge: the section keeps its height and the collection lies over the next section, in the editor, in Clean view and on the published page; afterwards the section's bottom handle can make the section shorter again
+- [ ] A block with a text right under it that is drawn pushed down (an FAQ or a collection whose content outgrew its frame), dragged sideways: the text stays where it was shown, and one Ctrl+Z restores both; the same with a set (Shift-click two blocks) dragged by one of its blocks and by the grip on the set's toolbar
+- [ ] A block like that dragged into another section: one Ctrl+Z puts it back, with both sections as they were
+- [ ] The arrow keys, «Align bottom» and «Distribute» on blocks like these: they line up by the boxes you see, and one Ctrl+Z restores
+- [ ] An FAQ near the bottom of a section dragged narrower by its corner: the section grows while you drag, and stays so after the release
+
+**The block's own width**
+
+- [ ] A narrow calendar on a wide page and the same calendar in the mobile view: both show the narrow layout; the same block at the same width looks the same in a wide and in a narrow window (the calendar designs that change by width are under each design in the calendar batch)
+- [ ] A gallery with four columns (grid, mosaic and polaroid): two columns in a narrow block, four in a wide one, the mosaic a whole wall
+- [ ] Product cards with a fixed column count: two columns in a narrow block, one below 320 px
+- [ ] An alternating timeline below 480 px: the line along the left edge, the cards under each other
+- [ ] A table and a statistic in narrow blocks: tighter cells and a smaller figure, nothing outside the box
+- [ ] The pages on a real phone: calendars, galleries and products look as before
+- [ ] No errors in the console while blocks are dragged back and forth
+
+### Test batch (0.7.20.1-0.7.20.4): the element menu (merged 6 October 2026)
+
+**The frame**
+
+- [ ] The gear on a block opens the element menu wide: Content, Style and Placement as columns, an area without settings (Style on the map block) taking no column; the button in the menu's head switches to three tabs and back
+- [ ] Admin settings, «Element menu»: Narrow makes the menu open with tabs after a reload, Wide with columns; the Properties panel in the rail is always tabs
+- [ ] With the Properties panel open, the floating menu never lies over the admin's panels; with the editor window narrowed until the wide menu does not fit beside them, the menu opens narrow
+- [ ] Placement on any block: «On narrower screens», «Hide on mobile» and «Pin while scrolling» stand open at the top, «Motion» and «Placement, layer and rotation» are groups showing their value
+- [ ] The quick row: «Narrow screen» and «On a phone» on every block, and on a calendar «Design», «Max count» (list, cards and agenda) and «Subscribe button»; each changes the preview at once; «Narrow screen» set to Shrink is still marked in the quick row and under «On narrower screens» after the menu is closed and opened again, and Wrap switches back
+- [ ] Calendar, the «Design» row in Style or the quick row: the picker fills the menu with six thumbnails across under the view headings, a click changes the design and the picker stays open, «Back to the menu» returns; the picker open and the menu closed with the cross: the menu opens again on its areas; Week strip chosen, then Plain: the view is List
+- [ ] Calendar, the colours in Style: swatches in rows with the name under each, three across in the wide menu and five in the narrow one; the clear button sits on the swatch's corner
+
+**Groups**
+
+- [ ] The calendar's menu with everything closed shows only group rows in Content and Style, each with its value: the number of sources, the view, «Off» or «N on» for the buttons, «Standard» or the owner's words for the empty state, «Standard» or «N of M changed» for the colours
+- [ ] A group left open stays open when another block is selected, in the wide menu, the narrow menu and the Properties panel
+- [ ] A change inside a group (a colour, a button switched on, a max count other than 6, a size other than 100 %) puts a yellow mark on the group's row and «Reset this group» under its controls; the reset puts the group's settings back, the mark goes, and one undo brings them back
+- [ ] «Announcement» appears as a group only on the designs that have an announcement; its switch reads «Show the calendar's announcement», and turning it on or off leaves the strip above the menu as it was (and the strip's own switch leaves the calendar's note)
+- [ ] Wide menu: every label with a field or a dropdown stands over its control and none wraps beside it; narrow menu and Properties panel: label and control on one row
+- [ ] «Reset the texts» appears under the Content groups only after a text in the block has been rewritten
+
+**The search**
 
 - [ ] The calendar's menu from the gear, «clock» in the search field: only «Clock» shows, with «View and count» open; Style and Placement say that nothing matches
 - [ ] «colour»: the Colours, Edge stripe and Text fields groups open with what matches; «size»: «Text fields» shows the field picker over «Size (px)»
@@ -15,331 +73,142 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 - [ ] The design picker open, a word typed: the picker closes and the hits show
 - [ ] Another block type (a gallery, a form): a word from one of its labels or tooltips finds it
 
-### Test batch (0.7.21.4): the block follows its own width
+### Test batch (0.7.18.4-0.7.19.17p and 0.7.0.39): the calendar (merged 6 October 2026)
 
-- [ ] Month with side panel dragged narrower by its corner: the panel goes under the month as the block passes 600 px, while it is dragged
-- [ ] A plain month or Week plan dragged below 540 px: the month turns to dots with a day list and Week plan stacks its days; dragged wider, they come back
-- [ ] A narrow calendar on a wide page and the same calendar in the mobile view: both show the narrow layout
-- [ ] A gallery with four columns (grid, mosaic and polaroid): two columns in a narrow block, four in a wide one, the mosaic a whole wall
-- [ ] Product cards with a fixed column count: two columns in a narrow block, one below 320 px
-- [ ] An alternating timeline below 480 px: the line along the left edge, the cards under each other
-- [ ] A table and a statistic in narrow blocks: tighter cells and a smaller figure, nothing outside the box
-- [ ] Bento, Split card, Year wheel and Regular event change by the block's width, also in a wide window
-- [ ] The pages on a real phone: calendars, galleries and products look as before
-- [ ] No errors in the console while blocks are dragged back and forth
+One item per design; what every design shares stands once, under «Every design».
 
-### Test batch (0.7.21.2.2): a drag never stretches a section
+**Adding a calendar**
 
-- [ ] The front page's top section: its height is the same with the editing chrome on and in Clean view (the collection's «+ Add images» buttons and «Write text …» lines no longer make it taller in the editor)
-- [ ] The collection in the top section dragged a little down or sideways: the section's bottom edge stays where it was during the drag and after the release; one Ctrl+Z puts everything back
-- [ ] The same collection dragged down until its lower part passes the section's bottom edge: the section keeps its height and the collection lies over the next section, in the editor, in Clean view and on the published page
-- [ ] After that first drag, the section's bottom handle can make the section shorter again, and the collection then lies over the edge
-- [ ] A click on a block, and a straight pull up or down on the corner of a calendar, collection or FAQ: nothing changes, and Ctrl+Z has nothing new to undo
-- [ ] A block with a text right under it that is drawn pushed down (an FAQ or a collection whose content outgrew its frame), dragged sideways: the text stays where it was shown; one Ctrl+Z restores both
-- [ ] The same with a set (Shift-click two blocks), dragged by one of its blocks and by the grip on the set's toolbar
-- [ ] A block like that dragged into another section: one Ctrl+Z puts it back, with both sections as they were
-- [ ] The arrow keys, «Align bottom» and «Distribute» on blocks like these: they line up by the boxes you see, and one Ctrl+Z restores
-- [ ] An FAQ near the bottom of a section dragged narrower by its corner: the section grows while you drag, and stays so after the release
-- [ ] A collection with image buttons right above a text block, in the editor: the buttons may overlap the text while editing; Clean view shows the page without the overlap
-- [ ] Type into an empty «Write text …» field of a collection card, then switch to Clean view: the typed words show
-- [ ] An FAQ with an answer open, dragged sideways: the open answer still pushes the blocks below; closed, the FAQ stands at its closed height
+- [ ] Blocks panel, Calendar: the views, and «Designs» unfolded with 34 thumbnails grouped by view, none running out of the panel; a press on one and a place in a section gives that design with an outline that fits; the block search («Week strip» gives «Calendar: Week strip») and «+ New block» in a section (a long list that scrolls) add the same
+- [ ] The section templates «What is on» and «What is on: cards», «month», «week» and «next»: each gives a heading and a calendar in that view, inside its section
+- [ ] A new calendar from the palette, the block menu or a section template: no category filter, no subscribe buttons and no «Sign up» buttons until they are switched on, and no «changed» dot on its view group (an Agenda or a «Coming up» calendar too); a «Coming up» design chosen on a new calendar shows three events in the card and three under «Later», while a calendar whose counts were set keeps them
+- [ ] The two calendars on Hjem render as before; the parser (ics.js) is fetched only on a page with a calendar, after the page has rendered (the Network panel)
+- [ ] The help chip on a calendar: its last line says the texts are rewritten by clicking them and that Style sets colours, the stripe and the font per field; Clean view hides the chip
+- [ ] A calendar block saved before these stages renders as it did in every design, and a block saved with a design renders the plain list on an older engine
 
-### Test batch (0.7.21.2): the height that follows the content
+**Sources and what is read from a feed**
 
-- [ ] A page saved before this version, in the editor and on the published page: every calendar, collection, product card, basket, checkout, countdown, FAQ, form, quote, share, statistic, table, timeline and audio block stands at its content's height with no air under it; the blocks below stay where they were, and nothing is cut off
-- [ ] An FAQ switched between cards and list in its menu: the outline follows the content at once, growing and shrinking
-- [ ] A calendar changed from a list design to a month design and back: the outline follows each design; the blocks under it move down with the taller design and stay where they are with the shorter one
-- [ ] One of these blocks dragged by its lower corner straight down, then straight up: the height stays, a magenta mark with «The height follows the content» shows at its lower edge while the button is held, and nothing changes when it is released
-- [ ] The same corner dragged sideways: the block narrows or widens as you drag with its height following the content, and after the release the outline matches the content
-- [ ] The pointer over the corner of such a block: a sideways arrow, and the tooltip «Drag to change the width; the height follows the content»; on a text or an image block the diagonal arrow as before
-- [ ] A long line typed into an FAQ question or a quote in the preview: the block grows with the words, the caret stays where you type, and the blocks below move down
-- [ ] An FAQ answer opened, typed in and closed again: the FAQ goes back to its closed height with no air under it
-- [ ] An FAQ on the published page: an opened answer pushes the blocks below down and closing it brings them back; on a phone the FAQ grows with the open answer
-- [ ] A collection or product cards in the editor, then in Clean view: in Clean view the outline matches the cards (the editor shows the image buttons and the empty-field placeholders on top)
-- [ ] A section with a height of its own and a calendar near its bottom changed to a taller design: the section grows to hold the calendar and the blocks below it
-- [ ] Undo right after a change that made a block taller: the setting, the height and the blocks below go back together
-- [ ] The audio block with a sound file: the outline is as tall as the player
-- [ ] Three statistics in a row as cards: they line up when their figures and labels take the same height (a label on two lines makes its card taller until «stretch» in 0.7.21.3)
-- [ ] The basket on a shop page: an open drawer leaves the blocks below where they are
-- [ ] A calendar with a real feed: on the published page it holds the frame's height while it loads and stands at the events' height after; in the editor its outline follows the events once the fit has come back
-- [ ] The push batch's «drag a calendar taller right after a change of setting» no longer applies: a calendar's height follows its content, and the drag items above replace it
+- [ ] A source with a name: its events wear the name as their chip and the filter shows it, and a title like «Møte: Årsmøte» stays whole; a source with a colour: chips, date badges and the filter button take it, and cleared they follow the accent; two sources with the same event show it once, keeping a sign-up link or a place found in only one copy
+- [ ] «Calendars on the site»: lists the sources of the other calendar blocks, adds one with a click, and says so when there are none
+- [ ] A Nextcloud calendar's share link pasted under Sources as it is: the events show, and «Subscribe» gives an address a calendar app can follow
+- [ ] With a Proton, Outlook or Nextcloud calendar: adding its host to `ICS_HOSTS` as the calendar guide and the setup guide describe makes the calendar show
+- [ ] A real feed with «the last Thursday of every month», «the second Sunday of May» and an event with single extra dates: the occurrences land on the right dates for the coming months
+- [ ] A feed whose events carry `CATEGORIES` and whose calendar has no name: the chips and the category filter show the feed's categories, and a title with a colon is left whole
+- [ ] A feed that answers with junk, on the published page: the quiet empty state, never standing loading bars
+- [ ] Empty state: a block without sources on the published page, and a feed with nothing coming up, show the icon and the line; own words and another icon in Content change it, and None removes the icon
 
-### Test batch (0.7.0.36-0.7.19.17p): what the push review fixed
+**Times and dates**
 
-- [ ] A calendar in the preview: rewrite two of its texts (for example «Upcoming» and «Week» in the view switcher), reload the editor: both rewrites stand
-- [ ] An all-day event over two days (for example a Saturday and a Sunday): it shows on both days in Week strip, the month on a phone and the day plan; «Add to calendar» gives the right last day in Google Calendar and in the file
-- [ ] With a time zone set for the site and the computer on another zone: an all-day event stands on its own day, and a timed event at the zone's clock
-- [ ] Billboard, Split card, Countdown ring and Dark glass with a cancelled next event: only its title is struck; the «Later» rows look as usual
-- [ ] Week plan with an event from 22:00 to past midnight: the hours run to 23 and the event is drawn; Day plan the day after shows it in the row above the hours
-- [ ] Week plan and Calendar layers: the arrows through the weeks around the end of October keep to whole weeks from the first day
-- [ ] The 12-hour clock on Week plan and Day plan: the hour axis reads «1 pm»
-- [ ] The site in English: dates read «5 Oct», never «5. Oct»; Dark glass's clock reads «01d 15h 22m»
-- [ ] Agenda, dark: pick a calendar in its menu that has nothing coming; the menu stands and another calendar can be picked
-- [ ] Timeline: a click on an event's words opens its card; a cancelled event's title is struck
-- [ ] Year wheel with a screen reader: the months are buttons that read their name and pressed state
-- [ ] A card open in the Clean view while the calendar is drawn again (a setting changed in another tab of the editor, or the window crosses the phone width on the published page): the card closes
-- [ ] A calendar whose feed answers with junk on the published page: the quiet empty state, never standing loading bars
-- [ ] Clean view, a design with «Address of the whole programme» set to another site: the link opens in a new tab, and the editor's preview stays
-- [ ] Editor: change a calendar setting and press Undo once: the setting and the calendar's height go back together; drag a calendar taller right after a change of setting: the height you dragged stays
-- [ ] Editor: open the design picker, close the menu with the cross, open the menu again: it shows its areas; choose Week strip, then Plain: the view is List
-- [ ] Editor: a new Agenda calendar and a new «Coming up» calendar show no «changed» dot on their view group
+- [ ] A real feed: an event from 18:00 to 21:00 reads «18:00-21:00» in every design that shows a time, one with no end reads its start; an all-day event over three days reads «until» its last day; a timed event that ends on a later day reads its start, the last day and the end time
+- [ ] An all-day event over two days (a Saturday and a Sunday): it shows on both days in Week strip, the month on a phone and Day plan; «Add to calendar» gives the right last day in Google Calendar and in the file
+- [ ] An event cancelled in the calendar app: a struck, dimmed title, «Cancelled» where the time stands and no sign-up, in every design; «Show cancelled events» off removes them from every view
+- [ ] «Clock»: 24 h is marked whatever the site language; 12 h writes «6:00 pm-9:00 pm»; «The week starts» is offered on month, week, year and agenda designs, Bento and with the view switcher on: Sunday puts Sunday first and moves the grids, Auto follows the site language
+- [ ] Site panel, «Time zone»: Europe/Oslo is accepted, «Mars/Olympus» is refused with «Unknown time zone» and leaves the stored value, an empty field removes it; with the zone set and the computer on another zone, the times stay on the site's clock, an all-day event stays on its own day, a line under the calendar names the zone, and «today» and the countdowns follow the real moment; with the field empty and a feed kept in another zone, the line says the times are in your own zone
+- [ ] The site in English: dates read «5 Oct», never «5. Oct»
+- [ ] The page source of a published calendar with a real feed: dates and times are `<time datetime>`, the day for a date and the true moment for a clock time, also with a time zone set; «Cancelled» is not a time
+
+**Finding events and the view switcher**
+
+- [ ] Content: «Show place filter», «Show search field» and «Show earlier events» stand under the category filter and are off on a new calendar; «Show earlier events» is hidden for a month, week, day or year design; the group's reset switches all three off
+- [ ] «Show search field» on, published: a word leaves only the events with it in the title, place or description, whatever the case; two words must both be found; the field keeps its text and the caret while the list changes; no match shows «No events match»; emptying the field brings every event back
+- [ ] «Show place filter» on, a feed with two or more venues: a button per venue («All places» first), named up to the place's first comma; a press narrows the list and keeps the focus; with one venue no row is drawn
+- [ ] «Show earlier events» on, a feed with events in the last 90 days: «Earlier (n)» under the calendar with the right count, the latest first, a press on a row opens the card; nothing that is over stands among the coming events; the sample data shows one event under «Earlier»
+- [ ] Search, place and category together: each narrows what the others leave, and the «Earlier» fold follows them; the field and the button rows fit the width on a phone in a list, a card and a «Coming up» design
+- [ ] «Show view switcher» on a list, cards, agenda or next calendar: «Upcoming», «Week» («Uke» in Norwegian) and «Month» at the top, «Upcoming» pressed; Week and Month show the week strip and the month with their arrows, including this week's and this month's earlier events; the published page starts on «Upcoming» every time
+- [ ] The switcher is not offered for a month, week, day or year design, and a block that had it on and is given such a design shows no buttons; its words are rewritten by clicking them (a click on the word edits, on the button's edge it switches); in the switcher's week, about 650 px wide, the time and the title stay inside each event's box
+
+**The event card**
+
+- [ ] Published page and Clean view, every design: a click on an event, or Tab to it and Enter, opens its card over its calendar with the calendar shaded; the page does not scroll when the card opens or closes, also with the page scrolled far down; the page scrolls as usual while the card is open, the scrollbar stays, and the card scrolls away with its calendar, under the navigation bar
+- [ ] Escape, the close button and a press outside close the card with the focus back on the event; a press on another event closes the open card and opens the new one; a card open while the calendar is drawn again (a setting changed, or the window crossing the phone width) closes
+- [ ] The card is never wider or taller than its calendar (a calendar lower than 300 px lets it reach below itself); more content scrolls inside the card; with the editing handles on, a click on an event selects the block and opens nothing; switching to Clean view closes the element menu
+- [ ] The card with a real feed: the whole description with clickable links (a formatted description from Outlook with paragraphs, lists, bold and links, and no pictures, colours or forms from the feed), the picture, and no sign-up or «Add to calendar» on a cancelled event
+- [ ] «Join» for a meeting link from Zoom, Teams, Meet, Whereby, Jitsi, Webex, Proton Meet, kMeet or Element Call, also for a Meet or Teams meeting added in the calendar app with no link in the description; Site panel, «Own meeting addresses»: a host or a pasted address is stored as the host alone, several divided by commas, and an event with a link to it shows «Join»
+- [ ] «Show «Sign up» buttons» on: «Sign up: https://…» or «Tickets: https://…» in a description gives the button to that address, an event service's own address gives it to that page, a plain link gives no button and stays in the text, and a picture or meeting link never becomes the button; «Sign up» and «Join» show their host as their tooltip
+- [ ] «Add to calendar» unfolds without moving the card off its calendar: «Add to Google» opens Google Calendar filled in, «Download as a file (.ics)» opens in Apple Calendar and Outlook with the right time, and «Subscribe» with the iCal address, selected at a click
+- [ ] The card's words, date line and button have contrast against the ground in every design, also on Glass, Dark glass, the dark designs and the plain month
+- [ ] In the calendar itself, in Clean view and on the published page: a place opens the map in a new tab (an address when the place is one), an address in a description is a link, and an excerpt of a long description ends at a word with «…» and keeps an address near the cut whole; in Clean view «Address of the whole programme» set to another site opens in a new tab and the preview stays
+
+**Places and the map service**
+
+- [ ] Site panel, «Map service»: OpenStreetMap, DuckDuckGo Maps, Brave Maps, HERE WeGo, Google Maps, Apple Maps, Norgeskart and FINN kart in that order, each with a note that reads in the list's width, in Norwegian, English and Turkish admin; OpenStreetMap on a site that has never set it
+- [ ] With each service chosen and published, a place with a venue's name before its address («Mormors Stue, Nedre Enkeltskillingsveita 2, 7011 Trondheim, Norge») opens the service at the right spot; a name alone and an address alone open it with that text, and a web address still opens that address
+- [ ] An event whose calendar app stores a point for the place: OpenStreetMap and Apple Maps open that point, the others the search; an event with a point and no place in words gets «Show on the map» in its card
+
+**Search engines**
+
+- [ ] A published page with a real feed: the live `<head>` holds a `script type="application/ld+json"` with the events beside the site's `Organization`, and the Schema Markup Validator reads them without errors, each with a name, a start and a place; `endDate`, all-day dates, `EventCancelled`, `VirtualLocation` and `MixedEventAttendanceMode` where they apply
+- [ ] «Tell search engines about the events» off: the events script is gone and `Organization` stands; another page of the site removes the script of the page left; the preview and sample data write none
+- [ ] Google's Rich Results Test on the published page finds the events; warnings for price, ticket link and performer are expected
+
+**Loading, keyboard, screen reader and print**
+
+- [ ] Published page with a real feed: quiet bars while the calendar is fetched (still with reduced motion), at the frame's height on a desktop with nothing below moving when the events arrive; on a phone the second load in a session has the same height before and after; a screen reader announces «Loading the calendar»; the preview with a feed shows the bars, never «No upcoming events» for a moment
+- [ ] A day grid on the keyboard (the plain month, Overview on cream, Month with side panel, Week strip, Day plan's day picker, Heat map, the months on a phone): one tab stop, the arrow keys between days, Home and End to the ends of the week, PageUp and PageDown to the month or week before and after, Tab through the day's events and out, Enter on an event opens its card; with the editing handles on the arrow keys do nothing there
+- [ ] A screen reader: a day reads its date and number of events («Sunday 4 October, 1 event»), an arrow press reads the new month, week or day, the arrows are named for the previous and next month in the site's language, and a press on «Week», «Month» or a category keeps the focus on the pressed button and reads it as pressed
+- [ ] Nothing in any design runs out of the block at 360 px with a real feed with long titles
+
+**Every design**
+
+- [ ] Every design in turn, sample data in the preview and a real feed on the published page: it draws, «View» stands in Content only on Plain, and the month, week, day and year designs also show the earlier events of their span; the colour slots follow the design's own colours when empty and a dark theme stays readable; «Edge stripe on the boxes» adds the stripe to its rows, cards, tiles, day columns or plan blocks in the event's calendar colour, «Stripe colour» overrides it and off removes it
+- [ ] Style, «Text fields»: Title with font, size, Bold or Normal, italic, underline and colour changes every title and nothing else; the same for Date, Time, Place, Description, Category and Large numerals
+- [ ] The words of a design («Next event», «Later», «All», «Sign up», «Subscribe», «Programme», «Today», the units): a click in the preview opens the text toolbar, bold or a colour applies, and the words survive a reload and a publish; two texts rewritten in one calendar both stand after a reload; «Reset the texts» puts the defaults back
+- [ ] «Show «Sign up» buttons» off removes the buttons in every design
+- [ ] Style, «Size»: 60 % draws the whole calendar smaller, text included, 150 % larger, and the outline follows; a drag afterwards leaves the percentage where it was
+- [ ] Style, «Settings for the design»: a group only on the designs that have settings, holding only that design's; each change shows at once and survives a reload and a publish
+
+**The designs, one item each**
+
+- [ ] Plain, List: more events than the max count give «Show all N (M more)» under the rows, which opens the rest in the same design without a reload; «Fold the rest under «Show all»» (on the list designs only) off removes the fold; the same fold in Timeline, Table, Programme booklet, Numbered programme, List on navy and Glass
+- [ ] Plain, Cards and Agenda: the cards fill the width; Agenda's rows stand under their month with the day number and weekday, and the max count counts like the list
+- [ ] Plain, Month: chips per day and the keyboard grid; below 540 px wide (a narrow block, also while dragged, or a phone) every day is a button with up to four dots in the calendars' colours, today picked first, a press lists the day's events under the grid («Nothing on this day» when empty) and the arrows change the month
+- [ ] Plain, Next: «Events in the card» 1, 2 and 3 hold that many in full under «Next event» (one) or «Coming up» (more); «Under «Later»» 0 to 10 lists one-line rows below
+- [ ] Timeline: the date on one line to the left, a rail with a dot per event (the first in the accent, the rest in Dots), the sign-up as a filled button, the chip under the title; a click on an event's words opens its card, and a cancelled event's title is struck
+- [ ] Table: the header row in its colours, every other row tinted, «all day» for an all-day event, the sign-up at the right end; «Show the Time column», «Show the Place column» and «Striped rows» off remove each; a narrow block scrolls the table sideways; folded rows may stand slightly off the columns above
+- [ ] Programme booklet: the paper with a shadow, «Programme» and the month span, a column per month that wraps to one in a narrow block, the day in the accent, the description's first line; «Show the description» off removes it
+- [ ] Numbered programme: 01, 02, 03 in Numerals, «3 events» at the top right, the sign-up or the chip in the right column, a rule between rows; the fold counts on (03, 04 …) of the whole list; «Count 01, 02, 03» off counts 1, 2, 3, also through the fold
+- [ ] List on navy: navy rows, the day in gold and the month in capitals, the category outlined, the place underlined in gold, the title in the heading font, the filter chips and subscribe buttons in the row colour; a weekly event wears «Repeats» (rewritable, coloured by «Repeats mark») and a single one does not; the view switcher, search field and the switcher's month read light on dark
+- [ ] Glass: three blobs behind frosted cards (Colour blob 1 to 3, The glass, Glass edge); transparent by default, so a section picture or gradient shows through, and a «Ground» colour makes it solid; the filter chips, subscribe button and view switcher in glass
+- [ ] Poster wall: the first poster twice as large in Poster 1, the next two in Poster 2 and 3, the fourth plain, then again; category and place in capitals at the top, the day huge, title and time at the foot; «Columns» 2, 3 and 4 fix the count and Auto fills; «Address of the whole programme» adds a last dashed tile; two columns on a phone
+- [ ] Tickets: the stub in the Stub colour (the calendar's colour when it has one) with day, month and time, a dashed tear, place · category under the title, the sign-up at the right end; without a sign-up «Open to everyone» (rewritable; «Show «Open to everyone»» off removes it); the programme address as a foot link
+- [ ] Day carousel: the cards scroll sideways and snap, the two arrows move one card, the first card in The first card colours with the sign-up on it; a dot per card follows the scroll (arrows, touch, wheel) and a click on a dot scrolls to its card; no dots with one card
+- [ ] Picture cards: a picture attached to the event in the calendar app, or a picture link in its description, shows in the band when its host stands in PHOTO_HOSTS, otherwise the Without a picture colour (locally plain); the date badge and the chip on the band; «Columns» 2 to 4 or Auto
+- [ ] Grid on cream: cream cards with a navy head, the day in gold, the category as a gold pill, the place underlined in gold; Header row, Card, Text and Gold recolour them; «Repeats» on a weekly event
+- [ ] Bento: the hero tile with the «Next» pill and «In N days» (the next event's picture fills it with the words readable), two small tiles, the current month with today ringed and the event days in Soft accent, «This month», the subscribe tile with a source, wide rows for the rest and no subscribe row under the block; two columns in a narrow block, also in a wide window
+- [ ] Billboard: the pulse beside «Coming up», three tiles counting days, hours and minutes that move on after a minute, the sign-up as a full-width bar, «Then:» with the later events, the subscribe link and the programme address at the foot; a cancelled next event: only its title is struck
+- [ ] Stacked cards: with «Events in the card» 3, three cards with the front one readable, «Browse the cards» turns the next to the front, «3 next» at the top right, the later rows under
+- [ ] Noticeboard: the next event on a pinned yellow note; «Show announcement» adds a blue note with rewritable label, heading and text, its link gives «Read more»; «Later» on the strip
+- [ ] Split card: the weekday, the huge day and the month on the panel in the calendar's colour, the chip, title, first line and sign-up beside it, «Later» under; «Show the description» off removes it; the panel stacks above the words in a narrow block and on a phone; a cancelled next event: only its title is struck
+- [ ] Band: the tag at the left, the next events in one line with dots between; with more than fit the band rolls, pauses under the pointer and stands still with reduced motion; «Roll when the band is too narrow» off: it stands still and scrolls sideways by hand
+- [ ] One line: the first rows marked «Coming up» with the accent dot and stripe, the rest «Later», «In N days» at the right and the sign-up as a button
+- [ ] Countdown ring: the ring fills over the last two weeks, the middle counts days and on the last day hours, two later rows with dots under a rule; a cancelled next event: only its title is struck
+- [ ] Dark glass: a blurred, half transparent dark ground the section shows through («Ground» makes it solid), the countdown in monospace («01d 15h 22m» on an English site), «Until the start» with the percentage and the bar, the sign-up and subscribe buttons side by side, «Then» in a glass box, Colour blob 1 and 2; a cancelled next event: only its title is struck
+- [ ] Coming up bento: the hero tile in the calendar's colour with «Coming up» and «In N days», a date tile per later event (the third dark), the link tile with the count, the subscribe link and the programme address; no subscribe row under the block; «Events in the card» 3 with one later event gives three day tiles beside the first
+- [ ] Week strip: the current week with today framed, «Week N» and the span, the arrows a week at a time, a pill per event; in a block about 650 px wide the time and title stay inside each box; below 540 px (a narrow block, also while dragged, or a phone) the days stand under each other with today marked, and dragged wider the seven columns come back
+- [ ] Week plan: the hours from the earliest event (at most 08) to past the latest (at least 18), today tinted, an all-day row, timed events as blocks with their length; «First hour» 6 and «Last hour» 22 give 06 to 21, empty gives 08 to 17, an event at 23:00 still shows with the last hour 20; «Tint the weekend»; an event from 22:00 past midnight is drawn with the hours to 23; the 12-hour clock writes «1 pm» on the axis and 24 h keeps 08, 09; the arrows around the end of October keep whole weeks; below 540 px the days stand under each other with their events in clock order, all-day first, «Today» on one line
+- [ ] Calendar layers: a row per named calendar with a switch in the head that hides and shows it, a bar per event across its days, today tinted, no chip row and «Show category filter» hidden; the arrows around the end of October keep whole weeks; on a phone each calendar with its events under its name and the day written on each («Sun 4», «Mon 5 to Wed 7»), the week label wrapping
+- [ ] Month with side panel: at most two chips per day and «+N», today ringed, a click or Enter on a day shows its events in the panel, a grey day of the next month moves the month, the legend lists the calendars; «Side of the panel» Right, Left and Under; the panel goes under the month when the block is narrower than 600 px (while it is dragged) and on a phone, whatever is chosen
+- [ ] Overview on cream: the month on cream with a gold rule, gold arrows, today in a gold circle, pills with a gold line and the time in dark gold; below 540 px the dots and the day list of the plain month
+- [ ] Day plan: today with «Today» and «N today», the week strip picks another day (Enter picks it and keeps the focus), the now line and the past hours shaded on today only; «First hour» and «Last hour»; an event past midnight shows in the row above the hours on the next day; the 12-hour axis reads «1 pm»
+- [ ] Year wheel: twelve arcs, past months in Past, this month in the accent, a dot per event, the year and the count in the middle, a click or Enter on an arc lists the month to the right; «The month at the top of the wheel» August puts August at the top with the dots following, «The current month» moves by itself next month; a screen reader reads the months as buttons with their name and pressed state; the layout changes by the block's width, also in a wide window
+- [ ] Heat map: twelve small months, days shaded None, Few, More and Many, today ringed, a day pointed at or focused reads its events under the grid; one tab stop for the whole year
+- [ ] Coming up on cream: the navy head with the gold dot, the next event with the navy date badge and «In N days», «Later» on a gold rail, an arrow on an event with an address; the announcement as Section (at the foot) or Alert band (under the head, with its colours); «Panel text» colours the words under «Later» without the card's titles, and «Text» the other way round
+- [ ] Coming up on navy: with «Events in the card» 2 or 3, the first on a cream card with the chip outlined, the place underlined and «Read more» with an address, the others as navy cards with a gold edge, «2 next» at the top right, «Later» as lines
+- [ ] Regular event: the next event's title large in red, the first paragraph of its description, When, Where and For whom («Open to everyone» rewritable), «All dates» folding out every coming date with the same title (Max count caps them, no fold with one date); the announcement aside to the right, under the card in a narrow block and on a phone
+- [ ] Agenda, dark: the month, this week's days with today in the accent and dots under days with events, a card per event with the time to the left and a stripe in the calendar's colour, «Today» before today's date; with two or more named calendars a chip beside the month opens «All» and the calendars, a choice filters and names it, Escape or a press outside closes, also in Clean view and published; a calendar with nothing coming leaves the menu standing; the shared parts read light on dark
+- [ ] The ApeironLF designs with nothing coming up: the pill «Dates · Dates to come» (rewritable), the dashed box with the own line and icon from Content, the subscribe button in gold, readable on a light and a dark page
+
+**Languages and guides**
+
+- [ ] Admin in Nynorsk, a calendar's menu: the labels are in Nynorsk and none runs out of its control
+- [ ] The site in English, Turkish and Swedish (the language pack on): the calendar's buttons, dates, «Today», «Tomorrow», «In N days» and plural forms read in that language
+- [ ] The site in Northern Sami: the calendar's visitor texts read by someone who knows the language, with the wrong ones noted
+- [ ] The calendar guide (English and Norwegian) read through: the steps for the iCal address match Google Calendar, and for each other service tried the «Tested» column and the steps are corrected; its «Designs» section and the user guide's calendar paragraph read well; the links from the user guide and the README tables open it
+
+### Test batch (0.7.0.36-0.7.19.17p): what the push review fixed outside the calendar
+
 - [ ] An own icon from an animated GIF: it becomes a small still icon; a GIF above 4 MB says it is too large
 - [ ] A section with the inverse theme and a wave divider at the bottom with the default colour: the divider shows in the page's background colour
-- [ ] The calendar guide and the setup guide: with a Proton, Outlook or Nextcloud calendar, adding its host to `ICS_HOSTS` as described makes the calendar show
-
-### Test batch (0.7.19.17): the calendar's designs in the palette, the templates and the translations
-
-- [ ] Blocks panel, Calendar, «Designs» unfolded: 34 thumbnails grouped by view, none running out of the panel
-- [ ] A press on a thumbnail (for example «Week strip») and a place in a section: the calendar comes in that design, and its outline fits it
-- [ ] The block search: «Week strip» gives «Calendar: Week strip», and it adds the same
-- [ ] «+ New block» in a section, Calendar: the list unfolds with the views and the designs, can be scrolled and used though it is long, and a press adds that design with an outline that fits
-- [ ] The four new section templates («What is on: cards», «month», «week» and «next»): each gives a heading and a calendar in that view, inside its section
-- [ ] Admin in Nynorsk, a calendar's menu: the labels are in Nynorsk and none runs out of its control
-- [ ] The site in Swedish (the language pack on): a calendar's buttons, date phrases and plural forms are in Swedish
-- [ ] The site in Northern Sami: the calendar's visitor texts are in Sami; read by someone who knows the language, with the wrong ones noted
-- [ ] A press on an event with the page scrolled far down: the page stays where it is, and the card opens over its calendar
-- [ ] The week of the view switcher, and Week strip, in a calendar about 650 px wide: the time and the title stay inside each event's box
-- [ ] Week strip in a calendar narrower than 540 px on a wide screen: the days stand under each other; dragged wider again, the seven columns come back
-- [ ] The calendar guide's «Designs» section and the user guide's calendar paragraph read through, in English and Norwegian
-
-### Test batch (0.7.19.16): what the calendar reads from a feed, meeting and sign-up links, and the calendar guide
-
-- [ ] A real feed with an event on «the last Thursday of every month» (made in Outlook or Google Calendar): the occurrences land on the right dates for the coming months
-- [ ] A real feed with a yearly event in a given month («the second Sunday of May») and an event with single extra dates: both show on the right dates
-- [ ] An event with a Google Meet or Teams meeting added in the calendar app, and no link in its description: the card shows «Join», and the tooltip names the host
-- [ ] An event with a Proton Meet, kMeet or Element Call link in its description: the card shows «Join»
-- [ ] Site panel, «Own meeting addresses»: a host or a whole pasted address is stored as the host alone, several divided by commas; an event with a link to that host then shows «Join»; emptying the field removes it again
-- [ ] «Show «Sign up» buttons» on: a description with «Sign up: https://…» or «Tickets: https://…» gives the button to that address; an event from an event service with its own address gives the button to that page; a description with only a plain link gives no button and the link stays in the text; a picture link or a meeting link never becomes the button
-- [ ] «Show «Sign up» buttons» off: no «Sign up» button in the lists or in the card
-- [ ] «Sign up» and «Join» show the host they lead to when the pointer rests on them
-- [ ] An event whose calendar app stores a point for the place: with OpenStreetMap or Apple Maps as the map service the place opens that point; with the others it opens the search as before
-- [ ] An event with a formatted description (from Outlook): the card shows paragraphs, lists, bold and links, and no pictures, colours or forms from the feed
-- [ ] A Nextcloud calendar's share link, copied from the share dialog and pasted under Sources as it is: the events show, and «Subscribe» gives an address a calendar app can follow
-- [ ] The calendar guide (docs/languages/calendar-guide/, English and Norwegian) read through: the steps for finding the iCal address match Google Calendar, and for each other service that is tried the «Tested» column and the steps are corrected to what was found
-- [ ] The links to the calendar guide from the user guide and from the README tables open it
-
-### Test batch (0.7.19.15): finding events in the calendar
-
-- [ ] Element menu, a calendar: «Show place filter», «Show search field» and «Show earlier events» stand under the category filter and are off on a new calendar; «Show earlier events» is hidden for a month, week, day or year design; the group's reset switches all three off
-- [ ] «Show search field» on, published: typing a word leaves only the events with it in the title, place or description, whatever the case; two words must both be found; the field keeps its text and the caret while the list changes; a search without matches shows «No events match»; emptying the field brings every event back
-- [ ] «Show place filter» on, a feed with two or more venues: a button per venue («All places» first), named by the place up to its first comma; a press narrows the list and the pressed button keeps the focus; with one venue no row is drawn
-- [ ] «Show earlier events» on, a feed with events in the last 90 days: «Earlier (n)» under the calendar with the right count, the latest first; a press on a row opens the event's card; nothing that is over stands among the coming events
-- [ ] Search, place and category together: each narrows what the others leave, and the «Earlier» fold follows them
-- [ ] A feed whose events carry `CATEGORIES` (and whose calendar has no name in Properties): the category chips and the category filter show the feed's categories, and a title with a colon is left whole
-- [ ] The three in a list design, a card design and a «Coming up» design, on a phone: the field and the button rows fit the width
-- [ ] The sample data in the preview shows one event under «Earlier» when the switch is on
-
-### Test batch (0.7.0.39): the event card leaves the page alone, and the map service
-
-- [ ] Published page: with an event's card open the page scrolls as usual, the scrollbar stays and the background does not move when the card opens or closes
-- [ ] The card lies over its calendar and scrolls away with it; scrolled up, it goes under the navigation bar, never over it
-- [ ] Escape and the close button close the card and put the focus back on the event; a press anywhere outside the card closes it; a press on another event closes the open card and opens the new one
-- [ ] «Add to calendar» unfolded makes the card taller without moving it off its calendar
-- [ ] Site panel, «Map service»: the list shows OpenStreetMap, DuckDuckGo Maps, Brave Maps, HERE WeGo, Google Maps, Apple Maps, Norgeskart and FINN kart in that order, each with a note under its name that reads in the list's width; OpenStreetMap is chosen on a site that has never set it
-- [ ] With each service chosen and published, the place of an event with a venue's name before its address («Mormors Stue, Nedre Enkeltskillingsveita 2, 7011 Trondheim, Norge») opens that service at the right spot
-- [ ] A place that is only a name («The clubhouse») and a place that is an address alone open the service with that text; a place that is a web address still opens that address
-- [ ] The notes read in Norwegian, English and Turkish admin
-
-### Test batch (0.7.19.14): the calendar's events as structured data
-
-- [ ] A published page with a calendar that has a real feed: the page source's `<head>` (the live DOM, in the browser's inspector) holds a `script type="application/ld+json"` with the calendar's events beside the site's `Organization`
-- [ ] That script pasted into the Schema Markup Validator (validator.schema.org): the events are read without errors, each with a name, a start and a place
-- [ ] An event with an end has `endDate`; an all-day event has days without a clock; a cancelled event has `EventCancelled`; an event with a meeting link has a `VirtualLocation`, and with a place beside it `MixedEventAttendanceMode`
-- [ ] «Tell search engines about the events» off in the element menu, published: the events script is gone and the `Organization` script stands
-- [ ] Moving to another page of the site removes the events script of the page that was left
-- [ ] The preview and a calendar with sample data write no events script
-- [ ] Second check: Google's Rich Results Test on the published page's address finds the events; warnings for price, ticket link and performer are expected
-
-### Test batch (0.7.19.13): the calendar's dates as time elements, day grids on the keyboard, and a printed list
-
-- [ ] Published page, «Month»: Tab reaches the grid once (today, else the first day); the arrow keys move between the days, Home and End go to the ends of the week, PageUp and PageDown change the month and keep the day, and an arrow past the first or last day changes the month; Tab from a day goes through that day's events and then out of the grid; Enter on an event opens its card
-- [ ] The same keys in Overview on cream, Month with side panel (Enter picks the day and the panel follows), Week strip (PageUp and PageDown change the week), the day picker of Day plan (Enter picks the day and the focus stays on it) and Heat map (one tab stop for the whole year, the readout follows the focused day)
-- [ ] The months on a phone with a keyboard: the same keys between the day buttons
-- [ ] With the editing handles on in the preview the arrow keys do nothing in a day grid; in the Clean view they work
-- [ ] A screen reader: a day is read with its date and number of events («Sunday 4 October, 1 event»); a press on an arrow reads the new month, week or day; a press on «Week» or «Month» in the view switcher, or on a category, keeps the focus on the pressed button and reads it as pressed
-- [ ] The page source of a published calendar with a real feed: dates and times are `<time datetime>`, with the day for a date and the true moment for a clock time, also with a time zone set for the site; «Cancelled» is not a time
-- [ ] Print (or the print preview) of a page with a calendar, in a list design and in a month design: no buttons and no design, the events as a plain list of date, time, title and place; the list does not run over the block below it
-- [ ] Every design looks as it did before on screen: no date, time or day number has changed its size, weight, colour or place
-
-### Test batch (0.7.19.12): the calendar's loading state and the seven-column designs on the phone
-
-- [ ] Published page with a real feed, desktop: while the calendar is fetched the block shows quiet bars at the frame's height, and nothing below it moves when the events arrive; with reduced motion set in the system the bars stand still
-- [ ] Published page with a real feed, phone: the bars show while the calendar is fetched; on the second load in the same session (another page and back) the block has the same height before and after the events arrive
-- [ ] A screen reader announces «Loading the calendar» while the feed is fetched
-- [ ] The preview with a feed shows the bars while it loads, never «No upcoming events» for a moment
-- [ ] Week strip on a phone (360 px): the seven days under each other, each event in the full width under its day, today marked, the arrows move through the weeks
-- [ ] Week plan on a phone: the days under each other with their events in the order of the clock and all-day events first, no hour grid, «Today» on one line
-- [ ] Calendar layers on a phone: each calendar with its events under its name and the day written on each event («Sun 4», a span as «Mon 5 to Wed 7»); the switches hide and show a calendar; the week label wraps instead of running out of the box
-- [ ] «Month» and Overview on cream on a phone: every day a button with up to four dots in the calendars' colours; today is picked first; a press on a day lists its events under the grid, a day without events says «Nothing on this day», and a press on a row opens the event's card; the arrows change the month
-- [ ] The view switcher on a phone: «Week» and «Month» show the same phone layouts
-- [ ] Nothing in the five designs runs out of the block's width at 360 px, with a real feed with long titles
-
-### Test batch (0.7.19.11): the card that opens at a click on a calendar event
-
-- [ ] Published page and Clean view, every design: a click on an event opens its card inside the calendar, the calendar shaded behind it and the rest of the page untouched; the page does not scroll when the card opens or closes; Escape, the close button and a click outside close it, and the focus is back on the event; Tab to an event and Enter opens it too
-- [ ] The card is never wider or taller than its calendar (a calendar lower than 300 px lets it reach below itself) and never lies over the navigation bar; more content than fits scrolls inside the card; scrolling the page keeps the card on its calendar
-- [ ] With the editing handles on, a click on an event selects the block and opens nothing
-- [ ] The card with a real feed: the whole description with clickable links, the picture, «Sign up» when the event has a sign-up link, «Join» when it has a Zoom, Teams, Meet, Whereby, Jitsi or Webex link, and no sign-up or «Add to calendar» on a cancelled event
-- [ ] «Add to calendar» unfolds: «This event only» with «Add to Google» (opens Google Calendar with the title, time, place and description filled in) and «Download as a file (.ics)» (opens in Apple Calendar and Outlook with the right time); «The whole calendar» with «Subscribe» and the iCal address, which is selected at a click
-- [ ] The card reads in every design: the words, the date line and the button have contrast against the ground, also on Glass, Dark glass, the dark designs and the plain month
-- [ ] In the calendar itself, in the Clean view and on the published page: a place opens the map in a new tab (or the address, when the place is one), and an address in a description is a link; with the handles on, a click selects the block
-- [ ] An excerpt of a long description ends at a word with «…», and an address near the cut is whole
-- [ ] Switching to the Clean view closes the element menu
-- [ ] The view switcher's second button reads «Uke»
-
-### Test batch (0.7.19.10): times and status on the calendar
-
-- [ ] With a real feed, an event from 18:00 to 21:00 reads «18:00-21:00» in every design that shows a time, and an event with no end in the feed reads its start only
-- [ ] An all-day event over three days reads «until» its last day where the time stands, in the list, card, next and month designs; a timed event that ends on a later day reads its start, the last day and the end time
-- [ ] An event cancelled in the calendar app (STATUS:CANCELLED) shows with a struck title, dimmed, «Cancelled» where the time stands and no sign-up button, in every design including the week, day and heat map designs
-- [ ] Content, View and count, «Show cancelled events» off removes them from every view; on brings them back
-- [ ] «Clock»: 24 h is marked on every calendar whatever the site language; 12 h writes «6:00 pm-9:00 pm»; the hour column of Week plan and Day plan stays 08, 09
-- [ ] «The week starts» is offered on month, week, year and agenda designs, Bento and with the view switcher on: Sunday puts Sunday first in the weekday row and moves the grids; Auto follows the site language (Monday for Norwegian and British English)
-- [ ] Site panel, «Time zone»: Europe/Oslo is accepted, «Mars/Olympus» is refused with «Unknown time zone» and leaves the stored value; an empty field removes it
-- [ ] With the site's zone set and the computer's clock moved to another zone: the calendar's times stay on the site's clock, a line under the calendar names the zone, «today» and the countdowns still follow the real moment; with the field empty and a feed kept in another zone than the computer's, the line says the times are in your own zone
-- [ ] Year wheel, «The month at the top of the wheel»: «The current month» puts this month at the top, and next month it has moved by itself
-
-### Test batch (0.7.20.2): the calendar's settings in groups
-
-- [ ] The element menu on a calendar with everything closed shows only group rows in Content and Style, each with its value: the number of sources, the view, «Off» or «N on» for the buttons, «Standard» or the owner's words for the empty state, «Standard» or «N of M changed» for the colours
-- [ ] A group left open stays open when another calendar is selected, in the wide menu, the narrow menu and the Properties panel
-- [ ] A change inside a group (a colour, a button switched on, a max count other than 6, a size other than 100 %) puts a yellow mark on the group's row and «Reset this group» under its controls; the reset puts the group's settings back, the mark goes, and one undo brings them back
-- [ ] «Announcement» appears as a group only on the designs that have an announcement
-- [ ] Wide menu: every label with a field or a dropdown stands over its control and none wraps beside it; narrow menu and Properties panel: label and control on one row as before
-- [ ] «Reset the texts» appears under the Content groups only after a text in the block has been rewritten
-
-### Test batch (0.7.20.1): the element menu's frame, and the calendar's size and defaults
-
-- [ ] The gear on a block opens the element menu wide: Content, Style and Placement as columns, an area without settings (Style on the map block) taking no column; the button in the menu's head switches to three tabs and back
-- [ ] Admin settings, «Element menu»: Narrow makes the menu open with tabs after a reload, Wide with columns; the Properties panel in the rail is always tabs
-- [ ] With the Properties panel open, the floating menu never lies over the admin's panels; with the editor window narrowed until the wide menu does not fit beside them, the menu opens narrow
-- [ ] Placement on any block: «On narrower screens», «Hide on mobile» and «Pin while scrolling» stand open at the top, «Motion» and «Placement, layer and rotation» are groups showing their value, and a group left open stays open on the next block
-- [ ] The quick row at the top of the menu: «Narrow screen» and «On a phone» on every block, and on a calendar «Design», «Max count» (list, cards and agenda) and «Subscribe button»; each changes the preview at once
-- [ ] «Narrow screen»: Shrink, close the menu, open it again: Shrink is still marked, in the quick row and under «On narrower screens»; Wrap switches back
-- [ ] Calendar, the «Design» row in Style or the quick row: the picker fills the menu with six thumbnails across under the view headings, a click changes the design and the picker stays open, «Back to the menu» returns
-- [ ] Calendar, the colours in Style: swatches in rows with the name under each, three across in the wide menu and five in the narrow one; the clear button sits on the swatch's corner
-- [ ] A new calendar from the block palette, from the block menu and from a section preset: no category filter, no subscribe buttons and no «Sign up» buttons until they are switched on
-- [ ] Glass and Dark glass on a section with a picture or a gradient: the section shows through the design; a colour in «Ground» makes it solid
-- [ ] Every calendar design, picked one after the other with sample data and with a real feed: the outline ends where the calendar ends, neither clipping it nor leaving air under it
-- [ ] Changing a calendar's count, view switcher, design settings or «Size»: the outline follows the new height
-- [ ] Dragging a calendar's outline: narrower and wider reflow it while dragging with the text at the same size; shorter than the content, the outline comes back to the content on release; taller, it stays as dragged
-- [ ] Style, «Size» on a calendar: 60 % draws the whole calendar smaller, text included, 150 % larger, and the outline follows; a drag afterwards leaves the percentage where it was
-- [ ] A «Coming up» design chosen on a new calendar shows three events in the card and three under «Later»; a calendar whose counts were already set keeps them
-- [ ] Coming up on cream: «Panel text» colours the words under «Later» without touching the titles on the card, and «Text» the other way round
-- [ ] Content on a design with an announcement: the switch reads «Show the calendar's announcement»; turning it on or off leaves the strip above the menu as it was, and the strip's own switch leaves the calendar's note as it was
-
-### Test batch (0.7.19.9): settings per calendar design
-
-- [ ] Style tab on a calendar: «Settings for the design» stands under the design picker only on Month with side panel, Week plan, Day plan, Table, Poster wall, Picture cards, Year wheel, Numbered programme, Programme booklet, Split card and Band, and holds only that design's settings; every change shows in the preview at once and survives a reload and a publish
-- [ ] Month with side panel, «Side of the panel»: Right, Left and Under move the panel; on a phone the panel stands under the month whatever is chosen
-- [ ] Week plan and Day plan: «First hour» 6 and «Last hour» 22 give a plan from 06 to 21, empty fields give 08 to 17 again, and an event at 23:00 still shows with the last hour set to 20; «Tint the weekend» shades Saturday and Sunday
-- [ ] Table: «Show the Time column» and «Show the Place column» off remove the column with its heading; «Striped rows» off leaves every row plain
-- [ ] Poster wall and Picture cards, «Columns»: 2, 3 and 4 fix the count on a desktop, Auto fills the width as before, and a phone keeps its own layout
-- [ ] Year wheel, «The month at the top of the wheel»: with August chosen, August stands at the top, the dots follow their months and a click on a month still lists that month
-- [ ] Numbered programme, «Count 01, 02, 03» off counts 1, 2, 3, also through the fold
-- [ ] Programme booklet and Split card with a real feed with descriptions: «Show the description» off removes it
-- [ ] Band, «Roll when the band is too narrow» off: the band stands still and scrolls sideways by hand when the events are wider than it
-- [ ] Coming up bento with «Events in the card» at 3 and one later event: three day tiles beside the first event; with 1 and 0 the block is as before
-- [ ] A calendar block saved before this change renders unchanged in every design
-
-### Test batch (0.7.19.8): the parts of the calendar artboards left out
-
-- [ ] A list calendar (the plain list, Timeline, Table, Programme booklet, Numbered programme, List on navy, Glass) with more events than the max count: «Show all N (M more)» under the rows opens the rest in the same design without a reload; Numbered programme counts on (03, 04 ...) and its count is of the whole list; Table's folded rows may stand slightly off the columns above
-- [ ] Content, «Fold the rest under «Show all»» stands under the max count on list designs only; off removes the fold, and a block saved before the change shows the fold
-- [ ] With a real feed: a weekly event wears «Repeats» in List on navy and Grid on cream and a single event does not; the word is rewritten by clicking it, and «Repeats mark» in the Style tab's colours changes its colour
-- [ ] Content, «Address of the whole programme» is offered on Poster wall, Tickets, Billboard and Coming up bento only; with /program filled in Poster wall has a last dashed tile, Tickets and Billboard a foot link and Coming up bento a link in its tile, all leading there on the published page; emptied, they are gone
-- [ ] Tickets: an event without a sign-up shows «Open to everyone» at the right end, one with a sign-up shows the button; «Show «Open to everyone»» off removes the words; the words are rewritten by clicking them
-- [ ] Day carousel: a dot per card under the cards, the long dot follows the scroll (arrows, touch, wheel) and a click on a dot scrolls to its card; with one card there are no dots
-- [ ] Agenda, dark with two or more named calendars: a chip beside the month opens a menu under it with «All» and the calendars, a choice filters the cards and the chip names it, a click outside or Escape closes the menu; with one calendar there is no chip; the menu is also there in the Clean view and on the published page
-- [ ] Bento with a real feed whose next event has a picture (an attachment or a picture link on an allowed host): the picture fills the hero tile and the words stay readable; without a picture the tile is as before
-
-### Testrunde-batch (0.7.19.7): the view switcher and the design picker
-
-- [ ] Content, «Show view switcher» on a list, cards, agenda or next calendar (any design): three buttons at the top of the block, «Upcoming» pressed; «Week» shows the week strip with its arrows, «Month» the month with its arrows, «Upcoming» the block's own design again; the published page starts on «Upcoming» every time
-- [ ] The switcher with a real feed: the week and the month show this week's and this month's earlier events too, while the block's own design shows only what is coming
-- [ ] «Show view switcher» is not offered for a month, week, day or year design, and a block that had it on and is given such a design shows no buttons
-- [ ] The three button words are rewritten by clicking them in the preview (a click on the word edits, a click on the button's edge switches), and «Reset the texts» puts them back; on the Glass design the buttons stand in glass
-- [ ] Style tab, the fold «Design: <name>»: opens to a thumbnail per design in two columns under the headings List, Cards, Month, Agenda, Next, Week, Day and Year, with Plain alone at the top; the chosen design has the accent frame; a click changes the design in the preview at once and the fold's name with it
-- [ ] The help chip on a calendar block: the card's last line says the texts are rewritten by clicking them and that the Style tab sets colours, the stripe and the font per field
-
-### Testrunde-batch (0.7.19.6): the ApeironLF set and the dark agenda
-
-- [ ] Style tab, Design: Coming up on cream, Coming up on navy, Regular event and Agenda, dark draw the demo data in the preview and a real feed on the published page
-- [ ] Coming up on cream: the navy head with the gold dot, the next event with the navy date badge and the «In N days» pill, «Later» on a gold rail; an event with a URL in the calendar (or a sign-up link) gets an arrow that opens it, one without gets none
-- [ ] Coming up on cream, Show announcement: «The announcement as» Section puts it as a section at the foot with label, heading and text; Alert band puts a red band under the head with the heading alone and a warning icon; with a link the band and the arrow follow it; Alert band and Alert text recolour the band
-- [ ] Coming up on navy: with Events in the card 2 or 3, the first on a cream card with the chip outlined, the place underlined and «Read more» when the event has an address, the others as navy cards with a gold edge, «2 next» at the top right, «Later» as lines
-- [ ] Regular event: the next event's title large in red, the first paragraph of its description, When, Where and For whom («Open to everyone» is rewritten by clicking it), «All dates» folds out every coming date with the same title (Max count caps them); with one date there is no fold; Show announcement adds the aside to the right, under the card on a phone
-- [ ] Agenda, dark: the month, this week's days with today in the accent and a dot under days with events, a card per event with the time to the left and a stripe in the calendar's colour, «Today» before today's date; Edge stripe off removes the stripes
-- [ ] An ApeironLF design (the six of them) on a calendar with nothing coming up: the pill «Dates · Dates to come», the dashed box with the own line and icon from Content, the subscribe button in gold; the pill's two texts are rewritten by clicking them; the text is readable on a light and a dark page
-- [ ] Picture cards with an event that has a picture ATTACHED in the calendar (not only a link in the description): the picture shows when its host stands in PHOTO_HOSTS
-
-### Testrunde-batch (0.7.19.5): «Coming up» designs on the calendar
-
-- [ ] Style tab, Design: Billboard, Stacked cards, Noticeboard, Split card, Band, One line, Countdown ring, Dark glass and Coming up bento draw the demo data in the preview and a real feed on the published page; Content shows Events in the card and Under «Later» for them
-- [ ] Billboard: the pulse beside «Coming up», the three tiles count days, hours and minutes and move on after a minute, the sign-up as a full-width bar, «Then:» listing the later events, the subscribe link at the foot; Background, Text, Label, Pulse and the tile and button colours recolour it
-- [ ] Stacked cards: with Events in the card 3, three cards stacked with the front one readable; «Browse the cards» turns the next card to the front; «3 next» at the top right; the later rows under
-- [ ] Noticeboard: the next event on a pinned yellow note, «Show announcement» adds a blue note whose label, heading and text are rewritten by clicking them in the preview, Link from the announcement gives «Read more» its address, «Later» on the strip
-- [ ] Split card: the weekday, the huge day and the month on the panel in the calendar's colour (The date panel otherwise), the chip, the title, the first line of the description and the sign-up to the right, «Later» under; the panel stacks above the words on a phone
-- [ ] Band: the tag at the left, the next events in one line with dots between; with more than fit the band rolls, pauses under the pointer and stands still with reduced motion
-- [ ] One line: the first rows (Events in the card) marked «Coming up» with the accent dot and stripe, the rest «Later», «In N days» at the right and the sign-up as a button
-- [ ] Countdown ring: the ring fills over the last two weeks before the event, the middle counts days and on the last day hours, the two later rows with dots under a rule
-- [ ] Dark glass: the countdown in monospace, «Until the start» with the percentage and the bar, the sign-up and the subscribe button side by side, «Then» in a glass box; Colour blob 1 and 2 recolour the blobs
-- [ ] Coming up bento: the hero tile in the calendar's colour with «Coming up» and «In N days», a date tile per later event (the third dark), the link tile with the count and the subscribe link; no subscribe row under the block
-- [ ] Every next design: the texts («Coming up», «Later», «Then», the units, the buttons) are rewritten by clicking them, the colour slots follow the design when empty, Edge stripe adds the stripe, and Show «Sign up» buttons off removes the buttons
-
-### Testrunde-batch (0.7.19.4): month, week, day and year designs on the calendar
-
-- [ ] Style tab, Design: Week strip, Week plan, Calendar layers, Month with side panel, Overview on cream, Day plan, Year wheel and Heat map draw the demo data in the preview and a real feed on the published page; Content shows no View for them
-- [ ] Week strip: the current week with today framed in the accent, «Week N» and the span above, the arrows move a week at a time, a pill per event in the calendar's colour (Pill and Pill text otherwise)
-- [ ] Week plan: the hours from the earliest event (at most 08) to past the latest (at least 18), today's column tinted and its number ringed, an all-day event in the row above, a timed one as a block in its hour with its length; «Today» returns to this week
-- [ ] Calendar layers: one row per named calendar (or «Arrangementer»), a switch per calendar in the head that hides and shows its row, a bar per event spanning its days, today's column tinted; the chip row is not drawn and Content hides «Show category filter»
-- [ ] Month with side panel: the month with at most two chips per day and «+N», today ringed, a click on a day shows its events in the panel, a click on a grey day from the next month moves the month, the panel's legend lists the calendars with their colours; the panel moves under the month on a phone
-- [ ] Overview on cream: the month on cream with a gold rule at the top, the arrows outlined in gold, today in a gold circle, the pills with a gold line and the time in dark gold
-- [ ] Day plan: today with «Today» above the date and «N today» at the right, the week strip picks another day, the now line in the current hour and the past hours shaded on today only
-- [ ] Year wheel: twelve arcs, the months before this one in Past, this month in the accent, a dot per event (Later dots for those gone), the year and the count in the middle, a click or Enter on an arc lists that month's events to the right
-- [ ] Heat map: twelve small months, every day shaded by its count (None, Few, More, Many), today ringed, pointing at or focusing a day reads its events out under the grid
-- [ ] A calendar with sources: the month, week, day and year designs show events earlier in their span than now (this month's past events in the month designs, this year's in the year designs)
-- [ ] Every time design: the colour slots follow the design when empty, Edge stripe adds the stripe to the day columns, plan blocks and cards, the field styles change the right pieces, and the texts («Today», «Year wheel», «The whole year», the legend) are rewritten by clicking them
-
-### Testrunde-batch (0.7.19.3): six card designs on the calendar
-
-- [ ] Style tab, Design: Poster wall, Tickets, Day carousel, Picture cards, Grid on cream and Bento draw the demo data in the preview and a real feed on the published page
-- [ ] Poster wall: the first poster twice as large in Poster 1, the next two in Poster 2 and 3, the fourth plain, then the three colours again; category and place in capitals at the top, the day huge, the title and time at the foot; two columns on a phone
-- [ ] Tickets: the stub in the Stub colour (the calendar's colour when the source has one) with the day, the month and the time, a dashed tear between stub and body, place · category under the title, the sign-up as a button at the right end
-- [ ] Day carousel: the cards scroll sideways and snap, the two arrows move one card, the first card in the The first card colours, the sign-up as a button on it and the chip on the others
-- [ ] Picture cards: an event with a picture attached in the calendar, or a picture link in its description, shows it in the band when the picture host stands in PHOTO_HOSTS; without, the band is the Without a picture colour; the date badge and the chip sit on the band; locally the band stays plain
-- [ ] Grid on cream: cream cards with a navy head, the day in gold, the category as a gold pill, the place underlined in gold; Header row, Card, Text and Gold recolour them
-- [ ] Bento: the hero tile for the next event with the «Next» pill and «In N days», two small tiles, the current month with today ringed, the next event's day in the accent and the other event days in Soft accent, «This month» counting this month's events, the subscribe tile when the block has a source, wide rows for the rest; no subscribe row under the block; two columns on a phone
-- [ ] Every card design: the colour slots follow the design when empty, Edge stripe on the boxes adds the stripe to every card and tile, the field styles change the right pieces, and the texts («Next», «This month», «All», the buttons) are rewritten by clicking them
-
-### Testrunde-batch (0.7.19.2): six list designs on the calendar
-
-- [ ] Style tab, Design: the dropdown lists Plain, Timeline, Table, Programme booklet, Numbered programme, List on navy and Glass; each draws the demo data in the preview and a real feed on the published page, and Content's View disappears while a design other than Plain is chosen
-- [ ] Timeline: the date on one line to the left, a rail with a dot per event (the first in the accent, the rest in Dots), the sign-up as a filled button, the chip under the title
-- [ ] Table: the header row in Header row and Header text colours, every other row in Every other row, «all day» for an all-day event, the sign-up at the right end; a narrow block scrolls the table sideways instead of breaking it
-- [ ] Programme booklet: the paper in Surface with a shadow, «Programme» and the month span in the heading, one column per month that wraps to one column in a narrow block, the day in the accent, the description's first line under the title
-- [ ] Numbered programme: 01, 02, 03 in the Numerals colour, «3 events» at the top right, the sign-up or the chip in the right column, a rule between the rows
-- [ ] List on navy: navy rows with the day in gold and the month in capitals, the category outlined, the place underlined in gold, the title in the heading font; the filter chips and the subscribe buttons follow the row colour
-- [ ] Glass: three blobs behind frosted cards, Colour blob 1 to 3 recolour them, The glass and Glass edge change the cards, the filter chips and the subscribe button take the glass too
-- [ ] Every design: the colour slots in Style follow the design's own colours when empty and the theme's dark mode stays readable; Edge stripe on the boxes adds the stripe to the rows, cards or table cells; Text fields Title, Date, Time, Place, Category and Large numerals change the right pieces
-- [ ] Every design: click «Date», «Programme», «All» or «Sign up» in the preview and rewrite it; the words survive a reload and «Reset the texts» puts them back
-- [ ] A block saved with a design renders the plain list on an older engine (the view is written along with the design)
-
-### Testrunde-batch (0.7.19.1): the calendar card, named sources and the design foundation
-
-- [ ] Calendar with two sources holding the same event: it shows once in every view; a signup link or a location present in only one copy is kept
-- [ ] Next view, Events in the card 1, 2 and 3: the card holds that many in full, the heading reads «Next event» for one and «Coming up» for more; Under «Later» 0 to 10 lists that many one-line rows below
-- [ ] A source with a name: its events wear the name as their chip and the filter shows the name; the title stays whole even when it reads «Møte: Årsmøte»
-- [ ] A source with a colour: its chips, date badges and filter button take the colour; cleared, they follow the accent again
-- [ ] «Calendars on the site»: lists the sources of the other calendar blocks (this page and the others), adds one with a click, and says so when there are none
-- [ ] Agenda view: rows under their month with the day number and weekday, the limit counts like the list
-- [ ] Empty state: a block without sources on the published page, and a feed with nothing coming up, show the icon and the line; own words and another icon in Content change it; None removes the icon
-- [ ] Style tab, Colours: Accent, Surface, Lines and Chips set each surface; emptied, the theme's colours return; a dark theme follows along
-- [ ] Style tab, Edge stripe on the boxes: a stripe along the left edge of every row, card, next row and agenda row in the event's calendar colour (else the accent); Stripe colour overrides it; off, no stripe
-- [ ] Style tab, Text fields: pick Title and set font, size, Bold or Normal, italic, underline and colour: every title in the view changes, nothing else; the same for Date, Time, Place, Description (cards), Category (chips) and Large numerals (the badge's day number)
-- [ ] Click «Next event», «Later», «All», «Sign up» or «Subscribe» in the preview: the text toolbar appears, bold or a colour applies, the words survive a reload and a publish; «Reset the texts» appears in Content and puts the defaults back
-- [ ] Content, Show «Sign up» buttons off: the buttons disappear in every view
-- [ ] A calendar block saved before this round renders as before, and its view can still be changed in Content
 
 ### Testrunde-batch (0.7.13.12): animated images and the video block's file source
 
@@ -413,7 +282,7 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 - [ ] Reload admin with Historikk or Oppdatering as the last open panel: the panel shows its list, not a loading line
 - [ ] Nav panel, Mobil fold: no «content width» choice; «over the top section» only for the bar; a mobile border with its own width and colour draws with those on a phone; verktøy Venstre on mobile alone puts the burger leftmost there
 - [ ] Hover style Pille with a submenu: the highlight in the submenu stays inside the card
-- [ ] A block whose content is taller than its frame, resized by the corner: the box follows the pointer and does not snap back on release
+- [ ] A text block whose words are taller than its frame, resized by the corner: the box follows the pointer and does not snap back on release
 - [ ] Block menu opened low on a short screen: the search field stays on screen and the menu scrolls
 - [ ] Menu items: drag a row and release beside the list (inside admin): it lands where the clone stood; Escape cancels
 - [ ] Gjennomsiktig øverst with Krymp, reduced motion on: nothing animates
@@ -534,12 +403,9 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 ### Testrunde-batch (0.7.0.31): the block toolbar's buttons
 
-- [ ] Hover a block and press the cross: the block is deleted, and Ctrl+Z brings it back
-- [ ] The duplicate button, the two z-order buttons and the mobile button on the same toolbar: each one does what it says on a single click
 - [ ] Click a button in a section's toolbar: Properties switches to that section, as it does when you click its surface
 - [ ] A link in the content whose label is an icon alone: clicking it in the preview selects the block and does not navigate the preview away
 - [ ] Press and hold on a button and drag a little before releasing: the block does not follow the pointer
-- [ ] Drag a block by its surface as before: the move still starts after a short drag, and a plain click still just selects
 
 ### Testrunde-batch (0.7.0.30): the pill highlight
 
@@ -608,8 +474,7 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 ### Testrunde-batch (0.7.0.22): the section height and the rotated block
 
-- [ ] Drag a block down past the bottom edge of its section: it lies across the boundary and the section keeps its height, also for the last section above the footer
-- [ ] A block whose content is taller than its frame, left inside the section: the section still makes room for it and the blocks below still move
+- [ ] A block dragged past the bottom edge of the last section above the footer: it lies across the boundary and the section keeps its height; a block whose content is taller than its frame, left inside the section: the section still makes room for it and the blocks below still move
 - [ ] Rotate a block, then drag it: it follows the pointer from the first movement with no sideways jump, and lands where it is dropped
 - [ ] Rotate a block and drop it in another section: it lands at the height it was dropped at, not higher up
 - [ ] A block with taller content, moved with the arrow keys and with align: its box keeps its size throughout
@@ -624,7 +489,7 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 ### Testrunde-batch (0.7.0.11): the nav and the announcement
 
-- [ ] Page switch on the published site: the old page stays on screen until the new one is rendered, then a cut; the menu never disappears or moves; a prerendered page (link hovered first) cross-fades; the first section's top clearance is right from the first frame
+- [ ] Page switch on the published site: the old page stays on screen until the new one is rendered, then a cut; the menu never disappears or moves; a prerendered page (link hovered first) cross-fades; the first section's top clearance is right from the first frame; Firefox navigates at once without errors, and with reduced motion the switch is a plain cut
 
 ### Testrunde-batch (0.7.18.6): the plugin folders gone, the docs corrected
 
@@ -637,29 +502,21 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 - [ ] Clearing the field removes `analytics` from site.json and the beacon from the published page after the next publish
 - [ ] The Plugins panel lists only lang-sv; a site whose own plugins.json still lists «analytics» logs one warning and measures nothing until the token is moved into the gear
 
-### Testrunde-batch (0.7.18.4): the calendar block in the core
-
-- [ ] Blocks panel: a «Kalender» group with Liste, Kort, Måned and Neste among the core groups, the search finds «Kalender: Måned», and «+ Ny blokk» in the preview lists Kalender; the two calendars on Hjem (list with a Google source, empty month) render exactly as before the move, and the published page shows the same
-- [ ] Properties on a calendar block shows «Innstillinger …», which opens the sources panel on the block: sources, the view segment, max count (list and cards only), the two toggles; «Bruk» writes the props and re-renders; without sources the preview shows the three demo events with the note
-- [ ] The parser is not preloaded: the Network panel shows ics.js requested only on a page with a calendar block, after the page has rendered
-- [ ] The help chip lists the seven lines; Ren visning hides the chip and the gear
-- [ ] «+ Ny seksjon»: «Hva skjer» is in Kort og lister with the core presets; the Plugins panel lists lang-sv and analytics only
-
 ### Testrunde-batch (0.7.18.3): the form block in the core
 
 - [ ] Blocks panel: «Skjema» sits among the core blocks (after Kart), the search finds it, and «+ Ny blokk» in the preview lists it; a new form block comes with Navn, E-post and Melding in the admin language
-- [ ] Properties on a form block shows «Innstillinger …», which opens the config panel on the block in the preview: send mode, recipient and subject or endpoint, the field list with types, required and options, button text and confirmation; «Bruk» writes the props and re-renders
+- [ ] The element menu on a form block: send mode, recipient and subject or endpoint, the field list with types, required and options, button text and confirmation; each change shows in the preview at once
 - [ ] In the preview a filled form validates without sending (the preview message); on the published page mailto opens the email client with the fields in the body, and endpoint mode posts JSON (and explains the connect-src line when blocked)
-- [ ] The help chip and the gear sit together at the top right of the block; Ren visning hides both
-- [ ] «+ Ny seksjon»: «Kontaktskjema» is in Kort og lister with the core presets; the Plugins panel lists calendar, lang-sv and analytics only
+- [ ] The help chip sits at the top right of the block; Ren visning hides it
+- [ ] «+ Ny seksjon»: «Kontaktskjema» is in Kort og lister with the core presets
 
 ### Testrunde-batch (0.7.18.2): the map block in the core
 
 - [ ] Blocks panel: «Kart» sits among the core blocks (after Ikon), the search finds it, and «+ Ny blokk» in the preview lists it; no «Plugins» group appears for it; the Hjem page's existing map renders exactly as before the move
-- [ ] Properties: Sted with «Søk» (an address on the published site, coordinates or an OSM link locally), Zoom 1-19 and Høyde 120-900 update the map at once; a block without a place shows the placeholder in the editor and nothing for visitors
+- [ ] The element menu: Sted with «Søk» (an address on the published site, coordinates or an OSM link locally), Zoom 1-19 and Høyde 120-900 update the map at once; a block without a place shows the placeholder in the editor and nothing for visitors
 - [ ] The help chip on the map block lists the five lines; a host that blocks openstreetmap.org shows the frame-src line in the editor and a link for visitors
 - [ ] «+ Ny seksjon»: «Finn oss» is in Kort og lister with the core presets (not in a Plugins group); it inserts a title and a map
-- [ ] The Plugins panel lists only lang-sv (map is gone from plugins.json), and a site that still lists «map» in its own plugins.json just logs a warning and renders the core block
+- [ ] A site that still lists «map» in its own plugins.json just logs a warning and renders the core block
 
 ### Testrunde-batch (0.7.18.1): the Swedish language pack in admin
 
@@ -678,26 +535,21 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 
 ### Testrunde-batch (0.7.17.2-3): scaling below the content width, and the content push
 
-- [ ] (23 September 2026) The site setting «Under innholdsbredden» is gone from the Site panel, and the items below about «Skaler siden», «Minste skala» on the site and the 1228 px floor no longer apply: below the content width the canvas is fluid and nothing is zoomed as a whole
-- [ ] «Ved smalere skjerm: Krymp innholdet» with «Minste skala» is now in the Style tab of every block except image, video, shape and icon (stats, quote, FAQ, table, collection, product, button, countdown, plugin blocks): at a narrow window the block's content keeps its size until it no longer fits the design height, then shrinks only as much as needed down to the floor, and wraps and pushes past it; «Bryt innholdet» restores the size at once
-- [ ] Image, video, shape and icon blocks: the Style tab row reads «Ved smalere skjerm: Følg bredden / Behold en minste størrelse» with «Minste skala»; with 60 % on an image at a narrow window the image stops shrinking at 60 % of its design width, is capped at the canvas's right edge (never overhangs into the gutter), and the blocks around it are unaffected; with «Full» content width the floor does nothing; the first image on Om oss ships with the floor in the example data
+- [ ] The demo pages at 1440, 1280, 1024 and 820 px in Chromium and Firefox: no text over another block, and below the content width the canvas is fluid with nothing zoomed as a whole
+- [ ] «Ved smalere skjerm: Krymp innholdet» with «Minste skala» is in Placement in the element menu of every block except image, video, shape and icon (stats, quote, FAQ, table, collection, product, button, countdown, plugin blocks): at a narrow window the block's content keeps its size until it no longer fits the design height, then shrinks only as much as needed down to the floor, and wraps and pushes past it; «Bryt innholdet» restores the size at once
+- [ ] Image, video, shape and icon blocks: the row reads «Ved smalere skjerm: Følg bredden / Behold en minste størrelse» with «Minste skala»; with 60 % on an image at a narrow window the image stops shrinking at 60 % of its design width, is capped at the canvas's right edge (never overhangs into the gutter), and the blocks around it are unaffected; with «Full» content width the floor does nothing; the first image on Om oss ships with the floor in the example data
 - [ ] The Hjem page's paragraph «Urd er under oppbygging ...» ships with «Krymp innholdet» 60 % in the example data: at 700 px it shrinks and the «Les mer» button stays in place; a text block that had the old text-level setting in a local draft must be set again
-
-- [ ] (push preparation 24 September 2026) Resizing a block with the corner or edge handle: the box follows the pointer in both width and height during the drag and lands where released; the push runs again on release
 - [ ] The Hjem page at about 1070 px window width: «Gjerne følg prosjektet på vår Github side!» wraps to two lines and the «Les mer» button sits below the text, not under it; widen the window and the button returns to its design place
-- [ ] The demo pages at 1440, 1280, 1024 and 820 px in Chromium and Firefox: no text over another block; between the binding width and about 1228 px the page is the design at a smaller size; below that it follows the window width at the smallest scale
 - [ ] A badge or a title deliberately placed over an image (its top above the image's middle) stays where it is when the image's neighbour text grows
-- [ ] Drag a block that was pushed down: at drag start every block in the section returns to its design position, and after release the push is back; arrow keys and align behave the same
 - [ ] A pinned block (scroll pinning) and a docked block after a push and under zoom at 1280 px: they pin and release where they stand
-- [ ] Site panel, Layout: «Below the content width» Scale the page / Keep the sizes, and «Smallest scale» with the floor width in the text; Keep the sizes restores the earlier behaviour, and the push still keeps the blocks apart
-- [ ] The nav: a wide window shows the items; narrowing the window folds them to the burger only when they reach the tools; 640 px gives the burger; nothing folds at 1228 px
+- [ ] The nav: a wide window shows the items; narrowing the window folds them to the burger only when they reach the tools; 640 px gives the burger
 - [ ] Browser zoom to 200 % still enlarges the text, and a text made longer in the editor at the design width pushes the block below
 - [ ] The published page equals the preview at the Laptop and Tablet devices
 - [ ] The Screen choice (own window or an editing size with width and height) sits in the admin settings behind the gear, not under the Screen button in the toolbar; a click on Screen only selects the device, and the choice is remembered in the browser
 - [ ] The device strip has four devices (Screen, Laptop, Tablet, Phone); Reference 1920 is gone
 - [ ] Screen with a browser window narrower than 640 px shows the stacked mobile layout, as the published page does in that window
 - [ ] Type more text into a text block at the design width until the box grows: the blocks below move down with it, one undo step restores both; a feed block with more entries than its box moves the blocks below on the published page without changing the draft
-- [ ] Text block, Style tab, «Ved smalere skjerm: Krymp teksten» with «Minste skala» 60 %: at 700 px the heading shrinks with the width instead of wrapping and the button below stays in place; at «Minste skala» 100 % it wraps and pushes as before; the mobile view wraps regardless
+- [ ] A text block with «Krymp innholdet» 60 % at 700 px: the heading shrinks with the width instead of wrapping and the button below stays in place; the mobile view wraps regardless
 - [ ] The shrink starts only when needed: a text with room to spare in its frame keeps its size as the window narrows until the frame is too narrow for it at full size, then it gets smaller step by step so it still fits the design height, and never under «Minste skala» (a share of the DESIGN size: 40 % of a 16 px text is 6.4 px, whatever the page scale); typing into a shrunk text re-fits it
 - [ ] Narrowing the window slowly with a shrunk text never shows a flicker: the text is never drawn wrapped and then unwrapped at a step, it just gets smaller; widening it again brings the size back the same way, and the console shows no ResizeObserver loop message
 - [ ] Narrow the window so a paragraph wraps and pushes, then widen it again: the box and the blocks below return to the design; a FAQ answer opened on the published page pushes the blocks below and closing it brings them back
@@ -710,8 +562,6 @@ Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter 
 - [ ] Engine colour picker (a form plugin field or a block colour on the canvas) with the Brønn theme: all theme dots are shown and pick their colour
 
 ### Testrunde-batch (0.7.12): the anchoring round and the local test round after it
-
-Supersedes the fold state in the 0.7.15.2 item «six folds ... the first four open, the last two closed»: since 0.7.12 no group is open until the user opens it; nothing is removed.
 
 - [ ] A modern browser (Chrome 125+, Firefox 147+, Safari 26+): a Nav panel dropdown opens as a popover under its button, flips above near the bottom edge, closes on Escape, a click outside, a click in the preview and a scroll; the chosen value is applied
 - [ ] The same in an older browser (Safari 18-25, Firefox 132-146): the menus behave as before 0.7.12 (measured placement, same closing)
@@ -731,7 +581,7 @@ Supersedes the fold state in the 0.7.15.2 item «six folds ... the first four op
 
 Supersedes the panel placement described in the 0.7.15 items below (the controls are the same, now grouped); nothing is removed.
 
-- [ ] Nav panel, Appearance open: six folds Layout, Size, Frame, Behaviour, Colours, Background; the first four open, the last two closed; each fold opens and closes on its heading
+- [ ] Nav panel, Appearance open: six folds Layout, Size, Frame, Behaviour, Colours, Background, all closed until opened; each fold opens and closes on its heading
 - [ ] Layout: switching the variant swaps only the rows under it (floating: menu width, glow, space above; bar: overlay, align to content width; side: text alignment, column width), and the placement row stays
 - [ ] Size on Screen: the number beside Thickness follows the slider and vice versa; typing 30 sets 30 px, emptying the field returns to the preset's value and the preset lights up again
 - [ ] Size on Phone: the sliders show the desktop values until a mobile value is set; dragging Thickness writes only the mobile override (the Screen view is unchanged); emptying the number (placeholder «Same») removes the override; side padding and item spacing are hidden on Phone
@@ -760,26 +610,19 @@ Supersedes the panel placement described in the 0.7.15 items below (the controls
 
 ### Testrunde-batch (0.7.2.7): the Screen device follows the browser window
 
-Replaces the «My screen» wording in the 0.7.2.6 batch below with «My window»; the items there still apply with the window as the reference.
-
 - [ ] Clean view on Screen (My window) in a browser window narrower than the monitor: the preview stands 1:1 with the published page opened in the same window (the content band and the text at the same size and position, apart from the page's scrollbar width)
 - [ ] Resize the browser window: the preview follows the new width at once; the Screen tooltip shows the window width
 - [ ] Maximise the window: the preview equals the published page maximised
 
 ### Testrunde-batch (0.7.2.6): the Screen device follows your own screen, or an editing size
 
-Supersedes the 0.7.2.2 items «"Skjerm"-lerretet er 1920 px» and «Skjerm-knappen følger designbredden», and the 1488 px figure in the 0.7.2 fold item (the binding width is 1637 px); nothing is removed.
-
-- [ ] My screen (default): maximise the admin window, open the published site in a new tab of the same browser; the content band has the same width relative to the window in the preview and on the site
-- [ ] Zoom the browser to 125 % with the admin window maximised and repeat: the preview follows the zoomed width, and the Screen tooltip shows it (a non-maximised window reads the screen width instead, which some engines report unzoomed)
-- [ ] Narrow the window until the Device cluster folds: the My screen / Editing size segment sits directly under Screen in the menu; unfolded, a second click on the active Screen button opens the same popover, and an outside click or Escape closes it
 - [ ] Editing size without a height: the canvas stands at the typed width, the panel is filled, no bar below the stage
 - [ ] Editing size with height 900: the stage ends at the fold, the surface below it is dark, the page scrolls inside the iframe, no second scrollbar in fit mode; manual zoom past the surface still pans
 - [ ] Type 100 and 9999 in W, then 300 and 5000 in H: the fields snap to 640, 3840, 480 and 2400; an empty or 0 height fills the panel again
-- [ ] Reload: mode, W and H persist; another browser starts on My screen
-- [ ] Reference 1920, Laptop, Tablet and Phone are unchanged, with no bar below the stage
+- [ ] Reload: mode, W and H persist; another browser starts on My window
+- [ ] Laptop, Tablet and Phone are unchanged, with no bar below the stage
 - [ ] A site with content width Full previews at your own screen width
-- [ ] The W and H fields are hidden on My screen; the device labels, the segment and the tooltips read correctly in nb, en-GB and tr
+- [ ] The W and H fields are hidden on My window; the device labels, the segment and the tooltips read correctly in nb, en-GB and tr
 
 ### Testrunde-batch (0.7.8.2): fresh content after a publish
 
@@ -810,13 +653,13 @@ Supersedes the 0.7.2.2 items «"Skjerm"-lerretet er 1920 px» and «Skjerm-knapp
 
 - [ ] Egenskaper-overskriften viser oversatt blokknavn (ikke rå id) for galleri, samling, tidslinje, sitat, statistikk, tabell, deling, nedteller, produkt, handlekurv og kasse
 - [ ] Samlingsblokkens tomtilstander (ingen samling valgt, ukjent samling, tom samling), «+ Legg til bilder»-knappen og «Uten dato»-overskriften er på admin-språket; bildeeditorens «Ingen bilde ennå» vises for tom miniatyr
-- [ ] Publisering skriver commit-meldingen på admin-språket, f.eks. «Oppdater Hjem, menyen via Urd-admin» i nb og «Update Home, the menu via Urd admin» i en-GB; en publisering uten titler gir «nettstedet»/«the site»
+- [ ] Publisering med admin på bokmål skriver commit-meldingen på norsk, f.eks. «Oppdater Hjem, menyen via Urd-admin»; en publisering uten titler gir «nettstedet»
 - [ ] Vipps (testavtale, deployet): returen fra betaling lander på ?ordered=1 og kvitteringen vises; en betaling startet før oppdateringen som returnerer med ?bestilt=1 gir ingen kvittering (kjent kant)
 - [ ] Nye bakgrunnsbilder lagres som media/background-<hash>, menybilder som media/menu-<hash>; nye samlingsinnslag får id entry-...
 
 **0.7.14.9: Resterende strenger**
 
-- [ ] Preset-galleriet og blokkmenyene viser riktige (norske) etiketter og hint i nb; plugin-presetene ligger i Kort og lister-gruppen i ALLE språk (ikke egen gruppe i en-GB/tr)
+- [ ] Preset-galleriet og blokkmenyene viser riktige (norske) etiketter og hint i nb; kalender-, kart- og skjemapresetene ligger i Kort og lister-gruppen i ALLE språk
 - [ ] Chrome-tekstene er oversatt: tom bilde-/galleriblokk på lerretet, «Skriv tekst»-placeholder, videoskjoldets tooltip, kolonnebredde-gripen i sidestilt nav (nb/en-GB/tr)
 - [ ] Kontaktskjemaets valideringsmeldinger hos besøkende er fortsatt på sidespråket
 - [ ] Lokal server starter med engelske meldinger; en ugyldig SVG-opplasting avvises fortsatt pent
@@ -844,18 +687,12 @@ Supersedes the 0.7.2.2 items «"Skjerm"-lerretet er 1920 px» and «Skjerm-knapp
 
 **0.7.14.5: Motorfil-renames**
 
-- [ ] Lokal server (dev-server.py): forsiden og alle undersider laster uten 404 i nettverkspanelet (alle modulepreloads treffer); editoren åpner og alle blokktyper rendrer
 - [ ] Butikkflyten ende til ende etter filflyttingen: produktkort, kurvskuff, kasse og nav-kurv virker (shop.js/cart.js/checkout.js)
 - [ ] Galleri med lightbox, samlingsblokk, maler-innsetting og CSV-eksport/-import virker (gallery-model/collections/collections-csv/templates-model)
 
 **0.7.14.4: Plugin-laget med aliaser**
 
-- [ ] Fersk side: kalender-, kart- og skjemablokkene virker som før (blokkmeny, redigering, preview og publisert); Hva skjer-/Finn oss-/Kontaktskjema-presetene finnes i seksjonsgalleriet med riktige navn
-- [ ] GAMMEL SIDE + NY MOTOR + GAMMEL PLUGIN-MAPPE: en side bygget før renamet (blokktype kalender/kart/skjema, preset hva-skjer) rendrer riktig med de gamle plugin-mappene i repoet (direkte treff)
-- [ ] GAMMEL SIDE + NY PLUGIN-MAPPE: samme side med de NYE plugin-mappene rendrer riktig via aliasene (blokker og preset-adder)
-- [ ] Kartpluginens CSP-instruks viser fortsatt riktig frame-src-linje; skjemainnsending og kalenderens ICS-kilder virker
-- [ ] Svensk språkpakke (lang-sv) kan aktiveres og gir svensk besøkende-språk
-- [ ] i18n: plugin-tekstene (kalendervisninger, skjemafelt, kart) er uendret i nb/en-GB/tr
+- [ ] En side bygget før renamet (blokktype kalender/kart/skjema, preset hva-skjer) rendrer med kjerneblokkene; Hva skjer-, Finn oss- og Kontaktskjema-presetene står i seksjonsgalleriet med riktige navn
 
 **0.7.14.3: Preset-idene til engelsk med migrering**
 
@@ -874,7 +711,7 @@ Kjernen i testen er invarianten: en side bygget FØR renamet skal se identisk ut
 - [ ] En lagret mal (seksjon/blokkgruppe) fra før renamet settes inn med riktige blokker; en side-mal likeså
 - [ ] TIDSLINJE/SITAT: variantvalgene i Egenskaper (venstre/vekslende linje, stort/kort sitat) og markørvalget virker; gamle blokker med norske verdier viser samme variant som før
 - [ ] SEKSJONSROLLER: rollevelgeren viser alle sju rollene med riktige farger i begge moduser; gamle sider med norske roller beholder fargene
-- [ ] Kalender-/kart-/skjemablokker (plugin-typene) er uendret på gamle og nye sider
+- [ ] Kalender-, kart- og skjemablokkene er uendret på gamle og nye sider
 - [ ] i18n: blokk-etikettene, rollene og variantvalgene har riktige tekster i nb, en-GB og tr
 
 ### Testrunde-batch (0.7.7): Video-bakgrunnslag og mediegrensene
@@ -891,7 +728,7 @@ Laget og grensene kan testes lokalt; materialiseringen ved publisering trenger e
 
 ### Testrunde-batch (0.7.6): SEO- og synlighetspakken
 
-Head-taggene og markøren kan testes lokalt; de publiserings-genererte filene (sitemap/robots/RSS), 404-siden og analytics trenger en deployet side.
+Head-taggene og markøren kan testes lokalt; de publiserings-genererte filene (sitemap/robots/RSS) og 404-siden trenger en deployet side.
 
 - [ ] SØK OG DELING: gruppen i Sider-panelet viser den åpne sidens navn; beskrivelse, delingstittel/-beskrivelse og delingsbilde lagres i utkastet og publiseres; view-source på publisert side viser description, canonical, og:-taggene, twitter:card og JSON-LD (aldri i preview-iframen)
 - [ ] Fallback-trappa: en side uten egne felt får og:description fra nettstedsbeskrivelsen og og:image fra nettstedsikonet; deling av en side i sosiale medier viser riktig kort
@@ -901,7 +738,6 @@ Head-taggene og markøren kan testes lokalt; de publiserings-genererte filene (s
 - [ ] SITEMAP/ROBOTS: publisering skriver sitemap.xml med alle synlige sider (absolutte adresser) og robots.txt med Disallow: /admin/ og sitemap-peker; ny publisering uten endringer gir ingen diff i filene
 - [ ] RSS: endre nyhets-samlingen og publiser - content/samlinger/nyheter.xml finnes med innslag, pubDate og escapede titler; produktkatalogen får aldri feed
 - [ ] 404: en ukjent adresse på deployet side viser 404-siden med temafargene og forsidelenke (status 404); lokalt degraderer det pent
-- [ ] ANALYTICS: aktivert plugin uten token gjør ingenting; med token og _headers-linjene lastes beacon hos besøkende men aldri i preview; Plugins-panelet viser script-src- og connect-src-linjene når de mangler i CSP-en
 - [ ] i18n: en-GB og tr for Søk og deling-feltene, avkryssingen og markør-tooltipen
 
 ### Testrunde-batch (0.7.5.3): Kortvis animasjon og nav-kurvens klaring
@@ -914,7 +750,6 @@ Head-taggene og markøren kan testes lokalt; de publiserings-genererte filene (s
 
 ### Testrunde-batch (0.7.0.3): Tag-stripping-fiksen og avhengighetsbumpene
 
-- [ ] Editoren virker som før etter Svelte/Vite-bumpene: åpne admin, rediger, angre, bytt panel og publiser uten nye feil i konsollen
 - [ ] Et produkt med formatert tittel (fet/kursiv) viser ren tekst i kurvlinjen (skuffen og kassen) og i Samlinger-panelets sammendragslinje; å tømme tittelen på lerretet beholder fortsatt den gamle
 
 ### Testrunde-batch (0.7.5.2): Betalingslaget, butikkdesignet og testfunn-fiksene
@@ -922,7 +757,7 @@ Head-taggene og markøren kan testes lokalt; de publiserings-genererte filene (s
 Betalingslaget trenger en deployet side med Vipps-testavtale (MT-miljøet, VIPPS_API_BASE=https://apitest.vipps.no); resten kan testes lokalt.
 
 - [ ] VIPPS: uten hemmeligheter i Cloudflare viser «Betal med Vipps» en rolig utilgjengelig-tekst (503), og skjema-kassen virker uendret; lokalt (ingen functions) det samme
-- [ ] Vipps med testavtale (deployet): knappen redirecter til Vipps Checkout med riktig sum (regnet server-side); en tuklet payload (ukjent produkt-id, negativt antall) avvises; retur til kassesiden med ?bestilt=1 viser kvittering, tømmer kurven, og en oppfrisking etterpå tømmer IKKE en ny kurv
+- [ ] Vipps med testavtale (deployet): knappen redirecter til Vipps Checkout med riktig sum (regnet server-side); en tuklet payload (ukjent produkt-id, negativt antall) avvises; retur til kassesiden med ?ordered=1 viser kvittering, tømmer kurven, og en oppfrisking etterpå tømmer IKKE en ny kurv
 - [ ] Kasse-Egenskaper: Vipps Checkout-avkryssingen viser/skjuler knappen; tooltip forklarer Cloudflare-oppsettet
 - [ ] FARGEPRØVER: med OS i mørk modus viser Egenskaper-prøvene alt-paletten; klikk på månebryteren i forhåndsvisningen flipper prøvene og seksjonstema-prøvene live; en side med scheme: dark viser riktig palett i lys modus
 - [ ] HANDLEKURV-BLOKK: første klikk på kurvpillen velger blokken (ingen skuff), flate-dra flytter den, andre klikk åpner skuffen; hos besøkende åpner første klikk som før; gamle sider med kurven på y=28 kan fortsatt velges og flyttes
@@ -1038,15 +873,15 @@ Layouten er lagt om, så denne batchen er bredere enn vanlig. Det viktigste er d
 - [ ] Marquee (dra et utvalgsrektangel i tom seksjonsflate): rektangelet følger pekeren, og blokkene det dekker blir markert (ikke naboene ved siden av)
 - [ ] Rutenettet (Vis grid) og de smarte hjelpelinjene ligger på innholdsflaten, ikke forskjøvet ut i margen; midtlinja treffer midten av innholdet
 - [ ] Fest ved scrolling: en festet blokk beholder sin bredde og venstrekant i det den fester seg (skal IKKE hoppe mot venstre skjermkant). Test både vanlig festing, gruppefesting og «Til skjermen»-dokking
-- [ ] Folden: lag en seksjon med minstehøyde `85vh` og en seksjon under. Seksjonen under skal IKKE være synlig før du scroller, og det skal stemme med hva en ekte nettleser viser ved 1488 px bredde
+- [ ] Folden: lag en seksjon med minstehøyde `85vh` og en seksjon under. Seksjonen under skal IKKE være synlig før du scroller, og det skal stemme med hva en ekte nettleser viser ved 1637 px bredde
 - [x] Sett `"maxWidth": "full"` på én seksjon i en sidefil (håndredigert) og se at kun den seksjonen går kant til kant
 - [ ] Tekstblokker: åpne en side med mye tekst i en smal blokk og se at rammen vokser av seg selv ved rendring, ikke bare når du skriver. Rammen skal ALDRI krympe av seg selv
-- [ ] Mobilvisning er uendret: auto-stabling ser ut som før, og en seksjon satt til manuell mobil-layout beholder plasseringene sine
+- [ ] Mobilvisning er uendret: auto-stabling ser ut som før
 - [ ] Publiser og sjekk den deployede siden: samme utseende som i Ren visning, og `site.json` har fått `schemaVersion: 2` med `layout`-feltet
 
 ### Testrunde-batch (0.7.2.5): Topplinja folder seg, og bekreftelsen flyttet ut av knappen
 
-Forkast-knappen oppfører seg annerledes enn i 0.7.2.4-batchen under: den vokser ikke lenger når den væpnes, og andre klikk skjer på en egen pille. De tre punktene om væpning og andre klikk der er erstattet av punktene her.
+Forkast-knappen vokser ikke når den væpnes, og andre klikk skjer på en egen pille.
 
 - [ ] TOPPLINJA HOLDER ÉN HØYDE: dra admin-vinduet sakte fra bredt til smalt og se at linja aldri brytes til to rader. Merk at nettleserzoom teller: på 125 % er et 1920 px vindu 1536 px for foldingen
 - [ ] Trinnene kommer i denne rekkefølgen når vinduet smalner: «Forkast utkast» mister teksten og blir sirkelen, ENHET/ZOOM/VIS forsvinner, «Ren visning» og «Se siden» blir rene ikoner og GitHub-brukeren viker, Vis-klyngen blir meny, Enhet-klyngen blir meny og «Upublisert» blir «!», Zoom-klyngen blir meny
@@ -1060,43 +895,26 @@ Forkast-knappen oppfører seg annerledes enn i 0.7.2.4-batchen under: den vokser
 - [ ] «Sikker?»-pilla er dempet med rød kant og rød tekst i hvile, og blir tydelig fylt rød med hvit tekst når pekeren er over den
 - [ ] Den runde forkast-knappen skal også skifte farge under pekeren, både i hvile og når den er væpnet
 - [ ] Klikk et annet sted eller trykk Escape mens pilla er framme: den skal forsvinne uten å forkaste noe. Test begge
-- [ ] Gjør vinduet så smalt det går og gjenta hele forkast-flyten: pilla skal fortsatt være synlig og klikkbar, og «Publiser» skal stå i ro
-- [ ] «Se siden» har fått et pil-ut-av-ramme-ikon og teksten er uten ↗-tegnet. Sjekk at knappen ikke blir tom når den folder til rent ikon
+- [ ] Gjør vinduet så smalt det går og gjenta hele forkast-flyten: pilla skal fortsatt være synlig og klikkbar, og «Publiser» skal stå i ro; «Se siden» blir ikke tom når den folder til rent ikon
 - [ ] Bytt admin-språk til engelsk og tyrkisk og sjekk menyradene i de tre foldede klyngene, samt at foldingen skjer tidsnok på tyrkisk (som har de lengste tekstene)
 
 ### Testrunde-batch (0.7.2.4): Opprydding i topplinja og sideskinnen
 
-- [ ] Urd-merket er borte fra topplinja og står nederst i sideskinnen, til venstre for tannhjulet, med en skillelinje over
-- [ ] Verktøyene står i tre merkede klynger: ENHET (fire enheter), ZOOM (minus, prosent, pluss, tilpass) og VIS (rutenett, hjelpelinjer). Hver klynge har en lett ramme, og knappene inni har ikke lenger egen kant
-- [ ] Aktiv knapp inne i en klynge markeres fortsatt tydelig (valgt enhet, Tilpass, rutenett på)
-- [ ] «Publiser» klistrer seg ikke lenger til vinduskanten
-- [ ] Utkast-statusen er en dempet gul pille med kant, ikke en fylt aksentflate. «Publiser» skal være den ENESTE fylte knappen i hele topplinja
-- [ ] Forkast er en liten rød sirkel med gjenopprett-ikon (pil med urviser). Hjelpeteksten forklarer hva den gjør
-- [ ] FØRSTE KLIKK VÆPNER: sirkelen blir fylt rød og utvider seg til «Sikker?». Knappene til høyre (Ren visning, Se siden, Publiser) skal IKKE flytte seg når den vokser
-- [ ] Andre klikk forkaster. Klikk et annet sted, eller Escape, avvæpner uten å forkaste. Test begge; avvæpningen var koblet til den gamle knappeklassen og måtte rettes
-- [ ] Sideskinnen har versal-etikettene DENNE SIDEN, NETTSTEDET og SYSTEM over hver gruppe, og de gamle skillestrekene er borte
-- [ ] Skinnen er strammet til: smalere (9,5rem), monospace, mindre skrift og ingen mellomrom mellom punktene. Med tolv punkter skal den ikke lenger fylle nesten hele lerretshøyden
-- [ ] Aktivt panel markeres med farget tekst og en strek i venstrekanten, ikke lenger med en fylt pille. Sjekk at det er tydelig hvilket panel som er åpent
-- [ ] Utkast-pilla er like stor som knappene rundt seg, ikke halvparten. Teksten er kortet til «Upublisert»
 - [ ] Bytt admin-språk til engelsk og tyrkisk og sjekk alle seks nye etikettene
 
 ### Testrunde-batch (0.7.2.3): Rutenett, hjelpelinjer og størrelsen på redigeringshåndtakene
 
-- [ ] HÅNDTAKENE ER STORE FRA START: last admin på nytt og se at «+ Ny seksjon», «+ Ny blokk», seksjonsverktøylinja og blokkhåndtakene har admin-størrelse MED EN GANG, uten at du først må røre zoomen. Dette var feilen: zoomen ble ikke meldt inn ved lasting
 - [ ] Seksjonsgalleriet («+ Ny seksjon» klikket) er nå i admin-størrelse og ikke krympet med lerretet. Sjekk på 50 % og 150 %
 - [ ] Drastrimlene i seksjonens topp- og bunnkant er like lette å treffe uansett zoom
 - [ ] OMRISSET LIGGER PÅ RUTENE: slå på rutenettet, dra en blokk så den snapper, og se at den blå rammen rundt blokken følger rutelinjene. Den lå før 2 px utenfor og kunne derfor aldri treffe
 - [ ] Rutenettets linjer er skarpe og synlige på alle zoomnivåer, ikke bleke og uskarpe. Selve rutestørrelsen skal fortsatt følge zoomen, altså bli mindre når du zoomer ut
 - [ ] Hjelpelinjene er tydeligere enn før og synlige mot både lyse og mørke seksjoner
-- [ ] NY BRYTER FOR RUTENETTET i verktøylinja ved siden av hjelpelinje-knappen. Rutenettet skal nå kunne stå på uten at Grid-panelet er åpent, valget skal huskes ved omlasting, og det skal ikke slås av når du bytter panel eller setter inn en ny seksjon
 - [ ] Bytt admin-språk til engelsk og tyrkisk og sjekk hjelpeteksten på den nye rutenett-knappen
-- [ ] De to knappene har nå ULIKE ikoner: rutenett er et nett, hjelpelinjer er en boks med krysset stiplet innretting. De var før nesten identiske
-- [ ] Hjelpelinjene er magenta og tydelig synlige mot alle seksjonsfarger. Fargen er bevisst fast og følger ikke admin-temaet, så den skiller seg fra rutenettet
 - [ ] «+ Ny blokk» og seksjonens verktøylinje overlapper ikke lenger i øvre høyre hjørne. Sjekk på 50 %, 74 % og 150 % zoom, siden det var avstanden som ikke skalerte med
 
 ### Testrunde-batch (0.7.2.2): Innholdsbredde-innstillingen og enhetsbryteren
 
-Standarden ble korrigert fra 1200 til 1440 etter ny research, sidemargen byttet fra piksler til prosent av vindusbredden, og de to punktene om lerretsmodus i 0.7.2-batchen over er erstattet av enhetsbryteren her. Letterboksen er fjernet igjen: siden skal vises slik den faktisk vises.
+Standarden ble korrigert fra 1200 til 1440 etter ny research, og sidemargen byttet fra piksler til prosent av vindusbredden. Letterboksen er fjernet igjen: siden skal vises slik den faktisk vises.
 
 - [ ] Nettsted-panelet: Innholdsbredde har en levende prøve med tre striper (1920, 1536, 1366). Endre bredden og se at stripene og margtallene følger med med én gang
 - [ ] Prøven forteller sannheten: ved 1440 skal 1920 og 1536 vise en tydelig stripe med marg, mens 1366 vises DEMPET (bredden binder ikke der). Ved 1600 skal 1536 bli dempet
@@ -1106,19 +924,16 @@ Standarden ble korrigert fra 1200 til 1440 etter ny research, sidemargen byttet 
 - [ ] Under Avansert ligger det rå vw-tallet med skyveknapp 0 til 12. Hjelpeteksten forklarer hva vw betyr med konkrete tall
 - [ ] Marg-kolonnen viser tall der bredden binder og bindestrek der den ikke gjør det
 - [ ] MARGEN FØLGER SKJERMEN: gjør nettleservinduet smalere i Ren visning og se at luften i kantene krymper proporsjonalt, ikke står fast. Over cirka 1640 px skal margen derimot vokse, fordi det da er innholdsbredden som bestemmer
-- [ ] «Skjerm»-lerretet er 1920 px, altså en fast referanseskjerm. Dra i sidemarg-skyveknappen og se at zoom-prosenten IKKE endrer seg og at siden ikke blir større eller mindre; kun Bærbar og Nettbrett skal vise margendringen, siden margen ikke har effekt på 1920
 - [ ] INGEN BARER: lerretet fyller panelet i alle fire enheter og i Ren visning, uten striper på sidene. Sjekk særlig med sidemarg satt til Ingen, som var verst før
 - [ ] HERO VOKSER IKKE PÅ HOVER: før vokste seksjonen med verktøylinjens høyde når pekeren traff den, og krympet igjen når den forlot. Beveg pekeren inn og ut av toppseksjonen på Hjem og se at ingenting flytter seg
 - [ ] Under prøven står «Bredden slår inn fra N px vindusbredde». Sjekk at tallet endrer seg både når du endrer bredden og når du endrer margen (1440 med Middels skal gi 1637)
 - [ ] HÅNDTAKENE HOLDER ADMIN-STØRRELSE: zoom inn og ut med minus og pluss, og se at «+ Ny seksjon», «+ Ny blokk», seksjonsverktøylinja, blokkens resize- og roterhåndtak, tekst-verktøylinja og flerutvalgs-linja beholder samme størrelse som knappene i admin-panelene. Sjekk på 30 %, 100 % og 300 %
 - [ ] Håndtakene sitter der de skal ved alle zoomnivåer: resize-håndtaket i nedre høyre hjørne av blokken, roter-håndtaket i øvre høyre, «+ Ny blokk» øverst til høyre i seksjonen. De skal ikke drive vekk fra ankeret sitt når du zoomer
 - [ ] Rutenettet, marquee-rektangelet og de smarte hjelpelinjene skal derimot IKKE holde konstant størrelse: de måler sidens egen geometri og skal følge zoomen som resten av siden
-- [ ] INGEN SCROLLBAR I FORHÅNDSVISNINGEN i det hele tatt: verken en strek inntil sidens innhold eller en langs kanten av flaten. Scrolling skal likevel virke som før med hjul og touch, både i redigering og Ren visning
 - [ ] «Se siden» og den publiserte siden skal derimot ha helt vanlig scrollbar: skjulingen gjelder KUN forhåndsvisningen
 - [ ] INGEN PUMPING: åpne og lukk admin-panelene og dra vindusstørrelsen sakte fram og tilbake. Siden skal ikke veksle mellom to størrelser eller blafre; den skal skalere jevnt
 - [ ] Zoom manuelt til 200 eller 300 % med pluss-knappen: DA skal du kunne dra lerretet sidelengs for å nå resten. Trykk Tilpass, og panoreringen skal forsvinne igjen
-- [ ] Enhetsbryteren i verktøylinja har fire knapper: Skjerm, Bærbar, Nettbrett, Telefon. Hver skal gi riktig lerretsstørrelse, og hjelpeteksten skal vise målene
-- [ ] Skjerm-knappen følger designbredden: endrer du innholdsbredden i Nettsted-panelet, endres lerretets bredde tilsvarende
+- [ ] Hjelpeteksten på hver av de fire enhetsknappene viser målene, og hver gir riktig lerretsstørrelse
 - [ ] Nettbrett og Bærbar skal fortsatt være SKRIVEBORDSvisning i motoren: blokkene ligger absolutt plassert, Egenskaper viser plasseringsfeltene, og Fest ved scrolling kan settes. Kun Telefon skal gi mobilvisning
 - [ ] Mobil-tilsyn-merket øverst hopper fortsatt til telefonvisning når du klikker det
 - [ ] Zoom-kontrollen (Tilpass, minus, prosent, pluss) virker uendret i alle fire enheter
@@ -1132,9 +947,8 @@ Standarden ble korrigert fra 1200 til 1440 etter ny research, sidemargen byttet 
 - [ ] Hjelpetekstene på Fest ved scrolling og avstanden nevner at seksjonen må være høyere enn blokken, og at menyhøyden legges til automatisk (nb, engelsk, tyrkisk, nynorsk)
 - [ ] Bekreftelsesdialogen (f.eks. «Lagre som mal» eller «Slett mal»): Escape avbryter, klikk på det mørke bakteppet avbryter, og klikket treffer ikke knapper i panelet under; Enter i navnefeltet lagrer fortsatt; marker tekst i navnefeltet og slipp musa utenfor dialogen (skal IKKE lukke)
 - [ ] Escape med både dialog og blokkmeny åpen lukker kun dialogen
-- [ ] Publisering, angre-publisering og Oppdatering-panelets sjekk fungerer som før (CSRF-vernet er lagt om til Sec-Fetch-Site); test i minst to nettlesere, gjerne en personvern-orientert
-- [ ] Innlogging: logg inn og ut som vanlig; en feilet innlogging skal gi «GitHub avviste innloggingen», aldri en rå serverfeil
-- [ ] Kalender-pluginen henter feeden som før (proxyen leser nå strømmen med bytegrense)
+- [ ] Angre-publisering og Oppdatering-panelets sjekk fungerer som før (CSRF-vernet er lagt om til Sec-Fetch-Site); test i minst to nettlesere, gjerne en personvern-orientert
+- [ ] En feilet innlogging gir «GitHub avviste innloggingen», aldri en rå serverfeil
 - [ ] Nav-logo, footer-logo, ikonblokk med eget bilde, bildelag og bildegalleri-lag viser bildene som før, både i editor og publisert
 - [ ] Seksjon med glød-lag som ble laget før radius/plassering fantes: laget vises (var usynlig)
 - [ ] Festing virker nå i vanlig redigeringsvisning: sett «Fest ved scrolling» på en blokk og scroll i editoren; blokken fester seg uten at du må bytte til Ren visning
@@ -1191,7 +1005,7 @@ Standarden ble korrigert fra 1200 til 1440 etter ny research, sidemargen byttet 
 
 - [ ] Kebab-menyen på en side-rad: «Lagre som mal» og «Slett siden» (forsiden mangler slett); lukkes ved klikk utenfor og Escape
 - [ ] Lagre en side som mal (både den aktive og en annen side): navnedialog, statusmelding, og rutenettet «Ny side fra mal» dukker opp under + Opprett side
-- [ ] Rutenettet: Tom side + malene med miniatyrer som ligner sidene; valgt kort huskes til neste opprettelse; kryss sletter malen (med bekreftelse) og rutenettet forsvinner når siste mal er borte
+- [ ] Rutenettet: Tom side + malene med miniatyrer som ligner sidene; valgt kort huskes til neste opprettelse; kryss sletter malen (med bekreftelse)
 - [ ] Opprett side fra mal: nytt navn/slug, alle seksjoner og blokker med, redigerbar som vanlig; å sette inn fra samme mal to ganger gir ingen id-kollisjoner (rediger den ene, den andre står urørt)
 - [ ] Ctrl+Z etter mal-lagring og etter side-opprettelse ruller tilbake som ett steg per handling
 - [ ] Publisering av en side-mal (mot urd-web): filen har kind page, bilder i sidens seksjoner materialiseres til media/
@@ -1201,13 +1015,9 @@ Standarden ble korrigert fra 1200 til 1440 etter ny research, sidemargen byttet 
 - [ ] Layout-knappen vises i seksjonsverktøylinjen kun for seksjoner med minst to bevegelige blokker (ikke for tomme/en-blokks seksjoner eller rene dekor-seksjoner)
 - [ ] Stripen: klistret rett under verktøylinjen gjennom hele seksjonen, ligger over den flytende nav-en, viser riktige varianter (splitt/hero kun med tekst OG media) med miniatyrer som ligner seksjonen
 - [ ] Bytte flytter blokkene uten å endre innhold/høyder; dekor og former står urørt; ETT Ctrl+Z ruller hele byttet tilbake; alt er redigerbart etterpå
-- [ ] Bytte på en seksjon med manuell mobil-layout flagger mobil-tilsynet (gult merke)
+- [ ] Bytte på en seksjon med en pinnet blokk på mobil flagger mobil-tilsynet
 - [ ] Urd-innstillingene (tannhjulet): «Bytt oppsett-velgeren» bytter til galleri-meny-formen uten omlasting; menyen har tittel, lukkeknapp og samme kort; valget huskes per nettleser
 - [ ] Velgeren lukkes ved valg, nytt knappeklikk, klikk utenfor og Escape (begge formene)
-
-### Testrunde-batch (0.6.7.8): Oppsetts-modellen (ren logikk, ingen UI ennå)
-
-- [ ] Kun automatisk dekning i denne runden (tests/section-layouts.test.mjs); den manuelle testingen av bytt oppsett kommer med UI-et i 0.6.7.9-batchen
 
 ### Testrunde-batch (0.6.7.5): Blokkgruppe som gjenbrukbar
 
@@ -1220,11 +1030,9 @@ Standarden ble korrigert fra 1200 til 1440 etter ny research, sidemargen byttet 
 - [ ] Slett en publisert mal og publiser: filen slettes fra repoet, indeksen krymper; en ny mal med samme navn i samme publisering overlever (create-vernet)
 - [ ] Ctrl+Z rett etter publisering ruller mal-endringen tilbake som utkast mot NY publisert baseline (angre gjenskaper det publiserte innholdet, ikke gammel tilstand)
 
-
 ### Testrunde-batch (0.6.7.1): Middels-reviewrunden
 
 - [ ] Mobilvisning: en side med faq/galleri/samling/kalender/skjema/kart med MER innhold enn desktophøyden viser alt uten at innholdet flyter over blokken under (naturlig høyde i stabling)
-
 
 ### Testrunde-batch (0.6.6.6.4): Sider/Samlinger/Plugins-prosa og undermeny-fiksene
 
@@ -1240,7 +1048,6 @@ Standarden ble korrigert fra 1200 til 1440 etter ny research, sidemargen byttet 
 - [ ] Nav-panelet: tooltips på Logo-gruppens summary (Hjem-knapp-forklaringen) og Meny-punkter-summaryen (undermeny-forklaringen); ingen prosaavsnitt igjen i panelet, og tallfeltene for logobilde (høyde/avrunding) forklarer seg selv via egne tooltips
 - [ ] Footer-panelet ser og virker uendret ut (ingen endringer gjort)
 - [ ] Uskarphet bak menyen virker igjen i alle nav-varianter (bar, flytende, flytende firkant/tab, sidestilt) og i undermeny/mobilpanel; av/på-bryteren i Nav-panelet har umiddelbar effekt begge veier
-- [ ] Sideoverganger på publisert side (Chromium-familien): fortsatt myk krysstoning med nav og footer i ro, nå som navnene settes i pageswap/pagereveal i stedet for statisk CSS
 - [ ] Etter neste oppdatering av urd-web: uskarpheten virker også der (fiksen ligger i base.css + urd.js, begge i motor-atomgruppen)
 
 ### Testrunde-batch (0.6.9.x): splitt, oppdaterer og fase-slipp (samlet og slått sammen 5. august 2026)
@@ -1253,10 +1060,9 @@ Standarden ble korrigert fra 1200 til 1440 etter ny research, sidemargen byttet 
 - [ ] Ny side med slug «readme» avvises i editoren med reservert-navn-meldingen (ikke server-feil ved publisering)
 - [ ] Oppsettsguidene har Forutsetninger øverst i alle fem språk, og gamle stier (docs/OPPSETT-PUBLISERING.md, docs/BRUKERVEILEDNING.md) er borte uten døde lenker i repoet
 
-- [ ] Lokalt (dev-server.py): alle sider laster uten 404 i konsoll/nettverksfane (motoren fra /assets/engine/0.6.10/), alle fire pluginene virker i preview via /assets/urd/-skallene, admin-språkbytte virker (ordbøkene kjøretids-lastes via skallene), og Oppdatering-panelet degraderer pent til utilgjengelig-melding uten functions
+- [ ] Lokalt (dev-server.py): alle sider laster uten 404 i konsoll/nettverksfane (motoren fra /assets/engine/0.6.10/), språkpakken virker i preview via /assets/urd/-skallene, admin-språkbytte virker (ordbøkene kjøretids-lastes via skallene), og Oppdatering-panelet degraderer pent til utilgjengelig-melding uten functions
 - [ ] Pre-v1-innbakingen: eksempelsidene rendrer identisk som før (gradienter, bilde-bakgrunner med parallaks, kalender-blokken på Hjem) uten plassholder-advarsler i konsollen, og gradient-editoren redigerer farger/andeler/animasjon og publiserer rent
-- [ ] Nytt innhold: opprett en side og sett inn en ny kalender-blokk fra velgeren; begge virker, og publisert sidefil har `"schemaVersion": 1`
-- [ ] Engangsoppsettet (rekkefølgen i UTVIKLING): opprett offentlig `urd-template`-repo MED «Add a README file» (så main finnes), legg secreten `URD_TEMPLATE_PAT` (fine-grained, contents read/write kun på malrepoet) i MONOREPOET Urd sine Actions-secrets (ikke i malrepoet), kjør første synk, og huk deretter av Settings → General → «Template repository» (da vises «Use this template»-knappen) + sett topic `urd-template`
+- [ ] Nytt innhold: opprett en side og sett inn en ny kalender-blokk fra velgeren; begge virker og publiseres
 - [ ] Release-flyten: tagg `v0.6.9` og publiser GitHub-releasen; Action-en kjører grønt (check-release i full modus, tester, synk) og seeder urd-template med ÉN commit «Urd v0.6.9» pluss taggen. En rc-dispatch med prerelease-flagget seeder tilsvarende for oppdaterer-testing, omkjøring er ufarlig (uendret innhold/eksisterende tagg flyttes aldri), og en dispatch mot tagg som ikke matcher urd.json.engine stoppes i versjonskonsistens-steget før noe pushes
 - [ ] Deployen av 0.6.9 på urdweb: siden virker som før; undersidene har render-blokkerende tema og blinkefritt lys/mørk-valg ved direkte innlasting; svar-headerne viser `immutable` på en motorfil og på base.css, men IKKE på /assets/urd/i18n.js; en publisering skriver slug-kopier med de versjonerte stiene (vis kildekode på en underside); og Oppdatering-panelet melder «kjører nyeste» mot malrepoet
 - [ ] Klon-flyten: følg OPPSETT-PUBLISERING fra «0. Lag nettsidens repo» til deployet side mot en ekte klon, uten monorepo-kunnskap; hvert steg stemmer med det GitHub/Cloudflare faktisk viser
@@ -1271,15 +1077,12 @@ Standarden ble korrigert fra 1200 til 1440 etter ny research, sidemargen byttet 
 - [ ] Utløpt innlogging: med utløpt/ugyldig token gir publisering «sign in again»-varianten (koden `loginExpired`), ikke den generiske «must sign in»-meldingen med rå årsak
 - [ ] Kart-søket i preview: søk på tøys (under 3 tegn og et sted som ikke finnes) med admin på et annet språk - «skriv en adresse»- og «fant ikke stedet»-meldingene følger admin-språket
 - [ ] Kalender-feed-feil: pek en kalenderkilde på en ikke-godkjent vert - feilen i blokken viser vertsnavnet interpolert, på admin-språket
-- [ ] Panelene etter CSS-ryddingen: klikk gjennom alle paneler (særlig Tema, Nettsted, oppsettskortet og verktøyradene) og se at ingenting har mistet stil
-- [ ] Motor-stempelet: alle fire pluginene laster fortsatt (ingen «krever motor»-advarsler i konsollen), og plugin-panelet viser ingen versjonsadvarsel med engine 0.6.8 mot kravet >=0.6.8
 
 ### Testrunde-batch (0.6.8.10): språkpakke-plugins
 
 - [ ] Aktivering: åpne Plugins-panelet - «Svensk språkpakke» står der (deaktivert), viser «Språkpakke: Svenska» og ingen versjonsadvarsel. Slå den på og publiser
 - [ ] Besøkende-språket: Nettsted > Språk viser nå Svenska alfabetisk mellom Norsk nynorsk og Türkçe. Velg det, og se i forhåndsvisningen at meny, «Till toppen», lysboks, galleri og nyhetsbrev-skjemaet er svenske MENS admin fortsatt er på ditt eget språk
 - [ ] Publisert side: last den ekte siden med site.lang = sv - samme svenske chrome, og `<html lang="sv">` i kilden. Datobadger og kalender-månedsnavn er svenske via Intl (ikke oversatt i pakken)
-- [ ] Delvis dekning: pakken dekker KUN besøkende-siden, så admin-språkvelgeren skal IKKE tilby Svenska. Sjekk at den ikke dukker opp der
 - [ ] Deaktivering: slå pakken av igjen mens site.lang fortsatt er sv - siden faller til bokmål uten å kræsje, og velgeren beholder «sv» som eget alternativ så verdien ikke går tapt
 - [ ] Utkast vs. publisert: slå pakken på UTEN å publisere - språket skal være valgbart i Nettsted-panelet og virke i forhåndsvisningen (utkastlista), men admin-språkvelgeren venter til det er publisert
 - [ ] Lag din egen: følg «Språkpakker»-avsnittet i template/plugins/README.md og lag en pakke for et språk med admin-dekning (kopier locales/admin/nb.js, oversett noen nøkler) - de uoversatte nøklene skal vises på bokmål, ikke som nøkkelnavn
@@ -1295,15 +1098,11 @@ Standarden ble korrigert fra 1200 til 1440 etter ny research, sidemargen byttet 
 - [ ] Samisk gjennomgang: be gjerne en med nordsamisk som morsmål se over README-se.md, GUIDE-se.md og SETUP-se.md (alle er merket som maskinutkast)
 - [ ] CONTRIBUTING: følg «Bidra med språk»-oppskriften som om du var en ny bidragsyter - er stegene nok til å legge inn en rettelse og verifisere den med paritetstesten?
 
-### Testrunde-batch (0.6.8.8): plugin-locales (kalender, skjema, kart)
+### Testrunde-batch (0.6.8.8): plugin-locales (skjema, kart)
 
-- [ ] Besøkende-språket: sett site.lang til en-GB og se på en side med kalender/skjema/kart - «Next event»-panelet, nedtellingen (Today!/Tomorrow/In {n} days), Abonner-knappene, skjemaets valideringsmeldinger og «Send», kartets «View larger map» følger språket; månedsnavn/ukedager i kalenderen likeså
-- [ ] Nedtelling på samisk/tyrkisk: stikkprøv at «I dag/I morgen/Om N dager»-tekstene er ekte språk (egne nøkler, ikke rå tall); samisk er maskinutkast (funn meldes)
-- [ ] Config-panelene i preview (Kilder/Skjema/Sted) og hjelpechipene følger ADMIN-språket, uavhengig av site-språket
-- [ ] Plugin-navnene: Blokker-panelets «Fra plugins»-seksjon og Plugins-panelet viser names på admin-språket (Calendar/Takvim …); blokk- og variant-etiketter likeså
-- [ ] Språkbytte i preview: bytt Nettsted > Språk - plugin-tekstene hos besøkende i previewen bytter MED (applyPluginSiteLocales), ingen norske rester
+- [ ] Besøkende-språket: sett site.lang til en-GB og se på en side med skjema og kart - skjemaets valideringsmeldinger og «Send» og kartets «View larger map» følger språket
+- [ ] Språkbytte i preview: bytt Nettsted > Språk - skjema- og karttekstene hos besøkende i previewen bytter MED, ingen norske rester; hjelpechipene følger ADMIN-språket
 - [ ] Skjema-seed: sett inn Kontaktskjema-preset med admin på engelsk - feltene heter Name/Email/Message (seed); publisert skjema validerer og sender som før
-- [ ] A11y: kalenderens ‹/›-månedsknapper annonserer Forrige/Neste måned på sidens språk
 - [ ] Gamle manifester: en plugin UTEN locales/names-feltene lastes som før (bakoverkompatibelt)
 
 ### Testrunde-batch (0.6.8.7): seed-innhold på admin-språket
@@ -1331,7 +1130,6 @@ Standarden ble korrigert fra 1200 til 1440 etter ny research, sidemargen byttet 
 - [ ] Fargevelgeren: «koblet til temafargen»-tittelen (pek på en swatch koblet til token) interpolerer riktig på valgt språk; Fjern fargen-knappen likeså
 - [ ] Bildeeditoren og tegnvelgeren: etiketter (Zoom/Lysstyrke/Kontrast/Metning, Nullstill/Bruk) følger språket
 - [ ] Fet/kursiv-knappene i logo-innstillingene viser B/I på engelsk, K/I på tyrkisk, F/K på norsk
-- [ ] Innhold forblir innhold: nye blokker settes fortsatt inn med norsk seed-tekst uansett admin-språk (oversettes først i 0.6.8.7), og publiserings-commitmeldingen i historikken er norsk (bevisst: delt git-historikk)
 
 ### Testrunde-batch (0.6.8.4): admin-strenger A (meldinger, dialoger, nedtrekk)
 
@@ -1343,9 +1141,8 @@ Standarden ble korrigert fra 1200 til 1440 etter ny research, sidemargen byttet 
 
 ### Testrunde-batch (0.6.8.2-3): panel-refaktoren og språkvelgerne
 
-- [ ] Panelene virker som før: klikk gjennom alle 11 (Sider, Blokker, Egenskaper, Grid, Nettsted, Tema, Nav, Footer, Samlinger, Plugins, Historikk) - åpne/lukke, Grid-overlegg følger Grid-panelet, Historikk laster, blokk-klikk åpner Egenskaper
 - [ ] Auto-språk: uten lagret valg skal admin følge nettleser-/OS-språket (norsk maskin = bokmål; sett nettleseren til et ustøttet språk, f.eks. tysk = engelsk)
-- [ ] Språkvelgeren i topbaren: velg hvert av de fem språkene - admin laster på nytt og panelnavnene skifter språk (resten av UI-et er fortsatt norsk til batchene 4-6); «Automatisk» går tilbake til enhetsspråket; valget overlever ny fane/omstart i samme nettleser
+- [ ] Språkvelgeren under tannhjulet: velg hvert av språkene - admin laster på nytt på det språket; «Automatisk» går tilbake til enhetsspråket; valget overlever ny fane/omstart i samme nettleser
 - [ ] Nettsted > Språk på nettsiden: bytt til f.eks. English (UK) - previewen bytter besøkende-chrome UMIDDELBART (footer-knapper, til-toppen) uten omlasting; «Upubliserte endringer» vises; publiser og sjekk at den publiserte siden følger valget
 - [ ] Håndredigert lang-verdi utenfor lista (f.eks. «de» i site.json): panelet viser den som eget alternativ øverst og ødelegger ingenting
 - [ ] Historikk-datoene formateres etter admin-språket
@@ -1360,8 +1157,7 @@ Standarden ble korrigert fra 1200 til 1440 etter ny research, sidemargen byttet 
 
 ### Testrunde-batch (0.6.0.5): View Transitions mellom sider, native scrollås og myk ankerscroll
 
-- [ ] Sidebytte-krysstoning: naviger mellom sider på den publiserte siden i Chromium - myk krysstoning der nav og footer står i ro mens innholdet toner; frem/tilbake-knappene gir samme overgang. I Firefox (uten støtte): vanlig, umiddelbar navigasjon uten feil
-- [ ] Redusert bevegelse: med OS-innstillingen på skal sidebyttet være et rent klipp (ingen toning), og ankerlenker/«Til toppen» hoppe direkte
+- [ ] Redusert bevegelse: ankerlenker og «Til toppen» hopper direkte
 - [ ] Preview i admin: sidebytter i editoren skal være som før (ingen overgang, ingen visuelle artefakter fra view-transition-navnene)
 - [ ] Scrollås: åpne lysboksen (bilde/galleri) - bakgrunnen kan ikke scrolles; lukk (Esc, kryss, bakgrunnsklikk) - scrollen er fri igjen med bevart posisjon. Prøv også re-åpning rett etter lukking
 - [ ] Myk ankerscroll: en blokk-lenke til `#anker` og «Til toppen»-pilen ruller mykt hos besøkende
@@ -1373,7 +1169,6 @@ Standarden ble korrigert fra 1200 til 1440 etter ny research, sidemargen byttet 
 - [ ] Angre samlinger: rediger et innslag (både i panelet og klikk-og-skriv i preview) - Ctrl+Z angrer selve samlingsendringen, aldri en urelatert side-/site-endring; slett en samling og Ctrl+Z bringer den tilbake med innholdet; opprett en samling og Ctrl+Z fjerner den igjen
 - [ ] Angre plugins: skru en plugin av/på og Ctrl+Z - previewen laster på nytt med forrige liste; vanlig angring av sideinnhold skal ALDRI utløse preview-reload
 - [ ] Kvotevarsel: fyll utkastet med store bilder til localStorage sprenges (eller senk kvoten midlertidig i devtools) - rød feilmelding i statuslinja i stedet for stille tap; publisering frigjør plassen
-- [ ] Publisering etter vokter-tilstrammingen: vanlig publisering (sider, samlinger, plugins, bilder/SVG-logo, sletting av side/samling) går gjennom uten avvisning
 
 ### Testrunde-batch (0.6.6.5.2): footer-overhaling, delt bakgrunnslag for nav, Urd-logo
 
@@ -1382,6 +1177,5 @@ Footer-overhalingen (26. juli). Bygg footeren i admin (Footer-panelet) og sjekk 
 
 ### Testrunde-batch (0.6.14): kart-forbedringer
 
-- [ ] Kart adressesøk: skriv en vanlig adresse (f.eks. «Storgata 1, Oslo») i «⚙ Sted» og klikk «Bruk» - stedet slås opp og vises (krever den PUBLISERTE siden; koordinater og OSM-lenker virker også lokalt)
 - [ ] Kartet vises nå ut av boksen på den publiserte siden (OSM er lagt i Urds _headers frame-src); ingen manuell CSP-jobb lenger. Bekreft at kartet faktisk viser etter publisering + deploy
 - [ ] CSP-vokter-fiks: hvis kartet likevel blokkeres (annen host) får besøkende en «Åpne kartet på OpenStreetMap»-lenke i stedet for et brukket bilde; editoren får instruksen. (Rettet også en variabel-skygging fra 0.6.12 som ville kastet feil her)
