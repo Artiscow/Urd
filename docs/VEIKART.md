@@ -98,6 +98,7 @@ Vi bruker Urd som en fremmed bruker, uten snarveier:
 
 - Lag en ekte side (arbeidsnavn: Urd-Design) via «Use this template»-knappen, i eget repo med eget Cloudflare-oppsett, satt opp KUN ved å følge [oppsettsguiden](languages/setup-publication/SETUP-nb.md). All friksjon som oppdages er funn som skal fikses.
 - Bygg siden ferdig gjennom admin alene.
+- Hosting utover Cloudflare Pages: siden servert fra hvilken som helst statisk host (GitHub Pages, Netlify, egen server), med en måte for innloggingen og publiseringen fra `/admin` å virke der (lagt til 6. oktober 2026; detaljer i BACKLOG).
 - Slipp deretter en Urd-oppdatering som inneholder en **ekte blokkendring (v1→v2 med migrering)**, og kjør oppdater-knappen på Urd-Design-siden.
 
 Frem til v0.6 er `template/` både verksted og demo (urdweb); det er greit så lenge eksempelinnholdet holdes presentabelt. Fra v0.6 er malen et eget repo, og Urd-Design blir den første siden som lever som en ekte brukers.

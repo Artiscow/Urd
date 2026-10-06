@@ -26,11 +26,11 @@ Omsetjing av README. Hovudutgåva i repo-rota er på engelsk.
 
 Urd er ein open source nettsidebyggjar der **repoet du klonar ER nettsida di** - og nettsida er sin eigen byggjar. Eit gratis, statisk, git-eigd alternativ til Squarespace, Wix og Publii.
 
-Ingen server. Ingen database. Ingen abonnement. Ingen byggjeprosess. Berre eit git-repo med lesbare filer som du eig sjølv, og som kan serverast av kva som helst statisk host (Cloudflare Pages, GitHub Pages, …).
+Ingen server. Ingen database. Ingen abonnement. Ingen byggjeprosess. Berre eit git-repo med lesbare filer som du eig sjølv. I dag køyrer sida på Cloudflare Pages: der blir sidene serverte, og Functions tek seg av innlogginga og publiseringa frå `/admin`. Å kunne serverast frå kva som helst statisk host (GitHub Pages, Netlify, eigen server) er planlagt i v0.9.
 
 ## Slik fungerer det
 
-1. **Lag repoet ditt** frå [urd-template](https://github.com/Artiscow/urd-template) («Use this template» på GitHub) og kople det til ein statisk host: [oppsettsguiden](../setup-publication/SETUP-nn.md) tek deg gjennom kvart steg.
+1. **Lag repoet ditt** frå [urd-template](https://github.com/Artiscow/urd-template) («Use this template» på GitHub) og kople det til Cloudflare Pages: [oppsettsguiden](../setup-publication/SETUP-nn.md) tek deg gjennom kvart steg.
 2. **Set opp** sida di gjennom oppsettsvegvisaren - namn, fargar, logo.
 3. **Rediger** ved å gå til `disida.no/admin` og logge inn med GitHub. Der er heile byggjaren: klikk og skriv rett på sida, dra blokker fritt på eit grid, legg til seksjonar, rediger bakgrunnar, fargar og navigasjon.
 4. **Publiser** - eitt klikk lagar éin git-commit med endringane dine, og hosten serverer den nye sida på under eit minutt.
@@ -38,7 +38,7 @@ Ingen server. Ingen database. Ingen abonnement. Ingen byggjeprosess. Berre eit g
 
 Etter første oppsett er admin-sida kontrollsenteret for nettsida di. Alt du ser på sida kan redigerast derfrå.
 
-Kalender (abonnerbar feed med fire visingar), kontaktskjema (mailto eller eige endepunkt) og kart (personvennleg OpenStreetMap) er kjerneblokker i Blokker-panelet. Urd kan i tillegg utvidast med **plugins** som bur i repoet ditt og blir skrudde på i admin. Éin følgjer med: den svenske språkpakken, som òg er dømet for den som vil lage eigne. Sjå [template/plugins/README.md](../../../template/plugins/README.md) for å lage eigne.
+Kalender (ein iCal-feed i fem visingar og 34 design, med arrangementskort, søk og filter), kontaktskjema (mailto eller eige endepunkt) og kart (personvennleg OpenStreetMap) er kjerneblokker i Blokker-panelet. Urd kan i tillegg utvidast med **plugins** som bur i repoet ditt og blir skrudde på i admin. Éin følgjer med: den svenske språkpakken, som òg er dømet for den som vil lage eigne. Sjå [template/plugins/README.md](../../../template/plugins/README.md) for å lage eigne.
 
 ## Dei fire lovnadene
 
@@ -53,7 +53,7 @@ Editoren og motoren sine tekstar for besøkjande finst på nordsamisk, britisk e
 
 ## Dokumentasjon
 
-Dokumenta er skrivne på bokmål; skildringane under er omsette.
+Engelsk er hovudspråket i prosjektet. Dokument som berre finst på bokmål er merkte, og i endringsloggen, backloggen og testlista er eldre innslag på bokmål og nyare på engelsk.
 
 | Dokument | Innhald |
 |---|---|
@@ -64,12 +64,14 @@ Dokumenta er skrivne på bokmål; skildringane under er omsette.
 | [Brukarrettleiing](../user-guide/GUIDE-nn.md) | For sideeigarar: korleis editoren blir brukt, utan kode |
 | [docs/UTVIKLING.md](../../UTVIKLING.md) | For oss som utviklar Urd: oppsett, reglar, vanlege oppgåver (på bokmål) |
 | [Oppsett av publisering](../setup-publication/SETUP-nn.md) | Eingongsoppsett av publisering: GitHub OAuth-app + Cloudflare |
-| [docs/BACKLOG.md](../../BACKLOG.md) | Løpande oppgåveliste: gjeremål, buggar og forslag (på bokmål) |
-| [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Sjekklista til eigaren: levert arbeid som ventar på testing (på bokmål) |
+| [Bilete frå ei delt mappe](../setup-photos/PHOTOS-nb.md) | Bakgrunnsbilete frå ei Google Drive-mappe, eit Google Foto-album eller ei Nextcloud-deling, og Cloudflare-variablane dei treng (på bokmål) |
+| [Kalenderen](../calendar-guide/CALENDAR-nb.md) | For nettstadeigarar: kalendertenester, møtelenkjer, påmelding, kart og kva kalenderblokka les frå eit arrangement (på bokmål) |
+| [docs/BACKLOG.md](../../BACKLOG.md) | Løpande oppgåveliste: gjeremål, buggar og forslag (eldre innslag på bokmål) |
+| [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Sjekklista for manuell testing: levert arbeid som ventar på testing (eldre innslag på bokmål) |
 | [docs/sammenligning/FUNKSJONSKART.md](../../sammenligning/FUNKSJONSKART.md) | Funksjonssamanlikning mot andre nettsidebyggjarar med gap-analyse (på bokmål) |
 | [docs/sammenligning/LAERDOMMER.md](../../sammenligning/LAERDOMMER.md) | Korleis andre nettsidebyggjarar byggjer, og kva vi kan hente (arkitektur og mønster) (på bokmål) |
 | [docs/sammenligning/ELEMENTKART.md](../../sammenligning/ELEMENTKART.md) | Element og funksjonar: korleis dei blir tilbydde brukaren og korleis dei blir bygde (på bokmål) |
-| [docs/CHANGELOG.md](../../CHANGELOG.md) | Endringslogg per push (på bokmål) |
+| [docs/CHANGELOG.md](../../CHANGELOG.md) | Endringslogg per commit og push (eldre innslag på bokmål) |
 | [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Slik bidreg du: fork, grein, testar, pull request (på bokmål) |
 | [docs/adr/](../../adr/) | Arkitekturavgjerder med grunngjeving (på engelsk) |
 

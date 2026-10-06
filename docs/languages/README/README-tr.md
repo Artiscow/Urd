@@ -20,19 +20,19 @@ README çevirisi. Depo kökündeki ana sürüm İngilizcedir.
 > Urd, İskandinav mitolojisinde Yggdrasil'in dibinde oturup tanrıların kaderini belirleyen üç nornadan muhtemelen en yaşlısıdır. Nornalar birlikte oturur, kader ipliklerini eğirir ya da kaderi ağaç parçalarına kazır.
 > Urd, kendi web siteni ağacın kökünden eğirmek ve kazımak için bir araçtır.
 
-**Adı nasıl okunur:** *Urd* kabaca **uurd** diye okunur (Norveççe [ʉːɖ]). Ünlü, Türkçedeki "u" ile "ü" arasında bir sestir: dudaklar yuvarlak ve öne doğru. "rd" ise dilin ucu geriye kıvrılarak tek bir sese dönüşür. İngilizcedeki *weird* sözcüğü de aynı kökten gelir: Eski İngilizce *wyrd*, yani kader.
+**Adı nasıl okunur:** *Urd* [ʉːɖ], kabaca **uurd**.
 
-**Durum: geliştirme aşamasında - henüz kullanıma hazır değil.** Nereye geldiğimizi görmek için [yol haritasına](../../VEIKART.md) bak.
+**Durum: geliştirme aşamasında - henüz kullanıma hazır değil.** Nereye geldiğimizi görmek için [yol haritasına](../ROADMAP-en-GB.md) bak.
 
 ## Urd nedir?
 
 Urd, **klonladığın deponun kendisinin web siten olduğu** açık kaynaklı bir web sitesi kurucusudur - ve web sitesi kendi kurucusudur. Squarespace, Wix ve Publii'ye ücretsiz, statik, git ile sahip olunan bir alternatif.
 
-Sunucu yok. Veritabanı yok. Abonelik yok. Derleme süreci yok. Yalnızca kendi sahip olduğun okunabilir dosyalardan oluşan ve herhangi bir statik sunucunun (Cloudflare Pages, GitHub Pages, …) yayımlayabileceği bir git deposu.
+Sunucu yok. Veritabanı yok. Abonelik yok. Derleme süreci yok. Yalnızca kendi sahip olduğun okunabilir dosyalardan oluşan bir git deposu. Bugün site Cloudflare Pages üzerinde çalışır: sayfaları o sunar, `/admin` üzerinden giriş ve yayımlamayı da Functions üstlenir. Herhangi bir statik sunucudan (GitHub Pages, Netlify, kendi sunucun) yayımlanabilmesi v0.9 için planlanmıştır.
 
 ## Nasıl çalışır
 
-1. [urd-template](https://github.com/Artiscow/urd-template) şablonundan **kendi deponu oluştur** (GitHub'da «Use this template») ve statik bir sunucuya bağla: [kurulum kılavuzu](../setup-publication/SETUP-tr.md) her adımda yol gösterir.
+1. [urd-template](https://github.com/Artiscow/urd-template) şablonundan **kendi deponu oluştur** (GitHub'da «Use this template») ve Cloudflare Pages'e bağla: [kurulum kılavuzu](../setup-publication/SETUP-tr.md) her adımda yol gösterir.
 2. Siteni kurulum sihirbazıyla **kur** - ad, renkler, logo.
 3. `siten.org/admin` adresine giderek ve GitHub ile giriş yaparak **düzenle**. Kurucunun tamamı orada: sayfanın üzerine tıklayıp doğrudan yaz, blokları ızgarada serbestçe sürükle, bölümler ekle, arka planları, renkleri ve gezinmeyi düzenle.
 4. **Yayımla** - tek tıklama değişikliklerinle tek bir git commit oluşturur ve sunucu yeni sayfayı bir dakikadan kısa sürede yayımlar.
@@ -40,7 +40,7 @@ Sunucu yok. Veritabanı yok. Abonelik yok. Derleme süreci yok. Yalnızca kendi 
 
 İlk kurulumdan sonra admin sayfası web sitenin kontrol merkezidir. Sayfada gördüğün her şey oradan düzenlenebilir.
 
-Takvim (dört görünümlü, abone olunabilir akış), iletişim formu (mailto ya da kendi uç noktan) ve harita (gizlilik dostu OpenStreetMap), Bloklar panelindeki çekirdek bloklardır. Urd ayrıca deponda yaşayan ve adminden açılan **eklentilerle** genişletilebilir. Birlikte gelen tek eklenti İsveççe dil paketidir; o aynı zamanda eklenti yazanlar için örnektir. Kendi eklentini yapmak için [template/plugins/README.md](../../../template/plugins/README.md) dosyasına bak.
+Takvim (beş görünüm ve 34 tasarımda bir iCal akışı; etkinlik kartı, arama ve filtrelerle), iletişim formu (mailto ya da kendi uç noktan) ve harita (gizlilik dostu OpenStreetMap), Bloklar panelindeki çekirdek bloklardır. Urd ayrıca deponda yaşayan ve adminden açılan **eklentilerle** genişletilebilir. Birlikte gelen tek eklenti İsveççe dil paketidir; o aynı zamanda eklenti yazanlar için örnektir. Kendi eklentini yapmak için [template/plugins/README.md](../../../template/plugins/README.md) dosyasına bak.
 
 ## Dört söz
 
@@ -55,23 +55,25 @@ Düzenleyici ve motorun ziyaretçilere gösterdiği metinler Kuzey Sami dili, İ
 
 ## Belgeler
 
-Belgeler Norveççe yazılmıştır; aşağıdaki açıklamalar çevrilmiştir.
+Projenin ana dili İngilizcedir. Yalnızca Norveççe olan belgeler işaretlenmiştir; değişiklik günlüğü, iş listesi ve test listesinde eski kayıtlar Norveççe, yeniler İngilizcedir.
 
 | Belge | İçerik |
 |---|---|
-| [docs/VISJON.md](../../VISJON.md) | Urd'un ne olduğu, kimin için olduğu ve tüm kararları yöneten sözler (Norveççe) |
+| [Vizyon](../VISION-en-GB.md) | Urd'un ne olduğu, kimin için olduğu ve tüm kararları yöneten sözler (İngilizce) |
 | [docs/ARCHITECTURE.md](../../ARCHITECTURE.md) | Sistem genel bakışı: motor, düzenleyici, yayımlama akışı (İngilizce) |
 | [docs/SCHEMA.md](../../SCHEMA.md) | Veri modeli - her şeyin üzerine kurulduğu sözleşme (İngilizce) |
-| [docs/VEIKART.md](../../VEIKART.md) | İskeletten v1.0'a kadar aşamalar (Norveççe) |
+| [Yol haritası](../ROADMAP-en-GB.md) | İskeletten v1.0'a kadar aşamalar (İngilizce) |
 | [Kullanıcı kılavuzu](../user-guide/GUIDE-tr.md) | Site sahipleri için: düzenleyicinin kodsuz kullanımı |
-| [docs/UTVIKLING.md](../../UTVIKLING.md) | Urd'u geliştiren bizler için: kurulum, kurallar, sık yapılan işler (Norveççe) |
+| [Geliştirme](../DEVELOPMENT-en-GB.md) | Urd'u geliştiren bizler için: kurulum, kurallar, sık yapılan işler (İngilizce) |
 | [Yayımlama kurulumu](../setup-publication/SETUP-tr.md) | Tek seferlik yayımlama kurulumu: GitHub OAuth uygulaması + Cloudflare |
-| [docs/BACKLOG.md](../../BACKLOG.md) | Güncel görev listesi: yapılacaklar, hatalar ve öneriler (Norveççe) |
-| [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Sahibin kontrol listesi: test bekleyen teslim edilmiş işler (Norveççe) |
+| [Paylaşılan bir klasörden resimler](../setup-photos/PHOTOS-en-GB.md) | Bir Google Drive klasöründen, Google Fotoğraflar albümünden ya da Nextcloud paylaşımından arka plan resimleri ve gereken Cloudflare değişkenleri (İngilizce) |
+| [Takvim](../calendar-guide/CALENDAR-en-GB.md) | Site sahipleri için: takvim hizmetleri, toplantı bağlantıları, kayıt, haritalar ve Takvim bloğunun bir etkinlikten okudukları (İngilizce) |
+| [docs/BACKLOG.md](../../BACKLOG.md) | Güncel görev listesi: yapılacaklar, hatalar ve öneriler (eski kayıtlar Norveççe) |
+| [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Elle test kontrol listesi: test bekleyen teslim edilmiş işler (eski kayıtlar Norveççe) |
 | [docs/sammenligning/FUNKSJONSKART.md](../../sammenligning/FUNKSJONSKART.md) | Diğer web sitesi kurucularıyla özellik karşılaştırması ve boşluk analizi (Norveççe) |
 | [docs/sammenligning/LAERDOMMER.md](../../sammenligning/LAERDOMMER.md) | Diğer web sitesi kurucularının nasıl kurulduğu ve bizim neler alabileceğimiz (mimari ve desenler) (Norveççe) |
 | [docs/sammenligning/ELEMENTKART.md](../../sammenligning/ELEMENTKART.md) | Öğeler ve işlevler: kullanıcıya nasıl sunulduğu ve nasıl kurulduğu (Norveççe) |
-| [docs/CHANGELOG.md](../../CHANGELOG.md) | Her push için değişiklik günlüğü (Norveççe) |
+| [docs/CHANGELOG.md](../../CHANGELOG.md) | Her commit ve push için değişiklik günlüğü (eski kayıtlar Norveççe) |
 | [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Nasıl katkı verilir: fork, dal, testler, pull request (Norveççe) |
 | [docs/adr/](../../adr/) | Gerekçeleriyle mimari kararlar (İngilizce) |
 

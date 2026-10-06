@@ -98,6 +98,7 @@ We use Urd as an outside user, without shortcuts:
 
 - Create a real site (working name: Urd-Design) via the «Use this template» button, in its own repo with its own Cloudflare setup, set up ONLY by following [the setup guide](setup-publication/SETUP-en-GB.md). All friction that is discovered is a finding that shall be fixed.
 - Build the site to completion through admin alone.
+- Hosting beyond Cloudflare Pages: the site served from any static host (GitHub Pages, Netlify, an own server), with a way for the sign-in and the publishing from `/admin` to work there (added 6 October 2026; details in BACKLOG).
 - Then release an Urd update that contains a **real block change (v1→v2 with migration)**, and run the update button on the Urd-Design site.
 
 Up to v0.6, `template/` is both workshop and demo (urdweb); that is fine as long as the example content is kept presentable. From v0.6 the template is its own repo, and Urd-Design becomes the first site that lives as a real user's.

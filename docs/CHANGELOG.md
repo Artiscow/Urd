@@ -27,6 +27,14 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.42 - The READMEs brought up to date - 6 October 2026
+
+- The pronunciation in the English and Turkish READMEs ran to a paragraph on the vowel, the «rd» and the word's history. It is the phonetic form and a rough spelling, «*Urd* [ʉːɖ], roughly **oord**», and the English heading's misspelling «Pronounciation» is corrected.
+- The READMEs said the site can be served by any static host, GitHub Pages included, though the sign-in and the publishing from `/admin` run on Cloudflare Pages Functions. All five say what works today and that any static host is planned for v0.9, which BACKLOG, ROADMAP and VEIKART now carry as a v0.9 item.
+- The calendar was described as a feed with four views; it reads five views and 34 designs with an event card, search and filters. The English, Turkish and Sami READMEs linked the Norwegian roadmap from their status line; they link the English one.
+- The language notes said the documents are in Norwegian and, in the Norwegian README, that Norwegian is the working language. They say English is the canonical language and that the change log, the backlog and the test checklist hold older entries in Norwegian. The Nynorsk, Turkish and Sami tables gain the calendar and photo guides, and the Turkish and Sami ones link the English vision, roadmap and development documents.
+- The Northern Sami README called Urd's files unreadable («lohkanmeahttun»), static «stáhtalaš» (governmental), the gap analysis a shoe analysis («gapme») and the change log «in the name of» each push, and copied Norwegian «Ingen server» word for word (found by reading it through). Those and a handful of inflections are corrected; the mythology paragraph and three terms are left for a native speaker, under the machine-translation note.
+
 ### 0.7.0.41 - The later phases back in BACKLOG - 6 October 2026
 
 - BACKLOG had no v0.8, v0.9, v1.0 or after-1.0 items: the commit 0.7.21.1 (3 October 2026) removed the sections «Til v0.8 og senere faser», «Moderniser til native/CSS» and «Etter v1.0 (horisont)», 59 lines, along with the stages it rewrote, and its entry did not say so (found 6 October 2026). The three sections are restored word for word from the version before that commit, between the v0.7 milestone and «Liten huskeliste»; none of their items has been built since.
