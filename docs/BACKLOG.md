@@ -313,6 +313,7 @@ What comes, in order:
 - [ ] Legg til flere keyboard shortcuts - ctrl+x
 - [ ] Å dra et element mot toppen eller bunnen av siden automatisk scroller siden opp eller ned
 - [ ] Dobbeltklikmeny/elementmeny: når man skriver så skal det første valget bli highlighetet - det valget som man velger om man kun skriver og trykker enter skal være highlightet
+- [ ] ekstra valgfri nav på bunnen/siden av siden - slik som på en datamaskin
 
 ## Kjente begrensninger (dokumentert, ingen fiks planlagt)
 
