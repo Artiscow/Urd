@@ -152,10 +152,8 @@ export function ta(key, params) {
 }
 
 /**
- * The plural form a count takes in the visitor language, and the key that
- * holds it: the Intl.PluralRules category ('one'/'two'/'few'/'many'/'other';
- * Northern Sami has a dual form) when the dictionary has a key for it, else
- * 'other'.
+ * The plural form a count takes in the visitor language, and the key that holds it.
+ * The form is the Intl.PluralRules category ('one'/'two'/'few'/'many'/'other'; Northern Sami has a dual form) when the dictionary has a key for it, else 'other'.
  */
 export function pluralForm(baseKey, n) {
   let cat = 'other';
@@ -165,8 +163,8 @@ export function pluralForm(baseKey, n) {
 }
 
 /**
- * Plural lookup: the key of the count's plural form (pluralForm). The count
- * is always available as {n}.
+ * Plural lookup: the key of the count's plural form (pluralForm).
+ * The count is always available as {n}.
  */
 export function tp(baseKey, n, params) {
   const { key } = pluralForm(baseKey, n);

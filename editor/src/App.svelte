@@ -1331,7 +1331,6 @@
   function calFieldStyleOf() {
     return selectedBlock?.props.fieldStyle?.[calField] ?? {};
   }
-  /** A design with a view of its own writes that view too, so an engine without the design still draws the right data. */
   /** The announcement's own words as plain text, for the fields in its group; the preview stores them as HTML. */
   function calNoticeWords(key) {
     const html = selectedBlock.props.texts?.[key];
@@ -1348,6 +1347,7 @@
     setBlockProp('texts', Object.keys(texts).length ? texts : undefined);
   }
 
+  /** A design with a view of its own writes that view too, so an engine without the design still draws the right data. */
   function setCalendarDesign(id) {
     const def = calDesign(id);
     // A «Coming up» design starts with three events in the card and three under «Later», unless the counts are already set.

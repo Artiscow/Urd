@@ -8,13 +8,13 @@
 export const CAL_CLOCKS = ['24', '12'];
 export const CAL_WEEK_STARTS = ['auto', 'mon', 'sun'];
 
-/** A language tag Intl accepts: the legacy `no` is Bokmål, anything unknown the browser's own. */
+/** A language tag Intl accepts: the legacy `no` is Bokmål, and an unknown tag is Bokmål too, so the site never follows the visitor's browser (ADR-0012). */
 function localeOf(lang) {
   const tag = lang === 'no' ? 'nb' : lang;
   try {
-    return Intl.getCanonicalLocales(tag)[0];
+    return Intl.getCanonicalLocales(tag)[0] ?? 'nb';
   } catch {
-    return undefined;
+    return 'nb';
   }
 }
 
@@ -28,7 +28,7 @@ export function calWeekStart(props, lang) {
   if (props?.weekStart === 'sun') return 0;
   if (props?.weekStart === 'mon') return 1;
   try {
-    const locale = new Intl.Locale(localeOf(lang) ?? 'nb');
+    const locale = new Intl.Locale(localeOf(lang));
     const info = typeof locale.getWeekInfo === 'function' ? locale.getWeekInfo() : locale.weekInfo;
     // Intl counts Monday as 1 and Sunday as 7.
     if (info?.firstDay === 7) return 0;

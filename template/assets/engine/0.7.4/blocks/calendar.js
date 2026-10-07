@@ -225,7 +225,7 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     const copy = node.cloneNode(true);
     for (const value of copy.querySelectorAll('.urd-cal-n')) value.replaceWith(params(key).includes(value.dataset.p) ? `{${value.dataset.p}}` : value.textContent);
     for (const part of copy.querySelectorAll('[contenteditable]')) part.removeAttribute('contenteditable');
-    return copy.innerHTML.replace(/​/g, '');
+    return copy.innerHTML.replace(/\u200b/g, '');
   };
   /** An empty text's hint in the editor: a removed line's default words, or the prompt of a text that has no words of its own. */
   const hintFor = (node, key, form) => {
@@ -253,7 +253,7 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     node.classList.toggle('urd-cal-blank', blank);
     if (blank) {
       node.replaceChildren();
-      hintFor(node, key, form);
+      if (editable) hintFor(node, key, form);
       return;
     }
     if (own) {
@@ -274,11 +274,11 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
       // In the Clean view the words are plain text and the link around them works (urd.js switches this with the handles).
       node.classList.add('urd-text');
       node.contentEditable = clean() ? 'false' : 'true';
-      // The words stop the press, so a link around them is never followed while they are edited.
+      // The words stop the press, so a link around them is never followed and a fold never toggles while they are edited.
       node.addEventListener('click', (event) => {
         if (clean()) return;
         event.stopPropagation();
-        if (node.closest('a[href]')) event.preventDefault();
+        if (node.closest('a[href], summary')) event.preventDefault();
       });
       node.addEventListener('input', () => {
         const { form } = TEXTS.get(node);
@@ -923,8 +923,10 @@ function openCard(dialog, from) {
     event.preventDefault();
     dialog.close('escape');
   }, { signal: watch.signal });
+  // The editor's text toolbar, colour picker and menus lie outside the card and work on its words.
   document.addEventListener('pointerdown', (event) => {
-    if (!dialog.contains(event.target)) dialog.close();
+    if (dialog.contains(event.target) || event.target.closest?.('.urd-text-toolbar, .urd-cp, .urd-dd-menu')) return;
+    dialog.close();
   }, { capture: true, signal: watch.signal });
   OPEN_CARDS.set(dialog, from);
   dialog.addEventListener('close', () => {

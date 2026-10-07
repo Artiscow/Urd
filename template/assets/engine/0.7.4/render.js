@@ -375,12 +375,9 @@ function unfoldedHeight(el) {
 }
 
 /**
- * The editor's own parts inside a block: the image adders, the «+ Product»
- * card, the placeholders of empty fields and the hints of a calendar's
- * removed or empty lines. They are drawn in the preview
- * but are never part of the page, so the push and the fit measure a block
- * without them; base.css hides the same list under `.urd-fit-measure`, and a
- * test holds the two equal.
+ * The editor's own parts inside a block: the image adders, the «+ Product» card, the placeholders of empty fields and the hints of a calendar's removed or empty lines.
+ * They are drawn in the preview but are never part of the page, so the push and the fit measure a block without them.
+ * base.css hides the same list under `.urd-fit-measure`, and a test holds the two equal.
  */
 export const EDITOR_ONLY = '.urd-collection-image-adder, .urd-product-adder, .urd-collection-placeholder:empty, .urd-cal-gone';
 
