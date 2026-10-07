@@ -22,6 +22,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { ENGINE_VERSION, ENGINE_DIR } from './_engine.mjs';
+import { releaseHeaders } from '../scripts/release-headers.mjs';
 
 const ENTRY = 'boot.js';
 const TEMPLATE = new URL('../template/', import.meta.url);
@@ -176,16 +177,22 @@ test('the shells in assets/urd/ re-export from the current engine version', () =
 });
 
 test('_headers has the version-neutral immutable rules', () => {
-  const headers = readFileSync(new URL('_headers', TEMPLATE), 'utf8');
-  for (const rule of ['/assets/engine/*', '/assets/styles/base.css', '/media/*']) {
+  // The template's _headers is the monorepo's with the engine rule swapped at the release (scripts/release-headers.mjs).
+  // The monorepo revalidates the engine, whose files change between releases under the same folder.
+  const monorepo = readFileSync(new URL('_headers', TEMPLATE), 'utf8');
+  const block = (headers, rule) => {
     const idx = headers.indexOf(`\n${rule}\n`);
     assert.ok(idx !== -1, `_headers is missing the rule ${rule}`);
-    const block = headers.slice(idx, headers.indexOf('\n\n', idx + 1) === -1 ? undefined : headers.indexOf('\n\n', idx + 1));
-    assert.match(block, /immutable/, `the ${rule} block in _headers is missing immutable`);
+    const end = headers.indexOf('\n\n', idx + 1);
+    return headers.slice(idx, end === -1 ? undefined : end);
+  };
+  for (const [headers, rule] of [[releaseHeaders(monorepo), '/assets/engine/*'], [monorepo, '/assets/styles/base.css'], [monorepo, '/media/*']]) {
+    assert.match(block(headers, rule), /immutable/, `the ${rule} block in _headers is missing immutable`);
   }
+  assert.match(block(monorepo, '/assets/engine/*'), /Cache-Control: no-cache$/, 'the monorepo revalidates the engine');
   // The rule must be version-neutral: _headers is hand-editable (ADR-0006)
   // and must never need changes at an engine bump.
-  assert.ok(!headers.includes(`/assets/engine/${ENGINE_VERSION}`), '_headers must not contain a versioned engine path');
+  assert.ok(!monorepo.includes(`/assets/engine/${ENGINE_VERSION}`), '_headers must not contain a versioned engine path');
 });
 
 test('the base.css stamp in the HTML shells matches the file content', () => {

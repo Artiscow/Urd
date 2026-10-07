@@ -36,14 +36,13 @@
 /media/*
   Cache-Control: public, max-age=31536000, immutable
 
-# The engine is version-addressed (assets/engine/<version>/..., ADR-0013): a
-# new engine gets a new folder, so the modules can be cached forever. The rule
-# is DELIBERATELY version-neutral (/assets/engine/* covers any versioned
-# folder), so this hand-edited file never needs changing on an engine bump.
-# The stable plugin API shells in /assets/urd/ stay OUTSIDE and revalidate
-# normally.
+# The engine is version-addressed (assets/engine/<version>/..., ADR-0013), but in the Urd monorepo its files change between releases under the same folder name.
+# A deployment of this folder (the test site) or a local Wrangler server therefore asks before every use (no-cache: a 304 when the file is unchanged).
+# The release sync writes the template's own block in its place (scripts/release-headers.mjs): there every release gets a new folder, so the modules are cached forever.
+# The rule is version-neutral (/assets/engine/* covers any versioned folder).
+# The stable plugin API shells in /assets/urd/ stay OUTSIDE and revalidate normally.
 /assets/engine/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: no-cache
 
 # base.css is always referenced with the content stamp ?v=<hash> from the HTML
 # shells: new content gives a new URL, so it too can be cached forever.

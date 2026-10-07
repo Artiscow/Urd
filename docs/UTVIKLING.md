@@ -79,7 +79,7 @@ tests/      node --test-tester (foreløpig migreringskontrakten)
 - **Nytt bakgrunnslag:** samme mønster i `template/assets/engine/backgrounds/`.
 - **Ny seksjonspreset:** en datafabrikk (`create()` som returnerer en gyldig seksjon), ingen egen kodevei.
 - **Endre datamodellen:** se regel 3 og 4 over.
-- **Teste publiseringslaget lokalt (fra v0.2):** `npx wrangler pages dev template` og sett miljøvariablene fra [ADR-0003](adr/0003-publishing-via-github-oauth-and-pages-functions.md) i en `.dev.vars`-fil (gitignoreres).
+- **Teste publiseringslaget lokalt (fra v0.2):** `npx wrangler pages dev template` og sett miljøvariablene fra [ADR-0003](adr/0003-publishing-via-github-oauth-and-pages-functions.md) i en `.dev.vars`-fil (gitignoreres). Wrangler bruker `_headers`, så motorfilene sjekkes på nytt der som på testsiden.
 
 ## Versjonering
 
@@ -99,7 +99,7 @@ Sannhetskilden er `engine`-feltet i `template/urd.json`. Git-taggen (`v0.2.0`) o
 3. `npm run build` i `editor/`, committ output (bundelen bærer motorstien).
 4. Oppdater `docs/CHANGELOG.md` (utgivelsesoverskrift `## [x.y.z] - dato`) og `editor/package.json` til samme versjon.
 5. Tagg utgivelsen (`v0.x.y`) og publiser en GitHub-release på taggen.
-6. Release-Action-en (`.github/workflows/release.yml`) kjører da automatisk: validerer versjonskonsistens (`scripts/check-release.mjs`: engine == tagg == CHANGELOG-overskrift == package.json), kjører testene, og synker innholdet av `template/` til `urd-template`-repoet som ÉN squashet commit («Urd v0.x.y») med samme tagg. Taggen i malrepoet er oppdaterens sjekksum-baseline og flyttes aldri.
+6. Release-Action-en (`.github/workflows/release.yml`) kjører da automatisk: validerer versjonskonsistens (`scripts/check-release.mjs`: engine == tagg == CHANGELOG-overskrift == package.json), kjører testene, og synker innholdet av `template/` til `urd-template`-repoet som ÉN squashet commit («Urd v0.x.y») med samme tagg. I kopien bytter `scripts/release-headers.mjs` motorregelen i `_headers` til malens (lagres for alltid): hovedrepoets egen regel lar nettleseren sjekke motorfilene på nytt, siden de endres mellom utgivelser under samme mappe (ADR-0013-tillegg). En manuell kjøring av Action-en startes med workflowen fra `main`; `check-release.mjs` stopper en kjøring fra en eldre ref, der workflowen mangler byttet. Taggen i malrepoet er oppdaterens sjekksum-baseline og flyttes aldri.
 
 Forutsetninger (engangsoppsett, gjøres FØR første utgivelse; før dette finnes verken malrepoet eller «Use this template»-knappen, og lenkene til `urd-template` i dokumentasjonen gir 404):
 

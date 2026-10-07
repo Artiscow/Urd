@@ -81,7 +81,7 @@ tests/      node --test tests (for now the migration contract)
 - **New background layer:** the same pattern in `template/assets/engine/backgrounds/`.
 - **New section preset:** a data factory (`create()` that returns a valid section), no separate code path.
 - **Change the data model:** see rules 3 and 4 above.
-- **Test the publishing layer locally (from v0.2):** `npx wrangler pages dev template` and set the environment variables from [ADR-0003](../adr/0003-publishing-via-github-oauth-and-pages-functions.md) in a `.dev.vars` file (gitignored).
+- **Test the publishing layer locally (from v0.2):** `npx wrangler pages dev template` and set the environment variables from [ADR-0003](../adr/0003-publishing-via-github-oauth-and-pages-functions.md) in a `.dev.vars` file (gitignored). Wrangler applies `_headers`, so the engine files are revalidated there as on the test site.
 
 ## Versioning
 
@@ -101,7 +101,7 @@ The source of truth is the `engine` field in `template/urd.json`. The git tag (`
 3. `npm run build` in `editor/`, commit the output (the bundle carries the engine path).
 4. Update `docs/CHANGELOG.md` (the release heading `## [x.y.z] - date`) and `editor/package.json` to the same version.
 5. Tag the release (`v0.x.y`) and publish a GitHub release on the tag.
-6. The release Action (`.github/workflows/release.yml`) then runs by itself: it validates the version consistency (`scripts/check-release.mjs`: engine == tag == CHANGELOG heading == package.json), runs the tests, and syncs the content of `template/` to the `urd-template` repo as ONE squashed commit («Urd v0.x.y») with the same tag. The tag in the template repo is the updater's checksum baseline and is never moved.
+6. The release Action (`.github/workflows/release.yml`) then runs by itself: it validates the version consistency (`scripts/check-release.mjs`: engine == tag == CHANGELOG heading == package.json), runs the tests, and syncs the content of `template/` to the `urd-template` repo as ONE squashed commit («Urd v0.x.y») with the same tag. In the copy, `scripts/release-headers.mjs` swaps the engine rule of `_headers` to the template's (cached forever): the monorepo's own rule revalidates the engine, whose files change between releases under the same directory (ADR-0013 addendum). A manual run of the Action is started with the workflow from `main`; `check-release.mjs` stops a run from an older ref, whose workflow lacks the swap. The tag in the template repo is the updater's checksum baseline and is never moved.
 
 Prerequisites (a one-time setup, done BEFORE the first release; until then neither the template repo nor the «Use this template» button exists, and the links to `urd-template` in the documentation give 404):
 

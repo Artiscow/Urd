@@ -26,6 +26,13 @@ if (`v${engine}` !== tag) {
   errors.push(`tag ${tag} does not match urd.json.engine (${engine})`);
 }
 
+// The release Action runs the workflow of the ref it was started from: a release runs its tag's, a manual run the chosen ref's.
+// An older workflow skips steps a newer tag needs (the template's _headers, scripts/release-headers.mjs), so only main's or the synced tag's is accepted.
+const workflowRef = process.env.GITHUB_WORKFLOW_REF;
+if (workflowRef && !workflowRef.endsWith(`@refs/tags/${tag}`) && !workflowRef.endsWith('@refs/heads/main')) {
+  errors.push(`the release workflow ran from ${workflowRef.slice(workflowRef.indexOf('@') + 1)}; start it from main or from the tag ${tag}`);
+}
+
 // The engine folder must exist under the name the engine field gives
 // (ADR-0013); the remaining invariants (shells, HTML references) are covered
 // by the test suite, which the Action runs after this check.

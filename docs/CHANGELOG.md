@@ -27,6 +27,14 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.43 - The test site and local server always load the newest engine - 7 October 2026
+
+- The test site deployed from the monorepo could stay blank after a push until the browser's cache was emptied, and the admin preview there ran an old engine under a new editor. `_headers` told browsers to keep the engine files for a year without asking, while in the monorepo they change between releases under the same folder (53 commits under `0.7.4/` since the release). The monorepo's `template/_headers` revalidates the engine (`Cache-Control: no-cache`), so an unchanged file costs a 304; a local `wrangler pages dev` follows the same rule, and `dev-server.py` is unchanged.
+- The release writes the template's own rule back: `release.yml` runs the new `scripts/release-headers.mjs` on its copy of `_headers`, which swaps in the immutable engine block byte for byte as released, and stops the run before the commit unless the copy's engine rule is the immutable one. `tests/release-headers.test.mjs` pins the result to the template's released blob, so released and published sites keep their rule and the updater shows no «change by hand» note.
+- `scripts/check-release.mjs` accepts only the release workflow of `main` or of the synced tag, since a manual run with an older workflow would skip the swap.
+- ADR-0013 gets an addendum (immutable only in a release), and ARCHITECTURE.md, the development document in English and Norwegian and AGENTS.md's release paragraph describe the swap.
+- BACKLOG: the URGENT item and the v0.9 item on an emptied browser cache are delivered. Two v0.9 items are added under the updater hardening: a page that heals itself after an update on released sites (a boot guard, with the research behind this commit), and «Undo the last publish» reverting an Urd update committed after the publish.
+
 ### 0.7.19.18 - All calendar texts follow the site language and can be edited - 7 October 2026
 
 - About 40 visible words in the 34 built calendar designs bypassed the rewritable texts, every text with a number among them. They are rewritable texts whose values stand as islands that a rewrite keeps as `{n}`, `{date}` and the like, stored per plural form (`CAL_TEXTS`, `CAL_PLURAL_TEXTS` and `CAL_TEXT_PARAMS` in calendar-designs.js, `ui.tx` in calendar.js; SCHEMA.md).

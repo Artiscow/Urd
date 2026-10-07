@@ -99,6 +99,17 @@ jobs:
           # in, so files deleted in template/ also disappear from the template repo.
           find urd-template -mindepth 1 -maxdepth 1 -not -name '.git' -exec rm -rf {} +
           cp -a template/. urd-template/
+          # The template caches the engine forever and the monorepo revalidates it (ADR-0013 addendum), so the copy gets the template's engine rule.
+          # A tag from before the script already holds that rule.
+          if [ -f scripts/release-headers.mjs ]; then
+            node scripts/release-headers.mjs urd-template/_headers
+          fi
+          # The run stops here, before any commit, unless the template's engine rule is the immutable one.
+          rule=$(awk '$0 == "/assets/engine/*" { getline; print; exit }' urd-template/_headers)
+          if [ "$rule" != "  Cache-Control: public, max-age=31536000, immutable" ]; then
+            echo "ERROR: the template's engine rule is '$rule', not the immutable one." >&2
+            exit 1
+          fi
           cd urd-template
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'

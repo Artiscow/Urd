@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring.
 
+### Test batch (0.7.0.43): the test site and local server always load the newest engine
+
+- [ ] After this push, empty the cache once in each browser that has visited the test site (urdweb) before: the old engine files were stored for a year and are not asked for again until then
+- [ ] Then a change to an engine file pushed to the test site: a plain reload shows it, the page is never blank, and the admin preview runs the new engine without a hard reload
+- [ ] The browser's Network tab on the test site: the engine files show `Cache-Control: no-cache` and answer 304 on a reload; `base.css` and the pictures under `/media/` still show `immutable`
+- [ ] A missing engine file on the test site (for example `/assets/engine/0.0.0/x.js`): a 404 without the year-long rule, as it answers locally in Wrangler
+- [ ] The older item on the deployment of 0.6.9 to urdweb expects `immutable` on an engine file: from this push that holds for released sites (urd-web) only, and the test site shows `no-cache`
+- [ ] At the next release: the template repo's `_headers` is unchanged (git blob `a20e6b5…`), a published site's Updates panel shows no `_headers` note, and an engine file on the published site still shows `immutable`
+
 ### Test batch (0.7.19.18): all calendar texts follow the site language and can be edited
 
 **The words in the site's language**

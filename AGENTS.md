@@ -36,7 +36,7 @@ If CI's build-conformity check fails with a diff inside framework code (the Svel
 
 CI runs the same three plus the build-conformity check (tests.yml), CodeQL scans on push and weekly, dependency-review runs on PRs, and release.yml syncs template/ to the template repo at releases, gated by `scripts/check-release.mjs`. Two recurring CodeQL pitfalls: (1) never check a URL with a substring (`.includes('vert.no')`), parse the URL and compare the host exactly; (2) use anchored regexes for URL and data validation, which CodeQL recognises as barriers.
 
-**At a release, a fourth step applies:** `node scripts/check-release.mjs v<version>` must be green in full mode (tag == `urd.json.engine` == CHANGELOG release heading == `editor/package.json`, and the engine directory exists) BEFORE anything is tagged.
+**At a release, a fourth step applies:** `node scripts/check-release.mjs v<version>` must be green in full mode (tag == `urd.json.engine` == CHANGELOG release heading == `editor/package.json`, and the engine directory exists) BEFORE anything is tagged. The monorepo's `template/_headers` revalidates the engine (`no-cache`), and the release Action writes the template's immutable rule into its copy (`scripts/release-headers.mjs`); never set the engine rule to immutable in the monorepo, and change the release block in the script (and the pinned blob in `tests/release-headers.test.mjs`) only when the template's `_headers` is meant to change.
 
 ## Non-negotiable rules
 
