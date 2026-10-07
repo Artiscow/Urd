@@ -10,8 +10,10 @@ import { engineImport } from './_engine.mjs';
 
 const {
   CAL_DESIGNS, CAL_VIEWS, CAL_FIELDS, CAL_TEXTS, CAL_SIZE, CAL_MODULES,
-  CAL_SWITCH_VIEWS, calSwitcher, calFolds, calProgramHref, CAL_OPTIONS, calOptionDefs, calOptions, CAL_SCALE, calScale, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calTextHtml, calHasTextOverrides,
+  CAL_SWITCH_VIEWS, calSwitcher, calFolds, calProgramHref, CAL_OPTIONS, calOptionDefs, calOptions, CAL_SCALE, calScale, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calHasTextOverrides,
+  CAL_PLURAL_TEXTS, CAL_CONTENT_TEXTS, CAL_HINT_TEXTS, CAL_TEXT_PARAMS, calTextSlot, calBlankHtml, calTextValue, calSplitTokens, calResetTexts,
 } = await engineImport('calendar-designs.js');
+import { readFileSync } from 'node:fs';
 
 const plain = CAL_DESIGNS[0];
 const { calendarThumb, CAL_THUMB_IDS } = await engineImport('calendar-thumb.js');
@@ -100,19 +102,109 @@ test('calFieldCss: only the set and valid parts are written', () => {
   assert.deepEqual(calFieldCss({ italic: 'yes', underline: 0, color: 'url(x)' }), {});
 });
 
-test('calTextHtml and calHasTextOverrides: blank or missing text means the default words', () => {
-  assert.equal(calTextHtml(undefined, 'next'), null);
-  assert.equal(calTextHtml({ next: '   ' }, 'next'), null);
-  assert.equal(calTextHtml({ next: '<b>Neste</b>' }, 'next'), '<b>Neste</b>');
+test('calBlankHtml: what an emptied editable text leaves holds no words', () => {
+  for (const blank of [undefined, null, false, '', '   ', '&nbsp;', '&#160;', '<br>', '<div><br></div>', '<b></b> ']) assert.equal(calBlankHtml(blank), true, String(blank));
+  for (const words of ['<b>Neste</b>', 'x', '{n}']) assert.equal(calBlankHtml(words), false, words);
+  // Linear on markup that never closes.
+  assert.equal(calBlankHtml('<'.repeat(20000)), false);
+});
+
+test('calTextValue: the owner\'s words, a removed content line, or the default', () => {
+  assert.equal(calTextValue(undefined, 'next'), null);
+  assert.equal(calTextValue({ next: '   ' }, 'next'), null);
+  assert.equal(calTextValue({ next: '<br>' }, 'next'), null, 'an emptied word is the default again');
+  assert.equal(calTextValue({ next: '<b>Neste</b>' }, 'next'), '<b>Neste</b>');
+  assert.equal(calTextValue({ series: false }, 'series'), false, 'a content line the owner removed');
+  assert.equal(calTextValue({ next: false }, 'next'), null, 'false means nothing on a word that is not content');
+  assert.equal(calTextValue({ 'inDays.other': 'Om {n} netter' }, 'inDays', 'other'), 'Om {n} netter');
+  assert.equal(calTextValue({ 'inDays.other': 'Om {n} netter' }, 'inDays', 'one'), null, 'each plural form has its own words');
+  assert.equal(calTextValue({ unitDays: 'døgn' }, 'unitDays', 'one'), 'døgn', 'words written before the text had forms count for every form');
+  assert.equal(calTextValue({ unitDays: 'døgn', 'unitDays.one': 'døgnet' }, 'unitDays', 'one'), 'døgnet');
+});
+
+test('calTextSlot and calSplitTokens: the slot a text is stored under, and its placeholders', () => {
+  assert.equal(calTextSlot('count', 'other'), 'count.other');
+  assert.equal(calTextSlot('next', 'other'), 'next');
+  assert.equal(calTextSlot('count'), 'count');
+  assert.deepEqual(calSplitTokens('Om {n} dager', ['n']), ['Om ', { name: 'n' }, ' dager']);
+  assert.deepEqual(calSplitTokens('Vis alle {n} ({m} til)', ['n', 'm']), ['Vis alle ', { name: 'n' }, ' (', { name: 'm' }, ' til)']);
+  assert.deepEqual(calSplitTokens('{d}d {h}t', ['d', 'h', 'm']), [{ name: 'd' }, 'd ', { name: 'h' }, 't']);
+  assert.deepEqual(calSplitTokens('Om {x} dager', ['n']), ['Om {x} dager'], 'a placeholder the text does not have stays words');
+  assert.deepEqual(calSplitTokens('', ['n']), []);
+});
+
+test('calHasTextOverrides and calResetTexts: rewrites and removed lines count, the announcement\'s own words are kept', () => {
+  const apSeries = calDesign('apSeries');
   assert.equal(calHasTextOverrides(plain, undefined), false);
   assert.equal(calHasTextOverrides(plain, { next: '' }), false);
   assert.equal(calHasTextOverrides(plain, { later: 'Siden' }), true);
+  assert.equal(calHasTextOverrides(plain, { 'inDays.other': 'Om {n} netter' }), true, 'a plural form counts');
+  assert.equal(calHasTextOverrides(apSeries, { series: false }), true, 'a removed line counts');
+  assert.equal(calHasTextOverrides(apSeries, { noticeTitle: 'Stengt i høstferien' }), false, 'the announcement is the owner\'s own text, not a rewrite');
+  assert.equal(calResetTexts({ later: 'Siden', series: false }), undefined);
+  assert.deepEqual(calResetTexts({ later: 'Siden', noticeTitle: 'Stengt', noticeText: '<br>' }), { noticeTitle: 'Stengt' });
+});
+
+test('every design with an announcement lists its words, «Read it all» on a cut text included', () => {
+  const noticed = CAL_DESIGNS.filter((design) => design.notice);
+  assert.ok(noticed.length >= 3);
+  for (const design of noticed) {
+    for (const key of ['noticeLabel', 'noticeTitle', 'noticeText', 'readWhole', 'moreInfo']) assert.ok(design.texts.includes(key), `${design.id} lists ${key}`);
+  }
+  assert.equal(calHasTextOverrides(calDesign('noticeboard'), { readWhole: 'Hele teksten' }), true);
+});
+
+test('the text classes name texts there are, and every placeholder is the dictionary\'s', async () => {
+  for (const key of [...CAL_PLURAL_TEXTS, ...CAL_CONTENT_TEXTS, ...Object.keys(CAL_HINT_TEXTS), ...Object.keys(CAL_TEXT_PARAMS)]) assert.ok(key in CAL_TEXTS, key);
+  for (const key of Object.keys(CAL_HINT_TEXTS)) assert.equal(CAL_TEXTS[key], null, `${key} has no words of its own`);
+  for (const lang of ['nb', 'en-GB', 'tr']) {
+    const site = (await engineImport(`locales/site/${lang}.js`)).default.strings;
+    const admin = (await engineImport(`locales/admin/${lang}.js`)).default.strings;
+    for (const hint of Object.values(CAL_HINT_TEXTS)) assert.ok(hint in admin, `${lang} admin key ${hint}`);
+    for (const [key, base] of Object.entries(CAL_TEXTS)) {
+      if (!base) continue;
+      const forms = CAL_PLURAL_TEXTS.includes(key) ? Object.keys(site).filter((k) => k.startsWith(`${base}.`)) : [base];
+      assert.ok(forms.length && forms.every((k) => k in site), `${lang} site key ${base}`);
+      for (const form of forms) {
+        const tokens = [...site[form].matchAll(/\{([a-z]+)\}/gi)].map((m) => m[1]).sort();
+        assert.deepEqual(tokens, [...(CAL_TEXT_PARAMS[key] ?? [])].sort(), `${lang} ${form}: placeholders`);
+      }
+    }
+  }
+});
+
+test('the renderers write no words, no clock halves and no capitals of their own', () => {
+  const dir = new URL('../template/assets/engine/', import.meta.url);
+  const engine = readFileSync(new URL('../template/urd.json', import.meta.url), 'utf8');
+  const version = JSON.parse(engine).engine;
+  const read = (name) => readFileSync(new URL(`${version}/${name}`, dir), 'utf8');
+  const files = ['blocks/calendar.js', 'blocks/calendar-list.js', 'blocks/calendar-cards.js', 'blocks/calendar-next.js', 'blocks/calendar-time.js', 'blocks/calendar-more.js', 'calendar-format.js'];
+  for (const name of files) {
+    const src = read(name);
+    assert.doesNotMatch(src, /['"`](?:am|pm)['"`]/, `${name}: a clock half written in the code`);
+    assert.doesNotMatch(src, /\.to(?:Locale)?UpperCase\(/, `${name}: capitals made in the code (the style sheet follows the language)`);
+    // A percentage for a reader is written by the language («45 %», «%45»); a CSS width (`${n}%`) is no text.
+    assert.doesNotMatch(src, /\}\s+%`/, `${name}: a percentage written in the code`);
+  }
+  // A design's words are drawn through ui.tx, so the owner can rewrite them; the dictionary is read directly only for a screen reader's label.
+  const allowed = new Set(['calendar.moreInfo', 'calendar.count', 'calendar.unnamed']);
+  const wordKeys = new Set(Object.values(CAL_TEXTS).filter(Boolean));
+  for (const name of files.slice(1, 6)) {
+    for (const m of read(name).matchAll(/\bt[p]?\('(calendar\.[A-Za-z]+)'/g)) {
+      assert.ok(!wordKeys.has(m[1]) || allowed.has(m[1]), `${name}: ${m[1]} drawn without ui.tx`);
+    }
+    // Content a design ships with goes through ui.line, so the owner can remove it.
+    for (const key of CAL_CONTENT_TEXTS) assert.doesNotMatch(read(name), new RegExp(`ui\\.tx\\('${key}'`), `${name}: ${key} drawn as a word, not as a line`);
+  }
 });
 
 test('the dictionaries hold every key the designs point at', async () => {
   const site = (await engineImport('locales/site/nb.js')).default.strings;
   const admin = (await engineImport('locales/admin/nb.js')).default.strings;
-  for (const key of Object.values(CAL_TEXTS)) assert.ok(key in site, `site key ${key}`);
+  for (const [key, base] of Object.entries(CAL_TEXTS)) {
+    if (!base) continue;
+    assert.ok(CAL_PLURAL_TEXTS.includes(key) ? `${base}.other` in site : base in site, `site key ${base}`);
+  }
   for (const design of CAL_DESIGNS) {
     assert.ok(design.labelKey in admin, `admin key ${design.labelKey}`);
     for (const slot of design.slots) {

@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
 const {
-  calClock12, calWeekStart, formatClock, leadDays, orderWeekdays, startOfWeek, isMultiDay, timeRange,
+  calClock12, calWeekStart, formatClock, formatHour, formatPercent, daysBetween, leadDays, orderWeekdays, startOfWeek, isMultiDay, timeRange,
   zoneValid, zoneOffsetMs, shiftToZone, zoneDiffers, localOffsetMs,
   dateTimeAttr,
 } = await engineImport('calendar-format.js');
@@ -27,12 +27,35 @@ test('calWeekStart: the choice of the block first, then the language, Monday for
   assert.equal(calWeekStart({}, 'not a language'), 1);
 });
 
-test('formatClock: 24 hours with two digits, 12 hours with am and pm', () => {
+/** Intl writes narrow and non-breaking spaces between its parts: compared as plain spaces. */
+const plain = (text) => text.replace(/\s/g, ' ');
+
+test('formatClock: 24 hours with two digits, 12 hours as the language writes them', () => {
   assert.equal(formatClock(18, 0, false), '18:00');
-  assert.equal(formatClock(9, 5, false), '09:05');
-  assert.equal(formatClock(18, 0, true), '6:00 pm');
-  assert.equal(formatClock(0, 30, true), '12:30 am');
-  assert.equal(formatClock(12, 0, true), '12:00 pm');
+  assert.equal(formatClock(9, 5, false, 'tr'), '09:05');
+  assert.equal(plain(formatClock(18, 0, true, 'en-GB')), '6:00 pm');
+  assert.equal(plain(formatClock(0, 30, true, 'en-GB')), '12:30 am');
+  assert.equal(plain(formatClock(12, 0, true, 'en-GB')), '12:00 pm');
+  assert.match(formatClock(18, 0, true, 'tr'), /^ÖS\s6:00$/, 'Turkish writes the half of the day first');
+  assert.match(formatClock(18, 0, true, 'nb'), /^6:00\s/, 'Norwegian has its own words for the halves');
+  assert.equal(formatClock(18, 0, true, 'no'), formatClock(18, 0, true, 'nb'), 'the legacy tag is Norwegian');
+});
+
+test('formatHour and formatPercent: an hour on a plan\'s axis and a share, in the language\'s form', () => {
+  assert.equal(formatHour(8, false), '08');
+  assert.equal(plain(formatHour(13, true, 'en-GB')), '1 pm');
+  assert.match(formatHour(13, true, 'tr'), /^ÖS\s1$/);
+  assert.equal(plain(formatPercent(0.45, 'nb')), '45 %');
+  assert.equal(formatPercent(0.45, 'en-GB'), '45%');
+  assert.equal(formatPercent(0.45, 'tr'), '%45');
+});
+
+test('daysBetween: whole calendar days, not hours, across a night and a change of clock', () => {
+  assert.equal(daysBetween(new Date(2026, 9, 7, 23, 30).getTime(), new Date(2026, 9, 8, 1, 0).getTime()), 1, 'tomorrow at 01:00 is tomorrow');
+  assert.equal(daysBetween(new Date(2026, 9, 7, 0, 10).getTime(), new Date(2026, 9, 7, 23, 50).getTime()), 0);
+  assert.equal(daysBetween(new Date(2026, 9, 24, 12, 0).getTime(), new Date(2026, 9, 26, 12, 0).getTime()), 2, 'the weekend the clocks go back');
+  assert.equal(daysBetween(new Date(2026, 2, 28, 12, 0).getTime(), new Date(2026, 2, 30, 0, 30).getTime()), 2, 'the weekend the clocks go forward');
+  assert.equal(daysBetween(new Date(2026, 9, 8).getTime(), new Date(2026, 9, 7).getTime()), -1);
 });
 
 test('the week: lead cells, weekday order and the start of a week follow the first day', () => {
@@ -51,7 +74,7 @@ test('isMultiDay and timeRange: the end is written when the feed gave one', () =
   const sameDay = { start, end: new Date(2026, 9, 4, 21, 0).getTime(), hasEnd: true };
   assert.equal(isMultiDay(sameDay), false);
   assert.deepEqual(timeRange(sameDay, false), { from: '18:00', to: '21:00' });
-  assert.deepEqual(timeRange(sameDay, true), { from: '6:00 pm', to: '9:00 pm' });
+  assert.deepEqual(Object.fromEntries(Object.entries(timeRange(sameDay, true, 'en-GB')).map(([k, v]) => [k, plain(v)])), { from: '6:00 pm', to: '9:00 pm' });
   assert.deepEqual(timeRange({ ...sameDay, hasEnd: false }, false), { from: '18:00', to: null });
   assert.equal(isMultiDay({ start, end: new Date(2026, 9, 6, 12, 0).getTime() }), true);
   assert.equal(isMultiDay({ start }), false);

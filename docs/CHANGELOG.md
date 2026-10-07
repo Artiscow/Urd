@@ -27,6 +27,19 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.19.18 - All calendar texts follow the site language and can be edited - 7 October 2026
+
+- About 40 visible words in the 34 built calendar designs bypassed the rewritable texts, every text with a number among them. They are rewritable texts whose values stand as islands that a rewrite keeps as `{n}`, `{date}` and the like, stored per plural form (`CAL_TEXTS`, `CAL_PLURAL_TEXTS` and `CAL_TEXT_PARAMS` in calendar-designs.js, `ui.tx` in calendar.js; SCHEMA.md).
+- Dates were joined in Norwegian order, the 12-hour clock wrote `am`/`pm` and shares `45 %` in every language, and the year wheel's `toUpperCase()` wrote Turkish İ wrong. Dates go through dictionary templates, the clock, hours and shares through Intl (`formatClock`, `formatHour` and `formatPercent` in calendar-format.js), and the wheel's capitals through CSS.
+- The countdown units read «1 dager», a picked day that was not today said «N i dag», an empty day or month said «No upcoming events», and «I dag!» could show for an event tomorrow at 01:00. The units have plural forms, the picked day and the empty day and month have words of their own, and the countdown counts calendar days (`daysBetween`).
+- Content a design ships with (the announcement's label, the empty state's pill, the regular event's labels) came back with its default when emptied, and an emptied text holding `<br>` drew an empty line. An emptied content line is stored as `false`, left out on the page and in the Clean view, and stands as a faint hint in the editor (`CAL_CONTENT_TEXTS`, `ui.line`, `ui.group`); any other blank text shows its default.
+- The announcement's default title and text were editor instructions a visitor saw, and the preview's sample events followed the admin language. The announcement shows hints in the admin language in the editor only and is not drawn without words of its own, a reset of the texts keeps it (`calResetTexts`), and the sample events follow the site language.
+- Test finding 7 October 2026: pressing the words of the alert band in the preview followed its link and left the page, as did every link with rewritable words. The words stop the link while they are edited (`editLink`).
+- The announcement could only be written on the note, and the event card could not be opened in the editor. The calendar's menu has Heading and Text fields under Announcement, and a press on an event of the selected calendar opens its card, with the card above the selected block and a press inside it keeping the selection (preview-edit.js, base.css).
+- A long announcement made its note as tall as its text. The text stops after four lines, six in the Regular event's aside, and a cut text gets «Read it all», which opens the announcement in full in a card like an event's (`ui.notice`, `showNoticeDialog`); in the editor a press on the cut text of the selected calendar opens it.
+- The cut was never found in testing, since Chrome leaves the clamped lines out of `scrollHeight`. The text is measured without the clamp instead.
+- A test holds the renderers to no clock halves, capitals or dictionary words of their own. BACKLOG moves the theme words, «Word choice» and the switch for rewriting calendar data to 0.7.19.23, and the calendar guide in English and Norwegian describes the words, the announcement's fields and the cards.
+
 ### 0.7.0.42 - The READMEs brought up to date - 6 October 2026
 
 - The pronunciation in the English and Turkish READMEs ran to a paragraph on the vowel, the «rd» and the word's history. It is the phonetic form and a rough spelling, «*Urd* [ʉːɖ], roughly **oord**», and the English heading's misspelling «Pronounciation» is corrected.

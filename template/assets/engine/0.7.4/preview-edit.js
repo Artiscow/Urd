@@ -2818,6 +2818,9 @@ document.addEventListener('pointerdown', (event) => {
   const target = eventTarget(event);
   // Clicks in the multi toolbar must never change the set it acts on.
   if (target?.closest('.urd-multi-toolbar')) return;
+  // A calendar's card lies over the page outside its block: a press in it
+  // (its words are rewritten there) keeps the calendar selected.
+  if (target?.closest('.urd-cal-dialog')) return;
   const blockEl = target?.closest('.urd-block') ?? null;
   if (blockEl && event.shiftKey && !isMobile()) {
     toggleMulti(blockEl);
@@ -3719,8 +3722,11 @@ function enhanceBlock(el, block, section, grid, host) {
         // surface drag and selection.
         if (target?.closest('.urd-cart-button') && selectedBlockId === block.id && multiIds.size <= 1) return;
         // In the Clean view a calendar event keeps its click: it opens the
-        // event in full, as on the published page.
+        // event in full, as on the published page. So does an event of the
+        // selected calendar while editing, where the card's words are
+        // rewritten: an unselected calendar drags from its events too.
         if (document.body.classList.contains('urd-chrome-off') && target?.closest('.urd-cal-event')) return;
+        if (target?.closest('.urd-cal-event') && selectedBlockId === block.id && multiIds.size <= 1) return;
         // The plugin config panels are guarded by class name, the old
         // reference plugin names included: plugin copies in user repos
         // keep them forever (see the compatibility surface in SCHEMA.md).

@@ -3,15 +3,13 @@
  * The data is the limited, filtered list the block hands every view.
  * Loaded by the block on the first render of a block that uses one of them, never in the visitor closure.
  */
-import { t, tp, dates } from '../i18n.js';
+import { dates } from '../i18n.js';
 
 const two = (n) => String(n).padStart(2, '0');
 const dayOf = (occ) => new Date(occ.start);
 const monthShort = (d) => dates().monthsShort[d.getMonth()];
 const weekdayShort = (d) => dates().weekdaysShort[(d.getDay() + 6) % 7];
 const weekday = (d) => dates().weekdays[(d.getDay() + 6) % 7];
-/** «5. okt» in the site language (calendar.dayMonth). */
-const dayMonth = (d) => t('calendar.dayMonth', { d: d.getDate(), m: monthShort(d) });
 
 /** The meta line with the weekday in front of the time and the place (the date number stands elsewhere). */
 function weekdayMeta(occ, ui) {
@@ -33,7 +31,7 @@ export function timeline(host, occs, props, ics, ui) {
   occs.forEach((occ, i) => {
     const d = dayOf(occ);
     const when = ui.el('div', 'urd-cal-tl-when');
-    when.append(ui.field('strong', 'number', dayMonth(d), null, d), ui.field('span', 'date', weekday(d), null, d));
+    when.append(ui.field('strong', 'number', ui.dayMonth(d), null, d), ui.field('span', 'date', weekday(d), null, d));
     const rail = ui.el('div', 'urd-cal-tl-rail');
     const dot = ui.color(ui.el('span', 'urd-cal-tl-dot'), occ);
     if (i === 0) dot.classList.add('urd-cal-tl-dot-first');
@@ -69,12 +67,11 @@ export function table(host, occs, props, ics, ui) {
   headRow.appendChild(ui.el('th'));
   head.appendChild(headRow);
   const body = ui.el('tbody');
-  const dd = dates();
   for (const occ of occs) {
     const d = dayOf(occ);
     const row = ui.tint(ui.el('tr'), occ);
     const date = ui.el('td', 'urd-cal-table-date');
-    date.appendChild(ui.field('strong', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: dd.monthsShort[d.getMonth()] }), null, d));
+    date.appendChild(ui.field('strong', 'date', ui.dateLine(d), null, d));
     const time = ui.el('td');
     time.appendChild(ui.field('span', 'time', ui.time(occ), null, occ));
     const event = ui.el('td');
@@ -105,7 +102,10 @@ export function booklet(host, occs, props, ics, ui) {
   title.appendChild(ui.tx('program'));
   const first = groups[0];
   const last = groups[groups.length - 1];
-  const span = !first ? '' : first === last ? `${months[first.month]} ${first.year}` : `${months[first.month]} · ${months[last.month]} ${last.year}`;
+  // The span of months in the language's order: «October 2026», «October · December 2026», or with both years when it crosses one.
+  let span = '';
+  if (first === last) span = ui.monthYear(first.year, first.month);
+  else if (first) span = ui.monthRange(first.year === last.year ? months[first.month] : ui.monthYear(first.year, first.month), ui.monthYear(last.year, last.month));
   head.append(title, ui.field('span', 'date', span, 'urd-cal-booklet-span'));
   // The heading stands once, over the first rows; the fold continues the same paper.
   if (!ui.rest) paper.appendChild(head);
@@ -135,7 +135,7 @@ export function booklet(host, occs, props, ics, ui) {
 export function numbered(host, occs, props, ics, ui) {
   const wrap = ui.el('div', 'urd-cal-numbered');
   // The count is of the whole list, and the numbers run on through the fold.
-  if (!ui.rest) wrap.appendChild(ui.el('span', 'urd-cal-numbered-count', tp('calendar.count', ui.total || occs.length)));
+  if (!ui.rest) wrap.appendChild(ui.el('span', 'urd-cal-numbered-count', ui.tx('count', null, { n: ui.total || occs.length })));
   occs.forEach((occ, i) => {
     const row = ui.tint(ui.el('div', 'urd-cal-numbered-row'), occ);
     row.appendChild(ui.field('span', 'number', ui.opt.pad === false ? String(ui.offset + i + 1) : two(ui.offset + i + 1), 'urd-cal-numbered-n'));

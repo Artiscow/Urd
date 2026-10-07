@@ -14,8 +14,10 @@ export const CAL_VIEWS = ['list', 'cards', 'month', 'agenda', 'next', 'week', 'd
 export const CAL_FIELDS = ['title', 'date', 'time', 'place', 'description', 'category', 'number'];
 
 /**
- * The static texts a design can show, with the site dictionary key each one falls back to.
- * The owner rewrites them by clicking them in the preview; the block stores the HTML under the text's key in `props.texts`.
+ * Every word a design draws that is not calendar data, with the site dictionary key it falls back to: the labels and buttons, the words of an event's time and its countdown, the words the block draws around the design, and the texts with a number in them («In {n} days», «{n} events»).
+ * The owner rewrites them by clicking them in the preview; the block stores the HTML under the text's key in `props.texts`, a text with plural forms under the form shown («count.other»), with its numbers kept as `{n}`.
+ * A text with plural forms names its dictionary key without the form (`calendar.count` for `calendar.count.one` and `calendar.count.other`).
+ * `null` marks a text that has no words of its own: the owner writes it, and the editor shows a hint in its place until then (CAL_HINT_TEXTS).
  */
 export const CAL_TEXTS = {
   next: 'calendar.next',
@@ -48,9 +50,10 @@ export const CAL_TEXTS = {
   untilStart: 'calendar.untilStart',
   wholeProgram: 'calendar.wholeProgram',
   noticeLabel: 'calendar.noticeLabel',
-  noticeTitle: 'calendar.noticeTitle',
-  noticeText: 'calendar.noticeText',
+  noticeTitle: null,
+  noticeText: null,
   moreInfo: 'calendar.moreInfo',
+  readWhole: 'calendar.readWhole',
   series: 'calendar.series',
   when: 'calendar.when',
   where: 'calendar.where',
@@ -70,19 +73,79 @@ export const CAL_TEXTS = {
   addFile: 'calendar.addFile',
   addWhole: 'calendar.addWhole',
   icalAddress: 'calendar.icalAddress',
+  onMap: 'calendar.onMap',
+  moreN: 'calendar.more',
+  count: 'calendar.count',
+  todayCount: 'calendar.todayCount',
+  nextN: 'calendar.nextN',
+  today: 'calendar.today',
+  tomorrow: 'calendar.tomorrow',
+  inDays: 'calendar.inDays',
+  cancelled: 'calendar.cancelled',
+  allDay: 'calendar.allDay',
+  until: 'calendar.until',
+  timeAt: 'calendar.timeAt',
+  countdownClock: 'calendar.countdownClock',
+  weekN: 'calendar.weekN',
+  range: 'calendar.range',
+  earlier: 'calendar.earlier',
+  showAll: 'calendar.showAll',
+  allPlaces: 'calendar.allPlaces',
+  noMatch: 'calendar.noMatch',
+  dayNone: 'calendar.dayNone',
+  monthNone: 'calendar.monthNone',
+  unnamed: 'calendar.unnamed',
+  zoneOf: 'calendar.zoneOf',
+  zoneYours: 'calendar.zoneYours',
+};
+
+/** The texts with plural forms: the dictionary holds one key per form, and the owner's words are stored per form. */
+export const CAL_PLURAL_TEXTS = ['count', 'todayCount', 'nextN', 'inDays', 'unitDays', 'unitHours', 'unitMin'];
+
+/**
+ * The texts that are content a design ships with rather than words for a thing every calendar has (an announcement, the empty state's pill, the regular event's labels).
+ * The owner can remove such a line by emptying it in the preview: it is stored as `false`, never drawn for a visitor, and stands as a faint hint in the editor.
+ */
+export const CAL_CONTENT_TEXTS = ['noticeLabel', 'noticeTitle', 'noticeText', 'emptyKicker', 'emptyTitle', 'series', 'forWhom', 'openAll'];
+
+/** The admin dictionary's hint for a text without words of its own, shown in the editor only. */
+export const CAL_HINT_TEXTS = { noticeTitle: 'calendar.noticeTitleHint', noticeText: 'calendar.noticeTextHint' };
+
+/** The placeholders a text may hold, by text: each stands for a value the design fills in (a number, a date, a time, a zone). */
+export const CAL_TEXT_PARAMS = {
+  earlier: ['n'],
+  showAll: ['n', 'm'],
+  count: ['n'],
+  moreN: ['n'],
+  weekN: ['n'],
+  todayCount: ['n'],
+  nextN: ['n'],
+  inDays: ['n'],
+  until: ['date'],
+  timeAt: ['time'],
+  countdownClock: ['d', 'h', 'm'],
+  range: ['from', 'to'],
+  zoneOf: ['zone'],
+  zoneYours: ['zone'],
 };
 
 /** The texts of the ApeironLF empty state (the designs with `empty: 'ap'`). */
 const AP_EMPTY_TEXTS = ['emptyKicker', 'emptyTitle'];
 
 /** The texts of the announcement note, for the designs that declare `notice`. */
-const NOTICE_TEXTS = ['noticeLabel', 'noticeTitle', 'noticeText', 'moreInfo'];
+const NOTICE_TEXTS = ['noticeLabel', 'noticeTitle', 'noticeText', 'readWhole', 'moreInfo'];
 
 /** The texts of the event in full (the dialog a click on an event opens), in every design. */
-const EVENT_TEXTS = ['when', 'where', 'join', 'addEvent', 'addOne', 'addFile', 'addWhole', 'icalAddress'];
+const EVENT_TEXTS = ['when', 'where', 'join', 'addEvent', 'addOne', 'addFile', 'addWhole', 'icalAddress', 'onMap', 'recurring'];
+
+/** The words of an event's time and of its countdown, wherever a design writes them. */
+const TIME_TEXTS = ['cancelled', 'allDay', 'until', 'timeAt', 'today', 'tomorrow', 'inDays'];
+
+/** The words the block draws around a design: the place filter, the search, the folds, the zone line, and the view switcher's week and month. */
+const BLOCK_TEXTS = ['allPlaces', 'noMatch', 'earlier', 'showAll', 'zoneOf', 'zoneYours', 'weekN', 'range', 'moreN', 'dayNone'];
 
 /** The texts every design with chips, sign-up and subscribe buttons shows. */
-const COMMON_TEXTS = ['all', 'signup', 'subscribe', 'subscribeMulti', 'addGoogle', 'swUpcoming', 'swWeek', 'swMonth', ...EVENT_TEXTS];
+const COMMON_TEXTS = ['all', 'signup', 'subscribe', 'subscribeMulti', 'addGoogle', 'swUpcoming', 'swWeek', 'swMonth', ...BLOCK_TEXTS, ...TIME_TEXTS, ...EVENT_TEXTS];
 
 /** A colour slot: the label key is `calendar.slot.<key>`, the section groups the pickers in the panel. */
 const slot = (key, section = 'colors') => ({ key, labelKey: `calendar.slot.${key}`, section });
@@ -139,7 +202,7 @@ export const CAL_DESIGNS = [
     module: 'list',
     stripe: false,
     slots: [slot('accent'), slot('number'), slot('line'), slot('chip')],
-    texts: COMMON_TEXTS,
+    texts: ['count', ...COMMON_TEXTS],
   },
   {
     id: 'apList',
@@ -149,7 +212,7 @@ export const CAL_DESIGNS = [
     module: 'list',
     stripe: false,
     slots: [slot('row'), slot('text'), slot('gold'), slot('line'), slot('rec')],
-    texts: ['recurring', ...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
+    texts: [...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
   },
   {
     id: 'glass',
@@ -207,7 +270,7 @@ export const CAL_DESIGNS = [
     module: 'cards',
     stripe: false,
     slots: [slot('head'), slot('card'), slot('text'), slot('gold'), slot('rec')],
-    texts: ['recurring', ...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
+    texts: [...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
   },
   {
     id: 'bento',
@@ -245,7 +308,7 @@ export const CAL_DESIGNS = [
     stripe: false,
     ownFilter: true,
     slots: [slot('accent'), slot('surface'), slot('line'), slot('todayBg')],
-    texts: ['subscribe', 'subscribeMulti', 'addGoogle', 'signup', ...EVENT_TEXTS],
+    texts: ['unnamed', ...COMMON_TEXTS],
   },
   {
     id: 'sidepanel',
@@ -273,7 +336,7 @@ export const CAL_DESIGNS = [
     module: 'time',
     stripe: false,
     slots: [slot('accent'), slot('surface'), slot('line'), slot('past'), slot('event')],
-    texts: ['todayBtn', ...COMMON_TEXTS],
+    texts: ['todayBtn', 'todayCount', 'count', ...COMMON_TEXTS],
   },
   {
     id: 'yearWheel',
@@ -282,7 +345,7 @@ export const CAL_DESIGNS = [
     module: 'time',
     stripe: false,
     slots: [slot('accent'), slot('surface'), slot('line'), slot('ring', 'wheel'), slot('past', 'wheel'), slot('dot', 'wheel'), slot('dotOff', 'wheel')],
-    texts: ['wheel', 'pickMonth', ...COMMON_TEXTS],
+    texts: ['wheel', 'pickMonth', 'count', 'monthNone', ...COMMON_TEXTS],
   },
   {
     id: 'heatmap',
@@ -291,7 +354,7 @@ export const CAL_DESIGNS = [
     module: 'time',
     stripe: false,
     slots: [slot('surface'), slot('panel'), slot('line'), slot('cell0', 'scale'), slot('cell1', 'scale'), slot('cell2', 'scale'), slot('cell3', 'scale'), slot('today', 'scale')],
-    texts: ['wholeYear', 'fewer', 'more', 'pickDay', ...COMMON_TEXTS],
+    texts: ['wholeYear', 'fewer', 'more', 'pickDay', 'count', ...COMMON_TEXTS],
   },
   {
     id: 'billboard',
@@ -311,7 +374,7 @@ export const CAL_DESIGNS = [
     module: 'next',
     stripe: false,
     slots: [slot('accent'), slot('surface'), slot('line'), slot('card', 'cards'), slot('cardText', 'cards'), slot('cardMid', 'cards'), slot('cardBack', 'cards'), slot('badge', 'cards'), slot('badgeText', 'cards')],
-    texts: ['now', 'browse', ...COMMON_TEXTS],
+    texts: ['now', 'browse', 'nextN', ...COMMON_TEXTS],
   },
   {
     id: 'noticeboard',
@@ -367,7 +430,7 @@ export const CAL_DESIGNS = [
     stripe: false,
     ownSubscribe: true,
     slots: [slot('ground'), slot('text'), slot('label'), slot('edge', 'glass'), slot('glass', 'glass'), slot('track', 'glass'), slot('blobA', 'blobs'), slot('blobB', 'blobs'), slot('button', 'buttons'), slot('buttonText', 'buttons')],
-    texts: ['now', 'then', 'untilStart', ...COMMON_TEXTS],
+    texts: ['now', 'then', 'untilStart', 'countdownClock', ...COMMON_TEXTS],
   },
   {
     id: 'nextBento',
@@ -378,7 +441,7 @@ export const CAL_DESIGNS = [
     ownSubscribe: true,
     program: true,
     slots: [slot('accent'), slot('accentText'), slot('soft'), slot('tile'), slot('line')],
-    texts: ['now', 'wholeProgram', ...COMMON_TEXTS],
+    texts: ['now', 'wholeProgram', 'count', ...COMMON_TEXTS],
   },
   {
     id: 'apNow',
@@ -400,7 +463,7 @@ export const CAL_DESIGNS = [
     stripe: false,
     empty: 'ap',
     slots: [slot('ground'), slot('text'), slot('tile'), slot('line'), slot('gold'), slot('goldDark'), slot('card', 'first'), slot('cardText', 'first')],
-    texts: ['now', 'later', 'moreInfo', ...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
+    texts: ['now', 'later', 'moreInfo', 'nextN', ...AP_EMPTY_TEXTS, ...COMMON_TEXTS],
   },
   {
     id: 'apSeries',
@@ -599,13 +662,71 @@ export function calFieldCss(style) {
   return css;
 }
 
-/** The owner's HTML for a static text, or null when the design's default words apply. */
-export function calTextHtml(texts, key) {
-  const html = texts?.[key];
-  return typeof html === 'string' && html.trim() ? html : null;
+/** The slot a text's words are stored under: the plural form after the key for a text with plural forms («count.other»), else the key. */
+export function calTextSlot(key, form) {
+  return form && CAL_PLURAL_TEXTS.includes(key) ? `${key}.${form}` : key;
 }
 
-/** True when the owner has rewritten at least one of the design's texts. */
+const BLANK_HTML = /^(?:\s|&nbsp;|&#160;|<[^<>]*>)*$/i;
+
+/** True when stored HTML holds no words: nothing, spaces, non-breaking spaces or tags alone, which is what an emptied editable text leaves. */
+export function calBlankHtml(html) {
+  return typeof html !== 'string' || BLANK_HTML.test(html);
+}
+
+/**
+ * The owner's words for a text: their HTML, `false` for a content line the owner removed (CAL_CONTENT_TEXTS), or null when the dictionary's words apply.
+ * A text with plural forms is read from its form's slot first, then from the key alone, where its words stood before the text had forms.
+ */
+export function calTextValue(texts, key, form) {
+  const slots = form && CAL_PLURAL_TEXTS.includes(key) ? [calTextSlot(key, form), key] : [key];
+  for (const slot of slots) {
+    const value = texts?.[slot];
+    if (value === false) {
+      if (CAL_CONTENT_TEXTS.includes(key)) return false;
+    } else if (!calBlankHtml(value)) {
+      return value;
+    }
+  }
+  return null;
+}
+
+/**
+ * A text cut at its placeholders: the plain stretches as strings and each placeholder of `names` as `{name}`.
+ * A placeholder that is not among the names stays part of the text.
+ * @returns {Array<string|{name: string}>}
+ */
+export function calSplitTokens(text, names) {
+  const str = String(text ?? '');
+  const out = [];
+  let last = 0;
+  for (const m of str.matchAll(/\{([a-z]+)\}/gi)) {
+    if (!names.includes(m[1])) continue;
+    if (m.index > last) out.push(str.slice(last, m.index));
+    out.push({ name: m[1] });
+    last = m.index + m[0].length;
+  }
+  if (last < str.length) out.push(str.slice(last));
+  return out;
+}
+
+/**
+ * True when the owner has rewritten or removed at least one of the design's texts.
+ * The words of a text without words of its own (the announcement's title and text) are the owner's content, not a rewrite, and never count.
+ */
 export function calHasTextOverrides(design, texts) {
-  return design.texts.some((key) => calTextHtml(texts, key) !== null);
+  return Object.keys(texts ?? {}).some((slot) => {
+    const key = slot.split('.')[0];
+    if (!design.texts.includes(key) || CAL_HINT_TEXTS[key]) return false;
+    return texts[slot] === false ? CAL_CONTENT_TEXTS.includes(key) : !calBlankHtml(texts[slot]);
+  });
+}
+
+/** The texts after «Reset the texts»: the default words everywhere, keeping only the owner's own words in the texts that have none (an announcement is never deleted by a reset); undefined when nothing is kept. */
+export function calResetTexts(texts) {
+  const kept = {};
+  for (const key of Object.keys(CAL_HINT_TEXTS)) {
+    if (!calBlankHtml(texts?.[key])) kept[key] = texts[key];
+  }
+  return Object.keys(kept).length ? kept : undefined;
 }

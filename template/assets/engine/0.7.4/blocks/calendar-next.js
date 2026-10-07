@@ -3,17 +3,14 @@
  * The announcement (`props.notice` with the texts `noticeLabel`, `noticeTitle` and `noticeText`) is an optional part of the designs that declare `notice`.
  * Loaded by the block on the first render of a block that uses one of them, never in the visitor closure.
  */
-import { t, tp, dates } from '../i18n.js';
+import { dates } from '../i18n.js';
 
 const DAY = 24 * 3600 * 1000;
 const two = (n) => String(n).padStart(2, '0');
 const dayOf = (occ) => new Date(occ.start);
 const monthShort = (d) => dates().monthsShort[d.getMonth()];
 const monthLong = (d) => dates().months[d.getMonth()];
-const weekdayShort = (d) => dates().weekdaysShort[(d.getDay() + 6) % 7];
 const weekday = (d) => dates().weekdays[(d.getDay() + 6) % 7];
-/** «5. okt» in the site language (calendar.dayMonth). */
-const dayMonth = (d) => t('calendar.dayMonth', { d: d.getDate(), m: monthShort(d) });
 
 /** Days, hours and minutes left until an event (zero once it has begun). */
 function countdownParts(occ, now = Date.now()) {
@@ -34,7 +31,7 @@ function everyMinute(node, fn) {
 function longWhen(occ, ui, { place = true } = {}) {
   const d = dayOf(occ);
   const line = ui.el('span', 'urd-cal-nx-when');
-  line.appendChild(ui.field('span', 'date', t('calendar.dateLine', { wd: weekday(d), d: d.getDate(), m: monthLong(d) }), null, d));
+  line.appendChild(ui.field('span', 'date', ui.dateLine(d, true), null, d));
   if (ui.hasTime(occ)) {
     line.appendChild(document.createTextNode(' '));
     line.appendChild(ui.field('span', 'time', ui.timeText(occ), null, occ));
@@ -53,27 +50,27 @@ const laterOf = (occs, props, ics) => occs.slice(ics.nextCount(props.nextCount),
 function laterRow(occ, ui, className) {
   const d = dayOf(occ);
   const row = ui.tint(ui.el('div', className), occ);
-  row.append(ui.field('strong', 'date', dayMonth(d), null, d), ui.field('span', 'title', occ.title, 'urd-cal-nx-later-title'), ui.field('span', 'time', ui.timeText(occ), 'urd-cal-nx-later-time', occ));
+  row.append(ui.field('strong', 'date', ui.dayMonth(d), null, d), ui.field('span', 'title', occ.title, 'urd-cal-nx-later-title'), ui.field('span', 'time', ui.timeText(occ), 'urd-cal-nx-later-time', occ));
   return row;
 }
 
-/** The announcement note, when the design shows one and the owner has switched it on. */
+/**
+ * The announcement note, when the design shows one and the owner has switched it on.
+ * Its title and text are the owner's own words: a note without either is never drawn for a visitor, and stands with its hints in the editor.
+ * A text longer than the note holds opens the announcement in full in a card (`ui.notice`).
+ */
 function noticeNode(props, ui, className) {
   if (props.notice?.show !== true) return null;
   const note = ui.el('div', className);
-  const label = ui.el('span', 'urd-cal-nx-notice-label');
-  label.appendChild(ui.tx('noticeLabel'));
-  const title = ui.el('strong', 'urd-cal-nx-notice-title');
-  title.appendChild(ui.tx('noticeTitle'));
-  const text = ui.el('span', 'urd-cal-nx-notice-text');
-  text.appendChild(ui.tx('noticeText'));
-  note.append(label, title, text);
-  const href = typeof props.notice.href === 'string' ? props.notice.href.trim() : '';
-  if (/^(https?:\/\/|\/(?!\/)|#|mailto:)/i.test(href)) {
-    const a = ui.link('urd-cal-nx-notice-link', 'moreInfo', href, '');
-    note.appendChild(a);
-  }
-  return note;
+  const [, title, text] = [['noticeLabel', 'span', 'urd-cal-nx-notice-label', false], ['noticeTitle', 'strong', 'urd-cal-nx-notice-title', true], ['noticeText', 'span', 'urd-cal-nx-notice-text', true]].map(([key, tag, name, carry]) => {
+    const part = ui.line(ui.el(tag, name), key, { carry });
+    if (part) note.appendChild(part);
+    return part;
+  });
+  const raw = typeof props.notice.href === 'string' ? props.notice.href.trim() : '';
+  const href = /^(https?:\/\/|\/(?!\/)|#|mailto:)/i.test(raw) ? raw : '';
+  if (href) note.appendChild(ui.link('urd-cal-nx-notice-link', 'moreInfo', href, ''));
+  return ui.notice(note, { title, text, href });
 }
 
 /** N1 Billboard: a dark board with the pulse label, the title large, a countdown in three tiles and the sign-up as a bar. */
@@ -85,21 +82,23 @@ export function billboard(host, occs, props, ics, ui) {
   label.append(ui.el('i', 'urd-cal-bb-pulse'), ui.tx('now'));
   board.append(label, heroTitle, longWhen(hero, ui));
   const tiles = ui.el('div', 'urd-cal-bb-tiles');
-  const parts = [];
-  for (const key of ['unitDays', 'unitHours', 'unitMin']) {
+  // Each tile's unit takes the plural form of the number on it («1 day», «2 days»).
+  const parts = ['unitDays', 'unitHours', 'unitMin'].map((key) => {
     const tile = ui.el('div', 'urd-cal-bb-tile');
     const num = ui.field('strong', 'number', '00');
     const unit = ui.el('span');
-    unit.appendChild(ui.tx(key));
+    const words = ui.tx(key, null, { n: 0 });
+    unit.appendChild(words);
     tile.append(num, unit);
     tiles.appendChild(tile);
-    parts.push(num);
-  }
+    return { num, words };
+  });
   everyMinute(board, () => {
     const { days, hours, minutes } = countdownParts(hero);
-    parts[0].textContent = two(days);
-    parts[1].textContent = two(hours);
-    parts[2].textContent = two(minutes);
+    [days, hours, minutes].forEach((value, i) => {
+      parts[i].num.textContent = two(value);
+      ui.retx(parts[i].words, { n: value });
+    });
   });
   board.appendChild(tiles);
   const signup = ui.signup(hero);
@@ -116,7 +115,7 @@ export function billboard(host, occs, props, ics, ui) {
     later.forEach((occ, i) => {
       if (i) then.appendChild(document.createTextNode(', '));
       const d = dayOf(occ);
-      then.append(ui.field('span', 'title', occ.title), document.createTextNode(' '), ui.field('span', 'date', dayMonth(d), null, d));
+      then.append(ui.field('span', 'title', occ.title), document.createTextNode(' '), ui.field('span', 'date', ui.dayMonth(d), null, d));
     });
     foot.appendChild(then);
   }
@@ -137,14 +136,14 @@ export function stacked(host, occs, props, ics, ui) {
   const head = ui.el('div', 'urd-cal-stack-head');
   const label = ui.el('span', 'urd-cal-stack-label');
   label.appendChild(ui.tx('now'));
-  head.append(label, ui.el('span', 'urd-cal-stack-count', tp('calendar.nextN', count)));
+  head.append(label, ui.el('span', 'urd-cal-stack-count', ui.tx('nextN', null, { n: count })));
   wrap.appendChild(head);
   const pile = ui.el('div', 'urd-cal-stack-pile');
   const cards = featured.map((occ) => {
     const d = dayOf(occ);
     const card = ui.tint(ui.el('article', 'urd-cal-stack-card'), occ);
     const top = ui.el('div', 'urd-cal-stack-top');
-    top.append(ui.field('span', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: monthShort(d) }), 'urd-cal-stack-badge', d), ui.el('span', 'urd-cal-stack-in', ui.countdown(occ)));
+    top.append(ui.field('span', 'date', ui.dateLine(d), 'urd-cal-stack-badge', d), ui.el('span', 'urd-cal-stack-in', ui.countdown(occ)));
     card.append(top, ui.field('strong', 'title', occ.title, 'urd-cal-stack-title'));
     const meta = ui.meta(occ, { date: false });
     if (meta) card.appendChild(meta);
@@ -267,7 +266,7 @@ export function band(host, occs, props, ics, ui) {
     if (i) run.appendChild(ui.el('i', 'urd-cal-band-sep'));
     const d = dayOf(occ);
     const item = ui.tint(ui.el('span', 'urd-cal-band-item'), occ);
-    item.append(ui.field('span', 'date', dayMonth(d), null, d), document.createTextNode(' · '), ui.field('strong', 'title', occ.title), document.createTextNode(' · '), ui.field('span', 'time', ui.timeText(occ), null, occ));
+    item.append(ui.field('span', 'date', ui.dayMonth(d), null, d), document.createTextNode(' · '), ui.field('strong', 'title', occ.title), document.createTextNode(' · '), ui.field('span', 'time', ui.timeText(occ), null, occ));
     if (occ.location) {
       item.appendChild(document.createTextNode(' · '));
       item.appendChild(ui.field('span', 'place', occ.location));
@@ -304,7 +303,7 @@ export function oneLine(host, occs, props, ics, ui) {
     const label = ui.el('span', 'urd-cal-line-label');
     label.appendChild(ui.tx(i < count ? 'now' : 'later'));
     const text = ui.el('span', 'urd-cal-line-text');
-    text.append(ui.field('strong', 'title', occ.title), document.createTextNode(' · '), ui.field('span', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: monthShort(d) }), null, d));
+    text.append(ui.field('strong', 'title', occ.title), document.createTextNode(' · '), ui.field('span', 'date', ui.dateLine(d), null, d));
     if (ui.hasTime(occ)) {
       text.appendChild(document.createTextNode(' '));
       text.appendChild(ui.field('span', 'time', ui.timeText(occ), null, occ));
@@ -355,11 +354,15 @@ export function ring(host, occs, props, ics, ui) {
     const filled = Math.max(0, Math.min(1, 1 - left / (14 * DAY)));
     const circ = 2 * Math.PI * 56;
     arc.setAttribute('stroke-dasharray', `${(filled * circ).toFixed(1)} ${circ.toFixed(1)}`);
-    num.textContent = String(days > 0 ? days : hours);
+    const value = days > 0 ? days : hours;
+    num.textContent = String(value);
+    // The unit takes the plural form of the number («1 day», «3 days»), and turns to hours on the last day.
     const key = days > 0 ? 'unitDays' : 'unitHours';
     if (unit.dataset.unit !== key) {
       unit.dataset.unit = key;
-      unit.replaceChildren(ui.tx(key));
+      unit.replaceChildren(ui.tx(key, null, { n: value }));
+    } else {
+      ui.retx(unit.firstChild, { n: value });
     }
   });
   const body = ui.el('div', 'urd-cal-ring-body');
@@ -375,7 +378,7 @@ export function ring(host, occs, props, ics, ui) {
     for (const occ of later) {
       const row = laterRow(occ, ui, 'urd-cal-ring-row');
       row.prepend(ui.el('i', 'urd-cal-ring-rowdot'));
-      row.lastChild.textContent = ui.countdown(occ);
+      row.lastChild.replaceChildren(ui.countdown(occ));
       list.appendChild(row);
     }
     card.appendChild(list);
@@ -394,6 +397,8 @@ export function darkGlass(host, occs, props, ics, ui) {
   const label = ui.el('span', 'urd-cal-dg-label');
   label.append(ui.el('i', 'urd-cal-dg-pulse'), ui.tx('now'));
   const clock = ui.field('span', 'number', '', 'urd-cal-dg-clock');
+  const clockWords = ui.tx('countdownClock', null, { d: '00', h: '00', m: '00' });
+  clock.appendChild(clockWords);
   head.append(label, clock);
   inner.append(head, heroTitle, longWhen(hero, ui));
   const progress = ui.el('div', 'urd-cal-dg-progress');
@@ -409,10 +414,10 @@ export function darkGlass(host, occs, props, ics, ui) {
   inner.appendChild(progress);
   everyMinute(card, () => {
     const { days, hours, minutes } = countdownParts(hero);
-    clock.textContent = t('calendar.countdownClock', { d: two(days), h: two(hours), m: two(minutes) });
+    ui.retx(clockWords, { d: two(days), h: two(hours), m: two(minutes) });
     const left = Math.max(0, (hero.real ?? hero.start) - Date.now());
     const filled = Math.max(0, Math.min(1, 1 - left / (14 * DAY)));
-    pct.textContent = `${Math.round(filled * 100)} %`;
+    pct.textContent = ui.percent(filled);
     fill.style.width = `${Math.round(filled * 100)}%`;
   });
   const buttons = ui.el('div', 'urd-cal-dg-buttons');
@@ -448,7 +453,7 @@ export function nextBento(host, occs, props, ics, ui) {
   const words = ui.el('div', 'urd-cal-nbento-words');
   words.appendChild(ui.field('strong', 'title', hero.title, 'urd-cal-nbento-title'));
   const meta = ui.el('div', 'urd-cal-meta');
-  meta.appendChild(ui.field('span', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: monthShort(d) }), null, d));
+  meta.appendChild(ui.field('span', 'date', ui.dateLine(d), null, d));
   if (ui.hasTime(hero)) {
     meta.appendChild(document.createTextNode(' · '));
     meta.appendChild(ui.field('span', 'time', ui.timeText(hero), null, hero));
@@ -482,7 +487,7 @@ export function nextBento(host, occs, props, ics, ui) {
   const count = ui.el('strong', 'urd-cal-nbento-small');
   // The tile's words lead to the whole programme when the block has an address for it.
   count.appendChild(ui.program() ?? ui.tx('wholeProgram'));
-  count.appendChild(ui.el('span', 'urd-cal-nbento-sub', tp('calendar.count', occs.length)));
+  count.appendChild(ui.el('span', 'urd-cal-nbento-sub', ui.tx('count', null, { n: occs.length })));
   linkTile.appendChild(count);
   if (sub) linkTile.appendChild(sub);
   grid.appendChild(linkTile);

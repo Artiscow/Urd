@@ -152,15 +152,25 @@ export function ta(key, params) {
 }
 
 /**
- * Plural lookup: the key is suffixed with the Intl.PluralRules category
- * ('one'/'two'/'few'/'many'/'other'; Northern Sami has a dual form), with
- * .other as fallback. The count is always available as {n}.
+ * The plural form a count takes in the visitor language, and the key that
+ * holds it: the Intl.PluralRules category ('one'/'two'/'few'/'many'/'other';
+ * Northern Sami has a dual form) when the dictionary has a key for it, else
+ * 'other'.
  */
-export function tp(baseKey, n, params) {
+export function pluralForm(baseKey, n) {
   let cat = 'other';
   try { cat = new Intl.PluralRules(site.lang).select(n); } catch { /* unknown language: other */ }
-  const chosen = site.dict[`${baseKey}.${cat}`] ?? site.dict[`${baseKey}.other`];
-  return format(chosen ?? `${baseKey}.${cat}`, { ...params, n });
+  const form = site.dict[`${baseKey}.${cat}`] !== undefined || site.dict[`${baseKey}.other`] === undefined ? cat : 'other';
+  return { form, key: `${baseKey}.${form}` };
+}
+
+/**
+ * Plural lookup: the key of the count's plural form (pluralForm). The count
+ * is always available as {n}.
+ */
+export function tp(baseKey, n, params) {
+  const { key } = pluralForm(baseKey, n);
+  return format(site.dict[key] ?? key, { ...params, n });
 }
 
 /**

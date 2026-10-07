@@ -3,17 +3,13 @@
  * Each is a renderer over the block's ui helpers (fields, static texts, buttons; see makeUi in calendar.js) with its own rules in base.css under its own class names.
  * Loaded by the block on the first render of a block that uses one of them, never in the visitor closure.
  */
-import { t, tp, dates } from '../i18n.js';
+import { t, dates } from '../i18n.js';
 import { iconSvg } from '../icons.js';
 
-const two = (n) => String(n).padStart(2, '0');
 const dayOf = (occ) => new Date(occ.start);
 const monthShort = (d) => dates().monthsShort[d.getMonth()];
 const monthLong = (d) => dates().months[d.getMonth()];
 const weekdayShort = (d) => dates().weekdaysShort[(d.getDay() + 6) % 7];
-const weekday = (d) => dates().weekdays[(d.getDay() + 6) % 7];
-/** «5. okt» in the site language (calendar.dayMonth), with the month short or written out. */
-const dayMonth = (d, long = false) => t('calendar.dayMonth', { d: d.getDate(), m: long ? monthLong(d) : monthShort(d) });
 const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
 /** «Wed · 19:00 · the place» as fields: the weekday, the time and the place. */
@@ -50,7 +46,7 @@ function laterRail(later, ui) {
   for (const occ of later) {
     const d = dayOf(occ);
     const row = ui.tint(ui.el('div', 'urd-cal-apn-rail-row'), occ);
-    row.append(ui.el('i', 'urd-cal-apn-rail-dot'), ui.field('strong', 'date', dayMonth(d), null, d), ui.field('span', 'title', occ.title));
+    row.append(ui.el('i', 'urd-cal-apn-rail-dot'), ui.field('strong', 'date', ui.dayMonth(d), null, d), ui.field('span', 'title', occ.title));
     const arrow = arrowLink(occ, ui, 'urd-cal-apn-arrow');
     if (arrow) row.appendChild(arrow);
     list.appendChild(row);
@@ -69,15 +65,19 @@ export function apNow(host, occs, props, ics, ui) {
   const href = typeof props.notice?.href === 'string' && /^(https?:\/\/|\/(?!\/)|#|mailto:)/i.test(props.notice.href.trim()) ? props.notice.href.trim() : '';
   if (notice && props.notice.as === 'band') {
     const band = ui.el(href ? 'a' : 'div', 'urd-cal-apn-alert');
-    if (href) band.href = href;
+    if (href) {
+      band.href = href;
+      ui.editLink(band);
+    }
     const mark = ui.el('span', 'urd-cal-apn-alert-icon');
     mark.setAttribute('aria-hidden', 'true');
     mark.innerHTML = iconSvg('warning') || iconSvg('info') || '';
-    const words = ui.el('span', 'urd-cal-apn-alert-text');
-    words.appendChild(ui.tx('noticeTitle'));
-    band.append(mark, words);
+    band.appendChild(mark);
+    // The band carries the announcement's title: without one it is never drawn for a visitor.
+    const words = ui.line(ui.el('span', 'urd-cal-apn-alert-text'), 'noticeTitle', { carry: true });
+    if (words) band.appendChild(words);
     if (href) band.appendChild(ui.el('span', 'urd-cal-apn-alert-arrow', '→'));
-    card.appendChild(band);
+    if (ui.group(band)) card.appendChild(band);
   }
   for (const occ of occs.slice(0, count)) {
     const d = dayOf(occ);
@@ -106,22 +106,20 @@ export function apNow(host, occs, props, ics, ui) {
   }
   if (notice && props.notice.as !== 'band') {
     const box = ui.el('div', 'urd-cal-apn-notice');
-    const text = ui.el('div', 'urd-cal-apn-notice-body');
-    const kicker = ui.el('span', 'urd-cal-apn-kicker');
-    kicker.appendChild(ui.tx('noticeLabel'));
-    const title = ui.el('strong', 'urd-cal-apn-notice-title');
-    title.appendChild(ui.tx('noticeTitle'));
-    const words = ui.el('span', 'urd-cal-apn-notice-text');
-    words.appendChild(ui.tx('noticeText'));
-    text.append(kicker, title, words);
-    box.appendChild(text);
+    const body = ui.el('div', 'urd-cal-apn-notice-body');
+    const [, title, text] = [['noticeLabel', 'span', 'urd-cal-apn-kicker', false], ['noticeTitle', 'strong', 'urd-cal-apn-notice-title', true], ['noticeText', 'span', 'urd-cal-apn-notice-text', true]].map(([key, tag, name, carry]) => {
+      const part = ui.line(ui.el(tag, name), key, { carry });
+      if (part) body.appendChild(part);
+      return part;
+    });
+    box.appendChild(body);
     if (href) {
       const arrow = ui.el('a', 'urd-cal-apn-arrow', '→');
       arrow.href = href;
       arrow.setAttribute('aria-label', t('calendar.moreInfo'));
       box.appendChild(arrow);
     }
-    card.appendChild(box);
+    if (ui.notice(box, { title, text, href })) card.appendChild(box);
   }
   host.appendChild(card);
 }
@@ -134,7 +132,7 @@ export function apNavy(host, occs, props, ics, ui) {
   const label = ui.el('span', 'urd-cal-apv-label');
   label.append(ui.el('i', 'urd-cal-apn-dot'), ui.tx('now'));
   head.appendChild(label);
-  if (count > 1) head.appendChild(ui.el('span', 'urd-cal-apv-count', tp('calendar.nextN', count)));
+  if (count > 1) head.appendChild(ui.el('span', 'urd-cal-apv-count', ui.tx('nextN', null, { n: count })));
   card.appendChild(head);
   occs.slice(0, count).forEach((occ, i) => {
     const d = dayOf(occ);
@@ -176,7 +174,7 @@ export function apNavy(host, occs, props, ics, ui) {
       const d = dayOf(occ);
       const row = ui.tint(ui.el('div', 'urd-cal-apv-row'), occ);
       const words = ui.el('span');
-      words.append(ui.field('strong', 'date', dayMonth(d), null, d), ui.field('span', 'title', occ.title));
+      words.append(ui.field('strong', 'date', ui.dayMonth(d), null, d), ui.field('span', 'title', occ.title));
       row.appendChild(words);
       const arrow = arrowLink(occ, ui, 'urd-cal-apv-arrow');
       if (arrow) row.appendChild(arrow);
@@ -191,7 +189,7 @@ export function apNavy(host, occs, props, ics, ui) {
 function longDate(occ, ui) {
   const d = dayOf(occ);
   const line = ui.el('span');
-  line.appendChild(ui.field('span', 'date', dayMonth(d, true), null, d));
+  line.appendChild(ui.field('span', 'date', ui.dayMonth(d, true), null, d));
   if (ui.hasTime(occ)) {
     line.appendChild(document.createTextNode(' '));
     line.appendChild(ui.field('span', 'time', ui.timeText(occ), null, occ));
@@ -206,9 +204,12 @@ export function apSeries(host, occs, props, ics, ui) {
   const series = ui.all.filter((occ) => occ.title === first.title).slice(0, Math.max(1, props.limit ?? 6));
   const card = ui.tint(ui.el('div', 'urd-cal-aps'), first);
   const main = ui.el('div', 'urd-cal-aps-main');
-  const kicker = ui.el('span', 'urd-cal-aps-kicker');
-  kicker.append(ui.el('i'), ui.tx('series'));
-  main.append(kicker, ui.field('strong', 'title', first.title, 'urd-cal-aps-title'));
+  const kicker = ui.line(ui.el('span', 'urd-cal-aps-kicker'), 'series');
+  if (kicker) {
+    kicker.prepend(ui.el('i'));
+    main.appendChild(kicker);
+  }
+  main.appendChild(ui.field('strong', 'title', first.title, 'urd-cal-aps-title'));
   const text = String(first.description ?? '').split('\n').find((line) => line.trim() && !/^https?:\/\//i.test(line.trim()));
   if (text) main.appendChild(ui.field('p', 'description', ui.excerpt(text, 400), 'urd-cal-aps-text'));
   const facts = ui.el('div', 'urd-cal-aps-facts');
@@ -222,9 +223,13 @@ export function apSeries(host, occs, props, ics, ui) {
   };
   fact('when', longDate(first, ui));
   fact('where', first.location ? ui.field('span', 'place', first.location, 'urd-cal-aps-place') : null);
-  const open = ui.el('strong');
-  open.appendChild(ui.tx('openAll'));
-  fact('forWhom', open);
+  // «For whom» and its answer are the design's own content: the row goes when the owner removes the answer.
+  const whom = ui.el('div');
+  const whomLabel = ui.line(ui.el('span', 'urd-cal-aps-fact'), 'forWhom');
+  if (whomLabel) whom.appendChild(whomLabel);
+  const open = ui.line(ui.el('strong'), 'openAll', { carry: true });
+  if (open) whom.appendChild(open);
+  if (ui.group(whom)) facts.appendChild(whom);
   main.appendChild(facts);
   const signup = ui.signup(first);
   if (signup) main.appendChild(signup);
@@ -248,16 +253,15 @@ export function apSeries(host, occs, props, ics, ui) {
   card.appendChild(main);
   if (props.notice?.show === true) {
     const aside = ui.el('aside', 'urd-cal-aps-aside');
-    const title = ui.el('strong', 'urd-cal-aps-aside-title');
-    title.appendChild(ui.tx('noticeTitle'));
-    const label = ui.el('span', 'urd-cal-aps-fact');
-    label.appendChild(ui.tx('noticeLabel'));
-    const words = ui.el('p', 'urd-cal-aps-aside-text');
-    words.appendChild(ui.tx('noticeText'));
-    aside.append(title, label, words);
-    const href = typeof props.notice.href === 'string' ? props.notice.href.trim() : '';
-    if (/^(https?:\/\/|\/(?!\/)|#|mailto:)/i.test(href)) aside.appendChild(ui.link('urd-cal-aps-aside-link', 'moreInfo', href, ''));
-    card.appendChild(aside);
+    const [title, , text] = [['noticeTitle', 'strong', 'urd-cal-aps-aside-title', true], ['noticeLabel', 'span', 'urd-cal-aps-fact', false], ['noticeText', 'p', 'urd-cal-aps-aside-text', true]].map(([key, tag, name, carry]) => {
+      const part = ui.line(ui.el(tag, name), key, { carry });
+      if (part) aside.appendChild(part);
+      return part;
+    });
+    const raw = typeof props.notice.href === 'string' ? props.notice.href.trim() : '';
+    const href = /^(https?:\/\/|\/(?!\/)|#|mailto:)/i.test(raw) ? raw : '';
+    if (href) aside.appendChild(ui.link('urd-cal-aps-aside-link', 'moreInfo', href, ''));
+    if (ui.notice(aside, { title, text, href })) card.appendChild(aside);
   }
   host.appendChild(card);
 }
@@ -347,7 +351,7 @@ export function mobileAgenda(host, occs, props, ics, ui) {
         label.appendChild(ui.tx('todayBtn'));
         label.appendChild(document.createTextNode(', '));
       }
-      label.appendChild(ui.field('span', 'date', t('calendar.weekdayDay', { wd: weekday(d), d: d.getDate() }), null, d));
+      label.appendChild(ui.field('span', 'date', ui.weekdayDay(d, true), null, d));
       list.appendChild(label);
       last = d;
     }

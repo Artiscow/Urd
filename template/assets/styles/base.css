@@ -1193,7 +1193,7 @@ textarea.urd-form-input {
   padding-left: 1rem;
 }
 
-/* A static text (a label, a button's words) is edited in place in the preview, where the text toolbar attaches to it. */
+/* A design's words (a label, a button's words, the words of a time or a countdown) are edited in place in the preview, where the text toolbar attaches to them. */
 .urd-cal .urd-cal-tx {
   overflow-wrap: anywhere;
 }
@@ -1206,6 +1206,18 @@ textarea.urd-form-input {
 .urd-cal-tx[contenteditable]:focus {
   outline: 1px dashed var(--urd-cal-accent);
   outline-offset: 2px;
+}
+
+/* A value in the words (a number, a date, a time) is a whole the owner's words keep: marked while the words are being edited. */
+.urd-preview:not(.urd-chrome-off) .urd-cal-tx[contenteditable='true']:focus .urd-cal-n {
+  border-radius: 3px;
+  background: color-mix(in srgb, currentcolor 12%, transparent);
+}
+
+/* An empty text in the editor: a removed line's default words, or the prompt of a text that has none, as a faint hint to write in. */
+.urd-preview .urd-cal-blank::before {
+  content: attr(data-placeholder);
+  opacity: 0.45;
 }
 
 .urd-cal-titlerow {
@@ -1265,6 +1277,34 @@ textarea.urd-form-input {
 .urd-cal-event:focus-visible {
   outline: 2px solid var(--urd-cal-accent, var(--urd-color-accent));
   outline-offset: 2px;
+}
+
+/* The announcement's text stops after a few lines (the design sets how many), and a text that does not fit opens the announcement in full in a card («Read it all»). */
+.urd-cal .urd-cal-clamp {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--urd-cal-notice-lines, 4);
+}
+
+/* While its words are written, the whole text stands. */
+.urd-cal .urd-cal-clamp:focus-within {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: none;
+}
+
+.urd-cal-notice-more {
+  display: block;
+  width: fit-content;
+  font-size: 0.85em;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.urd-cal-notice-more[hidden] {
+  display: none;
 }
 
 /* The event in full: a native dialog over the page, dressed as the card it was opened from (the variables are set by the block from that card), with the theme as the fallback. */
@@ -3208,7 +3248,7 @@ textarea.urd-form-input {
   font-size: 1.15em;
 }
 
-.urd-cal-wstrip-label span {
+.urd-cal-wstrip-label > span {
   font-size: 0.8em;
   opacity: 0.7;
 }
@@ -4026,6 +4066,7 @@ textarea.urd-form-input {
 .urd-cal-wheel-month {
   font-size: 11px;
   font-weight: 700;
+  text-transform: uppercase;
   fill: currentcolor;
   opacity: 0.6;
   pointer-events: none;
@@ -4221,7 +4262,7 @@ textarea.urd-form-input {
   border-radius: var(--urd-radius-sm);
 }
 
-.urd-cal-heat-readout span {
+.urd-cal-heat-readout > span {
   opacity: 0.75;
 }
 
@@ -4738,7 +4779,7 @@ textarea.urd-form-input {
   line-height: 1;
 }
 
-.urd-cal-bb-tile span {
+.urd-cal-bb-tile > span {
   font-size: 0.68em;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -5385,7 +5426,7 @@ textarea.urd-form-input {
   letter-spacing: -0.03em;
 }
 
-.urd-cal-ring-centre span {
+.urd-cal-ring-centre > span {
   margin-top: 4px;
   font-size: 0.68em;
   font-weight: 700;
@@ -6337,6 +6378,7 @@ textarea.urd-form-input {
 }
 
 .urd-cal-aps-aside {
+  --urd-cal-notice-lines: 6;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 0.6em;
@@ -12362,6 +12404,11 @@ body.urd-mobile .urd-section-resize-top {
   outline: none;
 }
 
+/* A calendar's card opened while editing lies over its raised calendar and the shade on it, where its words are rewritten. */
+.urd-preview:not(.urd-chrome-off) .urd-cal-dialog {
+  z-index: 100000;
+}
+
 .urd-preview .urd-block.urd-selected .urd-edit-toolbar {
   display: flex;
 }
@@ -13046,6 +13093,7 @@ body.urd-mobile .urd-section-resize-top {
 .urd-preview.urd-chrome-off .urd-collection-image-adder,
 .urd-preview.urd-chrome-off .urd-product-adder,
 .urd-preview.urd-chrome-off .urd-collection-placeholder:empty,
+.urd-preview.urd-chrome-off .urd-cal-gone,
 .urd-preview.urd-chrome-off .urd-grid-overlay {
   display: none !important;
 }
@@ -13055,8 +13103,14 @@ body.urd-mobile .urd-section-resize-top {
    fields. The list is EDITOR_ONLY in render.js; a test holds the two equal. */
 .urd-preview .urd-fit-measure .urd-collection-image-adder,
 .urd-preview .urd-fit-measure .urd-product-adder,
-.urd-preview .urd-fit-measure .urd-collection-placeholder:empty {
+.urd-preview .urd-fit-measure .urd-collection-placeholder:empty,
+.urd-preview .urd-fit-measure .urd-cal-gone {
   display: none !important;
+}
+
+/* The regular event without its announcement in the Clean view: the main column alone, as on the published page. */
+.urd-preview.urd-chrome-off .urd-cal-aps:has(> .urd-cal-aps-aside.urd-cal-gone) {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .urd-preview.urd-chrome-off .urd-collection-editable:hover,

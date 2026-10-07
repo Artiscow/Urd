@@ -2,7 +2,7 @@
  * The calendar block's card designs (milestone 0.7.19): six looks on the cards view, each a renderer over the block's ui helpers (fields, static texts, buttons; see makeUi in calendar.js) with its own rules in base.css under its own class names.
  * Loaded by the block on the first render of a block that uses one of them, never in the visitor closure.
  */
-import { t, tp, dates } from '../i18n.js';
+import { t, dates } from '../i18n.js';
 
 const two = (n) => String(n).padStart(2, '0');
 const dayOf = (occ) => new Date(occ.start);
@@ -155,7 +155,7 @@ export function photo(host, occs, props, ics, ui) {
       img.src = src;
       band.appendChild(img);
     }
-    band.appendChild(ui.field('span', 'date', t('calendar.dayMonth', { d: d.getDate(), m: monthShort(d) }), 'urd-cal-photo-date', d));
+    band.appendChild(ui.field('span', 'date', ui.dayMonth(d), 'urd-cal-photo-date', d));
     const chip = ui.chip(occ);
     if (chip) band.appendChild(chip);
     const body = ui.el('div', 'urd-cal-photo-body');
@@ -234,7 +234,7 @@ function miniMonth(ui) {
 function smallTile(occ, ui) {
   const d = dayOf(occ);
   const tile = ui.tint(ui.el('article', 'urd-cal-bento-tile urd-cal-bento-small'), occ);
-  tile.appendChild(ui.field('span', 'date', t('calendar.dateLine', { wd: weekdayShort(d), d: d.getDate(), m: monthShort(d) }), 'urd-cal-bento-label', d));
+  tile.appendChild(ui.field('span', 'date', ui.dateLine(d), 'urd-cal-bento-label', d));
   const body = ui.el('div');
   body.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-bento-title'));
   body.appendChild(ui.field('span', 'time', ui.timeText(occ), 'urd-cal-bento-sub', occ));

@@ -96,9 +96,11 @@ Hvor du finner dem:
 
 En kalender er like høy som det den viser: omrisset tilpasses designet, og på nytt når du bytter design, innstillinger eller bredde. Dra i håndtaket i hjørnet av omrisset for å gjøre kalenderen smalere eller bredere; et drag opp eller ned stopper ved kanten av kalenderen. **Størrelse** i menyen gjør hele kalenderen, teksten medregnet, mindre eller større.
 
-Hvert design har egne farger, og noen har egne innstillinger, i blokkens meny. Ordene et design skriver («Neste arrangement», «Senere») endres ved å klikke på dem i forhåndsvisningen.
+Hvert design har egne farger, og noen har egne innstillinger, i blokkens meny.
 
-**Kalenderens kunngjøring.** Noen av designene for «Akkurat nå» kan vise en lapp ved siden av neste arrangement, slått på med **Vis kunngjøring i kalenderen**. Du skriver den ved å klikke på lappen i forhåndsvisningen. Den er uavhengig av kunngjøringsstripen over menyen.
+**Ordene.** Alle ord et design skriver følger sidens språk, og endres ved å klikke på dem i forhåndsvisningen: «Neste arrangement», «Senere», knappene, «hele dagen», «Avlyst», og ordene rundt et tall, som «Om 3 dager» eller «Uke 41». Selve tallet blir stående: det er markert mens du skriver, og du skriver rundt det. En linje et design har med seg, som «Fast arrangement» eller «For hvem: Åpent for alle», forsvinner fra siden når du tømmer den; i editoren står den igjen som et svakt hint du kan klikke på og skrive i igjen. **Tilbakestill tekstene** i blokkens meny setter alle ordene tilbake, også linjene som er fjernet.
+
+**Kalenderens kunngjøring.** Noen av designene for «Akkurat nå» kan vise en lapp ved siden av neste arrangement, slått på med **Vis kunngjøring i kalenderen**. Du skriver overskriften og teksten under **Kunngjøring** i blokkens meny, eller ved å klikke på lappen i forhåndsvisningen, der den viser et hint til da; en lapp uten ord vises ikke på siden, og tilbakestilling av tekstene beholder det du har skrevet. En tekst som er lengre enn lappen har plass til, stopper etter noen linjer og får **Les hele**, som åpner hele kunngjøringen i et kort slik et arrangement gjør; i editoren åpner du kortet ved å klikke på den avkuttede teksten i den valgte kalenderen, og skriver hele teksten der. Den er uavhengig av kunngjøringsstripen over menyen.
 
 ## Hva som leses fra et arrangement
 
@@ -201,6 +203,8 @@ Verktøyene virker sammen: et søk innenfor ett lokale, i én kategori.
 Et trykk på et arrangement åpner kortet over kalenderen: dato og tid, sted, bilde, hele beskrivelsen, og knappene Bli med og Meld deg på. Siden kan rulles som vanlig, og Escape, lukkeknappen eller et trykk utenfor kortet lukker det.
 
 **Legg i kalender** i kortet gir den besøkende arrangementet i sin egen kalender: til Google Kalender, eller som fil for Apple Kalender, Outlook og de andre. Den tilbyr også hele kalenderen som abonnement.
+
+I editoren velger første trykk på en kalender den, og et trykk på et av arrangementene åpner kortet. Ordene i det («Når», «Hvor», «Legg i kalender») endres da ved å klikke på dem, som i selve kalenderen.
 
 **Vis abonner-knapp** setter en **Abonner**-knapp under kalenderen, så besøkende kan følge hele kalenderen i sin egen app.
 

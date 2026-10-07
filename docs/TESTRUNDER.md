@@ -2,6 +2,37 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring.
 
+### Test batch (0.7.19.18): all calendar texts follow the site language and can be edited
+
+**The words in the site's language**
+
+- [ ] The site language set to English, every calendar design picked one after the other with sample data: not one Norwegian word without an edit, in the design itself, the switcher's week and month, «Show all» and «Earlier», the printed list and the event card; the sample events are in English too
+- [ ] The site language set to Turkish: dates in Turkish order on the cards and in the month heads, the Year wheel's months in capitals with a dotted İ, Dark glass's share written «%45», and with the 12-hour clock the hours as «ÖÖ»/«ÖS»
+- [ ] Billboard and Countdown ring with an event one day away: «1 DAY» and «Tomorrow», not «1 days»; an event tomorrow at 01:00 says «Tomorrow», not «Today!»
+- [ ] Day plan, Heat map and Month with side panel on a day that is not today: the count of that day, not «N today»; an empty day and an empty month say so in their own words, not «No upcoming events»
+
+**Rewriting and removing words**
+
+- [ ] A text with a number rewritten in the preview (the count in Numbered programme, «In N days»): the number stays and the new words stand after a reload; bold across the words and the number, and a Backspace right after the number, leave the number in place
+- [ ] The Regular event's label, «For whom» and the announcement's label emptied in the preview: a faint hint in the editor, nothing in the Clean view, on the published page and on the phone, and the design closes up with no empty box (the Regular event falls to one column without its aside)
+- [ ] «Reset the texts» after rewriting and removing words: every word back to the default, the announcement's own heading and text kept
+- [ ] A page saved before this version with emptied calendar words: the default words show, no empty lines
+
+**The announcement**
+
+- [ ] The calendar's menu, Content → Announcement: «Heading» and «Text» fill the note in the preview at once, a line break in the text stays, and `<` is written as it is; in the alert band only «Heading» is shown
+- [ ] An announcement without words: hints in the editor in the admin language, nothing on the published page
+- [ ] Coming up on cream with the announcement as an alert band with an address: pressing its words in the editor puts the caret there and the preview stays on the page; in the Clean view the band follows its link
+- [ ] A long announcement text in Noticeboard, Coming up on cream and Regular event: four lines (six in the Regular event) ending in «…» and «Read it all» under them; a short text has no «Read it all»
+- [ ] On the published page and in the Clean view: a click on the announcement or «Read it all» opens a card with the label, the heading, the whole text and «Read more» when it has an address, in the note's colours and the heading's font; Tab to the announcement and Enter opens it too, and Escape closes it with the focus back on the announcement
+- [ ] In the editor: the first click selects the calendar, a click on the cut text opens the card, the whole text is written there and the note follows at once; «Read it all» is rewritten by clicking it; writing in the text on the note shows all of it while you write
+- [ ] The cut and the card in Firefox and in a WebKit browser (GNOME Web or Safari): the same four lines, «…» and «Read it all»
+
+**The event card in the editor**
+
+- [ ] The first press on an event selects the calendar, the next opens its card; «When», «Where» and «Add to calendar» in the card are rewritten by clicking them, and the card stays open while you write; Escape or a press outside closes it
+- [ ] The selected calendar cannot be dragged by its events; it drags by the move handle, or by an event before it is selected
+
 ### Test batch (0.7.21.2-0.7.21.4): the height that follows the content, drags and the block's own width (merged 6 October 2026)
 
 **The height that follows the content**

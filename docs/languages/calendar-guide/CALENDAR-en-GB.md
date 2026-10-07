@@ -96,9 +96,11 @@ Where to find them:
 
 A calendar is as tall as what it shows: its outline is fitted to its design, and again when you change the design, its settings or its width. Drag the handle in the outline's corner to make the calendar narrower or wider; a pull up or down stops at the edge of the calendar. **Size** in the menu makes the whole calendar, text included, smaller or larger.
 
-Each design has its own colours, and some have settings of their own, in the block's menu. The words a design writes («Next event», «Later») are changed by clicking them in the preview.
+Each design has its own colours, and some have settings of their own, in the block's menu.
 
-**The calendar's announcement.** Some of the «Coming up» designs can show a note beside the next event, switched on with **Show the calendar's announcement**. You write it by clicking the note in the preview. It is separate from the announcement strip above the menu.
+**The words.** Every word a design writes follows the site's language, and is changed by clicking it in the preview: «Next event», «Later», the buttons, «all day», «Cancelled», and the words around a number, such as «In 3 days» or «Week 41». The number itself stays: it is marked while you write, and you write around it. A line a design brings with it, such as «A regular event» or «For whom: Open to everyone», disappears from the page when you empty it; in the editor it stays as a faint hint you can click and write in again. **Reset the texts** in the block's menu puts every word back, the removed lines too.
+
+**The calendar's announcement.** Some of the «Coming up» designs can show a note beside the next event, switched on with **Show the calendar's announcement**. You write its heading and text under **Announcement** in the block's menu, or by clicking the note in the preview, where it shows a hint until then; a note without words is not shown on the page, and a reset of the texts keeps what you wrote. A text longer than the note holds stops after a few lines and gets **Read it all**, which opens the whole announcement in a card like an event's; in the editor you open that card by clicking the cut text of the selected calendar, and write the whole text there. It is separate from the announcement strip above the menu.
 
 ## What is read from an event
 
@@ -201,6 +203,8 @@ The tools work together: a search inside one venue, in one category.
 A press on an event opens its card over the calendar: the date and time, the place, the picture, the whole description, and the Join and Sign up buttons. The page can be scrolled as usual, and Escape, the close button or a press outside the card closes it.
 
 **Add to calendar** in the card gives the visitor the event in their own calendar: to Google Calendar, or as a file for Apple Calendar, Outlook and the others. It also offers the whole calendar as a subscription.
+
+In the editor, the first press on a calendar selects it, and a press on one of its events opens the card. Its words («When», «Where», «Add to calendar») are then changed by clicking them, as in the calendar itself.
 
 **Show subscribe button** puts a **Subscribe** button under the calendar, so visitors can follow the whole calendar in their own app.
 

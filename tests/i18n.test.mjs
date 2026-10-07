@@ -13,7 +13,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, existsSync, readFileSync } from 'node:fs';
 import { engineImport, ENGINE_DIR } from './_engine.mjs';
 const {
-  t, tp, matchLang, requestedLang, initSiteLocale, dates,
+  t, tp, pluralForm, matchLang, requestedLang, initSiteLocale, dates,
   SUPPORTED_LANGS, validateLanguages, isBuiltinLang,
 } = await engineImport('i18n.js');
 const { registerPackLanguages, loadPackStrings, packLanguages } = await engineImport('language-packs.js');
@@ -255,6 +255,17 @@ test('tp: plural categories via Intl.PluralRules (nb one/other)', async () => {
   // an unknown base key gives '<base>.<category>' so the error is visible and traceable.
   assert.equal(tp('x.days', 1), 'x.days.one');
   assert.equal(tp('x.days', 3), 'x.days.other');
+});
+
+test('pluralForm: the form a count takes, falling back to other where the language has no key for its category', async () => {
+  await initSiteLocale('nb');
+  assert.deepEqual(pluralForm('calendar.inDays', 1), { form: 'one', key: 'calendar.inDays.one' });
+  assert.deepEqual(pluralForm('calendar.inDays', 3), { form: 'other', key: 'calendar.inDays.other' });
+  // Northern Sami counts two as a form of its own (the dual), which the calendar's texts do not have: the other form stands for it.
+  await initSiteLocale('se');
+  assert.deepEqual(pluralForm('calendar.inDays', 2), { form: 'other', key: 'calendar.inDays.other' });
+  await initSiteLocale('nb');
+  assert.deepEqual(pluralForm('x.days', 1), { form: 'one', key: 'x.days.one' }, 'an unknown key keeps its category, so tp shows it');
 });
 
 test('api error codes: every code in functions has an api. key in the admin base', () => {

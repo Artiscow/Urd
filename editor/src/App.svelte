@@ -130,7 +130,7 @@
   import { zoneValid } from '$engine/calendar-format.js';
   import { MAP_SERVICES, mapService } from '$engine/map-links.js';
   import { meetingHostList } from '$engine/meeting-links.js';
-  import { CAL_FIELDS, CAL_SIZE, CAL_SWITCH_VIEWS, calDesign, calView, calStripe, calHasTextOverrides, calDesignGroups, calOptionDefs, calOptions, calScale, CAL_SCALE } from '$engine/calendar-designs.js';
+  import { CAL_FIELDS, CAL_SIZE, CAL_SWITCH_VIEWS, calDesign, calView, calStripe, calHasTextOverrides, calResetTexts, calDesignGroups, calOptionDefs, calOptions, calScale, CAL_SCALE } from '$engine/calendar-designs.js';
   import { calendarThumb } from '$engine/calendar-thumb.js';
 
   /** The background layer types in the order they are offered in the panel. */
@@ -1332,6 +1332,22 @@
     return selectedBlock?.props.fieldStyle?.[calField] ?? {};
   }
   /** A design with a view of its own writes that view too, so an engine without the design still draws the right data. */
+  /** The announcement's own words as plain text, for the fields in its group; the preview stores them as HTML. */
+  function calNoticeWords(key) {
+    const html = selectedBlock.props.texts?.[key];
+    if (typeof html !== 'string') return '';
+    return new DOMParser().parseFromString(html.replace(/<br\s*\/?>/gi, '\n'), 'text/html').body.textContent.trim();
+  }
+
+  /** The announcement's words from its fields: plain text with its line breaks kept; an emptied field leaves the hint in the preview. */
+  function setCalNoticeWords(key, value) {
+    const words = value.trim();
+    const texts = { ...(selectedBlock.props.texts ?? {}) };
+    if (words) texts[key] = words.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+    else delete texts[key];
+    setBlockProp('texts', Object.keys(texts).length ? texts : undefined);
+  }
+
   function setCalendarDesign(id) {
     const def = calDesign(id);
     // A «Coming up» design starts with three events in the card and three under «Later», unless the counts are already set.
@@ -9905,6 +9921,15 @@
               options={[['note', ta('calendar.noticeAsNote')], ['band', ta('calendar.noticeAsBand')]]}
               onchange={(v) => setBlockProp('notice', { ...(selectedBlock.props.notice ?? {}), as: v === 'band' ? 'band' : undefined })} />
           {/if}
+          <!-- The announcement's own words, also written by clicking them in the preview; the band shows the heading alone -->
+          <label title={ta('tip.calendar.noticeHeading')}>{ta('calendar.noticeHeading')}
+            <input value={calNoticeWords('noticeTitle')} placeholder={ta('calendar.noticeTitleHint')}
+              onchange={(e) => setCalNoticeWords('noticeTitle', e.target.value)} /></label>
+          {#if selectedBlock.props.notice?.as !== 'band' || !calDesign(selectedBlock.props.design).noticeBand}
+            <label class="field-stack" title={ta('tip.calendar.noticeBody')}>{ta('calendar.noticeBody')}
+              <textarea rows="3" value={calNoticeWords('noticeText')}
+                onchange={(e) => setCalNoticeWords('noticeText', e.target.value)}></textarea></label>
+          {/if}
           <label title={ta('tip.calendar.noticeHref')}>{ta('calendar.noticeHref')}
             <input value={selectedBlock.props.notice?.href ?? ''} placeholder="https://" spellcheck="false"
               onchange={(e) => setBlockProp('notice', { ...(selectedBlock.props.notice ?? {}), href: e.target.value.trim() || undefined })} /></label>
@@ -9918,9 +9943,9 @@
       {#if calDesign(selectedBlock.props.design).notice}
         {@render menuGroup('cal-notice', ta('calendar.group.notice'), cm.notice, calNotice, cm.noticeReset)}
       {/if}
-      <!-- The labels and the buttons' words are rewritten by clicking them in the preview; this puts the defaults back -->
+      <!-- The design's words are rewritten by clicking them in the preview; this puts the defaults back and the removed lines too, keeping the announcement's own words -->
       {#if calHasTextOverrides(calDesign(selectedBlock.props.design), selectedBlock.props.texts)}
-        <button type="button" class="ghost action" title={ta('tip.calendar.resetTexts')} onclick={() => setBlockProp('texts', undefined)}>{ta('calendar.resetTexts')}</button>
+        <button type="button" class="ghost action" title={ta('tip.calendar.resetTexts')} onclick={() => setBlockProp('texts', calResetTexts(selectedBlock.props.texts))}>{ta('calendar.resetTexts')}</button>
       {/if}
     {:else if selectedBlock.type === 'faq'}
       <label class="gridmenu-snap" title={ta('tip.faq.multi')}>

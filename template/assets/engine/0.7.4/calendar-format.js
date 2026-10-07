@@ -1,5 +1,5 @@
 /**
- * How the calendar block writes times and lays out weeks: the pure rules behind the clock (24 or 12 hours), the first day of the week, an event's end, a span over several days, and the time zone the times are shown in.
+ * How the calendar block writes times and lays out weeks: the pure rules behind the clock (24 or 12 hours), the first day of the week, an event's end, a span over several days, the days left to an event, a percentage, and the time zone the times are shown in.
  * The clock is 24 hours unless the block asks for 12 (`clock`), and the site language decides the week unless the block says otherwise (`weekStart`); the site's own time zone, when set, is the zone every visitor sees the times in.
  * Loaded by the block on its first render, with ics.js and the design model, never in the visitor closure; it never touches the DOM.
  */
@@ -39,11 +39,53 @@ export function calWeekStart(props, lang) {
 
 const two = (n) => String(n).padStart(2, '0');
 
-/** A time of day as text: «18:00», or «6:00 pm» on a 12-hour clock. */
-export function formatClock(hours, minutes, clock12) {
+const formats = new Map();
+/** An Intl formatter for the language, made once per language and options. */
+function intlFormat(kind, lang, options) {
+  const id = `${kind}|${lang ?? ''}|${JSON.stringify(options)}`;
+  if (!formats.has(id)) {
+    const locale = localeOf(lang);
+    let format;
+    try {
+      format = kind === 'number' ? new Intl.NumberFormat(locale, options) : new Intl.DateTimeFormat(locale, options);
+    } catch {
+      format = kind === 'number' ? new Intl.NumberFormat(undefined, options) : new Intl.DateTimeFormat(undefined, options);
+    }
+    formats.set(id, format);
+  }
+  return formats.get(id);
+}
+
+/** A fixed day at a time of day, read in UTC so no zone moves the clock. */
+const atClock = (hours, minutes) => new Date(Date.UTC(2026, 0, 5, hours, minutes));
+
+/**
+ * A time of day as text: «18:00», or on a 12-hour clock as the language writes it («6:00 pm», «6:00 p.m.», «ÖS 6:00»).
+ * The language decides the words for the half of the day and where they stand.
+ */
+export function formatClock(hours, minutes, clock12, lang) {
   if (!clock12) return `${two(hours)}:${two(minutes)}`;
-  const h = hours % 12 === 0 ? 12 : hours % 12;
-  return `${h}:${two(minutes)} ${hours < 12 ? 'am' : 'pm'}`;
+  return intlFormat('clock', lang, { hour: 'numeric', minute: '2-digit', hourCycle: 'h12', timeZone: 'UTC' }).format(atClock(hours, minutes));
+}
+
+/** An hour on a plan's axis: «08», or on a 12-hour clock as the language writes it («1 pm», «ÖS 1»). */
+export function formatHour(hour, clock12, lang) {
+  if (!clock12) return two(hour);
+  return intlFormat('hour', lang, { hour: 'numeric', hourCycle: 'h12', timeZone: 'UTC' }).format(atClock(hour, 0));
+}
+
+/** A share as a percentage the way the language writes it («45 %», «45%», «%45»). */
+export function formatPercent(fraction, lang) {
+  return intlFormat('number', lang, { style: 'percent', maximumFractionDigits: 0 }).format(fraction);
+}
+
+/** The number of calendar days from one time's day to another's on the local clock: 1 from 23:30 to 01:00 the next night, whatever the hours between, and across a change of clock. */
+export function daysBetween(fromMs, toMs) {
+  const day = (ms) => {
+    const d = new Date(ms);
+    return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  };
+  return Math.round((day(toMs) - day(fromMs)) / (24 * 3600 * 1000));
 }
 
 /** The empty cells before the first of a month in a grid whose weeks start on weekStart. */
@@ -80,12 +122,12 @@ export function isMultiDay(occ) {
  * `to` is null when the feed gave no end or when the end is the start; for an event that ends on a later day it is the end's clock, and the caller writes the day before it.
  * @returns {{from: string, to: string|null}}
  */
-export function timeRange(occ, clock12) {
+export function timeRange(occ, clock12, lang) {
   const start = new Date(occ.start);
-  const from = formatClock(start.getHours(), start.getMinutes(), clock12);
+  const from = formatClock(start.getHours(), start.getMinutes(), clock12, lang);
   if (!occ.hasEnd || !(occ.end > occ.start)) return { from, to: null };
   const end = new Date(occ.end);
-  return { from, to: formatClock(end.getHours(), end.getMinutes(), clock12) };
+  return { from, to: formatClock(end.getHours(), end.getMinutes(), clock12, lang) };
 }
 
 const isoDay = (d) => `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`;
