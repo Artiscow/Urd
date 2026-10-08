@@ -92,6 +92,7 @@
     if (addPage() !== false) navNewPageTitle = '';
   }
   import IconEditor from './lib/IconEditor.svelte';
+  import DesignPicker from './lib/DesignPicker.svelte';
   // The editor shares the migration code with the engine (same file, bundled in).
   import { defaultFormFields } from '$engine/blocks/form.js';
   import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION, SITE_SCHEMA_VERSION } from '$engine/migrate.js';
@@ -131,7 +132,6 @@
   import { MAP_SERVICES, mapService } from '$engine/map-links.js';
   import { meetingHostList } from '$engine/meeting-links.js';
   import { CAL_FIELDS, CAL_SIZE, CAL_SWITCH_VIEWS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, calSwitcherViews, calDescription, calHasExcerpt, calDesign, calView, calStripe, calHasTextOverrides, calResetTexts, calDesignGroups, calOptionDefs, calOptions, calScale, CAL_SCALE } from '$engine/calendar-designs.js';
-  import { calendarThumb } from '$engine/calendar-thumb.js';
 
   /** The background layer types in the order they are offered in the panel. */
   const BG_TYPES = [
@@ -1095,7 +1095,7 @@
     const b = selectedBlock;
     const items = [];
     if (b.type === 'calendar') {
-      items.push({ id: 'design', label: ta('calendar.design'), kind: 'open', value: ta(calDesign(b.props.design).labelKey), run: () => (menuPickerFor = b.blockId) });
+      items.push({ id: 'design', label: ta('calendar.design'), kind: 'open', value: ta(calDesign(b.props.design).labelKey), run: () => (designPicker = { mode: 'set' }) });
       if (['list', 'cards', 'agenda'].includes(calView(b.props))) {
         items.push({ id: 'limit', label: ta('lbl.maxCount'), kind: 'number', min: 1, max: 50, value: b.props.limit ?? 6, set: (v) => setBlockProp('limit', Math.max(1, Math.min(50, Number(v) || 6))) });
       }
@@ -1149,17 +1149,11 @@
     };
   }
 
-  /** The block whose design picker stands open over the menu; null when the menu shows its areas. */
-  let menuPickerFor = $state(null);
-  // The design picker belongs to one opening of one block's menu: another block, or the floating menu closing, puts the menu back on its areas.
-  let menuWasOpen = false;
+  /** The design picker (DesignPicker) over the editor: 'set' changes the selected calendar's design, 'add' adds a calendar in the chosen design; null = closed. */
+  let designPicker = $state(null);
   $effect(() => {
-    if (menuPickerFor && selectedBlock?.blockId !== menuPickerFor) menuPickerFor = null;
-    const open = Boolean(blockMenu);
-    if (menuWasOpen && !open) menuPickerFor = null;
-    menuWasOpen = open;
+    if (designPicker?.mode === 'set' && selectedBlock?.type !== 'calendar') designPicker = null;
   });
-  const menuPicking = () => selectedBlock?.type === 'calendar' && menuPickerFor === selectedBlock.blockId;
 
   /** The element menu's search, one for each place the menu is drawn: the
    *  floating menu's head and the Properties panel. A search belongs to one
@@ -1182,11 +1176,9 @@
   // A word in the search closes the design picker over the menu, so the hits are seen.
   function setMenuQuery(value) {
     menuQuery = value;
-    if (value.trim()) menuPickerFor = null;
   }
   function setPropsQuery(value) {
     propsQuery = value;
-    if (value.trim()) menuPickerFor = null;
   }
 
   /** What a closed group shows: how the block fits a narrower screen, and its motion. */
@@ -1358,7 +1350,6 @@
     const plainView = def.id === 'plain' && !['list', 'cards', 'month', 'agenda', 'next'].includes(calView(selectedBlock.props)) ? { view: 'list' } : {};
     // setBlockProps fits the frame to the new design.
     setBlockProps('design', { design: def.id === 'plain' ? undefined : def.id, ...(def.view ? { view: def.view } : {}), ...plainView, ...counts });
-    menuPickerFor = null;
   }
   function setCalColor(key, value) {
     const colors = { ...(selectedBlock.props.colors ?? {}) };
@@ -8338,23 +8329,10 @@
                   <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-next')}>{ta('calendar.viewNext')}</button>
                   <button class="ghost" title={ta('tip.blocks.calendar')} onclick={() => addBlock('calendar-agenda')}>{ta('calendar.viewAgenda')}</button>
                 </div>
-                <!-- Every design as a thumbnail, grouped by the view it shows: a press adds a calendar in that design -->
-                <details class="group cal-palette">
-                  <summary>{ta('calendar.designs')}</summary>
-                  {#each calDesignGroups() as group (group.view ?? 'plain')}
-                    {#if group.view}
-                      <span class="mini-label">{ta(CAL_VIEW_KEYS[group.view])}</span>
-                    {/if}
-                    <div class="footer-tpick">
-                      {#each group.designs as d (d.id)}
-                        <button type="button" class="footer-tp" title={ta(d.labelKey)} onclick={() => addCalendarDesign(d.id)}>
-                          <span class="footer-tp-thumb">{@html calendarThumb(d.id)}</span>
-                          <span class="footer-tp-name">{ta(d.labelKey)}</span>
-                        </button>
-                      {/each}
-                    </div>
-                  {/each}
-                </details>
+                <!-- Every design with its picture, in the design picker: a choice adds a calendar in that design -->
+                <div class="group-items">
+                  <button class="ghost" title={ta('tip.calendar.picker.open')} onclick={() => (designPicker = { mode: 'add' })}>{ta('calendar.picker.open')}</button>
+                </div>
               </details>
               <details class="group">
                 <summary>{ta('group.shapes')}</summary>
@@ -9089,6 +9067,12 @@
 
   {#if iconEditorImage}
     <IconEditor image={iconEditorImage} onapply={applyIcon} oncancel={() => (iconEditorImage = null)} />
+  {/if}
+  {#if designPicker}
+    <DesignPicker mode={designPicker.mode} current={designPicker.mode === 'set' ? calDesign(selectedBlock?.props.design).id : 'plain'}
+      site={siteDraft ? $state.snapshot(siteDraft) : null} page={store?.data ? $state.snapshot(store.data) : null}
+      onpick={(id) => { if (designPicker.mode === 'add') addCalendarDesign(id); else setCalendarDesign(id); designPicker = null; }}
+      onclose={() => (designPicker = null)} />
   {/if}
 
   {#if confirmBox}
@@ -10387,7 +10371,7 @@
     {:else if selectedBlock.type === 'calendar'}
       {@const calDef = calDesign(selectedBlock.props.design)}
       <!-- The design: a row naming it, opening the picker over the whole menu -->
-      <button type="button" class="menu-row cal-design-row" title={ta('tip.calendar.design')} onclick={() => (menuPickerFor = selectedBlock.blockId)}>
+      <button type="button" class="menu-row cal-design-row" title={ta('tip.calendar.design')} onclick={() => (designPicker = { mode: 'set' })}>
         <span class="menu-group-title">{ta('calendar.design')}</span><span class="menu-group-value">{ta(calDef.labelKey)}</span>
       </button>
       {@const cm = calMenu()}
@@ -11045,33 +11029,8 @@
   {/snippet}
 
   <!-- The design picker takes the whole menu while it is open: every design as a drawn thumbnail, grouped by the view it stands on -->
-  {#snippet menuDesignPicker()}
-    {@const calDef = calDesign(selectedBlock.props.design)}
-    <div class="menu-picker cal-designs">
-      <div class="menu-picker-head">
-        <button type="button" class="ghost action" onclick={() => (menuPickerFor = null)}>{ta('menu.back')}</button>
-        <span class="panel-strong">{ta('calendar.design')}: {ta(calDef.labelKey)}</span>
-      </div>
-      {#each calDesignGroups() as group (group.view ?? 'plain')}
-        {#if group.view}
-          <span class="mini-label">{ta(CAL_VIEW_KEYS[group.view])}</span>
-        {/if}
-        <div class="footer-tpick">
-          {#each group.designs as d (d.id)}
-            <button type="button" class="footer-tp" class:on={d.id === calDef.id} aria-pressed={d.id === calDef.id}
-              title={ta(d.labelKey)} onclick={() => setCalendarDesign(d.id)}>
-              <span class="footer-tp-thumb">{@html calendarThumb(d.id)}</span>
-              <span class="footer-tp-name">{ta(d.labelKey)}</span>
-            </button>
-          {/each}
-        </div>
-      {/each}
-    </div>
-  {/snippet}
 
-  {#if menuPicking()}
-    {@render menuDesignPicker()}
-  {:else if !query.trim()}
+  {#if !query.trim()}
     <!-- The quick row: the settings used most, changed without opening anything -->
     <div class="menu-quick">
       {#each menuQuickItems() as item (item.id)}
@@ -11092,7 +11051,7 @@
       {/each}
     </div>
   {/if}
-  {#if !menuPicking() && query.trim()}
+  {#if query.trim()}
     <!-- The search: a copy of the three areas of its own, narrowed to what matches (menu-search.js),
          as columns when wide and under each other when narrow, each area saying when nothing in it matches -->
     <div class="emenu-cols emenu-search" class:stacked={!wide} {@attach menuSearch(query, matchWords)}>
@@ -11100,13 +11059,13 @@
       <section class="emenu-col"><p class="panel-strong emenu-title">{ta('props.tabStyle')}</p>{@render menuStyle()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>
       <section class="emenu-col"><p class="panel-strong emenu-title">{ta('props.tabPlacement')}</p>{@render menuPlacement()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>
     </div>
-  {:else if !menuPicking() && wide}
+  {:else if wide}
     <div class="emenu-cols">
       <section class="emenu-col"><p class="panel-strong">{ta('props.tabContent')}</p>{@render menuContent()}</section>
       <section class="emenu-col"><p class="panel-strong">{ta('props.tabStyle')}</p>{@render menuStyle()}</section>
       <section class="emenu-col"><p class="panel-strong">{ta('props.tabPlacement')}</p>{@render menuPlacement()}</section>
     </div>
-  {:else if !menuPicking()}
+  {:else}
     <div class="props-tabs">
       <span class="seg">
         <button type="button" class:on={propsTab === 'content'}
@@ -11833,26 +11792,6 @@
   }
 
   /* The design picker over the whole menu: the thumbnails as many across as the menu is wide */
-  .menu-picker {
-    display: grid;
-    gap: 0.5rem;
-  }
-
-  .block-menu.wide .menu-picker {
-    width: min(700px, 100vw - 50px);
-  }
-
-  .menu-picker-head {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-  }
-
-  .menu-picker .footer-tpick {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
-    gap: 0.5rem;
-  }
 
   /* A group of the element menu: the title to the left, the current value muted to the right */
   .menu-group summary {

@@ -74,6 +74,8 @@ Før en kilde er limt inn, viser blokken eksempelarrangementer i editoren, så d
 
 ## Design
 
+**Velge design:** «Velg design …» i Stil-fanen på en kalender (og i Kalender-gruppen i Blokker-panelet, der valget legger til en ny kalender) åpner designvelgeren over editoren: alle designene med bilde, gruppert etter familie, med søk på navn og filter på visning. Det merkede designet tegnes levende med eksempelarrangementer i ditt eget tema og språk før du bruker det.
+
 Kalenderen har 34 design, gruppert etter hva de viser. Et design velges når blokken legges til, og byttes senere under **Design** i blokkens meny. Arrangementene er de samme i alle design.
 
 | Viser | Design |

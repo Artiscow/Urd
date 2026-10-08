@@ -12,9 +12,9 @@ const {
   CAL_DESIGNS, CAL_VIEWS, CAL_FIELDS, CAL_TEXTS, CAL_SIZE, CAL_MODULES,
   CAL_SWITCH_VIEWS, calSwitcher, calFolds, calProgramHref, CAL_OPTIONS, calOptionDefs, calOptions, CAL_SCALE, calScale, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calHasTextOverrides,
   CAL_PLURAL_TEXTS, CAL_CONTENT_TEXTS, CAL_HINT_TEXTS, CAL_TEXT_PARAMS, calTextSlot, calBlankHtml, calTextValue, calSplitTokens, calResetTexts,
-  CAL_SETS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, calSwitcherViews, calDescription, calHasExcerpt, CAL_PHONE_MODES, calPhoneDesign,
+  CAL_SETS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, calSwitcherViews, calDescription, calHasExcerpt, CAL_PHONE_MODES, calPhoneDesign, CAL_FAMILIES, calDesignFamilies,
 } = await engineImport('calendar-designs.js');
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync, statSync } from 'node:fs';
 
 const plain = CAL_DESIGNS[0];
 const { calendarThumb, CAL_THUMB_IDS } = await engineImport('calendar-thumb.js');
@@ -32,6 +32,7 @@ test('every design has a label key, slots with label keys, known texts and a vie
     assert.ok(design.view === null || CAL_VIEWS.includes(design.view), `${design.id}: view ${design.view}`);
     assert.equal(typeof design.stripe, 'boolean');
     assert.ok(CAL_PHONE_MODES.includes(design.phone), `${design.id}: phone ${design.phone}`);
+    assert.ok(CAL_FAMILIES.includes(design.family), `${design.id}: family ${design.family}`);
     for (const slot of design.slots) assert.equal(slot.labelKey, `calendar.slot.${slot.key}`);
     for (const key of design.texts) assert.ok(key in CAL_TEXTS, `${design.id}: text ${key}`);
     if (design.module) assert.ok(CAL_MODULES.includes(design.module), `${design.id}: module ${design.module}`);
@@ -356,4 +357,22 @@ test('calPhoneDesign: on a phone only a design that cannot be read there switche
   assert.equal(calPhoneDesign({ design: 'plain' }), false);
   assert.equal(calPhoneDesign({ design: 'posters' }), false);
   assert.equal(calPhoneDesign(undefined), false);
+});
+
+test('calDesignFamilies: every design once, in the families\' order, the plain design first', () => {
+  const families = calDesignFamilies();
+  assert.deepEqual(families.map((f) => f.family), CAL_FAMILIES);
+  const ids = families.flatMap((f) => f.designs.map((d) => d.id));
+  assert.equal(ids.length, CAL_DESIGNS.length);
+  assert.equal(new Set(ids).size, ids.length);
+  assert.equal(ids[0], 'plain');
+  for (const f of families) assert.equal(f.labelKey, `calendar.family.${f.family}`);
+});
+
+test('every design has a picture for the design picker', () => {
+  for (const design of CAL_DESIGNS) {
+    const file = new URL(`../template/admin/designs/${design.id}.webp`, import.meta.url);
+    assert.ok(existsSync(file), `${design.id}: ${file.pathname}`);
+    assert.ok(statSync(file).size > 1000 && statSync(file).size < 120000, `${design.id}: picture size`);
+  }
 });

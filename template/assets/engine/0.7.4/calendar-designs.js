@@ -4,7 +4,7 @@
  * The owner's choices are additive props on the block (`design`, `colors`, `stripe`, `texts`, `fieldStyle`, `showSignup`, `showMore`, `programHref`, `showOpen`, `options`, `scale`); a block without them renders the plain design on the theme's colours.
  * The module is bundled by the editor and loaded by the block on its first render (with ics.js, outside the visitor closure), so it never touches the DOM and never calls ta().
  *
- * A design is five things, added together: an entry in CAL_DESIGNS below (its view, the colour slots by section with the plain colours first, the static texts, the stripe and the flags); a renderer exported under the design's id from its blocks/calendar-<module>.js; its rules in base.css, under its own class names, that read every slot as `--urd-cal-s-<slot>` with the design's own default; a drawing in calendar-thumb.js; and the label, slot and section keys in the nb, en-GB and tr admin dictionaries. tests/calendar-designs.test.mjs holds the entries, the renderers, the drawings and the keys against each other; the style sheet is checked by eye.
+ * A design is five things, added together: an entry in CAL_DESIGNS below (its view, the colour slots by section with the plain colours first, the static texts, the stripe and the flags); a renderer exported under the design's id from its blocks/calendar-<module>.js; its rules in base.css, under its own class names, that read every slot as `--urd-cal-s-<slot>` with the design's own default; a drawing in calendar-thumb.js; a picture under template/admin/designs/<id>.webp made by scripts/design-pictures.mjs for the design picker; and the label, slot and section keys in the nb, en-GB and tr admin dictionaries. tests/calendar-designs.test.mjs holds the entries, the renderers, the drawings and the keys against each other; the style sheet is checked by eye.
  */
 
 /** The data views a design can stand on; `null` on a design means the block's own `view`. */
@@ -147,6 +147,17 @@ const BLOCK_TEXTS = ['noMatch', 'earlier', 'showAll', 'zoneOf', 'zoneYours', 'we
 const COMMON_TEXTS = ['all', 'signup', 'subscribe', 'subscribeMulti', 'addGoogle', 'swUpcoming', 'swWeek', 'swMonth', ...BLOCK_TEXTS, ...TIME_TEXTS, ...EVENT_TEXTS];
 
 /**
+ * The design families the picker groups by (`family` in the list), in the picker's order; the label key is `calendar.family.<id>`.
+ * The stylised families (retro, fairy tale, future, graphic styles, nature, objects) join the list as they are built.
+ */
+export const CAL_FAMILIES = ['modern', 'next', 'ap'];
+
+/** The designs by family, in the families' order: every design once, the plain design first in its family. */
+export function calDesignFamilies() {
+  return CAL_FAMILIES.map((family) => ({ family, labelKey: `calendar.family.${family}`, designs: CAL_DESIGNS.filter((d) => d.family === family) })).filter((f) => f.designs.length);
+}
+
+/**
  * How a design behaves on a phone (`phone` in the list): `fits` reads as it is, `flows` lays its columns under each other in base.css, and `switch` cannot be read there and draws the shared phone design instead (calPhoneDesign).
  */
 export const CAL_PHONE_MODES = ['fits', 'flows', 'switch'];
@@ -161,13 +172,14 @@ const slot = (key, section = 'colors') => ({ key, labelKey: `calendar.slot.${key
  * `ownSubscribe` marks a design that places the subscribe buttons inside its own layout, so the block draws no row under it, `ownFilter` one that draws its own calendar switches instead of the chip row, and `notice` one that can show the announcement note (`props.notice { show, href, as }` with the texts noticeLabel, noticeTitle and noticeText; `noticeBand` marks a design that can draw it as an alert band instead, `as: 'band'`).
  * `empty: 'ap'` gives the design ApeironLF's empty state (a pill, a dashed box and the subscribe button) in place of the plain one.
  * `program` marks a design that draws a link to the whole programme when the block has an address for it (`props.programHref`), and `open` one that writes «Open to everyone» on an event without a sign-up (`props.showOpen`).
- * @type {Array<{id: string, labelKey: string, view: string|null, module?: string, phone: string, stripe: boolean, slots: Array<{key: string, labelKey: string, section: string}>, texts: string[]}>}
+ * @type {Array<{id: string, labelKey: string, view: string|null, module?: string, family: string, phone: string, stripe: boolean, slots: Array<{key: string, labelKey: string, section: string}>, texts: string[]}>}
  */
 export const CAL_DESIGNS = [
   {
     id: 'plain',
     labelKey: 'calendar.design.plain',
     set: 'theme',
+    family: 'modern',
     phone: 'fits',
     view: null,
     stripe: false,
@@ -178,6 +190,7 @@ export const CAL_DESIGNS = [
     id: 'timeline',
     labelKey: 'calendar.design.timeline',
     set: 'theme',
+    family: 'modern',
     phone: 'fits',
     view: 'list',
     module: 'list',
@@ -189,6 +202,7 @@ export const CAL_DESIGNS = [
     id: 'table',
     labelKey: 'calendar.design.table',
     set: 'theme',
+    family: 'modern',
     phone: 'switch',
     view: 'list',
     module: 'list',
@@ -200,6 +214,7 @@ export const CAL_DESIGNS = [
     id: 'booklet',
     labelKey: 'calendar.design.booklet',
     set: 'poster',
+    family: 'modern',
     phone: 'fits',
     excerpt: true,
     view: 'list',
@@ -212,6 +227,7 @@ export const CAL_DESIGNS = [
     id: 'numbered',
     labelKey: 'calendar.design.numbered',
     set: 'poster',
+    family: 'modern',
     phone: 'fits',
     view: 'list',
     module: 'list',
@@ -223,6 +239,7 @@ export const CAL_DESIGNS = [
     id: 'apList',
     labelKey: 'calendar.design.apList',
     set: 'apNavy',
+    family: 'ap',
     phone: 'fits',
     empty: 'ap',
     view: 'list',
@@ -235,6 +252,7 @@ export const CAL_DESIGNS = [
     id: 'glass',
     labelKey: 'calendar.design.glass',
     set: 'lightGlass',
+    family: 'modern',
     phone: 'fits',
     view: 'list',
     module: 'list',
@@ -246,6 +264,7 @@ export const CAL_DESIGNS = [
     id: 'posters',
     labelKey: 'calendar.design.posters',
     set: 'poster',
+    family: 'modern',
     phone: 'flows',
     view: 'cards',
     module: 'cards',
@@ -258,6 +277,7 @@ export const CAL_DESIGNS = [
     id: 'tickets',
     labelKey: 'calendar.design.tickets',
     set: 'theme',
+    family: 'modern',
     phone: 'flows',
     view: 'cards',
     module: 'cards',
@@ -271,6 +291,7 @@ export const CAL_DESIGNS = [
     id: 'carousel',
     labelKey: 'calendar.design.carousel',
     set: 'theme',
+    family: 'modern',
     phone: 'fits',
     view: 'cards',
     module: 'cards',
@@ -282,6 +303,7 @@ export const CAL_DESIGNS = [
     id: 'photo',
     labelKey: 'calendar.design.photo',
     set: 'theme',
+    family: 'modern',
     phone: 'flows',
     view: 'cards',
     module: 'cards',
@@ -293,6 +315,7 @@ export const CAL_DESIGNS = [
     id: 'apGrid',
     labelKey: 'calendar.design.apGrid',
     set: 'apCream',
+    family: 'ap',
     phone: 'flows',
     empty: 'ap',
     view: 'cards',
@@ -305,6 +328,7 @@ export const CAL_DESIGNS = [
     id: 'bento',
     labelKey: 'calendar.design.bento',
     set: 'bento',
+    family: 'modern',
     phone: 'flows',
     view: 'cards',
     module: 'cards',
@@ -317,6 +341,7 @@ export const CAL_DESIGNS = [
     id: 'weekStrip',
     labelKey: 'calendar.design.weekStrip',
     set: 'theme',
+    family: 'modern',
     phone: 'flows',
     view: 'week',
     module: 'time',
@@ -328,6 +353,7 @@ export const CAL_DESIGNS = [
     id: 'weekPlan',
     labelKey: 'calendar.design.weekPlan',
     set: 'theme',
+    family: 'modern',
     phone: 'flows',
     view: 'week',
     module: 'time',
@@ -339,6 +365,7 @@ export const CAL_DESIGNS = [
     id: 'layers',
     labelKey: 'calendar.design.layers',
     set: 'theme',
+    family: 'modern',
     phone: 'flows',
     view: 'week',
     module: 'time',
@@ -351,6 +378,7 @@ export const CAL_DESIGNS = [
     id: 'sidepanel',
     labelKey: 'calendar.design.sidepanel',
     set: 'theme',
+    family: 'modern',
     phone: 'flows',
     view: 'month',
     module: 'time',
@@ -362,6 +390,7 @@ export const CAL_DESIGNS = [
     id: 'apMonth',
     labelKey: 'calendar.design.apMonth',
     set: 'apCream',
+    family: 'ap',
     phone: 'flows',
     empty: 'ap',
     view: 'month',
@@ -374,6 +403,7 @@ export const CAL_DESIGNS = [
     id: 'dayPlan',
     labelKey: 'calendar.design.dayPlan',
     set: 'theme',
+    family: 'modern',
     phone: 'fits',
     view: 'day',
     module: 'time',
@@ -385,6 +415,7 @@ export const CAL_DESIGNS = [
     id: 'yearWheel',
     labelKey: 'calendar.design.yearWheel',
     set: 'theme',
+    family: 'modern',
     phone: 'fits',
     view: 'year',
     module: 'time',
@@ -396,6 +427,7 @@ export const CAL_DESIGNS = [
     id: 'heatmap',
     labelKey: 'calendar.design.heatmap',
     set: 'theme',
+    family: 'modern',
     phone: 'switch',
     view: 'year',
     module: 'time',
@@ -407,6 +439,7 @@ export const CAL_DESIGNS = [
     id: 'billboard',
     labelKey: 'calendar.design.billboard',
     set: 'board',
+    family: 'next',
     phone: 'fits',
     view: 'next',
     module: 'next',
@@ -420,6 +453,7 @@ export const CAL_DESIGNS = [
     id: 'stacked',
     labelKey: 'calendar.design.stacked',
     set: 'theme',
+    family: 'next',
     phone: 'fits',
     view: 'next',
     module: 'next',
@@ -431,6 +465,7 @@ export const CAL_DESIGNS = [
     id: 'noticeboard',
     labelKey: 'calendar.design.noticeboard',
     set: 'cork',
+    family: 'next',
     phone: 'fits',
     view: 'next',
     module: 'next',
@@ -443,6 +478,7 @@ export const CAL_DESIGNS = [
     id: 'split',
     labelKey: 'calendar.design.split',
     set: 'theme',
+    family: 'next',
     phone: 'fits',
     excerpt: true,
     view: 'next',
@@ -455,6 +491,7 @@ export const CAL_DESIGNS = [
     id: 'band',
     labelKey: 'calendar.design.band',
     set: 'theme',
+    family: 'next',
     phone: 'fits',
     view: 'next',
     module: 'next',
@@ -466,6 +503,7 @@ export const CAL_DESIGNS = [
     id: 'oneLine',
     labelKey: 'calendar.design.oneLine',
     set: 'theme',
+    family: 'next',
     phone: 'fits',
     view: 'next',
     module: 'next',
@@ -477,6 +515,7 @@ export const CAL_DESIGNS = [
     id: 'ring',
     labelKey: 'calendar.design.ring',
     set: 'theme',
+    family: 'next',
     phone: 'fits',
     view: 'next',
     module: 'next',
@@ -488,6 +527,7 @@ export const CAL_DESIGNS = [
     id: 'darkGlass',
     labelKey: 'calendar.design.darkGlass',
     set: 'darkGlass',
+    family: 'next',
     phone: 'fits',
     view: 'next',
     module: 'next',
@@ -500,6 +540,7 @@ export const CAL_DESIGNS = [
     id: 'nextBento',
     labelKey: 'calendar.design.nextBento',
     set: 'bento',
+    family: 'next',
     phone: 'fits',
     view: 'next',
     module: 'next',
@@ -513,6 +554,7 @@ export const CAL_DESIGNS = [
     id: 'apNow',
     labelKey: 'calendar.design.apNow',
     set: 'apCream',
+    family: 'ap',
     phone: 'fits',
     view: 'next',
     module: 'more',
@@ -527,6 +569,7 @@ export const CAL_DESIGNS = [
     id: 'apNavy',
     labelKey: 'calendar.design.apNavy',
     set: 'apNavy',
+    family: 'ap',
     phone: 'fits',
     view: 'next',
     module: 'more',
@@ -539,6 +582,7 @@ export const CAL_DESIGNS = [
     id: 'apSeries',
     labelKey: 'calendar.design.apSeries',
     set: 'apCream',
+    family: 'ap',
     phone: 'fits',
     excerpt: true,
     view: 'list',
@@ -553,6 +597,7 @@ export const CAL_DESIGNS = [
     id: 'mobileAgenda',
     labelKey: 'calendar.design.mobileAgenda',
     set: 'agendaDark',
+    family: 'modern',
     phone: 'fits',
     view: 'agenda',
     module: 'more',

@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.19.22): the design picker
+
+- [ ] «Choose design …» in the Calendar group of the Blocks panel opens the picker centred over the editor: 34 designs with pictures in three families (Plain and modern, Coming up, ApeironLF), a search field focused, «34 designs» counted, and «Add calendar» adds a calendar in the marked design and closes it
+- [ ] The Design row in a selected calendar's block menu (and the quick row's Design) opens the same picker with the block's design marked «Chosen»; «Use this design» changes the block's design and closes
+- [ ] The view filter narrows the list (Month: Plain, Month with side panel, Overview on cream), the search narrows by name in the admin language, and «No design matches» shows for a word with no hit
+- [ ] The preview on the right draws the marked design live with sample events in the site's own theme and language, sized to the calendar alone (no header, footer or empty ground), and changes within a moment of a click; double-clicking a tile applies it
+- [ ] Escape and the cross close the picker without changing anything; the editor's own preview is untouched by the picker's (no block moves or selections from it)
+- [ ] The pictures are the designs as the engine draws them with sample data (no site header over them); a missing picture would show the old schematic thumbnail in its place
+
 ### Test batch (0.7.19.21): the phone design, and «Add to calendar» switchable
 
 - [ ] Table and Heatmap on a phone (or dragged narrower than 540 px in the editor): the design is replaced by a stacked list with «Upcoming», a row per event (date · time, title, place, the sign-up button when the sign-up buttons are on) and «Show all N» for the rest; the list takes the design's colours (try Table with own colour slots)

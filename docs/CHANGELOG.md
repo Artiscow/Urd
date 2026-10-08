@@ -27,6 +27,14 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.19.22 - The design picker - 8 October 2026
+
+- The calendar designs stood as a fold of schematic thumbnails in the Style tab, the block menu and the block palette, with no room for the count. The design picker (`editor/src/lib/DesignPicker.svelte`) opens over the editor from all three places: every design with a picture, grouped by family (`family` in `CAL_DESIGNS`, `CAL_FAMILIES`, pure `calDesignFamilies`), a search on the name, a filter on the view, the chosen design marked, and the marked design drawn live in a preview iframe of its own in the site's theme and language before «Use this design» or «Add calendar». The three folds and the menu's own picker are removed.
+- The pictures are the engine's own drawings of each design with the sample events, 34 WebP files under `template/admin/designs/` made by the new `scripts/design-pictures.mjs` (a headless browser against the local server; the site's header, strip and scroll-top button kept out). They lie outside `admin/assets/`, which the editor build empties. A design without a picture shows its schematic thumbnail, and a test holds that every design has a family and a picture.
+- The picker is a native modal dialog (ADR-0011), so it stands centred whatever panel it was opened from, and its preview's height follows the drawn block through the preview window's own ResizeObserver, with the site's header, announcement strip and footer hidden in that iframe.
+- The preview bridge heard every message on the window; it now hears its own iframe alone (`previewBridge.js`), so the picker's iframe never reaches the editor's handlers.
+- SCHEMA.md describes the family and the picker, the calendar guide in English and Norwegian describes choosing a design, and the five admin dictionaries get the picker's keys.
+
 ### 0.7.19.21 - The phone design, and «Add to calendar» switchable - 8 October 2026
 
 - Table and Heatmap could not be read on a phone (four squeezed columns; a year grid twelve screens tall). Every design declares how it behaves on a phone (`phone` in `CAL_DESIGNS`: fits, flows or switch, `CAL_PHONE_MODES`), and a design that switches draws the shared phone design there: one stacked agenda in the set's colours and type, as drawn on the canvas (V29 to V37), with the «Upcoming» heading, a row per event and the fold (`renderPhoneAgenda` in blocks/calendar.js, `.urd-cal-pa-*` in base.css). `phoneDesign: false` shows the design as it is (pure `calPhoneDesign`), and the «Phone design» switch is shown only on a design that switches.

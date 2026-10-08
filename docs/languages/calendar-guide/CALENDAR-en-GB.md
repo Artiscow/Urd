@@ -74,6 +74,8 @@ Until a source is pasted, the block shows sample events in the editor, so you ca
 
 ## Designs
 
+**Choosing a design:** «Choose design …» in the Style tab of a calendar (and in the Calendar group of the Blocks panel, where the choice adds a new calendar) opens the design picker over the editor: every design with a picture, grouped by family, with a search on the name and a filter on the view. The marked design is drawn live with sample events in your own theme and language before you use it.
+
 The calendar has 34 designs, grouped by what they show. A design is chosen when the block is added, and changed later under **Design** in the block's menu. The events are the same in every design.
 
 | Shows | Designs |

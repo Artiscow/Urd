@@ -69,7 +69,8 @@
  */
 export function createPreviewBridge(iframe, handlers = {}) {
   const listener = (event) => {
-    if (event.origin !== location.origin) return;
+    // The bridge's own iframe alone: another preview iframe (the design picker's) has a bridge of its own.
+    if (event.origin !== location.origin || event.source !== iframe.contentWindow) return;
     const msg = event.data;
     if (msg?.type === 'urd-edit') handlers.onEdit?.(msg);
     if (msg?.type === 'urd-move') handlers.onMove?.(msg);
