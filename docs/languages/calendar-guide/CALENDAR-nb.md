@@ -181,16 +181,17 @@ Hvorfor formen betyr noe:
 
 ## Finne arrangementer
 
-Fire verktøy hjelper en besøkende å finne et arrangement. Alle er brytere i blokkens meny, og alle er av på en ny kalender:
+Tre verktøy hjelper en besøkende å finne et arrangement. Alle er brytere i blokkens meny, og alle er av på en ny kalender:
 
-- **Vis kategori-filter:** en knapp per kategori.
-- **Vis stedsfilter:** en knapp per lokale. Lokalet er stedet fram til første komma, så «Klubbhuset, Storgata 1» er «Klubbhuset». Knappene vises når arrangementene har to eller flere lokaler.
-- **Vis søkefelt:** den besøkende skriver, og bare arrangementene med de ordene i tittel, sted eller beskrivelse står igjen.
+- **Vis kalenderfilter:** en knapp per kalender, vist når arrangementene kommer fra to eller flere. Knappene er kalendernes navn, eller kategoriene en kilde har med, eller titler skrevet som «Møte: Årsmøte».
+- **Vis søkefelt:** den besøkende skriver, og bare arrangementene med de ordene i tittel, sted eller beskrivelse står igjen. Et sted finner man ved å søke på det.
 - **Vis tidligere arrangementer:** arrangementene fra de siste 90 dagene som er over, foldet under «Tidligere» med antall. Den tilbys i designene som teller opp det som kommer, ikke i måned, uke, dag eller år.
 
-Verktøyene virker sammen: et søk innenfor ett lokale, i én kategori.
+Verktøyene virker sammen: et søk innenfor én kalender. De tegnes i designets egne farger og former, slik kortet som åpnes ved et trykk også gjør.
 
-**Vis visningsvelger** lar den besøkende bytte mellom det som kommer, uken og måneden.
+**Vis visningsvelger** lar den besøkende bytte mellom det som kommer, uken og måneden. Under bryteren velger **Bak Uke** og **Bak Måned** hvilket design som tegnes når en besøkende trykker på knappen: ukestripen eller ett av ukedesignene, den vanlige måneden eller ett av månedsdesignene. Uten et valg passer måneden til kalenderens utseende (ApeironLF-måneden på ApeironLF-designene).
+
+**Vis beskrivelsen** vises på designene som har plass til den i radene sine (Programhefte, Delt kort, Fast arrangement og de vanlige kortene): **I radene** skriver beskrivelsens første linje under arrangementet, **Bare i kortet** overlater den til kortet som åpnes ved et trykk, og som alltid har hele beskrivelsen.
 
 ## Tider
 

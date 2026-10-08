@@ -1112,6 +1112,181 @@ textarea.urd-form-input {
   width: 100%;
 }
 
+/*
+ * The colour sets (calendar-designs.js `set`, the class `urd-cal-set-<id>` on the block and on its card): the event card, the switcher's week and month, the finding tools and the phone view are drawn from these variables alone, so a design overrides its set by redefining one under its own class (`urd-cal-d-<id>` on the block, `urd-cal-dlg-<id>` on the card).
+ * The theme set follows the site; the others take the design's colour slots with the values the Design canvas drew.
+ */
+.urd-cal,
+.urd-cal-dialog {
+  --urd-cal-set-bg: var(--urd-cal-s-surface, var(--urd-color-surface));
+  --urd-cal-set-surface: var(--urd-color-bg);
+  --urd-cal-set-ink: var(--urd-color-text);
+  --urd-cal-set-muted: color-mix(in srgb, var(--urd-color-text) 65%, transparent);
+  --urd-cal-set-line: var(--urd-cal-s-line, color-mix(in srgb, var(--urd-color-text) 14%, transparent));
+  --urd-cal-set-accent: var(--urd-cal-s-accent, var(--urd-color-accent));
+  --urd-cal-set-accent-text: var(--urd-cal-accent-text, var(--urd-color-accent-text));
+  --urd-cal-set-label: var(--urd-cal-s-accent, var(--urd-color-accent));
+  --urd-cal-set-radius: var(--urd-radius-md);
+  --urd-cal-set-chip-radius: 999px;
+  --urd-cal-set-frame: 1px solid var(--urd-cal-set-line);
+  --urd-cal-set-shadow: 0 24px 60px rgb(0 0 0 / 35%);
+  --urd-cal-set-blur: none;
+  --urd-cal-set-font: var(--urd-font-body);
+  --urd-cal-set-title-font: var(--urd-font-heading);
+  --urd-cal-set-title-weight: 700;
+  --urd-cal-set-label-case: none;
+  --urd-cal-set-label-spacing: 0;
+}
+
+.urd-cal-set-apCream {
+  --urd-cal-set-bg: var(--urd-cal-s-card, #f3ecd8);
+  --urd-cal-set-surface: var(--urd-cal-s-panel, #eae1c7);
+  --urd-cal-set-ink: var(--urd-cal-s-text, #1c2340);
+  --urd-cal-set-muted: #4e5368;
+  --urd-cal-set-line: var(--urd-cal-s-line, #d9cfae);
+  --urd-cal-set-accent: var(--urd-cal-s-head, #1c2340);
+  --urd-cal-set-accent-text: var(--urd-cal-s-gold, #d0a74a);
+  --urd-cal-set-label: var(--urd-cal-s-goldDark, #8f6a1e);
+  --urd-cal-set-radius: 14px;
+  --urd-cal-set-frame: 1px solid var(--urd-cal-s-gold, #d0a74a);
+  --urd-cal-set-title-weight: 500;
+  --urd-cal-set-label-case: uppercase;
+  --urd-cal-set-label-spacing: 0.2em;
+}
+
+.urd-cal-set-apNavy {
+  --urd-cal-set-bg: var(--urd-cal-s-ground, #1c2340);
+  --urd-cal-set-surface: var(--urd-cal-s-tile, #262e4f);
+  --urd-cal-set-ink: var(--urd-cal-s-text, #f3ecd8);
+  --urd-cal-set-muted: #9aa0b8;
+  --urd-cal-set-line: var(--urd-cal-s-line, #3a4366);
+  --urd-cal-set-accent: var(--urd-cal-s-gold, #d0a74a);
+  --urd-cal-set-accent-text: var(--urd-cal-s-ground, #1c2340);
+  --urd-cal-set-label: var(--urd-cal-s-gold, #d0a74a);
+  --urd-cal-set-radius: 14px;
+  --urd-cal-set-frame: 1px solid var(--urd-cal-s-gold, #d0a74a);
+  --urd-cal-set-title-weight: 500;
+  --urd-cal-set-label-case: uppercase;
+  --urd-cal-set-label-spacing: 0.2em;
+}
+
+.urd-cal-set-agendaDark {
+  --urd-cal-set-bg: var(--urd-cal-s-ground, #121216);
+  --urd-cal-set-surface: var(--urd-cal-s-card, #1c1c22);
+  --urd-cal-set-ink: var(--urd-cal-s-text, #f5f5f7);
+  --urd-cal-set-muted: #8d8d98;
+  --urd-cal-set-line: var(--urd-cal-s-edge, #2a2a32);
+  --urd-cal-set-accent: var(--urd-cal-s-accent, #ff6b4a);
+  --urd-cal-set-accent-text: #ffffff;
+  --urd-cal-set-label: var(--urd-cal-s-accent, #ff6b4a);
+  --urd-cal-set-radius: 22px;
+  --urd-cal-set-chip-radius: 12px;
+  --urd-cal-set-label-case: uppercase;
+  --urd-cal-set-label-spacing: 0.1em;
+}
+
+.urd-cal-set-board {
+  --urd-cal-set-bg: var(--urd-cal-s-bg, #17201d);
+  --urd-cal-set-surface: var(--urd-cal-s-tile, #233530);
+  --urd-cal-set-ink: var(--urd-cal-s-text, #f6f5f1);
+  --urd-cal-set-muted: #a9b6b1;
+  --urd-cal-set-line: var(--urd-cal-s-tile, #2d443d);
+  --urd-cal-set-accent: var(--urd-cal-s-label, #5fd3bd);
+  --urd-cal-set-accent-text: var(--urd-cal-s-bg, #0f1a17);
+  --urd-cal-set-label: var(--urd-cal-s-label, #5fd3bd);
+  --urd-cal-set-radius: 12px;
+  --urd-cal-set-chip-radius: 8px;
+  --urd-cal-set-frame: none;
+  --urd-cal-set-title-weight: 800;
+  --urd-cal-set-label-case: uppercase;
+  --urd-cal-set-label-spacing: 0.14em;
+}
+
+.urd-cal-set-darkGlass {
+  --urd-cal-set-bg: var(--urd-cal-s-ground, #121216);
+  --urd-cal-set-surface: var(--urd-cal-s-glass, rgb(255 255 255 / 7%));
+  --urd-cal-set-ink: var(--urd-cal-s-text, #f5f5f7);
+  --urd-cal-set-muted: #a0a0aa;
+  --urd-cal-set-line: var(--urd-cal-s-edge, rgb(255 255 255 / 14%));
+  --urd-cal-set-accent: var(--urd-cal-s-button, #f5f5f7);
+  --urd-cal-set-accent-text: var(--urd-cal-s-buttonText, #121216);
+  --urd-cal-set-label: var(--urd-cal-s-label, #ff8a65);
+  --urd-cal-set-radius: 16px;
+  --urd-cal-set-frame: 1px solid var(--urd-cal-s-edge, rgb(255 255 255 / 14%));
+  --urd-cal-set-blur: blur(20px);
+  --urd-cal-set-title-weight: 600;
+  --urd-cal-set-label-case: uppercase;
+  --urd-cal-set-label-spacing: 0.12em;
+}
+
+.urd-cal-set-cork {
+  --urd-cal-set-bg: var(--urd-cal-s-note, #fff7cc);
+  --urd-cal-set-surface: var(--urd-cal-s-board, #8a5a3c);
+  --urd-cal-set-ink: var(--urd-cal-s-noteText, #17201d);
+  --urd-cal-set-muted: #6b6250;
+  --urd-cal-set-line: color-mix(in srgb, var(--urd-cal-s-noteText, #17201d) 18%, transparent);
+  --urd-cal-set-accent: var(--urd-cal-s-button, #2b2a1f);
+  --urd-cal-set-accent-text: var(--urd-cal-s-buttonText, #fff7cc);
+  --urd-cal-set-label: var(--urd-cal-s-noteLabel, #b7791f);
+  --urd-cal-set-radius: 0;
+  --urd-cal-set-chip-radius: 0;
+  --urd-cal-set-frame: none;
+  --urd-cal-set-shadow: 0 18px 40px rgb(0 0 0 / 35%);
+  --urd-cal-set-title-weight: 800;
+  --urd-cal-set-label-case: uppercase;
+  --urd-cal-set-label-spacing: 0.12em;
+}
+
+.urd-cal-set-poster {
+  --urd-cal-set-bg: var(--urd-cal-s-surface, var(--urd-color-surface));
+  --urd-cal-set-surface: var(--urd-color-bg);
+  --urd-cal-set-ink: var(--urd-color-text);
+  --urd-cal-set-muted: color-mix(in srgb, var(--urd-color-text) 65%, transparent);
+  --urd-cal-set-line: var(--urd-cal-s-line, color-mix(in srgb, var(--urd-color-text) 22%, transparent));
+  --urd-cal-set-accent: var(--urd-color-text);
+  --urd-cal-set-accent-text: var(--urd-color-bg);
+  --urd-cal-set-label: var(--urd-cal-s-accent, var(--urd-color-accent));
+  --urd-cal-set-radius: 0;
+  --urd-cal-set-chip-radius: 0;
+  --urd-cal-set-frame: 2px solid var(--urd-color-text);
+  --urd-cal-set-title-weight: 800;
+  --urd-cal-set-label-case: uppercase;
+  --urd-cal-set-label-spacing: 0.14em;
+}
+
+.urd-cal-set-bento {
+  --urd-cal-set-bg: var(--urd-cal-s-tile, var(--urd-color-surface));
+  --urd-cal-set-surface: var(--urd-cal-s-soft, color-mix(in srgb, var(--urd-cal-s-accent, var(--urd-color-accent)) 18%, var(--urd-color-surface)));
+  --urd-cal-set-ink: var(--urd-color-text);
+  --urd-cal-set-muted: color-mix(in srgb, var(--urd-color-text) 60%, transparent);
+  --urd-cal-set-line: var(--urd-cal-s-line, color-mix(in srgb, var(--urd-color-text) 10%, transparent));
+  --urd-cal-set-accent: var(--urd-cal-s-accent, var(--urd-color-accent));
+  --urd-cal-set-accent-text: var(--urd-cal-s-accentText, var(--urd-cal-accent-text, var(--urd-color-accent-text)));
+  --urd-cal-set-label: color-mix(in srgb, var(--urd-color-text) 60%, transparent);
+  --urd-cal-set-radius: 22px;
+  --urd-cal-set-chip-radius: 999px;
+  --urd-cal-set-title-weight: 600;
+  --urd-cal-set-label-case: uppercase;
+  --urd-cal-set-label-spacing: 0.08em;
+}
+
+.urd-cal-set-lightGlass {
+  --urd-cal-set-bg: var(--urd-cal-s-ground, #f6f3ef);
+  --urd-cal-set-surface: var(--urd-cal-s-glass, rgb(255 255 255 / 55%));
+  --urd-cal-set-ink: var(--urd-cal-s-text, #17161a);
+  --urd-cal-set-muted: #5a5960;
+  --urd-cal-set-line: var(--urd-cal-s-glassLine, rgb(255 255 255 / 80%));
+  --urd-cal-set-accent: var(--urd-cal-s-text, #17161a);
+  --urd-cal-set-accent-text: var(--urd-cal-s-ground, #f6f3ef);
+  --urd-cal-set-label: #5a5960;
+  --urd-cal-set-radius: 18px;
+  --urd-cal-set-frame: 1px solid var(--urd-cal-s-glassLine, rgb(255 255 255 / 80%));
+  --urd-cal-set-blur: blur(18px);
+  --urd-cal-set-title-weight: 600;
+  --urd-cal-set-label-case: uppercase;
+  --urd-cal-set-label-spacing: 0.1em;
+}
+
 .urd-cal .urd-collection-card {
   background: var(--urd-cal-surface);
   border-color: var(--urd-cal-line);
@@ -1123,9 +1298,9 @@ textarea.urd-form-input {
   justify-self: start;
   gap: 2px;
   padding: 4px;
-  background: var(--urd-cal-surface);
-  border: 1px solid var(--urd-cal-line);
-  border-radius: 999px;
+  background: var(--urd-cal-set-surface);
+  border: var(--urd-cal-set-frame);
+  border-radius: var(--urd-cal-set-chip-radius);
 }
 
 .urd-cal-switch-btn {
@@ -1133,16 +1308,80 @@ textarea.urd-form-input {
   font: inherit;
   font-size: 0.78em;
   font-weight: 700;
-  color: inherit;
+  letter-spacing: var(--urd-cal-set-label-spacing);
+  color: var(--urd-cal-set-ink);
+  text-transform: var(--urd-cal-set-label-case);
   background: transparent;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--urd-cal-set-chip-radius);
   cursor: pointer;
 }
 
 .urd-cal-switch-btn[aria-pressed="true"] {
-  color: var(--urd-color-bg);
-  background: var(--urd-color-text);
+  color: var(--urd-cal-set-accent-text);
+  background: var(--urd-cal-set-accent);
+}
+
+/* The sets whose tools have a form of their own: the Ap sets' gold-framed group, the poster's square frames, the cork board's pinned notes, the board's tiles. */
+.urd-cal-set-apCream .urd-cal-switch,
+.urd-cal-set-apNavy .urd-cal-switch {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.urd-cal-set-apCream .urd-cal-switch-btn + .urd-cal-switch-btn,
+.urd-cal-set-apNavy .urd-cal-switch-btn + .urd-cal-switch-btn {
+  border-left: var(--urd-cal-set-frame);
+}
+
+.urd-cal-set-apCream .urd-cal-switch-btn,
+.urd-cal-set-apNavy .urd-cal-switch-btn {
+  border-radius: 0;
+}
+
+.urd-cal-set-poster .urd-cal-switch {
+  gap: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.urd-cal-set-poster .urd-cal-switch-btn + .urd-cal-switch-btn {
+  border-left: var(--urd-cal-set-frame);
+}
+
+.urd-cal-set-board .urd-cal-switch {
+  gap: 4px;
+  border-radius: var(--urd-cal-set-radius);
+}
+
+.urd-cal-set-cork .urd-cal-switch {
+  gap: 6px;
+  padding: 0;
+  background: transparent;
+}
+
+.urd-cal-set-cork .urd-cal-switch-btn {
+  padding: 8px 14px;
+  color: var(--urd-cal-set-ink);
+  background: var(--urd-cal-set-bg);
+  box-shadow: 0 4px 10px rgb(0 0 0 / 18%);
+  transform: rotate(-1deg);
+}
+
+.urd-cal-set-cork .urd-cal-switch-btn:nth-child(2n) {
+  transform: rotate(0.8deg);
+}
+
+.urd-cal-set-cork .urd-cal-switch-btn[aria-pressed="true"] {
+  color: var(--urd-cal-s-noteAltText, #4a1f1a);
+  background: var(--urd-cal-s-noteAlt, #ffd9d4);
+}
+
+.urd-cal-set-darkGlass .urd-cal-switch,
+.urd-cal-set-lightGlass .urd-cal-switch {
+  backdrop-filter: var(--urd-cal-set-blur);
 }
 
 .urd-cal-d-glass .urd-cal-switch {
@@ -1170,6 +1409,9 @@ textarea.urd-form-input {
 .urd-cal-stripes .urd-cal-bento-tile,
 .urd-cal-stripes .urd-cal-wstrip-day,
 .urd-cal-stripes .urd-cal-plan-event,
+.urd-cal-stripes .urd-cal-wplan-pill,
+.urd-cal-stripes .urd-cal-dplan-pill,
+.urd-cal-stripes .urd-cal-layers-bar,
 .urd-cal-stripes .urd-cal-side-card,
 .urd-cal-stripes .urd-cal-wheel-card,
 .urd-cal-stripes .urd-cal-bb,
@@ -1191,6 +1433,16 @@ textarea.urd-form-input {
 
 .urd-cal-stripes .urd-collection-card {
   padding-left: 1rem;
+}
+
+/* The plans' boxes keep their own tight padding beside the stripe. */
+.urd-cal-stripes .urd-cal-plan-event {
+  padding-left: 7px;
+}
+
+.urd-cal-stripes .urd-cal-wplan-pill,
+.urd-cal-stripes .urd-cal-dplan-pill {
+  padding-left: 6px;
 }
 
 /* A design's words (a label, a button's words, the words of a time or a countdown) are edited in place in the preview, where the text toolbar attaches to them. */
@@ -1307,10 +1559,10 @@ textarea.urd-form-input {
   display: none;
 }
 
-/* The event in full: a native dialog over the page, dressed as the card it was opened from (the variables are set by the block from that card), with the theme as the fallback. */
+/* The event in full: a native dialog over the page, drawn in its calendar's set (the set class and the colour slots are copied onto it by the block), with the theme set as the fallback. */
 .urd-cal-dialog {
-  --dlg-text: var(--urd-cal-dlg-text, var(--urd-color-text));
-  --dlg-accent: var(--urd-cal-dlg-accent, var(--urd-color-accent));
+  --dlg-text: var(--urd-cal-set-ink);
+  --dlg-accent: var(--urd-cal-set-accent);
   position: absolute;
   inset: auto;
   box-sizing: border-box;
@@ -1320,15 +1572,14 @@ textarea.urd-form-input {
   margin: 0;
   font-size: 0.92rem;
   overflow-y: auto;
-  font-family: var(--urd-cal-dlg-font, var(--urd-font-body));
+  font-family: var(--urd-cal-set-font);
   line-height: 1.5;
   color: var(--dlg-text);
-  background-color: var(--urd-cal-dlg-bg, var(--urd-color-surface));
-  background-image: var(--urd-cal-dlg-image, none);
-  border: var(--urd-cal-dlg-border, 1px solid color-mix(in srgb, var(--dlg-text) 14%, transparent));
-  border-radius: var(--urd-cal-dlg-radius, var(--urd-radius-md));
-  box-shadow: 0 24px 60px rgb(0 0 0 / 35%);
-  backdrop-filter: var(--urd-cal-dlg-blur, none);
+  background-color: var(--urd-cal-set-bg);
+  border: var(--urd-cal-set-frame);
+  border-radius: var(--urd-cal-set-radius);
+  box-shadow: var(--urd-cal-set-shadow);
+  backdrop-filter: var(--urd-cal-set-blur);
 }
 
 /* The card lies over its calendar, under the navigation bar: the calendar is shaded, the page behind is left alone. */
@@ -1371,7 +1622,9 @@ textarea.urd-form-input {
   padding-right: 3rem;
   font-size: 0.85em;
   font-weight: 600;
-  color: var(--dlg-accent);
+  letter-spacing: var(--urd-cal-set-label-spacing);
+  color: var(--urd-cal-set-label);
+  text-transform: var(--urd-cal-set-label-case);
 }
 
 .urd-cal-dialog-date::first-letter {
@@ -1380,13 +1633,10 @@ textarea.urd-form-input {
 
 .urd-cal-dialog-title {
   margin: 0.2rem 3rem 0.9rem 0;
-  font-family: var(--urd-cal-dlg-title-font, var(--urd-font-heading));
+  font-family: var(--urd-cal-set-title-font);
   font-size: 1.35em;
-  font-style: var(--urd-cal-dlg-title-style, normal);
-  font-weight: var(--urd-cal-dlg-title-weight, 700);
+  font-weight: var(--urd-cal-set-title-weight);
   line-height: 1.15;
-  color: var(--urd-cal-dlg-title-color, inherit);
-  text-transform: var(--urd-cal-dlg-title-case, none);
 }
 
 .urd-cal-dialog-title.urd-cal-cancelled {
@@ -1494,10 +1744,128 @@ textarea.urd-form-input {
 .urd-cal-dialog a.urd-cal-dialog-primary {
   padding: 0.55rem 1rem;
   font-weight: 600;
-  color: var(--urd-cal-dlg-on-accent, var(--urd-color-accent-text));
+  color: var(--urd-cal-set-accent-text);
   text-decoration: none;
   background: var(--dlg-accent);
-  border-radius: var(--urd-radius-sm);
+  border-radius: var(--urd-cal-set-chip-radius);
+}
+
+/* The sets whose card has a form of its own: the cork board's card is a pinned note, the poster's a square sheet, the glass sets' a pane over a blurred ground. */
+.urd-cal-set-cork.urd-cal-dialog {
+  transform: rotate(-0.8deg);
+}
+
+.urd-cal-set-cork.urd-cal-dialog::before {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  margin-left: -9px;
+  content: '';
+  background: var(--urd-cal-s-pin, #d33a2c);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 35%);
+}
+
+.urd-cal-set-poster.urd-cal-dialog {
+  box-shadow: 8px 8px 0 var(--urd-cal-set-ink);
+}
+
+.urd-cal-set-darkGlass.urd-cal-dialog,
+.urd-cal-set-lightGlass.urd-cal-dialog {
+  background-color: color-mix(in srgb, var(--urd-cal-set-bg) 85%, transparent);
+}
+
+.urd-cal-set-bento.urd-cal-dialog .urd-cal-dialog-date {
+  display: inline-block;
+  padding: 4px 10px;
+  color: var(--urd-cal-set-accent-text);
+  background: var(--urd-cal-set-accent);
+  border-radius: 999px;
+}
+
+/* The sets whose ground is not the page's (navy, the dark board, dark glass and the cork board) draw their tools on their own ground, so the set's words read; without `:has` the tools stand on the page as before. */
+.urd-cal-set-apNavy:has(> .urd-cal-tools, > .urd-cal-chips, > .urd-cal-nomatch, > .urd-cal-earlier),
+.urd-cal-set-board:has(> .urd-cal-tools, > .urd-cal-chips, > .urd-cal-nomatch, > .urd-cal-earlier),
+.urd-cal-set-darkGlass:has(> .urd-cal-tools, > .urd-cal-chips, > .urd-cal-nomatch, > .urd-cal-earlier),
+.urd-cal-set-cork:has(> .urd-cal-tools, > .urd-cal-chips, > .urd-cal-nomatch, > .urd-cal-earlier) {
+  padding: 1em;
+  color: var(--urd-cal-set-ink);
+  background: var(--urd-cal-set-bg);
+  border-radius: var(--urd-cal-set-radius);
+}
+
+.urd-cal-set-cork:has(> .urd-cal-tools, > .urd-cal-chips, > .urd-cal-nomatch, > .urd-cal-earlier) {
+  color: var(--urd-cal-s-boardText, #cfe3dc);
+  background: var(--urd-cal-set-surface);
+  border-radius: 14px;
+}
+
+/* The box the switcher's week or month is drawn in: it carries the chosen design's class, and the block's set is its theme, so a design drawn from the theme's colours takes the set's. */
+.urd-cal-swview {
+  --urd-color-text: var(--urd-cal-set-ink);
+  --urd-color-bg: var(--urd-cal-set-bg);
+  --urd-color-surface: var(--urd-cal-set-surface);
+  --urd-color-accent: var(--urd-cal-set-accent);
+  --urd-color-accent-text: var(--urd-cal-set-accent-text);
+  --urd-cal-accent: var(--urd-cal-set-accent);
+  --urd-cal-accent-text: var(--urd-cal-set-accent-text);
+  --urd-cal-surface: var(--urd-cal-set-surface);
+  --urd-cal-line: var(--urd-cal-set-line);
+  display: grid;
+  gap: 12px;
+  color: var(--urd-cal-set-ink);
+}
+
+/* The week plan behind the switcher's button: its hour rows at half their height, so a day's hours fit under the block's own design. */
+.urd-cal-swview .urd-cal-wplan-grid {
+  grid-auto-rows: minmax(1.8em, auto);
+}
+
+/* The week strip's head in the switcher: the week on one line with its arrows, not a head of its own. */
+.urd-cal-swview .urd-cal-wstrip-head .urd-cal-nav {
+  width: 36px;
+  height: 36px;
+}
+
+.urd-cal-swview .urd-cal-wstrip-label strong {
+  font-size: 1em;
+}
+
+/* The tools' size (`toolsSize`): the switcher, the chips, the search and the arrows of the week and the month, small or large. */
+.urd-cal-tools-s .urd-cal-tools,
+.urd-cal-tools-s .urd-cal-chips,
+.urd-cal-tools-s .urd-cal-swview .urd-cal-month-head,
+.urd-cal-tools-s .urd-cal-swview .urd-cal-wstrip-head {
+  font-size: 0.82em;
+}
+
+.urd-cal-tools-s .urd-cal-switch-btn {
+  padding: 4px 10px;
+}
+
+.urd-cal-tools-s .urd-cal-nav,
+.urd-cal-tools-s .urd-cal-searchbtn {
+  width: 32px;
+  height: 32px;
+}
+
+.urd-cal-tools-l .urd-cal-tools,
+.urd-cal-tools-l .urd-cal-chips,
+.urd-cal-tools-l .urd-cal-swview .urd-cal-month-head,
+.urd-cal-tools-l .urd-cal-swview .urd-cal-wstrip-head {
+  font-size: 1.2em;
+}
+
+.urd-cal-tools-l .urd-cal-switch-btn {
+  padding: 9px 18px;
+}
+
+.urd-cal-tools-l .urd-cal-nav,
+.urd-cal-tools-l .urd-cal-searchbtn {
+  width: 48px;
+  height: 48px;
 }
 
 /* A cancelled event: its title struck and the box dimmed, in every design. */
@@ -1527,8 +1895,18 @@ textarea.urd-form-input {
   padding: 6px 2px;
   font-size: 0.9em;
   font-weight: 600;
-  color: var(--urd-cal-accent);
+  letter-spacing: var(--urd-cal-set-label-spacing);
+  color: var(--urd-cal-set-label);
+  text-transform: var(--urd-cal-set-label-case);
   cursor: pointer;
+}
+
+.urd-cal-set-apCream .urd-cal-earlier > .urd-cal-fold-summary,
+.urd-cal-set-apNavy .urd-cal-earlier > .urd-cal-fold-summary,
+.urd-cal-set-poster .urd-cal-earlier > .urd-cal-fold-summary {
+  width: auto;
+  font-size: 0.78em;
+  border-bottom: var(--urd-cal-set-frame);
 }
 
 .urd-cal-fold-body {
@@ -1583,17 +1961,86 @@ textarea.urd-form-input {
   padding: 3px 10px;
   font: inherit;
   font-size: 0.78em;
-  color: inherit;
-  background: transparent;
-  border: 1px solid color-mix(in srgb, var(--urd-color-text) 25%, transparent);
-  border-radius: 999px;
+  color: var(--urd-cal-set-ink);
+  background: var(--urd-cal-set-surface);
+  border: 1px solid var(--urd-cal-set-line);
+  border-radius: var(--urd-cal-set-chip-radius);
   cursor: pointer;
 }
 
 .urd-cal-chipbtn.selected {
-  color: var(--urd-cal-color-text, var(--urd-cal-accent-text));
-  background: var(--urd-cal-color, var(--urd-cal-accent));
-  border-color: var(--urd-cal-color, var(--urd-cal-accent));
+  color: var(--urd-cal-color-text, var(--urd-cal-set-accent-text));
+  background: var(--urd-cal-color, var(--urd-cal-set-accent));
+  border-color: var(--urd-cal-color, var(--urd-cal-set-accent));
+}
+
+.urd-cal-set-apCream .urd-cal-chipbtn,
+.urd-cal-set-apNavy .urd-cal-chipbtn,
+.urd-cal-set-poster .urd-cal-chipbtn {
+  background: transparent;
+  border: var(--urd-cal-set-frame);
+}
+
+.urd-cal-set-apCream .urd-cal-chipbtn.selected,
+.urd-cal-set-apNavy .urd-cal-chipbtn.selected,
+.urd-cal-set-poster .urd-cal-chipbtn.selected {
+  background: var(--urd-cal-color, var(--urd-cal-set-accent));
+  border-color: var(--urd-cal-color, var(--urd-cal-set-accent));
+}
+
+.urd-cal-set-cork .urd-cal-chipbtn {
+  color: var(--urd-cal-set-ink);
+  background: var(--urd-cal-set-bg);
+  border: 0;
+  box-shadow: 0 4px 10px rgb(0 0 0 / 18%);
+}
+
+.urd-cal-set-cork .urd-cal-chipbtn.selected {
+  color: var(--urd-cal-s-noteAltText, #4a1f1a);
+  background: var(--urd-cal-s-noteAlt, #ffd9d4);
+}
+
+.urd-cal-set-board .urd-cal-chipbtn {
+  border: 0;
+}
+
+/* The switcher and the search on one row; the search's button shows on a phone alone. */
+.urd-cal-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.urd-cal-searchrow {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.urd-cal-searchbtn {
+  display: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  color: var(--urd-cal-set-ink);
+  cursor: pointer;
+  background: var(--urd-cal-set-surface);
+  border: 1px solid var(--urd-cal-set-line);
+  border-radius: var(--urd-cal-set-chip-radius);
+}
+
+.urd-cal-searchbtn svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
 }
 
 /* The visitor's search, the «nothing matches» line and the «Earlier» fold of events that are over. */
@@ -1601,19 +2048,87 @@ textarea.urd-form-input {
   box-sizing: border-box;
   width: 100%;
   max-width: 22em;
+  margin-left: auto;
   padding: 0.45em 0.9em;
   font: inherit;
   font-size: 0.9em;
-  color: inherit;
-  background: var(--urd-cal-surface);
-  border: 1px solid color-mix(in srgb, var(--urd-color-text) 25%, transparent);
-  border-radius: 999px;
+  color: var(--urd-cal-set-ink);
+  background: var(--urd-cal-set-surface);
+  border: 1px solid var(--urd-cal-set-line);
+  border-radius: var(--urd-cal-set-chip-radius);
+}
+
+.urd-cal-search::placeholder {
+  color: var(--urd-cal-set-muted);
+}
+
+.urd-cal-set-apCream .urd-cal-search,
+.urd-cal-set-apNavy .urd-cal-search,
+.urd-cal-set-poster .urd-cal-search {
+  padding-right: 0;
+  padding-left: 0;
+  background: transparent;
+  border-width: 0 0 var(--urd-cal-set-frame-width, 1px);
+  border-image: none;
+  border-radius: 0;
+}
+
+.urd-cal-set-apCream .urd-cal-search,
+.urd-cal-set-apNavy .urd-cal-search {
+  font-style: italic;
+  border-bottom: 1px solid var(--urd-cal-s-gold, #d0a74a);
+}
+
+.urd-cal-set-poster .urd-cal-search {
+  font-weight: 700;
+  border-bottom: 2px solid var(--urd-cal-set-ink);
+}
+
+.urd-cal-set-cork .urd-cal-search {
+  color: var(--urd-cal-s-stripText, #e6efeb);
+  background: var(--urd-cal-s-strip, #1f2d29);
+  border: 0;
+  border-radius: 8px;
 }
 
 .urd-cal-nomatch {
   padding: 1em 0;
   margin: 0;
-  opacity: 0.7;
+  color: var(--urd-cal-set-muted);
+}
+
+.urd-cal-set-apCream .urd-cal-nomatch,
+.urd-cal-set-apNavy .urd-cal-nomatch {
+  font-style: italic;
+  border-top: 1px solid var(--urd-cal-set-line);
+  border-bottom: 1px solid var(--urd-cal-set-line);
+}
+
+.urd-cal-set-poster .urd-cal-nomatch {
+  font-family: var(--urd-cal-set-title-font);
+  font-size: 1.4em;
+  font-weight: 600;
+  border-top: 1px solid var(--urd-cal-set-line);
+  border-bottom: 1px solid var(--urd-cal-set-line);
+}
+
+.urd-cal-set-cork .urd-cal-nomatch,
+.urd-cal-set-board .urd-cal-nomatch,
+.urd-cal-set-darkGlass .urd-cal-nomatch,
+.urd-cal-set-bento .urd-cal-nomatch,
+.urd-cal-set-agendaDark .urd-cal-nomatch {
+  padding: 1em 1.1em;
+  color: var(--urd-cal-set-ink);
+  background: var(--urd-cal-set-surface);
+  border: 1px dashed var(--urd-cal-set-line);
+  border-radius: var(--urd-cal-set-radius);
+}
+
+.urd-cal-set-cork .urd-cal-nomatch {
+  background: var(--urd-cal-set-bg);
+  border: 0;
+  box-shadow: 0 8px 18px rgb(0 0 0 / 18%);
+  transform: rotate(0.6deg);
 }
 
 .urd-cal-earlier-rows {
@@ -1627,8 +2142,38 @@ textarea.urd-form-input {
   grid-template-columns: 4.5em minmax(0, 1fr);
   gap: 2px 10px;
   padding: 6px 8px;
-  border-radius: var(--urd-radius-sm);
+  color: var(--urd-cal-set-ink);
+  background: var(--urd-cal-set-surface);
+  border: 1px solid var(--urd-cal-set-line);
+  border-radius: var(--urd-cal-set-chip-radius);
   opacity: 0.8;
+}
+
+.urd-cal-earlier-row .urd-cal-earlier-date {
+  letter-spacing: var(--urd-cal-set-label-spacing);
+  color: var(--urd-cal-set-label);
+  text-transform: var(--urd-cal-set-label-case);
+}
+
+.urd-cal-set-apCream .urd-cal-earlier-row,
+.urd-cal-set-apNavy .urd-cal-earlier-row,
+.urd-cal-set-poster .urd-cal-earlier-row {
+  background: transparent;
+  border-width: 0 0 1px;
+  border-radius: 0;
+}
+
+.urd-cal-set-cork .urd-cal-earlier-rows {
+  padding: 10px 12px;
+  color: var(--urd-cal-s-stripText, #e6efeb);
+  background: var(--urd-cal-s-strip, #1f2d29);
+  border-radius: 8px;
+}
+
+.urd-cal-set-cork .urd-cal-earlier-row {
+  color: inherit;
+  background: transparent;
+  border: 0;
 }
 
 .urd-cal-earlier-date,
@@ -1773,15 +2318,154 @@ textarea.urd-form-input {
   width: 30px;
   height: 30px;
   font: inherit;
-  color: inherit;
-  background: var(--urd-cal-surface);
-  border: 1px solid color-mix(in srgb, var(--urd-color-text) 20%, transparent);
+  color: var(--urd-cal-set-ink);
+  background: var(--urd-cal-set-surface);
+  border: 1px solid var(--urd-cal-set-line);
   border-radius: 50%;
   cursor: pointer;
 }
 
 .urd-cal-nav:hover {
-  border-color: var(--urd-cal-accent);
+  border-color: var(--urd-cal-set-accent);
+}
+
+.urd-cal-set-apCream .urd-cal-nav,
+.urd-cal-set-apNavy .urd-cal-nav {
+  color: var(--urd-cal-s-gold, #d0a74a);
+  background: transparent;
+  border-color: var(--urd-cal-s-gold, #d0a74a);
+}
+
+.urd-cal-set-poster .urd-cal-nav {
+  border: var(--urd-cal-set-frame);
+  border-radius: 0;
+}
+
+.urd-cal-set-board .urd-cal-nav,
+.urd-cal-set-darkGlass .urd-cal-nav,
+.urd-cal-set-bento .urd-cal-nav {
+  border-radius: var(--urd-cal-set-chip-radius);
+}
+
+/* The switcher's month and week in the block's set: the head in the set's label words, the day cells on the set's ground, today in the set's accent. */
+.urd-cal-swview .urd-cal-month-head strong,
+.urd-cal-swview .urd-cal-wstrip-label strong {
+  letter-spacing: var(--urd-cal-set-label-spacing);
+  color: var(--urd-cal-set-label);
+  text-transform: var(--urd-cal-set-label-case);
+}
+
+.urd-cal-swview .urd-cal-dow,
+.urd-cal-swview .urd-cal-wstrip-wd {
+  letter-spacing: var(--urd-cal-set-label-spacing);
+  color: var(--urd-cal-set-label);
+  opacity: 1;
+}
+
+.urd-cal-swview .urd-cal-day,
+.urd-cal-swview .urd-cal-wstrip-day {
+  color: var(--urd-cal-set-ink);
+  background: var(--urd-cal-set-surface);
+  border-color: var(--urd-cal-set-line);
+  border-radius: var(--urd-cal-set-chip-radius);
+}
+
+.urd-cal-swview .urd-cal-day-empty {
+  background: transparent;
+  border-color: transparent;
+}
+
+.urd-cal-swview .urd-cal-today,
+.urd-cal-swview .urd-cal-wstrip-today {
+  background: color-mix(in srgb, var(--urd-cal-set-accent) 12%, var(--urd-cal-set-surface));
+  border-color: var(--urd-cal-set-accent);
+}
+
+.urd-cal-swview .urd-cal-wstrip-today .urd-cal-wstrip-wd {
+  color: var(--urd-cal-set-accent);
+}
+
+.urd-cal-swview .urd-cal-pill,
+.urd-cal-swview .urd-cal-wstrip-pill {
+  color: var(--urd-cal-color-text, var(--urd-cal-set-accent-text));
+  background: var(--urd-cal-color, var(--urd-cal-set-accent));
+  border-radius: calc(var(--urd-cal-set-chip-radius) / 2 + 2px);
+}
+
+.urd-cal-set-apCream .urd-cal-swview .urd-cal-pill,
+.urd-cal-set-apNavy .urd-cal-swview .urd-cal-pill,
+.urd-cal-set-apCream .urd-cal-swview .urd-cal-wstrip-pill,
+.urd-cal-set-apNavy .urd-cal-swview .urd-cal-wstrip-pill,
+.urd-cal-set-board .urd-cal-swview .urd-cal-pill,
+.urd-cal-set-board .urd-cal-swview .urd-cal-wstrip-pill {
+  padding-left: 8px;
+  color: var(--urd-cal-set-ink);
+  background: transparent;
+  border-left: 2px solid var(--urd-cal-color, var(--urd-cal-s-gold, var(--urd-cal-set-label)));
+  border-radius: 0;
+}
+
+.urd-cal-set-apCream .urd-cal-swview .urd-cal-day,
+.urd-cal-set-apCream .urd-cal-swview .urd-cal-wstrip-day,
+.urd-cal-set-apNavy .urd-cal-swview .urd-cal-day,
+.urd-cal-set-apNavy .urd-cal-swview .urd-cal-wstrip-day {
+  background: var(--urd-cal-set-bg);
+  border-radius: 0;
+}
+
+.urd-cal-set-apCream .urd-cal-swview .urd-cal-today,
+.urd-cal-set-apCream .urd-cal-swview .urd-cal-wstrip-today {
+  background: var(--urd-cal-set-surface);
+  box-shadow: inset 0 0 0 2px var(--urd-cal-s-gold, #d0a74a);
+}
+
+.urd-cal-set-apNavy .urd-cal-swview .urd-cal-today,
+.urd-cal-set-apNavy .urd-cal-swview .urd-cal-wstrip-today {
+  color: var(--urd-cal-s-ground, #1c2340);
+  background: var(--urd-cal-s-text, #f3ecd8);
+}
+
+.urd-cal-set-cork .urd-cal-swview .urd-cal-day,
+.urd-cal-set-cork .urd-cal-swview .urd-cal-wstrip-day {
+  background: var(--urd-cal-set-bg);
+  border: 0;
+  box-shadow: 0 4px 10px rgb(0 0 0 / 18%);
+}
+
+.urd-cal-set-cork .urd-cal-swview .urd-cal-today,
+.urd-cal-set-cork .urd-cal-swview .urd-cal-wstrip-today {
+  color: var(--urd-cal-s-noteAltText, #4a1f1a);
+  background: var(--urd-cal-s-noteAlt, #ffd9d4);
+  transform: rotate(-1.5deg);
+}
+
+.urd-cal-set-poster .urd-cal-swview .urd-cal-day,
+.urd-cal-set-poster .urd-cal-swview .urd-cal-wstrip-day {
+  border-radius: 0;
+}
+
+.urd-cal-set-poster .urd-cal-swview .urd-cal-today,
+.urd-cal-set-poster .urd-cal-swview .urd-cal-wstrip-today {
+  box-shadow: inset 0 0 0 3px var(--urd-cal-set-ink);
+}
+
+/* The block's edge stripe reaches the week strip's days behind the switcher's button, over the set's own borders. */
+.urd-cal-stripes .urd-cal-swview .urd-cal-wstrip-day {
+  border-left: 3px solid var(--urd-cal-stripe, var(--urd-cal-color, var(--urd-cal-accent)));
+}
+
+.urd-cal-set-bento .urd-cal-swview .urd-cal-today,
+.urd-cal-set-bento .urd-cal-swview .urd-cal-wstrip-today {
+  color: var(--urd-cal-s-heroText, #ffffff);
+  background: var(--urd-cal-s-hero, #1f1f24);
+  border-color: var(--urd-cal-s-hero, #1f1f24);
+}
+
+.urd-cal-set-darkGlass .urd-cal-swview .urd-cal-day,
+.urd-cal-set-darkGlass .urd-cal-swview .urd-cal-wstrip-day,
+.urd-cal-set-lightGlass .urd-cal-swview .urd-cal-day,
+.urd-cal-set-lightGlass .urd-cal-swview .urd-cal-wstrip-day {
+  backdrop-filter: var(--urd-cal-set-blur);
 }
 
 .urd-cal-grid {
@@ -3449,7 +4133,6 @@ textarea.urd-form-input {
   font-weight: 700;
   line-height: 1.2;
   background: color-mix(in srgb, var(--urd-cal-color, var(--urd-cal-accent)) 18%, transparent);
-  border-left: 3px solid var(--urd-cal-color, var(--urd-cal-accent));
   border-radius: 6px;
 }
 
@@ -3463,7 +4146,6 @@ textarea.urd-form-input {
   font-size: 0.72em;
   line-height: 1.2;
   background: var(--urd-cal-s-event, color-mix(in srgb, var(--urd-cal-color, var(--urd-cal-accent)) 18%, var(--urd-cal-surface)));
-  border-left: 3px solid var(--urd-cal-color, var(--urd-cal-accent));
   border-radius: 8px;
 }
 
@@ -4406,6 +5088,56 @@ textarea.urd-form-input {
 }
 
 /* ---- The phone: the seven-column designs with their days under each other, and the months as dots that open the day ---- */
+
+/* The finding tools on a phone: the switcher across the width with the search as a button beside it, the field across the width when the button opens it, and the calendar chips in one row that scrolls sideways. */
+.urd-cal-phone .urd-cal-tools {
+  flex-wrap: wrap;
+}
+
+.urd-cal-phone .urd-cal-switch {
+  display: flex;
+  flex: 1;
+  min-width: fit-content;
+}
+
+.urd-cal-phone .urd-cal-switch-btn {
+  flex: 1;
+  padding-right: 6px;
+  padding-left: 6px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.urd-cal-phone .urd-cal-searchbtn {
+  display: grid;
+}
+
+.urd-cal-phone .urd-cal-searchrow {
+  flex: none;
+  margin-left: auto;
+}
+
+.urd-cal-phone .urd-cal-searchrow:not(.urd-cal-search-open) .urd-cal-search {
+  display: none;
+}
+
+.urd-cal-phone .urd-cal-searchrow.urd-cal-search-open {
+  flex-basis: 100%;
+}
+
+.urd-cal-phone .urd-cal-search {
+  max-width: none;
+}
+
+.urd-cal-phone .urd-cal-chips {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.urd-cal-phone .urd-cal-chipbtn {
+  flex: none;
+}
 
 .urd-cal-phone .urd-cal-wstrip-grid {
   grid-template-columns: minmax(0, 1fr);

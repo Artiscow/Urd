@@ -351,7 +351,8 @@ export function sidepanel(host, occs, props, ics, ui) {
     }
     if (!list.children.length) list.appendChild(ui.el('p', 'urd-cal-side-none', ui.tx('dayNone')));
     panel.appendChild(list);
-    const names = [...new Set(ui.all.map((occ) => occ.category).filter(Boolean))];
+    // The key to the calendars' colours: with the calendar filter on, and only when a calendar has a colour of its own (the sources' colour setting).
+    const names = props.showCategories === true && ui.all.some((occ) => occ.color) ? [...new Set(ui.all.map((occ) => occ.category).filter(Boolean))] : [];
     if (names.length) {
       const legend = ui.el('div', 'urd-cal-side-legend');
       for (const name of names) {

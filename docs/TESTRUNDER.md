@@ -2,6 +2,21 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.19.19-20): the card, the switcher's views and the finding tools per design set
+
+- [ ] The event card opened in each of the 34 designs: its ground, ink, accent, radius and type follow the design's set (cream and navy on the Ap designs, a pinned note on Noticeboard, a hard-shadowed square on the poster designs, glass on the two glass designs, the theme's colours on the plain designs), and the text reads on every one
+- [ ] The switcher's Week and Month on a dark design (Liste på marine, Dark glass, Billboard): the week strip and the month are drawn in the design's colours, not the theme's
+- [ ] Content → the switcher toggle: Week design and Month design appear only with the switcher on; Week plan, Layers, Month with side panel and Oversikt på krem behind the buttons are drawn in the block's set, and the ApeironLF month is the default on the Ap designs
+- [ ] The tools' size setting: small and large change the switcher's buttons, the chips, the search field and the week's and month's arrows together
+- [ ] The calendar filter is off on a new calendar and on an older calendar without the key; switched on it shows the calendars' names (the sources' names, else the «Category: Title» words); no place filter exists, and an older calendar with the place filter stored shows none
+- [ ] On a phone (or a narrow preview) the switcher and a search button stand on one row; the button opens the search field, which stays open while it holds words; the chips scroll sideways
+- [ ] A calendar without sources in the preview: the block grows with its sample data and pushes the blocks below, and the published page shows the empty state
+- [ ] The edge stripe setting on a calendar with Week plan behind the Week button: off gives the plan's boxes no edge, on gives them the calendar's colour, and an own colour gives that colour; Week plan and Day plan alone keep their edge by default
+- [ ] Month with side panel behind the Month button: the key of the calendars is shown only with the calendar filter on, and the sample calendars (Møte, Sosialt, Tur) stand in three colours in the month's pills and the key
+- [ ] «Show all N (M more)» in the editor: the press that selects the block leaves it, the next press opens it and puts the caret in the words, the presses after that edit the words, and a press after leaving the words closes it; in the Clean view one press toggles it
+- [ ] The description setting (Content): shown on Programme booklet, Split card, Regular event and the plain cards only; «Only in the card» removes the excerpt from the rows and the pressed card still holds the whole description; an older Programme booklet or Split card with the description switched off in Style reads as «Only in the card»
+- [ ] The selected chip is visible on Oversikt på krem, Liste på marine and the poster designs; the tools stand on their own ground on the navy, board, dark glass and cork sets
+
 ### Test batch (0.7.0.43): the test site and local server always load the newest engine
 
 - [ ] After this push, empty the cache once in each browser that has visited the test site (urdweb) before: the old engine files were stored for a year and are not asked for again until then

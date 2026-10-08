@@ -282,7 +282,7 @@ reading order. You usually do not have to do anything.
   calendar's iCal address or Google calendar id under **Sources** in its menu
   (a row per calendar); a source can be given a name and a colour, and the name
   becomes the events' category. In the same menu you choose the design, the
-  count, and what visitors get: a category and a place filter, a search field,
+  count, and what visitors get: a calendar filter, a search field,
   earlier events, a view switcher, and the **Subscribe** and **Sign up**
   buttons. A press on an event opens its card with the whole description, a
   map link, and **Join** for a video meeting.

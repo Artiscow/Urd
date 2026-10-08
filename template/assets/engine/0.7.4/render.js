@@ -316,10 +316,6 @@ const BLOCK_CHROME = '.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .ur
  * @returns {number}
  */
 function contentHeight(el) {
-  // Demo content (the preview's stand-in when a block has no source) is
-  // clipped to the frame and never counts as growth: the published page
-  // has no demo, so a push from it would exist in the preview alone.
-  if (el.dataset.urdDemo) return 0;
   return childrenHeight(el);
 }
 
@@ -416,15 +412,14 @@ export function visitorHeights(el) {
 }
 
 /**
- * Whether a block that follows its content is drawn at it: demo content
- * stands clipped to the frame (it exists in the preview alone), and a block
- * still loading its content (`aria-busy`) holds the frame's height so the
- * page does not jump when the content arrives.
+ * Whether a block that follows its content is drawn at it: a block still
+ * loading its content (`aria-busy`) holds the frame's height so the page
+ * does not jump when the content arrives.
  * @param {HTMLElement} el The block element
  * @returns {boolean}
  */
 export function drawsAtContent(el) {
-  return !el.dataset.urdDemo && !el.querySelector('[aria-busy="true"]');
+  return !el.querySelector('[aria-busy="true"]');
 }
 
 /**

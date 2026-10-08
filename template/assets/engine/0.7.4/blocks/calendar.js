@@ -90,17 +90,21 @@ async function loadOccurrences(ics, cf, sources, limit, view, from, zone, meetin
 /** A drawn picture for the sample data: hills under a sun, as an inline SVG the preview may load from itself. */
 const DEMO_IMAGE = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450"><rect width="800" height="450" fill="#bfe3dd"/><circle cx="610" cy="130" r="64" fill="#f6d77a"/><path d="M0 330 L170 200 L300 300 L450 150 L640 310 L800 220 L800 450 L0 450Z" fill="#3f8f80"/><path d="M0 380 L220 290 L420 370 L620 300 L800 360 L800 450 L0 450Z" fill="#256b5f"/></svg>')}`;
 
+/** The sample calendars' colours, one per calendar, so the sample shows how coloured calendars look. */
+const DEMO_COLORS = { demoCat1: '#2f80ed', demoCat2: '#e0632c', demoCat3: '#2e9e5b' };
+
 function demoOccurrences() {
   const day = 24 * 3600 * 1000;
   const base = Date.now();
+  const cat = (key) => ({ category: t(`calendar.${key}`), color: DEMO_COLORS[key] });
   // The sample events carry what a real feed can: an end, a description with a link, a picture, a sign-up, a meeting link, a repeat and a cancellation.
   return [
-    { start: base + 3 * day, end: base + 3 * day + 2 * 3600 * 1000, allDay: false, title: t('calendar.demoTitle1'), category: t('calendar.demoCat1'), location: t('calendar.demoLoc1'), signup: null, description: `${t('calendar.demoDesc2')} https://meet.jit.si/urd-example`, hasEnd: true, demo: true },
-    { start: base + 10 * day, end: base + 10 * day + 3600 * 1000, allDay: false, title: t('calendar.demoTitle2'), category: t('calendar.demoCat2'), location: t('calendar.demoLoc1'), signup: null, description: t('calendar.demoDesc3'), recurring: true, demo: true },
-    { start: base + 17 * day, end: base + 18 * day, allDay: true, title: t('calendar.demoTitle3'), category: t('calendar.demoCat3'), location: t('calendar.demoLoc2'), signup: 'https://example.org/signup', description: `${t('calendar.demoDesc4')} https://example.org/signup`, demo: true },
-    { start: base + day, end: base + day + 90 * 60 * 1000, allDay: false, title: t('calendar.demoTitle4'), category: t('calendar.demoCat1'), location: t('calendar.demoLoc1'), signup: 'https://example.org/signup', description: `${t('calendar.demoDesc1')} https://example.org/training`, image: DEMO_IMAGE, hasEnd: true, demo: true },
-    { start: base - 9 * day, end: base - 9 * day + 3600 * 1000, allDay: false, title: t('calendar.demoTitle2'), category: t('calendar.demoCat2'), location: t('calendar.demoLoc1'), signup: null, description: t('calendar.demoDesc3'), recurring: true, hasEnd: true, demo: true },
-    { start: base + 5 * day, end: base + 5 * day, allDay: true, title: t('calendar.demoTitle5'), category: t('calendar.demoCat2'), location: t('calendar.demoLoc2'), signup: null, description: '', cancelled: true, demo: true },
+    { start: base + 3 * day, end: base + 3 * day + 2 * 3600 * 1000, allDay: false, title: t('calendar.demoTitle1'), ...cat('demoCat1'), location: t('calendar.demoLoc1'), signup: null, description: `${t('calendar.demoDesc2')} https://meet.jit.si/urd-example`, hasEnd: true, demo: true },
+    { start: base + 10 * day, end: base + 10 * day + 3600 * 1000, allDay: false, title: t('calendar.demoTitle2'), ...cat('demoCat2'), location: t('calendar.demoLoc1'), signup: null, description: t('calendar.demoDesc3'), recurring: true, demo: true },
+    { start: base + 17 * day, end: base + 18 * day, allDay: true, title: t('calendar.demoTitle3'), ...cat('demoCat3'), location: t('calendar.demoLoc2'), signup: 'https://example.org/signup', description: `${t('calendar.demoDesc4')} https://example.org/signup`, demo: true },
+    { start: base + day, end: base + day + 90 * 60 * 1000, allDay: false, title: t('calendar.demoTitle4'), ...cat('demoCat1'), location: t('calendar.demoLoc1'), signup: 'https://example.org/signup', description: `${t('calendar.demoDesc1')} https://example.org/training`, image: DEMO_IMAGE, hasEnd: true, demo: true },
+    { start: base - 9 * day, end: base - 9 * day + 3600 * 1000, allDay: false, title: t('calendar.demoTitle2'), ...cat('demoCat2'), location: t('calendar.demoLoc1'), signup: null, description: t('calendar.demoDesc3'), recurring: true, hasEnd: true, demo: true },
+    { start: base + 5 * day, end: base + 5 * day, allDay: true, title: t('calendar.demoTitle5'), ...cat('demoCat2'), location: t('calendar.demoLoc2'), signup: null, description: '', cancelled: true, demo: true },
   ].sort((a, b) => a.start - b.start);
 }
 
@@ -161,7 +165,7 @@ const TEXTS = new WeakMap();
  * `time`, `timeText` and `countdown` are nodes with the words in them; `timeString` and `metaString` are the same as plain text, for a tooltip or a screen reader.
  * `dayMonth`, `dateLine`, `weekdayDay`, `monthYear`, `monthRange` and `percent` write dates and shares in the order and form of the site's language.
  * `filter` is the category filter for a design that draws its own, and `offset`, `total` and `rest` tell a list design where in the whole list its rows stand when the block folds the rest.
- * `opt` holds the design's own settings (calOptions).
+ * `opt` holds the design's own settings (calOptions), and `descriptionIn` says whether a design with room draws the description in its rows or leaves it to the card (calDescription).
  * Every edit posts the whole props with the text under its slot in `texts`, so the editor's draft stays the owner of the words.
  */
 function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
@@ -274,11 +278,19 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
       // In the Clean view the words are plain text and the link around them works (urd.js switches this with the handles).
       node.classList.add('urd-text');
       node.contentEditable = clean() ? 'false' : 'true';
-      // The words stop the press, so a link around them is never followed and a fold never toggles while they are edited.
+      // The words stop the press, so a link around them is never followed.
+      // A fold's summary follows the block's two-step model: the press that selects the block leaves the fold, the next press opens or closes it and goes into the words, and the presses after that edit the words until they lose focus.
+      let selectedBefore = false;
+      let editing = false;
+      node.addEventListener('pointerdown', () => { selectedBefore = el.classList.contains('urd-selected'); });
+      node.addEventListener('blur', () => { editing = false; });
       node.addEventListener('click', (event) => {
         if (clean()) return;
         event.stopPropagation();
-        if (node.closest('a[href], summary')) event.preventDefault();
+        if (node.closest('a[href]')) event.preventDefault();
+        if (!node.closest('summary')) return;
+        if (!selectedBefore || editing) event.preventDefault();
+        else editing = true;
       });
       node.addEventListener('input', () => {
         const { form } = TEXTS.get(node);
@@ -571,7 +583,7 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
   const subscribe = () => (props.showSubscribe !== false && sources.length ? subscribeRow(ics, sources, ui) : null);
   /** The event's own page: the address the feed gives it, else its sign-up link; null without either. */
   const href = (occ) => (typeof occ.url === 'string' && /^https?:\/\//i.test(occ.url) ? occ.url : occ.signup || null);
-  const ui = { el: el2, tint, field, meta, tx, retx, line, group, notice, link, editLink, signup, chip, recurring, program, openToAll, subscribe, href, countdown, image: imageUrl, all: [], offset: 0, total: 0, rest: false, filter: null, opt: cd.calOptions(props), time, timeText, timeString, metaString, hasTime, excerpt, sources,
+  const ui = { el: el2, tint, field, meta, tx, retx, line, group, notice, link, editLink, signup, chip, recurring, program, openToAll, subscribe, href, countdown, image: imageUrl, all: [], offset: 0, total: 0, rest: false, filter: null, opt: cd.calOptions(props), descriptionIn: cd.calDescription(props), time, timeText, timeString, metaString, hasTime, excerpt, sources,
     dayMonth, dateLine, weekdayDay, monthYear, monthRange, percent,
     /** The week as the site's language lays it out: the empty cells before the first of a month, the weekday names in order, and the first day of a week. */
     lead: (first) => cf.leadDays(first, weekStart),
@@ -668,98 +680,20 @@ function descriptionNode(description, ui) {
   return box;
 }
 
-const CLEAR = /^(?:transparent|rgba\(0, 0, 0, 0\))$/;
-
-/** A computed colour as [r, g, b, a]; null for anything else than rgb() and rgba(). */
-function rgba(colour) {
-  const m = /^rgba?\(([^)]+)\)$/.exec(String(colour).trim());
-  if (!m) return null;
-  const parts = m[1].split(/[,\s/]+/).filter(Boolean).map(Number);
-  if (parts.length < 3 || parts.some((n) => !Number.isFinite(n))) return null;
-  return [parts[0], parts[1], parts[2], parts[3] ?? 1];
-}
-
-/** One colour laid over another. */
-const over = (top, under) => top.slice(0, 3).map((c, i) => c * top[3] + under[i] * (1 - top[3]));
-
-/** The relative luminance of a colour (WCAG). */
-function luminance([r, g, b]) {
-  const lin = (c) => { const v = c / 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
-  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
-}
-
-/** The contrast between two colours, 1 to 21. */
-function contrast(a, b) {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-  return (hi + 0.05) / (lo + 0.05);
-}
-
-/** Black or white, whichever reads better on a colour. */
-const readableOn = (colour) => (luminance(colour) > 0.4 ? [17, 17, 17] : [255, 255, 255]);
-const css = (colour) => `rgb(${colour.slice(0, 3).map(Math.round).join(' ')})`;
-
 /**
- * Dresses the dialog as the card it was opened from, so every design gets its own: the ground (colour, gradient and blur) of the event's box or of the nearest box around it that has one, its text colour, corners and border, the face and weight of its title, and the design's accent.
- * What the design does not set falls back to the theme in base.css.
+ * The card wears its calendar's set: the set class, the design's card class (`urd-cal-dlg-<design>`, where a design overrides its set's variables for the card), and the owner's colour slots copied from the block, so base.css draws it in the design's own colours although it lies in the page.
  */
 function dressDialog(dialog, from) {
   const host = from?.closest?.('.urd-cal');
   if (!host) return;
-  let ground = from;
-  while (ground && ground !== host.parentElement) {
-    const cs = getComputedStyle(ground);
-    if (!CLEAR.test(cs.backgroundColor) || cs.backgroundImage !== 'none') break;
-    ground = ground.parentElement;
+  for (const name of host.classList) {
+    if (name.startsWith('urd-cal-set-')) dialog.classList.add(name);
+    else if (name.startsWith('urd-cal-d-')) dialog.classList.add(name.replace('urd-cal-d-', 'urd-cal-dlg-'));
   }
-  const set = (name, value) => { if (value) dialog.style.setProperty(name, value); };
-  const own = getComputedStyle(from);
-  if (ground && ground !== host.parentElement) {
-    const cs = getComputedStyle(ground);
-    set('--urd-cal-dlg-bg', cs.backgroundColor);
-    if (cs.backgroundImage !== 'none' && !cs.backgroundImage.includes('url(')) set('--urd-cal-dlg-image', cs.backgroundImage);
-    if (cs.backdropFilter && cs.backdropFilter !== 'none') set('--urd-cal-dlg-blur', cs.backdropFilter);
-    set('--urd-cal-dlg-radius', `min(${cs.borderTopLeftRadius}, 28px)`);
-    if (parseFloat(cs.borderTopWidth) > 0) set('--urd-cal-dlg-border', `${cs.borderTopWidth} ${cs.borderTopStyle} ${cs.borderTopColor}`);
-  }
-  set('--urd-cal-dlg-font', own.fontFamily);
-  // The colours are checked before they are used: a see-through ground is laid on the theme's surface, and words that would not read on the ground become black or white.
-  const surface = rgba(getComputedStyle(document.body).backgroundColor) ?? [255, 255, 255, 1];
-  const raw = rgba(dialog.style.getPropertyValue('--urd-cal-dlg-bg')) ?? surface;
-  const blurred = Boolean(dialog.style.getPropertyValue('--urd-cal-dlg-blur'));
-  const solid = raw[3] < 1 ? over(raw, surface) : raw.slice(0, 3);
-  if (raw[3] < 1 && !blurred) dialog.style.setProperty('--urd-cal-dlg-bg', css(solid));
-  const words = rgba(own.color);
-  const text = words && contrast(words, solid) >= 4.5 ? words : readableOn(solid);
-  set('--urd-cal-dlg-text', css(text));
-  dialog.dataset.ground = css(solid);
-  const title = from.matches('.urd-cal-f-title') ? from : from.querySelector('.urd-cal-f-title, .urd-cal-notice-title');
-  if (title) {
-    const cs = getComputedStyle(title);
-    set('--urd-cal-dlg-title-font', cs.fontFamily);
-    set('--urd-cal-dlg-title-weight', cs.fontWeight);
-    const titleColour = rgba(cs.color);
-    if (titleColour && contrast(titleColour, solid) >= 3) set('--urd-cal-dlg-title-color', cs.color);
-    set('--urd-cal-dlg-title-case', cs.textTransform);
-    set('--urd-cal-dlg-title-style', cs.fontStyle);
-  }
-  // The accent: the colour the design gives its own small words (the date, a number), else the calendar's accent.
-  const mark = from.querySelector('.urd-cal-f-number, .urd-cal-f-date');
-  const probe = el2('i');
-  probe.style.color = 'var(--urd-cal-accent)';
-  host.appendChild(probe);
-  const hostAccent = getComputedStyle(probe).color;
-  probe.remove();
-  const marked = mark ? getComputedStyle(mark).color : '';
-  const accent = [marked !== own.color ? marked : '', hostAccent].map(rgba).find((c) => c && contrast(c, solid) >= 3) ?? text;
-  set('--urd-cal-dlg-accent', css(accent));
-  set('--urd-cal-dlg-on-accent', css(readableOn(accent)));
+  for (const name of host.style) if (name.startsWith('--urd-cal-s-') || name === '--urd-cal-accent-text') dialog.style.setProperty(name, host.style.getPropertyValue(name));
 }
 
-/**
- * Opens one event in a native dialog: the date and the time, the title, the place as a link to the map, the calendar it belongs to, the picture, the whole description with its links, and the sign-up, the meeting link and «Add to calendar» (a file with the one event, and the Google link).
- * The dialog is built per opening and removed when it closes; the focus returns to the event it was opened from.
- */
-/** The open cards and the event each was opened from. */
+/** The open cards, each with the event or announcement it was opened from. */
 const OPEN_CARDS = new Map();
 
 /** Closes a card whose event is no longer on the page: its calendar has been drawn again under it. */
@@ -1025,7 +959,7 @@ function renderCards(host, occs, props, ics, ui) {
     if (chip) top.appendChild(chip);
     card.appendChild(top);
     card.appendChild(ui.field('strong', 'title', occ.title, 'urd-collection-title'));
-    const excerpt = ui.excerpt(occ.description);
+    const excerpt = ui.descriptionIn === 'card' ? '' : ui.excerpt(occ.description);
     if (excerpt) card.appendChild(ui.field('div', 'description', excerpt, 'urd-collection-text'));
     const signup = ui.signup(occ);
     if (signup) card.appendChild(signup);
@@ -1278,34 +1212,29 @@ function foldNode(render, rest, total, props, ics, ui) {
   return fold;
 }
 
-/** The place filter: a chip per venue (the place up to its first comma), drawn when the events have two or more. */
-function placeRow(occs, active, onpick, ics, ui) {
-  const places = [...new Set(occs.map((occ) => ics.placeName(occ.location)).filter(Boolean))];
-  if (places.length < 2) return null;
-  const row = el2('div', 'urd-cal-chips urd-cal-places');
-  row.setAttribute('role', 'group');
-  row.setAttribute('aria-label', t('calendar.places'));
-  for (const place of [null, ...places]) {
-    const btn = el2('button', 'urd-cal-chipbtn', place ?? ui.tx('allPlaces'));
-    btn.type = 'button';
-    btn.dataset.calKey = place ? `place-${place}` : 'place';
-    btn.setAttribute('aria-pressed', active === place ? 'true' : 'false');
-    if (active === place) btn.classList.add('selected');
-    btn.addEventListener('click', () => onpick(place));
-    row.appendChild(btn);
-  }
-  return row;
-}
-
 const SEARCH_WAIT = 200;
 
-/** The search field: one node for the life of the block, so the words and the caret stay while the calendar is redrawn under it. */
+/**
+ * The search field: one node for the life of the block, so the words and the caret stay while the calendar is redrawn under it.
+ * On a phone the field is folded behind a button with the search icon, and opens when the button is pressed; it stays open while it holds words.
+ */
 function searchField(onsearch) {
   const row = el2('div', 'urd-cal-searchrow');
+  const open = el2('button', 'urd-cal-searchbtn');
+  open.type = 'button';
+  open.setAttribute('aria-label', t('calendar.search'));
+  open.setAttribute('aria-expanded', 'false');
+  open.innerHTML = iconSvg('search') || '';
   const input = el2('input', 'urd-cal-search');
   input.type = 'search';
   input.placeholder = t('calendar.search');
   input.setAttribute('aria-label', t('calendar.search'));
+  open.addEventListener('click', () => {
+    const shown = row.classList.toggle('urd-cal-search-open');
+    open.setAttribute('aria-expanded', shown ? 'true' : 'false');
+    if (shown) input.focus({ preventScroll: true });
+  });
+  row.appendChild(open);
   // The number of matches, read out by a screen reader after a search.
   const status = el2('span', 'urd-cal-loading-text');
   status.setAttribute('role', 'status');
@@ -1626,7 +1555,6 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
   const zone = cf.zoneValid(siteZone) ? siteZone.trim() : null;
   const sources = (props.sources ?? []).filter((source) => ics.sourceEntry(source).url);
   let activeCategory = null;
-  let activePlace = null;
   let query = '';
   let shown = null;
   const search = props.showSearch === true ? searchField((words) => {
@@ -1640,7 +1568,9 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
   // The design: its class, the owner's colour slots and the edge stripe on the host.
   const design = cd.calDesign(props.design);
   const view = cd.calView(props);
-  host.className = `urd-cal urd-cal-d-${design.id}`;
+  host.className = `urd-cal urd-cal-d-${design.id} urd-cal-set-${design.set}`;
+  // The size of the finding tools (the switcher, the chips, the search and the week's and month's arrows): small, normal or large.
+  if (props.toolsSize === 's' || props.toolsSize === 'l') host.classList.add(`urd-cal-tools-${props.toolsSize}`);
   for (const [name, value] of Object.entries(cd.calSlotVars(design, props.colors))) host.style.setProperty(name, value);
   // The text on the calendar's accent follows the accent the owner picked.
   const accentInk = props.colors?.accent ? inkOn(props.colors.accent) : null;
@@ -1720,9 +1650,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
     // Cancelled events are shown as cancelled unless the owner has hidden them.
     const kept = props.showCancelled === false ? occurrences.filter((occ) => !occ.cancelled) : occurrences;
     // The visitor's own narrowing: the words searched for, the place and the category.
-    const narrowed = kept.filter((occ) => ics.matchesSearch(occ, query)
-      && (!activePlace || ics.placeName(occ.location) === activePlace)
-      && (!activeCategory || occ.category === activeCategory));
+    const narrowed = kept.filter((occ) => ics.matchesSearch(occ, query) && (!activeCategory || occ.category === activeCategory));
     // A design that counts out what is coming shows nothing that is over; a week, month, day or year shows its whole span.
     const comingOnly = own && !SPAN_VIEWS.includes(view);
     const filtered = comingOnly ? narrowed.filter((occ) => (occ.end ?? occ.start) >= soon) : narrowed;
@@ -1734,24 +1662,23 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
       : filtered.slice(0, limit);
     // A list folds the events beyond the max count instead of dropping them.
     const folds = own && cd.calFolds(props) && filtered.length > limit;
+    // The switcher and the search stand on one row, so a phone shows the search as a button beside the switcher.
+    const tools = el2('div', 'urd-cal-tools');
     if (switcher) {
-      host.appendChild(switchRow(mode, (picked) => {
+      tools.appendChild(switchRow(mode, (picked) => {
         mode = picked;
         draw(occurrences, note);
       }, ui));
     }
-    // A design with switches of its own (ownFilter) draws no chip row.
-    const chips = props.showCategories === false || design.ownFilter ? null : categoryRow(occurrences, activeCategory, (category) => {
+    if (search) tools.appendChild(search);
+    if (tools.children.length) host.appendChild(tools);
+    // The calendar filter, when the owner switched it on; a design with switches of its own (ownFilter), the block's or the one behind the switcher's button, draws no chip row.
+    const shownDesign = own ? design : cd.calDesign(cd.calSwitcherViews(props)[mode]);
+    const chips = props.showCategories !== true || shownDesign.ownFilter ? null : categoryRow(occurrences, activeCategory, (category) => {
       activeCategory = category;
       draw(occurrences, note);
     }, ui);
-    if (search) host.appendChild(search);
     if (chips) host.appendChild(chips);
-    const places = props.showPlaces === true ? placeRow(kept, activePlace, (place) => {
-      activePlace = place;
-      draw(occurrences, note);
-    }, ics, ui) : null;
-    if (places) host.appendChild(places);
     // The whole filtered list, for a design that draws more than the rows (the bento's month dots).
     ui.all = filtered;
     ui.total = folds ? filtered.length : limited.length;
@@ -1764,11 +1691,17 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
         draw(occurrences, note);
       },
     };
-    if (mode === 'week') {
-      weekMod.weekStrip(host, limited, props, ics, ui);
-    } else if (mode === 'month') {
-      renderMonth(host, limited, props, ics, ui);
-    } else if (!limited.length && (query || activePlace || activeCategory) && kept.length) {
+    if (mode === 'week' || mode === 'month') {
+      // The design behind the button (calSwitcherViews) is drawn in a box of its own that carries its class and its options, so its style sheet rules and settings apply inside the block's own set.
+      const chosen = cd.calSwitcherViews(props)[mode];
+      const box = el2('div', `urd-cal-swview urd-cal-d-${chosen}`);
+      const opt = ui.opt;
+      ui.opt = cd.calOptions({ ...props, design: chosen });
+      for (const [key, value] of Object.entries(ui.opt)) box.classList.add(`urd-cal-o-${key}-${typeof value === 'boolean' ? (value ? 'on' : 'off') : value}`);
+      host.appendChild(box);
+      (chosen === 'month' ? renderMonth : weekMod[chosen])(box, limited, props, ics, ui);
+      ui.opt = opt;
+    } else if (!limited.length && (query || activeCategory) && kept.length) {
       // Events there are, but none the visitor's search or filter leaves.
       // A design with a filter of its own is drawn even so, so the visitor can choose again.
       if (design.ownFilter) (mod?.[design.id] ?? renderList)(host, limited, props, ics, ui);
@@ -1804,22 +1737,13 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
   };
 
   if (!sources.length) {
-    // Demo data exists only in the preview, so it must not change the block's height there: the published page shows the empty state at the frame's height, and a taller demo would push the neighbours in the preview alone.
-    // The block is marked so the push pass measures no growth (render.js contentHeight), and the demo is clipped to the frame.
+    // Demo data exists only in the preview, where the block follows it as it follows a feed, so the owner sees the whole design; visitors see the empty state, as for a calendar with nothing coming up.
     if (ctx.preview) adminLocaleReady.then(() => {
-      if (!host.isConnected) return;
-      el.dataset.urdDemo = '1';
-      host.style.maxHeight = '100%';
-      host.style.overflow = 'hidden';
-      draw(demoOccurrences(), ta('calendar.demoNote'));
+      if (host.isConnected) draw(demoOccurrences(), ta('calendar.demoNote'));
     });
-    // Visitors see the empty state, as for a calendar with nothing coming up.
     else draw([], null);
     return;
   }
-  delete el.dataset.urdDemo;
-  host.style.maxHeight = '';
-  host.style.overflow = '';
 
   // The switcher needs the week and the month from their start, whichever is the earlier.
   // The week begins on the day the site's language starts it on, which can be the day before Monday.

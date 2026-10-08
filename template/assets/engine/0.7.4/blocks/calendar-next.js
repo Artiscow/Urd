@@ -237,7 +237,7 @@ export function split(host, occs, props, ics, ui) {
   const meta = ui.meta(hero, { date: false });
   if (meta) body.appendChild(meta);
   const excerpt = ui.excerpt(hero.description, 220);
-  if (excerpt && ui.opt.description !== false) body.appendChild(ui.field('p', 'description', excerpt, 'urd-cal-split-text'));
+  if (excerpt && ui.descriptionIn !== 'card') body.appendChild(ui.field('p', 'description', excerpt, 'urd-cal-split-text'));
   const signup = ui.signup(hero);
   if (signup) body.appendChild(signup);
   top.append(panel, body);

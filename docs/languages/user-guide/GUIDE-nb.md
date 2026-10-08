@@ -281,7 +281,7 @@ leserekkefølge. Du trenger vanligvis ikke gjøre noe.
   kalenderens iCal-adresse eller Google-kalender-id under **Kilder** i menyen
   dens (en rad per kalender); en kilde kan få navn og farge, og navnet blir
   arrangementenes kategori. I samme meny velger du design, antall, og hva
-  besøkende får: kategori- og stedsfilter, søkefelt, tidligere arrangementer,
+  besøkende får: kalenderfilter, søkefelt, tidligere arrangementer,
   visningsvelger, og knappene **Abonner** og **Meld deg på**. Et trykk på et
   arrangement åpner kortet med hele beskrivelsen, kartlenke, og **Bli med**
   for et videomøte.

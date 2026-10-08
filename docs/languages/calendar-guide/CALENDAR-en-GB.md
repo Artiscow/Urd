@@ -181,16 +181,17 @@ Why the form matters:
 
 ## Finding events
 
-Four tools help a visitor find an event. All are switches in the block's menu, and all are off on a new calendar:
+Three tools help a visitor find an event. All are switches in the block's menu, and all are off on a new calendar:
 
-- **Show category filter:** a button per category.
-- **Show place filter:** a button per venue. The venue is the place up to its first comma, so «The hall, Storgata 1» is «The hall». The buttons appear when the events have two or more venues.
-- **Show search field:** the visitor types, and only the events with those words in their title, place or description are left.
+- **Show calendar filter:** a button per calendar, shown when the events come from two or more. The buttons are the calendars' names, or the categories a feed carries, or titles written as «Meeting: AGM».
+- **Show search field:** the visitor types, and only the events with those words in their title, place or description are left. A place is found by searching for it.
 - **Show earlier events:** the events of the last 90 days that are over, folded under «Earlier» with their count. It is offered in the designs that count out what is coming, not in a month, week, day or year.
 
-The tools work together: a search inside one venue, in one category.
+The tools work together: a search inside one calendar. They are drawn in the design's own colours and shapes, as is the card that opens at a press.
 
-**Show view switcher** lets the visitor change between what is coming, the week and the month.
+**Show view switcher** lets the visitor change between what is coming, the week and the month. Under the switch, **Behind Week** and **Behind Month** choose which design is drawn when a visitor presses the button: the week strip or one of the week designs, the plain month or one of the month designs. Without a choice, the month matches the calendar's look (the ApeironLF month on the ApeironLF designs).
+
+**Show the description** appears on the designs with room for it in their rows (Programme booklet, Split card, Regular event, and the plain cards): **In the rows** writes the first line of the description under the event, **Only in the card** leaves it to the card that opens at a press, which always holds the whole description.
 
 ## Times
 

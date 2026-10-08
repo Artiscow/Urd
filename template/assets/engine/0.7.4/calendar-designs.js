@@ -90,7 +90,6 @@ export const CAL_TEXTS = {
   range: 'calendar.range',
   earlier: 'calendar.earlier',
   showAll: 'calendar.showAll',
-  allPlaces: 'calendar.allPlaces',
   noMatch: 'calendar.noMatch',
   dayNone: 'calendar.dayNone',
   monthNone: 'calendar.monthNone',
@@ -142,7 +141,7 @@ const EVENT_TEXTS = ['when', 'where', 'join', 'addEvent', 'addOne', 'addFile', '
 const TIME_TEXTS = ['cancelled', 'allDay', 'until', 'timeAt', 'today', 'tomorrow', 'inDays'];
 
 /** The words the block draws around a design: the place filter, the search, the folds, the zone line, and the view switcher's week and month. */
-const BLOCK_TEXTS = ['allPlaces', 'noMatch', 'earlier', 'showAll', 'zoneOf', 'zoneYours', 'weekN', 'range', 'moreN', 'dayNone'];
+const BLOCK_TEXTS = ['noMatch', 'earlier', 'showAll', 'zoneOf', 'zoneYours', 'weekN', 'range', 'moreN', 'dayNone'];
 
 /** The texts every design with chips, sign-up and subscribe buttons shows. */
 const COMMON_TEXTS = ['all', 'signup', 'subscribe', 'subscribeMulti', 'addGoogle', 'swUpcoming', 'swWeek', 'swMonth', ...BLOCK_TEXTS, ...TIME_TEXTS, ...EVENT_TEXTS];
@@ -163,6 +162,7 @@ export const CAL_DESIGNS = [
   {
     id: 'plain',
     labelKey: 'calendar.design.plain',
+    set: 'theme',
     view: null,
     stripe: false,
     slots: [slot('accent'), slot('surface'), slot('line'), slot('chip')],
@@ -171,6 +171,7 @@ export const CAL_DESIGNS = [
   {
     id: 'timeline',
     labelKey: 'calendar.design.timeline',
+    set: 'theme',
     view: 'list',
     module: 'list',
     stripe: false,
@@ -180,6 +181,7 @@ export const CAL_DESIGNS = [
   {
     id: 'table',
     labelKey: 'calendar.design.table',
+    set: 'theme',
     view: 'list',
     module: 'list',
     stripe: false,
@@ -189,6 +191,8 @@ export const CAL_DESIGNS = [
   {
     id: 'booklet',
     labelKey: 'calendar.design.booklet',
+    set: 'poster',
+    excerpt: true,
     view: 'list',
     module: 'list',
     stripe: false,
@@ -198,6 +202,7 @@ export const CAL_DESIGNS = [
   {
     id: 'numbered',
     labelKey: 'calendar.design.numbered',
+    set: 'poster',
     view: 'list',
     module: 'list',
     stripe: false,
@@ -207,6 +212,7 @@ export const CAL_DESIGNS = [
   {
     id: 'apList',
     labelKey: 'calendar.design.apList',
+    set: 'apNavy',
     empty: 'ap',
     view: 'list',
     module: 'list',
@@ -217,6 +223,7 @@ export const CAL_DESIGNS = [
   {
     id: 'glass',
     labelKey: 'calendar.design.glass',
+    set: 'lightGlass',
     view: 'list',
     module: 'list',
     stripe: false,
@@ -226,6 +233,7 @@ export const CAL_DESIGNS = [
   {
     id: 'posters',
     labelKey: 'calendar.design.posters',
+    set: 'poster',
     view: 'cards',
     module: 'cards',
     stripe: false,
@@ -236,6 +244,7 @@ export const CAL_DESIGNS = [
   {
     id: 'tickets',
     labelKey: 'calendar.design.tickets',
+    set: 'theme',
     view: 'cards',
     module: 'cards',
     stripe: false,
@@ -247,6 +256,7 @@ export const CAL_DESIGNS = [
   {
     id: 'carousel',
     labelKey: 'calendar.design.carousel',
+    set: 'theme',
     view: 'cards',
     module: 'cards',
     stripe: false,
@@ -256,6 +266,7 @@ export const CAL_DESIGNS = [
   {
     id: 'photo',
     labelKey: 'calendar.design.photo',
+    set: 'theme',
     view: 'cards',
     module: 'cards',
     stripe: false,
@@ -265,6 +276,7 @@ export const CAL_DESIGNS = [
   {
     id: 'apGrid',
     labelKey: 'calendar.design.apGrid',
+    set: 'apCream',
     empty: 'ap',
     view: 'cards',
     module: 'cards',
@@ -275,6 +287,7 @@ export const CAL_DESIGNS = [
   {
     id: 'bento',
     labelKey: 'calendar.design.bento',
+    set: 'bento',
     view: 'cards',
     module: 'cards',
     stripe: false,
@@ -285,6 +298,7 @@ export const CAL_DESIGNS = [
   {
     id: 'weekStrip',
     labelKey: 'calendar.design.weekStrip',
+    set: 'theme',
     view: 'week',
     module: 'time',
     stripe: false,
@@ -294,15 +308,17 @@ export const CAL_DESIGNS = [
   {
     id: 'weekPlan',
     labelKey: 'calendar.design.weekPlan',
+    set: 'theme',
     view: 'week',
     module: 'time',
-    stripe: false,
+    stripe: true,
     slots: [slot('accent'), slot('surface'), slot('line'), slot('todayBg'), slot('event')],
     texts: ['todayBtn', ...COMMON_TEXTS],
   },
   {
     id: 'layers',
     labelKey: 'calendar.design.layers',
+    set: 'theme',
     view: 'week',
     module: 'time',
     stripe: false,
@@ -313,6 +329,7 @@ export const CAL_DESIGNS = [
   {
     id: 'sidepanel',
     labelKey: 'calendar.design.sidepanel',
+    set: 'theme',
     view: 'month',
     module: 'time',
     stripe: false,
@@ -322,6 +339,7 @@ export const CAL_DESIGNS = [
   {
     id: 'apMonth',
     labelKey: 'calendar.design.apMonth',
+    set: 'apCream',
     empty: 'ap',
     view: 'month',
     module: 'time',
@@ -332,15 +350,17 @@ export const CAL_DESIGNS = [
   {
     id: 'dayPlan',
     labelKey: 'calendar.design.dayPlan',
+    set: 'theme',
     view: 'day',
     module: 'time',
-    stripe: false,
+    stripe: true,
     slots: [slot('accent'), slot('surface'), slot('line'), slot('past'), slot('event')],
     texts: ['todayBtn', 'todayCount', 'count', ...COMMON_TEXTS],
   },
   {
     id: 'yearWheel',
     labelKey: 'calendar.design.yearWheel',
+    set: 'theme',
     view: 'year',
     module: 'time',
     stripe: false,
@@ -350,6 +370,7 @@ export const CAL_DESIGNS = [
   {
     id: 'heatmap',
     labelKey: 'calendar.design.heatmap',
+    set: 'theme',
     view: 'year',
     module: 'time',
     stripe: false,
@@ -359,6 +380,7 @@ export const CAL_DESIGNS = [
   {
     id: 'billboard',
     labelKey: 'calendar.design.billboard',
+    set: 'board',
     view: 'next',
     module: 'next',
     stripe: false,
@@ -370,6 +392,7 @@ export const CAL_DESIGNS = [
   {
     id: 'stacked',
     labelKey: 'calendar.design.stacked',
+    set: 'theme',
     view: 'next',
     module: 'next',
     stripe: false,
@@ -379,6 +402,7 @@ export const CAL_DESIGNS = [
   {
     id: 'noticeboard',
     labelKey: 'calendar.design.noticeboard',
+    set: 'cork',
     view: 'next',
     module: 'next',
     stripe: false,
@@ -389,6 +413,8 @@ export const CAL_DESIGNS = [
   {
     id: 'split',
     labelKey: 'calendar.design.split',
+    set: 'theme',
+    excerpt: true,
     view: 'next',
     module: 'next',
     stripe: false,
@@ -398,6 +424,7 @@ export const CAL_DESIGNS = [
   {
     id: 'band',
     labelKey: 'calendar.design.band',
+    set: 'theme',
     view: 'next',
     module: 'next',
     stripe: false,
@@ -407,6 +434,7 @@ export const CAL_DESIGNS = [
   {
     id: 'oneLine',
     labelKey: 'calendar.design.oneLine',
+    set: 'theme',
     view: 'next',
     module: 'next',
     stripe: true,
@@ -416,6 +444,7 @@ export const CAL_DESIGNS = [
   {
     id: 'ring',
     labelKey: 'calendar.design.ring',
+    set: 'theme',
     view: 'next',
     module: 'next',
     stripe: false,
@@ -425,6 +454,7 @@ export const CAL_DESIGNS = [
   {
     id: 'darkGlass',
     labelKey: 'calendar.design.darkGlass',
+    set: 'darkGlass',
     view: 'next',
     module: 'next',
     stripe: false,
@@ -435,6 +465,7 @@ export const CAL_DESIGNS = [
   {
     id: 'nextBento',
     labelKey: 'calendar.design.nextBento',
+    set: 'bento',
     view: 'next',
     module: 'next',
     stripe: false,
@@ -446,6 +477,7 @@ export const CAL_DESIGNS = [
   {
     id: 'apNow',
     labelKey: 'calendar.design.apNow',
+    set: 'apCream',
     view: 'next',
     module: 'more',
     stripe: false,
@@ -458,6 +490,7 @@ export const CAL_DESIGNS = [
   {
     id: 'apNavy',
     labelKey: 'calendar.design.apNavy',
+    set: 'apNavy',
     view: 'next',
     module: 'more',
     stripe: false,
@@ -468,6 +501,8 @@ export const CAL_DESIGNS = [
   {
     id: 'apSeries',
     labelKey: 'calendar.design.apSeries',
+    set: 'apCream',
+    excerpt: true,
     view: 'list',
     module: 'more',
     stripe: false,
@@ -479,6 +514,7 @@ export const CAL_DESIGNS = [
   {
     id: 'mobileAgenda',
     labelKey: 'calendar.design.mobileAgenda',
+    set: 'agendaDark',
     view: 'agenda',
     module: 'more',
     stripe: true,
@@ -509,10 +545,45 @@ export const CAL_OPTIONS = {
   // The month at the top of the wheel: one of the twelve, or `now` for the month the visitor is in.
   yearWheel: [choice('firstMonth', [...MONTHS, 'now'], '0')],
   numbered: [toggle('pad', true)],
-  booklet: [toggle('description', true)],
-  split: [toggle('description', true)],
   band: [toggle('roll', true)],
 };
+
+/**
+ * The colour sets: every design belongs to one, and the event card, the switcher's week and month, the finding tools and the phone view are drawn per set in base.css (`urd-cal-set-<id>` on the block, ADR-0011).
+ * A design overrides its set by redefining a set variable under its own class (`urd-cal-d-<id>` on the block, `urd-cal-dlg-<id>` on the card).
+ */
+export const CAL_SETS = ['theme', 'apCream', 'apNavy', 'agendaDark', 'board', 'darkGlass', 'cork', 'poster', 'bento', 'lightGlass'];
+
+/** The designs a switcher button can stand behind: the week strip and the week designs, the plain month and the month designs. */
+export const CAL_SWITCH_WEEKS = ['weekStrip', 'weekPlan', 'layers'];
+export const CAL_SWITCH_MONTHS = ['month', 'sidepanel', 'apMonth'];
+
+/**
+ * The designs behind the switcher's Week and Month buttons: the owner's choice (`switcherViews`) when it is one of the designs a button can hold, else the one matching the block's set (the ApeironLF month on the Ap sets, the plain month elsewhere, the week strip for the week).
+ * @returns {{week: string, month: string}}
+ */
+export function calSwitcherViews(props) {
+  const design = calDesign(props?.design);
+  const chosen = props?.switcherViews ?? {};
+  const week = CAL_SWITCH_WEEKS.includes(chosen.week) ? chosen.week : 'weekStrip';
+  const month = CAL_SWITCH_MONTHS.includes(chosen.month) ? chosen.month : (design.set === 'apCream' || design.set === 'apNavy' ? 'apMonth' : 'month');
+  return { week, month };
+}
+
+/**
+ * Where the description is drawn: in the event's own row (`rows`) or only in the card that opens at a press (`card`).
+ * Only a design with room in its rows (`excerpt`) draws it there; the legacy per-design option `description: false` reads as `card`.
+ */
+export function calDescription(props) {
+  if (props?.description === 'card' || props?.description === 'rows') return props.description;
+  return props?.options?.description === false ? 'card' : 'rows';
+}
+
+/** True when the block's rows have room for the description: a design that draws an excerpt (`excerpt`), or the plain design in the cards view. */
+export function calHasExcerpt(props) {
+  const design = calDesign(props?.design);
+  return design.excerpt === true || (design.id === 'plain' && calView(props) === 'cards');
+}
 
 /** The option definitions of a design; an empty list for a design without settings of its own. */
 export function calOptionDefs(designId) {

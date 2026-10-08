@@ -191,8 +191,6 @@ export default {
     'calendar.dayNone': 'Nothing on this day',
     'calendar.earlier': 'Earlier ({n})',
     'calendar.search': 'Search the events',
-    'calendar.places': 'Places',
-    'calendar.allPlaces': 'All places',
     'calendar.noMatch': 'No events match',
     'calendar.onMap': 'Show on the map',
     'calendar.viewsLabel': 'View',

@@ -158,8 +158,6 @@ export default {
     'calendar.dayNone': 'Ii mihkkege dán beaivvi',
     'calendar.earlier': 'Árabut ({n})',
     'calendar.search': 'Oza lágidemiin',
-    'calendar.places': 'Báikkit',
-    'calendar.allPlaces': 'Buot báikkit',
     'calendar.noMatch': 'Ii oktage lágideapmi heive',
     'calendar.onMap': 'Čájet kárttas',
   },

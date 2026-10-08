@@ -8,7 +8,7 @@
    * @type {{ label: string, title?: string, value: string, options: Array<[string, string]>, onchange: (value: string) => void }}
    */
   let { label, title = undefined, value, options, onchange } = $props();
-  const stacked = $derived(options.length > 3 || options.reduce((n, [, text]) => n + `${text}`.length, 0) > 20);
+  const stacked = $derived(options.length > 3 || options.reduce((n, [, text]) => n + `${text}`.length, 0) > 14);
   const key = (v) => `${v ?? ''}`;
 </script>
 

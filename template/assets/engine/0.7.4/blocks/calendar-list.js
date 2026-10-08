@@ -118,7 +118,7 @@ export function booklet(host, occs, props, ics, ui) {
       row.appendChild(ui.field('strong', 'number', String(dayOf(occ).getDate()), 'urd-cal-booklet-day', occ));
       const body = ui.el('div', 'urd-cal-booklet-body');
       body.append(ui.field('strong', 'title', occ.title, 'urd-cal-booklet-name'), weekdayMeta(occ, ui));
-      const text = ui.opt.description === false ? null : excerptNode(occ, ui, 'urd-cal-booklet-text');
+      const text = ui.descriptionIn === 'card' ? null : excerptNode(occ, ui, 'urd-cal-booklet-text');
       if (text) body.appendChild(text);
       const signup = ui.signup(occ);
       if (signup) body.appendChild(signup);

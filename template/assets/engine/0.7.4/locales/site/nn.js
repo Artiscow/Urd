@@ -153,8 +153,6 @@ export default {
     'calendar.dayNone': 'Ingenting denne dagen',
     'calendar.earlier': 'Tidlegare ({n})',
     'calendar.search': 'Søk i arrangementa',
-    'calendar.places': 'Stader',
-    'calendar.allPlaces': 'Alle stader',
     'calendar.noMatch': 'Ingen arrangement passar',
     'calendar.onMap': 'Vis i kart',
     'calendar.viewsLabel': 'Vising',

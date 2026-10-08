@@ -198,8 +198,6 @@ export default {
     'calendar.dayNone': 'Ingenting den här dagen',
     'calendar.earlier': 'Tidigare ({n})',
     'calendar.search': 'Sök bland evenemangen',
-    'calendar.places': 'Platser',
-    'calendar.allPlaces': 'Alla platser',
     'calendar.noMatch': 'Inga evenemang matchar',
     'calendar.onMap': 'Visa på kartan',
     'calendar.viewsLabel': 'Vy',

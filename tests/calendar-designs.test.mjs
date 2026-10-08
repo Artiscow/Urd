@@ -6,12 +6,13 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { engineImport } from './_engine.mjs';
+import { engineImport, ENGINE_DIR } from './_engine.mjs';
 
 const {
   CAL_DESIGNS, CAL_VIEWS, CAL_FIELDS, CAL_TEXTS, CAL_SIZE, CAL_MODULES,
   CAL_SWITCH_VIEWS, calSwitcher, calFolds, calProgramHref, CAL_OPTIONS, calOptionDefs, calOptions, CAL_SCALE, calScale, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calHasTextOverrides,
   CAL_PLURAL_TEXTS, CAL_CONTENT_TEXTS, CAL_HINT_TEXTS, CAL_TEXT_PARAMS, calTextSlot, calBlankHtml, calTextValue, calSplitTokens, calResetTexts,
+  CAL_SETS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, calSwitcherViews, calDescription, calHasExcerpt,
 } = await engineImport('calendar-designs.js');
 import { readFileSync } from 'node:fs';
 
@@ -312,4 +313,35 @@ test('calScale: the stored size inside its bounds, 1 for anything else', () => {
   assert.equal(calScale({ scale: 9 }), CAL_SCALE.max);
   assert.equal(calScale({ scale: 'big' }), 1);
   assert.equal(calScale({ scale: -1 }), 1);
+});
+
+test('every design belongs to a colour set, and base.css defines every set', () => {
+  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  for (const design of CAL_DESIGNS) assert.ok(CAL_SETS.includes(design.set), `${design.id} has a set`);
+  for (const set of CAL_SETS) assert.ok(set === 'theme' || css.includes(`.urd-cal-set-${set} {`), `base.css defines the set ${set}`);
+  // The card is drawn from the set variables alone: nothing measured at run time reaches it.
+  assert.ok(!css.includes('--urd-cal-dlg-'), 'the card reads no measured variable');
+  const block = readFileSync(new URL('blocks/calendar.js', ENGINE_DIR), 'utf8');
+  const dress = block.slice(block.indexOf('function dressDialog('), block.indexOf('function closeButton('));
+  assert.ok(!dress.includes('getComputedStyle'), 'dressDialog measures nothing');
+});
+
+test('calSwitcherViews: the matching designs by default, the owner\'s choice when it is one a button can hold', () => {
+  assert.deepEqual(calSwitcherViews({ design: 'timeline' }), { week: 'weekStrip', month: 'month' });
+  assert.deepEqual(calSwitcherViews({ design: 'apNow' }), { week: 'weekStrip', month: 'apMonth' });
+  assert.deepEqual(calSwitcherViews({ design: 'apNavy', switcherViews: { week: 'layers', month: 'sidepanel' } }), { week: 'layers', month: 'sidepanel' });
+  assert.deepEqual(calSwitcherViews({ design: 'glass', switcherViews: { week: 'table', month: 'nonsense' } }), { week: 'weekStrip', month: 'month' });
+  for (const id of [...CAL_SWITCH_WEEKS, ...CAL_SWITCH_MONTHS.filter((m) => m !== 'month')]) assert.equal(calDesign(id).id, id, `${id} is a design`);
+});
+
+test('calDescription and calHasExcerpt: the rows or the card, only where the rows have room', () => {
+  assert.equal(calDescription({}), 'rows');
+  assert.equal(calDescription({ description: 'card' }), 'card');
+  assert.equal(calDescription({ options: { description: false } }), 'card', 'the legacy per-design option reads as the card');
+  assert.equal(calDescription({ description: 'rows', options: { description: false } }), 'rows');
+  for (const id of ['booklet', 'split', 'apSeries']) assert.ok(calHasExcerpt({ design: id }), `${id} has room`);
+  assert.ok(calHasExcerpt({ design: 'plain', view: 'cards' }));
+  assert.ok(!calHasExcerpt({ design: 'plain', view: 'list' }));
+  assert.ok(!calHasExcerpt({ design: 'timeline' }));
+  assert.ok(!Object.keys(CAL_OPTIONS).some((id) => CAL_OPTIONS[id].some((def) => def.key === 'description')), 'the description is a block setting, not a design option');
 });

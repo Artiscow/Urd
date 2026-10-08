@@ -130,7 +130,7 @@
   import { zoneValid } from '$engine/calendar-format.js';
   import { MAP_SERVICES, mapService } from '$engine/map-links.js';
   import { meetingHostList } from '$engine/meeting-links.js';
-  import { CAL_FIELDS, CAL_SIZE, CAL_SWITCH_VIEWS, calDesign, calView, calStripe, calHasTextOverrides, calResetTexts, calDesignGroups, calOptionDefs, calOptions, calScale, CAL_SCALE } from '$engine/calendar-designs.js';
+  import { CAL_FIELDS, CAL_SIZE, CAL_SWITCH_VIEWS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, calSwitcherViews, calDescription, calHasExcerpt, calDesign, calView, calStripe, calHasTextOverrides, calResetTexts, calDesignGroups, calOptionDefs, calOptions, calScale, CAL_SCALE } from '$engine/calendar-designs.js';
   import { calendarThumb } from '$engine/calendar-thumb.js';
 
   /** The background layer types in the order they are offered in the panel. */
@@ -1121,8 +1121,8 @@
     const view = calView(p);
     const limit0 = view === 'agenda' ? 8 : 6;
     const count0 = view === 'next' ? 3 : undefined;
-    const viewChanged = p.switcher === true || p.showMore === false || (p.limit ?? 6) !== limit0 || p.nextCount !== count0 || p.laterCount !== count0 || p.showCancelled === false || p.structuredData === false || p.clock != null || p.weekStart != null;
-    const on = [!def.ownFilter && p.showCategories !== false, p.showSubscribe !== false, p.showSignup === true, p.showPlaces === true, p.showSearch === true, p.showEarlier === true].filter(Boolean).length;
+    const viewChanged = p.switcher === true || p.switcherViews != null || p.toolsSize != null || p.description != null || p.showMore === false || (p.limit ?? 6) !== limit0 || p.nextCount !== count0 || p.laterCount !== count0 || p.showCancelled === false || p.structuredData === false || p.clock != null || p.weekStart != null;
+    const on = [!def.ownFilter && p.showCategories === true, p.showSubscribe !== false, p.showSignup === true, p.showSearch === true, p.showEarlier === true].filter(Boolean).length;
     const buttonsChanged = on > 0 || p.showOpen === false || Boolean(p.programHref);
     const emptyChanged = Boolean(p.emptyText) || (p.emptyIcon != null && p.emptyIcon !== 'calendar');
     const optCount = calOptionDefs(p.design).filter((d) => p.options?.[d.key] != null).length + (calScale(p) !== 1 ? 1 : 0);
@@ -1131,9 +1131,9 @@
     return {
       sources: String((p.sources ?? []).length),
       view: ta(CAL_VIEW_KEYS[calView(p)]),
-      viewReset: viewChanged ? reset('cal-view', { switcher: undefined, showMore: undefined, limit: limit0, nextCount: count0, laterCount: count0, showCancelled: undefined, structuredData: undefined, clock: undefined, weekStart: undefined }) : null,
+      viewReset: viewChanged ? reset('cal-view', { switcher: undefined, switcherViews: undefined, toolsSize: undefined, description: undefined, showMore: undefined, limit: limit0, nextCount: count0, laterCount: count0, showCancelled: undefined, structuredData: undefined, clock: undefined, weekStart: undefined }) : null,
       buttons: on ? ta('menu.onCount', { n: on }) : ta('common.off'),
-      buttonsReset: buttonsChanged ? reset('cal-buttons', { showCategories: false, showSubscribe: false, showSignup: false, showPlaces: undefined, showSearch: undefined, showEarlier: undefined, showOpen: undefined, programHref: undefined }) : null,
+      buttonsReset: buttonsChanged ? reset('cal-buttons', { showCategories: false, showSubscribe: false, showSignup: false, showSearch: undefined, showEarlier: undefined, showOpen: undefined, programHref: undefined }) : null,
       empty: p.emptyText || ta('menu.standard'),
       emptyReset: emptyChanged ? reset('cal-empty', { emptyText: undefined, emptyIcon: undefined }) : null,
       notice: p.notice?.show === true ? ta('common.on') : ta('common.off'),
@@ -9798,6 +9798,31 @@
             onchange={(e) => setBlockProp('switcher', e.target.checked || undefined)} />
           {ta('calendar.switcher')}
         </label>
+        {#if selectedBlock.props.switcher === true}
+          <!-- The designs behind the switcher's Week and Month buttons, directly under the switch they belong to -->
+          {@const sw = calSwitcherViews(selectedBlock.props)}
+          <div class="ctl-row" title={ta('tip.calendar.switchWeek')}>
+            <span class="mini-label ctl-name">{ta('calendar.switchWeek')}</span>
+            <Dropdown value={sw.week} options={CAL_SWITCH_WEEKS.map((id) => [id, ta(`calendar.design.${id}`)])}
+              onchange={(v) => setBlockProp('switcherViews', { ...(selectedBlock.props.switcherViews ?? {}), week: v })} />
+          </div>
+          <div class="ctl-row" title={ta('tip.calendar.switchMonth')}>
+            <span class="mini-label ctl-name">{ta('calendar.switchMonth')}</span>
+            <Dropdown value={sw.month} options={CAL_SWITCH_MONTHS.map((id) => [id, id === 'month' ? ta('calendar.viewMonth') : ta(`calendar.design.${id}`)])}
+              onchange={(v) => setBlockProp('switcherViews', { ...(selectedBlock.props.switcherViews ?? {}), month: v })} />
+          </div>
+        {/if}
+        <Choice label={ta('calendar.toolsSize')} title={ta('tip.calendar.toolsSize')} value={['s', 'l'].includes(selectedBlock.props.toolsSize) ? selectedBlock.props.toolsSize : 'm'}
+          options={[['s', ta('calendar.toolsSize.s')], ['m', ta('calendar.toolsSize.m')], ['l', ta('calendar.toolsSize.l')]]}
+          onchange={(v) => setBlockProp('toolsSize', v === 'm' ? undefined : v)} />
+      {/if}
+      <!-- Where the description stands, on the designs with room for it in their rows -->
+      {#if calHasExcerpt(selectedBlock.props)}
+        <div title={ta('tip.calendar.opt.description')}>
+          <Choice label={ta('calendar.opt.description')} value={calDescription(selectedBlock.props)}
+            options={[['rows', ta('calendar.descriptionRows')], ['card', ta('calendar.descriptionCard')]]}
+            onchange={(v) => setBlockProp('description', v === 'rows' ? undefined : v)} />
+        </div>
       {/if}
       {#if ['list', 'cards', 'agenda'].includes(selectedBlock.props.view ?? 'list')}
         <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
@@ -9847,18 +9872,13 @@
       {#snippet calButtons()}
       <!-- A design with calendar switches of its own has no chip row to switch -->
       {#if !calDesign(selectedBlock.props.design).ownFilter}
-        <label class="gridmenu-snap">
-          <input type="checkbox" checked={selectedBlock.props.showCategories !== false}
+        <label class="gridmenu-snap" title={ta('tip.calendar.showCategories')}>
+          <input type="checkbox" checked={selectedBlock.props.showCategories === true}
             onchange={(e) => setBlockProp('showCategories', e.target.checked)} />
           {ta('calendar.showCategories')}
         </label>
       {/if}
-      <!-- What a visitor finds events with: a place filter, a search field, and the events that are over -->
-      <label class="gridmenu-snap" title={ta('tip.calendar.showPlaces')}>
-        <input type="checkbox" checked={selectedBlock.props.showPlaces === true}
-          onchange={(e) => setBlockProp('showPlaces', e.target.checked ? true : undefined)} />
-        {ta('calendar.showPlaces')}
-      </label>
+      <!-- What a visitor finds events with: a search field, and the events that are over -->
       <label class="gridmenu-snap" title={ta('tip.calendar.showSearch')}>
         <input type="checkbox" checked={selectedBlock.props.showSearch === true}
           onchange={(e) => setBlockProp('showSearch', e.target.checked ? true : undefined)} />
