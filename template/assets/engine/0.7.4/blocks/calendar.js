@@ -593,6 +593,8 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     today: () => new Date(zone ? cf.shiftToZone(Date.now(), zone) : Date.now()),
     /** True when the calendar is narrow (drawCalendar), and a design with seven columns draws its phone layout. */
     phone: false,
+    /** True when the design shows a span (a week, month, day or year) rather than what is coming. */
+    spanView: SPAN_VIEWS.includes(cd.calView(props)),
     /** A label that names the week, month or day shown: a change of it is read out by a screen reader. */
     live: (node) => {
       node.setAttribute('aria-live', 'polite');
@@ -777,7 +779,8 @@ function showEventDialog(occ, from, ics, ui, props) {
     join.rel = 'noopener';
     actions.appendChild(join);
   }
-  if (!occ.cancelled) {
+  // «Add to calendar» is left out of a cancelled event's card, and of every card when the owner switched it off (showAdd).
+  if (!occ.cancelled && props.showAdd !== false) {
     // The moment itself, when the times are shown on the site's own clock.
     const shift = occ.real != null ? occ.start - occ.real : 0;
     const real = { ...occ, start: occ.start - shift, end: Number.isFinite(occ.end) ? occ.end - shift : occ.end };
@@ -1144,6 +1147,39 @@ function renderMonth(host, occs, props, ics, ui) {
   prev.addEventListener('click', () => move(-1));
   next.addEventListener('click', () => move(1));
   paint();
+  host.appendChild(wrap);
+}
+
+/**
+ * The phone design (calPhoneDesign): one stacked agenda for a design that cannot be read on a phone, drawn in the design's set.
+ * A design that shows a span (a year) lists what is coming, counted by the block's max count, since its whole span is loaded.
+ */
+function renderPhoneAgenda(host, occs, props, ics, ui) {
+  const wrap = el2('div', 'urd-cal-pa');
+  let list = occs;
+  if (!ui.rest && ui.spanView) {
+    const soon = ui.today().getTime() - 6 * 3600 * 1000;
+    list = occs.filter((occ) => (occ.end ?? occ.start) >= soon).slice(0, Math.max(1, Number(props.limit) || 6));
+  }
+  if (!ui.rest) {
+    const head = el2('div', 'urd-cal-pa-head');
+    head.appendChild(ui.tx('swUpcoming', 'urd-cal-pa-title'));
+    if (list[0]) head.appendChild(el2('span', 'urd-cal-pa-next', ui.countdown(list[0])));
+    wrap.appendChild(head);
+  }
+  for (const occ of list) {
+    const row = ui.tint(el2('article', 'urd-cal-pa-row'), occ);
+    const when = ui.meta(occ, { place: false });
+    if (when) {
+      when.className = 'urd-cal-pa-when';
+      row.appendChild(when);
+    }
+    row.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-pa-name'));
+    if (occ.location) row.appendChild(ui.field('span', 'place', occ.location, 'urd-cal-pa-place'));
+    const signup = ui.signup(occ);
+    if (signup) row.appendChild(signup);
+    wrap.appendChild(row);
+  }
   host.appendChild(wrap);
 }
 
@@ -1709,7 +1745,10 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
     } else if (!limited.length) {
       host.appendChild(design.empty === 'ap' ? emptyApNode(props, ui) : emptyNode(props));
     } else {
-      const render = mod?.[design.id] ?? VIEWS[view] ?? renderList;
+      // On a phone a design that cannot be read there draws the shared phone design instead, unless the owner switched it off.
+      const phoneDesign = ui.phone && cd.calPhoneDesign(props);
+      host.classList.toggle('urd-cal-phone-design', phoneDesign);
+      const render = phoneDesign ? renderPhoneAgenda : (mod?.[design.id] ?? VIEWS[view] ?? renderList);
       render(host, limited, props, ics, ui);
       if (folds) host.appendChild(foldNode(render, filtered.slice(limit), filtered.length, props, ics, ui));
     }

@@ -2,6 +2,15 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.19.21): the phone design, and «Add to calendar» switchable
+
+- [ ] Table and Heatmap on a phone (or dragged narrower than 540 px in the editor): the design is replaced by a stacked list with «Upcoming», a row per event (date · time, title, place, the sign-up button when the sign-up buttons are on) and «Show all N» for the rest; the list takes the design's colours (try Table with own colour slots)
+- [ ] Content on a Table or Heatmap calendar shows «Phone design», ticked; unticked, the phone shows the table or the year grid as before. The switch is absent on every other design
+- [ ] Heatmap on a phone with the phone design: the list holds what is coming, counted by the max count, not the whole year
+- [ ] Table on a phone with the switcher on: Upcoming shows the phone design, Week and Month show their own phone layouts, and the edge stripe setting colours the rows' edges
+- [ ] Poster wall and Picture cards on a phone: one column, the first poster no wider than the column, whatever the columns option says
+- [ ] «Show «Add to calendar»» under Content, ticked by default: unticked, the event's card has no «Add to calendar» fold (and no subscribe links in it); the subscribe row under the calendar is unchanged. The Buttons group in the block menu counts the change and resets it
+
 ### Test batch (0.7.19.19-20): the card, the switcher's views and the finding tools per design set
 
 - [ ] The event card opened in each of the 34 designs: its ground, ink, accent, radius and type follow the design's set (cream and navy on the Ap designs, a pinned note on Noticeboard, a hard-shadowed square on the poster designs, glass on the two glass designs, the theme's colours on the plain designs), and the text reads on every one

@@ -1426,6 +1426,7 @@ textarea.urd-form-input {
 .urd-cal-stripes .urd-cal-apv-first,
 .urd-cal-stripes .urd-cal-apv-tile,
 .urd-cal-stripes .urd-cal-aps-row,
+.urd-cal-stripes .urd-cal-pa-row,
 .urd-cal-stripes .urd-cal-magenda-body {
   padding-left: 10px;
   border-left: 3px solid var(--urd-cal-stripe, var(--urd-cal-color, var(--urd-cal-accent)));
@@ -5137,6 +5138,81 @@ textarea.urd-form-input {
 
 .urd-cal-phone .urd-cal-chipbtn {
   flex: none;
+}
+
+/* The poster wall and the picture cards flow into one column on a phone, whatever the columns option says, and the first poster spans no more than the column. */
+.urd-cal-phone :is(.urd-cal-posters, .urd-cal-photos) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.urd-cal-phone .urd-cal-posters > * {
+  grid-row: auto;
+  grid-column: auto;
+}
+
+/* The phone design (calPhoneDesign, `.urd-cal-phone-design` on the host): one stacked agenda drawn from the set's variables, with the set's words for the dates and the set's type for the titles. */
+.urd-cal-pa {
+  display: grid;
+  color: var(--urd-cal-set-ink);
+  font-family: var(--urd-cal-set-font);
+}
+
+.urd-cal-pa-head {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 8px;
+}
+
+.urd-cal-pa-title {
+  font-family: var(--urd-cal-set-title-font);
+  font-size: 1.4em;
+  font-weight: var(--urd-cal-set-title-weight);
+  line-height: 1.1;
+}
+
+.urd-cal-pa-next {
+  font-size: 0.82em;
+  color: var(--urd-cal-set-muted);
+}
+
+.urd-cal-pa-row {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  padding: 12px 0;
+  border-top: 1px solid var(--urd-cal-set-line);
+}
+
+.urd-cal-pa-when {
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: var(--urd-cal-set-label-spacing);
+  color: var(--urd-cal-set-label);
+  text-transform: var(--urd-cal-set-label-case);
+}
+
+.urd-cal-pa-name {
+  font-family: var(--urd-cal-set-title-font);
+  font-size: 1.15em;
+  font-weight: var(--urd-cal-set-title-weight);
+  line-height: 1.15;
+}
+
+.urd-cal-pa-place {
+  color: var(--urd-cal-set-muted);
+}
+
+.urd-cal-pa-row .urd-cal-signup {
+  margin-top: 6px;
+  padding: 7px 12px;
+  font-size: 0.85em;
+  font-weight: 700;
+  color: var(--urd-cal-set-accent-text);
+  text-decoration: none;
+  background: var(--urd-cal-set-accent);
+  border-radius: var(--urd-cal-set-chip-radius);
 }
 
 .urd-cal-phone .urd-cal-wstrip-grid {

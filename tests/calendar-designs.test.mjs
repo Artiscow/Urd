@@ -12,7 +12,7 @@ const {
   CAL_DESIGNS, CAL_VIEWS, CAL_FIELDS, CAL_TEXTS, CAL_SIZE, CAL_MODULES,
   CAL_SWITCH_VIEWS, calSwitcher, calFolds, calProgramHref, CAL_OPTIONS, calOptionDefs, calOptions, CAL_SCALE, calScale, calDesignGroups, calDesign, calView, calColorCss, calSlotVars, calStripe, calFieldCss, calHasTextOverrides,
   CAL_PLURAL_TEXTS, CAL_CONTENT_TEXTS, CAL_HINT_TEXTS, CAL_TEXT_PARAMS, calTextSlot, calBlankHtml, calTextValue, calSplitTokens, calResetTexts,
-  CAL_SETS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, calSwitcherViews, calDescription, calHasExcerpt,
+  CAL_SETS, CAL_SWITCH_WEEKS, CAL_SWITCH_MONTHS, calSwitcherViews, calDescription, calHasExcerpt, CAL_PHONE_MODES, calPhoneDesign,
 } = await engineImport('calendar-designs.js');
 import { readFileSync } from 'node:fs';
 
@@ -31,6 +31,7 @@ test('every design has a label key, slots with label keys, known texts and a vie
     assert.match(design.labelKey, /^calendar\.design\./);
     assert.ok(design.view === null || CAL_VIEWS.includes(design.view), `${design.id}: view ${design.view}`);
     assert.equal(typeof design.stripe, 'boolean');
+    assert.ok(CAL_PHONE_MODES.includes(design.phone), `${design.id}: phone ${design.phone}`);
     for (const slot of design.slots) assert.equal(slot.labelKey, `calendar.slot.${slot.key}`);
     for (const key of design.texts) assert.ok(key in CAL_TEXTS, `${design.id}: text ${key}`);
     if (design.module) assert.ok(CAL_MODULES.includes(design.module), `${design.id}: module ${design.module}`);
@@ -344,4 +345,15 @@ test('calDescription and calHasExcerpt: the rows or the card, only where the row
   assert.ok(!calHasExcerpt({ design: 'plain', view: 'list' }));
   assert.ok(!calHasExcerpt({ design: 'timeline' }));
   assert.ok(!Object.keys(CAL_OPTIONS).some((id) => CAL_OPTIONS[id].some((def) => def.key === 'description')), 'the description is a block setting, not a design option');
+});
+
+test('calPhoneDesign: on a phone only a design that cannot be read there switches, until the owner switches it off', () => {
+  const switching = CAL_DESIGNS.filter((d) => d.phone === 'switch').map((d) => d.id);
+  assert.ok(switching.includes('table') && switching.includes('heatmap'));
+  assert.equal(calPhoneDesign({ design: 'table' }), true);
+  assert.equal(calPhoneDesign({ design: 'table', phoneDesign: false }), false);
+  assert.equal(calPhoneDesign({ design: 'heatmap', phoneDesign: true }), true);
+  assert.equal(calPhoneDesign({ design: 'plain' }), false);
+  assert.equal(calPhoneDesign({ design: 'posters' }), false);
+  assert.equal(calPhoneDesign(undefined), false);
 });

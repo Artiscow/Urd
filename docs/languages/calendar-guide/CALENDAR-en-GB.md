@@ -203,7 +203,7 @@ The tools work together: a search inside one calendar. They are drawn in the des
 
 A press on an event opens its card over the calendar: the date and time, the place, the picture, the whole description, and the Join and Sign up buttons. The page can be scrolled as usual, and Escape, the close button or a press outside the card closes it.
 
-**Add to calendar** in the card gives the visitor the event in their own calendar: to Google Calendar, or as a file for Apple Calendar, Outlook and the others. It also offers the whole calendar as a subscription.
+**Add to calendar** in the card gives the visitor the event in their own calendar: to Google Calendar, or as a file for Apple Calendar, Outlook and the others. It also offers the whole calendar as a subscription. Untick «Show Add to calendar» under Content to leave it out of the cards.
 
 In the editor, the first press on a calendar selects it, and a press on one of its events opens the card. Its words («When», «Where», «Add to calendar») are then changed by clicking them, as in the calendar itself.
 
@@ -218,6 +218,7 @@ Give every event a place with an address. An event without one is the kind searc
 ## Phone, keyboard and print
 
 - **On a phone, and wherever a calendar is narrower than 540 px** (a narrow column of a wide page), the designs with seven columns change: the days of a week stand under each other, and in a month every day is a button with a dot per event; a press lists that day's events. A design with a panel or an aside beside it lays them under each other when the calendar is narrower than 600 px. The calendar decides by its own width, so dragging it narrower in the editor shows the change at once.
+- **A design that cannot be read on a phone** (Table and Heatmap) switches into the phone design there: one stacked list in the design's colours, with the date, time, title, place and sign-up of each event. It is on by default; untick «Phone design» in Content to show the design as it is. The other designs read as they are or lay their columns under each other.
 - **With a keyboard** a month or a week is one stop for the Tab key. The arrow keys move between the days, Home and End go to the ends of the week, and PageUp and PageDown change the month or the week. Enter opens an event.
 - **On paper** the design and the buttons are left out, and the events are printed as a plain list.
 

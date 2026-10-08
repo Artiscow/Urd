@@ -1123,7 +1123,7 @@
     const count0 = view === 'next' ? 3 : undefined;
     const viewChanged = p.switcher === true || p.switcherViews != null || p.toolsSize != null || p.description != null || p.showMore === false || (p.limit ?? 6) !== limit0 || p.nextCount !== count0 || p.laterCount !== count0 || p.showCancelled === false || p.structuredData === false || p.clock != null || p.weekStart != null;
     const on = [!def.ownFilter && p.showCategories === true, p.showSubscribe !== false, p.showSignup === true, p.showSearch === true, p.showEarlier === true].filter(Boolean).length;
-    const buttonsChanged = on > 0 || p.showOpen === false || Boolean(p.programHref);
+    const buttonsChanged = on > 0 || p.showOpen === false || p.showAdd === false || Boolean(p.programHref);
     const emptyChanged = Boolean(p.emptyText) || (p.emptyIcon != null && p.emptyIcon !== 'calendar');
     const optCount = calOptionDefs(p.design).filter((d) => p.options?.[d.key] != null).length + (calScale(p) !== 1 ? 1 : 0);
     const colorCount = def.slots.filter((slot) => p.colors?.[slot.key]).length;
@@ -1133,7 +1133,7 @@
       view: ta(CAL_VIEW_KEYS[calView(p)]),
       viewReset: viewChanged ? reset('cal-view', { switcher: undefined, switcherViews: undefined, toolsSize: undefined, description: undefined, showMore: undefined, limit: limit0, nextCount: count0, laterCount: count0, showCancelled: undefined, structuredData: undefined, clock: undefined, weekStart: undefined }) : null,
       buttons: on ? ta('menu.onCount', { n: on }) : ta('common.off'),
-      buttonsReset: buttonsChanged ? reset('cal-buttons', { showCategories: false, showSubscribe: false, showSignup: false, showSearch: undefined, showEarlier: undefined, showOpen: undefined, programHref: undefined }) : null,
+      buttonsReset: buttonsChanged ? reset('cal-buttons', { showCategories: false, showSubscribe: false, showSignup: false, showSearch: undefined, showEarlier: undefined, showOpen: undefined, showAdd: undefined, programHref: undefined }) : null,
       empty: p.emptyText || ta('menu.standard'),
       emptyReset: emptyChanged ? reset('cal-empty', { emptyText: undefined, emptyIcon: undefined }) : null,
       notice: p.notice?.show === true ? ta('common.on') : ta('common.off'),
@@ -9816,6 +9816,14 @@
           options={[['s', ta('calendar.toolsSize.s')], ['m', ta('calendar.toolsSize.m')], ['l', ta('calendar.toolsSize.l')]]}
           onchange={(v) => setBlockProp('toolsSize', v === 'm' ? undefined : v)} />
       {/if}
+      <!-- The phone design, on a design that cannot be read on a phone: on by default, switchable off -->
+      {#if calDesign(selectedBlock.props.design).phone === 'switch'}
+        <label class="gridmenu-snap" title={ta('tip.calendar.phoneDesign')}>
+          <input type="checkbox" checked={selectedBlock.props.phoneDesign !== false}
+            onchange={(e) => setBlockProp('phoneDesign', e.target.checked ? undefined : false)} />
+          {ta('calendar.phoneDesign')}
+        </label>
+      {/if}
       <!-- Where the description stands, on the designs with room for it in their rows -->
       {#if calHasExcerpt(selectedBlock.props)}
         <div title={ta('tip.calendar.opt.description')}>
@@ -9900,6 +9908,11 @@
         <input type="checkbox" checked={selectedBlock.props.showSignup === true}
           onchange={(e) => setBlockProp('showSignup', e.target.checked)} />
         {ta('calendar.showSignup')}
+      </label>
+      <label class="gridmenu-snap" title={ta('tip.calendar.showAdd')}>
+        <input type="checkbox" checked={selectedBlock.props.showAdd !== false}
+          onchange={(e) => setBlockProp('showAdd', e.target.checked ? undefined : false)} />
+        {ta('calendar.showAdd')}
       </label>
       {#if calDesign(selectedBlock.props.design).open}
         <label class="gridmenu-snap" title={ta('tip.calendar.showOpen')}>

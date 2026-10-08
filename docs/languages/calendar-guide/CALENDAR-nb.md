@@ -203,7 +203,7 @@ Verktøyene virker sammen: et søk innenfor én kalender. De tegnes i designets 
 
 Et trykk på et arrangement åpner kortet over kalenderen: dato og tid, sted, bilde, hele beskrivelsen, og knappene Bli med og Meld deg på. Siden kan rulles som vanlig, og Escape, lukkeknappen eller et trykk utenfor kortet lukker det.
 
-**Legg i kalender** i kortet gir den besøkende arrangementet i sin egen kalender: til Google Kalender, eller som fil for Apple Kalender, Outlook og de andre. Den tilbyr også hele kalenderen som abonnement.
+**Legg i kalender** i kortet gir den besøkende arrangementet i sin egen kalender: til Google Kalender, eller som fil for Apple Kalender, Outlook og de andre. Den tilbyr også hele kalenderen som abonnement. Fjern avkryssingen «Vis «Legg i kalender»» under Innhold for å utelate det fra kortene.
 
 I editoren velger første trykk på en kalender den, og et trykk på et av arrangementene åpner kortet. Ordene i det («Når», «Hvor», «Legg i kalender») endres da ved å klikke på dem, som i selve kalenderen.
 
@@ -218,6 +218,7 @@ Gi hvert arrangement et sted med adresse. Et arrangement uten er den typen søke
 ## Telefon, tastatur og utskrift
 
 - **På telefon, og overalt der en kalender er smalere enn 540 px** (en smal kolonne på en bred side), endres designene med sju kolonner: dagene i en uke står under hverandre, og i en måned er hver dag en knapp med en prikk per arrangement; et trykk lister dagens arrangementer. Et design med et panel eller en sidekolonne ved siden av legger dem under hverandre når kalenderen er smalere enn 600 px. Kalenderen bestemmer ut fra sin egen bredde, så når du drar den smalere i redigereren, ser du endringen med en gang.
+- **Et design som ikke kan leses på telefon** (Tabell og Varmekart) bytter til telefondesignet der: én stablet liste i designets farger, med dato, tid, tittel, sted og påmelding for hvert arrangement. Det er på som standard; fjern avkryssingen «Telefondesign» under Innhold for å vise designet som det er. De andre designene leses som de er eller legger kolonnene under hverandre.
 - **Med tastatur** er en måned eller en uke ett stopp for Tab-tasten. Piltastene går mellom dagene, Home og End går til endene av uken, og PageUp og PageDown bytter måned eller uke. Enter åpner et arrangement.
 - **På papir** utelates designet og knappene, og arrangementene skrives ut som en enkel liste.
 

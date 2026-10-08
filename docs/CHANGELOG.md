@@ -27,6 +27,13 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.19.21 - The phone design, and «Add to calendar» switchable - 8 October 2026
+
+- Table and Heatmap could not be read on a phone (four squeezed columns; a year grid twelve screens tall). Every design declares how it behaves on a phone (`phone` in `CAL_DESIGNS`: fits, flows or switch, `CAL_PHONE_MODES`), and a design that switches draws the shared phone design there: one stacked agenda in the set's colours and type, as drawn on the canvas (V29 to V37), with the «Upcoming» heading, a row per event and the fold (`renderPhoneAgenda` in blocks/calendar.js, `.urd-cal-pa-*` in base.css). `phoneDesign: false` shows the design as it is (pure `calPhoneDesign`), and the «Phone design» switch is shown only on a design that switches.
+- The poster wall drew two cramped columns on a phone, with the first poster spanning both. It and the picture cards flow into one column there, whatever the columns option says.
+- «Add to calendar» stood in every event's card with no way to leave it out. The setting `showAdd` (`false` leaves it out) with the switch «Show «Add to calendar»» under Content, on by default.
+- SCHEMA.md describes `phone`, `phoneDesign` and `showAdd`; the calendar guide in English and Norwegian describes the phone design and the switch; the five admin dictionaries get the two settings' keys.
+
 ### 0.7.19.20 - The description in the rows or only in the card - 8 October 2026
 
 - Programme booklet and Split card each had a per-design toggle for the description, and the other designs with room for an excerpt had none. The block setting `description` (`rows` or `card`, pure `calDescription`, which reads the legacy `options.description: false` as `card`) says whether the description stands in the event's own row or only in the card that opens at a press; the two per-design toggles leave `CAL_OPTIONS`, and the editor shows the setting only on designs that draw an excerpt (`excerpt` in the design list, pure `calHasExcerpt`).

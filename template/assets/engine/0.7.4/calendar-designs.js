@@ -146,6 +146,11 @@ const BLOCK_TEXTS = ['noMatch', 'earlier', 'showAll', 'zoneOf', 'zoneYours', 'we
 /** The texts every design with chips, sign-up and subscribe buttons shows. */
 const COMMON_TEXTS = ['all', 'signup', 'subscribe', 'subscribeMulti', 'addGoogle', 'swUpcoming', 'swWeek', 'swMonth', ...BLOCK_TEXTS, ...TIME_TEXTS, ...EVENT_TEXTS];
 
+/**
+ * How a design behaves on a phone (`phone` in the list): `fits` reads as it is, `flows` lays its columns under each other in base.css, and `switch` cannot be read there and draws the shared phone design instead (calPhoneDesign).
+ */
+export const CAL_PHONE_MODES = ['fits', 'flows', 'switch'];
+
 /** A colour slot: the label key is `calendar.slot.<key>`, the section groups the pickers in the panel. */
 const slot = (key, section = 'colors') => ({ key, labelKey: `calendar.slot.${key}`, section });
 
@@ -156,13 +161,14 @@ const slot = (key, section = 'colors') => ({ key, labelKey: `calendar.slot.${key
  * `ownSubscribe` marks a design that places the subscribe buttons inside its own layout, so the block draws no row under it, `ownFilter` one that draws its own calendar switches instead of the chip row, and `notice` one that can show the announcement note (`props.notice { show, href, as }` with the texts noticeLabel, noticeTitle and noticeText; `noticeBand` marks a design that can draw it as an alert band instead, `as: 'band'`).
  * `empty: 'ap'` gives the design ApeironLF's empty state (a pill, a dashed box and the subscribe button) in place of the plain one.
  * `program` marks a design that draws a link to the whole programme when the block has an address for it (`props.programHref`), and `open` one that writes «Open to everyone» on an event without a sign-up (`props.showOpen`).
- * @type {Array<{id: string, labelKey: string, view: string|null, module?: string, stripe: boolean, slots: Array<{key: string, labelKey: string, section: string}>, texts: string[]}>}
+ * @type {Array<{id: string, labelKey: string, view: string|null, module?: string, phone: string, stripe: boolean, slots: Array<{key: string, labelKey: string, section: string}>, texts: string[]}>}
  */
 export const CAL_DESIGNS = [
   {
     id: 'plain',
     labelKey: 'calendar.design.plain',
     set: 'theme',
+    phone: 'fits',
     view: null,
     stripe: false,
     slots: [slot('accent'), slot('surface'), slot('line'), slot('chip')],
@@ -172,6 +178,7 @@ export const CAL_DESIGNS = [
     id: 'timeline',
     labelKey: 'calendar.design.timeline',
     set: 'theme',
+    phone: 'fits',
     view: 'list',
     module: 'list',
     stripe: false,
@@ -182,6 +189,7 @@ export const CAL_DESIGNS = [
     id: 'table',
     labelKey: 'calendar.design.table',
     set: 'theme',
+    phone: 'switch',
     view: 'list',
     module: 'list',
     stripe: false,
@@ -192,6 +200,7 @@ export const CAL_DESIGNS = [
     id: 'booklet',
     labelKey: 'calendar.design.booklet',
     set: 'poster',
+    phone: 'fits',
     excerpt: true,
     view: 'list',
     module: 'list',
@@ -203,6 +212,7 @@ export const CAL_DESIGNS = [
     id: 'numbered',
     labelKey: 'calendar.design.numbered',
     set: 'poster',
+    phone: 'fits',
     view: 'list',
     module: 'list',
     stripe: false,
@@ -213,6 +223,7 @@ export const CAL_DESIGNS = [
     id: 'apList',
     labelKey: 'calendar.design.apList',
     set: 'apNavy',
+    phone: 'fits',
     empty: 'ap',
     view: 'list',
     module: 'list',
@@ -224,6 +235,7 @@ export const CAL_DESIGNS = [
     id: 'glass',
     labelKey: 'calendar.design.glass',
     set: 'lightGlass',
+    phone: 'fits',
     view: 'list',
     module: 'list',
     stripe: false,
@@ -234,6 +246,7 @@ export const CAL_DESIGNS = [
     id: 'posters',
     labelKey: 'calendar.design.posters',
     set: 'poster',
+    phone: 'flows',
     view: 'cards',
     module: 'cards',
     stripe: false,
@@ -245,6 +258,7 @@ export const CAL_DESIGNS = [
     id: 'tickets',
     labelKey: 'calendar.design.tickets',
     set: 'theme',
+    phone: 'flows',
     view: 'cards',
     module: 'cards',
     stripe: false,
@@ -257,6 +271,7 @@ export const CAL_DESIGNS = [
     id: 'carousel',
     labelKey: 'calendar.design.carousel',
     set: 'theme',
+    phone: 'fits',
     view: 'cards',
     module: 'cards',
     stripe: false,
@@ -267,6 +282,7 @@ export const CAL_DESIGNS = [
     id: 'photo',
     labelKey: 'calendar.design.photo',
     set: 'theme',
+    phone: 'flows',
     view: 'cards',
     module: 'cards',
     stripe: false,
@@ -277,6 +293,7 @@ export const CAL_DESIGNS = [
     id: 'apGrid',
     labelKey: 'calendar.design.apGrid',
     set: 'apCream',
+    phone: 'flows',
     empty: 'ap',
     view: 'cards',
     module: 'cards',
@@ -288,6 +305,7 @@ export const CAL_DESIGNS = [
     id: 'bento',
     labelKey: 'calendar.design.bento',
     set: 'bento',
+    phone: 'flows',
     view: 'cards',
     module: 'cards',
     stripe: false,
@@ -299,6 +317,7 @@ export const CAL_DESIGNS = [
     id: 'weekStrip',
     labelKey: 'calendar.design.weekStrip',
     set: 'theme',
+    phone: 'flows',
     view: 'week',
     module: 'time',
     stripe: false,
@@ -309,6 +328,7 @@ export const CAL_DESIGNS = [
     id: 'weekPlan',
     labelKey: 'calendar.design.weekPlan',
     set: 'theme',
+    phone: 'flows',
     view: 'week',
     module: 'time',
     stripe: true,
@@ -319,6 +339,7 @@ export const CAL_DESIGNS = [
     id: 'layers',
     labelKey: 'calendar.design.layers',
     set: 'theme',
+    phone: 'flows',
     view: 'week',
     module: 'time',
     stripe: false,
@@ -330,6 +351,7 @@ export const CAL_DESIGNS = [
     id: 'sidepanel',
     labelKey: 'calendar.design.sidepanel',
     set: 'theme',
+    phone: 'flows',
     view: 'month',
     module: 'time',
     stripe: false,
@@ -340,6 +362,7 @@ export const CAL_DESIGNS = [
     id: 'apMonth',
     labelKey: 'calendar.design.apMonth',
     set: 'apCream',
+    phone: 'flows',
     empty: 'ap',
     view: 'month',
     module: 'time',
@@ -351,6 +374,7 @@ export const CAL_DESIGNS = [
     id: 'dayPlan',
     labelKey: 'calendar.design.dayPlan',
     set: 'theme',
+    phone: 'fits',
     view: 'day',
     module: 'time',
     stripe: true,
@@ -361,6 +385,7 @@ export const CAL_DESIGNS = [
     id: 'yearWheel',
     labelKey: 'calendar.design.yearWheel',
     set: 'theme',
+    phone: 'fits',
     view: 'year',
     module: 'time',
     stripe: false,
@@ -371,6 +396,7 @@ export const CAL_DESIGNS = [
     id: 'heatmap',
     labelKey: 'calendar.design.heatmap',
     set: 'theme',
+    phone: 'switch',
     view: 'year',
     module: 'time',
     stripe: false,
@@ -381,6 +407,7 @@ export const CAL_DESIGNS = [
     id: 'billboard',
     labelKey: 'calendar.design.billboard',
     set: 'board',
+    phone: 'fits',
     view: 'next',
     module: 'next',
     stripe: false,
@@ -393,6 +420,7 @@ export const CAL_DESIGNS = [
     id: 'stacked',
     labelKey: 'calendar.design.stacked',
     set: 'theme',
+    phone: 'fits',
     view: 'next',
     module: 'next',
     stripe: false,
@@ -403,6 +431,7 @@ export const CAL_DESIGNS = [
     id: 'noticeboard',
     labelKey: 'calendar.design.noticeboard',
     set: 'cork',
+    phone: 'fits',
     view: 'next',
     module: 'next',
     stripe: false,
@@ -414,6 +443,7 @@ export const CAL_DESIGNS = [
     id: 'split',
     labelKey: 'calendar.design.split',
     set: 'theme',
+    phone: 'fits',
     excerpt: true,
     view: 'next',
     module: 'next',
@@ -425,6 +455,7 @@ export const CAL_DESIGNS = [
     id: 'band',
     labelKey: 'calendar.design.band',
     set: 'theme',
+    phone: 'fits',
     view: 'next',
     module: 'next',
     stripe: false,
@@ -435,6 +466,7 @@ export const CAL_DESIGNS = [
     id: 'oneLine',
     labelKey: 'calendar.design.oneLine',
     set: 'theme',
+    phone: 'fits',
     view: 'next',
     module: 'next',
     stripe: true,
@@ -445,6 +477,7 @@ export const CAL_DESIGNS = [
     id: 'ring',
     labelKey: 'calendar.design.ring',
     set: 'theme',
+    phone: 'fits',
     view: 'next',
     module: 'next',
     stripe: false,
@@ -455,6 +488,7 @@ export const CAL_DESIGNS = [
     id: 'darkGlass',
     labelKey: 'calendar.design.darkGlass',
     set: 'darkGlass',
+    phone: 'fits',
     view: 'next',
     module: 'next',
     stripe: false,
@@ -466,6 +500,7 @@ export const CAL_DESIGNS = [
     id: 'nextBento',
     labelKey: 'calendar.design.nextBento',
     set: 'bento',
+    phone: 'fits',
     view: 'next',
     module: 'next',
     stripe: false,
@@ -478,6 +513,7 @@ export const CAL_DESIGNS = [
     id: 'apNow',
     labelKey: 'calendar.design.apNow',
     set: 'apCream',
+    phone: 'fits',
     view: 'next',
     module: 'more',
     stripe: false,
@@ -491,6 +527,7 @@ export const CAL_DESIGNS = [
     id: 'apNavy',
     labelKey: 'calendar.design.apNavy',
     set: 'apNavy',
+    phone: 'fits',
     view: 'next',
     module: 'more',
     stripe: false,
@@ -502,6 +539,7 @@ export const CAL_DESIGNS = [
     id: 'apSeries',
     labelKey: 'calendar.design.apSeries',
     set: 'apCream',
+    phone: 'fits',
     excerpt: true,
     view: 'list',
     module: 'more',
@@ -515,6 +553,7 @@ export const CAL_DESIGNS = [
     id: 'mobileAgenda',
     labelKey: 'calendar.design.mobileAgenda',
     set: 'agendaDark',
+    phone: 'fits',
     view: 'agenda',
     module: 'more',
     stripe: true,
@@ -703,6 +742,11 @@ export function calSlotVars(design, colors) {
  * Without a colour the stripe takes the event's calendar colour, else the accent.
  * @returns {{show: boolean, color: string|null}}
  */
+/** True when the block draws the shared phone design on a phone: the design cannot be read there (`switch`), and the owner has not switched it off (`phoneDesign: false`). */
+export function calPhoneDesign(props) {
+  return calDesign(props?.design).phone === 'switch' && props?.phoneDesign !== false;
+}
+
 export function calStripe(design, stripe) {
   const show = typeof stripe?.show === 'boolean' ? stripe.show : design.stripe;
   return { show, color: show ? calColorCss(stripe?.color) : null };
