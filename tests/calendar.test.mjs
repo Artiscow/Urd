@@ -9,7 +9,7 @@ import { engineImport } from './_engine.mjs';
 const {
   parseIcs, expandEvents, partsToMs, findMeetingLink, eventIcs, googleEventUrl, eventJsonLd, placeName, matchesSearch, meetingLinkOf,
   splitCategory, findSignupLink, signupLinkOf, findImageLink, normalizeSourceUrl, subscribeLinks, startOfWeek, isoWeek, windowStart,
-  nextCount, laterCount, NEXT_COUNT, LATER_COUNT, dedupeOccurrences, groupByMonth, sourceEntry,
+  nextCount, laterCount, NEXT_COUNT, LATER_COUNT, dedupeOccurrences, groupByMonth, sourceEntry, calendarEntry, resolveSources,
 } = await engineImport('ics.js');
 
 // The ICS fixtures carry deliberate Norwegian event content (titles, locations, signup lines): calendar feeds are user data.
@@ -549,4 +549,36 @@ test('signupLinkOf: every line that names a sign-up is tried, and a name is no s
 test('normalizeSourceUrl: the Nextcloud embedding link, and a token with - and _', () => {
   assert.equal(normalizeSourceUrl('https://sky.example.org/apps/calendar/embed/AbC-d_E1'), 'https://sky.example.org/remote.php/dav/public-calendars/AbC-d_E1?export');
   assert.equal(normalizeSourceUrl('https://sky.example.org/remote.php/dav/public-calendars/AbC-d_E1'), 'https://sky.example.org/remote.php/dav/public-calendars/AbC-d_E1?export');
+});
+
+test('calendarEntry: a registry calendar with every field trimmed and the switches on unless false, null without an id or an address', () => {
+  const full = calendarEntry({ id: 'styret', url: ' https://x.test/a.ics ', name: ' Styret ', color: 'accent', colorText: '#fff', colorBox: '#123', colorChip: 'surface', description: ' Open meetings ', link: 'https://x.test/styret', organizer: ' The board ', subscribable: false, inFilter: false });
+  assert.deepEqual(full, { id: 'styret', url: 'https://x.test/a.ics', name: 'Styret', color: 'accent', colors: { text: '#fff', box: '#123', chip: 'surface' }, description: 'Open meetings', link: 'https://x.test/styret', organizer: 'The board', subscribable: false, inFilter: false });
+  const bare = calendarEntry({ id: 'tur', url: 'https://x.test/b.ics' });
+  assert.deepEqual(bare, { id: 'tur', url: 'https://x.test/b.ics', name: '', color: '', colors: { text: '', box: '', chip: '' }, description: '', link: '', organizer: '', subscribable: true, inFilter: true });
+  assert.equal(calendarEntry({ id: 'x', url: '', name: 'No address' }), null);
+  assert.equal(calendarEntry({ url: 'https://x.test/c.ics' }), null);
+  assert.equal(calendarEntry({ id: 'x', url: 'https://x.test/c.ics', organizer: 7 }).organizer, '');
+  assert.equal(calendarEntry('styret'), null);
+});
+
+test('resolveSources: own addresses as they are, references through the registry, the rest dropped', () => {
+  const calendars = [{ id: 'styret', url: 'https://x.test/a.ics', name: 'Styret', color: 'accent', inFilter: false }, { id: 'tur', url: 'https://x.test/b.ics' }, { id: 'broken' }];
+  const own = resolveSources(['  https://x.test/own.ics ', { url: 'https://x.test/named.ics', name: 'Kor', color: '#abc' }], calendars);
+  assert.deepEqual(own.map((s) => [s.id, s.url, s.name, s.color, s.subscribable, s.inFilter]), [['', 'https://x.test/own.ics', '', '', true, true], ['', 'https://x.test/named.ics', 'Kor', '#abc', true, true]]);
+  assert.deepEqual(own[0].colors, { text: '', box: '', chip: '' });
+  const refs = resolveSources([{ calendar: 'styret' }, { calendar: ' tur ' }, { calendar: 'styret' }, { calendar: 'missing' }, { calendar: 'broken' }, '', null, { url: '' }], calendars);
+  assert.deepEqual(refs.map((s) => [s.id, s.name, s.inFilter]), [['styret', 'Styret', false], ['tur', '', true]]);
+  assert.deepEqual(resolveSources([{ calendar: 'styret' }, 'https://x.test/own.ics'], null).map((s) => s.url), ['https://x.test/own.ics']);
+  assert.deepEqual(resolveSources(undefined, calendars), []);
+  assert.deepEqual(resolveSources('https://x.test/own.ics', calendars), []);
+});
+
+test('eventJsonLd: the organizer with its own page, else the site with its root', () => {
+  const occ = { title: 'Møte', start: Date.UTC(2026, 9, 10, 18), end: Date.UTC(2026, 9, 10, 20), hasEnd: true, allDay: false };
+  const site = eventJsonLd(occ, { pageUrl: 'https://site.test/kalender', organizer: 'Foreningen' });
+  assert.deepEqual(site.organizer, { '@type': 'Organization', name: 'Foreningen', url: 'https://site.test/' });
+  const own = eventJsonLd(occ, { pageUrl: 'https://site.test/kalender', organizer: 'Styret', organizerUrl: 'https://site.test/styret' });
+  assert.deepEqual(own.organizer, { '@type': 'Organization', name: 'Styret', url: 'https://site.test/styret' });
+  assert.equal(eventJsonLd(occ, { pageUrl: 'https://site.test/kalender' }).organizer, undefined);
 });

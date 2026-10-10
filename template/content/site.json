@@ -6,7 +6,14 @@
     "description": "Urd sin testside",
     "meetingHosts": [],
     "icon": "/media/ikon-9740643c.webp",
-    "setup": true
+    "setup": true,
+    "calendars": [
+      {
+        "id": "apeiron",
+        "url": "https://calendar.google.com/calendar/ical/apeironlinjeforening%40gmail.com/public/basic.ics",
+        "name": "Apeiron"
+      }
+    ]
   },
   "breakpoints": {
     "mobile": 640

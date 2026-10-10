@@ -2,6 +2,18 @@
 
 Nytt som er levert og venter på manuell testing i produksjon/lokalt. **Punkter strykes kun av den som tester**; assistenten legger til nye punkter når noe leveres, men fjerner aldri noe her. Nye leveranser får en egen «Testrunde-batch»-seksjon øverst (nyeste først); punkter uten batch ligger i restlisten nederst. [BACKLOG.md](BACKLOG.md) eier oppgavene; denne listen eier testingen av det som alt er levert. Om noe er fjernet betyr det at det er sjekket og løst, oppført som en kjent bug, eller erstattet av en senere endring (gjennomgått og samlet 6. oktober 2026: kalenderbatchene er slått sammen til én med ett punkt per design).
 
+### Test batch (0.7.19.29): the site's calendars
+
+- [ ] The Site panel has the group «Calendars» with the example calendar «Apeiron»; «New calendar» at the top adds a row that opens with the caret in its name; pressing the head folds it together and opens it again with a smooth slide and a turning chevron, one row open at a time, and the panel never jumps while a row opens or closes
+- [ ] In the open row: Basics (name, address, description), Colours (main colour and the three extra swatches on one line) and Shown to visitors (web page, organiser, the two switches); «Remove calendar» removes the row; move up and down reorders; after a reload the row persists and the stored calendar holds only the fields set (the switches only when off)
+- [ ] A calendar block's Sources: the home page's calendar shows its reference as a read-only row with «Apeiron»; the site's calendars stand as a checkbox list and ticking one adds it, unticking removes it; «Add calendar» plus an address plus «Save in the site's calendars» moves the address to the Site panel and the row becomes read-only; «Edit the site's calendars» opens the Site panel with the group open
+- [ ] On a real feed: a named source (an own address with a name and a colour, or a registry calendar) gives its events the name as chip and the colour on the chip, the date and the edge stripe; this did not work before this push
+- [ ] Registry switches on a real feed: «In the calendar filter» off gives the calendar's events no chip and leaves it out of the chip row and the side panel's key; «Can be subscribed to» off leaves it out of the subscribe row and the card's «whole calendar» links while the other calendar keeps its button
+- [ ] The card of an event from a registry calendar with an organiser, a description and a web page: «Organiser» as a fact, the description under the event's own, and «More about <name>» opening the page; the published page's JSON-LD carries the organiser with that page as its url
+- [ ] Extra colours on a registry calendar: a box background colours the event boxes in the week plan and the lists, a chip colour the chips and the filter button, a text colour the text on the main colour
+- [ ] A block whose reference points at a calendar removed from the registry: the editor row says so, and the preview shows the sample data with the note about the missing calendar
+- [ ] The editor's own preview is untouched by the picker's iframe (no block moves or selections from it) after the bridge's source check
+
 ### Test batch (0.7.19.22): the design picker
 
 - [ ] «Choose design …» in the Calendar group of the Blocks panel opens the picker centred over the editor: 34 designs with pictures in three families (Plain and modern, Coming up, ApeironLF), a search field focused, «34 designs» counted, and «Add calendar» adds a calendar in the marked design and closes it

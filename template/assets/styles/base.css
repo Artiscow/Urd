@@ -1488,8 +1488,8 @@ textarea.urd-form-input {
 .urd-cal-chip {
   padding: 2px 8px;
   font-size: 0.72em;
-  background: var(--urd-cal-s-chip, color-mix(in srgb, var(--urd-cal-color, var(--urd-cal-accent)) 18%, transparent));
-  border: 1px solid color-mix(in srgb, var(--urd-cal-color, var(--urd-cal-accent)) 45%, transparent);
+  background: var(--urd-cal-s-chip, color-mix(in srgb, var(--urd-cal-chip-color, var(--urd-cal-color, var(--urd-cal-accent))) 18%, transparent));
+  border: 1px solid color-mix(in srgb, var(--urd-cal-chip-color, var(--urd-cal-color, var(--urd-cal-accent))) 45%, transparent);
   border-radius: 999px;
 }
 
@@ -1669,6 +1669,19 @@ textarea.urd-form-input {
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 0.9rem;
+}
+
+/* The calendar's own words and page from the site's registry, under the event's description. */
+.urd-cal-dialog-source {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0 0 0.9rem;
+  font-size: 0.92em;
+}
+
+.urd-cal-dialog-source-text {
+  margin: 0;
+  opacity: 0.8;
 }
 
 .urd-cal-dialog-meta .urd-cal-chip,
@@ -1971,8 +1984,8 @@ textarea.urd-form-input {
 
 .urd-cal-chipbtn.selected {
   color: var(--urd-cal-color-text, var(--urd-cal-set-accent-text));
-  background: var(--urd-cal-color, var(--urd-cal-set-accent));
-  border-color: var(--urd-cal-color, var(--urd-cal-set-accent));
+  background: var(--urd-cal-chip-color, var(--urd-cal-color, var(--urd-cal-set-accent)));
+  border-color: var(--urd-cal-chip-color, var(--urd-cal-color, var(--urd-cal-set-accent)));
 }
 
 .urd-cal-set-apCream .urd-cal-chipbtn,
@@ -4133,7 +4146,7 @@ textarea.urd-form-input {
   font-size: 0.7em;
   font-weight: 700;
   line-height: 1.2;
-  background: color-mix(in srgb, var(--urd-cal-color, var(--urd-cal-accent)) 18%, transparent);
+  background: var(--urd-cal-color-bg, color-mix(in srgb, var(--urd-cal-color, var(--urd-cal-accent)) 18%, transparent));
   border-radius: 6px;
 }
 
@@ -4146,7 +4159,7 @@ textarea.urd-form-input {
   padding: 5px 7px;
   font-size: 0.72em;
   line-height: 1.2;
-  background: var(--urd-cal-s-event, color-mix(in srgb, var(--urd-cal-color, var(--urd-cal-accent)) 18%, var(--urd-cal-surface)));
+  background: var(--urd-cal-color-bg, var(--urd-cal-s-event, color-mix(in srgb, var(--urd-cal-color, var(--urd-cal-accent)) 18%, var(--urd-cal-surface))));
   border-radius: 8px;
 }
 
@@ -4422,7 +4435,7 @@ textarea.urd-form-input {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  background: var(--urd-cal-s-chip, color-mix(in srgb, var(--urd-cal-color, var(--urd-cal-accent)) 22%, transparent));
+  background: var(--urd-cal-s-chip, color-mix(in srgb, var(--urd-cal-chip-color, var(--urd-cal-color, var(--urd-cal-accent))) 22%, transparent));
   border-radius: 5px;
 }
 
@@ -5437,7 +5450,7 @@ textarea.urd-form-input {
   display: grid;
   gap: 2px;
   padding: 8px 10px;
-  background: color-mix(in srgb, var(--urd-cal-color, var(--urd-cal-accent)) 14%, transparent);
+  background: var(--urd-cal-color-bg, color-mix(in srgb, var(--urd-cal-color, var(--urd-cal-accent)) 14%, transparent));
   border-left: 3px solid var(--urd-cal-color, var(--urd-cal-accent));
   border-radius: var(--urd-radius-sm);
 }

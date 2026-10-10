@@ -430,6 +430,8 @@ export function expandEvents(events, { from = Date.now(), to, max = 300 } = {}) 
       meeting: event.meeting ?? null,
       geo: event.geo ?? null,
       descriptionHtml: event.html ?? '',
+      // The source the event came from (the block stamps it on the parsed event), kept on every occurrence.
+      source: event.source ?? null,
       start: startMs,
       end: endMs,
       allDay: !!event.start.allDay,
@@ -662,10 +664,10 @@ const isoDate = (ms) => {
  * One occurrence as a schema.org `Event` for the page's JSON-LD: the name, the start and the end (the days alone for an all-day event, its last day as the end), the place with its address or the meeting link, and whether it is cancelled and held online.
  * `real` is the true moment of an occurrence whose start is shown on another zone's clock.
  * @param {object} occ An occurrence from expandEvents, with its title
- * @param {{pageUrl?: string, organizer?: string, meetingHosts?: string[]}} [site] The page the event is shown on, the site's name and its own meeting hosts
+ * @param {{pageUrl?: string, organizer?: string, organizerUrl?: string, meetingHosts?: string[]}} [site] The page the event is shown on, the organizer (the site's name, or the calendar's own organizer with its page) and the site's own meeting hosts
  * @returns {object|null} null without a name or a start
  */
-export function eventJsonLd(occ, { pageUrl = '', organizer = '', meetingHosts = [] } = {}) {
+export function eventJsonLd(occ, { pageUrl = '', organizer = '', organizerUrl = '', meetingHosts = [] } = {}) {
   const name = String(occ?.title ?? occ?.summary ?? '').trim();
   if (!name || !Number.isFinite(occ?.start)) return null;
   const shift = occ.start - (occ.real ?? occ.start);
@@ -691,7 +693,10 @@ export function eventJsonLd(occ, { pageUrl = '', organizer = '', meetingHosts = 
   if (typeof occ.image === 'string' && /^https?:\/\//i.test(occ.image)) data.image = occ.image;
   const own = typeof occ.url === 'string' && /^https?:\/\//i.test(occ.url) ? occ.url : pageUrl;
   if (own) data.url = own;
-  if (organizer) data.organizer = { '@type': 'Organization', name: organizer, ...(pageUrl ? { url: new URL('/', pageUrl).href } : {}) };
+  if (organizer) {
+    const url = organizerUrl || (pageUrl ? new URL('/', pageUrl).href : '');
+    data.organizer = { '@type': 'Organization', name: organizer, ...(url ? { url } : {}) };
+  }
   return data;
 }
 
@@ -751,6 +756,59 @@ export function sourceEntry(source) {
     };
   }
   return { url: String(source ?? '').trim(), name: '', color: '' };
+}
+
+/**
+ * A calendar of the site's registry (site.calendars) as the block reads it: every field trimmed, the colours gathered, the two switches true unless false.
+ * Pure.
+ * @param {unknown} calendar A registry entry `{ id, url, name?, color?, colorText?, colorBox?, colorChip?, description?, link?, organizer?, subscribable?, inFilter? }`
+ * @returns {object|null} null without an id or an address
+ */
+export function calendarEntry(calendar) {
+  if (!calendar || typeof calendar !== 'object') return null;
+  const str = (value) => (typeof value === 'string' ? value.trim() : '');
+  const id = str(calendar.id);
+  const url = str(calendar.url);
+  if (!id || !url) return null;
+  return {
+    id,
+    url,
+    name: str(calendar.name),
+    color: str(calendar.color),
+    colors: { text: str(calendar.colorText), box: str(calendar.colorBox), chip: str(calendar.colorChip) },
+    description: str(calendar.description),
+    link: str(calendar.link),
+    organizer: str(calendar.organizer),
+    subscribable: calendar.subscribable !== false,
+    inFilter: calendar.inFilter !== false,
+  };
+}
+
+/**
+ * The block's sources as the calendar reads them: an address of its own (a string or `{ url, name, color }`) as it is, a reference `{ calendar: id }` looked up in the site's registry.
+ * A reference to a calendar that is not there and an entry without an address are dropped, and the same calendar twice is one source.
+ * Pure.
+ * @param {unknown} sources The block's `sources`
+ * @param {unknown} calendars The site's `site.calendars`
+ * @returns {Array<ReturnType<typeof calendarEntry>>}
+ */
+export function resolveSources(sources, calendars) {
+  const registry = new Map((Array.isArray(calendars) ? calendars : []).map(calendarEntry).filter(Boolean).map((entry) => [entry.id, entry]));
+  const out = [];
+  const seen = new Set();
+  for (const source of Array.isArray(sources) ? sources : []) {
+    if (source && typeof source === 'object' && 'calendar' in source) {
+      const entry = registry.get(String(source.calendar ?? '').trim());
+      if (!entry || seen.has(entry.id)) continue;
+      seen.add(entry.id);
+      out.push(entry);
+      continue;
+    }
+    const own = sourceEntry(source);
+    if (!own.url) continue;
+    out.push({ ...own, id: '', colors: { text: '', box: '', chip: '' }, description: '', link: '', organizer: '', subscribable: true, inFilter: true });
+  }
+  return out;
 }
 
 /** Subscribe links for a source: webcal always; Google calendars also get "add to Google". */

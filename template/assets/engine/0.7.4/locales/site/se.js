@@ -139,6 +139,8 @@ export default {
     'calendar.swWeek': 'Vahkku',
     'calendar.swMonth': 'Mánnu',
     'calendar.recurring': 'Geardduhuvvo',
+    'calendar.organizer': 'Lágideaddji',
+    'calendar.moreAbout': 'Eanet {name} birra',
     'calendar.openToAll': 'Rabas buohkaide',
     'calendar.showAll': 'Čájet buot {n} ({m} vel)',
     'calendar.join': 'Searvva',

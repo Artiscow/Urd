@@ -66,6 +66,8 @@ export const CAL_TEXTS = {
   swWeek: 'calendar.swWeek',
   swMonth: 'calendar.swMonth',
   recurring: 'calendar.recurring',
+  organizer: 'calendar.organizer',
+  moreAbout: 'calendar.moreAbout',
   openToAll: 'calendar.openToAll',
   join: 'calendar.join',
   addEvent: 'calendar.addEvent',
@@ -112,6 +114,7 @@ export const CAL_HINT_TEXTS = { noticeTitle: 'calendar.noticeTitleHint', noticeT
 
 /** The placeholders a text may hold, by text: each stands for a value the design fills in (a number, a date, a time, a zone). */
 export const CAL_TEXT_PARAMS = {
+  moreAbout: ['name'],
   earlier: ['n'],
   showAll: ['n', 'm'],
   count: ['n'],
@@ -135,7 +138,7 @@ const AP_EMPTY_TEXTS = ['emptyKicker', 'emptyTitle'];
 const NOTICE_TEXTS = ['noticeLabel', 'noticeTitle', 'noticeText', 'readWhole', 'moreInfo'];
 
 /** The texts of the event in full (the dialog a click on an event opens), in every design. */
-const EVENT_TEXTS = ['when', 'where', 'join', 'addEvent', 'addOne', 'addFile', 'addWhole', 'icalAddress', 'onMap', 'recurring'];
+const EVENT_TEXTS = ['when', 'where', 'organizer', 'moreAbout', 'join', 'addEvent', 'addOne', 'addFile', 'addWhole', 'icalAddress', 'onMap', 'recurring'];
 
 /** The words of an event's time and of its countdown, wherever a design writes them. */
 const TIME_TEXTS = ['cancelled', 'allDay', 'until', 'timeAt', 'today', 'tomorrow', 'inDays'];

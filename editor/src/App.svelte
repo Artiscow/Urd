@@ -1129,7 +1129,7 @@
     const colorCount = def.slots.filter((slot) => p.colors?.[slot.key]).length;
     const fieldCount = Object.keys(p.fieldStyle ?? {}).length;
     return {
-      sources: String((p.sources ?? []).length),
+      sources: String((p.sources ?? []).filter((src) => { const c = calSource(src); return c.ref ? Boolean(siteCalendarById(c.ref)) : c.url.trim(); }).length),
       view: ta(CAL_VIEW_KEYS[calView(p)]),
       viewReset: viewChanged ? reset('cal-view', { switcher: undefined, switcherViews: undefined, toolsSize: undefined, description: undefined, showMore: undefined, limit: limit0, nextCount: count0, laterCount: count0, showCancelled: undefined, structuredData: undefined, clock: undefined, weekStart: undefined }) : null,
       buttons: on ? ta('menu.onCount', { n: on }) : ta('common.off'),
@@ -1506,12 +1506,29 @@
     });
   }
   /* The calendar block (Content): one source per line. */
-  /** A calendar source as the panel edits it: a bare address stays a string in the file, one
-      with a name or a colour is an object (the engine's sourceEntry reads both). */
-  const calSource = (src) => (src && typeof src === 'object'
-    ? { url: src.url ?? '', name: src.name ?? '', color: src.color ?? '' }
-    : { url: typeof src === 'string' ? src : '', name: '', color: '' });
-  const packCalSource = ({ url, name, color }) => (name || color ? { url, ...(name ? { name } : {}), ...(color ? { color } : {}) } : url);
+  /** A calendar source as the panel edits it: a reference to one of the site's calendars (`{ calendar: id }`, read-only here),
+      a bare address that stays a string in the file, or an address with a name or a colour as an object (the engine's resolveSources reads all three). */
+  const calSource = (src) => {
+    if (src && typeof src === 'object' && 'calendar' in src) return { ref: String(src.calendar ?? ''), url: '', name: '', color: '' };
+    if (src && typeof src === 'object') return { ref: '', url: src.url ?? '', name: src.name ?? '', color: src.color ?? '' };
+    return { ref: '', url: typeof src === 'string' ? src : '', name: '', color: '' };
+  };
+  const packCalSource = ({ ref, url, name, color }) => (ref ? { calendar: ref } : name || color ? { url, ...(name ? { name } : {}), ...(color ? { color } : {}) } : url);
+  /** The ids of the site's calendars this block shows. */
+  const calRefs = () => new Set((selectedBlock.props.sources ?? []).map((src) => calSource(src).ref).filter(Boolean));
+  function toggleCalendarRef(id, on) {
+    // A snapshot: the entries go back into the page data and on to the preview, where a state proxy cannot be cloned.
+    const rest = $state.snapshot(selectedBlock.props.sources ?? []).filter((src) => calSource(src).ref !== id);
+    setBlockProp('sources', on ? [...rest, { calendar: id }] : rest);
+  }
+  /** An own address moved into the site's calendars: the registry gets the row's address, name and colour, and the row becomes a reference.
+      Two history entries, the site's and the page's, since the registry and the block are kept apart. */
+  function saveCalendarToSite(i) {
+    const list = $state.snapshot(selectedBlock.props.sources ?? []);
+    const { url, name, color } = calSource(list[i]);
+    const id = addSiteCalendar({ url: url.trim(), ...(name ? { name } : {}), ...(color ? { color } : {}) });
+    setBlockProp('sources', list.map((src, j) => (j === i ? { calendar: id } : src)));
+  }
   function setCalendarSource(i, patch) {
     mutateBlock(`edit:${selectedBlock.blockId}:source${i}`, (b) => {
       const list = [...(b.props.sources ?? [])];
@@ -1520,43 +1537,10 @@
     });
   }
   function addCalendarRow() {
-    setBlockProp('sources', [...(selectedBlock.props.sources ?? []), '']);
+    setBlockProp('sources', [...$state.snapshot(selectedBlock.props.sources ?? []), '']);
   }
   function removeCalendarSource(i) {
-    setBlockProp('sources', (selectedBlock.props.sources ?? []).filter((_, j) => j !== i));
-  }
-
-  /** The calendar sources found in the site's other calendar blocks: null until asked for. */
-  let siteCalSources = $state(null);
-  /** Collects the sources of every calendar block on the site, this page's draft and the other
-      pages' drafts or published files, so a calendar set once can be added to another block
-      with a click instead of being pasted again. */
-  async function loadSiteCalSources() {
-    const found = new Set();
-    const take = (page) => {
-      for (const section of page?.sections ?? []) {
-        for (const block of section.blocks ?? []) {
-          if (block.type !== 'calendar') continue;
-          for (const source of block.props?.sources ?? []) {
-            const { url } = calSource(source);
-            if (url.trim()) found.add(url.trim());
-          }
-        }
-      }
-    };
-    take(store?.data);
-    await Promise.all((siteDraft.pages ?? []).filter((p) => p.id !== pageId).map(async (p) => {
-      try {
-        // An unpublished draft is what the owner is working on; otherwise the published file.
-        const draft = localStorage.getItem(`urd-draft-${p.id}`);
-        take(draft ? JSON.parse(draft) : await (await fetch(`/${p.file}`)).json());
-      } catch { /* a page that cannot be read has no calendars to offer */ }
-    }));
-    siteCalSources = [...found];
-  }
-  function addCalendarSource(source) {
-    const own = selectedBlock.props.sources ?? [];
-    if (!own.some((src) => calSource(src).url === source)) setBlockProp('sources', [...own, source]);
+    setBlockProp('sources', $state.snapshot(selectedBlock.props.sources ?? []).filter((_, j) => j !== i));
   }
 
   function setFaqItem(i, patch) {
@@ -3517,6 +3501,63 @@
     siteMutate('site', () => {
       if (hosts.length) siteDraft.site.meetingHosts = hosts;
       else delete siteDraft.site.meetingHosts;
+    });
+  }
+  /** The site's calendars (site.calendars): registered once with their settings, and picked by the calendar blocks as references. */
+  let siteCalendarsOpen = $state(false);
+  /** The id of the calendar whose row stands open in the Site panel; one at a time. */
+  let openSiteCalendar = $state(null);
+  /** A calendar's colour as CSS for a swatch: a hex value as it is, a theme token through its variable, none as the accent the engine falls back to. */
+  const swatchCss = (color) => (!color ? 'var(--urd-color-accent)' : color.startsWith('#') ? color : `var(--urd-color-${color})`);
+  /** The calendar whose name field gets the caret once its row stands open: the one just added. */
+  let focusSiteCalendar = $state(null);
+  $effect(() => {
+    const id = focusSiteCalendar;
+    if (!id) return;
+    focusSiteCalendar = null;
+    tick().then(() => document.querySelector(`[data-cal-name="${id}"]`)?.focus());
+  });
+  const siteCalendars = () => siteDraft?.site?.calendars ?? [];
+  const siteCalendarById = (id) => siteCalendars().find((cal) => cal.id === id) ?? null;
+  /** Adds a calendar and returns its id; `seed` carries an address, a name and a colour from a block's row. */
+  function addSiteCalendar(seed = {}) {
+    const cal = { id: makeId('cal'), url: '', ...seed };
+    siteMutate('site', () => { (siteDraft.site.calendars ??= []).unshift(cal); });
+    openSiteCalendar = cal.id;
+    focusSiteCalendar = cal.id;
+    siteCalendarsOpen = true;
+    return cal.id;
+  }
+  function removeSiteCalendar(i) {
+    siteMutate('site', () => {
+      if (siteDraft.site.calendars[i]?.id === openSiteCalendar) openSiteCalendar = null;
+      siteDraft.site.calendars.splice(i, 1);
+      if (!siteDraft.site.calendars.length) delete siteDraft.site.calendars;
+    });
+  }
+  function moveSiteCalendar(i, dir) {
+    siteMutate('site', () => {
+      const list = siteDraft.site.calendars;
+      const j = i + dir;
+      if (j < 0 || j >= list.length) return;
+      [list[i], list[j]] = [list[j], list[i]];
+    });
+  }
+  /** One field of a calendar: an empty value removes the field, except the address, which stays as an empty string. */
+  function setSiteCalendar(i, key, value, keep = false) {
+    const clean = String(value ?? '').trim();
+    siteMutate(`edit:site-cal-${i}-${key}`, () => {
+      const cal = siteDraft.site.calendars[i];
+      if (clean || keep) cal[key] = clean;
+      else delete cal[key];
+    });
+  }
+  /** A switch that is on unless stored as false. */
+  function setSiteCalendarFlag(i, key, on) {
+    siteMutate('site', () => {
+      const cal = siteDraft.site.calendars[i];
+      if (on) delete cal[key];
+      else cal[key] = false;
     });
   }
   /** The map service places link to (site.mapService): OpenStreetMap is the default and is stored as no field. */
@@ -8040,6 +8081,88 @@
               <label title={ta('tip.settings.meetingHosts')}>{ta('settings.meetingHosts')}
                 <input value={(siteDraft.site.meetingHosts ?? []).join(', ')} placeholder="meet.example.org" spellcheck="false"
                   onchange={(e) => setSiteMeetingHosts(e.target.value)} /></label>
+              <!-- The site's calendars (site.calendars): registered once with their settings, picked by the calendar blocks as references.
+                   A list of closed rows (the colour, the name, the address) with one row open at a time; the new calendar opens with the caret in its name -->
+              <details class="group" bind:open={siteCalendarsOpen}>
+                <summary title={ta('tip.site.calendars')}>{ta('group.siteCalendars')}</summary>
+                <div class="group-items">
+                  <button type="button" class="site-cal-add" onclick={() => addSiteCalendar()}>{@html ICONS.plus} {ta('ui.addSiteCalendar')}</button>
+                  {#if siteCalendars().length}
+                    <div class="site-cal-list">
+                      {#each siteCalendars() as cal, ci (cal.id)}
+                        {@const open = openSiteCalendar === cal.id}
+                        <div class="site-cal-row" class:open>
+                          <!-- The head opens and closes the row; the body slides between its two heights -->
+                          <button type="button" class="site-cal-head" aria-expanded={open} onclick={() => (openSiteCalendar = open ? null : cal.id)}>
+                            <span class="site-cal-dot" style:background={swatchCss(cal.color)} aria-hidden="true"></span>
+                            <span class="site-cal-text">
+                              <span class="site-cal-name">{cal.name || cal.url || ta('ui.addSiteCalendar')}</span>
+                              <span class="site-cal-addr">{cal.url || ta('calendar.sourceUrl')}</span>
+                            </span>
+                            <span class="site-cal-chev" aria-hidden="true">{@html ICONS.down}</span>
+                          </button>
+                          <div class="site-cal-body" inert={!open}>
+                            <div class="site-cal-clip">
+                              <div class="site-cal-fields">
+                                <span class="mini-label site-cal-section">{ta('group.siteCalBasics')}</span>
+                                <label class="site-cal-field">{ta('lbl.name')}
+                                  <input value={cal.name ?? ''} placeholder={ta('calendar.sourceName')} title={ta('tip.calendar.sourceName')} data-cal-name={cal.id}
+                                    onchange={(e) => setSiteCalendar(ci, 'name', e.target.value)} /></label>
+                                <label class="site-cal-field">{ta('calendar.sourceUrl')}
+                                  <input value={cal.url} placeholder={ta('calendar.sourcesPh')} spellcheck="false"
+                                    onchange={(e) => setSiteCalendar(ci, 'url', e.target.value, true)} /></label>
+                                <label class="site-cal-field" title={ta('tip.siteCal.description')}>{ta('siteCal.description')}
+                                  <input value={cal.description ?? ''}
+                                    onchange={(e) => setSiteCalendar(ci, 'description', e.target.value)} /></label>
+                                <span class="mini-label site-cal-section">{ta('group.siteCalColors')}</span>
+                                <!-- The main colour and the three that replace what it derives (empty = derived), four swatches on one row -->
+                                <div class="site-cal-colors">
+                                  <span class="site-cal-color" title={ta('tip.calendar.sourceColor')}>
+                                    <ColorPicker value={cal.color || 'accent'} tokens={themeSwatches()} label={ta('siteCal.colorMain')}
+                                      onchange={(hex) => setSiteCalendar(ci, 'color', hex ?? '')} />
+                                    <span>{ta('siteCal.colorMain')}</span>
+                                  </span>
+                                  {#each [['colorText', 'siteCal.colorText'], ['colorBox', 'siteCal.colorBox'], ['colorChip', 'siteCal.colorChip']] as [key, labelKey] (key)}
+                                    <span class="site-cal-color" title={ta(`tip.${labelKey}`)}>
+                                      <ColorPicker value={cal[key] || ''} tokens={themeSwatches()} allowClear label={ta(labelKey)}
+                                        onchange={(hex) => setSiteCalendar(ci, key, hex ?? '')} />
+                                      <span>{ta(labelKey)}</span>
+                                    </span>
+                                  {/each}
+                                </div>
+                                <span class="mini-label site-cal-section">{ta('group.siteCalVisitors')}</span>
+                                <label class="site-cal-field" title={ta('tip.siteCal.link')}>{ta('siteCal.link')}
+                                  <input value={cal.link ?? ''} placeholder="https://" spellcheck="false"
+                                    onchange={(e) => setSiteCalendar(ci, 'link', e.target.value)} /></label>
+                                <label class="site-cal-field" title={ta('tip.siteCal.organizer')}>{ta('siteCal.organizer')}
+                                  <input value={cal.organizer ?? ''}
+                                    onchange={(e) => setSiteCalendar(ci, 'organizer', e.target.value)} /></label>
+                                <label class="gridmenu-snap" title={ta('tip.siteCal.subscribable')}>
+                                  <input type="checkbox" checked={cal.subscribable !== false}
+                                    onchange={(e) => setSiteCalendarFlag(ci, 'subscribable', e.target.checked)} />
+                                  {ta('siteCal.subscribable')}
+                                </label>
+                                <label class="gridmenu-snap" title={ta('tip.siteCal.inFilter')}>
+                                  <input type="checkbox" checked={cal.inFilter !== false}
+                                    onchange={(e) => setSiteCalendarFlag(ci, 'inFilter', e.target.checked)} />
+                                  {ta('siteCal.inFilter')}
+                                </label>
+                                <div class="site-cal-foot">
+                                  <span class="row-tools">
+                                    <button class="ghost row-tool" onclick={() => moveSiteCalendar(ci, -1)} disabled={ci === 0}>{@html ICONS.up}</button>
+                                    <button class="ghost row-tool" onclick={() => moveSiteCalendar(ci, 1)} disabled={ci === siteCalendars().length - 1}>{@html ICONS.down}</button>
+                                  </span>
+                                  <button type="button" class="site-cal-remove" title={ta('tip.site.removeCalendar')} onclick={() => removeSiteCalendar(ci)}>{ta('siteCal.remove')}</button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+              </details>
               <hr class="gridmenu-divider" />
               <p class="panel-strong" title={ta('tip.site.contentWidth')}>{ta('lbl.contentWidth')}</p>
               <!-- Live sample: one strip per common screen width, so it is
@@ -9734,38 +9857,50 @@
       <!-- The calendar's content as groups, each showing its value while closed and a reset when it differs from the defaults -->
       {@const cm = calMenu()}
       {#snippet calSources()}
-      <!-- One row per calendar: the address, and a name and a colour of its own. A named
-           calendar is a category in the filter, whatever its events' titles say -->
+      <!-- One row per calendar: one of the site's calendars (read-only here, edited in the Site panel), or an address of
+           its own with a name and a colour. A named calendar is a category in the filter, whatever its events' titles say -->
       {#each selectedBlock.props.sources ?? [] as src, i (i)}
         {@const cal = calSource(src)}
-        <div class="bg-layer">
-          <span class="toolbar-row">
-            <input class="tb-grow" value={cal.url} placeholder={ta('calendar.sourcesPh')} spellcheck="false"
-              title={ta('calendar.sourceUrl')} onchange={(e) => setCalendarSource(i, { url: e.target.value.trim() })} />
-            <button class="ghost row-tool" title={ta('ui.remove')} onclick={() => removeCalendarSource(i)}>{@html ICONS.cross}</button>
-          </span>
-          <span class="toolbar-row">
-            <input class="tb-grow" value={cal.name} placeholder={ta('calendar.sourceName')} title={ta('tip.calendar.sourceName')}
-              onchange={(e) => setCalendarSource(i, { name: e.target.value.trim() })} />
-            <ColorPicker value={cal.color || 'accent'} tokens={themeSwatches()} allowClear
-              label={ta('tip.calendar.sourceColor')} onchange={(hex) => setCalendarSource(i, { color: hex ?? '' })} />
-          </span>
-        </div>
+        {#if cal.ref}
+          {@const reg = siteCalendarById(cal.ref)}
+          <div class="bg-layer">
+            <span class="toolbar-row">
+              <span class="cal-ref-swatch" style:background={reg?.color ? (reg.color.startsWith('#') ? reg.color : `var(--urd-color-${reg.color})`) : 'transparent'} aria-hidden="true"></span>
+              <span class="tb-grow cal-ref-name" class:muted={!reg}>{reg ? (reg.name || reg.url) : ta('calendar.refMissing')}</span>
+              <button class="ghost row-tool" title={ta('ui.remove')} onclick={() => removeCalendarSource(i)}>{@html ICONS.cross}</button>
+            </span>
+          </div>
+        {:else}
+          <div class="bg-layer">
+            <span class="toolbar-row">
+              <input class="tb-grow" value={cal.url} placeholder={ta('calendar.sourcesPh')} spellcheck="false"
+                title={ta('calendar.sourceUrl')} onchange={(e) => setCalendarSource(i, { url: e.target.value.trim() })} />
+              <button class="ghost row-tool" title={ta('ui.remove')} onclick={() => removeCalendarSource(i)}>{@html ICONS.cross}</button>
+            </span>
+            <span class="toolbar-row">
+              <input class="tb-grow" value={cal.name} placeholder={ta('calendar.sourceName')} title={ta('tip.calendar.sourceName')}
+                onchange={(e) => setCalendarSource(i, { name: e.target.value.trim() })} />
+              <ColorPicker value={cal.color || 'accent'} tokens={themeSwatches()} allowClear
+                label={ta('tip.calendar.sourceColor')} onchange={(hex) => setCalendarSource(i, { color: hex ?? '' })} />
+            </span>
+            <button type="button" class="ghost action" title={ta('tip.calendar.saveToSite')} disabled={!cal.url.trim()}
+              onclick={() => saveCalendarToSite(i)}>{ta('calendar.saveToSite')}</button>
+          </div>
+        {/if}
       {/each}
       <button type="button" class="ghost action" onclick={addCalendarRow}>{@html ICONS.plus} {ta('ui.addCalendar')}</button>
-      <!-- The calendars that already stand in other calendar blocks on the site, to add with a click -->
-      <button type="button" class="ghost action" title={ta('tip.calendar.siteSources')} onclick={loadSiteCalSources}>
-        {@html ICONS.plus} {ta('calendar.siteSources')}
-      </button>
-      {#if siteCalSources}
-        {@const others = siteCalSources.filter((src) => !(selectedBlock.props.sources ?? []).some((own) => calSource(own).url === src))}
-        {#each others as src (src)}
-          <button type="button" class="linkish cal-source" title={src} onclick={() => addCalendarSource(src)}>{src}</button>
-        {/each}
-        {#if !others.length}
-          <span class="gridmenu-value">{ta('calendar.siteSourcesNone')}</span>
-        {/if}
+      <!-- The site's calendars: the ticked ones are shown by this block -->
+      <span class="mini-label" title={ta('tip.calendar.siteSources')}>{ta('calendar.siteSources')}</span>
+      {#each siteCalendars() as reg (reg.id)}
+        <label class="gridmenu-snap">
+          <input type="checkbox" checked={calRefs().has(reg.id)} onchange={(e) => toggleCalendarRef(reg.id, e.target.checked)} />
+          {reg.name || reg.url}
+        </label>
+      {/each}
+      {#if !siteCalendars().length}
+        <span class="gridmenu-value">{ta('calendar.siteSourcesNone')}</span>
       {/if}
+      <button type="button" class="linkish" onclick={() => { siteCalendarsOpen = true; activePanel = 'site'; }}>{ta('calendar.editSiteCalendars')}</button>
       {/snippet}
       {#snippet calViewGroup()}
       <!-- A design with a view of its own (Style) fixes the view -->
@@ -12395,13 +12530,195 @@
   }
 
   /* A calendar address offered from another block: one line, cut at the panel's width */
-  .cal-source {
-    display: block;
-    max-width: 100%;
+  /* The site's calendars in the Site panel: a list of rows, each a head that opens its body; one open at a time.
+     The body slides between its heights with a grid row that goes from 0fr to 1fr (no measuring), clipped by its own wrapper. */
+  .site-cal-add {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.55rem;
+    font: inherit;
+    font-weight: 600;
+    color: var(--urd-color-accent, #7c5cff);
+    cursor: pointer;
+    background: transparent;
+    border: 1.5px dashed var(--urd-color-accent, #7c5cff);
+    border-radius: 0.6rem;
+  }
+  .site-cal-list {
+    display: grid;
     overflow: hidden;
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: 0.6rem;
+    /* The browser's scroll anchoring must not follow the rows while they slide, or the panel jumps with them. */
+    overflow-anchor: none;
+  }
+  .site-cal-row {
+    border-top: 1px solid rgb(255 255 255 / 10%);
+    transition: background-color 240ms ease;
+  }
+  .site-cal-row:first-child {
+    border-top: 0;
+  }
+  .site-cal-row.open {
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 8%, transparent);
+  }
+  .site-cal-row .site-cal-head {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    width: 100%;
+    padding: 0.6rem 0.5rem 0.6rem 0.7rem;
+    font: inherit;
+    color: inherit;
     text-align: left;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+  }
+  .site-cal-row .site-cal-head:hover {
+    background: rgb(255 255 255 / 4%);
+  }
+  .site-cal-dot {
+    flex: none;
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 1px solid rgb(255 255 255 / 25%);
+    border-radius: 999px;
+  }
+  .site-cal-text {
+    display: grid;
+    flex: 1;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+  .site-cal-name {
+    font-weight: 600;
+  }
+  .site-cal-row.open .site-cal-name {
+    font-weight: 700;
+  }
+  .site-cal-addr {
+    overflow: hidden;
+    font-size: 0.74rem;
     text-overflow: ellipsis;
     white-space: nowrap;
+    opacity: 0.65;
+  }
+  .site-cal-chev {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    line-height: 0;
+    opacity: 0.7;
+    transition: transform 240ms cubic-bezier(0.2, 0, 0, 1);
+  }
+  .site-cal-chev :global(svg) {
+    display: block;
+  }
+  .site-cal-row.open .site-cal-chev {
+    transform: rotate(180deg);
+  }
+  .site-cal-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 240ms cubic-bezier(0.2, 0, 0, 1);
+  }
+  .site-cal-row.open .site-cal-body {
+    grid-template-rows: 1fr;
+  }
+  .site-cal-clip {
+    min-height: 0;
+    overflow: clip;
+  }
+  .site-cal-fields {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0 0.5rem 0.6rem 0.7rem;
+  }
+  .site-cal-section {
+    margin-top: 0.5rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid rgb(255 255 255 / 12%);
+  }
+  .site-cal-fields > .site-cal-section:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .site-cal-row .site-cal-field {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.2rem;
+    align-items: stretch;
+    font-size: 0.78rem;
+    opacity: 0.85;
+  }
+  .site-cal-field input {
+    width: 100%;
+    min-width: 0;
+  }
+  .site-cal-colors {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+  .site-cal-color {
+    display: grid;
+    grid-template-rows: auto 2.4em;
+    gap: 0.25rem;
+    align-items: start;
+    justify-items: center;
+    font-size: 0.68rem;
+    line-height: 1.15;
+    text-align: center;
+    opacity: 0.85;
+  }
+  .site-cal-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgb(255 255 255 / 10%);
+  }
+  .site-cal-remove {
+    padding: 0.4rem 0.7rem;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #ff9a9a;
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid rgb(255 154 154 / 35%);
+    border-radius: 0.5rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .site-cal-row,
+    .site-cal-chev,
+    .site-cal-body {
+      transition: none;
+    }
+  }
+  /* A row that points at one of the site's calendars: its colour and name, read-only */
+  .cal-ref-swatch {
+    flex: none;
+    width: 0.9rem;
+    height: 0.9rem;
+    border: 1px solid rgb(255 255 255 / 25%);
+    border-radius: 999px;
+  }
+  .cal-ref-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .cal-ref-name.muted {
+    opacity: 0.6;
   }
   :global(.lbtn-mark) {
     width: 2.2rem;

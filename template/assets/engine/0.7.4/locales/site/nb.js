@@ -175,6 +175,8 @@ export default {
     'calendar.swWeek': 'Uke',
     'calendar.swMonth': 'Måned',
     'calendar.recurring': 'Gjentas',
+    'calendar.organizer': 'Arrangør',
+    'calendar.moreAbout': 'Mer om {name}',
     'calendar.openToAll': 'Åpent for alle',
     'calendar.showAll': 'Vis alle {n} ({m} til)',
     'calendar.join': 'Bli med',

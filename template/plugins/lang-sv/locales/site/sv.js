@@ -179,6 +179,8 @@ export default {
     'calendar.swWeek': 'Vecka',
     'calendar.swMonth': 'Månad',
     'calendar.recurring': 'Upprepas',
+    'calendar.organizer': 'Arrangör',
+    'calendar.moreAbout': 'Mer om {name}',
     'calendar.openToAll': 'Öppet för alla',
     'calendar.showAll': 'Visa alla {n} ({m} till)',
     'calendar.join': 'Anslut',

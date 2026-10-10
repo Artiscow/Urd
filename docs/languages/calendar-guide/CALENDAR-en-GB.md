@@ -72,6 +72,8 @@ Until a source is pasted, the block shows sample events in the editor, so you ca
 
 **Several calendars** can stand in one block. They are shown as one calendar, and an event that stands in two of them is shown once. Give each a **Name** and a colour: the name becomes the events' category, and the colour marks them.
 
+**The site's calendars.** A calendar the site uses more than once is registered once, in the Site panel under Calendars: its address, a name (its chip and category everywhere), a colour, and settings that follow it into every block: a description (in the event card and as the chip's tooltip), extra colours for the text on the colour, the event box and the chip, its own web page («More about …» in the card), an organiser (in the card, and given to search engines as the event's organiser), and two switches: whether visitors can subscribe to it, and whether it stands in the calendar filter. In a block's Sources, tick the site's calendars the block shows; an address pasted into a block can be moved to the registry with «Save in the site's calendars», and «Edit the site's calendars» opens the panel.
+
 ## Designs
 
 **Choosing a design:** «Choose design …» in the Style tab of a calendar (and in the Calendar group of the Blocks panel, where the choice adds a new calendar) opens the design picker over the editor: every design with a picture, grouped by family, with a search on the name and a filter on the view. The marked design is drawn live with sample events in your own theme and language before you use it.

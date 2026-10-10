@@ -51,20 +51,19 @@ async function fetchSource(url) {
   return text;
 }
 
-/** All sources → sorted occurrences with category and signup link. */
+/** All sources (resolved, ics.resolveSources) → sorted occurrences with category and signup link. */
 async function loadOccurrences(ics, cf, sources, limit, view, from, zone, meetingHosts) {
   const errors = [];
   const events = [];
   let feedZone = null;
-  await Promise.all(sources.map(async (source) => {
-    const entry = ics.sourceEntry(source);
+  await Promise.all(sources.map(async (entry) => {
     const url = ics.normalizeSourceUrl(entry.url);
     if (!url) { errors.push(ta('calendar.unknownSource', { source: entry.url })); return; }
     try {
-      // Every event remembers the calendar it came from: its name and colour.
+      // Every event remembers the source it came from (expandEvents keeps it on the occurrence): its name and colours, and from the site's registry its words, page, organizer and whether it stands in the filter.
       const feed = ics.parseIcs(await fetchSource(url));
       feedZone ??= feed.timezone;
-      for (const event of feed.events) events.push({ ...event, calendar: entry.name, calendarColor: entry.color });
+      for (const event of feed.events) events.push({ ...event, source: entry });
     } catch (error) {
       errors.push(`${url}: ${error.message}`);
     }
@@ -74,9 +73,16 @@ async function loadOccurrences(ics, cf, sources, limit, view, from, zone, meetin
   const expanded = ics.expandEvents(events, { from, max: wide ? 600 : Math.max(limit * 4, 120) })
     .map((occ) => {
       // A named calendar is the category; otherwise the feed's own first category, and last «Category: Title» in the event itself.
-      const named = occ.calendar || occ.categories?.[0];
+      const source = occ.source ?? null;
+      const named = source?.name || occ.categories?.[0];
       const split = named ? { category: named, title: occ.summary } : ics.splitCategory(occ.summary);
-      return { ...occ, ...split, color: occ.calendarColor || '', signup: ics.signupLinkOf(occ, meetingHosts), image: occ.image || ics.findImageLink(occ.description) };
+      // A calendar kept out of the filter gives its events no category: no chip, and no place in the chip row or a legend.
+      if (source && !source.inFilter) split.category = '';
+      return {
+        ...occ, ...split, color: source?.color || '', colors: source?.colors ?? null,
+        calendar: source?.name || '', calendarDescription: source?.description || '', calendarLink: source?.link || '', calendarOrganizer: source?.organizer || '',
+        signup: ics.signupLinkOf(occ, meetingHosts), image: occ.image || ics.findImageLink(occ.description),
+      };
     });
   // The sources are one calendar to the visitor: an event that stands in two of them is shown once.
   // With a zone set for the site, every time is moved to that zone's clock; `real` keeps the moment itself for the countdowns.
@@ -110,18 +116,22 @@ function demoOccurrences() {
 
 /* ---------- Formatting ---------- */
 
-/** The event's calendar colour on a box, so its chip, badge and stripe follow the calendar. */
-/** A node in a calendar's own colour, with the text colour that reads on it. */
-function paintColor(node, colour) {
+/**
+ * A node in a calendar's own colour, so its chip, badge and stripe follow the calendar, with the text colour that reads on it.
+ * The registry's extra colours, when set, replace the derived ones: the text on the colour, the event's box and the chip.
+ */
+function paintColor(node, colour, colors = null) {
   if (!colour) return node;
   node.style.setProperty('--urd-cal-color', resolveColor(colour));
-  const ink = inkOn(colour);
+  const ink = colors?.text ? resolveColor(colors.text) : inkOn(colour);
   if (ink) node.style.setProperty('--urd-cal-color-text', ink);
+  if (colors?.box) node.style.setProperty('--urd-cal-color-bg', resolveColor(colors.box));
+  if (colors?.chip) node.style.setProperty('--urd-cal-chip-color', resolveColor(colors.chip));
   return node;
 }
 
 function tintNode(node, occ, mark = node) {
-  paintColor(node, occ.color);
+  paintColor(node, occ.color, occ.colors);
   // A cancelled event's box is marked, so its title is struck in every design.
   if (occ.cancelled) mark.classList.add('urd-cal-cancelled');
   return node;
@@ -134,11 +144,9 @@ function badgeNode(occ, ui) {
   return badge;
 }
 
-function chipNode(category, color, ui) {
+function chipNode(category, color, ui, colors = null) {
   if (!category) return null;
-  const chip = ui.field('span', 'category', category, 'urd-cal-chip');
-  if (color) chip.style.setProperty('--urd-cal-color', resolveColor(color));
-  return chip;
+  return paintColor(ui.field('span', 'category', category, 'urd-cal-chip'), color, colors);
 }
 
 /**
@@ -522,7 +530,7 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     a.rel = 'noopener';
     return a;
   };
-  const chip = (occ) => chipNode(occ.category, occ.color, ui);
+  const chip = (occ) => chipNode(occ.category, occ.color, ui, occ.colors);
   /**
    * The event's box: tinted by its calendar, and opening the event in full at a click or Enter.
    * A click on a link, a button or a text being edited is left to that element.
@@ -580,7 +588,7 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     return tx('openToAll', 'urd-cal-open');
   };
   /** The subscribe buttons, for a design that places them itself; null when they are off or there is no source. */
-  const subscribe = () => (props.showSubscribe !== false && sources.length ? subscribeRow(ics, sources, ui) : null);
+  const subscribe = () => (props.showSubscribe !== false && sources.some((source) => source.subscribable) ? subscribeRow(ics, sources, ui) : null);
   /** The event's own page: the address the feed gives it, else its sign-up link; null without either. */
   const href = (occ) => (typeof occ.url === 'string' && /^https?:\/\//i.test(occ.url) ? occ.url : occ.signup || null);
   const ui = { el: el2, tint, field, meta, tx, retx, line, group, notice, link, editLink, signup, chip, recurring, program, openToAll, subscribe, href, countdown, image: imageUrl, all: [], offset: 0, total: 0, rest: false, filter: null, opt: cd.calOptions(props), descriptionIn: cd.calDescription(props), time, timeText, timeString, metaString, hasTime, excerpt, sources,
@@ -746,6 +754,8 @@ function showEventDialog(occ, from, ics, ui, props) {
   if (occ.location) {
     fact('where', ui.field('span', 'place', occ.location));
   }
+  // The calendar's organizer from the site's registry.
+  if (occ.calendarOrganizer) fact('organizer', el2('span', 'urd-cal-dialog-organizer', occ.calendarOrganizer));
   dialog.appendChild(facts);
   const meta = el2('div', 'urd-cal-dialog-meta');
   const chip = ui.chip(occ);
@@ -764,6 +774,20 @@ function showEventDialog(occ, from, ics, ui, props) {
   }
   // The feed's HTML description when it has one, else the plain one.
   if (occ.descriptionHtml || occ.description) dialog.appendChild(descriptionNode(occ.descriptionHtml || occ.description, ui));
+  // The calendar's own words and page, from the site's registry.
+  if (occ.calendarDescription || occ.calendarLink) {
+    const about = el2('div', 'urd-cal-dialog-source');
+    if (occ.calendarDescription) about.appendChild(el2('p', 'urd-cal-dialog-source-text', occ.calendarDescription));
+    if (occ.calendarLink) {
+      const more = el2('a', 'urd-cal-dialog-link');
+      more.href = occ.calendarLink;
+      more.target = '_blank';
+      more.rel = 'noopener';
+      more.appendChild(ui.tx('moreAbout', null, { name: occ.calendar || occ.calendarOrganizer || '' }));
+      about.appendChild(ui.editLink(more));
+    }
+    dialog.appendChild(about);
+  }
   const actions = el2('div', 'urd-cal-dialog-actions');
   // The card shows the sign-up when the block does («Show sign-up button»).
   if (occ.signup && !occ.cancelled && props.showSignup === true) {
@@ -797,7 +821,7 @@ function showEventDialog(occ, from, ics, ui, props) {
     const file = ui.link('urd-cal-dialog-link', 'addFile', URL.createObjectURL(new Blob([ics.eventIcs(real)], { type: 'text/calendar' })), '');
     file.download = `${String(occ.title || 'event').replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '').slice(0, 60) || 'event'}.ics`;
     choices.append(one, google, file);
-    const feeds = ui.sources.map((source) => ics.subscribeLinks(ics.sourceEntry(source).url)).filter(Boolean);
+    const feeds = ui.sources.filter((source) => source.subscribable).map((source) => ics.subscribeLinks(source.url)).filter(Boolean);
     if (feeds.length) {
       const whole = el2('span', 'urd-cal-dialog-choice-label');
       whole.appendChild(ui.tx('addWhole'));
@@ -935,7 +959,7 @@ function renderList(host, occs, props, ics, ui) {
     const body = el2('div', 'urd-collection-body');
     const titleRow = el2('div', 'urd-cal-titlerow');
     titleRow.appendChild(ui.field('strong', 'title', occ.title, 'urd-collection-title'));
-    const chip = chipNode(occ.category, occ.color, ui);
+    const chip = chipNode(occ.category, occ.color, ui, occ.colors);
     if (chip) titleRow.appendChild(chip);
     body.appendChild(titleRow);
     const meta = ui.meta(occ);
@@ -958,7 +982,7 @@ function renderCards(host, occs, props, ics, ui) {
       when.className = 'urd-collection-date';
       top.appendChild(when);
     }
-    const chip = chipNode(occ.category, occ.color, ui);
+    const chip = chipNode(occ.category, occ.color, ui, occ.colors);
     if (chip) top.appendChild(chip);
     card.appendChild(top);
     card.appendChild(ui.field('strong', 'title', occ.title, 'urd-collection-title'));
@@ -978,7 +1002,7 @@ function nextRow(occ, ui) {
   const body = el2('div', null);
   const titleRow = el2('div', 'urd-cal-titlerow');
   titleRow.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-next-title'));
-  const chip = chipNode(occ.category, occ.color, ui);
+  const chip = chipNode(occ.category, occ.color, ui, occ.colors);
   if (chip) titleRow.appendChild(chip);
   body.appendChild(titleRow);
   const meta = ui.meta(occ);
@@ -1037,7 +1061,7 @@ function renderAgenda(host, occs, props, ics, ui) {
       const body = el2('span', 'urd-cal-agenda-body');
       const titleRow = el2('span', 'urd-cal-titlerow');
       titleRow.appendChild(ui.field('strong', 'title', occ.title));
-      const chip = chipNode(occ.category, occ.color, ui);
+      const chip = chipNode(occ.category, occ.color, ui, occ.colors);
       if (chip) titleRow.appendChild(chip);
       body.appendChild(titleRow);
       const where = ui.meta(occ, { date: false });
@@ -1187,12 +1211,14 @@ const VIEWS = { list: renderList, cards: renderCards, month: renderMonth, next: 
 
 /* ---------- Subscribe and category filter ---------- */
 
+/** The subscribe buttons for the sources that can be subscribed to (a registry calendar can be kept out). */
 function subscribeRow(ics, sources, ui) {
   const row = el2('div', 'urd-cal-subscribe');
-  for (const source of sources) {
-    const links = ics.subscribeLinks(ics.sourceEntry(source).url);
+  const open = sources.filter((source) => source.subscribable);
+  for (const source of open) {
+    const links = ics.subscribeLinks(source.url);
     if (!links) continue;
-    row.appendChild(ui.link('urd-cal-sub-btn', sources.length > 1 ? 'subscribeMulti' : 'subscribe', links.webcal, t('calendar.subscribeTitle')));
+    row.appendChild(ui.link('urd-cal-sub-btn', open.length > 1 ? 'subscribeMulti' : 'subscribe', links.webcal, t('calendar.subscribeTitle')));
     if (links.google) {
       const google = ui.link('urd-cal-sub-btn', 'addGoogle', links.google, t('calendar.addGoogleTitle'));
       google.target = '_blank';
@@ -1206,7 +1232,8 @@ function subscribeRow(ics, sources, ui) {
 function categoryRow(occs, active, onpick, ui) {
   const categories = [...new Set(occs.map((occ) => occ.category).filter(Boolean))];
   if (categories.length < 2) return null;
-  const colourOf = (category) => occs.find((occ) => occ.category === category && occ.color)?.color ?? '';
+  const sampleOf = (category) => occs.find((occ) => occ.category === category && occ.color);
+  const describedAs = (category) => occs.find((occ) => occ.category === category && occ.calendarDescription)?.calendarDescription ?? '';
   const row = el2('div', 'urd-cal-chips');
   row.setAttribute('role', 'group');
   row.setAttribute('aria-label', t('calendar.categoriesLabel'));
@@ -1222,7 +1249,11 @@ function categoryRow(occs, active, onpick, ui) {
     const btn = el2('button', 'urd-cal-chipbtn');
     btn.type = 'button';
     btn.appendChild(ui.field('span', 'category', category));
-    paintColor(btn, colourOf(category));
+    const sample = sampleOf(category);
+    paintColor(btn, sample?.color ?? '', sample?.colors);
+    // The registry's description of the calendar, as the chip's tooltip.
+    const description = describedAs(category);
+    if (description) btn.title = description;
     btn.dataset.calKey = `category-${category}`;
     btn.setAttribute('aria-pressed', active === category ? 'true' : 'false');
     if (active === category) btn.classList.add('selected');
@@ -1413,7 +1444,10 @@ function writeEventData(el, occs, ics, ctx, meetingHosts) {
     if (old.dataset.urdCal === id) old.remove();
   }
   const site = { pageUrl: location.origin + location.pathname, organizer: ctx.site?.site?.title ?? '', meetingHosts };
-  const events = occs.slice(0, PRINT_MAX).map((occ) => ics.eventJsonLd(occ, site)).filter(Boolean);
+  // A calendar with an organizer of its own in the site's registry names it, with its page, in place of the site.
+  const events = occs.slice(0, PRINT_MAX).map((occ) => ics.eventJsonLd(occ, occ.calendarOrganizer
+    ? { ...site, organizer: occ.calendarOrganizer, organizerUrl: occ.calendarLink || '' }
+    : site)).filter(Boolean);
   if (!events.length) return;
   const script = document.createElement('script');
   script.type = 'application/ld+json';
@@ -1563,8 +1597,8 @@ function renderCalendar(el, props, ctx) {
   const ruler = el2('div', 'urd-block-ruler');
   ruler.setAttribute('aria-hidden', 'true');
   el.appendChild(ruler);
-  // A calendar with a feed stands in its loading state until the events are drawn.
-  if ((props.sources ?? []).length) {
+  // A calendar with a feed, an address of its own or a reference to the site's registry, stands in its loading state until the events are drawn.
+  if ((props.sources ?? []).some((source) => (typeof source === 'string' ? source.trim() : source && (source.url || source.calendar)))) {
     host.setAttribute('aria-busy', 'true');
     host.appendChild(loadingNode(el, ctx));
   }
@@ -1589,7 +1623,8 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
   // The site's own time zone, when set: every visitor sees the times on that zone's clock.
   const siteZone = ctx.site?.site?.timeZone;
   const zone = cf.zoneValid(siteZone) ? siteZone.trim() : null;
-  const sources = (props.sources ?? []).filter((source) => ics.sourceEntry(source).url);
+  // The sources with the site's registry resolved into them: the addresses, names, colours and the registry's words.
+  const sources = ics.resolveSources(props.sources, ctx.site?.site?.calendars);
   let activeCategory = null;
   let query = '';
   let shown = null;
@@ -1777,8 +1812,9 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
 
   if (!sources.length) {
     // Demo data exists only in the preview, where the block follows it as it follows a feed, so the owner sees the whole design; visitors see the empty state, as for a calendar with nothing coming up.
+    // A block whose only sources point at calendars no longer in the registry says so in its note.
     if (ctx.preview) adminLocaleReady.then(() => {
-      if (host.isConnected) draw(demoOccurrences(), ta('calendar.demoNote'));
+      if (host.isConnected) draw(demoOccurrences(), ta((props.sources ?? []).length ? 'calendar.unknownCalendar' : 'calendar.demoNote'));
     });
     else draw([], null);
     return;

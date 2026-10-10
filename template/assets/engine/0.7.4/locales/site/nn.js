@@ -134,6 +134,8 @@ export default {
     'calendar.swWeek': 'Veke',
     'calendar.swMonth': 'Månad',
     'calendar.recurring': 'Gjentek seg',
+    'calendar.organizer': 'Arrangør',
+    'calendar.moreAbout': 'Meir om {name}',
     'calendar.openToAll': 'Ope for alle',
     'calendar.showAll': 'Vis alle {n} ({m} til)',
     'calendar.join': 'Bli med',

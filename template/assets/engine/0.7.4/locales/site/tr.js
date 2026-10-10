@@ -171,6 +171,8 @@ export default {
     'calendar.swWeek': 'Hafta',
     'calendar.swMonth': 'Ay',
     'calendar.recurring': 'Tekrarlanır',
+    'calendar.organizer': 'Düzenleyen',
+    'calendar.moreAbout': '{name} hakkında',
     'calendar.openToAll': 'Herkese açık',
     'calendar.showAll': 'Tümünü göster: {n} ({m} tane daha)',
     'calendar.join': 'Katıl',

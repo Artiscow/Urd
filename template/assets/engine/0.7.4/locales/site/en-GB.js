@@ -172,6 +172,8 @@ export default {
     'calendar.swWeek': 'Week',
     'calendar.swMonth': 'Month',
     'calendar.recurring': 'Repeats',
+    'calendar.organizer': 'Organiser',
+    'calendar.moreAbout': 'More about {name}',
     'calendar.openToAll': 'Open to everyone',
     'calendar.showAll': 'Show all {n} ({m} more)',
     'calendar.join': 'Join',

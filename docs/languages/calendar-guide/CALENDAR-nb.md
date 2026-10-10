@@ -72,6 +72,8 @@ Før en kilde er limt inn, viser blokken eksempelarrangementer i editoren, så d
 
 **Flere kalendere** kan stå i én blokk. De vises som én kalender, og et arrangement som står i to av dem vises én gang. Gi hver et **Navn** og en farge: navnet blir arrangementenes kategori, og fargen merker dem.
 
+**Nettstedets kalendere.** En kalender nettstedet bruker flere steder registreres én gang, i Nettsted-panelet under Kalendere: adressen, et navn (chipen og kategorien overalt), en farge, og innstillinger som følger den inn i hver blokk: en beskrivelse (i arrangementskortet og som tips på chipen), ekstra farger for teksten på fargen, arrangementsboksen og chipen, kalenderens egen nettside («Mer om …» i kortet), en arrangør (i kortet, og gitt til søkemotorene som arrangementets arrangør), og to brytere: om besøkende kan abonnere på den, og om den står i kalenderfilteret. Under Kilder i en blokk huker du av nettstedets kalendere blokken viser; en adresse limt inn i en blokk kan flyttes til registeret med «Lagre i nettstedets kalendere», og «Rediger nettstedets kalendere» åpner panelet.
+
 ## Design
 
 **Velge design:** «Velg design …» i Stil-fanen på en kalender (og i Kalender-gruppen i Blokker-panelet, der valget legger til en ny kalender) åpner designvelgeren over editoren: alle designene med bilde, gruppert etter familie, med søk på navn og filter på visning. Det merkede designet tegnes levende med eksempelarrangementer i ditt eget tema og språk før du bruker det.
