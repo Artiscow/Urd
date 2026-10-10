@@ -1522,7 +1522,7 @@ export default {
     'calendar.picker.add': 'Legg til kalender',
     'calendar.picker.open': 'Vel design …',
     'calendar.picker.none': 'Ingen design passar',
-    'calendar.picker.current': 'Valt',
+    'calendar.picker.current': 'I bruk',
     'calendar.picker.count': '{n} design',
     'calendar.picker.preview': 'Førehandsvising av {name} med dømedata, i sida sitt eige tema',
     'tip.calendar.picker.open': 'Alle kalenderdesigna med bilete, grupperte etter familie, med søk og filter på vising',

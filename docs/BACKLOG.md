@@ -355,14 +355,11 @@ Kuratert topp-sett av byggemåte-grep der native/CSS erstatter skjør egen-JS og
 - [ ] Se på muligheter for å få oppdateringer fra Urd om man går vekk fra Github - hvordan sende/trekke oppdatering til/fra Github via en annen server/service som Gitlab, egen server (som NTNUs servermapper for organisasjoner)
 
 ## Liten huskeliste
-What comes, in order:
+What comes, in order (brought up to date 11 October 2026):
 
-1. A push with the full preparation. Everything since the last prepared push has been built without the independent review: new schema fields, the allowlist for a feed's HTML, and translations made by subagents.
-2. 0.7.21.2 (the height that follows the content) and 0.7.21.4 (the block follows its own width). The design round needs both settled: a design is drawn for a box that behaves in a known way, and the week strip already needed a container query to stay readable in a narrow frame (0.7.19.17).
-3. 0.7.20.4 (the search in the element menu). The calendar's menu has grown by eleven settings since its groups were built.
-4. 0.7.19.18 (the words), then 0.7.19.19 (the design round for the event card, the switcher's week and month and the filters: drawn and reviewed, then built with 0.7.19.20).
-5. The rest of 0.7.21 (21.3, 21.5, 21.6 and 21.7) and of 0.7.20 (20.3, 20.5 and 20.6). None of them holds up the design round.
-6. 0.7.19.21 onwards: the phone design, the picker, the stylised designs last, and the text colour per surface.
+1. A push with the full preparation. Everything since the push of 7 October 2026 (0.7.0.40-43p) has been built without the independent review: four commits with new schema fields (the colour sets, the switcher's designs, the description setting, the phone design, the site's calendars), the design pictures and their script, and a large editor diff.
+2. The rest of 0.7.21 (21.3, 21.5, 21.6 and 21.7) and of 0.7.20 (20.3, 20.5 and 20.6). None of them holds up the design round.
+3. The rest of 0.7.19: the stylised families (19.23 to 19.27, 53 designs, each drawing and building its own sets for the card, the switcher's week and month, the tools and the phone view) and the text colour per surface (19.28). Delivered so far from the round: the words (19.18), the sets with the card, the switcher's views and the tools (19.19), the description setting (19.20), the phone design (19.21), the design picker (19.22) and the site's calendars (19.29).
 
 ## Bugs, (dårlige) funksjoner og ting som ellers må gjøres
 

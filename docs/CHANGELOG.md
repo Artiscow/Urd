@@ -27,6 +27,21 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.19.19-29p - Push preparation: the calendar's sets, registry and picker reviewed - 11 October 2026
+
+- Review finding: the registry's web page reached the card's «More about» link and the structured data with no guard but the schema's pattern, which the engine never enforces. `calendarEntry` keeps the link only as an http(s) address (an anchored pattern), with a test.
+- Review finding: the «missing calendar» note stood under a block whose only source row was still empty, since the note tested the raw count. It shows only when a source is a reference to a calendar the registry lacks.
+- Review finding: an event of a calendar kept out of the filter lost the words before «Category:» from its title as well as its chip. The title stays whole.
+- Review finding: the phone-design class on the block was set only in the branch that draws events, so an empty redraw kept a stale one. It is set before the branches.
+- Review finding: the pictures script left its temporary profile behind when the browser could not start, and crashed without a page target. The browser's error is awaited and the target guarded.
+- Review finding: the calendar guide named the switcher's settings «Behind Week» and «Behind Month» while the panel says «Week design» and «Month design». The guide follows the panel.
+- Review finding: the 0.7.19.29 entry logged the preview bridge's source check, which 0.7.19.22 made. Dropped there.
+- Review finding: the design picker's dialog was two rems wider and taller than the window (no border-box), so the card sat off centre and lost its right and bottom edges on a small window. The dialog is sized with border-box.
+- Review finding: opened from the block palette, the picker marked Plain as the chosen design although no block was selected, beside the highlighted tile. Add mode has no current design, and the badge on a selected block's design reads «In use».
+- Review finding: the picker sent the page to its preview twice at open, and a close that was not a cancel (a second Escape the browser forces) hid the dialog while the picker stayed mounted, so «Design» did not reopen it. The effect sends once, and the dialog's close event leaves the picker.
+- Review finding: four comments in App.svelte described code the picker had replaced, the description setting's tip sat on a wrapper around its choice, and the block's reference row painted a calendar without a colour as transparent where the Site panel shows the accent. The comments are gone, the tip is the choice's own, and both swatches use the same helper.
+- Mechanical checks: no em dashes, the test batches' checkbox syntax, the stylesheet stamp current in the eight shells, the version fields consistent, and the committed bundle equal to a fresh build.
+
 ### 0.7.19.29 - The site's calendars - 10 October 2026
 
 - Every calendar block carried its own sources, so the same calendar could be named and coloured differently from block to block, and «Calendars on the site» only scanned the other blocks for addresses. The site registers its calendars once in `site.calendars` (site.json, additive; schema, SCHEMA.md and the example data in the same commit), each with an address, a name, a description, four colours (the main colour, the text on it, the event box and the chip), its own web page, an organizer and two switches (can be subscribed to, in the calendar filter), and a block picks one as the source `{ "calendar": "<id>" }`. The bare address and `{ url, name, color }` forms stay valid.
@@ -34,7 +49,7 @@ entydig: alle commit-innslag over forrige p-innslag.
 - Test finding 10 October 2026: a source's name and colour (0.7.13.13) never reached the events of a real feed, since `expandEvents` built every occurrence from a fixed list of fields. The occurrence carries its source, and the name, the colour and the registry's words follow it.
 - The Site panel gets the group «Calendars» (the canvas «Urd kalenderregister», proposal B chosen 10 October 2026): «New calendar» at the top, a list of closed rows (colour, name, address), one row open at a time with the sections Basics, Colours (four swatches on one row) and Shown to visitors, and move and «Remove calendar» at its foot. The body slides between its heights with a grid row from `0fr` to `1fr`, the closed bodies are `inert`, the list has `overflow-anchor: none` so the panel does not jump with the sliding rows, and the new calendar opens with the caret in its name.
 - In a block's Sources, a reference is a read-only row with the calendar's colour and name, the site's calendars stand as a checkbox list, «Save in the site's calendars» moves an own address into the registry and makes the row a reference, and «Edit the site's calendars» opens the Site panel with the group open. The block's source helpers snapshot the state before writing it back, since a state proxy cannot be posted to the preview.
-- The preview bridge heard every message on the window; it now hears its own iframe alone (`previewBridge.js`). The calendar guide in English and Norwegian describes the registry, and the admin dictionaries in five languages and the site dictionaries in six get the keys.
+- The calendar guide in English and Norwegian describes the registry, and the admin dictionaries in five languages and the site dictionaries in six get the keys.
 - Along the way: the Svelte compiler's style pruning crawled for over ten minutes on the group's first styles, which used `+` and `>` combinators and a universal selector that the rest of the editor never uses; the rules are plain class selectors and the editor builds in three minutes as before.
 
 ### 0.7.19.22 - The design picker - 8 October 2026

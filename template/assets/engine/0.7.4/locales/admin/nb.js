@@ -2461,7 +2461,7 @@ export default {
     'calendar.picker.add': 'Legg til kalender',
     'calendar.picker.open': 'Velg design …',
     'calendar.picker.none': 'Ingen design passer',
-    'calendar.picker.current': 'Valgt',
+    'calendar.picker.current': 'I bruk',
     'calendar.picker.count': '{n} design',
     'calendar.picker.preview': 'Forhåndsvisning av {name} med eksempeldata, i sidens eget tema',
     'tip.calendar.picker.open': 'Alle kalenderdesignene med bilde, gruppert etter familie, med søk og filter på visning',

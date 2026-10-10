@@ -2458,7 +2458,7 @@ export default {
     'calendar.picker.add': 'Add calendar',
     'calendar.picker.open': 'Choose design …',
     'calendar.picker.none': 'No design matches',
-    'calendar.picker.current': 'Chosen',
+    'calendar.picker.current': 'In use',
     'calendar.picker.count': '{n} designs',
     'calendar.picker.preview': 'Preview of {name} with sample data, in the site\'s own theme',
     'tip.calendar.picker.open': 'Every calendar design with a picture, grouped by family, with a search and a filter on the view',

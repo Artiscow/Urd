@@ -193,7 +193,7 @@ Tre verktøy hjelper en besøkende å finne et arrangement. Alle er brytere i bl
 
 Verktøyene virker sammen: et søk innenfor én kalender. De tegnes i designets egne farger og former, slik kortet som åpnes ved et trykk også gjør.
 
-**Vis visningsvelger** lar den besøkende bytte mellom det som kommer, uken og måneden. Under bryteren velger **Bak Uke** og **Bak Måned** hvilket design som tegnes når en besøkende trykker på knappen: ukestripen eller ett av ukedesignene, den vanlige måneden eller ett av månedsdesignene. Uten et valg passer måneden til kalenderens utseende (ApeironLF-måneden på ApeironLF-designene).
+**Vis visningsvelger** lar den besøkende bytte mellom det som kommer, uken og måneden. Under bryteren velger **Ukedesign** og **Månedsdesign** hvilket design som tegnes når en besøkende trykker på knappen: ukestripen eller ett av ukedesignene, den vanlige måneden eller ett av månedsdesignene. Uten et valg passer måneden til kalenderens utseende (ApeironLF-måneden på ApeironLF-designene).
 
 **Vis beskrivelsen** vises på designene som har plass til den i radene sine (Programhefte, Delt kort, Fast arrangement og de vanlige kortene): **I radene** skriver beskrivelsens første linje under arrangementet, **Bare i kortet** overlater den til kortet som åpnes ved et trykk, og som alltid har hele beskrivelsen.
 

@@ -559,6 +559,8 @@ test('calendarEntry: a registry calendar with every field trimmed and the switch
   assert.equal(calendarEntry({ id: 'x', url: '', name: 'No address' }), null);
   assert.equal(calendarEntry({ url: 'https://x.test/c.ics' }), null);
   assert.equal(calendarEntry({ id: 'x', url: 'https://x.test/c.ics', organizer: 7 }).organizer, '');
+  assert.equal(calendarEntry({ id: 'x', url: 'https://x.test/c.ics', link: 'javascript:alert(1)' }).link, '');
+  assert.equal(calendarEntry({ id: 'x', url: 'https://x.test/c.ics', link: '/styret' }).link, '');
   assert.equal(calendarEntry('styret'), null);
 });
 

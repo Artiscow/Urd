@@ -193,7 +193,7 @@ Three tools help a visitor find an event. All are switches in the block's menu, 
 
 The tools work together: a search inside one calendar. They are drawn in the design's own colours and shapes, as is the card that opens at a press.
 
-**Show view switcher** lets the visitor change between what is coming, the week and the month. Under the switch, **Behind Week** and **Behind Month** choose which design is drawn when a visitor presses the button: the week strip or one of the week designs, the plain month or one of the month designs. Without a choice, the month matches the calendar's look (the ApeironLF month on the ApeironLF designs).
+**Show view switcher** lets the visitor change between what is coming, the week and the month. Under the switch, **Week design** and **Month design** choose which design is drawn when a visitor presses the button: the week strip or one of the week designs, the plain month or one of the month designs. Without a choice, the month matches the calendar's look (the ApeironLF month on the ApeironLF designs).
 
 **Show the description** appears on the designs with room for it in their rows (Programme booklet, Split card, Regular event, and the plain cards): **In the rows** writes the first line of the description under the event, **Only in the card** leaves it to the card that opens at a press, which always holds the whole description.
 

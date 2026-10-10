@@ -2458,7 +2458,7 @@ export default {
     'calendar.picker.add': 'Takvim ekle',
     'calendar.picker.open': 'Tasarım seç …',
     'calendar.picker.none': 'Eşleşen tasarım yok',
-    'calendar.picker.current': 'Seçili',
+    'calendar.picker.current': 'Kullanımda',
     'calendar.picker.count': '{n} tasarım',
     'calendar.picker.preview': '{name} tasarımının örnek verilerle, sitenin kendi temasında önizlemesi',
     'tip.calendar.picker.open': 'Resimli tüm takvim tasarımları, aileye göre gruplanmış, arama ve görünüm filtresiyle',

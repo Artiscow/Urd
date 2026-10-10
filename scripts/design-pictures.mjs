@@ -61,14 +61,17 @@ function connect(url) {
 const profile = mkdtempSync(join(tmpdir(), 'urd-design-pictures-'));
 const browser = spawn(BROWSER, [`--headless=new`, `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`, '--no-first-run', `--window-size=${WIDTH},1000`, 'about:blank'], { stdio: 'ignore' });
 let cdp = null;
+// A browser that cannot start reports it through the error event, which is awaited below so the profile is cleaned up.
+const browserFailed = new Promise((_, reject) => browser.on('error', (error) => reject(new Error(`the browser could not start: ${error.message}`))));
 try {
   let targets = null;
   for (let i = 0; i < 40 && !targets; i++) {
-    await wait(500);
+    await Promise.race([wait(500), browserFailed]);
     targets = await fetch(`http://127.0.0.1:${PORT}/json/list`).then((r) => r.json()).catch(() => null);
   }
-  if (!targets) throw new Error(`the browser did not answer on port ${PORT}`);
-  cdp = connect(targets.find((t) => t.type === 'page').webSocketDebuggerUrl);
+  const page = targets?.find((t) => t.type === 'page');
+  if (!page) throw new Error(`the browser did not answer with a page on port ${PORT}`);
+  cdp = connect(page.webSocketDebuggerUrl);
   await cdp.send('Runtime.enable');
   await cdp.send('Page.enable');
   await cdp.send('Emulation.setDeviceMetricsOverride', { width: WIDTH, height: 1000, deviceScaleFactor: 1, mobile: false });

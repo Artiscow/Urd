@@ -1173,7 +1173,6 @@
   });
   const getMenuQuery = () => menuQuery;
   const getPropsQuery = () => propsQuery;
-  // A word in the search closes the design picker over the menu, so the hits are seen.
   function setMenuQuery(value) {
     menuQuery = value;
   }
@@ -9192,7 +9191,7 @@
     <IconEditor image={iconEditorImage} onapply={applyIcon} oncancel={() => (iconEditorImage = null)} />
   {/if}
   {#if designPicker}
-    <DesignPicker mode={designPicker.mode} current={designPicker.mode === 'set' ? calDesign(selectedBlock?.props.design).id : 'plain'}
+    <DesignPicker mode={designPicker.mode} current={designPicker.mode === 'set' ? calDesign(selectedBlock?.props.design).id : null}
       site={siteDraft ? $state.snapshot(siteDraft) : null} page={store?.data ? $state.snapshot(store.data) : null}
       onpick={(id) => { if (designPicker.mode === 'add') addCalendarDesign(id); else setCalendarDesign(id); designPicker = null; }}
       onclose={() => (designPicker = null)} />
@@ -9865,7 +9864,7 @@
           {@const reg = siteCalendarById(cal.ref)}
           <div class="bg-layer">
             <span class="toolbar-row">
-              <span class="cal-ref-swatch" style:background={reg?.color ? (reg.color.startsWith('#') ? reg.color : `var(--urd-color-${reg.color})`) : 'transparent'} aria-hidden="true"></span>
+              <span class="cal-ref-swatch" style:background={swatchCss(reg?.color)} aria-hidden="true"></span>
               <span class="tb-grow cal-ref-name" class:muted={!reg}>{reg ? (reg.name || reg.url) : ta('calendar.refMissing')}</span>
               <button class="ghost row-tool" title={ta('ui.remove')} onclick={() => removeCalendarSource(i)}>{@html ICONS.cross}</button>
             </span>
@@ -9945,11 +9944,9 @@
       {/if}
       <!-- Where the description stands, on the designs with room for it in their rows -->
       {#if calHasExcerpt(selectedBlock.props)}
-        <div title={ta('tip.calendar.opt.description')}>
-          <Choice label={ta('calendar.opt.description')} value={calDescription(selectedBlock.props)}
-            options={[['rows', ta('calendar.descriptionRows')], ['card', ta('calendar.descriptionCard')]]}
-            onchange={(v) => setBlockProp('description', v === 'rows' ? undefined : v)} />
-        </div>
+        <Choice label={ta('calendar.opt.description')} title={ta('tip.calendar.opt.description')} value={calDescription(selectedBlock.props)}
+          options={[['rows', ta('calendar.descriptionRows')], ['card', ta('calendar.descriptionCard')]]}
+          onchange={(v) => setBlockProp('description', v === 'rows' ? undefined : v)} />
       {/if}
       {#if ['list', 'cards', 'agenda'].includes(selectedBlock.props.view ?? 'list')}
         <label title={ta('tip.collection.limit')}>{ta('lbl.maxCount')}
@@ -11163,7 +11160,6 @@
     {@render menuGroup('frame', ta('group.placement'), viewMode === 'desktop' ? `${selectedBlock.frame.w} % × ${selectedBlock.frame.h}` : '', menuFrame)}
   {/snippet}
 
-  <!-- The design picker takes the whole menu while it is open: every design as a drawn thumbnail, grouped by the view it stands on -->
 
   {#if !query.trim()}
     <!-- The quick row: the settings used most, changed without opening anything -->
@@ -11926,7 +11922,6 @@
     border-color: var(--urd-color-accent, #7c5cff);
   }
 
-  /* The design picker over the whole menu: the thumbnails as many across as the menu is wide */
 
   /* A group of the element menu: the title to the left, the current value muted to the right */
   .menu-group summary {
@@ -12529,7 +12524,6 @@
     gap: 8px;
   }
 
-  /* A calendar address offered from another block: one line, cut at the panel's width */
   /* The site's calendars in the Site panel: a list of rows, each a head that opens its body; one open at a time.
      The body slides between its heights with a grid row that goes from 0fr to 1fr (no measuring), clipped by its own wrapper. */
   .site-cal-add {

@@ -75,9 +75,8 @@ async function loadOccurrences(ics, cf, sources, limit, view, from, zone, meetin
       // A named calendar is the category; otherwise the feed's own first category, and last «Category: Title» in the event itself.
       const source = occ.source ?? null;
       const named = source?.name || occ.categories?.[0];
-      const split = named ? { category: named, title: occ.summary } : ics.splitCategory(occ.summary);
-      // A calendar kept out of the filter gives its events no category: no chip, and no place in the chip row or a legend.
-      if (source && !source.inFilter) split.category = '';
+      // A calendar kept out of the filter gives its events no category and leaves their titles whole: no chip, and no place in the chip row or a legend.
+      const split = source && !source.inFilter ? { category: '', title: occ.summary } : named ? { category: named, title: occ.summary } : ics.splitCategory(occ.summary);
       return {
         ...occ, ...split, color: source?.color || '', colors: source?.colors ?? null,
         calendar: source?.name || '', calendarDescription: source?.description || '', calendarLink: source?.link || '', calendarOrganizer: source?.organizer || '',
@@ -1762,6 +1761,9 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
         draw(occurrences, note);
       },
     };
+    // On a phone a design that cannot be read there is marked for the shared phone design, unless the owner switched it off.
+    const phoneDesign = ui.phone && cd.calPhoneDesign(props);
+    host.classList.toggle('urd-cal-phone-design', phoneDesign);
     if (mode === 'week' || mode === 'month') {
       // The design behind the button (calSwitcherViews) is drawn in a box of its own that carries its class and its options, so its style sheet rules and settings apply inside the block's own set.
       const chosen = cd.calSwitcherViews(props)[mode];
@@ -1781,8 +1783,6 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
       host.appendChild(design.empty === 'ap' ? emptyApNode(props, ui) : emptyNode(props));
     } else {
       // On a phone a design that cannot be read there draws the shared phone design instead, unless the owner switched it off.
-      const phoneDesign = ui.phone && cd.calPhoneDesign(props);
-      host.classList.toggle('urd-cal-phone-design', phoneDesign);
       const render = phoneDesign ? renderPhoneAgenda : (mod?.[design.id] ?? VIEWS[view] ?? renderList);
       render(host, limited, props, ics, ui);
       if (folds) host.appendChild(foldNode(render, filtered.slice(limit), filtered.length, props, ics, ui));
@@ -1814,7 +1814,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, el, host, props, c
     // Demo data exists only in the preview, where the block follows it as it follows a feed, so the owner sees the whole design; visitors see the empty state, as for a calendar with nothing coming up.
     // A block whose only sources point at calendars no longer in the registry says so in its note.
     if (ctx.preview) adminLocaleReady.then(() => {
-      if (host.isConnected) draw(demoOccurrences(), ta((props.sources ?? []).length ? 'calendar.unknownCalendar' : 'calendar.demoNote'));
+      if (host.isConnected) draw(demoOccurrences(), ta((props.sources ?? []).some((source) => source && typeof source === 'object' && 'calendar' in source) ? 'calendar.unknownCalendar' : 'calendar.demoNote'));
     });
     else draw([], null);
     return;

@@ -9,7 +9,7 @@
   import { CAL_VIEWS, calDesign, calDesignFamilies } from '$engine/calendar-designs.js';
   import { calendarThumb } from '$engine/calendar-thumb.js';
 
-  let { current = 'plain', mode = 'set', site = null, page = null, onpick, onclose } = $props();
+  let { current = null, mode = 'set', site = null, page = null, onpick, onclose } = $props();
 
   const VIEW_KEYS = { list: 'calendar.viewList', cards: 'calendar.viewCards', month: 'calendar.viewMonth', agenda: 'calendar.viewAgenda', next: 'calendar.viewNext', week: 'calendar.viewWeek', day: 'calendar.viewDay', year: 'calendar.viewYear' };
   /** The preview page's width in CSS px; the iframe is scaled to the pane, and its height follows the drawn calendar. */
@@ -17,7 +17,7 @@
 
   let query = $state('');
   let view = $state('');
-  let chosen = $state(current);
+  let chosen = $state(current ?? 'plain');
   let broken = $state(new Set());
   let iframeEl = $state(null);
   let paneW = $state(0);
@@ -96,7 +96,6 @@
   function onMessage(event) {
     if (event.origin !== location.origin || event.source !== iframeEl?.contentWindow) return;
     if (event.data?.type !== 'urd-ready') return;
-    previewReady = true;
     // The preview shows the design alone: the site's header, announcement strip, footer and scroll-top button stay out of it.
     const doc = iframeEl?.contentDocument;
     if (doc && !doc.getElementById('design-picker-style')) {
@@ -108,7 +107,8 @@
     if (site) post({ type: 'urd-site', site });
     post({ type: 'urd-viewport', mode: 'desktop' });
     post({ type: 'urd-chrome', visible: false });
-    sendPreview();
+    // The effect below sends the page once the preview is ready, and again at every choice.
+    previewReady = true;
   }
 
   $effect(() => {
@@ -118,8 +118,8 @@
 
   $effect(() => () => watcher?.disconnect());
 
-  function onCancel(event) {
-    event.preventDefault();
+  /** The dialog closing on its own (Escape, or a close the browser forces) leaves the picker too. */
+  function onClosed() {
     onclose?.();
   }
 
@@ -130,7 +130,7 @@
 
 <svelte:window onmessage={onMessage} />
 
-<dialog class="dp-overlay" bind:this={dialogEl} aria-label={ta('calendar.picker.title')} oncancel={onCancel}>
+<dialog class="dp-overlay" bind:this={dialogEl} aria-label={ta('calendar.picker.title')} onclose={onClosed}>
   <div class="dp-card">
     <div class="dp-head">
       <h2>{ta('calendar.picker.title')}</h2>
@@ -140,7 +140,7 @@
         <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
       </button>
     </div>
-    <div class="dp-views" role="group" aria-label={ta('calendar.picker.title')}>
+    <div class="dp-views" role="group">
       <button type="button" class:on={view === ''} aria-pressed={view === ''} onclick={() => (view = '')}>{ta('calendar.picker.all')}</button>
       {#each CAL_VIEWS as v (v)}
         <button type="button" class:on={view === v} aria-pressed={view === v} onclick={() => (view = v)}>{ta(VIEW_KEYS[v])}</button>
@@ -153,7 +153,7 @@
             <h3>{ta(family.labelKey)}</h3>
             <div class="dp-grid">
               {#each family.designs as d (d.id)}
-                <button type="button" class="dp-tile" class:on={d.id === chosen} class:current={d.id === current} aria-pressed={d.id === chosen}
+                <button type="button" class="dp-tile" class:on={d.id === chosen} class:current={current !== null && d.id === current} aria-pressed={d.id === chosen}
                   title={ta(d.labelKey)} onclick={() => (chosen = d.id)} ondblclick={() => onpick?.(d.id)}>
                   <span class="dp-pic">
                     {#if broken.has(d.id)}
@@ -163,7 +163,7 @@
                     {/if}
                   </span>
                   <span class="dp-name">{ta(d.labelKey)}</span>
-                  {#if d.id === current}
+                  {#if current !== null && d.id === current}
                     <span class="dp-mark">{ta('calendar.picker.current')}</span>
                   {/if}
                 </button>
@@ -182,7 +182,7 @@
             <span class="dp-side-view">{ta(VIEW_KEYS[chosenDef.view])}</span>
           {/if}
         </div>
-        <div class="dp-preview" bind:clientWidth={paneW} aria-label={ta('calendar.picker.preview', { name: ta(chosenDef.labelKey) })}>
+        <div class="dp-preview" bind:clientWidth={paneW}>
           <div class="dp-stage" style="width:{PREVIEW_W * scale}px; height:{previewH * scale}px">
             <iframe bind:this={iframeEl} title={ta('calendar.picker.preview', { name: ta(chosenDef.labelKey) })} src="/?preview=1"
               style="width:{PREVIEW_W}px; height:{previewH}px; transform:scale({scale}); transform-origin:top left"></iframe>
@@ -198,6 +198,7 @@
   .dp-overlay {
     position: fixed;
     inset: 0;
+    box-sizing: border-box;
     width: 100vw;
     max-width: none;
     height: 100vh;

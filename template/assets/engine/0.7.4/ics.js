@@ -770,6 +770,8 @@ export function calendarEntry(calendar) {
   const id = str(calendar.id);
   const url = str(calendar.url);
   if (!id || !url) return null;
+  // The calendar's page is drawn as a link: only a web address is kept (the anchored pattern is the guard).
+  const link = str(calendar.link);
   return {
     id,
     url,
@@ -777,7 +779,7 @@ export function calendarEntry(calendar) {
     color: str(calendar.color),
     colors: { text: str(calendar.colorText), box: str(calendar.colorBox), chip: str(calendar.colorChip) },
     description: str(calendar.description),
-    link: str(calendar.link),
+    link: /^https?:\/\//i.test(link) ? link : '',
     organizer: str(calendar.organizer),
     subscribable: calendar.subscribable !== false,
     inFilter: calendar.inFilter !== false,

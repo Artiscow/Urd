@@ -1963,7 +1963,7 @@ export default {
     'calendar.picker.add': 'Lägg till kalender',
     'calendar.picker.open': 'Välj design …',
     'calendar.picker.none': 'Ingen design matchar',
-    'calendar.picker.current': 'Vald',
+    'calendar.picker.current': 'Används',
     'calendar.picker.count': '{n} designer',
     'calendar.picker.preview': 'Förhandsvisning av {name} med exempeldata, i sidans eget tema',
     'tip.calendar.picker.open': 'Alla kalenderdesigner med bild, grupperade efter familj, med sök och filter på vy',
