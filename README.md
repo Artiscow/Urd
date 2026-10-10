@@ -26,7 +26,7 @@
 
 **Pronunciation:** *Urd* [ʉːɖ], roughly **oord**.
 
-**Status: under development - not ready for use yet.** See [the roadmap](docs/languages/ROADMAP-en-GB.md) for how far we have come.
+**Status: under development - not ready for use yet.** See [the roadmap](docs/languages/ROADMAP-en-GB.md) for how far we have come, https://urdweb.pages.dev/admin/ to see the latest pre-release and https://urd-web.pages.dev/admin/ for the latest release.
 
 ## What is Urd?
 
