@@ -75,9 +75,7 @@ English is the project's canonical language. Documents not yet translated are ma
 | [docs/BACKLOG.md](docs/BACKLOG.md) | Running task list: to-dos, bugs and suggestions (older entries in Norwegian) |
 | [docs/TESTRUNDER.md](docs/TESTRUNDER.md) | Checklist for manual testing: delivered work waiting to be tested (older entries in Norwegian) |
 | [docs/languages/](docs/languages/) | The translations: the user guide and the setup guide in five languages, the calendar and photo guides in English and Norwegian, and the vision, roadmap and development documents in Norwegian beside the English |
-| [docs/sammenligning/FUNKSJONSKART.md](docs/sammenligning/FUNKSJONSKART.md) | Feature comparison against other website builders with a gap analysis (in Norwegian) |
-| [docs/sammenligning/LAERDOMMER.md](docs/sammenligning/LAERDOMMER.md) | How other website builders are built, and what we can take from them (in Norwegian) |
-| [docs/sammenligning/ELEMENTKART.md](docs/sammenligning/ELEMENTKART.md) | Elements and features: how they are offered to the user and how they are built (in Norwegian) |
+| [docs/comparison/](docs/comparison/README.md) | Urd against other website builders: features, elements, design and code, with the dated surveys behind the decisions |
 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | Change log per commit and push (older entries in Norwegian) |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute: fork, branch, tests, pull request (in Norwegian) |
 | [docs/adr/](docs/adr/) | Architecture decisions with reasoning |

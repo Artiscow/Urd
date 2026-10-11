@@ -4,7 +4,7 @@ Date: 10 August 2026. Status: accepted (v0.7; the read part is built in v0.8, th
 
 ## Context
 
-«External AI service» appears in one place in the comparison: in [ELEMENTKART.md](../sammenligning/ELEMENTKART.md) part 7, as a rejected core dependency, with the AI wizard as the lowest priority in part 5a with the justification «requires an external service, against dependency-free». The field has moved since the map was written on 27 July 2026. In 2026 Sanity, Contentful, Storyblok, Strapi and Payload all shipped MCP servers, and an MCP server has become table stakes for a CMS: it lets the site owner's own agent client (Claude Code, VS Code, Cursor) read and edit content directly.
+«External AI service» appeared in one place in the comparison of July 2026 (the element map, now [ELEMENTS.md](../comparison/ELEMENTS.md) and [CODE.md](../comparison/CODE.md)): as a rejected core dependency, with the AI wizard as the lowest priority of its delivery recommendations with the justification «requires an external service, against dependency-free». The field has moved since the map was written on 27 July 2026. In 2026 Sanity, Contentful, Storyblok, Strapi and Payload all shipped MCP servers, and an MCP server has become table stakes for a CMS: it lets the site owner's own agent client (Claude Code, VS Code, Cursor) read and edit content directly.
 
 That changes the premise of the rejection. The objection concerned an external SERVICE that Urd depends on. An MCP server is not that: it is a local process in the site owner's own cloned repo, which calls nowhere, stores no key and is not part of the built site. The model is the site owner's own, chosen by the site owner, run by the site owner's own client. Urd never becomes an intermediary.
 

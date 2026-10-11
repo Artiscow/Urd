@@ -67,9 +67,7 @@ Editoren og motorens besøkende-tekster finnes på nordsamisk, britisk engelsk, 
 | [docs/BACKLOG.md](../../BACKLOG.md) | Løpende oppgaveliste: gjøremål, bugs og forslag (nyere innslag på engelsk) |
 | [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Sjekkliste for manuell testing: levert arbeid som venter på testing (nyere innslag på engelsk) |
 | [docs/languages/](../) | Alle oversatte dokumenter (guide og oppsett på fem språk; engelsk tekst er kanonisk ved avvik) |
-| [docs/sammenligning/FUNKSJONSKART.md](../../sammenligning/FUNKSJONSKART.md) | Funksjonssammenligning mot andre nettsidebyggere med gap-analyse |
-| [docs/sammenligning/LAERDOMMER.md](../../sammenligning/LAERDOMMER.md) | Hvordan andre nettsidebyggere bygger, og hva vi kan hente (arkitektur og mønstre) |
-| [docs/sammenligning/ELEMENTKART.md](../../sammenligning/ELEMENTKART.md) | Elementer og funksjoner: hvordan de tilbys brukeren og hvordan de bygges |
+| [docs/comparison/](../../comparison/README.md) | Urd mot andre nettsidebyggere: funksjoner, elementer, design og kode, med undersøkelsene bak beslutningene (på engelsk) |
 | [docs/CHANGELOG.md](../../CHANGELOG.md) | Endringslogg per commit og push (nyere innslag på engelsk) |
 | [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Slik bidrar du: fork, gren, tester, pull request |
 | [docs/adr/](../../adr/) | Arkitekturbeslutninger med begrunnelse (på engelsk) |

@@ -68,9 +68,7 @@ Engelsk er hovudspråket i prosjektet. Dokument som berre finst på bokmål er m
 | [Kalenderen](../calendar-guide/CALENDAR-nb.md) | For nettstadeigarar: kalendertenester, møtelenkjer, påmelding, kart og kva kalenderblokka les frå eit arrangement (på bokmål) |
 | [docs/BACKLOG.md](../../BACKLOG.md) | Løpande oppgåveliste: gjeremål, buggar og forslag (eldre innslag på bokmål) |
 | [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Sjekklista for manuell testing: levert arbeid som ventar på testing (eldre innslag på bokmål) |
-| [docs/sammenligning/FUNKSJONSKART.md](../../sammenligning/FUNKSJONSKART.md) | Funksjonssamanlikning mot andre nettsidebyggjarar med gap-analyse (på bokmål) |
-| [docs/sammenligning/LAERDOMMER.md](../../sammenligning/LAERDOMMER.md) | Korleis andre nettsidebyggjarar byggjer, og kva vi kan hente (arkitektur og mønster) (på bokmål) |
-| [docs/sammenligning/ELEMENTKART.md](../../sammenligning/ELEMENTKART.md) | Element og funksjonar: korleis dei blir tilbydde brukaren og korleis dei blir bygde (på bokmål) |
+| [docs/comparison/](../../comparison/README.md) | Urd mot andre nettsidebyggjarar: funksjonar, element, design og kode, med undersøkingane bak avgjerdene (på engelsk) |
 | [docs/CHANGELOG.md](../../CHANGELOG.md) | Endringslogg per commit og push (eldre innslag på bokmål) |
 | [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Slik bidreg du: fork, grein, testar, pull request (på bokmål) |
 | [docs/adr/](../../adr/) | Arkitekturavgjerder med grunngjeving (på engelsk) |

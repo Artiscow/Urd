@@ -70,9 +70,7 @@ Prošeavtta váldogiella lea eaŋgalasgiella. Dokumeanttat mat leat dušše dár
 | [Kaleandar](../calendar-guide/CALENDAR-en-GB.md) | Siidooamasteddjiide: kaleandarbálvalusat, čoahkkinliŋkkat, dieđiheapmi, kárttat ja maid Kaleandar-blohkka lohká dáhpáhusas (eaŋgalasgillii) |
 | [docs/BACKLOG.md](../../BACKLOG.md) | Jotkkolaš bargolistu: barggut, meattáhusat ja evttohusat (boarráset merkkašumit dárogillii) |
 | [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Dárkkistanlistu gieđain geahččaleapmái: buktojuvvon bargu mii vuordá geahččaleami (boarráset merkkašumit dárogillii) |
-| [docs/sammenligning/FUNKSJONSKART.md](../../sammenligning/FUNKSJONSKART.md) | Doaibmabuohtastahttin eará neahttasiidohuksejeddjiiguin ja váilluid analysa (dárogillii) |
-| [docs/sammenligning/LAERDOMMER.md](../../sammenligning/LAERDOMMER.md) | Movt eará neahttasiidohuksejeaddjit huksejit, ja maid mii sáhttit váldit (arkitektuvra ja minsttarat) (dárogillii) |
-| [docs/sammenligning/ELEMENTKART.md](../../sammenligning/ELEMENTKART.md) | Elemeanttat ja doaimmat: movt dat fállojuvvojit geavaheaddjái ja movt dat huksejuvvojit (dárogillii) |
+| [docs/comparison/](../../comparison/README.md) | Doaibmabuohtastahttin eará neahttasiidohuksejeddjiiguin; elemeanttat ja doaimmat; arkitektuvra ja minsttarat (eaŋgalasgillii) |
 | [docs/CHANGELOG.md](../../CHANGELOG.md) | Rievdadanlogga juohke commitii ja pushii (boarráset merkkašumit dárogillii) |
 | [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Ná don veahkehat: fork, ossodat, testtat, pull request (dárogillii) |
 | [docs/adr/](../../adr/) | Arkitektuvramearrádusat ákkastallamiiguin (eaŋgalasgillii) |

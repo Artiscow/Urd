@@ -4,7 +4,7 @@ Date: 27 July 2026. Status: accepted (v0.6, «Modernise to native/CSS»); decisi
 
 ## Context
 
-Urd's engine is dependency-free vanilla JS served raw. Components built «the old way» use custom JS for state, position and animation (rAF and scroll listeners, manual `aria-expanded`, `max-height`/`scrollHeight` hacking, absolute positioning with z-index wars, custom focus traps and outside-click listeners). That drags along a whole class of nasty, often unsolvable bugs: jank, teleported elements, stuck hover, overlays trapped in a stacking context, lost focus. The field study in [ELEMENTKART.md](../sammenligning/ELEMENTKART.md) (parts 3, 5b and the table in 6) showed that modern builders avoid precisely these by building on browser primitives, and that the platform has baseline primitives for most of it.
+Urd's engine is dependency-free vanilla JS served raw. Components built «the old way» use custom JS for state, position and animation (rAF and scroll listeners, manual `aria-expanded`, `max-height`/`scrollHeight` hacking, absolute positioning with z-index wars, custom focus traps and outside-click listeners). That drags along a whole class of nasty, often unsolvable bugs: jank, teleported elements, stuck hover, overlays trapped in a stacking context, lost focus. The field study (now [CODE.md](../comparison/CODE.md), Parts 4 and 6, with the table «Old way, bug, modern fix») showed that modern builders avoid precisely these by building on browser primitives, and that the platform has baseline primitives for most of it.
 
 ## Decision
 
@@ -24,7 +24,7 @@ Urd's engine is dependency-free vanilla JS served raw. Components built «the ol
 - Building on primitives deletes fragile JS and gives better accessibility «for free» (the dialog's focus trap and focus return, the popover's light dismiss).
 - The invariant holds: the props shape is not changed by a pure render rework, so no migration is needed; if a rebuild changes props, [ADR-0005] applies as usual.
 - New engine lessons are pinned in [AGENTS.md]. The rule about `@supports` gating and «fallback = end state» is a fixed checkpoint in the test rounds.
-- Where a primitive is not mature enough (native masonry), we deliberately wait; see ELEMENTKART part 8.
+- Where a primitive is not mature enough (native masonry), we deliberately wait; see [CODE.md](../comparison/CODE.md#not-ready-or-deliberately-not-taken), «Not ready, or deliberately not taken».
 
 [ADR-0010]: 0010-disclosure-navigation.md
 [ADR-0005]: 0005-versioning-and-migration.md

@@ -70,9 +70,7 @@ Projenin ana dili İngilizcedir. Yalnızca Norveççe olan belgeler işaretlenmi
 | [Takvim](../calendar-guide/CALENDAR-en-GB.md) | Site sahipleri için: takvim hizmetleri, toplantı bağlantıları, kayıt, haritalar ve Takvim bloğunun bir etkinlikten okudukları (İngilizce) |
 | [docs/BACKLOG.md](../../BACKLOG.md) | Güncel görev listesi: yapılacaklar, hatalar ve öneriler (eski kayıtlar Norveççe) |
 | [docs/TESTRUNDER.md](../../TESTRUNDER.md) | Elle test kontrol listesi: test bekleyen teslim edilmiş işler (eski kayıtlar Norveççe) |
-| [docs/sammenligning/FUNKSJONSKART.md](../../sammenligning/FUNKSJONSKART.md) | Diğer web sitesi kurucularıyla özellik karşılaştırması ve boşluk analizi (Norveççe) |
-| [docs/sammenligning/LAERDOMMER.md](../../sammenligning/LAERDOMMER.md) | Diğer web sitesi kurucularının nasıl kurulduğu ve bizim neler alabileceğimiz (mimari ve desenler) (Norveççe) |
-| [docs/sammenligning/ELEMENTKART.md](../../sammenligning/ELEMENTKART.md) | Öğeler ve işlevler: kullanıcıya nasıl sunulduğu ve nasıl kurulduğu (Norveççe) |
+| [docs/comparison/](../../comparison/README.md) | Diğer web sitesi kurucularıyla özellik karşılaştırması ve boşluk analizi; öğeler ve işlevler; mimari ve desenler (İngilizce) |
 | [docs/CHANGELOG.md](../../CHANGELOG.md) | Her commit ve push için değişiklik günlüğü (eski kayıtlar Norveççe) |
 | [CONTRIBUTING.md](../../../CONTRIBUTING.md) | Nasıl katkı verilir: fork, dal, testler, pull request (Norveççe) |
 | [docs/adr/](../../adr/) | Gerekçeleriyle mimari kararlar (İngilizce) |

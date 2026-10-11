@@ -27,6 +27,16 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.46 - The comparison maps rewritten in English as docs/comparison/, refreshed from the research of 11 October 2026, and sorted into the backlog and the roadmap - 12 October 2026
+
+- The three maps in `docs/sammenligning/` were Norwegian with English surveys, told delivery status in place and carried stale facts (a «Safari 19» that never existed; ADR-0011 and 0016 cited parts that did not exist). They are replaced by `docs/comparison/` in English: README (the index, source marks, ID scheme and a map from every old number), FEATURES (C1-C114), ELEMENTS (E1-E37), DESIGN (D1-D62, new), CODE (T1-T113) and SURVEYS (the dated surveys the ADRs cite, kept as decided).
+- The maps are refreshed from nine research passes of 11 October 2026: the hosted builders, the source code of 21 open-source editors, the platform at Chrome 155, Firefox 157 and Safari 27, elements and design, 30 published pages measured, associations and the Norwegian rules, and full enumerations of 313 elements, about 594 site functions and 338 editor functions, each with Urd's status and its place.
+- Sorted into BACKLOG: URGENT, Vipps Checkout ends 30 April 2027; milestones 0.7.23 Redirects (ADR-0015 had no build item) and 0.7.24 Privacy defaults; the v0.8 Element round (stages ER-A to ER-H) with publish-time files for search engines and agents, visitor speed findings, typed custom fields and site search; items in 0.7.0 (the watch list corrected, Baseline features that can replace engine code), 0.7.3, 0.7.9, 0.7.10, 0.7.11, 0.7.16, v0.9 (board handover, forms with Turnstile, fixture and fuzz tests) and after v1.0. The pointers to the old maps follow the new IDs.
+- Found in Urd's code and placed in BACKLOG: the preview's message listener checks only the origin, the shells' `<noscript>` line is Norwegian, the form's status line is not announced, a self-hosted video takes no captions, and the ribbons and the slides view have no pause a visitor can count on (a phone tap stops a ribbon only through emulated `:hover`).
+- Both roadmaps get privacy defaults and redirects in v0.7, the Element round and the publish-time files in v0.8, board handover in v0.9, synced global blocks after v1.0, and a risk row for the Vipps deadline.
+- Pointers moved: nine ADRs (pointer text only; the frozen copies under `docs/adr/amended/` are untouched), AGENTS.md (the folder and the list of documents not yet translated), the five READMEs, BACKLOG's headings and translation item, and one CHANGELOG link. The archiving ADR of 0.7.16.1 no longer claims ADR-0025, which is the sizing model.
+- An independent review and four checks (the old maps, Urd's code, the research reports) found an inverted router gate and a weak `interpolate-size` gate, text that contradicted ADR-0017, ADR-0003, ADR-0020 and ADR-0014, Urd's existing «↑» button and the ribbon's keyboard pause unrecorded, and facts and source links dropped in the rewrite; all are corrected, and the Elementor agent claims and the EAA's exemption for microenterprises are marked unverified.
+
 ### 0.7.0.45 - Bug round: the calendar's parser, Year wheel, phone width and Band pause, media in the CSP, and the dev server in the template - 11 October 2026
 
 - An unpublished film or sound file (a data URL in the draft) was blocked in a deployed site's preview, since `_headers` had no `media-src`. The CSP allows `media-src 'self' data:` (no `blob:`, which no media path uses); the pinned released blob in `tests/release-headers.test.mjs` follows, and existing sites get the line as the updater's «change by hand» note.
@@ -1068,7 +1078,7 @@ Milepæl 0.7.5 minus det valgfrie betalingslaget. Gateway-fri butikk etter Apeir
 
 ### 0.7.4 - Blokk- og feltrunden: skjema-felttyper, tabell, delingsknapper, nedteller og lyd - 14. august 2026
 
-Milepæl 0.7.4. Funksjonskartets C5 (felttyper), C8 (tabell), C9 (deling + nedteller) og C10 (lyd), etter kartenes oppskrifter i [sammenligning/](sammenligning/).
+Milepæl 0.7.4. Funksjonskartets C5 (felttyper), C8 (tabell), C9 (deling + nedteller) og C10 (lyd), etter kartenes oppskrifter i [sammenligning/ (now comparison/)](comparison/).
 
 - Skjema-pluginen hadde bare tekst/e-post/telefon/flerlinjes. Fire nye felttyper: nedtrekk og dato er native kontroller hos besøkende med `color-scheme` (ADR-0009 forbyr kun redigerings-UI), radiovalg rendres som `fieldset`/`legend`, og avkryssing bærer boolsk verdi hele veien (påkrevd = må krysses av, ja-ordet i mailto-kroppen, ekte boolsk i endepunkt-payloaden). Nedtrekk/radio får alternativene som kommaseparert liste i felt-editoren (nytt additivt felt `options`), og validering avviser verdier utenfor listen. Ni nye tester.
 - Ny kjerneblokk `tabell`: semantisk `<table>` i overflow-x-wrapper (brede tabeller ruller i egen flate), celler skrives rett på lerretet, rader/kolonner styres i Egenskaper; stilvalg for linjer (rader/rutenett/ingen), striper og overskriftsrad. Autovekst.
