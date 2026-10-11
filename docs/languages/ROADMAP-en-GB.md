@@ -10,7 +10,7 @@ The order is deliberate: **engine → publishing loop → editor depth.** The en
 
 Documents (VISJON, ARCHITECTURE, SCHEMA, VEIKART, the ADRs), JSON Schema contract in `schema/`, repo skeleton with engine stubs, example content, editor shell and function stubs. `migrate.js` is implemented for real - the invariant first.
 
-**Gate:** the example data validates against the schemas; the documents are approved by the owner.
+**Gate:** the example data validates against the schemas; the documents are approved.
 
 ## v0.2 - «Thin slice» *(delivered 16 July 2026)*
 
@@ -53,42 +53,42 @@ the editing surfaces are built on the new layout:
 - Setup wizard on first visit (name, colours, logo, GitHub/Cloudflare connection).
 - History and undo-publishing UI (`history`/`revert`).
 
-## v0.6 - Ecosystem
+## v0.6 - Ecosystem *(delivered 9 August 2026)*
 
-- Plugin loading in earnest: plugins deliver **their own blocks, section presets, backgrounds, animations and templates** via `register(Urd)`. The calendar plugin as the reference example; maps and forms as further reference plugins (moved into the core 24 September 2026, milestone 0.7.18).
-- **The archive/data block pattern**: blocks that render collections of entries (news, notices, boards), designed together with the calendar plugin (a core block since 24 September 2026, milestone 0.7.18). Calendar-dependent presets: news, notice board, «What's on».
+- Plugin loading in earnest: plugins deliver **their own blocks, section presets, backgrounds, animations and templates** via `register(Urd)`. The calendar plugin as the reference example, with maps and forms as further reference plugins (all three became core blocks in 0.7.18).
+- **The archive/data block pattern**: blocks that render collections of entries (news, notices, boards), designed together with the calendar. Calendar-dependent presets: news, notice board, «What's on».
 - **«Save as template»**: your own sections/pages are saved in `content/maler/` and can be shared as plugins. GitHub topic convention (`urd-plugin`, `urd-template`) for discoverability.
 - `urd-template` repo split + release Action («Use this template»).
-- Updater v1: one-click Urd update that only overwrites the manifest paths in `urd.json`.
+- Updater v1 ([ADR-0014](../adr/0014-updater-model.md)): a one-click Urd update from the template repo, where every Urd-owned file is classified by its checksum against the release tag, so a hand-edited file is shown before anything is written; `_headers` is never written and gets diff instructions instead.
 
-The phase is steered as milestones 0.6.1-0.6.9 in [BACKLOG.md](../BACKLOG.md), and grew along the way with an editor and design lift (0.6.6), templates and reuse (0.6.7) and the multilingual framework (0.6.8).
+The phase was steered as milestones 0.6.1-0.6.9 in [BACKLOG.md](../BACKLOG.md), and grew along the way with an editor and design lift (0.6.6), templates and reuse (0.6.7) and the multilingual framework (0.6.8).
 
-**Gate:** clone the template via «Use this template», build a page in admin, install the calendar plugin (moved into the core 24 September 2026, milestone 0.7.18), and run the update button: everything survives.
+**Gate:** clone the template via «Use this template», build a page in admin, install the calendar plugin, and run the update button: everything survives. *(Passed 9 August 2026.)*
 
 ## v0.7 - Polish + shop
-- **Shop without a payment gateway as a core feature** (the ApeironLF model, chosen 18 July 2026): product card block with variants, shopping cart (localStorage + drawer), order form to email/optional endpoint, payment via Vipps number instructions. Dependency-free, git-owned catalogue; built on the v0.6 data block pattern. Details in [BACKLOG.md](../BACKLOG.md).
-- **SEO base package** (from the feature map of 23 July 2026, see [FUNKSJONSKART.md](../sammenligning/FUNKSJONSKART.md)): per-page meta/og fields, sitemap, robots, 404, canonical. Plus RSS for collections, more form field types, video background layer and CSV/table; details in the backlog.
-- **Architecture work added to the phase along the way** (details in [BACKLOG.md](../BACKLOG.md)): the mobile reconsideration (a separate mobile model?), fixed content width (its own ADR: makes the layout width-invariant, fixes the fold discrepancy in admin and the flow-out bugs) and client-side navigation.
-- Check all features and see whether anything is missing or does not work well. (The feature comparison against other builders was done on 23 July 2026 - FUNKSJONSKART.md; remaining: a separate review of intuitiveness and clutter.)
-- Is everything intuitive?
-- Are things cluttered?
-- Anything that is not easy to understand or easy to misunderstand?
 
-**Gate:** a test order goes through cart, order form and email on a deployed site; the published site has meta/og fields, sitemap, robots and 404; the intuitiveness review has been carried out and the findings sorted into the backlog; the architecture clarifications (mobile, content width, client-side navigation) have landed with an ADR or been explicitly moved.
+- **Shop without a payment gateway as a core feature** (the ApeironLF model, chosen 18 July 2026): product card block with variants, shopping cart (localStorage + drawer), order form to email/optional endpoint, payment via Vipps number instructions. Dependency-free, git-owned catalogue; built on the v0.6 data block pattern. A real payment checkout was moved into the phase as an optional layer on top of the form checkout (9 August 2026; Vipps Checkout, [ADR-0020](../adr/0020-optional-payment-layer-vipps-checkout.md)); the core stays gateway-free.
+- **SEO base package** (from the feature map of 23 July 2026, see [FUNKSJONSKART.md](../sammenligning/FUNKSJONSKART.md)): per-page meta/og fields, sitemap, robots, 404, canonical. Plus RSS for collections, more form field types, video background layer and CSV/table.
+- **The architecture clarifications**: the fixed content width ([ADR-0018](../adr/0018-bound-content-width.md)), the synced mobile model ([ADR-0019](../adr/0019-synced-mobile-model.md)), client-side navigation (measured, and closed without a router), the content push on the desktop canvas ([ADR-0024](../adr/0024-content-push-on-the-desktop-canvas.md)) and the sizing model for every block ([ADR-0025](../adr/0025-the-sizing-model.md)).
+- **The intuitiveness review**: is everything intuitive, is anything cluttered, is anything easy to misunderstand? (The feature comparison against other builders was done on 23 July 2026, FUNKSJONSKART.md.)
 
-## v0.8 - Optimisation
+The phase is steered as milestones 0.7.0-0.7.21 in [BACKLOG.md](../BACKLOG.md), split up on 9 August 2026 (the architecture clarifications first, then blocks, shop and visibility, polish towards the end) and grown along the way. Releases carry the phase's minor with a running patch number (0.7.1 to 0.7.4 so far). As of 11 October 2026:
 
-Performance and size review of the whole product. (Basic
-image compression on upload - webp, max 1600px, size warning -
-was delivered in v0.3; this is the layer above.)
+- **Delivered:** 0.7.1 the clean-up round, 0.7.2 the fixed content width, 0.7.4 blocks and form fields, 0.7.5 the shop, 0.7.6 SEO and visibility, 0.7.7 the video background and media limits, 0.7.8 client-side navigation, 0.7.12 the anchoring round, 0.7.14 the English clean-up, 0.7.15 navigation bar sizing.
+- **Open:** 0.7.3 the mobile reconsideration, 0.7.9 the design stretch from 0.6.6, 0.7.10 the intuitiveness review and editor polish, 0.7.11 the accessibility round, 0.7.13 the element review, 0.7.16 archiving and person collections, 0.7.17 the width scaling (its test-round follow-up), 0.7.18 map, form, calendar and analytics into the core (every stage delivered), 0.7.19 the calendar designs, 0.7.20 the element menu, 0.7.21 the sizing model for every element.
 
-- Images onwards: responsive sizes (`srcset`), AVIF assessment, lazy loading, and possibly recompression of existing media/ files.
-- The website/template: measure and lower weight and load time for visitors (engine size, critical CSS, caching headers, Lighthouse budget as a CI check?).
-- The engine: profile rendering and rerendering with many sections/blocks; avoid unnecessary redraws in the preview.
-- The editor: bundle size and startup time; drag/resize shall hold 60 fps on large pages too.
-- «Baked HTML on publishing» (the SEO/no-JS point from the risk list) naturally belongs here if it has not already been taken.
-- From the feature map (23 July 2026): entry pages (permalink per collection entry, generated on publishing - belongs together with the baking) and a media library panel.
-- Modernise to native/CSS (from [ELEMENTKART.md](../sammenligning/ELEMENTKART.md) of 27 July 2026): `<dialog>`/Popover top layer, `<details name>`, scroll-driven animations, `light-dark()` without FOUC and a finer patch protocol. Native/CSS replaces fragile bespoke JS and lowers weight/jank; separate backlog section with details and doc references.
+**Gate:** a test order goes through cart, order form and email on a deployed site; the published site has meta/og fields, sitemap, robots and 404; the intuitiveness review has been carried out and the findings sorted into the backlog; and every milestone above is delivered and has passed its test round, or has been moved to a later phase with the move recorded in the backlog.
+
+## v0.8 - Speed, media and baked pages
+
+Three threads: a performance and size review of the whole product, the media work that makes pictures light and manageable, and pages baked into HTML at publishing, together with the content that needs its own address. (Basic image compression on upload - webp, max 1600 px, size warning - was delivered in v0.3.)
+
+- **Speed for visitors:** measure and lower weight and load time (engine size, critical CSS, caching headers, `content-visibility` for sections below the fold, a Lighthouse budget as a CI check?), and show the engine's lightness measurably.
+- **Speed in the editor:** profile rendering and rerendering with many sections and blocks, a finer patch protocol in the preview (one block or attribute instead of a section rerender), bundle size and startup time, drag and resize at 60 fps on large pages, and an index layer so admin queries stay fast as collections grow.
+- **Media:** responsive pictures (`srcset`, the picture's own ratio, AVIF), a media library panel (from the feature map), an image editor in admin, a longer content hash in media file names, and possibly recompressing existing media files.
+- **Baked pages:** «baked HTML on publishing» (the SEO/no-JS point from the risk list), with collection data baked in, and entry pages (a permalink per collection entry, from the feature map) generated with it.
+- **Content:** events as a collection kind (date, time and place, an upcoming filter and a month view), for an association that keeps its programme in Urd rather than in a calendar feed; and the template model: a template or a group of templates exported as a plugin, and whole site templates kept in Urd.
+- **Alongside:** the MCP server's read part ([ADR-0017](../adr/0017-ai-via-local-mcp-server.md)), a dependency-free local process with read tools and `urd_validate`; and the updater offering the refreshed shipped plugins as opt-in files.
 
 **Gate:** the performance budget (Lighthouse thresholds and weight targets, fixed when the phase starts) has been measured and held on a published example page, and drag/resize holds 60 fps on a large page.
 
@@ -101,7 +101,9 @@ We use Urd as an outside user, without shortcuts:
 - Hosting beyond Cloudflare Pages: the site served from any static host (GitHub Pages, Netlify, an own server), with a way for the sign-in and the publishing from `/admin` to work there (added 6 October 2026; details in BACKLOG).
 - Then release an Urd update that contains a **real block change (v1→v2 with migration)**, and run the update button on the Urd-Design site.
 
-Up to v0.6, `template/` is both workshop and demo (urdweb); that is fine as long as the example content is kept presentable. From v0.6 the template is its own repo, and Urd-Design becomes the first site that lives as a real user's.
+Also in the phase (details in [BACKLOG.md](../BACKLOG.md)): the documentation round (setup guide friction, troubleshooting, the readme structure) and the user guide finished, and the release and updater hardening, both gathered here on 9 August 2026 because they cover the guides and the code the dress rehearsal tries out; the MCP server's write tools (ADR-0017); the translation round for nn and se; touch-friendliness for admin and the published page; and starting a new site from a blank page or a full page template.
+
+Until v0.6, `template/` was both workshop and demo (urdweb); from v0.6 the template is its own repo, and Urd-Design is the first site that lives as a real user's.
 
 **Gate:** Urd-Design survives the update without loss of content or manual intervention - promise 2 proven in practice, not just in the test suite.
 
@@ -109,15 +111,17 @@ Up to v0.6, `template/` is both workshop and demo (urdweb); that is fine as long
 
 An association can clone, set up, build and maintain a site without a developer.
 
-**Gate:** the migration contract has been tested with at least one real v1→v2 block change in the test suite; a pilot site (candidate: recreating ApeironLF with Urd) has been built and is being operated. The pilot presupposes the v0.7 shop (ApeironLF has merch with a cart) and the v0.6 calendar plugin (a core block since 24 September 2026, milestone 0.7.18) (events from a Google Calendar/iCal feed).
+**Gate:** the migration contract has been tested with at least one real v1→v2 block change in the test suite; a pilot site (candidate: recreating ApeironLF with Urd) has been built and is being operated. The pilot presupposes the v0.7 shop (ApeironLF has merch with a cart) and the calendar block (events from a Google Calendar/iCal feed).
 
 ## After 1.0 (horizon)
 
 Unprioritised, depends on community and needs: import from existing sites,
 multilingual CONTENT (nb/nn/en variants of the pages themselves; the UI and the documentation
-are multilingual from 0.6.8), concurrency view in admin, gallery website for templates and
+are multilingual from 0.6.8), more UI languages (French, German, Spanish, Finnish, Danish),
+export of a built site, concurrency view in admin, gallery website for templates and
 plugins (urd.dev), GitLab/Gitea adapter, external media storage (R2),
-PR-per-draft/deploy-preview workflow (from [LAERDOMMER.md](../sammenligning/LAERDOMMER.md)) and
+PR-per-draft/deploy-preview workflow (from [LAERDOMMER.md](../sammenligning/LAERDOMMER.md)),
+shop extensions beyond the ApeironLF needs (prices and stock per variant and more) and a
 shop/merch template. Details in [BACKLOG.md](../BACKLOG.md).
 
 ---
@@ -137,8 +141,8 @@ Nothing from the original brainstorm shall be lost:
 | Detailed editor for section/block/text/images/colours | v0.3-v0.5 |
 | Making your own sections | v0.3 (empty section + blocks) |
 | Making your own template | v0.6 («Save as template» → `content/maler/`) |
-| Plugins in /plugins: templates, animations, backgrounds, sections | v0.6 (plugin API `provides:{blocks, sectionPresets, backgrounds, animations, maler}`) - the contract was already defined in the v0.1 schema |
-| Templates for hero, images, calendar, footer | v0.3 (presets) + calendar as reference plugin (v0.6; moved into the core 24 September 2026, milestone 0.7.18) |
+| Plugins in /plugins: templates, animations, backgrounds, sections | v0.6 (plugin API `provides:{blocks, sectionPresets, backgrounds, animations, templates}`) - the contract was already defined in the v0.1 schema |
+| Templates for hero, images, calendar, footer | v0.3 (presets) + the calendar (a reference plugin in v0.6, a core block from 0.7.18) |
 | An update never breaks a built site (`version` + `migrate`) | v0.1 (migrate.js implemented) + tested in the v1.0 gate |
 | Real GitHub OAuth + Cloudflare connection | v0.2 (thin slice) |
 | Static + git, publish = commit, optional host | The whole architecture ([ARCHITECTURE.md](../ARCHITECTURE.md)) |
@@ -147,9 +151,9 @@ Nothing from the original brainstorm shall be lost:
 
 | Topic | Status |
 |---|---|
-| SEO / visitors without JS (client-side rendering gives an empty shell to simple crawlers) | Accepted in v0; the SEO base package is planned in v0.7 and «baked HTML on publishing» in v0.8 - the editor already renders finished DOM that can be snapshotted |
-| Auto-derived mobile layout for decor blocks (lines/circles stack badly) | Delivered in v0.4 («decor» flag); the mobile model as a whole is reconsidered in v0.7 (the backlog's mobile reconsideration) |
-| Images in git (repo growth, file limits at hosts) | v0: size warnings in the editor; external storage (e.g. R2) as a plugin question towards v1 |
-| The updater vs. hand-edited Urd-owned files | Decided at the 0.6.9 gate - probably a checksum warning before overwriting |
-| Non-GitHub hosts (GitLab/Gitea) | The `functions/_lib` boundary is kept adapter-friendly; out of scope until after v1 |
+| SEO / visitors without JS (client-side rendering gives an empty shell to simple crawlers) | Accepted in v0; the SEO base package was delivered in 0.7.6, and «baked HTML on publishing» is planned in v0.8 - the editor already renders finished DOM that can be snapshotted |
+| Auto-derived mobile layout for decor blocks (lines/circles stack badly) | Delivered in v0.4 («decor» flag); the mobile model as a whole is decided in [ADR-0019](../adr/0019-synced-mobile-model.md) (synced per block, the row grid), with `hideMobile` taking over the mobile hiding |
+| Images in git (repo growth, file limits at hosts) | v0: size warnings in the editor; the media library (v0.8) shows sizes and unused files; external storage (e.g. R2) as a plugin question after v1 |
+| The updater vs. hand-edited Urd-owned files | Decided in [ADR-0014](../adr/0014-updater-model.md): every Urd-owned file is classified by its checksum against the release tag, a hand-edited file is shown as a conflict before anything is written, and `_headers` is never written |
+| Non-GitHub hosts (GitLab/Gitea) | The `functions/_lib` boundary is kept adapter-friendly; out of scope until after v1 (other static hosts for the site itself are planned in v0.9) |
 | Number of breakpoints | Two (desktop + mobile) in v1; tablet considered later |

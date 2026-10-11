@@ -53,42 +53,40 @@ redigeringsflatene bygges på den nye layouten:
 
 ## v0.6 - Økosystem *(levert 9. august 2026)*
 
-- Plugin-lasting for alvor: plugins leverer **egne blokker, seksjonspresets, bakgrunner, animasjoner og maler** via `register(Urd)`. Kalender-pluginen som referanseeksempel; kart og skjema som ytterligere referanse-plugins (flyttet inn i kjernen 24. september 2026, milepæl 0.7.18).
-- **Arkiv/datablokk-mønsteret**: blokker som rendrer samlinger av innslag (nyheter, oppslag, styrer), designet sammen med kalender-pluginen. Kalender-avhengige presets: nyheter, oppslagstavle, «Hva skjer».
+- Plugin-lasting for alvor: plugins leverer **egne blokker, seksjonspresets, bakgrunner, animasjoner og maler** via `register(Urd)`. Kalender-pluginen som referanseeksempel, med kart og skjema som ytterligere referanse-plugins (alle tre ble kjerneblokker i 0.7.18).
+- **Arkiv/datablokk-mønsteret**: blokker som rendrer samlinger av innslag (nyheter, oppslag, styrer), designet sammen med kalenderen. Kalender-avhengige presets: nyheter, oppslagstavle, «Hva skjer».
 - **«Lagre som mal»**: egne seksjoner/sider lagres i `content/maler/` og kan deles som plugins. GitHub-topic-konvensjon (`urd-plugin`, `urd-template`) for oppdagbarhet.
 - `urd-template`-repo-splitt + release-Action («Use this template»).
-- Oppdaterer v1: én-klikks Urd-oppdatering som kun overskriver manifest-stiene i `urd.json`.
+- Oppdaterer v1 ([ADR-0014](adr/0014-updater-model.md)): én-klikks Urd-oppdatering fra malrepoet, der hver Urd-eide fil klassifiseres etter sjekksummen mot utgivelsestaggen, så en håndredigert fil vises før noe skrives; `_headers` skrives aldri og får diff-instruks i stedet.
 
-Fasen styres som milepælene 0.6.1-0.6.9 i [BACKLOG.md](BACKLOG.md), og vokste underveis med et editor- og designløft (0.6.6), maler og gjenbruk (0.6.7) og flerspråk-rammeverket (0.6.8).
+Fasen ble styrt som milepælene 0.6.1-0.6.9 i [BACKLOG.md](BACKLOG.md), og vokste underveis med et editor- og designløft (0.6.6), maler og gjenbruk (0.6.7) og flerspråk-rammeverket (0.6.8).
 
-**Port:** klon malen via «Use this template», bygg en side i admin, installer kalender-pluginen (flyttet inn i kjernen 24. september 2026, milepæl 0.7.18), og kjør oppdateringsknappen: alt overlever. *(Bestått 9. august 2026.)*
+**Port:** klon malen via «Use this template», bygg en side i admin, installer kalender-pluginen, og kjør oppdateringsknappen: alt overlever. *(Bestått 9. august 2026.)*
 
 ## v0.7 - Finpuss + butikk
-- **Butikk uten betalingsgateway som kjernefunksjon** (ApeironLF-modellen, valgt 18. juli 2026): produktkort-blokk med varianter, handlekurv (localStorage + skuff), bestillingsskjema til e-post/valgfritt endepunkt, betaling via Vipps-nummer-instruks. Avhengighetsfri, git-eid katalog; bygges på v0.6-datablokk-mønsteret. Ekte betalings-kasse er flyttet inn i fasen som valgfritt lag oppå skjema-kassen (9. august 2026); kjernen forblir gateway-fri. Detaljer i [BACKLOG.md](BACKLOG.md).
-- **SEO-grunnpakke** (fra funksjonskartet 23. juli 2026, se [FUNKSJONSKART.md](sammenligning/FUNKSJONSKART.md)): per-side meta/og-felter, sitemap, robots, 404, canonical. Pluss RSS for samlinger, flere skjema-felttyper, video-bakgrunnslag og CSV/tabell; detaljer i backloggen.
-- **Arkitektur-arbeid lagt til fasen underveis** (detaljer i [BACKLOG.md](BACKLOG.md)): mobil-revurderingen (egen mobilmodell?), fast innholdsbredde (egen ADR: gjør layouten breddeinvariant, fikser fold-avviket i admin og flow-out-bugene) og klientside-navigasjon.
-- Sjekke alle funksjoner og se om noe mangler eller ikke fungerer godt. (Funksjonssammenligningen mot andre byggere er gjort 23. juli 2026 - FUNKSJONSKART.md; gjenstår: egen gjennomgang av intuitivitet og rot.)
-- Er alt intuitivt?
-- Er ting rotete?
-- Noe som ikke er lett å forstå eller lett å misforstå?
 
-Fasen styres som milepælene 0.7.0-0.7.10 i [BACKLOG.md](BACKLOG.md) (delt opp 9. august 2026: arkitekturavklaringene bredde og mobil først, deretter blokker, butikk og synlighet, finpuss mot slutten).
+- **Butikk uten betalingsgateway som kjernefunksjon** (ApeironLF-modellen, valgt 18. juli 2026): produktkort-blokk med varianter, handlekurv (localStorage + skuff), bestillingsskjema til e-post/valgfritt endepunkt, betaling via Vipps-nummer-instruks. Avhengighetsfri, git-eid katalog; bygges på v0.6-datablokk-mønsteret. Ekte betalings-kasse er flyttet inn i fasen som valgfritt lag oppå skjema-kassen (9. august 2026; Vipps Checkout, [ADR-0020](adr/0020-optional-payment-layer-vipps-checkout.md)); kjernen forblir gateway-fri.
+- **SEO-grunnpakke** (fra funksjonskartet 23. juli 2026, se [FUNKSJONSKART.md](sammenligning/FUNKSJONSKART.md)): per-side meta/og-felter, sitemap, robots, 404, canonical. Pluss RSS for samlinger, flere skjema-felttyper, video-bakgrunnslag og CSV/tabell.
+- **Arkitektur-avklaringene**: fast innholdsbredde ([ADR-0018](adr/0018-bound-content-width.md)), den synkede mobilmodellen ([ADR-0019](adr/0019-synced-mobile-model.md)), klientside-navigasjon (målt, og lukket uten ruter), innholdsdytting på desktop-lerretet ([ADR-0024](adr/0024-content-push-on-the-desktop-canvas.md)) og størrelsesmodellen for hver blokk ([ADR-0025](adr/0025-the-sizing-model.md)).
+- **Intuitivitets-gjennomgangen**: er alt intuitivt, er noe rotete, er noe lett å misforstå? (Funksjonssammenligningen mot andre byggere er gjort 23. juli 2026, FUNKSJONSKART.md.)
 
-**Port:** en testbestilling går gjennom handlekurv, bestillingsskjema og e-post på en deployet side; publisert side har meta/og-felter, sitemap, robots og 404; intuitivitets-gjennomgangen er gjennomført og funnene sortert inn i backloggen; arkitektur-avklaringene (mobil, innholdsbredde, klientside-navigasjon) er landet med ADR eller eksplisitt flyttet.
+Fasen styres som milepælene 0.7.0-0.7.21 i [BACKLOG.md](BACKLOG.md), delt opp 9. august 2026 (arkitekturavklaringene først, deretter blokker, butikk og synlighet, finpuss mot slutten) og utvidet underveis. Utgivelsene bærer fasens minor med løpende patch-nummer (0.7.1 til 0.7.4 så langt). Per 11. oktober 2026:
 
-## v0.8 - Optimalisering
+- **Levert:** 0.7.1 oppryddingsrunden, 0.7.2 fast innholdsbredde, 0.7.4 blokker og skjemafelter, 0.7.5 butikken, 0.7.6 SEO og synlighet, 0.7.7 video-bakgrunn og mediegrenser, 0.7.8 klientside-navigasjon, 0.7.12 forankringsrunden, 0.7.14 engelsk-renskingen, 0.7.15 menylinjens størrelse.
+- **Åpne:** 0.7.3 mobil-revurderingen, 0.7.9 design-strekket fra 0.6.6, 0.7.10 intuitivitets-gjennomgangen og editor-finpuss, 0.7.11 tilgjengelighetsrunden, 0.7.13 elementgjennomgangen, 0.7.16 arkivering og personsamlinger, 0.7.17 breddeskaleringen (oppfølgingen fra testrunden), 0.7.18 kart, skjema, kalender og besøksmåling inn i kjernen (alle trinn levert), 0.7.19 kalenderdesignene, 0.7.20 elementmenyen, 0.7.21 størrelsesmodellen for hvert element.
 
-Ytelses- og størrelsesgjennomgang av hele produktet. (Grunnleggende
-bildekomprimering ved opplasting - webp, maks 1600px, størrelsesvarsel -
-er levert i v0.3; dette er laget over.)
+**Port:** en testbestilling går gjennom handlekurv, bestillingsskjema og e-post på en deployet side; publisert side har meta/og-felter, sitemap, robots og 404; intuitivitets-gjennomgangen er gjennomført og funnene sortert inn i backloggen; og hver milepæl over er levert og har bestått testrunden sin, eller er flyttet til en senere fase med flyttingen ført i backloggen.
 
-- Bilder videre: responsive størrelser (`srcset`), AVIF-vurdering, lazy loading, og eventuelt rekomprimering av eksisterende media/-filer.
-- Nettsiden/malen: mål og senk vekt og lastetid for besøkende (motorstørrelse, kritisk CSS, caching-headere, Lighthouse-budsjett som CI-sjekk?).
-- Motoren: profiler rendering og rerendering ved mange seksjoner/blokker; unngå unødvendige omtegninger i preview.
-- Editoren: bundle-størrelse og oppstartstid; dra/resize skal holde 60 fps også på store sider.
-- «Bakt HTML ved publisering» (SEO/no-JS-punktet fra risikolisten) hører naturlig hjemme her om den ikke alt er tatt.
-- Fra funksjonskartet (23. juli 2026): innslagssider (permalenke per samlingsinnslag, generert ved publisering - hører sammen med bakingen) og mediebibliotek-panel.
-- Moderniser til native/CSS (fra [ELEMENTKART.md](sammenligning/ELEMENTKART.md) 27. juli 2026): `<dialog>`/Popover top-layer, `<details name>`, scroll-drevne animasjoner, `light-dark()` uten FOUC og finere patch-protokoll. Native/CSS erstatter skjør egen-JS og senker vekt/jank; egen backlog-seksjon med detaljer og doc-henvisninger.
+## v0.8 - Fart, media og bakte sider
+
+Tre tråder: en ytelses- og størrelsesgjennomgang av hele produktet, mediearbeidet som gjør bilder lette og håndterlige, og sider bakt til HTML ved publisering, sammen med innholdet som trenger sin egen adresse. (Grunnleggende bildekomprimering ved opplasting - webp, maks 1600 px, størrelsesvarsel - ble levert i v0.3.)
+
+- **Fart for besøkende:** mål og senk vekt og lastetid (motorstørrelse, kritisk CSS, caching-headere, `content-visibility` for seksjoner under folden, Lighthouse-budsjett som CI-sjekk?), og vis motorens letthet målbart.
+- **Fart i editoren:** profiler rendering og rerendering med mange seksjoner og blokker, en finere patch-protokoll i preview (én blokk eller ett attributt i stedet for å tegne seksjonen på nytt), bundle-størrelse og oppstartstid, dra og resize i 60 fps på store sider, og et indekslag så admin-spørringer holder farten når samlingene vokser.
+- **Media:** responsive bilder (`srcset`, bildets egne mål, AVIF), et mediebibliotek-panel (fra funksjonskartet), en bildeeditor i admin, lengre innholdshash i mediefilnavn, og eventuelt rekomprimering av eksisterende media/-filer.
+- **Bakte sider:** «bakt HTML ved publisering» (SEO/no-JS-punktet fra risikolisten), med samlingsdata bakt inn, og innslagssider (en permalenke per samlingsinnslag, fra funksjonskartet) generert sammen med den.
+- **Innhold:** arrangementer som samlingstype (dato, tid og sted, et kommende-filter og en månedsvisning), for en forening som holder programmet sitt i Urd og ikke i en kalenderfeed; og malmodellen: en mal eller en gruppe maler eksportert som plugin, og hele nettstedsmaler holdt i Urd.
+- **Ved siden av:** MCP-serverens lesedel ([ADR-0017](adr/0017-ai-via-local-mcp-server.md)), en avhengighetsfri lokal prosess med leseverktøy og `urd_validate`; og at oppdatereren tilbyr de oppfriskede medfølgende pluginene som valgfrie filer.
 
 **Port:** ytelsesbudsjettet (Lighthouse-terskler og vektmål, festes når fasen startes) er målt og holdt på publisert eksempelside, og dra/resize holder 60 fps på en stor side.
 
@@ -101,9 +99,9 @@ Vi bruker Urd som en fremmed bruker, uten snarveier:
 - Hosting utover Cloudflare Pages: siden servert fra hvilken som helst statisk host (GitHub Pages, Netlify, egen server), med en måte for innloggingen og publiseringen fra `/admin` å virke der (lagt til 6. oktober 2026; detaljer i BACKLOG).
 - Slipp deretter en Urd-oppdatering som inneholder en **ekte blokkendring (v1→v2 med migrering)**, og kjør oppdater-knappen på Urd-Design-siden.
 
-Frem til v0.6 er `template/` både verksted og demo (urdweb); det er greit så lenge eksempelinnholdet holdes presentabelt. Fra v0.6 er malen et eget repo, og Urd-Design blir den første siden som lever som en ekte brukers.
+Også i fasen (detaljer i [BACKLOG.md](BACKLOG.md)): dokumentasjonsrunden (oppsettsguide-friksjon, feilsøking, readme-strukturen) og en ferdig brukerveiledning, og utgivelses- og oppdaterer-herdingen, begge samlet hit 9. august 2026 fordi de dekker guidene og koden generalprøven prøver ut; MCP-serverens skriveverktøy (ADR-0017); oversettelsesrunden for nn og se; touchvennlighet for admin og publisert side; og å starte et nytt nettsted fra en blank side eller en full sidemal.
 
-Samlet til fasen 9. august 2026 (detaljer i [BACKLOG.md](BACKLOG.md)): dokumentasjonsrunden (oppsettsguide-friksjon, troubleshoot, readme-strukturen) og utgivelses-/oppdaterer-herdingen - begge dekker guidene og koden generalprøven prøver ut.
+Frem til v0.6 var `template/` både verksted og demo (urdweb); fra v0.6 er malen et eget repo, og Urd-Design er den første siden som lever som en ekte brukers.
 
 **Port:** Urd-Design overlever oppdateringen uten tap av innhold eller manuell inngripen - løfte 2 bevist i praksis, ikke bare i testsuiten.
 
@@ -111,15 +109,17 @@ Samlet til fasen 9. august 2026 (detaljer i [BACKLOG.md](BACKLOG.md)): dokumenta
 
 En forening kan klone, sette opp, bygge og vedlikeholde en side uten utvikler.
 
-**Port:** migreringskontrakten er testet med minst én reell v1→v2-blokkendring i testsuiten; en pilotside (kandidat: gjenskape ApeironLF med Urd) er bygget og driftes. Piloten forutsetter v0.7-butikken (ApeironLF har merch med handlekurv) og v0.6-kalenderpluginen (arrangementer fra Google Calendar/iCal-feed).
+**Port:** migreringskontrakten er testet med minst én reell v1→v2-blokkendring i testsuiten; en pilotside (kandidat: gjenskape ApeironLF med Urd) er bygget og driftes. Piloten forutsetter v0.7-butikken (ApeironLF har merch med handlekurv) og kalenderblokken (arrangementer fra Google Calendar/iCal-feed).
 
 ## Etter 1.0 (horisont)
 
 Uprioritert, avhenger av community og behov: import fra eksisterende sider,
 flerspråklig INNHOLD (nb/nn/en-varianter av sidene selv; UI-et og dokumentasjonen
-er flerspråklige fra 0.6.8), samtidighetsvisning i admin, galleri-nettsted for maler og
+er flerspråklige fra 0.6.8), flere UI-språk (fransk, tysk, spansk, finsk, dansk),
+eksport av et bygget nettsted, samtidighetsvisning i admin, galleri-nettsted for maler og
 plugins (urd.dev), GitLab/Gitea-adapter, ekstern medialagring (R2),
-PR-per-utkast-/deploy-preview-arbeidsflyt (fra [LAERDOMMER.md](sammenligning/LAERDOMMER.md)) og
+PR-per-utkast-/deploy-preview-arbeidsflyt (fra [LAERDOMMER.md](sammenligning/LAERDOMMER.md)),
+butikk-utvidelser utover ApeironLFs behov (pris og varelager per variant med mer) og
 butikk/merch-mal. Detaljer i [BACKLOG.md](BACKLOG.md).
 
 ---
@@ -139,8 +139,8 @@ Ingenting fra den opprinnelige idemyldringen skal gå tapt:
 | Detaljert editor for seksjon/blokk/tekst/bilder/farger | v0.3–v0.5 |
 | Lage egne seksjoner | v0.3 (tom seksjon + blokker) |
 | Lage egen mal | v0.6 («Lagre som mal» → `content/maler/`) |
-| Plugins i /plugins: maler, animasjoner, bakgrunner, seksjoner | v0.6 (plugin-API `provides:{blocks, sectionPresets, backgrounds, animations, maler}`) - kontrakten er definert allerede i v0.1-skjemaet |
-| Maler for hero, bilder, kalender, footer | v0.3 (presets) + kalender som referanse-plugin (v0.6; flyttet inn i kjernen 24. september 2026, milepæl 0.7.18) |
+| Plugins i /plugins: maler, animasjoner, bakgrunner, seksjoner | v0.6 (plugin-API `provides:{blocks, sectionPresets, backgrounds, animations, templates}`) - kontrakten er definert allerede i v0.1-skjemaet |
+| Maler for hero, bilder, kalender, footer | v0.3 (presets) + kalenderen (referanse-plugin i v0.6, kjerneblokk fra 0.7.18) |
 | Oppdatering knuser aldri bygget side (`version` + `migrate`) | v0.1 (migrate.js implementert) + testet i v1.0-porten |
 | Reell GitHub OAuth + Cloudflare-kobling | v0.2 (tynn skive) |
 | Statisk + git, publiser = commit, valgfri host | Hele arkitekturen ([ARCHITECTURE.md](ARCHITECTURE.md)) |
@@ -149,9 +149,9 @@ Ingenting fra den opprinnelige idemyldringen skal gå tapt:
 
 | Tema | Status |
 |---|---|
-| SEO / besøkende uten JS (klientside-rendering gir tomt skall for enkle crawlere) | Akseptert i v0; SEO-grunnpakken er planlagt i v0.7 og «bakt HTML ved publisering» i v0.8 - editoren rendrer allerede ferdig DOM som kan snapshottes |
-| Auto-avledet mobil-layout for dekor-blokker (streker/sirkler stabler dårlig) | Levert i v0.4 («dekor»-flagg); mobilmodellen som helhet revurderes i v0.7 (backloggens mobil-revurdering) |
-| Bilder i git (repo-vekst, filgrenser hos hoster) | v0: størrelsesvarsler i editor; ekstern lagring (f.eks. R2) som plugin-spørsmål mot v1 |
-| Oppdaterer vs. håndredigerte Urd-eide filer | Avgjøres ved 0.6.9-gaten - trolig sjekksum-varsel før overskriving |
-| Ikke-GitHub-hoster (GitLab/Gitea) | `functions/_lib`-grensen holdes adapter-vennlig; utenfor scope til etter v1 |
+| SEO / besøkende uten JS (klientside-rendering gir tomt skall for enkle crawlere) | Akseptert i v0; SEO-grunnpakken ble levert i 0.7.6, og «bakt HTML ved publisering» er planlagt i v0.8 - editoren rendrer allerede ferdig DOM som kan snapshottes |
+| Auto-avledet mobil-layout for dekor-blokker (streker/sirkler stabler dårlig) | Levert i v0.4 («dekor»-flagg); mobilmodellen som helhet er avgjort i [ADR-0019](adr/0019-synced-mobile-model.md) (synket per blokk, radnettet), der `hideMobile` har tatt over mobilskjulingen |
+| Bilder i git (repo-vekst, filgrenser hos hoster) | v0: størrelsesvarsler i editor; mediebiblioteket (v0.8) viser størrelser og ubrukte filer; ekstern lagring (f.eks. R2) som plugin-spørsmål etter v1 |
+| Oppdaterer vs. håndredigerte Urd-eide filer | Avgjort i [ADR-0014](adr/0014-updater-model.md): hver Urd-eide fil klassifiseres etter sjekksummen mot utgivelsestaggen, en håndredigert fil vises som konflikt før noe skrives, og `_headers` skrives aldri |
+| Ikke-GitHub-hoster (GitLab/Gitea) | `functions/_lib`-grensen holdes adapter-vennlig; utenfor scope til etter v1 (andre statiske hoster for selve nettstedet er planlagt i v0.9) |
 | Antall breakpoints | To (desktop + mobil) i v1; nettbrett vurderes senere |
