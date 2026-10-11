@@ -15,5 +15,5 @@ Date: 5 August 2026. Status: accepted (the ownership; the build itself belongs t
 ## Consequences
 
 - The data model remains host-neutral (the spirit of ADR-0003: an adapter-friendly boundary towards the host).
-- When the build comes, `_redirects` must be moved from DENY_EXACT to publishing's write set in the same commit as the generator, and the completeness test in tests/guard.test.mjs will require an ownership class for it (the same mechanism that caught speculation-rules.json and the template's README files).
+- When the build comes, `_redirects` must be moved from DENY_EXACT to publishing's write set in the same commit as the generator, and the completeness test in tests/guard.test.mjs will require an ownership class for it.
 - Users who need redirects BEFORE v0.7 can add `_redirects` by hand via git; the file survives both publishing and updating untouched.

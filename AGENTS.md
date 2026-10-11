@@ -40,7 +40,7 @@ CI runs the same three plus the build-conformity check (tests.yml), CodeQL scans
 
 ## Non-negotiable rules
 
-- **The invariant: an Urd update must NEVER break a built site.** If you change the props shape of a block, section, background or animation: bump `version`, write a migration, add a test. See ADR-0005. Before v1, unpushed format changes need no migration, and the pre-v1 migrations are baked in (ADR-0005 addendum); from v1.0 the contract is fully enforced.
+- **The invariant: an Urd update must NEVER break a built site.** If you change the props shape of a block, section, background or animation: bump `version`, write a migration, add a test. See ADR-0005. Before v1, unpushed format changes need no migration, and the pre-v1 migrations are baked in (ADR-0005); from v1.0 the contract is fully enforced.
 - **All schema fields are additive.** Never remove a field without a migration.
 - **Schema changes are made in three places in the same commit:** `docs/SCHEMA.md`, `schema/`, and the example data.
 - **`_headers` is Urd-owned, never written by publishing** (ADR-0006) **and is PERMANENTLY exempt from the updater**, which shows diff instructions instead (ADR-0014). Plugins declare CSP needs in the manifest; the host is added manually to `_headers` in the repo. `_redirects` is publishing-generated (built in v0.7) and sits in the guard's DENY until then (ADR-0015).

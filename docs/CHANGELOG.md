@@ -27,6 +27,12 @@ push med p-suffiks: én commit gir 0.6.0.4p, flere commits (0.6.7.2 til
 blandede serier skrives begge fullt ut (0.6.6.5.11-0.6.0.1p). Spennet er
 entydig: alle commit-innslag over forrige p-innslag.
 
+### 0.7.0.44 - The ADRs as standing decisions, with the mechanics in ARCHITECTURE, SCHEMA and DEVELOPMENT - 11 October 2026
+
+- The 25 ADRs had grown build mechanics, sequences of events and addenda that changed decisions without rewriting them (the rule in AGENTS.md, set 11 October 2026). All are reviewed and 22 edited: nine rewritten where a decision had changed (0004, 0005, 0008, 0011, 0012, 0013, 0016, 0018, 0022; the earlier text of each, and of 0021 and 0023 whose text was restructured, is kept under `docs/adr/amended/`), the rest trimmed; 0001, 0002 and 0010 were clean. The ADRs go from about 25 000 to 17 500 words.
+- The mechanics the ADRs carried are now described where they belong: ARCHITECTURE.md (the migration machinery, the sanitiser, the help chip, the dictionary loading, the MCP server's root, the mobile row grid, the navigation bar's sizing, the push pass in full, and the editor's themed components, floating menus, panel-language class contract, own ids, Screen device, canvas measuring and mobile messages), SCHEMA.md (the `accent-text` automatics and a «The page migrations» section with all five steps and the English name map) and DEVELOPMENT-en-GB.md with UTVIKLING.md (the invariants pinned by tests, the Norwegian audit, the payment layer's secrets, the release steps in full).
+- Three references to withdrawn addenda (ARCHITECTURE.md, AGENTS.md, BACKLOG.md) point at the decisions instead.
+
 ### 0.7.21.3 - «Follow the content» or «Own height» per block, and the section's own height is the owner's - 11 October 2026
 
 - Thirteen block types followed their content with no way to get a taller box, and the map sized itself by a setting of its own. A block whose type follows its content can be given its own height in the Placement area of the element menu (`height: { mode: "own", align? }`, one additive field): it takes the dragged height and places its content at the top, in the middle, at the bottom or stretched; `followsContent` in push-model.js reads the field, so the push pass, the fit, the settle and the drag stop follow it, and base.css lays the box out as a one-row grid. Stretch is offered where the height is used: stats, countdown and quote, and the calendar in its plain list and card views, where the rows and cards spread. Fields in SCHEMA.md, the mechanics in ARCHITECTURE.md.

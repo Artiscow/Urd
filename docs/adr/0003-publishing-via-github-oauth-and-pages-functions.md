@@ -10,10 +10,10 @@
 
 Small serverless functions (`template/functions/api/github/`) ship with the repo and are run by the host (Cloudflare Pages Functions):
 
-- **OAuth:** `login` → GitHub → `callback` exchanges the code for a token *server-side*; the token is stored in an httpOnly Secure cookie and never reaches browser JS.
-- **Commit:** `commit` takes `{message, files:[{path,content,encoding}]}` and creates ONE commit via the GitHub Git Data API (blobs → tree → commit → ref).
-- **Protection:** the `ALLOWED_LOGINS` allowlist is enforced in all mutating endpoints; the **path allowlist** means publishing can only write `content/**`, `media/**`, `plugins/plugins.json` - never `functions/**`, `admin/**`, `assets/engine/**`, `.github/**`, `_headers`, `urd.json`.
-- **Conflict:** `latest?base=<sha>` reveals other people's publishes since load; `revert` does a forward revert (a new commit with the previous tree - history is never deleted).
+- **OAuth:** the login flow exchanges the GitHub code for a token *server-side*; the token is stored in an httpOnly Secure cookie and never reaches browser JS.
+- **Commit:** one publish is ONE commit, created through the GitHub Git Data API.
+- **Protection:** the `ALLOWED_LOGINS` allowlist is enforced in all mutating endpoints, and a **path allowlist** limits publishing to user data (content, media and the plugin index): Urd-owned code, configuration and headers are never written through publishing. The allowlist lives in `functions/_lib/guard.js`; `_redirects` is governed by ADR-0015.
+- **Conflict:** the editor can ask whether other people have published since load; `revert` does a forward revert (a new commit with the previous tree - history is never deleted).
 - **No admin password:** editing locally is harmless (draft in localStorage); the gate is GitHub login + allowlist at commit.
 
 ## Consequences

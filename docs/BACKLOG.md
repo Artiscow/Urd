@@ -388,7 +388,7 @@ What comes, in order (brought up to date 11 October 2026):
 ## Kjente begrensninger (dokumentert, ingen fiks planlagt)
 
 - Pictures from a Nextcloud share or a JSON list are proxied at their stored size (only Google's picture host resizes on request); the 12 MB cap applies, and the photo guide asks for sensibly sized files (review note, 0.7.0.16-35p)
-- The preview hides the page's scrollbar, so browsers with a classic scrollbar lay out the published page about 15 px narrower than the preview shows (ADR-0018 addendum, 16 September 2026)
+- The preview hides the page's scrollbar, so browsers with a classic scrollbar lay out the published page about 15 px narrower than the preview shows (ADR-0018, 16 September 2026)
 - `python3 -m http.server` ruter ikke `path`-ene fra sideregisteret (kun `/` fungerer); dokumentert begrensning (`?page=<id>` er lokal-fallback)
 - Angring av en merge-commit gjenoppretter første forelders innholdstilstand (dokumentert i revert.js); sjelden via admin-flyten, men mulig når noen også jobber via git
 - Tekst-selvhelbrederen fjerner alle knapper i rik tekst ved rendering, også en bevisst innlimt HTML-knapp (vernet mot foreldreløse håndtak-knapper veier tyngre); innlimte event-attributter og script strippes alltid hos besøkende

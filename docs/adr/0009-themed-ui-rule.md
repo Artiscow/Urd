@@ -1,6 +1,6 @@
 # ADR-0009: The themed UI rule (never native select in editing UI)
 
-Date: 19 July 2026. Status: accepted (v0.6 M3).
+Date: 19 July 2026. Status: accepted (v0.6 M3). How the components are built is described in [ARCHITECTURE.md](../ARCHITECTURE.md).
 
 ## Context
 
@@ -10,14 +10,15 @@ Native select popups are drawn by the browser/OS, outside the page's rendering m
 
 1. **Native `<select>` is forbidden in all editing UI** (the admin panels and the preview layer). `color-scheme: dark` is not an accepted solution; it is overridden by browsers.
 2. **The shared components own the form**:
-   - Admin (Svelte): [Dropdown.svelte](../../editor/src/lib/Dropdown.svelte) - `<Dropdown value={…} options={[[value, label], …]} onchange={(v) => …} />`
-   - The canvas and plugins (vanilla): [dropdown.js](../../template/assets/urd/dropdown.js) (stable plugin API path, ADR-0013) - `createDropdown({ value, options, onchange, title })`; does not steal focus, so text selections survive the choice
-   - **Segment buttons** for small option sets (2-5 short labels): the image editor's pattern (.urd-imged-seg) / the calendar's .urd-kal-seg
-3. Other native controls are fine: checkbox/range/number follow `accent-color`/`color-scheme` without the popup problem; the file and colour picker DIALOGUES are OS surfaces with their own themes and are ok (but `input type=color` as the PICKER has already been replaced by the colour picker).
+   - Admin (Svelte): [Dropdown.svelte](../../editor/src/lib/Dropdown.svelte)
+   - The canvas and plugins (vanilla): [dropdown.js](../../template/assets/urd/dropdown.js) (stable plugin API path, ADR-0013)
+   - **Segment buttons** for small option sets (2-5 short labels)
+3. Other native controls are fine: checkbox/range/number follow `accent-color`/`color-scheme` without the popup problem. The colour picker is a themed component; the OS colour dialogue it opens, like the file dialogue, is an OS surface with its own theme and is fine.
 4. The rule applies to the core AND plugins; the requirement is stated in plugins/README.md.
+5. **Visitor surfaces follow the visitor:** visitor forms (the form block) follow the visitor's OS theme and may use native select with `color-scheme`.
 
 ## Consequences
 
 - Nobody needs to consider select styling again; new choice controls start from the shared components.
-- Visitor surfaces are not affected (the site itself has no selects; the form plugin in M4 (a core block since 0.7.18) must take a position there: visitor forms follow the USER's OS theme and may use native select with color-scheme).
+- Visitor surfaces are not affected by the rule; the site itself has no editing selects.
 - Checkpoint in test rounds: no native select popup anywhere in the editor.
